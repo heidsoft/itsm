@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -20,15 +21,50 @@ type ProcessTriggerServiceInterface interface {
 
 type Service struct {
 	repo                  Repository
+	productionService     *service.IncidentService
 	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 
-func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, productionSvc *service.IncidentService, logger *zap.SugaredLogger) *Service {
 	return &Service{
-		repo:   repo,
-		logger: logger,
+		repo:              repo,
+		productionService: productionSvc,
+		logger:            logger,
 	}
+}
+
+func (s *Service) Acknowledge(ctx context.Context, id, userID, tenantID int) error {
+	return s.productionService.AcknowledgeIncident(ctx, id, userID, tenantID)
+}
+
+func (s *Service) Resolve(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
+	return s.productionService.ResolveIncident(ctx, id, userID, tenantID, resolution, rootCause)
+}
+
+func (s *Service) Close(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
+	return s.productionService.CloseIncident(ctx, id, userID, tenantID, closeNotes)
+}
+
+func (s *Service) Reopen(ctx context.Context, id, userID, tenantID int) error {
+	return s.productionService.ReopenIncident(ctx, id, userID, tenantID)
+}
+
+func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) error {
+	_, err := s.productionService.AssignIncident(ctx, id, assigneeID, tenantID)
+	return err
+}
+
+func (s *Service) Delete(ctx context.Context, id, tenantID int) error {
+	return s.productionService.DeleteIncident(ctx, id, tenantID)
+}
+
+func (s *Service) PauseSLA(_ context.Context, _, _ int) error {
+	return nil
+}
+
+func (s *Service) ResumeSLA(_ context.Context, _, _ int) error {
+	return nil
 }
 
 // SetProcessTriggerService 设置流程触发服务

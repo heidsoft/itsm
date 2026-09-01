@@ -82,7 +82,7 @@ func TestService_GetStats_TableDriven(t *testing.T) {
 			if tc.seed != nil {
 				tc.seed(repo)
 			}
-			svc := NewService(repo, nil)
+			svc := NewService(repo, nil, nil)
 
 			stats, err := svc.GetStats(t.Context(), tc.tenantID)
 			assert.NoError(t, err)
@@ -126,7 +126,7 @@ func TestService_GetStats_NoDirectEntAccess(t *testing.T) {
 	var calls int
 	repo := newMockRepository()
 	repo.statsCallCount = &calls
-	svc := NewService(repo, nil)
+	svc := NewService(repo, nil, nil)
 
 	_, err := svc.GetStats(t.Context(), 42)
 	assert.NoError(t, err)

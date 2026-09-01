@@ -25,6 +25,141 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+func (h *Handler) Acknowledge(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.service.Acknowledge(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) Resolve(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req struct {
+		Resolution string `json:"resolution"`
+		RootCause  string `json:"rootCause"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	if err := h.service.Resolve(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.Resolution, req.RootCause); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) Close(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req struct {
+		CloseNotes string `json:"closeNotes"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	if err := h.service.Close(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.CloseNotes); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) Reopen(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.service.Reopen(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) Assign(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req struct {
+		AssigneeID int `json:"assigneeId"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	if err := h.service.Assign(c.Request.Context(), id, req.AssigneeID, c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.service.Delete(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) PauseSLA(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.service.PauseSLA(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *Handler) ResumeSLA(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.service.ResumeSLA(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
+		common.Fail(c, 400, "")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func incidentID(c *gin.Context) (int, bool) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return 0, false
+	}
+	return id, true
+}
+
 // Create handles incident creation
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateIncidentRequest
