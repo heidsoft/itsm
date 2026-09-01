@@ -502,23 +502,101 @@ func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
 }
 
 func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
-	common.Fail(c, common.ServerErrorCode, "not implemented")
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	err := h.service.alertingSvc.AcknowledgeAlert(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"))
+	if err != nil {
+		if err.Error() == "alert not found" {
+			common.Fail(c, common.NotFoundErrorCode, "告警不存在")
+			return
+		}
+		h.service.logger.Errorw("Failed to acknowledge alert", "error", err, "id", id)
+		common.Fail(c, common.InternalErrorCode, "确认告警失败")
+		return
+	}
+	common.SuccessWithMessage(c, "确认告警成功", nil)
 }
 
 func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
-	common.Fail(c, common.ServerErrorCode, "not implemented")
+	startTimeStr := c.Query("startTime")
+	endTimeStr := c.Query("endTime")
+	if startTimeStr == "" || endTimeStr == "" {
+		common.Fail(c, common.ParamErrorCode, "开始时间和结束时间不能为空")
+		return
+	}
+	startTime, err := time.Parse(time.RFC3339, startTimeStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "开始时间格式无效")
+		return
+	}
+	endTime, err := time.Parse(time.RFC3339, endTimeStr)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "结束时间格式无效")
+		return
+	}
+	statistics, err := h.service.alertingSvc.GetAlertStatistics(c.Request.Context(), c.GetInt("tenant_id"), startTime, endTime)
+	if err != nil {
+		h.service.logger.Errorw("Failed to get alert statistics", "error", err)
+		common.Fail(c, common.InternalErrorCode, "获取告警统计失败")
+		return
+	}
+	common.Success(c, statistics)
 }
 
 func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
-	common.Fail(c, common.ServerErrorCode, "not implemented")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 {
+		size = 10
+	}
+	if size > 100 {
+		size = 100
+	}
+	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), c.GetInt("tenant_id"), page, size)
+	if err != nil {
+		h.service.logger.Errorw("Failed to get active alerts", "error", err)
+		common.Fail(c, common.InternalErrorCode, "获取活跃告警失败")
+		return
+	}
+	common.Success(c, dto.IncidentAlertListResponse{Items: alerts, Total: total, Page: page, PageSize: size})
 }
 
 func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
-	common.Fail(c, common.ServerErrorCode, "not implemented")
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	analysis, err := h.service.monitoringService.AnalyzeIncidentImpact(c.Request.Context(), id, c.GetInt("tenant_id"))
+	if err != nil {
+		h.service.logger.Errorw("Failed to analyze incident impact", "error", err, "id", id)
+		common.Fail(c, common.InternalErrorCode, "分析事件影响失败")
+		return
+	}
+	common.Success(c, analysis)
 }
 
 func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
-	common.Fail(c, common.ServerErrorCode, "not implemented")
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req dto.ConvertIncidentToProblemRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	problem, err := h.service.rootCauseSvc.CreateProblemFromIncident(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), &req)
+	if err != nil {
+		h.service.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", id)
+		common.Fail(c, common.InternalErrorCode, "转换失败: "+err.Error())
+		return
+	}
+	common.Success(c, dto.ToProblemResponse(problem))
 }
 
 // Update handles updating an incident

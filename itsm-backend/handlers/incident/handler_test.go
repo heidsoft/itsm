@@ -219,7 +219,7 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	repo := newMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 	h := NewHandler(svc)
 	r := gin.New()
 

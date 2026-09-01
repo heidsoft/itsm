@@ -224,7 +224,7 @@ func TestService_Update_StatusTransition_TableDriven(t *testing.T) {
 
 func TestGoldenJourney_IncidentResolvedAndClosed(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 	ctx := context.Background()
 	incident, err := svc.Create(ctx, 11, &Incident{Title: "核心支付不可用", ReporterID: 101, Priority: "urgent"})
 	require.NoError(t, err)
@@ -280,7 +280,7 @@ func TestService_Create_AutoPriorityTable(t *testing.T) {
 // audit event and triggers the async rule executor.
 func TestService_Create_HappyPath(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	created, err := svc.Create(context.Background(), 1, &Incident{
 		Title:       "Production outage",
@@ -313,7 +313,7 @@ func TestService_Create_HappyPath(t *testing.T) {
 func TestService_Create_NumberGenerationError(t *testing.T) {
 	repo := newSLAMockRepository()
 	repo.failNumberErr = errors.New("number generator down")
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	inc, err := svc.Create(context.Background(), 1, &Incident{Title: "anything"})
 	assert.Error(t, err)
@@ -325,7 +325,7 @@ func TestService_Create_NumberGenerationError(t *testing.T) {
 // expected fields and an escalation event to the audit log.
 func TestService_Escalate_SetsLevelAndEvent(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
 	require.NoError(t, err)
@@ -351,7 +351,7 @@ func TestService_Escalate_SetsLevelAndEvent(t *testing.T) {
 // is not visible to the supplied tenant.
 func TestService_Escalate_NotFound(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	_, err := svc.Escalate(context.Background(), 1, 999, 1, "x")
 	assert.Error(t, err)
@@ -361,7 +361,7 @@ func TestService_Escalate_NotFound(t *testing.T) {
 // transitions that would otherwise bypass the state-machine.
 func TestService_Update_InvalidTransitionRejected(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	// Force-create a closed incident so we can attempt the terminal-block.
 	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
@@ -384,7 +384,7 @@ func TestService_Update_InvalidTransitionRejected(t *testing.T) {
 // resolved state (and ClosedAt on close).
 func TestService_Update_ResolvedTimestamp(t *testing.T) {
 	repo := newSLAMockRepository()
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
 	require.NoError(t, err)
@@ -408,7 +408,7 @@ func TestService_Update_ResolvedTimestamp(t *testing.T) {
 // TestService_EvaluateCondition_TableDriven exercises the rule-condition
 // evaluator directly.
 func TestService_EvaluateCondition_TableDriven(t *testing.T) {
-	svc := NewService(newSLAMockRepository(), nil, zap.NewNop().Sugar())
+	svc := NewService(newSLAMockRepository(), nil, nil, nil, nil, zap.NewNop().Sugar())
 	inc := &Incident{Priority: "high", Status: "new"}
 
 	cases := []struct {
@@ -437,7 +437,7 @@ func TestService_EvaluateCondition_TableDriven(t *testing.T) {
 func TestService_ExecuteRules_RuleErrorIsLogged(t *testing.T) {
 	repo := newSLAMockRepository()
 	repo.failListRulesErr = errors.New("rls denied")
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	// executeRules is private, but Create() fires it in a goroutine.
 	_, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
@@ -461,7 +461,7 @@ func TestService_ExecuteRules_AppliesMatchingRule(t *testing.T) {
 			Conditions: map[string]interface{}{"status": "new"},
 		},
 	}
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	_, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
 	require.NoError(t, err)
@@ -490,7 +490,7 @@ func TestService_ExecuteRules_NonMatchingRuleSkipped(t *testing.T) {
 			Conditions: map[string]interface{}{"status": "closed"},
 		},
 	}
-	svc := NewService(repo, nil, zap.NewNop().Sugar())
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
 	_, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
 	require.NoError(t, err)

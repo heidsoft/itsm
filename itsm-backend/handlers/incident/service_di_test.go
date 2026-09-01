@@ -20,6 +20,6 @@ func TestNewServiceWiresProductionIncidentDependencies(t *testing.T) {
 
 	require.Same(t, incidentSvc, svc.productionService)
 	require.Same(t, monitoringSvc, svc.monitoringService)
-	require.Same(t, alertingSvc, svc.alertingService)
-	require.Same(t, rootCauseSvc, svc.rootCauseAnalysisService)
+	require.Same(t, alertingSvc, svc.alertingSvc)
+	require.Same(t, rootCauseSvc, svc.rootCauseSvc)
 }

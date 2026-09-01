@@ -296,8 +296,11 @@ func NewApplication() *Application {
 	// 初始化业务服务层
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	incidentService := service.NewIncidentService(client, sugar, ticketSLAService)
+	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
+	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
+	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
 	incidentRepo := incident.NewEntRepository(client)
-	incidentHandlerService := incident.NewService(incidentRepo, incidentService, sugar)
+	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
@@ -576,8 +579,6 @@ func NewApplication() *Application {
 	if err := commandRegistry.Register(commandbus.CommandExecuteIncidentRules, incidentRulesCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register incident rules command handler", "error", err)
 	}
-	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
-	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	incidentAlertingService.SetConnectorManager(connectorManager)
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
 	analyticsService := service.NewAnalyticsService(client, sugar)
@@ -653,7 +654,6 @@ func NewApplication() *Application {
 	ticketCommentService.SetNotificationService(ticketNotificationService)
 	ticketRatingService.SetNotificationService(ticketNotificationService)
 
-	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
 	rootCauseAnalysisService.SetGateway(llmGateway)
 	rootCauseAnalysisService.SetLogger(sugar)
 	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)

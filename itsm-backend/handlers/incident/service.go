@@ -23,14 +23,20 @@ type ProcessTriggerServiceInterface interface {
 type Service struct {
 	repo                  Repository
 	productionService     *service.IncidentService
+	monitoringService     *service.IncidentMonitoringService
+	alertingSvc           *service.IncidentAlertingService
+	rootCauseSvc          *service.RootCauseAnalysisService
 	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 
-func NewService(repo Repository, productionSvc *service.IncidentService, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, logger *zap.SugaredLogger) *Service {
 	return &Service{
 		repo:              repo,
 		productionService: productionSvc,
+		monitoringService: monitoringSvc,
+		alertingSvc:       alertingSvc,
+		rootCauseSvc:      rootCauseSvc,
 		logger:            logger,
 	}
 }
