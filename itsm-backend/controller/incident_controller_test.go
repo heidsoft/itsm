@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -75,7 +76,7 @@ func TestIncidentController_ListIncidents(t *testing.T) {
 			w := httptest.NewRecorder()
 			c, _ := gin.CreateTestContext(w)
 			c.Request = req
-			c.Set("tenant_id", 1)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 
 			r.ServeHTTP(w, req)
 		})
@@ -86,7 +87,7 @@ func TestIncidentController_ResolveRejectsInvalidJSONContract(t *testing.T) {
 	_, incidentController := setupTestIncidentController(t)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
-		c.Set("tenant_id", 1)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Set("user_id", 1)
 		c.Next()
 	})
