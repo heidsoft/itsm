@@ -1021,3 +1021,19 @@ func isUserInputUpdateError(err error) bool {
 	}
 	return false
 }
+
+func (h *Handler) GetTicketActivity(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid id")
+		return
+	}
+	tenantID := c.GetInt("tenant_id")
+	result, err := h.service.GetTicketActivity(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "获取活动日志失败")
+		return
+	}
+	common.Success(c, result)
+}

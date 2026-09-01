@@ -17,6 +17,7 @@ import (
 	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
+	ticketHandler "itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
@@ -206,6 +207,7 @@ type RouterConfig struct {
 	// Controllers
 	ProblemInvestigationController  *controller.ProblemInvestigationController
 	TicketController                *controller.TicketController
+	TicketHandler                  *ticketHandler.Handler
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
 	TicketAttachmentController      *controller.TicketAttachmentController
@@ -573,8 +575,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Tickets ====================
 		tickets := tenant.(*gin.RouterGroup).Group("/tickets")
 		{
-			tickets.GET("", middleware.RequirePermission("ticket", "read"), config.TicketController.ListTickets)
-			tickets.POST("", middleware.RequirePermission("ticket", "create"), config.TicketController.CreateTicket)
+			tickets.GET("", middleware.RequirePermission("ticket", "read"), config.TicketHandler.ListTickets)
+			tickets.POST("", middleware.RequirePermission("ticket", "create"), config.TicketHandler.CreateTicket)
 
 			if config.TicketViewController != nil {
 				tickets.GET("/views", middleware.RequirePermission("view", "read"), config.TicketViewController.ListTicketViews)
@@ -584,29 +586,29 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tickets.DELETE("/views/:id", middleware.RequirePermission("view", "delete"), config.TicketViewController.DeleteTicketView)
 			}
 
-			tickets.GET("/search", middleware.RequirePermission("ticket", "read"), config.TicketController.SearchTickets)
-			tickets.GET("/stats", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketStats)
-			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketController.GetOverdueTickets)
-			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketController.ExportTickets)
-			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketController.BatchDeleteTickets)
+			tickets.GET("/search", middleware.RequirePermission("ticket", "read"), config.TicketHandler.SearchTickets)
+			tickets.GET("/stats", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicketStats)
+			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetOverdueTickets)
+			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketHandler.ExportTickets)
+			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.BatchDeleteTickets)
 			if config.TicketWorkflowController != nil {
 				tickets.GET("/cc/my", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListMyCCRecords)
 			}
 
 			// 工单模板
-			tickets.GET("/templates", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplates)
-			tickets.GET("/templates/categories", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplateCategories)
-			tickets.POST("/templates", middleware.RequirePermission("template", "create"), config.TicketController.CreateTicketTemplate)
-			tickets.GET("/templates/:id", middleware.RequirePermission("template", "read"), config.TicketController.GetTicketTemplate)
-			tickets.PUT("/templates/:id", middleware.RequirePermission("template", "update"), config.TicketController.UpdateTicketTemplate)
-			tickets.PATCH("/templates/:id/status", middleware.RequirePermission("template", "update"), config.TicketController.UpdateTicketTemplateStatus)
-			tickets.POST("/templates/:id/copy", middleware.RequirePermission("template", "create"), config.TicketController.CopyTicketTemplate)
-			tickets.DELETE("/templates/:id", middleware.RequirePermission("template", "delete"), config.TicketController.DeleteTicketTemplate)
+			tickets.GET("/templates", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplates)
+			tickets.GET("/templates/categories", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplateCategories)
+			tickets.POST("/templates", middleware.RequirePermission("template", "create"), config.TicketHandler.CreateTicketTemplate)
+			tickets.GET("/templates/:id", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplate)
+			tickets.PUT("/templates/:id", middleware.RequirePermission("template", "update"), config.TicketHandler.UpdateTicketTemplate)
+			tickets.PATCH("/templates/:id/status", middleware.RequirePermission("template", "update"), config.TicketHandler.UpdateTicketTemplateStatus)
+			tickets.POST("/templates/:id/copy", middleware.RequirePermission("template", "create"), config.TicketHandler.CopyTicketTemplate)
+			tickets.DELETE("/templates/:id", middleware.RequirePermission("template", "delete"), config.TicketHandler.DeleteTicketTemplate)
 
-			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketController.EscalateTicket)
-			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketActivity)
-			tickets.PUT("/:id/sla/pause", middleware.RequirePermission("ticket", "update"), config.TicketController.PauseSLA)
-			tickets.PUT("/:id/sla/resume", middleware.RequirePermission("ticket", "update"), config.TicketController.ResumeSLA)
+			tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketHandler.EscalateTicket)
+			tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicketActivity)
+			tickets.PUT("/:id/sla/pause", middleware.RequirePermission("ticket", "update"), config.TicketHandler.PauseSLA)
+			tickets.PUT("/:id/sla/resume", middleware.RequirePermission("ticket", "update"), config.TicketHandler.ResumeSLA)
 			tickets.GET("/types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
 				common.Success(c, gin.H{"types": []gin.H{
 					{"id": 1, "name": "故障工单", "code": "incident"},
@@ -617,24 +619,24 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					{"id": 6, "name": "持续改进", "code": "improvement"},
 				}, "total": 6})
 			})
-			tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicket)
-			tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicket)
+			tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicket)
+			tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), config.TicketHandler.UpdateTicket)
 			// REST 契约：部分更新使用 PATCH（与 PUT 共用同一 handler，DTO 指针字段区分未传/传零值）
-			tickets.PATCH("/:id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicket)
-			tickets.PUT("/:id/status", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateTicketStatus)
-			tickets.DELETE("/:id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteTicket)
-			tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), config.TicketController.AssignTicket)
-			tickets.POST("/:id/resolve", middleware.RequirePermission("ticket", "update"), config.TicketController.ResolveTicket)
-			tickets.POST("/:id/close", middleware.RequirePermission("ticket", "update"), config.TicketController.CloseTicket)
+			tickets.PATCH("/:id", middleware.RequirePermission("ticket", "update"), config.TicketHandler.UpdateTicket)
+			tickets.PUT("/:id/status", middleware.RequirePermission("ticket", "update"), config.TicketHandler.UpdateTicketStatus)
+			tickets.DELETE("/:id", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.DeleteTicket)
+			tickets.POST("/:id/assign", middleware.RequirePermission("ticket", "assign"), config.TicketHandler.AssignTicket)
+			tickets.POST("/:id/resolve", middleware.RequirePermission("ticket", "update"), config.TicketHandler.ResolveTicket)
+			tickets.POST("/:id/close", middleware.RequirePermission("ticket", "update"), config.TicketHandler.CloseTicket)
 
 			// 工单SLA信息
-			tickets.GET("/:id/sla", middleware.RequirePermission("ticket", "read"), config.TicketController.GetTicketSLAInfo)
+			tickets.GET("/:id/sla", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicketSLAInfo)
 
 			// 子任务管理
-			tickets.GET("/:id/subtasks", middleware.RequirePermission("ticket", "read"), config.TicketController.GetSubtasks)
-			tickets.POST("/:id/subtasks", middleware.RequirePermission("ticket", "create"), config.TicketController.CreateSubtask)
-			tickets.PATCH("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "update"), config.TicketController.UpdateSubtask)
-			tickets.DELETE("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "delete"), config.TicketController.DeleteSubtask)
+			tickets.GET("/:id/subtasks", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetSubtasks)
+			tickets.POST("/:id/subtasks", middleware.RequirePermission("ticket", "create"), config.TicketHandler.CreateSubtask)
+			tickets.PATCH("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "update"), config.TicketHandler.UpdateSubtask)
+			tickets.DELETE("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.DeleteSubtask)
 
 			// 工单关联（已接入 TicketAssociationService）
 			if config.TicketAssociationService != nil {
@@ -1827,7 +1829,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				})
 				dashboard.GET("/stats", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
 				if config.TicketController != nil {
-					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.TicketController.GetTicketStats)
+					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.TicketHandler.GetTicketStats)
 				} else {
 					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
 				}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/service"
 
 	"go.uber.org/zap"
 )
@@ -13,13 +14,14 @@ import (
 // Service handles ticket business logic.
 // All operations go through the Repository interface (tenant-isolated).
 type Service struct {
-	repo   Repository
-	logger *zap.SugaredLogger
+	repo            Repository
+	productionSvc   *service.TicketService
+	logger          *zap.SugaredLogger
 }
 
 // NewService creates a new ticket service.
-func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
-	return &Service{repo: repo, logger: logger}
+func NewService(repo Repository, productionSvc *service.TicketService, logger *zap.SugaredLogger) *Service {
+	return &Service{repo: repo, productionSvc: productionSvc, logger: logger}
 }
 
 // Create creates a new ticket.
@@ -262,4 +264,9 @@ func IsDataScopeAllRole(role string) bool {
 	default:
 		return false
 	}
+}
+
+// GetTicketActivity retrieves ticket activity log (merged comments, attachments, status changes)
+func (s *Service) GetTicketActivity(ctx context.Context, ticketID, tenantID int) ([]map[string]interface{}, error) {
+	return s.productionSvc.GetTicketActivity(ctx, ticketID, tenantID)
 }

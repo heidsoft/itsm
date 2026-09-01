@@ -43,6 +43,7 @@ import (
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
+	"itsm-backend/handlers/ticket"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
@@ -450,6 +451,9 @@ func NewApplication() *Application {
 		ConnectorManager:      connectorManager,
 	})
 	ticketService.EnableWorkflowOutbox()
+	ticketRepo := ticket.NewEntRepository(ticketRepoImpl)
+	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, sugar)
+	ticketHandler := ticket.NewHandler(ticketHandlerService)
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -1033,6 +1037,7 @@ func NewApplication() *Application {
 		RedisRateLimiter:                redisRateLimiter,
 		AppStartTime:                    time.Now(),
 		TicketController:                ticketController,
+		TicketHandler:                  ticketHandler,
 		TicketDependencyController:      ticketDependencyController,
 		TicketCommentController:         ticketCommentController,
 		TicketAttachmentController:      ticketAttachmentController,
