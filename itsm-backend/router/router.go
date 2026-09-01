@@ -206,7 +206,6 @@ type RouterConfig struct {
 
 	// Controllers
 	ProblemInvestigationController  *controller.ProblemInvestigationController
-	TicketController                *controller.TicketController
 	TicketHandler                   *ticketHandler.Handler
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
@@ -217,7 +216,6 @@ type RouterConfig struct {
 	TicketViewController            *controller.TicketViewController
 	TicketWorkflowController        *controller.TicketWorkflowController
 	TicketAutomationRuleController  *controller.TicketAutomationRuleController
-	IncidentController              *controller.IncidentController
 	IncidentHandler                 *incidentHandler.IncidentHandler
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
@@ -963,7 +961,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Incidents ====================
-		if config.IncidentController != nil {
+		if config.IncidentHandler != nil {
 			inc := tenant.(*gin.RouterGroup).Group("/incidents")
 			{
 				// 核心 CRUD
@@ -1026,7 +1024,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResolveAlert)
 			}
 		}
-		if config.IncidentController != nil && config.CMDBHandler != nil {
+		if config.CMDBHandler != nil {
 			tenant.GET("/incidents/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCIs)
 		}
 
@@ -1828,7 +1826,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					})
 				})
 				dashboard.GET("/stats", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
-				if config.TicketController != nil {
+				if config.TicketHandler != nil {
 					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.TicketHandler.GetTicketStats)
 				} else {
 					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)

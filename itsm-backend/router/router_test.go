@@ -289,16 +289,16 @@ func TestSetupRoutes_CMDBControllerNil(t *testing.T) {
 	assert.NotPanics(t, func() { SetupRoutes(r, cfg) })
 }
 
-func TestSetupRoutes_IncidentControllerNil(t *testing.T) {
+func TestSetupRoutes_IncidentHandlerNil(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:router_incidentnil?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:          "test-secret",
-		Logger:             logger,
-		Client:             client,
-		IncidentController: nil,
+		JWTSecret:      "test-secret",
+		Logger:         logger,
+		Client:         client,
+		IncidentHandler: nil,
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -419,9 +419,7 @@ func TestRouterConfig_ZeroValue(t *testing.T) {
 	assert.Empty(t, cfg.JWTSecret)
 	assert.Nil(t, cfg.Logger)
 	assert.Nil(t, cfg.Client)
-	assert.Nil(t, cfg.TicketController)
 	assert.Nil(t, cfg.CMDBController)
-	assert.Nil(t, cfg.IncidentController)
 	assert.Nil(t, cfg.DashboardHandler)
 }
 

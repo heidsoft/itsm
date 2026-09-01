@@ -610,7 +610,6 @@ func NewApplication() *Application {
 	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
 	toolRegistry.SetTicketService(ticketService)
 
-	ticketController := controller.NewTicketController(ticketService, ticketDependencyService, database.GetRawDB(), sugar)
 	ticketDependencyController := controller.NewTicketDependencyController(ticketDependencyService)
 
 	ticketCommentService := service.NewTicketCommentService(client, sugar)
@@ -656,7 +655,6 @@ func NewApplication() *Application {
 
 	rootCauseAnalysisService.SetGateway(llmGateway)
 	rootCauseAnalysisService.SetLogger(sugar)
-	incidentController := controller.NewIncidentController(incidentService, incidentRuleEngine, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	approvalController := controller.NewApprovalController(approvalService)
 
 	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
@@ -953,10 +951,6 @@ func NewApplication() *Application {
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
 
-	// Inject SLA monitor into controllers for Pause/Resume API (P0-2)
-	ticketController.SetSLAMonitorService(slaMonitorService)
-	incidentController.SetSLAMonitorService(slaMonitorService)
-
 	// Survey Service & Controller
 	surveyService := service.NewSurveyService(client, sugar)
 	surveyController := controller.NewSurveyController(surveyService)
@@ -1036,7 +1030,6 @@ func NewApplication() *Application {
 		CSRFEnabled:                     cfg.Security.CSRFEnabled,
 		RedisRateLimiter:                redisRateLimiter,
 		AppStartTime:                    time.Now(),
-		TicketController:                ticketController,
 		TicketHandler:                   ticketHandler,
 		TicketDependencyController:      ticketDependencyController,
 		TicketCommentController:         ticketCommentController,
@@ -1048,7 +1041,6 @@ func NewApplication() *Application {
 		TicketViewController:            ticketViewController,
 		TicketWorkflowController:        ticketWorkflowController,
 		TicketAutomationRuleController:  ticketAutomationRuleController,
-		IncidentController:              incidentController,
 		IncidentHandler:                 incidentHandler,
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,
