@@ -30,6 +30,7 @@ const (
 	ConflictCode            = 4090 // 版本冲突
 	UnprocessableEntityCode = 4220
 	InternalErrorCode       = 5001
+	ServerErrorCode         = InternalErrorCode
 	ServiceUnavailableCode  = 5003
 	// P2-6 AI 工具 RBAC 校验
 	ToolPermissionDeniedCode = 2004 // 工具权限不足

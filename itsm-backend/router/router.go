@@ -24,6 +24,7 @@ import (
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/email_intake"
+	incidentHandler "itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/operations"
@@ -215,6 +216,7 @@ type RouterConfig struct {
 	TicketWorkflowController        *controller.TicketWorkflowController
 	TicketAutomationRuleController  *controller.TicketAutomationRuleController
 	IncidentController              *controller.IncidentController
+	IncidentHandler                 *incidentHandler.IncidentHandler
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
@@ -963,63 +965,63 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			inc := tenant.(*gin.RouterGroup).Group("/incidents")
 			{
 				// 核心 CRUD
-				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentController.ListIncidents)
-				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncident)
-				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentStats)
-				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncident)
-				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
-				inc.DELETE("/:id", middleware.RequirePermission("incident", "delete"), config.IncidentController.DeleteIncident)
+				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Lists)
+				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Create)
+				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetStats)
+				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Get)
+				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
+				inc.DELETE("/:id", middleware.RequirePermission("incident", "delete"), config.IncidentHandler.Delete)
 
 				// 事件操作
-				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateIncident)
-				inc.POST("/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeIncident)
-				inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveIncident)
-				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentController.CloseIncident)
-				inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), config.IncidentController.ReopenIncident)
-				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentController.AssignIncident)
-				inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentController.PauseSLA)
-				inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentController.ResumeSLA)
-				inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), config.IncidentController.EscalateMajorIncident)
-				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentController.ConvertToProblem)
-				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentController.AnalyzeIncidentImpact)
+				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Escalate)
+				inc.POST("/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Acknowledge)
+				inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Resolve)
+				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Close)
+				inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Reopen)
+				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentHandler.Assign)
+				inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.PauseSLA)
+				inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResumeSLA)
+				inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), config.IncidentHandler.EscalateMajor)
+				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ConvertToProblem)
+				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentHandler.AnalyzeImpact)
 
 				// 关联数据
-				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentEvents)
-				inc.POST("/events", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentEvent)
-				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentAlerts)
-				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMetrics)
+				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetEvents)
+				inc.POST("/events", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateEvent)
+				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetAlerts)
+				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetMetrics)
 
 				// 根因分析
-				inc.POST("/root-cause", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateRootCause))
-				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentController.GetRootCause)
-				inc.POST("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateRootCause)
-				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateRootCause)
+				inc.POST("/root-cause", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateRootCause))
+				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetRootCause)
+				inc.POST("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
+				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
 
 				// 影响评估
-				inc.POST("/impact-assessment", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateImpactAssessment))
-				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentController.GetImpactAssessment)
-				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateImpactAssessment)
+				inc.POST("/impact-assessment", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateImpactAssessment))
+				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetImpactAssessment)
+				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateImpactAssessment)
 
 				// 事件分类
-				inc.POST("/classification", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentController.UpdateClassification))
-				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentController.GetClassification)
-				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateClassification)
-				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentController.UpdateIncident)
+				inc.POST("/classification", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateClassification))
+				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetClassification)
+				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateClassification)
+				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
 
 				// 评论
-				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentComments)
-				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentComment)
-				inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentController.DeleteIncidentComment)
+				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetComments)
+				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateComment)
+				inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentHandler.DeleteComment)
 
 				// 监控
-				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentController.GetIncidentMonitoring)
+				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetMonitoring)
 
 				// 告警管理
-				inc.POST("/alerts", middleware.RequirePermission("incident", "write"), config.IncidentController.CreateIncidentAlert)
-				inc.GET("/alerts/active", middleware.RequirePermission("incident", "read"), config.IncidentController.GetActiveAlerts)
-				inc.GET("/alerts/statistics", middleware.RequirePermission("incident", "read"), config.IncidentController.GetAlertStatistics)
-				inc.POST("/alerts/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentController.AcknowledgeAlert)
-				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentController.ResolveAlert)
+				inc.POST("/alerts", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateAlert)
+				inc.GET("/alerts/active", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetActiveAlerts)
+				inc.GET("/alerts/statistics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetAlertStatistics)
+				inc.POST("/alerts/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentHandler.AcknowledgeAlert)
+				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResolveAlert)
 			}
 		}
 		if config.IncidentController != nil && config.CMDBController != nil {

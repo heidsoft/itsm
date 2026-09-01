@@ -17,15 +17,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+// IncidentHandler HTTP handlers for incident domain
+type IncidentHandler struct {
 	service *Service
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service) *IncidentHandler {
+	return &IncidentHandler{service: service}
 }
 
-func (h *Handler) Acknowledge(c *gin.Context) {
+func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -38,7 +39,7 @@ func (h *Handler) Acknowledge(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) Resolve(c *gin.Context) {
+func (h *IncidentHandler) Resolve(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -59,7 +60,7 @@ func (h *Handler) Resolve(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) Close(c *gin.Context) {
+func (h *IncidentHandler) Close(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -79,7 +80,7 @@ func (h *Handler) Close(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) Reopen(c *gin.Context) {
+func (h *IncidentHandler) Reopen(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -92,7 +93,7 @@ func (h *Handler) Reopen(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) Assign(c *gin.Context) {
+func (h *IncidentHandler) Assign(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -112,7 +113,7 @@ func (h *Handler) Assign(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) Delete(c *gin.Context) {
+func (h *IncidentHandler) Delete(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -125,7 +126,7 @@ func (h *Handler) Delete(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) PauseSLA(c *gin.Context) {
+func (h *IncidentHandler) PauseSLA(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -138,7 +139,7 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 	common.Success(c, nil)
 }
 
-func (h *Handler) ResumeSLA(c *gin.Context) {
+func (h *IncidentHandler) ResumeSLA(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -161,7 +162,7 @@ func incidentID(c *gin.Context) (int, bool) {
 }
 
 // Create handles incident creation
-func (h *Handler) Create(c *gin.Context) {
+func (h *IncidentHandler) Create(c *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -212,7 +213,7 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 // Get handles retrieving a single incident
-func (h *Handler) Get(c *gin.Context) {
+func (h *IncidentHandler) Get(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -235,7 +236,7 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 // List handles listing incidents
-func (h *Handler) List(c *gin.Context) {
+func (h *IncidentHandler) Lists(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
 	tenantID := c.GetInt("tenant_id")
@@ -277,8 +278,251 @@ func (h *Handler) List(c *gin.Context) {
 	})
 }
 
+func (h *IncidentHandler) CreateAlert(c *gin.Context) {
+	var req dto.CreateIncidentAlertRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.CreateIncidentAlert(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) CreateComment(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req struct {
+		Content    string `json:"content" binding:"required"`
+		IsInternal bool   `json:"isInternal"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.AuthErrorCode, "User ID missing")
+		return
+	}
+	result, err := h.service.productionService.CreateIncidentEvent(c.Request.Context(), &dto.CreateIncidentEventRequest{
+		IncidentID: id, EventType: "comment", EventName: "用户评论", Description: req.Content,
+		Status: "active", Data: map[string]interface{}{"isInternal": req.IsInternal}, UserID: &userID, Source: "user",
+	}, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) CreateEvent(c *gin.Context) {
+	var req dto.CreateIncidentEventRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.CreateIncidentEvent(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) DeleteComment(c *gin.Context) {
+	incidentID, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	commentID, err := strconv.Atoi(c.Param("commentId"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "invalid comment id")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	if err := h.service.productionService.DeleteIncidentComment(c.Request.Context(), incidentID, commentID, tenantID); err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *IncidentHandler) GetAlerts(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.GetIncidentAlerts(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) GetComments(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.GetIncidentComments(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) GetEvents(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.GetIncidentEvents(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) GetMetrics(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.GetIncidentMetrics(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) GetMonitoring(c *gin.Context) {
+	var req dto.IncidentMonitoringRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	result, err := h.service.productionService.GetIncidentMonitoring(c.Request.Context(), &req, tenantID)
+	if err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, result)
+}
+
+func (h *IncidentHandler) ResolveAlert(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.AuthErrorCode, "User ID missing")
+		return
+	}
+	if err := h.service.productionService.ResolveIncidentAlert(c.Request.Context(), id, userID, tenantID); err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
+	id, ok := incidentID(c)
+	if !ok {
+		return
+	}
+	var req dto.EscalateMajorIncidentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	userID := c.GetInt("user_id")
+	if userID == 0 {
+		common.Fail(c, common.AuthErrorCode, "User ID missing")
+		return
+	}
+	if err := h.service.productionService.EscalateToMajorIncident(c.Request.Context(), id, userID, tenantID, &req); err != nil {
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, nil)
+}
+
+func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
+	common.Fail(c, common.ServerErrorCode, "not implemented")
+}
+
+func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
+	common.Fail(c, common.ServerErrorCode, "not implemented")
+}
+
+func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
+	common.Fail(c, common.ServerErrorCode, "not implemented")
+}
+
+func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
+	common.Fail(c, common.ServerErrorCode, "not implemented")
+}
+
+func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
+	common.Fail(c, common.ServerErrorCode, "not implemented")
+}
+
 // Update handles updating an incident
-func (h *Handler) Update(c *gin.Context) {
+func (h *IncidentHandler) Update(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -342,7 +586,7 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 // Escalate handles escalating an incident
-func (h *Handler) Escalate(c *gin.Context) {
+func (h *IncidentHandler) Escalate(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -367,7 +611,7 @@ func (h *Handler) Escalate(c *gin.Context) {
 	common.Success(c, h.toDTO(updated))
 }
 
-func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
+func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 	if i == nil {
 		return nil
 	}
@@ -430,7 +674,7 @@ func (h *Handler) toDTO(i *Incident) *dto.IncidentResponse {
 // P0-2 修复：handler 不再直接访问 ent.Client，改为通过 service 层调用仓储。
 // 仓储以单次 COUNT(*) FILTER + AVG 聚合查询完成全部指标，pprof 查询次数由 7 降至 1。
 // 字段已统一为 camelCase（见 dto.IncidentStats / repository.IncidentStats）。
-func (h *Handler) GetStats(c *gin.Context) {
+func (h *IncidentHandler) GetStats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
 		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
@@ -448,7 +692,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 }
 
 // GetRootCause 获取根因分析
-func (h *Handler) GetRootCause(c *gin.Context) {
+func (h *IncidentHandler) GetRootCause(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -471,7 +715,7 @@ func (h *Handler) GetRootCause(c *gin.Context) {
 }
 
 // UpdateRootCause 更新根因分析
-func (h *Handler) UpdateRootCause(c *gin.Context) {
+func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -503,7 +747,7 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 }
 
 // GetImpactAssessment 获取影响评估
-func (h *Handler) GetImpactAssessment(c *gin.Context) {
+func (h *IncidentHandler) GetImpactAssessment(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -525,7 +769,7 @@ func (h *Handler) GetImpactAssessment(c *gin.Context) {
 }
 
 // UpdateImpactAssessment 更新影响评估
-func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
+func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -557,7 +801,7 @@ func (h *Handler) UpdateImpactAssessment(c *gin.Context) {
 }
 
 // GetClassification 获取事件分类
-func (h *Handler) GetClassification(c *gin.Context) {
+func (h *IncidentHandler) GetClassification(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -580,7 +824,7 @@ func (h *Handler) GetClassification(c *gin.Context) {
 }
 
 // UpdateClassification 更新事件分类
-func (h *Handler) UpdateClassification(c *gin.Context) {
+func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -610,7 +854,7 @@ func (h *Handler) UpdateClassification(c *gin.Context) {
 }
 
 // GetIncidentEvents 获取事件活动记录
-func (h *Handler) GetIncidentEvents(c *gin.Context) {
+func (h *IncidentHandler) GetIncidentEvents(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -651,7 +895,7 @@ func (h *Handler) GetIncidentEvents(c *gin.Context) {
 }
 
 // GetIncidentAlerts 获取事件告警
-func (h *Handler) GetIncidentAlerts(c *gin.Context) {
+func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -692,7 +936,7 @@ func (h *Handler) GetIncidentAlerts(c *gin.Context) {
 }
 
 // GetIncidentMetrics 获取事件指标
-func (h *Handler) GetIncidentMetrics(c *gin.Context) {
+func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -747,7 +991,7 @@ func (h *Handler) GetIncidentMetrics(c *gin.Context) {
 }
 
 // GetIncidentComments 获取事件评论列表
-func (h *Handler) GetIncidentComments(c *gin.Context) {
+func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -811,7 +1055,7 @@ func (h *Handler) GetIncidentComments(c *gin.Context) {
 }
 
 // CreateIncidentComment 创建事件评论
-func (h *Handler) CreateIncidentComment(c *gin.Context) {
+func (h *IncidentHandler) CreateIncidentComment(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {

@@ -295,6 +295,9 @@ func NewApplication() *Application {
 	// 初始化业务服务层
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
 	incidentService := service.NewIncidentService(client, sugar, ticketSLAService)
+	incidentRepo := incident.NewEntRepository(client)
+	incidentHandlerService := incident.NewService(incidentRepo, incidentService, sugar)
+	incidentHandler := incident.NewHandler(incidentHandlerService)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
 	// 如果 Redis 不可用，使用数据库回退方案
@@ -1041,6 +1044,7 @@ func NewApplication() *Application {
 		TicketWorkflowController:        ticketWorkflowController,
 		TicketAutomationRuleController:  ticketAutomationRuleController,
 		IncidentController:              incidentController,
+		IncidentHandler:                 incidentHandler,
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,

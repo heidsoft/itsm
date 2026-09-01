@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
+	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
@@ -65,6 +66,10 @@ func (s *Service) PauseSLA(_ context.Context, _, _ int) error {
 
 func (s *Service) ResumeSLA(_ context.Context, _, _ int) error {
 	return nil
+}
+
+func (s *Service) CreateIncidentEvent(ctx context.Context, req *dto.CreateIncidentEventRequest, tenantID int) (*dto.IncidentEventResponse, error) {
+	return s.productionService.CreateIncidentEvent(ctx, req, tenantID)
 }
 
 // SetProcessTriggerService 设置流程触发服务

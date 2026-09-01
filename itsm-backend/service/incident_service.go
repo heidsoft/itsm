@@ -2078,6 +2078,55 @@ func (s *IncidentService) GetIncidentMetrics(ctx context.Context, incidentID int
 	return responses, nil
 }
 
+// GetIncidentComments returns comment events for an incident.
+func (s *IncidentService) GetIncidentComments(ctx context.Context, incidentID, tenantID int) ([]dto.IncidentEventResponse, error) {
+	if err := s.ensureActiveIncident(ctx, incidentID, tenantID); err != nil {
+		return nil, err
+	}
+	events, err := s.client.IncidentEvent.Query().
+		Where(incidentevent.IncidentIDEQ(incidentID), incidentevent.TenantIDEQ(tenantID), incidentevent.EventTypeEQ("comment")).
+		Order(ent.Desc("created_at")).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query incident comments: %w", err)
+	}
+	responses := make([]dto.IncidentEventResponse, len(events))
+	for i, event := range events {
+		responses[i] = *s.toIncidentEventResponse(event)
+	}
+	return responses, nil
+}
+
+// DeleteIncidentComment removes a comment belonging to the specified incident and tenant.
+func (s *IncidentService) DeleteIncidentComment(ctx context.Context, incidentID, commentID, tenantID int) error {
+	deleted, err := s.client.IncidentEvent.Delete().Where(
+		incidentevent.IDEQ(commentID), incidentevent.IncidentIDEQ(incidentID),
+		incidentevent.TenantIDEQ(tenantID), incidentevent.EventTypeEQ("comment"),
+	).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete incident comment: %w", err)
+	}
+	if deleted != 1 {
+		return ErrIncidentNotFound
+	}
+	return nil
+}
+
+// ResolveIncidentAlert resolves an active alert in the current tenant.
+func (s *IncidentService) ResolveIncidentAlert(ctx context.Context, alertID, userID, tenantID int) error {
+	now := time.Now()
+	updated, err := s.client.IncidentAlert.Update().Where(
+		incidentalert.IDEQ(alertID), incidentalert.TenantIDEQ(tenantID), incidentalert.StatusNEQ("resolved"),
+	).SetStatus("resolved").SetResolvedAt(now).SetUpdatedAt(now).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to resolve incident alert: %w", err)
+	}
+	if updated != 1 {
+		return ErrIncidentNotFound
+	}
+	s.logger.Infow("Incident alert resolved", "alert_id", alertID, "tenant_id", tenantID, "user_id", userID)
+	return nil
+}
+
 // triggerWorkflowForIncident 为事件触发工作流
 func (s *IncidentService) triggerWorkflowForIncident(ctx context.Context, incidentID int, tenantID int) error {
 	// 获取事件信息
