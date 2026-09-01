@@ -86,9 +86,19 @@
     <!-- 问题解决网关 -->
     <bpmn:exclusiveGateway id="Gateway_Solved" name="问题解决?">
       <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_Notify</bpmn:outgoing>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
     </bpmn:exclusiveGateway>
+
+    <!-- 已解决 → 通知相关方 -->
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Gateway_Solved" targetRef="Activity_Notify">
+      <bpmn:conditionExpression><![CDATA[${variables['solved'] == true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <!-- 未解决 → 打回专家团队重试（最多循环次数由外部控制） -->
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Gateway_Solved" targetRef="Activity_ExpertHandle">
+      <bpmn:conditionExpression><![CDATA[${variables['solved'] != true}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
 
     <!-- 通知相关方 -->
     <bpmn:serviceTask id="Activity_Notify" name="通知相关方" implementation="##WebService">
@@ -128,9 +138,6 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_4" sourceRef="Activity_AutoEscalate" targetRef="Activity_ExpertHandle" />
     <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_ExpertHandle" targetRef="Gateway_Solved" />
-    <bpmn:sequenceFlow id="Flow_Notify" sourceRef="Gateway_Solved" targetRef="Activity_Notify">
-      <bpmn:conditionExpression><![CDATA[${variables['solved'] == true}]]></bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Notify" targetRef="Activity_Close" />
     <bpmn:sequenceFlow id="Flow_Final" sourceRef="Activity_Close" targetRef="EndEvent_1" />
   </bpmn:process>
