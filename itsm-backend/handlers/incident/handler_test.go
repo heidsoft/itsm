@@ -15,6 +15,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -230,23 +231,21 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	// Override the per-test values via X-Test-TenantID / X-Test-UserID
 	// headers in the higher-level route handlers if needed.
 	auth := func(c *gin.Context) {
-		tenantID := 0
-		userID := 0
 		if v := c.GetHeader("X-Test-TenantID"); v != "" {
-			tenantID = mustAtoi(v)
+			tenantID := mustAtoi(v)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 		}
 		if v := c.GetHeader("X-Test-UserID"); v != "" {
-			userID = mustAtoi(v)
+			userID := mustAtoi(v)
+			c.Set("user_id", userID)
 		}
-		c.Set("tenant_id", tenantID)
-		c.Set("user_id", userID)
 		c.Set("role", "agent")
 		c.Next()
 	}
 
 	api := r.Group("/api/v1", auth)
 	api.POST("/incidents", h.Create)
-	api.GET("/incidents", h.List)
+	api.GET("/incidents", h.Lists)
 	api.GET("/incidents/:id", h.Get)
 	api.PUT("/incidents/:id", h.Update)
 	api.POST("/incidents/:id/escalate", h.Escalate)
@@ -324,7 +323,7 @@ func TestHandler_Create_TableDriven(t *testing.T) {
 				Title:       "Server CPU high",
 				Description: "CPU > 90%",
 			},
-			tenantHdr: "0",
+			tenantHdr: "",
 			userHdr:   "7",
 			want:      want{httpStatus: 401, bodyCode: 2001},
 		},

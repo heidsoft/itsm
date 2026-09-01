@@ -614,7 +614,10 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	updates := &Incident{}
 	if req.Title != nil {
