@@ -50,14 +50,15 @@ import (
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
-	probleminvestigation "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/problem"
+	probleminvestigation "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	"itsm-backend/handlers/ticket"
+	ticketworkflow "itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
@@ -642,10 +643,10 @@ func NewApplication() *Application {
 	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
 	ticketAssignmentSmartController := controller.NewTicketAssignmentSmartController(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar)
 
-	// Ticket Workflow Service & Controller
+	// Ticket Workflow Service & Handler（2026-09-02 迁移至 handlers/ticket_workflow）
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowService.SetConnectorManager(connectorManager)
-	ticketWorkflowController := controller.NewTicketWorkflowController(ticketWorkflowService, database.GetRawDB(), sugar)
+	ticketWorkflowHandler := ticketworkflow.NewHandler(ticketWorkflowService, database.GetRawDB(), sugar)
 
 	// Ticket Automation Rule Controller (service 已于 131 行预创建并注入 V2)
 	ticketAutomationRuleController := controller.NewTicketAutomationRuleController(ticketAutomationRuleService, sugar)
@@ -1042,7 +1043,7 @@ func NewApplication() *Application {
 		TicketRatingController:          ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
 		TicketViewController:            ticketViewController,
-		TicketWorkflowController:        ticketWorkflowController,
+		TicketWorkflowHandler:           ticketWorkflowHandler,
 		TicketAutomationRuleController:  ticketAutomationRuleController,
 		IncidentHandler:                 incidentHandler,
 		ApprovalHandler:                 approvalHandler,
@@ -1095,21 +1096,21 @@ func NewApplication() *Application {
 		CloudController:        cloudController,
 
 		// Domain Handlers
-		ServiceCatalogHandler:          scHandler,
-		ServiceRequestHandler:          srHandler,
-		ProblemHandler:                 problemHandler,
-		ProblemInvestigationHandler:     problemInvestigationHandler,
-		ChangeHandler:                  changeHandler,
-		CABHandler:                     cabHandler,
-		KnowledgeHandler:               knowledgeHandler,
-		SLAHandler:                     slaHandler,
-		SLATemplateController:          slaTemplateController,
-		VectorStoreController:          vectorStoreController,
-		AIHandler:                      aiHandler, // Added AI domain handler
-		EmailIntakeHandler:             emailIntakeHandler,
-		CommonHandler:                  commonHandler,
-		AuthController:                 authController,
-		RoleHandler:                    roleHandler,
+		ServiceCatalogHandler:       scHandler,
+		ServiceRequestHandler:       srHandler,
+		ProblemHandler:              problemHandler,
+		ProblemInvestigationHandler: problemInvestigationHandler,
+		ChangeHandler:               changeHandler,
+		CABHandler:                  cabHandler,
+		KnowledgeHandler:            knowledgeHandler,
+		SLAHandler:                  slaHandler,
+		SLATemplateController:       slaTemplateController,
+		VectorStoreController:       vectorStoreController,
+		AIHandler:                   aiHandler, // Added AI domain handler
+		EmailIntakeHandler:          emailIntakeHandler,
+		CommonHandler:               commonHandler,
+		AuthController:              authController,
+		RoleHandler:                 roleHandler,
 
 		// Sprint C — Skill Registry v1
 		SkillHandler: skillHandler,

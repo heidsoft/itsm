@@ -29,14 +29,15 @@ import (
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/operations"
-	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/problem"
+	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	ticketHandler "itsm-backend/handlers/ticket"
+	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -216,10 +217,10 @@ type RouterConfig struct {
 	TicketRatingController          *controller.TicketRatingController
 	TicketAssignmentSmartController *controller.TicketAssignmentSmartController
 	TicketViewController            *controller.TicketViewController
-	TicketWorkflowController        *controller.TicketWorkflowController
+	TicketWorkflowHandler           *ticketWorkflowHandler.Handler
 	TicketAutomationRuleController  *controller.TicketAutomationRuleController
 	IncidentHandler                 *incidentHandler.IncidentHandler
-	ApprovalHandler                *approvalHandler.Handler
+	ApprovalHandler                 *approvalHandler.Handler
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
 	BPMNDashboardController         *controller.BPMNDashboardController
@@ -591,8 +592,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			tickets.GET("/overdue", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetOverdueTickets)
 			tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketHandler.ExportTickets)
 			tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.BatchDeleteTickets)
-			if config.TicketWorkflowController != nil {
-				tickets.GET("/cc/my", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListMyCCRecords)
+			if config.TicketWorkflowHandler != nil {
+				tickets.GET("/cc/my", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.ListMyCCRecords)
 			}
 
 			// 工单模板
@@ -768,22 +769,22 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// 工单流转工作流
-			if config.TicketWorkflowController != nil {
-				tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.AcceptTicket)
-				tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.RejectTicket)
-				tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.WithdrawTicket)
-				tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ForwardTicket)
-				tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.CCTicket)
-				tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ApproveTicket)
-				tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ResolveTicket)
-				tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.CloseTicket)
-				tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowController.ReopenTicket)
-				tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.ListTicketCCRecords)
-				tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowState)
+			if config.TicketWorkflowHandler != nil {
+				tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.AcceptTicket)
+				tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.RejectTicket)
+				tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.WithdrawTicket)
+				tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ForwardTicket)
+				tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.CCTicket)
+				tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ApproveTicket)
+				tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ResolveTicket)
+				tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.CloseTicket)
+				tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ReopenTicket)
+				tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.ListTicketCCRecords)
+				tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowState)
 				// 工单详情体验增强：V2 聚合 BPMN 真实节点状态（当前/下一/历史）。
-				tickets.GET("/:id/workflow/state-v2", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowStateV2)
-				tickets.GET("/:id/workflow-history", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
-				tickets.GET("/:id/workflow_records", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowController.GetTicketWorkflowHistory)
+				tickets.GET("/:id/workflow/state-v2", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowStateV2)
+				tickets.GET("/:id/workflow-history", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
+				tickets.GET("/:id/workflow_records", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
 			}
 
 			// 工单自动化规则
@@ -1104,8 +1105,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
 				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
 				// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
-			if config.ProblemInvestigationHandler != nil {
-				problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
+				if config.ProblemInvestigationHandler != nil {
+					problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
 				}
 			}
 		}
