@@ -17,7 +17,6 @@ import (
 	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
-	ticketHandler "itsm-backend/handlers/ticket"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
@@ -35,6 +34,7 @@ import (
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
+	ticketHandler "itsm-backend/handlers/ticket"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -207,7 +207,7 @@ type RouterConfig struct {
 	// Controllers
 	ProblemInvestigationController  *controller.ProblemInvestigationController
 	TicketController                *controller.TicketController
-	TicketHandler                  *ticketHandler.Handler
+	TicketHandler                   *ticketHandler.Handler
 	TicketDependencyController      *controller.TicketDependencyController
 	TicketCommentController         *controller.TicketCommentController
 	TicketAttachmentController      *controller.TicketAttachmentController
@@ -1026,8 +1026,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResolveAlert)
 			}
 		}
-		if config.IncidentController != nil && config.CMDBController != nil {
-			tenant.GET("/incidents/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBController.ListCIs)
+		if config.IncidentController != nil && config.CMDBHandler != nil {
+			tenant.GET("/incidents/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCIs)
 		}
 
 		// ==================== Service Catalog & Requests (DDD) ====================
@@ -1197,8 +1197,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 		}
 		// ==================== CMDB ====================
-		if config.CMDBController != nil {
-			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config.CMDBController, config)
+		if config.CMDBHandler != nil {
+			SetupCMDBRoutes(tenant.(*gin.RouterGroup), config)
 		}
 
 		// ==================== Asset Licenses ====================

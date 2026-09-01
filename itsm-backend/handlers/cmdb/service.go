@@ -8,13 +8,16 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	"itsm-backend/controller"
 	"itsm-backend/ent"
 
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Service struct {
 	repo             Repository
+	productionSvc    *controller.CMDBController
 	logger           *zap.SugaredLogger
 	discoveryRuntime DiscoveryRuntime
 }
@@ -29,17 +32,139 @@ type DiscoveryRuntime struct {
 	WorkerReady             bool
 }
 
-func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
-	return NewServiceWithDiscoveryRuntime(repo, logger, DiscoveryRuntime{})
+func NewService(repo Repository, productionSvc *controller.CMDBController, logger *zap.SugaredLogger) *Service {
+	return NewServiceWithDiscoveryRuntime(repo, productionSvc, logger, DiscoveryRuntime{})
 }
 
-func NewServiceWithDiscoveryRuntime(repo Repository, logger *zap.SugaredLogger, runtime DiscoveryRuntime) *Service {
+func NewServiceWithDiscoveryRuntime(repo Repository, productionSvc *controller.CMDBController, logger *zap.SugaredLogger, runtime DiscoveryRuntime) *Service {
 	return &Service{
 		repo:             repo,
+		productionSvc:    productionSvc,
 		logger:           logger,
 		discoveryRuntime: runtime,
 	}
 }
+
+// Legacy CMDB use cases remain owned by the production CMDB service aggregate.
+// These methods are the migration bridge used by Handler while those use cases
+// are progressively moved into the domain package.
+func (s *Service) SearchCI(c *gin.Context) { s.productionSvc.SearchCI(c) }
+
+func (s *Service) ListCIs(c *gin.Context) { s.productionSvc.ListCIs(c) }
+
+func (s *Service) GetCI(c *gin.Context) { s.productionSvc.GetCI(c) }
+
+func (s *Service) CreateCI(c *gin.Context) { s.productionSvc.CreateCI(c) }
+
+func (s *Service) UpdateCI(c *gin.Context) { s.productionSvc.UpdateCI(c) }
+
+func (s *Service) DeleteCI(c *gin.Context) { s.productionSvc.DeleteCI(c) }
+
+func (s *Service) GetCIStats(c *gin.Context) { s.productionSvc.GetCIStats(c) }
+
+func (s *Service) ListCITypes(c *gin.Context) { s.productionSvc.ListCITypes(c) }
+
+func (s *Service) GetCIType(c *gin.Context) { s.productionSvc.GetCIType(c) }
+
+func (s *Service) CreateCIType(c *gin.Context) { s.productionSvc.CreateCIType(c) }
+
+func (s *Service) UpdateCIType(c *gin.Context) { s.productionSvc.UpdateCIType(c) }
+
+func (s *Service) DeleteCIType(c *gin.Context) { s.productionSvc.DeleteCIType(c) }
+
+func (s *Service) ListCIAttributeDefinitions(c *gin.Context) {
+	s.productionSvc.ListCIAttributeDefinitions(c)
+}
+
+func (s *Service) GetCIAttributeDefinition(c *gin.Context) {
+	s.productionSvc.GetCIAttributeDefinition(c)
+}
+
+func (s *Service) CreateCIAttributeDefinition(c *gin.Context) {
+	s.productionSvc.CreateCIAttributeDefinition(c)
+}
+
+func (s *Service) UpdateCIAttributeDefinition(c *gin.Context) {
+	s.productionSvc.UpdateCIAttributeDefinition(c)
+}
+
+func (s *Service) DeleteCIAttributeDefinition(c *gin.Context) {
+	s.productionSvc.DeleteCIAttributeDefinition(c)
+}
+
+func (s *Service) ListCITags(c *gin.Context) { s.productionSvc.ListCITags(c) }
+
+func (s *Service) GetCITag(c *gin.Context) { s.productionSvc.GetCITag(c) }
+
+func (s *Service) CreateCITag(c *gin.Context) { s.productionSvc.CreateCITag(c) }
+
+func (s *Service) UpdateCITag(c *gin.Context) { s.productionSvc.UpdateCITag(c) }
+
+func (s *Service) DeleteCITag(c *gin.Context) { s.productionSvc.DeleteCITag(c) }
+
+func (s *Service) ListSavedViews(c *gin.Context) { s.productionSvc.ListSavedViews(c) }
+
+func (s *Service) GetSavedView(c *gin.Context) { s.productionSvc.GetSavedView(c) }
+
+func (s *Service) CreateSavedView(c *gin.Context) { s.productionSvc.CreateSavedView(c) }
+
+func (s *Service) UpdateSavedView(c *gin.Context) { s.productionSvc.UpdateSavedView(c) }
+
+func (s *Service) DeleteSavedView(c *gin.Context) { s.productionSvc.DeleteSavedView(c) }
+
+func (s *Service) ListImportTasks(c *gin.Context) { s.productionSvc.ListImportTasks(c) }
+
+func (s *Service) GetImportTaskStatus(c *gin.Context) { s.productionSvc.GetImportTaskStatus(c) }
+
+func (s *Service) CreateImportTask(c *gin.Context) { s.productionSvc.CreateImportTask(c) }
+
+func (s *Service) ListExportTasks(c *gin.Context) { s.productionSvc.ListExportTasks(c) }
+
+func (s *Service) GetExportTaskStatus(c *gin.Context) { s.productionSvc.GetExportTaskStatus(c) }
+
+func (s *Service) CreateExportTask(c *gin.Context) { s.productionSvc.CreateExportTask(c) }
+
+func (s *Service) ListCIRelationships(c *gin.Context) { s.productionSvc.ListCIRelationships(c) }
+
+func (s *Service) GetCIRelationship(c *gin.Context) { s.productionSvc.GetCIRelationship(c) }
+
+func (s *Service) CreateCIRelationship(c *gin.Context) { s.productionSvc.CreateCIRelationship(c) }
+
+func (s *Service) UpdateCIRelationship(c *gin.Context) { s.productionSvc.UpdateCIRelationship(c) }
+
+func (s *Service) DeleteCIRelationship(c *gin.Context) { s.productionSvc.DeleteCIRelationship(c) }
+
+func (s *Service) ListCIRelationshipsByCIID(c *gin.Context) {
+	s.productionSvc.ListCIRelationshipsByCIID(c)
+}
+
+func (s *Service) GetCITopology(c *gin.Context) { s.productionSvc.GetCITopology(c) }
+
+func (s *Service) GetCIImpactAnalysis(c *gin.Context) { s.productionSvc.GetCIImpactAnalysis(c) }
+
+func (s *Service) GetCIHistory(c *gin.Context) { s.productionSvc.GetCIHistory(c) }
+
+func (s *Service) RevertCIVersion(c *gin.Context) { s.productionSvc.RevertCIVersion(c) }
+
+func (s *Service) GetLifecycleHistory(c *gin.Context) { s.productionSvc.GetLifecycleHistory(c) }
+
+func (s *Service) UpdateLifecycleStatus(c *gin.Context) { s.productionSvc.UpdateLifecycleStatus(c) }
+
+func (s *Service) BatchUpdateLifecycleStatus(c *gin.Context) {
+	s.productionSvc.BatchUpdateLifecycleStatus(c)
+}
+
+func (s *Service) AddTagsToCI(c *gin.Context) { s.productionSvc.AddTagsToCI(c) }
+
+func (s *Service) RemoveTagsFromCI(c *gin.Context) { s.productionSvc.RemoveTagsFromCI(c) }
+
+func (s *Service) BatchCreateCI(c *gin.Context) { s.productionSvc.BatchCreateCI(c) }
+
+func (s *Service) BatchUpdateCI(c *gin.Context) { s.productionSvc.BatchUpdateCI(c) }
+
+func (s *Service) BatchDeleteCI(c *gin.Context) { s.productionSvc.BatchDeleteCI(c) }
+
+func (s *Service) ListRelationshipTypes(c *gin.Context) { s.productionSvc.ListRelationshipTypes(c) }
 
 type CapabilityStatus struct {
 	Key                 string

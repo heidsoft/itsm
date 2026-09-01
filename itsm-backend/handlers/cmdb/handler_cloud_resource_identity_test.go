@@ -33,7 +33,7 @@ func TestCreateCloudResourceRejectsCrossTenantAccountAtHandlerBoundary(t *testin
 		c.Set("tenant_id", 1)
 		c.Next()
 	})
-	router.POST("/api/v1/cmdb/cloud-resources", NewHandler(NewService(repo, zap.NewNop().Sugar())).CreateCloudResource)
+	router.POST("/api/v1/cmdb/cloud-resources", NewHandler(NewService(repo, nil, zap.NewNop().Sugar())).CreateCloudResource)
 
 	body := `{"cloudAccountId":7,"serviceId":11,"resourceId":"i-cross-tenant"}`
 	recorder := httptest.NewRecorder()

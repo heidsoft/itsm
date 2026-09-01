@@ -198,7 +198,7 @@ func (m *mockRepository) ListDiscoveryResults(ctx context.Context, tenantID int,
 // newTestService 构造一个挂载了 mock 仓库的 Service。
 // 使用 zap.NewNop() 避免日志输出，避免污染测试输出。
 func newTestService(repo Repository) *Service {
-	return NewService(repo, zap.NewNop().Sugar())
+	return NewService(repo, nil, zap.NewNop().Sugar())
 }
 
 func TestService_CreateCloudService(t *testing.T) {

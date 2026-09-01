@@ -52,7 +52,7 @@ func main() {
 	// 初始化 DDD CMDB 服务
 	sugar.Infow("Initializing DDD CMDB service")
 	cmdbRepo := cmdb.NewEntRepository(client)
-	cmdbDDDService := cmdb.NewService(cmdbRepo, sugar)
+	cmdbDDDService := cmdb.NewService(cmdbRepo, nil, sugar)
 
 	// 初始化控制器
 	cmdbController := controller.NewCMDBController(

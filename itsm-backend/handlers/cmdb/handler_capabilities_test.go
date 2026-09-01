@@ -26,7 +26,7 @@ func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testi
 		require.Equal(t, "aliyun", provider)
 		return []*CloudAccount{{TenantID: tenantID, Provider: provider, IsActive: true, CredentialRef: "secret://tenant-42/aliyun-prod"}}, nil
 	}}
-	svc := NewServiceWithDiscoveryRuntime(repo, zap.NewNop().Sugar(), DiscoveryRuntime{
+	svc := NewServiceWithDiscoveryRuntime(repo, nil, zap.NewNop().Sugar(), DiscoveryRuntime{
 		Adapters: capabilityAdapterInspector{ready: true},
 		// The worker and tenant secret resolver intentionally remain unavailable.
 		CredentialResolverReady: false,
@@ -64,7 +64,7 @@ func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testi
 
 func TestGetCapabilitiesFailsClosedWithoutTenantContext(t *testing.T) {
 	router := gin.New()
-	router.GET("/api/v1/cmdb/capabilities", NewHandler(NewService(&mockRepository{}, zap.NewNop().Sugar())).GetCapabilities)
+	router.GET("/api/v1/cmdb/capabilities", NewHandler(NewService(&mockRepository{}, nil, zap.NewNop().Sugar())).GetCapabilities)
 
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/cmdb/capabilities", nil))

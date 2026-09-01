@@ -43,7 +43,6 @@ import (
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
-	"itsm-backend/handlers/ticket"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
@@ -56,6 +55,7 @@ import (
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
+	"itsm-backend/handlers/ticket"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
@@ -764,7 +764,7 @@ func NewApplication() *Application {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cloudAdapterRegistry := cloudruntime.NewRegistry()
 	cloudAdapterRegistry.Register(cloudaliyun.NewAliyunECSAdapter(sugar))
-	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, sugar, cmdb.DiscoveryRuntime{
+	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, cmdbController, sugar, cmdb.DiscoveryRuntime{
 		Adapters: cloudAdapterRegistry,
 		// secret:// resolution and the durable worker land in later phases.
 		CredentialResolverReady: false,
@@ -1037,7 +1037,7 @@ func NewApplication() *Application {
 		RedisRateLimiter:                redisRateLimiter,
 		AppStartTime:                    time.Now(),
 		TicketController:                ticketController,
-		TicketHandler:                  ticketHandler,
+		TicketHandler:                   ticketHandler,
 		TicketDependencyController:      ticketDependencyController,
 		TicketCommentController:         ticketCommentController,
 		TicketAttachmentController:      ticketAttachmentController,

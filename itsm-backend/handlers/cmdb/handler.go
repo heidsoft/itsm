@@ -20,6 +20,112 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+// The methods below expose the production CMDB use cases through the domain
+// handler during the controller-to-handler route migration.
+func (h *Handler) SearchCI(c *gin.Context) { h.svc.SearchCI(c) }
+
+func (h *Handler) ListCIs(c *gin.Context) { h.svc.ListCIs(c) }
+
+func (h *Handler) GetCI(c *gin.Context) { h.svc.GetCI(c) }
+
+func (h *Handler) CreateCI(c *gin.Context) { h.svc.CreateCI(c) }
+
+func (h *Handler) UpdateCI(c *gin.Context) { h.svc.UpdateCI(c) }
+
+func (h *Handler) DeleteCI(c *gin.Context) { h.svc.DeleteCI(c) }
+
+func (h *Handler) GetCIStats(c *gin.Context) { h.svc.GetCIStats(c) }
+
+func (h *Handler) ListCITypes(c *gin.Context) { h.svc.ListCITypes(c) }
+
+func (h *Handler) GetCIType(c *gin.Context) { h.svc.GetCIType(c) }
+
+func (h *Handler) CreateCIType(c *gin.Context) { h.svc.CreateCIType(c) }
+
+func (h *Handler) UpdateCIType(c *gin.Context) { h.svc.UpdateCIType(c) }
+
+func (h *Handler) DeleteCIType(c *gin.Context) { h.svc.DeleteCIType(c) }
+
+func (h *Handler) ListCIAttributeDefinitions(c *gin.Context) { h.svc.ListCIAttributeDefinitions(c) }
+
+func (h *Handler) GetCIAttributeDefinition(c *gin.Context) { h.svc.GetCIAttributeDefinition(c) }
+
+func (h *Handler) CreateCIAttributeDefinition(c *gin.Context) { h.svc.CreateCIAttributeDefinition(c) }
+
+func (h *Handler) UpdateCIAttributeDefinition(c *gin.Context) { h.svc.UpdateCIAttributeDefinition(c) }
+
+func (h *Handler) DeleteCIAttributeDefinition(c *gin.Context) { h.svc.DeleteCIAttributeDefinition(c) }
+
+func (h *Handler) ListCITags(c *gin.Context) { h.svc.ListCITags(c) }
+
+func (h *Handler) GetCITag(c *gin.Context) { h.svc.GetCITag(c) }
+
+func (h *Handler) CreateCITag(c *gin.Context) { h.svc.CreateCITag(c) }
+
+func (h *Handler) UpdateCITag(c *gin.Context) { h.svc.UpdateCITag(c) }
+
+func (h *Handler) DeleteCITag(c *gin.Context) { h.svc.DeleteCITag(c) }
+
+func (h *Handler) ListSavedViews(c *gin.Context) { h.svc.ListSavedViews(c) }
+
+func (h *Handler) GetSavedView(c *gin.Context) { h.svc.GetSavedView(c) }
+
+func (h *Handler) CreateSavedView(c *gin.Context) { h.svc.CreateSavedView(c) }
+
+func (h *Handler) UpdateSavedView(c *gin.Context) { h.svc.UpdateSavedView(c) }
+
+func (h *Handler) DeleteSavedView(c *gin.Context) { h.svc.DeleteSavedView(c) }
+
+func (h *Handler) ListImportTasks(c *gin.Context) { h.svc.ListImportTasks(c) }
+
+func (h *Handler) GetImportTaskStatus(c *gin.Context) { h.svc.GetImportTaskStatus(c) }
+
+func (h *Handler) CreateImportTask(c *gin.Context) { h.svc.CreateImportTask(c) }
+
+func (h *Handler) ListExportTasks(c *gin.Context) { h.svc.ListExportTasks(c) }
+
+func (h *Handler) GetExportTaskStatus(c *gin.Context) { h.svc.GetExportTaskStatus(c) }
+
+func (h *Handler) CreateExportTask(c *gin.Context) { h.svc.CreateExportTask(c) }
+
+func (h *Handler) ListCIRelationships(c *gin.Context) { h.svc.ListCIRelationships(c) }
+
+func (h *Handler) GetCIRelationship(c *gin.Context) { h.svc.GetCIRelationship(c) }
+
+func (h *Handler) CreateCIRelationship(c *gin.Context) { h.svc.CreateCIRelationship(c) }
+
+func (h *Handler) UpdateCIRelationship(c *gin.Context) { h.svc.UpdateCIRelationship(c) }
+
+func (h *Handler) DeleteCIRelationship(c *gin.Context) { h.svc.DeleteCIRelationship(c) }
+
+func (h *Handler) ListCIRelationshipsByCIID(c *gin.Context) { h.svc.ListCIRelationshipsByCIID(c) }
+
+func (h *Handler) GetCITopology(c *gin.Context) { h.svc.GetCITopology(c) }
+
+func (h *Handler) GetCIImpactAnalysis(c *gin.Context) { h.svc.GetCIImpactAnalysis(c) }
+
+func (h *Handler) GetCIHistory(c *gin.Context) { h.svc.GetCIHistory(c) }
+
+func (h *Handler) RevertCIVersion(c *gin.Context) { h.svc.RevertCIVersion(c) }
+
+func (h *Handler) GetLifecycleHistory(c *gin.Context) { h.svc.GetLifecycleHistory(c) }
+
+func (h *Handler) UpdateLifecycleStatus(c *gin.Context) { h.svc.UpdateLifecycleStatus(c) }
+
+func (h *Handler) BatchUpdateLifecycleStatus(c *gin.Context) { h.svc.BatchUpdateLifecycleStatus(c) }
+
+func (h *Handler) AddTagsToCI(c *gin.Context) { h.svc.AddTagsToCI(c) }
+
+func (h *Handler) RemoveTagsFromCI(c *gin.Context) { h.svc.RemoveTagsFromCI(c) }
+
+func (h *Handler) BatchCreateCI(c *gin.Context) { h.svc.BatchCreateCI(c) }
+
+func (h *Handler) BatchUpdateCI(c *gin.Context) { h.svc.BatchUpdateCI(c) }
+
+func (h *Handler) BatchDeleteCI(c *gin.Context) { h.svc.BatchDeleteCI(c) }
+
+func (h *Handler) ListRelationshipTypes(c *gin.Context) { h.svc.ListRelationshipTypes(c) }
+
 func failCMDBError(c *gin.Context, err error, publicMessage string) {
 	var appErr *common.AppError
 	if errors.As(err, &appErr) {
