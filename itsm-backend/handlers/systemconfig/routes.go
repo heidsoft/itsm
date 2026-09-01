@@ -1,4 +1,4 @@
-package controller
+package systemconfig
 
 import (
 	"strconv"
@@ -6,31 +6,26 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
-// SystemConfigController 系统配置控制器
-type SystemConfigController struct {
-	configService *service.SystemConfigService
-	logger        *zap.SugaredLogger
-}
-
-// NewSystemConfigController 创建系统配置控制器
-func NewSystemConfigController(configService *service.SystemConfigService, logger *zap.SugaredLogger) *SystemConfigController {
-	return &SystemConfigController{
-		configService: configService,
-		logger:        logger,
+// tenantID 提取租户上下文；沿用旧 controller 的 middleware.GetTenantID + 401 语义
+// （UnauthorizedCode + "未授权访问"，与 handlerctx.RequireTenantID 的 2001 等价，
+// 但为保持行为契约原样保留旧实现）。
+func tenantID(c *gin.Context) (int, bool) {
+	tid, err := middleware.GetTenantID(c)
+	if err != nil || tid == 0 {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return 0, false
 	}
+	return tid, true
 }
 
 // ListConfigs 获取配置列表
-func (sc *SystemConfigController) ListConfigs(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) ListConfigs(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
@@ -38,13 +33,12 @@ func (sc *SystemConfigController) ListConfigs(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 	category := c.Query("category")
 
-	configs, total, err := sc.configService.ListSystemConfigs(c.Request.Context(), tenantID, category, page, pageSize)
+	configs, total, err := h.configService.ListSystemConfigs(c.Request.Context(), tid, category, page, pageSize)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
-	// 转换响应
 	configResponses := make([]dto.SystemConfigResponse, len(configs))
 	for i, cfg := range configs {
 		configResponses[i] = dto.SystemConfigResponse{
@@ -70,10 +64,9 @@ func (sc *SystemConfigController) ListConfigs(c *gin.Context) {
 }
 
 // GetConfig 获取单个配置
-func (sc *SystemConfigController) GetConfig(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) GetConfig(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
@@ -83,7 +76,7 @@ func (sc *SystemConfigController) GetConfig(c *gin.Context) {
 		return
 	}
 
-	config, err := sc.configService.GetSystemConfig(c.Request.Context(), id, tenantID)
+	config, err := h.configService.GetSystemConfig(c.Request.Context(), id, tid)
 	if err != nil {
 		common.NotFoundWithErr(c, err, "resource not found")
 		return
@@ -104,16 +97,15 @@ func (sc *SystemConfigController) GetConfig(c *gin.Context) {
 }
 
 // GetConfigByKey 根据key获取配置
-func (sc *SystemConfigController) GetConfigByKey(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) GetConfigByKey(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
 	key := c.Param("key")
 
-	config, err := sc.configService.GetSystemConfigByKey(c.Request.Context(), key, tenantID)
+	config, err := h.configService.GetSystemConfigByKey(c.Request.Context(), key, tid)
 	if err != nil {
 		common.NotFoundWithErr(c, err, "resource not found")
 		return
@@ -134,10 +126,9 @@ func (sc *SystemConfigController) GetConfigByKey(c *gin.Context) {
 }
 
 // UpdateConfig 更新配置
-func (sc *SystemConfigController) UpdateConfig(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) UpdateConfig(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
@@ -153,7 +144,7 @@ func (sc *SystemConfigController) UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	config, err := sc.configService.UpdateSystemConfig(c.Request.Context(), id, &req, tenantID)
+	config, err := h.configService.UpdateSystemConfig(c.Request.Context(), id, &req, tid)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -174,10 +165,9 @@ func (sc *SystemConfigController) UpdateConfig(c *gin.Context) {
 }
 
 // BatchUpdateConfigs 批量更新配置
-func (sc *SystemConfigController) BatchUpdateConfigs(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) BatchUpdateConfigs(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
@@ -187,13 +177,12 @@ func (sc *SystemConfigController) BatchUpdateConfigs(c *gin.Context) {
 		return
 	}
 
-	configs, err := sc.configService.BatchUpdateSystemConfigs(c.Request.Context(), reqs, tenantID)
+	configs, err := h.configService.BatchUpdateSystemConfigs(c.Request.Context(), reqs, tid)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
-	// 转换响应
 	configResponses := make([]dto.SystemConfigResponse, len(configs))
 	for i, cfg := range configs {
 		configResponses[i] = dto.SystemConfigResponse{
@@ -214,14 +203,13 @@ func (sc *SystemConfigController) BatchUpdateConfigs(c *gin.Context) {
 }
 
 // InitDefaultConfigs 初始化默认配置
-func (sc *SystemConfigController) InitDefaultConfigs(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil || tenantID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+func (h *Handler) InitDefaultConfigs(c *gin.Context) {
+	tid, ok := tenantID(c)
+	if !ok {
 		return
 	}
 
-	err = sc.configService.InitDefaultConfigs(c.Request.Context(), tenantID)
+	err := h.configService.InitDefaultConfigs(c.Request.Context(), tid)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

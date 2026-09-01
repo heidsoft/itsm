@@ -57,6 +57,7 @@ import (
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
+	systemconfig "itsm-backend/handlers/systemconfig"
 	"itsm-backend/handlers/ticket"
 	ticketworkflow "itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/internal/commandbus"
@@ -932,9 +933,9 @@ func NewApplication() *Application {
 	tenantService := service.NewTenantService(client, sugar)
 	tenantController := controller.NewTenantController(tenantService, sugar)
 
-	// System Config Controller
+	// System Config Handler（2026-09-02 迁移至 handlers/systemconfig）
 	systemConfigService := service.NewSystemConfigService(client, sugar)
-	systemConfigController := controller.NewSystemConfigController(systemConfigService, sugar)
+	systemConfigHandler := systemconfig.NewHandler(systemConfigService, sugar)
 
 	// Vendor Controller
 	vendorService := service.NewVendorService(client, sugar)
@@ -1075,7 +1076,7 @@ func NewApplication() *Application {
 		AuditLogController:         auditLogController,
 
 		MSPController:           mspController,
-		SystemConfigController:  systemConfigController,
+		SystemConfigHandler:     systemConfigHandler,
 		ApprovalChainController: approvalChainController,
 
 		// Notification Preference Controller
