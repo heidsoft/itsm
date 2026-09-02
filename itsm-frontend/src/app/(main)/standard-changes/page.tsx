@@ -179,7 +179,7 @@ export default function StandardChangesPage() {
         message.success(t('common.saveSuccess') || '更新成功');
       } else {
         await StandardChangeApi.createTemplate(values);
-        message.success(t('common.createSuccess') || '创建成功');
+        message.success(t('common.submitSuccess') || '创建成功');
       }
       setModalVisible(false);
       fetchTemplates();
@@ -188,8 +188,8 @@ export default function StandardChangesPage() {
       console.error('Failed to submit:', error);
       message.error(
         editingTemplate
-          ? t('common.updateFailed') || '更新失败'
-          : t('common.createFailed') || '创建失败'
+          ? t('common.saveFailed') || '更新失败'
+          : t('common.submitFailed') || '创建失败'
       );
     }
   };

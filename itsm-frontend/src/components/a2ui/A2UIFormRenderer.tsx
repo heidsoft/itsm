@@ -5,7 +5,7 @@ import { Form, Input, Select, Button, Card, Space, Spin, App } from 'antd';
 import { Send, Bot, CheckCircle } from 'lucide-react';
 import type { A2UIComponent, A2UIDataModel, ValueDef, OptionItem, ActionDef, TextProps } from '@/types/a2ui';
 import { getValueByPath, setValueByPath } from '@/types/a2ui';
-import { isAuthenticated } from '@/lib/auth/token-storage';
+import { useAuthStore } from '@/lib/store/auth-store';
 import { A2UIApi } from '@/lib/api/a2ui-api';
 
 // 解析值定义（字面量或路径）
@@ -291,9 +291,9 @@ export function A2UIFormRenderer() {
     });
   }, []);
 
-  // 检查是否已登录
+  // 检查是否已登录：使用 zustand 的 isAuthenticated（AuthGuard 已通过 /api/v1/auth/me 探活验证）
   const checkAuth = (): boolean => {
-    if (!isAuthenticated()) {
+    if (!useAuthStore.getState().isAuthenticated) {
       message.error('请先登录后再使用此功能');
       return false;
     }

@@ -273,7 +273,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         const items: MenuProps['items'] = [
           {
             key: 'delete',
-            label: t('incidents.delete') || '删除',
+            label: t('common.delete') || '删除',
             icon: <Trash2 size={14} />,
             danger: true,
             onClick: handleDelete,

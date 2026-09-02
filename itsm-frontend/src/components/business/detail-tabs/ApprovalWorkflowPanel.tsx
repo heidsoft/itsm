@@ -387,7 +387,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
               {bpmnState.currentAssignees && bpmnState.currentAssignees.length > 0 && (
                 <Space size={4} className="mt-2" wrap>
                   <Text type="secondary" className="text-xs">
-                    {t('detailTabs.bpmnAssignees') || '处理人'}
+                    {t('detailTabs.approverLabel') || '处理人'}
                   </Text>
                   {bpmnState.currentAssignees.map((u) => (
                     <Tooltip key={u.id} title={u.fullName || u.username}>
@@ -402,7 +402,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
             {bpmnState.nextActivities && bpmnState.nextActivities.length > 0 && (
               <div>
                 <Text type="secondary" className="text-xs">
-                  {t('detailTabs.bpmnNextNode') || '下一步'}
+                  {t('common.next') || '下一步'}
                 </Text>
                 <Space orientation="vertical" size={4} className="mt-1 w-full">
                   {bpmnState.nextActivities.map((nx: NextActivityInfo) => (
@@ -437,7 +437,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           message={
             <Text>
               <Tag color="success" className="mr-2">
-                {t('detailTabs.bpmnStatusCompleted') || '流程已完成'}
+                {t('detailTabs.approvalStatusApproved') || '流程已完成'}
               </Tag>
               {bpmnState.processDefinitionName || bpmnState.processDefinitionKey}
             </Text>
@@ -460,7 +460,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           type="error"
           showIcon
           icon={<CircleAlert size={16} />}
-          message={t('detailTabs.bpmnStatusTerminated') || '流程已终止'}
+          message={t('detailTabs.approvalStatusRejected') || '流程已终止'}
         />
       )}
 
@@ -469,7 +469,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           type="info"
           showIcon
           message={
-            t('detailTabs.bpmnNotStartedHint') ||
+            t('detailTabs.workflowNotMatched') ||
             '该工单未绑定 BPMN 流程，使用简化审批模式。'
           }
           className="text-xs"

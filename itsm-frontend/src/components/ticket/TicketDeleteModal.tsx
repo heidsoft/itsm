@@ -39,7 +39,7 @@ export function TicketDeleteModal({
 
   return (
     <Modal
-      title={t('tickets.confirmDeleteTitle')}
+      title={t('tickets.confirmDelete')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}

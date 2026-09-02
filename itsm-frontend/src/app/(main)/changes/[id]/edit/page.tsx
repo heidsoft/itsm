@@ -160,11 +160,11 @@ const EditChangePage: React.FC = () => {
       };
 
       await ChangeApi.updateChange(Number(id), payload);
-      message.success(t('changes.updateSuccess') || '变更更新成功');
+      message.success(t('common.operationSuccess') || '变更更新成功');
       router.push(`/changes/${id}`);
     } catch (err) {
       console.error('更新变更失败:', err);
-      message.error(t('changes.updateFailed') || '变更更新失败');
+      message.error(t('changes.createFailed') || '变更更新失败');
     } finally {
       setLoading(false);
     }

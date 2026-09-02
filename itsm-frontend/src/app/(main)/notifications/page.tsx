@@ -642,7 +642,7 @@ export default function NotificationsPage() {
               )}
             </Space>
           </div>
-          <Spin spinning={loading} tip={t('workflow.loading')}>{renderNotificationList(filteredNotifications)}</Spin>
+          <Spin spinning={loading} tip={t('common.loading')}>{renderNotificationList(filteredNotifications)}</Spin>
         </Card>
       ),
     },

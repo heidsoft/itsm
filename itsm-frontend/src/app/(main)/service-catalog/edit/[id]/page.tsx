@@ -67,21 +67,21 @@ export default function EditServicePage() {
 
   return (
     <div className="p-6 max-w-2xl">
-      <Card title={t('service.editService')}>
+      <Card title={t('common.edit')}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item label={t('service.name')} name="name" rules={[{ required: true }]}>
+          <Form.Item label={t('service.serviceName')} name="name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item label={t('service.category')} name="category">
+          <Form.Item label={t('ticketDetail.labelCategory')} name="category">
             <Input />
           </Form.Item>
-          <Form.Item label={t('service.description')} name="description">
+          <Form.Item label={t('ticketDetail.labelDescription')} name="description">
             <TextArea rows={4} />
           </Form.Item>
           <Form.Item label={t('service.deliveryTime')} name="deliveryTime">
             <InputNumber min={1} className="w-full" />
           </Form.Item>
-          <Form.Item label={t('service.status')} name="status" valuePropName="checked">
+          <Form.Item label={t('ticketDetail.labelStatus')} name="status" valuePropName="checked">
             <Switch checkedChildren="enabled" unCheckedChildren="disabled" />
           </Form.Item>
           <Form.Item>

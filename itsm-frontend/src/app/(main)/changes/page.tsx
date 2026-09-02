@@ -81,7 +81,7 @@ export default function ChangesPage() {
       rejected: { label: t('changes.rejected'), color: 'red' },
       failed: { label: t('changes.failed'), color: 'red' },
       rolled_back: { label: t('changes.rolledBack'), color: 'volcano' },
-      cancelled: { label: t('changes.cancelled') || t('changes.statusOptions.cancelled'), color: 'default' },
+      cancelled: { label: t('changes.statusOptions.cancelled'), color: 'default' },
     }),
     [t]
   );

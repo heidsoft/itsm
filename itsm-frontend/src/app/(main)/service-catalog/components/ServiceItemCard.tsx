@@ -90,12 +90,12 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     setDeleting(true);
     try {
       await ServiceCatalogApi.deleteService(String(catalog.id));
-      message.success(t('service.deleteSuccess') || '服务已删除');
+      message.success(t('common.deleteSuccess') || '服务已删除');
       // 触发刷新
       window.location.reload();
     } catch (error) {
       console.error('Failed to delete service:', error);
-      message.error(t('service.deleteFailed') || '删除失败');
+      message.error(t('common.deleteFailed') || '删除失败');
     } finally {
       setDeleting(false);
     }

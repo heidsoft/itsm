@@ -67,7 +67,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       const response = await TicketCommentApi.getComments(ticketId);
       setComments(response.comments || []);
     } catch (error) {
-      message.error(t('comments.loadFailed') || '加载评论失败');
+      message.error(t('detailTabs.loadFailed') || '加载评论失败');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
   // 添加评论
   const handleAddComment = async () => {
     if (!newComment.trim()) {
-      message.warning(t('comments.contentRequired') || '请输入评论内容');
+      message.warning(t('detailTabs.commentRequired') || '请输入评论内容');
       return;
     }
 
@@ -95,10 +95,10 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       setComments(prev => [comment, ...prev]);
       setNewComment('');
       setIsInternal(false);
-      message.success(t('comments.addSuccess') || '评论添加成功');
+      message.success(t('detailTabs.commentSuccess') || '评论添加成功');
       onCommentAdded?.(comment);
     } catch (error) {
-      message.error(t('comments.addFailed') || '添加评论失败');
+      message.error(t('detailTabs.loadFailed') || '添加评论失败');
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +119,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
   // 更新评论
   const handleUpdateComment = async (commentId: number) => {
     if (!editingContent.trim()) {
-      message.warning(t('comments.contentRequired') || '请输入评论内容');
+      message.warning(t('detailTabs.commentRequired') || '请输入评论内容');
       return;
     }
 
@@ -130,10 +130,10 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       setComments(prev => prev.map(c => (c.id === commentId ? updated : c)));
       setEditingId(null);
       setEditingContent('');
-      message.success(t('comments.updateSuccess') || '评论更新成功');
+      message.success(t('detailTabs.commentSuccess') || '评论更新成功');
       onCommentUpdated?.(updated);
     } catch (error) {
-      message.error(t('comments.updateFailed') || '更新评论失败');
+      message.error(t('detailTabs.loadFailed') || '更新评论失败');
     }
   };
 
@@ -142,11 +142,11 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
     try {
       await TicketCommentApi.deleteComment(ticketId, commentId);
       setComments(prev => prev.filter(c => c.id !== commentId));
-      message.success(t('comments.deleteSuccess') || '评论删除成功');
+      message.success(t('detailTabs.commentSuccess') || '评论删除成功');
       onCommentDeleted?.(commentId);
     } catch (error) {
-      message.error(t('comments.deleteFailed') || '删除评论失败');
-      message.error(t('comments.deleteFailed') || '删除评论失败');
+      message.error(t('detailTabs.loadFailed') || '删除评论失败');
+      message.error(t('detailTabs.loadFailed') || '删除评论失败');
     }
   };
 
@@ -191,7 +191,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
           title={
             <Space>
               <MessageSquare className="w-4 h-4" />
-              <span>{t('comments.title') || '评论'}</span>
+              <span>{t('detailTabs.comments') || '评论'}</span>
             </Space>
           }
           className="shadow-sm"
@@ -224,7 +224,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                 loading={submitting}
                 disabled={!newComment.trim()}
               >
-                {t('comments.send') || '发送'}
+                {t('detailTabs.postComment') || '发送'}
               </Button>
             </div>
           </Space>
@@ -237,7 +237,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
           <Space>
             <MessageSquare className="w-4 h-4" />
             <span>
-              {t('comments.list') || '评论列表'} ({comments.length})
+              {t('detailTabs.comments') || '评论列表'} ({comments.length})
             </span>
           </Space>
         }
@@ -247,7 +247,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
         {comments.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <Text type="secondary">{t('comments.empty') || '暂无评论'}</Text>
+            <Text type="secondary">{t('detailTabs.noComments') || '暂无评论'}</Text>
           </div>
         ) : (
           <List
@@ -272,7 +272,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                       </Text>
                       {comment.isInternal && (
                         <Tag color="orange" icon={<Lock className="w-3 h-3" />}>
-                          {t('comments.internal') || '内部'}
+                          {t('detailTabs.internalOnly') || '内部'}
                         </Tag>
                       )}
                       {comment.mentions && comment.mentions.length > 0 && (
@@ -332,7 +332,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                             )}
                             {canDelete(comment) && (
                               <Popconfirm
-                                title={t('comments.deleteConfirm') || '确定要删除这条评论吗？'}
+                                title={t('detailTabs.deleteConfirmTitle') || '确定要删除这条评论吗？'}
                                 onConfirm={() => handleDeleteComment(comment.id)}
                                 okText={t('common.confirm') || '确定'}
                                 cancelText={t('common.cancel') || '取消'}

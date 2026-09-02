@@ -203,7 +203,7 @@ export default function TeamsPage() {
       <Table columns={columns} dataSource={teams} rowKey="id" loading={fetching} />
 
       <Modal
-        title={editingTeam ? t('enterprise.teams.editTitle') : t('enterprise.teams.createOrEdit')}
+        title={editingTeam ? t('enterprise.teams.title') : t('enterprise.teams.createOrEdit')}
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => {

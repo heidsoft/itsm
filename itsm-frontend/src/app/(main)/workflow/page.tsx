@@ -395,7 +395,7 @@ const WorkflowManagementPage = () => {
 
       message.success(t('workflow.exportSuccess', { name: workflow.name }));
     } catch {
-      message.error(t('workflow.exportFailed'));
+      message.error(t('workflow.operationFailed'));
     }
   };
 
@@ -1082,7 +1082,7 @@ const WorkflowManagementPage = () => {
       {/* 批量操作工具栏（统一 BatchActionBar） */}
       <BatchActionBar
         selectedCount={selectedRowKeys.length}
-        itemLabel={t('workflow.workflowItem') || '工作流'}
+        itemLabel={t('workflow.workflowManagement') || '工作流'}
         leftExtra={t('workflow.selectedWorkflows', { count: selectedRowKeys.length })}
         onClear={() => setSelectedRowKeys([])}
         actions={[
@@ -1099,7 +1099,7 @@ const WorkflowManagementPage = () => {
           },
           {
             key: 'export',
-            label: t('workflow.batchExport'),
+            label: t('workflow.export'),
             onClick: handleBatchExport,
           },
           {
@@ -1411,7 +1411,7 @@ const WorkflowManagementPage = () => {
               <Descriptions.Item label={t('workflow.createdAt')}>
                 {new Date(viewingWorkflow.createdAt).toLocaleString('zh-CN')}
               </Descriptions.Item>
-              <Descriptions.Item label={t('workflow.updatedAt')}>
+              <Descriptions.Item label="更新时间">
                 {new Date(viewingWorkflow.updatedAt).toLocaleString('zh-CN')}
               </Descriptions.Item>
               <Descriptions.Item label="创建人" span={2}>

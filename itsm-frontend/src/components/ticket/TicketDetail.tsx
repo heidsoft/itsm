@@ -983,8 +983,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 <XCircle className="w-5 h-5 text-red-600" />
               )}
               {approvalAction === 'approve'
-                ? t('ticketDetail.approveTitle') || '审批通过'
-                : t('ticketDetail.rejectTitle') || '审批驳回'}
+                ? t('ticketDetail.approve') || '审批通过'
+                : t('ticketDetail.reject') || '审批驳回'}
             </Space>
           }
           open={approvalModalVisible}
@@ -1004,7 +1004,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   required: approvalAction === 'reject',
                   message:
                     approvalAction === 'reject'
-                      ? t('ticketDetail.rejectReasonRequired') || '请填写驳回原因'
+                      ? t('ticketDetail.assigneeRequired') || '请填写驳回原因'
                       : undefined,
                 },
               ]}
@@ -1013,8 +1013,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 rows={3}
                 placeholder={
                   approvalAction === 'approve'
-                    ? t('ticketDetail.approveRemarkPlaceholder') || '请输入审批意见（可选）'
-                    : t('ticketDetail.rejectRemarkPlaceholder') || '请输入驳回原因'
+                    ? t('ticketDetail.assignRemarkPlaceholder') || '请输入审批意见（可选）'
+                    : t('ticketDetail.ccRemarkPlaceholder') || '请输入驳回原因'
                 }
                 maxLength={500}
                 showCount
@@ -1039,8 +1039,8 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   loading={approvalAction === 'approve' ? approving : rejecting}
                 >
                   {approvalAction === 'approve'
-                    ? t('ticketDetail.confirmApprove') || '确认通过'
-                    : t('ticketDetail.confirmReject') || '确认驳回'}
+                    ? t('ticketDetail.confirmAssign') || '确认通过'
+                    : t('ticketDetail.confirmDelete') || '确认驳回'}
                 </Button>
               </Space>
             </Form.Item>

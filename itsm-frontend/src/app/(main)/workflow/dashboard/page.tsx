@@ -177,8 +177,8 @@ export default function BPMNDashboardPage() {
     return (
       <div className='p-6'>
         <Alert
-          message={t('common.warning') || '警告'}
-          description={t('workflow.loginRequired') || '请先登录以查看工作流仪表盘'}
+          message={t('notificationCenter.typeLabels.warning') || '警告'}
+          description={t('auth.login.subtitle') || '请先登录以查看工作流仪表盘'}
           type='warning'
           showIcon
         />

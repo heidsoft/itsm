@@ -73,7 +73,7 @@ export default function ServiceApprovalsPage() {
     { title: t('service.requester'), dataIndex: 'requesterName' },
     { title: t('service.createdAt'), dataIndex: 'createdAt' },
     {
-      title: t('service.status'),
+      title: t('ticketDetail.labelStatus'),
       render: (_: unknown, record: ServiceRequestRecord) => (
         <Tag color="orange">{t('service.pending')}</Tag>
       ),
