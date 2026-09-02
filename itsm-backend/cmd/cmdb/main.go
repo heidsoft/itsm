@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/handlers/cmdb"
@@ -54,8 +53,8 @@ func main() {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cmdbDDDService := cmdb.NewService(cmdbRepo, nil, sugar)
 
-	// 初始化控制器
-	cmdbController := controller.NewCMDBController(
+	// 初始化 CMDB 生产服务（原 controller.CMDBController，已迁入 handlers/cmdb）
+	cmdbController := cmdb.NewProductionService(
 		sugar,
 		ciTypeService,
 		ciAttributeDefinitionService,

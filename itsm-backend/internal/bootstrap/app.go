@@ -683,8 +683,8 @@ func NewApplication() *Application {
 	approvalHandler := approval.NewHandler(approvalService)
 
 	// ProblemController and ChangeController removed - using Handlers instead
-	// CMDB Controller
-	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService, importExportService, savedViewService)
+	// CMDB ProductionService（原 controller.CMDBController，已迁入 handlers/cmdb）
+	cmdbProductionService := cmdb.NewProductionService(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService, importExportService, savedViewService)
 
 	// Release & Asset Management Handlers
 	releaseHTTPHandler := releaseHandler.NewHandler(sugar, releaseService)
@@ -778,7 +778,7 @@ func NewApplication() *Application {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cloudAdapterRegistry := cloudruntime.NewRegistry()
 	cloudAdapterRegistry.Register(cloudaliyun.NewAliyunECSAdapter(sugar))
-	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, cmdbController, sugar, cmdb.DiscoveryRuntime{
+	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, cmdbProductionService, sugar, cmdb.DiscoveryRuntime{
 		Adapters: cloudAdapterRegistry,
 		// secret:// resolution and the durable worker land in later phases.
 		CredentialResolverReady: false,

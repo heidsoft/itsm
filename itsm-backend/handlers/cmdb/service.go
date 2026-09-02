@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"itsm-backend/common"
-	"itsm-backend/controller"
 	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,7 @@ import (
 
 type Service struct {
 	repo             Repository
-	productionSvc    *controller.CMDBController
+	productionSvc    *ProductionService
 	logger           *zap.SugaredLogger
 	discoveryRuntime DiscoveryRuntime
 }
@@ -32,11 +31,11 @@ type DiscoveryRuntime struct {
 	WorkerReady             bool
 }
 
-func NewService(repo Repository, productionSvc *controller.CMDBController, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, productionSvc *ProductionService, logger *zap.SugaredLogger) *Service {
 	return NewServiceWithDiscoveryRuntime(repo, productionSvc, logger, DiscoveryRuntime{})
 }
 
-func NewServiceWithDiscoveryRuntime(repo Repository, productionSvc *controller.CMDBController, logger *zap.SugaredLogger, runtime DiscoveryRuntime) *Service {
+func NewServiceWithDiscoveryRuntime(repo Repository, productionSvc *ProductionService, logger *zap.SugaredLogger, runtime DiscoveryRuntime) *Service {
 	return &Service{
 		repo:             repo,
 		productionSvc:    productionSvc,
