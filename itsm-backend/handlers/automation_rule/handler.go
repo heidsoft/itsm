@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -70,6 +71,10 @@ func (h *Handler) GetAutomationRule(c *gin.Context) {
 	rule, err := h.ruleService.GetAutomationRule(c.Request.Context(), ruleID, tid)
 	if err != nil {
 		h.logger.Errorw("Failed to get automation rule", "error", err, "rule_id", ruleID)
+		if ent.IsNotFound(err) {
+			common.NotFoundWithErr(c, err, "自动化规则不存在或无权访问")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
