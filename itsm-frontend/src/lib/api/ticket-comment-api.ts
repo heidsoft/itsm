@@ -40,7 +40,7 @@ export interface UpdateTicketCommentRequest {
 }
 
 export interface ListTicketCommentsResponse {
-  comments: TicketComment[];
+  items: TicketComment[];
   total: number;
 }
 
@@ -49,24 +49,7 @@ export class TicketCommentApi {
    * 获取工单评论列表
    */
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
-    const response = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
-    // Type guard to extract data from possible wrapped response
-    const rawData = ((response as { data?: unknown })?.data ?? response) as
-      | { comments?: TicketComment[]; total?: number }
-      | TicketComment[];
-    
-    let comments: TicketComment[] = [];
-    let total: number = 0;
-    
-    if (Array.isArray(rawData)) {
-      comments = rawData;
-      total = rawData.length;
-    } else {
-      comments = Array.isArray(rawData?.comments) ? rawData.comments : [];
-      total = typeof rawData?.total === 'number' ? rawData.total : comments.length;
-    }
-    
-    return { comments, total };
+    return httpClient.get<ListTicketCommentsResponse>(`/api/v1/tickets/${ticketId}/comments`);
   }
 
   /**

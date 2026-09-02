@@ -16,7 +16,7 @@ import (
 // Handler 持有 TicketCommentService 依赖.
 type Handler struct {
 	commentService *service.TicketCommentService
-	logger        *zap.SugaredLogger
+	logger         *zap.SugaredLogger
 }
 
 // NewHandler 构造 ticket_comment Handler.
@@ -26,7 +26,7 @@ func NewHandler(commentService *service.TicketCommentService, logger *zap.Sugare
 	}
 	return &Handler{
 		commentService: commentService,
-		logger:        logger,
+		logger:         logger,
 	}
 }
 
@@ -53,8 +53,8 @@ func (h *Handler) ListTicketComments(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListTicketCommentsResponse{
-		Comments: comments,
-		Total:    len(comments),
+		Items: comments,
+		Total: len(comments),
 	})
 }
 

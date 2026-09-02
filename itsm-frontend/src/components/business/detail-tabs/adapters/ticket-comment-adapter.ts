@@ -3,8 +3,8 @@ import type { CommentAdapter, CommentItem } from '../types';
 
 export const ticketCommentAdapter: CommentAdapter = {
   async list(targetId) {
-    const { comments, total } = await TicketCommentApi.getComments(Number(targetId));
-    return { comments: (comments || []) as unknown as CommentItem[], total };
+    const { items, total } = await TicketCommentApi.getComments(Number(targetId));
+    return { comments: items as unknown as CommentItem[], total };
   },
   async create(targetId, data) {
     const res = await TicketCommentApi.createComment(Number(targetId), data);

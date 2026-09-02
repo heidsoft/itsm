@@ -65,7 +65,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
     setLoading(true);
     try {
       const response = await TicketCommentApi.getComments(ticketId);
-      setComments(response.comments || []);
+      setComments(response.items);
     } catch (error) {
       message.error(t('detailTabs.loadFailed') || '加载评论失败');
     } finally {

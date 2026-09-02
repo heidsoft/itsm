@@ -15,26 +15,14 @@ describe('SLATemplateApi', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('listTemplates', () => {
-    it('should list templates when response is array', async () => {
+    it('should list templates from the standard list response', async () => {
       const templates = [{ key: 'gold', name: 'Gold SLA', recommended: true }];
-      mockGet.mockResolvedValue(templates);
+      mockGet.mockResolvedValue({ items: templates, total: 1 });
       const result = await SLATemplateApi.listTemplates();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/templates');
       expect(result).toEqual(templates);
     });
 
-    it('should list templates when response is object with templates field', async () => {
-      const templates = [{ key: 'gold', name: 'Gold SLA' }];
-      mockGet.mockResolvedValue({ templates, total: 1 });
-      const result = await SLATemplateApi.listTemplates();
-      expect(result).toEqual(templates);
-    });
-
-    it('should return empty array when templates field is missing', async () => {
-      mockGet.mockResolvedValue({});
-      const result = await SLATemplateApi.listTemplates();
-      expect(result).toEqual([]);
-    });
   });
 
   describe('getTemplate', () => {
@@ -74,7 +62,7 @@ describe('SLATemplateApi', () => {
         { key: 'silver', name: 'Silver', recommended: true },
         { key: 'basic', name: 'Basic', recommended: false },
       ];
-      mockGet.mockResolvedValue(templates);
+      mockGet.mockResolvedValue({ items: templates, total: templates.length });
       mockPost.mockResolvedValue({ templateKey: 'gold', created: true, wasAlreadyExist: false, message: 'ok' });
 
       const result = await SLATemplateApi.installAllRecommended();
@@ -89,7 +77,7 @@ describe('SLATemplateApi', () => {
         { key: 'gold', name: 'Gold', recommended: true },
         { key: 'silver', name: 'Silver', recommended: true },
       ];
-      mockGet.mockResolvedValue(templates);
+      mockGet.mockResolvedValue({ items: templates, total: templates.length });
       mockPost
         .mockRejectedValueOnce(new Error('Install failed'))
         .mockResolvedValueOnce({ templateKey: 'silver', created: true, wasAlreadyExist: false, message: 'ok' });
@@ -101,7 +89,10 @@ describe('SLATemplateApi', () => {
     });
 
     it('should return empty array when no recommended templates', async () => {
-      mockGet.mockResolvedValue([{ key: 'basic', name: 'Basic', recommended: false }]);
+      mockGet.mockResolvedValue({
+        items: [{ key: 'basic', name: 'Basic', recommended: false }],
+        total: 1,
+      });
       const result = await SLATemplateApi.installAllRecommended();
       expect(mockPost).not.toHaveBeenCalled();
       expect(result).toEqual([]);

@@ -45,7 +45,7 @@ func (h *Handler) ListTicketViews(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListTicketViewsResponse{
-		Views: views,
+		Items: views,
 		Total: len(views),
 	})
 }

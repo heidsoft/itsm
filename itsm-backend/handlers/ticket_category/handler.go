@@ -188,8 +188,8 @@ func (h *Handler) ListCategories(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"categories": dto.ToTicketCategoryResponseList(categories),
-		"total":      total,
+		"items": dto.ToTicketCategoryResponseList(categories),
+		"total": total,
 	})
 }
 

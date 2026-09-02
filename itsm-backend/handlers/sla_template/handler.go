@@ -39,8 +39,8 @@ func tenantID(c *gin.Context) (int, bool) {
 func (h *Handler) ListTemplates(ctx *gin.Context) {
 	templates := h.templateService.ListTemplates()
 	common.Success(ctx, gin.H{
-		"templates": templates,
-		"total":     len(templates),
+		"items": templates,
+		"total": len(templates),
 	})
 }
 

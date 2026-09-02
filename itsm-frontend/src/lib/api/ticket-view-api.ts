@@ -68,7 +68,7 @@ export interface ShareTicketViewRequest {
 }
 
 export interface ListTicketViewsResponse {
-  views: TicketView[];
+  items: TicketView[];
   total: number;
 }
 

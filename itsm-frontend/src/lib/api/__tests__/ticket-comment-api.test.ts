@@ -21,19 +21,13 @@ describe('TicketCommentApi', () => {
 
   describe('getComments', () => {
     it('should fetch comments for a ticket', async () => {
-      mockGet.mockResolvedValue({ comments: [{ id: 1, content: 'test' }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1, content: 'test' }], total: 1 });
       const result = await TicketCommentApi.getComments(10);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/10/comments');
-      expect(result.comments).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
     });
 
-    it('should handle array response', async () => {
-      mockGet.mockResolvedValue([{ id: 1, content: 'test' }]);
-      const result = await TicketCommentApi.getComments(10);
-      expect(result.comments).toHaveLength(1);
-      expect(result.total).toBe(1);
-    });
   });
 
   describe('createComment', () => {

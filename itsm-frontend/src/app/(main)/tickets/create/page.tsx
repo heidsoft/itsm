@@ -159,7 +159,7 @@ export default function CreateTicketPage() {
       try {
         const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: 200 });
         if (cancelled) return;
-        const list = res.categories ?? res.items ?? [];
+        const list = res.items;
         setCategoryOptions(
           list
             .filter(c => c.isActive !== false)

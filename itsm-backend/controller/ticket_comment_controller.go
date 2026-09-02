@@ -54,8 +54,8 @@ func (tcc *TicketCommentController) ListTicketComments(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListTicketCommentsResponse{
-		Comments: comments,
-		Total:    len(comments),
+		Items: comments,
+		Total: len(comments),
 	})
 }
 

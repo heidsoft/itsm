@@ -37,8 +37,8 @@ type TicketCommentResponse struct {
 
 // ListTicketCommentsResponse 工单评论列表响应
 type ListTicketCommentsResponse struct {
-	Comments []*TicketCommentResponse `json:"comments"`
-	Total    int                      `json:"total"`
+	Items []*TicketCommentResponse `json:"items"`
+	Total int                      `json:"total"`
 }
 
 func (r *CreateTicketCommentRequest) Normalize() {

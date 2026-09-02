@@ -119,7 +119,7 @@ const TicketCategoryManagementPage = () => {
     setLoading(true);
     try {
       const data = await TicketCategoryApi.getCategories({ page: 1, pageSize: 500 });
-      const list = normalizeCategories(data.categories || data.items || []);
+      const list = normalizeCategories(data.items);
       setCategories(list);
     } catch (error) {
       console.error('Failed to load categories:', error);

@@ -52,7 +52,7 @@ type TicketViewResponse struct {
 
 // ListTicketViewsResponse 工单视图列表响应
 type ListTicketViewsResponse struct {
-	Views []*TicketViewResponse `json:"views"`
+	Items []*TicketViewResponse `json:"items"`
 	Total int                   `json:"total"`
 }
 

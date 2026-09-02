@@ -21,10 +21,10 @@ describe('TicketViewApi', () => {
 
   describe('listViews', () => {
     it('should list ticket views', async () => {
-      mockGet.mockResolvedValue({ views: [{ id: 1, name: 'My View' }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1, name: 'My View' }], total: 1 });
       const result = await TicketViewApi.listViews();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/views');
-      expect(result.views).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 

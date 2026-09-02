@@ -48,7 +48,7 @@ export interface UpdateCategoryRequest {
 }
 
 export class TicketCategoryApi {
-  // 获取分类列表 - 支持两种后端响应格式
+  // 获取分类列表
   static async getCategories(params?: {
     page?: number;
     pageSize?: number;
@@ -56,8 +56,7 @@ export class TicketCategoryApi {
     isActive?: boolean;
     keyword?: string;
   }): Promise<{
-    categories?: TicketCategory[];
-    items?: TicketCategory[];
+    items: TicketCategory[];
     total: number;
   }> {
     return httpClient.get('/api/v1/ticket-categories', params);

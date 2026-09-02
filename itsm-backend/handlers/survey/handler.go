@@ -52,7 +52,10 @@ func (h *Handler) ListSurveys(ctx *gin.Context) {
 		common.Fail(ctx, 5001, err.Error())
 		return
 	}
-	common.Success(ctx, surveys)
+	common.Success(ctx, gin.H{
+		"items": surveys,
+		"total": len(surveys),
+	})
 }
 
 // GetSurvey GET /api/v1/surveys/:id
@@ -109,7 +112,10 @@ func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 		common.Fail(ctx, 5001, err.Error())
 		return
 	}
-	common.Success(ctx, responses)
+	common.Success(ctx, gin.H{
+		"items": responses,
+		"total": len(responses),
+	})
 }
 
 // GetAnalytics GET /api/v1/surveys/:id/analytics

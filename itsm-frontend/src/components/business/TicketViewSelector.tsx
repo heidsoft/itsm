@@ -54,12 +54,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     setLoading(true);
     try {
       const response = await TicketViewApi.listViews();
-      // 确保 response 和 views 是有效的
-      if (response && Array.isArray(response.views)) {
-        setViews(response.views);
-      } else {
-        setViews([]);
-      }
+      setViews(response.items);
     } catch (error: unknown) {
       console.error('Failed to load views:', error);
       // 检查错误信息，如果是"无效的工单ID"，说明可能是API参数问题

@@ -47,7 +47,7 @@ export interface ListCategoriesParams {
 
 // 分类列表响应
 export interface ListCategoriesResponse {
-  categories: TicketCategory[];
+  items: TicketCategory[];
   total: number;
 }
 

@@ -36,18 +36,15 @@ export interface TemplateInstallResult {
 }
 
 export interface TemplateListResponse {
-  templates: SLATemplate[];
+  items: SLATemplate[];
   total: number;
 }
 
 export class SLATemplateApi {
   /** 列出所有预置 SLA 模板 */
   static async listTemplates(): Promise<SLATemplate[]> {
-    const data = await httpClient.get<TemplateListResponse | SLATemplate[]>(
-      '/api/v1/sla/templates'
-    );
-    if (Array.isArray(data)) return data;
-    return (data as TemplateListResponse).templates ?? [];
+    const data = await httpClient.get<TemplateListResponse>('/api/v1/sla/templates');
+    return data.items;
   }
 
   /** 获取单个 SLA 模板详情 */
