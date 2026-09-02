@@ -12,6 +12,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/customerbranch"
+	"itsm-backend/ent/emailconversation"
 	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/oncallschedule"
@@ -72,6 +73,15 @@ type Resolution struct {
 type Resolver struct{ client *ent.Client }
 
 func NewResolver(client *ent.Client) *Resolver { return &Resolver{client: client} }
+
+// Service is the main service struct for email_intake domain
+type Service struct {
+	client *ent.Client
+}
+
+func NewService(client *ent.Client) *Service {
+	return &Service{client: client}
+}
 
 func (r *Resolver) Resolve(ctx context.Context, tenantID int, fields IntakeFields) (Resolution, error) {
 	result := Resolution{}
@@ -346,4 +356,178 @@ func (s *OnCallService) CurrentResolver(ctx context.Context, tenantID, groupID i
 	sort.Slice(shifts, func(i, j int) bool { return shifts[i].StartAt.Before(shifts[j].StartAt) })
 	shift := shifts[0]
 	return &CurrentOnCall{ScheduleID: shift.ScheduleID, ShiftID: shift.ID, GroupID: groupID, UserID: shift.UserID, StartAt: shift.StartAt, EndAt: shift.EndAt}, nil
+}
+
+
+// ─── ServiceCustomer ────────────────────────────────────────────────
+
+func (s *Service) CreateCustomer(ctx context.Context, tenantID int, req *customerRequest) (*ent.ServiceCustomer, error) {
+	status := defaultString(req.Status, "active")
+	return s.client.ServiceCustomer.Create().SetTenantID(tenantID).SetName(strings.TrimSpace(req.Name)).
+		SetNormalizedName(NormalizeName(req.Name)).SetShortName(req.ShortName).SetAliases(req.Aliases).
+		SetHistoricalNames(req.HistoricalNames).SetStatus(status).SetNillableLinkedCustomerTenantID(req.LinkedCustomerTenantID).Save(ctx)
+}
+
+func (s *Service) ListCustomers(ctx context.Context, tenantID int) ([]*ent.ServiceCustomer, error) {
+	return s.client.ServiceCustomer.Query().Where(servicecustomer.TenantIDEQ(tenantID)).Order(ent.Desc(servicecustomer.FieldUpdatedAt)).All(ctx)
+}
+
+func (s *Service) UpdateCustomer(ctx context.Context, tenantID, id int, req *customerRequest) (*ent.ServiceCustomer, error) {
+	return s.client.ServiceCustomer.UpdateOneID(id).Where(servicecustomer.TenantIDEQ(tenantID)).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetShortName(req.ShortName).SetAliases(req.Aliases).SetHistoricalNames(req.HistoricalNames).SetStatus(defaultString(req.Status, "active")).SetNillableLinkedCustomerTenantID(req.LinkedCustomerTenantID).Save(ctx)
+}
+
+func (s *Service) DisableCustomer(ctx context.Context, tenantID, id int) (*ent.ServiceCustomer, error) {
+	return s.client.ServiceCustomer.UpdateOneID(id).Where(servicecustomer.TenantIDEQ(tenantID)).SetStatus("inactive").Save(ctx)
+}
+
+func (s *Service) CustomerExists(ctx context.Context, tenantID, id int) (bool, error) {
+	return s.client.ServiceCustomer.Query().Where(servicecustomer.IDEQ(id), servicecustomer.TenantIDEQ(tenantID)).Exist(ctx)
+}
+
+// ─── CustomerBranch ─────────────────────────────────────────────────
+
+func (s *Service) CreateBranch(ctx context.Context, tenantID int, req *branchRequest) (*ent.CustomerBranch, error) {
+	status := defaultString(req.Status, "active")
+	return s.client.CustomerBranch.Create().SetTenantID(tenantID).SetCustomerID(req.CustomerID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetAliases(req.Aliases).SetStatus(status).Save(ctx)
+}
+
+func (s *Service) ListBranches(ctx context.Context, tenantID, customerID int) ([]*ent.CustomerBranch, error) {
+	query := s.client.CustomerBranch.Query().Where(customerbranch.TenantIDEQ(tenantID))
+	if customerID > 0 {
+		query.Where(customerbranch.CustomerIDEQ(customerID))
+	}
+	return query.All(ctx)
+}
+
+func (s *Service) UpdateBranch(ctx context.Context, tenantID, id int, req *branchRequest) (*ent.CustomerBranch, error) {
+	return s.client.CustomerBranch.UpdateOneID(id).Where(customerbranch.TenantIDEQ(tenantID)).SetCustomerID(req.CustomerID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetAliases(req.Aliases).SetStatus(defaultString(req.Status, "active")).Save(ctx)
+}
+
+func (s *Service) DisableBranch(ctx context.Context, tenantID, id int) (*ent.CustomerBranch, error) {
+	return s.client.CustomerBranch.UpdateOneID(id).Where(customerbranch.TenantIDEQ(tenantID)).SetStatus("inactive").Save(ctx)
+}
+
+func (s *Service) BranchExistsForCustomer(ctx context.Context, tenantID, branchID, customerID int) (bool, error) {
+	return s.client.CustomerBranch.Query().Where(customerbranch.IDEQ(branchID), customerbranch.CustomerIDEQ(customerID), customerbranch.TenantIDEQ(tenantID)).Exist(ctx)
+}
+
+// ─── SourceOrganization ─────────────────────────────────────────────
+
+func (s *Service) CreateSourceOrganization(ctx context.Context, tenantID int, req *sourceOrganizationRequest) (*ent.SourceOrganization, error) {
+	status := defaultString(req.Status, "active")
+	return s.client.SourceOrganization.Create().SetTenantID(tenantID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetEmailAddresses(req.EmailAddresses).SetEmailDomains(req.EmailDomains).SetStatus(status).Save(ctx)
+}
+
+func (s *Service) ListSourceOrganizations(ctx context.Context, tenantID int) ([]*ent.SourceOrganization, error) {
+	return s.client.SourceOrganization.Query().Where(sourceorganization.TenantIDEQ(tenantID)).All(ctx)
+}
+
+func (s *Service) UpdateSourceOrganization(ctx context.Context, tenantID, id int, req *sourceOrganizationRequest) (*ent.SourceOrganization, error) {
+	return s.client.SourceOrganization.UpdateOneID(id).Where(sourceorganization.TenantIDEQ(tenantID)).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetEmailAddresses(req.EmailAddresses).SetEmailDomains(req.EmailDomains).SetStatus(defaultString(req.Status, "active")).Save(ctx)
+}
+
+func (s *Service) DisableSourceOrganization(ctx context.Context, tenantID, id int) (*ent.SourceOrganization, error) {
+	return s.client.SourceOrganization.UpdateOneID(id).Where(sourceorganization.TenantIDEQ(tenantID)).SetStatus("inactive").Save(ctx)
+}
+
+// ─── SupportContract ────────────────────────────────────────────────
+
+func (s *Service) CreateSupportContract(ctx context.Context, tenantID int, req *supportContractRequest) (*ent.SupportContract, error) {
+	status := defaultString(req.Status, "active")
+	return s.client.SupportContract.Create().SetTenantID(tenantID).SetCustomerID(req.CustomerID).SetNillableBranchID(req.BranchID).SetContractNumber(strings.TrimSpace(req.ContractNumber)).SetNormalizedContractNumber(NormalizeContractNumber(req.ContractNumber)).SetStatus(status).SetNillableStartAt(req.StartAt).SetNillableEndAt(req.EndAt).Save(ctx)
+}
+
+func (s *Service) ListSupportContracts(ctx context.Context, tenantID int) ([]*ent.SupportContract, error) {
+	return s.client.SupportContract.Query().Where(supportcontract.TenantIDEQ(tenantID)).All(ctx)
+}
+
+func (s *Service) UpdateSupportContract(ctx context.Context, tenantID, id int, req *supportContractRequest) (*ent.SupportContract, error) {
+	return s.client.SupportContract.UpdateOneID(id).Where(supportcontract.TenantIDEQ(tenantID)).SetCustomerID(req.CustomerID).SetNillableBranchID(req.BranchID).SetContractNumber(strings.TrimSpace(req.ContractNumber)).SetNormalizedContractNumber(NormalizeContractNumber(req.ContractNumber)).SetStatus(defaultString(req.Status, "active")).SetNillableStartAt(req.StartAt).SetNillableEndAt(req.EndAt).Save(ctx)
+}
+
+func (s *Service) TerminateSupportContract(ctx context.Context, tenantID, id int) (*ent.SupportContract, error) {
+	return s.client.SupportContract.UpdateOneID(id).Where(supportcontract.TenantIDEQ(tenantID)).SetStatus("terminated").Save(ctx)
+}
+
+func (s *Service) SupportContractExists(ctx context.Context, tenantID, id int) (bool, error) {
+	return s.client.SupportContract.Query().Where(supportcontract.IDEQ(id), supportcontract.TenantIDEQ(tenantID)).Exist(ctx)
+}
+
+// ─── ExternalContractReference ──────────────────────────────────────
+
+func (s *Service) CreateExternalContractReference(ctx context.Context, tenantID int, req *externalReferenceRequest) (*ent.ExternalContractReference, error) {
+	contract, err := s.client.SupportContract.Query().Where(supportcontract.IDEQ(req.SupportContractID), supportcontract.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.client.ExternalContractReference.Create().SetTenantID(tenantID).SetSourceOrganizationID(req.SourceOrganizationID).SetSupportContractID(contract.ID).SetCustomerID(contract.CustomerID).SetNillableBranchID(contract.BranchID).SetExternalContractNumber(strings.TrimSpace(req.ExternalContractNumber)).SetNormalizedExternalContractNumber(NormalizeContractNumber(req.ExternalContractNumber)).Save(ctx)
+}
+
+func (s *Service) ListExternalContractReferences(ctx context.Context, tenantID int) ([]*ent.ExternalContractReference, error) {
+	return s.client.ExternalContractReference.Query().Where(externalcontractreference.TenantIDEQ(tenantID)).All(ctx)
+}
+
+func (s *Service) UpdateExternalContractReference(ctx context.Context, tenantID, id int, req *externalReferenceRequest) (*ent.ExternalContractReference, error) {
+	contract, err := s.client.SupportContract.Query().Where(supportcontract.IDEQ(req.SupportContractID), supportcontract.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s.client.ExternalContractReference.UpdateOneID(id).Where(externalcontractreference.TenantIDEQ(tenantID)).SetSourceOrganizationID(req.SourceOrganizationID).SetSupportContractID(req.SupportContractID).SetCustomerID(contract.CustomerID).SetNillableBranchID(contract.BranchID).SetExternalContractNumber(strings.TrimSpace(req.ExternalContractNumber)).SetNormalizedExternalContractNumber(NormalizeContractNumber(req.ExternalContractNumber)).Save(ctx)
+}
+
+func (s *Service) DeleteExternalContractReference(ctx context.Context, tenantID, id int) (int, error) {
+	return s.client.ExternalContractReference.Delete().Where(externalcontractreference.IDEQ(id), externalcontractreference.TenantIDEQ(tenantID)).Exec(ctx)
+}
+
+// ─── SourceOrganization existence (shared) ──────────────────────────
+
+func (s *Service) SourceOrganizationExists(ctx context.Context, tenantID, id int) (bool, error) {
+	return s.client.SourceOrganization.Query().Where(sourceorganization.IDEQ(id), sourceorganization.TenantIDEQ(tenantID)).Exist(ctx)
+}
+
+// ─── OnCallSchedule ─────────────────────────────────────────────────
+
+func (s *Service) CreateOnCallSchedule(ctx context.Context, tenantID int, req *scheduleRequest) (*ent.OnCallSchedule, error) {
+	timezone := defaultString(req.Timezone, "Asia/Shanghai")
+	status := defaultString(req.Status, "active")
+	return s.client.OnCallSchedule.Create().SetTenantID(tenantID).SetGroupID(req.GroupID).SetName(req.Name).SetTimezone(timezone).SetStatus(status).Save(ctx)
+}
+
+func (s *Service) ListOnCallSchedules(ctx context.Context, tenantID int) ([]*ent.OnCallSchedule, error) {
+	return s.client.OnCallSchedule.Query().Where(oncallschedule.TenantIDEQ(tenantID)).All(ctx)
+}
+
+func (s *Service) GroupExistsInTenant(ctx context.Context, tenantID, groupID int) (bool, error) {
+	return s.client.Group.Query().Where(group.IDEQ(groupID), group.TenantIDEQ(tenantID)).Exist(ctx)
+}
+
+// ─── EmailConversation ──────────────────────────────────────────────
+
+func (s *Service) ListConversations(ctx context.Context, tenantID int, status string, page, pageSize int) ([]*ent.EmailConversation, int, error) {
+	query := s.client.EmailConversation.Query().Where(emailconversation.TenantIDEQ(tenantID))
+	if status != "" {
+		query.Where(emailconversation.StatusEQ(status))
+	}
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	items, err := query.
+		WithCustomer().WithBranch().WithSupportContract().WithIncidents().
+		Order(ent.Desc(emailconversation.FieldLastMessageAt)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+func (s *Service) GetConversation(ctx context.Context, tenantID, id int) (*ent.EmailConversation, error) {
+	return s.client.EmailConversation.Query().Where(emailconversation.IDEQ(id), emailconversation.TenantIDEQ(tenantID)).WithCustomer().WithBranch().WithSupportContract().WithMessages().WithAnalyses().WithOutboundMessages().WithIncidents().Only(ctx)
+}
+
+func (s *Service) ReloadConversation(ctx context.Context, id, tenantID int) (*ent.EmailConversation, error) {
+	return s.client.EmailConversation.Query().Where(emailconversation.IDEQ(id), emailconversation.TenantIDEQ(tenantID)).WithCustomer().WithBranch().WithSupportContract().WithIncidents().Only(ctx)
 }

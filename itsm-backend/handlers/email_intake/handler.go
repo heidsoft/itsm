@@ -9,20 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
 	"itsm-backend/ent"
-	"itsm-backend/ent/customerbranch"
-	"itsm-backend/ent/emailconversation"
-	"itsm-backend/ent/externalcontractreference"
-	"itsm-backend/ent/group"
-	"itsm-backend/ent/oncallschedule"
-	"itsm-backend/ent/servicecustomer"
-	"itsm-backend/ent/sourceorganization"
-	"itsm-backend/ent/supportcontract"
 	"itsm-backend/middleware"
 )
 
 type Handler struct {
-	client       *ent.Client
-	resolver     *Resolver
+	svc          *Service
 	onCall       *OnCallService
 	orchestrator *EmailIntakeOrchestrator
 }
@@ -32,7 +23,7 @@ func (h *Handler) SetOrchestrator(orchestrator *EmailIntakeOrchestrator) {
 }
 
 func NewHandler(client *ent.Client) *Handler {
-	return &Handler{client: client, resolver: NewResolver(client), onCall: NewOnCallService(client)}
+	return &Handler{svc: NewService(client), onCall: NewOnCallService(client)}
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -103,13 +94,7 @@ func (h *Handler) CreateCustomer(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid customer")
 		return
 	}
-	status := req.Status
-	if status == "" {
-		status = "active"
-	}
-	entity, err := h.client.ServiceCustomer.Create().SetTenantID(tenantID).SetName(strings.TrimSpace(req.Name)).
-		SetNormalizedName(NormalizeName(req.Name)).SetShortName(req.ShortName).SetAliases(req.Aliases).
-		SetHistoricalNames(req.HistoricalNames).SetStatus(status).SetNillableLinkedCustomerTenantID(req.LinkedCustomerTenantID).Save(c)
+	entity, err := h.svc.CreateCustomer(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -122,7 +107,7 @@ func (h *Handler) ListCustomers(c *gin.Context) {
 	if !ok {
 		return
 	}
-	items, err := h.client.ServiceCustomer.Query().Where(servicecustomer.TenantIDEQ(tenantID)).Order(ent.Desc(servicecustomer.FieldUpdatedAt)).All(c)
+	items, err := h.svc.ListCustomers(c, tenantID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -148,7 +133,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid customer")
 		return
 	}
-	entity, err := h.client.ServiceCustomer.UpdateOneID(id).Where(servicecustomer.TenantIDEQ(tenantID)).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetShortName(req.ShortName).SetAliases(req.Aliases).SetHistoricalNames(req.HistoricalNames).SetStatus(defaultString(req.Status, "active")).SetNillableLinkedCustomerTenantID(req.LinkedCustomerTenantID).Save(c)
+	entity, err := h.svc.UpdateCustomer(c, tenantID, id, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -165,7 +150,7 @@ func (h *Handler) DisableCustomer(c *gin.Context) {
 	if !ok {
 		return
 	}
-	entity, err := h.client.ServiceCustomer.UpdateOneID(id).Where(servicecustomer.TenantIDEQ(tenantID)).SetStatus("inactive").Save(c)
+	entity, err := h.svc.DisableCustomer(c, tenantID, id)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -190,15 +175,11 @@ func (h *Handler) CreateBranch(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid branch")
 		return
 	}
-	if exists, err := h.client.ServiceCustomer.Query().Where(servicecustomer.IDEQ(req.CustomerID), servicecustomer.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
+	if exists, err := h.svc.CustomerExists(c, tenantID, req.CustomerID); err != nil || !exists {
 		common.Fail(c, common.ParamErrorCode, "customer not found")
 		return
 	}
-	status := req.Status
-	if status == "" {
-		status = "active"
-	}
-	entity, err := h.client.CustomerBranch.Create().SetTenantID(tenantID).SetCustomerID(req.CustomerID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetAliases(req.Aliases).SetStatus(status).Save(c)
+	entity, err := h.svc.CreateBranch(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -211,11 +192,8 @@ func (h *Handler) ListBranches(c *gin.Context) {
 	if !ok {
 		return
 	}
-	query := h.client.CustomerBranch.Query().Where(customerbranch.TenantIDEQ(tenantID))
-	if id, err := strconv.Atoi(c.Query("customerId")); err == nil && id > 0 {
-		query.Where(customerbranch.CustomerIDEQ(id))
-	}
-	items, err := query.All(c)
+	customerID, _ := strconv.Atoi(c.Query("customerId"))
+	items, err := h.svc.ListBranches(c, tenantID, customerID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -241,11 +219,11 @@ func (h *Handler) UpdateBranch(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid branch")
 		return
 	}
-	if exists, err := h.client.ServiceCustomer.Query().Where(servicecustomer.IDEQ(req.CustomerID), servicecustomer.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
+	if exists, err := h.svc.CustomerExists(c, tenantID, req.CustomerID); err != nil || !exists {
 		common.Fail(c, common.ParamErrorCode, "customer not found")
 		return
 	}
-	entity, err := h.client.CustomerBranch.UpdateOneID(id).Where(customerbranch.TenantIDEQ(tenantID)).SetCustomerID(req.CustomerID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetAliases(req.Aliases).SetStatus(defaultString(req.Status, "active")).Save(c)
+	entity, err := h.svc.UpdateBranch(c, tenantID, id, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -262,7 +240,7 @@ func (h *Handler) DisableBranch(c *gin.Context) {
 	if !ok {
 		return
 	}
-	entity, err := h.client.CustomerBranch.UpdateOneID(id).Where(customerbranch.TenantIDEQ(tenantID)).SetStatus("inactive").Save(c)
+	entity, err := h.svc.DisableBranch(c, tenantID, id)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -287,11 +265,7 @@ func (h *Handler) CreateSourceOrganization(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid source organization")
 		return
 	}
-	status := req.Status
-	if status == "" {
-		status = "active"
-	}
-	entity, err := h.client.SourceOrganization.Create().SetTenantID(tenantID).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetEmailAddresses(req.EmailAddresses).SetEmailDomains(req.EmailDomains).SetStatus(status).Save(c)
+	entity, err := h.svc.CreateSourceOrganization(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -304,7 +278,7 @@ func (h *Handler) ListSourceOrganizations(c *gin.Context) {
 	if !ok {
 		return
 	}
-	items, err := h.client.SourceOrganization.Query().Where(sourceorganization.TenantIDEQ(tenantID)).All(c)
+	items, err := h.svc.ListSourceOrganizations(c, tenantID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -330,7 +304,7 @@ func (h *Handler) UpdateSourceOrganization(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid source organization")
 		return
 	}
-	entity, err := h.client.SourceOrganization.UpdateOneID(id).Where(sourceorganization.TenantIDEQ(tenantID)).SetName(strings.TrimSpace(req.Name)).SetNormalizedName(NormalizeName(req.Name)).SetEmailAddresses(req.EmailAddresses).SetEmailDomains(req.EmailDomains).SetStatus(defaultString(req.Status, "active")).Save(c)
+	entity, err := h.svc.UpdateSourceOrganization(c, tenantID, id, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -347,7 +321,7 @@ func (h *Handler) DisableSourceOrganization(c *gin.Context) {
 	if !ok {
 		return
 	}
-	entity, err := h.client.SourceOrganization.UpdateOneID(id).Where(sourceorganization.TenantIDEQ(tenantID)).SetStatus("inactive").Save(c)
+	entity, err := h.svc.DisableSourceOrganization(c, tenantID, id)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -374,21 +348,10 @@ func (h *Handler) CreateSupportContract(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid support contract")
 		return
 	}
-	if exists, err := h.client.ServiceCustomer.Query().Where(servicecustomer.IDEQ(req.CustomerID), servicecustomer.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
-		common.Fail(c, common.ParamErrorCode, "customer not found")
+	if err := h.ensureContractRefs(c, tenantID, &req); err != nil {
 		return
 	}
-	if req.BranchID != nil {
-		if exists, err := h.client.CustomerBranch.Query().Where(customerbranch.IDEQ(*req.BranchID), customerbranch.CustomerIDEQ(req.CustomerID), customerbranch.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
-			common.Fail(c, common.ParamErrorCode, "branch not found for customer")
-			return
-		}
-	}
-	status := req.Status
-	if status == "" {
-		status = "active"
-	}
-	entity, err := h.client.SupportContract.Create().SetTenantID(tenantID).SetCustomerID(req.CustomerID).SetNillableBranchID(req.BranchID).SetContractNumber(strings.TrimSpace(req.ContractNumber)).SetNormalizedContractNumber(NormalizeContractNumber(req.ContractNumber)).SetStatus(status).SetNillableStartAt(req.StartAt).SetNillableEndAt(req.EndAt).Save(c)
+	entity, err := h.svc.CreateSupportContract(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -401,7 +364,7 @@ func (h *Handler) ListSupportContracts(c *gin.Context) {
 	if !ok {
 		return
 	}
-	items, err := h.client.SupportContract.Query().Where(supportcontract.TenantIDEQ(tenantID)).All(c)
+	items, err := h.svc.ListSupportContracts(c, tenantID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -427,22 +390,30 @@ func (h *Handler) UpdateSupportContract(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid support contract")
 		return
 	}
-	if exists, err := h.client.ServiceCustomer.Query().Where(servicecustomer.IDEQ(req.CustomerID), servicecustomer.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
-		common.Fail(c, common.ParamErrorCode, "customer not found")
+	if err := h.ensureContractRefs(c, tenantID, &req); err != nil {
 		return
 	}
-	if req.BranchID != nil {
-		if exists, err := h.client.CustomerBranch.Query().Where(customerbranch.IDEQ(*req.BranchID), customerbranch.CustomerIDEQ(req.CustomerID), customerbranch.TenantIDEQ(tenantID)).Exist(c); err != nil || !exists {
-			common.Fail(c, common.ParamErrorCode, "branch not found for customer")
-			return
-		}
-	}
-	entity, err := h.client.SupportContract.UpdateOneID(id).Where(supportcontract.TenantIDEQ(tenantID)).SetCustomerID(req.CustomerID).SetNillableBranchID(req.BranchID).SetContractNumber(strings.TrimSpace(req.ContractNumber)).SetNormalizedContractNumber(NormalizeContractNumber(req.ContractNumber)).SetStatus(defaultString(req.Status, "active")).SetNillableStartAt(req.StartAt).SetNillableEndAt(req.EndAt).Save(c)
+	entity, err := h.svc.UpdateSupportContract(c, tenantID, id, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 	common.Success(c, mapSupportContract(entity))
+}
+
+// ensureContractRefs 校验合同引用的 customer/branch 存在且属于当前租户
+func (h *Handler) ensureContractRefs(c *gin.Context, tenantID int, req *supportContractRequest) error {
+	if exists, err := h.svc.CustomerExists(c, tenantID, req.CustomerID); err != nil || !exists {
+		common.Fail(c, common.ParamErrorCode, "customer not found")
+		return errMissingRef
+	}
+	if req.BranchID != nil {
+		if exists, err := h.svc.BranchExistsForCustomer(c, tenantID, *req.BranchID, req.CustomerID); err != nil || !exists {
+			common.Fail(c, common.ParamErrorCode, "branch not found for customer")
+			return errMissingRef
+		}
+	}
+	return nil
 }
 
 func (h *Handler) TerminateSupportContract(c *gin.Context) {
@@ -454,7 +425,7 @@ func (h *Handler) TerminateSupportContract(c *gin.Context) {
 	if !ok {
 		return
 	}
-	entity, err := h.client.SupportContract.UpdateOneID(id).Where(supportcontract.TenantIDEQ(tenantID)).SetStatus("terminated").Save(c)
+	entity, err := h.svc.TerminateSupportContract(c, tenantID, id)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -468,6 +439,8 @@ type externalReferenceRequest struct {
 	ExternalContractNumber string `json:"externalContractNumber" binding:"required"`
 }
 
+var errMissingRef = errors.New("missing reference")
+
 func (h *Handler) CreateExternalContractReference(c *gin.Context) {
 	tenantID, ok := tenant(c)
 	if !ok {
@@ -478,18 +451,11 @@ func (h *Handler) CreateExternalContractReference(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid external reference")
 		return
 	}
-	source, err := h.client.SourceOrganization.Query().Where(sourceorganization.IDEQ(req.SourceOrganizationID), sourceorganization.TenantIDEQ(tenantID)).Only(c)
-	if err != nil {
+	if exists, err := h.svc.SourceOrganizationExists(c, tenantID, req.SourceOrganizationID); err != nil || !exists {
 		common.Fail(c, common.ParamErrorCode, "source organization not found")
 		return
 	}
-	_ = source
-	contract, err := h.client.SupportContract.Query().Where(supportcontract.IDEQ(req.SupportContractID), supportcontract.TenantIDEQ(tenantID)).Only(c)
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "support contract not found")
-		return
-	}
-	entity, err := h.client.ExternalContractReference.Create().SetTenantID(tenantID).SetSourceOrganizationID(req.SourceOrganizationID).SetSupportContractID(contract.ID).SetCustomerID(contract.CustomerID).SetNillableBranchID(contract.BranchID).SetExternalContractNumber(strings.TrimSpace(req.ExternalContractNumber)).SetNormalizedExternalContractNumber(NormalizeContractNumber(req.ExternalContractNumber)).Save(c)
+	entity, err := h.svc.CreateExternalContractReference(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -502,7 +468,7 @@ func (h *Handler) ListExternalContractReferences(c *gin.Context) {
 	if !ok {
 		return
 	}
-	items, err := h.client.ExternalContractReference.Query().Where(externalcontractreference.TenantIDEQ(tenantID)).All(c)
+	items, err := h.svc.ListExternalContractReferences(c, tenantID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -528,16 +494,11 @@ func (h *Handler) UpdateExternalContractReference(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid external reference")
 		return
 	}
-	contract, err := h.client.SupportContract.Query().Where(supportcontract.IDEQ(req.SupportContractID), supportcontract.TenantIDEQ(tenantID)).Only(c)
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "support contract not found")
-		return
-	}
-	if exists, sourceErr := h.client.SourceOrganization.Query().Where(sourceorganization.IDEQ(req.SourceOrganizationID), sourceorganization.TenantIDEQ(tenantID)).Exist(c); sourceErr != nil || !exists {
+	if exists, err := h.svc.SourceOrganizationExists(c, tenantID, req.SourceOrganizationID); err != nil || !exists {
 		common.Fail(c, common.ParamErrorCode, "source organization not found")
 		return
 	}
-	entity, err := h.client.ExternalContractReference.UpdateOneID(id).Where(externalcontractreference.TenantIDEQ(tenantID)).SetSourceOrganizationID(req.SourceOrganizationID).SetSupportContractID(req.SupportContractID).SetCustomerID(contract.CustomerID).SetNillableBranchID(contract.BranchID).SetExternalContractNumber(strings.TrimSpace(req.ExternalContractNumber)).SetNormalizedExternalContractNumber(NormalizeContractNumber(req.ExternalContractNumber)).Save(c)
+	entity, err := h.svc.UpdateExternalContractReference(c, tenantID, id, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -554,7 +515,7 @@ func (h *Handler) DeleteExternalContractReference(c *gin.Context) {
 	if !ok {
 		return
 	}
-	deleted, err := h.client.ExternalContractReference.Delete().Where(externalcontractreference.IDEQ(id), externalcontractreference.TenantIDEQ(tenantID)).Exec(c)
+	deleted, err := h.svc.DeleteExternalContractReference(c, tenantID, id)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -579,20 +540,12 @@ func (h *Handler) CreateSchedule(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid schedule")
 		return
 	}
-	timezone := req.Timezone
-	if timezone == "" {
-		timezone = "Asia/Shanghai"
-	}
-	status := req.Status
-	if status == "" {
-		status = "active"
-	}
-	groupExists, err := h.client.Group.Query().Where(group.IDEQ(req.GroupID), group.TenantIDEQ(tenantID)).Exist(c)
+	groupExists, err := h.svc.GroupExistsInTenant(c, tenantID, req.GroupID)
 	if err != nil || !groupExists {
 		common.Fail(c, common.ParamErrorCode, "group not found in tenant")
 		return
 	}
-	entity, err := h.client.OnCallSchedule.Create().SetTenantID(tenantID).SetGroupID(req.GroupID).SetName(req.Name).SetTimezone(timezone).SetStatus(status).Save(c)
+	entity, err := h.svc.CreateOnCallSchedule(c, tenantID, &req)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -605,7 +558,7 @@ func (h *Handler) ListSchedules(c *gin.Context) {
 	if !ok {
 		return
 	}
-	items, err := h.client.OnCallSchedule.Query().Where(oncallschedule.TenantIDEQ(tenantID)).All(c)
+	items, err := h.svc.ListOnCallSchedules(c, tenantID)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -742,10 +695,7 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	if !ok {
 		return
 	}
-	query := h.client.EmailConversation.Query().Where(emailconversation.TenantIDEQ(tenantID))
-	if status := strings.TrimSpace(c.Query("status")); status != "" {
-		query.Where(emailconversation.StatusEQ(status))
-	}
+	status := strings.TrimSpace(c.Query("status"))
 	// Pagination: page (1-based) and page_size (default 20, max 100)
 	page := 1
 	pageSize := 20
@@ -762,17 +712,7 @@ func (h *Handler) ListConversations(c *gin.Context) {
 		}
 		pageSize = ps
 	}
-	total, err := query.Count(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
-		return
-	}
-	items, err := query.
-		WithCustomer().WithBranch().WithSupportContract().WithIncidents().
-		Order(ent.Desc(emailconversation.FieldLastMessageAt)).
-		Offset((page - 1) * pageSize).
-		Limit(pageSize).
-		All(c)
+	items, total, err := h.svc.ListConversations(c, tenantID, status, page, pageSize)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
@@ -799,7 +739,7 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "invalid conversation id")
 		return
 	}
-	item, err := h.client.EmailConversation.Query().Where(emailconversation.IDEQ(id), emailconversation.TenantIDEQ(tenantID)).WithCustomer().WithBranch().WithSupportContract().WithMessages().WithAnalyses().WithOutboundMessages().WithIncidents().Only(c)
+	item, err := h.svc.GetConversation(c, tenantID, id)
 	if ent.IsNotFound(err) {
 		common.Fail(c, common.NotFoundCode, "conversation not found")
 		return
@@ -947,7 +887,7 @@ func (h *Handler) actionResult(c *gin.Context, updated *ent.EmailConversation, e
 		common.Fail(c, common.ConflictCode, "email intake action conflicts with the current state")
 		return
 	}
-	item, loadErr := h.client.EmailConversation.Query().Where(emailconversation.IDEQ(updated.ID), emailconversation.TenantIDEQ(updated.TenantID)).WithCustomer().WithBranch().WithSupportContract().WithIncidents().Only(c)
+	item, loadErr := h.svc.ReloadConversation(c, updated.ID, updated.TenantID)
 	if loadErr != nil {
 		common.InternalError(c, "failed to load updated email conversation")
 		return
