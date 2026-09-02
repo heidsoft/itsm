@@ -236,8 +236,8 @@ type ListTicketTypesRequest struct {
 	Status          *TicketTypeStatus `form:"status"`
 	Keyword         string            `form:"keyword"`
 	IncludeArchived bool              `form:"includeArchived"`
-	Page            int               `form:"page" binding:"min=1"`
-	PageSize        int               `form:"pageSize" binding:"min=1,max=100"`
+	Page            int               `form:"page" binding:"omitempty,min=1"`
+	PageSize        int               `form:"pageSize" binding:"omitempty,min=1"`
 }
 
 // TicketTypeListResponse 工单类型列表响应
