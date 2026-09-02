@@ -48,5 +48,5 @@ type GetRatingStatsRequest struct {
 	CategoryID *int    `form:"category_id"` // 按分类筛选
 	StartDate  *string `form:"start_date"`  // 开始日期
 	EndDate    *string `form:"end_date"`    // 结束日期
-	TenantID   int     `form:"tenant_id" binding:"required"`
+	TenantID   int     `form:"tenant_id"`
 }

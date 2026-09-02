@@ -4,7 +4,7 @@ import "time"
 
 // 趋势预测相关DTO
 type TrendPredictionRequest struct {
-	TimeRange      []string               `json:"timeRange" binding:"required,len=2" example:"[\"2024-01-01\",\"2024-12-31\"]"`
+	TimeRange      []string               `json:"timeRange" binding:"omitempty,len=2" example:"[\"2024-01-01\",\"2024-12-31\"]"`
 	PredictionType string                 `json:"predictionType" binding:"required,oneof=volume type priority resource" example:"volume"`
 	Filters        map[string]interface{} `json:"filters,omitempty"`
 	Model          string                 `json:"model,omitempty" example:"arima"`

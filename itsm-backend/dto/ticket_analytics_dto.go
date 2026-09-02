@@ -4,10 +4,10 @@ import "time"
 
 // 深度数据分析相关DTO（使用DeepAnalytics前缀避免与ticket_dto.go中的TicketAnalytics冲突）
 type DeepAnalyticsRequest struct {
-	Dimensions []string               `json:"dimensions" binding:"required,min=1" example:"[\"status\",\"priority\"]"`
-	Metrics    []string               `json:"metrics" binding:"required,min=1" example:"[\"count\",\"response_time\"]"`
-	ChartType  string                 `json:"chartType" binding:"required,oneof=line bar pie area table" example:"bar"`
-	TimeRange  []string               `json:"timeRange" binding:"required,len=2" example:"[\"2024-01-01\",\"2024-01-31\"]"`
+	Dimensions []string               `json:"dimensions" binding:"omitempty,min=1" example:"[\"status\",\"priority\"]"`
+	Metrics    []string               `json:"metrics" binding:"omitempty,min=1" example:"[\"count\",\"response_time\"]"`
+	ChartType  string                 `json:"chartType" binding:"omitempty,oneof=line bar pie area table" example:"bar"`
+	TimeRange  []string               `json:"timeRange" binding:"omitempty,len=2" example:"[\"2024-01-01\",\"2024-01-31\"]"`
 	Filters    map[string]interface{} `json:"filters,omitempty"`
 	GroupBy    *string                `json:"groupBy,omitempty" example:"status"`
 	Page       int                    `json:"page" example:"1"`
