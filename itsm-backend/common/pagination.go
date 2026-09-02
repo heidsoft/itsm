@@ -25,7 +25,7 @@ type PaginationResponse struct {
 
 // ListResponse 列表响应结构
 type ListResponse struct {
-	Data       interface{}         `json:"data"`
+	Items      interface{}         `json:"items"`
 	Pagination *PaginationResponse `json:"pagination"`
 }
 
@@ -77,17 +77,17 @@ func NewPaginationResponse(page, pageSize int, total int64) *PaginationResponse 
 }
 
 // NewListResponse 创建列表响应
-func NewListResponse(data interface{}, pagination *PaginationResponse) *ListResponse {
+func NewListResponse(items interface{}, pagination *PaginationResponse) *ListResponse {
 	return &ListResponse{
-		Data:       data,
+		Items:      items,
 		Pagination: pagination,
 	}
 }
 
 // SuccessWithPagination 带分页的成功响应
-func SuccessWithPagination(c *gin.Context, data interface{}, page, pageSize int, total int64) {
+func SuccessWithPagination(c *gin.Context, items interface{}, page, pageSize int, total int64) {
 	pagination := NewPaginationResponse(page, pageSize, total)
-	response := NewListResponse(data, pagination)
+	response := NewListResponse(items, pagination)
 	Success(c, response)
 }
 

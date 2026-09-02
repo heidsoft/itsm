@@ -209,9 +209,9 @@ func (h *Handler) ListArticles(c *gin.Context) {
 	}
 
 	common.Success(c, dto.KnowledgeArticleListResponse{
-		Articles: dtos,
-		Total:    total,
-		Page:     page,
+		Items:   dtos,
+		Total:   total,
+		Page:    page,
 		PageSize: pageSize,
 	})
 }
@@ -431,7 +431,7 @@ func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"categories": restricted, "total": len(restricted)})
+	common.Success(c, gin.H{"items": restricted, "total": len(restricted)})
 }
 
 // SetCategoryRestriction handles POST /api/v1/knowledge/categories/restricted

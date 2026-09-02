@@ -90,7 +90,7 @@ func main() {
 					{"name": "cmdb_ci_ip_switch", "label": "交换机", "icon": "network", "color": "#17a2b8"},
 					{"name": "cmdb_ci_database", "label": "数据库", "icon": "database", "color": "#fd7e14"},
 				}
-				c.JSON(200, gin.H{"success": true, "data": classes})
+				c.JSON(200, gin.H{"success": true, "items": classes})
 			})
 
 			// CI列表
@@ -100,7 +100,7 @@ func main() {
 					c.JSON(500, gin.H{"success": false, "message": err.Error()})
 					return
 				}
-				c.JSON(200, gin.H{"success": true, "data": cis})
+				c.JSON(200, gin.H{"success": true, "items": cis})
 			})
 
 			// 创建CI

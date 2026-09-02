@@ -309,8 +309,8 @@ func humanizeTag(tag string) string {
 }
 
 // SuccessWithList 返回列表数据的成功响应
-func SuccessWithList(c *gin.Context, data interface{}, total int, page int, pageSize int) {
-	listResponse := NewListResponse(data, NewPaginationResponse(page, pageSize, int64(total)))
+func SuccessWithList(c *gin.Context, items interface{}, total int, page int, pageSize int) {
+	listResponse := NewListResponse(items, NewPaginationResponse(page, pageSize, int64(total)))
 	c.JSON(http.StatusOK, Response{
 		Code:    SuccessCode,
 		Message: "success",

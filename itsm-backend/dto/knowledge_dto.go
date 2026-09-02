@@ -88,7 +88,7 @@ type ListKnowledgeArticlesRequest struct {
 
 // 知识库文章列表响应
 type KnowledgeArticleListResponse struct {
-	Articles []KnowledgeArticleResponse `json:"articles"`
+	Items   []KnowledgeArticleResponse `json:"items"`
 	Total    int                        `json:"total"`
 	Page     int                        `json:"page"`
 	PageSize int                        `json:"pageSize"`

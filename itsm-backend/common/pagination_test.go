@@ -151,8 +151,8 @@ func TestPaginationResponse_JSONSerialization(t *testing.T) {
 
 // ==================== ListResponse 测试 ====================
 
-func TestListResponse_WithData(t *testing.T) {
-	data := []int{1, 2, 3, 4, 5}
+func TestListResponse_WithItems(t *testing.T) {
+	items := []int{1, 2, 3, 4, 5}
 	pagination := &PaginationResponse{
 		Page:       1,
 		PageSize:   20,
@@ -163,21 +163,21 @@ func TestListResponse_WithData(t *testing.T) {
 	}
 
 	resp := ListResponse{
-		Data:       data,
+		Items:      items,
 		Pagination: pagination,
 	}
 
-	assert.Len(t, resp.Data.([]int), 5)
+	assert.Len(t, resp.Items.([]int), 5)
 	assert.NotNil(t, resp.Pagination)
 }
 
 func TestListResponse_WithNilPagination(t *testing.T) {
 	resp := ListResponse{
-		Data:       []string{"a", "b", "c"},
+		Items:      []string{"a", "b", "c"},
 		Pagination: nil,
 	}
 
-	assert.Len(t, resp.Data.([]string), 3)
+	assert.Len(t, resp.Items.([]string), 3)
 	assert.Nil(t, resp.Pagination)
 }
 
@@ -304,8 +304,8 @@ func TestSuccessWithPagination(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	data := []string{"a", "b", "c"}
-	SuccessWithPagination(c, data, 1, 10, 3)
+	items := []string{"a", "b", "c"}
+	SuccessWithPagination(c, items, 1, 10, 3)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -317,7 +317,8 @@ func TestSuccessWithPagination(t *testing.T) {
 	// 验证内部结构
 	listResp, ok := resp.Data.(map[string]interface{})
 	assert.True(t, ok)
-	assert.NotNil(t, listResp["data"])
+	assert.NotNil(t, listResp["items"])
+	assert.NotContains(t, listResp, "data")
 	assert.NotNil(t, listResp["pagination"])
 }
 

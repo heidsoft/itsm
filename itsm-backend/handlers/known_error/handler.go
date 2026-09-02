@@ -514,7 +514,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		categories = append(categories, cat)
 	}
 
-	common.Success(c, gin.H{"categories": categories})
+	common.Success(c, gin.H{"items": categories})
 }
 
 // PromoteToKnownError handles POST /api/v1/known-errors/:id/promote
