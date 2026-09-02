@@ -13,7 +13,6 @@ import (
 
 	"itsm-backend/common"
 	connectorAlert "itsm-backend/connector/alert"
-	"itsm-backend/controller"
 	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
@@ -35,7 +34,6 @@ import (
 	"itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	connectorHandler "itsm-backend/handlers/connector"
-	departmentHandler "itsm-backend/handlers/department"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
@@ -55,11 +53,9 @@ import (
 	provisioningHandler "itsm-backend/handlers/provisioning"
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
-	rootCauseHandler "itsm-backend/handlers/root_cause"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
-	slaPolicyHandler "itsm-backend/handlers/sla_policy"
 	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	surveyHandler "itsm-backend/handlers/survey"
 	"itsm-backend/handlers/sla"
@@ -277,7 +273,6 @@ type RouterConfig struct {
 	TicketTypeHandler     *ticketTypeHandler.Handler
 
 	// CMDB Controllers
-	CMDBHandler      *cmdb.Handler
 	TicketTagHandler *ticketTagHandler.Handler
 
 	// User Handler
