@@ -20,24 +20,28 @@ import (
 	"itsm-backend/handlers/ai"
 	approvalHandler "itsm-backend/handlers/approval"
 	authHandler "itsm-backend/handlers/auth"
+	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/email_intake"
+	feishuHandler "itsm-backend/handlers/feishu"
 	incidentHandler "itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/operations"
 	"itsm-backend/handlers/problem"
 	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
+	rbacHandler "itsm-backend/handlers/rbac"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	systemConfigHandler "itsm-backend/handlers/systemconfig"
+	tenantHandler "itsm-backend/handlers/tenant"
 	ticketHandler "itsm-backend/handlers/ticket"
 	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/middleware"
@@ -223,12 +227,7 @@ type RouterConfig struct {
 	TicketAutomationRuleController  *controller.TicketAutomationRuleController
 	IncidentHandler                 *incidentHandler.IncidentHandler
 	ApprovalHandler                 *approvalHandler.Handler
-	BPMNWorkflowController          *controller.BPMNWorkflowController
-	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
-	BPMNDashboardController         *controller.BPMNDashboardController
-	BPMNMonitoringController        *controller.BPMNMonitoringController
-	BPMNAIGeneratorController       *controller.BPMNAIGeneratorController
-	BPMNLintController              *controller.BPMNLintController
+	BPMNHandler                     *bpmnHandler.Handler
 
 	A2UITicketController *controller.A2UITicketController
 	DashboardHandler     *handlers.DashboardHandler
@@ -251,11 +250,9 @@ type RouterConfig struct {
 	// Group Controller
 	GroupController *controller.GroupController
 
-	// Role & Permission Controllers (new database-backed implementation)
-	RoleController                   *controller.RoleController
-	PermissionController             *controller.PermissionController
-	MenuController                   *controller.MenuController
-	TenantController                 *controller.TenantController
+	// RBAC and tenant domain handlers
+	RBACHandler                      *rbacHandler.Handler
+	TenantHandler                    *tenantHandler.Handler
 	MSPController                    *controller.MSPController
 	SystemConfigHandler              *systemConfigHandler.Handler
 	ApprovalChainController          *controller.ApprovalChainController
@@ -313,7 +310,7 @@ type RouterConfig struct {
 	// Connector Controller (连接器/插件/技能市场)
 	ConnectorController   *controller.ConnectorController
 	AlertHandler          *connectorAlert.Handler
-	FeishuController      *controller.FeishuController
+	FeishuHandler         *feishuHandler.Handler
 	MarketplaceController *marketplaceController.Controller
 
 	// Ticket Association Service (工单关联服务)
@@ -1419,8 +1416,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// User Menu (no permission required, will be filtered by role)
-			if config.MenuController != nil {
-				authGrp.GET("/menus", middleware.AuthMiddleware(config.JWTSecret), config.MenuController.GetUserMenus)
+			if config.RBACHandler != nil {
+				authGrp.GET("/menus", middleware.AuthMiddleware(config.JWTSecret), config.RBACHandler.GetUserMenus)
 			}
 
 			// ==================== Audit Logs ====================
@@ -1528,58 +1525,58 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				tenant.GET("/teams", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeams)
 				tenant.GET("/tags", middleware.RequirePermission("tag", "read"), config.CommonHandler.ListTags)
 			}
-			if config.TenantController != nil {
+			if config.TenantHandler != nil {
 				admin := tenant.(*gin.RouterGroup).Group("/admin")
 				{
-					admin.GET("/tenants", middleware.RequirePermission("tenant", "read"), config.TenantController.ListTenants)
+					admin.GET("/tenants", middleware.RequirePermission("tenant", "read"), config.TenantHandler.ListTenants)
 				}
 			}
 
 			// Role & Permission Controllers (database-backed with tenant isolation)
-			if config.RoleController != nil {
+			if config.RBACHandler != nil {
 				roles := tenant.(*gin.RouterGroup).Group("/roles")
 				{
-					roles.GET("", middleware.RequirePermission("role", "read"), config.RoleController.ListRoles)
-					roles.POST("", middleware.RequirePermission("role", "create"), config.RoleController.CreateRole)
-					roles.GET("/:id", middleware.RequirePermission("role", "read"), config.RoleController.GetRole)
-					roles.PUT("/:id", middleware.RequirePermission("role", "update"), config.RoleController.UpdateRole)
-					roles.DELETE("/:id", middleware.RequirePermission("role", "delete"), config.RoleController.DeleteRole)
-					roles.POST("/:id/permissions", middleware.RequirePermission("role", "update"), config.RoleController.AssignPermissions)
+					roles.GET("", middleware.RequirePermission("role", "read"), config.RBACHandler.ListRoles)
+					roles.POST("", middleware.RequirePermission("role", "create"), config.RBACHandler.CreateRole)
+					roles.GET("/:id", middleware.RequirePermission("role", "read"), config.RBACHandler.GetRole)
+					roles.PUT("/:id", middleware.RequirePermission("role", "update"), config.RBACHandler.UpdateRole)
+					roles.DELETE("/:id", middleware.RequirePermission("role", "delete"), config.RBACHandler.DeleteRole)
+					roles.POST("/:id/permissions", middleware.RequirePermission("role", "update"), config.RBACHandler.AssignPermissions)
 				}
 			}
 
-			if config.PermissionController != nil {
+			if config.RBACHandler != nil {
 				permissions := tenant.(*gin.RouterGroup).Group("/permissions")
 				{
-					permissions.GET("", middleware.RequirePermission("permission", "read"), config.PermissionController.ListPermissions)
-					permissions.POST("", middleware.RequirePermission("permission", "create"), config.PermissionController.CreatePermission)
-					permissions.POST("/init", middleware.RequirePermission("permission", "create"), config.PermissionController.InitDefaultPermissions)
+					permissions.GET("", middleware.RequirePermission("permission", "read"), config.RBACHandler.ListPermissions)
+					permissions.POST("", middleware.RequirePermission("permission", "create"), config.RBACHandler.CreatePermission)
+					permissions.POST("/init", middleware.RequirePermission("permission", "create"), config.RBACHandler.InitDefaultPermissions)
 				}
 			}
 
 			// Menu Controllers (database-backed with tenant isolation)
-			if config.MenuController != nil {
+			if config.RBACHandler != nil {
 				menus := tenant.(*gin.RouterGroup).Group("/menus")
 				{
-					menus.GET("", middleware.RequirePermission("menu", "read"), config.MenuController.ListMenus)
-					menus.POST("", middleware.RequirePermission("menu", "create"), config.MenuController.CreateMenu)
-					menus.GET("/:id", middleware.RequirePermission("menu", "read"), config.MenuController.GetMenu)
-					menus.PUT("/:id", middleware.RequirePermission("menu", "update"), config.MenuController.UpdateMenu)
-					menus.DELETE("/:id", middleware.RequirePermission("menu", "delete"), config.MenuController.DeleteMenu)
-					menus.POST("/init", middleware.RequirePermission("menu", "create"), config.MenuController.InitDefaultMenus)
+					menus.GET("", middleware.RequirePermission("menu", "read"), config.RBACHandler.ListMenus)
+					menus.POST("", middleware.RequirePermission("menu", "create"), config.RBACHandler.CreateMenu)
+					menus.GET("/:id", middleware.RequirePermission("menu", "read"), config.RBACHandler.GetMenu)
+					menus.PUT("/:id", middleware.RequirePermission("menu", "update"), config.RBACHandler.UpdateMenu)
+					menus.DELETE("/:id", middleware.RequirePermission("menu", "delete"), config.RBACHandler.DeleteMenu)
+					menus.POST("/init", middleware.RequirePermission("menu", "create"), config.RBACHandler.InitDefaultMenus)
 				}
 			}
 
 			// Tenant Management (admin only)
-			if config.TenantController != nil {
+			if config.TenantHandler != nil {
 				tenants := tenant.(*gin.RouterGroup).Group("/tenants")
 				{
-					tenants.GET("", middleware.RequirePermission("tenant", "read"), config.TenantController.ListTenants)
-					tenants.POST("", middleware.RequirePermission("tenant", "create"), config.TenantController.CreateTenant)
-					tenants.GET("/:id", middleware.RequirePermission("tenant", "read"), config.TenantController.GetTenant)
-					tenants.PUT("/:id", middleware.RequirePermission("tenant", "update"), config.TenantController.UpdateTenant)
-					tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantController.DeleteTenant)
-					tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantController.UpdateTenantStatus)
+					tenants.GET("", middleware.RequirePermission("tenant", "read"), config.TenantHandler.ListTenants)
+					tenants.POST("", middleware.RequirePermission("tenant", "create"), config.TenantHandler.CreateTenant)
+					tenants.GET("/:id", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenant)
+					tenants.PUT("/:id", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenant)
+					tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantHandler.DeleteTenant)
+					tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantStatus)
 				}
 			}
 
@@ -1654,52 +1651,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			problemInvestigationExtra.GET("/problem-knowledge-articles/problems/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemKnowledgeArticles)
 		}
 
-		// ==================== BPMN Workflow ====================
-		if config.BPMNWorkflowController != nil {
-			config.BPMNWorkflowController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
-
-		// 简化路由：/workflow/* -> /bpmn/*
-		workflow := tenant.(*gin.RouterGroup).Group("/workflow")
-		{
-			workflow.GET("/instances", middleware.RequirePermission("process_instance", "read"), config.BPMNWorkflowController.ListProcessInstances)
-			workflow.GET("/instances/:id", middleware.RequirePermission("process_instance", "read"), config.BPMNWorkflowController.GetProcessInstance)
-			workflow.POST("/instances", middleware.RequirePermission("process_instance", "create"), config.BPMNWorkflowController.StartProcess)
-			workflow.PUT("/instances/:id/terminate", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.TerminateProcess)
-			workflow.PUT("/instances/:id/suspend", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.SuspendProcess)
-			workflow.PUT("/instances/:id/resume", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.ResumeProcess)
-			// 任务
-			workflow.GET("/tasks", middleware.RequirePermission("task", "read"), config.BPMNWorkflowController.ListUserTasks)
-			workflow.GET("/tasks/all", middleware.RequirePermission("task", "admin"), config.BPMNWorkflowController.ListAllTasks)
-			workflow.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.CompleteTask)
-			workflow.POST("/tasks/:id/claim", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ClaimTask)
-			workflow.PUT("/tasks/:id/reassign", middleware.RequirePermission("task", "update"), config.BPMNWorkflowController.ReassignTask)
-			workflow.PUT("/tasks/:id/terminate", middleware.RequirePermission("process_instance", "update"), config.BPMNWorkflowController.TerminateTask)
-		}
-
-		// BPMN Process Trigger Controller (统一流程触发接口)
-		if config.BPMNProcessTriggerController != nil {
-			config.BPMNProcessTriggerController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
-
-		// BPMN Dashboard Controller (监控仪表盘)
-		if config.BPMNDashboardController != nil {
-			config.BPMNDashboardController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
-
-		// ==================== BPMN Monitoring ====================
-		// BPMN AI Generator (AI驱动的流程生成)
-		if config.BPMNAIGeneratorController != nil {
-			config.BPMNAIGeneratorController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
-
-		// BPMN Lint（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
-		if config.BPMNLintController != nil {
-			config.BPMNLintController.RegisterRoutes(tenant.(*gin.RouterGroup))
-		}
-
-		if config.BPMNMonitoringController != nil {
-			config.BPMNMonitoringController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		// ==================== BPMN ====================
+		if config.BPMNHandler != nil {
+			config.BPMNHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// A2UI Ticket Controller (AI-driven UI表单)
@@ -1964,7 +1918,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		})
 
 		// Legacy /api/v1/bpmn/definitions path; canonical BPMN APIs are
-		// registered by BPMNWorkflowController under /api/v1/bpmn/process-*.
+		// registered by the BPMN handler under /api/v1/bpmn/process-*.
 		bpmn := tenant.(*gin.RouterGroup).Group("/bpmn")
 		{
 			bpmn.GET("/definitions", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
@@ -2023,7 +1977,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	}
 
 	// 飞书相关路由
-	if config.FeishuController != nil {
-		SetupFeishuRoutes(auth, public, config.FeishuController)
+	if config.FeishuHandler != nil {
+		SetupFeishuRoutes(auth, public, config.FeishuHandler)
 	}
 }

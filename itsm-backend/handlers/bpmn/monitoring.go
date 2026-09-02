@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"strconv"
@@ -10,25 +10,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// BPMNMonitoringController BPMN监控控制器
-type BPMNMonitoringController struct {
+// MonitoringHandler BPMN监控控制器
+type MonitoringHandler struct {
 	monitoringService *service.BPMNMonitoringService
 }
 
-// NewBPMNMonitoringController 创建BPMN监控控制器
-func NewBPMNMonitoringController(monitoringService *service.BPMNMonitoringService) *BPMNMonitoringController {
-	return &BPMNMonitoringController{
+// NewMonitoringHandler 创建BPMN监控控制器
+func NewMonitoringHandler(monitoringService *service.BPMNMonitoringService) *MonitoringHandler {
+	return &MonitoringHandler{
 		monitoringService: monitoringService,
 	}
 }
 
 // SetMonitoringService 设置监控服务（用于延迟注入）
-func (c *BPMNMonitoringController) SetMonitoringService(s *service.BPMNMonitoringService) {
+func (c *MonitoringHandler) SetMonitoringService(s *service.BPMNMonitoringService) {
 	c.monitoringService = s
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNMonitoringController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 	monitoring := r.Group("/bpmn/monitoring")
 	{
 		// 流程指标监控
@@ -69,7 +69,7 @@ func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 }
 
 // GetProcessMetrics 获取流程指标
-func (c *BPMNMonitoringController) GetProcessMetrics(ctx *gin.Context) {
+func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return
@@ -107,7 +107,7 @@ func (c *BPMNMonitoringController) GetProcessMetrics(ctx *gin.Context) {
 }
 
 // GetProcessMetricsByKey 根据流程定义键获取指标
-func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
+func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 	processKey := ctx.Param("processKey")
 	if processKey == "" {
 		common.Fail(ctx, common.ParamErrorCode, "流程定义键不能为空")
@@ -152,7 +152,7 @@ func (c *BPMNMonitoringController) GetProcessMetricsByKey(ctx *gin.Context) {
 }
 
 // GetProcessInstanceStatus 获取流程实例状态
-func (c *BPMNMonitoringController) GetProcessInstanceStatus(ctx *gin.Context) {
+func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
 	instanceIDStr := ctx.Param("instanceId")
 	instanceID, err := strconv.Atoi(instanceIDStr)
 	if err != nil {
@@ -175,7 +175,7 @@ func (c *BPMNMonitoringController) GetProcessInstanceStatus(ctx *gin.Context) {
 }
 
 // ListProcessInstancesStatus 获取流程实例状态列表
-func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) {
+func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return
@@ -223,7 +223,7 @@ func (c *BPMNMonitoringController) ListProcessInstancesStatus(ctx *gin.Context) 
 }
 
 // GetProcessTimeline 获取流程实例完整时间线
-func (c *BPMNMonitoringController) GetProcessTimeline(ctx *gin.Context) {
+func (c *MonitoringHandler) GetProcessTimeline(ctx *gin.Context) {
 	processInstanceKey := ctx.Param("instanceId")
 	if processInstanceKey == "" {
 		common.Fail(ctx, common.ParamErrorCode, "流程实例Key不能为空")
@@ -248,7 +248,7 @@ func (c *BPMNMonitoringController) GetProcessTimeline(ctx *gin.Context) {
 }
 
 // GetPerformanceMetrics 获取性能指标
-func (c *BPMNMonitoringController) GetPerformanceMetrics(ctx *gin.Context) {
+func (c *MonitoringHandler) GetPerformanceMetrics(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return
@@ -271,7 +271,7 @@ func (c *BPMNMonitoringController) GetPerformanceMetrics(ctx *gin.Context) {
 }
 
 // GetPerformanceAlerts 获取性能告警
-func (c *BPMNMonitoringController) GetPerformanceAlerts(ctx *gin.Context) {
+func (c *MonitoringHandler) GetPerformanceAlerts(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return
@@ -287,7 +287,7 @@ func (c *BPMNMonitoringController) GetPerformanceAlerts(ctx *gin.Context) {
 }
 
 // GetSystemHealth 获取系统健康状态
-func (c *BPMNMonitoringController) GetSystemHealth(ctx *gin.Context) {
+func (c *MonitoringHandler) GetSystemHealth(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return
@@ -303,7 +303,7 @@ func (c *BPMNMonitoringController) GetSystemHealth(ctx *gin.Context) {
 }
 
 // GetAuditLogs 获取审计日志
-func (c *BPMNMonitoringController) GetAuditLogs(ctx *gin.Context) {
+func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
 	if !ok {
 		return

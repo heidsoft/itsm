@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"github.com/gin-gonic/gin"
@@ -7,17 +7,17 @@ import (
 	"itsm-backend/service"
 )
 
-// BPMNLintController BPMN Lint 控制器
+// LintHandler BPMN Lint 控制器
 //
 // 提供后端流程校验真源：前端设计器「校验流程」与 BPMN AI 生成器
 // 共用同一 Lint 规则（结构/事件/任务配置/连通性/网关语义）。
-type BPMNLintController struct {
+type LintHandler struct {
 	lintService *service.BPMNLintService
 }
 
-// NewBPMNLintController 创建控制器实例
-func NewBPMNLintController() *BPMNLintController {
-	return &BPMNLintController{
+// NewLintHandler 创建控制器实例
+func NewLintHandler() *LintHandler {
+	return &LintHandler{
 		lintService: service.NewBPMNLintService(),
 	}
 }
@@ -32,7 +32,7 @@ func NewBPMNLintController() *BPMNLintController {
 // @Success 200 {object} common.Response{data=dto.BPMNLintResult}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/bpmn/lint [post]
-func (c *BPMNLintController) LintBPMN(ctx *gin.Context) {
+func (c *LintHandler) LintBPMN(ctx *gin.Context) {
 	var req dto.BPMNLintRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, 1001, "参数错误: "+err.Error())
@@ -50,7 +50,7 @@ func (c *BPMNLintController) LintBPMN(ctx *gin.Context) {
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNLintController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *LintHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmn := r.Group("/bpmn")
 	{
 		// 校验 BPMN XML

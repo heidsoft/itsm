@@ -42,23 +42,27 @@ import (
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/approval"
 	authHandler "itsm-backend/handlers/auth"
+	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
+	feishuHandler "itsm-backend/handlers/feishu"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
 	"itsm-backend/handlers/problem"
 	probleminvestigation "itsm-backend/handlers/problem_investigation"
+	rbacHandler "itsm-backend/handlers/rbac"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
 	"itsm-backend/handlers/standard_change"
 	systemconfig "itsm-backend/handlers/systemconfig"
+	tenantHandler "itsm-backend/handlers/tenant"
 	"itsm-backend/handlers/ticket"
 	ticketworkflow "itsm-backend/handlers/ticket_workflow"
 	"itsm-backend/internal/commandbus"
@@ -678,30 +682,38 @@ func NewApplication() *Application {
 	ticketTagService := service.NewTicketTagService(client)
 	ticketTagController := controller.NewTicketTagController(ticketTagService, sugar.Desugar())
 
-	bpmnWorkflowController := controller.NewBPMNWorkflowController(processEngine, bpmnVersionService)
+	bpmnWorkflowHandler := bpmnHandler.NewWorkflowHandler(processEngine, bpmnVersionService)
 	bpmnTemplateService := service.NewBPMNTemplateService(client)
 
-	// BPMN Process Trigger Controller (processBindingService/processTriggerService 已于 119-122 行预创建并注入 V2)
+	// BPMN Process Trigger Handler (processBindingService/processTriggerService 已于 119-122 行预创建并注入 V2)
 	configInheritanceService := service.NewConfigInheritanceService(client, sugar)
-	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService, configInheritanceService)
+	bpmnProcessTriggerHandler := bpmnHandler.NewProcessTriggerHandler(processTriggerService, processBindingService, configInheritanceService)
 
-	// BPMN Dashboard Controller (监控仪表盘)
+	// BPMN Dashboard Handler (监控仪表盘)
 	bpmnMetricsService := service.NewBPMNMetricsService(client, sugar)
 	bpmnAuditService := service.NewBPMNAuditService(client, sugar)
 	bpmnTenantService := service.NewBPMNTenantService(client, sugar)
 	bpmnSlaService := service.NewBPMNSLAService(client, sugar)
-	bpmnDashboardController := controller.NewBPMNDashboardController(bpmnMetricsService, bpmnAuditService, bpmnTenantService, bpmnSlaService)
+	bpmnDashboardHandler := bpmnHandler.NewDashboardHandler(bpmnMetricsService, bpmnAuditService, bpmnTenantService, bpmnSlaService)
 
-	// BPMN Monitoring Service & Controller（监控 + 完整执行轨迹时间线）
+	// BPMN Monitoring Service & Handler（监控 + 完整执行轨迹时间线）
 	bpmnMonitoringService := service.NewBPMNMonitoringService(client, bpmnAuditService, sugar)
-	bpmnMonitoringController := controller.NewBPMNMonitoringController(bpmnMonitoringService)
-	// BPMN AI Generator Service & Controller (AI驱动的流程生成)
+	bpmnMonitoringHandler := bpmnHandler.NewMonitoringHandler(bpmnMonitoringService)
+	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
 	bpmnDeploymentService := service.NewBPMNDeploymentService(client)
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService)
-	bpmnAIGeneratorController := controller.NewBPMNAIGeneratorController(bpmnAIGeneratorService)
+	bpmnAIGeneratorHandler := bpmnHandler.NewAIGeneratorHandler(bpmnAIGeneratorService)
 
-	// BPMN Lint Controller（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
-	bpmnLintController := controller.NewBPMNLintController()
+	// BPMN Lint Handler（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
+	bpmnLintHandler := bpmnHandler.NewLintHandler()
+	bpmnHTTPHandler := bpmnHandler.NewHandler(
+		bpmnWorkflowHandler,
+		bpmnProcessTriggerHandler,
+		bpmnDashboardHandler,
+		bpmnMonitoringHandler,
+		bpmnAIGeneratorHandler,
+		bpmnLintHandler,
+	)
 
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
@@ -719,7 +731,7 @@ func NewApplication() *Application {
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
 	feishuSyncService := service.NewFeishuSyncService(client, sugar)
-	feishuController := controller.NewFeishuController(connectorManager, feishuSyncService, marketplaceSvc, sugar)
+	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -911,23 +923,19 @@ func NewApplication() *Application {
 	groupService := service.NewGroupService(client)
 	groupController := controller.NewGroupController(groupService, sugar)
 
-	// Role & Permission Controllers (database-backed with tenant isolation)
+	// RBAC handler (database-backed with tenant isolation)
 	roleService := service.NewRoleService(client, sugar)
-	roleController := controller.NewRoleController(roleService, sugar)
 	permissionService := service.NewPermissionService(client, sugar)
-	permissionController := controller.NewPermissionController(permissionService, sugar)
-
-	// Menu Controller (database-backed with tenant isolation)
 	menuService := service.NewMenuService(client, sugar)
-	menuController := controller.NewMenuController(menuService)
+	rbacHTTPHandler := rbacHandler.NewHandler(roleService, permissionService, menuService, sugar)
 
 	// Audit Log Controller (支持过滤/分页的审计日志查询)
 	auditLogService := service.NewAuditLogService(client, sugar)
 	auditLogController := controller.NewAuditLogController(auditLogService, sugar)
 
-	// Tenant Controller
+	// Tenant handler
 	tenantService := service.NewTenantService(client, sugar)
-	tenantController := controller.NewTenantController(tenantService, sugar)
+	tenantHTTPHandler := tenantHandler.NewHandler(tenantService, sugar)
 
 	// System Config Handler（2026-09-02 迁移至 handlers/systemconfig）
 	systemConfigService := service.NewSystemConfigService(client, sugar)
@@ -1044,12 +1052,7 @@ func NewApplication() *Application {
 		TicketAutomationRuleController:  ticketAutomationRuleController,
 		IncidentHandler:                 incidentHandler,
 		ApprovalHandler:                 approvalHandler,
-		BPMNWorkflowController:          bpmnWorkflowController,
-		BPMNProcessTriggerController:    bpmnProcessTriggerController,
-		BPMNDashboardController:         bpmnDashboardController,
-		BPMNMonitoringController:        bpmnMonitoringController,
-		BPMNAIGeneratorController:       bpmnAIGeneratorController,
-		BPMNLintController:              bpmnLintController,
+		BPMNHandler:                     bpmnHTTPHandler,
 		A2UITicketController:            a2uiTicketController,
 		CMDBController:                  cmdbController,
 
@@ -1063,11 +1066,9 @@ func NewApplication() *Application {
 		UserController:           userController,
 		GroupController:          groupController,
 
-		// Role & Permission Controllers
-		RoleController:             roleController,
-		PermissionController:       permissionController,
-		MenuController:             menuController,
-		TenantController:           tenantController,
+		// RBAC and tenant handlers
+		RBACHandler:                rbacHTTPHandler,
+		TenantHandler:              tenantHTTPHandler,
 		EscalationMatrixController: escalationMatrixController,
 		AuditLogController:         auditLogController,
 
@@ -1123,7 +1124,7 @@ func NewApplication() *Application {
 		// Connector Controller
 		ConnectorController: connectorController,
 		AlertHandler:        alertHandler,
-		FeishuController:    feishuController,
+		FeishuHandler:       feishuHTTPHandler,
 
 		MarketplaceController: marketplaceCtrl,
 

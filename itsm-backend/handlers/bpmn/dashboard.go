@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"strconv"
@@ -11,22 +11,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// BPMNDashboardController BPMN监控仪表盘控制器
-type BPMNDashboardController struct {
+// DashboardHandler BPMN监控仪表盘控制器
+type DashboardHandler struct {
 	metricsService *service.BPMNMetricsService
 	auditService   *service.BPMNAuditService
 	tenantService  *service.BPMNTenantService
 	slaService     *service.BPMNSLAService
 }
 
-// NewBPMNDashboardController 创建BPMN监控仪表盘控制器
-func NewBPMNDashboardController(
+// NewDashboardHandler 创建BPMN监控仪表盘控制器
+func NewDashboardHandler(
 	metricsService *service.BPMNMetricsService,
 	auditService *service.BPMNAuditService,
 	tenantService *service.BPMNTenantService,
 	slaService *service.BPMNSLAService,
-) *BPMNDashboardController {
-	return &BPMNDashboardController{
+) *DashboardHandler {
+	return &DashboardHandler{
 		metricsService: metricsService,
 		auditService:   auditService,
 		tenantService:  tenantService,
@@ -50,7 +50,7 @@ func resolveTenantID(ctx *gin.Context) (int, bool) {
 
 // failInternal logs the raw error for operators and returns a sanitized 5001 to the client.
 // Raw service/SQL errors must never leak through the API response.
-func (c *BPMNDashboardController) failInternal(ctx *gin.Context, action string, err error) {
+func (c *DashboardHandler) failInternal(ctx *gin.Context, action string, err error) {
 	zap.S().Errorw("BPMN Dashboard: "+action+" failed",
 		"path", ctx.Request.URL.Path,
 		"tenant_id", ctx.GetInt("tenant_id"),
@@ -60,7 +60,7 @@ func (c *BPMNDashboardController) failInternal(ctx *gin.Context, action string, 
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNDashboardController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 	dashboard := r.Group("/bpmn/dashboard")
 	{
 		// 仪表盘
@@ -92,7 +92,7 @@ func (c *BPMNDashboardController) RegisterRoutes(r *gin.RouterGroup) {
 // @Param start_time query string false "开始时间"
 // @Param end_time query string false "结束时间"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetDashboardMetrics(ctx *gin.Context) {
+func (c *DashboardHandler) GetDashboardMetrics(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
 	if !ok {
 		return
@@ -132,7 +132,7 @@ func (c *BPMNDashboardController) GetDashboardMetrics(ctx *gin.Context) {
 // @Param start_time query string false "开始时间"
 // @Param end_time query string false "结束时间"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
+func (c *DashboardHandler) GetProcessMetrics(ctx *gin.Context) {
 	key := ctx.Param("key")
 	if key == "" {
 		common.Fail(ctx, 1001, "流程定义Key不能为空")
@@ -183,7 +183,7 @@ func (c *BPMNDashboardController) GetProcessMetrics(ctx *gin.Context) {
 // @Param page query int false "页码"
 // @Param page_size query int false "每页数量"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
+func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
 	if !ok {
 		return
@@ -264,7 +264,7 @@ func (c *BPMNDashboardController) GetAuditLogs(ctx *gin.Context) {
 // @Produce json
 // @Param process_instance_key path string true "流程实例Key"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetProcessTimeline(ctx *gin.Context) {
+func (c *DashboardHandler) GetProcessTimeline(ctx *gin.Context) {
 	processInstanceKey := ctx.Param("process_instance_key")
 	if processInstanceKey == "" {
 		common.Fail(ctx, 1001, "流程实例Key不能为空")
@@ -292,7 +292,7 @@ func (c *BPMNDashboardController) GetProcessTimeline(ctx *gin.Context) {
 // @Param start_time query string false "开始时间"
 // @Param end_time query string false "结束时间"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
+func (c *DashboardHandler) GetUserActivity(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("userId"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的用户ID")
@@ -335,7 +335,7 @@ func (c *BPMNDashboardController) GetUserActivity(ctx *gin.Context) {
 // @Produce json
 // @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetSLAViolations(ctx *gin.Context) {
+func (c *DashboardHandler) GetSLAViolations(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
 	if !ok {
 		return
@@ -359,7 +359,7 @@ func (c *BPMNDashboardController) GetSLAViolations(ctx *gin.Context) {
 // @Param start_time query string false "开始时间"
 // @Param end_time query string false "结束时间"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
+func (c *DashboardHandler) GetSLACompliance(ctx *gin.Context) {
 	key := ctx.Query("key")
 	if key == "" {
 		common.Fail(ctx, 1001, "流程定义Key不能为空")
@@ -406,7 +406,7 @@ func (c *BPMNDashboardController) GetSLACompliance(ctx *gin.Context) {
 // @Produce json
 // @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetTenantStats(ctx *gin.Context) {
+func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
 	if !ok {
 		return
@@ -428,7 +428,7 @@ func (c *BPMNDashboardController) GetTenantStats(ctx *gin.Context) {
 // @Param key query string true "流程定义Key"
 // @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
-func (c *BPMNDashboardController) GetBottleneckAnalysis(ctx *gin.Context) {
+func (c *DashboardHandler) GetBottleneckAnalysis(ctx *gin.Context) {
 	key := ctx.Query("key")
 	if key == "" {
 		common.Fail(ctx, 1001, "流程定义Key不能为空")

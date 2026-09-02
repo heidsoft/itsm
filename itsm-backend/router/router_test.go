@@ -295,9 +295,9 @@ func TestSetupRoutes_IncidentHandlerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:      "test-secret",
-		Logger:         logger,
-		Client:         client,
+		JWTSecret:       "test-secret",
+		Logger:          logger,
+		Client:          client,
 		IncidentHandler: nil,
 	}
 
@@ -434,10 +434,10 @@ func TestSetupRoutes_LegacyStubs(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:        "test-secret",
-		Logger:           logger,
-		Client:           client,
-		TenantController: nil, // triggers legacy stubs
+		JWTSecret:     "test-secret",
+		Logger:        logger,
+		Client:        client,
+		TenantHandler: nil, // triggers legacy stubs
 	}
 
 	gin.SetMode(gin.TestMode)

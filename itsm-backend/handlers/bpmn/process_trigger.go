@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"strconv"
@@ -10,16 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// BPMNProcessTriggerController 流程触发控制器
-type BPMNProcessTriggerController struct {
+// ProcessTriggerHandler 流程触发控制器
+type ProcessTriggerHandler struct {
 	triggerService *service.ProcessTriggerService
 	bindingService *service.ProcessBindingService
 	configService  *service.ConfigInheritanceService
 }
 
-// NewBPMNProcessTriggerController 创建流程触发控制器
-func NewBPMNProcessTriggerController(triggerService *service.ProcessTriggerService, bindingService *service.ProcessBindingService, configService *service.ConfigInheritanceService) *BPMNProcessTriggerController {
-	return &BPMNProcessTriggerController{
+// NewProcessTriggerHandler 创建流程触发控制器
+func NewProcessTriggerHandler(triggerService *service.ProcessTriggerService, bindingService *service.ProcessBindingService, configService *service.ConfigInheritanceService) *ProcessTriggerHandler {
+	return &ProcessTriggerHandler{
 		triggerService: triggerService,
 		bindingService: bindingService,
 		configService:  configService,
@@ -27,7 +27,7 @@ func NewBPMNProcessTriggerController(triggerService *service.ProcessTriggerServi
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNProcessTriggerController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *ProcessTriggerHandler) RegisterRoutes(r *gin.RouterGroup) {
 	// 流程触发
 	trigger := r.Group("/process-trigger")
 	{
@@ -74,7 +74,7 @@ func (c *BPMNProcessTriggerController) RegisterRoutes(r *gin.RouterGroup) {
 // @Success 200 {object} common.Response{dto.ProcessTriggerResponse}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/process-trigger [post]
-func (c *BPMNProcessTriggerController) TriggerProcess(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 	var req dto.ProcessTriggerRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, 1001, err.Error())
@@ -97,7 +97,7 @@ func (c *BPMNProcessTriggerController) TriggerProcess(ctx *gin.Context) {
 }
 
 // GetProcessStatus 获取流程状态
-func (c *BPMNProcessTriggerController) GetProcessStatus(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的流程实例ID")
@@ -116,7 +116,7 @@ func (c *BPMNProcessTriggerController) GetProcessStatus(ctx *gin.Context) {
 }
 
 // CancelProcess 取消流程
-func (c *BPMNProcessTriggerController) CancelProcess(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的流程实例ID")
@@ -140,7 +140,7 @@ func (c *BPMNProcessTriggerController) CancelProcess(ctx *gin.Context) {
 }
 
 // SuspendProcess 暂停流程
-func (c *BPMNProcessTriggerController) SuspendProcess(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的流程实例ID")
@@ -164,7 +164,7 @@ func (c *BPMNProcessTriggerController) SuspendProcess(ctx *gin.Context) {
 }
 
 // ResumeProcess 恢复流程
-func (c *BPMNProcessTriggerController) ResumeProcess(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 	instanceID, err := strconv.Atoi(ctx.Param("instance_id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的流程实例ID")
@@ -183,7 +183,7 @@ func (c *BPMNProcessTriggerController) ResumeProcess(ctx *gin.Context) {
 }
 
 // CreateBinding 创建流程绑定
-func (c *BPMNProcessTriggerController) CreateBinding(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 	var binding dto.ProcessBinding
 	if err := ctx.ShouldBindJSON(&binding); err != nil {
 		common.Fail(ctx, 1001, err.Error())
@@ -203,7 +203,7 @@ func (c *BPMNProcessTriggerController) CreateBinding(ctx *gin.Context) {
 }
 
 // GetBinding 获取流程绑定
-func (c *BPMNProcessTriggerController) GetBinding(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的绑定ID")
@@ -222,7 +222,7 @@ func (c *BPMNProcessTriggerController) GetBinding(ctx *gin.Context) {
 }
 
 // QueryBindings 查询流程绑定列表
-func (c *BPMNProcessTriggerController) QueryBindings(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 	var req dto.ProcessBindingQueryRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, 1001, err.Error())
@@ -242,7 +242,7 @@ func (c *BPMNProcessTriggerController) QueryBindings(ctx *gin.Context) {
 }
 
 // UpdateBinding 更新流程绑定
-func (c *BPMNProcessTriggerController) UpdateBinding(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的绑定ID")
@@ -268,7 +268,7 @@ func (c *BPMNProcessTriggerController) UpdateBinding(ctx *gin.Context) {
 }
 
 // DeleteBinding 删除流程绑定
-func (c *BPMNProcessTriggerController) DeleteBinding(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的绑定ID")
@@ -287,7 +287,7 @@ func (c *BPMNProcessTriggerController) DeleteBinding(ctx *gin.Context) {
 }
 
 // GetBindingsByBusinessType 根据业务类型获取绑定列表
-func (c *BPMNProcessTriggerController) GetBindingsByBusinessType(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) GetBindingsByBusinessType(ctx *gin.Context) {
 	businessType := dto.BusinessType(ctx.Param("business_type"))
 
 	tenantID, _ := ctx.Get("tenant_id")
@@ -302,7 +302,7 @@ func (c *BPMNProcessTriggerController) GetBindingsByBusinessType(ctx *gin.Contex
 }
 
 // GetDepartmentProcesses 获取部门专属流程绑定
-func (c *BPMNProcessTriggerController) GetDepartmentProcesses(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 	departmentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的部门ID")
@@ -321,7 +321,7 @@ func (c *BPMNProcessTriggerController) GetDepartmentProcesses(ctx *gin.Context) 
 }
 
 // InitDepartmentProcesses 初始化部门默认流程模板
-func (c *BPMNProcessTriggerController) InitDepartmentProcesses(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 	departmentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的部门ID")
@@ -347,7 +347,7 @@ func (c *BPMNProcessTriggerController) InitDepartmentProcesses(ctx *gin.Context)
 }
 
 // ListDomainConfigs 查询当前租户配置
-func (c *BPMNProcessTriggerController) ListDomainConfigs(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) ListDomainConfigs(ctx *gin.Context) {
 	tenantID, _ := ctx.Get("tenant_id")
 	configType := ctx.Query("configType")
 
@@ -361,7 +361,7 @@ func (c *BPMNProcessTriggerController) ListDomainConfigs(ctx *gin.Context) {
 }
 
 // SetDomainConfig 创建或更新层级配置
-func (c *BPMNProcessTriggerController) SetDomainConfig(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 	var req struct {
 		ConfigType   string                 `json:"configType" binding:"required"`
 		ConfigKey    string                 `json:"configKey" binding:"required"`
@@ -400,7 +400,7 @@ func (c *BPMNProcessTriggerController) SetDomainConfig(ctx *gin.Context) {
 }
 
 // GetEffectiveDomainConfig 获取继承解析后的有效配置
-func (c *BPMNProcessTriggerController) GetEffectiveDomainConfig(ctx *gin.Context) {
+func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 	tenantID, _ := ctx.Get("tenant_id")
 	departmentID, err := parseOptionalIntQuery(ctx, "department_id")
 	if err != nil {

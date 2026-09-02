@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"context"
@@ -18,15 +18,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// BPMNWorkflowController BPMN工作流控制器
-type BPMNWorkflowController struct {
+// WorkflowHandler BPMN工作流控制器
+type WorkflowHandler struct {
 	processEngine  service.ProcessEngine
 	versionService *service.BPMNVersionService
 }
 
-// NewBPMNWorkflowController 创建BPMN工作流控制器
-func NewBPMNWorkflowController(processEngine service.ProcessEngine, versionService *service.BPMNVersionService) *BPMNWorkflowController {
-	return &BPMNWorkflowController{
+// NewWorkflowHandler 创建BPMN工作流控制器
+func NewWorkflowHandler(processEngine service.ProcessEngine, versionService *service.BPMNVersionService) *WorkflowHandler {
+	return &WorkflowHandler{
 		processEngine:  processEngine,
 		versionService: versionService,
 	}
@@ -52,7 +52,7 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *WorkflowHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmn := r.Group("/bpmn")
 	{
 		// 流程定义管理
@@ -110,7 +110,7 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func (c *BPMNWorkflowController) PublishProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 	key, version := ctx.Param("key"), ctx.Query("version")
 	if version == "" {
 		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
@@ -133,7 +133,7 @@ func (c *BPMNWorkflowController) PublishProcessDefinition(ctx *gin.Context) {
 	common.SuccessWithMessage(ctx, "流程定义发布成功", dto.ToBPMNProcessDefinitionResponse(definition))
 }
 
-func (c *BPMNWorkflowController) GetApprovalHistory(ctx *gin.Context) {
+func (c *WorkflowHandler) GetApprovalHistory(ctx *gin.Context) {
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
 		return
@@ -147,7 +147,7 @@ func (c *BPMNWorkflowController) GetApprovalHistory(ctx *gin.Context) {
 }
 
 // SubmitTaskDecision records an explicit approval decision and advances the BPMN task.
-func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
+func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 	var req struct {
 		Action    string                 `json:"action" binding:"required,oneof=approve reject"`
@@ -199,7 +199,7 @@ func (c *BPMNWorkflowController) SubmitTaskDecision(ctx *gin.Context) {
 }
 
 // CreateProcessDefinition 创建流程定义
-func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	// 获取租户上下文。租户缺失时 fail-closed，禁止回退默认租户(ADR 0001)。
 	tenantIDFromCtx := ctx.GetInt("tenant_id")
 	if tenantIDFromCtx <= 0 {
@@ -238,7 +238,7 @@ func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
 }
 
 // ListProcessDefinitions 获取流程定义列表
-func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
+func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 	var req service.ListProcessDefinitionsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -275,7 +275,7 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 }
 
 // GetProcessDefinition 获取流程定义
-func (c *BPMNWorkflowController) GetProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) GetProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -301,7 +301,7 @@ func (c *BPMNWorkflowController) GetProcessDefinition(ctx *gin.Context) {
 }
 
 // UpdateProcessDefinition 更新流程定义
-func (c *BPMNWorkflowController) UpdateProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
@@ -329,7 +329,7 @@ func (c *BPMNWorkflowController) UpdateProcessDefinition(ctx *gin.Context) {
 }
 
 // DeleteProcessDefinition 删除流程定义
-func (c *BPMNWorkflowController) DeleteProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) DeleteProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
@@ -351,7 +351,7 @@ func (c *BPMNWorkflowController) DeleteProcessDefinition(ctx *gin.Context) {
 }
 
 // ExportProcessDefinition 导出流程定义
-func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) ExportProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
@@ -386,7 +386,7 @@ func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
 }
 
 // CloneProcessDefinition 复制流程定义
-func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
+func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
@@ -434,7 +434,7 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 }
 
 // SetProcessDefinitionActive 激活/停用流程定义
-func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
+func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
@@ -473,7 +473,7 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 }
 
 // StartProcess 启动流程实例
-func (c *BPMNWorkflowController) StartProcess(ctx *gin.Context) {
+func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 	var req struct {
 		ProcessDefinitionKey string                 `json:"processDefinitionKey" binding:"required"`
 		BusinessKey          string                 `json:"businessKey" binding:"required"`
@@ -498,7 +498,7 @@ func (c *BPMNWorkflowController) StartProcess(ctx *gin.Context) {
 }
 
 // ListProcessInstances 获取流程实例列表
-func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
+func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 	var req service.ListProcessInstancesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -535,7 +535,7 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 }
 
 // GetProcessInstance 获取流程实例
-func (c *BPMNWorkflowController) GetProcessInstance(ctx *gin.Context) {
+func (c *WorkflowHandler) GetProcessInstance(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -552,7 +552,7 @@ func (c *BPMNWorkflowController) GetProcessInstance(ctx *gin.Context) {
 }
 
 // SetProcessInstanceVariables 设置流程实例变量
-func (c *BPMNWorkflowController) SetProcessInstanceVariables(ctx *gin.Context) {
+func (c *WorkflowHandler) SetProcessInstanceVariables(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
 
 	var req struct {
@@ -577,7 +577,7 @@ func (c *BPMNWorkflowController) SetProcessInstanceVariables(ctx *gin.Context) {
 }
 
 // SuspendProcess 暂停流程实例
-func (c *BPMNWorkflowController) SuspendProcess(ctx *gin.Context) {
+func (c *WorkflowHandler) SuspendProcess(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
 
 	var req struct {
@@ -602,7 +602,7 @@ func (c *BPMNWorkflowController) SuspendProcess(ctx *gin.Context) {
 }
 
 // ResumeProcess 恢复流程实例
-func (c *BPMNWorkflowController) ResumeProcess(ctx *gin.Context) {
+func (c *WorkflowHandler) ResumeProcess(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -619,7 +619,7 @@ func (c *BPMNWorkflowController) ResumeProcess(ctx *gin.Context) {
 }
 
 // TerminateProcess 终止流程实例
-func (c *BPMNWorkflowController) TerminateProcess(ctx *gin.Context) {
+func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 	processInstanceID := ctx.Param("id")
 
 	var req struct {
@@ -644,7 +644,7 @@ func (c *BPMNWorkflowController) TerminateProcess(ctx *gin.Context) {
 }
 
 // ListUserTasks 获取用户任务列表（默认「我的待办」语义）
-func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
+func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -690,7 +690,7 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 }
 
 // ListAllTasks 获取当前租户全部任务。生产路由必须先通过 task:admin 权限校验。
-func (c *BPMNWorkflowController) ListAllTasks(ctx *gin.Context) {
+func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -721,7 +721,7 @@ func (c *BPMNWorkflowController) ListAllTasks(ctx *gin.Context) {
 }
 
 // GetTask 获取任务
-func (c *BPMNWorkflowController) GetTask(ctx *gin.Context) {
+func (c *WorkflowHandler) GetTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -747,7 +747,7 @@ func (c *BPMNWorkflowController) GetTask(ctx *gin.Context) {
 }
 
 // AssignTask 分配任务
-func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
+func (c *WorkflowHandler) AssignTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req struct {
@@ -772,7 +772,7 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 }
 
 // ReassignTask performs an audited tenant-scoped recovery of an active task.
-func (c *BPMNWorkflowController) ReassignTask(ctx *gin.Context) {
+func (c *WorkflowHandler) ReassignTask(ctx *gin.Context) {
 	var req struct {
 		NewAssigneeID int    `json:"newAssigneeId" binding:"required"`
 		Reason        string `json:"reason" binding:"required"`
@@ -793,7 +793,7 @@ func (c *BPMNWorkflowController) ReassignTask(ctx *gin.Context) {
 }
 
 // TerminateTask terminates the owning BPMN instance and all of its open tasks.
-func (c *BPMNWorkflowController) TerminateTask(ctx *gin.Context) {
+func (c *WorkflowHandler) TerminateTask(ctx *gin.Context) {
 	var req struct {
 		Reason string `json:"reason" binding:"required"`
 	}
@@ -813,7 +813,7 @@ func (c *BPMNWorkflowController) TerminateTask(ctx *gin.Context) {
 }
 
 // ClaimTask 认领任务
-func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
+func (c *WorkflowHandler) ClaimTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -846,7 +846,7 @@ func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
 }
 
 // CompleteTask 完成任务
-func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
+func (c *WorkflowHandler) CompleteTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req struct {
@@ -879,7 +879,7 @@ func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
 }
 
 // CancelTask 取消任务
-func (c *BPMNWorkflowController) CancelTask(ctx *gin.Context) {
+func (c *WorkflowHandler) CancelTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req struct {
@@ -904,7 +904,7 @@ func (c *BPMNWorkflowController) CancelTask(ctx *gin.Context) {
 }
 
 // SetTaskVariables 设置任务变量
-func (c *BPMNWorkflowController) SetTaskVariables(ctx *gin.Context) {
+func (c *WorkflowHandler) SetTaskVariables(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req struct {
@@ -929,7 +929,7 @@ func (c *BPMNWorkflowController) SetTaskVariables(ctx *gin.Context) {
 }
 
 // ListVersions 获取版本列表
-func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
+func (c *WorkflowHandler) ListVersions(ctx *gin.Context) {
 	processKey := ctx.Query("processKey")
 	tenantID := ctx.GetInt("tenant_id")
 
@@ -962,7 +962,7 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 }
 
 // GetVersion 获取指定版本详情
-func (c *BPMNWorkflowController) GetVersion(ctx *gin.Context) {
+func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 	processKey := ctx.Param("key")
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
@@ -983,7 +983,7 @@ func (c *BPMNWorkflowController) GetVersion(ctx *gin.Context) {
 }
 
 // CreateVersion 创建新版本
-func (c *BPMNWorkflowController) CreateVersion(ctx *gin.Context) {
+func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
 	var req service.CreateVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -1003,7 +1003,7 @@ func (c *BPMNWorkflowController) CreateVersion(ctx *gin.Context) {
 }
 
 // ActivateVersion 激活指定版本
-func (c *BPMNWorkflowController) ActivateVersion(ctx *gin.Context) {
+func (c *WorkflowHandler) ActivateVersion(ctx *gin.Context) {
 	processKey := ctx.Param("key")
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
@@ -1024,7 +1024,7 @@ func (c *BPMNWorkflowController) ActivateVersion(ctx *gin.Context) {
 }
 
 // RollbackVersion 回滚到指定版本
-func (c *BPMNWorkflowController) RollbackVersion(ctx *gin.Context) {
+func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 	processKey := ctx.Param("key")
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
@@ -1050,7 +1050,7 @@ func (c *BPMNWorkflowController) RollbackVersion(ctx *gin.Context) {
 }
 
 // CompareVersions 比较两个版本
-func (c *BPMNWorkflowController) CompareVersions(ctx *gin.Context) {
+func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 	processKey := ctx.Param("key")
 	baseVersion := ctx.Query("baseVersion")
 	targetVersion := ctx.Query("targetVersion")
@@ -1090,7 +1090,7 @@ func (c *BPMNWorkflowController) CompareVersions(ctx *gin.Context) {
 }
 
 // GetInstanceStats 获取实例统计
-func (c *BPMNWorkflowController) GetInstanceStats(ctx *gin.Context) {
+func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 	var req service.InstanceStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -1114,7 +1114,7 @@ func (c *BPMNWorkflowController) GetInstanceStats(ctx *gin.Context) {
 }
 
 // GetTaskStats 获取任务统计
-func (c *BPMNWorkflowController) GetTaskStats(ctx *gin.Context) {
+func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
 	var req service.TaskStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -1139,7 +1139,7 @@ func (c *BPMNWorkflowController) GetTaskStats(ctx *gin.Context) {
 }
 
 // CreateCounterSignTasks 创建会签任务
-func (c *BPMNWorkflowController) CreateCounterSignTasks(ctx *gin.Context) {
+func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req service.CounterSignRequest
@@ -1162,7 +1162,7 @@ func (c *BPMNWorkflowController) CreateCounterSignTasks(ctx *gin.Context) {
 }
 
 // GetCounterSignStatus 获取会签状态
-func (c *BPMNWorkflowController) GetCounterSignStatus(ctx *gin.Context) {
+func (c *WorkflowHandler) GetCounterSignStatus(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
 	if !ok {
@@ -1179,7 +1179,7 @@ func (c *BPMNWorkflowController) GetCounterSignStatus(ctx *gin.Context) {
 }
 
 // Vote 投票
-func (c *BPMNWorkflowController) Vote(ctx *gin.Context) {
+func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
 	var req service.VoteRequest
@@ -1202,7 +1202,7 @@ func (c *BPMNWorkflowController) Vote(ctx *gin.Context) {
 }
 
 // GetVersionChangeLogs 获取流程定义的版本变更日志列表
-func (c *BPMNWorkflowController) GetVersionChangeLogs(ctx *gin.Context) {
+func (c *WorkflowHandler) GetVersionChangeLogs(ctx *gin.Context) {
 	processKey := ctx.Param("key")
 	tenantID := ctx.GetInt("tenant_id")
 
@@ -1216,7 +1216,7 @@ func (c *BPMNWorkflowController) GetVersionChangeLogs(ctx *gin.Context) {
 }
 
 // GetVersionChangeLogsByID 根据流程定义ID获取版本变更日志
-func (c *BPMNWorkflowController) GetVersionChangeLogsByID(ctx *gin.Context) {
+func (c *WorkflowHandler) GetVersionChangeLogsByID(ctx *gin.Context) {
 	processDefIDStr := ctx.Param("id")
 	processDefID, err := strconv.Atoi(processDefIDStr)
 	if err != nil {

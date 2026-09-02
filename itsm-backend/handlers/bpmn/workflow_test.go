@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"bytes"
@@ -188,7 +188,7 @@ func newBPMNWorkflowTestRouter(t *testing.T) (*gin.Engine, *fakeTaskService) {
 	gin.SetMode(gin.TestMode)
 	fakeTask := &fakeTaskService{}
 	engine := &fakeProcessEngine{taskSvc: fakeTask}
-	ctrl := NewBPMNWorkflowController(engine, nil)
+	ctrl := NewWorkflowHandler(engine, nil)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -237,7 +237,7 @@ func newTaskListHandlerTestRouter(t *testing.T) (*gin.Engine, *fakeTaskService) 
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	fakeTask := &fakeTaskService{}
-	ctrl := NewBPMNWorkflowController(&fakeProcessEngine{taskSvc: fakeTask}, nil)
+	ctrl := NewWorkflowHandler(&fakeProcessEngine{taskSvc: fakeTask}, nil)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
 		c.Set("tenant_id", 11)

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"itsm-backend/controller"
+	feishuHandler "itsm-backend/handlers/feishu"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 func SetupFeishuRoutes(
 	auth *gin.RouterGroup,
 	public *gin.RouterGroup,
-	feishuController *controller.FeishuController,
+	feishuController *feishuHandler.Handler,
 ) {
 	// 飞书OAuth路由（部分需要公开访问）
 	feishu := auth.Group("/feishu")

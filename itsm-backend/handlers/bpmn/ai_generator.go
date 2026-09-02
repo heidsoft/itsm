@@ -1,4 +1,4 @@
-package controller
+package bpmn
 
 import (
 	"github.com/gin-gonic/gin"
@@ -7,14 +7,14 @@ import (
 	"itsm-backend/service"
 )
 
-// BPMNAIGeneratorController AI BPMN生成控制器
-type BPMNAIGeneratorController struct {
+// AIGeneratorHandler AI BPMN生成控制器
+type AIGeneratorHandler struct {
 	aiGeneratorService *service.BPMNAIGeneratorService
 }
 
-// NewBPMNAIGeneratorController 创建控制器实例
-func NewBPMNAIGeneratorController(aiGeneratorService *service.BPMNAIGeneratorService) *BPMNAIGeneratorController {
-	return &BPMNAIGeneratorController{
+// NewAIGeneratorHandler 创建控制器实例
+func NewAIGeneratorHandler(aiGeneratorService *service.BPMNAIGeneratorService) *AIGeneratorHandler {
+	return &AIGeneratorHandler{
 		aiGeneratorService: aiGeneratorService,
 	}
 }
@@ -31,7 +31,7 @@ func NewBPMNAIGeneratorController(aiGeneratorService *service.BPMNAIGeneratorSer
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/bpmn/ai/generate [post]
-func (c *BPMNAIGeneratorController) GenerateBPMN(ctx *gin.Context) {
+func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 	var req dto.GenerateBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, 1001, "参数错误: "+err.Error())
@@ -60,7 +60,7 @@ func (c *BPMNAIGeneratorController) GenerateBPMN(ctx *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/bpmn/ai/preview [post]
-func (c *BPMNAIGeneratorController) PreviewBPMN(ctx *gin.Context) {
+func (c *AIGeneratorHandler) PreviewBPMN(ctx *gin.Context) {
 	var req dto.PreviewBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, 1001, "参数错误: "+err.Error())
@@ -88,7 +88,7 @@ func (c *BPMNAIGeneratorController) PreviewBPMN(ctx *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Router /api/v1/bpmn/ai/templates/suggestions [get]
-func (c *BPMNAIGeneratorController) GetTemplateSuggestions(ctx *gin.Context) {
+func (c *AIGeneratorHandler) GetTemplateSuggestions(ctx *gin.Context) {
 	keyword := ctx.Query("keyword")
 	if keyword == "" {
 		common.Fail(ctx, 1001, "关键词不能为空")
@@ -105,7 +105,7 @@ func (c *BPMNAIGeneratorController) GetTemplateSuggestions(ctx *gin.Context) {
 }
 
 // RegisterRoutes 注册路由
-func (c *BPMNAIGeneratorController) RegisterRoutes(r *gin.RouterGroup) {
+func (c *AIGeneratorHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmnAI := r.Group("/bpmn/ai")
 	{
 		// 生成BPMN流程
