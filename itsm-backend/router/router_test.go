@@ -244,7 +244,7 @@ func TestSetupRoutes_MSPControllerNil(t *testing.T) {
 		JWTSecret:     "test-secret",
 		Logger:        logger,
 		Client:        client,
-		MSPController: nil,
+		MSPHandler: nil,
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -286,7 +286,7 @@ func TestSetupRoutes_CMDBControllerNil(t *testing.T) {
 		JWTSecret:      "test-secret",
 		Logger:         logger,
 		Client:         client,
-		CMDBController: nil,
+		CMDBHandler: nil,
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -466,7 +466,7 @@ func TestRouterConfig_ZeroValue(t *testing.T) {
 	assert.Empty(t, cfg.JWTSecret)
 	assert.Nil(t, cfg.Logger)
 	assert.Nil(t, cfg.Client)
-	assert.Nil(t, cfg.CMDBController)
+	assert.Nil(t, cfg.CMDBHandler)
 	assert.Nil(t, cfg.DashboardHandler)
 }
 

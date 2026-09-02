@@ -61,6 +61,7 @@ import (
 	probleminvestigation "itsm-backend/handlers/problem_investigation"
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
+	globalSearchHandler "itsm-backend/handlers/global_search"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
@@ -605,6 +606,8 @@ func NewApplication() *Application {
 		guidanceURL = "http://localhost:8091"
 	}
 	guidanceClient := service.NewGuidanceClient(guidanceURL, sugar)
+
+	// P2 Handler Services
 	triageService := service.NewTriageServiceWithGuidanceAndSugaredLogger(llmGateway, guidanceClient, sugar)
 
 	rootCauseService := service.NewRootCauseService(client, sugar)
@@ -1060,7 +1063,7 @@ func NewApplication() *Application {
 		SkillHandler: skillHandler,
 
 		// Global Search
-		GlobalSearchHandler: nil, // TODO: wire
+		GlobalSearchHandler: globalSearchHandler.NewHandler(client),
 
 		// Standard Change Handler
 		StandardChangeHandler: standardChangeHandler,
