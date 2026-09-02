@@ -67,6 +67,25 @@ func ticketListToResponse(ts []*Ticket) []*dto.TicketResponse {
 	return result
 }
 
+// ticketStatsToDTO 将领域实体转为与前端契约一致的扁平 DTO。
+// 前端期望字段：total / open / inProgress / resolved / pending / highPriority / overdue。
+// entity 字段：TotalTickets / OpenTickets / InProgressTickets / PendingTickets /
+// ResolvedTickets / ClosedTickets / CriticalTickets / HighTickets / AvgResolutionMin。
+func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
+	if s == nil {
+		return &dto.TicketStatsResponse{}
+	}
+	return &dto.TicketStatsResponse{
+		Total:        s.TotalTickets,
+		Open:         s.OpenTickets,
+		InProgress:   s.InProgressTickets,
+		Resolved:     s.ResolvedTickets,
+		Pending:      s.PendingTickets,
+		HighPriority: s.HighTickets,
+		Overdue:      s.OverdueTickets,
+	}
+}
+
 // CreateTicket handles POST /api/v1/tickets
 func (h *Handler) CreateTicket(c *gin.Context) {
 	var req dto.CreateTicketRequest
@@ -182,10 +201,8 @@ func (h *Handler) ListTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"items": ticketListToResponse(tickets),
-		"total": total,
-	})
+	// v1.1 回归：使用 SuccessWithPagination 自动产出 items+tickets 别名，避免前端 response.tickets 未定义导致列表为空
+	common.SuccessWithPagination(c, ticketListToResponse(tickets), req.Page, req.PageSize, int64(total))
 }
 
 // UpdateTicket handles PUT /api/v1/tickets/:id
@@ -359,7 +376,9 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, stats)
+	// v1.1 回归：返回与前端约定的扁平 DTO（total/open/inProgress/resolved/pending/highPriority/overdue），
+	// 避免 stats 卡片显示 0。原先直接返回 entity，字段名（TotalTickets/OpenTickets）与前端契约不一致。
+	common.Success(c, ticketStatsToDTO(stats))
 }
 
 // AssignTicket handles POST /api/v1/tickets/:id/assign

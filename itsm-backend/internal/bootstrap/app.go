@@ -41,6 +41,7 @@ import (
 	a2uiHandler "itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
+	applicationHandler "itsm-backend/handlers/application"
 	"itsm-backend/handlers/approval"
 	approvalChainHandler "itsm-backend/handlers/approval_chain"
 	assetHandler "itsm-backend/handlers/asset"
@@ -110,6 +111,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
+
+	// 顶层 handlers 包：聚合 dashboard_handler.go 等遗留 controller 风格 handler
+	"itsm-backend/handlers"
 )
 
 type Application struct {
@@ -352,6 +356,9 @@ func NewApplication() *Application {
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
+	// Application handler v1.1 回归：handlers/<domain>/ 已迁移但
+	// bootstrap 没注入，router 看到的字段为 nil，路由被 if 守卫跳过
+	applicationHTTPHandler := applicationHandler.NewHandler(client)
 	incidentRepo := incident.NewEntRepository(client)
 	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)
@@ -512,6 +519,10 @@ func NewApplication() *Application {
 	ticketRepo := ticket.NewEntRepository(ticketRepoImpl)
 	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, sugar)
 	ticketHandler := ticket.NewHandler(ticketHandlerService)
+	// Dashboard handler v1.1 回归：之前未初始化导致 /api/v1/dashboard/overview 等全部 404
+	dashboardService := service.NewDashboardService(client, sugar)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
+
 	ticketService.EnableSideEffectOutbox()
 	_ = sequenceService // V2 内部通过 Repository.GenerateTicketNumber 使用 sequence；保留为运行时上下文依赖
 
@@ -729,8 +740,6 @@ func NewApplication() *Application {
 	// Global Search Controller (全局搜索)
 
 	// Standard Change Handler (标准变更模板库)
-	stdChangeService := standard_change.NewService(client)
-	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 
 	// Known Error Handler (KEDB)
 	knownErrorService := known_error.NewService(client)
@@ -818,6 +827,8 @@ func NewApplication() *Application {
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
 	changeServiceDomain := change.NewService(changeRepo, client, sugar, approvalChainService)
+	stdChangeService := standard_change.NewService(client, changeServiceDomain)
+	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
 
 	// CAB 成员名册 handler（审批流转由审批链引擎 cab: 解析器驱动，handler 仅管名册）
@@ -1077,8 +1088,10 @@ func NewApplication() *Application {
 		CloudHandler:      cloudHandler.NewHandler(cloudService, sugar),
 
 		// Domain Handlers
+		DashboardHandler:            dashboardHandler,
 		ServiceCatalogHandler:       scHandler,
 		ServiceRequestHandler:       srHandler,
+		ApplicationHandler:          applicationHTTPHandler,
 		ProblemHandler:              problemHandler,
 		ProblemInvestigationHandler: problemInvestigationHandler,
 		ChangeHandler:               changeHandler,

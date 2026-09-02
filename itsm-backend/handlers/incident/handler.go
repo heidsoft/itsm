@@ -1,6 +1,7 @@
 package incident
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -23,20 +24,43 @@ func NewHandler(service *Service) *IncidentHandler {
 	return &IncidentHandler{service: service}
 }
 
+func failIncidentOperation(c *gin.Context, err error) {
+	var businessErr *common.BusinessError
+	if errors.As(err, &businessErr) {
+		common.Fail(c, businessErr.Code, businessErr.Message)
+		return
+	}
+	if ent.IsNotFound(err) {
+		common.NotFound(c, "事件不存在")
+		return
+	}
+	common.InternalError(c, "事件操作失败")
+}
+
 func (h *IncidentHandler) Acknowledge(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
 	}
 
 	if err := h.service.Acknowledge(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) Resolve(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -51,13 +75,18 @@ func (h *IncidentHandler) Resolve(c *gin.Context) {
 	}
 
 	if err := h.service.Resolve(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.Resolution, req.RootCause); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) Close(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -71,26 +100,36 @@ func (h *IncidentHandler) Close(c *gin.Context) {
 	}
 
 	if err := h.service.Close(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.CloseNotes); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) Reopen(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
 	}
 
 	if err := h.service.Reopen(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) Assign(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
@@ -104,46 +143,61 @@ func (h *IncidentHandler) Assign(c *gin.Context) {
 	}
 
 	if err := h.service.Assign(c.Request.Context(), id, req.AssigneeID, c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) Delete(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
 	}
 
 	if err := h.service.Delete(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) PauseSLA(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
 	}
 
 	if err := h.service.PauseSLA(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
 }
 
 func (h *IncidentHandler) ResumeSLA(c *gin.Context) {
+	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
+		common.AuthFailed(c, "缺少有效租户或用户上下文")
+		return
+	}
+
 	id, ok := incidentID(c)
 	if !ok {
 		return
 	}
 
 	if err := h.service.ResumeSLA(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
-		common.Fail(c, 400, "")
+		failIncidentOperation(c, err)
 		return
 	}
 	common.Success(c, nil)
@@ -269,10 +323,8 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		dtos = append(dtos, h.toDTO(i))
 	}
 
-	common.Success(c, map[string]interface{}{
-		"items": dtos,
-		"total": total,
-	})
+	// v1.1 回归：使用 SuccessWithPagination 产出 items+incidents 别名
+	common.SuccessWithPagination(c, dtos, page, size, int64(total))
 }
 
 func (h *IncidentHandler) CreateAlert(c *gin.Context) {

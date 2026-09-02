@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // TicketTypeStatus 工单类型状态
 type TicketTypeStatus string
@@ -243,10 +246,20 @@ type ListTicketTypesRequest struct {
 // TicketTypeListResponse 工单类型列表响应
 type TicketTypeListResponse struct {
 	Items      []TicketTypeDefinition `json:"items"`
+	Types      []TicketTypeDefinition `json:"types"` // v1.1 回归：前端别名
 	Total      int64                  `json:"total"`
 	Page       int                    `json:"page"`
 	PageSize   int                    `json:"pageSize"`
 	TotalPages int                    `json:"totalPages"`
+}
+
+// MarshalJSON 保证 types 别名至少与 items 一致，避免前端列表为空。
+func (r TicketTypeListResponse) MarshalJSON() ([]byte, error) {
+	if r.Types == nil {
+		r.Types = r.Items
+	}
+	type alias TicketTypeListResponse
+	return json.Marshal(alias(r))
 }
 
 type TicketTypePreset struct {
