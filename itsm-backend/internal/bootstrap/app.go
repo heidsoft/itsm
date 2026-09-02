@@ -39,7 +39,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
-	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/approval"
 	assetHandler "itsm-backend/handlers/asset"
@@ -62,6 +61,11 @@ import (
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
 	globalSearchHandler "itsm-backend/handlers/global_search"
+	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
+	approvalChainHandler "itsm-backend/handlers/approval_chain"
+	vendorHandler "itsm-backend/handlers/vendor"
+	provisioningHandler "itsm-backend/handlers/provisioning"
+	ticketCategoryHandler "itsm-backend/handlers/ticket_category"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
@@ -733,9 +737,6 @@ func NewApplication() *Application {
 		}
 	}()
 
-	dashboardService := service.NewDashboardService(client, sugar)
-	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
-
 	// Domain: Service Catalog (DDD)
 	scRepo := service_catalog.NewEntRepository(client)
 	scService := service_catalog.NewService(scRepo, sugar)
@@ -755,6 +756,10 @@ func NewApplication() *Application {
 
 	// Approval Chain Service（供服务请求审批链求值引擎消费）
 	approvalChainService := service.NewApprovalChainService(client, sugar)
+	escalationMatrixService := service.NewEscalationMatrixService(sugar)
+	vendorService := service.NewVendorService(client, sugar)
+	provisioningService := service.NewProvisioningService(client, sugar)
+	ticketCategoryService := service.NewTicketCategoryService(client)
 
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
@@ -1010,31 +1015,24 @@ func NewApplication() *Application {
 		BPMNHandler:                     bpmnHTTPHandler,
 		A2UIHandler:                  nil, // TODO: wire
 		CMDBHandler:                  cmdbHandler,
+		TicketCategoryHandler: ticketCategoryHandler.NewHandler(ticketCategoryService, sugar),
+		EscalationMatrixHandler: escalationMatrixHandler.NewHandler(sugar, escalationMatrixService),
+		AuditLogHandler:         nil, // TODO: wire
+		MSPHandler:              nil, // TODO: wire
+		SystemConfigHandler:     systemConfigHandler,
+		ApprovalChainHandler:    approvalChainHandler.NewHandler(approvalChainService, sugar),
 
-		DashboardHandler:         dashboardHandler,
-			ProjectHandler:        nil, // TODO: wire
-		ApplicationHandler:    nil, // TODO: wire
-		TicketCategoryHandler: nil, // TODO: wire
-		TicketTypeHandler:     nil, // TODO: wire
-		TicketTagHandler:      nil, // TODO: wire
+		// Vendor Controller
+		VendorHandler:           vendorHandler.NewHandler(vendorService, sugar),
+
+		// Additional controllers
+		ProvisioningHandler:     provisioningHandler.NewHandler(provisioningService, sugar),
 		UserHandler:              userHTTPHandler,
 		GroupHandler:             groupHTTPHandler,
 
 		// RBAC and tenant handlers
 		RBACHandler:                rbacHTTPHandler,
 		TenantHandler:              tenantHTTPHandler,
-		EscalationMatrixHandler: nil, // TODO: wire
-		AuditLogHandler:         nil, // TODO: wire
-
-		MSPHandler:           nil, // TODO: wire
-		SystemConfigHandler:     systemConfigHandler,
-		ApprovalChainHandler: nil, // TODO: wire
-
-		// Vendor Controller
-		VendorHandler: nil, // TODO: wire
-
-		// Additional controllers
-		ProvisioningHandler: nil, // TODO: wire
 		AnalyticsHandler:    nil, // TODO: wire
 		PredictionHandler:   nil, // TODO: wire
 		ReleaseHandler:         releaseHTTPHandler,
