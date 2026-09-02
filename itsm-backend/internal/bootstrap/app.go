@@ -992,12 +992,12 @@ func NewApplication() *Application {
 		RedisRateLimiter:                redisRateLimiter,
 		AppStartTime:                    time.Now(),
 		TicketHandler:                   ticketHandler,
-		TicketDependencyHandler:      nil, // TODO: wire
-		TicketCommentHandler:         nil, // TODO: wire
-		TicketAttachmentHandler:      nil, // TODO: wire
-		TicketNotificationHandler:    nil, // TODO: wire
+		TicketDependencyHandler:      nil, // TODO: wire // TODO: wire
+		TicketCommentHandler:         nil, // TODO: wire // TODO: wire
+		TicketAttachmentHandler:      nil, // TODO: wire // TODO: wire
+		TicketNotificationHandler:    nil, // TODO: wire // TODO: wire
 		NotificationHandler:             notificationHTTPHandler,
-		TicketRatingHandler:          nil, // TODO: wire
+		TicketRatingHandler:          nil, // TODO: wire // TODO: wire
 		TicketAssignmentSmartHandler: nil, // TODO: wire
 		TicketViewHandler:            nil, // TODO: wire
 		TicketWorkflowHandler:           ticketWorkflowHandler,
