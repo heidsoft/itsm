@@ -1,0 +1,454 @@
+package connector
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"time"
+
+	"itsm-backend/common"
+	"itsm-backend/connector"
+	"itsm-backend/connector/marketplace"
+	"itsm-backend/dto"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+// Handler 连接器HTTP处理器
+type Handler struct {
+	manager  *connector.Manager
+	market   *marketplace.Market
+	registry *connector.Registry
+	logger   *zap.SugaredLogger
+	store    *connector.PersistentConfigStore
+}
+
+// NewHandler creates a new connector handler
+func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *Handler {
+	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger}
+}
+
+// SetPersistentStore sets the persistent config store
+func (h *Handler) SetPersistentStore(store *connector.PersistentConfigStore) {
+	h.store = store
+}
+
+// ListMarket 列出市场中所有可用连接器
+func (h *Handler) ListMarket(ctx *gin.Context) {
+	reg := h.registry
+	if reg == nil {
+		reg = connector.Default()
+	}
+	mfs := reg.List()
+	tenantID := ctx.GetInt("tenant_id")
+	configs := h.manager.ListByTenant(tenantID)
+	installed := make(map[string]bool, len(configs))
+	enabled := make(map[string]bool, len(configs))
+	for _, cfg := range configs {
+		installed[cfg.Name] = true
+		enabled[cfg.Name] = cfg.Enabled
+	}
+	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	out := make([]dto.ConnectorManifestDTO, 0, len(mfs))
+	for _, m := range mfs {
+		healthy, checkedAt, lastErr := healthForManifest(health, tenantID, m.Name)
+		out = append(out, dto.ConnectorManifestDTO{
+			Name:                m.Name,
+			Version:             m.Version,
+			Title:               m.Title,
+			Provider:            m.Provider,
+			Type:                string(m.Type),
+			Description:         m.Description,
+			Author:              m.Author,
+			Homepage:            m.Homepage,
+			IconURL:             m.IconURL,
+			Capabilities:        capToString(m.Capabilities),
+			Tags:                m.Tags,
+			MinITSMVer:          m.MinITSMVer,
+			Local:               true,
+			Installed:           installed[m.Name],
+			Enabled:             enabled[m.Name],
+			Healthy:             healthy,
+			LastCheckedAt:       checkedAt,
+			LastError:           lastErr,
+			Lifecycle:           connectorLifecycle(installed[m.Name], enabled[m.Name], healthy, lastErr),
+			Category:            string(m.Type),
+			IsOfficial:          m.IsOfficial,
+			RequiredPermissions: m.RequiredPermissions,
+			Checksum:            m.Checksum,
+		})
+	}
+	common.Success(ctx, gin.H{"items": out, "total": len(out)})
+}
+
+// ListConfigs 列出当前租户已配置的连接器实例（凭据脱敏）
+func (h *Handler) ListConfigs(ctx *gin.Context) {
+	tenantID := ctx.GetInt("tenant_id")
+	cfgs := h.manager.ListByTenant(tenantID)
+	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	out := make([]dto.ConnectorConfigDTO, 0, len(cfgs))
+	for _, cfg := range cfgs {
+		out = append(out, maskConfig(cfg, health))
+	}
+	common.Success(ctx, gin.H{"items": out, "total": len(out)})
+}
+
+// Provision 创建/更新一个连接器实例
+func (h *Handler) Provision(ctx *gin.Context) {
+	var req dto.ProvisionConnectorRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		return
+	}
+	tenantID := ctx.GetInt("tenant_id")
+	if len(req.Credentials) == 0 {
+		for _, existing := range h.manager.ListByTenant(tenantID) {
+			if existing.Name == req.Name && existing.Provider == req.Provider {
+				req.Credentials = existing.Credentials
+				break
+			}
+		}
+	}
+	if req.Settings == nil {
+		req.Settings = make(map[string]interface{})
+	}
+	callbackInstanceID := ""
+	for _, existing := range h.manager.ListByTenant(tenantID) {
+		if existing.Name == req.Name {
+			callbackInstanceID, _ = existing.Settings["callbackInstanceId"].(string)
+			break
+		}
+	}
+	if callbackInstanceID == "" {
+		buf := make([]byte, 24)
+		if _, err := rand.Read(buf); err != nil {
+			common.Fail(ctx, common.InternalErrorCode, "无法生成回调实例标识")
+			return
+		}
+		callbackInstanceID = hex.EncodeToString(buf)
+	}
+	req.Settings["callbackInstanceId"] = callbackInstanceID
+	cfg := connector.Config{
+		TenantID:    tenantID,
+		Name:        req.Name,
+		Provider:    req.Provider,
+		Enabled:     req.Enabled,
+		Credentials: req.Credentials,
+		Settings:    req.Settings,
+		Labels:      req.Labels,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+	for _, manifest := range h.registry.List() {
+		if manifest.Name == req.Name {
+			cfg.Type = manifest.Type
+			break
+		}
+	}
+	if err := h.manager.Provision(ctx.Request.Context(), cfg); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	if h.store != nil {
+		if err := h.store.Save(ctx.Request.Context(), cfg); err != nil {
+			h.manager.Revoke(cfg)
+			common.Fail(ctx, common.InternalErrorCode, err.Error())
+			return
+		}
+	}
+	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckAll(ctx.Request.Context())))
+}
+
+// Revoke 停用并移除一个连接器实例
+func (h *Handler) Revoke(ctx *gin.Context) {
+	name := ctx.Param("name")
+	tenantID := ctx.GetInt("tenant_id")
+	provider := ctx.Query("provider")
+	if provider == "" {
+		for _, cfg := range h.manager.ListByTenant(tenantID) {
+			if cfg.Name == name {
+				provider = cfg.Provider
+				break
+			}
+		}
+	}
+	h.manager.Revoke(connector.Config{TenantID: tenantID, Name: name, Provider: provider})
+	if h.store != nil {
+		if err := h.store.Delete(ctx.Request.Context(), tenantID, name, provider); err != nil {
+			common.Fail(ctx, common.InternalErrorCode, err.Error())
+			return
+		}
+	}
+	common.Success(ctx, gin.H{"name": name, "revoked": true})
+}
+
+// Send 通过指定连接器发消息
+func (h *Handler) Send(ctx *gin.Context) {
+	name := ctx.Param("name")
+	var req dto.SendConnectorMessageRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		return
+	}
+	tenantID := ctx.GetInt("tenant_id")
+	msg := &connector.Message{
+		Channel:  req.Channel,
+		Type:     req.Type,
+		Title:    req.Title,
+		Content:  req.Content,
+		Mentions: convertMentions(req.Mentions),
+		Actions:  convertActions(req.Actions),
+		Metadata: req.Metadata,
+	}
+	if req.Card != nil {
+		msg.Card = convertCard(req.Card)
+	}
+	if err := h.manager.Send(ctx.Request.Context(), tenantID, name, msg); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"name": name, "channel": req.Channel, "sent": true})
+}
+
+// Test 发送一条简单测试消息
+func (h *Handler) Test(ctx *gin.Context) {
+	name := ctx.Param("name")
+	tenantID := ctx.GetInt("tenant_id")
+	var channel string
+	for _, cfg := range h.manager.ListByTenant(tenantID) {
+		if cfg.Name == name {
+			if ch, ok := cfg.Settings["debug_channel"].(string); ok {
+				channel = ch
+			}
+		}
+	}
+	if channel == "" {
+		common.Fail(ctx, common.ParamErrorCode, "settings.debug_channel not configured for "+name)
+		return
+	}
+	if err := h.manager.Send(ctx.Request.Context(), tenantID, name, &connector.Message{
+		Channel: channel,
+		Type:    "text",
+		Title:   "ITSM 连接器测试",
+		Content: "这是一条来自 ITSM 的测试消息。\n时间: " + time.Now().Format(time.RFC3339),
+	}); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, gin.H{"name": name, "channel": channel, "sent": true})
+}
+
+// Health 所有运行实例健康检查
+func (h *Handler) Health(ctx *gin.Context) {
+	res := h.manager.HealthCheckAll(context.Background())
+	out := make(map[string]dto.ConnectorHealthDTO, len(res))
+	for k, v := range res {
+		out[k] = dto.ConnectorHealthDTO{
+			OK:        v.OK,
+			LatencyMs: v.LatencyMs,
+			Message:   v.Message,
+			CheckedAt: v.CheckedAt,
+			Extra:     v.Extra,
+		}
+	}
+	common.Success(ctx, out)
+}
+
+// Lifecycle 连接器生命周期视图
+func (h *Handler) Lifecycle(ctx *gin.Context) {
+	reg := h.registry
+	if reg == nil {
+		reg = connector.Default()
+	}
+	tenantID := ctx.GetInt("tenant_id")
+	configs := h.manager.ListByTenant(tenantID)
+	configByName := make(map[string]connector.Config, len(configs))
+	for _, cfg := range configs {
+		configByName[cfg.Name] = cfg
+	}
+	health := h.manager.HealthCheckAll(ctx.Request.Context())
+	manifests := reg.List()
+	out := make([]dto.ConnectorLifecycleDTO, 0, len(manifests))
+	for _, m := range manifests {
+		cfg, installed := configByName[m.Name]
+		enabled := installed && cfg.Enabled
+		healthy, checkedAt, lastErr := healthForManifest(health, tenantID, m.Name)
+		out = append(out, dto.ConnectorLifecycleDTO{
+			Name:          m.Name,
+			Provider:      m.Provider,
+			Type:          string(m.Type),
+			Installed:     installed,
+			Enabled:       enabled,
+			Healthy:       healthy,
+			Lifecycle:     connectorLifecycle(installed, enabled, healthy, lastErr),
+			LastCheckedAt: checkedAt,
+			LastError:     lastErr,
+			Capabilities:  capToString(m.Capabilities),
+		})
+	}
+	common.Success(ctx, gin.H{"items": out, "total": len(out)})
+}
+
+// FeishuCallback 飞书事件回调入口
+func (h *Handler) FeishuCallback(ctx *gin.Context) {
+	body, _ := ctx.GetRawData()
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		h.logger.Warnw("Connector FeishuCallback: tenant_id missing in context", "remote_ip", ctx.ClientIP())
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	conn, ok := h.manager.Get(tenantID, "feishu")
+	if !ok {
+		ctx.JSON(200, gin.H{"challenge": ctx.Query("challenge")})
+		return
+	}
+	rcv, ok := conn.(connector.Receiver)
+	if !ok {
+		ctx.JSON(200, gin.H{"code": -1, "msg": "feishu connector is not a Receiver"})
+		return
+	}
+	headers := map[string]string{
+		"X-Lark-Request-Timestamp": ctx.GetHeader("X-Lark-Request-Timestamp"),
+		"X-Lark-Request-Nonce":     ctx.GetHeader("X-Lark-Request-Nonce"),
+		"X-Lark-Signature":         ctx.GetHeader("X-Lark-Signature"),
+	}
+	if err := rcv.VerifySignature(headers, body); err != nil {
+		ctx.JSON(401, gin.H{"code": -1, "msg": err.Error()})
+		return
+	}
+	msg, err := rcv.ParseInbound(body)
+	if err != nil {
+		ctx.JSON(400, gin.H{"code": -1, "msg": err.Error()})
+		return
+	}
+	if msg.Type == "url_verification" {
+		ctx.JSON(200, gin.H{"challenge": msg.Content})
+		return
+	}
+	if h.logger != nil {
+		h.logger.Infow("feishu inbound", "type", msg.Type, "user", msg.UserID, "chat", msg.ChatID)
+	}
+	ctx.JSON(200, gin.H{"code": 0})
+}
+
+// helpers
+
+func maskConfig(cfg connector.Config, health map[string]connector.HealthStatus) dto.ConnectorConfigDTO {
+	masked := make(map[string]string, len(cfg.Credentials))
+	for k := range cfg.Credentials {
+		masked[k] = "******"
+	}
+	healthy, checkedAt, lastErr := healthForConfig(health, cfg)
+	return dto.ConnectorConfigDTO{
+		Name:          cfg.Name,
+		Provider:      cfg.Provider,
+		Type:          string(cfg.Type),
+		Enabled:       cfg.Enabled,
+		Healthy:       healthy,
+		Lifecycle:     connectorLifecycle(true, cfg.Enabled, healthy, lastErr),
+		LastCheckedAt: checkedAt,
+		LastError:     lastErr,
+		CreatedAt:     cfg.CreatedAt,
+		UpdatedAt:     cfg.UpdatedAt,
+		Credentials:   masked,
+		Settings:      cfg.Settings,
+		Labels:        cfg.Labels,
+	}
+}
+
+func healthForConfig(health map[string]connector.HealthStatus, cfg connector.Config) (bool, *time.Time, string) {
+	key := fmt.Sprintf("%d/%s/%s", cfg.TenantID, cfg.Name, cfg.Provider)
+	if h, ok := health[key]; ok {
+		checkedAt := h.CheckedAt
+		if h.OK {
+			return true, &checkedAt, ""
+		}
+		return false, &checkedAt, h.Message
+	}
+	return false, nil, ""
+}
+
+func healthForManifest(health map[string]connector.HealthStatus, tenantID int, name string) (bool, *time.Time, string) {
+	for key, h := range health {
+		prefix := fmt.Sprintf("%d/%s/", tenantID, name)
+		if len(key) >= len(prefix) && key[:len(prefix)] == prefix {
+			checkedAt := h.CheckedAt
+			if h.OK {
+				return true, &checkedAt, ""
+			}
+			return false, &checkedAt, h.Message
+		}
+	}
+	return false, nil, ""
+}
+
+func connectorLifecycle(installed, enabled, healthy bool, lastErr string) string {
+	switch {
+	case healthy:
+		return "healthy"
+	case enabled && lastErr != "":
+		return "unhealthy"
+	case enabled:
+		return "enabled"
+	case installed:
+		return "installed"
+	default:
+		return "available"
+	}
+}
+
+func capToString(caps []connector.Capability) []string {
+	out := make([]string, 0, len(caps))
+	for _, c := range caps {
+		out = append(out, string(c))
+	}
+	return out
+}
+
+func convertMentions(in []dto.MentionDTO) []connector.Mention {
+	out := make([]connector.Mention, 0, len(in))
+	for _, m := range in {
+		out = append(out, connector.Mention{Type: m.Type, ID: m.ID, Name: m.Name})
+	}
+	return out
+}
+
+func convertActions(in []dto.ActionDTO) []connector.Action {
+	out := make([]connector.Action, 0, len(in))
+	for _, a := range in {
+		out = append(out, connector.Action{Type: a.Type, Text: a.Text, URL: a.URL, Value: a.Value})
+	}
+	return out
+}
+
+func convertCard(in *dto.CardPayloadDTO) *connector.Card {
+	card := &connector.Card{Variables: in.Variables}
+	if in.Header != nil {
+		card.Header = &connector.CardHeader{Title: in.Header.Title, Subtitle: in.Header.Subtitle, Color: in.Header.Color}
+	}
+	for _, s := range in.Sections {
+		sec := connector.CardSection{Title: s.Title}
+		for _, e := range s.Content {
+			sec.Content = append(sec.Content, convertElement(e))
+		}
+		card.Sections = append(card.Sections, sec)
+	}
+	for _, e := range in.Elements {
+		card.Elements = append(card.Elements, convertElement(e))
+	}
+	return card
+}
+
+func convertElement(e dto.CardElementDTO) connector.CardElement {
+	el := connector.CardElement{Type: e.Type, Text: e.Text, ImageURL: e.ImageURL, Extras: e.Extras}
+	for _, kv := range e.Fields {
+		el.Fields = append(el.Fields, connector.KV{Key: kv.Key, Value: kv.Value, Short: kv.Short})
+	}
+	if e.Action != nil {
+		el.Action = &connector.Action{Type: e.Action.Type, Text: e.Action.Text, URL: e.Action.URL, Value: e.Action.Value}
+	}
+	return el
+}
