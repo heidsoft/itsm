@@ -126,6 +126,7 @@ func srSetup(t *testing.T) (*gin.Engine, *ent.Client, int, int, int) {
 	r.POST("/api/v1/service-requests", h.Create)
 	r.GET("/api/v1/service-requests", h.List)
 	r.GET("/api/v1/service-requests/:id", h.Get)
+	r.GET("/api/v1/service-requests/:id/approvals", h.ListApprovals)
 	r.PUT("/api/v1/service-requests/:id", h.Update)
 	r.PUT("/api/v1/service-requests/:id/status", h.UpdateStatus)
 	r.DELETE("/api/v1/service-requests/:id", h.Delete)
@@ -237,6 +238,42 @@ func TestServiceRequestHandler_Get_NotFound(t *testing.T) {
 	r, _, _, _, _ := srSetup(t)
 	resp := srDoReq(t, r, "GET", "/api/v1/service-requests/999999", nil)
 	assert.EqualValues(t, 404, resp.Code, "body=%s", srStr(resp))
+}
+
+func TestServiceRequestHandler_ListApprovals(t *testing.T) {
+	r, _, _, _, catID := srSetup(t)
+	id := srCreateOne(t, r, catID)
+
+	resp := srDoReq(t, r, "GET", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approvals", nil)
+	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", srStr(resp))
+	approvals, ok := resp.Data.([]interface{})
+	require.True(t, ok, "body=%s", srStr(resp))
+	require.Len(t, approvals, 3)
+	first := approvals[0].(map[string]interface{})
+	assert.EqualValues(t, id, first["serviceRequestId"])
+	assert.Equal(t, "manager", first["step"])
+}
+
+func TestServiceRequestHandler_ListApprovals_RejectsCrossTenant(t *testing.T) {
+	r, client, _, _, catID := srSetup(t)
+	id := srCreateOne(t, r, catID)
+
+	foreignTenant, err := client.Tenant.Create().
+		SetName("Foreign Tenant").
+		SetCode("FOREIGN-" + srUID()).
+		SetDomain("foreign-" + srUID() + ".test").
+		SetStatus("active").
+		Save(context.Background())
+	require.NoError(t, err)
+
+	foreignRouter := gin.New()
+	foreignRouter.Use(srAuth(foreignTenant.ID, 999999))
+	scRepo := service_catalog.NewEntRepository(client)
+	svc := NewService(NewEntRepository(client), scRepo, cmdb.NewEntRepository(client), client, zaptest.NewLogger(t).Sugar(), nil)
+	foreignRouter.GET("/api/v1/service-requests/:id/approvals", NewHandler(svc).ListApprovals)
+
+	resp := srDoReq(t, foreignRouter, "GET", "/api/v1/service-requests/"+strconv.Itoa(id)+"/approvals", nil)
+	assert.EqualValues(t, common.NotFoundErrorCode, resp.Code, "body=%s", srStr(resp))
 }
 
 func TestServiceRequestHandler_List(t *testing.T) {

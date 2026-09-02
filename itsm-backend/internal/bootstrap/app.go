@@ -41,6 +41,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/approval"
+	authHandler "itsm-backend/handlers/auth"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cmdb"
@@ -475,7 +476,6 @@ func NewApplication() *Application {
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)
 	mspController := controller.NewMSPController(mspAllocationService, ticketService, sugar)
 
-	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
 	// 将 ApprovalService 注入 BPMN 引擎的 ApprovalHandler，解决循环依赖
@@ -631,9 +631,6 @@ func NewApplication() *Application {
 	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
 	notificationPreferenceController := controller.NewNotificationPreferenceController(notificationPreferenceService, sugar)
 
-	// 服务请求服务（依赖通知服务）
-	serviceRequestService := service.NewServiceRequestService(client, sugar, approvalService, notificationService)
-
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
 	ticketViewService := service.NewTicketViewService(client, sugar)
@@ -661,7 +658,6 @@ func NewApplication() *Application {
 	rootCauseAnalysisService.SetLogger(sugar)
 	approvalHandler := approval.NewHandler(approvalService)
 
-	serviceController := controller.NewServiceController(serviceCatalogService, serviceRequestService)
 	provisioningService := service.NewProvisioningService(client, sugar)
 	provisioningController := controller.NewProvisioningController(provisioningService)
 
@@ -900,9 +896,9 @@ func NewApplication() *Application {
 	}
 	commonHandler := domainCommon.NewHandler(commonServiceDomain)
 
-	// Auth Controller（装配缺失的 register / forgot-password / reset-password / validate-reset-token / switch-tenant 路由）
-	authService := service.NewAuthService(client, cfg.JWT.Secret, sugar, nil)
-	authController := controller.NewAuthController(authService)
+	// Auth handler owns account self-service and tenant session switching.
+	authService := authHandler.NewService(client, cfg.JWT.Secret, sugar, nil)
+	authHTTPHandler := authHandler.NewHandler(authService)
 
 	// Role Handler (in-memory for now)
 	roleHandler := common.NewRoleHandler(client, sugar)
@@ -1086,7 +1082,6 @@ func NewApplication() *Application {
 		VendorController: vendorController,
 
 		// Additional controllers
-		ServiceController:      serviceController,
 		ProvisioningController: provisioningController,
 		AnalyticsController:    analyticsController,
 		PredictionController:   predictionController,
@@ -1110,7 +1105,7 @@ func NewApplication() *Application {
 		AIHandler:                   aiHandler, // Added AI domain handler
 		EmailIntakeHandler:          emailIntakeHandler,
 		CommonHandler:               commonHandler,
-		AuthController:              authController,
+		AuthHandler:                 authHTTPHandler,
 		RoleHandler:                 roleHandler,
 
 		// Sprint C — Skill Registry v1

@@ -19,6 +19,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	approvalHandler "itsm-backend/handlers/approval"
+	authHandler "itsm-backend/handlers/auth"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
@@ -264,7 +265,6 @@ type RouterConfig struct {
 	NotificationController           *controller.NotificationController
 
 	// Additional domain controllers
-	ServiceController      *controller.ServiceController
 	ProvisioningController *controller.ProvisioningController
 	AnalyticsController    *controller.AnalyticsController
 	PredictionController   *controller.PredictionController
@@ -292,7 +292,7 @@ type RouterConfig struct {
 	// 注册 /api/v1/system/vector-store*；为 nil 时路由不注册。
 	VectorStoreController *controller.VectorStoreController
 	CommonHandler         *domainCommon.Handler
-	AuthController        *controller.AuthController
+	AuthHandler           *authHandler.Handler
 	RoleHandler           *common.RoleHandler
 
 	// Sprint C — Skill Registry v1
@@ -385,11 +385,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// 无需认证的账号自助端点（注册/密码找回/重置）
-		if config.AuthController != nil {
-			public.POST("/auth/register", middleware.LoginRateLimiter(), config.AuthController.Register)
-			public.POST("/auth/forgot-password", middleware.LoginRateLimiter(), config.AuthController.ForgotPassword)
-			public.POST("/auth/reset-password", middleware.LoginRateLimiter(), config.AuthController.ResetPassword)
-			public.POST("/auth/validate-reset-token", middleware.LoginRateLimiter(), config.AuthController.ValidateResetToken)
+		if config.AuthHandler != nil {
+			public.POST("/auth/register", middleware.LoginRateLimiter(), config.AuthHandler.Register)
+			public.POST("/auth/forgot-password", middleware.LoginRateLimiter(), config.AuthHandler.ForgotPassword)
+			public.POST("/auth/reset-password", middleware.LoginRateLimiter(), config.AuthHandler.ResetPassword)
+			public.POST("/auth/validate-reset-token", middleware.LoginRateLimiter(), config.AuthHandler.ValidateResetToken)
 		}
 
 		// CSRF token 获取端点（无需认证）
@@ -1062,6 +1062,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				sr.GET("/me", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.List)
 				sr.GET("/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListPending)
 				sr.GET("/:id", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.Get)
+				sr.GET("/:id/approvals", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListApprovals)
 				sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Update)
 				sr.PUT("/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.UpdateStatus)
 				sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), config.ServiceRequestHandler.Delete)
@@ -1412,8 +1413,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
 				authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
 				authGrp.POST("/logout", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.Logout)
-				if config.AuthController != nil {
-					authGrp.POST("/switch-tenant", middleware.AuthMiddleware(config.JWTSecret), config.AuthController.SwitchTenant)
+				if config.AuthHandler != nil {
+					authGrp.POST("/switch-tenant", middleware.AuthMiddleware(config.JWTSecret), config.AuthHandler.SwitchTenant)
 				}
 			}
 
@@ -1498,25 +1499,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					applications.POST("", middleware.RequirePermission("application", "write"), config.ApplicationController.CreateApplication)
 					applications.GET("/microservices", middleware.RequirePermission("application", "read"), config.ApplicationController.ListMicroservices)
 					applications.POST("/microservices", middleware.RequirePermission("application", "write"), config.ApplicationController.CreateMicroservice)
-				}
-			}
-
-			// Service Catalog & Service Requests
-			if config.ServiceController != nil {
-				services := tenant.(*gin.RouterGroup).Group("/services")
-				{
-					services.GET("/catalogs", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogs)
-					services.POST("/catalogs", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.CreateServiceCatalog)
-					services.GET("/catalogs/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceController.GetServiceCatalogByID)
-					services.PUT("/catalogs/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceController.UpdateServiceCatalog)
-					services.DELETE("/catalogs/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceController.DeleteServiceCatalog)
-					services.GET("/requests", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetUserServiceRequests)
-					services.POST("/requests", middleware.RequirePermission("service_request", "write"), config.ServiceController.CreateServiceRequest)
-					services.GET("/requests/:id", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestByID)
-					services.PUT("/requests/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceController.UpdateServiceRequestStatus)
-					services.POST("/requests/approval", middleware.RequirePermission("service_request", "write"), config.ServiceController.ApplyServiceRequestApproval)
-					services.GET("/requests/approvals", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetServiceRequestApprovals)
-					services.GET("/requests/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceController.GetPendingServiceRequestApprovals)
 				}
 			}
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/domain/provisioning"
+	domainServiceRequest "itsm-backend/domain/servicerequest"
 	"itsm-backend/ent"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/servicerequest"
@@ -46,7 +47,7 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("服务请求不存在")
 	}
-	if string(sr.Status) != SRStatusSecurityApproved {
+	if string(sr.Status) != domainServiceRequest.StatusSecurityApproved {
 		return nil, fmt.Errorf("当前状态不允许启动交付（需要 security_approved）")
 	}
 

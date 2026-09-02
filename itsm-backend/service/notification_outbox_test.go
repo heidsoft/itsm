@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"itsm-backend/connector"
-	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/notification"
@@ -66,33 +64,6 @@ func TestEnqueueResourceNotificationTxCommitsAndRollsBackWithBusinessTransaction
 	require.Equal(t, commandbus.CommandDeliverNotification, command.CommandType)
 	require.Equal(t, "service_request", command.AggregateType)
 	require.Contains(t, command.IdempotencyKey, fmt.Sprintf(":%d:in_app:%d:", requestID, userID))
-}
-
-func TestCreateServiceRequestCommitsApprovalNotificationCommand(t *testing.T) {
-	client, ctx, tenantID, requesterID, _ := notificationOutboxFixture(t)
-	catalog, err := client.ServiceCatalog.Create().SetName("云资源服务").SetTenantID(tenantID).Save(ctx)
-	require.NoError(t, err)
-	item, err := client.ServiceCatalogItem.Create().SetCatalogID(catalog.ID).SetName("生产数据库申请").
-		SetTenantID(tenantID).SetRequiresApproval(true).Save(ctx)
-	require.NoError(t, err)
-	service := NewServiceRequestService(client, zap.NewNop().Sugar(), nil, NewNotificationService(client))
-	expiresAt := time.Now().Add(24 * time.Hour)
-
-	created, err := service.CreateServiceRequest(ctx, &dto.CreateServiceRequestRequest{
-		CatalogID: item.ID, Title: "申请生产数据库", DataClassification: "internal", ComplianceAck: true,
-		ExpireAt: &expiresAt,
-	}, requesterID, tenantID)
-	require.NoError(t, err)
-	require.NotZero(t, created.ID)
-	commands, err := client.OperationalCommand.Query().Where(
-		operationalcommand.TenantIDEQ(tenantID),
-		operationalcommand.AggregateTypeEQ("service_request"),
-		operationalcommand.AggregateIDEQ(created.ID),
-	).All(ctx)
-	require.NoError(t, err)
-	require.Len(t, commands, 1)
-	require.Equal(t, commandbus.CommandDeliverNotification, commands[0].CommandType)
-	require.EqualValues(t, requesterID, commands[0].Payload["recipientId"])
 }
 
 func TestServiceRequestNotificationHandlerProducesAuditedInAppDelivery(t *testing.T) {

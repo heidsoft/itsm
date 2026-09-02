@@ -86,33 +86,31 @@ func (h *Handler) toDTO(req *ServiceRequest, approvals []*ServiceRequestApproval
 	}
 
 	if approvals != nil {
-		resp.Approvals = make([]dto.ServiceRequestApprovalResponse, len(approvals))
-		for i, app := range approvals {
-			resp.Approvals[i] = dto.ServiceRequestApprovalResponse{
-				ID:               app.ID,
-				ServiceRequestID: app.ServiceRequestID,
-				Level:            app.Level,
-				Step:             app.Step,
-				Status:           app.Status,
-				ApproverName:     app.ApproverName,
-				Comment:          app.Comment,
-				Action:           app.Action,
-				TimeoutHours:     app.TimeoutHours,
-			}
-			if app.DueAt != nil {
-				t := *app.DueAt
-				resp.Approvals[i].DueAt = &t
-			}
-			if app.ProcessedAt != nil {
-				t := *app.ProcessedAt
-				resp.Approvals[i].ProcessedAt = &t
-			}
-			if app.ApproverID != nil {
-				resp.Approvals[i].ApproverID = app.ApproverID
-			}
-		}
+		resp.Approvals = toApprovalDTOs(approvals)
 	}
 	return resp
+}
+
+func toApprovalDTOs(approvals []*ServiceRequestApproval) []dto.ServiceRequestApprovalResponse {
+	responses := make([]dto.ServiceRequestApprovalResponse, len(approvals))
+	for i, app := range approvals {
+		responses[i] = dto.ServiceRequestApprovalResponse{
+			ID:               app.ID,
+			ServiceRequestID: app.ServiceRequestID,
+			Level:            app.Level,
+			Step:             app.Step,
+			Status:           app.Status,
+			ApproverID:       app.ApproverID,
+			ApproverName:     app.ApproverName,
+			Comment:          app.Comment,
+			Action:           app.Action,
+			TimeoutHours:     app.TimeoutHours,
+			DueAt:            app.DueAt,
+			ProcessedAt:      app.ProcessedAt,
+			CreatedAt:        app.CreatedAt,
+		}
+	}
+	return responses
 }
 
 func (h *Handler) Create(c *gin.Context) {
@@ -189,6 +187,29 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 	common.Success(c, h.toDTO(req, approvals))
+}
+
+// ListApprovals returns the approval history for one tenant-scoped service request.
+func (h *Handler) ListApprovals(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的服务请求ID")
+		return
+	}
+
+	tenantID := c.GetInt("tenant_id")
+	if tenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
+
+	_, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
+	if err != nil {
+		failServiceRequest(c, err)
+		return
+	}
+
+	common.Success(c, toApprovalDTOs(approvals))
 }
 
 func (h *Handler) List(c *gin.Context) {

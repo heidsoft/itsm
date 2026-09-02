@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainServiceRequest "itsm-backend/domain/servicerequest"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/cmdb"
@@ -23,15 +24,15 @@ const (
 	ApprovalStepIT       = "it"
 	ApprovalStepSecurity = "security"
 
-	SRStatusSubmitted        = "submitted"
-	SRStatusManagerApproved  = "manager_approved"
-	SRStatusITApproved       = "it_approved"
-	SRStatusSecurityApproved = "security_approved"
-	SRStatusRejected         = "rejected"
-	SRStatusProvisioning     = "provisioning"
-	SRStatusDelivered        = "delivered"
-	SRStatusFailed           = "failed"
-	SRStatusCancelled        = "cancelled"
+	SRStatusSubmitted        = domainServiceRequest.StatusSubmitted
+	SRStatusManagerApproved  = domainServiceRequest.StatusManagerApproved
+	SRStatusITApproved       = domainServiceRequest.StatusITApproved
+	SRStatusSecurityApproved = domainServiceRequest.StatusSecurityApproved
+	SRStatusRejected         = domainServiceRequest.StatusRejected
+	SRStatusProvisioning     = domainServiceRequest.StatusProvisioning
+	SRStatusDelivered        = domainServiceRequest.StatusDelivered
+	SRStatusFailed           = domainServiceRequest.StatusFailed
+	SRStatusCancelled        = domainServiceRequest.StatusCancelled
 
 	ApprovalStatusPending  = "pending"
 	ApprovalStatusApproved = "approved"

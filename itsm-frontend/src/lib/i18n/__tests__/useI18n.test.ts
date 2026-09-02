@@ -45,7 +45,7 @@ describe('useI18n', () => {
   describe('t() function', () => {
     it('should return translation for valid key', () => {
       const { result } = renderHook(() => useI18n());
-      const translation = result.current.t('common.ok');
+      const translation = result.current.t('common.confirm');
       expect(typeof translation).toBe('string');
     });
 
