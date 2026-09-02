@@ -11,7 +11,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/service"
 
@@ -36,8 +35,8 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 
 	logger := zaptest.NewLogger(t).Sugar()
 
-	invService := service.NewProblemInvestigationService(db, logger)
-	h := NewHandler(logger, invService, client)
+	invService := service.NewProblemInvestigationService(db, client, logger)
+	h := NewHandler(logger, invService)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -262,8 +261,8 @@ func TestHandler_MissingTenantContext(t *testing.T) {
 	db, err := sql.Open("sqlite3", "file:pi_notenant?mode=memory&_fk=1")
 	require.NoError(t, err)
 	logger := zaptest.NewLogger(t).Sugar()
-	invService := service.NewProblemInvestigationService(db, logger)
-	h := NewHandler(logger, invService, client)
+	invService := service.NewProblemInvestigationService(db, client, logger)
+	h := NewHandler(logger, invService)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -276,5 +275,3 @@ func TestHandler_MissingTenantContext(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code, "缺 tenant 上下文应 401（handlerctx 契约）")
 }
-
-var _ = ent.Desc // 保持 import（Order(ent.Desc) 在 routes.go 中使用）

@@ -8,13 +8,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
-	"itsm-backend/ent"
 	"itsm-backend/middleware"
 )
 
 type Handler struct {
 	svc          *Service
-	onCall       *OnCallService
 	orchestrator *EmailIntakeOrchestrator
 }
 
@@ -22,8 +20,8 @@ func (h *Handler) SetOrchestrator(orchestrator *EmailIntakeOrchestrator) {
 	h.orchestrator = orchestrator
 }
 
-func NewHandler(client *ent.Client) *Handler {
-	return &Handler{svc: NewService(client), onCall: NewOnCallService(client)}
+func NewHandler(service *Service) *Handler {
+	return &Handler{svc: service}
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -587,7 +585,7 @@ func (h *Handler) CreateShift(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid shift")
 		return
 	}
-	entity, err := h.onCall.CreateShift(c, tenantID, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
+	entity, err := h.svc.CreateShift(c, tenantID, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
 	if err != nil {
 		code := common.ParamErrorCode
 		if !errors.Is(err, ErrOverlappingShift) && !errors.Is(err, ErrInvalidShift) {
@@ -605,7 +603,7 @@ func (h *Handler) ListShifts(c *gin.Context) {
 		return
 	}
 	scheduleID, _ := strconv.Atoi(c.Query("scheduleId"))
-	items, err := h.onCall.ListShifts(c, tenantID, scheduleID)
+	items, err := h.svc.ListShifts(c, tenantID, scheduleID)
 	if err != nil {
 		common.InternalError(c, "failed to list shifts")
 		return
@@ -632,7 +630,7 @@ func (h *Handler) UpdateShift(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "invalid shift")
 		return
 	}
-	entity, err := h.onCall.UpdateShift(c, tenantID, id, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
+	entity, err := h.svc.UpdateShift(c, tenantID, id, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
 	if err != nil {
 		code := common.ParamErrorCode
 		if errors.Is(err, ErrShiftNotFound) {
@@ -656,7 +654,7 @@ func (h *Handler) DeleteShift(c *gin.Context) {
 		common.ParamError(c, "invalid shift id")
 		return
 	}
-	err = h.onCall.DeleteShift(c, tenantID, id)
+	err = h.svc.DeleteShift(c, tenantID, id)
 	if err != nil {
 		if errors.Is(err, ErrShiftNotFound) {
 			common.NotFound(c, "shift not found")
@@ -678,7 +676,7 @@ func (h *Handler) CurrentOnCall(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "groupId is required")
 		return
 	}
-	current, err := h.onCall.CurrentResolver(c, tenantID, groupID, time.Now())
+	current, err := h.svc.CurrentOnCall(c, tenantID, groupID, time.Now())
 	if err != nil {
 		if errors.Is(err, ErrNoOnCall) {
 			common.Fail(c, common.NotFoundCode, err.Error())
@@ -740,7 +738,7 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		return
 	}
 	item, err := h.svc.GetConversation(c, tenantID, id)
-	if ent.IsNotFound(err) {
+	if isPersistenceNotFound(err) {
 		common.Fail(c, common.NotFoundCode, "conversation not found")
 		return
 	}
@@ -770,7 +768,7 @@ func (h *Handler) RevalidateConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Revalidate(c, tenantID, id, version)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) ConfirmConversation(c *gin.Context) {
@@ -779,7 +777,7 @@ func (h *Handler) ConfirmConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Confirm(c, tenantID, id, version)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) RetryConversation(c *gin.Context) {
@@ -788,7 +786,7 @@ func (h *Handler) RetryConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Retry(c, tenantID, id, version)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) RejectConversation(c *gin.Context) {
@@ -797,7 +795,7 @@ func (h *Handler) RejectConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Reject(c, tenantID, id, version)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) CorrectConversation(c *gin.Context) {
@@ -825,7 +823,7 @@ func (h *Handler) CorrectConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.ApplyCorrections(c, tenantID, id, req.Version, userID, req.Fields)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) OverrideConversation(c *gin.Context) {
@@ -857,7 +855,7 @@ func (h *Handler) OverrideConversation(c *gin.Context) {
 		return
 	}
 	updated, err := h.orchestrator.Override(c, tenantID, id, req.Version, actorID, req.Reason)
-	h.actionResult(c, updated, err)
+	h.actionResult(c, updatedIdentity(updated), err)
 }
 
 func (h *Handler) conversationAction(c *gin.Context) (int, int, int, bool) {
@@ -882,12 +880,12 @@ func (h *Handler) conversationAction(c *gin.Context) (int, int, int, bool) {
 	return tenantID, id, req.Version, true
 }
 
-func (h *Handler) actionResult(c *gin.Context, updated *ent.EmailConversation, err error) {
+func (h *Handler) actionResult(c *gin.Context, updated conversationIdentity, err error) {
 	if err != nil {
 		common.Fail(c, common.ConflictCode, "email intake action conflicts with the current state")
 		return
 	}
-	item, loadErr := h.svc.ReloadConversation(c, updated.ID, updated.TenantID)
+	item, loadErr := h.svc.ReloadConversation(c, updated.id, updated.tenantID)
 	if loadErr != nil {
 		common.InternalError(c, "failed to load updated email conversation")
 		return

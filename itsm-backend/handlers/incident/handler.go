@@ -942,14 +942,14 @@ func (h *IncidentHandler) GetIncidentEvents(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	inc, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID)
+	events, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
 	}
 
 	var result []gin.H
-	for _, e := range inc.Edges.IncidentEvents {
+	for _, e := range events {
 		result = append(result, gin.H{
 			"id":          e.ID,
 			"incidentId":  e.IncidentID,
@@ -975,14 +975,14 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	inc, err := h.service.GetIncidentAlerts(c.Request.Context(), id, tenantID)
+	alerts, err := h.service.GetIncidentAlerts(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
 	}
 
 	var result []gin.H
-	for _, a := range inc.Edges.IncidentAlerts {
+	for _, a := range alerts {
 		result = append(result, gin.H{
 			"id":           a.ID,
 			"incident_id":  a.IncidentID,
@@ -1031,7 +1031,7 @@ func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 		"resolution_time_hours": resolutionTime,
 		"sla_violations":        violations,
 		"uptime_percentage":     99.9,
-		"metrics_count":         len(inc.Edges.IncidentMetrics),
+		"metrics_count":         inc.MetricsCount,
 		"checked_at":            now,
 	}
 

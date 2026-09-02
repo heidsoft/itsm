@@ -31,6 +31,36 @@ type Service struct {
 	processTriggerService ProcessTriggerServiceInterface
 }
 
+// IncidentEventReadModel is the handler-facing projection for an incident event.
+// Keeping this projection in the service prevents HTTP handlers from traversing
+// Ent edges and accidentally depending on persistence implementation details.
+type IncidentEventReadModel struct {
+	ID          int
+	IncidentID  int
+	EventType   string
+	EventName   string
+	Description string
+	OccurredAt  time.Time
+	CreatedAt   time.Time
+}
+
+type IncidentAlertReadModel struct {
+	ID          int
+	IncidentID  int
+	AlertName   string
+	AlertType   string
+	Severity    string
+	Status      string
+	TriggeredAt time.Time
+}
+
+type IncidentMetricsReadModel struct {
+	ID           int
+	CreatedAt    time.Time
+	ResolvedAt   time.Time
+	MetricsCount int
+}
+
 func NewService(repo Repository, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, logger *zap.SugaredLogger) *Service {
 	return &Service{
 		repo:              repo,
@@ -317,18 +347,38 @@ func (s *Service) GetStats(ctx context.Context, tenantID int) (*IncidentStats, e
 // ─── 子资源读模型（自 handler 下沉）────────────────────────────────
 
 // GetIncidentEvents 返回事件的全部活动记录（按 Edge 加载）。
-func (s *Service) GetIncidentEvents(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
-	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "events")
+func (s *Service) GetIncidentEvents(ctx context.Context, id, tenantID int) ([]IncidentEventReadModel, error) {
+	item, err := s.repo.GetIncidentWithEdges(ctx, id, tenantID, "events")
+	if err != nil {
+		return nil, err
+	}
+	result := make([]IncidentEventReadModel, 0, len(item.Edges.IncidentEvents))
+	for _, event := range item.Edges.IncidentEvents {
+		result = append(result, IncidentEventReadModel{ID: event.ID, IncidentID: event.IncidentID, EventType: event.EventType, EventName: event.EventName, Description: event.Description, OccurredAt: event.OccurredAt, CreatedAt: event.CreatedAt})
+	}
+	return result, nil
 }
 
 // GetIncidentAlerts 返回事件的全部告警（按 Edge 加载）。
-func (s *Service) GetIncidentAlerts(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
-	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "alerts")
+func (s *Service) GetIncidentAlerts(ctx context.Context, id, tenantID int) ([]IncidentAlertReadModel, error) {
+	item, err := s.repo.GetIncidentWithEdges(ctx, id, tenantID, "alerts")
+	if err != nil {
+		return nil, err
+	}
+	result := make([]IncidentAlertReadModel, 0, len(item.Edges.IncidentAlerts))
+	for _, alert := range item.Edges.IncidentAlerts {
+		result = append(result, IncidentAlertReadModel{ID: alert.ID, IncidentID: alert.IncidentID, AlertName: alert.AlertName, AlertType: alert.AlertType, Severity: alert.Severity, Status: alert.Status, TriggeredAt: alert.TriggeredAt})
+	}
+	return result, nil
 }
 
 // GetIncidentMetricsData 返回事件及其指标边，供指标计算。
-func (s *Service) GetIncidentMetricsData(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
-	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "metrics")
+func (s *Service) GetIncidentMetricsData(ctx context.Context, id, tenantID int) (*IncidentMetricsReadModel, error) {
+	item, err := s.repo.GetIncidentWithEdges(ctx, id, tenantID, "metrics")
+	if err != nil {
+		return nil, err
+	}
+	return &IncidentMetricsReadModel{ID: item.ID, CreatedAt: item.CreatedAt, ResolvedAt: item.ResolvedAt, MetricsCount: len(item.Edges.IncidentMetrics)}, nil
 }
 
 // CountTenantSLAViolations 统计租户级 SLA 违规数（指标接口用）。

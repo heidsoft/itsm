@@ -35,6 +35,23 @@ func (h *Handler) SetPersistentStore(store *connector.PersistentConfigStore) {
 	h.store = store
 }
 
+// requireStore 校验持久化存储已注入，未注入时拒绝写操作并显性报错。
+//
+// 背景：历史上 store 曾被误注入到无路由挂载的 controller.ConnectorController，
+// 而实际承接路由的 handler 的 h.store 始终为 nil。由于旧逻辑用
+// `if h.store != nil` 静默跳过落库，配置只写入内存 manager，重启即丢失，
+// 且没有任何报错。这里改为 fail-loudly，避免同类接线遗漏再次静默丢数据。
+func (h *Handler) requireStore(ctx *gin.Context) bool {
+	if h.store == nil {
+		if h.logger != nil {
+			h.logger.Errorw("connector persistent store is not configured; refusing write to avoid losing config on restart")
+		}
+		common.Fail(ctx, common.InternalErrorCode, "连接器配置持久化未就绪，拒绝保存")
+		return false
+	}
+	return true
+}
+
 // ListMarket 列出市场中所有可用连接器
 func (h *Handler) ListMarket(ctx *gin.Context) {
 	reg := h.registry
@@ -147,16 +164,17 @@ func (h *Handler) Provision(ctx *gin.Context) {
 			break
 		}
 	}
+	if !h.requireStore(ctx) {
+		return
+	}
 	if err := h.manager.Provision(ctx.Request.Context(), cfg); err != nil {
 		common.Fail(ctx, common.InternalErrorCode, err.Error())
 		return
 	}
-	if h.store != nil {
-		if err := h.store.Save(ctx.Request.Context(), cfg); err != nil {
-			h.manager.Revoke(cfg)
-			common.Fail(ctx, common.InternalErrorCode, err.Error())
-			return
-		}
+	if err := h.store.Save(ctx.Request.Context(), cfg); err != nil {
+		h.manager.Revoke(cfg)
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
 	}
 	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckAll(ctx.Request.Context())))
 }
@@ -174,12 +192,13 @@ func (h *Handler) Revoke(ctx *gin.Context) {
 			}
 		}
 	}
+	if !h.requireStore(ctx) {
+		return
+	}
 	h.manager.Revoke(connector.Config{TenantID: tenantID, Name: name, Provider: provider})
-	if h.store != nil {
-		if err := h.store.Delete(ctx.Request.Context(), tenantID, name, provider); err != nil {
-			common.Fail(ctx, common.InternalErrorCode, err.Error())
-			return
-		}
+	if err := h.store.Delete(ctx.Request.Context(), tenantID, name, provider); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
 	}
 	common.Success(ctx, gin.H{"name": name, "revoked": true})
 }

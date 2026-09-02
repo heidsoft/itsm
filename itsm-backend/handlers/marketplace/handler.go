@@ -4,34 +4,22 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"itsm-backend/common"
-	"itsm-backend/connector"
-	"itsm-backend/ent"
-	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/middleware"
 	"itsm-backend/service/marketplace"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Controller 市场控制器
-type Controller struct {
-	service          *marketplace.Service
-	connectorManager *connector.Manager
+// Handler 市场 HTTP 入口。
+type Handler struct {
+	service *marketplace.Service
 }
 
-// NewController 创建市场控制器
-func NewController(service *marketplace.Service, managers ...*connector.Manager) *Controller {
-	var connectorManager *connector.Manager
-	if len(managers) > 0 {
-		connectorManager = managers[0]
-	}
-	return &Controller{
-		service:          service,
-		connectorManager: connectorManager,
-	}
+// NewHandler 创建市场 Handler。
+func NewHandler(service *marketplace.Service) *Handler {
+	return &Handler{service: service}
 }
 
 func getTenantID(ctx *gin.Context) (int, bool) {
@@ -53,7 +41,7 @@ func getUserID(ctx *gin.Context) (int, bool) {
 }
 
 // RegisterRoutes 注册路由
-func (c *Controller) RegisterRoutes(r *gin.RouterGroup) {
+func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	marketplaceGroup := r.Group("/marketplace")
 	{
 		// 公开接口
@@ -85,7 +73,7 @@ func (c *Controller) RegisterRoutes(r *gin.RouterGroup) {
 // @Param page_size query int false "每页数量，默认20"
 // @Success 200 {object} common.Response{data=object{items=[]ent.MarketplaceItem, total=int, page=int, page_size=int}}
 // @Router /api/v1/marketplace/items [get]
-func (c *Controller) ListItems(ctx *gin.Context) {
+func (c *Handler) ListItems(ctx *gin.Context) {
 	itemType := ctx.Query("type")
 	category := ctx.Query("category")
 	search := ctx.Query("search")
@@ -131,7 +119,7 @@ func (c *Controller) ListItems(ctx *gin.Context) {
 // @Param id path int true "组件ID"
 // @Success 200 {object} common.Response{data=ent.MarketplaceItem}
 // @Router /api/v1/marketplace/items/{id} [get]
-func (c *Controller) GetItem(ctx *gin.Context) {
+func (c *Handler) GetItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
@@ -158,7 +146,7 @@ func (c *Controller) GetItem(ctx *gin.Context) {
 // @Security Bearer
 // @Success 200 {object} common.Response{data=ent.TenantInstallation}
 // @Router /api/v1/marketplace/items/{id}/install [post]
-func (c *Controller) InstallItem(ctx *gin.Context) {
+func (c *Handler) InstallItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
@@ -201,7 +189,7 @@ func (c *Controller) InstallItem(ctx *gin.Context) {
 // @Security Bearer
 // @Success 200 {object} common.Response
 // @Router /api/v1/marketplace/items/{id}/uninstall [post]
-func (c *Controller) UninstallItem(ctx *gin.Context) {
+func (c *Handler) UninstallItem(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
@@ -237,7 +225,7 @@ func (c *Controller) UninstallItem(ctx *gin.Context) {
 // @Security Bearer
 // @Success 200 {object} common.Response{data=[]ent.TenantInstallation}
 // @Router /api/v1/marketplace/installations [get]
-func (c *Controller) ListInstallations(ctx *gin.Context) {
+func (c *Handler) ListInstallations(ctx *gin.Context) {
 	status := ctx.Query("status")
 	tenantID, ok := getTenantID(ctx)
 	if !ok {
@@ -263,7 +251,7 @@ func (c *Controller) ListInstallations(ctx *gin.Context) {
 // @Security Bearer
 // @Success 200 {object} common.Response{data=ent.TenantInstallation}
 // @Router /api/v1/marketplace/installations/{id} [get]
-func (c *Controller) GetInstallation(ctx *gin.Context) {
+func (c *Handler) GetInstallation(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
@@ -300,7 +288,7 @@ func (c *Controller) GetInstallation(ctx *gin.Context) {
 // @Security Bearer
 // @Success 200 {object} common.Response{data=ent.TenantInstallation}
 // @Router /api/v1/marketplace/installations/{id}/config [put]
-func (c *Controller) UpdateInstallationConfig(ctx *gin.Context) {
+func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 	itemIDStr := ctx.Param("id")
 	itemID, err := strconv.Atoi(itemIDStr)
 	if err != nil {
@@ -319,85 +307,11 @@ func (c *Controller) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
-	_, err = c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
+	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
 	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
-	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
-		return
-	}
-	if err := c.provisionConnectorInstallation(ctx, installation); err != nil {
 		common.Fail(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	common.Success(ctx, installation)
-}
-
-func (c *Controller) provisionConnectorInstallation(ctx *gin.Context, installation *ent.TenantInstallation) error {
-	if c.connectorManager == nil || installation == nil || installation.Edges.Item == nil {
-		return nil
-	}
-	item := installation.Edges.Item
-	if item.Type != marketplaceitem.TypeConnector {
-		return nil
-	}
-	connectorName := strings.TrimSuffix(item.Name, "-connector")
-	cfg := connector.Config{
-		TenantID:    installation.TenantID,
-		Name:        connectorName,
-		Provider:    connectorName,
-		Enabled:     installation.Status == "active",
-		Credentials: stringMapFromConfig(installation.Config["credentials"]),
-		Settings:    interfaceMapFromConfig(installation.Config["settings"]),
-		Labels: map[string]string{
-			"marketplace_item_id": strconv.Itoa(item.ID),
-			"marketplace_name":    item.Name,
-			"marketplace_title":   item.Title,
-		},
-		CreatedAt: installation.InstalledAt,
-		UpdatedAt: installation.UpdatedAt,
-	}
-	if cfg.Provider == "" {
-		cfg.Provider = item.Name
-	}
-	return c.connectorManager.Provision(ctx.Request.Context(), cfg)
-}
-
-func stringMapFromConfig(value interface{}) map[string]string {
-	out := map[string]string{}
-	if typed, ok := value.(map[string]string); ok {
-		for k, v := range typed {
-			out[k] = v
-		}
-		return out
-	}
-	if typed, ok := value.(map[string]interface{}); ok {
-		for k, v := range typed {
-			if s, ok := v.(string); ok {
-				out[k] = s
-			}
-		}
-	}
-	return out
-}
-
-func interfaceMapFromConfig(value interface{}) map[string]interface{} {
-	out := map[string]interface{}{}
-	if typed, ok := value.(map[string]interface{}); ok {
-		for k, v := range typed {
-			out[k] = v
-		}
-		return out
-	}
-	if typed, ok := value.(map[string]string); ok {
-		for k, v := range typed {
-			out[k] = v
-		}
-	}
-	return out
 }

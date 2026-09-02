@@ -7,7 +7,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -130,7 +129,7 @@ func (h *Handler) Get(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -151,7 +150,7 @@ func (h *Handler) GetAssociations(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -200,7 +199,7 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 	// 验证问题存在
 	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -234,7 +233,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 	// 验证问题存在
 	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -442,7 +441,7 @@ func problemRequestContext(c *gin.Context) (int, int, bool) {
 
 func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err error) {
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else if strings.Contains(err.Error(), "required") {
 			common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -562,7 +561,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -592,7 +591,7 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -619,7 +618,7 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")

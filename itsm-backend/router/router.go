@@ -13,28 +13,27 @@ import (
 
 	"itsm-backend/common"
 	connectorAlert "itsm-backend/connector/alert"
-	marketplaceController "itsm-backend/controller/marketplace"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
-	"itsm-backend/handlers/ai"
 	a2uiHandler "itsm-backend/handlers/a2ui"
-	approvalHandler "itsm-backend/handlers/approval"
-	approvalChainHandler "itsm-backend/handlers/approval_chain"
+	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
 	applicationHandler "itsm-backend/handlers/application"
+	approvalHandler "itsm-backend/handlers/approval"
+	approvalChainHandler "itsm-backend/handlers/approval_chain"
 	assetHandler "itsm-backend/handlers/asset"
 	assignmentSmartHandler "itsm-backend/handlers/assignment_smart"
 	auditlogHandler "itsm-backend/handlers/auditlog"
-	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	authHandler "itsm-backend/handlers/auth"
+	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
-	connectorHandler "itsm-backend/handlers/connector"
 	domainCommon "itsm-backend/handlers/common"
+	connectorHandler "itsm-backend/handlers/connector"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
@@ -43,6 +42,7 @@ import (
 	incidentHandler "itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	marketplaceHandler "itsm-backend/handlers/marketplace"
 	mspHandler "itsm-backend/handlers/msp"
 	notificationHandler "itsm-backend/handlers/notification"
 	"itsm-backend/handlers/operations"
@@ -56,17 +56,17 @@ import (
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
-	slaTemplateHandler "itsm-backend/handlers/sla_template"
-	surveyHandler "itsm-backend/handlers/survey"
 	"itsm-backend/handlers/sla"
+	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	"itsm-backend/handlers/standard_change"
+	surveyHandler "itsm-backend/handlers/survey"
 	systemConfigHandler "itsm-backend/handlers/systemconfig"
 	tenantHandler "itsm-backend/handlers/tenant"
+	ticketHandler "itsm-backend/handlers/ticket"
 	ticketAttachmentHandler "itsm-backend/handlers/ticket_attachment"
 	ticketCategoryHandler "itsm-backend/handlers/ticket_category"
 	ticketCommentHandler "itsm-backend/handlers/ticket_comment"
 	ticketDependencyHandler "itsm-backend/handlers/ticket_dependency"
-	ticketHandler "itsm-backend/handlers/ticket"
 	ticketNotificationHandler "itsm-backend/handlers/ticket_notification"
 	ticketRatingHandler "itsm-backend/handlers/ticket_rating"
 	ticketTagHandler "itsm-backend/handlers/ticket_tag"
@@ -74,8 +74,8 @@ import (
 	ticketViewHandler "itsm-backend/handlers/ticket_view"
 	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
 	usersHandler "itsm-backend/handlers/user"
-	vendorHandler "itsm-backend/handlers/vendor"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
+	vendorHandler "itsm-backend/handlers/vendor"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -246,8 +246,8 @@ type RouterConfig struct {
 	AppStartTime time.Time
 
 	// Controllers
-	ProblemInvestigationHandler     *problemInvestigationHandler.Handler
-	TicketHandler                   *ticketHandler.Handler
+	ProblemInvestigationHandler  *problemInvestigationHandler.Handler
+	TicketHandler                *ticketHandler.Handler
 	TicketDependencyHandler      *ticketDependencyHandler.Handler
 	TicketCommentHandler         *ticketCommentHandler.Handler
 	TicketAttachmentHandler      *ticketAttachmentHandler.Handler
@@ -255,14 +255,14 @@ type RouterConfig struct {
 	TicketRatingHandler          *ticketRatingHandler.Handler
 	TicketAssignmentSmartHandler *assignmentSmartHandler.Handler
 	TicketViewHandler            *ticketViewHandler.Handler
-	TicketWorkflowHandler           *ticketWorkflowHandler.Handler
+	TicketWorkflowHandler        *ticketWorkflowHandler.Handler
 	TicketAutomationRuleHandler  *automationRuleHandler.Handler
-	IncidentHandler                 *incidentHandler.IncidentHandler
-	ApprovalHandler                 *approvalHandler.Handler
-	BPMNHandler                     *bpmnHandler.Handler
+	IncidentHandler              *incidentHandler.IncidentHandler
+	ApprovalHandler              *approvalHandler.Handler
+	BPMNHandler                  *bpmnHandler.Handler
 
-	A2UIHandler *a2uiHandler.Handler
-	DashboardHandler     *handlers.DashboardHandler
+	A2UIHandler      *a2uiHandler.Handler
+	DashboardHandler *handlers.DashboardHandler
 
 	// Organization & Project
 	ProjectHandler     *projectHandler.Handler
@@ -282,21 +282,21 @@ type RouterConfig struct {
 	GroupHandler *groupHandler.Handler
 
 	// RBAC and tenant domain handlers
-	RBACHandler                *rbacHandler.Handler
-	TenantHandler              *tenantHandler.Handler
+	RBACHandler             *rbacHandler.Handler
+	TenantHandler           *tenantHandler.Handler
 	MSPHandler              *mspHandler.Handler
-	SystemConfigHandler        *systemConfigHandler.Handler
+	SystemConfigHandler     *systemConfigHandler.Handler
 	ApprovalChainHandler    *approvalChainHandler.Handler
 	EscalationMatrixHandler *escalationMatrixHandler.Handler
 	AuditLogHandler         *auditlogHandler.Handler
-	NotificationHandler        *notificationHandler.Handler
+	NotificationHandler     *notificationHandler.Handler
 
 	// Additional domain controllers
 	ProvisioningHandler *provisioningHandler.Handler
 	AnalyticsHandler    *analyticsHandler.Handler
 	PredictionHandler   *predictionHandler.Handler
-	ReleaseHandler         *releaseHandler.ReleaseHandler
-	AssetHandler           *assetHandler.Handler
+	ReleaseHandler      *releaseHandler.ReleaseHandler
+	AssetHandler        *assetHandler.Handler
 	VendorHandler       *vendorHandler.Handler
 	SurveyHandler       *surveyHandler.Handler
 	CloudHandler        *cloud.Handler
@@ -306,20 +306,20 @@ type RouterConfig struct {
 	ServiceRequestHandler *service_request.Handler
 	CMDBHandler           *cmdb.Handler
 
-	ProblemHandler        *problem.Handler
-	ChangeHandler         *change.Handler
-	CABHandler            *cab.Handler
-	KnowledgeHandler      *knowledge.Handler
-	SLAHandler            *sla.Handler
+	ProblemHandler     *problem.Handler
+	ChangeHandler      *change.Handler
+	CABHandler         *cab.Handler
+	KnowledgeHandler   *knowledge.Handler
+	SLAHandler         *sla.Handler
 	SLATemplateHandler *slaTemplateHandler.Handler
-	AIHandler             *ai.Handler
-	EmailIntakeHandler    *email_intake.Handler
+	AIHandler          *ai.Handler
+	EmailIntakeHandler *email_intake.Handler
 	// VectorStoreController 提供向量存储（RAG 检索底座）状态查看与连通性测试，
 	// 注册 /api/v1/system/vector-store*；为 nil 时路由不注册。
 	VectorStoreHandler *vectorStoreHandler.Handler
-	CommonHandler         *domainCommon.Handler
-	AuthHandler           *authHandler.Handler
-	RoleHandler           *common.RoleHandler
+	CommonHandler      *domainCommon.Handler
+	AuthHandler        *authHandler.Handler
+	RoleHandler        *common.RoleHandler
 
 	// Sprint C — Skill Registry v1
 	SkillHandler *skill.Handler
@@ -338,9 +338,9 @@ type RouterConfig struct {
 
 	// Connector Controller (连接器/插件/技能市场)
 	ConnectorHandler   *connectorHandler.Handler
-	AlertHandler          *connectorAlert.Handler
-	FeishuHandler         *feishuHandler.Handler
-	MarketplaceController *marketplaceController.Controller
+	AlertHandler       *connectorAlert.Handler
+	FeishuHandler      *feishuHandler.Handler
+	MarketplaceHandler *marketplaceHandler.Handler
 
 	// Ticket Association Service (工单关联服务)
 	TicketAssociationService *service.TicketAssociationService
@@ -1684,8 +1684,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			config.KnownErrorHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
-		if config.MarketplaceController != nil {
-			config.MarketplaceController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		if config.MarketplaceHandler != nil {
+			config.MarketplaceHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// Connector Controller (连接器/插件/技能市场)

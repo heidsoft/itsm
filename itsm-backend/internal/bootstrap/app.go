@@ -28,9 +28,8 @@ import (
 	_ "itsm-backend/connector/builtin/wecom"
 	"itsm-backend/connector/marketplace"
 	connectorVector "itsm-backend/connector/vector"
-	"itsm-backend/controller"
-	marketplaceController "itsm-backend/controller/marketplace"
 	connectorHandler "itsm-backend/handlers/connector"
+	marketplaceHandler "itsm-backend/handlers/marketplace"
 	"itsm-backend/pkg/eventbus"
 	marketplaceService "itsm-backend/service/marketplace"
 
@@ -446,7 +445,6 @@ func NewApplication() *Application {
 	connectorMarket := marketplace.New()
 	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar)
 	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, database.GetRawDB(), alertDevelopmentMode())
-	connectorController := controller.NewConnectorController(connectorManager, connector.Default(), connectorMarket, sugar)
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
 	if connectorEncryptionKey == "" {
 		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
@@ -459,7 +457,10 @@ func NewApplication() *Application {
 	if connectorStoreErr != nil {
 		sugar.Fatalw("Failed to initialize connector config store", "error", connectorStoreErr)
 	}
-	connectorController.SetPersistentStore(connectorStore)
+	// connector 配置持久化必须注入到实际承接路由的 handler。此前误注入到无路由挂载的
+	// controller.ConnectorController，导致 h.store 为 nil，Provision/Revoke 跳过落库，
+	// 配置仅存于内存、重启即丢失。
+	connectorHandler.SetPersistentStore(connectorStore)
 	if persistedConfigs, loadErr := connectorStore.LoadAll(context.Background()); loadErr != nil {
 		sugar.Warnw("Failed to reload persisted connector configs", "error", loadErr)
 	} else {
@@ -636,7 +637,7 @@ func NewApplication() *Application {
 	// 市场服务
 	marketplaceSvc := marketplaceService.NewService(client, sugar)
 	marketplaceSvc.SetConnectorManager(connectorManager)
-	marketplaceCtrl := marketplaceController.NewController(marketplaceSvc, connectorManager)
+	marketplaceHTTPHandler := marketplaceHandler.NewHandler(marketplaceSvc)
 
 	// Guidance sidecar for constrained JSON generation
 	guidanceURL := os.Getenv("GUIDANCE_URL")
@@ -811,8 +812,8 @@ func NewApplication() *Application {
 	// Problem Investigation Service & Handler（问题调查/RCA/解决方案/知识沉淀）
 	// 修复：此前该 controller 从未在 bootstrap 装配，导致 /problem-investigation 路由组整体未注册（404）
 	// 2026-09-02 迁移至 handlers/problem_investigation（域切片架构）
-	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), sugar)
-	problemInvestigationHandler := probleminvestigation.NewHandler(sugar, problemInvestigationService, client)
+	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), client, sugar)
+	problemInvestigationHandler := probleminvestigation.NewHandler(sugar, problemInvestigationService)
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())
@@ -866,7 +867,8 @@ func NewApplication() *Application {
 	// Sprint C — Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	skillHandler := skill.NewHandler(skillRegistry, sugar)
-	emailIntakeHandler := email_intake.NewHandler(client)
+	emailIntakeService := email_intake.NewService(client)
+	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))
 	automationReporterID, _ := strconv.Atoi(os.Getenv("EMAIL_INTAKE_AUTOMATION_REPORTER_ID"))
 	assignmentGroupID, _ := strconv.Atoi(os.Getenv("EMAIL_INTAKE_DEFAULT_GROUP_ID"))
@@ -1108,7 +1110,7 @@ func NewApplication() *Application {
 		AlertHandler:     alertHandler,
 		FeishuHandler:    feishuHTTPHandler,
 
-		MarketplaceController: marketplaceCtrl,
+		MarketplaceHandler: marketplaceHTTPHandler,
 
 		// WebSocket Service
 		WebSocketService: wsService,

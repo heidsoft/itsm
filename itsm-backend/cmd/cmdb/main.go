@@ -48,13 +48,8 @@ func main() {
 	cmdbImportExportService := service.NewCMDBImportExportService(client, sugar, configurationItemService, ciTagService)
 	cmdbSavedViewService := service.NewCMDBSavedViewService(client, sugar)
 
-	// 初始化 DDD CMDB 服务
-	sugar.Infow("Initializing DDD CMDB service")
-	cmdbRepo := cmdb.NewEntRepository(client)
-	cmdbDDDService := cmdb.NewService(cmdbRepo, nil, sugar)
-
-	// 初始化 CMDB 生产服务（原 controller.CMDBController，已迁入 handlers/cmdb）
-	cmdbController := cmdb.NewProductionService(
+	// 独立 CMDB 兼容入口复用 handlers/cmdb 的生产服务，不再装配 legacy controller。
+	cmdbHandler := cmdb.NewProductionService(
 		sugar,
 		ciTypeService,
 		ciAttributeDefinitionService,
@@ -65,7 +60,6 @@ func main() {
 		cmdbImportExportService,
 		cmdbSavedViewService,
 	)
-	_ = cmdbDDDService
 
 	// 初始化路由
 	r := gin.Default()
@@ -124,18 +118,18 @@ func main() {
 	{
 		cmdb := api.Group("/configuration-items")
 		{
-			cmdb.GET("", cmdbController.ListCIs)
-			cmdb.POST("", cmdbController.CreateCI)
-			cmdb.GET("/stats", cmdbController.GetCIStats)
-			cmdb.GET("/relationship-types", cmdbController.ListRelationshipTypes)
-			cmdb.GET("/relationships", cmdbController.ListCIRelationships)
-			cmdb.POST("/relationships", cmdbController.CreateCIRelationship)
-			cmdb.GET("/relationships/:id", cmdbController.GetCIRelationship)
-			cmdb.PUT("/relationships/:id", cmdbController.UpdateCIRelationship)
-			cmdb.DELETE("/relationships/:id", cmdbController.DeleteCIRelationship)
-			cmdb.GET("/:id", cmdbController.GetCI)
-			cmdb.GET("/:ciId/relationships", cmdbController.ListCIRelationshipsByCIID)
-			cmdb.GET("/:ciId/impact-analysis", cmdbController.GetCIImpactAnalysis)
+			cmdb.GET("", cmdbHandler.ListCIs)
+			cmdb.POST("", cmdbHandler.CreateCI)
+			cmdb.GET("/stats", cmdbHandler.GetCIStats)
+			cmdb.GET("/relationship-types", cmdbHandler.ListRelationshipTypes)
+			cmdb.GET("/relationships", cmdbHandler.ListCIRelationships)
+			cmdb.POST("/relationships", cmdbHandler.CreateCIRelationship)
+			cmdb.GET("/relationships/:id", cmdbHandler.GetCIRelationship)
+			cmdb.PUT("/relationships/:id", cmdbHandler.UpdateCIRelationship)
+			cmdb.DELETE("/relationships/:id", cmdbHandler.DeleteCIRelationship)
+			cmdb.GET("/:id", cmdbHandler.GetCI)
+			cmdb.GET("/:ciId/relationships", cmdbHandler.ListCIRelationshipsByCIID)
+			cmdb.GET("/:ciId/impact-analysis", cmdbHandler.GetCIImpactAnalysis)
 		}
 	}
 

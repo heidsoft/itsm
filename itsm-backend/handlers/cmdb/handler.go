@@ -235,8 +235,8 @@ func toCloudResourceDTO(resource *CloudResource) *dto.CloudResourceResponse {
 	}
 }
 
-// GetReconciliation 之外的 CI CRUD / CIType CRUD / 关系类型接口未注册路由，属死代码，已删除；
-// CI/CIType/关系的线上路径见 controller/cmdb_controller.go + service 层。
+// GetReconciliation 之外的 CI CRUD / CIType CRUD / 关系类型接口由本包的
+// ProductionService 承接，生产路径不再依赖 legacy controller。
 
 // GetReconciliation handles GET /api/v1/cmdb/reconciliation
 func (h *Handler) GetReconciliation(c *gin.Context) {

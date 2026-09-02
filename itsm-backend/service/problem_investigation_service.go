@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/ent/knowledgearticle"
 
 	"go.uber.org/zap"
 )
@@ -14,15 +17,35 @@ import (
 // ProblemInvestigationService 问题调查服务
 type ProblemInvestigationService struct {
 	db     *sql.DB
+	client *ent.Client
 	logger *zap.SugaredLogger
 }
 
 // NewProblemInvestigationService 创建问题调查服务
-func NewProblemInvestigationService(db *sql.DB, logger *zap.SugaredLogger) *ProblemInvestigationService {
+func NewProblemInvestigationService(db *sql.DB, client *ent.Client, logger *zap.SugaredLogger) *ProblemInvestigationService {
 	return &ProblemInvestigationService{
 		db:     db,
+		client: client,
 		logger: logger,
 	}
+}
+
+func (s *ProblemInvestigationService) CreateKnowledgeArticle(ctx context.Context, tenantID, authorID int, req *dto.CreateProblemKnowledgeArticleRequest) (*ent.KnowledgeArticle, error) {
+	return s.client.KnowledgeArticle.Create().
+		SetTitle(req.ArticleTitle).
+		SetContent(req.ArticleContent).
+		SetCategory(req.ArticleType).
+		SetAuthorID(authorID).
+		SetTags(strings.Join(req.Tags, ",")).
+		SetTenantID(tenantID).
+		Save(ctx)
+}
+
+func (s *ProblemInvestigationService) ListKnowledgeArticles(ctx context.Context, tenantID int) ([]*ent.KnowledgeArticle, error) {
+	return s.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantIDEQ(tenantID), knowledgearticle.DeletedAtIsNil()).
+		Order(ent.Desc(knowledgearticle.FieldCreatedAt)).
+		All(ctx)
 }
 
 // problemInvestigationStatusTransitions 与 handlers/problem 的状态机保持一致。

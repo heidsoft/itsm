@@ -77,10 +77,47 @@ func NewResolver(client *ent.Client) *Resolver { return &Resolver{client: client
 // Service is the main service struct for email_intake domain
 type Service struct {
 	client *ent.Client
+	onCall *OnCallService
 }
 
 func NewService(client *ent.Client) *Service {
-	return &Service{client: client}
+	return &Service{client: client, onCall: NewOnCallService(client)}
+}
+
+type conversationIdentity struct {
+	id       int
+	tenantID int
+}
+
+func updatedIdentity(updated *ent.EmailConversation) conversationIdentity {
+	if updated == nil {
+		return conversationIdentity{}
+	}
+	return conversationIdentity{id: updated.ID, tenantID: updated.TenantID}
+}
+
+func isPersistenceNotFound(err error) bool {
+	return ent.IsNotFound(err)
+}
+
+func (s *Service) CreateShift(ctx context.Context, tenantID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
+	return s.onCall.CreateShift(ctx, tenantID, scheduleID, userID, startAt, endAt)
+}
+
+func (s *Service) ListShifts(ctx context.Context, tenantID, scheduleID int) ([]*ent.OnCallShift, error) {
+	return s.onCall.ListShifts(ctx, tenantID, scheduleID)
+}
+
+func (s *Service) UpdateShift(ctx context.Context, tenantID, shiftID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
+	return s.onCall.UpdateShift(ctx, tenantID, shiftID, scheduleID, userID, startAt, endAt)
+}
+
+func (s *Service) DeleteShift(ctx context.Context, tenantID, shiftID int) error {
+	return s.onCall.DeleteShift(ctx, tenantID, shiftID)
+}
+
+func (s *Service) CurrentOnCall(ctx context.Context, tenantID, groupID int, at time.Time) (*CurrentOnCall, error) {
+	return s.onCall.CurrentResolver(ctx, tenantID, groupID, at)
 }
 
 func (r *Resolver) Resolve(ctx context.Context, tenantID int, fields IntakeFields) (Resolution, error) {
@@ -357,7 +394,6 @@ func (s *OnCallService) CurrentResolver(ctx context.Context, tenantID, groupID i
 	shift := shifts[0]
 	return &CurrentOnCall{ScheduleID: shift.ScheduleID, ShiftID: shift.ID, GroupID: groupID, UserID: shift.UserID, StartAt: shift.StartAt, EndAt: shift.EndAt}, nil
 }
-
 
 // ─── ServiceCustomer ────────────────────────────────────────────────
 

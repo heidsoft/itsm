@@ -2,13 +2,10 @@ package probleminvestigation
 
 import (
 	"strconv"
-	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/ent"
-	"itsm-backend/ent/knowledgearticle"
 
 	"github.com/gin-gonic/gin"
 )
@@ -449,31 +446,7 @@ func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 	}
 	uid := userID(c)
 
-	entClient := h.entClient
-	if entClient == nil {
-		// 兼容测试与降级装配：从上下文取（与旧 controller 的 handlerctx.GetEntClient 行为一致）
-		var okEnt bool
-		entClient, okEnt = handlerctx.GetEntClient(c)
-		if !okEnt {
-			return
-		}
-	}
-
-	// 转换 tags 为字符串
-	tagsStr := ""
-	if len(req.Tags) > 0 {
-		tagsStr = strings.Join(req.Tags, ",")
-	}
-
-	// 创建知识库文章
-	article, err := entClient.KnowledgeArticle.Create().
-		SetTitle(req.ArticleTitle).
-		SetContent(req.ArticleContent).
-		SetCategory(req.ArticleType).
-		SetAuthorID(uid).
-		SetTags(tagsStr).
-		SetTenantID(tid).
-		Save(c.Request.Context())
+	article, err := h.invService.CreateKnowledgeArticle(c.Request.Context(), tid, uid, &req)
 	if err != nil {
 		h.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tid)
 		common.FailWithErr(c, err, "操作失败")
@@ -508,20 +481,8 @@ func (h *Handler) GetProblemKnowledgeArticles(c *gin.Context) {
 		return
 	}
 
-	entClient := h.entClient
-	if entClient == nil {
-		var okEnt bool
-		entClient, okEnt = handlerctx.GetEntClient(c)
-		if !okEnt {
-			return
-		}
-	}
-
 	// 获取知识库文章列表（按创建时间倒序；沿用旧实现未按 problem 过滤的行为）
-	articles, err := entClient.KnowledgeArticle.Query().
-		Where(knowledgearticle.TenantIDEQ(tid), knowledgearticle.DeletedAtIsNil()).
-		Order(ent.Desc("created_at")).
-		All(c.Request.Context())
+	articles, err := h.invService.ListKnowledgeArticles(c.Request.Context(), tid)
 	if err != nil {
 		h.logger.Errorw("Get knowledge articles failed", "error", err, "tenant_id", tid)
 		common.Fail(c, common.InternalErrorCode, "获取知识库文章列表失败")

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 
 	"go.uber.org/zap"
@@ -14,6 +15,11 @@ import (
 type Service struct {
 	repo   Repository
 	logger *zap.SugaredLogger
+}
+
+// IsNotFound keeps persistence error classification behind the domain service.
+func (s *Service) IsNotFound(err error) bool {
+	return ent.IsNotFound(err)
 }
 
 func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
