@@ -14,6 +14,6 @@ export interface GlobalSearchResponse {
   total: number;
 }
 
-export async function globalSearch(keyword: string): Promise<GlobalSearchResponse> {
-  return httpClient.get<GlobalSearchResponse>('/api/v1/global-search', { keyword });
+export async function globalSearch(query: string): Promise<GlobalSearchResponse> {
+  return httpClient.get<GlobalSearchResponse>('/api/v1/global-search', { q: query });
 }

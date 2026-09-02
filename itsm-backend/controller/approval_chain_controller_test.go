@@ -327,7 +327,7 @@ func TestApprovalChainController_CrossTenantIsolation(t *testing.T) {
 		resp := doReq(t, rB, "GET", "/api/v1/approval-chains", nil, false)
 		require.Equal(t, common.SuccessCode, resp.Code)
 		data := resp.Data.(map[string]interface{})
-		list := data["data"].([]interface{})
+		list := data["items"].([]interface{})
 		for _, item := range list {
 			m := item.(map[string]interface{})
 			if id, ok := m["id"].(float64); ok && int(id) == idA {

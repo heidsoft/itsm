@@ -67,7 +67,7 @@ func TestTicketTypeDefinitionUsesCamelCaseJSON(t *testing.T) {
 
 func TestTicketTypeListResponseUsesCamelCaseJSON(t *testing.T) {
 	resp := TicketTypeListResponse{
-		Types:      []TicketTypeDefinition{{ID: 1, Code: "incident", Name: "Incident"}},
+		Items:      []TicketTypeDefinition{{ID: 1, Code: "incident", Name: "Incident"}},
 		Total:      1,
 		Page:       2,
 		PageSize:   20,
@@ -78,8 +78,10 @@ func TestTicketTypeListResponseUsesCamelCaseJSON(t *testing.T) {
 	assert.NoError(t, err)
 
 	jsonStr := string(data)
+	assert.Contains(t, jsonStr, `"items":[`)
 	assert.Contains(t, jsonStr, `"pageSize":20`)
 	assert.Contains(t, jsonStr, `"totalPages":5`)
+	assert.NotContains(t, jsonStr, `"types"`)
 	assert.NotContains(t, jsonStr, `"page_size"`)
 	assert.NotContains(t, jsonStr, `"total_pages"`)
 }

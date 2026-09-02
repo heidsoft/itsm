@@ -406,7 +406,7 @@ export async function aiIntelligentSearch(
   suggestions: string[];
 }> {
   const res = await httpClient.get<{ results: Array<any>; total: number }>(
-    `/api/v1/global-search?keyword=${encodeURIComponent(query)}`
+    `/api/v1/global-search?q=${encodeURIComponent(query)}`
   );
   const results = Array.isArray(res?.results) ? res.results : [];
 

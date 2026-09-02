@@ -242,7 +242,7 @@ type ListTicketTypesRequest struct {
 
 // TicketTypeListResponse 工单类型列表响应
 type TicketTypeListResponse struct {
-	Types      []TicketTypeDefinition `json:"types"`
+	Items      []TicketTypeDefinition `json:"items"`
 	Total      int64                  `json:"total"`
 	Page       int                    `json:"page"`
 	PageSize   int                    `json:"pageSize"`

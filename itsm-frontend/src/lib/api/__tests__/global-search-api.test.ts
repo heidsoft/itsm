@@ -16,7 +16,7 @@ describe('globalSearch', () => {
   it('should search with keyword', async () => {
     mockGet.mockResolvedValue({ results: [{ id: 1, type: 'ticket', title: 'Test' }], total: 1 });
     const result = await globalSearch('test');
-    expect(mockGet).toHaveBeenCalledWith('/api/v1/global-search', { keyword: 'test' });
+    expect(mockGet).toHaveBeenCalledWith('/api/v1/global-search', { q: 'test' });
     expect(result.results).toHaveLength(1);
     expect(result.total).toBe(1);
   });

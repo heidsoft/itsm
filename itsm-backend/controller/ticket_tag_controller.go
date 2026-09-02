@@ -160,7 +160,7 @@ func (ttc *TicketTagController) ListTags(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"tags":  dto.ToTicketTagResponseList(tags),
+		"items": dto.ToTicketTagResponseList(tags),
 		"total": total,
 	})
 }

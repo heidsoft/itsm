@@ -277,7 +277,7 @@ describe('AI API', () => {
         ],
       });
       const result = await aiIntelligentSearch('login issue');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/global-search?keyword=login%20issue');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/global-search?q=login%20issue');
       expect(result.tickets).toHaveLength(1);
       expect(result.tickets[0].number).toBe('TCK-1');
       expect(result.incidents).toHaveLength(1);

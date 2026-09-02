@@ -73,7 +73,7 @@ func (h *Handler) ListChains(c *gin.Context) {
 
 	chainResponses := dto.ToApprovalChainResponseList(chains)
 	common.Success(c, dto.ApprovalChainListResponse{
-		Data:  chainResponses,
+		Items: chainResponses,
 		Total: total,
 		Page:  page,
 		Size:  pageSize,

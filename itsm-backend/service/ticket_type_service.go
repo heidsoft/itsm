@@ -380,7 +380,7 @@ func (s *TicketTypeService) ListTicketTypes(ctx context.Context, req *dto.ListTi
 	}
 
 	return &dto.TicketTypeListResponse{
-		Types:      types,
+		Items:      types,
 		Total:      int64(total),
 		Page:       req.Page,
 		PageSize:   pageSize,

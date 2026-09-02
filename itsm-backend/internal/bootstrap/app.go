@@ -1093,7 +1093,7 @@ func NewApplication() *Application {
 		SkillHandler: skillHandler,
 
 		// Global Search
-		GlobalSearchHandler: globalSearchHandler.NewHandler(client),
+		GlobalSearchHandler: globalSearchHandler.NewHandler(globalSearchHandler.NewService(client)),
 
 		// Standard Change Handler
 		StandardChangeHandler: standardChangeHandler,
