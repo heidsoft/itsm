@@ -41,6 +41,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	"itsm-backend/handlers/approval"
+	assetHandler "itsm-backend/handlers/asset"
 	authHandler "itsm-backend/handlers/auth"
 	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
@@ -50,12 +51,15 @@ import (
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
 	feishuHandler "itsm-backend/handlers/feishu"
+	groupHandler "itsm-backend/handlers/group"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	notificationHandler "itsm-backend/handlers/notification"
 	"itsm-backend/handlers/problem"
 	probleminvestigation "itsm-backend/handlers/problem_investigation"
 	rbacHandler "itsm-backend/handlers/rbac"
+	releaseHandler "itsm-backend/handlers/release"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
@@ -65,6 +69,7 @@ import (
 	tenantHandler "itsm-backend/handlers/tenant"
 	"itsm-backend/handlers/ticket"
 	ticketworkflow "itsm-backend/handlers/ticket_workflow"
+	userHandler "itsm-backend/handlers/user"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
@@ -629,11 +634,9 @@ func NewApplication() *Application {
 
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)
-	notificationController := controller.NewNotificationController(notificationService)
-
-	// Notification Preference Service & Controller
+	// Notification and preference services share the notification domain handler.
 	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
-	notificationPreferenceController := controller.NewNotificationPreferenceController(notificationPreferenceService, sugar)
+	notificationHTTPHandler := notificationHandler.NewHandler(notificationService, notificationPreferenceService, sugar)
 
 	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	ticketRatingController := controller.NewTicketRatingController(ticketRatingService, sugar)
@@ -669,10 +672,9 @@ func NewApplication() *Application {
 	// CMDB Controller
 	cmdbController := controller.NewCMDBController(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService, importExportService, savedViewService)
 
-	// Release & Asset Management Controllers
-	releaseController := controller.NewReleaseController(sugar, releaseService)
-	assetController := controller.NewAssetController(sugar, assetService)
-	assetLicenseController := controller.NewAssetLicenseController(sugar, assetLicenseService)
+	// Release & Asset Management Handlers
+	releaseHTTPHandler := releaseHandler.NewHandler(sugar, releaseService)
+	assetHTTPHandler := assetHandler.NewHandler(assetService, assetLicenseService, sugar)
 
 	projectController := controller.NewProjectController(client)
 	applicationController := controller.NewApplicationController(client)
@@ -915,13 +917,13 @@ func NewApplication() *Application {
 	// Role Handler (in-memory for now)
 	roleHandler := common.NewRoleHandler(client, sugar)
 
-	// User Controller
+	// User Handler
 	userService := service.NewUserService(client, sugar)
-	userController := controller.NewUserController(userService, sugar)
+	userHTTPHandler := userHandler.NewHandler(userService, sugar)
 
-	// Group Controller
+	// Group Handler
 	groupService := service.NewGroupService(client)
-	groupController := controller.NewGroupController(groupService, sugar)
+	groupHTTPHandler := groupHandler.NewHandler(groupService, sugar)
 
 	// RBAC handler (database-backed with tenant isolation)
 	roleService := service.NewRoleService(client, sugar)
@@ -1044,7 +1046,7 @@ func NewApplication() *Application {
 		TicketCommentController:         ticketCommentController,
 		TicketAttachmentController:      ticketAttachmentController,
 		TicketNotificationController:    ticketNotificationController,
-		NotificationController:          notificationController,
+		NotificationHandler:             notificationHTTPHandler,
 		TicketRatingController:          ticketRatingController,
 		TicketAssignmentSmartController: ticketAssignmentSmartController,
 		TicketViewController:            ticketViewController,
@@ -1063,8 +1065,8 @@ func NewApplication() *Application {
 		TicketCategoryController: ticketCategoryController,
 		TicketTypeController:     ticketTypeController,
 		TicketTagController:      ticketTagController,
-		UserController:           userController,
-		GroupController:          groupController,
+		UserHandler:              userHTTPHandler,
+		GroupHandler:             groupHTTPHandler,
 
 		// RBAC and tenant handlers
 		RBACHandler:                rbacHTTPHandler,
@@ -1076,9 +1078,6 @@ func NewApplication() *Application {
 		SystemConfigHandler:     systemConfigHandler,
 		ApprovalChainController: approvalChainController,
 
-		// Notification Preference Controller
-		NotificationPreferenceController: notificationPreferenceController,
-
 		// Vendor Controller
 		VendorController: vendorController,
 
@@ -1086,9 +1085,8 @@ func NewApplication() *Application {
 		ProvisioningController: provisioningController,
 		AnalyticsController:    analyticsController,
 		PredictionController:   predictionController,
-		ReleaseController:      releaseController,
-		AssetController:        assetController,
-		AssetLicenseController: assetLicenseController,
+		ReleaseHandler:         releaseHTTPHandler,
+		AssetHandler:           assetHTTPHandler,
 		SurveyController:       surveyController,
 		CloudController:        cloudController,
 

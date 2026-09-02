@@ -19,6 +19,7 @@ import (
 	"itsm-backend/handlers"
 	"itsm-backend/handlers/ai"
 	approvalHandler "itsm-backend/handlers/approval"
+	assetHandler "itsm-backend/handlers/asset"
 	authHandler "itsm-backend/handlers/auth"
 	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
@@ -28,13 +29,16 @@ import (
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/email_intake"
 	feishuHandler "itsm-backend/handlers/feishu"
+	groupHandler "itsm-backend/handlers/group"
 	incidentHandler "itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	notificationHandler "itsm-backend/handlers/notification"
 	"itsm-backend/handlers/operations"
 	"itsm-backend/handlers/problem"
 	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
 	rbacHandler "itsm-backend/handlers/rbac"
+	releaseHandler "itsm-backend/handlers/release"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
@@ -44,6 +48,7 @@ import (
 	tenantHandler "itsm-backend/handlers/tenant"
 	ticketHandler "itsm-backend/handlers/ticket"
 	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
+	usersHandler "itsm-backend/handlers/user"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -244,31 +249,29 @@ type RouterConfig struct {
 	CMDBController      *controller.CMDBController
 	TicketTagController *controller.TicketTagController
 
-	// User Controller
-	UserController *controller.UserController
+	// User Handler
+	UserHandler *usersHandler.UserHandler
 
-	// Group Controller
-	GroupController *controller.GroupController
+	// Group Handler
+	GroupHandler *groupHandler.Handler
 
 	// RBAC and tenant domain handlers
-	RBACHandler                      *rbacHandler.Handler
-	TenantHandler                    *tenantHandler.Handler
-	MSPController                    *controller.MSPController
-	SystemConfigHandler              *systemConfigHandler.Handler
-	ApprovalChainController          *controller.ApprovalChainController
-	EscalationMatrixController       *controller.EscalationMatrixController
-	NotificationPreferenceController *controller.NotificationPreferenceController
-	AuditLogController               *controller.AuditLogController
-	NotificationController           *controller.NotificationController
+	RBACHandler                *rbacHandler.Handler
+	TenantHandler              *tenantHandler.Handler
+	MSPController              *controller.MSPController
+	SystemConfigHandler        *systemConfigHandler.Handler
+	ApprovalChainController    *controller.ApprovalChainController
+	EscalationMatrixController *controller.EscalationMatrixController
+	AuditLogController         *controller.AuditLogController
+	NotificationHandler        *notificationHandler.Handler
 
 	// Additional domain controllers
 	ProvisioningController *controller.ProvisioningController
 	AnalyticsController    *controller.AnalyticsController
 	PredictionController   *controller.PredictionController
-	ReleaseController      *controller.ReleaseController
-	AssetController        *controller.AssetController
+	ReleaseHandler         *releaseHandler.ReleaseHandler
+	AssetHandler           *assetHandler.Handler
 	VendorController       *controller.VendorController
-	AssetLicenseController *controller.AssetLicenseController
 	SurveyController       *controller.SurveyController
 	CloudController        *controller.CloudController
 
@@ -1165,36 +1168,25 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Releases ====================
-		if config.ReleaseController != nil {
+		if config.ReleaseHandler != nil {
 			releases := tenant.(*gin.RouterGroup).Group("/releases")
 			{
-				releases.GET("", middleware.RequirePermission("release", "read"), config.ReleaseController.ListReleases)
-				releases.POST("", middleware.RequirePermission("release", "write"), config.ReleaseController.CreateRelease)
-				releases.GET("/stats", middleware.RequirePermission("release", "read"), config.ReleaseController.GetReleaseStats)
-				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseController.GetRelease)
-				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateRelease)
-				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseController.UpdateReleaseStatus)
-				releases.POST("/:id/approve", middleware.RequirePermission("release", "approve"), config.ReleaseController.ApproveRelease)
-				releases.POST("/:id/reject", middleware.RequirePermission("release", "approve"), config.ReleaseController.RejectRelease)
-				releases.POST("/:id/rollback", middleware.RequirePermission("release", "rollback"), config.ReleaseController.RollbackRelease)
-				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseController.DeleteRelease)
+				releases.GET("", middleware.RequirePermission("release", "read"), config.ReleaseHandler.ListReleases)
+				releases.POST("", middleware.RequirePermission("release", "write"), config.ReleaseHandler.CreateRelease)
+				releases.GET("/stats", middleware.RequirePermission("release", "read"), config.ReleaseHandler.GetReleaseStats)
+				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseHandler.GetRelease)
+				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseHandler.UpdateRelease)
+				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseHandler.UpdateReleaseStatus)
+				releases.POST("/:id/approve", middleware.RequirePermission("release", "approve"), config.ReleaseHandler.ApproveRelease)
+				releases.POST("/:id/reject", middleware.RequirePermission("release", "approve"), config.ReleaseHandler.RejectRelease)
+				releases.POST("/:id/rollback", middleware.RequirePermission("release", "rollback"), config.ReleaseHandler.RollbackRelease)
+				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseHandler.DeleteRelease)
 			}
 		}
 
 		// ==================== Assets ====================
-		if config.AssetController != nil {
-			assets := tenant.(*gin.RouterGroup).Group("/assets")
-			{
-				assets.GET("", middleware.RequirePermission("asset", "read"), config.AssetController.ListAssets)
-				assets.POST("", middleware.RequirePermission("asset", "write"), config.AssetController.CreateAsset)
-				assets.GET("/stats", middleware.RequirePermission("asset", "read"), config.AssetController.GetAssetStats)
-				assets.GET("/:id", middleware.RequirePermission("asset", "read"), config.AssetController.GetAsset)
-				assets.PUT("/:id", middleware.RequirePermission("asset", "write"), config.AssetController.UpdateAsset)
-				assets.PUT("/:id/status", middleware.RequirePermission("asset", "write"), config.AssetController.UpdateAssetStatus)
-				assets.PUT("/:id/assign", middleware.RequirePermission("asset", "write"), config.AssetController.AssignAsset)
-				assets.PUT("/:id/retire", middleware.RequirePermission("asset", "write"), config.AssetController.RetireAsset)
-				assets.DELETE("/:id", middleware.RequirePermission("asset", "delete"), config.AssetController.DeleteAsset)
-			}
+		if config.AssetHandler != nil {
+			assetHandler.SetupRoutes(tenant.(*gin.RouterGroup), config.AssetHandler)
 		}
 		// ==================== CMDB ====================
 		if config.CMDBHandler != nil {
@@ -1202,18 +1194,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Asset Licenses ====================
-		if config.AssetLicenseController != nil {
-			licenses := tenant.(*gin.RouterGroup).Group("/licenses")
-			{
-				licenses.GET("", middleware.RequirePermission("license", "read"), config.AssetLicenseController.ListLicenses)
-				licenses.POST("", middleware.RequirePermission("license", "write"), config.AssetLicenseController.CreateLicense)
-				licenses.GET("/stats", middleware.RequirePermission("license", "read"), config.AssetLicenseController.GetLicenseStats)
-				licenses.GET("/:id", middleware.RequirePermission("license", "read"), config.AssetLicenseController.GetLicense)
-				licenses.PUT("/:id", middleware.RequirePermission("license", "write"), config.AssetLicenseController.UpdateLicense)
-				licenses.PUT("/:id/assign", middleware.RequirePermission("license", "write"), config.AssetLicenseController.AssignUsers)
-				licenses.DELETE("/:id", middleware.RequirePermission("license", "delete"), config.AssetLicenseController.DeleteLicense)
-			}
-		}
+		// Licenses are served by the same AssetHandler
+		// (no separate handler — routes registered above via SetupRoutes)
 
 		// ==================== Vendors ====================
 		if config.VendorController != nil {
@@ -1424,20 +1406,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			SetupAuditLogRoutes(tenant.(*gin.RouterGroup), config.AuditLogController, config.CommonHandler)
 
 			// Users
-			if config.UserController != nil {
+			if config.UserHandler != nil {
 				users := tenant.(*gin.RouterGroup).Group("/users")
 				{
-					users.GET("", middleware.RequirePermission("user", "read"), config.UserController.ListUsers)
-					users.POST("", middleware.RequirePermission("user", "write"), config.UserController.CreateUser)
+					users.GET("", middleware.RequirePermission("user", "read"), config.UserHandler.ListUsers)
+					users.POST("", middleware.RequirePermission("user", "write"), config.UserHandler.CreateUser)
 					users.GET("/profile", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe) // 获取当前用户信息（需认证）
 					users.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)      // alias of /profile
-					users.GET("/:id", middleware.RequirePermission("user", "read"), config.UserController.GetUser)
-					users.PUT("/:id", middleware.RequirePermission("user", "write"), config.UserController.UpdateUser)
-					users.DELETE("/:id", middleware.RequirePermission("user", "delete"), config.UserController.DeleteUser)
-					users.PUT("/:id/status", middleware.RequirePermission("user", "write"), config.UserController.ChangeUserStatus)
-					users.PUT("/:id/reset-password", middleware.RequirePermission("user", "write"), config.UserController.ResetPassword)
-					users.GET("/stats", middleware.RequirePermission("user", "read"), config.UserController.GetUserStats)
-					users.POST("/batch", middleware.RequirePermission("user", "write"), config.UserController.BatchUpdateUsers)
+					users.GET("/:id", middleware.RequirePermission("user", "read"), config.UserHandler.GetUser)
+					users.PUT("/:id", middleware.RequirePermission("user", "write"), config.UserHandler.UpdateUser)
+					users.DELETE("/:id", middleware.RequirePermission("user", "delete"), config.UserHandler.DeleteUser)
+					users.PUT("/:id/status", middleware.RequirePermission("user", "write"), config.UserHandler.ChangeUserStatus)
+					users.PUT("/:id/reset-password", middleware.RequirePermission("user", "write"), config.UserHandler.ResetPassword)
+					users.GET("/stats", middleware.RequirePermission("user", "read"), config.UserHandler.GetUserStats)
+					users.POST("/batch", middleware.RequirePermission("user", "write"), config.UserHandler.BatchUpdateUsers)
 				}
 			} else {
 				users := tenant.(*gin.RouterGroup).Group("/users")
@@ -1447,17 +1429,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// Groups
-			if config.GroupController != nil {
+			if config.GroupHandler != nil {
 				groups := tenant.(*gin.RouterGroup).Group("/groups")
 				{
-					groups.GET("", middleware.RequirePermission("groups", "read"), config.GroupController.ListGroups)
-					groups.POST("", middleware.RequirePermission("groups", "write"), config.GroupController.CreateGroup)
-					groups.GET("/:id", middleware.RequirePermission("groups", "read"), config.GroupController.GetGroup)
-					groups.PUT("/:id", middleware.RequirePermission("groups", "write"), config.GroupController.UpdateGroup)
-					groups.DELETE("/:id", middleware.RequirePermission("groups", "write"), config.GroupController.DeleteGroup)
-					groups.POST("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupController.AddUserToGroup)
-					groups.DELETE("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupController.RemoveUserFromGroup)
-					groups.GET("/:id/members", middleware.RequirePermission("groups", "read"), config.GroupController.GetGroupMembers)
+					groups.GET("", middleware.RequirePermission("groups", "read"), config.GroupHandler.ListGroups)
+					groups.POST("", middleware.RequirePermission("groups", "write"), config.GroupHandler.CreateGroup)
+					groups.GET("/:id", middleware.RequirePermission("groups", "read"), config.GroupHandler.GetGroup)
+					groups.PUT("/:id", middleware.RequirePermission("groups", "write"), config.GroupHandler.UpdateGroup)
+					groups.DELETE("/:id", middleware.RequirePermission("groups", "write"), config.GroupHandler.DeleteGroup)
+					groups.POST("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupHandler.AddUserToGroup)
+					groups.DELETE("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupHandler.RemoveUserFromGroup)
+					groups.GET("/:id/members", middleware.RequirePermission("groups", "read"), config.GroupHandler.GetGroupMembers)
 				}
 			}
 
@@ -1581,34 +1563,34 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			}
 
 			// Notification Preferences
-			config.Logger.Info("NotificationPreferenceController check:", zap.Any("controller", config.NotificationPreferenceController))
-			if config.NotificationPreferenceController != nil {
+			config.Logger.Info("NotificationHandler check:", zap.Any("handler", config.NotificationHandler))
+			if config.NotificationHandler != nil {
 				config.Logger.Info("Registering notification-preferences routes")
 				notifPrefs := tenant.(*gin.RouterGroup).Group("/notification-preferences")
 				{
-					notifPrefs.GET("", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.ListPreferences)
-					notifPrefs.GET("/event-types", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.ListEventTypes)
-					notifPrefs.GET("/:event_type", middleware.RequirePermission("notification", "read"), config.NotificationPreferenceController.GetPreference)
-					notifPrefs.POST("", middleware.RequirePermission("notification", "create"), config.NotificationPreferenceController.CreateOrUpdatePreference)
-					notifPrefs.PUT("", middleware.RequirePermission("notification", "update"), config.NotificationPreferenceController.BulkUpdatePreferences)
-					notifPrefs.DELETE("/:event_type", middleware.RequirePermission("notification", "delete"), config.NotificationPreferenceController.DeletePreference)
-					notifPrefs.POST("/reset", middleware.RequirePermission("notification", "update"), config.NotificationPreferenceController.ResetPreferences)
-					notifPrefs.POST("/init", middleware.RequirePermission("notification", "create"), config.NotificationPreferenceController.InitializeDefaultPreferences)
+					notifPrefs.GET("", middleware.RequirePermission("notification", "read"), config.NotificationHandler.ListPreferences)
+					notifPrefs.GET("/event-types", middleware.RequirePermission("notification", "read"), config.NotificationHandler.ListEventTypes)
+					notifPrefs.GET("/:event_type", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetPreference)
+					notifPrefs.POST("", middleware.RequirePermission("notification", "create"), config.NotificationHandler.CreateOrUpdatePreference)
+					notifPrefs.PUT("", middleware.RequirePermission("notification", "update"), config.NotificationHandler.BulkUpdatePreferences)
+					notifPrefs.DELETE("/:event_type", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeletePreference)
+					notifPrefs.POST("/reset", middleware.RequirePermission("notification", "update"), config.NotificationHandler.ResetPreferences)
+					notifPrefs.POST("/init", middleware.RequirePermission("notification", "create"), config.NotificationHandler.InitializeDefaultPreferences)
 				}
 			}
 
 			// Notifications
-			if config.NotificationController != nil {
+			if config.NotificationHandler != nil {
 				notifications := tenant.(*gin.RouterGroup).Group("/notifications")
 				{
-					notifications.GET("", middleware.RequirePermission("notification", "read"), config.NotificationController.GetNotifications)
-					notifications.GET("/unread-count", middleware.RequirePermission("notification", "read"), config.NotificationController.GetUnreadCount)
-					notifications.PUT("/:id/read", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkNotificationRead)
-					notifications.PUT("/read-all", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkAllNotificationsRead)
-					notifications.PUT("/batch/read", middleware.RequirePermission("notification", "update"), config.NotificationController.MarkNotificationsRead)
-					notifications.DELETE("/batch", middleware.RequirePermission("notification", "delete"), config.NotificationController.DeleteNotifications)
-					notifications.DELETE("/:id", middleware.RequirePermission("notification", "delete"), config.NotificationController.DeleteNotification)
-					notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationController.CreateNotification)
+					notifications.GET("", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetNotifications)
+					notifications.GET("/unread-count", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetUnreadCount)
+					notifications.PUT("/:id/read", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkNotificationRead)
+					notifications.PUT("/read-all", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkAllNotificationsRead)
+					notifications.PUT("/batch/read", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkNotificationsRead)
+					notifications.DELETE("/batch", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeleteNotifications)
+					notifications.DELETE("/:id", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeleteNotification)
+					notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationHandler.CreateNotification)
 				}
 			}
 		}

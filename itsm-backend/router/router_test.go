@@ -12,6 +12,12 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/handlers/ai"
+	assetHandler "itsm-backend/handlers/asset"
+	domainCommon "itsm-backend/handlers/common"
+	groupHandler "itsm-backend/handlers/group"
+	notificationHandler "itsm-backend/handlers/notification"
+	releaseHandler "itsm-backend/handlers/release"
+	userHandler "itsm-backend/handlers/user"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
 	"itsm-backend/service"
@@ -305,6 +311,47 @@ func TestSetupRoutes_IncidentHandlerNil(t *testing.T) {
 	r := gin.New()
 
 	assert.NotPanics(t, func() { SetupRoutes(r, cfg) })
+}
+
+func TestSetupRoutes_P1DomainHandlersRegistered(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:router_p1_handlers?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	logger := zaptest.NewLogger(t).Sugar()
+
+	cfg := &RouterConfig{
+		JWTSecret:           "test-secret",
+		Logger:              logger,
+		Client:              client,
+		CommonHandler:       domainCommon.NewHandler(nil),
+		AssetHandler:        assetHandler.NewHandler(service.NewAssetService(client, logger), service.NewAssetLicenseService(client, logger), logger),
+		GroupHandler:        groupHandler.NewHandler(service.NewGroupService(client), logger),
+		NotificationHandler: notificationHandler.NewHandler(service.NewNotificationService(client), service.NewNotificationPreferenceService(client, logger), logger),
+		UserHandler:         userHandler.NewHandler(service.NewUserService(client, logger), logger),
+		ReleaseHandler:      releaseHandler.NewHandler(logger, service.NewReleaseService(client, logger)),
+	}
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	SetupRoutes(r, cfg)
+
+	want := map[string]bool{
+		"GET /api/v1/assets":                   false,
+		"GET /api/v1/licenses":                 false,
+		"GET /api/v1/groups":                   false,
+		"GET /api/v1/users":                    false,
+		"GET /api/v1/notifications":            false,
+		"GET /api/v1/notification-preferences": false,
+		"GET /api/v1/releases":                 false,
+	}
+	for _, route := range r.Routes() {
+		key := route.Method + " " + route.Path
+		if _, ok := want[key]; ok {
+			want[key] = true
+		}
+	}
+	for route, registered := range want {
+		assert.True(t, registered, "%s should be registered through its domain handler", route)
+	}
 }
 
 func TestSetupRoutes_AuthMiddleware_HealthUnauthenticated(t *testing.T) {
