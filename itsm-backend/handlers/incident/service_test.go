@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 
 	"github.com/stretchr/testify/assert"
@@ -499,4 +500,20 @@ func TestService_ExecuteRules_NonMatchingRuleSkipped(t *testing.T) {
 	for _, r := range repo.rules {
 		assert.Equal(t, 0, r.ExecutionCount, "non-matching rule must not fire")
 	}
+}
+
+func (m *slaMockRepository) GetIncidentWithEdges(ctx context.Context, id, tenantID int, edges ...string) (*ent.Incident, error) {
+	return nil, errors.New("mock: incident not found")
+}
+
+func (m *slaMockRepository) ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error) {
+	return []*ent.IncidentEvent{}, nil
+}
+
+func (m *slaMockRepository) CreateIncidentCommentEvent(ctx context.Context, event *ent.IncidentEvent) (*ent.IncidentEvent, error) {
+	return event, nil
+}
+
+func (m *slaMockRepository) CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error) {
+	return 0, nil
 }

@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentrule"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -393,4 +394,57 @@ func (r *EntRepository) UpdateRuleStats(ctx context.Context, ruleID int, count i
 		SetExecutionCount(count).
 		SetLastExecutedAt(lastExecutedAt).
 		Exec(ctx)
+}
+
+// GetIncidentWithEdges 按 id+tenant 加载 Incident 并带上指定 eager-loading 边。
+// edges 取值："events" | "alerts" | "metrics"；未知值忽略。
+func (r *EntRepository) GetIncidentWithEdges(ctx context.Context, id, tenantID int, edges ...string) (*ent.Incident, error) {
+	query := r.client.Incident.Query().
+		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID))
+	for _, e := range edges {
+		switch e {
+		case "events":
+			query = query.WithIncidentEvents()
+		case "alerts":
+			query = query.WithIncidentAlerts()
+		case "metrics":
+			query = query.WithIncidentMetrics()
+		}
+	}
+	return query.Only(ctx)
+}
+
+// ListIncidentComments 返回 event_type=comment 的事件（即事件评论）。
+func (r *EntRepository) ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error) {
+	return r.client.IncidentEvent.Query().
+		Where(
+			incidentevent.IncidentIDEQ(incidentID),
+			incidentevent.TenantIDEQ(tenantID),
+			incidentevent.EventType("comment"),
+		).
+		WithIncident().
+		All(ctx)
+}
+
+// CreateIncidentCommentEvent 写入一条评论型 IncidentEvent。
+func (r *EntRepository) CreateIncidentCommentEvent(ctx context.Context, event *ent.IncidentEvent) (*ent.IncidentEvent, error) {
+	return r.client.IncidentEvent.Create().
+		SetIncidentID(event.IncidentID).
+		SetEventType(event.EventType).
+		SetEventName(event.EventName).
+		SetDescription(event.Description).
+		SetStatus(event.Status).
+		SetUserID(event.UserID).
+		SetSource(event.Source).
+		SetData(event.Data).
+		SetTenantID(event.TenantID).
+		SetOccurredAt(event.OccurredAt).
+		Save(ctx)
+}
+
+// CountTenantSLAViolations 统计租户级 SLA 违规数（供指标接口）。
+func (r *EntRepository) CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error) {
+	return r.client.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tenantID)).
+		Count(ctx)
 }

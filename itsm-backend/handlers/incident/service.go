@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
@@ -311,4 +312,55 @@ func (s *Service) GetStats(ctx context.Context, tenantID int) (*IncidentStats, e
 		return nil, fmt.Errorf("invalid tenant id: %d", tenantID)
 	}
 	return s.repo.GetStats(ctx, tenantID)
+}
+
+// ─── 子资源读模型（自 handler 下沉）────────────────────────────────
+
+// GetIncidentEvents 返回事件的全部活动记录（按 Edge 加载）。
+func (s *Service) GetIncidentEvents(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
+	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "events")
+}
+
+// GetIncidentAlerts 返回事件的全部告警（按 Edge 加载）。
+func (s *Service) GetIncidentAlerts(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
+	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "alerts")
+}
+
+// GetIncidentMetricsData 返回事件及其指标边，供指标计算。
+func (s *Service) GetIncidentMetricsData(ctx context.Context, id, tenantID int) (*ent.Incident, error) {
+	return s.repo.GetIncidentWithEdges(ctx, id, tenantID, "metrics")
+}
+
+// CountTenantSLAViolations 统计租户级 SLA 违规数（指标接口用）。
+func (s *Service) CountTenantSLAViolations(ctx context.Context, tenantID int) int {
+	count, err := s.repo.CountTenantSLAViolations(ctx, tenantID)
+	if err != nil {
+		s.logger.Errorw("GetIncidentMetrics: failed to count SLA violations", "error", err)
+		return 0
+	}
+	return count
+}
+
+// ListIncidentComments 返回事件评论（event_type=comment 的 IncidentEvent）。
+func (s *Service) ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error) {
+	return s.repo.ListIncidentComments(ctx, incidentID, tenantID)
+}
+
+// CreateIncidentComment 校验事件归属后写入一条评论。
+func (s *Service) CreateIncidentComment(ctx context.Context, incidentID, tenantID, userID int, content string, isInternal bool) (*ent.IncidentEvent, error) {
+	if _, err := s.repo.GetIncidentWithEdges(ctx, incidentID, tenantID); err != nil {
+		return nil, err
+	}
+	return s.repo.CreateIncidentCommentEvent(ctx, &ent.IncidentEvent{
+		IncidentID:  incidentID,
+		EventType:   "comment",
+		EventName:   "用户评论",
+		Description: content,
+		Status:      "active",
+		UserID:      userID,
+		Source:      "user",
+		Data:        map[string]interface{}{"isInternal": isInternal},
+		TenantID:    tenantID,
+		OccurredAt:  time.Now(),
+	})
 }

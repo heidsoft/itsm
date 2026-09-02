@@ -9,9 +9,6 @@ import (
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/incident"
-	"itsm-backend/ent/incidentevent"
-	"itsm-backend/ent/slaviolation"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -944,16 +941,8 @@ func (h *IncidentHandler) GetIncidentEvents(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	entClient, ok := handlerctx.GetEntClient(c)
-	if !ok {
-		return
-	}
 
-	// 使用 Edge 查询事件活动记录
-	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
-		WithIncidentEvents().
-		Only(c.Request.Context())
+	inc, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -985,16 +974,8 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	entClient, ok := handlerctx.GetEntClient(c)
-	if !ok {
-		return
-	}
 
-	// 使用 Edge 查询事件告警
-	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
-		WithIncidentAlerts().
-		Only(c.Request.Context())
+	inc, err := h.service.GetIncidentAlerts(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -1026,16 +1007,8 @@ func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	entClient, ok := handlerctx.GetEntClient(c)
-	if !ok {
-		return
-	}
 
-	// 获取事件信息及指标
-	inc, err := entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
-		WithIncidentMetrics().
-		Only(c.Request.Context())
+	inc, err := h.service.GetIncidentMetricsData(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		return
@@ -1051,13 +1024,7 @@ func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 
 	// 获取 SLA 违规数（按租户过滤）
 	// 注意：SLAViolation 关联的是 ticket，如需关联 incident 需要通过 ticket 过滤
-	violations, err := entClient.SLAViolation.Query().
-		Where(slaviolation.TenantIDEQ(tenantID)).
-		Count(c.Request.Context())
-	if err != nil {
-		zap.S().Errorw("GetIncidentMetrics: failed to count SLA violations", "error", err)
-		violations = 0
-	}
+	violations := h.service.CountTenantSLAViolations(c.Request.Context(), tenantID)
 
 	result := gin.H{
 		"incident_id":           inc.ID,
@@ -1081,16 +1048,9 @@ func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	entClient, ok := handlerctx.GetEntClient(c)
-	if !ok {
-		return
-	}
 
 	// 验证事件存在且属于该租户
-	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
-		Only(c.Request.Context())
-	if err != nil {
+	if _, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID); err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
@@ -1100,14 +1060,7 @@ func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 	}
 
 	// 查询评论（使用 IncidentEvent with event_type=comment）
-	events, err := entClient.IncidentEvent.Query().
-		Where(
-			incidentevent.IncidentIDEQ(id),
-			incidentevent.TenantIDEQ(tenantID),
-			incidentevent.EventType("comment"),
-		).
-		WithIncident().
-		All(c.Request.Context())
+	events, err := h.service.ListIncidentComments(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -1155,40 +1108,14 @@ func (h *IncidentHandler) CreateIncidentComment(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
-	entClient, ok := handlerctx.GetEntClient(c)
-	if !ok {
-		return
-	}
 
-	// 验证事件存在且属于该租户
-	_, err = entClient.Incident.Query().
-		Where(incident.IDEQ(id), incident.TenantIDEQ(tenantID)).
-		Only(c.Request.Context())
+	event, err := h.service.CreateIncidentComment(c.Request.Context(), id, tenantID, userID, req.Content, req.IsInternal)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Incident not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
 		}
-		return
-	}
-
-	// 创建评论（使用 IncidentEvent with event_type=comment）
-	data := map[string]interface{}{"isInternal": req.IsInternal}
-	event, err := entClient.IncidentEvent.Create().
-		SetIncidentID(id).
-		SetEventType("comment").
-		SetEventName("用户评论").
-		SetDescription(req.Content).
-		SetStatus("active").
-		SetUserID(userID).
-		SetSource("user").
-		SetData(data).
-		SetTenantID(tenantID).
-		SetOccurredAt(time.Now()).
-		Save(c.Request.Context())
-	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 

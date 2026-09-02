@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/ent"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/middleware"
@@ -210,6 +211,22 @@ func (m *mockRepository) ListActiveRules(ctx context.Context, tenantID int) ([]*
 
 func (m *mockRepository) UpdateRuleStats(ctx context.Context, ruleID int, count int, lastExecutedAt time.Time) error {
 	return nil
+}
+
+func (m *mockRepository) GetIncidentWithEdges(ctx context.Context, id, tenantID int, edges ...string) (*ent.Incident, error) {
+	return nil, errors.New("mock: incident not found")
+}
+
+func (m *mockRepository) ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error) {
+	return []*ent.IncidentEvent{}, nil
+}
+
+func (m *mockRepository) CreateIncidentCommentEvent(ctx context.Context, event *ent.IncidentEvent) (*ent.IncidentEvent, error) {
+	return event, nil
+}
+
+func (m *mockRepository) CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error) {
+	return 0, nil
 }
 
 // -----------------------------------------------------------------------------

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -28,6 +29,12 @@ type Repository interface {
 	// Rule operations
 	ListActiveRules(ctx context.Context, tenantID int) ([]*IncidentRule, error)
 	UpdateRuleStats(ctx context.Context, ruleID int, count int, lastExecutedAt time.Time) error
+
+	// Read-model queries for handler-facing sub-resources
+	GetIncidentWithEdges(ctx context.Context, id, tenantID int, edges ...string) (*ent.Incident, error)
+	ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error)
+	CreateIncidentCommentEvent(ctx context.Context, event *ent.IncidentEvent) (*ent.IncidentEvent, error)
+	CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error)
 }
 
 // IncidentStats 聚合统计（按 tenant 隔离）
