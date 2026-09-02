@@ -6,53 +6,50 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	entstandardchange "itsm-backend/ent/standardchange"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	client *ent.Client
+	svc    *Service
 	logger *zap.SugaredLogger
 }
 
-func NewHandler(client *ent.Client, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
-		client: client,
+		svc:    svc,
 		logger: logger,
 	}
 }
 
-// toResponse converts ent StandardChange to DTO response
-func toResponse(sc *ent.StandardChange) *dto.StandardChangeResponse {
+func (h *Handler) toResponse(sc *ent.StandardChange) *dto.StandardChangeResponse {
 	if sc == nil {
 		return nil
 	}
 	return &dto.StandardChangeResponse{
-		ID:                 sc.ID,
-		Title:              sc.Title,
-		Description:        sc.Description,
-		ImplementationPlan: sc.ImplementationPlan,
-		RollbackPlan:       sc.RollbackPlan,
-		Justification:      sc.Justification,
-		Category:           sc.Category,
-		RiskLevel:          sc.RiskLevel,
-		ImpactScope:        sc.ImpactScope,
-		ExpectedDuration:   sc.ExpectedDuration,
-		ApprovalRequired:   sc.ApprovalRequired,
-		AffectedCis:        sc.AffectedCis,
-		Prerequisites:      sc.Prerequisites,
-		Remarks:            sc.Remarks,
-		CreatedBy:          sc.CreatedBy,
-		TenantID:           sc.TenantID,
-		IsActive:           sc.IsActive,
-		CreatedAt:          sc.CreatedAt,
-		UpdatedAt:          sc.UpdatedAt,
+		ID:                  sc.ID,
+		Title:               sc.Title,
+		Description:         sc.Description,
+		ImplementationPlan:  sc.ImplementationPlan,
+		RollbackPlan:        sc.RollbackPlan,
+		Justification:       sc.Justification,
+		Category:            sc.Category,
+		RiskLevel:           sc.RiskLevel,
+		ImpactScope:         sc.ImpactScope,
+		ExpectedDuration:    sc.ExpectedDuration,
+		ApprovalRequired:    sc.ApprovalRequired,
+		AffectedCis:         sc.AffectedCis,
+		Prerequisites:       sc.Prerequisites,
+		Remarks:             sc.Remarks,
+		CreatedBy:           sc.CreatedBy,
+		TenantID:            sc.TenantID,
+		IsActive:            sc.IsActive,
+		CreatedAt:           sc.CreatedAt,
+		UpdatedAt:           sc.UpdatedAt,
 	}
 }
 
-// ListStandardChanges handles GET /api/v1/standard-changes
 func (h *Handler) ListStandardChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
@@ -60,55 +57,21 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 	search := c.Query("search")
 	activeOnly := c.Query("active_only") == "true"
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	ctx := c.Request.Context()
-
-	// Build query
-	query := h.client.StandardChange.Query().Where(entstandardchange.TenantID(tenantID))
-
-	if activeOnly {
-		query = query.Where(entstandardchange.IsActive(true))
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
 	}
 
-	if category != "" {
-		query = query.Where(entstandardchange.Category(category))
-	}
-
-	if search != "" {
-		query = query.Where(
-			entstandardchange.Or(
-				entstandardchange.TitleContains(search),
-				entstandardchange.DescriptionContains(search),
-			),
-		)
-	}
-
-	// Get total count
-	total, err := query.Count(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to count standard changes", "error", err)
-		total = 0
-	}
-
-	// Get paginated results
-	offset := (page - 1) * pageSize
-	results, err := query.
-		Order(ent.Desc(entstandardchange.FieldCreatedAt)).
-		Offset(offset).
-		Limit(pageSize).
-		All(ctx)
+	results, total, err := h.svc.ListStandardChanges(c.Request.Context(), tenantID, page, pageSize, category, search, activeOnly)
 	if err != nil {
 		h.logger.Warnw("Failed to list standard changes", "error", err)
 		common.InternalError(c, "Failed to list standard changes")
 		return
 	}
 
-	// Convert to DTOs
 	templates := make([]dto.StandardChangeResponse, 0, len(results))
 	for _, sc := range results {
-		templates = append(templates, *toResponse(sc))
+		templates = append(templates, *h.toResponse(sc))
 	}
 
 	common.Success(c, gin.H{
@@ -119,363 +82,228 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 	})
 }
 
-// GetStandardChange handles GET /api/v1/standard-changes/:id
 func (h *Handler) GetStandardChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	ctx := c.Request.Context()
-
-	sc, err := h.client.StandardChange.Query().
-		Where(
-			entstandardchange.ID(id),
-			entstandardchange.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Standard change template not found")
-			return
-		}
-		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.InternalError(c, "Failed to get standard change")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	common.Success(c, toResponse(sc))
+	sc, err := h.svc.GetStandardChange(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.FailWithErr(c, err, "获取标准变更模板失败")
+		return
+	}
+
+	common.Success(c, h.toResponse(sc))
 }
 
-// CreateStandardChange handles POST /api/v1/standard-changes
 func (h *Handler) CreateStandardChange(c *gin.Context) {
 	var req dto.CreateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamError(c, err.Error())
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	userIDVal, _ := c.Get("user_id")
-	userID := userIDVal.(int)
-
-	ctx := c.Request.Context()
-
-	// Set defaults
-	riskLevel := req.RiskLevel
-	if riskLevel == "" {
-		riskLevel = "low"
-	}
-	impactScope := req.ImpactScope
-	if impactScope == "" {
-		impactScope = "low"
-	}
-	category := req.Category
-	if category == "" {
-		category = "general"
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
 	}
 
-	// expected_duration: when omitted the JSON zero value (0) would be set
-	// explicitly and override the schema default (30). Apply the default for
-	// any non-positive value so templates keep a sane estimated duration.
-	expectedDuration := req.ExpectedDuration
-	if expectedDuration <= 0 {
-		expectedDuration = 30
+	createdBy := h.getUserID(c)
+
+	input := &SCCreateInput{
+		TenantID:           tenantID,
+		Title:              req.Title,
+		Description:        req.Description,
+		ImplementationPlan: req.ImplementationPlan,
+		RollbackPlan:       req.RollbackPlan,
+		Justification:      req.Justification,
+		Category:           req.Category,
+		RiskLevel:          req.RiskLevel,
+		ImpactScope:        req.ImpactScope,
+		ExpectedDuration:   req.ExpectedDuration,
+		ApprovalRequired:   req.ApprovalRequired,
+		AFFECTEDCIs:        req.AffectedCis,
+		Prerequisites:      req.Prerequisites,
+		Remarks:            req.Remarks,
+		CreatedBy:          createdBy,
 	}
 
-	sc, err := h.client.StandardChange.Create().
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetImplementationPlan(req.ImplementationPlan).
-		SetRollbackPlan(req.RollbackPlan).
-		SetJustification(req.Justification).
-		SetCategory(category).
-		SetRiskLevel(riskLevel).
-		SetImpactScope(impactScope).
-		SetExpectedDuration(expectedDuration).
-		SetApprovalRequired(req.ApprovalRequired).
-		SetAffectedCis(req.AffectedCis).
-		SetPrerequisites(req.Prerequisites).
-		SetRemarks(req.Remarks).
-		SetCreatedBy(userID).
-		SetTenantID(tenantID).
-		SetIsActive(true).
-		Save(ctx)
+	sc, err := h.svc.CreateStandardChange(c.Request.Context(), input)
 	if err != nil {
-		h.logger.Warnw("Failed to create standard change", "error", err)
-		common.InternalError(c, "Failed to create standard change template")
+		common.FailWithErr(c, err, "创建标准变更模板失败")
 		return
 	}
 
-	common.Success(c, toResponse(sc))
+	common.Success(c, h.toResponse(sc))
 }
 
-// UpdateStandardChange handles PUT /api/v1/standard-changes/:id
 func (h *Handler) UpdateStandardChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
 	var req dto.UpdateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body")
+		common.ParamError(c, err.Error())
 		return
 	}
 
-	ctx := c.Request.Context()
-
-	// Get existing
-	sc, err := h.client.StandardChange.Query().
-		Where(
-			entstandardchange.ID(id),
-			entstandardchange.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Standard change template not found")
-			return
-		}
-		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.InternalError(c, "Failed to get standard change")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Build update builder
-	update := sc.Update()
-
+	input := &SCUpdateInput{}
 	if req.Title != nil {
-		update = update.SetTitle(*req.Title)
+		input.Title = req.Title
 	}
 	if req.Description != nil {
-		update = update.SetDescription(*req.Description)
+		input.Description = req.Description
 	}
 	if req.ImplementationPlan != nil {
-		update = update.SetImplementationPlan(*req.ImplementationPlan)
+		input.ImplementationPlan = req.ImplementationPlan
 	}
 	if req.RollbackPlan != nil {
-		update = update.SetRollbackPlan(*req.RollbackPlan)
+		input.RollbackPlan = req.RollbackPlan
 	}
 	if req.Justification != nil {
-		update = update.SetJustification(*req.Justification)
+		input.Justification = req.Justification
 	}
 	if req.Category != nil {
-		update = update.SetCategory(*req.Category)
+		input.Category = req.Category
 	}
 	if req.RiskLevel != nil {
-		update = update.SetRiskLevel(*req.RiskLevel)
+		input.RiskLevel = req.RiskLevel
 	}
 	if req.ImpactScope != nil {
-		update = update.SetImpactScope(*req.ImpactScope)
+		input.ImpactScope = req.ImpactScope
 	}
 	if req.ExpectedDuration != nil {
-		update = update.SetExpectedDuration(*req.ExpectedDuration)
+		input.ExpectedDuration = req.ExpectedDuration
 	}
 	if req.ApprovalRequired != nil {
-		update = update.SetApprovalRequired(*req.ApprovalRequired)
+		input.ApprovalRequired = req.ApprovalRequired
 	}
 	if req.AffectedCis != nil {
-		update = update.SetAffectedCis(req.AffectedCis)
+		input.AFFECTEDCIs = &req.AffectedCis
 	}
 	if req.Prerequisites != nil {
-		update = update.SetPrerequisites(req.Prerequisites)
+		input.Prerequisites = &req.Prerequisites
 	}
 	if req.Remarks != nil {
-		update = update.SetRemarks(*req.Remarks)
+		input.Remarks = req.Remarks
 	}
 	if req.IsActive != nil {
-		update = update.SetIsActive(*req.IsActive)
+		input.IsActive = req.IsActive
 	}
 
-	updated, err := update.Save(ctx)
+	sc, err := h.svc.UpdateStandardChange(c.Request.Context(), tenantID, id, input)
 	if err != nil {
-		h.logger.Warnw("Failed to update standard change", "error", err, "id", id)
-		common.InternalError(c, "Failed to update standard change template")
+		common.FailWithErr(c, err, "更新标准变更模板失败")
 		return
 	}
 
-	common.Success(c, toResponse(updated))
+	common.Success(c, h.toResponse(sc))
 }
 
-// DeleteStandardChange handles DELETE /api/v1/standard-changes/:id
 func (h *Handler) DeleteStandardChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	ctx := c.Request.Context()
-
-	// Verify exists
-	_, err := h.client.StandardChange.Query().
-		Where(
-			entstandardchange.ID(id),
-			entstandardchange.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Standard change template not found")
-			return
-		}
-		h.logger.Warnw("Failed to get standard change", "error", err, "id", id)
-		common.InternalError(c, "Failed to get standard change")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Soft delete - just deactivate
-	_, err = h.client.StandardChange.Update().
-		Where(entstandardchange.ID(id), entstandardchange.TenantID(tenantID)).
-		SetIsActive(false).
-		Save(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to delete standard change", "error", err, "id", id)
-		common.InternalError(c, "Failed to delete standard change template")
+	if err := h.svc.DeleteStandardChange(c.Request.Context(), tenantID, id); err != nil {
+		common.FailWithErr(c, err, "删除标准变更模板失败")
 		return
 	}
 
-	common.Success(c, gin.H{"message": "deleted"})
+	common.Success(c, nil)
 }
 
-// GetCategories handles GET /api/v1/standard-changes/categories
 func (h *Handler) GetCategories(c *gin.Context) {
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	ctx := c.Request.Context()
-
-	// Get all templates and extract distinct categories
-	results, err := h.client.StandardChange.Query().
-		Select(entstandardchange.FieldCategory).
-		Where(entstandardchange.TenantID(tenantID)).
-		All(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to get categories", "error", err)
-		common.InternalError(c, "Failed to get categories")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Extract distinct categories
-	categorySet := make(map[string]bool)
-	for _, r := range results {
-		if r.Category != "" {
-			categorySet[r.Category] = true
-		}
+	cats, err := h.svc.GetCategories(c.Request.Context(), tenantID)
+	if err != nil {
+		common.InternalError(c, "获取分类失败")
+		return
 	}
 
-	categories := make([]string, 0, len(categorySet))
-	for cat := range categorySet {
-		categories = append(categories, cat)
-	}
-
-	common.Success(c, gin.H{"items": categories})
+	common.Success(c, gin.H{"items": cats})
 }
 
-// InstantiateStandardChange handles POST /api/v1/standard-changes/:id/instantiate
-// Creates a new Change from a standard change template
 func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 
-	tenantIDVal, _ := c.Get("tenant_id")
-	tenantID := tenantIDVal.(int)
-
-	userIDVal, _ := c.Get("user_id")
-	userID := userIDVal.(int)
-
-	var req dto.InstantiateStandardChangeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		// Body is optional
-		req = dto.InstantiateStandardChangeRequest{}
-	}
-
-	ctx := c.Request.Context()
-
-	// Get the template
-	template, err := h.client.StandardChange.Query().
-		Where(
-			entstandardchange.ID(id),
-			entstandardchange.TenantID(tenantID),
-			entstandardchange.IsActive(true),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Standard change template not found")
-			return
-		}
-		h.logger.Warnw("Failed to get standard change template", "error", err, "id", id)
-		common.InternalError(c, "Failed to get standard change template")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Determine title
-	title := template.Title
-	if req.Title != "" {
-		title = req.Title
-	}
+	createdBy := h.getUserID(c)
 
-	// Determine affected CIs
-	affectedCIs := template.AffectedCis
-	if len(req.AffectedCis) > 0 {
-		affectedCIs = req.AffectedCis
-	}
-
-	// Create change from template
-	change, err := h.client.Change.Create().
-		SetTitle(title).
-		SetDescription(template.Description).
-		SetJustification(template.Justification).
-		SetType("standard").
-		SetStatus("draft").
-		SetPriority("medium").
-		SetImpactScope(template.ImpactScope).
-		SetRiskLevel(template.RiskLevel).
-		SetImplementationPlan(template.ImplementationPlan).
-		SetRollbackPlan(template.RollbackPlan).
-		SetAffectedCis(affectedCIs).
-		SetCreatedBy(userID).
-		SetTenantID(tenantID).
-		Save(ctx)
+	change, err := h.svc.Instantiate(c.Request.Context(), tenantID, id, createdBy)
 	if err != nil {
-		h.logger.Warnw("Failed to create change from template", "error", err)
-		common.InternalError(c, "Failed to create change from template")
+		common.FailWithErr(c, err, "实例化标准变更失败")
 		return
 	}
-
-	h.logger.Infow("Created change from standard change template",
-		"template_id", id, "change_id", change.ID, "title", change.Title)
 
 	common.Success(c, gin.H{
 		"change_id": change.ID,
-		"change":    change,
+		"change_number": change.ChangeNumber,
 	})
 }
 
-// RegisterRoutes registers the standard change routes
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	standardChanges := r.Group("/standard-changes")
+	sc := r.Group("/standard-changes")
 	{
-		standardChanges.GET("", h.ListStandardChanges)
-		standardChanges.GET("/categories", h.GetCategories)
-		standardChanges.GET("/:id", h.GetStandardChange)
-		standardChanges.POST("", h.CreateStandardChange)
-		standardChanges.PUT("/:id", h.UpdateStandardChange)
-		standardChanges.DELETE("/:id", h.DeleteStandardChange)
-		standardChanges.POST("/:id/instantiate", h.InstantiateStandardChange)
+		sc.GET("", h.ListStandardChanges)
+		sc.POST("", h.CreateStandardChange)
+		sc.GET("/categories", h.GetCategories)
+		sc.GET("/:id", h.GetStandardChange)
+		sc.PUT("/:id", h.UpdateStandardChange)
+		sc.DELETE("/:id", h.DeleteStandardChange)
+		sc.POST("/:id/instantiate", h.InstantiateStandardChange)
 	}
+}
+
+func (h *Handler) getTenantID(c *gin.Context) (int, bool) {
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, common.AuthErrorCode, "租户上下文缺失")
+		return 0, false
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID == 0 {
+		common.Fail(c, common.AuthErrorCode, "无效的租户上下文")
+		return 0, false
+	}
+	return tenantID, true
+}
+
+func (h *Handler) getUserID(c *gin.Context) int {
+	if uid, ok := c.Get("user_id"); ok {
+		if id, ok := uid.(int); ok {
+			return id
+		}
+	}
+	return 0
 }

@@ -728,7 +728,8 @@ func NewApplication() *Application {
 	// Global Search Controller (全局搜索)
 
 	// Standard Change Handler (标准变更模板库)
-	standardChangeHandler := standard_change.NewHandler(client, sugar)
+	stdChangeService := standard_change.NewService(client)
+	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 
 	// Known Error Handler (KEDB)
 	knownErrorService := known_error.NewService(client)
