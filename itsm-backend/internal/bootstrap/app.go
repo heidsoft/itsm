@@ -27,10 +27,10 @@ import (
 	_ "itsm-backend/connector/builtin/webhook"
 	_ "itsm-backend/connector/builtin/wecom"
 	"itsm-backend/connector/marketplace"
-	connectorHandler "itsm-backend/handlers/connector"
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/controller"
 	marketplaceController "itsm-backend/controller/marketplace"
+	connectorHandler "itsm-backend/handlers/connector"
 	"itsm-backend/pkg/eventbus"
 	marketplaceService "itsm-backend/service/marketplace"
 
@@ -39,43 +39,62 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	a2uiHandler "itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/ai"
+	analyticsHandler "itsm-backend/handlers/analytics"
 	"itsm-backend/handlers/approval"
+	approvalChainHandler "itsm-backend/handlers/approval_chain"
 	assetHandler "itsm-backend/handlers/asset"
+	assignmentSmartHandler "itsm-backend/handlers/assignment_smart"
+	auditlogHandler "itsm-backend/handlers/auditlog"
 	authHandler "itsm-backend/handlers/auth"
+	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/cab"
 	"itsm-backend/handlers/change"
+	cloudHandler "itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/handlers/email_intake"
+	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
+	globalSearchHandler "itsm-backend/handlers/global_search"
 	groupHandler "itsm-backend/handlers/group"
 	"itsm-backend/handlers/incident"
 	"itsm-backend/handlers/knowledge"
 	"itsm-backend/handlers/known_error"
+	mspHandler "itsm-backend/handlers/msp"
 	notificationHandler "itsm-backend/handlers/notification"
+	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
 	probleminvestigation "itsm-backend/handlers/problem_investigation"
+	provisioningHandler "itsm-backend/handlers/provisioning"
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
-	globalSearchHandler "itsm-backend/handlers/global_search"
-	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
-	approvalChainHandler "itsm-backend/handlers/approval_chain"
-	vendorHandler "itsm-backend/handlers/vendor"
-	provisioningHandler "itsm-backend/handlers/provisioning"
-	ticketCategoryHandler "itsm-backend/handlers/ticket_category"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/handlers/service_request"
 	"itsm-backend/handlers/skill"
 	"itsm-backend/handlers/sla"
+	slaTemplateHandler "itsm-backend/handlers/sla_template"
 	"itsm-backend/handlers/standard_change"
+	surveyHandler "itsm-backend/handlers/survey"
 	systemconfig "itsm-backend/handlers/systemconfig"
 	tenantHandler "itsm-backend/handlers/tenant"
 	"itsm-backend/handlers/ticket"
+	ticketAttachmentHandler "itsm-backend/handlers/ticket_attachment"
+	ticketCategoryHandler "itsm-backend/handlers/ticket_category"
+	ticketCommentHandler "itsm-backend/handlers/ticket_comment"
+	ticketDependencyHandler "itsm-backend/handlers/ticket_dependency"
+	ticketNotificationHandler "itsm-backend/handlers/ticket_notification"
+	ticketRatingHandler "itsm-backend/handlers/ticket_rating"
+	ticketTagHandler "itsm-backend/handlers/ticket_tag"
+	ticketTypeHandler "itsm-backend/handlers/ticket_type"
+	ticketViewHandler "itsm-backend/handlers/ticket_view"
 	ticketworkflow "itsm-backend/handlers/ticket_workflow"
 	userHandler "itsm-backend/handlers/user"
+	vectorStoreHandler "itsm-backend/handlers/vector_store"
+	vendorHandler "itsm-backend/handlers/vendor"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
@@ -315,6 +334,21 @@ func NewApplication() *Application {
 
 	// 初始化业务服务层
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
+	auditLogService := service.NewAuditLogService(client, sugar)
+	ticketTypeService := service.NewTicketTypeService(client, sugar)
+	ticketTagService := service.NewTicketTagService(client)
+	surveyService := service.NewSurveyService(client, sugar)
+	cloudService := service.NewCloudService(client, sugar)
+	slaTemplateService := service.NewSLATemplateService(client, sugar)
+	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
+	ticketCommentService := service.NewTicketCommentService(client, sugar)
+	ticketAttachmentService := service.NewTicketAttachmentService(client, sugar)
+	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
+	ticketRatingService := service.NewTicketRatingService(client, sugar)
+	ticketViewService := service.NewTicketViewService(client, sugar)
+	ticketAssignmentRuleService := service.NewTicketAssignmentRuleService(client, sugar)
+	ticketAssignmentService := service.NewTicketAssignmentService(client, sugar)
+	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
 	incidentService := service.NewIncidentService(client, sugar, ticketSLAService)
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
@@ -441,7 +475,6 @@ func NewApplication() *Application {
 	}
 
 	// 通知 / 审批 / SLA / 自动化 / 序列服务（V2 子服务）
-	ticketNotificationService := service.NewTicketNotificationService(client, sugar)
 	notificationCommandHandler := service.NewNotificationDeliveryCommandHandler(client, connectorManager, sugar)
 	if err := commandRegistry.Register(commandbus.CommandDeliverNotification, notificationCommandHandler.Handle); err != nil {
 		sugar.Fatalw("Failed to register notification command handler", "error", err)
@@ -555,6 +588,7 @@ func NewApplication() *Application {
 	// 供 /api/v1/ai/metrics 输出真实的 avg_response_time_seconds。
 	llmObserver := service.NewLLMObserver(database.GetRawDB(), sugar)
 	llmGateway := service.NewLLMGateway(llmProvider, llmLimiter, llmObserver, llmConfig.Provider)
+	a2uiService := service.NewA2UITicketService(llmGateway)
 
 	vectorStore := service.NewVectorStore(database.GetRawDB())
 	ragService := service.NewRAGServiceWithAutoConfig(client, vectorStore, embedder, sugar)
@@ -627,15 +661,12 @@ func NewApplication() *Application {
 	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
 	toolRegistry.SetTicketService(ticketService)
 
-
-	ticketCommentService := service.NewTicketCommentService(client, sugar)
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)
 	// Notification and preference services share the notification domain handler.
 	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
 	notificationHTTPHandler := notificationHandler.NewHandler(notificationService, notificationPreferenceService, sugar)
 
-	ticketRatingService := service.NewTicketRatingService(client, sugar)
 	// Ticket Workflow Service & Handler（2026-09-02 迁移至 handlers/ticket_workflow）
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowService.SetConnectorManager(connectorManager)
@@ -658,7 +689,6 @@ func NewApplication() *Application {
 	// Release & Asset Management Handlers
 	releaseHTTPHandler := releaseHandler.NewHandler(sugar, releaseService)
 	assetHTTPHandler := assetHandler.NewHandler(assetService, assetLicenseService, sugar)
-
 
 	bpmnWorkflowHandler := bpmnHandler.NewWorkflowHandler(processEngine, bpmnVersionService)
 	bpmnTemplateService := service.NewBPMNTemplateService(client)
@@ -756,6 +786,7 @@ func NewApplication() *Application {
 
 	// Approval Chain Service（供服务请求审批链求值引擎消费）
 	approvalChainService := service.NewApprovalChainService(client, sugar)
+	mspAllocationService := service.NewMSPAllocationService(client, sugar)
 	escalationMatrixService := service.NewEscalationMatrixService(sugar)
 	vendorService := service.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
@@ -928,7 +959,6 @@ func NewApplication() *Application {
 	// Survey Service & Controller
 
 	// Cloud Service & Controller
-	ticketTypeService := service.NewTicketTypeService(client, sugar)
 	// 工单类型服务就绪后注入工具注册表与审批队列，使 create_ticket_type 可经审批流执行。
 	toolRegistry.SetTicketTypeService(ticketTypeService)
 	toolQueue.SetTicketTypeService(ticketTypeService)
@@ -992,53 +1022,55 @@ func NewApplication() *Application {
 	}
 
 	routerConfig := &router.RouterConfig{
-		JWTSecret:                       cfg.JWT.Secret,
-		Logger:                          sugar,
-		Client:                          client,
-		RawDB:                           database.GetRawDB(),
-		CSRFEnabled:                     cfg.Security.CSRFEnabled,
-		RedisRateLimiter:                redisRateLimiter,
-		AppStartTime:                    time.Now(),
-		TicketHandler:                   ticketHandler,
-		TicketDependencyHandler:      nil, // TODO: wire // TODO: wire
-		TicketCommentHandler:         nil, // TODO: wire // TODO: wire
-		TicketAttachmentHandler:      nil, // TODO: wire // TODO: wire
-		TicketNotificationHandler:    nil, // TODO: wire // TODO: wire
-		NotificationHandler:             notificationHTTPHandler,
-		TicketRatingHandler:          nil, // TODO: wire // TODO: wire
-		TicketAssignmentSmartHandler: nil, // TODO: wire
-		TicketViewHandler:            nil, // TODO: wire
-		TicketWorkflowHandler:           ticketWorkflowHandler,
-		TicketAutomationRuleHandler:  nil, // TODO: wire
-		IncidentHandler:                 incidentHandler,
-		ApprovalHandler:                 approvalHandler,
-		BPMNHandler:                     bpmnHTTPHandler,
-		A2UIHandler:                  nil, // TODO: wire
+		JWTSecret:                    cfg.JWT.Secret,
+		Logger:                       sugar,
+		Client:                       client,
+		RawDB:                        database.GetRawDB(),
+		CSRFEnabled:                  cfg.Security.CSRFEnabled,
+		RedisRateLimiter:             redisRateLimiter,
+		AppStartTime:                 time.Now(),
+		TicketHandler:                ticketHandler,
+		TicketDependencyHandler:      ticketDependencyHandler.NewHandler(ticketDependencyService, sugar),
+		TicketCommentHandler:         ticketCommentHandler.NewHandler(ticketCommentService, sugar),
+		TicketAttachmentHandler:      ticketAttachmentHandler.NewHandler(ticketAttachmentService, sugar),
+		TicketNotificationHandler:    ticketNotificationHandler.NewHandler(ticketNotificationService, sugar),
+		NotificationHandler:          notificationHTTPHandler,
+		TicketRatingHandler:          ticketRatingHandler.NewHandler(ticketRatingService, sugar),
+		TicketAssignmentSmartHandler: assignmentSmartHandler.NewHandler(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar),
+		TicketViewHandler:            ticketViewHandler.NewHandler(ticketViewService, sugar),
+		TicketWorkflowHandler:        ticketWorkflowHandler,
+		TicketAutomationRuleHandler:  automationRuleHandler.NewHandler(ticketAutomationRuleService, sugar),
+		IncidentHandler:              incidentHandler,
+		ApprovalHandler:              approvalHandler,
+		BPMNHandler:                  bpmnHTTPHandler,
+		A2UIHandler:                  a2uiHandler.NewHandler(a2uiService, sugar),
 		CMDBHandler:                  cmdbHandler,
-		TicketCategoryHandler: ticketCategoryHandler.NewHandler(ticketCategoryService, sugar),
-		EscalationMatrixHandler: escalationMatrixHandler.NewHandler(sugar, escalationMatrixService),
-		AuditLogHandler:         nil, // TODO: wire
-		MSPHandler:              nil, // TODO: wire
-		SystemConfigHandler:     systemConfigHandler,
-		ApprovalChainHandler:    approvalChainHandler.NewHandler(approvalChainService, sugar),
+		TicketCategoryHandler:        ticketCategoryHandler.NewHandler(ticketCategoryService, sugar),
+		TicketTypeHandler:            ticketTypeHandler.NewHandler(ticketTypeService, sugar),
+		TicketTagHandler:             ticketTagHandler.NewHandler(ticketTagService, sugar),
+		EscalationMatrixHandler:      escalationMatrixHandler.NewHandler(sugar, escalationMatrixService),
+		AuditLogHandler:              auditlogHandler.NewHandler(auditLogService, sugar),
+		MSPHandler:                   mspHandler.NewHandler(mspAllocationService, ticketService, sugar),
+		SystemConfigHandler:          systemConfigHandler,
+		ApprovalChainHandler:         approvalChainHandler.NewHandler(approvalChainService, sugar),
 
 		// Vendor Controller
-		VendorHandler:           vendorHandler.NewHandler(vendorService, sugar),
+		VendorHandler: vendorHandler.NewHandler(vendorService, sugar),
 
 		// Additional controllers
-		ProvisioningHandler:     provisioningHandler.NewHandler(provisioningService, sugar),
-		UserHandler:              userHTTPHandler,
-		GroupHandler:             groupHTTPHandler,
+		ProvisioningHandler: provisioningHandler.NewHandler(provisioningService, sugar),
+		UserHandler:         userHTTPHandler,
+		GroupHandler:        groupHTTPHandler,
 
 		// RBAC and tenant handlers
-		RBACHandler:                rbacHTTPHandler,
-		TenantHandler:              tenantHTTPHandler,
-		AnalyticsHandler:    nil, // TODO: wire
-		PredictionHandler:   nil, // TODO: wire
-		ReleaseHandler:         releaseHTTPHandler,
-		AssetHandler:           assetHTTPHandler,
-		SurveyHandler:       nil, // TODO: wire
-		CloudHandler:        nil, // TODO: wire
+		RBACHandler:       rbacHTTPHandler,
+		TenantHandler:     tenantHTTPHandler,
+		AnalyticsHandler:  analyticsHandler.NewHandler(analyticsService),
+		PredictionHandler: predictionHandler.NewHandler(predictionService, sugar),
+		ReleaseHandler:    releaseHTTPHandler,
+		AssetHandler:      assetHTTPHandler,
+		SurveyHandler:     surveyHandler.NewHandler(surveyService, sugar),
+		CloudHandler:      cloudHandler.NewHandler(cloudService, sugar),
 
 		// Domain Handlers
 		ServiceCatalogHandler:       scHandler,
@@ -1049,8 +1081,8 @@ func NewApplication() *Application {
 		CABHandler:                  cabHandler,
 		KnowledgeHandler:            knowledgeHandler,
 		SLAHandler:                  slaHandler,
-		SLATemplateHandler:       nil, // TODO: wire
-		VectorStoreHandler:       nil, // TODO: wire
+		SLATemplateHandler:          slaTemplateHandler.NewHandler(slaTemplateService),
+		VectorStoreHandler:          vectorStoreHandler.NewHandler(database.GetRawDB(), sugar),
 		AIHandler:                   aiHandler, // Added AI domain handler
 		EmailIntakeHandler:          emailIntakeHandler,
 		CommonHandler:               commonHandler,
@@ -1071,8 +1103,8 @@ func NewApplication() *Application {
 
 		// Connector Handler
 		ConnectorHandler: connectorHandler,
-		AlertHandler:        alertHandler,
-		FeishuHandler:       feishuHTTPHandler,
+		AlertHandler:     alertHandler,
+		FeishuHandler:    feishuHTTPHandler,
 
 		MarketplaceController: marketplaceCtrl,
 
