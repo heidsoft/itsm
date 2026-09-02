@@ -1,33 +1,28 @@
 package known_error
 
 import (
-	"fmt"
 	"strconv"
-	"sync"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	entknownerror "itsm-backend/ent/knownerror"
-	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	client *ent.Client
+	svc   *Service
 	logger *zap.SugaredLogger
 }
 
-func NewHandler(client *ent.Client, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc *Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
-		client: client,
+		svc:   svc,
 		logger: logger,
 	}
 }
 
-// toResponse converts ent KnownError to DTO response
 func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 	if ke == nil {
 		return nil
@@ -54,525 +49,320 @@ func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 	}
 }
 
-// ListKnownErrors handles GET /api/v1/known-errors
 func (h *Handler) ListKnownErrors(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
-	status := c.Query("status")
-	category := c.Query("category")
-	severity := c.Query("severity")
-	keyword := c.Query("keyword")
 
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	// Build query
-	query := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID))
-
-	if status != "" {
-		query = query.Where(entknownerror.Status(status))
-	}
-	if category != "" {
-		query = query.Where(entknownerror.Category(category))
-	}
-	if severity != "" {
-		query = query.Where(entknownerror.Severity(severity))
-	}
-	if keyword != "" {
-		query = query.Where(
-			entknownerror.Or(
-				entknownerror.TitleContains(keyword),
-				entknownerror.DescriptionContains(keyword),
-				entknownerror.SymptomsContains(keyword),
-			),
-		)
-	}
-
-	// Get total
-	total, err := query.Count(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to count known errors", "error", err)
-		total = 0
-	}
-
-	// Get paginated results
-	offset := (page - 1) * pageSize
-	results, err := query.
-		Order(ent.Desc(entknownerror.FieldCreatedAt)).
-		Offset(offset).
-		Limit(pageSize).
-		All(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to list known errors", "error", err)
-		common.InternalError(c, "Failed to list known errors")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Convert to DTOs
-	items := make([]*dto.KEDBResponse, 0, len(results))
-	for _, ke := range results {
-		items = append(items, h.toResponse(ke))
+	items, total, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, page, pageSize)
+	if err != nil {
+		common.InternalError(c, "获取已知错误列表失败")
+		return
 	}
 
-	common.Success(c, &dto.KEDBListResponse{
-		Items:    items,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	})
+	dtos := make([]dto.KEDBResponse, 0, len(items))
+	for _, item := range items {
+		dtos = append(dtos, *h.toResponse(item))
+	}
+
+	common.SuccessWithList(c, dtos, total, page, pageSize)
 }
 
-// GetKnownError handles GET /api/v1/known-errors/:id
 func (h *Handler) GetKnownError(c *gin.Context) {
-	id, ok := common.ParsePositiveID(c, "id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的ID")
+		return
+	}
+
+	tenantID, ok := h.getTenantID(c)
 	if !ok {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	ke, err := h.client.KnownError.Query().
-		Where(
-			entknownerror.ID(id),
-			entknownerror.TenantID(tenantID),
-		).
-		Only(ctx)
+	item, err := h.svc.GetKnownError(c.Request.Context(), tenantID, id)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Known error not found")
-			return
-		}
-		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to get known error")
+		common.FailWithErr(c, err, "获取已知错误失败")
 		return
 	}
 
-	common.Success(c, h.toResponse(ke))
+	common.Success(c, h.toResponse(item))
 }
 
-// CreateKnownError handles POST /api/v1/known-errors
 func (h *Handler) CreateKnownError(c *gin.Context) {
-	var req dto.KEDBCreateRequest
+	var req dto.CreateKnownErrorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamError(c, err.Error())
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
-
-	userID := c.GetInt("user_id")
-
-	ctx := c.Request.Context()
-
-	// Set defaults
-	status := "draft"
-	severity := req.Severity
-	if severity == "" {
-		severity = "medium"
-	}
-	category := req.Category
-	if category == "" {
-		category = "general"
-	}
-
-	builder := h.client.KnownError.Create().
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetSymptoms(req.Symptoms).
-		SetRootCause(req.RootCause).
-		SetWorkaround(req.Workaround).
-		SetResolution(req.Resolution).
-		SetStatus(status).
-		SetCategory(category).
-		SetSeverity(severity).
-		SetAffectedProducts(req.AffectedProducts).
-		SetAffectedCis(req.AffectedCIs).
-		SetKeywords(req.Keywords).
-		SetCreatedBy(userID).
-		SetTenantID(tenantID)
-
-	ke, err := builder.Save(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to create known error", "error", err)
-		common.InternalError(c, "Failed to create known error")
-		return
-	}
-
-	common.Success(c, h.toResponse(ke))
-}
-
-// UpdateKnownError handles PUT /api/v1/known-errors/:id
-func (h *Handler) UpdateKnownError(c *gin.Context) {
-	id, ok := common.ParsePositiveID(c, "id")
+	tenantID, ok := h.getTenantID(c)
 	if !ok {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	createdBy := h.getUserID(c)
+
+	input := &KnownErrorCreateInput{
+		TenantID:    tenantID,
+		Title:       req.Title,
+		Description: req.Description,
+		Symptoms:    req.Symptoms,
+		RootCause:   req.RootCause,
+		Workaround:  req.Workaround,
+		Resolution:  req.Resolution,
+		Status:      req.Status,
+		Category:    req.Category,
+		Severity:    req.Severity,
+		CreatedBy:   createdBy,
+	}
+
+	item, err := h.svc.CreateKnownError(c.Request.Context(), input)
+	if err != nil {
+		common.FailWithErr(c, err, "创建已知错误失败")
+		return
+	}
+
+	common.Success(c, h.toResponse(item))
+}
+
+func (h *Handler) UpdateKnownError(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的ID")
+		return
+	}
 
 	var req dto.KEDBUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body")
+		common.ParamError(c, err.Error())
 		return
 	}
 
-	ctx := c.Request.Context()
-
-	// Get existing
-	ke, err := h.client.KnownError.Query().
-		Where(
-			entknownerror.ID(id),
-			entknownerror.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Known error not found")
-			return
-		}
-		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to get known error")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
-	// Build update
-	update := ke.Update()
-
+	input := &KnownErrorUpdateInput{}
 	if req.Title != nil {
-		update = update.SetTitle(*req.Title)
+		input.Title = req.Title
 	}
 	if req.Description != nil {
-		update = update.SetDescription(*req.Description)
+		input.Description = req.Description
 	}
 	if req.Symptoms != nil {
-		update = update.SetSymptoms(*req.Symptoms)
+		input.Symptoms = req.Symptoms
 	}
 	if req.RootCause != nil {
-		update = update.SetRootCause(*req.RootCause)
+		input.RootCause = req.RootCause
 	}
 	if req.Workaround != nil {
-		update = update.SetWorkaround(*req.Workaround)
+		input.Workaround = req.Workaround
 	}
 	if req.Resolution != nil {
-		update = update.SetResolution(*req.Resolution)
-	}
-	if req.Category != nil {
-		update = update.SetCategory(*req.Category)
-	}
-	if req.Severity != nil {
-		update = update.SetSeverity(*req.Severity)
+		input.Resolution = req.Resolution
 	}
 	if req.Status != nil {
-		update = update.SetStatus(*req.Status)
+		input.Status = req.Status
+	}
+	if req.Category != nil {
+		input.Category = req.Category
+	}
+	if req.Severity != nil {
+		input.Severity = req.Severity
 	}
 	if req.AffectedProducts != nil {
-		update = update.SetAffectedProducts(req.AffectedProducts)
+		input.AffectedProducts = &req.AffectedProducts
 	}
 	if req.AffectedCIs != nil {
-		update = update.SetAffectedCis(req.AffectedCIs)
+		input.AffectedCIs = &req.AffectedCIs
 	}
 	if req.Keywords != nil {
-		update = update.SetKeywords(req.Keywords)
+		input.Keywords = &req.Keywords
 	}
 
-	updated, err := update.Save(ctx)
+	item, err := h.svc.UpdateKnownError(c.Request.Context(), tenantID, id, input)
 	if err != nil {
-		h.logger.Warnw("Failed to update known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to update known error")
+		common.FailWithErr(c, err, "更新已知错误失败")
+		return
+	}
+
+	common.Success(c, h.toResponse(item))
+}
+
+func (h *Handler) DeleteKnownError(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的ID")
+		return
+	}
+
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.svc.DeleteKnownError(c.Request.Context(), tenantID, id); err != nil {
+		common.FailWithErr(c, err, "删除已知错误失败")
+		return
+	}
+
+	common.Success(c, nil)
+}
+
+func (h *Handler) GetStats(c *gin.Context) {
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
+	}
+
+	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
+	if err != nil {
+		common.InternalError(c, "获取统计信息失败")
+		return
+	}
+
+	common.Success(c, gin.H{
+		"total":       stats.Total,
+		"active":      stats.Active,
+		"resolved":    stats.Resolved,
+		"deprecated":  stats.Deprecated,
+		"critical":    stats.Critical,
+		"high":        stats.High,
+		"medium":      stats.Medium,
+		"low":         stats.Low,
+		"totalPages":  1,
+		"page":        1,
+	})
+}
+
+func (h *Handler) SearchKnownErrors(c *gin.Context) {
+	keyword := c.Query("q")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
+	}
+
+	items, total, err := h.svc.SearchKnownErrors(c.Request.Context(), tenantID, keyword, page, pageSize)
+	if err != nil {
+		common.InternalError(c, "搜索已知错误失败")
+		return
+	}
+
+	dtos := make([]dto.KEDBResponse, 0, len(items))
+	for _, item := range items {
+		dtos = append(dtos, *h.toResponse(item))
+	}
+
+	common.SuccessWithList(c, dtos, total, page, pageSize)
+}
+
+func (h *Handler) GetCategories(c *gin.Context) {
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
+	}
+
+	items, _, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, 1, 1000)
+	if err != nil {
+		common.InternalError(c, "获取分类失败")
+		return
+	}
+
+	categorySet := make(map[string]bool)
+	categories := make([]string, 0)
+	for _, ke := range items {
+		if ke.Category != "" {
+			if !categorySet[ke.Category] {
+				categorySet[ke.Category] = true
+				categories = append(categories, ke.Category)
+			}
+		}
+	}
+
+	common.Success(c, gin.H{"items": categories})
+}
+
+func (h *Handler) PromoteToKnownError(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的ID")
+		return
+	}
+
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
+		return
+	}
+
+	item, err := h.svc.GetKnownError(c.Request.Context(), tenantID, id)
+	if err != nil {
+		common.FailWithErr(c, err, "获取已知错误失败")
+		return
+	}
+
+	if item.Status == "resolved" {
+		common.Fail(c, common.BadRequestCode, "已解决的问题不能再次提升")
+		return
+	}
+
+	updated, err := h.svc.UpdateKnownError(c.Request.Context(), tenantID, id, &KnownErrorUpdateInput{
+		Status: ptrString("resolved"),
+	})
+	if err != nil {
+		common.FailWithErr(c, err, "提升已知错误失败")
 		return
 	}
 
 	common.Success(c, h.toResponse(updated))
 }
 
-// DeleteKnownError handles DELETE /api/v1/known-errors/:id
-func (h *Handler) DeleteKnownError(c *gin.Context) {
-	id, ok := common.ParsePositiveID(c, "id")
-	if !ok {
-		return
-	}
-
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	// Verify exists
-	_, err := h.client.KnownError.Query().
-		Where(
-			entknownerror.ID(id),
-			entknownerror.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Known error not found")
-			return
-		}
-		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to get known error")
-		return
-	}
-
-	// Delete
-	_, err = h.client.KnownError.Delete().
-		Where(entknownerror.ID(id)).
-		Exec(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to delete known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to delete known error")
-		return
-	}
-
-	common.Success(c, gin.H{"message": "deleted"})
-}
-
-// GetStats handles GET /api/v1/known-errors/stats
-func (h *Handler) GetStats(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	// Run total count and all group counts in parallel with error collection
-	var total, active, resolved, deprecated, critical, high, medium, low int
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	errs := make([]error, 0)
-
-	wg.Add(8)
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID)).Count(ctx)
-		mu.Lock()
-		total = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("total count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("active")).Count(ctx)
-		mu.Lock()
-		active = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("active count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("resolved")).Count(ctx)
-		mu.Lock()
-		resolved = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("resolved count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Status("deprecated")).Count(ctx)
-		mu.Lock()
-		deprecated = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("deprecated count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("critical")).Count(ctx)
-		mu.Lock()
-		critical = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("critical count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("high")).Count(ctx)
-		mu.Lock()
-		high = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("high count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("medium")).Count(ctx)
-		mu.Lock()
-		medium = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("medium count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	go func() {
-		defer wg.Done()
-		n, err := h.client.KnownError.Query().Where(entknownerror.TenantID(tenantID), entknownerror.Severity("low")).Count(ctx)
-		mu.Lock()
-		low = n
-		if err != nil {
-			errs = append(errs, fmt.Errorf("low count: %w", err))
-		}
-		mu.Unlock()
-	}()
-	wg.Wait()
-
-	if len(errs) > 0 {
-		h.logger.Errorw("GetStats: DB queries failed", "errors", errs)
-		common.Fail(c, 5001, "Failed to retrieve known error statistics")
-		return
-	}
-
-	common.Success(c, &dto.KEDBStatsResponse{
-		Total:      total,
-		Active:     active,
-		Resolved:   resolved,
-		Deprecated: deprecated,
-		Critical:   critical,
-		High:       high,
-		Medium:     medium,
-		Low:        low,
-	})
-}
-
-// SearchKnownErrors handles GET /api/v1/known-errors/search
-// Full-text search across title, description, symptoms, root_cause, workaround
-func (h *Handler) SearchKnownErrors(c *gin.Context) {
-	queryStr := c.Query("q")
-	if queryStr == "" {
-		common.ParamError(c, "Query parameter 'q' is required")
-		return
-	}
-
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	results, err := h.client.KnownError.Query().
-		Where(
-			entknownerror.TenantID(tenantID),
-			entknownerror.Or(
-				entknownerror.TitleContains(queryStr),
-				entknownerror.DescriptionContains(queryStr),
-				entknownerror.SymptomsContains(queryStr),
-				entknownerror.RootCauseContains(queryStr),
-				entknownerror.WorkaroundContains(queryStr),
-			),
-		).
-		Limit(20).
-		All(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to search known errors", "error", err)
-		common.InternalError(c, "Failed to search known errors")
-		return
-	}
-
-	knownErrors := make([]*dto.KEDBResponse, 0, len(results))
-	for _, ke := range results {
-		knownErrors = append(knownErrors, h.toResponse(ke))
-	}
-
-	common.Success(c, gin.H{
-		"knownErrors": knownErrors,
-		"total":       len(knownErrors),
-	})
-}
-
-// GetCategories handles GET /api/v1/known-errors/categories
-func (h *Handler) GetCategories(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	results, err := h.client.KnownError.Query().
-		Select(entknownerror.FieldCategory).
-		Where(entknownerror.TenantID(tenantID)).
-		All(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to get categories", "error", err)
-		common.InternalError(c, "Failed to get categories")
-		return
-	}
-
-	// Extract distinct categories
-	categorySet := make(map[string]bool)
-	for _, r := range results {
-		if r.Category != "" {
-			categorySet[r.Category] = true
-		}
-	}
-
-	categories := make([]string, 0, len(categorySet))
-	for cat := range categorySet {
-		categories = append(categories, cat)
-	}
-
-	common.Success(c, gin.H{"items": categories})
-}
-
-// PromoteToKnownError handles POST /api/v1/known-errors/:id/promote
-// Promotes a draft to active known error status
-func (h *Handler) PromoteToKnownError(c *gin.Context) {
-	id, ok := common.ParsePositiveID(c, "id")
-	if !ok {
-		return
-	}
-
-	tenantID := c.GetInt("tenant_id")
-
-	ctx := c.Request.Context()
-
-	ke, err := h.client.KnownError.Query().
-		Where(
-			entknownerror.ID(id),
-			entknownerror.TenantID(tenantID),
-		).
-		Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			common.NotFound(c, "Known error not found")
-			return
-		}
-		h.logger.Warnw("Failed to get known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to get known error")
-		return
-	}
-
-	// Update to active status
-	_, err = ke.Update().
-		SetStatus("active").
-		Save(ctx)
-	if err != nil {
-		h.logger.Warnw("Failed to promote known error", "error", err, "id", id)
-		common.InternalError(c, "Failed to promote known error")
-		return
-	}
-
-	common.Success(c, gin.H{"message": "promoted to active"})
-}
-
-// RegisterRoutes registers the known error routes
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	knownErrors := r.Group("/known-errors")
+	errors := r.Group("/known-errors")
 	{
-		// D-8 修复：原四条变更路由零 RBAC，任意登录用户可 CRUD 已知错误库。
-		// KEDB 属问题管理范畴，复用已 seeded 且已赋权给运营角色的 problem 权限做最小侵入保护
-		// （避免新增 unknown_error 权限导致现有租户未重新 seed 而全员不可访问）。
-		knownErrors.GET("", middleware.RequirePermission("problem", "read"), h.ListKnownErrors)
-		knownErrors.GET("/stats", middleware.RequirePermission("problem", "read"), h.GetStats)
-		knownErrors.GET("/categories", middleware.RequirePermission("problem", "read"), h.GetCategories)
-		knownErrors.GET("/search", middleware.RequirePermission("problem", "read"), h.SearchKnownErrors)
-		knownErrors.GET("/:id", middleware.RequirePermission("problem", "read"), h.GetKnownError)
-		knownErrors.POST("", middleware.RequirePermission("problem", "write"), h.CreateKnownError)
-		knownErrors.PUT("/:id", middleware.RequirePermission("problem", "write"), h.UpdateKnownError)
-		knownErrors.DELETE("/:id", middleware.RequirePermission("problem", "delete"), h.DeleteKnownError)
-		knownErrors.POST("/:id/promote", middleware.RequirePermission("problem", "write"), h.PromoteToKnownError)
+		errors.GET("", h.ListKnownErrors)
+		errors.POST("", h.CreateKnownError)
+		errors.GET("/stats", h.GetStats)
+		errors.GET("/search", h.SearchKnownErrors)
+		errors.GET("/categories", h.GetCategories)
+		errors.GET("/:id", h.GetKnownError)
+		errors.PUT("/:id", h.UpdateKnownError)
+		errors.DELETE("/:id", h.DeleteKnownError)
+		errors.POST("/:id/promote", h.PromoteToKnownError)
 	}
+}
+
+func (h *Handler) getTenantID(c *gin.Context) (int, bool) {
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, common.AuthErrorCode, "租户上下文缺失")
+		return 0, false
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok || tenantID == 0 {
+		common.Fail(c, common.AuthErrorCode, "无效的租户上下文")
+		return 0, false
+	}
+	return tenantID, true
+}
+
+func (h *Handler) getUserID(c *gin.Context) int {
+	if uid, ok := c.Get("user_id"); ok {
+		if id, ok := uid.(int); ok {
+			return id
+		}
+	}
+	return 0
+}
+
+func ptrString(s string) *string {
+	return &s
 }

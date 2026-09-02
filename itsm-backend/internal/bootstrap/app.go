@@ -731,7 +731,8 @@ func NewApplication() *Application {
 	standardChangeHandler := standard_change.NewHandler(client, sugar)
 
 	// Known Error Handler (KEDB)
-	knownErrorHandler := known_error.NewHandler(client, sugar)
+	knownErrorService := known_error.NewService(client)
+	knownErrorHandler := known_error.NewHandler(knownErrorService, sugar)
 
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
