@@ -109,7 +109,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 
       setSlas(slaResponse.items ?? []);
       setUsers(userResponse.users ?? []);
-      setCategories(categoryResponse.items);
+      setCategories(categoryResponse.items ?? categoryResponse.categories ?? []);
       setWorkflows(workflowResponse.definitions ?? workflowResponse.items ?? []);
       setAssignmentRuleOptions(ruleResponse.rules ?? ruleResponse.items ?? []);
     } catch (error) {

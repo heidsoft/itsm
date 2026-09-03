@@ -4,18 +4,60 @@ import {
   usePermissionGuard, PERMISSIONS, ROLES,
 } from '../use-permissions';
 
-const mockUser = { role: 'admin', id: 1, name: 'Admin User' };
+// 契约说明（2026-09-03 适配）：
+// use-permissions 已改为「后端下发的 user.permissions 为唯一事实来源 + fail-closed」，
+// 不再在前端维护角色→权限静态表。因此：
+//  1. mock 用户必须携带 permissions 数组（模拟后端 login/capabilities 下发）；
+//  2. hasPermission 走 useAuthStore.getState()，mock 工厂必须提供 getState；
+//  3. 「角色 X 应有权限 Y」的旧断言不再成立——权限由后端 role_permission 配置决定，
+//     前端只负责透传与 fail-closed。
+
+const adminPermissions = [
+  'ticket:read', 'ticket:create', 'ticket:update', 'ticket:delete',
+  'ticket:assign', 'ticket:escalate', 'ticket:resolve', 'ticket:close',
+  'ticket:reopen', 'ticket:export',
+  'incident:read', 'incident:create', 'incident:declare_major',
+  'problem:read', 'problem:create',
+  'change:read', 'change:approve', 'change:reject', 'change:review',
+  'knowledge:read', 'knowledge:create', 'knowledge:publish',
+  'cmdb:read', 'cmdb:manage',
+  'user:read', 'user:create', 'user:manage',
+  'role:read', 'role:manage',
+  'system:read', 'system:manage',
+  'report:read', 'report:export', 'report:create',
+];
+
+const mockUser = {
+  role: 'admin',
+  id: 1,
+  name: 'Admin User',
+  permissions: adminPermissions,
+};
+
+const makeState = (user: typeof mockUser | null) => ({
+  user,
+  hasPermission: (permission: string) =>
+    !!user?.permissions?.includes(permission),
+});
 
 jest.mock('@/lib/store/auth-store', () => ({
-  useAuthStore: jest.fn(() => ({ user: mockUser })),
+  useAuthStore: Object.assign(
+    jest.fn(() => makeState(mockUser)),
+    { getState: () => makeState(mockUser) },
+  ),
 }));
 
 import { useAuthStore } from '@/lib/store/auth-store';
 
+const mockStore = (user: typeof mockUser | null) => {
+  (useAuthStore as unknown as jest.Mock).mockReturnValue(makeState(user));
+  (useAuthStore as unknown as { getState: () => unknown }).getState = () => makeState(user);
+};
+
 describe('usePermissions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: mockUser });
+    mockStore(mockUser);
   });
 
   it('should return permissions for admin role', () => {
@@ -60,23 +102,25 @@ describe('usePermissions', () => {
   });
 
   it('should return true for isSuperAdmin with super_admin role', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'super_admin' } });
+    mockStore({ ...mockUser, role: 'super_admin' });
     const { result } = renderHook(() => usePermissions());
     expect(result.current.isSuperAdmin()).toBe(true);
     expect(result.current.isAdmin()).toBe(true);
   });
 
-  it('should return empty permissions when no user', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: null });
+  it('should return empty permissions when no user (fail-closed)', () => {
+    mockStore(null);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.userPermissions).toEqual([]);
     expect(result.current.userRoles).toEqual([]);
   });
 
-  it('should return empty permissions when user has no role', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { id: 1 } });
+  it('should return empty userRoles when user has no role', () => {
+    const noRoleUser = { ...mockUser, role: '' };
+    mockStore(noRoleUser as typeof mockUser);
     const { result } = renderHook(() => usePermissions());
-    expect(result.current.userPermissions).toEqual([]);
+    // 权限来自后端下发，与角色名无关，仍保留
+    expect(result.current.userPermissions.length).toBeGreaterThan(0);
     expect(result.current.userRoles).toEqual([]);
   });
 
@@ -112,49 +156,47 @@ describe('usePermissions', () => {
 
   it('should check canBatchOperate', () => {
     const { result } = renderHook(() => usePermissions());
-    // Admin doesn't have batch_delete by default
+    // mock 权限集未下发 batch_delete，fail-closed 应拒绝
     expect(result.current.canBatchOperate('ticket', 'delete')).toBe(false);
   });
 
-  it('should handle technician role', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'technician' } });
+  it('should grant only backend-issued permissions (no static role table)', () => {
+    // 新契约：角色名不再决定权限，只有后端下发的 permissions 生效
+    const limitedUser = {
+      role: 'technician',
+      id: 2,
+      name: 'Tech',
+      permissions: ['ticket:read', 'ticket:resolve'],
+    };
+    mockStore(limitedUser as unknown as typeof mockUser);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.hasPermission('ticket', 'read')).toBe(true);
     expect(result.current.hasPermission('ticket', 'resolve')).toBe(true);
+    // 未下发的权限一律拒绝，即使角色听起来应该有
+    expect(result.current.hasPermission('ticket', 'create')).toBe(false);
     expect(result.current.hasPermission('user', 'manage')).toBe(false);
   });
 
-  it('should handle end_user role', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'end_user' } });
+  it('should be fail-closed when permissions missing entirely', () => {
+    const noPermUser = { role: 'admin', id: 3, name: 'No Perm' };
+    (useAuthStore as unknown as jest.Mock).mockReturnValue(makeState(noPermUser as unknown as typeof mockUser));
+    (useAuthStore as unknown as { getState: () => unknown }).getState = () => makeState(noPermUser as unknown as typeof mockUser);
     const { result } = renderHook(() => usePermissions());
-    expect(result.current.hasPermission('ticket', 'read')).toBe(true);
-    expect(result.current.hasPermission('ticket', 'create')).toBe(true);
-    expect(result.current.hasPermission('ticket', 'delete')).toBe(false);
+    expect(result.current.userPermissions).toEqual([]);
+    expect(result.current.hasPermission('ticket', 'read')).toBe(false);
   });
 
-  it('should handle unknown role with base permissions', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'unknown_role' } });
+  it('should handle superadmin role alias (permissions still required)', () => {
+    mockStore({ ...mockUser, role: 'superadmin' });
     const { result } = renderHook(() => usePermissions());
-    expect(result.current.hasPermission('ticket', 'read')).toBe(true);
-    expect(result.current.hasPermission('ticket', 'delete')).toBe(false);
-  });
-
-  it('should handle superadmin alias', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'superadmin' } });
-    const { result } = renderHook(() => usePermissions());
-    expect(result.current.hasPermission('user', 'manage')).toBe(true);
-  });
-
-  it('should handle sysadmin alias', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'sysadmin' } });
-    const { result } = renderHook(() => usePermissions());
+    // 角色别名不影响权限判断：权限来自后端下发
     expect(result.current.hasPermission('user', 'manage')).toBe(true);
   });
 });
 
 describe('useRoutePermissions', () => {
   beforeEach(() => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: mockUser });
+    mockStore(mockUser);
   });
 
   it('should check route permission when no requirements', () => {
@@ -182,7 +224,7 @@ describe('useRoutePermissions', () => {
 
 describe('useOperationPermissions', () => {
   beforeEach(() => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: mockUser });
+    mockStore(mockUser);
   });
 
   it('should return ticket permissions', () => {
@@ -232,7 +274,7 @@ describe('useOperationPermissions', () => {
     expect(result.current.cmdb.canManage()).toBe(true);
   });
 
-  it('should return user management permissions (admin gets via isAdmin)', () => {
+  it('should return user management permissions', () => {
     const { result } = renderHook(() => useOperationPermissions());
     expect(result.current.user.canView()).toBe(true);
     expect(result.current.user.canCreate()).toBe(true);
@@ -258,8 +300,14 @@ describe('useOperationPermissions', () => {
     expect(result.current.report.canCreate()).toBe(true);
   });
 
-  it('should limit permissions for end_user', () => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { role: 'end_user' } });
+  it('should limit permissions to backend-issued set for restricted users', () => {
+    const limitedUser = {
+      role: 'end_user',
+      id: 4,
+      name: 'End User',
+      permissions: ['ticket:read', 'ticket:create'],
+    };
+    mockStore(limitedUser as unknown as typeof mockUser);
     const { result } = renderHook(() => useOperationPermissions());
     expect(result.current.ticket.canView()).toBe(true);
     expect(result.current.ticket.canCreate()).toBe(true);
@@ -272,7 +320,7 @@ describe('useOperationPermissions', () => {
 
 describe('usePermissionGuard', () => {
   beforeEach(() => {
-    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: mockUser });
+    mockStore(mockUser);
   });
 
   it('should return true when has permission', () => {
