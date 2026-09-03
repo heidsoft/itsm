@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
@@ -77,7 +78,10 @@ func TestProblemServiceLifecycleAndTimestamps(t *testing.T) {
 	assert.Nil(t, p.ResolvedAt)
 
 	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "unknown"})
-	require.ErrorContains(t, err, "invalid problem status transition")
+	require.Error(t, err)
+	var badStatusErr *common.BusinessError
+	require.ErrorAs(t, err, &badStatusErr, "非法状态必须是 BusinessError")
+	assert.Equal(t, common.ConflictCode, badStatusErr.Code)
 }
 
 func TestGoldenJourney_ProblemRCAResolvedAndClosed(t *testing.T) {
@@ -88,7 +92,10 @@ func TestGoldenJourney_ProblemRCAResolvedAndClosed(t *testing.T) {
 	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
 
 	_, err := service.CloseProblem(ctx, tenant.ID, p.ID, "不得跳过分析")
-	require.ErrorContains(t, err, "invalid problem status transition")
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "open 直接 closed 必须被状态机以 BusinessError 拒绝")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
 	p, err = service.InvestigateProblem(ctx, tenant.ID, p.ID)
 	require.NoError(t, err)
 	p, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, "连接池耗尽")
@@ -156,4 +163,31 @@ func TestProblemAssociationsEnforceTenantBoundary(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, withAssociations.Tickets, 1)
 	assert.Equal(t, localTicket.ID, withAssociations.Tickets[0].ID)
+}
+
+// TestProblemInvalidTransitionReturnsBusinessError 确保状态机违规返回
+// BusinessError(4090) 而非裸 error —— 否则 handler 会误判为内部错误返回 500。
+func TestProblemInvalidTransitionReturnsBusinessError(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	tenant := createProblemHandlerTenant(t, ctx, client, "bizerr")
+	user := createProblemHandlerUser(t, ctx, client, tenant.ID, "bizerr")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
+
+	// open -> investigating 合法
+	_, err := service.InvestigateProblem(ctx, tenant.ID, p.ID)
+	require.NoError(t, err)
+
+	// investigating -> closed 非法：必须先经过 resolved
+	_, err = service.CloseProblem(ctx, tenant.ID, p.ID, "resolution")
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "状态机违规必须是 BusinessError")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// 合法路径 investigating -> resolved -> closed 应成功
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"})
+	require.NoError(t, err)
+	closed, err := service.CloseProblem(ctx, tenant.ID, p.ID, "resolution")
+	require.NoError(t, err)
+	assert.Equal(t, "closed", closed.Status)
 }

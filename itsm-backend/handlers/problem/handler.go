@@ -1,6 +1,7 @@
 package problem
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -441,11 +442,16 @@ func problemRequestContext(c *gin.Context) (int, int, bool) {
 
 func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err error) {
 	if err != nil {
-		if h.service.IsNotFound(err) {
+		var bizErr *common.BusinessError
+		switch {
+		case h.service.IsNotFound(err):
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
-		} else if strings.Contains(err.Error(), "required") {
+		case errors.As(err, &bizErr):
+			// 业务规则错误（状态机违规/参数校验）按声明的业务码响应，不得落为 500
+			common.Fail(c, bizErr.Code, bizErr.Message)
+		case strings.Contains(err.Error(), "required"):
 			common.ParamErrorWithErr(c, err, "请求参数错误")
-		} else {
+		default:
 			common.FailWithErr(c, err, "操作失败")
 		}
 		return

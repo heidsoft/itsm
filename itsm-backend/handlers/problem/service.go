@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/common"
 
 	"go.uber.org/zap"
 )
@@ -93,7 +94,13 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 	}
 	if p.Status != "" {
 		if !isValidProblemStatusTransition(existing.Status, p.Status) {
-			return nil, fmt.Errorf("invalid problem status transition: %s -> %s", existing.Status, p.Status)
+			// 业务状态机违规必须用 BusinessError(409) 表达，否则 handler 会误判为
+			// 内部错误返回 500，前端会把合法的流程防护当成服务器故障。
+			return nil, common.NewBusinessError(
+				common.ConflictCode,
+				"当前问题状态不允许此操作",
+				fmt.Sprintf("%s -> %s", existing.Status, p.Status),
+			)
 		}
 		// P1 修复：先捕获前态再修改，时间戳分支才能正确判定"是否首次进入"。
 		// 旧实现在状态写入后才比对 `existing.Status != "resolved"`，此时两侧永远相等，
@@ -118,7 +125,11 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 	}
 	if p.Priority != "" {
 		if !isValidProblemPriority(p.Priority) {
-			return nil, fmt.Errorf("invalid problem priority: %s", p.Priority)
+			return nil, common.NewBusinessError(
+				common.ParamErrorCode,
+				"无效的问题优先级",
+				p.Priority,
+			)
 		}
 		existing.Priority = p.Priority
 	}
