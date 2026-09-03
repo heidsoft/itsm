@@ -15,6 +15,7 @@ import (
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/internal/commandbus"
 
+	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
 )
 
@@ -425,11 +426,19 @@ func (r *EntRepository) SubmitForApprovalWithWorkflow(
 	defer tx.Rollback()
 
 	if workflow != nil {
-		dialect, err := sqlDialect(r.db)
+		dialectName, err := sqlDialect(r.db)
 		if err != nil {
 			return err
 		}
-		txClient := ent.NewClient(ent.Driver(entsql.NewDriver(dialect, entsql.Conn{ExecQuerier: tx})))
+		// 绑定已有 *sql.Tx 时必须用 nopTx 语义（对齐 ent/tx.go 的 txDriver）：
+		// ent builder 的 sqlgraph.UpdateNode 会调用 drv.Tx()，若直接把 *sql.Tx
+		// 塞进 entsql.Conn{ExecQuerier}，Driver.DB() 的 *sql.DB 类型断言会 panic
+		// （interface conversion: sql.ExecQuerier is *sql.Tx, not *sql.DB）。
+		// 包装后 Tx() 返回 nop 事务：Commit/Rollback 均为空操作，事务生命周期
+		// 仍由本函数的 tx/defer tx.Rollback() 独占管理。
+		txClient := ent.NewClient(ent.Driver(&nopTxDriver{
+			drv: entsql.NewDriver(dialectName, entsql.Conn{ExecQuerier: tx}),
+		}))
 		if err := workflow(txClient); err != nil {
 			return fmt.Errorf("advance BPMN workflow: %w", err)
 		}
@@ -506,6 +515,29 @@ func sqlDialect(db *sql.DB) (string, error) {
 		return "", fmt.Errorf("unsupported database driver %s", driverType)
 	}
 }
+
+// nopTxDriver 让绑定到 *sql.Tx 的 ent client 在事务内安全执行：
+// Tx() 返回自身的 nop 包装（Commit/Rollback 无操作），与 ent 生成代码
+// ent/tx.go 中 txDriver 的语义一致。真实的提交/回滚由外层事务管理者执行。
+type nopTxDriver struct {
+	drv *entsql.Driver
+}
+
+func (d *nopTxDriver) Exec(ctx context.Context, query string, args, v any) error {
+	return d.drv.Exec(ctx, query, args, v)
+}
+
+func (d *nopTxDriver) Query(ctx context.Context, query string, args, v any) error {
+	return d.drv.Query(ctx, query, args, v)
+}
+
+func (d *nopTxDriver) Tx(context.Context) (dialect.Tx, error) {
+	return dialect.NopTx(d), nil
+}
+
+func (d *nopTxDriver) Close() error { return nil }
+
+func (d *nopTxDriver) Dialect() string { return d.drv.Dialect() }
 
 func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
 	// C-5 修复：必须加 AND status = 'pending' 条件，防止已驳回/已批准的审批被重复修改
