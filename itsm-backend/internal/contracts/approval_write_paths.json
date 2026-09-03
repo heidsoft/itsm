@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "targetRuntime": "bpmn",
   "entries": [
     {"file":"handlers/change/repository_impl.go","owner":"change","models":["ChangeApproval","change_approval_chains"],"mode":"legacy-runtime"},
@@ -8,7 +8,6 @@
     {"file":"pkg/seeder/tenant_provisioner.go","owner":"initialization","models":["ApprovalWorkflow"],"mode":"template-only"},
     {"file":"service/approval_chain_service.go","owner":"approval-template","models":["ApprovalChain"],"mode":"template-only"},
     {"file":"service/approval_service.go","owner":"legacy-approval","models":["ApprovalWorkflow"],"mode":"compatibility"},
-    {"file":"service/bpmn_process_engine.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"},
-    {"file":"service/service_request_service.go","owner":"service-request","models":["ServiceRequestApproval"],"mode":"legacy-runtime"}
+    {"file":"service/bpmn_process_engine.go","owner":"workflow","models":["ProcessApprovalDecision"],"mode":"authoritative"}
   ]
 }

@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -80,15 +81,30 @@ type UserTenantsResponse struct {
 }
 
 // RegisterRequest 用户注册请求
+// DisplayName 兼容两个字段名：新契约 displayName；旧前端/第三方一直发送 fullName。
+// f575c3f4 将 fullName 改名为 displayName 时漏改前端（auth-service.ts 仍发 fullName），
+// 导致注册接口对前端 100% 返回 400。此处用 fullName 接旧字段，handler 层归一。
 type RegisterRequest struct {
-	Username   string `json:"username" binding:"required,min=3,max=20,alphanum"`
-	Email      string `json:"email" binding:"required,email"`
-	Password   string `json:"password" binding:"required,min=8"`
-	DisplayName string `json:"displayName" binding:"required"`
-	Phone      string `json:"phone" binding:"omitempty"`
-	Company    string `json:"company,omitempty"`
-	Role       string `json:"role" binding:"omitempty"`
-	TenantCode string `json:"tenantCode,omitempty"`
+	Username    string `json:"username" binding:"required,min=3,max=20,alphanum"`
+	Email       string `json:"email" binding:"required,email"`
+	Password    string `json:"password" binding:"required,min=8"`
+	DisplayName string `json:"displayName" binding:"omitempty"`
+	FullName    string `json:"fullName" binding:"omitempty"`
+	Phone       string `json:"phone" binding:"omitempty"`
+	Company     string `json:"company,omitempty"`
+	Role        string `json:"role" binding:"omitempty"`
+	TenantCode  string `json:"tenantCode,omitempty"`
+}
+
+// ResolvedDisplayName 返回归一后的显示名，两者皆空时回退为用户名。
+func (r RegisterRequest) ResolvedDisplayName() string {
+	if v := strings.TrimSpace(r.DisplayName); v != "" {
+		return v
+	}
+	if v := strings.TrimSpace(r.FullName); v != "" {
+		return v
+	}
+	return r.Username
 }
 
 // RegisterResponse 用户注册响应

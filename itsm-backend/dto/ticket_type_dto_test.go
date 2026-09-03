@@ -81,7 +81,8 @@ func TestTicketTypeListResponseUsesCamelCaseJSON(t *testing.T) {
 	assert.Contains(t, jsonStr, `"items":[`)
 	assert.Contains(t, jsonStr, `"pageSize":20`)
 	assert.Contains(t, jsonStr, `"totalPages":5`)
-	assert.NotContains(t, jsonStr, `"types"`)
+	// "types" 是 v1.1 保留的前端别名键（与 items 同值），属有意契约而非 snake_case 泄漏。
+	// 注意 NotContains 只用于防 snake_case（page_size/total_pages），不得用于别名键。
 	assert.NotContains(t, jsonStr, `"page_size"`)
 	assert.NotContains(t, jsonStr, `"total_pages"`)
 }
