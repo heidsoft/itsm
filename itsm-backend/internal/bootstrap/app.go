@@ -108,8 +108,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 
 	// 顶层 handlers 包：聚合 dashboard_handler.go 等遗留 controller 风格 handler
@@ -1146,7 +1144,8 @@ func NewApplication() *Application {
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 	docs.SwaggerInfo.Title = "ITSM API"
 	docs.SwaggerInfo.Description = "IT Service Management System API Documentation"
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger 路由已在 router.SetupRoutes 中通过 ENABLE_SWAGGER 环境变量条件注册，
+	// 此处不再重复注册，避免 dev 环境同时设置 ENABLE_SWAGGER=true 时触发路由冲突 panic。
 
 	return &Application{
 		Cfg:               cfg,
