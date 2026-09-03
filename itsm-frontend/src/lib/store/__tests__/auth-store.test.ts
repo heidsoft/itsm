@@ -300,6 +300,76 @@ describe('useAuthStore', () => {
       
       expect(useAuthStore.getState().hasPermission('ticket:view')).toBe(false);
     });
+
+    it('super_admin 的 ["*"] 通配符应匹配任意权限码（管理菜单判定依赖）', async () => {
+      const { useAuthStore } = await import('../auth-store');
+      
+      const mockUser = {
+        id: 1,
+        name: 'Super Admin',
+        username: 'superadmin',
+        email: 'admin@example.com',
+        role: 'super_admin',
+        tenantId: 1,
+        // 后端 Login getUserPermissions 对 super_admin 下发 ["*"]
+        permissions: ['*'],
+      };
+
+      act(() => {
+        useAuthStore.getState().login(mockUser, 'mock-token');
+      });
+
+      // Sidebar isAdmin 判定的四个权限码都必须命中
+      expect(useAuthStore.getState().hasPermission('user:write')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('role:write')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('system_config:write')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('ticket_type:manage')).toBe(true);
+    });
+
+    it('资源级通配符 "resource:*" 应匹配该资源下任意 action', async () => {
+      const { useAuthStore } = await import('../auth-store');
+      
+      const mockUser = {
+        id: 2,
+        name: 'Ops Admin',
+        username: 'opsadmin',
+        email: 'ops@example.com',
+        role: 'admin',
+        tenantId: 1,
+        permissions: ['user:*', 'ticket:read'],
+      };
+
+      act(() => {
+        useAuthStore.getState().login(mockUser, 'mock-token');
+      });
+
+      expect(useAuthStore.getState().hasPermission('user:write')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('user:delete')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(true);
+      // 资源不通配时不得跨界
+      expect(useAuthStore.getState().hasPermission('role:write')).toBe(false);
+      expect(useAuthStore.getState().hasPermission('ticket:write')).toBe(false);
+    });
+
+    it('permissions 为空数组时应返回 false', async () => {
+      const { useAuthStore } = await import('../auth-store');
+      
+      const mockUser = {
+        id: 3,
+        name: 'Plain User',
+        username: 'plainuser',
+        email: 'plain@example.com',
+        role: 'end_user',
+        tenantId: 1,
+        permissions: [],
+      };
+
+      act(() => {
+        useAuthStore.getState().login(mockUser, 'mock-token');
+      });
+
+      expect(useAuthStore.getState().hasPermission('ticket:view')).toBe(false);
+    });
   });
 
   describe('hasRole', () => {

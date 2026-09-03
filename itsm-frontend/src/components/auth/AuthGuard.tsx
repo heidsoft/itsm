@@ -52,6 +52,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
               role: string;
               department: string;
               tenantId: number;
+              permissions?: string[];
             }>('/api/v1/auth/me');
           } catch (e) {
             console.error('Failed to fetch user info:', e);
@@ -88,6 +89,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
               name: userResponse?.name || '',
               role: userResponse?.role || 'end_user',
               department: userResponse?.department,
+              // 刷新后由 /auth/me 重建权限列表；缺失时 super_admin 等角色会丢失管理菜单
+              permissions: userResponse?.permissions,
             },
             'authenticated', // Token is in httpOnly cookie, not accessible here
             currentTenant

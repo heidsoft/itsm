@@ -216,8 +216,19 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 
 // User Management
 
+// GetUser 获取用户信息（/auth/me 数据源）。
+// 前端刷新页面后由 AuthGuard 重建 user，若此处不带 permissions，
+// hasPermission 会全部返回 false，导致 Sidebar 管理功能区等权限驱动 UI 消失。
+// 因此与 Login 相同，按角色填充权限列表（super_admin → ["*"]）。
 func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
-	return s.repo.GetUserByID(ctx, id)
+	u, err := s.repo.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if u.Permissions == nil || len(u.Permissions) == 0 {
+		u.Permissions = s.getUserPermissions(u.Role)
+	}
+	return u, nil
 }
 
 func (s *Service) ListUsers(ctx context.Context, tenantID int) ([]*User, error) {

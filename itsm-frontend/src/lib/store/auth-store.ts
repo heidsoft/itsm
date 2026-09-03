@@ -131,9 +131,16 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // 检查用户权限
+      // 支持通配符：super_admin 的 permissions 为 ["*"]（后端 getUserPermissions 下发），
+      // 必须能匹配任意具体权限码；同时兼容 "resource:*" 形式的资源级通配。
+      // 与后端 filterMenusByPermission / RequirePermission 的语义保持一致。
       hasPermission: (permission: string) => {
         const { user } = get();
-        return user?.permissions?.includes(permission) || false;
+        const permissions = user?.permissions;
+        if (!permissions || permissions.length === 0) return false;
+        if (permissions.includes('*') || permissions.includes(permission)) return true;
+        const resource = permission.split(':')[0];
+        return permissions.includes(`${resource}:*`);
       },
 
       // 检查用户角色
