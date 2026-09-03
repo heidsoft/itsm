@@ -227,7 +227,7 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 
 // GetTenantSettings returns settings for the current tenant (from JWT context)
 func (h *Handler) GetTenantSettings(c *gin.Context) {
-	tenantID, ok := c.Get("tenantID")
+	tenantID, ok := c.Get("tenant_id")
 	if !ok {
 		common.FailWithErr(c, nil, "无法获取租户信息")
 		return
@@ -254,7 +254,7 @@ func (h *Handler) GetTenantSettings(c *gin.Context) {
 
 // UpdateTenantSettings updates settings for the current tenant
 func (h *Handler) UpdateTenantSettings(c *gin.Context) {
-	tenantID, ok := c.Get("tenantID")
+	tenantID, ok := c.Get("tenant_id")
 	if !ok {
 		common.FailWithErr(c, nil, "无法获取租户信息")
 		return

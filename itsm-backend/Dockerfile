@@ -36,7 +36,7 @@ ENV CGO_ENABLED=0 \
     GOMEMLIMIT=2GiB
 
 # ca-certificates for any TLS module fetches; git for go mod download.
-RUN apk add --no-cache ca-certificates git
+RUN apk add --no-cache ca-certificates
 
 # Cache module download across builds.
 COPY go.mod go.sum ./
