@@ -1,6 +1,13 @@
 
 # Development stack.
 #
+# Windows Docker Desktop 拉取 Docker Hub 镜像失败时，可在
+# Settings -> Docker Engine 的 JSON 中加入（这是 Docker daemon 配置，不能写成 Compose 字段）：
+#   "registry-mirrors": ["https://docker.m.daocloud.io"]
+# 保存后点击 Apply & restart，再执行 `docker compose -f docker-compose.dev.yml pull`。
+# 若现有 JSON 已有其他配置，请只合并 registry-mirrors 字段，不要覆盖整个文件。
+# 镜像地址也可通过 .env 中的 *_IMAGE 变量覆盖，示例见 .env.dev.example。
+#
 # Core services (postgres, redis, minio, itsm-init, itsm-backend, itsm-frontend)
 # start with a plain `docker compose -f docker-compose.dev.yml up -d` — no
 # --profile flag required.
@@ -13,6 +20,51 @@
 # longer needed. Previously every core service carried `profiles: ["dev"]`,
 # which made the intuitive command silently start nothing at all and report
 # success — please do not reintroduce it on the core services.
+#
+# =============================================================================
+# 网络加速配置（解决 Docker Hub 镜像拉取超时问题）
+# =============================================================================
+# Windows/macOS/Linux 用户如果遇到以下错误：
+#   "failed to resolve reference docker.io/library/redis:7-alpine: ... dialing registry-1.docker.io:443 connection timed out"
+#
+# 解决方案：在 Docker Desktop 设置中添加镜像加速器
+#
+# 方法1：Docker Desktop 图形界面（推荐）
+#   - 打开 Docker Desktop → Settings → Docker Engine
+#   - 在右侧编辑器中添加 "registry-mirrors" 配置（见下方 JSON 示例）
+#   - 点击 Apply & Restart
+#
+# 方法2：手动修改 daemon.json
+#   - Linux:   sudo vim /etc/docker/daemon.json
+#   - macOS:   vim ~/.docker/daemon.json
+#   - Windows:  打开 %USERPROFILE%\.docker\daemon.json（如不存在则创建）
+#
+#   {
+#     "registry-mirrors": [
+#       "https://docker.1ms.run",
+#       "https://docker.xuanyuan.me"
+#     ]
+#   }
+#
+#   阿里云用户可登录 https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
+#   获取专属加速地址，格式如：https://your-id.mirror.aliyuncs.com
+#
+# 常用加速器（任选一个或组合使用）：
+#   - Docker 官方加速：https://docker.1ms.run
+#   - DaoCloud 镜像：https://docker.xuanyuan.me
+#   - 中科大镜像：https://docker.mirrors.ustc.edu.cn
+#   - 网易镜像：https://hub-mirror.c.163.com
+#   - 七牛云：https://docker.mirrors.qiniu.com
+#
+# 方法3：如果加速器仍然超时，可直接拉取镜像到本地（适用于内网环境）
+#   docker pull pgvector/pgvector:pg17
+#   docker pull redis:7-alpine
+#   docker pull minio/minio:latest
+#   docker pull ollama/ollama:latest
+#   docker pull prom/prometheus:latest
+#   docker pull grafana/grafana:10.1.0
+#
+# =============================================================================
 
 services:
   # BuildKit 共享缓存（加速增量编译）
@@ -23,7 +75,8 @@ services:
   # 后端使用 `postgres:5432`（容器网络主机名），因此 8090/3000 等对外端口不受影响。
   # 集成测试可通过 `host=localhost port=55432` 直接连接容器内的真实 PG。
   postgres:
-    image: pgvector/pgvector:pg17
+    # pgvector 暂保留官方镜像；Docker Hub 连通性由 daemon registry mirror 解决。
+    image: ${POSTGRES_IMAGE:-pgvector/pgvector:pg17}
     container_name: itsm-postgres-dev
     hostname: postgres
     environment:
@@ -44,7 +97,8 @@ services:
     restart: unless-stopped
   # Redis 缓存（开发环境）
   redis:
-    image: redis:7-alpine
+    # 国内网络默认使用 DaoCloud 代理；可通过 REDIS_IMAGE 切回官方源。
+    image: ${REDIS_IMAGE:-m.daocloud.io/docker.io/library/redis:7-alpine}
     container_name: itsm-redis-dev
     hostname: redis
     ports:
@@ -61,7 +115,8 @@ services:
     restart: unless-stopped
   # MinIO 对象存储（开发环境，可选）
   minio:
-    image: minio/minio:latest
+    # 国内网络默认使用 DaoCloud 代理；可通过 MINIO_IMAGE 切回官方源。
+    image: ${MINIO_IMAGE:-m.daocloud.io/docker.io/minio/minio:latest}
     container_name: itsm-minio-dev
     hostname: minio
     command: server /data --console-address ":9001"
@@ -315,7 +370,7 @@ services:
     restart: unless-stopped
   # Ollama（本地 LLM 服务，可选）
   ollama:
-    image: ollama/ollama:latest
+    image: ${OLLAMA_IMAGE:-ollama/ollama:latest}
     container_name: itsm-ollama-dev
     hostname: ollama
     ports:
@@ -331,7 +386,7 @@ services:
 
     # Prometheus（监控，可选）
   prometheus:
-    image: prom/prometheus:latest
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:latest}
     container_name: itsm-prometheus-dev
     hostname: prometheus
     ports:
@@ -348,7 +403,7 @@ services:
   grafana:
     # Pinned to the same version as monitoring/docker-compose.monitoring.yml —
     # "latest" made the two stacks drift apart.
-    image: grafana/grafana:10.1.0
+    image: ${GRAFANA_IMAGE:-grafana/grafana:10.1.0}
     container_name: itsm-grafana-dev
     hostname: grafana
     ports:
