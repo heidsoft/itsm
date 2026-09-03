@@ -24,8 +24,10 @@ type CreateNotificationRequest struct {
 	Type       string  `json:"type" binding:"required,oneof=info success warning error"`
 	ActionURL  *string `json:"actionUrl,omitempty"`
 	ActionText *string `json:"actionText,omitempty"`
-	UserID     int     `json:"userId" binding:"required"`
-	TenantID   int     `json:"tenantId" binding:"required"`
+	// UserID and TenantID are extracted from auth token by the handler; they are
+	// accepted in the body only for backwards compatibility but not required.
+	UserID   int `json:"userId"`
+	TenantID int `json:"tenantId"`
 }
 
 // UpdateNotificationRequest 更新通知请求
