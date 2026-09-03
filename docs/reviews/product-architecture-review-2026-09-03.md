@@ -25,7 +25,7 @@
 | 标准领域 Handler 文件 | 65 | `handlers/**/handler.go` |
 | 顶层业务 Service 文件 | 160 | `service/*.go`，排除测试 |
 | 旧 `controller/` 生产 Go 文件 | 0 | 当前目录已无生产 Go 文件，迁移方向正确 |
-| 静态 HTTP 注册调用 | 1,031 | Router/handlers 中 `.GET/.POST/.PUT/.PATCH/.DELETE` 文本计数；包含测试装配和兼容注册，**不等于 1,031 个唯一 API** |
+| 静态生产 HTTP 注册调用 | 881 | Router/handlers 中 `.GET/.POST/.PUT/.PATCH/.DELETE` 文本计数，排除测试；包含兼容注册，**不等于 881 个唯一 API** |
 | Ent Schema | 133 | `ent/schema/*.go` |
 | 前端页面入口 | 166 | App Router 的 `page.tsx` |
 | 前端 API client 文件 | 79 | `src/lib/api/` 顶层 TypeScript 文件，排除测试 |
@@ -110,7 +110,7 @@
 
 SLA 有策略、模板、监控、告警、暂停/恢复与升级服务，生产入口位于 `/sla`，实现证据为 [`handlers/sla`](../../itsm-backend/handlers/sla)、[`sla_monitor_service.go`](../../itsm-backend/service/sla_monitor_service.go) 和 [`sla_alert_service.go`](../../itsm-backend/service/sla_alert_service.go)。不足是工作日历、节假日、跨地域时区、分布式权威时间以及事件/请求/变更统一适用性。
 
-NOC 页面 [`app/(main)/noc/page.tsx`](../../itsm-frontend/src/app/(main)/noc/page.tsx) 查询真实重大事件，但“高优事件”“正在处理”由当前 20 条分页数据计算，不能代表全量；页面也没有消费已有 IncidentAlert/Metric 服务。它目前是重大事件列表视图，不是完整 NOC 作战台。
+NOC 页面 [`app/(main)/noc/page.tsx`](<../../itsm-frontend/src/app/(main)/noc/page.tsx>) 查询真实重大事件，但“高优事件”“正在处理”由当前 20 条分页数据计算，不能代表全量；页面也没有消费已有 IncidentAlert/Metric 服务。它目前是重大事件列表视图，不是完整 NOC 作战台。
 
 ### 3.7 资产与 License
 
@@ -282,4 +282,3 @@ AI 输出必须带 model/prompt/confidence/evidence/feedback/audit。
 ## 8. 最终结论
 
 产品已经具备国内开源企业 ITSM 的有竞争力底座，尤其是“BPMN + CMDB + AI + durable command + 私有部署”的组合。短期成功不取决于再增加模块，而取决于把 Pilot 收敛成可重复验收的闭环。建议对外使用“核心能力 GA 候选、扩展能力 Pilot”的分层表述；完成 P0 后选择 2–3 个设计伙伴跑 90 天生产试点，用可量化 SLA、MTTR、变更失败率、知识命中率与 AI 采纳率证明价值，再扩大连接器与市场投入。
-
