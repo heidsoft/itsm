@@ -107,6 +107,12 @@ func (c *WorkflowHandler) RegisterRoutes(r *gin.RouterGroup) {
 		// 版本变更日志 (注意：:id 路由必须在 :key 之前定义)
 		bpmn.GET("/process-definitions/changelogs/:id", c.GetVersionChangeLogsByID)
 		bpmn.GET("/process-definitions/:key/changelogs", c.GetVersionChangeLogs)
+
+		// /bpmn/definitions 别名 (兼容旧路径，透传到 /bpmn/process-definitions)
+		bpmn.GET("/definitions", c.ListProcessDefinitions)
+		bpmn.POST("/definitions", c.CreateProcessDefinition)
+		bpmn.GET("/definitions/:key", c.GetProcessDefinition)
+		bpmn.PUT("/definitions/:key", c.UpdateProcessDefinition)
 	}
 }
 

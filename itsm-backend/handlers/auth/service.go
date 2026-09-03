@@ -149,7 +149,7 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 	if role.String() == "" {
 		role = user.RoleEndUser
 	}
-	userEntity, err := s.client.User.Create().SetUsername(req.Username).SetEmail(req.Email).SetName(req.FullName).SetPasswordHash(string(hashedPassword)).SetPhone(req.Phone).SetDepartment(req.Company).SetRole(role).SetTenantID(tenantID).SetActive(true).Save(ctx)
+	userEntity, err := s.client.User.Create().SetUsername(req.Username).SetEmail(req.Email).SetName(req.DisplayName).SetPasswordHash(string(hashedPassword)).SetPhone(req.Phone).SetDepartment(req.Company).SetRole(role).SetTenantID(tenantID).SetActive(true).Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败")
 	}

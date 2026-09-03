@@ -238,7 +238,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username: "bob",
 			Email:    "bob@example.com",
 			Password: "securePass1",
-			FullName: "Bob Builder",
+			DisplayName: "Bob Builder",
 			Phone:    "13900000000",
 			Company:  "Acme",
 			Role:     "end_user",
@@ -259,7 +259,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username: "bob",
 			Email:    "bob@example.com",
 			Password: "securePass1",
-			FullName: "Bob Builder",
+			DisplayName: "Bob Builder",
 			Phone:    "13900000000",
 			Company:  "Acme",
 			Role:     "end_user",
@@ -287,7 +287,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username: "alice", // 已存在
 			Email:    "new@example.com",
 			Password: "securePass1",
-			FullName: "Imposter",
+			DisplayName: "Imposter",
 		}
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
@@ -299,7 +299,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username: "charlie",
 			Email:    "alice@example.com", // 已存在
 			Password: "securePass1",
-			FullName: "Charlie",
+			DisplayName: "Charlie",
 		}
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
@@ -311,7 +311,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username:   "diana",
 			Email:      "diana@example.com",
 			Password:   "securePass1",
-			FullName:   "Diana",
+			DisplayName:   "Diana",
 			TenantCode: "tenant2",
 		}
 		resp, err := fx.service.Register(fx.ctx, req)
@@ -328,7 +328,7 @@ func TestAuthService_Register(t *testing.T) {
 			Username:   "eve",
 			Email:      "eve@example.com",
 			Password:   "securePass1",
-			FullName:   "Eve",
+			DisplayName:   "Eve",
 			TenantCode: "ghost-tenant",
 		}
 		_, err := fx.service.Register(fx.ctx, req)
@@ -662,7 +662,7 @@ func TestAuthService_Register_And_Login_RoundTrip(t *testing.T) {
 		Username:   "round-trip",
 		Email:      "rt@example.com",
 		Password:   "password123",
-		FullName:   "Round Trip",
+		DisplayName:   "Round Trip",
 		TenantCode: "test",
 	}
 	regResp, err := fx.service.Register(fx.ctx, req)

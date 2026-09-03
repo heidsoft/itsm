@@ -224,3 +224,59 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 
 	common.Success(c, response)
 }
+
+// GetTenantSettings returns settings for the current tenant (from JWT context)
+func (h *Handler) GetTenantSettings(c *gin.Context) {
+	tenantID, ok := c.Get("tenantID")
+	if !ok {
+		common.FailWithErr(c, nil, "无法获取租户信息")
+		return
+	}
+	tenant, err := h.svc.GetTenant(c.Request.Context(), tenantID.(int))
+	if err != nil {
+		common.FailWithErr(c, err, "获取租户设置失败")
+		return
+	}
+	common.Success(c, gin.H{
+		"id":      tenant.ID,
+		"name":    tenant.Name,
+		"code":    tenant.Code,
+		"domain":  tenant.Domain,
+		"type":    tenant.Type,
+		"status":  tenant.Status,
+		"plan":    tenant.PlanCode,
+		"tier":    tenant.ServiceTier,
+		"owner":   tenant.OwnerContact,
+		"billing": tenant.BillingEnabled,
+		"currency": tenant.Currency,
+	})
+}
+
+// UpdateTenantSettings updates settings for the current tenant
+func (h *Handler) UpdateTenantSettings(c *gin.Context) {
+	tenantID, ok := c.Get("tenantID")
+	if !ok {
+		common.FailWithErr(c, nil, "无法获取租户信息")
+		return
+	}
+	var req dto.UpdateTenantRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	updated, err := h.svc.UpdateTenant(c.Request.Context(), tenantID.(int), &req)
+	if err != nil {
+		common.FailWithErr(c, err, "更新租户设置失败")
+		return
+	}
+	common.Success(c, gin.H{
+		"id":      updated.ID,
+		"name":    updated.Name,
+		"code":    updated.Code,
+		"domain":  updated.Domain,
+		"status":  updated.Status,
+		"plan":    updated.PlanCode,
+		"tier":    updated.ServiceTier,
+		"owner":   updated.OwnerContact,
+	})
+}

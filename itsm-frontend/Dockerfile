@@ -73,6 +73,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps && \
     NEXT_DISABLE_TURBOPACK=1 ./node_modules/.bin/next build \
     && test -f .next/standalone/server.js
 

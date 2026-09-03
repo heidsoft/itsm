@@ -1586,6 +1586,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantHandler.DeleteTenant)
 					tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantStatus)
 				}
+
+				// Tenant settings (current tenant — uses auth context, not :id)
+				tenant.GET("/settings", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenantSettings)
+				tenant.PUT("/settings", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantSettings)
 			}
 
 			// Notification Preferences
@@ -1916,57 +1920,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Legacy Compatibility Routes ====================
-		// These old paths are kept only to return explicit guidance. They must
-		// not pretend that writes succeeded before a real backend is wired.
+		// Legacy /workflows → /bpmn/process-definitions (BPMN handler handles /bpmn/*)
 		tenant.GET("/workflows", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
+			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
 		})
 		tenant.POST("/workflows", middleware.RequirePermission("workflow", "create"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
-		})
-
-		// Legacy /api/v1/bpmn/definitions path; canonical BPMN APIs are
-		// registered by the BPMN handler under /api/v1/bpmn/process-*.
-		bpmn := tenant.(*gin.RouterGroup).Group("/bpmn")
-		{
-			bpmn.GET("/definitions", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
-				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions")
-			})
-			bpmn.POST("/definitions", middleware.RequirePermission("workflow", "create"), func(c *gin.Context) {
-				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions")
-			})
-			bpmn.GET("/definitions/:id", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
-				common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
-			})
-			bpmn.PUT("/definitions/:id", middleware.RequirePermission("workflow", "update"), func(c *gin.Context) {
-				common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/bpmn/process-definitions/"+c.Param("id"))
-			})
-		}
-
-		// Legacy service catalog path. Canonical APIs are /service-catalogs and
-		// /service-catalog-services.
-		tenant.GET("/services", middleware.RequirePermission("service_catalog", "read"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/service-catalogs")
-		})
-		tenant.POST("/services", middleware.RequirePermission("service_catalog", "create"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/service-catalogs")
-		})
-
-		// Legacy SLA path. Canonical SLA APIs are registered under /sla.
-		tenant.GET("/slas", middleware.RequirePermission("sla", "read"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/sla/definitions")
-		})
-		tenant.POST("/slas", middleware.RequirePermission("sla", "create"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/sla/definitions")
-		})
-
-		// Legacy knowledge path. Canonical knowledge APIs are registered under
-		// /knowledge/articles and /knowledge-articles.
-		tenant.GET("/knowledge", middleware.RequirePermission("knowledge", "read"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口未接入真实数据，请使用 /api/v1/knowledge/articles")
-		})
-		tenant.POST("/knowledge", middleware.RequirePermission("knowledge", "create"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "兼容接口不支持写入，请使用 /api/v1/knowledge/articles")
+			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
 		})
 
 		if config.TicketTypeHandler != nil {
