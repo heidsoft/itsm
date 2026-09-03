@@ -964,6 +964,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 						"timestamp": time.Now(),
 					})
 				})
+
+				// Tenant settings (current tenant — uses auth context)
+				sysRoot.GET("/settings", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenantSettings)
+				sysRoot.PUT("/settings", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantSettings)
 			}
 
 			// 向量存储（RAG）状态与连通性诊断：/api/v1/system/vector-store
@@ -1586,10 +1590,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantHandler.DeleteTenant)
 					tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantStatus)
 				}
-
-				// Tenant settings (current tenant — uses auth context, not :id)
-				tenant.GET("/settings", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenantSettings)
-				tenant.PUT("/settings", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantSettings)
 			}
 
 			// Notification Preferences
