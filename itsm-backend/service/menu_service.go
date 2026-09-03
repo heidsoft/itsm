@@ -427,8 +427,25 @@ func (s *MenuService) addDatabaseRolePermissions(ctx context.Context, permission
 func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map[string]bool, roleCodes map[string]bool) []*ent.Menu {
 	filtered := make([]*ent.Menu, 0)
 
+	// debugLog nil 守卫：单元测试直接构造 MenuService{}，logger 可能为 nil；
+	// 调试日志不得成为 nil 指针 panic 源。
+	debugLog := func(msg string, kv ...interface{}) {
+		if s.logger != nil {
+			s.logger.Infow(msg, kv...)
+		}
+	}
+
+	debugLog("DEBUG filterMenusByPermission entry",
+		"total_menus", len(menus),
+		"permissions_count", len(permissions),
+		"permissions_keys", keysOfMap(permissions),
+		"roleCodes", keysOfMap(roleCodes),
+		"isElevatedMenuRole", isElevatedMenuRole(roleCodes))
+
 	for _, m := range menus {
 		if shouldRestrictMenuForRole(m.Path, roleCodes) {
+			debugLog("DEBUG menu excluded",
+				"id", m.ID, "name", m.Name, "path", m.Path, "perm", m.PermissionCode, "reason", "restricted-by-role")
 			continue
 		}
 
@@ -488,10 +505,23 @@ func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map
 					continue
 				}
 			}
+			debugLog("DEBUG menu excluded",
+				"id", m.ID, "name", m.Name, "path", m.Path, "perm", m.PermissionCode, "reason", "no-permission-match")
+		} else {
+			debugLog("DEBUG menu excluded",
+				"id", m.ID, "name", m.Name, "path", m.Path, "perm", m.PermissionCode, "reason", "split-not-2")
 		}
 	}
 
 	return filtered
+}
+
+func keysOfMap(m map[string]bool) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func collectUserRoleCodes(userEntity *ent.User) map[string]bool {

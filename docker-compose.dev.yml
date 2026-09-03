@@ -347,6 +347,9 @@ services:
       # - NEXT_PUBLIC_API_URL=http://localhost:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
+      # dev server 启用 Turbopack（webpack 在 Docker VM 冷编译 /login 实测 89.5s）；
+      # 置 0 可回退 webpack。不影响 next build（build 固定 NEXT_DISABLE_TURBOPACK=1）
+      - NEXT_DEV_TURBOPACK=${NEXT_DEV_TURBOPACK:-1}
 
       # 清除代理
       - HTTP_PROXY=
@@ -365,8 +368,12 @@ services:
       - itsm-dev-network
     volumes:
       - ./itsm-frontend:/app
-      - /app/node_modules
-      - /app/.next
+      # node_modules 用命名卷而非匿名卷：匿名卷随容器删除即丢，每次重建
+      # 都要重新从 /opt/deps 复制 950MB 依赖（1-2 分钟）。命名卷持久保留，
+      # entrypoint 的 sentinel 文件使其跳过重复复制。
+      - itsm_frontend_node_modules_dev:/app/node_modules
+      # .next 同理用命名卷：保留 dev 编译缓存，容器重启/重建后页面无需全部冷编译
+      - itsm_frontend_next_cache_dev:/app/.next
     restart: unless-stopped
   # Ollama（本地 LLM 服务，可选）
   ollama:
@@ -433,6 +440,10 @@ volumes:
   prometheus_dev_data:
     driver: local
   grafana_dev_data:
+    driver: local
+  itsm_frontend_node_modules_dev:
+    driver: local
+  itsm_frontend_next_cache_dev:
     driver: local
 
 networks:

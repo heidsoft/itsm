@@ -211,12 +211,20 @@ if [ ! -f "$SENTINEL" ]; then
   echo "[entrypoint-next] /app/node_modules populated." >&2
 fi
 export PATH="/opt/deps/node_modules/.bin:/app/node_modules/.bin:$PATH"
+# NEXT_DEV_TURBOPACK=1 时 dev server 使用 Turbopack：webpack 冷编译在 Docker VM 中
+# 极慢（/login 3759 modules 实测 89.5s），Turbopack 可大幅缩短。构建（next build）
+# 不受此开关影响（build 走 NEXT_DISABLE_TURBOPACK=1 的独立路径）。
+TURBO_FLAG=""
+if [ "$NEXT_DEV_TURBOPACK" = "1" ]; then
+  TURBO_FLAG="--turbopack"
+  echo "[entrypoint-next] Turbopack enabled for dev server" >&2
+fi
 for p in /app/node_modules/next/dist/bin/next \
          /opt/deps/node_modules/next/dist/bin/next \
          /app/node_modules/.bin/next; do
   if [ -f "$p" ]; then
     echo "[entrypoint-next] using: $p" >&2
-    exec node "$p" dev -H 0.0.0.0
+    exec node "$p" dev -H 0.0.0.0 $TURBO_FLAG
   fi
 done
 echo "[entrypoint-next] FAILED to locate next binary." >&2
