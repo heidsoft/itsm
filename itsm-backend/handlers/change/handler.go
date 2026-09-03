@@ -1,6 +1,7 @@
 package change
 
 import (
+	"errors"
 	"io"
 	"strconv"
 	"strings"
@@ -482,7 +483,18 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 
 	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus, comment)
 	if err != nil {
-		common.InternalError(c, "状态转换失败: "+err.Error())
+		// 按错误语义分流：业务规则拒绝与并发冲突不得再伪装成 500。
+		// 否则客户端无法与真实故障区分，重试逻辑无从实现，告警也会被无谓污染。
+		switch {
+		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification):
+			common.Conflict(c, err.Error(), nil)
+		case errors.Is(err, ErrNotApprover):
+			common.Fail(c, common.ForbiddenCode, err.Error())
+		case errors.Is(err, ErrChangeNotFound):
+			common.Fail(c, common.NotFoundCode, "变更不存在")
+		default:
+			common.InternalError(c, "状态转换失败: "+err.Error())
+		}
 		return
 	}
 	common.Success(c, toDTO(res))

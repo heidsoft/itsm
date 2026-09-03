@@ -669,8 +669,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// 工单关联（已接入 TicketAssociationService）
 			if config.TicketAssociationService != nil {
 				tickets.GET("/:id/relations", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-					ticketID := c.GetInt("id")
-					if ticketID == 0 {
+					// URL :id 必须通过 c.Param 读取；c.GetInt 只能拿到 context store 里的
+					// tenant_id/user_id/role 等键值，URL 参数不在该 store 中。
+					ticketID, err := strconv.Atoi(c.Param("id"))
+					if err != nil || ticketID == 0 {
 						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
 						return
 					}
@@ -686,8 +688,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 					})
 				})
 				tickets.GET("/:id/relations/stats", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-					ticketID := c.GetInt("id")
-					if ticketID == 0 {
+					ticketID, err := strconv.Atoi(c.Param("id"))
+					if err != nil || ticketID == 0 {
 						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
 						return
 					}
@@ -712,8 +714,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// 工单→配置项反向查询：复用 TicketAssociationService.GetConfigurationItems
 				// （AI 本体链路落地后，工单详情页可展示其影响的配置项）
 				tickets.GET("/:id/configuration-items", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-					ticketID := c.GetInt("id")
-					if ticketID == 0 {
+					ticketID, err := strconv.Atoi(c.Param("id"))
+					if err != nil || ticketID == 0 {
 						common.Fail(c, common.ParamErrorCode, "invalid ticket id")
 						return
 					}

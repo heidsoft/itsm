@@ -264,6 +264,19 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	return results, total, nil
 }
 
+// UpdateStatusCAS 用单条条件 UPDATE 实现状态推进，把「读状态—校验—写状态」
+// 的竞态窗口收敛为一次原子比较交换。状态已被其他请求抢先修改时返回 false。
+func (r *EntRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, expectedStatus, targetStatus string) (bool, error) {
+	affected, err := r.client.Change.Update().
+		Where(change.IDEQ(id), change.TenantIDEQ(tenantID), change.StatusEQ(expectedStatus)).
+		SetStatus(targetStatus).
+		Save(ctx)
+	if err != nil {
+		return false, err
+	}
+	return affected > 0, nil
+}
+
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
 	// P1 修复：写路径强制租户隔离，避免越权更新跨租户变更。
 	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。

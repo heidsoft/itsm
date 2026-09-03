@@ -17,6 +17,38 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// persistChangeInEntClient inserts a Change row in the ent client whose ID
+// matches the mock repo's Change.ID. Service.TransitionStatus's CAS
+// optimistic-locking path uses the ent client to look up the row by ID and
+// to issue a conditional UPDATE on (id, tenant_id, status). Without a row
+// in the ent client the CAS fails with ErrConcurrentModification, even
+// though the mock repo has the correct change.
+//
+// Strategy: create the change via ent to obtain its auto-generated ID, then
+// rewrite the mock Change's ID to match. This keeps the existing test
+// fixture (createTestChange) and downstream assertions (repo.changes[c.ID])
+// working without renumbering mock IDs.
+func persistChangeInEntClient(t *testing.T, client *ent.Client, c *Change) {
+	t.Helper()
+	ctx := context.Background()
+	created, err := client.Change.Create().
+		SetChangeNumber(fmt.Sprintf("CHG-TEST-%d", c.ID)).
+		SetTitle(c.Title).
+		SetDescription(c.Description).
+		SetType(c.Type).
+		SetStatus(c.Status).
+		SetPriority(c.Priority).
+		SetImpactScope(c.ImpactScope).
+		SetRiskLevel(c.RiskLevel).
+		SetCreatedBy(c.CreatedBy).
+		SetTenantID(c.TenantID).
+		SetCreatedAt(c.CreatedAt).
+		SetUpdatedAt(c.UpdatedAt).
+		Save(ctx)
+	require.NoError(t, err, "persist change into ent client for CAS path")
+	c.ID = created.ID
+}
+
 // ==================== TransitionStatus ↔ BPMN 桥接集成测试（P0-1 阶段3） ====================
 
 func newChangeBridgeEntClient(t *testing.T, dbName string) *ent.Client {
@@ -120,6 +152,7 @@ func TestTransitionStatus_BridgesBPMNTask(t *testing.T) {
 
 	c := createTestChange(repo, tenantID, actorID)
 	c.Status = "pending"
+	persistChangeInEntClient(t, entClient, c)
 	rec, err := repo.CreateApprovalRecord(ctx, &ApprovalRecord{
 		ChangeID:   c.ID,
 		ApproverID: actorID,
@@ -162,6 +195,7 @@ func TestTransitionStatus_BridgeFailClosed(t *testing.T) {
 
 	c := createTestChange(repo, tenantID, actorID)
 	c.Status = "pending"
+	persistChangeInEntClient(t, entClient, c)
 	rec, err := repo.CreateApprovalRecord(ctx, &ApprovalRecord{
 		ChangeID:   c.ID,
 		ApproverID: actorID,
@@ -198,6 +232,7 @@ func TestTransitionStatus_NoBoundInstanceFallsBack(t *testing.T) {
 
 	c := createTestChange(repo, tenantID, actorID)
 	c.Status = "pending"
+	persistChangeInEntClient(t, entClient, c)
 	_, err := repo.CreateApprovalRecord(ctx, &ApprovalRecord{
 		ChangeID:   c.ID,
 		ApproverID: actorID,

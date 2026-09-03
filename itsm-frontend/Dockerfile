@@ -72,8 +72,10 @@ ENV NODE_ENV=production \
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# CI/build containers must not run repository lifecycle hooks; `prepare` invokes
+# Husky, which is intentionally unavailable in the production image build.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --legacy-peer-deps && \
+    npm ci --legacy-peer-deps --ignore-scripts && \
     NEXT_DISABLE_TURBOPACK=1 ./node_modules/.bin/next build \
     && test -f .next/standalone/server.js
 

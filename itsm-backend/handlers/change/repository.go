@@ -13,6 +13,11 @@ type Repository interface {
 	Get(ctx context.Context, id int, tenantID int) (*Change, error)
 	List(ctx context.Context, tenantID int, page, size int, status, search, riskLevel string, dataScope datascope.DataScope, currentUserID int) ([]*Change, int, error)
 	Update(ctx context.Context, c *Change) (*Change, error)
+	// UpdateStatusCAS 条件更新变更状态（乐观锁）：仅当记录当前状态等于
+	// expectedStatus 时才推进到 targetStatus。返回 false 表示状态已被并发
+	// 修改（或记录不存在/不属于该租户），调用方据此返回 409 冲突。
+	// 这是状态转换消除 TOCTOU 竞态的关键原语，禁止绕过。
+	UpdateStatusCAS(ctx context.Context, id, tenantID int, expectedStatus, targetStatus string) (bool, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
 	SubmitForApproval(ctx context.Context, changeID, tenantID int, plan []ApprovalLevelPlan, comment string) error

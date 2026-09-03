@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -59,6 +60,9 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 
 // mockRepository implements Repository interface for testing
 type mockRepository struct {
+	// mu 保护所有 map 字段。状态转换的并发回归测试（-race）会并行调用
+	// Get/UpdateStatusCAS/Update，无锁会触发 data race 并掩盖真实竞态。
+	mu            sync.Mutex
 	changes       map[int]*Change
 	approvals     map[int]*ApprovalRecord
 	riskAssess    map[int]*RiskAssessment
@@ -90,6 +94,8 @@ func (m *mockRepository) Create(ctx context.Context, c *Change) (*Change, error)
 }
 
 func (m *mockRepository) Get(ctx context.Context, id int, tenantID int) (*Change, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	c, ok := m.changes[id]
 	if !ok || c.TenantID != tenantID {
 		return nil, http.ErrMissingFile
@@ -152,9 +158,23 @@ func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int,
 }
 
 func (m *mockRepository) Update(ctx context.Context, c *Change) (*Change, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	c.UpdatedAt = time.Now()
 	m.changes[c.ID] = c
 	return c, nil
+}
+
+func (m *mockRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, expectedStatus, targetStatus string) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.changes[id]
+	if !ok || c.TenantID != tenantID || c.Status != expectedStatus {
+		return false, nil
+	}
+	c.Status = targetStatus
+	c.UpdatedAt = time.Now()
+	return true, nil
 }
 
 func (m *mockRepository) Delete(ctx context.Context, id int, tenantID int) error {
@@ -219,6 +239,8 @@ func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenant
 }
 
 func (m *mockRepository) CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	r.ID = m.nextID
 	m.nextID++
 	r.CreatedAt = time.Now()
@@ -227,18 +249,72 @@ func (m *mockRepository) CreateApprovalRecord(ctx context.Context, r *ApprovalRe
 }
 
 func (m *mockRepository) UpdateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error) {
-	m.approvals[r.ID] = r
-	return r, nil
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	// 与生产实现保持一致：只更新调用方传入的字段，其它列（如 ApproverID）
+	// 必须保留。直接覆盖 m.approvals[r.ID] = r 会丢失 ApproverID，导致
+	// 并发审批场景下后续请求读取记录时退化为 "user is not an approver"。
+	existing, ok := m.approvals[r.ID]
+	if !ok {
+		m.approvals[r.ID] = r
+		return r, nil
+	}
+	if r.Status != "" {
+		existing.Status = r.Status
+	}
+	if r.Comment != nil {
+		existing.Comment = r.Comment
+	}
+	if r.ApprovedAt != nil {
+		existing.ApprovedAt = r.ApprovedAt
+	}
+	if r.Levels != nil {
+		existing.Levels = r.Levels
+	}
+	if r.ApproverName != "" {
+		existing.ApproverName = r.ApproverName
+	}
+	return existing, nil
 }
 
 func (m *mockRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	// 阻断-1：必须返回深拷贝，否则调用方在 service.go:824 读取
+	// h.Status / h.ApproverID 时与 UpdateApprovalRecord 中的
+	// existing.Status = r.Status 写入存在数据竞争。生产实现的
+	// EntRepository.GetApprovalHistory 走的是 Ent 的 SELECT 路径，
+	// 读到的也是 *ent.ApprovalRecord，但 Ent 自身的查询结果有独立副本，
+	// 不会与正在被 Update 修改的同一行共享可变状态。
 	var result []*ApprovalRecord
 	for _, a := range m.approvals {
 		if a.ChangeID == changeID {
-			result = append(result, a)
+			result = append(result, cloneApprovalRecord(a))
 		}
 	}
 	return result, nil
+}
+
+func cloneApprovalRecord(a *ApprovalRecord) *ApprovalRecord {
+	if a == nil {
+		return nil
+	}
+	cp := *a
+	if a.ApproverID != 0 {
+		// int 为值类型，不需要再深拷贝
+	}
+	if a.Comment != nil {
+		c := *a.Comment
+		cp.Comment = &c
+	}
+	if a.ApprovedAt != nil {
+		t := *a.ApprovedAt
+		cp.ApprovedAt = &t
+	}
+	if a.Levels != nil {
+		cp.Levels = append([]int(nil), a.Levels...)
+	}
+	return &cp
 }
 
 func (m *mockRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {

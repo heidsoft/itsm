@@ -2,6 +2,7 @@ package change
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -16,6 +17,21 @@ import (
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
+)
+
+// 领域级哨兵错误：用于让 HTTP 层把「业务规则拒绝」与「系统内部故障」区分开。
+// 此前 TransitionStatus 的所有失败都被统一包装成 500，导致状态机冲突、
+// 非审批人越权等**预期内的业务拒绝**被误报为服务端故障，污染告警且
+// 客户端无法据此重试。调用方请用 errors.Is 判定。
+var (
+	// ErrChangeNotFound 变更不存在或不属于当前租户（→ 404）。
+	ErrChangeNotFound = errors.New("change not found")
+	// ErrInvalidTransition 状态机不允许该转换（→ 409 Conflict）。
+	ErrInvalidTransition = errors.New("invalid state transition")
+	// ErrNotApprover 当前用户不是该变更的待办审批人（→ 403）。
+	ErrNotApprover = errors.New("user is not an approver of this change")
+	// ErrConcurrentModification 状态已被并发请求抢先修改（→ 409 Conflict）。
+	ErrConcurrentModification = errors.New("change was modified concurrently")
 )
 
 type Service struct {
@@ -787,12 +803,12 @@ func inferITILPractices(summary *dto.ChangeCMDBImpactSummary) []string {
 func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus, comment string) (*Change, error) {
 	c, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("change not found")
+		return nil, fmt.Errorf("%w: id=%d", ErrChangeNotFound, id)
 	}
 
 	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)
 	if !service.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
-		return nil, fmt.Errorf("无效的状态转换: 从 '%s' 到 '%s'", c.Status, targetStatus)
+		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
 	// For approval actions, verify user is the approver
@@ -811,7 +827,17 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			}
 		}
 		if !isApprover {
-			return nil, fmt.Errorf("用户不是该变更的审批人，无权执行此操作")
+			// 找不到该用户的 pending 审批记录有两种截然不同的成因，必须区分：
+			//  1. 用户确实不是审批人 → 403（ErrNotApprover）
+			//  2. 并发场景下审批记录已被抢先者消费 → 409（ErrConcurrentModification）
+			// 判据：重新读取变更状态。若与本次校验时的快照不同，说明状态已被
+			// 其他请求推进，此时返回"不是审批人"会误导调用方（用户其实是审批人，
+			// 只是来晚了），也会让运维误判为权限配置问题。
+			if fresh, getErr := s.repo.Get(ctx, id, tenantID); getErr == nil && fresh.Status != c.Status {
+				return nil, fmt.Errorf("%w: 审批已被并发处理（状态 '%s' → '%s'）",
+					ErrConcurrentModification, c.Status, fresh.Status)
+			}
+			return nil, fmt.Errorf("%w: user_id=%d", ErrNotApprover, userID)
 		}
 
 		// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
@@ -902,9 +928,14 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		defer tx.Rollback()
 
 		if _, updateErr := tx.Change.UpdateOneID(c.ID).
-			Where(change.TenantID(tenantID)).
+			Where(change.TenantIDEQ(tenantID), change.StatusEQ(c.Status)).
 			SetStatus(targetStatus).
 			Save(ctx); updateErr != nil {
+			// StatusEQ 未命中 → 状态已被并发请求抢先推进，属预期内的业务冲突。
+			if ent.IsNotFound(updateErr) {
+				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+					ErrConcurrentModification, c.Status, targetStatus)
+			}
 			return nil, fmt.Errorf("failed to update change status: %w", updateErr)
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
@@ -916,6 +947,20 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 		c.Status = targetStatus
 		return c, nil
+	}
+
+	// 非终态：CAS 推进状态（乐观锁），再回写其余字段。
+	// 原先直接 repo.Update 存在 TOCTOU 竞态：并发请求同时读到同一旧状态、
+	// 各自通过状态机校验后都写入成功，导致 N 个请求全部返回 200，
+	// 客户端与审计无法区分"谁真正推进了状态"。CAS 把并发窗口收敛到一次
+	// 条件更新，抢先者成功、落后者收到 409。
+	ok, err := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update change status: %w", err)
+	}
+	if !ok {
+		return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+			ErrConcurrentModification, c.Status, targetStatus)
 	}
 
 	c.Status = targetStatus
