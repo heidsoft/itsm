@@ -19,18 +19,18 @@ describe('SystemConfigAPI', () => {
 
   describe('getConfigs', () => {
     it('should get configs with params', async () => {
-      const expected = { configs: [], total: 0 };
+      const expected = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(expected);
-      const res = await SystemConfigAPI.getConfigs({ page: 1, pageSize: 10 } as any);
+      const res = await SystemConfigAPI.getConfigs({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs', { page: 1, pageSize: 10 });
       expect(res).toEqual(expected);
     });
 
     it('should get configs without params', async () => {
-      const expected = { configs: [], total: 0 };
+      const expected = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(expected);
       const res = await SystemConfigAPI.getConfigs();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs', undefined);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs', { pageSize: 1000 });
       expect(res).toEqual(expected);
     });
   });
@@ -57,10 +57,10 @@ describe('SystemConfigAPI', () => {
 
   describe('updateConfig', () => {
     it('should update config', async () => {
-      const data = { value: 'New ITSM' };
+      const data = { key: 'site_name', value: 'New ITSM' };
       const expected = { id: 1, key: 'site_name', value: 'New ITSM' };
       mockPut.mockResolvedValue(expected);
-      const res = await SystemConfigAPI.updateConfig(1, data as any);
+      const res = await SystemConfigAPI.updateConfig(1, data);
       expect(mockPut).toHaveBeenCalledWith('/api/v1/system-configs/1', data);
       expect(res).toEqual(expected);
     });
@@ -68,7 +68,7 @@ describe('SystemConfigAPI', () => {
 
   describe('updateConfigs', () => {
     it('should batch update configs', async () => {
-      const data = [{ id: 1, value: 'A' }, { id: 2, value: 'B' }] as any;
+      const data = [{ key: 'siteName', value: 'A' }, { key: 'siteDescription', value: 'B' }];
       const expected = [{ id: 1, value: 'A' }, { id: 2, value: 'B' }];
       mockPut.mockResolvedValue(expected);
       const res = await SystemConfigAPI.updateConfigs(data);

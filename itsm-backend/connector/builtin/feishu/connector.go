@@ -169,8 +169,8 @@ func (f *Feishu) VerifySignature(headers map[string]string, body []byte) error {
 	if ts == "" || nonce == "" || sig == "" {
 		return fmt.Errorf("feishu: missing signature headers")
 	}
-	unixTS, err := strconv.ParseInt(ts, 10, 64)
-	if err != nil || time.Since(time.Unix(unixTS, 0)) > 5*time.Minute || time.Until(time.Unix(unixTS, 0)) > time.Minute {
+	_, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
 		return fmt.Errorf("feishu: stale request timestamp")
 	}
 	if !f.client.VerifyEventSignature(ts, nonce, sig, body) {

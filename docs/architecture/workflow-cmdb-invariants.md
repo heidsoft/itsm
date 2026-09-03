@@ -113,6 +113,20 @@ client.ProcessInstance.UpdateOne(instance).SetVariables(vars).Save(ctx)
 
 ---
 
+### 2.6 影响分析的关联资源必须独立校验租户
+
+根 CI 通过租户检查，不代表其历史关联都可信。受影响工单、事件查询必须分别包含 tenant 条件；图中的每条边必须连接已加载的本租户节点，不能暴露不可见 CI 的 ID。
+
+回归：`handlers/cmdb/production_topology_test.go` 中的 `TestCIImpactAnalysis_FiltersForeignAssociations` 通过真实 Handler 和数据库覆盖正常关联及跨租户异常关联。
+
+### 2.7 图查询错误必须保持稳定语义
+
+根 CI 不存在与跨租户不可见统一返回 HTTP 404 / code 4004；数据库故障返回 HTTP 500 / code 5001，响应不得包含原始 SQL/Ent 错误。
+
+回归：同文件的 `TestCIGraphLookupErrors`。本次变更记录见 [2026-09-03 评审](../reviews/workflow-cmdb-review-2026-09-03.md)。
+
+---
+
 ## 3. 引用与变更
 
 - 新增不变量必须在此文件登记，并在对应测试文件中添加 `TestInvariant_<Name>`。

@@ -162,11 +162,15 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	task, taskErr := c.processEngine.TaskService().GetTask(workflowCtx, taskID)
-	if taskErr != nil {
-		if id, parseErr := strconv.Atoi(taskID); parseErr == nil {
-			task, taskErr = c.processEngine.TaskService().GetTaskByID(workflowCtx, id)
-		}
+	// Use the same ID interpretation as GetTask and CompleteTask: numeric IDs
+	// are database primary keys, not BPMN task IDs belonging to another task.
+	id, parseErr := strconv.Atoi(taskID)
+	var task *ent.ProcessTask
+	var taskErr error
+	if parseErr == nil {
+		task, taskErr = c.processEngine.TaskService().GetTaskByID(workflowCtx, id)
+	} else {
+		task, taskErr = c.processEngine.TaskService().GetTask(workflowCtx, taskID)
 	}
 	if taskErr != nil {
 		common.NotFound(ctx, "审批任务不存在")

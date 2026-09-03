@@ -2,6 +2,7 @@ package incident
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -73,19 +74,19 @@ func NewService(repo Repository, productionSvc *service.IncidentService, monitor
 }
 
 func (s *Service) Acknowledge(ctx context.Context, id, userID, tenantID int) error {
-	return s.productionService.AcknowledgeIncident(ctx, id, userID, tenantID)
+	return lifecycleError(s.productionService.AcknowledgeIncident(ctx, id, userID, tenantID))
 }
 
 func (s *Service) Resolve(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
-	return s.productionService.ResolveIncident(ctx, id, userID, tenantID, resolution, rootCause)
+	return lifecycleError(s.productionService.ResolveIncident(ctx, id, userID, tenantID, resolution, rootCause))
 }
 
 func (s *Service) Close(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
-	return s.productionService.CloseIncident(ctx, id, userID, tenantID, closeNotes)
+	return lifecycleError(s.productionService.CloseIncident(ctx, id, userID, tenantID, closeNotes))
 }
 
 func (s *Service) Reopen(ctx context.Context, id, userID, tenantID int) error {
-	return s.productionService.ReopenIncident(ctx, id, userID, tenantID)
+	return lifecycleError(s.productionService.ReopenIncident(ctx, id, userID, tenantID))
 }
 
 func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) error {
@@ -94,15 +95,15 @@ func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) erro
 }
 
 func (s *Service) Delete(ctx context.Context, id, tenantID int) error {
-	return s.productionService.DeleteIncident(ctx, id, tenantID)
+	return lifecycleError(s.productionService.DeleteIncident(ctx, id, tenantID))
 }
 
 func (s *Service) PauseSLA(_ context.Context, _, _ int) error {
-	return nil
+	return common.NewBusinessError(common.ServiceUnavailableCode, "事件 SLA 暂停尚未接入计时服务", "")
 }
 
 func (s *Service) ResumeSLA(_ context.Context, _, _ int) error {
-	return nil
+	return common.NewBusinessError(common.ServiceUnavailableCode, "事件 SLA 恢复尚未接入计时服务", "")
 }
 
 func (s *Service) CreateIncidentEvent(ctx context.Context, req *dto.CreateIncidentEventRequest, tenantID int) (*dto.IncidentEventResponse, error) {
@@ -413,4 +414,22 @@ func (s *Service) CreateIncidentComment(ctx context.Context, incidentID, tenantI
 		TenantID:    tenantID,
 		OccurredAt:  time.Now(),
 	})
+}
+
+// lifecycleError preserves domain failure semantics without exposing provider errors.
+func lifecycleError(err error) error {
+	switch {
+	case errors.Is(err, service.ErrIncidentInvalidTransition):
+		return common.NewBusinessError(common.ConflictCode, "当前事件状态不允许此操作", "")
+	case errors.Is(err, service.ErrIncidentVersionConflict):
+		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
+	case errors.Is(err, service.ErrIncidentResolutionRequired):
+		return common.NewBusinessError(common.ParamErrorCode, "请填写解决方案", "")
+	case errors.Is(err, service.ErrIncidentCloseNotesRequired):
+		return common.NewBusinessError(common.ParamErrorCode, "请填写关闭说明", "")
+	case errors.Is(err, service.ErrIncidentNotFound):
+		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
+	default:
+		return err
+	}
 }

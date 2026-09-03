@@ -34,6 +34,10 @@ type workflowCommandCreator interface {
 	CreateWithWorkflowCommand(context.Context, *Change) (*Change, error)
 }
 
+type atomicApprovalSubmitter interface {
+	SubmitForApprovalWithWorkflow(context.Context, int, int, []ApprovalLevelPlan, string, func(*ent.Client) error) error
+}
+
 func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
 	svc := &Service{
 		repo:          repo,
@@ -237,20 +241,22 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		plan = []ApprovalLevelPlan{{Level: 1, ApprovalType: "serial", Threshold: 1, Required: true, ApproverIDs: ids}}
 	}
 
-	// 4. 提交（写入 change_approval_chains，保留层级与 quorum 元数据）
-	if err := s.repo.SubmitForApproval(ctx, changeID, tenantID, plan, req.Comment); err != nil {
-		s.logger.Warnw("Failed to atomically submit change", "error", err, "change_id", changeID)
-		return nil, fmt.Errorf("提交变更审批失败: %w", err)
+	// 4. 在同一数据库事务中推进 BPMN 并提交审批状态/审批链/outbox。
+	// BPMN 失败时 draft 保持不变；后续任一业务写入失败也会回滚 BPMN 状态。
+	var submitErr error
+	if submitter, ok := s.repo.(atomicApprovalSubmitter); ok && s.approvalBridge != nil {
+		submitErr = submitter.SubmitForApprovalWithWorkflow(ctx, changeID, tenantID, plan, req.Comment, func(txc *ent.Client) error {
+			_, err := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+				ctx, txc, tenantID, submitterID, string(dto.BusinessTypeChange), changeID, nil, 1,
+			)
+			return err
+		})
+	} else {
+		submitErr = s.repo.SubmitForApproval(ctx, changeID, tenantID, plan, req.Comment)
 	}
-
-	// P0-2：提交审批后同步完成流程中的“变更评估”任务，推进到审批网关。
-	// 这一段失败不回滚已提交的业务审批（后续动作会自愈推进流程），仅记录告警。
-	if s.approvalBridge != nil {
-		if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
-			ctx, tenantID, submitterID, string(dto.BusinessTypeChange), changeID, nil, 1,
-		); bridgeErr != nil {
-			s.logger.Warnw("提交变更后推进流程任务失败（非致命，后续动作自愈）", "error", bridgeErr, "change_id", changeID)
-		}
+	if submitErr != nil {
+		s.logger.Warnw("Failed to atomically submit change", "error", submitErr, "change_id", changeID)
+		return nil, fmt.Errorf("提交变更审批失败: %w", submitErr)
 	}
 
 	// 审批记录、审批链和 notification.deliver 命令已由仓储在同一事务提交。

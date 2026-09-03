@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -13,6 +14,8 @@ import (
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/internal/commandbus"
+
+	entsql "entgo.io/ent/dialect/sql"
 )
 
 type EntRepository struct {
@@ -400,11 +403,37 @@ func (r *EntRepository) SubmitForApproval(
 	plan []ApprovalLevelPlan,
 	comment string,
 ) error {
+	return r.SubmitForApprovalWithWorkflow(ctx, changeID, tenantID, plan, comment, nil)
+}
+
+// SubmitForApprovalWithWorkflow 在同一底层数据库事务内推进 BPMN 并提交变更审批。
+// workflow 收到的 Ent client 绑定到当前 sql.Tx，禁止在回调内自行提交事务。
+func (r *EntRepository) SubmitForApprovalWithWorkflow(
+	ctx context.Context,
+	changeID, tenantID int,
+	plan []ApprovalLevelPlan,
+	comment string,
+	workflow func(*ent.Client) error,
+) error {
+	if r.db == nil {
+		return fmt.Errorf("change approval transaction database is unavailable")
+	}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+
+	if workflow != nil {
+		dialect, err := sqlDialect(r.db)
+		if err != nil {
+			return err
+		}
+		txClient := ent.NewClient(ent.Driver(entsql.NewDriver(dialect, entsql.Conn{ExecQuerier: tx})))
+		if err := workflow(txClient); err != nil {
+			return fmt.Errorf("advance BPMN workflow: %w", err)
+		}
+	}
 
 	result, err := tx.ExecContext(ctx,
 		`UPDATE changes SET status = 'pending', updated_at = $1
@@ -464,6 +493,18 @@ func (r *EntRepository) SubmitForApproval(
 		}
 	}
 	return tx.Commit()
+}
+
+func sqlDialect(db *sql.DB) (string, error) {
+	driverType := fmt.Sprintf("%T", db.Driver())
+	switch {
+	case strings.Contains(driverType, "sqlite3"):
+		return "sqlite3", nil
+	case strings.Contains(driverType, "pq") || strings.Contains(driverType, "pgx"):
+		return "postgres", nil
+	default:
+		return "", fmt.Errorf("unsupported database driver %s", driverType)
+	}
 }
 
 func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {

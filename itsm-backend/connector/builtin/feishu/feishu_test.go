@@ -1,6 +1,7 @@
 package feishu
 
 import (
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"testing"
@@ -11,8 +12,7 @@ import (
 func TestVerifyEventSignature(t *testing.T) {
 	c := NewClient("", "app", "sec", "", "ek1")
 	ts, nonce, body := "1700000000", "abc123", []byte(`{"hello":"world"}`)
-	h := sha256.New()
-	h.Write([]byte("ek1"))
+	h := hmac.New(sha256.New, []byte("ek1"))
 	h.Write([]byte(ts))
 	h.Write([]byte(nonce))
 	h.Write(body)

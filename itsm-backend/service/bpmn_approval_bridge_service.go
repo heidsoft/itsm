@@ -128,13 +128,23 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 //   - (false, nil) 无关联运行中流程实例或无待办用户任务，调用方按旧逻辑处理；
 //   - (false, err) 存在待办任务但推进失败，调用方应中止业务动作。
 func (b *BPMNApprovalBridge) AdvanceBusinessWorkflow(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, variables map[string]interface{}, maxSteps int) (bool, error) {
+	return b.advanceBusinessWorkflow(ctx, b.client, tenantID, actorUserID, businessType, businessID, variables, maxSteps, false)
+}
+
+// AdvanceBusinessWorkflowWithClient 使用调用方事务绑定的 Ent client 推进流程。
+// 它不创建或提交事务，任何失败都由外层事务连同业务状态一起回滚。
+func (b *BPMNApprovalBridge) AdvanceBusinessWorkflowWithClient(ctx context.Context, txc *ent.Client, tenantID, actorUserID int, businessType string, businessID int, variables map[string]interface{}, maxSteps int) (bool, error) {
+	return b.advanceBusinessWorkflow(ctx, txc, tenantID, actorUserID, businessType, businessID, variables, maxSteps, true)
+}
+
+func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client *ent.Client, tenantID, actorUserID int, businessType string, businessID int, variables map[string]interface{}, maxSteps int, reuseTransaction bool) (bool, error) {
 	if tenantID <= 0 || businessID <= 0 || maxSteps <= 0 {
 		return false, nil
 	}
 
 	handled := false
 	for step := 0; step < maxSteps; step++ {
-		_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
+		_, task, err := b.findPendingApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
 		if err != nil {
 			return handled, err
 		}
@@ -145,9 +155,15 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkflow(ctx context.Context, tenant
 		workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 		workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
 
-		engine := NewCustomProcessEngine(b.client, b.logger)
-		if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
-			return handled, fmt.Errorf("推进流程任务失败: %w", err)
+		engine := NewCustomProcessEngine(client, b.logger)
+		var completeErr error
+		if customEngine, ok := engine.(*CustomProcessEngine); reuseTransaction && ok {
+			completeErr = customEngine.CompleteTaskWithClient(workflowCtx, client, task.TaskID, variables)
+		} else {
+			completeErr = engine.CompleteTask(workflowCtx, task.TaskID, variables)
+		}
+		if completeErr != nil {
+			return handled, fmt.Errorf("推进流程任务失败: %w", completeErr)
 		}
 		handled = true
 	}
@@ -159,8 +175,12 @@ func (b *BPMNApprovalBridge) AdvanceBusinessWorkflow(ctx context.Context, tenant
 // 无关联实例或无待办任务时返回 (nil, nil, nil)，调用方回退旧逻辑。
 // 待办状态包含 delegated，保证委派后的任务仍可被新审批人通过桥接完成。
 func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
+	return b.findPendingApprovalTaskWithClient(ctx, b.client, tenantID, businessType, businessID)
+}
+
+func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
 	businessKey := fmt.Sprintf("%s:%d", strings.ToLower(businessType), businessID)
-	instance, err := b.client.ProcessInstance.Query().
+	instance, err := client.ProcessInstance.Query().
 		Where(
 			processinstance.BusinessKey(businessKey),
 			processinstance.TenantID(tenantID),
@@ -175,7 +195,7 @@ func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenant
 		return nil, nil, fmt.Errorf("查询业务关联流程实例失败: %w", err)
 	}
 
-	task, err := b.client.ProcessTask.Query().
+	task, err := client.ProcessTask.Query().
 		Where(
 			processtask.ProcessInstanceID(instance.ID),
 			processtask.TenantID(tenantID),

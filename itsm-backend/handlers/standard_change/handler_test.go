@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/enttest"
+	changedomain "itsm-backend/handlers/change"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -37,7 +39,7 @@ func newTestClient(t *testing.T) *ent.Client {
 func setupTestRouter(t *testing.T, client *ent.Client, userID, tenantID int) (*gin.Engine, *Handler) {
 	gin.SetMode(gin.TestMode)
 	logger := zaptest.NewLogger(t).Sugar()
-	h := NewHandler(client, logger)
+	h := NewHandler(NewService(client, changedomain.NewService(changedomain.NewEntRepository(client, nil), client, zaptest.NewLogger(t).Sugar(), nil)), logger)
 
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -93,11 +95,13 @@ func doRequest(r *gin.Engine, method, path string, body interface{}) *httptest.R
 // ===================== toResponse conversion =====================
 
 func TestToResponse_Nil(t *testing.T) {
-	assert.Nil(t, toResponse(nil))
+	h := NewHandler(NewService(newTestClient(t), nil), zaptest.NewLogger(t).Sugar())
+	assert.Nil(t, h.toResponse(nil))
 }
 
 func TestToResponse_MapsAllFields(t *testing.T) {
-	sc := createTemplate(t, newTestClient(t), 1, 7, func(b *ent.StandardChangeCreate) {
+	client := newTestClient(t)
+	sc := createTemplate(t, client, 1, 7, func(b *ent.StandardChangeCreate) {
 		b.SetDescription("desc").
 			SetJustification("reason").
 			SetExpectedDuration(45).
@@ -108,7 +112,8 @@ func TestToResponse_MapsAllFields(t *testing.T) {
 			SetIsActive(false)
 	})
 
-	resp := toResponse(sc)
+	h := NewHandler(NewService(client, changedomain.NewService(changedomain.NewEntRepository(client, nil), client, zaptest.NewLogger(t).Sugar(), nil)), zaptest.NewLogger(t).Sugar())
+	resp := h.toResponse(sc)
 	require.NotNil(t, resp)
 	assert.Equal(t, sc.ID, resp.ID)
 	assert.Equal(t, "默认模板", resp.Title)
@@ -433,8 +438,8 @@ func TestInstantiateStandardChange_Defaults(t *testing.T) {
 	w := doRequest(r, "POST", "/api/v1/standard-changes/"+strconv.Itoa(tmpl.ID)+"/instantiate", dto.InstantiateStandardChangeRequest{})
 	resp, data := decodeResponse(t, w)
 	assert.Equal(t, common.SuccessCode, resp.Code)
-	require.Contains(t, data, "change_id")
-	changeID := int(data["change_id"].(float64))
+	require.Contains(t, data, "changeId")
+	changeID := int(data["changeId"].(float64))
 
 	// Verify the Change was created from the template with the expected mapping.
 	created, err := client.Change.Query().
@@ -467,8 +472,8 @@ func TestInstantiateStandardChange_Overrides(t *testing.T) {
 	w := doRequest(r, "POST", "/api/v1/standard-changes/"+strconv.Itoa(tmpl.ID)+"/instantiate", req)
 	resp, data := decodeResponse(t, w)
 	assert.Equal(t, common.SuccessCode, resp.Code)
-	require.Contains(t, data, "change_id")
-	changeID := int(data["change_id"].(float64))
+	require.Contains(t, data, "changeId")
+	changeID := int(data["changeId"].(float64))
 
 	created, err := client.Change.Query().
 		Where(change.ID(changeID), change.TenantID(1)).
@@ -526,3 +531,34 @@ func TestStandardChange_TenantIsolation(t *testing.T) {
 
 // strPtr is a small helper for building optional-string update requests.
 func strPtr(s string) *string { return &s }
+
+func TestInstantiateStandardChangeWorkflowCommandAtomicity(t *testing.T) {
+	for _, failEnqueue := range []bool{false, true} {
+		t.Run(strconv.FormatBool(failEnqueue), func(t *testing.T) {
+			client := newTestClient(t)
+			tmpl := createTemplate(t, client, 1, 1, nil)
+			if failEnqueue {
+				client.OperationalCommand.Use(func(next ent.Mutator) ent.Mutator {
+					return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+						return nil, fmt.Errorf("injected outbox failure")
+					})
+				})
+			}
+			r, _ := setupTestRouter(t, client, 1, 1)
+			w := doRequest(r, "POST", "/api/v1/standard-changes/"+strconv.Itoa(tmpl.ID)+"/instantiate", dto.InstantiateStandardChangeRequest{})
+			response, data := decodeResponse(t, w)
+			if failEnqueue {
+				require.Equal(t, http.StatusInternalServerError, w.Code)
+				require.Equal(t, common.InternalErrorCode, response.Code)
+				require.Zero(t, client.Change.Query().CountX(context.Background()))
+				require.Zero(t, client.OperationalCommand.Query().CountX(context.Background()))
+				return
+			}
+			require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+			command := client.OperationalCommand.Query().OnlyX(context.Background())
+			require.Equal(t, 1, command.TenantID)
+			require.Equal(t, int(data["changeId"].(float64)), command.AggregateID)
+			require.NotContains(t, data, "change_id")
+		})
+	}
+}

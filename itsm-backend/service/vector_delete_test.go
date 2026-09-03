@@ -3,14 +3,29 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
+
+	connectorVector "itsm-backend/connector/vector"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+type failingDeleteVectorStore struct{ err error }
+
+func (s *failingDeleteVectorStore) Search(context.Context, connectorVector.SearchRequest) (connectorVector.SearchResponse, error) {
+	return connectorVector.SearchResponse{}, nil
+}
+func (s *failingDeleteVectorStore) Insert(context.Context, connectorVector.InsertRequest) error {
+	return nil
+}
+func (s *failingDeleteVectorStore) Delete(context.Context, []string) error { return s.err }
+func (s *failingDeleteVectorStore) Ping(context.Context) error             { return nil }
+func (s *failingDeleteVectorStore) Close() error                           { return nil }
 
 // newVectorsTestDB 建立 sqlite 内存库的 vectors 简化表。
 // 只含 Delete 所需列（tenant_id/object_type/object_id），pgvector 列在单测中不可用。
@@ -91,7 +106,7 @@ func TestRAGService_RemoveArticle(t *testing.T) {
 	require.NoError(t, rag.RemoveArticle(ctx, 1, 7))
 }
 
-func TestRAGService_RemoveArticle_DisabledOrNilVectors(t *testing.T) {
+func TestRAGService_RemoveArticle_NilVectors(t *testing.T) {
 	ctx := context.Background()
 
 	// vectors 为 nil（如关键字降级模式）→ 静默成功
@@ -101,11 +116,22 @@ func TestRAGService_RemoveArticle_DisabledOrNilVectors(t *testing.T) {
 	})
 	require.NoError(t, ragNoVectors.RemoveArticle(ctx, 1, 7))
 
-	// useVector=false → 静默成功
+	// useVector=false 仅表示检索降级；已有历史向量仍必须清理。
 	db := newVectorsTestDB(t)
 	ragDisabled := NewRAGService(nil, NewVectorStore(db), nil, zaptest.NewLogger(t).Sugar(), RAGConfig{
 		UseVector:  false,
 		UseKeyword: true,
 	})
+	seedVector(t, db, 1, "kb", 7, "降级前遗留向量")
 	require.NoError(t, ragDisabled.RemoveArticle(ctx, 1, 7))
+	assert.Equal(t, 0, countVectors(t, db))
+}
+
+func TestRAGService_RemoveArticle_ReportsConnectorFailure(t *testing.T) {
+	rag := NewRAGService(nil, nil, nil, zaptest.NewLogger(t).Sugar(), RAGConfig{UseKeyword: true})
+	rag.SetVectorStore(&failingDeleteVectorStore{err: errors.New("backend unavailable")})
+
+	err := rag.RemoveArticle(context.Background(), 8, 19)
+	require.ErrorContains(t, err, "connector vector delete")
+	require.ErrorContains(t, err, "backend unavailable")
 }

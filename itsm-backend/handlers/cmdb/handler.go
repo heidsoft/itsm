@@ -165,6 +165,11 @@ func (h *Handler) GetCapabilities(c *gin.Context) {
 	}}})
 }
 
+func (h *Handler) GetDiscoveryHealth(c *gin.Context) {
+	health := h.svc.GetDiscoveryHealth()
+	common.Success(c, health)
+}
+
 // toCIDTO maps domain CI to DTO
 func toCIDTO(ci *ConfigurationItem) *dto.CIResponse {
 	if ci == nil {

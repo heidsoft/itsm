@@ -28,10 +28,17 @@ type SystemConfigResponse struct {
 
 // SystemConfigListResponse 列表响应
 type SystemConfigListResponse struct {
-	Configs []SystemConfigResponse `json:"configs"`
-	Total   int                    `json:"total"`
-	Page    int                    `json:"page"`
-	Size    int                    `json:"size"`
+	Items      []SystemConfigResponse `json:"items"`
+	Total      int                    `json:"total"`
+	Page       int                    `json:"page"`
+	PageSize   int                    `json:"pageSize"`
+	TotalPages int                    `json:"totalPages"`
+}
+
+type ListSystemConfigsRequest struct {
+	Page     int    `form:"page" binding:"min=1"`
+	PageSize int    `form:"pageSize" binding:"min=1,max=1000"`
+	Category string `form:"category"`
 }
 
 // UpdateSystemConfigRequest 更新请求

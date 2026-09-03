@@ -15,7 +15,7 @@ import (
 // 但为保持行为契约原样保留旧实现）。
 func tenantID(c *gin.Context) (int, bool) {
 	tid, err := middleware.GetTenantID(c)
-	if err != nil || tid == 0 {
+	if err != nil || tid <= 0 {
 		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return 0, false
 	}
@@ -29,9 +29,12 @@ func (h *Handler) ListConfigs(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	category := c.Query("category")
+	req := dto.ListSystemConfigsRequest{Page: 1, PageSize: 20}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.ParamError(c, "分页参数错误")
+		return
+	}
+	page, pageSize, category := req.Page, req.PageSize, req.Category
 
 	configs, total, err := h.configService.ListSystemConfigs(c.Request.Context(), tid, category, page, pageSize)
 	if err != nil {
@@ -56,10 +59,11 @@ func (h *Handler) ListConfigs(c *gin.Context) {
 	}
 
 	common.Success(c, dto.SystemConfigListResponse{
-		Configs: configResponses,
-		Total:   total,
-		Page:    page,
-		Size:    pageSize,
+		Items:      configResponses,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
 	})
 }
 

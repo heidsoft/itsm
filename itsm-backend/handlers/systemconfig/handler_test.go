@@ -84,17 +84,17 @@ func TestHandler_InitDefaultConfigs_ThenList(t *testing.T) {
 	var listResp struct {
 		Code int `json:"code"`
 		Data struct {
-			Configs []map[string]interface{} `json:"configs"`
-			Total   int                      `json:"total"`
-			Page    int                      `json:"page"`
-			Size    int                      `json:"size"`
+			Items    []map[string]interface{} `json:"items"`
+			Total    int                      `json:"total"`
+			Page     int                      `json:"page"`
+			PageSize int                      `json:"pageSize"`
 		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w2.Body.Bytes(), &listResp))
 	assert.Equal(t, 0, listResp.Code)
 	assert.Greater(t, listResp.Data.Total, 0, "初始化后应至少有一条默认配置")
 	assert.Equal(t, 1, listResp.Data.Page)
-	assert.Equal(t, 20, listResp.Data.Size)
+	assert.Equal(t, 20, listResp.Data.PageSize)
 }
 
 func TestHandler_GetConfig_InvalidID(t *testing.T) {

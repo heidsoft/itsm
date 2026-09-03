@@ -48,6 +48,7 @@ func SetupCMDBRoutes(
 	cmdb := auth.Group("/cmdb")
 	{
 		cmdb.GET("/capabilities", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetCapabilities)
+		cmdb.GET("/discovery/health", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetDiscoveryHealth)
 
 		// 关系类型元数据
 		cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), config.CMDBHandler.ListRelationshipTypes)

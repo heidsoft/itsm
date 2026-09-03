@@ -117,7 +117,7 @@ export class StandardChangeApi {
   }
 
   // 从模板实例化变更
-  static async instantiate(id: number, data?: InstantiateStandardChangeRequest): Promise<{ changeId: number }> {
-    return httpClient.post<{ changeId: number }>(`/api/v1/standard-changes/${id}/instantiate`, data || {});
+  static async instantiate(id: number, data?: InstantiateStandardChangeRequest): Promise<{ changeId: number; changeNumber: string }> {
+    return httpClient.post<{ changeId: number; changeNumber: string }>(`/api/v1/standard-changes/${id}/instantiate`, data || {});
   }
 }

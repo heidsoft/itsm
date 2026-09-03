@@ -19,6 +19,7 @@ type Runner struct {
 	client   *ent.Client
 	logger   *zap.SugaredLogger
 	registry *Registry
+	resolver TenantSecretResolver
 }
 
 // NewRunner 构造 Runner
@@ -29,6 +30,8 @@ func NewRunner(client *ent.Client, logger *zap.SugaredLogger) *Runner {
 func NewRunnerWithRegistry(client *ent.Client, logger *zap.SugaredLogger, registry *Registry) *Runner {
 	return &Runner{client: client, logger: logger, registry: registry}
 }
+
+func (r *Runner) SetTenantSecretResolver(resolver TenantSecretResolver) { r.resolver = resolver }
 
 // RunAll 执行全量云资源发现
 func (r *Runner) RunAll(ctx context.Context, tenantID int, opts ...Option) error {
@@ -65,6 +68,17 @@ func (r *Runner) RunAll(ctx context.Context, tenantID int, opts ...Option) error
 }
 
 func (r *Runner) runAccount(ctx context.Context, account *ent.CloudAccount, cfg *Config) error {
+	if r.resolver == nil {
+		return fmt.Errorf("tenant secret resolver is not configured")
+	}
+	credential, err := r.resolver.Resolve(ctx, account.TenantID, account.CredentialRef)
+	if err != nil {
+		return fmt.Errorf("resolve tenant cloud credential: %w", err)
+	}
+	// Never persist resolved material: adapters receive a request-local copy.
+	resolvedAccount := *account
+	resolvedAccount.CredentialRef = credential
+	account = &resolvedAccount
 	if r.registry == nil {
 		return fmt.Errorf("cloud adapter registry is not configured")
 	}

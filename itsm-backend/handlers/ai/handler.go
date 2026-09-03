@@ -33,9 +33,12 @@ func (h *Handler) ListTools(c *gin.Context) {
 	role := c.GetString("role")
 	tenantID := c.GetInt("tenant_id")
 
-	// Flag 未开启或无 ent client 时，返回全部工具（兼容历史行为）
-	if !IsToolRBACEnabled() || h.svc.entClient == nil || role == "" || role == "super_admin" {
-		common.Success(c, gin.H{"tools": allTools})
+	if tenantID <= 0 || c.GetInt("user_id") <= 0 || role == "" {
+		common.AuthFailed(c, "缺少有效身份上下文")
+		return
+	}
+	if h.svc.entClient == nil || h.svc.tools == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
 		return
 	}
 
@@ -60,13 +63,17 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
+	if tenantID <= 0 {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 
 	// P2-6: 校验工具存在性；写工具（!ReadOnly）交由 ExecuteTool 统一走审批流
 	// （创建 pending invocation + 入队等待人工审批），与聊天路径行为一致。
+	if h.svc.tools == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "AI 工具注册表未就绪")
+		return
+	}
 	toolDef := h.svc.tools.GetTool(req.Name)
 	if toolDef == nil {
 		common.Fail(c, common.UnknownToolCode, "unknown tool: "+req.Name)
@@ -78,23 +85,38 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 	}
 
 	userID := c.GetInt("user_id")
+	if userID <= 0 {
+		common.AuthFailed(c, "用户信息缺失")
+		return
+	}
 	role := c.GetString("role")
 
-	res, _, err := h.svc.ExecuteTool(c.Request.Context(), userID, tenantID, role, req.Name, req.Args)
+	res, invocationID, err := h.svc.ExecuteTool(c.Request.Context(), userID, tenantID, role, req.Name, req.Args)
 	if err != nil {
+		if errors.Is(err, ErrToolUnavailable) {
+			common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
+			return
+		}
 		// P2-6: 区分权限拒绝与未知工具的错误码
 		if errors.Is(err, ErrToolPermissionDenied) {
-			common.FailWithErr(c, err, "操作失败")
+			common.Fail(c, common.ToolPermissionDeniedCode, "无权执行该工具")
 			return
 		}
 		if errors.Is(err, ErrUnknownTool) {
-			common.FailWithErr(c, err, "操作失败")
+			common.Fail(c, common.UnknownToolCode, "工具不存在")
 			return
 		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
+	if invocationID > 0 {
+		common.Success(c, dto.ToolExecutionResponse{
+			Status: "pending", Summary: "工具操作已提交审批", InvocationID: invocationID,
+			ApprovalState: "pending", NextActions: []string{"等待审批后执行"}, Artifacts: []string{},
+		})
+		return
+	}
 	common.Success(c, gin.H{
 		"status":      "success",
 		"summary":     "tool executed",
@@ -771,18 +793,18 @@ func (h *Handler) ListToolInvocations(c *gin.Context) {
 	items := make([]gin.H, 0, len(invs))
 	for _, inv := range invs {
 		items = append(items, gin.H{
-			"id":             inv.ID,
-			"toolName":       inv.ToolName,
-			"arguments":      inv.Arguments,
-			"status":         inv.Status,
-			"needsApproval":  inv.NeedsApproval,
-			"approvalState":  inv.ApprovalState,
-			"approvalReason": inv.ApprovalReason,
-			"permissionCheck": inv.PermissionCheck,
+			"id":               inv.ID,
+			"toolName":         inv.ToolName,
+			"arguments":        inv.Arguments,
+			"status":           inv.Status,
+			"needsApproval":    inv.NeedsApproval,
+			"approvalState":    inv.ApprovalState,
+			"approvalReason":   inv.ApprovalReason,
+			"permissionCheck":  inv.PermissionCheck,
 			"permissionReason": inv.PermissionReason,
-			"createdAt":      inv.CreatedAt,
-			"conversationId": inv.ConversationID,
-			"userId":         inv.UserID,
+			"createdAt":        inv.CreatedAt,
+			"conversationId":   inv.ConversationID,
+			"userId":           inv.UserID,
 		})
 	}
 	common.Success(c, gin.H{"items": items, "state": state})

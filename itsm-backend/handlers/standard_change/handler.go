@@ -1,6 +1,7 @@
 package standard_change
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -23,30 +24,49 @@ func NewHandler(svc *Service, logger *zap.SugaredLogger) *Handler {
 	}
 }
 
+// failStandardChangeErr 统一映射 service 返回的错误：
+// 实体不存在 → 404，其余 → 内部错误。
+//
+// 该映射在 controller → handlers 的 service 化重构中一度丢失（统一走了
+// common.FailWithErr），导致查询/更新/删除/实例化不存在的模板时返回 500
+// 而非 404，属于对外契约回归。
+func failStandardChangeErr(c *gin.Context, err error, publicMsg string) {
+	var businessErr *common.BusinessError
+	if errors.As(err, &businessErr) {
+		common.Fail(c, businessErr.Code, businessErr.Message)
+		return
+	}
+	if ent.IsNotFound(err) {
+		common.NotFoundWithErr(c, err, "Standard change template not found")
+		return
+	}
+	common.FailWithErr(c, err, publicMsg)
+}
+
 func (h *Handler) toResponse(sc *ent.StandardChange) *dto.StandardChangeResponse {
 	if sc == nil {
 		return nil
 	}
 	return &dto.StandardChangeResponse{
-		ID:                  sc.ID,
-		Title:               sc.Title,
-		Description:         sc.Description,
-		ImplementationPlan:  sc.ImplementationPlan,
-		RollbackPlan:        sc.RollbackPlan,
-		Justification:       sc.Justification,
-		Category:            sc.Category,
-		RiskLevel:           sc.RiskLevel,
-		ImpactScope:         sc.ImpactScope,
-		ExpectedDuration:    sc.ExpectedDuration,
-		ApprovalRequired:    sc.ApprovalRequired,
-		AffectedCis:         sc.AffectedCis,
-		Prerequisites:       sc.Prerequisites,
-		Remarks:             sc.Remarks,
-		CreatedBy:           sc.CreatedBy,
-		TenantID:            sc.TenantID,
-		IsActive:            sc.IsActive,
-		CreatedAt:           sc.CreatedAt,
-		UpdatedAt:           sc.UpdatedAt,
+		ID:                 sc.ID,
+		Title:              sc.Title,
+		Description:        sc.Description,
+		ImplementationPlan: sc.ImplementationPlan,
+		RollbackPlan:       sc.RollbackPlan,
+		Justification:      sc.Justification,
+		Category:           sc.Category,
+		RiskLevel:          sc.RiskLevel,
+		ImpactScope:        sc.ImpactScope,
+		ExpectedDuration:   sc.ExpectedDuration,
+		ApprovalRequired:   sc.ApprovalRequired,
+		AffectedCis:        sc.AffectedCis,
+		Prerequisites:      sc.Prerequisites,
+		Remarks:            sc.Remarks,
+		CreatedBy:          sc.CreatedBy,
+		TenantID:           sc.TenantID,
+		IsActive:           sc.IsActive,
+		CreatedAt:          sc.CreatedAt,
+		UpdatedAt:          sc.UpdatedAt,
 	}
 }
 
@@ -95,7 +115,7 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 
 	sc, err := h.svc.GetStandardChange(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "获取标准变更模板失败")
+		failStandardChangeErr(c, err, "获取标准变更模板失败")
 		return
 	}
 
@@ -206,7 +226,7 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 
 	sc, err := h.svc.UpdateStandardChange(c.Request.Context(), tenantID, id, input)
 	if err != nil {
-		common.FailWithErr(c, err, "更新标准变更模板失败")
+		failStandardChangeErr(c, err, "更新标准变更模板失败")
 		return
 	}
 
@@ -225,7 +245,7 @@ func (h *Handler) DeleteStandardChange(c *gin.Context) {
 	}
 
 	if err := h.svc.DeleteStandardChange(c.Request.Context(), tenantID, id); err != nil {
-		common.FailWithErr(c, err, "删除标准变更模板失败")
+		failStandardChangeErr(c, err, "删除标准变更模板失败")
 		return
 	}
 
@@ -244,7 +264,7 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"items": cats})
+	common.Success(c, gin.H{"categories": cats})
 }
 
 func (h *Handler) InstantiateStandardChange(c *gin.Context) {
@@ -260,15 +280,24 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 
 	createdBy := h.getUserID(c)
 
-	change, err := h.svc.Instantiate(c.Request.Context(), tenantID, id, createdBy)
+	var req dto.InstantiateStandardChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamError(c, "实例化参数错误")
+		return
+	}
+	if createdBy <= 0 {
+		common.AuthFailed(c, "用户信息缺失")
+		return
+	}
+	change, err := h.svc.Instantiate(c.Request.Context(), tenantID, id, createdBy, &req)
 	if err != nil {
-		common.FailWithErr(c, err, "实例化标准变更失败")
+		failStandardChangeErr(c, err, "实例化标准变更失败")
 		return
 	}
 
 	common.Success(c, gin.H{
-		"change_id": change.ID,
-		"change_number": change.ChangeNumber,
+		"changeId":     change.ID,
+		"changeNumber": change.ChangeNumber,
 	})
 }
 

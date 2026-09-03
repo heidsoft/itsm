@@ -7,6 +7,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -789,8 +790,12 @@ func (c *ProductionService) GetCITopology(ctx *gin.Context) {
 	depth, _ := strconv.Atoi(ctx.DefaultQuery("depth", "3"))
 	result, err := c.ciRelationshipService.GetCITopology(ctx.Request.Context(), ciID, tenantID, depth)
 	if err != nil {
-		c.logger.Errorw("Get CI topology failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
-		common.Fail(ctx, common.InternalErrorCode, "获取CI拓扑失败: "+err.Error())
+		if ent.IsNotFound(err) {
+			common.NotFound(ctx, "配置项不存在")
+			return
+		}
+		c.logger.Errorw("Get CI topology failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
+		common.InternalError(ctx, "获取CI拓扑失败")
 		return
 	}
 	common.Success(ctx, result)
@@ -826,8 +831,12 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.GetCIImpactAnalysis(ctx.Request.Context(), ciID, tenantID, maxDepth)
 	if err != nil {
-		c.logger.Errorw("Get CI impact analysis failed", "error", err, "ci_id", ciID, "tenant_id", tenantID)
-		common.Fail(ctx, common.InternalErrorCode, "获取CI影响分析失败: "+err.Error())
+		if ent.IsNotFound(err) {
+			common.NotFound(ctx, "配置项不存在")
+			return
+		}
+		c.logger.Errorw("Get CI impact analysis failed", "errorClass", "internal", "ciId", ciID, "tenantId", tenantID)
+		common.InternalError(ctx, "获取CI影响分析失败")
 		return
 	}
 

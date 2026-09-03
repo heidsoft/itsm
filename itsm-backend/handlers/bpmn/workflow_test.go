@@ -358,8 +358,8 @@ func TestSubmitTaskDecision_UnknownTaskFailsClosed(t *testing.T) {
 	assert.Equal(t, float64(4004), resp["code"])
 	assert.Equal(t, 0, fakeTask.completeByIDCalls, "不存在的任务不得推进")
 	assert.Equal(t, 0, fakeTask.completeCalls)
-	// 数字 ID 必须先走 string 查询，再 fallback 到主键查询
-	assert.Equal(t, []string{"42"}, fakeTask.getTaskIDs)
+	// 数字 ID 的校验和完成必须使用同一个数据库主键。
+	assert.Empty(t, fakeTask.getTaskIDs)
 	assert.Equal(t, []int{42}, fakeTask.getTaskByIDIDs)
 }
 

@@ -6,15 +6,9 @@ import (
 	"sync"
 )
 
-// P2-6 AI 工具 RBAC 校验 Feature Flag
-//
-// 默认 off（兼容历史行为）。
-// 启用方式：
-//   AI_TOOL_RBAC_ENABLED=true     // 校验失败时记录 denied 审计日志，但不拦截请求（影子模式）
-//   AI_TOOL_RBAC_ENFORCE=true     // 校验失败时实际拦截请求（执行模式）
-//
-// 影子模式先行 3-7 天，确认无误杀后再开启 ENFORCE 模式。
-// 两个开关均为 off 时，Gate 2 跳过校验，permission_check 写入 "skipped"。
+// Legacy rollout flags are retained for configuration compatibility only.
+// Tool execution and discovery always enforce resource permissions; these
+// flags cannot disable authorization or permit execution in shadow mode.
 
 var (
 	rbacFlagOnce    sync.Once

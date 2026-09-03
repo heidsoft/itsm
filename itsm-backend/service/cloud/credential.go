@@ -5,8 +5,44 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
+
+type TenantSecretResolver interface {
+	Resolve(ctx context.Context, tenantID int, credentialRef string) (string, error)
+}
+
+type ConfigTenantSecretResolver struct {
+	secrets map[string]string
+}
+
+func NewConfigTenantSecretResolver(secrets map[string]string) *ConfigTenantSecretResolver {
+	copyOfSecrets := make(map[string]string, len(secrets))
+	for ref, value := range secrets {
+		copyOfSecrets[strings.TrimSpace(ref)] = strings.TrimSpace(value)
+	}
+	return &ConfigTenantSecretResolver{secrets: copyOfSecrets}
+}
+
+func (r *ConfigTenantSecretResolver) Resolve(_ context.Context, tenantID int, credentialRef string) (string, error) {
+	if tenantID <= 0 {
+		return "", fmt.Errorf("tenant ID is required to resolve cloud credential")
+	}
+	ref := strings.TrimSpace(credentialRef)
+	if !strings.HasPrefix(ref, "secret://") {
+		return ref, nil
+	}
+	prefix := "secret://tenant-" + strconv.Itoa(tenantID) + "/"
+	if !strings.HasPrefix(ref, prefix) {
+		return "", fmt.Errorf("cloud credential reference is outside tenant scope")
+	}
+	value, ok := r.secrets[ref]
+	if !ok || value == "" {
+		return "", fmt.Errorf("cloud credential secret is not configured")
+	}
+	return value, nil
+}
 
 // ResolvedCredential 运行时凭据结构（所有字段非 nil）
 type ResolvedCredential struct {

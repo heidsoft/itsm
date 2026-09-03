@@ -133,13 +133,13 @@ func (c *Client) doJSON(ctx context.Context, method, path string, in, out interf
 // VerifyEventSignature 验证事件订阅请求的签名
 // https://open.feishu.cn/document/server-docs/event-subscription-guide/signature-verification
 //
-//	encrypt_key + timestamp + nonce 拼接后做 SHA256，与 header X-Lark-Signature 比对
+//	以 encrypt_key 为密钥，对 timestamp + nonce + body 做 HMAC-SHA256，
+//	与 header X-Lark-Signature 做常量时间比较。
 func (c *Client) VerifyEventSignature(ts, nonce, signature string, body []byte) bool {
-	if c.encryptKey == "" || signature == "" {
+	if c.encryptKey == "" || ts == "" || nonce == "" || signature == "" {
 		return false
 	}
-	h := sha256.New()
-	h.Write([]byte(c.encryptKey))
+	h := hmac.New(sha256.New, []byte(c.encryptKey))
 	h.Write([]byte(ts))
 	h.Write([]byte(nonce))
 	h.Write(body)

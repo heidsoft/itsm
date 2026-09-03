@@ -31,6 +31,26 @@ type DiscoveryRuntime struct {
 	WorkerReady             bool
 }
 
+func (s *Service) GetDiscoveryHealth() CapabilityStatus {
+	adapterReady := s.discoveryRuntime.Adapters != nil && s.discoveryRuntime.Adapters.HasAdapter("aliyun", "ecs")
+	missing := make([]string, 0, 3)
+	if !adapterReady {
+		missing = append(missing, "aliyunEcsAdapter")
+	}
+	if !s.discoveryRuntime.CredentialResolverReady {
+		missing = append(missing, "tenantSecretResolver")
+	}
+	if !s.discoveryRuntime.WorkerReady {
+		missing = append(missing, "discoveryWorker")
+	}
+	ready := adapterReady && s.discoveryRuntime.CredentialResolverReady && s.discoveryRuntime.WorkerReady
+	state := "ready"
+	if !ready {
+		state = "unready"
+	}
+	return CapabilityStatus{Key: "cmdbDiscovery", State: state, BuildCapability: true, DeploymentReadiness: ready, ActorPermission: true, MissingRequirements: missing}
+}
+
 func NewService(repo Repository, productionSvc *ProductionService, logger *zap.SugaredLogger) *Service {
 	return NewServiceWithDiscoveryRuntime(repo, productionSvc, logger, DiscoveryRuntime{})
 }
@@ -166,13 +186,13 @@ func (s *Service) BatchDeleteCI(c *gin.Context) { s.productionSvc.BatchDeleteCI(
 func (s *Service) ListRelationshipTypes(c *gin.Context) { s.productionSvc.ListRelationshipTypes(c) }
 
 type CapabilityStatus struct {
-	Key                 string
-	State               string
-	BuildCapability     bool
-	DeploymentReadiness bool
-	TenantReadiness     bool
-	ActorPermission     bool
-	MissingRequirements []string
+	Key                 string   `json:"key"`
+	State               string   `json:"state"`
+	BuildCapability     bool     `json:"buildCapability"`
+	DeploymentReadiness bool     `json:"deploymentReadiness"`
+	TenantReadiness     bool     `json:"tenantReadiness"`
+	ActorPermission     bool     `json:"actorPermission"`
+	MissingRequirements []string `json:"missingRequirements"`
 }
 
 func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*CapabilityStatus, error) {

@@ -122,6 +122,10 @@ func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID in
 		query = query.Where(systemconfig.CategoryEQ(category))
 	}
 
+	total, err = query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count filtered system configs: %w", err)
+	}
 	configs, err := query.
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).

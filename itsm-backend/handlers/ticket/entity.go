@@ -24,7 +24,7 @@ type Ticket struct {
 	CategoryID            *int
 	DepartmentID          *int
 	ParentTicketID        *int
-	SLADefinitionID        *int
+	SLADefinitionID       *int
 	SLAResponseDeadline   *time.Time
 	SLAResolutionDeadline *time.Time
 	FirstResponseAt       *time.Time
@@ -80,13 +80,14 @@ type TicketTemplate struct {
 
 // TicketStats holds aggregated ticket statistics per tenant
 type TicketStats struct {
-	TotalTickets     int `json:"totalTickets"`
-	OpenTickets      int `json:"openTickets"`
+	OverdueTickets    int `json:"overdueTickets"`
+	TotalTickets      int `json:"totalTickets"`
+	OpenTickets       int `json:"openTickets"`
 	InProgressTickets int `json:"inProgressTickets"`
-	PendingTickets   int `json:"pendingTickets"`
-	ResolvedTickets  int `json:"resolvedTickets"`
-	ClosedTickets    int `json:"closedTickets"`
-	CriticalTickets  int `json:"criticalTickets"`
-	HighTickets      int `json:"highTickets"`
-	AvgResolutionMin int `json:"avgResolutionMin"`
+	PendingTickets    int `json:"pendingTickets"`
+	ResolvedTickets   int `json:"resolvedTickets"`
+	ClosedTickets     int `json:"closedTickets"`
+	CriticalTickets   int `json:"criticalTickets"`
+	HighTickets       int `json:"highTickets"`
+	AvgResolutionMin  int `json:"avgResolutionMin"`
 }

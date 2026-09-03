@@ -3,16 +3,24 @@ package standard_change
 import (
 	"context"
 
+	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entstandardchange "itsm-backend/ent/standardchange"
+	changedomain "itsm-backend/handlers/change"
 )
 
-type Service struct {
-	client *ent.Client
+type ChangeCreator interface {
+	CreateChange(context.Context, *changedomain.Change) (*changedomain.Change, error)
 }
 
-func NewService(client *ent.Client) *Service {
-	return &Service{client: client}
+type Service struct {
+	client  *ent.Client
+	changes ChangeCreator
+}
+
+func NewService(client *ent.Client, changes ChangeCreator) *Service {
+	return &Service{client: client, changes: changes}
 }
 
 func (s *Service) ListStandardChanges(ctx context.Context, tenantID int, page, pageSize int, category, search string, activeOnly bool) ([]*ent.StandardChange, int, error) {
@@ -54,6 +62,28 @@ func (s *Service) GetStandardChange(ctx context.Context, tenantID, id int) (*ent
 }
 
 func (s *Service) CreateStandardChange(ctx context.Context, input *SCCreateInput) (*ent.StandardChange, error) {
+	// 默认值属于业务规则，必须在 service 层落地：handler 只负责 HTTP 编排。
+	// 这些默认值在 controller → handlers 的 service 化重构中一度丢失（req 空值被
+	// 直接写入），导致 category/risk_level/impact_scope 落库为空串。
+	riskLevel := input.RiskLevel
+	if riskLevel == "" {
+		riskLevel = "low"
+	}
+	impactScope := input.ImpactScope
+	if impactScope == "" {
+		impactScope = "low"
+	}
+	category := input.Category
+	if category == "" {
+		category = "general"
+	}
+	// expected_duration：省略时 JSON 零值 0 会被显式写入并覆盖 schema 默认值 30，
+	// 因此任何非正值都回落到 30，保证模板有合理的预计工期。
+	expectedDuration := input.ExpectedDuration
+	if expectedDuration <= 0 {
+		expectedDuration = 30
+	}
+
 	return s.client.StandardChange.Create().
 		SetTenantID(input.TenantID).
 		SetTitle(input.Title).
@@ -61,10 +91,10 @@ func (s *Service) CreateStandardChange(ctx context.Context, input *SCCreateInput
 		SetImplementationPlan(input.ImplementationPlan).
 		SetRollbackPlan(input.RollbackPlan).
 		SetJustification(input.Justification).
-		SetCategory(input.Category).
-		SetRiskLevel(input.RiskLevel).
-		SetImpactScope(input.ImpactScope).
-		SetExpectedDuration(input.ExpectedDuration).
+		SetCategory(category).
+		SetRiskLevel(riskLevel).
+		SetImpactScope(impactScope).
+		SetExpectedDuration(expectedDuration).
 		SetApprovalRequired(input.ApprovalRequired).
 		SetAffectedCis(input.AFFECTEDCIs).
 		SetPrerequisites(input.Prerequisites).
@@ -123,10 +153,11 @@ func (s *Service) UpdateStandardChange(ctx context.Context, tenantID, id int, in
 }
 
 func (s *Service) DeleteStandardChange(ctx context.Context, tenantID, id int) error {
-	_, err := s.client.StandardChange.Delete().
-		Where(entstandardchange.ID(id), entstandardchange.TenantID(tenantID)).
+	// Retain template history and make deletion idempotent for this tenant.
+	return s.client.StandardChange.UpdateOneID(id).
+		Where(entstandardchange.TenantID(tenantID)).
+		SetIsActive(false).
 		Exec(ctx)
-	return err
 }
 
 func (s *Service) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
@@ -148,24 +179,31 @@ func (s *Service) GetCategories(ctx context.Context, tenantID int) ([]string, er
 }
 
 // Instantiate creates a Change from a StandardChange template
-func (s *Service) Instantiate(ctx context.Context, tenantID, templateID int, createdBy int) (*ent.Change, error) {
+func (s *Service) Instantiate(ctx context.Context, tenantID, templateID int, createdBy int, req *dto.InstantiateStandardChangeRequest) (*changedomain.Change, error) {
 	template, err := s.client.StandardChange.Query().
-		Where(entstandardchange.ID(templateID), entstandardchange.TenantID(tenantID)).
-		Only(ctx)
+		Where(entstandardchange.ID(templateID), entstandardchange.TenantID(tenantID), entstandardchange.IsActive(true)).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return s.client.Change.Create().
-		SetTenantID(tenantID).
-		SetTitle(template.Title).
-		SetDescription(template.Description).
-		SetType("standard").
-		SetRiskLevel(template.RiskLevel).
-		SetImpactScope(template.ImpactScope).
-		SetStatus("pending").
-		SetCreatedBy(createdBy).
-		Save(ctx)
+	if s.changes == nil {
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "变更创建服务未就绪", "")
+	}
+	title := template.Title
+	if req.Title != "" {
+		title = req.Title
+	}
+	affected := template.AffectedCis
+	if req.AffectedCis != nil {
+		affected = req.AffectedCis
+	}
+	return s.changes.CreateChange(ctx, &changedomain.Change{
+		TenantID: tenantID, CreatedBy: createdBy, Title: title,
+		Description: template.Description, Justification: template.Justification,
+		Type: "standard", Status: "draft", Priority: "medium",
+		RiskLevel: template.RiskLevel, ImpactScope: template.ImpactScope,
+		ImplementationPlan: template.ImplementationPlan, RollbackPlan: template.RollbackPlan,
+		AffectedCIs: affected, PlannedStartDate: req.PlannedStartDate, PlannedEndDate: req.PlannedEndDate,
+	})
 }
 
 // Input DTOs

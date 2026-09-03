@@ -137,13 +137,23 @@ func (m *Manager) GetByCallbackInstanceID(name, callbackInstanceID string) (Conn
 	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+	var matched *instance
 	for _, inst := range m.instances {
 		id, _ := inst.cfg.Settings["callbackInstanceId"].(string)
 		if inst.cfg.Name == name && inst.cfg.Enabled && id == callbackInstanceID {
-			return inst.conn, inst.cfg.TenantID, true
+			// A public callback identifier must resolve to exactly one tenant.
+			// Fail closed on legacy/corrupt duplicate configuration instead of
+			// selecting a tenant according to randomized map iteration order.
+			if matched != nil {
+				return nil, 0, false
+			}
+			matched = inst
 		}
 	}
-	return nil, 0, false
+	if matched == nil || matched.cfg.TenantID <= 0 {
+		return nil, 0, false
+	}
+	return matched.conn, matched.cfg.TenantID, true
 }
 
 // ListByTenant 列出某租户所有运行中的连接器

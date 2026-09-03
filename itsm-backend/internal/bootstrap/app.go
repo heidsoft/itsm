@@ -788,11 +788,17 @@ func NewApplication() *Application {
 	cmdbRepo := cmdb.NewEntRepository(client)
 	cloudAdapterRegistry := cloudruntime.NewRegistry()
 	cloudAdapterRegistry.Register(cloudaliyun.NewAliyunECSAdapter(sugar))
+	tenantSecretResolver := cloudruntime.NewConfigTenantSecretResolver(cfg.CloudDiscovery.TenantSecrets)
+	cloudDiscoveryRunner := cloudruntime.NewRunnerWithRegistry(client, sugar, cloudAdapterRegistry)
+	cloudDiscoveryRunner.SetTenantSecretResolver(tenantSecretResolver)
+	cloudDiscoveryWorker := cloudruntime.NewDiscoveryWorker(cloudDiscoveryRunner)
+	if err := commandRegistry.Register(commandbus.CommandRunCMDBCloudDiscovery, cloudDiscoveryWorker.Handle); err != nil {
+		sugar.Fatalw("Failed to register CMDB cloud discovery worker", "error", err)
+	}
 	cmdbServiceDomain := cmdb.NewServiceWithDiscoveryRuntime(cmdbRepo, cmdbProductionService, sugar, cmdb.DiscoveryRuntime{
-		Adapters: cloudAdapterRegistry,
-		// secret:// resolution and the durable worker land in later phases.
-		CredentialResolverReady: false,
-		WorkerReady:             false,
+		Adapters:                cloudAdapterRegistry,
+		CredentialResolverReady: tenantSecretResolver != nil,
+		WorkerReady:             cloudDiscoveryWorker != nil,
 	})
 	cmdbHandler := cmdb.NewHandler(cmdbServiceDomain)
 

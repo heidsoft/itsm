@@ -87,6 +87,8 @@ var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
 // ErrUnknownTool 未知工具（P2-6 Gate 2）
 var ErrUnknownTool = fmt.Errorf("unknown tool")
 
+var ErrToolUnavailable = fmt.Errorf("tool authorization dependencies unavailable")
+
 // ExecuteTool 执行 AI 工具
 // P2-6: 新增 userID 和 role 参数用于 Gate 2 RBAC 校验
 //
@@ -96,12 +98,15 @@ var ErrUnknownTool = fmt.Errorf("unknown tool")
 //	Gate 2: 工具级 RBAC（本方法）— 按 ToolDefinition.Resource/Action 校验
 //	Gate 3: 审批流（写工具 !ReadOnly）— 由 NeedsApproval 处理
 func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, name string, args map[string]interface{}) (interface{}, int, error) {
-	if s.tools == nil {
-		return nil, 0, fmt.Errorf("tool registry not initialized")
+	if userID <= 0 || tenantID <= 0 {
+		return nil, 0, ErrToolPermissionDenied
+	}
+	if s.tools == nil || s.entClient == nil {
+		return nil, 0, ErrToolUnavailable
 	}
 
 	// === P2-6 Gate 2: 工具级 RBAC 校验 ===
-	permCheck := "skipped"
+	permCheck := "passed"
 	permReason := ""
 	allowed := true
 
@@ -112,8 +117,8 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		return nil, 0, ErrUnknownTool
 	}
 
-	if IsToolRBACEnabled() && s.entClient != nil && role != "" && role != "super_admin" {
-		if middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
+	{
+		if role != "" && middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
 			permCheck = "passed"
 		} else {
 			permCheck = "denied"
@@ -122,12 +127,12 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 			s.logger.Warnw("AI tool RBAC denied",
 				"user_id", userID, "tenant_id", tenantID, "role", role,
 				"tool", name, "resource", toolDef.Resource, "action", toolDef.Action,
-				"enforce", IsToolRBACEnforce())
+				"enforce", true)
 		}
 	}
 
-	// 影子模式：只记录日志，不拦截；执行模式：拒绝请求
-	if !allowed && IsToolRBACEnforce() {
+	// Authorization is mandatory; feature flags must never bypass it.
+	if !allowed {
 		s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "", nil, false)
 		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, permReason)
 	}
@@ -733,9 +738,9 @@ func (s *Service) persistAIResult(ctx context.Context, analysisType string, tena
 		UserID:        userID,
 		AnalysisType:  analysisType,
 		RequestPrompt: prompt,
-		ResultJSON:   string(resultJSON),
-		Model:        model,
-		Degraded:     false,
+		ResultJSON:    string(resultJSON),
+		Model:         model,
+		Degraded:      false,
 	}
 	if latencyMs > 0 {
 		record.LatencyMs = latencyMs

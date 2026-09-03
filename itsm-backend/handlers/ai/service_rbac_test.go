@@ -184,9 +184,8 @@ func boolStr(b bool) string {
 	return "false"
 }
 
-// ===== T1: super_admin 始终放行（即使 RBAC enforce 开启） =====
-// 期望：super_admin 跳过 Gate 2，permCheck=skipped，进入 create_ticket 审批流。
-func TestExecuteTool_T1_SuperAdminBypass(t *testing.T) {
+// The shared permission resolver authorizes super_admin within the supplied tenant.
+func TestExecuteTool_T1_SuperAdminPermissionPassed(t *testing.T) {
 	env := newRBACTestEnv(t)
 	setFlag(t, true, true) // enforce 模式，应最严格
 
@@ -198,7 +197,7 @@ func TestExecuteTool_T1_SuperAdminBypass(t *testing.T) {
 
 	inv := env.repo.lastInvocation()
 	require.NotNil(t, inv)
-	assert.Equal(t, "skipped", inv.PermissionCheck, "super_admin 跳过工具级 RBAC")
+	assert.Equal(t, "passed", inv.PermissionCheck)
 	assert.Equal(t, "super_admin", inv.RoleSnapshot)
 	assert.Equal(t, "pending", inv.ApprovalState)
 	assert.Equal(t, 10, inv.TenantID, "租户上下文应透传到审计记录")
@@ -244,23 +243,17 @@ func TestExecuteTool_T3_PermissionDeniedEnforce(t *testing.T) {
 	assert.NotEqual(t, "pending", inv.ApprovalState, "enforce 拒绝时不应创建待审批任务")
 }
 
-// ===== T4: 影子模式（enabled 但非 enforce）拒绝时只记录不拦截 =====
-// security 无权限，但未开 enforce：应继续进入审批流，仅 permCheck=denied。
-func TestExecuteTool_T4_ShadowModeRecordsDeniedButProceeds(t *testing.T) {
+// Shadow rollout settings cannot bypass tool authorization.
+func TestExecuteTool_ShadowModeStillDenies(t *testing.T) {
 	env := newRBACTestEnv(t)
-	setFlag(t, true, false) // 影子模式
-
-	args := map[string]interface{}{"title": "x"}
-	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", args)
-
-	require.NoError(t, err, "影子模式不拦截请求")
-	assert.Greater(t, invID, 0, "影子模式仍应进入审批流")
-
+	setFlag(t, true, false)
+	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
+	require.ErrorIs(t, err, ai.ErrToolPermissionDenied)
+	assert.Zero(t, invID)
 	inv := env.repo.lastInvocation()
 	require.NotNil(t, inv)
-	assert.Equal(t, "denied", inv.PermissionCheck, "影子模式仍记录权限校验结果")
-	assert.Contains(t, inv.PermissionReason, "ticket:write")
-	assert.Equal(t, "pending", inv.ApprovalState, "影子模式应继续走审批流")
+	assert.Equal(t, "denied", inv.PermissionCheck)
+	assert.NotEqual(t, "pending", inv.ApprovalState)
 }
 
 // ===== T5: 未知工具 -> 返回 ErrUnknownTool + denied 审计 =====
@@ -299,38 +292,23 @@ func TestExecuteTool_T6_TenantContextPropagatedToAudit(t *testing.T) {
 	assert.Equal(t, 200, invos[1].TenantID, "审计记录必须按调用时的 tenantID 分离")
 }
 
-// ===== T7: Feature Flag 关闭 -> 跳过 Gate 2，permCheck=skipped =====
-// 默认 off：兼容历史行为，不校验、不拦截。
-func TestExecuteTool_T7_FlagDisabledSkipsCheck(t *testing.T) {
+// Disabling rollout flags must not disable permission enforcement.
+func TestExecuteTool_FlagDisabledStillDenies(t *testing.T) {
 	env := newRBACTestEnv(t)
 	setFlag(t, false, false)
-
-	// security 对 ticket:write 无权限，但 flag 关闭应完全跳过
 	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
-
-	require.NoError(t, err, "flag 关闭时不做 RBAC 校验")
-	assert.Greater(t, invID, 0)
-
+	require.ErrorIs(t, err, ai.ErrToolPermissionDenied)
+	assert.Zero(t, invID)
 	inv := env.repo.lastInvocation()
 	require.NotNil(t, inv)
-	assert.Equal(t, "skipped", inv.PermissionCheck, "flag 关闭时权限校验应被跳过")
-	assert.Empty(t, inv.PermissionReason)
-	assert.Equal(t, "security", inv.RoleSnapshot, "即便跳过校验仍记录角色快照")
+	assert.Equal(t, "denied", inv.PermissionCheck)
 }
 
-// ===== 附加：entClient 为 nil 时跳过 Gate 2（防御性降级） =====
-// 若 entClient 未注入（旧部署/单元测试），不应 panic，应降级为 skipped。
-func TestExecuteTool_NilEntClientSkipsGate(t *testing.T) {
+func TestExecuteTool_NilEntClientFailsClosed(t *testing.T) {
 	env := newRBACTestEnv(t)
-	setFlag(t, true, true)
-	// 显式清空 ent client，模拟未注入场景
 	env.svc.SetEntClient(nil)
-
 	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
-
-	require.NoError(t, err, "entClient 为 nil 时应降级放行，不 panic")
-	assert.Greater(t, invID, 0)
-	inv := env.repo.lastInvocation()
-	require.NotNil(t, inv)
-	assert.Equal(t, "skipped", inv.PermissionCheck)
+	require.ErrorIs(t, err, ai.ErrToolUnavailable)
+	assert.Zero(t, invID)
+	assert.Nil(t, env.repo.lastInvocation())
 }

@@ -28,6 +28,7 @@ const (
 	CommandDeliverNotification    = "notification.deliver"
 	CommandProcessCMDBImport      = "cmdb.import.process"
 	CommandProcessCMDBExport      = "cmdb.export.process"
+	CommandRunCMDBCloudDiscovery  = "cmdb.cloud_discovery.run"
 	CommandExecuteTicketRules     = "ticket.rules.execute"
 	CommandSyncTicketFeishu       = "ticket.feishu.sync"
 	CommandExecuteIncidentRules   = "incident.rules.execute"

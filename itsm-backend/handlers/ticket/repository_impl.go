@@ -57,7 +57,7 @@ func (r *EntRepository) toDomain(t *ticket.Ticket) *Ticket {
 		RatingComment:         t.RatingComment,
 		RatedAt:               t.RatedAt,
 		RatedBy:               t.RatedBy,
-		Version:                t.Version,
+		Version:               t.Version,
 		IsManagedByMSP:        t.IsManagedByMSP,
 		MSPProviderID:         t.MSPProviderID,
 		ManagedByUserID:       t.ManagedByUserID,
@@ -257,7 +257,12 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*TicketStat
 		return nil, fmt.Errorf("get priority counts: %w", err)
 	}
 
-	stats := &TicketStats{}
+	// Reuse the authoritative overdue filter without loading the full backlog.
+	overdue, err := r.repo.List(ctx, tenantID, &ticket.FilterParams{IsOverdue: true}, &base.QueryParams{Page: 1, PageSize: 1})
+	if err != nil {
+		return nil, fmt.Errorf("get overdue count: %w", err)
+	}
+	stats := &TicketStats{OverdueTickets: overdue.Total}
 	for status, count := range statusCounts {
 		stats.TotalTickets += count
 		switch status {

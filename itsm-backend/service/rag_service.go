@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -1002,19 +1003,25 @@ func (r *RAGService) IndexArticle(ctx context.Context, tenantID int, articleID i
 // 真实删除：软删除/取消发布文章时调用，物理移除 vectors 表中的残留向量，
 // 使检索侧不再依赖 enrichment 阶段的兜底过滤。幂等：条目不存在时静默成功。
 func (r *RAGService) RemoveArticle(ctx context.Context, tenantID int, articleID int) error {
+	var deleteErrors []error
+
 	// Clean connector store
 	if r.vectorStore != nil {
 		if err := r.vectorStore.Delete(ctx, []string{fmt.Sprintf("tenant:%d:kb:%d", tenantID, articleID)}); err != nil {
 			r.logger.Warnw("RAGService: failed to remove article from connector vector store", "article_id", articleID, "tenant_id", tenantID, "error", err)
+			deleteErrors = append(deleteErrors, fmt.Errorf("connector vector delete: %w", err))
 		}
 	}
 	// Also clean legacy store if available
-	if !r.useVector || r.vectors == nil {
-		return nil
+	// 删除不依赖 useVector：即使检索因 embedder/配置不可用而降级，历史向量仍需清理。
+	if r.vectors != nil {
+		if err := r.vectors.Delete(ctx, tenantID, "kb", articleID); err != nil {
+			r.logger.Warnw("RAGService: failed to remove article vector from legacy store", "article_id", articleID, "tenant_id", tenantID, "error", err)
+			deleteErrors = append(deleteErrors, fmt.Errorf("legacy vector delete: %w", err))
+		}
 	}
-	if err := r.vectors.Delete(ctx, tenantID, "kb", articleID); err != nil {
-		r.logger.Warnw("RAGService: failed to remove article vector from legacy store", "article_id", articleID, "tenant_id", tenantID, "error", err)
-		return fmt.Errorf("failed to remove article vector: %w", err)
+	if len(deleteErrors) > 0 {
+		return errors.Join(deleteErrors...)
 	}
 	r.logger.Infow("RAGService: article vector removed", "article_id", articleID, "tenant_id", tenantID)
 	return nil

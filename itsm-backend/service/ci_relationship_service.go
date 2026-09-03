@@ -8,6 +8,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
@@ -392,7 +394,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI not found")
+			return nil, fmt.Errorf("CI not found: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI for impact analysis", "error", err, "ci_id", ciID)
 		return nil, fmt.Errorf("failed to get CI: %w", err)
@@ -420,6 +422,11 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 	impactEdges := make([]dto.TopologyEdge, 0, len(downEdges)+len(upEdges))
 	seenEdges := map[int]bool{}
 	for _, edge := range append(downEdges, upEdges...) {
+		// Legacy relationships may reference a CI outside the caller's tenant.
+		// Only expose edges whose endpoints passed the scoped CI queries.
+		if !seenNodes[edge.Source] || !seenNodes[edge.Target] {
+			continue
+		}
 		if !seenEdges[edge.ID] {
 			seenEdges[edge.ID] = true
 			impactEdges = append(impactEdges, edge)
@@ -429,7 +436,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 
 	// 受影响的工单/事件：通过 CI 已有的 tickets/incidents 边填充
 	affectedTickets := make([]dto.AffectedTicket, 0)
-	tickets, err := root.QueryTickets().All(ctx)
+	tickets, err := root.QueryTickets().Where(ticket.TenantIDEQ(tenantID)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query affected tickets: %w", err)
 	}
@@ -440,7 +447,7 @@ func (s *CIRelationshipService) GetCIImpactAnalysis(ctx context.Context, ciID, t
 		})
 	}
 	affectedIncidents := make([]dto.AffectedIncident, 0)
-	incidents, err := root.QueryIncidents().All(ctx)
+	incidents, err := root.QueryIncidents().Where(incident.TenantIDEQ(tenantID)).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query affected incidents: %w", err)
 	}

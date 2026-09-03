@@ -13,18 +13,28 @@ import (
 )
 
 type Config struct {
-	Database   DatabaseConfig   `mapstructure:"database"`
-	Server     ServerConfig     `mapstructure:"server"`
-	JWT        JWTConfig        `mapstructure:"jwt"`
-	Log        LogConfig        `mapstructure:"log"`
-	LLM        LLMConfig        `mapstructure:"llm"`
-	SMS        SMSConfig        `mapstructure:"sms"`
-	SMTP       SMTPConfig       `mapstructure:"smtp"`
-	Ticket     TicketConfig     `mapstructure:"ticket"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	Security   SecurityConfig   `mapstructure:"security"`
-	Deployment DeploymentConfig `mapstructure:"deployment"`
-	RLS        RLSConfig        `mapstructure:"rls"`
+	Database       DatabaseConfig       `mapstructure:"database"`
+	Server         ServerConfig         `mapstructure:"server"`
+	JWT            JWTConfig            `mapstructure:"jwt"`
+	Log            LogConfig            `mapstructure:"log"`
+	LLM            LLMConfig            `mapstructure:"llm"`
+	SMS            SMSConfig            `mapstructure:"sms"`
+	SMTP           SMTPConfig           `mapstructure:"smtp"`
+	Ticket         TicketConfig         `mapstructure:"ticket"`
+	Redis          RedisConfig          `mapstructure:"redis"`
+	Security       SecurityConfig       `mapstructure:"security"`
+	Deployment     DeploymentConfig     `mapstructure:"deployment"`
+	RLS            RLSConfig            `mapstructure:"rls"`
+	CloudDiscovery CloudDiscoveryConfig `mapstructure:"cloud_discovery"`
+}
+
+// CloudDiscoveryConfig contains deployment-owned credential material used to
+// resolve tenant-scoped secret:// references. Keys are the complete references
+// (for example secret://tenant-42/aliyun-prod); values are provider credential
+// JSON documents. This is a bootstrap implementation until an external secret
+// manager connector owns resolution.
+type CloudDiscoveryConfig struct {
+	TenantSecrets map[string]string `mapstructure:"tenant_secrets"`
 }
 
 // RLSConfig 控制 PostgreSQL Row-Level Security 的启用档位。
@@ -247,6 +257,7 @@ func LoadConfig() (*Config, error) {
 	viper.Set("security", rawConfig["security"])
 	viper.Set("admin", rawConfig["admin"])
 	viper.Set("deployment", rawConfig["deployment"])
+	viper.Set("cloud_discovery", rawConfig["cloud_discovery"])
 
 	// 重新绑定到 Config 结构
 	var config Config

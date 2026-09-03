@@ -3,6 +3,7 @@ package feishu
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ func (h *Handler) RegisterRoutes(auth *gin.RouterGroup, public *gin.RouterGroup)
 	feishu := auth.Group("/feishu")
 	{
 		feishu.GET("/oauth/auth-url", middleware.RequirePermission("feishu", "use"), h.GetOAuthAuthURL)
-			feishu.POST("/sync/ticket/:ticket_id", middleware.RequirePermission("ticket", "update"), h.SyncTicketToFeishu)
+		feishu.POST("/sync/ticket/:ticket_id", middleware.RequirePermission("ticket", "update"), h.SyncTicketToFeishu)
 	}
 
 	// Public callbacks (no auth required)
@@ -196,7 +197,7 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		common.Fail(ctx, common.ForbiddenCode, "Invalid signature")
 		return
 	}
-	if !h.consumeWebhookNonce(headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], headers["X-Lark-Signature"]) {
+	if !h.consumeWebhookNonce(tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"]) {
 		common.Fail(ctx, common.ForbiddenCode, "Replay detected")
 		return
 	}
@@ -232,9 +233,24 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 	common.Success(ctx, &dto.FeishuWebhookResponse{EventType: msg.Type, Action: "ignored"})
 }
 
-func (h *Handler) consumeWebhookNonce(timestamp, nonce, signature string) bool {
-	key := timestamp + ":" + nonce + ":" + signature
+func (h *Handler) consumeWebhookNonce(tenantID int, timestamp, nonce string) bool {
+	if tenantID <= 0 || timestamp == "" || nonce == "" {
+		return false
+	}
+	unixTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return false
+	}
 	now := time.Now()
+	requestTime := time.Unix(unixTimestamp, 0)
+	if requestTime.Before(now.Add(-5*time.Minute)) || requestTime.After(now.Add(5*time.Minute)) {
+		return false
+	}
+
+	// A nonce is single-use within a tenant and timestamp. The signature is
+	// deliberately excluded: including it would allow the same nonce to be
+	// consumed repeatedly by changing the body and recomputing the signature.
+	key := fmt.Sprintf("%d:%s:%s", tenantID, timestamp, nonce)
 	h.replayMu.Lock()
 	defer h.replayMu.Unlock()
 	for k, expires := range h.replayed {

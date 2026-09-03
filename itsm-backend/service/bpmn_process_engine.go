@@ -330,24 +330,49 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		}
 	}()
 
+	task, err := e.completeTaskWithClient(ctx, txc, tenantID, taskID, variables)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// 7. 提交事务；任一步骤失败已在上方回滚
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %w", err)
+	}
+
+	// 8. 记录审计日志 - 任务完成（事务外，仅审计，失败不阻断）
+	e.recordTaskCompletedAudit(ctx, task, variables)
+	return nil
+}
+
+// CompleteTaskWithClient 在调用方已经建立的数据库事务中完成任务。
+// txc 必须绑定到该事务；本方法不提交、回滚，也不写事务外审计，由事务所有者决定最终结果。
+func (e *CustomProcessEngine) CompleteTaskWithClient(ctx context.Context, txc *ent.Client, taskID string, variables map[string]interface{}) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = e.completeTaskWithClient(ctx, txc, tenantID, taskID, variables)
+	return err
+}
+
+func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *ent.Client, tenantID int, taskID string, variables map[string]interface{}) (*ent.ProcessTask, error) {
 	// 1. 获取任务（固定按当前租户过滤，不存在"无过滤跨租户"分支）
 	task, err := txc.ProcessTask.Query().
 		Where(processtask.TaskID(taskID), processtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("获取任务失败: %w", err)
+		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
-	if err := e.authorizeTaskActor(ctx, task); err != nil {
-		_ = tx.Rollback()
-		return err
+	if err := e.authorizeTaskActorWithClient(ctx, txc, task); err != nil {
+		return nil, err
 	}
 
 	// 2. 获取流程实例 - 使用任务中存储的ProcessInstanceID (ent自动生成的ID)
 	instance, err := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
 	// 3. 获取流程定义并解析
@@ -361,21 +386,18 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		).
 		Only(ctx)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("获取流程定义失败: %w", err)
+		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
 	bpmnDefinitions, err := e.parser.ParseXML(definition.BpmnXML)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("解析BPMN失败: %w", err)
+		return nil, fmt.Errorf("解析BPMN失败: %w", err)
 	}
 	process := bpmnDefinitions.Processes[0]
 
 	// 4. 更新当前任务状态
 	if task.Status == "completed" || task.Status == "cancelled" {
-		_ = tx.Rollback()
-		return fmt.Errorf("任务已结束，不能重复完成")
+		return nil, fmt.Errorf("任务已结束，不能重复完成")
 	}
 
 	updated, err := txc.ProcessTask.Update().
@@ -390,19 +412,16 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		SetTaskVariables(variables).
 		Save(ctx)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("更新任务状态失败: %w", err)
+		return nil, fmt.Errorf("更新任务状态失败: %w", err)
 	}
 	if updated != 1 {
-		_ = tx.Rollback()
-		return fmt.Errorf("任务已被处理，请刷新后重试")
+		return nil, fmt.Errorf("任务已被处理，请刷新后重试")
 	}
 
 	// 5. 在事务内合并变量（无并发写者，直接合并即可）
 	instance, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables)
 	if err != nil {
-		_ = tx.Rollback()
-		return fmt.Errorf("合并实例变量失败: %w", err)
+		return nil, fmt.Errorf("合并实例变量失败: %w", err)
 	}
 
 	// 6. 执行流程推进（从当前UserTask继续）。审批拒绝策略属于节点
@@ -412,31 +431,24 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	if approvalAction == "reject" && rejectStrategy == "terminate" {
 		if _, err = txc.ProcessInstance.UpdateOneID(instance.ID).
 			SetStatus("terminated").SetEndTime(time.Now()).Save(ctx); err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("终止被拒绝流程失败: %w", err)
+			return nil, fmt.Errorf("终止被拒绝流程失败: %w", err)
 		}
 		if _, err = txc.ProcessTask.Update().Where(
 			processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
 			processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
 		).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
+			return nil, fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
 		}
 	} else if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
-		_ = tx.Rollback()
-		return err
+		return nil, err
 	}
 	if err := e.recordApprovalDecision(ctx, txc, instance, task, variables); err != nil {
-		_ = tx.Rollback()
-		return err
+		return nil, err
 	}
+	return task, nil
+}
 
-	// 7. 提交事务；任一步骤失败已在上方回滚
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %w", err)
-	}
-
-	// 8. 记录审计日志 - 任务完成（事务外，仅审计，失败不阻断）
+func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, task *ent.ProcessTask, variables map[string]interface{}) {
 	userID := 0
 	userName := ""
 	if u, ok := ctx.Value("user").(*ent.User); ok {
@@ -447,8 +459,6 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 	if err := e.auditService.RecordTaskCompleted(ctx, task, userID, userName, variablesBefore, variables); err != nil {
 		e.logger.Warnw("audit record failed", "error", err)
 	}
-
-	return nil
 }
 
 // mergeVariablesInTx 在事务内合并流程实例变量并返回更新后的实例。
@@ -509,11 +519,15 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 // user or an explicitly resolved candidate. System/internal calls without an
 // authenticated actor keep their existing behavior.
 func (e *CustomProcessEngine) authorizeTaskActor(ctx context.Context, task *ent.ProcessTask) error {
+	return e.authorizeTaskActorWithClient(ctx, e.client, task)
+}
+
+func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, client *ent.Client, task *ent.ProcessTask) error {
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if userID <= 0 {
 		return nil
 	}
-	actor, err := e.client.User.Query().Where(user.ID(userID)).Only(ctx)
+	actor, err := client.User.Query().Where(user.ID(userID)).Only(ctx)
 	if err != nil {
 		return fmt.Errorf("审批用户不存在: %w", err)
 	}
