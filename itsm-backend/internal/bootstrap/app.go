@@ -34,7 +34,6 @@ import (
 	marketplaceService "itsm-backend/service/marketplace"
 
 	"itsm-backend/database"
-	"itsm-backend/docs"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
@@ -1136,16 +1135,6 @@ func NewApplication() *Application {
 		TicketAssociationService: ticketAssociationService,
 	}
 	router.SetupRoutes(r, routerConfig)
-
-	// Swagger - configure and register swagger docs
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = ""
-	docs.SwaggerInfo.BasePath = "/"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
-	docs.SwaggerInfo.Title = "ITSM API"
-	docs.SwaggerInfo.Description = "IT Service Management System API Documentation"
-	// Swagger 路由已在 router.SetupRoutes 中通过 ENABLE_SWAGGER 环境变量条件注册，
-	// 此处不再重复注册，避免 dev 环境同时设置 ENABLE_SWAGGER=true 时触发路由冲突 panic。
 
 	return &Application{
 		Cfg:               cfg,
