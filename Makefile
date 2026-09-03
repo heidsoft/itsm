@@ -113,6 +113,53 @@ health: ## 健康检查
 	@curl -s http://localhost/api/v1/health | jq . || echo "后端不健康"
 	@curl -s http://localhost | head -1 || echo "前端不健康"
 
+# ========================
+# 开发环境优化命令
+# ========================
+
+dev-start-docker: ## 启动优化后的Docker开发环境（启用BuildKit + 前端持久化缓存）
+	@echo "$(BLUE)启动Docker开发环境（优化模式）...$(NC)"
+	@DOCKER_BUILDKIT=1 docker compose -f docker-compose.dev.yml up -d
+	@echo "$(GREEN)优化：BuildKit缓存 + .next持久化已启用$(NC)"
+	@echo "$(GREEN)提示：前端代码变更会自动热重载，但建议重启时执行 dev-rebuild 清理缓存$(NC)"
+
+dev-rebuild: ## 重建开发环境镜像（启用BuildKit缓存）
+	@echo "$(BLUE)重建开发环境（保留缓存）...$(NC)"
+	@DOCKER_BUILDKIT=1 docker compose -f docker-compose.dev.yml build --pull itsm-backend itsm-frontend
+	@docker compose -f docker-compose.dev.yml up -d itsm-backend itsm-frontend
+	@echo "$(GREEN)重建完成$(NC)"
+
+dev-backend-local: ## 本地直接运行后端（编译产物），仅容器提供DB/Redis/Minio
+	@echo "$(BLUE)启动本地后端模式（DB/Redis/Minio走容器）...$(NC)"
+	@docker compose -f docker-compose.dev.yml up -d postgres redis minio itsm-init
+	@echo "$(BLUE)等待DB就绪...$(NC)"
+	@sleep 3
+	@echo "$(BLUE)请在另一个终端运行：cd itsm-backend && go run ./cmd/server$(NC)"
+	@echo "$(GREEN)后端监听 localhost:8090$(NC)"
+	@echo "$(GREEN)前端：cd itsm-frontend && npm run dev$(NC)"
+
+dev-stop: ## 停止开发环境
+	@echo "$(BLUE)停止开发环境...$(NC)"
+	docker compose -f docker-compose.dev.yml down
+	@echo "$(GREEN)停止完成$(NC)"
+
+dev-logs: ## 查看开发环境日志
+	docker compose -f docker-compose.dev.yml logs -f
+
+dev-status: ## 显示开发环境状态
+	docker compose -f docker-compose.dev.yml ps
+
+dev-reset: ## 重置开发环境（清除所有数据）
+	@echo "$(RED)警告：将删除所有开发数据！$(NC)"
+	@read -p "确认? (y/N) " -n 1 -r; echo; if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then exit 1; fi
+	docker compose -f docker-compose.dev.yml down -v
+	rm -rf itsm-frontend/.next
+	@echo "$(GREEN)重置完成，执行 make dev-start-docker 重新启动$(NC)"
+
+dev-frontend-only: ## 仅启动前端开发服务器（需要后端已运行）
+	@echo "$(BLUE)启动前端热重载开发服务器...$(NC)"
+	cd itsm-frontend && npm run dev
+
 status: ## 显示服务状态
 	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps
 

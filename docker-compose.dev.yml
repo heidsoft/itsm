@@ -15,6 +15,9 @@
 # success — please do not reintroduce it on the core services.
 
 services:
+  # BuildKit 共享缓存（加速增量编译）
+  # 在 docker desktop 设置中启用 BuildKit，或者设置 DOCKER_BUILDKIT=1 环境变量
+
   # PostgreSQL 数据库（开发环境）
   # 本机 Homebrew PostgreSQL 默认占用 5432，开发容器改为发布到 55432。
   # 后端使用 `postgres:5432`（容器网络主机名），因此 8090/3000 等对外端口不受影响。
