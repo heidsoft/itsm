@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -17,6 +18,19 @@ import (
 	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
+)
+
+// SubmitApproval 的领域哨兵错误：handler 层按语义分流
+// （409 Conflict / 404 Not Found / 403 Forbidden），不得再伪装成 500。
+var (
+	// ErrApprovalRecordProcessed 审批记录已被并发请求抢先处理（乐观锁竞态落败）→ 409
+	ErrApprovalRecordProcessed = errors.New("approval record already processed")
+	// ErrApprovalRecordNotFound 审批记录不存在（或租户不匹配）→ 404
+	ErrApprovalRecordNotFound = errors.New("approval record not found")
+	// ErrApprovalNotAuthorized 当前用户不是该记录的指定审批人 → 403
+	ErrApprovalNotAuthorized = errors.New("user is not authorized to approve this record")
+	// ErrApprovalOutOfOrder 越级审批（前序级别尚未完成）→ 409
+	ErrApprovalOutOfOrder = errors.New("approval out of order")
 )
 
 type ApprovalService struct {
@@ -335,7 +349,7 @@ func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client
 		).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("approval record not found or already processed: %w", err)
+		return fmt.Errorf("%w: %v", ErrApprovalRecordNotFound, err)
 	}
 
 	// 顺序审批校验（H1 修复）：仅允许审批当前最低待审批级别，防止越级审批
@@ -345,13 +359,13 @@ func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client
 	}
 	if approvalRecord.CurrentLevel > minLevel {
 		s.logger.Warnw("Approval out of order", "record_level", approvalRecord.CurrentLevel, "min_pending_level", minLevel)
-		return fmt.Errorf("请先完成前序级别（第 %d 级）的审批", minLevel)
+		return fmt.Errorf("%w: 请先完成前序级别（第 %d 级）的审批", ErrApprovalOutOfOrder, minLevel)
 	}
 
 	// 权限检查：验证用户是否是该审批记录的指定审批人
 	if approvalRecord.ApproverID != userID {
 		s.logger.Warnw("User is not the assigned approver", "user_id", userID, "approver_id", approvalRecord.ApproverID, "record_id", recordID)
-		return fmt.Errorf("user is not authorized to approve this record")
+		return ErrApprovalNotAuthorized
 	}
 
 	// 获取审批工作流以检查操作权限
@@ -402,7 +416,7 @@ func (s *ApprovalService) submitApproval(ctx context.Context, client *ent.Client
 		// Ent 的 UpdateOne 命中 0 行会返回 not-found，这里转为明确业务错误。
 		if ent.IsNotFound(err) {
 			s.logger.Warnw("Approval record already processed by another request (race lost)", "record_id", recordID)
-			return fmt.Errorf("审批记录已被其他请求处理，请刷新后重试")
+			return fmt.Errorf("%w: 审批记录已被其他请求处理，请刷新后重试", ErrApprovalRecordProcessed)
 		}
 		s.logger.Errorw("Failed to update approval record", "error", err)
 		return fmt.Errorf("failed to update approval record: %w", err)

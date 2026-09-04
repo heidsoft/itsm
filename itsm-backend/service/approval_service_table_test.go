@@ -864,7 +864,9 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 			userID:       0, // 会在测试中设为正确的 approver ID
 			recordStatus: "approved",
 			wantErr:      true,
-			errContains:  "not found or already processed",
+			// 哨兵语义：非 pending 记录按"记录不存在"处理（→ handler 层 404），
+			// 并发竞态落败（pending→被抢）才映射 409 ErrApprovalRecordProcessed
+			errContains: ErrApprovalRecordNotFound.Error(),
 		},
 		{
 			name:         "invalid action",

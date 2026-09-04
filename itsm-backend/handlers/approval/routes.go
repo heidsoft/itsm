@@ -1,12 +1,14 @@
 package approval
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -313,7 +315,19 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 		req.DelegateToUserID,
 		tid,
 	); err != nil {
-		common.Fail(c, common.InternalErrorCode, "提交审批失败: "+err.Error())
+		// 按领域哨兵错误分流：并发冲突/越级 → 409，记录不存在 → 404，
+		// 非指定审批人 → 403；仅真实故障保留 500（T-2 观察项修复）。
+		switch {
+		case errors.Is(err, service.ErrApprovalRecordProcessed),
+			errors.Is(err, service.ErrApprovalOutOfOrder):
+			common.Conflict(c, err.Error(), nil)
+		case errors.Is(err, service.ErrApprovalRecordNotFound):
+			common.Fail(c, common.NotFoundCode, "审批记录不存在")
+		case errors.Is(err, service.ErrApprovalNotAuthorized):
+			common.Fail(c, common.ForbiddenCode, "当前用户不是该审批记录的指定审批人")
+		default:
+			common.Fail(c, common.InternalErrorCode, "提交审批失败: "+err.Error())
+		}
 		return
 	}
 
