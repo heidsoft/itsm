@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useAuthStore, ROLES } from '@/lib/store/auth-store';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isAuthenticated as checkCookieAuth } from '@/lib/auth/token-storage';
 import { httpClient } from '@/lib/api/http-client';
@@ -314,9 +314,11 @@ export const AdminGuard: React.FC<AdminGuardProps> = ({
   fallback,
   showFallback = true,
 }) => {
-  const { hasRole } = useAuthStore();
+  // 统一走 store 的 isAdmin（与 hasPermission/hasRole 单一语义源，
+  // 避免组件层散落硬编码角色字符串——33bfac27 教训：双轨判断易漂移）
+  const isAdmin = useAuthStore(state => state.isAdmin);
 
-  if (!hasRole('admin') && !hasRole('super_admin')) {
+  if (!isAdmin()) {
     if (showFallback) {
       return fallback || <AccessDenied />;
     }
@@ -343,7 +345,7 @@ export const SuperAdminGuard: React.FC<SuperAdminGuardProps> = ({
 }) => {
   const { hasRole } = useAuthStore();
 
-  if (!hasRole('super_admin')) {
+  if (!hasRole(ROLES.SUPER_ADMIN)) {
     if (showFallback) {
       return fallback || <AccessDenied />;
     }
