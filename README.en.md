@@ -24,7 +24,7 @@ ITSM is an open-source enterprise service management platform designed for digit
 
 The platform covers tickets, incidents, problems, changes, releases, service requests, service catalogs, knowledge, SLA, CMDB, and BPMN orchestration. AI is embedded into triage, summarization, knowledge retrieval, workflow recommendations, audit trails, and controlled tool execution.
 
-The project is currently in the v1.1 hardening phase. Before a production rollout, validate security configuration, backup and recovery, capacity, SSO and organization synchronization, monitoring, and disaster recovery for your environment.
+The project is currently in the v1.6.x hardening convergence phase: the legacy controller layer has been fully retired in favor of `handlers/<domain>` vertical slices, state-machine concurrency protection (CAS) and business-error semantics (409 vs 500) have landed, and reliable async execution is in place. Before a production rollout, validate security configuration, backup and recovery, capacity, SSO and organization synchronization, monitoring, and disaster recovery for your environment.
 
 ## Core Capabilities
 

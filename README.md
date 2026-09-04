@@ -58,7 +58,7 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 - **AI 是决策支持**：分诊、摘要、检索和建议可降级、可审计，不绕过权限和人工责任。
 - **异步动作必须可靠**：工作流启动和关键通知通过事务 command/outbox、租约、fencing、重试和死信执行，不依赖请求内 goroutine。
 
-> 当前处于生产加固阶段。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；开源用户请先看[开源产品能力说明](./docs/product/open-source-release-capability.md)，生产选型再结合[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果。
+> 当前处于 v1.6.x 生产加固收敛阶段：legacy controller 迁移已完成，后端统一为 `handlers/<domain>` 垂直分层；状态机并发防护（CAS）、业务错误语义（409 区分于 500）与可靠异步执行已落地。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；开源用户请先看[开源产品能力说明](./docs/product/open-source-release-capability.md)，生产选型再结合[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果。
 
 开发前请先阅读[文档状态与事实源](./docs/documentation-governance.md)。`output/`、`docs/review/`、`docs/test-plan/` 和 `docs/archive/` 中的报告是历史快照，不能覆盖当前源码、运行时和最新发布证据。
 
@@ -84,8 +84,8 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 |:---|:---:|:---|:---|
 | 工单与事件 | GA 候选 | 状态流转、分派、CI、SLA、BPMN、租户隔离 | 固化事件恢复旅程和容量验收；事件更新含 `force` 参数可绕过版本检查，生产部署前需明确控制策略 |
 | 工单类型与动态表单 | GA 候选 | 类型快照、动态字段、Preset 安装、Workflow/SLA/Assignment 绑定、独立权限与审计 | 大规模字段配置、升级兼容和管理员 E2E 验收 |
-| 变更管理 | **Pilot** | 风险、受影响 CI、审批、回滚方案、PIR 基础 | BPMN 推进与业务状态落库尚非原子，审批记录更新失败仅 warn；影响分析门禁、窗口冲突与回滚演练需补齐后重新评估 GA 候选 |
-| 问题与 Known Error | Pilot | 根因、临时方案、关联事件、知识沉淀基础 | 强化 CI 引用和知识发布闭环 |
+| 变更管理 | **Pilot** | 风险、受影响 CI、审批、回滚方案、PIR 基础；业务状态机 CAS 并发防护与审批链收口 | 影响分析门禁、窗口冲突与回滚演练需补齐；审批链量级/会签与 BPMN 推进闭环继续收敛后重新评估 GA 候选 |
+| 问题与 Known Error | Pilot | 根因、临时方案、关联事件、知识沉淀基础；完整状态机生命周期（open → investigating → resolved → closed）与状态机违规 409 语义 | 强化 CI 引用和知识发布闭环 |
 | 服务目录与请求 | Pilot | 目录、请求、审批、服务任务基础 | 目录版本、交付补偿和 CI 变更闭环 |
 | CMDB 核心 | GA 候选 | CI 类型、配置项、关系、历史、拓扑、影响分析 | 数据质量、规模和恢复验收；CI 历史记录在 CI 保存后单独写入，原子性需生产验证 |
 | CMDB 云发现 | Pilot | 阿里云适配与连通基础 | Job/Worker/Diff/对账、密钥服务和退役治理 |
@@ -94,7 +94,7 @@ ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问
 | 知识与 RAG | Pilot | 文章、关键词/向量检索、问答降级；默认关键词后端仅为进程内后备 | 持久化向量存储、发布版本、可见性和索引一致性 |
 | AI | Pilot | LLM Gateway、分诊、摘要、RAG、审计框架 | 统一 evaluator、反馈和高风险动作治理 |
 | 通知与连接器 | Pilot | 可靠通知 outbox、投递审计、连接器框架 | 真实渠道健康检查、回调验签和重放运维 |
-| RBAC/多租户 | GA 候选 | 角色权限、Endpoint ACL、租户过滤、审计 | 按领域持续补权限矩阵和跨租户回归；`super_admin/sysadmin` 跨租户绕过需明确范围；用户有效性查询暂未校验租户归属 |
+| RBAC/多租户 | GA 候选 | 角色权限、Endpoint ACL、租户过滤、审计；动态权限热更新（数据库权限两表 + 缓存失效）；`super_admin` 通配权限链路（登录/`/auth/me`/前端判定对齐） | 按领域持续补权限矩阵和跨租户回归；`super_admin/sysadmin` 跨租户绕过需明确范围；用户有效性查询暂未校验租户归属 |
 
 CMDB 的正式与试点边界见 [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md)。
 
@@ -332,6 +332,7 @@ flowchart TB
 - 事件、变更的关键 BPMN 启动命令。
 - 工单创建、SLA 违规和变更审批通知生产者。
 - 站内通知及企业消息投递的幂等、重试、死信和投递审计基础。
+- 资源已删除的异步命令（如变更删除后残留的工作流/通知命令）识别为永久失败并立即进入死信，不再占用重试轮次。
 
 设计与运维约束见 [Operational Command / Outbox](./docs/architecture/operational-command-outbox.md)。
 
@@ -427,6 +428,10 @@ npm test
 # 根目录工程契约
 cd ..
 make check-contracts
+
+# 业务流程回归（需先启动开发环境；覆盖事件/问题全生命周期、变更拒绝路径、
+# 状态机负例、伪造 token 负例与通知/仪表盘联动，共 27 项断言）
+python3 output/dev_business_flow_test.py
 ```
 
 详细分层、测试策略和 E2E 用法见[本地开发命令](./docs/dev-commands-reference.md)和[测试指南](./docs/testing/README.md)。
