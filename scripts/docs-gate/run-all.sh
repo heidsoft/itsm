@@ -2,11 +2,12 @@
 #
 # scripts/docs-gate/run-all.sh
 #
-# 一键运行 docs-gate 的 4 条规则：
+# 一键运行 docs-gate 的 5 条规则：
 #   C.1 硬编码生产密码（hardcoded passwords）
 #   C.2 Roadmap 重复
 #   C.3 内部 markdown 链接失效（advisory）
 #   C.4 发布报告无 revision 断言
+#   C.5 代码 <-> 文档同步新鲜度（make 目标存在性 / ROADMAP 与 CHANGELOG 新鲜度）
 #
 # 当前阶段（v1.5）全部 advisory：仅日志报告，不阻断构建。
 # v2.0 起升级为 hard：缺失任意关键字段阻断。
@@ -53,6 +54,7 @@ run_gate "C.1 hardcoded passwords"   "${ROOT_DIR}/scripts/docs-gate/check-hardco
 run_gate "C.2 duplicate roadmap"    "${ROOT_DIR}/scripts/docs-gate/check-duplicate-roadmap.sh"
 run_gate "C.3 broken internal links" "${ROOT_DIR}/scripts/docs-gate/check-broken-links.sh"
 run_gate "C.4 release claims"       "${ROOT_DIR}/scripts/docs-gate/check-release-claims.sh"
+run_gate "C.5 doc sync freshness"   "${ROOT_DIR}/scripts/docs-gate/check-doc-sync.sh"
 
 echo ""
 echo "########################################"

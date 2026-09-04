@@ -29,13 +29,31 @@ When making architecture choices, prefer enterprise correctness, auditability, t
 
 ## Current Product Stage
 
-The repository is past v1.0 GA foundation work and is moving through v1.1 hardening:
+The repository is past v1.0 GA and is converging on the v1.6.x hardening line:
 
 - v1.0 delivered ITIL core flows, BPMN workflow engine, CMDB v1, knowledge/RAG scaffold, SLA, RBAC, multi-tenant/MSP foundations, Docker Compose, GHCR images, and basic AI/connector scaffolding.
-- v1.1 focus is coverage backfill, controller splitting, connector marketplace v1, RBAC hardening, AI audit console, and integration test coverage.
-- v1.5+ focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
+- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. The legacy `controller/` layer has been fully retired in favor of `handlers/<domain>`.
+- v1.7 focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
 
 For new work, align with the roadmap rather than creating parallel mechanisms. If a feature overlaps with workflow, connector, AI skill, or marketplace direction, extend the existing extension point.
+
+## Documentation Sync Discipline
+
+Docs and code are one bidirectional loop, not a one-way afterthought. In every change batch:
+
+1. **Code → docs (sync obligation).** If your change lands in a sync-trigger category below, update the doc in the SAME commit — never "next PR":
+
+   | Change | Update |
+   |:---|:---|
+   | user-visible fix / capability | `CHANGELOG.md` `[Unreleased]` |
+   | API contract change (breaking or not) | `CHANGELOG.md` + `docs/api/API_REFERENCE.md` (+ `UPGRADE.md` if breaking) |
+   | domain maturity change (GA candidate / Pilot) | `README.md` maturity table + `docs/product/` — verify against source/tests first |
+   | make targets / dev commands / compose usage | `README.md` (+ `README.en.md`/`README.ja.md` if referenced there) |
+   | roadmap status change | `ROADMAP.md` + refresh its `Last synced` date |
+
+2. **Docs → code (drive obligation).** Start iterations from `ROADMAP.md` convergence items and `docs/prd/`; after hardening/fix work, write the new capability baseline back into ROADMAP "已落地" and the README maturity table, citing the test/acceptance evidence.
+
+3. **Doc drift is a defect.** Fix docs in the same batch as the code that invalidated them; if truly impossible, log a follow-up in `CHANGELOG.md` `[Unreleased]`. Run `make docs-gate` (advisory today) when docs or Makefile targets changed — gate C.5 auto-verifies make-target existence and ROADMAP/CHANGELOG freshness. Full rules: [docs/documentation-governance.md](./docs/documentation-governance.md).
 
 ## Development Commands
 

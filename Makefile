@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend deploy test clean
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -107,6 +107,57 @@ lint-frontend: ## 运行前端lint
 
 type-check: ## TypeScript类型检查
 	cd itsm-frontend && npm run type-check
+
+check-contracts: ## 校验工程契约（API 同源、部署、CI 等 7 项）
+	@echo "$(BLUE)校验工程契约...$(NC)"
+	@node scripts/check-engineering-contracts.js
+
+docs-gate: ## 运行文档质量门禁（advisory；--strict 传 DOCS_GATE_ARGS=--strict）
+	@echo "$(BLUE)运行文档质量门禁...$(NC)"
+	@bash scripts/docs-gate/run-all.sh $(DOCS_GATE_ARGS)
+
+# ========================
+# 生产语义化入口（README 引用的稳定目标名）
+# ========================
+
+prod-init: ## 生成 .env.prod（不覆盖已有文件），空密钥字段填充随机值
+	@if [ -f .env.prod ]; then \
+		echo "$(RED).env.prod 已存在，跳过生成以避免覆盖真实凭据$(NC)"; \
+	else \
+		cp .env.prod.example .env.prod; \
+		for k in DB_PASSWORD REDIS_PASSWORD JWT_SECRET; do \
+			val=$$(openssl rand -hex 32); \
+			perl -pi -e "s{^$${k}=.*}{$${k}=$${val}}" .env.prod; \
+		done; \
+		echo "$(GREEN).env.prod 已生成：DB_PASSWORD/REDIS_PASSWORD/JWT_SECRET 已填入随机值$(NC)"; \
+		echo "$(RED)仍必须手动设置：ADMIN_PASSWORD、域名、TLS 等全部 [REQUIRED] 项$(NC)"; \
+	fi
+
+prod-deploy: deploy ## 部署到生产环境（deploy 别名）
+prod-health: health ## 生产健康检查（health 别名）
+prod-status: status ## 生产状态查询（status 别名）
+build-images: build ## 构建全部镜像（build 别名，支持 VERSION/REGISTRY 变量）
+
+verify-scripts: ## 校验 scripts 下全部 shell 脚本语法
+	@echo "$(BLUE)校验脚本语法...$(NC)"
+	@fail=0; for f in scripts/*.sh scripts/docs-gate/*.sh; do \
+		bash -n "$$f" || { echo "语法错误: $$f"; fail=1; }; \
+	done; if [ $$fail -eq 1 ]; then exit 1; fi
+	@echo "$(GREEN)所有脚本语法通过$(NC)"
+
+# ========================
+# 开发环境语义化别名
+# ========================
+
+dev-health: ## 开发环境健康检查
+	@curl -s -o /dev/null -w "backend:  HTTP %{http_code}\n" --max-time 5 http://localhost:8090/api/v1/health || echo "backend:  down"
+	@curl -s -o /dev/null -w "frontend: HTTP %{http_code}\n" --max-time 5 http://localhost:3000 || echo "frontend: down"
+
+dev-stop-docker: dev-stop ## 停止 Docker 开发环境（dev-stop 别名）
+dev-clean: dev-reset ## 清理开发数据卷（dev-reset 别名：删除本地数据库与对象存储数据）
+dev-start-local: dev-backend-local ## 本机热更新开发（DB/Redis/MinIO 走容器，Go/Next 本地运行）
+dev-stop-local: ## 停止本地开发进程说明
+	@echo "本地 Go/Next 进程为前台运行：在对应终端按 Ctrl-C 停止；停容器请执行 make dev-stop"
 
 health: ## 健康检查
 	@echo "$(BLUE)检查服务状态...$(NC)"
