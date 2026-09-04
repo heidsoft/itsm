@@ -367,23 +367,31 @@ func (c *ProductionService) DeleteCIAttributeDefinition(ctx *gin.Context) {
 // ------------------------------ 配置项相关接口 ------------------------------
 
 // ListCIs 获取配置项列表
-// @Summary 获取配置项列表
-// @Description 获取所有配置项的列表，支持分页和筛选
+// @Summary 获取配置项列表（统一 List + Search 入口，P1-1）
+// @Description 单一入口：覆盖原 List + Search 双接口。支持分页、过滤、关键词宽模糊、排序、标签过滤、时间范围与关系预加载。
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param size query int false "每页数量"
-// @Param ciTypeId query int false "CI类型ID"
-// @Param status query string false "状态"
+// @Param page query int false "页码（默认1）"
+// @Param size query int false "每页数量（默认20，最大200）"
+// @Param ciTypeId query int false "CI类型ID（精确匹配）"
+// @Param ciType query string false "CI类型字符串（精确匹配）"
+// @Param status query string false "状态（模糊匹配）"
 // @Param environment query string false "环境"
 // @Param criticality query string false "重要性"
 // @Param cloudProvider query string false "云厂商"
 // @Param cloudAccountId query string false "云账号ID"
 // @Param cloudRegion query string false "云区域"
-// @Param assignedTo query string false "负责人"
-// @Param ownedBy query string false "拥有者"
-// @Param search query string false "搜索关键词（名称、资产标签、序列号等）"
+// @Param assignedTo query string false "负责人（模糊匹配）"
+// @Param ownedBy query string false "拥有者（模糊匹配）"
+// @Param search query string false "关键词宽模糊（名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）"
+// @Param ciNumber query string false "CI唯一业务编号精确匹配（AI Agent 稳定定位实体用自然键）"
+// @Param sortBy query string false "排序字段（id/name/status/environment/criticality/created_at/updated_at）"
+// @Param sortOrder query string false "排序方向（asc/desc）"
+// @Param dateFrom query string false "创建时间起始（RFC3339）"
+// @Param dateTo query string false "创建时间截止（RFC3339）"
+// @Param tagIds query []int false "标签ID列表（OR）"
+// @Param withRelations query bool false "是否预加载关系（默认false）"
 // @Success 200 {object} common.Response{data=dto.CIListResponse}
 // @Router /api/v1/cmdb/cis [get]
 func (c *ProductionService) ListCIs(ctx *gin.Context) {
@@ -1267,11 +1275,14 @@ func (c *ProductionService) BatchDeleteCI(ctx *gin.Context) {
 // SearchCI 高级搜索CI
 // @Summary 高级搜索CI
 // @Description 多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
+// @Summary [已废弃] CI高级搜索
+// @Description 已废弃（P1-1）：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
 // @Tags CMDB
 // @Accept json
 // @Produce json
-// @Param request body dto.CISearchRequest true "搜索请求"
+// @Param request body dto.CISearchRequest true "搜索请求（已废弃）"
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.CIResponse]}
+// @Deprecated
 // @Router /api/v1/cmdb/cis/search [post]
 func (c *ProductionService) SearchCI(ctx *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(ctx)

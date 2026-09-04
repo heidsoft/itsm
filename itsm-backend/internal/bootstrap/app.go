@@ -686,6 +686,11 @@ func NewApplication() *Application {
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
 	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
 	toolRegistry.SetTicketService(ticketService)
+	// P1-3：CMDB 关系类工具（get_ci/get_ci_relationships/create_ci_relationship/delete_ci_relationship/get_ci_impact）需要 CIRelationshipService
+	toolRegistry.SetCIRelationshipService(ciRelationshipService)
+	// P1-4：影响分析 AI 解释服务（可选注入；LLM/Redis 任意缺失 → fail-open 不影响主流程）
+	impactExplainer := service.NewImpactExplanationService(llmGateway, llmConfig.Model, nil, sugar)
+	toolRegistry.SetImpactExplainer(impactExplainer)
 
 	// General Notification Service & Controller
 	notificationService := service.NewNotificationService(client)

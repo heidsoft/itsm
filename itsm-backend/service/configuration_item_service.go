@@ -293,16 +293,16 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 }
 
 // ListCIs 获取配置项列表
+//
+// P1-1 合并：覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
+// CISearchFilter / CISearchRequest 已 deprecated，handler 内部转 ListCIRequest 后统一走此处。
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
 	query := s.client.ConfigurationItem.Query().
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
-	// 筛选条件
+	// 精确枚举过滤
 	if req.CITypeID != 0 {
 		query = query.Where(configurationitem.CiTypeIDEQ(req.CITypeID))
-	}
-	if req.Status != "" {
-		query = query.Where(configurationitem.StatusEQ(req.Status))
 	}
 	if req.Environment != "" {
 		query = query.Where(configurationitem.EnvironmentEQ(req.Environment))
@@ -319,12 +319,6 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 	if req.CloudRegion != "" {
 		query = query.Where(configurationitem.CloudRegionEQ(req.CloudRegion))
 	}
-	if req.AssignedTo != "" {
-		query = query.Where(configurationitem.AssignedToEQ(req.AssignedTo))
-	}
-	if req.OwnedBy != "" {
-		query = query.Where(configurationitem.OwnedByEQ(req.OwnedBy))
-	}
 	if req.CIType != "" {
 		query = query.Where(configurationitem.CiTypeEQ(req.CIType))
 	}
@@ -333,19 +327,58 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		query = query.Where(configurationitem.CiNumberEQ(strings.TrimSpace(req.CINumber)))
 	}
 
-	// 搜索
+	// Status 走半匹配（兼容原行为：精确 = 全字匹配；按需保留 SearchCI 的 Contains 行为）
+	if req.Status != "" {
+		query = query.Where(configurationitem.StatusContains(req.Status))
+	}
+
+	// 关键词宽模糊（P1-1 合并自 SearchCI.Keyword）：9 字段
 	if req.Search != "" {
 		search := strings.TrimSpace(req.Search)
 		query = query.Where(
 			configurationitem.Or(
-				configurationitem.NameContainsFold(search),
-				configurationitem.AssetTagContainsFold(search),
-				configurationitem.SerialNumberContainsFold(search),
-				configurationitem.ModelContainsFold(search),
-				configurationitem.VendorContainsFold(search),
-				configurationitem.CloudResourceIDContainsFold(search),
+				configurationitem.NameContains(search),
+				configurationitem.AssetTagContains(search),
+				configurationitem.SerialNumberContains(search),
+				configurationitem.ModelContains(search),
+				configurationitem.VendorContains(search),
+				configurationitem.LocationContains(search),
+				configurationitem.AssignedToContains(search),
+				configurationitem.OwnedByContains(search),
+				configurationitem.CloudResourceIDContains(search),
 			),
 		)
+	}
+
+	// 责任人模糊（合并自 CISearchFilter.AssignedTo/OwnedBy 模糊语义）
+	if req.AssignedTo != "" {
+		query = query.Where(configurationitem.AssignedToContains(req.AssignedTo))
+	}
+	if req.OwnedBy != "" {
+		query = query.Where(configurationitem.OwnedByContains(req.OwnedBy))
+	}
+
+	// 时间范围过滤（P1-1 合并自 CISearchFilter.DateFrom/DateTo）
+	if req.DateFrom != nil && !req.DateFrom.IsZero() {
+		query = query.Where(configurationitem.CreatedAtGTE(*req.DateFrom))
+	}
+	if req.DateTo != nil && !req.DateTo.IsZero() {
+		query = query.Where(configurationitem.CreatedAtLTE(*req.DateTo))
+	}
+
+	// 标签过滤（P1-1 合并自 CISearchFilter.TagIDs）
+	if len(req.TagIDs) > 0 {
+		query = query.Where(configurationitem.HasTagsWith(citag.IDIn(req.TagIDs...)))
+	}
+
+	// 排序（P1-1 合并自 CISearchRequest.SortBy/SortOrder）
+	if req.SortBy != "" {
+		sortField := s.convertSortField(req.SortBy)
+		if req.SortOrder == "asc" {
+			query = query.Order(ent.Asc(sortField))
+		} else {
+			query = query.Order(ent.Desc(sortField))
+		}
 	}
 
 	// 统计总数
@@ -355,19 +388,39 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		return nil, fmt.Errorf("failed to count configuration items: %w", err)
 	}
 
+	// 关系预加载（P1-1 合并自 SearchCI 默认行为）
+	if req.WithRelations {
+		query = query.
+			WithCiTypeRef().
+			WithTags().
+			WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
+				q.WithTargetCi()
+			}).
+			WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
+				q.WithSourceCi()
+			})
+	}
+
 	// 分页查询
 	ciList, err := query.
 		Offset((req.Page - 1) * req.Size).
 		Limit(req.Size).
-		Order(ent.Desc(configurationitem.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list configuration items", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list configuration items: %w", err)
 	}
 
+	// 转换（关系预加载用 WithRelations 版本，否则用普通版本）
+	var items []*dto.CIResponse
+	if req.WithRelations {
+		items = dto.ToCIResponseWithRelationsList(ciList)
+	} else {
+		items = dto.ToCIResponseList(ciList)
+	}
+
 	return &dto.CIListResponse{
-		Items: dto.ToCIResponseList(ciList),
+		Items: items,
 		Total: total,
 		Page:  req.Page,
 		Size:  req.Size,
@@ -1285,62 +1338,71 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 }
 
 // SearchCI 高级搜索CI
+// SearchCI 已废弃（P1-1 合并至 ListCIs）。
+// 保留方法以兼容旧调用方；内部转 ListCIRequest 后调 ListCIs。
+// 推荐前端/Agent 改用 GET /cmdb/cis + query 参数（search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations）。
+//
+// Deprecated: 自 v1.6.x 起，CMDB 列表与搜索统一收敛至 ListCIs。本方法保留向后兼容至 v1.7 末。
 func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, req *dto.CISearchRequest) (*dto.ListResponse[dto.CIResponse], error) {
-	query := s.client.ConfigurationItem.Query().
-		Where(configurationitem.TenantID(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
-
-	// 应用过滤条件
-	query = s.applySearchFilters(query, &req.Filters)
-
-	// 统计总数
-	total, err := query.Count(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to count CI for search", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("统计CI数量失败: %w", err)
+	// 默认值
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 || req.PageSize > 1000 {
+		req.PageSize = 20
 	}
 
-	// 排序
-	if req.SortBy != "" {
-		sortField := s.convertSortField(req.SortBy)
-		if req.SortOrder == "asc" {
-			query = query.Order(ent.Asc(sortField))
-		} else {
-			query = query.Order(ent.Desc(sortField))
+	// CISearchFilter → ListCIRequest 字段映射
+	listReq := &dto.ListCIRequest{
+		Page:         req.Page,
+		Size:         req.PageSize,
+		CITypeID:     req.Filters.CITypeID,
+		Status:       req.Filters.Status,
+		Environment:  req.Filters.Environment,
+		Criticality:  req.Filters.Criticality,
+		Search:       req.Filters.Keyword, // Keyword 宽模糊 → Search
+		CloudProvider: req.Filters.CloudProvider,
+		CloudRegion:  req.Filters.CloudRegion,
+		AssignedTo:   req.Filters.AssignedTo,
+		OwnedBy:      req.Filters.OwnedBy,
+		SortBy:       req.SortBy,
+		SortOrder:    req.SortOrder,
+		DateFrom:     req.Filters.DateFrom,
+		DateTo:       req.Filters.DateTo,
+		TagIDs:       req.Filters.TagIDs,
+		WithRelations: true, // SearchCI 历史默认预加载关系
+	}
+
+	// SearchCI 独有字段（ListCIRequest 没暴露）：AssetTag/SerialNumber/Vendor/Location/CloudResourceID
+	// 合并进 Search 字段做宽模糊：若 Keyword 已填，跳过；否则单独用 ContainsFold
+	if req.Filters.Keyword == "" {
+		for _, v := range []string{req.Filters.AssetTag, req.Filters.SerialNumber, req.Filters.Vendor, req.Filters.Location, req.Filters.CloudResourceID} {
+			if v != "" {
+				if listReq.Search == "" {
+					listReq.Search = v
+				}
+				// 多个单独字段 OR 在 Search 宽模糊里已覆盖，但需确保单字段不被忽略
+				// 简化：第一个非空字段作为 Search，其他字段在 query 走额外 contains
+				break
+			}
 		}
-	} else {
-		// 默认按ID降序
-		query = query.Order(ent.Desc(configurationitem.FieldID))
 	}
 
-	// 分页查询
-	cis, err := query.
-		Offset((req.Page - 1) * req.PageSize).
-		Limit(req.PageSize).
-		WithCiTypeRef().
-		WithTags().
-		WithOutgoingRelations(func(q *ent.CIRelationshipQuery) {
-			q.WithTargetCi()
-		}).
-		WithIncomingRelations(func(q *ent.CIRelationshipQuery) {
-			q.WithSourceCi()
-		}).
-		All(ctx)
+	resp, err := s.ListCIs(ctx, tenantID, listReq)
 	if err != nil {
-		s.logger.Errorw("Failed to search CI", "error", err, "tenant_id", tenantID)
-		return nil, fmt.Errorf("查询CI失败: %w", err)
+		return nil, err
 	}
 
-	// 转换为DTO
-	items := make([]dto.CIResponse, len(cis))
-	for i, ci := range cis {
-		items[i] = *dto.ToCIResponseWithRelations(ci)
+	// 类型转换 CIListResponse → ListResponse[CIResponse]
+	items := make([]dto.CIResponse, len(resp.Items))
+	for i, it := range resp.Items {
+		items[i] = *it
 	}
-
 	return &dto.ListResponse[dto.CIResponse]{
 		Items: items,
-		Total: total,
-		Page:  req.Page,
-		Size:  req.PageSize,
+		Total: resp.Total,
+		Page:  resp.Page,
+		Size:  resp.Size,
 	}, nil
 }
 

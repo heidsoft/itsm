@@ -1255,6 +1255,19 @@ func ToCIResponseList(cis []*ent.ConfigurationItem) []*CIResponse {
 	return res
 }
 
+// ToCIResponseWithRelationsList 转换配置项实体列表为带关系的响应列表
+// P1-1：ListCIs 在 WithRelations=true 时使用
+func ToCIResponseWithRelationsList(cis []*ent.ConfigurationItem) []*CIResponse {
+	if cis == nil {
+		return nil
+	}
+	res := make([]*CIResponse, len(cis))
+	for i, ci := range cis {
+		res[i] = ToCIResponseWithRelations(ci)
+	}
+	return res
+}
+
 // ToCIRelationshipResponse 转换 CI 关系实体为响应
 func ToCIRelationshipResponse(rel *ent.CIRelationship) *CIRelationshipResponse {
 	if rel == nil {

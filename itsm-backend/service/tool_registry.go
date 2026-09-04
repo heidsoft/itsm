@@ -22,12 +22,14 @@ type ToolDefinition struct {
 }
 
 type ToolRegistry struct {
-	rag        *RAGService
-	incident   *IncidentService
-	cmdb       *ConfigurationItemService
-	client     *ent.Client
-	ticket     *TicketService
-	ticketType *TicketTypeService
+	rag            *RAGService
+	incident       *IncidentService
+	cmdb           *ConfigurationItemService
+	ciRelationship *CIRelationshipService
+	client         *ent.Client
+	ticket         *TicketService
+	ticketType     *TicketTypeService
+	impactExplain  *ImpactExplanationService
 }
 
 func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *ConfigurationItemService, client *ent.Client) *ToolRegistry {
@@ -37,8 +39,14 @@ func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *Configura
 // SetTicketService / SetTicketTypeService 注入写工具所需的领域服务。
 // 采用 setter 而非构造函数参数，避免破坏既有 NewToolRegistry(nil,...) 测试调用，
 // 也便于在 bootstrap 中按依赖就绪顺序分别装配（ticketType 在 ticket 之后构造）。
-func (t *ToolRegistry) SetTicketService(s *TicketService)         { t.ticket = s }
-func (t *ToolRegistry) SetTicketTypeService(s *TicketTypeService) { t.ticketType = s }
+func (t *ToolRegistry) SetTicketService(s *TicketService)             { t.ticket = s }
+func (t *ToolRegistry) SetTicketTypeService(s *TicketTypeService)     { t.ticketType = s }
+func (t *ToolRegistry) SetCIRelationshipService(s *CIRelationshipService) {
+	t.ciRelationship = s
+}
+
+// SetImpactExplainer P1-4：影响分析 AI 解释服务（可选注入，未注入时不报错）
+func (t *ToolRegistry) SetImpactExplainer(s *ImpactExplanationService) { t.impactExplain = s }
 
 // GetTool 按名称查找工具定义，找不到返回 nil
 // P2-6: AI 工具 RBAC 校验入口需要查询 ToolDefinition.Resource/Action
@@ -67,6 +75,8 @@ func (t *ToolRegistry) canExecuteWriteTool(name string) bool {
 		return t.ticketType != nil
 	case "link_ticket_ci":
 		return t.cmdb != nil
+	case "create_ci_relationship", "delete_ci_relationship":
+		return t.cmdb != nil && t.ciRelationship != nil
 	default:
 		return true
 	}
@@ -271,6 +281,104 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 					"color":            map[string]interface{}{"type": "string"},
 				},
 				"required": []string{"code", "name"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		// ============================================================
+		// P1-3 CMDB AI 工具扩展（get_ci / get_ci_relationships /
+		//   create_ci_relationship / delete_ci_relationship / get_ci_impact）
+		// 全部围绕 CI 业务编号（自然键）或多轮稳定的 ci_id 提供，让 Agent
+		// 能完整驱动 CMDB 拓扑编辑与影响面分析。
+		// ============================================================
+		{
+			Name:        "get_ci",
+			Description: "按 CI 编号或 ID 精确获取一个配置项（含完整字段与 1 跳关系摘要）。多轮对话中用 ci_number 稳定定位同一资产，先 list_cis 拿到 ci_number 再 get_ci 取详情最稳妥",
+			ReadOnly:    true,
+			Resource:    "cmdb",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"ci_number":      map[string]interface{}{"type": "string", "description": "CI 唯一业务编号（如 CI-202609-000001），与 ci_id 二选一"},
+					"ci_id":          map[string]interface{}{"type": "integer", "description": "CI 数据库 ID，先用 list_cis 定位"},
+					"with_relations": map[string]interface{}{"type": "boolean", "description": "是否返回 1 跳关系摘要（默认 true）"},
+				},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
+			Name:        "get_ci_relationships",
+			Description: "获取某 CI 的所有关系（出边 + 入边 + 类型汇总）。用于回答「这个资产依赖什么 / 被谁依赖」类问题",
+			ReadOnly:    true,
+			Resource:    "cmdb",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"ci_number": map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
+					"ci_id":     map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
+					"direction": map[string]interface{}{"type": "string", "enum": []any{"outgoing", "incoming", "both"}, "description": "出边/入边/双向，默认 both"},
+				},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
+			Name:        "create_ci_relationship",
+			Description: "在两个 CI 之间创建一条关系（需审批）。关系类型见 GET /cmdb/ontology#relationshipTypes 单一源；创建前必须先 list_cis 拿到 source/target 的 ci_id。系统会自动判环（wouldCreateCycle）",
+			ReadOnly:    false,
+			Resource:    "cmdb",
+			Action:      "write",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"source_ci_id":     map[string]interface{}{"type": "integer", "description": "源 CI ID"},
+					"target_ci_id":     map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
+					"relationship_type": map[string]interface{}{"type": "string", "description": "关系类型枚举（如 depends_on/hosts/connects_to/...）"},
+					"strength":         map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
+					"description":      map[string]interface{}{"type": "string", "description": "备注"},
+				},
+				"required": []string{"source_ci_id", "target_ci_id", "relationship_type"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
+			Name:        "delete_ci_relationship",
+			Description: "删除一条 CI 关系（需审批）。仅传 relationship_id（先用 get_ci_relationships 查）",
+			ReadOnly:    false,
+			Resource:    "cmdb",
+			Action:      "write",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"relationship_id": map[string]interface{}{"type": "integer", "description": "关系 ID"},
+				},
+				"required": []string{"relationship_id"},
+			},
+			ResultSchema: map[string]interface{}{
+				"type": "object",
+			},
+		},
+		{
+			Name:        "get_ci_impact",
+			Description: "对指定 CI 做影响分析（多跳上下游遍历）：返回上下游节点/距离/关系类型/风险等级/受影响工单与事件，用于回答「这个 CI 故障会影响哪些资产与服务」。hops=1 表示直接依赖与被依赖，hops=3 推荐用于深度分析（max=10）",
+			ReadOnly:    true,
+			Resource:    "cmdb",
+			Action:      "read",
+			ArgsSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"ci_number": map[string]interface{}{"type": "string", "description": "CI 唯一业务编号"},
+					"ci_id":     map[string]interface{}{"type": "integer", "description": "CI 数据库 ID"},
+					"hops":      map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 10, "description": "BFS 跳数（默认 3）"},
+				},
 			},
 			ResultSchema: map[string]interface{}{
 				"type": "object",
@@ -528,6 +636,205 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, err
 		}
 		return created, nil
+
+	// ============================================================
+	// P1-3 CMDB AI 工具实现
+	// ============================================================
+	case "get_ci":
+		if t.cmdb == nil {
+			return nil, fmt.Errorf("cmdb service not initialized")
+		}
+		ciNumber, _ := args["ci_number"].(string)
+		var ciID int
+		if v, ok := args["ci_id"].(float64); ok {
+			ciID = int(v)
+		}
+		if ciID == 0 && ciNumber == "" {
+			return nil, fmt.Errorf("get_ci: ci_number or ci_id is required")
+		}
+		withRelations := true
+		if v, ok := args["with_relations"].(bool); ok {
+			withRelations = v
+		}
+		// ci_number 解析：用 list_cis 路径（避免新增 GetCIByNumber，list 已有 ci_number 精确过滤）
+		if ciID == 0 {
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			if err != nil {
+				return nil, fmt.Errorf("get_ci: lookup by ci_number failed: %w", err)
+			}
+			if len(listResp.Items) == 0 {
+				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+			}
+			ciID = listResp.Items[0].ID
+		}
+		ci, err := t.cmdb.GetCIByID(ctx, ciID, tenantID, withRelations)
+		if err != nil {
+			return nil, err
+		}
+		if ci == nil {
+			return map[string]interface{}{"found": false, "ci_id": ciID}, nil
+		}
+		return map[string]interface{}{"found": true, "ci": ci}, nil
+
+	case "get_ci_relationships":
+		if t.ciRelationship == nil {
+			return nil, fmt.Errorf("ci relationship service not initialized")
+		}
+		ciNumber, _ := args["ci_number"].(string)
+		var ciID int
+		if v, ok := args["ci_id"].(float64); ok {
+			ciID = int(v)
+		}
+		if ciID == 0 && ciNumber == "" {
+			return nil, fmt.Errorf("get_ci_relationships: ci_number or ci_id is required")
+		}
+		if ciID == 0 {
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			if err != nil {
+				return nil, fmt.Errorf("get_ci_relationships: lookup failed: %w", err)
+			}
+			if len(listResp.Items) == 0 {
+				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+			}
+			ciID = listResp.Items[0].ID
+		}
+		direction, _ := args["direction"].(string)
+		if direction == "" {
+			direction = "both"
+		}
+		outgoing, err := t.ciRelationship.ListCIRelationshipsByCIID(ctx, ciID, tenantID, "outgoing")
+		if err != nil {
+			return nil, fmt.Errorf("get_ci_relationships: outgoing failed: %w", err)
+		}
+		incoming, err := t.ciRelationship.ListCIRelationshipsByCIID(ctx, ciID, tenantID, "incoming")
+		if err != nil {
+			return nil, fmt.Errorf("get_ci_relationships: incoming failed: %w", err)
+		}
+		out := outgoing
+		in := incoming
+		if direction == "outgoing" {
+			in = nil
+		}
+		if direction == "incoming" {
+			out = nil
+		}
+		return map[string]interface{}{
+			"ci_id":    ciID,
+			"outgoing": out,
+			"incoming": in,
+			"total":    len(out) + len(in),
+		}, nil
+
+	case "create_ci_relationship":
+		if t.cmdb == nil || t.ciRelationship == nil {
+			return nil, fmt.Errorf("cmdb relationship service not initialized")
+		}
+		var sourceID, targetID int
+		if v, ok := args["source_ci_id"].(float64); ok {
+			sourceID = int(v)
+		}
+		if v, ok := args["target_ci_id"].(float64); ok {
+			targetID = int(v)
+		}
+		if sourceID <= 0 || targetID <= 0 {
+			return nil, fmt.Errorf("create_ci_relationship: source_ci_id and target_ci_id are required")
+		}
+		relType, _ := args["relationship_type"].(string)
+		if relType == "" {
+			return nil, fmt.Errorf("create_ci_relationship: relationship_type is required (see /cmdb/ontology#relationshipTypes)")
+		}
+		strength, _ := args["strength"].(string)
+		if strength == "" {
+			strength = "medium"
+		}
+		description, _ := args["description"].(string)
+
+		req := &dto.CreateCIRelationshipRequest{
+			SourceCIID:       sourceID,
+			TargetCIID:       targetID,
+			RelationshipType: dto.CIRelationshipType(relType),
+			Strength:         dto.RelationshipStrength(strength),
+			Description:      description,
+		}
+		created, err := t.ciRelationship.CreateCIRelationship(ctx, req, tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return created, nil
+
+	case "delete_ci_relationship":
+		if t.ciRelationship == nil {
+			return nil, fmt.Errorf("ci relationship service not initialized")
+		}
+		var relID int
+		if v, ok := args["relationship_id"].(float64); ok {
+			relID = int(v)
+		}
+		if relID <= 0 {
+			return nil, fmt.Errorf("delete_ci_relationship: relationship_id is required")
+		}
+		if err := t.ciRelationship.DeleteCIRelationship(ctx, relID, tenantID); err != nil {
+			return nil, err
+		}
+		return map[string]interface{}{"deleted": true, "relationship_id": relID}, nil
+
+	case "get_ci_impact":
+		if t.cmdb == nil || t.ciRelationship == nil {
+			return nil, fmt.Errorf("cmdb relationship service not initialized")
+		}
+		ciNumber, _ := args["ci_number"].(string)
+		var ciID int
+		if v, ok := args["ci_id"].(float64); ok {
+			ciID = int(v)
+		}
+		if ciID == 0 && ciNumber == "" {
+			return nil, fmt.Errorf("get_ci_impact: ci_number or ci_id is required")
+		}
+		if ciID == 0 {
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			if err != nil {
+				return nil, fmt.Errorf("get_ci_impact: lookup failed: %w", err)
+			}
+			if len(listResp.Items) == 0 {
+				return map[string]interface{}{"found": false, "ci_number": ciNumber}, nil
+			}
+			ciID = listResp.Items[0].ID
+		}
+		hops := 3
+		if v, ok := args["hops"].(float64); ok {
+			hops = int(v)
+		}
+		if hops < 1 {
+			hops = 1
+		}
+		if hops > 10 {
+			hops = 10
+		}
+		impact, err := t.ciRelationship.GetCIImpactAnalysis(ctx, ciID, tenantID, hops)
+		if err != nil {
+			return nil, err
+		}
+		// P1-4：影响分析 AI 解释层（fail-open，未注入 / LLM 失败时返回 nil）
+		var explain map[string]interface{}
+		if t.impactExplain != nil && impact != nil {
+			if ie, _ := t.impactExplain.ExplainImpact(ctx, tenantID, ciID, hops, impact); ie != nil {
+				explain = map[string]interface{}{
+					"summary":     ie.Summary,
+					"rootCauses":  ie.RootCauses,
+					"slaRisks":    ie.SLARisks,
+					"suggestions": ie.Suggestions,
+					"generatedAt": ie.GeneratedAt,
+					"model":       ie.Model,
+				}
+			}
+		}
+		return map[string]interface{}{
+			"impact":     impact,
+			"hops":       hops,
+			"ci_id":      ciID,
+			"explain_ai": explain,
+		}, nil
+
 	default:
 		return nil, fmt.Errorf("unknown tool: %s", name)
 	}

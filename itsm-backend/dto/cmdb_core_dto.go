@@ -50,22 +50,45 @@ type CITypeListResponse struct {
 }
 
 // ListCIRequest 获取配置项列表请求。
+//
+// 单一入口：覆盖原 ListCIRequest + CISearchRequest 合并需求
+//  - 关键词模糊（search 字段，匹配：名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）
+//  - 枚举精确过滤（status/environment/criticality/ciType）
+//  - 云字段（cloudProvider/cloudAccountId/cloudRegion）
+//  - 责任人（assignedTo/ownedBy）
+//  - 业务编号（ciNumber，AI 多轮定位自然键）
+//  - 排序（sortBy/sortOrder）
+//  - 时间范围（dateFrom/dateTo）
+//  - 标签（tagIds，[]int）
+//  - 分页（page/size）
 type ListCIRequest struct {
-	Page           int    `form:"page,default=1" binding:"omitempty,min=1"`
-	Size           int    `form:"size,default=20" binding:"omitempty,min=1,max=200"`
-	CITypeID       int    `form:"ciTypeId"`
-	Status         string `form:"status"`
-	Environment    string `form:"environment"`
-	Criticality    string `form:"criticality"`
-	CloudProvider  string `form:"cloudProvider"`
-	CloudAccountID string `form:"cloudAccountId"`
-	CloudRegion    string `form:"cloudRegion"`
-	AssignedTo     string `form:"assignedTo"`
-	OwnedBy        string `form:"ownedBy"`
-	Search         string `form:"search"`
-	CIType         string `form:"ciType"`
-	// CINumber CI 唯一业务编号精确匹配（AI Agent 稳定定位实体用的自然键）
+	Page           int       `form:"page,default=1" binding:"omitempty,min=1"`
+	Size           int       `form:"size,default=20" binding:"omitempty,min=1,max=200"`
+	CITypeID       int       `form:"ciTypeId"`
+	CIType         string    `form:"ciType"`
+	Status         string    `form:"status"`
+	Environment    string    `form:"environment"`
+	Criticality    string    `form:"criticality"`
+	CloudProvider  string    `form:"cloudProvider"`
+	CloudAccountID string    `form:"cloudAccountId"`
+	CloudRegion    string    `form:"cloudRegion"`
+	AssignedTo     string    `form:"assignedTo"`
+	OwnedBy        string    `form:"ownedBy"`
+	// Search 模糊搜索关键词（合并原 SearchCI.Keyword 宽语义）：
+	// 名称 / 资产标签 / 序列号 / 型号 / 厂商 / 云资源ID / 位置 / 负责人 / 归属人
+	Search string `form:"search"`
+	// CINumber CI 唯一业务编号精确匹配（AI Agent 稳定定位实体的自然键）
 	CINumber string `form:"ciNumber"`
+	// 排序（P1-1 合并自 CISearchRequest）
+	SortBy    string `form:"sortBy" binding:"omitempty,oneof=id name status environment criticality created_at updated_at"`
+	SortOrder string `form:"sortOrder" binding:"omitempty,oneof=asc desc"`
+	// 时间范围（P1-1 合并自 CISearchFilter.DateFrom/DateTo）
+	DateFrom *time.Time `form:"dateFrom" time_format:"2006-01-02T15:04:05Z07:00"`
+	DateTo   *time.Time `form:"dateTo" time_format:"2006-01-02T15:04:05Z07:00"`
+	// 标签过滤（P1-1 合并自 CISearchFilter.TagIDs）：数组形如 ?tagIds=1&tagIds=2
+	TagIDs []int `form:"tagIds"`
+	// WithRelations 是否预加载关系（P1-1 与 SearchCI 对齐：预加载出/入边+标签+CITypeRef）
+	WithRelations bool `form:"withRelations"`
 }
 
 // CIListResponse 配置项列表响应。
