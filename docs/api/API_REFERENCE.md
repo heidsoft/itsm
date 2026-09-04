@@ -969,17 +969,50 @@ Authorization: Bearer <accessToken>
 
 ## CMDB 接口
 
+> 路径前缀为 `/api/v1`。历史兼容别名 `GET /api/v1/configuration-items` 仍然可用。
+
+### 获取 CMDB 本体（AI-Native 自描述接口）
+
+供 AI Agent / 集成方在运行时发现 CMDB 契约，无需硬编码字段与枚举。
+
+```http
+GET /api/v1/cmdb/ontology
+Authorization: Bearer <accessToken>
+```
+
+返回 `data` 结构：
+
+| 字段 | 说明 |
+|:---|:---|
+| `ciTypes[]` | 租户下的 CI 类型：`id` / `name` / `description` / `icon` / `color` / `parentTypeId` / `attributeSchema`（合法 JSON 时解析为对象）/ `attributeDefinitions[]` |
+| `relationshipTypes[]` | 受控关系词表：`type` / `name` / `description` / `direction` / `reverse` / `icon` |
+| `statuses[]` / `environments[]` | 生命周期与环境取值 |
+| `tools[]` | CMDB 相关的 AI 工具定义（含 JSON-Schema 参数契约）；`list_cis` 的 `ci_type` 枚举由租户自有 CI 类型动态生成 |
+
+单个 CI 类型的属性定义查询失败只降级该类型（记 warn 日志并置空数组），不影响整体返回。
+
+### 获取 CI 关系类型词表
+
+```http
+GET /api/v1/cmdb/relationship-types
+Authorization: Bearer <accessToken>
+```
+
+返回 13 种受控关系类型：`depends_on`、`hosts`、`hosted_on`、`connects_to`（双向）、`runs_on`、`contains`、`part_of`、`impacts`、`impacted_by`、`owns`、`owned_by`、`uses`、`used_by`。
+创建/更新 CI 关系时传入该词表之外的值会返回 `400`。
+
 ### 获取配置项列表
 
 ```http
-GET /cmdb/items
+GET /api/v1/cmdb/cis
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
-- typeId: 类型过滤
-- search: 搜索关键词
+- page: 页码（默认 1）
+- size: 每页数量（默认 20，上限 200）
+- ciType: 类型过滤
+- ciNumber: 按 CI 业务编号精确过滤（如 CI-202609-000001）
+- search: 按名称/资产标签/序列号模糊搜索
 ```
 
 ### 获取配置项详情

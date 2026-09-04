@@ -12,6 +12,7 @@ import type {
   CIType,
 } from '@/types/cmdb';
 import { RelationType } from '@/types/cmdb';
+import { relationshipLabel } from '@/lib/cmdb/relationship-vocabulary';
 
 export class GraphEngine {
   /**
@@ -385,24 +386,14 @@ export class GraphEngine {
   /**
    * 获取关系类型标签
    */
-  private static getRelationshipLabel(type: RelationType): string {
-    const labels: Record<RelationType, string> = {
-      [RelationType.CONNECTED_TO]: '连接到',
-      [RelationType.INSTALLED_ON]: '安装在',
-      [RelationType.HOSTED_ON]: '托管在',
-      [RelationType.RUNS_ON]: '运行在',
-      [RelationType.CONTAINS]: '包含',
-      [RelationType.DEPENDS_ON]: '依赖于',
-      [RelationType.PROVIDES_TO]: '提供给',
-      [RelationType.USES]: '使用',
-      [RelationType.MANAGES]: '管理',
-      [RelationType.SUPPORTS]: '支持',
-      [RelationType.OWNED_BY]: '归属于',
-      [RelationType.LOCATED_IN]: '位于',
-      [RelationType.MEMBER_OF]: '成员',
-      [RelationType.CUSTOM]: '自定义',
-    };
-    return labels[type] || type;
+  /**
+   * 关系类型中文标签。
+   * 标签源统一走 relationship-vocabulary（与后端受控词表对齐），
+   * 不再使用 @/types/cmdb 的 RelationType 枚举——那是历史 mock 词表，
+   * 与后端 13 种关系类型不重合，会导致拓扑图边标签显示为原始英文 key。
+   */
+  private static getRelationshipLabel(type: string): string {
+    return relationshipLabel(type);
   }
 
   /**

@@ -54,7 +54,7 @@ export enum CIStatus {
  */
 export interface ConfigurationItem {
   id: string;
-  ciNumber: string; // CI编号
+  ciNumber?: string; // CI编号（后端自动生成，存量数据可能为空）
   name: string;
   type: CIType;
   status: CIStatus;
