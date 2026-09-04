@@ -166,7 +166,8 @@ type IncidentSeed struct {
 
 // ProblemSeed 问题种子数据结构
 type ProblemSeed struct {
-	Title       string `json:"title"`
+	ProblemNumber string `json:"problem_number"`
+	Title         string `json:"title"`
 	Description string `json:"description"`
 	Status      string `json:"status"`
 	Priority    string `json:"priority"`
@@ -177,6 +178,7 @@ type ProblemSeed struct {
 
 // ChangeSeed 变更种子数据结构
 type ChangeSeed struct {
+	ChangeNumber  string `json:"change_number"`
 	Title         string `json:"title"`
 	Description   string `json:"description"`
 	Type          string `json:"type"`
@@ -552,6 +554,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTicketTags(ctx)             // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
 	s.seedRolePermissions(ctx)        // 新增：为角色分配权限
+	s.seedBusinessRecords(ctx)        // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
 }
 
 // SeedProduction applies product defaults and then verifies the minimum

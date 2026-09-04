@@ -1,0 +1,171 @@
+{
+  "_comment": "演示数据模板：配合 make dev-seed-demo 使用（ITSM_SEED_CONFIG=config/seed/demo.json）。业务记录数组在种子配置中非空时才会播种；其余字段留空表示沿用产品默认模板（config/seed/default.json 的部门/角色/SLA/服务目录等）。所有记录幂等，可重复执行。",
+  "incidents": [
+    {
+      "incident_number": "INC-DEMO-0001",
+      "title": "核心数据库主从同步延迟超过 30 秒",
+      "description": "监控平台告警：生产 MySQL 主从复制延迟（Seconds_Behind_Master）达到 32 秒并持续上升。当前业务读写未受影响，但存在数据不一致风险，需尽快介入。",
+      "status": "new",
+      "priority": "critical",
+      "severity": "critical",
+      "category": "数据库"
+    },
+    {
+      "incident_number": "INC-DEMO-0002",
+      "title": "生产 Web 集群 CPU 使用率飙升至 95%",
+      "description": "web-03 与 web-05 节点 CPU 持续高于 95%，初步定位为定时任务异常重试导致。已横向扩容 1 个节点，继续观察并排查任务配置。",
+      "status": "in_progress",
+      "priority": "high",
+      "severity": "high",
+      "category": "应用服务"
+    },
+    {
+      "incident_number": "INC-DEMO-0003",
+      "title": "3 楼办公区 Wi-Fi 间歇性断连",
+      "description": "多位同事反馈 3 楼东侧工位 Wi-Fi 每隔几分钟断连一次。已有 AP 日志显示信道干扰，待网络组现场排查。",
+      "status": "assigned",
+      "priority": "medium",
+      "severity": "medium",
+      "category": "网络"
+    },
+    {
+      "incident_number": "INC-DEMO-0004",
+      "title": "VPN 网关部分用户登录超时",
+      "description": "外部办公人员反馈 VPN 拨入后认证超时，影响约 20% 用户。已知问题 PRB-DEMO-0001 跟踪中，可参考知识库《VPN 登录超时排查手册》临时处理。",
+      "status": "acknowledged",
+      "priority": "high",
+      "severity": "high",
+      "category": "网络"
+    },
+    {
+      "incident_number": "INC-DEMO-0005",
+      "title": "企业邮箱无法发送外部邮件",
+      "description": "邮件网关出站队列积压，外发邮件全部滞留。根因：出站 IP 被对端反垃圾网关临时限流，已切换备用出站通道，队列已清空。",
+      "status": "resolved",
+      "priority": "medium",
+      "severity": "medium",
+      "category": "邮件"
+    },
+    {
+      "incident_number": "INC-DEMO-0006",
+      "title": "财务系统报销模块提交后报 500 错误",
+      "description": "报销单提交接口报 500，日志显示附件服务连接超时。已修复附件服务连接池配置并回归验证，工单关闭。",
+      "status": "closed",
+      "priority": "medium",
+      "severity": "medium",
+      "category": "应用服务"
+    },
+    {
+      "incident_number": "INC-DEMO-0007",
+      "title": "研发测试环境磁盘空间使用率超过 90%",
+      "description": "test-node-02 磁盘使用率 92%，主要是历史构建产物堆积。已通知研发清理，并计划配置自动清理策略。",
+      "status": "new",
+      "priority": "low",
+      "severity": "low",
+      "category": "基础设施"
+    },
+    {
+      "incident_number": "INC-DEMO-0008",
+      "title": "核心交换机端口闪断导致分支机构断网",
+      "description": "总部核心交换机 SW-CORE-01 的 G0/0/24 端口反复闪断，深圳分支全部断网。已切换到备用链路，原升级为重大事件并升级至网络专家组处理。",
+      "status": "escalated",
+      "priority": "critical",
+      "severity": "critical",
+      "category": "网络"
+    }
+  ],
+  "problems": [
+    {
+      "problem_number": "PRB-DEMO-0001",
+      "title": "VPN 网关周期性登录超时根因分析",
+      "description": "近一个月 VPN 认证超时反复出现（关联事件 INC-DEMO-0004），呈现工作日高峰期集中的规律。初步怀疑认证服务连接池在高并发下耗尽，正在压测复现。",
+      "status": "investigating",
+      "priority": "high",
+      "category": "网络",
+      "root_cause": "疑似 VPN 认证服务与目录服务之间的连接池在高并发场景下耗尽，待压测数据确认。",
+      "impact": "影响约 20% 外部办公人员的远程接入体验，存在批量无法办公的风险。"
+    },
+    {
+      "problem_number": "PRB-DEMO-0002",
+      "title": "邮件系统外发失败问题复盘与预防",
+      "description": "本次外发邮件滞留（关联事件 INC-DEMO-0005）由出站 IP 限流触发。已识别根因并形成应急预案，需要评估长期解决方案（双出站通道常态化）。",
+      "status": "identified",
+      "priority": "medium",
+      "category": "邮件",
+      "root_cause": "单一出站通道无冗余，IP 信誉被对端限流后无自动切换机制。",
+      "impact": "外发邮件平均延迟 45 分钟，影响对外商务沟通。"
+    }
+  ],
+  "changes": [
+    {
+      "change_number": "CHG-DEMO-0001",
+      "title": "核心数据库版本升级（8.0.36 → 8.0.40）",
+      "description": "生产 MySQL 主库滚动升级至 8.0.40，修复已知复制延迟缺陷（与 INC-DEMO-0001 相关）。升级窗口：周六 02:00-05:00。",
+      "type": "normal",
+      "status": "pending",
+      "priority": "high",
+      "impact_scope": "high",
+      "risk_level": "high",
+      "justification": "修复主从复制延迟缺陷，降低数据不一致风险；新版本包含性能改进与安全补丁。"
+    },
+    {
+      "change_number": "CHG-DEMO-0002",
+      "title": "3 楼办公区无线 AP 固件批量升级",
+      "description": "针对 Wi-Fi 间歇性断连问题（PRB-DEMO-0001 关联），升级 3 楼全部 12 台 AP 固件至最新稳定版，并统一信道规划。",
+      "type": "normal",
+      "status": "approved",
+      "priority": "medium",
+      "impact_scope": "low",
+      "risk_level": "medium",
+      "justification": "固件升级包含信道自动避让增强，预期显著改善 3 楼无线体验。"
+    },
+    {
+      "change_number": "CHG-DEMO-0003",
+      "title": "研发区出站端口策略调整（标准变更）",
+      "description": "按标准变更模板执行：研发区防火墙开放出站 8443 端口，用于访问外部制品仓库。按模板核对清单执行，无需审批。",
+      "type": "standard",
+      "status": "draft",
+      "priority": "low",
+      "impact_scope": "low",
+      "risk_level": "low",
+      "justification": "标准变更模板场景，风险低且有回滚预案。"
+    }
+  ],
+  "knowledge_articles": [
+    {
+      "title": "VPN 登录超时排查手册",
+      "content": "适用场景：VPN 拨入后认证超时或频繁掉线。\n\n排查步骤：\n1. 确认本机网络可用（访问任意公网站点）。\n2. 重试拨入一次，记录超时发生的时间点。\n3. 若工作日 10:00 与 14:00 前后集中出现，属于已知问题（VPN 网关高并发认证瓶颈），可错峰 10 分钟后重试。\n4. 持续失败请联系服务台，提供工位 IP 与时间点。\n\n临时缓解：切换手机热点拨入。该问题由 PRB-DEMO-0001 跟踪根治。",
+      "category": "故障排查",
+      "is_published": true,
+      "view_count": 328
+    },
+    {
+      "title": "企业邮箱常见问题与自助处理",
+      "content": "1. 无法发送外部邮件：先确认收件人地址无误；若全部外发失败，可能是出站通道限流，等待 30 分钟自动恢复，紧急事项可联系服务台加急。\n2. 收不到邮件：检查垃圾邮件箱与客户端过滤规则。\n3. 邮箱容量告警：清理超大附件或归档历史邮件（客户端设置-邮箱清理）。\n4. 密码重置：统一通过门户自助重置，无法自助时联系服务台验证身份后处理。",
+      "category": "常见问题",
+      "is_published": true,
+      "view_count": 512
+    },
+    {
+      "title": "核心数据库主从同步延迟应急预案",
+      "content": "触发条件：主从延迟（Seconds_Behind_Master）连续 5 分钟超过 30 秒。\n\n处置流程：\n1. 值班工程师确认延迟趋势与 Binlog 积压量。\n2. 检查是否存在大事务/批量任务，必要时限流非核心批量写入。\n3. 延迟超过 5 分钟且持续恶化时，按重大事件流程升级（P0/P1 事件走主管审批）。\n4. 处置完成后在本预案记录复盘结论，并复核 SLA 达成情况。\n\n关联预案：数据库切换决策需 DBA 双人复核后方可执行。",
+      "category": "应急预案",
+      "is_published": true,
+      "view_count": 186
+    },
+    {
+      "title": "新员工入职 IT 账户开通流程",
+      "content": "1. HR 系统发起入职流程后，自动生成服务请求并进入 IT 服务台队列。\n2. 服务台按部门模板开通：域账号、企业邮箱、VPN、IM。\n3. 特殊权限（数据库/生产访问）需部门经理审批后开通。\n4. 开通完成后在服务请求中回传账号信息单，入职当天生效。\n\n标准时效：1 个工作日；加急件半天内完成。",
+      "category": "服务指南",
+      "is_published": true,
+      "view_count": 240
+    },
+    {
+      "title": "办公 Wi-Fi 断连自助排查五步法",
+      "content": "1. 确认是否仅本机断连：询问邻座同事。\n2. 仅本机：关闭再打开无线开关，或删除网络后重连。\n3. 多人断连：记录区域与时间，直接报修（附区域与工位号）。\n4. 有线优先：工位网口可临时切换有线办公。\n5. 报修后：在事件单中补充断连时间点，有助于网络组定位干扰源。",
+      "category": "常见问题",
+      "is_published": true,
+      "view_count": 401
+    }
+  ]
+}

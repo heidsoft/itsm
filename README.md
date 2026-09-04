@@ -100,6 +100,8 @@ CMDB 的正式与试点边界见 [CMDB 商业 MVP](./docs/product/cmdb-commercia
 
 ## 快速开始
 
+> **语言说明**：v1.6.x 产品界面为**中文优先**（面向中国私有化部署场景），英文/日文 README 提供入门指引；完整界面多语言（en-US 等）规划在 v1.7，详见 [ROADMAP](ROADMAP.md)。
+
 ### 环境要求
 
 - Docker Desktop 或兼容的 Docker Engine/Compose
@@ -141,6 +143,18 @@ make dev-start-docker
 ```
 
 该账号只用于本地开发。生产环境的管理员密码由 `.env.prod` 中的 `ADMIN_PASSWORD` 决定（初始化容器 `itsm-init` 首次启动时写入），请以你自己的 `.env.prod` 为准，不要使用任何文档示例密码。任何可被其他人访问的部署都必须先修改管理员密码、`JWT_SECRET`、数据库、Redis 和对象存储凭据。
+
+### （可选）一键填充演示数据
+
+空系统只有功能模板，没有业务记录。执行以下命令可播种一套演示数据
+（8 条事件、2 个问题、3 个变更、5 篇知识库文章），方便快速了解各模块的实际使用效果：
+
+```bash
+make dev-seed-demo   # 幂等，可重复执行
+```
+
+演示数据使用 `INC-DEMO-xxxx` / `PRB-DEMO-xxxx` / `CHG-DEMO-xxxx` 固定编号，
+覆盖事件生命周期各状态（new → escalated → closed）。生产部署**不会**预置这些虚构记录。
 
 ### 验证启动结果
 

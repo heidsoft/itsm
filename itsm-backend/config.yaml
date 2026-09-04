@@ -1,6 +1,7 @@
 database:
   host: "${DB_HOST:localhost}"
-  port: 5432
+  # DB_PORT 用于宿主机直连容器化数据库（如 dev 栈 55432）；容器内保持 5432。
+  port: "${DB_PORT:5432}"
   user: "${DB_USER:itsm}"
   # No default password is baked in. docker compose always injects DB_PASSWORD
   # (dev: dev123, prod: required), so this fallback only applies when running

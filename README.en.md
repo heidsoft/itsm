@@ -56,7 +56,23 @@ Open:
 - Backend: `http://localhost:8090`
 - Swagger: `http://localhost:8090/swagger/index.html`
 
+> **Language note:** through v1.6.x the product UI is **Chinese-first** (targeting China private-deployment scenarios). English/Japanese READMEs cover onboarding; full UI localization (en-US etc.) is planned for v1.7 — see the [ROADMAP](ROADMAP.md).
+
 The development-only initial account is `admin / admin123`. For production deployments, the admin password is set by `ADMIN_PASSWORD` in your `.env.prod` (applied by the one-shot `itsm-init` container on first start) — never use documentation example passwords there.
+
+### (Optional) One-Command Demo Data
+
+A fresh system ships with configuration templates only — no business records. Run the following
+to seed a demo dataset (8 incidents, 2 problems, 3 changes, 5 knowledge articles) so you can
+explore each module with realistic content:
+
+```bash
+make dev-seed-demo   # idempotent, safe to re-run
+```
+
+Demo records use fixed numbers (`INC-DEMO-xxxx` / `PRB-DEMO-xxxx` / `CHG-DEMO-xxxx`) covering
+the incident lifecycle (new → escalated → closed). Production deployments never seed these
+fictional records.
 
 Stop the environment:
 

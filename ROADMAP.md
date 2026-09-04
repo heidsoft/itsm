@@ -91,6 +91,7 @@ Concretely that means:
 - [x] **分层迁移收尾** — legacy controller 全部退役，新代码统一进入 `handlers/<domain>` 垂直分层；swagger 路由冲突、菜单/认证契约断裂等收敛问题清零。
 - [x] **状态机与错误语义加固** — 变更状态推进 CAS 并发防护；问题/事件状态机违规返回 409 业务语义而非 500；`super_admin` 通配权限链路（登录 / `/auth/me` / 前端判定）对齐。
 - [x] **可靠执行补强** — commandbus 对聚合已删除的命令立即死信；审批链收口 SQL 缺列修复；业务流程回归套件（63 项集成 + 27 项生命周期深度）全绿。
+- [x] **开源体验补强** — `make dev-seed-demo` 一键演示数据集（事件/问题/变更/知识库，幂等），README 快速开始接入；产品定位明示 **v1.6.x 界面中文优先**，完整界面 i18n 规划至 v1.7。
 
 ### 当前收敛项
 
@@ -132,6 +133,10 @@ Concretely that means:
       assignee, SLA tier; engineer accepts with one click.
 - [ ] **SLA forecast skill** — predict SLA breach risk per ticket,
       surface on dashboards.
+- [ ] **Full UI i18n** — the UI is Chinese-first through v1.6.x; extract
+      the remaining hardcoded strings (currently ~83% of pages) into
+      `src/lib/i18n` message catalogs and ship an en-US locale with a
+      per-user language switch.
 
 ### Quality
 
