@@ -419,10 +419,17 @@ services:
     restart: always
 
 volumes:
+  # 卷必须 external 指向既有数据卷：拆分项目名（-p itsm-prod）后 compose
+  # 会按 "<project>_<volume>" 生成新卷名，若不锁定旧卷名，prod Postgres 将挂到
+  # 空卷导致数据"消失"（实际是换了新卷）。旧卷由旧项目名 itsm 生成。
   postgres_prod_data:
-    driver: local
+    name: itsm_postgres_prod_data
+    external: true
   redis_prod_data:
-    driver: local
+    name: itsm_redis_prod_data
+    external: true
+  # minio 是 --profile storage 的可选服务且尚无历史数据卷，保持自动创建；
+  # external 会因卷不存在使首次启用 storage profile 直接报错。
   minio_prod_data:
     driver: local
 
