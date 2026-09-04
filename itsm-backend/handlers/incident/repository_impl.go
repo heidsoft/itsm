@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/user"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -447,4 +448,26 @@ func (r *EntRepository) CountTenantSLAViolations(ctx context.Context, tenantID i
 	return r.client.SLAViolation.Query().
 		Where(slaviolation.TenantIDEQ(tenantID)).
 		Count(ctx)
+}
+
+// GetUserNamesByIDs 批量查询用户姓名（id → name）。租户隔离 + IN 一次查询。
+// 查不到的用户不进 map（前端回退显示 ID）。
+func (r *EntRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	names := make(map[int]string, len(ids))
+	if len(ids) == 0 {
+		return names, nil
+	}
+	rows, err := r.client.User.Query().
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.IDIn(ids...),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("batch query user names: %w", err)
+	}
+	for _, u := range rows {
+		names[u.ID] = u.Name
+	}
+	return names, nil
 }

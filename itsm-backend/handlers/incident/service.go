@@ -192,6 +192,11 @@ func (s *Service) List(ctx context.Context, tenantID int, page, size int, filter
 	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
 }
 
+// GetUserNames 批量查询用户姓名（供列表响应回填 reporterName/assigneeName）。
+func (s *Service) GetUserNames(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	return s.repo.GetUserNamesByIDs(ctx, tenantID, ids)
+}
+
 func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Incident) (*Incident, error) {
 	current, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {

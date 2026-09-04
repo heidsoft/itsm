@@ -452,6 +452,39 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		dtos = append(dtos, h.toDTO(i))
 	}
 
+	// 批量回填 reporterName/assigneeName：一次 IN 查询避免 N+1，
+	// 前端列表直接显示姓名而非裸用户 ID。
+	userIDs := make([]int, 0, len(incidents)*2)
+	seen := make(map[int]struct{}, len(incidents)*2)
+	for _, i := range incidents {
+		if i.ReporterID > 0 {
+			if _, ok := seen[i.ReporterID]; !ok {
+				seen[i.ReporterID] = struct{}{}
+				userIDs = append(userIDs, i.ReporterID)
+			}
+		}
+		if i.AssigneeID != nil && *i.AssigneeID > 0 {
+			if _, ok := seen[*i.AssigneeID]; !ok {
+				seen[*i.AssigneeID] = struct{}{}
+				userIDs = append(userIDs, *i.AssigneeID)
+			}
+		}
+	}
+	if len(userIDs) > 0 {
+		nameMap, nameErr := h.service.GetUserNames(c.Request.Context(), tenantID, userIDs)
+		if nameErr == nil {
+			for _, d := range dtos {
+				if d.ReporterID > 0 {
+					d.ReporterName = nameMap[d.ReporterID]
+				}
+				if d.AssigneeID != nil {
+					d.AssigneeName = nameMap[*d.AssigneeID]
+				}
+			}
+		}
+		// 姓名回填是增强信息：失败不阻断列表返回，前端回退显示用户 ID
+	}
+
 	// v1.1 回归：使用 SuccessWithPagination 产出 items+incidents 别名
 	common.SuccessWithPagination(c, dtos, page, size, int64(total))
 }

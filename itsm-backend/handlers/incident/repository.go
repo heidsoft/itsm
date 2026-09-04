@@ -35,6 +35,10 @@ type Repository interface {
 	ListIncidentComments(ctx context.Context, incidentID, tenantID int) ([]*ent.IncidentEvent, error)
 	CreateIncidentCommentEvent(ctx context.Context, event *ent.IncidentEvent) (*ent.IncidentEvent, error)
 	CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error)
+
+	// GetUserNamesByIDs 批量查询用户姓名（id → name），用于列表响应回填
+	// reporterName/assigneeName，避免前端展示裸用户 ID。一次 IN 查询，无 N+1。
+	GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error)
 }
 
 // IncidentStats 聚合统计（按 tenant 隔离）

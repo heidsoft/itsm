@@ -517,3 +517,7 @@ func (m *slaMockRepository) CreateIncidentCommentEvent(ctx context.Context, even
 func (m *slaMockRepository) CountTenantSLAViolations(ctx context.Context, tenantID int) (int, error) {
 	return 0, nil
 }
+
+func (m *slaMockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	return map[int]string{}, nil
+}

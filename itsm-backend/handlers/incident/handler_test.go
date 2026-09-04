@@ -229,6 +229,10 @@ func (m *mockRepository) CountTenantSLAViolations(ctx context.Context, tenantID 
 	return 0, nil
 }
 
+func (m *mockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	return map[int]string{}, nil
+}
+
 // -----------------------------------------------------------------------------
 // harness: wires Service → Handler → gin.Engine
 // -----------------------------------------------------------------------------
