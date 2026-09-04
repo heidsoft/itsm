@@ -1,10 +1,15 @@
 'use client';
 
 /**
- * CI关系管理组件
+ * CI关系管理组件 (P1-2)
+ * - useState+useEffect+setLoading 改为 React Query：自动竞态/缓存/重试
+ * - 创建/删除走 useCreateRelationshipMutation / useDeleteRelationshipMutation，
+ *   onSuccess 自动 invalidate 出/入向查询
+ * - 拓扑环检测改用 useTopologyGraphQuery（按需触发，不在挂载时拉）
+ * - 可选 CI 候选用 useAvailableCIsQuery（搜索值变化驱动 queryKey）
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Table,
@@ -16,7 +21,7 @@ import {
   Select,
   Input,
   Tooltip,
-  message,
+  App,
   Popconfirm,
   Typography,
   Badge,
@@ -24,17 +29,18 @@ import {
   Row,
   Col,
 } from 'antd';
-import { Plus, Trash2, Eye, Link, Network } from 'lucide-react';
+import { Plus, Trash2, Link, Network } from 'lucide-react';
 import dayjs from 'dayjs';
 
+import { type CIRelationship, type TopologyEdge } from '@/lib/api/cmdb-relationship';
 import {
-  CIRelationshipAPI,
-  type CIRelationship,
-  type CIRelationshipType,
-  type RelationshipTypeInfo,
-  type CreateRelationshipRequest,
-  type TopologyEdge,
-} from '@/lib/api/cmdb-relationship';
+  useRelationshipTypesV2Query,
+  useCIRelationshipsListQuery,
+  useAvailableCIsQuery,
+  useTopologyGraphQuery,
+  useCreateRelationshipMutation,
+  useDeleteRelationshipMutation,
+} from '@/lib/hooks/useCMDB';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -62,23 +68,6 @@ const hasPath = (edges: TopologyEdge[], from: number, to: number): boolean => {
   return false;
 };
 
-// 关系类型中文映射
-const relationshipTypeLabels: Record<string, string> = {
-  dependsOn: '依赖',
-  hosts: '托管',
-  hostedOn: '所属',
-  connectsTo: '连接',
-  runsOn: '运行',
-  contains: '包含',
-  partOf: '组成',
-  impacts: '影响',
-  impactedBy: '受影响于',
-  owns: '拥有',
-  ownedBy: '被拥有',
-  uses: '使用',
-  usedBy: '被使用',
-};
-
 // 关系强度标签
 const strengthLabels: Record<string, { color: string; label: string }> = {
   critical: { color: 'red', label: '关键' },
@@ -98,153 +87,100 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   ciName,
   onRefresh,
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [outgoingRelations, setOutgoingRelations] = useState<CIRelationship[]>([]);
-  const [incomingRelations, setIncomingRelations] = useState<CIRelationship[]>([]);
-  const [relationshipTypes, setRelationshipTypes] = useState<RelationshipTypeInfo[]>([]);
+  const { message } = App.useApp();
+  // React Query：关系类型（10 分钟缓存）
+  const typesQuery = useRelationshipTypesV2Query();
+  const relationshipTypes = typesQuery.data ?? [];
+
+  // React Query：出/入向关系列表
+  const relationsQuery = useCIRelationshipsListQuery(ciId, {
+    includeOutgoing: true,
+    includeIncoming: true,
+    activeOnly: false,
+  });
+  const outgoingRelations: CIRelationship[] = relationsQuery.data?.outgoingRelations ?? [];
+  const incomingRelations: CIRelationship[] = relationsQuery.data?.incomingRelations ?? [];
+
+  // React Query：拓扑图（仅在创建模态打开时按需获取，避免空挂载）
+  const [topologyEnabled, setTopologyEnabled] = useState(false);
+  const topologyQuery = useTopologyGraphQuery(ciId, 5, topologyEnabled);
+
+  // React Query mutations
+  const createMutation = useCreateRelationshipMutation();
+  const deleteMutation = useDeleteRelationshipMutation();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createType, setCreateType] = useState<'outgoing' | 'incoming'>('outgoing');
   const [form] = Form.useForm();
+  const [searchTerm, setSearchTerm] = useState('');
+  const availableCIsQuery = useAvailableCIsQuery(ciId, searchTerm || undefined, createModalOpen);
+  const availableCIs = (availableCIsQuery.data ?? []).map(c => ({
+    id: c.id,
+    name: c.name,
+    type: c.type ?? '',
+  }));
 
-  const [availableCIs, setAvailableCIs] = useState<{ id: number; name: string; type: string }[]>(
-    []
-  );
-  const [creating, setCreating] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    },
-    []
-  );
-
-  // 加载关系类型
-  useEffect(() => {
-    const loadTypes = async () => {
-      try {
-        const types = await CIRelationshipAPI.getRelationshipTypes();
-        setRelationshipTypes(types);
-      } catch (error) {
-        message.error('加载关系类型失败');
-      }
-    };
-    loadTypes();
-  }, []);
-
-  // 加载关系数据
-  const loadRelations = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await CIRelationshipAPI.getCIRelationships(ciId, {
-        includeOutgoing: true,
-        includeIncoming: true,
-        activeOnly: false,
-      });
-      setOutgoingRelations(data.outgoingRelations);
-      setIncomingRelations(data.incomingRelations);
-    } catch (error) {
-      message.error('加载关系失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [ciId]);
-
-  useEffect(() => {
-    loadRelations();
-  }, [loadRelations]);
-
-  // 打开创建模态框
+  // 打开创建模态框：激活按需拓扑查询；触发一次初始拉取
   const handleOpenCreate = (type: 'outgoing' | 'incoming') => {
     setCreateType(type);
     setCreateModalOpen(true);
     form.resetFields();
-
-    // 加载可用CI列表
-    loadAvailableCIs();
+    setSearchTerm('');
+    setTopologyEnabled(true);
   };
 
-  // 加载可用CI列表
-  const loadAvailableCIs = async (search?: string) => {
-    try {
-      const cIs = await CIRelationshipAPI.getAvailableCIs(ciId, search);
-      setAvailableCIs(cIs.map(c => ({ id: c.id, name: c.name, type: c.type })));
-    } catch (error) {
-      message.error('加载可用CI失败，请稍后重试');
+  // 关闭模态：清查询态以释放内存
+  const handleCloseCreate = () => {
+    setCreateModalOpen(false);
+    setTopologyEnabled(false);
+  };
+
+  // 创建关系（环检测 → 提交 → 失败由 mutation onError 弹出）
+  const handleCreate = async (values: {
+    targetCiId: number;
+    relationshipType: string;
+    strength?: 'critical' | 'high' | 'medium' | 'low';
+    impactLevel?: 'critical' | 'high' | 'medium' | 'low';
+    description?: string;
+  }) => {
+    const targetCiId = values.targetCiId;
+    const sourceCiId = createType === 'outgoing' ? ciId : targetCiId;
+    const destCiId = createType === 'outgoing' ? targetCiId : ciId;
+
+    // 环检测：若拓扑数据源可达，新增 source→target 会成环
+    const graph = topologyQuery.data;
+    if (graph?.edges && hasPath(graph.edges, destCiId, sourceCiId)) {
+      message.error('无法创建关系：该关系会与现有关系形成循环依赖');
+      return;
     }
-  };
 
-  // CI 搜索防抖（300ms）
-  const handleSearchAvailableCIs = (search: string) => {
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
-    searchTimerRef.current = setTimeout(() => {
-      loadAvailableCIs(search);
-    }, 300);
-  };
-
-  // 创建关系
-  const handleCreate = async (values: any) => {
-    setCreating(true);
     try {
-      const targetCiId = values.targetCiId;
-
-      const sourceCiId = createType === 'outgoing' ? ciId : targetCiId;
-      const destCiId = createType === 'outgoing' ? targetCiId : ciId;
-
-      // 环检测：若已有关系图中 target 可达 source，新增 source→target 会成环
-      try {
-        const graph = await CIRelationshipAPI.getTopologyGraph(ciId, 5);
-        if (hasPath(graph.edges || [], destCiId, sourceCiId)) {
-          message.error('无法创建关系：该关系会与现有关系形成循环依赖');
-          return;
-        }
-      } catch {
-        // 拓扑接口不可用时不阻塞创建，由后端兜底校验
-      }
-
-      const data: CreateRelationshipRequest = {
+      await createMutation.mutateAsync({
         sourceCiId,
         targetCiId: destCiId,
-        relationshipType: values.relationshipType,
+        relationshipType: values.relationshipType as any,
         strength: values.strength,
         impactLevel: values.impactLevel,
         description: values.description,
-      };
-
-      await CIRelationshipAPI.createRelationship(data);
-      message.success('关系创建成功');
-      setCreateModalOpen(false);
+      });
+      handleCloseCreate();
       form.resetFields();
-      loadRelations();
       onRefresh?.();
-    } catch (error) {
-      message.error(error instanceof Error ? error.message : '创建关系失败');
-    } finally {
-      setCreating(false);
+    } catch (e: any) {
+      message.error(e?.message ?? '创建关系失败');
     }
   };
 
-  // 删除关系
   const handleDelete = async (relationId: number) => {
-    if (deletingId !== null) return;
-    setDeletingId(relationId);
     try {
-      await CIRelationshipAPI.deleteRelationship(relationId);
-      message.success('关系已删除');
-      loadRelations();
+      await deleteMutation.mutateAsync(relationId);
       onRefresh?.();
-    } catch (error) {
-      message.error('删除关系失败');
-    } finally {
-      setDeletingId(null);
+    } catch {
+      // error 已由 mutation onError 展示
     }
   };
+
+  const isLoading = relationsQuery.isLoading;
 
   // 表格列定义
   const columns = [
@@ -321,7 +257,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
                 danger
                 icon={<Trash2 />}
                 size='small'
-                loading={deletingId === record.id}
+                loading={deleteMutation.isPending && deleteMutation.variables === record.id}
                 aria-label='删除关系'
               />
             </Popconfirm>
@@ -347,7 +283,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
           size='small'
-          loading={loading}
+          loading={isLoading}
         />
       ),
     },
@@ -366,7 +302,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: total => `共 ${total} 条` }}
           size='small'
-          loading={loading}
+          loading={isLoading}
         />
       ),
     },
@@ -400,7 +336,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       <Modal
         title={createType === 'outgoing' ? '添加出向关系' : '添加入向关系'}
         open={createModalOpen}
-        onCancel={() => setCreateModalOpen(false)}
+        onCancel={handleCloseCreate}
         footer={null}
         width={500}
       >
@@ -419,7 +355,9 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
               showSearch
               placeholder='搜索CI名称'
               optionFilterProp='children'
-              onSearch={handleSearchAvailableCIs}
+              onSearch={setSearchTerm}
+              filterOption={false}
+              loading={availableCIsQuery.isFetching}
               style={{ width: '100%' }}
              options={availableCIs.map(ci => ({ value: ci.id, label: <Space>
                     <span>{ci.name}</span>
@@ -459,8 +397,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
 
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => setCreateModalOpen(false)}>取消</Button>
-              <Button type='primary' htmlType='submit' loading={creating}>
+              <Button onClick={handleCloseCreate}>取消</Button>
+              <Button type='primary' htmlType='submit' loading={createMutation.isPending}>
                 创建
               </Button>
             </Space>

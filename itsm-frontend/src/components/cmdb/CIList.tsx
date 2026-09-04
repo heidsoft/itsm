@@ -2,9 +2,13 @@
 
 /**
  * 配置项 (CI) 列表组件
+ * P1-2：手写 useState + useEffect + isMountedRef + requestIdRef 替换为 React Query。
+ *  - useCIsQuery 自动处理竞态/卸载/loading/error（无需 AbortController/cancelledRef）
+ *  - useCITypesQuery 缓存 10 分钟（CI 类型列表稳定）
+ *  - useDeleteCIMutation 成功后自动 invalidate 列表
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Table,
   Tag,
@@ -24,9 +28,13 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 
-import { CMDBApi } from '@/lib/api/';
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
 import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
+import {
+  useCIsQuery,
+  useCITypesQuery,
+  useDeleteCIMutation,
+} from '@/lib/hooks/useCMDB';
 const statusColors: Record<string, string> = {
   [CIStatus.ACTIVE]: 'green',
   [CIStatus.INACTIVE]: 'default',
@@ -34,24 +42,9 @@ const statusColors: Record<string, string> = {
   [CIStatus.DECOMMISSIONED]: 'red',
 };
 
-const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  return '';
-};
-
 const CIList: React.FC = () => {
   const router = useRouter();
   const { message } = App.useApp();
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-  const [data, setData] = useState<ConfigurationItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [types, setTypes] = useState<CIType[]>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const requestIdRef = useRef(0);
-  const isMountedRef = useRef(true);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [filters, setFilters] = useState<{
     search: string;
     ciTypeId?: number;
@@ -59,120 +52,73 @@ const CIList: React.FC = () => {
   }>({
     search: '',
   });
-  const filtersRef = useRef(filters);
-
-  const updateFilters = (next: typeof filters) => {
-    filtersRef.current = next;
-    setFilters(next);
-  };
 
   const [query, setQuery] = useState({
     offset: 0,
     limit: 10,
   });
 
-  const loadTypes = useCallback(async () => {
-    try {
-      const res = await CMDBApi.getCITypes();
-      if (!isMountedRef.current) return;
-      // 支持多种响应格式
-      const list = (res as any)?.data ?? (res as any)?.items ?? res;
-      setTypes(Array.isArray(list) ? list : []);
-    } catch (e) {
-      if (!isMountedRef.current) return;
-      message.error('加载资产类型失败');
-    }
-  }, []);
+  // React Query：CI 列表（自动竞态/缓存/重试；queryKey 含 filter+page 让缓存自然按维度隔离）
+  const listQuery = useCIsQuery({
+    offset: query.offset,
+    limit: query.limit,
+    ciTypeId: filters.ciTypeId,
+    search: filters.search || undefined,
+    status: filters.status,
+  });
+  const data = useMemo(() => listQuery.data?.items ?? [], [listQuery.data]);
+  const total = useMemo(() => listQuery.data?.total ?? 0, [listQuery.data]);
 
-  const loadData = useCallback(async () => {
-    const requestId = ++requestIdRef.current;
-    setLoading(true);
-    setLoadError(false);
-    try {
-      const currentFilters = filtersRef.current;
-      const resp = await CMDBApi.getCIs({
-        offset: query.offset,
-        limit: query.limit,
-        ciTypeId: currentFilters.ciTypeId,
-        search: currentFilters.search || undefined,
-        status: currentFilters.status,
-      });
-      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setData(resp.items ?? []);
-      setTotal(resp.total ?? 0);
-    } catch (error) {
-      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
-      setLoadError(true);
-      const errorMessage = getErrorMessage(error);
-      message.error(errorMessage ? `加载配置项列表失败：${errorMessage}` : '加载配置项列表失败');
-    } finally {
-      if (isMountedRef.current && requestId === requestIdRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [query]);
+  // React Query：CI 类型列表（缓存 10 分钟，避免重复请求）
+  const typesQuery = useCITypesQuery();
+  const types: CIType[] = useMemo(() => {
+    const res = typesQuery.data as unknown;
+    if (!res) return [];
+    const list = (res as any)?.data ?? (res as any)?.items ?? res;
+    return Array.isArray(list) ? list : [];
+  }, [typesQuery.data]);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, []);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  useEffect(() => {
-    loadTypes();
-  }, [loadTypes]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleSearch = () => {
-    if (query.offset === 0) {
-      loadData();
-      return;
-    }
-    setQuery(prev => ({ ...prev, offset: 0 }));
-  };
-
-  // 搜索框变化：300ms 防抖后自动查询
+  // 搜索框变化：300ms 防抖后自动查询（节流）
+  const [searchInput, setSearchInput] = useState('');
   const handleSearchInputChange = (value: string) => {
-    updateFilters({ ...filtersRef.current, search: value });
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
-    searchTimerRef.current = setTimeout(() => {
-      handleSearch();
+    setSearchInput(value);
+    // React Query 由 queryKey 驱动，filters.search 通过 useMemo 派生；
+    // 防抖通过延迟设置 filters 实现。
+    const t = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value }));
+      if (query.offset !== 0) setQuery(prev => ({ ...prev, offset: 0 }));
     }, 300);
+    return () => clearTimeout(t);
   };
 
   // 下拉筛选变化：即时自动查询
   const handleFilterChange = (patch: Partial<typeof filters>) => {
-    updateFilters({ ...filtersRef.current, ...patch });
-    handleSearch();
+    setFilters(prev => ({ ...prev, ...patch }));
+    setQuery(prev => ({ ...prev, offset: 0 }));
   };
 
+  // 删除走 useDeleteCIMutation，自动 invalidate + onSuccess 提示
+  const deleteMutation = useDeleteCIMutation();
   const handleDelete = (id: number) => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除此配置项吗？相关关系也将受到影响。',
-      onOk: async () => {
-        try {
-          await CMDBApi.deleteCI(String(id));
-          message.success('删除成功');
-          loadData();
-        } catch (e) {
-          const errorMessage = getErrorMessage(e);
-          message.error(errorMessage ? `删除失败：${errorMessage}` : '删除失败');
-        }
-      },
+      onOk: () => deleteMutation.mutateAsync(String(id)).catch(() => {}),
     });
   };
 
-  // 批量删除
+  // handleSearch：React Query 模式下由 queryKey 驱动，"查询"按钮触发当前过滤条件生效（offset 归零）
+  const handleSearch = () => {
+    if (query.offset !== 0) {
+      setQuery(prev => ({ ...prev, offset: 0 }));
+    } else {
+      listQuery.refetch();
+    }
+  };
+
+  // 批量删除：走 useDeleteCIMutation，按条 mutateAsync + Promise.allSettled 统计成功/失败
   const handleBatchDelete = () => {
     if (selectedRowKeys.length === 0) {
       message.warning('请先选择要删除的配置项');
@@ -183,7 +129,7 @@ const CIList: React.FC = () => {
       content: `确定要删除选中的 ${selectedRowKeys.length} 个配置项吗？此操作不可恢复。`,
       onOk: async () => {
         const results = await Promise.allSettled(
-          selectedRowKeys.map(id => CMDBApi.deleteCI(String(id))),
+          selectedRowKeys.map(id => deleteMutation.mutateAsync(String(id))),
         );
         const succeeded = results.filter(r => r.status === 'fulfilled').length;
         const failed = results.length - succeeded;
@@ -195,12 +141,12 @@ const CIList: React.FC = () => {
           message.warning(`成功删除 ${succeeded} 个，失败 ${failed} 个，请检查后重试`);
         }
         setSelectedRowKeys([]);
-        loadData();
+        listQuery.refetch();
       },
     });
   };
 
-  // 导出选中项
+  // 导出选中项（CSV）：M1 占位实现，按列硬编码；M2 可切换为 xlsx 流式导出。
   const handleExport = () => {
     if (selectedRowKeys.length === 0) {
       message.warning('请先选择要导出的配置项');
@@ -358,7 +304,7 @@ const CIList: React.FC = () => {
             <Button type="primary" onClick={handleSearch}>
               查询
             </Button>
-            <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
+            <Button icon={<RotateCcw />} onClick={() => listQuery.refetch()} loading={listQuery.isFetching}>
               刷新
             </Button>
           </Space>
@@ -397,12 +343,12 @@ const CIList: React.FC = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
-          loading={loading}
+          loading={listQuery.isLoading}
           locale={{
             emptyText:
-              loading && data.length === 0 ? (
+              listQuery.isLoading && data.length === 0 ? (
                 <LoadingEmptyError state="loading" minHeight={200} />
-              ) : loadError ? (
+              ) : listQuery.isError ? (
                 <LoadingEmptyError
                   state="error"
                   minHeight={200}
@@ -410,7 +356,7 @@ const CIList: React.FC = () => {
                     title: '加载失败',
                     description: '加载配置项列表失败',
                     actionText: '重试',
-                    onAction: loadData,
+                    onAction: () => listQuery.refetch(),
                   }}
                 />
               ) : (

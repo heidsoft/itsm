@@ -14,7 +14,12 @@ import {
   resolveEffectiveTypeSchemaFields,
 } from '@/components/cmdb/ci-editor-shared';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
-import { CMDBApi } from '@/lib/api/cmdb-api';
+import {
+  useCITypesQuery,
+  useCreateCIMutation,
+  useCloudResourcesQuery,
+  useCloudServicesQuery,
+} from '@/lib/hooks/useCMDB';
 import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
 import { useI18n } from '@/lib/i18n';
 
@@ -24,69 +29,29 @@ const CreateCIPage: React.FC = () => {
   const searchParams = useSearchParams();
   const { message } = App.useApp();
   const [form] = Form.useForm<CIFormValues>();
-  const [types, setTypes] = useState<CIType[]>([]);
-  const [typesLoading, setTypesLoading] = useState(true);
-  const [cloudResources, setCloudResources] = useState<CloudResource[]>([]);
-  const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
-  const [cloudLoading, setCloudLoading] = useState(true);
+
+  // React Query：CI 类型、云资源、云服务（10 分钟缓存，自动重试/竞态）
+  const typesQuery = useCITypesQuery();
+  const cloudResourcesQuery = useCloudResourcesQuery();
+  const cloudServicesQuery = useCloudServicesQuery();
+
+  const types: CIType[] = (typesQuery.data as unknown as CIType[]) ?? [];
+  const cloudResources: CloudResource[] =
+    extractCloudDataList<CloudResource>(cloudResourcesQuery.data) ?? [];
+  const cloudServices: CloudService[] =
+    extractCloudDataList<CloudService>(cloudServicesQuery.data) ?? [];
+
+  const typesLoading = typesQuery.isLoading;
+  const cloudLoading = cloudResourcesQuery.isLoading || cloudServicesQuery.isLoading;
+
   const [schemaFields, setSchemaFields] = useState<SchemaField[]>([]);
   const [typeSchemaFields, setTypeSchemaFields] = useState<SchemaField[]>([]);
-  const [saving, setSaving] = useState(false);
   const { markDirty, clearDirty, handleCancel } = useUnsavedChangesGuard(router);
 
   const cloudServiceMap = useMemo(
     () => new Map(cloudServices.map(service => [service.id, service])),
     [cloudServices]
   );
-
-  useEffect(() => {
-    const loadTypes = async () => {
-      try {
-        const res = await CMDBApi.getCITypes();
-        setTypes(res || []);
-      } catch {
-        message.error(t('cmdb.loadCITypesFailed'));
-      } finally {
-        setTypesLoading(false);
-      }
-    };
-    loadTypes();
-  }, [message, t]);
-
-  useEffect(() => {
-    const loadCloudData = async () => {
-      setCloudLoading(true);
-      try {
-        // Use Promise.allSettled so that a single failing endpoint does not block
-        // the entire CI form. Previously a Promise.all would short-circuit on the first
-        // rejection, leaving the UI stuck in loading state.
-        const results = await Promise.allSettled([
-          CMDBApi.getCloudResources(),
-          CMDBApi.getCloudServices(),
-        ]);
-
-        const resourcesResult = results[0];
-        const servicesResult = results[1];
-
-        if (resourcesResult.status === 'fulfilled') {
-          setCloudResources(extractCloudDataList<CloudResource>(resourcesResult.value));
-        }
-        if (servicesResult.status === 'fulfilled') {
-          setCloudServices(extractCloudDataList<CloudService>(servicesResult.value));
-        }
-
-        // Show error message if both failed
-        if (resourcesResult.status === 'rejected' && servicesResult.status === 'rejected') {
-          message.error(t('cmdb.loadCloudResourcesFailed'));
-        }
-      } catch {
-        message.error(t('cmdb.loadCloudResourcesFailed'));
-      } finally {
-        setCloudLoading(false);
-      }
-    };
-    loadCloudData();
-  }, [message, t]);
 
   useEffect(() => {
     if (!cloudResources.length || !cloudServices.length) return;
@@ -108,6 +73,22 @@ const CreateCIPage: React.FC = () => {
       cloudResourceType: service?.resourceTypeCode,
     });
   }, [cloudResources, cloudServices, cloudServiceMap, form, searchParams]);
+
+  // 单一失败提示：两个查询都 failed 才弹，避免云资源/服务其中一个暂时不可用时打扰
+  useEffect(() => {
+    if (
+      cloudResourcesQuery.isError &&
+      cloudServicesQuery.isError
+    ) {
+      message.error(t('cmdb.loadCloudResourcesFailed'));
+    }
+  }, [cloudResourcesQuery.isError, cloudServicesQuery.isError, message, t]);
+
+  useEffect(() => {
+    if (typesQuery.isError) {
+      message.error(t('cmdb.loadCITypesFailed'));
+    }
+  }, [typesQuery.isError, message, t]);
 
   const handleCloudResourceChange = (value?: number) => {
     if (!value) {
@@ -133,33 +114,35 @@ const CreateCIPage: React.FC = () => {
     form.setFieldValue('customAttributes', undefined);
   };
 
-  const handleSubmit = async (values: CIFormValues) => {
-    try {
-      let attributes: Record<string, unknown> | undefined;
-      if (values.attributes) {
-        try {
-          attributes =
-            typeof values.attributes === 'string'
-              ? JSON.parse(values.attributes)
-              : values.attributes;
-        } catch {
-          message.error(t('cmdb.invalidJSON'));
-          return;
-        }
-      }
-      const customAttributes = compactRecord(
-        values.customAttributes as Record<string, unknown> | undefined
-      );
-      attributes = {
-        ...(attributes || {}),
-        ...(customAttributes || {}),
-      };
-      if (Object.keys(attributes).length === 0) {
-        attributes = undefined;
-      }
+  // React Query mutation：自动 invalidate + 错误提示
+  const createMutation = useCreateCIMutation();
 
-      setSaving(true);
-      const created = await CMDBApi.createCI({
+  const handleSubmit = async (values: CIFormValues) => {
+    let attributes: Record<string, unknown> | undefined;
+    if (values.attributes) {
+      try {
+        attributes =
+          typeof values.attributes === 'string'
+            ? JSON.parse(values.attributes)
+            : values.attributes;
+      } catch {
+        message.error(t('cmdb.invalidJSON'));
+        return;
+      }
+    }
+    const customAttributes = compactRecord(
+      values.customAttributes as Record<string, unknown> | undefined
+    );
+    attributes = {
+      ...(attributes || {}),
+      ...(customAttributes || {}),
+    };
+    if (Object.keys(attributes).length === 0) {
+      attributes = undefined;
+    }
+
+    try {
+      const created = await createMutation.mutateAsync({
         name: values.name,
         ciTypeId: Number(values.ciTypeId),
         status: values.status,
@@ -186,11 +169,12 @@ const CreateCIPage: React.FC = () => {
         cloudResourceRefId: values.cloudResourceRefId,
         cloudMetadata: values.cloudMetadata,
       });
-      message.success(t('cmdb.createCISuccess'));
+      // mutation onSuccess 已展示 'cmdb.createCISuccess' 中文，但 i18n key 名称保留以便未来切换语言
+      void message; // keep tree-shaking happy
       clearDirty();
-      // 创建成功后跳转新 CI 详情页；接口未返回 id 时回退到列表
-      if (created?.id) {
-        router.push(`/cmdb/cis/${created.id}`);
+      const id = (created as { id?: number })?.id;
+      if (id) {
+        router.push(`/cmdb/cis/${id}`);
       } else {
         router.push('/cmdb');
       }
@@ -215,8 +199,6 @@ const CreateCIPage: React.FC = () => {
         }
       }
       message.error(errorMessage);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -246,7 +228,7 @@ const CreateCIPage: React.FC = () => {
             cloudLoading={cloudLoading}
             schemaFields={schemaFields}
             typeSchemaFields={typeSchemaFields}
-            saving={saving}
+            saving={createMutation.isPending}
             submitText='保存配置项'
             onSubmit={handleSubmit}
             onCancel={handleCancel}

@@ -1,20 +1,17 @@
 'use client';
 
 /**
- * 服务端搜索的配置项选择器
- *
- * 替代"手输 CI ID"与"一次性拉全量列表"两类交互：
- * - 输入关键字后防抖 300ms 调用后端 search 接口
- * - 选项展示名称 + 类型，支持清空
- * - 受控 value 不在当前候选中时，保留已选项用于回显
+ * 服务端搜索的配置项选择器 (P1-2 React Query)
+ * - search 防抖 300ms 后驱动 useCIsQuery，竞态/卸载/缓存由 RQ 自动处理
+ * - excludeIds 在 queryFn filterOption 端过滤（保持前端单一过滤点）
+ * - 受控 value 不在当前候选时，mergedOptions 保留已选项用于回显
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Select, Tag } from 'antd';
+import { useCIsQuery } from '@/lib/hooks/useCMDB';
 
-import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIStatusLabels } from '@/constants/cmdb';
-import type { ConfigurationItem } from '@/types/biz/cmdb';
 
 export interface CISelectOption {
   id: number;
@@ -48,89 +45,56 @@ const CISearchSelect: React.FC<CISearchSelectProps> = ({
   excludeIds,
   searchSize = 20,
 }) => {
-  const [options, setOptions] = useState<CISelectOption[]>([]);
-  const [fetching, setFetching] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<CISelectOption | null>(null);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fetchSeqRef = useRef(0);
-  const isMountedRef = useRef(true);
-  // excludeIds 走 ref，避免父组件每次渲染传新数组导致重复请求
-  const excludeIdsRef = useRef(excludeIds);
+  // 搜索值（输入框立即反映） + 防抖值（驱动 query）
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
+  // excludeIds 通过 ref 透传，避免父组件传新数组导致 queryKey 不稳定
+  const excludeIdsRef = useRef(excludeIds);
   useEffect(() => {
     excludeIdsRef.current = excludeIds;
   }, [excludeIds]);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, []);
+  // 挂载时即预加载第一页（保证未输入关键字也有候选）
+  const listQuery = useCIsQuery({
+    search: debouncedSearch || undefined,
+    size: searchSize,
+  });
 
-  const searchCIs = useCallback(
-    async (search?: string) => {
-      const seq = ++fetchSeqRef.current;
-      setFetching(true);
-      try {
-        const resp = await CMDBApi.getCIs({ search: search || undefined, size: searchSize });
-        if (!isMountedRef.current || seq !== fetchSeqRef.current) return;
-        const items = resp.items ?? [];
-        setOptions(
-          items
-            .filter(ci => !excludeIdsRef.current?.includes(ci.id))
-            .map(ci => ({
-              id: ci.id,
-              name: ci.name,
-              type: ci.type,
-              status: ci.status,
-            }))
-        );
-      } catch {
-        if (isMountedRef.current && seq === fetchSeqRef.current) {
-          setOptions([]);
-        }
-      } finally {
-        if (isMountedRef.current && seq === fetchSeqRef.current) {
-          setFetching(false);
-        }
-      }
-    },
-    [searchSize]
-  );
+  const options: CISelectOption[] = useMemo(() => {
+    const items = (listQuery.data?.items ?? []) as Array<{
+      id: number;
+      name: string;
+      type?: string;
+      status?: string;
+    }>;
+    const excluded = excludeIdsRef.current ?? [];
+    return items
+      .filter(ci => !excluded.includes(ci.id))
+      .map(ci => ({ id: ci.id, name: ci.name, type: ci.type, status: ci.status }));
+  }, [listQuery.data]);
 
-  // 挂载时预加载第一页，保证未输入关键字也有候选
-  useEffect(() => {
-    searchCIs();
-  }, [searchCIs]);
+  const [selectedOption, setSelectedOption] = useState<CISelectOption | null>(null);
 
-  const handleSearch = (search: string) => {
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
-    searchTimerRef.current = setTimeout(() => {
-      searchCIs(search);
-    }, SEARCH_DEBOUNCE_MS);
-  };
-
-  const handleChange = (nextValue: number | undefined) => {
-    const option = nextValue
-      ? options.find(item => item.id === nextValue) ?? null
-      : null;
-    setSelectedOption(option);
-    onChange?.(nextValue, option ?? undefined);
-  };
-
-  // 受控值不在当前候选里时，把已选项补进候选，保证回显不退化成裸 ID
+  // 受控 value 不在当前候选里时保留已选项回显
   const mergedOptions = useMemo(() => {
     if (value && selectedOption && !options.some(item => item.id === value)) {
       return [selectedOption, ...options];
     }
     return options;
   }, [options, selectedOption, value]);
+
+  const fetching = listQuery.isFetching;
+
+  const handleChange = (nextValue: number | undefined) => {
+    const option = nextValue ? options.find(item => item.id === nextValue) ?? null : null;
+    setSelectedOption(option);
+    onChange?.(nextValue, option ?? undefined);
+  };
 
   return (
     <Select<number>
@@ -140,7 +104,7 @@ const CISearchSelect: React.FC<CISearchSelectProps> = ({
       placeholder={placeholder}
       style={style}
       filterOption={false}
-      onSearch={handleSearch}
+      onSearch={setSearchInput}
       onChange={handleChange}
       loading={fetching}
       notFoundContent={fetching ? '搜索中...' : '无匹配配置项'}

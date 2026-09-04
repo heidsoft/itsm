@@ -1,138 +1,82 @@
 /**
- * useCIDetail Hook
- * 管理 CI 详情页面的所有数据和状态
+ * useCIDetail Hook (P1-2)
+ * - 详情/类型/影响/历史均通过 React Query 驱动：自动竞态/卸载/缓存/重试
+ * - loadXxx 改为 refetch 包装器，保留旧调用方契约（tab 切换时手动触发）
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { message } from 'antd';
 import { useParams } from 'next/navigation';
+import { message } from 'antd';
 
-import type { UseCIDetailReturn, ImpactAnalysisData, ChangeHistoryData } from '../types';
-import type { ConfigurationItem } from '@/types/biz/cmdb';
-import type { CIType } from '@/types/biz/cmdb'; // Keep as any-compatible
+import type { UseCIDetailReturn } from '../types';
+import type { CIType } from '@/types/biz/cmdb';
 import {
-  fetchCIDetail,
-  fetchCIImpactAnalysis,
-  fetchCIChangeHistory,
-} from '../services/ci-detail-service';
+  useCIQuery,
+  useCITypesQuery,
+  useImpactAnalysisQuery,
+  useCIChangeHistoryQuery,
+} from '@/lib/hooks/useCMDB';
+import type { ImpactAnalysisRequest } from '@/types/cmdb';
 
 export const useCIDetail = (): UseCIDetailReturn => {
   const { id } = useParams() as { id: string };
 
-  const [ci, setCi] = useState<any>(null);
-  const [types, setTypes] = useState<CIType[]>([]);
-  const [loading, setLoading] = useState(true);
+  // React Query：CI 详情（自动竞态/卸载/缓存/重试）
+  const ciQuery = useCIQuery(id);
+  const typesQuery = useCITypesQuery();
 
-  const [impactAnalysis, setImpactAnalysis] = useState<any>(null);
-  const [impactLoading, setImpactLoading] = useState(false);
+  // React Query：影响分析 & 变更历史（懒加载由 enabled 控制；
+  // tab 切换可触发 refetch，等同旧 loadXxx 语义）
+  const impactRequest: ImpactAnalysisRequest = {
+    ciId: id,
+    analysisType: 'both',
+    maxDepth: 3,
+  };
+  const impactQuery = useImpactAnalysisQuery(impactRequest, !!id);
+  const historyQuery = useCIChangeHistoryQuery(id, undefined, !!id);
 
-  const [changeHistory, setChangeHistory] = useState<any>(null);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  // 错误提示（保留旧 message.error 行为，仅在出错且已发生请求时弹一次）
+  if (ciQuery.isError && !ciQuery.data) {
+    message.error('加载资产详情失败');
+  }
 
-  // 用于取消异步操作的 ref
-  const cancelledRef = useRef(false);
+  const ci = ciQuery.data ?? null;
+  const types: CIType[] = useMemoNormalizeTypes(typesQuery.data);
 
-  // 组件卸载时设置取消标志（挂载时重置，兼容 StrictMode 双重挂载）
-  useEffect(() => {
-    cancelledRef.current = false;
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
+  // loadXxx 包装为 refetch，保留旧调用方契约（onClick/tab 切换）
+  const loadDetail = async () => {
+    await ciQuery.refetch();
+  };
+  const loadImpactAnalysis = async () => {
+    await impactQuery.refetch();
+  };
+  const loadChangeHistory = async () => {
+    await historyQuery.refetch();
+  };
 
-  /**
-   * 加载 CI 详情
-   */
-  const loadDetail = useCallback(async () => {
-    if (!id) return;
-
-    setLoading(true);
-    try {
-      const { ci: ciData, types: typeData } = await fetchCIDetail(id);
-      if (!cancelledRef.current) {
-        setCi(ciData);
-        setTypes(typeData);
-      }
-    } catch (error) {
-      if (!cancelledRef.current) {
-        message.error('加载资产详情失败');
-      }
-    } finally {
-      if (!cancelledRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [id]);
-
-  /**
-   * 加载影响分析
-   */
-  const loadImpactAnalysis = useCallback(async () => {
-    if (!id) return;
-
-    setImpactLoading(true);
-    try {
-      const data = await fetchCIImpactAnalysis(id);
-      if (!cancelledRef.current) {
-        setImpactAnalysis(data);
-      }
-    } catch (error) {
-      if (!cancelledRef.current) {
-        message.error('加载影响分析失败，请稍后重试');
-      }
-    } finally {
-      if (!cancelledRef.current) {
-        setImpactLoading(false);
-      }
-    }
-  }, [id]);
-
-  /**
-   * 加载变更历史
-   */
-  const loadChangeHistory = useCallback(async () => {
-    if (!id) return;
-
-    setHistoryLoading(true);
-    try {
-      const data = await fetchCIChangeHistory(id);
-      if (!cancelledRef.current) {
-        setChangeHistory(data);
-      }
-    } catch (error) {
-      if (!cancelledRef.current) {
-        message.error('加载变更历史失败，请稍后重试');
-      }
-    } finally {
-      if (!cancelledRef.current) {
-        setHistoryLoading(false);
-      }
-    }
-  }, [id]);
-
-  /**
-   * 初始加载
-   */
-  useEffect(() => {
-    loadDetail();
-  }, [loadDetail]);
-
-  /**
-   * 计算类型信息
-   */
   const typeInfo = types.find(t => t.id === ci?.ciTypeId);
 
   return {
     ci,
     types,
-    loading,
-    impactAnalysis,
-    impactLoading,
-    changeHistory,
-    historyLoading,
+    loading: ciQuery.isLoading || (!!id && typesQuery.isLoading),
+    impactAnalysis: (impactQuery.data as unknown as UseCIDetailReturn['impactAnalysis']) ?? null,
+    impactLoading: impactQuery.isFetching,
+    changeHistory: (historyQuery.data as unknown as UseCIDetailReturn['changeHistory']) ?? null,
+    historyLoading: historyQuery.isFetching,
     loadDetail,
     loadImpactAnalysis,
     loadChangeHistory,
     typeInfo,
   };
 };
+
+// useCITypesQuery 在 CIList 中已对返回值做兼容（data 直接是数组，或包在 {data,items}），
+// 这里也按相同模式解析，避免单一 contract 假设。
+function useMemoNormalizeTypes(raw: unknown): CIType[] {
+  if (!raw) return [];
+  const v = raw as { data?: CIType[]; items?: CIType[] } | CIType[];
+  if (Array.isArray(v)) return v;
+  if (Array.isArray(v.data)) return v.data;
+  if (Array.isArray(v.items)) return v.items;
+  return [];
+}

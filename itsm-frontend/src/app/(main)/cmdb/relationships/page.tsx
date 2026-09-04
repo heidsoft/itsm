@@ -5,7 +5,7 @@ import { App, Card, Empty, Select, Spin } from 'antd';
 
 import CIRelationshipManager from '@/components/cmdb/CIRelationshipManager';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
-import { CMDBApi } from '@/lib/api/cmdb-api';
+import { useCIsQuery } from '@/lib/hooks/useCMDB';
 
 type CiOption = {
   id: number;
@@ -15,44 +15,28 @@ type CiOption = {
 
 export default function RelationshipsPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = React.useState(true);
-  const [cis, setCis] = React.useState<CiOption[]>([]);
+  // React Query：CI 全量（relationships 页用作根 CI 选择）
+  const cisQuery = useCIsQuery({ size: 200 });
+  const cis: CiOption[] = React.useMemo(() => {
+    const items = (cisQuery.data?.items ?? []) as Array<{ id: number; name: string; type?: string }>;
+    return items.map(item => ({ id: item.id, name: item.name, type: item.type || '配置项' }));
+  }, [cisQuery.data]);
+
   const [selectedCiId, setSelectedCiId] = React.useState<number | undefined>(undefined);
 
+  // 默认选中第一条
   React.useEffect(() => {
-    let mounted = true;
+    if (selectedCiId === undefined && cis.length > 0) {
+      setSelectedCiId(cis[0].id);
+    }
+  }, [cis, selectedCiId]);
 
-    const load = async () => {
-      setLoading(true);
-      try {
-        const response = await CMDBApi.getCIs({ limit: 200 });
-		const items = response?.items ?? [];
-        const options = items.map((item) => ({
-          id: item.id,
-          name: item.name,
-		  type: item.type || '配置项',
-        }));
-        if (!mounted) return;
-        setCis(options);
-        if (options.length > 0) {
-          setSelectedCiId(options[0].id);
-        }
-      } catch (error) {
-        message.error('加载配置项失败');
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [message]);
+  React.useEffect(() => {
+    if (cisQuery.isError) message.error('加载配置项失败');
+  }, [cisQuery.isError, message]);
 
   const selectedCi = cis.find(item => item.id === selectedCiId) || null;
+  const loading = cisQuery.isLoading;
 
   return (
     <div className="space-y-6 p-6">

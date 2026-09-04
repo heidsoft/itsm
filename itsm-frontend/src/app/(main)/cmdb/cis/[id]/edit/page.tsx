@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { App, Card } from 'antd';
-import { Form } from 'antd';
+import { App, Card, Form } from 'antd';
 
 import { CIEditorForm } from '@/components/cmdb/CIEditorForm';
 import { useUnsavedChangesGuard } from '@/components/cmdb/useUnsavedChangesGuard';
@@ -15,7 +14,13 @@ import {
   resolveEffectiveTypeSchemaFields,
 } from '@/components/cmdb/ci-editor-shared';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
-import { CMDBApi } from '@/lib/api/cmdb-api';
+import {
+  useCIQuery,
+  useCITypesQuery,
+  useCloudResourcesQuery,
+  useCloudServicesQuery,
+  useUpdateCIMutation,
+} from '@/lib/hooks/useCMDB';
 import type { CIType, CloudResource, CloudService, ConfigurationItem } from '@/types/biz/cmdb';
 
 const EditCIPage: React.FC = () => {
@@ -23,17 +28,44 @@ const EditCIPage: React.FC = () => {
   const { id } = useParams() as { id: string };
   const { message } = App.useApp();
   const [form] = Form.useForm<CIFormValues>();
-  const [types, setTypes] = useState<CIType[]>([]);
-  const [typesLoading, setTypesLoading] = useState(true);
-  const [cloudResources, setCloudResources] = useState<CloudResource[]>([]);
-  const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
-  const [cloudLoading, setCloudLoading] = useState(true);
-  const [schemaFields, setSchemaFields] = useState<SchemaField[]>([]);
-  const [typeSchemaFields, setTypeSchemaFields] = useState<SchemaField[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [ci, setCi] = useState<ConfigurationItem | null>(null);
-  const initializedRef = useRef(false);
+
+  // React Query：CI 类型 / 云资源 / 云服务 / 当前 CI（缓存 + 自动重试）
+  const typesQuery = useCITypesQuery();
+  const cloudResourcesQuery = useCloudResourcesQuery();
+  const cloudServicesQuery = useCloudServicesQuery();
+  const ciQuery = useCIQuery(id);
+
+  const types: CIType[] = (typesQuery.data as unknown as CIType[]) ?? [];
+  const cloudResources: CloudResource[] =
+    extractCloudDataList<CloudResource>(cloudResourcesQuery.data) ?? [];
+  const cloudServices: CloudService[] =
+    extractCloudDataList<CloudService>(cloudServicesQuery.data) ?? [];
+  const ci = (ciQuery.data as unknown as ConfigurationItem) ?? null;
+
+  const typesLoading = typesQuery.isLoading;
+  const cloudLoading = cloudResourcesQuery.isLoading || cloudServicesQuery.isLoading;
+  const loading = ciQuery.isLoading;
+
+  // 错误提示
+  useEffect(() => {
+    if (typesQuery.isError) message.error('加载资产类型失败');
+  }, [typesQuery.isError, message]);
+  useEffect(() => {
+    if (cloudResourcesQuery.isError && cloudServicesQuery.isError)
+      message.error('加载云资源数据失败');
+  }, [cloudResourcesQuery.isError, cloudServicesQuery.isError, message]);
+  useEffect(() => {
+    if (ciQuery.isError) message.error('加载配置项失败');
+  }, [ciQuery.isError, message]);
+
+  const schemaFieldsStateRef = useRef<SchemaField[]>([]);
+  const typeSchemaFieldsStateRef = useRef<SchemaField[]>([]);
+  const [schemaFields, setSchemaFields] = React.useState<SchemaField[]>([]);
+  const [typeSchemaFields, setTypeSchemaFields] = React.useState<SchemaField[]>([]);
+  // 维持原 ref 行为以便引用一致
+  schemaFieldsStateRef.current = schemaFields;
+  typeSchemaFieldsStateRef.current = typeSchemaFields;
+
   const { markDirty, clearDirty, handleCancel } = useUnsavedChangesGuard(router);
 
   const cloudServiceMap = useMemo(
@@ -41,55 +73,7 @@ const EditCIPage: React.FC = () => {
     [cloudServices]
   );
 
-  useEffect(() => {
-    const loadTypes = async () => {
-      try {
-        const res = await CMDBApi.getCITypes();
-        setTypes(res || []);
-      } catch {
-        message.error('加载资产类型失败');
-      } finally {
-        setTypesLoading(false);
-      }
-    };
-    loadTypes();
-  }, [message]);
-
-  useEffect(() => {
-    const loadCloudData = async () => {
-      setCloudLoading(true);
-      try {
-        const [resources, services] = await Promise.all([
-          CMDBApi.getCloudResources(),
-          CMDBApi.getCloudServices(),
-        ]);
-        setCloudResources(extractCloudDataList<CloudResource>(resources));
-        setCloudServices(extractCloudDataList<CloudService>(services));
-      } catch {
-        message.error('加载云资源数据失败');
-      } finally {
-        setCloudLoading(false);
-      }
-    };
-    loadCloudData();
-  }, [message]);
-
-  useEffect(() => {
-    const loadCI = async () => {
-      setLoading(true);
-      try {
-        const res = await CMDBApi.getCI(id);
-        setCi(res as unknown as ConfigurationItem);
-      } catch {
-        message.error('加载配置项失败');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) {
-      loadCI();
-    }
-  }, [id, message]);
+  const initializedRef = useRef(false);
 
   const omitSchemaFieldValues = (
     attributes: Record<string, unknown> | undefined,
@@ -179,61 +163,64 @@ const EditCIPage: React.FC = () => {
     form.setFieldValue('customAttributes', undefined);
   };
 
+  const updateMutation = useUpdateCIMutation();
+
   const handleSubmit = async (values: CIFormValues) => {
+    let attributes: Record<string, unknown> | undefined;
+    if (values.attributes) {
+      try {
+        attributes =
+          typeof values.attributes === 'string'
+            ? JSON.parse(values.attributes)
+            : values.attributes;
+      } catch {
+        message.error('扩展属性需要是有效的 JSON');
+        return;
+      }
+    }
+    const customAttributes = compactRecord(
+      values.customAttributes as Record<string, unknown> | undefined
+    );
+    attributes = {
+      ...(attributes || {}),
+      ...(customAttributes || {}),
+    };
+    if (Object.keys(attributes).length === 0) {
+      attributes = undefined;
+    }
     try {
-      let attributes: Record<string, unknown> | undefined;
-      if (values.attributes) {
-        try {
-          attributes =
-            typeof values.attributes === 'string'
-              ? JSON.parse(values.attributes)
-              : values.attributes;
-        } catch {
-          message.error('扩展属性需要是有效的 JSON');
-          return;
-        }
-      }
-      const customAttributes = compactRecord(
-        values.customAttributes as Record<string, unknown> | undefined
-      );
-      attributes = {
-        ...(attributes || {}),
-        ...(customAttributes || {}),
-      };
-      if (Object.keys(attributes).length === 0) {
-        attributes = undefined;
-      }
-      setSaving(true);
-      await CMDBApi.updateCI(id, {
-        name: values.name,
-        ciTypeId: values.ciTypeId,
-        status: values.status,
-        description: values.description,
-        attributes,
-        serialNumber: values.serialNumber,
-        model: values.model,
-        vendor: values.vendor,
-        location: values.location,
-        assetTag: values.assetTag,
-        assignedTo: values.assignedTo,
-        ownedBy: values.ownedBy,
-        environment: values.environment,
-        criticality: values.criticality,
-        discoverySource: values.discoverySource,
-        source: values.source,
-        cloudProvider: values.cloudProvider,
-        cloudAccountId: values.cloudAccountId,
-        cloudRegion: values.cloudRegion,
-        cloudZone: values.cloudZone,
-        cloudResourceId: values.cloudResourceId,
-        cloudResourceType: values.cloudResourceType,
-        cloudSyncStatus: values.cloudSyncStatus,
-        cloudResourceRefId: values.cloudResourceRefId,
-        cloudMetadata: values.cloudMetadata,
+      await updateMutation.mutateAsync({
+        id,
+        data: {
+          name: values.name,
+          ciTypeId: values.ciTypeId,
+          status: values.status,
+          description: values.description,
+          attributes,
+          serialNumber: values.serialNumber,
+          model: values.model,
+          vendor: values.vendor,
+          location: values.location,
+          assetTag: values.assetTag,
+          assignedTo: values.assignedTo,
+          ownedBy: values.ownedBy,
+          environment: values.environment,
+          criticality: values.criticality,
+          discoverySource: values.discoverySource,
+          source: values.source,
+          cloudProvider: values.cloudProvider,
+          cloudAccountId: values.cloudAccountId,
+          cloudRegion: values.cloudRegion,
+          cloudZone: values.cloudZone,
+          cloudResourceId: values.cloudResourceId,
+          cloudResourceType: values.cloudResourceType,
+          cloudSyncStatus: values.cloudSyncStatus,
+          cloudResourceRefId: values.cloudResourceRefId,
+          cloudMetadata: values.cloudMetadata,
+        },
       });
-      message.success('配置项更新成功');
+      // mutation onSuccess 已展示 '配置项已更新'
       clearDirty();
-      // 保存后留在详情页，与"创建成功 -> 详情页"保持一致，避免丢失当前操作上下文
       router.push(`/cmdb/cis/${id}`);
     } catch (error) {
       if (error instanceof Error) {
@@ -241,8 +228,6 @@ const EditCIPage: React.FC = () => {
       } else {
         message.error('更新配置项失败');
       }
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -269,7 +254,7 @@ const EditCIPage: React.FC = () => {
           cloudLoading={cloudLoading}
           schemaFields={schemaFields}
           typeSchemaFields={typeSchemaFields}
-          saving={saving}
+          saving={updateMutation.isPending}
           submitText='保存修改'
           onSubmit={handleSubmit}
           onCancel={handleCancel}

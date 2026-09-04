@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, Select, Button, Space, Tag, Spin, message, Drawer, Descriptions, Empty } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { App, Card, Select, Button, Space, Tag, Spin, Drawer, Descriptions, Empty } from 'antd';
 import { RotateCcw, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Node, Edge, NodeTypes} from 'reactflow';
@@ -9,8 +9,8 @@ import ReactFlow, { Controls, Background, useNodesState, useEdgesState, MarkerTy
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { PageContainer } from '@/components/layout/PageContainer';
-import { CMDBApi } from '@/lib/api/cmdb-api';
-import { CIRelationshipAPI, type TopologyNode } from '@/lib/api/cmdb-relationship';
+import { useCIsQuery, useTopologyGraphQuery } from '@/lib/hooks/useCMDB';
+import { type TopologyNode } from '@/lib/api/cmdb-relationship';
 import { CIStatusLabels } from '@/constants/cmdb';
 
 const ciTypeIcons: Record<string, string> = {
@@ -95,13 +95,42 @@ const nodeTypes: NodeTypes = { ciNode: CINode };
 
 export default function TopologyPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { message: messageApi } = App.useApp();
+  // 把全局 message 代理到 messageApi（保持旧调用语义）
+  const message = { error: (msg: string) => messageApi.error(msg) };
+
   const [selectedCI, setSelectedCI] = useState<number | null>(null);
-  const [ciOptions, setCIOptions] = useState<{ id: number; name: string; type: string; status?: string }[]>([]);
-  const [ciFetching, setCiFetching] = useState(false);
-  const ciSearchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const ciFetchSeqRef = React.useRef(0);
-  const isMountedRef = React.useRef(true);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // CI 选项防抖（300ms）
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // React Query：CI 选项（按搜索值变化自动失效/拉取）
+  const cisQuery = useCIsQuery({
+    search: debouncedSearch || undefined,
+    size: 20,
+  });
+  const ciOptions = useMemo(
+    () =>
+      ((cisQuery.data?.items ?? []) as Array<{
+        id: number;
+        name: string;
+        type?: string;
+        ciType?: string;
+        status?: string;
+      }>).map(ci => ({
+        id: ci.id,
+        name: ci.name,
+        type: ci.ciType || ci.type || '',
+        status: ci.status,
+      })),
+    [cisQuery.data]
+  );
+
   const [depth, setDepth] = useState(2);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -110,78 +139,57 @@ export default function TopologyPage() {
   // 当前点击高亮的节点 id（一跳影响面高亮）
   const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
 
-  // 服务端搜索 CI，防抖 300ms
-  const searchCIs = useCallback(async (search?: string) => {
-    const seq = ++ciFetchSeqRef.current;
-    setCiFetching(true);
-    try {
-      const result = await CMDBApi.getCIs({ search: search || undefined, size: 20 });
-      if (!isMountedRef.current || seq !== ciFetchSeqRef.current) return;
-      const items = result.items ?? [];
-      setCIOptions(items.map((ci: any) => ({
-        id: ci.id,
-        name: ci.name,
-        type: ci.ciType || ci.type || '',
-        status: ci.status,
-      })));
-    } catch (error) {
-      if (isMountedRef.current && seq === ciFetchSeqRef.current) {
-        setCIOptions([]);
-      }
-    } finally {
-      if (isMountedRef.current && seq === ciFetchSeqRef.current) {
-        setCiFetching(false);
-      }
-    }
-  }, []);
+  // React Query：拓扑图（仅在选中 CI 时拉取，按 depth 缓存）
+  const topologyQuery = useTopologyGraphQuery(selectedCI ?? 0, depth, !!selectedCI);
+  const loading = topologyQuery.isFetching;
 
-  // 预加载第一页，保证未输入关键字也有候选
+  // 拓扑数据落入 react-flow 节点/边
   useEffect(() => {
-    isMountedRef.current = true;
-    searchCIs();
-    return () => {
-      isMountedRef.current = false;
-      if (ciSearchTimerRef.current) clearTimeout(ciSearchTimerRef.current);
-    };
-  }, [searchCIs]);
-
-  const handleCISelectSearch = (search: string) => {
-    if (ciSearchTimerRef.current) clearTimeout(ciSearchTimerRef.current);
-    ciSearchTimerRef.current = setTimeout(() => searchCIs(search), 300);
-  };
-
-  const loadTopology = useCallback(async () => {
-    if (!selectedCI) return;
-    setLoading(true);
+    if (!topologyQuery.data) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
+    const graph = topologyQuery.data;
+    const flowEdges: Edge[] = graph.edges.map(edge => ({
+      id: 'e' + edge.id,
+      source: String(edge.source),
+      target: String(edge.target),
+      label: edge.relationshipLabel,
+      type: 'smoothstep',
+      animated: edge.impactLevel === 'critical',
+      style: { stroke: getEdgeColor(edge.strength) },
+      markerEnd: { type: MarkerType.ArrowClosed, color: getEdgeColor(edge.strength) },
+    }));
+    const rawNodes: Node[] = graph.nodes.map(node => ({
+      id: String(node.id),
+      type: 'ciNode',
+      position: { x: 0, y: 0 },
+      data: { ...node },
+    }));
+    setNodes(layoutWithDagre(rawNodes, flowEdges));
+    setEdges(flowEdges);
     setHighlightNodeId(null);
-    try {
-      const graph = await CIRelationshipAPI.getTopologyGraph(selectedCI, depth);
-      const flowEdges: Edge[] = graph.edges.map(edge => ({
-        id: 'e' + edge.id, source: String(edge.source), target: String(edge.target), label: edge.relationshipLabel, type: 'smoothstep',
-        animated: edge.impactLevel === 'critical', style: { stroke: getEdgeColor(edge.strength) },
-        markerEnd: { type: MarkerType.ArrowClosed, color: getEdgeColor(edge.strength) }
-      }));
-      const rawNodes: Node[] = graph.nodes.map(node => ({
-        id: String(node.id), type: 'ciNode', position: { x: 0, y: 0 }, data: { ...node }
-      }));
-      // dagre 自动分层布局，替代原先的取模网格排布
-      setNodes(layoutWithDagre(rawNodes, flowEdges));
-      setEdges(flowEdges);
-    } catch (error) { console.error('Failed to load topology:', error); message.error('加载拓扑图失败'); setNodes([]); setEdges([]); }
-    finally { setLoading(false); }
-  }, [selectedCI, depth, setNodes, setEdges]);
+  }, [topologyQuery.data, setNodes, setEdges]);
 
-  React.useEffect(() => { if (selectedCI) loadTopology(); }, [selectedCI, depth, loadTopology]);
+  // 错误反馈（失败弹一次）
+  useEffect(() => {
+    if (topologyQuery.isError) message.error('加载拓扑图失败');
+  }, [topologyQuery.isError, message]);
 
-  const onNodeClick = useCallback((_: any, node: Node) => {
+  const onNodeClick = React.useCallback((_: unknown, node: Node) => {
     setSelectedNodeData(node.data as TopologyNode);
     setHighlightNodeId(node.id);
     setDrawerVisible(true);
   }, []);
 
-  const onPaneClick = useCallback(() => {
+  const onPaneClick = React.useCallback(() => {
     setHighlightNodeId(null);
   }, []);
+
+  const handleRefresh = () => {
+    topologyQuery.refetch();
+  };
 
   // 一跳邻居集合（含自身）
   const neighborIds = useMemo(() => {
@@ -236,10 +244,10 @@ export default function TopologyPage() {
             style={{ width: 300 }}
             value={selectedCI}
             onChange={setSelectedCI}
-            onSearch={handleCISelectSearch}
+            onSearch={setSearchInput}
             filterOption={false}
-            loading={ciFetching}
-            notFoundContent={ciFetching ? '搜索中...' : '无匹配配置项'}
+            loading={cisQuery.isFetching}
+            notFoundContent={cisQuery.isFetching ? '搜索中...' : '无匹配配置项'}
             allowClear
             options={ciOptions.map(ci => ({
               value: ci.id,
@@ -256,7 +264,7 @@ export default function TopologyPage() {
           />
           <Select placeholder="关系深度" value={depth} onChange={setDepth} style={{ width: 120 }}
             options={[{ value: 1, label: '1 层' }, { value: 2, label: '2 层' }, { value: 3, label: '3 层' }, { value: 4, label: '4 层' }]} />
-          <Button icon={<RotateCcw />} onClick={loadTopology} loading={loading} disabled={!selectedCI}>刷新</Button>
+          <Button icon={<RotateCcw />} onClick={handleRefresh} loading={loading} disabled={!selectedCI}>刷新</Button>
           {highlightNodeId && <Tag color="blue" closable onClose={() => setHighlightNodeId(null)}>已高亮直接上下游（点击空白处取消）</Tag>}
         </Space>
       </Card>
