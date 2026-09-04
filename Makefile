@@ -1,9 +1,11 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
 ENV_FILE ?= .env.prod
+# Go 工具链（本机多版本共存时可用 GO=/path/to/go 覆盖）
+GO ?= go
 COMPOSE_FILE ?= docker-compose.prod.yml
 
 # 颜色
@@ -210,6 +212,21 @@ dev-reset: ## 重置开发环境（清除所有数据）
 dev-frontend-only: ## 仅启动前端开发服务器（需要后端已运行）
 	@echo "$(BLUE)启动前端热重载开发服务器...$(NC)"
 	cd itsm-frontend && npm run dev
+
+dev-seed-demo: ## 播种演示数据（事件/问题/变更/知识库），幂等可重复执行
+	@echo "$(BLUE)连接开发数据库（localhost:55432）播种演示数据...$(NC)"
+	cd itsm-backend && \
+		DB_HOST="$${DB_HOST:-localhost}" DB_PORT="$${DB_PORT:-55432}" \
+		DB_USER="$${DB_USER:-itsm_user}" DB_PASSWORD="$${DB_PASSWORD:-dev123}" \
+		DB_NAME="$${DB_NAME:-itsm}" \
+		ITSM_SEED_CONFIG=config/seed/demo.json \
+		$(GO) run -tags seed_demo .
+	@echo "$(GREEN)完成：使用 admin / admin123 登录即可查看演示数据$(NC)"
+
+swagger-gen: ## 重新生成 OpenAPI/Swagger 文档（itsm-backend/docs，版本锁定 go.mod）
+	@echo "$(BLUE)生成 Swagger 文档...$(NC)"
+	cd itsm-backend && $(GO) run github.com/swaggo/swag/cmd/swag init -d . -g main.go -o docs --parseDependency --parseInternal
+	@echo "$(GREEN)已更新 itsm-backend/docs/{docs.go,swagger.json,swagger.yaml}$(NC)"
 
 status: ## 显示服务状态
 	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps

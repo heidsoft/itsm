@@ -114,6 +114,22 @@ else
   fail "$GOV 不存在"
 fi
 
+# ---------- 5. Swagger 文档核心路径冒烟（C.6） ----------
+# 检查生成的 OpenAPI 文档包含核心域路径且非陈旧空壳。完整的注解-文档一致性
+# 由 CI api-contract-check.yml 的 swagger-docs-freshness job 强制（重新生成 + git diff）。
+SWAGGER_JSON="itsm-backend/docs/swagger.json"
+if [ -f "$SWAGGER_JSON" ]; then
+  for p in '/api/v1/incidents' '/api/v1/problems' '/api/v1/changes' '/api/v1/users'; do
+    if grep -q "\"${p}\"" "$SWAGGER_JSON" || grep -q "\"${p}/" "$SWAGGER_JSON"; then
+      pass "swagger.json 包含核心域路径 ${p}"
+    else
+      fail "swagger.json 缺少核心域路径 ${p}（先执行 make swagger-gen 重新生成）"
+    fi
+  done
+else
+  fail "$SWAGGER_JSON 不存在（执行 make swagger-gen 生成）"
+fi
+
 # ---------- 结果 ----------
 echo ""
 if [ "${#FAILS[@]}" -gt 0 ]; then

@@ -60,6 +60,18 @@ func toDTO(c *Change) *dto.ChangeResponse {
 }
 
 // CreateChange handles POST /api/v1/changes
+//
+//	@Summary	创建变更单
+//	@Description	创建新的变更请求，初始状态为 draft（草稿）。类型支持 normal / standard / emergency。
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	request	body	dto.CreateChangeRequest	true	"创建变更请求"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes [post]
 func (h *Handler) CreateChange(c *gin.Context) {
 	var req dto.CreateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -101,6 +113,15 @@ func (h *Handler) CreateChange(c *gin.Context) {
 }
 
 // GetChange handles GET /api/v1/changes/:id
+//
+//	@Summary	获取变更详情
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	404	{object}	common.Response
+//	@Router	/api/v1/changes/{id} [get]
 func (h *Handler) GetChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -119,6 +140,16 @@ func (h *Handler) GetChange(c *gin.Context) {
 }
 
 // GetApprovalSummary handles GET /api/v1/changes/:id/approval-summary
+//
+//	@Summary	获取变更审批摘要
+//	@Description	返回该变更的审批链进度摘要（各节点状态与意见）
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/approval-summary [get]
 func (h *Handler) GetApprovalSummary(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -137,6 +168,16 @@ func (h *Handler) GetApprovalSummary(c *gin.Context) {
 }
 
 // GetRiskAssessment handles GET /api/v1/changes/:id/risk-assessment
+//
+//	@Summary	获取变更风险评估
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response{data=dto.ChangeRiskAssessment}
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/risk-assessment [get]
+//	@Router	/api/v1/changes/{id}/risk [get]
 func (h *Handler) GetRiskAssessment(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -172,6 +213,19 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 }
 
 // UpdateRisk handles PUT /api/v1/changes/:id/risk
+//
+//	@Summary	更新变更风险评估
+//	@Description	RiskLevel 仅接受 low / medium / high
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.ChangeRiskAssessment	true	"风险评估内容"
+//	@Success	200	{object}	common.Response{data=dto.ChangeRiskAssessment}
+//	@Failure	400	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/risk [put]
 func (h *Handler) UpdateRisk(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -221,6 +275,16 @@ func (h *Handler) UpdateRisk(c *gin.Context) {
 }
 
 // GetCMDBImpactSummary handles GET /api/v1/changes/:id/cmdb-impact
+//
+//	@Summary	获取变更的 CMDB 影响摘要
+//	@Description	返回受影响配置项（AffectedCIs）的汇总影响信息
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/cmdb-impact [get]
 func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -240,6 +304,20 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 }
 
 // ListChanges handles GET /api/v1/changes
+//
+//	@Summary	获取变更列表
+//	@Description	分页查询变更，支持状态、关键词与风险等级过滤；含行级数据权限过滤
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	page	query	int	false	"页码（默认 1）"
+//	@Param	pageSize	query	int	false	"每页数量（默认 10）"
+//	@Param	status	query	string	false	"状态过滤"	Enums(draft,pending,approved,rejected,scheduled,in_progress,completed,failed,rolled_back,cancelled,closed)
+//	@Param	search	query	string	false	"标题/描述关键词"
+//	@Param	riskLevel	query	string	false	"风险等级过滤（同时兼容 risk_level）"	Enums(low,medium,high)
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes [get]
 func (h *Handler) ListChanges(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
@@ -277,6 +355,20 @@ func (h *Handler) ListChanges(c *gin.Context) {
 }
 
 // UpdateChange handles PUT /api/v1/changes/:id
+//
+//	@Summary	更新变更单
+//	@Description	部分更新：仅提交字段生效
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.UpdateChangeRequest	true	"更新变更请求"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id} [put]
 func (h *Handler) UpdateChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -349,6 +441,19 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 }
 
 // SubmitApproval handles POST /api/v1/changes/:id/approvals
+//
+//	@Summary	提交变更审批记录
+//	@Description	为变更添加审批意见；会触发审批链推进（待审批时自动置为 pending）
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.CreateChangeApprovalRequest	true	"审批意见"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/approvals [post]
 func (h *Handler) SubmitApproval(c *gin.Context) {
 	changeID, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -380,6 +485,20 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 }
 
 // SubmitChange handles POST /api/v1/changes/:id/submit
+//
+//	@Summary	提交变更进入审批
+//	@Description	将 draft 状态的变更提交审批，创建审批链并把状态推进为 pending
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.SubmitChangeRequest	false	"提交参数（可为空 body）"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	409	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/submit [post]
 func (h *Handler) SubmitChange(c *gin.Context) {
 	changeID, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -406,6 +525,15 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 }
 
 // GetStats handles GET /api/v1/changes/stats
+//
+//	@Summary	获取变更统计
+//	@Description	返回当前租户各状态的变更数量汇总
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{object}	common.Response{data=dto.ChangeStatsResponse}
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/stats [get]
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")
 	tenantID := tenantIDVal.(int)
@@ -440,6 +568,29 @@ func toStatsDTO(s *Stats) *dto.ChangeStatsResponse {
 
 // TransitionStatus handles status transition actions
 // POST /api/v1/changes/:id/approve|reject|start|complete|rollback|cancel
+//
+//	@Summary	变更状态流转
+//	@Description	按路径尾段执行状态流转：approve→approved、reject→rejected、schedule→scheduled、start→in_progress、complete→completed、close→closed、rollback→rolled_back、cancel→cancelled。审批类操作需要 change:approve 权限。状态机违规或 CAS 并发冲突返回 409。
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	object	false	"备注（{comment 或 reason}）"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	403	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	409	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/approve [post]
+//	@Router	/api/v1/changes/{id}/reject [post]
+//	@Router	/api/v1/changes/{id}/schedule [post]
+//	@Router	/api/v1/changes/{id}/start [post]
+//	@Router	/api/v1/changes/{id}/complete [post]
+//	@Router	/api/v1/changes/{id}/close [post]
+//	@Router	/api/v1/changes/{id}/rollback [post]
+//	@Router	/api/v1/changes/{id}/cancel [post]
 func (h *Handler) TransitionStatus(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -501,6 +652,19 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 }
 
 // AssignChange handles POST /api/v1/changes/:id/assign
+//
+//	@Summary	分配变更处理人
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	object	true	"分配对象（{assigneeId: int, 必填}）"
+//	@Success	200	{object}	common.Response{data=dto.ChangeResponse}
+//	@Failure	400	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/assign [post]
 func (h *Handler) AssignChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -532,6 +696,15 @@ func (h *Handler) AssignChange(c *gin.Context) {
 }
 
 // GetApprovals handles GET /api/v1/changes/:id/approvals
+//
+//	@Summary	获取变更审批历史
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/approvals [get]
 func (h *Handler) GetApprovals(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -548,6 +721,15 @@ func (h *Handler) GetApprovals(c *gin.Context) {
 }
 
 // DeleteChange handles DELETE /api/v1/changes/:id
+//
+//	@Summary	删除变更单
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id} [delete]
 func (h *Handler) DeleteChange(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -564,6 +746,19 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 }
 
 // GetCalendar handles GET /api/v1/changes/calendar
+//
+//	@Summary	获取变更日历视图
+//	@Description	按时间窗口返回变更排期，用于变更日历展示
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	startDate	query	string	true	"开始日期（YYYY-MM-DD）"
+//	@Param	endDate	query	string	true	"结束日期（YYYY-MM-DD）"
+//	@Param	status	query	string	false	"状态过滤"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/calendar [get]
 func (h *Handler) GetCalendar(c *gin.Context) {
 	var req dto.ChangeCalendarRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -586,6 +781,20 @@ func (h *Handler) GetCalendar(c *gin.Context) {
 // ==================== PIR (Post-Implementation Review) Handlers ====================
 
 // CreatePIR handles POST /api/v1/changes/:id/pir
+//
+//	@Summary	创建实施后评审（PIR）
+//	@Description	为已完成（completed）的变更创建实施后评审记录；同一变更仅允许一份 PIR，重复创建返回 409
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Param	request	body	dto.CreateChangePIRRequest	true	"PIR 内容"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	409	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/pir [post]
 func (h *Handler) CreatePIR(c *gin.Context) {
 	changeID, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -618,6 +827,16 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 }
 
 // GetPIR handles GET /api/v1/changes/:id/pir
+//
+//	@Summary	获取变更的 PIR
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"变更ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/{id}/pir [get]
 func (h *Handler) GetPIR(c *gin.Context) {
 	changeID, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -641,6 +860,17 @@ func (h *Handler) GetPIR(c *gin.Context) {
 }
 
 // ListPIRs handles GET /api/v1/changes/pirs
+//
+//	@Summary	获取 PIR 列表
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	page	query	int	false	"页码（默认 1）"
+//	@Param	pageSize	query	int	false	"每页数量（默认 10）"
+//	@Param	result	query	string	false	"评审结论过滤"
+//	@Success	200	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/pirs [get]
 func (h *Handler) ListPIRs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
@@ -659,6 +889,20 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 }
 
 // UpdatePIR handles PUT /api/v1/changes/pir/:id
+//
+//	@Summary	更新 PIR
+//	@Description	注意：路径参数 id 是 PIR 记录 ID，不是变更 ID
+//	@Tags	变更管理
+//	@Accept	json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"PIR 记录ID"
+//	@Param	request	body	dto.UpdateChangePIRRequest	true	"PIR 更新内容"
+//	@Success	200	{object}	common.Response
+//	@Failure	400	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/pir/{id} [put]
 func (h *Handler) UpdatePIR(c *gin.Context) {
 	pirID, ok := common.ParsePositiveID(c, "id")
 	if !ok {
@@ -688,6 +932,17 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 }
 
 // DeletePIR handles DELETE /api/v1/changes/pir/:id
+//
+//	@Summary	删除 PIR
+//	@Description	注意：路径参数 id 是 PIR 记录 ID，不是变更 ID
+//	@Tags	变更管理
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param	id	path	int	true	"PIR 记录ID"
+//	@Success	200	{object}	common.Response
+//	@Failure	404	{object}	common.Response
+//	@Failure	500	{object}	common.Response
+//	@Router	/api/v1/changes/pir/{id} [delete]
 func (h *Handler) DeletePIR(c *gin.Context) {
 	pirID, ok := common.ParsePositiveID(c, "id")
 	if !ok {

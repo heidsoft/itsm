@@ -87,6 +87,18 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 	return &resp
 }
 
+// Create 问题管理-创建问题
+// @Summary 创建问题
+// @Description 创建新的问题记录
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateProblemRequest true "创建问题请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req dto.CreateProblemRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -120,6 +132,18 @@ func (h *Handler) Create(c *gin.Context) {
 	common.Success(c, h.toDTO(created))
 }
 
+// Get 问题管理-获取问题详情
+// @Summary 获取问题详情
+// @Description 根据ID获取问题详情（含关联数据）
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id} [get]
 func (h *Handler) Get(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -141,6 +165,17 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 // GetAssociations 获取问题的关联项
+// @Summary 获取问题关联项
+// @Description 获取问题关联的事件、工单和变更列表
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=dto.ProblemAssociationResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/associations [get]
 func (h *Handler) GetAssociations(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -183,6 +218,19 @@ func (h *Handler) GetAssociations(c *gin.Context) {
 }
 
 // AddAssociation 添加关联
+// @Summary 添加问题关联
+// @Description 为问题添加关联的事件、工单或变更
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.ProblemAssociationRequest true "关联请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/associations [post]
 func (h *Handler) AddAssociation(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -217,6 +265,19 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 }
 
 // RemoveAssociation 移除关联
+// @Summary 移除问题关联
+// @Description 移除问题的一个关联项
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.ProblemRemoveAssociationRequest true "移除关联请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/associations [delete]
 func (h *Handler) RemoveAssociation(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -250,6 +311,22 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// List 问题管理-获取问题列表
+// @Summary 获取问题列表
+// @Description 分页获取问题列表，支持状态、优先级、分类和关键词过滤
+// @Tags 问题管理
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(10)
+// @Param status query string false "状态过滤"
+// @Param priority query string false "优先级过滤"
+// @Param category query string false "分类过滤"
+// @Param keyword query string false "搜索关键词"
+// @Success 200 {object} common.Response{data=dto.ListProblemsResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems [get]
 func (h *Handler) List(c *gin.Context) {
 	var req dto.ListProblemsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -322,6 +399,21 @@ func (h *Handler) List(c *gin.Context) {
 	})
 }
 
+// Update 问题管理-更新问题
+// @Summary 更新问题
+// @Description 更新问题信息（部分字段可选），状态流转违规返回409
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.UpdateProblemRequest true "更新问题请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id} [put]
 func (h *Handler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -370,6 +462,19 @@ func (h *Handler) Update(c *gin.Context) {
 	common.Success(c, h.toDTO(updated))
 }
 
+// InvestigateProblem 问题管理-开始调查问题
+// @Summary 开始调查问题
+// @Description 将问题流转为调查中状态，状态流转违规返回409
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/investigate [post]
 func (h *Handler) InvestigateProblem(c *gin.Context) {
 	id, tenantID, ok := problemRequestContext(c)
 	if !ok {
@@ -379,6 +484,21 @@ func (h *Handler) InvestigateProblem(c *gin.Context) {
 	h.respondProblemMutation(c, updated, err)
 }
 
+// UpdateRootCause 问题管理-记录问题根因
+// @Summary 更新问题根因
+// @Description 记录问题的根因分析，状态流转违规返回409
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.UpdateProblemRootCauseRequest true "根因请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/root-cause [put]
 func (h *Handler) UpdateRootCause(c *gin.Context) {
 	id, tenantID, ok := problemRequestContext(c)
 	if !ok {
@@ -393,6 +513,21 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 	h.respondProblemMutation(c, updated, err)
 }
 
+// UpdateSolution 问题管理-更新问题解决方案
+// @Summary 更新问题解决方案
+// @Description 记录问题的临时解决方案（变通方法）或最终解决方案，状态流转违规返回409
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.UpdateProblemResolutionRequest true "解决方案请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/solution [put]
 func (h *Handler) UpdateSolution(c *gin.Context) {
 	id, tenantID, ok := problemRequestContext(c)
 	if !ok {
@@ -411,6 +546,21 @@ func (h *Handler) UpdateSolution(c *gin.Context) {
 	h.respondProblemMutation(c, updated, err)
 }
 
+// CloseProblem 问题管理-关闭问题
+// @Description 关闭问题并可同时记录最终解决方案，状态流转违规返回409
+// @Summary 关闭问题
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Param request body dto.CloseProblemRequest true "关闭问题请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 409 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/close [post]
 func (h *Handler) CloseProblem(c *gin.Context) {
 	id, tenantID, ok := problemRequestContext(c)
 	if !ok {
@@ -459,6 +609,17 @@ func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err e
 	common.Success(c, h.toDTO(updated))
 }
 
+// Delete 问题管理-删除问题
+// @Summary 删除问题
+// @Description 根据ID删除问题
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id} [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -476,6 +637,15 @@ func (h *Handler) Delete(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// GetStats 问题管理-获取问题统计
+// @Summary 获取问题统计
+// @Description 获取问题各状态数量统计
+// @Tags 问题管理
+// @Produce json
+// @Success 200 {object} common.Response{data=dto.ProblemStatsResponse}
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/stats [get]
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 	stats, err := h.service.GetStats(c.Request.Context(), tenantID.(int))
@@ -497,6 +667,16 @@ func (h *Handler) GetStats(c *gin.Context) {
 }
 
 // GetTrends handles GET /api/v1/problems/trend
+// @Summary 获取问题趋势
+// @Description 按日期范围获取问题创建趋势，默认最近6个月
+// @Tags 问题管理
+// @Produce json
+// @Param startDate query string false "开始日期（YYYY-MM-DD）"
+// @Param endDate query string false "结束日期（YYYY-MM-DD）"
+// @Success 200 {object} common.Response{data=object}
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/trend [get]
 func (h *Handler) GetTrends(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 
@@ -527,6 +707,16 @@ func (h *Handler) GetTrends(c *gin.Context) {
 }
 
 // GetHotspots handles GET /api/v1/problems/hotspots
+// @Summary 获取问题热点
+// @Description 按日期范围获取问题热点分析，默认最近3个月
+// @Tags 问题管理
+// @Produce json
+// @Param startDate query string false "开始日期（YYYY-MM-DD）"
+// @Param endDate query string false "结束日期（YYYY-MM-DD）"
+// @Success 200 {object} common.Response{data=object}
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/hotspots [get]
 func (h *Handler) GetHotspots(c *gin.Context) {
 	tenantID, _ := c.Get("tenant_id")
 
@@ -557,6 +747,17 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 }
 
 // GetProblemSLA handles GET /api/v1/problems/:id/sla
+// @Summary 获取问题SLA
+// @Description 获取问题SLA状态（当前问题暂未配置SLA，返回默认无SLA状态）
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=object}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/sla [get]
 func (h *Handler) GetProblemSLA(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -587,6 +788,17 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 }
 
 // GetProblemComments handles GET /api/v1/problems/:id/comments
+// @Summary 获取问题评论
+// @Description 获取问题评论列表（评论功能暂未实现，返回空列表）
+// @Tags 问题管理
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response{data=object}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/comments [get]
 func (h *Handler) GetProblemComments(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -614,6 +826,18 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 }
 
 // AddProblemComment handles POST /api/v1/problems/:id/comments
+// @Summary 添加问题评论
+// @Description 为问题添加评论（评论功能暂未实现，返回501错误）
+// @Tags 问题管理
+// @Accept json
+// @Produce json
+// @Param id path int true "问题ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/problems/{id}/comments [post]
 func (h *Handler) AddProblemComment(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

@@ -13,6 +13,10 @@ on:
     paths:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/router/**'
+      - 'itsm-backend/handlers/**'
+      - 'itsm-backend/dto/**'
+      - 'itsm-backend/swagger_meta.go'
+      - 'itsm-backend/docs/**'
       - 'scripts/check-api-paths.js'
       - 'scripts/check-engineering-contracts.js'
       - 'scripts/__tests__/check-engineering-contracts.test.js'
@@ -28,6 +32,10 @@ on:
     paths:
       - 'itsm-frontend/src/lib/**'
       - 'itsm-backend/router/**'
+      - 'itsm-backend/handlers/**'
+      - 'itsm-backend/dto/**'
+      - 'itsm-backend/swagger_meta.go'
+      - 'itsm-backend/docs/**'
       - 'scripts/check-api-paths.js'
       - 'scripts/check-engineering-contracts.js'
       - 'scripts/__tests__/check-engineering-contracts.test.js'
@@ -179,3 +187,33 @@ jobs:
             MODULE_ROUTES=$(grep -cE "/api/v1/${module}" itsm-backend/router/router.go 2>/dev/null || echo "0")
             echo "  ${module}: ${MODULE_ROUTES} routes"
           done
+
+  swagger-docs-freshness:
+    name: Swagger Docs Freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: itsm-backend/go.mod
+          cache: true
+          cache-dependency-path: itsm-backend/go.sum
+
+      - name: Regenerate Swagger docs
+        run: |
+          echo "=== Regenerating Swagger docs (swag version pinned by itsm-backend/go.mod) ==="
+          cd itsm-backend
+          go run github.com/swaggo/swag/cmd/swag init -d . -g main.go -o docs --parseDependency --parseInternal
+
+      - name: Fail on drift between annotations and committed docs
+        run: |
+          if ! git diff --exit-code -- itsm-backend/docs/swagger.json itsm-backend/docs/swagger.yaml itsm-backend/docs/docs.go; then
+            echo "::error::itsm-backend/docs is stale. Handler annotations changed but generated Swagger docs were not regenerated."
+            echo "Fix: run 'make swagger-gen' and commit the updated itsm-backend/docs/ files."
+            exit 1
+          fi
+          echo "Swagger docs are in sync with annotations."

@@ -37,6 +37,17 @@ func failIncidentOperation(c *gin.Context, err error) {
 	common.InternalError(c, "事件操作失败")
 }
 
+// Acknowledge 事件管理-确认事件
+// @Summary 确认事件
+// @Description 确认（受理）指定事件
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/acknowledge [post]
 func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -55,6 +66,19 @@ func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Resolve 事件管理-解决事件
+// @Summary 解决事件
+// @Description 提供解决方案与根因并解决指定事件
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body object true "解决事件请求（resolution、rootCause）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/resolve [post]
 func (h *IncidentHandler) Resolve(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -81,6 +105,19 @@ func (h *IncidentHandler) Resolve(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Close 事件管理-关闭事件
+// @Summary 关闭事件
+// @Description 关闭指定事件并记录关闭备注
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body object true "关闭事件请求（closeNotes）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/close [post]
 func (h *IncidentHandler) Close(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -106,6 +143,17 @@ func (h *IncidentHandler) Close(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Reopen 事件管理-重开事件
+// @Summary 重开事件
+// @Description 将已解决/关闭的事件重新打开
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/reopen [post]
 func (h *IncidentHandler) Reopen(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -124,6 +172,19 @@ func (h *IncidentHandler) Reopen(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Assign 事件管理-指派事件
+// @Summary 指派事件
+// @Description 将指定事件指派给处理人
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body object true "指派请求（assigneeId）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/assign [post]
 func (h *IncidentHandler) Assign(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -149,6 +210,17 @@ func (h *IncidentHandler) Assign(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// Delete 事件管理-删除事件
+// @Summary 删除事件
+// @Description 删除指定事件
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id} [delete]
 func (h *IncidentHandler) Delete(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -167,6 +239,17 @@ func (h *IncidentHandler) Delete(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// PauseSLA 事件管理-暂停SLA
+// @Summary 暂停事件SLA
+// @Description 暂停指定事件的 SLA 计时
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/sla/pause [put]
 func (h *IncidentHandler) PauseSLA(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -185,6 +268,17 @@ func (h *IncidentHandler) PauseSLA(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// ResumeSLA 事件管理-恢复SLA
+// @Summary 恢复事件SLA
+// @Description 恢复指定事件的 SLA 计时
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/sla/resume [put]
 func (h *IncidentHandler) ResumeSLA(c *gin.Context) {
 	if c.GetInt("tenant_id") <= 0 || c.GetInt("user_id") <= 0 {
 		common.AuthFailed(c, "缺少有效租户或用户上下文")
@@ -212,7 +306,18 @@ func incidentID(c *gin.Context) (int, bool) {
 	return id, true
 }
 
-// Create handles incident creation
+// Create 事件管理-创建事件
+// @Summary 创建事件
+// @Description 创建新的 IT 事件工单
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateIncidentRequest true "创建事件请求"
+// @Success 200 {object} common.Response{data=dto.IncidentResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents [post]
 func (h *IncidentHandler) Create(c *gin.Context) {
 	var req dto.CreateIncidentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -263,7 +368,17 @@ func (h *IncidentHandler) Create(c *gin.Context) {
 	common.Success(c, h.toDTO(created))
 }
 
-// Get handles retrieving a single incident
+// Get 事件管理-获取事件详情
+// @Summary 获取事件详情
+// @Description 根据 ID 获取事件详情
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response{data=dto.IncidentResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id} [get]
 func (h *IncidentHandler) Get(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -286,7 +401,21 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 	common.Success(c, h.toDTO(incident))
 }
 
-// List handles listing incidents
+// Lists 事件管理-获取事件列表
+// @Summary 获取事件列表
+// @Description 分页获取事件列表，支持状态、优先级、关键词过滤
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "页码" default(1)
+// @Param size query int false "每页数量" default(10)
+// @Param status query string false "状态过滤"
+// @Param priority query string false "优先级过滤"
+// @Param keyword query string false "搜索关键词"
+// @Param scope query string false "范围过滤（me 表示仅我的事件）"
+// @Success 200 {object} common.Response{data=[]dto.IncidentResponse}
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents [get]
 func (h *IncidentHandler) Lists(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
@@ -327,6 +456,18 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	common.SuccessWithPagination(c, dtos, page, size, int64(total))
 }
 
+// CreateAlert 事件管理-创建事件告警
+// @Summary 创建事件告警
+// @Description 为事件创建告警记录
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateIncidentAlertRequest true "创建事件告警请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/alerts [post]
 func (h *IncidentHandler) CreateAlert(c *gin.Context) {
 	var req dto.CreateIncidentAlertRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -345,6 +486,19 @@ func (h *IncidentHandler) CreateAlert(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// CreateComment 事件管理-创建事件评论
+// @Summary 创建事件评论
+// @Description 为指定事件添加评论
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body object true "创建评论请求（content、isInternal）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments [post]
 func (h *IncidentHandler) CreateComment(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -378,6 +532,18 @@ func (h *IncidentHandler) CreateComment(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// CreateEvent 事件管理-创建事件活动记录
+// @Summary 创建事件活动记录
+// @Description 创建事件活动/审计记录
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateIncidentEventRequest true "创建事件活动记录请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/events [post]
 func (h *IncidentHandler) CreateEvent(c *gin.Context) {
 	var req dto.CreateIncidentEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -396,6 +562,18 @@ func (h *IncidentHandler) CreateEvent(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// DeleteComment 事件管理-删除事件评论
+// @Summary 删除事件评论
+// @Description 删除指定事件下的评论
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param commentId path int true "评论ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments/{commentId} [delete]
 func (h *IncidentHandler) DeleteComment(c *gin.Context) {
 	incidentID, ok := incidentID(c)
 	if !ok {
@@ -417,6 +595,17 @@ func (h *IncidentHandler) DeleteComment(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// GetAlerts 事件管理-获取事件告警列表
+// @Summary 获取事件告警列表
+// @Description 获取指定事件的告警列表
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/alerts [get]
 func (h *IncidentHandler) GetAlerts(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -434,6 +623,17 @@ func (h *IncidentHandler) GetAlerts(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// GetComments 事件管理-获取事件评论列表
+// @Summary 获取事件评论列表
+// @Description 获取指定事件的评论列表
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/comments [get]
 func (h *IncidentHandler) GetComments(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -451,6 +651,17 @@ func (h *IncidentHandler) GetComments(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// GetEvents 事件管理-获取事件活动列表
+// @Summary 获取事件活动列表
+// @Description 获取指定事件的活动记录列表
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/events [get]
 func (h *IncidentHandler) GetEvents(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -468,6 +679,17 @@ func (h *IncidentHandler) GetEvents(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// GetMetrics 事件管理-获取事件指标
+// @Summary 获取事件指标
+// @Description 获取指定事件的监控指标
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/metrics [get]
 func (h *IncidentHandler) GetMetrics(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -485,6 +707,18 @@ func (h *IncidentHandler) GetMetrics(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// GetMonitoring 事件管理-事件监控查询
+// @Summary 事件监控查询
+// @Description 按条件查询事件监控数据
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.IncidentMonitoringRequest true "事件监控查询请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/monitoring [post]
 func (h *IncidentHandler) GetMonitoring(c *gin.Context) {
 	var req dto.IncidentMonitoringRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -503,6 +737,17 @@ func (h *IncidentHandler) GetMonitoring(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// ResolveAlert 事件管理-解决事件告警
+// @Summary 解决事件告警
+// @Description 解决指定的事件告警
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "告警ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/alerts/{id}/resolve [post]
 func (h *IncidentHandler) ResolveAlert(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -524,6 +769,19 @@ func (h *IncidentHandler) ResolveAlert(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// EscalateMajor 事件管理-升级为重大事件
+// @Summary 升级为重大事件
+// @Description 将指定事件升级为重大事件
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body dto.EscalateMajorIncidentRequest true "升级重大事件请求"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/major-incident [post]
 func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -550,6 +808,17 @@ func (h *IncidentHandler) EscalateMajor(c *gin.Context) {
 	common.Success(c, nil)
 }
 
+// AcknowledgeAlert 事件管理-确认事件告警
+// @Summary 确认事件告警
+// @Description 确认指定的事件告警
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "告警ID"
+// @Success 200 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/alerts/{id}/acknowledge [post]
 func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -568,6 +837,18 @@ func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
 	common.SuccessWithMessage(c, "确认告警成功", nil)
 }
 
+// GetAlertStatistics 事件管理-获取告警统计
+// @Summary 获取告警统计
+// @Description 按时间范围获取告警统计数据
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param startTime query string true "开始时间（RFC3339）"
+// @Param endTime query string true "结束时间（RFC3339）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/alerts/statistics [get]
 func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 	startTimeStr := c.Query("startTime")
 	endTimeStr := c.Query("endTime")
@@ -594,6 +875,17 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 	common.Success(c, statistics)
 }
 
+// GetActiveAlerts 事件管理-获取活跃告警列表
+// @Summary 获取活跃告警列表
+// @Description 分页获取当前活跃的事件告警
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "页码" default(1)
+// @Param size query int false "每页数量" default(10)
+// @Success 200 {object} common.Response{data=dto.IncidentAlertListResponse}
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/alerts/active [get]
 func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
@@ -615,6 +907,16 @@ func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	common.Success(c, dto.IncidentAlertListResponse{Items: alerts, Total: total, Page: page, PageSize: size})
 }
 
+// AnalyzeImpact 事件管理-分析事件影响
+// @Summary 分析事件影响
+// @Description 分析指定事件的影响范围
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/impact [get]
 func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -629,6 +931,19 @@ func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
 	common.Success(c, analysis)
 }
 
+// ConvertToProblem 事件管理-事件转问题
+// @Summary 事件转问题
+// @Description 将指定事件转换为问题工单
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body dto.ConvertIncidentToProblemRequest true "事件转问题请求"
+// @Success 200 {object} common.Response{data=dto.ProblemResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/convert-to-problem [post]
 func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 	id, ok := incidentID(c)
 	if !ok {
@@ -648,7 +963,20 @@ func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 	common.Success(c, dto.ToProblemResponse(problem))
 }
 
-// Update handles updating an incident
+// Update 事件管理-更新事件
+// @Summary 更新事件
+// @Description 更新指定事件的基本信息或状态（同时挂载在 PUT /{id} 与 PUT /{id}/status）
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body dto.UpdateIncidentRequest true "更新事件请求"
+// @Success 200 {object} common.Response{data=dto.IncidentResponse}
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id} [put]
+// @Router /api/v1/incidents/{id}/status [put]
 func (h *IncidentHandler) Update(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -715,7 +1043,19 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 	common.Success(c, h.toDTO(updated))
 }
 
-// Escalate handles escalating an incident
+// Escalate 事件管理-升级事件
+// @Summary 升级事件
+// @Description 按指定升级级别和原因升级事件
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Param request body dto.IncidentEscalationRequest true "事件升级请求"
+// @Success 200 {object} common.Response{data=dto.IncidentResponse}
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/escalate [post]
 func (h *IncidentHandler) Escalate(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -804,6 +1144,16 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 // P0-2 修复：handler 不再直接访问 ent.Client，改为通过 service 层调用仓储。
 // 仓储以单次 COUNT(*) FILTER + AVG 聚合查询完成全部指标，pprof 查询次数由 7 降至 1。
 // 字段已统一为 camelCase（见 dto.IncidentStats / repository.IncidentStats）。
+// GetStats 事件管理-获取事件统计
+// @Summary 获取事件统计
+// @Description 获取当前租户的事件统计数据（兼容前端）
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/stats [get]
 func (h *IncidentHandler) GetStats(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -821,7 +1171,17 @@ func (h *IncidentHandler) GetStats(c *gin.Context) {
 	common.Success(c, stats)
 }
 
-// GetRootCause 获取根因分析
+// GetRootCause 事件管理-获取根因分析
+// @Summary 获取根因分析
+// @Description 获取指定事件的根因分析信息
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/root-cause [get]
 func (h *IncidentHandler) GetRootCause(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -844,7 +1204,21 @@ func (h *IncidentHandler) GetRootCause(c *gin.Context) {
 	})
 }
 
-// UpdateRootCause 更新根因分析
+// UpdateRootCause 事件管理-更新根因分析
+// @Summary 更新根因分析
+// @Description 更新指定事件的根因分析（同时挂载在 POST /root-cause、POST /{id}/root-cause 与 PUT /{id}/root-cause）
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int false "事件ID（/{id}/root-cause 路由时必填）"
+// @Param request body object true "更新根因分析请求（rootCause）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/root-cause [post]
+// @Router /api/v1/incidents/{id}/root-cause [put]
+// @Router /api/v1/incidents/root-cause [post]
 func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -876,7 +1250,17 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 	common.Success(c, gin.H{"message": "根因分析已更新"})
 }
 
-// GetImpactAssessment 获取影响评估
+// GetImpactAssessment 事件管理-获取影响评估
+// @Summary 获取影响评估
+// @Description 获取指定事件的影响评估信息
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/impact-assessment [get]
 func (h *IncidentHandler) GetImpactAssessment(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -898,7 +1282,20 @@ func (h *IncidentHandler) GetImpactAssessment(c *gin.Context) {
 	})
 }
 
-// UpdateImpactAssessment 更新影响评估
+// UpdateImpactAssessment 事件管理-更新影响评估
+// @Summary 更新影响评估
+// @Description 更新指定事件的影响评估（同时挂载在 POST /impact-assessment 与 PUT /{id}/impact-assessment）
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int false "事件ID（/{id}/impact-assessment 路由时必填）"
+// @Param request body object true "更新影响评估请求（impactAnalysis）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/impact-assessment [put]
+// @Router /api/v1/incidents/impact-assessment [post]
 func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -930,7 +1327,17 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 	common.Success(c, gin.H{"message": "影响评估已更新"})
 }
 
-// GetClassification 获取事件分类
+// GetClassification 事件管理-获取事件分类
+// @Summary 获取事件分类
+// @Description 获取指定事件的分类信息
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "事件ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/incidents/{id}/classification [get]
 func (h *IncidentHandler) GetClassification(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -953,7 +1360,20 @@ func (h *IncidentHandler) GetClassification(c *gin.Context) {
 	})
 }
 
-// UpdateClassification 更新事件分类
+// UpdateClassification 事件管理-更新事件分类
+// @Summary 更新事件分类
+// @Description 更新指定事件的分类信息（同时挂载在 POST /classification 与 PUT /{id}/classification）
+// @Tags 事件管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int false "事件ID（/{id}/classification 路由时必填）"
+// @Param request body object true "更新分类请求（category、subcategory）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/{id}/classification [put]
+// @Router /api/v1/incidents/classification [post]
 func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
