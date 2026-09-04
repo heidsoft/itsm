@@ -702,9 +702,10 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	if isTerminal {
 		rawDB := database.GetRawDB()
 		if rawDB != nil {
+			// 表结构无 updated_at 列（migration 建表仅有 created_at），不得在 SQL 中引用
 			if _, closeErr := rawDB.ExecContext(ctx, `
 				UPDATE change_approval_chains
-				SET status = 'obsolete', updated_at = CURRENT_TIMESTAMP
+				SET status = 'obsolete'
 				WHERE change_id = $1 AND tenant_id = $2 AND status = 'pending'
 			`, id, tenantID); closeErr != nil {
 				s.logger.Errorw("收口 change_approval_chains 失败（非致命，后续状态机兜底）",
@@ -738,7 +739,7 @@ func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) erro
 	}
 	_, err := rawDB.ExecContext(ctx, `
 		UPDATE change_approval_chains
-		SET status = 'obsolete', updated_at = CURRENT_TIMESTAMP
+		SET status = 'obsolete'
 		WHERE change_id = $1 AND tenant_id = $2 AND status = 'pending'
 	`, changeID, tenantID)
 	return err

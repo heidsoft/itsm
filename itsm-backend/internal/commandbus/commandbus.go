@@ -293,7 +293,10 @@ func (w *Worker) heartbeat(ctx context.Context, cmd *ent.OperationalCommand, can
 
 func (w *Worker) fail(ctx context.Context, cmd *ent.OperationalCommand, cause error) error {
 	status := StatusPending
-	if cmd.Attempt >= cmd.MaxAttempts {
+	// 资源不存在（如聚合已被删除）是永久性失败，重试只会产生噪音并拖到 dead_letter。
+	// outbox 模式下命令与业务同事务写入，执行时聚合不可见即意味着已删除，重试无意义。
+	var notFound *ent.NotFoundError
+	if cmd.Attempt >= cmd.MaxAttempts || errors.As(cause, &notFound) {
 		status = StatusDeadLetter
 	}
 	delay := time.Duration(math.Min(math.Pow(2, float64(cmd.Attempt)), 300)) * time.Second

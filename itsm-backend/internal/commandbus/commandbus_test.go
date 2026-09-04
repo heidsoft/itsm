@@ -3,6 +3,7 @@ package commandbus
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -18,7 +19,9 @@ import (
 
 func newCommandTestClient(t *testing.T) *ent.Client {
 	t.Helper()
-	return enttest.Open(t, dialect.SQLite, "file:commandbus?mode=memory&cache=shared&_fk=1")
+	// 每个测试独立内存库：共享库会让跨测试残留的 pending 命令
+	// 被 worker.RunOnce 抢先领取，造成顺序依赖的假失败。
+	return enttest.Open(t, dialect.SQLite, fmt.Sprintf("file:commandbus-%s?mode=memory&cache=shared&_fk=1", t.Name()))
 }
 
 func TestWorkerProcessesCommandExactlyOnceAfterSuccess(t *testing.T) {
@@ -111,4 +114,32 @@ func TestEnqueueRejectsDuplicateIdempotencyKey(t *testing.T) {
 	require.NoError(t, err)
 	_, err = Enqueue(ctx, client, req)
 	require.True(t, ent.IsConstraintError(err))
+}
+
+// TestWorkerDeadLettersNotFoundImmediately 资源不存在（聚合已删除）属于永久失败，
+// worker 必须立即 dead_letter，不得无谓重试占用调度轮次。
+func TestWorkerDeadLettersNotFoundImmediately(t *testing.T) {
+	client := newCommandTestClient(t)
+	ctx := context.Background()
+	registry := NewRegistry()
+	calls := 0
+	require.NoError(t, registry.Register(CommandStartBPMN, func(_ context.Context, _ *ent.OperationalCommand) error {
+		calls++
+		return &ent.NotFoundError{}
+	}))
+	cmd, err := Enqueue(ctx, client, EnqueueRequest{
+		TenantID: 7, CommandType: CommandStartBPMN,
+		AggregateType: "change", AggregateID: 99, IdempotencyKey: "change:99:workflow:start",
+	})
+	require.NoError(t, err)
+
+	worker := NewWorker(client, registry, zap.NewNop().Sugar(), "worker-a")
+	processed, err := worker.RunOnce(ctx)
+	require.NoError(t, err)
+	require.True(t, processed)
+
+	stored, err := client.OperationalCommand.Get(ctx, cmd.ID)
+	require.NoError(t, err)
+	require.Equal(t, StatusDeadLetter, stored.Status, "not-found 应一次失败即 dead_letter")
+	require.Equal(t, 1, calls, "不得重试")
 }
