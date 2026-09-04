@@ -92,25 +92,25 @@ interface CustomField {
 const templateCategories = [
   {
     key: 'incident',
-    label: 'Incident Management',
+    label: '事件管理',
     icon: <AlertTriangle size={16} />,
     color: 'red',
   },
   {
     key: 'serviceRequest',
-    label: 'Service Request',
+    label: '服务请求',
     icon: <FileText size={16} />,
     color: 'blue',
   },
   {
     key: 'problem',
-    label: 'Problem Management',
+    label: '问题管理',
     icon: <BookOpen size={16} />,
     color: 'orange',
   },
   {
     key: 'change',
-    label: 'Change Management',
+    label: '变更管理',
     icon: <Workflow size={16} />,
     color: 'purple',
   },
@@ -264,7 +264,7 @@ const TicketTemplatesPage = () => {
       hoverable
       className="h-full"
       actions={[
-        <Tooltip title="View template" key="view">
+        <Tooltip title="查看模板" key="view">
           <Button
             type="text"
             icon={<Eye size={16} />}
@@ -272,7 +272,7 @@ const TicketTemplatesPage = () => {
             aria-label="查看模板详情"
           />
         </Tooltip>,
-        <Tooltip title="Edit template" key="edit">
+        <Tooltip title="编辑模板" key="edit">
           <Button
             type="text"
             icon={<Edit size={16} />}
@@ -280,7 +280,7 @@ const TicketTemplatesPage = () => {
             aria-label="编辑模板"
           />
         </Tooltip>,
-        <Tooltip title="Copy template" key="copy">
+        <Tooltip title="复制模板" key="copy">
           <Button
             type="text"
             icon={<Copy size={16} />}
@@ -355,7 +355,7 @@ const TicketTemplatesPage = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Switch checked={template.isActive} size="small" />
-          <Text className="text-xs">{template.isActive ? 'Active' : 'Inactive'}</Text>
+          <Text className="text-xs">{template.isActive ? '启用' : '停用'}</Text>
         </div>
       </div>
     </Card>
@@ -439,14 +439,14 @@ const TicketTemplatesPage = () => {
       {/* Page header actions */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Ticket Template Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">工单模板管理</h1>
           <p className="text-gray-600 mt-1">
-            Manage and configure ticket templates to improve ticket creation efficiency
+            管理并配置工单模板，提升工单创建效率
           </p>
         </div>
         <Space>
           <Button icon={<RefreshCw size={16} />} onClick={loadTemplates} aria-label="刷新模板列表">
-            Refresh
+            刷新
           </Button>
           <Button
             type="primary"
@@ -454,7 +454,7 @@ const TicketTemplatesPage = () => {
             onClick={handleCreateTemplate}
             aria-label="新建模板"
           >
-            New Template
+            新建模板
           </Button>
         </Space>
       </div>
@@ -463,7 +463,7 @@ const TicketTemplatesPage = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Total Templates"
+              title="模板总数"
               value={templates.length}
               prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
             />
@@ -472,7 +472,7 @@ const TicketTemplatesPage = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Active Templates"
+              title="启用模板"
               value={templates.filter(t => t.isActive).length}
               styles={{ content: { color: '#52c41a' } }}
               prefix={<CheckCircle size={16} />}
@@ -482,7 +482,7 @@ const TicketTemplatesPage = () => {
         <Col span={8}>
           <Card>
             <Statistic
-              title="Categories"
+              title="分类数"
               value={new Set(templates.map(t => t.category).filter(Boolean)).size}
               prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
             />
@@ -491,18 +491,18 @@ const TicketTemplatesPage = () => {
       </Row>
 
       {/* Filter and search */}
-      <Card title="Template Management" className="mb-6">
+      <Card title="模板管理" className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <Title level={5} className="mb-0">
-            Filter Conditions
+            筛选条件
           </Title>
           <Space>
             <Radio.Group
               value={viewMode}
               onChange={(e: RadioChangeEvent) => setViewMode(e.target.value)}
             >
-              <Radio.Button value="grid">Grid View</Radio.Button>
-              <Radio.Button value="list">List View</Radio.Button>
+              <Radio.Button value="grid">卡片视图</Radio.Button>
+              <Radio.Button value="list">列表视图</Radio.Button>
             </Radio.Group>
           </Space>
         </div>
@@ -510,7 +510,7 @@ const TicketTemplatesPage = () => {
         <Row gutter={16} align="middle">
           <Col span={8}>
             <Input.Search
-              placeholder="Search templates..."
+              placeholder="搜索模板..."
               allowClear
               value={searchKeyword}
               onChange={e => setSearchKeyword(e.target.value)}
@@ -522,9 +522,9 @@ const TicketTemplatesPage = () => {
               value={selectedCategory}
               onChange={setSelectedCategory}
               style={{ width: '100%' }}
-              placeholder="Select category"
+              placeholder="选择分类"
               options={[
-                { value: 'all', label: 'All Categories' },
+                { value: 'all', label: '全部分类' },
                 ...templateCategories.map(cat => ({
                   value: cat.key,
                   label: <div className="flex items-center"><span className={`text-${cat.color}-500 mr-2`}>{cat.icon}</span>{cat.label}</div>,
@@ -537,11 +537,11 @@ const TicketTemplatesPage = () => {
               value={filterStatus}
               onChange={setFilterStatus}
               style={{ width: '100%' }}
-              placeholder="Status filter"
+              placeholder="状态筛选"
               options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' },
+                { value: 'all', label: '全部状态' },
+                { value: 'active', label: '启用' },
+                { value: 'inactive', label: '停用' },
               ]}
             />
           </Col>
@@ -560,7 +560,7 @@ const TicketTemplatesPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4">
               <RefreshCw size={32} className="text-blue-500 animate-spin" />
             </div>
-            <Text className="text-gray-500">Loading templates...</Text>
+            <Text className="text-gray-500">加载模板中...</Text>
           </div>
         </Card>
       ) : filteredTemplates.length === 0 ? (
@@ -570,11 +570,11 @@ const TicketTemplatesPage = () => {
               <FileText size={48} className="text-gray-400" />
             </div>
             <Title level={4} className="text-gray-600 mb-2">
-              No Templates
+              暂无模板
             </Title>
-            <p className="text-gray-500 mb-4">No matching ticket templates found</p>
+            <p className="text-gray-500 mb-4">未找到匹配的工单模板</p>
             <Button type="primary" onClick={() => setModalVisible(true)}>
-              Create First Template
+              创建第一个模板
             </Button>
           </div>
         </Card>
@@ -592,7 +592,7 @@ const TicketTemplatesPage = () => {
 
       {/* Create/Edit template modal */}
       <Modal
-        title={editingTemplate ? 'Edit Ticket Template' : 'New Ticket Template'}
+        title={editingTemplate ? '编辑工单模板' : '新建工单模板'}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -641,24 +641,24 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="Template Name"
+                label="模板名称"
                 name="name"
-                rules={[{ required: true, message: 'Please enter template name' }]}
+                rules={[{ required: true, message: '请输入模板名称' }]}
               >
-                <Input placeholder="Please enter template name" />
+                <Input placeholder="请输入模板名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label="Template Type"
+                label="模板类型"
                 name="type"
-                rules={[{ required: true, message: 'Please select template type' }]}
+                rules={[{ required: true, message: '请选择模板类型' }]}
               >
-                <Select placeholder="Please select template type" options={[
-                  { value: 'incident', label: 'Incident' },
-                  { value: 'service_request', label: 'Service Request' },
-                  { value: 'problem', label: 'Problem' },
-                  { value: 'change', label: 'Change' },
+                <Select placeholder="请选择模板类型" options={[
+                  { value: 'incident', label: '事件' },
+                  { value: 'service_request', label: '服务请求' },
+                  { value: 'problem', label: '问题' },
+                  { value: 'change', label: '变更' },
                 ]} />
               </Form.Item>
             </Col>
@@ -667,62 +667,62 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="Category"
+                label="分类"
                 name="category"
-                rules={[{ required: true, message: 'Please select category' }]}
+                rules={[{ required: true, message: '请选择分类' }]}
               >
-                <Input placeholder="Please enter category" />
+                <Input placeholder="请输入分类" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Subcategory" name="subcategory">
-                <Input placeholder="Please enter subcategory (optional)" />
+              <Form.Item label="子分类" name="subcategory">
+                <Input placeholder="请输入子分类（可选）" />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            label="Description"
+            label="描述"
             name="description"
-            rules={[{ required: true, message: 'Please enter template description' }]}
+            rules={[{ required: true, message: '请输入模板描述' }]}
           >
             <TextArea
               rows={3}
-              placeholder="Please describe template purpose and applicable scenarios in detail"
+              placeholder="请详细描述模板用途与适用场景"
             />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="Priority"
+                label="优先级"
                 name="priority"
-                rules={[{ required: true, message: 'Please select priority' }]}
+                rules={[{ required: true, message: '请选择优先级' }]}
               >
-                <Select placeholder="Please select priority" options={[
-                  { value: 'low', label: 'Low' },
-                  { value: 'medium', label: 'Medium' },
-                  { value: 'high', label: 'High' },
-                  { value: 'urgent', label: 'Urgent' },
+                <Select placeholder="请选择优先级" options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                  { value: 'urgent', label: '紧急' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="Estimated Processing Time"
+                label="预计处理时长"
                 name="estimatedTime"
-                rules={[{ required: true, message: 'Please enter estimated processing time' }]}
+                rules={[{ required: true, message: '请输入预计处理时长' }]}
               >
-                <Input placeholder="e.g.: 2 hours" />
+                <Input placeholder="如：2 小时" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
                 label="SLA"
                 name="sla"
-                rules={[{ required: true, message: 'Please enter SLA' }]}
+                rules={[{ required: true, message: '请输入 SLA' }]}
               >
-                <Input placeholder="e.g.: 4 hours" />
+                <Input placeholder="如：4 小时" />
               </Form.Item>
             </Col>
           </Row>
@@ -730,43 +730,43 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="Impact Scope"
+                label="影响范围"
                 name="impact"
-                rules={[{ required: true, message: 'Please select impact scope' }]}
+                rules={[{ required: true, message: '请选择影响范围' }]}
               >
-                <Select placeholder="Please select impact scope" options={[
-                  { value: 'individual', label: 'Individual' },
-                  { value: 'department', label: 'Department' },
-                  { value: 'organization', label: 'Organization' },
-                  { value: 'customer', label: 'Customer' },
+                <Select placeholder="请选择影响范围" options={[
+                  { value: 'individual', label: '个人' },
+                  { value: 'department', label: '部门' },
+                  { value: 'organization', label: '组织' },
+                  { value: 'customer', label: '客户' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="Urgency Level"
+                label="紧急程度"
                 name="urgency"
-                rules={[{ required: true, message: 'Please select urgency level' }]}
+                rules={[{ required: true, message: '请选择紧急程度' }]}
               >
-                <Select placeholder="Please select urgency level" options={[
-                  { value: 'low', label: 'Low' },
-                  { value: 'medium', label: 'Medium' },
-                  { value: 'high', label: 'High' },
-                  { value: 'critical', label: 'Critical' },
+                <Select placeholder="请选择紧急程度" options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                  { value: 'critical', label: '严重' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="Business Value"
+                label="业务价值"
                 name="businessValue"
-                rules={[{ required: true, message: 'Please select business value' }]}
+                rules={[{ required: true, message: '请选择业务价值' }]}
               >
-                <Select placeholder="Please select business value" options={[
-                  { value: 'low', label: 'Low' },
-                  { value: 'medium', label: 'Medium' },
-                  { value: 'high', label: 'High' },
-                  { value: 'critical', label: 'Critical' },
+                <Select placeholder="请选择业务价值" options={[
+                  { value: 'low', label: '低' },
+                  { value: 'medium', label: '中' },
+                  { value: 'high', label: '高' },
+                  { value: 'critical', label: '严重' },
                 ]} />
               </Form.Item>
             </Col>
@@ -775,40 +775,40 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="Source"
+                label="来源"
                 name="source"
-                rules={[{ required: true, message: 'Please select source' }]}
+                rules={[{ required: true, message: '请选择来源' }]}
               >
-                <Select placeholder="Please select source" options={[
-                  { value: 'web', label: 'Web Portal' },
-                  { value: 'email', label: 'Email' },
-                  { value: 'phone', label: 'Phone' },
-                  { value: 'chat', label: 'Online Chat' },
+                <Select placeholder="请选择来源" options={[
+                  { value: 'web', label: '门户' },
+                  { value: 'email', label: '邮件' },
+                  { value: 'phone', label: '电话' },
+                  { value: 'chat', label: '在线聊天' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Tags" name="tags">
-                <Select mode="tags" placeholder="Add tags..." style={{ width: '100%' }} />
+              <Form.Item label="标签" name="tags">
+                <Select mode="tags" placeholder="添加标签..." style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Divider>Advanced Settings</Divider>
+          <Divider>高级设置</Divider>
 
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item label="Auto Assignment" name="autoAssign" valuePropName="checked">
+              <Form.Item label="自动指派" name="autoAssign" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Requires Approval" name="requiresApproval" valuePropName="checked">
+              <Form.Item label="需要审批" name="requiresApproval" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Template Status" name="isActive" valuePropName="checked">
+              <Form.Item label="模板状态" name="isActive" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
@@ -817,24 +817,24 @@ const TicketTemplatesPage = () => {
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label="SLA Type"
+                label="SLA 类型"
                 name="slaType"
-                rules={[{ required: true, message: 'Please select SLA type' }]}
+                rules={[{ required: true, message: '请选择 SLA 类型' }]}
               >
-                <Select placeholder="Please select SLA type" options={[
-                  { value: 'hours', label: 'Hours' },
-                  { value: 'days', label: 'Days' },
-                  { value: 'business_hours', label: 'Business Hours' },
+                <Select placeholder="请选择 SLA 类型" options={[
+                  { value: 'hours', label: '小时' },
+                  { value: 'days', label: '天' },
+                  { value: 'business_hours', label: '工作时间' },
                 ]} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label="Approval Level" name="approvalLevel">
-                <Select placeholder="Please select approval level" options={[
-                  { value: 'none', label: 'No Approval Required' },
-                  { value: 'manager', label: 'Manager Approval' },
-                  { value: 'director', label: 'Director Approval' },
-                  { value: 'executive', label: 'Executive Approval' },
+              <Form.Item label="审批层级" name="approvalLevel">
+                <Select placeholder="请选择审批层级" options={[
+                  { value: 'none', label: '无需审批' },
+                  { value: 'manager', label: '经理审批' },
+                  { value: 'director', label: '总监审批' },
+                  { value: 'executive', label: '高管审批' },
                 ]} />
               </Form.Item>
             </Col>
@@ -843,7 +843,7 @@ const TicketTemplatesPage = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingTemplate ? 'Update Template' : 'Create Template'}
+                {editingTemplate ? '更新模板' : '创建模板'}
               </Button>
               <Button onClick={() => setModalVisible(false)}>取消</Button>
             </Space>
