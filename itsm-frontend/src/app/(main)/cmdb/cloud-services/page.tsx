@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Breadcrumb,
   Button,
@@ -18,6 +19,7 @@ import {
 } from 'antd';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { CMDB_KEYS, useCloudServicesQuery } from '@/lib/hooks/useCMDB';
 import type { CloudService } from '@/types/biz/cmdb';
 import { useI18n } from '@/lib/i18n';
 
@@ -35,30 +37,28 @@ const providerOptions = [
 export default function CloudServicePage() {
   const { t } = useI18n();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
-  const [updateSubmitting, setUpdateSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [data, setData] = useState<CloudService[]>([]);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editModal, setEditModal] = useState(false);
-  const [editingService, setEditingService] = useState<CloudService | null>(null);
+
+  // React Query：云服务目录（provider 进 queryKey，切换自动重取）
+  const [providerFilter, setProviderFilter] = useState<string | undefined>(undefined);
+  const servicesQuery = useCloudServicesQuery(providerFilter);
+  const data = useMemo(() => servicesQuery.data ?? [], [servicesQuery.data]);
+  const loading = servicesQuery.isLoading;
 
   const serviceMap = useMemo(() => {
     return new Map(data.map(service => [service.id, service]));
   }, [data]);
 
   const createProvider = Form.useWatch('provider', createForm);
-  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [editingService, setEditingService] = useState<CloudService | null>(null);
+
+  const invalidateServices = () =>
+    queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'cloud-services'] });
 
   const buildPayload = (values: Record<string, any>) => {
     const payload: Record<string, any> = {
@@ -97,41 +97,25 @@ export default function CloudServicePage() {
     return payload;
   };
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const values = form.getFieldsValue();
-      const list = await CMDBApi.getCloudServices(values.provider);
-      if (isMountedRef.current) {
-        setData(list || []);
-      }
-    } catch (error) {
-      if (isMountedRef.current) {
-        message.error(t('cmdb.loadCloudServicesFailed'));
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-    }
+  // 查询：提交表单当前值
+  const handleSearch = () => {
+    const values = form.getFieldsValue();
+    setProviderFilter(values.provider);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleCreate = async () => {
-    if (createSubmitting) return;
-    setCreateSubmitting(true);
-    try {
+  // 新增云服务（SyntaxError = JSON 模板非法，走独立提示）
+  const createMutation = useMutation({
+    mutationFn: async () => {
       const values = await createForm.validateFields();
-      const payload = buildPayload(values);
-      await CMDBApi.createCloudService(payload);
+      return CMDBApi.createCloudService(buildPayload(values));
+    },
+    onSuccess: () => {
       message.success(t('cmdb.cloudServiceCreated'));
       setCreateOpen(false);
       createForm.resetFields();
-      loadData();
-    } catch (error) {
+      invalidateServices();
+    },
+    onError: error => {
       if (error instanceof SyntaxError) {
         message.error(t('cmdb.propertyTemplateInvalidJSON'));
         return;
@@ -139,10 +123,8 @@ export default function CloudServicePage() {
       if (error instanceof Error) {
         message.error(error.message || t('cmdb.cloudServiceCreateFailed'));
       }
-    } finally {
-      setCreateSubmitting(false);
-    }
-  };
+    },
+  });
 
   const handleEdit = (service: CloudService) => {
     setEditingService(service);
@@ -163,33 +145,31 @@ export default function CloudServicePage() {
     setEditModal(true);
   };
 
-  const handleDelete = async (service: CloudService) => {
-    if (deletingId !== null) return;
-    setDeletingId(service.id);
-    try {
-      await CMDBApi.deleteCloudService(service.id);
+  const deleteMutation = useMutation({
+    mutationFn: (service: CloudService) => CMDBApi.deleteCloudService(service.id),
+    onSuccess: () => {
       message.success('云服务已删除');
-      loadData();
-    } catch (error) {
+      invalidateServices();
+    },
+    onError: error => {
       message.error(error instanceof Error ? error.message : '删除云服务失败');
-    } finally {
-      setDeletingId(null);
-    }
-  };
+    },
+  });
 
-  const handleUpdate = async () => {
-    if (!editingService) return;
-    if (updateSubmitting) return;
-    setUpdateSubmitting(true);
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingService) throw new Error('no editing service');
       const values = await createForm.validateFields();
-      await CMDBApi.updateCloudService(editingService.id, buildPayload(values));
+      return CMDBApi.updateCloudService(editingService.id, buildPayload(values));
+    },
+    onSuccess: () => {
       message.success('云服务已更新');
       setEditModal(false);
       setEditingService(null);
       createForm.resetFields();
-      loadData();
-    } catch (error) {
+      invalidateServices();
+    },
+    onError: error => {
       message.error(
         error instanceof SyntaxError
           ? t('cmdb.propertyTemplateInvalidJSON')
@@ -197,10 +177,8 @@ export default function CloudServicePage() {
             ? error.message
             : '更新云服务失败'
       );
-    } finally {
-      setUpdateSubmitting(false);
-    }
-  };
+    },
+  });
 
   const columns = [
     {
@@ -270,13 +248,13 @@ export default function CloudServicePage() {
             description='删除后无法恢复。'
             okText='删除'
             cancelText='取消'
-            onConfirm={() => handleDelete(record)}
+            onConfirm={() => deleteMutation.mutate(record)}
           >
             <Button
               type='link'
               danger
               size='small'
-              loading={deletingId === record.id}
+              loading={deleteMutation.isPending && deleteMutation.variables?.id === record.id}
               aria-label={`删除云服务 ${record.serviceName}`}
             >
               删除
@@ -305,7 +283,7 @@ export default function CloudServicePage() {
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button onClick={loadData}>查询</Button>
+            <Button onClick={handleSearch}>查询</Button>
             <Button type='primary' onClick={() => setCreateOpen(true)}>
               新增云服务
             </Button>
@@ -328,8 +306,8 @@ export default function CloudServicePage() {
           setCreateOpen(false);
           createForm.resetFields();
         }}
-        onOk={handleCreate}
-        confirmLoading={createSubmitting}
+        onOk={() => createMutation.mutate()}
+        confirmLoading={createMutation.isPending}
       >
         <Form form={createForm} layout='vertical'>
           <Form.Item
@@ -404,8 +382,8 @@ export default function CloudServicePage() {
           setEditingService(null);
           createForm.resetFields();
         }}
-        onOk={handleUpdate}
-        confirmLoading={updateSubmitting}
+        onOk={() => updateMutation.mutate()}
+        confirmLoading={updateMutation.isPending}
       >
         <Form form={createForm} layout='vertical'>
           <Form.Item

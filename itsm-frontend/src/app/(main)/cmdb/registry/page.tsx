@@ -4,9 +4,16 @@ import React from 'react';
 import { Alert, App, Badge, Button, Card, Col, Row, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { Cloud, Database, RefreshCw, Server, Sparkles } from 'lucide-react';
 
-import { CMDBApi, type CMDBRuntimeCapability } from '@/lib/api/cmdb-api';
+import type { CMDBRuntimeCapability } from '@/lib/api/cmdb-api';
 import { ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview, type StatsOverviewItem } from '@/components/ui/StatsOverview';
+import {
+  useCapabilitiesQuery,
+  useCloudAccountsQuery,
+  useCloudServicesQuery,
+  useDiscoveryHistoryQuery,
+  useDiscoverySourcesQuery,
+} from '@/lib/hooks/useCMDB';
 
 const { Text } = Typography;
 
@@ -22,41 +29,41 @@ const normalizeList = <T,>(response: unknown): T[] => {
 
 export default function ServiceGraphRegistryPage() {
   const { message } = App.useApp();
-  const [loading, setLoading] = React.useState(true);
-  const [discoverySources, setDiscoverySources] = React.useState<any[]>([]);
-  const [cloudServices, setCloudServices] = React.useState<any[]>([]);
-  const [cloudAccounts, setCloudAccounts] = React.useState<any[]>([]);
-  const [discoveryHistory, setDiscoveryHistory] = React.useState<any[]>([]);
-  const [discoveryCapability, setDiscoveryCapability] = React.useState<CMDBRuntimeCapability | null>(null);
-  const [refreshAt, setRefreshAt] = React.useState<string | null>(null);
 
-  const load = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const [sources, services, accounts, history, runtimeCapabilities] = await Promise.all([
-        CMDBApi.getDiscoverySources(),
-        CMDBApi.getCloudServices(),
-        CMDBApi.getCloudAccounts(),
-        CMDBApi.getDiscoveryHistory(),
-        CMDBApi.getCapabilities(),
-      ]);
+  // React Query：5 路数据并行加载（替代手写 Promise.all + setState）
+  const sourcesQuery = useDiscoverySourcesQuery();
+  const servicesQuery = useCloudServicesQuery();
+  const accountsQuery = useCloudAccountsQuery();
+  const historyQuery = useDiscoveryHistoryQuery();
+  const capabilitiesQuery = useCapabilitiesQuery();
 
-      setDiscoverySources(normalizeList(sources));
-      setCloudServices(normalizeList(services));
-      setCloudAccounts(normalizeList(accounts));
-      setDiscoveryHistory(normalizeList(history));
-      setDiscoveryCapability(runtimeCapabilities.items.find(item => item.key === 'cmdbDiscovery') ?? null);
-      setRefreshAt(new Date().toISOString());
-    } catch (error) {
-      message.error('加载图谱注册中心失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [message]);
+  const queries = [sourcesQuery, servicesQuery, accountsQuery, historyQuery, capabilitiesQuery];
+  const loading = queries.some(q => q.isLoading);
+  const fetching = queries.some(q => q.isFetching);
+  const hasError = queries.some(q => q.isError);
 
   React.useEffect(() => {
-    load();
-  }, [load]);
+    if (hasError) {
+      message.error('加载图谱注册中心失败');
+    }
+  }, [hasError, message]);
+
+  const handleRefresh = () => {
+    queries.forEach(q => q.refetch());
+  };
+
+  const discoverySources = normalizeList<Record<string, unknown>>(sourcesQuery.data);
+  const cloudServices = normalizeList<Record<string, unknown>>(servicesQuery.data);
+  const cloudAccounts = normalizeList<Record<string, unknown>>(accountsQuery.data);
+  const discoveryHistory = normalizeList<Record<string, unknown>>(historyQuery.data);
+
+  const discoveryCapability: CMDBRuntimeCapability | null =
+    capabilitiesQuery.data?.items.find(item => item.key === 'cmdbDiscovery') ?? null;
+
+  // 最后刷新时间取数据最近一次成功落地的时刻
+  const refreshAt = queries.some(q => q.dataUpdatedAt > 0)
+    ? new Date(Math.max(...queries.map(q => q.dataUpdatedAt))).toISOString()
+    : null;
 
   const statsItems: StatsOverviewItem[] = [
     {
@@ -212,7 +219,7 @@ export default function ServiceGraphRegistryPage() {
         description="集中管理发现源、云服务和云账号的接入信息及历史记录。"
         actions={
           <Space wrap>
-            <Button icon={<RefreshCw className="h-4 w-4" />} loading={loading} onClick={load}>
+            <Button icon={<RefreshCw className="h-4 w-4" />} loading={fetching} onClick={handleRefresh}>
               刷新
             </Button>
             <Button type="primary" href="/cmdb/relationships" icon={<Database className="h-4 w-4" />}>

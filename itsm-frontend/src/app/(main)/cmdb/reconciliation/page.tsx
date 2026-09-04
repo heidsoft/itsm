@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Breadcrumb,
   Button,
@@ -18,12 +19,8 @@ import type { ColumnsType } from 'antd/es/table';
 
 import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchSelect';
 import { CMDBApi } from '@/lib/api/cmdb-api';
-import type {
-  CloudResource,
-  CloudService,
-  ConfigurationItem,
-  ReconciliationResponse,
-} from '@/types/biz/cmdb';
+import { CMDB_KEYS, useCloudServicesQuery, useReconciliationQuery } from '@/lib/hooks/useCMDB';
+import type { CloudResource, ConfigurationItem } from '@/types/biz/cmdb';
 
 const summaryLabels = [
   { key: 'resourceTotal', label: '资源总数' },
@@ -35,53 +32,54 @@ const summaryLabels = [
 
 export default function ReconciliationPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState<ReconciliationResponse['summary'] | null>(null);
-  const [unboundResources, setUnboundResources] = useState<CloudResource[]>([]);
-  const [orphanCIs, setOrphanCIs] = useState<ConfigurationItem[]>([]);
-  const [unlinkedCIs, setUnlinkedCIs] = useState<ConfigurationItem[]>([]);
-  const [services, setServices] = useState<CloudService[]>([]);
+  const queryClient = useQueryClient();
+
+  // React Query：对账结果 + 云服务目录（替代手写 loadData + setState）
+  const reconQuery = useReconciliationQuery();
+  const servicesQuery = useCloudServicesQuery();
+
+  const loading = reconQuery.isLoading || servicesQuery.isLoading;
+
+  const summary = reconQuery.data?.summary ?? null;
+  const unboundResources = reconQuery.data?.unboundResources ?? [];
+  const orphanCIs = reconQuery.data?.orphanCIs ?? [];
+  const unlinkedCIs = reconQuery.data?.unlinkedCIs ?? [];
+
+  const services = servicesQuery.data ?? [];
+  const serviceMap = useMemo(() => new Map(services.map(item => [item.id, item])), [services]);
+
   const [bindOpen, setBindOpen] = useState(false);
   const [bindResource, setBindResource] = useState<CloudResource | null>(null);
   const [bindCIID, setBindCIID] = useState<number | undefined>(undefined);
   const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
-  const [bindSubmitting, setBindSubmitting] = useState(false);
 
-  const serviceMap = useMemo(() => new Map(services.map(item => [item.id, item])), [services]);
+  // 绑定已有 CI：写回云资源信息后同时失效对账与 CI 缓存
+  const bindMutation = useMutation({
+    mutationFn: ({ ciId, data }: { ciId: string; data: Parameters<typeof CMDBApi.updateCI>[1] }) =>
+      CMDBApi.updateCI(ciId, data),
+    onSuccess: (_result, variables) => {
+      message.success(`已将资源绑定到配置项「${bindCIOption?.name ?? variables.ciId}」`);
+      setBindOpen(false);
+      setBindResource(null);
+      setBindCIID(undefined);
+      setBindCIOption(undefined);
+      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'reconciliation'] });
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
+    },
+    onError: error => {
+      message.error(error instanceof Error ? error.message || '绑定失败' : '绑定失败');
+    },
+  });
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [recon, serviceList] = await Promise.all([
-        CMDBApi.getReconciliationResults(),
-        CMDBApi.getCloudServices(),
-      ]);
-      const r = recon as unknown as ReconciliationResponse;
-      setSummary(r.summary || null);
-      setUnboundResources(r.unboundResources || []);
-      setOrphanCIs(r.orphanCIs || []);
-      setUnlinkedCIs(r.unlinkedCIs || []);
-      setServices(serviceList || []);
-    } catch (error) {
-      message.error('加载对账数据失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleBindExisting = async () => {
+  const handleBindExisting = () => {
     if (!bindResource || !bindCIID) {
       message.warning('请先选择要绑定的配置项');
       return;
     }
-    try {
-      const service = serviceMap.get(bindResource.serviceId);
-      setBindSubmitting(true);
-      await CMDBApi.updateCI(String(bindCIID), {
+    const service = serviceMap.get(bindResource.serviceId);
+    bindMutation.mutate({
+      ciId: String(bindCIID),
+      data: {
         cloudResourceRefId: bindResource.id,
         cloudProvider: service?.provider,
         cloudAccountId: bindResource.cloudAccountId ? String(bindResource.cloudAccountId) : undefined,
@@ -91,18 +89,8 @@ export default function ReconciliationPage() {
         cloudResourceType: service?.resourceTypeCode,
         cloudMetadata: bindResource.metadata,
         cloudSyncStatus: 'success',
-      });
-      message.success(`已将资源绑定到配置项「${bindCIOption?.name ?? bindCIID}」`);
-      setBindOpen(false);
-      setBindResource(null);
-      setBindCIID(undefined);
-      setBindCIOption(undefined);
-      loadData();
-    } catch (error) {
-      message.error(error instanceof Error ? error.message || '绑定失败' : '绑定失败');
-    } finally {
-      setBindSubmitting(false);
-    }
+      },
+    });
   };
 
   const resourceColumns: ColumnsType<CloudResource> = [
@@ -262,7 +250,7 @@ export default function ReconciliationPage() {
         onCancel={() => setBindOpen(false)}
         onOk={handleBindExisting}
         okButtonProps={{ disabled: !bindCIID }}
-        confirmLoading={bindSubmitting}
+        confirmLoading={bindMutation.isPending}
         okText="绑定"
         destroyOnClose
       >

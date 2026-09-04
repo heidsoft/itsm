@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Breadcrumb,
   Button,
@@ -21,9 +22,8 @@ import {
 import { Search, Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { CMDB_KEYS, useCloudAccountsQuery } from '@/lib/hooks/useCMDB';
 import type { CloudAccount } from '@/types/biz/cmdb';
-
-
 
 const providerOptions = [
   { value: 'aliyun', label: '阿里云' },
@@ -36,30 +36,23 @@ const providerOptions = [
 
 export default function CloudAccountPage() {
   const router = useRouter();
-  const [form] = Form.useForm();
+  const queryClient = useQueryClient();
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [createSubmitting, setCreateSubmitting] = useState(false);
-  const [updateSubmitting, setUpdateSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [data, setData] = useState<CloudAccount[]>([]);
+
+  // React Query：云账号列表（替代手写 loadData + isMountedRef）
+  const accountsQuery = useCloudAccountsQuery();
+  const data = accountsQuery.data ?? [];
+  const loading = accountsQuery.isLoading;
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<CloudAccount | null>(null);
   const [searchText, setSearchText] = useState('');
   const [filterProvider, setFilterProvider] = useState<string | undefined>(undefined);
-  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // 过滤后的数据
-  const filteredData = useCallback(() => {
+  // 客户端过滤（搜索/厂商筛选）
+  const filteredData = useMemo(() => {
     return data.filter(item => {
       const matchSearch =
         !searchText ||
@@ -70,46 +63,51 @@ export default function CloudAccountPage() {
     });
   }, [data, searchText, filterProvider]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const list = await CMDBApi.getCloudAccounts();
-      if (isMountedRef.current) {
-        setData(list || []);
-      }
-    } catch (error) {
-      if (isMountedRef.current) {
-        message.error('加载云账号失败');
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-    }
-  };
+  const invalidateAccounts = () =>
+    queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'cloud-accounts'] });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleCreate = async () => {
-    if (createSubmitting) return;
-    setCreateSubmitting(true);
-    try {
-      const values = await createForm.validateFields();
-      await CMDBApi.createCloudAccount(values);
+  // 新增云账号
+  const createMutation = useMutation({
+    mutationFn: (values: Record<string, unknown>) => CMDBApi.createCloudAccount(values),
+    onSuccess: () => {
       message.success('云账号已创建');
       setCreateOpen(false);
       createForm.resetFields();
-      loadData();
-    } catch (error) {
+      invalidateAccounts();
+    },
+    onError: error => {
       if (error instanceof Error) {
         message.error(error.message || '创建失败');
       }
-    } finally {
-      setCreateSubmitting(false);
+    },
+  });
+
+  const handleCreate = async () => {
+    try {
+      const values = await createForm.validateFields();
+      createMutation.mutate(values);
+    } catch {
+      // 表单校验失败，由 antd Form 自行提示
     }
   };
+
+  // 编辑云账号
+  const updateMutation = useMutation({
+    mutationFn: ({ id, values }: { id: number; values: Record<string, unknown> }) =>
+      CMDBApi.updateCloudAccount(id, values),
+    onSuccess: () => {
+      message.success('云账号已更新');
+      setEditOpen(false);
+      setEditingAccount(null);
+      editForm.resetFields();
+      invalidateAccounts();
+    },
+    onError: error => {
+      if (error instanceof Error) {
+        message.error(error.message || '更新失败');
+      }
+    },
+  });
 
   const handleEdit = (record: CloudAccount) => {
     setEditingAccount(record);
@@ -125,57 +123,49 @@ export default function CloudAccountPage() {
 
   const handleUpdate = async () => {
     if (!editingAccount) return;
-    if (updateSubmitting) return;
-    setUpdateSubmitting(true);
     try {
       const values = await editForm.validateFields();
-      // 使用 CloudAccount ID 进行更新
-      await CMDBApi.updateCloudAccount(editingAccount.id, {
-        ...values,
-      });
-      message.success('云账号已更新');
-      setEditOpen(false);
-      setEditingAccount(null);
-      editForm.resetFields();
-      loadData();
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message || '更新失败');
-      }
-    } finally {
-      setUpdateSubmitting(false);
+      updateMutation.mutate({ id: editingAccount.id, values });
+    } catch {
+      // 表单校验失败，由 antd Form 自行提示
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (deletingId !== null) return;
-    setDeletingId(id);
-    try {
-      await CMDBApi.deleteCloudAccount(String(id));
+  // 删除云账号（行级 loading：isPending + variables 比对）
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => CMDBApi.deleteCloudAccount(String(id)),
+    onSuccess: () => {
       message.success('云账号已删除');
-      loadData();
-    } catch (error) {
+      invalidateAccounts();
+    },
+    onError: error => {
       if (error instanceof Error) {
         message.error(error.message || '删除失败');
       }
-    } finally {
-      setDeletingId(null);
-    }
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(id);
   };
 
-  const handleToggleStatus = async (record: CloudAccount) => {
-    try {
-      // 调用更新接口切换状态
-      await CMDBApi.updateCloudAccount(record.id, {
-        isActive: !record.isActive,
-      });
+  // 启用/停用切换（复用更新接口）
+  const toggleMutation = useMutation({
+    mutationFn: (record: CloudAccount) =>
+      CMDBApi.updateCloudAccount(record.id, { isActive: !record.isActive }),
+    onSuccess: (_result, record) => {
       message.success(record.isActive ? '云账号已停用' : '云账号已启用');
-      loadData();
-    } catch (error) {
+      invalidateAccounts();
+    },
+    onError: error => {
       if (error instanceof Error) {
         message.error(error.message || '操作失败');
       }
-    }
+    },
+  });
+
+  const handleToggleStatus = (record: CloudAccount) => {
+    toggleMutation.mutate(record);
   };
 
   const columns = [
@@ -218,6 +208,7 @@ export default function CloudAccountPage() {
           checkedChildren='启用'
           unCheckedChildren='停用'
           size='small'
+          loading={toggleMutation.isPending && toggleMutation.variables?.id === record.id}
           onChange={() => handleToggleStatus(record)}
         />
       ),
@@ -250,7 +241,7 @@ export default function CloudAccountPage() {
                 danger
                 icon={<Trash2 />}
                 size='small'
-                loading={deletingId === record.id}
+                loading={deleteMutation.isPending && deleteMutation.variables === record.id}
                 aria-label={`删除云账号 ${record.accountName}`}
               />
             </Tooltip>
@@ -296,20 +287,24 @@ export default function CloudAccountPage() {
           options={providerOptions}
         />
         <Space>
-          <Button icon={<RotateCcw />} onClick={loadData} loading={loading}>
+          <Button
+            icon={<RotateCcw />}
+            onClick={() => accountsQuery.refetch()}
+            loading={accountsQuery.isFetching}
+          >
             刷新
           </Button>
           <Button type='primary' icon={<Plus />} onClick={() => setCreateOpen(true)}>
             新增云账号
           </Button>
         </Space>
-        <span className='ml-auto text-sm text-gray-500'>共 {filteredData().length} 个账号</span>
+        <span className='ml-auto text-sm text-gray-500'>共 {filteredData.length} 个账号</span>
       </div>
 
       <Table
         rowKey='id'
         loading={loading}
-        dataSource={filteredData()}
+        dataSource={filteredData}
         columns={columns as any}
         pagination={{
           pageSize: 10,
@@ -329,7 +324,7 @@ export default function CloudAccountPage() {
           createForm.resetFields();
         }}
         onOk={handleCreate}
-        confirmLoading={createSubmitting}
+        confirmLoading={createMutation.isPending}
         width={500}
       >
         <Form form={createForm} layout='vertical'>
@@ -374,7 +369,7 @@ export default function CloudAccountPage() {
           editForm.resetFields();
         }}
         onOk={handleUpdate}
-        confirmLoading={updateSubmitting}
+        confirmLoading={updateMutation.isPending}
         width={500}
       >
         <Form form={editForm} layout='vertical'>

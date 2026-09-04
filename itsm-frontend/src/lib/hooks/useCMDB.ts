@@ -8,6 +8,7 @@ import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIRelationshipAPI } from '@/lib/api/cmdb-relationship';
 import type { GetCIListRequest } from '@/lib/api/cmdb-api';
 import type { GraphQuery, ImpactAnalysisRequest } from '@/types/cmdb';
+import type { ReconciliationResponse } from '@/types/biz/cmdb';
 
 export const CMDB_KEYS = {
   all: ['cmdb'] as const,
@@ -212,6 +213,34 @@ export function useCloudAccountsQuery() {
   });
 }
 
+// P1-2+: 发现源（注册中心页，与 discovery rules 同端点但语义独立）
+export function useDiscoverySourcesQuery() {
+  return useQuery({
+    queryKey: [...CMDB_KEYS.discovery(), 'sources'],
+    queryFn: () => CMDBApi.getDiscoverySources(),
+    staleTime: 300000,
+  });
+}
+
+// P1-2+: 后端能力开关（cmdbDiscovery 就绪状态等，注册中心告警条用）
+export function useCapabilitiesQuery() {
+  return useQuery({
+    queryKey: [...CMDB_KEYS.all, 'capabilities'] as const,
+    queryFn: () => CMDBApi.getCapabilities(),
+    staleTime: 60000,
+  });
+}
+
+// P1-2+: 云资源对账结果（summary + 待绑定/孤儿/未关联列表）
+export function useReconciliationQuery() {
+  return useQuery({
+    queryKey: [...CMDB_KEYS.all, 'reconciliation'] as const,
+    queryFn: () =>
+      CMDBApi.getReconciliationResults() as unknown as Promise<ReconciliationResponse>,
+    staleTime: 60000,
+  });
+}
+
 // Mutation Hooks
 export function useCreateCIMutation() {
   const queryClient = useQueryClient();
@@ -352,6 +381,9 @@ const CMDBHooks = {
   useCloudResourcesQuery,
   useCloudServicesQuery,
   useCloudAccountsQuery,
+  useDiscoverySourcesQuery,
+  useCapabilitiesQuery,
+  useReconciliationQuery,
 };
 
 export default CMDBHooks;

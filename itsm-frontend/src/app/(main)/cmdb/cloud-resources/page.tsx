@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Breadcrumb,
   Button,
@@ -16,14 +17,13 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import { Search, Plus, Eye, RotateCcw, Link } from 'lucide-react';
+import { Search, Plus, Eye, RotateCcw } from 'lucide-react';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import CISearchSelect, { type CISelectOption } from '@/components/cmdb/CISearchSelect';
-import type { CloudResource, CloudService } from '@/types/biz/cmdb';
-
-
+import { CMDB_KEYS, useCloudResourcesQuery, useCloudServicesQuery } from '@/lib/hooks/useCMDB';
+import type { CloudResource } from '@/types/biz/cmdb';
 
 const providerOptions = [
   { value: 'aliyun', label: '阿里云' },
@@ -55,82 +55,72 @@ const cloudResourceStatusTextMap: Record<string, string> = {
   failed: '失败',
 };
 
+interface AppliedFilters {
+  provider?: string;
+  serviceId?: number;
+  region?: string;
+}
+
 export default function CloudResourcePage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const queryClient = useQueryClient();
   const [form] = Form.useForm();
   const [bindForm] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [resources, setResources] = useState<CloudResource[]>([]);
-  const [total, setTotal] = useState(0);
-  const [services, setServices] = useState<CloudService[]>([]);
-  const [binding, setBinding] = useState<CloudResource | null>(null);
-  const [bindSubmitting, setBindSubmitting] = useState(false);
-  const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
-  const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const isMountedRef = useRef(true);
+
+  // React Query：云资源（过滤 + 分页进 queryKey，条件变化自动重取）
+  const [filters, setFilters] = useState<AppliedFilters>({});
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+
+  const resourcesQuery = useCloudResourcesQuery({
+    provider: filters.provider,
+    serviceId: filters.serviceId,
+    region: filters.region,
+    offset: (pagination.current - 1) * pagination.pageSize,
+    limit: pagination.pageSize,
+  });
+  const servicesQuery = useCloudServicesQuery();
 
   const provider = Form.useWatch('provider', form);
 
+  const services = servicesQuery.data ?? [];
   const serviceMap = useMemo(() => {
     return new Map(services.map(service => [service.id, service]));
   }, [services]);
 
-  const loadServices = async () => {
-    try {
-      const list = await CMDBApi.getCloudServices();
-      if (isMountedRef.current) {
-        setServices(list || []);
-      }
-    } catch (error) {
-      if (isMountedRef.current) {
-        message.error('加载云服务目录失败');
-      }
-    }
-  };
+  // API 返回兼容处理：可能是数组或 { items, total } 格式
+  type ApiListResponse =
+    | CloudResource[]
+    | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
+  const response = resourcesQuery.data as ApiListResponse | undefined;
+  const resources = useMemo(
+    () =>
+      Array.isArray(response) ? response : response?.items || response?.data || [],
+    [response]
+  );
+  const total = Array.isArray(response)
+    ? response.length
+    : response?.total ?? resources.length;
 
-  const loadResources = async (page = 1, pageSize = 10) => {
-    setLoading(true);
-    try {
-      const values = form.getFieldsValue();
-      const list = await CMDBApi.getCloudResources({
-        provider: values.provider,
-        serviceId: values.serviceId,
-        region: values.region,
-        offset: (page - 1) * pageSize,
-        limit: pageSize,
-      });
-      if (isMountedRef.current) {
-        // API 返回兼容处理：可能是数组或 { items, total } 格式
-        type ApiListResponse =
-          | CloudResource[]
-          | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
-        const response = list as ApiListResponse;
-        const items = Array.isArray(response) ? response : response.items || response.data || [];
-        const totalCount = Array.isArray(response)
-          ? items.length
-          : (response.total ?? items.length);
-        setResources(items);
-        setTotal(totalCount);
-      }
-    } catch (error) {
-      if (isMountedRef.current) {
-        message.error('加载云资源失败');
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  // 分页变化处理
   const handleTableChange = (page: number, pageSize: number) => {
     setPagination({ current: page, pageSize });
-    loadResources(page, pageSize);
   };
+
+  // 查询：提交表单当前值（重置回第一页）
+  const handleSearch = () => {
+    const values = form.getFieldsValue();
+    setFilters({
+      provider: values.provider,
+      serviceId: values.serviceId,
+      region: values.region,
+    });
+    setPagination(p => ({ ...p, current: 1 }));
+  };
+
+  const [binding, setBinding] = useState<CloudResource | null>(null);
+  const [bindCIOption, setBindCIOption] = useState<CISelectOption | undefined>(undefined);
+  const [selectedRow, setSelectedRow] = useState<CloudResource | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   // 查看资源详情
   const handleViewDetail = (record: CloudResource) => {
@@ -138,14 +128,50 @@ export default function CloudResourcePage() {
     setDetailOpen(true);
   };
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    loadServices();
-    loadResources();
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
+  // 绑定已有 CI：写回云资源信息后失效 CI / 云资源 / 对账缓存
+  const bindMutation = useMutation({
+    mutationFn: ({ ciId, data }: { ciId: string; data: Parameters<typeof CMDBApi.updateCI>[1] }) =>
+      CMDBApi.updateCI(ciId, data),
+    onSuccess: () => {
+      message.success('已绑定到配置项');
+      setBinding(null);
+      setBindCIOption(undefined);
+      queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
+      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'cloud-resources'] });
+      queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'reconciliation'] });
+    },
+    onError: error => {
+      if (error instanceof Error) {
+        message.error(error.message || '绑定失败');
+      } else {
+        message.error('绑定失败');
+      }
+    },
+  });
+
+  const handleBindExisting = async () => {
+    if (!binding) return;
+    try {
+      const values = await bindForm.validateFields();
+      const service = serviceMap.get(binding.serviceId);
+      bindMutation.mutate({
+        ciId: values.ciId,
+        data: {
+          cloudResourceRefId: binding.id,
+          cloudProvider: service?.provider,
+          cloudAccountId: String(binding.cloudAccountId),
+          cloudRegion: binding.region,
+          cloudZone: binding.zone,
+          cloudResourceId: binding.resourceId,
+          cloudResourceType: service?.resourceTypeCode,
+          cloudMetadata: binding.metadata,
+          cloudSyncStatus: 'success',
+        },
+      });
+    } catch {
+      // 表单校验失败，由 antd Form 自行提示
+    }
+  };
 
   const columns = [
     {
@@ -252,36 +278,6 @@ export default function CloudResourcePage() {
     },
   ];
 
-  const handleBindExisting = async () => {
-    if (!binding) return;
-    try {
-      const values = await bindForm.validateFields();
-      const service = serviceMap.get(binding.serviceId);
-      setBindSubmitting(true);
-      await CMDBApi.updateCI(values.ciId, {
-        cloudResourceRefId: binding.id,
-        cloudProvider: service?.provider,
-        cloudAccountId: String(binding.cloudAccountId),
-        cloudRegion: binding.region,
-        cloudZone: binding.zone,
-        cloudResourceId: binding.resourceId,
-        cloudResourceType: service?.resourceTypeCode,
-        cloudMetadata: binding.metadata,
-        cloudSyncStatus: 'success',
-      });
-      message.success('已绑定到配置项');
-      setBinding(null);
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message || '绑定失败');
-      } else {
-        message.error('绑定失败');
-      }
-    } finally {
-      setBindSubmitting(false);
-    }
-  };
-
   return (
     <Card>
       <div className='mb-4'>
@@ -325,17 +321,13 @@ export default function CloudResourcePage() {
           </Form.Item>
           <Form.Item className='!mb-0'>
             <Space>
-              <Button
-                type='primary'
-                icon={<Search />}
-                onClick={() => loadResources(1, pagination.pageSize)}
-              >
+              <Button type='primary' icon={<Search />} onClick={handleSearch}>
                 查询
               </Button>
               <Button
                 icon={<RotateCcw />}
-                onClick={() => loadResources(pagination.current, pagination.pageSize)}
-                loading={loading}
+                onClick={() => resourcesQuery.refetch()}
+                loading={resourcesQuery.isFetching}
               >
                 刷新
               </Button>
@@ -347,7 +339,7 @@ export default function CloudResourcePage() {
 
       <Table
         rowKey='id'
-        loading={loading}
+        loading={resourcesQuery.isLoading}
         dataSource={resources}
         columns={columns as unknown as React.ComponentProps<typeof Table>['columns']}
         pagination={{
@@ -372,7 +364,7 @@ export default function CloudResourcePage() {
           setBindCIOption(undefined);
         }}
         onOk={handleBindExisting}
-        confirmLoading={bindSubmitting}
+        confirmLoading={bindMutation.isPending}
         okText='绑定'
         destroyOnClose
         width={480}
