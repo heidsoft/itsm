@@ -222,12 +222,24 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     },
     {
       title: t('incidents.reporter'),
-      dataIndex: 'reporter',
+      dataIndex: 'reporterName',
       key: 'reporter',
       width: 150,
-      render: (reporter: { name: string }) => (
-        <div style={{ fontSize: 'small' }}>{reporter?.name || t('incidents.unknown')}</div>
-      ),
+      render: (_: unknown, record: Incident) => {
+        // 后端列表接口回填 reporterName；缺失时回退用户 ID，不再恒显「未知」
+        const text = record.reporterName || (record.reporter?.name || (record.reporterId ? `用户#${record.reporterId}` : t('incidents.unknown')));
+        return <div style={{ fontSize: 'small' }}>{text}</div>;
+      },
+    },
+    {
+      title: '处理人',
+      dataIndex: 'assigneeName',
+      key: 'assignee',
+      width: 130,
+      render: (_: unknown, record: Incident) => {
+        const text = record.assigneeName || record.assignee?.name || (record.assigneeId ? `用户#${record.assigneeId}` : '-');
+        return <div style={{ fontSize: 'small' }}>{text}</div>;
+      },
     },
     {
       title: t('incidents.createdAt'),
@@ -328,7 +340,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         rowKey="id"
         loading={loading}
         pagination={false}
-        scroll={{ x: 1200 }}
+        scroll={{ x: 1330 }}
       />
     </div>
   );

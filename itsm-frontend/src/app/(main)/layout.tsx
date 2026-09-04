@@ -143,7 +143,7 @@ export default function MainLayout({
     return () => clearInterval(timer);
   }, [isAuthenticated]);
 
-  // 响应式布局：在移动端自动折叠侧边栏
+  // 响应式布局：在移动端自动折叠侧边栏；从移动端拉宽回桌面时恢复展开
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
@@ -157,6 +157,13 @@ export default function MainLayout({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // 移动端 → 桌面端切换时恢复侧边栏展开（此前会永久停留在收起态）
+  useEffect(() => {
+    if (mounted && !isMobile) {
+      setCollapsed(false);
+    }
+  }, [mounted, isMobile]);
 
   // 在移动端，点击内容区域时折叠侧边栏
   const handleContentClick = () => {

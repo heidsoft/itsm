@@ -14,7 +14,11 @@ export interface Incident {
   severity: IncidentSeverity;
   incidentNumber?: string;
   reporterId?: number;
+  /** 报告人姓名（列表接口回填，可能缺失，回退显示 reporterId） */
+  reporterName?: string;
   assigneeId?: number;
+  /** 处理人姓名（列表接口回填，可能缺失，回退显示 assigneeId） */
+  assigneeName?: string;
   configurationItemId?: number;
   category: string;
   subcategory: string;

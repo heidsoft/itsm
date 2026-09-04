@@ -867,14 +867,12 @@
   top: 24px;
 }
 
-.ant-message-notice {
-  border-radius: 8px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(8px);
-}
-
+/* 注意：视觉样式只作用于 .ant-message-notice-content（实际可见的气泡）。
+   .ant-message-notice 是撑满整行的包裹层，在其上加 box-shadow /
+   backdrop-filter 会在屏幕顶部产生一条贯穿全宽的透明磨砂遮罩。 */
 .ant-message-notice-content {
   border-radius: 8px;
+  box-shadow: var(--shadow-lg);
 }
 
 /* 改进的模态框样式 */

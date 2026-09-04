@@ -163,6 +163,8 @@ export interface Incident {
   priority?: TicketPriority;
   reporterId: number;
   reporter?: UserBasicInfo;
+  /** 报告人姓名（列表接口批量回填，可能缺失） */
+  reporterName?: string;
   assigneeId?: number;
   assignee?: UserBasicInfo;
   assigneeName?: string;
