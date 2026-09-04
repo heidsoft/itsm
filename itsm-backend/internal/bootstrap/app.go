@@ -208,6 +208,23 @@ func makeSequenceDBSyncFn(db *sql.DB, logger *zap.SugaredLogger) func(key string
 			)
 		}
 
+		// sequence:ci:<YYYYMM> —— ci_number 是全局唯一约束（不含 tenant_id），
+		// 跨租户取最大；原生 SQL 绕过 Ent 拦截器，把已退役（scrapped）的 CI 也算进去，
+		// 否则 Redis 重置后会从 1 重新发号，撞上存量编号
+		if parts := strings.Split(key, ":"); len(parts) == 3 && parts[0] == "sequence" && parts[1] == "ci" {
+			ym := parts[2]
+			if len(ym) != 6 {
+				return 0, fmt.Errorf("invalid ci sequence key: %s", key)
+			}
+			prefix := fmt.Sprintf("CI-%s%s-", ym[:4], ym[4:])
+			return queryMax(
+				`SELECT ci_number FROM configuration_items `+
+					`WHERE ci_number LIKE $1 AND ci_number IS NOT NULL AND ci_number != '' `+
+					`ORDER BY ci_number DESC LIMIT 1`,
+				prefix+"%",
+			)
+		}
+
 		logger.Warnw("Unsupported sequence key, skip DB sync", "key", key)
 		return 0, fmt.Errorf("unsupported sequence key: %s", key)
 	}
@@ -694,6 +711,11 @@ func NewApplication() *Application {
 	// ProblemController and ChangeController removed - using Handlers instead
 	// CMDB ProductionService（原 controller.CMDBController，已迁入 handlers/cmdb）
 	cmdbProductionService := cmdb.NewProductionService(sugar, ciTypeService, ciAttributeDefinitionService, configurationItemService, ciRelationshipService, ciHistoryService, ciTagService, importExportService, savedViewService)
+	// AI-Native：本体自描述端点（/cmdb/ontology）暴露 AI 工具面（含按租户动态 ci_type 枚举）
+	cmdbProductionService.SetToolRegistry(toolRegistry)
+	// ci_number 发号器：优先 Redis 序列（与事件编号同机制），无 Redis 时 DB 兜底
+	configurationItemService.SetSequenceService(sequenceService)
+	configurationItemService.SetRawDB(database.GetRawDB())
 
 	// Release & Asset Management Handlers
 	releaseHTTPHandler := releaseHandler.NewHandler(sugar, releaseService)

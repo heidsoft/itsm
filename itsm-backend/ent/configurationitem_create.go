@@ -27,6 +27,20 @@ type ConfigurationItemCreate struct {
 	hooks    []Hook
 }
 
+// SetCiNumber sets the "ci_number" field.
+func (_c *ConfigurationItemCreate) SetCiNumber(v string) *ConfigurationItemCreate {
+	_c.mutation.SetCiNumber(v)
+	return _c
+}
+
+// SetNillableCiNumber sets the "ci_number" field if the given value is not nil.
+func (_c *ConfigurationItemCreate) SetNillableCiNumber(v *string) *ConfigurationItemCreate {
+	if v != nil {
+		_c.SetCiNumber(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *ConfigurationItemCreate) SetName(v string) *ConfigurationItemCreate {
 	_c.mutation.SetName(v)
@@ -860,6 +874,10 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 		_node = &ConfigurationItem{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(configurationitem.Table, sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CiNumber(); ok {
+		_spec.SetField(configurationitem.FieldCiNumber, field.TypeString, value)
+		_node.CiNumber = &value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 		_node.Name = value

@@ -21,7 +21,7 @@ type CIRelationship struct {
 	ID int `json:"id,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
-	// 关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by
+	// 关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, impacted_by, owns, owned_by, uses, used_by
 	RelationshipType string `json:"relationship_type,omitempty"`
 	// 源CI ID
 	SourceCiID int `json:"source_ci_id,omitempty"`

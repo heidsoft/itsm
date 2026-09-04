@@ -552,6 +552,8 @@ definitions:
       attributes:
         additionalProperties: true
         type: object
+      ciNumber:
+        type: string
       ciTypeId:
         type: integer
       cloudAccountId:
@@ -838,6 +840,112 @@ definitions:
       tenantId:
         type: integer
       updatedAt:
+        type: string
+    type: object
+  dto.CMDBOntologyCIType:
+    properties:
+      attributeDefinitions:
+        items:
+          $ref: '#/definitions/dto.CIAttributeDefinitionResponse'
+        type: array
+      attributeSchema:
+        description: |-
+          AttributeSchema 为 CIType 表中的 schema 文本：合法 JSON 时输出为 JSON 对象，
+          否则原样输出字符串（保持透明，便于诊断脏数据）。
+      color:
+        type: string
+      description:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      parentTypeId:
+        type: integer
+    type: object
+  dto.CMDBOntologyEnums:
+    properties:
+      ciStatus:
+        items:
+          type: string
+        type: array
+      criticality:
+        items:
+          type: string
+        type: array
+      environment:
+        items:
+          type: string
+        type: array
+      impactLevel:
+        items:
+          type: string
+        type: array
+      lifecycleStatus:
+        items:
+          type: string
+        type: array
+      ownershipMode:
+        items:
+          type: string
+        type: array
+      relationshipStrength:
+        items:
+          type: string
+        type: array
+    type: object
+  dto.CMDBOntologyRelationshipType:
+    properties:
+      description:
+        type: string
+      direction:
+        description: uni-directional / bi-directional
+        type: string
+      icon:
+        type: string
+      name:
+        type: string
+      reverseType:
+        description: 语义反向类型
+        type: string
+      type:
+        type: string
+    type: object
+  dto.CMDBOntologyResponse:
+    properties:
+      aiTools:
+        items:
+          $ref: '#/definitions/dto.CMDBOntologyTool'
+        type: array
+      ciTypes:
+        items:
+          $ref: '#/definitions/dto.CMDBOntologyCIType'
+        type: array
+      enums:
+        $ref: '#/definitions/dto.CMDBOntologyEnums'
+      relationshipTypes:
+        items:
+          $ref: '#/definitions/dto.CMDBOntologyRelationshipType'
+        type: array
+      version:
+        type: string
+    type: object
+  dto.CMDBOntologyTool:
+    properties:
+      action:
+        type: string
+      argsSchema:
+        additionalProperties: true
+        type: object
+      description:
+        type: string
+      name:
+        type: string
+      readOnly:
+        type: boolean
+      resource:
         type: string
     type: object
   dto.ChangeImpact:
@@ -2518,6 +2626,9 @@ definitions:
       assigneeId:
         example: 2
         type: integer
+      assigneeName:
+        example: 李四
+        type: string
       assignmentGroupId:
         type: integer
       category:
@@ -2577,6 +2688,9 @@ definitions:
       reporterId:
         example: 1
         type: integer
+      reporterName:
+        example: 张三
+        type: string
       resolutionSteps:
         items:
           $ref: '#/definitions/dto.ResolutionStep'
@@ -4002,7 +4116,7 @@ definitions:
         type: object
       relationship_type:
         description: '关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains,
-          part_of, impacts, owned_by, owns, uses, used_by'
+          part_of, impacts, impacted_by, owns, owned_by, uses, used_by'
         type: string
       source_ci_id:
         description: 源CI ID
@@ -4544,6 +4658,9 @@ definitions:
         type: object
       canonical_cloud_account_id:
         description: 云厂商不可变账号ID
+        type: string
+      ci_number:
+        description: CI唯一业务编号，格式 CI-YYYYMM-NNNNNN，由服务层发号器生成（全局唯一，跨租户协调）
         type: string
       ci_type:
         description: CI类型
@@ -12908,11 +13025,33 @@ paths:
       summary: 获取导入任务状态
       tags:
       - CMDB
+  /api/v1/cmdb/ontology:
+    get:
+      consumes:
+      - application/json
+      description: 一次性返回 CI 类型（含属性定义与 schema）、受控关系词表、受控枚举值域与可用 AI 工具，供 LLM Agent 自省与闭环操作
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CMDBOntologyResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 获取 CMDB 本体自描述
+      tags:
+      - CMDB
   /api/v1/cmdb/relationship-types:
     get:
       consumes:
       - application/json
-      description: 获取CMDB支持的内置关系类型枚举
+      description: 获取CMDB支持的内置关系类型枚举（受控词表单一源：ent/schema/ci_relationship.go，全部 13 种）
       produces:
       - application/json
       responses:

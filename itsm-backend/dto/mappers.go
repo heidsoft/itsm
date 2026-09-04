@@ -1141,6 +1141,9 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		CreatedAt:          ci.CreatedAt,
 		UpdatedAt:          ci.UpdatedAt,
 	}
+	if ci.CiNumber != nil {
+		res.CINumber = *ci.CiNumber
+	}
 	if len(ci.Edges.Tags) > 0 {
 		res.Tags = make([]string, len(ci.Edges.Tags))
 		for i, tag := range ci.Edges.Tags {

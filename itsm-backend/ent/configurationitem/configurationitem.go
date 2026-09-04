@@ -14,6 +14,8 @@ const (
 	Label = "configuration_item"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldCiNumber holds the string denoting the ci_number field in the database.
+	FieldCiNumber = "ci_number"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -177,6 +179,7 @@ const (
 // Columns holds all SQL columns for configurationitem fields.
 var Columns = []string{
 	FieldID,
+	FieldCiNumber,
 	FieldName,
 	FieldDescription,
 	FieldCiTypeID,
@@ -292,6 +295,11 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByCiNumber orders the results by the ci_number field.
+func ByCiNumber(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCiNumber, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.

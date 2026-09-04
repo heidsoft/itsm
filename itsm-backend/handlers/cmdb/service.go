@@ -185,6 +185,8 @@ func (s *Service) BatchDeleteCI(c *gin.Context) { s.productionSvc.BatchDeleteCI(
 
 func (s *Service) ListRelationshipTypes(c *gin.Context) { s.productionSvc.ListRelationshipTypes(c) }
 
+func (s *Service) GetOntology(c *gin.Context) { s.productionSvc.GetOntology(c) }
+
 type CapabilityStatus struct {
 	Key                 string   `json:"key"`
 	State               string   `json:"state"`

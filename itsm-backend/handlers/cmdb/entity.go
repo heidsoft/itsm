@@ -7,6 +7,7 @@ import (
 // ConfigurationItem representing a CI in the CMDB
 type ConfigurationItem struct {
 	ID                 int                    `json:"id"`
+	CINumber           string                 `json:"ciNumber,omitempty"`
 	Name               string                 `json:"name"`
 	Description        string                 `json:"description"`
 	Type               string                 `json:"type"` // Legacy type field from schema

@@ -126,6 +126,8 @@ func (h *Handler) BatchDeleteCI(c *gin.Context) { h.svc.BatchDeleteCI(c) }
 
 func (h *Handler) ListRelationshipTypes(c *gin.Context) { h.svc.ListRelationshipTypes(c) }
 
+func (h *Handler) GetOntology(c *gin.Context) { h.svc.GetOntology(c) }
+
 func failCMDBError(c *gin.Context, err error, publicMessage string) {
 	var appErr *common.AppError
 	if errors.As(err, &appErr) {
@@ -177,6 +179,7 @@ func toCIDTO(ci *ConfigurationItem) *dto.CIResponse {
 	}
 	return &dto.CIResponse{
 		ID:                 ci.ID,
+		CINumber:           ci.CINumber,
 		Name:               ci.Name,
 		Type:               ci.Type,
 		CITypeID:           ci.CITypeID,

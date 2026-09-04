@@ -255,6 +255,9 @@ type RelationshipTypeInfo struct {
 	Description string             `json:"description"`
 	Direction   string             `json:"direction"` // uni-directional / bi-directional
 	Icon        string             `json:"icon"`
+	// Reverse 语义反向类型（如 depends_on -> impacted_by），无反向时为空。
+	// 与 /cmdb/ontology 的 reverseType 保持同一语义，便于 Agent 从任一端点推导双向关系。
+	Reverse CIRelationshipType `json:"reverse,omitempty"`
 }
 
 // GetRelationshipTypesResponse 获取所有关系类型响应

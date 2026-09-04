@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/ticket"
 )
 
@@ -71,6 +72,47 @@ func (t *ToolRegistry) canExecuteWriteTool(name string) bool {
 	}
 }
 
+// ListToolsForTenant 返回按租户动态化的工具清单。
+// P0-1（CMDB AI-Native）：list_cis 的 ci_type 枚举不再硬编码 5 值，
+// 而是从该租户的 CIType 表实时读取——租户自定义类型（如 serverless）对 Agent 可见。
+// 查询失败或无类型时静默回落到静态清单（fail-open 仅影响参数提示，不影响执行校验）。
+func (t *ToolRegistry) ListToolsForTenant(ctx context.Context, tenantID int) []ToolDefinition {
+	tools := t.ListTools()
+	if t.client == nil {
+		return tools
+	}
+	types, err := t.client.CIType.Query().
+		Where(citype.TenantIDEQ(tenantID), citype.IsActiveEQ(true)).
+		Order(ent.Asc(citype.FieldName)).
+		Limit(50).
+		All(ctx)
+	if err != nil || len(types) == 0 {
+		if err != nil {
+			// 仅影响参数 schema 提示质量，降级为静态枚举
+			// logger 未注入 ToolRegistry，保持静默（与 ListTools 同等约束）
+			_ = err
+		}
+		return tools
+	}
+	enumVals := make([]any, 0, len(types))
+	for _, ty := range types {
+		enumVals = append(enumVals, ty.Name)
+	}
+	for i := range tools {
+		if tools[i].Name != "list_cis" {
+			continue
+		}
+		props, ok := tools[i].ArgsSchema["properties"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if ct, ok := props["ci_type"].(map[string]interface{}); ok {
+			ct["enum"] = enumVals
+		}
+	}
+	return tools
+}
+
 func (t *ToolRegistry) ListTools() []ToolDefinition {
 	return []ToolDefinition{
 		{
@@ -129,17 +171,18 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 		},
 		{
 			Name:        "list_cis",
-			Description: "列出配置项（CMDB）。支持按名称/资产标签/序列号模糊搜索与按类型过滤，用于定位受影响 IT 资产",
+			Description: "列出配置项（CMDB）。支持按 CI 编号精确定位、按名称/资产标签/序列号模糊搜索与按类型过滤，用于定位受影响 IT 资产。ci_type 枚举以 GET /cmdb/ontology 返回的租户实际类型为准",
 			ReadOnly:    true,
 			Resource:    "cmdb",
 			Action:      "read",
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"search":  map[string]interface{}{"type": "string", "description": "按名称/资产标签/序列号/厂商/云资源ID模糊搜索"},
-					"ci_type": map[string]interface{}{"type": "string", "description": "CI类型，如 server/database/application/network", "enum": []any{"server", "database", "application", "network", "storage", "cloud_resource"}},
-					"limit":   map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
-					"offset":  map[string]interface{}{"type": "integer", "minimum": 0},
+					"search":    map[string]interface{}{"type": "string", "description": "按名称/资产标签/序列号/厂商/云资源ID模糊搜索"},
+					"ci_number": map[string]interface{}{"type": "string", "description": "CI唯一编号精确匹配（如 CI-202609-000001），优先于 search，多轮对话间用它稳定定位同一资产"},
+					"ci_type":   map[string]interface{}{"type": "string", "description": "CI类型（租户自定义类型见 /cmdb/ontology）", "enum": []any{"server", "database", "application", "network", "storage", "cloud_resource"}},
+					"limit":     map[string]interface{}{"type": "integer", "minimum": 1, "maximum": 100},
+					"offset":    map[string]interface{}{"type": "integer", "minimum": 0},
 				},
 			},
 			ResultSchema: map[string]interface{}{
@@ -313,8 +356,9 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		}
 		search, _ := args["search"].(string)
 		ciType, _ := args["ci_type"].(string)
+		ciNumber, _ := args["ci_number"].(string)
 		page := offset/limit + 1
-		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, Size: limit, Search: search, CIType: ciType})
+		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, Size: limit, Search: search, CIType: ciType, CINumber: ciNumber})
 		if err != nil {
 			return nil, err
 		}

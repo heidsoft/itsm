@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/dto"
@@ -9,10 +10,24 @@ import (
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/schema"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
+
+// ErrInvalidRelationshipType 关系类型不在受控词表内（词表单一源见 ent/schema/ci_relationship.go）。
+// handler 通过 errors.Is 将其映射为 400 参数错误，而不是 500。
+var ErrInvalidRelationshipType = errors.New("invalid CI relationship type")
+
+// validateRelationshipType 校验请求中的关系类型是否在受控词表内（创建与更新共用）。
+func validateRelationshipType(t dto.CIRelationshipType) error {
+	if !schema.IsValidCIRelationshipType(string(t)) {
+		return fmt.Errorf("%w: %q (allowed: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, impacted_by, owns, owned_by, uses, used_by)",
+			ErrInvalidRelationshipType, string(t))
+	}
+	return nil
+}
 
 // CIRelationshipService CI关系服务
 type CIRelationshipService struct {
@@ -30,6 +45,11 @@ func NewCIRelationshipService(client *ent.Client, logger *zap.SugaredLogger) *CI
 
 // CreateCIRelationship 创建CI关系
 func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *dto.CreateCIRelationshipRequest, tenantID int) (*dto.CIRelationshipResponse, error) {
+	// P0-2 词表收口：关系类型必须在 13 种内置受控词表内，拒绝自由字符串脏值
+	if err := validateRelationshipType(req.RelationshipType); err != nil {
+		return nil, err
+	}
+
 	// 检查源CI是否存在
 	sourceCI, err := s.client.ConfigurationItem.Query().
 		Where(configurationitem.IDEQ(req.SourceCIID), configurationitem.TenantIDEQ(tenantID)).
@@ -237,6 +257,12 @@ func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tena
 
 // UpdateCIRelationship 更新CI关系
 func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id, tenantID int, req *dto.UpdateCIRelationshipRequest) (*dto.CIRelationshipResponse, error) {
+	// P0-2 词表收口：更新侧同样拒绝词表外的关系类型
+	if req.RelationshipType != nil {
+		if err := validateRelationshipType(*req.RelationshipType); err != nil {
+			return nil, err
+		}
+	}
 	update := s.client.CIRelationship.UpdateOneID(id).
 		Where(cirelationship.TenantIDEQ(tenantID))
 

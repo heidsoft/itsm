@@ -1062,6 +1062,7 @@ var (
 	// ConfigurationItemsColumns holds the columns for the "configuration_items" table.
 	ConfigurationItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ci_number", Type: field.TypeString, Nullable: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "ci_type", Type: field.TypeString, Default: "server"},
@@ -1116,78 +1117,83 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "configuration_items_assets_configuration_item",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[43]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[44]},
 				RefColumns: []*schema.Column{AssetsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "configuration_items_ci_types_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[44]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[45]},
 				RefColumns: []*schema.Column{CiTypesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "configuration_items_cloud_resources_cis",
-				Columns:    []*schema.Column{ConfigurationItemsColumns[45]},
+				Columns:    []*schema.Column{ConfigurationItemsColumns[46]},
 				RefColumns: []*schema.Column{CloudResourcesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
+				Name:    "configurationitem_ci_number",
+				Unique:  true,
+				Columns: []*schema.Column{ConfigurationItemsColumns[1]},
+			},
+			{
 				Name:    "configurationitem_ci_type",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[3]},
-			},
-			{
-				Name:    "configurationitem_ci_type_id",
-				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[44]},
-			},
-			{
-				Name:    "configurationitem_status",
 				Unique:  false,
 				Columns: []*schema.Column{ConfigurationItemsColumns[4]},
 			},
 			{
-				Name:    "configurationitem_environment",
+				Name:    "configurationitem_ci_type_id",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[45]},
+			},
+			{
+				Name:    "configurationitem_status",
 				Unique:  false,
 				Columns: []*schema.Column{ConfigurationItemsColumns[5]},
 			},
 			{
-				Name:    "configurationitem_cloud_provider",
+				Name:    "configurationitem_environment",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[25]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[6]},
 			},
 			{
-				Name:    "configurationitem_cloud_account_id",
+				Name:    "configurationitem_cloud_provider",
 				Unique:  false,
 				Columns: []*schema.Column{ConfigurationItemsColumns[26]},
 			},
 			{
-				Name:    "configurationitem_cloud_region",
+				Name:    "configurationitem_cloud_account_id",
 				Unique:  false,
 				Columns: []*schema.Column{ConfigurationItemsColumns[27]},
 			},
 			{
+				Name:    "configurationitem_cloud_region",
+				Unique:  false,
+				Columns: []*schema.Column{ConfigurationItemsColumns[28]},
+			},
+			{
 				Name:    "configurationitem_cloud_resource_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[29]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[30]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_source_id",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[36], ConfigurationItemsColumns[19]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[37], ConfigurationItemsColumns[20]},
 			},
 			{
 				Name:    "configurationitem_tenant_id_serial_number",
 				Unique:  true,
-				Columns: []*schema.Column{ConfigurationItemsColumns[36], ConfigurationItemsColumns[8]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[37], ConfigurationItemsColumns[9]},
 			},
 			{
 				Name:    "configurationitem_ownership_mode",
 				Unique:  false,
-				Columns: []*schema.Column{ConfigurationItemsColumns[14]},
+				Columns: []*schema.Column{ConfigurationItemsColumns[15]},
 			},
 		},
 	}
@@ -4164,7 +4170,7 @@ var (
 		{Name: "form_schema", Type: field.TypeJSON, Nullable: true},
 		{Name: "available_regions", Type: field.TypeJSON, Nullable: true},
 		{Name: "available_specs", Type: field.TypeJSON, Nullable: true},
-		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "status", Type: field.TypeString, Default: "enabled"},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "sort_order", Type: field.TypeInt, Default: 0},

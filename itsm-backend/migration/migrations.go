@@ -94,6 +94,11 @@ var RegisteredMigrations = []Migration{
 		Description: "Normalize service_catalogs.status from legacy 'active'/'inactive' to API contract 'enabled'/'disabled' (fixes /service-catalog showing all services as 已停用)",
 		RollbackSQL: "UPDATE service_catalogs SET status = 'active' WHERE status = 'enabled'; UPDATE service_catalogs SET status = 'inactive' WHERE status = 'disabled';",
 	},
+	{
+		Version:     "018_backfill_ci_number",
+		Description: "Backfill configuration_items.ci_number (CI-YYYYMM-NNNNNN) for rows created before the natural key was introduced; AI Agent uses ci_number to locate CIs stably",
+		RollbackSQL: "",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -724,6 +729,33 @@ UPDATE service_catalogs SET status = 'disabled' WHERE status = 'inactive';
 -- 3）保持 is_active 与 status 一致：
 --    enabled/active => is_active=true；disabled/inactive => is_active=false。
 UPDATE service_catalogs SET is_active = (status = 'enabled');
+`
+	case "018_backfill_ci_number":
+		return `
+-- 回填 configuration_items.ci_number（P0-3 CMDB AI-Native 自然键）：
+-- 既有 CI 无业务编号，Agent 只能靠自增 id 定位。按 created_at 年月 + 行号发号：
+-- 格式 CI-YYYYMM-NNNNNN，与运行时发号器（generateCINumber）保持一致。
+-- 幂等：仅处理 ci_number IS NULL 的行；唯一索引在 ent auto migration 中创建，
+-- NULL 互不冲突，回填前不会撞唯一约束。若候选号与已有编号冲突（理论上仅当
+-- 历史数据里已有同格式手工编号），整体回退到带随机后缀的分支兜底。
+WITH backfill AS (
+  SELECT id,
+         'CI-' || to_char(created_at, 'YYYYMM') || '-' || lpad((row_number() OVER (PARTITION BY to_char(created_at, 'YYYYMM') ORDER BY id))::text, 6, '0') AS candidate
+  FROM configuration_items
+  WHERE ci_number IS NULL
+), conflicts AS (
+  SELECT b.id
+  FROM backfill b
+  JOIN configuration_items c ON c.ci_number = b.candidate AND c.id != b.id
+)
+UPDATE configuration_items ci
+SET ci_number = CASE
+      WHEN EXISTS (SELECT 1 FROM conflicts f WHERE f.id = b.id)
+        THEN 'CI-' || to_char(ci.created_at, 'YYYYMM') || '-' || substr(md5(random()::text || ci.id::text), 1, 6)
+      ELSE b.candidate
+    END
+FROM backfill b
+WHERE ci.id = b.id;
 `
 	default:
 		return ""

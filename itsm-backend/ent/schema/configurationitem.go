@@ -17,6 +17,10 @@ type ConfigurationItem struct {
 // Fields of the ConfigurationItem.
 func (ConfigurationItem) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("ci_number").
+			Comment("CI唯一业务编号，格式 CI-YYYYMM-NNNNNN，由服务层发号器生成（全局唯一，跨租户协调）").
+			Optional().
+			Nillable(),
 		field.String("name").
 			Comment("CI名称").
 			NotEmpty(),
@@ -184,6 +188,7 @@ func (ConfigurationItem) Edges() []ent.Edge {
 // Indexes of the ConfigurationItem.
 func (ConfigurationItem) Indexes() []ent.Index {
 	return []ent.Index{
+		index.Fields("ci_number").Unique(),
 		index.Fields("ci_type"),
 		index.Fields("ci_type_id"),
 		index.Fields("status"),

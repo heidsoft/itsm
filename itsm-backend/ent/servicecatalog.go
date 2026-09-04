@@ -54,7 +54,7 @@ type ServiceCatalog struct {
 	AvailableRegions []string `json:"available_regions,omitempty"`
 	// 可选规格
 	AvailableSpecs []string `json:"available_specs,omitempty"`
-	// 状态
+	// 状态: enabled|disabled
 	Status string `json:"status,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`

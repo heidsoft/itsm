@@ -2,12 +2,14 @@ package cmdb
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/schema"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +27,7 @@ type ProductionService struct {
 	ciTagService                 *service.CITagService
 	importExportService          *service.CMDBImportExportService
 	savedViewService             *service.CMDBSavedViewService
+	toolRegistry                 *service.ToolRegistry // 可选：本体自描述端点暴露 AI 工具面
 }
 
 // NewProductionService 创建 CMDB 生产服务（自 controller 迁入）
@@ -686,6 +689,11 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.CreateCIRelationship(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
+		// P0-2 词表收口：词表外关系类型是客户端参数错误（400），不是服务端故障
+		if errors.Is(err, service.ErrInvalidRelationshipType) {
+			common.Fail(ctx, common.ParamErrorCode, err.Error())
+			return
+		}
 		c.logger.Errorw("Create CI relationship failed", "error", err, "tenant_id", tenantID, "source_ci_id", req.SourceCIID, "target_ci_id", req.TargetCIID)
 		common.Fail(ctx, common.InternalErrorCode, "创建CI关系失败: "+err.Error())
 		return
@@ -718,6 +726,11 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.UpdateCIRelationship(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
+		// P0-2 词表收口：词表外关系类型是客户端参数错误（400），不是服务端故障
+		if errors.Is(err, service.ErrInvalidRelationshipType) {
+			common.Fail(ctx, common.ParamErrorCode, err.Error())
+			return
+		}
 		c.logger.Errorw("Update CI relationship failed", "error", err, "relation_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "更新CI关系失败: "+err.Error())
 		return
@@ -753,27 +766,27 @@ func (c *ProductionService) DeleteCIRelationship(ctx *gin.Context) {
 
 // ListRelationshipTypes 获取内置CI关系类型
 // @Summary 获取内置CI关系类型
-// @Description 获取CMDB支持的内置关系类型枚举
+// @Description 获取CMDB支持的内置关系类型枚举（受控词表单一源：ent/schema/ci_relationship.go，全部 13 种）
 // @Tags CMDB
 // @Accept json
 // @Produce json
 // @Success 200 {object} common.Response{data=dto.GetRelationshipTypesResponse}
 // @Router /api/v1/cmdb/relationship-types [get]
 func (c *ProductionService) ListRelationshipTypes(ctx *gin.Context) {
-	common.Success(ctx, dto.GetRelationshipTypesResponse{
-		Types: []dto.RelationshipTypeInfo{
-			{Type: dto.DependsOn, Name: "依赖", Description: "源CI依赖目标CI", Direction: "uni-directional", Icon: "link"},
-			{Type: dto.Hosts, Name: "托管", Description: "源CI托管目标CI", Direction: "uni-directional", Icon: "server"},
-			{Type: dto.HostedOn, Name: "承载于", Description: "源CI运行或部署在目标CI上", Direction: "uni-directional", Icon: "hard-drive"},
-			{Type: dto.ConnectsTo, Name: "连接到", Description: "源CI连接目标CI", Direction: "bi-directional", Icon: "network"},
-			{Type: dto.RunsOn, Name: "运行于", Description: "源CI运行在目标CI上", Direction: "uni-directional", Icon: "play"},
-			{Type: dto.Contains, Name: "包含", Description: "源CI包含目标CI", Direction: "uni-directional", Icon: "box"},
-			{Type: dto.PartOf, Name: "组成部分", Description: "源CI是目标CI的一部分", Direction: "uni-directional", Icon: "component"},
-			{Type: dto.Impacts, Name: "影响", Description: "源CI故障会影响目标CI", Direction: "uni-directional", Icon: "activity"},
-			{Type: dto.Owns, Name: "拥有", Description: "源CI拥有目标CI", Direction: "uni-directional", Icon: "key"},
-			{Type: dto.Uses, Name: "使用", Description: "源CI使用目标CI能力", Direction: "uni-directional", Icon: "plug"},
-		},
-	})
+	// P0-2 词表收口：从 ent/schema 受控词表派生，禁止在本文件维护第二份清单。
+	// schema 词表顺序即常量声明顺序，前端图标/方向语义直接消费。
+	types := make([]dto.RelationshipTypeInfo, 0, len(schema.CIRelationshipTypeVocabulary))
+	for _, m := range schema.CIRelationshipTypeVocabulary {
+		types = append(types, dto.RelationshipTypeInfo{
+			Type:        dto.CIRelationshipType(m.Type),
+			Name:        m.Name,
+			Description: m.Description,
+			Direction:   m.Direction,
+			Icon:        m.Icon,
+			Reverse:     dto.CIRelationshipType(m.Reverse),
+		})
+	}
+	common.Success(ctx, dto.GetRelationshipTypesResponse{Types: types})
 }
 
 // GetCITopology 获取统一的 CI 拓扑图

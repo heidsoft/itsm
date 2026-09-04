@@ -124,6 +124,7 @@ type CreateCIRequest struct {
 // CIResponse 配置项响应
 type CIResponse struct {
 	ID                 int                    `json:"id"`
+	CINumber           string                 `json:"ciNumber,omitempty"`
 	Name               string                 `json:"name"`
 	Type               string                 `json:"type"`
 	CITypeID           int                    `json:"ciTypeId"`

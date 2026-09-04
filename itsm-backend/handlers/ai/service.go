@@ -81,6 +81,14 @@ func (s *Service) ListTools() []service.ToolDefinition {
 	return s.tools.ListTools()
 }
 
+// ListToolsForTenant 返回按租户动态化的工具清单（list_cis 的 ci_type 枚举来自租户 CIType 表）。
+func (s *Service) ListToolsForTenant(ctx context.Context, tenantID int) []service.ToolDefinition {
+	if s.tools == nil {
+		return nil
+	}
+	return s.tools.ListToolsForTenant(ctx, tenantID)
+}
+
 // ErrToolPermissionDenied 工具权限不足（P2-6 Gate 2）
 var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
 
@@ -297,7 +305,8 @@ func (s *Service) ChatStream(
 	// 它们经由 ExecuteTool 进入待审批队列，绝不在聊天链路内直接落地写库。
 	var tools []service.LLMTool
 	if s.tools != nil {
-		for _, td := range s.tools.ListTools() {
+		// 按租户动态化工具参数（list_cis 的 ci_type 枚举来自租户 CIType 表）
+		for _, td := range s.tools.ListToolsForTenant(ctx, tenantID) {
 			if !td.ReadOnly && !chatWritableTools[td.Name] {
 				continue
 			}

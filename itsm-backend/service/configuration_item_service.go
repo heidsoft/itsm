@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -21,12 +22,20 @@ import (
 
 // ConfigurationItemService 配置项服务
 type ConfigurationItemService struct {
-	client         *ent.Client
-	logger         *zap.SugaredLogger
-	historyService *CIHistoryService
-	tagService     *CITagService
-	attrValidator  *CIAttributeValidator
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	historyService  *CIHistoryService
+	tagService      *CITagService
+	attrValidator   *CIAttributeValidator
+	sequenceService *SequenceService // 可选：ci_number Redis 发号器（与事件编号同机制）
+	rawDB           *sql.DB          // 可选：ci_number DB 兜底发号
 }
+
+// SetSequenceService 注入 Redis 序列服务（bootstrap 装配；未注入时走 DB 兜底）。
+func (s *ConfigurationItemService) SetSequenceService(seq *SequenceService) { s.sequenceService = seq }
+
+// SetRawDB 注入原生 DB 连接（ci_number DB 兜底发号用）。
+func (s *ConfigurationItemService) SetRawDB(db *sql.DB) { s.rawDB = db }
 
 // NewConfigurationItemService 创建配置项服务
 func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, historyService *CIHistoryService, tagService *CITagService) *ConfigurationItemService {
@@ -146,6 +155,15 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		create.SetCloudResourceRefID(req.CloudResourceRefID)
 	}
 
+	// P0-3（CMDB AI-Native）：生成全局唯一业务编号 ci_number（CI-YYYYMM-NNNNNN）。
+	// 编号是 Agent 稳定定位实体的自然键；发号失败不阻断创建（降级为无编号，迁移 018 可回填）。
+	ciNumber, numErr := s.generateCINumber(ctx)
+	if numErr != nil {
+		s.logger.Warnw("Failed to generate ci_number, creating CI without number", "error", numErr, "tenant_id", tenantID)
+	} else {
+		create.SetCiNumber(ciNumber)
+	}
+
 	ci, err := create.Save(ctx)
 	if err == nil {
 		// 记录创建历史
@@ -159,8 +177,94 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		return nil, fmt.Errorf("failed to create configuration item: %w", err)
 	}
 
-	s.logger.Infow("Configuration item created successfully", "ci_id", ci.ID, "tenant_id", tenantID, "name", ci.Name)
+	s.logger.Infow("Configuration item created successfully", "ci_id", ci.ID, "tenant_id", tenantID, "name", ci.Name, "ci_number", ci.CiNumber)
 	return dto.ToCIResponse(ci), nil
+}
+
+// generateCINumber 生成 CI 唯一业务编号，格式 CI-YYYYMM-NNNNNN。
+// 机制复刻 IncidentService.generateIncidentNumber：优先 Redis 序列（按月分片、原子递增、
+// 全局存在性校验 + 跳号），Redis 不可用时 DB FOR UPDATE SKIP LOCKED 兜底，最终随机后缀兜底。
+// ci_number 为全局唯一索引（不含 tenant_id），必须跨租户协调避免碰撞。
+func (s *ConfigurationItemService) generateCINumber(ctx context.Context) (string, error) {
+	now := time.Now()
+	year, month := now.Year(), int(now.Month())
+	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+	key := fmt.Sprintf("sequence:ci:%d%02d", year, month)
+
+	// 优先 Redis 序列
+	if s.sequenceService != nil {
+		const maxProbe = 20
+		for i := 0; i < maxProbe; i++ {
+			seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+			if err != nil {
+				s.logger.Warnw("Redis sequence failed for ci_number, fallback to DB", "error", err)
+				break
+			}
+			candidate := fmt.Sprintf("CI-%04d%02d-%06d", year, month, seq)
+			taken, existErr := s.ciNumberExistsRaw(ctx, candidate)
+			if existErr != nil {
+				// 校验失败不阻断创建，交由数据库唯一约束兜底
+				s.logger.Warnw("ci_number existence check failed, accepting candidate", "error", existErr, "candidate", candidate)
+				return candidate, nil
+			}
+			if !taken {
+				return candidate, nil
+			}
+			s.logger.Warnw("ci_number already taken globally, probing next", "candidate", candidate, "attempt", i+1)
+		}
+		return fmt.Sprintf("CI-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
+	}
+
+	// DB 兜底：当月最大编号加锁后递增（跨租户协调，不加租户过滤）
+	if s.rawDB != nil {
+		tx, err := s.rawDB.BeginTx(ctx, nil)
+		if err == nil {
+			prefix := fmt.Sprintf("CI-%04d%02d-", year, month)
+			query := `SELECT ci_number FROM configuration_items WHERE ci_number LIKE $1 AND ci_number IS NOT NULL AND ci_number != '' ORDER BY ci_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
+			var maxNum string
+			scanErr := tx.QueryRowContext(ctx, query, prefix+"%").Scan(&maxNum)
+			if scanErr == nil {
+				seq := 0
+				if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
+					fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
+				}
+				candidate := fmt.Sprintf("CI-%04d%02d-%06d", year, month, seq+1)
+				_ = tx.Commit()
+				return candidate, nil
+			}
+			_ = tx.Rollback()
+			if scanErr != sql.ErrNoRows {
+				s.logger.Warnw("ci_number lock query failed, using random fallback", "error", scanErr)
+			}
+		} else {
+			s.logger.Warnw("ci_number tx begin failed, using random fallback", "error", err)
+		}
+	}
+
+	// 最终兜底：唯一后缀保证全局唯一约束不被打破
+	return fmt.Sprintf("CI-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
+}
+
+// ciNumberExistsRaw 检查 ci_number 是否已被占用。
+//
+// 必须用原生 SQL 绕过 Ent 拦截器：ci_number 是全局唯一索引（不含 tenant_id），
+// 而 Ent 拦截器会自动附加租户过滤与 lifecycle_status != 'scrapped' 过滤。
+// 若走 Ent 查询，已退役（scrapped）的 CI 或其他租户占用的编号会被误判为"未占用"，
+// 进而生成重复编号并撞上全局唯一约束（23505）。
+func (s *ConfigurationItemService) ciNumberExistsRaw(ctx context.Context, candidate string) (bool, error) {
+	if s.rawDB == nil {
+		// rawDB 未注入时退化为 Ent 查询（单租户且无 scrapped 数据的场景仍可正常工作）
+		return s.client.ConfigurationItem.Query().
+			Where(configurationitem.CiNumberEQ(candidate)).
+			Exist(ctx)
+	}
+	var exists bool
+	err := s.rawDB.QueryRowContext(ctx,
+		`SELECT EXISTS (SELECT 1 FROM configuration_items WHERE ci_number = $1)`, candidate).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
 // GetCIByID 根据ID获取配置项
@@ -223,6 +327,10 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 	}
 	if req.CIType != "" {
 		query = query.Where(configurationitem.CiTypeEQ(req.CIType))
+	}
+	// ci_number 精确匹配：AI Agent / 多轮对话间稳定定位实体的自然键
+	if req.CINumber != "" {
+		query = query.Where(configurationitem.CiNumberEQ(strings.TrimSpace(req.CINumber)))
 	}
 
 	// 搜索
@@ -821,6 +929,13 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 		}
 		if item.CloudResourceRefID != 0 {
 			create.SetCloudResourceRefID(item.CloudResourceRefID)
+		}
+
+		// P0-3：批量创建同样补 ci_number（发号失败不阻断该项创建）
+		if ciNum, numErr := s.generateCINumber(ctx); numErr == nil {
+			create.SetCiNumber(ciNum)
+		} else {
+			s.logger.Warnw("Failed to generate ci_number in batch create", "error", numErr, "tenant_id", tenantID)
 		}
 
 		ci, err := create.Save(ctx)

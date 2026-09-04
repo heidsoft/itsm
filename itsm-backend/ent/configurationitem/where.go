@@ -55,6 +55,11 @@ func IDLTE(id int) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldLTE(FieldID, id))
 }
 
+// CiNumber applies equality check predicate on the "ci_number" field. It's identical to CiNumberEQ.
+func CiNumber(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiNumber, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldName, v))
@@ -253,6 +258,81 @@ func EffectiveAt(v time.Time) predicate.ConfigurationItem {
 // ExpireAt applies equality check predicate on the "expire_at" field. It's identical to ExpireAtEQ.
 func ExpireAt(v time.Time) predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(sql.FieldEQ(FieldExpireAt, v))
+}
+
+// CiNumberEQ applies the EQ predicate on the "ci_number" field.
+func CiNumberEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEQ(FieldCiNumber, v))
+}
+
+// CiNumberNEQ applies the NEQ predicate on the "ci_number" field.
+func CiNumberNEQ(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNEQ(FieldCiNumber, v))
+}
+
+// CiNumberIn applies the In predicate on the "ci_number" field.
+func CiNumberIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIn(FieldCiNumber, vs...))
+}
+
+// CiNumberNotIn applies the NotIn predicate on the "ci_number" field.
+func CiNumberNotIn(vs ...string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotIn(FieldCiNumber, vs...))
+}
+
+// CiNumberGT applies the GT predicate on the "ci_number" field.
+func CiNumberGT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGT(FieldCiNumber, v))
+}
+
+// CiNumberGTE applies the GTE predicate on the "ci_number" field.
+func CiNumberGTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldGTE(FieldCiNumber, v))
+}
+
+// CiNumberLT applies the LT predicate on the "ci_number" field.
+func CiNumberLT(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLT(FieldCiNumber, v))
+}
+
+// CiNumberLTE applies the LTE predicate on the "ci_number" field.
+func CiNumberLTE(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldLTE(FieldCiNumber, v))
+}
+
+// CiNumberContains applies the Contains predicate on the "ci_number" field.
+func CiNumberContains(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContains(FieldCiNumber, v))
+}
+
+// CiNumberHasPrefix applies the HasPrefix predicate on the "ci_number" field.
+func CiNumberHasPrefix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasPrefix(FieldCiNumber, v))
+}
+
+// CiNumberHasSuffix applies the HasSuffix predicate on the "ci_number" field.
+func CiNumberHasSuffix(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldHasSuffix(FieldCiNumber, v))
+}
+
+// CiNumberIsNil applies the IsNil predicate on the "ci_number" field.
+func CiNumberIsNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldIsNull(FieldCiNumber))
+}
+
+// CiNumberNotNil applies the NotNil predicate on the "ci_number" field.
+func CiNumberNotNil() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldNotNull(FieldCiNumber))
+}
+
+// CiNumberEqualFold applies the EqualFold predicate on the "ci_number" field.
+func CiNumberEqualFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldEqualFold(FieldCiNumber, v))
+}
+
+// CiNumberContainsFold applies the ContainsFold predicate on the "ci_number" field.
+func CiNumberContainsFold(v string) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(sql.FieldContainsFold(FieldCiNumber, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.

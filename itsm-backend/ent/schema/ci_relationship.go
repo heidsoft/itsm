@@ -41,6 +41,69 @@ const (
 	UsedBy CIRelationshipType = "used_by"
 )
 
+// CIRelationshipTypeMeta 内置关系类型元数据。
+// 这是 CMDB 关系词表的**单一受控源**（single source of truth）：
+// API /relationship-types 端点、AI 工具参数、ontology 正则反向映射都必须从这里派生，
+// 禁止在其他文件再硬编码第二份关系清单（2026-09-04 CMDB AI-Native 评审 P0-2 收口）。
+type CIRelationshipTypeMeta struct {
+	Type        CIRelationshipType
+	Name        string             // 中文展示名
+	Description string             // 语义说明
+	Direction   string             // uni-directional / bi-directional
+	Icon        string             // 前端图标名
+	Reverse     CIRelationshipType // 语义反向类型（用于入边方向描述；自反类型为自身）
+}
+
+// CIRelationshipTypeVocabulary 全部 13 种内置关系类型的受控词表。
+// 注意：depends_on 与 impacted_by 互为反向、impacts 的反向也是 impacted_by，
+// 与 ontology_service 既有行为保持一致（ 收口时未改变运行语义）。
+var CIRelationshipTypeVocabulary = []CIRelationshipTypeMeta{
+	{Type: DependsOn, Name: "依赖", Description: "源CI依赖目标CI", Direction: "uni-directional", Icon: "link", Reverse: ImpactedBy},
+	{Type: Hosts, Name: "托管", Description: "源CI托管目标CI", Direction: "uni-directional", Icon: "server", Reverse: HostedOn},
+	{Type: HostedOn, Name: "承载于", Description: "源CI运行或部署在目标CI上", Direction: "uni-directional", Icon: "hard-drive", Reverse: Hosts},
+	{Type: ConnectsTo, Name: "连接到", Description: "源CI连接目标CI", Direction: "bi-directional", Icon: "network", Reverse: ConnectsTo},
+	{Type: RunsOn, Name: "运行于", Description: "源CI运行在目标CI上", Direction: "uni-directional", Icon: "play", Reverse: RunsOn},
+	{Type: Contains, Name: "包含", Description: "源CI包含目标CI", Direction: "uni-directional", Icon: "box", Reverse: PartOf},
+	{Type: PartOf, Name: "组成部分", Description: "源CI是目标CI的一部分", Direction: "uni-directional", Icon: "component", Reverse: Contains},
+	{Type: Impacts, Name: "影响", Description: "源CI故障会影响目标CI", Direction: "uni-directional", Icon: "activity", Reverse: ImpactedBy},
+	{Type: ImpactedBy, Name: "受影响于", Description: "源CI受目标CI故障影响", Direction: "uni-directional", Icon: "activity", Reverse: DependsOn},
+	{Type: Owns, Name: "拥有", Description: "源CI拥有目标CI", Direction: "uni-directional", Icon: "key", Reverse: OwnedBy},
+	{Type: OwnedBy, Name: "被拥有", Description: "源CI被目标CI拥有", Direction: "uni-directional", Icon: "key", Reverse: Owns},
+	{Type: Uses, Name: "使用", Description: "源CI使用目标CI能力", Direction: "uni-directional", Icon: "plug", Reverse: UsedBy},
+	{Type: UsedBy, Name: "被使用", Description: "源CI能力被目标CI使用", Direction: "uni-directional", Icon: "plug", Reverse: Uses},
+}
+
+// IsValidCIRelationshipType 判断关系类型是否在受控词表内。
+func IsValidCIRelationshipType(v string) bool {
+	for _, m := range CIRelationshipTypeVocabulary {
+		if string(m.Type) == v {
+			return true
+		}
+	}
+	return false
+}
+
+// ReverseCIRelationshipType 返回语义反向关系类型；未知类型原样返回（保持既有行为）。
+func ReverseCIRelationshipType(v string) string {
+	for _, m := range CIRelationshipTypeVocabulary {
+		if string(m.Type) == v {
+			return string(m.Reverse)
+		}
+	}
+	return v
+}
+
+// CIRelationshipTypeDirectionLabel 返回关系类型的方向语义描述（入边/出边展示用）。
+func CIRelationshipTypeDirectionLabel(v string) string {
+	switch v {
+	case string(DependsOn), string(ImpactedBy), string(HostedOn), string(PartOf), string(OwnedBy), string(UsedBy):
+		return "依赖/受影响方向"
+	case string(Impacts), string(Hosts), string(Contains), string(Owns), string(Uses), string(RunsOn):
+		return "影响/承载方向"
+	}
+	return "双向"
+}
+
 // RelationshipStrength 关系强度
 type RelationshipStrength string
 
@@ -73,9 +136,10 @@ func (CIRelationship) Fields() []ent.Field {
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(), // 必填：存量数据已由 migrations/20260610_cmdb_tenant_id_backfill.sql 回填
-		// 关系类型
+		// 关系类型（受控词表见 CIRelationshipTypeVocabulary，13 种内置类型；
+		// 写入侧由 ci_relationship_service 校验，禁止自由字符串）
 		field.String("relationship_type").
-			Comment("关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by").
+			Comment("关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, impacted_by, owns, owned_by, uses, used_by").
 			NotEmpty(),
 		// 源CI ID (关系发起方)
 		field.Int("source_ci_id").

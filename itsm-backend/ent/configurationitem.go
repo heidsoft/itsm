@@ -20,6 +20,8 @@ type ConfigurationItem struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CI唯一业务编号，格式 CI-YYYYMM-NNNNNN，由服务层发号器生成（全局唯一，跨租户协调）
+	CiNumber *string `json:"ci_number,omitempty"`
 	// CI名称
 	Name string `json:"name,omitempty"`
 	// CI描述
@@ -223,7 +225,7 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case configurationitem.FieldID, configurationitem.FieldCiTypeID, configurationitem.FieldSourceMissingCount, configurationitem.FieldCloudResourceRefID, configurationitem.FieldTenantID, configurationitem.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldSourceID, configurationitem.FieldCanonicalCloudAccountID, configurationitem.FieldSourceFingerprint, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
+		case configurationitem.FieldCiNumber, configurationitem.FieldName, configurationitem.FieldDescription, configurationitem.FieldCiType, configurationitem.FieldStatus, configurationitem.FieldEnvironment, configurationitem.FieldCriticality, configurationitem.FieldAssetTag, configurationitem.FieldSerialNumber, configurationitem.FieldModel, configurationitem.FieldVendor, configurationitem.FieldLocation, configurationitem.FieldAssignedTo, configurationitem.FieldOwnedBy, configurationitem.FieldOwnershipMode, configurationitem.FieldDiscoverySource, configurationitem.FieldSource, configurationitem.FieldSourceID, configurationitem.FieldCanonicalCloudAccountID, configurationitem.FieldSourceFingerprint, configurationitem.FieldCloudProvider, configurationitem.FieldCloudAccountID, configurationitem.FieldCloudRegion, configurationitem.FieldCloudZone, configurationitem.FieldCloudResourceID, configurationitem.FieldCloudResourceType, configurationitem.FieldCloudSyncStatus, configurationitem.FieldLifecycleStatus:
 			values[i] = new(sql.NullString)
 		case configurationitem.FieldLocalModifiedAt, configurationitem.FieldLastDiscovered, configurationitem.FieldSourceLastSeenAt, configurationitem.FieldCloudSyncTime, configurationitem.FieldCreatedAt, configurationitem.FieldUpdatedAt, configurationitem.FieldEffectiveAt, configurationitem.FieldExpireAt:
 			values[i] = new(sql.NullTime)
@@ -250,6 +252,13 @@ func (_m *ConfigurationItem) assignValues(columns []string, values []any) error 
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			_m.ID = int(value.Int64)
+		case configurationitem.FieldCiNumber:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ci_number", values[i])
+			} else if value.Valid {
+				_m.CiNumber = new(string)
+				*_m.CiNumber = value.String
+			}
 		case configurationitem.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -605,6 +614,11 @@ func (_m *ConfigurationItem) String() string {
 	var builder strings.Builder
 	builder.WriteString("ConfigurationItem(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	if v := _m.CiNumber; v != nil {
+		builder.WriteString("ci_number=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")

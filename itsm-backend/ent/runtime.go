@@ -1050,59 +1050,59 @@ func init() {
 	configurationitemFields := schema.ConfigurationItem{}.Fields()
 	_ = configurationitemFields
 	// configurationitemDescName is the schema descriptor for name field.
-	configurationitemDescName := configurationitemFields[0].Descriptor()
+	configurationitemDescName := configurationitemFields[1].Descriptor()
 	// configurationitem.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	configurationitem.NameValidator = configurationitemDescName.Validators[0].(func(string) error)
 	// configurationitemDescCiTypeID is the schema descriptor for ci_type_id field.
-	configurationitemDescCiTypeID := configurationitemFields[2].Descriptor()
+	configurationitemDescCiTypeID := configurationitemFields[3].Descriptor()
 	// configurationitem.CiTypeIDValidator is a validator for the "ci_type_id" field. It is called by the builders before save.
 	configurationitem.CiTypeIDValidator = configurationitemDescCiTypeID.Validators[0].(func(int) error)
 	// configurationitemDescCiType is the schema descriptor for ci_type field.
-	configurationitemDescCiType := configurationitemFields[3].Descriptor()
+	configurationitemDescCiType := configurationitemFields[4].Descriptor()
 	// configurationitem.DefaultCiType holds the default value on creation for the ci_type field.
 	configurationitem.DefaultCiType = configurationitemDescCiType.Default.(string)
 	// configurationitemDescStatus is the schema descriptor for status field.
-	configurationitemDescStatus := configurationitemFields[4].Descriptor()
+	configurationitemDescStatus := configurationitemFields[5].Descriptor()
 	// configurationitem.DefaultStatus holds the default value on creation for the status field.
 	configurationitem.DefaultStatus = configurationitemDescStatus.Default.(string)
 	// configurationitemDescEnvironment is the schema descriptor for environment field.
-	configurationitemDescEnvironment := configurationitemFields[5].Descriptor()
+	configurationitemDescEnvironment := configurationitemFields[6].Descriptor()
 	// configurationitem.DefaultEnvironment holds the default value on creation for the environment field.
 	configurationitem.DefaultEnvironment = configurationitemDescEnvironment.Default.(string)
 	// configurationitemDescCriticality is the schema descriptor for criticality field.
-	configurationitemDescCriticality := configurationitemFields[6].Descriptor()
+	configurationitemDescCriticality := configurationitemFields[7].Descriptor()
 	// configurationitem.DefaultCriticality holds the default value on creation for the criticality field.
 	configurationitem.DefaultCriticality = configurationitemDescCriticality.Default.(string)
 	// configurationitemDescOwnershipMode is the schema descriptor for ownership_mode field.
-	configurationitemDescOwnershipMode := configurationitemFields[14].Descriptor()
+	configurationitemDescOwnershipMode := configurationitemFields[15].Descriptor()
 	// configurationitem.DefaultOwnershipMode holds the default value on creation for the ownership_mode field.
 	configurationitem.DefaultOwnershipMode = configurationitemDescOwnershipMode.Default.(string)
 	// configurationitemDescSourceMissingCount is the schema descriptor for source_missing_count field.
-	configurationitemDescSourceMissingCount := configurationitemFields[22].Descriptor()
+	configurationitemDescSourceMissingCount := configurationitemFields[23].Descriptor()
 	// configurationitem.DefaultSourceMissingCount holds the default value on creation for the source_missing_count field.
 	configurationitem.DefaultSourceMissingCount = configurationitemDescSourceMissingCount.Default.(int)
 	// configurationitem.SourceMissingCountValidator is a validator for the "source_missing_count" field. It is called by the builders before save.
 	configurationitem.SourceMissingCountValidator = configurationitemDescSourceMissingCount.Validators[0].(func(int) error)
 	// configurationitemDescTenantID is the schema descriptor for tenant_id field.
-	configurationitemDescTenantID := configurationitemFields[37].Descriptor()
+	configurationitemDescTenantID := configurationitemFields[38].Descriptor()
 	// configurationitem.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	configurationitem.TenantIDValidator = configurationitemDescTenantID.Validators[0].(func(int) error)
 	// configurationitemDescVersion is the schema descriptor for version field.
-	configurationitemDescVersion := configurationitemFields[38].Descriptor()
+	configurationitemDescVersion := configurationitemFields[39].Descriptor()
 	// configurationitem.DefaultVersion holds the default value on creation for the version field.
 	configurationitem.DefaultVersion = configurationitemDescVersion.Default.(int)
 	// configurationitemDescCreatedAt is the schema descriptor for created_at field.
-	configurationitemDescCreatedAt := configurationitemFields[39].Descriptor()
+	configurationitemDescCreatedAt := configurationitemFields[40].Descriptor()
 	// configurationitem.DefaultCreatedAt holds the default value on creation for the created_at field.
 	configurationitem.DefaultCreatedAt = configurationitemDescCreatedAt.Default.(func() time.Time)
 	// configurationitemDescUpdatedAt is the schema descriptor for updated_at field.
-	configurationitemDescUpdatedAt := configurationitemFields[40].Descriptor()
+	configurationitemDescUpdatedAt := configurationitemFields[41].Descriptor()
 	// configurationitem.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	configurationitem.DefaultUpdatedAt = configurationitemDescUpdatedAt.Default.(func() time.Time)
 	// configurationitem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	configurationitem.UpdateDefaultUpdatedAt = configurationitemDescUpdatedAt.UpdateDefault.(func() time.Time)
 	// configurationitemDescLifecycleStatus is the schema descriptor for lifecycle_status field.
-	configurationitemDescLifecycleStatus := configurationitemFields[41].Descriptor()
+	configurationitemDescLifecycleStatus := configurationitemFields[42].Descriptor()
 	// configurationitem.DefaultLifecycleStatus holds the default value on creation for the lifecycle_status field.
 	configurationitem.DefaultLifecycleStatus = configurationitemDescLifecycleStatus.Default.(string)
 	configurationitemhistoryFields := schema.ConfigurationItemHistory{}.Fields()

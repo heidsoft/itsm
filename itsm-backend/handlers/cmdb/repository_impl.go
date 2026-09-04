@@ -32,6 +32,7 @@ func toCIDomain(e *ent.ConfigurationItem) *ConfigurationItem {
 	}
 	return &ConfigurationItem{
 		ID:                 e.ID,
+		CINumber:           ciNumberString(e.CiNumber),
 		Name:               e.Name,
 		Description:        e.Description,
 		Type:               e.CiType,
@@ -774,4 +775,12 @@ func optionalTime(value time.Time) *time.Time {
 		return nil
 	}
 	return &value
+}
+
+// ciNumberString 安全解引用 ci_number（Optional+Nillable 字段）
+func ciNumberString(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
 }

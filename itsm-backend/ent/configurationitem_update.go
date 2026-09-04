@@ -35,6 +35,26 @@ func (_u *ConfigurationItemUpdate) Where(ps ...predicate.ConfigurationItem) *Con
 	return _u
 }
 
+// SetCiNumber sets the "ci_number" field.
+func (_u *ConfigurationItemUpdate) SetCiNumber(v string) *ConfigurationItemUpdate {
+	_u.mutation.SetCiNumber(v)
+	return _u
+}
+
+// SetNillableCiNumber sets the "ci_number" field if the given value is not nil.
+func (_u *ConfigurationItemUpdate) SetNillableCiNumber(v *string) *ConfigurationItemUpdate {
+	if v != nil {
+		_u.SetCiNumber(*v)
+	}
+	return _u
+}
+
+// ClearCiNumber clears the value of the "ci_number" field.
+func (_u *ConfigurationItemUpdate) ClearCiNumber() *ConfigurationItemUpdate {
+	_u.mutation.ClearCiNumber()
+	return _u
+}
+
 // SetName sets the "name" field.
 func (_u *ConfigurationItemUpdate) SetName(v string) *ConfigurationItemUpdate {
 	_u.mutation.SetName(v)
@@ -1143,6 +1163,12 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 			}
 		}
 	}
+	if value, ok := _u.mutation.CiNumber(); ok {
+		_spec.SetField(configurationitem.FieldCiNumber, field.TypeString, value)
+	}
+	if _u.mutation.CiNumberCleared() {
+		_spec.ClearField(configurationitem.FieldCiNumber, field.TypeString)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)
 	}
@@ -1714,6 +1740,26 @@ type ConfigurationItemUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *ConfigurationItemMutation
+}
+
+// SetCiNumber sets the "ci_number" field.
+func (_u *ConfigurationItemUpdateOne) SetCiNumber(v string) *ConfigurationItemUpdateOne {
+	_u.mutation.SetCiNumber(v)
+	return _u
+}
+
+// SetNillableCiNumber sets the "ci_number" field if the given value is not nil.
+func (_u *ConfigurationItemUpdateOne) SetNillableCiNumber(v *string) *ConfigurationItemUpdateOne {
+	if v != nil {
+		_u.SetCiNumber(*v)
+	}
+	return _u
+}
+
+// ClearCiNumber clears the value of the "ci_number" field.
+func (_u *ConfigurationItemUpdateOne) ClearCiNumber() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearCiNumber()
+	return _u
 }
 
 // SetName sets the "name" field.
@@ -2853,6 +2899,12 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.CiNumber(); ok {
+		_spec.SetField(configurationitem.FieldCiNumber, field.TypeString, value)
+	}
+	if _u.mutation.CiNumberCleared() {
+		_spec.ClearField(configurationitem.FieldCiNumber, field.TypeString)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(configurationitem.FieldName, field.TypeString, value)

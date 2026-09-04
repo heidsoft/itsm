@@ -50,6 +50,9 @@ func SetupCMDBRoutes(
 		cmdb.GET("/capabilities", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetCapabilities)
 		cmdb.GET("/discovery/health", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetDiscoveryHealth)
 
+		// AI-Native 本体自描述端点：CI 类型 × 属性定义 × 关系词表 × 枚举值域 × AI 工具
+		cmdb.GET("/ontology", middleware.RequirePermission("cmdb_ci", "read"), config.CMDBHandler.GetOntology)
+
 		// 关系类型元数据
 		cmdb.GET("/relationship-types", middleware.RequirePermission("cmdb_relationship", "read"), config.CMDBHandler.ListRelationshipTypes)
 

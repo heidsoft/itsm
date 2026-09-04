@@ -551,12 +551,12 @@ func (_q *ConfigurationItemQuery) WithIncomingRelations(opts ...func(*CIRelation
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CiNumber string `json:"ci_number,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.ConfigurationItem.Query().
-//		GroupBy(configurationitem.FieldName).
+//		GroupBy(configurationitem.FieldCiNumber).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *ConfigurationItemQuery) GroupBy(field string, fields ...string) *ConfigurationItemGroupBy {
@@ -574,11 +574,11 @@ func (_q *ConfigurationItemQuery) GroupBy(field string, fields ...string) *Confi
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CiNumber string `json:"ci_number,omitempty"`
 //	}
 //
 //	client.ConfigurationItem.Query().
-//		Select(configurationitem.FieldName).
+//		Select(configurationitem.FieldCiNumber).
 //		Scan(ctx, &v)
 func (_q *ConfigurationItemQuery) Select(fields ...string) *ConfigurationItemSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

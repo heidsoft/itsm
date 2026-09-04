@@ -64,6 +64,8 @@ type ListCIRequest struct {
 	OwnedBy        string `form:"ownedBy"`
 	Search         string `form:"search"`
 	CIType         string `form:"ciType"`
+	// CINumber CI 唯一业务编号精确匹配（AI Agent 稳定定位实体用的自然键）
+	CINumber string `form:"ciNumber"`
 }
 
 // CIListResponse 配置项列表响应。

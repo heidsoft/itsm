@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/release"
+	"itsm-backend/ent/schema"
 	"itsm-backend/ent/ticket"
 )
 
@@ -49,6 +50,8 @@ var (
 	releaseNumberRe  = regexp.MustCompile(`REL-\d{8}-\w+`)
 	problemNumberRe  = regexp.MustCompile(`PRB-\d{8}-\d+`)
 	changeNumberRe   = regexp.MustCompile(`CHG-\d{8}-\d+`)
+	// ciNumberRe CI 唯一业务编号（P0-3：CI-YYYYMM-NNNNNN，Agent/用户可直接用编号定位 CI）
+	ciNumberRe = regexp.MustCompile(`CI-\d{4,6}-\d+`)
 )
 
 // OntologyEntity 识别并扩展出的一个业务实体卡
@@ -207,13 +210,31 @@ func (s *OntologyService) ExtractAndExpand(ctx context.Context, tenantID int, qu
 		oc.Entities = append(oc.Entities, s.expandChange(ctx, tenantID, c))
 	}
 
-	// 2. CI 实体：抽取 query 中的引号词与中文/字母词组，做 name 精确→前缀匹配
+	// 2. CI 实体：优先按 ci_number 编号识别（精确），再按名称候选词匹配
+	seenCI := map[int]bool{}
+	for _, num := range dedupeStringsLocal(matchAll(ciNumberRe, query)) {
+		ci, err := s.client.ConfigurationItem.Query().
+			Where(
+				ciPred.TenantIDEQ(tenantID),
+				ciPred.CiNumberEQ(num),
+			).
+			Only(ctx)
+		if err != nil {
+			if !ent.IsNotFound(err) {
+				s.logger.Warnw("ontology: CI number lookup failed", "number", num, "error", err)
+			}
+			continue
+		}
+		seenCI[ci.ID] = true
+		oc.Entities = append(oc.Entities, s.expandCI(ctx, tenantID, ci))
+	}
 	ciNames := extractCandidateCINames(query)
 	for _, name := range ciNames {
 		ci, err := s.lookupCI(ctx, tenantID, name)
-		if err != nil {
+		if err != nil || seenCI[ci.ID] {
 			continue
 		}
+		seenCI[ci.ID] = true
 		oc.Entities = append(oc.Entities, s.expandCI(ctx, tenantID, ci))
 	}
 
@@ -488,9 +509,14 @@ func (s *OntologyService) expandChange(ctx context.Context, tenantID int, c *ent
 }
 
 func (s *OntologyService) expandCI(ctx context.Context, tenantID int, ci *ent.ConfigurationItem) *OntologyEntity {
+	number := ""
+	if ci.CiNumber != nil {
+		number = *ci.CiNumber
+	}
 	e := &OntologyEntity{
 		ObjectType: "ci",
 		ID:         ci.ID,
+		Number:     number,
 		Title:      ci.Name,
 		Status:     ci.Status,
 		Snippet:    fmt.Sprintf("类型 %s / 环境 %s / 关键度 %s", ci.CiType, ci.Environment, ci.Criticality),
@@ -646,27 +672,12 @@ var ciStopwords = map[string]bool{
 func isStopword(w string) bool { return ciStopwords[w] }
 
 func reverseRelation(rel string) string {
-	m := map[string]string{
-		"depends_on": "impacted_by", "impacted_by": "depends_on",
-		"hosts": "hosted_on", "hosted_on": "hosts",
-		"contains": "part_of", "part_of": "contains",
-		"impacts": "impacted_by", "owns": "owned_by", "owned_by": "owns",
-		"uses": "used_by", "used_by": "uses",
-	}
-	if v, ok := m[rel]; ok {
-		return v
-	}
-	return rel
+	// P0-2 词表收口：反向映射从 ent/schema 受控词表派生，本文件不再维护第二份清单
+	return schema.ReverseCIRelationshipType(rel)
 }
 
 func directionLabel(rel string) string {
-	switch rel {
-	case "depends_on", "impacted_by", "hosted_on", "part_of", "owned_by", "used_by":
-		return "依赖/受影响方向"
-	case "impacts", "hosts", "contains", "owns", "uses":
-		return "影响/承载方向"
-	}
-	return "双向"
+	return schema.CIRelationshipTypeDirectionLabel(rel)
 }
 
 func userDisplayName(u *ent.User) string {

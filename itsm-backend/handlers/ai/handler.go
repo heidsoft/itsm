@@ -28,8 +28,6 @@ func NewHandler(svc *Service) *Handler {
 // ListTools handles GET /api/v1/agent/tools
 // P2-6: 按 ToolDefinition.Resource/Action 过滤，仅返回当前角色有权限的工具
 func (h *Handler) ListTools(c *gin.Context) {
-	allTools := h.svc.ListTools()
-
 	role := c.GetString("role")
 	tenantID := c.GetInt("tenant_id")
 
@@ -41,6 +39,9 @@ func (h *Handler) ListTools(c *gin.Context) {
 		common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
 		return
 	}
+
+	// 按租户动态化工具参数（list_cis 的 ci_type 枚举来自该租户 CIType 表）
+	allTools := h.svc.ListToolsForTenant(c.Request.Context(), tenantID)
 
 	visible := make([]service.ToolDefinition, 0, len(allTools))
 	for _, t := range allTools {

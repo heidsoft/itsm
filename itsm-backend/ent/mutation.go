@@ -33143,6 +33143,7 @@ type ConfigurationItemMutation struct {
 	op                         Op
 	typ                        string
 	id                         *int
+	ci_number                  *string
 	name                       *string
 	description                *string
 	ci_type                    *string
@@ -33312,6 +33313,55 @@ func (m *ConfigurationItemMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetCiNumber sets the "ci_number" field.
+func (m *ConfigurationItemMutation) SetCiNumber(s string) {
+	m.ci_number = &s
+}
+
+// CiNumber returns the value of the "ci_number" field in the mutation.
+func (m *ConfigurationItemMutation) CiNumber() (r string, exists bool) {
+	v := m.ci_number
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCiNumber returns the old "ci_number" field's value of the ConfigurationItem entity.
+// If the ConfigurationItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ConfigurationItemMutation) OldCiNumber(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCiNumber is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCiNumber requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCiNumber: %w", err)
+	}
+	return oldValue.CiNumber, nil
+}
+
+// ClearCiNumber clears the value of the "ci_number" field.
+func (m *ConfigurationItemMutation) ClearCiNumber() {
+	m.ci_number = nil
+	m.clearedFields[configurationitem.FieldCiNumber] = struct{}{}
+}
+
+// CiNumberCleared returns if the "ci_number" field was cleared in this mutation.
+func (m *ConfigurationItemMutation) CiNumberCleared() bool {
+	_, ok := m.clearedFields[configurationitem.FieldCiNumber]
+	return ok
+}
+
+// ResetCiNumber resets all changes to the "ci_number" field.
+func (m *ConfigurationItemMutation) ResetCiNumber() {
+	m.ci_number = nil
+	delete(m.clearedFields, configurationitem.FieldCiNumber)
 }
 
 // SetName sets the "name" field.
@@ -35786,7 +35836,10 @@ func (m *ConfigurationItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ConfigurationItemMutation) Fields() []string {
-	fields := make([]string, 0, 44)
+	fields := make([]string, 0, 45)
+	if m.ci_number != nil {
+		fields = append(fields, configurationitem.FieldCiNumber)
+	}
 	if m.name != nil {
 		fields = append(fields, configurationitem.FieldName)
 	}
@@ -35927,6 +35980,8 @@ func (m *ConfigurationItemMutation) Fields() []string {
 // schema.
 func (m *ConfigurationItemMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case configurationitem.FieldCiNumber:
+		return m.CiNumber()
 	case configurationitem.FieldName:
 		return m.Name()
 	case configurationitem.FieldDescription:
@@ -36024,6 +36079,8 @@ func (m *ConfigurationItemMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *ConfigurationItemMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case configurationitem.FieldCiNumber:
+		return m.OldCiNumber(ctx)
 	case configurationitem.FieldName:
 		return m.OldName(ctx)
 	case configurationitem.FieldDescription:
@@ -36121,6 +36178,13 @@ func (m *ConfigurationItemMutation) OldField(ctx context.Context, name string) (
 // type.
 func (m *ConfigurationItemMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case configurationitem.FieldCiNumber:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCiNumber(v)
+		return nil
 	case configurationitem.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -36498,6 +36562,9 @@ func (m *ConfigurationItemMutation) AddField(name string, value ent.Value) error
 // mutation.
 func (m *ConfigurationItemMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(configurationitem.FieldCiNumber) {
+		fields = append(fields, configurationitem.FieldCiNumber)
+	}
 	if m.FieldCleared(configurationitem.FieldDescription) {
 		fields = append(fields, configurationitem.FieldDescription)
 	}
@@ -36605,6 +36672,9 @@ func (m *ConfigurationItemMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *ConfigurationItemMutation) ClearField(name string) error {
 	switch name {
+	case configurationitem.FieldCiNumber:
+		m.ClearCiNumber()
+		return nil
 	case configurationitem.FieldDescription:
 		m.ClearDescription()
 		return nil
@@ -36706,6 +36776,9 @@ func (m *ConfigurationItemMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *ConfigurationItemMutation) ResetField(name string) error {
 	switch name {
+	case configurationitem.FieldCiNumber:
+		m.ResetCiNumber()
+		return nil
 	case configurationitem.FieldName:
 		m.ResetName()
 		return nil

@@ -5060,9 +5060,49 @@
                 }
             }
         },
+        "/api/v1/cmdb/ontology": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "一次性返回 CI 类型（含属性定义与 schema）、受控关系词表、受控枚举值域与可用 AI 工具，供 LLM Agent 自省与闭环操作",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB"
+                ],
+                "summary": "获取 CMDB 本体自描述",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CMDBOntologyResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/relationship-types": {
             "get": {
-                "description": "获取CMDB支持的内置关系类型枚举",
+                "description": "获取CMDB支持的内置关系类型枚举（受控词表单一源：ent/schema/ci_relationship.go，全部 13 种）",
                 "consumes": [
                     "application/json"
                 ],
@@ -12400,6 +12440,9 @@
                     "type": "object",
                     "additionalProperties": true
                 },
+                "ciNumber": {
+                    "type": "string"
+                },
                 "ciTypeId": {
                     "type": "integer"
                 },
@@ -12818,6 +12861,163 @@
                     "type": "integer"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CMDBOntologyCIType": {
+            "type": "object",
+            "properties": {
+                "attributeDefinitions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CIAttributeDefinitionResponse"
+                    }
+                },
+                "attributeSchema": {
+                    "description": "AttributeSchema 为 CIType 表中的 schema 文本：合法 JSON 时输出为 JSON 对象，\n否则原样输出字符串（保持透明，便于诊断脏数据）。"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentTypeId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CMDBOntologyEnums": {
+            "type": "object",
+            "properties": {
+                "ciStatus": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "criticality": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "environment": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "impactLevel": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "lifecycleStatus": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ownershipMode": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "relationshipStrength": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CMDBOntologyRelationshipType": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "direction": {
+                    "description": "uni-directional / bi-directional",
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "reverseType": {
+                    "description": "语义反向类型",
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CMDBOntologyResponse": {
+            "type": "object",
+            "properties": {
+                "aiTools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CMDBOntologyTool"
+                    }
+                },
+                "ciTypes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CMDBOntologyCIType"
+                    }
+                },
+                "enums": {
+                    "$ref": "#/definitions/dto.CMDBOntologyEnums"
+                },
+                "relationshipTypes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CMDBOntologyRelationshipType"
+                    }
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CMDBOntologyTool": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "argsSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "readOnly": {
+                    "type": "boolean"
+                },
+                "resource": {
                     "type": "string"
                 }
             }
@@ -15164,6 +15364,10 @@
                     "type": "integer",
                     "example": 2
                 },
+                "assigneeName": {
+                    "type": "string",
+                    "example": "李四"
+                },
                 "assignmentGroupId": {
                     "type": "integer"
                 },
@@ -15243,6 +15447,10 @@
                 "reporterId": {
                     "type": "integer",
                     "example": 1
+                },
+                "reporterName": {
+                    "type": "string",
+                    "example": "张三"
                 },
                 "resolutionSteps": {
                     "type": "array",
@@ -17304,7 +17512,7 @@
                     "additionalProperties": true
                 },
                 "relationship_type": {
-                    "description": "关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, owned_by, owns, uses, used_by",
+                    "description": "关系类型: depends_on, hosts, hosted_on, connects_to, runs_on, contains, part_of, impacts, impacted_by, owns, owned_by, uses, used_by",
                     "type": "string"
                 },
                 "source_ci_id": {
@@ -18066,6 +18274,10 @@
                 },
                 "canonical_cloud_account_id": {
                     "description": "云厂商不可变账号ID",
+                    "type": "string"
+                },
+                "ci_number": {
+                    "description": "CI唯一业务编号，格式 CI-YYYYMM-NNNNNN，由服务层发号器生成（全局唯一，跨租户协调）",
                     "type": "string"
                 },
                 "ci_type": {
