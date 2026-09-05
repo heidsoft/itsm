@@ -967,67 +967,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Incidents ====================
 		if config.IncidentHandler != nil {
-			inc := tenant.(*gin.RouterGroup).Group("/incidents")
-			{
-				// 核心 CRUD
-				inc.GET("", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Lists)
-				inc.POST("", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Create)
-				inc.GET("/stats", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetStats)
-				inc.GET("/:id", middleware.RequirePermission("incident", "read"), config.IncidentHandler.Get)
-				inc.PUT("/:id", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
-				inc.DELETE("/:id", middleware.RequirePermission("incident", "delete"), config.IncidentHandler.Delete)
-
-				// 事件操作
-				inc.POST("/:id/escalate", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Escalate)
-				inc.POST("/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Acknowledge)
-				inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Resolve)
-				inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Close)
-				inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Reopen)
-				inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), config.IncidentHandler.Assign)
-				inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.PauseSLA)
-				inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResumeSLA)
-				inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), config.IncidentHandler.EscalateMajor)
-				inc.POST("/:id/convert-to-problem", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ConvertToProblem)
-				inc.GET("/:id/impact", middleware.RequirePermission("incident", "read"), config.IncidentHandler.AnalyzeImpact)
-
-				// 关联数据
-				inc.GET("/:id/events", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetEvents)
-				inc.POST("/events", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateEvent)
-				inc.GET("/:id/alerts", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetAlerts)
-				inc.GET("/:id/metrics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetMetrics)
-
-				// 根因分析
-				inc.POST("/root-cause", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateRootCause))
-				inc.GET("/:id/root-cause", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetRootCause)
-				inc.POST("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
-				inc.PUT("/:id/root-cause", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateRootCause)
-
-				// 影响评估
-				inc.POST("/impact-assessment", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateImpactAssessment))
-				inc.GET("/:id/impact-assessment", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetImpactAssessment)
-				inc.PUT("/:id/impact-assessment", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateImpactAssessment)
-
-				// 事件分类
-				inc.POST("/classification", middleware.RequirePermission("incident", "write"), withIncidentIDParam(config.IncidentHandler.UpdateClassification))
-				inc.GET("/:id/classification", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetClassification)
-				inc.PUT("/:id/classification", middleware.RequirePermission("incident", "write"), config.IncidentHandler.UpdateClassification)
-				inc.PUT("/:id/status", middleware.RequirePermission("incident", "write"), config.IncidentHandler.Update)
-
-				// 评论
-				inc.GET("/:id/comments", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetComments)
-				inc.POST("/:id/comments", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateComment)
-				inc.DELETE("/:id/comments/:commentId", middleware.RequirePermission("incident", "write"), config.IncidentHandler.DeleteComment)
-
-				// 监控
-				inc.POST("/monitoring", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetMonitoring)
-
-				// 告警管理
-				inc.POST("/alerts", middleware.RequirePermission("incident", "write"), config.IncidentHandler.CreateAlert)
-				inc.GET("/alerts/active", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetActiveAlerts)
-				inc.GET("/alerts/statistics", middleware.RequirePermission("incident", "read"), config.IncidentHandler.GetAlertStatistics)
-				inc.POST("/alerts/:id/acknowledge", middleware.RequirePermission("incident", "write"), config.IncidentHandler.AcknowledgeAlert)
-				inc.POST("/alerts/:id/resolve", middleware.RequirePermission("incident", "write"), config.IncidentHandler.ResolveAlert)
-			}
+			SetupIncidentRoutes(tenant.(*gin.RouterGroup), config.IncidentHandler)
 		}
 		if config.CMDBHandler != nil {
 			tenant.GET("/incidents/configuration-items", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCIs)
@@ -1069,31 +1009,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Problems (DDD) ====================
 		if config.ProblemHandler != nil {
-			problems := tenant.(*gin.RouterGroup).Group("/problems")
-			{
-				problems.GET("", middleware.RequirePermission("problem", "read"), config.ProblemHandler.List)
-				problems.POST("", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Create)
-				problems.GET("/stats", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetStats)
-				problems.GET("/trend", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetTrends)
-				problems.GET("/hotspots", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetHotspots)
-				problems.GET("/:id", middleware.RequirePermission("problem", "read"), config.ProblemHandler.Get)
-				problems.PUT("/:id", middleware.RequirePermission("problem", "write"), config.ProblemHandler.Update)
-				problems.DELETE("/:id", middleware.RequirePermission("problem", "delete"), config.ProblemHandler.Delete)
-				problems.POST("/:id/investigate", middleware.RequirePermission("problem", "write"), config.ProblemHandler.InvestigateProblem)
-				problems.PUT("/:id/root-cause", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateRootCause)
-				problems.PUT("/:id/solution", middleware.RequirePermission("problem", "write"), config.ProblemHandler.UpdateSolution)
-				problems.POST("/:id/close", middleware.RequirePermission("problem", "write"), config.ProblemHandler.CloseProblem)
-				problems.GET("/:id/sla", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemSLA)
-				problems.GET("/:id/comments", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetProblemComments)
-				problems.POST("/:id/comments", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddProblemComment)
-				// 关联管理
-				problems.GET("/:id/associations", middleware.RequirePermission("problem", "read"), config.ProblemHandler.GetAssociations)
-				problems.POST("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.AddAssociation)
-				problems.DELETE("/:id/associations", middleware.RequirePermission("problem", "write"), config.ProblemHandler.RemoveAssociation)
-				// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
-				if config.ProblemInvestigationHandler != nil {
-					problems.GET("/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
-				}
+			SetupProblemRoutes(tenant.(*gin.RouterGroup), config.ProblemHandler)
+			// 问题调查关联列表（前端契约：GET /api/v1/problems/:id/relationships）
+			if config.ProblemInvestigationHandler != nil {
+				tenant.(*gin.RouterGroup).GET("/problems/:id/relationships", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemRelationships)
 			}
 		}
 
@@ -1134,159 +1053,20 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Knowledge Base (DDD) ====================
 		if config.KnowledgeHandler != nil {
-			// New route structure: /api/v1/knowledge/articles
-			knowledgeGrp := tenant.(*gin.RouterGroup).Group("/knowledge")
-			{
-				// Articles
-				articles := knowledgeGrp.Group("/articles")
-				{
-					articles.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
-					articles.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
-					articles.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
-					articles.PUT("/:id", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UpdateArticle)
-					articles.DELETE("/:id", middleware.RequirePermission("knowledge", "delete"), config.KnowledgeHandler.DeleteArticle)
-					articles.POST("/:id/publish", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.PublishArticle)
-					articles.POST("/:id/unpublish", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.UnpublishArticle)
-					// 内容复核（L1 时效闭环）：确认内容仍然适用，解除「逾期未复核」过滤
-					articles.POST("/:id/review", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.MarkArticleReviewed)
-
-					// Comments
-					articles.GET("/:id/comments", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticleComments)
-					articles.POST("/:id/comments", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.AddArticleComment)
-				}
-
-				// Categories
-				knowledgeGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
-
-				// 知识分类可见性纳管（L0 权限边界）：控制哪些分类的知识仅授权角色可读
-				knowledgeGrp.GET("/categories/restricted", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.ListRestrictedCategories)
-				knowledgeGrp.POST("/categories/restricted", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.SetCategoryRestriction)
-
-				// Search
-				knowledgeGrp.POST("/search", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.SearchArticles)
-
-				// Recommendations
-				knowledgeGrp.GET("/recommendations", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecommendations)
-				knowledgeGrp.GET("/recent", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecentArticles)
-
-				// Stats
-				knowledgeGrp.GET("/stats", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetStats)
-			}
-
-			// Legacy route for backward compatibility: /api/v1/knowledge-articles/*
-			kbGrp := tenant.(*gin.RouterGroup).Group("/knowledge-articles")
-			{
-				kbGrp.GET("", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.ListArticles)
-				kbGrp.POST("", middleware.RequirePermission("knowledge", "write"), config.KnowledgeHandler.CreateArticle)
-				// 静态路由必须在动态路由 /:id 之前注册，否则 Gin 会将 "categories" 当作 :id 参数
-				kbGrp.GET("/categories", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetCategories)
-				kbGrp.GET("/:id", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetArticle)
-			}
+			SetupKnowledgeRoutes(tenant.(*gin.RouterGroup), config.KnowledgeHandler)
 		}
 
 		if config.SLAHandler != nil {
-			slaGrp := tenant.(*gin.RouterGroup).Group("/sla")
-			{
-				slaGrp.GET("", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
-				// SLA Definitions
-				slaGrp.GET("/stats", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAStats)
-				slaGrp.GET("/definitions", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
-				slaGrp.POST("/definitions", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
-				// 兼容旧路径：/sla/policies → /sla/definitions
-				slaGrp.GET("/policies", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListSLADefinitions)
-				slaGrp.POST("/policies", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateSLADefinition)
-				slaGrp.GET("/policies/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
-				slaGrp.PUT("/policies/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
-				slaGrp.DELETE("/policies/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
-
-				// 兼容旧路径：/sla/monitor → /sla/monitoring
-				slaGrp.POST("/monitor", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
-
-				slaGrp.GET("/definitions/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLADefinition)
-				slaGrp.PUT("/definitions/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateSLADefinition)
-				slaGrp.DELETE("/definitions/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteSLADefinition)
-
-				// SLA Alert Rules
-				slaGrp.POST("/alert-rules", middleware.RequirePermission("sla", "write"), config.SLAHandler.CreateAlertRule)
-				slaGrp.GET("/alert-rules", middleware.RequirePermission("sla", "read"), config.SLAHandler.ListAlertRules)
-				slaGrp.GET("/alert-rules/:id", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertRule)
-				slaGrp.PUT("/alert-rules/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateAlertRule)
-				slaGrp.DELETE("/alert-rules/:id", middleware.RequirePermission("sla", "delete"), config.SLAHandler.DeleteAlertRule)
-
-				// SLA Metrics
-				slaGrp.GET("/metrics", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMetrics)
-
-				// SLA Violations
-				slaGrp.GET("/violations", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAViolations)
-				slaGrp.PUT("/violations/:id", middleware.RequirePermission("sla", "write"), config.SLAHandler.UpdateViolationStatus)
-
-				// SLA Monitoring
-				slaGrp.POST("/monitoring", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAMonitoring)
-				// SLA 绩效按维度聚合（serviceType / priority），供监控大屏绩效表格使用
-				slaGrp.GET("/performance", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAPerformance)
-
-				// SLA Compliance Check
-				slaGrp.POST("/check-compliance/:ticketId", middleware.RequirePermission("sla", "read"), config.SLAHandler.CheckSLACompliance)
-
-				// SLA Alert History
-				slaGrp.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertHistory)
-				slaGrp.GET("/compliance-report", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAComplianceReport)
-			}
-
+			SetupSLARoutes(tenant.(*gin.RouterGroup), config.SLAHandler)
 			// SLA 模板（开箱即用预置模板）
 			if config.SLATemplateHandler != nil {
-				config.SLATemplateHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+				SetupSLATemplateRoutes(tenant.(*gin.RouterGroup), config.SLATemplateHandler)
 			}
 		}
 
 		// ==================== AI & Analytics (DDD) ====================
 		if config.AIHandler != nil {
-			aiGrp := tenant.(*gin.RouterGroup).Group("/ai")
-			{
-				aiGrp.POST("/chat", middleware.RequirePermission("ai", "read"), config.AIHandler.Chat)
-				aiGrp.POST("/chat/stream", middleware.RequirePermission("ai", "read"), config.AIHandler.ChatStream)
-				aiGrp.GET("/conversations", middleware.RequirePermission("ai", "read"), config.AIHandler.ListConversations)
-				aiGrp.GET("/conversations/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetConversation)
-				aiGrp.DELETE("/conversations/:id", middleware.RequirePermission("ai", "write"), config.AIHandler.DeleteConversation)
-				aiGrp.GET("/analysis-results", middleware.RequirePermission("ai", "read"), config.AIHandler.ListAIAnalysisResults)
-				aiGrp.GET("/analysis-results/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetAIAnalysisResult)
-				aiGrp.DELETE("/analysis-results/:id", middleware.RequirePermission("ai", "write"), config.AIHandler.DeleteAIAnalysisResult)
-				aiGrp.POST("/analytics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetDeepAnalytics)
-				aiGrp.POST("/predictions", middleware.RequirePermission("ai", "read"), config.AIHandler.GetTrendPrediction)
-				aiGrp.POST("/tickets/:id/analyze", middleware.RequirePermission("ai", "read"), config.AIHandler.AnalyzeTicket)
-				aiGrp.POST("/incidents/:id/analyze",
-					middleware.RequirePermission("ai", "read"),
-					middleware.RequirePermission("incident", "read"),
-					config.AIHandler.AnalyzeIncident,
-				)
-				aiGrp.POST("/feedback", middleware.RequirePermission("ai", "write"), config.AIHandler.SaveFeedback)
-				aiGrp.POST("/audit", middleware.RequirePermission("ai", "write"), config.AIHandler.RecordAudit)
-				aiGrp.GET("/metrics", middleware.RequirePermission("ai", "read"), config.AIHandler.GetMetrics)
-				// AI 评估报告（按场景有用率 / 置信度校准 / 平台 LLM 统计）
-				aiGrp.GET("/evaluation", middleware.RequirePermission("ai", "read"), config.AIHandler.GetEvaluation)
-				// AI 审计日志（ai_audit 记录分页查询）
-				aiGrp.GET("/audit-logs", middleware.RequirePermission("ai", "read"), config.AIHandler.GetAuditLogs)
-				aiGrp.POST("/triage", middleware.RequirePermission("ai", "read"), config.AIHandler.Triage)
-				// RAG endpoints
-				// Bug fix (2026-08-15): handler KnowledgeSearch uses ShouldBindJSON
-				// to read {query,limit,type} from a request body, but the route was
-				// registered as GET. Gin would refuse to parse a body on GET, so the
-				// endpoint always returned ParamError. Promote to POST to match the
-				// handler's binding contract.
-				aiGrp.POST("/rag/search", middleware.RequirePermission("ai", "read"), config.AIHandler.KnowledgeSearch)
-				// AI 工单智能创建
-				aiGrp.POST("/ticket/create", middleware.RequirePermission("ticket", "create"), config.AIHandler.CreateTicketByAI)
-			}
-
-			agentGrp := tenant.(*gin.RouterGroup).Group("/agent")
-			{
-				agentGrp.GET("/tools", middleware.RequirePermission("ai", "read"), config.AIHandler.ListTools)
-				agentGrp.POST("/tools/execute", middleware.RequirePermission("ai", "read"), config.AIHandler.ExecuteTool)
-				agentGrp.GET("/tools/:id", middleware.RequirePermission("ai", "read"), config.AIHandler.GetToolInvocation)
-				// 审批人待办列表：GET /api/v1/agent/tools/invocations?state=pending
-				agentGrp.GET("/tools/invocations", middleware.RequirePermission("ai", "read"), config.AIHandler.ListToolInvocations)
-				agentGrp.POST("/tools/:id/approve", middleware.RequirePermission("ai", "write"), config.AIHandler.ApproveTool)
-			}
+			SetupAIRoutes(tenant.(*gin.RouterGroup), config.AIHandler)
 		}
 
 		// ==================== Skill Registry v1 ====================
