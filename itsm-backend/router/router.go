@@ -1066,24 +1066,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Service Catalog & Requests (DDD) ====================
 		if config.ServiceCatalogHandler != nil {
-			tenant.(*gin.RouterGroup).GET("/service-catalog", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
-
-			sc := tenant.(*gin.RouterGroup).Group("/service-catalogs")
-			{
-				sc.GET("", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
-				sc.POST("", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Create)
-				sc.GET("/search", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Search)
-				sc.GET("/stats", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Stats)
-				sc.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
-				sc.PUT("/:id", middleware.RequirePermission("service_catalog", "write"), config.ServiceCatalogHandler.Update)
-				sc.DELETE("/:id", middleware.RequirePermission("service_catalog", "delete"), config.ServiceCatalogHandler.Delete)
-			}
-			// 简化的服务项路由
-			scServices := tenant.(*gin.RouterGroup).Group("/service-catalog-services")
-			{
-				scServices.GET("", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.List)
-				scServices.GET("/:id", middleware.RequirePermission("service_catalog", "read"), config.ServiceCatalogHandler.Get)
-			}
+			SetupServiceCatalogRoutes(tenant.(*gin.RouterGroup), config.ServiceCatalogHandler)
 		}
 
 		if config.ServiceRequestHandler != nil {
@@ -1147,43 +1130,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Changes (DDD) ====================
 		if config.ChangeHandler != nil {
-			changes := tenant.(*gin.RouterGroup).Group("/changes")
-			{
-				changes.GET("", middleware.RequirePermission("change", "read"), config.ChangeHandler.ListChanges)
-				changes.POST("", middleware.RequirePermission("change", "write"), config.ChangeHandler.CreateChange)
-				changes.GET("/stats", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetStats)
-				changes.GET("/:id", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetChange)
-				changes.PUT("/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateChange)
-				changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeleteChange)
-				changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitChange)
-				changes.POST("/:id/assign", middleware.RequirePermission("change", "write"), config.ChangeHandler.AssignChange)
-				// 状态转换：approve/reject 需要独立审批权限，rollback 需要独立回滚权限（H-15 修复：禁止 write 权限泛化为审批/回滚）
-				changes.POST("/:id/approve", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/reject", middleware.RequirePermission("change", "approve"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/schedule", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/start", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/close", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), config.ChangeHandler.TransitionStatus)
-				changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), config.ChangeHandler.TransitionStatus)
-				// 审批
-				changes.GET("/:id/approvals", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovals)
-				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
-				changes.GET("/:id/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovalSummary)
-				// 风险评估（同时支持 /risk 和 /risk-assessment 两个路径）
-				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
-				changes.GET("/:id/risk", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
-				changes.PUT("/:id/risk", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdateRisk)
-				changes.GET("/:id/cmdb-impact", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCMDBImpactSummary)
-				// 日历视图
-				changes.GET("/calendar", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetCalendar)
-				// PIR (Post-Implementation Review)
-				changes.GET("/pirs", middleware.RequirePermission("change", "read"), config.ChangeHandler.ListPIRs)
-				changes.GET("/:id/pir", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetPIR)
-				changes.POST("/:id/pir", middleware.RequirePermission("change", "write"), config.ChangeHandler.CreatePIR)
-				changes.PUT("/pir/:id", middleware.RequirePermission("change", "write"), config.ChangeHandler.UpdatePIR)
-				changes.DELETE("/pir/:id", middleware.RequirePermission("change", "delete"), config.ChangeHandler.DeletePIR)
-			}
+			SetupChangeRoutes(tenant.(*gin.RouterGroup), config.ChangeHandler)
 		}
 
 		// ==================== CAB (Change Advisory Board) ====================
