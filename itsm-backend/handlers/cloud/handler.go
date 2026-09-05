@@ -5,7 +5,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -13,26 +13,20 @@ import (
 
 // Handler 云服务HTTP处理器
 type Handler struct {
-	cloudService *service.CloudService
+	cloudService Service
 	logger      *zap.SugaredLogger
 }
 
 // NewHandler creates a new cloud handler
-func NewHandler(cloudService *service.CloudService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(cloudService Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{cloudService: cloudService, logger: logger}
 }
 
-// getTenantID 从上下文获取租户ID
-func (h *Handler) getTenantID(c *gin.Context) int {
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		return 0
-	}
-	id, ok := tenantID.(int)
-	if !ok {
-		return 0
-	}
-	return id
+// getTenantID 从上下文获取租户ID；缺失时统一响应 401（fail-closed）。
+// 历史实现读裸 "tenant_id" key 且缺失时静默返回 0（fail-open），已按
+// middleware.TenantIDOrUnauthorized 统一语义修正。
+func (h *Handler) getTenantID(c *gin.Context) (int, bool) {
+	return middleware.TenantIDOrUnauthorized(c)
 }
 
 // ===================================
@@ -49,9 +43,8 @@ func (h *Handler) getTenantID(c *gin.Context) int {
 // @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
 // @Router /api/v1/cloud/accounts [post]
 func (h *Handler) CreateCloudAccount(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -82,9 +75,8 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
 // @Router /api/v1/cloud/accounts/{id} [get]
 func (h *Handler) GetCloudAccount(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -116,9 +108,8 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
 // @Router /api/v1/cloud/accounts/{id} [put]
 func (h *Handler) UpdateCloudAccount(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -156,9 +147,8 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cloud/accounts/{id} [delete]
 func (h *Handler) DeleteCloudAccount(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -193,9 +183,8 @@ func (h *Handler) DeleteCloudAccount(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudAccountListResponse}
 // @Router /api/v1/cloud/accounts [get]
 func (h *Handler) ListCloudAccounts(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -242,9 +231,8 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
 // @Router /api/v1/cloud/services [post]
 func (h *Handler) CreateCloudService(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -275,9 +263,8 @@ func (h *Handler) CreateCloudService(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
 // @Router /api/v1/cloud/services/{id} [get]
 func (h *Handler) GetCloudService(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -309,9 +296,8 @@ func (h *Handler) GetCloudService(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
 // @Router /api/v1/cloud/services/{id} [put]
 func (h *Handler) UpdateCloudService(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -349,9 +335,8 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cloud/services/{id} [delete]
 func (h *Handler) DeleteCloudService(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -389,9 +374,8 @@ func (h *Handler) DeleteCloudService(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudServiceListResponse}
 // @Router /api/v1/cloud/services [get]
 func (h *Handler) ListCloudServices(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -438,9 +422,8 @@ func (h *Handler) ListCloudServices(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
 // @Router /api/v1/cloud/resources [post]
 func (h *Handler) CreateCloudResource(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -471,9 +454,8 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
 // @Router /api/v1/cloud/resources/{id} [get]
 func (h *Handler) GetCloudResource(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -505,9 +487,8 @@ func (h *Handler) GetCloudResource(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
 // @Router /api/v1/cloud/resources/{id} [put]
 func (h *Handler) UpdateCloudResource(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -545,9 +526,8 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/cloud/resources/{id} [delete]
 func (h *Handler) DeleteCloudResource(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -586,9 +566,8 @@ func (h *Handler) DeleteCloudResource(c *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.CloudResourceListResponse}
 // @Router /api/v1/cloud/resources [get]
 func (h *Handler) ListCloudResources(c *gin.Context) {
-	tenantID := h.getTenantID(c)
-	if tenantID == 0 {
-		common.Fail(c, 1001, "无法获取租户信息")
+	tenantID, ok := h.getTenantID(c)
+	if !ok {
 		return
 	}
 
