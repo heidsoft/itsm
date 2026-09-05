@@ -397,27 +397,20 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		return nil, fmt.Errorf("failed to list changes: %w", err)
 	}
 
-	// 构建响应列表
-	var changeResponses []dto.ChangeResponse
-	for _, changeEntity := range changes {
-		// 获取创建人信息
-		creator, err := s.client.User.Query().Where(user.IDEQ(changeEntity.CreatedBy), user.TenantIDEQ(tenantID)).Only(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to get creator info", "error", err, "user_id", changeEntity.CreatedBy)
-		}
+	// 批量预取创建人/处理人姓名：原实现在循环内逐条查 User（N+1，
+	// 每页 100 条会产生 1+200 次查询），改为一次 IN 查询 + 内存映射。
+	userNameByID := s.loadUserNames(ctx, tenantID, changes)
 
-		// 获取处理人信息
+	// 构建响应列表
+	changeResponses := make([]dto.ChangeResponse, 0, len(changes))
+	for _, changeEntity := range changes {
+		createdByName := userNameByID[changeEntity.CreatedBy]
+
 		var assigneeName *string
 		if changeEntity.AssigneeID > 0 {
-			assignee, err := s.client.User.Query().Where(user.IDEQ(changeEntity.AssigneeID), user.TenantIDEQ(tenantID)).Only(ctx)
-			if err == nil {
-				assigneeName = &assignee.Name
+			if name, ok := userNameByID[changeEntity.AssigneeID]; ok {
+				assigneeName = &name
 			}
-		}
-
-		createdByName := ""
-		if creator != nil {
-			createdByName = creator.Name
 		}
 		response := dto.ChangeResponse{
 			ID:                 changeEntity.ID,
@@ -468,6 +461,46 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		PageSize:   pageSize,
 		TotalPages: totalPages,
 	}, nil
+}
+
+// loadUserNames 批量加载给定变更列表涉及的创建人/处理人姓名。
+// 单次 IN 查询替代循环内逐条查询（N+1）；查询失败时降级为空映射，
+// 仅影响姓名展示，不阻断列表返回。
+func (s *ChangeService) loadUserNames(ctx context.Context, tenantID int, changes []*ent.Change) map[int]string {
+	names := make(map[int]string)
+	if len(changes) == 0 {
+		return names
+	}
+
+	ids := make([]int, 0, len(changes)*2)
+	seen := make(map[int]struct{}, len(changes)*2)
+	for _, c := range changes {
+		for _, id := range []int{c.CreatedBy, c.AssigneeID} {
+			if id <= 0 {
+				continue
+			}
+			if _, dup := seen[id]; dup {
+				continue
+			}
+			seen[id] = struct{}{}
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return names
+	}
+
+	users, err := s.client.User.Query().
+		Where(user.IDIn(ids...), user.TenantIDEQ(tenantID)).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("Failed to batch load user names", "error", err, "tenant_id", tenantID, "user_count", len(ids))
+		return names
+	}
+	for _, u := range users {
+		names[u.ID] = u.Name
+	}
+	return names
 }
 
 // UpdateChange 更新变更

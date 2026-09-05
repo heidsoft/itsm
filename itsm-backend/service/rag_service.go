@@ -340,14 +340,27 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 				return nil, fmt.Errorf("vector connector search: %w", err)
 			}
 		} else {
+			// 批量预取命中文章：原实现在循环内逐条查 KnowledgeArticle
+			// （N+1，TopK 20 即 21 次查询），改为一次 IN 查询 + 内存映射，
+			// 过滤条件（tenant/published/未删除）与原逐条查询完全一致。
+			objIDs := make([]int, 0, len(response.Results))
+			for _, hit := range response.Results {
+				id, err := strconv.Atoi(hit.ID)
+				if err != nil {
+					continue
+				}
+				objIDs = append(objIDs, id)
+			}
+			articles := r.loadArticlesByIDs(ctx, tenantID, objIDs)
+
 			results := make([]map[string]any, 0, len(response.Results))
 			for _, hit := range response.Results {
 				objID, err := strconv.Atoi(hit.ID)
 				if err != nil {
 					continue
 				}
-				a, err := r.client.KnowledgeArticle.Query().Where(ka.IDEQ(objID), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).Only(ctx)
-				if err != nil {
+				a, ok := articles[objID]
+				if !ok {
 					continue
 				}
 				// 可引用性（L0 权限 + L1 时效）：向量索引里可能残留受限分类文章
@@ -451,6 +464,27 @@ func (r *RAGService) articleReadable(ctx context.Context, tenantID int, a *ent.K
 		viewer = knowledgeaccess.Viewer{}
 	}
 	return r.knowledgeGuard.CanReadCategory(ctx, tenantID, viewer, a.Category, a.AuthorID)
+}
+
+// loadArticlesByIDs 批量加载可检索文章（单次 IN 查询替代循环内逐条查询）。
+// 过滤条件与历史逐条查询一致：租户隔离 + 未软删 + 已发布。
+// 查询失败降级为空映射（检索返回空结果而非报错）。
+func (r *RAGService) loadArticlesByIDs(ctx context.Context, tenantID int, ids []int) map[int]*ent.KnowledgeArticle {
+	byID := make(map[int]*ent.KnowledgeArticle, len(ids))
+	if len(ids) == 0 {
+		return byID
+	}
+	articles, err := r.client.KnowledgeArticle.Query().
+		Where(ka.IDIn(ids...), ka.TenantIDEQ(tenantID), ka.DeletedAtIsNil(), ka.IsPublished(true)).
+		All(ctx)
+	if err != nil {
+		r.logger.Warnw("RAG: batch load articles failed", "error", err, "tenant_id", tenantID, "count", len(ids))
+		return byID
+	}
+	for _, a := range articles {
+		byID[a.ID] = a
+	}
+	return byID
 }
 
 // articleCitable 综合判定一篇文章是否可被 RAG 引用：L0 分类可见性 + L1 时效性。
