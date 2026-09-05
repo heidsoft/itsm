@@ -26,6 +26,8 @@ Thumbs.db
 bin/
 /pkg/
 vendor/
+!itsm-backend/handlers/vendor/
+!itsm-backend/handlers/vendor/**
 !itsm-backend/ent/vendor/
 !itsm-backend/ent/vendor/**
 !itsm-backend/migrations/vendor/
@@ -216,6 +218,8 @@ itsm-backend/logs/
 itsm-frontend/.next/
 itsm-frontend/tests/e2e/venv/
 release/
+!itsm-backend/handlers/release/
+!itsm-backend/handlers/release/**
 
 # 防止再次误提交大文件/二进制
 /itsm-agent/itsm-agent
