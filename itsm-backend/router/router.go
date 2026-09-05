@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -115,117 +114,6 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 
 		c.Params = append(c.Params, gin.Param{Key: "id", Value: strconv.Itoa(incidentID)})
 		handler(c)
-	}
-}
-
-func defaultDashboardLayout() gin.H {
-	return gin.H{
-		"cols":             12,
-		"rows":             24,
-		"margin":           []int{16, 16},
-		"containerPadding": []int{16, 16},
-		"rowHeight":        80,
-		"isDraggable":      true,
-		"isResizable":      true,
-	}
-}
-
-func defaultDashboardWidgets() []gin.H {
-	return []gin.H{
-		{
-			"id":          "ticket_overview",
-			"type":        "metric",
-			"title":       "工单总览",
-			"description": "工单数量与状态概览",
-			"position":    gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
-			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "total", "unit": "个"},
-			"dataSource":  "tickets",
-			"isVisible":   true,
-		},
-		{
-			"id":          "ticket_trend",
-			"type":        "chart",
-			"title":       "工单趋势",
-			"description": "近期工单创建与解决趋势",
-			"position":    gin.H{"x": 3, "y": 0, "w": 6, "h": 4},
-			"config":      gin.H{"showTitle": true, "showBorder": true, "chartType": "line", "xAxis": "date", "yAxis": "count"},
-			"dataSource":  "ticket_trend",
-			"isVisible":   true,
-		},
-		{
-			"id":          "sla_status",
-			"type":        "progress",
-			"title":       "SLA 达成率",
-			"description": "服务级别协议履约情况",
-			"position":    gin.H{"x": 9, "y": 0, "w": 3, "h": 2},
-			"config":      gin.H{"showTitle": true, "showBorder": true, "metric": "slaCompliance", "unit": "%"},
-			"dataSource":  "sla",
-			"isVisible":   true,
-		},
-	}
-}
-
-func defaultDashboardConfig() gin.H {
-	now := time.Now().Format(time.RFC3339)
-	return gin.H{
-		"id":          1,
-		"name":        "默认仪表盘",
-		"description": "系统默认运维视图",
-		"isDefault":   true,
-		"isPublic":    false,
-		"layout":      defaultDashboardLayout(),
-		"widgets":     defaultDashboardWidgets(),
-		"filters": []gin.H{
-			{
-				"id":         "time_range",
-				"name":       "时间范围",
-				"type":       "select",
-				"field":      "timeRange",
-				"options":    []gin.H{{"label": "最近7天", "value": "7d"}, {"label": "最近30天", "value": "30d"}},
-				"isRequired": false,
-				"isVisible":  true,
-			},
-		},
-		"permissions": []string{},
-		"createdBy":   0,
-		"updatedBy":   0,
-		"createdAt":   now,
-		"updatedAt":   now,
-		"shareSettings": gin.H{
-			"isShared": false,
-		},
-	}
-}
-
-func defaultDashboardTemplate() gin.H {
-	return gin.H{
-		"id":            1,
-		"name":          "ITSM 运营总览",
-		"description":   "适用于服务台、SLA 与工单趋势的默认模板",
-		"category":      "operations",
-		"tags":          []string{"itsm", "ticket", "sla"},
-		"layout":        defaultDashboardLayout(),
-		"widgets":       defaultDashboardWidgets(),
-		"filters":       []gin.H{},
-		"isPublic":      true,
-		"downloadCount": 0,
-	}
-}
-
-func dashboardWidgetByID(widgetID string) gin.H {
-	for _, widget := range defaultDashboardWidgets() {
-		if widget["id"] == widgetID {
-			return widget
-		}
-	}
-	return gin.H{
-		"id":         widgetID,
-		"type":       "metric",
-		"title":      widgetID,
-		"position":   gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
-		"config":     gin.H{"showTitle": true, "showBorder": true},
-		"dataSource": widgetID,
-		"isVisible":  true,
 	}
 }
 
@@ -864,100 +752,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== System Configs ====================
 		if config.SystemConfigHandler != nil {
-			sysConfigs := tenant.(*gin.RouterGroup).Group("/system-configs")
-			{
-				// 配置管理
-				sysConfigs.GET("", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.ListConfigs)
-				sysConfigs.GET("/init", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.InitDefaultConfigs)
-				sysConfigs.GET("/:id", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.GetConfig)
-				sysConfigs.GET("/key/:key", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.GetConfigByKey)
-				sysConfigs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigHandler.UpdateConfig)
-				sysConfigs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigHandler.BatchUpdateConfigs)
-
-				// 系统状态
-				sysConfigs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
-					var m runtime.MemStats
-					runtime.ReadMemStats(&m)
-
-					var uptime string
-					if !config.AppStartTime.IsZero() {
-						uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
-					}
-
-					c.JSON(200, gin.H{
-						"cpu": gin.H{
-							"usage": 0,
-							"cores": runtime.NumCPU(),
-						},
-						"memory": gin.H{
-							"used":  m.Alloc / 1024 / 1024,
-							"total": m.Sys / 1024 / 1024,
-							"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-						},
-						"goroutines": runtime.NumGoroutine(),
-						"startTime":  config.AppStartTime,
-						"uptime":     uptime,
-						"timestamp":  time.Now(),
-					})
-				})
-			}
-
-			// P1-01 别名：/system/config → 系统状态（前端默认 fetch 路径）
-			sysRoot := tenant.(*gin.RouterGroup).Group("/system")
-			{
-				// 兼容旧路径：/configs → /system-configs
-				configs := tenant.(*gin.RouterGroup).Group("/configs")
-				{
-					configs.GET("", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.ListConfigs)
-					configs.GET("/init", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.InitDefaultConfigs)
-					configs.GET("/:id", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.GetConfig)
-					configs.GET("/key/:key", middleware.RequirePermission("config", "read"), config.SystemConfigHandler.GetConfigByKey)
-					configs.PUT("/:id", middleware.RequirePermission("config", "update"), config.SystemConfigHandler.UpdateConfig)
-					configs.PUT("/batch", middleware.RequirePermission("config", "update"), config.SystemConfigHandler.BatchUpdateConfigs)
-					configs.GET("/status", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
-						var m runtime.MemStats
-						runtime.ReadMemStats(&m)
-
-						var uptime string
-						if !config.AppStartTime.IsZero() {
-							uptime = time.Since(config.AppStartTime).Truncate(time.Second).String()
-						}
-
-						c.JSON(200, gin.H{
-							"cpu": gin.H{
-								"usage": 0,
-								"cores": runtime.NumCPU(),
-							},
-							"memory": gin.H{
-								"used":  m.Alloc / 1024 / 1024,
-								"total": m.Sys / 1024 / 1024,
-								"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-							},
-							"goroutines": runtime.NumGoroutine(),
-							"startTime":  config.AppStartTime,
-							"uptime":     uptime,
-							"timestamp":  time.Now(),
-						})
-					})
-				}
-
-				sysRoot.GET("/config", middleware.RequirePermission("config", "read"), func(c *gin.Context) {
-					c.JSON(200, gin.H{
-						"status":    "ok",
-						"version":   "1.6.8",
-						"timestamp": time.Now(),
-					})
-				})
-
-				// Tenant settings (current tenant — uses auth context)
-				sysRoot.GET("/settings", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenantSettings)
-				sysRoot.PUT("/settings", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantSettings)
-			}
-
-			// 向量存储（RAG）状态与连通性诊断：/api/v1/system/vector-store
-			if config.VectorStoreHandler != nil {
-				config.VectorStoreHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
-			}
+			SetupSystemConfigRoutes(tenant.(*gin.RouterGroup), config.SystemConfigHandler, config.TenantHandler, config.VectorStoreHandler, config.AppStartTime)
 		}
 
 		// ==================== Approval Chains ====================
@@ -979,32 +774,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		if config.ServiceRequestHandler != nil {
-			sr := tenant.(*gin.RouterGroup).Group("/service-requests")
-			{
-				sr.POST("", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Create)
-				sr.GET("", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.List)
-				sr.GET("/me", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.List)
-				sr.GET("/approvals/pending", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListPending)
-				sr.GET("/:id", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.Get)
-				sr.GET("/:id/approvals", middleware.RequirePermission("service_request", "read"), config.ServiceRequestHandler.ListApprovals)
-				sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.Update)
-				sr.PUT("/:id/status", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.UpdateStatus)
-				sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), config.ServiceRequestHandler.Delete)
-				sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
-				sr.POST("/:id/approvals", middleware.RequirePermission("service_request", "write"), config.ServiceRequestHandler.ApplyApproval)
-			}
-
-			// Provisioning routes
-			if config.ProvisioningHandler != nil {
-				sr.POST("/:id/provision", middleware.RequirePermission("service_request", "write"), config.ProvisioningHandler.StartProvisioning)
-				sr.GET("/:id/provisioning-tasks", middleware.RequirePermission("service_request", "read"), config.ProvisioningHandler.ListProvisioningTasks)
-			}
-
-			// Provisioning task routes (separate path)
-			provisioning := tenant.(*gin.RouterGroup).Group("/provisioning-tasks")
-			{
-				provisioning.POST("/:id/execute", middleware.RequirePermission("service_request", "write"), config.ProvisioningHandler.ExecuteProvisioningTask)
-			}
+			SetupServiceRequestRoutes(tenant.(*gin.RouterGroup), config.ServiceRequestHandler, config.ProvisioningHandler)
 		}
 
 		// ==================== Problems (DDD) ====================
@@ -1303,38 +1073,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，
 		// 统一复用已 seeded 且已赋权运营角色的 problem 权限，避免注册后全员 403。
 		if config.ProblemInvestigationHandler != nil {
-			problemInvestigation := tenant.(*gin.RouterGroup).Group("/problem-investigation")
-			{
-				// 问题调查管理
-				problemInvestigation.POST("/investigations", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemInvestigation)
-				problemInvestigation.GET("/investigations/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemInvestigation)
-				problemInvestigation.PUT("/investigations/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateProblemInvestigation)
-
-				// 调查步骤管理
-				problemInvestigation.POST("/steps", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateInvestigationStep)
-				problemInvestigation.PUT("/steps/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateInvestigationStep)
-				// Gin 路由树不允许同一位置出现不同参数名（:id vs :investigation_id 会 panic），
-				// 统一使用 :id，与上方 /investigations/:id 保持一致。
-				problemInvestigation.GET("/investigations/:id/steps", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetInvestigationSteps)
-
-				// 根本原因分析
-				problemInvestigation.POST("/root-cause-analysis", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateRootCauseAnalysis)
-				problemInvestigation.PUT("/root-cause-analysis/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateRootCauseAnalysis)
-
-				// 解决方案管理
-				problemInvestigation.POST("/solutions", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemSolution)
-				problemInvestigation.PUT("/solutions/:id", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.UpdateProblemSolution)
-				problemInvestigation.GET("/problems/:id/solutions", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemSolutions)
-
-				// 问题调查摘要
-				problemInvestigation.GET("/problems/:id/summary", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemInvestigationSummary)
-			}
-
-			// 关联管理与知识沉淀（前端契约：/api/v1/problem-relationships、/api/v1/problem-knowledge-articles）
-			problemInvestigationExtra := tenant.(*gin.RouterGroup)
-			problemInvestigationExtra.POST("/problem-relationships", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateProblemRelationship)
-			problemInvestigationExtra.POST("/problem-knowledge-articles", middleware.RequirePermission("problem", "write"), config.ProblemInvestigationHandler.CreateKnowledgeArticle)
-			problemInvestigationExtra.GET("/problem-knowledge-articles/problems/:id", middleware.RequirePermission("problem", "read"), config.ProblemInvestigationHandler.GetProblemKnowledgeArticles)
+			SetupProblemInvestigationRoutes(tenant.(*gin.RouterGroup), config.ProblemInvestigationHandler)
 		}
 
 		// ==================== BPMN ====================
@@ -1376,161 +1115,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		if config.DashboardHandler != nil {
-			dashboard := tenant.(*gin.RouterGroup).Group("/dashboard")
-			{
-				// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
-				dashboard.GET("", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetOverview)
-				dashboard.GET("/overview", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetOverview)
-				dashboard.GET("/config", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, defaultDashboardConfig())
-				})
-				dashboard.POST("/config", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
-					common.Success(c, gin.H{"success": true})
-				})
-				dashboard.GET("/layout", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, defaultDashboardLayout())
-				})
-				dashboard.POST("/layout", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
-					common.Success(c, gin.H{"success": true})
-				})
-				dashboard.GET("/widgets/available", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, defaultDashboardWidgets())
-				})
-				dashboard.POST("/widgets", middleware.RequirePermission("widget", "create"), func(c *gin.Context) {
-					widget := dashboardWidgetByID("custom_widget")
-					var payload map[string]interface{}
-					if err := c.ShouldBindJSON(&payload); err == nil {
-						for key, value := range payload {
-							widget[key] = value
-						}
-					}
-					if widget["id"] == nil || widget["id"] == "" {
-						widget["id"] = "custom_widget"
-					}
-					common.Success(c, gin.H{"widget": widget})
-				})
-				dashboard.GET("/widgets/:widget_id/data", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
-				})
-				dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
-					common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
-				})
-				dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("widget", "update"), func(c *gin.Context) {
-					widget := dashboardWidgetByID(c.Param("widget_id"))
-					var payload map[string]interface{}
-					if err := c.ShouldBindJSON(&payload); err == nil {
-						for key, value := range payload {
-							widget[key] = value
-						}
-					}
-					common.Success(c, gin.H{"widget": widget})
-				})
-				dashboard.DELETE("/widgets/:widget_id", middleware.RequirePermission("widget", "delete"), func(c *gin.Context) {
-					common.Success(c, gin.H{"success": true})
-				})
-				dashboard.GET("/charts/:chart_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, gin.H{
-						"labels":   []string{},
-						"datasets": []gin.H{{"label": c.Param("chart_type"), "data": []int{}}},
-					})
-				})
-				dashboard.GET("/realtime/:data_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, gin.H{
-						"type":      c.Param("data_type"),
-						"data":      gin.H{},
-						"timestamp": time.Now().Format(time.RFC3339),
-					})
-				})
-				dashboard.GET("/stats", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
-				if config.TicketHandler != nil {
-					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.TicketHandler.GetTicketStats)
-				} else {
-					dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
-				}
-				dashboard.GET("/stats/users", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetUserStats)
-				dashboard.GET("/stats/system", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSystemStats)
-				dashboard.GET("/kpi-metrics", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetKPIMetrics)
-				dashboard.GET("/metrics/performance", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, gin.H{
-						"loadTime":      0,
-						"renderTime":    0,
-						"dataFetchTime": 0,
-						"widgetCount":   len(defaultDashboardWidgets()),
-						"memoryUsage":   0,
-					})
-				})
-				dashboard.GET("/metrics/usage", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, gin.H{
-						"totalViews":         0,
-						"uniqueUsers":        0,
-						"avgSessionDuration": 0,
-						"mostUsedWidgets":    []gin.H{},
-						"peakUsageHours":     []int{},
-					})
-				})
-				// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
-				dashboard.GET("/metrics", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
-				dashboard.GET("/ticket-trend", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
-				dashboard.GET("/incident-distribution", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetIncidentDistribution)
-				dashboard.GET("/sla-data", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSLAData)
-				dashboard.GET("/satisfaction-data", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSatisfactionData)
-				dashboard.GET("/quick-actions", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetQuickActions)
-				dashboard.GET("/recent-activities", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetRecentActivities)
-				dashboard.GET("/reports", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
-				})
-				dashboard.POST("/reports/:report_type", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
-					common.Success(c, gin.H{
-						"id":         0,
-						"name":       c.Param("report_type"),
-						"type":       c.Param("report_type"),
-						"template":   gin.H{"title": c.Param("report_type"), "sections": []gin.H{}, "filters": []gin.H{}, "timeRange": "7d", "format": "html"},
-						"recipients": []string{},
-						"isActive":   false,
-						"createdBy":  0,
-						"createdAt":  time.Now().Format(time.RFC3339),
-						"updatedAt":  time.Now().Format(time.RFC3339),
-					})
-				})
-				dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
-				})
-				dashboard.POST("/export", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
-					common.Success(c, gin.H{"downloadUrl": ""})
-				})
-				dashboard.GET("/templates", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-					common.Success(c, []gin.H{defaultDashboardTemplate()})
-				})
-				dashboard.POST("/templates", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
-					common.Success(c, gin.H{"template": defaultDashboardTemplate()})
-				})
-				dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
-					common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
-				})
-			}
+			SetupDashboardRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.TicketHandler)
 		}
 
 		// ==================== Reports 报表 ====================
-		reports := tenant.(*gin.RouterGroup).Group("/reports")
-		{
-			reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
-				common.Success(c, gin.H{
-					"reports": []gin.H{
-						{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
-						{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
-						{"id": "problems", "name": "问题报表", "path": "/reports/problems"},
-						{"id": "changes", "name": "变更报表", "path": "/reports/changes"},
-						{"id": "sla", "name": "SLA报表", "path": "/reports/sla"},
-						{"id": "cmdb-quality", "name": "CMDB质量报表", "path": "/reports/cmdb-quality"},
-						{"id": "catalog-usage", "name": "服务目录使用报表", "path": "/reports/catalog-usage"},
-					},
-				})
-			})
-			reports.GET("/tickets", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetStats)
-			reports.GET("/incidents", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetIncidentDistribution)
-			reports.GET("/problems", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
-			reports.GET("/changes", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetTicketTrend)
-			reports.GET("/sla", middleware.RequirePermission("report", "read"), config.DashboardHandler.GetSLAData)
+		if config.DashboardHandler != nil {
+			SetupReportsRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler)
 		}
 
 		// ==================== Surveys 客户满意度调查 ====================
