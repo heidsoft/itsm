@@ -6,7 +6,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -14,12 +13,12 @@ import (
 
 // UserHandler HTTP handlers for user domain
 type UserHandler struct {
-	userService *service.UserService
+	userService Service
 	logger      *zap.SugaredLogger
 }
 
 // NewHandler creates a new UserHandler
-func NewHandler(userService *service.UserService, logger *zap.SugaredLogger) *UserHandler {
+func NewHandler(userService Service, logger *zap.SugaredLogger) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 		logger:      logger,
