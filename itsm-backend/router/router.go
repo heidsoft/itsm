@@ -48,7 +48,7 @@ import (
 	"itsm-backend/handlers/operations"
 	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
-	problemInvestigationHandler "itsm-backend/handlers/problem_investigation"
+	"itsm-backend/handlers/problem_investigation"
 	projectHandler "itsm-backend/handlers/project"
 	provisioningHandler "itsm-backend/handlers/provisioning"
 	rbacHandler "itsm-backend/handlers/rbac"
@@ -246,7 +246,7 @@ type RouterConfig struct {
 	AppStartTime time.Time
 
 	// Controllers
-	ProblemInvestigationHandler  *problemInvestigationHandler.Handler
+	ProblemInvestigationHandler  *problem_investigation.Handler
 	TicketHandler                *ticketHandler.Handler
 	TicketDependencyHandler      *ticketDependencyHandler.Handler
 	TicketCommentHandler         *ticketCommentHandler.Handler

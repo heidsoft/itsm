@@ -1,4 +1,4 @@
-package ticketworkflow
+package ticket_workflow
 
 import (
 	"database/sql"

@@ -3,7 +3,7 @@
 // 业务逻辑仍由 service.TicketWorkflowService 承载，本包只做参数解析与响应封装。
 // GetTicketWorkflowHistory 沿用旧实现的裸 SQL 查询（含 P1-08 的 NullString 修复），
 // 后续演进应下沉至 service 层。
-package ticketworkflow
+package ticket_workflow
 
 import (
 	"database/sql"

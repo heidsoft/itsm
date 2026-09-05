@@ -67,7 +67,7 @@ import (
 	notificationHandler "itsm-backend/handlers/notification"
 	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
-	probleminvestigation "itsm-backend/handlers/problem_investigation"
+	"itsm-backend/handlers/problem_investigation"
 	provisioningHandler "itsm-backend/handlers/provisioning"
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
@@ -90,7 +90,7 @@ import (
 	ticketTagHandler "itsm-backend/handlers/ticket_tag"
 	ticketTypeHandler "itsm-backend/handlers/ticket_type"
 	ticketViewHandler "itsm-backend/handlers/ticket_view"
-	ticketworkflow "itsm-backend/handlers/ticket_workflow"
+	"itsm-backend/handlers/ticket_workflow"
 	userHandler "itsm-backend/handlers/user"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
@@ -701,7 +701,7 @@ func NewApplication() *Application {
 	// Ticket Workflow Service & Handler（2026-09-02 迁移至 handlers/ticket_workflow）
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowService.SetConnectorManager(connectorManager)
-	ticketWorkflowHandler := ticketworkflow.NewHandler(ticketWorkflowService, database.GetRawDB(), sugar)
+	ticketWorkflowHandler := ticket_workflow.NewHandler(ticketWorkflowService, database.GetRawDB(), sugar)
 
 	// Ticket Automation Rule Controller (service 已于 131 行预创建并注入 V2)
 	// Set notification service dependencies
@@ -852,7 +852,7 @@ func NewApplication() *Application {
 	// 修复：此前该 controller 从未在 bootstrap 装配，导致 /problem-investigation 路由组整体未注册（404）
 	// 2026-09-02 迁移至 handlers/problem_investigation（域切片架构）
 	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), client, sugar)
-	problemInvestigationHandler := probleminvestigation.NewHandler(sugar, problemInvestigationService)
+	problemInvestigationHandler := problem_investigation.NewHandler(sugar, problemInvestigationService)
 
 	// Domain: Change (DDD)
 	changeRepo := change.NewEntRepository(client, database.GetRawDB())

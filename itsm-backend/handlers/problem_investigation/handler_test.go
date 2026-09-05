@@ -1,4 +1,4 @@
-package probleminvestigation
+package problem_investigation
 
 import (
 	"bytes"
