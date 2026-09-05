@@ -20,6 +20,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -35,10 +36,12 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	// Add auth middleware mock
+	// Add auth middleware mock（对齐生产链：TenantMiddleware 设置 TenantContextKey，
+	// handler 经 middleware.TenantIDOrUnauthorized 读取）
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", 1)
 		c.Set("tenant_id", 1)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Next()
 	})
 
@@ -1171,4 +1174,28 @@ func TestInferITILPractices(t *testing.T) {
 		got := inferITILPractices(summary)
 		assert.Empty(t, got)
 	})
+}
+
+// TestChangeHandler_MissingTenantContext_401 是租户 panic 修复的回归锚点：
+// 历史实现 c.Get("tenant_id").(int) 在上下文缺失时 panic（gin recovery 兜 500），
+// 修复后应 fail-closed 返回 401 且不触达 service。
+func TestChangeHandler_MissingTenantContext_401(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	repo := newMockRepository()
+	svc := NewService(repo, nil, zaptest.NewLogger(t).Sugar(), nil)
+	handler := NewHandler(svc)
+
+	r := gin.New()
+	r.Use(gin.Recovery())
+	// 不注入任何租户上下文（模拟中间件链缺失/绕过）
+	r.GET("/api/v1/changes/:id", handler.GetChange)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/changes/1", nil)
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.AuthFailedCode, resp.Code)
 }
