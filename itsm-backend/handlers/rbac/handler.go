@@ -17,14 +17,14 @@ import (
 
 // Handler HTTP handler for RBAC domain (role, permission, menu)
 type Handler struct {
-	roleService       *service.RoleService
-	permissionService *service.PermissionService
-	menuService      *service.MenuService
+	roleService       RoleService
+	permissionService PermissionService
+	menuService      MenuService
 	logger           *zap.SugaredLogger
 }
 
 // NewHandler creates a new RBAC handler
-func NewHandler(roleService *service.RoleService, permissionService *service.PermissionService, menuService *service.MenuService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(roleService RoleService, permissionService PermissionService, menuService MenuService, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
 		roleService:       roleService,
 		permissionService: permissionService,

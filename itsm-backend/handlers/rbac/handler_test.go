@@ -5,12 +5,14 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
@@ -21,6 +23,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -375,4 +378,212 @@ func TestAssignPermissions_RejectsCrossTenantPermission(t *testing.T) {
 	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20"))
 	require.Len(t, list.Roles, 1)
 	assert.NotContains(t, list.Roles[0].Permissions, "secret:read", "被拒绝的授权不得落库")
+}
+
+// =============================================================================
+// 薄层 mock 测试：补 handler 分支覆盖（不替代上方 SQLite 集成测试）。
+// 现有集成测试用真实 service + ent，此处用 mock 验证 handler 自身的
+// 401/400/哨兵分流等分支逻辑。
+// =============================================================================
+
+type mockRoleService struct{ mock.Mock }
+
+func (m *mockRoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
+	args := m.Called(ctx, req, tenantID)
+	if r, ok := args.Get(0).(*dto.RoleResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockRoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error) {
+	args := m.Called(ctx, id, tenantID)
+	if r, ok := args.Get(0).(*dto.RoleResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockRoleService) ListRoles(ctx context.Context, tenantID int, page, pageSize int, search string) ([]*dto.RoleResponse, int, error) {
+	args := m.Called(ctx, tenantID, page, pageSize, search)
+	if l, ok := args.Get(0).([]*dto.RoleResponse); ok {
+		return l, args.Int(1), args.Error(2)
+	}
+	return nil, 0, args.Error(2)
+}
+func (m *mockRoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
+	args := m.Called(ctx, id, req, tenantID)
+	if r, ok := args.Get(0).(*dto.RoleResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockRoleService) DeleteRole(ctx context.Context, id int, tenantID int) error {
+	args := m.Called(ctx, id, tenantID)
+	return args.Error(0)
+}
+func (m *mockRoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
+	args := m.Called(ctx, roleID, permissionIDs, tenantID)
+	return args.Error(0)
+}
+
+type mockPermissionService struct{ mock.Mock }
+
+func (m *mockPermissionService) CreatePermission(ctx context.Context, req *dto.CreatePermissionRequest, tenantID int) (*dto.PermissionResponse, error) {
+	args := m.Called(ctx, req, tenantID)
+	if r, ok := args.Get(0).(*dto.PermissionResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockPermissionService) ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error) {
+	args := m.Called(ctx, tenantID, resource)
+	if l, ok := args.Get(0).([]*dto.PermissionResponse); ok {
+		return l, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockPermissionService) InitDefaultPermissions(ctx context.Context, tenantID int) error {
+	args := m.Called(ctx, tenantID)
+	return args.Error(0)
+}
+
+type mockMenuService struct{ mock.Mock }
+
+func (m *mockMenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
+	args := m.Called(ctx, req, tenantID)
+	if r, ok := args.Get(0).(*dto.MenuDTO); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockMenuService) GetMenu(ctx context.Context, id int, tenantID int) (*dto.MenuDTO, error) {
+	args := m.Called(ctx, id, tenantID)
+	if r, ok := args.Get(0).(*dto.MenuDTO); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockMenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuDTO, error) {
+	args := m.Called(ctx, tenantID)
+	if l, ok := args.Get(0).([]*dto.MenuDTO); ok {
+		return l, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockMenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
+	args := m.Called(ctx, id, req, tenantID)
+	if r, ok := args.Get(0).(*dto.MenuDTO); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+func (m *mockMenuService) DeleteMenu(ctx context.Context, id int, tenantID int) error {
+	args := m.Called(ctx, id, tenantID)
+	return args.Error(0)
+}
+func (m *mockMenuService) GetUserMenus(ctx context.Context, userID int, tenantID int) (*dto.MenuTreeResponse, error) {
+	args := m.Called(ctx, userID, tenantID)
+	if r, ok := args.Get(0).(*dto.MenuTreeResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+// newMockRbacHandler 用 mock service 构造 handler。
+func newMockRbacHandler(t *testing.T, role *mockRoleService, perm *mockPermissionService, menu *mockMenuService) *Handler {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	return NewHandler(role, perm, menu, zaptest.NewLogger(t).Sugar())
+}
+
+func mockCtx(method, path, body string, tenantID int) (*httptest.ResponseRecorder, *gin.Context) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	if body != "" {
+		c.Request = httptest.NewRequest(method, path, bytes.NewBufferString(body))
+		c.Request.Header.Set("Content-Type", "application/json")
+	} else {
+		c.Request = httptest.NewRequest(method, path, nil)
+	}
+	if tenantID > 0 {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+	}
+	c.Set("user_id", 1)
+	c.Set("role", "admin")
+	c.Params = gin.Params{{Key: "id", Value: "1"}}
+	return w, c
+}
+
+func TestCreateRole_Success_Mock(t *testing.T) {
+	role := &mockRoleService{}
+	h := newMockRbacHandler(t, role, &mockPermissionService{}, &mockMenuService{})
+	role.On("CreateRole", mock.Anything, mock.Anything, 1).Return(&dto.RoleResponse{ID: 1, Code: "agent"}, nil)
+
+	w, c := mockCtx(http.MethodPost, "/api/v1/roles", `{"name":"Agent"}`, 1)
+	h.CreateRole(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.SuccessCode, resp.Code)
+	role.AssertExpectations(t)
+}
+
+func TestCreateRole_MissingTenant_Mock(t *testing.T) {
+	role := &mockRoleService{}
+	h := newMockRbacHandler(t, role, &mockPermissionService{}, &mockMenuService{})
+
+	w, c := mockCtx(http.MethodPost, "/api/v1/roles", `{"name":"Agent"}`, 0)
+	h.CreateRole(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	role.AssertNotCalled(t, "CreateRole")
+}
+
+func TestCreateRole_ValidationFailure_Mock(t *testing.T) {
+	role := &mockRoleService{}
+	h := newMockRbacHandler(t, role, &mockPermissionService{}, &mockMenuService{})
+
+	// 缺 name（binding required）→ 400
+	w, c := mockCtx(http.MethodPost, "/api/v1/roles", `{"code":"x"}`, 1)
+	h.CreateRole(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	role.AssertNotCalled(t, "CreateRole")
+}
+
+// 核心哨兵分流：跨租户权限分配 → 400 而非 500（R1 契约，与集成测试互补）。
+func TestAssignPermissions_CrossTenantSentinel_Mock(t *testing.T) {
+	role := &mockRoleService{}
+	h := newMockRbacHandler(t, role, &mockPermissionService{}, &mockMenuService{})
+	role.On("AssignPermissions", mock.Anything, 1, []int{99}, 1).Return(service.ErrPermissionNotInTenant)
+
+	w, c := mockCtx(http.MethodPost, "/api/v1/roles/1/permissions", `{"permissionIds":[99]}`, 1)
+	h.AssignPermissions(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ParamErrorCode, resp.Code)
+	role.AssertExpectations(t)
+}
+
+func TestGetUserMenus_Unauthenticated_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/users/me/menus", nil)
+	// 不设置 user_id → 401
+
+	h.GetUserMenus(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	menu.AssertNotCalled(t, "GetUserMenus")
+}
+
+// 直接引用哨兵，防止重构时误删错误语义。
+func TestSentinelExists(t *testing.T) {
+	assert.Error(t, service.ErrPermissionNotInTenant)
+	assert.True(t, errors.Is(service.ErrPermissionNotInTenant, service.ErrPermissionNotInTenant))
 }
