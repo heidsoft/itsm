@@ -41,9 +41,8 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 	app, err := h.service.CreateApplication(ctx.Request.Context(), req.Name, req.Code, req.Type, req.ProjectID, tenantID)
@@ -64,9 +63,8 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/applications [get]
 func (h *Handler) ListApplications(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 	apps, err := h.service.ListApplications(ctx.Request.Context(), tenantID)
@@ -100,9 +98,8 @@ func (h *Handler) CreateMicroservice(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 	svc, err := h.service.CreateMicroservice(ctx.Request.Context(), req.Name, req.Code, req.Language, req.Framework, req.ApplicationID, tenantID)
@@ -144,9 +141,8 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 
@@ -176,9 +172,8 @@ func (h *Handler) DeleteApplication(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 
@@ -200,9 +195,8 @@ func (h *Handler) DeleteApplication(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/applications/microservices [get]
 func (h *Handler) ListMicroservices(ctx *gin.Context) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 	microservices, err := h.service.ListMicroservices(ctx.Request.Context(), tenantID)
@@ -244,9 +238,8 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 
@@ -276,9 +269,8 @@ func (h *Handler) DeleteMicroservice(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
 		return
 	}
 

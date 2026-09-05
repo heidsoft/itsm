@@ -45,9 +45,8 @@ func NewHandler(service interface {
 // @Success 200 {object} common.Response{data=ent.Project}
 // @Router /api/v1/projects [post]
 func (h *Handler) CreateProject(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -85,9 +84,8 @@ func (h *Handler) CreateProject(c *gin.Context) {
 // @Success 200 {object} common.Response{data=ent.Project}
 // @Router /api/v1/projects/{id} [get]
 func (h *Handler) GetProject(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -121,9 +119,8 @@ func (h *Handler) GetProject(c *gin.Context) {
 // @Success 200 {object} common.Response{data=ent.Project}
 // @Router /api/v1/projects/{id} [put]
 func (h *Handler) UpdateProject(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -173,9 +170,8 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/projects/{id} [delete]
 func (h *Handler) DeleteProject(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -204,9 +200,8 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 // @Success 200 {object} common.Response{data=[]ent.Project}
 // @Router /api/v1/projects [get]
 func (h *Handler) ListProjects(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 

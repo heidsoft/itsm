@@ -34,9 +34,8 @@ func NewHandler(svc *service.DepartmentService) *Handler {
 // @Success 200 {object} common.Response{data=ent.Department}
 // @Router /api/v1/departments [post]
 func (h *Handler) CreateDepartment(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -75,9 +74,8 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 // @Success 200 {object} common.Response{data=ent.Department}
 // @Router /api/v1/departments/{id} [get]
 func (h *Handler) GetDepartment(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -112,9 +110,8 @@ func (h *Handler) GetDepartment(c *gin.Context) {
 // @Success 200 {object} common.Response{data=ent.Department}
 // @Router /api/v1/departments/{id} [put]
 func (h *Handler) UpdateDepartment(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -168,9 +165,8 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/departments/{id} [delete]
 func (h *Handler) DeleteDepartment(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -199,9 +195,8 @@ func (h *Handler) DeleteDepartment(c *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/departments/tree [get]
 func (h *Handler) GetDepartmentTree(c *gin.Context) {
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 

@@ -28,14 +28,9 @@ func NewHandler(client *ent.Client) *Handler {
 	}
 }
 
-// tenantID 提取租户上下文
+// tenantID 提取租户上下文，统一委托给 middleware 助手（401 语义）
 func tenantID(c *gin.Context) (int, bool) {
-	tid, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
-		return 0, false
-	}
-	return tid, true
+	return middleware.TenantIDOrUnauthorized(c)
 }
 
 // pathID 提取路径参数 ID

@@ -50,9 +50,12 @@ func (h *Handler) Search(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil || tenantID == 0 {
-		common.Fail(ctx, common.BadRequestCode, "租户上下文缺失")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
+	if tenantID == 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
 

@@ -210,6 +210,19 @@ func GetTenantID(c *gin.Context) (int, error) {
 	return tenantCtx.TenantID, nil
 }
 
+// TenantIDOrUnauthorized 提取租户ID，失败时统一响应 401（AuthFailedCode）。
+// 租户上下文缺失本质是认证问题，历史代码存在 500/400/401 三种映射，
+// 新代码一律使用本助手以统一语义（对齐 auditlog/rbac 等多数派）。
+// 返回 false 时响应已写出，调用方应直接 return。
+func TenantIDOrUnauthorized(c *gin.Context) (int, bool) {
+	tenantID, err := GetTenantID(c)
+	if err != nil {
+		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return 0, false
+	}
+	return tenantID, true
+}
+
 // GetUserID 获取用户ID
 func GetUserID(c *gin.Context) (int, error) {
 	userID, exists := c.Get("user_id")

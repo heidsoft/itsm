@@ -42,9 +42,8 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 	}
 
 	// 获取当前用户租户ID并自动填充
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 	// 自动填充租户ID，避免前端传入
@@ -92,12 +91,11 @@ func (h *Handler) ListGroups(c *gin.Context) {
 	// 获取租户ID（优先使用查询参数，否则从上下文中获取）
 	tenantID := req.TenantID
 	if tenantID == 0 {
-		var err error
-		tenantID, err = middleware.GetTenantID(c)
-		if err != nil {
-			common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+		tid, ok := middleware.TenantIDOrUnauthorized(c)
+		if !ok {
 			return
 		}
+		tenantID = tid
 	}
 	req.TenantID = tenantID
 
@@ -153,9 +151,8 @@ func (h *Handler) GetGroup(c *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -218,9 +215,8 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -253,9 +249,8 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -296,9 +291,8 @@ func (h *Handler) AddUserToGroup(c *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -339,9 +333,8 @@ func (h *Handler) RemoveUserFromGroup(c *gin.Context) {
 		return
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
@@ -386,9 +379,8 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 		pageSize = 10
 	}
 
-	tenantID, err := middleware.GetTenantID(c)
-	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
 		return
 	}
 
