@@ -38,7 +38,7 @@ describe('CMDBApi', () => {
       mockGet.mockResolvedValue({ items: [{ id: 1, name: 'Server-01' }], total: 1 });
       const result = await CMDBApi.getCIs({ status: 'active' });
       expect(mockGet).toHaveBeenCalledWith(
-        '/api/v1/configuration-items',
+        '/api/v1/cmdb/cis',
         expect.objectContaining({ status: 'active' })
       );
       expect(result.items).toHaveLength(1);
@@ -49,7 +49,7 @@ describe('CMDBApi', () => {
     it('should get CI by id', async () => {
       mockGet.mockResolvedValue({ id: 1, name: 'Server-01' });
       const result = await CMDBApi.getCI(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1');
     });
   });
 
@@ -58,7 +58,7 @@ describe('CMDBApi', () => {
       const data = { name: 'Server-02', ciTypeId: 1, status: 'active' };
       mockPost.mockResolvedValue({ id: 2, ...data });
       const result = await CMDBApi.createCI(data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/configuration-items', data);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/cis', data);
     });
   });
 
@@ -66,7 +66,7 @@ describe('CMDBApi', () => {
     it('should update a CI', async () => {
       mockPut.mockResolvedValue({ id: 1, name: 'Updated' });
       await CMDBApi.updateCI(1, { name: 'Updated' });
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/configuration-items/1', { name: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cmdb/cis/1', { name: 'Updated' });
     });
   });
 
@@ -74,7 +74,7 @@ describe('CMDBApi', () => {
     it('should delete a CI', async () => {
       mockDelete.mockResolvedValue(undefined);
       await CMDBApi.deleteCI(1);
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/configuration-items/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cmdb/cis/1');
     });
   });
 
@@ -82,7 +82,7 @@ describe('CMDBApi', () => {
     it('should get CMDB stats', async () => {
       mockGet.mockResolvedValue({ total: 50 });
       const result = await CMDBApi.getCMDBStats();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/stats', undefined);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/stats', undefined);
     });
   });
 
@@ -90,7 +90,7 @@ describe('CMDBApi', () => {
     it('should get CI types (array response)', async () => {
       mockGet.mockResolvedValue([{ id: 1, name: 'Server' }]);
       const result = await CMDBApi.getCITypes();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/types', {
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/ci-types', {
         page: 1,
         size: 200,
       });
@@ -108,7 +108,7 @@ describe('CMDBApi', () => {
     it('should create a CI type', async () => {
       mockPost.mockResolvedValue({ id: 1, name: 'Database' });
       await CMDBApi.createCITypes({ name: 'Database' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/configuration-items/types', {
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/ci-types', {
         name: 'Database',
       });
     });
@@ -118,7 +118,7 @@ describe('CMDBApi', () => {
     it('should delete a CI type', async () => {
       mockDelete.mockResolvedValue(undefined);
       await CMDBApi.deleteCITypes(1);
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/configuration-items/types/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cmdb/ci-types/1');
     });
   });
 
@@ -127,7 +127,7 @@ describe('CMDBApi', () => {
       const data = { parentId: 1, childId: 2, type: 'depends_on' };
       mockPost.mockResolvedValue({ id: 1, ...data });
       await CMDBApi.createCIRelationship(data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/configuration-items/relationships', data);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/relationships', data);
     });
   });
 
@@ -136,7 +136,7 @@ describe('CMDBApi', () => {
       mockGet.mockResolvedValue([{ id: 1, parentId: 1, childId: 2 }]);
       const result = await CMDBApi.getCIRelationships(1);
       expect(mockGet).toHaveBeenCalledWith(
-        '/api/v1/configuration-items/1/relationships',
+        '/api/v1/cmdb/cis/1/relationships',
         undefined
       );
     });
@@ -170,7 +170,7 @@ describe('CMDBApi', () => {
     it('should update CI type', async () => {
       mockPut.mockResolvedValue({ id: 1, name: 'Updated' });
       await CMDBApi.updateCITypes(1, { name: 'Updated' });
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/configuration-items/types/1', {
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cmdb/ci-types/1', {
         name: 'Updated',
       });
     });
@@ -180,7 +180,7 @@ describe('CMDBApi', () => {
     it('should get topology', async () => {
       mockGet.mockResolvedValue({ nodes: [], edges: [] });
       await CMDBApi.getCITopology(1, 5);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/topology', { depth: 5 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology', { depth: 5 });
     });
   });
 
@@ -188,7 +188,7 @@ describe('CMDBApi', () => {
     it('should get impact analysis', async () => {
       mockGet.mockResolvedValue({ impactedItems: [] });
       await CMDBApi.getCIImpactAnalysis(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/impact-analysis');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/impact-analysis');
     });
   });
 
@@ -196,7 +196,7 @@ describe('CMDBApi', () => {
     it('should analyze impact with maxDepth', async () => {
       mockGet.mockResolvedValue({ impactedItems: [] });
       await CMDBApi.analyzeImpact({ ciId: '1', maxDepth: 5 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/impact-analysis', {
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/impact-analysis', {
         maxDepth: 5,
       });
     });
@@ -206,7 +206,7 @@ describe('CMDBApi', () => {
     it('should get change history', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0 });
       await CMDBApi.getCIChangeHistory(1, { page: 1, pageSize: 10 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/change-history', {
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/history', {
         page: 1,
         pageSize: 10,
       });
@@ -222,7 +222,7 @@ describe('CMDBApi', () => {
         type: 'depends_on',
         description: 'test',
       });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/configuration-items/relationships', {
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/relationships', {
         parentId: 10,
         childId: 20,
         type: 'depends_on',
@@ -235,7 +235,7 @@ describe('CMDBApi', () => {
     it('should delete relationship', async () => {
       mockDelete.mockResolvedValue(undefined);
       await CMDBApi.deleteRelationship('5');
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/configuration-items/relationships/5');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cmdb/relationships/5');
     });
   });
 

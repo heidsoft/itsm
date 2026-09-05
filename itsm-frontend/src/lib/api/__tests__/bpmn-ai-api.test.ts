@@ -84,4 +84,16 @@ describe('BPMNAIApi', () => {
       processType: 'change',
     });
   });
+
+  it('runs the canonical BPMN lint endpoint', async () => {
+    const lintResult = { hasErrors: false, errorCount: 0, warningCount: 0, issues: [] };
+    (httpClient.post as jest.Mock).mockResolvedValueOnce(lintResult);
+
+    const result = await BPMNAIApi.lintBPMN('<bpmn:definitions />');
+
+    expect(httpClient.post).toHaveBeenCalledWith('/api/v1/bpmn/lint', {
+      bpmnXml: '<bpmn:definitions />',
+    });
+    expect(result).toBe(lintResult);
+  });
 });

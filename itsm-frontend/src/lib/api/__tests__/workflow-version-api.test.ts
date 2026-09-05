@@ -128,7 +128,7 @@ describe('WorkflowVersionApi', () => {
     it('should delegate to getWorkflowVersions', async () => {
       mockGet.mockResolvedValue([]);
       const result = await WorkflowVersionApi.getProcessVersions('proc1');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/versions?process_key=proc1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/versions?processKey=proc1');
       expect(result).toEqual([]);
     });
   });

@@ -84,7 +84,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
     const load = async () => {
       setSystemLoading(true);
       try {
-        const result = await CMDBApi.getCIs({ limit: 200, offset: 0 });
+        const result = await CMDBApi.getCIs({ page: 1, size: 200 });
 		const items = result.items ?? [];
         const mapped: SystemItem[] = items.map(ci => {
 		  const ciType = ci.type || '配置项';

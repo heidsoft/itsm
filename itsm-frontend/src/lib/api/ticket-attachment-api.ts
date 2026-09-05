@@ -71,7 +71,7 @@ export class TicketAttachmentApi {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
-            if (response.code === 200 && response.data) {
+            if ((response.code === 0 || response.code === 200) && response.data) {
               resolve(response.data);
             } else {
               reject(new Error(response.message || '上传失败'));
@@ -89,8 +89,11 @@ export class TicketAttachmentApi {
         reject(new Error('上传失败'));
       });
 
-      const baseURL = API_BASE_URL || process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
-      xhr.open('POST', `${baseURL}/api/v1/tickets/${ticketId}/attachments`);
+      // 使用与 httpClient 相同的路径策略：生产环境通过 nginx 反代，用相对路径
+      const uploadUrl = API_BASE_URL
+        ? `${API_BASE_URL}/api/v1/tickets/${ticketId}/attachments`
+        : `/api/v1/tickets/${ticketId}/attachments`;
+      xhr.open('POST', uploadUrl);
 
       // 添加认证头
       const token = httpClient.getAuthToken();

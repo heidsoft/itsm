@@ -25,7 +25,7 @@ export class WorkflowVersionApi {
         createdAt: string;
         updatedAt: string;
       }>
-    >(`/api/v1/bpmn/versions?process_key=${workflowId}`);
+    >(`/api/v1/bpmn/versions?processKey=${encodeURIComponent(workflowId)}`);
 
     const list = Array.isArray(res) ? res : [];
     return list.map(item => ({

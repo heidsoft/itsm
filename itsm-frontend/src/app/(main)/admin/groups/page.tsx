@@ -5,11 +5,14 @@ import {
   App,
   Button,
   Card,
+  Col,
   Empty,
   Form,
   Input,
   Modal,
+  Row,
   Space,
+  Statistic,
   Table,
   Tag,
   Typography,
@@ -17,10 +20,10 @@ import {
   List,
   Transfer,
   Badge,
+  theme,
 } from 'antd';
 import type { TablePaginationConfig } from 'antd';
 import { Edit, Plus, Search, Trash2, UserPlus, Users, User as UserIcon, X, Check } from 'lucide-react';
-import BusinessStatsGrid from '@/components/common/BusinessStatsGrid';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
 import { UserApi, type User } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
@@ -29,6 +32,7 @@ const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
 
 const GroupManagement: React.FC = () => {
+  const { token } = theme.useToken();
   const { t } = useI18n();
   const { message, modal } = App.useApp();
   const [form] = Form.useForm();
@@ -214,30 +218,17 @@ const GroupManagement: React.FC = () => {
     }));
   };
 
-  const statsItems = [
+  // 与其他 admin 页面（users/roles 等）保持一致的 Card + Statistic 风格，只展示真实可得的指标
+  const statsCards = [
     {
-      label: t('groups.stats.total'),
+      title: t('groups.stats.total'),
       value: pagination.total,
-      icon: <Users size={20} />,
-      tone: 'blue' as const,
+      icon: <Users size={18} style={{ color: token.colorPrimary }} />,
     },
     {
-      label: t('groups.stats.current'),
+      title: t('groups.stats.current'),
       value: groups.length,
-      icon: <UserPlus size={20} />,
-      tone: 'green' as const,
-    },
-    {
-      label: t('common.search'),
-      value: search ? pagination.total : '-',
-      icon: <Search size={20} />,
-      tone: 'cyan' as const,
-    },
-    {
-      label: t('groups.stats.type'),
-      value: t('groups.title'),
-      icon: <Users size={20} />,
-      tone: 'purple' as const,
+      icon: <UserPlus size={18} style={{ color: '#52c41a' }} />,
     },
   ];
 
@@ -323,7 +314,15 @@ const GroupManagement: React.FC = () => {
         </Button>
       </div>
 
-      <BusinessStatsGrid items={statsItems} loading={loading && groups.length === 0} />
+      <Row gutter={16}>
+        {statsCards.map(item => (
+          <Col span={12} md={8} lg={6} key={item.title}>
+            <Card>
+              <Statistic title={item.title} value={item.value} prefix={item.icon} />
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
       <Card>
         <Space wrap className="w-full justify-between">

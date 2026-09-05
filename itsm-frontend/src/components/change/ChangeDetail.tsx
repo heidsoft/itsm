@@ -4,7 +4,7 @@
  * 变更详情组件
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Descriptions,
@@ -73,6 +73,10 @@ const ChangeDetail: React.FC = () => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [approvalComment, setApprovalComment] = useState('');
   const [processing, setProcessing] = useState(false);
+  // 写操作 in-flight 标志：按钮 loading 状态要等 render 提交后才生效，
+  // 快速连续点击存在重复提交窗口（实测批准发 3 次、提交审批发 2 次）。
+  // 用 ref 做同步重入拦截，同一时刻只允许一个写请求在飞。
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     if (id) {
@@ -108,7 +112,8 @@ const ChangeDetail: React.FC = () => {
 
   // 提交审批
   const handleSubmit = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.submitForApproval(change.id);
@@ -117,13 +122,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.submitFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 排期
   const handleSchedule = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.scheduleChange(change.id);
@@ -132,13 +139,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.scheduleFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 开始实施
   const handleStart = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.startImplementation(change.id);
@@ -147,13 +156,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.startFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 完成实施
   const handleComplete = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.completeImplementation(change.id);
@@ -162,13 +173,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.completeFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 关闭变更（已完成/已回滚 → 已关闭）
   const handleClose = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.closeChange(change.id);
@@ -177,13 +190,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.closeFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 回滚
   const handleRollback = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.rollbackChange(change.id, approvalComment);
@@ -193,13 +208,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.rollbackFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 取消
   const handleCancel = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.cancelChange(change.id, approvalComment);
@@ -209,13 +226,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.cancelFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 批准变更
   const handleApprove = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.approveChange(change.id, { comment: approvalComment });
@@ -226,13 +245,15 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.approveFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };
 
   // 拒绝变更
   const handleReject = async () => {
-    if (!change) return;
+    if (!change || inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       await ChangeApi.rejectChange(change.id, { comment: approvalComment });
@@ -243,6 +264,7 @@ const ChangeDetail: React.FC = () => {
     } catch (error) {
       message.error(t('changeDetail.rejectFailed'));
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
   };

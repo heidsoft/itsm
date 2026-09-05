@@ -64,7 +64,8 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           isLoading: false,
           currentTenant: tenant || null,
-        });
+          _hasConfirmedSession: true,
+        } as Record<string, unknown>);
 
         // 只设置租户信息（不存储 token）
         if (tenant) {
@@ -166,9 +167,9 @@ export const useAuthStore = create<AuthState>()(
       }),
       skipHydration: true, // 手动处理 SSR hydration
       onRehydrateStorage: () => (state) => {
-        // hydration 完成后，强制将 isAuthenticated 设为 false
-        // 后续通过 /api/v1/auth/me 接口验证真实登录状态
-        if (state) {
+        // 初次 hydration 时强制 isAuthenticated = false（因为没有持久化登录态）
+        // 但 login() 之后的 rehydrate 调用不得覆盖已确认的登录状态
+        if (state && !(state as unknown as Record<string, unknown>)._hasConfirmedSession) {
           state.isAuthenticated = false;
         }
       },
@@ -320,11 +321,25 @@ import { useEffect } from 'react';
 export const useAuthStoreHydration = () => {
   useEffect(() => {
     // 触发 persist hydration - rehydrate may return void or Promise
+    const restoreTenantContext = () => {
+      const { currentTenant } = useAuthStore.getState();
+      if (currentTenant?.id) {
+        // 从持久化的 currentTenant 恢复内存中的 tenant-context
+        httpClient.setTenantId(currentTenant.id);
+        httpClient.setTenantCode(currentTenant.code);
+      }
+    };
     const result = useAuthStore.persist.rehydrate();
     if (result instanceof Promise) {
-      result.catch((err: unknown) => {
-        console.error('Auth store hydration failed:', err);
-      });
+      result
+        .then(() => {
+          restoreTenantContext();
+        })
+        .catch((err: unknown) => {
+          console.error('Auth store hydration failed:', err);
+        });
+    } else {
+      restoreTenantContext();
     }
   }, []);
 };

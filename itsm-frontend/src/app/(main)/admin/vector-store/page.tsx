@@ -8,6 +8,7 @@ import {
   Activity, CheckCircle, Database, RefreshCw, Wifi, WifiOff, Zap,
 } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { VectorStoreApi } from '@/lib/api/vector-store-api';
 import type { VectorStoreStatus, VectorStoreTestResult } from '@/lib/api/vector-store-api';
 
@@ -92,6 +93,18 @@ export default function VectorStoreAdminPage() {
         </Space>
       }
     >
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="怎么配置、怎么测试"
+        intro="本页用于查看向量存储（知识库 RAG 语义检索）的运行状态并测试连通性；实际配置在后端部署环境变量 VECTOR_STORE_CONFIG 中完成，不在页面上编辑。"
+        steps={[
+          '默认使用关键词检索（backend: keyword），未配置向量库时系统仍能提供确定的检索回退，不算故障。',
+          '要启用语义检索：在部署配置（docker-compose / K8s）中为后端设置 VECTOR_STORE_CONFIG，backend 可选 pgvector / qdrant / milvus，连接参数写入 config，支持 ${ENV_VAR} 引用避免明文密钥。',
+          '重启后端后点“刷新”，确认“配置状态”为已配置、“能力状态”为就绪。',
+          '点右上角“连通性测试”验证读写延迟；按钮置灰表示尚未配置。',
+          '就绪后到知识库重新索引文章，AI 问答即可使用语义检索；能力状态为“降级”时检索会回退到关键词结果。',
+        ]}
+      />
       <Spin spinning={loading}>
         {!status && !loading ? (
           <Empty description="无法获取向量存储状态" />

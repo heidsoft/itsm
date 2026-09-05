@@ -9,7 +9,12 @@ import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { AuthService } from '@/lib/services/auth-service';
 import { DESIGN } from '@/design-system/tokens';
 import { useI18n } from '@/lib/i18n';
-import { TicketNotificationApi, type TicketNotification } from '@/lib/api/ticket-notification-api';
+import {
+  TicketNotificationApi,
+  toTicketNotification,
+  type TicketNotification,
+  type UserNotification,
+} from '@/lib/api/ticket-notification-api';
 import type { GlobalSearchResponse } from '@/lib/api/global-search-api';
 import { notificationWS } from '@/lib/services/notification-ws';
 import { UserMenuDropdown } from './UserMenuDropdown';
@@ -23,13 +28,6 @@ const { Header: AntHeader } = Layout;
 // 常量定义
 const NOTIFICATION_REFRESH_INTERVAL_MS = 30000; // 30秒
 const NOTIFICATION_PAGE_SIZE = 10;
-
-const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
-  ...notification,
-  createdAt: notification.createdAt,
-  readAt: notification.readAt,
-  sentAt: notification.sentAt,
-});
 
 interface HeaderProps {
   collapsed: boolean;
@@ -70,6 +68,9 @@ export const Header: React.FC<HeaderProps> = ({
   // 通知状态
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  // badge 计数使用服务端权威值（/unread-count），而非当前页列表推导，
+  // 避免只统计本页导致的计数偏差
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -80,11 +81,15 @@ export const Header: React.FC<HeaderProps> = ({
     if (!user?.id) return;
     setNotificationsLoading(true);
     try {
-      const response = await TicketNotificationApi.getUserNotifications({
-        page: 1,
-        pageSize: NOTIFICATION_PAGE_SIZE,
-      });
-      setNotifications((response.notifications || []).map(normalizeNotification));
+      const [response, unread] = await Promise.all([
+        TicketNotificationApi.getUserNotifications({
+          page: 1,
+          size: NOTIFICATION_PAGE_SIZE,
+        }),
+        TicketNotificationApi.getUnreadCount().catch(() => null),
+      ]);
+      setNotifications((response.notifications || []).map(toTicketNotification));
+      if (unread && typeof unread.count === 'number') setUnreadCount(unread.count);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
@@ -93,17 +98,19 @@ export const Header: React.FC<HeaderProps> = ({
   }, [user?.id]);
 
   // 初始化通知和WebSocket
+  // token 存储在 httpOnly cookie 中，前端不持有；已登录（user.id 存在）即可发起请求
   useEffect(() => {
-    if (user?.id && token) {
+    if (user?.id) {
       loadNotifications();
-      notificationWS.connect(user.id, token).catch(() => {
+      notificationWS.connect(user.id, token ?? '').catch(() => {
         // WebSocket server not available, ignore silently
       });
 
-      const unsubscribe = notificationWS.onNotification((notification: TicketNotification) => {
-        const normalized = normalizeNotification(notification);
+      const unsubscribe = notificationWS.onNotification((notification: UserNotification) => {
+        const normalized = toTicketNotification(notification);
         setNotifications(prev => [normalized, ...prev]);
-        message.info(notification.content);
+        if (!notification.read) setUnreadCount(prev => prev + 1);
+        message.info(normalized.content);
       });
 
       return () => {
@@ -170,6 +177,7 @@ export const Header: React.FC<HeaderProps> = ({
       setNotifications(prev =>
         prev.map(n => (n.id === id ? { ...n, status: 'read' as const } : n))
       );
+      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -179,12 +187,11 @@ export const Header: React.FC<HeaderProps> = ({
     try {
       await TicketNotificationApi.markAllNotificationsRead();
       setNotifications(prev => prev.map(n => ({ ...n, status: 'read' as const })));
+      setUnreadCount(0);
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
     }
   }, []);
-
-  const unreadCount = notifications.filter(n => n.status !== 'read').length;
 
   // 语言切换菜单
   const languageItems = [
@@ -232,14 +239,16 @@ export const Header: React.FC<HeaderProps> = ({
               flexShrink: 0,
             }}
           />
-          {showBreadcrumb && (
-            <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
-              <Breadcrumb
-                items={breadcrumb || (dynamicBreadcrumb.length > 1 ? dynamicBreadcrumb : buildBreadcrumb(pathname))}
-                separator="/"
-              />
-            </div>
-          )}
+          {showBreadcrumb && (() => {
+            const items = breadcrumb || (dynamicBreadcrumb.length > 1 ? dynamicBreadcrumb : buildBreadcrumb(pathname || ''));
+            // Hide breadcrumb on root/dashboard (single item with no navigation value)
+            if (items.length <= 1 && (pathname === '/' || pathname === '/dashboard')) return null;
+            return (
+              <div className={styles.breadcrumb} role="navigation" aria-label="面包屑导航">
+                <Breadcrumb items={items} separator="/" />
+              </div>
+            );
+          })()}
         </div>
 
         {/* 右侧 */}

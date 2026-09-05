@@ -264,10 +264,10 @@ const WorkflowManagementPage = () => {
       },
       {
         key: 'designer',
-        title: '审批设计器',
-        description: '快速进入工单审批与 BPMN 设计',
+        title: '流程设计器',
+        description: '快速进入 BPMN 流程设计与审批节点配置',
         icon: <Code className="h-5 w-5" />,
-        path: '/workflow/ticket-approval',
+        path: '/workflow/designer',
         accent: '#eb2f96',
       },
     ],

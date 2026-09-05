@@ -336,13 +336,12 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
                 </Button>
               )}
 
-              {/* 主要操作按钮 */}
+              {/* 主要操作按钮：与全站其他页面（工单/变更/知识库等）保持一致的默认尺寸 */}
               {primaryAction && (
                 <Button
                   type="primary"
                   icon={primaryAction.icon || <Plus />}
                   onClick={primaryAction.onClick}
-                  size="small"
                 >
                   {primaryAction.label}
                 </Button>

@@ -44,6 +44,7 @@ const { Password } = Input;
 
 // 引入系统配置API
 import { SystemConfigAPI } from '@/lib/api/system-config-api';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 
 const BOOLEAN_CONFIG_KEYS = new Set([
   'passwordRequireUppercase',
@@ -502,6 +503,20 @@ export default function SystemConfiguration() {
         </Title>
         <Text type="secondary">管理系统全局设置和集成配置</Text>
       </div>
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="系统配置怎么用"
+        intro="本页管理全局默认值：基础信息、会话超时、密码策略、账户安全与 SMTP 邮件设置。修改会影响所有用户，请谨慎。"
+        steps={[
+          '表单按标签页分组展示；修改任意字段后页面会出现“您有未保存的配置更改”提醒，点右上角“保存配置”统一提交，点“重置”放弃修改恢复上次保存值；未保存前修改不生效，请勿直接离开页面。',
+          '部署后建议先核对基础设置：系统名称与访问 URL、时区、语言与日期时间格式（影响时间展示与通知内容），以及会话超时时间。',
+          '上传限制（大小与允许类型）影响工单附件等所有文件上传，按组织规范调整。',
+          '密码策略与账户安全调整会作用于后续的设置与重置；收紧策略前请确认不会阻碍存量用户正常登录。',
+          '需要邮件通知时必须配好 SMTP（服务器、端口、账号、授权码）；保存后触发一条真实通知（如工单分配）验证邮件送达。',
+          '上方“系统运行时间 / Goroutine / CPU 核心 / 内存使用率”为后端实时运行指标，仅供健康观察，无需配置。',
+        ]}
+      />
 
       {/* 系统状态统计 */}
       <Row gutter={[16, 16]}>

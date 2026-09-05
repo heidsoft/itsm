@@ -127,7 +127,7 @@ export default function ProblemListPage() {
         pageSize,
         status: statusFilter,
         priority: priorityFilter,
-        search: searchKeyword,
+        keyword: searchKeyword,
       });
       const items = response.problems || [];
       setProblems(items);
@@ -150,7 +150,7 @@ export default function ProblemListPage() {
         pageSize: 100,
         status: statusFilter,
         priority: priorityFilter,
-        search: searchKeyword,
+        keyword: searchKeyword,
       });
       setProblems(response.problems || []);
     } catch (error) {
@@ -165,12 +165,14 @@ export default function ProblemListPage() {
     setStatsLoading(true);
     try {
       const statsData = await ProblemApi.getProblemStats();
-      setStats({
-        total: statsData.total || 0,
-        open: statsData.open || 0,
-        inProgress: statsData.inProgress || 0,
-        resolved: statsData.resolved || 0,
-      });
+      if (statsData) {
+        setStats({
+          total: statsData.total || 0,
+          open: statsData.open || 0,
+          inProgress: statsData.inProgress || 0,
+          resolved: statsData.resolved || 0,
+        });
+      }
     } catch (error) {
       console.error('Failed to fetch problem stats:', error);
       message.error(t('problems.getStatsFailed'));

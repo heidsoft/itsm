@@ -5,7 +5,7 @@ import { App, Card, Select, Button, Space, Tag, Spin, Drawer, Descriptions, Empt
 import { RotateCcw, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { Node, Edge, NodeTypes} from 'reactflow';
-import ReactFlow, { Controls, Background, useNodesState, useEdgesState, MarkerType, BackgroundVariant, Handle, Position } from 'reactflow';
+import ReactFlow, { Controls, Background, useNodesState, useEdgesState, BackgroundVariant, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -151,16 +151,23 @@ export default function TopologyPage() {
       return;
     }
     const graph = topologyQuery.data;
-    const flowEdges: Edge[] = graph.edges.map(edge => ({
-      id: 'e' + edge.id,
-      source: String(edge.source),
-      target: String(edge.target),
-      label: edge.relationshipLabel,
-      type: 'smoothstep',
-      animated: edge.impactLevel === 'critical',
-      style: { stroke: getEdgeColor(edge.strength) },
-      markerEnd: { type: MarkerType.ArrowClosed, color: getEdgeColor(edge.strength) },
-    }));
+    const flowEdges: Edge[] = graph.edges.map(edge => {
+      // React Flow 11.11.4 的 getMarkerId() 会把 marker 对象所有字段拼成 id（含 = 和 &），
+      // 传入 id 字段仅影响 marker <defs> 定义不影响 <path marker-end> 引用，导致引用丢失。
+      // 修复：改用字符串形式 markerEnd＋独立注入全局 <defs>，避开该 API，跟浏览器拿干净引用。
+      const color = getEdgeColor(edge.strength);
+      const markerId = `cmdb-arrow-${normalizeStrength(edge.strength)}`;
+      return {
+        id: 'e' + edge.id,
+        source: String(edge.source),
+        target: String(edge.target),
+        label: edge.relationshipLabel,
+        type: 'smoothstep',
+        animated: edge.impactLevel === 'critical',
+        style: { stroke: color },
+        markerEnd: markerId,
+      };
+    });
     const rawNodes: Node[] = graph.nodes.map(node => ({
       id: String(node.id),
       type: 'ciNode',
@@ -268,7 +275,15 @@ export default function TopologyPage() {
           {highlightNodeId && <Tag color="blue" closable onClose={() => setHighlightNodeId(null)}>已高亮直接上下游（点击空白处取消）</Tag>}
         </Space>
       </Card>
-      <Card className="shadow-sm rounded-lg" style={{ height: 'calc(100vh - 250px)' }}>
+      <Card
+        className="shadow-sm rounded-lg"
+        style={{ height: 'calc(100vh - 250px)' }}
+        // antd v6 Card body 默认不继承父高，造成拓扑画布 0px 高度、图不可见；
+        // 这里显式推下 body height，让内部 div height:100% 链生效。
+        styles={{ body: { height: '100%', padding: 0, position: 'relative' } }}
+      >
+        {/* 全局 SVG marker defs，避开 React Flow 11.11.4 getMarkerId() 拼接问题 */}
+        <EdgeArrowDefs />
         {loading ? <div style={{ textAlign: 'center', padding: 100 }}><Spin size="large" /><div style={{ marginTop: 16 }}>加载拓扑图中...</div></div>
         : selectedCI ? <div style={{ height: '100%' }}><ReactFlow nodes={displayNodes} edges={displayEdges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onNodeClick={onNodeClick} onPaneClick={onPaneClick}
             nodeTypes={nodeTypes} fitView fitViewOptions={{ padding: 0.2 }} attributionPosition="bottom-left"><Controls /><Background variant={BackgroundVariant.Dots} gap={20} size={1} /></ReactFlow></div>
@@ -305,4 +320,55 @@ export default function TopologyPage() {
 
 function getEdgeColor(strength: string): string {
   switch (strength) { case 'critical': return '#f5222d'; case 'high': return '#fa8c16'; case 'medium': return '#1890ff'; case 'low': return '#8c8c8c'; default: return '#8c8c8c'; }
+}
+
+// normalizeStrength 将关系强度归一为 marker id 安全的 kebab 片段（仅字母/数字/-/_），
+// 避免 React Flow 生成的 SVG marker id 含 = 或 & 导致引用路径丢失。
+function normalizeStrength(strength: string): string {
+  const safe = (strength || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  return safe || 'default';
+}
+
+// EdgeArrowDefs 提供拓扑边箭头的全局 <marker> 定义，按关系强度枚举。
+// React Flow 11.11.4 的内置 markerEnd API 会拼接含 =、& 的 ID 到 <path marker-end>,
+// 在部分浏览器下会被 URL 转义吃掉导致引用丢失、箭头不渲染。
+// 这里改用手动在隐藏 <svg> 中输出干净 id，Edge 传 `url(#id)` 字符串。
+function EdgeArrowDefs() {
+  const variants: Array<{ strength: string; color: string }> = [
+    { strength: 'critical', color: '#f5222d' },
+    { strength: 'high', color: '#fa8c16' },
+    { strength: 'medium', color: '#1890ff' },
+    { strength: 'low', color: '#8c8c8c' },
+    { strength: 'default', color: '#8c8c8c' },
+  ];
+  return (
+    <svg
+      width="0"
+      height="0"
+      aria-hidden
+      focusable="false"
+      style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
+    >
+      <defs>
+        {variants.map(({ strength, color }) => (
+          <marker
+            key={strength}
+            id={`cmdb-arrow-${strength}`}
+            markerWidth="12.5"
+            markerHeight="12.5"
+            viewBox="-10 -10 20 20"
+            orient="auto-start-reverse"
+            markerUnits="strokeWidth"
+            refX={0}
+            refY={0}
+          >
+            <polyline
+              points="-5,-4 0,0 -5,4 -5,-4"
+              style={{ stroke: color, fill: color, strokeWidth: 1 }}
+            />
+          </marker>
+        ))}
+      </defs>
+    </svg>
+  );
 }

@@ -122,25 +122,33 @@ export default function ApprovalChainsPage() {
   const [editingChain, setEditingChain] = useState<ApprovalChain | null>(null);
 
   // 加载审批链列表
+  // 后端列表接口返回标准包裹体 data: { items, total, page, size }，
+  // httpClient.get 拆封后拿到的是分页对象本身；此前误用 getPaginated 假定的
+  // response.data 字段，导致 undefined.map 崩溃（Cannot read properties of undefined）。
   const loadChains = useCallback(async () => {
     try {
       setLoading(true);
 
-      const params = {
-        page: pagination.current,
-        pageSize: pagination.pageSize,
-        ...filters,
-      };
+      const query = new URLSearchParams({
+        page: String(pagination.current),
+        pageSize: String(pagination.pageSize),
+      });
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          query.append(key, String(value));
+        }
+      });
 
-      const response = await httpClient.getPaginated<ApprovalChain>(
-        '/api/v1/approval-chains',
-        params
-      );
+      const response = await httpClient.get<{
+        items?: BackendApprovalChain[];
+        total?: number;
+      }>(`/api/v1/approval-chains?${query.toString()}`);
 
-      setChains((response.data as unknown as BackendApprovalChain[]).map(normalizeChain));
+      const items = response?.items ?? [];
+      setChains(items.map(normalizeChain));
       setPagination(prev => ({
         ...prev,
-        total: response.total || response.data.length,
+        total: response?.total ?? items.length,
       }));
     } catch (error) {
       handleError(error, '加载审批链列表失败');
@@ -226,7 +234,7 @@ export default function ApprovalChainsPage() {
           <div>
             <Text strong>审批步骤：</Text>
             <ol className="mt-2 list-decimal pl-5">
-              {chain.steps.map(step => (
+              {(chain.steps ?? []).map(step => (
                 <li key={`${chain.id}-${step.stepOrder}`}>
                   {step.stepName}：
                   {step.approverType === 'user'

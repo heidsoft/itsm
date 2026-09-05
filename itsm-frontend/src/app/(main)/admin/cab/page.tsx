@@ -12,12 +12,14 @@ import {
   Space,
   Tag,
   App,
+  Alert,
   Input,
   Segmented,
   Popconfirm,
   Typography,
 } from 'antd';
 import { Plus, Trash2, Users } from 'lucide-react';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import { CabApi } from '@/lib/api/';
 import { UserApi, type User } from '@/lib/api/user-api';
 import type {
@@ -35,9 +37,9 @@ const BOARD_OPTIONS: { label: string; value: CabBoardType }[] = [
 ];
 
 const ROLE_OPTIONS: { label: string; value: CabMemberRole }[] = [
-  { label: '成员 member', value: 'member' },
-  { label: '主席 chair', value: 'chair' },
-  { label: '秘书 secretary', value: 'secretary' },
+  { label: '评审成员：参与变更评审和投票', value: 'member' },
+  { label: '主持人：组织评审并确认结论', value: 'chair' },
+  { label: '记录人：维护会议与决议记录', value: 'secretary' },
 ];
 
 const CabManagementPage: React.FC = () => {
@@ -192,7 +194,25 @@ const CabManagementPage: React.FC = () => {
         </Space>
       </Space>
 
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        intro="CAB（变更咨询委员会）负责评审高风险变更；这里维护的是委员会名单，不是审批流程本身。"
+        steps={[
+          '用右上角分段控件在 CAB 与 ECAB（紧急变更委员会）两个名单之间切换。',
+          '点击“新增成员”选择用户并指定角色：主持人组织评审并确认结论，评审成员参与投票，记录人维护会议与决议记录。',
+          '变更工单进入评审阶段时，审批候选人来自这份名单；常规变更配 CAB，紧急变更配 ECAB。',
+          '不需要某位成员时直接在列表中移除，不影响历史评审记录。',
+        ]}
+      />
+
       <Card>
+        <Alert
+          className="mb-4"
+          type="info"
+          showIcon
+          message="CAB 用于评审常规或高风险变更；ECAB 用于紧急变更"
+          description="先选择委员会，再添加具备变更决策职责的用户并赋予其在会议中的职责。成员启用后，流程中的 CAB 审批步骤才会将其纳入候选审批人；停用不会删除历史评审记录。"
+        />
         <Table
           rowKey="id"
           loading={loading}

@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
-import { getTenantId, getTenantCode, subscribe } from '@/lib/auth/tenant-context';
+import { getTenantId, getTenantCode, setTenantId as setContextTenantId, setTenantCode as setContextTenantCode, subscribe } from '@/lib/auth/tenant-context';
 
 // 递归将对象的 key 从 snake_case 转换为 camelCase
 const toCamelCase = (obj: unknown): unknown => {
@@ -75,11 +75,11 @@ class HttpClient {
   setTenantId(tenantId: number | null) {
     // Tenant state is now managed by TenantContext — kept for backward compat
     // New code should use tenant-context.ts directly
-    logger.debug('HttpClient.setTenantId called (deprecated — use tenant-context.ts)');
+    setContextTenantId(tenantId);
   }
 
   setTenantCode(code: string | null) {
-    logger.debug('HttpClient.setTenantCode called (deprecated — use tenant-context.ts)');
+    setContextTenantCode(code);
   }
 
   // Get tenant code — now reads from TenantContext (single source of truth)
@@ -132,12 +132,33 @@ class HttpClient {
   }
 
   // 获取CSRF token（用于mutating请求）
+  // 直接在 httpClient 中维护 token 缓存，避免跨模块实例化导致的状态不同步
+  private csrfTokenCache: string | null = null;
+  private csrfTokenPromise: Promise<string | null> | null = null;
+
   private async getCSRFToken(): Promise<string | null> {
-    try {
-      return await security.csrf.getToken();
-    } catch {
-      return null;
+    if (this.csrfTokenCache) {
+      return this.csrfTokenCache;
     }
+    if (this.csrfTokenPromise) {
+      return this.csrfTokenPromise;
+    }
+    this.csrfTokenPromise = security.csrf.getToken().then(token => {
+      this.csrfTokenCache = token;
+      return token;
+    }).catch(error => {
+      console.warn('[HttpClient] getCSRFToken error:', error);
+      return null;
+    });
+    this.csrfTokenPromise.finally(() => {
+      this.csrfTokenPromise = null;
+    });
+    return this.csrfTokenPromise;
+  }
+
+  /** Public accessor for legacy API classes that use raw fetch */
+  async getCSRFTokenForExternal(): Promise<string | null> {
+    return this.getCSRFToken();
   }
 
   // 为mutating请求添加CSRF header
@@ -162,8 +183,8 @@ class HttpClient {
     return ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method || 'GET');
   }
 
-  private async isCSRFRejection(response: Response): Promise<boolean> {
-    if (response.status !== 403) return false;
+  private async isCSRFRejection(response?: Response): Promise<boolean> {
+    if (!response || response.status !== 403) return false;
     try {
       const payload = (await response.clone().json()) as { message?: string };
       return payload.message?.startsWith('CSRF token') === true;
@@ -266,6 +287,7 @@ class HttpClient {
         this.isMutatingMethod(config.method) &&
         (await this.isCSRFRejection(response))
       ) {
+        this.csrfTokenCache = null;
         security.csrf.clearToken();
         const retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
         response = await fetch(url, {
@@ -278,7 +300,8 @@ class HttpClient {
         });
       }
 
-      if (response.ok && this.isMutatingMethod(config.method)) {
+      if (response?.ok && this.isMutatingMethod(config.method)) {
+        this.csrfTokenCache = null;
         security.csrf.clearToken();
       }
 

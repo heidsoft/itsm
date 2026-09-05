@@ -20,6 +20,7 @@ import {
   Alert,
 } from 'antd';
 import { Plus, Edit, Delete, PlayCircle, PauseCircle, Settings } from 'lucide-react';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import type {
   AutomationRule,
   CreateAutomationRuleRequest,
@@ -219,6 +220,27 @@ const AutomationRulesPage: React.FC = () => {
             创建规则
           </Button>
         </div>
+
+        <Alert
+          className="mb-4"
+          type="info"
+          showIcon
+          message="自动化规则用于工单生命周期内的条件触发，不是另一套 BPMN 流程"
+          description="先用条件定义命中的工单字段，再配置动作（例如更新字段、分配处理人或发送通知）。规则按优先级执行；BPMN 负责审批、服务履约等显式流程。创建后请用某一真实工单执行“测试”，确认命中与动作，再启用到生产。"
+        />
+
+        <UsageGuideCard
+          style={{ marginBottom: 16 }}
+          title="从创建到启用：推荐的配置步骤"
+          intro="自动化规则 = 触发条件 + 执行动作，适用于单工单生命周期内的自动处理；需要多人审批、多阶段流转时用 BPMN 流程设计器。"
+          steps={[
+            '点击“创建规则”，填写名称和优先级（数字越大越先执行）。',
+            '配置触发条件：字段选状态/优先级/类型/分类，操作符选等于/不等于/包含/在列表中；多个条件需同时满足。',
+            '配置执行动作（可多条）：自动分配、发送通知、更新字段、升级、自动关闭。',
+            '保存后先保持禁用，用一张真实工单修改对应字段验证命中效果，再切换启用。',
+            '启用后通过列表的“执行次数”观察规则是否被触发；未命中时检查条件字段值是否完全匹配。',
+          ]}
+        />
 
         {rules.length === 0 && !loading ? (
           <Alert

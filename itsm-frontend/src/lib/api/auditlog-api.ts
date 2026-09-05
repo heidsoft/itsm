@@ -6,6 +6,8 @@ export interface AuditLog {
   createdAt: string; // ISO 时间字符串
   tenantId: number;
   userId: number;
+  // 后端 service 层 join user 表填充，name 优先、缺失回退 username
+  userName?: string;
   requestId: string;
   ip: string;
   resource: string;

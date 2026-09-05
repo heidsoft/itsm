@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Form, Input, Select, Button, Card, message, Alert, Spin } from 'antd';
 import { ProblemApi } from '@/lib/api/problem-api';
-import { ProblemPriority } from '@/constants/problem';
+import { ProblemPriority, ProblemCategoryOptions } from '@/constants/problem';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
@@ -60,16 +60,6 @@ const CreateProblemPageContent = () => {
     { value: ProblemPriority.MEDIUM, label: '中' },
     { value: ProblemPriority.HIGH, label: '高' },
     { value: ProblemPriority.CRITICAL, label: '紧急' },
-  ];
-
-  const categoryOptions = [
-    { value: '系统问题', label: '系统问题' },
-    { value: '网络问题', label: '网络问题' },
-    { value: '数据库问题', label: '数据库问题' },
-    { value: '应用问题', label: '应用问题' },
-    { value: '安全问题', label: '安全问题' },
-    { value: '硬件问题', label: '硬件问题' },
-    { value: '其他', label: '其他' },
   ];
 
   return (
@@ -144,7 +134,7 @@ const CreateProblemPageContent = () => {
             name="category"
             rules={[{ required: true, message: '请选择分类' }]}
           >
-            <Select placeholder="选择分类" options={categoryOptions} />
+            <Select placeholder="选择分类" options={ProblemCategoryOptions} />
           </Form.Item>
 
           <Form.Item

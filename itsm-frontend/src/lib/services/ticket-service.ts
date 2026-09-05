@@ -83,6 +83,7 @@ export interface UpdateTicketRequest {
   source?: string;
   impact?: string;
   urgency?: string;
+  isOverdue?: boolean;
   businessValue?: string;
   customFields?: Record<string, unknown>;
 }
@@ -101,6 +102,7 @@ export interface ListTicketsParams {
   dateFrom?: string;
   dateTo?: string;
   tags?: string[];
+  isOverdue?: boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

@@ -177,11 +177,12 @@ export default function AuditLogsPage() {
       title: t('bpmn.audit.activityName') || '活动',
       dataIndex:'activityName',
       key:'activityName',
-      width: 150,
+      width: 160,
+      ellipsis: true,
       render: (name: string, record: ProcessAuditLog) => (
-        <Space>
+        <Space size={4} className="w-full min-w-0">
           {getActivityTypeIcon(record.activityType)}
-          {name || record.activityId}
+          <span className="truncate">{name || record.activityId}</span>
         </Space>
       ),
     },
@@ -201,7 +202,12 @@ export default function AuditLogsPage() {
       title: t('bpmn.audit.processInstance') || '流程实例',
       dataIndex:'processInstanceKey',
       key:'processInstanceKey',
-      width: 180,
+      width: 220,
+      // 实例 key 形如 PI-change_normal_flow-1788572798064346374，无 ellipsis 时会撞宽列把后续字段顶出可视区
+      ellipsis: true,
+      render: (val: string) => (
+        <span className="font-mono text-xs" title={val}>{val || '-'}</span>
+      ),
     },
     {
       title: t('bpmn.audit.comment') || '备注',
@@ -301,6 +307,7 @@ export default function AuditLogsPage() {
           columns={columns}
           rowKey="id"
           loading={loading}
+          scroll={{ x: 1200 }}
           pagination={{
             current: page,
             pageSize,

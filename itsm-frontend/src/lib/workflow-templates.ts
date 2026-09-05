@@ -1,6 +1,11 @@
 /**
  * 工作流模板定义
- * 提供常用企业流程模板
+ * 提供常用企业流程模板。
+ *
+ * BPMN XML 由 buildTemplateXml 统一生成，保证每个模板都携带完整的
+ * BPMNDiagram DI（节点 shape + 连线 edge）。此前部分模板缺少 DI，
+ * bpmn-js 导入时报 "no diagram to display"；请假模板缺少 BPMNEdge，
+ * 渲染后节点之间没有连线。
  */
 
 export interface WorkflowTemplate {
@@ -19,6 +24,127 @@ export interface WorkflowTemplate {
   };
 }
 
+type NodeKind =
+  | 'startEvent'
+  | 'endEvent'
+  | 'userTask'
+  | 'exclusiveGateway'
+  | 'parallelGateway';
+
+interface TplNode {
+  id: string;
+  kind: NodeKind;
+  name: string;
+  x: number;
+  y: number;
+}
+
+interface TplFlow {
+  id: string;
+  from: string;
+  to: string;
+  name?: string;
+  /** 条件表达式（如网关分支的 approved == true） */
+  condition?: string;
+  /** 连线拐点坐标，首尾分别贴源/目标节点 */
+  waypoints: Array<[number, number]>;
+}
+
+const NODE_SIZE: Record<NodeKind, [number, number]> = {
+  startEvent: [36, 36],
+  endEvent: [36, 36],
+  userTask: [100, 80],
+  exclusiveGateway: [50, 50],
+  parallelGateway: [50, 50],
+};
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** 生成带完整 DI 的 BPMN 2.0 XML */
+function buildTemplateXml(
+  processId: string,
+  processName: string,
+  nodes: TplNode[],
+  flows: TplFlow[]
+): string {
+  const incoming = new Map<string, string[]>();
+  const outgoing = new Map<string, string[]>();
+  flows.forEach(flow => {
+    incoming.set(flow.to, [...(incoming.get(flow.to) ?? []), flow.id]);
+    outgoing.set(flow.from, [...(outgoing.get(flow.from) ?? []), flow.id]);
+  });
+
+  const processElements = nodes
+    .map(node => {
+      const ins = incoming.get(node.id) ?? [];
+      const outs = outgoing.get(node.id) ?? [];
+      const children = [
+        ...ins.map(id => `      <bpmn:incoming>${id}</bpmn:incoming>`),
+        ...outs.map(id => `      <bpmn:outgoing>${id}</bpmn:outgoing>`),
+      ].join('\n');
+      return `    <bpmn:${node.kind} id="${node.id}" name="${escapeXml(node.name)}">${
+        children ? `\n${children}\n    </bpmn:${node.kind}>` : '/>'
+      }`;
+    })
+    .join('\n');
+
+  const flowElements = flows
+    .map(flow => {
+      const attrs = `id="${flow.id}" sourceRef="${flow.from}" targetRef="${flow.to}"${
+        flow.name ? ` name="${escapeXml(flow.name)}"` : ''
+      }`;
+      if (!flow.condition) {
+        return `    <bpmn:sequenceFlow ${attrs} />`;
+      }
+      return `    <bpmn:sequenceFlow ${attrs}>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${escapeXml(
+        flow.condition
+      )}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>`;
+    })
+    .join('\n');
+
+  const shapes = nodes
+    .map(node => {
+      const [width, height] = NODE_SIZE[node.kind];
+      const marker = node.kind === 'exclusiveGateway' ? ' isMarkerVisible="true"' : '';
+      return `      <bpmndi:BPMNShape id="${node.id}_di" bpmnElement="${node.id}"${marker}>
+        <dc:Bounds x="${node.x}" y="${node.y}" width="${width}" height="${height}" />
+      </bpmndi:BPMNShape>`;
+    })
+    .join('\n');
+
+  const edges = flows
+    .map(
+      flow => `      <bpmndi:BPMNEdge id="${flow.id}_di" bpmnElement="${flow.id}">
+${flow.waypoints
+  .map(([x, y]) => `        <di:waypoint x="${x}" y="${y}" />`)
+  .join('\n')}
+      </bpmndi:BPMNEdge>`
+    )
+    .join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_${processId}" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="${processId}" name="${escapeXml(processName)}" isExecutable="true">
+${processElements}
+${flowElements}
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="${processId}">
+${shapes}
+${edges}
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+}
+
 /**
  * 预设工作流模板
  */
@@ -29,64 +155,39 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '员工请假申请审批，支持年假、病假、事假等类型',
     category: 'hr',
     icon: 'Calendar',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_LeaveRequest" name="请假审批流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="Task_Submit" name="提交请假申请">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_ManagerApprove" name="部门经理审批">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否通过">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
-      <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:endEvent id="EndEvent_Approved" name="审批通过">
-      <bpmn:incoming>Flow_Approved</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:endEvent id="EndEvent_Rejected" name="审批拒绝">
-      <bpmn:incoming>Flow_Rejected</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_ManagerApprove" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_ManagerApprove" targetRef="Gateway_Approval" />
-    <bpmn:sequenceFlow id="Flow_Approved" name="通过" sourceRef="Gateway_Approval" targetRef="EndEvent_Approved">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approved == true</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_Rejected" name="拒绝" sourceRef="Gateway_Approval" targetRef="EndEvent_Rejected">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approved == false</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_LeaveRequest">
-      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="180" y="160" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_Submit_di" bpmnElement="Task_Submit">
-        <dc:Bounds x="270" y="138" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ManagerApprove_di" bpmnElement="Task_ManagerApprove">
-        <dc:Bounds x="420" y="138" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_Approval_di" bpmnElement="Gateway_Approval" isMarkerVisible="true">
-        <dc:Bounds x="575" y="155" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_Approved_di" bpmnElement="EndEvent_Approved">
-        <dc:Bounds x="692" y="100" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_Rejected_di" bpmnElement="EndEvent_Rejected">
-        <dc:Bounds x="692" y="220" width="36" height="36" />
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_LeaveRequest',
+      '请假审批流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 180, y: 160 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交请假申请', x: 270, y: 138 },
+        { id: 'Task_ManagerApprove', kind: 'userTask', name: '部门经理审批', x: 420, y: 138 },
+        { id: 'Gateway_Approval', kind: 'exclusiveGateway', name: '是否通过', x: 575, y: 155 },
+        { id: 'EndEvent_Approved', kind: 'endEvent', name: '审批通过', x: 692, y: 100 },
+        { id: 'EndEvent_Rejected', kind: 'endEvent', name: '审批拒绝', x: 692, y: 220 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[216, 178], [270, 178]] },
+        { id: 'Flow_2', from: 'Task_Submit', to: 'Task_ManagerApprove', waypoints: [[370, 178], [420, 178]] },
+        { id: 'Flow_3', from: 'Task_ManagerApprove', to: 'Gateway_Approval', waypoints: [[520, 178], [575, 180]] },
+        {
+          id: 'Flow_Approved',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Approved',
+          name: '通过',
+          condition: '${approved == true}',
+          waypoints: [[600, 155], [600, 118], [692, 118]],
+        },
+        {
+          id: 'Flow_Rejected',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Rejected',
+          name: '拒绝',
+          condition: '${approved == false}',
+          waypoints: [[600, 205], [600, 238], [692, 238]],
+        },
+      ]
+    ),
     approvalConfig: {
       requireApproval: true,
       approvalType: 'sequential',
@@ -99,47 +200,41 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '员工费用报销审批，支持差旅、招待、采购等费用类型',
     category: 'finance',
     icon: 'DollarSign',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_ExpenseApproval" name="费用报销流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="Task_Submit" name="提交报销单">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_ManagerApprove" name="部门负责人审批">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_FinanceApprove" name="财务审批">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_Approval" name="是否通过">
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-      <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
-      <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:endEvent id="EndEvent_Approved" name="审批通过">
-      <bpmn:incoming>Flow_Approved</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:endEvent id="EndEvent_Rejected" name="审批拒绝">
-      <bpmn:incoming>Flow_Rejected</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_ManagerApprove" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_ManagerApprove" targetRef="Task_FinanceApprove" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_FinanceApprove" targetRef="Gateway_Approval" />
-    <bpmn:sequenceFlow id="Flow_Approved" name="通过" sourceRef="Gateway_Approval" targetRef="EndEvent_Approved">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approved == true</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_Rejected" name="拒绝" sourceRef="Gateway_Approval" targetRef="EndEvent_Rejected">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approved == false</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-  </bpmn:process>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_ExpenseApproval',
+      '费用报销流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 150, y: 200 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交报销单', x: 250, y: 178 },
+        { id: 'Task_ManagerApprove', kind: 'userTask', name: '部门负责人审批', x: 420, y: 178 },
+        { id: 'Task_FinanceApprove', kind: 'userTask', name: '财务审批', x: 590, y: 178 },
+        { id: 'Gateway_Approval', kind: 'exclusiveGateway', name: '是否通过', x: 760, y: 195 },
+        { id: 'EndEvent_Approved', kind: 'endEvent', name: '审批通过', x: 880, y: 140 },
+        { id: 'EndEvent_Rejected', kind: 'endEvent', name: '审批拒绝', x: 880, y: 260 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[186, 218], [250, 218]] },
+        { id: 'Flow_2', from: 'Task_Submit', to: 'Task_ManagerApprove', waypoints: [[350, 218], [420, 218]] },
+        { id: 'Flow_3', from: 'Task_ManagerApprove', to: 'Task_FinanceApprove', waypoints: [[520, 218], [590, 218]] },
+        { id: 'Flow_4', from: 'Task_FinanceApprove', to: 'Gateway_Approval', waypoints: [[690, 218], [760, 220]] },
+        {
+          id: 'Flow_Approved',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Approved',
+          name: '通过',
+          condition: '${approved == true}',
+          waypoints: [[785, 195], [785, 158], [880, 158]],
+        },
+        {
+          id: 'Flow_Rejected',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Rejected',
+          name: '拒绝',
+          condition: '${approved == false}',
+          waypoints: [[810, 220], [845, 278], [880, 278]],
+        },
+      ]
+    ),
     approvalConfig: {
       requireApproval: true,
       approvalType: 'sequential',
@@ -149,20 +244,28 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {
     id: 'procurement',
     name: '采购审批流程',
-    description: '办公用品、设备采购审批流程，支持金额阈值自动路由',
+    description: '办公用品、设备采购审批流程，逐级经理审批',
     category: 'procurement',
     icon: 'ShoppingCart',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_Procurement" name="采购审批流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始"/>
-    <bpmn:userTask id="Task_Submit" name="提交采购申请"/>
-    <bpmn:userTask id="Task_ManagerApprove" name="部门经理审批"/>
-    <bpmn:userTask id="Task_DirectorApprove" name="总监审批"/>
-    <bpmn:userTask id="Task_CFOApprove" name="CFO审批"/>
-    <bpmn:endEvent id="EndEvent_Approved" name="审批通过"/>
-  </bpmn:process>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_Procurement',
+      '采购审批流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 150, y: 200 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交采购申请', x: 250, y: 178 },
+        { id: 'Task_ManagerApprove', kind: 'userTask', name: '部门经理审批', x: 420, y: 178 },
+        { id: 'Task_DirectorApprove', kind: 'userTask', name: '总监审批', x: 590, y: 178 },
+        { id: 'Task_CFOApprove', kind: 'userTask', name: 'CFO审批', x: 760, y: 178 },
+        { id: 'EndEvent_Approved', kind: 'endEvent', name: '审批通过', x: 930, y: 200 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[186, 218], [250, 218]] },
+        { id: 'Flow_2', from: 'Task_Submit', to: 'Task_ManagerApprove', waypoints: [[350, 218], [420, 218]] },
+        { id: 'Flow_3', from: 'Task_ManagerApprove', to: 'Task_DirectorApprove', waypoints: [[520, 218], [590, 218]] },
+        { id: 'Flow_4', from: 'Task_DirectorApprove', to: 'Task_CFOApprove', waypoints: [[690, 218], [760, 218]] },
+        { id: 'Flow_5', from: 'Task_CFOApprove', to: 'EndEvent_Approved', waypoints: [[860, 218], [930, 218]] },
+      ]
+    ),
     approvalConfig: {
       requireApproval: true,
       approvalType: 'sequential',
@@ -175,43 +278,27 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: 'IT系统变更、配置变更审批流程，包含评估和测试环节',
     category: 'it',
     icon: 'GitBranch',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_ChangeRequest" name="变更管理流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="Task_Submit" name="提交变更申请">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_ImpactAnalysis" name="影响分析">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_ITApproval" name="IT负责人审批">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_Implementation" name="实施变更">
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_Verification" name="验证确认">
-      <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_6</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_Completed" name="变更完成">
-      <bpmn:incoming>Flow_6</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_ImpactAnalysis" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_ImpactAnalysis" targetRef="Task_ITApproval" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_ITApproval" targetRef="Task_Implementation" />
-    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Implementation" targetRef="Task_Verification" />
-    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Verification" targetRef="EndEvent_Completed" />
-  </bpmn:process>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_ChangeRequest',
+      '变更管理流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 150, y: 200 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交变更申请', x: 250, y: 178 },
+        { id: 'Task_ImpactAnalysis', kind: 'userTask', name: '影响分析', x: 420, y: 178 },
+        { id: 'Task_ITApproval', kind: 'userTask', name: 'IT负责人审批', x: 590, y: 178 },
+        { id: 'Task_Implementation', kind: 'userTask', name: '实施变更', x: 760, y: 178 },
+        { id: 'Task_Verification', kind: 'userTask', name: '验证确认', x: 930, y: 178 },
+        { id: 'EndEvent_Completed', kind: 'endEvent', name: '变更完成', x: 1100, y: 200 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[186, 218], [250, 218]] },
+        { id: 'Flow_2', from: 'Task_Submit', to: 'Task_ImpactAnalysis', waypoints: [[350, 218], [420, 218]] },
+        { id: 'Flow_3', from: 'Task_ImpactAnalysis', to: 'Task_ITApproval', waypoints: [[520, 218], [590, 218]] },
+        { id: 'Flow_4', from: 'Task_ITApproval', to: 'Task_Implementation', waypoints: [[690, 218], [760, 218]] },
+        { id: 'Flow_5', from: 'Task_Implementation', to: 'Task_Verification', waypoints: [[860, 218], [930, 218]] },
+        { id: 'Flow_6', from: 'Task_Verification', to: 'EndEvent_Completed', waypoints: [[1030, 218], [1100, 218]] },
+      ]
+    ),
     approvalConfig: {
       requireApproval: true,
       approvalType: 'sequential',
@@ -224,45 +311,48 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '合同签订审批流程，包含法务审核和会签环节',
     category: 'legal',
     icon: 'FileText',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_ContractApproval" name="合同审批流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始">
-      <bpmn:outgoing>Flow_1</bpmn:outgoing>
-    </bpmn:startEvent>
-    <bpmn:userTask id="Task_Submit" name="提交合同">
-      <bpmn:incoming>Flow_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_2</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_LegalReview" name="法务会签">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_FinanceReview" name="财务会签">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:parallelGateway id="Gateway_Parallel" name="并行会签">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
-    </bpmn:parallelGateway>
-    <bpmn:userTask id="Task_GMApproval" name="总经理审批">
-      <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_6</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_Approved" name="审批完成">
-      <bpmn:incoming>Flow_6</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Submit" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Submit" targetRef="Task_LegalReview" />
-    <bpmn:sequenceFlow id="Flow_2b" sourceRef="Task_Submit" targetRef="Task_FinanceReview" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_LegalReview" targetRef="Gateway_Parallel" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_FinanceReview" targetRef="Gateway_Parallel" />
-    <bpmn:sequenceFlow id="Flow_5" sourceRef="Gateway_Parallel" targetRef="Task_GMApproval" />
-    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_GMApproval" targetRef="EndEvent_Approved" />
-  </bpmn:process>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_ContractApproval',
+      '合同审批流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 150, y: 240 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交合同', x: 250, y: 218 },
+        { id: 'Task_LegalReview', kind: 'userTask', name: '法务会签', x: 420, y: 120 },
+        { id: 'Task_FinanceReview', kind: 'userTask', name: '财务会签', x: 420, y: 300 },
+        { id: 'Gateway_Parallel', kind: 'parallelGateway', name: '并行会签', x: 590, y: 233 },
+        { id: 'Task_GMApproval', kind: 'userTask', name: '总经理审批', x: 700, y: 218 },
+        { id: 'EndEvent_Approved', kind: 'endEvent', name: '审批完成', x: 860, y: 238 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[186, 258], [250, 258]] },
+        {
+          id: 'Flow_2',
+          from: 'Task_Submit',
+          to: 'Task_LegalReview',
+          waypoints: [[350, 258], [385, 258], [385, 160], [420, 160]],
+        },
+        {
+          id: 'Flow_2b',
+          from: 'Task_Submit',
+          to: 'Task_FinanceReview',
+          waypoints: [[350, 258], [385, 258], [385, 340], [420, 340]],
+        },
+        {
+          id: 'Flow_3',
+          from: 'Task_LegalReview',
+          to: 'Gateway_Parallel',
+          waypoints: [[520, 160], [555, 160], [555, 258], [590, 258]],
+        },
+        {
+          id: 'Flow_4',
+          from: 'Task_FinanceReview',
+          to: 'Gateway_Parallel',
+          waypoints: [[520, 340], [555, 340], [555, 258], [590, 258]],
+        },
+        { id: 'Flow_5', from: 'Gateway_Parallel', to: 'Task_GMApproval', waypoints: [[640, 258], [700, 258]] },
+        { id: 'Flow_6', from: 'Task_GMApproval', to: 'EndEvent_Approved', waypoints: [[800, 258], [860, 258]] },
+      ]
+    ),
     approvalConfig: {
       requireApproval: true,
       approvalType: 'parallel',
@@ -275,13 +365,15 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     description: '从零开始创建自定义流程',
     category: 'custom',
     icon: 'Plus',
-    bpmnXml: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_Custom" name="自定义流程" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="开始"/>
-    <bpmn:endEvent id="EndEvent_1" name="结束"/>
-  </bpmn:process>
-</bpmn:definitions>`,
+    bpmnXml: buildTemplateXml(
+      'Process_Custom',
+      '自定义流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 180, y: 160 },
+        { id: 'EndEvent_1', kind: 'endEvent', name: '结束', x: 350, y: 160 },
+      ],
+      []
+    ),
     approvalConfig: {
       requireApproval: false,
       approvalType: 'single',

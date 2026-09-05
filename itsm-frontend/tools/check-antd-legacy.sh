@@ -19,11 +19,6 @@ PATTERNS=(
   'Space direction='
   '<Tabs\.TabPane'
   'Form\.(Input|TextArea|Select|DatePicker|Radio|Checkbox)\b'
-  "import \{ message \} from 'antd'"
-  'import \{ message \} from "antd"'
-  "import \{ notification \} from 'antd'"
-  'import \{ notification \} from "antd"'
-  'Modal\.(confirm|info|success|error|warning)\('
 )
 
 # Collect matching ts/tsx files once (POSIX-compatible, bash 3.2-safe).

@@ -8,7 +8,7 @@
  * - Step 2: 创建第一个工单（教学）
  * - Step 3: 查看服务目录
  * - Step 4: 配置 CMDB 第一个 CI
- * - Step 5: 体验 AI 分诊（mock + Coming Soon 标签）
+ * - Step 5: 体验 AI 分诊（调用真实后端能力）
  */
 
 import React, { useState } from 'react';
@@ -25,6 +25,7 @@ import {
   Alert,
 } from 'antd';
 import { LayoutGrid, CheckCircle, PlusCircle, Database, Rocket, Bot } from 'lucide-react';
+import { AIApi, TriageResult } from '@/lib/api/ai-api';
 
 const { Title, Paragraph } = Typography;
 
@@ -187,6 +188,28 @@ function CMDBStep() {
 }
 
 function AITriageStep() {
+  const { message } = App.useApp();
+  const [description, setDescription] = useState('VPN 连不上，多个同事无法访问内网系统。');
+  const [result, setResult] = useState<TriageResult | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const runTriage = async () => {
+    const trimmed = description.trim();
+    if (!trimmed) {
+      message.warning('请先描述一个问题');
+      return;
+    }
+    setLoading(true);
+    try {
+      setResult(await AIApi.triage('VPN 连接问题', trimmed));
+    } catch {
+      setResult(null);
+      message.error('AI 分诊暂时不可用，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
       <Title level={4}>
@@ -196,19 +219,13 @@ function AITriageStep() {
       <Paragraph>
         AI 分诊会自动分析工单内容，推荐分类、优先级和处理人。
       </Paragraph>
-      <Alert
-        type="info"
-        showIcon
-        message="AI 辅助分诊"
-        description="根据工单内容推荐分类、优先级和处理人。仅供参考。"
-      />
+      <Alert type="info" showIcon title="AI 辅助分诊" description="根据工单内容推荐分类和优先级，结果仅供参考。" />
       <Card type="inner" title="效果演示">
-        <Paragraph>
-          工单：「VPN 连不上」→ 建议分类：网络 / 优先级：高 / 处理人：网络组
-        </Paragraph>
-        <Paragraph type="secondary" style={{ fontSize: 12 }}>
-          （演示数据，仅供参考）
-        </Paragraph>
+        <Space orientation="vertical" style={{ width: '100%' }}>
+          <textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} style={{ width: '100%', padding: 8 }} aria-label="问题描述" />
+          <Button type="primary" icon={<Bot size={16} />} loading={loading} onClick={runTriage}>运行 AI 分诊</Button>
+          {result && <Alert type="success" title={`分类：${result.category} · 优先级：${result.priority}`} description={`置信度 ${(result.confidence * 100).toFixed(0)}%${result.explanation ? ` · ${result.explanation}` : ''}`} />}
+        </Space>
       </Card>
     </Space>
   );

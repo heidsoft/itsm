@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Card, Col, Row, Statistic, Typography, theme, Avatar, Progress } from 'antd';
-import { Users, Workflow, BookOpen, AlertCircle, TrendingUp, BarChart3, Activity, Shield, Zap } from 'lucide-react';
-import { useI18n } from '@/lib/i18n';
+import { Card, Col, Row, Typography } from 'antd';
+import { Users, Workflow, BookOpen, AlertCircle, BarChart3 } from 'lucide-react';
 import type { AdminStats } from '../hooks/useAdminData';
 
-const { Paragraph, Title, Text } = Typography;
+const { Text } = Typography;
 
 // 增强的设计系统 - 独特的企业仪表盘美学
 const DESIGN_SYSTEM = {
@@ -51,10 +50,7 @@ interface SystemOverviewProps {
   loading?: boolean;
 }
 
-export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }) => {
-  const { t } = useI18n();
-  const { token } = theme.useToken();
-
+export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats }) => {
   const formatValue = (value: string | number | null | undefined) => {
     if (value === null || value === undefined || value === '') {
       return '—';
@@ -62,64 +58,48 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
     return value;
   };
 
+  // 数值均来自后端真实统计接口；接口失败时显示 '—'，不展示虚构的增长百分比或进度。
   const systemStats = [
     {
       title: '活跃用户',
       value: formatValue(stats?.activeUsers),
-      change: '+12%',
-      changeValue: '+132',
       icon: Users,
       color: DESIGN_SYSTEM.colors.accent,
       gradient: DESIGN_SYSTEM.colors.gradient.accent,
-      trend: 'up',
-      description: stats?.activeUsers == null ? '暂无真实数据接入' : '较上月新增132位活跃用户',
-      progress: 78,
+      description: stats?.activeUsers == null ? '用户统计接口不可用' : '来自用户中心实时统计',
       placeholder: stats?.activeUsers == null,
     },
     {
       title: '运行中的流程',
       value: formatValue(stats?.runningWorkflows),
-      change: '+6.7%',
-      changeValue: '+3',
       icon: Workflow,
       color: DESIGN_SYSTEM.colors.success,
       gradient: DESIGN_SYSTEM.colors.gradient.success,
-      trend: 'up',
-      description: stats?.runningWorkflows == null ? '暂无真实数据接入' : '3个工作流新启动',
-      progress: 65,
+      description: stats?.runningWorkflows == null ? '流程统计接口不可用' : '当前处于执行中的流程实例',
       placeholder: stats?.runningWorkflows == null,
     },
     {
       title: '服务目录项',
       value: formatValue(stats?.serviceCatalogItems),
-      change: '+5.9%',
-      changeValue: '+5',
       icon: BookOpen,
       color: '#8b5cf6',
       gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-      trend: 'up',
-      description: stats?.serviceCatalogItems == null ? '服务目录数据待接入' : '新增5项服务目录',
-      progress: 82,
+      description: stats?.serviceCatalogItems == null ? '服务目录接口不可用' : '服务目录中已登记的服务总数',
       placeholder: stats?.serviceCatalogItems == null,
     },
     {
-      title: '系统告警',
-      value: formatValue(stats?.systemAlerts),
-      change: '-33%',
-      changeValue: '-1',
+      title: '待处理工单',
+      value: formatValue(stats?.pendingTickets),
       icon: AlertCircle,
       color: DESIGN_SYSTEM.colors.warning,
       gradient: DESIGN_SYSTEM.colors.gradient.warning,
-      trend: 'down',
-      description: stats?.systemAlerts == null ? '告警数据待接入' : '较昨日减少1个告警',
-      progress: 15,
-      placeholder: stats?.systemAlerts == null,
+      description: stats?.pendingTickets == null ? '工单统计接口不可用' : '新建与处理中状态的工单',
+      placeholder: stats?.pendingTickets == null,
     },
   ];
 
-  const EnhancedStatCard = ({ stat, index }: { stat: (typeof systemStats)[0]; index: number }) => {
+  const EnhancedStatCard = ({ stat }: { stat: (typeof systemStats)[0] }) => {
     const Icon = stat.icon;
-    const isPositive = stat.trend === 'up';
 
     return (
       <Card
@@ -178,23 +158,20 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
           >
             <Icon size={24} />
           </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '4px 10px',
-              borderRadius: 20,
-              background: isPositive ? `${DESIGN_SYSTEM.colors.success}15` : `${DESIGN_SYSTEM.colors.danger}15`,
-              color: isPositive ? DESIGN_SYSTEM.colors.success : DESIGN_SYSTEM.colors.danger,
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            <TrendingUp size={14} style={{ transform: isPositive ? 'none' : 'rotate(180deg)' }} />
-            <span>{stat.change}</span>
-          </div>
+          {stat.placeholder && (
+            <span
+              style={{
+                padding: '4px 10px',
+                borderRadius: 20,
+                background: `${DESIGN_SYSTEM.colors.textSecondary}15`,
+                color: DESIGN_SYSTEM.colors.textSecondary,
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              暂无数据
+            </span>
+          )}
         </div>
 
         {/* 统计数字 */}
@@ -218,37 +195,11 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
           {stat.value}
         </div>
 
-        {/* 进度条 */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <Text style={{ fontSize: 12, color: DESIGN_SYSTEM.colors.textSecondary }}>
-              {stat.description}
-            </Text>
-            {!stat.placeholder && (
-              <Text style={{ fontSize: 12, fontWeight: 600, color: stat.color }}>
-                {stat.progress}%
-              </Text>
-            )}
-          </div>
-          <div
-            style={{
-              height: 6,
-              borderRadius: 3,
-              background: '#f1f5f9',
-              overflow: 'hidden',
-              opacity: stat.placeholder ? 0.5 : 1,
-            }}
-          >
-            <div
-              style={{
-                height: '100%',
-                width: `${stat.placeholder ? 6 : stat.progress}%`,
-                borderRadius: 3,
-                background: stat.gradient,
-                transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',
-              }}
-            />
-          </div>
+        {/* 数据来源说明 */}
+        <div>
+          <Text style={{ fontSize: 12, color: DESIGN_SYSTEM.colors.textSecondary }}>
+            {stat.description}
+          </Text>
         </div>
       </Card>
     );
@@ -280,10 +231,8 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
           >
             <BarChart3 size={20} />
           </div>
-          <Title
-            level={3}
+          <Text
             style={{
-              margin: 0,
               fontSize: 22,
               fontWeight: 700,
               color: DESIGN_SYSTEM.colors.textPrimary,
@@ -291,7 +240,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
             }}
           >
             系统概览
-          </Title>
+          </Text>
         </div>
         <Text style={{ color: DESIGN_SYSTEM.colors.textSecondary, fontSize: 14 }}>
           实时监控系统关键指标和业务健康状态
@@ -300,9 +249,9 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
 
       {/* 统计卡片网格 */}
       <Row gutter={[20, 20]}>
-        {systemStats.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <EnhancedStatCard stat={stat} index={index} />
+        {systemStats.map((stat) => (
+          <Col xs={24} sm={12} lg={6} key={stat.title}>
+            <EnhancedStatCard stat={stat} />
           </Col>
         ))}
       </Row>

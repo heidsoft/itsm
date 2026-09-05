@@ -46,6 +46,7 @@ export class TicketRelationsApi {
 
   /**
    * 获取工单的所有关联
+   * 后端返回 {childrenTree, parentChain, relatedTickets} 对象，统一转换为扁平数组
    */
   static async getTicketRelations(
     ticketId: number,
@@ -55,10 +56,20 @@ export class TicketRelationsApi {
       includeDetails?: boolean;
     }
   ): Promise<TicketRelationWithDetails[]> {
-    return httpClient.get<TicketRelationWithDetails[]>(
+    const raw = await httpClient.get<
+      TicketRelationWithDetails[] | {relatedTickets?: TicketRelationWithDetails[]; childrenTree?: unknown; parentChain?: unknown}
+    >(
       `/api/v1/tickets/${ticketId}/relations`,
       params
     );
+    // Normalize: if API returns an object, extract the relatedTickets array
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+    if (raw && typeof raw === 'object' && Array.isArray(raw.relatedTickets)) {
+      return raw.relatedTickets;
+    }
+    return [];
   }
 
   /**

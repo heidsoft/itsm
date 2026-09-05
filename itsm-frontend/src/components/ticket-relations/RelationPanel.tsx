@@ -49,10 +49,13 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
   const [form] = Form.useForm();
 
   // Queries
-  const { data: relations, isLoading } = useTicketRelationsQuery(ticketId, {
+  const { data: rawRelations, isLoading } = useTicketRelationsQuery(ticketId, {
     includeDetails: true,
   });
   const { data: stats } = useRelationStatsQuery(ticketId);
+
+  // Defensive: ensure relations is always an array
+  const relations = Array.isArray(rawRelations) ? rawRelations : [];
 
   // Mutations
   const createMutation = useCreateRelationMutation();

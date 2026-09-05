@@ -55,14 +55,27 @@ export interface TicketListColumnActions {
   readonly onClose: (ticket: Ticket) => void;
 }
 
+/** Server-side sort state, used to keep column indicators in sync with the active query. */
+export interface TicketListSortState {
+  readonly sortBy?: string;
+  readonly sortOrder?: 'asc' | 'desc';
+}
+
 /**
  * Builds the Ant Design columns for the tickets table.
  *
  * Receives action handlers as props so the columns module stays pure and is
  * trivially memoizable. The container passes stable `useCallback` handlers.
  */
-export function buildTicketListColumns(actions: TicketListColumnActions): ColumnsType<Ticket> {
+export function buildTicketListColumns(
+  actions: TicketListColumnActions,
+  sort?: TicketListSortState
+): ColumnsType<Ticket> {
   const { onOpen, onEdit, onClose } = actions;
+  // Controlled sortOrder keeps the header indicator in sync with the server
+  // query (and lets "clear filters" reset it). null = no active sort.
+  const sortOf = (field: string) =>
+    sort?.sortBy === field ? (sort.sortOrder === 'asc' ? 'ascend' : 'descend') : null;
 
   return [
     {
@@ -72,6 +85,8 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       width: 200,
       fixed: 'left',
       ellipsis: true,
+      sorter: true,
+      sortOrder: sortOf('ticket_number'),
       render: (ticketNumber: string, record: Ticket) => (
         <Button type='link' size='small' onClick={() => onOpen(record)}>
           {ticketNumber || '-'}
@@ -95,6 +110,8 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       dataIndex: 'status',
       key: 'status',
       width: 100,
+      sorter: true,
+      sortOrder: sortOf('status'),
       render: (status: TicketStatus) => {
         const config = TICKET_STATUS_CONFIG[status] ?? { color: 'default', text: status };
         return <Tag color={config.color}>{config.text}</Tag>;
@@ -105,6 +122,8 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       dataIndex: 'priority',
       key: 'priority',
       width: 100,
+      sorter: true,
+      sortOrder: sortOf('priority'),
       render: (priority: TicketPriority) => {
         const config = PRIORITY_CONFIG[priority] ?? { color: 'default', text: priority };
         return <Tag color={config.color}>{config.text}</Tag>;
@@ -136,6 +155,8 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 160,
+      sorter: true,
+      sortOrder: sortOf('created_at'),
       render: (createdAt: string) => dayjs(createdAt).format('YYYY-MM-DD HH:mm'),
     },
     {
@@ -143,6 +164,8 @@ export function buildTicketListColumns(actions: TicketListColumnActions): Column
       dataIndex: 'updatedAt',
       key: 'updatedAt',
       width: 160,
+      sorter: true,
+      sortOrder: sortOf('updated_at'),
       render: (updatedAt: string) => dayjs(updatedAt).format('YYYY-MM-DD HH:mm'),
     },
     {

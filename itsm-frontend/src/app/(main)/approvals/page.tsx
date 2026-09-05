@@ -141,10 +141,11 @@ export default function ApprovalsCenterPage() {
   const loadLegacy = useCallback(async () => {
     setLegacyLoading(true);
     try {
+      // 查询参数统一 camelCase，与后端 DTO form tag 契约一致。
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ tickets?: any[] }>('/api/v1/tickets?status=pending&page=1&page_size=20').catch(() => ({ tickets: [] })),
-        httpClient.get<{ changes?: any[] }>('/api/v1/changes?status=pending&page=1&page_size=20').catch(() => ({ changes: [] })),
-        httpClient.get<{ items?: any[] }>('/api/v1/service-requests?status=pending&page=1&page_size=20').catch(() => ({ items: [] })),
+        httpClient.get<{ tickets?: any[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ tickets: [] })),
+        httpClient.get<{ changes?: any[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ changes: [] })),
+        httpClient.get<{ items?: any[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
       ]);
       const items: LegacyPendingItem[] = [
         ...(ticketsResp.tickets || []).map((t: any) => ({

@@ -45,9 +45,11 @@ export const transformSLA = (item: APISLADefinition): SLADefinition => ({
   description: item.description,
   serviceType: item.serviceType || '',
   priority: (item.priority || 'P3') as SLADefinition['priority'],
-  // 后端返回 camelCase 格式: responseTime, resolutionTime
+  // 后端返回 camelCase 格式: responseTime, resolutionTime（单位：分钟）
   responseTime: `${item.responseTime || 0}分钟`,
   resolutionTime: `${item.resolutionTime || 0}分钟`,
+  responseTimeMinutes: Number(item.responseTime) || 0,
+  resolutionTimeMinutes: Number(item.resolutionTime) || 0,
   // 可用性字段：优先取后端值，否则按 priority 派生
   availability: `${deriveAvailabilityTarget(item)}%`,
   businessHours: '7x24',

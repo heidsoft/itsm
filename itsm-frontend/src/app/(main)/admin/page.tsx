@@ -8,6 +8,7 @@ import { SystemHealth } from './components/SystemHealth';
 import { RecentActivity } from './components/RecentActivity';
 import { QuickActions } from './components/QuickActions';
 import { SystemInfo } from './components/SystemInfo';
+import { AdminSetupGuide } from './components/AdminSetupGuide';
 import { useAdminData } from './hooks/useAdminData';
 import { useI18n } from '@/lib/i18n';
 
@@ -42,6 +43,7 @@ const AdminDashboard = () => {
       <div>
         <SystemOverview stats={stats} loading={loading} />
       </div>
+      <AdminSetupGuide />
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={12}>
           <SystemHealth />

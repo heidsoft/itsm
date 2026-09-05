@@ -152,6 +152,7 @@ export {
 } from './auditlog-api';
 export { PriorityMatrixApi } from './priority-matrix-api';
 export { TemplateApi } from './template-api';
+export { BPMNWorkflowTemplateApi } from './bpmn-workflow-template-api';
 
 // ==================== 工具函数 ====================
 

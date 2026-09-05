@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { App, Button, Card, Input, List, Modal, Space, Switch, Table, Tag, Typography } from 'antd';
+import { Alert, App, Button, Card, Input, List, Modal, Space, Switch, Table, Tag, Typography } from 'antd';
 import { Copy, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { TicketTypeFormModal } from '@/components/business/TicketTypeFormModal';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
@@ -83,19 +83,27 @@ export default function TicketTypesPage() {
 
   return <div className="p-6"><Card>
     <div className="mb-5 flex items-start justify-between gap-4"><div><Title level={2} className="!mb-1">工单类型</Title><Text type="secondary">租户级类型、动态表单及流程策略配置</Text></div><Space><Button onClick={() => void openPresets()}>从预设安装</Button><Button type="primary" icon={<Plus className="h-4 w-4" />} onClick={() => { setEditing(null); setOpen(true); }}>新建类型</Button></Space></div>
+    <Alert
+      className="mb-4"
+      type="info"
+      showIcon
+      message="工单类型是配置生效的绑定中心"
+      description="在此选择已发布的工作流、已启用的 SLA 和分配规则；启用审批后补充审批层级。保存并启用类型后，创建该类型的测试工单，在流程实例、待审批、SLA 监控和审计日志中验收结果。"
+    />
     <Input.Search className="mb-4 max-w-sm" allowClear placeholder="搜索名称或编码" onSearch={setKeyword} />
     <div className="mb-3"><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />显示已归档类型</label></div>
-    <Table rowKey="id" loading={loading} dataSource={items} columns={[
-      { title: '名称', dataIndex: 'name', width: 180, ellipsis: true, render: (value: string) => <Text strong>{value}</Text> },
-      { title: '编码', dataIndex: 'code', render: (value: string) => <Tag color="blue">{value}</Tag> },
-      { title: '动态字段', dataIndex: 'customFields', render: (value: unknown[]) => `${value?.length ?? 0} 个` },
-	  { title: '默认优先级', dataIndex: 'defaultPriority', render: (value: string) => <Tag>{value}</Tag> },
-	  { title: '工作流', dataIndex: 'workflowDefinitionKey', render: (value?: string) => value || '-' },
-      { title: 'SLA', dataIndex: 'slaEnabled', render: (value: boolean) => value ? '已绑定' : '-' },
-	  { title: '排序', dataIndex: 'sortOrder', width: 70 },
-      { title: '状态', dataIndex: 'status', render: (value: string, item) => item.archivedAt ? <Tag color="default">已归档</Tag> : <Tag color={value === 'active' ? 'green' : 'default'}>{value === 'active' ? '启用' : '停用'}</Tag> },
-      { title: '更新时间', dataIndex: 'updatedAt', render: (value: string) => value ? new Date(value).toLocaleString() : '-' },
-      { title: '操作', width: 300, render: (_, item) => item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" checked={item.status === 'active'} onChange={async enabled => { try { await TicketTypeApi.setEnabled(item.id, enabled); message.success(enabled ? '工单类型已启用' : '工单类型已停用'); await load(); } catch (error) { message.error(error instanceof Error ? error.message : '操作失败'); } }} /></Space> },
+    {/* 每列显式设置宽度并对长文本列开启 ellipsis，避免列宽被均分导致字段拥挤；总宽超出容器时通过 scroll.x 横向滚动兜底 */}
+    <Table rowKey="id" loading={loading} dataSource={items} scroll={{ x: 'max-content' }} columns={[
+      { title: '名称', dataIndex: 'name', width: 160, ellipsis: true, render: (value: string) => <Text strong>{value}</Text> },
+      { title: '编码', dataIndex: 'code', width: 160, ellipsis: true, render: (value: string) => <Tag color="blue" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</Tag> },
+	  { title: '动态字段', dataIndex: 'customFields', width: 90, render: (value: unknown[]) => `${value?.length ?? 0} 个` },
+	  { title: '默认优先级', dataIndex: 'defaultPriority', width: 100, render: (value: string) => <Tag>{value}</Tag> },
+	  { title: '工作流', dataIndex: 'workflowDefinitionKey', width: 200, ellipsis: true, render: (value?: string) => value || '-' },
+      { title: 'SLA', dataIndex: 'slaEnabled', width: 80, render: (value: boolean) => value ? '已绑定' : '-' },
+	  { title: '排序', dataIndex: 'sortOrder', width: 64 },
+      { title: '状态', dataIndex: 'status', width: 96, render: (value: string, item) => item.archivedAt ? <Tag color="default">已归档</Tag> : <Tag color={value === 'active' ? 'green' : 'default'}>{value === 'active' ? '启用' : '停用'}</Tag> },
+      { title: '更新时间', dataIndex: 'updatedAt', width: 170, render: (value: string) => value ? new Date(value).toLocaleString() : '-' },
+      { title: '操作', width: 240, fixed: 'right', render: (_, item) => item.archivedAt ? <Space><Button size="small" type="primary" ghost icon={<RotateCcw className="h-3.5 w-3.5" />} onClick={() => restore(item)}>恢复</Button></Space> : <Space><Button size="small" icon={<Pencil className="h-3.5 w-3.5" />} onClick={() => { setEditing(item); setOpen(true); }}>编辑</Button><Button size="small" icon={<Copy className="h-3.5 w-3.5" />} onClick={() => clone(item)}>复制</Button><Switch size="small" checked={item.status === 'active'} onChange={async enabled => { try { await TicketTypeApi.setEnabled(item.id, enabled); message.success(enabled ? '工单类型已启用' : '工单类型已停用'); await load(); } catch (error) { message.error(error instanceof Error ? error.message : '操作失败'); } }} /></Space> },
     ]} />
   </Card><TicketTypeFormModal visible={open} editingType={editing} onCancel={() => { setOpen(false); setEditing(null); }} onSubmit={save} /><Modal title="工单类型预设库" open={presetOpen} footer={null} onCancel={() => setPresetOpen(false)}><List dataSource={presets} renderItem={preset => <List.Item actions={[<Button key="install" type="link" onClick={async () => { await TicketTypeApi.installPreset(preset.id); message.success('预设已安装'); setPresetOpen(false); await load(); }}>安装</Button>]}><List.Item.Meta title={preset.name} description={`${preset.category} · ${preset.description}`} /></List.Item>} /></Modal></div>;
 }

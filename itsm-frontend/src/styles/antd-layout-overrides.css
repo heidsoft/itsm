@@ -130,6 +130,16 @@
   font-weight: 600 !important;
 }
 
+/* 侧边栏收缩后，子菜单 flyout 弹层（portals 到 body）内的菜单项
+   会继承 inline-collapsed 的 title-content 隐藏样式（opacity:0 / max-width:0），
+   导致悬浮弹层只剩图标没有文字。弹层内强制恢复文字显示。 */
+.ant-menu-submenu-popup .ant-menu-title-content {
+  opacity: 1 !important;
+  visibility: visible !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
 /* ========== Breadcrumb 面包屑 ========== */
 .ant-breadcrumb {
   margin-bottom: 16px;

@@ -42,6 +42,8 @@ import {
   Empty,
 } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
+import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
 const { Title, Text } = Typography;
 
 // 工作流状态枚举
@@ -552,6 +554,21 @@ const WorkflowManagement = () => {
         </Title>
         <Text type="secondary">设计和管理业务流程，配置审批节点和自动化规则</Text>
       </div>
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="工作流管理怎么用"
+        intro="本页是流程定义的总入口：创建、复制、启停、删除流程；真正的节点编排在 BPMN 设计器中完成。"
+        steps={[
+          '标准流程：点“创建工作流”填写名称与说明（保存为草稿）→ 按提示进入设计器编排审批节点与连线 → 回到本页启用。草稿未编排前无法启用。',
+          '行操作：查看详情、“设计流程”打开对应设计器、“复制”基于现有流程生成草稿副本、启用/停用、删除；启用中的流程不可勾选批量删除。',
+          '编排时可从模板导入（如请假审批）；导入后请在设计器中确认节点连线完整再保存。',
+          '点“流程路由”进入绑定页面，把流程关联到工单等业务场景；业务对象满足路由规则时才会启动对应流程实例。',
+          '验证方式：启用后新建一条匹配的业务数据，到“工作流实例”查看执行状态与待办任务，到“工作流审计”查看流转记录。',
+        ]}
+      />
+
+      <WorkflowTemplateCatalog />
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>

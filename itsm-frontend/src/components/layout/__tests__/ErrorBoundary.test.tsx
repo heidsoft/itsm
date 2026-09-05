@@ -117,7 +117,7 @@ describe('Layout ErrorBoundary', () => {
       );
 
       // 应该显示错误标题
-      expect(screen.getByText(/System encountered some issues/i)).toBeInTheDocument();
+      expect(screen.getByText('系统遇到一些问题')).toBeInTheDocument();
     });
 
     it('显示默认错误消息', () => {
@@ -128,7 +128,7 @@ describe('Layout ErrorBoundary', () => {
       );
 
       expect(
-        screen.getByText(/Sorry, an error occurred while loading the page/i)
+        screen.getByText('抱歉，页面加载时发生了错误。技术团队已收到通知并正在处理。')
       ).toBeInTheDocument();
     });
 
@@ -139,7 +139,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Error Details:/i)).toBeInTheDocument();
+      expect(screen.getByText('错误详情：')).toBeInTheDocument();
     });
   });
 
@@ -151,7 +151,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Reload Page/i)).toBeInTheDocument();
+      expect(screen.getByText('重新加载')).toBeInTheDocument();
     });
 
     it('显示返回首页按钮', () => {
@@ -161,7 +161,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Back to Home/i)).toBeInTheDocument();
+      expect(screen.getByText('返回首页')).toBeInTheDocument();
     });
 
     it('显示报告问题按钮', () => {
@@ -171,7 +171,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(screen.getByText(/Report Issue/i)).toBeInTheDocument();
+      expect(screen.getByText('上报问题')).toBeInTheDocument();
     });
 
     it('点击刷新页面按钮调用 location.reload', () => {
@@ -181,7 +181,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      const reloadButton = screen.getByRole('button', { name: /Reload Page/i });
+      const reloadButton = screen.getByRole('button', { name: '重新加载' });
       fireEvent.click(reloadButton);
 
       expect(mockWindowLocation.reload).toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      const homeButton = screen.getByRole('button', { name: /Back to Home/i });
+      const homeButton = screen.getByRole('button', { name: '返回首页' });
       fireEvent.click(homeButton);
 
       expect(mockWindowLocation.href).toMatch(/^(http:\/\/localhost\/dashboard|\/dashboard)$/);
@@ -207,7 +207,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      const reportButton = screen.getByRole('button', { name: /Report Issue/i });
+      const reportButton = screen.getByRole('button', { name: '上报问题' });
 
       // 点击不应该抛出错误
       expect(() => fireEvent.click(reportButton)).not.toThrow();
@@ -227,7 +227,7 @@ describe('Layout ErrorBoundary', () => {
       expect(screen.getByTestId('custom-fallback')).toBeInTheDocument();
       expect(screen.getByText('Custom Error UI')).toBeInTheDocument();
       // 不应该显示默认错误 UI
-      expect(screen.queryByText(/System encountered some issues/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('系统遇到一些问题')).not.toBeInTheDocument();
     });
 
     it('调用 onError 回调函数', () => {
@@ -285,8 +285,8 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      // 开发环境应该显示 Stack Trace 摘要
-      expect(screen.getByText(/Stack Trace/i)).toBeInTheDocument();
+      // 开发环境应该显示堆栈跟踪摘要
+      expect(screen.getByText('堆栈跟踪')).toBeInTheDocument();
 
       Object.defineProperty(process.env, 'NODE_ENV', {
         value: originalEnv,
@@ -327,7 +327,7 @@ describe('Layout ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      const reportButton = screen.getByRole('button', { name: /Report Issue/i });
+      const reportButton = screen.getByRole('button', { name: '上报问题' });
       fireEvent.click(reportButton);
 
       // 验证 console.error 被调用（组件内部会记录错误）
@@ -467,15 +467,15 @@ describe('SimpleErrorFallback Component', () => {
 
     render(<SimpleErrorFallback error={testError} />);
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+    expect(screen.getByText('页面出现异常')).toBeInTheDocument();
     expect(screen.getByText('Simple test error')).toBeInTheDocument();
   });
 
-  it('无错误时显示 Unknown error', () => {
+  it('无错误时显示未知错误', () => {
     render(<SimpleErrorFallback />);
 
-    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
-    expect(screen.getByText('Unknown error')).toBeInTheDocument();
+    expect(screen.getByText('页面出现异常')).toBeInTheDocument();
+    expect(screen.getByText('未知错误')).toBeInTheDocument();
   });
 
   it.skip('显示错误图标', () => {
@@ -489,7 +489,7 @@ describe('SimpleErrorFallback Component', () => {
   it('点击刷新按钮重新加载页面', () => {
     render(<SimpleErrorFallback />);
 
-    const reloadButton = screen.getByRole('button', { name: /Reload Page/i });
+    const reloadButton = screen.getByRole('button', { name: '重新加载' });
     fireEvent.click(reloadButton);
 
     expect(mockWindowLocation.reload).toHaveBeenCalled();
@@ -621,7 +621,7 @@ describe('错误状态管理', () => {
     );
 
     // 应该显示错误 UI
-    expect(screen.getByText(/System encountered some issues/i)).toBeInTheDocument();
+    expect(screen.getByText('系统遇到一些问题')).toBeInTheDocument();
 
     // 重新渲染正常组件
     rerender(
@@ -632,7 +632,7 @@ describe('错误状态管理', () => {
 
     // ErrorBoundary 不会自动重置，需要刷新页面或手动重置
     // 这里验证错误状态仍然存在
-    expect(screen.getByText(/System encountered some issues/i)).toBeInTheDocument();
+    expect(screen.getByText('系统遇到一些问题')).toBeInTheDocument();
   });
 
   it.skip('子组件变化不自动重置错误状态', () => {
@@ -643,7 +643,7 @@ describe('错误状态管理', () => {
     );
 
     // 应该显示错误 UI
-    expect(screen.getByText(/System encountered some issues/i)).toBeInTheDocument();
+    expect(screen.getByText('系统遇到一些问题')).toBeInTheDocument();
 
     // 改变子组件
     rerender(
@@ -653,7 +653,7 @@ describe('错误状态管理', () => {
     );
 
     // 错误状态应该保持
-    expect(screen.getByText(/System encountered some issues/i)).toBeInTheDocument();
+    expect(screen.getByText('系统遇到一些问题')).toBeInTheDocument();
   });
 });
 
@@ -711,6 +711,6 @@ describe('性能和边界情况', () => {
     );
 
     // 错误消息应该正确显示
-    expect(screen.getByText(/Error with/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Error with/i).length).toBeGreaterThan(0);
   });
 });

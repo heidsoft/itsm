@@ -12,7 +12,7 @@ import { NetworkStatus } from '@/components/common/NetworkStatus';
 import { AdminRouteGuard } from '@/components/common/AdminRouteGuard';
 import { useLayoutStore } from '@/lib/store/layout-store';
 import PageTransition from '@/components/common/PageTransition';
-import { useAuthStore } from '@/lib/store/auth-store';
+import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import type { Tenant } from '@/lib/api/api-config';
 import { useTheme } from '@/lib/design-system/theme';
 
@@ -35,6 +35,9 @@ export default function MainLayout({
   const [checkingAuth, setCheckingAuth] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+
+  // 恢复持久化的 auth store，并同步租户上下文到内存
+  useAuthStoreHydration();
 
   // 处理客户端挂载和认证检查
   useEffect(() => {

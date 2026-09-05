@@ -15,6 +15,7 @@ import {
   type EscalationLevel,
   type EscalationMatrix,
 } from '@/lib/api/escalation-matrix-api';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -156,6 +157,19 @@ export default function EscalationMatricesPage() {
         description="升级矩阵为系统内置策略，当前仅支持查看，暂不提供在线编辑。后续版本将开放租户级自定义配置。"
         type="info"
         showIcon
+      />
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="怎么理解和使用升级矩阵"
+        intro="升级矩阵是 SLA 超时的自动升级策略：工单超过阈值仍未处理时，系统按级别逐级通知更高级别的处理人。本页为只读查看，不需要（也不支持）在线编辑。"
+        steps={[
+          '阅读方式：每个优先级（P1 最高）配置若干升级级别；待处理时长超过某级“阈值时间”即触发该级升级，按“目标类型 + ID”（用户 / 角色 / 群组）定位升级对象，并通过“通知渠道”（邮件、站内信等）发送。',
+          '默认策略中优先级越高阈值越短、级别越多：如 P1 为 5 / 15 / 30 分钟三级，P3 仅 240 分钟一级。',
+          '生效范围：SLA 告警升级、工单超时升级、BPMN 任务超时共用这套矩阵，无需单独启用。',
+          '前置条件：SLA 时限来自“SLA 模板 / SLA 定义”，未安装 SLA 的优先级不会触发升级；邮件渠道需要在“系统配置”中配好 SMTP。',
+          '建议用法：对照本表确认阈值与组织值班响应能力是否匹配；如需调整，当前可通过修改 SLA 定义与通知渠道间接影响，矩阵本身的自定义编辑将在后续版本开放。',
+        ]}
       />
 
       <Row gutter={[16, 16]}>

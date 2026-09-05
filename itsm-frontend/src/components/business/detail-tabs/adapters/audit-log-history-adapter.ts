@@ -35,6 +35,8 @@ export async function fetchAuditLogHistory(
     method: l.method,
     statusCode: l.statusCode,
     ip: l.ip,
-    user: { name: `用户#${l.userId}` },
+    // 后端 service 层 join user 表填充 userName（中文姓名优先，缺失回退 username）；
+    // 后端兼容未升级前仍返回 \`用户#<id>\` 形式。
+    user: { name: l.userName || `用户#${l.userId}` },
   }));
 }

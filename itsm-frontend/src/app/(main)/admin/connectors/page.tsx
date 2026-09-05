@@ -7,6 +7,7 @@ import {
 } from 'antd';
 import { Plus, RotateCcw, CheckCircle, XCircle, Plug, Send, Power } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import type {
   ConnectorManifest, ConnectorConfig, SendConnectorMessageRequest,
 } from '@/lib/services/connector-service';
@@ -295,6 +296,19 @@ export default function ConnectorsAdminPage() {
         style={{ marginBottom: 16 }}
         message={t('connectors.pageDescription')}
         description={t('connectors.description')}
+      />
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="启用后如何测试和使用连接器"
+        intro="连接器把通知、工单邮件等能力对接到企业 IM（飞书/企微/钉钉）、Webhook 或邮箱；凭证由后端保存，页面只展示脱敏信息。"
+        steps={[
+          '在“连接器市场”页签点“启用”，在弹窗中填写供应商标识和凭证（每行一个 key=value，如 app_id=xxx）；邮箱连接器有专用表单（IMAP/SMTP 主机、账号密码）。',
+          '启用后到“已配置”页签点“测试”验证连通性，成功/失败会直接提示；失败时检查凭证、网络和供应商后台配置。',
+          '用“发送消息”向已绑定的接收通道发一条测试消息，确认消息能真实送达。',
+          '测试通过后，SLA 告警、审批提醒等系统通知会按通知配置经由该通道投递；可在通知中心和审计日志中查看投递结果。',
+          '不再使用时点“禁用”，系统停止通过该通道投递，历史配置保留可随时重新启用。',
+        ]}
       />
 
       <Tabs

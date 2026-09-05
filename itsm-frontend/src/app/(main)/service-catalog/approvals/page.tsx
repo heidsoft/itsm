@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Table, Tag, Button, Card, App, Space, Modal, Input } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
@@ -23,6 +23,11 @@ export default function ServiceApprovalsPage() {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequestRecord | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  // 写操作防重复提交：行级 in-flight 集合拦截审批按钮快速连点，
+  // actionLoadingId 驱动按钮 loading；驳回弹窗用 confirmLoading + 同步 guard。
+  const inFlightRef = useRef<Set<number>>(new Set());
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
   useEffect(() => {
     loadApprovals();
@@ -43,12 +48,18 @@ export default function ServiceApprovalsPage() {
   };
 
   const handleApprove = async (id: number) => {
+    if (inFlightRef.current.has(id)) return;
+    inFlightRef.current.add(id);
+    setActionLoadingId(id);
     try {
       await ServiceCatalogApi.approveServiceRequest(id);
       message.success(t('service.approveSuccess'));
       loadApprovals();
     } catch (error) {
       message.error(t('service.approveFailed'));
+    } finally {
+      inFlightRef.current.delete(id);
+      setActionLoadingId(null);
     }
   };
 
@@ -57,6 +68,8 @@ export default function ServiceApprovalsPage() {
       message.error(t('service.rejectReasonRequired'));
       return;
     }
+    if (rejectSubmitting) return;
+    setRejectSubmitting(true);
     try {
       await ServiceCatalogApi.rejectServiceRequest(id, rejectReason);
       message.success(t('service.rejectSuccess'));
@@ -64,6 +77,8 @@ export default function ServiceApprovalsPage() {
       loadApprovals();
     } catch (error) {
       message.error(t('service.rejectFailed'));
+    } finally {
+      setRejectSubmitting(false);
     }
   };
 
@@ -82,7 +97,12 @@ export default function ServiceApprovalsPage() {
       title: t('common.actions'),
       render: (_: unknown, record: ServiceRequestRecord) => (
         <Space>
-          <Button size="small" type="primary" onClick={() => handleApprove(record.id)}>
+          <Button
+            size="small"
+            type="primary"
+            loading={actionLoadingId === record.id}
+            onClick={() => handleApprove(record.id)}
+          >
             {t('service.approve')}
           </Button>
           <Button
@@ -142,6 +162,7 @@ export default function ServiceApprovalsPage() {
         title={t('service.rejectRequest')}
         open={rejectModalVisible}
         onCancel={() => setRejectModalVisible(false)}
+        confirmLoading={rejectSubmitting}
         onOk={() => {
           if (selectedRequest?.id) handleReject(selectedRequest.id);
         }}

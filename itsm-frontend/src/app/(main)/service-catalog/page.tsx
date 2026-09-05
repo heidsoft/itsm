@@ -12,6 +12,7 @@ import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 
 const { Title, Text } = Typography;
 
@@ -35,19 +36,14 @@ const ServiceCatalogSkeleton: React.FC = () => (
   </div>
 );
 
-// 分类配置
-const getCategoryConfig = (t: (k: string) => string) => [
-  { key: 'all', label: t('serviceCatalog.categories.all'), icon: <Server /> },
-  { key: 'cloud', label: t('serviceCatalog.categories.cloud'), icon: <Cloud /> },
-  { key: 'account', label: t('serviceCatalog.categories.account'), icon: <UserCog /> },
-  { key: 'security', label: t('serviceCatalog.categories.security'), icon: <ShieldCheck /> },
-  { key: 'database', label: t('serviceCatalog.categories.database'), icon: <Database /> },
-  { key: 'network', label: t('serviceCatalog.categories.network'), icon: <Lock /> },
-];
+// Static icon pool cycled for dynamic categories
+const CATEGORY_ICONS = [Cloud, UserCog, ShieldCheck, Database, Lock, Server];
 
 export default function ServiceCatalogPage() {
   const { message } = App.useApp();
   const { t } = useI18n();
+  const { hasPermission } = usePermissions();
+  const canManageCatalog = hasPermission('service_catalog', 'write');
   const [activeCategory, setActiveCategory] = useState('all');
   const [creating, setCreating] = useState(false);
 
@@ -72,27 +68,36 @@ export default function ServiceCatalogPage() {
   const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
 
+  // Derive unique categories dynamically from loaded data
+  const dynamicCategories = React.useMemo(() => {
+    const set = new Set<string>();
+    catalogs.forEach(c => {
+      const cat = String(c.category || '').trim();
+      if (cat) set.add(cat);
+    });
+    return Array.from(set).sort();
+  }, [catalogs]);
+
+  const categoryConfig = React.useMemo(() => {
+    const items = [{ key: 'all', label: t('serviceCatalog.categories.all'), icon: <Server /> }];
+    dynamicCategories.forEach((cat, idx) => {
+      const IconComp = CATEGORY_ICONS[idx % CATEGORY_ICONS.length];
+      items.push({ key: cat, label: cat, icon: <IconComp /> });
+    });
+    return items;
+  }, [dynamicCategories, t]);
+
   // 根据选中分类过滤服务
   const filteredCatalogs = React.useMemo(() => {
     let result = catalogs;
-
-    const categoryMap: Record<string, string[]> = {
-      cloud: [t('serviceCatalog.categories.cloud'), 'Cloud Service'],
-      account: [t('serviceCatalog.categories.account'), 'Account Service'],
-      security: [t('serviceCatalog.categories.security'), 'Security Service'],
-      database: [t('serviceCatalog.categories.database'), 'Database Service'],
-      network: [t('serviceCatalog.categories.network'), 'Network Service'],
-    };
-
-    const targetCategories = categoryMap[activeCategory] || [];
     if (activeCategory !== 'all') {
-      result = result.filter(catalog => targetCategories.some(cat => String(catalog.category).includes(cat)));
+      result = result.filter(catalog => String(catalog.category) === activeCategory);
     }
     if (categoryFilter) result = result.filter(catalog => String(catalog.category).includes(categoryFilter));
     if (ciTypeFilter) result = result.filter(catalog => catalog.ciTypeId === ciTypeFilter);
     if (cloudServiceFilter) result = result.filter(catalog => catalog.cloudServiceId === cloudServiceFilter);
     return result;
-  }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter, t]);
+  }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter]);
 
   const popularCatalogs = React.useMemo(
     () => [...catalogs]
@@ -125,17 +130,10 @@ export default function ServiceCatalogPage() {
   // 处理分类标签切换
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
-
-    // 更新筛选条件
-    const categoryMap: Record<string, string> = {
-      all: '',
-      cloud: t('serviceCatalog.categories.cloud'),
-      account: t('serviceCatalog.categories.account'),
-      security: t('serviceCatalog.categories.security'),
-      database: t('serviceCatalog.categories.database'),
-      network: t('serviceCatalog.categories.network'),
-    };
-    setCategoryFilter(categoryMap[category] || '');
+    // categoryFilter is for text-based sub-filtering from the filters bar
+    if (category === 'all') {
+      setCategoryFilter('');
+    }
   };
 
   const handleCreateService = () => {
@@ -172,8 +170,6 @@ export default function ServiceCatalogPage() {
   if (loading && catalogs.length === 0) {
     return <ServiceCatalogSkeleton />;
   }
-
-  const categoryConfig = getCategoryConfig(t);
 
   return (
     <div className="p-6 min-h-screen" style={{ backgroundColor: 'var(--color-bg-secondary, #f9fafb)' }}>
@@ -229,20 +225,10 @@ export default function ServiceCatalogPage() {
           type="card"
           size="large"
           items={categoryConfig.map(cat => {
-            const categoryMap: Record<string, string[]> = {
-              cloud: [t('serviceCatalog.categories.cloud'), 'Cloud Service'],
-              account: [t('serviceCatalog.categories.account'), 'Account Service'],
-              security: [t('serviceCatalog.categories.security'), 'Security Service'],
-              database: [t('serviceCatalog.categories.database'), 'Database Service'],
-              network: [t('serviceCatalog.categories.network'), 'Network Service'],
-            };
-            const keywords = categoryMap[cat.key] || [];
             const count =
               cat.key === 'all'
                 ? catalogs.length
-                : catalogs.filter(c =>
-                    keywords.some(k => String(c.category).includes(k))
-                  ).length;
+                : catalogs.filter(c => String(c.category) === cat.key).length;
             return {
               key: cat.key,
               label: (
@@ -270,7 +256,7 @@ export default function ServiceCatalogPage() {
         ciTypes={ciTypes}
         cloudServices={cloudServices}
         optionsLoading={optionsLoading}
-        onCreateService={handleCreateService}
+        onCreateService={canManageCatalog ? handleCreateService : undefined}
         onRefresh={loadServiceCatalogs}
       />
 
@@ -281,9 +267,9 @@ export default function ServiceCatalogPage() {
             description={
               <div>
                 <p className="text-gray-500 mb-4">{t('serviceCatalog.noMatchingServices')}</p>
-                <Button type="primary" onClick={handleCreateService}>
+                {canManageCatalog ? <Button type="primary" onClick={handleCreateService}>
                   {t('serviceCatalog.createFirst')}
-                </Button>
+                </Button> : <p className="text-sm text-gray-500">暂时没有可申请的服务，请联系服务目录管理员。</p>}
               </div>
             }
           />

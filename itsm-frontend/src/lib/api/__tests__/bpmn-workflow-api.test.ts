@@ -31,9 +31,9 @@ describe('BPMNWorkflowApi', () => {
 
   describe('createProcessDefinition', () => {
     it('should post to process-definitions', async () => {
-      const data = { key: 'k1', name: 'n1', xml: '<xml/>' };
-      const expected = { id: 1, key: 'k1', name: 'n1', version: 1, status: 'draft', xml: '<xml/>' };
-      mockPost.mockResolvedValue({ data: expected });
+      const data = { key: 'k1', name: 'n1', bpmnXml: '<xml/>' };
+      const expected = { id: 1, key: 'k1', name: 'n1', version: '1.0.0', bpmnXml: '<xml/>' };
+      mockPost.mockResolvedValue(expected);
       const res = await BPMNWorkflowApi.createProcessDefinition(data);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/bpmn/process-definitions', data);
       expect(res).toEqual(expected);

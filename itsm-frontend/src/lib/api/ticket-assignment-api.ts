@@ -173,11 +173,8 @@ function normalizeRule(rule: AssignmentRule): AssignmentRule {
 function toBackendRulePayload<T extends CreateAssignmentRuleRequest | UpdateAssignmentRuleRequest>(
   data: T
 ): T {
-  const payload = { ...data } as T;
-  if ('is_active' in payload && payload.isActive !== undefined) {
-    payload.isActive = payload.isActive;
-  }
-  return payload;
+  // 规整规则创建/更新请求：所有键已经是 camelCase，body 直接透传。
+  return { ...data };
 }
 
 export class TicketAssignmentApi {

@@ -40,7 +40,8 @@ export interface SLAViolation {
   tenantId: number;
 }
 
-// SLA合规报告接口（字段为 camelCase；注意后端 compliance-report 端点接收的 query 参数为 snake_case start_date/end_date）
+// SLA 合规报告接口：所有字段统一 camelCase（包括嵌套 reportPeriod.startDate/endDate），
+// 后端 DTO 已迁到 camelCase form tag，前端不再使用 snake_case 兼容。
 export interface SLAComplianceReport {
   totalTickets: number;
   metSla: number;

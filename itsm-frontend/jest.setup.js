@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import { MessageChannel as NodeMessageChannel } from 'node:worker_threads';
 
 // Mock dayjs - required for Ant Design DatePicker
 // Must mock both default and named exports
@@ -126,7 +125,20 @@ jest.mock('dayjs', () => {
 });
 
 if (typeof globalThis.MessageChannel === 'undefined') {
-  globalThis.MessageChannel = NodeMessageChannel;
+  // React's scheduler needs MessageChannel, but worker_threads.MessageChannel
+  // keeps a native MESSAGEPORT referenced for the lifetime of each Jest worker.
+  // A browser-shaped microtask-backed channel preserves async scheduling in
+  // jsdom without leaving a native handle or coupling React to fake timers.
+  globalThis.MessageChannel = class TestMessageChannel {
+    constructor() {
+      this.port1 = { onmessage: null };
+      this.port2 = {
+        postMessage: (data) => {
+          queueMicrotask(() => this.port1.onmessage?.({ data }));
+        },
+      };
+    }
+  };
 }
 
 // Mock Next.js router

@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       </div>
 
       {/* 主菜单 */}
-      <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto', opacity: capabilitiesLoading ? 0.85 : 1 }}>
+      <div className={styles.mainMenu} style={{ flex: 1, overflowY: collapsed ? 'visible' : 'auto', opacity: capabilitiesLoading ? 0.85 : 1 }}>
         <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
       </div>
 

@@ -18,6 +18,12 @@ interface MenuItemsProps {
 
 type MenuItemRender = Required<MenuProps>['items'][number];
 
+/** 取菜单项的纯文本标题：label 为 JSX 时，antd 收缩态无法自动生成
+ * Tooltip，需显式传 title，否则收缩后悬浮只有图标没有文字。 */
+function itemTitleText(item: MenuItem): string | undefined {
+  return typeof item.label === 'string' ? item.label : undefined;
+}
+
 /**
  * 渲染菜单项
  * 使用唯一的 key（前缀 + index）避免 Ant Design Menu 的 key 冲突
@@ -48,6 +54,7 @@ export function renderMenuItems(
       return {
         key: uniqueParentKey,
         icon: item.icon,
+        title: itemTitleText(item),
         label: (
           <div
             className={styles.menuItemLabel}
@@ -80,13 +87,20 @@ export function renderMenuItems(
           return {
             key: uniqueChildKey,
             icon: child.icon,
+            title: itemTitleText(child),
             label: (
-              <div className={styles.menuItemLabel}>
+              <div
+                className={styles.menuItemLabel}
+                // antd v6 items[].onClick 在 SubMenu 展开态下偶发不触发（rc-menu 内部
+                // 事件冒泡与 title 切换竞争），保留 label 层 onClick 兜底，跟父项同
+                // 一套机制，保证「变更管理 → 新建变更」这类子项一定可跳转。
+                onClick={() => onMenuClick(child.path || child.key)}
+              >
                 <span className="truncate">{child.label}</span>
                 {child.badge && <Badge count={child.badge} size="small" className={styles.menuItemBadge} />}
               </div>
             ),
-            onClick: () => onMenuClick(child.key),
+            onClick: () => onMenuClick(child.path || child.key),
           };
         }),
       };
@@ -103,9 +117,11 @@ export function renderMenuItems(
     return {
       key: uniqueKey,
       icon: item.icon,
+      title: itemTitleText(item),
       label: (
         <div
           className={styles.menuItemLabel}
+          onClick={() => onMenuClick(item.path || item.key)}
           title={
             typeof item.description === 'string'
               ? item.description
@@ -118,7 +134,7 @@ export function renderMenuItems(
           {item.badge && <Badge count={item.badge} size="small" className={styles.menuItemBadge} />}
         </div>
       ),
-      onClick: () => onMenuClick(item.key),
+      onClick: () => onMenuClick(item.path || item.key),
       className: styles.menuItem,
     };
   });
@@ -136,6 +152,7 @@ export const MenuItems: React.FC<MenuItemsProps> = ({ items, selectedKeys, onMen
       items={renderMenuItems(items, onMenuClick)}
       theme="light"
       className={styles.customMenu}
+      getPopupContainer={() => document.body}
     />
   );
 };

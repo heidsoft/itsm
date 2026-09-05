@@ -4,16 +4,20 @@
  */
 
 import { logger } from '@/lib/env';
+import { httpClient } from '@/lib/api/http-client';
 import type { TicketNotification } from '@/lib/api/ticket-notification-api';
+import type { UserNotification } from '@/lib/api/ticket-notification-api';
 export type { TicketNotification } from '@/lib/api/ticket-notification-api';
+export type { UserNotification } from '@/lib/api/ticket-notification-api';
 
 export interface NotificationWSMessage {
   type: 'notification' | 'heartbeat' | 'error';
-  data?: TicketNotification;
+  /** 服务端推送的是原始通知契约（message/read 字段） */
+  data?: UserNotification;
   message?: string;
 }
 
-export type NotificationCallback = (notification: TicketNotification) => void;
+export type NotificationCallback = (notification: UserNotification) => void;
 export type ConnectionCallback = (connected: boolean) => void;
 export type ReconnectCallback = (attempt: number, maxAttempts: number) => void;
 export type MaxAttemptsCallback = () => void;
@@ -47,7 +51,6 @@ class NotificationWSService {
   private reconnectCallbacks: Set<ReconnectCallback> = new Set();
   private maxAttemptsCallbacks: Set<MaxAttemptsCallback> = new Set();
   private userId: number | null = null;
-  private token: string | null = null;
   private shouldReconnect = true;
   private isManualDisconnect = false;
 
@@ -61,21 +64,35 @@ class NotificationWSService {
 
   /**
    * 连接 WebSocket
+   * 流程：先 POST /api/v1/ws/ticket 获取短期票据，再用 ?ticket= 建立连接
    */
-  connect(userId: number, token: string): Promise<void> {
+  async connect(userId: number, _token: string): Promise<void> {
+    this.userId = userId;
+    this.shouldReconnect = true;
+    this.isManualDisconnect = false;
+
+    // 1. 获取 WebSocket 短期票据（认证走 httpOnly cookie，CSRF 由 httpClient 自动处理）
+    let ticket: string;
+    try {
+      const data = await httpClient.request<{ ticket: string }>('/api/v1/ws/ticket', {
+        method: 'POST',
+      });
+      if (!data?.ticket) {
+        throw new Error('获取 WebSocket 票据失败');
+      }
+      ticket = data.ticket;
+    } catch (err) {
+      logger.error('[NotificationWS] Failed to get WS ticket:', err);
+      throw err;
+    }
+
+    // 2. 使用票据建立 WebSocket 连接
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `ws://${window.location.host}/api/v1/ws/notifications`;
+    const url = `${wsUrl}?ticket=${encodeURIComponent(ticket)}`;
+
+    this.cleanup();
+
     return new Promise((resolve, reject) => {
-      this.userId = userId;
-      this.token = token;
-      this.shouldReconnect = true;
-      this.isManualDisconnect = false;
-
-      // 获取 WebSocket URL
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8090/api/v1/ws/notifications';
-      const url = `${wsUrl}?user_id=${userId}&token=${token}`;
-
-      // 清理旧连接
-      this.cleanup();
-
       try {
         this.ws = new WebSocket(url);
 
@@ -115,6 +132,12 @@ class NotificationWSService {
         reject(error);
       }
     });
+  }
+
+  private getApiBase(): string {
+    if (typeof window === 'undefined') return '';
+    const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    return `${proto}//${window.location.host}`;
   }
 
   /**
@@ -220,8 +243,8 @@ class NotificationWSService {
     this.reconnectCallbacks.forEach(cb => cb(this.reconnectAttempts, this.maxReconnectAttempts));
 
     this.reconnectTimeout = setTimeout(() => {
-      if (this.shouldReconnect && this.userId && this.token) {
-        this.connect(this.userId, this.token).catch(() => {
+      if (this.shouldReconnect && this.userId) {
+        this.connect(this.userId, '').catch(() => {
           // 连接失败由 onclose 处理，会触发重连
         });
       }
@@ -295,11 +318,11 @@ class NotificationWSService {
     this.reconnectAttempts = 0;
     this.reconnectDelay = 0;
 
-    if (this.userId && this.token) {
-      return this.connect(this.userId, this.token);
+    if (this.userId) {
+      return this.connect(this.userId, '');
     }
 
-    return Promise.reject(new Error('No userId or token available'));
+    return Promise.reject(new Error('No userId available'));
   }
 
   /**

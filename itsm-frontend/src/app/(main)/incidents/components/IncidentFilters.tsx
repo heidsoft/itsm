@@ -69,8 +69,10 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                   { value: "assigned", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-teal-500 rounded-full"></div><span>{t('incidents.statusAssigned')}</span></div> },
                   { value: "in_progress", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div><span>{t('incidents.statusInProgress')}</span></div> },
                   { value: "escalated", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-red-500 rounded-full"></div><span>{t('incidents.statusEscalated')}</span></div> },
+                  { value: "on_hold", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-orange-500 rounded-full"></div><span>{t('incidents.statusOnHold')}</span></div> },
                   { value: "resolved", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span>{t('incidents.statusResolved')}</span></div> },
                   { value: "closed", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-gray-500 rounded-full"></div><span>{t('incidents.statusClosed')}</span></div> },
+                  { value: "cancelled", label: <div className="flex items-center space-x-2"><div className="w-2 h-2 bg-gray-400 rounded-full"></div><span>{t('incidents.statusCancelled')}</span></div> },
                 ]}
               />
             </div>
@@ -105,10 +107,13 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
                 onChange={value => onFilterChange?.(status, priority, value)}
                 className="w-full rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                 options={[
+                  { value: "manual", label: "✍️ " + t('incidents.sourceManual') },
+                  { value: "monitoring", label: "📡 " + t('incidents.sourceMonitoring') },
                   { value: "email", label: "📧 " + t('incidents.sourceEmail') },
                   { value: "phone", label: "📞 " + t('incidents.sourcePhone') },
                   { value: "web", label: "🌐 " + t('incidents.sourceWeb') },
                   { value: "system", label: "⚙️ " + t('incidents.sourceSystem') },
+                  { value: "user", label: "👤 " + t('incidents.sourceUser') },
                 ]}
               />
             </div>

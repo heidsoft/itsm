@@ -1,10 +1,9 @@
 /**
- * CMDB API 服务 - 统一使用 /api/v1/configuration-items
+ * CMDB API 服务 - 统一使用生产路由 /api/v1/cmdb
  *
  * 注意：云资源/云账号/云服务/发现/对账等子资源在后端被挂在
  * `/api/v1/cmdb/*` 下（不是 `/api/v1/configuration-items/*`），
- * 所以这些子资源需要走 CMDB_BASE。CI 本体、CI 类型、关系仍走
- * `${BASE}`（与后端 /configuration-items 一致）。
+ * 所有 CMDB 资源统一走 `/api/v1/cmdb/*`，避免依赖已弃用的兼容别名。
  */
 
 import { httpClient } from './http-client';
@@ -60,8 +59,6 @@ export interface GetCIListRequest {
   search?: string;
   status?: string;
   environment?: string;
-  offset?: number;
-  limit?: number;
   page?: number;
   size?: number;
 }
@@ -87,9 +84,8 @@ export interface CMDBCapabilitiesResponse {
   items: CMDBRuntimeCapability[];
 }
 
-const BASE = '/api/v1/configuration-items';
-// CI 资源以外的子模块（云资源、云服务、云账号、发现、对账）后端挂在 `/api/v1/cmdb/*` 下
 const CMDB_BASE = '/api/v1/cmdb';
+const CIS_BASE = `${CMDB_BASE}/cis`;
 
 export class CMDBApi {
   static async getCapabilities(): Promise<CMDBCapabilitiesResponse> {
@@ -99,36 +95,32 @@ export class CMDBApi {
   // ==================== CI CRUD ====================
 
   static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {
-    const { offset, limit, ...filters } = query ?? {};
-    const size = filters.size ?? limit;
-    const page =
-      filters.page ?? (size && offset !== undefined ? Math.floor(offset / size) + 1 : undefined);
-    return httpClient.get(BASE, { ...filters, page, size });
+    return httpClient.get(CIS_BASE, query);
   }
 
   static async getCI(id: string | number): Promise<ConfigurationItem> {
-    return httpClient.get(`${BASE}/${id}`);
+    return httpClient.get(`${CIS_BASE}/${id}`);
   }
 
   static async createCI(request: CreateCIRequest): Promise<ConfigurationItem> {
-    return httpClient.post(BASE, request);
+    return httpClient.post(CIS_BASE, request);
   }
 
   static async updateCI(
     id: string | number,
     request: Partial<CreateCIRequest> & Record<string, any>
   ): Promise<ConfigurationItem> {
-    return httpClient.put(`${BASE}/${id}`, request);
+    return httpClient.put(`${CIS_BASE}/${id}`, request);
   }
 
   static async deleteCI(id: string | number): Promise<void> {
-    return httpClient.delete(`${BASE}/${id}`);
+    return httpClient.delete(`${CIS_BASE}/${id}`);
   }
 
   // ==================== Stats & Types ====================
 
   static async getCMDBStats(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return httpClient.get(`${BASE}/stats`, params);
+    return httpClient.get(`${CIS_BASE}/stats`, params);
   }
 
   static async getCITypes(): Promise<CIType[]> {
@@ -137,7 +129,7 @@ export class CMDBApi {
     for (let page = 1; ; page += 1) {
       const response = await httpClient.get<
         CIType[] | { items: CIType[]; total?: number; page?: number; size?: number }
-      >(`${BASE}/types`, { page, size });
+      >(`${CMDB_BASE}/ci-types`, { page, size });
       if (Array.isArray(response)) return response;
       const items = response.items ?? [];
       all.push(...items);
@@ -160,7 +152,7 @@ export class CMDBApi {
     parentTypeId?: number;
     isActive?: boolean;
   }): Promise<CIType> {
-    return httpClient.post(`${BASE}/types`, data);
+    return httpClient.post(`${CMDB_BASE}/ci-types`, data);
   }
 
   static async updateCITypes(
@@ -176,21 +168,21 @@ export class CMDBApi {
       isActive?: boolean;
     }
   ): Promise<CIType> {
-    return httpClient.put(`${BASE}/types/${id}`, data);
+    return httpClient.put(`${CMDB_BASE}/ci-types/${id}`, data);
   }
 
   static async deleteCITypes(id: number): Promise<void> {
-    return httpClient.delete(`${BASE}/types/${id}`);
+    return httpClient.delete(`${CMDB_BASE}/ci-types/${id}`);
   }
 
   // ==================== Topology & Impact ====================
 
   static async getCITopology(id: number, depth = 3): Promise<TopologyGraph> {
-    return httpClient.get(`${BASE}/${id}/topology`, { depth });
+    return httpClient.get(`${CIS_BASE}/${id}/topology`, { depth });
   }
 
   static async getCIImpactAnalysis(id: number): Promise<ImpactAnalysisResponse> {
-    return httpClient.get(`${BASE}/${id}/impact-analysis`);
+    return httpClient.get(`${CIS_BASE}/${id}/impact-analysis`);
   }
 
   /**
@@ -198,7 +190,7 @@ export class CMDBApi {
    * 单一接口取代散落的硬编码元数据；fail-soft 用于前端词汇表初始化。
    */
   static async getOntology(): Promise<Record<string, unknown>> {
-    return httpClient.get(`${BASE}/ontology`);
+    return httpClient.get(`${CMDB_BASE}/ontology`);
   }
 
   /**
@@ -215,7 +207,7 @@ export class CMDBApi {
       reverse?: string;
     }>;
   }> {
-    return httpClient.get(`${BASE}/relationship-types`);
+    return httpClient.get(`${CMDB_BASE}/relationship-types`);
   }
 
   static async analyzeImpact(request: {
@@ -223,7 +215,7 @@ export class CMDBApi {
     analysisType?: string;
     maxDepth?: number;
   }): Promise<ImpactAnalysisResponse> {
-    return httpClient.get(`${BASE}/${request.ciId}/impact-analysis`, {
+    return httpClient.get(`${CIS_BASE}/${request.ciId}/impact-analysis`, {
       maxDepth: request.maxDepth,
     });
   }
@@ -236,7 +228,7 @@ export class CMDBApi {
     data?: Array<Record<string, unknown>>;
     total?: number;
   }> {
-    return httpClient.get(`${BASE}/${id}/change-history`, params);
+    return httpClient.get(`${CIS_BASE}/${id}/history`, params);
   }
 
   // ==================== Relationships ====================
@@ -247,7 +239,7 @@ export class CMDBApi {
     type: string;
     description?: string;
   }): Promise<CIRelationship> {
-    return httpClient.post(`${BASE}/relationships`, data);
+    return httpClient.post(`${CMDB_BASE}/relationships`, data);
   }
 
   static async createRelationship(request: {
@@ -271,11 +263,11 @@ export class CMDBApi {
       types?: string[];
     }
   ): Promise<CIRelationship[]> {
-    return httpClient.get(`${BASE}/${ciId}/relationships`, params);
+    return httpClient.get(`${CIS_BASE}/${ciId}/relationships`, params);
   }
 
   static async deleteRelationship(id: string): Promise<void> {
-    return httpClient.delete(`${BASE}/relationships/${id}`);
+    return httpClient.delete(`${CMDB_BASE}/relationships/${id}`);
   }
 
   // ==================== Reconciliation ====================

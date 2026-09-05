@@ -261,6 +261,7 @@ export function AISuggestionPanel({
                       ? '#1890ff'
                       : '#ff4d4f'
                 }
+                format={(p) => `${p ?? confidencePercent}%`}
                 className="mb-0"
               />
             </div>

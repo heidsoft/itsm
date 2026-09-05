@@ -283,9 +283,9 @@ export const useDashboardData = () => {
         setRetryCount(prev => prev + 1);
 
         // 如果有缓存数据，在错误时仍然显示缓存数据
-        if (cachedData && !data) {
+        if (cachedData) {
           console.warn('API调用失败，使用缓存数据:', errorMessage);
-          setData(cachedData.data);
+          setData(currentData => currentData ?? cachedData.data);
           setLastUpdated(new Date(cachedData.timestamp));
         }
       } finally {
@@ -293,7 +293,7 @@ export const useDashboardData = () => {
         abortControllerRef.current = null;
       }
     },
-    [cachedData, setCachedData, setRefreshState, data]
+    [cachedData, setCachedData, setRefreshState]
   );
 
   const refreshData = useCallback(() => {

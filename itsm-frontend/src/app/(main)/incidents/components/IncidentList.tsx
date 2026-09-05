@@ -55,8 +55,13 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       text: t('incidents.statusInvestigating') || '调查中',
       backgroundColor: '#f9f0ff',
     },
-    // 处理中状态
+    // 处理中状态 (both camelCase and snake_case from API)
     inProgress: {
+      color: '#1890ff',
+      text: t('incidents.statusInProgress'),
+      backgroundColor: '#e6f7ff',
+    },
+    'in_progress': {
       color: '#1890ff',
       text: t('incidents.statusInProgress'),
       backgroundColor: '#e6f7ff',
@@ -73,11 +78,23 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       text: t('incidents.statusEscalated') || '已升级',
       backgroundColor: '#fff2f0',
     },
+    // 已暂停
+    'on_hold': {
+      color: '#fa8c16',
+      text: t('incidents.statusOnHold') || '已暂停',
+      backgroundColor: '#fff7e6',
+    },
     // 已解决状态
     resolved: {
       color: '#52c41a',
       text: t('incidents.statusResolved'),
       backgroundColor: '#f6ffed',
+    },
+    // 已取消状态
+    cancelled: {
+      color: '#00000073',
+      text: t('incidents.statusCancelled') || '已取消',
+      backgroundColor: '#fafafa',
     },
     // 已关闭状态
     closed: {

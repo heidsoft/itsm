@@ -28,8 +28,7 @@ export interface ProcessDefinition {
   description?: string;
   category?: string;
   version: number;
-  status: 'draft' | 'active' | 'suspended' | 'archived';
-  xml: string;
+  bpmnXml: string;
   deploymentId?: number;
   deploymentTime?: string;
   tenantId?: number;
@@ -43,6 +42,7 @@ export interface ProcessDefinitionListResponse {
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 // 流程定义请求
@@ -51,14 +51,14 @@ export interface CreateProcessDefinitionRequest {
   name: string;
   description?: string;
   category?: string;
-  xml: string;
+  bpmnXml: string;
 }
 
 export interface UpdateProcessDefinitionRequest {
   name?: string;
   description?: string;
   category?: string;
-  xml?: string;
+  bpmnXml?: string;
 }
 
 export interface CloneProcessDefinitionRequest {
@@ -203,7 +203,7 @@ export interface ProcessVersion {
   version: number;
   name: string;
   description?: string;
-  xml: string;
+  bpmnXml: string;
   status: string;
   isActivated: boolean;
   createdBy?: number;
@@ -297,11 +297,11 @@ export class BPMNWorkflowApi {
   static async createProcessDefinition(
     data: CreateProcessDefinitionRequest
   ): Promise<ProcessDefinition> {
-    const res = await httpClient.post<{ data?: ProcessDefinition } & ProcessDefinition>(
+    const res = await httpClient.post<ProcessDefinition>(
       `${this.baseUrl}/process-definitions`,
       data
     );
-    return (res as { data?: ProcessDefinition }).data ?? (res as ProcessDefinition);
+    return res;
   }
 
   /**
@@ -321,23 +321,17 @@ export class BPMNWorkflowApi {
     if (params?.status) query.status = params.status;
     if (params?.keyword) query.keyword = params.keyword;
 
-    const res = await httpClient.get<
-      { data?: ProcessDefinitionListResponse } & ProcessDefinitionListResponse
-    >(`${this.baseUrl}/process-definitions`, query);
-    return (
-      (res as { data?: ProcessDefinitionListResponse }).data ??
-      (res as ProcessDefinitionListResponse)
-    );
+    return httpClient.get<ProcessDefinitionListResponse>(`${this.baseUrl}/process-definitions`, query);
   }
 
   /**
    * 获取单个流程定义
    */
   static async getProcessDefinition(key: string): Promise<ProcessDefinition> {
-    const res = await httpClient.get<{ data?: ProcessDefinition } & ProcessDefinition>(
+    const res = await httpClient.get<ProcessDefinition>(
       `${this.baseUrl}/process-definitions/${encodeURIComponent(key)}`
     );
-    return (res as { data?: ProcessDefinition }).data ?? (res as ProcessDefinition);
+    return res;
   }
 
   /**
@@ -347,11 +341,11 @@ export class BPMNWorkflowApi {
     key: string,
     data: UpdateProcessDefinitionRequest
   ): Promise<ProcessDefinition> {
-    const res = await httpClient.put<{ data?: ProcessDefinition } & ProcessDefinition>(
+    const res = await httpClient.put<ProcessDefinition>(
       `${this.baseUrl}/process-definitions/${encodeURIComponent(key)}`,
       data
     );
-    return (res as { data?: ProcessDefinition }).data ?? (res as ProcessDefinition);
+    return res;
   }
 
   /**
@@ -380,11 +374,11 @@ export class BPMNWorkflowApi {
     key: string,
     data: CloneProcessDefinitionRequest
   ): Promise<ProcessDefinition> {
-    const res = await httpClient.post<{ data?: ProcessDefinition } & ProcessDefinition>(
+    const res = await httpClient.post<ProcessDefinition>(
       `${this.baseUrl}/process-definitions/${encodeURIComponent(key)}/clone`,
       data
     );
-    return (res as { data?: ProcessDefinition }).data ?? (res as ProcessDefinition);
+    return res;
   }
 
   /**
@@ -394,11 +388,11 @@ export class BPMNWorkflowApi {
     key: string,
     active: boolean
   ): Promise<ProcessDefinition> {
-    const res = await httpClient.put<{ data?: ProcessDefinition } & ProcessDefinition>(
+    const res = await httpClient.put<ProcessDefinition>(
       `${this.baseUrl}/process-definitions/${encodeURIComponent(key)}/active`,
       { active }
     );
-    return (res as { data?: ProcessDefinition }).data ?? (res as ProcessDefinition);
+    return res;
   }
 
   // ==================== 流程实例管理 ====================
@@ -407,11 +401,11 @@ export class BPMNWorkflowApi {
    * 启动流程实例
    */
   static async startProcess(data: StartProcessRequest): Promise<ProcessInstance> {
-    const res = await httpClient.post<{ data?: ProcessInstance } & ProcessInstance>(
+    const res = await httpClient.post<ProcessInstance>(
       `${this.baseUrl}/process-instances`,
       data
     );
-    return (res as { data?: ProcessInstance }).data ?? (res as ProcessInstance);
+    return res;
   }
 
   /**
@@ -434,13 +428,7 @@ export class BPMNWorkflowApi {
     if (params?.startTimeFrom) query.startTimeFrom = params.startTimeFrom;
     if (params?.startTimeTo) query.startTimeTo = params.startTimeTo;
 
-    const res = await httpClient.get<
-      { data?: ProcessInstanceListResponse } & ProcessInstanceListResponse
-    >(`${this.baseUrl}/process-instances`, query);
-    return (
-      (res as { data?: ProcessInstanceListResponse }).data ??
-      (res as ProcessInstanceListResponse)
-    );
+    return httpClient.get<ProcessInstanceListResponse>(`${this.baseUrl}/process-instances`, query);
   }
 
   /**

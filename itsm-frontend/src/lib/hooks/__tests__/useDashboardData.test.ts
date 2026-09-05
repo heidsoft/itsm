@@ -1,6 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardData } from '../useDashboardData';
 
+const mockSetLocalStorage = jest.fn();
+const mockSetSessionStorage = jest.fn();
+
 // Mock the DashboardAPI
 jest.mock('@/lib/api/dashboard-api', () => ({
   DashboardAPI: {
@@ -17,16 +20,10 @@ jest.mock('@/lib/services/ticket-service', () => ({
 
 // Mock usePerformance hooks (useLocalStorage, useSessionStorage)
 jest.mock('../usePerformance', () => ({
-  useLocalStorage: (key: string, initial: unknown) => {
-    const state = { value: initial };
-    const setValue = (v: unknown) => { state.value = typeof v === 'function' ? (v as Function)(state.value) : v; };
-    return [state.value, setValue, jest.fn()];
-  },
-  useSessionStorage: (key: string, initial: unknown) => {
-    const state = { value: initial };
-    const setValue = (v: unknown) => { state.value = typeof v === 'function' ? (v as Function)(state.value) : v; };
-    return [state.value, setValue, jest.fn()];
-  },
+  useLocalStorage: (_key: string, initial: unknown) =>
+    [initial, mockSetLocalStorage, jest.fn()],
+  useSessionStorage: (_key: string, initial: unknown) =>
+    [initial, mockSetSessionStorage, jest.fn()],
 }));
 
 import { DashboardAPI } from '@/lib/api/dashboard-api';
@@ -38,7 +35,6 @@ const mockGetTicketStats = ticketService.getTicketStats as jest.Mock;
 describe('useDashboardData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
     mockGetOverview.mockResolvedValue({
       kpiMetrics: [
         { id: 'total_tickets', title: 'Total', value: 100, unit: '', color: '', trend: 'up', change: 5, changeType: 'increase' },
@@ -57,10 +53,6 @@ describe('useDashboardData', () => {
     });
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   it('should return initial loading state', () => {
     const { result } = renderHook(() => useDashboardData());
 
@@ -69,7 +61,6 @@ describe('useDashboardData', () => {
   });
 
   it('should load data on mount', async () => {
-    jest.useRealTimers();
     const { result } = renderHook(() => useDashboardData());
 
     await waitFor(() => {

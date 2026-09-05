@@ -355,15 +355,31 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const token = ++importTokenRef.current;
     modeler
       .importXML(xml)
-      .then(() => {
+      .then(async () => {
         if (token !== importTokenRef.current || modelerRef.current !== modeler) return;
+        // AI / 模板来源的 XML 经常缺少 <bpmndi:BPMNDiagram>（DI 坐标部分），
+        // bpmn-js 解析 moddle 成功但画布渲染时报 "no diagram to display"。
+        // 这里立即 saveXML 让 moddle writer 自动补全 BPMNDI（默认坐标 + 形状），
+        // 再通过 onChange 回填父组件，保证后续保存 / 编辑都有完整 DI。
+        let normalizedXml: string | null = xml;
+        try {
+          const saved = await modeler.saveXML({ format: true });
+          if (saved && typeof saved.xml === 'string' && saved.xml.length > 0) {
+            normalizedXml = saved.xml;
+            emittedXmlRef.current = saved.xml;
+            // 告诉父组件使用补全后的 XML，避免下次又被识别为“外部新 XML”而重复导入。
+            onChangeRef.current?.(saved.xml);
+          }
+        } catch (saveErr) {
+          console.error('Failed to normalize XML after import:', saveErr);
+        }
         try {
           const canvas = modeler.get('canvas') as { zoom: (level?: string) => number };
           canvas.zoom('fit-viewport');
         } catch (err) {
           console.error('Failed to fit viewport after import:', err);
         }
-        setCurrentXML(xml);
+        setCurrentXML(normalizedXml ?? xml);
         // 导入新流程会重置命令栈
         setCanUndo(false);
         setCanRedo(false);

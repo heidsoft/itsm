@@ -34,6 +34,7 @@ import {
   Switch,
 } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import type { CIType } from '@/types/biz/cmdb';
 import {
   ATTRIBUTE_FIELD_TYPE_OPTIONS,
@@ -362,6 +363,19 @@ const CMDBTypesManagement = () => {
         </Title>
         <Text type='secondary'>管理CMDB配置项类型，自定义IT基础设施分类</Text>
       </div>
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title='CI 类型怎么用'
+        intro='CI 类型定义配置项的字段模板。CMDB 中创建配置项（CI 实例）时先选类型，再按该类型的属性模板录入字段。'
+        steps={[
+          '点“创建类型”填写名称等基本信息；建议按资产层次组织，如“服务器 → 物理服务器 / 虚拟机”。',
+          '属性模板：在表单中逐行维护字段（名称、类型、必填），支持文本、数字、布尔、日期、枚举选择五种类型；改完点“校验模板配置”确认无误，“JSON 预览”用于核对最终结构，提交时自动保存。',
+          '继承类型（可选）：选择父类型后自动继承其全部属性，当前类型定义同名属性时覆盖父类型，避免重复维护公共字段。',
+          '通过行内开关启用/停用类型；停用不会删除已有配置项数据。',
+          '删除限制：存在使用该类型的 CI 实例时无法删除，需先迁移或清理相关实例。',
+        ]}
+      />
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className='mb-6'>

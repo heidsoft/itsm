@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, Row, Col, Typography, Space, Avatar, Tooltip, Badge } from 'antd';
+import { Card, Row, Col, Typography, Space, Avatar, Tooltip } from 'antd';
 import {
   Users,
   Shield,
@@ -40,7 +40,6 @@ interface QuickActionItem {
   title: string;
   desc: string;
   href: string;
-  count: number;
   color: string;
   icon: LucideIcon;
 }
@@ -82,10 +81,10 @@ export const QuickActions: React.FC = () => {
       icon: Users,
       accent: '#3b82f6',
       items: [
-        { title: '用户管理', desc: '用户账户与组织', href: '/admin/users', count: 1234, color: '#3b82f6', icon: UserCheck },
-        { title: '角色管理', desc: '角色与权限配置', href: '/admin/roles', count: 15, color: '#6366f1', icon: UserCog },
-        { title: '用户组', desc: '组织架构管理', href: '/admin/groups', count: 28, color: '#06b6d4', icon: UserPlus },
-        { title: '权限矩阵', desc: '细粒度权限控制', href: '/admin/permissions', count: 156, color: '#8b5cf6', icon: Lock },
+        { title: '用户管理', desc: '用户账户与组织', href: '/admin/users', color: '#3b82f6', icon: UserCheck },
+        { title: '角色管理', desc: '角色与权限配置', href: '/admin/roles', color: '#6366f1', icon: UserCog },
+        { title: '用户组', desc: '组织架构管理', href: '/admin/groups', color: '#06b6d4', icon: UserPlus },
+        { title: '权限矩阵', desc: '细粒度权限控制', href: '/admin/permissions', color: '#8b5cf6', icon: Lock },
       ],
     },
     {
@@ -95,10 +94,11 @@ export const QuickActions: React.FC = () => {
       icon: Workflow,
       accent: '#10b981',
       items: [
-        { title: '工作流设计', desc: 'BPMN流程编排', href: '/admin/workflows', count: 45, color: '#10b981', icon: Workflow },
-        { title: '审批链', desc: '多级审批规则', href: '/admin/approval-chains', count: 12, color: '#14b8a6', icon: CheckSquare },
-        { title: 'SLA定义', desc: '服务级别协议', href: '/admin/sla-definitions', count: 8, color: '#f59e0b', icon: Clock },
-        { title: '升级规则', desc: '自动升级策略', href: '/admin/escalation-rules', count: 6, color: '#f97316', icon: AlertTriangle },
+        { title: '工单类型', desc: '绑定流程、SLA、审批与分配', href: '/tickets/types', color: '#059669', icon: ClipboardList },
+        { title: '工作流设计', desc: 'BPMN流程编排', href: '/admin/workflows', color: '#10b981', icon: Workflow },
+        { title: '审批链', desc: '多级审批规则', href: '/admin/approval-chains', color: '#14b8a6', icon: CheckSquare },
+        { title: 'SLA定义', desc: '服务级别协议', href: '/admin/sla-definitions', color: '#f59e0b', icon: Clock },
+        { title: '升级规则', desc: '自动升级策略', href: '/admin/escalation-rules', color: '#f97316', icon: AlertTriangle },
       ],
     },
     {
@@ -108,10 +108,10 @@ export const QuickActions: React.FC = () => {
       icon: Settings,
       accent: '#8b5cf6',
       items: [
-        { title: '服务目录', desc: '服务项管理', href: '/admin/service-catalogs', count: 89, color: '#ec4899', icon: BookOpen },
-        { title: '通知配置', desc: '消息推送规则', href: '/notifications', count: 24, color: '#ef4444', icon: Megaphone },
-        { title: '工单分类', desc: '分类与模板', href: '/admin/ticket-categories', count: 32, color: '#64748b', icon: Folder },
-        { title: '系统设置', desc: '全局参数配置', href: '/admin/system-config', count: 67, color: '#0f172a', icon: Cog },
+        { title: '服务目录', desc: '服务项管理', href: '/admin/service-catalogs', color: '#ec4899', icon: BookOpen },
+        { title: '通知配置', desc: '消息推送规则', href: '/notifications', color: '#ef4444', icon: Megaphone },
+        { title: '工单分类', desc: '分类与模板', href: '/admin/ticket-categories', color: '#64748b', icon: Folder },
+        { title: '系统设置', desc: '全局参数配置', href: '/admin/system-config', color: '#0f172a', icon: Cog },
       ],
     },
   ];
@@ -175,16 +175,6 @@ export const QuickActions: React.FC = () => {
               >
                 <item.icon size={20} style={{ color: item.color }} />
               </div>
-              <Badge
-                count={item.count}
-                style={{
-                  backgroundColor: `${item.color}15`,
-                  color: item.color,
-                  border: 'none',
-                  fontWeight: 600,
-                  fontSize: 11,
-                }}
-              />
             </div>
 
             {/* 标题 */}

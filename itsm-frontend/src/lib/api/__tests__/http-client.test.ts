@@ -217,6 +217,16 @@ describe('httpClient', () => {
   });
 
   describe('headers', () => {
+    it('continues without a CSRF header when token bootstrap is unavailable', async () => {
+      (security.csrf.getToken as jest.Mock).mockRejectedValueOnce(new Error('csrf unavailable'));
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
+
+      await httpClient.post('/api/v1/tickets', { title: 't' });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['X-CSRF-Token']).toBeUndefined();
+    });
+
     it('adds CSRF token to mutating requests only', async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
       await httpClient.post('/api/v1/tickets', { title: 't' });

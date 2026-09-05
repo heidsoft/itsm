@@ -22,6 +22,9 @@ export interface TicketQueryFilters {
   source?: string;
   impact?: string;
   urgency?: string;
+  isOverdue?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface BatchDeleteResult {
@@ -106,6 +109,9 @@ export const useTickets = (): UseTicketsReturn => {
         dateFrom: dateRange?.[0],
         dateTo: dateRange?.[1],
         tags: currentFilters.tags,
+        isOverdue: currentFilters.isOverdue,
+        sortBy: currentFilters.sortBy,
+        sortOrder: currentFilters.sortOrder,
       });
 
       setTickets(response.tickets ?? []);

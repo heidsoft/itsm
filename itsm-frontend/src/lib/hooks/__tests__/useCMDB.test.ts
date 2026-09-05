@@ -27,9 +27,18 @@ jest.mock('@/lib/api/cmdb-api', () => ({
   },
 }));
 
+jest.mock('@/lib/api/cmdb-relationship', () => ({
+  CIRelationshipAPI: {
+    createRelationship: jest.fn(),
+    deleteRelationship: jest.fn(),
+  },
+}));
+
 import { CMDBApi } from '@/lib/api/cmdb-api';
+import { CIRelationshipAPI } from '@/lib/api/cmdb-relationship';
 import { message } from 'antd';
 const mockApi = CMDBApi as jest.Mocked<typeof CMDBApi>;
+const mockRelationshipApi = CIRelationshipAPI as jest.Mocked<typeof CIRelationshipAPI>;
 
 const createWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -195,7 +204,7 @@ describe('useCMDB hooks', () => {
 
   describe('useCreateRelationshipMutation', () => {
     it('creates relationship', async () => {
-      mockApi.createRelationship.mockResolvedValue({ parentId: 'c1', childId: 'c2' } as any);
+      mockRelationshipApi.createRelationship.mockResolvedValue({ sourceCiId: 1, targetCiId: 2 } as any);
       const { result } = renderHook(() => useCreateRelationshipMutation(), { wrapper: createWrapper() });
       act(() => { result.current.mutate({ sourceCI: 'c1', targetCI: 'c2', type: 'depends_on' } as any); });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -205,7 +214,7 @@ describe('useCMDB hooks', () => {
 
   describe('useDeleteRelationshipMutation', () => {
     it('deletes relationship', async () => {
-      mockApi.deleteRelationship.mockResolvedValue(undefined as any);
+      mockRelationshipApi.deleteRelationship.mockResolvedValue(undefined as any);
       const { result } = renderHook(() => useDeleteRelationshipMutation(), { wrapper: createWrapper() });
       act(() => { result.current.mutate('rel-1'); });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));

@@ -149,23 +149,25 @@ const NotificationCenter: React.FC<{
     if (open) {
       loadData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 });
+      const response = await TicketNotificationApi.getUserNotifications({ page: 1, size: 100 });
+      // 后端契约：{title, message, read}；应用内通知列表固定 channel=in_app
       const loadedNotifications: Notification[] = (response.notifications ?? []).map(item => ({
         id: item.id,
-        title: item.type,
-        message: item.content,
-        type: item.type === 'sla_warning' ? 'warning' : 'info',
-        channel: item.channel,
-        status: item.status,
-        recipient: item.user?.name || item.user?.username || String(item.userId),
-        sentAt: item.sentAt,
-        readAt: item.readAt,
+        title: item.title || item.type,
+        message: item.message,
+        type: item.type === 'warning' || item.type === 'error' || item.type === 'success'
+          ? (item.type as Notification['type'])
+          : 'info',
+        channel: 'in_app',
+        status: item.read ? 'read' : 'sent',
+        recipient: String(item.userId),
+        readAt: item.read ? item.updatedAt : undefined,
+        sentAt: item.createdAt,
         createdAt: item.createdAt,
       }));
 

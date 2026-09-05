@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { getTenantCode } from '@/lib/auth/token-storage';
+import { httpClient } from '@/lib/api/http-client';
 
 export interface ServiceRequest {
   id: number;
@@ -109,6 +110,20 @@ class ServiceRequestAPI {
       }
     }
 
+    // 为 mutating 请求添加 CSRF token（与 httpClient 保持一致）
+    const method = (options.method || 'GET').toUpperCase();
+    const csrfHeaders: Record<string, string> = {};
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      try {
+        const csrfToken = await httpClient.getCSRFTokenForExternal();
+        if (csrfToken) {
+          csrfHeaders['X-CSRF-Token'] = csrfToken;
+        }
+      } catch {
+        // CSRF token 获取失败不阻塞请求
+      }
+    }
+
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
@@ -117,6 +132,7 @@ class ServiceRequestAPI {
           'Content-Type': 'application/json',
           ...(tenantCode && { 'X-Tenant-Code': tenantCode }),
           ...(authToken && { Authorization: `Bearer ${authToken}` }),
+          ...csrfHeaders,
           ...options.headers,
         },
       });

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dayjs } from 'dayjs';
 import { App, Card, Divider, Table } from 'antd';
-import type { TablePaginationConfig, TableProps } from 'antd/es/table';
+import type { FilterValue, TablePaginationConfig, SorterResult, TableCurrentDataSource } from 'antd/es/table/interface';
+import type { TableProps } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
@@ -217,7 +218,7 @@ const TicketList: React.FC<TicketListProps> = ({
   const handleClearFilters = useCallback(() => {
     setFilterValues(DEFAULT_FILTER_VALUES);
     setSearchValue('');
-    updateFilters({});
+    updateFilters({ sortBy: undefined, sortOrder: undefined });
   }, [updateFilters]);
 
   const handleConfirmDelete = useCallback(
@@ -235,8 +236,12 @@ const TicketList: React.FC<TicketListProps> = ({
   );
 
   const columns = useMemo(
-    () => buildTicketListColumns({ onOpen: openTicket, onEdit: editTicket, onClose: closeTicket }),
-    [openTicket, editTicket, closeTicket]
+    () =>
+      buildTicketListColumns(
+        { onOpen: openTicket, onEdit: editTicket, onClose: closeTicket },
+        { sortBy: filters.sortBy, sortOrder: filters.sortOrder }
+      ),
+    [openTicket, editTicket, closeTicket, filters.sortBy, filters.sortOrder]
   );
 
   const rowSelection: TableProps<Ticket>['rowSelection'] = useMemo(
@@ -247,11 +252,37 @@ const TicketList: React.FC<TicketListProps> = ({
     [selection]
   );
 
+  // 前端列 key → 后端排序字段白名单（见 handlers/ticket repository sortBy case）
+  const SORT_FIELD_MAP: Record<string, string> = {
+    ticketNumber: 'ticket_number',
+    status: 'status',
+    priority: 'priority',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  };
+
   const handleTableChange: TableProps<Ticket>['onChange'] = useCallback(
-    (next: TablePaginationConfig) => {
+    (
+      next: TablePaginationConfig,
+      _tableFilters: Record<string, FilterValue | null>,
+      sorter: SorterResult<Ticket> | SorterResult<Ticket>[],
+      extra: TableCurrentDataSource<Ticket>
+    ) => {
+      // 服务端排序：sort 动作只更新排序条件（updateFilters 会重置到第 1 页并拉取）
+      if (extra?.action === 'sort') {
+        const s = Array.isArray(sorter) ? sorter[0] : sorter;
+        const columnKey = typeof s?.columnKey === 'string' ? s.columnKey : '';
+        updateFilters({
+          sortBy:
+            s?.order && SORT_FIELD_MAP[columnKey] ? SORT_FIELD_MAP[columnKey] : undefined,
+          sortOrder:
+            s?.order === 'ascend' ? 'asc' : s?.order === 'descend' ? 'desc' : undefined,
+        });
+        return;
+      }
       updatePagination(next.current ?? 1, next.pageSize ?? 20);
     },
-    [updatePagination]
+    [updateFilters, updatePagination]
   );
 
   useTableKeyboardNav<Ticket>({

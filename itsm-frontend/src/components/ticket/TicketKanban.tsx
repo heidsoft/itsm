@@ -76,13 +76,14 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const filteredTickets = useMemo(() => {
     let filtered = [...tickets];
 
-    // 搜索过滤（使用防抖后的值）
+    // 搜索过滤（使用防抖后的值；字段判空避免 undefined.toLowerCase 崩溃）
     if (debouncedSearchValue) {
+      const q = debouncedSearchValue.toLowerCase();
       filtered = filtered.filter(
         ticket =>
-          ticket.title.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
-          ticket.description.toLowerCase().includes(debouncedSearchValue.toLowerCase()) ||
-          ticket.ticketNumber.toLowerCase().includes(debouncedSearchValue.toLowerCase())
+          (ticket.title ?? '').toLowerCase().includes(q) ||
+          (ticket.description ?? '').toLowerCase().includes(q) ||
+          (ticket.ticketNumber ?? '').toLowerCase().includes(q)
       );
     }
 
@@ -202,7 +203,10 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
   // 工单卡片组件
   const TicketCard = ({ ticket }: { ticket: Ticket }) => {
-    const priorityConfig = PRIORITY_CONFIG[ticket.priority as keyof typeof PRIORITY_CONFIG];
+    // 未知优先级兼容：避免 PRIORITY_CONFIG 查不到时读 undefined.color 崩溃
+    const priorityConfig =
+      PRIORITY_CONFIG[ticket.priority as keyof typeof PRIORITY_CONFIG] ??
+      ({ color: '#d9d9d9', text: '未知', icon: '•' } as (typeof PRIORITY_CONFIG)[keyof typeof PRIORITY_CONFIG]);
 
     return (
       <Card
@@ -220,10 +224,20 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         ]}
       >
         <div className="space-y-2">
-          {/* 工单标题 */}
-          <div className="flex items-start justify-between">
+          {/* 工单标题：minWidth:0 防止 flex 子项被长文本撑开，固定 2 行截断 */}
+          <div className="flex items-start justify-between gap-2">
             <Tooltip title={ticket.title}>
-              <Text strong className="text-sm flex-1 mr-2 overflow-hidden text-ellipsis whitespace-nowrap" style={{ display: 'block' }}>
+              <Text
+                strong
+                className="text-sm flex-1 overflow-hidden"
+                style={{
+                  display: '-webkit-box',
+                  WebkitBoxOrient: 'vertical',
+                  WebkitLineClamp: 2,
+                  wordBreak: 'break-word',
+                  minWidth: 0,
+                }}
+              >
                 {ticket.title}
               </Text>
             </Tooltip>
@@ -233,25 +247,37 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 backgroundColor: priorityConfig.color,
                 fontSize: '12px',
                 lineHeight: '16px',
+                flexShrink: 0,
               }}
             />
           </div>
 
           {/* 工单号和类型 */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <Text code className="text-xs">
               {ticket.ticketNumber || '-'}
             </Text>
-            <Tag color="blue">{ticket.type}</Tag>
+            <Tag color="blue" style={{ flexShrink: 0, marginInlineEnd: 0 }}>
+              {ticket.type}
+            </Tag>
           </div>
 
-          {/* 工单描述 */}
-          <Paragraph
-            ellipsis={{ rows: 2, expandable: false }}
-            className="text-xs text-gray-500 mb-2"
-          >
-            {ticket.description}
-          </Paragraph>
+          {/* 工单描述：CSS 行截断（不依赖 antd JS 测量），超长内容固定 2 行 */}
+          <Tooltip title={ticket.description}>
+            <div
+              className="text-xs text-gray-500 mb-2"
+              style={{
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: 2,
+                overflow: 'hidden',
+                wordBreak: 'break-word',
+                minHeight: '2.6em',
+              }}
+            >
+              {ticket.description || '无描述'}
+            </div>
+          </Tooltip>
 
           {/* 时间信息 */}
           <div className="flex items-center text-xs text-gray-400">
@@ -347,44 +373,58 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         </Row>
       </Card>
 
-      {/* 看板列 */}
-      <Row gutter={[16, 0]}>
+      {/* 看板列：固定列宽 + 横向滚动。原先 6 列用 Col span=4 平分，
+          窄屏下列被压到极窄，长文本撞高卡片无法查看 */}
+      <div className="flex gap-4 items-stretch overflow-x-auto pb-4" style={{ minHeight: 600 }}>
         {KANBAN_STATUS_CONFIG.map(status => (
-          <Col span={4} key={status.key}>
-            <Card
-              title={
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div
-                      className="w-2 h-2 rounded-full mr-2"
-                      style={{ backgroundColor: status.color }}
-                    />
-                    <Text strong>{status.title}</Text>
-                  </div>
-                  <Badge
-                    count={ticketsByStatus[status.key]?.length || 0}
+          <Card
+            key={status.key}
+            title={
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div
+                    className="w-2 h-2 rounded-full mr-2"
                     style={{ backgroundColor: status.color }}
                   />
+                  <Text strong>{status.title}</Text>
                 </div>
-              }
-              size="small"
-              className="h-full"
-              style={{ minHeight: '600px' }}
-            >
-              <div className="space-y-2">
-                {ticketsByStatus[status.key]?.map(ticket => (
-                  <TicketCard key={ticket.id} ticket={ticket} />
-                ))}
-                {(!ticketsByStatus[status.key] || ticketsByStatus[status.key].length === 0) && (
-                  <div className="text-center text-gray-400 py-8">
-                    <Text type="secondary">暂无工单</Text>
-                  </div>
-                )}
+                <Badge
+                  count={ticketsByStatus[status.key]?.length || 0}
+                  style={{ backgroundColor: status.color }}
+                />
               </div>
-            </Card>
-          </Col>
+            }
+            size="small"
+            style={{
+              flex: '0 0 300px',
+              minWidth: 300,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            styles={{
+              header: { flexShrink: 0 },
+              body: {
+                flex: 1,
+                overflowY: 'auto',
+                // 列内滚动，卡片再多也不会把整页撞长
+                maxHeight: 'calc(100vh - 300px)',
+                padding: 12,
+              },
+            }}
+          >
+            <div className="space-y-2">
+              {ticketsByStatus[status.key]?.map(ticket => (
+                <TicketCard key={ticket.id} ticket={ticket} />
+              ))}
+              {(!ticketsByStatus[status.key] || ticketsByStatus[status.key].length === 0) && (
+                <div className="text-center text-gray-400 py-8">
+                  <Text type="secondary">暂无工单</Text>
+                </div>
+              )}
+            </div>
+          </Card>
         ))}
-      </Row>
+      </div>
 
       {/* 工单详情模态框 */}
       <Modal

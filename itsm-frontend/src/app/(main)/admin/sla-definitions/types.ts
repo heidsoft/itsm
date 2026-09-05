@@ -11,6 +11,9 @@ export interface SLADefinition {
   priority: 'P1' | 'P2' | 'P3' | 'P4';
   responseTime: string;
   resolutionTime: string;
+  /** 原始分钟数值：展示为文本后仍可回填编辑表单 */
+  responseTimeMinutes: number;
+  resolutionTimeMinutes: number;
   availability: string;
   businessHours: string;
   escalationRules: string[];

@@ -255,7 +255,7 @@ export const routes: RouteConfig[] = [
         },
       },
       {
-        path: '/changes/create',
+        path: '/changes/new',
         name: 'change-create',
         title: '创建变更',
         component: 'ChangeCreate',

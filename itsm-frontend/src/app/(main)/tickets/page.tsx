@@ -50,7 +50,13 @@ function TicketsPageContent() {
   // 从 URL 参数获取当前标签页和高级搜索状态
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['list', 'kanban', 'analytics', 'search'].includes(tab)) {
+    // 分析视图是独立页面 /tickets/analytics，本页无对应内容区，
+    // 直接渲染会空白，统一重导航
+    if (tab === 'analytics') {
+      router.replace('/tickets/analytics');
+      return;
+    }
+    if (tab && ['list', 'kanban', 'search'].includes(tab)) {
       setActiveTab(tab);
     }
     // 从 URL 恢复高级搜索面板状态
@@ -58,7 +64,11 @@ function TicketsPageContent() {
     if (search === 'advanced') {
       setShowAdvancedSearch(true);
     }
-  }, [searchParams]);
+    if (searchParams.get('overdue') === 'true') {
+      setAdvancedFilters({ isOverdue: true });
+      setActiveTab('list');
+    }
+  }, [searchParams, router]);
 
   // 获取工单统计数据
   const fetchTicketStats = useCallback(async () => {
@@ -82,6 +92,11 @@ function TicketsPageContent() {
 
   // 处理标签页切换
   const handleTabChange = (tab: string) => {
+    // 分析页是独立路由（带完整图表/导出），本页 tab 无内容区，点 analytics 直接导航
+    if (tab === 'analytics') {
+      router.push('/tickets/analytics');
+      return;
+    }
     setActiveTab(tab);
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set('tab', tab);
@@ -178,7 +193,7 @@ function TicketsPageContent() {
                   icon={<Bell />}
                   onClick={() => {
                     setActiveTab('list');
-                    router.push('/tickets?tab=list', { scroll: false });
+                    router.push('/tickets?tab=list&overdue=true', { scroll: false });
                   }}
                 >
                   {t('tickets.slaWarning')}

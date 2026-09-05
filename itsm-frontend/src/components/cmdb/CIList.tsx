@@ -54,14 +54,14 @@ const CIList: React.FC = () => {
   });
 
   const [query, setQuery] = useState({
-    offset: 0,
-    limit: 10,
+    page: 1,
+    size: 10,
   });
 
   // React Query：CI 列表（自动竞态/缓存/重试；queryKey 含 filter+page 让缓存自然按维度隔离）
   const listQuery = useCIsQuery({
-    offset: query.offset,
-    limit: query.limit,
+    page: query.page,
+    size: query.size,
     ciTypeId: filters.ciTypeId,
     search: filters.search || undefined,
     status: filters.status,
@@ -88,7 +88,7 @@ const CIList: React.FC = () => {
     // 防抖通过延迟设置 filters 实现。
     const t = setTimeout(() => {
       setFilters(prev => ({ ...prev, search: value }));
-      if (query.offset !== 0) setQuery(prev => ({ ...prev, offset: 0 }));
+      if (query.page !== 1) setQuery(prev => ({ ...prev, page: 1 }));
     }, 300);
     return () => clearTimeout(t);
   };
@@ -96,7 +96,7 @@ const CIList: React.FC = () => {
   // 下拉筛选变化：即时自动查询
   const handleFilterChange = (patch: Partial<typeof filters>) => {
     setFilters(prev => ({ ...prev, ...patch }));
-    setQuery(prev => ({ ...prev, offset: 0 }));
+    setQuery(prev => ({ ...prev, page: 1 }));
   };
 
   // 删除走 useDeleteCIMutation，自动 invalidate + onSuccess 提示
@@ -109,10 +109,10 @@ const CIList: React.FC = () => {
     });
   };
 
-  // handleSearch：React Query 模式下由 queryKey 驱动，"查询"按钮触发当前过滤条件生效（offset 归零）
+  // handleSearch：React Query 模式下由 queryKey 驱动，查询按钮触发当前过滤条件生效并回到第 1 页
   const handleSearch = () => {
-    if (query.offset !== 0) {
-      setQuery(prev => ({ ...prev, offset: 0 }));
+    if (query.page !== 1) {
+      setQuery(prev => ({ ...prev, page: 1 }));
     } else {
       listQuery.refetch();
     }
@@ -374,14 +374,14 @@ const CIList: React.FC = () => {
               ),
           }}
           pagination={{
-            current: Math.floor(query.offset / query.limit) + 1,
-            pageSize: query.limit,
+            current: query.page,
+            pageSize: query.size,
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: total => `共 ${total} 条记录`,
             pageSizeOptions: ['10', '20', '50', '100'],
-            onChange: (page, pageSize) => setQuery({ offset: (page - 1) * pageSize, limit: pageSize }),
+            onChange: (page, pageSize) => setQuery({ ...query, page, size: pageSize }),
           }}
           scroll={{ x: 1200 }}
           getPopupContainer={node => node.parentElement || document.body}

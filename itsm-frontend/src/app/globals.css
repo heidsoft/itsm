@@ -2224,3 +2224,17 @@ html:not(.dark) .ant-btn-default:focus {
     padding: 14px !important;
   }
 }
+
+/* 权限配置树（admin/permissions）：节点标题占满整行，
+   否则内部的 justify-between 不生效，开关/标签紧贴文字造成字段偏移 */
+.enterprise-tree .ant-tree-node-content-wrapper {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.enterprise-tree .ant-tree-title {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}

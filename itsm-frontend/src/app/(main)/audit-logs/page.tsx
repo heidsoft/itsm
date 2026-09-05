@@ -119,8 +119,12 @@ const AuditLogsPage: React.FC = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 170,
+      // 后端返回 ISO 字符串（含时区后缀 25+ 字符），nowrap 直接撑爆 170px 列宽；
+      // 改为本地化短格式，列宽内完整展示。
       render: (v: string) => (
-        <Text style={{ whiteSpace: 'nowrap' }}>{v}</Text>
+        <Text style={{ whiteSpace: 'nowrap' }}>
+          {v ? new Date(v).toLocaleString('zh-CN', { hour12: false }) : '-'}
+        </Text>
       ),
     },
     {

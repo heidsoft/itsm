@@ -16,7 +16,7 @@ interface ServiceCatalogFiltersProps {
   ciTypes: CIType[];
   cloudServices: CloudService[];
   optionsLoading?: boolean;
-  onCreateService: () => void;
+  onCreateService?: () => void;
   onRefresh: () => void;
 }
 
@@ -86,7 +86,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             }))}
           />
         </Col>
-        <Col xs={24} sm={12} md={2}>
+        {onCreateService && <Col xs={24} sm={12} md={2}>
           <Tooltip title="刷新列表">
             <Button
               icon={<RefreshCw size={20} />}
@@ -98,7 +98,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
               {t('serviceCatalog.refresh')}
             </Button>
           </Tooltip>
-        </Col>
+        </Col>}
         <Col xs={24} sm={12} md={2}>
           <Button
             type="primary"

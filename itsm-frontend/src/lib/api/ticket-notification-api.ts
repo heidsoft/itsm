@@ -12,9 +12,16 @@ export interface TicketNotification {
     | 'commented'
     | 'sla_warning'
     | 'resolved'
-    | 'closed';
+    | 'closed'
+    | 'info';
   channel: 'email' | 'in_app' | 'sms';
   content: string;
+  /** Raw title from API (often an i18n key) */
+  title?: string;
+  /** Deep-link URL to the related entity */
+  actionUrl?: string;
+  /** Human-readable link text */
+  actionText?: string;
   sentAt?: string;
   readAt?: string;
   status: 'pending' | 'sent' | 'read';
@@ -35,11 +42,65 @@ export interface ListTicketNotificationsResponse {
   total: number;
 }
 
+/**
+ * 用户通知契约 —— 与后端 dto.Notification（GET /api/v1/notifications 真实
+ * 响应体）逐字段对齐：字段是 message/read，而不是 content/status。
+ */
+export interface UserNotification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  actionUrl?: string;
+  actionText?: string;
+  userId: number;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ListUserNotificationsResponse {
-  notifications: TicketNotification[];
+  notifications: UserNotification[];
   total: number;
   page: number;
-  pageSize: number;
+  /** 后端分页字段是 size（不是 pageSize） */
+  size: number;
+}
+
+const TICKET_EVENT_TYPES: ReadonlySet<string> = new Set([
+  'created',
+  'assigned',
+  'status_changed',
+  'commented',
+  'sla_warning',
+  'resolved',
+  'closed',
+  'info',
+]);
+
+/**
+ * Maps the raw user-notification contract to the UI-facing TicketNotification
+ * shape: message→content, read(bool)→status(enum). Single source of truth for
+ * the badge count and read-state rendering (Header / notifications page / WS).
+ */
+export function toTicketNotification(raw: UserNotification): TicketNotification {
+  const type = TICKET_EVENT_TYPES.has(raw.type) ? (raw.type as TicketNotification['type']) : 'info';
+  return {
+    id: raw.id,
+    ticketId: 0,
+    userId: raw.userId,
+    type,
+    channel: 'in_app',
+    content: raw.message || '',
+    title: raw.title || '',
+    actionUrl: raw.actionUrl,
+    actionText: raw.actionText,
+    readAt: raw.read ? raw.updatedAt : undefined,
+    sentAt: raw.createdAt,
+    status: raw.read ? 'read' : 'sent',
+    createdAt: raw.createdAt,
+  };
 }
 
 export interface SendTicketNotificationRequest {
@@ -85,13 +146,19 @@ export class TicketNotificationApi {
     return httpClient.post(`/api/v1/tickets/${ticketId}/notifications`, data);
   }
 
-  // 获取用户通知列表
+  // 获取用户通知列表（后端 query 契约：page/size/read/type）
   static async getUserNotifications(params?: {
     page?: number;
-    pageSize?: number;
+    size?: number;
     read?: boolean;
+    type?: string;
   }): Promise<ListUserNotificationsResponse> {
     return httpClient.get<ListUserNotificationsResponse>('/api/v1/notifications', params);
+  }
+
+  // 未读通知数（服务端权威计数，用于 badge）
+  static async getUnreadCount(): Promise<{ count: number }> {
+    return httpClient.get<{ count: number }>('/api/v1/notifications/unread-count');
   }
 
   // 标记通知为已读

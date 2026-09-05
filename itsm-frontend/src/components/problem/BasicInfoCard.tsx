@@ -20,6 +20,10 @@ interface BasicInfoCardProps {
     reporterId?: number;
     createdBy?: number;
     assigneeId?: number;
+    // 后端 service 层 join user 表返回的中文姓名，优先展示姓名，缺失时退到 ID
+    createdByName?: string;
+    assigneeName?: string;
+    reporterName?: string;
     createdAt: string;
     updatedAt: string;
   };
@@ -40,8 +44,9 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
     );
   }
 
-  const reporterId = data.reporterId ?? data.createdBy ?? '-';
-  const assigneeId = data.assigneeId ?? '-';
+  // 优先用后端返回的中文姓名，否则回退到 ID（保持可追溯）。
+  const reporterDisplay = data.reporterName || data.createdByName || (data.reporterId ?? data.createdBy ?? '-');
+  const assigneeDisplay = data.assigneeName || (data.assigneeId ?? '-');
   const createdAt = data.createdAt ?? '';
   const updatedAt = data.updatedAt ?? '';
   const noAnalysisText = t('problem.noAnalysis');
@@ -98,8 +103,8 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
             {getStatusLabel(status)}
           </span>
         </Descriptions.Item>
-        <Descriptions.Item label={t('problem.reporterId')}>{reporterId}</Descriptions.Item>
-        <Descriptions.Item label={t('problem.assigneeId')}>{assigneeId}</Descriptions.Item>
+        <Descriptions.Item label={t('problem.reporterId')}>{reporterDisplay}</Descriptions.Item>
+        <Descriptions.Item label={t('problem.assigneeId')}>{assigneeDisplay}</Descriptions.Item>
         <Descriptions.Item label={t('problem.priority')}>
           <span
             style={{

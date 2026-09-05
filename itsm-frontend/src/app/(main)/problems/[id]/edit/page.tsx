@@ -5,6 +5,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, Form, Input, Select, App, Row, Col, Space, Divider } from 'antd';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ProblemApi } from '@/lib/api/problem-api';
+import {
+  ProblemCategoryOptions,
+  isKnownProblemCategory,
+} from '@/constants/problem';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
@@ -29,15 +33,22 @@ export default function ProblemEditPage() {
         const resp = await ProblemApi.getProblem(Number(id));
         const data = resp as any;
         setProblemData(data);
+        // 后端可能带不在前枚举里的 category（旧数据 / 脏数据），
+        // antd v6 Select 不识别时表现为“空白”，此处直接显示原始字符串 + 后缀提示。
+        const rawCategory = typeof data.category === 'string' ? data.category : '';
+        const safeCategory = isKnownProblemCategory(rawCategory) ? rawCategory : '';
         form.setFieldsValue({
           title: data.title,
           description: data.description,
           priority: data.priority,
-          category: data.category,
+          category: safeCategory,
           status: data.status,
           rootCause: data.rootCause,
           impact: data.impact,
         });
+        if (rawCategory && !safeCategory) {
+          message.warning(`原分类 “${rawCategory}” 不在当前枚举内，请重新选择`);
+        }
       } catch (error) {
         message.error(t('problems.getFailed'));
         router.push('/problems');
@@ -132,7 +143,25 @@ export default function ProblemEditPage() {
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item name="category" label="分类">
-                <Select placeholder="请选择分类" allowClear options={[{ value: "系统问题", label: "系统问题" }, { value: "网络问题", label: "网络问题" }, { value: "数据库问题", label: "数据库问题" }, { value: "应用问题", label: "应用问题" }, { value: "安全问题", label: "安全问题" }, { value: "硬件问题", label: "硬件问题" }, { value: "其他", label: "其他" }]} />
+                <Select
+                  placeholder="请选择分类"
+                  allowClear
+                  // 旧数据 category 可能不在前枚举里，先把原始值附加为额外选项，
+                  // 这样既能保留原有内容、又能让 Select 正常显示旧值。
+                  options={[
+                    ...ProblemCategoryOptions,
+                    ...(problemData &&
+                    problemData.category &&
+                    !isKnownProblemCategory(problemData.category)
+                      ? [
+                          {
+                            value: problemData.category,
+                            label: `${problemData.category}（旧值）`,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>

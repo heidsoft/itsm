@@ -115,6 +115,15 @@ export default function WorkflowAIModal({
         includeApprovals: values.includeApprovals,
       });
 
+      // 防御性检查：后端在 AI 不可用 / 渠道异常等场景可能返回 200 + null body（result 为 null），
+      // 此处一次性抬走免得业务逻辑路径报 “Cannot read properties of null (reading 'bpmnXml')”。
+      if (!result || !result.bpmnXml) {
+        const emptyMessage = t('workflow.aiModal.generationEmptyResult');
+        setGenerationError(emptyMessage);
+        message.error(emptyMessage);
+        return;
+      }
+
       setGenerationResult(result);
       setGeneratedProcess(result.bpmnXml);
       message.success(t('workflow.aiModal.generateCompleted', { name: result.processName || values.processName }));
@@ -188,44 +197,17 @@ export default function WorkflowAIModal({
     setLoading(true);
     try {
       message.info(t('workflow.aiModal.analyzing'));
-
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const mockSuggestions: OptimizationSuggestion[] = [
-        {
-          id: '1',
-          type: 'optimization',
-          title: t('workflow.aiModal.suggDocTitle'),
-          description: t('workflow.aiModal.suggDocDesc'),
-          severity: 'low',
-        },
-        {
-          id: '2',
-          type: 'warning',
-          title: t('workflow.aiModal.suggAssigneeTitle'),
-          description: t('workflow.aiModal.suggAssigneeDesc'),
-          elementId: 'UserTask_1',
-          severity: 'medium',
-        },
-        {
-          id: '3',
-          type: 'warning',
-          title: t('workflow.aiModal.suggGatewayTitle'),
-          description: t('workflow.aiModal.suggGatewayDesc'),
-          elementId: 'Gateway_1',
-          severity: 'high',
-        },
-        {
-          id: '4',
-          type: 'optimization',
-          title: t('workflow.aiModal.suggSlaTitle'),
-          description: t('workflow.aiModal.suggSlaDesc'),
-          severity: 'low',
-        },
-      ];
-
-      setSuggestions(mockSuggestions);
-      message.success(t('workflow.aiModal.suggestionCount', { count: 4 }));
+      const result = await BPMNAIApi.lintBPMN(currentXML);
+      const mappedSuggestions: OptimizationSuggestion[] = result.issues.map((issue, index) => ({
+        id: `lint-${index}`,
+        type: issue.severity === 'error' ? 'error' : issue.severity === 'warning' ? 'warning' : 'optimization',
+        title: issue.category,
+        description: issue.message,
+        elementId: issue.elementId,
+        severity: issue.severity === 'error' ? 'high' : issue.severity === 'warning' ? 'medium' : 'low',
+      }));
+      setSuggestions(mappedSuggestions);
+      message.success(t('workflow.aiModal.suggestionCount', { count: mappedSuggestions.length }));
     } catch (error) {
       console.error('获取优化建议失败:', error);
       message.error(t('workflow.aiModal.suggestionFailed'));
@@ -239,34 +221,16 @@ export default function WorkflowAIModal({
     setLoading(true);
     try {
       message.info(t('workflow.aiModal.complianceChecking'));
-
-      await new Promise(resolve => setTimeout(resolve, 1800));
-
-      const mockIssues: ComplianceIssue[] = [
-        {
-          id: '1',
-          type: 'violation',
-          rule: t('workflow.aiModal.ruleFinanceApproval'),
-          description: t('workflow.aiModal.ruleFinanceApprovalDesc'),
-          severity: 'high',
-        },
-        {
-          id: '2',
-          type: 'warning',
-          rule: t('workflow.aiModal.ruleDataSecurity'),
-          description: t('workflow.aiModal.ruleDataSecurityDesc'),
-          severity: 'medium',
-        },
-        {
-          id: '3',
-          type: 'suggestion',
-          rule: t('workflow.aiModal.ruleEfficiency'),
-          description: t('workflow.aiModal.ruleEfficiencyDesc'),
-          severity: 'low',
-        },
-      ];
-
-      setComplianceIssues(mockIssues);
+      const result = await BPMNAIApi.lintBPMN(currentXML);
+      const mappedIssues: ComplianceIssue[] = result.issues.map((issue, index) => ({
+        id: `lint-${index}`,
+        type: issue.severity === 'error' ? 'violation' : issue.severity === 'warning' ? 'warning' : 'suggestion',
+        rule: issue.category,
+        description: issue.message,
+        elementId: issue.elementId,
+        severity: issue.severity === 'error' ? 'high' : issue.severity === 'warning' ? 'medium' : 'low',
+      }));
+      setComplianceIssues(mappedIssues);
       message.success(t('workflow.aiModal.complianceCompleted'));
     } catch (error) {
       console.error('合规检查失败:', error);
@@ -360,6 +324,11 @@ export default function WorkflowAIModal({
                           { label: t('workflow.aiModal.processTypeChange'), value: 'change' },
                           { label: t('workflow.aiModal.processTypeProblem'), value: 'problem' },
                           { label: t('workflow.aiModal.processTypeServiceRequest'), value: 'service_request' },
+                          { label: '请假审批', value: 'leave' },
+                          { label: '费用报销', value: 'expense' },
+                          { label: '人事流程', value: 'hr' },
+                          { label: '采购审批', value: 'procurement' },
+                          { label: 'IT业务流程', value: 'it' },
                           { label: t('workflow.aiModal.processTypeCustom'), value: 'custom' },
                         ]}
                       />

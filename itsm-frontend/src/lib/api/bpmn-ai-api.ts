@@ -1,6 +1,6 @@
 import { httpClient } from './http-client';
 
-export type BPMNProcessType = 'incident' | 'change' | 'problem' | 'service_request' | 'custom';
+export type BPMNProcessType = 'incident' | 'change' | 'problem' | 'service_request' | 'leave' | 'expense' | 'hr' | 'procurement' | 'it' | 'custom';
 export type BPMNEnterpriseType = 'cn_enterprise' | 'international' | 'startup' | 'government';
 
 export interface GenerateBPMNRequest {
@@ -24,6 +24,32 @@ export interface GenerateBPMNResponse {
   explanation: string;
   deploymentId?: string;
   processDefinitionId?: number;
+  lintResult?: BPMNLintResult;
+  candidateDefinition?: BusinessProcessCandidate;
+}
+
+export interface BPMNLintIssue {
+  severity: 'error' | 'warning' | 'info' | string;
+  category: string;
+  message: string;
+  elementId?: string;
+  elementName?: string;
+}
+
+export interface BPMNLintResult {
+  hasErrors: boolean;
+  errorCount: number;
+  warningCount: number;
+  issues: BPMNLintIssue[];
+}
+
+export interface BusinessProcessCandidate {
+  domain: BPMNProcessType | string;
+  formSchema: Record<string, unknown>;
+  approvalPolicy: Record<string, unknown>;
+  ontologyBindings: Record<string, unknown>;
+  slaConfig?: Record<string, unknown>;
+  requiresConfirmation: boolean;
 }
 
 export interface PreviewBPMNRequest {
@@ -66,7 +92,7 @@ export class BPMNAIApi {
     options?: { autoDeploy?: boolean }
   ): Promise<GenerateBPMNResponse> {
     const tenantId = request.tenantId ?? httpClient.getTenantId() ?? 1;
-    const endpoint = `${this.baseUrl}/generate${options?.autoDeploy ? '?auto_deploy=true' : ''}`;
+    const endpoint = `${this.baseUrl}/generate${options?.autoDeploy ? '?autoDeploy=true' : ''}`;
 
     return httpClient.post<GenerateBPMNResponse>(endpoint, {
       ...request,
@@ -76,6 +102,10 @@ export class BPMNAIApi {
 
   static async previewBPMN(request: PreviewBPMNRequest): Promise<PreviewBPMNResponse> {
     return httpClient.post<PreviewBPMNResponse>(`${this.baseUrl}/preview`, request);
+  }
+
+  static async lintBPMN(bpmnXml: string): Promise<BPMNLintResult> {
+    return httpClient.post<BPMNLintResult>('/api/v1/bpmn/lint', { bpmnXml });
   }
 
   static async getTemplateSuggestions(params: {

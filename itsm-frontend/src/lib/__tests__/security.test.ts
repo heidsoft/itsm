@@ -19,7 +19,7 @@ describe('xssProtection', () => {
   describe('escapeHtml', () => {
     it('should escape HTML special characters', () => {
       expect(xssProtection.escapeHtml('<script>alert("xss")</script>')).toBe(
-        '&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;'
+        '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
       );
     });
 
@@ -31,8 +31,8 @@ describe('xssProtection', () => {
       expect(xssProtection.escapeHtml("it's a test")).toBe('it&#39;s a test');
     });
 
-    it('should escape forward slashes', () => {
-      expect(xssProtection.escapeHtml('path/to/file')).toBe('path&#x2F;to&#x2F;file');
+    it('should NOT escape forward slashes (safe when < > are escaped)', () => {
+      expect(xssProtection.escapeHtml('path/to/file')).toBe('path/to/file');
     });
 
     it('should return unchanged string without special characters', () => {

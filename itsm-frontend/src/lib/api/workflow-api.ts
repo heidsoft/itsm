@@ -905,11 +905,23 @@ export class WorkflowApi {
         startTime: string;
         endTime?: string;
       }>;
+      items?: Array<{
+        id: string;
+        instanceId: string;
+        processDefinitionKey: string;
+        businessKey: string;
+        status: string;
+        startTime: string;
+        endTime?: string;
+      }>;
       pagination?: { total: number };
       total?: number;
     }>('/api/v1/bpmn/process-instances', query);
-    // httpClient.get returns responseData.data directly, which is an array
-    const list = Array.isArray(res) ? res : res?.data || [];
+    // 后端标准列表契约为 data: { items, total, page, pageSize, totalPages }；
+    // 保留 data/裸数组旧形态兼容。此前只读 res.data，导致 items 形态下列表永远为空。
+    const list = Array.isArray(res)
+      ? res
+      : res?.items || res?.data || [];
     const instances: WorkflowInstance[] = list.map(item => ({
       id: item.instanceId || item.id || '',
       workflowId: item.processDefinitionKey || '',

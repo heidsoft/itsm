@@ -5,12 +5,18 @@
   bottom: 0 !important;
   height: 100vh !important;
   overflow-y: auto !important;
+  overflow-x: visible !important;
   background: #ffffff !important;
   border-right: 1px solid #f0f0f0 !important;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05) !important;
   z-index: 1000 !important;
   display: flex !important;
   flex-direction: column !important;
+}
+
+/* When collapsed, remove vertical overflow so submenu flyout popups are not clipped */
+.sider:global(.ant-layout-sider-collapsed) {
+  overflow: visible !important;
 }
 
 .logoArea {

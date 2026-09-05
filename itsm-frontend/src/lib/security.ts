@@ -4,7 +4,7 @@ import DOMPurify from 'dompurify';
 
 // XSS防护
 export const xssProtection = {
-  // HTML转义
+  // HTML转义（仅转义真正危险的字符，/ 不需要转义因为 < > 已被转义）
   escapeHtml: (text: string): string => {
     const map: Record<string, string> = {
       '&': '&amp;',
@@ -12,9 +12,8 @@ export const xssProtection = {
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#39;',
-      '/': '&#x2F;',
     };
-    return text.replace(/[&<>"'\/]/g, s => map[s]);
+    return text.replace(/[&<>"']/g, s => map[s]);
   },
 
   // HTML反转义
@@ -59,27 +58,38 @@ export const csrfProtection = {
       return csrfProtection.privateTokenPromise;
     }
 
-    // 发起请求获取新token
-    csrfProtection.privateTokenPromise = (async () => {
-      try {
-        const response = await fetch('/api/v1/csrf-token', {
-          method: 'GET',
-          credentials: 'include', // Include httpOnly cookies
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.code === 0 && data.data?.csrf_token) {
-            csrfProtection.privateToken = data.data.csrf_token;
-            return csrfProtection.privateToken;
+    // 发起请求获取新token，带重试
+    const fetchToken = async (): Promise<string | null> => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const response = await fetch('/api/v1/csrf-token', {
+            method: 'GET',
+            credentials: 'include', // Include httpOnly cookies
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.code === 0 && data.data?.csrf_token) {
+              csrfProtection.privateToken = data.data.csrf_token;
+              return csrfProtection.privateToken;
+            }
+            console.warn('[CSRF] getToken: invalid response', data);
+          } else {
+            console.warn('[CSRF] getToken: HTTP', response.status);
           }
+        } catch (err) {
+          console.warn('[CSRF] getToken: fetch error', err);
         }
-        return null;
-      } catch {
-        return null;
-      } finally {
-        csrfProtection.privateTokenPromise = null;
+        if (attempt === 0) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
       }
-    })();
+      console.warn('[CSRF] getToken: returning null after retries');
+      return null;
+    };
+
+    csrfProtection.privateTokenPromise = fetchToken().finally(() => {
+      csrfProtection.privateTokenPromise = null;
+    });
 
     return csrfProtection.privateTokenPromise;
   },

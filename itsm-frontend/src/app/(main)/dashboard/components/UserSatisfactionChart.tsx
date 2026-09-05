@@ -60,6 +60,8 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
     data.length > 0 ? data.reduce((sum, item) => sum + item.rating, 0) / data.length : 0;
   const totalResponses = data.reduce((sum, item) => sum + item.responses, 0);
   const trend = data.length > 1 ? (data[data.length - 1].rating / data[0].rating - 1) * 100 : 0;
+  const maxRating = data.length > 0 ? Math.max(...data.map(d => d.rating)) : 0;
+  const minRating = data.length > 0 ? Math.min(...data.map(d => d.rating)) : 0;
 
   return (
     <DashboardChartCard
@@ -91,13 +93,13 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-1">最高评分</div>
             <div className="text-lg font-bold text-pink-600">
-              {Math.max(...data.map(d => d.rating)).toFixed(1)}
+              {data.length > 0 ? maxRating.toFixed(1) : '-'}
             </div>
           </div>
           <div className="text-center">
             <div className="text-xs text-gray-500 mb-1">最低评分</div>
             <div className="text-lg font-bold text-orange-600">
-              {Math.min(...data.map(d => d.rating)).toFixed(1)}
+              {data.length > 0 ? minRating.toFixed(1) : '-'}
             </div>
           </div>
         </div>

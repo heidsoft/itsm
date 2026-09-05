@@ -198,6 +198,10 @@ const SLADefinitionManagement = () => {
               ? {
                   ...sla,
                   ...values,
+                  responseTime: `${responseTimeMinutes}分钟`,
+                  resolutionTime: `${resolutionTimeMinutes}分钟`,
+                  responseTimeMinutes,
+                  resolutionTimeMinutes,
                   updatedAt: new Date().toLocaleDateString(),
                 }
               : sla
@@ -210,6 +214,10 @@ const SLADefinitionManagement = () => {
         const newSLA: SLADefinition = {
           id: String(result.id),
           ...values,
+          responseTime: `${responseTimeMinutes}分钟`,
+          resolutionTime: `${resolutionTimeMinutes}分钟`,
+          responseTimeMinutes,
+          resolutionTimeMinutes,
           status: 'draft',
           createdBy: '当前用户',
           createdAt: new Date().toLocaleDateString(),
@@ -340,7 +348,15 @@ const SLADefinitionManagement = () => {
               icon={<Edit className="w-4 h-4" />}
               onClick={() => {
                 setSelectedSLA(record);
-                form.setFieldsValue(record);
+                // Map record fields to form field names: responseTime→responseTimeValue, resolutionTime(minutes)→resolutionTimeValue(hours)
+                form.setFieldsValue({
+                  ...record,
+                  // 回填真实分钟/小时数值，而非展示文本
+                  responseTimeValue: record.responseTimeMinutes || 60,
+                  resolutionTimeValue: record.resolutionTimeMinutes
+                    ? Math.round(record.resolutionTimeMinutes / 60)
+                    : 4,
+                });
                 setShowCreateModal(true);
               }}
             />

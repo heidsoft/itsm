@@ -57,8 +57,8 @@ import type { Role } from '@/lib/api/api-config';
 import { useI18n } from '@/lib/i18n/useI18n';
 const { Title, Text } = Typography;
 
-// 权限模块定义
-const PERMISSION_MODULES = {
+// 权限模块定义（导出供契约测试断言 i18n key 完整性）
+export const PERMISSION_MODULES = {
   DASHBOARD: 'dashboard',
   TICKETS: 'ticket',
   TICKET_CATEGORY: 'ticket_category',
@@ -83,6 +83,13 @@ const PERMISSION_MODULES = {
   SYSTEM_CONFIG: 'system_config',
   AI: 'ai',
 } as const;
+
+// 翻译字典以常量名（TICKETS/KNOWLEDGE_BASE/WORKFLOWS 等）为 key，而 moduleKey
+// 是权限码（ticket/knowledge/bpmn 等），直接 toUpperCase() 会导致 11 个模块
+// 查不到翻译、渲染出原始 key。此处建立权限码 → i18n key 的显式映射。
+export const MODULE_I18N_KEYS: Record<string, string> = Object.fromEntries(
+  Object.entries(PERMISSION_MODULES).map(([name, value]) => [value, name]),
+);
 
 // 权限操作类型
 const PERMISSION_ACTIONS = {
@@ -124,6 +131,19 @@ function createDefaultPermissionState(): PermissionState {
       actions[actionKey] = true;
     }
     state[moduleKey] = { isEnabled: true, actions };
+  }
+  return state;
+}
+
+// 未选择角色时的空白状态：不能展示“全部启用”，否则会误导当前配置快照
+function createEmptyPermissionState(): PermissionState {
+  const state: PermissionState = {};
+  for (const moduleKey of Object.values(PERMISSION_MODULES)) {
+    const actions: ActionState = {};
+    for (const actionKey of Object.values(PERMISSION_ACTIONS)) {
+      actions[actionKey] = false;
+    }
+    state[moduleKey] = { isEnabled: false, actions };
   }
   return state;
 }
@@ -215,7 +235,7 @@ const PermissionConfiguration = () => {
   const { message } = App.useApp();
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
-  const [permissionState, setPermissionState] = useState<PermissionState>(createDefaultPermissionState());
+  const [permissionState, setPermissionState] = useState<PermissionState>(createEmptyPermissionState());
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [hasChanges, setHasChanges] = useState(false);
@@ -242,10 +262,11 @@ const PermissionConfiguration = () => {
     for (const moduleKey of Object.values(PERMISSION_MODULES)) {
       const meta = MODULE_META[moduleKey];
       const categoryName = t(`permissions.categories.${meta.categoryKey}`);
+      const i18nKey = MODULE_I18N_KEYS[moduleKey] ?? moduleKey.toUpperCase();
       result[moduleKey] = {
-        label: t(`permissions.modules.${moduleKey.toUpperCase()}.label`),
+        label: t(`permissions.modules.${i18nKey}.label`),
         icon: meta.icon,
-        description: t(`permissions.modules.${moduleKey.toUpperCase()}.description`),
+        description: t(`permissions.modules.${i18nKey}.description`),
         category: categoryName,
         categoryKey: meta.categoryKey,
       };
@@ -414,7 +435,7 @@ const PermissionConfiguration = () => {
     if (selectedRoleId) {
       await handleSelectRole(selectedRoleId);
     } else {
-      setPermissionState(createDefaultPermissionState());
+      setPermissionState(createEmptyPermissionState());
       setHasChanges(false);
     }
     message.info(t('permissions.messages.reset'));
@@ -739,8 +760,10 @@ const PermissionConfiguration = () => {
       {/* 权限配置内容 */}
       <Card className="enterprise-card">
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Spin size="large" tip={t('permissions.loading')} />
+          <div className="flex flex-col gap-3 justify-center items-center py-20">
+            {/* antd v6：Spin 的 tip 仅在嵌套模式下生效，改为独立文本提示 */}
+            <Spin size="large" />
+            <Text type="secondary">{t('permissions.loading')}</Text>
           </div>
         ) : viewMode === 'card' ? (
           renderCardView()

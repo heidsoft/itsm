@@ -46,23 +46,16 @@ import type {
   TicketNotification,
   NotificationPreferenceItem} from '@/lib/api/ticket-notification-api';
 import {
-  TicketNotificationApi
+  TicketNotificationApi,
+  toTicketNotification
 } from '@/lib/api/ticket-notification-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { notificationWS } from '@/lib/services/notification-ws';
 import { useI18n } from '@/lib/i18n';
+import { useRouter } from 'next/navigation';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-
-const normalizeNotification = (notification: TicketNotification): TicketNotification => ({
-  ...notification,
-  createdAt: notification.createdAt,
-  readAt: notification.readAt,
-  sentAt: notification.sentAt,
-  ticketId: notification.ticketId,
-  userId: notification.userId,
-});
 
 // 通知事件类型配置
 interface EventTypeConfig {
@@ -134,12 +127,13 @@ interface ChannelConfig {
 
 const CHANNELS: ChannelConfig[] = [
   { key: 'email', nameKey: 'notifications.email', icon: Mail, color: 'blue' },
-  { key:'inApp', nameKey: 'notifications.inApp', icon: MessageSquare, color: 'default' },
+  { key: 'in_app', nameKey: 'notifications.inApp', icon: MessageSquare, color: 'default' },
   { key: 'sms', nameKey: 'notifications.sms', icon: Smartphone, color: 'green' },
 ];
 
 export default function NotificationsPage() {
   const { t } = useI18n();
+  const router = useRouter();
   const { user, token } = useAuthStore();
   const { message } = App.useApp();
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
@@ -166,15 +160,15 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const [allRes, unreadRes, readRes] = await Promise.all([
-        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 }),
-        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: false }),
-        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: true }),
+        TicketNotificationApi.getUserNotifications({ page: 1, size: 100 }),
+        TicketNotificationApi.getUserNotifications({ page: 1, size: 100, read: false }),
+        TicketNotificationApi.getUserNotifications({ page: 1, size: 100, read: true }),
       ]);
 
-      const all = (allRes.notifications || []).map(normalizeNotification);
+      const all = (allRes.notifications || []).map(toTicketNotification);
       setNotifications(all);
-      setUnreadNotifications((unreadRes.notifications || []).map(normalizeNotification));
-      setReadNotifications((readRes.notifications || []).map(normalizeNotification));
+      setUnreadNotifications((unreadRes.notifications || []).map(toTicketNotification));
+      setReadNotifications((readRes.notifications || []).map(toTicketNotification));
     } catch (error) {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to load notifications:', error);
@@ -222,10 +216,10 @@ export default function NotificationsPage() {
 
       // 监听新通知
       const unsubscribe = notificationWS.onNotification(notification => {
-        const normalized = normalizeNotification(notification);
+        const normalized = toTicketNotification(notification);
         setNotifications(prev => [normalized, ...prev]);
         setUnreadNotifications(prev => [normalized, ...prev]);
-        message.info(notification.content);
+        message.info(normalized.content);
       });
 
       // 监听连接状态变化
@@ -347,7 +341,7 @@ export default function NotificationsPage() {
       // 获取所有通知（含已读与未读），逐条删除
       const response = await TicketNotificationApi.getUserNotifications({
         page: 1,
-        pageSize: 200,
+        size: 100,
       });
       const allItems = response.notifications || [];
       await Promise.all(
@@ -365,9 +359,12 @@ export default function NotificationsPage() {
   const filterNotifications = useCallback(
     (list: TicketNotification[]) => {
       return list.filter(item => {
-        // 搜索筛选
-        if (searchText && !item.content.toLowerCase().includes(searchText.toLowerCase())) {
-          return false;
+        // 搜索筛选：安全处理 content/title/message 可能为空的情况
+        if (searchText) {
+          const searchable = ((item.content || '') + ' ' + (item.title || '')).toLowerCase();
+          if (!searchable.includes(searchText.toLowerCase())) {
+            return false;
+          }
         }
         // 渠道筛选
         if (channelFilter && item.channel !== channelFilter) {
@@ -445,6 +442,15 @@ export default function NotificationsPage() {
     return date.format('YYYY-MM-DD HH:mm');
   };
 
+  const openNotificationAction = async (notification: TicketNotification) => {
+    const actionUrl = notification.actionUrl;
+    if (!actionUrl || !actionUrl.startsWith('/') || actionUrl.startsWith('//')) return;
+    if (notification.status !== 'read') {
+      await handleMarkRead(notification.id);
+    }
+    router.push(actionUrl);
+  };
+
   // 渲染通知列表
   const renderNotificationList = (notificationList: TicketNotification[]) => {
     if (notificationList.length === 0) {
@@ -463,6 +469,16 @@ export default function NotificationsPage() {
           <List.Item
             className={notification.status === 'read' ? 'opacity-70' : ''}
             actions={[
+              notification.actionUrl && (
+                <Button
+                  key="open"
+                  type="link"
+                  size="small"
+                  onClick={() => void openNotificationAction(notification)}
+                >
+                  {notification.actionText || '查看详情'}
+                </Button>
+              ),
               notification.status !== 'read' && (
                 <Button
                   key="read"
@@ -495,15 +511,18 @@ export default function NotificationsPage() {
                 </div>
               }
               title={
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Text strong={notification.status !== 'read'}>
-                      {getNotificationTypeLabel(notification.type)}
+                <div className="flex items-center justify-between gap-4">
+                  {/* flex 子项默认 min-width:auto 不会收缩，长内容会把右侧时间/标签和操作按钮挤压出列；
+                     min-w-0 + truncate 让正文占满剩余宽度并单行截断 */}
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <Text strong={notification.status !== 'read'} className="min-w-0 truncate">
+                      {notification.content || getNotificationTypeLabel(notification.type)}
                     </Text>
-                    {notification.status !== 'read' && <Badge status="processing" />}
+                    {notification.status !== 'read' && <Badge status="processing" className="shrink-0" />}
                     <Tag
                       color={getChannelColor(notification.channel)}
                       icon={getChannelIcon(notification.channel)}
+                      className="shrink-0"
                     >
                       {notification.channel === 'email'
                         ? t('notifications.email')
@@ -512,7 +531,7 @@ export default function NotificationsPage() {
                           : t('notifications.inApp')}
                     </Tag>
                   </div>
-                  <Text type="secondary" className="text-xs">
+                  <Text type="secondary" className="shrink-0 text-xs whitespace-nowrap">
                     {formatDateTime(notification.createdAt)}
                   </Text>
                 </div>

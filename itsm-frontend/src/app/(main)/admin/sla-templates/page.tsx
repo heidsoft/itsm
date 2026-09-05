@@ -26,6 +26,7 @@ import {
 import { Download, Eye, CheckCircle, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { SLATemplateApi, type SLATemplate, type TemplateInstallResult } from '@/lib/api/sla-template-api';
+import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -233,6 +234,19 @@ export default function SLATemplatesPage() {
           开箱即用的 SLA 模板，按行业（事件 / 变更 / 服务请求）和优先级预置。一键安装到当前租户即可生效，无需手工配置。
         </Paragraph>
       </div>
+
+      <UsageGuideCard
+        style={{ marginBottom: 16 }}
+        title="SLA 模板怎么用"
+        intro="模板是预置的 SLA 时限套餐（按业务类型与优先级）。安装到当前租户后即生成对应 SLA 定义并生效，无需手工逐项配置。"
+        steps={[
+          '先浏览模板卡片，点“查看”确认各优先级的响应 / 解决时限是否符合组织约定。',
+          '点“一键安装”（或顶部“全部安装推荐模板”）安装到当前租户；安装是幂等的，重复安装会提示“已存在，未重复安装”，不会产生重复规则。',
+          '安装后新工单即按对应优先级开始计时，可在 SLA 监控 / 仪表盘查看达标与超时情况。',
+          '超时后果：接近阈值会告警，突破后按“SLA 升级矩阵”逐级升级通知更高级别处理人。',
+          '建议先只安装主推业务（如事件管理）的推荐模板，用真实工单验证计时与升级符合预期后再补充其他模板。',
+        ]}
+      />
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={8}>
