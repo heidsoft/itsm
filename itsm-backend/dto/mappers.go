@@ -1,10 +1,7 @@
 package dto
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
-	"strconv"
 	"strings"
 	"time"
 
@@ -82,7 +79,11 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 		CreatedAt:      ticket.CreatedAt,
 		UpdatedAt:      ticket.UpdatedAt,
 		Resolution:     ticket.Resolution,
+		ResolutionCategory: ticket.ResolutionCategory,
 		Rating:         ticket.Rating,
+	}
+	if ticket.ClosedAt != nil && !ticket.ClosedAt.IsZero() {
+		response.ClosedAt = ticket.ClosedAt
 	}
 	// 时间戳字段：避免 ent 零值（0001-01-01）污染 JSON 输出
 	if !ticket.ResolvedAt.IsZero() {
@@ -93,8 +94,6 @@ func ToTicketResponse(ticket *ent.Ticket) *TicketResponse {
 		first := ticket.FirstResponseAt
 		response.FirstResponseAt = &first
 	}
-	// ResolutionCategory 和 ClosedAt 是后期 raw SQL 添加的列，ent 不知道
-	// 在控制器中调用 PopulateTicketExtraFields 补全
 
 	return response
 }
@@ -972,101 +971,8 @@ func ToTicketCategoryResponseList(categories []*ent.TicketCategory) []*TicketCat
 	return responses
 }
 
-// TicketExtraFields 后期通过 raw SQL 添加的列
-type TicketExtraFields struct {
-	ResolutionCategory sql.NullString
-	ClosedAt           sql.NullTime
-}
-
-// EnrichTicketResponses 批量从 raw DB 拉取 ent 不知道的字段并 patch 进响应
-// 用于 ListTickets 等返回多条记录的场景
-func EnrichTicketResponses(ctx context.Context, db *sql.DB, responses []*TicketResponse, tenantID int) {
-	if db == nil || len(responses) == 0 {
-		return
-	}
-	ids := make([]int, 0, len(responses))
-	idSet := make(map[int]struct{}, len(responses))
-	for _, r := range responses {
-		if r == nil {
-			continue
-		}
-		if _, ok := idSet[r.ID]; ok {
-			continue
-		}
-		idSet[r.ID] = struct{}{}
-		ids = append(ids, r.ID)
-	}
-	if len(ids) == 0 {
-		return
-	}
-	// 用 ANY($1) 批量查询
-	query := `SELECT id, resolution_category, closed_at FROM tickets WHERE tenant_id = $1 AND id = ANY($2::int[])`
-	rows, err := db.QueryContext(ctx, query, tenantID, pqIntArray(ids))
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	indexByID := make(map[int]int, len(responses))
-	for i, r := range responses {
-		if r != nil {
-			indexByID[r.ID] = i
-		}
-	}
-	for rows.Next() {
-		var id int
-		var rc sql.NullString
-		var ca sql.NullTime
-		if err := rows.Scan(&id, &rc, &ca); err == nil {
-			if i, ok := indexByID[id]; ok {
-				if rc.Valid {
-					responses[i].ResolutionCategory = rc.String
-				}
-				if ca.Valid {
-					t := ca.Time
-					responses[i].ClosedAt = &t
-				}
-			}
-		}
-	}
-}
-
-// EnrichTicketResponse 单条 ticket 富化
-func EnrichTicketResponse(ctx context.Context, db *sql.DB, response *TicketResponse, tenantID int) {
-	if db == nil || response == nil {
-		return
-	}
-	query := `SELECT resolution_category, closed_at FROM tickets WHERE id = $1 AND tenant_id = $2`
-	row := db.QueryRowContext(ctx, query, response.ID, tenantID)
-	var rc sql.NullString
-	var ca sql.NullTime
-	if err := row.Scan(&rc, &ca); err != nil {
-		return
-	}
-	if rc.Valid {
-		response.ResolutionCategory = rc.String
-	}
-	if ca.Valid {
-		t := ca.Time
-		response.ClosedAt = &t
-	}
-}
-
-// pqIntArray 把 []int 序列化为 PostgreSQL int[] 文本
-func pqIntArray(ids []int) string {
-	if len(ids) == 0 {
-		return "{}"
-	}
-	var b []byte
-	b = append(b, '{')
-	for i, v := range ids {
-		if i > 0 {
-			b = append(b, ',')
-		}
-		b = strconv.AppendInt(b, int64(v), 10)
-	}
-	b = append(b, '}')
-	return string(b)
-}
+// TicketResponse / TicketResponse 等字段中的 ResolutionCategory 与 ClosedAt
+// 在 ToTicketResponse 中直接通过 ent 字段映射，不需要再通过 raw SQL 二次回填。
 
 // ToCITypeResponse 转换 CI 类型实体为响应
 func ToCITypeResponse(ciType *ent.CIType) *CITypeResponse {

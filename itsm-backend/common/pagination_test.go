@@ -208,7 +208,7 @@ func TestGetPaginationFromQuery_WithPage(t *testing.T) {
 func TestGetPaginationFromQuery_WithPageSize(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request, _ = http.NewRequest("GET", "/api/test?page_size=50", nil)
+	c.Request, _ = http.NewRequest("GET", "/api/test?pageSize=50", nil)
 
 	pagination := GetPaginationFromQuery(c)
 
@@ -219,7 +219,7 @@ func TestGetPaginationFromQuery_WithPageSize(t *testing.T) {
 func TestGetPaginationFromQuery_WithBoth(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request, _ = http.NewRequest("GET", "/api/test?page=3&page_size=30", nil)
+	c.Request, _ = http.NewRequest("GET", "/api/test?page=3&pageSize=30", nil)
 
 	pagination := GetPaginationFromQuery(c)
 
@@ -257,10 +257,10 @@ func TestGetPaginationFromQuery_InvalidPageSize(t *testing.T) {
 		query    string
 		pageSize int
 	}{
-		{"负数大小", "page_size=-1", 20},
-		{"零大小", "page_size=0", 20},
-		{"非数字大小", "page_size=abc", 20},
-		{"超大限制", "page_size=200", 20},
+		{"负数大小", "pageSize=-1", 20},
+		{"零大小", "pageSize=0", 20},
+		{"非数字大小", "pageSize=abc", 20},
+		{"超大限制", "pageSize=200", 20},
 	}
 
 	for _, tt := range tests {
@@ -281,9 +281,9 @@ func TestGetPaginationFromQuery_ValidPageSize(t *testing.T) {
 		query    string
 		pageSize int
 	}{
-		{"边界值1", "page_size=1", 1},
-		{"边界值100", "page_size=100", 100},
-		{"正常值50", "page_size=50", 50},
+		{"边界值1", "pageSize=1", 1},
+		{"边界值100", "pageSize=100", 100},
+		{"正常值50", "pageSize=50", 50},
 	}
 
 	for _, tt := range tests {
