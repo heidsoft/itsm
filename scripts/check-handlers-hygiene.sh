@@ -11,6 +11,7 @@
 #       -> 接口类型依赖合法（如 standard_change → change 仅用 DTO 类型），
 #          但值得人工确认；具体实现依赖则属违规。
 #   H.3 下划线包名冻结：新建域包名含下划线则提示改用短名（不阻断）。
+#   H.4 包名≠目录名：违反 Go 惯例，调用点被迫加 import 别名（计为警告）。
 #
 # 用法：
 #   ./scripts/check-handlers-hygiene.sh            # advisory（仅报告）
@@ -84,6 +85,15 @@ for dir in "${HANDLERS_DIR}"/*/; do
   # H.3 下划线包名（新建域提示）
   if [[ "${domain}" == *_* ]]; then
     echo "  [H.3] ${domain}: 包名含下划线，新建域请用短小写单词（存量不强制改）"
+  fi
+
+  # H.4 包名与目录名不一致（Go 惯例：包名应与目录名一致）
+  # -> 不一致会导致每个调用点被迫加 import 别名（历史 problem_investigation /
+  #    ticket_workflow 两域即此类孤岛，2026-09-05 已统一）
+  pkg_name=$(grep -hm 1 '^package ' "${dir}"*.go 2>/dev/null | head -1 | awk '{print $2}')
+  if [[ -n "${pkg_name}" && "${pkg_name}" != "${domain}" ]]; then
+    echo "  [H.4] ${domain}: 包名 '${pkg_name}' 与目录名不一致（调用点需加 import 别名）"
+    TOTAL_WARN=$((TOTAL_WARN + 1))
   fi
 done
 
