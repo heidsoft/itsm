@@ -1,6 +1,6 @@
 # 五域双分层端点对账清单（2026-08-29）
 
-> 对应 [蓝图](../../plans/production-readiness-industry-blueprint.md) P1-1.1。
+> 对应 [蓝图](../../../plans/production-readiness-industry-blueprint.md) P1-1.1。
 > 结论:双分层重叠比预期轻——多数域已完成或接近完成迁移,真正问题集中在 **incident(未迁移)** 与 **knowledge(死代码未清理)**。
 
 ## 对账结果

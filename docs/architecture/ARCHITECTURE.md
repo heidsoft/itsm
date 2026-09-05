@@ -432,8 +432,8 @@ Confluence API → JSON → 分块 → Embedding → ChromaDB → Rerank → LLM
 
 ### 8.3 相关文档
 
-- [API 文档](./API.md)
-- [数据库 Schema](./DATABASE.md)
-- [部署指南](./DEPLOYMENT.md)
-- [BPMN 流程设计](./BPMN.md)
-- [AI 能力说明](./AI_FEATURES.md)
+- [API 文档](../api/API_REFERENCE.md)
+- [架构与数据库设计](./ARCHITECTURE_DESIGN.md)
+- [部署指南](../DEPLOYMENT_OPTIMIZATION.md)
+- [BPMN 审批语义](./approval-node-semantics.md)
+- [AI 产品能力](../product/itsm-commercial-capability-contract.md)

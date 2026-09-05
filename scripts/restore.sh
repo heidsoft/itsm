@@ -23,6 +23,13 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_err() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
+validate_database_name() {
+    if [[ ! "${PGDATABASE}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+        log_err "Invalid PGDATABASE identifier: ${PGDATABASE}"
+        return 1
+    fi
+}
+
 # Validate prerequisites
 check_prereqs() {
     local errors=0
@@ -71,8 +78,10 @@ restore_full() {
     # Confirmation prompt
     log_warn "This will overwrite the current database: ${PGDATABASE}"
     log_warn "All current data will be lost!"
-    log_warn "Press Ctrl+C to cancel, or wait 15 seconds to continue..."
-    sleep 15
+    if [ "${RESTORE_CONFIRM:-}" != "yes" ]; then
+        log_warn "Press Ctrl+C to cancel, or wait 15 seconds to continue..."
+        sleep 15
+    fi
 
     # Terminate existing connections
     log_info "Terminating existing connections to ${PGDATABASE}..."
@@ -83,12 +92,12 @@ restore_full() {
     # Drop existing database
     log_info "Dropping existing database..."
     psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d postgres \
-        -c "DROP DATABASE IF EXISTS ${PGDATABASE};" 2>/dev/null || true
+        -c "DROP DATABASE IF EXISTS \"${PGDATABASE}\";"
 
     # Create fresh database
     log_info "Creating database..."
     psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d postgres \
-        -c "CREATE DATABASE ${PGDATABASE};"
+        -c "CREATE DATABASE \"${PGDATABASE}\";"
 
     # Restore
     log_info "Restoring data..."
@@ -223,6 +232,7 @@ EOF
 }
 
 main() {
+    validate_database_name
     if ! check_prereqs; then
         log_err "Prerequisites check failed"
         exit 1

@@ -5,6 +5,9 @@
 - 使用 PostgreSQL 17，并已完成可恢复备份和恢复抽检。
 - 发布制品、迁移文件和初始化 manifest 来自同一 release version。
 - 显式提供生产环境变量文件；不得使用仓库默认凭据。
+- `VERSION` 必须是通过全部发布门禁的固定 release tag；禁止使用 `latest`。
+- 后端、Worker、init、AI sidecar 与前端必须由同一个 `VERSION` 驱动：Compose 中所有应用镜像都显式使用 `<service>:${VERSION}`，禁止依赖 Compose 自动生成的 `project-service` 或 `latest` 标签。发布前执行 `docker compose --env-file .env.prod -f docker-compose.prod.yml config --images`，确认每个应用镜像均带有同一 release tag。
+- Compose 仅提供 HTTP 上游，必须由受信任的企业入口网关终止 TLS，且不得将 80/8090 直接暴露到不受信任网络。
 - 普通 Web 容器必须设置 `ITSM_AUTO_MIGRATE=false`、`ITSM_AUTO_SEED=false`。
 
 ## 标准发布

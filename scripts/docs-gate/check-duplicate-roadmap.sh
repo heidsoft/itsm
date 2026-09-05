@@ -25,7 +25,7 @@
 
 set -uo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT_DIR="${DOCS_GATE_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "${ROOT_DIR}"
 
 STRICT="${1:-}"
@@ -36,10 +36,7 @@ echo "# Gate C.2 — Roadmap 重复检测"
 echo "########################################"
 
 # 豁免：ROADMAP.md 本身、文档治理说明、release README（描述如何写发布报告而非路线）
-EXEMPT_REGEX='(^\./ROADMAP\.md$|^./docs/documentation-governance\.md$|^./docs/roadmap\.md$|^./docs/release/README\.md$|^./docs/release/REPORT_TEMPLATE\.md$|^./AGENTS\.md$|^./CHANGELOG\.md$)'
-
-# 收集目标文件
-TARGETS="$(git ls-files '*.md' | grep -vE "${EXEMPT_REGEX}" || true)"
+EXEMPT_REGEX='(^ROADMAP\.md$|^docs/documentation-governance\.md$|^docs/roadmap\.md$|^docs/release/README\.md$|^docs/release/REPORT_TEMPLATE\.md$|^AGENTS\.md$|^CHANGELOG\.md$)'
 
 scan_roadmap_table() {
   local file="$1"
@@ -73,13 +70,14 @@ scan_roadmap_table() {
   ' "${file}"
 }
 
-for f in ${TARGETS}; do
+while IFS= read -r -d '' f; do
+  [[ "${f}" =~ ${EXEMPT_REGEX} ]] && continue
   HITS="$(scan_roadmap_table "${f}" || true)"
   if [ -n "${HITS}" ]; then
     echo "${HITS}"
     VIOLATIONS=$((VIOLATIONS + $(echo "${HITS}" | wc -l | tr -d ' ')))
   fi
-done
+done < <(git ls-files -z '*.md')
 
 echo ""
 echo "########################################"

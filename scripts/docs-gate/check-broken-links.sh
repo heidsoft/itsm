@@ -22,7 +22,7 @@
 
 set -uo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT_DIR="${DOCS_GATE_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "${ROOT_DIR}"
 
 STRICT="${1:-}"
@@ -31,8 +31,6 @@ VIOLATIONS=0
 echo "########################################"
 echo "# Gate C.3 — 内部 markdown 链接失效检测（advisory）"
 echo "########################################"
-
-TARGETS="$(git ls-files '*.md' '*.mdx' 2>/dev/null)"
 
 # 抽取内部链接，验证存在性
 check_links_in_file() {
@@ -53,25 +51,28 @@ check_links_in_file() {
         fi
         # 解析相对路径
         if [[ "${path}" == /* ]]; then
-          full="${ROOT_DIR}${path}"
+          full_norm="${ROOT_DIR}${path}"
         else
-          full="${ROOT_DIR}/${dir}/${path}"
+          parent="${ROOT_DIR}/${dir}/$(dirname "${path}")"
+          if [ -d "${parent}" ]; then
+            full_norm="$(cd "${parent}" && pwd)/$(basename "${path}")"
+          else
+            full_norm="${ROOT_DIR}/${dir}/${path}"
+          fi
         fi
-        # 规范化（去掉 ./ 与 ../）
-        full_norm="$(cd "${dir}" 2>/dev/null && cd "$(dirname "${path}")" 2>/dev/null && pwd 2>/dev/null)/$(basename "${path}")"
         if [ ! -e "${full_norm}" ]; then
           echo "  - ${file}: link '${link}' -> ${full_norm} (missing)"
         fi
       done
 }
 
-for f in ${TARGETS}; do
+while IFS= read -r -d '' f; do
   HITS="$(check_links_in_file "${f}" 2>/dev/null || true)"
   if [ -n "${HITS}" ]; then
     echo "${HITS}"
     VIOLATIONS=$((VIOLATIONS + $(echo "${HITS}" | wc -l | tr -d ' ')))
   fi
-done
+done < <(git ls-files -z '*.md' '*.mdx')
 
 echo ""
 echo "########################################"

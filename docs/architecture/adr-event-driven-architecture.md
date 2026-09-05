@@ -70,5 +70,5 @@
 
 ## 相关文档
 
-- [事件定义](./event-definitions.md)
-- [处理器实现示例](./event-handlers.md)
+- [领域归属](./domain-ownership.md)
+- [Operational Command / Outbox](./operational-command-outbox.md)

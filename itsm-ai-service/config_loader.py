@@ -97,7 +97,7 @@ def load_config(path: str = "config.yaml") -> Config:
     """加载配置文件"""
     if not os.path.exists(path):
         # Return default config if file doesn't exist
-        return Config(
+        config = Config(
             service=ServiceConfig(),
             database=DatabaseConfig(),
             redis=RedisConfig(),
@@ -106,11 +106,12 @@ def load_config(path: str = "config.yaml") -> Config:
             risk=RiskConfig(),
             triage=TriageConfig(),
         )
+        return apply_environment_overrides(config)
 
     with open(path, "r") as f:
         data = yaml.safe_load(f)
 
-    return Config(
+    config = Config(
         service=ServiceConfig(**data.get("service", {})),
         database=DatabaseConfig(**data.get("database", {})),
         redis=RedisConfig(**data.get("redis", {})),
@@ -119,6 +120,37 @@ def load_config(path: str = "config.yaml") -> Config:
         risk=RiskConfig(**data.get("risk", {})),
         triage=TriageConfig(**data.get("triage", {})),
     )
+    return apply_environment_overrides(config)
+
+
+def apply_environment_overrides(config: Config) -> Config:
+    """Apply deployment-safe environment overrides to file/default config.
+
+    Docker Compose injects provider credentials at runtime.  Keeping this
+    translation here makes the Python guidance sidecar use the same provider,
+    model and timeout as the Go LLM gateway without storing secrets in YAML.
+    """
+    config.service.host = os.getenv("SERVICE_HOST", config.service.host)
+    config.service.port = int(os.getenv("SERVICE_PORT", str(config.service.port)))
+    config.service.log_level = os.getenv("LOG_LEVEL", config.service.log_level)
+
+    config.llm.provider = os.getenv("LLM_PROVIDER", config.llm.provider).strip().lower()
+    config.llm.api_key = os.getenv("LLM_API_KEY", config.llm.api_key)
+    config.llm.model = os.getenv("LLM_MODEL", config.llm.model)
+    config.llm.base_url = os.getenv(
+        "LLM_BASE_URL",
+        os.getenv("LLM_ENDPOINT", config.llm.base_url),
+    )
+    # MiniMax's supported chat endpoint is Anthropic-compatible, not OpenAI
+    # chat/completions. Compose historically supplied the OpenAI default even
+    # when LLM_PROVIDER=minimax, so normalize that inherited default here.
+    if config.llm.provider == "minimax" and config.llm.base_url.rstrip("/") in {
+        "",
+        "https://api.openai.com/v1",
+    }:
+        config.llm.base_url = "https://api.minimaxi.com/anthropic/v1"
+    config.llm.timeout = int(os.getenv("LLM_TIMEOUT", str(config.llm.timeout)))
+    return config
 
 
 # Global config instance

@@ -1,6 +1,6 @@
 # v1.5.0 发布认证证据归档（2026-07-30）
 
-> Status: historical。该文件只证明 2026-07-30 当次 revision、数据库和容器运行，不证明当前 `1.6.8` 工作树。最新判断参见[文档状态与事实源](documentation-governance.md)和[部署业务测试](../output/product-deployment-business-test-2026-08-14.md)。
+> Status: historical。该文件只证明 2026-07-30 当次 revision、数据库和容器运行，不证明当前 `1.6.8` 工作树。最新判断参见[文档状态与事实源](documentation-governance.md)；历史输出 `output/product-deployment-business-test-2026-08-14.md` 未纳入版本库，不能作为可复核证据。
 
 本文档归档 `docs/initialization-release-certification.md` 中 P7/P8/P9 阻断项的关闭证据，以及生产模式部署验证结果。
 

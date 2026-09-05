@@ -33,8 +33,21 @@ const CONTRACTS = [
       /ITSM_CORS_ALLOWED_ORIGINS=/,
       /http:\/\/127\.0\.0\.1:3000/,
       /http:\/\/127\.0\.0\.1\/health/,
+      /127\.0\.0\.1:8090:8090/,
+      /image: itsm-backend:\$\{VERSION:\?VERSION must be set\}/,
     ],
-    forbid: [/^\s*- CORS_ALLOWED_ORIGINS=/m],
+    forbid: [
+      /^\s*- CORS_ALLOWED_ORIGINS=/m,
+      /^\s*- "8090:8090"/m,
+      /^\s*- "443:443"/m,
+      /image: itsm-backend:\$\{VERSION:-latest\}/,
+    ],
+  },
+  {
+    id: 'security-scans-block-release',
+    file: '.github/workflows/security.yml',
+    require: [/severity: 'CRITICAL,HIGH'/, /exit-code: '1'/],
+    forbid: [/-no-fail/, /severity: 'CRITICAL'\s*\n\s*exit-code: '1'/],
   },
   {
     id: 'frontend-ci-same-origin',

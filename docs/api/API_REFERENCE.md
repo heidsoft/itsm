@@ -11,6 +11,34 @@
 - **数据格式**: JSON
 - **字符编码**: UTF-8
 
+## AI 工作流生成
+
+AI 工作流接口必须携带 JWT，并且只能访问认证上下文中的租户。请求体中的 `tenantId`（如存在）不会覆盖认证租户。
+
+```http
+POST /api/v1/bpmn/ai/generate?autoDeploy=false
+POST /api/v1/bpmn/ai/preview
+GET  /api/v1/bpmn/ai/templates/suggestions?keyword=事件&processType=incident
+```
+
+`generate` 需要 `workflow:create` 权限，`preview` 和模板推荐需要 `workflow:read` 权限。生成响应包含 `bpmnXml`、`lintResult` 和待人工确认的 `candidateDefinition`；只有 Lint 没有错误时才允许自动部署。自动部署成功时同时返回 `deploymentId`、`processDefinitionId` 和实际版本 `version`。AI provider、模型和失败原因记录在现有 AI 可观测链路中，服务不可用返回 `5003`，不会返回空成功结果。
+
+### AI 工作流模板治理
+
+租户管理员可通过以下接口管理模板草稿和发布版本。所有接口使用认证租户范围，模板发布会再次执行 BPMN Lint，已发布版本不可直接覆盖编辑。
+
+```http
+GET  /api/v1/bpmn/ai/templates?keyword=费用&domain=expense&status=draft&page=1&pageSize=20
+GET  /api/v1/bpmn/ai/templates/{key}
+GET  /api/v1/bpmn/ai/templates/{key}/versions
+POST /api/v1/bpmn/ai/templates
+PUT  /api/v1/bpmn/ai/templates/{key}
+POST /api/v1/bpmn/ai/templates/{key}/publish
+POST /api/v1/bpmn/ai/templates/{key}/archive
+```
+
+创建模板会生成新的草稿版本（例如 `1.0.0`、`1.1.0`），编辑只允许作用于草稿；发布成功后状态为 `published`，停用只将最新已发布版本标记为 `archived`，不会删除历史版本。
+
 ## 通用响应格式
 
 所有 API 响应遵循以下格式：

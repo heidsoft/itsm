@@ -243,10 +243,11 @@ services:
       - MINIO_ROOT_PASSWORD=minioadmin123
       - MINIO_BUCKET=itsm-uploads
 
-      # LLM 配置（开发用本地模型）
-      - LLM_PROVIDER=ollama
-      - LLM_MODEL=llama2
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434 # 指向宿主机（开发用）
+      # LLM 配置（默认开发用本地模型，可由 .env 覆盖）
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_MODEL=${LLM_MODEL:-llama2}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_ENDPOINT=${LLM_ENDPOINT:-http://host.docker.internal:11434}
       # 或者使用本地运行的 Ollama 容器:
       # - OLLAMA_BASE_URL=http://ollama:11434
 
@@ -308,10 +309,10 @@ services:
       - SERVICE_PORT=8000
       - LOG_LEVEL=info
       - CORS_ORIGINS=http://localhost:3000,http://itsm-frontend:3000
-      - LLM_PROVIDER=ollama
-      - LLM_MODEL=llama2
-      - LLM_BASE_URL=http://ollama:11434/v1
-      - LLM_API_KEY=not-needed
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_MODEL=${LLM_MODEL:-llama2}
+      - LLM_BASE_URL=${LLM_ENDPOINT:-http://ollama:11434/v1}
+      - LLM_API_KEY=${LLM_API_KEY:-}
       - LLM_TIMEOUT=120
     expose:
       - "8000"

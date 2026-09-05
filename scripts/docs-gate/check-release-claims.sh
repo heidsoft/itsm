@@ -24,7 +24,7 @@
 
 set -uo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT_DIR="${DOCS_GATE_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "${ROOT_DIR}"
 
 STRICT="${1:-}"
@@ -54,40 +54,38 @@ BANNED_PHRASES=(
   'production ready'
 )
 
-# 目标文件（发布 / 认证 / readiness）
-TARGETS="$(
-  git ls-files '*.md' 2>/dev/null \
-    | grep -E '(docs/release/|docs/.*certification|docs/.*readiness|docs/.*release-|docs/.*GA-)'
-)"
-
 # 锚点正则：commit SHA（短 7 位 / 完整）/ 日期 / 镜像 digest
-ANCHOR_REGEX='(commit[[:space:]]+[0-9a-f]{7,}|[0-9a-f]{7,40}|sha256:[0-9a-f]+|20[0-9]{2}-[0-9]{2}-[0-9]{2})'
+# Keep this POSIX awk compatible: macOS awk does not enable interval expressions
+# such as {7,} consistently.
+ANCHOR_REGEX='(commit[[:space:]]+[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]|sha256:[0-9a-f]+|20[0-9][0-9]-[0-9][0-9]-[0-9][0-9])'
 
 scan_claims() {
   local file="$1"
   local phrase="$2"
   awk -v phrase="${phrase}" -v anchor="${ANCHOR_REGEX}" '
-    {
-      line = $0
-      if (line ~ phrase) {
+    { lines[NR] = $0 }
+    END {
+      total_lines = NR
+      for (line_no = 1; line_no <= total_lines; line_no++) {
+        if (lines[line_no] ~ phrase) {
         # 上下文窗口：前后 5 行
-        win_start = (NR > 5) ? NR - 5 : 1
+        win_start = (line_no > 5) ? line_no - 5 : 1
+        win_end = (line_no + 5 < total_lines) ? line_no + 5 : total_lines
         win = ""
-        for (i = win_start; i <= NR + 5 && i <= total_lines; i++) {
+        for (i = win_start; i <= win_end; i++) {
           win = win " " lines[i]
         }
-        # 检查窗口内是否有 anchor
         if (win !~ anchor) {
-          printf("  - %s:%d :: \"%s\" without anchor (commit/date/digest)\n", FILENAME, NR, phrase)
+          printf("  - %s:%d :: \"%s\" without anchor (commit/date/digest)\n", FILENAME, line_no, phrase)
+          }
         }
       }
-      lines[NR] = line
-      total_lines = NR
     }
   ' "${file}"
 }
 
-for f in ${TARGETS}; do
+while IFS= read -r -d '' f; do
+  [[ "${f}" =~ (docs/release/|docs/.*certification|docs/.*readiness|docs/.*release-|docs/.*GA-) ]] || continue
   for phrase in "${BANNED_PHRASES[@]}"; do
     HITS="$(scan_claims "${f}" "${phrase}" 2>/dev/null || true)"
     if [ -n "${HITS}" ]; then
@@ -95,7 +93,7 @@ for f in ${TARGETS}; do
       VIOLATIONS=$((VIOLATIONS + $(echo "${HITS}" | wc -l | tr -d ' ')))
     fi
   done
-done
+done < <(git ls-files -z '*.md')
 
 echo ""
 echo "########################################"

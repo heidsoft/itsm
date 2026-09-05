@@ -85,15 +85,35 @@ jobs:
           echo "PostgreSQL failed to start"
           exit 1
 
+      - name: Build production backend image
+        run: docker build --file itsm-backend/Dockerfile.prod --tag itsm-backend:dr --build-arg VERSION=dr-test itsm-backend
+
+      - name: Bootstrap real application schema
+        run: |
+          docker run --rm --network host \
+            -e DB_HOST=127.0.0.1 -e DB_PORT=5432 \
+            -e DB_USER=postgres -e DB_PASSWORD=postgres -e DB_NAME=itsm_test -e DB_SSLMODE=disable \
+            -e JWT_SECRET=dr-test-only-jwt-secret-with-more-than-32-characters \
+            -e DEPLOYMENT_MODE=private -e ITSM_BOOTSTRAP_ONLY=true \
+            -e ITSM_AUTO_MIGRATE=true -e ITSM_AUTO_SEED=false -e RLS_MODE=off \
+            itsm-backend:dr
+
       - name: Create backup directory
         run: mkdir -p ${{ env.BACKUP_DIR }}
 
-      - name: Run migrations
+      - name: Seed real tenant-scoped tables
         run: |
-          docker exec pg-dr-test psql -U postgres -d itsm_test \
-            -c "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, tenant_id INTEGER NOT NULL);"
-          docker exec pg-dr-test psql -U postgres -d itsm_test \
-            -c "INSERT INTO users (name, tenant_id) VALUES ('user1', 1), ('user2', 1), ('user3', 2);"
+          docker exec -i pg-dr-test psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test <<'EOSQL'
+          INSERT INTO tenants (id, name, code, type, status, billing_enabled, timezone, created_at, updated_at)
+          VALUES
+            (9101, 'DR Tenant A', 'dr-tenant-a', 'standard', 'active', false, 'Asia/Shanghai', now(), now()),
+            (9102, 'DR Tenant B', 'dr-tenant-b', 'standard', 'active', false, 'Asia/Shanghai', now(), now());
+          INSERT INTO teams (name, code, status, tenant_id, created_at, updated_at)
+          VALUES
+            ('DR Team A1', 'dr-a1', 'active', 9101, now(), now()),
+            ('DR Team A2', 'dr-a2', 'active', 9101, now(), now()),
+            ('DR Team B1', 'dr-b1', 'active', 9102, now(), now());
+          EOSQL
 
       - name: Run backup script
         run: |
@@ -108,35 +128,44 @@ jobs:
       - name: Verify backup
         run: |
           latest=$(ls -t ${{ env.BACKUP_DIR }}/itsm_full_*.dump 2>/dev/null | head -1)
-          if [ -n "$latest" ]; then
-            BACKUP_DIR=${{ env.BACKUP_DIR }} ./scripts/backup.sh verify "$latest"
-          fi
+          test -n "$latest"
+          BACKUP_DIR=${{ env.BACKUP_DIR }} ./scripts/backup.sh verify "$latest"
+          jq empty "${latest%.dump}.meta"
 
       - name: Simulate data corruption
         run: |
           docker exec pg-dr-test psql -U postgres -d itsm_test \
-            -c "DROP TABLE users;"
+            -c "DROP TABLE teams CASCADE;"
           docker exec pg-dr-test psql -U postgres -d itsm_test \
-            -c "SELECT count(*) FROM users;" || echo "Table dropped as expected"
+            -c "SELECT count(*) FROM teams;" && exit 1 || true
 
       - name: Run restore
         run: |
           latest=$(ls -t ${{ env.BACKUP_DIR }}/itsm_full_*.dump 2>/dev/null | head -1)
-          if [ -n "$latest" ]; then
-            # Copy backup locally for restore
-            cp "$latest" /tmp/
-            BACKUP_DIR=/tmp ./scripts/restore.sh full "/tmp/$(basename $latest)"
-          fi
+          test -n "$latest"
+          RESTORE_CONFIRM=yes BACKUP_DIR=${{ env.BACKUP_DIR }} ./scripts/restore.sh full "$latest"
 
       - name: Verify data restored
         run: |
-          count=$(docker exec pg-dr-test psql -U postgres -d itsm_test -t -c "SELECT count(*) FROM users;" 2>/dev/null | tr -d ' ')
+          count=$(docker exec pg-dr-test psql -U postgres -d itsm_test -Atc "SELECT count(*) FROM teams WHERE tenant_id IN (9101, 9102);")
           if [ "$count" = "3" ]; then
             echo "Data restored successfully: $count rows"
           else
             echo "Expected 3 rows, got: $count"
             exit 1
           fi
+          docker exec -i pg-dr-test psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test <<'EOSQL'
+          DO $$
+          DECLARE table_count integer; migration_count integer; policy_count integer;
+          BEGIN
+            SELECT count(*) INTO table_count FROM pg_tables WHERE schemaname = 'public';
+            SELECT count(*) INTO migration_count FROM schema_migrations;
+            SELECT count(*) INTO policy_count FROM pg_policies WHERE schemaname = 'public';
+            IF table_count < 100 THEN RAISE EXCEPTION 'restored schema too small: % tables', table_count; END IF;
+            IF migration_count < 13 THEN RAISE EXCEPTION 'migration ledger incomplete: %', migration_count; END IF;
+            IF policy_count < 10 THEN RAISE EXCEPTION 'RLS policies missing: %', policy_count; END IF;
+          END $$;
+          EOSQL
 
       - name: Cleanup
         if: always()
@@ -177,75 +206,75 @@ jobs:
           done
           exit 1
 
-      - name: Apply RLS migration
+      - name: Build production backend image
+        run: docker build --file itsm-backend/Dockerfile.prod --tag itsm-backend:rls --build-arg VERSION=rls-test itsm-backend
+
+      - name: Bootstrap real application schema and RLS migrations
         run: |
-          # Apply RLS migration directly to verify it works
-          docker exec pg-rls-test psql -U postgres -d itsm_test << 'EOSQL'
-            -- Create tenant-scoped tables
-            CREATE TABLE teams (
-              id SERIAL PRIMARY KEY,
-              name TEXT NOT NULL,
-              tenant_id INTEGER NOT NULL
-            );
-            CREATE TABLE users (
-              id SERIAL PRIMARY KEY,
-              name TEXT NOT NULL,
-              tenant_id INTEGER NOT NULL
-            );
+          docker run --rm --network host \
+            -e DB_HOST=127.0.0.1 -e DB_PORT=5432 \
+            -e DB_USER=postgres -e DB_PASSWORD=postgres -e DB_NAME=itsm_test -e DB_SSLMODE=disable \
+            -e JWT_SECRET=rls-test-only-jwt-secret-with-more-than-32-characters \
+            -e DEPLOYMENT_MODE=private -e ITSM_BOOTSTRAP_ONLY=true \
+            -e ITSM_AUTO_MIGRATE=true -e ITSM_AUTO_SEED=false -e RLS_MODE=off \
+            itsm-backend:rls
 
-            -- Enable RLS
-            ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-            ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
-            -- Create policy
-            CREATE OR REPLACE FUNCTION get_current_tenant_id() RETURNS INTEGER AS $$
-            BEGIN
-              RETURN NULLIF(current_setting('app.current_tenant_id', true)::INTEGER, 0);
-            END;
-            $$ LANGUAGE plpgsql STABLE;
-
-            CREATE POLICY tenant_isolation_teams ON teams
-              USING (tenant_id = get_current_tenant_id())
-              WITH CHECK (tenant_id = get_current_tenant_id());
-
-            CREATE POLICY tenant_isolation_users ON users
-              USING (tenant_id = get_current_tenant_id())
-              WITH CHECK (tenant_id = get_current_tenant_id());
-
-            -- Insert test data
-            INSERT INTO teams (name, tenant_id) VALUES
-              ('Team A - Tenant 1', 1),
-              ('Team B - Tenant 1', 1),
-              ('Team C - Tenant 2', 2);
-            INSERT INTO users (name, tenant_id) VALUES
-              ('User A1', 1),
-              ('User A2', 1),
-              ('User B1', 2);
+      - name: Prepare non-superuser tenant fixtures
+        run: |
+          docker exec -i pg-rls-test psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test <<'EOSQL'
+            CREATE ROLE itsm_rls_test LOGIN PASSWORD 'rls-test-only';
+            GRANT CONNECT ON DATABASE itsm_test TO itsm_rls_test;
+            GRANT USAGE ON SCHEMA public TO itsm_rls_test;
+            GRANT SELECT, INSERT, UPDATE, DELETE ON teams TO itsm_rls_test;
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO itsm_rls_test;
+            INSERT INTO teams (name, code, status, tenant_id, created_at, updated_at) VALUES
+              ('Team A1', 'rls-a1', 'active', 9101, now(), now()),
+              ('Team A2', 'rls-a2', 'active', 9101, now(), now()),
+              ('Team B1', 'rls-b1', 'active', 9102, now(), now());
           EOSQL
 
       - name: Test RLS enforcement
         run: |
-          docker exec pg-rls-test psql -U postgres -d itsm_test << 'EOSQL'
-            -- Test 1: Without setting tenant, rows should be hidden (default deny)
-            SET app.current_tenant_id = 1;
-            SELECT 'Tenant 1 sees teams:' as test;
-            SELECT COUNT(*) as tenant_1_teams FROM teams;  -- Should see 2 teams
+          docker exec -i pg-rls-test psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test <<'EOSQL'
+            SET ROLE itsm_rls_test;
+            RESET app.current_tenant;
+            DO $$ DECLARE n integer; BEGIN
+              SELECT count(*) INTO n FROM teams;
+              IF n <> 0 THEN RAISE EXCEPTION 'missing tenant context exposed % rows', n; END IF;
+            END $$;
 
-            -- Switch tenant context
-            SET app.current_tenant_id = 2;
-            SELECT 'Tenant 2 sees teams:' as test;
-            SELECT COUNT(*) as tenant_2_teams FROM teams;  -- Should see 1 team
+            SET app.current_tenant = '9101';
+            DO $$ DECLARE n integer; blocked boolean := false; BEGIN
+              SELECT count(*) INTO n FROM teams;
+              IF n <> 2 THEN RAISE EXCEPTION 'tenant A expected 2 rows, got %', n; END IF;
+              BEGIN
+                INSERT INTO teams (name, code, status, tenant_id, created_at, updated_at)
+                VALUES ('Cross tenant', 'rls-cross', 'active', 9102, now(), now());
+              EXCEPTION WHEN insufficient_privilege THEN blocked := true;
+              END;
+              IF NOT blocked THEN RAISE EXCEPTION 'cross-tenant insert was accepted'; END IF;
+            END $$;
 
-            -- Test INSERT enforcement
-            SET app.current_tenant_id = 1;
-            INSERT INTO teams (name, tenant_id) VALUES ('Cross-tenant attempt', 2);  -- Should fail or be rejected
+            SET app.current_tenant = '9102';
+            DO $$ DECLARE n integer; BEGIN
+              SELECT count(*) INTO n FROM teams;
+              IF n <> 1 THEN RAISE EXCEPTION 'tenant B expected 1 row, got %', n; END IF;
+            END $$;
           EOSQL
 
       - name: Verify RLS is active
         run: |
-          # Check that RLS is enabled on all required tables
-          docker exec pg-rls-test psql -U postgres -d itsm_test \
-            -c "SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' AND rowsecurity = true;"
+          docker exec -i pg-rls-test psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test <<'EOSQL'
+          DO $$ DECLARE disabled integer; policies integer; BEGIN
+            SELECT count(*) INTO disabled
+            FROM pg_policies p JOIN pg_tables t USING (schemaname, tablename)
+            WHERE p.schemaname = 'public' AND p.policyname LIKE 'tenant_isolation_%' AND NOT t.rowsecurity;
+            SELECT count(*) INTO policies FROM pg_policies
+            WHERE schemaname = 'public' AND policyname LIKE 'tenant_isolation_%';
+            IF disabled <> 0 THEN RAISE EXCEPTION '% policy tables do not have RLS enabled', disabled; END IF;
+            IF policies < 10 THEN RAISE EXCEPTION 'expected production RLS policy set, got %', policies; END IF;
+          END $$;
+          EOSQL
 
       - name: Cleanup
         if: always()
@@ -264,15 +293,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
-          go-version: '1.23'
+          go-version: '1.25'
           cache: true
 
       - name: Run fencing token tests
         run: |
           cd itsm-backend
           # Run only the fencing token tests
-          go test -v -run "TestFencingToken" ./internal/initialization/... \
-            -timeout 60s 2>&1 || echo "Tests require live database - expected to skip in CI without DB"
+          go test -v -run "TestFencingToken" ./internal/initialization/... -timeout 60s
 
       - name: Verify fence_test.go exists
         run: |

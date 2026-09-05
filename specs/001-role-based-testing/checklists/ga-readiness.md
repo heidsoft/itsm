@@ -4,7 +4,7 @@
 
 **Created**: 2026-06-13
 
-**Feature**: [spec.md](../spec.md) · [docs/ITSM-基于角色视角的产品测试方案.md](../../../docs/ITSM-基于角色视角的产品测试方案.md)
+**Feature**: [spec.md](../spec.md)（角色测试的当前事实源）
 
 ## P1 角色（必须 100% 通过）
 

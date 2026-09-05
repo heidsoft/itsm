@@ -463,7 +463,7 @@ python3 output/dev_business_flow_test.py
 ```bash
 make prod-init
 
-# 编辑 .env.prod，配置真实密码、JWT、域名、TLS 和外部依赖
+# 编辑 .env.prod，配置固定 VERSION、真实密码、JWT、域名和外部依赖
 make prod-deploy
 make prod-health
 ```
@@ -476,7 +476,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 
 上线前至少完成：
 
-- TLS、强密码、SSO/组织同步方案和最小权限配置。
+- 在企业入口网关/负载均衡器终止 TLS，并限制 Compose 的 80 端口仅接受该入口流量；同时完成强密码、SSO/组织同步方案和最小权限配置。
 - 显式数据库迁移、备份恢复和版本回滚演练。
 - 租户隔离、RBAC、审计、Webhook/回调验签验证。
 - 容量、故障恢复、队列积压和死信重放测试。

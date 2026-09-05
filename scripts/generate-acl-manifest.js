@@ -38,6 +38,27 @@ function extractRouteCall(l) {
   return { method: m[2], routePath: m[3], groupVar: m[1] || null };
 }
 
+function collectRouteCall(lines, startLine) {
+  let call = lines[startLine];
+  let depth = 0;
+  let started = false;
+
+  for (let lineNum = startLine; lineNum < lines.length; lineNum++) {
+    if (lineNum !== startLine) call += `\n${lines[lineNum]}`;
+    for (const char of lines[lineNum]) {
+      if (char === "(") {
+        depth++;
+        started = true;
+      } else if (char === ")") {
+        depth--;
+      }
+    }
+    if (started && depth <= 0) break;
+  }
+
+  return call;
+}
+
 function inferMenu(p) {
   if (!p) return "unknown";
   const seg = (p.split("/").filter(Boolean))[1] || "";
@@ -172,7 +193,8 @@ function parseFile(filePath) {
       const fullPath = (prefix + rp).replace(/\/+/g, "/");
 
       // 从路径后的参数中提取 RequirePermission；无则回退到分组级权限
-      let permission = extractPermission(l.slice(l.indexOf(routePath) + routePath.length));
+      const routeCall = collectRouteCall(lines, lineNum);
+      let permission = extractPermission(routeCall.slice(routeCall.indexOf(routePath) + routePath.length));
       if (!permission && groupVar && groupPermissions[groupVar]) {
         permission = groupPermissions[groupVar];
       }
@@ -212,6 +234,9 @@ function discoverRouterFiles(dir) {
 // ---------------------------------------------------------------------------
 
 const KNOWN_PUBLIC = new Set([
+  // Swagger is registered only when ENABLE_SWAGGER=true and is intentionally
+  // unauthenticated in that explicit development-only mode.
+  "/swagger/*any",
   "/api/v1/health", "/api/v1/healthz", "/api/v1/readyz",
   "/api/v1/version", "/api/v1/auth/login", "/api/v1/refresh-token",
   "/api/v1/auth/refresh",

@@ -1,6 +1,6 @@
 # Incident Operations Platform 架构蓝图
 
-> 对应上游需求：[incident-operations-platform-requirements.md](../incident-operations-platform-requirements.md)
+> 对应上游需求：`incident-operations-platform-requirements.md`（上游需求未纳入本仓库）
 > 文档目标：将 14 个 Epic 的需求约束转化为 **决策完整** 的实施蓝图，所有改动都基于现有 `itsm-backend` / `itsm-frontend` / `itsm-ai-service` / `itsm-agent` / `itsm-cli` 现有架构资产。
 >
 > 受众：开发团队、Code Review、QA、运维。上游不允许再开放业务决策，所有"是否复用 / 是否新建 / 走什么路径"在本文件中固化。

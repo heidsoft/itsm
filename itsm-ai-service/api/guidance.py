@@ -89,10 +89,54 @@ def _coerce_priority(value: str) -> str:
     return "medium"
 
 
+def _keyword_classify(title: str, description: str) -> GuidanceTriageResponse:
+    """基于关键词的降级分类，与后端 triage_service.go validCategories 对齐。"""
+    text = f"{title} {description}".lower()
+
+    category = "general"
+    if any(k in text for k in ["mysql", "postgres", "mongodb", "redis", "oracle", "数据库", "查询", "慢查询"]):
+        category = "database"
+    elif any(k in text for k in ["wifi", "router", "switch", "firewall", "vpn", "网络", "连接", "网卡", "dns", "ping"]):
+        category = "network"
+    elif any(k in text for k in ["cpu", "memory", "disk", "linux", "windows server", "服务器", "宕机", "重启", "硬件"]):
+        category = "server"
+    elif any(k in text for k in ["software", "app", "api", "deployment", "软件", "应用", "程序", "部署"]):
+        category = "application"
+    elif any(k in text for k in ["vulnerability", "attack", "permission", "auth", "安全", "漏洞", "攻击", "权限"]):
+        category = "security"
+    elif any(k in text for k in ["backup", "snapshot", "storage", "磁盘", "存储", "空间"]):
+        category = "storage"
+    elif any(k in text for k in ["account", "login", "password", "access", "账号", "密码", "登录"]):
+        category = "user_access"
+
+    priority = "medium"
+    if any(k in text for k in ["critical", "urgent", "emergency", "紧急", "严重", "宕机", "无法工作", "服务不可用"]):
+        priority = "critical"
+    elif any(k in text for k in ["high", "important", "重要", "影响工作", "故障"]):
+        priority = "high"
+    elif any(k in text for k in ["low", "minor", "不紧急", "轻微"]):
+        priority = "low"
+
+    return GuidanceTriageResponse(
+        category=category,
+        priority=priority,
+        confidence=0.7,
+        explanation="keyword-based classification (LLM unavailable)",
+        method="guidance-fallback",
+        latencyMs=0.0,
+    )
+
+
 def _call_llm(title: str, description: str) -> dict:
-    """直连 OpenAI 兼容 chat/completions，返回解析后的分类字典。"""
+    """Call the configured provider and return a constrained triage object."""
     cfg = get_config()
     api_key = os.getenv("LLM_API_KEY") or cfg.llm.api_key
+    if not api_key:
+        raise RuntimeError("LLM_API_KEY not configured")
+
+    if cfg.llm.provider == "minimax":
+        return _call_minimax(title, description, api_key)
+
     base_url = (cfg.llm.base_url or "https://api.openai.com/v1").rstrip("/")
     model = cfg.llm.model or "gpt-4o-mini"
     url = f"{base_url}/chat/completions"
@@ -122,23 +166,55 @@ def _call_llm(title: str, description: str) -> dict:
     return parsed
 
 
+def _call_minimax(title: str, description: str, api_key: str) -> dict:
+    """Call MiniMax's Anthropic-compatible Messages API.
+
+    The Go gateway uses this same protocol. Keeping it explicit prevents the
+    guidance sidecar from silently falling back to OpenAI when MiniMax is the
+    deployment provider.
+    """
+    cfg = get_config()
+    base_url = (cfg.llm.base_url or "https://api.minimaxi.com/anthropic/v1").rstrip("/")
+    payload = {
+        "model": cfg.llm.model,
+        "max_tokens": 512,
+        "system": _SYSTEM_PROMPT,
+        "temperature": 0.2,
+        "messages": [{"role": "user", "content": _build_user_prompt(title, description)}],
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+    }
+
+    with httpx.Client(timeout=httpx.Timeout(cfg.llm.timeout or 120)) as client:
+        resp = client.post(f"{base_url}/messages", json=payload, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+
+    text = next(
+        (block.get("text", "") for block in data.get("content", []) if block.get("type") == "text"),
+        "",
+    )
+    parsed = json.loads(text)
+    if not isinstance(parsed, dict):
+        raise ValueError("MiniMax did not return a JSON object")
+    return parsed
+
+
 @router.post("/triage", response_model=GuidanceTriageResponse)
 async def guidance_triage(req: GuidanceTriageRequest):
     """Guidance sidecar 兼容的受限分诊入口。"""
     start = time.perf_counter()
     try:
         raw = _call_llm(req.title, req.description)
-    except Exception as e:  # noqa: BLE001 - 任何失败都降级为 general/medium
-        logger.error(f"Guidance triage LLM failed: {e}")
+    except Exception as e:  # noqa: BLE001 - 任何失败都降级为关键词分类
+        logger.warning(f"Guidance triage LLM unavailable, using keyword fallback: {e}")
         latency = (time.perf_counter() - start) * 1000
-        return GuidanceTriageResponse(
-            category="general",
-            priority="medium",
-            confidence=0.5,
-            explanation="guidance LLM unavailable, keyword fallback",
-            method="guidance-fallback",
-            latencyMs=round(latency, 2),
-        )
+        fallback = _keyword_classify(req.title, req.description)
+        fallback.latencyMs = round(latency, 2)
+        return fallback
 
     latency = (time.perf_counter() - start) * 1000
     category = _coerce_category(str(raw.get("category", "general")))

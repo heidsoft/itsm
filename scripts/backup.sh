@@ -24,6 +24,13 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_err() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
+validate_database_name() {
+    if [[ ! "${PGDATABASE}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+        log_err "Invalid PGDATABASE identifier: ${PGDATABASE}"
+        return 1
+    fi
+}
+
 # Ensure backup directory exists
 ensure_backup_dir() {
     mkdir -p "${BACKUP_DIR}"
@@ -38,33 +45,23 @@ full_backup() {
 
     log_info "Starting full backup to ${backup_file}"
 
-    # Create backup metadata
     local metadata_file="${BACKUP_DIR}/itsm_full_${timestamp}.meta"
-    cat > "${metadata_file}" << EOF
-{
-  "type": "full",
-  "timestamp": "${timestamp}",
-  "database": "${PGDATABASE}",
-  "pg_version": "$(psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" -t -c 'SELECT version()' 2>/dev/null | tr -d '\n')",
-  "backup_file": "${backup_file}",
-  "started_at": "$(date -Iseconds)"
-}
-EOF
+    local started_at pg_version
+    started_at="$(date -Iseconds)"
+    pg_version="$(psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" -Atc 'SHOW server_version' 2>/dev/null)"
 
     # Perform pg_dump with compression
-    pg_dump -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" \
+    if pg_dump -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d "${PGDATABASE}" \
         -Fc \
         -c \
         --if-exists \
-        -f "${backup_file}" 2>&1
-
-    local exit_code=$?
-    if [ ${exit_code} -eq 0 ]; then
-        # Update metadata with completion info
-        echo ", \"completed_at\": \"$(date -Iseconds)\", \"status\": \"success\" }" >> "${metadata_file}"
+        -f "${backup_file}" 2>&1; then
+        printf '{\n  "type": "full",\n  "timestamp": "%s",\n  "database": "%s",\n  "pg_version": "%s",\n  "backup_file": "%s",\n  "started_at": "%s",\n  "completed_at": "%s",\n  "status": "success"\n}\n' \
+          "${timestamp}" "${PGDATABASE}" "${pg_version}" "${backup_file}" \
+          "${started_at}" "$(date -Iseconds)" > "${metadata_file}"
         log_info "Full backup completed successfully: ${backup_file}"
     else
-        echo ", \"completed_at\": \"$(date -Iseconds)\", \"status\": \"failed\" }" >> "${metadata_file}"
+        local exit_code=$?
         log_err "Full backup failed with exit code ${exit_code}"
         return ${exit_code}
     fi
@@ -200,6 +197,7 @@ EOF
 
 # Main
 main() {
+    validate_database_name
     ensure_backup_dir
 
     local command="${1:-help}"

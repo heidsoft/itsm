@@ -152,6 +152,6 @@
 
 详见：
 
-- [多租户设计](tenancy.md)
-- [BPMN 工作流架构](bpmn.md)
-- [模块边界清单](modules.md)
+- [领域归属与租户边界](domain-ownership.md)
+- [BPMN 审批运行时契约](approval-runtime-contract.md)
+- [系统架构设计](ARCHITECTURE_DESIGN.md)
