@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -271,8 +272,12 @@ func (c *DashboardHandler) GetProcessTimeline(ctx *gin.Context) {
 		return
 	}
 
-	tenantIDVal, _ := ctx.Get("tenant_id")
-	tenantID, _ := tenantIDVal.(int)
+	// 租户上下文缺失时 fail-closed（历史为 comma-ok 静默取 0，
+	// 存在以 tenantID=0 查询审计时间线的跨租户数据风险）
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
+	if !ok {
+		return
+	}
 
 	timeline, err := c.auditService.GetProcessTimeline(ctx.Request.Context(), processInstanceKey, tenantID)
 	if err != nil {
