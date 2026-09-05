@@ -575,29 +575,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Ticket Categories & Tags ====================
 		if config.TicketCategoryHandler != nil {
-			categories := tenant.(*gin.RouterGroup).Group("/ticket-categories")
-			{
-				categories.GET("", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryHandler.ListCategories)
-				categories.POST("", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryHandler.CreateCategory)
-				categories.GET("/tree", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryHandler.GetCategoryTree)
-				categories.POST("/import/preview", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryHandler.PreviewImport)
-				categories.POST("/import", middleware.RequirePermission("ticket_category", "create"), config.TicketCategoryHandler.ExecuteImport)
-				categories.GET("/:id", middleware.RequirePermission("ticket_category", "read"), config.TicketCategoryHandler.GetCategory)
-				categories.PUT("/:id", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryHandler.UpdateCategory)
-				categories.PUT("/:id/move", middleware.RequirePermission("ticket_category", "update"), config.TicketCategoryHandler.MoveCategory)
-				categories.DELETE("/:id", middleware.RequirePermission("ticket_category", "delete"), config.TicketCategoryHandler.DeleteCategory)
-			}
+			SetupTicketCategoryRoutes(tenant.(*gin.RouterGroup), config.TicketCategoryHandler)
 		}
 
 		if config.TicketTagHandler != nil {
-			tags := tenant.(*gin.RouterGroup).Group("/ticket-tags")
-			{
-				tags.GET("", middleware.RequirePermission("ticket_tag", "read"), config.TicketTagHandler.ListTags)
-				tags.POST("", middleware.RequirePermission("ticket_tag", "create"), config.TicketTagHandler.CreateTag)
-				tags.GET("/:id", middleware.RequirePermission("ticket_tag", "read"), config.TicketTagHandler.GetTag)
-				tags.PUT("/:id", middleware.RequirePermission("ticket_tag", "update"), config.TicketTagHandler.UpdateTag)
-				tags.DELETE("/:id", middleware.RequirePermission("ticket_tag", "delete"), config.TicketTagHandler.DeleteTag)
-			}
+			SetupTicketTagRoutes(tenant.(*gin.RouterGroup), config.TicketTagHandler)
 		}
 
 		// ==================== Tickets ====================
@@ -980,20 +962,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Approval Chains ====================
 		if config.ApprovalChainHandler != nil {
-			approvalChains := tenant.(*gin.RouterGroup).Group("/approval-chains")
-			{
-				approvalChains.GET("", middleware.RequirePermission("approval", "read"), config.ApprovalChainHandler.ListChains)
-				approvalChains.GET("/stats", middleware.RequirePermission("approval", "read"), config.ApprovalChainHandler.GetStats)
-				approvalChains.POST("", middleware.RequirePermission("approval", "create"), config.ApprovalChainHandler.CreateChain)
-				approvalChains.GET("/:id", middleware.RequirePermission("approval", "read"), config.ApprovalChainHandler.GetChain)
-				approvalChains.PUT("/:id", middleware.RequirePermission("approval", "update"), config.ApprovalChainHandler.UpdateChain)
-				approvalChains.DELETE("/:id", middleware.RequirePermission("approval", "delete"), config.ApprovalChainHandler.DeleteChain)
-			}
-			// ==================== Escalation Matrix ====================
-			if config.EscalationMatrixHandler != nil {
-				config.EscalationMatrixHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
-			}
-
+			SetupApprovalChainRoutes(tenant.(*gin.RouterGroup), config.ApprovalChainHandler, config.EscalationMatrixHandler)
 		}
 
 		// ==================== Incidents ====================
@@ -1137,30 +1106,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// 名册管理走 change 权限（CAB 属变更管理范畴，变更管理员/管理员已持该权限）。
 		// CAB 审批流转由审批链引擎（cab:CAB / cab:ECAB 解析器）统一驱动，不在此暴露。
 		if config.CABHandler != nil {
-			cabGrp := tenant.(*gin.RouterGroup).Group("/cab")
-			{
-				cabGrp.GET("/members", middleware.RequirePermission("change", "read"), config.CABHandler.ListCABMembers)
-				cabGrp.POST("/members", middleware.RequirePermission("change", "write"), config.CABHandler.AddCABMember)
-				cabGrp.PUT("/members/:id", middleware.RequirePermission("change", "write"), config.CABHandler.UpdateCABMember)
-				cabGrp.DELETE("/members/:id", middleware.RequirePermission("change", "write"), config.CABHandler.RemoveCABMember)
-			}
+			SetupCABRoutes(tenant.(*gin.RouterGroup), config.CABHandler)
 		}
 
 		// ==================== Releases ====================
 		if config.ReleaseHandler != nil {
-			releases := tenant.(*gin.RouterGroup).Group("/releases")
-			{
-				releases.GET("", middleware.RequirePermission("release", "read"), config.ReleaseHandler.ListReleases)
-				releases.POST("", middleware.RequirePermission("release", "write"), config.ReleaseHandler.CreateRelease)
-				releases.GET("/stats", middleware.RequirePermission("release", "read"), config.ReleaseHandler.GetReleaseStats)
-				releases.GET("/:id", middleware.RequirePermission("release", "read"), config.ReleaseHandler.GetRelease)
-				releases.PUT("/:id", middleware.RequirePermission("release", "write"), config.ReleaseHandler.UpdateRelease)
-				releases.PUT("/:id/status", middleware.RequirePermission("release", "write"), config.ReleaseHandler.UpdateReleaseStatus)
-				releases.POST("/:id/approve", middleware.RequirePermission("release", "approve"), config.ReleaseHandler.ApproveRelease)
-				releases.POST("/:id/reject", middleware.RequirePermission("release", "approve"), config.ReleaseHandler.RejectRelease)
-				releases.POST("/:id/rollback", middleware.RequirePermission("release", "rollback"), config.ReleaseHandler.RollbackRelease)
-				releases.DELETE("/:id", middleware.RequirePermission("release", "delete"), config.ReleaseHandler.DeleteRelease)
-			}
+			SetupReleaseRoutes(tenant.(*gin.RouterGroup), config.ReleaseHandler)
 		}
 
 		// ==================== Assets ====================
@@ -1178,13 +1129,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Vendors ====================
 		if config.VendorHandler != nil {
-			vendors := tenant.(*gin.RouterGroup).Group("/vendors")
-			{
-				vendors.GET("", middleware.RequirePermission("vendor", "read"), config.VendorHandler.ListVendors)
-				vendors.POST("", middleware.RequirePermission("vendor", "write"), config.VendorHandler.CreateVendor)
-				vendors.GET("/:id", middleware.RequirePermission("vendor", "read"), config.VendorHandler.GetVendor)
-				vendors.DELETE("/:id", middleware.RequirePermission("vendor", "delete"), config.VendorHandler.DeleteVendor)
-			}
+			SetupVendorRoutes(tenant.(*gin.RouterGroup), config.VendorHandler)
 		}
 
 		// ==================== Knowledge Base (DDD) ====================
@@ -1643,21 +1588,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// Connector Controller (连接器/插件/技能市场)
 		if config.ConnectorHandler != nil {
-			conns := tenant.(*gin.RouterGroup).Group("/connectors")
-			{
-				conns.GET("", middleware.RequirePermission("connector", "read"), config.ConnectorHandler.ListMarket)
-				conns.GET("/configs", middleware.RequirePermission("connector", "read"), config.ConnectorHandler.ListConfigs)
-				conns.GET("/lifecycle", middleware.RequirePermission("connector", "read"), config.ConnectorHandler.Lifecycle)
-				conns.POST("/configs", middleware.RequirePermission("connector", "write"), config.ConnectorHandler.Provision)
-				conns.DELETE("/configs/:name", middleware.RequirePermission("connector", "write"), config.ConnectorHandler.Revoke)
-				conns.POST("/:name/send", middleware.RequirePermission("connector", "write"), config.ConnectorHandler.Send)
-				conns.POST("/:name/test", middleware.RequirePermission("connector", "write"), config.ConnectorHandler.Test)
-				conns.GET("/health", middleware.RequirePermission("connector", "read"), config.ConnectorHandler.Health)
-			}
+			SetupConnectorRoutes(tenant.(*gin.RouterGroup), config.ConnectorHandler)
 		}
 
 		if config.AlertHandler != nil {
-			tenant.(*gin.RouterGroup).POST("/alerts/sources/:source/ingest", middleware.RequirePermission("alert", "write"), config.AlertHandler.Ingest)
+			SetupAlertRoutes(tenant.(*gin.RouterGroup), config.AlertHandler)
 		}
 
 		if config.DashboardHandler != nil {
@@ -1820,52 +1755,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== Surveys 客户满意度调查 ====================
 		if config.SurveyHandler != nil {
-			surveys := tenant.(*gin.RouterGroup).Group("/surveys")
-			{
-				surveys.GET("", middleware.RequirePermission("survey", "read"), config.SurveyHandler.ListSurveys)
-				surveys.POST("", middleware.RequirePermission("survey", "write"), config.SurveyHandler.CreateSurvey)
-				surveys.GET("/:id", middleware.RequirePermission("survey", "read"), config.SurveyHandler.GetSurvey)
-				surveys.PUT("/:id", middleware.RequirePermission("survey", "write"), config.SurveyHandler.UpdateSurvey)
-				surveys.GET("/:id/responses", middleware.RequirePermission("survey", "read"), config.SurveyHandler.GetSurveyResponses)
-				surveys.GET("/:id/analytics", middleware.RequirePermission("survey", "read"), config.SurveyHandler.GetAnalytics)
-				surveys.POST("/responses", middleware.RequirePermission("survey", "write"), config.SurveyHandler.SubmitResponse)
-			}
+			SetupSurveyRoutes(tenant.(*gin.RouterGroup), config.SurveyHandler)
 		}
 
 		// ==================== Cloud (云账号/云资源/云服务) ====================
 		if config.CloudHandler != nil {
-			cloud := tenant.(*gin.RouterGroup).Group("/cloud")
-			{
-				// Cloud Accounts (云账号)
-				cloudAccounts := cloud.Group("/accounts")
-				{
-					cloudAccounts.GET("", middleware.RequirePermission("cloud_account", "read"), config.CloudHandler.ListCloudAccounts)
-					cloudAccounts.POST("", middleware.RequirePermission("cloud_account", "write"), config.CloudHandler.CreateCloudAccount)
-					cloudAccounts.GET("/:id", middleware.RequirePermission("cloud_account", "read"), config.CloudHandler.GetCloudAccount)
-					cloudAccounts.PUT("/:id", middleware.RequirePermission("cloud_account", "write"), config.CloudHandler.UpdateCloudAccount)
-					cloudAccounts.DELETE("/:id", middleware.RequirePermission("cloud_account", "delete"), config.CloudHandler.DeleteCloudAccount)
-				}
-
-				// Cloud Services (云服务)
-				cloudServices := cloud.Group("/services")
-				{
-					cloudServices.GET("", middleware.RequirePermission("cloud_service", "read"), config.CloudHandler.ListCloudServices)
-					cloudServices.POST("", middleware.RequirePermission("cloud_service", "write"), config.CloudHandler.CreateCloudService)
-					cloudServices.GET("/:id", middleware.RequirePermission("cloud_service", "read"), config.CloudHandler.GetCloudService)
-					cloudServices.PUT("/:id", middleware.RequirePermission("cloud_service", "write"), config.CloudHandler.UpdateCloudService)
-					cloudServices.DELETE("/:id", middleware.RequirePermission("cloud_service", "delete"), config.CloudHandler.DeleteCloudService)
-				}
-
-				// Cloud Resources (云资源)
-				cloudResources := cloud.Group("/resources")
-				{
-					cloudResources.GET("", middleware.RequirePermission("cloud_resource", "read"), config.CloudHandler.ListCloudResources)
-					cloudResources.POST("", middleware.RequirePermission("cloud_resource", "write"), config.CloudHandler.CreateCloudResource)
-					cloudResources.GET("/:id", middleware.RequirePermission("cloud_resource", "read"), config.CloudHandler.GetCloudResource)
-					cloudResources.PUT("/:id", middleware.RequirePermission("cloud_resource", "write"), config.CloudHandler.UpdateCloudResource)
-					cloudResources.DELETE("/:id", middleware.RequirePermission("cloud_resource", "delete"), config.CloudHandler.DeleteCloudResource)
-				}
-			}
+			SetupCloudRoutes(tenant.(*gin.RouterGroup), config.CloudHandler)
 		}
 
 		// ==================== Legacy Compatibility Routes ====================
@@ -1878,17 +1773,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		})
 
 		if config.TicketTypeHandler != nil {
-			tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), config.TicketTypeHandler.ListTicketTypes)
-			tenant.POST("/ticket-types", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.CreateTicketType)
-			tenant.GET("/ticket-types/:id", middleware.RequirePermission("ticket", "read"), config.TicketTypeHandler.GetTicketType)
-			tenant.PUT("/ticket-types/:id", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.UpdateTicketType)
-			tenant.DELETE("/ticket-types/:id", middleware.RequirePermission("ticket_type", "archive"), config.TicketTypeHandler.DeleteTicketType)
-			tenant.POST("/ticket-types/:id/enable", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.EnableTicketType)
-			tenant.POST("/ticket-types/:id/disable", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.DisableTicketType)
-			tenant.POST("/ticket-types/:id/clone", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.CloneTicketType)
-			tenant.POST("/ticket-types/:id/restore", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.RestoreTicketType)
-			tenant.GET("/ticket-type-presets", middleware.RequirePermission("ticket_type", "manage"), config.TicketTypeHandler.ListPresets)
-			tenant.POST("/ticket-type-presets/:presetId/install", middleware.RequirePermission("ticket_type", "install_preset"), config.TicketTypeHandler.InstallPreset)
+			SetupTicketTypeRoutes(tenant.(*gin.RouterGroup), config.TicketTypeHandler)
 		}
 	}
 
