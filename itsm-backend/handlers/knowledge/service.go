@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
 	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/service"
 )
 
@@ -96,21 +97,33 @@ func (s *Service) SetRAG(rag *service.RAGService) {
 	s.rag = rag
 }
 
-// syncVectorIndex keeps the vectors table in sync with article publish state.
-// 失败仅告警，不阻断文章主流程；向量库始终只反映“已发布且未删除”的文章。
-func (s *Service) syncVectorIndex(ctx context.Context, tenantID, articleID int, title, content string, published bool) {
-	if s.rag == nil {
-		return
+// vectorIndexAction is persisted in the outbox. The consumer reloads the
+// article by ID and tenant, so the payload never contains article content.
+const (
+	vectorIndexSync   = "sync"
+	vectorIndexDelete = "delete"
+)
+
+func (s *Service) vectorOutboxEnabled() bool { return s.rag != nil && s.client != nil }
+
+func enqueueVectorSyncTx(ctx context.Context, tx *ent.Tx, article *Article, action string) error {
+	if article == nil || article.ID <= 0 || article.TenantID <= 0 {
+		return fmt.Errorf("knowledge vector outbox requires a tenant-scoped article")
 	}
-	var err error
-	if published {
-		err = s.rag.IndexArticle(ctx, tenantID, articleID, title, content)
-	} else {
-		err = s.rag.RemoveArticle(ctx, tenantID, articleID)
+	occurrence := article.UpdatedAt.UnixNano()
+	if occurrence <= 0 {
+		occurrence = article.CreatedAt.UnixNano()
 	}
-	if err != nil {
-		s.logger.Warnw("KnowledgeService: vector index sync failed", "article_id", articleID, "tenant_id", tenantID, "published", published, "error", err)
+	returnError := func() error {
+		_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+			TenantID: article.TenantID, CommandType: commandbus.CommandSyncKnowledgeVector,
+			AggregateType: "knowledge_article", AggregateID: article.ID,
+			IdempotencyKey: fmt.Sprintf("knowledge-vector:%d:%d:%s:%d", article.TenantID, article.ID, action, occurrence),
+			Payload:        map[string]interface{}{"action": action},
+		})
+		return err
 	}
+	return returnError()
 }
 
 func (s *Service) CreateArticle(ctx context.Context, a *Article) (*Article, error) {
@@ -118,13 +131,12 @@ func (s *Service) CreateArticle(ctx context.Context, a *Article) (*Article, erro
 	a.Title = common.SanitizeText(a.Title)
 	a.Content = common.SanitizeHTML(a.Content)
 	s.logger.Infow("Creating Knowledge Article", "title", a.Title, "category", a.Category)
+	if s.vectorOutboxEnabled() {
+		return s.createWithVectorOutbox(ctx, a)
+	}
 	created, err := s.repo.Create(ctx, a)
 	if err != nil {
 		return nil, err
-	}
-	// 创建即发布（如导入/模板初始化）时同步向量索引；草稿无需入向量库。
-	if created.IsPublished {
-		s.syncVectorIndex(ctx, created.TenantID, created.ID, created.Title, created.Content, true)
 	}
 	return created, nil
 }
@@ -142,22 +154,24 @@ func (s *Service) UpdateArticle(ctx context.Context, a *Article) (*Article, erro
 	a.Title = common.SanitizeText(a.Title)
 	a.Content = common.SanitizeHTML(a.Content)
 	s.logger.Infow("Updating Knowledge Article", "id", a.ID, "title", a.Title)
+	if s.vectorOutboxEnabled() {
+		return s.updateWithVectorOutbox(ctx, a)
+	}
 	updated, err := s.repo.Update(ctx, a)
 	if err != nil {
 		return nil, err
 	}
-	// 发布→重新索引（内容可能已变）；取消发布→移除向量，草稿不得进入 RAG 结果。
-	s.syncVectorIndex(ctx, updated.TenantID, updated.ID, updated.Title, updated.Content, updated.IsPublished)
 	return updated, nil
 }
 
 func (s *Service) DeleteArticle(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting Knowledge Article", "id", id)
+	if s.vectorOutboxEnabled() {
+		return s.deleteWithVectorOutbox(ctx, id, tenantID)
+	}
 	if err := s.repo.Delete(ctx, id, tenantID); err != nil {
 		return err
 	}
-	// 软删除后同步移除向量，避免检索侧残留空标题条目（RemoveArticle 幂等）。
-	s.syncVectorIndex(ctx, tenantID, id, "", "", false)
 	return nil
 }
 

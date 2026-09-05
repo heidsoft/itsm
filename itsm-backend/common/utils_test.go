@@ -569,7 +569,7 @@ func TestGetPaginationFromQuery(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page=3&page_size=50", nil)
+		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page=3&pageSize=50", nil)
 		p := GetPaginationFromQuery(c)
 		if p.Page != 3 {
 			t.Errorf("page=%d, want 3", p.Page)
@@ -579,11 +579,25 @@ func TestGetPaginationFromQuery(t *testing.T) {
 		}
 	})
 
+	t.Run("snake_case-page_size-falls-back-to-default", func(t *testing.T) {
+		// 契约：核心 helper 只接受 camelCase pageSize。
+		// snake_case 必须由专门的 QueryCompatMiddleware（或迁移后的调用方）处理，
+		// 不在 helper 内保留兜底分支，避免双契约长期共存。
+		gin.SetMode(gin.TestMode)
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page=3&page_size=50", nil)
+		p := GetPaginationFromQuery(c)
+		if p.PageSize != 20 {
+			t.Errorf("snake_case page_size should NOT be accepted; got pageSize=%d, want 20 (default)", p.PageSize)
+		}
+	})
+
 	t.Run("invalid-params-fallback", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page=abc&page_size=xyz", nil)
+		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page=abc&pageSize=xyz", nil)
 		p := GetPaginationFromQuery(c)
 		if p.Page != 1 {
 			t.Errorf("invalid page should fallback to 1, got %d", p.Page)
@@ -598,7 +612,7 @@ func TestGetPaginationFromQuery(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?page_size=9999", nil)
+		c.Request = httptest.NewRequest("GET", "/api/v1/tickets?pageSize=9999", nil)
 		p := GetPaginationFromQuery(c)
 		if p.PageSize != 20 {
 			t.Errorf("oversize pageSize should fallback to default 20, got %d", p.PageSize)

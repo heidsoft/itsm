@@ -284,10 +284,10 @@ type UpdateTemplateRequest struct {
 // ListTemplatesRequest 获取模板列表请求
 type ListTemplatesRequest struct {
 	Page      int    `json:"page" form:"page"`
-	PageSize  int    `json:"pageSize" form:"page_size"`
+	PageSize  int    `json:"pageSize" form:"pageSize"`
 	Category  string `json:"category" form:"category"`
-	IsActive  *bool  `json:"isActive" form:"is_active"`
-	TenantID  int    `json:"tenantId" form:"tenant_id"`
-	SortBy    string `json:"sortBy" form:"sort_by"`
-	SortOrder string `json:"sortOrder" form:"sort_order"`
+	IsActive  *bool  `json:"isActive" form:"isActive"`
+	TenantID  int    `json:"tenantId" form:"tenantId"`
+	SortBy    string `json:"sortBy" form:"sortBy"`
+	SortOrder string `json:"sortOrder" form:"sortOrder"`
 }

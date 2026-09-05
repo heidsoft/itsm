@@ -50,7 +50,7 @@ type UpdateRoleRequest struct {
 // GetRolesParams represents the query parameters for listing roles
 type GetRolesParams struct {
 	Page     int    `form:"page"`
-	PageSize int    `form:"page_size"`
+	PageSize int    `form:"pageSize"`
 	Status   string `form:"status"`
 	Search   string `form:"search"`
 }

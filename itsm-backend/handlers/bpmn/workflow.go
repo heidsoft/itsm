@@ -238,7 +238,11 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	}
 
 	// 使用带租户上下文的 ctx
-	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, &finalReq)
+	workflowCtx := context.WithValue(ctx.Request.Context(), bpmn.BPMNTenantIDContextKey, tenantIDFromCtx)
+	if userID := ctx.GetInt("user_id"); userID > 0 {
+		workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, userID)
+	}
+	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, &finalReq)
 	if err != nil {
 		common.InternalError(ctx, "创建流程定义失败: "+err.Error())
 		return
@@ -440,7 +444,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, created)
+	common.Success(ctx, dto.ToBPMNProcessDefinitionResponse(created))
 }
 
 // SetProcessDefinitionActive 激活/停用流程定义
@@ -486,7 +490,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 	var req struct {
 		ProcessDefinitionKey string                 `json:"processDefinitionKey" binding:"required"`
-		BusinessKey          string                 `json:"businessKey" binding:"required"`
+		BusinessKey          string                 `json:"businessKey"`
 		Variables            map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {

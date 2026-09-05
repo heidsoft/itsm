@@ -12,7 +12,7 @@ import (
 // PaginationRequest 分页请求参数
 type PaginationRequest struct {
 	Page     int `json:"page" form:"page" binding:"min=1"`
-	PageSize int `json:"pageSize" form:"page_size" binding:"min=1,max=100"`
+	PageSize int `json:"pageSize" form:"pageSize" binding:"min=1,max=100"`
 }
 
 // PaginationResponse 分页响应结构
@@ -167,6 +167,8 @@ func lowerFirst(s string) string {
 }
 
 // GetPaginationFromQuery 从查询参数中获取分页信息
+// 契约：查询参数统一使用 camelCase（pageSize），与请求 DTO 的 form tag 一致；
+// 旧的 page_size 形态不再解析，存量调用方需按 API 契约迁移。
 func GetPaginationFromQuery(c *gin.Context) *PaginationRequest {
 	page := 1
 	pageSize := 20
@@ -177,7 +179,7 @@ func GetPaginationFromQuery(c *gin.Context) *PaginationRequest {
 		}
 	}
 
-	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
+	if pageSizeStr := c.Query("pageSize"); pageSizeStr != "" {
 		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
 			pageSize = ps
 		}

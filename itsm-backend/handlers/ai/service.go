@@ -303,8 +303,15 @@ func (s *Service) ChatStream(
 
 	// 按权限过滤只读工具注入聊天路径；写工具仅放行经审批流的白名单（创建工单/更新工单/创建工单类型），
 	// 它们经由 ExecuteTool 进入待审批队列，绝不在聊天链路内直接落地写库。
+	//
+	// Provider 能力闸门：部分 provider（如 MiniMax Anthropic 兼容接口）仅实现了
+	// Chat，未实现 ChatStreamWithTools。此时 LLMGateway 会退化为普通 ChatStream，
+	// 但 System Prompt 依然告诉模型“必须调用工具”，导致模型在文本中假装调用
+	// (“正在调用 list_tickets 工具...”) 但永远拿不到结果。修复：检测 provider
+	// 能力，不支持时不注入 tools，让 RAG 层退化为纯知识库问答（合规）。
 	var tools []service.LLMTool
-	if s.tools != nil {
+	providerSupportsTools := s.llmGateway != nil && s.llmGateway.SupportsToolCalling()
+	if s.tools != nil && providerSupportsTools {
 		// 按租户动态化工具参数（list_cis 的 ci_type 枚举来自租户 CIType 表）
 		for _, td := range s.tools.ListToolsForTenant(ctx, tenantID) {
 			if !td.ReadOnly && !chatWritableTools[td.Name] {

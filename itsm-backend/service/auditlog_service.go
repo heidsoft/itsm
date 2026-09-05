@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -89,13 +90,35 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 		return nil, err
 	}
 
+	// 批量 join user 表查询 UserID 对应的姓名，避免前端只看到裸 ID。
+	userNameMap := map[int]string{}
+	if userIDs := collectAuditLogUserIDs(items); len(userIDs) > 0 {
+		users, err := s.client.User.Query().
+			Where(user.TenantIDEQ(tenantID), user.IDIn(userIDs...)).
+			Select(user.FieldID, user.FieldName, user.FieldUsername).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("auditlog: load user names failed, fall back to id", "error", err, "tenant_id", tenantID)
+		} else {
+			for _, u := range users {
+				name := u.Name
+				if name == "" {
+					name = u.Username
+				}
+				if name != "" {
+					userNameMap[u.ID] = name
+				}
+			}
+		}
+	}
+
 	logs := make([]*dto.AuditLog, 0, len(items))
 	for _, it := range items {
 		var body string
 		if it.RequestBody != nil {
 			body = *it.RequestBody
 		}
-		logs = append(logs, &dto.AuditLog{
+		log := &dto.AuditLog{
 			ID:          it.ID,
 			CreatedAt:   it.CreatedAt,
 			TenantID:    it.TenantID,
@@ -108,7 +131,14 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 			Method:      it.Method,
 			StatusCode:  it.StatusCode,
 			RequestBody: body,
-		})
+		}
+		if it.UserID > 0 {
+			if name, ok := userNameMap[it.UserID]; ok {
+				n := name
+				log.UserName = &n
+			}
+		}
+		logs = append(logs, log)
 	}
 
 	return &dto.ListAuditLogsResponse{
@@ -117,6 +147,23 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}, nil
+}
+
+// collectAuditLogUserIDs 收集一批 audit log 中去重的非零 user id。
+func collectAuditLogUserIDs(logs []*ent.AuditLog) []int {
+	seen := map[int]struct{}{}
+	out := make([]int, 0, len(logs))
+	for _, l := range logs {
+		if l == nil || l.UserID <= 0 {
+			continue
+		}
+		if _, ok := seen[l.UserID]; ok {
+			continue
+		}
+		seen[l.UserID] = struct{}{}
+		out = append(out, l.UserID)
+	}
+	return out
 }
 
 // GetCIAuditLogs 获取CI相关的审计日志

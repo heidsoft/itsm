@@ -46,8 +46,8 @@ type GetNotificationsRequest struct {
 	Size     int    `form:"size" binding:"min=0,max=100"`
 	Type     string `form:"type"`
 	Read     *bool  `form:"read"`
-	UserID   int    `form:"user_id"`
-	TenantID int    `form:"tenant_id"`
+	UserID   int    `form:"userId"`
+	TenantID int    `form:"tenantId"`
 }
 
 // NotificationListResponse 通知列表响应

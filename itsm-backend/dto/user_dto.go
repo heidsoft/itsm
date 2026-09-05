@@ -34,7 +34,7 @@ type UpdateUserRequest struct {
 type ListUsersRequest struct {
 	Page       int    `form:"page,default=1" binding:"min=1"`
 	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=200"`
-	TenantID   int    `form:"tenant_id"`
+	TenantID   int    `form:"tenantId"`
 	Status     string `form:"status"` // active, inactive
 	Department string `form:"department"`
 	Search     string `form:"search"`
@@ -117,7 +117,7 @@ type BatchUpdateUsersRequest struct {
 // SearchUsersRequest 搜索用户请求
 type SearchUsersRequest struct {
 	Keyword  string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
-	TenantID int    `json:"tenantId" form:"tenant_id"`
+	TenantID int    `json:"tenantId" form:"tenantId"`
 	Limit    int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
 }
 

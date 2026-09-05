@@ -153,6 +153,10 @@ func TestBPMNDeploymentService_DeployWithVersioning(t *testing.T) {
 		assert.True(t, def.IsLatest)
 		assert.Equal(t, deployment.ID, def.DeploymentID)
 
+		resolved, err := deployService.GetProcessDefinitionForDeployment(ctx, deployment.ID, testTenant.ID)
+		require.NoError(t, err)
+		assert.Equal(t, def.ID, resolved.ID)
+
 		// 验证部署记录
 		assert.NotNil(t, deployment)
 		assert.True(t, deployment.IsActive)

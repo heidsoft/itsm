@@ -471,3 +471,68 @@ func TestLLMGateway_UnicodeContent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "ok", resp)
 }
+
+// ==================== SupportsToolCalling 能力闸门（回归 bug：minimax 伪工具调用）====================
+
+// toolCapableProvider 同时实现 Chat 与 ChatStreamWithTools，用于验证能力探测返回 true。
+type toolCapableProvider struct {
+	MockLLMProvider
+	toolCallReceived int
+}
+
+func (p *toolCapableProvider) ChatStreamWithTools(_ context.Context, _ string, _ []LLMMessage, _ []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error {
+	if callback != nil {
+		callback("partial answer")
+	}
+	if onToolCalls != nil {
+		p.toolCallReceived++
+		onToolCalls([]LLMToolCall{{ID: "call_1", Name: "list_tickets", Arguments: "{}"}})
+	}
+	return nil
+}
+
+// TestLLMGateway_SupportsToolCalling_ReflectsProviderCapability 验证 provider 能力探测：
+//   - 未实现 ChatStreamWithTools 的 provider。如 MiniMax。必须返回 false，调用方据此不注入
+//     tool-driven system prompt，避免模型在文本中假装“正在调用 list_tickets 工具...”但永远拿不到结果。
+//   - 实现了 ChatStreamWithTools 的 provider（如 OpenAI）必须返回 true。
+//   - nil gateway 与 nil provider 不能 panic，返回 false。
+func TestLLMGateway_SupportsToolCalling_ReflectsProviderCapability(t *testing.T) {
+	t.Run("plain provider without tools capability returns false", func(t *testing.T) {
+		provider := &MockLLMProvider{Response: "ok"}
+		gateway := NewLLMGateway(provider, &MockTokenLimiter{ShouldAllow: true}, &MockObserver{}, "minimax")
+		assert.False(t, gateway.SupportsToolCalling(), "MiniMax 类仅 Chat provider 应该被判为不支持 tool calling")
+	})
+
+	t.Run("tool-capable provider returns true", func(t *testing.T) {
+		provider := &toolCapableProvider{}
+		provider.Response = "ok"
+		gateway := NewLLMGateway(provider, &MockTokenLimiter{ShouldAllow: true}, &MockObserver{}, "openai")
+		assert.True(t, gateway.SupportsToolCalling(), "OpenAI 类 provider 必须被判为支持 tool calling")
+	})
+
+	t.Run("nil gateway and nil provider are safe", func(t *testing.T) {
+		var nilGateway *LLMGateway
+		assert.False(t, nilGateway.SupportsToolCalling(), "nil gateway 必须 false 且不能 panic")
+		g := NewLLMGateway(nil, nil, nil, "")
+		assert.False(t, g.SupportsToolCalling(), "provider 为 nil 时必须 false")
+	})
+
+	t.Run("ChatStreamWithTools actually invokes provider on capability hit", func(t *testing.T) {
+		provider := &toolCapableProvider{}
+		gateway := NewLLMGateway(provider, &MockTokenLimiter{ShouldAllow: true}, &MockObserver{}, "openai")
+		var streamed string
+		var gotCalls []LLMToolCall
+		err := gateway.ChatStreamWithTools(
+			context.Background(), "gpt-4",
+			[]LLMMessage{{Role: "user", Content: "hi"}},
+			[]LLMTool{{Name: "list_tickets"}},
+			func(s string) { streamed += s },
+			func(tcs []LLMToolCall) { gotCalls = tcs },
+		)
+		require.NoError(t, err)
+		assert.Equal(t, "partial answer", streamed)
+		require.Len(t, gotCalls, 1)
+		assert.Equal(t, "list_tickets", gotCalls[0].Name)
+		assert.Equal(t, 1, provider.toolCallReceived)
+	})
+}

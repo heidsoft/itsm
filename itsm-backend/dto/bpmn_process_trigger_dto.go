@@ -98,13 +98,13 @@ type ProcessBinding struct {
 
 // ProcessBindingQueryRequest 查询流程绑定配置请求
 type ProcessBindingQueryRequest struct {
-	BusinessType    BusinessType `form:"business_type" json:"businessType,omitempty"`
-	BusinessSubType string       `form:"business_sub_type" json:"businessSubType,omitempty"`
-	DepartmentID    int          `form:"department_id" json:"departmentId,omitempty"`
-	TeamID          int          `form:"team_id" json:"teamId,omitempty"`
+	BusinessType    BusinessType `form:"businessType" json:"businessType,omitempty"`
+	BusinessSubType string       `form:"businessSubType" json:"businessSubType,omitempty"`
+	DepartmentID    int          `form:"departmentId" json:"departmentId,omitempty"`
+	TeamID          int          `form:"teamId" json:"teamId,omitempty"`
 	Scenario        string       `form:"scenario" json:"scenario,omitempty"`
 	Category        string       `form:"category" json:"category,omitempty"`
-	IsActive        *bool        `form:"is_active" json:"isActive,omitempty"`
+	IsActive        *bool        `form:"isActive" json:"isActive,omitempty"`
 	TenantID        int          `json:"-"` // 从上下文获取，不从请求参数绑定
 }
 

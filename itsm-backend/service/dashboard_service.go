@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"math"
 	"slices"
@@ -24,8 +25,13 @@ import (
 )
 
 // DashboardService 仪表盘服务
+//
+// db / repo 用于承载 PostgreSQL 专属的复杂聚合 SQL（FILTER / EXTRACT(EPOCH ...)），
+// 这些表达式无法用 Ent 表达且不通用，因此走 raw SQL；普通 CRUD / 状态过滤仍走 client。
 type DashboardService struct {
 	client *ent.Client
+	db     *sql.DB
+	repo   *dashboardRepository
 	logger *zap.SugaredLogger
 }
 
@@ -68,10 +74,22 @@ type SLAComplianceData struct {
 	CompliantTickets         int     `json:"compliantTickets"`
 }
 
-// NewDashboardService 创建仪表盘服务实例
+// NewDashboardService 创建仪表盘服务实例（向后兼容版本）。
+//
+// 在测试或简单场景中，调用方没有可注入的 *sql.DB 时仍可使用本构造函数；
+// 内部会回退到 process 级的 database.GetRawDB()。生产部署推荐显式调用
+// NewDashboardServiceWithDB 注入真实的 *sql.DB。
 func NewDashboardService(client *ent.Client, logger *zap.SugaredLogger) *DashboardService {
+	return NewDashboardServiceWithDB(client, database.GetRawDB(), logger)
+}
+
+// NewDashboardServiceWithDB 创建仪表盘服务实例并显式注入 *sql.DB。
+// 注入的 db 会用于 dashboardRepository 内的复杂聚合 raw SQL。
+func NewDashboardServiceWithDB(client *ent.Client, db *sql.DB, logger *zap.SugaredLogger) *DashboardService {
 	return &DashboardService{
 		client: client,
+		db:     db,
+		repo:   newDashboardRepository(db),
 		logger: logger,
 	}
 }
@@ -211,17 +229,8 @@ func (s *DashboardService) GetDashboardOverviewStats(ctx context.Context, tenant
 		return nil, err
 	}
 
-	// 使用数据库聚合计算真实平均时间（小时）
-	var avgRespHours, avgResHours float64
-	err = database.GetRawDB().QueryRowContext(ctx, `
-		SELECT
-			COALESCE(AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
-				FILTER (WHERE first_response_at IS NOT NULL AND tenant_id = $1), 0),
-			COALESCE(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
-				FILTER (WHERE resolved_at IS NOT NULL AND tenant_id = $1), 0)
-		FROM tickets
-		WHERE deleted_at IS NULL
-	`, tenantID).Scan(&avgRespHours, &avgResHours)
+	// 平均首次响应 / 解决时长由 dashboardRepository 封装，租户谓词下沉到仓储层
+	avgRespHours, avgResHours, err := s.repo.AvgResponseAndResolutionHours(ctx, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -814,48 +823,15 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		completedChange = 100
 	}
 
-	// 从数据库聚合真实的平均时间与 SLA 达成率
-	var avgRespHoursNow, avgResHoursNow float64
-	var avgRespHoursPrev, avgResHoursPrev float64
-	var totalSLATickets, metSLATickets int
-	err = database.GetRawDB().QueryRowContext(ctx, `
-		WITH current_month AS (
-			SELECT id, first_response_at, resolved_at, created_at
-			FROM tickets
-			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2
-		),
-		prev_month AS (
-			SELECT id, first_response_at, resolved_at, created_at
-			FROM tickets
-			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3 AND created_at < $2
-		),
-		sla_scope AS (
-			SELECT id, first_response_at, resolved_at, created_at, sla_response_deadline, sla_resolution_deadline
-			FROM tickets
-			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3
-		)
-		SELECT
-			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
-			           FROM current_month WHERE first_response_at IS NOT NULL), 0),
-			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
-			           FROM current_month WHERE resolved_at IS NOT NULL), 0),
-			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
-			           FROM prev_month WHERE first_response_at IS NOT NULL), 0),
-			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600.0)
-			           FROM prev_month WHERE resolved_at IS NOT NULL), 0),
-			(SELECT COUNT(*) FROM sla_scope),
-			(SELECT COUNT(*) FROM sla_scope WHERE (
-				sla_response_deadline IS NULL OR first_response_at <= sla_response_deadline
-			) AND (
-				sla_resolution_deadline IS NULL OR resolved_at <= sla_resolution_deadline
-			))
-	`, tenantID, thisMonthStart, lastMonthStart).Scan(
-		&avgRespHoursNow,
-		&avgResHoursNow,
-		&avgRespHoursPrev,
-		&avgResHoursPrev,
-		&totalSLATickets,
-		&metSLATickets,
+	// 从数据库聚合真实的平均时间与 SLA 达成率（由 dashboardRepository 封装 CTE）。
+	// KPIAvgAndSLAScope 同时返回本月/上月平均时长 + 本月 SLA scope 计数，
+	// 与 PreviousSLAScopeCount 配套计算 SLA 达成率环比。
+	avgRespHoursNow, avgResHoursNow, avgRespHoursPrev, avgResHoursPrev,
+		totalSLATickets, metSLATickets, err := s.repo.KPIAvgAndSLAScope(
+		ctx,
+		tenantID,
+		thisMonthStart,
+		lastMonthStart,
 	)
 	if err != nil {
 		return nil, err
@@ -879,14 +855,12 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	}
 
 	var slaCompliancePrev float64
-	err = database.GetRawDB().QueryRowContext(ctx, `
-		SELECT COUNT(*), COUNT(*) FILTER (
-			WHERE (sla_response_deadline IS NULL OR first_response_at <= sla_response_deadline)
-			AND (sla_resolution_deadline IS NULL OR resolved_at <= sla_resolution_deadline)
-		)
-		FROM tickets
-		WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2 AND created_at < $3
-	`, tenantID, lastMonthStart, thisMonthStart).Scan(&totalSLATickets, &metSLATickets)
+	totalSLATickets, metSLATickets, err = s.repo.PreviousSLAScopeCount(
+		ctx,
+		tenantID,
+		lastMonthStart,
+		thisMonthStart,
+	)
 	if err == nil && totalSLATickets > 0 {
 		slaCompliancePrev = math.Round(float64(metSLATickets)/float64(totalSLATickets)*1000) / 10
 	}

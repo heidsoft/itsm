@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -46,8 +47,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 // ListSurveys GET /api/v1/surveys
 func (h *Handler) ListSurveys(ctx *gin.Context) {
-	tenantID, _ := ctx.Get("tenant_id")
-	surveys, err := h.svc.GetSurveys(ctx.Request.Context(), tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	surveys, err := h.svc.GetSurveys(ctx.Request.Context(), tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -61,8 +65,11 @@ func (h *Handler) ListSurveys(ctx *gin.Context) {
 // GetSurvey GET /api/v1/surveys/:id
 func (h *Handler) GetSurvey(ctx *gin.Context) {
 	surveyID, _ := strconv.Atoi(ctx.Param("id"))
-	tenantID, _ := ctx.Get("tenant_id")
-	survey, err := h.svc.GetSurvey(ctx.Request.Context(), surveyID, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	survey, err := h.svc.GetSurvey(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -77,8 +84,11 @@ func (h *Handler) CreateSurvey(ctx *gin.Context) {
 		common.Fail(ctx, 1001, "参数错误")
 		return
 	}
-	tenantID, _ := ctx.Get("tenant_id")
-	survey, err := h.svc.CreateSurvey(ctx.Request.Context(), &req, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	survey, err := h.svc.CreateSurvey(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -94,8 +104,11 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 		common.Fail(ctx, 1001, "参数错误")
 		return
 	}
-	tenantID, _ := ctx.Get("tenant_id")
-	survey, err := h.svc.UpdateSurvey(ctx.Request.Context(), surveyID, &req, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	survey, err := h.svc.UpdateSurvey(ctx.Request.Context(), surveyID, &req, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -106,8 +119,11 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 // GetSurveyResponses GET /api/v1/surveys/:id/responses
 func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 	surveyID, _ := strconv.Atoi(ctx.Param("id"))
-	tenantID, _ := ctx.Get("tenant_id")
-	responses, err := h.svc.GetSurveyResponses(ctx.Request.Context(), surveyID, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	responses, err := h.svc.GetSurveyResponses(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -121,8 +137,11 @@ func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 // GetAnalytics GET /api/v1/surveys/:id/analytics
 func (h *Handler) GetAnalytics(ctx *gin.Context) {
 	surveyID, _ := strconv.Atoi(ctx.Param("id"))
-	tenantID, _ := ctx.Get("tenant_id")
-	analytics, err := h.svc.GetAnalytics(ctx.Request.Context(), surveyID, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	analytics, err := h.svc.GetAnalytics(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -137,8 +156,11 @@ func (h *Handler) SubmitResponse(ctx *gin.Context) {
 		common.Fail(ctx, 1001, "参数错误")
 		return
 	}
-	tenantID, _ := ctx.Get("tenant_id")
-	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, tenantID.(int)); err != nil {
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, tenantID); err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
 	}

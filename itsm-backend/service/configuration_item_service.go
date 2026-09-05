@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cirelationship"
@@ -29,13 +31,17 @@ type ConfigurationItemService struct {
 	attrValidator   *CIAttributeValidator
 	sequenceService *SequenceService // 可选：ci_number Redis 发号器（与事件编号同机制）
 	rawDB           *sql.DB          // 可选：ci_number DB 兜底发号
+	systemNumbering *database.SystemNumberingExecutor
 }
 
 // SetSequenceService 注入 Redis 序列服务（bootstrap 装配；未注入时走 DB 兜底）。
 func (s *ConfigurationItemService) SetSequenceService(seq *SequenceService) { s.sequenceService = seq }
 
 // SetRawDB 注入原生 DB 连接（ci_number DB 兜底发号用）。
-func (s *ConfigurationItemService) SetRawDB(db *sql.DB) { s.rawDB = db }
+func (s *ConfigurationItemService) SetRawDB(db *sql.DB) {
+	s.rawDB = db
+	s.systemNumbering = database.NewSystemNumberingExecutor(db, s.logger)
+}
 
 // NewConfigurationItemService 创建配置项服务
 func NewConfigurationItemService(client *ent.Client, logger *zap.SugaredLogger, historyService *CIHistoryService, tagService *CITagService) *ConfigurationItemService {
@@ -216,28 +222,30 @@ func (s *ConfigurationItemService) generateCINumber(ctx context.Context) (string
 	}
 
 	// DB 兜底：当月最大编号加锁后递增（跨租户协调，不加租户过滤）
-	if s.rawDB != nil {
-		tx, err := s.rawDB.BeginTx(ctx, nil)
-		if err == nil {
+	if s.systemNumbering != nil {
+		systemCtx := tenantctx.SystemContext(ctx, "cmdb:numbering", "allocate globally unique CI number")
+		candidate, err := s.systemNumbering.WithTx(systemCtx, "ci_number", func(tx *sql.Tx) (string, error) {
 			prefix := fmt.Sprintf("CI-%04d%02d-", year, month)
 			query := `SELECT ci_number FROM configuration_items WHERE ci_number LIKE $1 AND ci_number IS NOT NULL AND ci_number != '' ORDER BY ci_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
 			var maxNum string
-			scanErr := tx.QueryRowContext(ctx, query, prefix+"%").Scan(&maxNum)
+			scanErr := tx.QueryRowContext(systemCtx, query, prefix+"%").Scan(&maxNum)
 			if scanErr == nil {
 				seq := 0
 				if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
 					fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
 				}
-				candidate := fmt.Sprintf("CI-%04d%02d-%06d", year, month, seq+1)
-				_ = tx.Commit()
-				return candidate, nil
+				return fmt.Sprintf("CI-%04d%02d-%06d", year, month, seq+1), nil
 			}
-			_ = tx.Rollback()
-			if scanErr != sql.ErrNoRows {
-				s.logger.Warnw("ci_number lock query failed, using random fallback", "error", scanErr)
+			if scanErr == sql.ErrNoRows {
+				return "", sql.ErrNoRows
 			}
-		} else {
-			s.logger.Warnw("ci_number tx begin failed, using random fallback", "error", err)
+			return "", scanErr
+		})
+		if err == nil {
+			return candidate, nil
+		}
+		if err != sql.ErrNoRows {
+			s.logger.Warnw("ci_number system transaction failed, using random fallback", "error", err)
 		}
 	}
 
@@ -1354,22 +1362,22 @@ func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, r
 
 	// CISearchFilter → ListCIRequest 字段映射
 	listReq := &dto.ListCIRequest{
-		Page:         req.Page,
-		Size:         req.PageSize,
-		CITypeID:     req.Filters.CITypeID,
-		Status:       req.Filters.Status,
-		Environment:  req.Filters.Environment,
-		Criticality:  req.Filters.Criticality,
-		Search:       req.Filters.Keyword, // Keyword 宽模糊 → Search
+		Page:          req.Page,
+		Size:          req.PageSize,
+		CITypeID:      req.Filters.CITypeID,
+		Status:        req.Filters.Status,
+		Environment:   req.Filters.Environment,
+		Criticality:   req.Filters.Criticality,
+		Search:        req.Filters.Keyword, // Keyword 宽模糊 → Search
 		CloudProvider: req.Filters.CloudProvider,
-		CloudRegion:  req.Filters.CloudRegion,
-		AssignedTo:   req.Filters.AssignedTo,
-		OwnedBy:      req.Filters.OwnedBy,
-		SortBy:       req.SortBy,
-		SortOrder:    req.SortOrder,
-		DateFrom:     req.Filters.DateFrom,
-		DateTo:       req.Filters.DateTo,
-		TagIDs:       req.Filters.TagIDs,
+		CloudRegion:   req.Filters.CloudRegion,
+		AssignedTo:    req.Filters.AssignedTo,
+		OwnedBy:       req.Filters.OwnedBy,
+		SortBy:        req.SortBy,
+		SortOrder:     req.SortOrder,
+		DateFrom:      req.Filters.DateFrom,
+		DateTo:        req.Filters.DateTo,
+		TagIDs:        req.Filters.TagIDs,
 		WithRelations: true, // SearchCI 历史默认预加载关系
 	}
 

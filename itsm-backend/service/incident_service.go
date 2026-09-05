@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
+	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
@@ -75,6 +77,7 @@ type IncidentService struct {
 	processTriggerService ProcessTriggerServiceInterface
 	ruleEngine            *IncidentRuleEngine
 	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
+	systemNumbering       *database.SystemNumberingExecutor
 	workflowOutboxEnabled bool
 	rulesOutboxEnabled    bool
 	slaSvc                *TicketSLAService
@@ -113,6 +116,7 @@ func (s *IncidentService) SetSequenceService(seq *SequenceService) {
 // SetRawDB 设置原生数据库连接（用于事务性编号生成，S-4 修复）
 func (s *IncidentService) SetRawDB(db *sql.DB) {
 	s.rawDB = db
+	s.systemNumbering = database.NewSystemNumberingExecutor(db, s.logger)
 }
 
 func (s *IncidentService) SetRuleEngine(engine *IncidentRuleEngine) {
@@ -1308,34 +1312,30 @@ func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID i
 func (s *IncidentService) generateIncidentNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("INC-%04d%02d-", year, month)
 
-	if s.rawDB != nil {
-		tx, err := s.rawDB.BeginTx(ctx, nil)
-		if err == nil {
+	if s.systemNumbering != nil {
+		systemCtx := tenantctx.SystemContext(ctx, "incident:numbering", "allocate globally unique incident number")
+		candidate, err := s.systemNumbering.WithTx(systemCtx, "incident_number", func(tx *sql.Tx) (string, error) {
 			// 不加租户过滤：incident_number 全局唯一，必须跨租户协调最大号
 			query := `SELECT incident_number FROM incidents WHERE incident_number LIKE $1 AND incident_number IS NOT NULL AND incident_number != '' ORDER BY incident_number DESC LIMIT 1 FOR UPDATE SKIP LOCKED`
 			var maxNum string
-			scanErr := tx.QueryRowContext(ctx, query, prefix+"%").Scan(&maxNum)
+			scanErr := tx.QueryRowContext(systemCtx, query, prefix+"%").Scan(&maxNum)
 			if scanErr == nil {
 				seq := 0
 				if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
 					fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
 				}
-				candidate := fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq+1)
-				_ = tx.Commit()
-				return candidate, nil
+				return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq+1), nil
 			}
 			if scanErr == sql.ErrNoRows {
 				// 全表当月无记录：用唯一后缀避免两租户同时落到 000001 而碰撞
-				candidate := fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix())
-				_ = tx.Commit()
-				return candidate, nil
+				return fmt.Sprintf("INC-%04d%02d-%s", year, month, uniqueFallbackSuffix()), nil
 			}
-			// 其他查询错误：回滚后走最终兜底
-			_ = tx.Rollback()
-			s.logger.Warnw("Incident number lock query failed, using random fallback", "error", scanErr)
-		} else {
-			s.logger.Warnw("Incident number tx begin failed, using random fallback", "error", err)
+			return "", scanErr
+		})
+		if err == nil {
+			return candidate, nil
 		}
+		s.logger.Warnw("Incident number system transaction failed, using random fallback", "error", err)
 	}
 
 	// 最终兜底（无 rawDB 或事务异常）：唯一后缀保证全局唯一约束不被打破

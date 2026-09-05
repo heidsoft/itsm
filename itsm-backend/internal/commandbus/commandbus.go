@@ -34,6 +34,7 @@ const (
 	CommandExecuteIncidentRules   = "incident.rules.execute"
 	CommandSendIntakeEmail        = "email_intake.email.send"
 	CommandProcessIntakeEmail     = "email_intake.message.process"
+	CommandSyncKnowledgeVector    = "knowledge.vector.sync"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")

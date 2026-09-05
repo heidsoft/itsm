@@ -77,6 +77,17 @@ func (s *Service) List(ctx context.Context, tenantID int, page, size int, filter
 	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
 }
 
+// LoadUserNames 委托 repo 批量加载 user 显示名映射。查询失败仅记日志并返回空映射，
+// 由调用方决定是否降级（一般继续返回带 ID 的响应，让前端降级展示）。
+func (s *Service) LoadUserNames(ctx context.Context, tenantID int, ids []int) map[int]string {
+	m, err := s.repo.LoadUserNames(ctx, tenantID, ids)
+	if err != nil {
+		s.logger.Warnw("LoadUserNames failed", "error", err, "tenant_id", tenantID)
+		return map[int]string{}
+	}
+	return m
+}
+
 func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) (*Problem, error) {
 	existing, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {

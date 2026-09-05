@@ -46,7 +46,7 @@ type UpdateTenantRequest struct {
 // ListTenantsRequest 租户列表请求
 type ListTenantsRequest struct {
 	Page     int    `form:"page,default=1" binding:"min=1" comment:"页码"`
-	PageSize int    `form:"page_size,default=10" binding:"min=1,max=100" comment:"每页数量"`
+	PageSize int    `form:"pageSize,default=10" binding:"min=1,max=100" comment:"每页数量"`
 	Status   string `form:"status" binding:"omitempty,oneof=active suspended expired deleted" comment:"状态过滤"`
 	Type     string `form:"type" binding:"omitempty,oneof=standard internal saas_customer msp_provider msp_customer msp customer" comment:"类型过滤"`
 	Search   string `form:"search" comment:"搜索关键词"`

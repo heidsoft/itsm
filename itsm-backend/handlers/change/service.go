@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/dto"
@@ -892,19 +893,25 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
-	// For approve action, update the approval record to approved
-	if targetStatus == "approved" {
+	// 审批决定回写审批记录：approve/reject 都必须持久化，否则 pending 记录永不移除，
+	// 同一审批人可被重复消费；同时写入本次审批意见，意见为空时保留
+	// 提交审批时已写入的 comment，避免被空串覆盖。
+	if targetStatus == "approved" || targetStatus == "rejected" {
 		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
 		if err != nil {
 			s.logger.Warnw("TransitionStatus: failed to get approval history for record update", "error", err)
 		} else {
 			for _, h := range history {
 				if h.ApproverID == userID && h.Status == "pending" {
-					approvedStatus := "approved"
+					finalComment := strings.TrimSpace(comment)
+					if finalComment == "" && h.Comment != nil {
+						finalComment = *h.Comment
+					}
 					if _, err := s.repo.UpdateApprovalRecord(ctx, &ApprovalRecord{
 						ID:       h.ID,
 						TenantID: tenantID,
-						Status:   approvedStatus,
+						Status:   targetStatus,
+						Comment:  &finalComment,
 					}); err != nil {
 						s.logger.Warnw("TransitionStatus: failed to update approval record", "error", err, "record_id", h.ID)
 					}

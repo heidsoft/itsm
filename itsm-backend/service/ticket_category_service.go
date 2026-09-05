@@ -437,11 +437,11 @@ type MoveCategoryRequest struct {
 // ListCategoriesRequest 获取分类列表请求
 type ListCategoriesRequest struct {
 	Page     int   `json:"page" form:"page"`
-	PageSize int   `json:"pageSize" form:"page_size"`
-	ParentID *int  `json:"parentId" form:"parent_id"`
+	PageSize int   `json:"pageSize" form:"pageSize"`
+	ParentID *int  `json:"parentId" form:"parentId"`
 	Level    int   `json:"level" form:"level"`
-	IsActive *bool `json:"isActive" form:"is_active"`
-	TenantID int   `json:"tenantId" form:"tenant_id"`
+	IsActive *bool `json:"isActive" form:"isActive"`
+	TenantID int   `json:"tenantId" form:"tenantId"`
 }
 
 // CategoryTreeItem 分类树项目

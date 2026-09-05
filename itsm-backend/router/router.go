@@ -334,7 +334,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			if version == "" {
 				version = "1.6.9"
 			}
-			c.JSON(200, gin.H{"version": version, "build": "release"})
+			// 统一响应信封 {code,message,data}，前端 httpClient 按 data 解包。
+			common.Success(c, gin.H{"version": version, "build": "release"})
 		})
 		public.GET("/readiness/ga", func(c *gin.Context) {
 			common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))

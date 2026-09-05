@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -78,6 +77,26 @@ type RAGConfig struct {
 	HybridSearch        bool
 	SimilarityThreshold float64
 	MaxResults          int
+}
+
+// productAwareFallbackSystemPrompt is used when retrieval finds no knowledge
+// article. A missing article is a retrieval result, not evidence that the
+// embedded AI-Native ITSM assistant does not know which product it serves.
+func productAwareFallbackSystemPrompt() string {
+	return `你是 AI-Native ITSM 系统内置的 AI 助手，不是一个脱离产品上下文的通用客服。
+
+当前问题未命中知识库文章。这只表示没有可引用的知识文章，不表示你不了解本系统，也不要因此要求用户说明“是哪一个系统/平台”。
+
+当用户询问“当前系统有什么 AI 能力”“系统 AI 建设情况/差距/优先级”或类似问题时，先基于以下已实现事实回答，并明确区分“当前可用”“需运行配置”和“仍在建设”：
+- 当前 AI 能力处于 Pilot：LLM Gateway、知识库 RAG 检索与问答、工单智能分诊、工单摘要、工单/事件 AI 分析、AI 辅助创建工单、BPMN 流程生成/预览/校验、AI 反馈/审计/评价，以及受权限与人工审批约束的 Agent 工具调用。
+- RAG 按租户与知识可见性过滤；模型、向量检索和可调用工具依赖管理员配置及当前用户权限，未就绪时必须如实说明“未配置”或“降级”，不能假装可用。
+- 高风险写操作不会由 AI 静默执行，需 RBAC 校验、人工审批和审计；跨源 AIOps（监控/日志/告警实时关联、自动根因定位、自动修复）仍属于后续建设方向，不得表述为已上线能力。
+
+回答应先直接回答用户问题，使用简洁专业的中文；不要以“知识库未检索到文章”作为开场或主要结论。若问题需要当前租户的实时数据，说明可通过已授权的系统查询进一步核实，严禁编造数据。`
+}
+
+func productAwareEmptyKnowledgeFallback() string {
+	return "当前未检索到可引用的知识库文章，且 AI 模型服务未就绪。作为 AI-Native ITSM 内置助手，我仍可说明系统已具备的 AI 能力：RAG 知识检索、工单分诊与摘要、工单/事件分析、BPMN 辅助、AI 审计，以及受权限和人工审批约束的工具调用。具体能力是否可用取决于管理员的模型、向量检索配置和您的权限。"
 }
 
 // DefaultRAGConfig returns default RAG configuration
@@ -387,25 +406,17 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 		return nil, fmt.Errorf("failed to generate embedding: %w", err)
 	}
 
-	rows, err := r.vectors.SearchTopKByType(ctx, tenantID, "kb", embedding, limit)
+	vectorResults, err := r.vectors.SearchTopKByTypeResults(ctx, tenantID, "kb", embedding, limit)
 	if err != nil {
 		return nil, fmt.Errorf("vector search failed: %w", err)
 	}
-	defer rows.Close()
 
 	results := []map[string]any{}
-	for rows.Next() {
-		var objType string
-		var objID int
-		var content, source sql.NullString
-		var distance float64
-		if err := rows.Scan(&objType, &objID, &content, &source, &distance); err != nil {
-			r.logger.Warnw("RAGService: failed to scan vector result", "error", err)
-			continue
-		}
+	for _, vectorResult := range vectorResults {
+		objType, objID := vectorResult.ObjectType, vectorResult.ObjectID
 
 		// Calculate similarity score (1 - normalized distance)
-		similarity := 1.0 - distance
+		similarity := 1.0 - vectorResult.Distance
 		if similarity < 0 {
 			similarity = 0
 		}
@@ -413,8 +424,8 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 		item := map[string]any{
 			"object_type": objType,
 			"id":          objID,
-			"snippet":     snippet(content.String, 200),
-			"source":      source.String,
+			"snippet":     snippet(vectorResult.Content, 200),
+			"source":      vectorResult.Source,
 			"score":       similarity,
 			"search_type": "vector",
 		}
@@ -677,14 +688,14 @@ func (r *RAGService) AskWithLLM(ctx context.Context, tenantID int, query string,
 		// 知识库无匹配时仍尝试用 LLM 通用知识回答；仅当无网关时才退回模板。
 		if gateway != nil {
 			messages := []LLMMessage{
-				{Role: "system", Content: "你是IT服务管理(ITSM)智能助手。当前问题在知识库中未检索到相关文章。请基于你的通用IT服务管理/IT运维知识直接回答用户；如合适，可简要说明你还能提供的帮助。回答需简洁专业，使用中文。"},
+				{Role: "system", Content: productAwareFallbackSystemPrompt()},
 				{Role: "user", Content: query},
 			}
 			if resp, err := gateway.Chat(ctx, "", messages); err == nil {
 				return strings.TrimSpace(resp), nil
 			}
 		}
-		return "知识库中暂无相关内容。请尝试更换关键词或补充上下文，或联系知识管理员补充相关文章。", nil
+		return productAwareEmptyKnowledgeFallback(), nil
 	}
 
 	// Build context from retrieved documents
@@ -768,7 +779,7 @@ func (r *RAGService) AskWithLLMStream(
 		// 而不是直接返回"无内容"模板——否则助手对通用问题（如"你能做什么"）完全失效。
 		if gateway != nil {
 			generalMessages := []LLMMessage{
-				{Role: "system", Content: "你是IT服务管理(ITSM)智能助手。当前问题在知识库中未检索到相关文章。请基于你的通用IT服务管理/IT运维知识直接回答用户；如合适，可简要说明你还能提供的帮助（如协助创建或查询工单、检索知识库、解释SLA/变更/事件/CMDB等ITSM概念）。回答需简洁专业，使用中文。"},
+				{Role: "system", Content: productAwareFallbackSystemPrompt()},
 				{Role: "user", Content: query},
 			}
 			if err := gateway.ChatStream(ctx, "", generalMessages, onDelta); err != nil {
@@ -778,12 +789,7 @@ func (r *RAGService) AskWithLLMStream(
 			}
 		}
 		// 无 LLM 网关或 LLM 调用失败：给出静态引导模板
-		onDelta("知识库中暂无相关内容。以下为可能的原因与建议：\n\n")
-		onDelta("1. 知识库尚未录入相关文章——请联系知识管理员补充运维手册或FAQ；\n")
-		onDelta("2. 您的问题关键词与文章标题不匹配——请尝试更换关键词或补充上下文，如产品名、错误码、症状等；\n")
-		onDelta("3. 知识文章未发布或处于草稿状态——请在知识库页面检查文章状态；\n")
-		onDelta("4. 当前租户下未创建任何知识文章——可访问「知识库 → 新建文章」录入内容后重试。\n\n")
-		onDelta("您也可以直接联系运维团队或访问服务目录获取人工支持。")
+		onDelta(productAwareEmptyKnowledgeFallback())
 		return nil
 	}
 

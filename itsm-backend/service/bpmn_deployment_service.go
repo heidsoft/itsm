@@ -78,6 +78,19 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 	return deployment, nil
 }
 
+// GetProcessDefinitionForDeployment returns the latest definition created by
+// a deployment, scoped to the same tenant.
+func (s *BPMNDeploymentService) GetProcessDefinitionForDeployment(ctx context.Context, deploymentID, tenantID int) (*ent.ProcessDefinition, error) {
+	return s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.DeploymentID(deploymentID),
+			processdefinition.TenantID(tenantID),
+			processdefinition.IsLatest(true),
+		).
+		Order(ent.Desc(processdefinition.FieldID)).
+		First(ctx)
+}
+
 // createProcessDefinition 创建流程定义
 func (s *BPMNDeploymentService) createProcessDefinition(ctx context.Context, req *DeployProcessDefinitionRequest, deployment *ent.ProcessDeployment, processInfo map[string]interface{}) (*ent.ProcessDefinition, error) {
 	// 检查是否已存在相同key的流程定义

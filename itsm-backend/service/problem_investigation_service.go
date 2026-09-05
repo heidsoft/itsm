@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,9 +18,11 @@ import (
 
 // ProblemInvestigationService 问题调查服务
 type ProblemInvestigationService struct {
-	db     *sql.DB
-	client *ent.Client
-	logger *zap.SugaredLogger
+	db      *sql.DB
+	client  *ent.Client
+	logger  *zap.SugaredLogger
+	repo    *problemInvestigationRepository
+	users   *userLookupRepository
 }
 
 // NewProblemInvestigationService 创建问题调查服务
@@ -27,7 +31,14 @@ func NewProblemInvestigationService(db *sql.DB, client *ent.Client, logger *zap.
 		db:     db,
 		client: client,
 		logger: logger,
+		repo:   newProblemInvestigationRepository(db),
+		users:  newUserLookupRepository(db),
 	}
+}
+
+// SetUserLookupRepository 注入用户查询仓储（避免循环依赖）
+func (s *ProblemInvestigationService) SetUserLookupRepository(repo *userLookupRepository) {
+	s.users = repo
 }
 
 func (s *ProblemInvestigationService) CreateKnowledgeArticle(ctx context.Context, tenantID, authorID int, req *dto.CreateProblemKnowledgeArticleRequest) (*ent.KnowledgeArticle, error) {
@@ -65,10 +76,7 @@ var problemInvestigationStatusTransitions = map[string]map[string]struct{}{
 // 返回错误当且仅当目标转换非法（例如 closed 终态复活）。
 // SQL 带 AND status = $current 防止检查与更新之间的竞态。
 func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Context, problemID int, tenantID int, targetStatus string) error {
-	var currentStatus string
-	err := s.db.QueryRowContext(ctx,
-		"SELECT status FROM problems WHERE id = $1 AND tenant_id = $2",
-		problemID, tenantID).Scan(&currentStatus)
+	currentStatus, err := s.repo.CurrentProblemStatus(ctx, problemID, tenantID)
 	if err != nil {
 		return fmt.Errorf("查询问题状态失败: %v", err)
 	}
@@ -84,13 +92,11 @@ func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Contex
 		return fmt.Errorf("问题状态 %q 不允许转换为 %q", currentStatus, targetStatus)
 	}
 
-	res, err := s.db.ExecContext(ctx,
-		"UPDATE problems SET status = $1, updated_at = $2 WHERE id = $3 AND tenant_id = $4 AND status = $5",
-		targetStatus, time.Now(), problemID, tenantID, currentStatus)
+	updated, err := s.repo.UpdateProblemStatusWithGuard(ctx, problemID, tenantID, currentStatus, targetStatus, time.Now())
 	if err != nil {
 		return fmt.Errorf("更新问题状态失败: %v", err)
 	}
-	if affected, _ := res.RowsAffected(); affected == 0 {
+	if !updated {
 		// 并发竞争：状态已被其他请求改变，按失败处理由调用方决定是否重试
 		return fmt.Errorf("问题状态已被并发修改，请刷新后重试")
 	}
@@ -99,102 +105,60 @@ func (s *ProblemInvestigationService) transitionProblemStatus(ctx context.Contex
 
 // GetRootCauseAnalysis 获取根本原因分析
 func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, id int, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
-	var analysis dto.RootCauseAnalysisResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
-		       prca.root_cause_description, prca.contributing_factors, prca.evidence, prca.confidence_level,
-		       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
-		       prca.created_at, prca.updated_at
-		FROM problem_root_cause_analyses prca
-		JOIN problems p ON prca.problem_id = p.id
-		JOIN users u1 ON prca.analyst_id = u1.id
-		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
-		WHERE prca.id = $1 AND p.tenant_id = $2 AND u1.tenant_id = p.tenant_id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
-	`, id, tenantID).Scan(
-		&analysis.ID, &analysis.ProblemID, &analysis.AnalystID, &analysis.AnalystName,
-		&analysis.AnalysisMethod, &analysis.RootCauseDescription, &analysis.ContributingFactors,
-		&analysis.Evidence, &analysis.ConfidenceLevel, &analysis.AnalysisDate,
-		&analysis.ReviewedBy, &analysis.ReviewedByName, &analysis.ReviewDate,
-		&analysis.CreatedAt, &analysis.UpdatedAt,
-	)
+	analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("根因分析不存在")
 		}
 		return nil, fmt.Errorf("查询根因分析失败: %v", err)
 	}
-	return &analysis, nil
+	return analysis, nil
 }
 
 // GetProblemSolution 获取解决方案
 func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id int, tenantID int) (*dto.ProblemSolutionResponse, error) {
-	var solution dto.ProblemSolutionResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
-		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
-		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
-		       ps.created_at, ps.updated_at
-		FROM problem_solutions ps
-		JOIN problems p ON ps.problem_id = p.id
-		JOIN users u1 ON ps.proposed_by = u1.id
-		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		WHERE ps.id = $1 AND p.tenant_id = $2 AND u1.tenant_id = p.tenant_id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
-	`, id, tenantID).Scan(
-		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
-		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
-		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
-		&solution.RiskAssessment, &solution.ApprovalStatus, &solution.ApprovedBy, &solution.ApprovedByName,
-		&solution.ApprovalDate, &solution.CreatedAt, &solution.UpdatedAt,
-	)
+	solution, err := s.repo.GetProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("解决方案不存在")
 		}
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
-	return &solution, nil
+	return solution, nil
 }
 
 // CreateProblemInvestigation 创建问题调查
 func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Context, req *dto.CreateProblemInvestigationRequest, tenantID int) (*dto.ProblemInvestigationResponse, error) {
 	// 检查问题是否存在
-	var problemTitle string
-	err := s.db.QueryRowContext(ctx, "SELECT title FROM problems WHERE id = $1 AND tenant_id = $2", req.ProblemID, tenantID).Scan(&problemTitle)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("问题不存在")
-		}
+	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
+	} else if !ok {
+		return nil, fmt.Errorf("问题不存在")
 	}
 
 	// 检查是否已存在调查记录
-	var existingID int
-	err = s.db.QueryRowContext(ctx, `
-		SELECT pi.id
-		FROM problem_investigations pi
-		JOIN problems p ON pi.problem_id = p.id
-		WHERE pi.problem_id = $1 AND p.tenant_id = $2
-	`, req.ProblemID, tenantID).Scan(&existingID)
-	if err == nil {
+	exists, err := s.repo.InvestigationExistsByProblem(ctx, req.ProblemID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+	}
+	if exists {
 		return nil, fmt.Errorf("该问题已存在调查记录")
 	}
 
 	// 创建调查记录
-	var investigationID int
-	err = s.db.QueryRowContext(ctx, `
-		INSERT INTO problem_investigations (problem_id, investigator_id, estimated_completion_date, investigation_summary, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $5)
-		RETURNING id
-	`, req.ProblemID, req.InvestigatorID, req.EstimatedCompletionDate, req.InvestigationSummary, time.Now()).Scan(&investigationID)
+	var summaryPtr *string
+	if req.InvestigationSummary != "" {
+		summaryPtr = &req.InvestigationSummary
+	}
+	investigationID, err := s.repo.CreateInvestigation(ctx, req.ProblemID, req.InvestigatorID, req.EstimatedCompletionDate, summaryPtr, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("创建问题调查失败: %v", err)
 	}
 
 	// 获取调查者姓名
-	var investigatorName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.InvestigatorID, tenantID).Scan(&investigatorName)
-	if err != nil {
-		investigatorName = "未知用户"
+	investigatorName := "未知用户"
+	if name, ok, err := s.users.GetUserName(ctx, req.InvestigatorID, tenantID); err == nil && ok {
+		investigatorName = name
 	}
 
 	// 联动问题状态为"调查中"（经状态机校验，closed 终态拒绝联动；调查记录仍创建）
@@ -211,7 +175,7 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 		Status:                  dto.InvestigationStatusInProgress,
 		StartDate:               time.Now(),
 		EstimatedCompletionDate: req.EstimatedCompletionDate,
-		InvestigationSummary:    &req.InvestigationSummary,
+		InvestigationSummary:    summaryPtr,
 		CreatedAt:               time.Now(),
 		UpdatedAt:               time.Now(),
 	}, nil
@@ -219,29 +183,15 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 
 // GetProblemInvestigation 获取问题调查详情
 func (s *ProblemInvestigationService) GetProblemInvestigation(ctx context.Context, investigationID, tenantID int) (*dto.ProblemInvestigationResponse, error) {
-	var investigation dto.ProblemInvestigationResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT pi.id, pi.problem_id, pi.investigator_id, u.name, pi.status, pi.start_date, 
-		       pi.estimated_completion_date, pi.actual_completion_date, pi.investigation_summary,
-		       pi.created_at, pi.updated_at
-		FROM problem_investigations pi
-		JOIN users u ON pi.investigator_id = u.id
-		JOIN problems p ON pi.problem_id = p.id
-		WHERE pi.id = $1 AND p.tenant_id = $2
-	`, investigationID, tenantID).Scan(
-		&investigation.ID, &investigation.ProblemID, &investigation.InvestigatorID, &investigation.InvestigatorName,
-		&investigation.Status, &investigation.StartDate, &investigation.EstimatedCompletionDate,
-		&investigation.ActualCompletionDate, &investigation.InvestigationSummary,
-		&investigation.CreatedAt, &investigation.UpdatedAt,
-	)
+	investigation, err := s.repo.GetProblemInvestigation(ctx, investigationID, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("问题调查不存在")
 		}
 		return nil, fmt.Errorf("获取问题调查失败: %v", err)
 	}
 
-	return &investigation, nil
+	return investigation, nil
 }
 
 // UpdateProblemInvestigation 更新问题调查
@@ -252,37 +202,13 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 		return nil, err
 	}
 
-	// 构建更新查询
-	query := "UPDATE problem_investigations SET updated_at = $1"
-	args := []interface{}{time.Now()}
-	argIndex := 2
-
-	if req.Status != nil {
-		query += fmt.Sprintf(", status = $%d", argIndex)
-		args = append(args, *req.Status)
-		argIndex++
+	upd := investigationUpdate{
+		Status:                  statusStringPtr(req.Status),
+		EstimatedCompletionDate: req.EstimatedCompletionDate,
+		ActualCompletionDate:    req.ActualCompletionDate,
+		InvestigationSummary:    req.InvestigationSummary,
 	}
-	if req.EstimatedCompletionDate != nil {
-		query += fmt.Sprintf(", estimated_completion_date = $%d", argIndex)
-		args = append(args, *req.EstimatedCompletionDate)
-		argIndex++
-	}
-	if req.ActualCompletionDate != nil {
-		query += fmt.Sprintf(", actual_completion_date = $%d", argIndex)
-		args = append(args, *req.ActualCompletionDate)
-		argIndex++
-	}
-	if req.InvestigationSummary != nil {
-		query += fmt.Sprintf(", investigation_summary = $%d", argIndex)
-		args = append(args, *req.InvestigationSummary)
-		argIndex++
-	}
-
-	query += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", argIndex, argIndex+1)
-	args = append(args, investigationID, tenantID)
-
-	_, err = s.db.ExecContext(ctx, query, args...)
-	if err != nil {
+	if err := s.repo.UpdateInvestigation(ctx, investigationID, upd, int64(tenantID), time.Now().Unix()); err != nil {
 		return nil, fmt.Errorf("更新问题调查失败: %v", err)
 	}
 
@@ -301,26 +227,27 @@ func (s *ProblemInvestigationService) UpdateProblemInvestigation(ctx context.Con
 // CreateInvestigationStep 创建调查步骤
 func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Context, req *dto.CreateInvestigationStepRequest, tenantID int) (*dto.InvestigationStepResponse, error) {
 	// 检查调查记录是否存在
-	var problemID int
-	err := s.db.QueryRowContext(ctx, `
-		SELECT pi.problem_id FROM problem_investigations pi
-		JOIN problems p ON pi.problem_id = p.id
-		WHERE pi.id = $1 AND p.tenant_id = $2
-	`, req.InvestigationID, tenantID).Scan(&problemID)
+	problemID, err := s.repo.FetchInvestigationProblemID(ctx, req.InvestigationID, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("调查记录不存在")
-		}
 		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+	}
+	if problemID == 0 {
+		return nil, fmt.Errorf("调查记录不存在")
 	}
 
 	// 创建调查步骤
-	var stepID int
-	err = s.db.QueryRowContext(ctx, `
-		INSERT INTO problem_investigation_steps (investigation_id, step_number, step_title, step_description, assigned_to, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-		RETURNING id
-	`, req.InvestigationID, req.StepNumber, req.StepTitle, req.StepDescription, req.AssignedTo, req.Notes, time.Now()).Scan(&stepID)
+	var notesPtr *string
+	if req.Notes != "" {
+		notesPtr = &req.Notes
+	}
+	stepID, err := s.repo.CreateInvestigationStep(ctx, &InvestigationStepCreate{
+		InvestigationID: req.InvestigationID,
+		StepNumber:      req.StepNumber,
+		StepTitle:       req.StepTitle,
+		StepDescription: req.StepDescription,
+		AssignedTo:      req.AssignedTo,
+		Notes:           notesPtr,
+	}, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("创建调查步骤失败: %v", err)
 	}
@@ -328,9 +255,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 	// 获取分配人员姓名
 	var assignedToName *string
 	if req.AssignedTo != nil {
-		var name string
-		err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", *req.AssignedTo, tenantID).Scan(&name)
-		if err == nil {
+		if name, ok, err := s.users.GetUserName(ctx, *req.AssignedTo, tenantID); err == nil && ok {
 			assignedToName = &name
 		}
 	}
@@ -344,7 +269,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 		Status:          dto.StepStatusPending,
 		AssignedTo:      req.AssignedTo,
 		AssignedToName:  assignedToName,
-		Notes:           &req.Notes,
+		Notes:           notesPtr,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}, nil
@@ -353,66 +278,24 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 // UpdateInvestigationStep 更新调查步骤
 func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Context, stepID int, req *dto.UpdateInvestigationStepRequest, tenantID int) (*dto.InvestigationStepResponse, error) {
 	// 检查步骤是否存在
-	var investigationID int
-	err := s.db.QueryRowContext(ctx, `
-		SELECT pis.investigation_id FROM problem_investigation_steps pis
-		JOIN problem_investigations pi ON pis.investigation_id = pi.id
-		JOIN problems p ON pi.problem_id = p.id
-		WHERE pis.id = $1 AND p.tenant_id = $2
-	`, stepID, tenantID).Scan(&investigationID)
+	investigationID, err := s.repo.FetchStepInvestigationID(ctx, stepID, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("调查步骤不存在")
-		}
 		return nil, fmt.Errorf("查询调查步骤失败: %v", err)
 	}
-
-	// 构建更新查询
-	query := "UPDATE problem_investigation_steps SET updated_at = $1"
-	args := []interface{}{time.Now()}
-	argIndex := 2
-
-	if req.StepTitle != nil {
-		query += fmt.Sprintf(", step_title = $%d", argIndex)
-		args = append(args, *req.StepTitle)
-		argIndex++
-	}
-	if req.StepDescription != nil {
-		query += fmt.Sprintf(", step_description = $%d", argIndex)
-		args = append(args, *req.StepDescription)
-		argIndex++
-	}
-	if req.Status != nil {
-		query += fmt.Sprintf(", status = $%d", argIndex)
-		args = append(args, *req.Status)
-		argIndex++
-	}
-	if req.AssignedTo != nil {
-		query += fmt.Sprintf(", assigned_to = $%d", argIndex)
-		args = append(args, *req.AssignedTo)
-		argIndex++
-	}
-	if req.StartDate != nil {
-		query += fmt.Sprintf(", start_date = $%d", argIndex)
-		args = append(args, *req.StartDate)
-		argIndex++
-	}
-	if req.CompletionDate != nil {
-		query += fmt.Sprintf(", completion_date = $%d", argIndex)
-		args = append(args, *req.CompletionDate)
-		argIndex++
-	}
-	if req.Notes != nil {
-		query += fmt.Sprintf(", notes = $%d", argIndex)
-		args = append(args, *req.Notes)
-		argIndex++
+	if investigationID == 0 {
+		return nil, fmt.Errorf("调查步骤不存在")
 	}
 
-	query += fmt.Sprintf(" WHERE id = $%d", argIndex)
-	args = append(args, stepID)
-
-	_, err = s.db.ExecContext(ctx, query, args...)
-	if err != nil {
+	upd := stepUpdate{
+		StepTitle:       req.StepTitle,
+		StepDescription: req.StepDescription,
+		Status:          stepStatusStringPtr(req.Status),
+		AssignedTo:      req.AssignedTo,
+		StartDate:       req.StartDate,
+		CompletionDate:  req.CompletionDate,
+		Notes:           req.Notes,
+	}
+	if err := s.repo.UpdateStep(ctx, stepID, upd, time.Now()); err != nil {
 		return nil, fmt.Errorf("更新调查步骤失败: %v", err)
 	}
 
@@ -422,65 +305,61 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 
 // getInvestigationStep 获取调查步骤详情
 func (s *ProblemInvestigationService) getInvestigationStep(ctx context.Context, stepID, tenantID int) (*dto.InvestigationStepResponse, error) {
-	var step dto.InvestigationStepResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT pis.id, pis.investigation_id, pis.step_number, pis.step_title, pis.step_description,
-		       pis.status, pis.assigned_to, u.name, pis.start_date, pis.completion_date, pis.notes,
-		       pis.created_at, pis.updated_at
-		FROM problem_investigation_steps pis
-		JOIN problem_investigations pi ON pis.investigation_id = pi.id
-		JOIN problems p ON pi.problem_id = p.id
-		LEFT JOIN users u ON pis.assigned_to = u.id AND u.tenant_id = p.tenant_id
-		WHERE pis.id = $1 AND p.tenant_id = $2
-	`, stepID, tenantID).Scan(
-		&step.ID, &step.InvestigationID, &step.StepNumber, &step.StepTitle, &step.StepDescription,
-		&step.Status, &step.AssignedTo, &step.AssignedToName, &step.StartDate, &step.CompletionDate, &step.Notes,
-		&step.CreatedAt, &step.UpdatedAt,
-	)
+	step, err := s.repo.GetInvestigationStep(ctx, stepID, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("获取调查步骤失败: %v", err)
 	}
-
-	return &step, nil
+	return step, nil
 }
 
 // CreateRootCauseAnalysis 创建根本原因分析
 func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Context, req *dto.CreateRootCauseAnalysisRequest, tenantID int) (*dto.RootCauseAnalysisResponse, error) {
 	// 检查问题是否存在
-	var problemTitle string
-	err := s.db.QueryRowContext(ctx, "SELECT title FROM problems WHERE id = $1 AND tenant_id = $2", req.ProblemID, tenantID).Scan(&problemTitle)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("问题不存在")
-		}
+	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
+	} else if !ok {
+		return nil, fmt.Errorf("问题不存在")
 	}
 
 	// 检查是否已存在根本原因分析
-	var existingID int
-	err = s.db.QueryRowContext(ctx, "SELECT rca.id FROM problem_root_cause_analyses rca JOIN problems p ON rca.problem_id = p.id WHERE rca.problem_id = $1 AND p.tenant_id = $2", req.ProblemID, tenantID).Scan(&existingID)
-	if err == nil {
+	exists, err := s.repo.RootCauseExistsByProblem(ctx, req.ProblemID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+	}
+	if exists {
 		return nil, fmt.Errorf("该问题已存在根本原因分析")
 	}
 
 	// 创建根本原因分析
-	var analysisID int
-	err = s.db.QueryRowContext(ctx, `
-		INSERT INTO problem_root_cause_analyses (problem_id, analyst_id, analysis_method, root_cause_description, 
-		                                       contributing_factors, evidence, confidence_level, analysis_date, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8, $8)
-		RETURNING id
-	`, req.ProblemID, req.AnalystID, req.AnalysisMethod, req.RootCauseDescription,
-		req.ContributingFactors, req.Evidence, req.ConfidenceLevel, time.Now()).Scan(&analysisID)
+	confidence, err := parseConfidenceLevel(string(req.ConfidenceLevel))
+	if err != nil {
+		return nil, fmt.Errorf("置信度解析失败: %v", err)
+	}
+	var contributing *string
+	if req.ContributingFactors != "" {
+		contributing = &req.ContributingFactors
+	}
+	var evidence *string
+	if req.Evidence != "" {
+		evidence = &req.Evidence
+	}
+	analysisID, err := s.repo.CreateRootCauseAnalysis(ctx, &RootCauseAnalysisCreate{
+		ProblemID:            req.ProblemID,
+		AnalystID:            req.AnalystID,
+		AnalysisMethod:       req.AnalysisMethod,
+		RootCauseDescription: req.RootCauseDescription,
+		ContributingFactors:  contributing,
+		Evidence:             evidence,
+		ConfidenceLevel:      confidence,
+	}, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("创建根本原因分析失败: %v", err)
 	}
 
 	// 获取分析师姓名
-	var analystName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.AnalystID, tenantID).Scan(&analystName)
-	if err != nil {
-		analystName = "未知用户"
+	analystName := "未知用户"
+	if name, ok, err := s.users.GetUserName(ctx, req.AnalystID, tenantID); err == nil && ok {
+		analystName = name
 	}
 
 	return &dto.RootCauseAnalysisResponse{
@@ -490,8 +369,8 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 		AnalystName:          analystName,
 		AnalysisMethod:       req.AnalysisMethod,
 		RootCauseDescription: req.RootCauseDescription,
-		ContributingFactors:  &req.ContributingFactors,
-		Evidence:             &req.Evidence,
+		ContributingFactors:  contributing,
+		Evidence:             evidence,
 		ConfidenceLevel:      req.ConfidenceLevel,
 		AnalysisDate:         time.Now(),
 		CreatedAt:            time.Now(),
@@ -502,35 +381,36 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 // CreateProblemSolution 创建问题解决方案
 func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context, req *dto.CreateProblemSolutionRequest, tenantID int) (*dto.ProblemSolutionResponse, error) {
 	// 检查问题是否存在
-	var problemTitle string
-	err := s.db.QueryRowContext(ctx, "SELECT title FROM problems WHERE id = $1 AND tenant_id = $2", req.ProblemID, tenantID).Scan(&problemTitle)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("问题不存在")
-		}
+	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
+	} else if !ok {
+		return nil, fmt.Errorf("问题不存在")
 	}
 
-	// 创建解决方案
-	var solutionID int
-	err = s.db.QueryRowContext(ctx, `
-		INSERT INTO problem_solutions (problem_id, solution_type, solution_description, proposed_by, proposed_date,
-		                             status, priority, estimated_effort_hours, estimated_cost, risk_assessment,
-		                             approval_status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12)
-		RETURNING id
-	`, req.ProblemID, req.SolutionType, req.SolutionDescription, req.ProposedBy, time.Now(),
-		dto.SolutionStatusProposed, req.Priority, req.EstimatedEffortHours, req.EstimatedCost, req.RiskAssessment,
-		"pending", time.Now()).Scan(&solutionID)
+	var riskAssessment *string
+	if req.RiskAssessment != "" {
+		riskAssessment = &req.RiskAssessment
+	}
+	solutionID, err := s.repo.CreateProblemSolution(ctx, &ProblemSolutionCreate{
+		ProblemID:            req.ProblemID,
+		SolutionType:         string(req.SolutionType),
+		SolutionDescription:  req.SolutionDescription,
+		ProposedBy:           req.ProposedBy,
+		Status:               string(dto.SolutionStatusProposed),
+		Priority:             req.Priority,
+		EstimatedEffortHours: req.EstimatedEffortHours,
+		EstimatedCost:        req.EstimatedCost,
+		RiskAssessment:       riskAssessment,
+		ApprovalStatus:       "pending",
+	}, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("创建问题解决方案失败: %v", err)
 	}
 
 	// 获取提议者姓名
-	var proposedByName string
-	err = s.db.QueryRowContext(ctx, "SELECT name FROM users WHERE id = $1 AND tenant_id = $2", req.ProposedBy, tenantID).Scan(&proposedByName)
-	if err != nil {
-		proposedByName = "未知用户"
+	proposedByName := "未知用户"
+	if name, ok, err := s.users.GetUserName(ctx, req.ProposedBy, tenantID); err == nil && ok {
+		proposedByName = name
 	}
 
 	return &dto.ProblemSolutionResponse{
@@ -545,7 +425,7 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 		Priority:             req.Priority,
 		EstimatedEffortHours: req.EstimatedEffortHours,
 		EstimatedCost:        req.EstimatedCost,
-		RiskAssessment:       &req.RiskAssessment,
+		RiskAssessment:       riskAssessment,
 		ApprovalStatus:       "pending",
 		CreatedAt:            time.Now(),
 		UpdatedAt:            time.Now(),
@@ -555,13 +435,10 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 // GetProblemInvestigationSummary 获取问题调查摘要
 func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context.Context, problemID, tenantID int) (*dto.ProblemInvestigationSummaryResponse, error) {
 	// 检查问题是否存在
-	var problemTitle string
-	err := s.db.QueryRowContext(ctx, "SELECT title FROM problems WHERE id = $1 AND tenant_id = $2", problemID, tenantID).Scan(&problemTitle)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("问题不存在")
-		}
+	if _, ok, err := s.repo.FetchProblemTitle(ctx, problemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
+	} else if !ok {
+		return nil, fmt.Errorf("问题不存在")
 	}
 
 	summary := &dto.ProblemInvestigationSummaryResponse{
@@ -574,105 +451,31 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	}
 
 	// 获取调查记录
-	var investigationID int
-	err = s.db.QueryRowContext(ctx, "SELECT pi.id FROM problem_investigations pi JOIN problems p ON pi.problem_id = p.id WHERE pi.problem_id = $1 AND p.tenant_id = $2", problemID, tenantID).Scan(&investigationID)
-	if err == nil {
-		investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID)
-		if err == nil {
+	if investigationID, ok, err := s.repo.FetchInvestigationIDByProblem(ctx, problemID, tenantID); err == nil && ok {
+		if investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID); err == nil {
 			summary.Investigation = investigation
 		}
 	}
 
 	// 获取调查步骤
 	if summary.Investigation != nil {
-		rows, err := s.db.QueryContext(ctx, `
-			SELECT pis.id, pis.investigation_id, pis.step_number, pis.step_title, pis.step_description,
-			       pis.status, pis.assigned_to, u.name, pis.start_date, pis.completion_date, pis.notes,
-			       pis.created_at, pis.updated_at
-			FROM problem_investigation_steps pis
-			JOIN problem_investigations pi ON pis.investigation_id = pi.id
-			JOIN problems p ON pi.problem_id = p.id
-			LEFT JOIN users u ON pis.assigned_to = u.id AND u.tenant_id = p.tenant_id
-			WHERE pis.investigation_id = $1 AND p.tenant_id = $2
-			ORDER BY pis.step_number
-		`, investigationID, tenantID)
+		steps, err := s.repo.ListInvestigationSteps(ctx, summary.Investigation.ID, tenantID)
 		if err == nil {
-			defer rows.Close()
-			for rows.Next() {
-				var step dto.InvestigationStepResponse
-				err := rows.Scan(
-					&step.ID, &step.InvestigationID, &step.StepNumber, &step.StepTitle, &step.StepDescription,
-					&step.Status, &step.AssignedTo, &step.AssignedToName, &step.StartDate, &step.CompletionDate, &step.Notes,
-					&step.CreatedAt, &step.UpdatedAt,
-				)
-				if err == nil {
-					summary.Steps = append(summary.Steps, &step)
-				}
-			}
+			summary.Steps = steps
 		}
 	}
 
 	// 获取根本原因分析
-	var analysisID int
-	err = s.db.QueryRowContext(ctx, "SELECT rca.id FROM problem_root_cause_analyses rca JOIN problems p ON rca.problem_id = p.id WHERE rca.problem_id = $1 AND p.tenant_id = $2", problemID, tenantID).Scan(&analysisID)
-	if err == nil {
-		rows, err := s.db.QueryContext(ctx, `
-			SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
-			       prca.root_cause_description, prca.contributing_factors, prca.evidence, prca.confidence_level,
-			       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
-			       prca.created_at, prca.updated_at
-			FROM problem_root_cause_analyses prca
-			JOIN problems p ON prca.problem_id = p.id
-			JOIN users u1 ON prca.analyst_id = u1.id AND u1.tenant_id = p.tenant_id
-			LEFT JOIN users u2 ON prca.reviewed_by = u2.id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
-			WHERE prca.problem_id = $1 AND p.tenant_id = $2
-		`, problemID, tenantID)
-		if err == nil {
-			defer rows.Close()
-			if rows.Next() {
-				var analysis dto.RootCauseAnalysisResponse
-				err := rows.Scan(
-					&analysis.ID, &analysis.ProblemID, &analysis.AnalystID, &analysis.AnalystName,
-					&analysis.AnalysisMethod, &analysis.RootCauseDescription, &analysis.ContributingFactors,
-					&analysis.Evidence, &analysis.ConfidenceLevel, &analysis.AnalysisDate,
-					&analysis.ReviewedBy, &analysis.ReviewedByName, &analysis.ReviewDate,
-					&analysis.CreatedAt, &analysis.UpdatedAt,
-				)
-				if err == nil {
-					summary.RootCauseAnalysis = &analysis
-				}
-			}
+	if id, ok, err := s.repo.FetchRootCauseAnalysisIDByProblem(ctx, problemID, tenantID); err == nil && ok {
+		if analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID); err == nil {
+			summary.RootCauseAnalysis = analysis
 		}
 	}
 
 	// 获取解决方案
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
-		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
-		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
-		       ps.created_at, ps.updated_at
-		FROM problem_solutions ps
-		JOIN problems p ON ps.problem_id = p.id
-		JOIN users u1 ON ps.proposed_by = u1.id AND u1.tenant_id = p.tenant_id
-		LEFT JOIN users u2 ON ps.approved_by = u2.id AND (u2.id IS NULL OR u2.tenant_id = p.tenant_id)
-		WHERE ps.problem_id = $1 AND p.tenant_id = $2
-		ORDER BY ps.created_at DESC
-	`, problemID, tenantID)
+	solutions, err := s.repo.ListProblemSolutions(ctx, problemID, tenantID)
 	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var solution dto.ProblemSolutionResponse
-			err := rows.Scan(
-				&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
-				&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
-				&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
-				&solution.RiskAssessment, &solution.ApprovalStatus, &solution.ApprovedBy, &solution.ApprovedByName,
-				&solution.ApprovalDate, &solution.CreatedAt, &solution.UpdatedAt,
-			)
-			if err == nil {
-				summary.Solutions = append(summary.Solutions, &solution)
-			}
-		}
+		summary.Solutions = solutions
 	}
 
 	return summary, nil
@@ -683,75 +486,31 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 	s.logger.Infow("Updating root cause analysis", "id", id, "tenant_id", tenantID)
 
 	// 检查根因分析是否存在
-	var existingAnalysis dto.RootCauseAnalysisResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT prca.id, prca.problem_id, prca.analyst_id, u1.name, prca.analysis_method,
-		       prca.root_cause_description, prca.contributing_factors, prca.evidence, prca.confidence_level,
-		       prca.analysis_date, prca.reviewed_by, u2.name, prca.review_date,
-		       prca.created_at, prca.updated_at
-		FROM problem_root_cause_analyses prca
-		JOIN users u1 ON prca.analyst_id = u1.id
-		LEFT JOIN users u2 ON prca.reviewed_by = u2.id
-		JOIN problems p ON prca.problem_id = p.id
-		WHERE prca.id = $1 AND p.tenant_id = $2
-	`, id, tenantID).Scan(
-		&existingAnalysis.ID, &existingAnalysis.ProblemID, &existingAnalysis.AnalystID, &existingAnalysis.AnalystName,
-		&existingAnalysis.AnalysisMethod, &existingAnalysis.RootCauseDescription, &existingAnalysis.ContributingFactors,
-		&existingAnalysis.Evidence, &existingAnalysis.ConfidenceLevel, &existingAnalysis.AnalysisDate,
-		&existingAnalysis.ReviewedBy, &existingAnalysis.ReviewedByName, &existingAnalysis.ReviewDate,
-		&existingAnalysis.CreatedAt, &existingAnalysis.UpdatedAt,
-	)
+	count, err := s.repo.CountRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("根因分析不存在")
-		}
 		return nil, fmt.Errorf("查询根因分析失败: %v", err)
 	}
+	if count == 0 {
+		return nil, fmt.Errorf("根因分析不存在")
+	}
 
-	// 构建更新语句
-	updateSQL := "UPDATE problem_root_cause_analyses SET updated_at = $1"
-	var params []interface{}
-	paramIndex := 2
-
-	if req.AnalysisMethod != nil {
-		updateSQL += fmt.Sprintf(", analysis_method = $%d", paramIndex)
-		params = append(params, *req.AnalysisMethod)
-		paramIndex++
-	}
-	if req.RootCauseDescription != nil {
-		updateSQL += fmt.Sprintf(", root_cause_description = $%d", paramIndex)
-		params = append(params, *req.RootCauseDescription)
-		paramIndex++
-	}
-	if req.ContributingFactors != nil {
-		updateSQL += fmt.Sprintf(", contributing_factors = $%d", paramIndex)
-		params = append(params, *req.ContributingFactors)
-		paramIndex++
-	}
-	if req.Evidence != nil {
-		updateSQL += fmt.Sprintf(", evidence = $%d", paramIndex)
-		params = append(params, *req.Evidence)
-		paramIndex++
-	}
+	var confidence *float64
 	if req.ConfidenceLevel != nil {
-		updateSQL += fmt.Sprintf(", confidence_level = $%d", paramIndex)
-		params = append(params, *req.ConfidenceLevel)
-		paramIndex++
-	}
-	if req.ReviewedBy != nil {
-		updateSQL += fmt.Sprintf(", reviewed_by = $%d", paramIndex)
-		params = append(params, *req.ReviewedBy)
-		paramIndex++
+		confidence, err = parseConfidenceLevel(string(*req.ConfidenceLevel))
+		if err != nil {
+			return nil, fmt.Errorf("置信度解析失败: %v", err)
+		}
 	}
 
-	updateSQL += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", paramIndex, paramIndex+1)
-	params = append(params, id, tenantID)
-
-	now := time.Now()
-	params[0] = now
-
-	_, err = s.db.ExecContext(ctx, updateSQL, params...)
-	if err != nil {
+	upd := rootCauseUpdate{
+		AnalysisMethod:       req.AnalysisMethod,
+		RootCauseDescription: req.RootCauseDescription,
+		ContributingFactors:  req.ContributingFactors,
+		Evidence:             req.Evidence,
+		ConfidenceLevel:      confidence,
+		ReviewedBy:           req.ReviewedBy,
+	}
+	if err := s.repo.UpdateRootCauseAnalysis(ctx, id, tenantID, upd, time.Now()); err != nil {
 		return nil, fmt.Errorf("更新根因分析失败: %v", err)
 	}
 
@@ -763,20 +522,12 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting root cause analysis", "id", id, "tenant_id", tenantID)
 
-	// 检查是否存在
-	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_root_cause_analyses WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID).Scan(&count)
-	if err != nil {
-		return fmt.Errorf("查询根因分析失败: %v", err)
-	}
-	if count == 0 {
-		return fmt.Errorf("根因分析不存在")
-	}
-
-	// 删除
-	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_root_cause_analyses WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID)
+	deleted, err := s.repo.DeleteRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
 		return fmt.Errorf("删除根因分析失败: %v", err)
+	}
+	if !deleted {
+		return fmt.Errorf("根因分析不存在")
 	}
 
 	return nil
@@ -787,80 +538,24 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 	s.logger.Infow("Updating problem solution", "id", id, "tenant_id", tenantID)
 
 	// 检查解决方案是否存在
-	var existingSolution dto.ProblemSolutionResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
-		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
-		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
-		       ps.created_at, ps.updated_at
-		FROM problem_solutions ps
-		JOIN users u1 ON ps.proposed_by = u1.id
-		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		JOIN problems p ON ps.problem_id = p.id
-		WHERE ps.id = $1 AND p.tenant_id = $2
-	`, id, tenantID).Scan(
-		&existingSolution.ID, &existingSolution.ProblemID, &existingSolution.SolutionType, &existingSolution.SolutionDescription,
-		&existingSolution.ProposedBy, &existingSolution.ProposedByName, &existingSolution.ProposedDate, &existingSolution.Status,
-		&existingSolution.Priority, &existingSolution.EstimatedEffortHours, &existingSolution.EstimatedCost,
-		&existingSolution.RiskAssessment, &existingSolution.ApprovalStatus, &existingSolution.ApprovedBy, &existingSolution.ApprovedByName,
-		&existingSolution.ApprovalDate, &existingSolution.CreatedAt, &existingSolution.UpdatedAt,
-	)
+	count, err := s.repo.CountProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("解决方案不存在")
-		}
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
-
-	// 构建更新语句
-	updateSQL := "UPDATE problem_solutions SET updated_at = $1"
-	var params []interface{}
-	paramIndex := 2
-
-	if req.SolutionType != nil {
-		updateSQL += fmt.Sprintf(", solution_type = $%d", paramIndex)
-		params = append(params, *req.SolutionType)
-		paramIndex++
-	}
-	if req.SolutionDescription != nil {
-		updateSQL += fmt.Sprintf(", solution_description = $%d", paramIndex)
-		params = append(params, *req.SolutionDescription)
-		paramIndex++
-	}
-	if req.Status != nil {
-		updateSQL += fmt.Sprintf(", status = $%d", paramIndex)
-		params = append(params, *req.Status)
-		paramIndex++
-	}
-	if req.Priority != nil {
-		updateSQL += fmt.Sprintf(", priority = $%d", paramIndex)
-		params = append(params, *req.Priority)
-		paramIndex++
-	}
-	if req.EstimatedEffortHours != nil {
-		updateSQL += fmt.Sprintf(", estimated_effort_hours = $%d", paramIndex)
-		params = append(params, *req.EstimatedEffortHours)
-		paramIndex++
-	}
-	if req.EstimatedCost != nil {
-		updateSQL += fmt.Sprintf(", estimated_cost = $%d", paramIndex)
-		params = append(params, *req.EstimatedCost)
-		paramIndex++
-	}
-	if req.RiskAssessment != nil {
-		updateSQL += fmt.Sprintf(", risk_assessment = $%d", paramIndex)
-		params = append(params, *req.RiskAssessment)
-		paramIndex++
+	if count == 0 {
+		return nil, fmt.Errorf("解决方案不存在")
 	}
 
-	updateSQL += fmt.Sprintf(" WHERE id = $%d AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $%d)", paramIndex, paramIndex+1)
-	params = append(params, id, tenantID)
-
-	now := time.Now()
-	params[0] = now
-
-	_, err = s.db.ExecContext(ctx, updateSQL, params...)
-	if err != nil {
+	upd := solutionUpdate{
+		SolutionType:         solutionTypeStringPtr(req.SolutionType),
+		SolutionDescription:  req.SolutionDescription,
+		Status:               solutionStatusStringPtr(req.Status),
+		Priority:             req.Priority,
+		EstimatedEffortHours: req.EstimatedEffortHours,
+		EstimatedCost:        req.EstimatedCost,
+		RiskAssessment:       req.RiskAssessment,
+	}
+	if err := s.repo.UpdateProblemSolution(ctx, id, tenantID, upd, time.Now()); err != nil {
 		return nil, fmt.Errorf("更新解决方案失败: %v", err)
 	}
 
@@ -872,20 +567,12 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting problem solution", "id", id, "tenant_id", tenantID)
 
-	// 检查是否存在
-	var count int
-	err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM problem_solutions WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID).Scan(&count)
-	if err != nil {
-		return fmt.Errorf("查询解决方案失败: %v", err)
-	}
-	if count == 0 {
-		return fmt.Errorf("解决方案不存在")
-	}
-
-	// 删除
-	_, err = s.db.ExecContext(ctx, "DELETE FROM problem_solutions WHERE id = $1 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $2)", id, tenantID)
+	deleted, err := s.repo.DeleteProblemSolution(ctx, id, tenantID)
 	if err != nil {
 		return fmt.Errorf("删除解决方案失败: %v", err)
+	}
+	if !deleted {
+		return fmt.Errorf("解决方案不存在")
 	}
 
 	return nil
@@ -896,56 +583,94 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	s.logger.Infow("Approving solution", "id", id, "approver_id", approverID, "approved", approved)
 
 	// 检查解决方案是否存在
-	var solution dto.ProblemSolutionResponse
-	err := s.db.QueryRowContext(ctx, `
-		SELECT ps.id, ps.problem_id, ps.solution_type, ps.solution_description, ps.proposed_by, u1.name,
-		       ps.proposed_date, ps.status, ps.priority, ps.estimated_effort_hours, ps.estimated_cost,
-		       ps.risk_assessment, ps.approval_status, ps.approved_by, u2.name, ps.approval_date,
-		       ps.created_at, ps.updated_at
-		FROM problem_solutions ps
-		JOIN users u1 ON ps.proposed_by = u1.id
-		LEFT JOIN users u2 ON ps.approved_by = u2.id
-		JOIN problems p ON ps.problem_id = p.id
-		WHERE ps.id = $1 AND p.tenant_id = $2
-	`, id, tenantID).Scan(
-		&solution.ID, &solution.ProblemID, &solution.SolutionType, &solution.SolutionDescription,
-		&solution.ProposedBy, &solution.ProposedByName, &solution.ProposedDate, &solution.Status,
-		&solution.Priority, &solution.EstimatedEffortHours, &solution.EstimatedCost,
-		&solution.RiskAssessment, &solution.ApprovalStatus, &solution.ApprovedBy, &solution.ApprovedByName,
-		&solution.ApprovalDate, &solution.CreatedAt, &solution.UpdatedAt,
-	)
+	count, err := s.repo.CountProblemSolution(ctx, id, tenantID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("解决方案不存在")
-		}
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
+	if count == 0 {
+		return nil, fmt.Errorf("解决方案不存在")
+	}
 
-	// 更新审批状态
+	now := time.Now()
 	approvalStatus := "rejected"
 	if approved {
 		approvalStatus = "approved"
 	}
 
-	now := time.Now()
-	_, err = s.db.ExecContext(ctx, `
-		UPDATE problem_solutions
-		SET approval_status = $1, approved_by = $2, approval_date = $3, updated_at = $3
-		WHERE id = $4 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $5)
-	`, approvalStatus, approverID, now, id, tenantID)
-	if err != nil {
+	if err := s.repo.ApproveSolution(ctx, id, tenantID, approverID, approvalStatus, now); err != nil {
 		return nil, fmt.Errorf("更新审批状态失败: %v", err)
 	}
 
 	// 如果批准，更新解决方案状态为待实施
 	if approved {
-		_, err = s.db.ExecContext(ctx, `
-			UPDATE problem_solutions SET status = $1, updated_at = $2 WHERE id = $3 AND problem_id IN (SELECT id FROM problems WHERE tenant_id = $4)
-		`, dto.SolutionStatusPendingImplementation, now, id, tenantID)
-		if err != nil {
+		if err := s.repo.SetSolutionStatus(ctx, id, tenantID, string(dto.SolutionStatusPendingImplementation), now); err != nil {
 			s.logger.Warnw("Failed to update solution status after approval", "error", err)
 		}
 	}
 
 	return s.GetProblemSolution(ctx, id, tenantID)
+}
+
+// ============================================================
+// 内部工具：把强类型别名转 string/*，方便传进 repository
+// ============================================================
+
+func statusStringPtr(s *dto.ProblemInvestigationStatus) *string {
+	if s == nil {
+		return nil
+	}
+	v := string(*s)
+	return &v
+}
+
+func stepStatusStringPtr(s *dto.ProblemInvestigationStepStatus) *string {
+	if s == nil {
+		return nil
+	}
+	v := string(*s)
+	return &v
+}
+
+func solutionTypeStringPtr(s *dto.SolutionType) *string {
+	if s == nil {
+		return nil
+	}
+	v := string(*s)
+	return &v
+}
+
+func solutionStatusStringPtr(s *dto.SolutionStatus) *string {
+	if s == nil {
+		return nil
+	}
+	v := string(*s)
+	return &v
+}
+
+// parseConfidenceLevel 把字符串置信度（"high" / "0.9" 等）归一为 0-1 的 float64。
+//
+// 历史数据里 ConfidenceLevel 是枚举字符串，但数据库列是 float64，
+// 这里既支持直接是数字，也支持 "low/medium/high" 这种枚举（映射到 0.3/0.6/0.9）。
+func parseConfidenceLevel(raw string) (*float64, error) {
+	if raw == "" {
+		return nil, nil
+	}
+	if f, err := strconv.ParseFloat(raw, 64); err == nil {
+		if f < 0 || f > 1 {
+			return nil, fmt.Errorf("置信度超出 [0,1] 范围: %v", f)
+		}
+		return &f, nil
+	}
+	switch strings.ToLower(raw) {
+	case "low":
+		v := 0.3
+		return &v, nil
+	case "medium":
+		v := 0.6
+		return &v, nil
+	case "high":
+		v := 0.9
+		return &v, nil
+	}
+	return nil, fmt.Errorf("无法解析置信度: %q", raw)
 }

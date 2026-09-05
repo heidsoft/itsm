@@ -5,9 +5,22 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+
+	"itsm-backend/database"
 )
 
 type VectorStore struct{ db *sql.DB }
+
+// VectorSearchResult is fully materialized before its tenant-scoped SQL
+// connection is released. It prevents callers from holding *sql.Rows beyond
+// the RLS session lifetime.
+type VectorSearchResult struct {
+	ObjectType string
+	ObjectID   int
+	Content    string
+	Source     string
+	Distance   float64
+}
 
 func NewVectorStore(db *sql.DB) *VectorStore { return &VectorStore{db: db} }
 
@@ -19,30 +32,22 @@ func (s *VectorStore) TestConnection() error {
 	return err
 }
 
-// EnsureExtension 确保 pgvector 扩展已安装，并初始化 vectors 表。
-// 如果扩展不可用，将返回错误（调用方应降级为关键字搜索）。
+// EnsureExtension verifies that the bootstrap migration provisioned pgvector
+// storage. It deliberately performs no DDL: long-running application
+// instances must not mutate schema or race each other at startup.
 func (s *VectorStore) EnsureExtension(ctx context.Context) error {
-	// 尝试创建 pgvector 扩展（幂等操作，已存在时不报错）
-	_, err := s.db.ExecContext(ctx, "CREATE EXTENSION IF NOT EXISTS vector")
-	if err != nil {
-		return fmt.Errorf("pgvector 扩展不可用: %w", err)
+	if s == nil || s.db == nil {
+		return fmt.Errorf("vector store database is not configured")
 	}
-	// 确保 vectors 表存在
-	_, err = s.db.ExecContext(ctx, `
-		CREATE TABLE IF NOT EXISTS vectors (
-			id           SERIAL PRIMARY KEY,
-			tenant_id    INT NOT NULL,
-			object_type  TEXT NOT NULL,
-			object_id    INT NOT NULL,
-			embedding    vector(1536),
-			content      TEXT,
-			source       TEXT,
-			created_at   TIMESTAMPTZ DEFAULT NOW(),
-			UNIQUE(tenant_id, object_type, object_id)
-		)
-	`)
-	if err != nil {
-		return fmt.Errorf("初始化 vectors 表失败: %w", err)
+	var exists bool
+	if err := s.db.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')`).Scan(&exists); err != nil {
+		return fmt.Errorf("check pgvector extension: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("pgvector extension is not installed; run bootstrap migration 020")
+	}
+	if err := s.TestConnection(); err != nil {
+		return fmt.Errorf("vectors storage is not ready; run bootstrap migration 020: %w", err)
 	}
 	return nil
 }
@@ -66,6 +71,14 @@ func (s *VectorStore) Upsert(ctx context.Context, tenantID int, objectType strin
         SET embedding = EXCLUDED.embedding, content = EXCLUDED.content, source = EXCLUDED.source;
     `, tenantID, objectType, objectID, string(values), content, source)
 	return err
+}
+
+// CountByTenant 返回指定租户的向量数。
+// 调用方必须从已认证上下文中获取 tenantID,不得使用跨租户范围。
+func (s *VectorStore) CountByTenant(ctx context.Context, tenantID int) (int64, error) {
+	var count int64
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM vectors WHERE tenant_id = $1`, tenantID).Scan(&count)
+	return count, err
 }
 
 // Delete removes a vector entry by tenant + object identity.
@@ -120,6 +133,47 @@ func (s *VectorStore) SearchTopKByType(ctx context.Context, tenantID int, object
         ORDER BY embedding <#> $1::vector
         LIMIT $4;
     `, string(values), tenantID, objectType, k)
+}
+
+// SearchTopKByTypeResults is the tenant-safe search API for new callers.
+// It scans all rows while the scoped RLS connection is checked out.
+func (s *VectorStore) SearchTopKByTypeResults(ctx context.Context, tenantID int, objectType string, query []float32, k int) ([]VectorSearchResult, error) {
+	if k <= 0 {
+		k = 5
+	}
+	values := make([]byte, 0, len(query)*6)
+	values = append(values, '[')
+	for i, v := range query {
+		if i > 0 {
+			values = append(values, ',')
+		}
+		values = append(values, []byte(fmtFloat(v))...)
+	}
+	values = append(values, ']')
+	const statement = `
+        SELECT object_type, object_id, content, source, (embedding <#> $1::vector) AS distance
+        FROM vectors WHERE tenant_id = $2 AND object_type = $3
+        ORDER BY embedding <#> $1::vector
+        LIMIT $4;
+    `
+	return database.WithTenantSQL(ctx, s.db, tenantID, func(q database.SQLExecutor) ([]VectorSearchResult, error) {
+		rows, err := q.QueryContext(ctx, statement, string(values), tenantID, objectType, k)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		results := make([]VectorSearchResult, 0, k)
+		for rows.Next() {
+			var result VectorSearchResult
+			var content, source sql.NullString
+			if err := rows.Scan(&result.ObjectType, &result.ObjectID, &content, &source, &result.Distance); err != nil {
+				return nil, err
+			}
+			result.Content, result.Source = content.String, source.String
+			results = append(results, result)
+		}
+		return results, rows.Err()
+	})
 }
 
 func fmtFloat(f float32) string {

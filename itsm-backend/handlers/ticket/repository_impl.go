@@ -204,10 +204,25 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			fp.Keyword = v
 		}
 	}
+
+	// 排序：白名单校验，非法字段由 toEntField 回退到 created_at
+	orderBy := "created_at"
+	orderDir := "desc"
+	if filters != nil {
+		if v, ok := filters["sortBy"].(string); ok && v != "" {
+			switch v {
+			case "created_at", "updated_at", "title", "status", "priority", "ticket_number":
+				orderBy = v
+			}
+		}
+		if v, ok := filters["sortOrder"].(string); ok && v == "asc" {
+			orderDir = "asc"
+		}
+	}
 	fp.DataScope = ticket.DataScope(dataScope)
 	fp.CurrentUserID = currentUserID
 
-	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: page, PageSize: size, OrderBy: "created_at", OrderDir: "desc"})
+	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: page, PageSize: size, OrderBy: orderBy, OrderDir: orderDir})
 	if err != nil {
 		return nil, 0, err
 	}

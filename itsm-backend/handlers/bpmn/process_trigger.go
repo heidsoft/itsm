@@ -5,6 +5,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -81,11 +82,13 @@ func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 		return
 	}
 
-	// 从上下文获取租户ID
-	tenantID, _ := ctx.Get("tenant_id")
-	if tenantID != nil {
-		req.TenantID = tenantID.(int)
+	// 租户上下文取自中间件：历史实现为「缺失时沿用请求体」，存在跨租户触发风险，
+	// 且 tenantID 在上下文缺失时会 panic（nil 断言）。改为 fail-closed 401。
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
 	}
+	req.TenantID = tenantID
 
 	result, err := c.triggerService.TriggerProcess(ctx.Request.Context(), &req)
 	if err != nil {
@@ -104,9 +107,12 @@ func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	result, err := c.triggerService.GetProcessStatus(ctx.Request.Context(), instanceID, tenantID.(int))
+	result, err := c.triggerService.GetProcessStatus(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -128,9 +134,12 @@ func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 	}
 	ctx.ShouldBindJSON(&req)
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	err = c.triggerService.CancelProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID.(int))
+	err = c.triggerService.CancelProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -152,9 +161,12 @@ func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 	}
 	ctx.ShouldBindJSON(&req)
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	err = c.triggerService.SuspendProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID.(int))
+	err = c.triggerService.SuspendProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -171,9 +183,12 @@ func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	err = c.triggerService.ResumeProcess(ctx.Request.Context(), instanceID, tenantID.(int))
+	err = c.triggerService.ResumeProcess(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -190,8 +205,11 @@ func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
-	binding.TenantID = tenantID.(int)
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	binding.TenantID = tenantID
 
 	result, err := c.bindingService.CreateBinding(ctx.Request.Context(), &binding)
 	if err != nil {
@@ -210,9 +228,12 @@ func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	result, err := c.bindingService.GetBinding(ctx.Request.Context(), id, tenantID.(int))
+	result, err := c.bindingService.GetBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -229,8 +250,11 @@ func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
-	req.TenantID = tenantID.(int)
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	req.TenantID = tenantID
 
 	result, err := c.bindingService.QueryBindings(ctx.Request.Context(), &req)
 	if err != nil {
@@ -255,8 +279,11 @@ func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
-	binding.TenantID = tenantID.(int)
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
+	binding.TenantID = tenantID
 
 	result, err := c.bindingService.UpdateBinding(ctx.Request.Context(), id, &binding)
 	if err != nil {
@@ -275,9 +302,12 @@ func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	err = c.bindingService.DeleteBinding(ctx.Request.Context(), id, tenantID.(int))
+	err = c.bindingService.DeleteBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -290,9 +320,12 @@ func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) GetBindingsByBusinessType(ctx *gin.Context) {
 	businessType := dto.BusinessType(ctx.Param("business_type"))
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	result, err := c.bindingService.GetBindingsByBusinessType(ctx.Request.Context(), businessType, tenantID.(int))
+	result, err := c.bindingService.GetBindingsByBusinessType(ctx.Request.Context(), businessType, tenantID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -309,9 +342,12 @@ func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	result, err := c.bindingService.GetDepartmentBindings(ctx.Request.Context(), tenantID.(int), departmentID)
+	result, err := c.bindingService.GetDepartmentBindings(ctx.Request.Context(), tenantID, departmentID)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -336,9 +372,12 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 
-	if err := c.bindingService.InitDepartmentDefaultBindings(ctx.Request.Context(), tenantID.(int), departmentID, req.DepartmentType); err != nil {
+	if err := c.bindingService.InitDepartmentDefaultBindings(ctx.Request.Context(), tenantID, departmentID, req.DepartmentType); err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
 	}
@@ -348,10 +387,13 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 
 // ListDomainConfigs 查询当前租户配置
 func (c *ProcessTriggerHandler) ListDomainConfigs(ctx *gin.Context) {
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 	configType := ctx.Query("configType")
 
-	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID.(int), configType)
+	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID, configType)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return
@@ -379,10 +421,13 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		req.InheritMode = "inherit"
 	}
 
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 	err := c.configService.SetConfig(
 		ctx.Request.Context(),
-		tenantID.(int),
+		tenantID,
 		req.DepartmentID,
 		req.TeamID,
 		req.ConfigType,
@@ -401,7 +446,10 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 
 // GetEffectiveDomainConfig 获取继承解析后的有效配置
 func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
-	tenantID, _ := ctx.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(ctx)
+	if !tenantOK {
+		return
+	}
 	departmentID, err := parseOptionalIntQuery(ctx, "department_id")
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的部门ID")
@@ -419,7 +467,7 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.configService.GetEffectiveConfig(ctx.Request.Context(), tenantID.(int), departmentID, teamID, configType, configKey)
+	result, err := c.configService.GetEffectiveConfig(ctx.Request.Context(), tenantID, departmentID, teamID, configType, configKey)
 	if err != nil {
 		common.Fail(ctx, 5001, err.Error())
 		return

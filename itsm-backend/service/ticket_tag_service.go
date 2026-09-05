@@ -304,7 +304,7 @@ type UpdateTagRequest struct {
 // ListTagsRequest 获取标签列表请求
 type ListTagsRequest struct {
 	Page     int   `json:"page" form:"page"`
-	PageSize int   `json:"pageSize" form:"page_size"`
-	IsActive *bool `json:"isActive" form:"is_active"`
-	TenantID int   `json:"tenantId" form:"tenant_id"`
+	PageSize int   `json:"pageSize" form:"pageSize"`
+	IsActive *bool `json:"isActive" form:"isActive"`
+	TenantID int   `json:"tenantId" form:"tenantId"`
 }

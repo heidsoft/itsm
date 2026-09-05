@@ -3,6 +3,8 @@ package rls
 import (
 	"context"
 	"testing"
+
+	"itsm-backend/common/tenantctx"
 )
 
 func TestWithTenantAndRoundTrip(t *testing.T) {
@@ -10,6 +12,14 @@ func TestWithTenantAndRoundTrip(t *testing.T) {
 	tid, ok := TenantFromContext(ctx)
 	if !ok || tid != 42 {
 		t.Fatalf("expected tenant 42, got %d ok=%v", tid, ok)
+	}
+}
+
+func TestTenantFromContextAcceptsCanonicalTenantContext(t *testing.T) {
+	ctx := tenantctx.WithTenantID(context.Background(), 42)
+	tenantID, ok := TenantFromContext(ctx)
+	if !ok || tenantID != 42 {
+		t.Fatalf("expected canonical tenant context to resolve to 42, got %d, %v", tenantID, ok)
 	}
 }
 

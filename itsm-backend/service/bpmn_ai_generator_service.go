@@ -14,14 +14,25 @@ import (
 type BPMNAIGeneratorService struct {
 	llmGateway        *LLMGateway
 	deploymentService *BPMNDeploymentService
+	templateService   *BPMNTemplateService
+	templateCatalog   *BPMNWorkflowTemplateCatalog
 	parser            *BPMNParser
 }
 
+func (s *BPMNAIGeneratorService) SetTemplateCatalog(catalog *BPMNWorkflowTemplateCatalog) {
+	s.templateCatalog = catalog
+}
+
 // NewBPMNAIGeneratorService 创建AI生成服务实例
-func NewBPMNAIGeneratorService(llmGateway *LLMGateway, deploymentService *BPMNDeploymentService) *BPMNAIGeneratorService {
+func NewBPMNAIGeneratorService(llmGateway *LLMGateway, deploymentService *BPMNDeploymentService, templateServices ...*BPMNTemplateService) *BPMNAIGeneratorService {
+	var templateService *BPMNTemplateService
+	if len(templateServices) > 0 {
+		templateService = templateServices[0]
+	}
 	return &BPMNAIGeneratorService{
 		llmGateway:        llmGateway,
 		deploymentService: deploymentService,
+		templateService:   templateService,
 		parser:            NewBPMNParser(),
 	}
 }
@@ -43,7 +54,9 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 		},
 	}
 
-	response, err := s.llmGateway.Chat(ctx, "gpt-4o", messages)
+	// An empty model delegates selection to the configured provider.  Hard-coding
+	// gpt-4o here made BPMN generation incompatible with MiniMax/local deployments.
+	response, err := s.llmGateway.Chat(ctx, "", messages)
 	if err != nil {
 		return nil, fmt.Errorf("调用AI生成BPMN失败: %w", err)
 	}
@@ -72,14 +85,18 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 
 	// 构建响应
 	resp := &dto.GenerateBPMNResponse{
-		BPMNXML:            bpmnXML,
-		ProcessID:          processInfo["id"].(string),
-		ProcessName:        processInfo["name"].(string),
-		ProcessDescription: metadata.Explanation,
-		Version:            "1.0.0",
-		NodeCount:          metadata.NodeCount,
-		Complexity:         metadata.Complexity,
-		Explanation:        metadata.Explanation,
+		BPMNXML:             bpmnXML,
+		ProcessID:           processInfo["id"].(string),
+		ProcessName:         processInfo["name"].(string),
+		ProcessDescription:  metadata.Explanation,
+		Version:             "1.0.0",
+		NodeCount:           metadata.NodeCount,
+		Complexity:          metadata.Complexity,
+		Explanation:         metadata.Explanation,
+		CandidateDefinition: buildBusinessProcessCandidate(req),
+	}
+	if err := validateBusinessProcessCandidate(resp.CandidateDefinition); err != nil {
+		return nil, fmt.Errorf("候选业务流程定义校验失败: %w", err)
 	}
 
 	// 生成后自动 Lint：语义层检查（连通性/网关/任务配置），
@@ -115,11 +132,115 @@ func (s *BPMNAIGeneratorService) GenerateBPMN(ctx context.Context, req *dto.Gene
 		}
 
 		resp.DeploymentID = deployment.DeploymentID
-		// 这里需要查询对应的流程定义ID，暂时留空
-		// resp.ProcessDefinitionID = processDef.ID
+		definition, err := s.deploymentService.GetProcessDefinitionForDeployment(ctx, deployment.ID, req.TenantID)
+		if err != nil {
+			return nil, fmt.Errorf("自动部署成功但无法读取流程定义: %w", err)
+		}
+		resp.ProcessDefinitionID = definition.ID
+		resp.Version = definition.Version
 	}
 
 	return resp, nil
+}
+
+// SuggestTemplates returns tenant-scoped and immutable built-in template matches.
+func (s *BPMNAIGeneratorService) SuggestTemplates(ctx context.Context, tenantID int, keyword, processType string) ([]*dto.BPMNTemplateSuggestion, error) {
+	if s.templateService == nil {
+		return nil, fmt.Errorf("工作流模板目录未配置")
+	}
+	result := make([]*dto.BPMNTemplateSuggestion, 0)
+	if s.templateCatalog != nil {
+		custom, err := s.templateCatalog.List(ctx, tenantID, keyword, processType, "published", 1, 20)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range custom.Items {
+			result = append(result, &dto.BPMNTemplateSuggestion{ID: item.Key, Name: item.Name, Description: item.Description, ProcessType: item.Domain, Score: 1})
+		}
+	}
+	builtIns, err := s.templateService.SuggestTemplates(ctx, tenantID, keyword, processType)
+	if err != nil {
+		return nil, err
+	}
+	return append(result, builtIns...), nil
+}
+
+// buildBusinessProcessCandidate keeps business semantics explicit while the
+// AI supplies BPMN structure. The existing designer must review this object
+// before publication.
+func buildBusinessProcessCandidate(req *dto.GenerateBPMNRequest) *dto.BusinessProcessCandidate {
+	form := map[string]interface{}{"fields": []map[string]interface{}{}}
+	approval := map[string]interface{}{"required": req.IncludeApprovals, "mode": "sequential", "rules": []interface{}{}}
+	bindings := map[string]interface{}{"requester": "user", "organization": "department"}
+	switch req.ProcessType {
+	case "leave":
+		form["fields"] = businessFields("leaveType:enum", "startAt:date", "endAt:date", "reason:string")
+		bindings["approver"] = "direct_manager"
+	case "expense":
+		form["fields"] = businessFields("amount:number", "currency:enum", "costCenter:string", "invoice:file")
+		approval["rules"] = []interface{}{map[string]interface{}{"when": "amount < 5000", "role": "department_manager"}, map[string]interface{}{"when": "amount >= 5000", "role": "finance_manager"}}
+		bindings["costCenter"] = "cost_center"
+	case "hr":
+		form["fields"] = businessFields("employee:reference", "department:reference", "effectiveAt:date", "reason:string")
+		bindings["employee"] = "user"
+	case "procurement":
+		form["fields"] = businessFields("item:string", "quantity:number", "amount:number", "vendor:reference", "budgetCode:string")
+		approval["rules"] = []interface{}{map[string]interface{}{"when": "amount < 10000", "role": "budget_owner"}, map[string]interface{}{"when": "amount >= 10000", "role": "cfo"}}
+		bindings["vendor"] = "supplier"
+	case "it":
+		form["fields"] = businessFields("service:reference", "environment:enum", "impact:enum", "implementationPlan:string")
+		bindings["service"] = "service_catalog"
+	}
+	sla := map[string]interface{}{}
+	if req.IncludeSLA {
+		sla = map[string]interface{}{"enabled": true, "responseHours": 24, "resolutionHours": 72}
+	}
+	return &dto.BusinessProcessCandidate{Domain: req.ProcessType, FormSchema: form, ApprovalPolicy: approval, OntologyBindings: bindings, SLAConfig: sla, RequiresConfirmation: true}
+}
+
+func businessFields(specs ...string) []map[string]interface{} {
+	fields := make([]map[string]interface{}, 0, len(specs))
+	for _, spec := range specs {
+		parts := strings.SplitN(spec, ":", 2)
+		fields = append(fields, map[string]interface{}{"name": parts[0], "type": parts[1], "required": true})
+	}
+	return fields
+}
+
+// validateBusinessProcessCandidate is deliberately deterministic. It checks
+// the contract envelope before an AI-produced BPMN definition can be
+// auto-deployed; policy expressions are restricted to the supported amount
+// comparison grammar for now.
+func validateBusinessProcessCandidate(candidate *dto.BusinessProcessCandidate) error {
+	if candidate == nil || candidate.Domain == "" || candidate.FormSchema == nil || candidate.ApprovalPolicy == nil || candidate.OntologyBindings == nil {
+		return fmt.Errorf("缺少业务域、表单、本体或审批策略")
+	}
+	if fields, ok := candidate.FormSchema["fields"].([]map[string]interface{}); !ok {
+		return fmt.Errorf("formSchema.fields 必须是结构化字段列表")
+	} else {
+		for _, field := range fields {
+			name, _ := field["name"].(string)
+			typ, _ := field["type"].(string)
+			if name == "" || typ == "" || field["required"] != true {
+				return fmt.Errorf("字段定义不完整")
+			}
+		}
+	}
+	if rules, exists := candidate.ApprovalPolicy["rules"]; exists {
+		items, ok := rules.([]interface{})
+		if !ok {
+			return fmt.Errorf("approvalPolicy.rules 必须是数组")
+		}
+		for _, item := range items {
+			rule, ok := item.(map[string]interface{})
+			when, _ := rule["when"].(string)
+			role, _ := rule["role"].(string)
+			if !ok || role == "" || !regexp.MustCompile(`^amount\s*(<|<=|>=|>)\s*[0-9]+$`).MatchString(when) {
+				return fmt.Errorf("审批条件仅支持 amount 数值比较")
+			}
+		}
+	}
+	return nil
 }
 
 // PreviewBPMN 预览流程结构，不生成完整XML
@@ -139,7 +260,8 @@ func (s *BPMNAIGeneratorService) PreviewBPMN(ctx context.Context, req *dto.Previ
 		},
 	}
 
-	response, err := s.llmGateway.Chat(ctx, "gpt-4o", messages)
+	// Keep preview on the same deployment-configured model as generation.
+	response, err := s.llmGateway.Chat(ctx, "", messages)
 	if err != nil {
 		return nil, fmt.Errorf("调用AI预览流程失败: %w", err)
 	}

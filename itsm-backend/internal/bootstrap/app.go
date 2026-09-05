@@ -465,7 +465,7 @@ func NewApplication() *Application {
 	}
 	connectorMarket := marketplace.New()
 	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar)
-	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, database.GetRawDB(), alertDevelopmentMode())
+	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, client, alertDevelopmentMode())
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
 	if connectorEncryptionKey == "" {
 		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
@@ -534,7 +534,9 @@ func NewApplication() *Application {
 	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, sugar)
 	ticketHandler := ticket.NewHandler(ticketHandlerService)
 	// Dashboard handler v1.1 回归：之前未初始化导致 /api/v1/dashboard/overview 等全部 404
-	dashboardService := service.NewDashboardService(client, sugar)
+	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；
+	// 不再依赖全局 rawDB 兜底，便于测试隔离与多连接池演进。
+	dashboardService := service.NewDashboardServiceWithDB(client, database.GetRawDB(), sugar)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService, ticketService, incidentService, sugar)
 
 	ticketService.EnableSideEffectOutbox()
@@ -642,9 +644,13 @@ func NewApplication() *Application {
 	if err := vectorStore.EnsureExtension(initCtx); err != nil {
 		sugar.Warnw("pgvector 扩展未就绪，RAG功能降级为关键字搜索", "error", err)
 	} else {
-		sugar.Infow("pgvector 扩展初始化成功")
+		sugar.Infow("pgvector 存储已就绪")
 	}
 	initCancel()
+	knowledgeVectorCommandHandler := knowledge.NewVectorIndexCommandHandler(client, ragService)
+	if err := commandRegistry.Register(commandbus.CommandSyncKnowledgeVector, knowledgeVectorCommandHandler.Handle); err != nil {
+		sugar.Fatalw("Failed to register knowledge vector sync command handler", "error", err)
+	}
 
 	// 向量存储管理台：只读状态视图 + 连通性测试（配置本身仍由 VECTOR_STORE_CONFIG 部署级管理）
 
@@ -745,8 +751,11 @@ func NewApplication() *Application {
 	bpmnMonitoringHandler := bpmnHandler.NewMonitoringHandler(bpmnMonitoringService)
 	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
 	bpmnDeploymentService := service.NewBPMNDeploymentService(client)
-	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService)
+	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService, bpmnTemplateService)
 	bpmnAIGeneratorHandler := bpmnHandler.NewAIGeneratorHandler(bpmnAIGeneratorService)
+	bpmnTemplateCatalog := service.NewBPMNWorkflowTemplateCatalog(database.GetRawDB())
+	bpmnAIGeneratorService.SetTemplateCatalog(bpmnTemplateCatalog)
+	bpmnTemplateHandler := bpmnHandler.NewWorkflowTemplateHandler(bpmnTemplateCatalog)
 
 	// BPMN Lint Handler（流程校验真源：设计器校验按钮与 AI 生成后自动 Lint 共用）
 	bpmnLintHandler := bpmnHandler.NewLintHandler()
@@ -756,6 +765,7 @@ func NewApplication() *Application {
 		bpmnDashboardHandler,
 		bpmnMonitoringHandler,
 		bpmnAIGeneratorHandler,
+		bpmnTemplateHandler,
 		bpmnLintHandler,
 	)
 
@@ -1129,7 +1139,7 @@ func NewApplication() *Application {
 		KnowledgeHandler:            knowledgeHandler,
 		SLAHandler:                  slaHandler,
 		SLATemplateHandler:          slaTemplateHandler.NewHandler(slaTemplateService),
-		VectorStoreHandler:          vectorStoreHandler.NewHandler(database.GetRawDB(), sugar),
+		VectorStoreHandler:          vectorStoreHandler.NewHandler(service.NewVectorStore(database.GetRawDB()), sugar),
 		AIHandler:                   aiHandler, // Added AI domain handler
 		EmailIntakeHandler:          emailIntakeHandler,
 		CommonHandler:               commonHandler,

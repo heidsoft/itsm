@@ -409,12 +409,12 @@ type UpdateWorkflowRequest struct {
 // ListWorkflowsRequest 获取工作流列表请求
 type ListWorkflowsRequest struct {
 	Page      int    `json:"page" form:"page"`
-	PageSize  int    `json:"pageSize" form:"page_size"`
+	PageSize  int    `json:"pageSize" form:"pageSize"`
 	Type      string `json:"type" form:"type"`
-	IsActive  *bool  `json:"isActive" form:"is_active"`
-	TenantID  int    `json:"tenantId" form:"tenant_id"`
-	SortBy    string `json:"sortBy" form:"sort_by"`
-	SortOrder string `json:"sortOrder" form:"sort_order"`
+	IsActive  *bool  `json:"isActive" form:"isActive"`
+	TenantID  int    `json:"tenantId" form:"tenantId"`
+	SortBy    string `json:"sortBy" form:"sortBy"`
+	SortOrder string `json:"sortOrder" form:"sortOrder"`
 }
 
 // StartWorkflowRequest 启动工作流请求

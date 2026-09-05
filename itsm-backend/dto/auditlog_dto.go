@@ -8,6 +8,9 @@ type AuditLog struct {
 	CreatedAt   time.Time `json:"createdAt"`
 	TenantID    int       `json:"tenantId"`
 	UserID      int       `json:"userId"`
+	// UserName 后端 service 层 join user 表填充（name 优先，缺失回退 username）。
+	// 该字段变更属 DTO 增量，不影响审计中间件写入路径。
+	UserName    *string   `json:"userName,omitempty"`
 	RequestID   string    `json:"requestId"`
 	IP          string    `json:"ip"`
 	Resource    string    `json:"resource"`
@@ -21,14 +24,14 @@ type AuditLog struct {
 // ListAuditLogsRequest 审计日志查询请求参数
 type ListAuditLogsRequest struct {
 	Page       int    `form:"page"`
-	PageSize   int    `form:"page_size"`
-	UserID     *int   `form:"user_id"`
+	PageSize   int    `form:"pageSize"`
+	UserID     *int   `form:"userId"`
 	Resource   string `form:"resource"`
 	Action     string `form:"action"`
 	Method     string `form:"method"`
-	StatusCode *int   `form:"status_code"`
+	StatusCode *int   `form:"statusCode"`
 	Path       string `form:"path"`
-	RequestID  string `form:"request_id"`
+	RequestID  string `form:"requestId"`
 	From       string `form:"from"`
 	To         string `form:"to"`
 }

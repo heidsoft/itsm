@@ -49,7 +49,7 @@ export GOSUMDB=sum.golang.org.cn
 | `make backend-lint` | staticcheck v0.6.1（与 CI 同版本） |
 | `make backend-tidy` | `go mod tidy` |
 
-详见：[`docs/testing/go-toolchain.md`](../../docs/testing/go-toolchain.md)。
+详见：[`docs/testing/go-toolchain.md`](../docs/testing/go-toolchain.md)。
 
 ## Initialization
 

@@ -22,6 +22,16 @@ type MockEmbedder struct {
 	MockEmbed func(text string) ([]float32, error)
 }
 
+type promptCapturingProvider struct {
+	messages []LLMMessage
+	response string
+}
+
+func (p *promptCapturingProvider) Chat(_ context.Context, _ string, messages []LLMMessage) (string, error) {
+	p.messages = append([]LLMMessage(nil), messages...)
+	return p.response, nil
+}
+
 func (m *MockEmbedder) Embed(text string) ([]float32, error) {
 	if m.MockEmbed != nil {
 		return m.MockEmbed(text)
@@ -223,6 +233,35 @@ func TestRAG_Ask_NoResults(t *testing.T) {
 	results, err := svc.Ask(ctx, tenant.ID, "不存在的标题", 5)
 	require.NoError(t, err)
 	assert.Len(t, results, 0)
+}
+
+func TestRAG_AskWithLLM_NoKnowledgeMatchUsesProductAwareFallbackPrompt(t *testing.T) {
+	client := setupRAGTestClient(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	tenant, err := createTestTenant(ctx, client)
+	require.NoError(t, err)
+	rag := NewRAGService(client, nil, nil, zaptest.NewLogger(t).Sugar(), RAGConfig{UseKeyword: true})
+	provider := &promptCapturingProvider{response: "系统当前 AI 能力处于 Pilot。"}
+
+	answer, err := rag.AskWithLLM(ctx, tenant.ID, "当前系统AI能力有哪些", NewLLMGateway(provider, nil, nil, "test"), 5)
+	require.NoError(t, err)
+	assert.Equal(t, "系统当前 AI 能力处于 Pilot。", answer)
+	require.Len(t, provider.messages, 2)
+	prompt := provider.messages[0].Content
+	assert.Contains(t, prompt, "AI-Native ITSM 系统内置的 AI 助手")
+	assert.Contains(t, prompt, "不要因此要求用户说明“是哪一个系统/平台”")
+	assert.Contains(t, prompt, "工单智能分诊")
+	assert.Contains(t, prompt, "人工审批和审计")
+	assert.Contains(t, prompt, "仍属于后续建设方向")
+}
+
+func TestRAG_ProductAwareEmptyKnowledgeFallbackDescribesTheSystem(t *testing.T) {
+	fallback := productAwareEmptyKnowledgeFallback()
+	assert.Contains(t, fallback, "AI-Native ITSM 内置助手")
+	assert.Contains(t, fallback, "工单分诊与摘要")
+	assert.Contains(t, fallback, "模型、向量检索配置")
 }
 
 func TestRAG_Ask_NoResults_NoVectorConfigured(t *testing.T) {

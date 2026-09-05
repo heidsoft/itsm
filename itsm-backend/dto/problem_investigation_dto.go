@@ -71,8 +71,9 @@ const (
 
 // CreateProblemInvestigationRequest 创建问题调查请求
 type CreateProblemInvestigationRequest struct {
-	ProblemID               int        `json:"problemId" binding:"required"`
-	InvestigatorID          int        `json:"investigatorId" binding:"required"`
+	ProblemID int `json:"problemId" binding:"required"`
+	// InvestigatorID 可选：未指定时由 handler 默认为当前登录用户
+	InvestigatorID          int        `json:"investigatorId"`
 	EstimatedCompletionDate *time.Time `json:"estimatedCompletionDate"`
 	InvestigationSummary    string     `json:"investigationSummary"`
 }

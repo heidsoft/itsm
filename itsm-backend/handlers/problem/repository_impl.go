@@ -11,6 +11,7 @@ import (
 	entpredicate "itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/user"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -429,4 +430,45 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*ProblemSta
 		Closed:       closed,
 		HighPriority: high,
 	}, nil
+}
+
+// LoadUserNames 批量加载 user 显示名（id -> name）。当前租户范围，name 为空回退 username。
+// 失败返回部分映射 + error，由调用方决定是否降级（一般仅记日志不阻断主流程）。
+func (r *EntRepository) LoadUserNames(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	out := map[int]string{}
+	if len(ids) == 0 {
+		return out, nil
+	}
+	seen := map[int]struct{}{}
+	uniq := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniq = append(uniq, id)
+	}
+	if len(uniq) == 0 {
+		return out, nil
+	}
+	users, err := r.client.User.Query().
+		Where(user.TenantIDEQ(tenantID), user.IDIn(uniq...)).
+		Select(user.FieldID, user.FieldName, user.FieldUsername).
+		All(ctx)
+	if err != nil {
+		return out, err
+	}
+	for _, u := range users {
+		name := u.Name
+		if name == "" {
+			name = u.Username
+		}
+		if name != "" {
+			out[u.ID] = name
+		}
+	}
+	return out, nil
 }

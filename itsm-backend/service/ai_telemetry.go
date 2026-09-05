@@ -6,19 +6,44 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/ent"
+	"itsm-backend/ent/auditlog"
+
 	"go.uber.org/zap"
 )
 
+// AITelemetryService AI 遥测指标服务。
+//
+// 写路径（ObserveLLMCall / SaveFeedback）：调用 aiTelemetryRepository（封装层）。
+// 读路径（GetMetrics 中的 AI 调用次数）：
+//   - audit_logs 已经具备 Ent schema → 走 ent.AuditLog.Query()；
+//   - ai_feedbacks / ai_llm_calls 没有 Ent → 走 aiTelemetryRepository。
+//
+// 所有 SQL 集中在 ai_telemetry_repository.go，未来表结构变更只改一处。
+//
+// db / repo 双字段保留：repo 承载 5 个写/聚合方法（ObserveLLMCall/SaveFeedback/
+// AggregateFeedback/CountAIAuditLogs/AggregateLLMLatency），db 给 ai_evaluator.go
+// 的若干读路径（loadFeedbackSamples / loadPlatformStats / listFeedback / countFeedback）
+// 提供直连，避免在本次重构外引入额外 repository 拆解。
 type AITelemetryService struct {
-	db *sql.DB
+	db   *sql.DB
+	repo *aiTelemetryRepository
 	// skillRegistry 是可选的 SkillRegistry 引用（由 bootstrap 在服务组装阶段注入）。
 	// 设置后，Evaluate 会把 AIScenarioEval.Kind 映射到 Skill.code/Skill.name，
 	// 并额外生成 bySkill 维度的健康分；为 nil 时仍按旧"kind"维度聚合，向后兼容。
 	skillRegistry *SkillRegistry
+	// entClient 可选；为 nil 时 GetMetrics 的 audit_logs 聚合回退到 sql 计数。
+	entClient *ent.Client
 }
 
+// NewAITelemetryService 创建 AI 遥测服务。
 func NewAITelemetryService(db *sql.DB) *AITelemetryService {
-	return &AITelemetryService{db: db}
+	return &AITelemetryService{db: db, repo: newAITelemetryRepository(db)}
+}
+
+// SetEntClient 注入 Ent client，供 GetMetrics 中 audit_logs 聚合使用。
+func (s *AITelemetryService) SetEntClient(client *ent.Client) {
+	s.entClient = client
 }
 
 // SetSkillRegistry 注入 SkillRegistry，使 AI 评估报告能够按 Skill 维度聚合。
@@ -36,134 +61,78 @@ func (s *AITelemetryService) SetSkillRegistry(reg *SkillRegistry) {
 // tenant_id; latency metrics are platform-level, while tenant-scoped counters
 // keep coming from audit_logs / ai_feedbacks.
 type LLMObserver struct {
-	db     *sql.DB
+	repo   *aiTelemetryRepository
 	logger *zap.SugaredLogger
 }
 
+// NewLLMObserver 创建 LLM 观察者。
 func NewLLMObserver(db *sql.DB, logger *zap.SugaredLogger) *LLMObserver {
-	return &LLMObserver{db: db, logger: logger}
+	return &LLMObserver{repo: newAITelemetryRepository(db), logger: logger}
 }
 
 func (o *LLMObserver) Observe(provider string, model string, tokens int, latency time.Duration, err error) {
-	const insertSQL = `
-		INSERT INTO ai_llm_calls (provider, model, tokens, latency_ms, success)
-		VALUES ($1, $2, $3, $4, $5)
-	`
 	success := err == nil
-	if _, insertErr := o.db.Exec(insertSQL, provider, model, tokens, latency.Milliseconds(), success); insertErr != nil {
-		o.logger.Warnw("failed to record LLM call metric", "error", insertErr, "provider", provider)
+	if obsErr := o.repo.ObserveLLMCall(context.Background(), provider, model, tokens, latency.Milliseconds(), success); obsErr != nil {
+		safeLog(o.logger, "failed to record LLM call metric", "error", obsErr, "provider", provider)
 	}
 }
 
 // SaveFeedback saves user feedback on AI suggestions
 func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID int, reqID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string) error {
-	queryStr := `
-		INSERT INTO ai_feedbacks (tenant_id, user_id, request_id, kind, query, item_type, item_id, useful, score, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	`
-
-	var itemIDVal interface{}
-	if itemID != nil {
-		itemIDVal = *itemID
-	} else {
-		itemIDVal = nil
-	}
-
-	var scoreVal interface{}
-	if score != nil {
-		scoreVal = *score
-	} else {
-		scoreVal = nil
-	}
-
-	var notesVal interface{}
-	if notes != nil {
-		notesVal = *notes
-	} else {
-		notesVal = nil
-	}
-
-	_, err := s.db.ExecContext(ctx, queryStr, tenantID, userID, reqID, kind, query, itemType, itemIDVal, useful, scoreVal, notesVal)
-	return err
+	return s.repo.SaveFeedback(ctx, tenantID, userID, reqID, kind, query, itemType, itemID, useful, score, notes)
 }
 
 // GetMetrics retrieves AI usage metrics for a tenant
 func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (map[string]interface{}, error) {
 	metrics := make(map[string]interface{})
 
-	// Get total AI requests from audit_logs
-	var totalRequests int
-	query := `
-		SELECT COUNT(*) FROM audit_logs 
-		WHERE tenant_id = $1 AND action LIKE '%ai%' 
-		AND created_at >= NOW() - INTERVAL '1 day' * $2
-	`
-	err := s.db.QueryRowContext(ctx, query, tenantID, lookbackDays).Scan(&totalRequests)
+	totalRequests, err := s.countAIAuditLogs(ctx, tenantID, lookbackDays)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total requests: %w", err)
 	}
 	metrics["total_requests"] = totalRequests
 
-	// Get feedback metrics
-	var totalFeedback, usefulFeedback int
-	query = `
-		SELECT COUNT(*), COUNT(CASE WHEN useful THEN 1 END)
-		FROM ai_feedbacks 
-		WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '1 day' * $2
-	`
-	err = s.db.QueryRowContext(ctx, query, tenantID, lookbackDays).Scan(&totalFeedback, &usefulFeedback)
+	feedback, err := s.repo.AggregateFeedback(ctx, tenantID, lookbackDays)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get feedback metrics: %w", err)
+		return nil, err
 	}
-
-	metrics["total_feedback"] = totalFeedback
-	metrics["useful_feedback"] = usefulFeedback
-
-	if totalFeedback > 0 {
-		metrics["useful_rate"] = float64(usefulFeedback) / float64(totalFeedback)
+	metrics["total_feedback"] = feedback.TotalFeedback
+	metrics["useful_feedback"] = feedback.UsefulFeedback
+	if feedback.TotalFeedback > 0 {
+		metrics["useful_rate"] = float64(feedback.UsefulFeedback) / float64(feedback.TotalFeedback)
 	} else {
 		metrics["useful_rate"] = 0.0
 	}
-
-	// Get metrics by kind
-	query = `
-		SELECT kind, COUNT(*) 
-		FROM ai_feedbacks 
-		WHERE tenant_id = $1 AND created_at >= NOW() - INTERVAL '1 day' * $2
-		GROUP BY kind
-	`
-	rows, err := s.db.QueryContext(ctx, query, tenantID, lookbackDays)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get kind metrics: %w", err)
-	}
-	defer rows.Close()
-
-	kindMetrics := make(map[string]int)
-	for rows.Next() {
-		var kind string
-		var count int
-		if err := rows.Scan(&kind, &count); err != nil {
-			return nil, fmt.Errorf("failed to scan kind metrics: %w", err)
-		}
-		kindMetrics[kind] = count
-	}
-	metrics["by_kind"] = kindMetrics
+	metrics["by_kind"] = feedback.ByKind
 
 	// Average LLM latency from ai_llm_calls (platform-level, recorded by LLMObserver).
 	// Kept tenant-agnostic: the gateway is wired before any tenant context exists.
-	var avgLatencySeconds float64
-	var llmCallCount int
-	latencyQuery := `
-		SELECT COALESCE(AVG(latency_ms)::float / 1000.0, 0), COUNT(*)
-		FROM ai_llm_calls
-		WHERE created_at >= NOW() - INTERVAL '1 day' * $1
-	`
-	if err := s.db.QueryRowContext(ctx, latencyQuery, lookbackDays).Scan(&avgLatencySeconds, &llmCallCount); err != nil {
-		return nil, fmt.Errorf("failed to get latency metrics: %w", err)
+	latencyAgg, err := s.repo.AggregateLLMLatency(ctx, lookbackDays)
+	if err != nil {
+		return nil, err
 	}
-	metrics["avg_response_time_seconds"] = avgLatencySeconds
-	metrics["llm_call_count"] = llmCallCount
-	metrics["response_time_available"] = llmCallCount > 0
+	metrics["avg_response_time_seconds"] = latencyAgg.AvgLatencySeconds
+	metrics["llm_call_count"] = latencyAgg.CallCount
+	metrics["response_time_available"] = latencyAgg.CallCount > 0
 
 	return metrics, nil
+}
+
+// countAIAuditLogs 通过 Ent 在 audit_logs 中统计"近 lookbackDays 内、含 ai 动作"的条数。
+// 当未注入 entClient 时回退到 aiTelemetryRepository（仅在新旧 bootstrap 共存期）。
+func (s *AITelemetryService) countAIAuditLogs(ctx context.Context, tenantID, lookbackDays int) (int, error) {
+	if s.entClient != nil {
+		since := time.Now().AddDate(0, 0, -lookbackDays)
+		return s.entClient.AuditLog.Query().
+			Where(
+				auditlog.TenantIDEQ(tenantID),
+				auditlog.ActionContains("ai"),
+				auditlog.CreatedAtGTE(since),
+			).
+		Count(ctx)
+	}
+	if s.repo == nil {
+		return 0, fmt.Errorf("ai telemetry repository not initialised")
+	}
+	return s.repo.CountAIAuditLogs(ctx, tenantID, lookbackDays)
 }

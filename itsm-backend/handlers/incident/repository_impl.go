@@ -17,10 +17,19 @@ import (
 
 type EntRepository struct {
 	client *ent.Client
+	stats  *incidentStatsRepository
+	number *incidentNumberRepository
 }
 
 func NewEntRepository(client *ent.Client) *EntRepository {
-	return &EntRepository{client: client}
+	// 共享 *sql.DB：用于 stats 与 number 两个 PG 专用聚合/序列调用。
+	// 经由 database.GetRawDB() 取值，便于 bootstrap 不传第二个参数；
+	// 该 DB 仅在本仓库承担 PostgreSQL 序列与 FILTER 聚合表达。
+	return &EntRepository{
+		client: client,
+		stats:  newIncidentStatsRepository(database.GetRawDB()),
+		number: newIncidentNumberRepository(database.GetRawDB()),
+	}
 }
 
 // toDomain converts ent.Incident to domain Incident
@@ -279,58 +288,23 @@ func (r *EntRepository) CountByPeriod(ctx context.Context, tenantID int, start, 
 }
 
 // GetStats 单次聚合查询返回全量指标。
-// 租户隔离：所有 SQL 均绑定 tenantID = $1，避免跨租户泄露。
-// 指标说明：
-//   - total/open/critical/major/resolved: COUNT(*) FILTER 一次完成
-//   - avgResolutionTime: 已解决/已关闭事件的平均 (resolved_at - created_at) 分钟数；
-//     未解决事件排除；空集通过 COALESCE 返回 0 而非 NULL。
+// 已封装到 incidentStatsRepository：保留 PostgreSQL FILTER 聚合与 EXTRACT(EPOCH)
+// 语法以便单查询完成多指标统计，调用方不再接触 SQL。
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
-	stats := &IncidentStats{}
-
-	row := database.GetRawDB().QueryRowContext(ctx, `
-		SELECT
-		  COUNT(*) FILTER (WHERE TRUE) AS total,
-		  COUNT(*) FILTER (WHERE status IN ('open','in_progress')) AS open,
-		  COUNT(*) FILTER (WHERE priority = 'critical') AS critical,
-		  COUNT(*) FILTER (WHERE priority = 'high') AS major,
-		  COUNT(*) FILTER (WHERE status IN ('resolved','closed')) AS resolved,
-		  COALESCE(AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 60.0)
-		           FILTER (WHERE status IN ('resolved','closed') AND resolved_at IS NOT NULL),
-		           0)::int AS avg_minutes
-		FROM incidents
-		WHERE tenant_id = $1 AND deleted_at IS NULL
-	`, tenantID)
-
-	if err := row.Scan(
-		&stats.TotalIncidents,
-		&stats.OpenIncidents,
-		&stats.CriticalIncidents,
-		&stats.MajorIncidents,
-		&stats.ResolvedIncidents,
-		&stats.AvgResolutionTime,
-	); err != nil {
-		return nil, fmt.Errorf("scan incident stats: %w", err)
+	if r.stats == nil {
+		return nil, fmt.Errorf("incident stats repository not initialised")
 	}
-
-	return stats, nil
+	return r.stats.GetStats(ctx, tenantID)
 }
 
 func (r *EntRepository) GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error) {
-	// P0-2 修复：编号改为由数据库序列 incident_number_seq 原子生成，彻底消除
-	// 「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。
-	//   1) 序列单调递增且全局唯一，后缀永不重复，跨月也不会与历史编号碰撞；
-	//   2) 前缀 INC-YYYYMM 使用调用方传入的本地年月（service.go 用 time.Now()
-	//      本地时区），与统计窗口口径一致，不再出现 UTC 空窗 INC-...-000001；
-	//   3) (tenant_id, incident_number) 唯一索引作为最后兜底，即便异常也不会
-	//      落库重复编号。
-	// 序列在 database.InitDatabase 中创建并播种为「历史最大后缀+1」。
-	var seq int64
-	if err := database.GetRawDB().QueryRowContext(ctx,
-		"SELECT nextval('incident_number_seq')",
-	).Scan(&seq); err != nil {
-		return "", fmt.Errorf("generate incident number: %w", err)
+	// tenantID 入参保留以兼容 Repository 接口契约，但编号生成不依赖租户：
+	// incident_number_seq 是全局序列，租户隔离由
+	//   (tenant_id, incident_number) 唯一索引 与 service 层校验 兜底。
+	if r.number == nil {
+		return "", fmt.Errorf("incident number repository not initialised")
 	}
-	return fmt.Sprintf("INC-%04d%02d-%06d", year, month, seq), nil
+	return r.number.Generate(ctx, year, month)
 }
 
 func (r *EntRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {

@@ -99,6 +99,21 @@ var RegisteredMigrations = []Migration{
 		Description: "Backfill configuration_items.ci_number (CI-YYYYMM-NNNNNN) for rows created before the natural key was introduced; AI Agent uses ci_number to locate CIs stably",
 		RollbackSQL: "",
 	},
+	{
+		Version:     "019_align_rls_tenant_variable",
+		Description: "Align legacy RLS policies with the runtime app.current_tenant session variable",
+		RollbackSQL: "",
+	},
+	{
+		Version:     "020_add_ai_vector_observability_storage",
+		Description: "Create the pgvector and AI observability storage formerly created at application startup",
+		RollbackSQL: "",
+	},
+	{
+		Version:     "021_add_workflow_template_catalog",
+		Description: "Add tenant-scoped, versioned AI business workflow template catalog",
+		RollbackSQL: "DROP TABLE IF EXISTS workflow_templates;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -185,6 +200,77 @@ CREATE TABLE IF NOT EXISTS change_approvals (
 CREATE INDEX IF NOT EXISTS idx_change_approvals_change ON change_approvals(change_id);
 CREATE INDEX IF NOT EXISTS idx_change_approvals_approver ON change_approvals(approver_id);
 CREATE INDEX IF NOT EXISTS idx_change_approvals_status ON change_approvals(status);
+`
+	case "020_add_ai_vector_observability_storage":
+		return `
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS vectors (
+    id BIGSERIAL PRIMARY KEY,
+    tenant_id INT NOT NULL,
+    object_type TEXT NOT NULL,
+    object_id INT NOT NULL,
+    embedding VECTOR(1536) NOT NULL,
+    content TEXT,
+    source TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (tenant_id, object_type, object_id)
+);
+CREATE INDEX IF NOT EXISTS vectors_embedding_idx
+    ON vectors USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+CREATE TABLE IF NOT EXISTS ai_feedbacks (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    tenant_id INT NOT NULL,
+    user_id INT NOT NULL,
+    request_id TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    query TEXT,
+    item_type TEXT,
+    item_id INT,
+    useful BOOLEAN NOT NULL,
+    score INT,
+    notes TEXT
+);
+CREATE INDEX IF NOT EXISTS ai_feedbacks_tenant_idx ON ai_feedbacks(tenant_id);
+CREATE INDEX IF NOT EXISTS ai_feedbacks_created_idx ON ai_feedbacks(created_at);
+
+CREATE TABLE IF NOT EXISTS ai_llm_calls (
+    id BIGSERIAL PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    provider TEXT NOT NULL DEFAULT '',
+    model TEXT NOT NULL DEFAULT '',
+    tokens INT NOT NULL DEFAULT 0,
+    latency_ms INT NOT NULL DEFAULT 0,
+    success BOOLEAN NOT NULL DEFAULT TRUE
+);
+CREATE INDEX IF NOT EXISTS ai_llm_calls_created_idx ON ai_llm_calls(created_at);
+`
+	case "021_add_workflow_template_catalog":
+		return `
+CREATE TABLE IF NOT EXISTS workflow_templates (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(120) NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    domain VARCHAR(40) NOT NULL DEFAULT 'it',
+    form_schema JSONB NOT NULL DEFAULT '{}'::jsonb,
+    approval_policy JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ontology_bindings JSONB NOT NULL DEFAULT '{}'::jsonb,
+    sla_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+    bpmn_xml JSONB NOT NULL DEFAULT 'null'::jsonb,
+    version VARCHAR(40) NOT NULL DEFAULT '1.0.0',
+    status VARCHAR(20) NOT NULL DEFAULT 'draft',
+    is_public BOOLEAN NOT NULL DEFAULT FALSE,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id),
+    created_by INTEGER NOT NULL REFERENCES users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (tenant_id, key, version)
+);
+CREATE INDEX IF NOT EXISTS idx_workflow_templates_domain ON workflow_templates(tenant_id, domain, status);
+CREATE INDEX IF NOT EXISTS idx_workflow_templates_public ON workflow_templates(tenant_id, is_public);
 `
 	case "007_add_change_execution_tables":
 		return `
@@ -566,6 +652,23 @@ CREATE POLICY tenant_isolation_ticket_views ON ticket_views
 
 COMMENT ON FUNCTION get_current_tenant_id() IS
     'Returns the current tenant ID from session settings, used by RLS policies for tenant isolation';
+`
+	case "019_align_rls_tenant_variable":
+		return `
+-- Migration 009 policies call this helper, while the production RLS driver
+-- injects app.current_tenant. Keep the existing policies and forward-fix the
+-- helper so already deployed databases retain an immutable migration history.
+CREATE OR REPLACE FUNCTION get_current_tenant_id() RETURNS INTEGER AS $$
+BEGIN
+    RETURN NULLIF(current_setting('app.current_tenant', true), '')::INTEGER;
+EXCEPTION
+    WHEN invalid_text_representation THEN
+        RETURN NULL;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+COMMENT ON FUNCTION get_current_tenant_id() IS
+    'Returns app.current_tenant for tenant RLS; missing/invalid context fails closed';
 `
 	case "010_add_ticket_types":
 		return `

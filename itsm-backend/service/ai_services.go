@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"strconv"
 )
 
@@ -16,28 +15,20 @@ func SimilarIncidents(ctx context.Context, vectors *VectorStore, embedder Embedd
 		// Embedding failed
 		return []map[string]any{}, nil
 	}
-	rows, err := vectors.SearchTopKByType(ctx, tenantID, "incident", vec, k)
+	vectorResults, err := vectors.SearchTopKByTypeResults(ctx, tenantID, "incident", vec, k)
 	if err != nil {
 		// 如果向量搜索失败（例如pgvector扩展未安装），降级为空结果
 		return []map[string]any{}, nil
 	}
-	defer rows.Close()
 	out := []map[string]any{}
-	for rows.Next() {
-		var objType string
-		var objID int
-		var content, source sql.NullString
-		var distance float64
-		if err := rows.Scan(&objType, &objID, &content, &source, &distance); err != nil {
-			continue
-		}
+	for _, result := range vectorResults {
 		out = append(out, map[string]any{
-			"id":        objID,
-			"snippet":   content.String,
-			"ref":       source.String,
-			"score":     1.0 - distance,
-			"object":    objType,
-			"object_id": strconv.Itoa(objID),
+			"id":        result.ObjectID,
+			"snippet":   result.Content,
+			"ref":       result.Source,
+			"score":     1.0 - result.Distance,
+			"object":    result.ObjectType,
+			"object_id": strconv.Itoa(result.ObjectID),
 		})
 	}
 	return out, nil

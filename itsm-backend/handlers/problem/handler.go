@@ -22,6 +22,10 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
+	return h.toDTOWithUsers(p, nil)
+}
+
+func (h *Handler) toDTOWithUsers(p *Problem, userMap map[int]string) *dto.ProblemResponse {
 	if p == nil {
 		return nil
 	}
@@ -45,6 +49,20 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 	}
 	if p.AssigneeID != nil {
 		resp.AssigneeID = p.AssigneeID
+	}
+	if userMap != nil {
+		if p.CreatedBy > 0 {
+			if name, ok := userMap[p.CreatedBy]; ok && name != "" {
+				n := name
+				resp.CreatedByName = &n
+			}
+		}
+		if p.AssigneeID != nil && *p.AssigneeID > 0 {
+			if name, ok := userMap[*p.AssigneeID]; ok && name != "" {
+				n := name
+				resp.AssigneeName = &n
+			}
+		}
 	}
 
 	// 映射关联数据
@@ -86,6 +104,28 @@ func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
 	}
 
 	return &resp
+}
+
+// problemUserIDs 收集一组 problem 的 createdBy/assignee id 去重集合，用于批量查 name。
+func problemUserIDs(problems []*Problem) []int {
+	seen := map[int]struct{}{}
+	out := make([]int, 0)
+	for _, p := range problems {
+		if p == nil {
+			continue
+		}
+		if _, ok := seen[p.CreatedBy]; !ok && p.CreatedBy > 0 {
+			seen[p.CreatedBy] = struct{}{}
+			out = append(out, p.CreatedBy)
+		}
+		if p.AssigneeID != nil {
+			if _, ok := seen[*p.AssigneeID]; !ok && *p.AssigneeID > 0 {
+				seen[*p.AssigneeID] = struct{}{}
+				out = append(out, *p.AssigneeID)
+			}
+		}
+	}
+	return out
 }
 
 // Create 问题管理-创建问题
@@ -134,7 +174,12 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(created))
+	ids := []int{created.CreatedBy}
+	if created.AssigneeID != nil {
+		ids = append(ids, *created.AssigneeID)
+	}
+	userMap := h.service.LoadUserNames(c.Request.Context(), tenantID, ids)
+	common.Success(c, h.toDTOWithUsers(created, userMap))
 }
 
 // Get 问题管理-获取问题详情
@@ -169,7 +214,12 @@ func (h *Handler) Get(c *gin.Context) {
 		}
 		return
 	}
-	common.Success(c, h.toDTO(p))
+	ids := []int{p.CreatedBy}
+	if p.AssigneeID != nil {
+		ids = append(ids, *p.AssigneeID)
+	}
+	userMap := h.service.LoadUserNames(c.Request.Context(), tenantID, ids)
+	common.Success(c, h.toDTOWithUsers(p, userMap))
 }
 
 // GetAssociations 获取问题的关联项
@@ -380,27 +430,13 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
+	// 批量加载创建人/处理人显示名，避免列表项只显示 ID。
+	userMap := h.service.LoadUserNames(c.Request.Context(), tenantID, problemUserIDs(list))
+
 	// Map to DTO response
 	dtoProblems := make([]*dto.ProblemResponse, 0, len(list))
 	for _, p := range list {
-		item := &dto.ProblemResponse{
-			ID:          p.ID,
-			Title:       p.Title,
-			Description: p.Description,
-			Status:      p.Status,
-			Priority:    p.Priority,
-			Category:    p.Category,
-			RootCause:   p.RootCause,
-			Impact:      p.Impact,
-			CreatedBy:   p.CreatedBy,
-			TenantID:    p.TenantID,
-			CreatedAt:   p.CreatedAt,
-			UpdatedAt:   p.UpdatedAt,
-		}
-		if p.AssigneeID != nil {
-			item.AssigneeID = p.AssigneeID
-		}
-		dtoProblems = append(dtoProblems, item)
+		dtoProblems = append(dtoProblems, h.toDTOWithUsers(p, userMap))
 	}
 
 	page, pageSize := req.Page, req.PageSize
@@ -482,7 +518,12 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(updated))
+	ids := []int{updated.CreatedBy}
+	if updated.AssigneeID != nil {
+		ids = append(ids, *updated.AssigneeID)
+	}
+	userMap := h.service.LoadUserNames(c.Request.Context(), tenantID, ids)
+	common.Success(c, h.toDTOWithUsers(updated, userMap))
 }
 
 // InvestigateProblem 问题管理-开始调查问题
@@ -629,7 +670,18 @@ func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err e
 		}
 		return
 	}
-	common.Success(c, h.toDTO(updated))
+	if updated == nil {
+		common.Success(c, (*dto.ProblemResponse)(nil))
+		return
+	}
+	tenantID, _ := c.Get("tenant_id")
+	tid, _ := tenantID.(int)
+	ids := []int{updated.CreatedBy}
+	if updated.AssigneeID != nil {
+		ids = append(ids, *updated.AssigneeID)
+	}
+	userMap := h.service.LoadUserNames(c.Request.Context(), tid, ids)
+	common.Success(c, h.toDTOWithUsers(updated, userMap))
 }
 
 // Delete 问题管理-删除问题

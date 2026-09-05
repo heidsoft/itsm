@@ -44,9 +44,9 @@ type CategoryRatingStats struct {
 
 // GetRatingStatsRequest 获取评分统计请求
 type GetRatingStatsRequest struct {
-	AssigneeID *int    `form:"assignee_id"` // 按处理人筛选
-	CategoryID *int    `form:"category_id"` // 按分类筛选
-	StartDate  *string `form:"start_date"`  // 开始日期
-	EndDate    *string `form:"end_date"`    // 结束日期
-	TenantID   int     `form:"tenant_id"`
+	AssigneeID *int    `form:"assigneeId"` // 按处理人筛选
+	CategoryID *int    `form:"categoryId"` // 按分类筛选
+	StartDate  *string `form:"startDate"`  // 开始日期
+	EndDate    *string `form:"endDate"`    // 结束日期
+	TenantID   int     `form:"tenantId"`
 }

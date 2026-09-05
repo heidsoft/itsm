@@ -2,7 +2,6 @@ package alert
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -12,6 +11,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
+	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,11 +27,11 @@ type Handler struct {
 }
 
 // NewHandler creates an alert ingestion handler.
-func NewHandler(registry *Registry, connectorManager *connector.Manager, db *sql.DB, envIsDevelopment bool) *Handler {
+func NewHandler(registry *Registry, connectorManager *connector.Manager, client *ent.Client, envIsDevelopment bool) *Handler {
 	if registry == nil {
 		registry = Default()
 	}
-	return &Handler{registry: registry, connectorManager: connectorManager, repository: newSQLAlertRepository(db), envIsDevelopment: envIsDevelopment}
+	return &Handler{registry: registry, connectorManager: connectorManager, repository: newEntAlertRepository(client), envIsDevelopment: envIsDevelopment}
 }
 
 // Ingest receives a monitoring webhook and normalizes it into StandardAlert.

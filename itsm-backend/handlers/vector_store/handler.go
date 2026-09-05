@@ -2,7 +2,6 @@ package vector_store
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"regexp"
@@ -12,6 +11,7 @@ import (
 	"itsm-backend/common"
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -19,13 +19,13 @@ import (
 
 // Handler 向量存储HTTP处理器
 type Handler struct {
-	db     *sql.DB
+	store  *service.VectorStore
 	logger *zap.SugaredLogger
 }
 
 // NewHandler creates a new vector store handler
-func NewHandler(db *sql.DB, logger *zap.SugaredLogger) *Handler {
-	return &Handler{db: db, logger: logger}
+func NewHandler(store *service.VectorStore, logger *zap.SugaredLogger) *Handler {
+	return &Handler{store: store, logger: logger}
 }
 
 // VectorStoreStatusResponse 向量存储状态响应（camelCase 契约）
@@ -153,12 +153,20 @@ func (h *Handler) GetStatus(c *gin.Context) {
 		resp.Message = fmt.Sprintf("%s 连接正常 (%dms)", cfg.Backend, latency.Milliseconds())
 	}
 
-	if h.db != nil {
-		countCtx, countCancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
-		defer countCancel()
-		var count int64
-		if err := h.db.QueryRowContext(countCtx, `SELECT COUNT(*) FROM vectors`).Scan(&count); err == nil {
-			resp.VectorCount = count
+	if h.store != nil {
+		tenantID, terr := middleware.GetTenantID(c)
+		if terr == nil && tenantID > 0 {
+			countCtx, countCancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+			defer countCancel()
+			if count, cerr := h.store.CountByTenant(countCtx, tenantID); cerr == nil {
+				resp.VectorCount = count
+			} else {
+				h.logger.Warnw("vector store tenant count failed",
+					"tenant_id", tenantID, "error_class", "vector_count")
+			}
+		} else if terr != nil {
+			h.logger.Warnw("vector store status missing tenant context",
+				"error_class", "tenant_required")
 		}
 	}
 

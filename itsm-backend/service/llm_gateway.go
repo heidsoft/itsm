@@ -147,6 +147,20 @@ func (g *LLMGateway) ChatStreamWithTools(ctx context.Context, model string, mess
 	return g.ChatStream(ctx, model, messages, callback)
 }
 
+// SupportsToolCalling reports whether the bound provider can declare tools and
+// return real tool_calls in the response. Callers (e.g. AI ChatStream) use this
+// to decide whether to inject tool-driven system prompt instructions: when the
+// provider returns false, telling the model "you must call tools" causes it to
+// fabricate text like "正在调用 list_tickets 工具..." without ever executing
+// anything, which is exactly the bug we are guarding against.
+func (g *LLMGateway) SupportsToolCalling() bool {
+	if g == nil || g.provider == nil {
+		return false
+	}
+	_, ok := g.provider.(ToolCallingStreamProvider)
+	return ok
+}
+
 // Simple implementations
 var ErrRateLimited = &RateLimitError{Message: "rate limited"}
 

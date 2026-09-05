@@ -24,8 +24,10 @@ type CreateKnownErrorRequest struct {
 	AffectedProducts []string `json:"affectedProducts"`
 	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
-	CreatedBy        int      `json:"createdBy" binding:"required"`
-	TenantID         int      `json:"tenantId" binding:"required"`
+	// CreatedBy/TenantID 由服务端从认证上下文推导（见 handlers/known_error），
+	// 不接受客户端自报身份，因此不得声明 binding:"required"。
+	CreatedBy int `json:"createdBy"`
+	TenantID  int `json:"tenantId"`
 }
 
 // Known Error severities
@@ -100,7 +102,7 @@ type KEDBResponse struct {
 // KEDBListRequest 列出已知错误请求
 type KEDBListRequest struct {
 	Page     int    `form:"page"`
-	PageSize int    `form:"page_size"`
+	PageSize int    `form:"pageSize"`
 	Status   string `form:"status"`
 	Category string `form:"category"`
 	Severity string `form:"severity"`

@@ -19,4 +19,7 @@ type Repository interface {
 	GetStats(ctx context.Context, tenantID int) (*ProblemStats, error)
 	AddAssociations(ctx context.Context, tenantID, problemID int, relatedType string, relatedIDs []int) error
 	RemoveAssociation(ctx context.Context, tenantID, problemID int, relatedType string, relatedID int) error
+	// LoadUserNames 批量加载 user 显示名（id -> name），用于在 ProblemResponse 中
+	// 返回 createdBy/assignee 的中文姓名。仅查询 name/username 字段，name 为空时回退 username。
+	LoadUserNames(ctx context.Context, tenantID int, ids []int) (map[int]string, error)
 }

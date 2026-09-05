@@ -106,6 +106,21 @@ func TestPostSchemaMigrationsStartsAtUnifiedVersion(t *testing.T) {
 	}
 }
 
+func TestRLSVariableAlignmentMigrationUsesRuntimeTenantVariable(t *testing.T) {
+	sql := GetMigrationSQL("019_align_rls_tenant_variable")
+	assert.Contains(t, sql, "current_setting('app.current_tenant', true)")
+	assert.NotContains(t, sql, "current_setting('app.current_tenant_id'")
+	assert.Contains(t, sql, "RETURN NULL")
+}
+
+func TestAIStorageMigrationOwnsVectorAndTelemetryDDL(t *testing.T) {
+	sql := GetMigrationSQL("020_add_ai_vector_observability_storage")
+	assert.Contains(t, sql, "CREATE EXTENSION IF NOT EXISTS vector")
+	assert.Contains(t, sql, "CREATE TABLE IF NOT EXISTS vectors")
+	assert.Contains(t, sql, "CREATE TABLE IF NOT EXISTS ai_feedbacks")
+	assert.Contains(t, sql, "CREATE TABLE IF NOT EXISTS ai_llm_calls")
+}
+
 func TestInitializationLedgerIsVersioned(t *testing.T) {
 	sql := GetMigrationSQL("008_add_initialization_ledger")
 	assert.NotEmpty(t, sql)

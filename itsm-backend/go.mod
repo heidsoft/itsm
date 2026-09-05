@@ -9,6 +9,7 @@ replace itsm-backend => ./
 
 require (
 	entgo.io/ent v0.14.6
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ThreeDotsLabs/watermill v1.5.2
 	github.com/ThreeDotsLabs/watermill-redisstream v1.4.5
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.2.2
@@ -134,6 +135,7 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect

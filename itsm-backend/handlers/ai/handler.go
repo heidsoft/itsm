@@ -142,6 +142,10 @@ func (h *Handler) Chat(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
+	if tenantID <= 0 || userID <= 0 || role == "" {
+		common.AuthFailed(c, "缺少有效身份上下文")
+		return
+	}
 
 	// 注入知识访问者身份：RAG 检索据此做分类级可见性过滤（L0 权限边界）。
 	// 不注入则按匿名处理，已纳管的受限分类一律不可见（fail-closed）。
@@ -248,6 +252,10 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
+	if c.GetInt("user_id") <= 0 || c.GetString("role") == "" {
+		common.AuthFailed(c, "缺少有效身份上下文")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -733,7 +741,7 @@ func (h *Handler) CreateTicketByAI(c *gin.Context) {
 		common.FailWithErr(c, err, "AI ticket creation failed")
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	common.Success(c, result)
 }
 
 // GetToolInvocation handles GET /api/v1/agent/tools/:id

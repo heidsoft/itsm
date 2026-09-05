@@ -180,27 +180,27 @@ type MSPReportListResponse[T any] struct {
 // MSPAllocationQueryParam MSP 分配查询参数
 type MSPAllocationQueryParam struct {
 	Page              int    `json:"page,omitempty" form:"page"`
-	PageSize          int    `json:"pageSize,omitempty" form:"page_size"`
-	MSPUserID         int    `json:"mspUserId,omitempty" form:"msp_user_id"`
-	CustomerTenantID  int    `json:"customerTenantId,omitempty" form:"customer_tenant_id"`
+	PageSize          int    `json:"pageSize,omitempty" form:"pageSize"`
+	MSPUserID         int    `json:"mspUserId,omitempty" form:"mspUserId"`
+	CustomerTenantID  int    `json:"customerTenantId,omitempty" form:"customerTenantId"`
 	Role              string `json:"role,omitempty" form:"role"`
-	IncludeDeassigned bool   `json:"includeDeassigned,omitempty" form:"include_deassigned"`
+	IncludeDeassigned bool   `json:"includeDeassigned,omitempty" form:"includeDeassigned"`
 }
 
 // MSPTicketQueryParam MSP 工单查询参数
 type MSPTicketQueryParam struct {
 	Page             int    `json:"page,omitempty" form:"page"`
-	PageSize         int    `json:"pageSize,omitempty" form:"page_size"`
-	CustomerTenantID int    `json:"customerTenantId,omitempty" form:"customer_tenant_id" binding:"required"`
+	PageSize         int    `json:"pageSize,omitempty" form:"pageSize"`
+	CustomerTenantID int    `json:"customerTenantId,omitempty" form:"customerTenantId" binding:"required"`
 	Status           string `json:"status,omitempty" form:"status"`
-	AssignedToMSP    bool   `json:"assignedToMsp,omitempty" form:"assigned_to_msp"`
-	ManagedByUserID  int    `json:"managedByUserId,omitempty" form:"managed_by_user_id"`
+	AssignedToMSP    bool   `json:"assignedToMsp,omitempty" form:"assignedToMsp"`
+	ManagedByUserID  int    `json:"managedByUserId,omitempty" form:"managedByUserId"`
 }
 
 // MSPReportQueryParam MSP 报表查询参数
 type MSPReportQueryParam struct {
-	StartDate        string `json:"startDate" form:"start_date" binding:"required"`
-	EndDate          string `json:"endDate" form:"end_date" binding:"required"`
-	CustomerTenantID *int   `json:"customerTenantId,omitempty" form:"customer_tenant_id"`
-	MSPUserID        *int   `json:"mspUserId,omitempty" form:"msp_user_id"`
+	StartDate        string `json:"startDate" form:"startDate" binding:"required"`
+	EndDate          string `json:"endDate" form:"endDate" binding:"required"`
+	CustomerTenantID *int   `json:"customerTenantId,omitempty" form:"customerTenantId"`
+	MSPUserID        *int   `json:"mspUserId,omitempty" form:"mspUserId"`
 }

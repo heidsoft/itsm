@@ -14,6 +14,7 @@ type Handler struct {
 	dashboard      *DashboardHandler
 	monitoring     *MonitoringHandler
 	aiGenerator    *AIGeneratorHandler
+	template       *WorkflowTemplateHandler
 	lint           *LintHandler
 }
 
@@ -23,6 +24,7 @@ func NewHandler(
 	dashboard *DashboardHandler,
 	monitoring *MonitoringHandler,
 	aiGenerator *AIGeneratorHandler,
+	template *WorkflowTemplateHandler,
 	lint *LintHandler,
 ) *Handler {
 	return &Handler{
@@ -31,6 +33,7 @@ func NewHandler(
 		dashboard:      dashboard,
 		monitoring:     monitoring,
 		aiGenerator:    aiGenerator,
+		template:       template,
 		lint:           lint,
 	}
 }
@@ -53,6 +56,9 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 	if h.aiGenerator != nil {
 		h.aiGenerator.RegisterRoutes(r)
+	}
+	if h.template != nil {
+		h.template.RegisterRoutes(r)
 	}
 	if h.lint != nil {
 		h.lint.RegisterRoutes(r)

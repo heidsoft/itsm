@@ -1518,6 +1518,10 @@ type UpdateProcessDefinitionRequest struct {
 	BPMNXML          string                 `json:"bpmnXml"`
 	ProcessVariables map[string]interface{} `json:"processVariables"`
 	IsActive         *bool                  `json:"isActive"`
+	// CandidateDefinition is the AI-generated business contract. It is kept
+	// alongside the BPMN draft so publishing can enforce the same safety gate
+	// after a human edits the diagram.
+	CandidateDefinition map[string]interface{} `json:"candidateDefinition"`
 }
 
 type ListProcessDefinitionsRequest struct {
@@ -1848,6 +1852,9 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	if _, err = NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
 		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
 	}
+	if err := validateCandidateDefinition(req.CandidateDefinition); err != nil {
+		return nil, fmt.Errorf("候选流程策略校验失败: %w", err)
+	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("开始发布事务失败: %w", err)
@@ -1886,6 +1893,47 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 		return nil, fmt.Errorf("提交发布事务失败: %w", err)
 	}
 	return published, nil
+}
+
+// validateCandidateDefinition is deliberately deterministic. AI output is
+// advisory; publishing requires typed form fields and unambiguous approval
+// rules, while an omitted candidate remains valid for legacy BPMN definitions.
+func validateCandidateDefinition(candidate map[string]interface{}) error {
+	if len(candidate) == 0 {
+		return nil
+	}
+	for _, section := range []string{"domain", "formSchema", "approvalPolicy", "ontologyBindings", "slaConfig"} {
+		if _, ok := candidate[section]; !ok {
+			return fmt.Errorf("缺少 %s", section)
+		}
+	}
+	form, ok := candidate["formSchema"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("formSchema 格式错误")
+	}
+	fields, ok := form["fields"].([]interface{})
+	if !ok || len(fields) == 0 {
+		return fmt.Errorf("formSchema.fields 不能为空")
+	}
+	for i, raw := range fields {
+		f, ok := raw.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("字段 %d 格式错误", i)
+		}
+		if strings.TrimSpace(fmt.Sprint(f["name"])) == "" || strings.TrimSpace(fmt.Sprint(f["type"])) == "" {
+			return fmt.Errorf("字段 %d 缺少 name/type", i)
+		}
+	}
+	policy, ok := candidate["approvalPolicy"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("approvalPolicy 格式错误")
+	}
+	if rules, exists := policy["rules"]; exists {
+		if _, ok := rules.([]interface{}); !ok {
+			return fmt.Errorf("approvalPolicy.rules 格式错误")
+		}
+	}
+	return nil
 }
 
 func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Context, key string, version string) error {

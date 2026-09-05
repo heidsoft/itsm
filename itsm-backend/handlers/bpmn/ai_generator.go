@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 )
 
@@ -37,12 +38,25 @@ func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 		common.Fail(ctx, 1001, "参数错误: "+err.Error())
 		return
 	}
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		return
+	}
+	req.TenantID = tenantID
 
 	autoDeploy := ctx.Query("autoDeploy") == "true"
 
-	resp, err := c.aiGeneratorService.GenerateBPMN(ctx, &req, autoDeploy)
+	resp, err := c.aiGeneratorService.GenerateBPMN(ctx.Request.Context(), &req, autoDeploy)
 	if err != nil {
-		common.Fail(ctx, 5001, "生成BPMN失败: "+err.Error())
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流生成服务暂不可用")
+		return
+	}
+	// 防御：service 返 nil（边界场景，理论上不应该）会让响应 data 为 null、
+	// 前端访问 null.bpmnXml 报错。这里直接以 5003 返回，避免前端出现
+	// "Cannot read properties of null (reading 'bpmnXml')"。
+	if resp == nil || resp.BPMNXML == "" {
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流生成服务暂不可用")
 		return
 	}
 
@@ -66,10 +80,14 @@ func (c *AIGeneratorHandler) PreviewBPMN(ctx *gin.Context) {
 		common.Fail(ctx, 1001, "参数错误: "+err.Error())
 		return
 	}
+	if _, err := middleware.GetTenantID(ctx); err != nil {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		return
+	}
 
-	resp, err := c.aiGeneratorService.PreviewBPMN(ctx, &req)
+	resp, err := c.aiGeneratorService.PreviewBPMN(ctx.Request.Context(), &req)
 	if err != nil {
-		common.Fail(ctx, 5001, "预览流程失败: "+err.Error())
+		common.Fail(ctx, common.ServiceUnavailableCode, "AI工作流预览服务暂不可用")
 		return
 	}
 
@@ -95,11 +113,16 @@ func (c *AIGeneratorHandler) GetTemplateSuggestions(ctx *gin.Context) {
 		return
 	}
 
-	_ = ctx.Query("processType")
-
-	// 这里可以实现基于AI的模板推荐逻辑
-	// 暂时返回空结果
-	suggestions := []interface{}{}
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil {
+		common.AuthFailed(ctx, "未授权访问：缺少有效租户上下文")
+		return
+	}
+	suggestions, err := c.aiGeneratorService.SuggestTemplates(ctx.Request.Context(), tenantID, keyword, ctx.Query("processType"))
+	if err != nil {
+		common.Fail(ctx, common.ServiceUnavailableCode, "工作流模板目录暂不可用")
+		return
+	}
 
 	common.Success(ctx, suggestions)
 }
@@ -109,10 +132,10 @@ func (c *AIGeneratorHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmnAI := r.Group("/bpmn/ai")
 	{
 		// 生成BPMN流程
-		bpmnAI.POST("/generate", c.GenerateBPMN)
+		bpmnAI.POST("/generate", middleware.RequirePermission("workflow", "create"), c.GenerateBPMN)
 		// 预览流程结构
-		bpmnAI.POST("/preview", c.PreviewBPMN)
+		bpmnAI.POST("/preview", middleware.RequirePermission("workflow", "read"), c.PreviewBPMN)
 		// 获取模板建议
-		bpmnAI.GET("/templates/suggestions", c.GetTemplateSuggestions)
+		bpmnAI.GET("/templates/suggestions", middleware.RequirePermission("workflow", "read"), c.GetTemplateSuggestions)
 	}
 }

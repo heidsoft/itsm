@@ -20,14 +20,24 @@ import (
 )
 
 type EntRepository struct {
-	client *ent.Client
-	db     *sql.DB
+	client          *ent.Client
+	db              *sql.DB
+	stats           *statsRepository
+	approvalRecords *changeApprovalRecordRepository
+	approvalChains  *changeApprovalChainRepository
+	riskAssessments *changeRiskAssessmentRepository
+	statusTx        *changeStatusTxRepository
 }
 
 func NewEntRepository(client *ent.Client, db *sql.DB) *EntRepository {
 	return &EntRepository{
-		client: client,
-		db:     db,
+		client:          client,
+		db:              db,
+		stats:           newStatsRepository(client),
+		approvalRecords: newChangeApprovalRecordRepository(db),
+		approvalChains:  newChangeApprovalChainRepository(db),
+		riskAssessments: newChangeRiskAssessmentRepository(db),
+		statusTx:        newChangeStatusTxRepository(),
 	}
 }
 
@@ -330,85 +340,18 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 }
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
-	stats := &Stats{}
-
-	// Total
-	total, err := r.client.Change.Query().Where(change.TenantID(tenantID)).Count(ctx)
-	if err != nil {
-		return nil, err
+	if r.stats == nil {
+		return nil, fmt.Errorf("change stats repository not initialised")
 	}
-	stats.Total = total
-
-	// Single GROUP BY query instead of 11 sequential COUNT queries
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT status, COUNT(*) FROM changes
-		WHERE tenant_id = $1
-		GROUP BY status
-	`, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var status string
-		var count int
-		if err := rows.Scan(&status, &count); err != nil {
-			return nil, err
-		}
-		switch status {
-		case "draft":
-			stats.Draft = count
-		case "pending":
-			stats.Pending += count
-		case "pending_review":
-			// pending_review is a seed-data alias for pending (changes awaiting approval)
-			stats.Pending += count
-		case "approved":
-			stats.Approved = count
-		case "scheduled":
-			stats.Scheduled = count
-		case "in_progress":
-			stats.InProgress = count
-		case "completed":
-			stats.Completed = count
-		case "failed":
-			stats.Failed = count
-		case "rolled_back":
-			stats.RolledBack = count
-		case "rejected":
-			stats.Rejected = count
-		case "cancelled":
-			stats.Cancelled = count
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	// InProgress reflects changes actively being implemented (status='in_progress').
-	// Scheduled is reported separately so the frontend can distinguish "已排期" from "实施中".
-	// (The previous implementation summed Scheduled + Implementing, but Implementing was
-	// never written anywhere — see canonical statuses in dto.ChangeStatus and the
-	// canonical change status definitions.)
-
-	return stats, nil
+	return r.stats.GetStats(ctx, tenantID)
 }
 
-// Approval Records (Raw SQL)
+// Approval Records —— 已封装到 changeApprovalRecordRepository
 func (r *EntRepository) CreateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
-	query := `
-		INSERT INTO change_approvals (change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, created_at
-	`
-	now := time.Now()
-	err := r.db.QueryRowContext(ctx, query, rec.ChangeID, rec.TenantID, rec.ApproverID, rec.Status, rec.Comment, now, now).
-		Scan(&rec.ID, &rec.CreatedAt)
-	if err != nil {
-		return nil, err
+	if r.approvalRecords == nil {
+		return nil, fmt.Errorf("change approval record repository not initialised")
 	}
-	return rec, nil
+	return r.approvalRecords.Create(ctx, rec)
 }
 
 func (r *EntRepository) SubmitForApproval(
@@ -422,6 +365,9 @@ func (r *EntRepository) SubmitForApproval(
 
 // SubmitForApprovalWithWorkflow 在同一底层数据库事务内推进 BPMN 并提交变更审批。
 // workflow 收到的 Ent client 绑定到当前 sql.Tx，禁止在回调内自行提交事务。
+//
+// 拆解：变更状态推进 + 审批记录/审批链插入 + 通知 outbox 都委托到对应 repository，
+// 事务边界仍由本函数独占管理（*sql.Tx），repository 只负责"对表做正确的事"。
 func (r *EntRepository) SubmitForApprovalWithWorkflow(
 	ctx context.Context,
 	changeID, tenantID int,
@@ -457,47 +403,46 @@ func (r *EntRepository) SubmitForApprovalWithWorkflow(
 		}
 	}
 
-	result, err := tx.ExecContext(ctx,
-		`UPDATE changes SET status = 'pending', updated_at = $1
-		 WHERE id = $2 AND tenant_id = $3 AND status = 'draft'`,
-		time.Now(), changeID, tenantID)
+	// 1) 把变更推进到 pending。条件 UPDATE 保证幂等：
+	//    只有 status='draft' 时才能推进，避免覆盖别人已经提交/批准的状态。
+	if r.statusTx == nil {
+		return fmt.Errorf("change status tx repository not initialised")
+	}
+	promoted, err := r.statusTx.PromoteDraftToPending(ctx, tx, changeID, tenantID, time.Now())
 	if err != nil {
 		return err
 	}
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if affected != 1 {
+	if !promoted {
 		return fmt.Errorf("change is not an editable draft")
 	}
 
+	// 2) 写审批记录与审批链（按 (level, approver) 维度展开），并发送 in_app 通知 outbox。
 	now := time.Now()
 	for _, lvl := range plan {
-		approvalType := lvl.ApprovalType
-		if approvalType == "" {
-			approvalType = "serial"
-		}
 		seen := make(map[int]struct{}, len(lvl.ApproverIDs))
 		for _, approverID := range lvl.ApproverIDs {
 			if _, ok := seen[approverID]; ok {
 				continue
 			}
 			seen[approverID] = struct{}{}
-			if _, err := tx.ExecContext(ctx, `
-				INSERT INTO change_approvals
-					(change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
-				VALUES ($1, $2, $3, 'pending', $4, $5, $5)
-			`, changeID, tenantID, approverID, comment, now); err != nil {
+
+			if r.approvalRecords == nil {
+				return fmt.Errorf("change approval record repository not initialised")
+			}
+			if err := r.approvalRecords.CreateTx(ctx, tx, changeID, tenantID, approverID, comment, now); err != nil {
 				return err
 			}
-			if _, err := tx.ExecContext(ctx, `
-				INSERT INTO change_approval_chains
-					(change_id, tenant_id, level, approver_id, role, status, is_required, approval_type, threshold, created_at)
-				VALUES ($1, $2, $3, $4, 'approver', 'pending', $5, $6, $7, $8)
-			`, changeID, tenantID, lvl.Level, approverID, lvl.Required, approvalType, lvl.Threshold, now); err != nil {
+
+			if r.approvalChains == nil {
+				return fmt.Errorf("change approval chain repository not initialised")
+			}
+			if err := r.approvalChains.InsertTx(ctx, tx,
+				changeID, tenantID, lvl.Level, approverID, "approver",
+				lvl.Required, lvl.ApprovalType, lvl.Threshold, now,
+			); err != nil {
 				return err
 			}
+
 			content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级）", changeID, lvl.Level)
 			occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, lvl.Level, approverID)
 			digest := sha256.Sum256([]byte(fmt.Sprintf("%d|change|%d|%d|%s|in_app|%s", tenantID, changeID, approverID, "change_approval_required", occurrenceKey)))
@@ -553,79 +498,24 @@ func (d *nopTxDriver) Close() error { return nil }
 func (d *nopTxDriver) Dialect() string { return d.drv.Dialect() }
 
 func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
-	// C-5 修复：必须加 AND status = 'pending' 条件，防止已驳回/已批准的审批被重复修改
-	// 校验 RowsAffected == 1，否则返回 409 冲突，避免幂等问题
-	query := `
-		UPDATE change_approvals 
-		SET status = $1, comment = $2, approved_at = $3, updated_at = $4
-		WHERE id = $5 AND tenant_id = $6 AND status = 'pending'
-		RETURNING id, change_id, tenant_id, approver_id, status, comment, approved_at, created_at
-	`
-	var approvedAt sql.NullTime
-	now := time.Now()
-	err := r.db.QueryRowContext(ctx, query, rec.Status, rec.Comment, now, now, rec.ID, rec.TenantID).
-		Scan(&rec.ID, &rec.ChangeID, &rec.TenantID, &rec.ApproverID, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// 没有匹配的 pending 记录：要么记录不存在，要么已被处理过（已批准/已驳回）
-			// 先读一下当前记录状态，返回更精确的错误
-			var curStatus string
-			_ = r.db.QueryRowContext(ctx, `SELECT status FROM change_approvals WHERE id = $1 AND tenant_id = $2`, rec.ID, rec.TenantID).Scan(&curStatus)
-			if curStatus != "" {
-				return nil, fmt.Errorf("审批记录已处理（当前状态=%s），不可重复审批", curStatus)
-			}
-			return nil, fmt.Errorf("审批记录不存在或跨租户")
-		}
-		return nil, err
+	if r.approvalRecords == nil {
+		return nil, fmt.Errorf("change approval record repository not initialised")
 	}
-	if approvedAt.Valid {
-		rec.ApprovedAt = &approvedAt.Time
-	}
-	return rec, nil
+	return r.approvalRecords.Update(ctx, rec)
 }
 
 func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
-	// P1 修复：同时派生该审批人在审批链中所属层级（levels），供 service 层按
-	// (approverID, level) 双重匹配，避免跨层互相串。
-	//
-	// 方言兼容性：PG 的 string_agg 对 aggregate 参数不做隐式 int->text 转换
-	// （string_agg(integer, unknown) does not exist），SQLite 又不识别 ::text，
-	// 因此 levels 改由独立查询派生并在 Go 侧拼接，双方言均可运行。
-	query := `
-		SELECT a.id, a.approver_id, u.name as approver_name, a.status, a.comment, a.approved_at, a.created_at
-		FROM change_approvals a
-		LEFT JOIN users u ON a.approver_id = u.id
-		LEFT JOIN changes c ON a.change_id = c.id
-		WHERE a.change_id = $1 AND a.tenant_id = $2 AND c.tenant_id = $2
-		ORDER BY a.created_at ASC
-	`
-	rows, err := r.db.QueryContext(ctx, query, changeID, tenantID)
+	if r.approvalRecords == nil {
+		return nil, fmt.Errorf("change approval record repository not initialised")
+	}
+	if r.approvalChains == nil {
+		return nil, fmt.Errorf("change approval chain repository not initialised")
+	}
+	records, err := r.approvalRecords.ListByChange(ctx, changeID, tenantID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	// 返回空切片而非 nil，避免 JSON 序列化为 null 导致前端崩溃
-	records := make([]*ApprovalRecord, 0)
-	for rows.Next() {
-		var rec ApprovalRecord
-		var approvedAt sql.NullTime
-		err := rows.Scan(&rec.ID, &rec.ApproverID, &rec.ApproverName, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		if approvedAt.Valid {
-			rec.ApprovedAt = &approvedAt.Time
-		}
-		rec.ChangeID = changeID
-		rec.TenantID = tenantID
-		records = append(records, &rec)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	levelsByApprover, err := r.getApprovalChainLevels(ctx, changeID, tenantID)
+	levelsByApprover, err := r.approvalChains.LevelsByApprover(ctx, changeID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -635,63 +525,19 @@ func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, te
 	return records, nil
 }
 
-// getApprovalChainLevels 返回审批链中每位审批人的层级列表（按 level 升序）。
-func (r *EntRepository) getApprovalChainLevels(ctx context.Context, changeID int, tenantID int) (map[int][]int, error) {
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT approver_id, level
-		FROM change_approval_chains
-		WHERE change_id = $1 AND tenant_id = $2
-		ORDER BY approver_id, level
-	`, changeID, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	levels := make(map[int][]int)
-	for rows.Next() {
-		var approverID, level int
-		if err := rows.Scan(&approverID, &level); err != nil {
-			return nil, err
-		}
-		levels[approverID] = append(levels[approverID], level)
-	}
-	return levels, rows.Err()
-}
-
-// Approval Chain (Raw SQL)
+// Approval Chain —— 已封装到 changeApprovalChainRepository
 func (r *EntRepository) GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error) {
-	query := `
-		SELECT c.id, c.level, c.approver_id, u.name as approver_name, c.role, c.status, c.is_required, c.approval_type, c.threshold, c.created_at
-		FROM change_approval_chains c
-		LEFT JOIN users u ON c.approver_id = u.id
-		WHERE c.change_id = $1 AND c.tenant_id = $2
-		ORDER BY c.level ASC
-	`
-	rows, err := r.db.QueryContext(ctx, query, changeID, tenantID)
-	if err != nil {
-		return nil, err
+	if r.approvalChains == nil {
+		return nil, fmt.Errorf("change approval chain repository not initialised")
 	}
-	defer rows.Close()
-
-	// 返回空切片而非 nil，避免 JSON 序列化为 null 导致前端崩溃
-	chain := make([]*ApprovalChain, 0)
-	for rows.Next() {
-		var item ApprovalChain
-		err := rows.Scan(&item.ID, &item.Level, &item.ApproverID, &item.ApproverName, &item.Role, &item.Status, &item.IsRequired, &item.ApprovalType, &item.Threshold, &item.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		item.ChangeID = changeID
-		item.TenantID = tenantID
-		chain = append(chain, &item)
-	}
-	return chain, nil
+	return r.approvalChains.ListByChange(ctx, changeID, tenantID)
 }
 
 func (r *EntRepository) DeleteApprovalChain(ctx context.Context, changeID int, tenantID int) error {
-	_, err := r.db.ExecContext(ctx, "DELETE FROM change_approval_chains WHERE change_id = $1 AND tenant_id = $2", changeID, tenantID)
-	return err
+	if r.approvalChains == nil {
+		return fmt.Errorf("change approval chain repository not initialised")
+	}
+	return r.approvalChains.DeleteByChange(ctx, changeID, tenantID)
 }
 
 func (r *EntRepository) ReplaceApprovalChain(
@@ -699,106 +545,32 @@ func (r *EntRepository) ReplaceApprovalChain(
 	changeID, tenantID int,
 	chain []*ApprovalChain,
 ) error {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
+	if r.approvalChains == nil {
+		return fmt.Errorf("change approval chain repository not initialised")
 	}
-	defer tx.Rollback()
-
-	if _, err := tx.ExecContext(ctx,
-		"DELETE FROM change_approval_chains WHERE change_id = $1 AND tenant_id = $2",
-		changeID, tenantID); err != nil {
-		return err
-	}
-	for _, item := range chain {
-		// 保留 Quorum 元数据（与 SubmitForApproval 一致），否则重解析审批链会丢失
-		// approval_type/threshold，导致推进逻辑退化为纯串行、会签/或签失效。
-		approvalType := item.ApprovalType
-		if approvalType == "" {
-			approvalType = "serial"
-		}
-		if _, err := tx.ExecContext(ctx, `
-			INSERT INTO change_approval_chains
-				(change_id, tenant_id, level, approver_id, role, status, is_required, approval_type, threshold, created_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-		`, changeID, tenantID, item.Level, item.ApproverID, item.Role, item.Status, item.IsRequired, approvalType, item.Threshold, time.Now()); err != nil {
-			return err
-		}
-	}
-	return tx.Commit()
+	return r.approvalChains.Replace(ctx, changeID, tenantID, chain)
 }
 
-// Risk Assessment (Raw SQL)
+// Risk Assessment —— 已封装到 changeRiskAssessmentRepository
 func (r *EntRepository) CreateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
-	query := `
-		INSERT INTO change_risk_assessments (
-			change_id, tenant_id, risk_level, risk_description, impact_analysis,
-			mitigation_measures, contingency_plan, risk_owner, risk_review_date,
-			created_at, updated_at
-		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-		RETURNING id, created_at
-	`
-	now := time.Now()
-	err := r.db.QueryRowContext(ctx, query,
-		ra.ChangeID, ra.TenantID, ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
-		ra.MitigationMeasures, ra.ContingencyPlan, ra.RiskOwner, ra.RiskReviewDate,
-		now, now).
-		Scan(&ra.ID, &ra.CreatedAt)
-	if err != nil {
-		return nil, err
+	if r.riskAssessments == nil {
+		return nil, fmt.Errorf("change risk assessment repository not initialised")
 	}
-	ra.UpdatedAt = now
-	return ra, nil
+	return r.riskAssessments.Create(ctx, ra)
 }
 
 func (r *EntRepository) GetRiskAssessment(ctx context.Context, changeID int, tenantID int) (*RiskAssessment, error) {
-	query := `
-		SELECT id, tenant_id, risk_level, risk_description, impact_analysis,
-		       mitigation_measures, contingency_plan, risk_owner, risk_review_date,
-		       created_at, updated_at
-		FROM change_risk_assessments 
-		WHERE change_id = $1 AND tenant_id = $2
-	`
-	var ra RiskAssessment
-	var riskReviewDate sql.NullTime
-	err := r.db.QueryRowContext(ctx, query, changeID, tenantID).Scan(
-		&ra.ID, &ra.TenantID, &ra.RiskLevel, &ra.RiskDescription, &ra.ImpactAnalysis,
-		&ra.MitigationMeasures, &ra.ContingencyPlan, &ra.RiskOwner, &riskReviewDate,
-		&ra.CreatedAt, &ra.UpdatedAt,
-	)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // Not found is not an error here
-		}
-		return nil, err
+	if r.riskAssessments == nil {
+		return nil, fmt.Errorf("change risk assessment repository not initialised")
 	}
-	ra.ChangeID = changeID
-	if riskReviewDate.Valid {
-		ra.RiskReviewDate = &riskReviewDate.Time
-	}
-	return &ra, nil
+	return r.riskAssessments.GetByChange(ctx, changeID, tenantID)
 }
 
 func (r *EntRepository) UpdateRiskAssessment(ctx context.Context, ra *RiskAssessment) (*RiskAssessment, error) {
-	query := `
-		UPDATE change_risk_assessments
-		SET risk_level = $1, risk_description = $2, impact_analysis = $3,
-		    mitigation_measures = $4, contingency_plan = $5, risk_owner = $6,
-		    risk_review_date = $7, updated_at = $8
-		WHERE change_id = $9 AND tenant_id = $10
-		RETURNING id, created_at, updated_at
-	`
-	err := r.db.QueryRowContext(
-		ctx, query,
-		ra.RiskLevel, ra.RiskDescription, ra.ImpactAnalysis,
-		ra.MitigationMeasures, ra.ContingencyPlan, ra.RiskOwner,
-		ra.RiskReviewDate, time.Now(), ra.ChangeID, ra.TenantID,
-	).Scan(&ra.ID, &ra.CreatedAt, &ra.UpdatedAt)
-	if err != nil {
-		return nil, err
+	if r.riskAssessments == nil {
+		return nil, fmt.Errorf("change risk assessment repository not initialised")
 	}
-	return ra, nil
+	return r.riskAssessments.Update(ctx, ra)
 }
 
 // ValidateApproverBelongsToTenant validates that an approver belongs to the specified tenant
@@ -823,28 +595,24 @@ func (r *EntRepository) ListByDateRange(ctx context.Context, tenantID int, start
 	end = end.Add(24*time.Hour - time.Second) // End of day
 
 	query := r.client.Change.Query().
-		Where(change.TenantID(tenantID))
+		Where(
+			change.TenantIDEQ(tenantID),
+			change.PlannedStartDateLTE(end),
+			change.PlannedEndDateGTE(start),
+		)
 
 	if status != "" {
-		query = query.Where(change.Status(status))
+		query = query.Where(change.StatusEQ(status))
 	}
 
-	// Filter by planned date range in memory
-	changes, err := query.All(ctx)
+	ecs, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]*Change, 0)
-	for _, c := range changes {
-		if !c.PlannedStartDate.IsZero() && !c.PlannedEndDate.IsZero() {
-			// Check if date ranges overlap
-			if (c.PlannedStartDate.Before(end) || c.PlannedStartDate.Equal(end)) &&
-				(c.PlannedEndDate.After(start) || c.PlannedEndDate.Equal(start)) {
-				result = append(result, toDomain(c))
-			}
-		}
+	result := make([]*Change, 0, len(ecs))
+	for _, ec := range ecs {
+		result = append(result, toDomain(ec))
 	}
-
 	return result, nil
 }

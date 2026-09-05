@@ -7,9 +7,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 
@@ -212,6 +214,45 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 // GetTemplateList 获取模板列表（不部署）
 func (s *BPMNTemplateService) GetTemplateList() ([]*TemplateInfo, error) {
 	return s.listTemplates()
+}
+
+// SuggestTemplates searches the immutable built-in catalog. tenantID is kept
+// in the contract so future tenant-owned catalog entries cannot be returned
+// without an authenticated scope.
+func (s *BPMNTemplateService) SuggestTemplates(ctx context.Context, tenantID int, keyword, processType string) ([]*dto.BPMNTemplateSuggestion, error) {
+	keyword = strings.ToLower(strings.TrimSpace(keyword))
+	if keyword == "" || tenantID <= 0 {
+		return []*dto.BPMNTemplateSuggestion{}, nil
+	}
+
+	result := make([]*dto.BPMNTemplateSuggestion, 0)
+	builtIns, err := s.listTemplates()
+	if err != nil {
+		return nil, errors.Wrap(err, "列出内置模板失败")
+	}
+	for _, tmpl := range builtIns {
+		if processType != "" && tmpl.Category != processType {
+			continue
+		}
+		text := strings.ToLower(tmpl.ID + " " + tmpl.Name + " " + tmpl.Description)
+		if !strings.Contains(text, keyword) {
+			continue
+		}
+		result = append(result, &dto.BPMNTemplateSuggestion{ID: tmpl.ID, Name: tmpl.Name, Description: tmpl.Description, ProcessType: tmpl.Category, Score: templateMatchScore(text, keyword)})
+	}
+
+	sort.SliceStable(result, func(i, j int) bool { return result[i].Score > result[j].Score })
+	return result, nil
+}
+
+func templateMatchScore(text, keyword string) float64 {
+	if text == keyword {
+		return 1
+	}
+	if strings.HasPrefix(text, keyword) {
+		return 0.95
+	}
+	return 0.75
 }
 
 // DeployTemplateByName 根据名称部署单个模板

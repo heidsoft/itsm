@@ -41,6 +41,69 @@ func (s *ProblemService) SetProcessTriggerService(triggerService ProcessTriggerS
 	s.processTriggerService = triggerService
 }
 
+// loadUserNames 批量加载 user 显示名映射（id -> name），用于在 ProblemResponse
+// 中返回 createdBy/assignee 的中文姓名。当前租户范围内查询，name 为空时回退到 username。
+// 查询失败仅记日志并返回部分映射（不阻断主流程；前端可退回到只显示 ID）。
+func (s *ProblemService) loadUserNames(ctx context.Context, tenantID int, ids []int) map[int]string {
+	out := map[int]string{}
+	if len(ids) == 0 {
+		return out
+	}
+	uniq := make([]int, 0, len(ids))
+	seen := map[int]struct{}{}
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniq = append(uniq, id)
+	}
+	if len(uniq) == 0 {
+		return out
+	}
+	users, err := s.client.User.Query().
+		Where(user.TenantIDEQ(tenantID), user.IDIn(uniq...)).
+		Select(user.FieldID, user.FieldName, user.FieldUsername).
+		All(ctx)
+	if err != nil {
+		s.logger.Warnw("loadUserNames failed, return partial/empty map", "error", err, "tenant_id", tenantID)
+		return out
+	}
+	for _, u := range users {
+		name := u.Name
+		if name == "" {
+			name = u.Username
+		}
+		if name != "" {
+			out[u.ID] = name
+		}
+	}
+	return out
+}
+
+// problemUserIDs 收集一组 problem 的 createdBy/assignee id 去重集合，用于批量查 name。
+func problemUserIDs(problems []*ent.Problem) []int {
+	seen := map[int]struct{}{}
+	out := make([]int, 0)
+	for _, p := range problems {
+		if p == nil {
+			continue
+		}
+		if _, ok := seen[p.CreatedBy]; !ok && p.CreatedBy > 0 {
+			seen[p.CreatedBy] = struct{}{}
+			out = append(out, p.CreatedBy)
+		}
+		if _, ok := seen[p.AssigneeID]; !ok && p.AssigneeID > 0 {
+			seen[p.AssigneeID] = struct{}{}
+			out = append(out, p.AssigneeID)
+		}
+	}
+	return out
+}
+
 // CreateProblem 创建问题
 func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProblemRequest, createdBy, tenantID int) (*dto.ProblemResponse, error) {
 	s.logger.Infow("Creating problem", "title", req.Title, "tenant_id", tenantID, "created_by", createdBy)
@@ -91,7 +154,8 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 
 	s.logger.Infow("Problem created successfully", "id", problem.ID, "tenant_id", tenantID)
 
-	return dto.ToProblemResponse(problem), nil
+	userMap := s.loadUserNames(ctx, tenantID, []int{problem.CreatedBy, problem.AssigneeID})
+	return dto.ToProblemResponseWithUsers(problem, userMap), nil
 }
 
 // GetProblem 获取问题详情
@@ -110,7 +174,9 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 		return nil, fmt.Errorf("获取问题失败: %w", err)
 	}
 
-	return dto.ToProblemResponse(problem), nil
+	// 批量加载创建人/负责人的姓名，响应里返回中文姓名而不是裸 ID。
+	userMap := s.loadUserNames(ctx, tenantID, []int{problem.CreatedBy, problem.AssigneeID})
+	return dto.ToProblemResponseWithUsers(problem, userMap), nil
 }
 
 // ListProblems 获取问题列表
@@ -168,8 +234,9 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 		return nil, fmt.Errorf("获取问题列表失败: %w", err)
 	}
 
-	// map ent -> dto
-	dtoProblems := dto.ToProblemResponseList(problems)
+	// map ent -> dto（批量 join user 表取 createdBy/assignee 的中文名）
+	userMap := s.loadUserNames(ctx, tenantID, problemUserIDs(problems))
+	dtoProblems := dto.ToProblemResponseListWithUsers(problems, userMap)
 
 	return &dto.ListProblemsResponse{
 		Problems: dtoProblems,
@@ -244,7 +311,8 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 	}
 
 	s.logger.Infow("Problem updated successfully", "id", id, "tenant_id", tenantID)
-	return dto.ToProblemResponse(updatedProblem), nil
+	userMap := s.loadUserNames(ctx, tenantID, []int{updatedProblem.CreatedBy, updatedProblem.AssigneeID})
+	return dto.ToProblemResponseWithUsers(updatedProblem, userMap), nil
 }
 
 // DeleteProblem 删除问题（软删除）

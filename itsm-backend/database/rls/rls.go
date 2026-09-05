@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"itsm-backend/common/tenantctx"
 )
 
 // tenantCtxKey is the private type used to store tenant_id in context.Context.
@@ -36,7 +38,16 @@ func WithTenant(ctx context.Context, tenantID int64) context.Context {
 // TenantFromContext returns the tenant_id stored in ctx, or (0, false) if absent.
 func TenantFromContext(ctx context.Context) (int64, bool) {
 	v, ok := ctx.Value(tenantCtxKey{}).(int64)
-	return v, ok
+	if ok {
+		return v, true
+	}
+	// HTTP middleware and the durable-command worker use the canonical
+	// common/tenantctx package. Accept it here as well so raw SQL cannot
+	// silently lose tenant scope merely because it crosses the RLS adapter.
+	if tenantID, exists := tenantctx.TenantID(ctx); exists {
+		return int64(tenantID), true
+	}
+	return 0, false
 }
 
 // systemBypassKey marks a context as authorized to bypass RLS (server jobs).
@@ -51,7 +62,7 @@ func WithSystemBypass(ctx context.Context) context.Context {
 // IsSystemBypass reports whether the context is authorized for cross-tenant ops.
 func IsSystemBypass(ctx context.Context) bool {
 	v, _ := ctx.Value(systemBypassKey{}).(bool)
-	return v
+	return v || tenantctx.IsSystemBypass(ctx)
 }
 
 // ErrNoTenant is returned when a query is attempted without a tenant scope

@@ -69,10 +69,13 @@ type ProblemResponse struct {
 	Resolution    string    `json:"resolution"`
 	Impact        string    `json:"impact"`
 	AssigneeID    *int      `json:"assigneeId,omitempty"`
-	CreatedBy     int       `json:"createdBy"`
-	TenantID      int       `json:"tenantId"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	AssigneeName  *string   `json:"assigneeName,omitempty"`
+	// 创建人/报告人字段（ID + 名字。名字由 service 层 join user 表填充，避免前端再调一次 user API）
+	CreatedBy    int     `json:"createdBy"`
+	CreatedByName *string `json:"createdByName,omitempty"`
+	TenantID     int     `json:"tenantId"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 	// 关联数据
 	AssociatedTickets   []*AssociatedItemResponse `json:"associatedTickets,omitempty"`
 	AssociatedIncidents []*AssociatedItemResponse `json:"associatedIncidents,omitempty"`

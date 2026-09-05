@@ -5,7 +5,7 @@ type GenerateBPMNRequest struct {
 	// 业务需求描述
 	Requirement string `json:"requirement" binding:"required,min=10,max=2000"`
 	// 流程类型：incident/change/problem/service_request/custom
-	ProcessType string `json:"processType" binding:"required,oneof=incident change problem service_request custom"`
+	ProcessType string `json:"processType" binding:"required,oneof=incident change problem service_request leave expense hr procurement it custom"`
 	// 企业类型：cn_enterprise/international/startup/government
 	EnterpriseType string `json:"enterpriseType" binding:"required,oneof=cn_enterprise international startup government"`
 	// 是否包含SLA配置
@@ -15,7 +15,8 @@ type GenerateBPMNRequest struct {
 	// 是否包含审批节点
 	IncludeApprovals bool `json:"includeApprovals"`
 	// 租户ID
-	TenantID int `json:"tenantId" binding:"required"`
+	// TenantID is populated from the authenticated tenant context by the handler.
+	TenantID int `json:"tenantId,omitempty"`
 }
 
 // GenerateBPMNResponse AI生成BPMN流程响应
@@ -41,7 +42,19 @@ type GenerateBPMNResponse struct {
 	// 流程定义ID
 	ProcessDefinitionID int `json:"processDefinitionId,omitempty"`
 	// 生成后自动 Lint 的结果（结构/连通性/网关语义检查；HasErrors 时不应部署）
-	LintResult *BPMNLintResult `json:"lintResult,omitempty"`
+	LintResult          *BPMNLintResult           `json:"lintResult,omitempty"`
+	CandidateDefinition *BusinessProcessCandidate `json:"candidateDefinition,omitempty"`
+}
+
+// BusinessProcessCandidate is the structured contract edited in the existing
+// workflow designer before a BPMN definition can be published.
+type BusinessProcessCandidate struct {
+	Domain               string                 `json:"domain"`
+	FormSchema           map[string]interface{} `json:"formSchema"`
+	ApprovalPolicy       map[string]interface{} `json:"approvalPolicy"`
+	OntologyBindings     map[string]interface{} `json:"ontologyBindings"`
+	SLAConfig            map[string]interface{} `json:"slaConfig,omitempty"`
+	RequiresConfirmation bool                   `json:"requiresConfirmation"`
 }
 
 // PreviewBPMNRequest 预览生成的BPMN流程请求
@@ -49,7 +62,7 @@ type PreviewBPMNRequest struct {
 	// 业务需求描述
 	Requirement string `json:"requirement" binding:"required,min=10,max=2000"`
 	// 流程类型
-	ProcessType string `json:"processType" binding:"required,oneof=incident change problem service_request custom"`
+	ProcessType string `json:"processType" binding:"required,oneof=incident change problem service_request leave expense hr procurement it custom"`
 	// 企业类型
 	EnterpriseType string `json:"enterpriseType" binding:"required,oneof=cn_enterprise international startup government"`
 }
@@ -84,4 +97,65 @@ type BPMNNodePreview struct {
 	AssigneeRole string `json:"assigneeRole,omitempty"`
 	// SLA时间（分钟）
 	SLAMinutes int `json:"slaMinutes,omitempty"`
+}
+
+// BPMNTemplateSuggestion is the stable contract returned by template search.
+type BPMNTemplateSuggestion struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	ProcessType string  `json:"processType"`
+	Score       float64 `json:"score"`
+}
+
+type WorkflowTemplate struct {
+	ID               int                    `json:"id"`
+	Key              string                 `json:"key"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	Domain           string                 `json:"domain"`
+	FormSchema       map[string]interface{} `json:"formSchema"`
+	ApprovalPolicy   map[string]interface{} `json:"approvalPolicy"`
+	OntologyBindings map[string]interface{} `json:"ontologyBindings"`
+	SLAConfig        map[string]interface{} `json:"slaConfig"`
+	BPMNXML          string                 `json:"bpmnXml,omitempty"`
+	Version          string                 `json:"version"`
+	Status           string                 `json:"status"`
+	IsPublic         bool                   `json:"isPublic"`
+	CreatedBy        int                    `json:"createdBy"`
+	CreatedAt        string                 `json:"createdAt"`
+	UpdatedAt        string                 `json:"updatedAt"`
+}
+
+type WorkflowTemplateListResponse struct {
+	Items      []*WorkflowTemplate `json:"items"`
+	Total      int                 `json:"total"`
+	Page       int                 `json:"page"`
+	PageSize   int                 `json:"pageSize"`
+	TotalPages int                 `json:"totalPages"`
+}
+
+type CreateWorkflowTemplateRequest struct {
+	Key              string                 `json:"key" binding:"required,min=2,max=120"`
+	Name             string                 `json:"name" binding:"required,max=200"`
+	Description      string                 `json:"description"`
+	Domain           string                 `json:"domain" binding:"required,max=40"`
+	FormSchema       map[string]interface{} `json:"formSchema"`
+	ApprovalPolicy   map[string]interface{} `json:"approvalPolicy"`
+	OntologyBindings map[string]interface{} `json:"ontologyBindings"`
+	SLAConfig        map[string]interface{} `json:"slaConfig"`
+	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
+	IsPublic         bool                   `json:"isPublic"`
+}
+
+type UpdateWorkflowTemplateRequest struct {
+	Name             *string                 `json:"name"`
+	Description      *string                 `json:"description"`
+	Domain           *string                 `json:"domain"`
+	FormSchema       *map[string]interface{} `json:"formSchema"`
+	ApprovalPolicy   *map[string]interface{} `json:"approvalPolicy"`
+	OntologyBindings *map[string]interface{} `json:"ontologyBindings"`
+	SLAConfig        *map[string]interface{} `json:"slaConfig"`
+	BPMNXML          *string                 `json:"bpmnXml"`
+	IsPublic         *bool                   `json:"isPublic"`
 }

@@ -191,6 +191,15 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	if req.Keyword != "" {
 		filters["keyword"] = req.Keyword
 	}
+	if req.SortBy != "" {
+		filters["sortBy"] = req.SortBy
+	}
+	if req.SortOrder != "" {
+		filters["sortOrder"] = req.SortOrder
+	}
+	if req.IsOverdue {
+		filters["is_overdue"] = true
+	}
 
 	tickets, total, err := h.service.List(c.Request.Context(), tenantID, req.Page, req.PageSize, filters, currentUserID, currentRole)
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/repository/base"
@@ -37,6 +38,7 @@ type EntRepository struct {
 	logger          *zap.SugaredLogger
 	sequenceService SequenceProvider
 	rawDB           *sql.DB // for transactional SELECT FOR UPDATE
+	numberRepo      *ticketNumberRepository
 }
 
 // NewEntRepository 创建 Ent 工单仓储
@@ -63,6 +65,7 @@ func (r *EntRepository) SetSequenceService(seqSvc SequenceProvider) {
 // SetRawDB 设置原生数据库连接（用于事务性编号生成）
 func (r *EntRepository) SetRawDB(db *sql.DB) {
 	r.rawDB = db
+	r.numberRepo = newTicketNumberRepository(db)
 }
 
 // Create 创建工单
@@ -703,59 +706,32 @@ func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID
 	for attempt := 0; attempt < 3; attempt++ {
 		var candidate string
 
-		// 路径1：有 rawDB，优先使用事务 + NOWAIT
-		if r.rawDB != nil {
-			tx, err := r.rawDB.BeginTx(ctx, nil)
-			if err != nil {
-				r.logger.Warnw("BeginTx failed, trying Ent fallback", "error", err, "attempt", attempt+1)
-				// fall through to Ent fallback below
+		// 路径1：有 numberRepo，优先使用事务 + NOWAIT
+		if r.numberRepo != nil {
+			lockedCandidate, lockErr := database.WithTenantTx(ctx, r.rawDB, tenantID, func(tx *sql.Tx) (string, error) {
+				maxTicketNum, err := r.numberRepo.queryMaxLocked(ctx, tx, tenantID, prefix+"%")
+				if err != nil {
+					return "", err
+				}
+				seq := parseSequenceSuffix(maxTicketNum)
+				if seq == 0 {
+					return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, 1), nil
+				}
+				return fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1), nil
+			})
+			if lockErr != nil {
+				r.logger.Warnw("NOWAIT transaction failed, trying Ent fallback", "error", lockErr, "attempt", attempt+1)
 			} else {
-				// FOR UPDATE NOWAIT：立即失败而非跳过锁（快速感知冲突）
-				query := `SELECT ticket_number FROM tickets WHERE tenant_id = $1 AND ticket_number LIKE $2 AND ticket_number IS NOT NULL AND ticket_number != '' ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE NOWAIT`
-				var maxTicketNum string
-				err = tx.QueryRowContext(ctx, query, tenantID, prefix+"%").Scan(&maxTicketNum)
-
-				var seq int = 0
-				if err == nil && maxTicketNum != "" {
-					if idx := strings.LastIndex(maxTicketNum, "-"); idx >= 0 {
-						fmt.Sscanf(maxTicketNum[idx+1:], "%d", &seq)
-					}
-				} else if err == sql.ErrNoRows {
-					r.logger.Infow("No existing tickets this month, starting from seed", "tenant", tenantID, "year", year, "month", month)
-				} else if err != nil {
-					tx.Rollback()
-					r.logger.Warnw("NOWAIT query failed, trying Ent fallback", "error", err, "attempt", attempt+1)
-					// fall through to Ent fallback
-				}
-
-				if seq > 0 {
-					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, seq+1)
-				} else {
-					candidate = fmt.Sprintf("TKT-%04d%02d-%06d", year, month, 1)
-				}
-
-				r.logger.Infow("DB transaction generated ticket number",
-					"number", candidate, "tenant", tenantID, "attempt", attempt+1)
-
-				// 提交事务释放锁
-				if err := tx.Commit(); err != nil {
-					r.logger.Warnw("tx commit failed, retrying", "error", err, "attempt", attempt+1)
-					continue
-				}
-
-				// 双重保险：验证编号是否真的唯一
-				checkQuery := `SELECT COUNT(*) FROM tickets WHERE ticket_number = $1 AND tenant_id = $2`
-				var count int
-				if checkErr := r.rawDB.QueryRowContext(ctx, checkQuery, candidate, tenantID).Scan(&count); checkErr == nil && count > 0 {
+				candidate = lockedCandidate
+				if exists, checkErr := r.numberRepo.existsNumber(ctx, tenantID, candidate); checkErr == nil && exists {
 					r.logger.Warnw("Ticket number collision detected, retrying", "number", candidate, "attempt", attempt+1)
 					continue
 				}
-
 				return candidate, nil
 			}
 		}
 
-		// 路径2：Ent ORM fallback（没有 rawDB 或 rawDB 路径失败）
+		// 路径2：Ent ORM fallback（没有 numberRepo 或 numberRepo 路径失败）
 		tickets, err := r.Client().Ticket.Query().
 			Where(
 				ticket.TenantID(tenantID),
@@ -770,9 +746,8 @@ func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID
 			seq = 1
 		} else {
 			maxNum := tickets[0].TicketNumber
-			if idx := strings.LastIndex(maxNum, "-"); idx >= 0 {
-				fmt.Sscanf(maxNum[idx+1:], "%d", &seq)
-				seq++
+			if parsed := parseSequenceSuffix(maxNum); parsed > 0 {
+				seq = parsed + 1
 			} else {
 				seq = 1
 			}
@@ -782,11 +757,9 @@ func (r *EntRepository) generateTicketNumberWithDB(ctx context.Context, tenantID
 		r.logger.Infow("Ent fallback generated ticket number",
 			"number", candidate, "tenant", tenantID, "attempt", attempt+1)
 
-		// 如果有 rawDB，再验证一次（双重保险）
-		if r.rawDB != nil {
-			checkQuery := `SELECT COUNT(*) FROM tickets WHERE ticket_number = $1 AND tenant_id = $2`
-			var count int
-			if checkErr := r.rawDB.QueryRowContext(ctx, checkQuery, candidate, tenantID).Scan(&count); checkErr == nil && count > 0 {
+		// 如果有 numberRepo，再验证一次（双重保险）
+		if r.numberRepo != nil {
+			if exists, checkErr := r.numberRepo.existsNumber(ctx, tenantID, candidate); checkErr == nil && exists {
 				r.logger.Warnw("Ent fallback ticket number collision, retrying", "number", candidate, "attempt", attempt+1)
 				continue
 			}
@@ -985,11 +958,12 @@ func toDomainModels(entities []*ent.Ticket) []*Ticket {
 // toEntField 将字段名转换为 Ent 字段
 func toEntField(field string) string {
 	fieldMap := map[string]string{
-		"created_at": ticket.FieldCreatedAt,
-		"updated_at": ticket.FieldUpdatedAt,
-		"title":      ticket.FieldTitle,
-		"status":     ticket.FieldStatus,
-		"priority":   ticket.FieldPriority,
+		"created_at":    ticket.FieldCreatedAt,
+		"updated_at":    ticket.FieldUpdatedAt,
+		"title":         ticket.FieldTitle,
+		"status":        ticket.FieldStatus,
+		"priority":      ticket.FieldPriority,
+		"ticket_number": ticket.FieldTicketNumber,
 	}
 
 	if entField, ok := fieldMap[field]; ok {

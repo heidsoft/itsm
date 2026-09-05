@@ -47,6 +47,16 @@ func (c *CacheService) Set(ctx context.Context, key string, value interface{}, t
 	return nil
 }
 
+// SetBytes stores an already serialized value. HTTP response caching must use
+// this instead of Set: JSON encodes []byte as base64, which changes the body.
+func (c *CacheService) SetBytes(ctx context.Context, key string, value []byte, ttl time.Duration) error {
+	if err := c.client.Set(ctx, key, value, ttl).Err(); err != nil {
+		c.logger.Error("Failed to set cache bytes", zap.Error(err), zap.String("key", key))
+		return err
+	}
+	return nil
+}
+
 // Get 获取缓存
 func (c *CacheService) Get(ctx context.Context, key string, dest interface{}) error {
 	data, err := c.client.Get(ctx, key).Bytes()
@@ -64,6 +74,20 @@ func (c *CacheService) Get(ctx context.Context, key string, dest interface{}) er
 	}
 
 	return nil
+}
+
+// GetBytes returns an already serialized value. The returned slice is owned by
+// the caller and is safe to pass directly to an HTTP response writer.
+func (c *CacheService) GetBytes(ctx context.Context, key string) ([]byte, error) {
+	data, err := c.client.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, fmt.Errorf("cache key not found")
+		}
+		c.logger.Error("Failed to get cache bytes", zap.Error(err), zap.String("key", key))
+		return nil, err
+	}
+	return data, nil
 }
 
 // Delete 删除缓存

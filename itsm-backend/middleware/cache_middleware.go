@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -40,11 +41,10 @@ func (cm *CacheMiddleware) CacheResponse(ttl time.Duration) gin.HandlerFunc {
 		cacheKey := cm.generateCacheKey(c)
 
 		// 尝试从缓存获取
-		var cachedResponse bytes.Buffer
-		err := cm.cache.Get(c.Request.Context(), cacheKey, &cachedResponse)
+		cachedResponse, err := cm.cache.GetBytes(c.Request.Context(), cacheKey)
 		if err == nil {
 			cm.logger.Debug("Cache hit", zap.String("key", cacheKey))
-			c.Data(http.StatusOK, "application/json; charset=utf-8", cachedResponse.Bytes())
+			c.Data(http.StatusOK, "application/json; charset=utf-8", cachedResponse)
 			c.Abort()
 			return
 		}
@@ -63,7 +63,7 @@ func (cm *CacheMiddleware) CacheResponse(ttl time.Duration) gin.HandlerFunc {
 
 		// 只缓存成功的响应
 		if c.Writer.Status() == http.StatusOK && writer.body.Len() > 0 {
-			if err := cm.cache.Set(c.Request.Context(), cacheKey, writer.body.Bytes(), ttl); err != nil {
+			if err := cm.cache.SetBytes(c.Request.Context(), cacheKey, writer.body.Bytes(), ttl); err != nil {
 				cm.logger.Warn("Failed to cache response", zap.Error(err))
 			} else {
 				cm.logger.Debug("Response cached", zap.String("key", cacheKey))
@@ -77,10 +77,11 @@ func (cm *CacheMiddleware) InvalidateCache(patterns ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		// 只在成功的POST/PUT/DELETE请求后失效缓存
+		// 只在成功的写请求后失效缓存。
 		if c.Writer.Status() >= 200 && c.Writer.Status() < 300 &&
 			(c.Request.Method == http.MethodPost ||
 				c.Request.Method == http.MethodPut ||
+				c.Request.Method == http.MethodPatch ||
 				c.Request.Method == http.MethodDelete) {
 
 			for _, pattern := range patterns {
@@ -101,10 +102,12 @@ func (cm *CacheMiddleware) generateCacheKey(c *gin.Context) string {
 	tenantID := c.GetInt("tenant_id")
 	userID := c.GetInt("user_id")
 	path := c.Request.URL.Path
-	query := c.Request.URL.RawQuery
+	// Values.Encode canonicalizes query ordering; hashing avoids leaking search
+	// terms or filters into Redis key names and keeps the key bounded.
+	queryHash := sha256.Sum256([]byte(c.Request.URL.Query().Encode()))
 
-	return fmt.Sprintf("api:tenant:%d:user:%d:path:%s:query:%s",
-		tenantID, userID, path, query)
+	return fmt.Sprintf("api:tenant:%d:user:%d:path:%s:query:%x",
+		tenantID, userID, path, queryHash[:])
 }
 
 // responseWriter 响应写入器包装

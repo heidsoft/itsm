@@ -80,7 +80,11 @@ func TestCreateTicketByAI_Handler(t *testing.T) {
 	var resp map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Equal(t, "draft", resp["status"])
+	assert.Equal(t, float64(0), resp["code"])
+	data, ok := resp["data"].(map[string]interface{})
+	if assert.True(t, ok, "success response must expose data") {
+		assert.Equal(t, "draft", data["status"])
+	}
 }
 
 // TestSummarizeTicket_RouteExists 验证 SummarizeTicket 方法存在

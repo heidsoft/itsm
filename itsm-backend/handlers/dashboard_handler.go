@@ -645,8 +645,11 @@ func (h *DashboardHandler) GetStats(c *gin.Context) {
 // @Failure 500 {object} ErrorResponse
 // @Router /api/v1/dashboard/stats/users [get]
 func (h *DashboardHandler) GetUserStats(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
-	stats, err := h.dashboardService.GetUserStats(c.Request.Context(), tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	stats, err := h.dashboardService.GetUserStats(c.Request.Context(), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

@@ -15,7 +15,7 @@
 # ============================================================
 # Stage 1: Build
 # ============================================================
-FROM --platform=$BUILDPLATFORM mirror.gcr.io/library/golang:1.25.13-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.13-alpine AS builder
 
 WORKDIR /src
 
@@ -25,6 +25,8 @@ ARG TARGETARCH=amd64
 #   --build-arg GOPROXY=https://proxy.golang.org,direct
 ARG GOPROXY=https://goproxy.cn,direct
 ARG GOSUMDB=sum.golang.org
+# Alpine APK mirror: override to official (dl-cdn.alpinelinux.org) outside China
+ARG APK_MIRROR=https://mirrors.aliyun.com/alpine
 
 ENV CGO_ENABLED=0 \
     GOOS=${TARGETOS} \
@@ -36,7 +38,11 @@ ENV CGO_ENABLED=0 \
     GOGC=50 \
     GOMEMLIMIT=2GiB
 
-RUN apk add --no-cache ca-certificates git bash
+# Switch APK repositories to a reachable mirror for the builder stage
+RUN ALPINE_VER=$(awk -F= '$1=="VERSION_ID"{split($2,v,"."); print v[1]"."v[2]}' /etc/os-release) \
+    && echo "Using Alpine ${ALPINE_VER} mirror: ${APK_MIRROR}" \
+    && sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${APK_MIRROR}|g" /etc/apk/repositories \
+    && apk add --no-cache ca-certificates git bash
 
 # Copy go.mod and go.sum first for better layer caching
 COPY go.mod go.sum ./
@@ -69,12 +75,15 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # ============================================================
 # Stage 2: Runtime (alpine — minimal, non-root)
 # ============================================================
-FROM mirror.gcr.io/library/alpine:3.20 AS runtime
+FROM alpine:3.20 AS runtime
 
 WORKDIR /app
 
-# Install runtime dependencies in a single layer
-RUN apk add --no-cache \
+ARG APK_MIRROR=https://mirrors.aliyun.com/alpine
+
+# Switch APK mirror then install runtime dependencies in a single layer
+RUN sed -i "s|https://dl-cdn.alpinelinux.org/alpine|${APK_MIRROR}|g" /etc/apk/repositories \
+    && apk add --no-cache \
     ca-certificates \
     curl \
     tzdata \

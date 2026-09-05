@@ -20,8 +20,8 @@ type UpdateGroupRequest struct {
 // ListGroupsRequest 获取组列表请求
 type ListGroupsRequest struct {
 	Page     int    `form:"page,default=1" binding:"min=1"`
-	PageSize int    `form:"page_size,default=10" binding:"min=1,max=100"`
-	TenantID int    `form:"tenant_id"`
+	PageSize int    `form:"pageSize,default=10" binding:"min=1,max=100"`
+	TenantID int    `form:"tenantId"`
 	Search   string `form:"search"`
 }
 

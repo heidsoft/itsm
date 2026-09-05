@@ -4,8 +4,8 @@ import "time"
 
 // ProblemTrendRequest 问题趋势分析请求
 type ProblemTrendRequest struct {
-	StartDate string `json:"startDate" form:"start_date" binding:"required,datetime=2006-01-02"`
-	EndDate   string `json:"endDate" form:"end_date" binding:"required,datetime=2006-01-02"`
+	StartDate string `json:"startDate" form:"startDate" binding:"required,datetime=2006-01-02"`
+	EndDate   string `json:"endDate" form:"endDate" binding:"required,datetime=2006-01-02"`
 }
 
 // ProblemTrendResponse 问题趋势分析响应
