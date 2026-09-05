@@ -372,7 +372,7 @@ func NewApplication() *Application {
 	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
 	// Application handler v1.1 回归：handlers/<domain>/ 已迁移但
 	// bootstrap 没注入，router 看到的字段为 nil，路由被 if 守卫跳过
-	applicationHTTPHandler := applicationHandler.NewHandler(client)
+	applicationHTTPHandler := applicationHandler.NewHandler(service.NewApplicationService(client))
 	incidentRepo := incident.NewEntRepository(client)
 	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)

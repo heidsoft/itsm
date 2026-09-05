@@ -4,21 +4,19 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
-	"itsm-backend/ent"
 	"itsm-backend/middleware"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Handler 应用管理HTTP处理器
 type Handler struct {
-	service *service.ApplicationService
+	service Service
 }
 
 // NewHandler creates a new application handler
-func NewHandler(client *ent.Client) *Handler {
-	return &Handler{service: service.NewApplicationService(client)}
+func NewHandler(svc Service) *Handler {
+	return &Handler{service: svc}
 }
 
 // CreateApplication 创建应用
