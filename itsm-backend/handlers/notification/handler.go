@@ -5,7 +5,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -13,21 +12,21 @@ import (
 
 // Handler HTTP handlers for notification domain
 type Handler struct {
-	notificationService        *service.NotificationService
-	notificationPreferenceService *service.NotificationPreferenceService
-	logger                     *zap.SugaredLogger
+	notificationService           NotificationService
+	notificationPreferenceService NotificationPreferenceService
+	logger                        *zap.SugaredLogger
 }
 
 // NewHandler creates a new notification handler
 func NewHandler(
-	notificationService *service.NotificationService,
-	notificationPreferenceService *service.NotificationPreferenceService,
+	notificationService NotificationService,
+	notificationPreferenceService NotificationPreferenceService,
 	logger *zap.SugaredLogger,
 ) *Handler {
 	return &Handler{
-		notificationService:        notificationService,
+		notificationService:           notificationService,
 		notificationPreferenceService: notificationPreferenceService,
-		logger:                     logger,
+		logger:                        logger,
 	}
 }
 
