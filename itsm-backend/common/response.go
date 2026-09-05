@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -305,6 +306,60 @@ func humanizeTag(tag string) string {
 		return "not in allowed values"
 	default:
 		return tag
+	}
+}
+
+// RespondError 是 handler 的统一错误出口：把领域错误转成统一响应结构。
+// 匹配链（均用 errors.As，兼容包装）：
+//  1. *AppError：按其 HTTPStatus 映射到应用业务码（400→4000、401→2002、403→2003、
+//     404→4004、409→4090、422→4220、其余→5001），Message 直接透出（构造时已是面向用户的安全文案）。
+//  2. *BusinessError：原样业务码透出（incident/approval 域哨兵错误模式）。
+//  3. 其他错误：按内部错误处理（5001），原始错误仅记入日志，客户端收到 fallbackMsg。
+//
+// 用法：
+//
+//	if err := svc.Create(ctx, ...); err != nil {
+//	    common.RespondError(c, err, "创建失败")
+//	    return
+//	}
+//
+// 该 helper 收敛了此前各域 handler 手写 switch 的 AppError 映射，是
+// "领域哨兵错误 + handler 统一分流"范式的落点，避免业务拒绝被兜底成 500。
+func RespondError(c *gin.Context, err error, fallbackMsg string) {
+	if err == nil {
+		return
+	}
+	var appErr *AppError
+	if errors.As(err, &appErr) {
+		Fail(c, statusToAppCode(appErr.HTTPStatus), appErr.Message)
+		return
+	}
+	var bizErr *BusinessError
+	if errors.As(err, &bizErr) {
+		Fail(c, bizErr.Code, bizErr.Message)
+		return
+	}
+	FailWithErr(c, err, fallbackMsg)
+}
+
+// statusToAppCode 将 HTTP 状态码映射到统一响应的应用业务码。
+// AppError.HTTPStatus 来自 http.Status* 常量，此处反查 common 业务码体系。
+func statusToAppCode(httpStatus int) int {
+	switch httpStatus {
+	case http.StatusBadRequest:
+		return BadRequestCode
+	case http.StatusUnauthorized:
+		return UnauthorizedCode
+	case http.StatusForbidden:
+		return ForbiddenCode
+	case http.StatusNotFound:
+		return NotFoundCode
+	case http.StatusConflict:
+		return ConflictCode
+	case http.StatusUnprocessableEntity:
+		return UnprocessableEntityCode
+	default:
+		return InternalErrorCode
 	}
 }
 

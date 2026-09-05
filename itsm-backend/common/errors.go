@@ -70,6 +70,10 @@ func ErrorHandler(logger *zap.SugaredLogger) gin.HandlerFunc {
 
 			if businessErr, ok := err.(*BusinessError); ok {
 				Fail(c, businessErr.Code, businessErr.Message)
+			} else if appErr, ok := err.(*AppError); ok {
+				// AppError 自带 HTTP 语义（400/401/403/404/409...），
+				// 映射到统一业务码，避免被兜底成 500。
+				Fail(c, statusToAppCode(appErr.HTTPStatus), appErr.Message)
 			} else if conflictErr, ok := err.(*VersionConflictError); ok {
 				// 处理版本冲突错误
 				Conflict(c, conflictErr.Error(), gin.H{

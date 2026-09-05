@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -498,4 +499,70 @@ func TestInternalErrorf_FormatsMessage(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
 	assert.Equal(t, "user alice not allowed to perform delete", resp.Message)
+}
+
+func TestRespondError_AppErrorMapping(t *testing.T) {
+	cases := []struct {
+		name       string
+		err        error
+		wantCode   int
+		wantHTTP   int
+		wantMsg    string
+	}{
+		{"bad_request", NewBadRequestError("requester_id is required", nil), BadRequestCode, http.StatusBadRequest, "requester_id is required"},
+		{"not_found", NewNotFoundError("ticket"), NotFoundCode, http.StatusNotFound, "ticket not found"},
+		{"forbidden", NewForbiddenError("no permission"), ForbiddenCode, http.StatusForbidden, "no permission"},
+		{"conflict", NewConflictError("ticket", "duplicate"), ConflictCode, http.StatusConflict, "ticket already exists"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest("POST", "/api/v1/test", nil)
+			RespondError(c, tc.err, "fallback")
+			assert.Equal(t, tc.wantHTTP, w.Code)
+			var resp Response
+			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, tc.wantCode, resp.Code)
+			assert.Equal(t, tc.wantMsg, resp.Message)
+		})
+	}
+}
+
+func TestRespondError_BusinessErrorPassthrough(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/test", nil)
+	RespondError(c, NewBusinessError(4090, "conflict", ""), "fallback")
+	assert.Equal(t, http.StatusConflict, w.Code)
+	var resp Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 4090, resp.Code)
+}
+
+func TestRespondError_WrappedAppError(t *testing.T) {
+	// errors.As 兼容包装：领域层 %w 包一层后仍能识别语义。
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/test", nil)
+	inner := NewNotFoundError("ticket")
+	RespondError(c, fmt.Errorf("load: %w", inner), "fallback")
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	var resp Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, NotFoundCode, resp.Code)
+}
+
+func TestRespondError_FallbackOnInternal(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/v1/test", nil)
+	raw := errors.New("pq: connection refused")
+	RespondError(c, raw, "操作失败")
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	var resp Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, InternalErrorCode, resp.Code)
+	assert.Equal(t, "操作失败", resp.Message)
+	assert.NotContains(t, w.Body.String(), "connection refused")
 }

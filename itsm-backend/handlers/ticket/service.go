@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
@@ -29,7 +30,9 @@ func (s *Service) Create(ctx context.Context, tenantID int, params *CreateParams
 	s.logger.Infow("Creating ticket", "title", params.Title, "tenant_id", tenantID)
 
 	if params.RequesterID == 0 {
-		return nil, fmt.Errorf("requester_id is required")
+		// 领域哨兵错误：业务拒绝带 400 语义，交由 handler 统一分流，
+		// 不再被全局兜底成 500。
+		return nil, common.NewBadRequestError("requester_id is required", nil)
 	}
 	if params.Priority == "" {
 		params.Priority = "medium"
@@ -228,8 +231,11 @@ func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int
 	if err != nil {
 		return nil, err
 	}
-	if current.ParentTicketID == nil || *current.ParentTicketID != tenantID {
-		return nil, fmt.Errorf("subtask does not belong to parent")
+	// 修复：原代码比较 *current.ParentTicketID != tenantID —— ParentTicketID 是父工单 ID，
+	// 恒不等于 tenantID，导致所有子任务更新都被误判为"不属于父工单"。正确语义是：
+	// 仅当该工单不是子任务（无父工单）时拒绝。
+	if current.ParentTicketID == nil {
+		return nil, common.NewBadRequestError("subtask does not belong to parent", nil)
 	}
 	return s.repo.Update(ctx, subtaskID, params, tenantID)
 }

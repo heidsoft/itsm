@@ -137,11 +137,8 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 
 	ticket, err := h.service.Create(c.Request.Context(), tenantID, params)
 	if err != nil {
-		if businessErr, ok := err.(*common.BusinessError); ok {
-			common.Fail(c, businessErr.Code, businessErr.Message)
-			return
-		}
-		common.FailWithErr(c, err, "操作失败")
+		// 统一错误出口：AppError/BusinessError 按语义分流，其余兜底 500。
+		common.RespondError(c, err, "创建工单失败")
 		return
 	}
 
