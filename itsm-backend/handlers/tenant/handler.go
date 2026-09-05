@@ -228,7 +228,8 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 func (h *Handler) GetTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
-		common.FailWithErr(c, nil, "无法获取租户信息")
+		// 租户上下文缺失属认证问题，统一为 401（对齐上游 TenantMiddleware 与项目多数派）。
+		common.Fail(c, common.AuthFailedCode, "无法获取租户信息")
 		return
 	}
 	tenant, err := h.svc.GetTenant(c.Request.Context(), tenantID.(int))
@@ -255,7 +256,8 @@ func (h *Handler) GetTenantSettings(c *gin.Context) {
 func (h *Handler) UpdateTenantSettings(c *gin.Context) {
 	tenantID, ok := c.Get("tenant_id")
 	if !ok {
-		common.FailWithErr(c, nil, "无法获取租户信息")
+		// 租户上下文缺失属认证问题，统一为 401（对齐上游 TenantMiddleware 与项目多数派）。
+		common.Fail(c, common.AuthFailedCode, "无法获取租户信息")
 		return
 	}
 	var req dto.UpdateTenantRequest

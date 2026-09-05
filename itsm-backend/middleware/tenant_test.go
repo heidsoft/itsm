@@ -52,14 +52,16 @@ func TestTenantMiddleware(t *testing.T) {
 
 	_ = expiredTenant
 
-	t.Run("Missing Tenant Information Returns Bad Request", func(t *testing.T) {
+	t.Run("Missing Tenant Information Returns Unauthorized", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request, _ = http.NewRequest("GET", "/api/v1/tickets", nil)
 
 		TenantMiddleware(client)(c)
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		// 契约变更（2026-09-05）：400 → 401，与域内 TenantIDOrUnauthorized
+		// 及「租户不匹配」分支语义对齐；租户缺失是认证问题而非参数问题。
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
 		assert.Contains(t, w.Body.String(), "租户信息缺失")
 	})
 

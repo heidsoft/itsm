@@ -97,6 +97,46 @@ for dir in "${HANDLERS_DIR}"/*/; do
   fi
 done
 
+# ---------------------------------------------------------------------------
+# H.5 租户上下文取值危险模式（全局扫描，覆盖 handlers/ 根目录散落文件）
+#
+#   H.5a 无存在性检查的裸取值：X, _ := c.Get("tenant_id")
+#        上下文缺失时 X==nil，后续 X.(int) 直接 panic（gin recovery 兜 500）。
+#        2026-09-05 实测 problem/bpmn/survey/dashboard 共 37 处，已全部改
+#        委托 middleware.TenantIDOrUnauthorized(c) 返回 401。
+#   H.5b 残留的租户类型断言 X.(int)：即便有 exists 检查，仍属未收敛到助手的
+#        内联写法，三派系（500/400/401）语义不一致的根源。
+# ---------------------------------------------------------------------------
+H5A=$(grep -rnE '\w+, _ := (c|ctx)\.Get\("tenant_id"\)' "${HANDLERS_DIR}" --include='*.go' 2>/dev/null \
+      | grep -v '_test\.go' || true)
+if [ -n "${H5A}" ]; then
+  while IFS= read -r line; do
+    echo "  [H.5a] 租户裸取值(缺失即 panic): ${line}"
+    TOTAL_WARN=$((TOTAL_WARN + 1))
+  done <<< "${H5A}"
+fi
+
+H5B=$(grep -rnE '\btenantID\.\(int\)|\btenantIDVal\.\(int\)|\btid\.\(int\)' "${HANDLERS_DIR}" --include='*.go' 2>/dev/null \
+      | grep -v '_test\.go' || true)
+if [ -n "${H5B}" ]; then
+  while IFS= read -r line; do
+    echo "  [H.5b] 租户断言未收敛到 TenantIDOrUnauthorized: ${line}"
+    TOTAL_WARN=$((TOTAL_WARN + 1))
+  done <<< "${H5B}"
+fi
+
+# H.5c 与 H.5a 同类的 user_id 裸取值（缺失即 panic）：X, _ := c.Get("user_id")
+# 以及直接断言 c.Get("user_id").(int)。前期审查漏掉 user_id 这一平行 bug 类，
+# 现一并纳入守卫，防止回归。
+H5C=$(grep -rnE '\w+, _ := (c|ctx)\.Get\("user_id"\)|\.Get\("user_id"\)\.\(int\)' "${HANDLERS_DIR}" --include='*.go' 2>/dev/null \
+      | grep -v '_test\.go' || true)
+if [ -n "${H5C}" ]; then
+  while IFS= read -r line; do
+    echo "  [H.5c] user_id 裸取值(缺失即 panic): ${line}"
+    TOTAL_WARN=$((TOTAL_WARN + 1))
+  done <<< "${H5C}"
+fi
+
 echo ""
 if [ "${TOTAL_WARN}" -gt 0 ]; then
   echo "== 卫生检查: ${TOTAL_WARN} 条警告 =="

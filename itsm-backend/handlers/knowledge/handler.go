@@ -96,7 +96,8 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	userIDVal, ok := c.Get("user_id")
@@ -107,7 +108,8 @@ func (h *Handler) CreateArticle(c *gin.Context) {
 
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 	userID, ok := userIDVal.(int)
@@ -160,12 +162,14 @@ func (h *Handler) GetArticle(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -188,12 +192,14 @@ func (h *Handler) ListArticles(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -225,12 +231,14 @@ func (h *Handler) UpdateArticle(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -308,12 +316,14 @@ func (h *Handler) MarkArticleReviewed(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -345,12 +355,14 @@ func (h *Handler) setArticlePublished(c *gin.Context, published bool) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -379,12 +391,14 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -480,7 +494,8 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantIDInt, ok := tenantIDVal.(int)
@@ -539,7 +554,8 @@ func snippet(s string, maxLen int) string {
 func (h *Handler) GetRecommendations(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
@@ -566,7 +582,8 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 func (h *Handler) GetRecentArticles(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
@@ -593,12 +610,14 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 func (h *Handler) GetCategories(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 
@@ -615,12 +634,14 @@ func (h *Handler) GetCategories(c *gin.Context) {
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantIDVal, ok := c.Get("tenant_id")
 	if !ok {
-		common.ParamError(c, "Tenant ID not found")
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
 		return
 	}
 	tenantID, ok := tenantIDVal.(int)
 	if !ok {
-		common.ParamError(c, "Invalid tenant ID")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
 		return
 	}
 

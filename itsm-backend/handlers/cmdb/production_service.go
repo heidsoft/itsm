@@ -10,6 +10,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -1331,8 +1332,12 @@ func (c *ProductionService) CreateSavedView(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
+	userNameVal, _ := ctx.Get("user_name")
+	userNameStr, _ := userNameVal.(string)
 
 	var req dto.CreateCISavedViewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1340,7 +1345,7 @@ func (c *ProductionService) CreateSavedView(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.savedViewService.CreateSavedView(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	result, err := c.savedViewService.CreateSavedView(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create saved view failed", "error", err, "tenant_id", tenantID, "name", req.Name)
 		common.Fail(ctx, common.InternalErrorCode, "创建视图失败: "+err.Error())
@@ -1367,12 +1372,15 @@ func (c *ProductionService) ListSavedViews(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
 	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
 	includePublic, _ := strconv.ParseBool(ctx.DefaultQuery("include_public", "true"))
 
-	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID.(int), includePublic, page, pageSize)
+	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID, includePublic, page, pageSize)
 	if err != nil {
 		c.logger.Errorw("List saved views failed", "error", err, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "获取视图列表失败: "+err.Error())
@@ -1423,14 +1431,17 @@ func (c *ProductionService) UpdateSavedView(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
 	var req dto.UpdateCISavedViewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
-	result, err := c.savedViewService.UpdateSavedView(ctx.Request.Context(), id, tenantID, userID.(int), &req)
+	result, err := c.savedViewService.UpdateSavedView(ctx.Request.Context(), id, tenantID, userID, &req)
 	if err != nil {
 		c.logger.Errorw("Update saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "更新视图失败: "+err.Error())
@@ -1455,8 +1466,11 @@ func (c *ProductionService) DeleteSavedView(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
-	err := c.savedViewService.DeleteSavedView(ctx.Request.Context(), id, tenantID, userID.(int))
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
+	err := c.savedViewService.DeleteSavedView(ctx.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		c.logger.Errorw("Delete saved view failed", "error", err, "view_id", id, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "删除视图失败: "+err.Error())
@@ -1483,8 +1497,12 @@ func (c *ProductionService) CreateImportTask(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
+	userNameVal, _ := ctx.Get("user_name")
+	userNameStr, _ := userNameVal.(string)
 
 	var req dto.ImportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1492,7 +1510,7 @@ func (c *ProductionService) CreateImportTask(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.importExportService.CreateImportTask(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	result, err := c.importExportService.CreateImportTask(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create import task failed", "error", err, "tenant_id", tenantID, "file_url", req.FileURL)
 		common.Fail(ctx, common.InternalErrorCode, "创建导入任务失败: "+err.Error())
@@ -1577,8 +1595,12 @@ func (c *ProductionService) CreateExportTask(ctx *gin.Context) {
 		return
 	}
 
-	userID, _ := ctx.Get("user_id")
-	userName, _ := ctx.Get("user_name")
+	userID, uidOK := middleware.UserIDOrUnauthorized(ctx)
+	if !uidOK {
+		return
+	}
+	userNameVal, _ := ctx.Get("user_name")
+	userNameStr, _ := userNameVal.(string)
 
 	var req dto.ExportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1586,7 +1608,7 @@ func (c *ProductionService) CreateExportTask(ctx *gin.Context) {
 		return
 	}
 
-	result, err := c.importExportService.CreateExportTask(ctx.Request.Context(), &req, tenantID, userID.(int), userName.(string))
+	result, err := c.importExportService.CreateExportTask(ctx.Request.Context(), &req, tenantID, userID, userNameStr)
 	if err != nil {
 		c.logger.Errorw("Create export task failed", "error", err, "tenant_id", tenantID)
 		common.Fail(ctx, common.InternalErrorCode, "创建导出任务失败: "+err.Error())

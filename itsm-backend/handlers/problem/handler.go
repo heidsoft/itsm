@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -106,11 +107,15 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	userID, _ := c.Get("user_id") // Override req.CreatedBy with actual user?
-
-	// Legacy DTO has CreatedBy in request, but better to enforce from context
-	createdBy := userID.(int)
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	userID, uidOK := middleware.UserIDOrUnauthorized(c)
+	if !uidOK {
+		return
+	}
+	createdBy := userID
 
 	problem := &Problem{
 		Title:       req.Title,
@@ -123,7 +128,7 @@ func (h *Handler) Create(c *gin.Context) {
 		CreatedBy:   createdBy,
 	}
 
-	created, err := h.service.Create(c.Request.Context(), tenantID.(int), problem)
+	created, err := h.service.Create(c.Request.Context(), tenantID, problem)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -151,8 +156,11 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -183,8 +191,11 @@ func (h *Handler) GetAssociations(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	p, err := h.service.GetWithAssociations(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -244,9 +255,12 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 	// 验证问题存在
-	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	_, err = h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -256,7 +270,7 @@ func (h *Handler) AddAssociation(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AddAssociations(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedIDs); err != nil {
+	if err := h.service.AddAssociations(c.Request.Context(), tenantID, id, req.RelatedType, req.RelatedIDs); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -291,9 +305,12 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 	// 验证问题存在
-	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	_, err = h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -303,7 +320,7 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.RemoveAssociation(c.Request.Context(), tenantID.(int), id, req.RelatedType, req.RelatedID); err != nil {
+	if err := h.service.RemoveAssociation(c.Request.Context(), tenantID, id, req.RelatedType, req.RelatedID); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -334,7 +351,10 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
@@ -354,7 +374,7 @@ func (h *Handler) List(c *gin.Context) {
 		filters["keyword"] = req.Keyword
 	}
 
-	list, total, err := h.service.List(c.Request.Context(), tenantID.(int), req.Page, req.PageSize, filters, currentUserID, currentRole)
+	list, total, err := h.service.List(c.Request.Context(), tenantID, req.Page, req.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -427,7 +447,10 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 
 	// 将 DTO 指针字段转换为 domain entity
 	updates := &Problem{}
@@ -453,7 +476,7 @@ func (h *Handler) Update(c *gin.Context) {
 		updates.Impact = *req.Impact
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID.(int), id, updates)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -627,8 +650,11 @@ func (h *Handler) Delete(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	err = h.service.Delete(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	err = h.service.Delete(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -647,8 +673,11 @@ func (h *Handler) Delete(c *gin.Context) {
 // @Security BearerAuth
 // @Router /api/v1/problems/stats [get]
 func (h *Handler) GetStats(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
-	stats, err := h.service.GetStats(c.Request.Context(), tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -678,7 +707,10 @@ func (h *Handler) GetStats(c *gin.Context) {
 // @Security BearerAuth
 // @Router /api/v1/problems/trend [get]
 func (h *Handler) GetTrends(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 
 	startDateStr := c.DefaultQuery("startDate", "")
 	endDateStr := c.DefaultQuery("endDate", "")
@@ -698,7 +730,7 @@ func (h *Handler) GetTrends(c *gin.Context) {
 		}
 	}
 
-	data, err := h.service.GetTrend(c.Request.Context(), tenantID.(int), startDate, endDate)
+	data, err := h.service.GetTrend(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -718,7 +750,10 @@ func (h *Handler) GetTrends(c *gin.Context) {
 // @Security BearerAuth
 // @Router /api/v1/problems/hotspots [get]
 func (h *Handler) GetHotspots(c *gin.Context) {
-	tenantID, _ := c.Get("tenant_id")
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
 
 	startDateStr := c.DefaultQuery("startDate", "")
 	endDateStr := c.DefaultQuery("endDate", "")
@@ -738,7 +773,7 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 		}
 	}
 
-	data, err := h.service.GetHotspot(c.Request.Context(), tenantID.(int), startDate, endDate)
+	data, err := h.service.GetHotspot(c.Request.Context(), tenantID, startDate, endDate)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -765,8 +800,11 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	_, err = h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -806,8 +844,11 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	_, err = h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -845,8 +886,11 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := c.Get("tenant_id")
-	_, err = h.service.Get(c.Request.Context(), id, tenantID.(int))
+	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
+	if !tenantOK {
+		return
+	}
+	_, err = h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")

@@ -62,7 +62,8 @@ func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	}
 	id, ok := tenantID.(int)
 	if !ok {
-		common.Fail(ctx, common.InternalErrorCode, "租户ID类型错误")
+		// 租户上下文类型错误本质是认证/上下文问题，统一为 401（对齐上游中间件）。
+		common.Fail(ctx, common.AuthFailedCode, "租户ID类型错误")
 		return 0, false
 	}
 	return id, true

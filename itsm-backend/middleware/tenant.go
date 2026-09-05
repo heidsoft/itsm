@@ -131,7 +131,12 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		if tenantEntity == nil {
-			common.Fail(c, common.ParamErrorCode, "租户信息缺失")
+			// 语义修正（2026-09-05）：租户缺失属认证问题而非参数问题。
+			// 历史此处返回 ParamErrorCode(400)，与域内 TenantIDOrUnauthorized(401)
+			// 及同文件「租户不匹配」分支(AuthFailedCode) 三处语义不一致。
+			// 由于本中间件是 tenant 路由组的第一道关卡，域内 401 分支在生产中
+			// 实际不可达——真正的对外契约由此处决定，故统一为 401。
+			common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 			c.Abort()
 			return
 		}
@@ -201,11 +206,15 @@ func GetTenantContext(c *gin.Context) (*TenantContext, bool) {
 	return tenantCtx, ok
 }
 
-// GetTenantID 获取租户ID
+// GetTenantID 获取租户ID。fail-closed：上下文缺失或租户ID非法（<=0）一律报错，
+// 避免异常上下文（如 ID=0）被下游当作合法租户造成越权/数据误写。
 func GetTenantID(c *gin.Context) (int, error) {
 	tenantCtx, exists := GetTenantContext(c)
 	if !exists {
 		return 0, errors.New("租户上下文不存在")
+	}
+	if tenantCtx.TenantID <= 0 {
+		return 0, errors.New("租户上下文无效")
 	}
 	return tenantCtx.TenantID, nil
 }
@@ -235,4 +244,23 @@ func GetUserID(c *gin.Context) (int, error) {
 	}
 
 	return 0, errors.New("用户ID类型错误")
+}
+
+// UserIDOrUnauthorized 提取用户ID，失败时统一响应 401（AuthFailedCode）。
+// 与 TenantIDOrUnauthorized 平行：user_id 由 AuthMiddleware 写入扁平上下文
+// （c.Set("user_id", claims.UserID)，见 middleware/auth.go:247）。
+// 返回 false 时响应已写出，调用方应直接 return。
+// fail-closed：缺失、类型错误或非法值（<=0）一律 401，避免缺用户上下文时
+// 下游裸断言 .(int) panic 退化为 500。
+func UserIDOrUnauthorized(c *gin.Context) (int, bool) {
+	userID, err := GetUserID(c)
+	if err != nil {
+		common.Fail(c, common.AuthFailedCode, "用户上下文缺失")
+		return 0, false
+	}
+	if userID <= 0 {
+		common.Fail(c, common.AuthFailedCode, "用户上下文无效")
+		return 0, false
+	}
+	return userID, true
 }
