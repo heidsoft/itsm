@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -110,13 +110,17 @@ lint-frontend: ## 运行前端lint
 type-check: ## TypeScript类型检查
 	cd itsm-frontend && npm run type-check
 
-check-contracts: ## 校验工程契约（API 同源、部署、CI 等 7 项）
+check-contracts: ## 校验工程契约（API 同源、部署、CI 与安全门禁）
 	@echo "$(BLUE)校验工程契约...$(NC)"
 	@node scripts/check-engineering-contracts.js
 
 docs-gate: ## 运行文档质量门禁（advisory；--strict 传 DOCS_GATE_ARGS=--strict）
 	@echo "$(BLUE)运行文档质量门禁...$(NC)"
 	@bash scripts/docs-gate/run-all.sh $(DOCS_GATE_ARGS)
+
+check-handlers-hygiene: ## 检查 handlers 垂直切片卫生（裸奔域/域间 import；--strict 传 HANDLERS_GATE_ARGS=--strict）
+	@echo "$(BLUE)检查 handlers 分层卫生...$(NC)"
+	@bash scripts/check-handlers-hygiene.sh $(HANDLERS_GATE_ARGS)
 
 # ========================
 # 生产语义化入口（README 引用的稳定目标名）
@@ -132,7 +136,7 @@ prod-init: ## 生成 .env.prod（不覆盖已有文件），空密钥字段填�
 			perl -pi -e "s{^$${k}=.*}{$${k}=$${val}}" .env.prod; \
 		done; \
 		echo "$(GREEN).env.prod 已生成：DB_PASSWORD/REDIS_PASSWORD/JWT_SECRET 已填入随机值$(NC)"; \
-		echo "$(RED)仍必须手动设置：ADMIN_PASSWORD、域名、TLS 等全部 [REQUIRED] 项$(NC)"; \
+		echo "$(RED)仍必须手动设置：ADMIN_PASSWORD、固定 VERSION、域名与入口 TLS 等全部 [REQUIRED] 项$(NC)"; \
 	fi
 
 prod-deploy: deploy ## 部署到生产环境（deploy 别名）
