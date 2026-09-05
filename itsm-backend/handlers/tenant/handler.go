@@ -5,7 +5,6 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -13,12 +12,12 @@ import (
 
 // Handler HTTP handler for tenant domain
 type Handler struct {
-	svc   *service.TenantService
+	svc    Service
 	logger *zap.SugaredLogger
 }
 
 // NewHandler creates a new tenant handler
-func NewHandler(svc *service.TenantService, logger *zap.SugaredLogger) *Handler {
+func NewHandler(svc Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{svc: svc, logger: logger}
 }
 
