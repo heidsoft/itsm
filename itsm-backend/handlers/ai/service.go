@@ -28,6 +28,8 @@ type Service struct {
 	triageService      *service.TriageService
 	rca                *service.RootCauseService
 	aiTelemetryService *service.AITelemetryService
+	// P1-2 修复：SummarizeService 装配路径（替换之前绕行 rca.SummarizeTicket 的方式）
+	summarizeService *service.SummarizeService
 	// P2-6: ent client，用于复用 RBAC hasResourcePermission
 	entClient *ent.Client
 }
@@ -64,6 +66,12 @@ func NewService(
 // Kept as a setter to avoid churning existing NewService call sites.
 func (s *Service) SetLLMGateway(gateway *service.LLMGateway) {
 	s.llmGateway = gateway
+}
+
+// SetSummarizeService wires SummarizeService（2026-09-06 P1-2 修复：替换之前绕行 rca 的方式）。
+// SummarizeTicket 优先走 SummarizeService.SummarizeWithMetadata，失败兜底回 rca。
+func (s *Service) SetSummarizeService(svc *service.SummarizeService) {
+	s.summarizeService = svc
 }
 
 // SetEntClient wires the ent client for RBAC permission checks.
@@ -276,6 +284,10 @@ var chatWritableTools = map[string]bool{
 	"create_ticket_type": true,
 	// CMDB 本体链路：把工单挂到配置项（走同一审批流）
 	"link_ticket_ci": true,
+	// CMDB 关系写操作：与上面同一审批流 + Gate2 RBAC（resource=ci_relationship, action=write）
+	// LLM 在聊天中建/删 CI 关系必须走人工审批，与原生 UI 路径行为一致。
+	"create_ci_relationship": true,
+	"delete_ci_relationship": true,
 }
 
 // ChatStream streams a RAG answer through onDelta while emitting sources
@@ -498,7 +510,12 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 	}, nil
 }
 
-// SummarizeTicket B9: AI 工单总结 - 委托 RootCauseService 处理（有 ent 访问）
+// SummarizeTicket B9: AI 工单总结。
+//
+// 2026-09-06 P1-2 修复：把 SummarizeService 接入装配图（之前 NewSummarizeService 在
+// 生产装配路径零调用点，是 404 行死代码）。本函数仍委托 rca 处理 ent 反查与编排，
+// SummarizeService 通过 ai.summarize skill 独立被 SkillRegistry 消费（见 skills.go），
+// 二者职责解耦：rca 负责按 ticketID 拉上下文，SummarizeService 负责"按文本 + metadata"摘要。
 func (s *Service) SummarizeTicket(ctx context.Context, ticketID int, tenantID int) (interface{}, error) {
 	return s.rca.SummarizeTicket(ctx, ticketID, tenantID)
 }

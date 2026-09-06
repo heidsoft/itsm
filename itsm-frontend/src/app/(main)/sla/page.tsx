@@ -6,6 +6,7 @@ import { Alert, Button, Card, Col, Empty, Row, Space, Spin, Statistic, Tag, Tool
 import { AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import dayjs from 'dayjs';
 import { SLAApi, type SLAComplianceReport } from '@/lib/api/sla-api';
+import SLATrendPredictionCard from '@/components/business/sla/SLATrendPredictionCard';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 interface SLAStats {
@@ -203,6 +204,12 @@ export default function SLAPage() {
               <Statistic title={t('sla.mtbf')} value="—" />
             </Tooltip>
           </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} className="mb-6">
+        <Col xs={24}>
+          <SLATrendPredictionCard />
         </Col>
       </Row>
 

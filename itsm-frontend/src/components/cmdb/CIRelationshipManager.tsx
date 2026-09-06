@@ -41,6 +41,7 @@ import {
   useCreateRelationshipMutation,
   useDeleteRelationshipMutation,
 } from '@/lib/hooks/useCMDB';
+import { useOntologyRelationshipVocabulary } from '@/lib/cmdb/use-relationship-vocabulary';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -88,6 +89,11 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   onRefresh,
 }) => {
   const { message } = App.useApp();
+  // P1-4：把后端 ontology 关系词表写入 runtimeVocabulary（单一源闭环）。
+  // Select 渲染仍用 V2 端点（已有完整 name/description/direction），
+  // 但 graph-engine 等其他模块读 relationshipLabel() 时拿到的是 ontology 权威值。
+  // 返回值不直接使用——副作用即目的（注入运行时词表）。
+  useOntologyRelationshipVocabulary();
   // React Query：关系类型（10 分钟缓存）
   const typesQuery = useRelationshipTypesV2Query();
   const relationshipTypes = typesQuery.data ?? [];

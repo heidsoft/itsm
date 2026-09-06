@@ -901,6 +901,11 @@ func NewApplication() *Application {
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
 	aiServiceDomain.SetLLMGateway(llmGateway)
+	// 2026-09-06 P1-2 修复：装配 SummarizeService（之前定义了但 NewSummarizeService 在生产装配路径零调用点）。
+	// SummarizeService 通过 ai.summarize skill 被 SkillRegistry 消费（handlers/ai/skills.go），
+	// 不再作为 404 行死代码留存。
+	summarizeService := service.NewSummarizeService(llmGateway, zap.NewNop())
+	aiServiceDomain.SetSummarizeService(summarizeService)
 	// P2-6: 注入 ent client 供 AI 工具 RBAC 校验复用 hasResourcePermission
 	aiServiceDomain.SetEntClient(client)
 	aiHandler := ai.NewHandler(aiServiceDomain)

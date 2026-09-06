@@ -4,9 +4,10 @@ import (
 	"testing"
 )
 
-// TestToolRegistryWriteToolDefinitions 验证写工具（create_ticket/update_ticket/create_ticket_type）
-// 已正确注册为需审批的写操作（ReadOnly=false，且拥有独立的 resource/action）。
-// 这是 AI 写路径打通的基础：聊天 LLM 与 agent 路径都依赖这些定义判断RBAC与审批流。
+// TestToolRegistryWriteToolDefinitions 验证写工具（create_ticket/update_ticket/create_ticket_type/
+// link_ticket_ci/create_ci_relationship/delete_ci_relationship）已正确注册为需审批的写操作
+// （ReadOnly=false，且拥有独立的 resource/action）。
+// 这是 AI 写路径打通的基础：聊天 LLM 与 agent 路径都依赖这些定义判断 RBAC 与审批流。
 func TestToolRegistryWriteToolDefinitions(t *testing.T) {
 	reg := NewToolRegistry(nil, nil, nil, nil)
 	tools := reg.ListTools()
@@ -24,6 +25,9 @@ func TestToolRegistryWriteToolDefinitions(t *testing.T) {
 		{"create_ticket", "ticket", "write"},
 		{"update_ticket", "ticket", "write"},
 		{"create_ticket_type", "ticket_type", "write"},
+		{"link_ticket_ci", "cmdb", "write"},
+		{"create_ci_relationship", "cmdb", "write"},
+		{"delete_ci_relationship", "cmdb", "write"},
 	}
 
 	for _, c := range cases {

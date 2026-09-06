@@ -231,6 +231,39 @@ export async function aiGetAuditLogs(params: {
   return httpClient.get<AIAuditLogsResponse>(url);
 }
 
+// ==================== AI 趋势预测（对应后端 POST /api/v1/ai/predictions） ====================
+
+/** 后端 DTO：itsm-backend/dto/ticket_prediction_dto.go */
+export type TrendPredictionType = 'volume' | 'type' | 'priority' | 'resource';
+
+export interface TrendPredictionRequest {
+  timeRange: [string, string]; // YYYY-MM-DD ×2
+  predictionType: TrendPredictionType;
+  filters?: Record<string, unknown>;
+  model?: string;
+}
+
+export interface PredictionDataPoint {
+  date: string;
+  predictedValue: number;
+  lowerBound: number;
+  upperBound: number;
+  confidence: number;
+  category?: string;
+  priority?: string;
+}
+
+export interface TrendPredictionResponse {
+  predictions: PredictionDataPoint[];
+  confidence: number;
+  model: string;
+  generatedAt: string;
+}
+
+export async function aiPredict(req: TrendPredictionRequest): Promise<TrendPredictionResponse> {
+  return httpClient.post<TrendPredictionResponse>('/api/v1/ai/predictions', req);
+}
+
 // ==================== AI 工具调用审批队列（P0：打通人工审批闭环） ====================
 
 export interface ToolApproval {
