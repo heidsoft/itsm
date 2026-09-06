@@ -119,14 +119,25 @@ export class AuthService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const responseData = (await response.json()) as { code: number; message: string; data: T };
+    const responseData = (await response.json()) as {
+      code: number;
+      message: string;
+      data: T | { retryAfterSeconds?: number } | null;
+    };
 
     // 检查响应码
     if (responseData.code !== 0) {
-      throw new Error(responseData.message || '请求失败');
+      // P0-2（2026-09-06 UAT 修复）：登录限流响应 data.retryAfterSeconds 一并带出，
+      // 调用方（LoginForm）据此展示倒计时。
+      const data = (responseData.data ?? null) as { retryAfterSeconds?: number } | null;
+      const err = new Error(responseData.message || '请求失败');
+      if (data && typeof data.retryAfterSeconds === 'number') {
+        (err as Error & { retryAfterSeconds?: number }).retryAfterSeconds = data.retryAfterSeconds;
+      }
+      throw err;
     }
 
-    return responseData.data;
+    return responseData.data as T;
   }
 
   // 刷新token
@@ -233,8 +244,10 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      // P0-2（2026-09-06 UAT 修复）：登录失败时把 error 重新抛出，让 LoginForm
+      // 能拿到 retryAfterSeconds（限流响应）做倒计时展示。
+      // 不再 swallow 错误——调用方需要区分 invalid_credentials 与 rate_limited。
+      throw error;
     }
   }
 

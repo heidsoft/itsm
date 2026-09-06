@@ -101,7 +101,7 @@ func (s *Service) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.
 	if err != nil {
 		return nil, fmt.Errorf("生成token失败")
 	}
-	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, s.jwtSecret, 7*24*time.Hour)
+	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, 7*24*time.Hour)
 	if err != nil {
 		return nil, fmt.Errorf("生成刷新令牌失败")
 	}

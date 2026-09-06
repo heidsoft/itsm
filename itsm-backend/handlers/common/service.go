@@ -153,7 +153,7 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 		return nil, err
 	}
 
-	refreshToken, err := middleware.GenerateRefreshToken(u.ID, s.jwtSecret, 7*24*time.Hour)
+	refreshToken, err := middleware.GenerateRefreshToken(u.ID, u.Username, u.Role, u.TenantID, s.jwtSecret, 7*24*time.Hour)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 		return nil, err
 	}
 
-	newRefresh, err := middleware.GenerateRefreshToken(user.ID, s.jwtSecret, 7*24*time.Hour)
+	newRefresh, err := middleware.GenerateRefreshToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, 7*24*time.Hour)
 	if err != nil {
 		return nil, err
 	}

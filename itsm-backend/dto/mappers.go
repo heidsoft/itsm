@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/schema"
 )
 
 // ===================================
@@ -1231,6 +1232,16 @@ func ToCIRelationshipResponse(rel *ent.CIRelationship) *CIRelationshipResponse {
 	if rel.Edges.TargetCi != nil {
 		res.TargetCIName = rel.Edges.TargetCi.Name
 		res.TargetCIType = rel.Edges.TargetCi.CiType
+	}
+
+	// P1-5（2026-09-06 UAT 修复）：填入关系类型中文展示名。
+	// 之前 RelationshipTypeName 永远空字符串，导致前端 CMDB 关系列表的"关系类型"
+	// 列渲染空白。从 schema.CIRelationshipTypeVocabulary（单一受控源）查 Name 字段。
+	for _, meta := range schema.CIRelationshipTypeVocabulary {
+		if string(meta.Type) == string(rel.RelationshipType) {
+			res.RelationshipTypeName = meta.Name
+			break
+		}
 	}
 
 	return res

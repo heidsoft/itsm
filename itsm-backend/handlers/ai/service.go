@@ -541,12 +541,65 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 		}
 		output, err := s.slaForecastSkill.Execute(ctx, input)
 		if err == nil {
-			return output, nil
+			// P0-1（2026-09-06 UAT 修复）：slaForecastSkill 的 PredictionPoint 用
+			// "predicted" 字段，与 dto.TrendPredictionResponse.Predictions 契约
+			// "predictedValue" 不一致。出口做一层转译，保留 SLAForecastSkill 的
+			// 全部增强字段（insights / seasonality / trend / anomalyDates），
+			// 同时让前端 SLATrendPredictionCard 的 predictedValue 字段拿到真值。
+			return normalizeForecastOutput(output), nil
 		}
 		// Fall back to legacy prediction service on error
 		s.logger.Warnw("SLAForecastSkill failed, falling back to legacy", "error", err)
 	}
 	return s.prediction.GetTrendPrediction(ctx, req, tenantID)
+}
+
+// normalizeForecastOutput 把 SLAForecastSkill.ForecastOutput 转译为 dto 契约
+// （predictions[i].predictedValue 而非 predicted）。同时保留 SLAForecastSkill
+// 的 AI 增强字段（insights/seasonality/trend/anomalyDates）作为额外元数据。
+func normalizeForecastOutput(output *service.ForecastOutput) interface{} {
+	if output == nil {
+		return output
+	}
+	type predictionDTO struct {
+		Date           string  `json:"date"`
+		PredictedValue float64 `json:"predictedValue"`
+		LowerBound     float64 `json:"lowerBound"`
+		UpperBound     float64 `json:"upperBound"`
+		Confidence     float64 `json:"confidence"`
+		Anomaly        bool    `json:"anomaly"`
+	}
+	type forecastDTO struct {
+		Predictions  []predictionDTO      `json:"predictions"`
+		Confidence   float64              `json:"confidence"`
+		Model        string               `json:"model"`
+		GeneratedAt  string               `json:"generatedAt"`
+		Insights     string               `json:"insights"`
+		Seasonality  map[string]bool      `json:"seasonality"`
+		Trend        string               `json:"trend"`
+		AnomalyDates []string             `json:"anomalyDates"`
+	}
+	points := make([]predictionDTO, 0, len(output.Predictions))
+	for _, p := range output.Predictions {
+		points = append(points, predictionDTO{
+			Date:           p.Date.Format("2006-01-02"),
+			PredictedValue: p.Predicted,
+			LowerBound:     p.LowerBound,
+			UpperBound:     p.UpperBound,
+			Confidence:     p.Confidence,
+			Anomaly:        p.Anomaly,
+		})
+	}
+	return forecastDTO{
+		Predictions:  points,
+		Confidence:   output.Confidence,
+		Model:        output.Model,
+		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
+		Insights:     output.Insights,
+		Seasonality:  output.Seasonality,
+		Trend:        output.Trend,
+		AnomalyDates: output.AnomalyDates,
+	}
 }
 
 // GetForecastInsights returns AI-generated insights for SLA forecasting

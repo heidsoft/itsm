@@ -44,6 +44,8 @@ export interface AIMetrics {
   usefulRate: number;
   byKind: Record<string, number>;
   avgResponseTimeSeconds: number;
+  llmCallCount?: number;
+  responseTimeAvailable?: boolean;
 }
 
 export interface AIAuditEntry {

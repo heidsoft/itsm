@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, Lock, Shield, ArrowRight } from 'lucide-react';
@@ -43,7 +43,40 @@ function LoginForm() {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [countdown, setCountdown] = useState(0); // P0-2：限流倒计时（秒）
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // 清理倒计时定时器
+  useEffect(() => {
+    return () => {
+      if (countdownTimer.current) {
+        clearInterval(countdownTimer.current);
+      }
+    };
+  }, []);
+
+  // 启动倒计时
+  const startCountdown = (seconds: number) => {
+    if (countdownTimer.current) {
+      clearInterval(countdownTimer.current);
+    }
+    setCountdown(seconds);
+    setLoading(true);
+    countdownTimer.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownTimer.current) {
+            clearInterval(countdownTimer.current);
+            countdownTimer.current = null;
+          }
+          setLoading(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   // 检查会话过期标记
   const isExpired = searchParams.get('expired') === 'true';
@@ -72,9 +105,18 @@ function LoginForm() {
       }
     } catch (err) {
       logger.error('登录错误:', err);
-      setError(err instanceof Error ? err.message : t('auth.login.loginFailed'));
+      const e = err as Error & { retryAfterSeconds?: number };
+      // P0-2：限流响应携带 retryAfterSeconds，启动倒计时让按钮显示剩余秒数。
+      if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
+        setError(`${e.message}（${e.retryAfterSeconds} 秒后自动恢复）`);
+        startCountdown(e.retryAfterSeconds);
+        return;
+      }
+      setError(e instanceof Error ? e.message : t('auth.login.loginFailed'));
     } finally {
-      setLoading(false);
+      if (countdown === 0) {
+        setLoading(false);
+      }
     }
   };
 
@@ -193,11 +235,16 @@ function LoginForm() {
             type='primary'
             htmlType='submit'
             loading={loading}
+            disabled={countdown > 0}
             size='large'
             className='w-full h-10 rounded-md text-sm font-semibold'
             icon={<ArrowRight size={14} />}
           >
-            {loading ? t('auth.login.loggingIn') : t('auth.login.loginButton')}
+            {countdown > 0
+              ? `请等待 ${countdown} 秒`
+              : loading
+                ? t('auth.login.loggingIn')
+                : t('auth.login.loginButton')}
           </Button>
         </Form.Item>
       </Form>

@@ -74,11 +74,18 @@ func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSec
 }
 
 // 生成Refresh Token
-func GenerateRefreshToken(userID int, jwtSecret string, expireTime time.Duration) (string, error) {
+//
+// P1-3（2026-09-06 UAT 修复）：refresh token 必须携带完整的 username/role/tenantId。
+// 之前只填 userID，导致 refresh 续签时 handler 拿到空字符串身份，降级为匿名。
+// 现在签名补齐：调用方传入 user 完整信息，refresh 续签可解析出 tenant 上下文。
+func GenerateRefreshToken(userID int, username, role string, tenantID int, jwtSecret string, expireTime time.Duration) (string, error) {
 	// jti 用于 refresh token 黑名单唯一标识；带随机后缀避免同一秒重复
 	jti := fmt.Sprintf("rt-%d-%d-%d", userID, time.Now().UnixNano(), randSeq6())
 	claims := Claims{
 		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		TenantID:  tenantID,
 		TokenType: "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        jti,

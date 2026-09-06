@@ -82,28 +82,53 @@ func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID 
 	return s.repo.SaveFeedback(ctx, tenantID, userID, reqID, kind, query, itemType, itemID, useful, score, notes)
 }
 
-// GetMetrics retrieves AI usage metrics for a tenant
-func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (map[string]interface{}, error) {
-	metrics := make(map[string]interface{})
+// AIMetrics 指标聚合结果（API JSON 形状）。
+//
+// P1-4（2026-09-06 UAT 修复）：用结构体 + json tag 强制 camelCase，
+// 避免 map[string]interface{} 拼写漂移。前端 TS 类型 AIMetrics 字段对齐。
+// 单元测试只断言字段名（不需要起 sqlite 测试 DB）。
+type AIMetrics struct {
+	TotalRequests         int                    `json:"totalRequests"`
+	TotalFeedback         int                    `json:"totalFeedback"`
+	UsefulFeedback        int                    `json:"usefulFeedback"`
+	UsefulRate            float64                `json:"usefulRate"`
+	ByKind                map[string]interface{} `json:"byKind"`
+	AvgResponseTimeSeconds float64               `json:"avgResponseTimeSeconds"`
+	LLMCallCount          int                    `json:"llmCallCount"`
+	ResponseTimeAvailable bool                   `json:"responseTimeAvailable"`
+}
+
+// GetMetrics retrieves AI usage metrics for a tenant.
+//
+// P1-4（2026-09-06 UAT 修复）：用 AIMetrics 结构体 + json tag 强制 camelCase 序列化，
+// 替代之前 map[string]interface{} 拼写漂移导致前端读字段全 undefined 的问题。
+func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (*AIMetrics, error) {
+	out := &AIMetrics{}
 
 	totalRequests, err := s.countAIAuditLogs(ctx, tenantID, lookbackDays)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get total requests: %w", err)
 	}
-	metrics["total_requests"] = totalRequests
+	out.TotalRequests = totalRequests
 
 	feedback, err := s.repo.AggregateFeedback(ctx, tenantID, lookbackDays)
 	if err != nil {
 		return nil, err
 	}
-	metrics["total_feedback"] = feedback.TotalFeedback
-	metrics["useful_feedback"] = feedback.UsefulFeedback
+	out.TotalFeedback = feedback.TotalFeedback
+	out.UsefulFeedback = feedback.UsefulFeedback
 	if feedback.TotalFeedback > 0 {
-		metrics["useful_rate"] = float64(feedback.UsefulFeedback) / float64(feedback.TotalFeedback)
+		out.UsefulRate = float64(feedback.UsefulFeedback) / float64(feedback.TotalFeedback)
 	} else {
-		metrics["useful_rate"] = 0.0
+		out.UsefulRate = 0.0
 	}
-	metrics["by_kind"] = feedback.ByKind
+	// byKind 在 repository 里是 map[string]int，转一层为 map[string]interface{}
+	// 与 json 序列化兼容（int 在 JSON 序列化为 number）
+	byKind := make(map[string]interface{}, len(feedback.ByKind))
+	for k, v := range feedback.ByKind {
+		byKind[k] = v
+	}
+	out.ByKind = byKind
 
 	// Average LLM latency from ai_llm_calls (platform-level, recorded by LLMObserver).
 	// Kept tenant-agnostic: the gateway is wired before any tenant context exists.
@@ -111,11 +136,11 @@ func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookb
 	if err != nil {
 		return nil, err
 	}
-	metrics["avg_response_time_seconds"] = latencyAgg.AvgLatencySeconds
-	metrics["llm_call_count"] = latencyAgg.CallCount
-	metrics["response_time_available"] = latencyAgg.CallCount > 0
+	out.AvgResponseTimeSeconds = latencyAgg.AvgLatencySeconds
+	out.LLMCallCount = latencyAgg.CallCount
+	out.ResponseTimeAvailable = latencyAgg.CallCount > 0
 
-	return metrics, nil
+	return out, nil
 }
 
 // countAIAuditLogs 通过 Ent 在 audit_logs 中统计"近 lookbackDays 内、含 ai 动作"的条数。
