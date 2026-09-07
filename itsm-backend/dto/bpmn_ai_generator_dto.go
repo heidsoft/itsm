@@ -159,3 +159,17 @@ type UpdateWorkflowTemplateRequest struct {
 	BPMNXML          *string                 `json:"bpmnXml"`
 	IsPublic         *bool                   `json:"isPublic"`
 }
+
+// ReloadWorkflowTemplateResponse 重新部署已发布模板为 BPMN 流程定义的响应。
+// PreviousVersion 为空表示该 key 在 process_definitions 中尚无历史部署记录。
+// Source 标识重载源（当前固定为 workflow_templates，便于后续扩展内置模板）。
+type ReloadWorkflowTemplateResponse struct {
+	Key                string `json:"key"`
+	Name               string `json:"name"`
+	PreviousVersion    string `json:"previousVersion,omitempty"`
+	NewVersion         string `json:"newVersion"`
+	DeploymentID       string `json:"deploymentId"`
+	ProcessDefinitionID int   `json:"processDefinitionId"`
+	Source             string `json:"source"`
+	ReloadedAt         string `json:"reloadedAt"`
+}

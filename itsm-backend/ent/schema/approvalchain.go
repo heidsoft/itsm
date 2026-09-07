@@ -43,6 +43,15 @@ type ApprovalChainStep struct {
 	FallbackAction     string `json:"fallback_action,omitempty"`
 	FallbackApproverID int    `json:"fallback_approver_id,omitempty"`
 	FallbackRole       string `json:"fallback_role,omitempty"`
+	// 动态适配条件（i3 P0）：当工单上下文（Priority/Amount）不匹配条件时，
+	// 该层被跳过（视为自动通过），PendingLevel 直接跳到下一非跳过层。
+	// 全部为空表示「无条件适用」，与旧行为兼容。
+	// ConditionPriorities 优先级白名单（大小写不敏感），如 ["urgent","high","P1"]
+	ConditionPriorities []string `json:"condition_priorities,omitempty"`
+	// ConditionAmountMin 最小金额（含），0 表示无下限
+	ConditionAmountMin float64 `json:"condition_amount_min,omitempty"`
+	// ConditionAmountMax 最大金额（含），0 表示无上限
+	ConditionAmountMax float64 `json:"condition_amount_max,omitempty"`
 }
 
 // Edges of the ApprovalChain.

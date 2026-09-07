@@ -15,12 +15,40 @@ import (
 	"itsm-backend/ent/user"
 )
 
+// TicketCreator 工单创建接口，避免循环依赖
+// 由 service.TicketService 实现，在 connector 初始化时注入
+type TicketCreator interface {
+	CreateTicketFromExternal(ctx context.Context, req *ExternalTicketRequest) (*ent.Ticket, error)
+}
+
+// ExternalTicketRequest 外部系统创建工单请求
+// 统一了飞书、Webhook、邮件等外部来源的工单创建参数
+type ExternalTicketRequest struct {
+	Title        string
+	Description  string
+	Priority     string
+	Type         string
+	Status       string
+	RequesterID  int
+	TenantID     int
+	Source       string            // 来源标识，如 "feishu", "webhook", "email"
+	ExternalID   string            // 外部系统ID，如飞书任务GUID
+	FormData     map[string]interface{}
+}
+
 // Feishu 飞书连接器实现
 // 复用 package 内 Client 以享受 tenant_access_token 缓存
 type Feishu struct {
-	client    *Client
-	cfg       connector.Config
-	startedAt time.Time
+	client        *Client
+	cfg           connector.Config
+	startedAt     time.Time
+	ticketCreator TicketCreator // 可选：注入工单创建服务，避免直接操作数据库
+}
+
+// SetTicketCreator 注入工单创建服务
+// 在 connector 初始化后、处理消息前调用
+func (f *Feishu) SetTicketCreator(creator TicketCreator) {
+	f.ticketCreator = creator
 }
 
 // ActionHandler 卡片按钮/回调事件
@@ -398,47 +426,47 @@ func (f *Feishu) SyncFeishuTaskToTicket(ctx context.Context, tx *ent.Tx, feishuT
 			ClearErrorMessage().
 			Save(ctx)
 	} else {
-		// Create new ticket
-		createReq := dto.CreateTicketRequest{
-			Title:       feishuTask.Name,
-			Description: feishuTask.Description,
-			Priority:    mapPriorityFromFeishu(feishuTask.Priority),
-			Type:        "ticket",
-			// Set requester: need to map Feishu creator ID to ITSM user ID
-			// RequesterID: userID,
-		}
-
-		// Create ticket using the same logic as ticket service
-		// TODO: Inject ticket service or reuse create logic
-		// For now, we'll create it directly
-
-		// 映射飞书创建人到ITSM用户
-		requesterID := 1 // 默认管理员
-		if feishuTask.CreatorID != "" {
-			user, err := tx.User.Query().
-				Where(user.FeishuOpenID(feishuTask.CreatorID)).
-				Where(user.TenantID(f.cfg.TenantID)).
-				Only(ctx)
-			if err == nil {
-				requesterID = user.ID
+		// Create new ticket via injected TicketCreator service (preferred)
+		// Falls back to direct database access when TicketCreator is not injected
+		if f.ticketCreator != nil {
+			// 使用注入的 TicketCreator 服务创建工单
+			// 该服务负责业务规则校验、审批链触发、SLA 计算等
+			ticket, err = f.ticketCreator.CreateTicketFromExternal(ctx, &ExternalTicketRequest{
+				Title:       feishuTask.Name,
+				Description: feishuTask.Description,
+				Priority:    mapPriorityFromFeishu(feishuTask.Priority),
+				Type:        "ticket",
+				Status:      mapStatusFromFeishu(feishuTask.Status),
+				TenantID:    f.cfg.TenantID,
+				Source:      "feishu",
+				ExternalID:  feishuTask.GUID,
+			})
+		} else {
+			// Fallback: direct database access when TicketCreator not injected
+			// 映射飞书创建人到ITSM用户
+			requesterID := 1 // 默认管理员
+			if feishuTask.CreatorID != "" {
+				u, qerr := tx.User.Query().
+					Where(user.FeishuOpenID(feishuTask.CreatorID)).
+					Where(user.TenantID(f.cfg.TenantID)).
+					Only(ctx)
+				if qerr == nil {
+					requesterID = u.ID
+				}
 			}
-		}
 
-		ticketNumber := fmt.Sprintf("TK-%d-%s", f.cfg.TenantID, time.Now().Format("20060102150405"))
-		create := tx.Ticket.Create().
-			SetTitle(createReq.Title).
-			SetDescription(createReq.Description).
-			SetPriority(createReq.Priority).
-			SetType(createReq.Type).
-			SetStatus(mapStatusFromFeishu(feishuTask.Status)).
-			SetTenantID(f.cfg.TenantID).
-			SetRequesterID(requesterID).
-			SetTicketNumber(ticketNumber)
-
-		if createReq.AssigneeID > 0 {
-			create.SetAssigneeID(createReq.AssigneeID)
+			ticketNumber := fmt.Sprintf("TK-%d-%s", f.cfg.TenantID, time.Now().Format("20060102150405"))
+			create := tx.Ticket.Create().
+				SetTitle(feishuTask.Name).
+				SetDescription(feishuTask.Description).
+				SetPriority(mapPriorityFromFeishu(feishuTask.Priority)).
+				SetType("ticket").
+				SetStatus(mapStatusFromFeishu(feishuTask.Status)).
+				SetTenantID(f.cfg.TenantID).
+				SetRequesterID(requesterID).
+				SetTicketNumber(ticketNumber)
+			ticket, err = create.Save(ctx)
 		}
-		ticket, err = create.Save(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("feishu: failed to create ticket: %w", err)
 		}

@@ -51,13 +51,13 @@ func (r *entAlertRepository) Store(ctx context.Context, tenantID int, a *Standar
 		SetFiredAt(a.FiredAt).
 		SetRawPayload(a.RawPayload)
 
-	// TODO: re-enable after ent code regeneration: acknowledged_at, resolved_at
-	// if a.AcknowledgedAt != nil {
-	// 	build.SetAcknowledgedAt(*a.AcknowledgedAt)
-	// }
-	// if a.ResolvedAt != nil {
-	// 	build.SetResolvedAt(*a.ResolvedAt)
-	// }
+	// 设置可选的时间字段
+	if a.AcknowledgedAt != nil {
+		build.SetAcknowledgedAt(*a.AcknowledgedAt)
+	}
+	if a.ResolvedAt != nil {
+		build.SetResolvedAt(*a.ResolvedAt)
+	}
 
 	// upsert via separate query (OnConflict not available in current ent version)
 	created, err := build.Save(ctx)

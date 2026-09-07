@@ -61,6 +61,9 @@ type ApprovalLevelEval struct {
 	FallbackTriggered bool
 	FallbackAction    string
 	Status            string // pending | satisfied | blocked
+	// i3 P0 动态适配：上下文不匹配条件时该层被跳过，视为自动通过。
+	Skipped     bool   // 本层是否被条件过滤跳过
+	SkipReason  string // 跳过原因，如 "priority_not_match"/"amount_below_min"/"amount_above_max"
 }
 
 // ApprovalChainEvaluation 整体求值结果
@@ -109,6 +112,38 @@ func EvaluateApprovalChain(ctx context.Context, client *ent.Client, logger *zap.
 		var allApprovers []int
 		var allNames []string
 
+		// i3 P0 动态适配：当任一 step 配置了条件且条件与上下文不匹配时，
+		// 整个 level 被视为跳过（满足但无需审批），PendingLevel 跳过该层。
+		// 所有 step 的条件用「或」语义合并（任一匹配即可应用本层）。
+		applyLevel := true
+		var skipReason string
+		hasAnyCondition := false
+		for _, st := range steps {
+			if len(st.ConditionPriorities) > 0 || st.ConditionAmountMin > 0 || st.ConditionAmountMax > 0 {
+				hasAnyCondition = true
+				if match, reason := stepAppliesToContext(st, evalCtx); !match {
+					applyLevel = false
+					skipReason = reason
+				} else {
+					// 任一 step 条件匹配即视为本层适用
+					applyLevel = true
+					skipReason = ""
+					break
+				}
+			}
+		}
+		if hasAnyCondition && !applyLevel {
+			// 整个 level 因上下文不匹配被跳过：直接计入 satisfied，不进入审批人解析。
+			result.Levels = append(result.Levels, ApprovalLevelEval{
+				Level:        lvl,
+				Status:       "satisfied",
+				Skipped:      true,
+				SkipReason:   skipReason,
+				ApprovalType: "serial",
+				Threshold:    0,
+			})
+			continue
+		}
 		for _, st := range steps {
 			if st.IsRequired {
 				levelRequired = true
@@ -452,4 +487,34 @@ func intInSlice(v int, list []int) bool {
 		}
 	}
 	return false
+}
+
+// stepAppliesToContext 判定一个 step 的条件是否与求值上下文匹配。
+// 返回 (match, reason)。全部条件为空时永远匹配（与旧行为兼容）。
+// 优先级匹配：大小写不敏感、白名单语义（工单优先级必须在列表中）。
+// 金额匹配：[ConditionAmountMin, ConditionAmountMax] 闭区间；0 表示该侧无限制。
+func stepAppliesToContext(step schema.ApprovalChainStep, evalCtx ApprovalEvalContext) (bool, string) {
+	hasAny := len(step.ConditionPriorities) > 0 || step.ConditionAmountMin > 0 || step.ConditionAmountMax > 0
+	if !hasAny {
+		return true, ""
+	}
+	if len(step.ConditionPriorities) > 0 {
+		matched := false
+		for _, p := range step.ConditionPriorities {
+			if strings.EqualFold(strings.TrimSpace(p), strings.TrimSpace(evalCtx.Priority)) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return false, "priority_not_match"
+		}
+	}
+	if step.ConditionAmountMin > 0 && evalCtx.Amount < step.ConditionAmountMin {
+		return false, "amount_below_min"
+	}
+	if step.ConditionAmountMax > 0 && evalCtx.Amount > step.ConditionAmountMax {
+		return false, "amount_above_max"
+	}
+	return true, ""
 }

@@ -25,6 +25,7 @@ func (h *WorkflowTemplateHandler) RegisterRoutes(r *gin.RouterGroup) {
 	routes.PUT("/:key", middleware.RequirePermission("workflow", "update"), h.Update)
 	routes.POST("/:key/publish", middleware.RequirePermission("workflow", "update"), h.Publish)
 	routes.POST("/:key/archive", middleware.RequirePermission("workflow", "update"), h.Archive)
+	routes.POST("/:key/reload", middleware.RequirePermission("workflow", "update"), h.Reload)
 }
 
 func NewWorkflowTemplateHandler(catalog *service.BPMNWorkflowTemplateCatalog) *WorkflowTemplateHandler {
@@ -164,6 +165,31 @@ func (h *WorkflowTemplateHandler) Archive(ctx *gin.Context) {
 		return
 	}
 	common.Success(ctx, gin.H{"key": ctx.Param("key"), "status": "archived"})
+}
+
+// Reload 重新部署已发布模板为 BPMN 流程定义。
+// 仅取已发布（status='published'）的最新版本，不会把 draft 内容写入运行时。
+// 返回新部署的 deployment 与 process_definition 信息，便于前端展示版本跃迁。
+func (h *WorkflowTemplateHandler) Reload(ctx *gin.Context) {
+	tenantID, ok := templateTenant(ctx)
+	if !ok {
+		return
+	}
+	key := ctx.Param("key")
+	result, err := h.catalog.Reload(ctx.Request.Context(), tenantID, key)
+	if errors.Is(err, service.ErrWorkflowTemplateNotFound) {
+		common.Fail(ctx, common.NotFoundCode, "已发布模板不存在，无法重载")
+		return
+	}
+	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
+		common.Fail(ctx, common.ValidationError, err.Error())
+		return
+	}
+	if err != nil {
+		common.Fail(ctx, common.InternalErrorCode, "重载模板失败")
+		return
+	}
+	common.Success(ctx, result)
 }
 
 func (h *WorkflowTemplateHandler) Versions(ctx *gin.Context) {

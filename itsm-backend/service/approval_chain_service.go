@@ -31,16 +31,19 @@ func (s *ApprovalChainService) CreateApprovalChain(ctx context.Context, req *dto
 	chainSteps := make([]schema.ApprovalChainStep, len(req.Chain))
 	for i, step := range req.Chain {
 		chainSteps[i] = schema.ApprovalChainStep{
-			Level:              step.Level,
-			ApproverID:         step.ApproverID,
-			Role:               step.Role,
-			Name:               step.Name,
-			IsRequired:         step.IsRequired,
-			ApprovalType:       step.ApprovalType,
-			Threshold:          step.Threshold,
-			FallbackAction:     step.FallbackAction,
-			FallbackApproverID: step.FallbackApproverID,
-			FallbackRole:       step.FallbackRole,
+			Level:               step.Level,
+			ApproverID:          step.ApproverID,
+			Role:                step.Role,
+			Name:                step.Name,
+			IsRequired:          step.IsRequired,
+			ApprovalType:        step.ApprovalType,
+			Threshold:           step.Threshold,
+			FallbackAction:      step.FallbackAction,
+			FallbackApproverID:  step.FallbackApproverID,
+			FallbackRole:        step.FallbackRole,
+			ConditionPriorities: step.ConditionPriorities,
+			ConditionAmountMin:  step.ConditionAmountMin,
+			ConditionAmountMax:  step.ConditionAmountMax,
 		}
 	}
 
@@ -145,16 +148,19 @@ func (s *ApprovalChainService) UpdateApprovalChain(ctx context.Context, id int, 
 		chainSteps := make([]schema.ApprovalChainStep, len(req.Chain))
 		for i, step := range req.Chain {
 			chainSteps[i] = schema.ApprovalChainStep{
-				Level:              step.Level,
-				ApproverID:         step.ApproverID,
-				Role:               step.Role,
-				Name:               step.Name,
-				IsRequired:         step.IsRequired,
-				ApprovalType:       step.ApprovalType,
-				Threshold:          step.Threshold,
-				FallbackAction:     step.FallbackAction,
-				FallbackApproverID: step.FallbackApproverID,
-				FallbackRole:       step.FallbackRole,
+				Level:               step.Level,
+				ApproverID:          step.ApproverID,
+				Role:                step.Role,
+				Name:                step.Name,
+				IsRequired:          step.IsRequired,
+				ApprovalType:        step.ApprovalType,
+				Threshold:           step.Threshold,
+				FallbackAction:      step.FallbackAction,
+				FallbackApproverID:  step.FallbackApproverID,
+				FallbackRole:        step.FallbackRole,
+				ConditionPriorities: step.ConditionPriorities,
+				ConditionAmountMin:  step.ConditionAmountMin,
+				ConditionAmountMax:  step.ConditionAmountMax,
 			}
 		}
 		update = update.SetChain(chainSteps)

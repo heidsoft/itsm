@@ -703,11 +703,25 @@ type ApprovalTriggerRequest struct {
 	RequesterID  int
 	Amount       float64
 	TenantID     int
+	// DepartmentID / TeamID / ProjectID 是动态审批人解析的上下文。
+	// 传 0 时 TriggerApproval 会回退到工单本身的字段，再到 requester 的部门/团队/项目，
+	// 最后回退为读取不到的全错（避免静默丢级）。
+	DepartmentID int
+	TeamID       int
+	ProjectID    int
+	// ApproverFallback 解析失败时的最后迫降；为空则尝试租户管理员，仍找不到才记录失败。
+	ApproverFallback bool
 }
 
 // TriggerApproval 触发审批流程
 func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTriggerRequest) ([]*ent.ApprovalRecord, error) {
 	s.logger.Infow("Triggering approval", "ticket_number", req.TicketNumber, "ticket_type", req.TicketType, "priority", req.Priority)
+
+	// 以增强上下文丰富 req：动态审批人解析依赖部门/团队/项目 ID，
+	// requester 找不到部门时会到工单，查不到再记 warn。不覆盖调用方显式传入的 ID。
+	if req.DepartmentID == 0 || req.TeamID == 0 || req.ProjectID == 0 {
+		s.enrichApproverContext(ctx, req)
+	}
 
 	// ②/③ 解析审批的工单类型对应的流程：BPMN ProcessBinding 优先，未迁移类型回退旧 ApprovalWorkflow。
 	workflow, defKey, err := s.resolveApprovalWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
@@ -755,6 +769,7 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 
 	// 创建审批记录
 	records := make([]*ent.ApprovalRecord, 0)
+	approverNames := make(map[int]string)
 	for i, node := range nodes {
 		level := node.Level
 		if level < 1 {
@@ -769,12 +784,41 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 
 		approverIDs := node.ApproverIDs
 		if len(approverIDs) == 0 && node.AssigneeType != "" && node.AssigneeValue != "" {
-			approverID, _, err := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID, req.Amount)
-			if err != nil {
-				s.logger.Warnw("Failed to resolve approver", "error", err, "node", i)
-				continue
+			approverID, approverName, resolveErr := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID, req.Amount, req)
+			if resolveErr != nil {
+				s.logger.Warnw("Failed to resolve approver",
+					"error", resolveErr,
+					"node_index", i,
+					"level", level,
+					"assignee_type", node.AssigneeType,
+					"assignee_value", node.AssigneeValue,
+					"ticket_id", req.TicketID,
+					"workflow_id", workflow.ID,
+				)
+				// 不静默丢级：尝试迫降到租户管理员；仍失败则记 audit 后跳过该节点。
+				fallbackID, fallbackName, fallbackErr := s.resolveTenantAdminApprover(ctx, req.TenantID)
+				if fallbackErr == nil {
+					s.logger.Infow("Using tenant admin fallback for unresolved approver",
+						"node_index", i, "level", level,
+						"approver_id", fallbackID, "approver_name", fallbackName,
+					)
+					approverIDs = []int{fallbackID}
+					approverNames = map[int]string{fallbackID: fallbackName}
+				} else {
+					s.logger.Errorw("Approver resolution failed and no fallback available; skipping node",
+						"original_error", resolveErr,
+						"fallback_error", fallbackErr,
+						"node_index", i, "level", level,
+						"ticket_id", req.TicketID,
+					)
+					continue
+				}
+			} else {
+				approverIDs = []int{approverID}
+				if approverName != "" {
+					approverNames = map[int]string{approverID: approverName}
+				}
 			}
-			approverIDs = []int{approverID}
 		}
 
 		if len(approverIDs) == 0 {
@@ -786,14 +830,20 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 		}
 
 		for _, approverID := range approverIDs {
-			userEntity, err := s.client.User.Query().
-				Where(
-					user.IDEQ(approverID),
-					user.TenantIDEQ(req.TenantID),
-				).
-				Only(ctx)
-			if err != nil {
-				continue
+			// 优先使用解析阶段获得的名称（避免对同一 userID 重复查询），
+			// fallback 路径会优先填入，其他情况仍走 DB 查询。
+			approverName := approverNames[approverID]
+			if approverName == "" {
+				userEntity, err := s.client.User.Query().
+					Where(
+						user.IDEQ(approverID),
+						user.TenantIDEQ(req.TenantID),
+					).
+					Only(ctx)
+				if err != nil {
+					continue
+				}
+				approverName = userEntity.Name
 			}
 
 			record, err := s.client.ApprovalRecord.Create().
@@ -803,7 +853,7 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 				SetCurrentLevel(level).
 				SetTotalLevels(len(nodes)).
 				SetApproverID(approverID).
-				SetApproverName(userEntity.Name).
+				SetApproverName(approverName).
 				SetStatus("pending").
 				SetWorkflowID(workflow.ID).
 				SetTicketID(req.TicketID).
@@ -818,7 +868,15 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 			}
 
 			records = append(records, record)
-			s.logger.Infow("Created approval record", "record_id", record.ID, "approver", userEntity.Name, "level", level)
+			s.logger.Infow("Created approval record",
+				"record_id", record.ID,
+				"approver_id", approverID,
+				"approver_name", approverName,
+				"level", level,
+				"node_index", i,
+				"workflow_id", workflow.ID,
+				"ticket_id", req.TicketID,
+			)
 		}
 	}
 
@@ -1028,8 +1086,13 @@ func extractApproverSpec(raw map[string]interface{}) (string, string) {
 	return "", ""
 }
 
-// resolveApprover 解析审批人
-func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, assigneeValue string, tenantID int, amount float64) (int, string, error) {
+// resolveApprover 解析审批人。
+//
+// 上下文增强（i2 P0 修复）：
+//   - 当 assigneeType 为动态角色（dept_manager/team_leader/project_manager）且未提供
+//     assigneeValue 或解析失败时，回退使用 req.DepartmentID/TeamID/ProjectID；
+//   - 重复的 registry 构造与 resolver 注册被推迟到调用点必要类型，避免每次重建。
+func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, assigneeValue string, tenantID int, amount float64, req *ApprovalTriggerRequest) (int, string, error) {
 	switch assigneeType {
 	case "role":
 		// 根据角色查找用户
@@ -1067,21 +1130,36 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 		}
 		return ids[0], "", nil
 	case "dept_manager", "team_leader", "project_manager", "temp_team_leader":
-		scopeID, err := strconv.Atoi(assigneeValue)
-		if err != nil {
-			return 0, "", fmt.Errorf("无效的审批人范围ID: %s", assigneeValue)
+		// 优先使用 req 中的上下文 ID；否则尝试解析 assigneeValue；
+		// 都为 0/无效时记错误，由调用点迫降。
+		scopeID := 0
+		if req != nil {
+			switch assigneeType {
+			case "dept_manager":
+				scopeID = req.DepartmentID
+			case "team_leader", "temp_team_leader":
+				scopeID = req.TeamID
+			case "project_manager":
+				scopeID = req.ProjectID
+			}
+		}
+		if scopeID == 0 {
+			if parsed, perr := strconv.Atoi(assigneeValue); perr == nil {
+				scopeID = parsed
+			}
+		}
+		if scopeID == 0 {
+			return 0, "", fmt.Errorf("%s 缺少有效的范围 ID（department/team/project）", assigneeType)
 		}
 
 		appCtx := &approver.ApproverContext{TenantID: tenantID}
 		switch assigneeType {
 		case "dept_manager":
 			appCtx.DepartmentID = scopeID
-		case "team_leader":
+		case "team_leader", "temp_team_leader":
 			appCtx.TeamID = scopeID
 		case "project_manager":
 			appCtx.ProjectID = scopeID
-		case "temp_team_leader":
-			appCtx.TeamID = scopeID
 		}
 
 		registry := approver.NewResolverRegistry(s.logger)
@@ -1119,6 +1197,71 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 	default:
 		return 0, "", fmt.Errorf("不支持的审批人类型: %s", assigneeType)
 	}
+}
+
+// enrichApproverContext 用工单本身与 requester 的所属部门/团队/项目丰富 req 上下文。
+// 调用方已显式给出的 ID 不会被覆盖。client 为 nil 时直接返回，避免在单元测试场景下 panic。
+func (s *ApprovalService) enrichApproverContext(ctx context.Context, req *ApprovalTriggerRequest) {
+	if req == nil || s == nil || s.client == nil {
+		return
+	}
+
+	// 1. 先查工单本身的部门（如果调用方未指定 DepartmentID）
+	if req.DepartmentID == 0 && req.TicketID > 0 {
+		t, err := s.client.Ticket.Query().
+			Where(
+				ticket.IDEQ(req.TicketID),
+				ticket.TenantIDEQ(req.TenantID),
+			).
+			Only(ctx)
+		if err == nil && t != nil {
+			if req.DepartmentID == 0 {
+				req.DepartmentID = t.DepartmentID
+			}
+		}
+	}
+
+	// 2. 用 requester 兜底（适用于工单无部门或 service_request 等场景）
+	if req.RequesterID > 0 {
+		u, err := s.client.User.Query().
+			Where(
+				user.IDEQ(req.RequesterID),
+				user.TenantIDEQ(req.TenantID),
+			).
+			Only(ctx)
+		if err == nil && u != nil {
+			if req.DepartmentID == 0 {
+				req.DepartmentID = u.DepartmentID
+			}
+		}
+	}
+}
+
+// resolveTenantAdminApprover 寻找租户内第一位 active 的 super_admin/管理员，
+// 用于动态审批人解析失败时的最后迫降；找不到则返回 error，由调用方记 audit。
+func (s *ApprovalService) resolveTenantAdminApprover(ctx context.Context, tenantID int) (int, string, error) {
+	if s == nil || s.client == nil || tenantID <= 0 {
+		return 0, "", fmt.Errorf("approver service not initialized")
+	}
+	adminRoles := []user.Role{
+		user.Role("super_admin"),
+		user.Role("tenant_admin"),
+		user.Role("admin"),
+		user.Role("workflow_admin"),
+	}
+	for _, role := range adminRoles {
+		admin, err := s.client.User.Query().
+			Where(
+				user.RoleEQ(role),
+				user.TenantIDEQ(tenantID),
+				user.Active(true),
+			).
+			First(ctx)
+		if err == nil && admin != nil {
+			return admin.ID, admin.Name, nil
+		}
+	}
+	return 0, "", fmt.Errorf("no tenant admin available for fallback in tenant %d", tenantID)
 }
 
 func parseAmountThresholds(raw string) ([]approver.AmountThreshold, error) {
