@@ -20,6 +20,7 @@
     <!-- ========== 自动分配 ========== -->
     <bpmn:serviceTask id="Activity_AutoAssign" name="自动分配" implementation="##WebService">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <camunda:inputOutput>
           <camunda:inputParameter name="action">assign_incident</camunda:inputParameter>
         </camunda:inputOutput>
@@ -77,6 +78,7 @@
     <!-- ========== 升级处理 ========== -->
     <bpmn:serviceTask id="Activity_AutoEscalate" name="自动升级" implementation="##WebService">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <camunda:inputOutput>
           <camunda:inputParameter name="action">escalate_incident</camunda:inputParameter>
         </camunda:inputOutput>
@@ -101,6 +103,7 @@
     <!-- ========== 通知相关方 ========== -->
     <bpmn:serviceTask id="Activity_Notify" name="通知相关方" implementation="##WebService">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <camunda:inputOutput>
           <camunda:inputParameter name="action">notify</camunda:inputParameter>
         </camunda:inputOutput>

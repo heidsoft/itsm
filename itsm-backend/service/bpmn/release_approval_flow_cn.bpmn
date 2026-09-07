@@ -71,6 +71,7 @@
 
     <bpmn:serviceTask id="Activity_HotfixDeploy" name="热修复部署">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">hotfix_deploy</bpmn:metaData>
         <bpmn:metaData name="auto_rollback">true</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">30</bpmn:metaData>
@@ -140,6 +141,7 @@
 
     <bpmn:serviceTask id="Activity_StagingDeploy" name="预发布部署">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
       </bpmn:extensionElements>
@@ -155,7 +157,7 @@
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_TestFail</bpmn:incoming>
-      <bpmn:outgoing>Flow_R3_Normal</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fix_Retest</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- ========== 重大发布路径 ========== -->
@@ -241,6 +243,7 @@
 
     <bpmn:serviceTask id="Activity_StagingDeploy_Major" name="预发布部署">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">staging_deploy</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
       </bpmn:extensionElements>
@@ -256,12 +259,13 @@
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_MajorTestFail</bpmn:incoming>
-      <bpmn:outgoing>Flow_R3_Major</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FixMajor_Retest</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- ========== 灰度发布 ========== -->
     <bpmn:serviceTask id="Activity_CanaryDeploy" name="灰度发布(10%)">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">canary_deploy</bpmn:metaData>
         <bpmn:metaData name="initial_percentage">10</bpmn:metaData>
         <bpmn:metaData name="monitoring_enabled">true</bpmn:metaData>
@@ -293,6 +297,7 @@
     <!-- 灰度失败自动回滚 -->
     <bpmn:serviceTask id="Activity_AutoRollback" name="自动回滚">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_rollback</bpmn:metaData>
         <bpmn:metaData name="notify_roles">ops_manager,developer</bpmn:metaData>
       </bpmn:extensionElements>
@@ -303,6 +308,7 @@
     <!-- ========== 全量发布 ========== -->
     <bpmn:serviceTask id="Activity_FullDeploy" name="全量发布">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">full_deploy</bpmn:metaData>
         <bpmn:metaData name="maintenance_window_check">true</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
@@ -369,6 +375,7 @@
     <bpmn:sequenceFlow id="Flow_TestFail" sourceRef="Gateway_NormalTest" targetRef="Activity_FixIssues">
       <bpmn:conditionExpression><![CDATA[${variables['test_passed'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Fix_Retest" sourceRef="Activity_FixIssues" targetRef="Activity_UnitTest" />
     <bpmn:sequenceFlow id="Flow_R6_Normal" sourceRef="Activity_NormalApproval" targetRef="Activity_StagingDeploy" />
     <bpmn:sequenceFlow id="Flow_R_Merge_Normal" sourceRef="Activity_StagingDeploy" targetRef="Activity_CanaryDeploy" />
 
@@ -383,6 +390,7 @@
     <bpmn:sequenceFlow id="Flow_MajorTestFail" sourceRef="Gateway_MajorTest" targetRef="Activity_FixIssues_Major">
       <bpmn:conditionExpression><![CDATA[${variables['test_passed'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_FixMajor_Retest" sourceRef="Activity_FixIssues_Major" targetRef="Activity_SecurityTest" />
     <bpmn:sequenceFlow id="Flow_R7_Major" sourceRef="Activity_MajorTechApproval" targetRef="Activity_MajorSecurityApproval" />
     <bpmn:sequenceFlow id="Flow_R8_Major" sourceRef="Activity_MajorSecurityApproval" targetRef="Activity_MajorITDirectorApproval" />
     <bpmn:sequenceFlow id="Flow_R9_Major" sourceRef="Activity_MajorITDirectorApproval" targetRef="Activity_StagingDeploy_Major" />

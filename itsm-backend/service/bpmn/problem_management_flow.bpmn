@@ -67,7 +67,7 @@
     <bpmn:exclusiveGateway id="Gateway_SolutionResult" name="审批通过?">
       <bpmn:incoming>Flow_9</bpmn:incoming>
       <bpmn:outgoing>Flow_10</bpmn:outgoing>
-      <bpmn:outgoing>Flow_Solution</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SolutionResult</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 实施解决方案 -->
@@ -85,8 +85,7 @@
     <!-- 验证结果网关 -->
     <bpmn:exclusiveGateway id="Gateway_VerifyResult" name="验证成功?">
       <bpmn:incoming>Flow_12</bpmn:incoming>
-      <bpmn:outgoing>Flow_KB</bpmn:outgoing>
-      <bpmn:outgoing>Flow_Solution</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Close</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 知识库更新 -->
@@ -96,7 +95,7 @@
         <bpmn:metaData name="action">update_kb</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_KB</bpmn:incoming>
-      <bpmn:outgoing>Flow_Close</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KBDone</bpmn:outgoing>
     </bpmn:serviceTask>
 
     <!-- 关闭问题 -->
@@ -135,6 +134,7 @@
     <bpmn:sequenceFlow id="Flow_Close" sourceRef="Gateway_VerifyResult" targetRef="Activity_KnowledgeBase">
       <bpmn:conditionExpression><![CDATA[${variables['verified'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_KBDone" sourceRef="Activity_KnowledgeBase" targetRef="Activity_Close" />
     <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Close" targetRef="EndEvent_1" />
   </bpmn:process>
 </bpmn:definitions>

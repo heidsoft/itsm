@@ -32,6 +32,7 @@
     <!-- ========== 阶段1: 快速响应 (5分钟内) ========== -->
     <bpmn:serviceTask id="Activity_InstantNotify" name="即时通知" implementation="##WebService">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">instant_notify</bpmn:metaData>
         <bpmn:metaData name="notification_channel">sms,wechat,email</bpmn:metaData>
         <bpmn:metaData name="notify_roles">sd_manager,l1_support,ops_manager</bpmn:metaData>
@@ -43,6 +44,7 @@
 
     <bpmn:serviceTask id="Activity_AutoAssign_P0" name="自动分派" implementation="##WebService">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_assign</bpmn:metaData>
         <bpmn:metaData name="assign_rule">round_robin</bpmn:metaData>
         <bpmn:metaData name="target_role">l1_support</bpmn:metaData>
@@ -89,6 +91,7 @@
     <!-- 无法解决需升级 -->
     <bpmn:serviceTask id="Activity_AutoEscalate_L2" name="自动升级L2">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l2</bpmn:metaData>
         <bpmn:metaData name="notify_roles">l2_support,ops_manager</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
@@ -129,6 +132,7 @@
     <!-- L2无法解决升级L3 -->
     <bpmn:serviceTask id="Activity_EscalateL3" name="升级L3专家">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l3</bpmn:metaData>
         <bpmn:metaData name="notify_roles">l3_expert,ops_director,it_director</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
@@ -170,6 +174,7 @@
     <!-- 重大事件升级 -->
     <bpmn:serviceTask id="Activity_MajorIncidentEscalate" name="重大事件升级">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">major_incident_escalate</bpmn:metaData>
         <bpmn:metaData name="notify_roles">it_director,ops_director,security_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">10</bpmn:metaData>
@@ -186,12 +191,13 @@
         <bpmn:metaData name="participant_roles">it_director,ops_director,l3_expert</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToWarRoom</bpmn:incoming>
-      <bpmn:outgoing>Flow_FinalNotify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WarRoomNotify</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- ========== 结束阶段: 通知与归档 ========== -->
     <bpmn:serviceTask id="Activity_NotifyStakeholders" name="通知相关方">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_stakeholders</bpmn:metaData>
         <bpmn:metaData name="notify_roles">reporter,manager,audit</bpmn:metaData>
         <bpmn:metaData name="report_required">true</bpmn:metaData>
@@ -246,6 +252,7 @@
       <bpmn:conditionExpression><![CDATA[${variables['is_major_incident'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_ToWarRoom" sourceRef="Activity_MajorIncidentEscalate" targetRef="Activity_WarRoomHandle" />
+    <bpmn:sequenceFlow id="Flow_WarRoomNotify" sourceRef="Activity_WarRoomHandle" targetRef="Activity_NotifyStakeholders" />
     <bpmn:sequenceFlow id="Flow_FinalNotify" sourceRef="Activity_L3Fix" targetRef="Activity_NotifyStakeholders" />
     <bpmn:sequenceFlow id="Flow_NotifySuccess" sourceRef="Activity_L1Fix" targetRef="Activity_NotifyStakeholders" />
     <bpmn:sequenceFlow id="Flow_ToClose" sourceRef="Activity_NotifyStakeholders" targetRef="Activity_IncidentClose" />

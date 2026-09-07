@@ -231,6 +231,7 @@
     <!-- ========== 拒绝路径 ========== -->
     <bpmn:serviceTask id="Activity_NotifyRejection" name="通知申请被拒绝">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
         <bpmn:metaData name="notify_roles">requester</bpmn:metaData>
         <bpmn:metaData name="reason_required">true</bpmn:metaData>

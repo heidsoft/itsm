@@ -66,7 +66,7 @@
     <!-- 结束 -->
     <endEvent id="EndEvent_1" name="结束">
       <incoming>Flow_10</incoming>
-      <incoming>Flow_11</ingoing>
+      <incoming>Flow_11</incoming>
     </endEvent>
 
     <!-- 连线 -->

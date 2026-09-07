@@ -42,7 +42,7 @@
         <bpmn:metaData name="action">manual_assign</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ManualAssign</bpmn:incoming>
-      <bpmn:outgoing>Flow_NotifyAssign</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AssignedNotify</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 通知处理人 -->
@@ -69,7 +69,7 @@
         <bpmn:metaData name="action">sla_warning</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SLAWarn</bpmn:incoming>
-      <bpmn:outgoing>Flow_Complete</bpmn:outgoing>
+      <bpmn:outgoing>Flow_SLADone</bpmn:outgoing>
     </bpmn:serviceTask>
 
     <!-- 结束事件：分配完成 -->
@@ -85,6 +85,7 @@
         <bpmn:body>${variables['assign_success'] == false}</bpmn:body>
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AssignedNotify" sourceRef="Activity_ManualAssign" targetRef="Activity_NotifyAssignee" />
     <bpmn:sequenceFlow id="Flow_NotifyAssign" sourceRef="Gateway_AssignResult" targetRef="Activity_NotifyAssignee">
       <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <bpmn:body>${variables['assign_success'] == true}</bpmn:body>
@@ -96,6 +97,7 @@
         <bpmn:body>${variables['sla_warning'] == true}</bpmn:body>
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_SLADone" sourceRef="Activity_SLAWarn" targetRef="EndEvent_Complete" />
     <bpmn:sequenceFlow id="Flow_Complete" sourceRef="Gateway_SLA" targetRef="EndEvent_Complete">
       <bpmn:conditionExpression xsi:type="bpmn:tExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <bpmn:body>${variables['sla_warning'] != true}</bpmn:body>

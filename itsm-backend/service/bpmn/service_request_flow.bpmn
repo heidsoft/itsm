@@ -5,8 +5,8 @@
   <bpmn:process id="service_request_flow" name="服务请求流程" isExecutable="true">
     <bpmn:extensionElements>
       <bpmn:metaData name="category">service_request</bpmn:metaData>
-      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
-      <bpmn:metaData name="description">标准服务请求处理流程</bpmn:metaData>
+      <bpmn:metaData name="version">2.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">标准服务请求处理流程（含多级审批）</bpmn:metaData>
     </bpmn:extensionElements>
 
     <!-- 开始事件：请求提交 -->
@@ -27,17 +27,43 @@
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <!-- 审批流程 -->
-    <bpmn:userTask id="Activity_Approval" name="请求审批">
+    <!-- 一级审批：直属主管审批 -->
+    <bpmn:userTask id="Activity_Approval_L1" name="直属主管审批">
       <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L1_Result</bpmn:outgoing>
     </bpmn:userTask>
 
-    <!-- 审批结果 -->
-    <bpmn:exclusiveGateway id="Gateway_ApprovalResult" name="审批结果?">
-      <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    <!-- 一级审批结果 -->
+    <bpmn:exclusiveGateway id="Gateway_L1_Result" name="主管审批结果?">
+      <bpmn:incoming>Flow_L1_Result</bpmn:incoming>
+      <bpmn:outgoing>Flow_L1_Pass</bpmn:outgoing>
       <bpmn:outgoing>Flow_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 二级审批：部门经理审批 -->
+    <bpmn:userTask id="Activity_Approval_L2" name="部门经理审批">
+      <bpmn:incoming>Flow_L1_Pass</bpmn:incoming>
+      <bpmn:outgoing>Flow_L2_Result</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 二级审批结果 -->
+    <bpmn:exclusiveGateway id="Gateway_L2_Result" name="经理审批结果?">
+      <bpmn:incoming>Flow_L2_Result</bpmn:incoming>
+      <bpmn:outgoing>Flow_L2_Pass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L2_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 三级审批：IT运维经理审批 -->
+    <bpmn:userTask id="Activity_Approval_L3" name="IT运维经理审批">
+      <bpmn:incoming>Flow_L2_Pass</bpmn:incoming>
+      <bpmn:outgoing>Flow_L3_Result</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 三级审批结果 -->
+    <bpmn:exclusiveGateway id="Gateway_L3_Result" name="运维经理审批结果?">
+      <bpmn:incoming>Flow_L3_Result</bpmn:incoming>
+      <bpmn:outgoing>Flow_L3_Pass</bpmn:outgoing>
+      <bpmn:outgoing>Flow_L3_Reject</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <!-- 驳回通知 -->
@@ -47,12 +73,15 @@
         <bpmn:metaData name="action">notify_rejection</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Reject</bpmn:incoming>
+      <bpmn:incoming>Flow_L2_Reject</bpmn:incoming>
+      <bpmn:incoming>Flow_L3_Reject</bpmn:incoming>
       <bpmn:outgoing>Flow_EndReject</bpmn:outgoing>
     </bpmn:serviceTask>
 
     <!-- 执行服务 -->
     <bpmn:userTask id="Activity_Execute" name="执行服务">
       <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:incoming>Flow_L3_Pass</bpmn:incoming>
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -72,7 +101,7 @@
     <!-- 改进服务 -->
     <bpmn:userTask id="Activity_Feedback" name="改进服务">
       <bpmn:incoming>Flow_Feedback</bpmn:incoming>
-      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FeedbackLoop</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 服务完成 -->
@@ -97,14 +126,37 @@
     <!-- 连线 -->
     <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Activity_Accept" />
     <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Accept" targetRef="Gateway_Approval" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_Approval" targetRef="Activity_Approval">
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Gateway_Approval" targetRef="Activity_Approval_L1">
       <bpmn:conditionExpression><![CDATA[${variables['need_approval'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <!-- 不需要审批 → 直接执行 -->
     <bpmn:sequenceFlow id="Flow_4" sourceRef="Gateway_Approval" targetRef="Activity_Execute">
       <bpmn:conditionExpression><![CDATA[${variables['need_approval'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_5" sourceRef="Activity_Approval" targetRef="Gateway_ApprovalResult" />
-    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_ApprovalResult" targetRef="Activity_RejectNotify">
+    <!-- 三级审批全部通过 → 执行服务 -->
+    <bpmn:sequenceFlow id="Flow_L3_Pass" sourceRef="Gateway_L3_Result" targetRef="Activity_Execute">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <!-- 一级审批通过 → 二级审批 -->
+    <bpmn:sequenceFlow id="Flow_L1_Result" sourceRef="Activity_Approval_L1" targetRef="Gateway_L1_Result" />
+    <bpmn:sequenceFlow id="Flow_L1_Pass" sourceRef="Gateway_L1_Result" targetRef="Activity_Approval_L2">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <!-- 二级审批通过 → 三级审批 -->
+    <bpmn:sequenceFlow id="Flow_L2_Result" sourceRef="Activity_Approval_L2" targetRef="Gateway_L2_Result" />
+    <bpmn:sequenceFlow id="Flow_L2_Pass" sourceRef="Gateway_L2_Result" targetRef="Activity_Approval_L3">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <!-- 三级审批通过 → 执行服务 -->
+    <bpmn:sequenceFlow id="Flow_L3_Result" sourceRef="Activity_Approval_L3" targetRef="Gateway_L3_Result" />
+    <!-- 任意级别驳回 → 驳回通知 -->
+    <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_L1_Result" targetRef="Activity_RejectNotify">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L2_Reject" sourceRef="Gateway_L2_Result" targetRef="Activity_RejectNotify">
+      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_L3_Reject" sourceRef="Gateway_L3_Result" targetRef="Activity_RejectNotify">
       <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_EndReject" sourceRef="Activity_RejectNotify" targetRef="EndEvent_Reject" />
@@ -116,6 +168,7 @@
     <bpmn:sequenceFlow id="Flow_Feedback" sourceRef="Gateway_Satisfaction" targetRef="Activity_Feedback">
       <bpmn:conditionExpression><![CDATA[${variables['satisfied'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_FeedbackLoop" sourceRef="Activity_Feedback" targetRef="Activity_Confirm" />
     <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_Complete" targetRef="EndEvent_1" />
   </bpmn:process>
 </bpmn:definitions>

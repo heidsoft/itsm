@@ -16,6 +16,9 @@
 
     <!-- 自动执行扫描 (Service Task) -->
     <serviceTask id="Task_AutoScan" name="自动安全扫描" camunda:type="external" camunda:topic="security-scan">
+      <extensionElements>
+        <metaData name="service_task_type">generic_task</metaData>
+      </extensionElements>
       <incoming>Flow_2</incoming>
       <outgoing>Flow_3</outgoing>
     </serviceTask>

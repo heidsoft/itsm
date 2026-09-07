@@ -30,6 +30,7 @@
     <!-- ========== 问题分类 ========== -->
     <bpmn:serviceTask id="Activity_AutoClassify" name="自动分类">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">classify_problem</bpmn:metaData>
         <bpmn:metaData name="ai_enabled">true</bpmn:metaData>
         <bpmn:metaData name="category">hardware,software,network,process,other</bpmn:metaData>
@@ -77,12 +78,13 @@
         <bpmn:metaData name="approval_required">true</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_RootCauseFound</bpmn:incoming>
-      <bpmn:outgoing>Flow_P5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_Confirmed</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 根因待确认（需要更多时间） -->
     <bpmn:serviceTask id="Activity_RootCausePendingNotify" name="通知相关人">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_root_cause_pending</bpmn:metaData>
         <bpmn:metaData name="notify_roles">l3_expert,ops_manager</bpmn:metaData>
       </bpmn:extensionElements>
@@ -138,12 +140,13 @@
         <bpmn:metaData name="timeout_days">2</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SolutionRejected</bpmn:incoming>
-      <bpmn:outgoing>Flow_P6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_Revise</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- ========== 变更实施 ========== -->
     <bpmn:serviceTask id="Activity_CreateRFC" name="创建变更请求">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">create_change_request</bpmn:metaData>
         <bpmn:metaData name="link_problem">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -189,12 +192,13 @@
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Failed</bpmn:incoming>
-      <bpmn:outgoing>Flow_P6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_Reverify</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- ========== 知识沉淀 ========== -->
     <bpmn:serviceTask id="Activity_CreateKBArticle" name="创建知识库">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">create_knowledge_article</bpmn:metaData>
         <bpmn:metaData name="article_type">problem_solution</bpmn:metaData>
         <bpmn:metaData name="auto_publish">true</bpmn:metaData>
@@ -206,11 +210,12 @@
     <!-- 预防措施触发 -->
     <bpmn:serviceTask id="Activity_TriggerPrevention" name="触发预防措施">
       <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">trigger_prevention_measures</bpmn:metaData>
         <bpmn:metaData name="actions">monitoring_update,process_improvement,training</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_P11</bpmn:incoming>
-      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P12</bpmn:outgoing>
     </bpmn:serviceTask>
 
     <!-- ========== 问题关闭 ========== -->
@@ -221,7 +226,7 @@
         <bpmn:metaData name="link_change_request">true</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_P11</bpmn:incoming>
-      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P13</bpmn:outgoing>
     </bpmn:userTask>
 
     <!-- 结束事件 -->
@@ -242,8 +247,10 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_P5_Pending" sourceRef="Activity_RootCausePendingNotify" targetRef="Activity_WaitRootCause" />
     <bpmn:sequenceFlow id="Flow_P5" sourceRef="Activity_WaitRootCause" targetRef="Activity_SolutionDesign" />
-    <bpmn:sequenceFlow id="Flow_P5" sourceRef="Activity_RootCauseConfirmed" targetRef="Activity_SolutionDesign" />
+    <bpmn:sequenceFlow id="Flow_P5_Confirmed" sourceRef="Activity_RootCauseConfirmed" targetRef="Activity_SolutionDesign" />
     <bpmn:sequenceFlow id="Flow_P6" sourceRef="Activity_SolutionDesign" targetRef="Gateway_SolutionReview" />
+    <bpmn:sequenceFlow id="Flow_P6_Revise" sourceRef="Activity_SolutionRevise" targetRef="Gateway_SolutionReview" />
+    <bpmn:sequenceFlow id="Flow_P6_Reverify" sourceRef="Activity_ReviseSolution" targetRef="Gateway_SolutionReview" />
     <bpmn:sequenceFlow id="Flow_SolutionApproved" sourceRef="Gateway_SolutionReview" targetRef="Activity_SolutionApproved">
       <bpmn:conditionExpression><![CDATA[${variables['solution_approved'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -261,8 +268,8 @@
       <bpmn:conditionExpression><![CDATA[${variables['verified'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_P11" sourceRef="Activity_CreateKBArticle" targetRef="Activity_TriggerPrevention" />
-    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_TriggerPrevention" targetRef="Activity_ProblemClose" />
-    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_ProblemClose" targetRef="EndEvent_ProblemComplete" />
+    <bpmn:sequenceFlow id="Flow_P12" sourceRef="Activity_TriggerPrevention" targetRef="Activity_ProblemClose" />
+    <bpmn:sequenceFlow id="Flow_P13" sourceRef="Activity_ProblemClose" targetRef="EndEvent_ProblemComplete" />
 
   </bpmn:process>
 </bpmn:definitions>

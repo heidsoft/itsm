@@ -47,7 +47,7 @@
 
     <!-- 验证结果 -->
     <userTask id="Task_Verify" name="验证与反馈" camunda:assignee="${initiator}">
-      <incoming>Flow_8</ingoing>
+      <incoming>Flow_8</incoming>
       <outgoing>Flow_9</outgoing>
     </userTask>
 

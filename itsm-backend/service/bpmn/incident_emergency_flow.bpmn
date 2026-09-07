@@ -133,6 +133,7 @@
     <bpmn:sequenceFlow id="Flow_Resolve" sourceRef="Gateway_Resolved" targetRef="Activity_Resolve">
       <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] == true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Notify" sourceRef="Activity_Resolve" targetRef="Activity_Notify" />
     <bpmn:sequenceFlow id="Flow_Escalate" sourceRef="Gateway_Resolved" targetRef="Activity_AutoEscalate">
       <bpmn:conditionExpression><![CDATA[${variables['problem_identified'] != true}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
