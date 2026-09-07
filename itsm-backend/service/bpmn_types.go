@@ -33,6 +33,19 @@ type BPMNProcess struct {
 	IntermediateEvents []*BPMNIntermediateEvent `xml:"intermediateCatchEvent"`
 	DataObjects        []*BPMNDataObject        `xml:"dataObject"`
 	DataStores         []*BPMNDataStore         `xml:"dataStore"`
+
+	// OutgoingDecls 元素级 outgoing 声明索引（elementID -> flow ids），
+	// 由 parser 后处理填充（encoding/xml 无法在结构体层面表达
+	// 「outgoing 挂在哪个子元素下」，见 BPMNParser.collectOutgoingDecls）。
+	// 用途：① lint 校验声明与 sequenceFlow.sourceRef 一致性；
+	// ② 引擎 0 出边时的 fallback 寻路（防静默卡死）。
+	OutgoingDecls map[string][]string `xml:"-"`
+}
+
+// BPMNOutgoingRef 单条 outgoing 声明（收集阶段中间形态）。
+type BPMNOutgoingRef struct {
+	OwnerID string
+	FlowID  string
 }
 
 // BPMNStartEvent 开始事件
@@ -119,6 +132,13 @@ type BPMNServiceTask struct {
 	CCVariable         string `xml:"ccVariable,attr"`
 	CCNotify           string `xml:"ccNotify,attr"`
 	NotifyChannels     string `xml:"notifyChannels,attr"`
+
+	// ServiceTaskType 显式处理器类型，来自扩展元素
+	// <metaData name="service_task_type">xxx</metaData>。
+	// 非空时优先于 implementation/class 等标准属性参与 handler 匹配
+	// （见 serviceTaskReference），使「##WebService」等 BPMN 标准标注
+	// 不再劫持内部 handler 寻址。
+	ServiceTaskType string `xml:"-"`
 }
 
 // GetID 获取ID

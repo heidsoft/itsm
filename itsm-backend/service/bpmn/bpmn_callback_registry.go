@@ -37,10 +37,15 @@ func NewCallbackRegistry(client *ent.Client, logger *zap.SugaredLogger) *Callbac
 }
 
 // RegisterHandler 注册服务任务处理器
+// 同时以 handler ID 与任务类型（GetTaskType，如 generic_task）为键注册，
+// 模板 metaData service_task_type 使用任务类型寻址，两者命名空间都必须可命中。
 func (r *CallbackRegistry) RegisterHandler(handler ServiceTaskHandlerInterface) {
 	r.handlersMu.Lock()
 	defer r.handlersMu.Unlock()
 	r.handlers[handler.GetHandlerID()] = handler
+	if taskType := handler.GetTaskType(); taskType != "" {
+		r.handlers[taskType] = handler
+	}
 }
 
 // UnregisterHandler 注销处理器

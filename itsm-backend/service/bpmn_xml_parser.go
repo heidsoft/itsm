@@ -24,12 +24,83 @@ func (p *BPMNParser) ParseXML(xmlData []byte) (*BPMNDefinitions, error) {
 		return nil, fmt.Errorf("解析BPMN XML失败: %w", err)
 	}
 
+	// 后处理：填充 outgoing 声明索引 + serviceTask 的 metaData 处理器类型。
+	p.enrichProcessElements(xmlData, &definitions)
+
 	// 验证BPMN结构
 	if err := p.validateBPMN(&definitions); err != nil {
 		return nil, fmt.Errorf("BPMN验证失败: %w", err)
 	}
 
 	return &definitions, nil
+}
+
+// enrichProcessElements 解析器后处理：
+//  1. 收集各元素的 <outgoing> 声明到 process.OutgoingDecls（elementID -> flow ids）；
+//  2. 解析 serviceTask 扩展元素 <metaData name="service_task_type"> 到
+//     ServiceTask.ServiceTaskType，供 serviceTaskReference 优先匹配内部 handler。
+func (p *BPMNParser) enrichProcessElements(xmlData []byte, definitions *BPMNDefinitions) {
+	// 原始形态：任何携带 id 的元素都可能有 outgoing 子标签
+	type rawElement struct {
+		ID       string   `xml:"id,attr"`
+		Outgoing []string `xml:"outgoing"`
+	}
+	type rawServiceTask struct {
+		ID             string `xml:"id,attr"`
+		ExtensionElems struct {
+			MetaData []struct {
+				Name  string `xml:"name,attr"`
+				Value string `xml:",chardata"`
+			} `xml:"metaData"`
+		} `xml:"extensionElements"`
+	}
+	type rawProcess struct {
+		ID           string           `xml:"id,attr"`
+		Elements     []rawElement     `xml:",any"`
+		ServiceTasks []rawServiceTask `xml:"serviceTask"`
+	}
+	var rawDefs struct {
+		Processes []rawProcess `xml:"process"`
+	}
+	// 二次解析失败不影响主流程（best-effort 增强）
+	if err := xml.Unmarshal(xmlData, &rawDefs); err != nil {
+		return
+	}
+
+	for pi := range definitions.Processes {
+		proc := definitions.Processes[pi]
+		// rawDefs.Processes 与 definitions.Processes 顺序一致（同一文档两次 Unmarshal）
+		if pi >= len(rawDefs.Processes) {
+			break
+		}
+		raw := rawDefs.Processes[pi]
+
+		// 1) outgoing 声明索引（xml:",any" 捕获 process 直接子级元素）
+		decls := make(map[string][]string)
+		for _, el := range raw.Elements {
+			if el.ID == "" || len(el.Outgoing) == 0 {
+				continue
+			}
+			decls[el.ID] = append(decls[el.ID], el.Outgoing...)
+		}
+		if len(decls) > 0 {
+			proc.OutgoingDecls = decls
+		}
+
+		// 2) serviceTask metaData
+		for _, st := range proc.ServiceTasks {
+			for _, rst := range raw.ServiceTasks {
+				if rst.ID != st.ID {
+					continue
+				}
+				for _, md := range rst.ExtensionElems.MetaData {
+					if md.Name == "service_task_type" && md.Value != "" {
+						st.ServiceTaskType = strings.TrimSpace(md.Value)
+					}
+				}
+			}
+		}
+	}
 }
 
 // ParseXMLFromReader 从Reader解析BPMN XML

@@ -49,10 +49,16 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 	}
 	handler := e.callbackRegistry.GetHandler(serviceRef)
 	if handler == nil {
-		handler = e.callbackRegistry.GetHandler(task.GetType())
+		// serviceRef（ID/name/implementation 等）未命中时，按显式声明的
+		// service_task_type 再试一次。注意 task.GetType() 是 BPMN 元素类型
+		// （恒为 "ServiceTask"），registry 里注册的是 handler ID，两者命名
+		// 空间不同——保留此 fallback 只会掩盖配置错误，故移除之。
+		if task.ServiceTaskType != "" && task.ServiceTaskType != serviceRef {
+			handler = e.callbackRegistry.GetHandler(task.ServiceTaskType)
+		}
 	}
 	if handler == nil {
-		return fmt.Errorf("ServiceTask handler '%s' 未注册", serviceRef)
+		return fmt.Errorf("ServiceTask handler '%s' 未注册 (element=%s service_task_type=%s)", serviceRef, task.ID, task.ServiceTaskType)
 	}
 	variables := mergeServiceTaskVariables(instance.Variables, task)
 	variables["_commandId"] = cmd.ID

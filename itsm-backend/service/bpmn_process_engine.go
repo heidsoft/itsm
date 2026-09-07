@@ -554,7 +554,19 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 		if e.isEndEvent(process, currentElementID) {
 			return e.completeProcess(ctx, txc, instance)
 		}
-		return nil
+		// 防静默卡死（2026-09-07 内置模板测试 P0-1）：
+		// 0 出边且非结束事件时，先尝试用元素声明的 <bpmn:outgoing> 做一次
+		// fallback 匹配（声明与 sourceRef 不一致的模板历史遗留较多）；
+		// 仍无可走则将实例显式挂起并返回错误，而不是 return nil 静默成功。
+		if flowID, ok := firstOutgoingDeclaration(process, currentElementID); ok {
+			if flow := e.findSequenceFlow(process, flowID); flow != nil && flow.TargetRef != "" {
+				e.logger.Warnw("executeStep: sourceRef 无出边，使用 outgoing 声明 fallback",
+					"instance", instance.ID, "element", currentElementID, "declaredFlow", flowID)
+				return e.handleElement(ctx, txc, instance, process, flow.TargetRef)
+			}
+		}
+		return e.suspendOnBrokenGraph(ctx, txc, instance, currentElementID,
+			fmt.Sprintf("节点 %s 无可用出边且非结束事件（sourceRef 与 outgoing 声明均未命中），实例已挂起", currentElementID))
 	}
 
 	var targetRef string
@@ -621,11 +633,17 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 }
 
 func serviceTaskReference(task *BPMNServiceTask) string {
+	// 显式声明的内部处理器类型（metaData service_task_type）拥有最高优先级：
+	// 「##WebService」「##Java」等 BPMN 标准实现标注是给外部引擎看的，
+	// 不应劫持本引擎的 handler 寻址（曾致 incident 流程全部 dead_letter）。
+	if task.ServiceTaskType != "" {
+		return task.ServiceTaskType
+	}
 	serviceRef := task.ID
 	if task.Name != "" {
 		serviceRef = task.Name
 	}
-	if task.Implementation != "" {
+	if task.Implementation != "" && !strings.HasPrefix(task.Implementation, "##") {
 		serviceRef = task.Implementation
 	} else if task.Class != "" {
 		serviceRef = task.Class
@@ -1071,6 +1089,49 @@ func (e *CustomProcessEngine) findOutgoingFlows(process *BPMNProcess, sourceRef 
 		}
 	}
 	return flows
+}
+
+// findSequenceFlow 按 flow id 精确查找顺序流。
+func (e *CustomProcessEngine) findSequenceFlow(process *BPMNProcess, flowID string) *BPMNSequenceFlow {
+	for _, flow := range process.SequenceFlows {
+		if flow.ID == flowID {
+			return flow
+		}
+	}
+	return nil
+}
+
+// firstOutgoingDeclaration 读取元素声明的第一条 <bpmn:outgoing>（parser 后处理填充的索引）。
+func firstOutgoingDeclaration(process *BPMNProcess, elementID string) (string, bool) {
+	if process == nil || process.OutgoingDecls == nil {
+		return "", false
+	}
+	flows, ok := process.OutgoingDecls[elementID]
+	if !ok {
+		return "", false
+	}
+	for _, fid := range flows {
+		if fid != "" {
+			return fid, true
+		}
+	}
+	return "", false
+}
+
+// suspendOnBrokenGraph 图断裂的显式处置：实例挂起 + 错误返回，
+// 替代旧版 return nil 静默卡死（HTTP 200 但实例永不推进）。
+func (e *CustomProcessEngine) suspendOnBrokenGraph(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID, reason string) error {
+	e.logger.Errorw("executeStep: 流程图断裂，实例挂起",
+		"instance", instance.ID, "element", elementID, "reason", reason)
+	_, err := txc.ProcessInstance.UpdateOneID(instance.ID).
+		SetStatus("suspended").
+		SetSuspendedTime(time.Now()).
+		SetSuspendedReason(reason).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("标记实例挂起失败（原图断裂）: %w", err)
+	}
+	return fmt.Errorf("流程图断裂：节点 %s 无可用出边，实例 %d 已挂起", elementID, instance.ID)
 }
 
 // evaluateCondition 评估流转条件 (Domain Logic)
