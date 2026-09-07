@@ -7,6 +7,7 @@
 package datascope
 
 import (
+	"itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 )
@@ -52,13 +53,9 @@ func FromRoleEntity(r *ent.Role) DataScope {
 // 管理角色（super_admin/admin/manager/sysadmin）可见全租户数据，
 // 其余角色（end_user/agent 等）只能查看本人创建或分配给自己的数据。
 // 未知/空角色按非全量处理（安全默认：收窄而非放宽）。
-func IsDataScopeAllRole(role string) bool {
-	switch role {
-	case "super_admin", "admin", "manager", "sysadmin":
-		return true
-	default:
-		return false
-	}
+// 词表单一源：domain/role.IsAdminLike。
+func IsDataScopeAllRole(r string) bool {
+	return role.IsAdminLike(r)
 }
 
 // IsDataScopeDepartmentRole 判断角色是否拥有本部门数据权限。

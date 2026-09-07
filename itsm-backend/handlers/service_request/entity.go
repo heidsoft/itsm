@@ -91,4 +91,8 @@ type Repository interface {
 	// Pending approvals for approver
 	ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error)
 	GetUserContext(ctx context.Context, userID, tenantID int) (department, name string, err error)
+
+	// FindActiveUsersByRole 查找租户内指定角色的活跃用户；department 非空时优先返回同部门用户。
+	// 用于服务请求审批人自动分配。
+	FindActiveUsersByRole(ctx context.Context, tenantID int, role, department string) ([]int, error)
 }

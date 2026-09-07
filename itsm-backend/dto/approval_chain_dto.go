@@ -16,6 +16,14 @@ type ApprovalChainStepDTO struct {
 	FallbackAction     string `json:"fallbackAction,omitempty"`     // block(默认) | auto_approve | escalate | auto_reject
 	FallbackApproverID int    `json:"fallbackApproverId,omitempty"` // escalate 时的显式兜底审批人
 	FallbackRole       string `json:"fallbackRole,omitempty"`       // escalate 时的兜底角色/组
+	// 动态适配条件（i3 P0）：工单上下文（Priority/Amount）不匹配时本层被跳过。
+	// 全部为空表示「无条件适用」，与旧行为兼容。
+	// ConditionPriorities 优先级白名单（大小写不敏感），如 ["urgent","high"]
+	ConditionPriorities []string `json:"conditionPriorities,omitempty"`
+	// ConditionAmountMin 最小金额（含），0 表示无下限
+	ConditionAmountMin float64 `json:"conditionAmountMin,omitempty"`
+	// ConditionAmountMax 最大金额（含），0 表示无上限
+	ConditionAmountMax float64 `json:"conditionAmountMax,omitempty"`
 }
 
 // ApprovalChainRequest 创建审批链请求

@@ -24,8 +24,8 @@ func SetupServiceRequestRoutes(tenant *gin.RouterGroup, h *service_request.Handl
 		sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), h.Update)
 		sr.PUT("/:id/status", middleware.RequirePermission("service_request", "write"), h.UpdateStatus)
 		sr.DELETE("/:id", middleware.RequirePermission("service_request", "delete"), h.Delete)
-		sr.POST("/:id/approval", middleware.RequirePermission("service_request", "write"), h.ApplyApproval)
-		sr.POST("/:id/approvals", middleware.RequirePermission("service_request", "write"), h.ApplyApproval)
+		sr.POST("/:id/approval", middleware.RequirePermission("service_request", "approve"), h.ApplyApproval)
+		sr.POST("/:id/approvals", middleware.RequirePermission("service_request", "approve"), h.ApplyApproval)
 
 		// Provisioning routes
 		if provisioningHandler != nil {

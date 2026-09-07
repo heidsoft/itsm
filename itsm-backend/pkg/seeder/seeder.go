@@ -454,6 +454,9 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "运维总监", Code: "ops_director", Description: "运维部门总监"},
 			{Name: "系统管理员", Code: "sysadmin", Description: "系统管理员"},
 			{Name: "安全管理员", Code: "security_admin", Description: "安全管理角色"},
+			// 服务请求审批角色（users.role 单字段词表对齐，见 domain/role 包——2026-09-07 P1-B 修复）
+			{Name: "部门经理", Code: "manager", Description: "服务请求 L1 审批角色（与 users.role 对齐）"},
+			{Name: "IT管理员", Code: "it_admin", Description: "服务请求 L2 审批角色（与 users.role 对齐）"},
 			{Name: "审计管理员", Code: "audit_admin", Description: "审计管理角色"},
 			{Name: "运维经理", Code: "ops_manager", Description: "运维团队经理"},
 			{Name: "运维工程师", Code: "ops_engineer", Description: "运维工程师"},
@@ -1451,6 +1454,8 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"service_request:read", "查看服务请求", "service_request", "read", "查看服务请求"},
 		{"service_request:write", "处理服务请求", "service_request", "write", "创建、处理服务请求"},
 		{"service_request:delete", "删除服务请求", "service_request", "delete", "删除服务请求"},
+		// 审批动作独立权限（路由 RequirePermission("service_request","approve") 依赖，2026-09-07 场景深测 P1-B 修复）
+		{"service_request:approve", "审批服务请求", "service_request", "approve", "审批/驳回服务请求（L1/L2/L3 审批人）"},
 		// 通知权限（路由 RequirePermission("notification", "read"/"create") 依赖）
 		{"notification:read", "查看通知", "notification", "read", "查看通知和偏好设置"},
 		{"notification:create", "发送通知", "notification", "create", "创建/发送通知"},
@@ -2060,18 +2065,36 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"ticket:read", "ticket_type:read", "incident:read", "problem:read",
 			"system:read", "user:read", "role:read",
 			"knowledge:read", "report:read",
+			// 服务请求审批（2026-09-07 P1-B：审批角色权限补齐）
+			"service_request:read", "service_request:write", "service_request:approve",
 		},
 		// 审计管理员
 		"audit_admin": {
 			"ticket:read", "ticket_type:read", "incident:read", "problem:read", "change:read",
 			"system:read", "user:read", "role:read", "report:read",
 		},
-		// 部门经理
+		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
+		"manager": {
+			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
+			"problem:read", "change:read", "report:read",
+			"user:read", "department:read", "team:read",
+			"knowledge:read",
+			"service_request:read", "service_request:write", "service_request:approve",
+		},
+		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）
+		"it_admin": {
+			"ticket:read", "ticket_type:read", "ticket:write", "incident:read", "incident:write",
+			"problem:read", "change:read", "asset:read", "cmdb:read",
+			"user:read", "team:read", "knowledge:read", "report:read",
+			"service_request:read", "service_request:write", "service_request:approve",
+		},
+		// 部门经理（业务条线经理，rd_manager 等场景之外的通用审批角色）
 		"dept_manager": {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
 			"problem:read", "change:read", "report:read",
 			"user:read", "department:read", "team:read",
 			"knowledge:read",
+			"service_request:read", "service_request:approve",
 		},
 		// 团队主管
 		"team_lead": {

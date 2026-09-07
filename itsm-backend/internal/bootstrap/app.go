@@ -124,6 +124,9 @@ type Application struct {
 	CommandWorker     *commandbus.Worker
 	SkillRegistry     *service.SkillRegistry
 
+	// ServiceRequestRepo 服务请求仓储（供后台审批链自愈任务使用；路由侧另有独立构造）。
+	ServiceRequestRepo service_request.Repository
+
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
 	backgroundWG sync.WaitGroup
@@ -1188,6 +1191,9 @@ func NewApplication() *Application {
 		LegacyVectorStore: vectorStore,
 		CommandWorker:     commandWorker,
 		SkillRegistry:     skillRegistry,
+
+		// 存量 pending 请求审批链自愈任务的数据源（P1-A 修复配套）
+		ServiceRequestRepo: srRepo,
 	}
 }
 
@@ -1450,6 +1456,29 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 	if app.CommandWorker != nil {
 		safeGo("command-worker", func() {
 			app.CommandWorker.Run(ctx)
+		})
+	}
+
+	// 服务请求审批链自愈（2026-09-07 P1-A 配套）：对存量 pending 请求
+	// 按修复后的解析逻辑重算审批人。启动时执行一次，幂等。
+	if app.ServiceRequestRepo != nil {
+		safeGo("service-request-approval-repair", func() {
+			repairer := service_request.NewPendingApprovalRepairer(app.ServiceRequestRepo, app.Logger)
+			tenants, err := app.DBClient.Tenant.Query().All(ctx)
+			if err != nil {
+				app.Logger.Warnw("service-request approval repair: query tenants failed", "error", err)
+				return
+			}
+			for _, t := range tenants {
+				repaired, err := repairer.RunOnce(ctx, t.ID)
+				if err != nil {
+					app.Logger.Warnw("service-request approval repair failed", "tenant_id", t.ID, "error", err)
+					continue
+				}
+				if repaired > 0 {
+					app.Logger.Infow("service-request approval repair completed", "tenant_id", t.ID, "repaired", repaired)
+				}
+			}
 		})
 	}
 

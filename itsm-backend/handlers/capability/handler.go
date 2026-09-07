@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/domain/role"
 
 	"github.com/gin-gonic/gin"
 )
@@ -73,14 +74,14 @@ var registry = []definition{
 // are never returned; readiness is represented only as a boolean and reason.
 func Handler(c *gin.Context) {
 	now := time.Now().UTC()
-	role := c.GetString("role")
-	if role == "" {
+	roleStr := c.GetString("role")
+	if roleStr == "" {
 		if value, ok := c.Get("user_role"); ok {
-			role, _ = value.(string)
+			roleStr, _ = value.(string)
 		}
 	}
 	tenantReady := c.GetInt("tenant_id") > 0
-	admin := role == "admin" || role == "super_admin"
+	admin := role.IsAdminLike(roleStr)
 
 	items := make([]Capability, 0, len(registry))
 	for _, item := range registry {

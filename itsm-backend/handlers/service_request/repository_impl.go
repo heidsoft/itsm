@@ -517,3 +517,30 @@ func (r *EntRepository) GetUserContext(ctx context.Context, userID, tenantID int
 	}
 	return u.Department, u.Name, nil
 }
+
+// FindActiveUsersByRole 查找租户内指定角色的活跃用户；department 非空时优先返回同部门用户。
+// 用于服务请求审批人自动分配。
+func (r *EntRepository) FindActiveUsersByRole(ctx context.Context, tenantID int, role, department string) ([]int, error) {
+	query := r.client.User.Query().
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.ActiveEQ(true),
+			user.RoleEQ(user.Role(role)),
+		)
+
+	// 如果指定了部门，优先返回同部门用户
+	if department != "" {
+		query = query.Where(user.DepartmentEQ(department))
+	}
+
+	users, err := query.Select(user.FieldID).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("querying users by role: %w", err)
+	}
+
+	ids := make([]int, len(users))
+	for i, u := range users {
+		ids[i] = u.ID
+	}
+	return ids, nil
+}

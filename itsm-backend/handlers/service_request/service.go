@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	domainServiceRequest "itsm-backend/domain/servicerequest"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -43,13 +44,17 @@ const (
 	ApprovalTimeoutIT       = 48
 	ApprovalTimeoutSecurity = 72
 
-	// Roles
-	RoleAdmin      = "admin"
-	RoleSuperAdmin = "super_admin"
-	RoleManager    = "manager"
-	RoleAgent      = "agent"
-	RoleTechnician = "technician"
-	RoleSecurity   = "security"
+	// Roles：单一源在 domain/role（2026-09-07 P1-B 词表漂移治理）。
+	// 保留域内别名以最小化调用点改动；RoleSecurity/RoleAgent/RoleTechnician
+	// 为遗留词表，仅作 fallback 兼容，新代码一律用 domainrole 常量。
+	RoleAdmin      = domainrole.Admin
+	RoleSuperAdmin = domainrole.SuperAdmin
+	RoleManager    = domainrole.Manager
+	RoleAgent      = domainrole.Agent
+	RoleTechnician = domainrole.Technician
+	RoleSecurity   = "security" // 遗留词表：仅旧数据兼容，DB 真实角色为 security_admin
+	RoleITAdmin    = domainrole.ITAdmin
+	RoleSecAdmin   = domainrole.SecurityAdmin
 )
 
 type Service struct {
@@ -214,6 +219,12 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	}
 
 	newReq.TotalLevels = totalLevels
+
+	// 4.5 自动分配审批人：按角色解析（manager/it_admin/security_admin），
+	// 若同部门找不到则回退到租户内同角色用户，最后回退 super_admin。
+	// 防止审批链解析失败时出现「审批人=空」的全员可审/无人可审状态。
+	requesterDept, _, _ := s.repo.GetUserContext(ctx, requesterID, tenantID)
+	s.enrichApprovalsWithApprovers(ctx, tenantID, approvals, requesterDept)
 
 	// 5. Save
 	created, err := s.repo.Create(ctx, newReq, approvals)
@@ -452,17 +463,22 @@ func (s *Service) checkEligibility(actorID int, actorRole, actorDept, requesterD
 	if approval != nil {
 		step = approval.Step
 	}
+	// 词表与 DB 真实角色对齐（domain/role 单一源：users.role 实际值
+	// manager/it_admin/security_admin）。approver_ids 包含分支已覆盖正常路径，
+	// 此处是审批链未持久化 approver_ids 时的兜底。
 	switch step {
 	case ApprovalStepManager:
 		if actorRole == RoleManager && actorDept != "" && strings.EqualFold(actorDept, requesterDept) {
 			return nil
 		}
 	case ApprovalStepIT:
-		if actorRole == RoleAgent || actorRole == RoleTechnician {
+		// it_admin 为 DB 真实角色；agent/technician 为遗留词表兼容
+		if actorRole == RoleITAdmin || actorRole == RoleAgent || actorRole == RoleTechnician {
 			return nil
 		}
 	case ApprovalStepSecurity:
-		if actorRole == RoleSecurity {
+		// security_admin 为 DB 真实角色；security 为遗留词表兼容
+		if actorRole == RoleSecAdmin || actorRole == RoleSecurity {
 			return nil
 		}
 	}
@@ -480,6 +496,64 @@ func srLevelApprovedStatus(level, total int) string {
 		return SRStatusManagerApproved
 	}
 	return SRStatusITApproved
+}
+
+// resolveApproversForStep 根据审批步骤角色解析租户内的候选审批人。
+// 步骤到角色的映射：manager→manager, it→it_admin, security→security_admin。
+// 若指定部门则优先返回同部门用户，其次回退到租户内同角色用户。
+// 找不到候选人不返回错误（会记录 warn），由 admin/super_admin 兜底。
+func (s *Service) resolveApproversForStep(ctx context.Context, tenantID int, step string, requesterDept string) []int {
+	roleByStep := map[string]string{
+		ApprovalStepManager:  RoleManager,
+		ApprovalStepIT:       RoleITAdmin,
+		ApprovalStepSecurity: RoleSecAdmin,
+	}
+	role, ok := roleByStep[step]
+	if !ok {
+		return nil
+	}
+	// 三级回退：① 同部门同角色 → ② 租户内同角色（不限部门）→ ③ super_admin 兜底。
+	// 注意第②级必须存在：种子/真实数据中 manager/security 往往不在 requester 同部门，
+	// 缺了它审批链会退化为「审批人=requester 自己（admin）」的独审状态。
+	users, err := s.repo.FindActiveUsersByRole(ctx, tenantID, role, requesterDept)
+	if err != nil || len(users) == 0 {
+		if requesterDept != "" {
+			users, err = s.repo.FindActiveUsersByRole(ctx, tenantID, role, "")
+		}
+	}
+	if err != nil || len(users) == 0 {
+		s.logger.Warnw("未找到匹配审批人，使用 super_admin 兜底",
+			"step", step, "role", role, "department", requesterDept, "err", err)
+		// Fallback: 任何 super_admin
+		admins, adminErr := s.repo.FindActiveUsersByRole(ctx, tenantID, RoleSuperAdmin, "")
+		if adminErr == nil {
+			users = admins
+		}
+	}
+	if len(users) == 0 {
+		return nil
+	}
+	return users
+}
+
+// enrichApprovalsWithApprovers 补充审批步骤的 approver_ids，确保 checkEligibility
+// 能正确路由到具体审批人。
+func (s *Service) enrichApprovalsWithApprovers(ctx context.Context, tenantID int, approvals []*ServiceRequestApproval, requesterDept string) {
+	for _, app := range approvals {
+		if app.Status != ApprovalStatusPending {
+			continue
+		}
+		// 已有 approver_ids 的不覆盖
+		if existing, ok := app.Node["approver_ids"].([]interface{}); ok && len(existing) > 0 {
+			continue
+		}
+		if app.Node == nil {
+			app.Node = make(map[string]interface{})
+		}
+		ids := s.resolveApproversForStep(ctx, tenantID, app.Step, requesterDept)
+		app.Node["approver_ids"] = intsToIfaces(ids)
+		app.Node["step_label"] = app.Step
+	}
 }
 
 // resolveServiceRequestChain 解析租户内 service_request 类型的激活审批链并求值。
