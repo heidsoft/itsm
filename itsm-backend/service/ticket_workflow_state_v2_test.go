@@ -554,3 +554,146 @@ func TestGetTicketWorkflowStateV2_HTTPContract(t *testing.T) {
 // ==================== ensure 引用的 import 不被 lint 删除 ====================
 
 var _ = strings.TrimSpace
+
+// ==================== enrichBpmnProcessState candidate 解析测试 ====================
+
+// createCandidateTask 创建一个绑定到指定实例/定义的当前活动任务
+func createCandidateTask(t *testing.T, client *ent.Client, instanceID int, defKey string, tenantID int, assignee, candidateUsers, candidateGroups string) {
+	t.Helper()
+	_, err := client.ProcessTask.Create().
+		SetTaskID(fmt.Sprintf("T-CAND-%d", time.Now().UnixNano())).
+		SetTaskDefinitionKey("Task_Approve").
+		SetTaskName("审批").
+		SetTaskType("userTask").
+		SetProcessDefinitionKey(defKey).
+		SetProcessInstanceID(instanceID).
+		SetAssignee(assignee).
+		SetCandidateUsers(candidateUsers).
+		SetCandidateGroups(candidateGroups).
+		SetStatus("assigned").
+		SetCreatedTime(time.Now().Add(-time.Minute)).
+		SetTenantID(tenantID).
+		Save(context.Background())
+	require.NoError(t, err)
+}
+
+// candidate 解析三形式覆盖：ID 直收、username 反查、candidate_groups 经 GroupResolver 展开
+func TestEnrichBpmnProcessState_CandidateUsersAndGroups(t *testing.T) {
+	client := newBpmnStateTestClient(t, "bpmn_state_candidate")
+	tenant := createBpmnTestTenant(t, client, "cand")
+	requester := createBpmnTestUser(t, client, tenant.ID, "creq")
+	byIDUser := createBpmnTestUser(t, client, tenant.ID, "bid")       // candidate_users 里以 ID 出现
+	byNameUser := createBpmnTestUser(t, client, tenant.ID, "bname")   // candidate_users 里以 username 出现
+	groupMember := createBpmnTestUser(t, client, tenant.ID, "gmemb")  // candidate_groups 组成员
+	tk := createBpmnTestTicket(t, client, tenant.ID, requester.ID)
+
+	// 建 approvers 组并加入 groupMember
+	ctx := context.Background()
+	g, err := client.Group.Create().
+		SetName("approvers").
+		SetDescription("candidate test group").
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = g.Update().AddMemberIDs(groupMember.ID).Save(ctx)
+	require.NoError(t, err)
+
+	def := createBpmnDeploymentAndDefinition(t, client, tenant.ID, "approval_cand", bpmnApprovalXML)
+	instance, err := client.ProcessInstance.Create().
+		SetProcessInstanceID("PI-CAND").
+		SetProcessDefinitionKey(def.Key).
+		SetProcessDefinitionID(def.ID).
+		SetBusinessKey(fmt.Sprintf("ticket:%d", tk.ID)).
+		SetStatus("running").
+		SetCurrentActivityID("Task_Approve").
+		SetCurrentActivityName("审批").
+		SetStartTime(time.Now()).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// candidate_users = "<byID>,<byName username>"，candidate_groups = "approvers"
+	candidateCSV := fmt.Sprintf("%d,%s", byIDUser.ID, byNameUser.Username)
+	createCandidateTask(t, client, instance.ID, def.Key, tenant.ID, "", candidateCSV, "approvers")
+
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	state, err := svc.enrichBpmnProcessState(ctx, tk, tenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, state)
+
+	gotIDs := map[int]bool{}
+	for _, u := range state.CurrentAssignees {
+		gotIDs[u.ID] = true
+	}
+	assert.True(t, gotIDs[byIDUser.ID], "candidate_users 中 ID 形式应解析为处理人")
+	assert.True(t, gotIDs[byNameUser.ID], "candidate_users 中 username 形式应反查为处理人")
+	assert.True(t, gotIDs[groupMember.ID], "candidate_groups 应展开组成员为处理人")
+	assert.False(t, gotIDs[requester.ID], "无关用户不应被列为处理人")
+}
+
+// assignee 与 candidate 同时存在时去重合并，都指向同一用户只出现一次
+func TestEnrichBpmnProcessState_AssigneeAndCandidateDedup(t *testing.T) {
+	client := newBpmnStateTestClient(t, "bpmn_state_dedup")
+	tenant := createBpmnTestTenant(t, client, "dedup")
+	requester := createBpmnTestUser(t, client, tenant.ID, "dreq")
+	assignee := createBpmnTestUser(t, client, tenant.ID, "dasg")
+	tk := createBpmnTestTicket(t, client, tenant.ID, requester.ID)
+
+	def := createBpmnDeploymentAndDefinition(t, client, tenant.ID, "approval_dedup", bpmnApprovalXML)
+	ctx := context.Background()
+	instance, err := client.ProcessInstance.Create().
+		SetProcessInstanceID("PI-DEDUP").
+		SetProcessDefinitionKey(def.Key).
+		SetProcessDefinitionID(def.ID).
+		SetBusinessKey(fmt.Sprintf("ticket:%d", tk.ID)).
+		SetStatus("running").
+		SetCurrentActivityID("Task_Approve").
+		SetCurrentActivityName("审批").
+		SetStartTime(time.Now()).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// assignee = ID，candidate_users 同时含同一 ID + 该用户 email → 应去重为 1 条
+	candidateCSV := fmt.Sprintf("%d,%s", assignee.ID, assignee.Email)
+	createCandidateTask(t, client, instance.ID, def.Key, tenant.ID, strconv.Itoa(assignee.ID), candidateCSV, "")
+
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	state, err := svc.enrichBpmnProcessState(ctx, tk, tenant.ID)
+	require.NoError(t, err)
+	require.NotNil(t, state)
+
+	require.Len(t, state.CurrentAssignees, 1, "assignee+candidate 指向同一用户应去重")
+	assert.Equal(t, assignee.ID, state.CurrentAssignees[0].ID)
+}
+
+// 不存在的 candidate（已删用户/组名漂移）应降级跳过，不报错、不产生脏处理人
+func TestEnrichBpmnProcessState_UnknownCandidateFailsSoft(t *testing.T) {
+	client := newBpmnStateTestClient(t, "bpmn_state_softfail")
+	tenant := createBpmnTestTenant(t, client, "soft")
+	requester := createBpmnTestUser(t, client, tenant.ID, "sreq")
+	tk := createBpmnTestTicket(t, client, tenant.ID, requester.ID)
+
+	def := createBpmnDeploymentAndDefinition(t, client, tenant.ID, "approval_soft", bpmnApprovalXML)
+	ctx := context.Background()
+	instance, err := client.ProcessInstance.Create().
+		SetProcessInstanceID("PI-SOFT").
+		SetProcessDefinitionKey(def.Key).
+		SetProcessDefinitionID(def.ID).
+		SetBusinessKey(fmt.Sprintf("ticket:%d", tk.ID)).
+		SetStatus("running").
+		SetCurrentActivityID("Task_Approve").
+		SetCurrentActivityName("审批").
+		SetStartTime(time.Now()).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	createCandidateTask(t, client, instance.ID, def.Key, tenant.ID, "", "99999,ghost_user,ghost@nowhere.test", "no_such_group")
+
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	state, err := svc.enrichBpmnProcessState(ctx, tk, tenant.ID)
+	require.NoError(t, err, "未知 candidate 不应使状态查询报错")
+	require.NotNil(t, state)
+	assert.Empty(t, state.CurrentAssignees, "全部 candidate 不可解析时不应产生处理人")
+}

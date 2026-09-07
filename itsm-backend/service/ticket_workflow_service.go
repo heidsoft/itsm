@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/ticketcc"
 	"itsm-backend/ent/ticketworkflowrecord"
 	"itsm-backend/ent/user"
+	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
 )
@@ -1078,6 +1079,9 @@ func (s *TicketWorkflowService) enrichBpmnProcessState(ctx context.Context, tk *
 	// 解析当前任务、提取 assignee / candidate users / candidate groups
 	currentAssigneeIDs := map[int]struct{}{}
 	currentActivityType := ""
+	// candidate_tasks 在所有候选任务中只解析一次（同一 current_activity_id 可能有多条 task 行）
+	candidatesResolved := false
+	var candidateUsersCSV, candidateGroupsCSV string
 	for _, t := range tasks {
 		if t.Status != "created" && t.Status != "assigned" && t.Status != "started" && t.Status != "delegated" {
 			continue
@@ -1092,9 +1096,60 @@ func (s *TicketWorkflowService) enrichBpmnProcessState(ctx context.Context, tk *
 				currentAssigneeIDs[uid] = struct{}{}
 			}
 		}
-		// candidate_users / candidate_groups 留作后续扩展；V1 仅取 assignee。
+		// candidate_users / candidate_groups：与 bpmnTaskService.ListUserTasks 的匹配口径对齐。
+		// candidate_users 存储 ID/username/email 混合 CSV；candidate_groups 是组名 CSV，
+		// 需经 GroupResolver 展开为组成员。仅在首个候选任务上解析一次。
+		if !candidatesResolved {
+			candidatesResolved = true
+			candidateUsersCSV = t.CandidateUsers
+			candidateGroupsCSV = t.CandidateGroups
+		}
 	}
 	state.CurrentActivityType = currentActivityType
+
+	// 解析 candidate_users：ID 直接收；username/email 反查用户表 → ID
+	if candidateUsersCSV != "" {
+		for _, raw := range strings.Split(candidateUsersCSV, ",") {
+			raw = strings.TrimSpace(raw)
+			if raw == "" {
+				continue
+			}
+			if uid, perr := strconv.Atoi(raw); perr == nil && uid > 0 {
+				currentAssigneeIDs[uid] = struct{}{}
+				continue
+			}
+			// username 或 email 形式：批量反查
+			u, qerr := s.client.User.Query().
+				Where(
+					user.TenantID(tenantID),
+					user.Or(user.UsernameEQ(raw), user.EmailEQ(raw)),
+				).
+				First(ctx)
+			if qerr != nil || u == nil {
+				// 候选人不存在（已删用户/拼写漂移）：降级跳过，不阻塞状态查询
+				s.logger.Debugw("candidate user not resolvable", "candidate", raw, "error", qerr)
+				continue
+			}
+			currentAssigneeIDs[u.ID] = struct{}{}
+		}
+	}
+
+	// 解析 candidate_groups：经 GroupResolver 展开组成员
+	if candidateGroupsCSV != "" {
+		resolver := bpmn.NewGroupResolver(s.client)
+		groupUserIDs, _, gerr := resolver.ExpandGroupsToUsers(ctx, tenantID, candidateGroupsCSV)
+		if gerr != nil {
+			s.logger.Warnw("Failed to expand candidate groups for BPMN state",
+				"error", gerr, "groups", candidateGroupsCSV)
+		} else {
+			for _, uid := range groupUserIDs {
+				if uid > 0 {
+					currentAssigneeIDs[uid] = struct{}{}
+				}
+			}
+		}
+	}
+
 	if userMap := s.usersByIDs(ctx, currentAssigneeIDs, tenantID); len(userMap) > 0 {
 		state.CurrentAssignees = userMapToSortedSlice(userMap)
 	}
