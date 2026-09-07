@@ -87,11 +87,6 @@ export interface HistoryRecord {
   newValue?: string;
   changeReason?: string;
   createdAt: string;
-  // audit-log 兜底字段
-  path?: string;
-  method?: string;
-  statusCode?: number;
-  ip?: string;
 }
 
 // ==================== Approval ====================

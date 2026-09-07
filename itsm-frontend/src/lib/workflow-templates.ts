@@ -150,6 +150,51 @@ ${edges}
  */
 export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {
+    id: 'generic_request',
+    name: '通用申请审批流程',
+    description: '各类申请类工单的通用审批流：提交申请 → 主管审批 → 通过/拒绝',
+    category: 'ticket',
+    icon: 'Ticket',
+    bpmnXml: buildTemplateXml(
+      'Process_GenericRequest',
+      '通用申请审批流程',
+      [
+        { id: 'StartEvent_1', kind: 'startEvent', name: '开始', x: 180, y: 160 },
+        { id: 'Task_Submit', kind: 'userTask', name: '提交申请', x: 270, y: 138 },
+        { id: 'Task_ManagerApprove', kind: 'userTask', name: '主管审批', x: 420, y: 138 },
+        { id: 'Gateway_Approval', kind: 'exclusiveGateway', name: '是否通过', x: 575, y: 155 },
+        { id: 'EndEvent_Approved', kind: 'endEvent', name: '审批通过', x: 692, y: 100 },
+        { id: 'EndEvent_Rejected', kind: 'endEvent', name: '审批拒绝', x: 692, y: 220 },
+      ],
+      [
+        { id: 'Flow_1', from: 'StartEvent_1', to: 'Task_Submit', waypoints: [[216, 178], [270, 178]] },
+        { id: 'Flow_2', from: 'Task_Submit', to: 'Task_ManagerApprove', waypoints: [[370, 178], [420, 178]] },
+        { id: 'Flow_3', from: 'Task_ManagerApprove', to: 'Gateway_Approval', waypoints: [[520, 178], [575, 180]] },
+        {
+          id: 'Flow_Approved',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Approved',
+          name: '通过',
+          condition: '${approved == true}',
+          waypoints: [[600, 155], [600, 118], [692, 118]],
+        },
+        {
+          id: 'Flow_Rejected',
+          from: 'Gateway_Approval',
+          to: 'EndEvent_Rejected',
+          name: '拒绝',
+          condition: '${approved == false}',
+          waypoints: [[600, 205], [600, 238], [692, 238]],
+        },
+      ]
+    ),
+    approvalConfig: {
+      requireApproval: true,
+      approvalType: 'single',
+      approvers: [],
+    },
+  },
+  {
     id: 'leave_request',
     name: '请假审批流程',
     description: '员工请假申请审批，支持年假、病假、事假等类型',
@@ -396,18 +441,44 @@ export const TEMPLATE_CATEGORIES = [
 ];
 
 /**
- * 根据工单类型获取对应的模板
- * 用于工单创建时关联工作流
+ * 工单类型码 → 工作流模板 id 映射。
+ *
+ * 背景：后端 ticket_types.code（k8s_scale / ddl_execute / account_apply 等）
+ * 与通用审批模板并非一一对应——大多数工单类型共享同一「申请-审批」形态。
+ * 这里用显式映射代替给每个模板硬塞 ticketTypeCode 属性：
+ * 未列出的工单类型回退到 generic_request（通用申请审批流）。
+ * 新增专用流程时，在此登记映射即可让 getTemplateByTicketType 生效。
  */
-export const getTemplateByTicketType = (ticketTypeCode: string): WorkflowTemplate | undefined => {
-  return WORKFLOW_TEMPLATES.find(t => t.ticketTypeCode === ticketTypeCode);
+const TICKET_TYPE_TEMPLATE_MAP: Record<string, string> = {
+  account_apply: 'generic_request',
+  vm_apply: 'generic_request',
+  db_account_apply: 'generic_request',
+  app_apply: 'generic_request',
+  project_apply: 'generic_request',
+  domain_apply: 'generic_request',
+  gitlab_repo_apply: 'generic_request',
+  firewall_apply: 'generic_request',
+  data_export: 'generic_request',
+  ddl_execute: 'change_request',
+  k8s_scale: 'change_request',
+  general: 'generic_request',
 };
 
 /**
- * 获取所有工单相关的模板
+ * 根据工单类型获取对应的模板
+ * 用于工单创建时关联工作流；未知类型回退到通用申请审批流
+ */
+export const getTemplateByTicketType = (ticketTypeCode: string): WorkflowTemplate | undefined => {
+  const templateId = TICKET_TYPE_TEMPLATE_MAP[ticketTypeCode] ?? 'generic_request';
+  return WORKFLOW_TEMPLATES.find(t => t.id === templateId);
+};
+
+/**
+ * 获取所有工单相关的模板（被映射引用的模板）
  */
 export const getTicketWorkflowTemplates = (): WorkflowTemplate[] => {
-  return WORKFLOW_TEMPLATES.filter(t => t.ticketTypeCode !== undefined);
+  const usedIds = new Set(Object.values(TICKET_TYPE_TEMPLATE_MAP));
+  return WORKFLOW_TEMPLATES.filter(t => usedIds.has(t.id));
 };
 
 /**

@@ -34,6 +34,7 @@ import {
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
+import { ensureBpmnDI, hasBpmnDiagram } from './bpmnAutoLayout';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 
@@ -214,6 +215,31 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       modelerRef.current = modeler;
       initAttemptedRef.current = true;
 
+      // 在 bpmn-js 完成 XML 解析、准备调用 importDefinitions 渲染之前，
+      // 对缺 <bpmndi:BPMNDiagram> 的 Definitions 注入自动布局的 DI。
+      // 这是一个高优先级 (1500) 监听器，比 BaseModeler 默认的 _collectIds (1000) 更早运行；
+      // 我们只 mutate event.definitions，不返回值，从而不影响后续默认流程。
+      // 场景：AI 生成 / 模板导入的 BPMN XML 常常只有流程节点而没有 DI 部分，
+      // 不补全的话 importDefinitions 会在渲染阶段抛 'no diagram to display'。
+      modeler.on(
+        'import.parse.complete',
+        1500,
+        (event: { definitions?: unknown; error?: unknown }) => {
+          if (event?.error || !event.definitions) return;
+          const definitions = event.definitions as Parameters<typeof hasBpmnDiagram>[0];
+          if (hasBpmnDiagram(definitions)) return;
+          try {
+            const moddle = modeler.get('moddle');
+            ensureBpmnDI(
+              moddle as unknown as Parameters<typeof ensureBpmnDI>[0],
+              definitions as Parameters<typeof ensureBpmnDI>[1]
+            );
+          } catch (err) {
+            console.warn('[BPMNDesigner] failed to inject BPMNDI for missing diagrams', err);
+          }
+        }
+      );
+
       // 加载初始 XML（仅挂载时使用当时的 prop，后续变化由 [xml] effect 处理）
       const importInitial = async () => {
         try {
@@ -384,10 +410,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         setCanUndo(false);
         setCanRedo(false);
       })
-      .catch((err: Error) => {
+      .catch((err: Error & { warnings?: unknown }) => {
         if (token !== importTokenRef.current) return;
         console.error('Failed to import XML:', err);
-        message.error(t('bpmnDesigner.messages.importFailed') + ': ' + err.message);
+        // 最后的全跳保险：极少数情况下 import.parse.complete 阶段注入 DI 仍不生效
+        // （例如原始 XML 本身解析失败或 DI 补全失败），跳过错误让用户至少看到提示。
+        const detail = err?.message || t('bpmnDesigner.messages.importFailed');
+        message.error(`${t('bpmnDesigner.messages.importFailed')}: ${detail}`);
       });
   }, [xml, t]);
 

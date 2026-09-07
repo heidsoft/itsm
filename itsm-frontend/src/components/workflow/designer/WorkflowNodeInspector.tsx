@@ -473,10 +473,10 @@ export default function WorkflowNodeInspector({
     value: g.name,
   }));
 
-  // 用户选项（候选用户用 username，对应后端 lib-bpmn-engine candidateUsers 解析方式）
+  // 用户选项（BPMN 引擎 assignee / candidateUsers 期望用户 ID 的字符串形式）
   const userOptions = users.map(u => ({
     label: u.name || u.username || `User#${u.id}`,
-    value: u.username,
+    value: String(u.id),
   }));
 
   const ccUserOptions = users.map(u => ({

@@ -6,7 +6,7 @@ jest.mock('@/lib/api/http-client', () => ({
   httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
 }));
 
-import { WORKFLOW_TEMPLATES } from '../workflow-templates';
+import { WORKFLOW_TEMPLATES, getTemplateByTicketType, getTicketWorkflowTemplates } from '../workflow-templates';
 import type { WorkflowTemplate } from '../workflow-templates';
 
 describe('workflow-templates', () => {
@@ -49,5 +49,20 @@ describe('workflow-templates', () => {
       expect(tmpl.bpmnXml).toContain('<?xml');
       expect(tmpl.bpmnXml).toContain('bpmn:');
     });
+  });
+
+  it('getTemplateByTicketType maps known ticket types and falls back to generic_request', () => {
+    // 后端 ticket_types 实际码表（2026-09-07 核对）
+    expect(getTemplateByTicketType('account_apply')?.id).toBe('generic_request');
+    expect(getTemplateByTicketType('k8s_scale')?.id).toBe('change_request');
+    expect(getTemplateByTicketType('ddl_execute')?.id).toBe('change_request');
+    // 未知类型回退通用申请流而非 undefined
+    expect(getTemplateByTicketType('nonexistent_type')?.id).toBe('generic_request');
+  });
+
+  it('getTicketWorkflowTemplates returns templates referenced by the mapping', () => {
+    const ids = getTicketWorkflowTemplates().map(t => t.id);
+    expect(ids).toContain('generic_request');
+    expect(ids).toContain('change_request');
   });
 });

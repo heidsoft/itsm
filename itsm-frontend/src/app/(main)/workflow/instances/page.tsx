@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { App, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Table, Tag, Tabs, Timeline, Empty, Badge } from 'antd';
-import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Clock, User, FileText, MessageSquare, Rocket } from 'lucide-react';
+import { App, Button, Card, Form, Input, Modal, Select, Space, Table, Tag } from 'antd';
+import { Eye, PauseCircle, PlayCircle, RefreshCw, StopCircle, Rocket } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 import { FilterToolbarCard } from '@/components/ui/FilterToolbarCard';
@@ -10,9 +10,8 @@ import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { ManagementNotice, ManagementPageHeader } from '@/components/ui/ManagementPageHeader';
 import { StatsOverview } from '@/components/ui/StatsOverview';
 import { WorkflowApi } from '@/lib/api/workflow-api';
-import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
-import type { NodeInstance, WorkflowDefinition } from '@/types/workflow';
-import type { ProcessAuditLog } from '@/lib/api/bpmn-dashboard-api';
+import { WorkflowInstanceDetail } from '@/components/workflow/WorkflowInstanceDetail';
+import type { WorkflowDefinition } from '@/types/workflow';
 
 type InstanceRow = {
   id: string;
@@ -21,22 +20,6 @@ type InstanceRow = {
   status: string;
   startTime?: string;
   endTime?: string;
-};
-
-const formatDateTime = (value?: string | Date): string => {
-  if (!value) return '-';
-  const date = typeof value === 'string' ? new Date(value) : value;
-  if (Number.isNaN(date.getTime()) || date.getTime() < 0) {
-    return '-';
-  }
-  return date.toLocaleString('zh-CN');
-};
-
-const formatDuration = (ms: number): string => {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(0)}s`;
-  if (ms < 3600000) return `${(ms / 60000).toFixed(0)}m`;
-  return `${(ms / 3600000).toFixed(1)}h`;
 };
 
 const statusColorMap: Record<string, string> = {
@@ -56,29 +39,13 @@ const statusTextMap: Record<string, string> = {
   failed: '失败',
 };
 
-const taskStatusColorMap: Record<string, string> = {
-  pending: 'gold',
-  inProgress: 'blue',
-  completed: 'green',
-  failed: 'red',
-  cancelled: 'gray',
-  skipped: 'gray',
-};
-
-const auditActionColorMap: Record<string, string> = {
-  'PROCESS_STARTED': 'green',
-  'PROCESS_COMPLETED': 'blue',
-  'PROCESS_SUSPENDED': 'orange',
-  'PROCESS_RESUMED': 'green',
-  'PROCESS_TERMINATED': 'red',
-  'TASK_CREATED': 'blue',
-  'TASK_ASSIGNED': 'cyan',
-  'TASK_COMPLETED': 'green',
-  'TASK_FAILED': 'red',
-  'TASK_SKIPPED': 'gray',
-  'VARIABLE_UPDATED': 'purple',
-  'GATEWAY_PASSED': 'orange',
-  'SEQUENCE_FLOW_TAKEN': 'cyan',
+const formatDateTime = (value?: string | Date): string => {
+  if (!value) return '-';
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime()) || date.getTime() < 0) {
+    return '-';
+  }
+  return date.toLocaleString('zh-CN');
 };
 
 export default function WorkflowInstancesPage() {
@@ -112,14 +79,11 @@ function WorkflowInstancesContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlWorkflowId]);
-  
+
   // 详情弹窗状态
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [selectedInstance, setSelectedInstance] = useState<InstanceRow | null>(null);
-  const [tasks, setTasks] = useState<NodeInstance[]>([]);
-  const [auditLogs, setAuditLogs] = useState<ProcessAuditLog[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
+  const [selectedInstanceSummary, setSelectedInstanceSummary] = useState<InstanceRow | null>(null);
 
   // 发起流程弹窗状态
   const [startModalVisible, setStartModalVisible] = useState(false);
@@ -167,31 +131,10 @@ function WorkflowInstancesContent() {
     }
   };
 
-  const loadInstanceDetail = async (instanceId: string) => {
-    try {
-      setDetailLoading(true);
-      const [tasksRes, timelineRes] = await Promise.all([
-        WorkflowApi.getNodeInstances(instanceId),
-        BPMNDashboardApi.getProcessTimeline(instanceId).catch(() => []),
-      ]);
-      
-      setTasks(tasksRes || []);
-      setAuditLogs(timelineRes || []);
-    } catch (error) {
-      console.error('Failed to load instance detail:', error);
-      message.error('加载实例详情失败');
-      setTasks([]);
-      setAuditLogs([]);
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
   const handleViewDetail = (record: InstanceRow) => {
-    setSelectedInstance(record);
+    setSelectedInstanceId(record.id);
+    setSelectedInstanceSummary(record);
     setDetailModalVisible(true);
-    setActiveTab('basic');
-    loadInstanceDetail(record.id);
   };
 
   // 打开发起流程弹窗：加载已激活的流程定义供选择
@@ -294,9 +237,9 @@ function WorkflowInstancesContent() {
         width: 200,
         render: (_: unknown, record: InstanceRow) => (
           <Space size="small">
-            <Button 
-              type="text" 
-              icon={<Eye className="h-4 w-4" />} 
+            <Button
+              type="text"
+              icon={<Eye className="h-4 w-4" />}
               onClick={() => handleViewDetail(record)}
               size="small"
             >
@@ -389,195 +332,6 @@ function WorkflowInstancesContent() {
     [message, modal]
   );
 
-  const taskColumns = useMemo(
-    () => [
-      {
-        title: '任务ID',
-        dataIndex: 'id',
-        key: 'id',
-        width: 120,
-        render: (value: string) => <span className="font-mono text-xs">{value}</span>,
-      },
-      {
-        title: '节点名称',
-        dataIndex: 'nodeName',
-        key: 'nodeName',
-        width: 150,
-      },
-      {
-        title: '节点类型',
-        dataIndex: 'nodeType',
-        key: 'nodeType',
-        width: 100,
-        render: (value: string) => value.replace('_', ' '),
-      },
-      {
-        title: '状态',
-        dataIndex: 'status',
-        key: 'status',
-        width: 100,
-        render: (value: string) => <Tag color={taskStatusColorMap[value] || 'default'}>{value}</Tag>,
-      },
-      {
-        title: '处理人',
-        dataIndex: 'assigneeName',
-        key: 'assigneeName',
-        width: 120,
-        render: (value: string, record: NodeInstance) => value || record.assignee || '-',
-      },
-      {
-        title: '创建时间',
-        dataIndex: 'createdAt',
-        key: 'createdAt',
-        width: 180,
-        render: (value: string) => formatDateTime(value),
-      },
-      {
-        title: '截止时间',
-        dataIndex: 'dueDate',
-        key: 'dueDate',
-        width: 180,
-        render: (value: string) => value ? formatDateTime(value) : '-',
-      },
-    ],
-    []
-  );
-
-  const tabItems = [
-    {
-      key: 'basic',
-      label: '基本信息',
-      children: selectedInstance && (
-        <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="实例 ID">
-            <span className="font-mono text-xs">{selectedInstance.id}</span>
-          </Descriptions.Item>
-          <Descriptions.Item label="流程 Key">{selectedInstance.processDefinitionKey}</Descriptions.Item>
-          <Descriptions.Item label="业务键">{selectedInstance.businessKey}</Descriptions.Item>
-          <Descriptions.Item label="状态">
-            <Tag color={statusColorMap[selectedInstance.status] || 'default'}>
-              {statusTextMap[selectedInstance.status] || selectedInstance.status}
-            </Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="启动时间">{formatDateTime(selectedInstance.startTime)}</Descriptions.Item>
-          <Descriptions.Item label="结束时间">{formatDateTime(selectedInstance.endTime)}</Descriptions.Item>
-          {selectedInstance.startTime && (
-            <Descriptions.Item label="持续时间">
-              {selectedInstance.endTime 
-                ? formatDuration(new Date(selectedInstance.endTime).getTime() - new Date(selectedInstance.startTime).getTime())
-                : formatDuration(Date.now() - new Date(selectedInstance.startTime).getTime())
-              }
-            </Descriptions.Item>
-          )}
-        </Descriptions>
-      ),
-    },
-    {
-      key: 'tasks',
-      label: `任务列表 (${tasks.length})`,
-      children: (
-        <LoadingEmptyError
-          state={detailLoading ? 'loading' : tasks.length === 0 ? 'empty' : 'success'}
-          loadingText="正在加载任务列表..."
-          empty={{
-            title: '暂无任务数据',
-            description: '该流程实例还没有产生任何任务',
-          }}
-        >
-          <Table 
-            columns={taskColumns} 
-            dataSource={tasks} 
-            rowKey="id" 
-            pagination={{ pageSize: 10 }}
-            size="small"
-          />
-        </LoadingEmptyError>
-      ),
-    },
-    {
-      key: 'history',
-      label: `执行历史 (${auditLogs.length})`,
-      children: (
-        <LoadingEmptyError
-          state={detailLoading ? 'loading' : auditLogs.length === 0 ? 'empty' : 'success'}
-          loadingText="正在加载执行历史..."
-          empty={{
-            title: '暂无执行历史',
-            description: '该流程实例还没有执行记录',
-          }}
-        >
-          <div className="max-h-[500px] overflow-y-auto pr-2">
-            <Timeline
-              items={auditLogs.map((log, index) => {
-                const actionColor = auditActionColorMap[log.action] || 'gray';
-                return {
-                  color: actionColor,
-                  children: (
-                    <div className="mb-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <Space>
-                          <Badge color={actionColor} />
-                          <span className="font-medium text-sm">
-                            {log.action.replace('_', ' ')}
-                          </span>
-                          {log.activityName && (
-                            <Tag>{log.activityName}</Tag>
-                          )}
-                        </Space>
-                        <span className="text-xs text-gray-500">
-                          {formatDateTime(log.timestamp)}
-                        </span>
-                      </div>
-                      
-                      <div className="text-xs text-gray-600 mb-1 pl-5">
-                        {log.userName && (
-                          <span className="mr-3">
-                            <User className="w-3 h-3 inline mr-1" />
-                            {log.userName}
-                          </span>
-                        )}
-                        {log.assigneeName && (
-                          <span className="mr-3">
-                            <User className="w-3 h-3 inline mr-1" />
-                            处理人: {log.assigneeName}
-                          </span>
-                        )}
-                        {log.durationMs && (
-                          <span>
-                            <Clock className="w-3 h-3 inline mr-1" />
-                            耗时: {formatDuration(log.durationMs)}
-                          </span>
-                        )}
-                      </div>
-
-                      {log.comment && (
-                        <div className="text-xs bg-gray-50 p-2 rounded ml-5 mb-1">
-                          <MessageSquare className="w-3 h-3 inline mr-1 text-gray-400" />
-                          {log.comment}
-                        </div>
-                      )}
-
-                      {(log.variablesAfter && Object.keys(log.variablesAfter).length > 0) && (
-                        <div className="text-xs ml-5 mt-1">
-                          <details className="cursor-pointer">
-                            <summary className="text-blue-500">变量变更</summary>
-                            <pre className="mt-1 p-2 bg-gray-50 rounded overflow-x-auto text-[10px]">
-                              {JSON.stringify(log.variablesAfter, null, 2)}
-                            </pre>
-                          </details>
-                        </div>
-                      )}
-                    </div>
-                  ),
-                };
-              })}
-            />
-          </div>
-        </LoadingEmptyError>
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-6">
       <ManagementPageHeader
@@ -649,10 +403,10 @@ function WorkflowInstancesContent() {
             onAction: loadData,
           }}
         >
-          <Table 
-            columns={columns} 
-            dataSource={instances} 
-            rowKey="id" 
+          <Table
+            columns={columns}
+            dataSource={instances}
+            rowKey="id"
             pagination={{ pageSize: 10 }}
             scroll={{ x: 1140 }}
           />
@@ -705,18 +459,26 @@ function WorkflowInstancesContent() {
       </Modal>
 
       <Modal
-        title={selectedInstance ? `实例详情 · ${selectedInstance.id}` : '实例详情'}
+        title={selectedInstanceSummary ? `实例详情 · ${selectedInstanceSummary.id}` : '实例详情'}
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={null}
         destroyOnHidden
         width={900}
       >
-        <Tabs 
-          activeKey={activeTab} 
-          onChange={setActiveTab}
-          items={tabItems}
-        />
+        {selectedInstanceId && (
+          <WorkflowInstanceDetail
+            instanceId={selectedInstanceId}
+            initialInstance={selectedInstanceSummary ? {
+              id: selectedInstanceSummary.id,
+              processDefinitionKey: selectedInstanceSummary.processDefinitionKey,
+              businessKey: selectedInstanceSummary.businessKey,
+              status: selectedInstanceSummary.status,
+              startTime: selectedInstanceSummary.startTime,
+              endTime: selectedInstanceSummary.endTime,
+            } : undefined}
+          />
+        )}
       </Modal>
     </div>
   );

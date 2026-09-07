@@ -114,14 +114,6 @@ export const HistoryTimeline: React.FC<HistoryTimelineProps> = ({
                   {r.changeReason && (
                     <div className="text-sm text-gray-500 mt-1">{t('detailTabs.changeReason')}：{r.changeReason}</div>
                   )}
-                  {source === 'audit' && (r.method || r.path) && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {r.method} {r.path}{' '}
-                      {r.statusCode !== undefined && (
-                        <Tag color={r.statusCode >= 400 ? 'red' : 'default'}>{r.statusCode}</Tag>
-                      )}
-                    </div>
-                  )}
                 </div>
                 <div className="text-right ml-4 shrink-0">
                   <div className="text-sm text-gray-500">{fmt(r.createdAt)}</div>
