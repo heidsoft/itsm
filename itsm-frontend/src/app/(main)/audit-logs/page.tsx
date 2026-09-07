@@ -131,8 +131,10 @@ const AuditLogsPage: React.FC = () => {
       title: '用户',
       dataIndex: 'userId',
       key: 'userId',
-      width: 90,
-      render: (v: number) => (v ? `#${v}` : '-'),
+      width: 120,
+      // 优先显示后端 join user 表填充的 userName；缺失时回退 #userId
+      render: (v: number, record: AuditLog) =>
+        record.userName?.trim() ? record.userName : v ? `#${v}` : '-',
     },
     {
       title: '操作',
