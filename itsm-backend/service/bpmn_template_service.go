@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 //go:embed bpmn/*.bpmn
@@ -24,11 +25,12 @@ var bpmnTemplates embed.FS
 // BPMNTemplateService BPMN模板服务
 type BPMNTemplateService struct {
 	client *ent.Client
+	logger *zap.Logger
 }
 
 // NewBPMNTemplateService 创建BPMN模板服务
 func NewBPMNTemplateService(client *ent.Client) *BPMNTemplateService {
-	return &BPMNTemplateService{client: client}
+	return &BPMNTemplateService{client: client, logger: zap.NewNop()}
 }
 
 // TemplateInfo 模板信息
@@ -50,6 +52,7 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 	}
 
 	deployed := make([]*TemplateInfo, 0, len(templates))
+	deployFailures := make([]string, 0)
 
 	for _, tmpl := range templates {
 		// 检查是否已部署
@@ -59,16 +62,21 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 		}
 
 		if !exists {
-			// 部署模板
-			err := s.deployTemplate(ctx, tmpl, tenantID)
-			if err != nil {
-				return nil, fmt.Errorf("部署模板 %s 失败: %w", tmpl.Name, err)
+			// 部署模板（deployTemplate 内含 lint 门禁）。
+			// 单个坏模板只告警并跳过，不阻断其余模板部署。
+			if err := s.deployTemplate(ctx, tmpl, tenantID); err != nil {
+				s.logger.Sugar().Errorw("内置模板未部署（lint 门禁拦截）", "template", tmpl.ID, "error", err)
+				deployFailures = append(deployFailures, tmpl.ID)
+				continue
 			}
 		}
 
 		deployed = append(deployed, tmpl)
 	}
 
+	if len(deployFailures) > 0 {
+		return deployed, fmt.Errorf("%d 个内置模板未通过部署门禁: %s", len(deployFailures), strings.Join(deployFailures, ", "))
+	}
 	return deployed, nil
 }
 
@@ -173,6 +181,24 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 	data, err := bpmnTemplates.ReadFile(filepath.Join("bpmn", tmpl.Filename))
 	if err != nil {
 		return errors.Wrap(err, "读取模板文件失败")
+	}
+
+	// 部署前 lint 门禁（2026-09-07）：内置模板此前绕过发布校验，
+	// 2 个 XML 语法损坏 + 多个连线悬空的模板曾直接入库。
+	// 解析失败或存在 error 级 issue 时拒绝部署；由上层决定跳过或报错。
+	lintSvc := NewBPMNLintService()
+	lintResult, lintErr := lintSvc.LintBPMNXML(data)
+	if lintErr != nil {
+		return fmt.Errorf("模板 %s 未通过 lint（XML 不可解析）: %w", tmpl.ID, lintErr)
+	}
+	if lintResult != nil && lintResult.HasErrors {
+		msgs := make([]string, 0, lintResult.ErrorCount)
+		for _, is := range lintResult.Issues {
+			if is.Severity == "error" {
+				msgs = append(msgs, is.Message)
+			}
+		}
+		return fmt.Errorf("模板 %s 未通过 lint（%d 个 error）: %s", tmpl.ID, lintResult.ErrorCount, strings.Join(msgs, "; "))
 	}
 
 	// 获取当前时间

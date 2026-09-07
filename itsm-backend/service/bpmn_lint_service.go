@@ -98,6 +98,24 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 	// --- 规则组 3：连通性（入边/出边统计 + 不可达检测） ---
 	adjacency, nodeSet, flowTargets := buildGraph(process)
 
+	// --- 规则组 3.0：重复序列流 ID（2026-09-07 补）---
+	// encoding/xml 解析同名 sequenceFlow 时后者静默覆盖前者，
+	// 图会缺边——problem_management_flow_cn / service_request_flow_cn 曾各有一例。
+	flowSeen := make(map[string]bool, len(process.SequenceFlows))
+	for _, flow := range process.SequenceFlows {
+		if flow.ID == "" || flowSeen[flow.ID] {
+			continue
+		}
+		flowSeen[flow.ID] = true
+	}
+	dupCount := len(process.SequenceFlows) - len(flowSeen)
+	if dupCount > 0 {
+		result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+			Severity: "error", Category: "flows",
+			Message: fmt.Sprintf("%s 存在 %d 条重复 id 的序列流（XML 解析时后者覆盖前者，图将缺边）", prefix, dupCount),
+		})
+	}
+
 	for id, node := range nodeSet {
 		inDegree := flowTargets[id]
 		outDegree := len(adjacency[id])
@@ -143,6 +161,61 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 			})
 		}
 	}
+
+	// --- 规则组 6：outgoing 声明 ↔ sequenceFlow 一致性（2026-09-07 新增）---
+	// 引擎寻路只按 sequenceFlow.sourceRef。元素声明的 <outgoing> 若指向
+	// 一条 sourceRef 不是自己的 flow（悬空），该节点在运行时会 0 出边——
+	// 曾致 10/16 内置模板卡死（executeStep 静默 return nil）。
+	for elementID, flowIDs := range process.OutgoingDecls {
+		_, isEnd := findEnd(process, elementID)
+		if isEnd {
+			continue // 结束事件的 outgoing 声明本身即非法，但由规则组 3 兜底
+		}
+		for _, flowID := range flowIDs {
+			flow := findFlowByID(process, flowID)
+			if flow == nil {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "connectivity",
+					ElementID: elementID,
+					Message:   fmt.Sprintf("节点 %s 声明 outgoing=%s 但该序列流不存在（运行时将无路可走）", elementID, flowID),
+				})
+				continue
+			}
+			if flow.SourceRef != elementID {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "connectivity",
+					ElementID: elementID,
+					Message: fmt.Sprintf("节点 %s 声明 outgoing=%s 但该流 sourceRef=%s（连线悬空，运行时该节点 0 出边）",
+						elementID, flowID, flow.SourceRef),
+				})
+			}
+		}
+	}
+
+	// --- 规则组 7：serviceTask 处理器可达性（2026-09-07 新增）---
+	// implementation="##WebService" 等 BPMN 标准标注不是本引擎的 handler ID；
+	// 缺少 metaData service_task_type 的 serviceTask 将按 name/ID 寻址，
+	// 大概率找不到 handler 而 dead_letter。
+	for _, st := range process.ServiceTasks {
+		if st.ServiceTaskType == "" && strings.HasPrefix(st.Implementation, "##") {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "warning", Category: "tasks",
+				ElementID: st.ID, ElementName: st.Name,
+				Message: fmt.Sprintf("服务任务 %s 使用 %q 标准标注但未配置 metaData service_task_type，将按名称寻址 handler（找不到即 dead_letter）",
+					display(st.Name, st.ID), st.Implementation),
+			})
+		}
+	}
+}
+
+// findFlowByID 按 id 查找序列流。
+func findFlowByID(process *BPMNProcess, flowID string) *BPMNSequenceFlow {
+	for _, flow := range process.SequenceFlows {
+		if flow.ID == flowID {
+			return flow
+		}
+	}
+	return nil
 }
 
 // lintGateway 网关出入边检查：分叉需 >=1 出边，汇聚需 >=1 入边，单向网关混用给警告。

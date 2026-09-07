@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
@@ -26,12 +27,12 @@ func NewService(repo Repository, productionSvc *service.TicketService, logger *z
 }
 
 // Create creates a new ticket.
+// Delegates to productionSvc.CreateTicket which handles workflow outbox,
+// SLA, notifications, automation rules, and other side effects.
 func (s *Service) Create(ctx context.Context, tenantID int, params *CreateParams) (*Ticket, error) {
 	s.logger.Infow("Creating ticket", "title", params.Title, "tenant_id", tenantID)
 
 	if params.RequesterID == 0 {
-		// 领域哨兵错误：业务拒绝带 400 语义，交由 handler 统一分流，
-		// 不再被全局兜底成 500。
 		return nil, common.NewBadRequestError("requester_id is required", nil)
 	}
 	if params.Priority == "" {
@@ -41,12 +42,63 @@ func (s *Service) Create(ctx context.Context, tenantID int, params *CreateParams
 		params.Type = "incident"
 	}
 
-	created, err := s.repo.Create(ctx, params, tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("create ticket: %w", err)
+	// Build the DTO for the production service which owns workflow/SLA/outbox logic.
+	req := &dto.CreateTicketRequest{
+		Title:                 params.Title,
+		Description:           params.Description,
+		Type:                  params.Type,
+		Priority:              params.Priority,
+		RequesterID:           params.RequesterID,
+		FormFields:            params.FormFields,
+		TagIDs:                params.TagIDs,
+		WorkflowDefinitionKey: params.WorkflowDefinitionKey,
+	}
+	if params.AssigneeID != nil {
+		req.AssigneeID = *params.AssigneeID
+	}
+	if params.TicketTypeID != nil {
+		req.TicketTypeID = params.TicketTypeID
+	}
+	if params.CategoryID != nil {
+		req.CategoryID = params.CategoryID
+	}
+	if params.TemplateID != nil {
+		req.TemplateID = params.TemplateID
+	}
+	if params.ParentTicketID != nil {
+		req.ParentTicketID = params.ParentTicketID
 	}
 
-	return created, nil
+	// productionSvc 为 nil 时（单元测试 harness 场景）降级为纯 repo 创建，
+	// 跳过工作流/SLA/通知等生产侧副作用——生产装配恒传非 nil。
+	if s.productionSvc == nil {
+		return s.repo.Create(ctx, params, tenantID)
+	}
+
+	created, err := s.productionSvc.CreateTicket(ctx, req, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert domain ticket back to handler-layer ticket for response mapping.
+	return &Ticket{
+		ID:             created.ID,
+		TicketNumber:   created.TicketNumber,
+		Title:          created.Title,
+		Description:    created.Description,
+		Status:         string(created.Status),
+		Priority:       string(created.Priority),
+		Type:           string(created.Type),
+		TicketTypeCode: created.TicketTypeCode,
+		TicketTypeName: created.TicketTypeName,
+		FormFields:     created.FormFields,
+		RequesterID:    created.RequesterID,
+		AssigneeID:     created.AssigneeID,
+		TenantID:       created.TenantID,
+		Version:        created.Version,
+		CreatedAt:      created.CreatedAt,
+		UpdatedAt:      created.UpdatedAt,
+	}, nil
 }
 
 // Get retrieves a ticket by ID.

@@ -115,6 +115,8 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 		Priority:    req.Priority,
 		RequesterID: userID,
 		FormFields:  req.FormFields,
+
+		WorkflowDefinitionKey: req.WorkflowDefinitionKey,
 	}
 	if req.AssigneeID > 0 {
 		params.AssigneeID = &req.AssigneeID

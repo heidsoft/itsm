@@ -262,6 +262,9 @@ func (s *TicketService) runCreateTicketTx(
 
 // CreateTicket 创建工单
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ticket.Ticket, error) {
+	if req == nil {
+		return nil, common.NewBusinessError(common.ParamErrorCode, "request不能为nil", "")
+	}
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 	if strings.TrimSpace(req.Title) == "" {
 		return nil, common.NewBusinessError(common.ParamErrorCode, "title不能为空", "")
@@ -299,8 +302,12 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			return nil, fmt.Errorf("resolve ticket category: %w", err)
 		}
 	}
+	// 流程 Key 优先级（与 process_resolver.go 注释语义对齐，2026-09-07 修复）：
+	// 1. 请求显式指定（req.WorkflowDefinitionKey）——最高优先，不再被 TicketType 静默覆盖；
+	// 2. TicketType 配置的 WorkflowDefinitionKey；
+	// 3. 空 → triggerWorkflowForTicket 内走 ProcessResolver（绑定表）→ 兜底。
 	workflowDefinitionKey := req.WorkflowDefinitionKey
-	if configuredType != nil && configuredType.WorkflowDefinitionKey != "" {
+	if workflowDefinitionKey == "" && configuredType != nil && configuredType.WorkflowDefinitionKey != "" {
 		workflowDefinitionKey = configuredType.WorkflowDefinitionKey
 	}
 
@@ -429,6 +436,12 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 
 	// 触发审批（同步，走 ApprovalService，查找匹配工作流并创建 ApprovalRecord）
 	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入审批链路
+	// 同时传入 tkt.DepartmentID（i2 P0 修复），让 dept_manager 动态审批人解析有上下文；
+	// ApprovalService 仍会在 req.DepartmentID==0 时以 ticket/requester 兜底。
+	deptID := 0
+	if tkt.DepartmentID != nil {
+		deptID = *tkt.DepartmentID
+	}
 	if s.approvalSvc != nil {
 		if _, err := s.approvalSvc.TriggerApproval(ctx, &ApprovalTriggerRequest{
 			TicketID:     tkt.ID,
@@ -438,6 +451,8 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			Priority:     string(tkt.Priority),
 			RequesterID:  tkt.RequesterID,
 			TenantID:     tenantID,
+			DepartmentID: deptID,
+			ApproverFallback: true,
 		}); err != nil {
 			s.logger.Warnw("Approval trigger failed", "error", err, "ticket_id", tkt.ID)
 		}
@@ -1013,6 +1028,9 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNumber stri
 // UpdateTicket 更新工单
 // Phase 2.2: 增加 currentUserID 和 currentRole 参数，用于行级权限校验
 func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.UpdateTicketRequest, tenantID int, currentUserID int, currentRole string) (*ticket.Ticket, error) {
+	if req == nil {
+		return nil, common.NewBusinessError(common.ParamErrorCode, "request不能为nil", "")
+	}
 	s.logger.Infow("Updating ticket", "ticket_id", id, "tenant_id", tenantID)
 
 	// Phase 2.2: 行级权限校验
