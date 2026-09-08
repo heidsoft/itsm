@@ -98,6 +98,7 @@ import (
 	"itsm-backend/internal/initialization"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
+	"itsm-backend/internal/schema"
 	"itsm-backend/pkg/seeder"
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
@@ -1249,10 +1250,17 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 			return fmt.Errorf("create schema resources: %w", err)
 		}
 		migrator := migration.NewMigrator(database.GetRawDB(), sugar)
-		if err := runPostSchemaMigrations(ctx, migrator); err != nil {
+		if err := runPostSchemaMigrations(ctx, migrator, sugar); err != nil {
 			return fmt.Errorf("apply versioned post-schema migrations: %w", err)
 		}
 		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
+	}
+
+	// Tenant 治理门禁（2026-09-08 外部审计修复）：
+	// 外部审计发现 31 张表缺 tenant_id，原区分"漏加"与"有意豁免"靠注释散落。
+	// 此处调用 schema.ApplyGuard 启动扫描，按策略（prod fatal / dev warn）处置。
+	if err := runTenantGuard(ctx, database.GetRawDB(), sugar); err != nil {
+		return fmt.Errorf("tenant guard: %w", err)
 	}
 
 	if cfg.Deployment.AutoSeed {
@@ -1321,9 +1329,18 @@ type postSchemaMigrator interface {
 	RunMigrations(context.Context, []migration.Migration) (int, error)
 }
 
-func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator) error {
+// migrationLogger 抽象日志接口，使 runPostSchemaMigrations 可单测且不依赖 zap 包。
+type migrationLogger interface {
+	Errorw(msg string, keysAndValues ...interface{})
+	Infow(msg string, keysAndValues ...interface{})
+}
+
+func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator, logger migrationLogger) error {
 	if migrator == nil {
 		return fmt.Errorf("migration runner is required")
+	}
+	if logger == nil {
+		logger = noopMigrationLogger{}
 	}
 	if err := migrator.EnsureMigrationsTable(ctx); err != nil {
 		return fmt.Errorf("ensure migration ledger: %w", err)
@@ -1331,7 +1348,44 @@ func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator) e
 	if _, err := migrator.RunMigrations(ctx, migration.PostSchemaMigrations()); err != nil {
 		return fmt.Errorf("run post-schema migrations: %w", err)
 	}
+
+	// 目录自发现迁移（2026-09-08 外部审计修复）：
+	// 历史迁移体系是「Go 硬编码注册表 + 孤儿 SQL 目录」双轨制，导致
+	// migrations/*.sql 自 5 月以来从未自动加载（add_missing_indexes.sql
+	// 4 个月没执行，75 张表只剩 PK 索引）。本步骤以磁盘为真相补全迁移
+	// 流，并启动告警存在未登记条目。失败不致命（事务已在前一步成功），
+	// 但记 ERROR 便于排查。
+	fsMigs, discErr := migration.FilesystemMigrations("")
+	if discErr != nil {
+		logger.Errorw("filesystem migration discovery failed",
+			"error", discErr,
+			"hint", "MIGRATIONS_DIR env / 默认相对 migrations 目录")
+	} else {
+		merged := migration.MergeWithRegistered(fsMigs)
+		logger.Infow("filesystem migration stream merged",
+			"disk_only", len(fsMigs),
+			"registered", len(migration.PostSchemaMigrations()),
+			"merged_unique", len(merged))
+		if _, err := migrator.RunMigrations(ctx, merged); err != nil {
+			logger.Errorw("filesystem migrations apply failed",
+				"error", err,
+				"merged_count", len(merged))
+		}
+	}
 	return nil
+}
+
+type noopMigrationLogger struct{}
+
+func (noopMigrationLogger) Errorw(string, ...interface{}) {}
+func (noopMigrationLogger) Infow(string, ...interface{})  {}
+
+// runTenantGuard 调用 schema.ApplyGuard 按策略处置租户治理告警。
+// 拆为独立函数便于后续接入 cmd/cmdb、itsm-worker 等独立二进制启动路径。
+func runTenantGuard(ctx context.Context, db *sql.DB, logger *zap.SugaredLogger) error {
+	policy := schema.ResolvePolicy()
+	_, err := schema.ApplyGuard(ctx, db, logger, policy)
+	return err
 }
 
 func RunInitialization() {
