@@ -140,4 +140,18 @@ var (
 		},
 		[]string{"method", "path", "status"},
 	)
+
+	// AI metrics - AI 服务指标
+	// AIPersistErrors 记录 AI 对话/工具审计的持久化失败次数。
+	// 历史背景：L8 安全审计发现 handlers/ai/service.go 中 5 处 CreateMessage / CreateToolInvocation
+	// 调用以 _, _ = 形式丢弃错误，导致 DB 抖动时对话历史无声丢失。
+	// operation 标签区分写入路径（create_message | create_tool_invocation），
+	// role 标签区分消息角色（user | assistant | empty）；tenant_id 用于多租户归因。
+	AIPersistErrors = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_ai_persist_errors_total",
+			Help: "Total number of AI persistence failures (conversation messages, tool audit)",
+		},
+		[]string{"operation", "role", "tenant_id"},
+	)
 )

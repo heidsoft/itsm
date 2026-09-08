@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/metrics"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -188,9 +190,13 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 }
 
 // recordToolAudit 统一记录只读工具执行审计，包含 P2-6 RBAC 校验结果
+//
+// L8 修复（2026-09-08）：审计写入失败不再用 _, _ = 吞掉，改用结构化错误日志 +
+// itsm_ai_persist_errors_total{operation="create_tool_invocation"} 计数器埋点，
+// 保证 DB 抖动时审计丢失可观测、可告警。
 func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
 	argsStr, _ := json.Marshal(args)
-	_, _ = s.repo.CreateToolInvocation(ctx, &ToolInvocation{
+	if _, err := s.repo.CreateToolInvocation(ctx, &ToolInvocation{
 		TenantID:         tenantID,
 		ToolName:         toolName,
 		Arguments:        string(argsStr),
@@ -201,7 +207,21 @@ func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, rol
 		PermissionCheck:  permCheck,
 		PermissionReason: permReason,
 		RoleSnapshot:     role,
-	})
+	}); err != nil {
+		s.logger.Errorw("AI tool audit persistence failed",
+			"operation", "create_tool_invocation",
+			"tenant_id", tenantID,
+			"user_id", userID,
+			"tool_name", toolName,
+			"approval_state", "auto",
+			"error", err,
+		)
+		metrics.AIPersistErrors.WithLabelValues(
+			"create_tool_invocation",
+			"",
+			strconv.Itoa(tenantID),
+		).Inc()
+	}
 }
 
 func (s *Service) ApproveTool(ctx context.Context, id int, tenantID, userID int, approve bool, reason string) (string, error) {
@@ -259,17 +279,46 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 	}
 
 	if convID != 0 {
-		_, _ = s.repo.CreateMessage(ctx, &Message{
+		// L8 修复：Chat 路径持久化失败必须可见。两类消息分别打点，避免一次失败掩盖另一类错误。
+		if _, err := s.repo.CreateMessage(ctx, &Message{
 			ConversationID: convID,
 			Role:           "user",
 			Content:        query,
-		})
+		}); err != nil {
+			s.logger.Errorw("AI chat persist user message failed",
+				"operation", "create_message",
+				"tenant_id", tenantID,
+				"user_id", userID,
+				"conversation_id", convID,
+				"role", "user",
+				"error", err,
+			)
+			metrics.AIPersistErrors.WithLabelValues(
+				"create_message",
+				"user",
+				strconv.Itoa(tenantID),
+			).Inc()
+		}
 		payload, _ := json.Marshal(items)
-		_, _ = s.repo.CreateMessage(ctx, &Message{
+		if _, err := s.repo.CreateMessage(ctx, &Message{
 			ConversationID: convID,
 			Role:           "assistant",
 			Content:        string(payload),
-		})
+		}); err != nil {
+			s.logger.Errorw("AI chat persist assistant message failed",
+				"operation", "create_message",
+				"tenant_id", tenantID,
+				"user_id", userID,
+				"conversation_id", convID,
+				"role", "assistant",
+				"error", err,
+			)
+			metrics.AIPersistErrors.WithLabelValues(
+				"create_message",
+				"assistant",
+				strconv.Itoa(tenantID),
+			).Inc()
+		}
 	}
 
 	return items, convID, nil
@@ -405,21 +454,52 @@ func (s *Service) ChatStream(
 		}
 	}
 	if convID != 0 {
-		_, _ = s.repo.CreateMessage(ctx, &Message{
+		// L8 修复：ChatStream 路径持久化失败同样必须可见，与 Chat 路径共用同一计数器。
+		// 流式响应已经写回客户端；如果 DB 写入失败而日志被吞，
+		// 用户会看到回复但刷新后历史丢失，难以排查。
+		if _, err := s.repo.CreateMessage(ctx, &Message{
 			ConversationID: convID,
 			Role:           "user",
 			Content:        query,
-		})
+		}); err != nil {
+			s.logger.Errorw("AI chatstream persist user message failed",
+				"operation", "create_message",
+				"tenant_id", tenantID,
+				"user_id", userID,
+				"conversation_id", convID,
+				"role", "user",
+				"error", err,
+			)
+			metrics.AIPersistErrors.WithLabelValues(
+				"create_message",
+				"user",
+				strconv.Itoa(tenantID),
+			).Inc()
+		}
 		payload := map[string]any{
 			"answer":  captured.String(),
 			"sources": sources,
 		}
 		buf, _ := json.Marshal(payload)
-		_, _ = s.repo.CreateMessage(ctx, &Message{
+		if _, err := s.repo.CreateMessage(ctx, &Message{
 			ConversationID: convID,
 			Role:           "assistant",
 			Content:        string(buf),
-		})
+		}); err != nil {
+			s.logger.Errorw("AI chatstream persist assistant message failed",
+				"operation", "create_message",
+				"tenant_id", tenantID,
+				"user_id", userID,
+				"conversation_id", convID,
+				"role", "assistant",
+				"error", err,
+			)
+			metrics.AIPersistErrors.WithLabelValues(
+				"create_message",
+				"assistant",
+				strconv.Itoa(tenantID),
+			).Inc()
+		}
 	}
 
 	return convID, captured.String(), nil
