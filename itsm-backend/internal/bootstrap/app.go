@@ -1450,6 +1450,14 @@ func (app *Application) Run() {
 	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// Tenant 治理门禁（长驻进程同守门禁）：bootstrap job（itsm-init）已在
+	// InitializeStorage 中跑过 guard；这里覆盖 worker/api/all 长驻模式的启动路径，
+	// 使豁免漂移（新增未豁免的缺 tenant_id 表）在任何进程形态下都 fail closed。
+	// 策略复用 ResolvePolicy（prod=fatal / dev=warn，可 ITSM_TENANT_GUARD_POLICY 覆盖）。
+	if err := runTenantGuard(rootCtx, database.GetRawDB(), app.Logger); err != nil {
+		app.Logger.Fatalw("tenant guard blocked startup", "error", err)
+	}
+
 	if mode == ProcessModeWorker || mode == ProcessModeAll {
 		app.startBackgroundTasks(rootCtx)
 		app.Logger.Infow("worker schedulers started", "process_mode", mode)

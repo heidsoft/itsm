@@ -10,9 +10,11 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/handlers/cmdb"
+	"itsm-backend/internal/schema"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -27,7 +29,7 @@ func main() {
 	sugar := logger.Sugar()
 
 	// 初始化数据库
-	client, err := initDatabase()
+	client, driver, err := initDatabase()
 	if err != nil {
 		sugar.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -36,6 +38,20 @@ func main() {
 	// 运行数据库迁移
 	if err := runMigrations(context.Background(), client); err != nil {
 		sugar.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// Tenant 治理门禁（与主后端 bootstrap 同一豁免单一源）：
+	// 仅 postgres 后端适用（guard 扫 information_schema）；sqlite 独立部署场景跳过。
+	// 策略复用 ResolvePolicy（ENV=production 等 → fatal，可 ITSM_TENANT_GUARD_POLICY 覆盖）。
+	if driver == "postgres" {
+		guardDB, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+		if err != nil {
+			sugar.Fatalf("Failed to open guard DB connection: %v", err)
+		}
+		if _, err := schema.ApplyGuard(context.Background(), guardDB, sugar, schema.ResolvePolicy()); err != nil {
+			sugar.Fatalf("Tenant guard blocked CMDB startup: %v", err)
+		}
+		_ = guardDB.Close()
 	}
 
 	// 初始化服务
@@ -168,7 +184,8 @@ func initLogger() *zap.Logger {
 }
 
 // initDatabase 初始化数据库
-func initDatabase() (*ent.Client, error) {
+// 返回 (client, driver, error)；driver 供启动门禁按后端分支（tenant guard 仅 postgres 适用）。
+func initDatabase() (*ent.Client, string, error) {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		dbURL = "sqlite:///tmp/itsm_cmdb.db"
@@ -188,10 +205,10 @@ func initDatabase() (*ent.Client, error) {
 
 	client, err := ent.Open(driver, dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return nil, "", fmt.Errorf("failed to open database: %w", err)
 	}
 
-	return client, nil
+	return client, driver, nil
 }
 
 // runMigrations 运行数据库迁移
