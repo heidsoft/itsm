@@ -536,3 +536,139 @@ func TestLLMGateway_SupportsToolCalling_ReflectsProviderCapability(t *testing.T)
 		assert.Equal(t, 1, provider.toolCallReceived)
 	})
 }
+
+// ==================== 重试语义测试（2026-09-08 UAT Q-2 根因修复） ====================
+
+// flakyProvider 前几次返回瞬时错误，之后成功——模拟网络抖动/上游 5xx。
+type flakyProvider struct {
+	MockLLMProvider
+	mu          sync.Mutex
+	failures    int
+	errToReturn error
+}
+
+func (p *flakyProvider) Chat(_ context.Context, _ string, _ []LLMMessage) (string, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.CallCount++
+	if p.CallCount <= p.failures {
+		return "", p.errToReturn
+	}
+	return p.Response, nil
+}
+
+func (p *flakyProvider) calls() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.CallCount
+}
+
+func TestLLMGateway_RetryTransientErrors(t *testing.T) {
+	t.Run("network error retried then succeeds (transient)", func(t *testing.T) {
+		provider := &flakyProvider{
+			failures:        2,
+			errToReturn:     errors.New("MiniMax API error: connection reset by peer"),
+			MockLLMProvider: MockLLMProvider{Response: "ok after retry"},
+		}
+		observer := &MockObserver{}
+		gateway := NewLLMGateway(provider, &MockTokenLimiter{ShouldAllow: true}, observer, "minimax")
+
+		out, err := gateway.Chat(context.Background(), "m", []LLMMessage{{Role: "user", Content: "hi"}})
+		require.NoError(t, err)
+		assert.Equal(t, "ok after retry", out)
+		assert.Equal(t, 3, provider.calls(), "首次 + 2 次重试")
+		// 观测语义：最终结果只 Observe 一次
+		require.Len(t, observer.Records, 1)
+		assert.NoError(t, observer.Records[0].Err)
+	})
+
+	t.Run("5xx retried, 401 auth error NOT retried", func(t *testing.T) {
+		// 5xx：可重试
+		p5xx := &flakyProvider{
+			failures:        1,
+			errToReturn:     errors.New("MiniMax API error: status 502, message: bad gateway"),
+			MockLLMProvider: MockLLMProvider{Response: "ok"},
+		}
+		gw5xx := NewLLMGateway(p5xx, nil, nil, "minimax")
+		_, err := gw5xx.Chat(context.Background(), "m", []LLMMessage{{Role: "user", Content: "hi"}})
+		require.NoError(t, err)
+		assert.Equal(t, 2, p5xx.calls(), "5xx 应重试 1 次后成功")
+
+		// 401：不可重试（重试只会重复失败拖长等待）
+		p401 := &flakyProvider{
+			failures:        3,
+			errToReturn:     errors.New("OpenAI API error: error, status code: 401"),
+			MockLLMProvider: MockLLMProvider{Response: "ok"},
+		}
+		gw401 := NewLLMGateway(p401, nil, nil, "openai")
+		_, err = gw401.Chat(context.Background(), "m", []LLMMessage{{Role: "user", Content: "hi"}})
+		require.Error(t, err)
+		assert.Equal(t, 1, p401.calls(), "401 必须立即返回，不重试")
+	})
+
+	t.Run("persistent transient failure exhausts retries and fails", func(t *testing.T) {
+		provider := &flakyProvider{
+			failures:    99,
+			errToReturn: errors.New("MiniMax API error: status 503, message: overloaded"),
+		}
+		observer := &MockObserver{}
+		gateway := NewLLMGateway(provider, nil, observer, "minimax")
+
+		_, err := gateway.Chat(context.Background(), "m", []LLMMessage{{Role: "user", Content: "hi"}})
+		require.Error(t, err)
+		assert.Equal(t, 1+llmMaxRetries, provider.calls())
+		require.Len(t, observer.Records, 1, "重试中间态不 Observe，只记最终结果")
+		assert.Error(t, observer.Records[0].Err)
+	})
+
+	t.Run("caller context cancelled during backoff stops retrying", func(t *testing.T) {
+		provider := &flakyProvider{
+			failures:    99,
+			errToReturn: errors.New("MiniMax API error: status 500"),
+		}
+		gateway := NewLLMGateway(provider, nil, nil, "minimax")
+
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+		}()
+		_, err := gateway.Chat(ctx, "m", []LLMMessage{{Role: "user", Content: "hi"}})
+		require.Error(t, err)
+		assert.LessOrEqual(t, provider.calls(), 2, "ctx 取消后应停止重试")
+	})
+}
+
+// ==================== ChatStreamWithTools 门禁/观测补齐测试 ====================
+
+func TestLLMGateway_ChatStreamWithTools_GateAndObserve(t *testing.T) {
+	t.Run("tool path respects token limiter (previously bypassed)", func(t *testing.T) {
+		provider := &toolCapableProvider{}
+		limiter := &MockTokenLimiter{ShouldAllow: false}
+		gateway := NewLLMGateway(provider, limiter, &MockObserver{}, "openai")
+
+		err := gateway.ChatStreamWithTools(
+			context.Background(), "gpt-4",
+			[]LLMMessage{{Role: "user", Content: "hi"}},
+			[]LLMTool{{Name: "list_tickets"}},
+			func(string) {}, func([]LLMToolCall) {},
+		)
+		require.ErrorIs(t, err, ErrRateLimited)
+		assert.Equal(t, 0, provider.toolCallReceived, "限流时不得触达 provider")
+	})
+
+	t.Run("tool path emits exactly one observation (previously zero)", func(t *testing.T) {
+		provider := &toolCapableProvider{}
+		observer := &MockObserver{}
+		gateway := NewLLMGateway(provider, &MockTokenLimiter{ShouldAllow: true}, observer, "openai")
+
+		err := gateway.ChatStreamWithTools(
+			context.Background(), "gpt-4",
+			[]LLMMessage{{Role: "user", Content: "hi"}},
+			nil, func(string) {}, func([]LLMToolCall) {},
+		)
+		require.NoError(t, err)
+		require.Len(t, observer.Records, 1, "工具调用路径必须进 ai_llm_calls 观测")
+		assert.Equal(t, "openai", observer.Records[0].Provider)
+	})
+}
