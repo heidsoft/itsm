@@ -46,3 +46,20 @@ func MapProcessStatusToTicketStatus(status string) string {
 func BuildBusinessKey(entityType string, entityID int) string {
 	return fmt.Sprintf("%s:%d", entityType, entityID)
 }
+
+// contains 检查字符串是否包含子串。
+// 自 workflow_engine.go 迁入（原文件随 WorkflowEngine 死代码删除，2026-09-08）：
+// known_error_service.go 仍依赖该辅助函数。
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || (len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsSubstring(s, substr))))
+}
+
+// containsSubstring 检查字符串是否包含子串（简化实现）
+func containsSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
