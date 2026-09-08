@@ -73,7 +73,9 @@ WHERE is_published = true;
 -- 7. 工作流实例表 (Workflow Instances) 索引优化 - 中优先级
 -- =====================================================
 CREATE INDEX CONCURRENTLY IF NOT EXISTS wf_instance_tenant_idx ON workflow_instances (tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS wf_instance_ticket_idx ON workflow_instances (ticket_workflow_instances);
+-- 2026-09-08 修正：原列名 ticket_workflow_instances 不存在（脚本笔误致首次执行该条失败）。
+-- workflow_instances 实际通过 (entity_type, entity_id) 关联业务对象，按这两个列建组合索引。
+CREATE INDEX CONCURRENTLY IF NOT EXISTS wf_instance_entity_idx ON workflow_instances (entity_type, entity_id);
 -- =====================================================
 -- 8. 审批记录表 (Approval Records) 索引优化 - 中优先级
 -- =====================================================
