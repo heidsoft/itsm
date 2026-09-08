@@ -21,6 +21,12 @@ type Migration struct {
 	Checksum       string
 	ExecutionMS    int64
 	ReleaseVersion string
+
+	// SQLContent 用于「目录即真相」自发现迁移（2026-09-08 落地）：
+	// 文件系统发现的 SQL 文件加载到此处，绕过 GetMigrationSQL 的硬编码注册表，
+	// 避免 Go 改动滞后于 SQL 文件导致孤儿脚本。空值时回退到 GetMigrationSQL。
+	// 仅作为输入与 ApplyMigration 之间传输 SQL 的载体，不参与序列化。
+	SQLContent string
 }
 
 // Migrator handles database migrations
@@ -97,7 +103,7 @@ func (m *Migrator) GetPendingMigrations(ctx context.Context, available []Migrati
 	appliedVersions := make(map[string]bool)
 	for _, mig := range applied {
 		appliedVersions[mig.Version] = true
-		expected := checksumSQL(GetMigrationSQL(mig.Version))
+		expected := checksumSQL(migrationSQLFor(mig.Version, available))
 		if mig.Checksum != "" && expected != "" && mig.Checksum != expected {
 			return nil, fmt.Errorf(
 				"migration checksum mismatch for %s: applied=%s current=%s",
@@ -123,8 +129,11 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 		return nil
 	}
 
-	// Get the SQL to execute
-	sql := GetMigrationSQL(mig.Version)
+	// Get the SQL to execute. 优先用磁盘发现的 SQLContent，回退到 Go 硬编码注册表。
+	sql := mig.SQLContent
+	if sql == "" {
+		sql = GetMigrationSQL(mig.Version)
+	}
 	if sql == "" {
 		m.logger.Infow("No SQL to execute for migration", "version", mig.Version)
 		return nil
@@ -248,10 +257,24 @@ func (m *Migrator) DryRun(ctx context.Context, mig Migration) (string, error) {
 		return "-- Initial schema handled by Ent", nil
 	}
 
-	sql := GetMigrationSQL(mig.Version)
+	sql := mig.SQLContent
+	if sql == "" {
+		sql = GetMigrationSQL(mig.Version)
+	}
 	if sql == "" {
 		return "-- No SQL to execute", nil
 	}
 
 	return sql, nil
+}
+
+// migrationSQLFor 在「available 中找对应版本的 SQLContent」与「GetMigrationSQL」之间仲裁。
+// 与 ApplyMigration 内的 SQL 解析顺序保持一致，保证 checksum 比对与实际执行同源。
+func migrationSQLFor(version string, available []Migration) string {
+	for _, m := range available {
+		if m.Version == version && m.SQLContent != "" {
+			return m.SQLContent
+		}
+	}
+	return GetMigrationSQL(version)
 }
