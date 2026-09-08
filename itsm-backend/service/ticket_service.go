@@ -782,9 +782,18 @@ func normalizeCreateTicketType(reqType string, formFields ...map[string]interfac
 	return ticket.TypeIncident
 }
 
+// normalizeTicketTypeString 大小写归一：请求值大小写不敏感匹配合法词表（2026-09-07 词表统一）
+func normalizeTicketTypeString(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
+}
+
 func isSupportedTicketType(value string) bool {
-	switch ticket.Type(value) {
-	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest, "improvement", "ticket":
+	switch ticket.Type(normalizeTicketTypeString(value)) {
+	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest,
+		"improvement", "ticket",
+		// 码表对齐（2026-09-07 三处词表统一）：ticket_types 码表与 process_bindings
+		// 均配置了 general/assignment，此前代码词表缺失导致建单 1001 被拒
+		"general", "assignment":
 		return true
 	default:
 		return false
