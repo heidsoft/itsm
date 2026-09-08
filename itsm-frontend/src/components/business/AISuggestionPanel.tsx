@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Typography, Tag, Button, Space, Spin, Progress, Alert } from 'antd';
 import { Sparkles, Check, X, RefreshCw, AlertCircle } from 'lucide-react';
-import { aiTriage, type TriageResult } from '@/lib/api/ai-api';
+import { aiTriage, recordAIAudit, type TriageResult } from '@/lib/api/ai-api';
 
 const { Text, Paragraph } = Typography;
 
@@ -94,13 +94,37 @@ export function AISuggestionPanel({
     return () => clearTimeout(timer);
   }, [title, description, dismissed]);
 
+  // 上报 AI 审计（GA AI trace 契约）。fire-and-forget：失败仅记 console，不阻塞交互。
+  // 根因修复：此前 handleAccept/handleDismiss 只更新本地状态，从未上报后端，
+  // 导致 /ai/audit-logs 恒为空（0 条 ai_audit vs 44 次 LLM 调用）。
+  const reportAudit = (accepted: boolean, s: TriageResult) => {
+    recordAIAudit({
+      scenario: 'triage',
+      inputRef: `ticket:${title}`,
+      model: 'triage',
+      confidence: s.confidence,
+      suggestion: {
+        category: s.category,
+        priority: s.priority,
+        urgency: s.urgency,
+      },
+      accepted,
+    }).catch((err) => {
+      console.warn('[AIAudit] 上报失败（不阻塞）', err);
+    });
+  };
+
   const handleAccept = () => {
     if (suggestion && onAccept) {
+      reportAudit(true, suggestion);
       onAccept(suggestion);
     }
   };
 
   const handleDismiss = () => {
+    if (suggestion) {
+      reportAudit(false, suggestion);
+    }
     setDismissed(true);
     setSuggestion(null);
     onDismiss?.();

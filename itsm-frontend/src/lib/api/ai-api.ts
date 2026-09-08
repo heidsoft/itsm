@@ -103,6 +103,31 @@ export async function aiTriage(title: string, description: string): Promise<Tria
   };
 }
 
+export interface AIAuditRequest {
+  scenario: string;
+  inputRef: string;
+  promptVersion?: string;
+  model?: string;
+  confidence?: number;
+  suggestion: Record<string, unknown>;
+  accepted: boolean;
+  notes?: string;
+}
+
+/**
+ * 上报 AI 建议采纳/拒绝审计（GA AI trace 契约）。
+ *
+ * 背景（2026-09-08 断链根因）：后端 POST /api/v1/ai/audit 端点已就位，
+ * /ai/audit-logs 读 ai_feedbacks 中 item_type='ai_audit' 的记录；但前端
+ * 从未调用上报端点，导致审计页恒为空（0 条 vs 44 次 LLM 调用）。
+ *
+ * 调用约定：fire-and-forget——审计上报失败不得阻塞主交互，
+ * 由调用方 catch 后仅记 console（遥测是 best-effort 副作用）。
+ */
+export async function recordAIAudit(req: AIAuditRequest): Promise<void> {
+  await httpClient.post<{ message: string }>(`/api/v1/ai/audit`, req);
+}
+
 export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
   // 后端契约：POST /api/v1/ai/rag/search 返回 { results, degraded }（见 handlers/ai KnowledgeSearch）
   const res = await httpClient.post<{ results: RagAnswer[]; degraded?: boolean }>(
