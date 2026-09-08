@@ -3,6 +3,8 @@
   "targetRuntime": "bpmn",
   "entries": [
     {"file":"handlers/change/repository_impl.go","owner":"change","models":["ChangeApproval","change_approval_chains"],"mode":"legacy-runtime"},
+    {"file":"handlers/change/approval_chain_repository.go","owner":"change","models":["change_approval_chains"],"mode":"legacy-runtime"},
+    {"file":"handlers/change/approval_record_repository.go","owner":"change","models":["change_approvals"],"mode":"legacy-runtime"},
     {"file":"handlers/service_request/repository_impl.go","owner":"service-request","models":["ServiceRequestApproval"],"mode":"legacy-runtime"},
     {"file":"pkg/seeder/seeder.go","owner":"initialization","models":["ApprovalWorkflow"],"mode":"template-only"},
     {"file":"pkg/seeder/tenant_provisioner.go","owner":"initialization","models":["ApprovalWorkflow"],"mode":"template-only"},
