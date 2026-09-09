@@ -125,6 +125,11 @@ func (s *TicketService) SetProcessTriggerService(p ProcessTriggerServiceInterfac
 	s.processTriggerSvc = p
 }
 
+// SetSLAService 注入 SLA 服务（运行时依赖注入）
+func (s *TicketService) SetSLAService(svc *TicketSLAService) {
+	s.slaSvc = svc
+}
+
 // SetProcessResolver 注入流程解析器（运行时依赖注入）
 func (s *TicketService) SetProcessResolver(r *ProcessResolver) {
 	s.processResolver = r
