@@ -26,12 +26,16 @@ func newOperationsTestClient(t *testing.T) *ent.Client {
 }
 
 func createCommand(t *testing.T, client *ent.Client, tenantID int, status string) *ent.OperationalCommand {
+	return createCommandAt(t, client, tenantID, status, 10)
+}
+
+func createCommandAt(t *testing.T, client *ent.Client, tenantID int, status string, aggregateID int) *ent.OperationalCommand {
 	t.Helper()
 	command, err := client.OperationalCommand.Create().
 		SetTenantID(tenantID).SetCommandType(commandbus.CommandStartBPMN).
-		SetAggregateType("incident").SetAggregateID(10).
-		SetIdempotencyKey("incident:10:workflow:start:" + status).
-		SetPayload(map[string]interface{}{"accessToken": "must-not-leak", "incidentId": 10}).
+		SetAggregateType("incident").SetAggregateID(aggregateID).
+		SetIdempotencyKey(fmt.Sprintf("incident:%d:workflow:start:%s", aggregateID, status)).
+		SetPayload(map[string]interface{}{"accessToken": "must-not-leak", "incidentId": aggregateID}).
 		SetStatus(status).Save(context.Background())
 	require.NoError(t, err)
 	return command
@@ -119,4 +123,154 @@ func TestListReturnsOperationalSummaryForTenant(t *testing.T) {
 	count, err := client.OperationalCommand.Query().Where(operationalcommand.TenantIDEQ(2)).Count(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, 1, count)
+}
+
+func TestListFiltersByCommandTypeAndAggregateType(t *testing.T) {
+	client := newOperationsTestClient(t)
+	a := createCommand(t, client, 1, commandbus.StatusPending)
+	other, err := client.OperationalCommand.Create().
+		SetTenantID(1).SetCommandType(commandbus.CommandDeliverNotification).
+		SetAggregateType("ticket").SetAggregateID(99).
+		SetIdempotencyKey("ticket:99:notify").
+		SetStatus(commandbus.StatusPending).Save(context.Background())
+	require.NoError(t, err)
+
+	service := NewService(client)
+	page, err := service.List(context.Background(), ListRequest{
+		TenantID: 1, CommandType: commandbus.CommandStartBPMN, Page: 1, PageSize: 20,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, page.Total)
+	require.Equal(t, a.ID, page.Items[0].ID)
+
+	page, err = service.List(context.Background(), ListRequest{
+		TenantID: 1, AggregateType: "ticket", Page: 1, PageSize: 20,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, page.Total)
+	require.Equal(t, other.ID, page.Items[0].ID)
+
+	_, err = service.List(context.Background(), ListRequest{TenantID: 1, Status: "garbage"})
+	require.Error(t, err)
+}
+
+func TestBulkReplayRestoresCommandsAndKeepsIdempotencyKey(t *testing.T) {
+	client := newOperationsTestClient(t)
+	a := createCommandAt(t, client, 1, commandbus.StatusDeadLetter, 11)
+	b := createCommandAt(t, client, 1, commandbus.StatusDeadLetter, 12)
+	_, err := client.OperationalCommand.UpdateOneID(a.ID).
+		SetLastError("boom").SetAttempt(3).SetCompletedAt(time.Now()).Save(context.Background())
+	require.NoError(t, err)
+	service := NewService(client)
+
+	result, err := service.BulkReplay(context.Background(), BulkFilter{
+		TenantID: 1, Limit: 10,
+	}, Actor{UserID: 7, Path: "/bulk-replay", Method: "POST"})
+	require.NoError(t, err)
+	require.Equal(t, 2, result.Updated)
+	require.ElementsMatch(t, []int{a.ID, b.ID}, result.MatchedIDs)
+
+	for _, id := range []int{a.ID, b.ID} {
+		got, err := client.OperationalCommand.Get(context.Background(), id)
+		require.NoError(t, err)
+		require.Equal(t, commandbus.StatusPending, got.Status)
+		require.Empty(t, got.LastError)
+		require.NotNil(t, got.CreatedAt)
+	}
+
+	// audit 必须每条都写，不能只写一条
+	audits, err := client.AuditLog.Query().
+		Where(auditlog.ActionEQ("bulk_replay")).All(context.Background())
+	require.NoError(t, err)
+	require.Len(t, audits, 2)
+}
+
+func TestBulkReplayRejectsWrongStatusAndEmptyFilter(t *testing.T) {
+	client := newOperationsTestClient(t)
+	createCommand(t, client, 1, commandbus.StatusPending)
+	service := NewService(client)
+
+	_, err := service.BulkReplay(context.Background(), BulkFilter{TenantID: 1, Status: commandbus.StatusPending}, Actor{})
+	require.Error(t, err)
+
+	_, err = service.BulkReplay(context.Background(), BulkFilter{TenantID: 1}, Actor{})
+	require.ErrorIs(t, err, ErrBulkEmpty)
+}
+
+func TestBulkCancelOnlyTouchesStuckLeasesWhenAsked(t *testing.T) {
+	client := newOperationsTestClient(t)
+	stuck := createCommandAt(t, client, 1, commandbus.StatusProcessing, 21)
+	active := createCommandAt(t, client, 1, commandbus.StatusProcessing, 22)
+	_, err := client.OperationalCommand.UpdateOneID(stuck.ID).
+		SetLeaseOwner("worker-dead").
+		SetLeaseExpiresAt(time.Now().Add(-5 * time.Minute)).
+		SetFencingToken(2).Save(context.Background())
+	require.NoError(t, err)
+	_, err = client.OperationalCommand.UpdateOneID(active.ID).
+		SetLeaseOwner("worker-live").
+		SetLeaseExpiresAt(time.Now().Add(5 * time.Minute)).
+		SetFencingToken(2).Save(context.Background())
+	require.NoError(t, err)
+	service := NewService(client)
+	service.now = func() time.Time { return time.Now() }
+
+	// 仅撤离 lease 过期：active 必须保持 processing
+	result, err := service.BulkCancel(context.Background(), BulkFilter{
+		TenantID: 1, LeaseExpired: true,
+	}, Actor{UserID: 1, Path: "/bulk-cancel", Method: "POST"})
+	require.NoError(t, err)
+	require.Equal(t, []int{stuck.ID}, result.MatchedIDs)
+
+	gotStuck, err := client.OperationalCommand.Get(context.Background(), stuck.ID)
+	require.NoError(t, err)
+	require.Equal(t, StatusCancelled, gotStuck.Status)
+	require.Empty(t, gotStuck.LeaseOwner)
+
+	gotActive, err := client.OperationalCommand.Get(context.Background(), active.ID)
+	require.NoError(t, err)
+	require.Equal(t, commandbus.StatusProcessing, gotActive.Status)
+}
+
+func TestSummaryExposesStuckLeaseAndFailureRate(t *testing.T) {
+	client := newOperationsTestClient(t)
+	pending := createCommand(t, client, 1, commandbus.StatusPending)
+	processing := createCommand(t, client, 1, commandbus.StatusProcessing)
+	dead := createCommand(t, client, 1, commandbus.StatusDeadLetter)
+	succeeded := createCommand(t, client, 1, commandbus.StatusSucceeded)
+
+	// 把 processing 命令设为 lease 已过期，验证 stuckLeases
+	_, err := client.OperationalCommand.UpdateOneID(processing.ID).
+		SetLeaseExpiresAt(time.Now().Add(-time.Hour)).Save(context.Background())
+	require.NoError(t, err)
+
+	// 给 failed/succeeded 命令补 completed_at
+	now := time.Now()
+	_, err = client.OperationalCommand.UpdateOneID(dead.ID).
+		SetCompletedAt(now).Save(context.Background())
+	require.NoError(t, err)
+	_, err = client.OperationalCommand.UpdateOneID(succeeded.ID).
+		SetCompletedAt(now).Save(context.Background())
+	require.NoError(t, err)
+	_, err = client.OperationalCommand.UpdateOneID(pending.ID).
+		SetCompletedAt(now).Save(context.Background())
+	require.NoError(t, err)
+
+	page, err := NewService(client).List(context.Background(), ListRequest{TenantID: 1, Page: 1, PageSize: 20})
+	require.NoError(t, err)
+	require.Equal(t, 1, page.Summary.StuckLeases)
+	require.Equal(t, 1, page.Summary.Pending)
+	require.Equal(t, 1, page.Summary.DeadLetter)
+	require.Equal(t, 1, page.Summary.Succeeded)
+
+	var bpmnRow *CommandTypeStat
+	for i := range page.ByTypeRows {
+		if page.ByTypeRows[i].CommandType == commandbus.CommandStartBPMN {
+			bpmnRow = &page.ByTypeRows[i]
+		}
+	}
+	require.NotNil(t, bpmnRow)
+	require.Equal(t, 1, bpmnRow.DeadLetter)
+	require.Equal(t, 1, bpmnRow.SucceededRecent)
+	require.Equal(t, 1, bpmnRow.FailedRecent)
+	require.InDelta(t, 0.5, bpmnRow.FailureRate, 0.001)
 }
