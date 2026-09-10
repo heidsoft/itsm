@@ -1,3 +1,8 @@
+# 固定 compose 项目名，与 dev 栈（默认项目名 = 目录名 "itsm"）分离。
+# 若共用项目名，`docker compose -f docker-compose.prod.yml up -d`（Makefile/README 的
+# 默认写法）会与 dev 栈的服务名冲突并互相顶掉容器（表现为 dev up 后 prod 502，反之亦然）。
+name: itsm-prod
+
 services:
   # PostgreSQL 数据库（生产环境）
   postgres:
@@ -226,7 +231,9 @@ services:
       - ITSM_CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://yourdomain.com}
     ports:
       # 仅保留宿主机本地诊断入口；外部流量必须经过 nginx/上游网关。
-      - "127.0.0.1:8090:8090"
+      # 端口可配置：当 dev 栈（itsm-backend-dev 占用 0.0.0.0:8090）与 prod 同时运行时，
+      # 用 BACKEND_DIAG_PORT 错开，避免 "Bind for 127.0.0.1:8090 failed"。
+      - "127.0.0.1:${BACKEND_DIAG_PORT:-8090}:8090"
     depends_on:
       postgres:
         condition: service_healthy

@@ -112,6 +112,11 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backen
 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 ```
 
+`docker-compose.prod.yml` pins the Compose project name to `itsm-prod` (dev keeps the
+directory-derived project `itsm`), so dev and prod stacks no longer collide or evict each
+other's containers. The backend's host diagnostic port defaults to `127.0.0.1:8090`; set
+`BACKEND_DIAG_PORT` in `.env.prod` (e.g. `8091`) when a dev stack is running on the same host.
+
 Never use development passwords in production. Configure TLS, off-host backups, log retention, and monitoring before go-live.
 
 ## Building Versioned Images
