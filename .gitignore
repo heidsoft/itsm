@@ -254,3 +254,6 @@ tmp-audit/
 /tests/reports/
 # One-shot AI code review artifacts at backend root (CMDB/BPMN/...) — keep local, never commit
 itsm-backend/audit*.md
+
+# migration-lint compiled binary (build artifact, keep local)
+itsm-backend/migration-lint

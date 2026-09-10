@@ -6,6 +6,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+
+	"itsm-backend/migration/pii"
 )
 
 // User holds the schema definition for the User entity.
@@ -23,10 +25,12 @@ func (User) Fields() []ent.Field {
 		field.String("email").
 			Comment("邮箱").
 			Unique().
-			NotEmpty(),
+			NotEmpty().
+			Annotations(pii.New(pii.StrategyEmail)),
 		field.String("name").
 			Comment("姓名").
-			NotEmpty(),
+			NotEmpty().
+			Annotations(pii.New(pii.StrategyName)),
 		field.Enum("role").
 			Comment("角色").
 			Values("super_admin", "admin", "manager", "agent", "technician", "security", "end_user").
@@ -39,14 +43,16 @@ func (User) Fields() []ent.Field {
 			Optional(),
 		field.String("phone").
 			Comment("电话").
-			Optional(),
+			Optional().
+			Annotations(pii.New(pii.StrategyPhone)),
 		field.String("feishu_open_id").
 			Comment("飞书用户OpenID").
 			Optional().
 			Unique(),
 		field.String("password_hash").
 			Comment("密码哈希").
-			NotEmpty(),
+			NotEmpty().
+			Annotations(pii.New(pii.StrategyAPIKey)),
 		field.Bool("active").
 			Comment("是否激活").
 			Default(true),
