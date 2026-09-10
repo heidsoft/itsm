@@ -148,6 +148,9 @@ func (c *Client) VerifyStreamSignature(timestamp, signature string, body []byte)
 		return false
 	}
 	mac := hmac.New(sha256.New, []byte(c.appSecret))
+	mac.Write([]byte(timestamp))
+	mac.Write([]byte("\n"))
+	mac.Write(body)
 	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return signature == expected
 }

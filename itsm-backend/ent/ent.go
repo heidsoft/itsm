@@ -33,6 +33,7 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/connectorconfig"
+	"itsm-backend/ent/connectorinbounddedup"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/customerbranch"
@@ -138,6 +139,7 @@ import (
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"itsm-backend/ent/workflowtask"
+	"itsm-backend/ent/workflowtemplate"
 	"itsm-backend/ent/workflowversion"
 	"reflect"
 	"sync"
@@ -232,6 +234,7 @@ func checkColumn(t, c string) error {
 			configurationitem.Table:           configurationitem.ValidColumn,
 			configurationitemhistory.Table:    configurationitemhistory.ValidColumn,
 			connectorconfig.Table:             connectorconfig.ValidColumn,
+			connectorinbounddedup.Table:       connectorinbounddedup.ValidColumn,
 			contract.Table:                    contract.ValidColumn,
 			conversation.Table:                conversation.ValidColumn,
 			customerbranch.Table:              customerbranch.ValidColumn,
@@ -337,6 +340,7 @@ func checkColumn(t, c string) error {
 			workflow.Table:                    workflow.ValidColumn,
 			workflowinstance.Table:            workflowinstance.ValidColumn,
 			workflowtask.Table:                workflowtask.ValidColumn,
+			workflowtemplate.Table:            workflowtemplate.ValidColumn,
 			workflowversion.Table:             workflowversion.ValidColumn,
 		})
 	})

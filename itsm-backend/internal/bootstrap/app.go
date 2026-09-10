@@ -58,6 +58,8 @@ import (
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
+	dingtalkHandler "itsm-backend/handlers/dingtalk"
+	wecomHandler "itsm-backend/handlers/wecom"
 	globalSearchHandler "itsm-backend/handlers/global_search"
 	groupHandler "itsm-backend/handlers/group"
 	"itsm-backend/handlers/incident"
@@ -666,6 +668,12 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register incident rules command handler", "error", err)
 	}
 	incidentAlertingService.SetConnectorManager(connectorManager)
+	incidentAlertCommandHandler := service.NewIncidentAlertDeliveryCommandHandler(incidentAlertingService)
+	if incidentAlertCommandHandler != nil {
+		if err := commandRegistry.Register(commandbus.CommandDeliverIncidentAlert, incidentAlertCommandHandler.Handle); err != nil {
+			sugar.Fatalw("Failed to register incident alert delivery command handler", "error", err)
+		}
+	}
 	analyticsService := service.NewAnalyticsService(client, sugar)
 	predictionService := service.NewPredictionService(client, sugar)
 	slaForecastSkill := service.NewSLAForecastSkill(client, llmGateway, sugar)
@@ -786,7 +794,13 @@ func NewApplication() *Application {
 	// Connector Manager / Registry / Market —— 连接器/插件/技能市场基础设施
 	// Feishu 连接器控制器
 	feishuSyncService := service.NewFeishuSyncService(client, sugar)
+	inboundDedup := connector.NewInboundDeduper(client, 5*time.Minute)
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
+	feishuHTTPHandler.SetInboundDedup(inboundDedup)
+	dingtalkHTTPHandler := dingtalkHandler.NewHandler(connectorManager, inboundDedup, sugar)
+	dingtalkHTTPHandler.SetEntClient(client)
+	wecomHTTPHandler := wecomHandler.NewHandler(connectorManager, inboundDedup, sugar)
+	wecomHTTPHandler.SetEntClient(client)
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)
@@ -846,6 +860,12 @@ func NewApplication() *Application {
 	escalationMatrixService := service.NewEscalationMatrixService(sugar)
 	vendorService := service.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
+	provisioningTaskCommandHandler := service.NewProvisioningTaskCommandHandler(provisioningService)
+	if provisioningTaskCommandHandler != nil {
+		if err := commandRegistry.Register(commandbus.CommandExecuteProvisioningTask, provisioningTaskCommandHandler.Handle); err != nil {
+			sugar.Fatalw("Failed to register provisioning task command handler", "error", err)
+		}
+	}
 	ticketCategoryService := service.NewTicketCategoryService(client)
 
 	// Domain: Service Request (DDD)
@@ -1171,6 +1191,8 @@ func NewApplication() *Application {
 		ConnectorHandler: connectorHandler,
 		AlertHandler:     alertHandler,
 		FeishuHandler:    feishuHTTPHandler,
+		DingTalkHandler:  dingtalkHTTPHandler,
+		WeComHandler:     wecomHTTPHandler,
 
 		MarketplaceHandler: marketplaceHTTPHandler,
 

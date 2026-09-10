@@ -36,6 +36,8 @@ import (
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
+	dingtalkHandler "itsm-backend/handlers/dingtalk"
+	wecomHandler "itsm-backend/handlers/wecom"
 	globalSearchHandler "itsm-backend/handlers/global_search"
 	groupHandler "itsm-backend/handlers/group"
 	incidentHandler "itsm-backend/handlers/incident"
@@ -228,6 +230,8 @@ type RouterConfig struct {
 	ConnectorHandler   *connectorHandler.Handler
 	AlertHandler       *connectorAlert.Handler
 	FeishuHandler      *feishuHandler.Handler
+	DingTalkHandler    *dingtalkHandler.Handler
+	WeComHandler       *wecomHandler.Handler
 	MarketplaceHandler *marketplaceHandler.Handler
 
 	// Ticket Association Service (工单关联服务)
@@ -381,6 +385,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		operationRoutes.GET("/:id", operationHandler.Get)
 		operationRoutes.POST("/:id/replay", operationHandler.Replay)
 		operationRoutes.POST("/:id/cancel", operationHandler.Cancel)
+		operationRoutes.POST("/bulk-replay", operationHandler.BulkReplay)
+		operationRoutes.POST("/bulk-cancel", operationHandler.BulkCancel)
 	}
 
 	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）
@@ -640,5 +646,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	// 飞书相关路由
 	if config.FeishuHandler != nil {
 		SetupFeishuRoutes(auth, public, config.FeishuHandler)
+	}
+	if config.DingTalkHandler != nil {
+		config.DingTalkHandler.RegisterRoutes(public)
+	}
+	if config.WeComHandler != nil {
+		config.WeComHandler.RegisterRoutes(public)
 	}
 }

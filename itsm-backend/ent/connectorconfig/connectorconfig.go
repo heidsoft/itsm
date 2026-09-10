@@ -35,6 +35,10 @@ const (
 	FieldLastError = "last_error"
 	// FieldLastHealthCheckAt holds the string denoting the last_health_check_at field in the database.
 	FieldLastHealthCheckAt = "last_health_check_at"
+	// FieldLastSuccessAt holds the string denoting the last_success_at field in the database.
+	FieldLastSuccessAt = "last_success_at"
+	// FieldLastFailureAt holds the string denoting the last_failure_at field in the database.
+	FieldLastFailureAt = "last_failure_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -57,6 +61,8 @@ var Columns = []string{
 	FieldStatus,
 	FieldLastError,
 	FieldLastHealthCheckAt,
+	FieldLastSuccessAt,
+	FieldLastFailureAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -147,6 +153,16 @@ func ByLastError(opts ...sql.OrderTermOption) OrderOption {
 // ByLastHealthCheckAt orders the results by the last_health_check_at field.
 func ByLastHealthCheckAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastHealthCheckAt, opts...).ToFunc()
+}
+
+// ByLastSuccessAt orders the results by the last_success_at field.
+func ByLastSuccessAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastSuccessAt, opts...).ToFunc()
+}
+
+// ByLastFailureAt orders the results by the last_failure_at field.
+func ByLastFailureAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastFailureAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

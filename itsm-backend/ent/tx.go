@@ -66,6 +66,8 @@ type Tx struct {
 	ConfigurationItemHistory *ConfigurationItemHistoryClient
 	// ConnectorConfig is the client for interacting with the ConnectorConfig builders.
 	ConnectorConfig *ConnectorConfigClient
+	// ConnectorInboundDedup is the client for interacting with the ConnectorInboundDedup builders.
+	ConnectorInboundDedup *ConnectorInboundDedupClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
@@ -276,6 +278,8 @@ type Tx struct {
 	WorkflowInstance *WorkflowInstanceClient
 	// WorkflowTask is the client for interacting with the WorkflowTask builders.
 	WorkflowTask *WorkflowTaskClient
+	// WorkflowTemplate is the client for interacting with the WorkflowTemplate builders.
+	WorkflowTemplate *WorkflowTemplateClient
 	// WorkflowVersion is the client for interacting with the WorkflowVersion builders.
 	WorkflowVersion *WorkflowVersionClient
 
@@ -436,6 +440,7 @@ func (tx *Tx) init() {
 	tx.ConfigurationItem = NewConfigurationItemClient(tx.config)
 	tx.ConfigurationItemHistory = NewConfigurationItemHistoryClient(tx.config)
 	tx.ConnectorConfig = NewConnectorConfigClient(tx.config)
+	tx.ConnectorInboundDedup = NewConnectorInboundDedupClient(tx.config)
 	tx.Contract = NewContractClient(tx.config)
 	tx.Conversation = NewConversationClient(tx.config)
 	tx.CustomerBranch = NewCustomerBranchClient(tx.config)
@@ -541,6 +546,7 @@ func (tx *Tx) init() {
 	tx.Workflow = NewWorkflowClient(tx.config)
 	tx.WorkflowInstance = NewWorkflowInstanceClient(tx.config)
 	tx.WorkflowTask = NewWorkflowTaskClient(tx.config)
+	tx.WorkflowTemplate = NewWorkflowTemplateClient(tx.config)
 	tx.WorkflowVersion = NewWorkflowVersionClient(tx.config)
 }
 

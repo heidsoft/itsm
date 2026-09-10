@@ -134,6 +134,34 @@ func (_c *ConnectorConfigCreate) SetNillableLastHealthCheckAt(v *time.Time) *Con
 	return _c
 }
 
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_c *ConnectorConfigCreate) SetLastSuccessAt(v time.Time) *ConnectorConfigCreate {
+	_c.mutation.SetLastSuccessAt(v)
+	return _c
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_c *ConnectorConfigCreate) SetNillableLastSuccessAt(v *time.Time) *ConnectorConfigCreate {
+	if v != nil {
+		_c.SetLastSuccessAt(*v)
+	}
+	return _c
+}
+
+// SetLastFailureAt sets the "last_failure_at" field.
+func (_c *ConnectorConfigCreate) SetLastFailureAt(v time.Time) *ConnectorConfigCreate {
+	_c.mutation.SetLastFailureAt(v)
+	return _c
+}
+
+// SetNillableLastFailureAt sets the "last_failure_at" field if the given value is not nil.
+func (_c *ConnectorConfigCreate) SetNillableLastFailureAt(v *time.Time) *ConnectorConfigCreate {
+	if v != nil {
+		_c.SetLastFailureAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *ConnectorConfigCreate) SetCreatedAt(v time.Time) *ConnectorConfigCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -337,6 +365,14 @@ func (_c *ConnectorConfigCreate) createSpec() (*ConnectorConfig, *sqlgraph.Creat
 	if value, ok := _c.mutation.LastHealthCheckAt(); ok {
 		_spec.SetField(connectorconfig.FieldLastHealthCheckAt, field.TypeTime, value)
 		_node.LastHealthCheckAt = &value
+	}
+	if value, ok := _c.mutation.LastSuccessAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastSuccessAt, field.TypeTime, value)
+		_node.LastSuccessAt = &value
+	}
+	if value, ok := _c.mutation.LastFailureAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastFailureAt, field.TypeTime, value)
+		_node.LastFailureAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(connectorconfig.FieldCreatedAt, field.TypeTime, value)

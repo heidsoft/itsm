@@ -40,6 +40,10 @@ type ConnectorConfig struct {
 	LastError string `json:"last_error,omitempty"`
 	// LastHealthCheckAt holds the value of the "last_health_check_at" field.
 	LastHealthCheckAt *time.Time `json:"last_health_check_at,omitempty"`
+	// LastSuccessAt holds the value of the "last_success_at" field.
+	LastSuccessAt *time.Time `json:"last_success_at,omitempty"`
+	// LastFailureAt holds the value of the "last_failure_at" field.
+	LastFailureAt *time.Time `json:"last_failure_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -60,7 +64,7 @@ func (*ConnectorConfig) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case connectorconfig.FieldName, connectorconfig.FieldProvider, connectorconfig.FieldConnectorType, connectorconfig.FieldEncryptedCredentials, connectorconfig.FieldStatus, connectorconfig.FieldLastError:
 			values[i] = new(sql.NullString)
-		case connectorconfig.FieldLastHealthCheckAt, connectorconfig.FieldCreatedAt, connectorconfig.FieldUpdatedAt:
+		case connectorconfig.FieldLastHealthCheckAt, connectorconfig.FieldLastSuccessAt, connectorconfig.FieldLastFailureAt, connectorconfig.FieldCreatedAt, connectorconfig.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -154,6 +158,20 @@ func (_m *ConnectorConfig) assignValues(columns []string, values []any) error {
 				_m.LastHealthCheckAt = new(time.Time)
 				*_m.LastHealthCheckAt = value.Time
 			}
+		case connectorconfig.FieldLastSuccessAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_success_at", values[i])
+			} else if value.Valid {
+				_m.LastSuccessAt = new(time.Time)
+				*_m.LastSuccessAt = value.Time
+			}
+		case connectorconfig.FieldLastFailureAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_failure_at", values[i])
+			} else if value.Valid {
+				_m.LastFailureAt = new(time.Time)
+				*_m.LastFailureAt = value.Time
+			}
 		case connectorconfig.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -234,6 +252,16 @@ func (_m *ConnectorConfig) String() string {
 	builder.WriteString(", ")
 	if v := _m.LastHealthCheckAt; v != nil {
 		builder.WriteString("last_health_check_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.LastSuccessAt; v != nil {
+		builder.WriteString("last_success_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := _m.LastFailureAt; v != nil {
+		builder.WriteString("last_failure_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")

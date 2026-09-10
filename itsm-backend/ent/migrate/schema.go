@@ -1267,6 +1267,8 @@ var (
 		{Name: "status", Type: field.TypeString, Size: 40, Default: "configured"},
 		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
 		{Name: "last_health_check_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_success_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_failure_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -1285,6 +1287,35 @@ var (
 				Name:    "connectorconfig_tenant_id_enabled",
 				Unique:  false,
 				Columns: []*schema.Column{ConnectorConfigsColumns[1], ConnectorConfigsColumns[5]},
+			},
+		},
+	}
+	// ConnectorInboundDedupsColumns holds the columns for the "connector_inbound_dedups" table.
+	ConnectorInboundDedupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "connector_name", Type: field.TypeString, Size: 64},
+		{Name: "event_id", Type: field.TypeString, Size: 256},
+		{Name: "received_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "payload_hash", Type: field.TypeString, Size: 64},
+		{Name: "response_status", Type: field.TypeString, Size: 32},
+	}
+	// ConnectorInboundDedupsTable holds the schema information for the "connector_inbound_dedups" table.
+	ConnectorInboundDedupsTable = &schema.Table{
+		Name:       "connector_inbound_dedups",
+		Columns:    ConnectorInboundDedupsColumns,
+		PrimaryKey: []*schema.Column{ConnectorInboundDedupsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "connectorinbounddedup_tenant_id_connector_name_event_id",
+				Unique:  true,
+				Columns: []*schema.Column{ConnectorInboundDedupsColumns[1], ConnectorInboundDedupsColumns[2], ConnectorInboundDedupsColumns[3]},
+			},
+			{
+				Name:    "connectorinbounddedup_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{ConnectorInboundDedupsColumns[5]},
 			},
 		},
 	}
@@ -5545,6 +5576,49 @@ var (
 			},
 		},
 	}
+	// WorkflowTemplatesColumns holds the columns for the "workflow_templates" table.
+	WorkflowTemplatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "key", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "domain", Type: field.TypeString, Default: "it"},
+		{Name: "form_schema", Type: field.TypeJSON},
+		{Name: "approval_policy", Type: field.TypeJSON},
+		{Name: "ontology_bindings", Type: field.TypeJSON},
+		{Name: "sla_config", Type: field.TypeJSON},
+		{Name: "bpmn_xml", Type: field.TypeJSON, Nullable: true},
+		{Name: "version", Type: field.TypeString, Default: "1.0.0"},
+		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "is_public", Type: field.TypeBool, Default: false},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_by", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// WorkflowTemplatesTable holds the schema information for the "workflow_templates" table.
+	WorkflowTemplatesTable = &schema.Table{
+		Name:       "workflow_templates",
+		Columns:    WorkflowTemplatesColumns,
+		PrimaryKey: []*schema.Column{WorkflowTemplatesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "workflowtemplate_tenant_id_key_version",
+				Unique:  true,
+				Columns: []*schema.Column{WorkflowTemplatesColumns[13], WorkflowTemplatesColumns[1], WorkflowTemplatesColumns[10]},
+			},
+			{
+				Name:    "workflowtemplate_tenant_id_domain_status",
+				Unique:  false,
+				Columns: []*schema.Column{WorkflowTemplatesColumns[13], WorkflowTemplatesColumns[4], WorkflowTemplatesColumns[11]},
+			},
+			{
+				Name:    "workflowtemplate_tenant_id_is_public",
+				Unique:  false,
+				Columns: []*schema.Column{WorkflowTemplatesColumns[13], WorkflowTemplatesColumns[12]},
+			},
+		},
+	}
 	// WorkflowVersionsColumns holds the columns for the "workflow_versions" table.
 	WorkflowVersionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -6003,6 +6077,7 @@ var (
 		ConfigurationItemsTable,
 		ConfigurationItemHistoriesTable,
 		ConnectorConfigsTable,
+		ConnectorInboundDedupsTable,
 		ContractsTable,
 		ConversationsTable,
 		CustomerBranchesTable,
@@ -6108,6 +6183,7 @@ var (
 		WorkflowsTable,
 		WorkflowInstancesTable,
 		WorkflowTasksTable,
+		WorkflowTemplatesTable,
 		WorkflowVersionsTable,
 		ApplicationTagsTable,
 		ConfigurationItemIncidentsTable,

@@ -4,13 +4,16 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
 	"itsm-backend/connector/marketplace"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -23,12 +26,16 @@ type Handler struct {
 	registry *connector.Registry
 	logger   *zap.SugaredLogger
 	store    *connector.PersistentConfigStore
+	client   *ent.Client
 }
 
 // NewHandler creates a new connector handler
 func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplace.Market, logger *zap.SugaredLogger) *Handler {
 	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger}
 }
+
+// SetEntClient 注入 ent client，用于 rotate-secret 等需要写 audit_log 的端点。
+func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
 
 // SetPersistentStore sets the persistent config store
 func (h *Handler) SetPersistentStore(store *connector.PersistentConfigStore) {
@@ -275,6 +282,27 @@ func (h *Handler) Health(ctx *gin.Context) {
 	common.Success(ctx, out)
 }
 
+// TenantHealth 仅返回当前租户的连接器健康状态 + 最近 Send 成败时间，
+// 避免管理员 health 接口把所有租户的实例暴露给普通租户。
+func (h *Handler) TenantHealth(ctx *gin.Context) {
+	tenantID := ctx.GetInt("tenant_id")
+	res := h.manager.HealthCheckAll(ctx.Request.Context())
+	out := make(map[string]dto.ConnectorHealthDTO)
+	for k, v := range res {
+		if !strings.HasPrefix(k, fmt.Sprintf("%d/", tenantID)) {
+			continue
+		}
+		out[k] = dto.ConnectorHealthDTO{
+			OK:        v.OK,
+			LatencyMs: v.LatencyMs,
+			Message:   v.Message,
+			CheckedAt: v.CheckedAt,
+			Extra:     v.Extra,
+		}
+	}
+	common.Success(ctx, gin.H{"tenantId": tenantID, "items": out})
+}
+
 // Lifecycle 连接器生命周期视图
 func (h *Handler) Lifecycle(ctx *gin.Context) {
 	reg := h.registry
@@ -308,6 +336,94 @@ func (h *Handler) Lifecycle(ctx *gin.Context) {
 		})
 	}
 	common.Success(ctx, gin.H{"items": out, "total": len(out)})
+}
+
+// RotateSecret 触发凭据轮换。
+// body = { newCredentials: {...}, gracePeriodHours: N, actorUserId: int }。
+// 旧凭据在 grace_period_at 之前可以"反悔"：再调一次 Provision 即可；
+// 过期后旧凭据被标记 invalid，旧连接器实例必须重新 Provision。
+// 整条路径写 audit_log（action=rotate_secret），便于审计追责。
+func (h *Handler) RotateSecret(ctx *gin.Context) {
+	name := ctx.Param("name")
+	tenantID := ctx.GetInt("tenant_id")
+	actorID := ctx.GetInt("user_id")
+
+	var req struct {
+		NewCredentials    map[string]string `json:"newCredentials"`
+		GracePeriodHours  int               `json:"gracePeriodHours"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		return
+	}
+	if len(req.NewCredentials) == 0 {
+		common.Fail(ctx, common.ParamErrorCode, "newCredentials is required")
+		return
+	}
+	if req.GracePeriodHours < 0 || req.GracePeriodHours > 168 {
+		common.Fail(ctx, common.ParamErrorCode, "gracePeriodHours must be in [0, 168]")
+		return
+	}
+	// 找到现有连接器以决定 provider + settings 合并
+	existing := connector.Config{}
+	for _, cfg := range h.manager.ListByTenant(tenantID) {
+		if cfg.Name == name {
+			existing = cfg
+			break
+		}
+	}
+	if existing.TenantID == 0 {
+		common.NotFound(ctx, "connector instance not found")
+		return
+	}
+	if existing.Settings == nil {
+		existing.Settings = map[string]interface{}{}
+	}
+	graceAt := time.Now().Add(time.Duration(req.GracePeriodHours) * time.Hour)
+	existing.Settings["grace_period_at"] = graceAt
+	existing.Settings["rotated_at"] = time.Now()
+	existing.Credentials = req.NewCredentials
+	existing.UpdatedAt = time.Now()
+
+	if !h.requireStore(ctx) {
+		return
+	}
+	if err := h.manager.Provision(ctx.Request.Context(), existing); err != nil {
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	if err := h.store.Save(ctx.Request.Context(), existing); err != nil {
+		h.manager.Revoke(existing)
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	// 写 audit_log
+	if h.client != nil {
+		body, _ := json.Marshal(map[string]interface{}{
+			"connector":        name,
+			"provider":         existing.Provider,
+			"gracePeriodHours": req.GracePeriodHours,
+			"gracePeriodAt":    graceAt,
+			"actorUserId":      actorID,
+		})
+		bodyStr := string(body)
+		_ = h.client.AuditLog.Create().
+			SetTenantID(tenantID).
+			SetUserID(actorID).
+			SetAction("rotate_secret").
+			SetResource("connector").
+			SetMethod("POST").
+			SetPath(ctx.Request.URL.Path).
+			SetStatusCode(200).
+			SetRequestBody(bodyStr).
+			Exec(ctx.Request.Context())
+	}
+	common.Success(ctx, gin.H{
+		"name":               name,
+		"gracePeriodAt":      graceAt,
+		"gracePeriodHours":   req.GracePeriodHours,
+		"rotated":            true,
+	})
 }
 
 // FeishuCallback 飞书事件回调入口

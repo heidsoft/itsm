@@ -38,6 +38,7 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/configurationitemhistory"
 	"itsm-backend/ent/connectorconfig"
+	"itsm-backend/ent/connectorinbounddedup"
 	"itsm-backend/ent/contract"
 	"itsm-backend/ent/conversation"
 	"itsm-backend/ent/customerbranch"
@@ -143,6 +144,7 @@ import (
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
 	"itsm-backend/ent/workflowtask"
+	"itsm-backend/ent/workflowtemplate"
 	"itsm-backend/ent/workflowversion"
 
 	"entgo.io/ent"
@@ -210,6 +212,8 @@ type Client struct {
 	ConfigurationItemHistory *ConfigurationItemHistoryClient
 	// ConnectorConfig is the client for interacting with the ConnectorConfig builders.
 	ConnectorConfig *ConnectorConfigClient
+	// ConnectorInboundDedup is the client for interacting with the ConnectorInboundDedup builders.
+	ConnectorInboundDedup *ConnectorInboundDedupClient
 	// Contract is the client for interacting with the Contract builders.
 	Contract *ContractClient
 	// Conversation is the client for interacting with the Conversation builders.
@@ -420,6 +424,8 @@ type Client struct {
 	WorkflowInstance *WorkflowInstanceClient
 	// WorkflowTask is the client for interacting with the WorkflowTask builders.
 	WorkflowTask *WorkflowTaskClient
+	// WorkflowTemplate is the client for interacting with the WorkflowTemplate builders.
+	WorkflowTemplate *WorkflowTemplateClient
 	// WorkflowVersion is the client for interacting with the WorkflowVersion builders.
 	WorkflowVersion *WorkflowVersionClient
 }
@@ -460,6 +466,7 @@ func (c *Client) init() {
 	c.ConfigurationItem = NewConfigurationItemClient(c.config)
 	c.ConfigurationItemHistory = NewConfigurationItemHistoryClient(c.config)
 	c.ConnectorConfig = NewConnectorConfigClient(c.config)
+	c.ConnectorInboundDedup = NewConnectorInboundDedupClient(c.config)
 	c.Contract = NewContractClient(c.config)
 	c.Conversation = NewConversationClient(c.config)
 	c.CustomerBranch = NewCustomerBranchClient(c.config)
@@ -565,6 +572,7 @@ func (c *Client) init() {
 	c.Workflow = NewWorkflowClient(c.config)
 	c.WorkflowInstance = NewWorkflowInstanceClient(c.config)
 	c.WorkflowTask = NewWorkflowTaskClient(c.config)
+	c.WorkflowTemplate = NewWorkflowTemplateClient(c.config)
 	c.WorkflowVersion = NewWorkflowVersionClient(c.config)
 }
 
@@ -685,6 +693,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
 		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
 		ConnectorConfig:             NewConnectorConfigClient(cfg),
+		ConnectorInboundDedup:       NewConnectorInboundDedupClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
 		CustomerBranch:              NewCustomerBranchClient(cfg),
@@ -790,6 +799,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Workflow:                    NewWorkflowClient(cfg),
 		WorkflowInstance:            NewWorkflowInstanceClient(cfg),
 		WorkflowTask:                NewWorkflowTaskClient(cfg),
+		WorkflowTemplate:            NewWorkflowTemplateClient(cfg),
 		WorkflowVersion:             NewWorkflowVersionClient(cfg),
 	}, nil
 }
@@ -837,6 +847,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ConfigurationItem:           NewConfigurationItemClient(cfg),
 		ConfigurationItemHistory:    NewConfigurationItemHistoryClient(cfg),
 		ConnectorConfig:             NewConnectorConfigClient(cfg),
+		ConnectorInboundDedup:       NewConnectorInboundDedupClient(cfg),
 		Contract:                    NewContractClient(cfg),
 		Conversation:                NewConversationClient(cfg),
 		CustomerBranch:              NewCustomerBranchClient(cfg),
@@ -942,6 +953,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Workflow:                    NewWorkflowClient(cfg),
 		WorkflowInstance:            NewWorkflowInstanceClient(cfg),
 		WorkflowTask:                NewWorkflowTaskClient(cfg),
+		WorkflowTemplate:            NewWorkflowTemplateClient(cfg),
 		WorkflowVersion:             NewWorkflowVersionClient(cfg),
 	}, nil
 }
@@ -977,10 +989,11 @@ func (c *Client) Use(hooks ...Hook) {
 		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
 		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
 		c.Change, c.ChangePIR, c.CloudAccount, c.CloudResource, c.CloudService,
-		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract,
-		c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
-		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
-		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
+		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
+		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
+		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1004,7 +1017,8 @@ func (c *Client) Use(hooks ...Hook) {
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
 		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowTemplate,
+		c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -1019,10 +1033,11 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
 		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
 		c.Change, c.ChangePIR, c.CloudAccount, c.CloudResource, c.CloudService,
-		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig, c.Contract,
-		c.Conversation, c.CustomerBranch, c.Department, c.DiscoveryJob,
-		c.DiscoveryResult, c.DiscoverySource, c.DomainConfig, c.EmailConversation,
-		c.EmailIntakeAnalysis, c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
+		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
+		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
+		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
@@ -1046,7 +1061,8 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
 		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowVersion,
+		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowTemplate,
+		c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -1109,6 +1125,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ConfigurationItemHistory.mutate(ctx, m)
 	case *ConnectorConfigMutation:
 		return c.ConnectorConfig.mutate(ctx, m)
+	case *ConnectorInboundDedupMutation:
+		return c.ConnectorInboundDedup.mutate(ctx, m)
 	case *ContractMutation:
 		return c.Contract.mutate(ctx, m)
 	case *ConversationMutation:
@@ -1319,6 +1337,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.WorkflowInstance.mutate(ctx, m)
 	case *WorkflowTaskMutation:
 		return c.WorkflowTask.mutate(ctx, m)
+	case *WorkflowTemplateMutation:
+		return c.WorkflowTemplate.mutate(ctx, m)
 	case *WorkflowVersionMutation:
 		return c.WorkflowVersion.mutate(ctx, m)
 	default:
@@ -5490,6 +5510,139 @@ func (c *ConnectorConfigClient) mutate(ctx context.Context, m *ConnectorConfigMu
 		return (&ConnectorConfigDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ConnectorConfig mutation op: %q", m.Op())
+	}
+}
+
+// ConnectorInboundDedupClient is a client for the ConnectorInboundDedup schema.
+type ConnectorInboundDedupClient struct {
+	config
+}
+
+// NewConnectorInboundDedupClient returns a client for the ConnectorInboundDedup from the given config.
+func NewConnectorInboundDedupClient(c config) *ConnectorInboundDedupClient {
+	return &ConnectorInboundDedupClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `connectorinbounddedup.Hooks(f(g(h())))`.
+func (c *ConnectorInboundDedupClient) Use(hooks ...Hook) {
+	c.hooks.ConnectorInboundDedup = append(c.hooks.ConnectorInboundDedup, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `connectorinbounddedup.Intercept(f(g(h())))`.
+func (c *ConnectorInboundDedupClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ConnectorInboundDedup = append(c.inters.ConnectorInboundDedup, interceptors...)
+}
+
+// Create returns a builder for creating a ConnectorInboundDedup entity.
+func (c *ConnectorInboundDedupClient) Create() *ConnectorInboundDedupCreate {
+	mutation := newConnectorInboundDedupMutation(c.config, OpCreate)
+	return &ConnectorInboundDedupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ConnectorInboundDedup entities.
+func (c *ConnectorInboundDedupClient) CreateBulk(builders ...*ConnectorInboundDedupCreate) *ConnectorInboundDedupCreateBulk {
+	return &ConnectorInboundDedupCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ConnectorInboundDedupClient) MapCreateBulk(slice any, setFunc func(*ConnectorInboundDedupCreate, int)) *ConnectorInboundDedupCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ConnectorInboundDedupCreateBulk{err: fmt.Errorf("calling to ConnectorInboundDedupClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ConnectorInboundDedupCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ConnectorInboundDedupCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ConnectorInboundDedup.
+func (c *ConnectorInboundDedupClient) Update() *ConnectorInboundDedupUpdate {
+	mutation := newConnectorInboundDedupMutation(c.config, OpUpdate)
+	return &ConnectorInboundDedupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ConnectorInboundDedupClient) UpdateOne(_m *ConnectorInboundDedup) *ConnectorInboundDedupUpdateOne {
+	mutation := newConnectorInboundDedupMutation(c.config, OpUpdateOne, withConnectorInboundDedup(_m))
+	return &ConnectorInboundDedupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ConnectorInboundDedupClient) UpdateOneID(id int) *ConnectorInboundDedupUpdateOne {
+	mutation := newConnectorInboundDedupMutation(c.config, OpUpdateOne, withConnectorInboundDedupID(id))
+	return &ConnectorInboundDedupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ConnectorInboundDedup.
+func (c *ConnectorInboundDedupClient) Delete() *ConnectorInboundDedupDelete {
+	mutation := newConnectorInboundDedupMutation(c.config, OpDelete)
+	return &ConnectorInboundDedupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ConnectorInboundDedupClient) DeleteOne(_m *ConnectorInboundDedup) *ConnectorInboundDedupDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ConnectorInboundDedupClient) DeleteOneID(id int) *ConnectorInboundDedupDeleteOne {
+	builder := c.Delete().Where(connectorinbounddedup.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ConnectorInboundDedupDeleteOne{builder}
+}
+
+// Query returns a query builder for ConnectorInboundDedup.
+func (c *ConnectorInboundDedupClient) Query() *ConnectorInboundDedupQuery {
+	return &ConnectorInboundDedupQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeConnectorInboundDedup},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ConnectorInboundDedup entity by its id.
+func (c *ConnectorInboundDedupClient) Get(ctx context.Context, id int) (*ConnectorInboundDedup, error) {
+	return c.Query().Where(connectorinbounddedup.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ConnectorInboundDedupClient) GetX(ctx context.Context, id int) *ConnectorInboundDedup {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ConnectorInboundDedupClient) Hooks() []Hook {
+	return c.hooks.ConnectorInboundDedup
+}
+
+// Interceptors returns the client interceptors.
+func (c *ConnectorInboundDedupClient) Interceptors() []Interceptor {
+	return c.inters.ConnectorInboundDedup
+}
+
+func (c *ConnectorInboundDedupClient) mutate(ctx context.Context, m *ConnectorInboundDedupMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ConnectorInboundDedupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ConnectorInboundDedupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ConnectorInboundDedupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ConnectorInboundDedupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ConnectorInboundDedup mutation op: %q", m.Op())
 	}
 }
 
@@ -22770,6 +22923,139 @@ func (c *WorkflowTaskClient) mutate(ctx context.Context, m *WorkflowTaskMutation
 	}
 }
 
+// WorkflowTemplateClient is a client for the WorkflowTemplate schema.
+type WorkflowTemplateClient struct {
+	config
+}
+
+// NewWorkflowTemplateClient returns a client for the WorkflowTemplate from the given config.
+func NewWorkflowTemplateClient(c config) *WorkflowTemplateClient {
+	return &WorkflowTemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `workflowtemplate.Hooks(f(g(h())))`.
+func (c *WorkflowTemplateClient) Use(hooks ...Hook) {
+	c.hooks.WorkflowTemplate = append(c.hooks.WorkflowTemplate, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `workflowtemplate.Intercept(f(g(h())))`.
+func (c *WorkflowTemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.WorkflowTemplate = append(c.inters.WorkflowTemplate, interceptors...)
+}
+
+// Create returns a builder for creating a WorkflowTemplate entity.
+func (c *WorkflowTemplateClient) Create() *WorkflowTemplateCreate {
+	mutation := newWorkflowTemplateMutation(c.config, OpCreate)
+	return &WorkflowTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of WorkflowTemplate entities.
+func (c *WorkflowTemplateClient) CreateBulk(builders ...*WorkflowTemplateCreate) *WorkflowTemplateCreateBulk {
+	return &WorkflowTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *WorkflowTemplateClient) MapCreateBulk(slice any, setFunc func(*WorkflowTemplateCreate, int)) *WorkflowTemplateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &WorkflowTemplateCreateBulk{err: fmt.Errorf("calling to WorkflowTemplateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*WorkflowTemplateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &WorkflowTemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for WorkflowTemplate.
+func (c *WorkflowTemplateClient) Update() *WorkflowTemplateUpdate {
+	mutation := newWorkflowTemplateMutation(c.config, OpUpdate)
+	return &WorkflowTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *WorkflowTemplateClient) UpdateOne(_m *WorkflowTemplate) *WorkflowTemplateUpdateOne {
+	mutation := newWorkflowTemplateMutation(c.config, OpUpdateOne, withWorkflowTemplate(_m))
+	return &WorkflowTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *WorkflowTemplateClient) UpdateOneID(id int) *WorkflowTemplateUpdateOne {
+	mutation := newWorkflowTemplateMutation(c.config, OpUpdateOne, withWorkflowTemplateID(id))
+	return &WorkflowTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for WorkflowTemplate.
+func (c *WorkflowTemplateClient) Delete() *WorkflowTemplateDelete {
+	mutation := newWorkflowTemplateMutation(c.config, OpDelete)
+	return &WorkflowTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *WorkflowTemplateClient) DeleteOne(_m *WorkflowTemplate) *WorkflowTemplateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *WorkflowTemplateClient) DeleteOneID(id int) *WorkflowTemplateDeleteOne {
+	builder := c.Delete().Where(workflowtemplate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &WorkflowTemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for WorkflowTemplate.
+func (c *WorkflowTemplateClient) Query() *WorkflowTemplateQuery {
+	return &WorkflowTemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeWorkflowTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a WorkflowTemplate entity by its id.
+func (c *WorkflowTemplateClient) Get(ctx context.Context, id int) (*WorkflowTemplate, error) {
+	return c.Query().Where(workflowtemplate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *WorkflowTemplateClient) GetX(ctx context.Context, id int) *WorkflowTemplate {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *WorkflowTemplateClient) Hooks() []Hook {
+	return c.hooks.WorkflowTemplate
+}
+
+// Interceptors returns the client interceptors.
+func (c *WorkflowTemplateClient) Interceptors() []Interceptor {
+	return c.inters.WorkflowTemplate
+}
+
+func (c *WorkflowTemplateClient) mutate(ctx context.Context, m *WorkflowTemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&WorkflowTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&WorkflowTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&WorkflowTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&WorkflowTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown WorkflowTemplate mutation op: %q", m.Op())
+	}
+}
+
 // WorkflowVersionClient is a client for the WorkflowVersion schema.
 type WorkflowVersionClient struct {
 	config
@@ -22927,13 +23213,13 @@ type (
 		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
 		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
 		CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		ConfigurationItemHistory, ConnectorConfig, Contract, Conversation,
-		CustomerBranch, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		DomainConfig, EmailConversation, EmailIntakeAnalysis, EmailOutboundMessage,
-		EndpointACL, EngineerSkill, ExternalContractReference, FeishuTicketSync, Group,
-		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		ConfigurationItemHistory, ConnectorConfig, ConnectorInboundDedup, Contract,
+		Conversation, CustomerBranch, Department, DiscoveryJob, DiscoveryResult,
+		DiscoverySource, DomainConfig, EmailConversation, EmailIntakeAnalysis,
+		EmailOutboundMessage, EndpointACL, EngineerSkill, ExternalContractReference,
+		FeishuTicketSync, Group, InboundEmailMessage, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
 		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
@@ -22950,7 +23236,8 @@ type (
 		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
 		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowTemplate,
+		WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
@@ -22958,13 +23245,13 @@ type (
 		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
 		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
 		CloudAccount, CloudResource, CloudService, ConfigurationItem,
-		ConfigurationItemHistory, ConnectorConfig, Contract, Conversation,
-		CustomerBranch, Department, DiscoveryJob, DiscoveryResult, DiscoverySource,
-		DomainConfig, EmailConversation, EmailIntakeAnalysis, EmailOutboundMessage,
-		EndpointACL, EngineerSkill, ExternalContractReference, FeishuTicketSync, Group,
-		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
-		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
-		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
+		ConfigurationItemHistory, ConnectorConfig, ConnectorInboundDedup, Contract,
+		Conversation, CustomerBranch, Department, DiscoveryJob, DiscoveryResult,
+		DiscoverySource, DomainConfig, EmailConversation, EmailIntakeAnalysis,
+		EmailOutboundMessage, EndpointACL, EngineerSkill, ExternalContractReference,
+		FeishuTicketSync, Group, InboundEmailMessage, Incident, IncidentAlert,
+		IncidentEscalationRule, IncidentEvent, IncidentMetric, IncidentRule,
+		IncidentRuleExecution, ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
 		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
 		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
 		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
@@ -22981,6 +23268,7 @@ type (
 		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
 		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
 		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Interceptor
+		Workflow, WorkflowInstance, WorkflowTask, WorkflowTemplate,
+		WorkflowVersion []ent.Interceptor
 	}
 )

@@ -332,6 +332,18 @@ func (f ConnectorConfigFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConnectorConfigMutation", m)
 }
 
+// The ConnectorInboundDedupFunc type is an adapter to allow the use of ordinary
+// function as ConnectorInboundDedup mutator.
+type ConnectorInboundDedupFunc func(context.Context, *ent.ConnectorInboundDedupMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ConnectorInboundDedupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ConnectorInboundDedupMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ConnectorInboundDedupMutation", m)
+}
+
 // The ContractFunc type is an adapter to allow the use of ordinary
 // function as Contract mutator.
 type ContractFunc func(context.Context, *ent.ContractMutation) (ent.Value, error)
@@ -1590,6 +1602,18 @@ func (f WorkflowTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowTaskMutation", m)
+}
+
+// The WorkflowTemplateFunc type is an adapter to allow the use of ordinary
+// function as WorkflowTemplate mutator.
+type WorkflowTemplateFunc func(context.Context, *ent.WorkflowTemplateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f WorkflowTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.WorkflowTemplateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowTemplateMutation", m)
 }
 
 // The WorkflowVersionFunc type is an adapter to allow the use of ordinary

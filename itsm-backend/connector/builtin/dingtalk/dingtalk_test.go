@@ -33,6 +33,10 @@ func TestVerifyStreamSignature(t *testing.T) {
 	ts := "1700000000000"
 	body := []byte(`{"msg":"hi"}`)
 	mac := hmac.New(sha256.New, []byte("as"))
+	// 按钉钉 Stream 签名规范：base64(HMAC-SHA256(secret, timestamp + "\n" + body))
+	mac.Write([]byte(ts))
+	mac.Write([]byte("\n"))
+	mac.Write(body)
 	expected := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	if !c.VerifyStreamSignature(ts, expected, body) {
 		t.Fatal("expected valid signature")

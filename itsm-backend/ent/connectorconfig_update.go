@@ -209,6 +209,46 @@ func (_u *ConnectorConfigUpdate) ClearLastHealthCheckAt() *ConnectorConfigUpdate
 	return _u
 }
 
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *ConnectorConfigUpdate) SetLastSuccessAt(v time.Time) *ConnectorConfigUpdate {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *ConnectorConfigUpdate) SetNillableLastSuccessAt(v *time.Time) *ConnectorConfigUpdate {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *ConnectorConfigUpdate) ClearLastSuccessAt() *ConnectorConfigUpdate {
+	_u.mutation.ClearLastSuccessAt()
+	return _u
+}
+
+// SetLastFailureAt sets the "last_failure_at" field.
+func (_u *ConnectorConfigUpdate) SetLastFailureAt(v time.Time) *ConnectorConfigUpdate {
+	_u.mutation.SetLastFailureAt(v)
+	return _u
+}
+
+// SetNillableLastFailureAt sets the "last_failure_at" field if the given value is not nil.
+func (_u *ConnectorConfigUpdate) SetNillableLastFailureAt(v *time.Time) *ConnectorConfigUpdate {
+	if v != nil {
+		_u.SetLastFailureAt(*v)
+	}
+	return _u
+}
+
+// ClearLastFailureAt clears the value of the "last_failure_at" field.
+func (_u *ConnectorConfigUpdate) ClearLastFailureAt() *ConnectorConfigUpdate {
+	_u.mutation.ClearLastFailureAt()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ConnectorConfigUpdate) SetCreatedAt(v time.Time) *ConnectorConfigUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -370,6 +410,18 @@ func (_u *ConnectorConfigUpdate) sqlSave(ctx context.Context) (_node int, err er
 	}
 	if _u.mutation.LastHealthCheckAtCleared() {
 		_spec.ClearField(connectorconfig.FieldLastHealthCheckAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(connectorconfig.FieldLastSuccessAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastFailureAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastFailureAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastFailureAtCleared() {
+		_spec.ClearField(connectorconfig.FieldLastFailureAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(connectorconfig.FieldCreatedAt, field.TypeTime, value)
@@ -578,6 +630,46 @@ func (_u *ConnectorConfigUpdateOne) ClearLastHealthCheckAt() *ConnectorConfigUpd
 	return _u
 }
 
+// SetLastSuccessAt sets the "last_success_at" field.
+func (_u *ConnectorConfigUpdateOne) SetLastSuccessAt(v time.Time) *ConnectorConfigUpdateOne {
+	_u.mutation.SetLastSuccessAt(v)
+	return _u
+}
+
+// SetNillableLastSuccessAt sets the "last_success_at" field if the given value is not nil.
+func (_u *ConnectorConfigUpdateOne) SetNillableLastSuccessAt(v *time.Time) *ConnectorConfigUpdateOne {
+	if v != nil {
+		_u.SetLastSuccessAt(*v)
+	}
+	return _u
+}
+
+// ClearLastSuccessAt clears the value of the "last_success_at" field.
+func (_u *ConnectorConfigUpdateOne) ClearLastSuccessAt() *ConnectorConfigUpdateOne {
+	_u.mutation.ClearLastSuccessAt()
+	return _u
+}
+
+// SetLastFailureAt sets the "last_failure_at" field.
+func (_u *ConnectorConfigUpdateOne) SetLastFailureAt(v time.Time) *ConnectorConfigUpdateOne {
+	_u.mutation.SetLastFailureAt(v)
+	return _u
+}
+
+// SetNillableLastFailureAt sets the "last_failure_at" field if the given value is not nil.
+func (_u *ConnectorConfigUpdateOne) SetNillableLastFailureAt(v *time.Time) *ConnectorConfigUpdateOne {
+	if v != nil {
+		_u.SetLastFailureAt(*v)
+	}
+	return _u
+}
+
+// ClearLastFailureAt clears the value of the "last_failure_at" field.
+func (_u *ConnectorConfigUpdateOne) ClearLastFailureAt() *ConnectorConfigUpdateOne {
+	_u.mutation.ClearLastFailureAt()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ConnectorConfigUpdateOne) SetCreatedAt(v time.Time) *ConnectorConfigUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -769,6 +861,18 @@ func (_u *ConnectorConfigUpdateOne) sqlSave(ctx context.Context) (_node *Connect
 	}
 	if _u.mutation.LastHealthCheckAtCleared() {
 		_spec.ClearField(connectorconfig.FieldLastHealthCheckAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastSuccessAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastSuccessAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastSuccessAtCleared() {
+		_spec.ClearField(connectorconfig.FieldLastSuccessAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastFailureAt(); ok {
+		_spec.SetField(connectorconfig.FieldLastFailureAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastFailureAtCleared() {
+		_spec.ClearField(connectorconfig.FieldLastFailureAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(connectorconfig.FieldCreatedAt, field.TypeTime, value)

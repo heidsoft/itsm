@@ -23,8 +23,11 @@ type Manager struct {
 }
 
 type instance struct {
-	cfg  Config
-	conn Connector
+	cfg           Config
+	conn          Connector
+	lastSuccessAt time.Time
+	lastFailureAt time.Time
+	lastError     string
 }
 
 // NewManager 创建管理器
@@ -169,16 +172,39 @@ func (m *Manager) ListByTenant(tenantID int) []Config {
 	return out
 }
 
-// Send 通过指定连接器发送消息
+// Send 通过指定连接器发送消息，同时记录 last_success_at / last_failure_at，
+// 供运维 dashboard 与 health 端点展示最近一次成败。
 func (m *Manager) Send(ctx context.Context, tenantID int, name string, msg *Message) error {
 	c, ok := m.Get(tenantID, name)
 	if !ok {
 		return fmt.Errorf("connector %q not provisioned for tenant %d", name, tenantID)
 	}
-	return c.Send(ctx, msg)
+	err := c.Send(ctx, msg)
+	m.recordSendOutcome(tenantID, name, err)
+	return err
 }
 
-// HealthCheckAll 对所有运行中的连接器做健康检查
+func (m *Manager) recordSendOutcome(tenantID int, name string, err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, inst := range m.instances {
+		if inst.cfg.TenantID == tenantID && inst.cfg.Name == name {
+			now := time.Now()
+			if err != nil {
+				inst.lastFailureAt = now
+				inst.lastError = err.Error()
+				if len(inst.lastError) > 2000 {
+					inst.lastError = inst.lastError[:2000]
+				}
+			} else {
+				inst.lastSuccessAt = now
+			}
+			return
+		}
+	}
+}
+
+// HealthCheckAll 对所有运行中的连接器做健康检查；返回结果包含上次 Send 成功 / 失败时间。
 func (m *Manager) HealthCheckAll(ctx context.Context) map[string]HealthStatus {
 	m.mu.RLock()
 	insts := make([]*instance, 0, len(m.instances))
@@ -191,8 +217,21 @@ func (m *Manager) HealthCheckAll(ctx context.Context) map[string]HealthStatus {
 	for _, ins := range insts {
 		key := fmt.Sprintf("%d/%s/%s", ins.cfg.TenantID, ins.cfg.Name, ins.cfg.Provider)
 		cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		out[key] = ins.conn.HealthCheck(cctx)
+		status := ins.conn.HealthCheck(cctx)
 		cancel()
+		if status.Extra == nil {
+			status.Extra = map[string]interface{}{}
+		}
+		if !ins.lastSuccessAt.IsZero() {
+			status.Extra["lastSendSuccessAt"] = ins.lastSuccessAt
+		}
+		if !ins.lastFailureAt.IsZero() {
+			status.Extra["lastSendFailureAt"] = ins.lastFailureAt
+			if ins.lastError != "" {
+				status.Extra["lastSendError"] = ins.lastError
+			}
+		}
+		out[key] = status
 	}
 	return out
 }

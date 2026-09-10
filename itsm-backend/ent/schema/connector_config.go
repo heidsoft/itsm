@@ -25,6 +25,8 @@ func (ConnectorConfig) Fields() []ent.Field {
 		field.String("status").Default("configured").MaxLen(40),
 		field.String("last_error").Optional().MaxLen(2000),
 		field.Time("last_health_check_at").Optional().Nillable(),
+		field.Time("last_success_at").Optional().Nillable(),
+		field.Time("last_failure_at").Optional().Nillable(),
 		field.Time("created_at").Default(time.Now),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

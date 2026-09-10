@@ -87,6 +87,9 @@ type ConfigurationItemHistory func(*sql.Selector)
 // ConnectorConfig is the predicate function for connectorconfig builders.
 type ConnectorConfig func(*sql.Selector)
 
+// ConnectorInboundDedup is the predicate function for connectorinbounddedup builders.
+type ConnectorInboundDedup func(*sql.Selector)
+
 // Contract is the predicate function for contract builders.
 type Contract func(*sql.Selector)
 
@@ -401,6 +404,9 @@ type WorkflowInstance func(*sql.Selector)
 
 // WorkflowTask is the predicate function for workflowtask builders.
 type WorkflowTask func(*sql.Selector)
+
+// WorkflowTemplate is the predicate function for workflowtemplate builders.
+type WorkflowTemplate func(*sql.Selector)
 
 // WorkflowVersion is the predicate function for workflowversion builders.
 type WorkflowVersion func(*sql.Selector)

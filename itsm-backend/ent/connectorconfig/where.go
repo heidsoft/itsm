@@ -99,6 +99,16 @@ func LastHealthCheckAt(v time.Time) predicate.ConnectorConfig {
 	return predicate.ConnectorConfig(sql.FieldEQ(FieldLastHealthCheckAt, v))
 }
 
+// LastSuccessAt applies equality check predicate on the "last_success_at" field. It's identical to LastSuccessAtEQ.
+func LastSuccessAt(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
+// LastFailureAt applies equality check predicate on the "last_failure_at" field. It's identical to LastFailureAtEQ.
+func LastFailureAt(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldEQ(FieldLastFailureAt, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.ConnectorConfig {
 	return predicate.ConnectorConfig(sql.FieldEQ(FieldCreatedAt, v))
@@ -647,6 +657,106 @@ func LastHealthCheckAtIsNil() predicate.ConnectorConfig {
 // LastHealthCheckAtNotNil applies the NotNil predicate on the "last_health_check_at" field.
 func LastHealthCheckAtNotNil() predicate.ConnectorConfig {
 	return predicate.ConnectorConfig(sql.FieldNotNull(FieldLastHealthCheckAt))
+}
+
+// LastSuccessAtEQ applies the EQ predicate on the "last_success_at" field.
+func LastSuccessAtEQ(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtNEQ applies the NEQ predicate on the "last_success_at" field.
+func LastSuccessAtNEQ(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNEQ(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIn applies the In predicate on the "last_success_at" field.
+func LastSuccessAtIn(vs ...time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtNotIn applies the NotIn predicate on the "last_success_at" field.
+func LastSuccessAtNotIn(vs ...time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNotIn(FieldLastSuccessAt, vs...))
+}
+
+// LastSuccessAtGT applies the GT predicate on the "last_success_at" field.
+func LastSuccessAtGT(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldGT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtGTE applies the GTE predicate on the "last_success_at" field.
+func LastSuccessAtGTE(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldGTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLT applies the LT predicate on the "last_success_at" field.
+func LastSuccessAtLT(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldLT(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtLTE applies the LTE predicate on the "last_success_at" field.
+func LastSuccessAtLTE(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldLTE(FieldLastSuccessAt, v))
+}
+
+// LastSuccessAtIsNil applies the IsNil predicate on the "last_success_at" field.
+func LastSuccessAtIsNil() predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldIsNull(FieldLastSuccessAt))
+}
+
+// LastSuccessAtNotNil applies the NotNil predicate on the "last_success_at" field.
+func LastSuccessAtNotNil() predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNotNull(FieldLastSuccessAt))
+}
+
+// LastFailureAtEQ applies the EQ predicate on the "last_failure_at" field.
+func LastFailureAtEQ(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldEQ(FieldLastFailureAt, v))
+}
+
+// LastFailureAtNEQ applies the NEQ predicate on the "last_failure_at" field.
+func LastFailureAtNEQ(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNEQ(FieldLastFailureAt, v))
+}
+
+// LastFailureAtIn applies the In predicate on the "last_failure_at" field.
+func LastFailureAtIn(vs ...time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldIn(FieldLastFailureAt, vs...))
+}
+
+// LastFailureAtNotIn applies the NotIn predicate on the "last_failure_at" field.
+func LastFailureAtNotIn(vs ...time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNotIn(FieldLastFailureAt, vs...))
+}
+
+// LastFailureAtGT applies the GT predicate on the "last_failure_at" field.
+func LastFailureAtGT(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldGT(FieldLastFailureAt, v))
+}
+
+// LastFailureAtGTE applies the GTE predicate on the "last_failure_at" field.
+func LastFailureAtGTE(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldGTE(FieldLastFailureAt, v))
+}
+
+// LastFailureAtLT applies the LT predicate on the "last_failure_at" field.
+func LastFailureAtLT(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldLT(FieldLastFailureAt, v))
+}
+
+// LastFailureAtLTE applies the LTE predicate on the "last_failure_at" field.
+func LastFailureAtLTE(v time.Time) predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldLTE(FieldLastFailureAt, v))
+}
+
+// LastFailureAtIsNil applies the IsNil predicate on the "last_failure_at" field.
+func LastFailureAtIsNil() predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldIsNull(FieldLastFailureAt))
+}
+
+// LastFailureAtNotNil applies the NotNil predicate on the "last_failure_at" field.
+func LastFailureAtNotNil() predicate.ConnectorConfig {
+	return predicate.ConnectorConfig(sql.FieldNotNull(FieldLastFailureAt))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

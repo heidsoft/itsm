@@ -24,6 +24,7 @@ type Handler struct {
 	syncService      *service.FeishuSyncService
 	marketplace      *marketplaceService.Service
 	logger           *zap.SugaredLogger
+	inboundDedup     *connector.InboundDedup
 	replayMu         sync.Mutex
 	replayed         map[string]time.Time
 }
@@ -42,6 +43,10 @@ func NewHandler(
 		replayed:         make(map[string]time.Time),
 	}
 }
+
+// SetInboundDedup 注入持久化入站去重器（替代旧的 in-memory nonce map）。
+// nil 时退回 in-memory 实现，保留兼容。
+func (h *Handler) SetInboundDedup(d *connector.InboundDedup) { h.inboundDedup = d }
 
 // RegisterRoutes registers feishu routes
 func (h *Handler) RegisterRoutes(auth *gin.RouterGroup, public *gin.RouterGroup) {
