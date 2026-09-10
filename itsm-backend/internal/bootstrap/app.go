@@ -1268,6 +1268,11 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		if err := prepareTicketFormFieldsMigration(ctx, database.GetRawDB(), sugar); err != nil {
 			return fmt.Errorf("prepare ticket form fields migration: %w", err)
 		}
+		// workflow_templates.id 仍是 SERIAL 时，ent diff 会硬报
+		// "expect IDENTITY"，必须在 Schema.Create 之前对齐（见 021/实体重生成）。
+		if err := prepareWorkflowTemplatesIdentityMigration(ctx, database.GetRawDB(), sugar); err != nil {
+			return fmt.Errorf("prepare workflow_templates identity migration: %w", err)
+		}
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)
 		}
