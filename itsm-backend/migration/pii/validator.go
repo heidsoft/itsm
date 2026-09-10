@@ -27,12 +27,13 @@ func (v NotNullViolation) String() string {
 // CheckNotNullDefaults 解析一段迁移 SQL，检测所有新增 NOT NULL 列是否带 DEFAULT。
 // 当前仅支持 PostgreSQL 与 SQLite 风格的简单 ALTER TABLE ADD COLUMN。
 // 形如：
-//   ALTER TABLE foo ADD COLUMN bar varchar(255) NOT NULL;
-//   ALTER TABLE foo ADD COLUMN bar varchar(255) NOT NULL DEFAULT '';
-//   ALTER TABLE foo ADD COLUMN bar int NOT NULL DEFAULT 0;
-//   ALTER TABLE foo ADD COLUMN bar boolean NOT NULL DEFAULT false;
-//   ALTER TABLE foo ADD COLUMN bar timestamp NOT NULL DEFAULT now();
-//   ALTER TABLE foo ADD COLUMN bar bigint;  -- 可空 → OK
+//
+//	ALTER TABLE foo ADD COLUMN bar varchar(255) NOT NULL;
+//	ALTER TABLE foo ADD COLUMN bar varchar(255) NOT NULL DEFAULT '';
+//	ALTER TABLE foo ADD COLUMN bar int NOT NULL DEFAULT 0;
+//	ALTER TABLE foo ADD COLUMN bar boolean NOT NULL DEFAULT false;
+//	ALTER TABLE foo ADD COLUMN bar timestamp NOT NULL DEFAULT now();
+//	ALTER TABLE foo ADD COLUMN bar bigint;  -- 可空 → OK
 //
 // 多语句支持：分号分隔；注释行（-- 开头）跳过。
 func CheckNotNullDefaults(sql string) ([]NotNullViolation, error) {

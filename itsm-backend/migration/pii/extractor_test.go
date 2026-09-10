@@ -38,7 +38,7 @@ func TestExtractStrategiesIgnoresMalformedValues(t *testing.T) {
 
 func TestExtractStrategiesReturnsMultiple(t *testing.T) {
 	got := extractStrategies(map[string]any{
-		"PII": map[string]any{"Strategy": "phone"},
+		"PII":         map[string]any{"Strategy": "phone"},
 		"Multitenant": map[string]any{"Foo": "bar"},
 	})
 	require.Equal(t, []string{"phone"}, got)

@@ -114,6 +114,14 @@ check-contracts: ## 校验工程契约（API 同源、部署、CI 与安全门�
 	@echo "$(BLUE)校验工程契约...$(NC)"
 	@node scripts/check-engineering-contracts.js
 
+preflight: ## 升级/部署前预检（环境/端口/镜像/漂移/索引；BLOCKER 退出码 1）
+	@echo "$(BLUE)运行升级前预检...$(NC)"
+	@bash scripts/preflight.sh $(PREFLIGHT_ARGS)
+
+release-evidence: ## 生成发布证据包（SHA/digest/迁移/E2E 聚合；output/release-evidence-<版本>.md）
+	@echo "$(BLUE)生成发布证据包...$(NC)"
+	@bash scripts/release-evidence.sh
+
 docs-gate: ## 运行文档质量门禁（advisory；--strict 传 DOCS_GATE_ARGS=--strict）
 	@echo "$(BLUE)运行文档质量门禁...$(NC)"
 	@bash scripts/docs-gate/run-all.sh $(DOCS_GATE_ARGS)

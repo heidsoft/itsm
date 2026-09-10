@@ -9,9 +9,10 @@ import (
 // FieldDescriptor 列表，供 PolicyFromDescriptors 使用。
 //
 // 调用方通常：
-//   schema, err := load.Load("./ent/schema")
-//   descriptors, err := pii.ExtractFromLoadedSchema(schema)
-//   policy, err := pii.PolicyFromDescriptors(descriptors)
+//
+//	schema, err := load.Load("./ent/schema")
+//	descriptors, err := pii.ExtractFromLoadedSchema(schema)
+//	policy, err := pii.PolicyFromDescriptors(descriptors)
 //
 // 这里不直接 walk ent.Schema 接口，避免把 entc/gen 这种重型依赖倒灌到 pii 包里。
 //

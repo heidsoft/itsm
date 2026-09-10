@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -139,6 +140,13 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 		return nil
 	}
 
+	// CREATE INDEX CONCURRENTLY 不能在事务块内执行（PG 25001）：
+	// 此类迁移走非事务路径，逐条语句执行 + 逐条落账（账本 INSERT 独立提交）。
+	// 半失败场景：已建索引可幂等重建（IF NOT EXISTS），账本未记则重跑补齐。
+	if strings.Contains(strings.ToUpper(sql), "CONCURRENTLY") {
+		return m.applyNonTransactional(ctx, mig, sql)
+	}
+
 	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -179,6 +187,41 @@ func checksumSQL(sql string) string {
 	}
 	sum := sha256.Sum256([]byte(sql))
 	return hex.EncodeToString(sum[:])
+}
+
+// applyNonTransactional 执行含 CONCURRENTLY 的迁移：整个文件在事务外逐语句跑，
+// 全部成功后单独落账。语句按分号切分（该文件不含函数体/ dollar-quoted 字符串）。
+func (m *Migrator) applyNonTransactional(ctx context.Context, mig Migration, sql string) error {
+	m.logger.Infow("Applying migration (non-transactional, contains CONCURRENTLY)",
+		"version", mig.Version, "description", mig.Description)
+
+	started := time.Now()
+	for _, stmt := range splitSQLStatements(sql) {
+		trimmed := strings.TrimSpace(stmt)
+		if trimmed == "" || trimmed == ";" {
+			continue
+		}
+		if _, err := m.db.ExecContext(ctx, trimmed); err != nil {
+			return fmt.Errorf("failed to execute non-transactional statement: %w", err)
+		}
+	}
+
+	executionMS := time.Since(started).Milliseconds()
+	if _, err := m.db.ExecContext(ctx, `
+		INSERT INTO schema_migrations
+			(version, description, applied_at, rollback_sql, checksum, execution_ms, release_version)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, mig.Version, mig.Description, time.Now(), mig.RollbackSQL,
+		checksumSQL(sql), executionMS, m.releaseVersion); err != nil {
+		return fmt.Errorf("failed to record migration: %w", err)
+	}
+	m.logger.Infow("Migration applied successfully (non-transactional)", "version", mig.Version)
+	return nil
+}
+
+// splitSQLStatements 按分号切分 SQL（不处理函数体；CONCURRENTLY 索引脚本不含）。
+func splitSQLStatements(sql string) []string {
+	return strings.Split(sql, ";")
 }
 
 // RollbackMigration rolls back a single migration

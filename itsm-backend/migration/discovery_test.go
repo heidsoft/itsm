@@ -103,9 +103,17 @@ func TestMergeWithRegistered(t *testing.T) {
 	// 硬编码独有（GetMigrationSQL 非空）：保留作为兜底。
 	// SQLContent 字段为空是预期的——硬编码版本的 SQL 在 ApplyMigration 内回退到
 	// GetMigrationSQL(version)，而不是 SQLContent。验证「存在且 Description 非空」。
-	hc, ok := byVersion["002_add_notification_preferences"]
+	hc, ok := byVersion["007_add_change_execution_tables"]
 	require.True(t, ok, "硬编码独有迁移必须保留")
 	assert.NotEmpty(t, hc.Description)
+
+	// legacy 001-006 必须被排除出活动流：其内嵌 SQL 引用旧表名/旧结构，
+	// 重放必炸（2026-09-10 prod 实证 002 报 relation "tenant" does not exist）。
+	// 账本登记由 RecordLegacyMigrationsApplied 幂等补记，不在合并流内。
+	for _, m := range LegacyMigrations {
+		_, in := byVersion[m.Version]
+		assert.False(t, in, "legacy %s 不得进入活动迁移流", m.Version)
+	}
 
 	// 排序保证幂等
 	for i := 1; i < len(merged); i++ {

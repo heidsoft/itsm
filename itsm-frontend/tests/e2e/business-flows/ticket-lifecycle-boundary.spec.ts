@@ -5,7 +5,7 @@ import { test, expect, Page } from '@playwright/test';
 // 覆盖创建、编辑、状态流转、删除、跨租户隔离等场景
 // ============================================================
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090'\;
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8090';
 
 // Helper: 登录并返回 token
 async function loginAs(page: Page, email: string, password: string): Promise<string> {

@@ -25,13 +25,13 @@ import (
 type Strategy string
 
 const (
-	StrategyEmail     Strategy = "email"     // hash + salt；格式不可逆但同 email 仍相同
-	StrategyPhone     Strategy = "phone"     // hash + salt；保留 E.164 长度
-	StrategyIDCard    Strategy = "id_card"   // hash + salt；中国身份证等
-	StrategyName      Strategy = "name"      // 张* / 李**；格式保留
-	StrategyAddress   Strategy = "address"   // 部分脱敏；区 / 路保留，门牌号 *
-	StrategyAPIKey    Strategy = "api_key"   // NULL；mask 列标记为 REDACTED
-	StrategyFreeText  Strategy = "free_text" // 整段替换为固定占位符，禁止外发
+	StrategyEmail    Strategy = "email"     // hash + salt；格式不可逆但同 email 仍相同
+	StrategyPhone    Strategy = "phone"     // hash + salt；保留 E.164 长度
+	StrategyIDCard   Strategy = "id_card"   // hash + salt；中国身份证等
+	StrategyName     Strategy = "name"      // 张* / 李**；格式保留
+	StrategyAddress  Strategy = "address"   // 部分脱敏；区 / 路保留，门牌号 *
+	StrategyAPIKey   Strategy = "api_key"   // NULL；mask 列标记为 REDACTED
+	StrategyFreeText Strategy = "free_text" // 整段替换为固定占位符，禁止外发
 )
 
 // AllStrategies 是允许列表；任何不在表内的注解在 Policy 提取阶段会被忽略并记日志。
@@ -101,10 +101,10 @@ var identRE = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 // FieldDescriptor 是 ent 生成的 FieldDescriptor 抽象。
 // 仅暴露工具链需要的最小字段，避免耦合 ent 内部 API。
 type FieldDescriptor struct {
-	Table  string // 物理表名（snake_case）
-	Name   string // 字段名
-	GoName string // Go 字段名，用于校验报错信息
-	Type   string // "string" / "int" / "time" / "json" / "bool" / ...
+	Table       string // 物理表名（snake_case）
+	Name        string // 字段名
+	GoName      string // Go 字段名，用于校验报错信息
+	Type        string // "string" / "int" / "time" / "json" / "bool" / ...
 	Annotations []schema.Annotation
 }
 

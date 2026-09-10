@@ -55,11 +55,10 @@ import (
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
+	dingtalkHandler "itsm-backend/handlers/dingtalk"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
-	dingtalkHandler "itsm-backend/handlers/dingtalk"
-	wecomHandler "itsm-backend/handlers/wecom"
 	globalSearchHandler "itsm-backend/handlers/global_search"
 	groupHandler "itsm-backend/handlers/group"
 	"itsm-backend/handlers/incident"
@@ -96,11 +95,12 @@ import (
 	userHandler "itsm-backend/handlers/user"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
+	wecomHandler "itsm-backend/handlers/wecom"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
+	"itsm-backend/internal/schema"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
-	"itsm-backend/internal/schema"
 	"itsm-backend/pkg/seeder"
 	repository_ticket "itsm-backend/repository/ticket"
 	"itsm-backend/router"
@@ -1388,6 +1388,19 @@ func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator, l
 			"error", discErr,
 			"hint", "MIGRATIONS_DIR env / 默认相对 migrations 目录")
 	} else {
+		// 账本调和（只登记不执行）：①legacy 001-006 无条件收养；②既有安装上
+		// 发现机制上线前已生效的日期化磁盘迁移收养（全新安装照常执行）。
+		// 两者都不收养会被发现机制当 pending 重放而炸（2026-09-10 实证 23502）。
+		if err := migration.RecordLegacyMigrationsApplied(ctx, database.GetRawDB(), logger); err != nil {
+			logger.Errorw("legacy migration ledger backfill failed",
+				"error", err,
+				"hint", "非致命：账本缺 001-006 不阻塞启动，但 status 视图不完整")
+		}
+		if adopted, err := migration.AdoptUnrecordedFilesystemMigrations(ctx, database.GetRawDB(), fsMigs, logger); err != nil {
+			logger.Errorw("filesystem migration adoption failed", "error", err)
+		} else if adopted > 0 {
+			logger.Infow("pre-discovery filesystem migrations adopted", "count", adopted)
+		}
 		merged := migration.MergeWithRegistered(fsMigs)
 		logger.Infow("filesystem migration stream merged",
 			"disk_only", len(fsMigs),

@@ -127,14 +127,24 @@ func defaultMigrationsDir() string {
 }
 
 // MergeWithRegistered 以磁盘为真相：磁盘版本覆盖 RegisteredMigrations 中同名条目；
-// 磁盘新增条目追加；RegisteredMigrations 与 LegacyMigrations 中独有且 GetMigrationSQL
-// 非空的条目保留（向后兼容 Go 内嵌 SQL 迁移，例如 002-006/007-021）。
+// 磁盘新增条目追加；RegisteredMigrations 中独有且 GetMigrationSQL 非空的条目保留
+// （向后兼容 Go 内嵌 SQL 迁移，例如 007-021）。
+//
+// LegacyMigrations（001-006）不进活动流：它们是 ent 接管前的历史版本，其中
+// 002-006 的 Go 内嵌 SQL 仍引用旧表名/旧结构（如 002 的 tenant 表——现库为
+// tenants），在真实库上重放必然报错。2026-09-10 prod init 日志实证：发现机制
+// 把未记账的 legacy 当 pending，002_add_notification_preferences 反复报
+// `relation "tenant" does not exist`。legacy 版本的账本登记由 bootstrap 的
+// recordLegacyMigrationsApplied 幂等补记（只登记、不执行），保证账本完整可审计。
 //
 // 返回值按 Version 排序，方便重复执行幂等。
 func MergeWithRegistered(fs []Migration) []Migration {
+	legacy := map[string]bool{}
+	for _, m := range LegacyMigrations {
+		legacy[m.Version] = true
+	}
 	byVersion := map[string]Migration{}
 	all := append([]Migration{}, RegisteredMigrations...)
-	all = append(all, LegacyMigrations...)
 	for _, m := range all {
 		if GetMigrationSQL(m.Version) != "" {
 			if _, dup := byVersion[m.Version]; !dup {
