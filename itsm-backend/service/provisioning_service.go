@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/infrastructure/cloud"
 	cloudAlicloud "itsm-backend/infrastructure/cloud/alicloud"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -33,7 +34,10 @@ func NewProvisioningService(client *ent.Client, logger *zap.SugaredLogger) *Prov
 	}
 }
 
-// CreateTaskFromServiceRequest 仅创建交付任务并把 ServiceRequest 置为 provisioning
+// CreateTaskFromServiceRequest 仅创建交付任务、把 ServiceRequest 置为 provisioning，
+// 并把"执行任务"作为 CommandExecuteProvisioningTask 入箱。
+// worker 重载任务后调 ExecuteTask；这样请求结束 / 进程退出后仍可重试到 max_attempts，
+// 避免同步执行在网络抖动时丢交付任务。幂等键按 task ID 锁定，replay 不会重复执行。
 func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, serviceRequestID, tenantID, actorUserID int) (*ent.ProvisioningTask, error) {
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -81,6 +85,24 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		SetStatus("provisioning").
 		Exec(ctx); err != nil {
 		return nil, fmt.Errorf("更新服务请求状态失败: %w", err)
+	}
+
+	// 入箱：worker 重载 task 后调 ExecuteTask 实际跑 provider。同一 task ID
+	// 作为 idempotency_key，replay / 重试不会创建新任务。
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:       tenantID,
+		CommandType:    commandbus.CommandExecuteProvisioningTask,
+		AggregateType:  "provisioning_task",
+		AggregateID:    task.ID,
+		IdempotencyKey: fmt.Sprintf("provisioning_task:%d:execute", task.ID),
+		MaxAttempts:    5,
+		Payload: map[string]interface{}{
+			"serviceRequestId": serviceRequestID,
+			"taskId":           task.ID,
+			"actorUserId":      actorUserID,
+		},
+	}); err != nil {
+		return nil, fmt.Errorf("入箱交付任务执行命令失败: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {

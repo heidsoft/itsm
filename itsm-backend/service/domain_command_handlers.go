@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -93,4 +94,67 @@ func (h *IncidentRulesCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		return fmt.Errorf("load incident for rules: %w", err)
 	}
 	return h.engine.ExecuteRulesForIncident(executionCtx, cmd.AggregateID, cmd.TenantID)
+}
+
+// IncidentAlertDeliveryCommandHandler 处理 incident_alert.deliver 命令：
+// 在 worker 内重载 alert（带租户隔离），由 IncidentAlertingService.DeliverExternalAlert
+// 实际触发外部渠道（email / sms / slack / webhook）。原 fire-and-forget goroutine
+// 在请求结束后会被取消；现在交由 commandbus 调度，可重试到 max_attempts 并
+// 由 operations.operations API 暴露的死信/重放兜底。
+type IncidentAlertDeliveryCommandHandler struct {
+	alerting *IncidentAlertingService
+}
+
+func NewIncidentAlertDeliveryCommandHandler(alerting *IncidentAlertingService) *IncidentAlertDeliveryCommandHandler {
+	if alerting == nil {
+		return nil
+	}
+	return &IncidentAlertDeliveryCommandHandler{alerting: alerting}
+}
+
+func (h *IncidentAlertDeliveryCommandHandler) Handle(ctx context.Context, cmd *ent.OperationalCommand) error {
+	if h == nil || h.alerting == nil || cmd == nil {
+		return fmt.Errorf("invalid incident alert delivery command")
+	}
+	if cmd.CommandType != commandbus.CommandDeliverIncidentAlert ||
+		cmd.AggregateType != "incident_alert" ||
+		cmd.AggregateID <= 0 ||
+		cmd.TenantID <= 0 {
+		return fmt.Errorf("invalid incident alert delivery command")
+	}
+	executionCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return h.alerting.DeliverExternalAlert(executionCtx, cmd.AggregateID, cmd.TenantID)
+}
+
+// ProvisioningTaskCommandHandler 处理 provisioning.task.execute 命令：
+// 在 worker 内重载 ProvisioningTask，调 ProvisioningService.ExecuteTask 完成执行。
+// 入箱时已用 task ID 作 idempotency_key，replay / 重试不会重复执行同一任务。
+// 现有手动 POST /provisioning-tasks/:id/execute 端点保留，可作为运维强制重试入口。
+type ProvisioningTaskCommandHandler struct {
+	svc *ProvisioningService
+}
+
+func NewProvisioningTaskCommandHandler(svc *ProvisioningService) *ProvisioningTaskCommandHandler {
+	if svc == nil {
+		return nil
+	}
+	return &ProvisioningTaskCommandHandler{svc: svc}
+}
+
+func (h *ProvisioningTaskCommandHandler) Handle(ctx context.Context, cmd *ent.OperationalCommand) error {
+	if h == nil || h.svc == nil || cmd == nil {
+		return fmt.Errorf("invalid provisioning task command")
+	}
+	if cmd.CommandType != commandbus.CommandExecuteProvisioningTask ||
+		cmd.AggregateType != "provisioning_task" ||
+		cmd.AggregateID <= 0 ||
+		cmd.TenantID <= 0 {
+		return fmt.Errorf("invalid provisioning task command")
+	}
+	actorUserID, _ := cmd.Payload["actorUserId"].(float64)
+	executionCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+	_, err := h.svc.ExecuteTask(executionCtx, cmd.AggregateID, cmd.TenantID, int(actorUserID))
+	return err
 }

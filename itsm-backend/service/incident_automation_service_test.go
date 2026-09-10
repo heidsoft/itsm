@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentruleexecution"
+	"itsm-backend/ent/operationalcommand"
 	entuser "itsm-backend/ent/user"
 
 	"github.com/stretchr/testify/assert"
@@ -211,4 +212,44 @@ func TestIncidentCreationUsesFormalRuleEngine(t *testing.T) {
 		Only(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, "completed", execution.Status)
+}
+
+// TestIncidentAlertCreateEnqueuesExternalDeliveryCommand 验证告警创建后必须入箱
+// CommandDeliverIncidentAlert，并把 channel/alertType 写进 payload；
+// 同时验证 DeliverExternalAlert 在 alert 缺失时返回 nil（避免无限重试到 dead_letter）。
+func TestIncidentAlertCreateEnqueuesExternalDeliveryCommand(t *testing.T) {
+	client, _, ctx := setupIncidentTest(t)
+	defer client.Close()
+	tenant, err := createIncidentTestTenant(ctx, client, "alert-outbox")
+	require.NoError(t, err)
+	actor, err := createIncidentTestUser(ctx, client, tenant.ID, "alert-outbox-actor")
+	require.NoError(t, err)
+	_, err = actor.Update().SetRole(entuser.RoleAdmin).Save(ctx)
+	require.NoError(t, err)
+	incidentEntity := createAutomationIncident(t, ctx, client, tenant.ID, actor.ID, "INC-ALERT-OUTBOX")
+
+	alerting := NewIncidentAlertingService(client, zaptest.NewLogger(t).Sugar())
+	alert, err := alerting.CreateIncidentAlert(ctx, &dto.CreateIncidentAlertRequest{
+		IncidentID: incidentEntity.ID, AlertType: "monitoring", AlertName: "CPU high",
+		Message: "CPU exceeded threshold", Severity: "high",
+		Channels: []string{"in_app", "email"},
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	cmd, err := client.OperationalCommand.Query().
+		Where(operationalcommand.AggregateTypeEQ("incident_alert"), operationalcommand.AggregateIDEQ(alert.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "incident.alert.deliver", cmd.CommandType)
+	assert.Equal(t, "pending", cmd.Status)
+	assert.EqualValues(t, tenant.ID, cmd.TenantID)
+	channels, ok := cmd.Payload["channels"].([]interface{})
+	require.True(t, ok)
+	require.Len(t, channels, 2)
+	assert.Equal(t, "in_app", channels[0])
+
+	// DeliverExternalAlert 在 alert 不存在时必须返回 nil，
+	// 否则 worker 会无限重试直到 dead_letter，反而拖垮巡检。
+	err = alerting.DeliverExternalAlert(ctx, alert.ID+9999, tenant.ID)
+	require.NoError(t, err)
 }

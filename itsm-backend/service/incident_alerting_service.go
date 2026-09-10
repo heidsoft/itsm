@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -212,7 +213,10 @@ func (c *WebhookChannel) IsEnabled() bool {
 	return c.url != ""
 }
 
-// CreateIncidentAlert 创建事件告警
+// CreateIncidentAlert 创建事件告警：持久化告警行 + in-app 通知入箱 + 外部渠道命令入箱。
+// 外部渠道（email/sms/slack/webhook）以前是 fire-and-forget goroutine；现在改为
+// 入 commandbus.CommandDeliverIncidentAlert，由 worker 重载后调 DeliverExternalAlert。
+// 这样在请求完成后 worker 仍可重试到 max_attempts，避免请求取消/进程退出导致告警丢失。
 func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) (*dto.IncidentAlertResponse, error) {
 	s.logger.Infow("Creating incident alert", "incident_id", req.IncidentID, "type", req.AlertType)
 	if err := s.validateAlertRequest(ctx, req, tenantID); err != nil {
@@ -249,11 +253,45 @@ func (s *IncidentAlertingService) CreateIncidentAlert(ctx context.Context, req *
 	// lifecycle updates (and their mandatory audit events).
 	s.createSystemNotification(ctx, alert, tenantID)
 
-	// External channel delivery may block on remote services, so keep it async.
-	go s.sendAlertNotifications(context.Background(), alert)
+	// 外部渠道走 commandbus，让 worker 在请求结束后仍能可靠地重试到 max_attempts。
+	// 替换原 fire-and-forget goroutine（请求结束 / 进程退出后告警会丢）。
+	enqueueCtx := ctx
+	if _, err := commandbus.Enqueue(enqueueCtx, s.client, commandbus.EnqueueRequest{
+		TenantID:       tenantID,
+		CommandType:    commandbus.CommandDeliverIncidentAlert,
+		AggregateType:  "incident_alert",
+		AggregateID:    alert.ID,
+		IdempotencyKey: fmt.Sprintf("incident_alert:%d:deliver", alert.ID),
+		MaxAttempts:    5,
+		Payload: map[string]interface{}{
+			"alertId":   alert.ID,
+			"channels":  alert.Channels,
+			"alertType": alert.AlertType,
+		},
+	}); err != nil {
+		s.logger.Errorw("Failed to enqueue incident alert delivery", "error", err, "alert_id", alert.ID)
+	}
 
 	s.logger.Infow("Incident alert created successfully", "id", alert.ID)
 	return s.toIncidentAlertResponse(alert), nil
+}
+
+// DeliverExternalAlert 由 command handler 调用：重载 alert（带租户隔离）后发送外部渠道。
+// alert 已被软删或不存在 → 直接返回 nil（worker 标记 succeeded，避免无效重试到 dead_letter）。
+// 任意渠道发送失败 → 返回合并错误，由 commandbus 重试直到 max_attempts。
+func (s *IncidentAlertingService) DeliverExternalAlert(ctx context.Context, alertID, tenantID int) error {
+	alert, err := s.client.IncidentAlert.Query().
+		Where(incidentalert.IDEQ(alertID), incidentalert.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if ent.IsNotFound(err) {
+		s.logger.Infow("incident alert gone before delivery", "alert_id", alertID)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("load incident alert: %w", err)
+	}
+	s.sendAlertNotifications(ctx, alert)
+	return nil
 }
 
 func (s *IncidentAlertingService) validateAlertRequest(ctx context.Context, req *dto.CreateIncidentAlertRequest, tenantID int) error {
