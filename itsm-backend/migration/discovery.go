@@ -96,12 +96,13 @@ func FilesystemMigrations(dir string) ([]Migration, error) {
 // 约定（与历史迁移风格对齐）：
 //
 //	文件名 = 版本号（不含 .sql 后缀）；
-//	若文件名无 YYYYMMDD_ 前缀，使用文件名本体作为版本号；
+//	若文件名无 YYYYMMDD_ 前缀，但匹配已知别名前缀（add_missing_indexes*），
+//	使用文件名本体作为版本号；
 //	描述取首条非空 -- 注释（去除 -- 前缀与首尾空白），缺省回退到文件名。
 func parseMigrationHeader(name, body string) (string, string) {
 	version := strings.TrimSuffix(name, ".sql")
-	if !strings.HasPrefix(version, "20") && version != "add_missing_indexes" {
-		// 非日期化且非已知别名 → 拒绝：避免误把 README.md.txt 之类当迁移
+	if !strings.HasPrefix(version, "20") && !strings.HasPrefix(version, "add_missing_indexes") {
+		// 非日期化且非已知别名前缀 → 拒绝：避免误把 README.md.txt 之类当迁移
 		return "", ""
 	}
 	desc := version

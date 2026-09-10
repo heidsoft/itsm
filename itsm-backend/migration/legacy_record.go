@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -61,8 +60,8 @@ func adoptUnrecordedFilesystemMigrations(ctx context.Context, db *sql.DB, fs []M
 	}
 	adopted := 0
 	for _, m := range fs {
-		if !strings.HasPrefix(m.Version, "20") && m.Version != "add_missing_indexes" {
-			continue // 只收养日期化版本与已知历史别名
+		if !isPreDiscoveryVersion(m.Version) {
+			continue // 只收养发现机制上线前已存在的历史版本
 		}
 		recorded, err := recordMigrationAdopted(ctx, db, m.Version, m.Description, m.RollbackSQL, "adopted")
 		if err != nil {
@@ -92,6 +91,38 @@ func isExistingInstallation(ctx context.Context, db *sql.DB) (bool, error) {
 		return false, fmt.Errorf("detect existing installation: %w", err)
 	}
 	return exists, nil
+}
+
+// isPreDiscoveryVersion 判定版本名是否属于发现机制上线前已存在的迁移：
+// 日期化版本（YYYYMMDD_ 前缀）的日期必须早于 cutoff（否则是既有安装上的
+// 新迁移，必须正常执行而非收养——2026-09-11 复盘修正：原实现只看前缀不看
+// 日期，会把新批次误收养成"已执行"，静默跳过 DDL）；
+// 另收养已知的非日期化历史别名。
+func isPreDiscoveryVersion(version string) bool {
+	if version == "add_missing_indexes" {
+		return true
+	}
+	if len(version) < 8 {
+		return false
+	}
+	prefix := version[:8]
+	if !allDigits(prefix) {
+		return false
+	}
+	d, err := time.ParseInLocation("20060102", prefix, time.UTC)
+	if err != nil {
+		return false
+	}
+	return d.Before(adoptionCutoffUTC)
+}
+
+func allDigits(s string) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return len(s) > 0
 }
 
 // recordMigrationAdopted 幂等插入一条「已收养」账本记录；返回是否新插入。

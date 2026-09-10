@@ -120,3 +120,27 @@ func TestMergeWithRegistered(t *testing.T) {
 		assert.LessOrEqual(t, merged[i-1].Version, merged[i].Version)
 	}
 }
+
+// TestIsPreDiscoveryVersion 收养判定的日期边界（2026-09-11 复盘修正）：
+// 只看 "20" 前缀不看日期会把既有安装上的新迁移误收养（静默跳过 DDL）。
+func TestIsPreDiscoveryVersion(t *testing.T) {
+	cases := []struct {
+		version string
+		want    bool
+	}{
+		{"20260501_enable_rbac_from_db", true},     // 历史：早于 cutoff
+		{"20260907_ticket_types_menu", true},       // 历史：cutoff 前一天
+		{"20260908_new_migration", false},          // cutoff 当天：不算历史
+		{"20260910_add_something", false},          // 未来新增：必须正常执行
+		{"20990101_far_future", false},             // 远未来
+		{"add_missing_indexes", true},              // 已知历史别名
+		{"add_missing_indexes_v2", false},          // 新别名：不收养
+		{"007_add_change_execution_tables", false}, // unified 流不参与收养
+		{"2026", false},                            // 过短
+		{"20ab0101_x", false},                      // 非数字
+		{"20261301_x", false},                      // 非法月份
+	}
+	for _, c := range cases {
+		assert.Equal(t, c.want, isPreDiscoveryVersion(c.version), "version=%s", c.version)
+	}
+}
