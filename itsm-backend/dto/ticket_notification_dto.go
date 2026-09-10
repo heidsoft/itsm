@@ -36,23 +36,6 @@ type SendTicketNotificationRequest struct {
 	IdempotencyKey string `json:"idempotencyKey,omitempty" binding:"omitempty,max=200"`
 }
 
-// UpdateNotificationPreferencesRequest 更新通知偏好请求
-type UpdateNotificationPreferencesRequest struct {
-	EmailEnabled   bool `json:"emailEnabled"`   // 是否启用邮件通知
-	InAppEnabled   bool `json:"inAppEnabled"`   // 是否启用站内消息通知
-	SmsEnabled     bool `json:"smsEnabled"`     // 是否启用短信通知（可选）
-	SlaWarningTime int  `json:"slaWarningTime"` // SLA警告提前时间（分钟）
-}
-
-// NotificationPreferencesResponse 通知偏好响应
-type NotificationPreferencesResponse struct {
-	UserID         int  `json:"userId"`
-	EmailEnabled   bool `json:"emailEnabled"`
-	InAppEnabled   bool `json:"inAppEnabled"`
-	SmsEnabled     bool `json:"smsEnabled"`
-	SlaWarningTime int  `json:"slaWarningTime"`
-}
-
 // ToTicketNotificationResponse 将 Ent 实体转换为 DTO
 func ToTicketNotificationResponse(notification *ent.TicketNotification, user *ent.User) *TicketNotificationResponse {
 	resp := &TicketNotificationResponse{

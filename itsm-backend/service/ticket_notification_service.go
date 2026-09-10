@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
@@ -98,22 +99,18 @@ func (s *TicketNotificationService) SendNotification(
 			continue
 		}
 
-		// 检查用户通知偏好
-		preferences, err := s.getUserNotificationPreferences(ctx, userID)
-		if err != nil {
-			s.logger.Warnw("Failed to get user preferences, using defaults", "user_id", userID, "error", err)
+		// 按事件类型查询真实通知偏好（notification_preferences 表）。
+		// 无偏好记录 = 默认放行（与 per-event 偏好 API 的默认语义一致）。
+		// 查询失败按放行处理并留痕（不阻塞通知主链路），失败可观测由调用方日志覆盖。
+		channelAllowed, prefErr := s.channelAllowedForEvent(ctx, userID, tenantID, req.Type, req.Channel)
+		if prefErr != nil {
+			s.logger.Warnw("Failed to load notification preference, allowing send",
+				"user_id", userID, "event_type", req.Type, "channel", req.Channel, "error", prefErr)
+			channelAllowed = true
 		}
 
 		// 根据渠道和用户偏好决定是否发送
-		shouldSend := false
-		switch req.Channel {
-		case "email":
-			shouldSend = preferences.EmailEnabled
-		case "in_app":
-			shouldSend = preferences.InAppEnabled
-		case "sms":
-			shouldSend = preferences.SmsEnabled
-		}
+		shouldSend := channelAllowed
 
 		// 站内消息总是创建记录（即使其他渠道被禁用）
 		if req.Channel == "in_app" || shouldSend {
@@ -969,56 +966,39 @@ func (s *TicketNotificationService) MarkAllNotificationsRead(
 	return nil
 }
 
-// GetUserNotificationPreferences 获取用户通知偏好
-func (s *TicketNotificationService) GetUserNotificationPreferences(
-	ctx context.Context,
-	userID int,
-) (*dto.NotificationPreferencesResponse, error) {
-	// 注意：用户通知偏好存储在用户表的 preferences JSON 字段中
-	// 如果需要单独的 preference 表，可以在未来版本中实现
-	return &dto.NotificationPreferencesResponse{
-		UserID:         userID,
-		EmailEnabled:   true,
-		InAppEnabled:   true,
-		SmsEnabled:     false,
-		SlaWarningTime: 30, // 默认30分钟
-	}, nil
-}
-
-// UpdateUserNotificationPreferences 更新用户通知偏好
-func (s *TicketNotificationService) UpdateUserNotificationPreferences(
-	ctx context.Context,
-	userID int,
-	req *dto.UpdateNotificationPreferencesRequest,
-) (*dto.NotificationPreferencesResponse, error) {
-	// 注意：偏好应该保存到用户表的 preferences 字段
-	// 当前实现仅返回更新后的值
-	return &dto.NotificationPreferencesResponse{
-		UserID:         userID,
-		EmailEnabled:   req.EmailEnabled,
-		InAppEnabled:   req.InAppEnabled,
-		SmsEnabled:     req.SmsEnabled,
-		SlaWarningTime: req.SlaWarningTime,
-	}, nil
-}
-
-// getUserNotificationPreferences 内部方法：获取用户通知偏好（带默认值）
-func (s *TicketNotificationService) getUserNotificationPreferences(
-	ctx context.Context,
-	userID int,
-) (*dto.NotificationPreferencesResponse, error) {
-	prefs, err := s.GetUserNotificationPreferences(ctx, userID)
+// channelAllowedForEvent 按事件类型 + 渠道查询真实通知偏好（notification_preferences 表），
+// 判定该渠道对該用户是否放行。
+//
+// 语义与 per-event 偏好 API（NotificationPreferenceService）一致：
+//   - 无偏好记录 → 默认放行（未设置即跟随默认渠道开关）；
+//   - 有记录 → 返回对应渠道开关（email/in_app/sms/feishu/dingtalk/wecom/webhook）。
+//
+// connector 渠道统一按 push_enabled 判定（偏好模型中它们属「推送类」渠道）。
+func (s *TicketNotificationService) channelAllowedForEvent(ctx context.Context, userID, tenantID int, eventType, channel string) (bool, error) {
+	pref, err := s.client.NotificationPreference.Query().
+		Where(
+			notificationpreference.UserID(userID),
+			notificationpreference.TenantID(tenantID),
+			notificationpreference.EventType(eventType),
+		).
+		Only(ctx)
 	if err != nil {
-		// 返回默认值
-		return &dto.NotificationPreferencesResponse{
-			UserID:         userID,
-			EmailEnabled:   true,
-			InAppEnabled:   true,
-			SmsEnabled:     false,
-			SlaWarningTime: 30,
-		}, nil
+		if ent.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("query notification preference: %w", err)
 	}
-	return prefs, nil
+	switch channel {
+	case "email":
+		return pref.EmailEnabled, nil
+	case "in_app":
+		return pref.InAppEnabled, nil
+	case "sms":
+		return pref.SmsEnabled, nil
+	default:
+		// feishu / dingtalk / wecom / webhook 等连接器渠道按推送开关判定
+		return pref.PushEnabled, nil
+	}
 }
 
 // SendAssignmentNotification 发送工单分配通知
