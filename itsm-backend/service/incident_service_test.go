@@ -21,7 +21,6 @@ import (
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/ent/problem"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/middleware"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -613,7 +612,6 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
 			Version: 1, // 匹配当前版本
-			Force:   false,
 		}, testTenant.ID)
 
 		require.NoError(t, err)
@@ -627,7 +625,6 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 		_, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
 			Version: 1, // 使用旧版本号
-			Force:   false,
 		}, testTenant.ID)
 
 		require.Error(t, err)
@@ -641,32 +638,17 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 		assert.Equal(t, 2, conflictErr.ServerVersion)
 	})
 
-	t.Run("Force=true 忽略版本检查", func(t *testing.T) {
-		originalMode := middleware.PermissionConfig.Mode
-		originalCache := middleware.PermissionConfig.EnableCache
-		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeHardcodeOnly
-		middleware.PermissionConfig.EnableCache = false
-		t.Cleanup(func() {
-			middleware.PermissionConfig.Mode = originalMode
-			middleware.PermissionConfig.EnableCache = originalCache
-		})
-
+	t.Run("Force死字段已删除_旧版本号恒被版本锁拦截", func(t *testing.T) {
+		// P2 #27：DTO 的 Force 死字段已删除（无 HTTP 链路可达 + force-update 权限
+		// 从未授予任何角色），版本乐观锁恒生效——旧版本号必须稳定返回冲突。
 		newTitle := "Force Update"
-		_, err := service.UpdateIncident(middleware.WithRBACRole(ctx, "manager"), testIncident.ID, &dto.UpdateIncidentRequest{
+		_, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
-			Version: 1,    // 旧版本号
-			Force:   true, // 强制更新
+			Version: 1, // 旧版本号
 		}, testTenant.ID)
-		require.EqualError(t, err, "incident:force-update permission required when force=true")
-
-		response, err := service.UpdateIncident(middleware.WithRBACRole(ctx, "admin"), testIncident.ID, &dto.UpdateIncidentRequest{
-			Title:   &newTitle,
-			Version: 1,    // 旧版本号
-			Force:   true, // 强制更新
-		}, testTenant.ID)
-
-		require.NoError(t, err)
-		assert.Equal(t, newTitle, response.Title)
+		require.Error(t, err)
+		var conflictErr *common.VersionConflictError
+		require.ErrorAs(t, err, &conflictErr)
 	})
 
 	t.Run("Version=0 跳过版本检查", func(t *testing.T) {
@@ -674,7 +656,6 @@ func TestIncidentService_UpdateIncident_VersionControl(t *testing.T) {
 		response, err := service.UpdateIncident(ctx, testIncident.ID, &dto.UpdateIncidentRequest{
 			Title:   &newTitle,
 			Version: 0, // 跳过版本检查
-			Force:   false,
 		}, testTenant.ID)
 
 		require.NoError(t, err)

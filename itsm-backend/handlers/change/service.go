@@ -934,10 +934,20 @@ func inferITILPractices(summary *dto.ChangeCMDBImpactSummary) []string {
 
 // TransitionStatus transitions a change to a new status
 // For approve/reject actions, verifies user is the designated approver
-func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus, comment string) (*Change, error) {
+// P1-DataScope #27：非审批分支（schedule/start/complete/close/cancel）走
+// change:write RBAC，但同样能操作他入变更单——补行级 owner 校验
+//（写权限 ⊆ 读权限）。rollback 除外：回滚是授权动作（对齐 incident Assign
+// 先例，由独立 change:rollback RBAC 门禁约束）。
+func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus, comment, actorRole string) (*Change, error) {
 	c, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, fmt.Errorf("%w: id=%d", ErrChangeNotFound, id)
+	}
+
+	if targetStatus != "approved" && targetStatus != "rejected" && targetStatus != "rolled_back" {
+		if !datascope.CanWriteResource(userID, actorRole, c.CreatedBy, c.AssigneeID) {
+			return nil, common.NewForbiddenError("无权限操作该变更单：仅创建人、受理人或管理员可执行状态流转")
+		}
 	}
 
 	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)

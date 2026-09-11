@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -72,7 +74,7 @@ func TestTransitionStatus_ConcurrentApprovals_ExactlyOneWins(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			<-start // 尽量同时发起，放大竞态窗口
-			_, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "并发审批")
+			_, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "并发审批", "agent")
 			mu.Lock()
 			defer mu.Unlock()
 			switch {
@@ -105,11 +107,11 @@ func TestTransitionStatus_RepeatedApproval_Rejected(t *testing.T) {
 	const tenantID, approverID = 1, 101
 	c := seedPendingChange(t, repo, tenantID, approverID)
 
-	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "同意")
+	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "同意", "agent")
 	require.NoError(t, err)
 	assert.Equal(t, "approved", updated.Status)
 
-	_, err = svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "重复审批")
+	_, err = svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "approved", "重复审批", "agent")
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, ErrInvalidTransition) || errors.Is(err, ErrConcurrentModification),
 		"重复审批应被识别为状态机非法或并发冲突，实际: %v", err)
@@ -124,7 +126,7 @@ func TestTransitionStatus_InvalidTransition_IsSentinel(t *testing.T) {
 	c := createTestChange(repo, tenantID, approverID)
 	c.Status = "draft" // draft → completed 非状态机允许的边
 
-	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "completed", "越级推进")
+	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, approverID, "completed", "越级推进", "agent")
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, ErrInvalidTransition),
 		"非法状态转换必须返回 ErrInvalidTransition，实际: %v", err)
@@ -138,7 +140,7 @@ func TestTransitionStatus_NotApprover_IsSentinel(t *testing.T) {
 	const tenantID, realApprover, intruder = 1, 103, 999
 	c := seedPendingChange(t, repo, tenantID, realApprover)
 
-	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, intruder, "approved", "非审批人尝试审批")
+	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, intruder, "approved", "非审批人尝试审批", "agent")
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, ErrNotApprover),
 		"非审批人必须返回 ErrNotApprover，实际: %v", err)
@@ -155,7 +157,7 @@ func TestTransitionStatus_NotFound_IsSentinel(t *testing.T) {
 	c := createTestChange(repo, 1, 104)
 	c.Status = "pending"
 
-	_, err := svc.TransitionStatus(ctx, c.ID, 9999, 104, "approved", "跨租户审批")
+	_, err := svc.TransitionStatus(ctx, c.ID, 9999, 104, "approved", "跨租户审批", "agent")
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, ErrChangeNotFound),
 		"跨租户/不存在的变更必须返回 ErrChangeNotFound，实际: %v", err)
@@ -201,3 +203,49 @@ func TestUpdateStatusCAS_TenantIsolated(t *testing.T) {
 
 // 保证 time 包被使用（seedPendingChange 中 CreatedAt 依赖），避免导入被误删。
 var _ = time.Now
+
+// TestTransitionStatus_NonApproval_RowLevelGuard 锁定 P2 #27 行级守卫：
+// schedule/start/complete/close/cancel 走 change:write RBAC，但非 owner
+// 普通角色操作他入变更单必须 403 Forbidden AppError；owner 放行；
+// rollback 因属授权动作（独立 change:rollback RBAC）排除在行级守卫外。
+func TestTransitionStatus_NonApproval_RowLevelGuard(t *testing.T) {
+	svc, repo := newTransitionTestService(t)
+	ctx := context.Background()
+	const tenantID, ownerID = 1, 201
+
+	t.Run("非owner普通角色_schedule被拒403", func(t *testing.T) {
+		c := createTestChange(repo, tenantID, ownerID)
+		c.Status = "pending"
+		_, err := svc.TransitionStatus(ctx, c.ID, tenantID, 999, "scheduled", "", "agent")
+		require.Error(t, err)
+		var appErr *common.AppError
+		require.ErrorAs(t, err, &appErr)
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		assert.Contains(t, appErr.Message, "仅创建人、受理人或管理员")
+	})
+
+	t.Run("owner_schedule放行", func(t *testing.T) {
+		// 非终态路径不走 ent 事务（mock 场景可用）。pending→scheduled 状态机
+		// 不允许，先造 approved 状态变更，owner（agent）走 approved→scheduled。
+		c := createTestChange(repo, tenantID, ownerID)
+		c.Status = "approved"
+		updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, ownerID, "scheduled", "", "agent")
+		require.NoError(t, err)
+		assert.Equal(t, "scheduled", updated.Status)
+	})
+
+	t.Run("非owner_rollback不触发行级守卫", func(t *testing.T) {
+		// 陌生人 + agent 对他人变更 rollback：守卫必须放行（授权动作，独立
+		// change:rollback RBAC 门禁），错误若出现只能是状态机/事务层语义而非 403。
+		// mock 无 entClient 时终态收口会 nil panic，故仅验证 draft 状态下
+		// rolled_back 被状态机拒绝（ErrInvalidTransition）而非 403 AppError。
+		c := createTestChange(repo, tenantID, ownerID)
+		c.Status = "draft"
+		_, err := svc.TransitionStatus(ctx, c.ID, tenantID, 999, "rolled_back", "", "agent")
+		require.Error(t, err)
+		var appErr *common.AppError
+		assert.NotErrorAs(t, err, &appErr, "rollback 不得触发行级守卫 403")
+		assert.True(t, errors.Is(err, ErrInvalidTransition),
+			"draft→rolled_back 应被状态机拒绝, 实际: %v", err)
+	})
+}

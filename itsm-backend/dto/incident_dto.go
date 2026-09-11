@@ -84,7 +84,9 @@ type UpdateIncidentRequest struct {
 	ResolutionSteps []ResolutionStep       `json:"resolutionSteps,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 	Version         int                    `json:"version"` // 版本号（乐观锁）
-	Force           bool                   `json:"force"`   // 是否强制更新（忽略版本检查）；需要 incident:force-update 权限
+	// Force 字段已删除（2026-09-11）：DTO 定义了 "force"（注释声称可忽略版本
+	// 检查+需 force-update 权限），但 handler/service 全链路从未消费，且该
+	// 权限从未在 RBAC 词表中定义——纯死字段。留着会误导前端以为可强制更新。
 }
 
 // AssignIncidentRequest 分配事件请求

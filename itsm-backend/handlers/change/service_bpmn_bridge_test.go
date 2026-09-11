@@ -162,7 +162,7 @@ func TestTransitionStatus_BridgesBPMNTask(t *testing.T) {
 	taskID := createChangeBridgeProcessFixture(t, entClient, tenantID, "e2e1",
 		fmt.Sprintf("change:%d", c.ID), actorID)
 
-	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "approved", "同意实施")
+	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "approved", "同意实施", "agent")
 	require.NoError(t, err)
 	assert.Equal(t, "approved", updated.Status)
 
@@ -206,7 +206,7 @@ func TestTransitionStatus_BridgeFailClosed(t *testing.T) {
 	taskID := createChangeBridgeProcessFixture(t, entClient, tenantID, "fc1",
 		fmt.Sprintf("change:%d", c.ID), actorID+1000)
 
-	_, err = svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "rejected", "不同意")
+	_, err = svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "rejected", "不同意", "agent")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "同步流程审批任务失败")
 
@@ -240,7 +240,7 @@ func TestTransitionStatus_NoBoundInstanceFallsBack(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "approved", "同意")
+	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "approved", "同意", "agent")
 	require.NoError(t, err)
 	assert.Equal(t, "approved", updated.Status)
 }

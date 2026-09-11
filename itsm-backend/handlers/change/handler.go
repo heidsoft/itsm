@@ -687,7 +687,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 		comment = strings.TrimSpace(body.Reason)
 	}
 
-	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus, comment)
+	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus, comment, c.GetString("role"))
 	if err != nil {
 		// 按错误语义分流：业务规则拒绝与并发冲突不得再伪装成 500。
 		// 否则客户端无法与真实故障区分，重试逻辑无从实现，告警也会被无谓污染。
@@ -695,6 +695,10 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification):
 			common.Conflict(c, err.Error(), nil)
 		case errors.Is(err, ErrNotApprover):
+			common.Fail(c, common.ForbiddenCode, err.Error())
+		// P1-DataScope #27：行级守卫返回 403 AppError，必须语义分流
+		//（否则掉入 default 被吞成 500——错误映射铁律）。
+		case isForbiddenAppErr(err):
 			common.Fail(c, common.ForbiddenCode, err.Error())
 		case errors.Is(err, ErrChangeNotFound):
 			common.Fail(c, common.NotFoundCode, "变更不存在")
@@ -1049,4 +1053,13 @@ func (h *Handler) DeletePIR(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{"message": "PIR deleted"})
+}
+
+// isForbiddenAppErr 判定是否为 403 Forbidden AppError（P1-DataScope）。
+func isForbiddenAppErr(err error) bool {
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
+		return appErr.Code == common.ErrCodeForbidden
+	}
+	return false
 }
