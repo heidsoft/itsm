@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/release"
@@ -224,8 +225,10 @@ func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, p
 	}, nil
 }
 
-// UpdateRelease 更新发布
-func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, req *dto.UpdateReleaseRequest) (*dto.ReleaseResponse, error) {
+// UpdateRelease 更新发布。
+// DataScope 行级写守卫（对齐 ticket/change/incident 写路径批次）：读不到的单据
+// 同样不允许写——管理角色全租户可写，其余角色仅创建人或负责人（OwnerID）可写。
+func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, req *dto.UpdateReleaseRequest, actorID int, actorRole string) (*dto.ReleaseResponse, error) {
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
@@ -235,6 +238,12 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 		}
 		s.logger.Errorw("Failed to get release", "error", err, "release_id", id)
 		return nil, fmt.Errorf("failed to get release: %w", err)
+	}
+
+	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
+		s.logger.Warnw("Release update rejected by row-level guard",
+			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole)
+		return nil, common.NewForbiddenError("无权限操作该发布单：仅创建人、负责人或管理员可操作")
 	}
 
 	update := releaseEntity.Update()
@@ -320,8 +329,12 @@ var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
 //   - scheduled → in-progress / cancelled
 //   - in-progress → completed / failed / rolled_back / cancelled
 //   - completed / cancelled / rolled_back / failed 为终态（不可被复活）
-func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string) (*dto.ReleaseResponse, error) {
-	status = func() string { s1 := status; return s1 }()
+//
+// DataScope 行级写守卫：与 UpdateRelease 同规则，且**不排除** rolled_back 目标——
+// release 状态机允许经 /status 路由（仅 release:write）直达 rolled_back，若排除
+// 会形成绕行门禁的洞（D-5 同款）；统一守卫后 owner/管理员回滚不受影响，非 owner
+// 操作他人发布回滚被 403（专用 /rollback 路由的 release:rollback RBAC 仍先行生效）。
+func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string, actorID int, actorRole string) (*dto.ReleaseResponse, error) {
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
@@ -331,6 +344,12 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 		}
 		s.logger.Errorw("Failed to get release", "error", err, "release_id", id)
 		return nil, fmt.Errorf("failed to get release: %w", err)
+	}
+
+	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
+		s.logger.Warnw("Release status transition rejected by row-level guard",
+			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole, "target_status", status)
+		return nil, common.NewForbiddenError("无权限操作该发布单：仅创建人、负责人或管理员可执行状态流转")
 	}
 
 	// 1. 状态机白名单校验
@@ -468,7 +487,29 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 // （RFC 7231 §4.3.5：连续多次 DELETE 同一资源与一次效果相同），故未匹配到（已删/
 // 不存在/跨租户均视为 0 行）时不返回错误，让上游 controller 统一返 200 响应，客户端
 // 不会因为“曾被删”再次发送 DELETE 而误判为 5001 内部错误。
-func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) error {
+// DataScope 行级删守卫：幂等语义保留（查不到 = 已删 = 成功），查得到但非 owner 时
+// 改为先查后删——403 而非静默删除（对齐其他域 Delete 守卫模式）。
+func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int, actorID int, actorRole string) error {
+	releaseEntity, err := s.client.Release.Query().
+		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// 幂等：未匹配（已删/不存在/跨租户）= 视为已删除，不报错。
+			s.logger.Infow("Release delete matched 0 rows (idempotent, treated as success)",
+				"release_id", id, "tenant_id", tenantID)
+			return nil
+		}
+		s.logger.Errorw("Failed to get release for delete", "error", err, "release_id", id)
+		return fmt.Errorf("failed to delete release: %w", err)
+	}
+
+	if !datascope.CanWriteResource(actorID, actorRole, releaseEntity.CreatedBy, releaseEntity.OwnerID) {
+		s.logger.Warnw("Release delete rejected by row-level guard",
+			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole)
+		return common.NewForbiddenError("无权限删除该发布单：仅创建人、负责人或管理员可删除")
+	}
+
 	deleted, err := s.client.Release.Delete().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		Exec(ctx)
@@ -477,8 +518,8 @@ func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) er
 		return fmt.Errorf("failed to delete release: %w", err)
 	}
 	if deleted == 0 {
-		// 幂等：未匹配 = 视为已删除，不报错。
-		s.logger.Infow("Release delete matched 0 rows (idempotent, treated as success)",
+		// 并发窗口兜底：查询到但删除时已被他方删除，仍按幂等成功处理。
+		s.logger.Infow("Release delete matched 0 rows after guard (idempotent, treated as success)",
 			"release_id", id, "tenant_id", tenantID)
 		return nil
 	}

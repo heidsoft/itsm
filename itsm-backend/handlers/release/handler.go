@@ -132,8 +132,12 @@ func (h *ReleaseHandler) UpdateRelease(c *gin.Context) {
 		return
 	}
 
-	release, err := h.releaseService.UpdateRelease(c.Request.Context(), releaseID, tenantID, &req)
+	release, err := h.releaseService.UpdateRelease(c.Request.Context(), releaseID, tenantID, &req, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		if isForbiddenAppErr(err) {
+			common.RespondError(c, err, "操作失败")
+			return
+		}
 		h.logger.Errorw("Update release failed", "error", err, "release_id", releaseID)
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -167,13 +171,17 @@ func (h *ReleaseHandler) UpdateReleaseStatus(c *gin.Context) {
 		return
 	}
 
-	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, string(req.Status))
+	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, string(req.Status), c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		// D-5：状态机白名单拒绝属于调用方输入错误，应返回 400 而非 500，
 		// 避免客户端把"被安全策略拦截"误判为服务端故障而重试。
 		if errors.Is(err, service.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
 			common.ParamErrorWithErr(c, err, "请求参数错误")
+			return
+		}
+		if isForbiddenAppErr(err) {
+			common.RespondError(c, err, "操作失败")
 			return
 		}
 		h.logger.Errorw("Update release status failed", "error", err, "release_id", releaseID)
@@ -271,8 +279,12 @@ func (h *ReleaseHandler) updateReleaseActionStatus(c *gin.Context, status, reaso
 		common.ParamError(c, "无效的发布ID")
 		return
 	}
-	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status)
+	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, status, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		if isForbiddenAppErr(err) {
+			common.RespondError(c, err, "操作失败")
+			return
+		}
 		h.logger.Errorw("Release action failed", "error", err, "release_id", releaseID, "status", status)
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -299,8 +311,12 @@ func (h *ReleaseHandler) DeleteRelease(c *gin.Context) {
 		return
 	}
 
-	err = h.releaseService.DeleteRelease(c.Request.Context(), releaseID, tenantID)
+	err = h.releaseService.DeleteRelease(c.Request.Context(), releaseID, tenantID, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
+		if isForbiddenAppErr(err) {
+			common.RespondError(c, err, "操作失败")
+			return
+		}
 		h.logger.Errorw("Delete release failed", "error", err, "release_id", releaseID)
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -325,4 +341,15 @@ func (h *ReleaseHandler) GetReleaseStats(c *gin.Context) {
 	}
 
 	common.Success(c, stats)
+}
+
+// isForbiddenAppErr 判定是否为 403 Forbidden AppError（DataScope 行级守卫）。
+// 与 change 域同名助手同实现：FailWithErr 会把 AppError 兜底吞成 5001（错误映射
+// 铁律），行级拒绝必须走 RespondError 语义分流映射为 HTTP 403。
+func isForbiddenAppErr(err error) bool {
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
+		return appErr.Code == common.ErrCodeForbidden
+	}
+	return false
 }

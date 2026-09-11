@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -212,7 +214,7 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 	// D-5 修复后：draft→scheduled 为审批等效动作，必须经 ApplyReleaseApproval（release:approve），
 	// 不允许通过 UpdateReleaseStatus（release:write）直达，避免持 write 权限绕过审批门禁。
 	t.Run("draft->scheduled 经 status 路由被拒绝（须走审批）", func(t *testing.T) {
-		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "scheduled")
+		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "scheduled", testUser.ID, "admin")
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		rel, qErr := client.Release.Get(ctx, release.ID)
@@ -221,7 +223,7 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 	})
 
 	t.Run("draft->cancelled 允许（write 可取消草稿）", func(t *testing.T) {
-		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "cancelled")
+		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "cancelled", testUser.ID, "admin")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "cancelled", result.Status)
@@ -232,14 +234,14 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 	// scheduled / in-progress / completed 链路：先直接置 scheduled 作为"已审批"基线
 	t.Run("scheduled->in-progress", func(t *testing.T) {
 		_, _ = client.Release.UpdateOneID(release.ID).SetStatus("scheduled").Save(ctx)
-		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "in-progress")
+		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "in-progress", testUser.ID, "admin")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "in-progress", result.Status)
 	})
 
 	t.Run("in-progress->completed", func(t *testing.T) {
-		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "completed")
+		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "completed", testUser.ID, "admin")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "completed", result.Status)
@@ -295,4 +297,169 @@ func TestReleaseService_GetReleaseStats(t *testing.T) {
 	assert.NotNil(t, stats)
 	assert.Equal(t, 2, stats.Total)
 	assert.Equal(t, 2, stats.Draft)
+}
+
+// TestReleaseService_WritePath_RowLevelGuard 锁定 DataScope 行级写守卫（#27 release
+// 域补齐）：UpdateRelease / UpdateReleaseStatus / DeleteRelease 三写路径对非 owner
+// 普通角色一律 403 Forbidden AppError；owner / 受理人（OwnerID）/ admin-like 角色放行；
+// DELETE 幂等语义保留（查不到 = 成功）。
+// 测试角色遵循 E2E 铁律：agent 在 users.role 枚举内且不在 IsAdminLike 词表
+// （manager 会被守卫放行，不能用作 403 受试者；it_admin 不是 users.role 枚举值）。
+func TestReleaseService_WritePath_RowLevelGuard(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	releaseService := NewReleaseService(client, logger)
+
+	ctx := context.Background()
+
+	testTenant, err := client.Tenant.Create().
+		SetName("Guard Tenant").
+		SetCode("guard").
+		SetDomain("guard.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// owner（创建人）
+	owner, err := client.User.Create().
+		SetUsername("owner1").
+		SetEmail("owner@example.com").
+		SetName("Owner User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// assignee（被 OwnerID 指派的人）
+	assignee, err := client.User.Create().
+		SetUsername("assignee1").
+		SetEmail("assignee@example.com").
+		SetName("Assignee User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 同租户非 owner 普通角色（RBAC 有 release:write，但既非 owner 也非 assignee）
+	foreign, err := client.User.Create().
+		SetUsername("foreign1").
+		SetEmail("foreign@example.com").
+		SetName("Foreign User").
+		SetPasswordHash("hashedpassword").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	created, err := releaseService.CreateRelease(ctx, &dto.CreateReleaseRequest{
+		Title: "守卫测试发布",
+		Type:  "minor",
+	}, owner.ID, testTenant.ID)
+	require.NoError(t, err)
+	require.NotZero(t, created.ID)
+
+	// 为 assignee 子测试准备一份指派给 assignee 的发布
+	assigned, err := releaseService.CreateRelease(ctx, &dto.CreateReleaseRequest{
+		Title:   "指派发布",
+		Type:    "minor",
+		OwnerID: &assignee.ID,
+	}, owner.ID, testTenant.ID)
+	require.NoError(t, err)
+
+	newTitle := "越权改标题"
+
+	t.Run("非owner普通角色Update被拒403", func(t *testing.T) {
+		result, err := releaseService.UpdateRelease(ctx, created.ID, testTenant.ID, &dto.UpdateReleaseRequest{
+			Title: &newTitle,
+		}, foreign.ID, "agent")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		var appErr *common.AppError
+		require.ErrorAs(t, err, &appErr)
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		// 单据未被改动
+		rel, qErr := client.Release.Get(ctx, created.ID)
+		require.NoError(t, qErr)
+		assert.Equal(t, "守卫测试发布", rel.Title)
+	})
+
+	t.Run("非owner普通角色UpdateStatus被拒403", func(t *testing.T) {
+		result, err := releaseService.UpdateReleaseStatus(ctx, created.ID, testTenant.ID, "cancelled", foreign.ID, "agent")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		var appErr *common.AppError
+		require.ErrorAs(t, err, &appErr)
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		// 状态未被改动
+		rel, qErr := client.Release.Get(ctx, created.ID)
+		require.NoError(t, qErr)
+		assert.Equal(t, "draft", rel.Status)
+	})
+
+	t.Run("非owner普通角色Delete被拒403且单据仍在", func(t *testing.T) {
+		err := releaseService.DeleteRelease(ctx, created.ID, testTenant.ID, foreign.ID, "agent")
+		require.Error(t, err)
+		var appErr *common.AppError
+		require.ErrorAs(t, err, &appErr)
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+		_, qErr := client.Release.Get(ctx, created.ID)
+		require.NoError(t, qErr, "403 拒绝后单据必须仍然存在")
+	})
+
+	t.Run("非owner对rolled_back目标同样403（无绕行门禁）", func(t *testing.T) {
+		// 置为 in-progress 使 rolled_back 是合法状态机转换，从而区分 403（守卫）
+		// 与 400（状态机白名单）——若守卫被错误排除 rolled_back，本例会落到 400。
+		_, _ = client.Release.UpdateOneID(created.ID).SetStatus("in-progress").Save(ctx)
+		result, err := releaseService.UpdateReleaseStatus(ctx, created.ID, testTenant.ID, "rolled_back", foreign.ID, "agent")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		var appErr *common.AppError
+		require.ErrorAs(t, err, &appErr)
+		assert.Equal(t, common.ErrCodeForbidden, appErr.Code, "rolled_back 不得绕过行级守卫（/status 路由仅 release:write）")
+		// 复位为 draft 供后续子测试
+		_, _ = client.Release.UpdateOneID(created.ID).SetStatus("draft").Save(ctx)
+	})
+
+	t.Run("owner放行", func(t *testing.T) {
+		result, err := releaseService.UpdateRelease(ctx, created.ID, testTenant.ID, &dto.UpdateReleaseRequest{
+			Title: &newTitle,
+		}, owner.ID, "agent")
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, newTitle, result.Title)
+	})
+
+	t.Run("assignee放行UpdateStatus", func(t *testing.T) {
+		result, err := releaseService.UpdateReleaseStatus(ctx, assigned.ID, testTenant.ID, "cancelled", assignee.ID, "agent")
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, "cancelled", result.Status)
+	})
+
+	t.Run("adminLike角色跨单放行", func(t *testing.T) {
+		result, err := releaseService.UpdateRelease(ctx, created.ID, testTenant.ID, &dto.UpdateReleaseRequest{
+			Title: &newTitle,
+		}, foreign.ID, "manager")
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+	})
+
+	t.Run("Delete幂等语义保留（不存在视为成功）", func(t *testing.T) {
+		err := releaseService.DeleteRelease(ctx, 99999, testTenant.ID, foreign.ID, "agent")
+		assert.NoError(t, err, "查不到的单据按幂等成功处理，不泄露存在性")
+	})
+
+	t.Run("owner删除成功", func(t *testing.T) {
+		err := releaseService.DeleteRelease(ctx, assigned.ID, testTenant.ID, owner.ID, "agent")
+		assert.NoError(t, err)
+		_, qErr := client.Release.Get(ctx, assigned.ID)
+		assert.True(t, ent.IsNotFound(qErr), "owner 删除后单据应不存在")
+	})
 }
