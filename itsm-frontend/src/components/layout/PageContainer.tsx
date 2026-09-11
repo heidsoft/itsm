@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, Row, Col, Button, Space, Breadcrumb } from 'antd';
-import { ArrowLeft, Plus, Download, RotateCcw } from 'lucide-react';
+import { Card, Row, Col, Button, Breadcrumb } from 'antd';
+import { ArrowLeft } from 'lucide-react';
 
 // 企业级页面模板接口
 interface EnterprisePageTemplateProps {
@@ -46,36 +46,6 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
   className = '',
 }) => {
   const router = useRouter();
-  // 默认的快速操作
-  const defaultQuickActions = (
-    <Space>
-      <Button
-        type="primary"
-        icon={<Plus />}
-        className="enterprise-btn enterprise-btn-primary"
-        onClick={() => router.push('/tickets/create')}
-      >
-        新建
-      </Button>
-      <Button
-        icon={<RotateCcw />}
-        className="enterprise-btn enterprise-btn-ghost"
-        onClick={() => window.location.reload()}
-      >
-        刷新
-      </Button>
-      <Button
-        icon={<Download />}
-        className="enterprise-btn enterprise-btn-ghost"
-        onClick={() => {
-          // 导出功能由子组件通过 props 覆盖
-        }}
-      >
-        导出
-      </Button>
-    </Space>
-  );
-
   // 默认的工具栏
   const defaultToolbar = (
     <Card className="enterprise-toolbar">
@@ -95,7 +65,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
           </div>
         </Col>
         <Col xs={24} sm={12} md={8}>
-          {showQuickActions && (quickActions || defaultQuickActions)}
+          {showQuickActions && quickActions}
         </Col>
         <Col xs={24} sm={24} md={8}>
           <div className="flex justify-end">{extra}</div>
