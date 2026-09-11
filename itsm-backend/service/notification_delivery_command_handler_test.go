@@ -107,6 +107,99 @@ func TestNotificationDeliveryHandlerCreatesInAppRecordsIdempotently(t *testing.T
 	require.Equal(t, "sent", deliveries[0].Status)
 }
 
+// TestNotificationDeliveryHandlerSkipsWhenPreferenceDisabled 核心契约：偏好表对
+// 某事件类型的 in_app 渠道显式关闭后，投递命令应成功返回且不落任何投递/通知记录
+// （语义=按用户选择跳过，而非失败；避免 worker 无效重试到 dead_letter）。
+// 同时验证短词表映射：载荷 type=created 必须命中偏好表 ticket_created 行。
+func TestNotificationDeliveryHandlerSkipsWhenPreferenceDisabled(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	_, err := client.NotificationPreference.Create().
+		SetUserID(userID).SetTenantID(tenantID).SetEventType("ticket_created").
+		SetInAppEnabled(false).SetEmailEnabled(false).Save(ctx)
+	require.NoError(t, err)
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: "pref-skip",
+		Payload: map[string]interface{}{"ticketId": ticketID, "recipientId": userID, "type": "created", "channel": "in_app", "content": "应被偏好拦截"},
+	})
+	require.NoError(t, err)
+	cmd.Attempt = 1
+	handler := NewNotificationDeliveryCommandHandler(client, nil, zap.NewNop().Sugar())
+	require.NoError(t, handler.Handle(ctx, cmd), "偏好跳过应视为成功而非错误")
+
+	require.Zero(t, client.TicketNotification.Query().CountX(ctx), "不应创建 ticket_notification 记录")
+	require.Zero(t, client.Notification.Query().CountX(ctx), "不应创建通用 notification 记录")
+	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx), "不应创建投递审计记录")
+}
+
+// TestNotificationDeliveryHandlerAllowsWhenNoPreference 无偏好记录 = 默认放行，
+// 与同步路径（channelAllowedForEvent）及偏好 API 的默认语义一致。
+func TestNotificationDeliveryHandlerAllowsWhenNoPreference(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: "pref-allow",
+		Payload: map[string]interface{}{"ticketId": ticketID, "recipientId": userID, "type": "sla_breached", "channel": "in_app", "content": "无偏好应放行"},
+	})
+	require.NoError(t, err)
+	cmd.Attempt = 1
+	handler := NewNotificationDeliveryCommandHandler(client, nil, zap.NewNop().Sugar())
+	require.NoError(t, handler.Handle(ctx, cmd))
+	require.Equal(t, 1, client.Notification.Query().CountX(ctx), "无偏好记录应默认放行")
+}
+
+// TestNotificationDeliveryHandlerConnectorBlockedByPushToggle 连接器渠道按
+// push_enabled 判定：push=false 时 feishu 投递被跳过且不调用 connector。
+func TestNotificationDeliveryHandlerConnectorBlockedByPushToggle(t *testing.T) {
+	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
+	_, err := client.User.UpdateOneID(userID).SetFeishuOpenID("ou_pref_blocked").Save(ctx)
+	require.NoError(t, err)
+	_, err = client.NotificationPreference.Create().
+		SetUserID(userID).SetTenantID(tenantID).SetEventType("ticket_assigned").
+		SetInAppEnabled(true).SetPushEnabled(false).Save(ctx)
+	require.NoError(t, err)
+	fake := &notificationTestConnector{}
+	registry := connector.NewRegistry()
+	registry.Register(func() connector.Connector { return fake })
+	manager := connector.NewManager(registry, zap.NewNop().Sugar())
+	require.NoError(t, manager.Provision(ctx, connector.Config{TenantID: tenantID, Name: "feishu", Provider: "test", Enabled: true}))
+	cmd, err := commandbus.Enqueue(ctx, client, commandbus.EnqueueRequest{
+		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
+		AggregateType: "ticket", AggregateID: ticketID, IdempotencyKey: "pref-push",
+		Payload: map[string]interface{}{"ticketId": ticketID, "recipientId": userID, "type": "assigned", "channel": "feishu", "content": "push 关闭应拦截"},
+	})
+	require.NoError(t, err)
+	cmd.Attempt = 1
+	handler := NewNotificationDeliveryCommandHandler(client, manager, zap.NewNop().Sugar())
+	require.NoError(t, handler.Handle(ctx, cmd))
+	require.Equal(t, int32(0), fake.sent.Load(), "push_enabled=false 不应调用 connector")
+	require.Zero(t, client.NotificationDelivery.Query().CountX(ctx), "被拦截的投递不应产生审计记录")
+}
+
+// TestNormalizeNotificationEventType 锁定短→长词表映射：这是偏好匹配正确性的前提，
+// 任何一侧词表变更都必须同步本映射与该测试。
+func TestNormalizeNotificationEventType(t *testing.T) {
+	cases := map[string]string{
+		"created":                  "ticket_created",
+		"assigned":                 "ticket_assigned",
+		"updated":                  "ticket_updated",
+		"status_changed":           "ticket_updated",
+		"commented":                "comment_added",
+		"resolved":                 "ticket_resolved",
+		"closed":                   "ticket_closed",
+		"sla_warning":              "sla_warning",
+		"sla_alert":                "sla_warning",
+		"sla_breached":             "sla_violated",
+		"change_approval_required": "approval_required",
+		"change_approval_decided":  "approval_completed",
+		// 未识别值原样返回 → 查无偏好 → 默认放行
+		"some_future_type": "some_future_type",
+	}
+	for in, want := range cases {
+		require.Equal(t, want, normalizeNotificationEventType(in), "映射错误: %s", in)
+	}
+}
+
 func TestNotificationDeliveryHandlerRejectsCrossTenantRecipient(t *testing.T) {
 	client, ctx, tenantID, _, ticketID := notificationDeliveryFixture(t)
 	otherTenant, err := client.Tenant.Create().SetName("Other").SetCode("other-notify").SetDomain("other-notify.example.com").SetStatus("active").Save(ctx)

@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/notificationdelivery"
+	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
@@ -90,10 +91,91 @@ func (h *NotificationDeliveryCommandHandler) Handle(ctx context.Context, cmd *en
 		return fmt.Errorf("load notification recipient: %w", err)
 	}
 
+	// 消费 per-event 通知偏好（notification_preferences 表）。语义与同步路径
+	// （TicketNotificationService.channelAllowedForEvent）一致：无偏好记录默认放行，
+	// 查询失败留痕放行（best-effort，不阻塞投递主链路）。
+	// 入箱载荷的 type 是短词表（created/assigned/sla_alert/…），偏好表是长词表
+	// （ticket_created/sla_violated/…），必须先归一化再查询，否则永远匹配不上。
+	eventType := normalizeNotificationEventType(notificationType)
+	allowed, prefErr := h.channelAllowedForEvent(ctx, recipientID, cmd.TenantID, eventType, channel)
+	if prefErr != nil {
+		h.logger.Warnw("failed to load notification preference for delivery, allowing send",
+			"recipient_id", recipientID, "tenant_id", cmd.TenantID,
+			"event_type", eventType, "channel", channel, "error", prefErr)
+		allowed = true
+	}
+	if !allowed {
+		// 用户偏好显式关闭该渠道：语义是「按用户选择跳过」而非失败，
+		// 标记命令成功且不写投递记录，避免 worker 无效重试到 dead_letter。
+		h.logger.Infow("notification delivery skipped by user preference",
+			"recipient_id", recipientID, "tenant_id", cmd.TenantID,
+			"event_type", eventType, "channel", channel, "command_id", cmd.ID)
+		return nil
+	}
+
 	if channel == "in_app" {
 		return h.deliverInApp(ctx, cmd, tk, recipient, notificationType, content, actionURL, actionText)
 	}
 	return h.deliverConnector(ctx, cmd, tk, recipient, channel, notificationType, content, actionURL, actionText, resourceType, resourceID, existing)
+}
+
+// normalizeNotificationEventType 将入箱载荷的短 event_type 归一化为偏好表长词表。
+// 词表对齐 dto.ListNotificationEventTypes 与前端 EVENT_TYPES；未识别的值原样返回
+// （查不到偏好行 → 默认放行，与「无偏好=放行」语义收敛）。
+func normalizeNotificationEventType(notificationType string) string {
+	switch notificationType {
+	case "created":
+		return "ticket_created"
+	case "assigned":
+		return "ticket_assigned"
+	case "updated", "status_changed":
+		return "ticket_updated"
+	case "commented":
+		return "comment_added"
+	case "resolved":
+		return "ticket_resolved"
+	case "closed":
+		return "ticket_closed"
+	case "sla_warning", "sla_alert":
+		return "sla_warning"
+	case "sla_breached":
+		return "sla_violated"
+	case "change_approval_required":
+		return "approval_required"
+	case "change_approval_decided":
+		return "approval_completed"
+	default:
+		return notificationType
+	}
+}
+
+// channelAllowedForEvent 按 event_type+channel 查询用户偏好并判定渠道是否放行。
+// 无偏好记录 → 放行；connector 渠道按 push_enabled 判定（与偏好模型一致）。
+func (h *NotificationDeliveryCommandHandler) channelAllowedForEvent(ctx context.Context, userID, tenantID int, eventType, channel string) (bool, error) {
+	pref, err := h.client.NotificationPreference.Query().
+		Where(
+			notificationpreference.UserID(userID),
+			notificationpreference.TenantID(tenantID),
+			notificationpreference.EventType(eventType),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf("query notification preference: %w", err)
+	}
+	switch channel {
+	case "email":
+		return pref.EmailEnabled, nil
+	case "in_app":
+		return pref.InAppEnabled, nil
+	case "sms":
+		return pref.SmsEnabled, nil
+	default:
+		// feishu / dingtalk / wecom / webhook / slack 等连接器渠道按推送开关判定
+		return pref.PushEnabled, nil
+	}
 }
 
 func (h *NotificationDeliveryCommandHandler) deliverInApp(ctx context.Context, cmd *ent.OperationalCommand, tk *ent.Ticket, recipient *ent.User, notificationType, content, actionURL, actionText string) error {
