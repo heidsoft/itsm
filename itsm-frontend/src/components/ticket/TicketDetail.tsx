@@ -194,7 +194,18 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [approvalForm] = Form.useForm();
 
   // 支持通过 props 传入 id，或通过 useParams 获取
-  const ticketId = parseInt((propId ?? (params?.ticketId as string)) || '');
+  // 既支持数字 ID，也支持业务工单号(例:TKT-202609-000010)。
+  // 后端事实（审核核实）：仅 GET /tickets/:id 支持单号 fallback（GetByNumber），
+  // 其余端点（status/SLA/CI/cc/escalate/relations/approval）都是 strconv.Atoi 严格
+  // 数字解析。因此：详情查询用 rawId（单号/数字均可）；拿到 ticket 后统一用
+  // ticket.id（数字）驱动所有下游操作与子组件 props。
+  const rawId = (propId ?? (params?.ticketId as string)) || '';
+  const parsedId = parseInt(rawId, 10);
+  const isNumericId = Number.isFinite(parsedId) && String(parsedId) === rawId;
+  // 仅当路由参数是纯数字时才有可用的数字 ID；单号路由在 ticket 加载前为 undefined。
+  const numericId: number | undefined = isNumericId && parsedId > 0 ? parsedId : undefined;
+  // 详情查询键：数字 ID 或单号（后端 GetTicket 双模式）。
+  const ticketKey: number | string = numericId ?? rawId;
 
   // 判断当前用户是否是工单申请人
   const isRequester = ticket?.requesterId === currentUser?.id;
@@ -202,10 +213,15 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 判断工单是否处于终态（不可再操作）
   const isTicketFinal = ticket ? isFinalStatus(ticket.status as any) : false;
 
+  // 所有下游操作（写操作/子组件/关联面板）统一使用数字 ID。
+  // 单号路由下 ticket 加载完成后即有值；加载前子组件隐藏或禁用。
+  const resolvedTicketId: number | undefined = numericId ?? (ticket as { id?: number } | null)?.id;
+
   // Get ticket details
   const fetchTicket = useCallback(async () => {
-    // Skip if ticketId is not a valid number
-    if (!ticketId || isNaN(ticketId) || ticketId <= 0) {
+    // 同时支持数字 ID 与业务工单号(例:TKT-202609-000010);
+    // 仅在完全为空时才拦截,不再做 isNaN 判断。
+    if (!ticketKey || (typeof ticketKey === 'number' && ticketKey <= 0)) {
       setError(t('ticketDetail.invalidTicketId'));
       setLoading(false);
       return;
@@ -214,14 +230,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await TicketApi.getTicket(ticketId);
+      const data = await TicketApi.getTicket(ticketKey);
       setTicket(data as Ticket);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Network error');
     } finally {
       setLoading(false);
     }
-  }, [ticketId]);
+  }, [ticketKey]);
 
   // Get users for assignment（通过 React Query 缓存，避免每次详情页挂载都重新拉取）
   const usersQuery = useUserListQuery({ pageSize: 100 });
@@ -230,21 +246,24 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // Get ticket SLA info
   const fetchSLAInfo = useCallback(async () => {
+    // SLA 端点仅接受数字 ID，单号路由需等详情加载后取 ticket.id
+    if (!resolvedTicketId) return;
     try {
-      const data = await TicketApi.getTicketSLA(ticketId);
+      const data = await TicketApi.getTicketSLA(resolvedTicketId);
       setSlaInfo(data);
     } catch (error) {
       // SLA获取失败时不显示SLA信息
       setSlaInfo(null);
     }
-  }, [ticketId]);
+  }, [resolvedTicketId]);
 
   // AI-Native：工单→配置项反向查询（受影响配置项）
   const fetchCIs = useCallback(async () => {
-    if (!ticketId || isNaN(ticketId) || ticketId <= 0) return;
+    // CI 查询端点仅接受数字 ID，单号路由需等详情加载后取 ticket.id
+    if (!resolvedTicketId) return;
     setCisLoading(true);
     try {
-      const data = await TicketApi.getTicketConfigurationItems(ticketId);
+      const data = await TicketApi.getTicketConfigurationItems(resolvedTicketId);
       setCis(Array.isArray(data) ? data : []);
     } catch {
       // CI 查询失败不阻塞工单详情展示
@@ -252,20 +271,20 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     } finally {
       setCisLoading(false);
     }
-  }, [ticketId]);
+  }, [resolvedTicketId]);
 
   useEffect(() => {
-    if (ticketId) {
+    if (ticketKey) {
       fetchTicket();
     }
-  }, [ticketId]);
+  }, [ticketKey]);
 
   useEffect(() => {
-    if (ticketId) {
+    if (ticketKey) {
       fetchSLAInfo();
       fetchCIs();
     }
-  }, [ticketId]);
+  }, [ticketKey, fetchSLAInfo, fetchCIs]);
 
   // 用户列表由 useUserListQuery 内部处理挂载与缓存。
 
@@ -280,7 +299,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       let submitted = false;
       try {
         const recRes = await TicketApprovalApi.getApprovalRecords({
-          ticketId,
+          ticketId: resolvedTicketId!,
           page: 1,
           pageSize: 100,
         });
@@ -292,7 +311,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         );
         if (myPending) {
           await TicketApprovalApi.submitApproval({
-            ticketId,
+            ticketId: resolvedTicketId!,
             approvalId: myPending.id,
             action: approvalAction,
             comment: values.comment || '',
@@ -304,7 +323,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       }
       if (!submitted) {
         // 兜底：未发现审批链（例如简单审批工单），保留旧行为以不阻塞用户。
-        await TicketApi.updateTicketStatus(ticketId, isApprove ? 'approved' : 'rejected');
+        await TicketApi.updateTicketStatus(resolvedTicketId!, isApprove ? 'approved' : 'rejected');
       }
       antMessage.success(
         isApprove ? t('ticketDetail.approveSuccess') : t('ticketDetail.rejectSuccess'),
@@ -338,7 +357,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     try {
       setCCing(true);
       await TicketApi.ccTicket(
-        ticketId,
+        resolvedTicketId!,
         values.ccUsers,
         values.comment,
         values.notifyChannels || ['in_app']
@@ -369,7 +388,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const handleAssignSubmit = async (values: { assigneeId: number; comment?: string }) => {
     try {
       setAssigning(true);
-      await TicketApi.assignTicket(ticketId, values);
+      await TicketApi.assignTicket(resolvedTicketId!, values);
       antMessage.success(t('ticketDetail.assignSuccess'));
       setAssignModalVisible(false);
       assignForm.resetFields();
@@ -413,7 +432,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         version: ticket?.version,
       };
 
-      await TicketApi.updateTicket(ticketId, updatePayload);
+      await TicketApi.updateTicket(resolvedTicketId!, updatePayload);
       antMessage.success(t('ticketDetail.editSuccess'));
       setEditModalVisible(false);
       fetchTicket();
@@ -431,7 +450,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const handleDeleteConfirm = async () => {
     try {
       setDeleting(true);
-      await TicketApi.deleteTicket(ticketId);
+      await TicketApi.deleteTicket(resolvedTicketId!);
       antMessage.success(t('ticketDetail.deleteSuccess'));
       setDeleteModalVisible(false);
       // Navigate back to ticket list
@@ -582,7 +601,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               return;
             }
             try {
-              const updated = await TicketApi.updateTicket(ticketId, {
+              const updated = await TicketApi.updateTicket(resolvedTicketId!, {
                 category: suggestion.category,
                 priority: toTicketPriority(suggestion.priority),
                 version: ticket.version,
@@ -1175,24 +1194,29 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       </Card>
 
       {/* 流转进度卡片（工单三件套改造）：详情页头部下方、详情 Tabs 上方。
-          hidden 在 isTicketFinal 时折叠，避免无效请求。 */}
-      <WorkflowProgressCard
-        ticketId={ticketId}
-        hidden={isTicketFinal}
-        onRefresh={fetchTicket}
-      />
+          hidden 在 isTicketFinal 时折叠，避免无效请求。
+          单号路由下等详情加载后才有数字 ID，未加载前不渲染。 */}
+      {resolvedTicketId != null && (
+        <WorkflowProgressCard
+          ticketId={resolvedTicketId}
+          hidden={isTicketFinal}
+          onRefresh={fetchTicket}
+        />
+      )}
 
-      {/* 详情 Tabs（评论/附件/审批/历史/关联） */}
-      <TicketDetailTabs
-        ticketId={ticketId}
-        ticketNumber={ticket.ticketNumber}
-        ticketType={ticket.type as string | undefined}
-        ticketPriority={ticket.priority as string | undefined}
-        currentUserId={currentUser?.id}
-        isTicketFinal={isTicketFinal}
-        onRefresh={fetchTicket}
-        t={t}
-      />
+      {/* 详情 Tabs（评论/附件/审批/历史/关联）——统一用数字 ID */}
+      {resolvedTicketId != null && (
+        <TicketDetailTabs
+          ticketId={resolvedTicketId}
+          ticketNumber={ticket.ticketNumber}
+          ticketType={ticket.type as string | undefined}
+          ticketPriority={ticket.priority as string | undefined}
+          currentUserId={currentUser?.id}
+          isTicketFinal={isTicketFinal}
+          onRefresh={fetchTicket}
+          t={t}
+        />
+      )}
     </div>
   );
 };
