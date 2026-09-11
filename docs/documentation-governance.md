@@ -10,7 +10,7 @@
 2. 根目录 `README.md`、`ROADMAP.md`、`CHANGELOG.md` 和 `AGENTS.md`。
 3. `docs/product/`、`docs/architecture/`、`docs/DEPLOYMENT_OPTIMIZATION.md`、`docs/testing/` 中未标记为 historical/superseded 的规范。
 4. `plans/`：计划和设计输入，不证明已经实现。
-5. `output/`、`docs/review/`、`docs/test-plan/`：带日期的历史快照和测试证据，只证明当次运行。
+5. `output/`、`docs/review/`、`docs/test-plan/`：带日期的历史快照和测试证据，只证明当次运行。**注意 `output/` 已加入 `.gitignore`（产物可能含真实凭据），不随仓库分发**——`docs/` 下的规范文档不要引用 `output/` 中的文件作为事实源，否则对全新 clone 而言是失效链接。
 6. `docs/archive/`：归档资料，不参与当前设计决策。
 
 GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、运行时或最新测试证据。
@@ -21,7 +21,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 |---|---|
 | 产品版本 | 最新发布标签为 `v1.6.9`；当前工作树可能包含未发布变更，版本号不等于生产门禁已放行 |
 | 当前路线 | 以根目录 `ROADMAP.md` 和 `plans/open-source-commercialization-2026q3-blueprint.md` 为准 |
-| 最新部署事实 | 以 `output/deployment-walkthrough-verification-2026-08-28.md` 及**重新执行后**的证据为准；历史报告只证明当次运行 |
+| 最新部署事实 | 以**重新执行** `docs/delivery/production-readiness-program.md` 的验收流程后取得的证据为准；`output/` 下的历史报告是**本地产物**（该目录已按“可能含真实凭据”加入 `.gitignore`，不入库、不随 clone 分发），只证明当次运行，不可作为放行依据 |
 | 生产认证 | `docs/initialization-release-certification.md` 与 `docs/release-v1.5.0-certification-evidence.md` 是 2026-07-30 历史快照，不代表当前工作树 |
 | 开发登录 | 本地开发可使用 seed 账号；生产必须使用当前发布支持的 bootstrap 流程，禁止引用历史默认密码 |
 | 成熟度 | 页面、Schema 或测试文件存在不等于 GA；运行时 capability/readiness 和本次发布证据共同决定 |
