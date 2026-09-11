@@ -18,7 +18,10 @@
 
 ### 1.2 编排与脚本
 
-- **3 份 compose**：`docker-compose.yml`（默认/本地）、`docker-compose.dev.yml`（开发，带 profile）、`docker-compose.prod.yml`（生产，网络隔离 + 健康检查 + 回滚状态）。
+- **2 份 compose**（仓库根目录**没有**默认的 `docker-compose.yml`，不带 `-f` 直接执行 `docker compose up` 会失败）：
+  - `docker-compose.dev.yml`（本地开发，带 `--profile ai` / `--profile monitoring`）
+  - `docker-compose.prod.yml`（生产，固定项目名 `itsm-prod`、网络隔离 + 健康检查；需 `.env.prod`）
+  - dev/prod 项目名已隔离，避免同服务名互顶；prod 后端宿主机诊断口由 `BACKEND_DIAG_PORT` 配置（同机跑 dev 时设 8091，避开 8090）。
 - **部署脚本（scripts/）**：
   - `deploy-prod.sh`（~730 行，五阶段流水线：校验→备份→构建→部署→验证，含锁/回滚）
   - `deploy-dev.sh`（~810 行，本地/Docker 双模式，含 doctor）

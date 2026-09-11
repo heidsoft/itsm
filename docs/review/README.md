@@ -33,4 +33,12 @@
 | `browser-e2e-test-report-2026-06-18.md` | historical | 浏览器 E2E 烟测基线 |
 | `browser-functional-test-report-2026-06-20.md` | historical | 浏览器功能测试 |
 | `deep-business-test-report-2026-06-18.md` | historical | 深度业务流测试（默认账号过时，但仍含 API 验证记录） |
+| `product-architecture-review-2026-09-03.md` | historical | 产品架构评审快照；2026-09-12 由 `docs/reviews/`（复数目录）合并入本目录 |
+| `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用，移动时已同步更新该引用 |
+
+## 目录合并（2026-09-12）
+
+仓库曾并存 `docs/review/`（单数，本目录，有治理登记）与 `docs/reviews/`（复数，无 README、治理体系外）两个评审目录。为消除双入口，后者 2 份报告已通过 `git mv` 合并入本目录，`docs/reviews/` 空目录已移除，唯一外部引用（`workflow-cmdb-invariants.md`）已同步更新路径。
+
+**新评审报告一律放入本目录并登记上表**，不要再新建 `docs/reviews/`。
 

@@ -123,7 +123,7 @@ client.ProcessInstance.UpdateOne(instance).SetVariables(vars).Save(ctx)
 
 根 CI 不存在与跨租户不可见统一返回 HTTP 404 / code 4004；数据库故障返回 HTTP 500 / code 5001，响应不得包含原始 SQL/Ent 错误。
 
-回归：同文件的 `TestCIGraphLookupErrors`。本次变更记录见 [2026-09-03 评审](../reviews/workflow-cmdb-review-2026-09-03.md)。
+回归：同文件的 `TestCIGraphLookupErrors`。本次变更记录见 [2026-09-03 评审](../review/workflow-cmdb-review-2026-09-03.md)。
 
 ---
 

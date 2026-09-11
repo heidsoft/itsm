@@ -1,5 +1,14 @@
 # v1.1 覆盖率审计报告（2026-06-28）
 
+> **Status: superseded（2026-09-12 复核）**
+>
+> 本文数据是 2026-06-28 的历史快照，**不得用于判断当前覆盖率**：
+>
+> - 文中 `controller/*` 各包覆盖率已整体失效——`controller/` 目录在 v1.6.x 分层迁移中已清空，新代码统一为 `handlers/<domain>/`。
+> - 文中"上游 P0 bug：`go build ./service/...` 全部失败"已修复，当前 `go build ./...` 通过。
+> - **当前实测基线（2026-09-12）**：`go test -cover ./handlers/...` 整体 **26.2%**（本文口径为 service+controller 13.7%，两者不可直接比较）。
+> - 覆盖率目标与现状以根目录 `ROADMAP.md`「Key Metrics」为准；后续覆盖率数据建议由 CI 生成，不再手填历史数字。
+
 ## TL;DR
 
 v1.1 Sprint 的核心目标是把整体覆盖率从 **1%（v1.0 GA floor）提到 40%**。本次审计通过 `git revert 12491c74` 临时绕过上游 build 阻塞后跑出真实数据：

@@ -1,6 +1,6 @@
 # 文档状态与事实源
 
-> 最后审查：2026-09-04。本文定义仓库文档的权威层级；历史测试报告不得作为当前功能或发布状态的依据。
+> 最后审查：2026-09-12。本文定义仓库文档的权威层级；历史测试报告不得作为当前功能或发布状态的依据。
 
 ## 权威层级
 
@@ -21,7 +21,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 |---|---|
 | 产品版本 | 最新发布标签为 `v1.6.9`；当前工作树可能包含未发布变更，版本号不等于生产门禁已放行 |
 | 当前路线 | 以根目录 `ROADMAP.md` 和 `plans/open-source-commercialization-2026q3-blueprint.md` 为准 |
-| 最新部署事实 | 以 `output/product-deployment-business-test-2026-08-14.md` 及重新执行后的证据为准 |
+| 最新部署事实 | 以 `output/deployment-walkthrough-verification-2026-08-28.md` 及**重新执行后**的证据为准；历史报告只证明当次运行 |
 | 生产认证 | `docs/initialization-release-certification.md` 与 `docs/release-v1.5.0-certification-evidence.md` 是 2026-07-30 历史快照，不代表当前工作树 |
 | 开发登录 | 本地开发可使用 seed 账号；生产必须使用当前发布支持的 bootstrap 流程，禁止引用历史默认密码 |
 | 成熟度 | 页面、Schema 或测试文件存在不等于 GA；运行时 capability/readiness 和本次发布证据共同决定 |
