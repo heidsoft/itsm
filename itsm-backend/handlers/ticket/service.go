@@ -106,6 +106,12 @@ func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Ticket, error
 	return s.repo.GetByID(ctx, id, tenantID)
 }
 
+// GetByNumber retrieves a ticket by its business ticket number (e.g. TKT-202609-000010).
+// 用于让 GET /api/v1/tickets/:id 同时支持数字 ID 与业务工单号。
+func (s *Service) GetByNumber(ctx context.Context, ticketNumber string, tenantID int) (*Ticket, error) {
+	return s.repo.GetByNumber(ctx, ticketNumber, tenantID)
+}
+
 // List lists tickets with pagination and filtering.
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Ticket, int, error) {
 	dataScope := datascope.DataScopeAll
@@ -116,11 +122,16 @@ func (s *Service) List(ctx context.Context, tenantID int, page, size int, filter
 }
 
 // Update updates a ticket.
-func (s *Service) Update(ctx context.Context, tenantID int, id int, params *UpdateParams) (*Ticket, error) {
+// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
+// 本人创建或受理的工单（datascope.CanWriteResource）。
+func (s *Service) Update(ctx context.Context, tenantID int, id int, params *UpdateParams, actorID int, actorRole string) (*Ticket, error) {
 	// Fetch current ticket to get version for optimistic locking
 	current, err := s.repo.GetByID(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+		return nil, common.NewForbiddenError("无权限修改该工单：仅创建人、受理人或管理员可操作")
 	}
 	if params.Version == 0 {
 		params.Version = current.Version
@@ -134,12 +145,33 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 }
 
 // Delete soft-deletes a ticket.
-func (s *Service) Delete(ctx context.Context, id int, tenantID int) error {
+// P1-DataScope：删除同样受行级写权限约束（原先仅校验租户隔离）。
+func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
+	current, err := s.repo.GetByID(ctx, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+		return common.NewForbiddenError("无权限删除该工单：仅创建人、受理人或管理员可操作")
+	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
 
 // BatchDelete deletes multiple tickets.
-func (s *Service) BatchDelete(ctx context.Context, ids []int, tenantID int) error {
+// P1-DataScope：逐单行级校验，任一单据无权限则整体拒绝（全有或全无），
+// 避免批量接口被用来越权删除他人工单。
+func (s *Service) BatchDelete(ctx context.Context, ids []int, tenantID int, actorID int, actorRole string) error {
+	if !datascope.IsDataScopeAllRole(actorRole) {
+		for _, id := range ids {
+			current, err := s.repo.GetByID(ctx, id, tenantID)
+			if err != nil {
+				return err
+			}
+			if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+				return common.NewForbiddenError(fmt.Sprintf("无权限删除工单 %d：仅创建人、受理人或管理员可操作", id))
+			}
+		}
+	}
 	return s.repo.BatchDelete(ctx, ids, tenantID)
 }
 
@@ -277,11 +309,15 @@ func (s *Service) CreateSubtask(ctx context.Context, tenantID int, parentID int,
 }
 
 // UpdateSubtask updates a child ticket.
-func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int, params *UpdateParams) (*Ticket, error) {
+// P1-DataScope：子任务写路径同样受行级写权限约束。
+func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int, params *UpdateParams, actorID int, actorRole string) (*Ticket, error) {
 	// Verify subtask belongs to parent
 	current, err := s.repo.GetByID(ctx, subtaskID, tenantID)
 	if err != nil {
 		return nil, err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+		return nil, common.NewForbiddenError("无权限修改该子任务：仅创建人、受理人或管理员可操作")
 	}
 	// 修复：原代码比较 *current.ParentTicketID != tenantID —— ParentTicketID 是父工单 ID，
 	// 恒不等于 tenantID，导致所有子任务更新都被误判为"不属于父工单"。正确语义是：
@@ -293,7 +329,15 @@ func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int
 }
 
 // DeleteSubtask deletes a child ticket.
-func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int) error {
+// P1-DataScope：子任务删除同样受行级写权限约束。
+func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int, actorID int, actorRole string) error {
+	current, err := s.repo.GetByID(ctx, subtaskID, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+		return common.NewForbiddenError("无权限删除该子任务：仅创建人、受理人或管理员可操作")
+	}
 	return s.repo.Delete(ctx, subtaskID, tenantID)
 }
 

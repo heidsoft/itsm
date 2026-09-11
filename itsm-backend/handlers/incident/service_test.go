@@ -231,7 +231,7 @@ func TestGoldenJourney_IncidentResolvedAndClosed(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, status := range []string{"acknowledged", "in_progress", "resolved", "closed"} {
-		incident, err = svc.Update(ctx, 11, incident.ID, &Incident{Status: status})
+		incident, err = svc.Update(ctx, 11, incident.ID, &Incident{Status: status}, 101, "agent")
 		require.NoError(t, err, "transition to %s", status)
 	}
 	assert.Equal(t, "closed", incident.Status)
@@ -241,7 +241,7 @@ func TestGoldenJourney_IncidentResolvedAndClosed(t *testing.T) {
 
 	other, err := svc.Create(ctx, 11, &Incident{Title: "非法跃迁样本", ReporterID: 101})
 	require.NoError(t, err)
-	_, err = svc.Update(ctx, 11, other.ID, &Incident{Status: "closed"})
+	_, err = svc.Update(ctx, 11, other.ID, &Incident{Status: "closed"}, 101, "agent")
 	require.ErrorContains(t, err, "invalid incident status transition")
 	_, err = svc.Get(ctx, other.ID, 12)
 	require.Error(t, err, "cross-tenant direct ID must fail closed")
@@ -369,15 +369,15 @@ func TestService_Update_InvalidTransitionRejected(t *testing.T) {
 	require.NoError(t, err)
 
 	// Walk to closed via the legal path: new → in_progress → resolved → closed.
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"}, 0, "admin")
 	require.NoError(t, err)
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "resolved"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "resolved"}, 0, "admin")
 	require.NoError(t, err)
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "closed"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "closed"}, 0, "admin")
 	require.NoError(t, err)
 
 	// Now attempt to reopen from closed → must be rejected.
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"}, 0, "admin")
 	assert.Error(t, err, "closed is terminal; service must reject reopen")
 }
 
@@ -391,14 +391,14 @@ func TestService_Update_ResolvedTimestamp(t *testing.T) {
 	require.NoError(t, err)
 
 	// new → in_progress → resolved
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "in_progress"}, 0, "admin")
 	require.NoError(t, err)
-	updated, err := svc.Update(context.Background(), 1, created.ID, &Incident{Status: "resolved"})
+	updated, err := svc.Update(context.Background(), 1, created.ID, &Incident{Status: "resolved"}, 0, "admin")
 	require.NoError(t, err)
 	assert.NotNil(t, updated.ResolvedAt, "resolved transition must stamp ResolvedAt")
 
 	// resolved → closed
-	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "closed"})
+	_, err = svc.Update(context.Background(), 1, created.ID, &Incident{Status: "closed"}, 0, "admin")
 	require.NoError(t, err)
 	// closed is terminal; we have to read it back.
 	again, err := svc.Get(context.Background(), created.ID, 1)

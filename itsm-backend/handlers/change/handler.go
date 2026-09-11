@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -412,6 +413,9 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
 	var req dto.UpdateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -467,7 +471,7 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 		existing.RelatedTickets = req.RelatedTickets
 	}
 
-	res, err := h.svc.UpdateChange(c.Request.Context(), existing)
+	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
 		common.InternalError(c, "更新变更失败: "+err.Error())
 		return
@@ -736,8 +740,15 @@ func (h *Handler) AssignChange(c *gin.Context) {
 		common.NotFound(c, "Change not found")
 		return
 	}
+	// P1-DataScope：分配变更处理人属于写操作，同样受行级写权限约束
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
+	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
+		common.RespondError(c, common.NewForbiddenError("无权限分配该变更单：仅创建人、受理人或管理员可操作"), "操作失败")
+		return
+	}
 	existing.AssigneeID = &req.AssigneeID
-	res, err := h.svc.UpdateChange(c.Request.Context(), existing)
+	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
 		common.InternalError(c, "分配变更失败: "+err.Error())
 		return
@@ -791,8 +802,11 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：删除同样受行级写权限约束
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
-	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID); err != nil {
+	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
 		common.InternalError(c, "删除变更失败: "+err.Error())
 		return
 	}

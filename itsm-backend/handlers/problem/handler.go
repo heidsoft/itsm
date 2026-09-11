@@ -487,6 +487,9 @@ func (h *Handler) Update(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
 	// 将 DTO 指针字段转换为 domain entity
 	updates := &Problem{}
@@ -512,7 +515,7 @@ func (h *Handler) Update(c *gin.Context) {
 		updates.Impact = *req.Impact
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, actorID, actorRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -544,7 +547,8 @@ func (h *Handler) InvestigateProblem(c *gin.Context) {
 	if !ok {
 		return
 	}
-	updated, err := h.service.InvestigateProblem(c.Request.Context(), tenantID, id)
+	actorID, actorRole := actorContext(c)
+	updated, err := h.service.InvestigateProblem(c.Request.Context(), tenantID, id, actorID, actorRole)
 	h.respondProblemMutation(c, updated, err)
 }
 
@@ -573,7 +577,8 @@ func (h *Handler) UpdateRootCause(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	updated, err := h.service.UpdateRootCause(c.Request.Context(), tenantID, id, req.RootCause)
+	actorID, actorRole := actorContext(c)
+	updated, err := h.service.UpdateRootCause(c.Request.Context(), tenantID, id, actorID, actorRole, req.RootCause)
 	h.respondProblemMutation(c, updated, err)
 }
 
@@ -606,7 +611,8 @@ func (h *Handler) UpdateSolution(c *gin.Context) {
 	if resolution == "" {
 		resolution = req.Solution
 	}
-	updated, err := h.service.UpdateSolution(c.Request.Context(), tenantID, id, req.Workaround, resolution)
+	actorID, actorRole := actorContext(c)
+	updated, err := h.service.UpdateSolution(c.Request.Context(), tenantID, id, actorID, actorRole, req.Workaround, resolution)
 	h.respondProblemMutation(c, updated, err)
 }
 
@@ -635,7 +641,8 @@ func (h *Handler) CloseProblem(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	updated, err := h.service.CloseProblem(c.Request.Context(), tenantID, id, req.Resolution)
+	actorID, actorRole := actorContext(c)
+	updated, err := h.service.CloseProblem(c.Request.Context(), tenantID, id, actorID, actorRole, req.Resolution)
 	h.respondProblemMutation(c, updated, err)
 }
 
@@ -652,6 +659,11 @@ func problemRequestContext(c *gin.Context) (int, int, bool) {
 		return 0, 0, false
 	}
 	return id, tenantID, true
+}
+
+// actorContext 提取当前操作人身份（P1-DataScope 行级写权限校验用）。
+func actorContext(c *gin.Context) (int, string) {
+	return c.GetInt("user_id"), c.GetString("role")
 }
 
 func (h *Handler) respondProblemMutation(c *gin.Context, updated *Problem, err error) {
@@ -706,7 +718,9 @@ func (h *Handler) Delete(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	err = h.service.Delete(c.Request.Context(), id, tenantID)
+	// P1-DataScope：删除同样受行级写权限约束
+	actorID, actorRole := actorContext(c)
+	err = h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

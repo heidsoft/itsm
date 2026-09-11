@@ -94,7 +94,16 @@ func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) erro
 	return err
 }
 
-func (s *Service) Delete(ctx context.Context, id, tenantID int) error {
+func (s *Service) Delete(ctx context.Context, id, tenantID int, actorID int, actorRole string) error {
+	// P1-DataScope：删除前行级校验——写权限 ⊆ 读权限，普通角色仅可删除
+	// 本人报告或受理的事件单。
+	current, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
+		return common.NewForbiddenError("无权限删除该事件单：仅报告人、受理人或管理员可操作")
+	}
 	return lifecycleError(s.productionService.DeleteIncident(ctx, id, tenantID))
 }
 
@@ -197,10 +206,15 @@ func (s *Service) GetUserNames(ctx context.Context, tenantID int, ids []int) (ma
 	return s.repo.GetUserNamesByIDs(ctx, tenantID, ids)
 }
 
-func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Incident) (*Incident, error) {
+// Update 更新事件单。P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，
+// 普通角色仅可修改本人报告或受理的事件单（datascope.CanWriteResource）。
+func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Incident, actorID int, actorRole string) (*Incident, error) {
 	current, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
+		return nil, common.NewForbiddenError("无权限修改该事件单：仅报告人、受理人或管理员可操作")
 	}
 
 	// Apply updates

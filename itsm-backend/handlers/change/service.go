@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
@@ -96,13 +97,18 @@ func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int,
 	return s.repo.List(ctx, tenantID, page, size, status, search, riskLevel, dataScope, currentUserID)
 }
 
-func (s *Service) UpdateChange(ctx context.Context, c *Change) (*Change, error) {
+func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, actorRole string) (*Change, error) {
 	// P1-2: Guard governance fields. Changes must be in draft status to freely edit fields that
 	// feed CAB approval / risk snapshot. Reject silent post-submission mutations and force the
 	// caller to return to draft for re-approval instead.
 	existing, err := s.repo.Get(ctx, c.ID, c.TenantID)
 	if err != nil || existing == nil {
 		return nil, fmt.Errorf("change not found")
+	}
+	// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
+	// 本人创建或受理的变更单（datascope.CanWriteResource）。
+	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
+		return nil, common.NewForbiddenError("无权限修改该变更单：仅创建人、受理人或管理员可操作")
 	}
 	if existing.Status != "draft" {
 		if blocked := governanceFieldDiffs(existing, c); len(blocked) > 0 {
@@ -160,7 +166,18 @@ func governanceFieldDiffs(existing, requested *Change) []string {
 	return blocked
 }
 
-func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int) error {
+// DeleteChange 删除变更单。P1-DataScope：删除受行级写权限约束（原先仅校验租户隔离）。
+func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
+	existing, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil || existing == nil {
+		if err != nil && !ent.IsNotFound(err) {
+			return err
+		}
+		return fmt.Errorf("change not found")
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
+		return common.NewForbiddenError("无权限删除该变更单：仅创建人、受理人或管理员可操作")
+	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
 

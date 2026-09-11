@@ -67,17 +67,17 @@ func TestProblemServiceLifecycleAndTimestamps(t *testing.T) {
 	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
 
 	assert.Equal(t, "open", p.Status)
-	p, err := service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "investigating"})
+	p, err := service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "investigating"}, user.ID, "agent")
 	require.NoError(t, err)
 	assert.Nil(t, p.ResolvedAt)
-	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"})
+	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"}, user.ID, "agent")
 	require.NoError(t, err)
 	require.NotNil(t, p.ResolvedAt)
-	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "investigating"})
+	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "investigating"}, user.ID, "agent")
 	require.NoError(t, err)
 	assert.Nil(t, p.ResolvedAt)
 
-	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "unknown"})
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "unknown"}, user.ID, "agent")
 	require.Error(t, err)
 	var badStatusErr *common.BusinessError
 	require.ErrorAs(t, err, &badStatusErr, "非法状态必须是 BusinessError")
@@ -91,20 +91,20 @@ func TestGoldenJourney_ProblemRCAResolvedAndClosed(t *testing.T) {
 	user := createProblemHandlerUser(t, ctx, client, tenant.ID, "golden")
 	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
 
-	_, err := service.CloseProblem(ctx, tenant.ID, p.ID, "不得跳过分析")
+	_, err := service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "不得跳过分析")
 	require.Error(t, err)
 	var bizErr *common.BusinessError
 	require.ErrorAs(t, err, &bizErr, "open 直接 closed 必须被状态机以 BusinessError 拒绝")
 	assert.Equal(t, common.ConflictCode, bizErr.Code)
-	p, err = service.InvestigateProblem(ctx, tenant.ID, p.ID)
+	p, err = service.InvestigateProblem(ctx, tenant.ID, p.ID, user.ID, "agent")
 	require.NoError(t, err)
-	p, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, "连接池耗尽")
+	p, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, user.ID, "agent", "连接池耗尽")
 	require.NoError(t, err)
-	p, err = service.UpdateSolution(ctx, tenant.ID, p.ID, "临时扩容", "修复连接泄漏")
+	p, err = service.UpdateSolution(ctx, tenant.ID, p.ID, user.ID, "agent", "临时扩容", "修复连接泄漏")
 	require.NoError(t, err)
-	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"})
+	p, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"}, user.ID, "agent")
 	require.NoError(t, err)
-	p, err = service.CloseProblem(ctx, tenant.ID, p.ID, "修复连接泄漏并观察稳定")
+	p, err = service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "修复连接泄漏并观察稳定")
 	require.NoError(t, err)
 	assert.Equal(t, "closed", p.Status)
 	assert.Equal(t, "连接池耗尽", p.RootCause)
@@ -123,7 +123,7 @@ func TestProblemRepositorySoftDeleteExcludedEverywhere(t *testing.T) {
 	user := createProblemHandlerUser(t, ctx, client, tenant.ID, "delete")
 	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
 
-	require.NoError(t, service.Delete(ctx, p.ID, tenant.ID))
+	require.NoError(t, service.Delete(ctx, p.ID, tenant.ID, user.ID, "agent"))
 	_, err := service.Get(ctx, p.ID, tenant.ID)
 	require.True(t, ent.IsNotFound(err))
 	list, total, err := service.List(ctx, tenant.ID, 1, 10, nil, user.ID, "super_admin")
@@ -174,20 +174,66 @@ func TestProblemInvalidTransitionReturnsBusinessError(t *testing.T) {
 	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
 
 	// open -> investigating 合法
-	_, err := service.InvestigateProblem(ctx, tenant.ID, p.ID)
+	_, err := service.InvestigateProblem(ctx, tenant.ID, p.ID, user.ID, "agent")
 	require.NoError(t, err)
 
 	// investigating -> closed 非法：必须先经过 resolved
-	_, err = service.CloseProblem(ctx, tenant.ID, p.ID, "resolution")
+	_, err = service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "resolution")
 	require.Error(t, err)
 	var bizErr *common.BusinessError
 	require.ErrorAs(t, err, &bizErr, "状态机违规必须是 BusinessError")
 	assert.Equal(t, common.ConflictCode, bizErr.Code)
 
 	// 合法路径 investigating -> resolved -> closed 应成功
-	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"})
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"}, user.ID, "agent")
 	require.NoError(t, err)
-	closed, err := service.CloseProblem(ctx, tenant.ID, p.ID, "resolution")
+	closed, err := service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "resolution")
 	require.NoError(t, err)
 	assert.Equal(t, "closed", closed.Status)
+}
+
+// TestProblemWritePathRowLevelGuard 锁定 P1-DataScope 写路径行级校验：
+// 写权限 ⊆ 读权限——非 owner 且非受理人的普通角色改/删他人问题单必须 403。
+func TestProblemWritePathRowLevelGuard(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenant := createProblemHandlerTenant(t, ctx, client, "rowguard")
+	owner := createProblemHandlerUser(t, ctx, client, tenant.ID, "rowguard-owner")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, owner.ID)
+
+	stranger := createProblemHandlerUser(t, ctx, client, tenant.ID, "rowguard-stranger")
+	assignee := createProblemHandlerUser(t, ctx, client, tenant.ID, "rowguard-assignee")
+
+	// 管理角色先把 assignee 设为受理人（owner 委派场景）
+	_, err := service.Update(ctx, tenant.ID, p.ID, &Problem{AssigneeID: &assignee.ID}, 0, "manager")
+	require.NoError(t, err, "管理角色应可委派受理人")
+
+	// 受理人可写
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Priority: "low"}, assignee.ID, "agent")
+	require.NoError(t, err, "受理人应可修改")
+
+	// 非 owner 且非受理人 → 403 Forbidden
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Title: "hijack"}, stranger.ID, "agent")
+	require.Error(t, err, "无关普通角色修改他人问题单必须被拒绝")
+	var appErr *common.AppError
+	require.ErrorAs(t, err, &appErr, "必须是 AppError（403）")
+	assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+
+	err = service.Delete(ctx, p.ID, tenant.ID, stranger.ID, "agent")
+	require.Error(t, err, "无关普通角色删除他人问题单必须被拒绝")
+	require.ErrorAs(t, err, &appErr)
+	assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+
+	// 管理角色可写/可删
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Title: "admin touch"}, 0, "manager")
+	require.NoError(t, err, "管理角色应全租户可写")
+
+	// owner 可删
+	require.NoError(t, service.Delete(ctx, p.ID, tenant.ID, owner.ID, "agent"), "owner 应可删除自己的问题单")
+
+	// owner 仍可见数据未被越权篡改
+	fetched, err := service.Get(ctx, p.ID, tenant.ID)
+	if err == nil {
+		assert.NotEqual(t, "hijack", fetched.Title, "被拒绝的修改不应落库")
+	}
 }

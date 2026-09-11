@@ -419,7 +419,9 @@ func TestHandler_Get_NotFoundTable(t *testing.T) {
 		tenantHdr string
 		want      int
 	}{
-		{"invalid id", "abc", "1", 400},
+		// GetTicket 现支持业务工单号 fallback（非数字 ID 走 GetByNumber），
+		// 无效/不存在的工单号统一返回 404 而非 400。
+		{"invalid id", "abc", "1", 404},
 		{"non-existing id", "999", "1", 404},
 	}
 	for _, tc := range cases {
@@ -524,6 +526,49 @@ func TestHandler_Delete_TableDriven(t *testing.T) {
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
 	)
 	assert.Equal(t, 404, w.Code)
+}
+
+// TestHandler_WritePath_RowLevelForbidden 锁定 P1-DataScope 行级写权限：
+// 测试基建默认 role=agent；agent 仅能改/删自己创建的工单，
+// 换一个非 owner 的 agent 身份访问必须 403。
+func TestHandler_WritePath_RowLevelForbidden(t *testing.T) {
+	r, repo := newTestHarness(t)
+
+	// user 7 (agent) 创建工单 → requester_id=7
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "Owner only", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code)
+
+	var id int
+	for id = range repo.tickets {
+		break
+	}
+
+	// user 8 (agent, 非 owner 非 assignee) 更新 → 403
+	w = doJSON(t, r, http.MethodPut,
+		"/api/v1/tickets/"+strconv.Itoa(id),
+		dto.UpdateTicketRequest{Title: "hijack"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "8"},
+	)
+	assert.Equal(t, 403, w.Code, w.Body.String())
+
+	// user 8 删除 → 403
+	w = doJSON(t, r, http.MethodDelete,
+		"/api/v1/tickets/"+strconv.Itoa(id), nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "8"},
+	)
+	assert.Equal(t, 403, w.Code, w.Body.String())
+
+	// owner (user 7) 更新仍成功
+	w = doJSON(t, r, http.MethodPut,
+		"/api/v1/tickets/"+strconv.Itoa(id),
+		dto.UpdateTicketRequest{Title: "owner edit"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
+	assert.NotEqual(t, "hijack", repo.tickets[id].Title, "被拒绝的修改不应落库")
 }
 
 func TestHandler_AssignTicket(t *testing.T) {

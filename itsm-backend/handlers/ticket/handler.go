@@ -148,18 +148,27 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 }
 
 // GetTicket handles GET /api/v1/tickets/:id
+// :id 同时接受数字 ID(9)和业务工单号(TKT-202609-000010);
+// 前端 [ticketId] 动态路由会把两者都传进来,需要 fallback 到 GetByNumber。
 func (h *Handler) GetTicket(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工单ID")
-		return
-	}
+	idStr := c.Param("id")
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
-	ticket, err := h.service.Get(c.Request.Context(), id, tenantID)
+
+	ctx := c.Request.Context()
+	var (
+		ticket *Ticket
+		err    error
+	)
+	if id, atoiErr := strconv.Atoi(idStr); atoiErr == nil {
+		ticket, err = h.service.Get(ctx, id, tenantID)
+	} else {
+		// 非数字 ID 视为业务工单号,例如 TKT-202609-000010
+		ticket, err = h.service.GetByNumber(ctx, idStr, tenantID)
+	}
 	if err != nil {
 		common.Fail(c, common.NotFoundCode, "工单不存在")
 		return
@@ -231,6 +240,9 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
 	params := &UpdateParams{Version: req.Version}
 	if req.Title != "" {
@@ -261,7 +273,7 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 		// tags are handled via ReplaceTags=false; tags are set separately
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID, id, params)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, params, actorID, actorRole)
 	if err != nil {
 		if common.IsVersionConflictError(err) {
 			conflictErr := err.(*common.VersionConflictError)
@@ -278,6 +290,11 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 		}
 		if isUserInputUpdateError(err) {
 			common.ParamErrorWithErr(c, err, "请求参数错误")
+			return
+		}
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兑底 500
+		if isForbiddenErr(err) {
+			common.RespondError(c, err, "操作失败")
 			return
 		}
 		common.FailWithErr(c, err, "操作失败")
@@ -299,10 +316,14 @@ func (h *Handler) DeleteTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
-	if err := h.service.Delete(c.Request.Context(), id, tenantID); err != nil {
+	if err := h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兑底 500
 		if isForbiddenErr(err) {
-			common.FailWithErr(c, err, "操作失败")
+			common.RespondError(c, err, "操作失败")
 			return
 		}
 		common.FailWithErr(c, err, "操作失败")
@@ -355,10 +376,14 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
-	if err := h.service.BatchDelete(c.Request.Context(), req.TicketIDs, tenantID); err != nil {
+	if err := h.service.BatchDelete(c.Request.Context(), req.TicketIDs, tenantID, actorID, actorRole); err != nil {
 		if isForbiddenErr(err) {
-			common.FailWithErr(c, err, "操作失败")
+			// P1-DataScope：批量删除遇到越权单据，按语义响应 403
+			common.RespondError(c, err, "操作失败")
 			return
 		}
 		common.FailWithErr(c, err, "操作失败")
@@ -972,6 +997,9 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
@@ -995,7 +1023,7 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 		params.Priority = &req.Priority
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID, subtaskID, params)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, subtaskID, params, actorID, actorRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -1021,6 +1049,9 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：写路径注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
 	// Verify subtask belongs to parent
 	current, err := h.service.Get(c.Request.Context(), subtaskID, tenantID)
@@ -1033,7 +1064,7 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteSubtask(c.Request.Context(), subtaskID, tenantID); err != nil {
+	if err := h.service.DeleteSubtask(c.Request.Context(), subtaskID, tenantID, actorID, actorRole); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}

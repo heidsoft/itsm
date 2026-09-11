@@ -88,10 +88,15 @@ func (s *Service) LoadUserNames(ctx context.Context, tenantID int, ids []int) ma
 	return m
 }
 
-func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) (*Problem, error) {
+func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, actorID int, actorRole string) (*Problem, error) {
 	existing, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
+	}
+	// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
+	// 本人创建或受理的问题单（datascope.CanWriteResource）。
+	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
+		return nil, common.NewForbiddenError("无权限修改该问题单：仅创建人、受理人或管理员可操作")
 	}
 
 	// Update fields if they are set (non-zero/non-empty check in Handler or here)
@@ -167,35 +172,35 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem) 
 }
 
 // InvestigateProblem starts the investigation lifecycle for a problem.
-func (s *Service) InvestigateProblem(ctx context.Context, tenantID, id int) (*Problem, error) {
-	return s.Update(ctx, tenantID, id, &Problem{Status: "investigating"})
+func (s *Service) InvestigateProblem(ctx context.Context, tenantID, id, actorID int, actorRole string) (*Problem, error) {
+	return s.Update(ctx, tenantID, id, &Problem{Status: "investigating"}, actorID, actorRole)
 }
 
 // UpdateRootCause records the confirmed root cause.
-func (s *Service) UpdateRootCause(ctx context.Context, tenantID, id int, rootCause string) (*Problem, error) {
+func (s *Service) UpdateRootCause(ctx context.Context, tenantID, id, actorID int, actorRole string, rootCause string) (*Problem, error) {
 	rootCause = strings.TrimSpace(rootCause)
 	if rootCause == "" {
 		return nil, fmt.Errorf("rootCause is required")
 	}
-	return s.Update(ctx, tenantID, id, &Problem{RootCause: rootCause})
+	return s.Update(ctx, tenantID, id, &Problem{RootCause: rootCause}, actorID, actorRole)
 }
 
 // UpdateSolution records a workaround and/or final resolution.
-func (s *Service) UpdateSolution(ctx context.Context, tenantID, id int, workaround, resolution string) (*Problem, error) {
+func (s *Service) UpdateSolution(ctx context.Context, tenantID, id, actorID int, actorRole string, workaround, resolution string) (*Problem, error) {
 	workaround = strings.TrimSpace(workaround)
 	resolution = strings.TrimSpace(resolution)
 	if workaround == "" && resolution == "" {
 		return nil, fmt.Errorf("solution, workaround or resolution is required")
 	}
-	return s.Update(ctx, tenantID, id, &Problem{Workaround: workaround, Resolution: resolution})
+	return s.Update(ctx, tenantID, id, &Problem{Workaround: workaround, Resolution: resolution}, actorID, actorRole)
 }
 
 // CloseProblem closes a problem and optionally records its final resolution.
-func (s *Service) CloseProblem(ctx context.Context, tenantID, id int, resolution string) (*Problem, error) {
+func (s *Service) CloseProblem(ctx context.Context, tenantID, id, actorID int, actorRole string, resolution string) (*Problem, error) {
 	return s.Update(ctx, tenantID, id, &Problem{
 		Status:     "closed",
 		Resolution: strings.TrimSpace(resolution),
-	})
+	}, actorID, actorRole)
 }
 
 func isValidProblemPriority(priority string) bool {
@@ -244,7 +249,15 @@ func uniquePositiveIDs(ids []int) []int {
 	return result
 }
 
-func (s *Service) Delete(ctx context.Context, id int, tenantID int) error {
+// Delete 删除问题单。P1-DataScope：删除受行级写权限约束（原先仅校验租户隔离）。
+func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
+	existing, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
+		return common.NewForbiddenError("无权限删除该问题单：仅创建人、受理人或管理员可操作")
+	}
 	return s.repo.Delete(ctx, id, tenantID)
 }
 

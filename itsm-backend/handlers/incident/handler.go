@@ -232,7 +232,7 @@ func (h *IncidentHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(c.Request.Context(), id, c.GetInt("tenant_id")); err != nil {
+	if err := h.service.Delete(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), c.GetString("role")); err != nil {
 		failIncidentOperation(c, err)
 		return
 	}
@@ -1067,7 +1067,7 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 		updates.ResolutionSteps = dto.StructSliceToMapSlice(req.ResolutionSteps)
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -1274,7 +1274,7 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 		updates.RootCause = req.RootCause
 	}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -1351,7 +1351,7 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 		updates.ImpactAnalysis = req.ImpactAnalysis
 	}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -1427,7 +1427,7 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	updates := &Incident{Category: req.Category, Subcategory: req.Subcategory}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates)
+	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

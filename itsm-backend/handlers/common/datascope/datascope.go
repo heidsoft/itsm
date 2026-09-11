@@ -82,6 +82,31 @@ func DataScopeFromRole(roleCode string) DataScope {
 	return DataScopeOwnedOrAssigned
 }
 
+// CanWriteResource 判定 actor 是否可对单据执行写/删操作（行级写权限）。
+//
+// 原则：写权限 ⊆ 读权限。DataScope 决定读不到的单据，同样不允许写/删：
+//   - 管理角色（IsDataScopeAllRole：super_admin/admin/manager/sysadmin）全租户可写；
+//   - 其余角色仅 owner（创建人/报告人）或当前受理人可写。
+//
+// ownerID 为单据的归属人字段（ticket.RequesterID / change.CreatedBy /
+// problem.CreatedBy / incident.ReporterID）；assigneeID 可为 nil（未分配）。
+// actorID <= 0 视为无有效身份，按拒绝处理（安全收窄）。
+func CanWriteResource(actorID int, actorRole string, ownerID int, assigneeID *int) bool {
+	if IsDataScopeAllRole(actorRole) {
+		return true
+	}
+	if actorID <= 0 {
+		return false
+	}
+	if actorID == ownerID {
+		return true
+	}
+	if assigneeID != nil && *assigneeID > 0 && actorID == *assigneeID {
+		return true
+	}
+	return false
+}
+
 // ApplyTicketFilter 将 DataScope 过滤器应用到 ticket 查询。
 // query 为 ent Ticket 查询，userID 为当前用户 ID，departmentID 为用户所属部门。
 //
