@@ -256,6 +256,38 @@ func TestPatchMethodUsesUpdateContract(t *testing.T) {
 	}
 }
 
+// TestReleaseEndpointsHaveExplicitRBACMapping 回归（2026-09-11 E2E 实测暴露的 prod 缺陷）：
+// ResourceActionMap 此前完全没有 releases 条目，SmartCheckPermission L3 显式映射落空后，
+// URL 推导取复数路径段 "releases" 当资源名，而词表是单数 "release"，永不匹配；
+// L4 硬编码在 prod DBOnly（fail-closed）下禁用——三者叠加导致 release 域全部端点对
+// super_admin/sysadmin（通配符）以外的一切角色不可达，即便 DB 已授予 release:write。
+func TestReleaseEndpointsHaveExplicitRBACMapping(t *testing.T) {
+	cases := []struct {
+		method   string
+		path     string
+		resource string
+		action   string
+	}{
+		{"GET", "/api/v1/releases", "release", "read"},
+		{"GET", "/api/v1/releases/1", "release", "read"},
+		{"GET", "/api/v1/releases/stats", "release", "read"},
+		{"POST", "/api/v1/releases", "release", "write"},
+		{"PUT", "/api/v1/releases/1", "release", "write"},
+		{"PUT", "/api/v1/releases/1/status", "release", "write"},
+		{"POST", "/api/v1/releases/1/approve", "release", "approve"},
+		{"POST", "/api/v1/releases/1/reject", "release", "approve"},
+		{"POST", "/api/v1/releases/1/rollback", "release", "rollback"},
+		{"PATCH", "/api/v1/releases/1", "release", "write"},
+		{"DELETE", "/api/v1/releases/1", "release", "delete"},
+	}
+	for _, tc := range cases {
+		perm := getPermissionFromPath(tc.method, tc.path)
+		require.NotNil(t, perm, "%s %s 必须有显式 RBAC 映射", tc.method, tc.path)
+		assert.Equal(t, tc.resource, perm.Resource, "%s %s", tc.method, tc.path)
+		assert.Equal(t, tc.action, perm.Action, "%s %s", tc.method, tc.path)
+	}
+}
+
 func TestCheckPermissionMatch_ResourceAdminIncludesActions(t *testing.T) {
 	permissions := []Permission{{Resource: "ticket", Action: "admin"}}
 
