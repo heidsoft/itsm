@@ -317,11 +317,13 @@ func (s *TicketNotificationService) NotifyTicketCreated(ctx context.Context, tic
 		}
 	}
 
-	// 3. 如果只有创建人(没有处理人),广播给所有admin
+	// 3. 如果只有创建人(没有处理人),广播给同租户其他**活跃**用户
+	// （ActiveEQ 过滤：停用用户不收通知，否则投递端 user not found 进 dead_letter）
 	if len(userIDs) <= 1 && ticket.RequesterID > 0 {
 		admins, err := s.client.User.Query().
 			Where(user.TenantID(ticket.TenantID)).
 			Where(user.IDNEQ(ticket.RequesterID)).
+			Where(user.ActiveEQ(true)).
 			All(ctx)
 		if err == nil {
 			for _, admin := range admins {
@@ -780,9 +782,11 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 }
 
 // collectCreatedRecipients 与 NotifyTicketCreated 同步计算收件人：
-//  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他用户。
+//  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他**活跃**用户。
 //
 // tx 入参确保租户隔离与 ticket 一致，避免跨 tenant 误发。
+// 广播分支必须过滤 ActiveEQ(true)：停用用户入箱后投递端报 user not found 进 dead_letter
+// （prod 实测 2026-09-11：user5 active=false 被入箱）。
 func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) []int {
 	userIDs := []int{}
 	if ticket.AssigneeID > 0 {
@@ -804,6 +808,7 @@ func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticke
 		admins, err := tx.User.Query().
 			Where(user.TenantID(ticket.TenantID)).
 			Where(user.IDNEQ(ticket.RequesterID)).
+			Where(user.ActiveEQ(true)).
 			All(ctx)
 		if err == nil {
 			for _, admin := range admins {

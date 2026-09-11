@@ -245,6 +245,43 @@ func TestNotificationDeliveryHandlerSendsConnectorAndAuditsMaskedTarget(t *testi
 	require.NotEqual(t, "ou_sensitive_target_1234", delivery.TargetMasked)
 }
 
+// TestNotifyTicketCreatedTxExcludesInactiveUsers 广播分支必须排除停用用户：
+// 停用用户入箱后投递端报「user not found」进 dead_letter（prod 实测 user5 场景）。
+func TestNotifyTicketCreatedTxExcludesInactiveUsers(t *testing.T) {
+	client, ctx, tenantID, userID, _ := notificationDeliveryFixture(t)
+	// 工单创建后无 assignee，只挂 requester → 触发广播分支
+	_, err := client.User.Create().SetUsername("inactive-broadcast").SetEmail("inactive-b@example.com").
+		SetName("Inactive B").SetPasswordHash("hash").SetRole("agent").SetActive(false).
+		SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	activeB, err := client.User.Create().SetUsername("active-broadcast").SetEmail("active-b@example.com").
+		SetName("Active B").SetPasswordHash("hash").SetRole("agent").SetActive(true).
+		SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+
+	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())
+	svc.EnableTxOutbox()
+	tx, err := client.Tx(ctx)
+	require.NoError(t, err)
+	tk, err := tx.Ticket.Create().SetTitle("broadcast-ticket").SetTicketNumber("NOTIFY-BC").
+		SetRequesterID(userID).SetTenantID(tenantID).Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, svc.NotifyTicketCreatedTx(ctx, tx, tk))
+	require.NoError(t, tx.Commit())
+
+	commands, err := client.OperationalCommand.Query().
+		Where(operationalcommand.TenantIDEQ(tenantID), operationalcommand.AggregateIDEQ(tk.ID)).
+		All(ctx)
+	require.NoError(t, err)
+	recipients := map[int]struct{}{}
+	for _, cmd := range commands {
+		recipients[asInt(cmd.Payload["recipientId"])] = struct{}{}
+	}
+	require.NotContains(t, recipients, 0)
+	require.Contains(t, recipients, activeB.ID, "活跃用户应被广播")
+	require.Len(t, commands, 2, "requester + 1 活跃广播用户，停用用户不入箱")
+}
+
 func TestNotificationDeliveryFailureRetriesThenDeadLettersWithSafeAudit(t *testing.T) {
 	client, ctx, tenantID, userID, ticketID := notificationDeliveryFixture(t)
 	_, err := client.User.UpdateOneID(userID).SetFeishuOpenID("ou_failure_target").Save(ctx)
