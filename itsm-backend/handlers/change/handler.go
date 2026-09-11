@@ -564,7 +564,9 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 
 	res, err := h.svc.SubmitChange(c.Request.Context(), changeID, tenantID, userID, &req)
 	if err != nil {
-		common.InternalError(c, "提交变更失败: "+err.Error())
+		// 影响分析门禁返回 422 AppError，必须语义分流（RespondError），
+		// 不得被 InternalError 兜底吞成 500。
+		common.RespondError(c, err, "提交变更失败")
 		return
 	}
 

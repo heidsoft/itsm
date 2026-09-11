@@ -379,6 +379,26 @@ func (m *mockRepository) ListByDateRange(ctx context.Context, tenantID int, star
 	return result, nil
 }
 
+// FindOverlappingScheduled 模拟生产实现的重叠查询语义：
+// 时间窗半开区间相交（existing.start < windowEnd && existing.end > windowStart）
+// 且状态在活跃集内，排除自身。
+func (m *mockRepository) FindOverlappingScheduled(ctx context.Context, tenantID int, excludeChangeID int, windowStart, windowEnd time.Time) ([]*Change, error) {
+	activeStatuses := map[string]bool{"pending": true, "approved": true, "scheduled": true, "in_progress": true}
+	var result []*Change
+	for _, c := range m.changes {
+		if c.TenantID != tenantID || c.ID == excludeChangeID {
+			continue
+		}
+		if !activeStatuses[c.Status] || c.PlannedStartDate == nil || c.PlannedEndDate == nil {
+			continue
+		}
+		if c.PlannedStartDate.Before(windowEnd) && c.PlannedEndDate.After(windowStart) {
+			result = append(result, cloneChange(c))
+		}
+	}
+	return result, nil
+}
+
 // Helper function to create test change
 func createTestChange(repo *mockRepository, tenantID, userID int) *Change {
 	c := &Change{
@@ -1198,4 +1218,243 @@ func TestChangeHandler_MissingTenantContext_401(t *testing.T) {
 	var resp common.Response
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, common.AuthFailedCode, resp.Code)
+}
+
+// ==================== P1-③ 变更管理收敛：提交门禁测试 ====================
+
+// TestChangeHandler_SubmitGate_MissingPlansRejected 影响分析门禁：
+// 绑定受影响 CI 但实施/回滚计划为空的 draft 变更，提交必须被 422 拦截，
+// 不得被 InternalError 兜底吞成 500（对齐 P1-① 错误映射铁律）。
+func TestChangeHandler_SubmitGate_MissingPlansRejected(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	c := createTestChange(repo, 1, 1)
+	c.AffectedCIs = []string{"100", "101"}
+	// ImplementationPlan / RollbackPlan 均为空
+	repo.changes[c.ID] = c
+
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, "422 语义经 statusToAppCode 映射为 BadRequestCode")
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.NotEqual(t, common.SuccessCode, resp.Code)
+	assert.Contains(t, resp.Message, "实施计划")
+	assert.Contains(t, resp.Message, "回滚计划")
+}
+
+// TestChangeHandler_SubmitGate_PlansCompletePasses 门禁放行路径：
+// 补齐实施/回滚计划后同一变更提交成功（200，状态推进为 pending）。
+func TestChangeHandler_SubmitGate_PlansCompletePasses(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	c := createTestChange(repo, 1, 1)
+	c.AffectedCIs = []string{"100", "101"}
+	c.ImplementationPlan = "分批升级"
+	c.RollbackPlan = "回滚到上一版本镜像"
+	repo.changes[c.ID] = c
+
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.SuccessCode, resp.Code)
+}
+
+// TestChangeHandler_SubmitGate_NoCINotBlocked 无受影响 CI 的变更不受
+// 计划门禁约束（纯文档型变更不强制绑定计划）。
+func TestChangeHandler_SubmitGate_NoCINotBlocked(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	c := createTestChange(repo, 1, 1) // AffectedCIs 为空，计划为空
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestChangeHandler_WindowConflict_SameCIOverlappingRejected 窗口冲突门禁：
+// 同租户已有一个 pending 变更占用 CI-100 且时间窗重叠，第二个绑定 CI-100
+// 的变更提交必须被拦截，冲突消息包含对方单号与标题。
+func TestChangeHandler_WindowConflict_SameCIOverlappingRejected(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	// 冲突方：pending 变更，占用 CI-100，窗口 2026-10-01 08:00 ~ 2026-10-01 20:00
+	holder := createTestChange(repo, 1, 1)
+	holder.Status = "pending"
+	holder.ChangeNumber = "CHG-0001"
+	holder.Title = "数据库主库升级"
+	holder.AffectedCIs = []string{"100"}
+	s := time.Date(2026, 10, 1, 8, 0, 0, 0, time.Local)
+	e := time.Date(2026, 10, 1, 20, 0, 0, 0, time.Local)
+	holder.PlannedStartDate = &s
+	holder.PlannedEndDate = &e
+	repo.changes[holder.ID] = holder
+
+	// 提交方：draft 变更，同 CI-100，重叠窗口 12:00 ~ 23:00，计划齐全
+	c := createTestChange(repo, 1, 2)
+	c.AffectedCIs = []string{"100"}
+	c.ImplementationPlan = "切换到备库"
+	c.RollbackPlan = "切回主库"
+	cs := time.Date(2026, 10, 1, 12, 0, 0, 0, time.Local)
+	ce := time.Date(2026, 10, 1, 23, 0, 0, 0, time.Local)
+	c.PlannedStartDate = &cs
+	c.PlannedEndDate = &ce
+	repo.changes[c.ID] = c
+
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, "窗口冲突 422 语义")
+	var resp common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Contains(t, resp.Message, "CHG-0001")
+	assert.Contains(t, resp.Message, "数据库主库升级")
+}
+
+// TestChangeHandler_WindowConflict_DisjointCIPasses 时间重叠但 CI 无交集 → 放行。
+func TestChangeHandler_WindowConflict_DisjointCIPasses(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	holder := createTestChange(repo, 1, 1)
+	holder.Status = "scheduled"
+	holder.AffectedCIs = []string{"100"}
+	s := time.Date(2026, 10, 1, 8, 0, 0, 0, time.Local)
+	e := time.Date(2026, 10, 1, 20, 0, 0, 0, time.Local)
+	holder.PlannedStartDate = &s
+	holder.PlannedEndDate = &e
+	repo.changes[holder.ID] = holder
+
+	c := createTestChange(repo, 1, 2)
+	c.AffectedCIs = []string{"200"} // 不同 CI
+	c.ImplementationPlan = "扩容"
+	c.RollbackPlan = "缩容"
+	cs := time.Date(2026, 10, 1, 9, 0, 0, 0, time.Local)
+	ce := time.Date(2026, 10, 1, 19, 0, 0, 0, time.Local)
+	c.PlannedStartDate = &cs
+	c.PlannedEndDate = &ce
+	repo.changes[c.ID] = c
+
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestChangeHandler_WindowConflict_DraftHolderNotBlocking 冲突方为 draft
+// （无排期约束）或已完成（窗口已释放）时不拦截。
+func TestChangeHandler_WindowConflict_DraftHolderNotBlocking(t *testing.T) {
+	for _, holderStatus := range []string{"draft", "completed", "failed", "cancelled"} {
+		t.Run(holderStatus, func(t *testing.T) {
+			r, _, repo := setupTestHandler(t)
+
+			holder := createTestChange(repo, 1, 1)
+			holder.Status = holderStatus
+			holder.AffectedCIs = []string{"100"}
+			s := time.Date(2026, 10, 1, 8, 0, 0, 0, time.Local)
+			e := time.Date(2026, 10, 1, 20, 0, 0, 0, time.Local)
+			holder.PlannedStartDate = &s
+			holder.PlannedEndDate = &e
+			repo.changes[holder.ID] = holder
+
+			c := createTestChange(repo, 1, 2)
+			c.AffectedCIs = []string{"100"}
+			c.ImplementationPlan = "x"
+			c.RollbackPlan = "y"
+			cs := time.Date(2026, 10, 1, 9, 0, 0, 0, time.Local)
+			ce := time.Date(2026, 10, 1, 11, 0, 0, 0, time.Local)
+			c.PlannedStartDate = &cs
+			c.PlannedEndDate = &ce
+			repo.changes[c.ID] = c
+
+			requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+			w := httptest.NewRecorder()
+			httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+			httpReq.Header.Set("Content-Type", "application/json")
+			r.ServeHTTP(w, httpReq)
+
+			assert.Equal(t, http.StatusOK, w.Code, "状态 %s 的冲突方不应拦截提交", holderStatus)
+		})
+	}
+}
+
+// TestChangeHandler_WindowConflict_TouchingEdgesPasses 半开区间语义：
+// 前一窗口 20:00 结束、本窗口 20:00 开始（边界相接）不构成冲突。
+func TestChangeHandler_WindowConflict_TouchingEdgesPasses(t *testing.T) {
+	r, _, repo := setupTestHandler(t)
+
+	holder := createTestChange(repo, 1, 1)
+	holder.Status = "scheduled"
+	holder.AffectedCIs = []string{"100"}
+	s := time.Date(2026, 10, 1, 8, 0, 0, 0, time.Local)
+	e := time.Date(2026, 10, 1, 20, 0, 0, 0, time.Local)
+	holder.PlannedStartDate = &s
+	holder.PlannedEndDate = &e
+	repo.changes[holder.ID] = holder
+
+	c := createTestChange(repo, 1, 2)
+	c.AffectedCIs = []string{"100"}
+	c.ImplementationPlan = "x"
+	c.RollbackPlan = "y"
+	cs := time.Date(2026, 10, 1, 20, 0, 0, 0, time.Local) // 恰好接续
+	ce := time.Date(2026, 10, 1, 22, 0, 0, 0, time.Local)
+	c.PlannedStartDate = &cs
+	c.PlannedEndDate = &ce
+	repo.changes[c.ID] = c
+
+	requestBody, _ := json.Marshal(dto.SubmitChangeRequest{ApproverIDs: []int{2}})
+	w := httptest.NewRecorder()
+	httpReq, _ := http.NewRequest("POST", "/api/v1/changes/"+strconv.Itoa(c.ID)+"/submit", bytes.NewBuffer(requestBody))
+	httpReq.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, httpReq)
+
+	assert.Equal(t, http.StatusOK, w.Code, "边界相接（end==start）不算重叠")
+}
+
+// TestHasCIIntersection CI 交集判定纯函数锁定。
+func TestHasCIIntersection(t *testing.T) {
+	assert.True(t, hasCIIntersection([]string{"1", "2"}, []string{"2", "3"}))
+	assert.True(t, hasCIIntersection([]string{"1"}, []string{"1"}))
+	assert.False(t, hasCIIntersection([]string{"1", "2"}, []string{"3"}))
+	assert.False(t, hasCIIntersection([]string{"1"}, nil))
+	assert.False(t, hasCIIntersection(nil, []string{"1"}))
+	assert.False(t, hasCIIntersection(nil, nil))
+}
+
+// TestValidateSubmitGate_ErrorsAreAppErrors 门禁错误必须是 *AppError
+// （422 Validation），保证 handler 的 RespondError 能正确语义分流。
+func TestValidateSubmitGate_ErrorsAreAppErrors(t *testing.T) {
+	svc, _ := newTransitionTestService(t)
+
+	err := svc.validateSubmitGate(&Change{AffectedCIs: []string{"1"}})
+	require.Error(t, err)
+	appErr, ok := common.AsAppError(err)
+	require.True(t, ok, "门禁错误必须是 *AppError")
+	assert.Equal(t, common.ErrCodeValidation, appErr.Code)
+
+	// 无 CI / 计划齐全 → nil
+	assert.NoError(t, svc.validateSubmitGate(&Change{}))
+	assert.NoError(t, svc.validateSubmitGate(&Change{
+		AffectedCIs:        []string{"1"},
+		ImplementationPlan: "p",
+		RollbackPlan:       "r",
+	}))
 }

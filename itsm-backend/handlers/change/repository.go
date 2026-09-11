@@ -2,6 +2,7 @@ package change
 
 import (
 	"context"
+	"time"
 
 	"itsm-backend/handlers/common/datascope"
 )
@@ -42,4 +43,11 @@ type Repository interface {
 
 	// Calendar view
 	ListByDateRange(ctx context.Context, tenantID int, startDate, endDate, status string) ([]*Change, error)
+
+	// FindOverlappingScheduled 查询与给定时间窗重叠且未进入终态的变更
+	// （排除 changeID 自身），用于提交/排期前的窗口冲突检查。
+	// 重叠判定：existing.start < window.end && existing.end > window.start。
+	// 状态过滤：仅 pending/approved/scheduled/in_progress 参与
+	// （draft 无排期约束，终态/失败已释放窗口）。
+	FindOverlappingScheduled(ctx context.Context, tenantID int, excludeChangeID int, windowStart, windowEnd time.Time) ([]*Change, error)
 }

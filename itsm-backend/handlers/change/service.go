@@ -226,6 +226,112 @@ func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, 
 	}, nil
 }
 
+// ErrSubmitGateBlocked 变更提交被影响分析门禁拦截（→ 422 Validation 语义）。
+// 拦截条件：变更绑定了受影响 CI（存在实施风险）但实施计划/回滚计划缺失。
+var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis gate")
+
+// validateSubmitGate 提交前影响分析门禁（P1-③ GA 收敛项）。
+//
+// 此前 GetCMDBImpactSummary 已产出 RequiresCAB / RequiresBackoutPlan 推荐，
+// 但仅用于前端展示（WorkflowHints），SubmitChange 从不消费——绑定受影响 CI
+// 的变更在实施/回滚计划为空时照样提交成功，风险分析与提交流程断链。
+//
+// 门禁规则（失败关闭，宁严勿松）：
+//   - AffectedCIs 非空 ⇒ RequiresBackoutPlan ⇒ 实施计划与回滚计划都必须非空。
+//   - 无受影响 CI 不拦截（纯文档型变更不强制绑定计划）。
+//
+// 返回 *AppError（Validation/422），由 handler 的 RespondError 语义分流。
+func (s *Service) validateSubmitGate(c *Change) error {
+	if len(c.AffectedCIs) == 0 {
+		return nil
+	}
+	var missing []string
+	if strings.TrimSpace(c.ImplementationPlan) == "" {
+		missing = append(missing, "实施计划（implementationPlan）")
+	}
+	if strings.TrimSpace(c.RollbackPlan) == "" {
+		missing = append(missing, "回滚计划（rollbackPlan）")
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	return common.NewValidationError(
+		fmt.Sprintf("该变更关联了 %d 个受影响 CI，提交审批前必须补齐：%s。请先在变更详情中完善计划，或先解除不需要的 CI 关联",
+			len(c.AffectedCIs), strings.Join(missing, "、")),
+		ErrSubmitGateBlocked,
+	)
+}
+
+// checkWindowConflict 排期窗口冲突检查（P1-③ GA 收敛项）。
+//
+// 场景：同一租户内两个变更的排期窗口（PlannedStart/PlannedEnd）重叠且
+// AffectedCIs 有交集时，存在同 CI 双变更并行实施风险（A 的实施动作可能
+// 破坏 B 的回滚前提）。此前系统仅提供日历展示（GetCalendarView），冲突
+// 全靠人工肉眼核对，无任何拦截。
+//
+// 拦截规则（失败关闭）：
+//   - 变更自身必须已排期（两个 Planned 字段齐全），否则不检查。
+//   - 时间窗重叠 + CI 交集非空 ⇒ 拒绝提交（422），并列出冲突单据。
+//   - 仅 pending/approved/scheduled/in_progress 参与冲突（draft 不拦，
+//     终态窗口已释放）；审核中（pending）同样拦截——冲突应在审批前暴露。
+//
+// 查询失败降级放行（best-effort，不阻塞提交主链路）但留 Warn 日志。
+func (s *Service) checkWindowConflict(ctx context.Context, c *Change) error {
+	if c.PlannedStartDate == nil || c.PlannedEndDate == nil || len(c.AffectedCIs) == 0 {
+		return nil
+	}
+	if !c.PlannedStartDate.Before(*c.PlannedEndDate) {
+		// 非法窗口（start >= end）不在此处理：由数据校验负责，这里跳过
+		return nil
+	}
+	others, err := s.repo.FindOverlappingScheduled(ctx, c.TenantID, c.ID, *c.PlannedStartDate, *c.PlannedEndDate)
+	if err != nil {
+		// 冲突检查属 best-effort 增强门禁：查询故障不应阻断合法提交，
+		// 但必须可观测（静默吞错违反静默失败治理纪律）。
+		s.logger.Warnw("checkWindowConflict: 查询重叠排期失败，降级放行",
+			"error", err, "change_id", c.ID, "tenant_id", c.TenantID)
+		return nil
+	}
+
+	conflicts := make([]string, 0, len(others))
+	for _, o := range others {
+		if hasCIIntersection(c.AffectedCIs, o.AffectedCIs) {
+			num := o.ChangeNumber
+			if num == "" {
+				num = fmt.Sprintf("C-%d", o.ID)
+			}
+			conflicts = append(conflicts, fmt.Sprintf("%s「%s」(%s~%s)",
+				num, o.Title,
+				o.PlannedStartDate.Format("01-02 15:04"),
+				o.PlannedEndDate.Format("01-02 15:04"),
+			))
+		}
+	}
+	if len(conflicts) == 0 {
+		return nil
+	}
+	return common.NewValidationError(
+		fmt.Sprintf("排期窗口与以下活跃变更冲突（时间重叠且涉及相同 CI），请调整排期或复核受影响 CI：%s",
+			strings.Join(conflicts, "；")),
+		fmt.Errorf("window conflict: %w", ErrSubmitGateBlocked),
+	)
+}
+
+// hasCIIntersection 判定两个 CI 集合是否有交集（字符串精确匹配，
+// CI 编号/ID 均以字符串形态存储于 AffectedCIs）。
+func hasCIIntersection(a, b []string) bool {
+	set := make(map[string]struct{}, len(a))
+	for _, v := range a {
+		set[v] = struct{}{}
+	}
+	for _, v := range b {
+		if _, ok := set[v]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 // SubmitChange submits a change for approval
 // Transitions status from 'draft' to 'pending' and creates approval records for specified approvers
 func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitterID int, req *dto.SubmitChangeRequest) (*Change, error) {
@@ -238,6 +344,16 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 	// 2. Check if change is in draft status
 	if c.Status != "draft" {
 		return nil, fmt.Errorf("change must be in draft status to submit")
+	}
+
+	// 2.5 影响分析门禁：绑定受影响 CI 的变更必须先补齐实施/回滚计划（P1-③）。
+	if gateErr := s.validateSubmitGate(c); gateErr != nil {
+		return nil, gateErr
+	}
+
+	// 2.6 排期窗口冲突检查：同 CI 时间重叠的活跃变更拦截（P1-③）。
+	if gateErr := s.checkWindowConflict(ctx, c); gateErr != nil {
+		return nil, gateErr
 	}
 
 	// 3. 解析审批计划（引擎层级 + quorum）。

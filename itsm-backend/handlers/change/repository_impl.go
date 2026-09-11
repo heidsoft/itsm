@@ -616,3 +616,40 @@ func (r *EntRepository) ListByDateRange(ctx context.Context, tenantID int, start
 	}
 	return result, nil
 }
+
+// FindOverlappingScheduled 查询与给定时间窗重叠且处于活跃状态（未终态）的
+// 其他变更，用于提交/排期前的窗口冲突检查。
+//
+// 重叠语义（半开区间相交）：existing.start < windowEnd && existing.end > windowStart。
+// 状态过滤：draft（无排期约束）与终态/失败（窗口已释放）不参与冲突。
+// 排除自身（excludeChangeID<=0 时不排除）。
+func (r *EntRepository) FindOverlappingScheduled(ctx context.Context, tenantID int, excludeChangeID int, windowStart, windowEnd time.Time) ([]*Change, error) {
+	query := r.client.Change.Query().
+		Where(
+			change.TenantIDEQ(tenantID),
+			change.PlannedStartDateNotNil(),
+			change.PlannedEndDateNotNil(),
+			change.PlannedStartDateLT(windowEnd),
+			change.PlannedEndDateGT(windowStart),
+			change.StatusIn(
+				"pending",
+				"approved",
+				"scheduled",
+				"in_progress",
+			),
+		)
+	if excludeChangeID > 0 {
+		query = query.Where(change.IDNEQ(excludeChangeID))
+	}
+
+	ecs, err := query.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*Change, 0, len(ecs))
+	for _, ec := range ecs {
+		result = append(result, toDomain(ec))
+	}
+	return result, nil
+}
