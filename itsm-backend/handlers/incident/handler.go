@@ -30,6 +30,13 @@ func failIncidentOperation(c *gin.Context, err error) {
 		common.Fail(c, businessErr.Code, businessErr.Message)
 		return
 	}
+	// P1-DataScope：行级守卫返回 403 AppError，必须按语义分流（对齐
+	// common.RespondError），不得掉入 InternalError 兜底成 500。
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
+		common.Fail(c, common.ForbiddenCode, appErr.Message)
+		return
+	}
 	if ent.IsNotFound(err) {
 		common.NotFound(c, "事件不存在")
 		return
@@ -59,7 +66,7 @@ func (h *IncidentHandler) Acknowledge(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Acknowledge(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
+	if err := h.service.Acknowledge(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), c.GetString("role")); err != nil {
 		failIncidentOperation(c, err)
 		return
 	}
@@ -98,7 +105,7 @@ func (h *IncidentHandler) Resolve(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Resolve(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.Resolution, req.RootCause); err != nil {
+	if err := h.service.Resolve(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.Resolution, req.RootCause, c.GetString("role")); err != nil {
 		failIncidentOperation(c, err)
 		return
 	}
@@ -136,7 +143,7 @@ func (h *IncidentHandler) Close(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Close(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.CloseNotes); err != nil {
+	if err := h.service.Close(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), req.CloseNotes, c.GetString("role")); err != nil {
 		failIncidentOperation(c, err)
 		return
 	}
@@ -165,7 +172,7 @@ func (h *IncidentHandler) Reopen(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Reopen(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id")); err != nil {
+	if err := h.service.Reopen(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), c.GetString("role")); err != nil {
 		failIncidentOperation(c, err)
 		return
 	}

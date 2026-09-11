@@ -255,12 +255,18 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 		if v := c.GetHeader("X-Test-TenantID"); v != "" {
 			tenantID := mustAtoi(v)
 			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+			// 生产 tenant.go 同步注入 tenant_id（生命周期 handler 直接读取）
+			c.Set("tenant_id", tenantID)
 		}
 		if v := c.GetHeader("X-Test-UserID"); v != "" {
 			userID := mustAtoi(v)
 			c.Set("user_id", userID)
 		}
-		c.Set("role", "agent")
+		if v := c.GetHeader("X-Test-Role"); v != "" {
+			c.Set("role", v)
+		} else {
+			c.Set("role", "agent")
+		}
 		c.Next()
 	}
 
@@ -270,6 +276,11 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.GET("/incidents/:id", h.Get)
 	api.PUT("/incidents/:id", h.Update)
 	api.POST("/incidents/:id/escalate", h.Escalate)
+	// 生命周期路由（P1-DataScope 守卫测试需要走真实 handler 出口）
+	api.POST("/incidents/:id/acknowledge", h.Acknowledge)
+	api.POST("/incidents/:id/resolve", h.Resolve)
+	api.POST("/incidents/:id/close", h.Close)
+	api.POST("/incidents/:id/reopen", h.Reopen)
 
 	return r, repo
 }
@@ -548,3 +559,95 @@ func TestHandler_CommonFailOver2002(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, 401, w.Code)
 }
+
+// -----------------------------------------------------------------------------
+// P1-DataScope: lifecycle row-level guard (ack/resolve/close/reopen)
+// -----------------------------------------------------------------------------
+
+// seedLifecycleIncident 在 mock repo 播种一个事件单，返回其 ID。
+// reporterID/assigneeID 可控，用于构造 owner/assignee/无关人等行级场景。
+func seedLifecycleIncident(t *testing.T, repo *mockRepository, tenantID, reporterID int, assigneeID *int) int {
+	t.Helper()
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	repo.nextID++
+	id := repo.nextID
+	inc := &Incident{
+		ID:             id,
+		Title:          "lifecycle guard seed",
+		Status:         "new",
+		Priority:       "low",
+		IncidentNumber: fmt.Sprintf("INC-GUARD-%d", id),
+		ReporterID:     reporterID,
+		AssigneeID:     assigneeID,
+		DetectedAt:     time.Now(),
+		TenantID:       tenantID,
+	}
+	repo.incidents[id] = inc
+	return id
+}
+
+// TestHandler_LifecycleGuard_BlocksForeignAgents 覆盖 ack/resolve/close/reopen
+// 四个生命周期操作的行级守卫拦截分支：无关人（非 owner/非受理人/非管理角色）
+// 操作他人单据 → 403（AppError 语义分流，不得兜底 500）。守卫在 production
+// 层之前返回，mock harness（nil production service）安全。
+// 放行分支由 TestLifecycleGuard_SQLite_AllowedByRelation 走真实 Ent 覆盖。
+func TestHandler_LifecycleGuard_BlocksForeignAgents(t *testing.T) {
+	const tenant = 1
+	const reporter = 7
+	const assignee = 9
+	const stranger = 8
+
+	assigneeID := assignee
+	actions := []struct {
+		name   string
+		path   string
+		body   interface{}
+		seedFn func(repo *mockRepository) int
+	}{
+		{"acknowledge", "/acknowledge", nil, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, &assigneeID)
+		}},
+		{"resolve", "/resolve", map[string]string{"resolution": "fixed", "rootCause": "bug"}, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, &assigneeID)
+		}},
+		{"close", "/close", map[string]string{"closeNotes": "done"}, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, &assigneeID)
+		}},
+		{"reopen", "/reopen", nil, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, &assigneeID)
+		}},
+		{"acknowledge (unassigned)", "/acknowledge", nil, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, nil)
+		}},
+		{"close (unassigned)", "/close", map[string]string{"closeNotes": "done"}, func(repo *mockRepository) int {
+			return seedLifecycleIncident(t, repo, tenant, reporter, nil)
+		}},
+	}
+
+	for _, tc := range actions {
+		t.Run(tc.name, func(t *testing.T) {
+			r, repo := newTestHarness(t)
+			id := tc.seedFn(repo)
+			w := doJSON(t, r, http.MethodPost, fmt.Sprintf("/api/v1/incidents/%d%s", id, tc.path), tc.body, map[string]string{
+				"X-Test-TenantID": fmt.Sprintf("%d", tenant),
+				"X-Test-UserID":   fmt.Sprintf("%d", stranger), // 无关人：非 reporter、非 assignee
+				"X-Test-Role":     "agent",
+			})
+			assert.Equal(t, 403, w.Code, "body=%s", w.Body.String())
+
+			var resp struct {
+				Code    int    `json:"code"`
+				Message string `json:"message"`
+			}
+			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, common.ForbiddenCode, resp.Code, "必须走 AppError 语义分流而非 InternalError 兑底")
+			assert.Contains(t, resp.Message, "无权限")
+		})
+	}
+}
+
+// TestHandler_AssignGuard_NotRowLevelEnforced 已迁移至 lifecycle_contract_test.go
+// （TestAssignGuard_SQLite_NotRowLevelEnforced）：Assign 排除行级守卫的验证
+// 需要真实 production service（validateIncidentAssignee 查库），mock harness
+// 的 nil productionService 会 panic。

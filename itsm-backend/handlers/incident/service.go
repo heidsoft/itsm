@@ -73,22 +73,51 @@ func NewService(repo Repository, productionSvc *service.IncidentService, monitor
 	}
 }
 
-func (s *Service) Acknowledge(ctx context.Context, id, userID, tenantID int) error {
+// acknowledgeGuard 是 ack/resolve/close/reopen 共用的行级守卫。
+// P1-DataScope：生命周期写操作与 Update/Delete 同属"操作他人单据"风险面，
+// 写权限 ⊆ 读权限——普通角色仅可操作本人报告或受理的事件单。
+func (s *Service) acknowledgeGuard(ctx context.Context, id, actorID int, actorRole string, tenantID int) error {
+	current, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
+		return common.NewForbiddenError("无权限操作该事件单：仅报告人、受理人或管理员可执行生命周期操作")
+	}
+	return nil
+}
+
+func (s *Service) Acknowledge(ctx context.Context, id, userID, tenantID int, actorRole string) error {
+	if err := s.acknowledgeGuard(ctx, id, userID, actorRole, tenantID); err != nil {
+		return err
+	}
 	return lifecycleError(s.productionService.AcknowledgeIncident(ctx, id, userID, tenantID))
 }
 
-func (s *Service) Resolve(ctx context.Context, id, userID, tenantID int, resolution, rootCause string) error {
+func (s *Service) Resolve(ctx context.Context, id, userID, tenantID int, resolution, rootCause, actorRole string) error {
+	if err := s.acknowledgeGuard(ctx, id, userID, actorRole, tenantID); err != nil {
+		return err
+	}
 	return lifecycleError(s.productionService.ResolveIncident(ctx, id, userID, tenantID, resolution, rootCause))
 }
 
-func (s *Service) Close(ctx context.Context, id, userID, tenantID int, closeNotes string) error {
+func (s *Service) Close(ctx context.Context, id, userID, tenantID int, closeNotes, actorRole string) error {
+	if err := s.acknowledgeGuard(ctx, id, userID, actorRole, tenantID); err != nil {
+		return err
+	}
 	return lifecycleError(s.productionService.CloseIncident(ctx, id, userID, tenantID, closeNotes))
 }
 
-func (s *Service) Reopen(ctx context.Context, id, userID, tenantID int) error {
+func (s *Service) Reopen(ctx context.Context, id, userID, tenantID int, actorRole string) error {
+	if err := s.acknowledgeGuard(ctx, id, userID, actorRole, tenantID); err != nil {
+		return err
+	}
 	return lifecycleError(s.productionService.ReopenIncident(ctx, id, userID, tenantID))
 }
 
+// Assign 不纳入行级守卫：指派是"产生受理关系"的授权动作（受理人正是通过
+// assign 产生，对其做 owner/assignee 校验会循环依赖），路由层已有专用
+// incident:assign RBAC 门禁（见 router/incident_routes.go）。
 func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) error {
 	_, err := s.productionService.AssignIncident(ctx, id, assigneeID, tenantID)
 	return err
