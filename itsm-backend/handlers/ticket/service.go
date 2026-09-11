@@ -181,23 +181,55 @@ func (s *Service) AssignTicket(ctx context.Context, ticketID int, assigneeID int
 }
 
 // EscalateTicket escalates a ticket.
-func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int) (*Ticket, error) {
+// P1-DataScope：升级是生命周期写操作，与 Update/Delete 同风险面——行级校验
+// 写权限 ⊆ 读权限（普通角色仅创建人/受理人/管理员）。
+func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int, actorRole string) (*Ticket, error) {
+	if err := s.lifecycleGuard(ctx, ticketID, escalatedBy, actorRole, tenantID, "升级"); err != nil {
+		return nil, err
+	}
 	return s.repo.EscalateTicket(ctx, ticketID, reason, tenantID, escalatedBy)
 }
 
 // ResolveTicket resolves a ticket with a resolution note.
-func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int) (*Ticket, error) {
+// P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
+func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, actorID int, actorRole string) (*Ticket, error) {
+	if err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "解决"); err != nil {
+		return nil, err
+	}
 	return s.repo.ResolveTicket(ctx, ticketID, resolution, tenantID)
 }
 
 // CloseTicket closes a ticket.
-func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int) (*Ticket, error) {
+// P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
+func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, actorID int, actorRole string) (*Ticket, error) {
+	if err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "关闭"); err != nil {
+		return nil, err
+	}
 	return s.repo.CloseTicket(ctx, ticketID, tenantID)
 }
 
 // UpdateStatus updates the status of a ticket.
-func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string, tenantID int, userID int) (*Ticket, error) {
+// P1-DataScope：状态流转是生命周期写操作，行级校验对齐 Update/Delete
+// （写权限 ⊆ 读权限，普通角色仅创建人/受理人/管理员）。
+func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string, tenantID int, userID int, actorRole string) (*Ticket, error) {
+	if err := s.lifecycleGuard(ctx, ticketID, userID, actorRole, tenantID, "变更状态"); err != nil {
+		return nil, err
+	}
 	return s.repo.UpdateStatus(ctx, ticketID, status, tenantID)
+}
+
+// lifecycleGuard 是 resolve/close/escalate/updateStatus 共用的行级守卫。
+// 与 Update/Delete 的 CanWriteResource 校验语义一致：加载单据后校验
+// 写权限 ⊆ 读权限，拒绝返回 403 Forbidden AppError。
+func (s *Service) lifecycleGuard(ctx context.Context, ticketID, actorID int, actorRole string, tenantID int, action string) error {
+	current, err := s.repo.GetByID(ctx, ticketID, tenantID)
+	if err != nil {
+		return err
+	}
+	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
+		return common.NewForbiddenError(fmt.Sprintf("无权限%s该工单：仅创建人、受理人或管理员可操作", action))
+	}
+	return nil
 }
 
 // Search searches tickets by keyword.

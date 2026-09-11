@@ -328,10 +328,11 @@ func TestService_Escalate_SetsLevelAndEvent(t *testing.T) {
 	repo := newSLAMockRepository()
 	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
-	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low"})
+	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low", ReporterID: 101})
 	require.NoError(t, err)
 
-	updated, err := svc.Escalate(context.Background(), 1, created.ID, 2, "SLA breach")
+	// owner（报告人 101）升级：行级守卫放行
+	updated, err := svc.Escalate(context.Background(), 1, created.ID, 2, "SLA breach", 101, "end_user")
 	require.NoError(t, err)
 	assert.Equal(t, 2, updated.EscalationLevel)
 	assert.NotNil(t, updated.EscalatedAt)
@@ -348,13 +349,29 @@ func TestService_Escalate_SetsLevelAndEvent(t *testing.T) {
 	}, time.Second, 10*time.Millisecond)
 }
 
+// TestService_Escalate_ForeignAgentRejected 锁定 P1-DataScope 行级守卫：
+// 非 owner 普通角色升级他入事件单必须 403 Forbidden AppError。
+func TestService_Escalate_ForeignAgentRejected(t *testing.T) {
+	repo := newSLAMockRepository()
+	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
+
+	created, err := svc.Create(context.Background(), 1, &Incident{Title: "x", Priority: "low", ReporterID: 101})
+	require.NoError(t, err)
+
+	_, err = svc.Escalate(context.Background(), 1, created.ID, 2, "x", 202, "it_admin")
+	require.Error(t, err)
+	var appErr *common.AppError
+	require.ErrorAs(t, err, &appErr)
+	assert.Equal(t, common.ErrCodeForbidden, appErr.Code)
+}
+
 // TestService_Escalate_NotFound asserts the error path when the incident
 // is not visible to the supplied tenant.
 func TestService_Escalate_NotFound(t *testing.T) {
 	repo := newSLAMockRepository()
 	svc := NewService(repo, nil, nil, nil, nil, zap.NewNop().Sugar())
 
-	_, err := svc.Escalate(context.Background(), 1, 999, 1, "x")
+	_, err := svc.Escalate(context.Background(), 1, 999, 1, "x", 101, "end_user")
 	assert.Error(t, err)
 }
 

@@ -302,7 +302,11 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 				c.Set("user_id", n)
 			}
 		}
-		c.Set("role", "agent")
+		if v := c.GetHeader("X-Test-Role"); v != "" {
+			c.Set("role", v)
+		} else {
+			c.Set("role", "agent")
+		}
 		c.Next()
 	}
 
@@ -316,6 +320,7 @@ func newTestHarness(t *testing.T) (*gin.Engine, *mockRepository) {
 	api.POST("/tickets/:id/escalate", h.EscalateTicket)
 	api.POST("/tickets/:id/resolve", h.ResolveTicket)
 	api.POST("/tickets/:id/close", h.CloseTicket)
+	api.PUT("/tickets/:id/status", h.UpdateTicketStatus)
 	api.GET("/tickets/stats", h.GetTicketStats)
 	api.GET("/tickets/search", h.SearchTickets)
 
@@ -569,6 +574,78 @@ func TestHandler_WritePath_RowLevelForbidden(t *testing.T) {
 	)
 	assert.Equal(t, 200, w.Code, w.Body.String())
 	assert.NotEqual(t, "hijack", repo.tickets[id].Title, "被拒绝的修改不应落库")
+}
+
+// TestHandler_LifecycleOps_RowLevelForbidden 锁定 P1-DataScope #25 批次：
+// resolve/close/escalate/updateStatus 四个生命周期写操作与 Update/Delete
+// 同风险面——非 owner 普通角色（agent）操作他人工单必须 403，且行级
+// AppError 不得被兑底吞成 500；owner 操作正常。
+func TestHandler_LifecycleOps_RowLevelForbidden(t *testing.T) {
+	r, repo := newTestHarness(t)
+
+	// user 7 (agent) 创建工单 → requester_id=7
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "Lifecycle guard", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code)
+
+	var id int
+	for id = range repo.tickets {
+		break
+	}
+	idStr := strconv.Itoa(id)
+
+	// 非 owner（user 8, agent）四操作全部 403
+	for _, tc := range []struct {
+		name   string
+		method string
+		path   string
+		body   interface{}
+	}{
+		{"resolve 非owner拒绝", http.MethodPost, "/api/v1/tickets/" + idStr + "/resolve", dto.ResolveTicketRequest{Resolution: "fixed"}},
+		{"close 非owner拒绝", http.MethodPost, "/api/v1/tickets/" + idStr + "/close", dto.CloseTicketRequest{}},
+		{"escalate 非owner拒绝", http.MethodPost, "/api/v1/tickets/" + idStr + "/escalate", dto.EscalateTicketRequest{Reason: "breach"}},
+		{"updateStatus 非owner拒绝", http.MethodPut, "/api/v1/tickets/" + idStr + "/status", map[string]string{"status": "closed"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := doJSON(t, r, tc.method, tc.path, tc.body,
+				map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "8"},
+			)
+			assert.Equal(t, 403, w.Code, w.Body.String())
+			assert.Contains(t, w.Body.String(), "仅创建人、受理人或管理员可操作", "必须是行级守卫文案而非通用 RBAC 拒绝")
+		})
+	}
+
+	// owner（user 7）close 正常放行
+	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/close", dto.CloseTicketRequest{},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
+}
+
+// TestHandler_LifecycleOps_AdminLikeBypass 锁定管理角色全租户可写语义：
+// 非 owner 的 admin-like 角色四操作放行。
+func TestHandler_LifecycleOps_AdminLikeBypass(t *testing.T) {
+	r, repo := newTestHarness(t)
+
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "Admin bypass", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code)
+
+	var id int
+	for id = range repo.tickets {
+		break
+	}
+	idStr := strconv.Itoa(id)
+
+	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/resolve",
+		dto.ResolveTicketRequest{Resolution: "fixed by admin"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "9", "X-Test-Role": "manager"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
 }
 
 func TestHandler_AssignTicket(t *testing.T) {

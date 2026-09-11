@@ -353,11 +353,13 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	if !ok {
 		return
 	}
+	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
 	userID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
-	ticket, err := h.service.UpdateStatus(c.Request.Context(), id, req.Status, tenantID, userID)
+	ticket, err := h.service.UpdateStatus(c.Request.Context(), id, req.Status, tenantID, userID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failTicketOperation(c, err)
 		return
 	}
 
@@ -464,11 +466,13 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	escalatedBy := c.GetInt("user_id")
+	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
 
-	ticket, err := h.service.EscalateTicket(c.Request.Context(), id, req.Reason, tenantID, escalatedBy)
+	ticket, err := h.service.EscalateTicket(c.Request.Context(), id, req.Reason, tenantID, actorID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failTicketOperation(c, err)
 		return
 	}
 
@@ -498,9 +502,13 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	ticket, err := h.service.ResolveTicket(c.Request.Context(), id, resolution, tenantID)
+	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
+
+	ticket, err := h.service.ResolveTicket(c.Request.Context(), id, resolution, tenantID, actorID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failTicketOperation(c, err)
 		return
 	}
 
@@ -525,9 +533,13 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	ticket, err := h.service.CloseTicket(c.Request.Context(), id, tenantID)
+	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
+	actorID := c.GetInt("user_id")
+	actorRole := c.GetString("role")
+
+	ticket, err := h.service.CloseTicket(c.Request.Context(), id, tenantID, actorID, actorRole)
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "当前状态不允许关闭: "+err.Error())
+		failTicketOperation(c, err)
 		return
 	}
 
@@ -1158,6 +1170,17 @@ func isForbiddenErr(err error) bool {
 		return appErr.Code == common.ErrCodeForbidden
 	}
 	return false
+}
+
+// failTicketOperation 统一生命周期写操作（resolve/close/escalate/updateStatus）
+// 的错误出口：403 AppError 必须按语义分流（对齐错误映射铁律），不得掉入
+// FailWithErr 兜底被吞成 500。
+func failTicketOperation(c *gin.Context, err error) {
+	if isForbiddenErr(err) {
+		common.RespondError(c, err, "操作失败")
+		return
+	}
+	common.FailWithErr(c, err, "操作失败")
 }
 
 func isUserInputUpdateError(err error) bool {

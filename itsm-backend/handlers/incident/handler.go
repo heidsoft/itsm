@@ -1113,9 +1113,9 @@ func (h *IncidentHandler) Escalate(c *gin.Context) {
 
 	tenantID := c.GetInt("tenant_id")
 
-	updated, err := h.service.Escalate(c.Request.Context(), tenantID, id, req.EscalationLevel, req.Reason)
+	updated, err := h.service.Escalate(c.Request.Context(), tenantID, id, req.EscalationLevel, req.Reason, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		failIncidentOperation(c, err)
 		return
 	}
 

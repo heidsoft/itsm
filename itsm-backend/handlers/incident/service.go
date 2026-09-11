@@ -303,7 +303,13 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Inc
 	return updated, nil
 }
 
-func (s *Service) Escalate(ctx context.Context, tenantID int, id int, level int, reason string) (*Incident, error) {
+func (s *Service) Escalate(ctx context.Context, tenantID int, id int, level int, reason string, actorID int, actorRole string) (*Incident, error) {
+	// P1-DataScope：升级是生命周期写操作，与 ack/resolve/close/reopen 同风险面，
+	// 行级校验对齐 acknowledgeGuard（写权限 ⊆ 读权限）。
+	if err := s.acknowledgeGuard(ctx, id, actorID, actorRole, tenantID); err != nil {
+		return nil, err
+	}
+
 	current, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
