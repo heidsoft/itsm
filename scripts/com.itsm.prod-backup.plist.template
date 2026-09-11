@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ITSM prod 数据库每日定时备份（macOS launchd）
+  安装: make prod-backup-install
+  卸载: make prod-backup-uninstall
+  日志: backups/launchd.log（stdout+stderr 合并）
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.itsm.prod-backup</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO_ROOT__/scripts/prod-backup.sh</string>
+        <string>--verify</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO_ROOT__</string>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- 错过触发时间（如睡眠/关机）后开机补跑一次 -->
+    <key>StartCalendarAgent</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__REPO_ROOT__/backups/launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO_ROOT__/backups/launchd.log</string>
+</dict>
+</plist>

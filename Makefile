@@ -283,3 +283,29 @@ version: ## 显示版本信息
 	@echo "版本: $(VERSION)"
 	@echo "环境文件: $(ENV_FILE)"
 	@echo "Compose文件: $(COMPOSE_FILE)"
+
+prod-backup: ## prod 数据库备份（原子落盘+完整性校验，保留 KEEP_BACKUPS=7 份；--verify 附加完整标记校验）
+	./scripts/prod-backup.sh $(BACKUP_ARGS)
+
+prod-restore-drill: ## prod 备份恢复演练（隔离临时库恢复+行数断言，输出 RTO/RPO；可指定 DRILL_FILE=<file>）
+	./scripts/prod-restore-drill.sh $(DRILL_FILE)
+
+PLIST_LABEL=com.itsm.prod-backup
+PLIST_PATH=$(HOME)/Library/LaunchAgents/$(PLIST_LABEL).plist
+prod-backup-install: ## 安装 launchd 定时备份（每日 03:00 自动备份+完整性校验）
+	@mkdir -p $(HOME)/Library/LaunchAgents
+	sed -e "s|__REPO_ROOT__|$(CURDIR)|g" scripts/com.itsm.prod-backup.plist.template > $(PLIST_PATH)
+	launchctl unload $(PLIST_PATH) 2>/dev/null || true
+	launchctl load $(PLIST_PATH)
+	@echo "$(GREEN)launchd 备份任务已安装: $(PLIST_PATH)（每日 03:00）$(NC)"
+	@echo "查看运行日志: $(CURDIR)/backups/launchd.log"
+
+prod-backup-uninstall: ## 卸载 launchd 定时备份
+	launchctl unload $(PLIST_PATH) 2>/dev/null || true
+	rm -f $(PLIST_PATH)
+	@echo "$(GREEN)launchd 备份任务已卸载$(NC)"
+
+prod-backup-status: ## 查看 launchd 定时备份状态与最近一次运行结果
+	@if [ ! -f "$(PLIST_PATH)" ]; then echo "未安装（make prod-backup-install 安装）"; exit 0; fi
+	launchctl list | grep $(PLIST_LABEL) || echo "launchd 未加载该任务"
+	@tail -5 $(CURDIR)/backups/launchd.log 2>/dev/null || echo "尚无运行日志"
