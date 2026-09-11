@@ -15,7 +15,6 @@ import {
   Input,
   Select,
   Form,
-  App,
   Modal,
   Empty,
 } from 'antd';
@@ -25,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ChangeApi } from '@/lib/api/';
+import { notify } from '@/lib/notify';
 import type {
   ChangeType,
   ChangePriority} from '@/constants/change';
@@ -62,7 +62,6 @@ interface ChangeListProps {
 
 const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, status, risk }) => {
   const router = useRouter();
-  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Change[]>([]);
   const [total, setTotal] = useState(0);
@@ -103,7 +102,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         !('name' in error && (error as { name?: string }).name === 'ValidationError')
       ) {
         console.error('Failed to load changes:', error);
-        message.error('加载变更列表失败');
+        notify.error(error, { context: '加载变更列表' });
       }
     } finally {
       setLoading(false);
@@ -139,10 +138,10 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
       onOk: async () => {
         try {
           await ChangeApi.deleteChange(id);
-          message.success('删除成功');
+          notify.success('变更已删除');
           loadData();
         } catch (error) {
-          message.error('删除失败');
+          notify.error(error, { context: '删除变更' });
         }
       },
     });

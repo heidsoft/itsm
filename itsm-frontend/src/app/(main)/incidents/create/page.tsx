@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Tabs, Typography, Divider, Tag, Spin } from 'antd';
-import { ArrowLeft, Search, X } from 'lucide-react';
+import { ArrowLeft, Search, X, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import { IncidentCategoryOptions } from '@/constants/taxonomy';
@@ -11,9 +11,15 @@ import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { User } from '@/lib/api/user-api';
 import { UserApi } from '@/lib/api/user-api';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
+import { AIApi, type TriageResult, type RagAnswer } from '@/lib/api/ai-api';
+import { notify } from '@/lib/notify';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+
+// AI 建议回填白名单：只接受与表单选项一致的取值，避免写入无效枚举
+const PRIORITY_VALUES = ['critical', 'high', 'medium', 'low'];
+const CATEGORY_VALUES = IncidentCategoryOptions.map(option => option.value);
 
 // CI状态中文映射
 const ciStatusNameMap: Record<string, string> = {
@@ -50,6 +56,12 @@ export default function CreateIncidentPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const { handleError } = useErrorHandler();
+
+  // AI 智能辅助：分类建议 + 相似历史事件
+  // 说明：AI 建议一律「显式采纳」，不自动回填表单，避免用户不知情被改写输入
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<TriageResult | null>(null);
+  const [similarIncidents, setSimilarIncidents] = useState<RagAnswer[]>([]);
 
   // 加载用户列表
   useEffect(() => {
@@ -106,6 +118,74 @@ export default function CreateIncidentPage() {
 
   const handleRemoveCI = (ciId: number) => {
     setSelectedCIs(selectedCIs.filter(ci => ci.id !== ciId));
+  };
+
+  /**
+   * AI 智能分析：并行请求分类建议与相似历史事件。
+   * 两项独立降级——任一失败不影响另一项，避免用户产生「AI 整体不可用」的错觉。
+   */
+  const handleAIAnalyze = async () => {
+    const title: string = form.getFieldValue('title') || '';
+    const description: string = form.getFieldValue('description') || '';
+
+    if (!title.trim() && !description.trim()) {
+      notify.warning('请先填写事件标题或描述，AI 才能据此给出建议');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiSuggestion(null);
+    setSimilarIncidents([]);
+
+    const [triageRes, similarRes] = await Promise.allSettled([
+      AIApi.triage(title, description),
+      AIApi.similarIncidents(`${title} ${description}`.trim(), 3),
+    ]);
+
+    let hasResult = false;
+    if (triageRes.status === 'fulfilled' && triageRes.value) {
+      setAiSuggestion(triageRes.value);
+      hasResult = true;
+    }
+    if (similarRes.status === 'fulfilled' && similarRes.value?.incidents?.length) {
+      setSimilarIncidents(similarRes.value.incidents);
+      hasResult = true;
+    }
+
+    setAiLoading(false);
+
+    if (!hasResult) {
+      notify.aiUnavailable('AI 智能分析');
+    }
+  };
+
+  /** 采纳 AI 建议：仅回填白名单内且有值的字段，并明确告知采纳了哪些 */
+  const handleApplySuggestion = () => {
+    if (!aiSuggestion) return;
+
+    const patch: Record<string, unknown> = {};
+    const applied: string[] = [];
+
+    if (aiSuggestion.priority && PRIORITY_VALUES.includes(aiSuggestion.priority)) {
+      patch.priority = aiSuggestion.priority;
+      applied.push('优先级');
+    }
+    if (aiSuggestion.urgency && PRIORITY_VALUES.includes(aiSuggestion.urgency)) {
+      patch.urgency = aiSuggestion.urgency;
+      applied.push('紧急度');
+    }
+    if (aiSuggestion.category && CATEGORY_VALUES.includes(aiSuggestion.category)) {
+      patch.category = aiSuggestion.category;
+      applied.push('分类');
+    }
+
+    if (applied.length === 0) {
+      notify.warning('AI 建议的字段与当前表单选项不匹配，请手动选择');
+      return;
+    }
+
+    form.setFieldsValue(patch);
+    notify.success(`已采纳 ${applied.join('、')}，你仍可手动调整`);
   };
 
   const handleSubmit = async (values: IncidentFormValues) => {
@@ -197,6 +277,127 @@ export default function CreateIncidentPage() {
                             data-testid="incident-description-input"
                           />
                         </Form.Item>
+
+                        {/* AI 智能辅助：分类建议 + 相似历史事件 */}
+                        <div className="mb-4">
+                          <Button
+                            icon={<Sparkles />}
+                            onClick={handleAIAnalyze}
+                            loading={aiLoading}
+                            data-testid="incident-ai-analyze-btn"
+                          >
+                            {aiLoading ? 'AI 分析中…' : 'AI 智能分析'}
+                          </Button>
+                          <Text type="secondary" className="ml-2" style={{ fontSize: 12 }}>
+                            根据标题与描述推荐优先级/分类，并检索相似历史事件作为参考
+                          </Text>
+                        </div>
+
+                        {aiSuggestion && (
+                          <Card
+                            size="small"
+                            className="mb-4"
+                            title={
+                              <Space>
+                                <Sparkles size={14} />
+                                <span>AI 分类建议</span>
+                                <Tag color="blue">
+                                  置信度{' '}
+                                  {Math.round(
+                                    aiSuggestion.confidence > 1
+                                      ? aiSuggestion.confidence
+                                      : aiSuggestion.confidence * 100
+                                  )}
+                                  %
+                                </Tag>
+                              </Space>
+                            }
+                            extra={
+                              <Button
+                                type="link"
+                                size="small"
+                                onClick={handleApplySuggestion}
+                                data-testid="incident-ai-apply-btn"
+                              >
+                                采纳建议
+                              </Button>
+                            }
+                          >
+                            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                              <Space wrap size={4}>
+                                {aiSuggestion.priority && (
+                                  <Tag color="red">优先级：{aiSuggestion.priority}</Tag>
+                                )}
+                                {aiSuggestion.urgency && (
+                                  <Tag color="orange">紧急度：{aiSuggestion.urgency}</Tag>
+                                )}
+                                {aiSuggestion.category && (
+                                  <Tag color="purple">分类：{aiSuggestion.category}</Tag>
+                                )}
+                              </Space>
+                              {aiSuggestion.explanation && (
+                                <Text type="secondary" style={{ fontSize: 12 }}>
+                                  依据：{aiSuggestion.explanation}
+                                </Text>
+                              )}
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                建议仅供参考，需你点击「采纳建议」后才会写入表单。
+                              </Text>
+                            </Space>
+                          </Card>
+                        )}
+
+                        {similarIncidents.length > 0 && (
+                          <Card size="small" className="mb-4" title="相似历史事件">
+                            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                              {similarIncidents.map(item => (
+                                <div
+                                  key={`${item.objectType}-${item.id}`}
+                                  style={{
+                                    borderLeft: '3px solid #d9d9d9',
+                                    paddingLeft: 8,
+                                  }}
+                                >
+                                  <Space size={6} wrap>
+                                    <a
+                                      href={`/incidents/${item.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{ fontWeight: 500 }}
+                                    >
+                                      {item.title || `事件 #${item.id}`}
+                                    </a>
+                                    {typeof item.score === 'number' && (
+                                      <Tag>匹配度 {Math.round(item.score * 100)}%</Tag>
+                                    )}
+                                    {item.authorityLevel !== undefined && (
+                                      <Tag color={item.authorityLevel >= 20 ? 'green' : 'default'}>
+                                        {item.authorityLevel >= 30
+                                          ? '唯一真相源'
+                                          : item.authorityLevel >= 20
+                                            ? '官方标准'
+                                            : item.authorityLevel >= 10
+                                              ? '部门推荐'
+                                              : '普通'}
+                                      </Tag>
+                                    )}
+                                  </Space>
+                                  {item.snippet && (
+                                    <div
+                                      style={{
+                                        color: 'rgba(0,0,0,0.45)',
+                                        fontSize: 12,
+                                        marginTop: 2,
+                                      }}
+                                    >
+                                      {item.snippet}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </Space>
+                          </Card>
+                        )}
 
                         <Row gutter={16}>
                           <Col span={8}>
