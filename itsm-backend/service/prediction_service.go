@@ -30,14 +30,23 @@ func NewPredictionService(client *ent.Client, logger *zap.SugaredLogger) *Predic
 func (s *PredictionService) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (*dto.TrendPredictionResponse, error) {
 	s.logger.Infow("Getting trend prediction", "tenant_id", tenantID, "type", req.PredictionType)
 
-	// 解析时间范围
-	startTime, err := time.Parse("2006-01-02", req.TimeRange[0])
-	if err != nil {
-		return nil, fmt.Errorf("invalid start time format: %w", err)
-	}
-	endTime, err := time.Parse("2006-01-02", req.TimeRange[1])
-	if err != nil {
-		return nil, fmt.Errorf("invalid end time format: %w", err)
+	// 解析时间范围:若客户端未传 timeRange,默认「过去 6 个月 → 今天」(与 handlers/ai 的
+	// 预测默认窗口语义一致)。之前直接索引 req.TimeRange[0] 会 panic,前端一旦不带参数就 500。
+	var startTime, endTime time.Time
+	if len(req.TimeRange) == 2 {
+		var err error
+		startTime, err = time.Parse("2006-01-02", req.TimeRange[0])
+		if err != nil {
+			return nil, fmt.Errorf("invalid start time format: %w", err)
+		}
+		endTime, err = time.Parse("2006-01-02", req.TimeRange[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid end time format: %w", err)
+		}
+	} else {
+		endTime = time.Now()
+		startTime = endTime.AddDate(0, -6, 0)
+		s.logger.Warnw("prediction request missing timeRange, using last 6 months as default", "start", startTime, "end", endTime)
 	}
 
 	// 获取历史数据（最近6个月）

@@ -237,6 +237,10 @@ services:
       - LOG_LEVEL=debug
       - LOG_PATH=/app/logs
 
+      # WebSocket upgrader 默认只允许 same-origin。前端在 3000 端口直连后端 8090,
+      # 必须显式放行 origin,否则握手返回 403。
+      - WEBSOCKET_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://0.0.0.0:3000
+
       # 对象存储
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ROOT_USER=minioadmin
@@ -348,6 +352,8 @@ services:
       # - NEXT_PUBLIC_API_URL=http://localhost:8090
       - NEXT_PUBLIC_ENABLE_AI=true
       - NEXT_PUBLIC_ENABLE_SWAGGER=true
+      # WebSocket 必须绕过 Next.js BFF(BFF 用 fetch,无法升级 WS 协议)
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8090/api/v1/ws/notifications
       # dev server 启用 Turbopack（webpack 在 Docker VM 冷编译 /login 实测 89.5s）；
       # 置 0 可回退 webpack。不影响 next build（build 固定 NEXT_DISABLE_TURBOPACK=1）
       - NEXT_DEV_TURBOPACK=${NEXT_DEV_TURBOPACK:-1}

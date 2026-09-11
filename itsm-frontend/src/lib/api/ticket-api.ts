@@ -36,7 +36,9 @@ export class TicketApi {
   }
 
   // Get ticket details
-  static async getTicket(id: number): Promise<Ticket> {
+  // id 支持数字 ID 与业务工单号(TKT-202609-000010):
+  // 后端 GET /tickets/:id 在 Atoi 失败时会 fallback 到 GetTicketByNumber。
+  static async getTicket(id: number | string): Promise<Ticket> {
     return handleApiRequest(httpClient.get<Ticket>(`/api/v1/tickets/${id}`), {
       errorMessage: 'Failed to fetch ticket details',
     });

@@ -611,6 +611,16 @@ func (s *Service) GetDeepAnalytics(ctx context.Context, req *dto.DeepAnalyticsRe
 }
 
 func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredictionRequest, tenantID int) (interface{}, error) {
+	// 前端不带 timeRange 时默认为「过去 6 个月 → 今天」。
+	// 否则 req.TimeRange[0/1] 会 panic,与 prediction_service.go 行为对齐。
+	if len(req.TimeRange) != 2 {
+		now := time.Now()
+		req.TimeRange = []string{
+			now.AddDate(0, -6, 0).Format("2006-01-02"),
+			now.Format("2006-01-02"),
+		}
+	}
+
 	// Try to use AI-Native SLAForecastSkill first
 	if s.slaForecastSkill != nil {
 		input := &service.ForecastInput{

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Button,
@@ -103,6 +104,8 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
   ticketDescription,
   ticketCategory,
 }) => {
+  const router = useRouter();
+
   // 状态管理
   const [recommendations, setRecommendations] = useState<SolutionRecommendation[]>([]);
   const [associations, setAssociations] = useState<KnowledgeAssociation[]>([]);
@@ -266,7 +269,12 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key="view" type="link" icon={<Eye />}>
+                  <Button
+                    key="view"
+                    type="link"
+                    icon={<Eye />}
+                    onClick={() => router.push(`/knowledge/articles/${item.id}`)}
+                  >
                     查看
                   </Button>,
                   <Button key="associate" type="link" icon={<Link />}>
@@ -376,7 +384,12 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key="view" type="link" icon={<Eye />}>
+                  <Button
+                    key="view"
+                    type="link"
+                    icon={<Eye />}
+                    onClick={() => router.push(`/knowledge/articles/${item.articleId}`)}
+                  >
                     查看
                   </Button>,
                   <Button
@@ -449,7 +462,12 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key="view" type="link" icon={<Eye />}>
+                  <Button
+                    key="view"
+                    type="link"
+                    icon={<Eye />}
+                    onClick={() => router.push(`/knowledge/articles/${item.id}`)}
+                  >
                     查看
                   </Button>,
                   <Button key="associate" type="link" icon={<Link />}>
@@ -527,7 +545,12 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                 renderItem={item => (
                   <List.Item
                     actions={[
-                      <Button key="view" type="link" icon={<Eye />}>
+                      <Button
+                        key="view"
+                        type="link"
+                        icon={<Eye />}
+                        onClick={() => router.push(`/knowledge/articles/${item.id}`)}
+                      >
                         查看
                       </Button>,
                       <Button

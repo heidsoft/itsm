@@ -151,18 +151,42 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
       <Spin spinning={loading}>
         {!data || points.length === 0 ? (
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无预测数据" />
-        ) : (
-          <>
-            <Space size="large" className="mb-3" wrap>
-              <Text type="secondary">
-                模型：<Tag color="blue">{data.model}</Tag>
-              </Text>
-              <Text type="secondary">
-                整体置信度：
-                <Tag color={data.confidence >= 0.8 ? 'green' : 'orange'}>
-                  {(data.confidence * 100).toFixed(0)}%
-                </Tag>
-              </Text>
+        ) : (() => {
+          // 后端 predictedValue 全 0(历史样本不足)时,即使置信度返回高值也是误导。
+          // 这里给出「样本不足」的明确提示,避免渲染一条全 0 的曲线给用户。
+          const allZero = points.every(p => !p.predictedValue);
+          if (allZero) {
+            return (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <Space orientation="vertical" size={4}>
+                    <span>当前时间窗口内历史工单样本不足,暂无可信预测。</span>
+                    <Text type="secondary">
+                      模型:<Tag color="blue">{data.model}</Tag>
+                      整体置信度:
+                      <Tag color="orange">
+                        {(data.confidence * 100).toFixed(0)}%
+                      </Tag>
+                      (仅供参考,不建议作为决策依据)
+                    </Text>
+                  </Space>
+                }
+              />
+            );
+          }
+          return (
+            <>
+              <Space size="large" className="mb-3" wrap>
+                <Text type="secondary">
+                  模型：<Tag color="blue">{data.model}</Tag>
+                </Text>
+                <Text type="secondary">
+                  整体置信度：
+                  <Tag color={data.confidence >= 0.8 ? 'green' : 'orange'}>
+                    {(data.confidence * 100).toFixed(0)}%
+                  </Tag>
+                </Text>
               {summary && (
                 <>
                   <Text type="secondary">
@@ -180,7 +204,8 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
 
             <PredictionList points={points} />
           </>
-        )}
+        );
+        })()}
       </Spin>
 
       <Text type="secondary" className="mt-2 block text-xs">
