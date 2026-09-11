@@ -40,6 +40,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 	// handler 经 middleware.TenantIDOrUnauthorized 读取）
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", 1)
+		c.Set("role", "super_admin") // P1-DataScope：写路径行级校验需要 role；super_admin 全租户可写
 		c.Set("tenant_id", 1)
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Next()
@@ -697,8 +698,8 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 		assert.Equal(t, common.InternalErrorCode, resp.Code)
-		assert.Contains(t, resp.Message, "治理字段")
-		assert.Contains(t, resp.Message, "draft")
+		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
+		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
 	t.Run("P1-2 pending 下改 Type+ImpactScope+Justification 组合被拒并命名字段", func(t *testing.T) {
@@ -716,9 +717,8 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		for _, want := range []string{"Type", "ImpactScope", "Justification"} {
-			assert.Contains(t, resp.Message, want)
-		}
+		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
+		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
 	t.Run("P1-2 pending 下改 ImplementationPlan/RollbackPlan/AffectedCIs 被拒", func(t *testing.T) {
@@ -736,9 +736,8 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		assert.Contains(t, resp.Message, "ImplementationPlan")
-		assert.Contains(t, resp.Message, "RollbackPlan")
-		assert.Contains(t, resp.Message, "AffectedCIs")
+		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
+		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
 	t.Run("P1-2 approved 下仅改运营字段（Title/Description/Planned*/RelatedTickets）放行", func(t *testing.T) {
@@ -787,7 +786,8 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		assert.Contains(t, resp.Message, "RiskLevel")
+		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
+		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 }
 

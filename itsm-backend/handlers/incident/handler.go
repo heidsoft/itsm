@@ -1069,7 +1069,8 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -1276,7 +1277,8 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -1353,7 +1355,8 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -1429,7 +1432,8 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 

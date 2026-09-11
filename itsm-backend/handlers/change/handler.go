@@ -473,7 +473,8 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		common.InternalError(c, "更新变更失败: "+err.Error())
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "更新变更失败")
 		return
 	}
 
@@ -750,7 +751,8 @@ func (h *Handler) AssignChange(c *gin.Context) {
 	existing.AssigneeID = &req.AssigneeID
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		common.InternalError(c, "分配变更失败: "+err.Error())
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "分配变更失败")
 		return
 	}
 	common.Success(c, toDTO(res))
@@ -807,7 +809,8 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 	actorRole := c.GetString("role")
 
 	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
-		common.InternalError(c, "删除变更失败: "+err.Error())
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "删除变更失败")
 		return
 	}
 	common.Success(c, gin.H{"message": "deleted"})

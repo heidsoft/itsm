@@ -517,7 +517,8 @@ func (h *Handler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, actorID, actorRole)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
