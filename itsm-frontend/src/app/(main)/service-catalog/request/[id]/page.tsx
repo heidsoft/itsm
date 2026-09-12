@@ -160,17 +160,25 @@ export default function ServiceCatalogRequestPage() {
             showIcon
             className="mb-4"
             message={
-              <Space>
-                <Text strong>{catalog.name}</Text>
-                {catalog.deliveryTime != null && (
-                  <Tag icon={<Clock />} color="blue">
-                    交付时长 {catalog.deliveryTime} 天
-                  </Tag>
-                )}
-                {catalog.category && <Tag>{catalog.category}</Tag>}
-              </Space>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <Text strong className="!text-base">
+                  {catalog.name}
+                </Text>
+                <Space size={4} wrap>
+                  {catalog.deliveryTime != null && catalog.deliveryTime > 0 && (
+                    <Tag icon={<Clock />} color="blue">
+                      交付时长 {catalog.deliveryTime} 天
+                    </Tag>
+                  )}
+                  {catalog.category && <Tag>{catalog.category}</Tag>}
+                </Space>
+              </div>
             }
-            description={catalog.description}
+            description={
+              catalog.description ? (
+                <div className="text-gray-600 leading-relaxed">{catalog.description}</div>
+              ) : null
+            }
           />
         )}
 
