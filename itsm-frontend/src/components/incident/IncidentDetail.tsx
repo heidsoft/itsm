@@ -30,6 +30,7 @@ import { useRouter, useParams } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { IncidentAPI } from '@/lib/api/';
+import type { CreateIncidentClassificationRequest } from '@/lib/api/incident-api';
 import { UserApi } from '@/lib/api/user-api';
 import type { User } from '@/lib/api/user-api';
 import {
@@ -42,6 +43,12 @@ import type { Incident } from '@/types/biz/incident';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { SafeContent, SafeTextBlock } from '@/components/common/SafeContent';
 import { isValidIncidentTransition } from '@/lib/utils/workflow-state-machine';
+
+// 事件分类弹窗表单值：incidentId 由当前事件决定，置信度与自动分类标记由前端固定填充。
+type IncidentClassificationFormValues = Omit<
+  CreateIncidentClassificationRequest,
+  'incidentId' | 'classificationConfidence' | 'autoClassified'
+>;
 
 // 根因分析类型
 interface RootCauseData {
@@ -463,11 +470,11 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   };
 
   // 保存事件分类
-  const handleSaveCategory = async (values: any) => {
+  const handleSaveCategory = async (values: IncidentClassificationFormValues) => {
     if (!data) return;
     setSavingAnalysis(true);
     try {
-      const request = {
+      const request: CreateIncidentClassificationRequest = {
         incidentId: data.id,
         category: values.category,
         subcategory: values.subcategory,
@@ -479,25 +486,24 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         autoClassified: false,
       };
 
-      if (classificationData?.id) {
-        await IncidentAPI.updateIncidentClassification(classificationData.id, request);
-        message.success('事件分类已更新');
-      } else {
-        await IncidentAPI.createIncidentClassification(request);
-        message.success('事件分类已创建');
-      }
-
-      // 同时更新事件的基本分类信息
-      await IncidentAPI.updateIncident(data.id, {
-        category: values.category,
-        subcategory: values.subcategory,
-      });
+      // 分类接口在后端就是「更新事件」的同一用例（UpdateClassification -> service.Update），
+      // 它已经把 category/subcategory 落到事件行并推进了乐观锁 version。此处若再补一次
+      // PUT /incidents/:id，携带的是 POST 之前读到的 version，必然被判为并发冲突并弹出
+      // 「事件已被修改」——数据其实已保存成功。一次用户操作只发一次写请求。
+      // 后端 GetClassification 只返回 {incidentId, category, subcategory}，永远没有 id，
+      // 故不存在「更新已有分类」分支；POST 即唯一且幂等的写入口。
+      await IncidentAPI.createIncidentClassification(request);
+      message.success('事件分类已保存');
 
       setCategoryModalVisible(false);
       loadAnalysisData();
       loadData(); // 刷新事件基本信息
     } catch (error) {
-      handleError(error, 'saveCategory', '保存事件分类失败');
+      // handleError 只接受 (error, context)，第三个参数会被静默丢弃，用户看不到任何
+      // 提示；这里显式展示后端的语义化文案（冲突 4090 / 越权 2003）。
+      handleError(error, 'saveCategory');
+      const detail = error instanceof Error ? error.message : '';
+      message.error(detail || '保存事件分类失败');
     } finally {
       setSavingAnalysis(false);
     }

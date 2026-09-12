@@ -347,6 +347,8 @@ func (h *IncidentHandler) Create(c *gin.Context) {
 		Description:    req.Description,
 		Priority:       req.Priority,
 		Severity:       req.Severity,
+		Impact:         req.Impact,
+		Urgency:        req.Urgency,
 		Category:       req.Category,
 		Subcategory:    req.Subcategory,
 		ImpactAnalysis: dto.StructToMap(req.ImpactAnalysis),
@@ -1073,6 +1075,9 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 	if req.ResolutionSteps != nil {
 		updates.ResolutionSteps = dto.StructSliceToMapSlice(req.ResolutionSteps)
 	}
+	// 乐观锁版本透传：Version 是可选契约（0 = 客户端未提供），是否参与冲突判定由
+	// service.Update 的 `> 0` 守卫决定，与 legacy incident/ticket service 一致。
+	updates.Version = req.Version
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
@@ -1151,11 +1156,15 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 		Status:                i.Status,
 		Priority:              i.Priority,
 		Severity:              i.Severity,
+		Impact:                i.Impact,
+		Urgency:               i.Urgency,
 		IncidentNumber:        i.IncidentNumber,
 		ReporterID:            i.ReporterID,
 		AssigneeID:            i.AssigneeID,
 		Category:              i.Category,
 		Subcategory:           i.Subcategory,
+		Version:               i.Version,
+		IsMajorIncident:       i.IsMajorIncident,
 		ImpactAnalysis:        impactAnalysis,
 		RootCause:             rootCause,
 		ResolutionSteps:       resolutionSteps,

@@ -242,7 +242,16 @@ func TestGoldenJourney_IncidentResolvedAndClosed(t *testing.T) {
 	other, err := svc.Create(ctx, 11, &Incident{Title: "非法跃迁样本", ReporterID: 101})
 	require.NoError(t, err)
 	_, err = svc.Update(ctx, 11, other.ID, &Incident{Status: "closed"}, 101, "agent")
-	require.ErrorContains(t, err, "invalid incident status transition")
+	require.Error(t, err, "new → closed 属于非法跃迁，必须被拒绝")
+	// 非法跃迁必须归一化成 4090 业务冲突，而不是把内部英文错误串泄漏给客户端
+	// 后由 handler 兜底成 500/5001。
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "非法状态迁移必须返回 *common.BusinessError")
+	assert.Equal(t, common.ConflictCode, bizErr.Code, "非法状态迁移的业务码必须是 4090")
+	assert.NotEmpty(t, bizErr.Message, "必须给出面向用户的冲突提示")
+	assert.NotContains(t, bizErr.Message, "invalid incident status transition",
+		"不得把内部错误串当作客户端文案")
+
 	_, err = svc.Get(ctx, other.ID, 12)
 	require.Error(t, err, "cross-tenant direct ID must fail closed")
 }

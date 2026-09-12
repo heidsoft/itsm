@@ -2,11 +2,16 @@ package incident
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 )
+
+// ErrStaleVersion 表示条件更新未命中任何行：读取快照后版本已被并发写入推进。
+// service 层须将其映射为 409 冲突（提示刷新重试），不得退化成 500。
+var ErrStaleVersion = errors.New("incident: stale version on conditional update")
 
 // Repository defines the interface for incident data access
 type Repository interface {
@@ -14,6 +19,8 @@ type Repository interface {
 	Create(ctx context.Context, incident *Incident) (*Incident, error)
 	Get(ctx context.Context, id int, tenantID int) (*Incident, error)
 	List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Incident, int, error)
+	// Update 按 id + tenant_id + version 做条件更新并自增 version；
+	// 传入的 incident.Version 必须是本次读取到的当前版本，未命中时返回 ErrStaleVersion。
 	Update(ctx context.Context, incident *Incident) (*Incident, error)
 	Delete(ctx context.Context, id int, tenantID int) error
 	GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error)

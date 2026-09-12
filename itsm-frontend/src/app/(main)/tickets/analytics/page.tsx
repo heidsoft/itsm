@@ -228,7 +228,7 @@ const TicketAnalytics: React.FC = () => {
 
   // 总览 tab：KPI + 趋势 + 分布图
   const overviewTab = (
-    <Space direction="vertical" size="middle" className="w-full">
+    <Space orientation="vertical" size="middle" className="w-full">
       <Row gutter={[16, 16]}>
         <Col xs={12} sm={8} lg={4}>
           <Card size="small">

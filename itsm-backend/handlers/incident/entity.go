@@ -12,10 +12,14 @@ type Incident struct {
 	Status                string // new, in_progress, resolved, closed
 	Priority              string // low, medium, high, urgent
 	Severity              string // low, medium, high, critical
+	Impact                string // low, medium, high, critical
+	Urgency               string // low, medium, high, critical
 	IncidentNumber        string
 	ReporterID            int
 	AssigneeID            *int
 	ConfigurationItemID   *int
+	Version               int
+	IsMajorIncident       bool
 	Category              string `json:"category"`
 	Subcategory           string `json:"subcategory"`
 	ImpactAnalysis        map[string]interface{}

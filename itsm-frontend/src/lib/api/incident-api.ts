@@ -59,6 +59,8 @@ export interface Incident {
   resolutionCode?: string;
   problemId?: number; // 关联的问题ID
   escalationLevel?: number;
+  /** 乐观锁版本号，更新时必须原样回传，否则并发修改会被静默覆盖 */
+  version?: number;
   impactAnalysis?: {
     businessImpact?: {
       affectedUsers?: number;
@@ -207,6 +209,7 @@ export interface UpdateIncidentRequest {
   title?: string;
   description?: string;
   priority?: string;
+  severity?: string;
   type?: string;
   status?: string;
   assigneeId?: number;

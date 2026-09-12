@@ -32,6 +32,25 @@ func NewEntRepository(client *ent.Client) *EntRepository {
 	}
 }
 
+// optionalTime 保留 NULL 语义：ent 的 Optional 非 Nillable 时间字段把 DB NULL
+// 读成零值，直接取地址会伪造出「指向 0001-01-01 的非 nil 指针」，写路径据 != nil
+// 判断再把零值落库，从而不可逆地污染 resolved_at / closed_at。
+func optionalTime(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
+}
+
+// optionalID 同理保留「未设置」语义，避免 NULL 外键被读成指向 0 的指针，
+// 使「未分配」与「分配给用户 0」不可区分。
+func optionalID(id int) *int {
+	if id <= 0 {
+		return nil
+	}
+	return &id
+}
+
 // toDomain converts ent.Incident to domain Incident
 func (r *EntRepository) toDomain(e *ent.Incident) *Incident {
 	if e == nil {
@@ -44,10 +63,14 @@ func (r *EntRepository) toDomain(e *ent.Incident) *Incident {
 		Status:                e.Status,
 		Priority:              e.Priority,
 		Severity:              e.Severity,
+		Impact:                e.Impact,
+		Urgency:               e.Urgency,
 		IncidentNumber:        e.IncidentNumber,
 		ReporterID:            e.ReporterID,
-		AssigneeID:            &e.AssigneeID,
-		ConfigurationItemID:   &e.ConfigurationItemID,
+		AssigneeID:            optionalID(e.AssigneeID),
+		ConfigurationItemID:   optionalID(e.ConfigurationItemID),
+		Version:               e.Version,
+		IsMajorIncident:       e.IsMajorIncident,
 		Category:              e.Category,
 		Subcategory:           e.Subcategory,
 		ImpactAnalysis:        e.ImpactAnalysis,
@@ -55,17 +78,17 @@ func (r *EntRepository) toDomain(e *ent.Incident) *Incident {
 		ResolutionSteps:       e.ResolutionSteps,
 		Metadata:              e.Metadata,
 		DetectedAt:            e.DetectedAt,
-		ResolvedAt:            &e.ResolvedAt,
-		SLADefinitionID:       &e.SLADefinitionID,
-		SLAResponseDeadline:   &e.SLAResponseDeadline,
-		SLAResolutionDeadline: &e.SLAResolutionDeadline,
-		SLAFirstResponseAt:    &e.SLAFirstResponseAt,
-		SLAResolvedAt:         &e.SLAResolvedAt,
+		ResolvedAt:            optionalTime(e.ResolvedAt),
+		SLADefinitionID:       optionalID(e.SLADefinitionID),
+		SLAResponseDeadline:   optionalTime(e.SLAResponseDeadline),
+		SLAResolutionDeadline: optionalTime(e.SLAResolutionDeadline),
+		SLAFirstResponseAt:    optionalTime(e.SLAFirstResponseAt),
+		SLAResolvedAt:         optionalTime(e.SLAResolvedAt),
 		SLAStatus:             e.SLAStatus,
-		SLAPausedAt:           &e.SLAPausedAt,
+		SLAPausedAt:           optionalTime(e.SLAPausedAt),
 		SLAPauseReason:        e.SLAPauseReason,
-		ClosedAt:              &e.ClosedAt,
-		EscalatedAt:           &e.EscalatedAt,
+		ClosedAt:              optionalTime(e.ClosedAt),
+		EscalatedAt:           optionalTime(e.EscalatedAt),
 		EscalationLevel:       e.EscalationLevel,
 		IsAutomated:           e.IsAutomated,
 		Source:                e.Source,
@@ -135,6 +158,7 @@ func (r *EntRepository) Create(ctx context.Context, i *Incident) (*Incident, err
 		SetMetadata(i.Metadata).
 		SetDetectedAt(i.DetectedAt).
 		SetIsAutomated(i.IsAutomated).
+		SetIsMajorIncident(i.IsMajorIncident).
 		SetTenantID(i.TenantID).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now())
@@ -144,6 +168,14 @@ func (r *EntRepository) Create(ctx context.Context, i *Incident) (*Incident, err
 	}
 	if i.ConfigurationItemID != nil {
 		query.SetConfigurationItemID(*i.ConfigurationItemID)
+	}
+	// ent schema 对 impact/urgency 的 Validate 拒绝空串，留空时必须让 Default("medium")
+	// 生效，因此仅在调用方显式给出值时写入。
+	if i.Impact != "" {
+		query.SetImpact(i.Impact)
+	}
+	if i.Urgency != "" {
+		query.SetUrgency(i.Urgency)
 	}
 	if i.ResolvedAt != nil {
 		query.SetResolvedAt(*i.ResolvedAt)
@@ -228,12 +260,20 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, error) {
 	// P1-infra 修复：写路径强制租户隔离 + 软删守卫，避免越权更新与已软删记录被
 	// 覆盖（此前缺 TenantIDEQ / DeletedAtIsNil，并发陈旧快照上状态机判定失效）。
+	// P1-乐观锁修复：追加 VersionEQ 条件并 AddVersion(1)。此前是 read-then-
+	// unconditional-write，UpdateIncidentRequest.Version 从未被消费，陈旧客户端可
+	// 静默覆盖他人写入；且版本不自增，使 lifecycle 操作的 CAS 也失去意义。
+	// impact/urgency/is_major_incident 不在此写回：ent schema 的 Validate 拒绝空串，
+	// 且本包没有任何路径经 Update 修改它们（SetIsMajorIncident 在 legacy service 内
+	// 直接操作 ent），原样回写只会引入校验失败风险。
 	u := r.client.Incident.UpdateOneID(i.ID).
 		Where(
 			incident.TenantIDEQ(i.TenantID),
 			incident.DeletedAtIsNil(),
+			incident.VersionEQ(i.Version),
 		).
 		SetUpdatedAt(time.Now()).
+		AddVersion(1).
 		SetTitle(i.Title).
 		SetDescription(i.Description).
 		SetStatus(i.Status).
@@ -262,6 +302,11 @@ func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, err
 
 	saved, err := u.Save(ctx)
 	if err != nil {
+		// 调用方已先经 Get 校验过存在性与租户归属，此处未命中只可能是版本被并发
+		// 推进或记录在读写之间被软删，两者都属于陈旧快照冲突而非资源不存在。
+		if ent.IsNotFound(err) {
+			return nil, ErrStaleVersion
+		}
 		return nil, err
 	}
 	return r.toDomain(saved), nil

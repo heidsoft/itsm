@@ -237,13 +237,32 @@ func (s *Service) GetUserNames(ctx context.Context, tenantID int, ids []int) (ma
 
 // Update 更新事件单。P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，
 // 普通角色仅可修改本人报告或受理的事件单（datascope.CanWriteResource）。
+//
+// 所有错误在边界统一经 lifecycleError 归一化：handler 走 common.RespondError，
+// 它只识别 *AppError 与 *BusinessError，裸的领域哨兵（非法状态迁移、版本冲突、
+// ent not-found）会掉进 500 兜底。集中在一处归一化可避免漏掉某条 return 路径。
 func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Incident, actorID int, actorRole string) (*Incident, error) {
+	updated, err := s.updateIncident(ctx, tenantID, id, updates, actorID, actorRole)
+	if err != nil {
+		return nil, lifecycleError(err)
+	}
+	return updated, nil
+}
+
+func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, updates *Incident, actorID int, actorRole string) (*Incident, error) {
 	current, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.ReporterID, current.AssigneeID) {
 		return nil, common.NewForbiddenError("无权限修改该事件单：仅报告人、受理人或管理员可操作")
+	}
+
+	// 客户端乐观锁：updates.Version 由 handler 从 UpdateIncidentRequest.Version 注入。
+	// 该字段是指针语义的可选值，仅在客户端确实带了版本（>0）时校验；未带版本的旧
+	// 调用方仍受仓储层 VersionEQ 条件更新保护，不会退化成静默覆盖。
+	if updates.Version > 0 && updates.Version != current.Version {
+		return nil, fmt.Errorf("%w: client=%d current=%d", service.ErrIncidentVersionConflict, updates.Version, current.Version)
 	}
 
 	// Apply updates
@@ -262,7 +281,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Inc
 		// 旧逻辑允许终态（closed/cancelled）事件被任意改写回 active，
 		// 也允许从 new 直接跳到 resolved 绕过处理流程。
 		if !common.IsValidIncidentStatusTransition(current.Status, updates.Status) {
-			return nil, fmt.Errorf("invalid incident status transition from '%s' to '%s'", current.Status, updates.Status)
+			return nil, fmt.Errorf("%w: from '%s' to '%s'", service.ErrIncidentInvalidTransition, current.Status, updates.Status)
 		}
 		current.Status = updates.Status
 		if updates.Status == "resolved" {
@@ -283,7 +302,30 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Inc
 	if updates.AssigneeID != nil {
 		current.AssigneeID = updates.AssigneeID
 	}
-	// ... other fields
+	// 修复：handler 已把 Category/Subcategory/Metadata/ImpactAnalysis/RootCause/
+	// ResolutionSteps 从请求映射到 updates，此处却只留了 "// ... other fields"
+	// 占位注释，导致 PUT 返回 code 0 但这六个字段被静默丢弃（IncidentDetail 的
+	// 「保存事件分类」与事件编辑页的分类字段因此完全失效）。
+	// map/slice 用 nil 判断，使客户端显式传空值仍能清空字段；string 沿用本函数
+	// 既有的真值约定（清空文本字段的能力见 Update 的指针化改造事项）。
+	if updates.Category != "" {
+		current.Category = updates.Category
+	}
+	if updates.Subcategory != "" {
+		current.Subcategory = updates.Subcategory
+	}
+	if updates.Metadata != nil {
+		current.Metadata = updates.Metadata
+	}
+	if updates.ImpactAnalysis != nil {
+		current.ImpactAnalysis = updates.ImpactAnalysis
+	}
+	if updates.RootCause != nil {
+		current.RootCause = updates.RootCause
+	}
+	if updates.ResolutionSteps != nil {
+		current.ResolutionSteps = updates.ResolutionSteps
+	}
 
 	updated, err := s.repo.Update(ctx, current)
 	if err != nil {
@@ -303,7 +345,17 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, updates *Inc
 	return updated, nil
 }
 
+// Escalate 升级事件。与 Update 同理，错误在边界统一经 lifecycleError 归一化，
+// 避免行级守卫的 ent not-found 与仓储条件更新未命中退化成 500。
 func (s *Service) Escalate(ctx context.Context, tenantID int, id int, level int, reason string, actorID int, actorRole string) (*Incident, error) {
+	escalated, err := s.escalateIncident(ctx, tenantID, id, level, reason, actorID, actorRole)
+	if err != nil {
+		return nil, lifecycleError(err)
+	}
+	return escalated, nil
+}
+
+func (s *Service) escalateIncident(ctx context.Context, tenantID int, id int, level int, reason string, actorID int, actorRole string) (*Incident, error) {
 	// P1-DataScope：升级是生命周期写操作，与 ack/resolve/close/reopen 同风险面，
 	// 行级校验对齐 acknowledgeGuard（写权限 ⊆ 读权限）。
 	if err := s.acknowledgeGuard(ctx, id, actorID, actorRole, tenantID); err != nil {
@@ -477,11 +529,20 @@ func lifecycleError(err error) error {
 		return common.NewBusinessError(common.ConflictCode, "当前事件状态不允许此操作", "")
 	case errors.Is(err, service.ErrIncidentVersionConflict):
 		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
+	case errors.Is(err, ErrStaleVersion):
+		// 仓储条件更新未命中：读取快照后行已被并发写入推进。与客户端版本不符
+		// 同属冲突语义，必须提示刷新重试而不是 500。
+		return common.NewBusinessError(common.ConflictCode, "事件已被修改，请刷新后重试", "")
 	case errors.Is(err, service.ErrIncidentResolutionRequired):
 		return common.NewBusinessError(common.ParamErrorCode, "请填写解决方案", "")
 	case errors.Is(err, service.ErrIncidentCloseNotesRequired):
 		return common.NewBusinessError(common.ParamErrorCode, "请填写关闭说明", "")
 	case errors.Is(err, service.ErrIncidentNotFound):
+		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
+	case ent.IsNotFound(err):
+		// 仓储读/条件更新未命中：资源不存在或跨租户（fail closed 后同样表现为
+		// 不存在）。必须映射成 404/4004，否则经 common.RespondError 的写路径
+		//（Update/Escalate）会掉进 500 兜底，与 failIncidentOperation 不一致。
 		return common.NewBusinessError(common.NotFoundCode, "事件不存在", "")
 	default:
 		return err

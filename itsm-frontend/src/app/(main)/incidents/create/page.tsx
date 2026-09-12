@@ -323,7 +323,7 @@ export default function CreateIncidentPage() {
                               </Button>
                             }
                           >
-                            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                            <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                               <Space wrap size={4}>
                                 {aiSuggestion.priority && (
                                   <Tag color="red">优先级：{aiSuggestion.priority}</Tag>
@@ -349,7 +349,7 @@ export default function CreateIncidentPage() {
 
                         {similarIncidents.length > 0 && (
                           <Card size="small" className="mb-4" title="相似历史事件">
-                            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                            <Space orientation="vertical" size={8} style={{ width: '100%' }}>
                               {similarIncidents.map(item => (
                                 <div
                                   key={`${item.objectType}-${item.id}`}

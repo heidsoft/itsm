@@ -11,6 +11,17 @@ import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 
+interface IncidentFormValues {
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  severity: string;
+  category?: string;
+  subcategory?: string;
+  source?: string;
+}
+
 export default function IncidentEditPage() {
   const router = useRouter();
   const { t } = useI18n();
@@ -60,16 +71,31 @@ export default function IncidentEditPage() {
     };
   }, [id, form, router]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: IncidentFormValues) => {
     if (!id) return;
 
     setLoading(true);
     try {
-      await IncidentAPI.updateIncident(Number(id), values);
+      // source 不在后端 UpdateIncidentRequest 契约内，转发会被静默丢弃，故不提交。
+      const payload: UpdateIncidentRequest = {
+        title: values.title,
+        description: values.description,
+        status: values.status,
+        priority: values.priority,
+        severity: values.severity,
+        category: values.category,
+        subcategory: values.subcategory,
+        // 乐观锁：回传读取时的版本，后端据此判定并发冲突并返回 4090。
+        version: incidentData?.version,
+      };
+      await IncidentAPI.updateIncident(Number(id), payload);
       message.success(t('incidents.updateSuccess'));
       router.push(`/incidents/${id}`);
     } catch (error) {
-      message.error(t('incidents.updateFailed'));
+      // 后端已把冲突（4090）、越权（2003）、非法状态迁移映射成语义化业务码并给出
+      // 面向用户的文案；httpClient 只保留 message，故优先展示它，兜底才用通用文案。
+      const detail = error instanceof Error ? error.message : '';
+      message.error(detail || t('incidents.updateFailed'));
     } finally {
       setLoading(false);
     }
