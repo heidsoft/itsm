@@ -195,7 +195,7 @@ export default function EscalationMatricesPage() {
         </Col>
       </Row>
 
-      <Card title="完整升级矩阵（按优先级 + 级别）">
+      <Card title="升级矩阵（按优先级和级别）">
         <Table
           rowKey={r => `${r.priority}-${r.level}`}
           loading={loading}

@@ -327,19 +327,19 @@ export default function AssignmentRulesPage() {
           className="mb-4"
           type="info"
           showIcon
-          message="使用顺序：创建规则 → 在工单类型中绑定 → 用真实工单测试"
-          description="规则只定义“什么条件分给谁”。要在新建工单时自动生效，请到“工单类型”启用自动分配并选择该规则；保存前可用“测试”输入已有工单 ID 预览匹配结果。流程负责审批和任务流转，不替代处理人分配。"
+          message="顺序：先建规则 → 在工单类型里绑定 → 用真实工单测一下"
+          description={'规则只定义“什么条件分给谁”。新建工单要自动派单，去“工单类型”启用自动分配并选这条规则。保存前可以“测试”输入已有工单 ID 预览匹配结果。审批和任务流转走流程，跟派单不冲突。'}
         />
 
         <UsageGuideCard
           style={{ marginBottom: 16 }}
-          title="匹配条件与分配动作 JSON 怎么写"
-          intro="支持的条件字段：priority（优先级）、status（状态）、category_id（分类 ID）、department_id（部门 ID）；支持的操作符：equals / not_equals / contains / greater_than / less_than。"
+          title="匹配条件和分配动作怎么写"
+          intro="条件字段：priority（优先级）、status（状态）、category_id（分类 ID）、department_id（部门 ID）。操作符：equals / not_equals / contains / greater_than / less_than。"
           steps={[
-            '匹配条件示例（全部条件同时满足才命中）：[{ "field": "priority", "operator": "equals", "value": "urgent" }, { "field": "category_id", "operator": "equals", "value": 3 }]',
-            '分配动作示例（三选一）：{ "type": "user", "value": 5 } 直接分配给用户 ID 5；{ "type": "round_robin", "value": [5, 8, 12] } 在候选用户间轮询；{ "type": "load_balance", "value": [5, 8, 12] } 按负载在候选用户中选择。',
-            '优先级数字越大越先执行；先用“测试”输入一个真实工单 ID 预览命中结果，确认无误后再启用。',
-            '规则生效后，新建/接单工单会按规则自动分配处理人，分配结果记入工单历史。',
+            '匹配条件示例（全部同时满足才命中）：[{"field":"priority","operator":"equals","value":"urgent"},{"field":"category_id","operator":"equals","value":3}]',
+            '分配动作三选一：{"type":"user","value":5} 直接派给用户 5；{"type":"round_robin","value":[5,8,12]} 在候选里轮询；{"type":"load_balance","value":[5,8,12]} 按负载挑。',
+            '优先级数字越大越靠前。先用"测试"输入一个真实工单 ID 预览命中结果，没问题再启用。',
+            '启用后，新建/接单的工单会按规则自动派单，分配结果记入工单历史。',
           ]}
         />
 
