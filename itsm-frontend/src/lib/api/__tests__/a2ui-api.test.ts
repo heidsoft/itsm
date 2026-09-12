@@ -5,7 +5,22 @@ import { httpClient } from '../http-client';
 jest.mock('../http-client', () => ({
   httpClient: {
     getBaseURL: jest.fn(() => 'http://localhost:3000'),
+    getCSRFTokenForExternal: jest.fn(() => Promise.resolve(null)),
+    invalidateCSRFToken: jest.fn(),
   },
+}));
+
+jest.mock('@/lib/security', () => ({
+  security: {
+    network: {
+      getSecureHeaders: jest.fn(() => ({ 'Content-Type': 'application/json' })),
+    },
+  },
+}));
+
+jest.mock('@/lib/auth/tenant-context', () => ({
+  getTenantId: jest.fn(() => null),
+  getTenantCode: jest.fn(() => null),
 }));
 
 // Mock global fetch

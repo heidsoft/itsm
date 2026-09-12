@@ -249,10 +249,14 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      // P0-2（2026-09-06 UAT 修复）：登录失败时把 error 重新抛出，让 LoginForm
-      // 能拿到 retryAfterSeconds（限流响应）做倒计时展示。
-      // 不再 swallow 错误——调用方需要区分 invalid_credentials 与 rate_limited。
-      throw error;
+      // P0-2（2026-09-06 UAT 修复）：限流响应 data.retryAfterSeconds 由 makeRequest
+      // 附加到 Error 上，LoginForm 据此展示按钮倒计时。仅对限流错误 rethrow，
+      // 其他登录失败（凭证错误、网络错误）按调用方契约返回 false。
+      const e = error as Error & { retryAfterSeconds?: number };
+      if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
+        throw e;
+      }
+      return false;
     }
   }
 

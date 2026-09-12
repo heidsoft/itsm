@@ -37,6 +37,9 @@ const fillBasicInfo = () => {
 };
 
 describe('TicketTypeFormModal', () => {
+  // Ant Design Tabs rendering is heavy in jsdom; individual tests routinely take 3-9s.
+  jest.setTimeout(30000);
+
   it('renders all configuration tabs in create mode', () => {
     renderModal(jest.fn().mockResolvedValue(undefined));
 

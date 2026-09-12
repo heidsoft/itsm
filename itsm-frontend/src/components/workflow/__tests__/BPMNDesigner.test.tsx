@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { Button, Tooltip } from 'antd';
 import * as BpmnModeler from 'bpmn-js/lib/Modeler';
@@ -120,9 +120,38 @@ describe('BPMNDesigner', () => {
      *   - 监听器的事件名必须是 'import.parse.complete'
      *   - 优先级必须是 1500（高于 BaseModeler 默认 _collectIds 的 1000）
      *   - 回调签名必须能接收 { definitions, error }
+     *
+     * 注意：initializeModeler 由 useEffect 内 setTimeout(tryInit, 200) 驱动，
+     * jsdom 默认 getBoundingClientRect 返回 0x0 且 setTimeout 不自动触发，
+     * 因此需要 fake timers + mock getBoundingClientRect 双管齐下。
      */
+    beforeEach(() => {
+      jest.useFakeTimers();
+      Element.prototype.getBoundingClientRect = jest.fn(() => ({
+        width: 800,
+        height: 600,
+        x: 0,
+        y: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        left: 0,
+        toJSON: () => ({}),
+      }));
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('should register import.parse.complete listener with priority 1500 on mount', () => {
-      render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      act(() => {
+        render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      });
+      // flush the useEffect setTimeout(tryInit, 200)
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
 
       const registration = mockOn.mock.calls.find(
         (call: unknown[]) => call[0] === 'import.parse.complete'
@@ -135,7 +164,12 @@ describe('BPMNDesigner', () => {
     });
 
     it('listener short-circuits when event has error', () => {
-      render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      act(() => {
+        render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      });
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
 
       const registration = mockOn.mock.calls.find(
         (call: unknown[]) => call[0] === 'import.parse.complete'
@@ -147,7 +181,12 @@ describe('BPMNDesigner', () => {
     });
 
     it('listener short-circuits when event has no definitions', () => {
-      render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      act(() => {
+        render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+      });
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
 
       const registration = mockOn.mock.calls.find(
         (call: unknown[]) => call[0] === 'import.parse.complete'

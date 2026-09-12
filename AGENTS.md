@@ -32,7 +32,7 @@ When making architecture choices, prefer enterprise correctness, auditability, t
 The repository is past v1.0 GA and is converging on the v1.6.x hardening line:
 
 - v1.0 delivered ITIL core flows, BPMN workflow engine, CMDB v1, knowledge/RAG scaffold, SLA, RBAC, multi-tenant/MSP foundations, Docker Compose, GHCR images, and basic AI/connector scaffolding.
-- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. The legacy `controller/` layer has been fully retired in favor of `handlers/<domain>`.
+- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. `handlers/<domain>/` is now the primary routing target; the legacy `controller/` directory has been emptied of HTTP facades, but `service/` continues to host shared business logic consumed by both layers and is being migrated domain-by-domain into `handlers/<domain>/` (see Backend Layering Rules below).
 - v1.7 focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
 
 For new work, align with the roadmap rather than creating parallel mechanisms. If a feature overlaps with workflow, connector, AI skill, or marketplace direction, extend the existing extension point.
