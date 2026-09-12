@@ -23,6 +23,7 @@ interface WorkflowCanvasProps {
   onSave: (xml: string) => void;
   onChange: (xml: string) => void;
   onSelectionChange?: (selection: BpmnNodeSelection | null) => void;
+  onSerializeError?: (error: string | null) => void;
 }
 
 /**
@@ -32,7 +33,7 @@ interface WorkflowCanvasProps {
 const _apiRef: { current: BpmnDesignerApi | null } = { current: null };
 
 const WorkflowCanvas = forwardRef<BpmnDesignerApi, WorkflowCanvasProps>(function WorkflowCanvas(
-  { currentXML, onSave, onChange, onSelectionChange },
+  { currentXML, onSave, onChange, onSelectionChange, onSerializeError },
   _ref
 ) {
   return (
@@ -42,6 +43,7 @@ const WorkflowCanvas = forwardRef<BpmnDesignerApi, WorkflowCanvasProps>(function
         onSave={onSave}
         onChange={onChange}
         onSelectionChange={onSelectionChange}
+        onSerializeError={onSerializeError}
         apiRef={_apiRef}
       />
     </div>

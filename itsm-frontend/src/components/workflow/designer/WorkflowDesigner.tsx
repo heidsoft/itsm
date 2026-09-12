@@ -3,7 +3,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Layout, Tabs, Form, Modal, Tag, Button, Space, Typography, Switch, App } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { History, AlertTriangle, CheckCircle, XCircle, Bug, GitCompare } from 'lucide-react';
@@ -130,11 +130,8 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
   // 画布选中状态 - 驱动 WorkflowNodeInspector
   const [selectedNode, setSelectedNode] = useState<BpmnNodeSelection | null>(null);
-  // 保留 ref 以便在 onChange/命令栈中读取最新值
-  const selectedNodeRef = useRef<BpmnNodeSelection | null>(null);
-  useEffect(() => {
-    selectedNodeRef.current = selectedNode;
-  }, [selectedNode]);
+  // 画布无法序列化时禁止保存：此时任何缓存的 XML 都不可信
+  const [serializeError, setSerializeError] = useState<string | null>(null);
 
   // 校验相关状态
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
@@ -161,30 +158,33 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         message.warning(t('workflow.designer.designerNotReady'));
         return false;
       }
-      const ok = api.updateElementProperties(elementId, properties);
-      if (ok) {
-        // 同步本地选中节点的快照，避免面板一直显示旧值
-        setSelectedNode(prev =>
-          prev && prev.id === elementId
-            ? { ...prev, businessObject: { ...(prev.businessObject || {}), ...properties } }
-            : prev
-        );
-      }
-      return ok;
+      // 写入后由画布回读真实值刷新面板。这里不能把请求补丁合并进快照，
+      // 否则被 moddle 丢弃的属性也会显示成“已保存”。
+      return api.updateElementProperties(elementId, properties);
     },
-    []
+    [message, t]
   );
 
   const handleRefreshSelection = useCallback(() => {
-    // 重读：从当前画布 XML 重新解析选中节点的 businessObject
-    // 这里简单地清空再触发 onChange 重新通知 BPMNDesigner 重新触发选择事件
-    const cur = selectedNodeRef.current;
-    if (cur) {
-      setSelectedNode(null);
-      // 下一帧恢复，触发面板重新拉取 businessObject
-      requestAnimationFrame(() => setSelectedNode(cur));
-    }
+    getBpmnDesignerApi()?.resyncSelection();
   }, []);
+
+  /**
+   * 取画布当前真实 XML。返回 null 表示无法序列化，调用方必须放弃保存，
+   * 不能回退到 state 里缓存的旧 XML —— 那会把用户的编辑静默丢掉。
+   */
+  const resolveLiveXml = useCallback(async (): Promise<string | null> => {
+    const api = getBpmnDesignerApi();
+    if (!api) {
+      message.warning(t('workflow.designer.designerNotReady'));
+      return null;
+    }
+    const xml = await api.getXML();
+    if (!xml) {
+      message.error('流程无法序列化，已阻止保存，请先处理画布上的属性错误');
+    }
+    return xml;
+  }, [message, t]);
 
   // 弹窗状态
   const [showNewWorkflowModal, setShowNewWorkflowModal] = useState(false);
@@ -461,8 +461,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   }, []);
 
   // 保存工作流
-  const handleSave = async (xml: string) => {
+  const handleSave = async () => {
     if (!workflow) return;
+
+    const xml = await resolveLiveXml();
+    if (!xml) return;
 
     // 自动校验
     if (autoValidate) {
@@ -571,8 +574,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   }, [workflow, currentXML, message, loadWorkflowVersions]);
 
   // 保存并部署
-  const handleSaveAndDeploy = async (xml: string) => {
+  const handleSaveAndDeploy = async () => {
     if (!workflow) return;
+
+    const xml = await resolveLiveXml();
+    if (!xml) return;
 
     // 先校验
     const issues = await validateWorkflow(true);
@@ -808,6 +814,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           onSaveAndDeploy={handleSaveAndDeploy}
           onDeploy={handleDeploy}
           currentXML={currentXML}
+          serializeBlocked={!!serializeError}
           onValidate={validateWorkflow}
           validationIssues={validationIssues}
           onAIClick={() => setShowAIModal(true)}
@@ -834,6 +841,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                           setHasChanges(true);
                         }}
                         onSelectionChange={handleSelectionChange}
+                        onSerializeError={setSerializeError}
                       />
                     </div>
                     <div className="w-full md:w-80 shrink-0 overflow-y-auto bg-white rounded-lg shadow-sm border border-gray-200">

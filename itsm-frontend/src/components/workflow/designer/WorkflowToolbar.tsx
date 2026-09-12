@@ -18,10 +18,12 @@ interface WorkflowToolbarProps {
   saving: boolean;
   deploying: boolean;
   hasChanges?: boolean;
-  onSave: (xml: string) => void;
-  onSaveAndDeploy: (xml: string) => void;
+  onSave: () => void;
+  onSaveAndDeploy: () => void;
   onDeploy: () => void;
   currentXML: string;
+  /** 画布无法序列化时禁用保存/部署，避免把旧 XML 当最新内容提交 */
+  serializeBlocked?: boolean;
   onValidate?: () => void;
   validationIssues?: any[];
   onAIClick?: () => void;
@@ -37,6 +39,7 @@ export default function WorkflowToolbar({
   onSaveAndDeploy,
   onDeploy,
   currentXML,
+  serializeBlocked = false,
   onValidate,
   validationIssues = [],
   onAIClick,
@@ -145,6 +148,10 @@ export default function WorkflowToolbar({
         {hasChanges && (
           <Tag color="warning">{t('workflow.designer.toolbarUnsaved')}</Tag>
         )}
+
+        {serializeBlocked && (
+          <Tag color="error">流程序列化异常，保存已阻断</Tag>
+        )}
       </div>
 
       <Space>
@@ -165,7 +172,8 @@ export default function WorkflowToolbar({
         <Button
           icon={<Save />}
           loading={saving}
-          onClick={() => onSave(currentXML)}
+          disabled={serializeBlocked}
+          onClick={() => onSave()}
         >
           {t('workflow.designer.toolbarSave')}
         </Button>
@@ -175,7 +183,8 @@ export default function WorkflowToolbar({
             type="primary"
             icon={<CloudUpload />}
             loading={deploying}
-            onClick={() => onSaveAndDeploy(currentXML)}
+            disabled={serializeBlocked}
+            onClick={() => onSaveAndDeploy()}
           >
             {t('workflow.designer.toolbarSaveDeploy')}
           </Button>

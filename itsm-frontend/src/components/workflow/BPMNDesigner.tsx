@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import type { MenuProps } from 'antd';
-import { Button, Tooltip, App, Input, AutoComplete, Dropdown } from 'antd';
+import { Button, Tooltip, App, Input, AutoComplete, Dropdown, Alert } from 'antd';
 import {
   Save,
   PlayCircle,
@@ -35,6 +35,7 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 import itsmModdleDescriptor from './itsm-moddle-descriptor';
 import gridModule from 'diagram-js/lib/features/grid-snapping';
 import { ensureBpmnDI, hasBpmnDiagram } from './bpmnAutoLayout';
+import { normalizeNodeProperties, readReferenceId, type ModdleCreate } from './bpmnPropertyWrite';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 
@@ -49,6 +50,11 @@ interface BPMNDesignerProps {
   readOnly?: boolean;
   height?: number | string;
   onSelectionChange?: (selection: BpmnNodeSelection | null) => void;
+  /**
+   * 画布 XML 序列化失败/恢复时通知父组件。失败期间禁止保存，
+   * 否则父组件会拿着上一次的旧 XML 上报“保存成功”。
+   */
+  onSerializeError?: (error: string | null) => void;
   /**
    * 命令式 API 容器。父组件传入 ref-like 对象，
    * 组件内部会把 { updateElementProperties, fitViewport } 写入 ref.current
@@ -65,6 +71,8 @@ export interface BpmnDesignerApi {
   getXML: () => Promise<string | null>;
   validate: () => Promise<any[]>;
   selectElement: (elementId: string) => void;
+  /** 用画布当前真实值重新通知选中节点（撤销/重做/外部变更后调用） */
+  resyncSelection: () => void;
 }
 
 /**
@@ -92,6 +100,28 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
 };
 
+interface LiveElement {
+  id: string;
+  type?: string;
+  businessObject?: Record<string, unknown>;
+}
+
+/**
+ * 把画布元素当前值快照成面板契约。
+ * 这里刻意做浅拷贝：面板必须显示“模型里现在的值”，而不是“刚刚请求写入的值”。
+ * 传引用会让 React 认为对象未变化而不重渲染；直接合并请求补丁则会把
+ * 静默写入失败伪装成成功。
+ */
+const buildNodeSelection = (el: LiveElement): BpmnNodeSelection => {
+  const businessObject = el.businessObject || {};
+  return {
+    id: el.id,
+    type: el.type || (businessObject.$type as string) || 'unknown',
+    name: typeof businessObject.name === 'string' ? businessObject.name : undefined,
+    businessObject: { ...businessObject, $type: businessObject.$type },
+  };
+};
+
 const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   xml = '',
   onSave,
@@ -100,6 +130,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   readOnly = false,
   height = 600,
   onSelectionChange,
+  onSerializeError,
   apiRef,
 }) => {
   const { message } = App.useApp();
@@ -123,20 +154,24 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const onChangeRef = useRef(onChange);
   const onSaveRef = useRef(onSave);
   const onSelectionChangeRef = useRef(onSelectionChange);
+  const onSerializeErrorRef = useRef(onSerializeError);
   const messageRef = useRef(message);
   const tRef = useRef(t);
   const snapToGridRef = useRef(snapToGrid);
   const showGridRef = useRef(showGrid);
   const selectedElementsRef = useRef<string[]>([]);
   const currentXMLRef = useRef(currentXML);
+  const [serializeError, setSerializeError] = useState<string | null>(null);
+  const serializeErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
     onChangeRef.current = onChange;
     onSaveRef.current = onSave;
     onSelectionChangeRef.current = onSelectionChange;
+    onSerializeErrorRef.current = onSerializeError;
     messageRef.current = message;
     tRef.current = t;
-  }, [onChange, onSave, onSelectionChange, message, t]);
+  }, [onChange, onSave, onSelectionChange, onSerializeError, message, t]);
 
   useEffect(() => {
     snapToGridRef.current = snapToGrid;
@@ -168,6 +203,20 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     }
   }, []);
 
+  /**
+   * 序列化失败必须可见并阻断保存：一旦 saveXML 抛错，画布就没有可信的 XML，
+   * 继续用上一次缓存的 XML 走保存会静默丢掉之后的所有编辑。
+   */
+  const reportSerializeError = useCallback((error: string | null) => {
+    if (serializeErrorRef.current === error) return;
+    serializeErrorRef.current = error;
+    setSerializeError(error);
+    onSerializeErrorRef.current?.(error);
+    if (error) {
+      messageRef.current.error(`流程无法序列化，画布已停止同步：${error}`);
+    }
+  }, []);
+
   const scheduleXmlSync = useCallback((delay = 150) => {
     if (xmlSyncTimerRef.current) clearTimeout(xmlSyncTimerRef.current);
     xmlSyncTimerRef.current = setTimeout(async () => {
@@ -178,13 +227,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         if (result.xml) {
           setCurrentXML(result.xml);
           emittedXmlRef.current = result.xml;
+          reportSerializeError(null);
           onChangeRef.current?.(result.xml);
         }
       } catch (err) {
         console.error('Failed to serialize BPMN XML:', err);
+        reportSerializeError(err instanceof Error ? err.message : String(err));
       }
     }, delay);
-  }, []);
+  }, [reportSerializeError]);
 
   // 等待容器具有有效尺寸后再初始化 BPMN Modeler
   // bpmn-js 在容器尺寸为 0 时会抛出 "Cannot read properties of undefined (reading 'root-0')"
@@ -280,30 +331,18 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
       // 选中变化：更新本地选中集合，并通知父组件（驱动节点属性面板）
       modeler.on('selection.changed', () => {
-        const selection = modeler.get('selection') as { get: () => any[] };
+        const selection = modeler.get('selection') as { get: () => LiveElement[] };
         const elements = selection.get() || [];
         setSelectedElements(elements.map(e => e.id));
 
         const cb = onSelectionChangeRef.current;
         if (!cb) return;
-        if (elements.length === 0) {
-          cb(null);
-          return;
-        }
         const el = elements[0];
         if (!el) {
           cb(null);
           return;
         }
-        const nodeSelection: BpmnNodeSelection = {
-          id: el.id,
-          type: el.type || (el.businessObject && el.businessObject.$type) || 'unknown',
-          businessObject: el.businessObject || {},
-        };
-        if (el.businessObject?.name) {
-          nodeSelection.name = el.businessObject.name;
-        }
-        cb(nodeSelection);
+        cb(buildNodeSelection(el));
       });
 
       // 初始网格吸附状态
@@ -427,27 +466,23 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     };
   }, []);
 
-  // 保存：序列化最新 XML 后交给父组件（由父组件统一反馈保存结果）
+  // 保存：只有序列化成功才交给父组件，失败时绝不回退到缓存 XML
   const handleSave = useCallback(async () => {
     if (readOnly) return;
     const modeler = modelerRef.current;
-    let xmlToSave = currentXMLRef.current;
-    if (modeler) {
-      try {
-        const result = await modeler.saveXML({ format: true });
-        if (result.xml) {
-          xmlToSave = result.xml;
-          setCurrentXML(result.xml);
-          emittedXmlRef.current = result.xml;
-        }
-      } catch (err) {
-        console.error('Failed to save XML:', err);
-      }
+    if (!modeler) return;
+    try {
+      const result = await modeler.saveXML({ format: true });
+      if (!result.xml) throw new Error('序列化结果为空');
+      setCurrentXML(result.xml);
+      emittedXmlRef.current = result.xml;
+      reportSerializeError(null);
+      onSaveRef.current?.(result.xml);
+    } catch (err) {
+      console.error('Failed to save XML:', err);
+      reportSerializeError(err instanceof Error ? err.message : String(err));
     }
-    if (xmlToSave) {
-      onSaveRef.current?.(xmlToSave);
-    }
-  }, [readOnly]);
+  }, [readOnly, reportSerializeError]);
 
   // 部署
   const handleDeploy = useCallback(() => {
@@ -833,7 +868,8 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     const serviceTasks = elementRegistry.filter(el => el.type === 'bpmn:ServiceTask');
     serviceTasks.forEach(task => {
       const bo = task.businessObject;
-      if (!bo.implementation && !bo.operationRef) {
+      const operationRef = readReferenceId(bo, 'operationRef');
+      if (!bo.implementation && !operationRef) {
         errors.push({
           type: 'warning',
           message: t('bpmnDesigner.messages.serviceTaskNoConfig', { name: bo.name || task.id }),
@@ -842,7 +878,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           elementName: bo.name || task.id,
         });
       }
-      const implementation = bo.implementation || bo.operationRef;
+      const implementation = bo.implementation || operationRef;
       const supported = new Set(['webhook', 'cc_handler', 'ticket_handler', 'change_handler', 'incident_handler', 'service_request_handler', 'notification_handler', 'approval_handler', 'generic_handler']);
       if (implementation && !supported.has(implementation)) {
         errors.push({
@@ -908,34 +944,71 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   }, [message, t]);
 
   /**
+   * 供父组件调用：把面板当前值按画布真实值刷新。
+   * 写入后必须 resync，否则面板显示的是“请求写入的值”，
+   * 未声明属性被 moddle 丢弃时看起来也像成功。
+   */
+  const resyncSelection = useCallback(() => {
+    const modeler = modelerRef.current;
+    const cb = onSelectionChangeRef.current;
+    if (!modeler || !cb) return;
+    try {
+      const selection = modeler.get('selection') as { get: () => LiveElement[] };
+      const el = (selection.get() || [])[0];
+      cb(el ? buildNodeSelection(el) : null);
+    } catch (err) {
+      console.error('Resync selection failed:', err);
+    }
+  }, []);
+
+  /**
    * 供父组件调用：修改当前 BPMN 元素的属性。
    * 通过 modeling.updateProperties 走命令栈，会触发 commandStack.changed，
    * 进而通过 saveXML 把最新的 XML 推回父组件。
    */
   const updateElementProperties = useCallback((elementId: string, properties: Record<string, unknown>) => {
-    if (!modelerRef.current) {
+    const modeler = modelerRef.current;
+    if (!modeler) {
       console.warn('Modeler not ready');
       return false;
     }
     try {
-      const modeling = modelerRef.current.get('modeling') as
-        | { updateProperties: (el: any, props: Record<string, unknown>) => void }
-        | undefined;
-      const elementRegistry = modelerRef.current.get('elementRegistry') as {
-        get: (id: string) => any;
+      const elementRegistry = modeler.get('elementRegistry') as {
+        get: (id: string) => LiveElement | undefined;
       };
       const element = elementRegistry.get(elementId);
-      if (!element || !modeling) {
-        console.warn('Element or modeling not found:', elementId);
+      if (!element) {
+        console.warn('Element not found:', elementId);
         return false;
       }
-      modeling.updateProperties(element, properties);
+
+      const normalized = normalizeNodeProperties(properties, {
+        moddle: modeler.get('moddle') as unknown as ModdleCreate,
+        resolveElement: (id: string) => elementRegistry.get(id),
+      });
+      if (!normalized.ok) {
+        messageRef.current.error(normalized.error);
+        return false;
+      }
+
+      const modeling = modeler.get('modeling') as
+        | { updateProperties: (el: LiveElement, props: Record<string, unknown>) => void }
+        | undefined;
+      if (!modeling) {
+        console.warn('Modeling not available');
+        return false;
+      }
+      modeling.updateProperties(element, normalized.properties);
+      resyncSelection();
       return true;
     } catch (err) {
       console.error('Failed to update element properties:', err);
+      messageRef.current.error(
+        `节点属性写入失败：${err instanceof Error ? err.message : String(err)}`
+      );
       return false;
     }
-  }, []);
+  }, [resyncSelection]);
 
   /**
    * 供父组件调用：触发 fit-viewport（节点改变或初始加载后可用）
@@ -957,12 +1030,14 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     if (!modelerRef.current) return null;
     try {
       const result = await modelerRef.current.saveXML({ format: true });
+      reportSerializeError(null);
       return result.xml || null;
     } catch (err) {
       console.error('Failed to get XML:', err);
+      reportSerializeError(err instanceof Error ? err.message : String(err));
       return null;
     }
-  }, []);
+  }, [reportSerializeError]);
 
   /**
    * 供父组件调用：验证流程
@@ -992,9 +1067,9 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   // 暴露命令式 API 给父组件
   useEffect(() => {
     if (apiRef) {
-      apiRef.current = { updateElementProperties, fitViewport, getXML, validate, selectElement };
+      apiRef.current = { updateElementProperties, fitViewport, getXML, validate, selectElement, resyncSelection };
     }
-  }, [apiRef, updateElementProperties, fitViewport, getXML, validate, selectElement]);
+  }, [apiRef, updateElementProperties, fitViewport, getXML, validate, selectElement, resyncSelection]);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -1335,6 +1410,26 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           />
         </AutoComplete>
       </div>
+
+      {/* 序列化失败期间保存已被阻断，必须显式告知原因 */}
+      {serializeError && (
+        <div style={{
+          position: 'absolute',
+          top: 52,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 460,
+          maxWidth: '86%',
+          zIndex: 11,
+        }}>
+          <Alert
+            type="error"
+            showIcon
+            title="流程无法序列化，保存已阻断"
+            description={`${serializeError}。请撤销最近一次属性修改，或改用该节点支持的配置项后再保存。`}
+          />
+        </div>
+      )}
 
       {/* 缩放控制 */}
       <div

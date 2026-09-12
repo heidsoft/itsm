@@ -8,7 +8,7 @@ import { Card, Empty, Select, Input, Tag, Typography, Space, Divider, Alert, But
 import {
   User, Users, UserCheck, Hash, Tag as TagIcon, RefreshCw,
   Code, Server, GitBranch, PlayCircle, Clock, FileText,
-  Webhook, Settings, MessageSquare, Mail, AlertTriangle,
+  Settings, AlertTriangle,
   Database, Link, Timer, MessageCircle, Radio, ChevronDown, ChevronRight,
   Save, Undo, Redo, Info, Zap, Shield, Bell
 } from 'lucide-react';
@@ -22,6 +22,11 @@ import { UserApi, type User as ApiUser } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { httpClient } from '@/lib/api/http-client';
 import type { BpmnNodeSelection } from '../BPMNDesigner';
+import {
+  readConditionExpressionText,
+  readDocumentationText,
+  readReferenceId,
+} from '../bpmnPropertyWrite';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -335,6 +340,7 @@ export default function WorkflowNodeInspector({
   }
 
   // 节点类型判断
+  const bo = (selection.businessObject || {}) as Record<string, unknown>;
   const nodeType = selection.type.replace('bpmn:', '');
   const isUserTask = nodeType === 'UserTask';
   const isServiceTask = nodeType === 'ServiceTask';
@@ -342,12 +348,10 @@ export default function WorkflowNodeInspector({
   const isBusinessRuleTask = nodeType === 'BusinessRuleTask';
   const isSendTask = nodeType === 'SendTask';
   const isReceiveTask = nodeType === 'ReceiveTask';
-  const isMailTask = nodeType === 'ServiceTask' && (selection.businessObject?.type as string) === 'mail';
   const isCCTask =
     nodeType === 'ServiceTask' &&
-    ((selection.businessObject?.type as string) === 'cc' ||
-      (selection.businessObject?.implementation as string) === 'cc_handler' ||
-      (selection.businessObject?.operationRef as string) === 'cc_handler');
+    ((bo.implementation as string) === 'cc_handler' ||
+      readReferenceId(bo, 'operationRef') === 'cc_handler');
   const isExclusiveGateway = nodeType === 'ExclusiveGateway';
   const isInclusiveGateway = nodeType === 'InclusiveGateway';
   const isParallelGateway = nodeType === 'ParallelGateway';
@@ -377,12 +381,10 @@ export default function WorkflowNodeInspector({
     (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:ConditionalEventDefinition');
   const isTerminateEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:TerminateEventDefinition');
   const isCancelEvent = (selection.businessObject?.eventDefinitions as BpmnEventDefinition[])?.some(d => d.$type === 'bpmn:CancelEventDefinition');
-  
-  const bo = (selection.businessObject || {}) as Record<string, unknown>;
 
   // 通用属性
   const currentName = (bo.name as string) || '';
-  const currentDocumentation = (bo.documentation as string) || '';
+  const currentDocumentation = readDocumentationText(bo);
 
   // 用户任务属性
   const currentAssignee = (bo.assignee as string) || '';
@@ -403,7 +405,6 @@ export default function WorkflowNodeInspector({
 
   // 服务任务属性
   const currentImplementation = (bo.implementation as string) || '';
-  const currentOperationRef = (bo.operationRef as string) || '';
   const currentResultVariable = (bo.resultVariable as string) || '';
   const currentAsync = (bo.async as boolean) || false;
 
@@ -420,27 +421,22 @@ export default function WorkflowNodeInspector({
   const currentMessageRef = (bo.messageRef as string) || '';
   const currentOperation = (bo.operation as string) || '';
 
-  // 邮件任务属性
-  const currentMailTo = (bo.mailTo as string) || '';
-  const currentMailCc = (bo.mailCc as string) || '';
-  const currentMailSubject = (bo.mailSubject as string) || '';
-  const currentMailTemplate = (bo.mailTemplate as string) || '';
-
   // 抄送任务属性
   const currentCCType = (bo.ccType as string) || 'user'; // user, group, role, variable
   const currentCCUserIds = (bo.ccUserIds as string) || '';
   const currentCCGroupIds = (bo.ccGroupIds as string) || '';
   const currentCCRoleIds = (bo.ccRoleIds as string) || '';
   const currentCCVariable = (bo.ccVariable as string) || '';
-  const currentCCNotify = (bo.ccNotify as boolean) ?? true;
+  // ccNotify 在 moddle 与后端中都是字符串属性，'false' 也是 truthy，必须显式解析
+  const currentCCNotify = bo.ccNotify === undefined || bo.ccNotify === null
+    ? true
+    : String(bo.ccNotify) !== 'false';
   const currentNotifyChannels = parseCsv((bo.notifyChannels as string) || 'in_app');
 
 
   // 网关/序列流属性
-  const currentConditionExpression = (bo.conditionExpression && typeof bo.conditionExpression === 'object' 
-    ? (bo.conditionExpression as unknown as { body?: string })?.body || '' 
-    : (bo.conditionExpression as string) || '');
-  const currentDefaultFlow = (bo.default as string) || '';
+  const currentConditionExpression = readConditionExpressionText(bo);
+  const currentDefaultFlow = readReferenceId(bo, 'default');
 
   // 事件属性
   const currentTimerDefinition = (bo.timeDuration as string) || '';
@@ -537,20 +533,9 @@ export default function WorkflowNodeInspector({
     onUpdateProperties(selection.id, patch);
   };
 
-  // 应用条件表达式修改
+  // 应用条件表达式修改：形状转换由 BPMNDesigner 的 normalizeNodeProperties 负责
   const applyCondition = (value: string) => {
-    // 对于条件表达式，需要符合BPMN的结构
-    if (isSequenceFlow) {
-      apply({ 
-        conditionExpression: {
-          type: 'bpmn:FormalExpression',
-          body: value,
-          language: 'javascript'
-        } 
-      });
-    } else {
-      apply({ conditionExpression: value });
-    }
+    apply({ conditionExpression: value });
   };
 
   return (
@@ -652,7 +637,8 @@ export default function WorkflowNodeInspector({
                     onChange={value => apply({ approvalMode: value })}
                     options={[
                       { label: '单人审批', value: 'single' }, { label: '任一通过', value: 'any' },
-                      { label: '全部通过', value: 'all' }, { label: '比例/阈值通过', value: 'threshold' },
+                      { label: '全部通过', value: 'all' },
+                      { label: '比例/阈值通过（运行时未实现）', value: 'threshold', disabled: true },
                       { label: '顺序会签', value: 'sequential' },
                     ]}
                     className="w-full" size="small"
@@ -663,7 +649,11 @@ export default function WorkflowNodeInspector({
                       addonBefore="通过人数" size="small" />
                   )}
                   <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
-                    options={[{ label: '终止流程', value: 'terminate' }, { label: '退回发起人（未就绪）', value: 'to_requester', disabled: true }, { label: '进入拒绝分支', value: 'gateway' }]}
+                    options={[
+                      { label: '终止流程', value: 'terminate' },
+                      { label: '退回发起人（未就绪）', value: 'to_requester', disabled: true },
+                      { label: '进入拒绝分支（运行时未实现）', value: 'gateway', disabled: true },
+                    ]}
                     className="w-full" size="small" />
                   <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
                     disabled
@@ -818,7 +808,7 @@ export default function WorkflowNodeInspector({
                 type="info"
                 showIcon
                 className="mt-2 text-xs"
-                message="审批组中任一成员审批即视为该节点通过"
+                title="审批组中任一成员审批即视为该节点通过"
               />
             </div>
 
@@ -890,7 +880,7 @@ export default function WorkflowNodeInspector({
         )}
 
         {/* 服务任务配置 */}
-        {isServiceTask && !isMailTask && !isCCTask && (
+        {isServiceTask && !isCCTask && (
           <>
             <Divider className="my-2" />
 
@@ -907,19 +897,9 @@ export default function WorkflowNodeInspector({
                 size="small"
                 options={implementationOptions}
               />
-            </div>
-
-            <div className="mt-2">
-              <Text strong className="text-sm flex items-center mb-2">
-                <Webhook className="w-3.5 h-3.5 mr-1" />
-                操作引用 (operationRef)
+              <Text type="secondary" className="text-xs mt-1 block">
+                处理器由该属性唯一决定，仅可选运行时有实现的 handler
               </Text>
-              <DebouncedInput
-                value={currentOperationRef}
-                onCommit={value => apply({ operationRef: value })}
-                placeholder="输入操作标识或URL"
-                size="small"
-              />
             </div>
 
             <div className="mt-2">
@@ -930,7 +910,8 @@ export default function WorkflowNodeInspector({
               <DebouncedInput
                 value={currentResultVariable}
                 onCommit={value => apply({ resultVariable: value })}
-                placeholder="例如：httpResult（执行结果将存入该变量）"
+                placeholder="运行时尚未支持结果回写变量"
+                disabled
                 size="small"
               />
             </div>
@@ -943,10 +924,11 @@ export default function WorkflowNodeInspector({
               <Switch
                 checked={currentAsync}
                 onChange={checked => apply({ async: checked })}
+                disabled
                 size="small"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                开启后任务将异步执行，不阻塞主流程
+                服务任务当前同步执行，异步调度尚未接线
               </Text>
             </div>
 
@@ -954,12 +936,11 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              message="服务任务会在流程执行到该节点时自动调用配置的外部接口或服务，无需人工干预。"
+              title="服务任务会在流程执行到该节点时自动调用配置的外部接口或服务，无需人工干预。"
             />
           </>
         )}
 
-        {/* 邮件任务配置 */}
         {/* 抄送任务配置 */}
         {isCCTask && (
           <>
@@ -1093,77 +1074,6 @@ export default function WorkflowNodeInspector({
                 />
               </div>
             )}
-          </>
-        )}
-
-        {isMailTask && (
-          <>
-            <Divider className="my-2" />
-
-            <div>
-              <Text strong className="text-sm flex items-center mb-2">
-                <Mail className="w-3.5 h-3.5 mr-1" />
-                收件人 (To)
-              </Text>
-              <DebouncedInput
-                value={currentMailTo}
-                onCommit={value => apply({ mailTo: value })}
-                placeholder="多个收件人用逗号分隔，支持变量如 ${applyUser.email}"
-                size="small"
-              />
-            </div>
-
-            <div className="mt-2">
-              <Text strong className="text-sm flex items-center mb-2">
-                <Mail className="w-3.5 h-3.5 mr-1" />
-                抄送人 (Cc)
-              </Text>
-              <DebouncedInput
-                value={currentMailCc}
-                onCommit={value => apply({ mailCc: value })}
-                placeholder="多个抄送人用逗号分隔"
-                size="small"
-              />
-            </div>
-
-            <div className="mt-2">
-              <Text strong className="text-sm flex items-center mb-2">
-                <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                邮件主题
-              </Text>
-              <DebouncedInput
-                value={currentMailSubject}
-                onCommit={value => apply({ mailSubject: value })}
-                placeholder="邮件主题，支持变量如 ${order.title}"
-                size="small"
-              />
-            </div>
-
-            <div className="mt-2">
-              <Text strong className="text-sm flex items-center mb-2">
-                <FileText className="w-3.5 h-3.5 mr-1" />
-                邮件模板
-              </Text>
-              <DebouncedTextArea
-                value={currentMailTemplate}
-                onCommit={value => apply({ mailTemplate: value })}
-                placeholder="邮件内容模板，支持HTML和变量"
-                rows={5}
-                size="small"
-              />
-            </div>
-
-            <div className="mt-2">
-              <Text strong className="text-sm flex items-center mb-2">
-                <Settings className="w-3.5 h-3.5 mr-1" />
-                异步执行
-              </Text>
-              <Switch
-                checked={currentAsync}
-                onChange={checked => apply({ async: checked })}
-                size="small"
-              />
-            </div>
           </>
         )}
 
@@ -1351,7 +1261,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              message="网关的具体条件需要在输出的序列流上分别配置，点击对应的连接线即可设置条件表达式。"
+              title="网关的具体条件需要在输出的序列流上分别配置，点击对应的连接线即可设置条件表达式。"
             />
           </>
         )}
@@ -1378,7 +1288,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              message="包容网关会执行所有条件为true的分支，全部完成后才会继续向下执行。"
+              title="包容网关会执行所有条件为true的分支，全部完成后才会继续向下执行。"
             />
           </>
         )}
@@ -1406,7 +1316,7 @@ export default function WorkflowNodeInspector({
               type="info"
               showIcon
               className="mt-2 text-xs"
-              message="复杂网关支持自定义的分支合并条件，适用于复杂的流程控制场景。"
+              title="复杂网关支持自定义的分支合并条件，适用于复杂的流程控制场景。"
             />
           </>
         )}
@@ -1424,12 +1334,13 @@ export default function WorkflowNodeInspector({
               <DebouncedTextArea
                 value={currentConditionExpression}
                 onCommit={value => applyCondition(value)}
-                placeholder="例如：${order.amount > 10000} 或 JavaScript 表达式"
+                placeholder={'例如：${variables["amount"] > 10000}'}
                 rows={3}
                 className="font-mono text-xs"
               />
               <Text type="secondary" className="text-xs mt-1 block">
-                条件表达式返回 true 时，流程将沿此连线流转
+                {'使用 ${variables[键]} 形式读取流程变量；运行时按 expr-lang 求值，'}
+                {'不支持 JavaScript 语法，返回 true 时沿此连线流转'}
               </Text>
             </div>
           </>
