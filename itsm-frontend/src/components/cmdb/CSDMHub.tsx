@@ -30,6 +30,21 @@ const normalizeItems = (value: unknown): unknown[] => {
   return [];
 };
 
+type CapabilityBadge = { color: string; key: string };
+
+const maturityBadge = (maturity: string | undefined, t: (key: string) => string): CapabilityBadge => {
+  switch (maturity) {
+    case 'ga':
+      return { color: 'green', key: 'cmdb.hub.gaBadge' };
+    case 'pilot':
+      return { color: 'gold', key: 'cmdb.hub.pilotBadge' };
+    case 'disabled':
+      return { color: 'default', key: 'cmdb.hub.disabledBadge' };
+    default:
+      return { color: 'default', key: 'cmdb.hub.unknownBadge' };
+  }
+};
+
 export function CSDMHub() {
   const router = useRouter();
   const { message } = App.useApp();
@@ -89,9 +104,10 @@ export function CSDMHub() {
     {
       key: 'ga-capabilities',
       title: t('cmdb.hub.gaCapabilities'),
-      value: availableCapabilities.filter(item =>
-        capabilities.find(capability => capability.key === item.capabilityKey)?.maturity === 'ga'
-      ).length,
+      value: availableCapabilities.filter(item => {
+        const maturity = capabilities.find(capability => capability.key === item.capabilityKey)?.maturity;
+        return maturity === 'ga';
+      }).length,
       prefix: <ShieldCheck className="mr-2 text-green-600" />,
       accentColor: '#389e0d',
     },
@@ -126,12 +142,13 @@ export function CSDMHub() {
         <Row gutter={[16, 16]}>
           {availableCapabilities.map(capability => {
             const maturity = capabilities.find(item => item.key === capability.capabilityKey)?.maturity;
+            const badge = maturityBadge(maturity, t);
             return (
             <Col key={capability.key} xs={24} md={12} xl={6}>
               <Card size="small" className="h-full border-slate-200">
                 <div className="flex items-center justify-between gap-2">
                   <Title level={5} className="!mb-0">{capability.title}</Title>
-                  <Tag color={maturity === 'ga' ? 'green' : 'gold'}>{maturity === 'ga' ? t('cmdb.hub.gaBadge') : t('cmdb.hub.pilotBadge')}</Tag>
+                  <Tag color={badge.color}>{t(badge.key)}</Tag>
                 </div>
                 <Paragraph type="secondary" className="!mb-4 !mt-3 min-h-11">
                   {capability.description}
