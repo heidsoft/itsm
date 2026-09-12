@@ -54,7 +54,7 @@ type UpdateServiceRequestRequest struct {
 // GetServiceCatalogsRequest 获取服务目录请求
 type GetServiceCatalogsRequest struct {
 	Page     int    `json:"page" form:"page" binding:"omitempty,min=1"`
-	Size     int    `json:"size" form:"size" binding:"omitempty,min=1,max=100"`
+	Size     int    `json:"size" form:"size" binding:"omitempty,min=1,max=1000"`
 	Category string `json:"category" form:"category"`
 	Status   string `json:"status" form:"status" binding:"omitempty,oneof=enabled disabled"`
 }

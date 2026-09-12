@@ -151,6 +151,21 @@ func TestHandler_List(t *testing.T) {
 	assert.IsType(t, []interface{}{}, data["catalogs"])
 }
 
+func TestHandler_List_AcceptsSize1000(t *testing.T) {
+	r, _, _ := scSetup(t)
+	// Fix for #2: 导出 exportCatalog(pageSize:1000) 此前因 Size max=100 被拒，
+	// 现 max=1000 应能通过。
+	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs?size=1000", nil)
+	assert.Equal(t, common.SuccessCode, resp.Code, "size=1000 应被允许，body=%s", mustSC(resp))
+}
+
+func TestHandler_List_RejectsSize1001(t *testing.T) {
+	r, _, _ := scSetup(t)
+	// 越界上限必须仍被拒，避免放开 cap 后被滥用
+	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs?size=1001", nil)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "size=1001 必须返回 1001")
+}
+
 func TestHandler_Get_Success(t *testing.T) {
 	r, _, _ := scSetup(t)
 	uid := scUID()
