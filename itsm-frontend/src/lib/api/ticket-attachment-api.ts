@@ -4,7 +4,6 @@
  */
 
 import { httpClient } from './http-client';
-import { API_BASE_URL } from '@/lib/api/api-config';
 
 export interface TicketAttachment {
   id: number;
@@ -55,54 +54,14 @@ export class TicketAttachmentApi {
     const formData = new FormData();
     formData.append('file', file);
 
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      // 监听上传进度
-      xhr.upload.addEventListener('progress', event => {
-        if (event.lengthComputable && onProgress) {
-          const progress = (event.loaded / event.total) * 100;
-          onProgress(progress);
-        }
-      });
-
-      // 监听完成
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText);
-            if ((response.code === 0 || response.code === 200) && response.data) {
-              resolve(response.data);
-            } else {
-              reject(new Error(response.message || '上传失败'));
-            }
-          } catch (_error) {
-            reject(new Error('响应格式错误'));
-          }
-        } else {
-          reject(new Error(`上传失败: ${xhr.statusText}`));
-        }
-      });
-
-      // 监听错误
-      xhr.addEventListener('error', () => {
-        reject(new Error('上传失败'));
-      });
-
-      // 使用与 httpClient 相同的路径策略：生产环境通过 nginx 反代，用相对路径
-      const uploadUrl = API_BASE_URL
-        ? `${API_BASE_URL}/api/v1/tickets/${ticketId}/attachments`
-        : `/api/v1/tickets/${ticketId}/attachments`;
-      xhr.open('POST', uploadUrl);
-
-      // 添加认证头
-      const token = httpClient.getAuthToken();
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
-
-      xhr.send(formData);
-    });
+    // 必须走 httpClient：它统一负责 X-CSRF-Token、withCredentials（httpOnly cookie）、
+    // 租户 header、CSRF 轮换后重试与 camelCase 转换。自建 XHR 会被后端以
+    // 403 "CSRF token missing" 拒绝。
+    return httpClient.post<TicketAttachment>(
+      `/api/v1/tickets/${ticketId}/attachments`,
+      formData,
+      { onUploadProgress: onProgress }
+    );
   }
 
   /**

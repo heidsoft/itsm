@@ -337,4 +337,99 @@ describe('httpClient', () => {
       expect(result).toEqual([1, 2, 3]);
     });
   });
+
+  // 回归：post(FormData) 与 request({ data: FormData }) 曾各自手写请求，绕过
+  // addCSRFHeader 与 credentials，导致全站附件上传 / 批量导入被后端以
+  // 403 {"code":403,"message":"CSRF token missing"} 拒绝。
+  describe('FormData upload (CSRF regression)', () => {
+    function blobResponse(blob: Blob, status = 200): Response {
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        statusText: status === 200 ? 'OK' : 'Error',
+        blob: async () => blob,
+        clone: () => blobResponse(blob, status),
+        headers: new Headers(),
+      } as unknown as Response;
+    }
+
+    function makeFormData(): FormData {
+      const fd = new FormData();
+      fd.append('file', new File(['probe'], 'probe.txt', { type: 'text/plain' }));
+      return fd;
+    }
+
+    it('sends X-CSRF-Token and credentials on post(FormData)', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ code: 0, message: 'ok', data: { attachmentId: 7 } })
+      );
+
+      const result = await httpClient.post<{ attachmentId: number }>(
+        '/api/v1/tickets/15/attachments',
+        makeFormData()
+      );
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['X-CSRF-Token']).toBe('mock-csrf-token');
+      expect(init.credentials).toBe('include');
+      expect(init.body).toBeInstanceOf(FormData);
+      expect(result).toEqual({ attachmentId: 7 });
+    });
+
+    it('drops Content-Type so the browser sets the multipart boundary', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
+
+      // 调用方（knowledge-base-api.uploadImage、user-api.importUsers）会传无 boundary 的
+      // 'multipart/form-data'；它必须被丢弃，否则后端解析不了 multipart 体。
+      await httpClient.post('/api/v1/knowledge/articles/upload/image', makeFormData(), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['Content-Type']).toBeUndefined();
+    });
+
+    it('returns the raw blob when responseType is blob', async () => {
+      const blob = new Blob(['csv'], { type: 'text/csv' });
+      fetchMock.mockResolvedValueOnce(blobResponse(blob));
+
+      const result = await httpClient.post<Blob>('/api/v1/tickets/export', makeFormData(), {
+        responseType: 'blob',
+      });
+
+      expect(result).toBe(blob);
+    });
+
+    it('routes request({ data: FormData }) through the same CSRF handling', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: {} }));
+
+      await httpClient.request({
+        method: 'POST',
+        url: '/api/v1/users/import',
+        data: makeFormData(),
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(init.headers['X-CSRF-Token']).toBe('mock-csrf-token');
+      expect(init.headers['Content-Type']).toBeUndefined();
+      expect(init.credentials).toBe('include');
+      expect(init.body).toBeInstanceOf(FormData);
+    });
+
+    it('retries once when the rotated CSRF token is rejected', async () => {
+      fetchMock
+        .mockResolvedValueOnce(
+          jsonResponse({ code: 403, message: 'CSRF token missing' }, { status: 403, ok: false })
+        )
+        .mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: { attachmentId: 9 } }));
+
+      await expect(
+        httpClient.post('/api/v1/tickets/15/attachments', makeFormData())
+      ).resolves.toEqual({ attachmentId: 9 });
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][1].headers['X-CSRF-Token']).toBe('mock-csrf-token');
+      expect(fetchMock.mock.calls[1][1].headers['Content-Type']).toBeUndefined();
+    });
+  });
 });

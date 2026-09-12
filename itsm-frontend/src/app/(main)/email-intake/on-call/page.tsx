@@ -30,6 +30,8 @@ import {
   type OnCallSchedule,
   type OnCallShift,
 } from '@/lib/services/emailIntakeService';
+import { GroupAPI } from '@/lib/api/group-api';
+import { UserApi } from '@/lib/api/user-api';
 
 const { Title, Text } = Typography;
 
@@ -67,13 +69,13 @@ export default function OnCallPage() {
     try {
       const [s, g, u, sh] = await Promise.all([
         emailIntakeService.schedules(),
-        fetch('/api/v1/groups?pageSize=100').then(r => r.json()),
-        fetch('/api/v1/users?pageSize=200').then(r => r.json()),
+        GroupAPI.getGroups({ pageSize: 100 }),
+        UserApi.getUsers({ pageSize: 200 }),
         emailIntakeService.shifts(),
       ]);
       setSchedules(s.items);
-      setGroups(g.items || g.data?.items || []);
-      setUsers(u.items || u.data?.items || []);
+      setGroups((g.groups || []).map((gr) => ({ id: gr.id, name: gr.name })));
+      setUsers((u.users || []).map((usr) => ({ id: usr.id, name: usr.name || usr.username, email: usr.email })));
       setShifts(sh.items || []);
 
       // Load current on-call for each schedule

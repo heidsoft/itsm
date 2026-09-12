@@ -7,6 +7,8 @@ export class AuthService {
    * 第三方登录
    */
   static async thirdPartyLogin(provider: string, code: string, state?: string | null): Promise<void> {
+    // 例外：第三方 OAuth 回调路径（/api/auth/:provider/callback）不同于 SSO callback，无法走 AuthAPI
+    // eslint-disable-next-line no-restricted-syntax
     const response = await fetch(`/api/auth/${provider}/callback`, {
       method: 'POST',
       headers: {
@@ -106,6 +108,7 @@ export class AuthService {
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
+    // eslint-disable-next-line no-restricted-syntax
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -166,6 +169,8 @@ export class AuthService {
   static logout() {
     const { logout } = useAuthStore.getState();
     try {
+      // 例外：登出是 fire-and-forget，不阻塞 UI 跳转
+      // eslint-disable-next-line no-restricted-syntax
       fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
         method: 'POST',
         credentials: 'include',

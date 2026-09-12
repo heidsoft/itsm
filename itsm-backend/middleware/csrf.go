@@ -35,6 +35,12 @@ type CSRFConfig struct {
 }
 
 // DefaultCSRFConfig 默认 CSRF 配置
+//
+// 注意：Secure 字段不再基于 gin.Mode() 静态判断。CSRF cookie 的 Secure 标志
+// 在 GenerateCSRFToken 内通过 shouldUseSecureCSRFCookie(c) 动态判断，与
+// handlers/common.shouldUseSecureCookies 的认证 cookie 逻辑保持一致。
+// 这样可避免 release 模式 + 后端走 HTTP（反代前）时 CSRF cookie 强制 Secure
+// 被浏览器拒绝写入，以及 debug 模式 + HTTPS 反代时 CSRF cookie 缺失 Secure。
 func DefaultCSRFConfig() *CSRFConfig {
 	return &CSRFConfig{
 		TokenLength:  32,
@@ -42,11 +48,23 @@ func DefaultCSRFConfig() *CSRFConfig {
 		HeaderName:   CSRFTokenHeaderName,
 		FormName:     CSRFTokenFormName,
 		CookieMaxAge: 86400,
-		Secure:       gin.Mode() == gin.ReleaseMode, // 生产环境启用 Secure
+		// Secure 运行时由 GenerateCSRFToken 基于 c.Request.TLS / X-Forwarded-Proto 覆盖
+		Secure: false,
+		// SkipPaths 语义：
+		//  - 以 '/' 结尾视为前缀匹配（匹配 prefix+"/..."）；
+		//  - 其余视为精确匹配。
+		// 安全考虑：前缀匹配仅用于无 Double Submit Cookie 语义的端点
+		//（如 SSO 回调：跨域 POST 不带浏览器 cookie）。
+		// 注意："/api/v1/auth/sso/" 为前缀匹配，仅供 SSO initiate/callback 使用。
+		// 未来若在 /api/v1/auth/sso/ 下新增需要 CSRF 保护的写操作端点（如解绑 SSO），
+		// 必须改用精确匹配或将该端点移出 sso/ 前缀，否则会被误跳过 CSRF 验证。
 		SkipPaths: []string{
 			"/api/v1/auth/login",
 			"/api/v1/auth/refresh",
 			"/api/v1/auth/refresh-token",
+			"/api/v1/auth/logout",
+			"/api/v1/auth/webauthn/",
+			"/api/v1/auth/sso/",
 			"/api/v1/refresh-token",
 			"/metrics",
 			"/version",
@@ -54,6 +72,23 @@ func DefaultCSRFConfig() *CSRFConfig {
 		},
 		AllowedMethods: []string{"POST", "PUT", "DELETE", "PATCH"},
 	}
+}
+
+// shouldUseSecureCSRFCookie 判断 CSRF cookie 是否应带 Secure 标志。
+// 与 handlers/common.shouldUseSecureCookies 保持一致的动态判断逻辑：
+//   - 直接 HTTPS（c.Request.TLS != nil）→ Secure
+//   - 反向代理 HTTPS（X-Forwarded-Proto=https）→ Secure
+//   - 其他（dev 模式、HTTP 健康检查等）→ 不带 Secure
+//
+// 不依赖 gin.Mode()，避免运行模式与实际传输协议不一致导致 cookie 写入失败或泄露。
+func shouldUseSecureCSRFCookie(c *gin.Context) bool {
+	if c.Request == nil {
+		return false
+	}
+	if c.Request.TLS != nil {
+		return true
+	}
+	return strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
 }
 
 // CSRFTokenGenerator 生成 CSRF token
@@ -64,6 +99,9 @@ func CSRFTokenGenerator(length int) string {
 }
 
 // GenerateCSRFToken 生成 CSRF token 并设置到 cookie
+//
+// Secure 标志使用 shouldUseSecureCSRFCookie(c) 动态判断，与认证 cookie 逻辑一致，
+// 忽略 config.Secure 字段（保留字段仅为兼容既有调用方签名）。
 func GenerateCSRFToken(c *gin.Context, config *CSRFConfig) string {
 	token := CSRFTokenGenerator(config.TokenLength)
 
@@ -73,8 +111,8 @@ func GenerateCSRFToken(c *gin.Context, config *CSRFConfig) string {
 		config.CookieMaxAge,
 		"/",
 		config.Domain,
-		config.Secure,
-		true, // HttpOnly - 前端 JS 无法读取
+		shouldUseSecureCSRFCookie(c), // 动态判断，与认证 cookie 一致
+		true,                         // HttpOnly - 前端 JS 无法读取
 	)
 
 	return token
@@ -87,17 +125,30 @@ func CSRFProtectionMiddleware(config *CSRFConfig) gin.HandlerFunc {
 		config = DefaultCSRFConfig()
 	}
 
-	// 构建 skip paths map 加快查找
-	skipPaths := make(map[string]bool)
+	// 构建 skip paths：精确匹配 map + 前缀匹配 slice。
+	// SkipPaths 中以 '/' 结尾的视为前缀匹配，其余视为精确匹配。
+	exactSkipPaths := make(map[string]bool)
+	prefixSkipPaths := make([]string, 0)
 	for _, path := range config.SkipPaths {
-		skipPaths[path] = true
+		if strings.HasSuffix(path, "/") {
+			prefixSkipPaths = append(prefixSkipPaths, strings.TrimSuffix(path, "/"))
+		} else {
+			exactSkipPaths[path] = true
+		}
 	}
 
 	return func(c *gin.Context) {
-		// 1. 检查是否跳过 CSRF 验证
-		if skipPaths[c.Request.URL.Path] {
+		// 1. 检查是否跳过 CSRF 验证（精确匹配）
+		if exactSkipPaths[c.Request.URL.Path] {
 			c.Next()
 			return
+		}
+		// 1'. 前缀匹配：以 prefix + '/' 开头，避免误命中兄弟路径
+		for _, prefix := range prefixSkipPaths {
+			if strings.HasPrefix(c.Request.URL.Path, prefix+"/") {
+				c.Next()
+				return
+			}
 		}
 
 		// 1a. Bearer token 认证：无浏览器 cookie 语义（跨站不会自动附带 Authorization header），
@@ -238,62 +289,12 @@ func CSRFRefreshMiddleware(config *CSRFConfig) gin.HandlerFunc {
 	}
 }
 
-// SameSiteCSRFCookieConfig 生成 SameSite=Strict 的 CSRF cookie 配置
-func SameSiteCSRFCookieConfig() *http.Cookie {
-	return &http.Cookie{
-		Name:     CSRFTokenCookieName,
-		Value:    "",
-		Path:     "/",
-		MaxAge:   0,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-}
-
-// ValidateCSRFOrigin 验证请求来源
-func ValidateCSRFOrigin(c *gin.Context, allowedOrigins []string) bool {
-	origin := c.Request.Header.Get("Origin")
-	if origin == "" {
-		origin = c.Request.Header.Get("Referer")
-	}
-
-	if origin == "" {
-		// 无 origin/referer 的跨域请求应被拒绝
-		// 同源请求通常不带 Origin header，但 CSRF 攻击必然带跨域 Origin
-		// 此处安全起见返回 true（同源请求），CSRF token 本身提供保护
-		return true
-	}
-
-	for _, allowed := range allowedOrigins {
-		if origin == allowed {
-			return true
-		}
-	}
-
-	return false
-}
-
-// CSRFOriginValidationMiddleware 验证请求来源的中间件
-func CSRFOriginValidationMiddleware(allowedOrigins []string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 只对跨域请求进行来源验证
-		if c.Request.Method == "OPTIONS" {
-			c.Next()
-			return
-		}
-
-		if !ValidateCSRFOrigin(c, allowedOrigins) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"code":    http.StatusForbidden,
-				"message": "Invalid request origin",
-			})
-			return
-		}
-
-		c.Next()
-	}
-}
+// 已删除以下未接线的 dead code（全仓 grep 确认无外部调用方）：
+//   - SameSiteCSRFCookieConfig()：硬编码 Secure=true，与动态判断逻辑冲突
+//   - ValidateCSRFOrigin / CSRFOriginValidationMiddleware：从未在 router 注册
+//
+// 如未来需要 Origin 白名单校验，应作为独立中间件在 router 显式 Use，
+// 并补 tenant scope + RBAC 测试，避免再次以 dead code 形式潜伏。
 
 // CSRFTokenTTL token 过期时间
 const CSRFTokenTTL = time.Hour * 24

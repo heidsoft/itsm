@@ -472,17 +472,13 @@ class TicketService {
 
   // 导出工单
   async exportTickets(filters: TicketFilterParams = {}): Promise<Blob> {
-    const response = await fetch(`${this.baseUrl}/export`, {
+    const blob = await httpClient.request<Blob>({
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(filters),
+      url: `${this.baseUrl}/export`,
+      data: filters,
+      responseType: 'blob',
     });
-    if (!response.ok) {
-      throw new Error('Export failed');
-    }
-    return response.blob();
+    return blob;
   }
 }
 

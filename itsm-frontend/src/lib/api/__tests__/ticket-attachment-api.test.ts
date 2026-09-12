@@ -17,6 +17,7 @@ jest.mock('@/lib/api/api-config', () => ({
 }));
 
 const mockGet = httpClient.get as jest.Mock;
+const mockPost = httpClient.post as jest.Mock;
 const mockDelete = httpClient.delete as jest.Mock;
 
 describe('TicketAttachmentApi', () => {
@@ -29,6 +30,41 @@ describe('TicketAttachmentApi', () => {
       const result = await TicketAttachmentApi.listAttachments(10);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/10/attachments');
       expect(result.attachments).toHaveLength(1);
+    });
+  });
+
+  // 回归：uploadAttachment 曾自建 XMLHttpRequest，绕过 httpClient，因此不发送
+  // X-CSRF-Token、credentials 和租户 header，后端一律返回
+  // 403 {"code":403,"message":"CSRF token missing"}，工单附件上传全站不可用。
+  describe('uploadAttachment (CSRF regression)', () => {
+    it('delegates to httpClient.post so CSRF/credentials/tenant headers are applied', async () => {
+      const uploaded = { id: 7, ticketId: 10, fileName: 'a.png' };
+      mockPost.mockResolvedValue(uploaded);
+
+      const file = new File(['x'], 'a.png', { type: 'image/png' });
+      const onProgress = jest.fn();
+      const result = await TicketAttachmentApi.uploadAttachment(10, file, onProgress);
+
+      expect(mockPost).toHaveBeenCalledTimes(1);
+      const [url, body, config] = mockPost.mock.calls[0];
+      expect(url).toBe('/api/v1/tickets/10/attachments');
+      expect(body).toBeInstanceOf(FormData);
+      expect((body as FormData).get('file')).toBe(file);
+      expect(config).toEqual({ onUploadProgress: onProgress });
+      expect(result).toEqual(uploaded);
+    });
+
+    it('forwards progress callback as undefined when caller omits it', async () => {
+      mockPost.mockResolvedValue({ id: 8, ticketId: 10 });
+      await TicketAttachmentApi.uploadAttachment(10, new File(['x'], 'b.png'));
+      expect(mockPost.mock.calls[0][2]).toEqual({ onUploadProgress: undefined });
+    });
+
+    it('propagates upload failure instead of resolving', async () => {
+      mockPost.mockRejectedValue(new Error('CSRF token missing'));
+      await expect(
+        TicketAttachmentApi.uploadAttachment(10, new File(['x'], 'c.png'))
+      ).rejects.toThrow('CSRF token missing');
     });
   });
 

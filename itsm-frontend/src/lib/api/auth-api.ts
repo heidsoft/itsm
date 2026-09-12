@@ -57,6 +57,7 @@ const API_TIMEOUT = 30000; // 30秒超时
 // 注意：Token 现在存储在 httpOnly cookies 中，由后端设置
 // 这里只保留 clearAuthStorage 用于清理租户信息
 import { clearAuthStorage } from '@/lib/auth/token-storage';
+import type { Tenant } from '@/lib/api/api-config';
 
 // API端点
 const API_ENDPOINTS = {
@@ -69,6 +70,7 @@ const API_ENDPOINTS = {
   WEBAUTHN_CHALLENGE: '/api/v1/auth/webauthn/challenge',
   WEBAUTHN_VERIFY: '/api/v1/auth/webauthn/verify',
   SSO_INITIATE: '/api/v1/auth/sso/initiate',
+  SSO_CALLBACK: '/api/v1/auth/sso/callback',
 } as const;
 
 // HTTP客户端配置
@@ -416,6 +418,65 @@ class AuthApiClient {
       };
     }
   }
+
+  /**
+   * SSO回调处理
+   */
+  async ssoCallback(
+    code: string,
+    state: string | null,
+    provider: string = 'default'
+  ): Promise<{
+    success: boolean;
+    data?: {
+      user: {
+        id: number;
+        username: string;
+        role?: string;
+        email?: string;
+        name?: string;
+        tenantId?: number;
+        department?: string;
+        permissions?: string[];
+      };
+      tenant: Tenant;
+      accessToken: string;
+    };
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(
+        `${this.baseURL}${API_ENDPOINTS.SSO_CALLBACK}?provider=${encodeURIComponent(provider)}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, state }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          response.status === 404 || response.status === 501
+            ? 'SSO 登录暂未启用，请使用账号密码登录'
+            : 'SSO 登录失败，请稍后重试'
+        );
+      }
+
+      const data = await response.json();
+      if (data?.code !== 0 || !data?.data) {
+        throw new Error(data?.message || 'SSO 登录失败');
+      }
+
+      return { success: true, data: data.data };
+    } catch (error) {
+      console.error('SSO callback error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error',
+      };
+    }
+  }
 }
 
 // 导出单例实例
@@ -451,6 +512,8 @@ export const AuthAPI = {
   getWebAuthnChallenge: (username: string) => authApiClient.getWebAuthnChallenge(username),
   verifyWebAuthn: (credential: WebAuthnCredential) => authApiClient.verifyWebAuthn(credential),
   initiateSSOLogin: (provider?: string) => authApiClient.initiateSSOLogin(provider),
+  ssoCallback: (code: string, state: string | null, provider?: string) =>
+    authApiClient.ssoCallback(code, state, provider),
   validateToken: () => authApiClient.validateToken(),
 };
 

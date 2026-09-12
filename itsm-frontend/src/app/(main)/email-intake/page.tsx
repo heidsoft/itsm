@@ -35,6 +35,7 @@ import {
   type SupportContract,
   type OnCallSchedule,
 } from '@/lib/services/emailIntakeService';
+import { UserApi } from '@/lib/api/user-api';
 
 interface User {
   id: number;
@@ -103,7 +104,7 @@ export default function EmailIntakePage() {
           emailIntakeService.sourceOrganizations(),
           emailIntakeService.externalContractReferences(),
           emailIntakeService.schedules(),
-          fetch('/api/v1/users?pageSize=200').then(r => r.json()),
+          UserApi.getUsers({ pageSize: 200 }),
         ]);
       if (customerResult.status === 'fulfilled') setCustomers(customerResult.value.items ?? []);
       if (contractResult.status === 'fulfilled') setContracts(contractResult.value.items ?? []);
@@ -112,7 +113,13 @@ export default function EmailIntakePage() {
         setExternalReferences(externalReferenceResult.value.items ?? []);
       if (scheduleResult.status === 'fulfilled') setSchedules(scheduleResult.value.items ?? []);
       if (userResult.status === 'fulfilled')
-        setUsers(userResult.value.items || userResult.value.data?.items || []);
+        setUsers(
+          (userResult.value.users || []).map((u) => ({
+            id: u.id,
+            name: u.name || u.username,
+            email: u.email,
+          }))
+        );
     } catch (error) {
       message.error(`加载主数据失败：${(error as Error).message}`);
     }

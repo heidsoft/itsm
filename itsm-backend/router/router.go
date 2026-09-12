@@ -33,11 +33,10 @@ import (
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	connectorHandler "itsm-backend/handlers/connector"
+	dingtalkHandler "itsm-backend/handlers/dingtalk"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
 	feishuHandler "itsm-backend/handlers/feishu"
-	dingtalkHandler "itsm-backend/handlers/dingtalk"
-	wecomHandler "itsm-backend/handlers/wecom"
 	globalSearchHandler "itsm-backend/handlers/global_search"
 	groupHandler "itsm-backend/handlers/group"
 	incidentHandler "itsm-backend/handlers/incident"
@@ -77,6 +76,7 @@ import (
 	usersHandler "itsm-backend/handlers/user"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
+	wecomHandler "itsm-backend/handlers/wecom"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -372,8 +372,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	// CSRF 保护中间件（仅对状态变更请求生效）
 	if config.CSRFEnabled {
 		csrfConfig := middleware.DefaultCSRFConfig()
-		// CSRF 不验证登录相关的路径
-		csrfConfig.SkipPaths = append(csrfConfig.SkipPaths, "/api/v1/auth/login", "/api/v1/refresh-token")
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
 	auth.GET("/capabilities", capability.Handler)

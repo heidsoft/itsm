@@ -171,11 +171,6 @@ export class ErrorHandler {
 
     // 根据严重程度显示用户通知
     this.showUserNotification(errorInfo);
-
-    // 发送错误报告到服务器（生产环境）
-    if (process.env.NODE_ENV === 'production') {
-      this.reportError(errorInfo);
-    }
   }
 
   // 记录错误日志
@@ -226,21 +221,6 @@ export class ErrorHandler {
   private showValidationErrors(errors: Record<string, string[]>): void {
     const errorMessages = Object.values(errors).flat();
     errorMessages.forEach(msg => message.error(msg));
-  }
-
-  // 发送错误报告到服务器
-  private async reportError(errorInfo: ErrorInfo): Promise<void> {
-    try {
-      await fetch('/api/errors', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(errorInfo),
-      });
-    } catch (error) {
-      // console.error('Failed to report error:', error);
-    }
   }
 
   // 工具方法

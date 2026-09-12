@@ -73,6 +73,8 @@ function registerValidSW(swUrl: string, config?: Config) {
 }
 
 function checkValidServiceWorker(swUrl: string, config?: Config) {
+  // 例外：Service Worker 脚本必须用原生 fetch() 探测，不能走 httpClient（SW 注册场景）
+  // eslint-disable-next-line no-restricted-syntax
   fetch(swUrl, {
     headers: { 'Service-Worker': 'script' },
   })

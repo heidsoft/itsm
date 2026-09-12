@@ -99,4 +99,23 @@ export default [
       'react-hooks/exhaustive-deps': 'off',
     },
   },
+  // 禁止在业务层直接 fetch()，统一走 src/lib/api/httpClient
+  // 例外：src/lib/api/**（httpClient 自身实现）、src/app/api/**（Next.js route handler, Node 侧）
+  //       pwa.ts(SW 注册)、security.ts(CSRF token 获取先于 httpClient)、NetworkStatus.tsx(健康探测)
+  {
+    files: ['src/app/**/*.tsx', 'src/lib/services/**/*.ts', 'src/components/**/*.tsx'],
+    ignores: ['src/app/api/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='fetch']",
+          message:
+            '禁止直接调用 fetch()，请使用 src/lib/api/httpClient 统一封装的 API client。' +
+            '如确需例外（SW 注册、CSRF token 获取、健康探测），' +
+            '在调用上方加 // eslint-disable-next-line no-restricted-syntax 并注明理由。',
+        },
+      ],
+    },
+  },
 ];

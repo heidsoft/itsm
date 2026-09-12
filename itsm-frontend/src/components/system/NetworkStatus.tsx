@@ -46,6 +46,8 @@ export function NetworkStatus({ compact = false, enableFormLock = true }: Networ
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
 
+      // 例外：健康探测用原生 fetch 带 AbortController 超时，不走 httpClient（避免干扰认证态）
+      // eslint-disable-next-line no-restricted-syntax
       const res = await fetch(HEALTH_URL, {
         method: 'GET',
         signal: controller.signal,

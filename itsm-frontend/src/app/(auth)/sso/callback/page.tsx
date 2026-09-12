@@ -9,7 +9,7 @@ import { AuthService } from '@/lib/services/auth-service';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { logger } from '@/lib/env';
 import type { Tenant } from '@/lib/api/api-config';
-import { API_BASE_URL } from '@/lib/api/api-config';
+import { AuthAPI } from '@/lib/api/auth-api';
 
 const { Text, Title } = Typography;
 
@@ -54,43 +54,13 @@ function SSOCallbackContent() {
         // ⚠️ 安全修复：禁止在前端硬编码任何 SSO 用户、token、tenantId、permissions。
         // 必须由后端 /api/v1/auth/sso/callback 基于 OAuth/SAML code 进行真实校验后下发会话。
         // 在开源版本尚未对接 SSO 提供商时，此路由必须显示"SSO 暂未启用"并禁止本地登录。
-        const ssoCallbackResponse = await fetch(
-          `${API_BASE_URL}/api/v1/auth/sso/callback?provider=${encodeURIComponent(provider)}`,
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, state }),
-          }
-        );
+        const ssoResult = await AuthAPI.ssoCallback(code, state, provider);
 
-        if (!ssoCallbackResponse.ok) {
-          throw new Error(
-            ssoCallbackResponse.status === 404 || ssoCallbackResponse.status === 501
-              ? 'SSO 登录暂未启用，请使用账号密码登录'
-              : 'SSO 登录失败，请稍后重试'
-          );
+        if (!ssoResult.success || !ssoResult.data) {
+          throw new Error(ssoResult.error || 'SSO 登录失败');
         }
 
-        const ssoCallbackData = await ssoCallbackResponse.json();
-        if (ssoCallbackData?.code !== 0 || !ssoCallbackData?.data) {
-          throw new Error(ssoCallbackData?.message || 'SSO 登录失败');
-        }
-
-        const { user, tenant, accessToken } = ssoCallbackData.data as {
-          user: {
-            id: number;
-            username: string;
-            role?: string;
-            email?: string;
-            name?: string;
-            tenantId?: number;
-            department?: string;
-            permissions?: string[];
-          };
-          tenant: Tenant;
-          accessToken: string;
-        };
+        const { user, tenant, accessToken } = ssoResult.data;
 
         // 后端 SSO 响应里 email/name 可能缺失，这里兜底默认值
         const safeUser = {

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { httpClient } from '@/lib/api/http-client';
+import { UserApi } from '@/lib/api/user-api';
 import { WorkflowDefinitionApi } from '@/lib/api/workflow-definition-api';
 
 const { Title, Text } = Typography;
@@ -118,9 +119,14 @@ export default function ApprovalManagement() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/users?pageSize=200');
-      const data = await res.json();
-      setUsers(data.items || data.data?.items || []);
+      const data = await UserApi.getUsers({ pageSize: 200 });
+      setUsers(
+        (data.users || []).map((u) => ({
+          id: u.id,
+          name: u.name || u.username,
+          email: u.email,
+        }))
+      );
     } catch (error) {
       console.error('Failed to load users:', error);
     }

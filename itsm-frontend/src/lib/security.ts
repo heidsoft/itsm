@@ -62,6 +62,8 @@ export const csrfProtection = {
     const fetchToken = async (): Promise<string | null> => {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
+          // 例外：CSRF token 必须先于 httpClient 获取，无法走 httpClient（依赖自身）
+          // eslint-disable-next-line no-restricted-syntax
           const response = await fetch('/api/v1/csrf-token', {
             method: 'GET',
             credentials: 'include', // Include httpOnly cookies
