@@ -23,7 +23,7 @@ export class TicketApi {
 
     return {
       ...response,
-      size: response.size ?? response.pageSize ?? params?.pageSize ?? params?.size ?? 20,
+      size: response.pageSize ?? 20,
     };
   }
 

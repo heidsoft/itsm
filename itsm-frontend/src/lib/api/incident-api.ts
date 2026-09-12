@@ -373,10 +373,10 @@ export class IncidentAPI {
       );
 
       const response = await httpClient.get<IncidentListPayload>(API_URLS.INCIDENTS(), cleanParams);
-      const incidents = response.incidents ?? response.items ?? response.data ?? [];
-      const page = response.page ?? params.page ?? 1;
-      const pageSize = response.pageSize ?? params.pageSize ?? incidents.length;
-      const total = response.total ?? incidents.length;
+      const incidents = response.incidents ?? [];
+      const page = response.page ?? 1;
+      const pageSize = response.pageSize ?? 10;
+      const total = response.total ?? 0;
       return {
         incidents,
         items: incidents,

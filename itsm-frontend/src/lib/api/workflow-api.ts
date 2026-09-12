@@ -163,10 +163,8 @@ export class WorkflowApi {
         }
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : (res.data || res.items || res.list || []);
-    const total = Array.isArray(res)
-      ? list.length
-      : (res.total ?? res.pagination?.total ?? list.length);
+    const list = Array.isArray(res) ? res : (res.items ?? []);
+    const total = Array.isArray(res) ? list.length : (res.pagination?.total ?? list.length);
     const workflows: WorkflowDefinition[] = list.map((item: {
       id: number;
       key: string;

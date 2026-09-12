@@ -196,7 +196,7 @@ export class TicketAssignmentApi {
     return {
       ...response,
       recommendations: (response.recommendations || []).map(normalizeRecommendation),
-      total: response.total ?? response.recommendations?.length ?? 0,
+      total: response.total,
     };
   }
 
@@ -208,7 +208,7 @@ export class TicketAssignmentApi {
     return {
       ...response,
       rules: (response.rules || []).map(normalizeRule),
-      total: response.total ?? response.rules?.length ?? 0,
+      total: response.total,
     };
   }
 

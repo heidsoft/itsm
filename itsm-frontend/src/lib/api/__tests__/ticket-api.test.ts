@@ -29,7 +29,7 @@ describe('TicketApi', () => {
 
   describe('getTickets', () => {
     it('should fetch tickets with params', async () => {
-      const resp = { items: [], total: 0, size: 10 };
+      const resp = { tickets: [], total: 0, pageSize: 10 };
       mockGet.mockResolvedValue(resp);
       const result = await TicketApi.getTickets({ page: 1, pageSize: 10 });
       expect(handleApiRequest).toHaveBeenCalled();

@@ -699,18 +699,27 @@ describe('WorkflowApi', () => {
   });
 
   describe('getWorkflows with paginated response', () => {
-    it('should handle {data: [...]} response format', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce({ data: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }], total: 1 });
-      const result = await WorkflowApi.getWorkflows();
-      expect(result.workflows).toHaveLength(1);
-      expect(result.total).toBe(1);
-    });
-
-    it('should handle {items: [...]} response format', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }], pagination: { total: 5 } });
+    it('should handle canonical {items, pagination:{total}} response', async () => {
+      // 规范契约：后端 common.NewListResponse → {items, pagination:{total,page,pageSize,...}}
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        items: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }],
+        pagination: { total: 5 },
+      });
       const result = await WorkflowApi.getWorkflows();
       expect(result.workflows).toHaveLength(1);
       expect(result.total).toBe(5);
+    });
+
+    it('rejects legacy {data: [...]} shape (S-9 single-source contract)', async () => {
+      // Fix for S-9：旧实现用 response.data ?? response.items ?? response.list 多字段兜底，
+      // AGENTS.md 禁止。S-9 后只接受规范 {items, pagination}。
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({
+        data: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }],
+        total: 1,
+      });
+      const result = await WorkflowApi.getWorkflows();
+      expect(result.workflows).toHaveLength(0);
+      expect(result.total).toBe(0);
     });
   });
 });
