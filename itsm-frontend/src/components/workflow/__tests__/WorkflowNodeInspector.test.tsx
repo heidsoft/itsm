@@ -224,3 +224,118 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     expect(screen.getByText(/点击画布上的节点查看\/编辑属性/)).toBeInTheDocument();
   });
 });
+
+describe('WorkflowNodeInspector — moddle 值回读', () => {
+  const onUpdateProperties = jest.fn().mockReturnValue(true);
+
+  beforeEach(() => {
+    onUpdateProperties.mockClear();
+  });
+
+  it('把 bpmn:Documentation 列表显示为文本而不是 [object Object]', () => {
+    render(
+      <WorkflowNodeInspector
+        selection={{
+          id: 'UT1',
+          type: 'bpmn:UserTask',
+          businessObject: {
+            name: '审批',
+            documentation: [{ $type: 'bpmn:Documentation', text: '节点说明' }],
+          },
+        }}
+        onUpdateProperties={onUpdateProperties}
+      />
+    );
+
+    expect(screen.getByDisplayValue('节点说明')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/\[object/)).not.toBeInTheDocument();
+  });
+
+  it('空 documentation 列表显示为空', () => {
+    render(
+      <WorkflowNodeInspector
+        selection={{
+          id: 'UT2',
+          type: 'bpmn:UserTask',
+          businessObject: { name: 'x', documentation: [] },
+        }}
+        onUpdateProperties={onUpdateProperties}
+      />
+    );
+
+    const textarea = screen.getByPlaceholderText('输入节点功能描述（可选）');
+    expect(textarea).toHaveValue('');
+  });
+
+  it('网关默认分支显示连线 ID，而不是被解析后的引用对象', () => {
+    render(
+      <WorkflowNodeInspector
+        selection={{
+          id: 'GW1',
+          type: 'bpmn:ExclusiveGateway',
+          businessObject: {
+            name: '判断',
+            default: { $type: 'bpmn:SequenceFlow', id: 'Flow_ok' },
+          },
+        }}
+        onUpdateProperties={onUpdateProperties}
+      />
+    );
+
+    expect(screen.getByDisplayValue('Flow_ok')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/\[object Object\]/)).not.toBeInTheDocument();
+  });
+
+  it('ccNotify="false" 时发送通知开关是关闭的', () => {
+    render(
+      <WorkflowNodeInspector
+        selection={{
+          id: 'ST1',
+          type: 'bpmn:ServiceTask',
+          businessObject: {
+            name: '抄送',
+            implementation: 'cc_handler',
+            ccType: 'role',
+            ccRoleIds: '3,4',
+            ccNotify: 'false',
+            notifyChannels: 'in_app,email',
+          },
+        }}
+        onUpdateProperties={onUpdateProperties}
+      />
+    );
+
+    const switches = screen.getAllByRole('switch');
+    expect(switches[0]).not.toBeChecked();
+    // 抄送类型必须能回读，否则重开流程看起来像配置丢失
+    expect(document.querySelector('.ant-select-content-has-value')?.textContent).toContain('角色');
+  });
+
+  it('operationRef 输入已移除，未接线的拒绝分支选项被禁用', async () => {
+    render(
+      <WorkflowNodeInspector
+        selection={{
+          id: 'UT3',
+          type: 'bpmn:UserTask',
+          businessObject: {
+            name: '审批',
+            taskPurpose: 'approval',
+            approvalMode: 'single',
+            rejectStrategy: 'terminate',
+          },
+        }}
+        onUpdateProperties={onUpdateProperties}
+      />
+    );
+
+    expect(screen.queryByText('操作引用 (operationRef)')).not.toBeInTheDocument();
+
+    // 下拉顺序：taskPurpose / approvalMode / rejectStrategy / timeoutAction
+    const comboboxes = screen.getAllByRole('combobox');
+    fireEvent.mouseDown(comboboxes[2]);
+
+    const option = await screen.findByText('进入拒绝分支（运行时未实现）');
+    expect(option.closest('.ant-select-item')).toHaveClass('ant-select-item-option-disabled');
+    expect(onUpdateProperties).not.toHaveBeenCalled();
+  });
+});
