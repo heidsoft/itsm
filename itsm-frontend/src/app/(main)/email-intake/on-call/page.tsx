@@ -8,6 +8,7 @@ import {
   Card,
   DatePicker,
   Form,
+  Input,
   Modal,
   Popconfirm,
   Select,
@@ -318,16 +319,14 @@ export default function OnCallPage() {
       >
         <Form form={scheduleForm} layout='vertical'>
           <Form.Item name='name' label='排班名称' rules={[{ required: true }]}>
-            <Select
-              placeholder='选择支持组'
-              options={groups.map(g => ({ value: g.name + ' 排班', label: g.name }))}
-            />
+            <Input placeholder='请输入排班名称（例如：NOC 7×24 排班）' />
           </Form.Item>
           <Form.Item name='groupId' label='支持组' rules={[{ required: true }]}>
             <Select
-              placeholder='选择支持组'
+              placeholder={groups.length === 0 ? '暂无可选支持组' : '选择支持组'}
               showSearch
               optionFilterProp='label'
+              notFoundContent={groups.length === 0 ? '当前租户尚无支持组，请先在「支持组」菜单创建' : '无匹配项'}
               options={groups.map(g => ({ value: g.id, label: g.name }))}
             />
           </Form.Item>
