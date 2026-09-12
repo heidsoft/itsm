@@ -643,16 +643,24 @@ describe('WorkflowApi', () => {
   });
 
   describe('listWorkflowTasks', () => {
-    it('should list tasks for instance', async () => {
+    it('should list tasks from the canonical items field', async () => {
       (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: [{ id: '1', taskName: 'Step 1', status: 'completed' }] });
-      (httpClient.getTenantId as jest.Mock).mockReturnValue(1);
       const result = await WorkflowApi.listWorkflowTasks('inst1');
       expect(result).toHaveLength(1);
+      expect(httpClient.get).toHaveBeenCalledWith('/api/v1/bpmn/tasks', {
+        processInstanceId: 'inst1',
+        page: 1,
+        pageSize: 100,
+      });
+    });
+
+    it('does not read deprecated list fields', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({ list: [{ id: '1', taskName: 'Legacy task' }] });
+      await expect(WorkflowApi.listWorkflowTasks('inst1')).rejects.toThrow();
     });
 
     it('should throw error on failure', async () => {
       (httpClient.get as jest.Mock).mockRejectedValueOnce(new Error('fail'));
-      (httpClient.getTenantId as jest.Mock).mockReturnValue(1);
       await expect(WorkflowApi.listWorkflowTasks('inst1')).rejects.toThrow('fail');
     });
   });

@@ -353,22 +353,14 @@ export class WorkflowApi {
   static async listWorkflowTasks(instanceId: string): Promise<WorkflowTask[]> {
     // 调用后端 BPMN API 获取指定流程实例的任务列表
     try {
-      const res = await httpClient.get<{ items?: any[]; list?: any[]; data?: any[] }>('/api/v1/bpmn/tasks', {
+      const res = await httpClient.get<{ items: BpmnTaskRaw[] }>('/api/v1/bpmn/tasks', {
         processInstanceId: instanceId,
         page: 1,
         pageSize: 100,
       });
-      
-      // 解析响应数据
-      let tasks: any[] = [];
-      if (Array.isArray(res)) {
-        tasks = res;
-      } else if (res && typeof res === 'object') {
-        tasks = res.items || res.list || res.data || [];
-      }
-      
+
       // 转换为 WorkflowTask 格式
-      return tasks.map((task: any) => ({
+      return res.items.map(task => ({
         id: String(task.id || task.taskId || task.ID || ''),
         instanceId: instanceId,
         nodeId: task.taskId || task.taskDefinitionKey || '',
