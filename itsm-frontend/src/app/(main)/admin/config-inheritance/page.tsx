@@ -32,6 +32,7 @@ export default function ConfigInheritancePage() {
   const [effectiveConfig, setEffectiveConfig] = useState<EffectiveConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewed, setPreviewed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [previewForm] = Form.useForm();
@@ -81,6 +82,7 @@ export default function ConfigInheritancePage() {
         teamId: values.teamId,
       });
       setEffectiveConfig(data);
+      setPreviewed(true);
     } catch (error) {
       console.error(error);
       message.error(error instanceof Error ? error.message : '解析有效配置失败');
@@ -107,7 +109,7 @@ export default function ConfigInheritancePage() {
       render: (_, record) => {
         if (record.teamId > 0) return <Tag color="purple">团队 #{record.teamId}</Tag>;
         if (record.departmentId > 0) return <Tag color="geekblue">部门 #{record.departmentId}</Tag>;
-        if ((record as any).tenantId > 0) return <Tag color="green">租户</Tag>;
+        if (record.tenantId > 0) return <Tag color="green">租户</Tag>;
         return <Tag>全局</Tag>;
       },
     },
@@ -180,20 +182,20 @@ export default function ConfigInheritancePage() {
 
           <Card title="有效配置预览">
             <Form form={previewForm} layout="vertical">
-              <Form.Item name="config_type" label="配置类型" rules={[{ required: true }]}>
+              <Form.Item name="configType" label="配置类型" rules={[{ required: true }]}>
                 <Input placeholder="process_binding / approval_workflow / sla_rule" />
               </Form.Item>
-              <Form.Item name="config_key" label="配置键" rules={[{ required: true }]}>
+              <Form.Item name="configKey" label="配置键" rules={[{ required: true }]}>
                 <Input placeholder="default_sla" />
               </Form.Item>
               <Row gutter={12}>
                 <Col span={12}>
-                  <Form.Item name="department_id" label="部门ID">
+                  <Form.Item name="departmentId" label="部门ID">
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="team_id" label="团队ID">
+                  <Form.Item name="teamId" label="团队ID">
                     <InputNumber min={0} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
@@ -211,6 +213,15 @@ export default function ConfigInheritancePage() {
                 description={<pre style={{ margin: 0 }}>{JSON.stringify(effectiveConfig.value, null, 2)}</pre>}
               />
             )}
+            {previewed && !effectiveConfig && !previewLoading && (
+              <Alert
+                style={{ marginTop: 16 }}
+                type="info"
+                showIcon
+                message="全链路未命中配置"
+                description="全局 → 租户 → 部门 → 团队 各层级均未定义该配置，运行时使用代码默认值。"
+              />
+            )}
           </Card>
         </Col>
       </Row>
@@ -225,29 +236,29 @@ export default function ConfigInheritancePage() {
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="config_type" label="配置类型" rules={[{ required: true }]}>
+              <Form.Item name="configType" label="配置类型" rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="config_key" label="配置键" rules={[{ required: true }]}>
+              <Form.Item name="configKey" label="配置键" rules={[{ required: true }]}>
                 <Input />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="department_id" label="部门ID" initialValue={0}>
+              <Form.Item name="departmentId" label="部门ID" initialValue={0}>
                 <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="team_id" label="团队ID" initialValue={0}>
+              <Form.Item name="teamId" label="团队ID" initialValue={0}>
                 <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="inherit_mode" label="继承模式" initialValue="inherit">
+              <Form.Item name="inheritMode" label="继承模式" initialValue="inherit">
                 <Select
                   options={[
                     { value: 'inherit', label: 'inherit' },
@@ -262,7 +273,7 @@ export default function ConfigInheritancePage() {
             <Input />
           </Form.Item>
           <Form.Item
-            name="config_value"
+            name="configValue"
             label="配置值 JSON"
             rules={[{ required: true, message: '请输入 JSON 配置' }]}
             initialValue="{}"

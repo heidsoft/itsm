@@ -22,13 +22,13 @@ describe('Cloud API', () => {
     it('list should get accounts', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0 });
       await cloudAccountApi.list({ page: 1 } as any);
-      expect(mockGet).toHaveBeenCalledWith('/cloud/accounts', { params: { page: 1 } });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/accounts', { page: 1 });
     });
 
     it('get should get account by id', async () => {
       mockGet.mockResolvedValue({ id: 1, name: 'AWS' } as any);
       const result = await cloudAccountApi.get(1);
-      expect(mockGet).toHaveBeenCalledWith('/cloud/accounts/1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/accounts/1');
       expect((result as any).name).toBe('AWS');
     });
 
@@ -36,19 +36,19 @@ describe('Cloud API', () => {
       const data = { name: 'AWS', provider: 'aws' };
       mockPost.mockResolvedValue({ id: 1, ...data });
       await cloudAccountApi.create(data as any);
-      expect(mockPost).toHaveBeenCalledWith('/cloud/accounts', data);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cloud/accounts', data);
     });
 
     it('update should update account', async () => {
       mockPut.mockResolvedValue({ id: 1, name: 'Updated' });
       await cloudAccountApi.update(1, { name: 'Updated' } as any);
-      expect(mockPut).toHaveBeenCalledWith('/cloud/accounts/1', { name: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cloud/accounts/1', { name: 'Updated' });
     });
 
     it('delete should delete account', async () => {
       mockDelete.mockResolvedValue(undefined);
       await cloudAccountApi.delete(1);
-      expect(mockDelete).toHaveBeenCalledWith('/cloud/accounts/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cloud/accounts/1');
     });
   });
 
@@ -56,31 +56,31 @@ describe('Cloud API', () => {
     it('list should get services', async () => {
       mockGet.mockResolvedValue({ items: [] });
       await cloudServiceApi.list();
-      expect(mockGet).toHaveBeenCalledWith('/cloud/services', { params: undefined });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/services', undefined);
     });
 
     it('get should get service by id', async () => {
       mockGet.mockResolvedValue({ id: 1, name: 'EC2' });
       await cloudServiceApi.get(1);
-      expect(mockGet).toHaveBeenCalledWith('/cloud/services/1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/services/1');
     });
 
     it('create should create service', async () => {
       mockPost.mockResolvedValue({ id: 1 });
       await cloudServiceApi.create({ name: 'S3' } as any);
-      expect(mockPost).toHaveBeenCalledWith('/cloud/services', { name: 'S3' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cloud/services', { name: 'S3' });
     });
 
     it('update should update service', async () => {
       mockPut.mockResolvedValue({ id: 1 });
       await cloudServiceApi.update(1, { name: 'Updated' } as any);
-      expect(mockPut).toHaveBeenCalledWith('/cloud/services/1', { name: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cloud/services/1', { name: 'Updated' });
     });
 
     it('delete should delete service', async () => {
       mockDelete.mockResolvedValue(undefined);
       await cloudServiceApi.delete(1);
-      expect(mockDelete).toHaveBeenCalledWith('/cloud/services/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cloud/services/1');
     });
   });
 
@@ -88,31 +88,31 @@ describe('Cloud API', () => {
     it('list should get resources', async () => {
       mockGet.mockResolvedValue({ items: [] });
       await cloudResourceApi.list();
-      expect(mockGet).toHaveBeenCalledWith('/cloud/resources', { params: undefined });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/resources', undefined);
     });
 
     it('get should get resource by id', async () => {
       mockGet.mockResolvedValue({ id: 1, name: 'instance-1' });
       await cloudResourceApi.get(1);
-      expect(mockGet).toHaveBeenCalledWith('/cloud/resources/1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cloud/resources/1');
     });
 
     it('create should create resource', async () => {
       mockPost.mockResolvedValue({ id: 1 });
       await cloudResourceApi.create({ name: 'vm-1' } as any);
-      expect(mockPost).toHaveBeenCalledWith('/cloud/resources', { name: 'vm-1' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cloud/resources', { name: 'vm-1' });
     });
 
     it('update should update resource', async () => {
       mockPut.mockResolvedValue({ id: 1 });
       await cloudResourceApi.update(1, { name: 'Updated' } as any);
-      expect(mockPut).toHaveBeenCalledWith('/cloud/resources/1', { name: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cloud/resources/1', { name: 'Updated' });
     });
 
     it('delete should delete resource', async () => {
       mockDelete.mockResolvedValue(undefined);
       await cloudResourceApi.delete(1);
-      expect(mockDelete).toHaveBeenCalledWith('/cloud/resources/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cloud/resources/1');
     });
   });
 

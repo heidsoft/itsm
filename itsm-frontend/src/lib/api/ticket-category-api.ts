@@ -58,6 +58,9 @@ export class TicketCategoryApi {
   }): Promise<{
     items: TicketCategory[];
     total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
   }> {
     return httpClient.get('/api/v1/ticket-categories', params);
   }

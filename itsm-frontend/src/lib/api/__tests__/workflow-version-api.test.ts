@@ -29,7 +29,7 @@ describe('WorkflowVersionApi', () => {
       ];
       mockGet.mockResolvedValue(rawVersions);
       const result = await WorkflowVersionApi.getWorkflowVersions('proc1');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/versions?process_key=proc1');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/versions?processKey=proc1');
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('1');
       expect(result[0].code).toBe('proc1');

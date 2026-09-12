@@ -85,7 +85,8 @@ export interface CMDBCapabilitiesResponse {
 }
 
 const CMDB_BASE = '/api/v1/cmdb';
-const CIS_BASE = `${CMDB_BASE}/cis`;
+// 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
+const CIS_BASE = '/api/v1/cmdb/cis';
 
 export class CMDBApi {
   static async getCapabilities(): Promise<CMDBCapabilitiesResponse> {

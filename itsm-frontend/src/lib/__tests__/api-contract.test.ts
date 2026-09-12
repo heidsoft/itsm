@@ -129,9 +129,10 @@ function extractFrontendPaths(filePath: string): ExtractedFrontendPath[] {
     staticBases.set(match[1], match[2]);
   }
 
-  // Match httpClient.METHOD("path", ...) | 'path' | `path` (with optional <T> generic).
+  // Match httpClient.METHOD("path", ...) | 'path' | `path` | BARE_STATIC_BASE
+  // (with optional <T> generic).
   const callRe =
-    /httpClient\.(get|post|put|patch|delete)\s*(?:<[^>]+>)?\s*\(\s*['"`]([^'"`]+)['"`]/g;
+    /httpClient\.(get|post|put|patch|delete)\s*(?:<[^>]+>)?\s*\(\s*(?:['"`]([^'"`]*)['"`]|([A-Za-z_$][\w$]*))/g;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -139,10 +140,15 @@ function extractFrontendPaths(filePath: string): ExtractedFrontendPath[] {
     let m: RegExpExecArray | null;
     while ((m = re.exec(line)) !== null) {
       const method = m[1].toUpperCase();
-      const rawPath = m[2];
-      const resolvedPath = rawPath.replace(/^\$\{(?:this\.)?([^}]+)\}/, (token, name: string) => {
-        return staticBases.get(name) ?? token;
-      });
+      const bareIdentifier = m[3];
+      // 裸标识符只在能解析为静态 base 时纳入校验，避免把局部变量误报成漂移。
+      if (bareIdentifier !== undefined && !staticBases.has(bareIdentifier)) continue;
+      const rawPath = bareIdentifier ?? m[2];
+      const resolvedPath = bareIdentifier
+        ? staticBases.get(bareIdentifier)!
+        : rawPath.replace(/^\$\{(?:this\.)?([^}]+)\}/, (token, name: string) => {
+            return staticBases.get(name) ?? token;
+          });
       results.push({
         path: rawPath,
         method,

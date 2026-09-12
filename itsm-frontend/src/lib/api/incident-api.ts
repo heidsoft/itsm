@@ -850,14 +850,7 @@ export class IncidentAPI {
 
   /** @deprecated 使用 listIncidents */
   static async getIncidents(params?: ListIncidentsRequest): Promise<ListIncidentsResponse> {
-    return this.listIncidents(
-      params &&
-        ({
-          ...params,
-          assignee_id: params.assigneeId,
-          assigneeId: undefined,
-        } as ListIncidentsRequest)
-    );
+    return this.listIncidents(params);
   }
 
   /** @deprecated 使用 listIncidents */
