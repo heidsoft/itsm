@@ -83,12 +83,25 @@ describe('BPMNDashboardApi', () => {
   });
 
   describe('getSLAViolations', () => {
-    it('should get SLA violations', async () => {
-      const expected = [{ resourceType: 'ticket' }];
-      mockGet.mockResolvedValue(expected);
+    it('should call the real sla route and unwrap the paginated items envelope', async () => {
+      const items = [
+        {
+          id: 26,
+          ticketId: 34,
+          ticketNumber: 'TKT-202609-000035',
+          slaName: 'SLA-P1-高',
+          violationType: 'resolution_time',
+          violationTime: '2026-09-12T12:20:53Z',
+          severity: 'high',
+          isResolved: false,
+        },
+      ];
+      mockGet.mockResolvedValue({ items, total: 1, page: 1, pageSize: 100 });
       const res = await BPMNDashboardApi.getSLAViolations(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/dashboard/sla/violations?tenantId=1');
-      expect(res).toEqual(expected);
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/sla/violations?tenantId=1')
+      );
+      expect(res).toEqual(items);
     });
   });
 

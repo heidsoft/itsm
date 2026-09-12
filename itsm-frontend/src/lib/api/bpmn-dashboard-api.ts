@@ -96,19 +96,28 @@ export interface QueryAuditLogsRequest {
   pageSize?: number;
 }
 
+/**
+ * SLA 违规实体，字段与后端 handlers/sla/entity.go::SLAViolation 逐一对齐。
+ * 旧版 resourceType/startTime/deadline/slaStatus/elapsedMinutes 后端根本不存在，
+ * 导致监控表渲染 "Invalid Date" 与空单元格。
+ */
 export interface SLAViolation {
-  resourceType: string;
-  resourceId: number;
-  resourceKey: string;
-  slaStatus: string;
-  startTime: string;
-  deadline: string;
-  elapsedMinutes: number;
+  id: number;
+  createdBy: number;
+  ticketId: number;
+  ticketNumber?: string;
+  ticketTitle?: string;
+  ticketPriority?: string;
+  slaName?: string;
+  slaDefinitionId: number;
+  violationType: string;
+  violationTime: string;
+  description?: string;
+  severity: string;
+  isResolved: boolean;
+  resolvedAt?: string | null;
+  resolutionNotes?: string;
   tenantId: number;
-  // 额外字段
-  ticketId?: number;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface TenantBPMNStats {
@@ -202,10 +211,26 @@ export class BPMNDashboardApi {
   }
 
   /**
-   * 获取SLA违规
+   * 获取 SLA 违规列表。真实路由为 /api/v1/sla/violations（非 bpmn dashboard 前缀），
+   * 响应为分页信封 {items,total,page,pageSize}，这里解包返回 items。
    */
-  static async getSLAViolations(tenantId: number): Promise<SLAViolation[]> {
-    return httpClient.get<SLAViolation[]>(`${this.baseUrl}/sla/violations?tenantId=${tenantId}`);
+  static async getSLAViolations(
+    tenantId: number,
+    page = 1,
+    pageSize = 100
+  ): Promise<SLAViolation[]> {
+    const params = new URLSearchParams({
+      tenantId: tenantId.toString(),
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    const data = await httpClient.get<{
+      items: SLAViolation[];
+      total: number;
+      page: number;
+      pageSize: number;
+    }>(`/api/v1/sla/violations?${params}`);
+    return data?.items ?? [];
   }
 
   /**

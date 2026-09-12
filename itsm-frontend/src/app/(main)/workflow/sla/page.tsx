@@ -98,76 +98,84 @@ export default function SLAMonitoringPage() {
     }
   }, [selectedProcess, dateRange]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'breached':
+  const VIOLATION_TYPE_LABEL: Record<string, string> = {
+    response_time: '响应超时',
+    resolution_time: '解决超时',
+  };
+
+  const severityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
         return 'red';
-      case 'warning':
+      case 'high':
         return 'orange';
-      case 'ok':
-        return 'green';
+      case 'medium':
+        return 'gold';
+      case 'low':
+        return 'blue';
       default:
         return 'default';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'breached':
-        return <AlertTriangle size={14} />;
-      case 'warning':
-        return <Clock size={14} />;
-      case 'ok':
-        return <CheckCircle size={14} />;
-      default:
-        return null;
-    }
-  };
-
   const violationColumns = [
     {
-      title: t('workflow.sla.resourceType') || '资源类型',
-      dataIndex: 'resourceType',
-      key: 'resourceType',
-      width: 120,
-      render: (val: string) => <Tag>{val}</Tag>,
-    },
-    {
-      title: t('workflow.sla.resourceKey') || '资源Key',
-      dataIndex: 'resourceKey',
-      key: 'resourceKey',
-    },
-    {
-      title: t('workflow.sla.status') || '状态',
-      dataIndex: 'slaStatus',
-      key: 'slaStatus',
-      width: 100,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)} icon={getStatusIcon(status)}>
-          {status}
-        </Tag>
+      title: '工单',
+      dataIndex: 'ticketNumber',
+      key: 'ticketNumber',
+      width: 220,
+      render: (val: string, record: SLAViolation) => (
+        <div className="min-w-0">
+          <div className="font-medium">{val || `#${record.ticketId}`}</div>
+          {record.ticketTitle && (
+            <div className="truncate text-xs text-gray-500">{record.ticketTitle}</div>
+          )}
+        </div>
       ),
     },
     {
-      title: t('workflow.sla.startTime') || '开始时间',
-      dataIndex: 'startTime',
-      key: 'startTime',
-      width: 160,
-      render: (val: string) => new Date(val).toLocaleString(),
+      title: 'SLA',
+      dataIndex: 'slaName',
+      key: 'slaName',
+      width: 140,
+      render: (val: string) => val || '-',
     },
     {
-      title: t('workflow.sla.deadline') || '截止时间',
-      dataIndex: 'deadline',
-      key: 'deadline',
-      width: 160,
-      render: (val: string) => new Date(val).toLocaleString(),
+      title: '违规类型',
+      dataIndex: 'violationType',
+      key: 'violationType',
+      width: 110,
+      render: (val: string) => <Tag>{VIOLATION_TYPE_LABEL[val] || val || '-'}</Tag>,
     },
     {
-      title: t('workflow.sla.elapsedMinutes') || '已耗时(分钟)',
-      dataIndex: 'elapsedMinutes',
-      key: 'elapsedMinutes',
-      width: 120,
-      render: (val: number) => <span className={val > 480 ? 'text-red-500' : ''}>{val}</span>,
+      title: '严重级别',
+      dataIndex: 'severity',
+      key: 'severity',
+      width: 100,
+      render: (val: string) => <Tag color={severityColor(val)}>{val || '-'}</Tag>,
+    },
+    {
+      title: '违规时间',
+      dataIndex: 'violationTime',
+      key: 'violationTime',
+      width: 160,
+      render: (val: string) => (val ? dayjs(val).format('YYYY-MM-DD HH:mm') : '-'),
+    },
+    {
+      title: '状态',
+      dataIndex: 'isResolved',
+      key: 'isResolved',
+      width: 100,
+      render: (isResolved: boolean) =>
+        isResolved ? (
+          <Tag color="green" icon={<CheckCircle size={14} />}>
+            已处理
+          </Tag>
+        ) : (
+          <Tag color="red" icon={<AlertTriangle size={14} />}>
+            未处理
+          </Tag>
+        ),
     },
   ];
 
@@ -280,7 +288,7 @@ export default function SLAMonitoringPage() {
           <Table
             dataSource={violations}
             columns={violationColumns}
-            rowKey={record => `${record.resourceType}-${record.resourceId}`}
+            rowKey={record => record.id}
             loading={loading}
             pagination={false}
             size='small'
@@ -293,8 +301,8 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title={t('workflow.sla.breached') || '已逾期'}
-              value={violations.filter(v => v.slaStatus === 'breached').length}
+              title="未处理"
+              value={violations.filter(v => !v.isResolved).length}
               prefix={<AlertTriangle size={20} />}
               styles={{ content: { color: '#ff4d4f' } }}
             />
@@ -303,8 +311,8 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title={t('workflow.sla.warning') || '预警中'}
-              value={violations.filter(v => v.slaStatus === 'warning').length}
+              title="高严重级别"
+              value={violations.filter(v => v.severity === 'critical' || v.severity === 'high').length}
               prefix={<Clock size={20} />}
               styles={{ content: { color: '#faad14' } }}
             />
@@ -313,8 +321,8 @@ export default function SLAMonitoringPage() {
         <Col xs={24} sm={8}>
           <Card>
             <Statistic
-              title={t('workflow.sla.ok') || '正常'}
-              value={violations.filter(v => v.slaStatus === 'ok').length}
+              title="已处理"
+              value={violations.filter(v => v.isResolved).length}
               prefix={<CheckCircle size={20} />}
               styles={{ content: { color: '#52c41a' } }}
             />
