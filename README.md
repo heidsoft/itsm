@@ -522,7 +522,8 @@ make dev-start-docker
 # 前端：cd itsm-frontend && npm test
 
 # 5. 提交（使用 Conventional Commits）
-git add .
+# 显式挑选文件，不要用 git add . / git add -A 一键暂存
+git add itsm-backend/handlers/incident/service.go
 git commit -m "feat: describe your change"
 
 # 6. 推送并创建 PR
@@ -541,12 +542,9 @@ git push origin feature/your-feature
 
 ### 贡献要求
 
-- 遵循项目代码风格（ESLint + gofmt）
-- 新功能需附带测试用例
-- 提交信息使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式
-- PR 必须通过所有 CI 检查
+代码风格（ESLint + gofmt）、提交信息规范、测试要求与 PR 流程见 [CONTRIBUTING.md](./CONTRIBUTING.md)；PR 需通过全部 CI 检查才会合并。
 
-详细规范见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+提交前请显式挑选文件，并确认暂存区不含密码、密钥或 token 等凭据（`git add .` / `git add -A` 容易把本地凭据文件一并暂存）。
 
 - [查看贡献者](https://github.com/heidsoft/itsm/graphs/contributors)
 

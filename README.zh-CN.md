@@ -1,177 +1,19 @@
-<div align="center">
+# 中文 README（跳转）
 
-# 🤖 AI-Native ITSM · 智能服务管理
+> Status: superseded。
 
-## 企业级 IT 服务管理平台 | AI First, Not AI After
+为避免仓库出现两份中文 README，本文件不再维护项目内容。
 
-[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
-[![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
-[![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
-[![Backend CI](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml)
-[![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
-[![GA Gate](https://github.com/heidsoft/itsm/actions/workflows/ga-gate.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/ga-gate.yml)
-[![AI-Native](https://img.shields.io/badge/AI-Native-FF6B6B?style=flat&logo=openai)](https://openai.com)
-[![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
+**中文 README 的唯一事实源是 [根目录 README.md](./README.md)。** 其他语种入口：[English](./README.en.md) · [日本語](./README.ja.md)。
 
-**🚀 LLM-first 智能分诊 | Guidance-Harness-Skill 工程体系 | 开源免费**
+保留本文件是为了不破坏已存在的外部链接与文档站点引用；请勿在此补充内容，新增或修改请直接编辑 `README.md`。
 
-**简体中文** · [English](./README.en.md) · [日本語](./README.ja.md)
+## 为什么被替代
 
-[架构解析](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) · [GA 能力矩阵](./docs/v1-ga/capability-matrix.md)
+本文件是 v1.0 期的中文 README 草稿，与 `README.md` 承担同一角色但已失真：
 
-</div>
+- 技术栈徽章与 `package.json` / `go.mod` 不再一致（例如 TypeScript 徽章仍写 5.7）。
+- 「AI 能力（v1.0 GA 实验性）」等成熟度描述已被 `README.md` 的成熟度表取代。
+- 「验证 GA 准入」章节属于 v1.0 历史验收，按[文档状态与事实源](./docs/documentation-governance.md)不代表当前工作树。
 
----
-
-## 项目简介
-
-AI-Native ITSM（智能服务管理）是一个面向国内企业数字化流程治理的**开源** IT 服务管理平台，目标是**对标 ServiceNow 的核心 ITSM 能力**，同时保持：
-
-- ✨ **更轻量**：单二进制部署，资源占用仅 ServiceNow 的 5%
-- 🔒 **更易私有化**：支持完全离线部署，数据不出企业
-- 🇨🇳 **更适合本土**：飞书 / 企微 / 钉钉原生集成，中文 UI + 文档优先
-- 🤖 **AI First**：LLM-first 智能分诊，RAG 知识库，AI 审计可追溯
-
-## 核心能力
-
-### ITIL 核心流程
-
-- **工单 / 事件 / 问题 / 变更 / 发布**：完整 ITIL v4 生命周期
-- **服务目录 + 服务请求**：员工自助门户
-- **SLA 监控 + 告警**：实时合规率、违约预警
-- **CMDB + 影响分析**：配置项关系 + 拓扑 + 变更影响图
-- **BPMN 流程引擎**：可视化设计器，多级审批 / 加签 / 委派
-- **知识库 + RAG**：全文搜索 + 向量召回 + 评审流
-
-### AI 能力（v1.0 GA 实验性）
-
-- 🤖 **LLM 智能分诊**：自动分类 / 优先级 / 处理人推荐
-- 📝 **自动摘要**：工单、事件、问题一键总结
-- 🔍 **知识推荐**：基于上下文的 RAG 召回
-- 📊 **AI 审计**：prompt_version / model / confidence 全留痕
-- ⚠️ **声明**：当前 AI 功能依赖外部 LLM（OpenAI / Azure / 自部署），未配置时降级为规则引擎
-
-### 多租户与部署
-
-- **三种部署模式**：
-  - `private`：单租户，完全私有化
-  - `saas`：单租户 SaaS
-  - `saas_msp`：MSP 多租户，含资源配额
-- **RBAC + 跨租户隔离**：所有数据强校验 tenant_id
-
-## 快速开始
-
-### 方式一：Docker Compose（推荐）
-
-```bash
-# 1. 克隆
-git clone https://github.com/heidsoft/itsm.git
-cd itsm
-
-# 2. 启动（默认 private 模式）
-cp .env.dev.example .env
-make dev-start-docker
-# 等价：docker compose --env-file .env -f docker-compose.dev.yml --profile dev up -d --build
-
-# 3. 访问
-# 前端：http://localhost:3000
-# 后端：http://localhost:8090
-# 默认账号：admin / admin123（仅开发环境）
-# 生产环境管理员密码由 .env.prod 的 ADMIN_PASSWORD 决定（itsm-init 首次启动写入），不要使用示例密码
-```
-
-### 方式二：本地开发
-
-```bash
-# 启动基础设施及本机 Go/Next.js 开发进程
-make dev-start-local
-
-# 停止本机进程
-make dev-stop-local
-```
-
-### 方式三：生产部署
-
-```bash
-# 1. 修改环境变量
-cp .env.prod.example .env.prod
-# 必须修改：DB_PASSWORD / REDIS_PASSWORD / JWT_SECRET / ADMIN_PASSWORD
-# ⚠️ 生产环境会自动检测默认密码并拒绝启动
-
-# 2. 完整部署（校验、备份、构建、启动、健康检查）
-make prod-deploy
-
-# 手工构建与启动（必须显式传入 env-file）
-docker compose --env-file .env.prod -f docker-compose.prod.yml build itsm-backend itsm-frontend
-docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
-
-# 3. 验证
-curl http://localhost/health  # 通过 Nginx 验证整体链路，期望 200
-curl http://localhost:8090/api/v1/readiness/ga  # 验证后端就绪度
-```
-
-### 构建版本化镜像
-
-```bash
-VERSION=v1.2.0 make build-images
-VERSION=v1.2.0 REGISTRY=ghcr.io/heidsoft make build-images
-
-# 单独构建
-VERSION=v1.2.0 make build-frontend
-VERSION=v1.2.0 make build-backend
-```
-
-## 文档索引
-
-| 类别 | 文档 |
-|------|------|
-| **入门** | [快速开始](#快速开始) · [贡献指南](./CONTRIBUTING.md) |
-| **架构** | [商业就绪架构](./docs/architecture/commercial-ready-architecture.md) · [AI Native 架构](./docs/articles/07-ai-native-architecture-guidance-harness-skill.md) |
-| **v1.0 GA** | [GA 准入指南](./docs/v1-ga-readiness.md) · [能力矩阵](./docs/v1-ga/capability-matrix.md) · [回滚指南](./docs/migrations/rollback-guide.md) |
-| **对比** | [ServiceNow 差距分析](./docs/cmdb/servicenow-gap-analysis.md) · [CMDB-ITIL4 集成](./docs/cmdb/cmdb-workflow-itil4-integration.md) |
-| **审批** | [审批节点语义](./docs/architecture/approval-node-semantics.md) |
-| **质量** | [RBAC 跨租户回归](./docs/rbac/regression-report.md) · [Raw SQL 治理清单](./docs/sqlx/inventory.md) |
-| **运维** | [部署优化报告](./docs/DEPLOYMENT_OPTIMIZATION.md) · [运维运行手册](./docs/runbooks/production-initialization.md) · [安装说明](./docs/getting-started/install.md) |
-
-## 验证 GA 准入
-
-v1.0 GA 必须通过 4 项发布门禁：
-
-```bash
-# G1: 后端测试
-cd itsm-backend && go test ./...
-
-# G2: 前端构建
-cd itsm-frontend && npm run type-check && npm run build
-
-# G3: Docker Compose 健康检查
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
-curl -sf http://localhost/health
-
-# G4: 端到端 API 烟测
-./scripts/smoke-test.sh
-```
-
-详细准入清单见 [docs/v1-ga-readiness.md](./docs/v1-ga-readiness.md)。
-
-## 参与贡献
-
-我们欢迎所有形式的贡献：
-
-- 🐛 报告 Bug：[Issue Tracker](https://github.com/heidsoft/itsm/issues)
-- 💡 功能建议：[Discussions](https://github.com/heidsoft/itsm/discussions)
-- 🔧 提交 PR：参考 [CONTRIBUTING.md](./CONTRIBUTING.md)
-- 🌍 翻译：补充 [README.zh-CN.md](./README.zh-CN.md) 之外的语种
-
-## 许可证
-
-本项目基于 **Apache 2.0** 开源，详见 [LICENSE](./LICENSE)。
-
-## 致谢
-
-感谢所有贡献者（[Contributors](./CONTRIBUTORS.md)）和开源依赖。
-
----
-
-**智能服务管理 · 让 IT 服务更高效** · [官网](https://cloudmesh.top/) · [GitHub](https://github.com/heidsoft/itsm)
+版本状态必须结合当前源码、运行时和发布证据判断，规则见[文档状态与事实源](./docs/documentation-governance.md)。

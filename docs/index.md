@@ -4,7 +4,7 @@
 
 > **一句话**：一个面向 2026+ 工程师的开源 ITSM — 票务/事件/问题/变更、CMDB、知识库、BPMN 工作流、SLA、AI Triage，全部内建。
 
-[项目 README](https://github.com/heidsoft/itsm#readme) · [中文 README](https://github.com/heidsoft/itsm/blob/main/README.zh-CN.md) · [GitHub 仓库](https://github.com/heidsoft/itsm) · [变更日志](https://github.com/heidsoft/itsm/blob/main/CHANGELOG.md)
+[中文 README](https://github.com/heidsoft/itsm#readme) · [English](https://github.com/heidsoft/itsm/blob/main/README.en.md) · [日本語](https://github.com/heidsoft/itsm/blob/main/README.ja.md) · [GitHub 仓库](https://github.com/heidsoft/itsm) · [变更日志](https://github.com/heidsoft/itsm/blob/main/CHANGELOG.md)
 
 ---
 

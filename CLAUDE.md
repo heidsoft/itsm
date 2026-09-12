@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **与 AGENTS.md 的关系**：[AGENTS.md](./AGENTS.md) 是本仓库 AI 编码助手规范的**唯一事实源**且持续维护，本文件与之有大量重叠。本文件保留的唯一独占内容是 [Frontend Hook Patterns](#frontend-hook-patterns)（Pattern A–G 与 H1–H7 审查清单），该章节尚未合并进 AGENTS.md。
+>
+> 除该章节外，凡与 AGENTS.md 冲突之处**一律以 AGENTS.md 为准**。新增长期有效规范请写进 AGENTS.md，不要写在本文件，避免两份规范进一步分叉。
+
 ## Project Overview
 
 ITSM (IT Service Management) system with a Go/Gin backend and Next.js/TypeScript frontend. Features include:
@@ -29,11 +33,11 @@ When making architecture choices, prefer enterprise correctness, auditability, t
 
 ## Current Product Stage
 
-The repository is past v1.0 GA foundation work and is moving through v1.1 hardening:
+The repository is past v1.0 GA and is converging on the v1.6.x hardening line:
 
 - v1.0 delivered ITIL core flows, BPMN workflow engine, CMDB v1, knowledge/RAG scaffold, SLA, RBAC, multi-tenant/MSP foundations, Docker Compose, GHCR images, and basic AI/connector scaffolding.
-- v1.1 focus is coverage backfill, controller splitting, connector marketplace v1, RBAC hardening, AI audit console, and integration test coverage.
-- v1.5+ focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
+- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. The legacy `controller/` layer has been fully retired in favor of `handlers/<domain>`.
+- v1.7 focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
 
 For new work, align with the roadmap rather than creating parallel mechanisms. If a feature overlaps with workflow, connector, AI skill, or marketplace direction, extend the existing extension point.
 
@@ -90,16 +94,16 @@ ADMIN_PASSWORD=admin123
 
 ### Backend Structure
 
-- **controller/** - HTTP handlers, receive requests, call services (legacy horizontal layering)
-- **service/** - Business logic, orchestrate operations (legacy horizontal layering)
-- **handlers/<domain>/** - Domain-sliced modules (ai, change, cmdb, incident, knowledge, problem, service_catalog, service_request, sla, standard_change, ticket, etc.). Each domain package owns its own vertical slice: `handler.go` (HTTP layer), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Shared helpers live in `handlers/common/` and `handlers/shared/`.
+- **handlers/<domain>/** - **目标架构。** Domain-sliced modules (ai, change, cmdb, incident, knowledge, problem, service_catalog, service_request, sla, standard_change, ticket, etc.). Each domain package owns its own vertical slice: `handler.go` (HTTP layer), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Shared helpers live in `handlers/common/` and `handlers/shared/`. **新代码一律写在这里。**
+- **service/** - Business logic shared by legacy `controller/` and `handlers/<domain>/`. 无明确 owner 时不要新增业务逻辑。
+- **controller/** - **Legacy horizontal layering，已退役并清空。** 该目录冻结，不再新增文件；既有 controller 按 `git mv` 逐步迁入 `handlers/<domain>/`。
 - **ent/schema/** - Database schema definitions (Ent ORM)
 - **middleware/** - Auth, logging, CORS, tenant isolation
 - **dto/** - Request/response DTOs
 - **cache/** - Redis integration
 - **router/** - Route registration
 
-Boundary between the two backend layerings: `handlers/<domain>/` is the newer domain-sliced style; `controller/` + `service/` is the older horizontal style and still hosts most existing endpoints. When extending a domain, follow the layering that domain already uses — do not implement the same domain endpoint in both places, and do not call a domain's `repository_impl` from outside its `handlers/<domain>/` package.
+`handlers/<domain>/` 是唯一目标架构，`controller/` 已退役清空，不再存在"两套分层并存、按域各选一套"的情况。禁止同一域端点在两处各实现一份，也禁止从 `handlers/<domain>/` 包外部调用该域的 `repository_impl`。
 
 ### Frontend Structure
 

@@ -1,5 +1,13 @@
 # ITSM 系统架构设计文档
 
+> Status: superseded（分层部分已失真，保留作历史设计记录）。
+>
+> 本文与 [ARCHITECTURE.md](./ARCHITECTURE.md) 同名，且第 2.2 节仍按 **Controller → Service → Repository** 三层描述后端。该分层已退役：新代码统一进 `handlers/<domain>/` 垂直切片，legacy `controller/` 已清空。
+>
+> **当前架构请读 [ARCHITECTURE.md](./ARCHITECTURE.md) 与 [架构总览](./overview.md)；可靠异步执行读 [Operational Command / Outbox](./operational-command-outbox.md)。**
+>
+> 本文仅保留有参考价值的设计记录（数据模型、API 规范、安全与性能设计）。凡与上述文档冲突之处，一律以上述文档为准；8.1 节示例中的 `docker-compose.yml` 在仓库根目录并不存在，切勿照抄执行。
+
 ## 1. 系统概述
 
 ### 1.1 项目背景
