@@ -52,9 +52,9 @@ import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
     submitted: { label: '已提交', color: 'gold', icon: Clock, pulse: true },
-    managerApproved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
-    itApproved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
-    securityApproved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
+    manager_approved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
+    it_approved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
+    security_approved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
     provisioning: { label: '交付中', color: 'processing', icon: Hourglass, pulse: true },
     delivered: { label: '已交付', color: 'success', icon: CheckCircle, pulse: false },
     failed: { label: '交付失败', color: 'error', icon: XCircle, pulse: false },
@@ -62,7 +62,7 @@ const RequestStatusBadge = ({ status }: { status: string }) => {
     cancelled: { label: '已取消', color: 'default', icon: XCircle, pulse: false },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted;
+  const config = statusConfig[status as keyof typeof statusConfig] || { label: status || '-', color: 'default', icon: XCircle, pulse: false };
   const Icon = config.icon;
 
   return (

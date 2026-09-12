@@ -22,19 +22,41 @@ import { serviceRequestAPI } from '@/lib/api/service-request-api';
 
 const { Title, Text } = Typography;
 
+// 服务请求状态（snake_case，对应 backend enum）
+// 兼容旧 camelCase 数据，避免历史脏数据回退到英文原文。
+const REQUEST_STATUS_LABEL: Record<string, { color: string; label: string }> = {
+  submitted: { color: 'gold', label: '已提交' },
+  manager_approved: { color: 'blue', label: '主管已批' },
+  managerApproved: { color: 'blue', label: '主管已批' },
+  it_approved: { color: 'geekblue', label: 'IT已批' },
+  itApproved: { color: 'geekblue', label: 'IT已批' },
+  security_approved: { color: 'green', label: '安全已批' },
+  securityApproved: { color: 'green', label: '安全已批' },
+  provisioning: { color: 'cyan', label: '交付中' },
+  delivered: { color: 'green', label: '已交付' },
+  failed: { color: 'red', label: '交付失败' },
+  rejected: { color: 'red', label: '已拒绝' },
+  cancelled: { color: 'default', label: '已取消' },
+};
+
+// 审批步骤英文 → 中文（manager / it / security）
+const APPROVAL_STEP_LABEL: Record<string, string> = {
+  manager: '主管',
+  it: 'IT',
+  security: '安全',
+};
+
+// 审批记录状态英文 → 中文（pending / approved / rejected）
+const APPROVAL_RECORD_STATUS_LABEL: Record<string, string> = {
+  pending: '待审批',
+  approved: '已通过',
+  rejected: '已拒绝',
+  delegated: '已委派',
+  timeout: '已超时',
+};
+
 function statusTag(status: string) {
-  const map: Record<string, { color: string; label: string }> = {
-    submitted: { color: 'gold', label: '已提交' },
-    managerApproved: { color: 'blue', label: '主管已批' },
-    itApproved: { color: 'geekblue', label: 'IT已批' },
-    securityApproved: { color: 'green', label: '安全已批' },
-    provisioning: { color: 'cyan', label: '交付中' },
-    delivered: { color: 'green', label: '已交付' },
-    failed: { color: 'red', label: '交付失败' },
-    rejected: { color: 'red', label: '已拒绝' },
-    cancelled: { color: 'default', label: '已取消' },
-  };
-  const cfg = map[status] || { color: 'default', label: status || '-' };
+  const cfg = REQUEST_STATUS_LABEL[status] || { color: 'default', label: status || '-' };
   return <Tag color={cfg.color}>{cfg.label}</Tag>;
 }
 
@@ -227,9 +249,26 @@ export default function MyRequestDetailPage() {
           ) : (
             <Descriptions bordered column={1} size="small">
               {approvals.map((a: any) => (
-                <Descriptions.Item key={a.id} label={`L${a.level} · ${a.step}`}>
+                <Descriptions.Item
+                  key={a.id}
+                  label={`L${a.level} · ${APPROVAL_STEP_LABEL[a.step] || a.step}`}
+                >
                   <Space wrap>
-                    {statusTag(String(a.status))}
+                    {a.status === 'pending' || a.status === 'approved' || a.status === 'rejected' ? (
+                      <Tag
+                        color={
+                          a.status === 'approved'
+                            ? 'green'
+                            : a.status === 'rejected'
+                              ? 'red'
+                              : 'orange'
+                        }
+                      >
+                        {APPROVAL_RECORD_STATUS_LABEL[a.status] || a.status}
+                      </Tag>
+                    ) : (
+                      statusTag(String(a.status))
+                    )}
                     <Text type="secondary">审批人：{a.approverName || '-'}</Text>
                     <Text type="secondary">意见：{a.comment || '-'}</Text>
                   </Space>
