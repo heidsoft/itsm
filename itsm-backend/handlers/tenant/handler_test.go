@@ -156,9 +156,42 @@ func TestListTenants_Success(t *testing.T) {
 func TestUpdateTenantStatus_Success(t *testing.T) {
 	m := &mockTenantService{}
 	h := newTenantHandler(m)
+	m.On("GetTenant", mock.Anything, 1).Return(sampleTenant(), nil)
 	m.On("UpdateTenantStatus", mock.Anything, 1, "suspended").Return(nil)
 
 	w, c := doJSON(h, http.MethodPut, "/api/v1/tenants/1/status", `{"status":"suspended"}`)
+	h.UpdateTenantStatus(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	m.AssertExpectations(t)
+}
+
+func TestUpdateTenantStatus_BlocksSystemTenant(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	sysTenant := sampleTenant()
+	sysTenant.Code = protectedSystemTenantCode
+	m.On("GetTenant", mock.Anything, 1).Return(sysTenant, nil)
+
+	w, c := doJSON(h, http.MethodPut, "/api/v1/tenants/1/status", `{"status":"suspended"}`)
+	h.UpdateTenantStatus(c)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ConflictCode, resp.Code)
+	m.AssertNotCalled(t, "UpdateTenantStatus")
+}
+
+func TestUpdateTenantStatus_AllowsActivateSystemTenant(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	sysTenant := sampleTenant()
+	sysTenant.Code = protectedSystemTenantCode
+	m.On("GetTenant", mock.Anything, 1).Return(sysTenant, nil)
+	m.On("UpdateTenantStatus", mock.Anything, 1, "active").Return(nil)
+
+	w, c := doJSON(h, http.MethodPut, "/api/v1/tenants/1/status", `{"status":"active"}`)
 	h.UpdateTenantStatus(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -194,6 +227,7 @@ func TestGetTenant_InvalidID(t *testing.T) {
 func TestDeleteTenant_Success(t *testing.T) {
 	m := &mockTenantService{}
 	h := newTenantHandler(m)
+	m.On("GetTenant", mock.Anything, 1).Return(sampleTenant(), nil)
 	m.On("DeleteTenant", mock.Anything, 1).Return(nil)
 
 	w, c := doJSON(h, http.MethodDelete, "/api/v1/tenants/1", "")
@@ -201,4 +235,18 @@ func TestDeleteTenant_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	m.AssertExpectations(t)
+}
+
+func TestDeleteTenant_BlocksSystemTenant(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	sysTenant := sampleTenant()
+	sysTenant.Code = protectedSystemTenantCode
+	m.On("GetTenant", mock.Anything, 1).Return(sysTenant, nil)
+
+	w, c := doJSON(h, http.MethodDelete, "/api/v1/tenants/1", "")
+	h.DeleteTenant(c)
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	m.AssertNotCalled(t, "DeleteTenant")
 }

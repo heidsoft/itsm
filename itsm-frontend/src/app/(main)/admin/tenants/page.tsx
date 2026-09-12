@@ -303,13 +303,19 @@ export default function TenantManagement() {
             />
           </Tooltip>
           {record.status === 'active' ? (
-            <Tooltip title="暂停租户">
-              <Button
-                type="text"
-                icon={<PauseCircle className="w-4 h-4" />}
-                onClick={() => handleChangeTenantStatus(record, 'suspended')}
-              />
-            </Tooltip>
+            record.code === 'default' ? (
+              <Tooltip title="系统默认租户不可暂停（会导致整站无法访问）">
+                <Button type="text" disabled icon={<PauseCircle className="w-4 h-4" />} />
+              </Tooltip>
+            ) : (
+              <Tooltip title="暂停租户">
+                <Button
+                  type="text"
+                  icon={<PauseCircle className="w-4 h-4" />}
+                  onClick={() => handleChangeTenantStatus(record, 'suspended')}
+                />
+              </Tooltip>
+            )
           ) : (
             <Tooltip title="恢复租户">
               <Button
@@ -319,17 +325,23 @@ export default function TenantManagement() {
               />
             </Tooltip>
           )}
-          <Popconfirm
-            title="确认删除"
-            description="确定要删除这个租户吗？此操作不可恢复。"
-            onConfirm={() => handleDeleteTenant(record.id)}
-            okText="确认"
-            cancelText="取消"
-          >
-            <Tooltip title="删除">
-              <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+          {record.code === 'default' ? (
+            <Tooltip title="系统默认租户不可删除">
+              <Button type="text" danger disabled icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
-          </Popconfirm>
+          ) : (
+            <Popconfirm
+              title="确认删除"
+              description="确定要删除这个租户吗？此操作不可恢复。"
+              onConfirm={() => handleDeleteTenant(record.id)}
+              okText="确认"
+              cancelText="取消"
+            >
+              <Tooltip title="删除">
+                <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+              </Tooltip>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },

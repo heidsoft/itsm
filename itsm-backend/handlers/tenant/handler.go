@@ -21,6 +21,34 @@ func NewHandler(svc Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{svc: svc, logger: logger}
 }
 
+// protectedSystemTenantCode 是平台默认/系统租户的稳定标识。它一旦被暂停或过期，
+// 租户中间件会对所有请求 fail-closed（2003），连「恢复」入口自身都会 403，导致整站锁死。
+const protectedSystemTenantCode = "default"
+
+// isLockingTenantStatus 报告某状态是否会把租户移出服务（暂停/过期/删除）。
+func isLockingTenantStatus(status string) bool {
+	switch status {
+	case "suspended", "expired", "deleted":
+		return true
+	default:
+		return false
+	}
+}
+
+// blockIfLockingSystemTenant 加载目标租户，若为系统默认租户且操作会将其锁定，
+// 写入 HTTP 409 并返回 true（调用方据此中止）。加载失败时不拦截，交由后续用例处理。
+func (h *Handler) blockIfLockingSystemTenant(c *gin.Context, tenantID int, status, verb string) bool {
+	target, err := h.svc.GetTenant(c.Request.Context(), tenantID)
+	if err != nil || target == nil {
+		return false
+	}
+	if target.Code == protectedSystemTenantCode && isLockingTenantStatus(status) {
+		common.Conflict(c, "系统默认租户不允许"+verb, gin.H{"tenantId": tenantID, "code": target.Code})
+		return true
+	}
+	return false
+}
+
 // CreateTenant creates a new tenant
 func (h *Handler) CreateTenant(c *gin.Context) {
 	var req dto.CreateTenantRequest
@@ -99,6 +127,10 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 		return
 	}
 
+	if h.blockIfLockingSystemTenant(c, id, status, "暂停或过期") {
+		return
+	}
+
 	err = h.svc.UpdateTenantStatus(c.Request.Context(), id, status)
 	if err != nil {
 		h.logger.Errorf("更新租户状态失败: %v", err)
@@ -145,6 +177,10 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 		return
 	}
 
+	if req.Status != nil && h.blockIfLockingSystemTenant(c, id, *req.Status, "暂停或过期") {
+		return
+	}
+
 	tenant, err := h.svc.UpdateTenant(c.Request.Context(), id, &req)
 	if err != nil {
 		h.logger.Errorf("更新租户失败: %v", err)
@@ -162,6 +198,10 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		common.Fail(c, 1001, "无效的租户ID")
+		return
+	}
+
+	if h.blockIfLockingSystemTenant(c, id, "deleted", "删除") {
 		return
 	}
 
@@ -238,16 +278,16 @@ func (h *Handler) GetTenantSettings(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"id":      tenant.ID,
-		"name":    tenant.Name,
-		"code":    tenant.Code,
-		"domain":  tenant.Domain,
-		"type":    tenant.Type,
-		"status":  tenant.Status,
-		"plan":    tenant.PlanCode,
-		"tier":    tenant.ServiceTier,
-		"owner":   tenant.OwnerContact,
-		"billing": tenant.BillingEnabled,
+		"id":       tenant.ID,
+		"name":     tenant.Name,
+		"code":     tenant.Code,
+		"domain":   tenant.Domain,
+		"type":     tenant.Type,
+		"status":   tenant.Status,
+		"plan":     tenant.PlanCode,
+		"tier":     tenant.ServiceTier,
+		"owner":    tenant.OwnerContact,
+		"billing":  tenant.BillingEnabled,
 		"currency": tenant.Currency,
 	})
 }
@@ -271,13 +311,13 @@ func (h *Handler) UpdateTenantSettings(c *gin.Context) {
 		return
 	}
 	common.Success(c, gin.H{
-		"id":      updated.ID,
-		"name":    updated.Name,
-		"code":    updated.Code,
-		"domain":  updated.Domain,
-		"status":  updated.Status,
-		"plan":    updated.PlanCode,
-		"tier":    updated.ServiceTier,
-		"owner":   updated.OwnerContact,
+		"id":     updated.ID,
+		"name":   updated.Name,
+		"code":   updated.Code,
+		"domain": updated.Domain,
+		"status": updated.Status,
+		"plan":   updated.PlanCode,
+		"tier":   updated.ServiceTier,
+		"owner":  updated.OwnerContact,
 	})
 }
