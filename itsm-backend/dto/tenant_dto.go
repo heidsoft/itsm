@@ -5,7 +5,7 @@ import "time"
 // CreateTenantRequest 创建租户请求
 type CreateTenantRequest struct {
 	Name            string                 `json:"name" binding:"required,max=100" comment:"租户名称"`
-	Code            string                 `json:"code" binding:"required,max=50,alphanum" comment:"租户代码"`
+	Code            string                 `json:"code" binding:"required,max=50" comment:"租户代码"`
 	Domain          *string                `json:"domain,omitempty" binding:"omitempty,max=100" comment:"自定义域名"`
 	Type            string                 `json:"type" binding:"required,oneof=standard internal saas_customer msp_provider msp_customer msp customer" comment:"租户类型"`
 	Status          *string                `json:"status,omitempty" binding:"omitempty,oneof=active suspended expired deleted" comment:"租户状态"`

@@ -136,6 +136,31 @@ func TestCreateTenant_TypeInvalid(t *testing.T) {
 	m.AssertNotCalled(t, "CreateTenant")
 }
 
+func TestCreateTenant_AllowsUnderscoreCode(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+	m.On("CreateTenant", mock.Anything, mock.Anything).Return(sampleTenant(), nil)
+
+	// 带下划线的合法编码此前被 alphanum 绑定误拒，现应放行到 service
+	w, c := doJSON(h, http.MethodPost, "/api/v1/tenants", `{"name":"FinOps","code":"finops_001","type":"standard"}`)
+	h.CreateTenant(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	m.AssertCalled(t, "CreateTenant", mock.Anything, mock.Anything)
+}
+
+func TestCreateTenant_RejectsInvalidCode(t *testing.T) {
+	m := &mockTenantService{}
+	h := newTenantHandler(m)
+
+	// 含空格的非法编码 → 400，且不调用 service
+	w, c := doJSON(h, http.MethodPost, "/api/v1/tenants", `{"name":"Acme","code":"bad code","type":"standard"}`)
+	h.CreateTenant(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	m.AssertNotCalled(t, "CreateTenant")
+}
+
 func TestListTenants_Success(t *testing.T) {
 	m := &mockTenantService{}
 	h := newTenantHandler(m)

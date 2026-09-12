@@ -535,9 +535,18 @@ export default function TenantManagement() {
           <Form.Item
             label="租户编码"
             name="code"
-            rules={[{ required: true, message: '请输入租户编码' }]}
+            rules={[
+              { required: true, message: '请输入租户编码' },
+              {
+                pattern: /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/,
+                message: '只能包含字母、数字、下划线或连字符，且以字母或数字开头',
+              },
+            ]}
           >
-            <Input disabled={!!selectedTenant} placeholder="请输入租户编码" />
+            <Input
+              disabled={!!selectedTenant}
+              placeholder="例如 finops_001（字母、数字、下划线、连字符）"
+            />
           </Form.Item>
 
           <Form.Item label="域名" name="domain">

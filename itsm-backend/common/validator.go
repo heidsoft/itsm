@@ -171,3 +171,10 @@ func IsValidIPAddress(ip string) bool {
 	ipRegex := regexp.MustCompile(`^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`)
 	return ipRegex.MatchString(ip)
 }
+
+// IsValidTenantCode 校验租户编码：以字母或数字开头，后续允许字母、数字、下划线、连字符。
+// 租户编码常带下划线（如 finops_001），旧的 alphanum 绑定会误拒这类合法编码。
+func IsValidTenantCode(code string) bool {
+	codeRegex := regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`)
+	return codeRegex.MatchString(code)
+}

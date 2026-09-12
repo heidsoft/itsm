@@ -58,6 +58,11 @@ func (h *Handler) CreateTenant(c *gin.Context) {
 		return
 	}
 
+	if !common.IsValidTenantCode(req.Code) {
+		common.Fail(c, common.ParamErrorCode, "租户编码只能包含字母、数字、下划线或连字符，且需以字母或数字开头")
+		return
+	}
+
 	tenant, err := h.svc.CreateTenant(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorf("创建租户失败: %v", err)
