@@ -1,4 +1,5 @@
 import { ProcessBindingApi } from '../process-binding-api';
+import type { ProcessBindingPayload } from '../process-binding-api';
 import { httpClient } from '../http-client';
 
 jest.mock('../http-client', () => ({
@@ -42,6 +43,30 @@ describe('ProcessBindingApi', () => {
       expect(result[0].isDefault).toBe(false);
       expect(result[0].priority).toBe(0);
       expect(result[0].isActive).toBe(false);
+    });
+
+    it('ProcessBindingPayload excludes server-managed fields (compile-time gate)', () => {
+      // Fix for #1: 旧版 Omit 用 snake_case（tenant_id/created_at/updated_at），
+      // 而 ProcessBinding 是 camelCase → Omit 是 no-op，创建/更新负载会带上
+      // tenantId/createdAt/updatedAt。下面 3 处 @ts-expect-error 一旦不再报红，
+      // 说明 Omit 又坏回去了，能在 tsc 阶段挡住回归。
+      // 必须用直接对象字面量（不能 spread），否则 TS excess property check 不触发。
+      const valid: ProcessBindingPayload = {
+        businessType: 'ticket',
+        processDefinitionKey: 'proc1',
+        priority: 0,
+        isActive: true,
+        isDefault: false,
+      };
+      expect(valid.businessType).toBe('ticket');
+      // 编译时断言：以下三个赋值都应因 excess property check 报红
+      // @ts-expect-error tenantId must be omitted (server-managed)
+      const _t: ProcessBindingPayload = { ...valid, tenantId: 1 };
+      // @ts-expect-error createdAt must be omitted (server-managed)
+      const _c: ProcessBindingPayload = { ...valid, createdAt: 'x' };
+      // @ts-expect-error updatedAt must be omitted (server-managed)
+      const _u: ProcessBindingPayload = { ...valid, updatedAt: 'x' };
+      expect(_t && _c && _u).toBeTruthy();
     });
 
     it('should handle null response', async () => {

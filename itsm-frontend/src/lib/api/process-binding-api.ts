@@ -24,7 +24,7 @@ export interface ProcessBinding {
 
 export type ProcessBindingPayload = Omit<
   ProcessBinding,
-  'id' | 'tenant_id' | 'created_at' | 'updated_at'
+  'id' | 'tenantId' | 'createdAt' | 'updatedAt'
 >;
 
 type RawProcessBinding = Partial<ProcessBinding> & {

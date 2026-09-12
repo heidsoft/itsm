@@ -109,8 +109,14 @@ export default function ProcessRoutingPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      // 防御性剔除服务端字段：类型层面已 Omit，但 form values spread 可能
+      // 在运行期把 tenantId/createdAt/updatedAt 漏进来（这些由 JWT/后端管理）。
+      const safeValues = { ...values };
+      delete (safeValues as Record<string, unknown>).tenantId;
+      delete (safeValues as Record<string, unknown>).createdAt;
+      delete (safeValues as Record<string, unknown>).updatedAt;
       const payload: ProcessBindingPayload = {
-        ...values,
+        ...safeValues,
         conditions: parseJSONField(values.conditions, 'Conditions'),
         priority: values.priority ?? 0,
         isActive: values.isActive ?? true,
