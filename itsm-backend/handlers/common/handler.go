@@ -430,7 +430,7 @@ func (h *Handler) ListTags(c *gin.Context) {
 
 func (h *Handler) GetAuditLogs(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
-	userID, _ := strconv.Atoi(c.Query("user_id"))
+	userID, _ := strconv.Atoi(c.Query("userId"))
 	logs, err := h.svc.GetAuditLogs(c.Request.Context(), tenantID, userID)
 	if err != nil {
 		common.InternalError(c, "获取审计日志失败: "+err.Error())

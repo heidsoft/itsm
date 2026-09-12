@@ -294,7 +294,7 @@ func TestListStandardChanges_ActiveOnly(t *testing.T) {
 	})
 	r, _ := setupTestRouter(t, client, 1, 1)
 
-	w := doRequest(r, "GET", "/api/v1/standard-changes?active_only=true", nil)
+	w := doRequest(r, "GET", "/api/v1/standard-changes?activeOnly=true", nil)
 	resp, data := decodeResponse(t, w)
 	assert.Equal(t, common.SuccessCode, resp.Code)
 	assert.Equal(t, float64(1), data["total"])

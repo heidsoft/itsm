@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/ent"
@@ -10,6 +11,11 @@ import (
 
 	"go.uber.org/zap"
 )
+
+// ErrConfigNotFound 表示全局 → 租户 → 部门 → 团队 各层级均未命中配置。
+// 这是合法的空结果而非内部错误：调用方必须用 errors.Is 区分，并映射为
+// data=null 的成功响应，不能返回 500/5001。
+var ErrConfigNotFound = errors.New("config not found")
 
 // ConfigInheritanceService provides hierarchical configuration with inheritance
 type ConfigInheritanceService struct {
@@ -115,7 +121,7 @@ func (s *ConfigInheritanceService) GetEffectiveConfig(
 	}
 
 	if baseConfig == nil {
-		return nil, fmt.Errorf("no configuration found for %s/%s", configType, configKey)
+		return nil, fmt.Errorf("%w: %s/%s", ErrConfigNotFound, configType, configKey)
 	}
 
 	return &ResolvedConfig{

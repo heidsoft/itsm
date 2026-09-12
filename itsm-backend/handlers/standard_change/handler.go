@@ -75,7 +75,7 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 	category := c.Query("category")
 	search := c.Query("search")
-	activeOnly := c.Query("active_only") == "true"
+	activeOnly := c.Query("activeOnly") == "true"
 
 	tenantID, ok := h.getTenantID(c)
 	if !ok {

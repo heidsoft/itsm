@@ -145,42 +145,19 @@ func (h *Handler) GetCategory(c *gin.Context) {
 // ListCategories GET /api/v1/ticket-categories
 func (h *Handler) ListCategories(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
-	parentIDStr := c.Query("parent_id")
-	levelStr := c.Query("level")
-	activeStr := c.Query("active")
 
-	var parentID *int
-	var level int
-	var active *bool
-
-	if parentIDStr != "" {
-		if id, err := strconv.Atoi(parentIDStr); err == nil {
-			parentID = &id
-		}
+	var req service.ListCategoriesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的查询参数")
+		return
 	}
+	// tenantId 只能来自认证上下文，禁止由查询参数注入。
+	req.TenantID = tenantID
+	page := common.GetPaginationFromQuery(c)
+	req.Page = page.Page
+	req.PageSize = page.PageSize
 
-	if levelStr != "" {
-		if l, err := strconv.Atoi(levelStr); err == nil {
-			level = l
-		}
-	}
-
-	if activeStr != "" {
-		if a, err := strconv.ParseBool(activeStr); err == nil {
-			active = &a
-		}
-	}
-
-	req := &service.ListCategoriesRequest{
-		Page:     1,
-		PageSize: 100,
-		ParentID: parentID,
-		Level:    level,
-		IsActive: active,
-		TenantID: tenantID,
-	}
-
-	categories, total, err := h.categoryService.ListCategories(c.Request.Context(), req)
+	categories, total, err := h.categoryService.ListCategories(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket categories", "error", err, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")
@@ -188,8 +165,11 @@ func (h *Handler) ListCategories(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"items": dto.ToTicketCategoryResponseList(categories),
-		"total": total,
+		"items":      dto.ToTicketCategoryResponseList(categories),
+		"total":      total,
+		"page":       req.Page,
+		"pageSize":   req.PageSize,
+		"totalPages": (total + req.PageSize - 1) / req.PageSize,
 	})
 }
 

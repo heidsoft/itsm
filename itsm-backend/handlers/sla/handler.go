@@ -564,18 +564,20 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 // GetAlertHistory handles GET /api/v1/sla/alert-history
 func (h *Handler) GetAlertHistory(c *gin.Context) {
 	tenantIDVal := c.GetInt("tenant_id")
+	// filters 的 key 是仓储层/数据库列名（snake_case），不是 HTTP 契约；
+	// 查询参数按 camelCase 读取。
 	filters := make(map[string]interface{})
-	if slaID := c.Query("sla_definition_id"); slaID != "" {
+	if slaID := c.Query("slaDefinitionId"); slaID != "" {
 		if id, _ := strconv.Atoi(slaID); id > 0 {
 			filters["sla_definition_id"] = id
 		}
 	}
-	if alertRuleID := c.Query("alert_rule_id"); alertRuleID != "" {
+	if alertRuleID := c.Query("alertRuleId"); alertRuleID != "" {
 		if id, _ := strconv.Atoi(alertRuleID); id > 0 {
 			filters["alert_rule_id"] = id
 		}
 	}
-	if alertLevel := c.Query("alert_level"); alertLevel != "" {
+	if alertLevel := c.Query("alertLevel"); alertLevel != "" {
 		filters["alert_level"] = alertLevel
 	}
 

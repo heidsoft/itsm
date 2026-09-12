@@ -1,6 +1,7 @@
 package bpmn
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -450,12 +451,12 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	departmentID, err := parseOptionalIntQuery(ctx, "department_id")
+	departmentID, err := parseOptionalIntQuery(ctx, "departmentId")
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的部门ID")
 		return
 	}
-	teamID, err := parseOptionalIntQuery(ctx, "team_id")
+	teamID, err := parseOptionalIntQuery(ctx, "teamId")
 	if err != nil {
 		common.Fail(ctx, 1001, "无效的团队ID")
 		return
@@ -463,12 +464,17 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 	configType := ctx.Query("configType")
 	configKey := ctx.Query("configKey")
 	if configType == "" || configKey == "" {
-		common.Fail(ctx, 1001, "config_type 和 config_key 不能为空")
+		common.Fail(ctx, 1001, "configType 和 configKey 不能为空")
 		return
 	}
 
 	result, err := c.configService.GetEffectiveConfig(ctx.Request.Context(), tenantID, departmentID, teamID, configType, configKey)
 	if err != nil {
+		// 各继承层级均未命中配置是合法空结果，返回 data=null 而非 500。
+		if errors.Is(err, service.ErrConfigNotFound) {
+			common.Success(ctx, nil)
+			return
+		}
 		common.Fail(ctx, 5001, err.Error())
 		return
 	}
