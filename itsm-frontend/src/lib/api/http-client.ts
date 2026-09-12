@@ -162,6 +162,24 @@ class HttpClient {
     return this.getCSRFToken();
   }
 
+  /**
+   * External API classes that use raw fetch (instead of `requestInternal`) do not
+   * trigger the post-mutation CSRF cache invalidation in `requestInternal`.
+   * Backend rotates the CSRF cookie after every successful write; if the cache
+   * keeps the old token, the next mutation races with the new cookie and returns
+   * 403 "CSRF token mismatch". Call this after any external mutation succeeds.
+   */
+  invalidateCSRFToken(): void {
+    this.csrfTokenCache = null;
+    this.csrfTokenPromise = null;
+    security.csrf.clearToken();
+  }
+
+  /** True when the method requires CSRF token in the request header. */
+  isMutatingMethodPublic(method?: string): boolean {
+    return this.isMutatingMethod(method);
+  }
+
   // 为mutating请求添加CSRF header
   private async addCSRFHeader(
     headers: Record<string, string>,

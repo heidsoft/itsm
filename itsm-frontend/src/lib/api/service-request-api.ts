@@ -149,6 +149,13 @@ class ServiceRequestAPI {
         throw new Error(data.message || 'Request failed');
       }
 
+      // Backend rotates the CSRF cookie after every successful mutation; invalidate
+      // the cache so the next mutation forces a fresh token (otherwise stale cache
+      // races with the rotated cookie and triggers 403 "CSRF token mismatch").
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        httpClient.invalidateCSRFToken();
+      }
+
       return data.data; // Backend response format: { code, message, data }
     } catch (error) {
       // console.error('API request failed:', error);

@@ -42,6 +42,10 @@ async function postA2UI(path: string, payload: Record<string, unknown>): Promise
     throw new Error(data.message || `HTTP error! status: ${response.status}`);
   }
 
+  // Backend rotates the CSRF cookie after every successful mutation; invalidate
+  // the cache so the next mutation forces a fresh token.
+  httpClient.invalidateCSRFToken();
+
   return {
     code: data.code ?? 0,
     message: data.message || 'success',

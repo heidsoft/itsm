@@ -26,6 +26,7 @@ import dayjs from 'dayjs';
 import { ServiceRequestApi } from '@/lib/api/';
 import { ServiceRequestStatus, ApprovalStatus, ApprovalAction } from '@/constants/service-request';
 import type { ServiceRequest, ServiceRequestApproval } from '@/types/biz/service-request';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -37,9 +38,17 @@ const approvalStatusColors: Record<string, string> = {
   [ApprovalStatus.REJECTED]: 'red',
 };
 
+// 审批状态 i18n key 映射（与 src/lib/i18n/translations.ts 对齐）
+const approvalStatusLabelKeys: Record<string, string> = {
+  [ApprovalStatus.PENDING]: 'detailTabs.approvalStatusPending',
+  [ApprovalStatus.APPROVED]: 'detailTabs.approvalStatusApproved',
+  [ApprovalStatus.REJECTED]: 'detailTabs.approvalStatusRejected',
+};
+
 const ServiceRequestDetail: React.FC = () => {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [request, setRequest] = useState<ServiceRequest | null>(null);
   const [approvals, setApprovals] = useState<ServiceRequestApproval[]>([]);
@@ -131,7 +140,9 @@ const ServiceRequestDetail: React.FC = () => {
             <Space orientation="vertical" size={2}>
               <Text strong>{`${app.level}. ${app.step.toUpperCase()} 审批`}</Text>
               <div>
-                <Tag color={approvalStatusColors[app.status]}>{app.status}</Tag>
+                <Tag color={approvalStatusColors[app.status]}>
+                  {t(approvalStatusLabelKeys[app.status] || app.status)}
+                </Tag>
                 {app.approverName && <Text type="secondary">by {app.approverName}</Text>}
               </div>
               {app.comment && (
