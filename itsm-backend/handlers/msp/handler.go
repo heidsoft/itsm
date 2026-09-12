@@ -210,7 +210,13 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	pagination := common.GetPaginationFromQuery(c)
 	page, pageSize := pagination.Page, pagination.PageSize
 
-	mspCtx, _ := middleware.GetMSPContext(c)
+	mspCtx, exists := middleware.GetMSPContext(c)
+	if !exists || !mspCtx.IsMSP {
+		h.logger.Warnw("Rejected MSP customer tickets without MSP context",
+			"customer_tenant_id", customerTenantID, "user_id", c.GetInt("user_id"))
+		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		return
+	}
 	userID := mspCtx.MSPUserID
 
 	tickets, err := h.ticketService.GetCustomerTicketsForMSP(c.Request.Context(), userID, customerTenantID, &status, page, pageSize)
@@ -258,11 +264,11 @@ func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 
 // GetCustomerReports 获取客户服务报表
 func (h *Handler) GetCustomerReports(c *gin.Context) {
-	startDate := c.Query("start_date")
-	endDate := c.Query("end_date")
+	startDate := c.Query("startDate")
+	endDate := c.Query("endDate")
 
 	if startDate == "" || endDate == "" {
-		common.Fail(c, common.ParamErrorCode, "start_date和end_date为必填参数")
+		common.Fail(c, common.ParamErrorCode, "startDate和endDate为必填参数")
 		return
 	}
 
@@ -275,12 +281,12 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 
 	dateFrom, err := parseDateOrZero(startDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "start_date格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
 		return
 	}
 	dateTo, err := parseDateOrZero(endDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "end_date格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
 		return
 	}
 
@@ -299,38 +305,38 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 
 // GetPerformanceReports 获取 MSP 员工绩效报表
 func (h *Handler) GetPerformanceReports(c *gin.Context) {
-	startDate := c.Query("start_date")
-	endDate := c.Query("end_date")
-	mspUserIDStr := c.Query("msp_user_id")
+	startDate := c.Query("startDate")
+	endDate := c.Query("endDate")
+	mspUserIDStr := c.Query("mspUserId")
 
 	if startDate == "" || endDate == "" {
-		common.Fail(c, common.ParamErrorCode, "start_date和end_date为必填参数")
+		common.Fail(c, common.ParamErrorCode, "startDate和endDate为必填参数")
 		return
 	}
 
 	dateFrom, err := parseDateOrZero(startDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "start_date格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
 		return
 	}
 	dateTo, err := parseDateOrZero(endDate)
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "end_date格式错误(YYYY-MM-DD)")
+		common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
 		return
 	}
 
 	var mspUserID int
 	if mspUserIDStr == "" {
-		mspCtx, _ := middleware.GetMSPContext(c)
-		if !mspCtx.IsMSP {
-			common.Fail(c, common.ParamErrorCode, "非MSP用户")
+		mspCtx, exists := middleware.GetMSPContext(c)
+		if !exists || !mspCtx.IsMSP {
+			common.Fail(c, common.ForbiddenCode, "非MSP用户")
 			return
 		}
 		mspUserID = mspCtx.MSPUserID
 	} else {
 		mspUserID, err = strconv.Atoi(mspUserIDStr)
 		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "msp_user_id格式错误")
+			common.Fail(c, common.ParamErrorCode, "mspUserId格式错误")
 			return
 		}
 	}
