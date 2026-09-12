@@ -92,6 +92,14 @@ interface PriorityConfig {
   color?: string;
 }
 
+// 处理人下拉项：label 是带部门 Tag 的 React 节点，无法直接做字符串匹配，
+// 因此单独携带可搜索文本供 filterOption 使用。
+interface AssigneeOption {
+  value: number;
+  label: React.ReactNode;
+  searchText: string;
+}
+
 // 创建状态映射的工厂函数
 const createStatusMap = (t: (key: string) => string): Record<string, StatusConfig> => ({
   new: { text: t('ticketDetail.statusNew'), status: 'default' },
@@ -842,12 +850,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               name="assigneeId"
               rules={[{ required: true, message: t('ticketDetail.assigneeRequired') }]}
             >
-              <Select
+              <Select<number, AssigneeOption>
                 placeholder={t('ticketDetail.selectAssignee')}
                 loading={loadingUsers}
                 showSearch
                 filterOption={(input, option) =>
-                  (option?.label as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  (option?.searchText ?? '').includes(input.toLowerCase())
                 }
                 options={users.map(user => ({
                   value: user.id,
@@ -860,6 +868,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                       {user.department && <Tag color="blue">{user.department}</Tag>}
                     </Space>
                   ),
+                  searchText: `${user.name ?? ''} ${user.username ?? ''} ${user.department ?? ''}`.toLowerCase(),
                 }))}
               />
             </Form.Item>
