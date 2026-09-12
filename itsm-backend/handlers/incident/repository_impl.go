@@ -220,6 +220,28 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			incident.IncidentNumberContains(v),
 		))
 	}
+	if v, ok := filters["source"].(string); ok && v != "" {
+		query = query.Where(incident.Source(v))
+	}
+	if v, ok := filters["type"].(string); ok && v != "" {
+		query = query.Where(incident.TypeEQ(v))
+	}
+	if v, ok := filters["category"].(string); ok && v != "" {
+		query = query.Where(incident.Category(v))
+	}
+	// 布尔/整型只在 key 存在时过滤，避免把 false / 0 当成「不过滤」。
+	if v, ok := filters["is_major_incident"].(bool); ok {
+		query = query.Where(incident.IsMajorIncident(v))
+	}
+	if v, ok := filters["assignee_id"].(int); ok && v > 0 {
+		query = query.Where(incident.AssigneeIDEQ(v))
+	}
+	if v, ok := filters["date_from"].(time.Time); ok && !v.IsZero() {
+		query = query.Where(incident.CreatedAtGTE(v))
+	}
+	if v, ok := filters["date_to"].(time.Time); ok && !v.IsZero() {
+		query = query.Where(incident.CreatedAtLTE(v))
+	}
 
 	// 行级数据权限（推广自 ticket DataScope 模式）：
 	// OwnedOrAssigned 时强制追加 Or(ReporterIDEQ(uid), AssigneeIDEQ(uid))，

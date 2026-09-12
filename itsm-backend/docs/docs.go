@@ -6948,7 +6948,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "分页获取事件列表，支持状态、优先级、关键词过滤",
+                "description": "分页获取事件列表，支持状态、优先级、关键词、来源、类型、分类、处理人、重大事件与创建时间过滤",
                 "produces": [
                     "application/json"
                 ],
@@ -6991,7 +6991,49 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "范围过滤（me 表示仅我的事件）",
+                        "description": "来源过滤",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "事件类型过滤",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "事件分类过滤",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "处理人过滤",
+                        "name": "assigneeId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "仅重大事件（true）/仅非重大事件（false），未传表示不过滤",
+                        "name": "isMajorIncident",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间下界（RFC3339 或 YYYY-MM-DD）",
+                        "name": "dateFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间上界（RFC3339 或 YYYY-MM-DD）",
+                        "name": "dateTo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "范围过滤（me 表示仅我处理的事件）",
                         "name": "scope",
                         "in": "query"
                     }

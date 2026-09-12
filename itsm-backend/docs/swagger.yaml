@@ -14242,7 +14242,7 @@ paths:
       - 组管理
   /api/v1/incidents:
     get:
-      description: 分页获取事件列表，支持状态、优先级、关键词过滤
+      description: 分页获取事件列表，支持状态、优先级、关键词、来源、类型、分类、处理人、重大事件与创建时间过滤
       parameters:
       - default: 1
         description: 页码
@@ -14266,7 +14266,35 @@ paths:
         in: query
         name: keyword
         type: string
-      - description: 范围过滤（me 表示仅我的事件）
+      - description: 来源过滤
+        in: query
+        name: source
+        type: string
+      - description: 事件类型过滤
+        in: query
+        name: type
+        type: string
+      - description: 事件分类过滤
+        in: query
+        name: category
+        type: string
+      - description: 处理人过滤
+        in: query
+        name: assigneeId
+        type: integer
+      - description: 仅重大事件（true）/仅非重大事件（false），未传表示不过滤
+        in: query
+        name: isMajorIncident
+        type: boolean
+      - description: 创建时间下界（RFC3339 或 YYYY-MM-DD）
+        in: query
+        name: dateFrom
+        type: string
+      - description: 创建时间上界（RFC3339 或 YYYY-MM-DD）
+        in: query
+        name: dateTo
+        type: string
+      - description: 范围过滤（me 表示仅我处理的事件）
         in: query
         name: scope
         type: string

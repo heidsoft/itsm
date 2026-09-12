@@ -410,9 +410,17 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 	common.Success(c, h.toDTO(incident))
 }
 
+// parseIncidentTimeFilter 兼容纯日期与 RFC3339 两种前端时间写法。
+func parseIncidentTimeFilter(v string) (time.Time, error) {
+	if ts, err := time.Parse(time.RFC3339, v); err == nil {
+		return ts, nil
+	}
+	return time.Parse("2006-01-02", v)
+}
+
 // Lists 事件管理-获取事件列表
 // @Summary 获取事件列表
-// @Description 分页获取事件列表，支持状态、优先级、关键词过滤
+// @Description 分页获取事件列表，支持状态、优先级、关键词、来源、类型、分类、处理人、重大事件与创建时间过滤
 // @Tags 事件管理
 // @Produce json
 // @Security BearerAuth
@@ -421,7 +429,14 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 // @Param status query string false "状态过滤"
 // @Param priority query string false "优先级过滤"
 // @Param keyword query string false "搜索关键词"
-// @Param scope query string false "范围过滤（me 表示仅我的事件）"
+// @Param source query string false "来源过滤"
+// @Param type query string false "事件类型过滤"
+// @Param category query string false "事件分类过滤"
+// @Param assigneeId query int false "处理人过滤"
+// @Param isMajorIncident query bool false "仅重大事件（true）/仅非重大事件（false），未传表示不过滤"
+// @Param dateFrom query string false "创建时间下界（RFC3339 或 YYYY-MM-DD）"
+// @Param dateTo query string false "创建时间上界（RFC3339 或 YYYY-MM-DD）"
+// @Param scope query string false "范围过滤（me 表示仅我处理的事件）"
 // @Success 200 {object} common.Response{data=[]dto.IncidentResponse}
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [get]
@@ -433,6 +448,8 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
+	// filters 的 key 是仓储层/数据库列名（snake_case），不是 HTTP 契约；
+	// HTTP 侧统一读取 camelCase。
 	filters := make(map[string]interface{})
 	if v := c.Query("status"); v != "" {
 		filters["status"] = v
@@ -443,11 +460,56 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	if v := c.Query("keyword"); v != "" {
 		filters["keyword"] = v
 	}
+	if v := c.Query("source"); v != "" {
+		filters["source"] = v
+	}
+	if v := c.Query("type"); v != "" {
+		filters["type"] = v
+	}
+	if v := c.Query("category"); v != "" {
+		filters["category"] = v
+	}
+	// 用「参数是否存在」区分未传与 false/0，禁止用真值判断推断字段提交。
+	if v := c.Query("isMajorIncident"); v != "" {
+		major, err := strconv.ParseBool(v)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "isMajorIncident 必须是布尔值")
+			return
+		}
+		filters["is_major_incident"] = major
+	}
+	if v := c.Query("assigneeId"); v != "" {
+		assigneeID, err := strconv.Atoi(v)
+		if err != nil || assigneeID <= 0 {
+			common.Fail(c, common.ParamErrorCode, "assigneeId 格式错误")
+			return
+		}
+		filters["assignee_id"] = assigneeID
+	}
+	if v := c.Query("dateFrom"); v != "" {
+		ts, err := parseIncidentTimeFilter(v)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "dateFrom 格式错误（RFC3339 或 YYYY-MM-DD）")
+			return
+		}
+		filters["date_from"] = ts
+	}
+	if v := c.Query("dateTo"); v != "" {
+		ts, err := parseIncidentTimeFilter(v)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "dateTo 格式错误（RFC3339 或 YYYY-MM-DD）")
+			return
+		}
+		filters["date_to"] = ts
+	}
 
 	// Scope handling (optional, if we want my incidents)
 	if c.Query("scope") == "me" || strings.Contains(c.Request.URL.Path, "/me") {
-		userID := c.GetInt("user_id")
-		filters["assignee_id"] = userID // Service needs to support this filter
+		if currentUserID <= 0 {
+			common.Fail(c, common.AuthFailedCode, "缺少认证上下文，无法按我的事件过滤")
+			return
+		}
+		filters["assignee_id"] = currentUserID
 	}
 
 	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters, currentUserID, currentRole)
