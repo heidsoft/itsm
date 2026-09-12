@@ -344,11 +344,18 @@ GET /incidents
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
+- page: 页码（默认 1）
+- size: 每页数量（默认 10；该接口尚未收敛到规范的 pageSize，已单独跟进）
 - status: 状态过滤
-- severity: 严重程度过滤
-- search: 搜索关键词
+- priority: 优先级过滤
+- keyword: 搜索关键词（匹配标题/描述/事件编号）
+- source: 来源过滤（manual / monitoring / email …）
+- type: 事件类型过滤
+- category: 事件分类过滤
+- assigneeId: 处理人过滤（必须为正整数，否则返回 400/1001）
+- isMajorIncident: 重大事件过滤（true/false；未传表示不过滤，false 是有效过滤值）
+- dateFrom / dateTo: 创建时间区间（RFC3339 或 YYYY-MM-DD，格式错误返回 400/1001）
+- scope: 取值 me 时仅返回分配给当前登录用户的事件；缺少认证上下文返回 401
 ```
 
 ### 创建事件

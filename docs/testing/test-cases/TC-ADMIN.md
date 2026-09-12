@@ -2,8 +2,8 @@
 
 - **模块**: 系统管理 (System Administration)
 - **版本**: v1.0
-- **最后更新**: 2026-05-10
-- **总计**: 76 个测试用例
+- **最后更新**: 2026-09-12
+- **总计**: 180 个测试用例
 
 ---
 
@@ -27,19 +27,19 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| UM-001 | 用户列表-正常分页 | P1 | 功能 | GET /api/v1/users?page=1&page_size=10 | 返回用户列表，分页信息正确 |
-| UM-002 | 用户列表-指定每页数量 | P1 | 功能 | GET /api/v1/users?page=1&page_size=20 | 返回20条用户数据 |
+| UM-001 | 用户列表-正常分页 | P1 | 功能 | GET /api/v1/users?page=1&pageSize=10 | 返回用户列表，分页信息正确 |
+| UM-002 | 用户列表-指定每页数量 | P1 | 功能 | GET /api/v1/users?page=1&pageSize=20 | 返回20条用户数据 |
 | UM-003 | 用户列表-按状态筛选 | P2 | 功能 | GET /api/v1/users?status=active | 仅返回激活状态的用户 |
 | UM-004 | 用户列表-按部门筛选 | P2 | 功能 | GET /api/v1/users?department=技术部 | 仅返回技术部用户 |
 | UM-005 | 用户列表-关键词搜索 | P2 | 功能 | GET /api/v1/users?search=张三 | 返回包含"张三"的用户 |
 | UM-006 | 用户列表-组合筛选 | P2 | 功能 | GET /api/v1/users?status=active&department=技术部 | 返回技术部激活用户 |
-| UM-007 | 创建用户-必填字段完整 | P1 | 功能 | POST /api/v1/users {username, email, name, password, tenant_id} | 返回201和创建的用户信息 |
-| UM-008 | 创建用户-缺少用户名 | P2 | 边界 | POST /api/v1/users {email, name, password, tenant_id} | 返回400，提示username为必填 |
-| UM-009 | 创建用户-邮箱格式错误 | P2 | 边界 | POST /api/v1/users {username: "testuser", email: "invalid", name: "Test", password: "123456", tenant_id: 1} | 返回400，提示邮箱格式错误 |
-| UM-010 | 创建用户-密码过短 | P2 | 边界 | POST /api/v1/users {username: "testuser", email: "test@example.com", name: "Test", password: "123", tenant_id: 1} | 返回400，提示密码至少6位 |
+| UM-007 | 创建用户-必填字段完整 | P1 | 功能 | POST /api/v1/users {username, email, name, password, tenantId} | 返回201和创建的用户信息 |
+| UM-008 | 创建用户-缺少用户名 | P2 | 边界 | POST /api/v1/users {email, name, password, tenantId} | 返回400，提示username为必填 |
+| UM-009 | 创建用户-邮箱格式错误 | P2 | 边界 | POST /api/v1/users {username: "testuser", email: "invalid", name: "Test", password: "Passw0rd!202601", tenantId: 1} | 返回400，提示邮箱格式错误 |
+| UM-010 | 创建用户-密码过短 | P2 | 边界 | POST /api/v1/users {username: "testuser", email: "test@example.com", name: "Test", password: "123", tenantId: 1} | 返回400，提示密码至少12位 |
 | UM-011 | 创建用户-用户名重复 | P2 | 边界 | POST /api/v1/users两次相同username | 返回400，提示用户已存在 |
 | UM-012 | 创建用户-邮箱重复 | P2 | 边界 | POST /api/v1/users两次相同email | 返回400，提示邮箱已存在 |
-| UM-013 | 创建用户-指定角色 | P1 | 功能 | POST /api/v1/users {username, email, name, password, tenant_id, role: "admin"} | 用户创建时分配admin角色 |
+| UM-013 | 创建用户-指定角色 | P1 | 功能 | POST /api/v1/users {username, email, name, password, tenantId, role: "admin"} | 用户创建时分配admin角色 |
 | UM-014 | 获取用户详情-正常 | P1 | 功能 | GET /api/v1/users/{id} | 返回该用户完整信息 |
 | UM-015 | 获取用户详情-用户不存在 | P2 | 边界 | GET /api/v1/users/99999 | 返回404，提示用户不存在 |
 | UM-016 | 编辑用户-更新基本信息 | P1 | 功能 | PUT /api/v1/users/{id} {name: "新姓名"} | 返回更新后的用户信息 |
@@ -50,12 +50,12 @@
 | UM-021 | 删除用户-删除已删除用户 | P2 | 边界 | DELETE /api/v1/users/{id} (已删除) | 返回404，提示用户不存在 |
 | UM-022 | 禁用用户-正常禁用 | P1 | 功能 | PUT /api/v1/users/{id}/status {active: false} | 用户被禁用，active=false |
 | UM-023 | 禁用用户-激活已禁用用户 | P1 | 功能 | PUT /api/v1/users/{id}/status {active: true} | 用户被激活，active=true |
-| UM-024 | 禁用用户-无法禁用自己 | P2 | 业务规则 | PUT /api/v1/users/{current_user_id}/status {active: false} | 返回400，不能禁用自己 |
-| UM-025 | 重置密码-正常重置 | P1 | 功能 | PUT /api/v1/users/{id}/reset-password {new_password: "newpass123"} | 密码重置成功 |
-| UM-026 | 重置密码-新密码过短 | P2 | 边界 | PUT /api/v1/users/{id}/reset-password {new_password: "123"} | 返回400，提示密码至少6位 |
-| UM-027 | 批量启用用户 | P1 | 功能 | PUT /api/v1/users/batch {user_ids: [1,2,3], action: "activate"} | 多个用户被激活 |
-| UM-028 | 批量禁用用户 | P1 | 功能 | PUT /api/v1/users/batch {user_ids: [1,2,3], action: "deactivate"} | 多个用户被禁用 |
-| UM-029 | 批量更新部门 | P1 | 功能 | PUT /api/v1/users/batch {user_ids: [1,2], action: "department", department: "运营部"} | 用户转移到运营部 |
+| UM-024 | 禁用用户-无法禁用自己 | P2 | 业务规则 | PUT /api/v1/users/{userId}/status {active: false} | 返回400，不能禁用自己 |
+| UM-025 | 重置密码-正常重置 | P1 | 功能 | PUT /api/v1/users/{id}/reset-password {newPassword: "NewPassw0rd!2026"} | 密码重置成功 |
+| UM-026 | 重置密码-新密码过短 | P2 | 边界 | PUT /api/v1/users/{id}/reset-password {newPassword: "123"} | 返回400，提示密码至少12位 |
+| UM-027 | 批量启用用户 | P1 | 功能 | POST /api/v1/users/batch {userIds: [1,2,3], action: "activate"} | 多个用户被激活 |
+| UM-028 | 批量禁用用户 | P1 | 功能 | POST /api/v1/users/batch {userIds: [1,2,3], action: "deactivate"} | 多个用户被禁用 |
+| UM-029 | 批量更新部门 | P1 | 功能 | POST /api/v1/users/batch {userIds: [1,2], action: "department", department: "运营部"} | 用户转移到运营部 |
 | UM-030 | 搜索用户-正常搜索 | P1 | 功能 | GET /api/v1/users/search?keyword=张三&limit=10 | 返回匹配的用户列表 |
 | UM-031 | 搜索用户-空关键词 | P2 | 边界 | GET /api/v1/users/search?keyword= | 返回400，关键词不能为空 |
 | UM-032 | 用户统计-获取统计信息 | P2 | 功能 | GET /api/v1/users/stats | 返回用户统计数据 |
@@ -70,7 +70,7 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| RM-001 | 角色列表-正常分页 | P1 | 功能 | GET /api/v1/roles?page=1&page_size=20 | 返回角色列表，分页正确 |
+| RM-001 | 角色列表-正常分页 | P1 | 功能 | GET /api/v1/roles?page=1&pageSize=20 | 返回角色列表，分页正确 |
 | RM-002 | 角色列表-按状态筛选 | P2 | 功能 | GET /api/v1/roles?status=active | 仅返回激活状态的角色 |
 | RM-003 | 创建角色-必填字段完整 | P1 | 功能 | POST /api/v1/roles {name: "运维管理员", description: "负责运维"} | 返回创建的角色信息 |
 | RM-004 | 创建角色-缺少名称 | P2 | 边界 | POST /api/v1/roles {description: "test"} | 返回400，name为必填 |
@@ -80,13 +80,13 @@
 | RM-008 | 获取角色详情-角色不存在 | P2 | 边界 | GET /api/v1/roles/99999 | 返回404 |
 | RM-009 | 编辑角色-更新基本信息 | P1 | 功能 | PUT /api/v1/roles/{id} {name: "新名称"} | 返回更新后的角色信息 |
 | RM-010 | 编辑角色-更新描述 | P1 | 功能 | PUT /api/v1/roles/{id} {description: "新描述"} | 描述更新成功 |
-| RM-011 | 编辑系统内置角色 | P2 | 安全 | PUT /api/v1/roles/{id} (is_system=true) | 返回400，系统角色不可编辑 |
+| RM-011 | 编辑系统内置角色 | P2 | 安全 | PUT /api/v1/roles/{id} (isSystem=true) | 返回400，系统角色不可编辑 |
 | RM-012 | 删除角色-正常删除 | P1 | 功能 | DELETE /api/v1/roles/{id} | 返回200，删除成功 |
 | RM-013 | 删除角色-角色被用户使用 | P2 | 业务规则 | DELETE /api/v1/roles/{id} (有用户分配) | 返回400，提示角色正在使用 |
-| RM-014 | 删除系统内置角色 | P2 | 安全 | DELETE /api/v1/roles/{id} (is_system=true) | 返回400，系统角色不可删除 |
-| RM-015 | 分配权限-正常分配 | P1 | 功能 | PUT /api/v1/roles/{id}/permissions {permission_ids: [1,2,3]} | 权限分配成功 |
-| RM-016 | 分配权限-分配不存在的权限 | P2 | 边界 | PUT /api/v1/roles/{id}/permissions {permission_ids: [999]} | 返回400，权限不存在 |
-| RM-017 | 分配权限-空权限列表 | P2 | 边界 | PUT /api/v1/roles/{id}/permissions {permission_ids: []} | 清空角色所有权限 |
+| RM-014 | 删除系统内置角色 | P2 | 安全 | DELETE /api/v1/roles/{id} (isSystem=true) | 返回400，系统角色不可删除 |
+| RM-015 | 分配权限-正常分配 | P1 | 功能 | PUT /api/v1/roles/{id}/permissions {permissionIds: [1,2,3]} | 权限分配成功 |
+| RM-016 | 分配权限-分配不存在的权限 | P2 | 边界 | PUT /api/v1/roles/{id}/permissions {permissionIds: [999]} | 返回400，权限不存在 |
+| RM-017 | 分配权限-空权限列表 | P2 | 边界 | PUT /api/v1/roles/{id}/permissions {permissionIds: []} | 清空角色所有权限 |
 | RM-018 | 角色复制-正常复制 | P1 | 功能 | POST /api/v1/roles/{id}/clone {name: "新角色名称"} | 创建拥有相同权限的新角色 |
 | RM-019 | 角色复制-不提供名称 | P2 | 边界 | POST /api/v1/roles/{id}/clone {} | 返回400，name为必填 |
 
@@ -118,15 +118,15 @@
 | DM-003 | 创建部门-必填字段完整 | P1 | 功能 | POST /api/v1/departments {name: "技术部", code: "TECH"} | 返回创建的部门信息 |
 | DM-004 | 创建部门-缺少名称 | P2 | 边界 | POST /api/v1/departments {code: "TECH"} | 返回400，name为必填 |
 | DM-005 | 创建部门-缺少编码 | P2 | 边界 | POST /api/v1/departments {name: "技术部"} | 返回400，code为必填 |
-| DM-006 | 创建子部门 | P1 | 功能 | POST /api/v1/departments {name: "前端组", code: "FE", parent_id: 1} | 在父部门下创建子部门 |
+| DM-006 | 创建子部门 | P1 | 功能 | POST /api/v1/departments {name: "前端组", code: "FE", parentId: 1} | 在父部门下创建子部门 |
 | DM-007 | 获取部门详情-正常 | P1 | 功能 | GET /api/v1/departments/{id} | 返回部门完整信息 |
 | DM-008 | 编辑部门-更新基本信息 | P1 | 功能 | PUT /api/v1/departments/{id} {name: "新名称"} | 返回更新后的部门信息 |
-| DM-009 | 编辑部门-调整父部门 | P1 | 功能 | PUT /api/v1/departments/{id} {parent_id: 2} | 部门移动到新父部门下 |
-| DM-010 | 编辑部门-设置为顶级部门 | P2 | 功能 | PUT /api/v1/departments/{id} {parent_id: null} | 部门变为顶级部门 |
+| DM-009 | 编辑部门-调整父部门 | P1 | 功能 | PUT /api/v1/departments/{id} {parentId: 2} | 部门移动到新父部门下 |
+| DM-010 | 编辑部门-设置为顶级部门 | P2 | 功能 | PUT /api/v1/departments/{id} {parentId: 0} | 部门变为顶级部门 |
 | DM-011 | 删除部门-正常删除 | P1 | 功能 | DELETE /api/v1/departments/{id} | 返回200，删除成功 |
 | DM-012 | 删除部门-有子部门 | P2 | 业务规则 | DELETE /api/v1/departments/{id} (有子部门) | 返回400，提示存在子部门 |
 | DM-013 | 删除部门-有用户 | P2 | 业务规则 | DELETE /api/v1/departments/{id} (有用户) | 返回400，提示部门下有用户 |
-| DM-014 | 设置部门负责人 | P1 | 功能 | PUT /api/v1/departments/{id} {manager_id: 5} | 指定用户为部门负责人 |
+| DM-014 | 设置部门负责人 | P1 | 功能 | PUT /api/v1/departments/{id} {managerId: 5} | 指定用户为部门负责人 |
 | DM-015 | 获取部门成员 | P2 | 功能 | GET /api/v1/departments/{id}/members | 返回部门下的用户列表 |
 
 ---
@@ -142,7 +142,7 @@
 | TM-005 | 创建团队-编码重复 | P2 | 边界 | POST /api/v1/teams两次相同code | 返回400，编码已存在 |
 | TM-006 | 获取团队详情-正常 | P1 | 功能 | GET /api/v1/teams/{id} | 返回团队完整信息 |
 | TM-007 | 编辑团队-更新基本信息 | P1 | 功能 | PUT /api/v1/teams/{id} {name: "新名称"} | 返回更新后的团队信息 |
-| TM-008 | 编辑团队-设置负责人 | P1 | 功能 | PUT /api/v1/teams/{id} {manager_id: 3} | 团队负责人更新成功 |
+| TM-008 | 编辑团队-设置负责人 | P1 | 功能 | PUT /api/v1/teams/{id} {managerId: 3} | 团队负责人更新成功 |
 | TM-009 | 删除团队-正常删除 | P1 | 功能 | DELETE /api/v1/teams/{id} | 返回200，删除成功 |
 | TM-010 | 删除团队-有成员 | P2 | 业务规则 | DELETE /api/v1/teams/{id} (有成员) | 返回400，先移除成员 |
 | TM-011 | 添加团队成员 | P1 | 功能 | POST /api/v1/teams/{id}/members {user_id: 5} | 成员添加成功 |
@@ -157,7 +157,7 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| TN-001 | 租户列表-正常分页 | P1 | 功能 | GET /api/admin/tenants?page=1&page_size=10 | 返回租户列表 |
+| TN-001 | 租户列表-正常分页 | P1 | 功能 | GET /api/admin/tenants?page=1&pageSize=10 | 返回租户列表 |
 | TN-002 | 租户列表-按状态筛选 | P2 | 功能 | GET /api/admin/tenants?status=active | 仅返回激活状态租户 |
 | TN-003 | 租户列表-按类型筛选 | P2 | 功能 | GET /api/admin/tenants?type=enterprise | 仅返回企业版租户 |
 | TN-004 | 租户列表-关键词搜索 | P2 | 功能 | GET /api/admin/tenants?search=公司名 | 返回匹配的租户 |
@@ -165,7 +165,7 @@
 | TN-006 | 创建租户-缺少名称 | P2 | 边界 | POST /api/admin/tenants {code: "TEST", type: "trial"} | 返回400，name为必填 |
 | TN-007 | 创建租户-缺少编码 | P2 | 边界 | POST /api/admin/tenants {name: "测试公司", type: "trial"} | 返回400，code为必填 |
 | TN-008 | 创建租户-编码包含特殊字符 | P2 | 边界 | POST /api/admin/tenants {name: "测试公司", code: "TEST-01", type: "trial"} | 返回400，编码只能包含字母数字 |
-| TN-009 | 创建租户-设置过期时间 | P1 | 功能 | POST /api/admin/tenants {... , expires_at: "2027-01-01T00:00:00Z"} | 租户创建时设置过期时间 |
+| TN-009 | 创建租户-设置过期时间 | P1 | 功能 | POST /api/admin/tenants {... , expiresAt: "2027-01-01T00:00:00Z"} | 租户创建时设置过期时间 |
 | TN-010 | 创建租户-设置资源配额 | P2 | 功能 | POST /api/admin/tenants {... , quota: {users: 100, tickets: 1000}} | 租户创建时设置配额 |
 | TN-011 | 获取租户详情-正常 | P1 | 功能 | GET /api/admin/tenants/{id} | 返回租户完整信息 |
 | TN-012 | 获取租户详情-租户不存在 | P2 | 边界 | GET /api/admin/tenants/99999 | 返回404 |
@@ -184,7 +184,7 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| SC-001 | 配置列表-正常分页 | P1 | 功能 | GET /api/v1/system-configs?page=1&page_size=20 | 返回配置列表 |
+| SC-001 | 配置列表-正常分页 | P1 | 功能 | GET /api/v1/system-configs?page=1&pageSize=20 | 返回配置列表 |
 | SC-002 | 配置列表-按分类筛选 | P1 | 功能 | GET /api/v1/system-configs?category=email | 仅返回邮件相关配置 |
 | SC-003 | 获取单个配置-正常 | P1 | 功能 | GET /api/v1/system-configs/{id} | 返回配置详情 |
 | SC-004 | 根据Key获取配置 | P1 | 功能 | GET /api/v1/system-configs/key/{key} | 通过key返回配置 |
@@ -205,15 +205,15 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| AL-001 | 日志列表-正常分页 | P1 | 功能 | GET /api/v1/audit-logs?page=1&page_size=20 | 返回审计日志列表 |
-| AL-002 | 日志列表-按用户筛选 | P2 | 功能 | GET /api/v1/audit-logs?user_id=5 | 返回该用户的操作日志 |
+| AL-001 | 日志列表-正常分页 | P1 | 功能 | GET /api/v1/audit-logs?page=1&pageSize=20 | 返回审计日志列表 |
+| AL-002 | 日志列表-按用户筛选 | P2 | 功能 | GET /api/v1/audit-logs?userId=5 | 返回该用户的操作日志 |
 | AL-003 | 日志列表-按资源类型筛选 | P2 | 功能 | GET /api/v1/audit-logs?resource=user | 返回用户相关操作日志 |
 | AL-004 | 日志列表-按操作类型筛选 | P2 | 功能 | GET /api/v1/audit-logs?action=create | 返回创建操作日志 |
 | AL-005 | 日志列表-按HTTP方法筛选 | P2 | 功能 | GET /api/v1/audit-logs?method=POST | 返回POST请求日志 |
-| AL-006 | 日志列表-按状态码筛选 | P2 | 功能 | GET /api/v1/audit-logs?status_code=200 | 返回成功请求日志 |
+| AL-006 | 日志列表-按状态码筛选 | P2 | 功能 | GET /api/v1/audit-logs?statusCode=200 | 返回成功请求日志 |
 | AL-007 | 日志列表-按时间范围筛选 | P2 | 功能 | GET /api/v1/audit-logs?from=2026-05-01T00:00:00Z&to=2026-05-10T23:59:59Z | 返回指定时间范围日志 |
 | AL-008 | 日志列表-按路径筛选 | P2 | 功能 | GET /api/v1/audit-logs?path=/api/v1/users | 返回该路径操作日志 |
-| AL-009 | 日志列表-按请求ID筛选 | P2 | 功能 | GET /api/v1/audit-logs?request_id=abc123 | 返回该请求ID的日志 |
+| AL-009 | 日志列表-按请求ID筛选 | P2 | 功能 | GET /api/v1/audit-logs?requestId=abc123 | 返回该请求ID的日志 |
 | AL-010 | 导出日志 | P2 | 功能 | GET /api/v1/audit-logs/export | 导出会话内的操作日志 |
 | AL-011 | 获取日志详情 | P2 | 功能 | GET /api/v1/audit-logs/{id} | 返回日志详细信息，包含请求/响应详情 |
 
@@ -223,21 +223,21 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| AC-001 | 审批链列表-正常分页 | P1 | 功能 | GET /api/v1/approval-chains?page=1&page_size=20 | 返回审批链列表 |
-| AC-002 | 审批链列表-按实体类型筛选 | P2 | 功能 | GET /api/v1/approval-chains?entity_type=ticket | 仅返回工单审批链 |
+| AC-001 | 审批链列表-正常分页 | P1 | 功能 | GET /api/v1/approval-chains?page=1&pageSize=20 | 返回审批链列表 |
+| AC-002 | 审批链列表-按实体类型筛选 | P2 | 功能 | GET /api/v1/approval-chains?entityType=ticket | 仅返回工单审批链 |
 | AC-003 | 审批链列表-按状态筛选 | P2 | 功能 | GET /api/v1/approval-chains?status=active | 仅返回激活的审批链 |
-| AC-004 | 创建审批链-必填字段完整 | P1 | 功能 | POST /api/v1/approval-chains {name: "紧急工单审批", entity_type: "ticket", nodes: [...]} | 返回创建的审批链 |
-| AC-005 | 创建审批链-缺少名称 | P2 | 边界 | POST /api/v1/approval-chains {entity_type: "ticket", nodes: [...]} | 返回400，name为必填 |
-| AC-006 | 创建审批链-配置单个节点 | P1 | 功能 | POST /api/v1/approval-chains {...nodes: [{order: 1, type: "user", user_id: 5}]} | 审批链包含单个节点 |
-| AC-007 | 创建审批链-配置多级节点 | P1 | 功能 | POST /api/v1/approval-chains {...nodes: [{order: 1, type: "role", role_id: 2}, {order: 2, type: "user", user_id: 5}]} | 多级审批链创建成功 |
+| AC-004 | 创建审批链-必填字段完整 | P1 | 功能 | POST /api/v1/approval-chains {name: "紧急工单审批", entityType: "ticket", chain: [...]} | 返回创建的审批链 |
+| AC-005 | 创建审批链-缺少名称 | P2 | 边界 | POST /api/v1/approval-chains {entityType: "ticket", chain: [...]} | 返回400，name为必填 |
+| AC-006 | 创建审批链-配置单个节点 | P1 | 功能 | POST /api/v1/approval-chains {...chain: [{level: 1, role: "user", approverId: 5, isRequired: true}]} | 审批链包含单个节点 |
+| AC-007 | 创建审批链-配置多级节点 | P1 | 功能 | POST /api/v1/approval-chains {...chain: [{level: 1, role: "manager"}, {level: 2, role: "user", approverId: 5}]} | 多级审批链创建成功 |
 | AC-008 | 获取审批链详情-正常 | P1 | 功能 | GET /api/v1/approval-chains/{id} | 返回审批链完整信息，包含节点列表 |
-| AC-009 | 更新审批链-更新基本信息 | P1 | 功能 | PUT /api/v1/approval-chains/{id} {name: "新名称"} | 审批链名称更新成功 |
-| AC-010 | 更新审批链-添加节点 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {nodes: [..., new_node]} | 新增审批节点 |
+| AC-009 | 更新审批链-更新基本信息 | P1 | 功能 | PUT /api/v1/approval-chains/{id} {name: "新名称", entityType: "ticket", chain: [...]} | 审批链名称更新成功（PUT 为整体替换，缺少 entityType/chain 返回400） |
+| AC-010 | 更新审批链-添加节点 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {name, entityType, chain: [...原有节点, {level: N, role: "user", approverId: 6}]} | 新增审批节点 |
 | AC-011 | 删除审批链-正常删除 | P1 | 功能 | DELETE /api/v1/approval-chains/{id} | 返回200，删除成功 |
 | AC-012 | 删除审批链-审批链正在使用 | P2 | 业务规则 | DELETE /api/v1/approval-chains/{id} (被工单使用) | 返回400，提示审批链正在使用 |
 | AC-013 | 获取审批链统计 | P2 | 功能 | GET /api/v1/approval-chains/stats | 返回审批链使用统计 |
-| AC-014 | 启用审批链 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {status: "active"} | 审批链被激活 |
-| AC-015 | 禁用审批链 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {status: "inactive"} | 审批链被禁用 |
+| AC-014 | 启用审批链 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {name, entityType, chain, status: "active"} | 审批链被激活 |
+| AC-015 | 禁用审批链 | P2 | 功能 | PUT /api/v1/approval-chains/{id} {name, entityType, chain, status: "inactive"} | 审批链被禁用 |
 
 ---
 
@@ -245,22 +245,21 @@
 
 | ID | 测试用例 | 优先级 | 测试类型 | 操作步骤 | 预期结果 |
 |----|----------|--------|----------|----------|----------|
-| TC-001 | 分类列表-正常查询 | P1 | 功能 | GET /api/v1/ticket-categories | 返回分类列表 |
-| TC-002 | 分类列表-按父级筛选 | P2 | 功能 | GET /api/v1/ticket-categories?parent_id=1 | 返回该父级下的子分类 |
+| TC-001 | 分类列表-正常查询 | P1 | 功能 | GET /api/v1/ticket-categories?page=1&pageSize=20 | 返回 {items,total,page,pageSize,totalPages} 标准列表结构 |
+| TC-002 | 分类列表-按父级筛选 | P2 | 功能 | GET /api/v1/ticket-categories?parentId=1 | 返回该父级下的子分类 |
 | TC-003 | 分类列表-按层级筛选 | P2 | 功能 | GET /api/v1/ticket-categories?level=1 | 返回一级分类 |
-| TC-004 | 分类列表-按状态筛选 | P2 | 功能 | GET /api/v1/ticket-categories?active=true | 仅返回激活分类 |
+| TC-004 | 分类列表-按状态筛选 | P2 | 功能 | GET /api/v1/ticket-categories?isActive=true | 仅返回激活分类 |
 | TC-005 | 分类树形结构 | P1 | 功能 | GET /api/v1/ticket-categories/tree | 返回树形结构分类 |
-| TC-006 | 创建分类-必填字段完整 | P1 | 功能 | POST /api/v1/ticket-categories {name: "网络故障", slug: "network"} | 返回创建的分类 |
-| TC-007 | 创建分类-缺少名称 | P2 | 边界 | POST /api/v1/ticket-categories {slug: "network"} | 返回400，name为必填 |
-| TC-008 | 创建分类-创建子分类 | P1 | 功能 | POST /api/v1/ticket-categories {name: "路由器故障", slug: "router", parent_id: 1} | 在父分类下创建子分类 |
+| TC-006 | 创建分类-必填字段完整 | P1 | 功能 | POST /api/v1/ticket-categories {name: "网络故障", code: "network"} | 返回创建的分类 |
+| TC-007 | 创建分类-缺少名称 | P2 | 边界 | POST /api/v1/ticket-categories {code: "network"} | 返回400，name为必填 |
+| TC-008 | 创建分类-创建子分类 | P1 | 功能 | POST /api/v1/ticket-categories {name: "路由器故障", code: "router", parentId: 1} | 在父分类下创建子分类 |
 | TC-009 | 获取分类详情-正常 | P1 | 功能 | GET /api/v1/ticket-categories/{id} | 返回分类完整信息 |
 | TC-010 | 更新分类-更新基本信息 | P1 | 功能 | PUT /api/v1/ticket-categories/{id} {name: "新名称"} | 分类名称更新成功 |
-| TC-011 | 更新分类-调整排序 | P2 | 功能 | PUT /api/v1/ticket-categories/{id} {sort_order: 5} | 分类排序更新 |
+| TC-011 | 更新分类-调整排序 | P2 | 功能 | PUT /api/v1/ticket-categories/{id} {sortOrder: 5} | 分类排序更新 |
 | TC-012 | 删除分类-正常删除 | P1 | 功能 | DELETE /api/v1/ticket-categories/{id} | 返回200，删除成功 |
 | TC-013 | 删除分类-有子分类 | P2 | 业务规则 | DELETE /api/v1/ticket-categories/{id} (有子分类) | 返回400，提示存在子分类 |
 | TC-014 | 删除分类-被工单使用 | P2 | 业务规则 | DELETE /api/v1/ticket-categories/{id} (有工单) | 返回400，提示分类正在使用 |
-| TC-015 | 移动分类位置 | P2 | 功能 | PUT /api/v1/ticket-categories/{id}/move {new_parent_id: 2, new_sort_order: 3} | 分类位置调整 |
-| TC-016 | 拖拽排序-更新排序 | P1 | 功能 | PUT /api/v1/ticket-categories/reorder {categories: [{id: 1, sort_order: 1}, {id: 2, sort_order: 2}]} | 批量更新分类排序 |
+| TC-015 | 移动分类位置 | P2 | 功能 | PUT /api/v1/ticket-categories/{id}/move {newParentId: 2, newSortOrder: 3} | 分类位置调整 |
 
 ---
 
