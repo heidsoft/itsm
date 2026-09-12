@@ -222,3 +222,35 @@ func TestResetPassword_InvalidID(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	m.AssertNotCalled(t, "ResetPassword")
 }
+
+func TestListUsers_AcceptsPageSize1000(t *testing.T) {
+	// Fix for P1-5: groups 页面 Member Transfer 此前传 pageSize:500 被后端 max=200 拒，
+	// 错误被 .catch 吞掉，Transfer 显示 0 用户。PageSize 改 max=1000 后应能通过。
+	m := &mockUserService{}
+	m.On("ListUsers", mock.Anything, mock.Anything, 1).Return(&dto.PagedUsersResponse{Users: []*dto.UserDetailResponse{}}, nil)
+	h, _ := newTestHandler(m)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/users?page=1&pageSize=1000", nil)
+	c.Set("tenant_id", 1)
+
+	h.ListUsers(c)
+
+	assert.Equal(t, http.StatusOK, w.Code, "pageSize=1000 应被允许，body=%s", w.Body.String())
+}
+
+func TestListUsers_RejectsPageSize1001(t *testing.T) {
+	m := &mockUserService{}
+	h, _ := newTestHandler(m)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/users?page=1&pageSize=1001", nil)
+	c.Set("tenant_id", 1)
+
+	h.ListUsers(c)
+
+	assert.NotEqual(t, http.StatusOK, w.Code, "pageSize=1001 必须被拒（max=1000）")
+	m.AssertNotCalled(t, "ListUsers")
+}
