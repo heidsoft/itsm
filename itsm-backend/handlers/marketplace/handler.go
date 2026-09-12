@@ -68,27 +68,19 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 // @Param type query string false "组件类型：connector/skill/plugin"
 // @Param category query string false "分类"
 // @Param search query string false "搜索关键词"
-// @Param is_official query boolean false "是否是官方组件"
+// @Param isOfficial query boolean false "是否是官方组件"
 // @Param page query int false "页码，默认1"
-// @Param page_size query int false "每页数量，默认20"
-// @Success 200 {object} common.Response{data=object{items=[]ent.MarketplaceItem, total=int, page=int, page_size=int}}
+// @Param pageSize query int false "每页数量，默认20"
+// @Success 200 {object} common.Response{data=object{items=[]ent.MarketplaceItem, total=int, page=int, pageSize=int}}
 // @Router /api/v1/marketplace/items [get]
 func (c *Handler) ListItems(ctx *gin.Context) {
 	itemType := ctx.Query("type")
 	category := ctx.Query("category")
 	search := ctx.Query("search")
 	isOfficialStr := ctx.Query("isOfficial")
-	pageStr := ctx.DefaultQuery("page", "1")
-	pageSizeStr := ctx.DefaultQuery("page_size", "20")
 
-	page, _ := strconv.Atoi(pageStr)
-	if page < 1 {
-		page = 1
-	}
-	pageSize, _ := strconv.Atoi(pageSizeStr)
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
-	}
+	pagination := common.GetPaginationFromQuery(ctx)
+	page, pageSize := pagination.Page, pagination.PageSize
 
 	var isOfficial *bool
 	if isOfficialStr != "" {
@@ -98,15 +90,15 @@ func (c *Handler) ListItems(ctx *gin.Context) {
 
 	items, total, err := c.service.ListItems(ctx, itemType, category, search, isOfficial, page, pageSize)
 	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		common.FailWithErr(ctx, err, "查询组件列表失败")
 		return
 	}
 
 	common.Success(ctx, gin.H{
-		"items":     items,
-		"total":     total,
-		"page":      page,
-		"page_size": pageSize,
+		"items":    items,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
 	})
 }
 

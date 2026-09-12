@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -19,8 +20,8 @@ import (
 type Handler struct {
 	roleService       RoleService
 	permissionService PermissionService
-	menuService      MenuService
-	logger           *zap.SugaredLogger
+	menuService       MenuService
+	logger            *zap.SugaredLogger
 }
 
 // NewHandler creates a new RBAC handler
@@ -28,14 +29,29 @@ func NewHandler(roleService RoleService, permissionService PermissionService, me
 	return &Handler{
 		roleService:       roleService,
 		permissionService: permissionService,
-		menuService:      menuService,
-		logger:           logger,
+		menuService:       menuService,
+		logger:            logger,
 	}
 }
 
 // =============================================================================
 // Role Handlers
 // =============================================================================
+
+// normalizeRoleStatus 校验并归一化启用状态取值（绑定层职责）。
+// 空字符串表示调用方未提交该字段，原样返回让 service 走默认值；
+// 非法取值必须拒绝为参数错误（1001），禁止静默落库为默认值造成「假成功」。
+func normalizeRoleStatus(c *gin.Context, status string) (string, bool) {
+	if strings.TrimSpace(status) == "" {
+		return "", true
+	}
+	active, ok := dto.RoleActiveFromStatus(status)
+	if !ok {
+		common.ParamError(c, "status 取值非法，仅支持 active/inactive")
+		return "", false
+	}
+	return dto.RoleStatusFromActive(active), true
+}
 
 // CreateRole creates a new role
 func (h *Handler) CreateRole(c *gin.Context) {
@@ -50,6 +66,12 @@ func (h *Handler) CreateRole(c *gin.Context) {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
+
+	normalizedStatus, ok := normalizeRoleStatus(c, req.Status)
+	if !ok {
+		return
+	}
+	req.Status = normalizedStatus
 
 	role, err := h.roleService.CreateRole(c.Request.Context(), &req, tenantID)
 	if err != nil {
@@ -91,19 +113,29 @@ func (h *Handler) ListRoles(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	search := c.Query("search")
+	pagination := common.GetPaginationFromQuery(c)
 
-	roles, total, err := h.roleService.ListRoles(c.Request.Context(), tenantID, page, pageSize, search)
+	status, ok := normalizeRoleStatus(c, c.Query("status"))
+	if !ok {
+		return
+	}
+
+	params := &dto.GetRolesParams{
+		Page:     pagination.Page,
+		PageSize: pagination.PageSize,
+		Status:   status,
+		Search:   c.Query("search"),
+	}
+
+	roles, total, err := h.roleService.ListRoles(c.Request.Context(), tenantID, params)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
 	totalPages := 0
-	if pageSize > 0 {
-		totalPages = (total + pageSize - 1) / pageSize
+	if params.PageSize > 0 {
+		totalPages = (total + params.PageSize - 1) / params.PageSize
 	}
 
 	roleItems := make([]dto.RoleDTO, 0, len(roles))
@@ -113,31 +145,26 @@ func (h *Handler) ListRoles(c *gin.Context) {
 			permissionCodes = append(permissionCodes, permission.Code)
 		}
 
-		status := "inactive"
-		if role.IsActive {
-			status = "active"
-		}
-
 		roleItems = append(roleItems, dto.RoleDTO{
 			ID:          role.ID,
 			Name:        role.Name,
 			Code:        role.Code,
 			Description: role.Description,
 			Permissions: permissionCodes,
-			Status:      status,
+			Status:      role.Status,
 			IsSystem:    role.IsSystem,
 			CreatedAt:   role.CreatedAt.Format(time.RFC3339),
 			UpdatedAt:   role.UpdatedAt.Format(time.RFC3339),
 			TenantID:    role.TenantID,
-			DataScope:   string(role.DataScope),
+			DataScope:   role.DataScope,
 		})
 	}
 
 	common.Success(c, dto.RoleListResponse{
 		Roles:      roleItems,
 		Total:      total,
-		Page:       page,
-		PageSize:   pageSize,
+		Page:       params.Page,
+		PageSize:   params.PageSize,
 		TotalPages: totalPages,
 	})
 }
@@ -160,6 +187,20 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
+	}
+
+	if req.Status != nil {
+		normalized, ok := normalizeRoleStatus(c, *req.Status)
+		if !ok {
+			return
+		}
+		// 空串等同「未提交该字段」，必须清空指针，
+		// 否则 service 会把 "" 映射成 is_active=false，静默禁用角色
+		if normalized == "" {
+			req.Status = nil
+		} else {
+			req.Status = &normalized
+		}
 	}
 
 	role, err := h.roleService.UpdateRole(c.Request.Context(), id, &req, tenantID)

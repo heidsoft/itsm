@@ -14,8 +14,12 @@ package contract
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"itsm-backend/common"
@@ -767,16 +771,29 @@ func TestContract_SmartAssignmentAPI_ListRules(t *testing.T) {
 
 // ============ 分页参数规范化测试 ============
 
+// TestContract_Pagination_ParameterNaming 校验分页契约的唯一解析入口。
+//
+// 此处必须委托真实的 common.GetPaginationFromQuery，而不是在测试里再抄一份解析逻辑：
+// 早期版本自带 `c.DefaultQuery("pageSize", c.DefaultQuery("page_size", "10"))` 的桩 handler，
+// 断言的其实是桩自己的行为（page_size 恒等于「被接受」），既无法发现生产漂移，
+// 又把 snake_case 别名写成了契约文档。
 func TestContract_Pagination_ParameterNaming(t *testing.T) {
 	tests := []struct {
 		name        string
 		queryParams string
-		expectPage  string
-		expectSize  string
+		expectPage  int
+		expectSize  int
 	}{
-		{"camelCase pageSize", "?page=1&pageSize=10", "1", "10"},
-		{"snake_case page_size", "?page=1&page_size=10", "1", "10"},
-		{"only page", "?page=2", "2", ""},
+		{"camelCase pageSize 生效", "?page=1&pageSize=10", 1, 10},
+		{"snake_case page_size 被忽略并回落默认值", "?page=1&page_size=10", 1, 20},
+		{"只传 page 时 pageSize 取默认值", "?page=2", 2, 20},
+		{"缺省参数取默认值", "", 1, 20},
+		// 注意：HTTP 边界的 GetPaginationFromQuery 对越界值是「拒绝并回落默认值 20」，
+		// 而 service 边界的 ValidatePagination 是「夹紧到 MaxPageSize(100)」，
+		// DTO binding 的 max=100 则是「返回 400」。三者语义不一致，此处锁定 HTTP 边界的真实行为。
+		{"pageSize 超上限回落默认值而非夹紧", "?pageSize=500", 1, 20},
+		{"pageSize 非法值回落默认值", "?pageSize=abc", 1, 20},
+		{"pageSize 非正数回落默认值", "?pageSize=0", 1, 20},
 	}
 
 	for _, tt := range tests {
@@ -784,12 +801,10 @@ func TestContract_Pagination_ParameterNaming(t *testing.T) {
 			r := setupContractTest()
 
 			r.GET("/api/v1/test/pagination", func(c *gin.Context) {
-				page := c.DefaultQuery("page", "1")
-				pageSize := c.DefaultQuery("pageSize", c.DefaultQuery("page_size", "10"))
-
+				pagination := common.GetPaginationFromQuery(c)
 				common.Success(c, gin.H{
-					"page":     page,
-					"pageSize": pageSize,
+					"page":     pagination.Page,
+					"pageSize": pagination.PageSize,
 				})
 			})
 
@@ -799,11 +814,48 @@ func TestContract_Pagination_ParameterNaming(t *testing.T) {
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			require.NoError(t, err)
 
+			assert.Equal(t, http.StatusOK, w.Code)
+			assert.Equal(t, common.SuccessCode, response.Code)
+
 			data := response.Data.(map[string]interface{})
-			assert.Equal(t, tt.expectPage, data["page"])
-			if tt.expectSize != "" {
-				assert.Equal(t, tt.expectSize, data["pageSize"])
-			}
+			// JSON 数字反序列化为 float64
+			assert.Equal(t, float64(tt.expectPage), data["page"])
+			assert.Equal(t, float64(tt.expectSize), data["pageSize"])
+
+			// 响应字段命名契约：只允许 camelCase
+			assert.NotContains(t, data, "page_size")
+			assert.NotContains(t, data, "size")
 		})
 	}
+}
+
+// TestContract_Pagination_NoSnakeCaseAliasInProductionHandlers 静态守卫：
+// 生产 handler 不得再读取 page_size / 输出 page_size 响应键。
+// 契约测试若只覆盖桩路由，就无法阻止 handler 层重新引入 snake_case 别名。
+func TestContract_Pagination_NoSnakeCaseAliasInProductionHandlers(t *testing.T) {
+	var offenders []string
+	walkErr := filepath.WalkDir("../../handlers", func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return err
+		}
+		raw, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		for i, line := range strings.Split(string(raw), "\n") {
+			// 只关心真实的查询参数读取与响应键输出
+			if strings.Contains(line, `Query("page_size")`) ||
+				strings.Contains(line, `DefaultQuery("page_size"`) ||
+				strings.Contains(line, `form:"page_size"`) ||
+				strings.Contains(line, `"page_size":`) {
+				offenders = append(offenders, fmt.Sprintf("%s:%d: %s", path, i+1, strings.TrimSpace(line)))
+			}
+		}
+		return nil
+	})
+	require.NoError(t, walkErr)
+
+	assert.Empty(t, offenders,
+		"生产 handler 仍在使用 snake_case page_size，违反 API 契约 camelCase-only 规则：\n%s",
+		strings.Join(offenders, "\n"))
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"itsm-backend/pkg/cache"
@@ -188,35 +187,4 @@ func (h *CacheHelper) CacheCMDBData(ctx *gin.Context, tenantID, ciID int, fn fun
 func (h *CacheHelper) InvalidateCMDBCache(ctx *gin.Context, tenantID int) error {
 	pattern := fmt.Sprintf("cmdb:tenant:%d:*", tenantID)
 	return h.cache.DeleteByPattern(ctx.Request.Context(), pattern)
-}
-
-// ParsePagination 解析分页参数
-func ParsePagination(c *gin.Context) (page, pageSize int, err error) {
-	pageStr := c.Query("page")
-	if pageStr != "" {
-		page, err = strconv.Atoi(pageStr)
-		if err != nil {
-			return 0, 0, fmt.Errorf("page 参数必须为数字")
-		}
-	} else {
-		page = 1
-	}
-	if page < 1 {
-		page = 1
-	}
-
-	pageSizeStr := c.Query("page_size")
-	if pageSizeStr != "" {
-		pageSize, err = strconv.Atoi(pageSizeStr)
-		if err != nil {
-			return 0, 0, fmt.Errorf("page_size 参数必须为数字")
-		}
-	} else {
-		pageSize = 20
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
-	}
-
-	return
 }

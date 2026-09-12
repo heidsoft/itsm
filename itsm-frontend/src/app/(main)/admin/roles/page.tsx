@@ -12,7 +12,8 @@ import {
   Search,
 } from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useDebounce } from '@/lib/component-utils';
 import {
   Card,
   Table,
@@ -39,7 +40,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { RoleAPI } from '@/lib/api/role-api';
 import { UserApi } from '@/lib/api/user-api';
-import type { PermissionCatalogItem } from '@/lib/api/api-config';
+import type { PermissionCatalogItem, Role } from '@/lib/api/api-config';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
@@ -91,25 +92,24 @@ function derivePermissionModules(
 }
 
 export default function RoleManagement() {
-  interface RoleItem {
-    id: number;
-    name: string;
-    code?: string;
-    description?: string;
-    status?: string;
-    permissions: string[];
-    createdAt?: string;
-    isSystem?: boolean;
-  }
   const { t } = useI18n();
   const { message } = App.useApp();
-  const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  // 搜索走后端，逐字符发请求既浪费也会产生竞态；按项目既有约定防抖 300ms。
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  // 请求序号：只有最新一次请求允许写回 state，防止慢响应覆盖新过滤条件的结果。
+  const requestSeqRef = useRef(0);
+  // 列表分页：page/pageSize 驱动请求，total 来自后端。
+  // total 单独存放，避免写回请求依赖的同一份 state 造成 effect 自我触发。
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [rolesTotal, setRolesTotal] = useState(0);
   const [stats, setStats] = useState({
     totalRoles: 0,
     activeRoles: 0,
@@ -124,39 +124,50 @@ export default function RoleManagement() {
   const [permissionsError, setPermissionsError] = useState<string | null>(null);
 
   // 加载角色数据
-  const loadRoles = async () => {
+  const loadRoles = useCallback(async () => {
+    const seq = ++requestSeqRef.current;
     setLoading(true);
     try {
-      const [rolesResponse, userStats] = await Promise.all([
+      const search = debouncedSearch || undefined;
+      const [rolesResponse, activeResponse, inactiveResponse, userStats] = await Promise.all([
         RoleAPI.getRoles({
-          search: searchTerm || undefined,
+          page,
+          pageSize,
+          search,
           status: statusFilter !== 'all' ? statusFilter : undefined,
         }),
+        // 统计卡片必须反映全量结果集，不能从被截断的当页数据推导。
+        // 这里只取 total，pageSize=1 避免拉回无用的行。
+        RoleAPI.getRoles({ page: 1, pageSize: 1, search, status: 'active' }),
+        RoleAPI.getRoles({ page: 1, pageSize: 1, search, status: 'inactive' }),
         UserApi.getUserStats().catch(() => ({ total: 0, active: 0, inactive: 0 })),
       ]);
 
+      if (seq !== requestSeqRef.current) return;
+
       setRoles(rolesResponse.roles);
+      setRolesTotal(rolesResponse.total);
 
-      const activeRoles = rolesResponse.roles.filter((r: RoleItem) => r.status !== 'inactive').length;
-      const totalRoles = rolesResponse.roles.length;
-      const inactiveRoles = totalRoles - activeRoles;
-
+      // 后端 status 由 is_active 布尔映射，只可能是 active/inactive，两者之和即全量
       setStats({
-        totalRoles,
-        activeRoles,
-        inactiveRoles,
+        totalRoles: activeResponse.total + inactiveResponse.total,
+        activeRoles: activeResponse.total,
+        inactiveRoles: inactiveResponse.total,
         totalUsers: userStats.total,
       });
     } catch (error) {
+      if (seq !== requestSeqRef.current) return;
       console.error('Failed to load roles:', error);
       message.error(t('roles.loadRolesFailed'));
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [page, pageSize, debouncedSearch, statusFilter, message, t]);
 
   // 加载权限目录（动态派生模块矩阵）
-  const loadPermissions = async () => {
+  const loadPermissions = useCallback(async () => {
     setPermissionsLoading(true);
     setPermissionsError(null);
     try {
@@ -177,13 +188,16 @@ export default function RoleManagement() {
     } finally {
       setPermissionsLoading(false);
     }
-  };
+  }, [t]);
 
   // 初始化加载数据
   useEffect(() => {
     loadRoles();
+  }, [loadRoles]);
+
+  useEffect(() => {
     loadPermissions();
-  }, [searchTerm, statusFilter]);
+  }, [loadPermissions]);
 
   // 处理保存角色
   const handleSaveRole = async () => {
@@ -289,13 +303,13 @@ export default function RoleManagement() {
   };
 
   // 表格列定义
-  const columns: ColumnsType<RoleItem> = [
+  const columns: ColumnsType<Role> = [
     {
       title: t('roles.title'),
       key: 'info',
       width: 300,
       ellipsis: true,
-      render: (_: unknown, record: RoleItem) => (
+      render: (_: unknown, record: Role) => (
         <div>
           <div className="font-medium text-gray-900">{record.name}</div>
           <div className="text-sm text-gray-500 truncate">
@@ -309,7 +323,7 @@ export default function RoleManagement() {
       title: t('roles.status'),
       key: 'status',
       width: 120,
-      render: (_: unknown, record: RoleItem) => {
+      render: (_: unknown, record: Role) => {
         const isActive = record.status !== 'inactive';
         return (
           <Badge
@@ -339,7 +353,7 @@ export default function RoleManagement() {
       title: t('roles.actions'),
       key: 'actions',
       width: 150,
-      render: (_: unknown, record: RoleItem) => (
+      render: (_: unknown, record: Role) => (
         <Space size="small">
           <Tooltip title={t('roles.editTooltip')}>
             <Button
@@ -561,7 +575,10 @@ export default function RoleManagement() {
               placeholder={t('roles.searchPlaceholder')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={e => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
               allowClear
             />
           </Col>
@@ -569,7 +586,10 @@ export default function RoleManagement() {
             <Select
               placeholder={t('roles.selectStatus')}
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={value => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
               style={{ width: '100%' }}
               options={[
                 { value: 'all', label: t('roles.allStatus') },
@@ -607,11 +627,16 @@ export default function RoleManagement() {
           rowKey="id"
           loading={loading}
           pagination={{
-            total: roles.length,
-            pageSize: 10,
+            current: page,
+            pageSize,
+            total: rolesTotal,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: total => t('roles.totalLabel', { total }),
+            onChange: (nextPage, nextPageSize) => {
+              setPage(nextPage);
+              setPageSize(nextPageSize);
+            },
           }}
           scroll={{ x: 850 }}
           className="enterprise-table"

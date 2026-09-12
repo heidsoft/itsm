@@ -19,9 +19,11 @@ type UpdateGroupRequest struct {
 
 // ListGroupsRequest 获取组列表请求
 type ListGroupsRequest struct {
-	Page     int    `form:"page,default=1" binding:"min=1"`
-	PageSize int    `form:"pageSize,default=10" binding:"min=1,max=100"`
-	TenantID int    `form:"tenantId"`
+	Page     int `form:"page,default=1" binding:"min=1"`
+	PageSize int `form:"pageSize,default=10" binding:"min=1,max=100"`
+	// TenantID 由 handler 从认证上下文写入，禁止从查询参数绑定，
+	// 否则调用方可传 ?tenantId=N 读取他租户的组（跨租户 IDOR）。
+	TenantID int    `form:"-"`
 	Search   string `form:"search"`
 }
 

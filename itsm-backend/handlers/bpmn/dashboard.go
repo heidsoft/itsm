@@ -89,9 +89,8 @@ func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 // @Summary 获取仪表盘指标
 // @Tags BPMN仪表盘
 // @Produce json
-// @Param tenant_id query int true "租户ID"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param startTime query string false "开始时间"
+// @Param endTime query string false "结束时间"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetDashboardMetrics(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
@@ -129,9 +128,8 @@ func (c *DashboardHandler) GetDashboardMetrics(ctx *gin.Context) {
 // @Tags BPMN仪表盘
 // @Produce json
 // @Param key path string true "流程定义Key"
-// @Param tenant_id query int true "租户ID"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param startTime query string false "开始时间"
+// @Param endTime query string false "结束时间"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetProcessMetrics(ctx *gin.Context) {
 	key := ctx.Param("key")
@@ -174,15 +172,14 @@ func (c *DashboardHandler) GetProcessMetrics(ctx *gin.Context) {
 // @Summary 获取审计日志
 // @Tags BPMN仪表盘
 // @Produce json
-// @Param tenant_id query int true "租户ID"
-// @Param process_instance_id query int false "流程实例ID"
-// @Param process_definition_key query string false "流程定义Key"
 // @Param action query string false "操作类型"
-// @Param user_id query int false "用户ID"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param userId query int false "用户ID"
+// @Param startTime query string false "开始时间"
+// @Param endTime query string false "结束时间"
+// @Param processInstanceId query int false "流程实例ID"
+// @Param processDefinitionKey query string false "流程定义Key"
 // @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
+// @Param pageSize query int false "每页数量"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
@@ -194,13 +191,13 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		TenantID: tenantID,
 	}
 
-	if v := ctx.Query("process_instance_id"); v != "" {
+	if v := ctx.Query("processInstanceId"); v != "" {
 		if id, err := strconv.Atoi(v); err == nil {
 			req.ProcessInstanceID = id
 		}
 	}
 
-	if v := ctx.Query("process_definition_key"); v != "" {
+	if v := ctx.Query("processDefinitionKey"); v != "" {
 		req.ProcessDefinitionKey = v
 	}
 
@@ -293,9 +290,8 @@ func (c *DashboardHandler) GetProcessTimeline(ctx *gin.Context) {
 // @Tags BPMN仪表盘
 // @Produce json
 // @Param userId path int true "用户ID"
-// @Param tenant_id query int true "租户ID"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param startTime query string false "开始时间"
+// @Param endTime query string false "结束时间"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetUserActivity(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("userId"))
@@ -338,7 +334,6 @@ func (c *DashboardHandler) GetUserActivity(ctx *gin.Context) {
 // @Summary 获取SLA违规
 // @Tags BPMN仪表盘
 // @Produce json
-// @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetSLAViolations(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
@@ -360,9 +355,8 @@ func (c *DashboardHandler) GetSLAViolations(ctx *gin.Context) {
 // @Tags BPMN仪表盘
 // @Produce json
 // @Param key query string true "流程定义Key"
-// @Param tenant_id query int true "租户ID"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param startTime query string false "开始时间"
+// @Param endTime query string false "结束时间"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetSLACompliance(ctx *gin.Context) {
 	key := ctx.Query("key")
@@ -409,7 +403,6 @@ func (c *DashboardHandler) GetSLACompliance(ctx *gin.Context) {
 // @Summary 获取租户统计
 // @Tags BPMN仪表盘
 // @Produce json
-// @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 	tenantID, ok := resolveTenantID(ctx)
@@ -431,7 +424,6 @@ func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 // @Tags BPMN仪表盘
 // @Produce json
 // @Param key query string true "流程定义Key"
-// @Param tenant_id query int true "租户ID"
 // @Success 200 {object} common.Response
 func (c *DashboardHandler) GetBottleneckAnalysis(ctx *gin.Context) {
 	key := ctx.Query("key")

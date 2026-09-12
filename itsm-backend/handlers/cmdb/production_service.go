@@ -579,7 +579,7 @@ func (c *ProductionService) GetCIStats(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
+// @Param pageSize query int false "每页数量"
 // @Param relationshipType query string false "关系类型"
 // @Success 200 {object} common.Response{data=dto.CIRelationshipListResponse}
 // @Router /api/v1/cmdb/relationships [get]
@@ -589,21 +589,14 @@ func (c *ProductionService) ListCIRelationships(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSizeQuery := ctx.Query("pageSize")
-	if pageSizeQuery == "" {
-		pageSizeQuery = ctx.Query("pageSize")
-	}
-	if pageSizeQuery == "" {
-		pageSizeQuery = ctx.DefaultQuery("size", "20")
-	}
-	pageSize, _ := strconv.Atoi(pageSizeQuery)
+	pagination := common.GetPaginationFromQuery(ctx)
+	page, pageSize := pagination.Page, pagination.PageSize
 	relationshipType := ctx.Query("relationshipType")
 
 	result, err := c.ciRelationshipService.ListAllCIRelationships(ctx.Request.Context(), tenantID, page, pageSize, relationshipType)
 	if err != nil {
 		c.logger.Errorw("List CI relationships failed", "error", err, "tenant_id", tenantID)
-		common.Fail(ctx, common.InternalErrorCode, "获取CI关系列表失败: "+err.Error())
+		common.FailWithErr(ctx, err, "获取CI关系列表失败")
 		return
 	}
 

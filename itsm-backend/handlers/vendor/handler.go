@@ -54,8 +54,8 @@ func (h *Handler) CreateVendor(ctx *gin.Context) {
 
 // ListVendors GET /api/v1/vendors
 func (h *Handler) ListVendors(ctx *gin.Context) {
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(ctx.DefaultQuery("page_size", "10"))
+	pagination := common.GetPaginationFromQuery(ctx)
+	page, size := pagination.Page, pagination.PageSize
 	tv, ok := ctx.Get("tenant_id")
 	if !ok {
 		common.Fail(ctx, common.UnauthorizedCode, "租户信息缺失")

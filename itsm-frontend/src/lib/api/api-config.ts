@@ -263,6 +263,7 @@ export interface ServiceRequest {
 }
 
 // 角色相关接口
+// 与后端 dto.RoleDTO 逐字段对齐
 export interface Role {
   id: number;
   name: string;
@@ -272,15 +273,20 @@ export interface Role {
   status?: 'active' | 'inactive';
   isSystem?: boolean;
   userCount?: number;
+  /** 数据范围：all / department / owner */
+  dataScope?: string;
+  tenantId?: number;
   createdAt: string;
   updatedAt: string;
 }
 
+// 与后端 dto.RoleListResponse 逐字段对齐
 export interface RoleListResponse {
   roles: Role[];
   total: number;
   page: number;
   pageSize: number;
+  totalPages?: number;
 }
 
 export interface CreateRoleRequest {
@@ -301,7 +307,6 @@ export interface UpdateRoleRequest {
 
 export interface GetRolesParams {
   page?: number;
-  size?: number;
   pageSize?: number;
   status?: string;
   search?: string;

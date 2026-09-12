@@ -151,9 +151,9 @@ func (h *Handler) ListTags(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-	isActiveStr := c.Query("is_active")
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
+	isActiveStr := c.Query("isActive")
 
 	var active *bool
 	if isActiveStr != "" {

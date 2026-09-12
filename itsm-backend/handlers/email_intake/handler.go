@@ -694,25 +694,11 @@ func (h *Handler) ListConversations(c *gin.Context) {
 		return
 	}
 	status := strings.TrimSpace(c.Query("status"))
-	// Pagination: page (1-based) and page_size (default 20, max 100)
-	page := 1
-	pageSize := 20
-	if p, err := strconv.Atoi(c.Query("page")); err == nil && p > 0 {
-		page = p
-	}
-	pageSizeValue := c.Query("pageSize")
-	if pageSizeValue == "" {
-		pageSizeValue = c.Query("page_size") // temporary backward compatibility
-	}
-	if ps, err := strconv.Atoi(pageSizeValue); err == nil && ps > 0 {
-		if ps > 100 {
-			ps = 100
-		}
-		pageSize = ps
-	}
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
 	items, total, err := h.svc.ListConversations(c, tenantID, status, page, pageSize)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.FailWithErr(c, err, "查询邮件会话列表失败")
 		return
 	}
 	result := make([]conversationResponse, 0, len(items))

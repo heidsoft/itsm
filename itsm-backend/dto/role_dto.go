@@ -1,6 +1,37 @@
 package dto
 
-import "time"
+import (
+	"strings"
+	"time"
+)
+
+// 角色启用状态的线上契约取值。持久层是 role.is_active(bool)，
+// 对外统一表达为 status，避免出现 isActive/status 两套同义字段。
+const (
+	RoleStatusActive   = "active"
+	RoleStatusInactive = "inactive"
+)
+
+// RoleStatusFromActive 把持久层 is_active 映射为线上契约 status。
+func RoleStatusFromActive(isActive bool) string {
+	if isActive {
+		return RoleStatusActive
+	}
+	return RoleStatusInactive
+}
+
+// RoleActiveFromStatus 解析线上契约 status。ok=false 表示取值非法，
+// 调用方必须拒绝请求（1001），不得静默回退到默认值落库。
+func RoleActiveFromStatus(status string) (active bool, ok bool) {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case RoleStatusActive:
+		return true, true
+	case RoleStatusInactive:
+		return false, true
+	default:
+		return false, false
+	}
+}
 
 // RoleDTO represents a role data transfer object
 type RoleDTO struct {
@@ -43,8 +74,10 @@ type UpdateRoleRequest struct {
 	Code        *string  `json:"code"`
 	Description *string  `json:"description"`
 	Permissions []string `json:"permissions"`
-	Status      *string  `json:"status"`
-	IsActive    *bool    `json:"isActive"` // 是否启用角色
+	// Status 是启用状态的唯一线上契约（active/inactive），落库到 role.is_active。
+	// 曾并存同义字段 isActive，但 service 只读 isActive 导致前端发送的 status 被静默丢弃，
+	// 角色启用/禁用开关表现为「更新成功却毫无变化」，故删除双轨字段。
+	Status *string `json:"status"`
 }
 
 // GetRolesParams represents the query parameters for listing roles
@@ -62,7 +95,8 @@ type RoleResponse struct {
 	Code        string           `json:"code"`
 	Description string           `json:"description"`
 	IsSystem    bool             `json:"isSystem"`
-	IsActive    bool             `json:"isActive"`  // 角色是否启用
+	Status      string           `json:"status"`    // active/inactive，启用状态的唯一线上契约
+	IsActive    bool             `json:"-"`         // 内部字段：Status 的来源，不单独出 JSON，避免同义双字段
 	DataScope   string           `json:"dataScope"` // all/department/owner
 	Permissions []PermissionInfo `json:"permissions"`
 	TenantID    int              `json:"tenantId"`

@@ -31,10 +31,12 @@ type UpdateUserRequest struct {
 }
 
 // ListUsersRequest 获取用户列表请求
+//
+// 租户范围不在请求参数中：handler 从认证上下文取 tenantID 后单独传给 service，
+// 避免出现可被调用方覆盖的租户字段（跨租户 IDOR）。
 type ListUsersRequest struct {
 	Page       int    `form:"page,default=1" binding:"min=1"`
 	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=200"`
-	TenantID   int    `form:"tenantId"`
 	Status     string `form:"status"` // active, inactive
 	Department string `form:"department"`
 	Search     string `form:"search"`
@@ -115,10 +117,12 @@ type BatchUpdateUsersRequest struct {
 }
 
 // SearchUsersRequest 搜索用户请求
+//
+// 不含租户字段：租户范围由 handler 从认证上下文取出后单独传给 service，
+// 避免出现可被调用方覆盖的租户谓词（跨租户 IDOR）。
 type SearchUsersRequest struct {
-	Keyword  string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
-	TenantID int    `json:"tenantId" form:"tenantId"`
-	Limit    int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
+	Keyword string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
+	Limit   int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
 }
 
 // ImportUsersRequest 批量导入用户请求

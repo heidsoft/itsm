@@ -95,8 +95,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
-// @Param tenant_id query int false "租户ID"
+// @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "状态过滤" Enums(active, inactive)
 // @Param department query string false "部门过滤"
 // @Param search query string false "搜索关键词"
@@ -379,7 +378,6 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 // @Tags 用户管理
 // @Accept json
 // @Produce json
-// @Param tenant_id query int false "租户ID"
 // @Success 200 {object} common.Response{data=object}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/users/stats [get]
@@ -442,7 +440,6 @@ func (h *UserHandler) BatchUpdateUsers(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param keyword query string true "搜索关键词"
-// @Param tenant_id query int false "租户ID"
 // @Param limit query int false "限制数量" default(10)
 // @Success 200 {object} common.Response{data=[]dto.UserResponse}
 // @Failure 400 {object} common.Response

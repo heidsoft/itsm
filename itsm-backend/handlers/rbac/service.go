@@ -15,7 +15,7 @@ import (
 type RoleService interface {
 	CreateRole(ctx context.Context, req *dto.CreateRoleRequest, tenantID int) (*dto.RoleResponse, error)
 	GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error)
-	ListRoles(ctx context.Context, tenantID int, page, pageSize int, search string) ([]*dto.RoleResponse, int, error)
+	ListRoles(ctx context.Context, tenantID int, params *dto.GetRolesParams) ([]*dto.RoleResponse, int, error)
 	UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error)
 	DeleteRole(ctx context.Context, id int, tenantID int) error
 	AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error

@@ -253,6 +253,25 @@ definitions:
       serviceAvailability:
         type: number
     type: object
+  dto.BusinessProcessCandidate:
+    properties:
+      approvalPolicy:
+        additionalProperties: true
+        type: object
+      domain:
+        type: string
+      formSchema:
+        additionalProperties: true
+        type: object
+      ontologyBindings:
+        additionalProperties: true
+        type: object
+      requiresConfirmation:
+        type: boolean
+      slaConfig:
+        additionalProperties: true
+        type: object
+    type: object
   dto.BusinessType:
     enum:
     - ticket
@@ -2311,6 +2330,11 @@ definitions:
         - change
         - problem
         - service_request
+        - leave
+        - expense
+        - hr
+        - procurement
+        - it
         - custom
         type: string
       requirement:
@@ -2319,19 +2343,22 @@ definitions:
         minLength: 10
         type: string
       tenantId:
-        description: 租户ID
+        description: |-
+          租户ID
+          TenantID is populated from the authenticated tenant context by the handler.
         type: integer
     required:
     - enterpriseType
     - processType
     - requirement
-    - tenantId
     type: object
   dto.GenerateBPMNResponse:
     properties:
       bpmnXml:
         description: 生成的BPMN XML内容
         type: string
+      candidateDefinition:
+        $ref: '#/definitions/dto.BusinessProcessCandidate'
       complexity:
         description: 预估复杂度：low/medium/high
         type: string
@@ -2868,6 +2895,11 @@ definitions:
         - change
         - problem
         - service_request
+        - leave
+        - expense
+        - hr
+        - procurement
+        - it
         - custom
         type: string
       requirement:
@@ -2955,6 +2987,8 @@ definitions:
     properties:
       assigneeId:
         type: integer
+      assigneeName:
+        type: string
       associatedChanges:
         items:
           $ref: '#/definitions/dto.AssociatedItemResponse'
@@ -2973,7 +3007,10 @@ definitions:
       createdAt:
         type: string
       createdBy:
+        description: 创建人/报告人字段（ID + 名字。名字由 service 层 join user 表填充，避免前端再调一次 user API）
         type: integer
+      createdByName:
+        type: string
       description:
         type: string
       id:
@@ -3078,6 +3115,12 @@ definitions:
         type: string
       name:
         type: string
+      reverse:
+        allOf:
+        - $ref: '#/definitions/dto.CIRelationshipType'
+        description: |-
+          Reverse 语义反向类型（如 depends_on -> impacted_by），无反向时为空。
+          与 /cmdb/ontology 的 reverseType 保持同一语义，便于 Agent 从任一端点推导双向关系。
       type:
         $ref: '#/definitions/dto.CIRelationshipType'
     type: object
@@ -3584,9 +3627,6 @@ definitions:
         type: string
       description:
         type: string
-      force:
-        description: 是否强制更新（忽略版本检查）；需要 incident:force-update 权限
-        type: boolean
       impact:
         enum:
         - low
@@ -12283,21 +12323,25 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取所有配置项的列表，支持分页和筛选
+      description: 单一入口：覆盖原 List + Search 双接口。支持分页、过滤、关键词宽模糊、排序、标签过滤、时间范围与关系预加载。
       parameters:
-      - description: 页码
+      - description: 页码（默认1）
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大200）
         in: query
         name: size
         type: integer
-      - description: CI类型ID
+      - description: CI类型ID（精确匹配）
         in: query
         name: ciTypeId
         type: integer
-      - description: 状态
+      - description: CI类型字符串（精确匹配）
+        in: query
+        name: ciType
+        type: string
+      - description: 状态（模糊匹配）
         in: query
         name: status
         type: string
@@ -12321,18 +12365,49 @@ paths:
         in: query
         name: cloudRegion
         type: string
-      - description: 负责人
+      - description: 负责人（模糊匹配）
         in: query
         name: assignedTo
         type: string
-      - description: 拥有者
+      - description: 拥有者（模糊匹配）
         in: query
         name: ownedBy
         type: string
-      - description: 搜索关键词（名称、资产标签、序列号等）
+      - description: 关键词宽模糊（名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）
         in: query
         name: search
         type: string
+      - description: CI唯一业务编号精确匹配（AI Agent 稳定定位实体用自然键）
+        in: query
+        name: ciNumber
+        type: string
+      - description: 排序字段（id/name/status/environment/criticality/created_at/updated_at）
+        in: query
+        name: sortBy
+        type: string
+      - description: 排序方向（asc/desc）
+        in: query
+        name: sortOrder
+        type: string
+      - description: 创建时间起始（RFC3339）
+        in: query
+        name: dateFrom
+        type: string
+      - description: 创建时间截止（RFC3339）
+        in: query
+        name: dateTo
+        type: string
+      - collectionFormat: csv
+        description: 标签ID列表（OR）
+        in: query
+        items:
+          type: integer
+        name: tagIds
+        type: array
+      - description: 是否预加载关系（默认false）
+        in: query
+        name: withRelations
+        type: boolean
       produces:
       - application/json
       responses:
@@ -12345,7 +12420,7 @@ paths:
                 data:
                   $ref: '#/definitions/dto.CIListResponse'
               type: object
-      summary: 获取配置项列表
+      summary: 获取配置项列表（统一 List + Search 入口，P1-1）
       tags:
       - CMDB
     post:
@@ -12820,9 +12895,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: 多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
+      deprecated: true
+      description: |-
+        多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
+        已废弃（P1-1）：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
       parameters:
-      - description: 搜索请求
+      - description: 搜索请求（已废弃）
         in: body
         name: request
         required: true
@@ -12840,7 +12918,7 @@ paths:
                 data:
                   $ref: '#/definitions/dto.ListResponse-dto_CIResponse'
               type: object
-      summary: 高级搜索CI
+      summary: '[已废弃] CI高级搜索'
       tags:
       - CMDB
   /api/v1/cmdb/cis/stats:
@@ -13079,7 +13157,7 @@ paths:
         type: integer
       - description: 每页数量
         in: query
-        name: page_size
+        name: pageSize
         type: integer
       - description: 关系类型
         in: query
@@ -13898,11 +13976,7 @@ paths:
       - default: 10
         description: 每页数量
         in: query
-        name: page_size
-        type: integer
-      - description: 租户ID
-        in: query
-        name: tenant_id
+        name: pageSize
         type: integer
       - description: 搜索关键词
         in: query
@@ -14108,10 +14182,10 @@ paths:
         in: query
         name: page
         type: integer
-      - default: 10
+      - default: 20
         description: 每页数量
         in: query
-        name: page_size
+        name: pageSize
         type: integer
       produces:
       - application/json
@@ -15654,7 +15728,7 @@ paths:
         type: string
       - description: 是否是官方组件
         in: query
-        name: is_official
+        name: isOfficial
         type: boolean
       - description: 页码，默认1
         in: query
@@ -15662,7 +15736,7 @@ paths:
         type: integer
       - description: 每页数量，默认20
         in: query
-        name: page_size
+        name: pageSize
         type: integer
       produces:
       - application/json
@@ -15677,7 +15751,7 @@ paths:
                   properties:
                     ' page':
                       type: integer
-                    ' page_size':
+                    ' pageSize':
                       type: integer
                     ' total':
                       type: integer
@@ -16781,11 +16855,7 @@ paths:
       - default: 10
         description: 每页数量
         in: query
-        name: page_size
-        type: integer
-      - description: 租户ID
-        in: query
-        name: tenant_id
+        name: pageSize
         type: integer
       - description: 状态过滤
         enum:
@@ -17059,10 +17129,6 @@ paths:
         name: keyword
         required: true
         type: string
-      - description: 租户ID
-        in: query
-        name: tenant_id
-        type: integer
       - default: 10
         description: 限制数量
         in: query
@@ -17094,11 +17160,6 @@ paths:
       consumes:
       - application/json
       description: 获取用户统计信息
-      parameters:
-      - description: 租户ID
-        in: query
-        name: tenant_id
-        type: integer
       produces:
       - application/json
       responses:

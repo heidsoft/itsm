@@ -89,11 +89,11 @@ func (h *Handler) GetMSPContext(c *gin.Context) {
 	}
 
 	common.Success(c, dto.MSPContext{
-		IsMSP:             mspCtx.IsMSP,
+		IsMSP:            mspCtx.IsMSP,
 		MSPUserID:        mspCtx.MSPUserID,
-		CustomerTenantID:  mspCtx.CustomerTenantID,
-		Role:              mspCtx.Role,
-		AllowedCustomers:  mspCtx.AllowedCustomers,
+		CustomerTenantID: mspCtx.CustomerTenantID,
+		Role:             mspCtx.Role,
+		AllowedCustomers: mspCtx.AllowedCustomers,
 	})
 }
 
@@ -207,8 +207,8 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	}
 
 	status := c.Query("status")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
 
 	mspCtx, _ := middleware.GetMSPContext(c)
 	userID := mspCtx.MSPUserID

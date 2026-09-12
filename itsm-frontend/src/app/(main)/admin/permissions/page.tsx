@@ -291,7 +291,7 @@ const PermissionConfiguration = () => {
   const loadRoles = useCallback(async () => {
     setRolesLoading(true);
     try {
-      const response = await RoleAPI.getRoles({ page: 1, size: 100 });
+      const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
       setRoles(response.roles || []);
       const catalog = await RoleAPI.getPermissionCatalog();
       setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);

@@ -3829,7 +3829,7 @@ const docTemplate = `{
         },
         "/api/v1/cmdb/cis": {
             "get": {
-                "description": "获取所有配置项的列表，支持分页和筛选",
+                "description": "单一入口：覆盖原 List + Search 双接口。支持分页、过滤、关键词宽模糊、排序、标签过滤、时间范围与关系预加载。",
                 "consumes": [
                     "application/json"
                 ],
@@ -3839,29 +3839,35 @@ const docTemplate = `{
                 "tags": [
                     "CMDB"
                 ],
-                "summary": "获取配置项列表",
+                "summary": "获取配置项列表（统一 List + Search 入口，P1-1）",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "页码",
+                        "description": "页码（默认1）",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
+                        "description": "每页数量（默认20，最大200）",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "CI类型ID",
+                        "description": "CI类型ID（精确匹配）",
                         "name": "ciTypeId",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "状态",
+                        "description": "CI类型字符串（精确匹配）",
+                        "name": "ciType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态（模糊匹配）",
                         "name": "status",
                         "in": "query"
                     },
@@ -3897,20 +3903,66 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "负责人",
+                        "description": "负责人（模糊匹配）",
                         "name": "assignedTo",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "拥有者",
+                        "description": "拥有者（模糊匹配）",
                         "name": "ownedBy",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "搜索关键词（名称、资产标签、序列号等）",
+                        "description": "关键词宽模糊（名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）",
                         "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "CI唯一业务编号精确匹配（AI Agent 稳定定位实体用自然键）",
+                        "name": "ciNumber",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段（id/name/status/environment/criticality/created_at/updated_at）",
+                        "name": "sortBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向（asc/desc）",
+                        "name": "sortOrder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间起始（RFC3339）",
+                        "name": "dateFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "创建时间截止（RFC3339）",
+                        "name": "dateTo",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "标签ID列表（OR）",
+                        "name": "tagIds",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否预加载关系（默认false）",
+                        "name": "withRelations",
                         "in": "query"
                     }
                 ],
@@ -4162,7 +4214,7 @@ const docTemplate = `{
         },
         "/api/v1/cmdb/cis/search": {
             "post": {
-                "description": "多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序",
+                "description": "多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序\n已废弃（P1-1）：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。",
                 "consumes": [
                     "application/json"
                 ],
@@ -4172,10 +4224,11 @@ const docTemplate = `{
                 "tags": [
                     "CMDB"
                 ],
-                "summary": "高级搜索CI",
+                "summary": "[已废弃] CI高级搜索",
+                "deprecated": true,
                 "parameters": [
                     {
-                        "description": "搜索请求",
+                        "description": "搜索请求（已废弃）",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -5165,7 +5218,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "每页数量",
-                        "name": "page_size",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -6473,13 +6526,7 @@ const docTemplate = `{
                         "type": "integer",
                         "default": 10,
                         "description": "每页数量",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "租户ID",
-                        "name": "tenant_id",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -6758,9 +6805,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 10,
+                        "default": 20,
                         "description": "每页数量",
-                        "name": "page_size",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -9286,7 +9333,7 @@ const docTemplate = `{
                     {
                         "type": "boolean",
                         "description": "是否是官方组件",
-                        "name": "is_official",
+                        "name": "isOfficial",
                         "in": "query"
                     },
                     {
@@ -9298,7 +9345,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "每页数量，默认20",
-                        "name": "page_size",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -9319,7 +9366,7 @@ const docTemplate = `{
                                                 " page": {
                                                     "type": "integer"
                                                 },
-                                                " page_size": {
+                                                " pageSize": {
                                                     "type": "integer"
                                                 },
                                                 " total": {
@@ -11125,13 +11172,7 @@ const docTemplate = `{
                         "type": "integer",
                         "default": 10,
                         "description": "每页数量",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "租户ID",
-                        "name": "tenant_id",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -11298,12 +11339,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "租户ID",
-                        "name": "tenant_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
                         "default": 10,
                         "description": "限制数量",
                         "name": "limit",
@@ -11354,14 +11389,6 @@ const docTemplate = `{
                     "用户管理"
                 ],
                 "summary": "获取用户统计",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "租户ID",
-                        "name": "tenant_id",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -12020,6 +12047,33 @@ const docTemplate = `{
                 },
                 "serviceAvailability": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.BusinessProcessCandidate": {
+            "type": "object",
+            "properties": {
+                "approvalPolicy": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "domain": {
+                    "type": "string"
+                },
+                "formSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "ontologyBindings": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "requiresConfirmation": {
+                    "type": "boolean"
+                },
+                "slaConfig": {
+                    "type": "object",
+                    "additionalProperties": true
                 }
             }
         },
@@ -14896,8 +14950,7 @@ const docTemplate = `{
             "required": [
                 "enterpriseType",
                 "processType",
-                "requirement",
-                "tenantId"
+                "requirement"
             ],
             "properties": {
                 "enterpriseType": {
@@ -14930,6 +14983,11 @@ const docTemplate = `{
                         "change",
                         "problem",
                         "service_request",
+                        "leave",
+                        "expense",
+                        "hr",
+                        "procurement",
+                        "it",
                         "custom"
                     ]
                 },
@@ -14940,7 +14998,7 @@ const docTemplate = `{
                     "minLength": 10
                 },
                 "tenantId": {
-                    "description": "租户ID",
+                    "description": "租户ID\nTenantID is populated from the authenticated tenant context by the handler.",
                     "type": "integer"
                 }
             }
@@ -14951,6 +15009,9 @@ const docTemplate = `{
                 "bpmnXml": {
                     "description": "生成的BPMN XML内容",
                     "type": "string"
+                },
+                "candidateDefinition": {
+                    "$ref": "#/definitions/dto.BusinessProcessCandidate"
                 },
                 "complexity": {
                     "description": "预估复杂度：low/medium/high",
@@ -15725,6 +15786,11 @@ const docTemplate = `{
                         "change",
                         "problem",
                         "service_request",
+                        "leave",
+                        "expense",
+                        "hr",
+                        "procurement",
+                        "it",
                         "custom"
                     ]
                 },
@@ -15844,6 +15910,9 @@ const docTemplate = `{
                 "assigneeId": {
                     "type": "integer"
                 },
+                "assigneeName": {
+                    "type": "string"
+                },
                 "associatedChanges": {
                     "type": "array",
                     "items": {
@@ -15870,7 +15939,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdBy": {
+                    "description": "创建人/报告人字段（ID + 名字。名字由 service 层 join user 表填充，避免前端再调一次 user API）",
                     "type": "integer"
+                },
+                "createdByName": {
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -16024,6 +16097,14 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "reverse": {
+                    "description": "Reverse 语义反向类型（如 depends_on -\u003e impacted_by），无反向时为空。\n与 /cmdb/ontology 的 reverseType 保持同一语义，便于 Agent 从任一端点推导双向关系。",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CIRelationshipType"
+                        }
+                    ]
                 },
                 "type": {
                     "$ref": "#/definitions/dto.CIRelationshipType"
@@ -16768,10 +16849,6 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
-                },
-                "force": {
-                    "description": "是否强制更新（忽略版本检查）；需要 incident:force-update 权限",
-                    "type": "boolean"
                 },
                 "impact": {
                     "type": "string",

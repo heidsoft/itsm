@@ -100,6 +100,29 @@ func doRBACPost(t *testing.T, h *Handler, tenantID int, path string, body any) *
 	return w
 }
 
+// doRBACWrite 走真实 gin 路由发起角色写请求（POST /roles、PUT /roles/:id）。
+func doRBACWrite(t *testing.T, h *Handler, tenantID int, method, path string, body any) *httptest.ResponseRecorder {
+	t.Helper()
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		if tenantID > 0 {
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+		}
+		c.Next()
+	})
+	router.POST("/roles", h.CreateRole)
+	router.PUT("/roles/:id", h.UpdateRole)
+
+	raw, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(method, path, bytes.NewReader(raw))
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+	return w
+}
+
 func mkRBACTenant(t *testing.T, client *ent.Client, tag string) int {
 	t.Helper()
 	slug := strings.ReplaceAll(t.Name(), "/", "-") + "-" + tag
@@ -175,7 +198,7 @@ func TestListRoles_TenantIsolation(t *testing.T) {
 	mkRBACRole(t, client, tenantA, "A-运维", "role-a-ops", entrole.DataScopeDepartment, true)
 	mkRBACRole(t, client, tenantB, "B-管理员", "role-b-admin", entrole.DataScopeAll, true)
 
-	w := doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20")
+	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
 
@@ -192,7 +215,7 @@ func TestListRoles_RequiresTenantContext(t *testing.T) {
 	mkRBACRole(t, client, tenantA, "A-管理员", "role-a-admin", entrole.DataScopeAll, true)
 
 	// tenantID=0 → 不注入租户上下文，模拟中间件未生效的请求。
-	w := doRBACRequest(t, h, 0, "/roles?page=1&page_size=20")
+	w := doRBACRequest(t, h, 0, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusUnauthorized, w.Code, "缺少租户上下文必须 401，不能放行")
 
 	var env rbacEnvelope
@@ -210,7 +233,7 @@ func TestListRoles_SearchFiltersWithinTenant(t *testing.T) {
 	// 同名关键词但属于其他租户，不得被搜索到。
 	mkRBACRole(t, client, tenantB, "运维工程师", "role-b-ops", entrole.DataScopeAll, true)
 
-	w := doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20&search="+"%E8%BF%90%E7%BB%B4")
+	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&search="+"%E8%BF%90%E7%BB%B4")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
 
@@ -228,7 +251,7 @@ func TestListRoles_PaginationMath(t *testing.T) {
 			fmt.Sprintf("角色%d", i), fmt.Sprintf("role-a-%d", i), entrole.DataScopeAll, true)
 	}
 
-	w := doRBACRequest(t, h, tenantA, "/roles?page=2&page_size=2")
+	w := doRBACRequest(t, h, tenantA, "/roles?page=2&pageSize=2")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
 
@@ -248,7 +271,7 @@ func TestListRoles_MapsStatusScopeAndPermissions(t *testing.T) {
 	mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeOwner, true, p1, p2)
 	mkRBACRole(t, client, tenantA, "停用角色", "role-a-off", entrole.DataScopeAll, false)
 
-	w := doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20")
+	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
 	require.Len(t, list.Roles, 2)
@@ -266,6 +289,165 @@ func TestListRoles_MapsStatusScopeAndPermissions(t *testing.T) {
 	off := byCode["role-a-off"]
 	assert.Equal(t, "inactive", off.Status, "is_active=false 应映射为 inactive")
 	assert.Empty(t, off.Permissions, "无权限时应为空数组而非 null 缺失")
+}
+
+// =============================================================================
+// 角色启用状态契约回归（P0：启用/禁用开关曾是假控件）
+//
+// 线上实测：PUT /api/v1/roles/19 {"status":"inactive"} 返回 HTTP 200 + code 0
+// "success"，但响应体只有 isActive:true、数据库 is_active 仍为 t。根因是 service
+// 只读 req.IsActive，而前端与 DTO 契约只发 status，字段被静默丢弃。
+// 以下用例在修复前全部失败，修复后通过。
+// =============================================================================
+
+// TestUpdateRole_StatusTogglesIsActive 启用/禁用开关必须真实落库。
+func TestUpdateRole_StatusTogglesIsActive(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+	r := mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeAll, true)
+
+	w := doRBACWrite(t, h, tenantA, http.MethodPut, fmt.Sprintf("/roles/%d", r.ID),
+		map[string]any{"status": "inactive"})
+	require.Equal(t, http.StatusOK, w.Code, "响应体: %s", w.Body.String())
+
+	var env rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	require.Equal(t, 0, env.Code, "禁用角色应成功，响应体: %s", w.Body.String())
+
+	var resp dto.RoleResponse
+	require.NoError(t, json.Unmarshal(env.Data, &resp))
+	assert.Equal(t, "inactive", resp.Status, "响应必须回显已生效的 status")
+
+	// 单一契约：不得再输出 isActive 同义字段，避免前端读错字段导致「看起来没变」
+	assert.NotContains(t, string(env.Data), `"isActive"`, "启用状态只允许 status 一个线上字段")
+
+	persisted, err := client.Role.Get(context.Background(), r.ID)
+	require.NoError(t, err)
+	assert.False(t, persisted.IsActive, "数据库中 is_active 必须真的翻转为 false")
+
+	// 再翻回 active，确认双向可逆而非单向写死
+	w = doRBACWrite(t, h, tenantA, http.MethodPut, fmt.Sprintf("/roles/%d", r.ID),
+		map[string]any{"status": "active"})
+	require.Equal(t, http.StatusOK, w.Code)
+	persisted, err = client.Role.Get(context.Background(), r.ID)
+	require.NoError(t, err)
+	assert.True(t, persisted.IsActive, "数据库中 is_active 必须能翻回 true")
+}
+
+// TestUpdateRole_InvalidStatusRejected 非法枚举必须拒绝，禁止静默回退默认值。
+func TestUpdateRole_InvalidStatusRejected(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+	r := mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeAll, true)
+
+	w := doRBACWrite(t, h, tenantA, http.MethodPut, fmt.Sprintf("/roles/%d", r.ID),
+		map[string]any{"status": "enabled"})
+	require.Equal(t, http.StatusBadRequest, w.Code, "非法 status 必须 400，响应体: %s", w.Body.String())
+
+	var env rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	assert.Equal(t, common.ParamErrorCode, env.Code, "业务码应为参数错误 1001")
+
+	persisted, err := client.Role.Get(context.Background(), r.ID)
+	require.NoError(t, err)
+	assert.True(t, persisted.IsActive, "被拒绝的请求不得改动数据库")
+}
+
+// TestUpdateRole_BlankStatusDoesNotDisable 空串等同「未提交」，不得被当成 inactive。
+func TestUpdateRole_BlankStatusDoesNotDisable(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+	r := mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeAll, true)
+
+	name := "改名后的运维"
+	w := doRBACWrite(t, h, tenantA, http.MethodPut, fmt.Sprintf("/roles/%d", r.ID),
+		map[string]any{"name": name, "status": ""})
+	require.Equal(t, http.StatusOK, w.Code, "响应体: %s", w.Body.String())
+
+	persisted, err := client.Role.Get(context.Background(), r.ID)
+	require.NoError(t, err)
+	assert.Equal(t, name, persisted.Name, "同请求中的其他字段仍应生效")
+	assert.True(t, persisted.IsActive, "空 status 不得把角色静默禁用")
+}
+
+// TestCreateRole_HonorsStatus 创建时显式 inactive 必须落库为禁用，其余默认启用。
+func TestCreateRole_HonorsStatus(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+
+	w := doRBACWrite(t, h, tenantA, http.MethodPost, "/roles",
+		dto.CreateRoleRequest{Name: "停用角色", Code: "role-a-off", Status: "inactive"})
+	require.Equal(t, http.StatusOK, w.Code, "响应体: %s", w.Body.String())
+
+	var env rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	require.Equal(t, 0, env.Code, "响应体: %s", w.Body.String())
+	var created dto.RoleResponse
+	require.NoError(t, json.Unmarshal(env.Data, &created))
+	assert.Equal(t, "inactive", created.Status)
+
+	persisted, err := client.Role.Get(context.Background(), created.ID)
+	require.NoError(t, err)
+	assert.False(t, persisted.IsActive, "显式 inactive 创建的角色不得被强制启用")
+
+	// 未提交 status 时保持既有默认：启用
+	w = doRBACWrite(t, h, tenantA, http.MethodPost, "/roles",
+		dto.CreateRoleRequest{Name: "默认角色", Code: "role-a-default"})
+	require.Equal(t, http.StatusOK, w.Code, "响应体: %s", w.Body.String())
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	require.Equal(t, 0, env.Code, "响应体: %s", w.Body.String())
+	created = dto.RoleResponse{}
+	require.NoError(t, json.Unmarshal(env.Data, &created))
+	assert.Equal(t, "active", created.Status, "未提交 status 时默认启用")
+}
+
+// TestListRoles_StatusFilter status 过滤必须真实生效，否则筛选器是假控件。
+func TestListRoles_StatusFilter(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+	mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeAll, true)
+	mkRBACRole(t, client, tenantA, "开发", "role-a-dev", entrole.DataScopeAll, true)
+	mkRBACRole(t, client, tenantA, "停用角色", "role-a-off", entrole.DataScopeAll, false)
+
+	inactive := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&status=inactive"))
+	assert.Equal(t, 1, inactive.Total, "status=inactive 只应命中 1 个禁用角色")
+	require.Len(t, inactive.Roles, 1)
+	assert.Equal(t, "role-a-off", inactive.Roles[0].Code)
+
+	active := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&status=active"))
+	assert.Equal(t, 2, active.Total, "status=active 只应命中 2 个启用角色")
+	for _, r := range active.Roles {
+		assert.Equal(t, "active", r.Status)
+	}
+
+	all := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
+	assert.Equal(t, 3, all.Total, "不带 status 时应返回全部角色")
+
+	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&status=bogus")
+	require.Equal(t, http.StatusBadRequest, w.Code, "非法 status 过滤值必须 400 而非静默忽略")
+	var env rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	assert.Equal(t, common.ParamErrorCode, env.Code)
+}
+
+// TestListRoles_RejectsSnakeCasePageSize 分页只认 camelCase pageSize。
+// 契约见 common.GetPaginationFromQuery：page_size 形态不再解析。
+func TestListRoles_RejectsSnakeCasePageSize(t *testing.T) {
+	h, client := setupRBACTest(t)
+	tenantA := mkRBACTenant(t, client, "a")
+	for i := 0; i < 5; i++ {
+		mkRBACRole(t, client, tenantA,
+			fmt.Sprintf("角色%d", i), fmt.Sprintf("role-a-%d", i), entrole.DataScopeAll, true)
+	}
+
+	snake := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=2"))
+	assert.Equal(t, 20, snake.PageSize, "snake_case page_size 必须被忽略并回落默认值")
+	assert.Len(t, snake.Roles, 5, "被忽略的 page_size 不得截断结果")
+
+	camel := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=2"))
+	assert.Equal(t, 2, camel.PageSize, "camelCase pageSize 必须生效")
+	assert.Len(t, camel.Roles, 2)
+	assert.Equal(t, 5, camel.Total)
 }
 
 func TestGetRole_CrossTenantIsNotFound(t *testing.T) {
@@ -322,7 +504,7 @@ func TestListRoles_PermissionsAreTenantScoped(t *testing.T) {
 	mkRBACRole(t, client, tenantA, "运维", "role-a-ops", entrole.DataScopeAll, true, permA)
 	mkRBACRole(t, client, tenantB, "B-运维", "role-b-ops", entrole.DataScopeAll, true, permB)
 
-	w := doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20")
+	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
 	require.Len(t, list.Roles, 1)
@@ -344,7 +526,7 @@ func TestAssignPermissions_ThenListRoles_ReflectsGrants(t *testing.T) {
 		dto.AssignPermissionsRequest{PermissionIDs: []int{p1, p2}})
 	require.Equal(t, http.StatusOK, w.Code, "授权应成功，响应体: %s", w.Body.String())
 
-	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20"))
+	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
 	require.Len(t, list.Roles, 1)
 	assert.ElementsMatch(t, []string{"ticket:read", "ticket:write"}, list.Roles[0].Permissions,
 		"写入 RolePermission 后必须能在列表读回")
@@ -354,7 +536,7 @@ func TestAssignPermissions_ThenListRoles_ReflectsGrants(t *testing.T) {
 		dto.AssignPermissionsRequest{PermissionIDs: []int{p1}})
 	require.Equal(t, http.StatusOK, w.Code)
 
-	list = parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20"))
+	list = parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
 	require.Len(t, list.Roles, 1)
 	assert.Equal(t, []string{"ticket:read"}, list.Roles[0].Permissions,
 		"重复授权应 Replace 而非 Append")
@@ -375,7 +557,7 @@ func TestAssignPermissions_RejectsCrossTenantPermission(t *testing.T) {
 		dto.AssignPermissionsRequest{PermissionIDs: []int{permA, permB}})
 	require.Equal(t, http.StatusBadRequest, w.Code, "跨租户授权必须 400 拒绝，响应体: %s", w.Body.String())
 
-	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=20"))
+	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
 	require.Len(t, list.Roles, 1)
 	assert.NotContains(t, list.Roles[0].Permissions, "secret:read", "被拒绝的授权不得落库")
 }
@@ -395,6 +577,7 @@ func (m *mockRoleService) CreateRole(ctx context.Context, req *dto.CreateRoleReq
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockRoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.RoleResponse, error) {
 	args := m.Called(ctx, id, tenantID)
 	if r, ok := args.Get(0).(*dto.RoleResponse); ok {
@@ -402,13 +585,15 @@ func (m *mockRoleService) GetRole(ctx context.Context, id int, tenantID int) (*d
 	}
 	return nil, args.Error(1)
 }
-func (m *mockRoleService) ListRoles(ctx context.Context, tenantID int, page, pageSize int, search string) ([]*dto.RoleResponse, int, error) {
-	args := m.Called(ctx, tenantID, page, pageSize, search)
+
+func (m *mockRoleService) ListRoles(ctx context.Context, tenantID int, params *dto.GetRolesParams) ([]*dto.RoleResponse, int, error) {
+	args := m.Called(ctx, tenantID, params)
 	if l, ok := args.Get(0).([]*dto.RoleResponse); ok {
 		return l, args.Int(1), args.Error(2)
 	}
 	return nil, 0, args.Error(2)
 }
+
 func (m *mockRoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRoleRequest, tenantID int) (*dto.RoleResponse, error) {
 	args := m.Called(ctx, id, req, tenantID)
 	if r, ok := args.Get(0).(*dto.RoleResponse); ok {
@@ -416,10 +601,12 @@ func (m *mockRoleService) UpdateRole(ctx context.Context, id int, req *dto.Updat
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockRoleService) DeleteRole(ctx context.Context, id int, tenantID int) error {
 	args := m.Called(ctx, id, tenantID)
 	return args.Error(0)
 }
+
 func (m *mockRoleService) AssignPermissions(ctx context.Context, roleID int, permissionIDs []int, tenantID int) error {
 	args := m.Called(ctx, roleID, permissionIDs, tenantID)
 	return args.Error(0)
@@ -434,6 +621,7 @@ func (m *mockPermissionService) CreatePermission(ctx context.Context, req *dto.C
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockPermissionService) ListPermissions(ctx context.Context, tenantID int, resource string) ([]*dto.PermissionResponse, error) {
 	args := m.Called(ctx, tenantID, resource)
 	if l, ok := args.Get(0).([]*dto.PermissionResponse); ok {
@@ -441,6 +629,7 @@ func (m *mockPermissionService) ListPermissions(ctx context.Context, tenantID in
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockPermissionService) InitDefaultPermissions(ctx context.Context, tenantID int) error {
 	args := m.Called(ctx, tenantID)
 	return args.Error(0)
@@ -455,6 +644,7 @@ func (m *mockMenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuReq
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockMenuService) GetMenu(ctx context.Context, id int, tenantID int) (*dto.MenuDTO, error) {
 	args := m.Called(ctx, id, tenantID)
 	if r, ok := args.Get(0).(*dto.MenuDTO); ok {
@@ -462,6 +652,7 @@ func (m *mockMenuService) GetMenu(ctx context.Context, id int, tenantID int) (*d
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockMenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuDTO, error) {
 	args := m.Called(ctx, tenantID)
 	if l, ok := args.Get(0).([]*dto.MenuDTO); ok {
@@ -469,6 +660,7 @@ func (m *mockMenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.M
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockMenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	args := m.Called(ctx, id, req, tenantID)
 	if r, ok := args.Get(0).(*dto.MenuDTO); ok {
@@ -476,10 +668,12 @@ func (m *mockMenuService) UpdateMenu(ctx context.Context, id int, req *dto.Updat
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockMenuService) DeleteMenu(ctx context.Context, id int, tenantID int) error {
 	args := m.Called(ctx, id, tenantID)
 	return args.Error(0)
 }
+
 func (m *mockMenuService) GetUserMenus(ctx context.Context, userID int, tenantID int) (*dto.MenuTreeResponse, error) {
 	args := m.Called(ctx, userID, tenantID)
 	if r, ok := args.Get(0).(*dto.MenuTreeResponse); ok {

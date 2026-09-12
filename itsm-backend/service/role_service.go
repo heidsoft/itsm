@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
@@ -102,6 +103,7 @@ func (s *RoleService) buildRoleResponse(roleEntity *ent.Role) *dto.RoleResponse 
 		Code:        roleEntity.Code,
 		Description: roleEntity.Description,
 		IsSystem:    roleEntity.IsSystem,
+		Status:      dto.RoleStatusFromActive(roleEntity.IsActive),
 		IsActive:    roleEntity.IsActive,
 		DataScope:   string(roleEntity.DataScope),
 		Permissions: []dto.PermissionInfo{},
@@ -126,7 +128,7 @@ func (s *RoleService) CreateRole(ctx context.Context, req *dto.CreateRoleRequest
 		SetCode(code).
 		SetTenantID(tenantID).
 		SetIsSystem(req.IsSystem).
-		SetIsActive(true). // 新建角色默认启用
+		SetIsActive(req.Status != dto.RoleStatusInactive). // 默认启用，仅显式 inactive 时禁用
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建角色失败: %w", err)
@@ -173,17 +175,24 @@ func (s *RoleService) GetRole(ctx context.Context, id int, tenantID int) (*dto.R
 }
 
 // ListRoles 获取角色列表
-func (s *RoleService) ListRoles(ctx context.Context, tenantID int, page, pageSize int, search string) ([]*dto.RoleResponse, int, error) {
+func (s *RoleService) ListRoles(ctx context.Context, tenantID int, params *dto.GetRolesParams) ([]*dto.RoleResponse, int, error) {
+	page, pageSize := common.ValidatePagination(params.Page, params.PageSize)
+
 	query := s.client.Role.Query().
 		Where(role.TenantID(tenantID))
 
-	if strings.TrimSpace(search) != "" {
-		keyword := strings.TrimSpace(search)
+	if strings.TrimSpace(params.Search) != "" {
+		keyword := strings.TrimSpace(params.Search)
 		query = query.Where(role.Or(
 			role.NameContainsFold(keyword),
 			role.CodeContainsFold(keyword),
 			role.DescriptionContainsFold(keyword),
 		))
+	}
+
+	// status 取值已由 handler 用 dto.RoleActiveFromStatus 校验，非法值不会到这里
+	if active, ok := dto.RoleActiveFromStatus(params.Status); ok {
+		query = query.Where(role.IsActive(active))
 	}
 
 	total, err := query.Clone().Count(ctx)
@@ -254,9 +263,10 @@ func (s *RoleService) UpdateRole(ctx context.Context, id int, req *dto.UpdateRol
 	if req.Code != nil && strings.TrimSpace(*req.Code) != "" {
 		update = update.SetCode(strings.TrimSpace(*req.Code))
 	}
-	// 支持更新角色启用状态
-	if req.IsActive != nil {
-		update = update.SetIsActive(*req.IsActive)
+	// 启用状态：线上契约 status(active/inactive) → 持久层 is_active(bool)
+	// handler 已用 dto.RoleActiveFromStatus 校验取值，此处只需按契约映射
+	if req.Status != nil {
+		update = update.SetIsActive(*req.Status == dto.RoleStatusActive)
 	}
 
 	_, err = update.Save(ctx)

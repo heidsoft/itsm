@@ -14,7 +14,7 @@ import (
 
 // Handler HTTP handler for group domain
 type Handler struct {
-	svc   *service.GroupService
+	svc    *service.GroupService
 	logger *zap.SugaredLogger
 }
 
@@ -66,8 +66,7 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
-// @Param tenant_id query int false "租户ID"
+// @Param pageSize query int false "每页数量" default(10)
 // @Param search query string false "搜索关键词"
 // @Success 200 {object} common.Response{data=dto.PagedGroupsResponse}
 // @Failure 400 {object} common.Response
@@ -88,14 +87,12 @@ func (h *Handler) ListGroups(c *gin.Context) {
 		req.PageSize = 10
 	}
 
-	// 获取租户ID（优先使用查询参数，否则从上下文中获取）
-	tenantID := req.TenantID
-	if tenantID == 0 {
-		tid, ok := middleware.TenantIDOrUnauthorized(c)
-		if !ok {
-			return
-		}
-		tenantID = tid
+	// 租户身份只能来自认证上下文。曾经「优先使用查询参数」，
+	// 而 service 直接用 req.TenantID 作查询谓词，等于任意登录用户
+	// 传 ?tenantId=N 即可读取他租户的组（跨租户 IDOR）。
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
 	}
 	req.TenantID = tenantID
 
@@ -356,7 +353,7 @@ func (h *Handler) RemoveUserFromGroup(c *gin.Context) {
 // @Produce json
 // @Param id path int true "组ID"
 // @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
+// @Param pageSize query int false "每页数量" default(20)
 // @Success 200 {object} common.Response{data=dto.PagedUsersResponse}
 // @Failure 400 {object} common.Response
 // @Router /api/v1/groups/{id}/members [get]
@@ -368,16 +365,9 @@ func (h *Handler) GetGroupMembers(c *gin.Context) {
 		return
 	}
 
-	// 获取分页参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
-	}
+	// 获取分页参数（契约：camelCase pageSize，见 common.GetPaginationFromQuery）
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
 
 	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
 	if !ok {

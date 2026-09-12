@@ -91,11 +91,8 @@ func (h *Handler) SendTicketNotification(c *gin.Context) {
 // ListUserNotifications 获取用户通知列表
 func (h *Handler) ListUserNotifications(c *gin.Context) {
 	userID, tenantID := tenantUserID(c)
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
 
 	var read *bool
 	if readStr := c.Query("read"); readStr != "" {

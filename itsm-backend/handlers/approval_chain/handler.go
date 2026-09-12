@@ -60,9 +60,9 @@ func (h *Handler) ListChains(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-	entityType := c.Query("entity_type")
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
+	entityType := c.Query("entityType")
 	status := c.Query("status")
 
 	chains, total, err := h.chainService.ListApprovalChains(c.Request.Context(), tid, entityType, status, page, pageSize)
