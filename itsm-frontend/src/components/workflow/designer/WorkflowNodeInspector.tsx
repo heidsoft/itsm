@@ -220,7 +220,7 @@ export default function WorkflowNodeInspector({
     try {
       const tenantId = httpClient.getTenantId();
       if (!tenantId) throw new Error('缺少有效租户上下文');
-      const resp = await GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search });
+      const resp = await GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search });
       if (!cancelledRef.current) {
         setGroups(prev => {
           const existingIds = new Set(prev.map(g => g.id));
@@ -267,7 +267,7 @@ export default function WorkflowNodeInspector({
         if (!tenantId) throw new Error('缺少有效租户上下文');
         const [userResp, groupResp] = await Promise.all([
           UserApi.getUsers({ page: 1, pageSize: 200, search: '' }),
-          GroupAPI.getGroups({ page: 1, pageSize: 200, tenantId, search: '' }),
+          GroupAPI.getGroups({ page: 1, pageSize: 100, tenantId, search: '' }),
         ]);
         if (!cancelled) {
           setUsers((userResp.users as ApiUser[]) || []);
