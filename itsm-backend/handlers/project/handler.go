@@ -28,7 +28,8 @@ func NewHandler(service interface {
 	UpdateProject(ctx interface{}, id int, name, code *string, deptID, managerID *int, tenantID int) (*ent.Project, error)
 	DeleteProject(ctx interface{}, id int, tenantID int) error
 	GetProject(ctx interface{}, id int, tenantID int) (*ent.Project, error)
-}) *Handler {
+},
+) *Handler {
 	return &Handler{service: service}
 }
 

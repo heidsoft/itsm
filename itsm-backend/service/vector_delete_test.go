@@ -20,6 +20,7 @@ type failingDeleteVectorStore struct{ err error }
 func (s *failingDeleteVectorStore) Search(context.Context, connectorVector.SearchRequest) (connectorVector.SearchResponse, error) {
 	return connectorVector.SearchResponse{}, nil
 }
+
 func (s *failingDeleteVectorStore) Insert(context.Context, connectorVector.InsertRequest) error {
 	return nil
 }

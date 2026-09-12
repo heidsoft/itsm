@@ -7,21 +7,21 @@ package dto
 
 // CMDBOntologyResponse 本体自描述响应
 type CMDBOntologyResponse struct {
-	Version           string                          `json:"version"`
-	CITypes           []CMDBOntologyCIType            `json:"ciTypes"`
-	RelationshipTypes []CMDBOntologyRelationshipType  `json:"relationshipTypes"`
-	Enums             CMDBOntologyEnums               `json:"enums"`
-	AITools           []CMDBOntologyTool              `json:"aiTools"`
+	Version           string                         `json:"version"`
+	CITypes           []CMDBOntologyCIType           `json:"ciTypes"`
+	RelationshipTypes []CMDBOntologyRelationshipType `json:"relationshipTypes"`
+	Enums             CMDBOntologyEnums              `json:"enums"`
+	AITools           []CMDBOntologyTool             `json:"aiTools"`
 }
 
 // CMDBOntologyCIType 单个 CI 类型的本体描述
 type CMDBOntologyCIType struct {
-	ID                   int                             `json:"id"`
-	Name                 string                          `json:"name"`
-	Description          string                          `json:"description"`
-	Icon                 string                          `json:"icon"`
-	Color                string                          `json:"color"`
-	ParentTypeID         *int                            `json:"parentTypeId,omitempty"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Icon         string `json:"icon"`
+	Color        string `json:"color"`
+	ParentTypeID *int   `json:"parentTypeId,omitempty"`
 	// AttributeSchema 为 CIType 表中的 schema 文本：合法 JSON 时输出为 JSON 对象，
 	// 否则原样输出字符串（保持透明，便于诊断脏数据）。
 	AttributeSchema      interface{}                      `json:"attributeSchema,omitempty"`

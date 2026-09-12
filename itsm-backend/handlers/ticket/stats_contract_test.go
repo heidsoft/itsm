@@ -3,6 +3,12 @@ package ticket
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
@@ -10,11 +16,6 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
-	"net/http"
-	"net/http/httptest"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {

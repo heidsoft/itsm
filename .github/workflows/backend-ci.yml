@@ -201,10 +201,29 @@ jobs:
         # The staticcheck step above already excludes ./migrations/...
         # for the same reason; this is the test counterpart of that
         # policy.
+        #
+        # CI red-line: stderr from `go list` must not be silently discarded.
+        # Only the known migrations false-positive is filtered; any other
+        # compilation/import error fails the step immediately.
         run: |
           cd itsm-backend
-          TESTABLE_PKGS=$(go list ./... 2>/dev/null \
+          LIST_ERR=$(mktemp)
+          TESTABLE_PKGS=$(go list ./... 2>"$LIST_ERR" \
             | grep -vE '^itsm-backend/migrations$|^itsm-backend/migrations/hook$|^itsm-backend/migrations/enttest$|^itsm-backend/migrations/predicate$')
+          if [ -s "$LIST_ERR" ]; then
+            UNEXPECTED=$(grep -v 'migrations' "$LIST_ERR" || true)
+            if [ -n "$UNEXPECTED" ]; then
+              echo "::error::go list reported unexpected errors:"
+              echo "$UNEXPECTED"
+              rm -f "$LIST_ERR"
+              exit 1
+            fi
+          fi
+          rm -f "$LIST_ERR"
+          if [ -z "$TESTABLE_PKGS" ]; then
+            echo "::error::no testable packages found"
+            exit 1
+          fi
           go test $TESTABLE_PKGS -coverprofile=coverage.out -covermode=set
           if [ -f coverage.out ]; then
             go tool cover -func=coverage.out

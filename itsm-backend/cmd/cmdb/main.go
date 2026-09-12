@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
-	"database/sql"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 

@@ -168,12 +168,12 @@ type IncidentSeed struct {
 type ProblemSeed struct {
 	ProblemNumber string `json:"problem_number"`
 	Title         string `json:"title"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	Priority    string `json:"priority"`
-	Category    string `json:"category"`
-	RootCause   string `json:"root_cause"`
-	Impact      string `json:"impact"`
+	Description   string `json:"description"`
+	Status        string `json:"status"`
+	Priority      string `json:"priority"`
+	Category      string `json:"category"`
+	RootCause     string `json:"root_cause"`
+	Impact        string `json:"impact"`
 }
 
 // ChangeSeed 变更种子数据结构

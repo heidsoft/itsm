@@ -77,7 +77,7 @@ func TestAllRequestDTOsUseCamelCaseFormTags(t *testing.T) {
 	}
 
 	if len(violations) > 0 {
-		t.Fatalf("发现 %d 个 DTO form/query tag 仍使用 snake_case：\n  %s\n\n" +
+		t.Fatalf("发现 %d 个 DTO form/query tag 仍使用 snake_case：\n  %s\n\n"+
 			"AGENTS.md 要求：HTTP/JSON 字段统一 camelCase，禁止 `form:\"x_y\"` / `query:\"x_y\"`。",
 			len(violations), strings.Join(violations, "\n  "))
 	}

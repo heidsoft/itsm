@@ -24,16 +24,16 @@ type TicketCreator interface {
 // ExternalTicketRequest 外部系统创建工单请求
 // 统一了飞书、Webhook、邮件等外部来源的工单创建参数
 type ExternalTicketRequest struct {
-	Title        string
-	Description  string
-	Priority     string
-	Type         string
-	Status       string
-	RequesterID  int
-	TenantID     int
-	Source       string            // 来源标识，如 "feishu", "webhook", "email"
-	ExternalID   string            // 外部系统ID，如飞书任务GUID
-	FormData     map[string]interface{}
+	Title       string
+	Description string
+	Priority    string
+	Type        string
+	Status      string
+	RequesterID int
+	TenantID    int
+	Source      string // 来源标识，如 "feishu", "webhook", "email"
+	ExternalID  string // 外部系统ID，如飞书任务GUID
+	FormData    map[string]interface{}
 }
 
 // Feishu 飞书连接器实现

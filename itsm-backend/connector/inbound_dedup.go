@@ -22,9 +22,9 @@ var ErrDuplicateInbound = errors.New("connector: duplicate inbound event")
 // 已经被处理过（同 event_id），handler 应直接返回上次的响应；返回 false 时
 // 表示本轮是首次，handler 在处理成功后必须调 MarkProcessed 落地结果。
 type InboundDedup struct {
-	client      *ent.Client
+	client     *ent.Client
 	defaultTTL time.Duration
-	now         func() time.Time
+	now        func() time.Time
 }
 
 // NewInboundDeduper 创建持久化入站去重器。ttl 默认 5 分钟，与常见 IM 平台 timestamp 窗口一致。

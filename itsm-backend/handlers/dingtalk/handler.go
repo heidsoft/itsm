@@ -31,7 +31,8 @@ func NewHandler(mgr *connector.Manager, dedup *connector.InboundDedup, logger *z
 func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
 
 // RegisterRoutes 把公开回调注册到 public 路由组（IM 回调无需 JWT）：
-//   POST /api/v1/dingtalk/webhook/:instance_id
+//
+//	POST /api/v1/dingtalk/webhook/:instance_id
 func (h *Handler) RegisterRoutes(public *gin.RouterGroup) {
 	public.POST("/dingtalk/webhook/:instance_id", h.Webhook)
 }

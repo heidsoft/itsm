@@ -14,7 +14,7 @@ import (
 
 type Handler struct {
 	dependencyService *service.TicketDependencyService
-	logger          *zap.SugaredLogger
+	logger            *zap.SugaredLogger
 }
 
 func NewHandler(dependencyService *service.TicketDependencyService, logger *zap.SugaredLogger) *Handler {
@@ -23,7 +23,7 @@ func NewHandler(dependencyService *service.TicketDependencyService, logger *zap.
 	}
 	return &Handler{
 		dependencyService: dependencyService,
-		logger:          logger,
+		logger:            logger,
 	}
 }
 

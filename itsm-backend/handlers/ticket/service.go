@@ -16,9 +16,9 @@ import (
 // Service handles ticket business logic.
 // All operations go through the Repository interface (tenant-isolated).
 type Service struct {
-	repo            Repository
-	productionSvc   *service.TicketService
-	logger          *zap.SugaredLogger
+	repo          Repository
+	productionSvc *service.TicketService
+	logger        *zap.SugaredLogger
 }
 
 // NewService creates a new ticket service.
@@ -380,7 +380,7 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 		return nil, err
 	}
 	return map[string]interface{}{
-		"ticket_id":                     t.ID,
+		"ticket_id":                    t.ID,
 		"sla_definition_id":            t.SLADefinitionID,
 		"sla_response_deadline":        t.SLAResponseDeadline,
 		"sla_resolution_deadline":      t.SLAResolutionDeadline,

@@ -76,7 +76,7 @@ func TestListCIsMergedFields(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
 			Page: 1, Size: 10,
 			DateFrom: ptrTimeOrNil(now.Add(-2*time.Hour - 30*time.Minute)),
-			DateTo:   ptrTimeOrNil(now.Add(-30*time.Minute)),
+			DateTo:   ptrTimeOrNil(now.Add(-30 * time.Minute)),
 		})
 		require.NoError(t, err)
 		// 应只命中 ci-bravo（now-2h 在范围内）和 ci-charlie（now-1h 在范围内）；ci-alpha (now-3h) 被排除

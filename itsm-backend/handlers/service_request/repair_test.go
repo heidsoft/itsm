@@ -5,7 +5,6 @@ import (
 	"sync"
 	"testing"
 
-
 	"go.uber.org/zap"
 )
 

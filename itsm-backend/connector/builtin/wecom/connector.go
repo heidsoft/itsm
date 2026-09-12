@@ -89,7 +89,9 @@ func (w *WeCom) HealthCheck(ctx context.Context) connector.HealthStatus {
 func (w *WeCom) Close() error { return nil }
 
 // VerifySignature 企业微信回调验签：
-//   msg_signature = SHA1(token, timestamp, nonce, encrypt_or_echo_sorted)
+//
+//	msg_signature = SHA1(token, timestamp, nonce, encrypt_or_echo_sorted)
+//
 // 支持 url_verification（只 echo echostr 时算签）与事件回调（带 msg_encrypt）。
 func (w *WeCom) VerifySignature(headers map[string]string, body []byte) error {
 	if w.client == nil {
@@ -123,8 +125,8 @@ func (w *WeCom) VerifySignature(headers map[string]string, body []byte) error {
 	}
 	// 计算签名：用 body 中的 msg_encrypt 或 echostr（按字典序拼接）
 	var payload struct {
-		EchoStr   string `json:"echostr"`
-		Encrypt   string `json:"Encrypt"`
+		EchoStr    string `json:"echostr"`
+		Encrypt    string `json:"Encrypt"`
 		MsgEncrypt string `json:"msg_encrypt"`
 	}
 	_ = json.Unmarshal(body, &payload)
@@ -198,5 +200,7 @@ func mathabs(v int64) int64 {
 	return v
 }
 
-var _ connector.Connector = (*WeCom)(nil)
-var _ connector.Receiver = (*WeCom)(nil)
+var (
+	_ connector.Connector = (*WeCom)(nil)
+	_ connector.Receiver  = (*WeCom)(nil)
+)

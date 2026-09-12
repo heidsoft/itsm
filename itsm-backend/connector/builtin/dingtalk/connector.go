@@ -168,5 +168,7 @@ func (d *DingTalk) ParseInbound(body []byte) (*connector.InboundMessage, error) 
 	return msg, nil
 }
 
-var _ connector.Connector = (*DingTalk)(nil)
-var _ connector.Receiver = (*DingTalk)(nil)
+var (
+	_ connector.Connector = (*DingTalk)(nil)
+	_ connector.Receiver  = (*DingTalk)(nil)
+)

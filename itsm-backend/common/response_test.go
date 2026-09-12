@@ -503,11 +503,11 @@ func TestInternalErrorf_FormatsMessage(t *testing.T) {
 
 func TestRespondError_AppErrorMapping(t *testing.T) {
 	cases := []struct {
-		name       string
-		err        error
-		wantCode   int
-		wantHTTP   int
-		wantMsg    string
+		name     string
+		err      error
+		wantCode int
+		wantHTTP int
+		wantMsg  string
 	}{
 		{"bad_request", NewBadRequestError("requester_id is required", nil), BadRequestCode, http.StatusBadRequest, "requester_id is required"},
 		{"not_found", NewNotFoundError("ticket"), NotFoundCode, http.StatusNotFound, "ticket not found"},

@@ -27,6 +27,7 @@ func (m *mockApplicationService) CreateApplication(ctx context.Context, name, co
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) ListApplications(ctx context.Context, tenantID int) ([]*ent.Application, error) {
 	a := m.Called(ctx, tenantID)
 	if l, ok := a.Get(0).([]*ent.Application); ok {
@@ -34,6 +35,7 @@ func (m *mockApplicationService) ListApplications(ctx context.Context, tenantID 
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) UpdateApplication(ctx context.Context, id int, name, code, appType *string, projectID *int, tenantID int) (*ent.Application, error) {
 	a := m.Called(ctx, id, name, code, appType, projectID, tenantID)
 	if app, ok := a.Get(0).(*ent.Application); ok {
@@ -41,9 +43,11 @@ func (m *mockApplicationService) UpdateApplication(ctx context.Context, id int, 
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) DeleteApplication(ctx context.Context, id int, tenantID int) error {
 	return m.Called(ctx, id, tenantID).Error(0)
 }
+
 func (m *mockApplicationService) CreateMicroservice(ctx context.Context, name, code, language, framework string, appID, tenantID int) (*ent.Microservice, error) {
 	a := m.Called(ctx, name, code, language, framework, appID, tenantID)
 	if svc, ok := a.Get(0).(*ent.Microservice); ok {
@@ -51,6 +55,7 @@ func (m *mockApplicationService) CreateMicroservice(ctx context.Context, name, c
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) ListMicroservices(ctx context.Context, tenantID int) ([]*ent.Microservice, error) {
 	a := m.Called(ctx, tenantID)
 	if l, ok := a.Get(0).([]*ent.Microservice); ok {
@@ -58,6 +63,7 @@ func (m *mockApplicationService) ListMicroservices(ctx context.Context, tenantID
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) UpdateMicroservice(ctx context.Context, id int, name, code, language, framework *string, appID *int, tenantID int) (*ent.Microservice, error) {
 	a := m.Called(ctx, id, name, code, language, framework, appID, tenantID)
 	if svc, ok := a.Get(0).(*ent.Microservice); ok {
@@ -65,6 +71,7 @@ func (m *mockApplicationService) UpdateMicroservice(ctx context.Context, id int,
 	}
 	return nil, a.Error(1)
 }
+
 func (m *mockApplicationService) DeleteMicroservice(ctx context.Context, id int, tenantID int) error {
 	return m.Called(ctx, id, tenantID).Error(0)
 }

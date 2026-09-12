@@ -21,7 +21,8 @@ import (
 // createTimedArticle 创建带时效字段的测试文章。
 func createTimedArticle(ctx context.Context, client *ent.Client, tenantID, authorID int,
 	title, content, category string, published bool,
-	validFrom, validUntil, lastReviewed *time.Time, intervalDays, authority int) (*ent.KnowledgeArticle, error) {
+	validFrom, validUntil, lastReviewed *time.Time, intervalDays, authority int,
+) (*ent.KnowledgeArticle, error) {
 	b := client.KnowledgeArticle.Create().
 		SetTitle(title).
 		SetContent(content).
@@ -55,9 +56,9 @@ func TestRAG_KeywordSearch_FiltersByFreshness(t *testing.T) {
 
 	now := time.Now()
 	articles := []struct {
-		title    string
-		content  string
-		validTo  *time.Time
+		title   string
+		content string
+		validTo *time.Time
 	}{
 		// 永久有效：应被检索到
 		{"VPN 配置指南", "VPN 连接配置步骤 vpn", nil},

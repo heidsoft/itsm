@@ -2,22 +2,22 @@
 //
 // 2026-09-08（外部审计修复）：原 auditsm 是「表是否含 tenant_id」人工/经验判断，
 // 导致：
-//   1. 真「漏加」与「有意豁免」无法区分——reviews 只看到表名+列，无理由可循；
-//   2. 新建表时无任何机制阻止「忘加 tenant_id」；
-//   3. 改写建表 SQL 时无人复核豁免理由是否仍成立。
+//  1. 真「漏加」与「有意豁免」无法区分——reviews 只看到表名+列，无理由可循；
+//  2. 新建表时无任何机制阻止「忘加 tenant_id」；
+//  3. 改写建表 SQL 时无人复核豁免理由是否仍成立。
 //
 // 本包落地"豁免清单即真相 + 启动自检"治理：
 //   - TenantExemptTables 是单一源：每个豁免表必须写明理由（reason）+ 治理负责人（owner）
-//     + 最近一次复核日期（reviewed_at）+ 影响范围（scope：platform/global/per-tenant 拼接等）；
+//   - 最近一次复核日期（reviewed_at）+ 影响范围（scope：platform/global/per-tenant 拼接等）；
 //   - ApplyGuard 在生产启动时扫 information_schema，对比豁免清单，
 //     发现「未登记但缺 tenant_id 的表」按策略（Fatal / Warn / Silent）拒绝启动；
 //   - 单元测试自描述：任何新增豁免必须同时新增覆盖测试，否则 CI fail。
 //
 // 治理流程：
-//   1. 新增豁免 → 在 TenantExemptTables 添条目 + 更新 reviewed_at + 写测试；
-//   2. 复核周期（建议季度）：owner 验证豁免理由仍成立 → 更新 reviewed_at；
-//   3. 表 schema 变更触发 entc generate 后，CI 跑 TestTenantGuard_ExemptConsistency
-//      自动识别新增缺租户表，推动补办豁免或加列。
+//  1. 新增豁免 → 在 TenantExemptTables 添条目 + 更新 reviewed_at + 写测试；
+//  2. 复核周期（建议季度）：owner 验证豁免理由仍成立 → 更新 reviewed_at；
+//  3. 表 schema 变更触发 entc generate 后，CI 跑 TestTenantGuard_ExemptConsistency
+//     自动识别新增缺租户表，推动补办豁免或加列。
 package schema
 
 import (

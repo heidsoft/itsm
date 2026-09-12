@@ -52,28 +52,28 @@ type CITypeListResponse struct {
 // ListCIRequest 获取配置项列表请求。
 //
 // 单一入口：覆盖原 ListCIRequest + CISearchRequest 合并需求
-//  - 关键词模糊（search 字段，匹配：名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）
-//  - 枚举精确过滤（status/environment/criticality/ciType）
-//  - 云字段（cloudProvider/cloudAccountId/cloudRegion）
-//  - 责任人（assignedTo/ownedBy）
-//  - 业务编号（ciNumber，AI 多轮定位自然键）
-//  - 排序（sortBy/sortOrder）
-//  - 时间范围（dateFrom/dateTo）
-//  - 标签（tagIds，[]int）
-//  - 分页（page/size）
+//   - 关键词模糊（search 字段，匹配：名称/资产标签/序列号/型号/厂商/云资源ID/位置/负责人/归属人）
+//   - 枚举精确过滤（status/environment/criticality/ciType）
+//   - 云字段（cloudProvider/cloudAccountId/cloudRegion）
+//   - 责任人（assignedTo/ownedBy）
+//   - 业务编号（ciNumber，AI 多轮定位自然键）
+//   - 排序（sortBy/sortOrder）
+//   - 时间范围（dateFrom/dateTo）
+//   - 标签（tagIds，[]int）
+//   - 分页（page/size）
 type ListCIRequest struct {
-	Page           int       `form:"page,default=1" binding:"omitempty,min=1"`
-	Size           int       `form:"size,default=20" binding:"omitempty,min=1,max=200"`
-	CITypeID       int       `form:"ciTypeId"`
-	CIType         string    `form:"ciType"`
-	Status         string    `form:"status"`
-	Environment    string    `form:"environment"`
-	Criticality    string    `form:"criticality"`
-	CloudProvider  string    `form:"cloudProvider"`
-	CloudAccountID string    `form:"cloudAccountId"`
-	CloudRegion    string    `form:"cloudRegion"`
-	AssignedTo     string    `form:"assignedTo"`
-	OwnedBy        string    `form:"ownedBy"`
+	Page           int    `form:"page,default=1" binding:"omitempty,min=1"`
+	Size           int    `form:"size,default=20" binding:"omitempty,min=1,max=200"`
+	CITypeID       int    `form:"ciTypeId"`
+	CIType         string `form:"ciType"`
+	Status         string `form:"status"`
+	Environment    string `form:"environment"`
+	Criticality    string `form:"criticality"`
+	CloudProvider  string `form:"cloudProvider"`
+	CloudAccountID string `form:"cloudAccountId"`
+	CloudRegion    string `form:"cloudRegion"`
+	AssignedTo     string `form:"assignedTo"`
+	OwnedBy        string `form:"ownedBy"`
 	// Search 模糊搜索关键词（合并原 SearchCI.Keyword 宽语义）：
 	// 名称 / 资产标签 / 序列号 / 型号 / 厂商 / 云资源ID / 位置 / 负责人 / 归属人
 	Search string `form:"search"`

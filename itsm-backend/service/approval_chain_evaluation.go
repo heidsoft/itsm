@@ -62,8 +62,8 @@ type ApprovalLevelEval struct {
 	FallbackAction    string
 	Status            string // pending | satisfied | blocked
 	// i3 P0 动态适配：上下文不匹配条件时该层被跳过，视为自动通过。
-	Skipped     bool   // 本层是否被条件过滤跳过
-	SkipReason  string // 跳过原因，如 "priority_not_match"/"amount_below_min"/"amount_above_max"
+	Skipped    bool   // 本层是否被条件过滤跳过
+	SkipReason string // 跳过原因，如 "priority_not_match"/"amount_below_min"/"amount_above_max"
 }
 
 // ApprovalChainEvaluation 整体求值结果

@@ -51,9 +51,9 @@ func createConcTenant(ctx context.Context, t *testing.T, client *ent.Client) int
 func createConcUser(ctx context.Context, t *testing.T, client *ent.Client, tenantID int, suffix string) *ent.User {
 	t.Helper()
 	user, err := client.User.Create().
-		SetName("ConcUser"+suffix).
-		SetUsername("conc-"+suffix).
-		SetEmail("conc-"+suffix+"@example.com").
+		SetName("ConcUser" + suffix).
+		SetUsername("conc-" + suffix).
+		SetEmail("conc-" + suffix + "@example.com").
 		SetPasswordHash("hashed").
 		SetRole("admin").
 		SetActive(true).
@@ -146,9 +146,9 @@ func TestConcurrentTicketCreationMultiTenant(t *testing.T) {
 		RequesterID: userA.ID,
 	}, tenantA)
 	require.NoError(t, err)
-time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
+	time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
 	assert.NotNil(t, tkA)
-time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
+	time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
 
 	tkB, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
 		Title:       "TenantB ticket",

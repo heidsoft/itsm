@@ -12,9 +12,9 @@ import (
 //
 // 设计原因：ai_feedbacks / ai_llm_calls 两张表暂无 Ent schema（platform-level
 // 数据，刻意不带 tenant_id），保留 raw SQL 但集中在一个 repository 内，便于：
-//   1. 强制时间窗口与平台级聚合一致；
-//   2. 表结构变更只改本文件；
-//   3. 单元测试只需 mock 本仓储。
+//  1. 强制时间窗口与平台级聚合一致；
+//  2. 表结构变更只改本文件；
+//  3. 单元测试只需 mock 本仓储。
 type aiTelemetryRepository struct {
 	db *sql.DB
 }

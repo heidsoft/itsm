@@ -71,7 +71,7 @@ type CommandTypeStat struct {
 	DeadLetter      int     `json:"deadLetter"`
 	SucceededRecent int     `json:"succeededRecent"`
 	FailedRecent    int     `json:"failedRecent"`
-	SampleSize       int     `json:"sampleSize"`
+	SampleSize      int     `json:"sampleSize"`
 	FailureRate     float64 `json:"failureRate"`
 }
 

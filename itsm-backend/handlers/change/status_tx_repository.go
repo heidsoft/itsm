@@ -12,6 +12,7 @@ import (
 //   - change_approvals 写入
 //   - change_approval_chains 写入
 //   - notification outbox enqueue
+//
 // 因此单独抽出 change 状态推进的 Tx 入口，让 SubmitForApprovalWithWorkflow
 // 不必再内联 SQL，并保留"条件 UPDATE + 影响行校验"的幂等保证。
 type changeStatusTxRepository struct{}

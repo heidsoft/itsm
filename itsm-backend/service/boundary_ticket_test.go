@@ -33,9 +33,9 @@ func setupBoundaryTicketTest(t *testing.T) (*ent.Client, *TicketService, context
 func createBoundaryTenant(ctx context.Context, t *testing.T, client *ent.Client, suffix string) int {
 	t.Helper()
 	tenant, err := client.Tenant.Create().
-		SetName("BoundaryTenant"+suffix).
-		SetCode("boundary-"+suffix).
-		SetDomain("boundary-"+suffix+".example.com").
+		SetName("BoundaryTenant" + suffix).
+		SetCode("boundary-" + suffix).
+		SetDomain("boundary-" + suffix + ".example.com").
 		SetStatus("active").
 		Save(ctx)
 	require.NoError(t, err)
@@ -45,7 +45,7 @@ func createBoundaryTenant(ctx context.Context, t *testing.T, client *ent.Client,
 func createBoundaryUser(ctx context.Context, t *testing.T, client *ent.Client, tenantID int, suffix string) *ent.User {
 	t.Helper()
 	user, err := client.User.Create().
-				SetName("BoundaryUser"+suffix).
+		SetName("BoundaryUser" + suffix).
 		SetUsername("boundary-" + suffix).
 		SetEmail("boundary-" + suffix + "@example.com").
 		SetPasswordHash("hashed").
@@ -192,8 +192,8 @@ func TestTicketService_CreateTicket_AllPriorityValues(t *testing.T) {
 	priorities := []string{"low", "medium", "high", "critical", "unknown"}
 	for idx, prio := range priorities {
 		t.Run("priority_"+prio, func(t *testing.T) {
-			tenantID := createBoundaryTenant(ctx, t, client, "prio-" + prio + "-" + fmt.Sprint(idx))
-			user := createBoundaryUser(ctx, t, client, tenantID, prio + "-" + fmt.Sprint(idx))
+			tenantID := createBoundaryTenant(ctx, t, client, "prio-"+prio+"-"+fmt.Sprint(idx))
+			user := createBoundaryUser(ctx, t, client, tenantID, prio+"-"+fmt.Sprint(idx))
 			_, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
 				Title:       "Ticket with prio=" + prio,
 				Description: "desc",

@@ -12,13 +12,13 @@ import (
 )
 
 type Handler struct {
-	svc   *Service
+	svc    *Service
 	logger *zap.SugaredLogger
 }
 
 func NewHandler(svc *Service, logger *zap.SugaredLogger) *Handler {
 	return &Handler{
-		svc:   svc,
+		svc:    svc,
 		logger: logger,
 	}
 }
@@ -228,16 +228,16 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"total":       stats.Total,
-		"active":      stats.Active,
-		"resolved":    stats.Resolved,
-		"deprecated":  stats.Deprecated,
-		"critical":    stats.Critical,
-		"high":        stats.High,
-		"medium":      stats.Medium,
-		"low":         stats.Low,
-		"totalPages":  1,
-		"page":        1,
+		"total":      stats.Total,
+		"active":     stats.Active,
+		"resolved":   stats.Resolved,
+		"deprecated": stats.Deprecated,
+		"critical":   stats.Critical,
+		"high":       stats.High,
+		"medium":     stats.Medium,
+		"low":        stats.Low,
+		"totalPages": 1,
+		"page":       1,
 	})
 }
 

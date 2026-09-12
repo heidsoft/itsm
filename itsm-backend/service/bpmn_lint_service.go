@@ -157,7 +157,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
 				Severity: "warning", Category: "flows",
 				ElementID: flow.ID,
-				Message: fmt.Sprintf("序列流 %s 源自网关 %s 但未配置条件表达式（依赖默认流则忽略）", flow.ID, flow.SourceRef),
+				Message:   fmt.Sprintf("序列流 %s 源自网关 %s 但未配置条件表达式（依赖默认流则忽略）", flow.ID, flow.SourceRef),
 			})
 		}
 	}

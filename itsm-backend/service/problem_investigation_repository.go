@@ -14,10 +14,10 @@ import (
 // problemInvestigationRepository 负责封装 problem investigation 关联表（无 Ent schema）的 SQL。
 //
 // 设计原则：
-// 1. 所有方法都强制 tenant 隔离，要么用 IN (SELECT ... FROM problems WHERE tenant_id)，
-//    要么用 JOIN problems p ON ... WHERE p.tenant_id = $。
-// 2. 状态机校验 / 业务编排留在 service 层；repository 只暴露原子数据操作。
-// 3. 多表 JOIN 一次性读出 DTO，避免 service 反复 round-trip。
+//  1. 所有方法都强制 tenant 隔离，要么用 IN (SELECT ... FROM problems WHERE tenant_id)，
+//     要么用 JOIN problems p ON ... WHERE p.tenant_id = $。
+//  2. 状态机校验 / 业务编排留在 service 层；repository 只暴露原子数据操作。
+//  3. 多表 JOIN 一次性读出 DTO，避免 service 反复 round-trip。
 //
 // 被封装表：
 // problem_investigations、problem_investigation_steps、problem_root_cause_analyses、problem_solutions。
@@ -223,12 +223,12 @@ func (r *problemInvestigationRepository) UpdateInvestigation(ctx context.Context
 
 // InvestigationStepCreate 调查步骤写入行。
 type InvestigationStepCreate struct {
-	InvestigationID  int
-	StepNumber       int
-	StepTitle        string
-	StepDescription  string
-	AssignedTo       *int
-	Notes            *string
+	InvestigationID int
+	StepNumber      int
+	StepTitle       string
+	StepDescription string
+	AssignedTo      *int
+	Notes           *string
 }
 
 // CreateInvestigationStep 插入调查步骤。

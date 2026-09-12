@@ -81,9 +81,9 @@ func TestTicketAssociationRoutes_ReadsURLParamNotContext(t *testing.T) {
 	const secret = "assoc-urlparam-secret"
 
 	cfg := &RouterConfig{
-		JWTSecret:               secret,
-		Logger:                  logger,
-		Client:                  client,
+		JWTSecret:                secret,
+		Logger:                   logger,
+		Client:                   client,
 		TicketAssociationService: assoc,
 	}
 	gin.SetMode(gin.TestMode)
@@ -106,7 +106,7 @@ func TestTicketAssociationRoutes_ReadsURLParamNotContext(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
 
 		var body struct {
-			Code    int `json:"code"`
+			Code    int    `json:"code"`
 			Message string `json:"message"`
 			Data    []struct {
 				ID           int    `json:"id"`

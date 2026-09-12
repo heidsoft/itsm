@@ -28,7 +28,8 @@ func NewHandler(mgr *connector.Manager, dedup *connector.InboundDedup, logger *z
 func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
 
 // RegisterRoutes 公开回调路由（无需 JWT）：
-//   POST /api/v1/wecom/webhook/:instance_id
+//
+//	POST /api/v1/wecom/webhook/:instance_id
 func (h *Handler) RegisterRoutes(public *gin.RouterGroup) {
 	public.POST("/wecom/webhook/:instance_id", h.Webhook)
 }

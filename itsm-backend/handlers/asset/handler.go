@@ -13,9 +13,9 @@ import (
 
 // Handler 资产与许可证 HTTP 层
 type Handler struct {
-	svc            *service.AssetService
-	licenseSvc     *service.AssetLicenseService
-	logger         *zap.SugaredLogger
+	svc        *service.AssetService
+	licenseSvc *service.AssetLicenseService
+	logger     *zap.SugaredLogger
 }
 
 // NewHandler 创建 asset handler

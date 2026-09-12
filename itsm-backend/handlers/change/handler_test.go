@@ -20,8 +20,8 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/middleware"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/middleware"
 )
 
 // setupTestHandler creates a test handler with in-memory repository

@@ -13,9 +13,9 @@ import (
 //   - EXTRACT(EPOCH FROM (resolved_at - created_at)) — 时间差转秒
 //
 // 这些语法没有 Ent 等价的"跨方言"表达。封装到 repository 的目的：
-//   1) 把 SQL 字符串集中到一处，未来加方言兼容只需改这里；
-//   2) 强制 tenant_id 谓词、deleted_at 守卫（与 incident schema 软删语义一致）；
-//   3) 调用方只看到面向对象方法 GetStats(ctx, tenantID)。
+//  1. 把 SQL 字符串集中到一处，未来加方言兼容只需改这里；
+//  2. 强制 tenant_id 谓词、deleted_at 守卫（与 incident schema 软删语义一致）；
+//  3. 调用方只看到面向对象方法 GetStats(ctx, tenantID)。
 //
 // 注意：若需要 SQLite 兼容，应提供 SQLite 后端实现（独立文件或 build tag），
 // 当前后端默认 PostgreSQL，SQLite 仅用于测试。

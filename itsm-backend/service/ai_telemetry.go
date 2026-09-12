@@ -88,14 +88,14 @@ func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID 
 // 避免 map[string]interface{} 拼写漂移。前端 TS 类型 AIMetrics 字段对齐。
 // 单元测试只断言字段名（不需要起 sqlite 测试 DB）。
 type AIMetrics struct {
-	TotalRequests         int                    `json:"totalRequests"`
-	TotalFeedback         int                    `json:"totalFeedback"`
-	UsefulFeedback        int                    `json:"usefulFeedback"`
-	UsefulRate            float64                `json:"usefulRate"`
-	ByKind                map[string]interface{} `json:"byKind"`
-	AvgResponseTimeSeconds float64               `json:"avgResponseTimeSeconds"`
-	LLMCallCount          int                    `json:"llmCallCount"`
-	ResponseTimeAvailable bool                   `json:"responseTimeAvailable"`
+	TotalRequests          int                    `json:"totalRequests"`
+	TotalFeedback          int                    `json:"totalFeedback"`
+	UsefulFeedback         int                    `json:"usefulFeedback"`
+	UsefulRate             float64                `json:"usefulRate"`
+	ByKind                 map[string]interface{} `json:"byKind"`
+	AvgResponseTimeSeconds float64                `json:"avgResponseTimeSeconds"`
+	LLMCallCount           int                    `json:"llmCallCount"`
+	ResponseTimeAvailable  bool                   `json:"responseTimeAvailable"`
 }
 
 // GetMetrics retrieves AI usage metrics for a tenant.
@@ -154,7 +154,7 @@ func (s *AITelemetryService) countAIAuditLogs(ctx context.Context, tenantID, loo
 				auditlog.ActionContains("ai"),
 				auditlog.CreatedAtGTE(since),
 			).
-		Count(ctx)
+			Count(ctx)
 	}
 	if s.repo == nil {
 		return 0, fmt.Errorf("ai telemetry repository not initialised")

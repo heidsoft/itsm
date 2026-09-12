@@ -15,7 +15,7 @@ import (
 // Handler 持有 RootCauseService 依赖.
 type Handler struct {
 	rootCauseService *service.RootCauseService
-	logger          *zap.SugaredLogger
+	logger           *zap.SugaredLogger
 }
 
 // NewHandler 构造 root_cause Handler.
@@ -25,7 +25,7 @@ func NewHandler(rootCauseService *service.RootCauseService, logger *zap.SugaredL
 	}
 	return &Handler{
 		rootCauseService: rootCauseService,
-		logger:          logger,
+		logger:           logger,
 	}
 }
 

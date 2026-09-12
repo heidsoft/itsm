@@ -14,7 +14,7 @@ import (
 // Handler 云服务HTTP处理器
 type Handler struct {
 	cloudService Service
-	logger      *zap.SugaredLogger
+	logger       *zap.SugaredLogger
 }
 
 // NewHandler creates a new cloud handler
@@ -209,9 +209,9 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 
 	response := &dto.CloudAccountListResponse{
 		CloudAccounts: responses,
-		Total:        total,
-		Page:         req.Page,
-		PageSize:     req.PageSize,
+		Total:         total,
+		Page:          req.Page,
+		PageSize:      req.PageSize,
 	}
 
 	common.Success(c, response)
@@ -400,9 +400,9 @@ func (h *Handler) ListCloudServices(c *gin.Context) {
 
 	response := &dto.CloudServiceListResponse{
 		CloudServices: responses,
-		Total:        total,
-		Page:         req.Page,
-		PageSize:     req.PageSize,
+		Total:         total,
+		Page:          req.Page,
+		PageSize:      req.PageSize,
 	}
 
 	common.Success(c, response)
@@ -592,9 +592,9 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 
 	response := &dto.CloudResourceListResponse{
 		CloudResources: responses,
-		Total:         total,
-		Page:          req.Page,
-		PageSize:      req.PageSize,
+		Total:          total,
+		Page:           req.Page,
+		PageSize:       req.PageSize,
 	}
 
 	common.Success(c, response)

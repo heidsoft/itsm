@@ -449,14 +449,14 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 	if s.approvalSvc != nil {
 		if _, err := s.approvalSvc.TriggerApproval(ctx, &ApprovalTriggerRequest{
-			TicketID:     tkt.ID,
-			TicketNumber: tkt.TicketNumber,
-			TicketTitle:  tkt.Title,
-			TicketType:   string(tkt.Type),
-			Priority:     string(tkt.Priority),
-			RequesterID:  tkt.RequesterID,
-			TenantID:     tenantID,
-			DepartmentID: deptID,
+			TicketID:         tkt.ID,
+			TicketNumber:     tkt.TicketNumber,
+			TicketTitle:      tkt.Title,
+			TicketType:       string(tkt.Type),
+			Priority:         string(tkt.Priority),
+			RequesterID:      tkt.RequesterID,
+			TenantID:         tenantID,
+			DepartmentID:     deptID,
 			ApproverFallback: true,
 		}); err != nil {
 			s.logger.Warnw("Approval trigger failed", "error", err, "ticket_id", tkt.ID)

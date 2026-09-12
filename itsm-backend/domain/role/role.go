@@ -53,7 +53,7 @@ func IsAdminLike(r string) bool {
 func IsSuperAdmin(r string) bool { return r == SuperAdmin }
 
 // IsServiceRequestApprover 判断角色是否可参与服务请求审批
-//（L1 manager / L2 it_admin / L3 security_admin 及管理类兜底）。
+// （L1 manager / L2 it_admin / L3 security_admin 及管理类兜底）。
 // 与 handlers/service_request.checkEligibility 的 fallback 词表对齐。
 func IsServiceRequestApprover(r string) bool {
 	switch r {

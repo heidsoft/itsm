@@ -24,11 +24,11 @@ import (
 //
 // 不强制依赖 LLM（nil gateway → 返回 nil explain），方便测试与离线环境。
 type ImpactExplanationService struct {
-	llm           *LLMGateway
-	model         string
-	redis         *redis.Client
-	logger        *zap.SugaredLogger
-	cacheTTL      time.Duration
+	llm      *LLMGateway
+	model    string
+	redis    *redis.Client
+	logger   *zap.SugaredLogger
+	cacheTTL time.Duration
 }
 
 func NewImpactExplanationService(

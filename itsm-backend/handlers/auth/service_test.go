@@ -9,9 +9,9 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap/zaptest"
 	"golang.org/x/crypto/bcrypt"
 )

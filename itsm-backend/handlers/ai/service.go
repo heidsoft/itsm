@@ -660,14 +660,14 @@ func normalizeForecastOutput(output *service.ForecastOutput) interface{} {
 		Anomaly        bool    `json:"anomaly"`
 	}
 	type forecastDTO struct {
-		Predictions  []predictionDTO      `json:"predictions"`
-		Confidence   float64              `json:"confidence"`
-		Model        string               `json:"model"`
-		GeneratedAt  string               `json:"generatedAt"`
-		Insights     string               `json:"insights"`
-		Seasonality  map[string]bool      `json:"seasonality"`
-		Trend        string               `json:"trend"`
-		AnomalyDates []string             `json:"anomalyDates"`
+		Predictions  []predictionDTO `json:"predictions"`
+		Confidence   float64         `json:"confidence"`
+		Model        string          `json:"model"`
+		GeneratedAt  string          `json:"generatedAt"`
+		Insights     string          `json:"insights"`
+		Seasonality  map[string]bool `json:"seasonality"`
+		Trend        string          `json:"trend"`
+		AnomalyDates []string        `json:"anomalyDates"`
 	}
 	points := make([]predictionDTO, 0, len(output.Predictions))
 	for _, p := range output.Predictions {

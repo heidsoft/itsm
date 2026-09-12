@@ -215,9 +215,9 @@ func (h *Handler) ListArticles(c *gin.Context) {
 	}
 
 	common.Success(c, dto.KnowledgeArticleListResponse{
-		Items:   dtos,
-		Total:   total,
-		Page:    page,
+		Items:    dtos,
+		Total:    total,
+		Page:     page,
 		PageSize: pageSize,
 	})
 }

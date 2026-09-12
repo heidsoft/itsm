@@ -38,8 +38,10 @@ func TestEvaluateApprovalChain_SkipByPriorityNotMatch(t *testing.T) {
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
 		// L1 仅适用 urgent/high；medium 工单应被跳过
-		{Level: 1, Role: "manager", Name: "高优先级层", IsRequired: true,
-			ConditionPriorities: []string{"urgent", "high"}},
+		{
+			Level: 1, Role: "manager", Name: "高优先级层", IsRequired: true,
+			ConditionPriorities: []string{"urgent", "high"},
+		},
 		// L2 无条件，永远适用
 		{Level: 2, Role: "manager", Name: "通用层", IsRequired: true},
 	})
@@ -81,8 +83,10 @@ func TestEvaluateApprovalChain_SkipByPriority_CaseInsensitive(t *testing.T) {
 	_ = mkEvalUser(t, ctx, client, tn.ID, "manager", "m")
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
-		{Level: 1, Role: "manager", Name: "高层", IsRequired: true,
-			ConditionPriorities: []string{"Urgent", "HIGH"}},
+		{
+			Level: 1, Role: "manager", Name: "高层", IsRequired: true,
+			ConditionPriorities: []string{"Urgent", "HIGH"},
+		},
 	})
 
 	// 工单优先级 URGENT（不同大小写）也应匹配
@@ -108,8 +112,10 @@ func TestEvaluateApprovalChain_SkipByAmountBelowMin(t *testing.T) {
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
 		// L1 仅适用金额 >= 10000
-		{Level: 1, Role: "manager", Name: "大额层", IsRequired: true,
-			ConditionAmountMin: 10000},
+		{
+			Level: 1, Role: "manager", Name: "大额层", IsRequired: true,
+			ConditionAmountMin: 10000,
+		},
 		// L2 无条件
 		{Level: 2, Role: "manager", Name: "通用层", IsRequired: true},
 	})
@@ -146,8 +152,10 @@ func TestEvaluateApprovalChain_SkipByAmountAboveMax(t *testing.T) {
 	_ = mkEvalUser(t, ctx, client, tn.ID, "manager", "m")
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
-		{Level: 1, Role: "manager", Name: "小额层", IsRequired: true,
-			ConditionAmountMax: 1000},
+		{
+			Level: 1, Role: "manager", Name: "小额层", IsRequired: true,
+			ConditionAmountMax: 1000,
+		},
 	})
 
 	// amount=50000 > 1000 → L1 跳过
@@ -180,9 +188,11 @@ func TestEvaluateApprovalChain_SkipByAmountRangeBoundary(t *testing.T) {
 	_ = mkEvalUser(t, ctx, client, tn.ID, "manager", "m")
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
-		{Level: 1, Role: "manager", Name: "区间层", IsRequired: true,
+		{
+			Level: 1, Role: "manager", Name: "区间层", IsRequired: true,
 			ConditionAmountMin: 1000,
-			ConditionAmountMax: 5000},
+			ConditionAmountMax: 5000,
+		},
 	})
 
 	// amount=1000（等于下界）应匹配
@@ -219,9 +229,11 @@ func TestEvaluateApprovalChain_SkipByCombinedConditions(t *testing.T) {
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
 		// L1 要求 urgent 且 amount >= 10000
-		{Level: 1, Role: "manager", Name: "VIP 层", IsRequired: true,
+		{
+			Level: 1, Role: "manager", Name: "VIP 层", IsRequired: true,
 			ConditionPriorities: []string{"urgent"},
-			ConditionAmountMin:  10000},
+			ConditionAmountMin:  10000,
+		},
 	})
 
 	tests := []struct {
@@ -268,13 +280,17 @@ func TestEvaluateApprovalChain_MixedSkipAndApply(t *testing.T) {
 
 	chain := mkChainEntity(t, ctx, client, tn.ID, "ticket", []schema.ApprovalChainStep{
 		// L1 仅适用 urgent
-		{Level: 1, Role: "manager", Name: "紧急层", IsRequired: true,
-			ConditionPriorities: []string{"urgent"}},
+		{
+			Level: 1, Role: "manager", Name: "紧急层", IsRequired: true,
+			ConditionPriorities: []string{"urgent"},
+		},
 		// L2 永远适用
 		{Level: 2, Role: "manager", Name: "通用层", IsRequired: true},
 		// L3 仅适用 amount > 100000
-		{Level: 3, Role: "manager", Name: "巨额层", IsRequired: true,
-			ConditionAmountMin: 100000},
+		{
+			Level: 3, Role: "manager", Name: "巨额层", IsRequired: true,
+			ConditionAmountMin: 100000,
+		},
 	})
 
 	// medium + 5000 → L1 跳、L2 待、L3 跳
@@ -374,11 +390,11 @@ func TestEvaluateApprovalChain_NoConditionBackwardsCompatible(t *testing.T) {
 // ---- 9. stepAppliesToContext 纯函数测试 ----
 func TestStepAppliesToContext_TableDriven(t *testing.T) {
 	tests := []struct {
-		name        string
-		step        schema.ApprovalChainStep
-		evalCtx     ApprovalEvalContext
-		wantMatch   bool
-		wantReason  string
+		name       string
+		step       schema.ApprovalChainStep
+		evalCtx    ApprovalEvalContext
+		wantMatch  bool
+		wantReason string
 	}{
 		{
 			name:      "no conditions always matches",
@@ -387,50 +403,50 @@ func TestStepAppliesToContext_TableDriven(t *testing.T) {
 			wantMatch: true,
 		},
 		{
-			name: "priority in whitelist",
-			step: schema.ApprovalChainStep{ConditionPriorities: []string{"urgent", "high"}},
-			evalCtx:     ApprovalEvalContext{Priority: "urgent"},
-			wantMatch:   true,
+			name:      "priority in whitelist",
+			step:      schema.ApprovalChainStep{ConditionPriorities: []string{"urgent", "high"}},
+			evalCtx:   ApprovalEvalContext{Priority: "urgent"},
+			wantMatch: true,
 		},
 		{
-			name: "priority not in whitelist",
-			step: schema.ApprovalChainStep{ConditionPriorities: []string{"urgent", "high"}},
-			evalCtx:     ApprovalEvalContext{Priority: "low"},
-			wantMatch:   false,
-			wantReason:  "priority_not_match",
+			name:       "priority not in whitelist",
+			step:       schema.ApprovalChainStep{ConditionPriorities: []string{"urgent", "high"}},
+			evalCtx:    ApprovalEvalContext{Priority: "low"},
+			wantMatch:  false,
+			wantReason: "priority_not_match",
 		},
 		{
-			name: "amount within range",
-			step: schema.ApprovalChainStep{ConditionAmountMin: 100, ConditionAmountMax: 1000},
-			evalCtx:     ApprovalEvalContext{Amount: 500},
-			wantMatch:   true,
+			name:      "amount within range",
+			step:      schema.ApprovalChainStep{ConditionAmountMin: 100, ConditionAmountMax: 1000},
+			evalCtx:   ApprovalEvalContext{Amount: 500},
+			wantMatch: true,
 		},
 		{
-			name: "amount below min",
-			step: schema.ApprovalChainStep{ConditionAmountMin: 100},
-			evalCtx:     ApprovalEvalContext{Amount: 99},
-			wantMatch:   false,
-			wantReason:  "amount_below_min",
+			name:       "amount below min",
+			step:       schema.ApprovalChainStep{ConditionAmountMin: 100},
+			evalCtx:    ApprovalEvalContext{Amount: 99},
+			wantMatch:  false,
+			wantReason: "amount_below_min",
 		},
 		{
-			name: "amount above max",
-			step: schema.ApprovalChainStep{ConditionAmountMax: 1000},
-			evalCtx:     ApprovalEvalContext{Amount: 1001},
-			wantMatch:   false,
-			wantReason:  "amount_above_max",
+			name:       "amount above max",
+			step:       schema.ApprovalChainStep{ConditionAmountMax: 1000},
+			evalCtx:    ApprovalEvalContext{Amount: 1001},
+			wantMatch:  false,
+			wantReason: "amount_above_max",
 		},
 		{
-			name: "amount zero with min condition set → min check skipped (only checks >0)",
-			step: schema.ApprovalChainStep{ConditionAmountMin: 0, ConditionAmountMax: 1000},
-			evalCtx:     ApprovalEvalContext{Amount: 5000},
-			wantMatch:   false,
-			wantReason:  "amount_above_max",
+			name:       "amount zero with min condition set → min check skipped (only checks >0)",
+			step:       schema.ApprovalChainStep{ConditionAmountMin: 0, ConditionAmountMax: 1000},
+			evalCtx:    ApprovalEvalContext{Amount: 5000},
+			wantMatch:  false,
+			wantReason: "amount_above_max",
 		},
 		{
-			name: "priority case insensitive",
-			step: schema.ApprovalChainStep{ConditionPriorities: []string{"URGENT"}},
-			evalCtx:     ApprovalEvalContext{Priority: "urgent"},
-			wantMatch:   true,
+			name:      "priority case insensitive",
+			step:      schema.ApprovalChainStep{ConditionPriorities: []string{"URGENT"}},
+			evalCtx:   ApprovalEvalContext{Priority: "urgent"},
+			wantMatch: true,
 		},
 	}
 	for _, tt := range tests {
@@ -458,10 +474,14 @@ func TestEvaluateApprovalChain_MultiStepConditionOR(t *testing.T) {
 		//   step1: 优先级=urgent
 		//   step2: 金额 >= 50000
 		// 工单 (medium, 60000) 应匹配 step2，不被跳过
-		{Level: 1, Role: "manager", Name: "S1 urgent", IsRequired: true,
-			ConditionPriorities: []string{"urgent"}},
-		{Level: 1, Role: "manager", Name: "S2 amount", IsRequired: true,
-			ConditionAmountMin: 50000},
+		{
+			Level: 1, Role: "manager", Name: "S1 urgent", IsRequired: true,
+			ConditionPriorities: []string{"urgent"},
+		},
+		{
+			Level: 1, Role: "manager", Name: "S2 amount", IsRequired: true,
+			ConditionAmountMin: 50000,
+		},
 	})
 
 	res, err := svc.Evaluate(ctx, chain, ApprovalEvalContext{

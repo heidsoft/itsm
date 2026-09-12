@@ -39,8 +39,8 @@ func NewToolRegistry(rag *RAGService, incident *IncidentService, cmdb *Configura
 // SetTicketService / SetTicketTypeService 注入写工具所需的领域服务。
 // 采用 setter 而非构造函数参数，避免破坏既有 NewToolRegistry(nil,...) 测试调用，
 // 也便于在 bootstrap 中按依赖就绪顺序分别装配（ticketType 在 ticket 之后构造）。
-func (t *ToolRegistry) SetTicketService(s *TicketService)             { t.ticket = s }
-func (t *ToolRegistry) SetTicketTypeService(s *TicketTypeService)     { t.ticketType = s }
+func (t *ToolRegistry) SetTicketService(s *TicketService)         { t.ticket = s }
+func (t *ToolRegistry) SetTicketTypeService(s *TicketTypeService) { t.ticketType = s }
 func (t *ToolRegistry) SetCIRelationshipService(s *CIRelationshipService) {
 	t.ciRelationship = s
 }
@@ -337,11 +337,11 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			ArgsSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
-					"source_ci_id":     map[string]interface{}{"type": "integer", "description": "源 CI ID"},
-					"target_ci_id":     map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
+					"source_ci_id":      map[string]interface{}{"type": "integer", "description": "源 CI ID"},
+					"target_ci_id":      map[string]interface{}{"type": "integer", "description": "目标 CI ID"},
 					"relationship_type": map[string]interface{}{"type": "string", "description": "关系类型枚举（如 depends_on/hosts/connects_to/...）"},
-					"strength":         map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
-					"description":      map[string]interface{}{"type": "string", "description": "备注"},
+					"strength":          map[string]interface{}{"type": "string", "enum": []any{"strong", "medium", "weak"}, "description": "关系强度"},
+					"description":       map[string]interface{}{"type": "string", "description": "备注"},
 				},
 				"required": []string{"source_ci_id", "target_ci_id", "relationship_type"},
 			},

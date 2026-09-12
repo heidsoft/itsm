@@ -241,9 +241,9 @@ func TestSetupRoutes_MSPControllerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:     "test-secret",
-		Logger:        logger,
-		Client:        client,
+		JWTSecret:  "test-secret",
+		Logger:     logger,
+		Client:     client,
 		MSPHandler: nil,
 	}
 
@@ -283,9 +283,9 @@ func TestSetupRoutes_CMDBControllerNil(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 
 	cfg := &RouterConfig{
-		JWTSecret:      "test-secret",
-		Logger:         logger,
-		Client:         client,
+		JWTSecret:   "test-secret",
+		Logger:      logger,
+		Client:      client,
 		CMDBHandler: nil,
 	}
 

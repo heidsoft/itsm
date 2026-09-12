@@ -31,6 +31,7 @@ func (m *mockCloudService) CreateCloudAccount(ctx context.Context, tenantID int,
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) GetCloudAccount(ctx context.Context, tenantID, id int) (*ent.CloudAccount, error) {
 	args := m.Called(ctx, tenantID, id)
 	if r, ok := args.Get(0).(*ent.CloudAccount); ok {
@@ -38,6 +39,7 @@ func (m *mockCloudService) GetCloudAccount(ctx context.Context, tenantID, id int
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) UpdateCloudAccount(ctx context.Context, tenantID, id int, req *dto.UpdateCloudAccountRequest) (*ent.CloudAccount, error) {
 	args := m.Called(ctx, tenantID, id, req)
 	if r, ok := args.Get(0).(*ent.CloudAccount); ok {
@@ -45,10 +47,12 @@ func (m *mockCloudService) UpdateCloudAccount(ctx context.Context, tenantID, id 
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) DeleteCloudAccount(ctx context.Context, tenantID, id int) error {
 	args := m.Called(ctx, tenantID, id)
 	return args.Error(0)
 }
+
 func (m *mockCloudService) ListCloudAccounts(ctx context.Context, tenantID int, req *dto.ListCloudAccountsRequest) ([]*ent.CloudAccount, int, error) {
 	args := m.Called(ctx, tenantID, req)
 	if l, ok := args.Get(0).([]*ent.CloudAccount); ok {
@@ -56,6 +60,7 @@ func (m *mockCloudService) ListCloudAccounts(ctx context.Context, tenantID int, 
 	}
 	return nil, 0, args.Error(2)
 }
+
 func (m *mockCloudService) CreateCloudService(ctx context.Context, tenantID int, req *dto.CreateCloudServiceRequest) (*ent.CloudService, error) {
 	args := m.Called(ctx, tenantID, req)
 	if r, ok := args.Get(0).(*ent.CloudService); ok {
@@ -63,6 +68,7 @@ func (m *mockCloudService) CreateCloudService(ctx context.Context, tenantID int,
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) GetCloudService(ctx context.Context, tenantID, id int) (*ent.CloudService, error) {
 	args := m.Called(ctx, tenantID, id)
 	if r, ok := args.Get(0).(*ent.CloudService); ok {
@@ -70,6 +76,7 @@ func (m *mockCloudService) GetCloudService(ctx context.Context, tenantID, id int
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) UpdateCloudService(ctx context.Context, tenantID, id int, req *dto.UpdateCloudServiceRequest) (*ent.CloudService, error) {
 	args := m.Called(ctx, tenantID, id, req)
 	if r, ok := args.Get(0).(*ent.CloudService); ok {
@@ -77,10 +84,12 @@ func (m *mockCloudService) UpdateCloudService(ctx context.Context, tenantID, id 
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) DeleteCloudService(ctx context.Context, tenantID, id int) error {
 	args := m.Called(ctx, tenantID, id)
 	return args.Error(0)
 }
+
 func (m *mockCloudService) ListCloudServices(ctx context.Context, tenantID int, req *dto.ListCloudServicesRequest) ([]*ent.CloudService, int, error) {
 	args := m.Called(ctx, tenantID, req)
 	if l, ok := args.Get(0).([]*ent.CloudService); ok {
@@ -88,6 +97,7 @@ func (m *mockCloudService) ListCloudServices(ctx context.Context, tenantID int, 
 	}
 	return nil, 0, args.Error(2)
 }
+
 func (m *mockCloudService) CreateCloudResource(ctx context.Context, tenantID int, req *dto.CreateCloudResourceRequest) (*ent.CloudResource, error) {
 	args := m.Called(ctx, tenantID, req)
 	if r, ok := args.Get(0).(*ent.CloudResource); ok {
@@ -95,6 +105,7 @@ func (m *mockCloudService) CreateCloudResource(ctx context.Context, tenantID int
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) GetCloudResource(ctx context.Context, tenantID, id int) (*ent.CloudResource, error) {
 	args := m.Called(ctx, tenantID, id)
 	if r, ok := args.Get(0).(*ent.CloudResource); ok {
@@ -102,6 +113,7 @@ func (m *mockCloudService) GetCloudResource(ctx context.Context, tenantID, id in
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) UpdateCloudResource(ctx context.Context, tenantID, id int, req *dto.UpdateCloudResourceRequest) (*ent.CloudResource, error) {
 	args := m.Called(ctx, tenantID, id, req)
 	if r, ok := args.Get(0).(*ent.CloudResource); ok {
@@ -109,10 +121,12 @@ func (m *mockCloudService) UpdateCloudResource(ctx context.Context, tenantID, id
 	}
 	return nil, args.Error(1)
 }
+
 func (m *mockCloudService) DeleteCloudResource(ctx context.Context, tenantID, id int) error {
 	args := m.Called(ctx, tenantID, id)
 	return args.Error(0)
 }
+
 func (m *mockCloudService) ListCloudResources(ctx context.Context, tenantID int, req *dto.ListCloudResourcesRequest) ([]*ent.CloudResource, int, error) {
 	args := m.Called(ctx, tenantID, req)
 	if l, ok := args.Get(0).([]*ent.CloudResource); ok {

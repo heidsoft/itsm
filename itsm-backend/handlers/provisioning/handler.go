@@ -16,7 +16,7 @@ import (
 // Handler 持有 ProvisioningService 依赖.
 type Handler struct {
 	provisioningService *service.ProvisioningService
-	logger             *zap.SugaredLogger
+	logger              *zap.SugaredLogger
 }
 
 // NewHandler 构造 provisioning Handler.
@@ -26,7 +26,7 @@ func NewHandler(provisioningService *service.ProvisioningService, logger *zap.Su
 	}
 	return &Handler{
 		provisioningService: provisioningService,
-		logger:             logger,
+		logger:              logger,
 	}
 }
 

@@ -15,8 +15,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -582,9 +582,9 @@ func TestEnrichBpmnProcessState_CandidateUsersAndGroups(t *testing.T) {
 	client := newBpmnStateTestClient(t, "bpmn_state_candidate")
 	tenant := createBpmnTestTenant(t, client, "cand")
 	requester := createBpmnTestUser(t, client, tenant.ID, "creq")
-	byIDUser := createBpmnTestUser(t, client, tenant.ID, "bid")       // candidate_users 里以 ID 出现
-	byNameUser := createBpmnTestUser(t, client, tenant.ID, "bname")   // candidate_users 里以 username 出现
-	groupMember := createBpmnTestUser(t, client, tenant.ID, "gmemb")  // candidate_groups 组成员
+	byIDUser := createBpmnTestUser(t, client, tenant.ID, "bid")      // candidate_users 里以 ID 出现
+	byNameUser := createBpmnTestUser(t, client, tenant.ID, "bname")  // candidate_users 里以 username 出现
+	groupMember := createBpmnTestUser(t, client, tenant.ID, "gmemb") // candidate_groups 组成员
 	tk := createBpmnTestTicket(t, client, tenant.ID, requester.ID)
 
 	// 建 approvers 组并加入 groupMember

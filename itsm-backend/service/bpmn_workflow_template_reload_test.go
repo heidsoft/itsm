@@ -10,9 +10,9 @@ import (
 // 与 (tenant_id,key,version) 唯一索引兼容；不可解析片段回退为 1.0.0，避免撞号。
 func TestBumpMinorVersion(t *testing.T) {
 	cases := []struct {
-		name   string
-		input  string
-		want   string
+		name  string
+		input string
+		want  string
 	}{
 		{name: "empty string returns 1.0.0", input: "", want: "1.0.0"},
 		{name: "first deployment 1.0.0", input: "1.0.0", want: "1.1.0"},

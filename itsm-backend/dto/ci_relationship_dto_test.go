@@ -14,7 +14,7 @@ import (
 func TestToCIRelationshipResponse_FillsTypeName(t *testing.T) {
 	for _, meta := range schema.CIRelationshipTypeVocabulary {
 		rel := &ent.CIRelationship{
-			ID:              1,
+			ID:               1,
 			RelationshipType: string(meta.Type),
 		}
 		res := ToCIRelationshipResponse(rel)
@@ -30,7 +30,7 @@ func TestToCIRelationshipResponse_FillsTypeName(t *testing.T) {
 // TestToCIRelationshipResponse_UnknownTypeGraceful：未知关系类型不填充但 nil 安全。
 func TestToCIRelationshipResponse_UnknownTypeGraceful(t *testing.T) {
 	rel := &ent.CIRelationship{
-		ID:              99,
+		ID:               99,
 		RelationshipType: "deprecated_legacy_type",
 	}
 	res := ToCIRelationshipResponse(rel)

@@ -42,19 +42,19 @@ func (m *mockRepository) Create(ctx context.Context, params *CreateParams, tenan
 	defer m.mu.Unlock()
 	m.nextID++
 	t := &Ticket{
-		ID:             m.nextID,
-		TicketNumber:   "TKT-" + time.Now().Format("20060102") + "-001",
-		Title:          params.Title,
-		Description:    params.Description,
-		Status:         "new",
-		Priority:       params.Priority,
-		Type:           params.Type,
-		RequesterID:    params.RequesterID,
-		AssigneeID:     params.AssigneeID,
-		TenantID:       tenantID,
-		Version:        1,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		ID:           m.nextID,
+		TicketNumber: "TKT-" + time.Now().Format("20060102") + "-001",
+		Title:        params.Title,
+		Description:  params.Description,
+		Status:       "new",
+		Priority:     params.Priority,
+		Type:         params.Type,
+		RequesterID:  params.RequesterID,
+		AssigneeID:   params.AssigneeID,
+		TenantID:     tenantID,
+		Version:      1,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 	m.tickets[t.ID] = t
 	return t, nil

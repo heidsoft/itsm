@@ -18,11 +18,11 @@ import (
 
 // ProblemInvestigationService 问题调查服务
 type ProblemInvestigationService struct {
-	db      *sql.DB
-	client  *ent.Client
-	logger  *zap.SugaredLogger
-	repo    *problemInvestigationRepository
-	users   *userLookupRepository
+	db     *sql.DB
+	client *ent.Client
+	logger *zap.SugaredLogger
+	repo   *problemInvestigationRepository
+	users  *userLookupRepository
 }
 
 // NewProblemInvestigationService 创建问题调查服务

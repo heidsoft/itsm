@@ -333,14 +333,14 @@ func (s *BPMNWorkflowTemplateCatalog) Reload(ctx context.Context, tenantID int, 
 	}
 
 	return &dto.ReloadWorkflowTemplateResponse{
-		Key:               key,
-		Name:              template.Name,
-		PreviousVersion:   latestVersion.String,
-		NewVersion:        nextVersion,
-		DeploymentID:      deploymentIDStr,
+		Key:                 key,
+		Name:                template.Name,
+		PreviousVersion:     latestVersion.String,
+		NewVersion:          nextVersion,
+		DeploymentID:        deploymentIDStr,
 		ProcessDefinitionID: definitionID,
-		Source:            "workflow_templates",
-		ReloadedAt:        time.Now().UTC().Format(time.RFC3339),
+		Source:              "workflow_templates",
+		ReloadedAt:          time.Now().UTC().Format(time.RFC3339),
 	}, nil
 }
 

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -10,7 +11,7 @@ import (
 // WorkflowTemplate is the tenant-visible business workflow catalog entry.
 // JSON sections are versioned with the template so designer drafts remain
 // reproducible and can be linted before publication.
-type WorkflowTemplate struct { ent.Schema }
+type WorkflowTemplate struct{ ent.Schema }
 
 func (WorkflowTemplate) Fields() []ent.Field {
 	return []ent.Field{
@@ -27,6 +28,7 @@ func (WorkflowTemplate) Fields() []ent.Field {
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}
 }
+
 func (WorkflowTemplate) Indexes() []ent.Index {
 	return []ent.Index{index.Fields("tenant_id", "key", "version").Unique(), index.Fields("tenant_id", "domain", "status"), index.Fields("tenant_id", "is_public")}
 }

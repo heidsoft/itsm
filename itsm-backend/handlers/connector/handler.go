@@ -349,8 +349,8 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 	actorID := ctx.GetInt("user_id")
 
 	var req struct {
-		NewCredentials    map[string]string `json:"newCredentials"`
-		GracePeriodHours  int               `json:"gracePeriodHours"`
+		NewCredentials   map[string]string `json:"newCredentials"`
+		GracePeriodHours int               `json:"gracePeriodHours"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, err.Error())
@@ -419,10 +419,10 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 			Exec(ctx.Request.Context())
 	}
 	common.Success(ctx, gin.H{
-		"name":               name,
-		"gracePeriodAt":      graceAt,
-		"gracePeriodHours":   req.GracePeriodHours,
-		"rotated":            true,
+		"name":             name,
+		"gracePeriodAt":    graceAt,
+		"gracePeriodHours": req.GracePeriodHours,
+		"rotated":          true,
 	})
 }
 
