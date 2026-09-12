@@ -18,6 +18,7 @@ type BPMNTaskResponse struct {
 	Status               string                 `json:"status"`
 	Priority             string                 `json:"priority"`
 	Assignee             string                 `json:"assignee"`
+	AssigneeName         string                 `json:"assigneeName,omitempty"`
 	CandidateUsers       string                 `json:"candidateUsers"`
 	CandidateGroups      string                 `json:"candidateGroups"`
 	ProcessInstanceID    int                    `json:"processInstanceId"`

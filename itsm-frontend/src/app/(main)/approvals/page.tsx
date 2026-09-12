@@ -296,7 +296,9 @@ export default function ApprovalsCenterPage() {
       key: 'assignee',
       width: 110,
       responsive: ['md'] as any,
-      render: (assignee: string) => assignee || <Text type="secondary">未领取</Text>,
+      render: (assignee: string, record: BpmnMyTask) =>
+        record.assigneeName ||
+        (assignee ? '未识别' : <Text type="secondary">未领取</Text>),
     },
     {
       title: '创建时间',

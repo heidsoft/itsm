@@ -75,6 +75,7 @@ export interface BpmnMyTask {
   status: string;
   priority?: string;
   assignee?: string;
+  assigneeName?: string;
   candidateUsers?: string;
   candidateGroups?: string;
   processInstanceId: number;

@@ -2434,7 +2434,42 @@ func (s *bpmnTaskService) ListUserTaskViews(ctx context.Context, req *ListUserTa
 		}
 	}
 
-	return dto.ToBPMNTaskResponseList(tasks, instanceMap), total, nil
+	responses := dto.ToBPMNTaskResponseList(tasks, instanceMap)
+
+	// 批量解析负责人显示名：assignee 存的是数字用户 ID，直接渲染会让审批中心
+	// 显示「1」这类裸 ID。这里一次性按去重后的 ID 查用户，避免 N+1。
+	assigneeIDs := make([]int, 0, len(responses))
+	seenAssignee := make(map[int]bool, len(responses))
+	for _, resp := range responses {
+		if id, err := strconv.Atoi(strings.TrimSpace(resp.Assignee)); err == nil && id > 0 && !seenAssignee[id] {
+			seenAssignee[id] = true
+			assigneeIDs = append(assigneeIDs, id)
+		}
+	}
+	if len(assigneeIDs) > 0 {
+		users, err := s.client.User.Query().
+			Where(user.IDIn(assigneeIDs...)).
+			Select(user.FieldID, user.FieldName, user.FieldUsername).
+			All(ctx)
+		if err != nil {
+			return nil, 0, fmt.Errorf("加载任务负责人失败: %w", err)
+		}
+		nameByID := make(map[int]string, len(users))
+		for _, u := range users {
+			if u.Name != "" {
+				nameByID[u.ID] = u.Name
+			} else {
+				nameByID[u.ID] = u.Username
+			}
+		}
+		for _, resp := range responses {
+			if id, err := strconv.Atoi(strings.TrimSpace(resp.Assignee)); err == nil {
+				resp.AssigneeName = nameByID[id]
+			}
+		}
+	}
+
+	return responses, total, nil
 }
 
 func (s *bpmnTaskService) ListApprovalDecisions(ctx context.Context, processInstanceKey string) ([]*ent.ProcessApprovalDecision, error) {
