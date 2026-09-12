@@ -160,6 +160,7 @@ const GroupManagement: React.FC = () => {
       setAllUsers(response.users || []);
     } catch (error) {
       console.error('Failed to load users:', error);
+      message.error(t('groups.messages.loadFailed'));
     }
   };
 

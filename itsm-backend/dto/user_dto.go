@@ -36,7 +36,7 @@ type UpdateUserRequest struct {
 // 避免出现可被调用方覆盖的租户字段（跨租户 IDOR）。
 type ListUsersRequest struct {
 	Page       int    `form:"page,default=1" binding:"min=1"`
-	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=200"`
+	PageSize   int    `form:"pageSize,default=10" binding:"min=1,max=1000"`
 	Status     string `form:"status"` // active, inactive
 	Department string `form:"department"`
 	Search     string `form:"search"`
