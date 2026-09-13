@@ -62,7 +62,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          trivyignore: '.trivyignore'
+          trivyignores: '.trivyignore'
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -85,7 +85,7 @@ jobs:
           format: 'table'
           severity: 'CRITICAL,HIGH'
           exit-code: '1'
-          trivyignore: '.trivyignore'
+          trivyignores: '.trivyignore'
 
   govulncheck:
     name: Go Vulnerability Check
