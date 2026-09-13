@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🤖 AI-Native ITSM
+# AI-Native ITSM
 
-## Enterprise IT Service Management | AI First, Not AI After
+An open-source IT service management system for enterprises, covering ITIL core processes with BPMN workflow orchestration, CMDB, SLA, knowledge base, and multi-tenancy.
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
@@ -14,17 +14,20 @@
 
 **[简体中文](./README.md)** · **English** · **[日本語](./README.ja.md)**
 
-**ITIL Processes · BPMN Workflow · CMDB · AI Decision Support · Apache-2.0**
-
 </div>
 
 ## Overview
 
-ITSM is an open-source enterprise service management platform designed for digital process governance. It aims to provide ServiceNow-class core ITSM capabilities while remaining lightweight, private-deployment friendly, and extensible.
+This project aims to provide an enterprise ITSM system that actually works. It connects tickets, incidents, problems, changes, SLA, CMDB, and knowledge base into complete business processes, with audit trails, permission control, and multi-tenant isolation.
 
-The platform covers tickets, incidents, problems, changes, releases, service requests, service catalogs, knowledge, SLA, CMDB, and BPMN orchestration. AI is embedded into triage, summarization, knowledge retrieval, workflow recommendations, audit trails, and controlled tool execution.
+Key design choices:
 
-The project is currently in the v1.6.x hardening convergence phase: the legacy controller layer has been fully retired in favor of `handlers/<domain>` vertical slices, state-machine concurrency protection (CAS) and business-error semantics (409 vs 500) have landed, and reliable async execution is in place. Before a production rollout, validate security configuration, backup and recovery, capacity, SSO and organization synchronization, monitoring, and disaster recovery for your environment.
+- **BPMN for workflow orchestration**: Uses BPMN 2.0 standard for approvals and workflows, no custom engine
+- **CMDB is more than an asset table**: Configuration items and relationships feed into incident, change, and other processes for impact analysis
+- **AI as assistant, not replacement**: Triage, summarization, and knowledge retrieval can use AI, but must degrade gracefully, have audit records, and never bypass human approval
+- **Reliable async operations**: Workflow triggers, notifications, and other critical operations use transaction + outbox pattern, not goroutine fire-and-forget
+
+> **Current version v1.6.x**: In production hardening phase. Core ITIL processes (tickets, incidents, problems, changes, SLA, CMDB) are available, but module maturity varies. Some features are still in Pilot stage. Check the [open-source capability statement](./docs/product/open-source-release-capability.md) before production use.
 
 ## Core Capabilities
 

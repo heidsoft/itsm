@@ -2,9 +2,7 @@
 
 # AI-Native ITSM
 
-面向国内企业的开源 IT 服务管理平台
-
-ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企业连接器
+一个面向国内企业的开源 IT 服务管理系统，覆盖 ITIL 核心流程，支持 BPMN 工作流编排、CMDB、SLA、知识库和多租户。
 
 [![Go](https://img.shields.io/badge/Go-1.25.13-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?logo=next.js)](https://nextjs.org/)
@@ -33,10 +31,10 @@ ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企�
   - [API 调用示例](#api-调用示例)
   - [常用开发命令](#常用开发命令)
   - [常见场景](#常见场景)
-- [关键业务闭环](#关键业务闭环)
+- [核心业务流程](#核心业务流程)
 - [可靠执行架构](#可靠执行架构)
-- [插件化集成架构](#插件化集成架构)
-- [产品界面](#产品界面)
+- [插件化集成](#插件化集成)
+- [界面预览](#界面预览)
 - [技术栈与仓库结构](#技术栈与仓库结构)
 - [开发与测试](#开发与测试)
 - [生产部署](#生产部署)
@@ -49,54 +47,44 @@ ITIL 流程 · BPMN 编排 · CMDB · SLA · 知识库/RAG · 多租户 · 企�
 
 ## 项目定位
 
-ITSM 用一套可审计、可扩展的后端规则连接服务台、事件、问题、变更、服务请求、SLA、CMDB、知识和企业协作系统。项目目标不是堆出更多菜单，而是让真实企业流程能够连续运行：失败可恢复、权限可验证、操作可追踪、结果可验收。
+这个项目的目标是提供一个能真正跑起来的企业级 ITSM 系统。不是堆功能菜单，而是让工单、事件、问题、变更、SLA、CMDB 和知识库能够串成完整的业务流程，并且支持审计追踪、权限控制和多租户隔离。
 
-项目坚持四个原则：
+几个核心设计选择：
 
-- **流程是主线**：BPMN 是统一编排层，业务状态机仍由各领域服务负责。
-- **CMDB 是上下文**：配置项、关系和影响范围进入事件、问题、变更与服务请求，而不是停留在资产列表。
-- **AI 是决策支持**：分诊、摘要、检索和建议可降级、可审计，不绕过权限和人工责任。
-- **异步动作必须可靠**：工作流启动和关键通知通过事务 command/outbox、租约、fencing、重试和死信执行，不依赖请求内 goroutine。
+- **BPMN 做流程编排**：审批、工作流用 BPMN 2.0 标准，不自己造轮子
+- **CMDB 不只是资产表**：配置项和关系会进入事件、变更等流程，用于影响分析
+- **AI 是辅助不是替代**：分诊、摘要、知识检索可以用 AI，但必须能降级、有审计记录，不会绕过人工审批
+- **异步操作要可靠**：工作流启动、通知发送等关键操作用事务 + outbox 模式，不依赖 goroutine  fire-and-forget
 
-> 当前处于 v1.6.x 生产加固收敛阶段：legacy controller 迁移已完成，后端统一为 `handlers/<domain>` 垂直分层；状态机并发防护（CAS）、业务错误语义（409 区分于 500）与可靠异步执行已落地。核心 ITIL 能力已经具备可运行基础，但不同领域成熟度不同。代码或页面存在不等于已达到生产承诺；开源用户请先看[开源产品能力说明](./docs/product/open-source-release-capability.md)，生产选型再结合[商业能力契约](./docs/product/itsm-commercial-capability-contract.md)和对应验收结果。
-
-开发前请先阅读[文档状态与事实源](./docs/documentation-governance.md)。`output/`、`docs/review/`、`docs/test-plan/` 和 `docs/archive/` 中的报告是历史快照，不能覆盖当前源码、运行时和最新发布证据。
-
-运行时能力以认证接口 `GET /api/v1/capabilities` 为唯一事实来源。菜单和工作台必须同时满足构建可用、部署就绪、租户就绪及用户操作权限；仓库内的成熟度表用于发布说明，不替代运行时判断。
+> **当前版本 v1.6.x**：处于生产加固阶段。核心 ITIL 流程（工单、事件、问题、变更、SLA、CMDB）已经可用，但不同模块成熟度不同。有些功能还在 Pilot 阶段，生产使用前建议先看[开源产品能力说明](./docs/product/open-source-release-capability.md)。
 
 ## 适用场景
 
-- 企业 IT 服务台统一受理、分派和跟踪员工请求。
-- 运维团队将事件、CI、SLA、问题和变更串成治理闭环。
-- 数字化平台团队通过 BPMN 配置审批和跨系统流程。
-- 私有化、SaaS 或 SaaS + MSP 模式下的多组织服务管理。
-- 基于 Go、Next.js 和开放接口进行二次开发。
+- IT 服务台：统一受理、分派和跟踪员工请求
+- 运维治理：事件、CI、SLA、问题、变更闭环管理
+- 流程自动化：通过 BPMN 配置审批和跨系统流程
+- 多组织服务：私有化、SaaS 或 MSP 模式下的多租户管理
+- 二次开发：基于 Go + Next.js 和开放 API 定制
 
 ## 能力与成熟度
 
-成熟度定义：
+| 能力域 | 状态 | 说明 |
+|:---|:---:|:---|
+| 工单与事件 | GA 候选 | 状态流转、分派、SLA、BPMN 绑定、租户隔离已完整 |
+| 工单类型与动态表单 | GA 候选 | 自定义字段、表单 Preset、Workflow/SLA 绑定 |
+| 变更管理 | GA 候选 | 风险评估、审批链（会签/或签/CAB）、回滚方案、PIR |
+| 问题与 Known Error | Pilot | 根因分析、临时方案、关联事件、知识沉淀 |
+| 服务目录与请求 | Pilot | 目录管理、请求审批、服务任务 |
+| CMDB | GA 候选 | CI 类型、配置项、关系、拓扑、影响分析 |
+| CMDB 云发现 | Pilot | 阿里云适配，自动发现和同步 |
+| BPMN 与审批 | Pilot | 流程定义、实例、任务、变量、执行历史 |
+| SLA | GA 候选 | 策略、截止时间、预警、违规统计 |
+| 知识与 RAG | Pilot | 文章管理、关键词/向量检索、问答降级 |
+| AI 辅助 | Pilot | LLM Gateway、分诊、摘要、RAG |
+| 通知与连接器 | Pilot | 站内通知、投递审计、连接器框架 |
+| RBAC/多租户 | GA 候选 | 角色权限、Endpoint ACL、租户隔离、审计日志 |
 
-- **GA 候选**：核心模型、规则和主要接口已存在，可以进入企业生产验收。
-- **Pilot**：存在真实实现，但跨模块闭环、运维或测试仍需补齐。
-- **Disabled/规划中**：骨架或入口不构成可交付能力，不应作为生产承诺。
-
-| 能力域 | 当前状态 | 已有基础 | 进入生产前重点 |
-|:---|:---:|:---|:---|
-| 工单与事件 | GA 候选 | 状态流转、分派、CI、SLA、BPMN、租户隔离；写路径（Update/Delete/生命周期操作）均已接入行级守卫，版本乐观锁恒强制 | 固化事件恢复旅程和容量验收；行级守卫需随每次新增写端点同步评估 |
-| 工单类型与动态表单 | GA 候选 | 类型快照、动态字段、Preset 安装、Workflow/SLA/Assignment 绑定、独立权限与审计 | 大规模字段配置、升级兼容和管理员 E2E 验收 |
-| 变更管理 | **GA 候选** | 风险、受影响 CI、审批（会签/或签/N-ofM 阈值 + CAB）、回滚方案、PIR；业务状态机 CAS 并发防护；提交门禁：绑定受影响 CI 必须补齐实施/回滚计划（422），同 CI 排期窗口重叠冲突拦截；影响分析（CMDB 关联/风险推荐/CAB 建议） | 回滚演练留证与审批链量级压测建议随生产验收补充；PIR 闭环深度持续收敛 |
-| 问题与 Known Error | Pilot | 根因、临时方案、关联事件、知识沉淀基础；完整状态机生命周期（open → investigating → resolved → closed）与状态机违规 409 语义 | 强化 CI 引用和知识发布闭环 |
-| 服务目录与请求 | Pilot | 目录、请求、审批、服务任务基础 | 目录版本、交付补偿和 CI 变更闭环 |
-| CMDB 核心 | GA 候选 | CI 类型、配置项、关系、历史、拓扑、影响分析 | 数据质量、规模和恢复验收；CI 历史记录在 CI 保存后单独写入，原子性需生产验证 |
-| CMDB 云发现 | Pilot | 阿里云适配与连通基础 | Job/Worker/Diff/对账、密钥服务和退役治理 |
-| BPMN 与审批 | Pilot | 定义、绑定、实例、任务、变量、历史 | 继续迁移剩余非可靠触发路径 |
-| SLA | GA 候选 | 策略、截止时间、预警、违规、指标 | 工作日历、暂停恢复和跨领域统一；合规检查使用进程时钟，分布式环境建议配置权威时间源 |
-| 知识与 RAG | Pilot | 文章、关键词/向量检索、问答降级；默认关键词后端仅为进程内后备 | 持久化向量存储、发布版本、可见性和索引一致性 |
-| AI | Pilot | LLM Gateway、分诊、摘要、RAG、审计框架 | 统一 evaluator、反馈和高风险动作治理 |
-| 通知与连接器 | Pilot | 可靠通知 outbox、投递审计、连接器框架 | 真实渠道健康检查、回调验签和重放运维 |
-| RBAC/多租户 | GA 候选 | 角色权限、Endpoint ACL、租户过滤、审计；动态权限热更新（数据库权限两表 + 缓存失效）；`super_admin` 通配权限链路（登录/`/auth/me`/前端判定对齐） | 按领域持续补权限矩阵和跨租户回归；`super_admin/sysadmin` 跨租户绕过需明确范围；用户有效性查询暂未校验租户归属 |
-
-CMDB 的正式与试点边界见 [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md)。
+> **成熟度说明**：GA 候选 = 核心功能完整，可进入生产验收；Pilot = 有真实实现，但闭环或运维还需补齐。详细限制和验收要点见各模块文档。
 
 ## 快速开始
 
@@ -302,11 +290,11 @@ open http://localhost:8090/swagger/index.html
 
 完整 API 文档见 [API 参考](./docs/api/API_REFERENCE.md)。
 
-## 关键业务闭环
+## 核心业务流程
 
 ```mermaid
 flowchart LR
-    A[告警或人工报障] --> B[事件]
+    A[告警或报障] --> B[事件]
     B --> C[关联 CI 与影响范围]
     C --> D[SLA 与 BPMN]
     D --> E[处理与恢复]
@@ -316,23 +304,27 @@ flowchart LR
     H --> I[实施 / 验证 / 回滚 / PIR]
 ```
 
-商业 MVP 聚焦四条可验收旅程：
+四条主要验收旅程：
 
-1. 事件 → CI → SLA → 流程 → 恢复 → 审计。
-2. 重复事件 → 问题 → Known Error → 知识发布 → RAG。
-3. 变更 → 影响分析 → 风险 → 审批 → 实施/回滚 → PIR。
-4. 服务目录 → 请求 → 审批 → 交付 → CI 创建或变更。
+1. **事件管理**：报障 → 事件 → CI 关联 → SLA → 流程 → 恢复 → 审计
+2. **问题管理**：重复事件 → 问题 → Known Error → 知识发布 → RAG
+3. **变更管理**：变更 → 影响分析 → 风险 → 审批 → 实施/回滚 → PIR
+4. **服务请求**：目录 → 请求 → 审批 → 交付 → CI 创建或变更
 
 ## 可靠执行架构
 
-生产部署使用同一后端镜像的三个进程角色：`itsm-init` 只执行迁移和初始化，`ITSM_PROCESS_MODE=api` 只提供 HTTP/WebSocket，`ITSM_PROCESS_MODE=worker` 执行 command、SLA、升级和索引任务。`all` 仅用于开发环境，生产启动会拒绝该模式。
+生产环境使用同一后端镜像的三个进程角色：
+
+- `itsm-init`：执行数据库迁移和初始化
+- `ITSM_PROCESS_MODE=api`：提供 HTTP/WebSocket 服务
+- `ITSM_PROCESS_MODE=worker`：执行异步任务（工作流、SLA 检查、通知、索引等）
 
 ```mermaid
 flowchart TB
     UI[Next.js Web / Open API] --> API[Go / Gin API]
     API --> DOMAIN[ITIL 领域服务]
     DOMAIN --> TX[(业务数据 + Operational Command)]
-    TX --> WORKER[Lease + Heartbeat + Fencing Worker]
+    TX --> WORKER[Lease + Heartbeat Worker]
     WORKER --> BPMN[BPMN]
     WORKER --> NOTICE[站内通知 / 企业连接器]
     WORKER --> FUTURE[AI / CMDB 同步 / 索引]
@@ -341,40 +333,31 @@ flowchart TB
     API --> OBJECT[(MinIO / S3)]
 ```
 
-当前可靠执行基座已接管：
+关键异步操作（工作流启动、通知发送、SLA 违规等）通过事务 + outbox 模式保证可靠性，支持重试、死信和投递审计。
 
-- 事件、变更的关键 BPMN 启动命令。
-- 工单创建、SLA 违规和变更审批通知生产者。
-- 站内通知及企业消息投递的幂等、重试、死信和投递审计基础。
-- 资源已删除的异步命令（如变更删除后残留的工作流/通知命令）识别为永久失败并立即进入死信，不再占用重试轮次。
+## 插件化集成
 
-设计与运维约束见 [Operational Command / Outbox](./docs/architecture/operational-command-outbox.md)。
+系统通过连接器框架对接外部系统，支持配置驱动注册：
 
-## 插件化集成架构
+| 扩展点 | 当前实现 | 配置方式 |
+|:---|:---|:---|
+| 告警源 | 通用 Webhook（支持 Prometheus Alertmanager、PagerDuty 等） | `ALERT_SOURCE_CONFIG` 指向 YAML |
+| 向量存储 | Milvus、Qdrant、PGVector，以及内存关键词后备 | `VECTOR_STORE_CONFIG` 指向 YAML 或内联配置 |
 
-后端通过连接器契约隔离外部系统差异。当前新增的告警源与向量存储扩展点使用配置驱动注册，业务服务只依赖标准接口，便于在不复制领域规则的前提下替换外部实现。
-
-| 扩展点 | 代码位置 | 当前实现 | 配置与运行方式 |
-|:---|:---|:---|:---|
-| AlertSource | `itsm-backend/connector/alert/` | 通用 Webhook 告警源；通过字段映射将 Prometheus Alertmanager、PagerDuty 等外部告警 JSON 标准化 | `ALERT_SOURCE_CONFIG` 指向 YAML 配置；启用后由 `POST /api/v1/alerts/sources/:source/ingest` 接收请求 |
-| VectorStore | `itsm-backend/connector/vector/` | Milvus、Qdrant、PGVector，以及内存关键词检索后备 | `VECTOR_STORE_CONFIG` 可传 YAML 文件路径或内联 YAML；`fallback: true` 时主存储不可用或检索失败可使用关键词后备 |
+> 未配置向量存储时，默认使用内存关键词检索，重启后数据丢失，不适合生产环境独立使用。
 
 ### 告警源接入
 
-`AlertSource` 定义告警源元数据、载荷校验和标准化契约。YAML 可声明 source、启用状态、字段映射、payload 大小限制和 Webhook 签名参数；当前 Webhook 实现使用 HMAC-SHA256 验证签名，并从认证上下文获取租户，不接受请求自报租户。
-
-仓库提供 Prometheus Alertmanager 配置示例：
+配置 YAML 声明告警源、字段映射和 Webhook 签名参数。仓库提供 Prometheus Alertmanager 示例：
 
 ```bash
 cd itsm-backend
 export ALERT_SOURCE_CONFIG=etc/alert-sources/prometheus-alertmanager.yaml
 ```
 
-接入端点需要认证及 `alert:write` 权限。`:source` 必须与已启用 YAML 配置中的 `source` 一致；接口当前完成载荷校验、验签与标准化，不在 README 中承诺未接线的自动建单或外部回写能力。
+接入端点：`POST /api/v1/alerts/sources/:source/ingest`（需要认证和 `alert:write` 权限）。
 
-### 向量存储与 RAG 迁移
-
-`VectorStore` 将检索、写入、删除、健康检查与连接关闭统一为插件接口。可参考 `itsm-backend/etc/vector-store/config.yaml.example` 配置后端：
+### 向量存储配置
 
 ```bash
 cd itsm-backend
@@ -382,13 +365,9 @@ cp etc/vector-store/config.yaml.example etc/vector-store/config.yaml
 export VECTOR_STORE_CONFIG=etc/vector-store/config.yaml
 ```
 
-配置也可以直接使用内联 YAML，并支持 `${ENV_VAR}` 展开。未配置时使用关键词存储；配置 Milvus、Qdrant 或 PGVector 且启用 `fallback` 后，查询失败会回退到关键词检索，写入同时维护主存储和关键词后备。
+配置支持 `${ENV_VAR}` 展开。启用 `fallback: true` 后，主存储不可用时会自动回退到关键词检索。
 
-> 未配置时默认创建内存关键词后端，数据仅存于进程内存，重启丢失，不适合生产环境作为独立存储使用。
-
-知识文章索引采用迁移期双写：`RAGService` 只生成一次 embedding，同时写入连接器 `VectorStore` 与旧版 `vectors` 表；删除文章时也清理两侧数据。这一策略用于迁移期间保持新旧检索路径同步，不代表两套存储已经可以脱离一致性监控独立运行。
-
-## 产品界面
+## 界面预览
 
 | 事件与问题 | 变更与 CMDB |
 |:---:|:---:|
@@ -452,37 +431,29 @@ python3 output/dev_business_flow_test.py
 
 ## 生产部署
 
-项目支持三种部署模式：
+支持三种部署模式：
 
-- `private`：私有化部署。
-- `saas`：平台托管多个企业租户。
-- `saas_msp`：平台与 MSP 协同服务多个客户组织。
-
-生成生产配置后，先修改和核对所有凭据与域名，再部署：
+- **private**：私有化部署，单企业使用
+- **saas**：多租户 SaaS，平台托管
+- **saas_msp**：SaaS + MSP，平台与服务商协同
 
 ```bash
-make prod-init
-
-# 编辑 .env.prod，配置固定 VERSION、真实密码、JWT、域名和外部依赖
-make prod-deploy
-make prod-health
+make prod-init        # 生成生产配置
+# 编辑 .env.prod，修改密码、JWT、域名等
+make prod-deploy      # 部署
+make prod-health      # 检查状态
 ```
 
-手工使用 Compose 时必须显式传入同一份环境文件：
+上线前检查清单：
 
-```bash
-docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
-```
+- [ ] 修改所有默认密码和密钥（`ADMIN_PASSWORD`、`JWT_SECRET`、数据库、Redis）
+- [ ] 配置 TLS 证书（在网关/负载均衡器终止）
+- [ ] 执行数据库迁移和备份恢复演练
+- [ ] 验证租户隔离和 RBAC 权限
+- [ ] 测试容量、故障恢复和死信重放
+- [ ] 验收 CMDB、AI、连接器等已启用模块
 
-上线前至少完成：
-
-- 在企业入口网关/负载均衡器终止 TLS，并限制 Compose 的 80 端口仅接受该入口流量；同时完成强密码、SSO/组织同步方案和最小权限配置。
-- 显式数据库迁移、备份恢复和版本回滚演练。
-- 租户隔离、RBAC、审计、Webhook/回调验签验证。
-- 容量、故障恢复、队列积压和死信重放测试。
-- 对启用的 CMDB、AI、RAG、连接器逐项完成 readiness 验收。
-
-不要把开发默认配置用于生产。完整操作见[部署优化报告](./docs/DEPLOYMENT_OPTIMIZATION.md)、[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维运行手册](./docs/runbooks/production-initialization.md)。
+> 不要把开发默认配置用于生产。详细步骤见[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维手册](./docs/runbooks/production-initialization.md)。
 
 ## 文档导航
 

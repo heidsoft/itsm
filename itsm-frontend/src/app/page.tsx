@@ -175,7 +175,7 @@ export default function HomePage() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto pt-8 border-t border-gray-100">
               {[
-                { label: '开源协议', value: 'MIT' },
+                { label: '开源协议', value: 'Apache 2.0' },
                 { label: '技术栈', value: 'Next.js + Go' },
                 { label: 'AI 能力', value: 'RAG + LLM' },
                 { label: '部署方式', value: 'Docker' },
@@ -323,12 +323,12 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-white transition-colors text-sm"
               >
-                MIT License
+                Apache License 2.0
               </Link>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} AI-Native ITSM. Open Source under MIT License.</p>
+            <p>&copy; {new Date().getFullYear()} AI-Native ITSM. Open Source under Apache License 2.0.</p>
           </div>
         </div>
       </footer>
