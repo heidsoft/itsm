@@ -37,6 +37,14 @@ jobs:
       DEPLOYMENT_MODE: private
       MAX_RETRIES: '120'
       RETRY_INTERVAL: '3'
+      # Use official Docker Hub images in CI (GitHub runners have direct access)
+      # DaoCloud proxy blocks requests from GitHub Actions IP ranges
+      POSTGRES_IMAGE: pgvector/pgvector:pg17
+      REDIS_IMAGE: redis:7-alpine
+      MINIO_IMAGE: minio/minio:latest
+      OLLAMA_IMAGE: ollama/ollama:latest
+      PROMETHEUS_IMAGE: prom/prometheus:latest
+      GRAFANA_IMAGE: grafana/grafana:10.1.0
     steps:
       - name: Checkout
         uses: actions/checkout@v7
