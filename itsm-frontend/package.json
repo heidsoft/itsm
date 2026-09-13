@@ -54,7 +54,7 @@
     "framer-motion": "^12.42.2",
     "lodash-es": "^4.18.1",
     "lucide-react": "^0.525.0",
-    "next": "15.5.22",
+    "next": "15.5.24",
     "rc-field-form": "^2.7.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -91,7 +91,7 @@
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
     "eslint": "^9",
-    "eslint-config-next": "15.5.22",
+    "eslint-config-next": "15.5.24",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -108,7 +108,7 @@
   },
   "overrides": {
     "postcss": "8.5.25",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
     "uuid": "14.0.1",
     "nanoid": "^3.3.18"
   },
