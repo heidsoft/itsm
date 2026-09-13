@@ -231,7 +231,14 @@ func (h *Handler) PatchWorkflow(c *gin.Context) {
 }
 
 // GetApprovalRecords 获取审批记录
+// Deprecated: This API is deprecated. Use GET /api/v1/bpmn/tasks instead.
+// Sunset: Sat, 01 Nov 2026 00:00:00 GMT
 func (h *Handler) GetApprovalRecords(c *gin.Context) {
+	h.logger.Warnw("Deprecated API called", "path", c.FullPath(), "method", "GET /approval-records", "successor", "GET /api/v1/bpmn/tasks")
+	c.Header("Deprecation", "true")
+	c.Header("Sunset", "Sat, 01 Nov 2026 00:00:00 GMT")
+	c.Header("Link", `</api/v1/bpmn/tasks>; rel="successor-version"`)
+
 	var req dto.GetApprovalRecordsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		// 尝试从查询参数获取
@@ -282,7 +289,14 @@ func (h *Handler) GetApprovalRecords(c *gin.Context) {
 }
 
 // SubmitApproval 提交审批
+// Deprecated: This API is deprecated. Use POST /api/v1/bpmn/tasks/:id/decisions instead.
+// Sunset: Sat, 01 Nov 2026 00:00:00 GMT
 func (h *Handler) SubmitApproval(c *gin.Context) {
+	h.logger.Warnw("Deprecated API called", "path", c.FullPath(), "method", "POST /approvals/submit", "successor", "POST /api/v1/bpmn/tasks/:id/decisions")
+	c.Header("Deprecation", "true")
+	c.Header("Sunset", "Sat, 01 Nov 2026 00:00:00 GMT")
+	c.Header("Link", `</api/v1/bpmn/tasks/:id/decisions>; rel="successor-version"`)
+
 	var req struct {
 		TicketID         int    `json:"ticketId" binding:"required"`
 		ApprovalID       int    `json:"approvalId" binding:"required"`

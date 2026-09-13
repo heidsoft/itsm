@@ -317,17 +317,6 @@ func (s *ApprovalService) SubmitApproval(ctx context.Context, recordID int, user
 		return fmt.Errorf("failed to commit approval transaction: %w", err)
 	}
 
-	// ③ 同步驱动 BPMN 审批任务：若工单已启动审批流程实例，则经桥接完成对应 BPMN 任务，
-	// 保证流程实例与审批记录状态一致。桥接失败（如当前用户非该任务候选）仅告警，不回滚记录。
-	if action == "approve" || action == "reject" {
-		if rec, rerr := s.client.ApprovalRecord.Get(ctx, recordID); rerr == nil && rec != nil {
-			bridge := NewBPMNApprovalBridge(s.client, s.logger)
-			if _, berr := bridge.CompleteBusinessApprovalTask(ctx, tenantID, userID, "approval", rec.TicketID, action, comment); berr != nil {
-				s.logger.Warnw("同步BPMN审批任务失败（审批记录已更新）", "error", berr, "record_id", recordID, "ticket_id", rec.TicketID)
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -736,149 +725,16 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 	}
 
 	// BPMN 流程实例由 ticket_service 的 CommandStartBPMN outbox 命令统一启动（businessKey=ticket:<id>），
-	// 此处不再重复启动（避免双实例 P0）。ApprovalRecord 仍从 legacy ApprovalWorkflow.Nodes 创建，
-	// 供审批中心 UI 展示；长期迁移方案见 CHANGELOG.md [Unreleased]。
+	// 审批中心 UI 已迁移到直接消费 GET /bpmn/tasks，ApprovalRecord 不再写入（Phase 2 清理）。
+	// 保留 workflow 解析作为 guard：确认工单类型有绑定的审批流程才返回成功。
+	s.logger.Infow("TriggerApproval: ApprovalRecord write disabled (Phase 2), BPMN tasks are the authoritative source",
+		"ticket_id", req.TicketID,
+		"ticket_number", req.TicketNumber,
+		"workflow_id", workflow.ID,
+		"workflow_name", workflow.Name,
+	)
 
-	existing, err := s.client.ApprovalRecord.Query().
-		Where(
-			approvalrecord.TicketIDEQ(req.TicketID),
-			approvalrecord.WorkflowIDEQ(workflow.ID),
-			approvalrecord.TenantIDEQ(req.TenantID),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check existing approval records: %w", err)
-	}
-	if existing > 0 {
-		return nil, nil
-	}
-
-	// 解析工作流节点
-	nodes, err := s.parseWorkflowNodes(workflow.Nodes)
-	if err != nil {
-		s.logger.Errorw("Failed to parse workflow nodes", "error", err)
-		return nil, fmt.Errorf("failed to parse workflow: %w", err)
-	}
-
-	if len(nodes) == 0 {
-		s.logger.Warnw("Workflow has no nodes", "workflow_id", workflow.ID)
-		return nil, nil
-	}
-
-	// 创建审批记录
-	records := make([]*ent.ApprovalRecord, 0)
-	approverNames := make(map[int]string)
-	for i, node := range nodes {
-		level := node.Level
-		if level < 1 {
-			level = i + 1
-		}
-
-		// 计算截止时间
-		dueDate := time.Now()
-		if node.TimeoutHours > 0 {
-			dueDate = dueDate.Add(time.Duration(node.TimeoutHours) * time.Hour)
-		}
-
-		approverIDs := node.ApproverIDs
-		if len(approverIDs) == 0 && node.AssigneeType != "" && node.AssigneeValue != "" {
-			approverID, approverName, resolveErr := s.resolveApprover(ctx, node.AssigneeType, node.AssigneeValue, req.TenantID, req.Amount, req)
-			if resolveErr != nil {
-				s.logger.Warnw("Failed to resolve approver",
-					"error", resolveErr,
-					"node_index", i,
-					"level", level,
-					"assignee_type", node.AssigneeType,
-					"assignee_value", node.AssigneeValue,
-					"ticket_id", req.TicketID,
-					"workflow_id", workflow.ID,
-				)
-				// 不静默丢级：尝试迫降到租户管理员；仍失败则记 audit 后跳过该节点。
-				fallbackID, fallbackName, fallbackErr := s.resolveTenantAdminApprover(ctx, req.TenantID)
-				if fallbackErr == nil {
-					s.logger.Infow("Using tenant admin fallback for unresolved approver",
-						"node_index", i, "level", level,
-						"approver_id", fallbackID, "approver_name", fallbackName,
-					)
-					approverIDs = []int{fallbackID}
-					approverNames = map[int]string{fallbackID: fallbackName}
-				} else {
-					s.logger.Errorw("Approver resolution failed and no fallback available; skipping node",
-						"original_error", resolveErr,
-						"fallback_error", fallbackErr,
-						"node_index", i, "level", level,
-						"ticket_id", req.TicketID,
-					)
-					continue
-				}
-			} else {
-				approverIDs = []int{approverID}
-				if approverName != "" {
-					approverNames = map[int]string{approverID: approverName}
-				}
-			}
-		}
-
-		if len(approverIDs) == 0 {
-			continue
-		}
-
-		if node.ApprovalMode != "all" {
-			approverIDs = approverIDs[:1]
-		}
-
-		for _, approverID := range approverIDs {
-			// 优先使用解析阶段获得的名称（避免对同一 userID 重复查询），
-			// fallback 路径会优先填入，其他情况仍走 DB 查询。
-			approverName := approverNames[approverID]
-			if approverName == "" {
-				userEntity, err := s.client.User.Query().
-					Where(
-						user.IDEQ(approverID),
-						user.TenantIDEQ(req.TenantID),
-					).
-					Only(ctx)
-				if err != nil {
-					continue
-				}
-				approverName = userEntity.Name
-			}
-
-			record, err := s.client.ApprovalRecord.Create().
-				SetTicketNumber(req.TicketNumber).
-				SetTicketTitle(req.TicketTitle).
-				SetWorkflowName(workflow.Name).
-				SetCurrentLevel(level).
-				SetTotalLevels(len(nodes)).
-				SetApproverID(approverID).
-				SetApproverName(approverName).
-				SetStatus("pending").
-				SetWorkflowID(workflow.ID).
-				SetTicketID(req.TicketID).
-				SetStepOrder(level).
-				SetDueDate(dueDate).
-				SetTenantID(req.TenantID).
-				SetCreatedAt(time.Now()).
-				Save(ctx)
-			if err != nil {
-				s.logger.Errorw("Failed to create approval record", "error", err, "node", i)
-				continue
-			}
-
-			records = append(records, record)
-			s.logger.Infow("Created approval record",
-				"record_id", record.ID,
-				"approver_id", approverID,
-				"approver_name", approverName,
-				"level", level,
-				"node_index", i,
-				"workflow_id", workflow.ID,
-				"ticket_id", req.TicketID,
-			)
-		}
-	}
-
-	return records, nil
+	return []*ent.ApprovalRecord{}, nil
 }
 
 // resolveApprovalWorkflow 解析工单类型对应的审批工作流。

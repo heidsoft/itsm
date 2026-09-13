@@ -412,7 +412,7 @@ func TestApprovalService_GetApprovalRecords(t *testing.T) {
 	assert.GreaterOrEqual(t, len(records), 1)
 }
 
-func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testing.T) {
+func TestApprovalService_TriggerApproval_Phase2_NoApprovalRecordWrite(t *testing.T) {
 	client, service, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -424,7 +424,7 @@ func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testin
 	approver2, err := createApprovalTestUser(ctx, client, testTenant.ID, "trigger1b")
 	require.NoError(t, err)
 
-	workflow, err := client.ApprovalWorkflow.Create().
+	_, err = client.ApprovalWorkflow.Create().
 		SetName("Urgent Ticket Workflow").
 		SetTicketType("ticket").
 		SetPriority("urgent").
@@ -455,6 +455,7 @@ func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testin
 		Save(ctx)
 	require.NoError(t, err)
 
+	// Phase 2: TriggerApproval returns empty slice, no ApprovalRecord created
 	records, err := service.TriggerApproval(ctx, &ApprovalTriggerRequest{
 		TicketID:     ticketEntity.ID,
 		TicketNumber: ticketEntity.TicketNumber,
@@ -465,20 +466,20 @@ func TestApprovalService_TriggerApproval_CreateRecords_FromApproverIDs(t *testin
 		TenantID:     testTenant.ID,
 	})
 	require.NoError(t, err)
-	require.Len(t, records, 2)
+	assert.Empty(t, records, "Phase 2: TriggerApproval should return empty slice")
 
+	// Verify no ApprovalRecord was created in the database
 	count, err := client.ApprovalRecord.Query().
 		Where(
 			approvalrecord.TenantIDEQ(testTenant.ID),
-			approvalrecord.WorkflowIDEQ(workflow.ID),
 			approvalrecord.TicketIDEQ(ticketEntity.ID),
 		).
 		Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, 2, count)
+	assert.Equal(t, 0, count, "Phase 2: No ApprovalRecord should be created")
 }
 
-func TestApprovalService_TriggerApproval_IsIdempotent(t *testing.T) {
+func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testing.T) {
 	client, service, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -528,14 +529,16 @@ func TestApprovalService_TriggerApproval_IsIdempotent(t *testing.T) {
 		TenantID:     testTenant.ID,
 	}
 
+	// Phase 2: Multiple calls all return empty slice
 	records1, err := service.TriggerApproval(ctx, req)
 	require.NoError(t, err)
-	require.Len(t, records1, 1)
+	assert.Empty(t, records1, "Phase 2: First call should return empty slice")
 
 	records2, err := service.TriggerApproval(ctx, req)
 	require.NoError(t, err)
-	require.Nil(t, records2)
+	assert.Empty(t, records2, "Phase 2: Second call should also return empty slice")
 
+	// Verify no ApprovalRecord was ever created
 	recordCount, err := client.ApprovalRecord.Query().
 		Where(
 			approvalrecord.TenantIDEQ(testTenant.ID),
@@ -543,7 +546,7 @@ func TestApprovalService_TriggerApproval_IsIdempotent(t *testing.T) {
 		).
 		Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, 1, recordCount)
+	assert.Equal(t, 0, recordCount, "Phase 2: No ApprovalRecord should be created after multiple calls")
 }
 
 func TestApprovalService_SubmitApproval_Approve_UpdatesTicketWhenLastPending(t *testing.T) {
