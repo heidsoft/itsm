@@ -115,7 +115,7 @@ type BulkFilter struct {
 	Limit         int
 }
 
-func (f BulkFilter) validate() error {
+func (f *BulkFilter) validate() error {
 	if f.TenantID <= 0 {
 		return fmt.Errorf("tenant id is required")
 	}

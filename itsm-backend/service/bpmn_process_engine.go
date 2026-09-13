@@ -1690,7 +1690,11 @@ type bpmnProcessDefinitionService struct {
 }
 
 func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Context, req *CreateProcessDefinitionRequest) (*ent.ProcessDefinition, error) {
-	if _, err := NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
+	if req.Publish {
+		if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
+			return nil, err
+		}
+	} else if _, err := NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
 		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
 	}
 	tx, err := s.client.Tx(ctx)
@@ -1762,6 +1766,32 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		return nil, fmt.Errorf("提交流程定义事务失败: %w", err)
 	}
 	return definition, nil
+}
+
+func validateActivatableBPMNXML(bpmnXML string) error {
+	result, err := NewBPMNLintService().LintBPMNXML([]byte(bpmnXML))
+	if err != nil {
+		return fmt.Errorf("BPMN 发布校验失败: %w", err)
+	}
+	if !result.HasErrors {
+		return nil
+	}
+
+	messages := make([]string, 0, result.ErrorCount)
+	for _, issue := range result.Issues {
+		if issue.Severity != "error" {
+			continue
+		}
+		if issue.ElementID != "" {
+			messages = append(messages, fmt.Sprintf("[%s] %s", issue.ElementID, issue.Message))
+			continue
+		}
+		messages = append(messages, issue.Message)
+	}
+	if len(messages) == 0 {
+		return fmt.Errorf("BPMN 发布校验失败")
+	}
+	return fmt.Errorf("BPMN 发布校验失败: %s", strings.Join(messages, "；"))
 }
 
 // getNextVersion 获取下一个版本号（major.minor.0）。约定与部署服务一致：递增 minor、patch 归零、minor 不封顶。
@@ -1871,6 +1901,20 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 		return nil, err
 	}
 
+	willBeActive := definition.IsActive
+	if req.IsActive != nil {
+		willBeActive = *req.IsActive
+	}
+	if willBeActive {
+		bpmnXML := req.BPMNXML
+		if bpmnXML == "" {
+			bpmnXML = string(definition.BpmnXML)
+		}
+		if err := validateActivatableBPMNXML(bpmnXML); err != nil {
+			return nil, err
+		}
+	}
+
 	update := s.client.ProcessDefinition.UpdateOne(definition)
 
 	if req.Name != "" {
@@ -1910,8 +1954,8 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	if strings.TrimSpace(req.BPMNXML) == "" {
 		return nil, fmt.Errorf("发布流程必须包含 BPMN XML")
 	}
-	if _, err = NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
-		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
+	if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
+		return nil, err
 	}
 	if err := validateCandidateDefinition(req.CandidateDefinition); err != nil {
 		return nil, fmt.Errorf("候选流程策略校验失败: %w", err)
@@ -2064,6 +2108,11 @@ func (s *bpmnProcessDefinitionService) SetProcessDefinitionActive(ctx context.Co
 	definition, err := s.GetProcessDefinition(ctx, key, version)
 	if err != nil {
 		return err
+	}
+	if active {
+		if err := validateActivatableBPMNXML(string(definition.BpmnXML)); err != nil {
+			return err
+		}
 	}
 
 	_, err = s.client.ProcessDefinition.UpdateOne(definition).

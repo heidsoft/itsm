@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -72,7 +73,7 @@ func TestResolvePolicy(t *testing.T) {
 
 // TestApplyGuard_Silent 验证 silent 策略不读 DB（用于测试隔离）。
 func TestApplyGuard_Silent(t *testing.T) {
-	violations, err := ApplyGuard(nil, nil, nil, PolicySilent)
+	violations, err := ApplyGuard(context.TODO(), nil, nil, PolicySilent)
 	require.NoError(t, err)
 	assert.Nil(t, violations)
 }

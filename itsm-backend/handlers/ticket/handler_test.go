@@ -28,7 +28,6 @@ import (
 type mockRepository struct {
 	mu          sync.Mutex
 	tickets     map[int]*Ticket
-	events      []string
 	nextID      int
 	statsCalled bool
 }
@@ -347,17 +346,6 @@ func doJSON(t *testing.T, r http.Handler, method, path string, body interface{},
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
-}
-
-func strconvAtoi(s string) int {
-	n := 0
-	for _, c := range s {
-		if c < '0' || c > '9' {
-			return 0
-		}
-		n = n*10 + int(c-'0')
-	}
-	return n
 }
 
 // -----------------------------------------------------------------------------

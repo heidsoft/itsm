@@ -30,33 +30,6 @@ func newTicketNumberRepository(db *sql.DB) *ticketNumberRepository {
 	return &ticketNumberRepository{db: db}
 }
 
-// beginLockedLookup 开启一个事务并加 FOR UPDATE NOWAIT 锁，返回 tx 与回退函数。
-// 回退函数负责：未提交时回滚；ErrNoRows 时回滚后返回 nil；其它错误回滚后包装返回。
-//
-// 使用方调用顺序：
-//
-//	tx, rollback := r.beginLockedLookup(ctx, tenantID, prefix+"%")
-//	defer rollback(&err)
-//	if err := tx.QueryRowContext(...).Scan(&maxNum); err != nil { ... }
-//	if err := tx.Commit(); err != nil { ... }
-func (r *ticketNumberRepository) beginLockedLookup(ctx context.Context, tenantID int, likePattern string) (*sql.Tx, func(*error), error) {
-	if r == nil || r.db == nil {
-		return nil, func(*error) {}, errors.New("ticket number repository not initialised")
-	}
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, func(*error) {}, fmt.Errorf("begin tx: %w", err)
-	}
-	rollback := func(errp *error) {
-		if errp != nil && *errp != nil {
-			_ = tx.Rollback()
-			return
-		}
-		// err==nil 表示调用方已 Commit，无需 Rollback；调用方负责 Commit
-	}
-	return tx, rollback, nil
-}
-
 // queryMaxLocked 在已开启的事务内查询"本月已有最大工单号"，同时加 FOR UPDATE NOWAIT。
 // 查询不到（ErrNoRows）返回空串且不视为错误；其它错误向上抛出。
 func (r *ticketNumberRepository) queryMaxLocked(ctx context.Context, tx *sql.Tx, tenantID int, likePattern string) (string, error) {

@@ -34,7 +34,6 @@ func FilesystemMigrations(dir string) ([]Migration, error) {
 
 	type pair struct {
 		up    string
-		down  string
 		desc  string
 		title string
 	}

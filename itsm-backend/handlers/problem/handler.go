@@ -21,10 +21,6 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) toDTO(p *Problem) *dto.ProblemResponse {
-	return h.toDTOWithUsers(p, nil)
-}
-
 func (h *Handler) toDTOWithUsers(p *Problem, userMap map[int]string) *dto.ProblemResponse {
 	if p == nil {
 		return nil

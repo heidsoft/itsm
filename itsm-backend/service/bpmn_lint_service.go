@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"itsm-backend/dto"
@@ -86,6 +87,9 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 
 	// --- 规则组 2：任务配置 ---
 	for _, task := range process.UserTasks {
+		if strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "rework") {
+			continue
+		}
 		if task.Assignee == "" && task.CandidateUsers == "" && task.CandidateGroups == "" {
 			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
 				Severity: "warning", Category: "tasks",
@@ -97,6 +101,9 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 
 	// --- 规则组 3：连通性（入边/出边统计 + 不可达检测） ---
 	adjacency, nodeSet, flowTargets := buildGraph(process)
+
+	// --- 规则组 3.1：审批拒绝策略可执行性 ---
+	s.lintApprovalRejectionConfiguration(process, adjacency, result)
 
 	// --- 规则组 3.0：重复序列流 ID（2026-09-07 补）---
 	// encoding/xml 解析同名 sequenceFlow 时后者静默覆盖前者，
@@ -206,6 +213,134 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 			})
 		}
 	}
+}
+
+func (s *BPMNLintService) lintApprovalRejectionConfiguration(process *BPMNProcess, adjacency map[string][]string, result *dto.BPMNLintResult) {
+	reworkTasks := make(map[string]*BPMNUserTask)
+	approvalTaskIDs := make(map[string]bool)
+	for _, task := range process.UserTasks {
+		switch strings.ToLower(strings.TrimSpace(task.TaskPurpose)) {
+		case "rework":
+			reworkTasks[task.ID] = task
+			if hasStaticTaskAssignment(task) {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "approval",
+					ElementID: task.ID, ElementName: task.Name,
+					Message: fmt.Sprintf("返工任务 %s 不能配置固定执行人或候选人，必须由发起人回退规则分配", display(task.Name, task.ID)),
+				})
+			}
+		case "approval":
+			approvalTaskIDs[task.ID] = true
+		}
+	}
+
+	for _, task := range process.UserTasks {
+		strategy := strings.ToLower(strings.TrimSpace(task.RejectStrategy))
+		if strategy == "" || strategy == "terminate" {
+			continue
+		}
+		if !approvalTaskIDs[task.ID] {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "approval",
+				ElementID: task.ID, ElementName: task.Name,
+				Message: fmt.Sprintf("用户任务 %s 配置了拒绝策略 %q，但 taskPurpose 必须为 approval", display(task.Name, task.ID), task.RejectStrategy),
+			})
+			continue
+		}
+
+		switch strategy {
+		case "gateway":
+			if !hasApprovalRejectionFlow(process, task.ID) {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "approval",
+					ElementID: task.ID, ElementName: task.Name,
+					Message: fmt.Sprintf("审批任务 %s 的拒绝分支必须有直接出边，并显式判断 approvalAction == 'reject' 或 approvalResult == 'rejected'", display(task.Name, task.ID)),
+				})
+			}
+		case "to_requester":
+			reworkTask := findRejectedReworkTask(process, task.ID, reworkTasks)
+			if reworkTask == nil {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "approval",
+					ElementID: task.ID, ElementName: task.Name,
+					Message: fmt.Sprintf("审批任务 %s 的退回发起人分支必须直接连接到 taskPurpose=rework 的返工任务，并使用拒绝条件", display(task.Name, task.ID)),
+				})
+				continue
+			}
+			if !reworkCanReachApproval(reworkTask.ID, adjacency, approvalTaskIDs) {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "approval",
+					ElementID: reworkTask.ID, ElementName: reworkTask.Name,
+					Message: fmt.Sprintf("返工任务 %s 必须存在回到审批任务的路径", display(reworkTask.Name, reworkTask.ID)),
+				})
+			}
+		default:
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "approval",
+				ElementID: task.ID, ElementName: task.Name,
+				Message: fmt.Sprintf("审批任务 %s 使用了不支持的拒绝策略 %q", display(task.Name, task.ID), task.RejectStrategy),
+			})
+		}
+	}
+}
+
+func hasStaticTaskAssignment(task *BPMNUserTask) bool {
+	return strings.TrimSpace(task.Assignee) != "" ||
+		strings.TrimSpace(task.CandidateUsers) != "" ||
+		strings.TrimSpace(task.CandidateGroups) != ""
+}
+
+func hasApprovalRejectionFlow(process *BPMNProcess, taskID string) bool {
+	for _, flow := range process.SequenceFlows {
+		if flow.SourceRef == taskID && isApprovalRejectionCondition(flow.ConditionExpression) {
+			return true
+		}
+	}
+	return false
+}
+
+func findRejectedReworkTask(process *BPMNProcess, taskID string, reworkTasks map[string]*BPMNUserTask) *BPMNUserTask {
+	for _, flow := range process.SequenceFlows {
+		if flow.SourceRef != taskID || !isApprovalRejectionCondition(flow.ConditionExpression) {
+			continue
+		}
+		if reworkTask := reworkTasks[flow.TargetRef]; reworkTask != nil {
+			return reworkTask
+		}
+	}
+	return nil
+}
+
+var (
+	approvalActionRejectCondition   = regexp.MustCompile(`(?i)(?:variables\s*\[\s*['"]approvalaction['"]\s*\]|approvalaction)\s*==\s*['"]reject['"]`)
+	approvalResultRejectedCondition = regexp.MustCompile(`(?i)(?:variables\s*\[\s*['"]approvalresult['"]\s*\]|approvalresult)\s*==\s*['"]rejected['"]`)
+)
+
+func isApprovalRejectionCondition(condition *BPMNConditionExpression) bool {
+	if condition == nil {
+		return false
+	}
+	return approvalActionRejectCondition.MatchString(condition.Expression) ||
+		approvalResultRejectedCondition.MatchString(condition.Expression)
+}
+
+func reworkCanReachApproval(reworkTaskID string, adjacency map[string][]string, approvalTaskIDs map[string]bool) bool {
+	visited := map[string]bool{reworkTaskID: true}
+	queue := []string{reworkTaskID}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		for _, next := range adjacency[current] {
+			if approvalTaskIDs[next] {
+				return true
+			}
+			if !visited[next] {
+				visited[next] = true
+				queue = append(queue, next)
+			}
+		}
+	}
+	return false
 }
 
 // findFlowByID 按 id 查找序列流。

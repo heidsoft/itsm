@@ -24,9 +24,7 @@ func (m *repairRepoMock) ListPendingApprovals(ctx context.Context, tenantID, tar
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	out := make([]*ServiceRequest, 0)
-	for _, r := range m.requests {
-		out = append(out, r)
-	}
+	out = append(out, m.requests...)
 	return out, len(out), nil
 }
 

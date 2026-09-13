@@ -106,13 +106,6 @@ func (s *SystemConfigService) ListSystemConfigs(ctx context.Context, tenantID in
 		if err := s.InitDefaultConfigs(ctx, tenantID); err != nil {
 			s.logger.Warnf("懒加载默认配置失败: %v", err)
 		}
-		total, err = s.client.SystemConfig.Query().
-			Where(systemconfig.TenantIDEQ(tenantID), systemconfig.DeletedAtIsNil()).
-			Count(ctx)
-		if err != nil {
-			s.logger.Errorf("重新统计配置总数失败: %v", err)
-			return nil, 0, fmt.Errorf("重新统计配置总数失败: %w", err)
-		}
 	}
 
 	query := s.client.SystemConfig.Query().

@@ -76,11 +76,6 @@ func (m *mockApplicationService) DeleteMicroservice(ctx context.Context, id int,
 	return m.Called(ctx, id, tenantID).Error(0)
 }
 
-func newApplicationHandler(m *mockApplicationService) *Handler {
-	gin.SetMode(gin.TestMode)
-	return NewHandler(m)
-}
-
 func appCtx(method, path, body string, tenantID int) (*httptest.ResponseRecorder, *gin.Context) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)

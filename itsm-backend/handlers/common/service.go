@@ -225,7 +225,7 @@ func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if u.Permissions == nil || len(u.Permissions) == 0 {
+	if len(u.Permissions) == 0 {
 		u.Permissions = s.getUserPermissions(u.Role)
 	}
 	return u, nil
