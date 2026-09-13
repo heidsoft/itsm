@@ -724,7 +724,7 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 	}
 
 	// ②/③ 解析审批的工单类型对应的流程：BPMN ProcessBinding 优先，未迁移类型回退旧 ApprovalWorkflow。
-	workflow, defKey, err := s.resolveApprovalWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
+	workflow, _, err := s.resolveApprovalWorkflow(ctx, req.TicketType, req.Priority, req.TenantID)
 	if err != nil {
 		s.logger.Warnw("Error resolving approval workflow", "error", err)
 		return nil, nil
@@ -735,11 +735,9 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 		return nil, nil
 	}
 
-	// ③ 解析到 BPMN 审批流程：启动流程实例，由引擎真实求值（候选组→审批人）并生成待办任务。
-	// 失败仅告警，不阻塞工单创建。
-	if defKey != "" {
-		s.startApprovalProcess(ctx, req, defKey)
-	}
+	// BPMN 流程实例由 ticket_service 的 CommandStartBPMN outbox 命令统一启动（businessKey=ticket:<id>），
+	// 此处不再重复启动（避免双实例 P0）。ApprovalRecord 仍从 legacy ApprovalWorkflow.Nodes 创建，
+	// 供审批中心 UI 展示；长期迁移方案见 CHANGELOG.md [Unreleased]。
 
 	existing, err := s.client.ApprovalRecord.Query().
 		Where(
@@ -903,23 +901,6 @@ func (s *ApprovalService) resolveApprovalWorkflow(ctx context.Context, ticketTyp
 		return nil, "", ferr
 	}
 	return wf, "", nil
-}
-
-// startApprovalProcess 启动审批 BPMN 流程实例（业务键 approval:<ticketID>），
-// 由 BPMN 引擎真实求值候选组并生成待办任务。失败仅告警，不阻塞工单创建。
-func (s *ApprovalService) startApprovalProcess(ctx context.Context, req *ApprovalTriggerRequest, defKey string) {
-	triggerCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, req.TenantID)
-	engine := NewCustomProcessEngine(s.client, s.logger)
-	businessKey := fmt.Sprintf("approval:%d", req.TicketID)
-	variables := map[string]interface{}{
-		"ticketId":     req.TicketID,
-		"ticketNumber": req.TicketNumber,
-		"ticketType":   req.TicketType,
-		"priority":     req.Priority,
-	}
-	if _, err := engine.StartProcess(triggerCtx, defKey, businessKey, variables); err != nil {
-		s.logger.Warnw("启动审批BPMN流程实例失败", "error", err, "ticket_id", req.TicketID, "def_key", defKey)
-	}
 }
 
 // parseLegacyApprovalWorkflowID 从迁移流程定义 Key（legacy_approval_<id>）提取原始工作流 ID。

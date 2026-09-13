@@ -11,6 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/processinstance"
 	entTicket "itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
@@ -1488,4 +1489,97 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
+}
+
+// Regression: ticket creation must not spawn duplicate BPMN approval instances.
+// Phase 1 fix: TriggerApproval no longer calls startApprovalProcess; only the
+// transactional outbox path (CommandStartBPMN) creates a ProcessInstance.
+func TestTicketService_CreateTicket_SingleBPMNInstance(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	ctx := context.Background()
+	logger := zaptest.NewLogger(t).Sugar()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Single BPMN Tenant").
+		SetCode("single-bpmn").
+		SetDomain("single-bpmn.test").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	requester, err := client.User.Create().
+		SetUsername("single_bpmn_requester").
+		SetEmail("single-bpmn@example.com").
+		SetName("Single BPMN Requester").
+		SetPasswordHash("hash").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	deployment, err := client.ProcessDeployment.Create().
+		SetDeploymentID("dep-single-bpmn").
+		SetDeploymentName("Single BPMN Test").
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.ProcessDefinition.Create().
+		SetKey("ticket_general_flow").
+		SetName("Ticket General Flow").
+		SetBpmnXML([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="ticket_general_flow" name="Ticket General Flow" isExecutable="true">
+    <bpmn:startEvent id="start" name="Start"/>
+    <bpmn:endEvent id="end" name="End"/>
+    <bpmn:sequenceFlow id="flow1" sourceRef="start" targetRef="end"/>
+  </bpmn:process>
+</bpmn:definitions>`)).
+		SetDeploymentID(deployment.ID).
+		SetTenantID(tenant.ID).
+		SetIsActive(true).
+		SetIsLatest(true).
+		Save(ctx)
+	require.NoError(t, err)
+
+	ticketService := NewTicketServiceForTest(client, logger)
+	engine := NewCustomProcessEngine(client, logger)
+	ticketService.SetProcessTriggerService(NewProcessTriggerService(client, engine))
+
+	created, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
+		Title:       "Single BPMN Instance Test",
+		Description: "Verify only one BPMN instance is created",
+		Priority:    "medium",
+		RequesterID: requester.ID,
+	}, tenant.ID)
+	require.NoError(t, err)
+
+	ticketBusinessKey := fmt.Sprintf("ticket:%d", created.ID)
+	approvalBusinessKey := fmt.Sprintf("approval:%d", created.ID)
+
+	var ticketInstances []*ent.ProcessInstance
+	require.Eventually(t, func() bool {
+		var queryErr error
+		ticketInstances, queryErr = client.ProcessInstance.Query().
+			Where(
+				processinstance.TenantIDEQ(tenant.ID),
+				processinstance.BusinessKeyEQ(ticketBusinessKey),
+			).
+			All(ctx)
+		if queryErr != nil {
+			return false
+		}
+		return len(ticketInstances) == 1
+	}, 3*time.Second, 20*time.Millisecond, "Expected exactly one ProcessInstance with businessKey ticket:<id>")
+
+	approvalInstances, err := client.ProcessInstance.Query().
+		Where(
+			processinstance.TenantIDEQ(tenant.ID),
+			processinstance.BusinessKeyEQ(approvalBusinessKey),
+		).
+		All(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, len(approvalInstances), "Expected zero ProcessInstances with businessKey approval:<id>")
 }
