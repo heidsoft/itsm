@@ -10,7 +10,16 @@ import (
 	"github.com/expr-lang/expr"
 )
 
-// ExpressionEngine 表达式引擎
+// ExpressionEngine 是 BPMN 运行时条件求值的唯一内核（基于 expr-lang）。
+//
+// 所有流程网关条件、ServiceTask 表达式、变量计算均通过本引擎执行。
+// middleware/acl_expression_engine.go 是独立的手写解析器，专用于 API 访问控制，
+// 因安全关键域需要最小攻击面而故意不复用本引擎。
+//
+// 表达式方言统一规则：
+//   - BPMN XML 中的 <conditionExpression> 使用 ${...} 包裹，引擎自动剥离后求值
+//   - 结构化条件（审批链优先级/金额范围、事件规则）是配置数据结构，不走表达式引擎
+//   - 禁止新增字符串替换、正则匹配或中文关键词等非标求值路径
 type ExpressionEngine struct {
 	// 可选的外部函数映射
 	Functions map[string]interface{}

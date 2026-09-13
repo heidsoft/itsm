@@ -666,9 +666,9 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		if assignee == "" {
 			assignee = getUserID("assignee_id")
 		}
-		// 如果还是没有，根据任务名称自动分配
+		// 如果还是没有，根据流程变量或数据库规则分配
 		if assignee == "" {
-			assignee = e.getDefaultAssigntee(ctx, instance, task)
+			assignee = e.getDefaultAssignee(ctx, instance, task)
 		}
 	}
 
@@ -756,12 +756,13 @@ func splitNonEmptyCSV(value string) []string {
 	return values
 }
 
-// getDefaultAssigntee 根据任务类型和业务逻辑获取默认分配人
-// 优先级：1.流程变量显式指定 > 2.数据库规则匹配 > 3.中文关键词兜底（deprecated）
-func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) string {
+// getDefaultAssignee 按优先级解析任务默认分配人：
+// 1. 流程变量显式指定 assignee
+// 2. 数据库 ticket_assignment_rules 规则匹配
+// 均无匹配时返回空字符串，由 candidateUsers/candidateGroups 或手动分配兜底。
+func (e *CustomProcessEngine) getDefaultAssignee(ctx context.Context, instance *ent.ProcessInstance, task *BPMNUserTask) string {
 	taskName := task.Name
 
-	// 第一优先：流程变量中显式指定 assignee
 	if instance.Variables != nil {
 		if assignee, ok := instance.Variables["assignee"]; ok {
 			switch val := assignee.(type) {
@@ -781,47 +782,8 @@ func (e *CustomProcessEngine) getDefaultAssigntee(ctx context.Context, instance 
 		}
 	}
 
-	// 第二优先：数据库 ticket_assignment_rules 规则匹配
 	if assigneeFromRule := e.getAssigneeFromDBRules(ctx, instance, taskName); assigneeFromRule != "" {
 		return assigneeFromRule
-	}
-
-	// 第三优先：中文关键词兜底（deprecated，未来版本将移除）
-	// 审批类任务 - 尝试分配给管理员或安全审批人
-	if strings.Contains(taskName, "审批") || strings.Contains(taskName, "审核") || strings.Contains(taskName, "批准") {
-		// 查找有审批权限的用户 (角色为 admin 或 security)
-		users, err := e.client.User.Query().
-			Where(user.RoleIn("admin", "security")).
-			Where(user.TenantID(instance.TenantID)).
-			Where(user.Active(true)).
-			Limit(1).
-			All(ctx)
-		if err == nil && len(users) > 0 {
-			return strconv.Itoa(users[0].ID)
-		}
-	}
-
-	// 处理类任务 - 分配给工程师
-	if strings.Contains(taskName, "处理") || strings.Contains(taskName, "执行") {
-		users, err := e.client.User.Query().
-			Where(user.RoleIn("engineer", "admin")).
-			Where(user.TenantID(instance.TenantID)).
-			Where(user.Active(true)).
-			Limit(1).
-			All(ctx)
-		if err == nil && len(users) > 0 {
-			return strconv.Itoa(users[0].ID)
-		}
-	}
-
-	// 默认分配 - 返回第一个活跃用户
-	users, err := e.client.User.Query().
-		Where(user.TenantID(instance.TenantID)).
-		Where(user.Active(true)).
-		Limit(1).
-		All(ctx)
-	if err == nil && len(users) > 0 {
-		return strconv.Itoa(users[0].ID)
 	}
 
 	return ""
