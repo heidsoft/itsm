@@ -638,7 +638,7 @@ export default function WorkflowNodeInspector({
                     options={[
                       { label: '单人审批', value: 'single' }, { label: '任一通过', value: 'any' },
                       { label: '全部通过', value: 'all' },
-                      { label: '比例/阈值通过（运行时未实现）', value: 'threshold', disabled: true },
+                      { label: '比例/阈值通过', value: 'threshold' },
                       { label: '顺序会签', value: 'sequential' },
                     ]}
                     className="w-full" size="small"
