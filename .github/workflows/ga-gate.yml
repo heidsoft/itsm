@@ -41,7 +41,7 @@ jobs:
       # DaoCloud proxy blocks requests from GitHub Actions IP ranges
       POSTGRES_IMAGE: pgvector/pgvector:pg17
       REDIS_IMAGE: redis:7-alpine
-      MINIO_IMAGE: minio/minio:latest
+      MINIO_IMAGE: bitnami/minio:latest
       OLLAMA_IMAGE: ollama/ollama:latest
       PROMETHEUS_IMAGE: prom/prometheus:latest
       GRAFANA_IMAGE: grafana/grafana:10.1.0
@@ -55,7 +55,7 @@ jobs:
       - name: Start core stack
         run: >-
           docker compose -f docker-compose.dev.yml --profile dev
-          up -d --build postgres redis minio itsm-init itsm-backend itsm-frontend
+          up -d --build postgres redis itsm-init itsm-backend itsm-frontend
 
       - name: Wait for backend and frontend
         run: |
