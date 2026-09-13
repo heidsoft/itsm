@@ -1,0 +1,8 @@
+# Trivy ignore file
+# Format: CVE-ID per line
+# See: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# CVE-2026-48779: ws DoS via memory exhaustion
+# False positive: package-lock.json has ws@8.21.1 which is >= 8.21.0 (fixed version)
+# Trivy incorrectly reports 8.20.0 as vulnerable
+CVE-2026-48779
