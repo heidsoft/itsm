@@ -148,6 +148,42 @@ func TestTicketTypeWorkflowBindingRequiresActiveTenantDefinition(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// 审批级次的权威来源是绑定流程里的 BPMN 审批节点；TicketType.ApprovalChain 在运行时零消费
+// （resolveApprovalWorkflow 只查 ProcessBinding 与 legacy ApprovalWorkflow）。
+// 因此不得再强制"启用审批时必须配置审批链"——那只会逼人填一份不生效的配置。
+func TestTicketTypeApprovalChainIsOptional(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	svc := NewTicketTypeService(client, zap.NewNop().Sugar())
+	ctx := context.Background()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Approval Optional Tenant").
+		SetCode("APPROPT").
+		SetDomain("approval-optional.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	created, err := svc.CreateTicketType(ctx, &dto.CreateTicketTypeRequest{
+		Code:            "incident_bug",
+		Name:            "故障工单",
+		ApprovalEnabled: true,
+	}, tenant.ID, 1)
+	require.NoError(t, err)
+	assert.True(t, created.ApprovalEnabled)
+	assert.Empty(t, created.ApprovalChain)
+
+	updated, err := svc.UpdateTicketType(ctx, created.ID, &dto.UpdateTicketTypeRequest{
+		ApprovalEnabled: boolPtr(true),
+		ApprovalChain:   &[]dto.ApprovalChainDefinition{},
+	}, tenant.ID, 1)
+	require.NoError(t, err)
+	assert.True(t, updated.ApprovalEnabled)
+	assert.Empty(t, updated.ApprovalChain)
+}
+
 func TestIntPtrHelpers(t *testing.T) {
 	assert.Nil(t, intPtr(0))
 	if v := intPtr(7); assert.NotNil(t, v) {

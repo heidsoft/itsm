@@ -94,9 +94,9 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 	if req.SortOrder < 0 {
 		return nil, fmt.Errorf("排序值不能为负数")
 	}
-	if req.ApprovalEnabled && len(req.ApprovalChain) == 0 {
-		return nil, fmt.Errorf("启用审批时必须配置审批链")
-	}
+	// 不校验 ApprovalEnabled/ApprovalChain：审批级次的唯一权威表达是绑定工作流里的审批节点，
+	// resolveApprovalWorkflow 只查 ProcessBinding 与 legacy ApprovalWorkflow，从不读这两个字段。
+	// 强制填写会让"配置了却不生效"，比不校验更危险。
 	if err := validateCustomFields(req.CustomFields); err != nil {
 		return nil, err
 	}
@@ -252,17 +252,6 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 	}
 	if req.ApprovalChain != nil {
 		update.SetApprovalChain(toInterfaceSlice(*req.ApprovalChain))
-	}
-	approvalEnabled := existing.ApprovalEnabled
-	if req.ApprovalEnabled != nil {
-		approvalEnabled = *req.ApprovalEnabled
-	}
-	approvalChainEmpty := len(existing.ApprovalChain) == 0
-	if req.ApprovalChain != nil {
-		approvalChainEmpty = len(*req.ApprovalChain) == 0
-	}
-	if approvalEnabled && approvalChainEmpty {
-		return nil, fmt.Errorf("启用审批时必须配置审批链")
 	}
 	if req.SLAEnabled != nil {
 		update.SetSLAEnabled(*req.SLAEnabled)

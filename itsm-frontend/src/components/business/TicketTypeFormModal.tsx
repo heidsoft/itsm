@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
+  Alert,
   App,
   Badge,
   Button,
@@ -12,16 +14,15 @@ import {
   InputNumber,
   Modal,
   Popconfirm,
-  Radio,
   Select,
   Space,
+  Spin,
   Switch,
   Tabs,
   Tag,
 } from 'antd';
 import { ArrowDown, ArrowUp, Info, Plus, Trash2 } from 'lucide-react';
 import type {
-  ApprovalChainDefinition,
   AssignmentRule,
   CustomFieldDefinition,
   TicketTypeDefinition,
@@ -55,6 +56,54 @@ const labelToSnakeCaseKey = (label: string): string => {
   return ascii ? ascii.toLowerCase() : '';
 };
 
+interface BoundApprovalNode {
+  id: string;
+  name: string;
+  purpose: string;
+  approvalMode: string;
+  approverSource: string;
+}
+
+// 审批级次的权威来源是绑定流程里的 BPMN 审批节点，不是工单类型上的 JSON 字段。
+// 这里解析已绑定流程定义的人工节点用于只读预览，避免用户再配一份运行时不生效的审批链。
+const parseApprovalNodes = (bpmnXml?: string): BoundApprovalNode[] => {
+  if (!bpmnXml) return [];
+  const doc = new DOMParser().parseFromString(bpmnXml, 'application/xml');
+  if (doc.getElementsByTagName('parsererror').length > 0) return [];
+
+  // 属性按 localName 匹配，兼容 itsm:taskPurpose 与无前缀两种序列化形式
+  const attr = (el: Element, localName: string): string => {
+    for (let i = 0; i < el.attributes.length; i += 1) {
+      const item = el.attributes[i];
+      if ((item.localName || item.name) === localName) return item.value;
+    }
+    return '';
+  };
+
+  const nodes: BoundApprovalNode[] = [];
+  Array.from(doc.getElementsByTagName('*')).forEach(el => {
+    if ((el.localName || el.nodeName) !== 'userTask') return;
+    const id = el.getAttribute('id') || '';
+    nodes.push({
+      id,
+      name: el.getAttribute('name') || id,
+      purpose: attr(el, 'taskPurpose'),
+      approvalMode: attr(el, 'approvalMode'),
+      approverSource:
+        attr(el, 'assignee') || attr(el, 'candidateGroups') || attr(el, 'candidateUsers'),
+    });
+  });
+  return nodes;
+};
+
+// BPMN 审批节点的 approvalMode 取值，用显式映射避免动态拼接 i18n key
+const APPROVAL_MODE_LABEL_KEYS: Record<string, string> = {
+  single: 'ticketTypeForm.modeSingle',
+  any: 'ticketTypeForm.modeAny',
+  all: 'ticketTypeForm.modeAll',
+  sequential: 'ticketTypeForm.modeSequential',
+};
+
 const FieldLabel: React.FC<{ label: string; required?: boolean }> = ({ label, required }) => (
   <div className="mb-1 text-xs text-gray-500">
     {label}
@@ -70,18 +119,20 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
 }) => {
   const { t } = useI18n();
   const { message } = App.useApp();
+  const router = useRouter();
   const [form] = Form.useForm();
-  const approvalEnabled = Form.useWatch('approvalEnabled', form);
+  const workflowDefinitionKey = Form.useWatch('workflowDefinitionKey', form);
   const slaEnabled = Form.useWatch('slaEnabled', form);
   const autoAssignEnabled = Form.useWatch('autoAssignEnabled', form);
   const [loading, setLoading] = useState(false);
   const [depsLoading, setDepsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
-  const [approvalChain, setApprovalChain] = useState<ApprovalChainDefinition[]>([]);
+  const [approvalNodes, setApprovalNodes] = useState<BoundApprovalNode[]>([]);
+  const [approvalNodesLoading, setApprovalNodesLoading] = useState(false);
+  const [approvalNodesError, setApprovalNodesError] = useState('');
   const [assignmentRules, setAssignmentRules] = useState<AssignmentRule[]>([]);
   const [slas, setSlas] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [assignmentRuleOptions, setAssignmentRuleOptions] = useState<any[]>([]);
@@ -96,19 +147,16 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     setDepsLoading(true);
     try {
       const { SLAApi } = await import('@/lib/api/sla-api');
-      const { UserApi } = await import('@/lib/api/user-api');
       const { httpClient } = await import('@/lib/api/http-client');
 
-      const [slaResponse, userResponse, categoryResponse, workflowResponse, ruleResponse] = await Promise.all([
+      const [slaResponse, categoryResponse, workflowResponse, ruleResponse] = await Promise.all([
         SLAApi.getSLADefinitions(),
-        UserApi.getUsers({ page: 1, pageSize: 100, status: 'active' }),
         httpClient.get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200, isActive: true }),
         httpClient.get<any>('/api/v1/bpmn/process-definitions', { page: 1, pageSize: 200, isActive: true }),
         httpClient.get<any>('/api/v1/tickets/assignment-rules'),
       ]);
 
       setSlas(slaResponse.items ?? []);
-      setUsers(userResponse.users ?? []);
       setCategories(categoryResponse.items ?? categoryResponse.categories ?? []);
       setWorkflows(workflowResponse.definitions ?? workflowResponse.items ?? []);
       setAssignmentRuleOptions(ruleResponse.rules ?? ruleResponse.items ?? []);
@@ -130,7 +178,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
         description: editingType.description,
         icon: editingType.icon,
         color: editingType.color,
-        approvalEnabled: editingType.approvalEnabled,
         slaEnabled: editingType.slaEnabled,
         defaultSlaId: editingType.defaultSlaId,
         autoAssignEnabled: editingType.autoAssignEnabled,
@@ -141,15 +188,51 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
         assignmentRuleId: editingType.assignmentRuleId,
       });
       setCustomFields(editingType.customFields || []);
-      setApprovalChain(editingType.approvalChain || []);
       setAssignmentRules(editingType.assignmentRules || []);
     } else {
       form.resetFields();
       setCustomFields([]);
-      setApprovalChain([]);
       setAssignmentRules([]);
     }
+    setApprovalNodes([]);
+    setApprovalNodesError('');
   }, [visible, editingType, form]);
+
+  // 绑定的工作流变化时拉取流程定义，解析出审批节点做只读预览
+  useEffect(() => {
+    if (!visible) return;
+    const key = typeof workflowDefinitionKey === 'string' ? workflowDefinitionKey.trim() : '';
+    if (!key) {
+      setApprovalNodes([]);
+      setApprovalNodesError('');
+      setApprovalNodesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setApprovalNodesLoading(true);
+    setApprovalNodesError('');
+
+    void (async () => {
+      try {
+        const { WorkflowApi } = await import('@/lib/api/workflow-api');
+        const definition = await WorkflowApi.getProcessDefinition(key);
+        if (cancelled) return;
+        setApprovalNodes(parseApprovalNodes(definition.bpmnXml));
+      } catch (error) {
+        if (cancelled) return;
+        console.error('Failed to load approval nodes of bound workflow:', error);
+        setApprovalNodes([]);
+        setApprovalNodesError(t('ticketTypeForm.approvalNodesLoadFailed'));
+      } finally {
+        if (!cancelled) setApprovalNodesLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, workflowDefinitionKey, t]);
 
   const handleSubmit = async () => {
     let values;
@@ -186,16 +269,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       }
     }
 
-    // 审批链完整性校验
-    if (values.approvalEnabled) {
-      const invalidLevel = approvalChain.find(level => !level.approvers?.length);
-      if (invalidLevel) {
-        setActiveTab('approval');
-        message.warning(t('ticketTypeForm.approversRequired', { name: invalidLevel.name }));
-        return;
-      }
-    }
-
     // SLA 完整性校验
     if (values.slaEnabled && !values.defaultSlaId) {
       setActiveTab('sla');
@@ -206,7 +279,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     const submitData = {
       ...values,
       customFields: customFields.map((field, index) => ({ ...field, order: index })),
-      approvalChain: approvalChain.map((level, index) => ({ ...level, level: index + 1 })),
       assignmentRules,
     };
 
@@ -215,7 +287,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       await onSubmit(submitData);
       form.resetFields();
       setCustomFields([]);
-      setApprovalChain([]);
       setAssignmentRules([]);
     } catch (error) {
       // 错误提示由父组件展示，保持弹窗打开以便修改重试
@@ -256,33 +327,8 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
     }
   };
 
-  const addApprovalLevel = () => {
-    const newLevel: ApprovalChainDefinition = {
-      id: `level_${Date.now()}`,
-      level: approvalChain.length + 1,
-      name: `${t('ticketTypeForm.approvalLevelPrefix')} ${approvalChain.length + 1}`,
-      approvers: [],
-      approvalType: 'any',
-      allowReject: true,
-      allowDelegate: true,
-      rejectAction: 'return',
-    };
-    setApprovalChain([...approvalChain, newLevel]);
-  };
-
-  const removeApprovalLevel = (index: number) => {
-    setApprovalChain(
-      approvalChain
-        .filter((_, i) => i !== index)
-        .map((level, i) => ({ ...level, level: i + 1 })),
-    );
-  };
-
-  const updateApprovalLevel = (index: number, level: Partial<ApprovalChainDefinition>) => {
-    const newChain = [...approvalChain];
-    newChain[index] = { ...newChain[index], ...level };
-    setApprovalChain(newChain);
-  };
+  // 设计器按数字主键打开，而工单类型绑定的是流程 key，需从已加载列表反查
+  const boundWorkflow = workflows.find(item => item.key === workflowDefinitionKey);
 
   const priorityOptions = [
     { value: 'low', label: t('ticketTypeForm.priorityLow') },
@@ -314,7 +360,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       open={visible}
       onCancel={onCancel}
       width={1000}
-      maskClosable={false}
+      mask={{ closable: false }}
       keyboard={false}
       styles={{ body: { maxHeight: '65vh', overflowY: 'auto', paddingRight: 8 } }}
       footer={[
@@ -333,7 +379,6 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
         initialValues={{
           defaultPriority: 'medium',
           sortOrder: 0,
-          approvalEnabled: false,
           slaEnabled: false,
           autoAssignEnabled: false,
         }}
@@ -688,12 +733,20 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
             {
               key: 'approval',
               label: (
-                <Badge count={approvalChain.length} size="small" offset={[10, -2]}>
+                <Badge count={approvalNodes.length} size="small" offset={[10, -2]}>
                   {t('ticketTypeForm.tabApproval')}
                 </Badge>
               ),
               children: (
                 <>
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="!mb-4"
+                    message={t('ticketTypeForm.approvalSourceHint')}
+                    description={t('ticketTypeForm.approvalSourceHintDetail')}
+                  />
+
                   <Form.Item
                     label={t('ticketTypeForm.bindWorkflow')}
                     name="workflowDefinitionKey"
@@ -712,165 +765,80 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                     />
                   </Form.Item>
 
-                  <Form.Item
-                    label={t('ticketTypeForm.enableApproval')}
-                    name="approvalEnabled"
-                    valuePropName="checked"
-                  >
-                    <Switch />
-                  </Form.Item>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">
+                      {t('ticketTypeForm.approvalNodesCount', { count: approvalNodes.length })}
+                    </span>
+                    {boundWorkflow && (
+                      <Button
+                        type="link"
+                        className="!px-0"
+                        onClick={() => router.push(`/workflow/designer?id=${boundWorkflow.id}`)}
+                      >
+                        {t('ticketTypeForm.openDesigner')}
+                      </Button>
+                    )}
+                  </div>
 
-                  {approvalEnabled && (
-                    <div className="space-y-4 mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">
-                          {t('ticketTypeForm.approvalLevelsCount', {
-                            count: approvalChain.length,
-                          })}
-                        </span>
-                        <Button type="dashed" icon={<Plus />} onClick={addApprovalLevel}>
-                          {t('ticketTypeForm.addApprovalLevel')}
-                        </Button>
-                      </div>
-
-                      {approvalChain.length === 0 ? (
-                        <div className="text-center py-8 text-gray-400">
-                          <Info className="text-4xl mb-2" />
-                          <div>{t('ticketTypeForm.noApprovalLevels')}</div>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {approvalChain.map((level, index) => (
-                            <Card
-                              key={level.id}
-                              title={
-                                <Space size={4}>
-                                  <span className="text-gray-400">
-                                    {t('detailTabs.levelLabel', { level: level.level })}
-                                  </span>
-                                  <span>{level.name}</span>
-                                </Space>
-                              }
-                              size="small"
-                              extra={
-                                <Popconfirm
-                                  title={t('ticketTypeForm.deleteLevelConfirm')}
-                                  onConfirm={() => removeApprovalLevel(index)}
-                                >
-                                  <Button type="text" size="small" danger icon={<Trash2 />} />
-                                </Popconfirm>
-                              }
-                            >
-                              <div className="space-y-3">
-                                <div>
-                                  <FieldLabel label={t('ticketTypeForm.approvalLevelName')} />
-                                  <Input
-                                    value={level.name}
-                                    onChange={e =>
-                                      updateApprovalLevel(index, { name: e.target.value })
-                                    }
-                                  />
-                                </div>
-
-                                <div>
-                                  <FieldLabel label={t('ticketTypeForm.approvalMode')} />
-                                  <Radio.Group
-                                    value={level.approvalType}
-                                    onChange={e =>
-                                      updateApprovalLevel(index, {
-                                        approvalType: e.target.value,
-                                      })
-                                    }
-                                  >
-                                    <Radio value="any">{t('ticketTypeForm.approvalAny')}</Radio>
-                                    <Radio value="all">{t('ticketTypeForm.approvalAll')}</Radio>
-                                    <Radio value="majority">
-                                      {t('ticketTypeForm.approvalMajority')}
-                                    </Radio>
-                                  </Radio.Group>
-                                </div>
-
-                                <div>
-                                  <FieldLabel label={t('ticketTypeForm.approvers')} required />
-                                  <Select
-                                    mode="multiple"
-                                    loading={depsLoading}
-                                    placeholder={t('ticketTypeForm.selectApprovers')}
-                                    style={{ width: '100%' }}
-                                    value={level.approvers.map(a => a.value)}
-                                    onChange={values => {
-                                      const approvers = values.map(v => {
-                                        const user = users.find(u => u.id === v);
-                                        return {
-                                          type: 'user' as const,
-                                          value: v as number,
-                                          name: user
-                                            ? user.name || user.username
-                                            : `${t('ticketTypeForm.userPrefix')} ${v}`,
-                                        };
-                                      });
-                                      updateApprovalLevel(index, { approvers });
-                                    }}
-                                    options={users.map(user => ({
-                                      value: user.id,
-                                      label: user.name || user.username,
-                                    }))}
-                                  />
-                                </div>
-
-                                <div className="flex items-center gap-6">
-                                  <div className="flex items-center">
-                                    <Switch
-                                      size="small"
-                                      checked={level.allowReject}
-                                      onChange={allowReject =>
-                                        updateApprovalLevel(index, { allowReject })
-                                      }
-                                    />
-                                    <span className="ml-2 text-sm text-gray-600">
-                                      {t('ticketTypeForm.allowReject')}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Switch
-                                      size="small"
-                                      checked={level.allowDelegate}
-                                      onChange={allowDelegate =>
-                                        updateApprovalLevel(index, { allowDelegate })
-                                      }
-                                    />
-                                    <span className="ml-2 text-sm text-gray-600">
-                                      {t('ticketTypeForm.allowDelegate')}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {level.allowReject && (
-                                  <div>
-                                    <FieldLabel label={t('ticketTypeForm.rejectAction')} />
-                                    <Radio.Group
-                                      value={level.rejectAction}
-                                      onChange={e =>
-                                        updateApprovalLevel(index, {
-                                          rejectAction: e.target.value,
-                                        })
-                                      }
-                                    >
-                                      <Radio value="end">{t('ticketTypeForm.rejectEnd')}</Radio>
-                                      <Radio value="return">
-                                        {t('ticketTypeForm.rejectReturn')}
-                                      </Radio>
-                                      <Radio value="custom">
-                                        {t('ticketTypeForm.rejectCustom')}
-                                      </Radio>
-                                    </Radio.Group>
-                                  </div>
-                                )}
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
+                  {approvalNodesError ? (
+                    <Alert type="warning" showIcon message={approvalNodesError} />
+                  ) : approvalNodesLoading ? (
+                    <div className="text-center py-8">
+                      <Spin />
+                    </div>
+                  ) : !workflowDefinitionKey ? (
+                    <div className="text-center py-8 text-gray-400">
+                      <Info className="text-4xl mb-2" />
+                      <div>{t('ticketTypeForm.noWorkflowBound')}</div>
+                    </div>
+                  ) : approvalNodes.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      <Info className="text-4xl mb-2" />
+                      <div>{t('ticketTypeForm.noApprovalNodes')}</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {approvalNodes.map((node, index) => (
+                        <Card
+                          key={node.id}
+                          size="small"
+                          title={
+                            <Space size={4}>
+                              <span className="text-gray-400">
+                                {t('detailTabs.levelLabel', { level: index + 1 })}
+                              </span>
+                              <span>{node.name}</span>
+                            </Space>
+                          }
+                          extra={
+                            node.purpose === 'approval' ? (
+                              <Tag color="blue">{t('ticketTypeForm.purposeApproval')}</Tag>
+                            ) : (
+                              <Tag>{t('ticketTypeForm.purposeManual')}</Tag>
+                            )
+                          }
+                        >
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div>
+                              <span className="text-gray-400">
+                                {t('ticketTypeForm.approvalMode')}
+                                {'：'}
+                              </span>
+                              {t(
+                                APPROVAL_MODE_LABEL_KEYS[node.approvalMode] ??
+                                  'ticketTypeForm.notConfigured',
+                              )}
+                            </div>
+                            <div>
+                              <span className="text-gray-400">
+                                {t('ticketTypeForm.approverSource')}
+                                {'：'}
+                              </span>
+                              {node.approverSource || t('ticketTypeForm.notConfigured')}
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
                     </div>
                   )}
                 </>
