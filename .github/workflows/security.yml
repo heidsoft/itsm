@@ -100,7 +100,7 @@ jobs:
           cache-dependency-path: itsm-backend/go.sum
 
       - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
 
       - name: Run govulncheck
         working-directory: itsm-backend
