@@ -50,6 +50,7 @@ func setupChangeChainTest(t *testing.T) (*Service, *ent.Client, *sql.DB, int) {
 	svc := &Service{
 		repo:          repo,
 		logger:        logger,
+		entClient:     client,
 		approvalChain: service.NewApprovalChainService(client, logger),
 	}
 	return svc, client, db, tenant.ID

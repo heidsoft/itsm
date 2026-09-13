@@ -416,7 +416,9 @@ func (r *EntRepository) SubmitForApprovalWithWorkflow(
 		return fmt.Errorf("change is not an editable draft")
 	}
 
-	// 2) 写审批记录与审批链（按 (level, approver) 维度展开），并发送 in_app 通知 outbox。
+	// 2) 写审批链（按 (level, approver) 维度展开，用于 quorum 求值与前端时间线），
+	// 并发送 in_app 通知 outbox。审批记录由 BPMN bridge 写入 ProcessApprovalDecision，
+	// 不再写入 legacy change_approvals 表。
 	now := time.Now()
 	for _, lvl := range plan {
 		seen := make(map[int]struct{}, len(lvl.ApproverIDs))
@@ -425,13 +427,6 @@ func (r *EntRepository) SubmitForApprovalWithWorkflow(
 				continue
 			}
 			seen[approverID] = struct{}{}
-
-			if r.approvalRecords == nil {
-				return fmt.Errorf("change approval record repository not initialised")
-			}
-			if err := r.approvalRecords.CreateTx(ctx, tx, changeID, tenantID, approverID, comment, now); err != nil {
-				return err
-			}
 
 			if r.approvalChains == nil {
 				return fmt.Errorf("change approval chain repository not initialised")

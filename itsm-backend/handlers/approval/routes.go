@@ -11,6 +11,7 @@ import (
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // tenantID 提取租户上下文；沿用 handlerctx 契约（401 语义），
@@ -234,7 +235,7 @@ func (h *Handler) PatchWorkflow(c *gin.Context) {
 // Deprecated: This API is deprecated. Use GET /api/v1/bpmn/tasks instead.
 // Sunset: Sat, 01 Nov 2026 00:00:00 GMT
 func (h *Handler) GetApprovalRecords(c *gin.Context) {
-	h.logger.Warnw("Deprecated API called", "path", c.FullPath(), "method", "GET /approval-records", "successor", "GET /api/v1/bpmn/tasks")
+	zap.S().Warnw("Deprecated API called", "path", c.FullPath(), "method", "GET /approval-records", "successor", "GET /api/v1/bpmn/tasks")
 	c.Header("Deprecation", "true")
 	c.Header("Sunset", "Sat, 01 Nov 2026 00:00:00 GMT")
 	c.Header("Link", `</api/v1/bpmn/tasks>; rel="successor-version"`)
@@ -292,7 +293,7 @@ func (h *Handler) GetApprovalRecords(c *gin.Context) {
 // Deprecated: This API is deprecated. Use POST /api/v1/bpmn/tasks/:id/decisions instead.
 // Sunset: Sat, 01 Nov 2026 00:00:00 GMT
 func (h *Handler) SubmitApproval(c *gin.Context) {
-	h.logger.Warnw("Deprecated API called", "path", c.FullPath(), "method", "POST /approvals/submit", "successor", "POST /api/v1/bpmn/tasks/:id/decisions")
+	zap.S().Warnw("Deprecated API called", "path", c.FullPath(), "method", "POST /approvals/submit", "successor", "POST /api/v1/bpmn/tasks/:id/decisions")
 	c.Header("Deprecation", "true")
 	c.Header("Sunset", "Sat, 01 Nov 2026 00:00:00 GMT")
 	c.Header("Link", `</api/v1/bpmn/tasks/:id/decisions>; rel="successor-version"`)

@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/service"
 
@@ -587,7 +588,7 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 		s.logger.Errorw("checkAndTransitionChange: failed to get approval chain", "error", err, "change_id", changeID)
 		return err
 	}
-	history, err := s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+	history, err := s.GetApprovalHistory(ctx, changeID, tenantID)
 	if err != nil {
 		s.logger.Errorw("checkAndTransitionChange: failed to get approval history", "error", err, "change_id", changeID)
 		return err
@@ -957,23 +958,33 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 
 	// For approval actions, verify user is the approver
 	if targetStatus == "approved" || targetStatus == "rejected" {
-		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
+		chain, err := s.repo.GetApprovalChain(ctx, id, tenantID)
 		if err != nil {
-			s.logger.Errorw("TransitionStatus: failed to get approval history", "error", err, "change_id", id, "tenant_id", tenantID)
-			return nil, fmt.Errorf("failed to get approval history")
+			s.logger.Errorw("TransitionStatus: failed to get approval chain", "error", err, "change_id", id, "tenant_id", tenantID)
+			return nil, fmt.Errorf("failed to get approval chain")
 		}
-		// Find if this user has a pending approval
+		decisions, err := s.GetBPMNApprovalDecisions(ctx, id, tenantID)
+		if err != nil {
+			s.logger.Errorw("TransitionStatus: failed to get approval decisions", "error", err, "change_id", id, "tenant_id", tenantID)
+			return nil, fmt.Errorf("failed to get approval decisions")
+		}
+		decidedActors := map[int]struct{}{}
+		for _, d := range decisions {
+			decidedActors[d.ApproverID] = struct{}{}
+		}
 		isApprover := false
-		for _, h := range history {
-			if h.ApproverID == userID && h.Status == "pending" {
-				isApprover = true
-				break
+		for _, c := range chain {
+			if c.ApproverID == userID {
+				if _, decided := decidedActors[userID]; !decided {
+					isApprover = true
+					break
+				}
 			}
 		}
 		if !isApprover {
-			// 找不到该用户的 pending 审批记录有两种截然不同的成因，必须区分：
-			//  1. 用户确实不是审批人 → 403（ErrNotApprover）
-			//  2. 并发场景下审批记录已被抢先者消费 → 409（ErrConcurrentModification）
+			// 找不到该用户的待办审批有两种截然不同的成因，必须区分：
+			//  1. 用户确实不是审批人，或已经审批过 → 403（ErrNotApprover）
+			//  2. 并发场景下审批已被抢先者消费 → 409（ErrConcurrentModification）
 			// 判据：重新读取变更状态。若与本次校验时的快照不同，说明状态已被
 			// 其他请求推进，此时返回"不是审批人"会误导调用方（用户其实是审批人，
 			// 只是来晚了），也会让运维误判为权限配置问题。
@@ -1036,33 +1047,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
-	// 审批决定回写审批记录：approve/reject 都必须持久化，否则 pending 记录永不移除，
-	// 同一审批人可被重复消费；同时写入本次审批意见，意见为空时保留
-	// 提交审批时已写入的 comment，避免被空串覆盖。
-	if targetStatus == "approved" || targetStatus == "rejected" {
-		history, err := s.repo.GetApprovalHistory(ctx, id, tenantID)
-		if err != nil {
-			s.logger.Warnw("TransitionStatus: failed to get approval history for record update", "error", err)
-		} else {
-			for _, h := range history {
-				if h.ApproverID == userID && h.Status == "pending" {
-					finalComment := strings.TrimSpace(comment)
-					if finalComment == "" && h.Comment != nil {
-						finalComment = *h.Comment
-					}
-					if _, err := s.repo.UpdateApprovalRecord(ctx, &ApprovalRecord{
-						ID:       h.ID,
-						TenantID: tenantID,
-						Status:   targetStatus,
-						Comment:  &finalComment,
-					}); err != nil {
-						s.logger.Warnw("TransitionStatus: failed to update approval record", "error", err, "record_id", h.ID)
-					}
-					break
-				}
-			}
-		}
-	}
+	// 审批决定已由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
+	// 无需再回写 legacy change_approvals 表。
 
 	// H-2 / C-2 修复：
 	// 1. 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口 pending chains
@@ -1117,9 +1103,69 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	return s.repo.Update(ctx, c)
 }
 
-// GetApprovalHistory returns approval records for a change
+// GetApprovalHistory returns approval records for a change.
+// Migration: Uses ProcessApprovalDecision as the authoritative source (written by
+// BPMN bridge) instead of legacy change_approvals table. Levels field is still
+// populated from change_approval_chains for frontend approval timeline display.
 func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
-	return s.repo.GetApprovalHistory(ctx, changeID, tenantID)
+	decisions, err := s.GetBPMNApprovalDecisions(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	chain, err := s.repo.GetApprovalChain(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("get approval chain for levels: %w", err)
+	}
+	levelsByApprover := map[int][]int{}
+	for _, c := range chain {
+		levelsByApprover[c.ApproverID] = append(levelsByApprover[c.ApproverID], c.Level)
+	}
+	for _, rec := range decisions {
+		rec.Levels = levelsByApprover[rec.ApproverID]
+	}
+	return decisions, nil
+}
+
+// GetBPMNApprovalDecisions queries the authoritative ProcessApprovalDecision table
+// for all approval decisions related to a change. Results are mapped to
+// ApprovalRecord for compatibility with quorum evaluation and the approval
+// timeline. ProcessApprovalDecision is the single source of truth for approval
+// decisions once the BPMN bridge writes them; change_approvals is legacy.
+func (s *Service) GetBPMNApprovalDecisions(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	businessID := strconv.Itoa(changeID)
+	decisions, err := s.entClient.ProcessApprovalDecision.Query().
+		Where(
+			processapprovaldecision.BusinessType("change"),
+			processapprovaldecision.BusinessID(businessID),
+			processapprovaldecision.TenantID(tenantID),
+		).
+		Order(ent.Asc(processapprovaldecision.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query BPMN approval decisions: %w", err)
+	}
+
+	records := make([]*ApprovalRecord, 0, len(decisions))
+	for _, d := range decisions {
+		comment := d.Comment
+		var commentPtr *string
+		if comment != "" {
+			commentPtr = &comment
+		}
+		approvedAt := d.CreatedAt
+		records = append(records, &ApprovalRecord{
+			ID:           d.ID,
+			ChangeID:     changeID,
+			TenantID:     d.TenantID,
+			ApproverID:   d.ActorID,
+			ApproverName: d.ActorName,
+			Status:       d.Decision,
+			Comment:      commentPtr,
+			ApprovedAt:   &approvedAt,
+			CreatedAt:    d.CreatedAt,
+		})
+	}
+	return records, nil
 }
 
 // ==================== PIR (Post-Implementation Review) Methods ====================

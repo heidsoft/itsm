@@ -156,9 +156,11 @@ func (c *WorkflowHandler) GetApprovalHistory(ctx *gin.Context) {
 func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 	var req struct {
-		Action    string                 `json:"action" binding:"required,oneof=approve reject"`
-		Comment   string                 `json:"comment"`
-		Variables map[string]interface{} `json:"variables"`
+		Action            string                 `json:"action" binding:"required,oneof=approve reject delegate add_approver"`
+		Comment           string                 `json:"comment"`
+		Variables         map[string]interface{} `json:"variables"`
+		DelegateToUserID  *int                   `json:"delegateToUserId"`
+		AddApproverUserID *int                   `json:"addApproverUserId"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
@@ -182,6 +184,47 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		common.NotFound(ctx, "审批任务不存在")
 		return
 	}
+
+	if req.Action == "delegate" {
+		if req.DelegateToUserID == nil || *req.DelegateToUserID <= 0 {
+			common.Fail(ctx, common.ParamErrorCode, "委托必须指定目标用户")
+			return
+		}
+		newAssignee := strconv.Itoa(*req.DelegateToUserID)
+		var err error
+		if parseErr == nil {
+			err = c.processEngine.TaskService().DelegateTaskByID(workflowCtx, id, newAssignee)
+		} else {
+			err = c.processEngine.TaskService().DelegateTask(workflowCtx, taskID, newAssignee)
+		}
+		if err != nil {
+			common.Fail(ctx, common.ParamErrorCode, "委托失败: "+err.Error())
+			return
+		}
+		common.SuccessWithMessage(ctx, "任务已委托", nil)
+		return
+	}
+
+	if req.Action == "add_approver" {
+		if req.AddApproverUserID == nil || *req.AddApproverUserID <= 0 {
+			common.Fail(ctx, common.ParamErrorCode, "加签必须指定目标用户")
+			return
+		}
+		newApprover := strconv.Itoa(*req.AddApproverUserID)
+		var err error
+		if parseErr == nil {
+			err = c.processEngine.TaskService().AddApproverTaskByID(workflowCtx, id, newApprover)
+		} else {
+			err = c.processEngine.TaskService().AddApproverTask(workflowCtx, taskID, newApprover)
+		}
+		if err != nil {
+			common.Fail(ctx, common.ParamErrorCode, "加签失败: "+err.Error())
+			return
+		}
+		common.SuccessWithMessage(ctx, "加签成功", nil)
+		return
+	}
+
 	commentRequired, configured := task.TaskVariables["commentRequiredOnReject"].(bool)
 	if req.Action == "reject" && configured && commentRequired && strings.TrimSpace(req.Comment) == "" {
 		common.Fail(ctx, common.ParamErrorCode, "该审批节点要求拒绝时填写意见")

@@ -465,12 +465,15 @@ export class WorkflowApi {
   }
 
   /**
-   * 提交审批决策（approve/reject），完成对应 BPMN 任务并推进流程。
-   * 后端要求拒绝时必须填写意见，并会写入审批决策与审计记录。
+   * 提交审批决策（approve/reject/delegate/add_approver），完成对应 BPMN 任务并推进流程。
+   * delegate 动作必须指定 delegateToUserId；add_approver 必须指定 addApproverUserId。
    */
   static async submitTaskDecision(
     taskId: string | number,
-    payload: { action: 'approve' | 'reject'; comment?: string; variables?: Record<string, unknown> }
+    payload:
+      | { action: 'approve' | 'reject'; comment?: string; variables?: Record<string, unknown> }
+      | { action: 'delegate'; delegateToUserId: number; comment?: string }
+      | { action: 'add_approver'; addApproverUserId: number; comment?: string }
   ): Promise<void> {
     await httpClient.post(`/api/v1/bpmn/tasks/${taskId}/decisions`, payload);
   }

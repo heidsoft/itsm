@@ -171,7 +171,11 @@ func (e *ExpressionEngine) registerBuiltinFunctions(env map[string]interface{}) 
 		if len(arr) == 0 {
 			return 0
 		}
-		return e.Functions["sum"].(func([]float64) float64)(arr) / float64(len(arr))
+		total := 0.0
+		for _, v := range arr {
+			total += v
+		}
+		return total / float64(len(arr))
 	}
 
 	// 比较函数
@@ -370,31 +374,36 @@ func (e *ExpressionEngine) ValidateExpression(expression string) error {
 		return nil
 	}
 
+	normalized := expression
+	if strings.HasPrefix(normalized, "${") && strings.HasSuffix(normalized, "}") {
+		normalized = normalized[2 : len(normalized)-1]
+	}
+
 	// 基本的语法检查
 	// 1. 检查括号匹配
-	openCount := strings.Count(expression, "(")
-	closeCount := strings.Count(expression, ")")
+	openCount := strings.Count(normalized, "(")
+	closeCount := strings.Count(normalized, ")")
 	if openCount != closeCount {
 		return fmt.Errorf("括号不匹配: 开启=%d, 关闭=%d", openCount, closeCount)
 	}
 
 	// 2. 检查花括号匹配
-	braceCount := strings.Count(expression, "{")
-	braceCloseCount := strings.Count(expression, "}")
+	braceCount := strings.Count(normalized, "{")
+	braceCloseCount := strings.Count(normalized, "}")
 	if braceCount != braceCloseCount {
 		return fmt.Errorf("花括号不匹配: 开启=%d, 关闭=%d", braceCount, braceCloseCount)
 	}
 
 	// 3. 检查方括号匹配
-	squareOpen := strings.Count(expression, "[")
-	squareClose := strings.Count(expression, "]")
+	squareOpen := strings.Count(normalized, "[")
+	squareClose := strings.Count(normalized, "]")
 	if squareOpen != squareClose {
 		return fmt.Errorf("方括号不匹配: 开启=%d, 关闭=%d", squareOpen, squareClose)
 	}
 
 	// 4. 检查非法字符
-	illegalPattern := regexp.MustCompile(`[^\w\s\-\+\*/%<>=!&|,().{}\[\]?:"']`)
-	if illegalPattern.MatchString(expression) {
+	illegalPattern := regexp.MustCompile(`[^\w\s\-\+\*/%<>=!&|,().{}\[\]?:"'$]`)
+	if illegalPattern.MatchString(normalized) {
 		return fmt.Errorf("表达式包含非法字符")
 	}
 
@@ -405,7 +414,7 @@ func (e *ExpressionEngine) ValidateExpression(expression string) error {
 		env[name] = fn
 	}
 
-	_, err := expr.Compile(expression, expr.Env(env))
+	_, err := expr.Compile(normalized, expr.Env(env), expr.AllowUndefinedVariables())
 	if err != nil {
 		return fmt.Errorf("表达式语法错误: %w", err)
 	}

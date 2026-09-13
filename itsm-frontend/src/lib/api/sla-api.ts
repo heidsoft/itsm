@@ -9,6 +9,7 @@ export interface SLADefinition {
   priority: string;
   responseTime: number;
   resolutionTime: number;
+  escalationRules?: Record<string, unknown>[];
   availabilityTarget?: number;
   availability?: number;
   complianceRate?: number;

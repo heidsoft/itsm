@@ -547,7 +547,8 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedSLAAlertRules(ctx)
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
-	s.seedBPMNWorkflows(ctx) // 部署BPMN工作流模板
+	s.seedBPMNWorkflows(ctx)        // 部署BPMN工作流模板
+	s.seedWorkflowTemplates(ctx)    // 初始化工作流模板目录
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
 	s.seedTicketTypes(ctx)            // 新增：初始化工单类型
@@ -1310,6 +1311,114 @@ func (s *Seeder) seedBPMNWorkflows(ctx context.Context) {
 	}
 
 	s.sugar.Infow("BPMN workflows seeded", "count", len(templates))
+}
+
+// seedWorkflowTemplates 初始化工作流模板目录（workflow_templates 表）
+func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip workflow templates seed", "error", err)
+		return
+	}
+	tenantID := t.ID
+
+	admin, err := s.client.User.Query().First(ctx)
+	createdBy := 1
+	if err == nil {
+		createdBy = admin.ID
+	}
+
+	type tplSeed struct {
+		key, name, desc, domain, bpmn string
+	}
+	templates := []tplSeed{
+		{
+			key: "generic_request", name: "通用申请流程", desc: "适用于各类行政、IT、设施等通用申请场景",
+			domain: "it",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="generic_request" name="通用申请流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+		{
+			key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与 CAB 审批",
+			domain: "change",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="change_request" name="变更申请流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+		{
+			key: "incident_response", name: "事件响应流程", desc: "ITIL 事件管理流程，包含分级、分派、解决与回顾",
+			domain: "incident",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="incident_response" name="事件响应流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+		{
+			key: "service_request", name: "服务请求流程", desc: "标准服务请求履行流程，支持审批与自动履行",
+			domain: "service_request",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="service_request" name="服务请求流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+		{
+			key: "leave_request", name: "请假审批流程", desc: "员工请假申请与多级审批流程",
+			domain: "hr",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="leave_request" name="请假审批流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+		{
+			key: "expense_approval", name: "费用报销流程", desc: "员工费用报销申请与财务审批流程",
+			domain: "expense",
+			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="expense_approval" name="费用报销流程" isExecutable="true">
+    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
+  </bpmn:process>
+</bpmn:definitions>`,
+		},
+	}
+
+	db := database.GetRawDB()
+	if db == nil {
+		s.sugar.Warnw("raw DB not available; skip workflow templates seed")
+		return
+	}
+
+	for _, tpl := range templates {
+		var count int
+		err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM workflow_templates WHERE tenant_id=$1 AND key=$2", tenantID, tpl.key).Scan(&count)
+		if err != nil {
+			s.sugar.Warnw("check workflow template exists failed", "key", tpl.key, "error", err)
+			continue
+		}
+		if count > 0 {
+			continue
+		}
+		_, err = db.ExecContext(ctx,
+			`INSERT INTO workflow_templates (key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,tenant_id,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,'{}','{}','{}','{}',to_jsonb($5::text),'1.0.0','published',true,$6,$7,NOW(),NOW())`,
+			tpl.key, tpl.name, tpl.desc, tpl.domain, tpl.bpmn, tenantID, createdBy)
+		if err != nil {
+			s.sugar.Warnw("insert workflow template failed", "key", tpl.key, "error", err)
+			continue
+		}
+	}
+	s.sugar.Infow("workflow templates seeded", "count", len(templates))
 }
 
 func (s *Seeder) seedTicketViews(ctx context.Context) {

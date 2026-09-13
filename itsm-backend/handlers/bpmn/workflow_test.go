@@ -128,6 +128,18 @@ func (f *fakeTaskService) DelegateTask(ctx context.Context, taskID, newAssignee 
 	return nil
 }
 
+func (f *fakeTaskService) DelegateTaskByID(ctx context.Context, id int, newAssignee string) error {
+	return nil
+}
+
+func (f *fakeTaskService) AddApproverTask(ctx context.Context, taskID, newApprover string) error {
+	return nil
+}
+
+func (f *fakeTaskService) AddApproverTaskByID(ctx context.Context, id int, newApprover string) error {
+	return nil
+}
+
 func (f *fakeTaskService) EscalateTask(ctx context.Context, taskID, reason string) error {
 	return nil
 }

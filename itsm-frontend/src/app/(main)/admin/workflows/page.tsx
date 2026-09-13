@@ -16,6 +16,7 @@ import {
   Trash2,
   Search,
   Plus,
+  FileText,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -55,6 +56,7 @@ const WORKFLOW_STATUS = {
 
 // 工作流类型枚举
 const WORKFLOW_TYPES = {
+  TICKET: 'ticket',
   INCIDENT: 'incident',
   SERVICE_REQUEST: 'service_request',
   CHANGE: 'change',
@@ -81,6 +83,11 @@ interface Workflow {
 
 // 工作流类型配置
 const WORKFLOW_TYPE_CONFIG = {
+  [WORKFLOW_TYPES.TICKET]: {
+    label: '工单流程',
+    color: 'cyan',
+    icon: <FileText className="w-3 h-3" />,
+  },
   [WORKFLOW_TYPES.INCIDENT]: {
     label: '事件管理',
     color: 'red',

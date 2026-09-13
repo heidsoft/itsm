@@ -13,11 +13,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^19.0.0",
+    "got": "^14.0.0",
     "ink": "^6.2.0",
     "meow": "^14.0.0",
-    "got": "^14.0.0",
-    "ora": "^9.0.0"
+    "ora": "^9.0.0",
+    "react": "^19.0.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

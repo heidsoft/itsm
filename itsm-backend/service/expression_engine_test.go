@@ -63,3 +63,41 @@ func TestExpressionEngine_RegexReplace(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "a_b_c", res)
 }
+
+func TestExpressionEngine_AvgDoesNotPanic(t *testing.T) {
+	eng := NewExpressionEngine()
+
+	res, err := eng.Evaluate(`avg(scores)`, map[string]interface{}{
+		"scores": []float64{10, 20, 30},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 20.0, res)
+
+	res, err = eng.Evaluate(`avg(empty)`, map[string]interface{}{
+		"empty": []float64{},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, res)
+
+	ok, err := eng.EvaluateCondition(`avg(scores) > 15`, map[string]interface{}{
+		"scores": []float64{10, 20, 30},
+	})
+	require.NoError(t, err)
+	assert.True(t, ok)
+}
+
+func TestExpressionEngine_ValidateExpression_BPMNSyntax(t *testing.T) {
+	eng := NewExpressionEngine()
+
+	err := eng.ValidateExpression(`${approved == true}`)
+	require.NoError(t, err, "BPMN ${} 表达式应通过校验")
+
+	err = eng.ValidateExpression(`amount > 1000`)
+	require.NoError(t, err)
+
+	err = eng.ValidateExpression(`(`)
+	require.Error(t, err, "括号不匹配应报错")
+
+	err = eng.ValidateExpression(`{{{`)
+	require.Error(t, err, "花括号不匹配应报错")
+}

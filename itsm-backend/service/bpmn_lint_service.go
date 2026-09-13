@@ -213,6 +213,9 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 			})
 		}
 	}
+
+	// --- 规则组 8：审批节点能力可执行性（2026-09-13 新增）---
+	s.lintApprovalNodeCapabilities(process, result)
 }
 
 func (s *BPMNLintService) lintApprovalRejectionConfiguration(process *BPMNProcess, adjacency map[string][]string, result *dto.BPMNLintResult) {
@@ -282,6 +285,52 @@ func (s *BPMNLintService) lintApprovalRejectionConfiguration(process *BPMNProces
 			})
 		}
 	}
+}
+
+// lintApprovalNodeCapabilities 校验审批节点的能力配置是否在运行时可执行。
+//
+// 规则：
+//   - allowDelegate：仅对 taskPurpose=approval 有意义，非审批节点开启给 warning
+//   - approvalThreshold：显式阈值大于候选人数时不可能满足，给 error
+func (s *BPMNLintService) lintApprovalNodeCapabilities(process *BPMNProcess, result *dto.BPMNLintResult) {
+	for _, task := range process.UserTasks {
+		isApproval := strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "approval")
+		label := display(task.Name, task.ID)
+
+		// 8.3：allowDelegate 仅对审批节点有意义
+		if task.AllowDelegate && !isApproval {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "warning", Category: "approval",
+				ElementID: task.ID, ElementName: task.Name,
+				Message: fmt.Sprintf("用户任务 %s 开启了委托（allowDelegate），但 taskPurpose 不是 approval，委托能力仅在审批节点生效", label),
+			})
+		}
+
+		// 8.4：显式 approvalThreshold 大于候选人数
+		if isApproval && task.ApprovalThreshold > 0 {
+			candidateCount := countCandidates(task)
+			if candidateCount > 0 && task.ApprovalThreshold > candidateCount {
+				result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+					Severity: "error", Category: "approval",
+					ElementID: task.ID, ElementName: task.Name,
+					Message: fmt.Sprintf("审批任务 %s 的通过阈值 %d 大于候选审批人数 %d，审批永远无法满足", label, task.ApprovalThreshold, candidateCount),
+				})
+			}
+		}
+	}
+}
+
+// countCandidates 统计任务的候选审批人数。
+// assignee 算 1 人；candidateUsers/candidateGroups 按逗号分隔计数。
+// candidateGroups 按 1 人计（实际人数需查运行时，此处保守估计）。
+func countCandidates(task *BPMNUserTask) int {
+	n := 0
+	if strings.TrimSpace(task.Assignee) != "" {
+		n++
+	}
+	n += len(splitNonEmptyCSV(task.CandidateUsers))
+	n += len(splitNonEmptyCSV(task.CandidateGroups))
+	return n
 }
 
 func hasStaticTaskAssignment(task *BPMNUserTask) bool {

@@ -23,6 +23,7 @@ import {
   Tooltip,
   Badge,
   Skeleton,
+  Select,
 } from 'antd';
 import {
   CheckCircle,
@@ -36,10 +37,13 @@ import {
   Hand,
   GitBranch,
   ExternalLink,
+  ArrowRightLeft,
+  UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { httpClient } from '@/lib/api/http-client';
 import { WorkflowApi, type BpmnMyTask } from '@/lib/api/workflow-api';
+import { UserApi, type User } from '@/lib/api/user-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -119,6 +123,18 @@ export default function ApprovalsCenterPage() {
   } | null>(null);
   const [decisionComment, setDecisionComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // 委托
+  const [delegation, setDelegation] = useState<{ task: BpmnMyTask } | null>(null);
+  const [delegateToUserId, setDelegateToUserId] = useState<number | undefined>(undefined);
+  const [userOptions, setUserOptions] = useState<User[]>([]);
+  const [userLoading, setUserLoading] = useState(false);
+
+  // 加签
+  const [addApprover, setAddApprover] = useState<{ task: BpmnMyTask } | null>(null);
+  const [addApproverUserId, setAddApproverUserId] = useState<number | undefined>(undefined);
+  const [addApproverUserOptions, setAddApproverUserOptions] = useState<User[]>([]);
+  const [addApproverUserLoading, setAddApproverUserLoading] = useState(false);
 
   // 旧业务参考视图
   const [legacyLoading, setLegacyLoading] = useState(false);
@@ -242,6 +258,70 @@ export default function ApprovalsCenterPage() {
     }
   };
 
+  const openDelegation = async (task: BpmnMyTask) => {
+    setDelegation({ task });
+    setDelegateToUserId(undefined);
+    setUserLoading(true);
+    try {
+      const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
+      setUserOptions(res.users.filter((u) => u.id !== user?.id && u.active));
+    } catch {
+      message.error('加载用户列表失败');
+    } finally {
+      setUserLoading(false);
+    }
+  };
+
+  const submitDelegation = async () => {
+    if (!delegation || !delegateToUserId) return;
+    setSubmitting(true);
+    try {
+      await WorkflowApi.submitTaskDecision(delegation.task.id, {
+        action: 'delegate',
+        delegateToUserId,
+      });
+      message.success('任务已委托');
+      setDelegation(null);
+      loadTasks();
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '委托失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openAddApprover = async (task: BpmnMyTask) => {
+    setAddApprover({ task });
+    setAddApproverUserId(undefined);
+    setAddApproverUserLoading(true);
+    try {
+      const res = await UserApi.getUsers({ page: 1, pageSize: 200 });
+      setAddApproverUserOptions(res.users.filter((u) => u.id !== user?.id && u.active));
+    } catch {
+      message.error('加载用户列表失败');
+    } finally {
+      setAddApproverUserLoading(false);
+    }
+  };
+
+  const submitAddApprover = async () => {
+    if (!addApprover || !addApproverUserId) return;
+    setSubmitting(true);
+    try {
+      await WorkflowApi.submitTaskDecision(addApprover.task.id, {
+        action: 'add_approver',
+        addApproverUserId,
+      });
+      message.success('加签成功');
+      setAddApprover(null);
+      loadTasks();
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '加签失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // BPMN 待办表格列
   const taskColumns = [
     {
@@ -315,7 +395,7 @@ export default function ApprovalsCenterPage() {
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 280,
       render: (_: unknown, record: BpmnMyTask) => (
         <Space size="small">
           {!record.assignee && (
@@ -345,6 +425,24 @@ export default function ApprovalsCenterPage() {
           >
             拒绝
           </Button>
+          {!!((record.taskVariables as Record<string, unknown>)?.allowDelegate) && (
+            <Button
+              size="small"
+              icon={<ArrowRightLeft className="w-3 h-3" />}
+              onClick={() => openDelegation(record)}
+            >
+              委托
+            </Button>
+          )}
+          {!!((record.taskVariables as Record<string, unknown>)?.allowAddApprover) && (
+            <Button
+              size="small"
+              icon={<UserPlus className="w-3 h-3" />}
+              onClick={() => openAddApprover(record)}
+            >
+              加签
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -607,6 +705,106 @@ export default function ApprovalsCenterPage() {
                 maxLength={500}
                 showCount
               />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 委托弹窗 */}
+      <Modal
+        title="委托任务"
+        open={!!delegation}
+        onOk={submitDelegation}
+        onCancel={() => setDelegation(null)}
+        okText="确认委托"
+        okButtonProps={{ disabled: !delegateToUserId, loading: submitting }}
+        cancelText="取消"
+        destroyOnHidden
+      >
+        {delegation && (
+          <div className="space-y-3">
+            <div>
+              <Text type="secondary">任务：</Text>
+              <Text strong>{delegation.task.taskName || delegation.task.taskDefinitionKey}</Text>
+            </div>
+            {(() => {
+              const link = getBusinessLink(delegation.task);
+              return link ? (
+                <div>
+                  <Text type="secondary">业务单据：</Text>
+                  <Link href={link.url} className="text-blue-600">{link.label}</Link>
+                </div>
+              ) : null;
+            })()}
+            <div>
+              <Text type="secondary">委托给：</Text>
+              <Select
+                className="mt-1 w-full"
+                placeholder="选择被委托人"
+                loading={userLoading}
+                value={delegateToUserId}
+                onChange={setDelegateToUserId}
+                showSearch
+                optionFilterProp="label"
+                options={userOptions.map((u) => ({
+                  value: u.id,
+                  label: `${u.name}（${u.username}）`,
+                }))}
+                notFoundContent={userLoading ? '加载中…' : '无可用用户'}
+              />
+            </div>
+            <div className="text-xs text-gray-400">
+              委托后任务将转交给被委托人处理，原负责人不再收到该任务。
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 加签弹窗 */}
+      <Modal
+        title="加签审批人"
+        open={!!addApprover}
+        onOk={submitAddApprover}
+        onCancel={() => setAddApprover(null)}
+        okText="确认加签"
+        okButtonProps={{ disabled: !addApproverUserId, loading: submitting }}
+        cancelText="取消"
+        destroyOnHidden
+      >
+        {addApprover && (
+          <div className="space-y-3">
+            <div>
+              <Text type="secondary">任务：</Text>
+              <Text strong>{addApprover.task.taskName || addApprover.task.taskDefinitionKey}</Text>
+            </div>
+            {(() => {
+              const link = getBusinessLink(addApprover.task);
+              return link ? (
+                <div>
+                  <Text type="secondary">业务单据：</Text>
+                  <Link href={link.url} className="text-blue-600">{link.label}</Link>
+                </div>
+              ) : null;
+            })()}
+            <div>
+              <Text type="secondary">加签给：</Text>
+              <Select
+                className="mt-1 w-full"
+                placeholder="选择加签审批人"
+                loading={addApproverUserLoading}
+                value={addApproverUserId}
+                onChange={setAddApproverUserId}
+                showSearch
+                optionFilterProp="label"
+                options={addApproverUserOptions.map((u) => ({
+                  value: u.id,
+                  label: `${u.name}（${u.username}）`,
+                }))}
+                notFoundContent={addApproverUserLoading ? '加载中…' : '无可用用户'}
+              />
+            </div>
+            <div className="text-xs text-gray-400">
+              加签后将新增一位并行审批人，不影响当前审批进度。
             </div>
           </div>
         )}

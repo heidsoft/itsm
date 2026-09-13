@@ -70,6 +70,17 @@ const STATUS_CONFIG = {
   },
 };
 
+// 服务类型配置
+const SERVICE_TYPE_CONFIG: Record<string, string> = {
+  incident: '事件管理',
+  service_request: '服务请求',
+  change: '变更管理',
+  problem: '问题管理',
+  ticket: '工单',
+};
+
+const getServiceTypeLabel = (type: string) => SERVICE_TYPE_CONFIG[type] || type;
+
 const SLADefinitionManagement = () => {
   const { message } = App.useApp();
   const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
@@ -258,7 +269,7 @@ const SLADefinitionManagement = () => {
           </Text>
           <div className="flex items-center gap-4 mt-1">
             <span className="text-xs text-gray-500">ID: {record.id}</span>
-            <span className="text-xs text-gray-500">类型: {record.serviceType}</span>
+            <span className="text-xs text-gray-500">类型: {getServiceTypeLabel(record.serviceType)}</span>
           </div>
         </div>
       ),
@@ -489,7 +500,7 @@ const SLADefinitionManagement = () => {
               style={{ width: '100%' }}
               options={[
                 { value: 'all', label: '全部类型' },
-                ...serviceTypes.map(type => ({ value: type, label: type })),
+                ...serviceTypes.map(type => ({ value: type, label: getServiceTypeLabel(type) })),
               ]}
             />
           </Col>
@@ -577,7 +588,7 @@ const SLADefinitionManagement = () => {
                   showSearch
                   optionFilterProp="label"
                   placeholder="选择或输入服务类型"
-                  options={serviceTypes.map(type => ({ value: type, label: type }))}
+                  options={Object.entries(SERVICE_TYPE_CONFIG).map(([value, label]) => ({ value, label }))}
                 />
               </Form.Item>
             </Col>

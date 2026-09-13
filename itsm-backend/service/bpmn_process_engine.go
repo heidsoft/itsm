@@ -87,6 +87,9 @@ type TaskService interface {
 	HandleTaskTimeout(ctx context.Context, taskID string) error
 	RetryTask(ctx context.Context, taskID string, maxRetries int) error
 	DelegateTask(ctx context.Context, taskID string, newAssignee string) error
+	DelegateTaskByID(ctx context.Context, id int, newAssignee string) error
+	AddApproverTask(ctx context.Context, taskID string, newApprover string) error
+	AddApproverTaskByID(ctx context.Context, id int, newApprover string) error
 	EscalateTask(ctx context.Context, taskID string, reason string) error
 	BatchAssignTasks(ctx context.Context, taskIDs []string, assignee string, tenantID int) error
 	GetTaskStatistics(ctx context.Context, req *TaskStatisticsRequest) (*TaskStatistics, error)
@@ -428,16 +431,55 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	// 运行语义，不能只停留在设计器配置中。
 	rejectStrategy, _ := task.TaskVariables["rejectStrategy"].(string)
 	approvalAction, _ := variables["approvalAction"].(string)
-	if approvalAction == "reject" && rejectStrategy == "terminate" {
-		if _, err = txc.ProcessInstance.UpdateOneID(instance.ID).
-			SetStatus("terminated").SetEndTime(time.Now()).Save(ctx); err != nil {
-			return nil, fmt.Errorf("终止被拒绝流程失败: %w", err)
+	commentRequired, _ := task.TaskVariables["commentRequiredOnReject"].(bool)
+
+	if approvalAction == "reject" {
+		if commentRequired && strings.TrimSpace(variables["approvalComment"].(string)) == "" {
+			return nil, fmt.Errorf("该审批节点要求拒绝时必须填写意见")
 		}
-		if _, err = txc.ProcessTask.Update().Where(
-			processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
-			processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
-		).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
-			return nil, fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
+		switch strings.ToLower(strings.TrimSpace(rejectStrategy)) {
+		case "terminate":
+			if _, err = txc.ProcessInstance.UpdateOneID(instance.ID).
+				SetStatus("terminated").SetEndTime(time.Now()).Save(ctx); err != nil {
+				return nil, fmt.Errorf("终止被拒绝流程失败: %w", err)
+			}
+			if _, err = txc.ProcessTask.Update().Where(
+				processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
+				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
+			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
+				return nil, fmt.Errorf("取消被拒绝流程的剩余任务失败: %w", err)
+			}
+		case "to_requester":
+			if _, err = txc.ProcessTask.Update().Where(
+				processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
+				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
+				processtask.IDNEQ(task.ID),
+			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
+				return nil, fmt.Errorf("退回发起人时取消其他活动任务失败: %w", err)
+			}
+			variables["rework_requested"] = true
+			variables["rework_requested_by"] = task.Assignee
+			if _, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables); err != nil {
+				return nil, fmt.Errorf("写入退回变量失败: %w", err)
+			}
+			if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+				return nil, err
+			}
+		case "gateway":
+			if _, err = txc.ProcessTask.Update().Where(
+				processtask.ProcessInstanceID(instance.ID), processtask.TenantID(instance.TenantID),
+				processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled"),
+				processtask.IDNEQ(task.ID),
+			).SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx); err != nil {
+				return nil, fmt.Errorf("拒绝分支取消其他活动任务失败: %w", err)
+			}
+			if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+				return nil, err
+			}
+		default:
+			if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
+				return nil, err
+			}
 		}
 	} else if err := e.executeStep(ctx, txc, instance, process, task.TaskDefinitionKey, instance.Variables); err != nil {
 		return nil, err
@@ -783,6 +825,18 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 			}
 		}
 		return ""
+	}
+
+	// 返工任务（to_requester 拒绝策略）必须分配给原始发起人，不走默认分配
+	if assignee == "" && strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "rework") {
+		if requester := getUserID("requester_id"); requester != "" {
+			assignee = requester
+		} else if triggeredBy := getUserID("triggered_by"); triggeredBy != "" {
+			assignee = triggeredBy
+		}
+		if assignee != "" {
+			e.logger.Infow("返工任务已分配给发起人", "taskID", task.ID, "assignee", assignee)
+		}
 	}
 
 	// 如果BPMN没有定义分配人，从流程变量中获取
@@ -2908,16 +2962,132 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	if !allowDelegate {
 		return fmt.Errorf("该审批节点不允许委托")
 	}
+	if strings.TrimSpace(newAssignee) == "" {
+		return fmt.Errorf("委托目标不能为空")
+	}
+	// 记录委托来源和时间（覆盖已有值，支持多次委托链）
 	task.TaskVariables["delegated_from"] = task.Assignee
 	task.TaskVariables["delegated_time"] = time.Now().Format(time.RFC3339)
 
-	_, err = s.client.ProcessTask.UpdateOne(task).
-		SetAssignee(newAssignee).
-		SetStatus("delegated").
-		SetTaskVariables(task.TaskVariables).
-		Save(ctx)
+	originalAssignee := task.Assignee
 
-	return err
+	// 保持任务活跃状态（"assigned"），仅更换负责人；设为 "delegated" 会导致被委托人看不到该任务
+	if _, err = s.client.ProcessTask.UpdateOne(task).
+		SetAssignee(newAssignee).
+		SetStatus("assigned").
+		SetTaskVariables(task.TaskVariables).
+		Save(ctx); err != nil {
+		return err
+	}
+
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if actorID <= 0 {
+		return nil
+	}
+	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	if ierr != nil {
+		return nil
+	}
+	delegatedFrom, _ := strconv.Atoi(originalAssignee)
+	_, _ = s.client.ProcessApprovalDecision.Create().
+		SetProcessInstanceID(instance.ID).SetProcessTaskID(task.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(task.TaskID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
+		SetActorID(actorID).SetAction("delegate").SetDecision("delegated").
+		SetNillableDelegatedFrom(&delegatedFrom).
+		SetTenantID(instance.TenantID).Save(ctx)
+	return nil
+}
+
+// DelegateTaskByID 按数据库主键委托任务（与 CompleteTaskByID 对称）。
+func (s *bpmnTaskService) DelegateTaskByID(ctx context.Context, id int, newAssignee string) error {
+	task, err := s.client.ProcessTask.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("任务不存在: %w", err)
+	}
+	return s.DelegateTask(ctx, task.TaskID, newAssignee)
+}
+
+func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, newApprover string) error {
+	task, err := s.GetTask(ctx, taskID)
+	if err != nil {
+		return err
+	}
+
+	if task.TaskVariables == nil {
+		task.TaskVariables = make(map[string]interface{})
+	}
+	allowAdd, _ := task.TaskVariables["allowAddApprover"].(bool)
+	if !allowAdd {
+		return fmt.Errorf("该审批节点不允许加签")
+	}
+	if strings.TrimSpace(newApprover) == "" {
+		return fmt.Errorf("加签目标不能为空")
+	}
+
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	rootTaskID := task.TaskID
+	if task.RootTaskID != "" {
+		rootTaskID = task.RootTaskID
+	}
+	parentTaskID := task.TaskID
+	if task.ParentTaskID != "" {
+		parentTaskID = task.ParentTaskID
+	}
+
+	addedTaskID := fmt.Sprintf("%s_addapprover_%d", task.TaskID, time.Now().UnixNano())
+	newTask, err := s.client.ProcessTask.Create().
+		SetTaskID(addedTaskID).
+		SetProcessInstanceID(task.ProcessInstanceID).
+		SetProcessDefinitionKey(task.ProcessDefinitionKey).
+		SetTaskDefinitionKey(task.TaskDefinitionKey).
+		SetTaskName(task.TaskName).
+		SetTaskType("user_task").
+		SetAssignee(newApprover).
+		SetStatus(common.ProcessTaskStatusAssigned).
+		SetPriority(task.Priority).
+		SetParentTaskID(parentTaskID).
+		SetRootTaskID(rootTaskID).
+		SetTaskVariables(map[string]interface{}{
+			"taskPurpose":    "approval",
+			"added_by":       task.Assignee,
+			"added_time":     time.Now().Format(time.RFC3339),
+			"source_task_id": task.TaskID,
+		}).
+		SetTenantID(tenantID).
+		SetCreatedTime(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("创建加签任务失败: %w", err)
+	}
+
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if actorID <= 0 {
+		return nil
+	}
+	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	if ierr != nil {
+		return nil
+	}
+	_, _ = s.client.ProcessApprovalDecision.Create().
+		SetProcessInstanceID(instance.ID).SetProcessTaskID(newTask.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(addedTaskID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
+		SetActorID(actorID).SetAction("add_approver").SetDecision("added").
+		SetTenantID(instance.TenantID).Save(ctx)
+	return nil
+}
+
+func (s *bpmnTaskService) AddApproverTaskByID(ctx context.Context, id int, newApprover string) error {
+	task, err := s.client.ProcessTask.Get(ctx, id)
+	if err != nil {
+		return fmt.Errorf("任务不存在: %w", err)
+	}
+	return s.AddApproverTask(ctx, task.TaskID, newApprover)
 }
 
 func (s *bpmnTaskService) EscalateTask(ctx context.Context, taskID string, reason string) error {
@@ -3314,7 +3484,8 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 			).
 			SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx)
 		engine := NewCustomProcessEngine(s.client, s.logger)
-		if err := engine.CompleteTask(ctx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
+		systemCtx := context.WithValue(context.Background(), bpmn.BPMNTenantIDContextKey, tenantID)
+		if err := engine.CompleteTask(systemCtx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
 			return fmt.Errorf("推进会签父任务失败: %w", err)
 		}
 	}

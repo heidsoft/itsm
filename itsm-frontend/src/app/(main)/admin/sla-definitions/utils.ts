@@ -53,7 +53,9 @@ export const transformSLA = (item: APISLADefinition): SLADefinition => ({
   // 可用性字段：优先取后端值，否则按 priority 派生
   availability: `${deriveAvailabilityTarget(item)}%`,
   businessHours: '7x24',
-  escalationRules: [],
+  escalationRules: (item.escalationRules || []).map((rule) =>
+    typeof rule === 'string' ? rule : JSON.stringify(rule)
+  ),
   applicableServices: [],
   status: item.isActive ? 'active' : 'inactive',
   createdAt: item.createdAt || '',

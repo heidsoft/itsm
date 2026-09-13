@@ -2,6 +2,7 @@ package service
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -175,5 +176,146 @@ func TestBPMNLint_MissingNamespace(t *testing.T) {
 	svc := NewBPMNLintService()
 	if _, err := svc.LintBPMNXML([]byte(xml)); err == nil {
 		t.Fatal("缺命名空间必须返回 error")
+	}
+}
+
+// TestBPMNLint_ToRequesterNoLongerWarns to_requester 策略已实现运行时，不应再报 warning
+func TestBPMNLint_ToRequesterNoLongerWarns(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p1" name="退回测试" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:userTask id="T_approve" name="审批" taskPurpose="approval" assignee="manager" rejectStrategy="to_requester"/>
+    <bpmn:userTask id="T_rework" name="返工" taskPurpose="rework"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T_approve"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T_approve" targetRef="T_rework">
+      <bpmn:conditionExpression>approvalAction == 'reject'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F3" sourceRef="T_rework" targetRef="T_approve"/>
+    <bpmn:sequenceFlow id="F4" sourceRef="T_approve" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	for _, issue := range result.Issues {
+		if issue.ElementID == "T_approve" && strings.Contains(issue.Message, "to_requester") {
+			t.Fatal("to_requester 策略已实现运行时，不应再报 warning")
+		}
+	}
+}
+
+// TestBPMNLint_AllowAddApproverNoLongerWarns allowAddApprover 已实现运行时（加签），不应再报 warning
+func TestBPMNLint_AllowAddApproverNoLongerWarns(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p2" name="加签测试" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:userTask id="T1" name="审批" taskPurpose="approval" assignee="manager" allowAddApprover="true"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	for _, issue := range result.Issues {
+		if issue.ElementID == "T1" && strings.Contains(issue.Message, "加签") {
+			t.Fatal("allowAddApprover 已实现运行时加签逻辑，不应再报 warning")
+		}
+	}
+}
+
+// TestBPMNLint_AllowDelegateOnNonApproval allowDelegate 在非审批节点应报 warning
+func TestBPMNLint_AllowDelegateOnNonApproval(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p3" name="委托测试" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:userTask id="T1" name="普通任务" assignee="alice" allowDelegate="true"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	found := false
+	for _, issue := range result.Issues {
+		if issue.Severity == "warning" && issue.ElementID == "T1" && issue.Category == "approval" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("非审批节点开启 allowDelegate 应报 warning，但未找到")
+	}
+}
+
+// TestBPMNLint_ThresholdExceedsCandidates 审批阈值大于候选人数应报 error
+func TestBPMNLint_ThresholdExceedsCandidates(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p4" name="阈值测试" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:userTask id="T1" name="审批" taskPurpose="approval" candidateUsers="alice,bob" approvalThreshold="5"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	if !result.HasErrors {
+		t.Fatal("阈值 5 > 候选人 2 应报 error，但 HasErrors=false")
+	}
+	found := false
+	for _, issue := range result.Issues {
+		if issue.Severity == "error" && issue.ElementID == "T1" && issue.Category == "approval" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("未找到阈值超限 error")
+	}
+}
+
+// TestBPMNLint_ApprovalNodeCleanConfig 审批节点配置合理时不应报规则组 8 的 warning/error
+func TestBPMNLint_ApprovalNodeCleanConfig(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p5" name="正常审批" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:userTask id="T1" name="审批" taskPurpose="approval" candidateUsers="alice,bob" approvalThreshold="1" allowDelegate="true" rejectStrategy="terminate"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	for _, issue := range result.Issues {
+		if issue.Category == "approval" {
+			t.Errorf("合理配置不应产生 approval 类 issue，但发现: [%s] %s", issue.Severity, issue.Message)
+		}
 	}
 }

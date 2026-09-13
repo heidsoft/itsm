@@ -14,6 +14,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -58,7 +59,9 @@ func (s *BPMNTemplateService) LoadAndDeployTemplates(ctx context.Context, tenant
 		// 检查是否已部署
 		exists, err := s.isTemplateDeployed(ctx, tmpl.ID, tenantID)
 		if err != nil {
-			return nil, errors.Wrap(err, "检查模板部署状态失败")
+			s.logger.Sugar().Errorw("检查模板部署状态失败，跳过该模板", "template", tmpl.ID, "error", err)
+			deployFailures = append(deployFailures, tmpl.ID)
+			continue
 		}
 
 		if !exists {
@@ -204,16 +207,28 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 	// 获取当前时间
 	now := time.Now()
 
-	// 先创建部署记录
-	deployment, err := s.client.ProcessDeployment.Create().
-		SetDeploymentID(fmt.Sprintf("%s-v1", tmpl.ID)).
-		SetDeploymentName(fmt.Sprintf("%s v1", tmpl.Name)).
-		SetDeploymentTime(now).
-		SetTenantID(tenantID).
-		SetDeployedBy("system").
-		Save(ctx)
+	// 查找或创建部署记录（防止前次运行部分失败后 deployment_id 唯一约束冲突）
+	deploymentID := fmt.Sprintf("%s-v1", tmpl.ID)
+	deployment, err := s.client.ProcessDeployment.Query().
+		Where(
+			processdeployment.DeploymentID(deploymentID),
+			processdeployment.TenantID(tenantID),
+		).
+		First(ctx)
 	if err != nil {
-		return errors.Wrap(err, "创建部署记录失败")
+		if !ent.IsNotFound(err) {
+			return errors.Wrap(err, "查询部署记录失败")
+		}
+		deployment, err = s.client.ProcessDeployment.Create().
+			SetDeploymentID(deploymentID).
+			SetDeploymentName(fmt.Sprintf("%s v1", tmpl.Name)).
+			SetDeploymentTime(now).
+			SetTenantID(tenantID).
+			SetDeployedBy("system").
+			Save(ctx)
+		if err != nil {
+			return errors.Wrap(err, "创建部署记录失败")
+		}
 	}
 
 	// 创建流程定义（关联部署ID）
