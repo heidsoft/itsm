@@ -651,8 +651,8 @@ export default function WorkflowNodeInspector({
                   <Select value={currentRejectStrategy} onChange={value => apply({ rejectStrategy: value })}
                     options={[
                       { label: '终止流程', value: 'terminate' },
-                      { label: '退回发起人（未就绪）', value: 'to_requester', disabled: true },
-                      { label: '进入拒绝分支（运行时未实现）', value: 'gateway', disabled: true },
+                      { label: '退回发起人', value: 'to_requester' },
+                      { label: '进入拒绝分支', value: 'gateway' },
                     ]}
                     className="w-full" size="small" />
                   <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
@@ -660,8 +660,8 @@ export default function WorkflowNodeInspector({
                     options={[{ label: '仅提醒（超时调度未就绪）', value: 'notify' }, { label: '升级审批（未就绪）', value: 'escalate' }, { label: '自动拒绝（未就绪）', value: 'auto_reject' }]}
                     className="w-full" size="small" />
                   <Space wrap>
-                    <Switch size="small" checked={currentAllowDelegate} disabled />委托（未就绪）
-                    <Switch size="small" checked={currentAllowAddApprover} disabled />加签（未就绪）
+                    <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />允许委托
+                    <Switch size="small" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />允许加签
                     <Switch size="small" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
                   </Space>
                 </Space>
@@ -836,10 +836,9 @@ export default function WorkflowNodeInspector({
               </Text>
               <DebouncedInput
                 type="number"
-                placeholder="运行时优先级尚未接线"
+                placeholder="0-100，数值越高优先级越高"
                 value={currentPriority}
                 onCommit={value => apply({ priority: value })}
-                disabled
                 allowClear
                 size="small"
                 min={0}
@@ -853,10 +852,9 @@ export default function WorkflowNodeInspector({
                 截止时间 (dueDate)
               </Text>
               <DebouncedInput
-                placeholder="截止时间调度尚未接线"
+                placeholder="ISO 8601 格式，例如 2026-09-20T18:00:00+08:00"
                 value={currentDueDate}
                 onCommit={value => apply({ dueDate: value })}
-                disabled
                 allowClear
                 size="small"
               />
@@ -868,10 +866,9 @@ export default function WorkflowNodeInspector({
                 提醒时间 (followUpDate)
               </Text>
               <DebouncedInput
-                placeholder="提醒时间调度尚未接线"
+                placeholder="ISO 8601 格式，例如 2026-09-19T09:00:00+08:00"
                 value={currentFollowUpDate}
                 onCommit={value => apply({ followUpDate: value })}
-                disabled
                 allowClear
                 size="small"
               />

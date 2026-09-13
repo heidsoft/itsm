@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { App, Button, Card, Form, Input, Modal, Select, Space, Switch, Table, Tag, Typography } from 'antd';
-import { Edit, Eye, History, Plus, Upload, Archive } from 'lucide-react';
+import { App, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Switch, Table, Tag, Typography } from 'antd';
+import { Edit, Eye, History, Plus, Upload, Archive, Copy } from 'lucide-react';
 import {
   BPMNWorkflowTemplateApi,
   type WorkflowTemplate,
@@ -39,6 +39,8 @@ export default function WorkflowTemplateCatalog() {
   const [modalOpen, setModalOpen] = useState(false);
   const [versions, setVersions] = useState<WorkflowTemplate[]>([]);
   const [versionsOpen, setVersionsOpen] = useState(false);
+  const [detailItem, setDetailItem] = useState<WorkflowTemplate | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [form] = Form.useForm<CreateWorkflowTemplateRequest>();
 
   const load = async () => {
@@ -87,7 +89,7 @@ export default function WorkflowTemplateCatalog() {
           bpmnXml: values.bpmnXml,
           isPublic: values.isPublic,
         });
-        message.success('模板草稿已保存');
+        message.success(editing.status === 'published' ? '新版本草稿已创建' : '模板草稿已保存');
       } else {
         await BPMNWorkflowTemplateApi.create(values);
         message.success('模板草稿已创建');
@@ -146,6 +148,24 @@ export default function WorkflowTemplateCatalog() {
     }
   };
 
+  const showDetail = (item: WorkflowTemplate) => {
+    setDetailItem(item);
+    setDetailOpen(true);
+  };
+
+  const createNewVersion = (item: WorkflowTemplate) => {
+    setEditing(item);
+    form.setFieldsValue({
+      key: item.key,
+      name: item.name,
+      description: item.description,
+      domain: item.domain,
+      bpmnXml: item.bpmnXml,
+      isPublic: item.isPublic,
+    });
+    setModalOpen(true);
+  };
+
   return (
     <Card
       title="AI 工作流模板目录"
@@ -168,15 +188,16 @@ export default function WorkflowTemplateCatalog() {
           { title: '状态', dataIndex: 'status', render: (value: string) => <Tag color={STATUS_LABELS[value]?.color}>{STATUS_LABELS[value]?.label || value}</Tag> },
           { title: '更新时间', dataIndex: 'updatedAt' },
           { title: '操作', key: 'actions', render: (_: unknown, item: WorkflowTemplate) => <Space>
-            <Button type="text" icon={<Eye size={16} />} aria-label="查看版本" onClick={() => void showVersions(item)} />
+            <Button type="text" icon={<Eye size={16} />} aria-label="查看详情" onClick={() => showDetail(item)} />
             {item.status === 'draft' && <Button type="text" icon={<Edit size={16} />} aria-label="编辑草稿" onClick={() => openEdit(item)} />}
             {item.status === 'draft' && <Button type="text" icon={<Upload size={16} />} aria-label="发布模板" onClick={() => publish(item)} />}
+            {item.status === 'published' && <Button type="text" icon={<Copy size={16} />} aria-label="创建新版本" onClick={() => createNewVersion(item)} />}
             {item.status === 'published' && <Button type="text" danger icon={<Archive size={16} />} aria-label="停用模板" onClick={() => archive(item)} />}
             <Button type="text" icon={<History size={16} />} aria-label="查看历史版本" onClick={() => void showVersions(item)} />
           </Space> },
         ]}
       />
-      <Modal title={editing ? `编辑模板草稿 ${editing.version}` : '创建模板草稿'} open={modalOpen} onOk={() => void save()} confirmLoading={loading} onCancel={() => setModalOpen(false)} width={820}>
+      <Modal title={editing ? (editing.status === 'published' ? `基于 ${editing.name} ${editing.version} 创建新版本` : `编辑模板草稿 ${editing.version}`) : '创建模板草稿'} open={modalOpen} onOk={() => void save()} confirmLoading={loading} onCancel={() => setModalOpen(false)} width={820}>
         <Form form={form} layout="vertical">
           <Form.Item name="key" label="模板 Key" rules={[{ required: true, min: 2, max: 120 }]}><Input disabled={!!editing} placeholder="例如 expense_approval" /></Form.Item>
           <Form.Item name="name" label="模板名称" rules={[{ required: true }]}><Input /></Form.Item>
@@ -193,6 +214,27 @@ export default function WorkflowTemplateCatalog() {
           { title: '更新时间', dataIndex: 'updatedAt' },
           { title: 'BPMN', dataIndex: 'bpmnXml', render: (value: string) => value ? '已配置' : '缺失' },
         ]} />
+      </Modal>
+      <Modal title={detailItem ? `模板详情 — ${detailItem.name}` : '模板详情'} open={detailOpen} onCancel={() => setDetailOpen(false)} footer={null} width={800}>
+        {detailItem && (
+          <Descriptions column={2} bordered size="small">
+            <Descriptions.Item label="模板 Key" span={2}>{detailItem.key}</Descriptions.Item>
+            <Descriptions.Item label="模板名称">{detailItem.name}</Descriptions.Item>
+            <Descriptions.Item label="业务域">{DOMAIN_OPTIONS.find(option => option.value === detailItem.domain)?.label || detailItem.domain}</Descriptions.Item>
+            <Descriptions.Item label="版本">{detailItem.version}</Descriptions.Item>
+            <Descriptions.Item label="状态"><Tag color={STATUS_LABELS[detailItem.status]?.color}>{STATUS_LABELS[detailItem.status]?.label || detailItem.status}</Tag></Descriptions.Item>
+            <Descriptions.Item label="对租户用户可见">{detailItem.isPublic ? '是' : '否'}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{detailItem.createdAt}</Descriptions.Item>
+            <Descriptions.Item label="描述" span={2}>{detailItem.description || '—'}</Descriptions.Item>
+            <Descriptions.Item label="BPMN XML" span={2}>
+              {detailItem.bpmnXml ? (
+                <Typography.Paragraph ellipsis={{ rows: 6, expandable: true, symbol: '展开' }} style={{ marginBottom: 0, fontSize: 12, fontFamily: 'monospace', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                  {detailItem.bpmnXml}
+                </Typography.Paragraph>
+              ) : '未配置'}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
       </Modal>
     </Card>
   );
