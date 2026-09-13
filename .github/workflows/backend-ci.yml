@@ -211,7 +211,7 @@ jobs:
           TESTABLE_PKGS=$(go list ./... 2>"$LIST_ERR" \
             | grep -vE '^itsm-backend/migrations$|^itsm-backend/migrations/hook$|^itsm-backend/migrations/enttest$|^itsm-backend/migrations/predicate$')
           if [ -s "$LIST_ERR" ]; then
-            UNEXPECTED=$(grep -v 'migrations' "$LIST_ERR" || true)
+            UNEXPECTED=$(grep -v -e 'migrations' -e '^go: downloading' "$LIST_ERR" || true)
             if [ -n "$UNEXPECTED" ]; then
               echo "::error::go list reported unexpected errors:"
               echo "$UNEXPECTED"
