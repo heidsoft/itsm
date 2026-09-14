@@ -1,9 +1,9 @@
 # BPMN Timer Event 调度基础设施设计大纲
 
 **文档编号**: ITSM-PRD-2026-002
-**版本**: v0.3 Draft
-**日期**: 2026-09-13
-**状态**: Phase 1.5 Spike 完成 — 待产品评审后进入 Phase 1 实现
+**版本**: v0.4
+**日期**: 2026-09-14
+**状态**: 产品评审通过（5 个开放问题已决策，见 §11.2/§12）— Phase 1 待启动
 
 ---
 
@@ -427,13 +427,13 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | 多副本部署时 In-Memory Wheel 重复触发 | 同一 timer 被多个进程同时触发 | Phase 1 用 DB CAS 做 fencing；未来引入分布式锁 | 开放 |
 | 大量 timer 同时到期（如每日 9:00 的 Start Timer） | 瞬时 DB 和引擎压力 | time-wheel 分散 + 批量处理 + 限流 | 开放 |
 
-### 11.2 产品开放问题
+### 11.2 产品开放问题（2026-09-14 评审已全部决策）
 
-1. **Timer Start Event 的 cron 表达式是否需要支持时区？** — 多租户场景下，"每天 9:00" 是哪个时区？
-2. **Boundary Timer 是否需要支持 non-interrupting？** — 即超时提醒但不中断当前活动。这在 P0 阶段是否需要？
-3. **Timer 到期后的动作是否需要支持自定义表达式？** — 还是只支持预定义的枚举（升级/转派/自动完成/通知）？
-4. **SLA Working Hours Calendar** — P0/P1 已确定用 Cancel + Recreate 处理显式暂停/恢复。P2 是否需要 Working Hours Calendar（只计算工作时间，排除周末和节假日）？
-5. **用户可见性** — Timer Event 的等待状态是否在前端流程跟踪中可见？用户能否手动跳过等待？
+1. **✅ 已决策：Timer Start cron 按租户时区解析。** `tenants.timezone` 字段已存在（默认 `Asia/Shanghai`，见 `ent/schema/tenant.go`），cron 计算绝对 `fire_at` 时按租户时区执行 `time.LoadLocation`，无新增基础设施。用户级时区挂账 P2+。文档统一标注"租户时区语义"。
+2. **✅ 已决策：P0 仅支持 interrupting Boundary Timer。** non-interrupting 需要活动继续执行 + 并行分支的执行模型，改 executor fork 逻辑复杂度翻倍；`timer_type` 枚举已预留，P2（事件子流程批次）再扩展 `is_interrupting` 字段。
+3. **✅ 已决策：到期动作 = 预定义枚举 + 结构化参数，不做自定义表达式。** 枚举收敛在现有 `notify/escalate/auto_reject/auto_approve` 四动作 + P1 增补；参数走结构化 JSON `params`（escalate 目标组/用户、notify 模板 ID），可 Lint 可审计。自定义表达式与 AGENTS.md"高-risk 动作"约束冲突（审计与安全面失控），门关死。
+4. **✅ 已决策：维持 P0/P1 只做 Cancel + Recreate，Working Hours Calendar 留 P2。** 边界声明：timer 的 `fire_at` 一律 UTC 存储 + 租户时区展示，杜绝现有 SLA 时区 bug（路线图挂账项）在 Timer 体系重演；该边界在 Phase 2 SLA 合并时顺带解决。
+5. **✅ 已决策：P0 可见不可跳过，P1 增加手动跳过。** 可见：`WorkflowProgressCard` 对 intermediate/boundary timer 渲染"等待中，预计 xx 触发"（数据源 `process_timer` 查询，现成）。可跳过：`POST /timers/:id/skip` 走手动触发语义（CAS fencing 后按 fired 处理 + 审计），P1 与管理 API 写操作一起交付。
 
 ### 11.3 与现有 AGENTS.md 约束的关系
 
@@ -467,6 +467,11 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | 2026-09-13 | 新增 Phase 1.5 Spike（1 天） | lib-bpmn-engine v0.2.4 Timer Event 支持未验证，先 spike 再估 Phase 2 |
 | 2026-09-13 | Spike 结论：不 fork lib-bpmn-engine，在 CustomProcessEngine 层自建 Timer 调度 | 库仅支持 IntermediateCatchEvent+timeDuration 被动轮询；无 Boundary Timer / Timer Start / 回调 API；CustomProcessEngine 完全绕过该库（自有解析器 + DB 状态机），fork 收益为零 |
 | 2026-09-13 | Phase 2 引擎集成路径确认：Timer Scheduler 触发回调 → CustomProcessEngine 推进流程 | 不经过 lib-bpmn-engine 的执行循环；Timer 到期后直接调用 CustomProcessEngine 的方法推进到下一节点，与现有 TimeoutScanner 的 auto_reject/auto_approve 模式一致 |
+| 2026-09-14 | 产品评审 Q1：cron 按租户 timezone 解析（缺省 Asia/Shanghai） | `tenants.timezone` 字段已存在，零新增基础设施；MSP/SaaS 多租户"每天 9:00"语义正确 |
+| 2026-09-14 | 产品评审 Q2：P0 仅 interrupting Boundary Timer，non-interrupting 留 P2 | 避免 P0 改 executor fork 执行模型；timer_type 枚举已预留扩展位 |
+| 2026-09-14 | 产品评审 Q3：到期动作 = 四动作枚举 + 结构化 params，禁用自定义表达式 | 结构化参数可 Lint 可审计；表达式注入与 AGENTS.md 高-risk 动作约束冲突 |
+| 2026-09-14 | 产品评审 Q4：Working Hours Calendar 维持 P2；fire_at 一律 UTC 存储 + 租户时区展示 | Cancel+Recreate 已覆盖 P0 场景；UTC 存储边界杜绝 SLA 时区 bug 重演 |
+| 2026-09-14 | 产品评审 Q5：P0 等待状态前端可见（WorkflowProgressCard），P1 加手动跳过 | 数据源 process_timer 现成；跳过走手动触发语义（CAS fencing + 审计），与 P1 管理 API 写操作同批交付 |
 
 ---
 
