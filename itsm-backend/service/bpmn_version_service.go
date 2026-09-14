@@ -380,6 +380,11 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 
 // recordVersionChangeLog 记录版本变更日志
 func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, processDefID string, version string, changeLog, createdBy string, tenantID int) error {
+	if changeLog == "" {
+		// 空变更描述不记录（change_log 字段 NotEmpty 校验会拒绝，避免每次告警）
+		return nil
+	}
+
 	// 解析 processDefID 为 int
 	processDefIDInt, err := strconv.Atoi(processDefID)
 	if err != nil {
@@ -442,7 +447,7 @@ func (s *BPMNVersionService) compareBPMNXML(baseXML, targetXML string) ([]Change
 		Tasks []struct {
 			ID   string `xml:"id,attr"`
 			Name string `xml:"name,attr"`
-		} `xml:"process>userTask"`
+		} `xml:"userTask"`
 	}
 	type Definitions struct {
 		Process Process `xml:"process"`
@@ -505,18 +510,28 @@ func (s *BPMNVersionService) assessCompatibility(changes []ChangeDetail, breakin
 }
 
 // GetChangeLogsByProcessKey 根据流程定义key获取版本变更日志列表
+// 同一 key 可能存在多个版本的定义（每个版本一条 ProcessDefinition 记录），
+// 变更日志挂在各版本定义的 ID 上，因此按 key 查询需聚合所有版本的日志。
 func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, processKey string, tenantID int) ([]*ent.ProcessVersionChangelog, error) {
-	// 先通过 processdefinition 找到对应的 ID
-	pd, err := s.client.ProcessDefinition.Query().
+	// 先通过 processdefinition 找到该 key 下所有版本的定义 ID
+	pds, err := s.client.ProcessDefinition.Query().
 		Where(processdefinition.Key(processKey), processdefinition.TenantID(tenantID)).
-		First(ctx)
+		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("流程定义不存在: %w", err)
+	}
+	if len(pds) == 0 {
+		return nil, fmt.Errorf("流程定义不存在: key=%s tenant=%d", processKey, tenantID)
+	}
+
+	ids := make([]int, 0, len(pds))
+	for _, pd := range pds {
+		ids = append(ids, pd.ID)
 	}
 
 	// 获取 changelogs
 	changelogs, err := s.client.ProcessVersionChangelog.Query().
-		Where(processversionchangelog.ProcessDefinitionIDEQ(pd.ID)).
+		Where(processversionchangelog.ProcessDefinitionIDIn(ids...)).
 		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {

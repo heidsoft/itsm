@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processvariable"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -158,6 +159,7 @@ func (s *BPMNVariableService) CreateVariable(ctx context.Context, req *CreateVar
 		processInstanceID, _ = strconv.Atoi(req.ProcessInstanceID)
 	}
 	variable, err := s.client.ProcessVariable.Create().
+		SetVariableID(uuid.New().String()).
 		SetVariableName(req.Name).
 		SetVariableValue(string(valueBytes)). // ProcessVariable的variable_value是text类型
 		SetVariableType(string(req.Type)).
