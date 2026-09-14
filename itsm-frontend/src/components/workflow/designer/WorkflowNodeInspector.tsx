@@ -656,8 +656,9 @@ export default function WorkflowNodeInspector({
                     ]}
                     className="w-full" size="small" />
                   <Select value={currentTimeoutAction} onChange={value => apply({ timeoutAction: value })}
-                    disabled
-                    options={[{ label: '仅提醒（超时调度未就绪）', value: 'notify' }, { label: '升级审批（未就绪）', value: 'escalate' }, { label: '自动拒绝（未就绪）', value: 'auto_reject' }]}
+                    allowClear
+                    placeholder="选择超时动作"
+                    options={[{ label: '仅提醒', value: 'notify' }, { label: '升级审批', value: 'escalate' }, { label: '自动拒绝', value: 'auto_reject' }, { label: '自动通过', value: 'auto_approve' }]}
                     className="w-full" size="small" />
                   <Space wrap>
                     <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />允许委托
