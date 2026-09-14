@@ -57,6 +57,10 @@ const (
 	RoleSecAdmin   = domainrole.SecurityAdmin
 )
 
+type workflowCommandCreator interface {
+	CreateWithWorkflowCommand(context.Context, *ServiceRequest, []*ServiceRequestApproval) (*ServiceRequest, error)
+}
+
 type Service struct {
 	repo           Repository
 	scRepo         service_catalog.Repository
@@ -65,7 +69,8 @@ type Service struct {
 	approvalBridge *service.BPMNApprovalBridge
 	// approvalChain 审批链求值引擎：驱动服务请求的分级/会签/或签/fallback 审批。
 	// 仅当 BPMN 桥接未处理（无运行中流程实例）时消费，避免双轨推进。
-	approvalChain *service.ApprovalChainService
+	approvalChain         *service.ApprovalChainService
+	workflowOutboxEnabled bool
 }
 
 func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmdb.Repository, entClient *ent.Client, logger *zap.SugaredLogger, approvalChain *service.ApprovalChainService) *Service {
@@ -82,6 +87,11 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 	}
 	return svc
 }
+
+// EnableWorkflowOutbox opts the service into the atomic outbox path:
+// Create will call CreateWithWorkflowCommand so the business row and the
+// CommandStartBPMN outbox row share one transaction.
+func (s *Service) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
 
 // Create submits a new service request
 func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalogID int, reqData *ServiceRequest) (*ServiceRequest, error) {
@@ -226,11 +236,24 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	requesterDept, _, _ := s.repo.GetUserContext(ctx, requesterID, tenantID)
 	s.enrichApprovalsWithApprovers(ctx, tenantID, approvals, requesterDept)
 
-	// 5. Save
-	created, err := s.repo.Create(ctx, newReq, approvals)
-	if err != nil {
-		s.logger.Errorw("Failed to create service request", "error", err)
-		return nil, common.NewInternalError("Failed to create service request", err)
+	// 5. Save（outbox 启用时在同一事务内 enqueue CommandStartBPMN，
+	// 保证业务行与流程启动命令的原子性；与 incident/ticket/change 域对齐。）
+	var created *ServiceRequest
+	if s.workflowOutboxEnabled {
+		if creator, ok := s.repo.(workflowCommandCreator); ok {
+			created, err = creator.CreateWithWorkflowCommand(ctx, newReq, approvals)
+			if err != nil {
+				s.logger.Errorw("Failed to create service request with workflow command", "error", err)
+				return nil, common.NewInternalError("Failed to create service request", err)
+			}
+		}
+	}
+	if created == nil {
+		created, err = s.repo.Create(ctx, newReq, approvals)
+		if err != nil {
+			s.logger.Errorw("Failed to create service request", "error", err)
+			return nil, common.NewInternalError("Failed to create service request", err)
+		}
 	}
 
 	return created, nil

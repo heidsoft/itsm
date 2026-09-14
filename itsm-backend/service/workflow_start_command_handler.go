@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
@@ -120,6 +121,25 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 				"need_approval": ch.Type != "emergency",
 			},
 			TriggeredBy: fmt.Sprintf("%d", ch.CreatedBy), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
+		}
+	case "service_request":
+		sr, err := h.client.ServiceRequest.Query().Where(
+			servicerequest.IDEQ(cmd.AggregateID),
+			servicerequest.TenantIDEQ(cmd.TenantID),
+			servicerequest.DeletedAtIsNil(),
+		).Only(ctx)
+		if err != nil {
+			return fmt.Errorf("load service request for workflow: %w", err)
+		}
+		req = &dto.ProcessTriggerRequest{
+			BusinessType: dto.BusinessTypeServiceRequest, BusinessID: sr.ID,
+			ProcessDefinitionKey: "service_request_flow",
+			Variables: map[string]interface{}{
+				"service_request_id": sr.ID, "title": sr.Title, "reason": sr.Reason,
+				"status": sr.Status, "requester_id": sr.RequesterID, "catalog_id": sr.CatalogID,
+				"current_level": sr.CurrentLevel, "total_levels": sr.TotalLevels,
+			},
+			TriggeredBy: fmt.Sprintf("%d", sr.RequesterID), TriggeredAt: time.Now(), TenantID: cmd.TenantID,
 		}
 	default:
 		return fmt.Errorf("unsupported workflow aggregate type %q", cmd.AggregateType)

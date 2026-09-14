@@ -871,6 +871,7 @@ func NewApplication() *Application {
 	// Domain: Service Request (DDD)
 	srRepo := service_request.NewEntRepository(client)
 	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar, approvalChainService)
+	srService.EnableWorkflowOutbox()
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)

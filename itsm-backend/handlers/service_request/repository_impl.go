@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/commandbus"
 )
 
 type EntRepository struct {
@@ -170,6 +171,100 @@ func (r *EntRepository) Create(ctx context.Context, req *ServiceRequest, approva
 	}
 
 	return r.toDomain(savedReq), nil
+}
+
+// CreateWithWorkflowCommand atomically persists the service request, its approval
+// steps, and a CommandStartBPMN outbox command in a single transaction.
+func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, req *ServiceRequest, approvals []*ServiceRequestApproval) (*ServiceRequest, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("starting transaction: %w", err)
+	}
+	rollback := func(cause error) (*ServiceRequest, error) {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return nil, fmt.Errorf("%w; rollback: %v", cause, rbErr)
+		}
+		return nil, cause
+	}
+
+	create := tx.ServiceRequest.Create().
+		SetTenantID(req.TenantID).
+		SetCatalogID(req.CatalogID).
+		SetRequesterID(req.RequesterID).
+		SetStatus(req.Status).
+		SetCurrentLevel(req.CurrentLevel).
+		SetTotalLevels(req.TotalLevels).
+		SetComplianceAck(req.ComplianceAck).
+		SetNeedsPublicIP(req.NeedsPublicIP).
+		SetDataClassification(req.DataClassification)
+
+	if req.Title != "" {
+		create.SetTitle(req.Title)
+	}
+	if req.Reason != "" {
+		create.SetReason(req.Reason)
+	}
+	if req.FormData != nil {
+		create.SetFormData(req.FormData)
+	}
+	if req.CostCenter != "" {
+		create.SetCostCenter(req.CostCenter)
+	}
+	if req.SourceIPWhitelist != nil {
+		create.SetSourceIPWhitelist(req.SourceIPWhitelist)
+	}
+	if req.ExpireAt != nil {
+		create.SetExpireAt(*req.ExpireAt)
+	}
+	if req.CiID > 0 {
+		create.SetCiID(req.CiID)
+	}
+
+	saved, err := create.Save(ctx)
+	if err != nil {
+		return rollback(fmt.Errorf("creating service request: %w", err))
+	}
+
+	if len(approvals) > 0 {
+		bulk := make([]*ent.ServiceRequestApprovalCreate, len(approvals))
+		for i, app := range approvals {
+			bulk[i] = tx.ServiceRequestApproval.Create().
+				SetTenantID(req.TenantID).
+				SetServiceRequestID(saved.ID).
+				SetLevel(app.Level).
+				SetStep(app.Step).
+				SetStatus(app.Status).
+				SetTimeoutHours(app.TimeoutHours)
+
+			if app.DueAt != nil {
+				bulk[i].SetDueAt(*app.DueAt)
+			}
+			if app.Node != nil {
+				bulk[i].SetNode(app.Node)
+			}
+		}
+		if _, err := tx.ServiceRequestApproval.CreateBulk(bulk...).Save(ctx); err != nil {
+			return rollback(fmt.Errorf("creating approvals: %w", err))
+		}
+	}
+
+	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:      req.TenantID,
+		CommandType:   commandbus.CommandStartBPMN,
+		AggregateType: "service_request",
+		AggregateID:   saved.ID,
+		IdempotencyKey: fmt.Sprintf("service_request:%d:workflow:start", saved.ID),
+		Payload:       map[string]interface{}{"businessType": "service_request", "businessId": saved.ID},
+	})
+	if err != nil {
+		return rollback(fmt.Errorf("enqueue service request workflow: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return rollback(fmt.Errorf("committing transaction: %w", err))
+	}
+
+	return r.toDomain(saved), nil
 }
 
 func (r *EntRepository) Get(ctx context.Context, id, tenantID int) (*ServiceRequest, error) {
