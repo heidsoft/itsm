@@ -3604,6 +3604,80 @@ var (
 			},
 		},
 	}
+	// ProcessTimersColumns holds the columns for the "process_timers" table.
+	ProcessTimersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "timer_id", Type: field.TypeString},
+		{Name: "timer_type", Type: field.TypeString},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "activity_id", Type: field.TypeString, Nullable: true},
+		{Name: "timer_expression", Type: field.TypeString},
+		{Name: "expression_type", Type: field.TypeString},
+		{Name: "fire_at", Type: field.TypeTime},
+		{Name: "fired_at", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "retry_count", Type: field.TypeInt, Default: 0},
+		{Name: "max_retries", Type: field.TypeInt, Default: 3},
+		{Name: "last_fire_attempt", Type: field.TypeTime, Nullable: true},
+		{Name: "failure_reason", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "context_variables", Type: field.TypeJSON, Nullable: true},
+		{Name: "total_duration_seconds", Type: field.TypeFloat64, Nullable: true},
+		{Name: "elapsed_seconds", Type: field.TypeFloat64, Default: 0},
+		{Name: "pause_state", Type: field.TypeString, Default: "running"},
+		{Name: "parent_timer_id", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "process_instance_id", Type: field.TypeInt, Nullable: true},
+	}
+	// ProcessTimersTable holds the schema information for the "process_timers" table.
+	ProcessTimersTable = &schema.Table{
+		Name:       "process_timers",
+		Columns:    ProcessTimersColumns,
+		PrimaryKey: []*schema.Column{ProcessTimersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_timers_process_instances_timers",
+				Columns:    []*schema.Column{ProcessTimersColumns[24]},
+				RefColumns: []*schema.Column{ProcessInstancesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processtimer_timer_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessTimersColumns[1]},
+			},
+			{
+				Name:    "processtimer_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{ProcessTimersColumns[11]},
+			},
+			{
+				Name:    "processtimer_status_fire_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTimersColumns[9], ProcessTimersColumns[7]},
+			},
+			{
+				Name:    "processtimer_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTimersColumns[21], ProcessTimersColumns[9]},
+			},
+			{
+				Name:    "processtimer_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTimersColumns[24]},
+			},
+			{
+				Name:    "processtimer_pause_state_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessTimersColumns[19], ProcessTimersColumns[9]},
+			},
+		},
+	}
 	// ProcessVariablesColumns holds the columns for the "process_variables" table.
 	ProcessVariablesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -6132,6 +6206,7 @@ var (
 		ProcessExecutionHistoriesTable,
 		ProcessInstancesTable,
 		ProcessTasksTable,
+		ProcessTimersTable,
 		ProcessVariablesTable,
 		ProcessVersionChangelogsTable,
 		ProjectsTable,
@@ -6268,6 +6343,7 @@ func init() {
 	ProcessExecutionHistoriesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProcessInstancesTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessTasksTable.ForeignKeys[0].RefTable = ProcessInstancesTable
+	ProcessTimersTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProcessVariablesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProcessVersionChangelogsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessVersionChangelogsTable.ForeignKeys[1].RefTable = UsersTable

@@ -1274,6 +1274,29 @@ func HasExecutionHistoryWith(preds ...predicate.ProcessExecutionHistory) predica
 	})
 }
 
+// HasTimers applies the HasEdge predicate on the "timers" edge.
+func HasTimers() predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TimersTable, TimersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTimersWith applies the HasEdge predicate on the "timers" edge with a given conditions (other predicates).
+func HasTimersWith(preds ...predicate.ProcessTimer) predicate.ProcessInstance {
+	return predicate.ProcessInstance(func(s *sql.Selector) {
+		step := newTimersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasDefinition applies the HasEdge predicate on the "definition" edge.
 func HasDefinition() predicate.ProcessInstance {
 	return predicate.ProcessInstance(func(s *sql.Selector) {

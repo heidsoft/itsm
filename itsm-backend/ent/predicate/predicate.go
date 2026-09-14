@@ -252,6 +252,9 @@ type ProcessInstance func(*sql.Selector)
 // ProcessTask is the predicate function for processtask builders.
 type ProcessTask func(*sql.Selector)
 
+// ProcessTimer is the predicate function for processtimer builders.
+type ProcessTimer func(*sql.Selector)
+
 // ProcessVariable is the predicate function for processvariable builders.
 type ProcessVariable func(*sql.Selector)
 

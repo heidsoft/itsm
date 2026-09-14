@@ -91,6 +91,8 @@ func (ProcessInstance) Edges() []ent.Edge {
 			Comment("流程变量"),
 		edge.To("execution_history", ProcessExecutionHistory.Type).
 			Comment("执行历史"),
+		edge.To("timers", ProcessTimer.Type).
+			Comment("流程定时器"),
 		edge.From("definition", ProcessDefinition.Type).
 			Ref("process_instances").
 			Field("process_definition_id").

@@ -190,8 +190,20 @@ const (
 	ProcessTaskStatusAssigned  = "assigned"
 	ProcessTaskStatusStarted   = "started"
 	ProcessTaskStatusDelegated = "delegated"
-	ProcessTaskStatusCompleted = "completed"
-	ProcessTaskStatusCancelled = "cancelled"
+	ProcessTaskStatusCompleted  = "completed"
+	ProcessTaskStatusCancelled  = "cancelled"
+	ProcessTaskStatusTimeout    = "timeout"
+	ProcessTaskStatusEscalated  = "escalated"
+)
+
+// ===================================
+// ProcessTask Timeout Action Constants
+// ===================================
+const (
+	TimeoutActionNotify      = "notify"
+	TimeoutActionEscalate    = "escalate"
+	TimeoutActionAutoReject  = "auto_reject"
+	TimeoutActionAutoApprove = "auto_approve"
 )
 
 // ===================================

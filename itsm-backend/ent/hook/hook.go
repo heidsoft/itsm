@@ -992,6 +992,18 @@ func (f ProcessTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessTaskMutation", m)
 }
 
+// The ProcessTimerFunc type is an adapter to allow the use of ordinary
+// function as ProcessTimer mutator.
+type ProcessTimerFunc func(context.Context, *ent.ProcessTimerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessTimerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessTimerMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessTimerMutation", m)
+}
+
 // The ProcessVariableFunc type is an adapter to allow the use of ordinary
 // function as ProcessVariable mutator.
 type ProcessVariableFunc func(context.Context, *ent.ProcessVariableMutation) (ent.Value, error)

@@ -85,6 +85,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
@@ -3467,6 +3468,74 @@ func init() {
 	processtask.DefaultUpdatedAt = processtaskDescUpdatedAt.Default.(func() time.Time)
 	// processtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	processtask.UpdateDefaultUpdatedAt = processtaskDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processtimerFields := schema.ProcessTimer{}.Fields()
+	_ = processtimerFields
+	// processtimerDescTimerID is the schema descriptor for timer_id field.
+	processtimerDescTimerID := processtimerFields[0].Descriptor()
+	// processtimer.TimerIDValidator is a validator for the "timer_id" field. It is called by the builders before save.
+	processtimer.TimerIDValidator = processtimerDescTimerID.Validators[0].(func(string) error)
+	// processtimerDescTimerType is the schema descriptor for timer_type field.
+	processtimerDescTimerType := processtimerFields[1].Descriptor()
+	// processtimer.TimerTypeValidator is a validator for the "timer_type" field. It is called by the builders before save.
+	processtimer.TimerTypeValidator = processtimerDescTimerType.Validators[0].(func(string) error)
+	// processtimerDescProcessDefinitionKey is the schema descriptor for process_definition_key field.
+	processtimerDescProcessDefinitionKey := processtimerFields[2].Descriptor()
+	// processtimer.ProcessDefinitionKeyValidator is a validator for the "process_definition_key" field. It is called by the builders before save.
+	processtimer.ProcessDefinitionKeyValidator = processtimerDescProcessDefinitionKey.Validators[0].(func(string) error)
+	// processtimerDescTimerExpression is the schema descriptor for timer_expression field.
+	processtimerDescTimerExpression := processtimerFields[5].Descriptor()
+	// processtimer.TimerExpressionValidator is a validator for the "timer_expression" field. It is called by the builders before save.
+	processtimer.TimerExpressionValidator = processtimerDescTimerExpression.Validators[0].(func(string) error)
+	// processtimerDescExpressionType is the schema descriptor for expression_type field.
+	processtimerDescExpressionType := processtimerFields[6].Descriptor()
+	// processtimer.ExpressionTypeValidator is a validator for the "expression_type" field. It is called by the builders before save.
+	processtimer.ExpressionTypeValidator = processtimerDescExpressionType.Validators[0].(func(string) error)
+	// processtimerDescStatus is the schema descriptor for status field.
+	processtimerDescStatus := processtimerFields[9].Descriptor()
+	// processtimer.DefaultStatus holds the default value on creation for the status field.
+	processtimer.DefaultStatus = processtimerDescStatus.Default.(string)
+	// processtimerDescVersion is the schema descriptor for version field.
+	processtimerDescVersion := processtimerFields[10].Descriptor()
+	// processtimer.DefaultVersion holds the default value on creation for the version field.
+	processtimer.DefaultVersion = processtimerDescVersion.Default.(int)
+	// processtimerDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	processtimerDescIdempotencyKey := processtimerFields[11].Descriptor()
+	// processtimer.IdempotencyKeyValidator is a validator for the "idempotency_key" field. It is called by the builders before save.
+	processtimer.IdempotencyKeyValidator = processtimerDescIdempotencyKey.Validators[0].(func(string) error)
+	// processtimerDescRetryCount is the schema descriptor for retry_count field.
+	processtimerDescRetryCount := processtimerFields[12].Descriptor()
+	// processtimer.DefaultRetryCount holds the default value on creation for the retry_count field.
+	processtimer.DefaultRetryCount = processtimerDescRetryCount.Default.(int)
+	// processtimerDescMaxRetries is the schema descriptor for max_retries field.
+	processtimerDescMaxRetries := processtimerFields[13].Descriptor()
+	// processtimer.DefaultMaxRetries holds the default value on creation for the max_retries field.
+	processtimer.DefaultMaxRetries = processtimerDescMaxRetries.Default.(int)
+	// processtimerDescFailureReason is the schema descriptor for failure_reason field.
+	processtimerDescFailureReason := processtimerFields[15].Descriptor()
+	// processtimer.FailureReasonValidator is a validator for the "failure_reason" field. It is called by the builders before save.
+	processtimer.FailureReasonValidator = processtimerDescFailureReason.Validators[0].(func(string) error)
+	// processtimerDescElapsedSeconds is the schema descriptor for elapsed_seconds field.
+	processtimerDescElapsedSeconds := processtimerFields[18].Descriptor()
+	// processtimer.DefaultElapsedSeconds holds the default value on creation for the elapsed_seconds field.
+	processtimer.DefaultElapsedSeconds = processtimerDescElapsedSeconds.Default.(float64)
+	// processtimerDescPauseState is the schema descriptor for pause_state field.
+	processtimerDescPauseState := processtimerFields[19].Descriptor()
+	// processtimer.DefaultPauseState holds the default value on creation for the pause_state field.
+	processtimer.DefaultPauseState = processtimerDescPauseState.Default.(string)
+	// processtimerDescTenantID is the schema descriptor for tenant_id field.
+	processtimerDescTenantID := processtimerFields[21].Descriptor()
+	// processtimer.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processtimer.TenantIDValidator = processtimerDescTenantID.Validators[0].(func(int) error)
+	// processtimerDescCreatedAt is the schema descriptor for created_at field.
+	processtimerDescCreatedAt := processtimerFields[22].Descriptor()
+	// processtimer.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processtimer.DefaultCreatedAt = processtimerDescCreatedAt.Default.(func() time.Time)
+	// processtimerDescUpdatedAt is the schema descriptor for updated_at field.
+	processtimerDescUpdatedAt := processtimerFields[23].Descriptor()
+	// processtimer.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	processtimer.DefaultUpdatedAt = processtimerDescUpdatedAt.Default.(func() time.Time)
+	// processtimer.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	processtimer.UpdateDefaultUpdatedAt = processtimerDescUpdatedAt.UpdateDefault.(func() time.Time)
 	processvariableFields := schema.ProcessVariable{}.Fields()
 	_ = processvariableFields
 	// processvariableDescVariableID is the schema descriptor for variable_id field.

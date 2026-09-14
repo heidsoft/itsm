@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"time"
 
@@ -301,6 +302,21 @@ func (_c *ProcessInstanceCreate) AddExecutionHistory(v ...*ProcessExecutionHisto
 	return _c.AddExecutionHistoryIDs(ids...)
 }
 
+// AddTimerIDs adds the "timers" edge to the ProcessTimer entity by IDs.
+func (_c *ProcessInstanceCreate) AddTimerIDs(ids ...int) *ProcessInstanceCreate {
+	_c.mutation.AddTimerIDs(ids...)
+	return _c
+}
+
+// AddTimers adds the "timers" edges to the ProcessTimer entity.
+func (_c *ProcessInstanceCreate) AddTimers(v ...*ProcessTimer) *ProcessInstanceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTimerIDs(ids...)
+}
+
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
 func (_c *ProcessInstanceCreate) SetDefinitionID(id int) *ProcessInstanceCreate {
 	_c.mutation.SetDefinitionID(id)
@@ -564,6 +580,22 @@ func (_c *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Creat
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TimersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

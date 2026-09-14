@@ -89,6 +89,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
@@ -241,6 +242,7 @@ const (
 	TypeProcessExecutionHistory     = "ProcessExecutionHistory"
 	TypeProcessInstance             = "ProcessInstance"
 	TypeProcessTask                 = "ProcessTask"
+	TypeProcessTimer                = "ProcessTimer"
 	TypeProcessVariable             = "ProcessVariable"
 	TypeProcessVersionChangelog     = "ProcessVersionChangelog"
 	TypeProject                     = "Project"
@@ -109300,6 +109302,9 @@ type ProcessInstanceMutation struct {
 	execution_history          map[int]struct{}
 	removedexecution_history   map[int]struct{}
 	clearedexecution_history   bool
+	timers                     map[int]struct{}
+	removedtimers              map[int]struct{}
+	clearedtimers              bool
 	definition                 *int
 	cleareddefinition          bool
 	done                       bool
@@ -110486,6 +110491,60 @@ func (m *ProcessInstanceMutation) ResetExecutionHistory() {
 	m.removedexecution_history = nil
 }
 
+// AddTimerIDs adds the "timers" edge to the ProcessTimer entity by ids.
+func (m *ProcessInstanceMutation) AddTimerIDs(ids ...int) {
+	if m.timers == nil {
+		m.timers = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.timers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTimers clears the "timers" edge to the ProcessTimer entity.
+func (m *ProcessInstanceMutation) ClearTimers() {
+	m.clearedtimers = true
+}
+
+// TimersCleared reports if the "timers" edge to the ProcessTimer entity was cleared.
+func (m *ProcessInstanceMutation) TimersCleared() bool {
+	return m.clearedtimers
+}
+
+// RemoveTimerIDs removes the "timers" edge to the ProcessTimer entity by IDs.
+func (m *ProcessInstanceMutation) RemoveTimerIDs(ids ...int) {
+	if m.removedtimers == nil {
+		m.removedtimers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.timers, ids[i])
+		m.removedtimers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTimers returns the removed IDs of the "timers" edge to the ProcessTimer entity.
+func (m *ProcessInstanceMutation) RemovedTimersIDs() (ids []int) {
+	for id := range m.removedtimers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TimersIDs returns the "timers" edge IDs in the mutation.
+func (m *ProcessInstanceMutation) TimersIDs() (ids []int) {
+	for id := range m.timers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTimers resets all changes to the "timers" edge.
+func (m *ProcessInstanceMutation) ResetTimers() {
+	m.timers = nil
+	m.clearedtimers = false
+	m.removedtimers = nil
+}
+
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by id.
 func (m *ProcessInstanceMutation) SetDefinitionID(id int) {
 	m.definition = &id
@@ -111078,7 +111137,7 @@ func (m *ProcessInstanceMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessInstanceMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.process_tasks != nil {
 		edges = append(edges, processinstance.EdgeProcessTasks)
 	}
@@ -111087,6 +111146,9 @@ func (m *ProcessInstanceMutation) AddedEdges() []string {
 	}
 	if m.execution_history != nil {
 		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
+	if m.timers != nil {
+		edges = append(edges, processinstance.EdgeTimers)
 	}
 	if m.definition != nil {
 		edges = append(edges, processinstance.EdgeDefinition)
@@ -111116,6 +111178,12 @@ func (m *ProcessInstanceMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case processinstance.EdgeTimers:
+		ids := make([]ent.Value, 0, len(m.timers))
+		for id := range m.timers {
+			ids = append(ids, id)
+		}
+		return ids
 	case processinstance.EdgeDefinition:
 		if id := m.definition; id != nil {
 			return []ent.Value{*id}
@@ -111126,7 +111194,7 @@ func (m *ProcessInstanceMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessInstanceMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedprocess_tasks != nil {
 		edges = append(edges, processinstance.EdgeProcessTasks)
 	}
@@ -111135,6 +111203,9 @@ func (m *ProcessInstanceMutation) RemovedEdges() []string {
 	}
 	if m.removedexecution_history != nil {
 		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
+	if m.removedtimers != nil {
+		edges = append(edges, processinstance.EdgeTimers)
 	}
 	return edges
 }
@@ -111161,13 +111232,19 @@ func (m *ProcessInstanceMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case processinstance.EdgeTimers:
+		ids := make([]ent.Value, 0, len(m.removedtimers))
+		for id := range m.removedtimers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessInstanceMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedprocess_tasks {
 		edges = append(edges, processinstance.EdgeProcessTasks)
 	}
@@ -111176,6 +111253,9 @@ func (m *ProcessInstanceMutation) ClearedEdges() []string {
 	}
 	if m.clearedexecution_history {
 		edges = append(edges, processinstance.EdgeExecutionHistory)
+	}
+	if m.clearedtimers {
+		edges = append(edges, processinstance.EdgeTimers)
 	}
 	if m.cleareddefinition {
 		edges = append(edges, processinstance.EdgeDefinition)
@@ -111193,6 +111273,8 @@ func (m *ProcessInstanceMutation) EdgeCleared(name string) bool {
 		return m.clearedprocess_variables
 	case processinstance.EdgeExecutionHistory:
 		return m.clearedexecution_history
+	case processinstance.EdgeTimers:
+		return m.clearedtimers
 	case processinstance.EdgeDefinition:
 		return m.cleareddefinition
 	}
@@ -111222,6 +111304,9 @@ func (m *ProcessInstanceMutation) ResetEdge(name string) error {
 		return nil
 	case processinstance.EdgeExecutionHistory:
 		m.ResetExecutionHistory()
+		return nil
+	case processinstance.EdgeTimers:
+		m.ResetTimers()
 		return nil
 	case processinstance.EdgeDefinition:
 		m.ResetDefinition()
@@ -113117,6 +113202,2019 @@ func (m *ProcessTaskMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ProcessTask edge %s", name)
+}
+
+// ProcessTimerMutation represents an operation that mutates the ProcessTimer nodes in the graph.
+type ProcessTimerMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *int
+	timer_id                  *string
+	timer_type                *string
+	process_definition_key    *string
+	activity_id               *string
+	timer_expression          *string
+	expression_type           *string
+	fire_at                   *time.Time
+	fired_at                  *time.Time
+	status                    *string
+	version                   *int
+	addversion                *int
+	idempotency_key           *string
+	retry_count               *int
+	addretry_count            *int
+	max_retries               *int
+	addmax_retries            *int
+	last_fire_attempt         *time.Time
+	failure_reason            *string
+	context_variables         *map[string]interface{}
+	total_duration_seconds    *float64
+	addtotal_duration_seconds *float64
+	elapsed_seconds           *float64
+	addelapsed_seconds        *float64
+	pause_state               *string
+	parent_timer_id           *int
+	addparent_timer_id        *int
+	tenant_id                 *int
+	addtenant_id              *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	clearedFields             map[string]struct{}
+	process_instance          *int
+	clearedprocess_instance   bool
+	done                      bool
+	oldValue                  func(context.Context) (*ProcessTimer, error)
+	predicates                []predicate.ProcessTimer
+}
+
+var _ ent.Mutation = (*ProcessTimerMutation)(nil)
+
+// processtimerOption allows management of the mutation configuration using functional options.
+type processtimerOption func(*ProcessTimerMutation)
+
+// newProcessTimerMutation creates new mutation for the ProcessTimer entity.
+func newProcessTimerMutation(c config, op Op, opts ...processtimerOption) *ProcessTimerMutation {
+	m := &ProcessTimerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProcessTimer,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProcessTimerID sets the ID field of the mutation.
+func withProcessTimerID(id int) processtimerOption {
+	return func(m *ProcessTimerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProcessTimer
+		)
+		m.oldValue = func(ctx context.Context) (*ProcessTimer, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProcessTimer.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProcessTimer sets the old ProcessTimer of the mutation.
+func withProcessTimer(node *ProcessTimer) processtimerOption {
+	return func(m *ProcessTimerMutation) {
+		m.oldValue = func(context.Context) (*ProcessTimer, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProcessTimerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProcessTimerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProcessTimerMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProcessTimerMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProcessTimer.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTimerID sets the "timer_id" field.
+func (m *ProcessTimerMutation) SetTimerID(s string) {
+	m.timer_id = &s
+}
+
+// TimerID returns the value of the "timer_id" field in the mutation.
+func (m *ProcessTimerMutation) TimerID() (r string, exists bool) {
+	v := m.timer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimerID returns the old "timer_id" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldTimerID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimerID: %w", err)
+	}
+	return oldValue.TimerID, nil
+}
+
+// ResetTimerID resets all changes to the "timer_id" field.
+func (m *ProcessTimerMutation) ResetTimerID() {
+	m.timer_id = nil
+}
+
+// SetTimerType sets the "timer_type" field.
+func (m *ProcessTimerMutation) SetTimerType(s string) {
+	m.timer_type = &s
+}
+
+// TimerType returns the value of the "timer_type" field in the mutation.
+func (m *ProcessTimerMutation) TimerType() (r string, exists bool) {
+	v := m.timer_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimerType returns the old "timer_type" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldTimerType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimerType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimerType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimerType: %w", err)
+	}
+	return oldValue.TimerType, nil
+}
+
+// ResetTimerType resets all changes to the "timer_type" field.
+func (m *ProcessTimerMutation) ResetTimerType() {
+	m.timer_type = nil
+}
+
+// SetProcessDefinitionKey sets the "process_definition_key" field.
+func (m *ProcessTimerMutation) SetProcessDefinitionKey(s string) {
+	m.process_definition_key = &s
+}
+
+// ProcessDefinitionKey returns the value of the "process_definition_key" field in the mutation.
+func (m *ProcessTimerMutation) ProcessDefinitionKey() (r string, exists bool) {
+	v := m.process_definition_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessDefinitionKey returns the old "process_definition_key" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldProcessDefinitionKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessDefinitionKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessDefinitionKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessDefinitionKey: %w", err)
+	}
+	return oldValue.ProcessDefinitionKey, nil
+}
+
+// ResetProcessDefinitionKey resets all changes to the "process_definition_key" field.
+func (m *ProcessTimerMutation) ResetProcessDefinitionKey() {
+	m.process_definition_key = nil
+}
+
+// SetProcessInstanceID sets the "process_instance_id" field.
+func (m *ProcessTimerMutation) SetProcessInstanceID(i int) {
+	m.process_instance = &i
+}
+
+// ProcessInstanceID returns the value of the "process_instance_id" field in the mutation.
+func (m *ProcessTimerMutation) ProcessInstanceID() (r int, exists bool) {
+	v := m.process_instance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessInstanceID returns the old "process_instance_id" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldProcessInstanceID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessInstanceID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessInstanceID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessInstanceID: %w", err)
+	}
+	return oldValue.ProcessInstanceID, nil
+}
+
+// ClearProcessInstanceID clears the value of the "process_instance_id" field.
+func (m *ProcessTimerMutation) ClearProcessInstanceID() {
+	m.process_instance = nil
+	m.clearedFields[processtimer.FieldProcessInstanceID] = struct{}{}
+}
+
+// ProcessInstanceIDCleared returns if the "process_instance_id" field was cleared in this mutation.
+func (m *ProcessTimerMutation) ProcessInstanceIDCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldProcessInstanceID]
+	return ok
+}
+
+// ResetProcessInstanceID resets all changes to the "process_instance_id" field.
+func (m *ProcessTimerMutation) ResetProcessInstanceID() {
+	m.process_instance = nil
+	delete(m.clearedFields, processtimer.FieldProcessInstanceID)
+}
+
+// SetActivityID sets the "activity_id" field.
+func (m *ProcessTimerMutation) SetActivityID(s string) {
+	m.activity_id = &s
+}
+
+// ActivityID returns the value of the "activity_id" field in the mutation.
+func (m *ProcessTimerMutation) ActivityID() (r string, exists bool) {
+	v := m.activity_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActivityID returns the old "activity_id" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldActivityID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActivityID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActivityID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActivityID: %w", err)
+	}
+	return oldValue.ActivityID, nil
+}
+
+// ClearActivityID clears the value of the "activity_id" field.
+func (m *ProcessTimerMutation) ClearActivityID() {
+	m.activity_id = nil
+	m.clearedFields[processtimer.FieldActivityID] = struct{}{}
+}
+
+// ActivityIDCleared returns if the "activity_id" field was cleared in this mutation.
+func (m *ProcessTimerMutation) ActivityIDCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldActivityID]
+	return ok
+}
+
+// ResetActivityID resets all changes to the "activity_id" field.
+func (m *ProcessTimerMutation) ResetActivityID() {
+	m.activity_id = nil
+	delete(m.clearedFields, processtimer.FieldActivityID)
+}
+
+// SetTimerExpression sets the "timer_expression" field.
+func (m *ProcessTimerMutation) SetTimerExpression(s string) {
+	m.timer_expression = &s
+}
+
+// TimerExpression returns the value of the "timer_expression" field in the mutation.
+func (m *ProcessTimerMutation) TimerExpression() (r string, exists bool) {
+	v := m.timer_expression
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimerExpression returns the old "timer_expression" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldTimerExpression(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTimerExpression is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTimerExpression requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimerExpression: %w", err)
+	}
+	return oldValue.TimerExpression, nil
+}
+
+// ResetTimerExpression resets all changes to the "timer_expression" field.
+func (m *ProcessTimerMutation) ResetTimerExpression() {
+	m.timer_expression = nil
+}
+
+// SetExpressionType sets the "expression_type" field.
+func (m *ProcessTimerMutation) SetExpressionType(s string) {
+	m.expression_type = &s
+}
+
+// ExpressionType returns the value of the "expression_type" field in the mutation.
+func (m *ProcessTimerMutation) ExpressionType() (r string, exists bool) {
+	v := m.expression_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpressionType returns the old "expression_type" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldExpressionType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpressionType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpressionType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpressionType: %w", err)
+	}
+	return oldValue.ExpressionType, nil
+}
+
+// ResetExpressionType resets all changes to the "expression_type" field.
+func (m *ProcessTimerMutation) ResetExpressionType() {
+	m.expression_type = nil
+}
+
+// SetFireAt sets the "fire_at" field.
+func (m *ProcessTimerMutation) SetFireAt(t time.Time) {
+	m.fire_at = &t
+}
+
+// FireAt returns the value of the "fire_at" field in the mutation.
+func (m *ProcessTimerMutation) FireAt() (r time.Time, exists bool) {
+	v := m.fire_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFireAt returns the old "fire_at" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldFireAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFireAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFireAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFireAt: %w", err)
+	}
+	return oldValue.FireAt, nil
+}
+
+// ResetFireAt resets all changes to the "fire_at" field.
+func (m *ProcessTimerMutation) ResetFireAt() {
+	m.fire_at = nil
+}
+
+// SetFiredAt sets the "fired_at" field.
+func (m *ProcessTimerMutation) SetFiredAt(t time.Time) {
+	m.fired_at = &t
+}
+
+// FiredAt returns the value of the "fired_at" field in the mutation.
+func (m *ProcessTimerMutation) FiredAt() (r time.Time, exists bool) {
+	v := m.fired_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFiredAt returns the old "fired_at" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldFiredAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFiredAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFiredAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFiredAt: %w", err)
+	}
+	return oldValue.FiredAt, nil
+}
+
+// ClearFiredAt clears the value of the "fired_at" field.
+func (m *ProcessTimerMutation) ClearFiredAt() {
+	m.fired_at = nil
+	m.clearedFields[processtimer.FieldFiredAt] = struct{}{}
+}
+
+// FiredAtCleared returns if the "fired_at" field was cleared in this mutation.
+func (m *ProcessTimerMutation) FiredAtCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldFiredAt]
+	return ok
+}
+
+// ResetFiredAt resets all changes to the "fired_at" field.
+func (m *ProcessTimerMutation) ResetFiredAt() {
+	m.fired_at = nil
+	delete(m.clearedFields, processtimer.FieldFiredAt)
+}
+
+// SetStatus sets the "status" field.
+func (m *ProcessTimerMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ProcessTimerMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ProcessTimerMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *ProcessTimerMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ProcessTimerMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ProcessTimerMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ProcessTimerMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ProcessTimerMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
+// SetIdempotencyKey sets the "idempotency_key" field.
+func (m *ProcessTimerMutation) SetIdempotencyKey(s string) {
+	m.idempotency_key = &s
+}
+
+// IdempotencyKey returns the value of the "idempotency_key" field in the mutation.
+func (m *ProcessTimerMutation) IdempotencyKey() (r string, exists bool) {
+	v := m.idempotency_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdempotencyKey returns the old "idempotency_key" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldIdempotencyKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdempotencyKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdempotencyKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdempotencyKey: %w", err)
+	}
+	return oldValue.IdempotencyKey, nil
+}
+
+// ResetIdempotencyKey resets all changes to the "idempotency_key" field.
+func (m *ProcessTimerMutation) ResetIdempotencyKey() {
+	m.idempotency_key = nil
+}
+
+// SetRetryCount sets the "retry_count" field.
+func (m *ProcessTimerMutation) SetRetryCount(i int) {
+	m.retry_count = &i
+	m.addretry_count = nil
+}
+
+// RetryCount returns the value of the "retry_count" field in the mutation.
+func (m *ProcessTimerMutation) RetryCount() (r int, exists bool) {
+	v := m.retry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRetryCount returns the old "retry_count" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldRetryCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRetryCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRetryCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRetryCount: %w", err)
+	}
+	return oldValue.RetryCount, nil
+}
+
+// AddRetryCount adds i to the "retry_count" field.
+func (m *ProcessTimerMutation) AddRetryCount(i int) {
+	if m.addretry_count != nil {
+		*m.addretry_count += i
+	} else {
+		m.addretry_count = &i
+	}
+}
+
+// AddedRetryCount returns the value that was added to the "retry_count" field in this mutation.
+func (m *ProcessTimerMutation) AddedRetryCount() (r int, exists bool) {
+	v := m.addretry_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetRetryCount resets all changes to the "retry_count" field.
+func (m *ProcessTimerMutation) ResetRetryCount() {
+	m.retry_count = nil
+	m.addretry_count = nil
+}
+
+// SetMaxRetries sets the "max_retries" field.
+func (m *ProcessTimerMutation) SetMaxRetries(i int) {
+	m.max_retries = &i
+	m.addmax_retries = nil
+}
+
+// MaxRetries returns the value of the "max_retries" field in the mutation.
+func (m *ProcessTimerMutation) MaxRetries() (r int, exists bool) {
+	v := m.max_retries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxRetries returns the old "max_retries" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldMaxRetries(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxRetries is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxRetries requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxRetries: %w", err)
+	}
+	return oldValue.MaxRetries, nil
+}
+
+// AddMaxRetries adds i to the "max_retries" field.
+func (m *ProcessTimerMutation) AddMaxRetries(i int) {
+	if m.addmax_retries != nil {
+		*m.addmax_retries += i
+	} else {
+		m.addmax_retries = &i
+	}
+}
+
+// AddedMaxRetries returns the value that was added to the "max_retries" field in this mutation.
+func (m *ProcessTimerMutation) AddedMaxRetries() (r int, exists bool) {
+	v := m.addmax_retries
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxRetries resets all changes to the "max_retries" field.
+func (m *ProcessTimerMutation) ResetMaxRetries() {
+	m.max_retries = nil
+	m.addmax_retries = nil
+}
+
+// SetLastFireAttempt sets the "last_fire_attempt" field.
+func (m *ProcessTimerMutation) SetLastFireAttempt(t time.Time) {
+	m.last_fire_attempt = &t
+}
+
+// LastFireAttempt returns the value of the "last_fire_attempt" field in the mutation.
+func (m *ProcessTimerMutation) LastFireAttempt() (r time.Time, exists bool) {
+	v := m.last_fire_attempt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastFireAttempt returns the old "last_fire_attempt" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldLastFireAttempt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastFireAttempt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastFireAttempt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastFireAttempt: %w", err)
+	}
+	return oldValue.LastFireAttempt, nil
+}
+
+// ClearLastFireAttempt clears the value of the "last_fire_attempt" field.
+func (m *ProcessTimerMutation) ClearLastFireAttempt() {
+	m.last_fire_attempt = nil
+	m.clearedFields[processtimer.FieldLastFireAttempt] = struct{}{}
+}
+
+// LastFireAttemptCleared returns if the "last_fire_attempt" field was cleared in this mutation.
+func (m *ProcessTimerMutation) LastFireAttemptCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldLastFireAttempt]
+	return ok
+}
+
+// ResetLastFireAttempt resets all changes to the "last_fire_attempt" field.
+func (m *ProcessTimerMutation) ResetLastFireAttempt() {
+	m.last_fire_attempt = nil
+	delete(m.clearedFields, processtimer.FieldLastFireAttempt)
+}
+
+// SetFailureReason sets the "failure_reason" field.
+func (m *ProcessTimerMutation) SetFailureReason(s string) {
+	m.failure_reason = &s
+}
+
+// FailureReason returns the value of the "failure_reason" field in the mutation.
+func (m *ProcessTimerMutation) FailureReason() (r string, exists bool) {
+	v := m.failure_reason
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailureReason returns the old "failure_reason" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldFailureReason(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailureReason is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailureReason requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailureReason: %w", err)
+	}
+	return oldValue.FailureReason, nil
+}
+
+// ClearFailureReason clears the value of the "failure_reason" field.
+func (m *ProcessTimerMutation) ClearFailureReason() {
+	m.failure_reason = nil
+	m.clearedFields[processtimer.FieldFailureReason] = struct{}{}
+}
+
+// FailureReasonCleared returns if the "failure_reason" field was cleared in this mutation.
+func (m *ProcessTimerMutation) FailureReasonCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldFailureReason]
+	return ok
+}
+
+// ResetFailureReason resets all changes to the "failure_reason" field.
+func (m *ProcessTimerMutation) ResetFailureReason() {
+	m.failure_reason = nil
+	delete(m.clearedFields, processtimer.FieldFailureReason)
+}
+
+// SetContextVariables sets the "context_variables" field.
+func (m *ProcessTimerMutation) SetContextVariables(value map[string]interface{}) {
+	m.context_variables = &value
+}
+
+// ContextVariables returns the value of the "context_variables" field in the mutation.
+func (m *ProcessTimerMutation) ContextVariables() (r map[string]interface{}, exists bool) {
+	v := m.context_variables
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContextVariables returns the old "context_variables" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldContextVariables(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContextVariables is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContextVariables requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContextVariables: %w", err)
+	}
+	return oldValue.ContextVariables, nil
+}
+
+// ClearContextVariables clears the value of the "context_variables" field.
+func (m *ProcessTimerMutation) ClearContextVariables() {
+	m.context_variables = nil
+	m.clearedFields[processtimer.FieldContextVariables] = struct{}{}
+}
+
+// ContextVariablesCleared returns if the "context_variables" field was cleared in this mutation.
+func (m *ProcessTimerMutation) ContextVariablesCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldContextVariables]
+	return ok
+}
+
+// ResetContextVariables resets all changes to the "context_variables" field.
+func (m *ProcessTimerMutation) ResetContextVariables() {
+	m.context_variables = nil
+	delete(m.clearedFields, processtimer.FieldContextVariables)
+}
+
+// SetTotalDurationSeconds sets the "total_duration_seconds" field.
+func (m *ProcessTimerMutation) SetTotalDurationSeconds(f float64) {
+	m.total_duration_seconds = &f
+	m.addtotal_duration_seconds = nil
+}
+
+// TotalDurationSeconds returns the value of the "total_duration_seconds" field in the mutation.
+func (m *ProcessTimerMutation) TotalDurationSeconds() (r float64, exists bool) {
+	v := m.total_duration_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTotalDurationSeconds returns the old "total_duration_seconds" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldTotalDurationSeconds(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTotalDurationSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTotalDurationSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTotalDurationSeconds: %w", err)
+	}
+	return oldValue.TotalDurationSeconds, nil
+}
+
+// AddTotalDurationSeconds adds f to the "total_duration_seconds" field.
+func (m *ProcessTimerMutation) AddTotalDurationSeconds(f float64) {
+	if m.addtotal_duration_seconds != nil {
+		*m.addtotal_duration_seconds += f
+	} else {
+		m.addtotal_duration_seconds = &f
+	}
+}
+
+// AddedTotalDurationSeconds returns the value that was added to the "total_duration_seconds" field in this mutation.
+func (m *ProcessTimerMutation) AddedTotalDurationSeconds() (r float64, exists bool) {
+	v := m.addtotal_duration_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTotalDurationSeconds clears the value of the "total_duration_seconds" field.
+func (m *ProcessTimerMutation) ClearTotalDurationSeconds() {
+	m.total_duration_seconds = nil
+	m.addtotal_duration_seconds = nil
+	m.clearedFields[processtimer.FieldTotalDurationSeconds] = struct{}{}
+}
+
+// TotalDurationSecondsCleared returns if the "total_duration_seconds" field was cleared in this mutation.
+func (m *ProcessTimerMutation) TotalDurationSecondsCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldTotalDurationSeconds]
+	return ok
+}
+
+// ResetTotalDurationSeconds resets all changes to the "total_duration_seconds" field.
+func (m *ProcessTimerMutation) ResetTotalDurationSeconds() {
+	m.total_duration_seconds = nil
+	m.addtotal_duration_seconds = nil
+	delete(m.clearedFields, processtimer.FieldTotalDurationSeconds)
+}
+
+// SetElapsedSeconds sets the "elapsed_seconds" field.
+func (m *ProcessTimerMutation) SetElapsedSeconds(f float64) {
+	m.elapsed_seconds = &f
+	m.addelapsed_seconds = nil
+}
+
+// ElapsedSeconds returns the value of the "elapsed_seconds" field in the mutation.
+func (m *ProcessTimerMutation) ElapsedSeconds() (r float64, exists bool) {
+	v := m.elapsed_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldElapsedSeconds returns the old "elapsed_seconds" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldElapsedSeconds(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldElapsedSeconds is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldElapsedSeconds requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldElapsedSeconds: %w", err)
+	}
+	return oldValue.ElapsedSeconds, nil
+}
+
+// AddElapsedSeconds adds f to the "elapsed_seconds" field.
+func (m *ProcessTimerMutation) AddElapsedSeconds(f float64) {
+	if m.addelapsed_seconds != nil {
+		*m.addelapsed_seconds += f
+	} else {
+		m.addelapsed_seconds = &f
+	}
+}
+
+// AddedElapsedSeconds returns the value that was added to the "elapsed_seconds" field in this mutation.
+func (m *ProcessTimerMutation) AddedElapsedSeconds() (r float64, exists bool) {
+	v := m.addelapsed_seconds
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetElapsedSeconds resets all changes to the "elapsed_seconds" field.
+func (m *ProcessTimerMutation) ResetElapsedSeconds() {
+	m.elapsed_seconds = nil
+	m.addelapsed_seconds = nil
+}
+
+// SetPauseState sets the "pause_state" field.
+func (m *ProcessTimerMutation) SetPauseState(s string) {
+	m.pause_state = &s
+}
+
+// PauseState returns the value of the "pause_state" field in the mutation.
+func (m *ProcessTimerMutation) PauseState() (r string, exists bool) {
+	v := m.pause_state
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPauseState returns the old "pause_state" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldPauseState(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPauseState is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPauseState requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPauseState: %w", err)
+	}
+	return oldValue.PauseState, nil
+}
+
+// ResetPauseState resets all changes to the "pause_state" field.
+func (m *ProcessTimerMutation) ResetPauseState() {
+	m.pause_state = nil
+}
+
+// SetParentTimerID sets the "parent_timer_id" field.
+func (m *ProcessTimerMutation) SetParentTimerID(i int) {
+	m.parent_timer_id = &i
+	m.addparent_timer_id = nil
+}
+
+// ParentTimerID returns the value of the "parent_timer_id" field in the mutation.
+func (m *ProcessTimerMutation) ParentTimerID() (r int, exists bool) {
+	v := m.parent_timer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldParentTimerID returns the old "parent_timer_id" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldParentTimerID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldParentTimerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldParentTimerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldParentTimerID: %w", err)
+	}
+	return oldValue.ParentTimerID, nil
+}
+
+// AddParentTimerID adds i to the "parent_timer_id" field.
+func (m *ProcessTimerMutation) AddParentTimerID(i int) {
+	if m.addparent_timer_id != nil {
+		*m.addparent_timer_id += i
+	} else {
+		m.addparent_timer_id = &i
+	}
+}
+
+// AddedParentTimerID returns the value that was added to the "parent_timer_id" field in this mutation.
+func (m *ProcessTimerMutation) AddedParentTimerID() (r int, exists bool) {
+	v := m.addparent_timer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearParentTimerID clears the value of the "parent_timer_id" field.
+func (m *ProcessTimerMutation) ClearParentTimerID() {
+	m.parent_timer_id = nil
+	m.addparent_timer_id = nil
+	m.clearedFields[processtimer.FieldParentTimerID] = struct{}{}
+}
+
+// ParentTimerIDCleared returns if the "parent_timer_id" field was cleared in this mutation.
+func (m *ProcessTimerMutation) ParentTimerIDCleared() bool {
+	_, ok := m.clearedFields[processtimer.FieldParentTimerID]
+	return ok
+}
+
+// ResetParentTimerID resets all changes to the "parent_timer_id" field.
+func (m *ProcessTimerMutation) ResetParentTimerID() {
+	m.parent_timer_id = nil
+	m.addparent_timer_id = nil
+	delete(m.clearedFields, processtimer.FieldParentTimerID)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ProcessTimerMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ProcessTimerMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ProcessTimerMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ProcessTimerMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ProcessTimerMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProcessTimerMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProcessTimerMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProcessTimerMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ProcessTimerMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ProcessTimerMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ProcessTimer entity.
+// If the ProcessTimer object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessTimerMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ProcessTimerMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
+func (m *ProcessTimerMutation) ClearProcessInstance() {
+	m.clearedprocess_instance = true
+	m.clearedFields[processtimer.FieldProcessInstanceID] = struct{}{}
+}
+
+// ProcessInstanceCleared reports if the "process_instance" edge to the ProcessInstance entity was cleared.
+func (m *ProcessTimerMutation) ProcessInstanceCleared() bool {
+	return m.ProcessInstanceIDCleared() || m.clearedprocess_instance
+}
+
+// ProcessInstanceIDs returns the "process_instance" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessInstanceID instead. It exists only for internal usage by the builders.
+func (m *ProcessTimerMutation) ProcessInstanceIDs() (ids []int) {
+	if id := m.process_instance; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProcessInstance resets all changes to the "process_instance" edge.
+func (m *ProcessTimerMutation) ResetProcessInstance() {
+	m.process_instance = nil
+	m.clearedprocess_instance = false
+}
+
+// Where appends a list predicates to the ProcessTimerMutation builder.
+func (m *ProcessTimerMutation) Where(ps ...predicate.ProcessTimer) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProcessTimerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProcessTimerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProcessTimer, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProcessTimerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProcessTimerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProcessTimer).
+func (m *ProcessTimerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProcessTimerMutation) Fields() []string {
+	fields := make([]string, 0, 24)
+	if m.timer_id != nil {
+		fields = append(fields, processtimer.FieldTimerID)
+	}
+	if m.timer_type != nil {
+		fields = append(fields, processtimer.FieldTimerType)
+	}
+	if m.process_definition_key != nil {
+		fields = append(fields, processtimer.FieldProcessDefinitionKey)
+	}
+	if m.process_instance != nil {
+		fields = append(fields, processtimer.FieldProcessInstanceID)
+	}
+	if m.activity_id != nil {
+		fields = append(fields, processtimer.FieldActivityID)
+	}
+	if m.timer_expression != nil {
+		fields = append(fields, processtimer.FieldTimerExpression)
+	}
+	if m.expression_type != nil {
+		fields = append(fields, processtimer.FieldExpressionType)
+	}
+	if m.fire_at != nil {
+		fields = append(fields, processtimer.FieldFireAt)
+	}
+	if m.fired_at != nil {
+		fields = append(fields, processtimer.FieldFiredAt)
+	}
+	if m.status != nil {
+		fields = append(fields, processtimer.FieldStatus)
+	}
+	if m.version != nil {
+		fields = append(fields, processtimer.FieldVersion)
+	}
+	if m.idempotency_key != nil {
+		fields = append(fields, processtimer.FieldIdempotencyKey)
+	}
+	if m.retry_count != nil {
+		fields = append(fields, processtimer.FieldRetryCount)
+	}
+	if m.max_retries != nil {
+		fields = append(fields, processtimer.FieldMaxRetries)
+	}
+	if m.last_fire_attempt != nil {
+		fields = append(fields, processtimer.FieldLastFireAttempt)
+	}
+	if m.failure_reason != nil {
+		fields = append(fields, processtimer.FieldFailureReason)
+	}
+	if m.context_variables != nil {
+		fields = append(fields, processtimer.FieldContextVariables)
+	}
+	if m.total_duration_seconds != nil {
+		fields = append(fields, processtimer.FieldTotalDurationSeconds)
+	}
+	if m.elapsed_seconds != nil {
+		fields = append(fields, processtimer.FieldElapsedSeconds)
+	}
+	if m.pause_state != nil {
+		fields = append(fields, processtimer.FieldPauseState)
+	}
+	if m.parent_timer_id != nil {
+		fields = append(fields, processtimer.FieldParentTimerID)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, processtimer.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, processtimer.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, processtimer.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProcessTimerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case processtimer.FieldTimerID:
+		return m.TimerID()
+	case processtimer.FieldTimerType:
+		return m.TimerType()
+	case processtimer.FieldProcessDefinitionKey:
+		return m.ProcessDefinitionKey()
+	case processtimer.FieldProcessInstanceID:
+		return m.ProcessInstanceID()
+	case processtimer.FieldActivityID:
+		return m.ActivityID()
+	case processtimer.FieldTimerExpression:
+		return m.TimerExpression()
+	case processtimer.FieldExpressionType:
+		return m.ExpressionType()
+	case processtimer.FieldFireAt:
+		return m.FireAt()
+	case processtimer.FieldFiredAt:
+		return m.FiredAt()
+	case processtimer.FieldStatus:
+		return m.Status()
+	case processtimer.FieldVersion:
+		return m.Version()
+	case processtimer.FieldIdempotencyKey:
+		return m.IdempotencyKey()
+	case processtimer.FieldRetryCount:
+		return m.RetryCount()
+	case processtimer.FieldMaxRetries:
+		return m.MaxRetries()
+	case processtimer.FieldLastFireAttempt:
+		return m.LastFireAttempt()
+	case processtimer.FieldFailureReason:
+		return m.FailureReason()
+	case processtimer.FieldContextVariables:
+		return m.ContextVariables()
+	case processtimer.FieldTotalDurationSeconds:
+		return m.TotalDurationSeconds()
+	case processtimer.FieldElapsedSeconds:
+		return m.ElapsedSeconds()
+	case processtimer.FieldPauseState:
+		return m.PauseState()
+	case processtimer.FieldParentTimerID:
+		return m.ParentTimerID()
+	case processtimer.FieldTenantID:
+		return m.TenantID()
+	case processtimer.FieldCreatedAt:
+		return m.CreatedAt()
+	case processtimer.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProcessTimerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case processtimer.FieldTimerID:
+		return m.OldTimerID(ctx)
+	case processtimer.FieldTimerType:
+		return m.OldTimerType(ctx)
+	case processtimer.FieldProcessDefinitionKey:
+		return m.OldProcessDefinitionKey(ctx)
+	case processtimer.FieldProcessInstanceID:
+		return m.OldProcessInstanceID(ctx)
+	case processtimer.FieldActivityID:
+		return m.OldActivityID(ctx)
+	case processtimer.FieldTimerExpression:
+		return m.OldTimerExpression(ctx)
+	case processtimer.FieldExpressionType:
+		return m.OldExpressionType(ctx)
+	case processtimer.FieldFireAt:
+		return m.OldFireAt(ctx)
+	case processtimer.FieldFiredAt:
+		return m.OldFiredAt(ctx)
+	case processtimer.FieldStatus:
+		return m.OldStatus(ctx)
+	case processtimer.FieldVersion:
+		return m.OldVersion(ctx)
+	case processtimer.FieldIdempotencyKey:
+		return m.OldIdempotencyKey(ctx)
+	case processtimer.FieldRetryCount:
+		return m.OldRetryCount(ctx)
+	case processtimer.FieldMaxRetries:
+		return m.OldMaxRetries(ctx)
+	case processtimer.FieldLastFireAttempt:
+		return m.OldLastFireAttempt(ctx)
+	case processtimer.FieldFailureReason:
+		return m.OldFailureReason(ctx)
+	case processtimer.FieldContextVariables:
+		return m.OldContextVariables(ctx)
+	case processtimer.FieldTotalDurationSeconds:
+		return m.OldTotalDurationSeconds(ctx)
+	case processtimer.FieldElapsedSeconds:
+		return m.OldElapsedSeconds(ctx)
+	case processtimer.FieldPauseState:
+		return m.OldPauseState(ctx)
+	case processtimer.FieldParentTimerID:
+		return m.OldParentTimerID(ctx)
+	case processtimer.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case processtimer.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case processtimer.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProcessTimer field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProcessTimerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case processtimer.FieldTimerID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimerID(v)
+		return nil
+	case processtimer.FieldTimerType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimerType(v)
+		return nil
+	case processtimer.FieldProcessDefinitionKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessDefinitionKey(v)
+		return nil
+	case processtimer.FieldProcessInstanceID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessInstanceID(v)
+		return nil
+	case processtimer.FieldActivityID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActivityID(v)
+		return nil
+	case processtimer.FieldTimerExpression:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimerExpression(v)
+		return nil
+	case processtimer.FieldExpressionType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpressionType(v)
+		return nil
+	case processtimer.FieldFireAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFireAt(v)
+		return nil
+	case processtimer.FieldFiredAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFiredAt(v)
+		return nil
+	case processtimer.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case processtimer.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case processtimer.FieldIdempotencyKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdempotencyKey(v)
+		return nil
+	case processtimer.FieldRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRetryCount(v)
+		return nil
+	case processtimer.FieldMaxRetries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxRetries(v)
+		return nil
+	case processtimer.FieldLastFireAttempt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastFireAttempt(v)
+		return nil
+	case processtimer.FieldFailureReason:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailureReason(v)
+		return nil
+	case processtimer.FieldContextVariables:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContextVariables(v)
+		return nil
+	case processtimer.FieldTotalDurationSeconds:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTotalDurationSeconds(v)
+		return nil
+	case processtimer.FieldElapsedSeconds:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetElapsedSeconds(v)
+		return nil
+	case processtimer.FieldPauseState:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPauseState(v)
+		return nil
+	case processtimer.FieldParentTimerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetParentTimerID(v)
+		return nil
+	case processtimer.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case processtimer.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case processtimer.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProcessTimerMutation) AddedFields() []string {
+	var fields []string
+	if m.addversion != nil {
+		fields = append(fields, processtimer.FieldVersion)
+	}
+	if m.addretry_count != nil {
+		fields = append(fields, processtimer.FieldRetryCount)
+	}
+	if m.addmax_retries != nil {
+		fields = append(fields, processtimer.FieldMaxRetries)
+	}
+	if m.addtotal_duration_seconds != nil {
+		fields = append(fields, processtimer.FieldTotalDurationSeconds)
+	}
+	if m.addelapsed_seconds != nil {
+		fields = append(fields, processtimer.FieldElapsedSeconds)
+	}
+	if m.addparent_timer_id != nil {
+		fields = append(fields, processtimer.FieldParentTimerID)
+	}
+	if m.addtenant_id != nil {
+		fields = append(fields, processtimer.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProcessTimerMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case processtimer.FieldVersion:
+		return m.AddedVersion()
+	case processtimer.FieldRetryCount:
+		return m.AddedRetryCount()
+	case processtimer.FieldMaxRetries:
+		return m.AddedMaxRetries()
+	case processtimer.FieldTotalDurationSeconds:
+		return m.AddedTotalDurationSeconds()
+	case processtimer.FieldElapsedSeconds:
+		return m.AddedElapsedSeconds()
+	case processtimer.FieldParentTimerID:
+		return m.AddedParentTimerID()
+	case processtimer.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProcessTimerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case processtimer.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
+		return nil
+	case processtimer.FieldRetryCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddRetryCount(v)
+		return nil
+	case processtimer.FieldMaxRetries:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxRetries(v)
+		return nil
+	case processtimer.FieldTotalDurationSeconds:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTotalDurationSeconds(v)
+		return nil
+	case processtimer.FieldElapsedSeconds:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddElapsedSeconds(v)
+		return nil
+	case processtimer.FieldParentTimerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddParentTimerID(v)
+		return nil
+	case processtimer.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProcessTimerMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(processtimer.FieldProcessInstanceID) {
+		fields = append(fields, processtimer.FieldProcessInstanceID)
+	}
+	if m.FieldCleared(processtimer.FieldActivityID) {
+		fields = append(fields, processtimer.FieldActivityID)
+	}
+	if m.FieldCleared(processtimer.FieldFiredAt) {
+		fields = append(fields, processtimer.FieldFiredAt)
+	}
+	if m.FieldCleared(processtimer.FieldLastFireAttempt) {
+		fields = append(fields, processtimer.FieldLastFireAttempt)
+	}
+	if m.FieldCleared(processtimer.FieldFailureReason) {
+		fields = append(fields, processtimer.FieldFailureReason)
+	}
+	if m.FieldCleared(processtimer.FieldContextVariables) {
+		fields = append(fields, processtimer.FieldContextVariables)
+	}
+	if m.FieldCleared(processtimer.FieldTotalDurationSeconds) {
+		fields = append(fields, processtimer.FieldTotalDurationSeconds)
+	}
+	if m.FieldCleared(processtimer.FieldParentTimerID) {
+		fields = append(fields, processtimer.FieldParentTimerID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProcessTimerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProcessTimerMutation) ClearField(name string) error {
+	switch name {
+	case processtimer.FieldProcessInstanceID:
+		m.ClearProcessInstanceID()
+		return nil
+	case processtimer.FieldActivityID:
+		m.ClearActivityID()
+		return nil
+	case processtimer.FieldFiredAt:
+		m.ClearFiredAt()
+		return nil
+	case processtimer.FieldLastFireAttempt:
+		m.ClearLastFireAttempt()
+		return nil
+	case processtimer.FieldFailureReason:
+		m.ClearFailureReason()
+		return nil
+	case processtimer.FieldContextVariables:
+		m.ClearContextVariables()
+		return nil
+	case processtimer.FieldTotalDurationSeconds:
+		m.ClearTotalDurationSeconds()
+		return nil
+	case processtimer.FieldParentTimerID:
+		m.ClearParentTimerID()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProcessTimerMutation) ResetField(name string) error {
+	switch name {
+	case processtimer.FieldTimerID:
+		m.ResetTimerID()
+		return nil
+	case processtimer.FieldTimerType:
+		m.ResetTimerType()
+		return nil
+	case processtimer.FieldProcessDefinitionKey:
+		m.ResetProcessDefinitionKey()
+		return nil
+	case processtimer.FieldProcessInstanceID:
+		m.ResetProcessInstanceID()
+		return nil
+	case processtimer.FieldActivityID:
+		m.ResetActivityID()
+		return nil
+	case processtimer.FieldTimerExpression:
+		m.ResetTimerExpression()
+		return nil
+	case processtimer.FieldExpressionType:
+		m.ResetExpressionType()
+		return nil
+	case processtimer.FieldFireAt:
+		m.ResetFireAt()
+		return nil
+	case processtimer.FieldFiredAt:
+		m.ResetFiredAt()
+		return nil
+	case processtimer.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case processtimer.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case processtimer.FieldIdempotencyKey:
+		m.ResetIdempotencyKey()
+		return nil
+	case processtimer.FieldRetryCount:
+		m.ResetRetryCount()
+		return nil
+	case processtimer.FieldMaxRetries:
+		m.ResetMaxRetries()
+		return nil
+	case processtimer.FieldLastFireAttempt:
+		m.ResetLastFireAttempt()
+		return nil
+	case processtimer.FieldFailureReason:
+		m.ResetFailureReason()
+		return nil
+	case processtimer.FieldContextVariables:
+		m.ResetContextVariables()
+		return nil
+	case processtimer.FieldTotalDurationSeconds:
+		m.ResetTotalDurationSeconds()
+		return nil
+	case processtimer.FieldElapsedSeconds:
+		m.ResetElapsedSeconds()
+		return nil
+	case processtimer.FieldPauseState:
+		m.ResetPauseState()
+		return nil
+	case processtimer.FieldParentTimerID:
+		m.ResetParentTimerID()
+		return nil
+	case processtimer.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case processtimer.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case processtimer.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProcessTimerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.process_instance != nil {
+		edges = append(edges, processtimer.EdgeProcessInstance)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProcessTimerMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processtimer.EdgeProcessInstance:
+		if id := m.process_instance; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProcessTimerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProcessTimerMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProcessTimerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedprocess_instance {
+		edges = append(edges, processtimer.EdgeProcessInstance)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProcessTimerMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processtimer.EdgeProcessInstance:
+		return m.clearedprocess_instance
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProcessTimerMutation) ClearEdge(name string) error {
+	switch name {
+	case processtimer.EdgeProcessInstance:
+		m.ClearProcessInstance()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProcessTimerMutation) ResetEdge(name string) error {
+	switch name {
+	case processtimer.EdgeProcessInstance:
+		m.ResetProcessInstance()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessTimer edge %s", name)
 }
 
 // ProcessVariableMutation represents an operation that mutates the ProcessVariable nodes in the graph.

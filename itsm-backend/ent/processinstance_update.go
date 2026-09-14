@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"time"
 
@@ -420,6 +421,21 @@ func (_u *ProcessInstanceUpdate) AddExecutionHistory(v ...*ProcessExecutionHisto
 	return _u.AddExecutionHistoryIDs(ids...)
 }
 
+// AddTimerIDs adds the "timers" edge to the ProcessTimer entity by IDs.
+func (_u *ProcessInstanceUpdate) AddTimerIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.AddTimerIDs(ids...)
+	return _u
+}
+
+// AddTimers adds the "timers" edges to the ProcessTimer entity.
+func (_u *ProcessInstanceUpdate) AddTimers(v ...*ProcessTimer) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTimerIDs(ids...)
+}
+
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
 func (_u *ProcessInstanceUpdate) SetDefinitionID(id int) *ProcessInstanceUpdate {
 	_u.mutation.SetDefinitionID(id)
@@ -497,6 +513,27 @@ func (_u *ProcessInstanceUpdate) RemoveExecutionHistory(v ...*ProcessExecutionHi
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveExecutionHistoryIDs(ids...)
+}
+
+// ClearTimers clears all "timers" edges to the ProcessTimer entity.
+func (_u *ProcessInstanceUpdate) ClearTimers() *ProcessInstanceUpdate {
+	_u.mutation.ClearTimers()
+	return _u
+}
+
+// RemoveTimerIDs removes the "timers" edge to ProcessTimer entities by IDs.
+func (_u *ProcessInstanceUpdate) RemoveTimerIDs(ids ...int) *ProcessInstanceUpdate {
+	_u.mutation.RemoveTimerIDs(ids...)
+	return _u
+}
+
+// RemoveTimers removes "timers" edges to ProcessTimer entities.
+func (_u *ProcessInstanceUpdate) RemoveTimers(v ...*ProcessTimer) *ProcessInstanceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTimerIDs(ids...)
 }
 
 // ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
@@ -810,6 +847,51 @@ func (_u *ProcessInstanceUpdate) sqlSave(ctx context.Context) (_node int, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TimersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTimersIDs(); len(nodes) > 0 && !_u.mutation.TimersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TimersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1253,6 +1335,21 @@ func (_u *ProcessInstanceUpdateOne) AddExecutionHistory(v ...*ProcessExecutionHi
 	return _u.AddExecutionHistoryIDs(ids...)
 }
 
+// AddTimerIDs adds the "timers" edge to the ProcessTimer entity by IDs.
+func (_u *ProcessInstanceUpdateOne) AddTimerIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.AddTimerIDs(ids...)
+	return _u
+}
+
+// AddTimers adds the "timers" edges to the ProcessTimer entity.
+func (_u *ProcessInstanceUpdateOne) AddTimers(v ...*ProcessTimer) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTimerIDs(ids...)
+}
+
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
 func (_u *ProcessInstanceUpdateOne) SetDefinitionID(id int) *ProcessInstanceUpdateOne {
 	_u.mutation.SetDefinitionID(id)
@@ -1330,6 +1427,27 @@ func (_u *ProcessInstanceUpdateOne) RemoveExecutionHistory(v ...*ProcessExecutio
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveExecutionHistoryIDs(ids...)
+}
+
+// ClearTimers clears all "timers" edges to the ProcessTimer entity.
+func (_u *ProcessInstanceUpdateOne) ClearTimers() *ProcessInstanceUpdateOne {
+	_u.mutation.ClearTimers()
+	return _u
+}
+
+// RemoveTimerIDs removes the "timers" edge to ProcessTimer entities by IDs.
+func (_u *ProcessInstanceUpdateOne) RemoveTimerIDs(ids ...int) *ProcessInstanceUpdateOne {
+	_u.mutation.RemoveTimerIDs(ids...)
+	return _u
+}
+
+// RemoveTimers removes "timers" edges to ProcessTimer entities.
+func (_u *ProcessInstanceUpdateOne) RemoveTimers(v ...*ProcessTimer) *ProcessInstanceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTimerIDs(ids...)
 }
 
 // ClearDefinition clears the "definition" edge to the ProcessDefinition entity.
@@ -1673,6 +1791,51 @@ func (_u *ProcessInstanceUpdateOne) sqlSave(ctx context.Context) (_node *Process
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TimersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTimersIDs(); len(nodes) > 0 && !_u.mutation.TimersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TimersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processinstance.TimersTable,
+			Columns: []string{processinstance.TimersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processtimer.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

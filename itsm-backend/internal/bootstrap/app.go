@@ -1663,6 +1663,35 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 			}
 		}
 	})
+
+	// BPMN task timeout scanner: scans for overdue tasks every 2 minutes
+	// and dispatches the configured timeout action (notify/escalate/auto_reject/auto_approve).
+	safeGo("bpmn-timeout-scanner", func() {
+		scanner := service.NewTimeoutScanner(app.DBClient, app.Logger)
+		ticker := time.NewTicker(2 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				tenants, err := app.DBClient.Tenant.Query().All(ctx)
+				if err != nil {
+					continue
+				}
+				for _, t := range tenants {
+					processed, err := scanner.ScanOverdueTasks(ctx, t.ID)
+					if err != nil {
+						app.Logger.Warnw("BPMN timeout scan failed", "error", err, "tenant_id", t.ID)
+						continue
+					}
+					if processed > 0 {
+						app.Logger.Infow("BPMN timeout scan completed", "tenant_id", t.ID, "processed", processed)
+					}
+				}
+			}
+		}
+	})
 }
 
 // StopBackgroundTasks 等待所有由 startBackgroundTasks 启动的后台 goroutine

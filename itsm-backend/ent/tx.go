@@ -176,6 +176,8 @@ type Tx struct {
 	ProcessInstance *ProcessInstanceClient
 	// ProcessTask is the client for interacting with the ProcessTask builders.
 	ProcessTask *ProcessTaskClient
+	// ProcessTimer is the client for interacting with the ProcessTimer builders.
+	ProcessTimer *ProcessTimerClient
 	// ProcessVariable is the client for interacting with the ProcessVariable builders.
 	ProcessVariable *ProcessVariableClient
 	// ProcessVersionChangelog is the client for interacting with the ProcessVersionChangelog builders.
@@ -495,6 +497,7 @@ func (tx *Tx) init() {
 	tx.ProcessExecutionHistory = NewProcessExecutionHistoryClient(tx.config)
 	tx.ProcessInstance = NewProcessInstanceClient(tx.config)
 	tx.ProcessTask = NewProcessTaskClient(tx.config)
+	tx.ProcessTimer = NewProcessTimerClient(tx.config)
 	tx.ProcessVariable = NewProcessVariableClient(tx.config)
 	tx.ProcessVersionChangelog = NewProcessVersionChangelogClient(tx.config)
 	tx.Project = NewProjectClient(tx.config)

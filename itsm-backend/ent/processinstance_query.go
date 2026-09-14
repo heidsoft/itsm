@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"math"
 
@@ -30,6 +31,7 @@ type ProcessInstanceQuery struct {
 	withProcessTasks     *ProcessTaskQuery
 	withProcessVariables *ProcessVariableQuery
 	withExecutionHistory *ProcessExecutionHistoryQuery
+	withTimers           *ProcessTimerQuery
 	withDefinition       *ProcessDefinitionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -126,6 +128,28 @@ func (_q *ProcessInstanceQuery) QueryExecutionHistory() *ProcessExecutionHistory
 			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
 			sqlgraph.To(processexecutionhistory.Table, processexecutionhistory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.ExecutionHistoryTable, processinstance.ExecutionHistoryColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTimers chains the current query on the "timers" edge.
+func (_q *ProcessInstanceQuery) QueryTimers() *ProcessTimerQuery {
+	query := (&ProcessTimerClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, selector),
+			sqlgraph.To(processtimer.Table, processtimer.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.TimersTable, processinstance.TimersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -350,6 +374,7 @@ func (_q *ProcessInstanceQuery) Clone() *ProcessInstanceQuery {
 		withProcessTasks:     _q.withProcessTasks.Clone(),
 		withProcessVariables: _q.withProcessVariables.Clone(),
 		withExecutionHistory: _q.withExecutionHistory.Clone(),
+		withTimers:           _q.withTimers.Clone(),
 		withDefinition:       _q.withDefinition.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
@@ -387,6 +412,17 @@ func (_q *ProcessInstanceQuery) WithExecutionHistory(opts ...func(*ProcessExecut
 		opt(query)
 	}
 	_q.withExecutionHistory = query
+	return _q
+}
+
+// WithTimers tells the query-builder to eager-load the nodes that are connected to
+// the "timers" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ProcessInstanceQuery) WithTimers(opts ...func(*ProcessTimerQuery)) *ProcessInstanceQuery {
+	query := (&ProcessTimerClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withTimers = query
 	return _q
 }
 
@@ -479,10 +515,11 @@ func (_q *ProcessInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	var (
 		nodes       = []*ProcessInstance{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withProcessTasks != nil,
 			_q.withProcessVariables != nil,
 			_q.withExecutionHistory != nil,
+			_q.withTimers != nil,
 			_q.withDefinition != nil,
 		}
 	)
@@ -526,6 +563,13 @@ func (_q *ProcessInstanceQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 			func(n *ProcessInstance, e *ProcessExecutionHistory) {
 				n.Edges.ExecutionHistory = append(n.Edges.ExecutionHistory, e)
 			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withTimers; query != nil {
+		if err := _q.loadTimers(ctx, query, nodes,
+			func(n *ProcessInstance) { n.Edges.Timers = []*ProcessTimer{} },
+			func(n *ProcessInstance, e *ProcessTimer) { n.Edges.Timers = append(n.Edges.Timers, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -613,6 +657,36 @@ func (_q *ProcessInstanceQuery) loadExecutionHistory(ctx context.Context, query 
 	}
 	query.Where(predicate.ProcessExecutionHistory(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(processinstance.ExecutionHistoryColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessInstanceID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_instance_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ProcessInstanceQuery) loadTimers(ctx context.Context, query *ProcessTimerQuery, nodes []*ProcessInstance, init func(*ProcessInstance), assign func(*ProcessInstance, *ProcessTimer)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessInstance)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processtimer.FieldProcessInstanceID)
+	}
+	query.Where(predicate.ProcessTimer(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processinstance.TimersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

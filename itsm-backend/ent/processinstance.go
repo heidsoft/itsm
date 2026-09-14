@@ -73,11 +73,13 @@ type ProcessInstanceEdges struct {
 	ProcessVariables []*ProcessVariable `json:"process_variables,omitempty"`
 	// 执行历史
 	ExecutionHistory []*ProcessExecutionHistory `json:"execution_history,omitempty"`
+	// 流程定时器
+	Timers []*ProcessTimer `json:"timers,omitempty"`
 	// Definition holds the value of the definition edge.
 	Definition *ProcessDefinition `json:"definition,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // ProcessTasksOrErr returns the ProcessTasks value or an error if the edge
@@ -107,12 +109,21 @@ func (e ProcessInstanceEdges) ExecutionHistoryOrErr() ([]*ProcessExecutionHistor
 	return nil, &NotLoadedError{edge: "execution_history"}
 }
 
+// TimersOrErr returns the Timers value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessInstanceEdges) TimersOrErr() ([]*ProcessTimer, error) {
+	if e.loadedTypes[3] {
+		return e.Timers, nil
+	}
+	return nil, &NotLoadedError{edge: "timers"}
+}
+
 // DefinitionOrErr returns the Definition value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ProcessInstanceEdges) DefinitionOrErr() (*ProcessDefinition, error) {
 	if e.Definition != nil {
 		return e.Definition, nil
-	} else if e.loadedTypes[3] {
+	} else if e.loadedTypes[4] {
 		return nil, &NotFoundError{label: processdefinition.Label}
 	}
 	return nil, &NotLoadedError{edge: "definition"}
@@ -302,6 +313,11 @@ func (_m *ProcessInstance) QueryProcessVariables() *ProcessVariableQuery {
 // QueryExecutionHistory queries the "execution_history" edge of the ProcessInstance entity.
 func (_m *ProcessInstance) QueryExecutionHistory() *ProcessExecutionHistoryQuery {
 	return NewProcessInstanceClient(_m.config).QueryExecutionHistory(_m)
+}
+
+// QueryTimers queries the "timers" edge of the ProcessInstance entity.
+func (_m *ProcessInstance) QueryTimers() *ProcessTimerQuery {
+	return NewProcessInstanceClient(_m.config).QueryTimers(_m)
 }
 
 // QueryDefinition queries the "definition" edge of the ProcessInstance entity.

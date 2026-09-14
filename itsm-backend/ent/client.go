@@ -93,6 +93,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
@@ -322,6 +323,8 @@ type Client struct {
 	ProcessInstance *ProcessInstanceClient
 	// ProcessTask is the client for interacting with the ProcessTask builders.
 	ProcessTask *ProcessTaskClient
+	// ProcessTimer is the client for interacting with the ProcessTimer builders.
+	ProcessTimer *ProcessTimerClient
 	// ProcessVariable is the client for interacting with the ProcessVariable builders.
 	ProcessVariable *ProcessVariableClient
 	// ProcessVersionChangelog is the client for interacting with the ProcessVersionChangelog builders.
@@ -521,6 +524,7 @@ func (c *Client) init() {
 	c.ProcessExecutionHistory = NewProcessExecutionHistoryClient(c.config)
 	c.ProcessInstance = NewProcessInstanceClient(c.config)
 	c.ProcessTask = NewProcessTaskClient(c.config)
+	c.ProcessTimer = NewProcessTimerClient(c.config)
 	c.ProcessVariable = NewProcessVariableClient(c.config)
 	c.ProcessVersionChangelog = NewProcessVersionChangelogClient(c.config)
 	c.Project = NewProjectClient(c.config)
@@ -748,6 +752,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProcessExecutionHistory:     NewProcessExecutionHistoryClient(cfg),
 		ProcessInstance:             NewProcessInstanceClient(cfg),
 		ProcessTask:                 NewProcessTaskClient(cfg),
+		ProcessTimer:                NewProcessTimerClient(cfg),
 		ProcessVariable:             NewProcessVariableClient(cfg),
 		ProcessVersionChangelog:     NewProcessVersionChangelogClient(cfg),
 		Project:                     NewProjectClient(cfg),
@@ -902,6 +907,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProcessExecutionHistory:     NewProcessExecutionHistoryClient(cfg),
 		ProcessInstance:             NewProcessInstanceClient(cfg),
 		ProcessTask:                 NewProcessTaskClient(cfg),
+		ProcessTimer:                NewProcessTimerClient(cfg),
 		ProcessVariable:             NewProcessVariableClient(cfg),
 		ProcessVersionChangelog:     NewProcessVersionChangelogClient(cfg),
 		Project:                     NewProjectClient(cfg),
@@ -1005,20 +1011,20 @@ func (c *Client) Use(hooks ...Hook) {
 		c.OperationalCommand, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
-		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
-		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowTemplate,
-		c.WorkflowVersion,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
+		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
+		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
+		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
+		c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
+		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
+		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowTemplate, c.WorkflowVersion,
 	} {
 		n.Use(hooks...)
 	}
@@ -1049,20 +1055,20 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.OperationalCommand, c.PasswordResetToken, c.Permission,
 		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
-		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
-		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
-		c.SLAViolation, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
-		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
-		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.Workflow, c.WorkflowInstance, c.WorkflowTask, c.WorkflowTemplate,
-		c.WorkflowVersion,
+		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
+		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
+		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
+		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
+		c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
+		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
+		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
+		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
+		c.ToolInvocation, c.User, c.Vendor, c.Workflow, c.WorkflowInstance,
+		c.WorkflowTask, c.WorkflowTemplate, c.WorkflowVersion,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -1235,6 +1241,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProcessInstance.mutate(ctx, m)
 	case *ProcessTaskMutation:
 		return c.ProcessTask.mutate(ctx, m)
+	case *ProcessTimerMutation:
+		return c.ProcessTimer.mutate(ctx, m)
 	case *ProcessVariableMutation:
 		return c.ProcessVariable.mutate(ctx, m)
 	case *ProcessVersionChangelogMutation:
@@ -14190,6 +14198,22 @@ func (c *ProcessInstanceClient) QueryExecutionHistory(_m *ProcessInstance) *Proc
 	return query
 }
 
+// QueryTimers queries the timers edge of a ProcessInstance.
+func (c *ProcessInstanceClient) QueryTimers(_m *ProcessInstance) *ProcessTimerQuery {
+	query := (&ProcessTimerClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processinstance.Table, processinstance.FieldID, id),
+			sqlgraph.To(processtimer.Table, processtimer.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processinstance.TimersTable, processinstance.TimersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryDefinition queries the definition edge of a ProcessInstance.
 func (c *ProcessInstanceClient) QueryDefinition(_m *ProcessInstance) *ProcessDefinitionQuery {
 	query := (&ProcessDefinitionClient{config: c.config}).Query()
@@ -14377,6 +14401,155 @@ func (c *ProcessTaskClient) mutate(ctx context.Context, m *ProcessTaskMutation) 
 		return (&ProcessTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ProcessTask mutation op: %q", m.Op())
+	}
+}
+
+// ProcessTimerClient is a client for the ProcessTimer schema.
+type ProcessTimerClient struct {
+	config
+}
+
+// NewProcessTimerClient returns a client for the ProcessTimer from the given config.
+func NewProcessTimerClient(c config) *ProcessTimerClient {
+	return &ProcessTimerClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processtimer.Hooks(f(g(h())))`.
+func (c *ProcessTimerClient) Use(hooks ...Hook) {
+	c.hooks.ProcessTimer = append(c.hooks.ProcessTimer, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processtimer.Intercept(f(g(h())))`.
+func (c *ProcessTimerClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessTimer = append(c.inters.ProcessTimer, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessTimer entity.
+func (c *ProcessTimerClient) Create() *ProcessTimerCreate {
+	mutation := newProcessTimerMutation(c.config, OpCreate)
+	return &ProcessTimerCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessTimer entities.
+func (c *ProcessTimerClient) CreateBulk(builders ...*ProcessTimerCreate) *ProcessTimerCreateBulk {
+	return &ProcessTimerCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessTimerClient) MapCreateBulk(slice any, setFunc func(*ProcessTimerCreate, int)) *ProcessTimerCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessTimerCreateBulk{err: fmt.Errorf("calling to ProcessTimerClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessTimerCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessTimerCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessTimer.
+func (c *ProcessTimerClient) Update() *ProcessTimerUpdate {
+	mutation := newProcessTimerMutation(c.config, OpUpdate)
+	return &ProcessTimerUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessTimerClient) UpdateOne(_m *ProcessTimer) *ProcessTimerUpdateOne {
+	mutation := newProcessTimerMutation(c.config, OpUpdateOne, withProcessTimer(_m))
+	return &ProcessTimerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessTimerClient) UpdateOneID(id int) *ProcessTimerUpdateOne {
+	mutation := newProcessTimerMutation(c.config, OpUpdateOne, withProcessTimerID(id))
+	return &ProcessTimerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessTimer.
+func (c *ProcessTimerClient) Delete() *ProcessTimerDelete {
+	mutation := newProcessTimerMutation(c.config, OpDelete)
+	return &ProcessTimerDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessTimerClient) DeleteOne(_m *ProcessTimer) *ProcessTimerDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessTimerClient) DeleteOneID(id int) *ProcessTimerDeleteOne {
+	builder := c.Delete().Where(processtimer.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessTimerDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessTimer.
+func (c *ProcessTimerClient) Query() *ProcessTimerQuery {
+	return &ProcessTimerQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessTimer},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessTimer entity by its id.
+func (c *ProcessTimerClient) Get(ctx context.Context, id int) (*ProcessTimer, error) {
+	return c.Query().Where(processtimer.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessTimerClient) GetX(ctx context.Context, id int) *ProcessTimer {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProcessInstance queries the process_instance edge of a ProcessTimer.
+func (c *ProcessTimerClient) QueryProcessInstance(_m *ProcessTimer) *ProcessInstanceQuery {
+	query := (&ProcessInstanceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processtimer.Table, processtimer.FieldID, id),
+			sqlgraph.To(processinstance.Table, processinstance.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processtimer.ProcessInstanceTable, processtimer.ProcessInstanceColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessTimerClient) Hooks() []Hook {
+	return c.hooks.ProcessTimer
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessTimerClient) Interceptors() []Interceptor {
+	return c.inters.ProcessTimer
+}
+
+func (c *ProcessTimerClient) mutate(ctx context.Context, m *ProcessTimerMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessTimerCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessTimerUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessTimerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessTimerDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessTimer mutation op: %q", m.Op())
 	}
 }
 
@@ -23226,18 +23399,18 @@ type (
 		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
 		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
 		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceCustomer, ServiceRequest, ServiceRequestApproval,
-		SourceOrganization, StandardChange, SupportContract, Survey, SurveyResponse,
-		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowTemplate,
-		WorkflowVersion []ent.Hook
+		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
+		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowTemplate, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
@@ -23258,17 +23431,18 @@ type (
 		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
 		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
 		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessVariable, ProcessVersionChangelog,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
-		SLADefinition, SLAMetric, SLAPolicy, SLAViolation, ServiceCatalog,
-		ServiceCatalogItem, ServiceCustomer, ServiceRequest, ServiceRequestApproval,
-		SourceOrganization, StandardChange, SupportContract, Survey, SurveyResponse,
-		SystemConfig, Tag, Team, Tenant, TenantInstallation, Ticket, TicketApproval,
-		TicketAssignmentRule, TicketAttachment, TicketAutomationRule, TicketCC,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketType, TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor,
-		Workflow, WorkflowInstance, WorkflowTask, WorkflowTemplate,
+		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
+		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
+		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCC, TicketCategory,
+		TicketComment, TicketNotification, TicketTag, TicketTemplate, TicketType,
+		TicketView, TicketWorkflowRecord, ToolInvocation, User, Vendor, Workflow,
+		WorkflowInstance, WorkflowTask, WorkflowTemplate,
 		WorkflowVersion []ent.Interceptor
 	}
 )

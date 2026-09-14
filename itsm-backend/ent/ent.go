@@ -88,6 +88,7 @@ import (
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/processtimer"
 	"itsm-backend/ent/processvariable"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
@@ -289,6 +290,7 @@ func checkColumn(t, c string) error {
 			processexecutionhistory.Table:     processexecutionhistory.ValidColumn,
 			processinstance.Table:             processinstance.ValidColumn,
 			processtask.Table:                 processtask.ValidColumn,
+			processtimer.Table:                processtimer.ValidColumn,
 			processvariable.Table:             processvariable.ValidColumn,
 			processversionchangelog.Table:     processversionchangelog.ValidColumn,
 			project.Table:                     project.ValidColumn,

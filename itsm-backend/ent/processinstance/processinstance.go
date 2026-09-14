@@ -60,6 +60,8 @@ const (
 	EdgeProcessVariables = "process_variables"
 	// EdgeExecutionHistory holds the string denoting the execution_history edge name in mutations.
 	EdgeExecutionHistory = "execution_history"
+	// EdgeTimers holds the string denoting the timers edge name in mutations.
+	EdgeTimers = "timers"
 	// EdgeDefinition holds the string denoting the definition edge name in mutations.
 	EdgeDefinition = "definition"
 	// Table holds the table name of the processinstance in the database.
@@ -85,6 +87,13 @@ const (
 	ExecutionHistoryInverseTable = "process_execution_histories"
 	// ExecutionHistoryColumn is the table column denoting the execution_history relation/edge.
 	ExecutionHistoryColumn = "process_instance_id"
+	// TimersTable is the table that holds the timers relation/edge.
+	TimersTable = "process_timers"
+	// TimersInverseTable is the table name for the ProcessTimer entity.
+	// It exists in this package in order to avoid circular dependency with the "processtimer" package.
+	TimersInverseTable = "process_timers"
+	// TimersColumn is the table column denoting the timers relation/edge.
+	TimersColumn = "process_instance_id"
 	// DefinitionTable is the table that holds the definition relation/edge.
 	DefinitionTable = "process_instances"
 	// DefinitionInverseTable is the table name for the ProcessDefinition entity.
@@ -292,6 +301,20 @@ func ByExecutionHistory(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption 
 	}
 }
 
+// ByTimersCount orders the results by timers count.
+func ByTimersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTimersStep(), opts...)
+	}
+}
+
+// ByTimers orders the results by timers terms.
+func ByTimers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTimersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByDefinitionField orders the results by definition field.
 func ByDefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -317,6 +340,13 @@ func newExecutionHistoryStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ExecutionHistoryInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ExecutionHistoryTable, ExecutionHistoryColumn),
+	)
+}
+func newTimersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TimersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TimersTable, TimersColumn),
 	)
 }
 func newDefinitionStep() *sqlgraph.Step {
