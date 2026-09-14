@@ -126,6 +126,8 @@ type Application struct {
 	LegacyVectorStore *service.VectorStore
 	CommandWorker     *commandbus.Worker
 	SkillRegistry     *service.SkillRegistry
+	ProcessEngine     *service.CustomProcessEngine
+	TimerScheduler    *service.TimerScheduler
 
 	// ServiceRequestRepo 服务请求仓储（供后台审批链自愈任务使用；路由侧另有独立构造）。
 	ServiceRequestRepo service_request.Repository
@@ -1205,6 +1207,18 @@ func NewApplication() *Application {
 	}
 	router.SetupRoutes(r, routerConfig)
 
+	// Timer Event scheduler: create early so it can be stored in Application
+	timerStore := service.NewDBTimerStore(client, sugar)
+	timerEventHandler := service.NewTimerEventHandler(customProcessEngine, sugar)
+	timerScheduler := service.NewTimerScheduler(service.TimerSchedulerConfig{
+		Client:   client,
+		Store:    timerStore,
+		Logger:   sugar,
+		Callback: timerEventHandler.Callback(),
+	})
+
+	customProcessEngine.SetTimerServices(timerStore, timerScheduler)
+
 	return &Application{
 		Cfg:               cfg,
 		Logger:            sugar,
@@ -1215,6 +1229,8 @@ func NewApplication() *Application {
 		LegacyVectorStore: vectorStore,
 		CommandWorker:     commandWorker,
 		SkillRegistry:     skillRegistry,
+		ProcessEngine:     customProcessEngine,
+		TimerScheduler:    timerScheduler,
 
 		// 存量 pending 请求审批链自愈任务的数据源（P1-A 修复配套）
 		ServiceRequestRepo: srRepo,
@@ -1691,6 +1707,16 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 				}
 			}
 		}
+	})
+
+	// Timer Event scheduler: in-memory wheel with DB-backed recovery.
+	// Phase 2: TimerEventHandler bridges timer firing to BPMN process engine.
+	safeGo("timer-scheduler", func() {
+		if err := app.TimerScheduler.Start(ctx); err != nil {
+			app.Logger.Warnw("timer scheduler start failed", "error", err)
+		}
+		<-ctx.Done()
+		app.TimerScheduler.Stop()
 	})
 }
 

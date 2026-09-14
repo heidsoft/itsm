@@ -224,6 +224,8 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		return nil, fmt.Errorf("任务已被描述，请刷新后重试")
 	}
 
+	e.cancelBoundaryTimers(ctx, instance, process, task.TaskDefinitionKey)
+
 	// 5. 在事务内合并变量（无并发写者，直接合并即可）
 	instance, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables)
 	if err != nil {
@@ -460,7 +462,7 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 
 	if task := e.findUserTask(process, elementID); task != nil {
 		e.logger.Infow("Found user task, creating task", "taskID", task.ID, "taskName", task.Name)
-		return e.createUserTask(ctx, txc, instance, task)
+		return e.createUserTask(ctx, txc, instance, process, task)
 	} else if endEvent := e.findEndEvent(process, elementID); endEvent != nil {
 		e.markElementDone(ctx, txc, instance, elementID)
 		return e.completeProcess(ctx, txc, instance)
@@ -475,6 +477,8 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		return e.executeStep(ctx, txc, instance, process, elementID, instance.Variables)
 	} else if serviceTask := e.findServiceTask(process, elementID); serviceTask != nil {
 		return e.enqueueServiceTaskCommand(ctx, txc, instance, serviceTask)
+	} else if intermediateEvent := e.findIntermediateEvent(process, elementID); intermediateEvent != nil {
+		return e.handleIntermediateCatchEvent(ctx, txc, instance, process, intermediateEvent)
 	}
 
 	e.markElementDone(ctx, txc, instance, elementID)
@@ -603,7 +607,7 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 // UserTask 创建与分配
 // ---------------------------------------------------------------------------
 
-func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, task *BPMNUserTask) error {
+func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, task *BPMNUserTask) error {
 	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务（F-2）
 	// 必须使用事务客户端：CompleteTask 事务内刚创建的任务对外不可见，用 e.client 会漏读导致重复创建
 	if existing, _ := txc.ProcessTask.Query().
@@ -743,6 +747,9 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		}
 	}
 	e.logger.Infow("User task created with auto-assignment", "taskID", task.ID, "taskName", task.Name, "assignee", assignee)
+
+	e.registerBoundaryTimers(ctx, instance, process, task.ID)
+
 	return nil
 }
 
@@ -1082,6 +1089,187 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 		}
 	}
 	return nil
+}
+
+func (e *CustomProcessEngine) findIntermediateEvent(process *BPMNProcess, id string) *BPMNIntermediateEvent {
+	for _, event := range process.IntermediateEvents {
+		if event.ID == id {
+			return event
+		}
+	}
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// 定时器事件运行时注册（Phase 4）
+// ---------------------------------------------------------------------------
+
+// handleIntermediateCatchEvent 处理中间捕获事件。
+// 如果包含定时器定义，注册定时器并阻塞流程（不调用 executeStep）；
+// 否则直接推进（非定时器类型的中间事件暂按透传处理）。
+func (e *CustomProcessEngine) handleIntermediateCatchEvent(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, event *BPMNIntermediateEvent) error {
+	if event.TimerEventDefinition == nil || !e.hasTimerExpression(event.TimerEventDefinition) {
+		e.markElementDone(ctx, txc, instance, event.ID)
+		return e.executeStep(ctx, txc, instance, process, event.ID, instance.Variables)
+	}
+
+	if e.timerStore == nil {
+		return fmt.Errorf("定时器服务未配置，无法处理中间定时器事件 %s", event.ID)
+	}
+
+	expression, expressionType := e.extractTimerExpression(event.TimerEventDefinition)
+	fireAt, err := CalculateFireAt(expression, expressionType, time.Now())
+	if err != nil {
+		return fmt.Errorf("计算中间定时器触发时间失败: %w", err)
+	}
+
+	instanceID := instance.ID
+	_, err = e.timerStore.Create(ctx, &CreateTimerRequest{
+		TimerType:            TimerTypeIntermediate,
+		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessInstanceID:    &instanceID,
+		ActivityID:           event.ID,
+		TimerExpression:      expression,
+		ExpressionType:       ExpressionType(expressionType),
+		FireAt:               fireAt,
+		TenantID:             instance.TenantID,
+	})
+	if err != nil {
+		return fmt.Errorf("创建中间定时器记录失败: %w", err)
+	}
+
+	e.logger.Infow("Intermediate timer registered at runtime",
+		"instance_id", instance.ID,
+		"activity_id", event.ID,
+		"expression", expression,
+		"fire_at", fireAt,
+	)
+
+	return nil
+}
+
+// registerBoundaryTimers 在 UserTask 创建后，扫描并注册绑定到该任务的 boundary timer。
+func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, taskDefKey string) {
+	if e.timerStore == nil {
+		return
+	}
+
+	for _, boundary := range process.BoundaryEvents {
+		if boundary.AttachedToRef != taskDefKey {
+			continue
+		}
+		if boundary.TimerEventDefinition == nil || !e.hasTimerExpression(boundary.TimerEventDefinition) {
+			continue
+		}
+
+		expression, expressionType := e.extractTimerExpression(boundary.TimerEventDefinition)
+		fireAt, err := CalculateFireAt(expression, expressionType, time.Now())
+		if err != nil {
+			e.logger.Warnw("Failed to calculate boundary timer fire time",
+				"boundary_event_id", boundary.ID,
+				"attached_to", taskDefKey,
+				"error", err,
+			)
+			continue
+		}
+
+		instanceID := instance.ID
+		_, err = e.timerStore.Create(ctx, &CreateTimerRequest{
+			TimerType:            TimerTypeBoundary,
+			ProcessDefinitionKey: instance.ProcessDefinitionKey,
+			ProcessInstanceID:    &instanceID,
+			ActivityID:           boundary.ID,
+			TimerExpression:      expression,
+			ExpressionType:       ExpressionType(expressionType),
+			FireAt:               fireAt,
+			TenantID:             instance.TenantID,
+		})
+		if err != nil {
+			e.logger.Warnw("Failed to register boundary timer",
+				"boundary_event_id", boundary.ID,
+				"attached_to", taskDefKey,
+				"error", err,
+			)
+			continue
+		}
+
+		e.logger.Infow("Boundary timer registered at runtime",
+			"instance_id", instance.ID,
+			"boundary_event_id", boundary.ID,
+			"attached_to", taskDefKey,
+			"expression", expression,
+			"fire_at", fireAt,
+		)
+	}
+}
+
+// cancelBoundaryTimers 在 UserTask 正常完成时取消绑定到该任务的所有 pending boundary timer。
+func (e *CustomProcessEngine) cancelBoundaryTimers(ctx context.Context, instance *ent.ProcessInstance, process *BPMNProcess, taskDefKey string) {
+	if e.timerStore == nil {
+		return
+	}
+
+	for _, boundary := range process.BoundaryEvents {
+		if boundary.AttachedToRef != taskDefKey {
+			continue
+		}
+		if boundary.TimerEventDefinition == nil {
+			continue
+		}
+
+		timers, _, err := e.timerStore.List(ctx, TimerListFilter{
+			TenantID:           instance.TenantID,
+			TimerType:          string(TimerTypeBoundary),
+			ProcessInstanceID:  &instance.ID,
+			Status:             string(TimerStatusPending),
+			PageSize:           100,
+			Page:               1,
+		})
+		if err != nil {
+			e.logger.Warnw("Failed to list boundary timers for cancellation",
+				"instance_id", instance.ID,
+				"task_def_key", taskDefKey,
+				"error", err,
+			)
+			continue
+		}
+
+		for _, timer := range timers {
+			if timer.ActivityID == boundary.ID {
+				if err := e.timerStore.CancelByTimerID(ctx, timer.TimerID); err != nil {
+					e.logger.Warnw("Failed to cancel boundary timer",
+						"timer_id", timer.TimerID,
+						"error", err,
+					)
+				} else if e.timerScheduler != nil {
+					e.timerScheduler.Cancel(timer.TimerID)
+				}
+				e.logger.Infow("Boundary timer cancelled on task completion",
+					"timer_id", timer.TimerID,
+					"boundary_event_id", boundary.ID,
+					"task_def_key", taskDefKey,
+				)
+			}
+		}
+	}
+}
+
+// hasTimerExpression 检查定时器定义是否包含有效的表达式。
+func (e *CustomProcessEngine) hasTimerExpression(def *BPMNTimerEventDefinition) bool {
+	return strings.TrimSpace(def.TimeDuration) != "" ||
+		strings.TrimSpace(def.TimeDate) != "" ||
+		strings.TrimSpace(def.TimeCycle) != ""
+}
+
+// extractTimerExpression 从定时器定义中提取表达式和类型。
+func (e *CustomProcessEngine) extractTimerExpression(def *BPMNTimerEventDefinition) (expression, expressionType string) {
+	if strings.TrimSpace(def.TimeDuration) != "" {
+		return strings.TrimSpace(def.TimeDuration), "duration"
+	}
+	if strings.TrimSpace(def.TimeDate) != "" {
+		return strings.TrimSpace(def.TimeDate), "date"
+	}
+	return strings.TrimSpace(def.TimeCycle), "cycle"
 }
 
 // ---------------------------------------------------------------------------

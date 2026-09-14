@@ -15,8 +15,9 @@ import (
 
 // BPMNDeploymentService BPMN流程部署服务
 type BPMNDeploymentService struct {
-	client *ent.Client
-	parser *BPMNParser
+	client     *ent.Client
+	parser     *BPMNParser
+	timerStore TimerStore
 }
 
 // NewBPMNDeploymentService 创建BPMN部署服务实例
@@ -24,6 +25,15 @@ func NewBPMNDeploymentService(client *ent.Client) *BPMNDeploymentService {
 	return &BPMNDeploymentService{
 		client: client,
 		parser: NewBPMNParser(),
+	}
+}
+
+// NewBPMNDeploymentServiceWithTimerStore 创建带定时器存储的BPMN部署服务实例
+func NewBPMNDeploymentServiceWithTimerStore(client *ent.Client, timerStore TimerStore) *BPMNDeploymentService {
+	return &BPMNDeploymentService{
+		client:     client,
+		parser:     NewBPMNParser(),
+		timerStore: timerStore,
 	}
 }
 
@@ -61,18 +71,20 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 	}
 
 	// 创建流程定义
-	_, err = s.createProcessDefinition(ctx, req, deployment, processInfo)
+	processDef, err := s.createProcessDefinition(ctx, req, deployment, processInfo)
 	if err != nil {
 		// 如果创建流程定义失败，删除部署记录
 		s.client.ProcessDeployment.DeleteOne(deployment).Exec(ctx)
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
 
-	// 更新部署记录，关联流程定义
-	// 注意：ProcessDeployment没有ProcessDefinitionID字段，需要通过其他方式关联
-	// 这里暂时跳过，或者可以通过元数据存储关联信息
-	if err != nil {
-		return nil, fmt.Errorf("更新部署记录失败: %w", err)
+	// 注册开始定时器事件（Phase 3）
+	if s.timerStore != nil {
+		if err := s.registerStartTimers(ctx, definitions, processDef.Key, req.TenantID); err != nil {
+			// 定时器注册失败不影响部署成功，只记录警告
+			// TODO: 考虑是否需要回滚部署
+			fmt.Printf("警告: 注册开始定时器失败: %v\n", err)
+		}
 	}
 
 	return deployment, nil
@@ -351,3 +363,46 @@ type ListDeploymentsRequest struct {
 	Page      int       `json:"page" binding:"required,min=1"`
 	PageSize  int       `json:"pageSize" binding:"required,min=1,max=100"`
 }
+
+// registerStartTimers 注册开始定时器事件
+func (s *BPMNDeploymentService) registerStartTimers(ctx context.Context, definitions *BPMNDefinitions, processKey string, tenantID int) error {
+	if s.timerStore == nil {
+		return nil
+	}
+
+	timerEvents, err := ExtractTimerEvents(definitions, processKey)
+	if err != nil {
+		return fmt.Errorf("提取定时器事件失败: %w", err)
+	}
+
+	now := time.Now()
+	for _, timerEvent := range timerEvents {
+		// 只注册开始定时器
+		if timerEvent.TimerType != "start" {
+			continue
+		}
+
+		// 计算触发时间
+		fireAt, err := CalculateFireAt(timerEvent.Expression, timerEvent.ExpressionType, now)
+		if err != nil {
+			return fmt.Errorf("计算定时器触发时间失败: %w", err)
+		}
+
+		// 创建定时器记录
+		_, err = s.timerStore.Create(ctx, &CreateTimerRequest{
+			TimerType:            TimerType(timerEvent.TimerType),
+			ProcessDefinitionKey: timerEvent.ProcessDefinitionKey,
+			ActivityID:           timerEvent.ActivityID,
+			TimerExpression:      timerEvent.Expression,
+			ExpressionType:       ExpressionType(timerEvent.ExpressionType),
+			FireAt:               fireAt,
+			TenantID:             tenantID,
+		})
+		if err != nil {
+			return fmt.Errorf("创建定时器记录失败: %w", err)
+		}
+	}
+
+	return nil
+}
+

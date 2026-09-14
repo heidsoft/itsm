@@ -73,6 +73,7 @@ import (
 	ticketTypeHandler "itsm-backend/handlers/ticket_type"
 	ticketViewHandler "itsm-backend/handlers/ticket_view"
 	ticketWorkflowHandler "itsm-backend/handlers/ticket_workflow"
+	timerHandler "itsm-backend/handlers/timer"
 	usersHandler "itsm-backend/handlers/user"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
@@ -385,6 +386,17 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		operationRoutes.POST("/:id/cancel", operationHandler.Cancel)
 		operationRoutes.POST("/bulk-replay", operationHandler.BulkReplay)
 		operationRoutes.POST("/bulk-cancel", operationHandler.BulkCancel)
+	}
+
+	if config.Client != nil {
+		timerStore := service.NewDBTimerStore(config.Client, zap.S())
+		timerSvc := timerHandler.NewService(timerStore)
+		timerH := timerHandler.NewHandler(timerSvc)
+		timerRoutes := auth.Group("/timers")
+		timerRoutes.Use(middleware.RequirePermission("system", "read"))
+		timerRoutes.GET("", timerH.List)
+		timerRoutes.GET("/stats", timerH.Stats)
+		timerRoutes.GET("/:id", timerH.Get)
 	}
 
 	// WebSocket 路由（使用短期票据替代JWT query参数，避免token泄露）

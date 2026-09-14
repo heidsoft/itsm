@@ -102,6 +102,9 @@ type CustomProcessEngine struct {
 	taskService              *bpmnTaskService
 	// 审计服务
 	auditService *BPMNAuditService
+	// 定时器事件支持（Phase 4: 运行时注册）
+	timerStore     TimerStore
+	timerScheduler *TimerScheduler
 }
 
 // NewCustomProcessEngine 创建自定义流程引擎实例
@@ -124,6 +127,13 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 	engine.registerProcessFunctions()
 
 	return engine
+}
+
+// SetTimerServices injects timer store and scheduler for runtime timer event registration.
+// Called after engine construction in app.go wiring phase.
+func (e *CustomProcessEngine) SetTimerServices(store TimerStore, scheduler *TimerScheduler) {
+	e.timerStore = store
+	e.timerScheduler = scheduler
 }
 
 // registerProcessFunctions 注册流程相关的内置函数
