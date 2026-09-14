@@ -88,9 +88,10 @@ function buildTemplateXml(
         ...ins.map(id => `      <bpmn:incoming>${id}</bpmn:incoming>`),
         ...outs.map(id => `      <bpmn:outgoing>${id}</bpmn:outgoing>`),
       ].join('\n');
-      return `    <bpmn:${node.kind} id="${node.id}" name="${escapeXml(node.name)}">${
-        children ? `\n${children}\n    </bpmn:${node.kind}>` : '/>'
-      }`;
+      if (children) {
+        return `    <bpmn:${node.kind} id="${node.id}" name="${escapeXml(node.name)}">\n${children}\n    </bpmn:${node.kind}>`;
+      }
+      return `    <bpmn:${node.kind} id="${node.id}" name="${escapeXml(node.name)}" />`;
     })
     .join('\n');
 

@@ -51,6 +51,14 @@ describe('workflow-templates', () => {
     });
   });
 
+  it('bpmnXml does not contain malformed self-closing tags', () => {
+    WORKFLOW_TEMPLATES.forEach((tmpl: WorkflowTemplate) => {
+      // Malformed pattern: >/> (e.g., <bpmn:startEvent>/> instead of <bpmn:startEvent />)
+      const malformedPattern = />\/>/;
+      expect(malformedPattern.test(tmpl.bpmnXml)).toBe(false);
+    });
+  });
+
   it('getTemplateByTicketType maps known ticket types and falls back to generic_request', () => {
     // 后端 ticket_types 实际码表（2026-09-07 核对）
     expect(getTemplateByTicketType('account_apply')?.id).toBe('generic_request');
