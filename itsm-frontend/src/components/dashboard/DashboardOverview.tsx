@@ -38,7 +38,7 @@ dayjs.extend(relativeTime);
 
 import type { TicketStats, UserStats, SystemStats } from '@/types/dashboard';
 import type { Ticket } from '@/types/ticket';
-import type { User } from '@/types/user';
+import type { User } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 
 interface DashboardOverviewProps {
@@ -195,59 +195,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       setRecentTickets(mappedTickets);
 
-      // 转换活跃用户
-      const mappedUsers = activeUsersData.users.map((u: any) => {
-        return {
-          ...u,
-          fullName: u.name || u.username,
-          role: u.role || 'end_user',
-          status: u.active ? 'active' : 'inactive',
-          tenantId: u.tenantId || 1,
-          createdAt: u.createdAt || new Date().toISOString(),
-          updatedAt: u.updatedAt || new Date().toISOString(),
-          permissions: [],
-          groups: [],
-          preferences: {
-            theme: 'light',
-            language: 'zh-CN',
-            timezone: 'Asia/Shanghai',
-            dateFormat: 'YYYY-MM-DD',
-            timeFormat: '24h',
-            notifications: {
-              email: true,
-              sms: false,
-              inApp: true,
-              desktop: false,
-              ticketAssigned: true,
-              ticketUpdated: true,
-              ticketEscalated: true,
-              ticketResolved: true,
-              slaBreached: true,
-              systemMaintenance: true,
-            },
-            ui: {
-              sidebarCollapsed: false,
-              tablePageSize: 20,
-              defaultView: 'table',
-              showAvatars: true,
-              compactMode: false,
-            },
-            work: {
-              autoAssign: false,
-              defaultPriority: 'medium',
-              workingHours: {
-                start: '09:00',
-                end: '17:00',
-                timezone: 'Asia/Shanghai',
-              },
-              workingDays: [1, 2, 3, 4, 5],
-            },
-          },
-          isActive: u.active ?? true,
-          emailVerified: false,
-          phoneVerified: false,
-        } as User;
-      });
+      // 转换活跃用户（直接使用后端 User 形状，不再手工填充虚构偏好字段）
+      const mappedUsers: User[] = (activeUsersData.users as User[]).map(u => ({
+        ...u,
+        role: u.role || 'end_user',
+        name: u.name || u.username,
+        tenantId: u.tenantId || 1,
+        createdAt: u.createdAt || new Date().toISOString(),
+        updatedAt: u.updatedAt || new Date().toISOString(),
+      }));
 
       setActiveUsers(mappedUsers);
     } catch (error) {
@@ -533,7 +489,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <List.Item>
                     <List.Item.Meta
                       avatar={<Avatar icon={<UserIcon />} />}
-                      title={user.fullName}
+                      title={user.name}
                       description={
                         <Space>
                           <Tag>{user.role}</Tag>

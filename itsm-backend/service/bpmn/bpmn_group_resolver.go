@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/group"
+	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/user"
 )
 
@@ -63,7 +64,12 @@ func joinCSV(items []string) string {
 //   - userIDs: 所有组成员用户的 ID（去重）
 //   - usernames: 所有组成员的 username/email（去重）
 //
-// 注意：当某个组不存在或没有成员时，仅记录警告而不返回错误，
+// 角色回退（2026-09-15 GitHub issue 修复）：组名在 groups 表不存在时，若与
+// roles 表某个角色 code 同名，则按角色解析用户（M2M 边 ∪ 主角色枚举）。
+// 设计器下拉融合了「组 + 角色」选项，审批组配置缺失（groups 无种子）时
+// 选角色也能正确分派，不再静默产出空候选集。
+//
+// 注意：当某个组不存在且无同名角色时，仅容忍不报错，
 // 避免 BPMN 引擎因为配置缺失而中断流程执行。
 func (r *GroupResolver) ExpandGroupsToUsers(ctx context.Context, tenantID int, candidateGroups string) ([]int, []string, error) {
 	groupNames := splitCSV(candidateGroups)
@@ -86,41 +92,92 @@ func (r *GroupResolver) ExpandGroupsToUsers(ctx context.Context, tenantID int, c
 	for _, g := range groups {
 		found[g.Name] = true
 	}
-	for _, name := range groupNames {
-		if !found[name] {
-			// 组不存在：不阻塞流程，但发出警告，便于管理员发现配置漂移
-			// 此处不返回错误，由调用方日志处理
-			_ = name
-		}
-	}
 
 	seenID := make(map[int]struct{})
 	seenName := make(map[string]struct{})
 	var userIDs []int
 	var usernames []string
+	appendUser := func(id int, username, email string) {
+		if _, ok := seenID[id]; ok {
+			return
+		}
+		seenID[id] = struct{}{}
+		userIDs = append(userIDs, id)
+		// 优先 username，若为空则用 email，最后用 ID
+		display := strings.TrimSpace(username)
+		if display == "" {
+			display = strings.TrimSpace(email)
+		}
+		if display == "" {
+			display = fmt.Sprintf("%d", id)
+		}
+		if _, ok := seenName[display]; ok {
+			return
+		}
+		seenName[display] = struct{}{}
+		usernames = append(usernames, display)
+	}
+
 	for _, g := range groups {
 		for _, m := range g.Edges.Members {
-			if _, ok := seenID[m.ID]; ok {
-				continue
-			}
-			seenID[m.ID] = struct{}{}
-			userIDs = append(userIDs, m.ID)
-			// 优先 username，若为空则用 email，最后用 ID
-			display := strings.TrimSpace(m.Username)
-			if display == "" {
-				display = strings.TrimSpace(m.Email)
-			}
-			if display == "" {
-				display = fmt.Sprintf("%d", m.ID)
-			}
-			if _, ok := seenName[display]; ok {
-				continue
-			}
-			seenName[display] = struct{}{}
-			usernames = append(usernames, display)
+			appendUser(m.ID, m.Username, m.Email)
+		}
+	}
+
+	// 角色回退：未命中组的名字尝试按角色 code 解析
+	for _, name := range groupNames {
+		if found[name] {
+			continue
+		}
+		ids, err := r.resolveRoleUsers(ctx, tenantID, name)
+		if err != nil {
+			// 非角色也非组：容忍（既有语义），由调用方日志观测
+			continue
+		}
+		if len(ids) == 0 {
+			continue
+		}
+		users, err := r.client.User.Query().
+			Where(user.IDIn(ids...)).
+			All(ctx)
+		if err != nil {
+			continue
+		}
+		for _, m := range users {
+			appendUser(m.ID, m.Username, m.Email)
 		}
 	}
 	return userIDs, usernames, nil
+}
+
+// resolveRoleUsers 按角色 code 解析本租户内拥有该角色的用户 ID（M2M 边 ∪ 主角色枚举）。
+// 角色不存在返回错误；角色存在但无人返回空集。
+func (r *GroupResolver) resolveRoleUsers(ctx context.Context, tenantID int, code string) ([]int, error) {
+	roleEntity, err := r.client.Role.Query().
+		Where(entrole.CodeEQ(code), entrole.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	users, err := r.client.User.Query().
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.ActiveEQ(true),
+			user.Or(
+				user.HasRolesWith(entrole.IDEQ(roleEntity.ID)),
+				user.RoleEQ(user.Role(code)),
+			),
+		).
+		Select(user.FieldID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, 0, len(users))
+	for _, u := range users {
+		ids = append(ids, u.ID)
+	}
+	return ids, nil
 }
 
 // MergeCandidateUsers 把 BPMN candidateUsers 与组展开出的 usernames 合并去重，返回 CSV

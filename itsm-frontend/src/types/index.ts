@@ -16,30 +16,13 @@ export * from './ticket-relations';
 
 // ==================== 功能模块类型 ====================
 
-// 用户相关（从types/user导入）
+// 用户相关（唯一来源=@/lib/api/user-api，types/user 仅再导出）
 export type {
+  User,
   UserRole,
   UserStatus,
-  UserGroup,
-  UserPreferences,
   CreateUserRequest,
   UpdateUserRequest,
-  UserFilters,
-  UserListResponse,
-  UserStats,
-  LoginRequest,
-  LoginResponse,
-  RefreshTokenRequest,
-  ChangePasswordRequest,
-  ResetPasswordRequest,
-  SetPasswordRequest,
-  UserActivity,
-  UserSession,
-  Permission,
-  RolePermission,
-  UserImportRequest,
-  UserImportResult,
-  UserExportRequest,
 } from './user';
 
 // 工单相关（从types/ticket导入）

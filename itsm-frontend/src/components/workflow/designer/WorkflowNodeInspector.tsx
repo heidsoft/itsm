@@ -471,10 +471,22 @@ export default function WorkflowNodeInspector({
   const currentTransactionMethod = (bo.transactionMethod as string) || 'standard';
 
   // 组名选项（候选组用的是组名 group.name，对应后端 SetCandidateGroups）
-  const groupOptions = groups.map(g => ({
-    label: g.name,
-    value: g.name,
-  }));
+  // 融合角色选项：角色 code 同名时后端 ExpandGroupsToUsers 会回退按角色解析
+  // （M2M 边 ∪ 主角色枚举），groups 表为空也能按角色分派任务。
+  // 同名冲突时组优先（后端语义），此处去重避免出现两个相同 value。
+  const groupNameSet = new Set(groups.map(g => g.name));
+  const groupOptions = [
+    ...groups.map(g => ({
+      label: g.name,
+      value: g.name,
+    })),
+    ...roles
+      .filter(r => r.code && !groupNameSet.has(r.code))
+      .map(r => ({
+        label: `角色: ${r.name} (${r.code})`,
+        value: r.code,
+      })),
+  ];
 
   // 用户选项（BPMN 引擎 assignee / candidateUsers 期望用户 ID 的字符串形式）
   const userOptions = users.map(u => ({

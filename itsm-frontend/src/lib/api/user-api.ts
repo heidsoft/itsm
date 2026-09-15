@@ -1,6 +1,23 @@
 import { httpClient } from './http-client';
 
 // 用户相关的接口定义
+
+/**
+ * 主角色词表。单一源 = 后端 domain/role 包（domain/role/role.go）；
+ * security 为存量 legacy 值，新代码禁用。
+ */
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'manager'
+  | 'it_admin'
+  | 'security_admin'
+  | 'sysadmin'
+  | 'agent'
+  | 'technician'
+  | 'security'
+  | 'end_user';
+
 export interface User {
   id: number;
   username: string;

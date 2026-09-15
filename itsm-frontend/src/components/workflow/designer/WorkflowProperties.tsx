@@ -85,13 +85,13 @@ export default function WorkflowProperties({
     });
   };
 
-  // 自动审批角色变更
-  const handleAutoApproveRolesChange = (value: string[]) => {
-    setApprovalConfig({
-      ...approvalConfig,
-      autoApproveRoles: value,
-    });
-  };
+  // 自动审批角色变更（控件已禁用；保留以备后续接后端后启用）
+  // const handleAutoApproveRolesChange = (value: string[]) => {
+  //   setApprovalConfig({
+  //     ...approvalConfig,
+  //     autoApproveRoles: value,
+  //   });
+  // };
 
   // 响应时间变更
   const handleResponseTimeChange = (value: string) => {
@@ -270,16 +270,19 @@ export default function WorkflowProperties({
                 </Text>
               </div>
 
-              {/* 自动审批角色 */}
+              {/* 自动审批角色（规划中，未接后端——禁用避免误导配置） */}
               <div>
                 <Text strong className="block mb-2">
                   自动审批角色
+                  <Tooltip title="该能力尚未启用：审批策略需在服务请求三级审批或 BPMN 审批节点中配置；此控件为后续版本预留，当前选择不会保存、不会生效。">
+                    <Info className="text-gray-400 cursor-help ml-1 inline" />
+                  </Tooltip>
                 </Text>
                 <Select
                   mode="multiple"
-                  placeholder="选择角色"
-                  value={approvalConfig.autoApproveRoles}
-                  onChange={handleAutoApproveRolesChange}
+                  placeholder="即将推出（当前不生效）"
+                  value={[]}
+                  disabled
                   className="w-full"
                   loading={loadingRoles}
                   options={roleList.map(role => ({ value: role.code, label: role.name }))}

@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/user"
 )
 
 func setupGroupResolverDB(t *testing.T) (*ent.Client, *GroupResolver, context.Context) {
@@ -174,4 +175,61 @@ func TestGroupResolver_GetUserGroupNames_TenantIsolation(t *testing.T) {
 	got, err := resolver.GetUserGroupNames(ctx, t2.ID, alice.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "", got)
+}
+
+// TestGroupResolver_ExpandGroupsToUsers_RoleFallback 验证角色回退：组名不存在时
+// 若与 roles 表角色 code 同名，按角色解析用户（M2M ∪ 主角色枚举）。
+// 背景：groups 表无种子时设计器选角色（code 同名）此前产出空候选集。
+func TestGroupResolver_ExpandGroupsToUsers_RoleFallback(t *testing.T) {
+	client, resolver, ctx := setupGroupResolverDB(t)
+	defer client.Close()
+	tenant := createTestTenant(t, client, "T1")
+	otherTenant := createTestTenant(t, client, "T2")
+
+	itAdmin, err := client.Role.Create().SetCode("it_admin").SetName("IT管理").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
+	_, err = client.Role.Create().SetCode("it_admin").SetName("IT管理B").SetTenantID(otherTenant.ID).Save(ctx)
+	require.NoError(t, err)
+
+	newUser := func(tenantID int, username, enumRole string, roleIDs ...int) *ent.User {
+		u := createTestUser(t, client, tenantID, username, username+"@example.com")
+		u, err = u.Update().SetRole(user.Role(enumRole)).Save(ctx)
+		require.NoError(t, err)
+		if len(roleIDs) > 0 {
+			_, err = client.User.UpdateOne(u).AddRoleIDs(roleIDs...).Save(ctx)
+			require.NoError(t, err)
+		}
+		return u
+	}
+
+	_ = newUser(tenant.ID, "enum-admin", "it_admin")                    // 仅主角色枚举命中
+	m2mUser := newUser(tenant.ID, "m2m-admin", "end_user", itAdmin.ID) // 仅 M2M 命中
+	_ = m2mUser
+	_ = newUser(tenant.ID, "plain", "end_user")                         // 无关角色
+	_ = newUser(otherTenant.ID, "foreign-admin", "it_admin")            // 他租户排除
+	inactive := newUser(tenant.ID, "inactive-admin", "it_admin")
+	_, err = inactive.Update().SetActive(false).Save(ctx)
+	require.NoError(t, err)
+
+	ids, names, err := resolver.ExpandGroupsToUsers(ctx, tenant.ID, "it_admin")
+	require.NoError(t, err)
+	assert.NotEmpty(t, ids, "角色回退应命中本租户 it_admin 用户")
+	assert.Len(t, ids, 2, "枚举+M2M 两名活跃用户")
+	assert.NotContains(t, ids, inactive.ID)
+	assert.ElementsMatch(t, []string{"enum-admin", "m2m-admin"}, names)
+
+	// 组与角色同名时组优先：显式建的组是对角色的窄化/覆盖，不再叠加角色回退
+	groupUser := createTestUser(t, client, tenant.ID, "group-member", "gm@example.com")
+	_ = createTestGroup(t, client, tenant.ID, "it_admin", groupUser.ID)
+	ids, names, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "it_admin")
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{groupUser.ID}, ids, "同名组存在时按组解析，角色回退不叠加")
+
+	// 纯幽灵名仍容忍，组名 + 角色名混排各自解析
+	ids, names, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "ghost-group,managers-group")
+	require.NoError(t, err)
+	assert.Empty(t, ids, "幽灵名被容忍不报错")
+	ids, _, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "ghost-group,it_admin")
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{groupUser.ID}, ids, "幽灵名不影响同段内其他名字解析")
 }
