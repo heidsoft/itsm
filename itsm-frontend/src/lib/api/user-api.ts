@@ -10,6 +10,12 @@ export interface User {
   phone: string;
   active: boolean;
   tenantId: number;
+  /** 主角色（users.role 枚举，词表单一源=后端 domain/role） */
+  role: string;
+  /** RBAC 多角色 ID（user_roles M2M 边） */
+  roleIds?: number[];
+  /** RBAC 多角色名称（仅展示用） */
+  roleNames?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +28,10 @@ export interface CreateUserRequest {
   phone: string;
   password: string;
   tenantId: number;
+  /** 主角色；不传时后端默认 end_user */
+  role?: string;
+  /** RBAC 多角色 ID（写入 user_roles 边） */
+  roleIds?: number[];
 }
 
 export interface UpdateUserRequest {
@@ -30,6 +40,10 @@ export interface UpdateUserRequest {
   name?: string;
   department?: string;
   phone?: string;
+  /** 主角色变更（后端会吊销存量 token） */
+  role?: string;
+  /** RBAC 多角色替换集：非 undefined 时整体替换；[] 表示清空 */
+  roleIds?: number[];
 }
 
 export interface ListUsersParams {

@@ -34,11 +34,30 @@ import {
   Empty,
 } from 'antd';
 import { UserApi, type User } from '@/lib/api/user-api';
+import { RoleAPI } from '@/lib/api/role-api';
+import type { Role } from '@/lib/api/api-config';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
+
+// 主角色词表（单一源=后端 domain/role 包；security 为存量 legacy 值不提供新选）
+const PRIMARY_ROLE_OPTIONS = [
+  { value: 'end_user', label: '最终用户' },
+  { value: 'agent', label: '服务台坐席' },
+  { value: 'technician', label: '技术员' },
+  { value: 'manager', label: '部门经理' },
+  { value: 'it_admin', label: 'IT管理员' },
+  { value: 'security_admin', label: '安全管理员' },
+  { value: 'sysadmin', label: '系统运维' },
+  { value: 'admin', label: '系统管理员' },
+  { value: 'super_admin', label: '超级管理员' },
+];
+
+const PRIMARY_ROLE_LABEL: Record<string, string> = Object.fromEntries(
+  PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label])
+);
 
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
@@ -64,6 +83,8 @@ const UserManagement: React.FC = () => {
     search: '',
   });
   const [departments, setDepartments] = useState<string[]>([]);
+  // RBAC 角色（roles 表，供表单多选与列表展示）
+  const [rbacRoles, setRbacRoles] = useState<Role[]>([]);
 
   // 模态框状态
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
@@ -108,6 +129,16 @@ const UserManagement: React.FC = () => {
     loadUsers();
   }, [pagination.current, pagination.pageSize, filters]);
 
+  // 加载 RBAC 角色列表（表单下拉数据源）
+  useEffect(() => {
+    RoleAPI.getRoles({ page: 1, pageSize: 200 })
+      .then(res => setRbacRoles(res.roles || []))
+      .catch(() => {
+        // 角色加载失败不阻断用户管理主流程
+        setRbacRoles([]);
+      });
+  }, []);
+
   // 创建用户
   const handleCreateUser = async (values: any) => {
     setLoading(true);
@@ -125,6 +156,8 @@ const UserManagement: React.FC = () => {
         phone: values.phone,
         password: values.password,
         tenantId: tenantId,
+        role: values.role,
+        roleIds: values.roleIds,
       });
       message.success(t('users.messages.createSuccess'));
       setIsCreateModalVisible(false);
@@ -148,6 +181,9 @@ const UserManagement: React.FC = () => {
         name: values.name,
         department: values.department,
         phone: values.phone,
+        role: values.role,
+        // 显式传当前表单值：后端非 undefined 时整体替换 user_roles 边
+        roleIds: values.roleIds ?? [],
       });
       message.success(t('users.messages.updateSuccess'));
       setIsEditModalVisible(false);
@@ -241,6 +277,23 @@ const UserManagement: React.FC = () => {
       key: 'name',
     },
     {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      render: (_: string, record: User) => (
+        <Space size={[4, 4]} wrap>
+          {record.role && (
+            <Tag color="blue" bordered={false}>
+              {PRIMARY_ROLE_LABEL[record.role] ?? record.role}
+            </Tag>
+          )}
+          {(record.roleNames ?? []).map(n => (
+            <Tag key={n} bordered={false}>{n}</Tag>
+          ))}
+        </Space>
+      ),
+    },
+    {
       title: t('users.columns.email'),
       dataIndex: 'email',
       key: 'email',
@@ -288,7 +341,11 @@ const UserManagement: React.FC = () => {
                 icon: <Edit size={16} />,
                 onClick: () => {
                   setSelectedUser(record);
-                  editForm.setFieldsValue(record);
+                  editForm.setFieldsValue({
+                    ...record,
+                    role: record.role || undefined,
+                    roleIds: record.roleIds ?? [],
+                  });
                   setIsEditModalVisible(true);
                 },
               },
@@ -551,6 +608,24 @@ const UserManagement: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="role" label="主角色" initialValue="end_user">
+                <Select placeholder="请选择主角色" options={PRIMARY_ROLE_OPTIONS} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="roleIds" label="RBAC 角色（可多选）">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择 RBAC 角色"
+                  optionFilterProp="label"
+                  options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={loading}>
@@ -611,6 +686,24 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item name="phone" label="电话">
                 <Input placeholder="请输入电话号码" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="role" label="主角色">
+                <Select placeholder="不修改则留空" allowClear options={PRIMARY_ROLE_OPTIONS} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="roleIds" label="RBAC 角色（可多选）">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择 RBAC 角色"
+                  optionFilterProp="label"
+                  options={rbacRoles.map(r => ({ value: r.id, label: r.name }))}
+                />
               </Form.Item>
             </Col>
           </Row>

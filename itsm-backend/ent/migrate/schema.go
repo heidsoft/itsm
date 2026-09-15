@@ -5478,7 +5478,7 @@ var (
 		{Name: "username", Type: field.TypeString, Unique: true},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin", "manager", "agent", "technician", "security", "end_user"}, Default: "end_user"},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin", "manager", "it_admin", "security_admin", "sysadmin", "agent", "technician", "security", "end_user"}, Default: "end_user"},
 		{Name: "department", Type: field.TypeString, Nullable: true},
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "feishu_open_id", Type: field.TypeString, Unique: true, Nullable: true},

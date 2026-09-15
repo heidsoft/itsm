@@ -32,8 +32,8 @@ func (User) Fields() []ent.Field {
 			NotEmpty().
 			Annotations(pii.New(pii.StrategyName)),
 		field.Enum("role").
-			Comment("角色").
-			Values("super_admin", "admin", "manager", "agent", "technician", "security", "end_user").
+			Comment("角色（词表单一源=domain/role；security 为存量 legacy 值，新代码禁用）").
+			Values("super_admin", "admin", "manager", "it_admin", "security_admin", "sysadmin", "agent", "technician", "security", "end_user").
 			Default("end_user"),
 		field.String("department").
 			Comment("部门").

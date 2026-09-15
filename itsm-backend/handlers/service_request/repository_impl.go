@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
@@ -615,12 +616,22 @@ func (r *EntRepository) GetUserContext(ctx context.Context, userID, tenantID int
 
 // FindActiveUsersByRole 查找租户内指定角色的活跃用户；department 非空时优先返回同部门用户。
 // 用于服务请求审批人自动分配。
+// 角色匹配取双数据源并集：user_roles M2M 边（roles.code，与 cc_handler 对齐的
+// 正确数据模型）∪ users.role 单字段枚举（存量主角色）。此前只查枚举，而
+// it_admin/security_admin 等词表长期不在枚举/种子内，导致三级审批恒回退 super_admin
+// （2026-09-15 GitHub issue 复盘）。
 func (r *EntRepository) FindActiveUsersByRole(ctx context.Context, tenantID int, role, department string) ([]int, error) {
 	query := r.client.User.Query().
 		Where(
 			user.TenantIDEQ(tenantID),
 			user.ActiveEQ(true),
-			user.RoleEQ(user.Role(role)),
+			user.Or(
+				user.RoleEQ(user.Role(role)),
+				user.HasRolesWith(
+					entrole.CodeEQ(role),
+					entrole.TenantIDEQ(tenantID),
+				),
+			),
 		)
 
 	// 如果指定了部门，优先返回同部门用户

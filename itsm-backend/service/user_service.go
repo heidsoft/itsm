@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
@@ -77,13 +78,14 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		SetActive(true).
 		SetTenantID(tenantID)
 	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
+	primaryRole := ""
 	if strings.TrimSpace(req.Role) != "" {
-		role := strings.ToLower(strings.TrimSpace(req.Role))
+		primaryRole = strings.ToLower(strings.TrimSpace(req.Role))
 		// 兼容前端传的"user"角色，自动转换为"end_user"
-		if role == "user" {
-			role = "end_user"
+		if primaryRole == "user" {
+			primaryRole = "end_user"
 		}
-		uc = uc.SetRole(user.Role(role))
+		uc = uc.SetRole(user.Role(primaryRole))
 
 	}
 	// 如果请求中提供了MSP角色，则设置MSP角色
@@ -95,8 +97,57 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		return nil, fmt.Errorf("创建用户失败: %w", err)
 	}
 
+	// RBAC 多角色：显式 roleIds 优先；否则把主角色同步到 user_roles 边（存量回填同语义），
+	// 使按角色解析审批人/M2M 权限链路能命中新用户。
+	roleIDs := req.RoleIDs
+	if len(roleIDs) == 0 && primaryRole != "" {
+		if id, err := s.resolveRoleID(ctx, tenantID, primaryRole); err == nil {
+			roleIDs = []int{id}
+		} else {
+			// 主角色无对应 roles 表实体（如 legacy "security"），仅告警不阻断建用户。
+			s.logger.Warnw("主角色无对应 roles 表实体，user_roles 边未写入",
+				"username", req.Username, "role", primaryRole, "error", err)
+		}
+	}
+	if len(roleIDs) > 0 {
+		if err := s.SyncUserRoles(ctx, userEntity.ID, tenantID, roleIDs); err != nil {
+			return nil, fmt.Errorf("写入用户角色边失败: %w", err)
+		}
+	}
+
 	s.logger.Infof("用户创建成功: ID=%d, Username=%s", userEntity.ID, userEntity.Username)
 	return userEntity, nil
+}
+
+// resolveRoleID 按租户与 code 解析 roles 表实体 ID。
+func (s *UserService) resolveRoleID(ctx context.Context, tenantID int, code string) (int, error) {
+	r, err := s.client.Role.Query().
+		Where(entrole.CodeEQ(code), entrole.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return r.ID, nil
+}
+
+// SyncUserRoles 整体替换用户的 user_roles M2M 边（仅接受本租户内的角色 ID，防跨租户提权）。
+func (s *UserService) SyncUserRoles(ctx context.Context, userID, tenantID int, roleIDs []int) error {
+	if len(roleIDs) == 0 {
+		_, err := s.client.User.UpdateOneID(userID).ClearRoles().Save(ctx)
+		return err
+	}
+	// 校验全部角色属于同一租户，避免恶意 roleIds 跨租户挂角色。
+	n, err := s.client.Role.Query().
+		Where(entrole.IDIn(roleIDs...), entrole.TenantIDEQ(tenantID)).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("校验角色失败: %w", err)
+	}
+	if n != len(roleIDs) {
+		return fmt.Errorf("存在不属于当前租户的角色: 期望 %d 个，匹配 %d 个", len(roleIDs), n)
+	}
+	_, err = s.client.User.UpdateOneID(userID).ClearRoles().AddRoleIDs(roleIDs...).Save(ctx)
+	return err
 }
 
 // ListUsers 获取用户列表
@@ -135,8 +186,9 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 		return nil, fmt.Errorf("统计用户总数失败: %w", err)
 	}
 
-	// 分页查询
+	// 分页查询（预加载 roles 边供前端编辑表单回填）
 	users, err := query.
+		WithRoles().
 		Limit(req.PageSize).
 		Offset((req.Page - 1) * req.PageSize).
 		Order(ent.Desc(user.FieldCreatedAt)).
@@ -148,6 +200,12 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 	// 转换为响应格式
 	userResponses := make([]*dto.UserDetailResponse, 0, len(users))
 	for _, u := range users {
+		roleIDs := make([]int, 0, len(u.Edges.Roles))
+		roleNames := make([]string, 0, len(u.Edges.Roles))
+		for _, r := range u.Edges.Roles {
+			roleIDs = append(roleIDs, r.ID)
+			roleNames = append(roleNames, r.Name)
+		}
 		userResponses = append(userResponses, &dto.UserDetailResponse{
 			ID:         u.ID,
 			Username:   u.Username,
@@ -158,6 +216,8 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 			Active:     u.Active,
 			TenantID:   u.TenantID,
 			Role:       string(u.Role),
+			RoleIDs:    roleIDs,
+			RoleNames:  roleNames,
 			CreatedAt:  u.CreatedAt,
 			UpdatedAt:  u.UpdatedAt,
 		})
@@ -286,6 +346,19 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 	userEntity, err := update.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("更新用户失败: %w", err)
+	}
+
+	// RBAC 多角色替换：仅在显式提供 roleIds 时整体替换 user_roles 边
+	// （nil=不动；空数组=清空），避免部分更新语义破坏多角色并集。
+	if req.RoleIDs != nil {
+		if err := s.SyncUserRoles(ctx, id, tenantID, req.RoleIDs); err != nil {
+			return nil, fmt.Errorf("替换用户角色边失败: %w", err)
+		}
+		// 角色集合变更影响权限，与主角色变更同语义：吊销存量 token。
+		if err := middleware.InvalidateUserAccessTokens(ctx, id, time.Now()); err != nil {
+			s.logger.Errorw("用户多角色变更后吊销存量token失败（降权延迟风险）",
+				"user_id", id, "role_ids", req.RoleIDs, "error", err)
+		}
 	}
 
 	s.logger.Infof("用户更新成功: ID=%d", id)

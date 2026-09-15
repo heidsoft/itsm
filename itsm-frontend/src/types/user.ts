@@ -2,7 +2,18 @@
  * 用户相关类型定义
  */
 
-export type UserRole = 'admin' | 'manager' | 'agent' | 'technician' | 'end_user';
+// 词表单一源 = 后端 domain/role 包（见 domain/role/role.go）；security 为存量 legacy 值，新代码禁用
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'manager'
+  | 'it_admin'
+  | 'security_admin'
+  | 'sysadmin'
+  | 'agent'
+  | 'technician'
+  | 'security'
+  | 'end_user';
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 
 export interface User {

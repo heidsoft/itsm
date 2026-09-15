@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/assetlicense"
@@ -901,6 +902,24 @@ func (s *Seeder) seedTeams(ctx context.Context) {
 	s.sugar.Infow("teams seeded", "count", len(s.config.Teams))
 }
 
+// BuiltinRoles 返回 domain/role 词表的内置角色种子。
+// 契约：users.role 枚举值必须都能在 roles 表找到对应实体——
+// MigrateUserRolesBackfill 与按角色解析审批人（M2M 边）都依赖这一点。
+// config.Roles（default.json）提供岗位型角色，两者按 code 去重合并，config 优先。
+func BuiltinRoles() []RoleSeed {
+	return []RoleSeed{
+		{Code: domainrole.SuperAdmin, Name: "超级管理员", Description: "全部权限，跨租户引导"},
+		{Code: domainrole.Admin, Name: "系统管理员", Description: "租户内系统管理"},
+		{Code: domainrole.Manager, Name: "部门经理", Description: "部门审批与 L1 审批人"},
+		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "IT 服务管理，L2 审批人"},
+		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "安全管理，L3 审批人"},
+		{Code: domainrole.SysAdmin, Name: "系统运维", Description: "基础设施运维"},
+		{Code: domainrole.Agent, Name: "服务台坐席", Description: "一线支持与工单处理"},
+		{Code: domainrole.Technician, Name: "技术员", Description: "二线技术处理"},
+		{Code: domainrole.EndUser, Name: "最终用户", Description: "服务请求与查看本人工单"},
+	}
+}
+
 func (s *Seeder) seedRoles(ctx context.Context) {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
@@ -908,7 +927,21 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		return
 	}
 
+	// 内置词表在前，config Roles 在后；去重时后者（config）优先。
+	merged := BuiltinRoles()
+	seen := make(map[string]bool, len(merged))
+	for _, r := range merged {
+		seen[r.Code] = true
+	}
 	for _, r := range s.config.Roles {
+		if seen[r.Code] {
+			continue
+		}
+		seen[r.Code] = true
+		merged = append(merged, r)
+	}
+
+	for _, r := range merged {
 		existing, err := s.client.Role.Query().
 			Where(role.CodeEQ(r.Code), role.TenantIDEQ(t.ID)).
 			Only(ctx)
@@ -934,7 +967,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 			s.sugar.Warnw("seed role failed", "error", err, "name", r.Name)
 		}
 	}
-	s.sugar.Infow("roles seeded", "count", len(s.config.Roles))
+	s.sugar.Infow("roles seeded", "count", len(merged), "builtin", len(BuiltinRoles()), "config", len(s.config.Roles))
 }
 
 // MigrateUserRolesBackfill 回填 user_roles 边（Phase 1 迁移）。
