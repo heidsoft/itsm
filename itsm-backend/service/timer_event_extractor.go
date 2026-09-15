@@ -94,13 +94,19 @@ func extractTimerFromDefinition(timerType, processKey, activityID, eventName str
 
 	if timerDef.TimeDuration != "" {
 		expression = timerDef.TimeDuration
-		expressionType = "duration"
+		expressionType = string(ExprTypeDuration)
 	} else if timerDef.TimeDate != "" {
 		expression = timerDef.TimeDate
-		expressionType = "date"
+		expressionType = string(ExprTypeDate)
 	} else if timerDef.TimeCycle != "" {
 		expression = timerDef.TimeCycle
-		expressionType = "cycle"
+		// timeCycle 既可能是 ISO 8601 循环（R5/PT10M），也可能是 cron（"0 9 * * *"），
+		// 按实际内容分类，供调度器选择正确的触发时间算法（Phase 5）。
+		if detected, err := ParseTimerExpression(timerDef.TimeCycle); err == nil {
+			expressionType = string(detected)
+		} else {
+			expressionType = string(ExprTypeCycle)
+		}
 	} else {
 		return nil
 	}
@@ -121,36 +127,19 @@ func generateTimerID() string {
 	return "timer-" + uuid.New().String()
 }
 
-// CalculateFireAt 根据表达式计算触发时间
+// CalculateFireAt 根据表达式计算触发时间（默认使用服务器本地时区）。
+// 租户时区感知的场景请直接调用 NextFireAt（cron 表达式语义依赖时区）。
 func CalculateFireAt(expression, expressionType string, now time.Time) (time.Time, error) {
-	switch expressionType {
-	case "duration":
-		duration, err := time.ParseDuration(expression)
-		if err != nil {
-			// 尝试解析 ISO 8601 格式
-			duration, err = parseISO8601Duration(expression)
-			if err != nil {
-				return time.Time{}, fmt.Errorf("failed to parse duration expression '%s': %w", expression, err)
-			}
+	exprType := ExpressionType(expressionType)
+
+	// 兼容 duration 的 Go 原生格式（如 "30m"），ISO 8601 由 NextFireAt 处理。
+	if exprType == ExprTypeDuration {
+		if d, err := time.ParseDuration(expression); err == nil {
+			return now.Add(d).UTC(), nil
 		}
-		return now.Add(duration), nil
-
-	case "date":
-		// 尝试解析 ISO 8601 日期时间
-		fireAt, err := time.Parse(time.RFC3339, expression)
-		if err != nil {
-			return time.Time{}, fmt.Errorf("failed to parse date expression '%s': %w", expression, err)
-		}
-		return fireAt, nil
-
-	case "cycle":
-		// 循环表达式（如 R5/PT10M）- 只取第一次触发时间
-		// 简化处理：解析为 duration
-		return parseCycleExpression(expression, now)
-
-	default:
-		return time.Time{}, fmt.Errorf("unknown expression type: %s", expressionType)
 	}
+
+	return NextFireAt(expression, exprType, time.Local, now)
 }
 
 // parseISO8601Duration 解析 ISO 8601 持续时间（如 PT30M, P1D）
@@ -193,7 +182,36 @@ func parseISO8601Duration(duration string) (time.Duration, error) {
 		total += time.Duration(d) * 24 * time.Hour
 	}
 
+	// 静默失败治理：extractNumber 对无法识别的片段返回 0，若不作校验，
+	// "PT"、"PTxxX" 这类输入会被解析成 0 时长 → 定时器"立即触发"，
+	// 且调用方拿不到任何错误。要求至少存在一个"<数字><单位>"片段。
+	if !hasISO8601Component(duration) {
+		return 0, fmt.Errorf("invalid ISO 8601 duration: %q", duration)
+	}
+
 	return total, nil
+}
+
+// hasISO8601Component 报告字符串中是否至少存在一个 "<数字><单位>" 片段（单位 H/M/S/D）。
+// 允许显式的零值（如 PT0S、P0D），只拒绝完全没有可解析片段的输入。
+func hasISO8601Component(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			continue
+		}
+		j := i
+		for j < len(s) && s[j] >= '0' && s[j] <= '9' {
+			j++
+		}
+		if j < len(s) {
+			switch s[j] {
+			case 'H', 'M', 'S', 'D':
+				return true
+			}
+		}
+		i = j
+	}
+	return false
 }
 
 // findChar 查找字符位置

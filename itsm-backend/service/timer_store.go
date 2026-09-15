@@ -40,6 +40,8 @@ const (
 	ExprTypeDuration ExpressionType = "duration"
 	ExprTypeCron     ExpressionType = "cron"
 	ExprTypeDate     ExpressionType = "date"
+	// ExprTypeCycle ISO 8601 循环表达式（R5/PT10M）或重复 cron 的通用别名。
+	ExprTypeCycle ExpressionType = "cycle"
 )
 
 type PauseState string
@@ -369,4 +371,41 @@ func (s *DBTimerStore) Stats(ctx context.Context, tenantID int) (*TimerStats, er
 	stats.Paused = pausedCount
 
 	return stats, nil
+}
+
+// CancelPendingStartTimers 取消指定流程定义 Key 下全部 pending 的 start timer（Phase 5）。
+//
+// 用于流程重部署：新定义的时间表整体替换旧时间表。若不取消，每次保存/发布流程都会
+// 追加一份 start timer（timer_id 为新 uuid，幂等键不生效），导致定时任务被重复触发、
+// 重复启动流程实例。
+func CancelPendingStartTimers(ctx context.Context, client *ent.Client, tenantID int, processDefinitionKey string) (int, error) {
+	if client == nil || tenantID <= 0 || processDefinitionKey == "" {
+		return 0, nil
+	}
+	affected, err := client.ProcessTimer.Update().
+		Where(
+			processtimer.TenantID(tenantID),
+			processtimer.ProcessDefinitionKey(processDefinitionKey),
+			processtimer.TimerTypeEQ(string(TimerTypeStart)),
+			processtimer.StatusEQ(string(TimerStatusPending)),
+		).
+		SetStatus(string(TimerStatusCancelled)).
+		Save(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("cancel pending start timers failed: %w", err)
+	}
+	return affected, nil
+}
+
+// ListActiveStartTimers 列出指定流程定义 Key 下仍处于 pending 的 start timer（管理面展示用）。
+func ListActiveStartTimers(ctx context.Context, client *ent.Client, tenantID int, processDefinitionKey string) ([]*ent.ProcessTimer, error) {
+	return client.ProcessTimer.Query().
+		Where(
+			processtimer.TenantID(tenantID),
+			processtimer.ProcessDefinitionKey(processDefinitionKey),
+			processtimer.TimerTypeEQ(string(TimerTypeStart)),
+			processtimer.StatusEQ(string(TimerStatusPending)),
+		).
+		Order(ent.Asc(processtimer.FieldFireAt)).
+		All(ctx)
 }

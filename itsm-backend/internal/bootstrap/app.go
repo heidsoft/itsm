@@ -764,7 +764,11 @@ func NewApplication() *Application {
 	bpmnMonitoringService := service.NewBPMNMonitoringService(client, bpmnAuditService, sugar)
 	bpmnMonitoringHandler := bpmnHandler.NewMonitoringHandler(bpmnMonitoringService)
 	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
-	bpmnDeploymentService := service.NewBPMNDeploymentService(client)
+	// Timer Store 必须在部署服务之前创建：流程部署时注册 Timer Start Event 依赖它。
+	// 此前部署服务以 NewBPMNDeploymentService 构造（timerStore=nil），registerStartTimers
+	// 直接 return nil —— Timer Start 在生产环境从未落库（功能静默失效）。
+	timerStore := service.NewDBTimerStore(client, sugar)
+	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore)
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService, bpmnTemplateService)
 	bpmnAIGeneratorHandler := bpmnHandler.NewAIGeneratorHandler(bpmnAIGeneratorService)
 	bpmnTemplateCatalog := service.NewBPMNWorkflowTemplateCatalog(database.GetRawDB())
@@ -1208,8 +1212,8 @@ func NewApplication() *Application {
 	router.SetupRoutes(r, routerConfig)
 
 	// Timer Event scheduler: create early so it can be stored in Application
-	timerStore := service.NewDBTimerStore(client, sugar)
 	timerEventHandler := service.NewTimerEventHandler(customProcessEngine, sugar)
+	timerEventHandler.SetTimerStore(timerStore)
 	timerScheduler := service.NewTimerScheduler(service.TimerSchedulerConfig{
 		Client:   client,
 		Store:    timerStore,

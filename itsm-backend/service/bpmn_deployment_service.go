@@ -364,45 +364,12 @@ type ListDeploymentsRequest struct {
 	PageSize  int       `json:"pageSize" binding:"required,min=1,max=100"`
 }
 
-// registerStartTimers 注册开始定时器事件
+// registerStartTimers 注册开始定时器事件。
+//
+// 时间表语义与时区规则见 timer_start_schedule.go（Phase 5 抽出为共享实现，
+// 使设计器发布路径 bpmnProcessDefinitionService.PublishProcessDefinition 复用同一逻辑）。
 func (s *BPMNDeploymentService) registerStartTimers(ctx context.Context, definitions *BPMNDefinitions, processKey string, tenantID int) error {
-	if s.timerStore == nil {
-		return nil
-	}
-
-	timerEvents, err := ExtractTimerEvents(definitions, processKey)
-	if err != nil {
-		return fmt.Errorf("提取定时器事件失败: %w", err)
-	}
-
-	now := time.Now()
-	for _, timerEvent := range timerEvents {
-		// 只注册开始定时器
-		if timerEvent.TimerType != "start" {
-			continue
-		}
-
-		// 计算触发时间
-		fireAt, err := CalculateFireAt(timerEvent.Expression, timerEvent.ExpressionType, now)
-		if err != nil {
-			return fmt.Errorf("计算定时器触发时间失败: %w", err)
-		}
-
-		// 创建定时器记录
-		_, err = s.timerStore.Create(ctx, &CreateTimerRequest{
-			TimerType:            TimerType(timerEvent.TimerType),
-			ProcessDefinitionKey: timerEvent.ProcessDefinitionKey,
-			ActivityID:           timerEvent.ActivityID,
-			TimerExpression:      timerEvent.Expression,
-			ExpressionType:       ExpressionType(timerEvent.ExpressionType),
-			FireAt:               fireAt,
-			TenantID:             tenantID,
-		})
-		if err != nil {
-			return fmt.Errorf("创建定时器记录失败: %w", err)
-		}
-	}
-
-	return nil
+	_, err := SyncStartTimersFromDefinitions(ctx, s.client, s.timerStore, definitions, processKey, tenantID)
+	return err
 }
 

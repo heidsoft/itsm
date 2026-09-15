@@ -256,7 +256,7 @@ func TestTimerEventHandler_InvalidTimerType(t *testing.T) {
 	assert.Contains(t, err.Error(), "unknown timer type")
 }
 
-func TestTimerEventHandler_StartTimerNotImplemented(t *testing.T) {
+func TestTimerEventHandler_StartTimerMissingProcessDefinition(t *testing.T) {
 	client := newTimerEventHandlerTestClient(t, "start-timer")
 	logger := zaptest.NewLogger(t).Sugar()
 	tenantID := createTimerTenant(t, client, "start")
@@ -275,10 +275,12 @@ func TestTimerEventHandler_StartTimerNotImplemented(t *testing.T) {
 		TenantID:             tenantID,
 	}
 
+	// Phase 5 起 start timer 已实现：目标是启动流程实例；
+	// 流程定义不存在时必须报错（供调度器重试/告警），而不是静默成功。
 	err := handler.HandleTimerFire(ctx, timer)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "not yet implemented")
-	assert.Contains(t, err.Error(), "Phase 5")
+	assert.Contains(t, err.Error(), "start timer")
+	assert.Contains(t, err.Error(), "test_proc")
 }
 
 func TestTimerEventHandler_BoundaryEventNotFound(t *testing.T) {

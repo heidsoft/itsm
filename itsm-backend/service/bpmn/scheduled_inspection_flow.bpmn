@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                 xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                 xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                 xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 targetNamespace="http://bpmn.io/schema/bpmn"
+                 id="Definitions_ScheduledInspection">
+
+  <bpmn:process id="scheduled_inspection_flow" name="定时巡检流程" isExecutable="true">
+    <bpmn:extensionElements>
+      <bpmn:metaData name="category">ops</bpmn:metaData>
+      <bpmn:metaData name="sub_category">scheduled</bpmn:metaData>
+      <bpmn:metaData name="version">1.0.0</bpmn:metaData>
+      <bpmn:metaData name="description">按 cron 定时启动的巡检流程：到点自动生成巡检任务，人工确认巡检结果，异常自动升级并通知</bpmn:metaData>
+      <bpmn:metaData name="timer_start">0 9 * * *</bpmn:metaData>
+      <bpmn:metaData name="timer_timezone_hint">按租户时区解析（tenants.timezone，默认 Asia/Shanghai）</bpmn:metaData>
+    </bpmn:extensionElements>
+
+    <!--
+      定时开始事件（Timer Start Event，Phase 5）。
+      表达式为 cron 五字段：每天 09:00 触发（按租户时区解析）。
+      也支持 ISO 8601 一次性写法，如 <bpmn:timeDate>2026-12-31T23:59:59Z</bpmn:timeDate>。
+    -->
+    <bpmn:startEvent id="StartEvent_Schedule" name="每日 09:00 定时启动">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeCycle>0 9 * * *</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- 下发巡检任务 -->
+    <bpmn:serviceTask id="Activity_Dispatch" name="下发巡检任务" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">assign</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 人工执行巡检 -->
+    <bpmn:userTask id="Activity_Inspect" name="执行巡检并确认结果" instantiate="false">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">update_status</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 巡检结果判断 -->
+    <bpmn:exclusiveGateway id="Gateway_InspectionResult" name="巡检是否异常?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Abnormal</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Normal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- 异常升级处理 -->
+    <bpmn:userTask id="Activity_Escalate" name="异常升级处理" instantiate="false">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">escalate</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Abnormal</bpmn:incoming>
+      <bpmn:outgoing>Flow_EscalateJoin</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- 通知巡检结果 -->
+    <bpmn:serviceTask id="Activity_NotifyResult" name="通知巡检结果" implementation="##WebService">
+      <bpmn:extensionElements>
+        <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
+        <bpmn:metaData name="action">notify_requester</bpmn:metaData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Normal</bpmn:incoming>
+      <bpmn:incoming>Flow_EscalateJoin</bpmn:incoming>
+      <bpmn:outgoing>Flow_End</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- 结束事件 -->
+    <bpmn:endEvent id="EndEvent_Completed" name="巡检结束">
+      <bpmn:incoming>Flow_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- 连线定义 -->
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_Schedule" targetRef="Activity_Dispatch" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Activity_Dispatch" targetRef="Activity_Inspect" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Activity_Inspect" targetRef="Gateway_InspectionResult" />
+    <bpmn:sequenceFlow id="Flow_Abnormal" sourceRef="Gateway_InspectionResult" targetRef="Activity_Escalate">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
+        <bpmn:body>${variables['inspection_abnormal'] == true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Normal" sourceRef="Gateway_InspectionResult" targetRef="Activity_NotifyResult">
+      <bpmn:conditionExpression xsi:type="bpmn:tExpression">
+        <bpmn:body>${variables['inspection_abnormal'] != true}</bpmn:body>
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_EscalateJoin" sourceRef="Activity_Escalate" targetRef="Activity_NotifyResult" />
+    <bpmn:sequenceFlow id="Flow_End" sourceRef="Activity_NotifyResult" targetRef="EndEvent_Completed" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="scheduled_inspection_flow">
+      <bpmndi:BPMNShape id="StartEvent_Schedule_di" bpmnElement="StartEvent_Schedule">
+        <dc:Bounds x="152" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="126" y="255" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Activity_Dispatch_di" bpmnElement="Activity_Dispatch">
+        <dc:Bounds x="250" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Activity_Inspect_di" bpmnElement="Activity_Inspect">
+        <dc:Bounds x="400" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_InspectionResult_di" bpmnElement="Gateway_InspectionResult" isMarkerVisible="true">
+        <dc:Bounds x="555" y="205" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="541" y="262" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Activity_Escalate_di" bpmnElement="Activity_Escalate">
+        <dc:Bounds x="670" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Activity_NotifyResult_di" bpmnElement="Activity_NotifyResult">
+        <dc:Bounds x="830" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_Completed_di" bpmnElement="EndEvent_Completed">
+        <dc:Bounds x="982" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="972" y="255" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="188" y="230" />
+        <di:waypoint x="250" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="350" y="230" />
+        <di:waypoint x="400" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="500" y="230" />
+        <di:waypoint x="555" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Abnormal_di" bpmnElement="Flow_Abnormal">
+        <di:waypoint x="580" y="255" />
+        <di:waypoint x="580" y="360" />
+        <di:waypoint x="670" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Normal_di" bpmnElement="Flow_Normal">
+        <di:waypoint x="605" y="230" />
+        <di:waypoint x="830" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EscalateJoin_di" bpmnElement="Flow_EscalateJoin">
+        <di:waypoint x="770" y="360" />
+        <di:waypoint x="880" y="360" />
+        <di:waypoint x="880" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_End_di" bpmnElement="Flow_End">
+        <di:waypoint x="930" y="230" />
+        <di:waypoint x="982" y="230" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,9 +1,9 @@
 # BPMN Timer Event 调度基础设施设计大纲
 
 **文档编号**: ITSM-PRD-2026-002
-**版本**: v0.4
-**日期**: 2026-09-14
-**状态**: 产品评审通过（5 个开放问题已决策，见 §11.2/§12）— Phase 1 待启动
+**版本**: v0.5
+**日期**: 2026-09-15
+**状态**: Phase 1–5 全部交付（Timer Event 功能闭环）；遗留项 = 用户文档、non-interrupting Boundary（P2）、分布式锁 fencing（P2）
 
 ---
 
@@ -409,8 +409,8 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | **Phase 2: 引擎集成** | CustomProcessEngine 支持 Timer Intermediate / Boundary 节点的注册与触发 + SLA 暂停/恢复 | 3-5 天 | **✅ 已完成（2026-09-15）**——intermediate/boundary/start 注册触发 ✅（89dad5b1）；SLA 暂停/恢复 Cancel+Recreate ✅（挂起取消/恢复重建/终止取消，4 例 E2E） |
 | **Phase 3: 设计器集成** | WorkflowNodeInspector Timer 配置面板 + BPMN XML 序列化/反序列化 | 2-3 天 | **✅ 已完成（2026-09-15，commit 3146bade）**——extractor ✅ + 前端 Timer 配置面板（start/intermediate/boundary）✅ + XML 规范化写入 ✅ + lint 规则组 1.1 ✅ |
 | **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **✅ 核心完成（2026-09-15）**——BPMN dueDate 落库（修复零写入休眠循环）+ task_due 定时器（注册/到期分发/完成取消）+ TimeoutScanner 降级恢复兜底（claim-once 双路径安全）；**SLA Monitor 保持轮询**（聚合策略评估不适合逐票 timer，决策见 §12） |
-| **Phase 5: Timer Start** | 定时启动流程 + cron 表达式解析 + 产品模板 | 2 天 | **🟡 部分**——部署时自动注册 ✅；**cron 解析（含租户时区）与产品模板未做** |
-| **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 大部分**——29 例 E2E + 单测全绿、CHANGELOG 已补（2026-09-15）；用户文档未写 |
+| **Phase 5: Timer Start** | 定时启动流程 + cron 表达式解析 + 产品模板 | 2 天 | **✅ 已完成（2026-09-15）**——`timer_cron.go`（表达式四分类 + cron 按 `tenants.timezone` 求 `Next`、fire_at 统一 UTC 落库）+ `timer_start_schedule.go`（部署与设计器发布共用，整体替换语义；停用同步取消）+ `handleStartTimer`（businessKey 二次启动幂等 + cron/cycle 重排）+ 产品模板 `scheduled_inspection_flow.bpmn`。**修复两处真实缺陷**：cron 被 `CycleRemaining` 误判为一次性导致时间表触发一次即终止；`bpmnProcessDefinitionService` 发布/停用从未同步 start timer（主路径静默不生效）。**边界**：仅 P0 可见不可跳过；非法时区名静默回退默认时区 |
+| **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 大部分**——29 例 E2E + Phase 5 新增 18 例单测 + 单测全绿、17 模板门禁通过、CHANGELOG 已补（2026-09-15）；用户文档未写 |
 
 > **Phase 1.5 Spike 结论（2026-09-13）**：`lib-bpmn-engine v0.2.4` 仅支持 `IntermediateCatchEvent > timeDuration` 的被动轮询模型，无 Boundary Timer、Timer Start、`timeDate`、`timeCycle` 支持，且无 timer 回调注册 API。`CustomProcessEngine` 完全绕过该库（自有解析器 + DB 状态机），因此 **不需要 fork 引擎**——直接在 CustomProcessEngine 层自建 timer → 流程推进桥接。Phase 2 风险从"高"降为"中"，估算从 4-6 天降为 3-5 天。详见附录 C。
 
@@ -474,6 +474,12 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | 2026-09-15 | Phase 4：任务超时主路径 = task_due 定时器，TimeoutScanner 降级为恢复兜底 | timer 到期分发复用 scanner 的 dispatchTimeoutAction；claim-once 条件更新保证双路径只生效一次；扫描器继续兜底无 timer 任务（注册失败/timer 丢失/功能关闭） |
 | 2026-09-15 | Phase 4：SLA Monitor 保持轮询，不做逐票 Timer 化 | CheckSLAViolations 是聚合策略评估（多级阈值/批量工单），轮询是正确工具；逐票 timer 带来注册风暴与重建复杂度，收益不成比例 |
 | 2026-09-15 | BPMN dueDate 语义定为 `yyyy-mm-dd` → 当日 23:59:59（服务器本地时区） | XML 解析器既有校验格式即日期；任务截止按自然日结束计算符合业务直觉；时区统一问题随 Q4 的 UTC 存储边界（Phase 2）一并治理 |
+| 2026-09-15 | Phase 5：start timer 时间表同步采用**整体替换**（先取消同 `(tenant, process_key)` 全部 pending，再按新定义重建） | 增量同步会在每次发布/部署时累积时间表（timer_id 为新 uuid，幂等键失效）→ 同一 cron 被重复触发并重复启动流程实例 |
+| 2026-09-15 | Phase 5：cron 采用 robfig/cron v3 **标准 5 字段**，显式不接受 6 字段（带秒） | 秒级调度在 ITSM 定时启动场景无业务意义；收窄语法可把误配挡在发布前而非运行期 |
+| 2026-09-15 | Phase 5：cycle 次数语义（`CycleRemaining`）仅对 `exprType == cycle` 生效 | 无 `/` 的 cron 字符串会被判成"一次性（remaining=1）"→ cron 触发一次后时间表被永久终止；cron 天然无限重复，必须绕开次数分支 |
+| 2026-09-15 | Phase 5：重排（rearm）加 `hasPendingStartTimer` 幂等守卫 | 崩溃恢复/重放会以同一 timer 记录二次进入重排；无守卫则叠加第二份时间表，cron 逐跳放大成 2 倍实例 |
+| 2026-09-15 | Phase 5：已过期的一次性（`timeDate`）start timer **不注册**（静默跳过，由 lint 提示误配） | 启动一个"本应在过去启动"的流程无业务语义；不跳过会造成重启后的一次性补偿洪峰 |
+| 2026-09-15 | Phase 5：`parseISO8601Duration` 要求至少一个 `<数字><单位>` 片段，否则报错 | 旧实现把 `PT`/`PTxxX` 静默解析为 0 时长 → 定时器"立即触发"且调用方无感知，属静默失败（与可观测性治理冲突） |
 
 ---
 

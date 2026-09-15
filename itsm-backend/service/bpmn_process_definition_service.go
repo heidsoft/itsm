@@ -63,6 +63,14 @@ type ListProcessDefinitionsRequest struct {
 type bpmnProcessDefinitionService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
+	// timerStore 可选：发布/停用流程定义时同步 start timer 时间表（Phase 5）。
+	// 为 nil 时行为与历史版本一致（不注册定时启动）。
+	timerStore TimerStore
+}
+
+// SetTimerStore 注入 TimerStore（由 CustomProcessEngine.SetTimerServices 传播）。
+func (s *bpmnProcessDefinitionService) SetTimerStore(store TimerStore) {
+	s.timerStore = store
 }
 
 // CRUD
@@ -298,6 +306,15 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	if err = tx.Commit(); err != nil {
 		return nil, fmt.Errorf("提交发布事务失败: %w", err)
 	}
+
+	// Phase 5：发布即激活时间表——同步 Timer Start Event（cron/cycle 按租户时区）。
+	// 时间表同步在事务提交后执行（定时器只需 process_key + tenant，不依赖版本行）。
+	// 失败仅告警不阻断：定义已发布，重新发布即可重建时间表；不告警则问题不可见。
+	if _, err := SyncStartTimers(ctx, s.client, s.timerStore, []byte(req.BPMNXML), key, tenantID); err != nil {
+		s.logger.Warnw("failed to sync timer-start schedule on publish",
+			"error", err, "process_key", key, "tenant_id", tenantID)
+	}
+
 	return published, nil
 }
 
@@ -376,8 +393,26 @@ func (s *bpmnProcessDefinitionService) SetProcessDefinitionActive(ctx context.Co
 	_, err = s.client.ProcessDefinition.UpdateOne(definition).
 		SetIsActive(active).
 		Save(ctx)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Phase 5：停用流程必须同时下线其 start timer 时间表，否则定时器照常触发，
+	// 而 StartProcess 查不到 active+latest 定义 → 报错 → 重试风暴。
+	if !active {
+		tenantID, ctxErr := requireBPMNTenantContext(ctx)
+		if ctxErr == nil {
+			if cancelled, cErr := CancelStartTimers(ctx, s.client, key, tenantID); cErr != nil {
+				s.logger.Warnw("failed to cancel timer-start schedule on deactivate",
+					"error", cErr, "process_key", key, "tenant_id", tenantID)
+			} else if cancelled > 0 {
+				s.logger.Infow("cancelled timer-start schedule on deactivate",
+					"process_key", key, "tenant_id", tenantID, "cancelled", cancelled)
+			}
+		}
+	}
+
+	return nil
 }
 
 // Version helpers

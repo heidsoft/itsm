@@ -11,12 +11,14 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/service/bpmn"
 )
 
 // TimerEventHandler bridges the Timer Scheduler to the BPMN process engine.
 // It implements the TimerFireCallback and advances process instances when timer events fire.
 type TimerEventHandler struct {
 	engine *CustomProcessEngine
+	store  TimerStore
 	logger *zap.SugaredLogger
 }
 
@@ -26,6 +28,11 @@ func NewTimerEventHandler(engine *CustomProcessEngine, logger *zap.SugaredLogger
 		engine: engine,
 		logger: logger,
 	}
+}
+
+// SetTimerStore 注入 TimerStore，供 start timer 触发后重排下一跳（Phase 5）。
+func (h *TimerEventHandler) SetTimerStore(store TimerStore) {
+	h.store = store
 }
 
 // Callback returns the TimerFireCallback function for registration with the scheduler.
@@ -56,8 +63,8 @@ func (h *TimerEventHandler) HandleTimerFire(ctx context.Context, timer *TimerRec
 		return h.handleBoundaryTimer(ctx, timer)
 	case string(TimerTypeTaskDue):
 		return h.handleTaskDueTimer(ctx, timer)
-	case "start":
-		return fmt.Errorf("start timer not yet implemented (deferred to Phase 5)")
+	case string(TimerTypeStart):
+		return h.handleStartTimer(ctx, timer)
 	default:
 		return fmt.Errorf("unknown timer type: %s", timer.TimerType)
 	}
@@ -166,6 +173,200 @@ func (h *TimerEventHandler) handleTaskDueTimer(ctx context.Context, timer *Timer
 		return fmt.Errorf("task_due timer: dispatch timeout action for %s: %w", task.TaskID, err)
 	}
 	return nil
+}
+
+// handleStartTimer 处理定时启动流程（Phase 5）：
+// Timer Start Event 到期后启动一个新的流程实例；cron / cycle 表达式在启动成功后
+// 重排下一跳，形成常驻时间表。
+//
+// 幂等性：businessKey 由 timer_id + 计划触发时刻确定，启动前先查同名实例，
+// 命中即视为"本次触发已完成"（重试场景下不会重复启动流程）。
+func (h *TimerEventHandler) handleStartTimer(ctx context.Context, timer *TimerRecord) error {
+	if timer.ProcessDefinitionKey == "" {
+		return fmt.Errorf("start timer requires process_definition_key")
+	}
+
+	businessKey := fmt.Sprintf("timer:%s:%d", timer.TimerID, timer.FireAt.Unix())
+
+	// 幂等闸门：同一 timer 的同一次计划触发只允许启动一个实例。
+	existing, err := h.engine.client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.ProcessDefinitionKey(timer.ProcessDefinitionKey),
+			processinstance.TenantID(timer.TenantID),
+		).
+		First(ctx)
+	if err == nil {
+		h.logger.Infow("start timer skipped: process instance already launched (idempotent)",
+			"timer_id", timer.TimerID,
+			"business_key", businessKey,
+			"instance_id", existing.ID,
+		)
+		// 启动已完成，仍需保证重排（可能是上次重排失败后的重试）。
+		return h.rearmStartTimer(ctx, timer)
+	}
+	if !ent.IsNotFound(err) {
+		return fmt.Errorf("start timer: query existing instance: %w", err)
+	}
+
+	// StartProcess 强制要求租户上下文（fail-closed，P1-4）
+	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, timer.TenantID)
+
+	variables := map[string]interface{}{
+		"triggered_by":   "timer",
+		"timer_id":       timer.TimerID,
+		"timer_fired_at": timer.FireAt.UTC().Format(time.RFC3339),
+	}
+	for k, v := range timer.ContextVariables {
+		// 重排元数据（remaining_repetitions 等内部键）不注入业务变量
+		if k == "remaining_repetitions" {
+			continue
+		}
+		variables[k] = v
+	}
+
+	instance, err := h.engine.StartProcess(workflowCtx, timer.ProcessDefinitionKey, businessKey, variables)
+	if err != nil {
+		return fmt.Errorf("start timer: start process %s: %w", timer.ProcessDefinitionKey, err)
+	}
+
+	h.logger.Infow("start timer launched process instance",
+		"timer_id", timer.TimerID,
+		"process_key", timer.ProcessDefinitionKey,
+		"business_key", businessKey,
+		"instance_id", instance.ID,
+		"tenant_id", timer.TenantID,
+	)
+
+	return h.rearmStartTimer(ctx, timer)
+}
+
+// rearmStartTimer 为重复型表达式（cron / cycle）创建下一跳 timer。
+// 一次性表达式（duration / date）返回 nil，不做任何事。
+func (h *TimerEventHandler) rearmStartTimer(ctx context.Context, timer *TimerRecord) error {
+	if timer.TimerExpression == "" {
+		return nil // 无表达式元数据（历史记录）→ 按一次性处理
+	}
+
+	exprType := ExpressionType(timer.ExpressionType)
+	if exprType == "" {
+		detected, err := ParseTimerExpression(timer.TimerExpression)
+		if err != nil {
+			h.logger.Warnw("start timer rearm skipped: unparsable expression",
+				"error", err, "timer_id", timer.TimerID, "expression", timer.TimerExpression)
+			return nil
+		}
+		exprType = detected
+	}
+
+	if !IsRecurring(timer.TimerExpression, exprType) {
+		return nil
+	}
+
+	if h.store == nil {
+		h.logger.Warnw("start timer is recurring but no TimerStore wired; next occurrence not scheduled",
+			"timer_id", timer.TimerID)
+		return nil
+	}
+
+	// 重排幂等闸门：崩溃恢复/重放会以同一 timer 记录再次进入本函数。
+	// 若时间表中已存在同 (tenant, process_key, activity) 的 pending start timer，
+	// 说明上一轮重排已成功——再建一条会让 cron 变成双份时间表，之后每次触发启动两个实例。
+	if h.hasPendingStartTimer(ctx, timer) {
+		h.logger.Infow("start timer rearm skipped: next occurrence already scheduled",
+			"timer_id", timer.TimerID,
+			"process_key", timer.ProcessDefinitionKey,
+			"activity_id", timer.ActivityID,
+		)
+		return nil
+	}
+
+	// cycle 有限次数：递减剩余；本次已是最后一次则不再重排。
+	// 注意：仅 cycle 走次数语义。cron 天然无限重复，若也套用 CycleRemaining，
+	// 无 '/' 的 cron 字符串会被判成"一次性"（bounded=true, remaining=1），
+	// 导致 cron 触发一次后时间表被永久终止——这是必须避免的语义混淆。
+	contextVars := map[string]interface{}{}
+	if exprType == ExprTypeCycle {
+		if remaining, bounded, ok := CycleRemaining(timer.TimerExpression); ok && bounded {
+			current := remaining
+			if v, exists := timer.ContextVariables["remaining_repetitions"]; exists {
+				if n, ok := toInt(v); ok {
+					current = n
+				}
+			}
+			if current <= 1 {
+				h.logger.Infow("start timer repetitions exhausted",
+					"timer_id", timer.TimerID, "expression", timer.TimerExpression)
+				return nil
+			}
+			contextVars["remaining_repetitions"] = current - 1
+		}
+	}
+
+	loc := LoadTenantLocation(ctx, h.engine.client, timer.TenantID)
+	nextFireAt, err := NextFireAt(timer.TimerExpression, exprType, loc, time.Now())
+	if err != nil {
+		return fmt.Errorf("start timer rearm: compute next fire time: %w", err)
+	}
+
+	created, err := h.store.Create(ctx, &CreateTimerRequest{
+		TimerType:            TimerTypeStart,
+		ProcessDefinitionKey: timer.ProcessDefinitionKey,
+		ActivityID:           timer.ActivityID,
+		TimerExpression:      timer.TimerExpression,
+		ExpressionType:       exprType,
+		FireAt:               nextFireAt,
+		ContextVariables:     contextVars,
+		TenantID:             timer.TenantID,
+	})
+	if err != nil {
+		return fmt.Errorf("start timer rearm: create next timer: %w", err)
+	}
+
+	// 立即接驳到内存调度器（否则要等下一次周期性同步才知道它的存在）。
+	if h.engine.timerScheduler != nil {
+		if err := h.engine.timerScheduler.Schedule(ctx, entTimerToRecord(created)); err != nil {
+			// 调度失败不影响正确性：周期性同步/重启恢复会兜底接驳。
+			h.logger.Warnw("start timer rearm: failed to schedule next occurrence immediately",
+				"error", err, "timer_id", created.TimerID)
+		}
+	}
+
+	h.logger.Infow("start timer rearmed",
+		"previous_timer_id", timer.TimerID,
+		"next_timer_id", created.TimerID,
+		"next_fire_at", nextFireAt,
+		"expression_type", exprType,
+	)
+	return nil
+}
+
+// hasPendingStartTimer 报告时间表中是否已存在同 (tenant, process_key, activity) 的
+// pending start timer。用于把重排做成幂等操作。
+//
+// 查询失败按"不存在"处理并告警：宁可多排一次（下次触发会被实例幂等闸门拦下），
+// 也不能因为管理面查询抖动而永久停止 cron 时间表。
+func (h *TimerEventHandler) hasPendingStartTimer(ctx context.Context, timer *TimerRecord) bool {
+	if h.store == nil {
+		return false
+	}
+	timers, _, err := h.store.List(ctx, TimerListFilter{
+		TenantID:             timer.TenantID,
+		Status:               string(TimerStatusPending),
+		TimerType:            string(TimerTypeStart),
+		ProcessDefinitionKey: timer.ProcessDefinitionKey,
+	})
+	if err != nil {
+		h.logger.Warnw("start timer rearm: query existing schedule failed; proceeding as absent",
+			"error", err, "timer_id", timer.TimerID)
+		return false
+	}
+	for _, t := range timers {
+		if t.ActivityID == timer.ActivityID {
+			return true
+		}
+	}
+	return false
 }
 
 // loadRunningInstance loads the process instance and parses its BPMN definition.

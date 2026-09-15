@@ -131,9 +131,14 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 
 // SetTimerServices injects timer store and scheduler for runtime timer event registration.
 // Called after engine construction in app.go wiring phase.
+// SetTimerServices 注入 TimerStore 与调度器；同时把 store 传播给流程定义服务，
+// 使发布/停用流程定义时能同步 start timer 时间表（Phase 5）。
 func (e *CustomProcessEngine) SetTimerServices(store TimerStore, scheduler *TimerScheduler) {
 	e.timerStore = store
 	e.timerScheduler = scheduler
+	if e.processDefinitionService != nil {
+		e.processDefinitionService.SetTimerStore(store)
+	}
 }
 
 // registerProcessFunctions 注册流程相关的内置函数

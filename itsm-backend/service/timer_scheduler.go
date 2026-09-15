@@ -15,6 +15,13 @@ import (
 
 type TimerFireCallback func(ctx context.Context, timer *TimerRecord) error
 
+// timerSyncInterval 周期性同步间隔；timerSyncLookahead 为未来窗口接驳的前瞻跨度，
+// 取 2 倍 tick 以保证新 timer 在 fire_at 之前至少被扫描到一次。
+const (
+	timerSyncInterval  = 1 * time.Minute
+	timerSyncLookahead = 2 * time.Minute
+)
+
 type TimerRecord struct {
 	TimerID              string
 	TimerType            string
@@ -23,6 +30,10 @@ type TimerRecord struct {
 	ActivityID           string
 	FireAt               time.Time
 	TenantID             int
+	// Phase 5：start timer 触发后需要按原表达式重排下一跳，故回调必须携带表达式上下文。
+	TimerExpression  string
+	ExpressionType   string
+	ContextVariables map[string]interface{}
 }
 
 type TimerScheduler struct {
@@ -205,6 +216,9 @@ func (s *TimerScheduler) fireCallback(ctx context.Context, record *TimerRecord) 
 			ActivityID:           dbTimer.ActivityID,
 			FireAt:               dbTimer.FireAt,
 			TenantID:             dbTimer.TenantID,
+			TimerExpression:      dbTimer.TimerExpression,
+			ExpressionType:       dbTimer.ExpressionType,
+			ContextVariables:     dbTimer.ContextVariables,
 		}
 
 		if err := s.callback(ctx, callbackRecord); err != nil {
@@ -322,7 +336,7 @@ func (s *TimerScheduler) recover(ctx context.Context) error {
 }
 
 func (s *TimerScheduler) periodicSync(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(timerSyncInterval)
 	defer ticker.Stop()
 
 	for {
@@ -362,6 +376,31 @@ func (s *TimerScheduler) syncWithDB(ctx context.Context) {
 				}
 			}
 		}
+
+		// 未来窗口接驳：运行期新建的 timer（流程重新部署注册的 start timer、
+		// 触发后重排的下一跳等）必须在其 fire_at 之前进入内存调度器，
+		// 否则只能等它逾期后才被上面的 overdue 分支拾起（触发时间漂移到下一个 tick）。
+		// 窗口取 2 倍 tick 以保证"在 fire_at 之前至少被扫描到一次"。
+		future, err := s.store.FindPendingFuture(ctx, tenantID, now)
+		if err != nil {
+			s.logger.Errorf("periodic sync: failed to find future timers for tenant %d: %v", tenantID, err)
+			continue
+		}
+		horizon := now.Add(timerSyncLookahead)
+		for _, timer := range future {
+			if timer.FireAt.After(horizon) {
+				break // 已按 fire_at 升序，后续更远，无需继续
+			}
+			s.mu.Lock()
+			_, exists := s.timers[timer.TimerID]
+			s.mu.Unlock()
+			if exists {
+				continue
+			}
+			if err := s.Schedule(ctx, entTimerToRecord(timer)); err != nil {
+				s.logger.Errorf("periodic sync: failed to schedule future timer %s: %v", timer.TimerID, err)
+			}
+		}
 	}
 }
 
@@ -374,6 +413,9 @@ func entTimerToRecord(timer *ent.ProcessTimer) *TimerRecord {
 		ActivityID:           timer.ActivityID,
 		FireAt:               timer.FireAt,
 		TenantID:             timer.TenantID,
+		TimerExpression:      timer.TimerExpression,
+		ExpressionType:       timer.ExpressionType,
+		ContextVariables:     timer.ContextVariables,
 	}
 }
 
