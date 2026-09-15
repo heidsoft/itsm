@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knownerror"
@@ -65,6 +66,7 @@ type SeedConfig struct {
 	Departments       []DepartmentSeed       `json:"departments"`
 	Teams             []TeamSeed             `json:"teams"`
 	Roles             []RoleSeed             `json:"roles"`
+	Groups            []GroupSeed            `json:"groups"`
 	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
 	SLAPolicies       []SLAPolicySeed        `json:"sla_policies"`
 	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
@@ -102,6 +104,15 @@ type TeamSeed struct {
 type RoleSeed struct {
 	Name        string `json:"name"`
 	Code        string `json:"code"`
+	Description string `json:"description"`
+}
+
+// GroupSeed 审批组种子。Name 是 BPMN candidateGroups / assignee_type(group)
+// 引用的组名，也是 ExpandGroupsToUsers 的查询键；新建组初始无成员（成员由
+// 管理员在组管理页从角色对应人员中拉入），组名为空成员时依赖设计器的
+// 「组+角色」融合下拉让用户直接选角色回退，不会静默失败。
+type GroupSeed struct {
+	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
@@ -475,6 +486,19 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "普通用户", Code: "end_user", Description: "普通终端用户"},
 			{Name: "访客", Code: "guest", Description: "访客用户"},
 		},
+		// 审批组种子：从对应角色拉人组成的窄集合（审批组=窄集合，角色=粗粒度池）。
+		// 命名空间前缀 approvers- 刻意避开全部角色 code——ExpandGroupsToUsers 的
+		// 「同名组优先于角色回退」语义下，与角色码同名的空组会挡住角色回退导致
+		// 任务无人可见。新租户/新装环境组内无成员是预期状态，管理员在组管理页
+		// 从角色对应人员中拉人后即生效。
+		Groups: []GroupSeed{
+			{Name: "approvers-l1", Description: "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
+			{Name: "approvers-l2", Description: "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
+			{Name: "approvers-l3", Description: "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
+			{Name: "approvers-managers", Description: "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
+			{Name: "approvers-security", Description: "安全审批组：从 security_admin 角色人员中拉人组成"},
+			{Name: "approvers-change", Description: "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"},
+		},
 		SLADefinitions: []SLADefinitionSeed{
 			{Name: "SLA-P0-紧急", Description: "P0紧急级别SLA", ServiceType: "incident", Priority: "urgent", ResponseTime: 15, ResolutionTime: 120},
 			{Name: "SLA-P1-高", Description: "P1高级别SLA", ServiceType: "incident", Priority: "high", ResponseTime: 30, ResolutionTime: 240},
@@ -537,6 +561,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
+	s.seedGroups(ctx) // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
 	s.seedPermissions(ctx)          // 新增：初始化权限
 	s.seedMenus(ctx)                // 新增：初始化菜单
@@ -900,6 +925,59 @@ func (s *Seeder) seedTeams(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("teams seeded", "count", len(s.config.Teams))
+}
+
+// BuiltinGroups 返回内置审批组种子。
+// 组名是 BPMN candidateGroups / assignee_type(group) 的查询键，
+// 见 ExpandGroupsToUsers 与 resolveLegacyApprovalAssignee。
+func BuiltinGroups() []GroupSeed {
+	return []GroupSeed{
+		{Name: "approvers-l1", Description: "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
+		{Name: "approvers-l2", Description: "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
+		{Name: "approvers-l3", Description: "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
+		{Name: "approvers-managers", Description: "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
+		{Name: "approvers-security", Description: "安全审批组：从 security_admin 角色人员中拉人组成"},
+		{Name: "approvers-change", Description: "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"},
+	}
+}
+
+// seedGroups 审批组种子：新装环境 groups 表为空时 candidateGroups 解析为空候选集，
+// 任务无人可见（2026-09-15 复盘 R2）。组名以 approvers- 前缀避开全部角色 code，
+// 防止「同名组优先」语义下空组挡住角色回退。幂等：组已存在则跳过，不覆盖描述。
+func (s *Seeder) seedGroups(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip groups seed", "error", err)
+		return
+	}
+
+	created := 0
+	for _, gs := range s.config.Groups {
+		exists, err := s.client.Group.Query().
+			Where(group.NameEQ(gs.Name), group.TenantIDEQ(t.ID)).
+			Exist(ctx)
+		if err != nil {
+			s.sugar.Warnw("check existing group failed", "error", err, "name", gs.Name)
+			continue
+		}
+		if exists {
+			continue
+		}
+		if _, err := s.client.Group.Create().
+			SetName(gs.Name).
+			SetDescription(gs.Description).
+			SetTenantID(t.ID).
+			Save(ctx); err != nil {
+			s.sugar.Warnw("seed group failed", "error", err, "name", gs.Name)
+			continue
+		}
+		created++
+	}
+	if created > 0 {
+		s.sugar.Infow("groups seeded", "created", created, "total", len(s.config.Groups))
+	} else {
+		s.sugar.Infow("groups already seeded")
+	}
 }
 
 // BuiltinRoles 返回 domain/role 词表的内置角色种子。

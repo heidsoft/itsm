@@ -7,6 +7,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/citype"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/processbinding"
@@ -132,6 +133,27 @@ func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVers
 				SetIsVisible(item.IsVisible).SetIsEnabled(item.IsEnabled).
 				SetDescription(item.Description).SetTenantID(tenantID).Save(ctx); err != nil {
 				return fmt.Errorf("provision menu %s: %w", item.Path, err)
+			}
+		}
+	}
+
+	// 审批组克隆：BPMN candidateGroups / assignee_type(group) 依赖 groups 表，
+	// 缺失时任务候选集为空（2026-09-15 复盘 R2）。组是租户级骨架数据，成员关系
+	// 不克隆（成员用户尚未开通），由管理员开通后从角色人员中拉入。
+	sourceGroups, err := c.Group.Query().Where(group.TenantIDEQ(source.ID)).All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, item := range sourceGroups {
+		exists, err := c.Group.Query().Where(group.NameEQ(item.Name), group.TenantIDEQ(tenantID)).Exist(ctx)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			if _, err := c.Group.Create().
+				SetName(item.Name).SetDescription(item.Description).
+				SetTenantID(tenantID).Save(ctx); err != nil {
+				return fmt.Errorf("provision group %s: %w", item.Name, err)
 			}
 		}
 	}
@@ -333,6 +355,7 @@ func validateTenantReadinessWithClient(ctx context.Context, client *ent.Client, 
 			return client.RolePermission.Query().Where(rolepermission.TenantIDEQ(tenantID)).Count(ctx)
 		}},
 		{"menus", func() (int, error) { return client.Menu.Query().Where(menu.TenantIDEQ(tenantID)).Count(ctx) }},
+		{"groups", func() (int, error) { return client.Group.Query().Where(group.TenantIDEQ(tenantID)).Count(ctx) }},
 		{"SLA definitions", func() (int, error) {
 			return client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(tenantID)).Count(ctx)
 		}},
@@ -406,6 +429,21 @@ func validateTenantClone(ctx context.Context, client *ent.Client, sourceID, targ
 		}
 		if !exists {
 			return fmt.Errorf("managed menu %s missing", item.Path)
+		}
+	}
+	sourceGroups, err := client.Group.Query().Where(group.TenantIDEQ(sourceID)).All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, item := range sourceGroups {
+		exists, err := client.Group.Query().
+			Where(group.NameEQ(item.Name), group.TenantIDEQ(targetID)).
+			Exist(ctx)
+		if err != nil {
+			return err
+		}
+		if !exists {
+			return fmt.Errorf("managed group %s missing", item.Name)
 		}
 	}
 	sourceDefinitions, err := client.ProcessDefinition.Query().

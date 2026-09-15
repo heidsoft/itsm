@@ -11,6 +11,7 @@ import {
   Input,
   Modal,
   Row,
+  Select,
   Space,
   Statistic,
   Table,
@@ -25,7 +26,7 @@ import {
 import type { TablePaginationConfig } from 'antd';
 import { Edit, Plus, Search, Trash2, UserPlus, Users, User as UserIcon, X, Check } from 'lucide-react';
 import { GroupAPI, type Group } from '@/lib/api/group-api';
-import { UserApi, type User } from '@/lib/api/user-api';
+import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
@@ -49,6 +50,8 @@ const GroupManagement: React.FC = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [savingMembers, setSavingMembers] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  // 成员选择器角色筛选：审批组=从角色拉人组成的窄集合，按角色过滤是核心操作路径
+  const [memberRoleFilter, setMemberRoleFilter] = useState<string | undefined>(undefined);
 
   const [pagination, setPagination] = useState({
     current: 1,
@@ -167,6 +170,7 @@ const GroupManagement: React.FC = () => {
   // 打开成员管理弹窗
   const openMemberModal = async (group: Group) => {
     setSelectedGroup(group);
+    setMemberRoleFilter(undefined);
     setMemberModalOpen(true);
     await loadGroupMembers(group.id);
     await loadAllUsers();
@@ -210,6 +214,25 @@ const GroupManagement: React.FC = () => {
   const targetKeys = selectedUserIds.filter(id =>
     groupMembers.some(m => String(m.id) === id)
   );
+
+  // 角色筛选只作用于 Transfer 左侧「可添加」列表；右侧当前成员不受影响，
+  // 否则保存时会误把被筛掉的现有成员当成移除。
+  const filteredUserOptions = allUsers
+    .filter(u => !memberRoleFilter || u.role === memberRoleFilter)
+    .map(u => ({
+      key: String(u.id),
+      title: u.name || u.username || t('groups.members.userFallback', { id: u.id }),
+      description: u.email || u.username || '',
+      role: u.role,
+    }));
+
+  // 角色标签：显示用户主角色（词表单一源=PRIMARY_ROLE_LABEL）
+  const memberRoleTag = (role?: string) => {
+    if (!role) return null;
+    const label = PRIMARY_ROLE_LABEL[role];
+    if (!label) return null;
+    return <Tag>{label}</Tag>;
+  };
 
   const handleTableChange = (nextPagination: TablePaginationConfig) => {
     setPagination(prev => ({
@@ -460,12 +483,22 @@ const GroupManagement: React.FC = () => {
             {t('groups.members.description')}
           </Text>
 
+          <div className="mb-3 flex items-center gap-2">
+            <Text type="secondary">{t('groups.members.filterByRole')}</Text>
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder={t('groups.members.filterPlaceholder')}
+              style={{ width: 220 }}
+              value={memberRoleFilter}
+              onChange={(value?: string) => setMemberRoleFilter(value)}
+              options={PRIMARY_ROLE_OPTIONS}
+            />
+          </div>
+
           <Transfer
-            dataSource={allUsers.map(u => ({
-              key: String(u.id),
-              title: u.name || u.username || t('groups.members.userFallback', { id: u.id }),
-              description: u.email || u.username || '',
-            }))}
+            dataSource={filteredUserOptions}
             titles={[t('groups.members.available'), t('groups.members.current')]}
             targetKeys={targetKeys}
             onChange={(keys) => setSelectedUserIds(keys.map(k => String(k)))}
@@ -476,9 +509,10 @@ const GroupManagement: React.FC = () => {
                 <Text type="secondary" className="text-xs">
                   {item.description}
                 </Text>
+                {memberRoleTag((item as { role?: string }).role)}
               </Space>
             )}
-            listStyle={{ width: 280, height: 400 }}
+            listStyle={{ width: 300, height: 400 }}
             showSearch
             filterOption={(input, item) =>
               item.title.toLowerCase().includes(input.toLowerCase()) ||
@@ -505,6 +539,7 @@ const GroupManagement: React.FC = () => {
                         <UserIcon size={14} />
                       </Avatar>
                       <Text>{item.name || item.username || t('groups.members.userFallback', { id: item.id })}</Text>
+                      {memberRoleTag(item.role)}
                       {item.email && (
                         <Text type="secondary" className="text-xs">
                           {item.email}

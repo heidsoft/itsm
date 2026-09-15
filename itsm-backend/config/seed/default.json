@@ -48,6 +48,14 @@
     {"name": "普通用户", "code": "end_user", "description": "普通终端用户"},
     {"name": "访客", "code": "guest", "description": "访客用户"}
   ],
+  "groups": [
+    {"name": "approvers-l1", "description": "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
+    {"name": "approvers-l2", "description": "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
+    {"name": "approvers-l3", "description": "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
+    {"name": "approvers-managers", "description": "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
+    {"name": "approvers-security", "description": "安全审批组：从 security_admin 角色人员中拉人组成"},
+    {"name": "approvers-change", "description": "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"}
+  ],
   "sla_definitions": [
     {"name": "Incident-P0-紧急", "description": "核心业务中断或重大安全事件", "service_type": "incident", "priority": "urgent", "response_time": 15, "resolution_time": 120},
     {"name": "Incident-P1-高", "description": "重要业务受影响，需要快速恢复", "service_type": "incident", "priority": "high", "response_time": 30, "resolution_time": 240},

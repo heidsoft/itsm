@@ -3473,7 +3473,9 @@ export const translations = {
       },
       members: {
         title: '管理组成员',
-        description: '从左侧选择用户添加到本组，或移除已有成员。已在本组的成员显示在右侧。',
+        description: '从左侧选择用户添加到本组，或移除已有成员。已在本组的成员显示在右侧。可按主角色筛选，快速从某个角色的人员中拉人组成本组的审批班底。',
+        filterByRole: '按角色筛选',
+        filterPlaceholder: '选择主角色',
         available: '可添加的用户',
         current: '当前成员',
         itemsUnit: '用户',
@@ -8083,7 +8085,9 @@ export const translations = {
       },
       members: {
         title: 'Manage Group Members',
-        description: 'Select users from the left to add to this group, or remove existing members. Members in this group appear on the right.',
+        description: 'Select users from the left to add to this group, or remove existing members. Members in this group appear on the right. Filter by primary role to quickly assemble an approval bench from a role\'s users.',
+        filterByRole: 'Filter by role',
+        filterPlaceholder: 'Select primary role',
         available: 'Available Users',
         current: 'Current Members',
         itemsUnit: 'users',

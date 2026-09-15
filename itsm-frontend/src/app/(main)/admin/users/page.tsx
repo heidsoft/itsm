@@ -33,7 +33,7 @@ import {
   Tag,
   Empty,
 } from 'antd';
-import { UserApi, type User } from '@/lib/api/user-api';
+import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import type { Role } from '@/lib/api/api-config';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -41,23 +41,6 @@ import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
-
-// 主角色词表（单一源=后端 domain/role 包；security 为存量 legacy 值不提供新选）
-const PRIMARY_ROLE_OPTIONS = [
-  { value: 'end_user', label: '最终用户' },
-  { value: 'agent', label: '服务台坐席' },
-  { value: 'technician', label: '技术员' },
-  { value: 'manager', label: '部门经理' },
-  { value: 'it_admin', label: 'IT管理员' },
-  { value: 'security_admin', label: '安全管理员' },
-  { value: 'sysadmin', label: '系统运维' },
-  { value: 'admin', label: '系统管理员' },
-  { value: 'super_admin', label: '超级管理员' },
-];
-
-const PRIMARY_ROLE_LABEL: Record<string, string> = Object.fromEntries(
-  PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label])
-);
 
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();

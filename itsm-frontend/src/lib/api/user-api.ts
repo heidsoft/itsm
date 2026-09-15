@@ -18,6 +18,26 @@ export type UserRole =
   | 'security'
   | 'end_user';
 
+/**
+ * 主角色下拉选项（中文标签）。词表与后端 domain/role 包一一对应；
+ * 组管理页成员选择器的角色筛选也复用此词表。
+ */
+export const PRIMARY_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: 'end_user', label: '最终用户' },
+  { value: 'agent', label: '服务台坐席' },
+  { value: 'technician', label: '技术员' },
+  { value: 'manager', label: '部门经理' },
+  { value: 'it_admin', label: 'IT管理员' },
+  { value: 'security_admin', label: '安全管理员' },
+  { value: 'sysadmin', label: '系统运维' },
+  { value: 'admin', label: '系统管理员' },
+  { value: 'super_admin', label: '超级管理员' },
+];
+
+export const PRIMARY_ROLE_LABEL: Record<string, string> = Object.fromEntries(
+  PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label])
+);
+
 export interface User {
   id: number;
   username: string;

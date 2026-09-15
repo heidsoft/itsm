@@ -9,6 +9,7 @@ import (
 	"itsm-backend/config"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/role"
@@ -100,8 +101,61 @@ func TestSeedAllSaaSModeCreatesPlatformTenantAndAdmin(t *testing.T) {
 	assert.Equal(t, "super_admin", string(adminUser.Role))
 }
 
-func TestSeedAllSaaSMSPModeCreatesOnlyProviderTenant(t *testing.T) {
-	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
+// TestSeedGroupsAndProvisionClones 验证审批组种子链路（2026-09-15 复盘 R2）：
+// 1. SeedAll 后 default 租户装上 BuiltinGroups 全部组；
+// 2. 组名以 approvers- 为前缀，与全部角色 code 无交集（同名组优先语义下，
+//    与角色码同名的空组会挡住角色回退，导致任务候选集为空）；
+// 3. ProvisionTenant 把组克隆到目标租户（validateTenantReadiness 含 groups 检查）；
+// 4. 幂等：重复 SeedAll 不重复建组。
+func TestSeedGroupsAndProvisionClones(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaS)
+	seeder.SeedAll(ctx)
+
+	rootTenant, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	require.NoError(t, err)
+
+	builtin := BuiltinGroups()
+	require.NotEmpty(t, builtin)
+	rootGroups, err := seeder.client.Group.Query().Where(group.TenantIDEQ(rootTenant.ID)).All(ctx)
+	require.NoError(t, err)
+	rootNames := make(map[string]bool, len(rootGroups))
+	for _, g := range rootGroups {
+		rootNames[g.Name] = true
+	}
+	for _, gs := range builtin {
+		assert.True(t, rootNames[gs.Name], "builtin group %s missing after SeedAll", gs.Name)
+	}
+
+	// 幂等：重跑不重复建组
+	seeder.SeedAll(ctx)
+	rootCount, err := seeder.client.Group.Query().Where(group.TenantIDEQ(rootTenant.ID)).Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, len(rootGroups), rootCount)
+
+	// 组名不得与任何角色 code 同名（同名组优先语义的防呆）
+	roleCodes, err := seeder.client.Role.Query().Where(role.TenantIDEQ(rootTenant.ID)).All(ctx)
+	require.NoError(t, err)
+	roleCodeSet := make(map[string]bool, len(roleCodes))
+	for _, r := range roleCodes {
+		roleCodeSet[r.Code] = true
+	}
+	for _, gs := range builtin {
+		assert.False(t, roleCodeSet[gs.Name],
+			"group %s collides with a role code; same-name empty group would block role fallback", gs.Name)
+	}
+
+	// ProvisionTenant 克隆组到目标租户
+	target, err := seeder.client.Tenant.Create().
+		SetName("Group Clone Target").SetCode("group-clone-target").
+		SetType(tenant.TypeSaasCustomer).Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion))
+	targetCount, err := seeder.client.Group.Query().Where(group.TenantIDEQ(target.ID)).Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, len(rootGroups), targetCount)
+}
+
+func TestSeedAllSaaSMSPModeCreatesOnlyProviderTenant(t *testing.T) {	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
 
 	seeder.SeedAll(ctx)
 
