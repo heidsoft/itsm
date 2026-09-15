@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/metrics"
 
 	"go.uber.org/zap"
 )
@@ -190,6 +192,7 @@ func (s *TimerScheduler) fireCallback(ctx context.Context, record *TimerRecord) 
 	dbTimer, err := s.store.CASFire(ctx, record.TimerID, now)
 	if err != nil {
 		s.logger.Errorf("CAS fire failed for timer %s: %v", record.TimerID, err)
+		metrics.TimerFiredTotal.WithLabelValues(record.TimerType, "cas_failed", strconv.Itoa(record.TenantID)).Inc()
 		return
 	}
 
@@ -206,16 +209,20 @@ func (s *TimerScheduler) fireCallback(ctx context.Context, record *TimerRecord) 
 
 		if err := s.callback(ctx, callbackRecord); err != nil {
 			s.logger.Errorf("timer callback failed for %s: %v", record.TimerID, err)
+			metrics.TimerFiredTotal.WithLabelValues(record.TimerType, "failed", strconv.Itoa(record.TenantID)).Inc()
 			s.handleFireFailure(ctx, record, err)
 			return
 		}
 	}
 
+	metrics.TimerFiredTotal.WithLabelValues(record.TimerType, "success", strconv.Itoa(record.TenantID)).Inc()
+	metrics.TimerFireLatency.WithLabelValues(record.TimerType, strconv.Itoa(record.TenantID)).Observe(latency.Seconds())
 	s.metrics.RecordFire(latency)
 }
 
 func (s *TimerScheduler) handleFireFailure(ctx context.Context, record *TimerRecord, fireErr error) {
 	s.metrics.RecordRetry()
+	metrics.TimerRetryTotal.WithLabelValues(record.TimerType, strconv.Itoa(record.TenantID)).Inc()
 
 	dbTimer, err := s.store.GetByTimerID(ctx, record.TimerID)
 	if err != nil {
@@ -283,6 +290,7 @@ func (s *TimerScheduler) recover(ctx context.Context) error {
 			}
 			totalRecovered++
 			s.metrics.RecordRecovery()
+			metrics.TimerRecoveryTotal.WithLabelValues(strconv.Itoa(tenantID)).Inc()
 		}
 
 		future, err := s.store.FindPendingFuture(ctx, tenantID, now)

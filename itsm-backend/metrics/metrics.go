@@ -123,6 +123,52 @@ var (
 		[]string{"process_definition", "tenant_id"},
 	)
 
+	// Timer metrics - BPMN 定时器指标（PRD ITSM-PRD-2026-002 §8.1）
+	// status 标签区分触发结果：success = 回调推进成功；failed = 回调报错（进入重试）。
+	TimerFiredTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_timer_fired_total",
+			Help: "Total number of BPMN timer firings by outcome",
+		},
+		[]string{"type", "status", "tenant_id"},
+	)
+
+	TimerFireLatency = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "itsm_timer_fire_latency_seconds",
+			Help:    "Latency between timer fire_at and actual firing",
+			Buckets: []float64{0.01, 0.05, 0.1, 0.5, 1, 5, 15, 60, 300, 900},
+		},
+		[]string{"type", "tenant_id"},
+	)
+
+	TimerRecoveryTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_timer_recovery_total",
+			Help: "Total number of timers rescheduled by recovery scans",
+		},
+		[]string{"tenant_id"},
+	)
+
+	TimerRetryTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_timer_retry_total",
+			Help: "Total number of timer fire retries after callback failure",
+		},
+		[]string{"type", "tenant_id"},
+	)
+
+	// TimerPausedTotal 记录流程实例挂起时被取消的活跃定时器数量
+	// （恢复时由 reregisterInstanceTimers 重建，重建不计数——
+	// 该指标用于发现"挂起后 timer 仍在触发"的泄漏回归）。
+	TimerPausedTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "itsm_timer_paused_total",
+			Help: "Total number of active timers cancelled due to process instance suspension",
+		},
+		[]string{"tenant_id"},
+	)
+
 	// API metrics - API 指标
 	HTTPRequestDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{

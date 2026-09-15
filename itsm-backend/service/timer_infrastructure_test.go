@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -10,9 +11,11 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/metrics"
 
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -530,4 +533,95 @@ func TestDBTimerStore_CancelByProcessInstance(t *testing.T) {
 	for _, item := range items {
 		assert.Equal(t, string(TimerStatusCancelled), item.Status)
 	}
+}
+
+// TestTimerScheduler_PrometheusMetrics 调度器触发路径应同步写入 Prometheus 计数器
+// （itsm_timer_fired_total / itsm_timer_retry_total，PRD §8.1）。使用独立租户 ID
+// 隔离全局计数器基线。
+func TestTimerScheduler_PrometheusMetrics(t *testing.T) {
+	client := newTimerTestClient(t, "sched-prom")
+	store := newTimerTestStore(t, client)
+	tenantID := createTimerTenant(t, client, "prom")
+	tenantStr := strconv.Itoa(tenantID)
+	ctx := context.Background()
+
+	successBase := testutil.ToFloat64(metrics.TimerFiredTotal.WithLabelValues("intermediate", "success", tenantStr))
+	failBase := testutil.ToFloat64(metrics.TimerFiredTotal.WithLabelValues("intermediate", "failed", tenantStr))
+	retryBase := testutil.ToFloat64(metrics.TimerRetryTotal.WithLabelValues("intermediate", tenantStr))
+
+	// 成功路径：回调无错 → fired{success} +1
+	created, err := store.Create(ctx, &CreateTimerRequest{
+		TimerType:            TimerTypeIntermediate,
+		ProcessDefinitionKey: "prom_proc",
+		TimerExpression:      "PT1S",
+		ExpressionType:       ExprTypeDuration,
+		FireAt:               time.Now().Add(30 * time.Millisecond),
+		TenantID:             tenantID,
+	})
+	require.NoError(t, err)
+
+	scheduler := NewTimerScheduler(TimerSchedulerConfig{
+		Client: client,
+		Store:  store,
+		Logger: zaptest.NewLogger(t).Sugar(),
+		Callback: func(ctx context.Context, timer *TimerRecord) error {
+			return nil
+		},
+	})
+	require.NoError(t, scheduler.Schedule(ctx, &TimerRecord{
+		TimerID:              created.TimerID,
+		TimerType:            created.TimerType,
+		ProcessDefinitionKey: created.ProcessDefinitionKey,
+		FireAt:               created.FireAt,
+		TenantID:             tenantID,
+	}))
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if testutil.ToFloat64(metrics.TimerFiredTotal.WithLabelValues("intermediate", "success", tenantStr)) > successBase {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	assert.Greater(t, testutil.ToFloat64(metrics.TimerFiredTotal.WithLabelValues("intermediate", "success", tenantStr)), successBase,
+		"成功触发应递增 itsm_timer_fired_total{status=success}")
+
+	// 失败路径：回调报错 → fired{failed} +1 且 retry +1
+	failed, err := store.Create(ctx, &CreateTimerRequest{
+		TimerType:            TimerTypeIntermediate,
+		ProcessDefinitionKey: "prom_proc",
+		TimerExpression:      "PT1S",
+		ExpressionType:       ExprTypeDuration,
+		FireAt:               time.Now().Add(30 * time.Millisecond),
+		TenantID:             tenantID,
+	})
+	require.NoError(t, err)
+
+	failScheduler := NewTimerScheduler(TimerSchedulerConfig{
+		Client: client,
+		Store:  store,
+		Logger: zaptest.NewLogger(t).Sugar(),
+		Callback: func(ctx context.Context, timer *TimerRecord) error {
+			return fmt.Errorf("simulated callback failure")
+		},
+	})
+	require.NoError(t, failScheduler.Schedule(ctx, &TimerRecord{
+		TimerID:              failed.TimerID,
+		TimerType:            failed.TimerType,
+		ProcessDefinitionKey: failed.ProcessDefinitionKey,
+		FireAt:               failed.FireAt,
+		TenantID:             tenantID,
+	}))
+
+	deadline = time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if testutil.ToFloat64(metrics.TimerRetryTotal.WithLabelValues("intermediate", tenantStr)) > retryBase {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	assert.Greater(t, testutil.ToFloat64(metrics.TimerFiredTotal.WithLabelValues("intermediate", "failed", tenantStr)), failBase,
+		"失败触发应递增 itsm_timer_fired_total{status=failed}")
+	assert.Greater(t, testutil.ToFloat64(metrics.TimerRetryTotal.WithLabelValues("intermediate", tenantStr)), retryBase,
+		"回调失败应递增 itsm_timer_retry_total")
 }

@@ -404,10 +404,10 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 
 | 阶段 | 内容 | 估算 | 状态 |
 |------|------|------|------|
-| **Phase 1: 基础设施** | `process_timer` schema + Timer Scheduler + Recovery Scanner + DB Store + 查询/统计 API + Metrics | 4-5 天 | **✅ 已完成（2026-09-15，commit 89dad5b1）**——TimerStore/Scheduler/Recovery/管理 API 落地；Metrics 五项计数器**未实现**，挂账 Phase 4 批次 |
+| **Phase 1: 基础设施** | `process_timer` schema + Timer Scheduler + Recovery Scanner + DB Store + 查询/统计 API + Metrics | 4-5 天 | **✅ 已完成（2026-09-15，commit 89dad5b1 + metrics 补齐）**——TimerStore/Scheduler/Recovery/管理 API 落地；五项 Prometheus metrics 已实现（itsm_timer_fired_total/fire_latency/recovery/retry/paused，2026-09-15） |
 | **Phase 1.5: Spike** | 验证 `lib-bpmn-engine` Timer Event 支持能力 | 1 天 | **已完成** — 见附录 C |
-| **Phase 2: 引擎集成** | CustomProcessEngine 支持 Timer Intermediate / Boundary 节点的注册与触发 + SLA 暂停/恢复 | 3-5 天 | **🟡 部分（2026-09-15）**——intermediate/boundary/start 注册触发 ✅（commit 89dad5b1）；**SLA 暂停/恢复（Cancel+Recreate）未做** |
-| **Phase 3: 设计器集成** | WorkflowNodeInspector Timer 配置面板 + BPMN XML 序列化/反序列化 | 2-3 天 | **🟡 部分**——XML 解析（extractor）✅；**前端 Timer 配置面板未做** |
+| **Phase 2: 引擎集成** | CustomProcessEngine 支持 Timer Intermediate / Boundary 节点的注册与触发 + SLA 暂停/恢复 | 3-5 天 | **✅ 已完成（2026-09-15）**——intermediate/boundary/start 注册触发 ✅（89dad5b1）；SLA 暂停/恢复 Cancel+Recreate ✅（挂起取消/恢复重建/终止取消，4 例 E2E） |
+| **Phase 3: 设计器集成** | WorkflowNodeInspector Timer 配置面板 + BPMN XML 序列化/反序列化 | 2-3 天 | **✅ 已完成（2026-09-15，commit 3146bade）**——extractor ✅ + 前端 Timer 配置面板（start/intermediate/boundary）✅ + XML 规范化写入 ✅ + lint 规则组 1.1 ✅ |
 | **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **未启动**——三套后台任务（sla-monitor/timeout-scanner/timer-scheduler）仍并行运行 |
 | **Phase 5: Timer Start** | 定时启动流程 + cron 表达式解析 + 产品模板 | 2 天 | **🟡 部分**——部署时自动注册 ✅；**cron 解析（含租户时区）与产品模板未做** |
 | **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 大部分**——29 例 E2E + 单测全绿、CHANGELOG 已补（2026-09-15）；用户文档未写 |
