@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"go.uber.org/zap"
@@ -53,6 +54,8 @@ func (h *TimerEventHandler) HandleTimerFire(ctx context.Context, timer *TimerRec
 		return h.handleIntermediateTimer(ctx, timer)
 	case "boundary":
 		return h.handleBoundaryTimer(ctx, timer)
+	case string(TimerTypeTaskDue):
+		return h.handleTaskDueTimer(ctx, timer)
 	case "start":
 		return fmt.Errorf("start timer not yet implemented (deferred to Phase 5)")
 	default:
@@ -131,6 +134,38 @@ func (h *TimerEventHandler) handleBoundaryTimer(ctx context.Context, timer *Time
 		timer)
 
 	return h.engine.executeStep(ctx, h.engine.client, instance, process, boundaryEvent.ID, instance.Variables)
+}
+
+// handleTaskDueTimer 处理任务截止定时器（Phase 4）：
+// 重新加载任务最新状态，仍活跃才分发超时动作（notify/escalate/auto_reject/auto_approve，
+// 由 TimeoutScanner.dispatchTimeoutAction 承载，内部有 claim-once 保护）。
+// 任务已完成/取消/已超时 → 静默确认（timer 正常结束，不重试）。
+func (h *TimerEventHandler) handleTaskDueTimer(ctx context.Context, timer *TimerRecord) error {
+	if timer.ActivityID == "" {
+		return fmt.Errorf("task_due timer requires activity_id (task ID)")
+	}
+
+	task, err := h.engine.client.ProcessTask.Query().
+		Where(
+			processtask.TaskID(timer.ActivityID),
+			processtask.TenantID(timer.TenantID),
+		).
+		First(ctx)
+	if err != nil {
+		return fmt.Errorf("task_due timer: load task %s: %w", timer.ActivityID, err)
+	}
+
+	if !slices.Contains(timeoutActiveStatuses, task.Status) {
+		h.logger.Infow("task_due timer skipped: task no longer active",
+			"task_id", task.TaskID, "status", task.Status)
+		return nil
+	}
+
+	scanner := NewTimeoutScanner(h.engine.client, h.logger)
+	if err := scanner.dispatchTimeoutAction(ctx, task, timer.TenantID); err != nil {
+		return fmt.Errorf("task_due timer: dispatch timeout action for %s: %w", task.TaskID, err)
+	}
+	return nil
 }
 
 // loadRunningInstance loads the process instance and parses its BPMN definition.

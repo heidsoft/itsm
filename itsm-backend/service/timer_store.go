@@ -28,6 +28,10 @@ const (
 	TimerTypeStart         TimerType = "start"
 	TimerTypeIntermediate  TimerType = "intermediate"
 	TimerTypeBoundary      TimerType = "boundary"
+	// TimerTypeTaskDue 任务截止定时器（Phase 4）：BPMN userTask 配置 dueDate
+	// 属性时注册，到期由 TimerEventHandler 分发 TimeoutScanner 四动作；
+	// TimeoutScanner 轮询降级为恢复兜底（claim-once 保护下双路径安全）。
+	TimerTypeTaskDue TimerType = "task_due"
 )
 
 type ExpressionType string

@@ -1680,8 +1680,10 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		}
 	})
 
-	// BPMN task timeout scanner: scans for overdue tasks every 2 minutes
-	// and dispatches the configured timeout action (notify/escalate/auto_reject/auto_approve).
+	// BPMN task timeout scanner (Phase 4: 恢复兜底). 主路径是 task_due 定时器
+	// （createUserTask 注册、到期由 TimerEventHandler 分发四动作）；本扫描器每 2 分钟
+	// 兜底处理无 timer 的任务（注册失败、timer 丢失、功能关闭的部署）。
+	// dispatchTimeoutAction 带 claim-once 条件更新，双路径下同一任务只生效一次。
 	safeGo("bpmn-timeout-scanner", func() {
 		scanner := service.NewTimeoutScanner(app.DBClient, app.Logger)
 		ticker := time.NewTicker(2 * time.Minute)

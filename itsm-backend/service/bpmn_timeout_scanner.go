@@ -24,22 +24,25 @@ func NewTimeoutScanner(client *ent.Client, logger *zap.SugaredLogger) *TimeoutSc
 
 // ScanOverdueTasks finds active tasks past their due date within a tenant
 // and dispatches the configured timeout action for each.
+// timeoutActiveStatuses 视为"未处理"的任务状态。扫描器查询与
+// claim-once 条件更新共用，保证 timer 回调与恢复兜底扫描双路径下
+// 同一任务的超时动作只生效一次。
+var timeoutActiveStatuses = []string{
+	common.ProcessTaskStatusCreated,
+	common.ProcessTaskStatusAssigned,
+	common.ProcessTaskStatusStarted,
+}
+
 func (s *TimeoutScanner) ScanOverdueTasks(ctx context.Context, tenantID int) (int, error) {
 	if tenantID <= 0 {
 		return 0, fmt.Errorf("timeout scanner: invalid tenant ID")
 	}
 
 	now := time.Now()
-	activeStatuses := []string{
-		common.ProcessTaskStatusCreated,
-		common.ProcessTaskStatusAssigned,
-		common.ProcessTaskStatusStarted,
-	}
-
 	tasks, err := s.client.ProcessTask.Query().
 		Where(
 			processtask.TenantID(tenantID),
-			processtask.StatusIn(activeStatuses...),
+			processtask.StatusIn(timeoutActiveStatuses...),
 			processtask.DueDateNotNil(),
 			processtask.DueDateLT(now),
 		).
@@ -105,11 +108,22 @@ func extractTimeoutAction(vars map[string]interface{}) string {
 
 // actionNotify marks the task as timed out and enqueues a reminder notification.
 func (s *TimeoutScanner) actionNotify(ctx context.Context, task *ent.ProcessTask, tenantID int) error {
-	_, err := s.client.ProcessTask.UpdateOne(task).
+	// claim-once：仅当任务仍处于活跃状态时才置为 timeout。
+	// 影响行数为 0 说明 timer 回调或恢复扫描已处理过（双路径竞态保护）。
+	claimed, err := s.client.ProcessTask.Update().
+		Where(
+			processtask.ID(task.ID),
+			processtask.StatusIn(timeoutActiveStatuses...),
+		).
 		SetStatus(common.ProcessTaskStatusTimeout).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("set timeout status: %w", err)
+	}
+	if claimed == 0 {
+		s.logger.Infow("timeout action: notify skipped (already claimed)",
+			"task_id", task.TaskID, "tenant_id", tenantID)
+		return nil
 	}
 
 	assigneeID, _ := parseAssigneeID(task.Assignee)
@@ -132,12 +146,22 @@ func (s *TimeoutScanner) actionEscalate(ctx context.Context, task *ent.ProcessTa
 	vars["escalation_reason"] = "任务超时自动升级"
 	vars["escalated_time"] = time.Now().Format(time.RFC3339)
 
-	_, err := s.client.ProcessTask.UpdateOne(task).
+	// claim-once：同 actionNotify，防止 timer 回调与恢复扫描双路径重复升级。
+	claimed, err := s.client.ProcessTask.Update().
+		Where(
+			processtask.ID(task.ID),
+			processtask.StatusIn(timeoutActiveStatuses...),
+		).
 		SetStatus(common.ProcessTaskStatusEscalated).
 		SetTaskVariables(vars).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("set escalated status: %w", err)
+	}
+	if claimed == 0 {
+		s.logger.Infow("timeout action: escalate skipped (already claimed)",
+			"task_id", task.TaskID, "tenant_id", tenantID)
+		return nil
 	}
 
 	assigneeID, _ := parseAssigneeID(task.Assignee)

@@ -225,6 +225,7 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	}
 
 	e.cancelBoundaryTimers(ctx, instance, process, task.TaskDefinitionKey)
+	e.cancelTaskDueTimers(ctx, task.TenantID, task.TaskID)
 
 	// 5. 在事务内合并变量（无并发写者，直接合并即可）
 	instance, err = e.mergeVariablesInTx(ctx, txc, instance.ID, variables)
@@ -748,9 +749,58 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 	}
 	e.logger.Infow("User task created with auto-assignment", "taskID", task.ID, "taskName", task.Name, "assignee", assignee)
 
+	// BPMN dueDate 属性落地（Phase 4）：此前 XML 解析器校验过 dueDate 但从不写库，
+	// 导致 TimeoutScanner 扫描的 due_date 字段永远为空（休眠循环）。
+	// 日期语义：截止到当日 23:59:59（本地时区）。
+	if dueExpr := strings.TrimSpace(task.DueDate); dueExpr != "" {
+		if dueDay, err := time.ParseInLocation("2006-01-02", dueExpr, time.Local); err == nil {
+			dueAt := time.Date(dueDay.Year(), dueDay.Month(), dueDay.Day(), 23, 59, 59, 0, time.Local)
+			if _, err := txc.ProcessTask.UpdateOne(createdTask).SetDueDate(dueAt).Save(ctx); err != nil {
+				e.logger.Warnw("failed to persist BPMN dueDate on task",
+					"error", err, "task_def_key", task.ID, "due_date", dueExpr)
+			} else {
+				e.registerTaskDueTimer(ctx, instance, createdTask, dueAt)
+			}
+		} else {
+			e.logger.Warnw("invalid BPMN dueDate format (expect yyyy-mm-dd)",
+				"task_def_key", task.ID, "due_date", dueExpr)
+		}
+	}
+
 	e.registerBoundaryTimers(ctx, instance, process, task.ID)
 
 	return nil
+}
+
+// registerTaskDueTimer 为带截止时间的任务注册 task_due 定时器（Phase 4）。
+// 到期由 TimerEventHandler 分发 TimeoutScanner 四动作；已过期的截止时间不注册
+// （由恢复兜底扫描处理）。best-effort：注册失败仅告警，扫描器仍在兜底。
+func (e *CustomProcessEngine) registerTaskDueTimer(ctx context.Context, instance *ent.ProcessInstance, task *ent.ProcessTask, dueAt time.Time) {
+	if e.timerStore == nil || !dueAt.After(time.Now()) {
+		return
+	}
+	instanceID := instance.ID
+	if _, err := e.timerStore.Create(ctx, &CreateTimerRequest{
+		TimerType:            TimerTypeTaskDue,
+		ProcessDefinitionKey: instance.ProcessDefinitionKey,
+		ProcessInstanceID:    &instanceID,
+		ActivityID:           task.TaskID, // task_due 语义：ActivityID 承载唯一任务 ID
+		TimerExpression:      dueAt.Format(time.RFC3339),
+		ExpressionType:       ExprTypeDate,
+		FireAt:               dueAt,
+		ContextVariables: map[string]interface{}{
+			"task_id":       task.TaskID,
+			"task_def_key":  task.TaskDefinitionKey,
+			"timeout_action": task.TaskVariables["timeoutAction"],
+		},
+		TenantID: instance.TenantID,
+	}); err != nil {
+		e.logger.Warnw("failed to register task_due timer",
+			"error", err, "task_id", task.TaskID, "due_at", dueAt)
+		return
+	}
+	e.logger.Infow("task_due timer registered",
+		"task_id", task.TaskID, "due_at", dueAt, "instance_id", instance.ID)
 }
 
 func splitNonEmptyCSV(value string) []string {
@@ -1200,6 +1250,41 @@ func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instan
 			"expression", expression,
 			"fire_at", fireAt,
 		)
+	}
+}
+
+// cancelTaskDueTimers 在任务完成/终止时取消该任务的 task_due 定时器（Phase 4）。
+// 与 cancelBoundaryTimers 同语义：不留到期后才静默跳过的死 timer。
+func (e *CustomProcessEngine) cancelTaskDueTimers(ctx context.Context, tenantID int, taskID string) {
+	if e.timerStore == nil {
+		return
+	}
+	timers, _, err := e.timerStore.List(ctx, TimerListFilter{
+		TenantID:  tenantID,
+		TimerType: string(TimerTypeTaskDue),
+		Status:    string(TimerStatusPending),
+		PageSize:  100,
+		Page:      1,
+	})
+	if err != nil {
+		e.logger.Warnw("failed to list task_due timers for cancellation",
+			"error", err, "task_id", taskID)
+		return
+	}
+	for _, timer := range timers {
+		if timer.ActivityID != taskID {
+			continue
+		}
+		if err := e.timerStore.CancelByTimerID(ctx, timer.TimerID); err != nil {
+			e.logger.Warnw("failed to cancel task_due timer",
+				"error", err, "timer_id", timer.TimerID, "task_id", taskID)
+			continue
+		}
+		if e.timerScheduler != nil {
+			e.timerScheduler.Cancel(timer.TimerID)
+		}
+		e.logger.Infow("task_due timer cancelled on task completion",
+			"timer_id", timer.TimerID, "task_id", taskID)
 	}
 }
 

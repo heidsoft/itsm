@@ -408,7 +408,7 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | **Phase 1.5: Spike** | 验证 `lib-bpmn-engine` Timer Event 支持能力 | 1 天 | **已完成** — 见附录 C |
 | **Phase 2: 引擎集成** | CustomProcessEngine 支持 Timer Intermediate / Boundary 节点的注册与触发 + SLA 暂停/恢复 | 3-5 天 | **✅ 已完成（2026-09-15）**——intermediate/boundary/start 注册触发 ✅（89dad5b1）；SLA 暂停/恢复 Cancel+Recreate ✅（挂起取消/恢复重建/终止取消，4 例 E2E） |
 | **Phase 3: 设计器集成** | WorkflowNodeInspector Timer 配置面板 + BPMN XML 序列化/反序列化 | 2-3 天 | **✅ 已完成（2026-09-15，commit 3146bade）**——extractor ✅ + 前端 Timer 配置面板（start/intermediate/boundary）✅ + XML 规范化写入 ✅ + lint 规则组 1.1 ✅ |
-| **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **未启动**——三套后台任务（sla-monitor/timeout-scanner/timer-scheduler）仍并行运行 |
+| **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **✅ 核心完成（2026-09-15）**——BPMN dueDate 落库（修复零写入休眠循环）+ task_due 定时器（注册/到期分发/完成取消）+ TimeoutScanner 降级恢复兜底（claim-once 双路径安全）；**SLA Monitor 保持轮询**（聚合策略评估不适合逐票 timer，决策见 §12） |
 | **Phase 5: Timer Start** | 定时启动流程 + cron 表达式解析 + 产品模板 | 2 天 | **🟡 部分**——部署时自动注册 ✅；**cron 解析（含租户时区）与产品模板未做** |
 | **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 大部分**——29 例 E2E + 单测全绿、CHANGELOG 已补（2026-09-15）；用户文档未写 |
 
@@ -471,6 +471,9 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 | 2026-09-14 | 产品评审 Q3：到期动作 = 四动作枚举 + 结构化 params，禁用自定义表达式 | 结构化参数可 Lint 可审计；表达式注入与 AGENTS.md 高-risk 动作约束冲突 |
 | 2026-09-14 | 产品评审 Q4：Working Hours Calendar 维持 P2；fire_at 一律 UTC 存储 + 租户时区展示 | Cancel+Recreate 已覆盖 P0 场景；UTC 存储边界杜绝 SLA 时区 bug 重演 |
 | 2026-09-14 | 产品评审 Q5：P0 等待状态前端可见（WorkflowProgressCard），P1 加手动跳过 | 数据源 process_timer 现成；跳过走手动触发语义（CAS fencing + 审计），与 P1 管理 API 写操作同批交付 |
+| 2026-09-15 | Phase 4：任务超时主路径 = task_due 定时器，TimeoutScanner 降级为恢复兜底 | timer 到期分发复用 scanner 的 dispatchTimeoutAction；claim-once 条件更新保证双路径只生效一次；扫描器继续兜底无 timer 任务（注册失败/timer 丢失/功能关闭） |
+| 2026-09-15 | Phase 4：SLA Monitor 保持轮询，不做逐票 Timer 化 | CheckSLAViolations 是聚合策略评估（多级阈值/批量工单），轮询是正确工具；逐票 timer 带来注册风暴与重建复杂度，收益不成比例 |
+| 2026-09-15 | BPMN dueDate 语义定为 `yyyy-mm-dd` → 当日 23:59:59（服务器本地时区） | XML 解析器既有校验格式即日期；任务截止按自然日结束计算符合业务直觉；时区统一问题随 Q4 的 UTC 存储边界（Phase 2）一并治理 |
 
 ---
 
