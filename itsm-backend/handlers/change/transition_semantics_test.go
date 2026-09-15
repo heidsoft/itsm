@@ -34,6 +34,8 @@ func newTransitionTestService(t *testing.T) (*Service, *mockRepository) {
 }
 
 // seedPendingChange 创建一个处于 pending 且指定用户为待办审批人的变更。
+// dc5fbf97 契约：审批人校验数据源 = 审批链成员资格（ApprovalChain），
+// 审批决定从 ProcessApprovalDecision 读取；ApprovalRecord 仅作为业务侧快照保留。
 func seedPendingChange(t *testing.T, repo *mockRepository, tenantID, approverID int) *Change {
 	t.Helper()
 	c := createTestChange(repo, tenantID, approverID)
@@ -44,6 +46,13 @@ func seedPendingChange(t *testing.T, repo *mockRepository, tenantID, approverID 
 		Status:     "pending",
 	})
 	require.NoError(t, err)
+	// 审批链必须包含待办审批人，否则 isApprover 校验会误拒（→403）
+	require.NoError(t, repo.ReplaceApprovalChain(context.Background(), c.ID, tenantID, []*ApprovalChain{{
+		ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
+		ApproverID: approverID, Role: "approver", Status: "pending",
+		IsRequired: true, ApprovalType: "serial", Threshold: 1,
+		CreatedAt: time.Now(),
+	}}))
 	return c
 }
 

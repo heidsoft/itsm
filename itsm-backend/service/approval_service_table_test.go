@@ -1069,39 +1069,37 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 
 // ============================================================
 // 表驱动测试：TriggerApproval with different approval modes
-// 验证 "any" 模式只创建一条记录，"all" 模式创建多条记录
+// Phase 2 契约（2026-09 收敛）：BPMN 流程任务（GET /bpmn/tasks）是审批的权威来源，
+// TriggerApproval 不再写 ApprovalRecord——保留 workflow 解析作为 guard：
+// 工单类型有绑定的审批流程 → 返回空记录（非 nil）；无绑定 → nil, nil。
+// approvalMode/approverCount 仅影响 BPMN 节点语义，不再产生 ApprovalRecord 行。
 // ============================================================
 
 func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 	tests := []struct {
-		name            string
-		approvalMode    string
-		approverCount   int
-		wantRecordCount int
+		name          string
+		approvalMode  string
+		approverCount int
 	}{
 		{
-			name:            "any mode with 2 approvers creates 1 record",
-			approvalMode:    "any",
-			approverCount:   2,
-			wantRecordCount: 1,
+			name:          "any mode with 2 approvers writes no records",
+			approvalMode:  "any",
+			approverCount: 2,
 		},
 		{
-			name:            "all mode with 2 approvers creates 2 records",
-			approvalMode:    "all",
-			approverCount:   2,
-			wantRecordCount: 2,
+			name:          "all mode with 2 approvers writes no records",
+			approvalMode:  "all",
+			approverCount: 2,
 		},
 		{
-			name:            "all mode with 1 approver creates 1 record",
-			approvalMode:    "all",
-			approverCount:   1,
-			wantRecordCount: 1,
+			name:          "all mode with 1 approver writes no records",
+			approvalMode:  "all",
+			approverCount: 1,
 		},
 		{
-			name:            "any mode with 1 approver creates 1 record",
-			approvalMode:    "any",
-			approverCount:   1,
-			wantRecordCount: 1,
+			name:          "any mode with 1 approver writes no records",
+			approvalMode:  "any",
+			approverCount: 1,
 		},
 	}
 
@@ -1153,7 +1151,7 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				Save(ctx)
 			require.NoError(t, err)
 
-			// 触发审批
+			// 触发审批：workflow 命中 → Phase 2 返回空记录（非 nil），不写任何 ApprovalRecord
 			records, err := service.TriggerApproval(ctx, &ApprovalTriggerRequest{
 				TicketID:     ticket.ID,
 				TicketNumber: ticket.TicketNumber,
@@ -1164,9 +1162,10 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				TenantID:     tenant.ID,
 			})
 			require.NoError(t, err)
-			assert.Len(t, records, tt.wantRecordCount)
+			require.NotNil(t, records, "workflow 命中时应返回空切片而非 nil（guard 语义）")
+			assert.Empty(t, records)
 
-			// 验证数据库中的记录数
+			// 数据库不得有 ApprovalRecord 行（BPMN 任务是权威来源）
 			count, err := client.ApprovalRecord.Query().
 				Where(
 					approvalrecord.TenantIDEQ(tenant.ID),
@@ -1174,7 +1173,7 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				).
 				Count(ctx)
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantRecordCount, count)
+			assert.Equal(t, 0, count, "Phase 2 禁止写 ApprovalRecord")
 		})
 	}
 }

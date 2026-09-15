@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -172,20 +173,25 @@ func TestChange_SubmitChange_NoChainFallsBackToCreator(t *testing.T) {
 	require.Equal(t, []int{creator}, approvers, "无激活链时应回退创建人自审（旧逻辑）")
 }
 
-// queryChangeApprovalRecordIDs 返回某变更的全部审批记录（change_approvals）ID，用于驱动 ProcessApproval。
-func queryChangeApprovalRecordIDs(t *testing.T, db *sql.DB, changeID, tenantID int) []int {
+// seedApprovalDecisions 按 approverIDs 注入 ProcessApprovalDecision 审计行（businessType=change）。
+// dc5fbf97 起审批决定由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
+// change_approvals legacy 表已停止写入；测试直接注入审计行驱动 quorum 求值。
+func seedApprovalDecisions(t *testing.T, client *ent.Client, tenantID, changeID, actorID int, approverIDs []int) {
 	t.Helper()
-	rows, err := db.QueryContext(context.Background(),
-		`SELECT id FROM change_approvals WHERE change_id=$1 AND tenant_id=$2 ORDER BY id`, changeID, tenantID)
-	require.NoError(t, err)
-	defer rows.Close()
-	var out []int
-	for rows.Next() {
-		var id int
-		require.NoError(t, rows.Scan(&id))
-		out = append(out, id)
+	ctx := context.Background()
+	for _, aid := range approverIDs {
+		_, err := client.ProcessApprovalDecision.Create().
+			SetProcessInstanceID(changeID).SetProcessTaskID(changeID*100 + aid).
+			SetProcessInstanceKey(fmt.Sprintf("change-evt-%d", changeID)).
+			SetTaskID(fmt.Sprintf("TASK-%d-%d", changeID, aid)).
+			SetProcessDefinitionKey("change").SetNodeKey("Approval_1").
+			SetBusinessType("change").SetBusinessID(strconv.Itoa(changeID)).
+			SetActorID(aid).SetActorName(fmt.Sprintf("approver-%d", aid)).
+			SetAction("approve").SetDecision("approved").
+			SetTenantID(tenantID).Save(ctx)
+		require.NoError(t, err)
 	}
-	return out
+	_ = actorID
 }
 
 // queryChangeStatus 读取变更当前状态。
@@ -198,6 +204,8 @@ func queryChangeStatus(t *testing.T, client *ent.Client, changeID int) string {
 
 // TestChange_Advancement_ParallelAllMustApprove 验证：同一级 parallel（会签）要求
 // 全部候选人通过；少一人仍 pending，集齐后整体 approved。
+// dc5fbf97 契约：审批决定以 ProcessApprovalDecision 审计行为权威，
+// quorum 求值由 checkAndTransitionChange 按 (approver, level) 双重匹配驱动。
 func TestChange_Advancement_ParallelAllMustApprove(t *testing.T) {
 	svc, client, db, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
@@ -209,18 +217,17 @@ func TestChange_Advancement_ParallelAllMustApprove(t *testing.T) {
 
 	plan := []ApprovalLevelPlan{{Level: 1, ApprovalType: "parallel", Threshold: 2, Required: true, ApproverIDs: []int{a, b}}}
 	require.NoError(t, svc.repo.SubmitForApproval(ctx, changeID, tenantID, plan, "submit"))
-
-	recs := queryChangeApprovalRecordIDs(t, db, changeID, tenantID)
-	require.Len(t, recs, 2)
+	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
+	require.Equal(t, []int{a, b}, approvers)
 
 	// 仅一人批准 → 仍 pending
-	_, err := svc.ProcessApproval(ctx, recs[0], "approved", nil, tenantID)
-	require.NoError(t, err)
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID), "会签未集齐应仍 pending")
 
-	// 第二人批准 → approved
-	_, err = svc.ProcessApproval(ctx, recs[1], "approved", nil, tenantID)
-	require.NoError(t, err)
+	// 第二人批准 → approved（同一任务多行审计，验证唯一索引已放宽）
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{b})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
 }
 
@@ -236,18 +243,13 @@ func TestChange_Advancement_OrTwoChooseOne(t *testing.T) {
 
 	plan := []ApprovalLevelPlan{{Level: 1, ApprovalType: "or", Threshold: 1, Required: true, ApproverIDs: []int{a, b}}}
 	require.NoError(t, svc.repo.SubmitForApproval(ctx, changeID, tenantID, plan, "submit"))
-
-	recs := queryChangeApprovalRecordIDs(t, db, changeID, tenantID)
-	require.Len(t, recs, 2)
+	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
+	require.Equal(t, []int{a, b}, approvers)
 
 	// 第一人批准即满足阈值 → approved
-	_, err := svc.ProcessApproval(ctx, recs[0], "approved", nil, tenantID)
-	require.NoError(t, err)
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
-
-	// 同一记录已被处理，重复审批应冲突（不可重复）
-	_, err = svc.ProcessApproval(ctx, recs[0], "approved", nil, tenantID)
-	require.Error(t, err, "已批准的审批记录不可重复审批")
 }
 
 // TestChange_Advancement_ThresholdNofM 验证：parallel 但阈值<N（3 候选需 2 票）的多数决。
@@ -263,16 +265,17 @@ func TestChange_Advancement_ThresholdNofM(t *testing.T) {
 
 	plan := []ApprovalLevelPlan{{Level: 1, ApprovalType: "parallel", Threshold: 2, Required: true, ApproverIDs: []int{a, b, c}}}
 	require.NoError(t, svc.repo.SubmitForApproval(ctx, changeID, tenantID, plan, "submit"))
+	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
+	require.ElementsMatch(t, []int{a, b, c}, approvers)
 
-	recs := queryChangeApprovalRecordIDs(t, db, changeID, tenantID)
-	require.Len(t, recs, 3)
-
-	_, err := svc.ProcessApproval(ctx, recs[0], "approved", nil, tenantID)
-	require.NoError(t, err)
+	// 1 票 → 仍 pending
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{a})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID), "2 票阈值未达时应仍 pending")
 
-	_, err = svc.ProcessApproval(ctx, recs[1], "approved", nil, tenantID)
-	require.NoError(t, err)
+	// 2 票 → approved
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{b})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID), "达到 2 票阈值应 approved")
 }
 
@@ -312,13 +315,11 @@ func TestChange_Advancement_CABResolver(t *testing.T) {
 	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
 	require.ElementsMatch(t, []int{ca, cb}, approvers, "cab:CAB 步骤应解析出 CAB 活跃成员")
 
-	recs := queryChangeApprovalRecordIDs(t, db, changeID, tenantID)
-	require.Len(t, recs, 2)
-
-	_, err = svc.ProcessApproval(ctx, recs[0], "approved", nil, tenantID)
-	require.NoError(t, err)
+	// CAB parallel 全员通过：先一人 → pending，再一人 → approved
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{ca})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID))
-	_, err = svc.ProcessApproval(ctx, recs[1], "approved", nil, tenantID)
-	require.NoError(t, err)
+	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{cb})
+	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID))
 }

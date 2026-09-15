@@ -1132,6 +1132,11 @@ func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID
 // timeline. ProcessApprovalDecision is the single source of truth for approval
 // decisions once the BPMN bridge writes them; change_approvals is legacy.
 func (s *Service) GetBPMNApprovalDecisions(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	// 未装配 BPMN 桥接（entClient 为 nil，如纯 legacy 部署/单测构造）时视为无决策，
+	// 与本文件其他 entClient 防御点一致；调用方按空审批历史处理，走 legacy 审批链语义。
+	if s.entClient == nil {
+		return []*ApprovalRecord{}, nil
+	}
 	businessID := strconv.Itoa(changeID)
 	decisions, err := s.entClient.ProcessApprovalDecision.Query().
 		Where(

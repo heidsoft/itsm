@@ -3027,7 +3027,7 @@ var (
 		Indexes: []*schema.Index{
 			{
 				Name:    "processapprovaldecision_tenant_id_process_task_id",
-				Unique:  true,
+				Unique:  false,
 				Columns: []*schema.Column{ProcessApprovalDecisionsColumns[18], ProcessApprovalDecisionsColumns[2]},
 			},
 			{

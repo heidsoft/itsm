@@ -235,17 +235,20 @@ func TestBPMNApprovalBridge_DelegateReassignsTaskAndAllowsNewAssigneeToComplete(
 	require.NoError(t, err)
 	assert.True(t, handled, "存在待办流程任务时应同步委派")
 
-	// 任务应已重新指派给受托人，状态为 delegated
+	// 任务应已重新指派给受托人。状态保持 assigned（delegated 会让任务在待办列表
+	// 对受托人不可见，2026-09 语义收敛：委托只换 assignee 不改状态）。
 	task, err := client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
-	assert.Equal(t, "delegated", task.Status)
+	assert.Equal(t, "assigned", task.Status)
 	assert.Equal(t, strconv.Itoa(delegatee.ID), task.Assignee)
 
 	// 原审批人不再有权完成任务
 	_, err = bridge.CompleteBusinessApprovalTask(ctx, tenantID, actorID, "ticket", 456, "approve", "")
 	require.Error(t, err, "委派后原审批人不应再能完成任务")
 
-	// 受托人可通过桥接完成委派后的任务（delegated 状态仍被识别为待办）
+	// 受托人可通过桥接完成委派后的任务。
+	// 回归 R3：委派审计决策（action=delegate）+ 完成决策（action=approve）共用同一
+	// process_task_id，历史 UNIQUE(tenant_id, process_task_id) 会让此完成必然撞约束。
 	handled, err = bridge.CompleteBusinessApprovalTask(ctx, tenantID, delegatee.ID, "ticket", 456, "approve", "代批同意")
 	require.NoError(t, err)
 	assert.True(t, handled)
@@ -253,6 +256,17 @@ func TestBPMNApprovalBridge_DelegateReassignsTaskAndAllowsNewAssigneeToComplete(
 	task, err = client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
 	assert.Equal(t, "completed", task.Status)
+
+	// 委托与完成两条审计事实都应存在（不可再被唯一索引吞掉）
+	decisions, err := client.ProcessApprovalDecision.Query().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, decisions, 2)
+	actions := map[string]string{}
+	for _, d := range decisions {
+		actions[d.Action] = d.Decision
+	}
+	assert.Equal(t, "delegated", actions["delegate"])
+	assert.Equal(t, "approved", actions["approve"])
 }
 
 // 回归：BPMN 节点未声明 allowDelegate 时，桥接委派必须 fail closed，

@@ -1294,6 +1294,11 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		if err := prepareWorkflowTemplatesIdentityMigration(ctx, database.GetRawDB(), sugar); err != nil {
 			return fmt.Errorf("prepare workflow_templates identity migration: %w", err)
 		}
+		// process_approval_decisions 的旧唯一索引 (tenant_id, process_task_id) 会
+		// 让"委托后完成审批"必然撞唯一约束，须在 Schema.Create 前删除（审计事实表允许多行）。
+		if err := prepareProcessApprovalDecisionIndexMigration(ctx, database.GetRawDB(), sugar); err != nil {
+			return fmt.Errorf("prepare process_approval_decisions index migration: %w", err)
+		}
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)
 		}

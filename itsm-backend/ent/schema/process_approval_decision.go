@@ -37,7 +37,13 @@ func (ProcessApprovalDecision) Fields() []ent.Field {
 
 func (ProcessApprovalDecision) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("tenant_id", "process_task_id").Unique(),
+		// 审计事实表：一个任务可合法产生多条决策记录（delegate→受托人完成、add_approver
+		// 加签、多次委托链、withdraw/timeout 重入等），故 (tenant_id, process_task_id)
+		// 绝不能唯一——曾经 UNIQUE 导致"委托后受托人完成审批"必然撞唯一约束。
+		// 防重由任务状态 CAS（completeTaskWithClient 事务内 updated!=1 检查）保证。
+		// 兼容升级：internal/bootstrap 的 prepareProcessApprovalDecisionIndexMigration
+		// 会在 Schema.Create 前删除历史库中的旧唯一索引。
+		index.Fields("tenant_id", "process_task_id"),
 		index.Fields("tenant_id", "process_instance_id", "created_at"),
 		index.Fields("tenant_id", "business_type", "business_id"),
 		index.Fields("tenant_id", "actor_id", "created_at"),

@@ -723,13 +723,17 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 		return nil
 	}
 	delegatedFrom, _ := strconv.Atoi(originalAssignee)
-	_, _ = s.client.ProcessApprovalDecision.Create().
+	if _, err := s.client.ProcessApprovalDecision.Create().
 		SetProcessInstanceID(instance.ID).SetProcessTaskID(task.ID).
 		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(task.TaskID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
 		SetActorID(actorID).SetAction("delegate").SetDecision("delegated").
 		SetNillableDelegatedFrom(&delegatedFrom).
-		SetTenantID(instance.TenantID).Save(ctx)
+		SetTenantID(instance.TenantID).Save(ctx); err != nil {
+		// 审计事实失败不得静默：委派本身已生效，仅记录日志供巡检补偿
+		s.logger.Errorw("记录委派审计决策失败",
+			"task_id", task.TaskID, "process_instance_id", instance.ID, "error", err)
+	}
 	return nil
 }
 
@@ -807,12 +811,16 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 	if ierr != nil {
 		return nil
 	}
-	_, _ = s.client.ProcessApprovalDecision.Create().
+	if _, err := s.client.ProcessApprovalDecision.Create().
 		SetProcessInstanceID(instance.ID).SetProcessTaskID(newTask.ID).
 		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(addedTaskID).
 		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.TaskDefinitionKey).
 		SetActorID(actorID).SetAction("add_approver").SetDecision("added").
-		SetTenantID(instance.TenantID).Save(ctx)
+		SetTenantID(instance.TenantID).Save(ctx); err != nil {
+		// 审计事实失败不得静默：加签本身已生效，仅记录日志供巡检补偿
+		s.logger.Errorw("记录加签审计决策失败",
+			"task_id", addedTaskID, "process_instance_id", instance.ID, "error", err)
+	}
 	return nil
 }
 

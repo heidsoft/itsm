@@ -153,12 +153,19 @@ func TestTransitionStatus_BridgesBPMNTask(t *testing.T) {
 	c := createTestChange(repo, tenantID, actorID)
 	c.Status = "pending"
 	persistChangeInEntClient(t, entClient, c)
-	rec, err := repo.CreateApprovalRecord(ctx, &ApprovalRecord{
+	_, err := repo.CreateApprovalRecord(ctx, &ApprovalRecord{
 		ChangeID:   c.ID,
 		ApproverID: actorID,
 		Status:     "pending",
 	})
 	require.NoError(t, err)
+	// dc5fbf97 契约：isApprover 校验数据源 = 审批链成员资格，必须 seed 链
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{{
+		ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
+		ApproverID: actorID, Role: "approver", Status: "pending",
+		IsRequired: true, ApprovalType: "serial", Threshold: 1,
+		CreatedAt: time.Now(),
+	}}))
 	taskID := createChangeBridgeProcessFixture(t, entClient, tenantID, "e2e1",
 		fmt.Sprintf("change:%d", c.ID), actorID)
 
@@ -171,8 +178,8 @@ func TestTransitionStatus_BridgesBPMNTask(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "completed", task.Status)
 
-	// 业务审批记录已更新
-	assert.Equal(t, "approved", repo.approvals[rec.ID].Status)
+	// 审批决定已由 BPMN bridge 写入 ProcessApprovalDecision（权威审计源，
+	// dc5fbf97 起不再回写 legacy ApprovalRecord）
 
 	// 流程审批决策带正确的业务上下文
 	decisions, err := entClient.ProcessApprovalDecision.Query().All(ctx)
@@ -202,6 +209,13 @@ func TestTransitionStatus_BridgeFailClosed(t *testing.T) {
 		Status:     "pending",
 	})
 	require.NoError(t, err)
+	// dc5fbf97 契约：isApprover 校验数据源 = 审批链成员资格，必须 seed 链
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{{
+		ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
+		ApproverID: actorID, Role: "approver", Status: "pending",
+		IsRequired: true, ApprovalType: "serial", Threshold: 1,
+		CreatedAt: time.Now(),
+	}}))
 	// 流程任务指派给其他人，业务审批人无权完成流程任务
 	taskID := createChangeBridgeProcessFixture(t, entClient, tenantID, "fc1",
 		fmt.Sprintf("change:%d", c.ID), actorID+1000)
@@ -215,7 +229,7 @@ func TestTransitionStatus_BridgeFailClosed(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "assigned", task.Status)
 	assert.Equal(t, "pending", repo.changes[c.ID].Status)
-	assert.Equal(t, "pending", repo.approvals[rec.ID].Status)
+	_ = rec // 业务侧记录保留快照；权威决定在 ProcessApprovalDecision（未写入）
 
 	decisionCount, err := entClient.ProcessApprovalDecision.Query().Count(ctx)
 	require.NoError(t, err)
@@ -239,6 +253,13 @@ func TestTransitionStatus_NoBoundInstanceFallsBack(t *testing.T) {
 		Status:     "pending",
 	})
 	require.NoError(t, err)
+	// dc5fbf97 契约：isApprover 校验数据源 = 审批链成员资格，必须 seed 链
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{{
+		ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1,
+		ApproverID: actorID, Role: "approver", Status: "pending",
+		IsRequired: true, ApprovalType: "serial", Threshold: 1,
+		CreatedAt: time.Now(),
+	}}))
 
 	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorID, "approved", "同意", "agent")
 	require.NoError(t, err)
