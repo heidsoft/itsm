@@ -13,6 +13,8 @@ import {
   readConditionExpressionText,
   readDocumentationText,
   readReferenceId,
+  readTimerExpressionText,
+  hasTimerDefinition,
   type ModdleCreate,
 } from '../bpmnPropertyWrite';
 
@@ -192,5 +194,94 @@ describe('panel readers', () => {
     expect(readConditionExpressionText({ conditionExpression: { body: '${a>1}' } })).toBe('${a>1}');
     expect(readConditionExpressionText({ conditionExpression: '${a>1}' })).toBe('${a>1}');
     expect(readConditionExpressionText({})).toBe('');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer 表达式（timeDuration/timeDate/timeCycle）必须写进 TimerEventDefinition
+// ---------------------------------------------------------------------------
+
+describe('normalizeNodeProperties timer expressions', () => {
+  const { moddle, created } = makeModdle();
+
+  it('writes timeDuration into a new bpmn:TimerEventDefinition instead of top-level', () => {
+    const bo = { $type: 'bpmn:IntermediateCatchEvent', id: 'W1' };
+    const result = normalizeNodeProperties({ timeDuration: 'PT1H' }, {
+      moddle,
+      currentBusinessObject: bo,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const defs = result.properties.eventDefinitions as Array<{ $type: string }>;
+      expect(defs).toHaveLength(1);
+      expect(defs[0].$type).toBe('bpmn:TimerEventDefinition');
+      // 顶层不允许出现裸 timeDuration
+      expect(result.properties.timeDuration).toBeUndefined();
+    }
+    const timer = created.find(c => c.type === 'bpmn:TimerEventDefinition');
+    expect(timer).toBeDefined();
+    const expr = created.find(c => c.type === 'bpmn:FormalExpression');
+    expect(expr?.attributes).toMatchObject({ body: 'PT1H' });
+  });
+
+  it('preserves non-timer event definitions when replacing the timer one', () => {
+    const timerDef = { $type: 'bpmn:TimerEventDefinition', timeDuration: { body: 'PT1H' } };
+    const messageDef = { $type: 'bpmn:MessageEventDefinition' };
+    const bo = { $type: 'bpmn:IntermediateCatchEvent', id: 'W1', eventDefinitions: [timerDef, messageDef] };
+    const result = normalizeNodeProperties({ timeDuration: 'P1D' }, {
+      moddle,
+      currentBusinessObject: bo,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const defs = result.properties.eventDefinitions as Array<{ $type: string }>;
+      expect(defs).toHaveLength(2);
+      expect(defs[0].$type).toBe('bpmn:MessageEventDefinition');
+      expect(defs[1].$type).toBe('bpmn:TimerEventDefinition');
+    }
+  });
+
+  it('switching type clears sibling expressions (mutual exclusion)', () => {
+    const timerDef = { $type: 'bpmn:TimerEventDefinition', timeDuration: { body: 'PT1H' } };
+    const bo = { $type: 'bpmn:StartEvent', id: 'S1', eventDefinitions: [timerDef] };
+    const result = normalizeNodeProperties({ timeDate: '2026-12-31T00:00:00Z', timeDuration: '' }, {
+      moddle,
+      currentBusinessObject: bo,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const defs = result.properties.eventDefinitions as Array<Record<string, unknown>>;
+      expect(defs).toHaveLength(1);
+      expect(defs[0].timeDate).toBeDefined();
+      expect(defs[0].timeDuration).toBeUndefined();
+      expect(defs[0].timeCycle).toBeUndefined();
+    }
+  });
+
+  it('clearing all expressions removes the TimerEventDefinition', () => {
+    const timerDef = { $type: 'bpmn:TimerEventDefinition', timeCycle: { body: 'R/PT1H' } };
+    const bo = { $type: 'bpmn:BoundaryEvent', id: 'B1', eventDefinitions: [timerDef] };
+    const result = normalizeNodeProperties({ timeCycle: '' }, {
+      moddle,
+      currentBusinessObject: bo,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.properties.eventDefinitions).toEqual([]);
+    }
+  });
+});
+
+describe('readTimerExpressionText / hasTimerDefinition', () => {
+  it('reads body text from TimerEventDefinition and reports presence', () => {
+    const bo = {
+      eventDefinitions: [
+        { $type: 'bpmn:TimerEventDefinition', timeDuration: { body: 'PT4H' } },
+      ],
+    };
+    expect(readTimerExpressionText(bo, 'timeDuration')).toBe('PT4H');
+    expect(readTimerExpressionText(bo, 'timeDate')).toBe('');
+    expect(hasTimerDefinition(bo)).toBe(true);
+    expect(hasTimerDefinition({ eventDefinitions: [] })).toBe(false);
   });
 });

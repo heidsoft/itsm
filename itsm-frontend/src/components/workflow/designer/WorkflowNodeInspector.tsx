@@ -24,6 +24,8 @@ import { httpClient } from '@/lib/api/http-client';
 import type { BpmnNodeSelection } from '../BPMNDesigner';
 import {
   readConditionExpressionText,
+  readTimerExpressionText,
+  hasTimerDefinition,
   readDocumentationText,
   readReferenceId,
 } from '../bpmnPropertyWrite';
@@ -438,11 +440,16 @@ export default function WorkflowNodeInspector({
   const currentConditionExpression = readConditionExpressionText(bo);
   const currentDefaultFlow = readReferenceId(bo, 'default');
 
-  // 事件属性
-  const currentTimerDefinition = (bo.timeDuration as string) || '';
-  const currentTimerCycle = (bo.timeCycle as string) || '';
-  const currentTimerDate = (bo.timeDate as string) || '';
-  const currentTimerType = (bo.timerType as string) || 'duration';
+  // 事件属性：timer 表达式存于 TimerEventDefinition 子元素（顶层 bo 上不存在）
+  const currentTimerDefinition = readTimerExpressionText(bo, 'timeDuration');
+  const currentTimerCycle = readTimerExpressionText(bo, 'timeCycle');
+  const currentTimerDate = readTimerExpressionText(bo, 'timeDate');
+  // timerType 由非空表达式推导（三种互斥），不写入 moddle 属性
+  const currentTimerType = readTimerExpressionText(bo, 'timeDate')
+    ? 'date'
+    : readTimerExpressionText(bo, 'timeCycle')
+      ? 'cycle'
+      : 'duration';
   const currentSignalRef = (bo.signalRef as string) || '';
   const currentErrorCode = (bo.errorCode as string) || '';
   const currentEscalationCode = (bo.escalationCode as string) || '';
@@ -1344,77 +1351,114 @@ export default function WorkflowNodeInspector({
           </>
         )}
 
-        {/* 定时事件配置 */}
-        {isTimerEvent && (
+        {/* 定时事件配置：中间捕获事件必配；边界/开始事件可选启用 */}
+        {(isIntermediateCatchEvent || isBoundaryEvent || isStartEvent) && (
           <>
             <Divider className="my-2" />
 
-            <div>
-              <Text strong className="text-sm flex items-center mb-2">
-                <Clock className="w-3.5 h-3.5 mr-1" />
-                定时类型
-              </Text>
-              <Select
-                value={currentTimerType}
-                onChange={value => apply({ timerType: value })}
-                options={timerTypeOptions}
-                size="small"
-                className="w-full"
-              />
-            </div>
-
-            {currentTimerType === 'duration' && (
-              <div className="mt-2">
+            {(isBoundaryEvent || isStartEvent) && !isTimerEvent && (
+              <div className="mb-2">
                 <Text strong className="text-sm flex items-center mb-2">
-                  <Timer className="w-3.5 h-3.5 mr-1" />
-                  持续时间
+                  <Clock className="w-3.5 h-3.5 mr-1" />
+                  {isBoundaryEvent ? '定时边界事件' : '定时启动事件'}
                 </Text>
-                <DebouncedInput
-                  value={currentTimerDefinition}
-                  onCommit={value => apply({ timeDuration: value })}
-                  placeholder="例如：PT1H（1小时后执行）"
+                <Switch
                   size="small"
+                  checked={false}
+                  onChange={checked => {
+                    if (checked) apply({ timeDuration: 'PT1H' });
+                  }}
                 />
-                <Text type="secondary" className="text-xs mt-1 block">
-                  支持 ISO 8601 时长格式：PnYnMnDTnHnMnS
+                <Text type="secondary" className="text-xs ml-2">
+                  {isBoundaryEvent ? '开启后任务超时将中断并走异常路径' : '开启后按周期自动启动流程'}
                 </Text>
               </div>
             )}
 
-            {currentTimerType === 'cycle' && (
-              <div className="mt-2">
-                <Text strong className="text-sm flex items-center mb-2">
-                  <Timer className="w-3.5 h-3.5 mr-1" />
-                  周期表达式
-                </Text>
-                <DebouncedInput
-                  value={currentTimerCycle}
-                  onCommit={value => apply({ timeCycle: value })}
-                  placeholder="例如：R/PT1H（每小时执行一次）或 cron 表达式"
-                  size="small"
-                />
-                <Text type="secondary" className="text-xs mt-1 block">
-                  支持重复执行格式 R[次数]/[间隔时间] 或标准 cron 表达式
-                </Text>
-              </div>
-            )}
+            {isTimerEvent && (
+              <>
+                <div>
+                  <Text strong className="text-sm flex items-center mb-2">
+                    <Clock className="w-3.5 h-3.5 mr-1" />
+                    定时类型
+                  </Text>
+                  <Select
+                    value={currentTimerType}
+                    onChange={value => {
+                      // timerType 由表达式推导：切换类型即写入对应表达式并清空其余两种
+                      const seed: Record<string, string> = {
+                        duration: currentTimerDefinition || 'PT1H',
+                        date:
+                          currentTimerDate ||
+                          `${new Date(Date.now() + 86400000).toISOString().slice(0, 19)}Z`,
+                        cycle: currentTimerCycle || 'R/PT1H',
+                      };
+                      apply({
+                        timeDuration: value === 'duration' ? seed.duration : '',
+                        timeDate: value === 'date' ? seed.date : '',
+                        timeCycle: value === 'cycle' ? seed.cycle : '',
+                      });
+                    }}
+                    options={timerTypeOptions}
+                    size="small"
+                    className="w-full"
+                  />
+                </div>
 
-            {currentTimerType === 'date' && (
-              <div className="mt-2">
-                <Text strong className="text-sm flex items-center mb-2">
-                  <Timer className="w-3.5 h-3.5 mr-1" />
-                  指定时间
-                </Text>
-                <DebouncedInput
-                  value={currentTimerDate}
-                  onCommit={value => apply({ timeDate: value })}
-                  placeholder="例如：2025-12-31T23:59:59Z"
-                  size="small"
-                />
-                <Text type="secondary" className="text-xs mt-1 block">
-                  支持 ISO 8601 日期时间格式
-                </Text>
-              </div>
+                {currentTimerType === 'duration' && (
+                  <div className="mt-2">
+                    <Text strong className="text-sm flex items-center mb-2">
+                      <Timer className="w-3.5 h-3.5 mr-1" />
+                      持续时间
+                    </Text>
+                    <DebouncedInput
+                      value={currentTimerDefinition}
+                      onCommit={value => apply({ timeDuration: value })}
+                      placeholder="例如：PT1H（1小时后执行）"
+                      size="small"
+                    />
+                    <Text type="secondary" className="text-xs mt-1 block">
+                      支持 ISO 8601 时长格式：PnYnMnDTnHnMnS；清空即移除定时器
+                    </Text>
+                  </div>
+                )}
+
+                {currentTimerType === 'cycle' && (
+                  <div className="mt-2">
+                    <Text strong className="text-sm flex items-center mb-2">
+                      <Timer className="w-3.5 h-3.5 mr-1" />
+                      周期表达式
+                    </Text>
+                    <DebouncedInput
+                      value={currentTimerCycle}
+                      onCommit={value => apply({ timeCycle: value })}
+                      placeholder="例如：R/PT1H（每小时执行一次）"
+                      size="small"
+                    />
+                    <Text type="secondary" className="text-xs mt-1 block">
+                      支持重复执行格式 R[次数]/[间隔时间]；cron 表达式后端暂未支持，暂用 R/间隔 格式
+                    </Text>
+                  </div>
+                )}
+
+                {currentTimerType === 'date' && (
+                  <div className="mt-2">
+                    <Text strong className="text-sm flex items-center mb-2">
+                      <Timer className="w-3.5 h-3.5 mr-1" />
+                      指定时间
+                    </Text>
+                    <DebouncedInput
+                      value={currentTimerDate}
+                      onCommit={value => apply({ timeDate: value })}
+                      placeholder="例如：2026-12-31T23:59:59Z"
+                      size="small"
+                    />
+                    <Text type="secondary" className="text-xs mt-1 block">
+                      支持 ISO 8601 日期时间格式（RFC3339）
+                    </Text>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

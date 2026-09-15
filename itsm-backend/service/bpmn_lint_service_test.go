@@ -319,3 +319,96 @@ func TestBPMNLint_ApprovalNodeCleanConfig(t *testing.T) {
 		}
 	}
 }
+
+// TestBPMNLint_TimerEventMissingExpression TimerEventDefinition 三种表达式全空应报 error
+func TestBPMNLint_TimerEventMissingExpression(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p_timer" name="定时器" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:intermediateCatchEvent id="W1" name="空定时等待">
+      <bpmn:timerEventDefinition/>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="T1" name="处理" candidateUsers="alice"/>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="W1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="W1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F3" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	found := false
+	for _, issue := range result.Issues {
+		if issue.Category == "events" && issue.Severity == "error" && issue.ElementID == "W1" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("空表达式 TimerEventDefinition 应产生 events error")
+	}
+
+	// duration 配置齐全时不应报
+	xmlOk := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p_timer2" name="定时器2" isExecutable="true">
+    <bpmn:startEvent id="S2"/>
+    <bpmn:intermediateCatchEvent id="W2" name="等待1小时">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT1H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="E2"/>
+    <bpmn:sequenceFlow id="G1" sourceRef="S2" targetRef="W2"/>
+    <bpmn:sequenceFlow id="G2" sourceRef="W2" targetRef="E2"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	result2, err := svc.LintBPMNXML([]byte(xmlOk))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	for _, issue := range result2.Issues {
+		if issue.Category == "events" && issue.Severity == "error" && issue.ElementID == "W2" {
+			t.Errorf("配置齐全的定时事件不应报 error: %s", issue.Message)
+		}
+	}
+}
+
+// TestBPMNLint_BoundaryTimerMissingAttachedToRef 边界定时事件缺 attachedToRef 应报 error
+func TestBPMNLint_BoundaryTimerMissingAttachedToRef(t *testing.T) {
+	xml := `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  targetNamespace="http://test">
+  <bpmn:process id="p_b" name="边界" isExecutable="true">
+    <bpmn:startEvent id="S1"/>
+    <bpmn:userTask id="T1" name="处理" candidateUsers="alice"/>
+    <bpmn:boundaryEvent id="B1" name="超时">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT4H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="E1"/>
+    <bpmn:sequenceFlow id="F1" sourceRef="S1" targetRef="T1"/>
+    <bpmn:sequenceFlow id="F2" sourceRef="T1" targetRef="E1"/>
+  </bpmn:process>
+</bpmn:definitions>`
+	svc := NewBPMNLintService()
+	result, err := svc.LintBPMNXML([]byte(xml))
+	if err != nil {
+		t.Fatalf("解析失败: %v", err)
+	}
+	found := false
+	for _, issue := range result.Issues {
+		if issue.Category == "events" && issue.Severity == "error" && issue.ElementID == "B1" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("缺 attachedToRef 的边界定时事件应产生 events error")
+	}
+}

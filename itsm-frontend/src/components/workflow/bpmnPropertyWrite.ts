@@ -12,6 +12,8 @@ export interface ModdleCreate {
 export interface NormalizeContext {
   moddle: ModdleCreate;
   resolveElement?: (elementId: string) => { businessObject?: unknown } | undefined;
+  /** 当前元素 businessObject：timer 表达式需读取现有 eventDefinitions 以保留其他事件定义 */
+  currentBusinessObject?: Record<string, unknown>;
 }
 
 export type NormalizeResult =
@@ -90,14 +92,97 @@ function normalizeDefaultFlow(
   return { ok: true, properties: { default: target.businessObject } };
 }
 
+/** Timer 表达式在 TimerEventDefinition 上的三种载体 */
+const TIMER_EXPRESSION_KEYS = ['timeDuration', 'timeDate', 'timeCycle'] as const;
+
+interface TimerCarrier {
+  eventDefinitions?: Array<Record<string, unknown>>;
+}
+
+interface TimerExpressionBody {
+  body?: unknown;
+}
+
+function readTimerBodies(businessObject: Record<string, unknown> | undefined): Record<(typeof TIMER_EXPRESSION_KEYS)[number], string> {
+  const definitions = (businessObject as TimerCarrier | undefined)?.eventDefinitions;
+  const timerDef = Array.isArray(definitions)
+    ? definitions.find(d => (d as { $type?: string }).$type === 'bpmn:TimerEventDefinition')
+    : undefined;
+  const read = (def: Record<string, unknown> | undefined, key: string): string => {
+    if (!def) return '';
+    const raw = def[key];
+    if (typeof raw === 'string') return raw;
+    if (raw && typeof raw === 'object') {
+      const body = (raw as TimerExpressionBody).body;
+      return typeof body === 'string' ? body : '';
+    }
+    return '';
+  };
+  return {
+    timeDuration: read(timerDef, 'timeDuration'),
+    timeDate: read(timerDef, 'timeDate'),
+    timeCycle: read(timerDef, 'timeCycle'),
+  };
+}
+
+/**
+ * 把 timeDuration/timeDate/timeCycle 写入（或创建）bpmn:TimerEventDefinition：
+ * - 三种表达式互斥，切换类型时清空其余两种；
+ * - 全部为空时移除 TimerEventDefinition（避免产生无表达式的非法定时事件）；
+ * - 保留 eventDefinitions 中的其他事件定义（消息/信号等）。
+ */
+function normalizeTimerExpressions(
+  timerPatch: Record<string, unknown>,
+  currentBusinessObject: Record<string, unknown> | undefined,
+  moddle: ModdleCreate
+): NormalizeResult {
+  const bodies = readTimerBodies(currentBusinessObject);
+  for (const [key, value] of Object.entries(timerPatch)) {
+    if (!TIMER_EXPRESSION_KEYS.includes(key as (typeof TIMER_EXPRESSION_KEYS)[number])) continue;
+    bodies[key as (typeof TIMER_EXPRESSION_KEYS)[number]] = typeof value === 'string' ? value : '';
+  }
+
+  const attributes: Record<string, unknown> = {};
+  for (const key of TIMER_EXPRESSION_KEYS) {
+    if (bodies[key] !== '') {
+      attributes[key] = moddle.create('bpmn:FormalExpression', { body: bodies[key] });
+    }
+  }
+
+  const definitions = (currentBusinessObject as TimerCarrier | undefined)?.eventDefinitions;
+  const others = Array.isArray(definitions)
+    ? definitions.filter(d => (d as { $type?: string }).$type !== 'bpmn:TimerEventDefinition')
+    : [];
+
+  const eventDefinitions =
+    Object.keys(attributes).length > 0
+      ? [...others, moddle.create('bpmn:TimerEventDefinition', attributes)]
+      : others;
+
+  return { ok: true, properties: { eventDefinitions } };
+}
+
 export function normalizeNodeProperties(
   patch: Record<string, unknown>,
   context: NormalizeContext
 ): NormalizeResult {
-  const { moddle, resolveElement } = context;
+  const { moddle, resolveElement, currentBusinessObject } = context;
   const properties: Record<string, unknown> = {};
 
+  // timer 表达式（timeDuration/timeDate/timeCycle）必须写进 bpmn:TimerEventDefinition
+  // 子元素，直接 set 到 businessObject 顶层会产生非法 XML（后端 extractor 读不到）。
+  const timerPatch: Record<string, unknown> = {};
+  for (const key of TIMER_EXPRESSION_KEYS) {
+    if (key in patch) timerPatch[key] = patch[key];
+  }
+  if (Object.keys(timerPatch).length > 0) {
+    const result = normalizeTimerExpressions(timerPatch, currentBusinessObject, moddle);
+    if (!result.ok) return result;
+    Object.assign(properties, result.properties);
+  }
+
   for (const [key, value] of Object.entries(patch)) {
+    if (key in timerPatch) continue;
     if (key === 'documentation') {
       const result = normalizeDocumentation(value, moddle);
       if (!result.ok) return result;
@@ -163,4 +248,18 @@ export function readConditionExpressionText(
     return typeof body === 'string' ? body : '';
   }
   return '';
+}
+
+/** 读取元素 TimerEventDefinition 上的时间表达式（按 timeDuration/timeDate/timeCycle） */
+export function readTimerExpressionText(
+  businessObject: Record<string, unknown> | undefined,
+  key: 'timeDuration' | 'timeDate' | 'timeCycle'
+): string {
+  return readTimerBodies(businessObject)[key];
+}
+
+/** 元素是否挂有 TimerEventDefinition */
+export function hasTimerDefinition(businessObject: Record<string, unknown> | undefined): boolean {
+  const bodies = readTimerBodies(businessObject);
+  return bodies.timeDuration !== '' || bodies.timeDate !== '' || bodies.timeCycle !== '';
 }

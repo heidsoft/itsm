@@ -85,6 +85,38 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 		})
 	}
 
+	// --- 规则组 1.1：定时事件表达式（2026-09-15 补）---
+	// TimerEventDefinition 存在但三种时间表达式全空属于非法定义：
+	// extractor 无法计算 fire_at，运行时将无法注册/触发定时器。
+	checkTimerDefinition := func(kind, elementID, elementName string, def *BPMNTimerEventDefinition) {
+		if def == nil {
+			return
+		}
+		if strings.TrimSpace(def.TimeDuration) == "" && strings.TrimSpace(def.TimeDate) == "" && strings.TrimSpace(def.TimeCycle) == "" {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "events",
+				ElementID: elementID, ElementName: elementName,
+				Message: fmt.Sprintf("%s %s 的定时事件缺少时间表达式（timeDuration/timeDate/timeCycle 至少配置一项）", kind, display(elementName, elementID)),
+			})
+		}
+	}
+	for _, ev := range process.StartEvents {
+		checkTimerDefinition("开始事件", ev.ID, ev.Name, ev.TimerEventDefinition)
+	}
+	for _, ev := range process.IntermediateEvents {
+		checkTimerDefinition("中间事件", ev.ID, ev.Name, ev.TimerEventDefinition)
+	}
+	for _, ev := range process.BoundaryEvents {
+		checkTimerDefinition("边界事件", ev.ID, ev.Name, ev.TimerEventDefinition)
+		if ev.TimerEventDefinition != nil && strings.TrimSpace(ev.AttachedToRef) == "" {
+			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
+				Severity: "error", Category: "events",
+				ElementID: ev.ID, ElementName: ev.Name,
+				Message: fmt.Sprintf("边界事件 %s 缺少 attachedToRef（未声明附加到哪个活动）", display(ev.Name, ev.ID)),
+			})
+		}
+	}
+
 	// --- 规则组 2：任务配置 ---
 	for _, task := range process.UserTasks {
 		if strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "rework") {

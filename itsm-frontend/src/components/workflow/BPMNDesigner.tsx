@@ -985,6 +985,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       const normalized = normalizeNodeProperties(properties, {
         moddle: modeler.get('moddle') as unknown as ModdleCreate,
         resolveElement: (id: string) => elementRegistry.get(id),
+        currentBusinessObject: element.businessObject as Record<string, unknown> | undefined,
       });
       if (!normalized.ok) {
         messageRef.current.error(normalized.error);
