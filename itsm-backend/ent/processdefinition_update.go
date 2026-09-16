@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processversionchangelog"
+	"itsm-backend/ent/schema"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -118,6 +119,30 @@ func (_u *ProcessDefinitionUpdate) SetBpmnXML(v []uint8) *ProcessDefinitionUpdat
 // AppendBpmnXML appends value to the "bpmn_xml" field.
 func (_u *ProcessDefinitionUpdate) AppendBpmnXML(v []uint8) *ProcessDefinitionUpdate {
 	_u.mutation.AppendBpmnXML(v)
+	return _u
+}
+
+// SetApprovalConfig sets the "approval_config" field.
+func (_u *ProcessDefinitionUpdate) SetApprovalConfig(v *schema.ApprovalConfig) *ProcessDefinitionUpdate {
+	_u.mutation.SetApprovalConfig(v)
+	return _u
+}
+
+// ClearApprovalConfig clears the value of the "approval_config" field.
+func (_u *ProcessDefinitionUpdate) ClearApprovalConfig() *ProcessDefinitionUpdate {
+	_u.mutation.ClearApprovalConfig()
+	return _u
+}
+
+// SetSLAConfig sets the "sla_config" field.
+func (_u *ProcessDefinitionUpdate) SetSLAConfig(v map[string]interface{}) *ProcessDefinitionUpdate {
+	_u.mutation.SetSLAConfig(v)
+	return _u
+}
+
+// ClearSLAConfig clears the value of the "sla_config" field.
+func (_u *ProcessDefinitionUpdate) ClearSLAConfig() *ProcessDefinitionUpdate {
+	_u.mutation.ClearSLAConfig()
 	return _u
 }
 
@@ -476,6 +501,18 @@ func (_u *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (_node int, err 
 			sqljson.Append(u, processdefinition.FieldBpmnXML, value)
 		})
 	}
+	if value, ok := _u.mutation.ApprovalConfig(); ok {
+		_spec.SetField(processdefinition.FieldApprovalConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.ApprovalConfigCleared() {
+		_spec.ClearField(processdefinition.FieldApprovalConfig, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.SLAConfig(); ok {
+		_spec.SetField(processdefinition.FieldSLAConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.SLAConfigCleared() {
+		_spec.ClearField(processdefinition.FieldSLAConfig, field.TypeJSON)
+	}
 	if value, ok := _u.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)
 	}
@@ -778,6 +815,30 @@ func (_u *ProcessDefinitionUpdateOne) SetBpmnXML(v []uint8) *ProcessDefinitionUp
 // AppendBpmnXML appends value to the "bpmn_xml" field.
 func (_u *ProcessDefinitionUpdateOne) AppendBpmnXML(v []uint8) *ProcessDefinitionUpdateOne {
 	_u.mutation.AppendBpmnXML(v)
+	return _u
+}
+
+// SetApprovalConfig sets the "approval_config" field.
+func (_u *ProcessDefinitionUpdateOne) SetApprovalConfig(v *schema.ApprovalConfig) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetApprovalConfig(v)
+	return _u
+}
+
+// ClearApprovalConfig clears the value of the "approval_config" field.
+func (_u *ProcessDefinitionUpdateOne) ClearApprovalConfig() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearApprovalConfig()
+	return _u
+}
+
+// SetSLAConfig sets the "sla_config" field.
+func (_u *ProcessDefinitionUpdateOne) SetSLAConfig(v map[string]interface{}) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetSLAConfig(v)
+	return _u
+}
+
+// ClearSLAConfig clears the value of the "sla_config" field.
+func (_u *ProcessDefinitionUpdateOne) ClearSLAConfig() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearSLAConfig()
 	return _u
 }
 
@@ -1165,6 +1226,18 @@ func (_u *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processdefinition.FieldBpmnXML, value)
 		})
+	}
+	if value, ok := _u.mutation.ApprovalConfig(); ok {
+		_spec.SetField(processdefinition.FieldApprovalConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.ApprovalConfigCleared() {
+		_spec.ClearField(processdefinition.FieldApprovalConfig, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.SLAConfig(); ok {
+		_spec.SetField(processdefinition.FieldSLAConfig, field.TypeJSON, value)
+	}
+	if _u.mutation.SLAConfigCleared() {
+		_spec.ClearField(processdefinition.FieldSLAConfig, field.TypeJSON)
 	}
 	if value, ok := _u.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)

@@ -26,6 +26,10 @@ const (
 	FieldCategory = "category"
 	// FieldBpmnXML holds the string denoting the bpmn_xml field in the database.
 	FieldBpmnXML = "bpmn_xml"
+	// FieldApprovalConfig holds the string denoting the approval_config field in the database.
+	FieldApprovalConfig = "approval_config"
+	// FieldSLAConfig holds the string denoting the sla_config field in the database.
+	FieldSLAConfig = "sla_config"
 	// FieldProcessVariables holds the string denoting the process_variables field in the database.
 	FieldProcessVariables = "process_variables"
 	// FieldIsActive holds the string denoting the is_active field in the database.
@@ -93,6 +97,8 @@ var Columns = []string{
 	FieldVersion,
 	FieldCategory,
 	FieldBpmnXML,
+	FieldApprovalConfig,
+	FieldSLAConfig,
 	FieldProcessVariables,
 	FieldIsActive,
 	FieldIsLatest,

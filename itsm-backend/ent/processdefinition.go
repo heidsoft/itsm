@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
+	"itsm-backend/ent/schema"
 	"strings"
 	"time"
 
@@ -31,6 +32,10 @@ type ProcessDefinition struct {
 	Category string `json:"category,omitempty"`
 	// BPMN XML定义内容
 	BpmnXML []uint8 `json:"bpmn_xml,omitempty"`
+	// 流程级审批配置（require_approval/approval_type/approvers/auto_approve_roles/escalation_rules），列由 20260621 迁移创建
+	ApprovalConfig *schema.ApprovalConfig `json:"approval_config,omitempty"`
+	// 流程级 SLA 配置（response_time_hours/resolution_time_hours/business_hours_only 等），列由 20260621 迁移创建，当前仅透传存储
+	SLAConfig map[string]interface{} `json:"sla_config,omitempty"`
 	// 流程变量定义
 	ProcessVariables map[string]interface{} `json:"process_variables,omitempty"`
 	// 是否激活
@@ -113,7 +118,7 @@ func (*ProcessDefinition) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case processdefinition.FieldBpmnXML, processdefinition.FieldProcessVariables:
+		case processdefinition.FieldBpmnXML, processdefinition.FieldApprovalConfig, processdefinition.FieldSLAConfig, processdefinition.FieldProcessVariables:
 			values[i] = new([]byte)
 		case processdefinition.FieldIsActive, processdefinition.FieldIsLatest:
 			values[i] = new(sql.NullBool)
@@ -180,6 +185,22 @@ func (_m *ProcessDefinition) assignValues(columns []string, values []any) error 
 			} else if value != nil && len(*value) > 0 {
 				if err := json.Unmarshal(*value, &_m.BpmnXML); err != nil {
 					return fmt.Errorf("unmarshal field bpmn_xml: %w", err)
+				}
+			}
+		case processdefinition.FieldApprovalConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field approval_config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ApprovalConfig); err != nil {
+					return fmt.Errorf("unmarshal field approval_config: %w", err)
+				}
+			}
+		case processdefinition.FieldSLAConfig:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field sla_config", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.SLAConfig); err != nil {
+					return fmt.Errorf("unmarshal field sla_config: %w", err)
 				}
 			}
 		case processdefinition.FieldProcessVariables:
@@ -311,6 +332,12 @@ func (_m *ProcessDefinition) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("bpmn_xml=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BpmnXML))
+	builder.WriteString(", ")
+	builder.WriteString("approval_config=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ApprovalConfig))
+	builder.WriteString(", ")
+	builder.WriteString("sla_config=")
+	builder.WriteString(fmt.Sprintf("%v", _m.SLAConfig))
 	builder.WriteString(", ")
 	builder.WriteString("process_variables=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ProcessVariables))

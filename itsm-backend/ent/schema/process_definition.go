@@ -9,6 +9,26 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
+// ApprovalConfig 流程级审批配置。
+// DB 列由 migrations/20260621_process_definition_approval_sla_config.sql 创建（JSONB），
+// 本 struct 与该迁移 COMMENT 中登记的 Schema 一一对应——新增字段必须同步迁移注释，
+// 保证读改写（read-modify-write）不丢未知字段。
+type ApprovalConfig struct {
+	RequireApproval  bool             `json:"require_approval,omitempty"`
+	ApprovalType     string           `json:"approval_type,omitempty"` // single | parallel | sequential | conditional
+	Approvers        []int            `json:"approvers,omitempty"`     // 流程级兜底用户 ID 列表（主要走 BPMN 节点级 candidateGroups）
+	AutoApproveRoles []string         `json:"auto_approve_roles,omitempty"`
+	EscalationRules  []EscalationRule `json:"escalation_rules,omitempty"`
+}
+
+// EscalationRule 审批升级规则（当前仅透传存储，尚未消费）。
+type EscalationRule struct {
+	AfterHours int    `json:"after_hours,omitempty"`
+	ToUser     int    `json:"to_user,omitempty"`
+	ToGroup    string `json:"to_group,omitempty"`
+	Notify     bool   `json:"notify,omitempty"`
+}
+
 // ProcessDefinition holds the schema definition for the BPMN Process Definition entity.
 type ProcessDefinition struct {
 	ent.Schema
@@ -34,6 +54,12 @@ func (ProcessDefinition) Fields() []ent.Field {
 			Default("default"),
 		field.JSON("bpmn_xml", []byte{}).
 			Comment("BPMN XML定义内容"),
+		field.JSON("approval_config", &ApprovalConfig{}).
+			Comment("流程级审批配置（require_approval/approval_type/approvers/auto_approve_roles/escalation_rules），列由 20260621 迁移创建").
+			Optional(),
+		field.JSON("sla_config", map[string]interface{}{}).
+			Comment("流程级 SLA 配置（response_time_hours/resolution_time_hours/business_hours_only 等），列由 20260621 迁移创建，当前仅透传存储").
+			Optional(),
 		field.JSON("process_variables", map[string]interface{}{}).
 			Comment("流程变量定义").
 			Optional(),

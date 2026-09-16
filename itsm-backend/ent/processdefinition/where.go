@@ -455,6 +455,26 @@ func CategoryContainsFold(v string) predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(sql.FieldContainsFold(FieldCategory, v))
 }
 
+// ApprovalConfigIsNil applies the IsNil predicate on the "approval_config" field.
+func ApprovalConfigIsNil() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(sql.FieldIsNull(FieldApprovalConfig))
+}
+
+// ApprovalConfigNotNil applies the NotNil predicate on the "approval_config" field.
+func ApprovalConfigNotNil() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(sql.FieldNotNull(FieldApprovalConfig))
+}
+
+// SLAConfigIsNil applies the IsNil predicate on the "sla_config" field.
+func SLAConfigIsNil() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(sql.FieldIsNull(FieldSLAConfig))
+}
+
+// SLAConfigNotNil applies the NotNil predicate on the "sla_config" field.
+func SLAConfigNotNil() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(sql.FieldNotNull(FieldSLAConfig))
+}
+
 // ProcessVariablesIsNil applies the IsNil predicate on the "process_variables" field.
 func ProcessVariablesIsNil() predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(sql.FieldIsNull(FieldProcessVariables))

@@ -36,7 +36,7 @@ type ProcessApprovalDecision struct {
 	BusinessID string `json:"business_id,omitempty"`
 	// ActorID holds the value of the "actor_id" field.
 	ActorID int `json:"actor_id,omitempty"`
-	// ActorName holds the value of the "actor_name" field.
+	// 系统决策时固定为 system
 	ActorName string `json:"actor_name,omitempty"`
 	// approve, reject, delegate, transfer, add_approver, withdraw, timeout, system_decision
 	Action string `json:"action,omitempty"`

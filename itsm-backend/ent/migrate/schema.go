@@ -3208,6 +3208,8 @@ var (
 		{Name: "version", Type: field.TypeString, Default: "1.0.0"},
 		{Name: "category", Type: field.TypeString, Default: "default"},
 		{Name: "bpmn_xml", Type: field.TypeJSON},
+		{Name: "approval_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "sla_config", Type: field.TypeJSON, Nullable: true},
 		{Name: "process_variables", Type: field.TypeJSON, Nullable: true},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "is_latest", Type: field.TypeBool, Default: true},
@@ -3226,7 +3228,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "process_definitions_process_deployments_definitions",
-				Columns:    []*schema.Column{ProcessDefinitionsColumns[15]},
+				Columns:    []*schema.Column{ProcessDefinitionsColumns[17]},
 				RefColumns: []*schema.Column{ProcessDeploymentsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -3235,27 +3237,27 @@ var (
 			{
 				Name:    "processdefinition_tenant_id_key_version",
 				Unique:  true,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[12], ProcessDefinitionsColumns[1], ProcessDefinitionsColumns[4]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[14], ProcessDefinitionsColumns[1], ProcessDefinitionsColumns[4]},
 			},
 			{
 				Name:    "processdefinition_tenant_id_key",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[12], ProcessDefinitionsColumns[1]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[14], ProcessDefinitionsColumns[1]},
 			},
 			{
 				Name:    "processdefinition_deployment_id",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[15]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[17]},
 			},
 			{
 				Name:    "processdefinition_is_active",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[8]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[10]},
 			},
 			{
 				Name:    "processdefinition_is_latest",
 				Unique:  false,
-				Columns: []*schema.Column{ProcessDefinitionsColumns[9]},
+				Columns: []*schema.Column{ProcessDefinitionsColumns[11]},
 			},
 		},
 	}

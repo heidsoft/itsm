@@ -105196,6 +105196,8 @@ type ProcessDefinitionMutation struct {
 	category                  *string
 	bpmn_xml                  *[]uint8
 	appendbpmn_xml            []uint8
+	approval_config           **schema.ApprovalConfig
+	sla_config                *map[string]interface{}
 	process_variables         *map[string]interface{}
 	is_active                 *bool
 	is_latest                 *bool
@@ -105562,6 +105564,104 @@ func (m *ProcessDefinitionMutation) AppendedBpmnXML() ([]uint8, bool) {
 func (m *ProcessDefinitionMutation) ResetBpmnXML() {
 	m.bpmn_xml = nil
 	m.appendbpmn_xml = nil
+}
+
+// SetApprovalConfig sets the "approval_config" field.
+func (m *ProcessDefinitionMutation) SetApprovalConfig(sc *schema.ApprovalConfig) {
+	m.approval_config = &sc
+}
+
+// ApprovalConfig returns the value of the "approval_config" field in the mutation.
+func (m *ProcessDefinitionMutation) ApprovalConfig() (r *schema.ApprovalConfig, exists bool) {
+	v := m.approval_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldApprovalConfig returns the old "approval_config" field's value of the ProcessDefinition entity.
+// If the ProcessDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessDefinitionMutation) OldApprovalConfig(ctx context.Context) (v *schema.ApprovalConfig, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldApprovalConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldApprovalConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldApprovalConfig: %w", err)
+	}
+	return oldValue.ApprovalConfig, nil
+}
+
+// ClearApprovalConfig clears the value of the "approval_config" field.
+func (m *ProcessDefinitionMutation) ClearApprovalConfig() {
+	m.approval_config = nil
+	m.clearedFields[processdefinition.FieldApprovalConfig] = struct{}{}
+}
+
+// ApprovalConfigCleared returns if the "approval_config" field was cleared in this mutation.
+func (m *ProcessDefinitionMutation) ApprovalConfigCleared() bool {
+	_, ok := m.clearedFields[processdefinition.FieldApprovalConfig]
+	return ok
+}
+
+// ResetApprovalConfig resets all changes to the "approval_config" field.
+func (m *ProcessDefinitionMutation) ResetApprovalConfig() {
+	m.approval_config = nil
+	delete(m.clearedFields, processdefinition.FieldApprovalConfig)
+}
+
+// SetSLAConfig sets the "sla_config" field.
+func (m *ProcessDefinitionMutation) SetSLAConfig(value map[string]interface{}) {
+	m.sla_config = &value
+}
+
+// SLAConfig returns the value of the "sla_config" field in the mutation.
+func (m *ProcessDefinitionMutation) SLAConfig() (r map[string]interface{}, exists bool) {
+	v := m.sla_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSLAConfig returns the old "sla_config" field's value of the ProcessDefinition entity.
+// If the ProcessDefinition object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessDefinitionMutation) OldSLAConfig(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSLAConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSLAConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSLAConfig: %w", err)
+	}
+	return oldValue.SLAConfig, nil
+}
+
+// ClearSLAConfig clears the value of the "sla_config" field.
+func (m *ProcessDefinitionMutation) ClearSLAConfig() {
+	m.sla_config = nil
+	m.clearedFields[processdefinition.FieldSLAConfig] = struct{}{}
+}
+
+// SLAConfigCleared returns if the "sla_config" field was cleared in this mutation.
+func (m *ProcessDefinitionMutation) SLAConfigCleared() bool {
+	_, ok := m.clearedFields[processdefinition.FieldSLAConfig]
+	return ok
+}
+
+// ResetSLAConfig resets all changes to the "sla_config" field.
+func (m *ProcessDefinitionMutation) ResetSLAConfig() {
+	m.sla_config = nil
+	delete(m.clearedFields, processdefinition.FieldSLAConfig)
 }
 
 // SetProcessVariables sets the "process_variables" field.
@@ -106157,7 +106257,7 @@ func (m *ProcessDefinitionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProcessDefinitionMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 17)
 	if m.key != nil {
 		fields = append(fields, processdefinition.FieldKey)
 	}
@@ -106175,6 +106275,12 @@ func (m *ProcessDefinitionMutation) Fields() []string {
 	}
 	if m.bpmn_xml != nil {
 		fields = append(fields, processdefinition.FieldBpmnXML)
+	}
+	if m.approval_config != nil {
+		fields = append(fields, processdefinition.FieldApprovalConfig)
+	}
+	if m.sla_config != nil {
+		fields = append(fields, processdefinition.FieldSLAConfig)
 	}
 	if m.process_variables != nil {
 		fields = append(fields, processdefinition.FieldProcessVariables)
@@ -106223,6 +106329,10 @@ func (m *ProcessDefinitionMutation) Field(name string) (ent.Value, bool) {
 		return m.Category()
 	case processdefinition.FieldBpmnXML:
 		return m.BpmnXML()
+	case processdefinition.FieldApprovalConfig:
+		return m.ApprovalConfig()
+	case processdefinition.FieldSLAConfig:
+		return m.SLAConfig()
 	case processdefinition.FieldProcessVariables:
 		return m.ProcessVariables()
 	case processdefinition.FieldIsActive:
@@ -106262,6 +106372,10 @@ func (m *ProcessDefinitionMutation) OldField(ctx context.Context, name string) (
 		return m.OldCategory(ctx)
 	case processdefinition.FieldBpmnXML:
 		return m.OldBpmnXML(ctx)
+	case processdefinition.FieldApprovalConfig:
+		return m.OldApprovalConfig(ctx)
+	case processdefinition.FieldSLAConfig:
+		return m.OldSLAConfig(ctx)
 	case processdefinition.FieldProcessVariables:
 		return m.OldProcessVariables(ctx)
 	case processdefinition.FieldIsActive:
@@ -106330,6 +106444,20 @@ func (m *ProcessDefinitionMutation) SetField(name string, value ent.Value) error
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetBpmnXML(v)
+		return nil
+	case processdefinition.FieldApprovalConfig:
+		v, ok := value.(*schema.ApprovalConfig)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetApprovalConfig(v)
+		return nil
+	case processdefinition.FieldSLAConfig:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSLAConfig(v)
 		return nil
 	case processdefinition.FieldProcessVariables:
 		v, ok := value.(map[string]interface{})
@@ -106442,6 +106570,12 @@ func (m *ProcessDefinitionMutation) ClearedFields() []string {
 	if m.FieldCleared(processdefinition.FieldDescription) {
 		fields = append(fields, processdefinition.FieldDescription)
 	}
+	if m.FieldCleared(processdefinition.FieldApprovalConfig) {
+		fields = append(fields, processdefinition.FieldApprovalConfig)
+	}
+	if m.FieldCleared(processdefinition.FieldSLAConfig) {
+		fields = append(fields, processdefinition.FieldSLAConfig)
+	}
 	if m.FieldCleared(processdefinition.FieldProcessVariables) {
 		fields = append(fields, processdefinition.FieldProcessVariables)
 	}
@@ -106464,6 +106598,12 @@ func (m *ProcessDefinitionMutation) ClearField(name string) error {
 	switch name {
 	case processdefinition.FieldDescription:
 		m.ClearDescription()
+		return nil
+	case processdefinition.FieldApprovalConfig:
+		m.ClearApprovalConfig()
+		return nil
+	case processdefinition.FieldSLAConfig:
+		m.ClearSLAConfig()
 		return nil
 	case processdefinition.FieldProcessVariables:
 		m.ClearProcessVariables()
@@ -106496,6 +106636,12 @@ func (m *ProcessDefinitionMutation) ResetField(name string) error {
 		return nil
 	case processdefinition.FieldBpmnXML:
 		m.ResetBpmnXML()
+		return nil
+	case processdefinition.FieldApprovalConfig:
+		m.ResetApprovalConfig()
+		return nil
+	case processdefinition.FieldSLAConfig:
+		m.ResetSLAConfig()
 		return nil
 	case processdefinition.FieldProcessVariables:
 		m.ResetProcessVariables()

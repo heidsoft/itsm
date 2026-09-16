@@ -3277,31 +3277,31 @@ func init() {
 	// processdefinition.DefaultCategory holds the default value on creation for the category field.
 	processdefinition.DefaultCategory = processdefinitionDescCategory.Default.(string)
 	// processdefinitionDescIsActive is the schema descriptor for is_active field.
-	processdefinitionDescIsActive := processdefinitionFields[7].Descriptor()
+	processdefinitionDescIsActive := processdefinitionFields[9].Descriptor()
 	// processdefinition.DefaultIsActive holds the default value on creation for the is_active field.
 	processdefinition.DefaultIsActive = processdefinitionDescIsActive.Default.(bool)
 	// processdefinitionDescIsLatest is the schema descriptor for is_latest field.
-	processdefinitionDescIsLatest := processdefinitionFields[8].Descriptor()
+	processdefinitionDescIsLatest := processdefinitionFields[10].Descriptor()
 	// processdefinition.DefaultIsLatest holds the default value on creation for the is_latest field.
 	processdefinition.DefaultIsLatest = processdefinitionDescIsLatest.Default.(bool)
 	// processdefinitionDescDeploymentID is the schema descriptor for deployment_id field.
-	processdefinitionDescDeploymentID := processdefinitionFields[9].Descriptor()
+	processdefinitionDescDeploymentID := processdefinitionFields[11].Descriptor()
 	// processdefinition.DeploymentIDValidator is a validator for the "deployment_id" field. It is called by the builders before save.
 	processdefinition.DeploymentIDValidator = processdefinitionDescDeploymentID.Validators[0].(func(int) error)
 	// processdefinitionDescDeployedAt is the schema descriptor for deployed_at field.
-	processdefinitionDescDeployedAt := processdefinitionFields[11].Descriptor()
+	processdefinitionDescDeployedAt := processdefinitionFields[13].Descriptor()
 	// processdefinition.DefaultDeployedAt holds the default value on creation for the deployed_at field.
 	processdefinition.DefaultDeployedAt = processdefinitionDescDeployedAt.Default.(func() time.Time)
 	// processdefinitionDescTenantID is the schema descriptor for tenant_id field.
-	processdefinitionDescTenantID := processdefinitionFields[12].Descriptor()
+	processdefinitionDescTenantID := processdefinitionFields[14].Descriptor()
 	// processdefinition.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	processdefinition.TenantIDValidator = processdefinitionDescTenantID.Validators[0].(func(int) error)
 	// processdefinitionDescCreatedAt is the schema descriptor for created_at field.
-	processdefinitionDescCreatedAt := processdefinitionFields[13].Descriptor()
+	processdefinitionDescCreatedAt := processdefinitionFields[15].Descriptor()
 	// processdefinition.DefaultCreatedAt holds the default value on creation for the created_at field.
 	processdefinition.DefaultCreatedAt = processdefinitionDescCreatedAt.Default.(func() time.Time)
 	// processdefinitionDescUpdatedAt is the schema descriptor for updated_at field.
-	processdefinitionDescUpdatedAt := processdefinitionFields[14].Descriptor()
+	processdefinitionDescUpdatedAt := processdefinitionFields[16].Descriptor()
 	// processdefinition.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	processdefinition.DefaultUpdatedAt = processdefinitionDescUpdatedAt.Default.(func() time.Time)
 	// processdefinition.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

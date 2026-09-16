@@ -21,8 +21,11 @@ func (ProcessApprovalDecision) Fields() []ent.Field {
 		field.String("node_key").NotEmpty(),
 		field.String("business_type").Optional(),
 		field.String("business_id").Optional(),
-		field.Int("actor_id").Positive(),
-		field.String("actor_name").Optional(),
+		// 0 = 系统身份（auto_approve_roles 自动通过、TimeoutScanner 兜底动作），
+		// 其 audit 事实由 system_decision 动作落库，故放宽为 NonNegative；
+		// 人工决策仍恒为 Positive。
+		field.Int("actor_id").NonNegative(),
+		field.String("actor_name").Optional().Comment("系统决策时固定为 system"),
 		field.String("action").Comment("approve, reject, delegate, transfer, add_approver, withdraw, timeout, system_decision"),
 		field.String("decision").Comment("approved, rejected, delegated, withdrawn, timeout"),
 		field.Text("comment").Optional(),

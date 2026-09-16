@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processversionchangelog"
+	"itsm-backend/ent/schema"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -81,6 +82,18 @@ func (_c *ProcessDefinitionCreate) SetNillableCategory(v *string) *ProcessDefini
 // SetBpmnXML sets the "bpmn_xml" field.
 func (_c *ProcessDefinitionCreate) SetBpmnXML(v []uint8) *ProcessDefinitionCreate {
 	_c.mutation.SetBpmnXML(v)
+	return _c
+}
+
+// SetApprovalConfig sets the "approval_config" field.
+func (_c *ProcessDefinitionCreate) SetApprovalConfig(v *schema.ApprovalConfig) *ProcessDefinitionCreate {
+	_c.mutation.SetApprovalConfig(v)
+	return _c
+}
+
+// SetSLAConfig sets the "sla_config" field.
+func (_c *ProcessDefinitionCreate) SetSLAConfig(v map[string]interface{}) *ProcessDefinitionCreate {
+	_c.mutation.SetSLAConfig(v)
 	return _c
 }
 
@@ -411,6 +424,14 @@ func (_c *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.C
 	if value, ok := _c.mutation.BpmnXML(); ok {
 		_spec.SetField(processdefinition.FieldBpmnXML, field.TypeJSON, value)
 		_node.BpmnXML = value
+	}
+	if value, ok := _c.mutation.ApprovalConfig(); ok {
+		_spec.SetField(processdefinition.FieldApprovalConfig, field.TypeJSON, value)
+		_node.ApprovalConfig = value
+	}
+	if value, ok := _c.mutation.SLAConfig(); ok {
+		_spec.SetField(processdefinition.FieldSLAConfig, field.TypeJSON, value)
+		_node.SLAConfig = value
 	}
 	if value, ok := _c.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)
