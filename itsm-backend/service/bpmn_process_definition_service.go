@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/schema"
 
 	"go.uber.org/zap"
 )
@@ -32,8 +33,12 @@ type CreateProcessDefinitionRequest struct {
 	Category         string                 `json:"category"`
 	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
 	ProcessVariables map[string]interface{} `json:"processVariables"`
-	TenantID         int                    `json:"tenantId" binding:"required"`
-	Publish          bool                   `json:"publish"`
+	// ApprovalConfig 流程级审批配置（auto_approve_roles 等），与设计器「流程配置」页签对应。
+	// DB 列由 20260621 迁移创建，此前为孤儿列——前端写入从未持久化。
+	ApprovalConfig *schema.ApprovalConfig `json:"approvalConfig"`
+	SLAConfig      map[string]interface{} `json:"slaConfig"`
+	TenantID       int                    `json:"tenantId" binding:"required"`
+	Publish        bool                   `json:"publish"`
 }
 
 type UpdateProcessDefinitionRequest struct {
@@ -43,6 +48,9 @@ type UpdateProcessDefinitionRequest struct {
 	BPMNXML          string                 `json:"bpmnXml"`
 	ProcessVariables map[string]interface{} `json:"processVariables"`
 	IsActive         *bool                  `json:"isActive"`
+	// ApprovalConfig 非 nil 时整体替换流程级审批配置（读改写由前端负责）。
+	ApprovalConfig *schema.ApprovalConfig `json:"approvalConfig"`
+	SLAConfig      map[string]interface{} `json:"slaConfig"`
 	// CandidateDefinition is the AI-generated business contract. It is kept
 	// alongside the BPMN draft so publishing can enforce the same safety gate
 	// after a human edits the diagram.
@@ -135,6 +143,8 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetCategory(req.Category).
 		SetBpmnXML([]byte(req.BPMNXML)).
 		SetProcessVariables(req.ProcessVariables).
+		SetApprovalConfig(req.ApprovalConfig).
+		SetSLAConfig(req.SLAConfig).
 		SetVersion(nextVersion).
 		SetIsActive(req.Publish).
 		SetIsLatest(true).
@@ -241,6 +251,12 @@ func (s *bpmnProcessDefinitionService) UpdateProcessDefinition(ctx context.Conte
 	if req.ProcessVariables != nil {
 		update.SetProcessVariables(req.ProcessVariables)
 	}
+	if req.ApprovalConfig != nil {
+		update.SetApprovalConfig(req.ApprovalConfig)
+	}
+	if req.SLAConfig != nil {
+		update.SetSLAConfig(req.SLAConfig)
+	}
 	if req.IsActive != nil {
 		update.SetIsActive(*req.IsActive)
 	}
@@ -298,6 +314,13 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	}
 	if req.ProcessVariables != nil {
 		update.SetProcessVariables(req.ProcessVariables)
+	}
+	// 发布语义 = 整体替换草稿内容：配置字段随发布落库。
+	if req.ApprovalConfig != nil {
+		update.SetApprovalConfig(req.ApprovalConfig)
+	}
+	if req.SLAConfig != nil {
+		update.SetSLAConfig(req.SLAConfig)
 	}
 	published, err := update.Save(ctx)
 	if err != nil {

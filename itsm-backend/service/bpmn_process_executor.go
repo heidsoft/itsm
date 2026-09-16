@@ -12,6 +12,8 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/role"
+	"itsm-backend/ent/schema"
 	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
@@ -749,6 +751,19 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 	}
 	e.logger.Infow("User task created with auto-assignment", "taskID", task.ID, "taskName", task.Name, "assignee", assignee)
 
+	// R1（autoApproveRoles）：流程级审批配置声明 auto_approve_roles 时，
+	// 若发起人（requester_id/triggered_by）角色命中名单，任务创建即由系统身份
+	// 自动通过——任务照常落库留痕（completed），流程在同一事务内直接推进，
+	// 审批人零感知。与 TimeoutScanner.actionAutoApprove 同为系统完成路径。
+	// 失败不阻断：降级为普通待办任务（fail-open，可人工补审）。
+	autoHandled, autoErr := e.tryAutoApproveTask(ctx, txc, instance, process, task, createdTask)
+	if autoErr != nil {
+		e.logger.Warnw("auto_approve_roles 自动审批失败，任务降级为普通待办",
+			"error", autoErr, "taskID", task.ID, "instanceID", instance.ID)
+	} else if autoHandled {
+		return nil // 已自动完成并推进，无需继续注册定时器
+	}
+
 	// BPMN dueDate 属性落地（Phase 4）：此前 XML 解析器校验过 dueDate 但从不写库，
 	// 导致 TimeoutScanner 扫描的 due_date 字段永远为空（休眠循环）。
 	// 日期语义：截止到当日 23:59:59（本地时区）。
@@ -773,6 +788,167 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 }
 
 // registerTaskDueTimer 为带截止时间的任务注册 task_due 定时器（Phase 4）。
+
+// approvalConfig 从流程定义行读取流程级审批配置；未配置返回 nil。
+func (e *CustomProcessEngine) approvalConfig(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance) *schema.ApprovalConfig {
+	def, err := txc.ProcessDefinition.Query().
+		Where(
+			processdefinition.ID(instance.ProcessDefinitionID),
+			processdefinition.TenantID(instance.TenantID),
+		).
+		Select(processdefinition.FieldApprovalConfig).
+		First(ctx)
+	if err != nil || def == nil || def.ApprovalConfig == nil {
+		return nil
+	}
+	return def.ApprovalConfig
+}
+
+// requesterUserID 从流程变量提取发起人 ID（requester_id 优先，其次 triggered_by）。
+// triggered_by 可能是用户名（TriggerProcess 传字符串）也可能是 ID；用户名无法可靠
+// 反查时返回 0（放弃自动审批，不猜测）。
+func requesterUserID(instance *ent.ProcessInstance) int {
+	extract := func(v interface{}) int {
+		switch val := v.(type) {
+		case float64:
+			if val > 0 {
+				return int(val)
+			}
+		case int:
+			if val > 0 {
+				return val
+			}
+		case string:
+			if id, err := strconv.Atoi(strings.TrimSpace(val)); err == nil && id > 0 {
+				return id
+			}
+		}
+		return 0
+	}
+	if id := extract(instance.Variables["requester_id"]); id > 0 {
+		return id
+	}
+	return extract(instance.Variables["triggered_by"])
+}
+
+// userRolesInTenant 返回用户在租户内的全部角色码（主角色枚举 ∪ M2M roles 边），
+// 与 domain/role 词表同源小写比较。
+func (e *CustomProcessEngine) userRolesInTenant(ctx context.Context, txc *ent.Client, tenantID, userID int) map[string]bool {
+	roles := map[string]bool{}
+	u, err := txc.User.Query().
+		Where(user.ID(userID), user.TenantID(tenantID)).
+		WithRoles(func(q *ent.RoleQuery) { q.Select(role.FieldCode) }).
+		Only(ctx)
+	if err != nil || u == nil {
+		return roles
+	}
+	if u.Role != "" {
+		roles[strings.ToLower(string(u.Role))] = true
+	}
+	for _, r := range u.Edges.Roles {
+		if r != nil && r.Code != "" {
+			roles[strings.ToLower(r.Code)] = true
+		}
+	}
+	return roles
+}
+
+// tryAutoApproveTask R1：发起人角色命中流程定义 auto_approve_roles 名单时，
+// 以系统身份（actor_id=0, action=system_decision）在同一事务内完成任务并推进流程。
+// 返回 true 表示已自动处理（调用方应终止后续任务初始化）。
+//
+// 判定语义：
+//   - 仅对审批类任务生效（TaskPurpose == "approval"），普通任务不受影响；
+//   - 名单为空 → 不处理；发起人 ID 未知 → 不处理（fail-open 成人工任务）；
+//   - 任何失败仅告警返回 false，任务保持待办，绝不阻断流程创建。
+func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, task *BPMNUserTask, createdTask *ent.ProcessTask) (bool, error) {
+	if !strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "approval") {
+		return false, nil
+	}
+	cfg := e.approvalConfig(ctx, txc, instance)
+	if cfg == nil || len(cfg.AutoApproveRoles) == 0 {
+		return false, nil
+	}
+	requesterID := requesterUserID(instance)
+	if requesterID <= 0 {
+		e.logger.Infow("auto_approve_roles: 发起人 ID 未知，跳过自动审批",
+			"taskID", task.ID, "instanceID", instance.ID)
+		return false, nil
+	}
+	requesterRoles := e.userRolesInTenant(ctx, txc, instance.TenantID, requesterID)
+	hit := false
+	for _, want := range cfg.AutoApproveRoles {
+		want = strings.ToLower(strings.TrimSpace(want))
+		if want != "" && requesterRoles[want] {
+			hit = true
+			break
+		}
+	}
+	if !hit {
+		return false, nil
+	}
+
+	now := time.Now()
+	vars := map[string]interface{}{
+		"approvalAction":   "approve",
+		"approvalResult":   "approved",
+		"approvalComment":  "发起人角色命中 auto_approve_roles，系统自动通过",
+		"autoAction":       "auto_approve_roles",
+		"autoApproveRole":  strings.Join(cfg.AutoApproveRoles, ","),
+	}
+
+	// 1. 任务置完成（CAS：仅当仍活跃，防并发/幂等重入）
+	updated, err := txc.ProcessTask.Update().
+		Where(
+			processtask.ID(createdTask.ID),
+			processtask.StatusNEQ("completed"),
+			processtask.StatusNEQ("cancelled"),
+		).
+		SetStatus("completed").
+		SetCompletedTime(now).
+		SetAssignee(strconv.Itoa(requesterID)). // 留痕：自动通过视同发起人操作
+		SetTaskVariables(vars).
+		Save(ctx)
+	if err != nil {
+		return false, fmt.Errorf("自动审批更新任务状态失败: %w", err)
+	}
+	if updated != 1 {
+		e.logger.Warnw("auto_approve_roles: 任务状态已被并发修改，跳过自动审批",
+			"taskID", task.ID)
+		return true, nil
+	}
+
+	// 2. 推进流程（从该节点继续走条件网关/后续节点）
+	merged, err := e.mergeVariablesInTx(ctx, txc, instance.ID, vars)
+	if err != nil {
+		return false, fmt.Errorf("自动审批合并实例变量失败: %w", err)
+	}
+	if err := e.executeStep(ctx, txc, merged, process, task.ID, merged.Variables); err != nil {
+		return false, fmt.Errorf("自动审批推进流程失败: %w", err)
+	}
+
+	// 3. 系统身份审计事实（actor_id=0，action=system_decision）
+	businessType := fmt.Sprint(instance.Variables["business_type"])
+	businessID := fmt.Sprint(instance.Variables["business_id"])
+	if _, err := txc.ProcessApprovalDecision.Create().
+		SetProcessInstanceID(instance.ID).SetProcessTaskID(createdTask.ID).
+		SetProcessInstanceKey(instance.ProcessInstanceID).SetTaskID(createdTask.TaskID).
+		SetProcessDefinitionKey(instance.ProcessDefinitionKey).SetNodeKey(task.ID).
+		SetBusinessType(businessType).SetBusinessID(businessID).
+		SetActorID(0).SetActorName("system").
+		SetAction("system_decision").SetDecision("approved").
+		SetComment("发起人角色命中 auto_approve_roles，系统自动通过").
+		SetVariablesSnapshot(vars).
+		SetTenantID(instance.TenantID).
+		Save(ctx); err != nil {
+		return false, fmt.Errorf("自动审批写系统决策审计失败: %w", err)
+	}
+
+	e.logger.Infow("auto_approve_roles: 任务已系统自动通过",
+		"taskID", task.ID, "instanceID", instance.ID,
+		"requesterID", requesterID, "requesterRoles", requesterRoles)
+	return true, nil
+}
 // 到期由 TimerEventHandler 分发 TimeoutScanner 四动作；已过期的截止时间不注册
 // （由恢复兜底扫描处理）。best-effort：注册失败仅告警，扫描器仍在兜底。
 func (e *CustomProcessEngine) registerTaskDueTimer(ctx context.Context, instance *ent.ProcessInstance, task *ent.ProcessTask, dueAt time.Time) {
