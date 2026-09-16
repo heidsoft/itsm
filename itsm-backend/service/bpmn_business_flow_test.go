@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/ent/ticketassignmentrule"
 	"itsm-backend/service/bpmn"
 )
 
@@ -978,4 +979,267 @@ func TestBiz_ProcessCompletesQuickly(t *testing.T) {
 	completed, err := client.ProcessInstance.Get(ctx, instance.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "completed", completed.Status)
+}
+
+// ============================================================================
+// Test 21: EscalateTask — direct method on bpmnTaskService
+// ============================================================================
+
+func TestBiz_EscalateTask(t *testing.T) {
+	client := bizTestClient(t, "escalate")
+	logger := zaptest.NewLogger(t).Sugar()
+	ctx, tenantID := bizTenantCtx(t, client, "escalate")
+
+	bizDeploy(t, ctx, client, tenantID, "escalate_proc", bizBPMNSimpleApproval)
+	engine := NewCustomProcessEngine(client, logger).(*CustomProcessEngine)
+	engine.SetTimerServices(newMemoryTimerStore(), nil)
+
+	instance, err := engine.StartProcess(ctx, "escalate_proc", "BK-ESC-001", nil)
+	require.NoError(t, err)
+
+	task := bizFindTask(t, ctx, client, instance.ID, "manager_approval")
+
+	taskService := engine.TaskService()
+	require.NotNil(t, taskService)
+
+	err = taskService.EscalateTask(ctx, task.TaskID, "SLA 即将超时，需要上级介入")
+	require.NoError(t, err)
+
+	refreshed, err := client.ProcessTask.Get(ctx, task.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "escalated", refreshed.Status)
+	assert.Equal(t, "SLA 即将超时，需要上级介入", refreshed.TaskVariables["escalation_reason"])
+	assert.NotEmpty(t, refreshed.TaskVariables["escalated_time"])
+}
+
+func TestBiz_EscalateTask_NotFound(t *testing.T) {
+	client := bizTestClient(t, "escalate_nf")
+	logger := zaptest.NewLogger(t).Sugar()
+	engine := NewCustomProcessEngine(client, logger).(*CustomProcessEngine)
+
+	taskService := engine.TaskService()
+	err := taskService.EscalateTask(context.Background(), "nonexistent-task-id", "reason")
+	assert.Error(t, err)
+}
+
+// ============================================================================
+// Test 22: getAssigneeFromDBRules — DB-driven assignment rule matching
+// ============================================================================
+
+func TestBiz_GetAssigneeFromDBRules(t *testing.T) {
+	client := bizTestClient(t, "dbrules")
+	logger := zaptest.NewLogger(t).Sugar()
+	ctx, tenantID := bizTenantCtx(t, client, "dbrules")
+
+	_, err := client.TicketAssignmentRule.Create().
+		SetName("低优先级：审批任务").
+		SetPriority(1).
+		SetConditions([]map[string]interface{}{
+			{"field": "task_name", "operator": "contains", "value": "审批"},
+		}).
+		SetActions(map[string]interface{}{"assignee_id": float64(100)}).
+		SetIsActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.TicketAssignmentRule.Create().
+		SetName("高优先级：经理审批").
+		SetPriority(10).
+		SetConditions([]map[string]interface{}{
+			{"field": "task_name", "operator": "equals", "value": "经理审批"},
+		}).
+		SetActions(map[string]interface{}{"assignee_id": float64(200)}).
+		SetIsActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.TicketAssignmentRule.Create().
+		SetName("前缀匹配：变更审批").
+		SetPriority(5).
+		SetConditions([]map[string]interface{}{
+			{"field": "task_name", "operator": "prefix", "value": "变更"},
+		}).
+		SetActions(map[string]interface{}{"assignee_id": float64(300)}).
+		SetIsActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	_, err = client.TicketAssignmentRule.Create().
+		SetName("已停用的规则").
+		SetPriority(100).
+		SetConditions([]map[string]interface{}{
+			{"field": "task_name", "operator": "equals", "value": "经理审批"},
+		}).
+		SetActions(map[string]interface{}{"assignee_id": float64(999)}).
+		SetIsActive(false).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	engine := NewCustomProcessEngine(client, logger).(*CustomProcessEngine)
+
+	deployment, err := client.ProcessDeployment.Create().
+		SetDeploymentID("DEP-RULES-001").
+		SetDeploymentName("Rules Test Deployment").
+		SetDeploymentTime(time.Now()).
+		SetDeployedBy("test").
+		SetIsActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	procDef, err := client.ProcessDefinition.Create().
+		SetKey("rules_test_proc").
+		SetName("Rules Test").
+		SetVersion("1").
+		SetIsLatest(true).
+		SetBpmnXML([]byte("<definitions/>")).
+		SetDeploymentID(deployment.ID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	instance, err := client.ProcessInstance.Create().
+		SetProcessInstanceID("PI-RULES-001").
+		SetProcessDefinitionKey(procDef.Key).
+		SetProcessDefinitionID(procDef.ID).
+		SetStatus("running").
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	t.Run("exact match at high priority", func(t *testing.T) {
+		result := engine.getAssigneeFromDBRules(ctx, instance, "经理审批")
+		assert.Equal(t, "200", result)
+	})
+
+	t.Run("contains match at lower priority", func(t *testing.T) {
+		result := engine.getAssigneeFromDBRules(ctx, instance, "部门审批任务")
+		assert.Equal(t, "100", result)
+	})
+
+	t.Run("prefix match", func(t *testing.T) {
+		result := engine.getAssigneeFromDBRules(ctx, instance, "变更审批L1")
+		assert.Equal(t, "300", result)
+	})
+
+	t.Run("no match returns empty", func(t *testing.T) {
+		result := engine.getAssigneeFromDBRules(ctx, instance, "故障处理")
+		assert.Equal(t, "", result)
+	})
+
+	t.Run("disabled rule is skipped", func(t *testing.T) {
+		rules, err := client.TicketAssignmentRule.Query().
+			Where(ticketassignmentrule.TenantID(tenantID)).
+			All(ctx)
+		require.NoError(t, err)
+		disabledCount := 0
+		for _, r := range rules {
+			if !r.IsActive {
+				disabledCount++
+			}
+		}
+		assert.Equal(t, 1, disabledCount, "should have 1 disabled rule in DB")
+		result := engine.getAssigneeFromDBRules(ctx, instance, "经理审批")
+		assert.Equal(t, "200", result, "disabled rule (assignee 999) should not match")
+	})
+}
+
+// ============================================================================
+// Test 23: matchRuleConditions — unit tests for condition matching operators
+// ============================================================================
+
+func TestBiz_MatchRuleConditions(t *testing.T) {
+	tests := []struct {
+		name       string
+		conditions []map[string]interface{}
+		taskName   string
+		want       bool
+	}{
+		{
+			name:       "equals match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "equals", "value": "经理审批"}},
+			taskName:   "经理审批",
+			want:       true,
+		},
+		{
+			name:       "equals no match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "equals", "value": "经理审批"}},
+			taskName:   "经理审批任务",
+			want:       false,
+		},
+		{
+			name:       "contains match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "contains", "value": "审批"}},
+			taskName:   "部门审批任务",
+			want:       true,
+		},
+		{
+			name:       "contains no match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "contains", "value": "审批"}},
+			taskName:   "故障处理",
+			want:       false,
+		},
+		{
+			name:       "prefix match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "prefix", "value": "变更"}},
+			taskName:   "变更审批L1",
+			want:       true,
+		},
+		{
+			name:       "prefix no match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "prefix", "value": "变更"}},
+			taskName:   "审批变更",
+			want:       false,
+		},
+		{
+			name:       "suffix match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "suffix", "value": "L1"}},
+			taskName:   "变更审批L1",
+			want:       true,
+		},
+		{
+			name:       "suffix no match",
+			conditions: []map[string]interface{}{{"field": "task_name", "operator": "suffix", "value": "L1"}},
+			taskName:   "L1变更审批",
+			want:       false,
+		},
+		{
+			name:       "non-task_name field is skipped",
+			conditions: []map[string]interface{}{{"field": "priority", "operator": "equals", "value": "high"}},
+			taskName:   "anything",
+			want:       false,
+		},
+		{
+			name:       "empty conditions",
+			conditions: []map[string]interface{}{},
+			taskName:   "anything",
+			want:       false,
+		},
+		{
+			name:       "nil conditions",
+			conditions: nil,
+			taskName:   "anything",
+			want:       false,
+		},
+		{
+			name: "multiple conditions — second matches",
+			conditions: []map[string]interface{}{
+				{"field": "task_name", "operator": "equals", "value": "no-match"},
+				{"field": "task_name", "operator": "contains", "value": "审批"},
+			},
+			taskName: "部门审批",
+			want:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := matchRuleConditions(tc.conditions, tc.taskName)
+			assert.Equal(t, tc.want, got)
+		})
+	}
 }
