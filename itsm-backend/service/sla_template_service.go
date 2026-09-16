@@ -75,11 +75,13 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   15,
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
-				"timezone":        "Asia/Shanghai",
-				"workdays":        []int{1, 2, 3, 4, 5},
-				"work_hour_start": 0,
-				"work_hour_end":   24,
-				"is_24_7":         true,
+				// 键名与 parseBusinessHoursConfig 解析器对齐（ticket_sla_service.go:366+）；
+				// R4-b 2026-09-16 修复：旧键名 workdays/work_hour_start/is_24_7 被忽略导致 24×7 模板 fallback 9-18。
+				"time_zone":  "Asia/Shanghai",
+				"work_days":  []int{1, 2, 3, 4, 5},
+				"start_time": "00:00",
+				"end_time":   "23:59",
+				"is_24_7":    true,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -105,11 +107,11 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   60,
 			ResolutionTime: 480,
 			BusinessHours: map[string]interface{}{
-				"timezone":        "Asia/Shanghai",
-				"workdays":        []int{1, 2, 3, 4, 5},
-				"work_hour_start": 9,
-				"work_hour_end":   18,
-				"is_24_7":         false,
+				"time_zone":  "Asia/Shanghai",
+				"work_days":  []int{1, 2, 3, 4, 5},
+				"start_time": "09:00",
+				"end_time":   "18:00",
+				"is_24_7":    false,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -133,11 +135,11 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   240,
 			ResolutionTime: 1440,
 			BusinessHours: map[string]interface{}{
-				"timezone":        "Asia/Shanghai",
-				"workdays":        []int{1, 2, 3, 4, 5},
-				"work_hour_start": 9,
-				"work_hour_end":   18,
-				"is_24_7":         false,
+				"time_zone":  "Asia/Shanghai",
+				"work_days":  []int{1, 2, 3, 4, 5},
+				"start_time": "09:00",
+				"end_time":   "18:00",
+				"is_24_7":    false,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -160,11 +162,11 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   240,
 			ResolutionTime: 1440,
 			BusinessHours: map[string]interface{}{
-				"timezone":        "Asia/Shanghai",
-				"workdays":        []int{1, 2, 3, 4, 5},
-				"work_hour_start": 9,
-				"work_hour_end":   18,
-				"is_24_7":         false,
+				"time_zone":  "Asia/Shanghai",
+				"work_days":  []int{1, 2, 3, 4, 5},
+				"start_time": "09:00",
+				"end_time":   "18:00",
+				"is_24_7":    false,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
@@ -187,7 +189,7 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   30,
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
-				"timezone": "Asia/Shanghai",
+				"time_zone": "Asia/Shanghai",
 				"is_24_7":  true,
 			},
 			EscalationRules: map[string]interface{}{
@@ -212,11 +214,11 @@ func (s *SLATemplateService) initCatalog() {
 			ResponseTime:   480,
 			ResolutionTime: 4320,
 			BusinessHours: map[string]interface{}{
-				"timezone":        "Asia/Shanghai",
-				"workdays":        []int{1, 2, 3, 4, 5},
-				"work_hour_start": 9,
-				"work_hour_end":   18,
-				"is_24_7":         false,
+				"time_zone":  "Asia/Shanghai",
+				"work_days":  []int{1, 2, 3, 4, 5},
+				"start_time": "09:00",
+				"end_time":   "18:00",
+				"is_24_7":    false,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{

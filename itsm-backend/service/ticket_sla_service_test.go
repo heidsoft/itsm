@@ -484,7 +484,7 @@ func TestTicketSLAService_calculateDeadlineWithBusinessHours_EmptyCalendarUses24
 
 	startTime := time.Date(2024, time.January, 8, 9, 0, 0, 0, time.UTC) // 2024-01-08 是周一
 
-	result := slaService.calculateDeadlineWithBusinessHours(startTime, 60, nil)
+	result := slaService.calculateDeadlineWithBusinessHours(context.Background(), 1, startTime, 60, nil)
 
 	// 应该正好是1小时后
 	assert.Equal(t, startTime.Add(1*time.Hour), result)

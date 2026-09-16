@@ -131,11 +131,11 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 	// 使用同一口径，消除"建单落库调整 / 查询展示不调整"的两路径结论相反问题。
 	var responseDeadline, resolutionDeadline *time.Time
 	if slaDef.ResponseTime > 0 {
-		respDeadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResponseTime, slaDef.BusinessHours)
+		respDeadline := s.calculateDeadlineWithBusinessHours(ctx, t.TenantID, t.CreatedAt, slaDef.ResponseTime, slaDef.BusinessHours)
 		responseDeadline = &respDeadline
 	}
 	if slaDef.ResolutionTime > 0 {
-		resDeadline := s.calculateDeadlineWithBusinessHours(t.CreatedAt, slaDef.ResolutionTime, slaDef.BusinessHours)
+		resDeadline := s.calculateDeadlineWithBusinessHours(ctx, t.TenantID, t.CreatedAt, slaDef.ResolutionTime, slaDef.BusinessHours)
 		resolutionDeadline = &resDeadline
 	}
 
@@ -267,12 +267,12 @@ func (s *TicketSLAService) CalculateSLADeadline(ctx context.Context, tenantID in
 	now := time.Now()
 
 	if slaDef.ResponseTime > 0 {
-		respDeadline := s.calculateDeadlineWithBusinessHours(now, slaDef.ResponseTime, slaDef.BusinessHours)
+		respDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, slaDef.ResponseTime, slaDef.BusinessHours)
 		result.ResponseDeadline = &respDeadline
 	}
 
 	if slaDef.ResolutionTime > 0 {
-		resDeadline := s.calculateDeadlineWithBusinessHours(now, slaDef.ResolutionTime, slaDef.BusinessHours)
+		resDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, slaDef.ResolutionTime, slaDef.BusinessHours)
 		result.ResolutionDeadline = &resDeadline
 	}
 
@@ -316,11 +316,18 @@ func (s *TicketSLAService) getSLADefinition(ctx context.Context, tenantID int, t
 
 // calculateDeadlineWithBusinessHours applies an SLA definition's configured
 // business calendar. An empty calendar intentionally preserves 24x7 SLA time.
-func (s *TicketSLAService) calculateDeadlineWithBusinessHours(startTime time.Time, durationMinutes int, businessHours map[string]interface{}) time.Time {
+//
+// R4-b 2026-09-16：接受 ctx + tenantID，按租户时区注入 loc（覆盖 SLA 配置里的 time_zone 缺省值），
+// 与 timer_cron 的 LoadTenantLocation 口径一致；上下文不可用时回退 ResolveLocation("")=Asia/Shanghai。
+func (s *TicketSLAService) calculateDeadlineWithBusinessHours(ctx context.Context, tenantID int, startTime time.Time, durationMinutes int, businessHours map[string]interface{}) time.Time {
 	if len(businessHours) == 0 || durationMinutes <= 0 {
 		return startTime.Add(time.Duration(durationMinutes) * time.Minute)
 	}
-	return addBusinessMinutes(startTime, durationMinutes, parseBusinessHoursConfig(businessHours))
+	cfg := parseBusinessHoursConfig(businessHours)
+	if cfg.loc == nil {
+		cfg.loc = LoadTenantLocation(ctx, s.client, tenantID)
+	}
+	return addBusinessMinutes(startTime, durationMinutes, cfg)
 }
 
 // AdjustToBusinessHours 调整到工作时间（公开方法，供外部调用）。
@@ -339,10 +346,13 @@ type businessHoursConfig struct {
 	endHour   int                   // 工作时段结束小时（不含），18 表示 18:00
 	endMin    int                   // 工作时段结束分钟
 	holidays  map[string]bool       // 节假日集合，格式 "2006-01-02"
-	loc       *time.Location        // 时区：工作时间窗口按此时区计算（默认 time.Local）
+	is24x7    bool                  // 24×7 全天制：忽略工作日与起止时间，工时连续
+	loc       *time.Location        // 时区：工作时间窗口按此时区计算；nil 时调用方补 LoadTenantLocation
 }
 
 // defaultBusinessHoursConfig 返回默认业务时间配置（周一至周五 9:00-18:00）。
+// loc 故意留为 nil——上层 calculateDeadlineWithBusinessHours 会通过 LoadTenantLocation 补
+// 租户时区，避免 time.Local 拖垮跨时区租户。
 func defaultBusinessHoursConfig() businessHoursConfig {
 	return businessHoursConfig{
 		workDays: map[time.Weekday]bool{
@@ -352,7 +362,6 @@ func defaultBusinessHoursConfig() businessHoursConfig {
 		startHour: 9,
 		endHour:   18,
 		holidays:  map[string]bool{},
-		loc:       time.Local,
 	}
 }
 
@@ -360,29 +369,65 @@ func defaultBusinessHoursConfig() businessHoursConfig {
 // 配置格式参考 ent/schema/sla_policy.go 的 BusinessHoursConfig：
 //
 //	{ "work_days": [1,2,3,4,5], "start_time": "09:00", "end_time": "18:00",
-//	  "time_zone": "Asia/Shanghai", "holiday_list": ["2026-01-01"] }
+//	  "time_zone": "Asia/Shanghai", "holiday_list": ["2026-01-01"],
+//	  "is_24_7": false }
 //
 // 空或解析失败时返回默认配置（不阻断 SLA 计算）。
+//
+// R4-b 2026-09-16 修复：
+//  1. 兼容旧键名（workdays/work_hour_start/work_hour_end/timezone/is_24_7），
+//     不破坏历史已安装的 SLA 配置；
+//  2. is_24_7=true 时把 start/end 当作 00:00-23:59 跨天窗口，工作日集合忽略，
+//     避免 P1 模板声明 24×7 但被解析器 fallback 到 9-18 工时；
+//  3. loc 字段兜底为 ResolveLocation("")=Asia/Shanghai，与 timer_cron 一致，
+//     避免 time.Local 跨时区租户违约整体偏移（理想是用租户 TZ，下方 calculateDeadlineWithBusinessHours
+//     接受 tenantID 时会再用 LoadTenantLocation 覆盖）。
 func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 	cfg := defaultBusinessHoursConfig()
 	if len(raw) == 0 {
 		return cfg
 	}
-	if days, ok := raw["work_days"].([]interface{}); ok && len(days) > 0 {
-		cfg.workDays = map[time.Weekday]bool{}
-		// work_days 用 1-7 表示周一到周日（与 time.Weekday 0=Sunday 不同）
-		dayMap := map[int]time.Weekday{
-			1: time.Monday, 2: time.Tuesday, 3: time.Wednesday,
-			4: time.Thursday, 5: time.Friday, 6: time.Saturday, 7: time.Sunday,
-		}
-		for _, d := range days {
-			if dv, ok := d.(float64); ok {
-				if wd, ok := dayMap[int(dv)]; ok {
-					cfg.workDays[wd] = true
+
+	// is_24_7：兼容 bool 与字符串。is_24_7=true 时**最后**短路为 00:00-23:59 全天制，
+	// 必须放在所有 start_time/end_time 解析之后，否则会被覆盖回 9-18。
+	if v, ok := raw["is_24_7"].(bool); ok {
+		cfg.is24x7 = v
+	} else if v, ok := raw["is_24_7"].(string); ok {
+		cfg.is24x7 = v == "true" || v == "1"
+	}
+
+	// work_days：兼容 workdays / work_days
+	parseDays := func() {
+		if days, ok := raw["work_days"].([]interface{}); ok && len(days) > 0 {
+			cfg.workDays = map[time.Weekday]bool{}
+			dayMap := map[int]time.Weekday{
+				1: time.Monday, 2: time.Tuesday, 3: time.Wednesday,
+				4: time.Thursday, 5: time.Friday, 6: time.Saturday, 7: time.Sunday,
+			}
+			for _, d := range days {
+				if dv, ok := d.(float64); ok {
+					if wd, ok := dayMap[int(dv)]; ok {
+						cfg.workDays[wd] = true
+					}
+				}
+			}
+		} else if days, ok := raw["workdays"].([]interface{}); ok && len(days) > 0 {
+			cfg.workDays = map[time.Weekday]bool{}
+			dayMap := map[int]time.Weekday{
+				1: time.Monday, 2: time.Tuesday, 3: time.Wednesday,
+				4: time.Thursday, 5: time.Friday, 6: time.Saturday, 7: time.Sunday,
+			}
+			for _, d := range days {
+				if dv, ok := d.(float64); ok {
+					if wd, ok := dayMap[int(dv)]; ok {
+						cfg.workDays[wd] = true
+					}
 				}
 			}
 		}
 	}
+	parseDays()
+
 	parseHM := func(s string) (int, int) {
 		parts := strings.Split(s, ":")
 		if len(parts) != 2 {
@@ -395,15 +440,24 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 		}
 		return h, m
 	}
+	// start_time / end_time：兼容 work_hour_start/work_hour_end 与 start_hour/end_hour
 	if st, ok := raw["start_time"].(string); ok {
 		if h, m := parseHM(st); h >= 0 {
 			cfg.startHour, cfg.startMin = h, m
 		}
+	} else if h, ok := raw["start_hour"].(float64); ok {
+		cfg.startHour = int(h)
+	} else if h, ok := raw["work_hour_start"].(float64); ok {
+		cfg.startHour = int(h)
 	}
 	if et, ok := raw["end_time"].(string); ok {
 		if h, m := parseHM(et); h >= 0 {
 			cfg.endHour, cfg.endMin = h, m
 		}
+	} else if h, ok := raw["end_hour"].(float64); ok {
+		cfg.endHour = int(h)
+	} else if h, ok := raw["work_hour_end"].(float64); ok {
+		cfg.endHour = int(h)
 	}
 	if holidays, ok := raw["holiday_list"].([]interface{}); ok {
 		for _, h := range holidays {
@@ -412,8 +466,7 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 			}
 		}
 	}
-	// 时区：SLA 工作时间窗口必须按配置时区计算，否则跨时区租户违约判定整体偏移。
-	// 兼容 "time_zone"（文档约定）与 "timezone"（DTO 示例）两种键名。
+	// 时区：兼容 "time_zone"（文档约定）与 "timezone"（DTO/旧模板）。
 	if tz, ok := raw["time_zone"].(string); ok && tz != "" {
 		if loc, e := time.LoadLocation(tz); e == nil {
 			cfg.loc = loc
@@ -422,6 +475,22 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 		if loc, e := time.LoadLocation(tz); e == nil {
 			cfg.loc = loc
 		}
+	}
+	// is_24_7 短路：放在所有解析之后，覆盖 start/end 与 work_days，
+	// 让 24×7 模板（P1 紧急事件 / change_emergency）正确生效全天工时制。
+	if cfg.is24x7 {
+		cfg.workDays = map[time.Weekday]bool{
+			time.Monday: true, time.Tuesday: true, time.Wednesday: true,
+			time.Thursday: true, time.Friday: true, time.Saturday: true, time.Sunday: true,
+		}
+		cfg.startHour, cfg.startMin = 0, 0
+		cfg.endHour, cfg.endMin = 23, 59
+	}
+	// loc 兜底：始终保证 cfg.loc 非 nil，避免调用方在 cfg.loc==nil 时退化到 time.Local。
+	// 上层 calculateDeadlineWithBusinessHours(ctx, tenantID, ...) 会用 LoadTenantLocation
+	// 覆盖此处的兜底值（Asia/Shanghai）为租户 TZ。
+	if cfg.loc == nil {
+		cfg.loc = ResolveLocation("")
 	}
 	return cfg
 }
@@ -486,10 +555,20 @@ func adjustToBusinessHoursStart(t time.Time, cfg businessHoursConfig) time.Time 
 //  2. 计算当天剩余工时；若 minutes <= 当天剩余工时，截止时刻 = 当前指针 + minutes。
 //  3. 否则扣减当天剩余工时，跳到下一个工作日起点继续消耗，直到 minutes 耗尽。
 func addBusinessMinutes(start time.Time, minutes int, cfg businessHoursConfig) time.Time {
+	// is_24_7 时直接把 minutes 加到 start，不剔除任何时段（工时连续）。
+	// 时区使用 cfg.loc 兜底为 ResolveLocation("") = Asia/Shanghai（与 timer_cron 一致），
+	// 避免 time.Local 在跨时区容器里产生整体偏移。
+	if cfg.is24x7 {
+		loc := cfg.loc
+		if loc == nil {
+			loc = ResolveLocation("")
+		}
+		return start.In(loc).Add(time.Duration(minutes) * time.Minute)
+	}
 	remaining := time.Duration(minutes) * time.Minute
 	loc := cfg.loc
 	if loc == nil {
-		loc = time.Local
+		loc = ResolveLocation("")
 	}
 	// 关键修复：把起始时刻换算到配置时区后再计算工作窗口，
 	// 否则 9:00-18:00 窗口会按宿主机/UTC 时区计算，跨时区租户违约整体偏移。
@@ -564,8 +643,8 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 			s.logger.Warnw("No SLA definition found, using defaults", "service_type", serviceType, "priority", normalizedPriority)
 			return &SLADeadlineResult{
 				SLADefinitionID:    0,
-				ResponseDeadline:   toPointer(s.calculateDeadlineWithBusinessHours(now, 60, nil)),
-				ResolutionDeadline: toPointer(s.calculateDeadlineWithBusinessHours(now, 480, nil)),
+				ResponseDeadline:   toPointer(s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, 60, nil)),
+				ResolutionDeadline: toPointer(s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, 480, nil)),
 				BusinessHoursOnly:  false,
 			}, nil
 		}
@@ -576,8 +655,8 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 	// 旧逻辑用 AdjustToBusinessHours 平移截止时刻，导致非工作时段被当作顺延而非排除，
 	// 且与 GetTicketSLAInfo 路径使用不同口径，造成同一工单"是否违规"两路径结论相反。
 	businessHoursOnly := len(sla.BusinessHours) > 0
-	responseDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResponseTime, sla.BusinessHours)
-	resolutionDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResolutionTime, sla.BusinessHours)
+	responseDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, sla.ResponseTime, sla.BusinessHours)
+	resolutionDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, sla.ResolutionTime, sla.BusinessHours)
 
 	return &SLADeadlineResult{
 		SLADefinitionID:    sla.ID,
@@ -594,8 +673,8 @@ func (s *TicketSLAService) CalculateSLADeadlineByDefinition(ctx context.Context,
 		return nil, fmt.Errorf("bound SLA definition is unavailable: %w", err)
 	}
 	now := s.nowFunc()
-	responseDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResponseTime, sla.BusinessHours)
-	resolutionDeadline := s.calculateDeadlineWithBusinessHours(now, sla.ResolutionTime, sla.BusinessHours)
+	responseDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, sla.ResponseTime, sla.BusinessHours)
+	resolutionDeadline := s.calculateDeadlineWithBusinessHours(ctx, tenantID, now, sla.ResolutionTime, sla.BusinessHours)
 	return &SLADeadlineResult{SLADefinitionID: sla.ID, ResponseDeadline: &responseDeadline, ResolutionDeadline: &resolutionDeadline, BusinessHoursOnly: len(sla.BusinessHours) > 0}, nil
 }
 
