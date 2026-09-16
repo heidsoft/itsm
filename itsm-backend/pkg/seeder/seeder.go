@@ -2245,6 +2245,35 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			"incident:read", "incident:write",
 			"knowledge:read", "user:read", "sla:read", "notification:read", "ai:read",
 		},
+		// 服务台坐席（agent，domain/role 内置）：一线接单与处理，与 l1_support 等权，
+		// 额外覆盖服务请求 L1 审批（approvers-l1 组兜底）。
+		// 此前 seedRolePermissions 漏定义该键，导致 role_permissions 表中权限为 0，
+		// 所有 agent 用户访问任意 API 均 403（2026-09-16 P0 修复）。
+		"agent": {
+			// 工单核心（11）：坐席需要工单全生命周期
+			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			"ticket:assign", "ticket:escalate", "ticket:resolve", "ticket:close",
+			"ticket:export", "ticket:import", "ticket:delete",
+			// 工单元数据（4）：坐席起单与维护需要
+			"ticket_type:read",
+			"ticket_category:read", "ticket_tag:read", "ticket_template:read",
+			// 事件（3）：服务台典型处理对象
+			"incident:read", "incident:write", "incident:delete",
+			// 问题（2）：坐席发现/登记问题
+			"problem:read", "problem:write",
+			// 变更（1）：只读，不能 write/approve/rollback（变更由 CAB 走流程）
+			"change:read",
+			// 知识库（2）：坐席维护 KKB
+			"knowledge:read", "knowledge:write",
+			// SLA（1）：仅查看自己 SLA 进度
+			"sla:read",
+			// 服务请求（3）：坐席通常作为 L1 审批人
+			"service_request:read", "service_request:write", "service_request:approve",
+			// 上下文读权限（7）：坐席处理工单时的最小视角
+			"user:read", "team:read", "department:read",
+			"asset:read", "cmdb:read",
+			"notification:read", "ai:read",
+		},
 		// 二线支持工程师
 		"l2_support": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",

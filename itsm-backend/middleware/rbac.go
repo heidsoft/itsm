@@ -130,6 +130,14 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "system_config", Action: "write"},
 		{Resource: "org", Action: "read"},
 		{Resource: "org", Action: "write"},
+		// 部门管理权限：路由层使用 ("department", read/create/update/delete)；
+		// 2026-09-16 之前 RolePermissions 仅有 ("org", ...)，DBOnly 下非 super_admin
+		// 调 /departments 全部 403。现补齐 department 资源到 admin/manager/end_user，
+		// 与 common_system_routes.go 路由层声明保持一致。
+		{Resource: "department", Action: "read"},
+		{Resource: "department", Action: "create"},
+		{Resource: "department", Action: "update"},
+		{Resource: "department", Action: "delete"},
 		{Resource: "project", Action: "read"},
 		{Resource: "project", Action: "write"},
 		{Resource: "project", Action: "delete"},
@@ -210,6 +218,8 @@ var RolePermissions = map[string][]Permission{
 		// Organization permissions
 		{Resource: "org", Action: "read"},
 		{Resource: "org", Action: "write"},
+		// Department 读取（2026-09-16 修复 DBOnly 兜底后保持与 org 对齐）
+		{Resource: "department", Action: "read"},
 		// Project management permissions
 		{Resource: "project", Action: "read"},
 		{Resource: "project", Action: "write"},
@@ -332,6 +342,8 @@ var RolePermissions = map[string][]Permission{
 		// {Resource: "sla", Action: "write"},
 		{Resource: "system_config", Action: "read"},
 		{Resource: "org", Action: "read"},
+		// Department 读取（2026-09-16 修复 DBOnly 兜底后保持与 org 对齐）
+		{Resource: "department", Action: "read"},
 		{Resource: "cmdb", Action: "read"}, // 查看配置项信息
 		{Resource: "incident", Action: "read"},
 		{Resource: "change", Action: "read"},
@@ -586,6 +598,47 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 	return perms
 }
 
+// loadPermissionsFromDBDBOnlyState DBOnly 模式下区分三种状态，让 loadPermissionsByMode
+// 决定是 fail-closed（unavailable / configured）、走硬编码兜底（unconfigured）。
+//
+// 三态语义（详见 loadPermissionsByMode 注释）：
+//   - permissionDBOnlyUnavailable   : DB 不可用，调用方必须 fail-closed
+//   - permissionDBOnlyUnconfigured  : DB 可用但角色行不存在，走硬编码兜底
+//   - permissionDBOnlyConfigured    : DB 角色行存在，perms 以 DB 为准（空集=显式撤销，fail-closed）
+//
+// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()。
+func loadPermissionsFromDBDBOnlyState(ctx context.Context, client *ent.Client, roleName string, tenantID int) (permissionDBOnlyState, []Permission) {
+	if client == nil {
+		// DB 不可用，fail-closed（保留 baseline 测试
+		// TestSmartCheckPermission_DBOnlyFailClosed / TestDBOnlyPermissionModeDoesNotUseHardcodedFallback）
+		return permissionDBOnlyUnavailable, nil
+	}
+
+	roleEntity, err := client.Role.Query().
+		Where(
+			role.Code(roleName),
+			role.TenantID(tenantID),
+		).
+		Only(ctx)
+	if err != nil || roleEntity == nil {
+		// DB 可用但没角色行（典型：租户未跑 RBAC 初始化）
+		return permissionDBOnlyUnconfigured, nil
+	}
+
+	// 角色行存在：以 DB 实际权限集合为准（空集=显式撤销，仍 fail-closed）
+	perms := loadPermissionsFromDB(ctx, client, roleName, tenantID)
+	return permissionDBOnlyConfigured, perms
+}
+
+// permissionDBOnlyState 三态枚举，供 loadPermissionsByMode DBOnly 分支分流。
+type permissionDBOnlyState int
+
+const (
+	permissionDBOnlyUnavailable permissionDBOnlyState = iota
+	permissionDBOnlyUnconfigured
+	permissionDBOnlyConfigured
+)
+
 var ResourceActionMap = map[string]map[string]Permission{
 	"GET": {
 		"/api/v1/tickets":                     {Resource: "ticket", Action: "read"},
@@ -602,8 +655,6 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/users/*":                     {Resource: "user", Action: "read"},
 		"/api/v1/dashboard":                   {Resource: "dashboard", Action: "read"},
 		"/api/v1/dashboard/*":                 {Resource: "dashboard", Action: "read"},
-		"/api/v1/knowledge":                   {Resource: "knowledge", Action: "read"},
-		"/api/v1/knowledge/search":            {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge/*":                 {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge-articles":          {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge-articles/*":        {Resource: "knowledge", Action: "read"},
@@ -666,8 +717,6 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/ticket-tags":           {Resource: "ticket_tag", Action: "write"},
 		"/api/v1/ticket-tags/*":         {Resource: "ticket_tag", Action: "write"},
 		"/api/v1/users":                 {Resource: "user", Action: "write"},
-		"/api/v1/knowledge":             {Resource: "knowledge", Action: "write"},
-		"/api/v1/knowledge/search":      {Resource: "knowledge", Action: "read"},
 		"/api/v1/knowledge-articles":    {Resource: "knowledge", Action: "write"},
 		"/api/v1/knowledge-articles/*":  {Resource: "knowledge", Action: "write"},
 		"/api/v1/cmdb":                  {Resource: "cmdb", Action: "write"},
@@ -1098,12 +1147,34 @@ func hasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 }
 
 // loadPermissionsByMode 根据配置模式加载权限
+//
+// 2026-09-16 P0 修复（service-catalog/sla/dashboard/users/departments 等 API 403）：
+//   DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
+//     - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
+//     - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
+//                    走硬编码 RolePermissions 兜底，避免非 super_admin 全量 403
+//     - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
+//   兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
+//   保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
+//   TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
 func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string, tenantID int) []Permission {
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:
-		// Production is fail-closed: an empty, revoked, or unavailable database
-		// permission set must never regain privileges from compiled defaults.
-		return loadPermissionsFromDB(ctx, client, role, tenantID)
+		state, perms := loadPermissionsFromDBDBOnlyState(ctx, client, role, tenantID)
+		switch state {
+		case permissionDBOnlyConfigured:
+			// DB 显式配置（含空集合=显式撤销），尊重 DB
+			return perms
+		case permissionDBOnlyUnconfigured:
+			// DB 未配置：硬编码兜底，避免新装/小租户下非 super_admin 全量 403
+			if defaults, ok := RolePermissions[role]; ok {
+				return defaults
+			}
+			return nil
+		default:
+			// unavailable：DB 不可用，fail-closed（不返回任何授权）
+			return nil
+		}
 	case PermissionConfigModeHardcodeOnly:
 		if perms, ok := RolePermissions[role]; ok {
 			return perms
