@@ -128,28 +128,34 @@ func dashboardWidgetByID(widgetID string) gin.H {
 // SetupDashboardRoutes 注册仪表盘域路由。
 // 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // fallback ticketHandler：当 TicketHandler 未装配时 /stats/tickets 回退到 DashboardHandler.GetStats。
+//
+// 2026-09-16 P0 修复：原资源名为 ("report", "read"|"update"|"create") 与 RolePermissions 不一致，
+// 非 admin/manager 角色 DBOnly 模式下 dashboard 端点全量 403；端用户/服务台 agent 也无法访问仪表盘。
+// 路由层统一改用 ("dashboard", "read"|"update") 与 RolePermissions 中已存在的 dashboard:read 对齐，
+// create/delete 维度整合到 dashboard:write/admin；widget 资源未在 RolePermissions 中存在，
+// 一并收敛到 dashboard 资源，避免路由层与权限词表双轨。
 func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler, ticketHandler *ticketHandler.Handler) {
 	dashboard := tenant.Group("/dashboard")
 	{
 		// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
-		dashboard.GET("", middleware.RequirePermission("report", "read"), h.GetOverview)
-		dashboard.GET("/overview", middleware.RequirePermission("report", "read"), h.GetOverview)
-		dashboard.GET("/config", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("", middleware.RequirePermission("dashboard", "read"), h.GetOverview)
+		dashboard.GET("/overview", middleware.RequirePermission("dashboard", "read"), h.GetOverview)
+		dashboard.GET("/config", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardConfig())
 		})
-		dashboard.POST("/config", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
+		dashboard.POST("/config", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true})
 		})
-		dashboard.GET("/layout", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/layout", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardLayout())
 		})
-		dashboard.POST("/layout", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
+		dashboard.POST("/layout", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true})
 		})
-		dashboard.GET("/widgets/available", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/widgets/available", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardWidgets())
 		})
-		dashboard.POST("/widgets", middleware.RequirePermission("widget", "create"), func(c *gin.Context) {
+		dashboard.POST("/widgets", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			widget := dashboardWidgetByID("custom_widget")
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err == nil {
@@ -162,13 +168,13 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			common.Success(c, gin.H{"widget": widget})
 		})
-		dashboard.GET("/widgets/:widget_id/data", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/widgets/:widget_id/data", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 		})
-		dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
+		dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 		})
-		dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("widget", "update"), func(c *gin.Context) {
+		dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			widget := dashboardWidgetByID(c.Param("widget_id"))
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err == nil {
@@ -178,32 +184,32 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			}
 			common.Success(c, gin.H{"widget": widget})
 		})
-		dashboard.DELETE("/widgets/:widget_id", middleware.RequirePermission("widget", "delete"), func(c *gin.Context) {
+		dashboard.DELETE("/widgets/:widget_id", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true})
 		})
-		dashboard.GET("/charts/:chart_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/charts/:chart_type", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"labels":   []string{},
 				"datasets": []gin.H{{"label": c.Param("chart_type"), "data": []int{}}},
 			})
 		})
-		dashboard.GET("/realtime/:data_type", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/realtime/:data_type", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"type":      c.Param("data_type"),
 				"data":      gin.H{},
 				"timestamp": time.Now().Format(time.RFC3339),
 			})
 		})
-		dashboard.GET("/stats", middleware.RequirePermission("report", "read"), h.GetStats)
+		dashboard.GET("/stats", middleware.RequirePermission("dashboard", "read"), h.GetStats)
 		if ticketHandler != nil {
-			dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), ticketHandler.GetTicketStats)
+			dashboard.GET("/stats/tickets", middleware.RequirePermission("dashboard", "read"), ticketHandler.GetTicketStats)
 		} else {
-			dashboard.GET("/stats/tickets", middleware.RequirePermission("report", "read"), h.GetStats)
+			dashboard.GET("/stats/tickets", middleware.RequirePermission("dashboard", "read"), h.GetStats)
 		}
-		dashboard.GET("/stats/users", middleware.RequirePermission("report", "read"), h.GetUserStats)
-		dashboard.GET("/stats/system", middleware.RequirePermission("report", "read"), h.GetSystemStats)
-		dashboard.GET("/kpi-metrics", middleware.RequirePermission("report", "read"), h.GetKPIMetrics)
-		dashboard.GET("/metrics/performance", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/stats/users", middleware.RequirePermission("dashboard", "read"), h.GetUserStats)
+		dashboard.GET("/stats/system", middleware.RequirePermission("dashboard", "read"), h.GetSystemStats)
+		dashboard.GET("/kpi-metrics", middleware.RequirePermission("dashboard", "read"), h.GetKPIMetrics)
+		dashboard.GET("/metrics/performance", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"loadTime":      0,
 				"renderTime":    0,
@@ -212,7 +218,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 				"memoryUsage":   0,
 			})
 		})
-		dashboard.GET("/metrics/usage", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/metrics/usage", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"totalViews":         0,
 				"uniqueUsers":        0,
@@ -222,17 +228,19 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			})
 		})
 		// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
-		dashboard.GET("/metrics", middleware.RequirePermission("report", "read"), h.GetStats)
-		dashboard.GET("/ticket-trend", middleware.RequirePermission("report", "read"), h.GetTicketTrend)
-		dashboard.GET("/incident-distribution", middleware.RequirePermission("report", "read"), h.GetIncidentDistribution)
-		dashboard.GET("/sla-data", middleware.RequirePermission("report", "read"), h.GetSLAData)
-		dashboard.GET("/satisfaction-data", middleware.RequirePermission("report", "read"), h.GetSatisfactionData)
-		dashboard.GET("/quick-actions", middleware.RequirePermission("report", "read"), h.GetQuickActions)
-		dashboard.GET("/recent-activities", middleware.RequirePermission("report", "read"), h.GetRecentActivities)
-		dashboard.GET("/reports", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/metrics", middleware.RequirePermission("dashboard", "read"), h.GetStats)
+		dashboard.GET("/ticket-trend", middleware.RequirePermission("dashboard", "read"), h.GetTicketTrend)
+		dashboard.GET("/incident-distribution", middleware.RequirePermission("dashboard", "read"), h.GetIncidentDistribution)
+		dashboard.GET("/sla-data", middleware.RequirePermission("dashboard", "read"), h.GetSLAData)
+		dashboard.GET("/satisfaction-data", middleware.RequirePermission("dashboard", "read"), h.GetSatisfactionData)
+		dashboard.GET("/quick-actions", middleware.RequirePermission("dashboard", "read"), h.GetQuickActions)
+		dashboard.GET("/recent-activities", middleware.RequirePermission("dashboard", "read"), h.GetRecentActivities)
+		// /reports/* 与 /templates/* 视为高级报表生成，仍以 dashboard:read|write 收敛
+		// （避免引入 DBOnly 模式下词表无 entry 的 report/widget 资源）
+		dashboard.GET("/reports", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
 		})
-		dashboard.POST("/reports/:report_type", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
+		dashboard.POST("/reports/:report_type", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"id":         0,
 				"name":       c.Param("report_type"),
@@ -245,19 +253,19 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 				"updatedAt":  time.Now().Format(time.RFC3339),
 			})
 		})
-		dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
 		})
-		dashboard.POST("/export", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
+		dashboard.POST("/export", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{"downloadUrl": ""})
 		})
-		dashboard.GET("/templates", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		dashboard.GET("/templates", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, []gin.H{defaultDashboardTemplate()})
 		})
-		dashboard.POST("/templates", middleware.RequirePermission("report", "create"), func(c *gin.Context) {
+		dashboard.POST("/templates", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{"template": defaultDashboardTemplate()})
 		})
-		dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("report", "update"), func(c *gin.Context) {
+		dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
 		})
 	}
@@ -265,10 +273,12 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 
 // SetupReportsRoutes 注册报表路由。
 // 从 router.go 的集中注册块抽取而来；报表数据聚合复用 DashboardHandler 各查询方法。
+//
+// 2026-09-16 P0 修复：与 SetupDashboardRoutes 同步，资源名收敛到 dashboard（详见其上方注释）。
 func SetupReportsRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler) {
 	reports := tenant.Group("/reports")
 	{
-		reports.GET("", middleware.RequirePermission("report", "read"), func(c *gin.Context) {
+		reports.GET("", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"reports": []gin.H{
 					{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
@@ -281,10 +291,10 @@ func SetupReportsRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler) {
 				},
 			})
 		})
-		reports.GET("/tickets", middleware.RequirePermission("report", "read"), h.GetStats)
-		reports.GET("/incidents", middleware.RequirePermission("report", "read"), h.GetIncidentDistribution)
-		reports.GET("/problems", middleware.RequirePermission("report", "read"), h.GetTicketTrend)
-		reports.GET("/changes", middleware.RequirePermission("report", "read"), h.GetTicketTrend)
-		reports.GET("/sla", middleware.RequirePermission("report", "read"), h.GetSLAData)
+		reports.GET("/tickets", middleware.RequirePermission("dashboard", "read"), h.GetStats)
+		reports.GET("/incidents", middleware.RequirePermission("dashboard", "read"), h.GetIncidentDistribution)
+		reports.GET("/problems", middleware.RequirePermission("dashboard", "read"), h.GetTicketTrend)
+		reports.GET("/changes", middleware.RequirePermission("dashboard", "read"), h.GetTicketTrend)
+		reports.GET("/sla", middleware.RequirePermission("dashboard", "read"), h.GetSLAData)
 	}
 }
