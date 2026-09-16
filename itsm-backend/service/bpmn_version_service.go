@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -369,10 +370,25 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 		return 0, fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
-	// Version是string类型，需要解析为int
-	version, err := strconv.Atoi(processDef.Version)
-	if err != nil {
-		return 0, fmt.Errorf("解析版本号失败: %w", err)
+	// Version是string类型，可能是整数("1","2")或semver("1.0.0","1.1.0")
+	versionStr := processDef.Version
+	var version int
+
+	// 先尝试直接解析为整数
+	if v, err := strconv.Atoi(versionStr); err == nil {
+		version = v
+	} else {
+		// 尝试解析semver格式，取主版本号
+		parts := strings.Split(versionStr, ".")
+		if len(parts) > 0 {
+			if v, err := strconv.Atoi(parts[0]); err == nil {
+				version = v
+			} else {
+				return 0, fmt.Errorf("解析版本号失败: %w", err)
+			}
+		} else {
+			return 0, fmt.Errorf("解析版本号失败: 无效的版本格式 %s", versionStr)
+		}
 	}
 
 	return version, nil
