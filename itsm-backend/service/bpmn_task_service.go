@@ -324,9 +324,33 @@ func (s *bpmnTaskService) ListApprovalDecisions(ctx context.Context, processInst
 }
 
 func (s *bpmnTaskService) AssignTask(ctx context.Context, taskID string, assignee string) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if actorID <= 0 {
+		return fmt.Errorf("缺少有效的操作人上下文")
+	}
+
 	task, err := s.GetTask(ctx, taskID)
 	if err != nil {
 		return err
+	}
+
+	// 租户隔离：任务必须属于当前租户
+	if task.TenantID != tenantID {
+		return fmt.Errorf("任务不属于当前租户")
+	}
+
+	// 操作人校验：操作人必须存在于当前租户
+	if _, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx); err != nil {
+		return fmt.Errorf("操作人不存在或不属于当前租户")
+	}
+
+	// 目标用户校验：被分配人必须存在于同一租户且活跃
+	if err := s.validateTargetUser(ctx, tenantID, assignee); err != nil {
+		return fmt.Errorf("分配目标用户校验失败: %w", err)
 	}
 
 	_, err = s.client.ProcessTask.UpdateOne(task).
@@ -684,9 +708,32 @@ func (s *bpmnTaskService) RetryTask(ctx context.Context, taskID string, maxRetri
 }
 
 func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAssignee string) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if actorID <= 0 {
+		return fmt.Errorf("缺少有效的操作人上下文")
+	}
+
 	task, err := s.GetTask(ctx, taskID)
 	if err != nil {
 		return err
+	}
+
+	// 租户隔离：任务必须属于当前租户
+	if task.TenantID != tenantID {
+		return fmt.Errorf("任务不属于当前租户")
+	}
+
+	// 操作人校验：只有当前 assignee 才能委托
+	actor, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("操作人不存在或不属于当前租户")
+	}
+	if !matchesAssignee(task.Assignee, actorID, actor.Username) {
+		return fmt.Errorf("只有当前处理人才能委托此任务")
 	}
 
 	if task.TaskVariables == nil {
@@ -699,6 +746,12 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 	if strings.TrimSpace(newAssignee) == "" {
 		return fmt.Errorf("委托目标不能为空")
 	}
+
+	// 目标用户校验：必须存在于同一租户
+	if err := s.validateTargetUser(ctx, tenantID, newAssignee); err != nil {
+		return fmt.Errorf("委托目标用户校验失败: %w", err)
+	}
+
 	// 记录委托来源和时间（覆盖已有值，支持多次委托链）
 	task.TaskVariables["delegated_from"] = task.Assignee
 	task.TaskVariables["delegated_time"] = time.Now().Format(time.RFC3339)
@@ -714,10 +767,6 @@ func (s *bpmnTaskService) DelegateTask(ctx context.Context, taskID string, newAs
 		return err
 	}
 
-	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
-	if actorID <= 0 {
-		return nil
-	}
 	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if ierr != nil {
 		return nil
@@ -747,9 +796,32 @@ func (s *bpmnTaskService) DelegateTaskByID(ctx context.Context, id int, newAssig
 }
 
 func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, newApprover string) error {
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
+	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
+	if actorID <= 0 {
+		return fmt.Errorf("缺少有效的操作人上下文")
+	}
+
 	task, err := s.GetTask(ctx, taskID)
 	if err != nil {
 		return err
+	}
+
+	// 租户隔离：任务必须属于当前租户
+	if task.TenantID != tenantID {
+		return fmt.Errorf("任务不属于当前租户")
+	}
+
+	// 操作人校验：只有当前 assignee 才能加签
+	actor, err := s.client.User.Query().Where(user.IDEQ(actorID), user.TenantIDEQ(tenantID)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("操作人不存在或不属于当前租户")
+	}
+	if !matchesAssignee(task.Assignee, actorID, actor.Username) {
+		return fmt.Errorf("只有当前处理人才能加签此任务")
 	}
 
 	if task.TaskVariables == nil {
@@ -763,9 +835,9 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 		return fmt.Errorf("加签目标不能为空")
 	}
 
-	tenantID, err := requireBPMNTenantContext(ctx)
-	if err != nil {
-		return err
+	// 目标用户校验：必须存在于同一租户
+	if err := s.validateTargetUser(ctx, tenantID, newApprover); err != nil {
+		return fmt.Errorf("加签目标用户校验失败: %w", err)
 	}
 
 	rootTaskID := task.TaskID
@@ -803,10 +875,6 @@ func (s *bpmnTaskService) AddApproverTask(ctx context.Context, taskID string, ne
 		return fmt.Errorf("创建加签任务失败: %w", err)
 	}
 
-	actorID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
-	if actorID <= 0 {
-		return nil
-	}
 	instance, ierr := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if ierr != nil {
 		return nil
@@ -831,6 +899,53 @@ func (s *bpmnTaskService) AddApproverTaskByID(ctx context.Context, id int, newAp
 	}
 
 	return s.AddApproverTask(ctx, task.TaskID, newApprover)
+}
+
+// matchesAssignee 检查 assignee 字段是否匹配给定的用户 ID 或用户名。
+// assignee 字段可能是用户 ID（数字字符串）或用户名。
+func matchesAssignee(assignee string, userID int, username string) bool {
+	assignee = strings.TrimSpace(assignee)
+	if assignee == "" {
+		return false
+	}
+	if assignee == strconv.Itoa(userID) || assignee == username {
+		return true
+	}
+	return false
+}
+
+// validateTargetUser 校验目标用户是否存在于同一租户且处于活跃状态。
+// target 可能是用户 ID（数字字符串）或用户名。
+func (s *bpmnTaskService) validateTargetUser(ctx context.Context, tenantID int, target string) error {
+	target = strings.TrimSpace(target)
+	if target == "" {
+		return fmt.Errorf("目标用户不能为空")
+	}
+
+	// 尝试按 ID 查找
+	if id, err := strconv.Atoi(target); err == nil && id > 0 {
+		exists, err := s.client.User.Query().
+			Where(user.IDEQ(id), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("查询目标用户失败: %w", err)
+		}
+		if exists {
+			return nil
+		}
+	}
+
+	// 尝试按用户名查找
+	exists, err := s.client.User.Query().
+		Where(user.UsernameEQ(target), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("查询目标用户失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("目标用户不存在、已停用或不属于当前租户")
+	}
+	return nil
 }
 
 func (s *bpmnTaskService) EscalateTask(ctx context.Context, taskID string, reason string) error {

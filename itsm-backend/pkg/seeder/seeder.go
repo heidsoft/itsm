@@ -1885,7 +1885,7 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 105},
 		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "BarChart3", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 106},
 		{Name: "自动化规则", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 107},
-		{Name: "审批中心", Path: "/workflow/ticket-approval", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "approval:read", SortOrder: 108},
+		{Name: "审批中心", Path: "/approvals", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "approval:read", SortOrder: 108},
 		// 操作日志：2026-08-30 从 /admin 移到 /workflow，与工作流专属审计入口一致。
 		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
 

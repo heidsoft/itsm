@@ -150,6 +150,48 @@ func (s *UserService) SyncUserRoles(ctx context.Context, userID, tenantID int, r
 	return err
 }
 
+// CanGrantRoles 校验调用者是否有权授予指定角色集合（防 roleIds 越权提权）。
+// 空 roleIDs 视为无操作，直接返回 nil。
+func (s *UserService) CanGrantRoles(ctx context.Context, tenantID int, roleIDs []int, callerRole string) error {
+	if len(roleIDs) == 0 {
+		return nil
+	}
+	roles, err := s.client.Role.Query().
+		Where(entrole.IDIn(roleIDs...), entrole.TenantIDEQ(tenantID)).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("查询角色失败: %w", err)
+	}
+	if len(roles) != len(roleIDs) {
+		return fmt.Errorf("存在不属于当前租户的角色: 期望 %d 个，匹配 %d 个", len(roleIDs), len(roles))
+	}
+	callerRank := serviceRoleRank(callerRole)
+	for _, r := range roles {
+		if serviceRoleRank(r.Code) > callerRank {
+			return fmt.Errorf("无权限分配高于自身角色的用户角色: %s", r.Code)
+		}
+	}
+	return nil
+}
+
+// serviceRoleRank 返回角色权限层级（与 handler 层 roleRank 保持同一词表）。
+func serviceRoleRank(role string) int {
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "super_admin":
+		return 5
+	case "admin":
+		return 4
+	case "manager":
+		return 3
+	case "agent":
+		return 2
+	case "end_user", "user", "":
+		return 1
+	default:
+		return 0
+	}
+}
+
 // ListUsers 获取用户列表
 func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, tenantID int) (*dto.PagedUsersResponse, error) {
 	s.logger.Infof("获取用户列表: page=%d, pageSize=%d", req.Page, req.PageSize)

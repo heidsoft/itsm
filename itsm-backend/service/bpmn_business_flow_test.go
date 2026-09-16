@@ -569,14 +569,26 @@ func TestBiz_TaskAssignAndCancel(t *testing.T) {
 	assert.Equal(t, "created", task.Status)
 	assert.Empty(t, task.Assignee)
 
+	// 创建目标用户用于分配任务
+	targetUser, err := client.User.Create().
+		SetUsername("target_user").
+		SetEmail("target@test.com").
+		SetName("Target User").
+		SetPasswordHash("hash").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
 	taskSvc := engine.TaskService()
 
-	err = taskSvc.AssignTask(ctx, task.TaskID, "42")
+	err = taskSvc.AssignTask(ctx, task.TaskID, strconv.Itoa(targetUser.ID))
 	require.NoError(t, err)
 
 	assigned, err := client.ProcessTask.Get(ctx, task.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "42", assigned.Assignee)
+	assert.Equal(t, strconv.Itoa(targetUser.ID), assigned.Assignee)
 	assert.Equal(t, "assigned", assigned.Status)
 
 	err = taskSvc.CancelTask(ctx, task.TaskID, "任务取消")

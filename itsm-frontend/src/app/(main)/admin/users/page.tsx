@@ -147,7 +147,7 @@ const UserManagement: React.FC = () => {
       createForm.resetFields();
       loadUsers();
     } catch (error) {
-      message.error(t('users.messages.createFailed'));
+      message.error(error instanceof Error ? error.message : t('users.messages.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -174,7 +174,7 @@ const UserManagement: React.FC = () => {
       setSelectedUser(null);
       loadUsers();
     } catch (error) {
-      message.error(t('users.messages.updateFailed'));
+      message.error(error instanceof Error ? error.message : t('users.messages.updateFailed'));
     } finally {
       setLoading(false);
     }
@@ -188,7 +188,7 @@ const UserManagement: React.FC = () => {
       message.success(t('users.messages.deleteSuccess'));
       loadUsers();
     } catch (error) {
-      message.error(t('users.messages.deleteFailed'));
+      message.error(error instanceof Error ? error.message : t('users.messages.deleteFailed'));
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ const UserManagement: React.FC = () => {
       loadUsers();
     } catch (error) {
       console.error('Failed to toggle user status:', error);
-      message.error(t('users.messages.statusUpdateFailed'));
+      message.error(error instanceof Error ? error.message : t('users.messages.statusUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -224,7 +224,7 @@ const UserManagement: React.FC = () => {
       passwordForm.resetFields();
       setSelectedUser(null);
     } catch (error) {
-      message.error(t('users.messages.passwordResetFailed'));
+      message.error(error instanceof Error ? error.message : t('users.messages.passwordResetFailed'));
     } finally {
       setLoading(false);
     }

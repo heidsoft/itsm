@@ -93,6 +93,7 @@ const MENU_PATH_NORMALIZATIONS: Record<string, string> = {
   '/sla/overview': '/sla',
   '/email-intake/conversations': '/email-intake',
   '/knowledge/articles': '/knowledge',
+  '/workflow/monitoring': '/workflow/dashboard',
 };
 
 function normalizeMenuPath(raw: string): string {

@@ -70,6 +70,13 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 			return
 		}
 	}
+	// RoleIDs 越权防护：roleIds 中的角色不得高于调用者自身权限等级
+	if len(req.RoleIDs) > 0 {
+		if err := h.userService.CanGrantRoles(c.Request.Context(), targetTenantID, req.RoleIDs, callerRole); err != nil {
+			common.Forbidden(c, err.Error())
+			return
+		}
+	}
 
 	user, err := h.userService.CreateUser(c.Request.Context(), &req, targetTenantID)
 	if err != nil {
@@ -213,6 +220,13 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	if strings.TrimSpace(req.Role) != "" {
 		if roleRank(normalizeRole(req.Role)) > roleRank(callerRole) {
 			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
+			return
+		}
+	}
+	// RoleIDs 越权防护：roleIds 中的角色不得高于调用者自身权限等级
+	if len(req.RoleIDs) > 0 {
+		if err := h.userService.CanGrantRoles(c.Request.Context(), tenantID, req.RoleIDs, callerRole); err != nil {
+			common.Forbidden(c, err.Error())
 			return
 		}
 	}

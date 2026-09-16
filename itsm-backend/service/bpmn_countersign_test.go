@@ -292,7 +292,7 @@ func TestVote_UnauthorizedUser_Rejected(t *testing.T) {
 	ctx := userContext(f.tenantID, outsider.ID)
 	err = f.engine.TaskService().Vote(ctx, "TASK-CS-PARENT_countersign_0", &VoteRequest{Approved: true})
 	require.Error(t, err, "non-assignee should not be able to vote")
-	assert.Contains(t, err.Error(), "审批人")
+	assert.Contains(t, err.Error(), "认领")
 }
 
 func TestCreateCounterSignTasks_EmptyApprovers_Error(t *testing.T) {

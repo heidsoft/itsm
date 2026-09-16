@@ -23,4 +23,5 @@ type Service interface {
 	GetUserStats(ctx context.Context, tenantID int) (*dto.UserStatsResponse, error)
 	BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdateUsersRequest, tenantID int) error
 	SearchUsers(ctx context.Context, req *dto.SearchUsersRequest, tenantID int) ([]*dto.UserDetailResponse, error)
+	CanGrantRoles(ctx context.Context, tenantID int, roleIDs []int, callerRole string) error
 }

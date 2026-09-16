@@ -177,6 +177,21 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 		return nil, err
 	}
 
+	// 会签父任务拦截：存在子任务的任务不得通过常规 CompleteTask 路径完成，
+	// 必须通过会签投票机制（CompleteCounterSignVote）驱动。
+	// 但如果任务状态为 "finalizing"，说明是会签投票机制触发的系统完成，允许通过。
+	if task.Status != "finalizing" {
+		hasSubTasks, err := txc.ProcessTask.Query().
+			Where(processtask.ParentTaskIDEQ(task.TaskID), processtask.TenantID(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("检查会签子任务失败: %w", err)
+		}
+		if hasSubTasks {
+			return nil, fmt.Errorf("会签父任务不得直接完成，请通过会签投票机制处理")
+		}
+	}
+
 	// 2. 获取流程实例 - 使用任务中存储的ProcessInstanceID (ent自动生成的ID)
 	instance, err := txc.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	if err != nil {
@@ -381,7 +396,7 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 	if err != nil {
 		return fmt.Errorf("审批用户不存在: %w", err)
 	}
-	allowed := func(csv string) bool {
+	matches := func(csv string) bool {
 		for _, candidate := range strings.Split(csv, ",") {
 			candidate = strings.TrimSpace(candidate)
 			if candidate == strconv.Itoa(userID) || candidate == actor.Username {
@@ -390,7 +405,17 @@ func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, 
 		}
 		return false
 	}
-	if allowed(task.Assignee) || allowed(task.CandidateUsers) {
+	// 认领状态区分：已分配（claimed）的任务只允许 assignee 操作，
+	// 防止 candidateUsers 绕过 claim 直接完成任务。
+	assignee := strings.TrimSpace(task.Assignee)
+	if assignee != "" && assignee != "0" {
+		if matches(assignee) {
+			return nil
+		}
+		return fmt.Errorf("该任务已被认领，当前用户不是认领人")
+	}
+	// 未认领任务：assignee 或 candidateUsers 均可操作
+	if matches(task.Assignee) || matches(task.CandidateUsers) {
 		return nil
 	}
 	return fmt.Errorf("当前用户不是该任务的审批人或候选人")
@@ -663,19 +688,26 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 
 	// 如果BPMN没有定义分配人，从流程变量中获取
 	if assignee == "" {
-		// 优先使用 requester_id（工单申请人）
-		assignee = getUserID("requester_id")
-		// 其次使用 triggered_by（触发者）
-		if assignee == "" {
-			assignee = getUserID("triggered_by")
-		}
-		// 再其次使用 assignee_id
-		if assignee == "" {
+		isApproval := strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "approval")
+		if isApproval {
+			// 审批节点禁止回退到发起人（自审批防护）：
+			// 跳过 requester_id 和 triggered_by，直接从 assignee_id 和默认分配获取。
 			assignee = getUserID("assignee_id")
-		}
-		// 如果还是没有，根据流程变量或数据库规则分配
-		if assignee == "" {
-			assignee = e.getDefaultAssignee(ctx, instance, task)
+			if assignee == "" {
+				assignee = e.getDefaultAssignee(ctx, instance, task)
+			}
+		} else {
+			// 非审批节点：保持原有回退链
+			assignee = getUserID("requester_id")
+			if assignee == "" {
+				assignee = getUserID("triggered_by")
+			}
+			if assignee == "" {
+				assignee = getUserID("assignee_id")
+			}
+			if assignee == "" {
+				assignee = e.getDefaultAssignee(ctx, instance, task)
+			}
 		}
 	}
 

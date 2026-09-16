@@ -52,7 +52,7 @@ type CreateVersionRequest struct {
 	BPMNXML              string `json:"bpmnXml" binding:"required"`
 	ChangeLog            string `json:"changeLog"`
 	CompatibilityNotes   string `json:"compatibilityNotes"`
-	TenantID             int    `json:"tenantId" binding:"required"`
+	TenantID             int    `json:"tenantId"`
 	CreatedBy            string `json:"createdBy"`
 }
 

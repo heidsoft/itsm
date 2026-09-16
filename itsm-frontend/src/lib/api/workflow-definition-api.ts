@@ -40,7 +40,8 @@ export class WorkflowDefinitionApi {
       }>
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : [];
+    const raw = res as unknown as { items?: Array<{id: number; key: string; name: string; description?: string; version: number; status: string; createdAt: string; updatedAt: string}>; total?: number };
+    const list = Array.isArray(res) ? res : (raw.items ?? []);
     const workflows: WorkflowDefinition[] = list.map(item => ({
       id: String(item.id || ''),
       code: item.key || '',
@@ -63,7 +64,7 @@ export class WorkflowDefinitionApi {
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
     })) as WorkflowDefinition[];
-    return { workflows, total: list.length };
+    return { workflows, total: raw.total ?? list.length };
   }
 
   /**
