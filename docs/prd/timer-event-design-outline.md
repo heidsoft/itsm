@@ -402,15 +402,27 @@ Phase 1 包含查询和统计接口，写操作接口（cancel/reschedule/pause/
 
 ## 10. 工作量估算
 
+> **状态（2026-09-16 supersede 注）**：Phase 1–5 全部 ✅ 已完成（Timer Event 功能闭环）。
+> 累计交付 commit 序列见 `output/product-canonical-2026-09-16.md` §二。
+> 唯一遗留项 = **用户文档未写**（Phase 5 测试+文档行已标 🟡）；代码事实反查见下方状态列。
+> 按 09-12 文档治理规范，本表原文保留（不回改历史背景），仅顶部加状态 banner。
+
 | 阶段 | 内容 | 估算 | 状态 |
 |------|------|------|------|
 | **Phase 1: 基础设施** | `process_timer` schema + Timer Scheduler + Recovery Scanner + DB Store + 查询/统计 API + Metrics | 4-5 天 | **✅ 已完成（2026-09-15，commit 89dad5b1 + metrics 补齐）**——TimerStore/Scheduler/Recovery/管理 API 落地；五项 Prometheus metrics 已实现（itsm_timer_fired_total/fire_latency/recovery/retry/paused，2026-09-15） |
-| **Phase 1.5: Spike** | 验证 `lib-bpmn-engine` Timer Event 支持能力 | 1 天 | **已完成** — 见附录 C |
+| **Phase 1.5: Spike** | 验证 `lib-bpmn-engine` Timer Event 支持能力 | 1 天 | **✅ 已完成** — 见附录 C |
 | **Phase 2: 引擎集成** | CustomProcessEngine 支持 Timer Intermediate / Boundary 节点的注册与触发 + SLA 暂停/恢复 | 3-5 天 | **✅ 已完成（2026-09-15）**——intermediate/boundary/start 注册触发 ✅（89dad5b1）；SLA 暂停/恢复 Cancel+Recreate ✅（挂起取消/恢复重建/终止取消，4 例 E2E） |
 | **Phase 3: 设计器集成** | WorkflowNodeInspector Timer 配置面板 + BPMN XML 序列化/反序列化 | 2-3 天 | **✅ 已完成（2026-09-15，commit 3146bade）**——extractor ✅ + 前端 Timer 配置面板（start/intermediate/boundary）✅ + XML 规范化写入 ✅ + lint 规则组 1.1 ✅ |
-| **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **✅ 核心完成（2026-09-15）**——BPMN dueDate 落库（修复零写入休眠循环）+ task_due 定时器（注册/到期分发/完成取消）+ TimeoutScanner 降级恢复兜底（claim-once 双路径安全）；**SLA Monitor 保持轮询**（聚合策略评估不适合逐票 timer，决策见 §12） |
+| **Phase 4: 系统合并** | TimeoutScanner escalate 路径迁移 + SLA Monitor Timer 化 | 2-3 天 | **🟡 核心完成（2026-09-15）**——BPMN dueDate 落库（修复零写入休眠循环）+ task_due 定时器（注册/到期分发/完成取消）+ TimeoutScanner 降级恢复兜底（claim-once 双路径安全）；**SLA Monitor 保持轮询**（聚合策略评估不适合逐票 timer，决策见 §12） |
 | **Phase 5: Timer Start** | 定时启动流程 + cron 表达式解析 + 产品模板 | 2 天 | **✅ 已完成（2026-09-15）**——`timer_cron.go`（表达式四分类 + cron 按 `tenants.timezone` 求 `Next`、fire_at 统一 UTC 落库）+ `timer_start_schedule.go`（部署与设计器发布共用，整体替换语义；停用同步取消）+ `handleStartTimer`（businessKey 二次启动幂等 + cron/cycle 重排）+ 产品模板 `scheduled_inspection_flow.bpmn`。**修复两处真实缺陷**：cron 被 `CycleRemaining` 误判为一次性导致时间表触发一次即终止；`bpmnProcessDefinitionService` 发布/停用从未同步 start timer（主路径静默不生效）。**边界**：仅 P0 可见不可跳过；非法时区名静默回退默认时区 |
-| **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 大部分**——29 例 E2E + Phase 5 新增 18 例单测 + 单测全绿、17 模板门禁通过、CHANGELOG 已补（2026-09-15）；用户文档未写 |
+| **测试 + 文档** | 单元测试 + 集成测试 + CHANGELOG + 用户文档 | 2-3 天 | **🟡 部分完成**——29 例 E2E + Phase 5 新增 18 例单测 + 单测全绿、17 模板门禁通过、CHANGELOG 已补（2026-09-15）；**用户文档未写（遗留项）** |
+
+### 10.1 遗留项追踪（2026-09-16）
+
+| 遗留 | 原因 | 建议 |
+|------|------|------|
+| **Timer Event 用户文档未写** | Timer Event 设计复杂（含四类事件/五种表达式/cron 时区/整体替换语义），开发优先级压过文档；产品模板 `scheduled_inspection_flow.bpmn` 已落地作参考 | 下一轮 P1 立项 1 天工作量 |
+| SLA Monitor Timer 化（Phase 4 标 🟡） | CheckSLAViolations 是聚合策略评估（多级阈值/批量工单），逐票 timer 带来注册风暴与重建复杂度，收益不成比例 | 不实施（决策见 §11.2 第 4 条） |
 
 > **Phase 1.5 Spike 结论（2026-09-13）**：`lib-bpmn-engine v0.2.4` 仅支持 `IntermediateCatchEvent > timeDuration` 的被动轮询模型，无 Boundary Timer、Timer Start、`timeDate`、`timeCycle` 支持，且无 timer 回调注册 API。`CustomProcessEngine` 完全绕过该库（自有解析器 + DB 状态机），因此 **不需要 fork 引擎**——直接在 CustomProcessEngine 层自建 timer → 流程推进桥接。Phase 2 风险从"高"降为"中"，估算从 4-6 天降为 3-5 天。详见附录 C。
 
