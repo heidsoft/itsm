@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/ticket"
@@ -108,9 +109,39 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		if err != nil {
 			return fmt.Errorf("load change for workflow: %w", err)
 		}
-		processKey := "change_normal_flow"
+		fallbackKey := "change_normal_flow"
 		if ch.Type == "emergency" {
-			processKey = "change_emergency_flow"
+			fallbackKey = "change_emergency_flow"
+		}
+		processKey, _ := cmd.Payload["workflowDefinitionKey"].(string)
+		if processKey == "" && h.resolver != nil {
+			// P1（issue #92）：变更域接入流程路由——payload 显式指定 >
+			// process_bindings 路由（按变更类型/风险等级）> 内置兜底。
+			routed, rerr := h.resolver.ResolveForChange(ctx, ch, "")
+			if rerr != nil {
+				return fmt.Errorf("resolve change workflow: %w", rerr)
+			}
+			processKey = routed
+		}
+		if processKey == "" {
+			processKey = fallbackKey
+		}
+		// 路由/显式指定可能指向租户未部署的自定义流程定义；不存在时回退内置流程
+		// 并告警，避免 workflow.start 命令反复重试卡死变更的生命周期。
+		if processKey != "change_normal_flow" && processKey != "change_emergency_flow" {
+			defExists, derr := h.client.ProcessDefinition.Query().Where(
+				processdefinition.TenantIDEQ(cmd.TenantID),
+				processdefinition.IsActive(true),
+				processdefinition.Key(processKey),
+			).Exist(ctx)
+			if derr != nil {
+				return fmt.Errorf("check process definition %s: %w", processKey, derr)
+			}
+			if !defExists {
+				h.logger.Warnw("change workflow route points to missing process definition, falling back to builtin",
+					"change_id", ch.ID, "tenant_id", cmd.TenantID, "routed_key", processKey, "fallback_key", fallbackKey)
+				processKey = fallbackKey
+			}
 		}
 		req = &dto.ProcessTriggerRequest{
 			BusinessType: dto.BusinessTypeChange, BusinessID: ch.ID, ProcessDefinitionKey: processKey,
