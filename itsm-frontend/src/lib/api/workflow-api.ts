@@ -404,11 +404,8 @@ export class WorkflowApi {
     if (params?.status) {
       query.status = params.status;
     }
-    const res = await httpClient.get<BpmnTaskRaw[] | { items?: BpmnTaskRaw[]; list?: BpmnTaskRaw[]; data?: BpmnTaskRaw[]; total?: number; page?: number; size?: number }>('/api/v1/bpmn/tasks', query);
-    // 兼容多种返回结构：后端 ListResponse / items / list / data
-    const raw: BpmnTaskRaw[] = Array.isArray(res)
-      ? res
-      : (res?.items || res?.list || res?.data || []);
+    const res = await httpClient.get<{ items: BpmnTaskRaw[]; total?: number; page?: number; pageSize?: number }>('/api/v1/bpmn/tasks', query);
+    const raw: BpmnTaskRaw[] = res.items ?? [];
     const items: WorkflowTask[] = raw.map((task) => ({
       id: String(task.id || task.taskId || task.ID || ''),
       instanceId: String(task.processInstanceId ?? task.instanceId ?? ''),
@@ -423,10 +420,9 @@ export class WorkflowApi {
       variables: task.taskVariables || task.variables || {},
       retryCount: task.retryCount || 0,
     }));
-    const meta = Array.isArray(res) ? null : res;
-    const total = Number(meta?.total ?? items.length);
-    const page = Number(meta?.page ?? params?.page ?? 1);
-    const size = Number(meta?.size ?? params?.pageSize ?? items.length);
+    const total = Number(res.total ?? items.length);
+    const page = Number(res.page ?? params?.page ?? 1);
+    const size = Number(res.pageSize ?? params?.pageSize ?? items.length);
     return { items, total, page, size };
   }
 
@@ -451,16 +447,13 @@ export class WorkflowApi {
     if (params?.status) {
       query.status = params.status;
     }
-    const res = await httpClient.get<BpmnMyTask[] | { items?: BpmnMyTask[]; list?: BpmnMyTask[]; data?: BpmnMyTask[]; total?: number; page?: number; size?: number }>('/api/v1/bpmn/tasks', query);
-    const items: BpmnMyTask[] = Array.isArray(res)
-      ? res
-      : (res?.items || res?.list || res?.data || []);
-    const meta = Array.isArray(res) ? null : res;
+    const res = await httpClient.get<{ items: BpmnMyTask[]; total?: number; page?: number; pageSize?: number }>('/api/v1/bpmn/tasks', query);
+    const items: BpmnMyTask[] = res.items ?? [];
     return {
       items,
-      total: Number(meta?.total ?? items.length),
-      page: Number(meta?.page ?? params?.page ?? 1),
-      size: Number(meta?.size ?? params?.pageSize ?? items.length),
+      total: Number(res.total ?? items.length),
+      page: Number(res.page ?? params?.page ?? 1),
+      size: Number(res.pageSize ?? params?.pageSize ?? items.length),
     };
   }
 
@@ -890,16 +883,7 @@ export class WorkflowApi {
 
     // 修正: 确保路径与后端一致
     const res = await httpClient.get<{
-      data?: Array<{
-        id: string;
-        instanceId: string;
-        processDefinitionKey: string;
-        businessKey: string;
-        status: string;
-        startTime: string;
-        endTime?: string;
-      }>;
-      items?: Array<{
+      items: Array<{
         id: string;
         instanceId: string;
         processDefinitionKey: string;
@@ -911,11 +895,7 @@ export class WorkflowApi {
       pagination?: { total: number };
       total?: number;
     }>('/api/v1/bpmn/process-instances', query);
-    // 后端标准列表契约为 data: { items, total, page, pageSize, totalPages }；
-    // 保留 data/裸数组旧形态兼容。此前只读 res.data，导致 items 形态下列表永远为空。
-    const list = Array.isArray(res)
-      ? res
-      : res?.items || res?.data || [];
+    const list = res.items ?? [];
     const instances: WorkflowInstance[] = list.map(item => ({
       id: item.instanceId || item.id || '',
       workflowId: item.processDefinitionKey || '',
