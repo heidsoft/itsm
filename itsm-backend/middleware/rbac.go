@@ -653,6 +653,13 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/ticket-tags/*":               {Resource: "ticket_tag", Action: "read"},
 		"/api/v1/users":                       {Resource: "user", Action: "read"},
 		"/api/v1/users/*":                     {Resource: "user", Action: "read"},
+		// 2026-09-17 P0：RBACMiddleware 路径预检缺以下条目时，L3 URL 推断把
+		// /service-catalog（单数）/departments 推断成 "service-catalog"/"departments"，
+		// 与 DB 资源名 "service_catalog"/"department" 不匹配 → 即使角色拥有权限仍 403
+		// （路由级 RequirePermission 未到达即被拒）。与 2026-09-16 dashboard 收敛同一先例。
+		"/api/v1/service-catalog":             {Resource: "service_catalog", Action: "read"},
+		"/api/v1/departments":                 {Resource: "department", Action: "read"},
+		"/api/v1/departments/*":               {Resource: "department", Action: "read"},
 		"/api/v1/dashboard":                   {Resource: "dashboard", Action: "read"},
 		"/api/v1/dashboard/*":                 {Resource: "dashboard", Action: "read"},
 		"/api/v1/knowledge/*":                 {Resource: "knowledge", Action: "read"},
