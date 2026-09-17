@@ -150,6 +150,11 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
 		{Resource: "bpmn", Action: "delete"},
+		// 任务面独立于流程面（2026-09-17 P0）：曾有 bpmn 读写的角色同步获得
+		// 本人任务读 + 操作；跨用户全量任务视图（task:admin）只给管理/监督角色。
+		{Resource: "task", Action: "read"},
+		{Resource: "task", Action: "update"},
+		{Resource: "task", Action: "admin"},
 		// Release Management permissions
 		{Resource: "release", Action: "read"},
 		{Resource: "release", Action: "write"},
@@ -201,8 +206,12 @@ var RolePermissions = map[string][]Permission{
 		// Report 权限
 		{Resource: "report", Action: "read"},
 		// BPMN Workflow permissions
+		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
+		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
 		{Resource: "bpmn", Action: "read"},
-		{Resource: "bpmn", Action: "write"},
+		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
+		{Resource: "task", Action: "read"},
+		{Resource: "task", Action: "update"},
 		// Release Management permissions
 		{Resource: "release", Action: "read"},
 		{Resource: "release", Action: "write"},
@@ -258,8 +267,12 @@ var RolePermissions = map[string][]Permission{
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
+		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
+		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
 		{Resource: "bpmn", Action: "read"},
-		{Resource: "bpmn", Action: "write"},
+		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
+		{Resource: "task", Action: "read"},
+		{Resource: "task", Action: "update"},
 	},
 	"technician": {
 		{Resource: "ticket", Action: "read"},
@@ -278,8 +291,12 @@ var RolePermissions = map[string][]Permission{
 		// Groups management permissions
 		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
+		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
+		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
 		{Resource: "bpmn", Action: "read"},
-		{Resource: "bpmn", Action: "write"},
+		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
+		{Resource: "task", Action: "read"},
+		{Resource: "task", Action: "update"},
 	},
 	"security": {
 		// 安全角色需要基本的用户信息访问权限
@@ -307,8 +324,12 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
 		// BPMN Workflow permissions
+		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
+		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
 		{Resource: "bpmn", Action: "read"},
-		{Resource: "bpmn", Action: "write"},
+		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
+		{Resource: "task", Action: "read"},
+		{Resource: "task", Action: "update"},
 		// Release Management permissions
 		{Resource: "release", Action: "read"},
 		// Asset Management permissions
@@ -350,6 +371,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "problem", Action: "read"},
 		// BPMN Workflow permissions (read only)
 		{Resource: "bpmn", Action: "read"},
+		// 只读参与：可查看本人被指派/待确认的任务
+		{Resource: "task", Action: "read"},
 		// Release/Asset/License read permissions
 		{Resource: "release", Action: "read"},
 		{Resource: "asset", Action: "read"},
@@ -641,18 +664,18 @@ const (
 
 var ResourceActionMap = map[string]map[string]Permission{
 	"GET": {
-		"/api/v1/tickets":                     {Resource: "ticket", Action: "read"},
-		"/api/v1/tickets/*":                   {Resource: "ticket", Action: "read"},
-		"/api/v1/notifications":               {Resource: "notification", Action: "read"},
-		"/api/v1/notifications/*":             {Resource: "notification", Action: "read"},
-		"/api/v1/ticket-categories":           {Resource: "ticket_category", Action: "read"},
-		"/api/v1/ticket-categories/*":         {Resource: "ticket_category", Action: "read"},
-		"/api/v1/ticket-templates":            {Resource: "ticket_template", Action: "read"},
-		"/api/v1/ticket-templates/*":          {Resource: "ticket_template", Action: "read"},
-		"/api/v1/ticket-tags":                 {Resource: "ticket_tag", Action: "read"},
-		"/api/v1/ticket-tags/*":               {Resource: "ticket_tag", Action: "read"},
-		"/api/v1/users":                       {Resource: "user", Action: "read"},
-		"/api/v1/users/*":                     {Resource: "user", Action: "read"},
+		"/api/v1/tickets":             {Resource: "ticket", Action: "read"},
+		"/api/v1/tickets/*":           {Resource: "ticket", Action: "read"},
+		"/api/v1/notifications":       {Resource: "notification", Action: "read"},
+		"/api/v1/notifications/*":     {Resource: "notification", Action: "read"},
+		"/api/v1/ticket-categories":   {Resource: "ticket_category", Action: "read"},
+		"/api/v1/ticket-categories/*": {Resource: "ticket_category", Action: "read"},
+		"/api/v1/ticket-templates":    {Resource: "ticket_template", Action: "read"},
+		"/api/v1/ticket-templates/*":  {Resource: "ticket_template", Action: "read"},
+		"/api/v1/ticket-tags":         {Resource: "ticket_tag", Action: "read"},
+		"/api/v1/ticket-tags/*":       {Resource: "ticket_tag", Action: "read"},
+		"/api/v1/users":               {Resource: "user", Action: "read"},
+		"/api/v1/users/*":             {Resource: "user", Action: "read"},
 		// 2026-09-17 P0：RBACMiddleware 路径预检缺以下条目时，L3 URL 推断把
 		// /service-catalog（单数）/departments 推断成 "service-catalog"/"departments"，
 		// 与 DB 资源名 "service_catalog"/"department" 不匹配 → 即使角色拥有权限仍 403
@@ -704,6 +727,18 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "read"},
+		// 2026-09-17 P0「越权写收口」：任务面与流程面分开分权。
+		// 下列条目比 "/api/v1/bpmn/*" 更具体，getPermissionFromPath 按 specificity
+		// 取最具体规则，故任务路径解析为 task 资源而非 bpmn。
+		// 若不登记，收窄 bpmn:write 授权的同时会把任务操作一并拒掉（预检先于路由级检查）。
+		"/api/v1/bpmn/tasks":         {Resource: "task", Action: "read"},
+		"/api/v1/bpmn/tasks/all":     {Resource: "task", Action: "admin"},
+		"/api/v1/bpmn/tasks/*":       {Resource: "task", Action: "read"},
+		"/api/v1/workflow/tasks":     {Resource: "task", Action: "read"},
+		"/api/v1/workflow/tasks/all": {Resource: "task", Action: "admin"},
+		"/api/v1/workflow/tasks/*":   {Resource: "task", Action: "read"},
+		// BPMN XML 校验为只读分析：POST 方法但按 read 授权，与路由级 RequirePermission 一致
+		"/api/v1/bpmn/lint": {Resource: "bpmn", Action: "read"},
 		// MSP Permissions
 		"/api/v1/msp/status":              {Resource: "msp", Action: "read"},
 		"/api/v1/msp/context":             {Resource: "msp", Action: "read"},
@@ -765,6 +800,9 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings/*": {Resource: "bpmn", Action: "write"},
+		// 任务面与流程面分开分权（详见 GET 段注释）
+		"/api/v1/bpmn/tasks/*":     {Resource: "task", Action: "update"},
+		"/api/v1/workflow/tasks/*": {Resource: "task", Action: "update"},
 		// MSP Permissions
 		"/api/v1/msp/allocations":            {Resource: "msp_allocation", Action: "write"},
 		"/api/v1/msp/allocations/deallocate": {Resource: "msp_allocation", Action: "write"},
@@ -788,6 +826,9 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/releases/*":           {Resource: "release", Action: "write"},
 		// BPMN Workflow permissions
 		"/api/v1/bpmn/*": {Resource: "bpmn", Action: "write"},
+		// 任务面与流程面分开分权（详见 GET 段注释）
+		"/api/v1/bpmn/tasks/*":     {Resource: "task", Action: "update"},
+		"/api/v1/workflow/tasks/*": {Resource: "task", Action: "update"},
 	},
 	// PATCH 与 PUT 同为部分更新，必须保持同一 RBAC 契约：
 	// 否则 SmartCheckPermission L3 无法从显式映射解析出资源动作，
@@ -810,6 +851,9 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/releases/*":           {Resource: "release", Action: "write"},
 		// BPMN Workflow permissions
 		"/api/v1/bpmn/*": {Resource: "bpmn", Action: "write"},
+		// 任务面与流程面分开分权（详见 GET 段注释）
+		"/api/v1/bpmn/tasks/*":     {Resource: "task", Action: "update"},
+		"/api/v1/workflow/tasks/*": {Resource: "task", Action: "update"},
 	},
 	"DELETE": {
 		"/api/v1/tickets/*":            {Resource: "ticket", Action: "delete"},
@@ -1156,14 +1200,15 @@ func hasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 // loadPermissionsByMode 根据配置模式加载权限
 //
 // 2026-09-16 P0 修复（service-catalog/sla/dashboard/users/departments 等 API 403）：
-//   DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
-//     - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
-//     - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
-//                    走硬编码 RolePermissions 兜底，避免非 super_admin 全量 403
-//     - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
-//   兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
-//   保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
-//   TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
+//
+//	DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
+//	  - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
+//	  - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
+//	                 走硬编码 RolePermissions 兜底，避免非 super_admin 全量 403
+//	  - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
+//	兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
+//	保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
+//	TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
 func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string, tenantID int) []Permission {
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:

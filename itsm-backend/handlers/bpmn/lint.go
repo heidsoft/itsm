@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 )
 
@@ -53,7 +54,8 @@ func (c *LintHandler) LintBPMN(ctx *gin.Context) {
 func (c *LintHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmn := r.Group("/bpmn")
 	{
-		// 校验 BPMN XML
-		bpmn.POST("/lint", c.LintBPMN)
+		// 校验 BPMN XML（只读分析，故用 read；ResourceActionMap 为
+		// POST /api/v1/bpmn/lint 单独登记了 bpmn:read，两层口径一致）
+		bpmn.POST("/lint", middleware.RequirePermission("bpmn", "read"), c.LintBPMN)
 	}
 }

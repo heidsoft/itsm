@@ -93,6 +93,13 @@ func (m *mockUserService) SearchUsers(ctx context.Context, req *dto.SearchUsersR
 	return nil, args.Error(1)
 }
 
+// CanGrantRoles 角色授予上限校验（统一授权 P0，248bf3ca 引入）。
+// 默认放行；需要覆盖拦截路径的用例用 .On("CanGrantRoles", ...) 显式打桩。
+func (m *mockUserService) CanGrantRoles(ctx context.Context, tenantID int, roleIDs []int, callerRole string) error {
+	args := m.Called(ctx, tenantID, roleIDs, callerRole)
+	return args.Error(0)
+}
+
 func newTestHandler(m *mockUserService) (*UserHandler, *gin.Engine) {
 	gin.SetMode(gin.TestMode)
 	h := NewHandler(m, zap.NewNop().Sugar())

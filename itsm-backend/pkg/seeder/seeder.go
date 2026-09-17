@@ -1778,6 +1778,18 @@ func permissionDefinitions() []permissionDef {
 		{"role:delete", "删除角色", "role", "delete", "删除角色"},
 		{"system_config:read", "查看系统配置", "system_config", "read", "查看系统配置"},
 		{"system_config:write", "管理系统配置", "system_config", "write", "管理系统配置"},
+		// 任务面（2026-09-17 P0「越权写收口」）：任务与流程分权。
+		// 路由 /bpmn/tasks*、/workflow/tasks* 早已引用这些码，但码空间从未定义
+		// → DBOnly configured 态下除 super_admin 外全部 403（审批中心不可用）；
+		// 同时 bpmn:write 连带授予了「对任意任务下决策」的越权能力。
+		{"task:read", "查看任务", "task", "read", "查看本人待办与候选任务"},
+		{"task:update", "处理任务", "task", "update", "认领、完成、加签、投票与提交决策（归属由 handler 层二次校验）"},
+		{"task:admin", "管理任务", "task", "admin", "查看租户内全量任务与流程任务统计"},
+		// 以下码为「路由已引用但码空间缺失」的补齐（2026-09-17 P0 越权收口批次）：
+		// 仅登记码定义，不授予任何角色——真正放开需随批次 2/3 的授权与预检映射一并评估。
+		{"survey:read", "查看满意度调查", "survey", "read", "查看问卷定义与响应"},
+		{"marketplace:read", "查看扩展市场", "marketplace", "read", "查看扩展市场条目与安装记录"},
+		{"marketplace:write", "管理扩展市场", "marketplace", "write", "安装、卸载与配置扩展"},
 	}
 }
 
@@ -2190,7 +2202,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 // DBOnly P0 修复后暴露为 admin/technician 用户全 403）。
 // 守卫：pkg/seeder/role_permission_guard_test.go 锁定与 middleware.RolePermissions 的对齐。
 func builtinRolePermissionCodes() map[string][]string {
-	return map[string][]string{
+	m := map[string][]string{
 		// 系统管理员：所有权限
 		"sysadmin": allPermissionCodes(),
 		// IT总监：全局读写（不含系统管理）
@@ -2431,6 +2443,7 @@ func builtinRolePermissionCodes() map[string][]string {
 			"application:read", "application:write",
 			"group:read", "group:write",
 			"bpmn:read", "bpmn:write", "bpmn:delete",
+			"task:read", "task:update", "task:admin",
 			"asset:read", "asset:write", "asset:delete",
 			"license:read", "license:write", "license:delete",
 			"report:read",
@@ -2449,9 +2462,56 @@ func builtinRolePermissionCodes() map[string][]string {
 			"alerts:read",
 			"ai:read",
 			"group:read",
-			"bpmn:read", "bpmn:write",
+			// 2026-09-17 P0：剥离 bpmn:write。二线技术员的语义是「处理指派给自己的任务」，
+			// 不是「设计/发布/触发流程」；流程定义与实例写权限收归 admin 及以上。
+			"bpmn:read",
+			"task:read", "task:update",
 		},
 	}
+
+	// 任务面基线（2026-09-17 P0「越权写收口」）。
+	// 任何角色都可能被流程指派任务（变更 CAB 评审、服务请求审批、工单流转），
+	// 因此 task:read / task:update 是全角色基线，而不是个别角色的特权。
+	// 粒度控制不在角色层：ListUserTasks 只返回本人/候选任务；task:update 的每一步
+	// （认领态区分、自审批防护、委托/加签目标校验）由 handler 层 authorizeTaskActor 收口。
+	// guest 除外——外部访客不参与任何内部流程。
+	for role, codes := range m {
+		if role == "guest" {
+			continue
+		}
+		m[role] = appendMissingCodes(codes, "task:read", "task:update")
+	}
+	// 跨用户全量任务视图（GET /bpmn/tasks/all、GET /workflow/tasks/all）只给管理与监督角色。
+	for _, role := range []string{
+		"sysadmin", "it_director", "ops_director", "admin",
+		"manager", "dept_manager", "team_lead", "sd_manager", "ops_manager",
+		"change_manager", "it_admin", "security_admin", "audit_admin",
+	} {
+		if codes, ok := m[role]; ok {
+			m[role] = appendMissingCodes(codes, "task:admin")
+		}
+	}
+
+	return m
+}
+
+// appendMissingCodes 返回在 codes 基础上补齐 extra 缺失项的新切片（保序、去重）。
+func appendMissingCodes(codes []string, extra ...string) []string {
+	seen := make(map[string]bool, len(codes)+len(extra))
+	out := make([]string, 0, len(codes)+len(extra))
+	for _, c := range codes {
+		if !seen[c] {
+			seen[c] = true
+			out = append(out, c)
+		}
+	}
+	for _, c := range extra {
+		if !seen[c] {
+			seen[c] = true
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 func (s *Seeder) seedRolePermissions(ctx context.Context) {
@@ -2582,6 +2642,10 @@ func allPermissionCodes() []string {
 		"team:read", "team:write",
 		"approval:read", "approval:write",
 		"workflow:read", "workflow:write",
+		// BPMN 流程引擎（2026-09-17 P0：sysadmin/总监此前缺 bpmn 码 → 流程模块不可用）
+		"bpmn:read", "bpmn:write", "bpmn:delete",
+		// 任务面（2026-09-17 P0）：与 bpmn 分权，见 permissionDefinitions 注释
+		"task:read", "task:update", "task:admin",
 		"knowledge:read", "knowledge:write", "knowledge:delete",
 		"system:read", "system:write",
 		"org:read", "org:write",

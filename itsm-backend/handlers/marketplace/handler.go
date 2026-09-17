@@ -48,13 +48,15 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		marketplaceGroup.GET("/items", c.ListItems)
 		marketplaceGroup.GET("/items/:id", c.GetItem)
 
-		// 需要登录的接口
+		// 扩展安装/卸载/配置 = 平台级变更（2026-09-17 P0「越权写收口」）：
+		// 按 marketplace:* 授权；该码已在 permissionDefinitions 登记，
+		// 但尚未授予任何角色——真正放开由批次 2（词表统一）+ 批次 3（预检映射）决定。
 		{
-			marketplaceGroup.POST("/items/:id/install", c.InstallItem)
-			marketplaceGroup.POST("/items/:id/uninstall", c.UninstallItem)
-			marketplaceGroup.GET("/installations", c.ListInstallations)
-			marketplaceGroup.GET("/installations/:id", c.GetInstallation)
-			marketplaceGroup.PUT("/installations/:id/config", c.UpdateInstallationConfig)
+			marketplaceGroup.POST("/items/:id/install", middleware.RequirePermission("marketplace", "write"), c.InstallItem)
+			marketplaceGroup.POST("/items/:id/uninstall", middleware.RequirePermission("marketplace", "write"), c.UninstallItem)
+			marketplaceGroup.GET("/installations", middleware.RequirePermission("marketplace", "read"), c.ListInstallations)
+			marketplaceGroup.GET("/installations/:id", middleware.RequirePermission("marketplace", "read"), c.GetInstallation)
+			marketplaceGroup.PUT("/installations/:id/config", middleware.RequirePermission("marketplace", "write"), c.UpdateInstallationConfig)
 		}
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -326,17 +327,18 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	// 已知错误库属问题管理域（2026-09-17 P0「越权写收口」）：复用 problem:* 词表
 	errors := r.Group("/known-errors")
 	{
-		errors.GET("", h.ListKnownErrors)
-		errors.POST("", h.CreateKnownError)
-		errors.GET("/stats", h.GetStats)
-		errors.GET("/search", h.SearchKnownErrors)
-		errors.GET("/categories", h.GetCategories)
-		errors.GET("/:id", h.GetKnownError)
-		errors.PUT("/:id", h.UpdateKnownError)
-		errors.DELETE("/:id", h.DeleteKnownError)
-		errors.POST("/:id/promote", h.PromoteToKnownError)
+		errors.GET("", middleware.RequirePermission("problem", "read"), h.ListKnownErrors)
+		errors.POST("", middleware.RequirePermission("problem", "write"), h.CreateKnownError)
+		errors.GET("/stats", middleware.RequirePermission("problem", "read"), h.GetStats)
+		errors.GET("/search", middleware.RequirePermission("problem", "read"), h.SearchKnownErrors)
+		errors.GET("/categories", middleware.RequirePermission("problem", "read"), h.GetCategories)
+		errors.GET("/:id", middleware.RequirePermission("problem", "read"), h.GetKnownError)
+		errors.PUT("/:id", middleware.RequirePermission("problem", "write"), h.UpdateKnownError)
+		errors.DELETE("/:id", middleware.RequirePermission("problem", "delete"), h.DeleteKnownError)
+		errors.POST("/:id/promote", middleware.RequirePermission("problem", "write"), h.PromoteToKnownError)
 	}
 }
 

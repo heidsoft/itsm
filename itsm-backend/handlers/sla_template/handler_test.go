@@ -18,7 +18,9 @@ func TestListTemplatesUsesStandardListResponse(t *testing.T) {
 
 	handler := NewHandler(service.NewSLATemplateService(nil, nil))
 	router := gin.New()
-	handler.RegisterRoutes(router.Group("/api/v1"))
+	// 无数据库与权限数据，只挂被测端点；路由级权限门由
+	// router/route_permission_guard_test.go 守卫。
+	router.GET("/api/v1/sla/templates", handler.ListTemplates)
 
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/sla/templates", nil)

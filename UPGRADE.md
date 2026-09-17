@@ -66,6 +66,42 @@ configured），但角色权限映射此前缺少 `admin` / `technician` 条目�
 属**权限扩大**——如你曾依赖"空集拒绝"的行为或自行配置过这两个角色，请升级后审计
 `roles` 表权限绑定。
 
+### 1.6 任务面与流程面分权：technician 权限收窄 / 任务操作纳入权限码（2026-09-17）
+授权平面审计发现 `/bpmn/*` 与 `/process-trigger/*`、`/process-bindings/*` 等**写路由未挂权限
+中间件**，仅靠 `ResourceActionMap` 的粗粒度路径预检兜底，而 `bpmn:write` 同时授予了
+`technician`（rank=2 二线技术员）——实测该角色可创建/发布 BPMN 流程定义、启动/挂起流程实例、
+触发任意流程、改写流程绑定，且可对**他人**任务提交决策。同时 `/bpmn/tasks*` 路由引用的
+`task:read` / `task:admin` / `task:update` 权限码在码空间中从未定义，导致 DBOnly 权威态下
+**审批中心对所有角色（除 super_admin）不可用**——典型「写通读堵」。
+
+本次变更分两部分，方向相反，请注意：
+
+**（A）权限收窄（需评估是否影响你的自定义角色）**
+- `technician` 剥离 `bpmn:write`：不再能设计/发布/克隆/启停流程定义、启停/挂起流程实例、
+  触发流程或改写流程绑定。流程写权限现由 `bpmn:write` / `bpmn:delete` 独占（种子中仅 `admin`、
+  以及经 `allPermissionCodes()` 的 `sysadmin`/`it_director`/`ops_director` 持有）。
+- 若你的租户曾把 `technician` 当作「流程维护者」使用，请在升级前为该角色补授 `bpmn:write`，
+  或改用 `admin` / 自建流程管理员角色。
+- 同时 `standard-changes`、`known-errors`、`escalation-matrices`、`a2ui`、`surveys`、
+  `marketplace` 等域的写路由补挂了权限门（此前裸奔或仅靠预检兜底）。
+
+**（B）权限扩大（恢复既有设计意图）**
+- 新增 `task:read` / `task:update`：授予**除 guest 外的全部内置角色**。理由：任何角色都可能被
+  流程指派任务（变更 CAB 评审、服务请求审批、工单流转），而粒度控制不在角色层——
+  `GET /bpmn/tasks` 只返回本人/候选任务，`task:update` 的每一步（认领态区分、自审批防护、
+  委托/加签目标校验）由 handler 层 `authorizeTaskActor` 二次收口。
+- 新增 `task:admin`：仅授予 13 个管理/监督角色（`admin`/`sysadmin`/`it_director`/`ops_director`/
+  `manager`/`dept_manager`/`team_lead`/`sd_manager`/`ops_manager`/`change_manager`/`it_admin`/
+  `security_admin`/`audit_admin`），用于跨用户全量任务视图 `GET /bpmn/tasks/all`。
+- 新增 `marketplace:read` / `marketplace:write` / `survey:read` 码定义，**未授予任何角色**
+  （仅供后续批次开放，当前不产生任何访问变化）。
+
+**升级注意**：`pkg/seeder` 的 `builtinRolePermissionCodes()` 会在启动时幂等地把上述码写入
+`role_permissions`（只增不删、按受管权限集替换）。变更后请重启 backend 以刷新权限缓存
+（TTL 5 分钟且无失效端点）。升级后建议用 `admin` 与 `technician` 两个账号各取一个写端点
+（如 `POST /api/v1/bpmn/process-definitions`）与一个任务端点（`GET /api/v1/bpmn/tasks`）
+复验预期：admin 全通、technician 写 403 / 任务 200。
+
 ---
 
 ## 2. 环境变量变更

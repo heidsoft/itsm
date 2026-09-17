@@ -222,8 +222,12 @@ func newBPMNWorkflowTestRouter(t *testing.T) (*gin.Engine, *fakeTaskService) {
 		c.Set("user_id", userID)
 		c.Next()
 	})
+	// 本 harness 无数据库与权限数据，故只注册被测端点本身，不挂 RequirePermission。
+	// 路由级权限门的存在性由 router/route_permission_guard_test.go 守卫；
+	// 带真实 ent client 的用例（decision_identity_test.go）走完整鉴权链路。
 	g := r.Group("/api/v1")
-	ctrl.RegisterRoutes(g)
+	g.POST("/bpmn/tasks/:id/decisions", ctrl.SubmitTaskDecision)
+	g.GET("/bpmn/process-instances/:id/approval-history", ctrl.GetApprovalHistory)
 	return r, fakeTask
 }
 

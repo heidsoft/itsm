@@ -38,6 +38,10 @@ func TestSubmitTaskDecision_NumericIdentityCollision(t *testing.T) {
 		}
 		c.Set("tenant_id", tenant)
 		c.Set("user_id", 7)
+		// 路由级 RequirePermission 需要 role + client；空库 → DBOnly unconfigured
+		// → 回落到 middleware.RolePermissions["admin"]（真实鉴权链路）。
+		c.Set("role", "admin")
+		c.Set("client", client)
 	})
 	handler.RegisterRoutes(r.Group("/api/v1"))
 	for _, tenant := range []int{1, 2} {

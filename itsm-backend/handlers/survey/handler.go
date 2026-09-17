@@ -33,15 +33,19 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	if rg == nil {
 		return
 	}
+	// 满意度调查（2026-09-17 P0「越权写收口」）：
+	// 问卷定义与响应写入统一按 survey:write 授权。响应提交（POST /responses）的
+	// 主体是「被调查人」而非管理员，是否需要独立于管理面的授权码待批次 2 词表统一时定；
+	// 当前该路径本身仍被路径预检拦截（批次 3 补映射），故无行为回归。
 	surveys := rg.Group("/surveys")
 	{
-		surveys.GET("", h.ListSurveys)
-		surveys.POST("", h.CreateSurvey)
-		surveys.GET("/:id", h.GetSurvey)
-		surveys.PUT("/:id", h.UpdateSurvey)
-		surveys.GET("/:id/responses", h.GetSurveyResponses)
-		surveys.GET("/:id/analytics", h.GetAnalytics)
-		surveys.POST("/responses", h.SubmitResponse)
+		surveys.GET("", middleware.RequirePermission("survey", "read"), h.ListSurveys)
+		surveys.POST("", middleware.RequirePermission("survey", "write"), h.CreateSurvey)
+		surveys.GET("/:id", middleware.RequirePermission("survey", "read"), h.GetSurvey)
+		surveys.PUT("/:id", middleware.RequirePermission("survey", "write"), h.UpdateSurvey)
+		surveys.GET("/:id/responses", middleware.RequirePermission("survey", "read"), h.GetSurveyResponses)
+		surveys.GET("/:id/analytics", middleware.RequirePermission("survey", "read"), h.GetAnalytics)
+		surveys.POST("/responses", middleware.RequirePermission("survey", "write"), h.SubmitResponse)
 	}
 }
 

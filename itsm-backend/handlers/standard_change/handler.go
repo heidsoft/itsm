@@ -7,6 +7,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -302,15 +303,16 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	// 标准变更模板属变更管理域（2026-09-17 P0「越权写收口」）：复用 change:* 词表
 	sc := r.Group("/standard-changes")
 	{
-		sc.GET("", h.ListStandardChanges)
-		sc.POST("", h.CreateStandardChange)
-		sc.GET("/categories", h.GetCategories)
-		sc.GET("/:id", h.GetStandardChange)
-		sc.PUT("/:id", h.UpdateStandardChange)
-		sc.DELETE("/:id", h.DeleteStandardChange)
-		sc.POST("/:id/instantiate", h.InstantiateStandardChange)
+		sc.GET("", middleware.RequirePermission("change", "read"), h.ListStandardChanges)
+		sc.POST("", middleware.RequirePermission("change", "write"), h.CreateStandardChange)
+		sc.GET("/categories", middleware.RequirePermission("change", "read"), h.GetCategories)
+		sc.GET("/:id", middleware.RequirePermission("change", "read"), h.GetStandardChange)
+		sc.PUT("/:id", middleware.RequirePermission("change", "write"), h.UpdateStandardChange)
+		sc.DELETE("/:id", middleware.RequirePermission("change", "delete"), h.DeleteStandardChange)
+		sc.POST("/:id/instantiate", middleware.RequirePermission("change", "write"), h.InstantiateStandardChange)
 	}
 }
 

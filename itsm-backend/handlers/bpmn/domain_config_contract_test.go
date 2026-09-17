@@ -41,6 +41,11 @@ func newDomainConfigTestRouter(t *testing.T, client *ent.Client, tenantID int) *
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 		c.Set("tenant_id", tenantID)
 		c.Set("user_id", 1)
+		// 路由级 RequirePermission 需要 role + client 两个上下文键。
+		// 本测试库未跑 seeder（角色表为空 = DBOnly unconfigured），
+		// 判定回落到 middleware.RolePermissions["admin"]，即真实鉴权链路而非绕过。
+		c.Set("role", "admin")
+		c.Set("client", client)
 		c.Next()
 	})
 	group := r.Group("/api/v1")

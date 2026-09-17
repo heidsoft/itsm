@@ -29,40 +29,46 @@ func NewProcessTriggerHandler(triggerService *service.ProcessTriggerService, bin
 }
 
 // RegisterRoutes 注册路由
+//
+// 授权契约（2026-09-17 P0「越权写收口」）：流程触发与流程绑定决定「哪类业务走哪条流程」，
+// 属流程配置面，统一收归 bpmn:write（读为 bpmn:read）。此前整组零校验，
+// 仅靠 ResourceActionMap 的粗粒度路径预检兜底，而 bpmn:write 曾同时授予 technician
+// → 二线技术员可触发任意流程、改写流程绑定（prod 实测 400 而非 403）。
 func (c *ProcessTriggerHandler) RegisterRoutes(r *gin.RouterGroup) {
 	// 流程触发
 	trigger := r.Group("/process-trigger")
 	{
-		trigger.POST("", c.TriggerProcess)
-		trigger.GET("/status/:instance_id", c.GetProcessStatus)
-		trigger.POST("/cancel/:instance_id", c.CancelProcess)
-		trigger.POST("/suspend/:instance_id", c.SuspendProcess)
-		trigger.POST("/resume/:instance_id", c.ResumeProcess)
+		trigger.POST("", middleware.RequirePermission("bpmn", "write"), c.TriggerProcess)
+		trigger.GET("/status/:instance_id", middleware.RequirePermission("bpmn", "read"), c.GetProcessStatus)
+		trigger.POST("/cancel/:instance_id", middleware.RequirePermission("bpmn", "write"), c.CancelProcess)
+		trigger.POST("/suspend/:instance_id", middleware.RequirePermission("bpmn", "write"), c.SuspendProcess)
+		trigger.POST("/resume/:instance_id", middleware.RequirePermission("bpmn", "write"), c.ResumeProcess)
 	}
 
 	// 流程绑定管理
 	bindings := r.Group("/process-bindings")
 	{
-		bindings.POST("", c.CreateBinding)
-		bindings.GET("", c.QueryBindings)
-		bindings.GET("/by-type/:business_type", c.GetBindingsByBusinessType)
-		bindings.GET("/:id", c.GetBinding)
-		bindings.PUT("/:id", c.UpdateBinding)
-		bindings.DELETE("/:id", c.DeleteBinding)
+		bindings.POST("", middleware.RequirePermission("bpmn", "write"), c.CreateBinding)
+		bindings.GET("", middleware.RequirePermission("bpmn", "read"), c.QueryBindings)
+		bindings.GET("/by-type/:business_type", middleware.RequirePermission("bpmn", "read"), c.GetBindingsByBusinessType)
+		bindings.GET("/:id", middleware.RequirePermission("bpmn", "read"), c.GetBinding)
+		bindings.PUT("/:id", middleware.RequirePermission("bpmn", "write"), c.UpdateBinding)
+		bindings.DELETE("/:id", middleware.RequirePermission("bpmn", "write"), c.DeleteBinding)
 	}
 
-	// 部门流程配置
+	// 部门流程配置（读写均落在 department 资源上，与路径预检 /api/v1/departments 一致）
 	departments := r.Group("/departments")
 	{
-		departments.GET("/:id/processes", c.GetDepartmentProcesses)
-		departments.POST("/:id/init-processes", c.InitDepartmentProcesses)
+		departments.GET("/:id/processes", middleware.RequirePermission("department", "read"), c.GetDepartmentProcesses)
+		departments.POST("/:id/init-processes", middleware.RequirePermission("department", "write"), c.InitDepartmentProcesses)
 	}
 
+	// 域流程配置
 	domainConfigs := r.Group("/domain-configs")
 	{
-		domainConfigs.GET("", c.ListDomainConfigs)
-		domainConfigs.POST("", c.SetDomainConfig)
-		domainConfigs.GET("/effective", c.GetEffectiveDomainConfig)
+		domainConfigs.GET("", middleware.RequirePermission("bpmn", "read"), c.ListDomainConfigs)
+		domainConfigs.POST("", middleware.RequirePermission("bpmn", "write"), c.SetDomainConfig)
+		domainConfigs.GET("/effective", middleware.RequirePermission("bpmn", "read"), c.GetEffectiveDomainConfig)
 	}
 }
 

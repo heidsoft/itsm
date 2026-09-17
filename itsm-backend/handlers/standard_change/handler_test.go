@@ -46,6 +46,11 @@ func setupTestRouter(t *testing.T, client *ent.Client, userID, tenantID int) (*g
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", userID)
 		c.Set("tenant_id", tenantID)
+		// 路由级 RequirePermission 需要 role + client 两个上下文键。
+		// 测试库未跑 seeder（角色表为空 = DBOnly unconfigured），
+		// 判定回落到 middleware.RolePermissions["admin"]，属真实鉴权链路。
+		c.Set("role", "admin")
+		c.Set("client", client)
 		c.Next()
 	})
 	h.RegisterRoutes(r.Group("/api/v1"))

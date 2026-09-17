@@ -5,6 +5,7 @@ package escalation_matrix
 
 import (
 	"itsm-backend/common"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -78,10 +79,11 @@ func (h *Handler) InvalidateCache(ctx *gin.Context) {
 
 // RegisterRoutes 注册路由（兼容旧接口）
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	// 升级矩阵属 SLA 配置面（2026-09-17 P0「越权写收口」）
 	matrixGrp := r.Group("/escalation-matrices")
 	{
-		matrixGrp.GET("", h.GetMatrix)
-		matrixGrp.PUT("", h.SetMatrix)
-		matrixGrp.POST("/invalidate-cache", h.InvalidateCache)
+		matrixGrp.GET("", middleware.RequirePermission("sla", "read"), h.GetMatrix)
+		matrixGrp.PUT("", middleware.RequirePermission("sla", "write"), h.SetMatrix)
+		matrixGrp.POST("/invalidate-cache", middleware.RequirePermission("sla", "write"), h.InvalidateCache)
 	}
 }

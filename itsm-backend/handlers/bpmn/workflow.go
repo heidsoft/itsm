@@ -52,67 +52,76 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 }
 
 // RegisterRoutes 注册路由
+//
+// 授权契约（2026-09-17 P0「越权写收口」）：
+//   - 流程定义 / 实例 / 版本 的读写删 → bpmn:read / bpmn:write / bpmn:delete
+//     （与 middleware.ResourceActionMap 的 /api/v1/bpmn/* 预检条目同一资源名）
+//   - 任务（本人待办与操作）→ task:read / task:update；跨用户全量任务视图 → task:admin
+//     task 与 bpmn 必须分开：bpmn:write 意味着「能设计并发布流程」，不应连带
+//     「能对任意任务下决策」。归属/候选人校验在 handler 层 authorizeTaskActor 二次收口。
+//   - 本文件所有写路由必须显式挂 RequirePermission；守卫测试
+//     router/route_permission_guard_test.go 会拦截新增的裸奔写路由。
 func (c *WorkflowHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmn := r.Group("/bpmn")
 	{
 		// 流程定义管理
-		bpmn.POST("/process-definitions", c.CreateProcessDefinition)
-		bpmn.GET("/process-definitions", c.ListProcessDefinitions)
-		bpmn.GET("/process-definitions/:key", c.GetProcessDefinition)
-		bpmn.PUT("/process-definitions/:key", c.UpdateProcessDefinition)
-		bpmn.PUT("/process-definitions/:key/publish", c.PublishProcessDefinition)
-		bpmn.DELETE("/process-definitions/:key", c.DeleteProcessDefinition)
-		bpmn.GET("/process-definitions/:key/export", c.ExportProcessDefinition)
-		bpmn.POST("/process-definitions/:key/clone", c.CloneProcessDefinition)
-		bpmn.PUT("/process-definitions/:key/active", c.SetProcessDefinitionActive)
+		bpmn.POST("/process-definitions", middleware.RequirePermission("bpmn", "write"), c.CreateProcessDefinition)
+		bpmn.GET("/process-definitions", middleware.RequirePermission("bpmn", "read"), c.ListProcessDefinitions)
+		bpmn.GET("/process-definitions/:key", middleware.RequirePermission("bpmn", "read"), c.GetProcessDefinition)
+		bpmn.PUT("/process-definitions/:key", middleware.RequirePermission("bpmn", "write"), c.UpdateProcessDefinition)
+		bpmn.PUT("/process-definitions/:key/publish", middleware.RequirePermission("bpmn", "write"), c.PublishProcessDefinition)
+		bpmn.DELETE("/process-definitions/:key", middleware.RequirePermission("bpmn", "delete"), c.DeleteProcessDefinition)
+		bpmn.GET("/process-definitions/:key/export", middleware.RequirePermission("bpmn", "read"), c.ExportProcessDefinition)
+		bpmn.POST("/process-definitions/:key/clone", middleware.RequirePermission("bpmn", "write"), c.CloneProcessDefinition)
+		bpmn.PUT("/process-definitions/:key/active", middleware.RequirePermission("bpmn", "write"), c.SetProcessDefinitionActive)
 
 		// 流程实例管理
-		bpmn.POST("/process-instances", c.StartProcess)
-		bpmn.GET("/process-instances", c.ListProcessInstances)
-		bpmn.GET("/process-instances/:id", c.GetProcessInstance)
-		bpmn.GET("/process-instances/:id/approval-history", c.GetApprovalHistory)
-		bpmn.PUT("/process-instances/:id/variables", c.SetProcessInstanceVariables)
-		bpmn.PUT("/process-instances/:id/suspend", c.SuspendProcess)
-		bpmn.PUT("/process-instances/:id/resume", c.ResumeProcess)
-		bpmn.PUT("/process-instances/:id/terminate", c.TerminateProcess)
+		bpmn.POST("/process-instances", middleware.RequirePermission("bpmn", "write"), c.StartProcess)
+		bpmn.GET("/process-instances", middleware.RequirePermission("bpmn", "read"), c.ListProcessInstances)
+		bpmn.GET("/process-instances/:id", middleware.RequirePermission("bpmn", "read"), c.GetProcessInstance)
+		bpmn.GET("/process-instances/:id/approval-history", middleware.RequirePermission("bpmn", "read"), c.GetApprovalHistory)
+		bpmn.PUT("/process-instances/:id/variables", middleware.RequirePermission("bpmn", "write"), c.SetProcessInstanceVariables)
+		bpmn.PUT("/process-instances/:id/suspend", middleware.RequirePermission("bpmn", "write"), c.SuspendProcess)
+		bpmn.PUT("/process-instances/:id/resume", middleware.RequirePermission("bpmn", "write"), c.ResumeProcess)
+		bpmn.PUT("/process-instances/:id/terminate", middleware.RequirePermission("bpmn", "write"), c.TerminateProcess)
 
 		// 任务管理
 		bpmn.GET("/tasks", middleware.RequirePermission("task", "read"), c.ListUserTasks)
 		bpmn.GET("/tasks/all", middleware.RequirePermission("task", "admin"), c.ListAllTasks)
-		bpmn.GET("/tasks/:id", c.GetTask)
-		bpmn.PUT("/tasks/:id/assign", c.AssignTask)
-		bpmn.PUT("/tasks/:id/claim", c.ClaimTask)
-		bpmn.PUT("/tasks/:id/complete", c.CompleteTask)
-		bpmn.POST("/tasks/:id/decisions", c.SubmitTaskDecision)
-		bpmn.PUT("/tasks/:id/cancel", c.CancelTask)
-		bpmn.PUT("/tasks/:id/variables", c.SetTaskVariables)
+		bpmn.GET("/tasks/:id", middleware.RequirePermission("task", "read"), c.GetTask)
+		bpmn.PUT("/tasks/:id/assign", middleware.RequirePermission("task", "update"), c.AssignTask)
+		bpmn.PUT("/tasks/:id/claim", middleware.RequirePermission("task", "update"), c.ClaimTask)
+		bpmn.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), c.CompleteTask)
+		bpmn.POST("/tasks/:id/decisions", middleware.RequirePermission("task", "update"), c.SubmitTaskDecision)
+		bpmn.PUT("/tasks/:id/cancel", middleware.RequirePermission("task", "update"), c.CancelTask)
+		bpmn.PUT("/tasks/:id/variables", middleware.RequirePermission("task", "update"), c.SetTaskVariables)
 
 		// 会签管理
-		bpmn.POST("/tasks/:id/counter-sign", c.CreateCounterSignTasks)
-		bpmn.GET("/tasks/:id/counter-sign-status", c.GetCounterSignStatus)
-		bpmn.PUT("/tasks/:id/vote", c.Vote)
+		bpmn.POST("/tasks/:id/counter-sign", middleware.RequirePermission("task", "update"), c.CreateCounterSignTasks)
+		bpmn.GET("/tasks/:id/counter-sign-status", middleware.RequirePermission("task", "read"), c.GetCounterSignStatus)
+		bpmn.PUT("/tasks/:id/vote", middleware.RequirePermission("task", "update"), c.Vote)
 
 		// 统计
-		bpmn.GET("/stats/instances", c.GetInstanceStats)
-		bpmn.GET("/stats/tasks", c.GetTaskStats)
+		bpmn.GET("/stats/instances", middleware.RequirePermission("bpmn", "read"), c.GetInstanceStats)
+		bpmn.GET("/stats/tasks", middleware.RequirePermission("task", "read"), c.GetTaskStats)
 
 		// 版本管理
-		bpmn.GET("/versions", c.ListVersions)
-		bpmn.GET("/versions/:key/:version", c.GetVersion)
-		bpmn.POST("/versions", c.CreateVersion)
-		bpmn.PUT("/versions/:key/:version/activate", c.ActivateVersion)
-		bpmn.PUT("/versions/:key/:version/rollback", c.RollbackVersion)
-		bpmn.GET("/versions/:key/compare", c.CompareVersions)
+		bpmn.GET("/versions", middleware.RequirePermission("bpmn", "read"), c.ListVersions)
+		bpmn.GET("/versions/:key/:version", middleware.RequirePermission("bpmn", "read"), c.GetVersion)
+		bpmn.POST("/versions", middleware.RequirePermission("bpmn", "write"), c.CreateVersion)
+		bpmn.PUT("/versions/:key/:version/activate", middleware.RequirePermission("bpmn", "write"), c.ActivateVersion)
+		bpmn.PUT("/versions/:key/:version/rollback", middleware.RequirePermission("bpmn", "write"), c.RollbackVersion)
+		bpmn.GET("/versions/:key/compare", middleware.RequirePermission("bpmn", "read"), c.CompareVersions)
 
 		// 版本变更日志 (注意：:id 路由必须在 :key 之前定义)
-		bpmn.GET("/process-definitions/changelogs/:id", c.GetVersionChangeLogsByID)
-		bpmn.GET("/process-definitions/:key/changelogs", c.GetVersionChangeLogs)
+		bpmn.GET("/process-definitions/changelogs/:id", middleware.RequirePermission("bpmn", "read"), c.GetVersionChangeLogsByID)
+		bpmn.GET("/process-definitions/:key/changelogs", middleware.RequirePermission("bpmn", "read"), c.GetVersionChangeLogs)
 
 		// /bpmn/definitions 别名 (兼容旧路径，透传到 /bpmn/process-definitions)
-		bpmn.GET("/definitions", c.ListProcessDefinitions)
-		bpmn.POST("/definitions", c.CreateProcessDefinition)
-		bpmn.GET("/definitions/:key", c.GetProcessDefinition)
-		bpmn.PUT("/definitions/:key", c.UpdateProcessDefinition)
+		bpmn.GET("/definitions", middleware.RequirePermission("bpmn", "read"), c.ListProcessDefinitions)
+		bpmn.POST("/definitions", middleware.RequirePermission("bpmn", "write"), c.CreateProcessDefinition)
+		bpmn.GET("/definitions/:key", middleware.RequirePermission("bpmn", "read"), c.GetProcessDefinition)
+		bpmn.PUT("/definitions/:key", middleware.RequirePermission("bpmn", "write"), c.UpdateProcessDefinition)
 	}
 }
 

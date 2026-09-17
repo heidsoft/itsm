@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -60,12 +61,13 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	if rg == nil {
 		return
 	}
+	// A2UI 属 AI 生成面：写操作按 ai:write 授权（2026-09-17 P0「越权写收口」）
 	a2ai := rg.Group("/a2ui")
 	{
-		a2ai.POST("/ticket/form", h.GenerateForm)
-		a2ai.POST("/ticket/action", h.HandleAction)
+		a2ai.POST("/ticket/form", middleware.RequirePermission("ai", "write"), h.GenerateForm)
+		a2ai.POST("/ticket/action", middleware.RequirePermission("ai", "write"), h.HandleAction)
 		// B9: 前端实际调用的别名 POST /api/v1/a2ui/tickets
-		a2ai.POST("/tickets", h.ParseTicketIntent)
+		a2ai.POST("/tickets", middleware.RequirePermission("ai", "write"), h.ParseTicketIntent)
 	}
 }
 
