@@ -53,3 +53,45 @@ func TestAuthzSeederCodeSetParity(t *testing.T) {
 		t.Fatalf("authz.AllCodes 仅 %d 个码（seeder 有 %d 个），疑似提取逻辑失效", len(cat), len(old))
 	}
 }
+
+// TestRoleBindingsSubsetOfCodes 角色绑定引用的每个码必须在 catalog 中存在。
+//
+// 防止「派生规则/手写绑定引用了 catalog 中未定义的码」——codegen 单一源后
+// catalog 是权限码权威源，角色绑定引用未定义码意味着派生链破坏或迁移遗漏。
+func TestRoleBindingsSubsetOfCodes(t *testing.T) {
+	codes := authz.AllCodes()
+	allowed := make(map[string]bool, len(codes))
+	for _, c := range codes {
+		allowed[c] = true
+	}
+
+	bindings := authz.BuiltinRolePermissionCodes()
+
+	var violations []string
+	for role, roleCodes := range bindings {
+		for _, c := range roleCodes {
+			if !allowed[c] {
+				violations = append(violations, role+": "+c)
+			}
+		}
+	}
+	sort.Strings(violations)
+
+	if len(violations) > 0 {
+		t.Errorf("角色绑定引用了 catalog 中不存在的权限码（单一源破坏，需立即对齐）：\n"+
+			"  %d 处违规：\n  %s\n\n"+
+			"修复：把对应码补到 internal/authz/catalog.go 的 Definitions() 中。",
+			len(violations), joinLines(violations))
+	}
+}
+
+func joinLines(s []string) string {
+	out := ""
+	for i, v := range s {
+		if i > 0 {
+			out += "\n  "
+		}
+		out += v
+	}
+	return out
+}
