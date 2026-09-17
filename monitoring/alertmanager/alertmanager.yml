@@ -1,151 +1,81 @@
 # ITSM Alertmanager Configuration
-# Alertmanager handles routing alerts from Prometheus to notification channels
+# Routes Prometheus alerts to notification channels.
+#
+# All alerts are forwarded to the alert-webhook bridge service, which creates
+# alert records in the ITSM backend. For Feishu/DingTalk/WeCom notifications,
+# paste the incoming webhook URL directly into the critical-all receiver below
+# (Alertmanager does not support environment variable interpolation).
 
 global:
-  # SMTP配置用于邮件告警
-  smtp_smarthost: 'smtp.example.com:587'
-  smtp_from: 'alerts@itsm-system.com'
-  smtp_auth_username: 'alerts@itsm-system.com'
-  smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
-
-  # 微信/钉钉 Webhook 配置（可选）
-  # wechat_api_url: 'https://qyapi.weixin.qq.com/cgi-bin/'
-  # dingtalk_webhook_url: 'https://oapi.dingtalk.com/robot/send?access_token=xxx'
-
-# 路由配置
-route:
-  # 所有告警首先进入根路由
-  receiver: 'default-receiver'
-  group_by: ['alertname', 'cluster', 'service']
-  # 等待30秒合并同组告警
-  group_wait: 30s
-  # 每5分钟发送一次已解决的告警组
-  group_interval: 5m
-  # 告警解决后仍保留5分钟
   resolve_timeout: 5m
-  # 嵌套路由
+  # SMTP is optional; only used if email_configs are enabled below.
+  # smtp_smarthost: '${SMTP_SMARTHOST}'
+  # smtp_from: '${SMTP_FROM}'
+  # smtp_auth_username: '${SMTP_AUTH_USERNAME}'
+  # smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
+
+route:
+  receiver: 'itsm-webhook'
+  group_by: ['alertname', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  resolve_timeout: 5m
+
   routes:
-    # 关键告警直接发送到紧急接收者
     - match:
         severity: critical
-      receiver: 'critical-receiver'
-      group_wait: 0s
+      receiver: 'critical-all'
+      group_wait: 10s
       continue: true
 
-    # 警告级别告警发送到普通接收者
     - match:
         severity: warning
-      receiver: 'warning-receiver'
-      continue: true
+      receiver: 'itsm-webhook'
 
-    # 前端相关告警
     - match:
-        component: frontend
-      receiver: 'frontend-receiver'
-      continue: true
+        alertname: 'TargetDown'
+      receiver: 'itsm-webhook'
 
-    # 后端相关告警
-    - match:
-        component: backend
-      receiver: 'backend-receiver'
-
-    # 数据库相关告警
-    - match:
-        component: database
-      receiver: 'database-receiver'
-
-    # 缓存相关告警
-    - match:
-        component: cache
-      receiver: 'cache-receiver'
-
-# 接收者定义
 receivers:
-  # 默认接收者（邮件）
-  - name: 'default-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'itsm-team@example.com'
-        headers:
-          subject: '[ITSM Alert] {{ .GroupLabels.alertname }}'
+  # Primary receiver: forward all alerts to ITSM backend via alert-webhook bridge.
+  # The alert-webhook service converts Alertmanager payloads into ITSM alert records.
+  - name: 'itsm-webhook'
+    webhook_configs:
+      - url: 'http://alert-webhook:9094/webhook'
+        send_resolved: true
+        http_config:
+          follow_redirects: true
 
-  # 紧急告警接收者（短信+邮件）
-  - name: 'critical-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'itsm-critical@example.com,pagerduty@itsm-system.com'
-        headers:
-          subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
-    # PagerDuty 配置（可选）
-    # pagerduty_configs:
-    #   - service_key: '${PAGERDUTY_SERVICE_KEY}'
-    #     severity: critical
+  # Critical alerts: ITSM webhook + optional Feishu/DingTalk/WeCom webhooks.
+  # Uncomment the webhook_configs block and paste the URL to enable a channel.
+  - name: 'critical-all'
+    webhook_configs:
+      - url: 'http://alert-webhook:9094/webhook'
+        send_resolved: true
+    # Feishu (Lark) incoming webhook — paste the URL to enable.
+    # webhook_configs:
+    #   - url: 'https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN'
+    #     send_resolved: true
+    #     http_config:
+    #       follow_redirects: true
+    # DingTalk incoming webhook — paste the URL to enable.
+    # webhook_configs:
+    #   - url: 'https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN'
+    #     send_resolved: true
+    #     http_config:
+    #       follow_redirects: true
+    # WeCom (企业微信) incoming webhook — paste the URL to enable.
+    # webhook_configs:
+    #   - url: 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY'
+    #     send_resolved: true
+    #     http_config:
+    #       follow_redirects: true
 
-  # 警告告警接收者（邮件）
-  - name: 'warning-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'itsm-warnings@example.com'
-        headers:
-          subject: '[WARNING] {{ .GroupLabels.alertname }}'
-
-  # 前端告警接收者
-  - name: 'frontend-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'frontend-team@example.com'
-        headers:
-          subject: '[FRONTEND] {{ .GroupLabels.alertname }}'
-
-  # 后端告警接收者
-  - name: 'backend-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'backend-team@example.com'
-        headers:
-          subject: '[BACKEND] {{ .GroupLabels.alertname }}'
-
-  # 数据库告警接收者
-  - name: 'database-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'dba-team@example.com'
-        headers:
-          subject: '[DATABASE] {{ .GroupLabels.alertname }}'
-
-  # 缓存告警接收者
-  - name: 'cache-receiver'
-    email_configs:
-      - send_resolved: true
-        to: 'ops-team@example.com'
-        headers:
-          subject: '[CACHE] {{ .GroupLabels.alertname }}'
-
-# 抑制规则 - 防止告警风暴
+# Inhibit rules prevent alert storms when a root cause triggers many symptoms.
 inhibit_rules:
-  # 当 BackendDown 发生时，抑制其他后端相关告警
+  # Critical suppresses warning for the same alertname+service.
   - source_match:
-      alertname: 'BackendDown'
-    source_match_re:
-      component: 'backend'
-    target_match_re:
-      component: 'backend'
-    equal: ['cluster', 'service']
-
-  # 当 PostgreSQLDown 发生时，抑制数据库相关告警
-  - source_match:
-      alertname: 'PostgreSQLDown'
-    source_match_re:
-      component: 'database'
-    target_match_re:
-      component: 'database'
-    equal: ['cluster']
-
-  # 当 RedisDown 发生时，抑制缓存相关告警
-  - source_match:
-      alertname: 'RedisDown'
-    source_match_re:
-      component: 'cache'
-    target_match_re:
-      component: 'cache'
-    equal: ['cluster']
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'service']

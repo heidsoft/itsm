@@ -487,10 +487,36 @@ services:
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
+    depends_on:
+      alert-webhook:
+        condition: service_healthy
     networks:
       - itsm-prod-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  alert-webhook:
+    build:
+      context: ./monitoring/alert-webhook
+      dockerfile: Dockerfile
+    image: itsm/alert-webhook:latest
+    container_name: itsm-alert-webhook-prod
+    hostname: alert-webhook
+    profiles: ["monitoring"]
+    environment:
+      - ITSM_BACKEND_URL=http://itsm-backend:8090
+      - PORT=9094
+    depends_on:
+      itsm-backend:
+        condition: service_healthy
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9094/health"]
       interval: 30s
       timeout: 5s
       retries: 3

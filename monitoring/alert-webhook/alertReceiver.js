@@ -6,7 +6,7 @@
 const http = require('http');
 const https = require('https');
 
-const ITSM_BACKEND_URL = process.env.ITSM_BACKEND_URL || 'http://itsm-backend:8080';
+const ITSM_BACKEND_URL = process.env.ITSM_BACKEND_URL || 'http://itsm-backend:8090';
 const PORT = process.env.PORT || 9094;
 
 // Health check mode

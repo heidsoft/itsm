@@ -47,7 +47,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
           "expr": "sum(itsm_bpmn_active_instances)",
@@ -104,7 +104,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
           "expr": "sum(itsm_bpmn_pending_instances)",
@@ -179,7 +179,7 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum(rate(itsm_bpmn_workflow_duration_seconds_bucket[5m])) by (le))",
@@ -265,7 +265,7 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
           "expr": "sum(rate(itsm_bpmn_workflow_started_total[5m]))",
@@ -351,7 +351,7 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
           "expr": "itsm_bpmn_active_instances",
@@ -432,25 +432,25 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "itsm_tickets_total",
-          "legendFormat": "Total Tickets",
+          "expr": "sum(rate(itsm_timer_fired_total[5m])) by (type, status)",
+          "legendFormat": "{{type}} - {{status}}",
           "refId": "A"
         },
         {
-          "expr": "itsm_tickets_by_status",
-          "legendFormat": "{{status}}",
+          "expr": "sum(rate(itsm_timer_retry_total[5m])) by (type)",
+          "legendFormat": "retry {{type}}",
           "refId": "B"
         }
       ],
-      "title": "Tickets Overview",
+      "title": "Timer Event Rate",
       "type": "timeseries"
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 27,
+  "schemaVersion": 39,
   "style": "dark",
   "tags": ["itsm", "bpmn", "workflow"],
   "templating": {

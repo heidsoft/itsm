@@ -1,10 +1,8 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "annotations": { "list": [] },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "panels": [
@@ -16,9 +14,13 @@
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }]
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 500 }
+            ]
           },
-          "unit": "short"
+          "unit": "reqps"
         }
       },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
@@ -34,12 +36,12 @@
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(itsm_tickets_by_status)",
-          "legendFormat": "总工单数",
+          "expr": "sum(rate(itsm_http_requests_total[5m]))",
+          "legendFormat": "RPS",
           "refId": "A"
         }
       ],
-      "title": "工单概览",
+      "title": "API 请求速率",
       "type": "stat"
     },
     {
@@ -50,9 +52,12 @@
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }]
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.01 }
+            ]
           },
-          "unit": "short"
+          "unit": "percentunit"
         }
       },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
@@ -68,12 +73,12 @@
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(increase(itsm_incidents_created_total[24h]))",
-          "legendFormat": "24小时事件数",
+          "expr": "sum(rate(itsm_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(itsm_http_requests_total[5m]))",
+          "legendFormat": "错误率",
           "refId": "A"
         }
       ],
-      "title": "事件概览",
+      "title": "API 错误率",
       "type": "stat"
     },
     {
@@ -82,37 +87,37 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [],
-          "max": 100,
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 80 },
-              { "color": "green", "value": 95 }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 1 }
             ]
           },
-          "unit": "percent"
+          "unit": "s"
         }
       },
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
       "id": 3,
       "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "textMode": "auto"
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "avg(itsm_sla_compliance_ratio) * 100",
-          "legendFormat": "SLA合规率",
+          "expr": "histogram_quantile(0.95, sum(rate(itsm_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95",
           "refId": "A"
         }
       ],
-      "title": "SLA合规率",
-      "type": "gauge"
+      "title": "API p95 延迟",
+      "type": "stat"
     },
     {
       "datasource": "Prometheus",
@@ -122,7 +127,10 @@
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }]
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
           },
           "unit": "short"
         }
@@ -140,12 +148,12 @@
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(itsm_active_users)",
-          "legendFormat": "活跃用户",
+          "expr": "sum(increase(itsm_ai_persist_errors_total[1h]))",
+          "legendFormat": "AI持久化错误(1h)",
           "refId": "A"
         }
       ],
-      "title": "活跃用户",
+      "title": "AI 持久化错误",
       "type": "stat"
     },
     {
@@ -175,67 +183,82 @@
             "mode": "absolute",
             "steps": [{ "color": "green", "value": null }]
           },
-          "unit": "short"
+          "unit": "s"
         }
       },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "id": 5,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "tooltip": { "mode": "multi" }
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(rate(itsm_tickets_created_total[5m])) by (category, priority)",
-          "legendFormat": "{{category}} - {{priority}}",
+          "expr": "histogram_quantile(0.50, sum(rate(itsm_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.90, sum(rate(itsm_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p90",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(itsm_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99",
+          "refId": "C"
         }
       ],
-      "title": "工单创建趋势",
+      "title": "API 延迟分位数",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "scheme", "fixedColor": "blue", "seriesBy": "last" },
+          "color": { "mode": "palette-classic" },
           "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
             "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "scaleDistribution": { "type": "linear" }
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [{ "color": "green", "value": null }]
-          }
-        },
-        "overrides": []
+          },
+          "unit": "reqps"
+        }
       },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "id": 6,
       "options": {
-        "calculate": false,
-        "cellGap": 1,
-        "color": { "mode": "scheme", "scheme": "Oranges", "steps": 128 },
-        "exemplars": { "color": "rgba(255,0,255,0.7)" },
-        "filterValues": { "le": 1e-9 },
-        "legend": { "show": true },
-        "rowsFrame": { "layout": "auto" },
-        "tooltip": { "show": true, "yHistogram": false },
-        "yAxis": { "axisPlacement": "left", "reverse": false, "unit": "s" }
+        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(increase(itsm_ticket_resolution_time_seconds_bucket[5m])) by (le)",
-          "format": "heatmap",
-          "legendFormat": "{{le}}",
+          "expr": "sum(rate(itsm_http_requests_total[5m])) by (method, status)",
+          "legendFormat": "{{method}} {{status}}",
           "refId": "A"
         }
       ],
-      "title": "工单解决时间分布",
-      "type": "heatmap"
+      "title": "API 请求速率（按状态码）",
+      "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
@@ -271,22 +294,22 @@
       "id": 7,
       "options": {
         "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "tooltip": { "mode": "multi" }
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum(rate(itsm_incident_mttr_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(itsm_timer_fire_latency_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum(rate(itsm_incident_mttr_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(itsm_timer_fire_latency_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B"
         }
       ],
-      "title": "事件MTTR",
+      "title": "Timer 触发延迟",
       "type": "timeseries"
     },
     {
@@ -294,6 +317,23 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -305,77 +345,28 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "id": 8,
       "options": {
-        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
-        "pieType": "donut",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "tooltip": { "mode": "single" }
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(increase(itsm_changes_success_total[24h]))",
-          "legendFormat": "成功",
+          "expr": "sum(rate(itsm_timer_fired_total{status=\"success\"}[5m])) by (type)",
+          "legendFormat": "{{type}} 成功",
           "refId": "A"
         },
         {
-          "expr": "sum(increase(itsm_changes_failed_total[24h]))",
-          "legendFormat": "失败",
+          "expr": "sum(rate(itsm_timer_fired_total{status=\"failed\"}[5m])) by (type)",
+          "legendFormat": "{{type}} 失败",
           "refId": "B"
-        }
-      ],
-      "title": "变更成功率（24h）",
-      "type": "piechart"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": { "type": "linear" },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": { "group": "A", "mode": "none" },
-            "thresholdsStyle": { "mode": "off" }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }]
-          },
-          "unit": "short"
-        }
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
-      "id": 9,
-      "options": {
-        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
-      },
-      "pluginVersion": "10.1.0",
-      "targets": [
-        {
-          "expr": "rate(itsm_knowledge_searches_total[5m])",
-          "legendFormat": "搜索次数",
-          "refId": "A"
         },
         {
-          "expr": "rate(itsm_knowledge_articles_created_total[5m])",
-          "legendFormat": "新文章数",
-          "refId": "B"
+          "expr": "sum(rate(itsm_timer_recovery_total[5m]))",
+          "legendFormat": "恢复调度",
+          "refId": "C"
         }
       ],
-      "title": "知识库使用趋势",
+      "title": "Timer 事件统计",
       "type": "timeseries"
     },
     {
@@ -408,33 +399,33 @@
           "unit": "short"
         }
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
-      "id": 10,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "id": 9,
       "options": {
-        "legend": { "calcs": ["mean", "sum"], "displayMode": "table", "placement": "bottom" },
-        "tooltip": { "mode": "single" }
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
       },
       "pluginVersion": "10.1.0",
       "targets": [
         {
-          "expr": "sum(rate(itsm_sla_violations_total[1h])) by (sla_type)",
-          "legendFormat": "{{sla_type}}",
+          "expr": "sum(rate(itsm_ai_persist_errors_total[5m])) by (operation, role)",
+          "legendFormat": "{{operation}} / {{role}}",
           "refId": "A"
         }
       ],
-      "title": "SLA违规趋势",
+      "title": "AI 持久化错误速率",
       "type": "timeseries"
     }
   ],
-  "refresh": "30s",
+  "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["itsm", "business"],
+  "tags": ["itsm", "api", "timer", "ai"],
   "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "ITSM Business Metrics",
-  "uid": "itsm-business",
+  "title": "ITSM Overview - API & Infrastructure",
+  "uid": "itsm-overview",
   "version": 1
 }
