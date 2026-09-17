@@ -17,7 +17,7 @@ func SetupFeishuRoutes(
 	feishu := auth.Group("/feishu")
 	{
 		// OAuth授权URL获取（需要登录）
-		feishu.GET("/oauth/auth-url", middleware.RequirePermission("feishu", "use"), feishuController.GetOAuthAuthURL)
+		feishu.GET("/oauth/auth-url", middleware.RequirePermission("connector", "write"), feishuController.GetOAuthAuthURL)
 		// OAuth回调（公开访问，因为是从飞书跳转回来）
 		public.GET("/feishu/oauth/callback/:instance_id", feishuController.OAuthCallback)
 

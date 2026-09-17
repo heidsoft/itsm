@@ -15,10 +15,10 @@ func SetupApprovalChainRoutes(tenant *gin.RouterGroup, h *approvalChainHandler.H
 	{
 		approvalChains.GET("", middleware.RequirePermission("approval", "read"), h.ListChains)
 		approvalChains.GET("/stats", middleware.RequirePermission("approval", "read"), h.GetStats)
-		approvalChains.POST("", middleware.RequirePermission("approval", "create"), h.CreateChain)
+		approvalChains.POST("", middleware.RequirePermission("approval", "write"), h.CreateChain)
 		approvalChains.GET("/:id", middleware.RequirePermission("approval", "read"), h.GetChain)
-		approvalChains.PUT("/:id", middleware.RequirePermission("approval", "update"), h.UpdateChain)
-		approvalChains.DELETE("/:id", middleware.RequirePermission("approval", "delete"), h.DeleteChain)
+		approvalChains.PUT("/:id", middleware.RequirePermission("approval", "write"), h.UpdateChain)
+		approvalChains.DELETE("/:id", middleware.RequirePermission("approval", "write"), h.DeleteChain)
 	}
 	// ==================== Escalation Matrix ====================
 	if escalationMatrixHandler != nil {

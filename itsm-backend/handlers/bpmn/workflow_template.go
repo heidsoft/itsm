@@ -21,11 +21,11 @@ func (h *WorkflowTemplateHandler) RegisterRoutes(r *gin.RouterGroup) {
 	routes.GET("", middleware.RequirePermission("workflow", "read"), h.List)
 	routes.GET("/:key", middleware.RequirePermission("workflow", "read"), h.Get)
 	routes.GET("/:key/versions", middleware.RequirePermission("workflow", "read"), h.Versions)
-	routes.POST("", middleware.RequirePermission("workflow", "create"), h.Create)
-	routes.PUT("/:key", middleware.RequirePermission("workflow", "update"), h.Update)
-	routes.POST("/:key/publish", middleware.RequirePermission("workflow", "update"), h.Publish)
-	routes.POST("/:key/archive", middleware.RequirePermission("workflow", "update"), h.Archive)
-	routes.POST("/:key/reload", middleware.RequirePermission("workflow", "update"), h.Reload)
+	routes.POST("", middleware.RequirePermission("workflow", "write"), h.Create)
+	routes.PUT("/:key", middleware.RequirePermission("workflow", "write"), h.Update)
+	routes.POST("/:key/publish", middleware.RequirePermission("workflow", "write"), h.Publish)
+	routes.POST("/:key/archive", middleware.RequirePermission("workflow", "write"), h.Archive)
+	routes.POST("/:key/reload", middleware.RequirePermission("workflow", "write"), h.Reload)
 }
 
 func NewWorkflowTemplateHandler(catalog *service.BPMNWorkflowTemplateCatalog) *WorkflowTemplateHandler {

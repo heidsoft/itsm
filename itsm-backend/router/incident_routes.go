@@ -26,7 +26,7 @@ func SetupIncidentRoutes(tenant *gin.RouterGroup, h *incidentHandler.IncidentHan
 		inc.POST("/:id/resolve", middleware.RequirePermission("incident", "write"), h.Resolve)
 		inc.POST("/:id/close", middleware.RequirePermission("incident", "write"), h.Close)
 		inc.POST("/:id/reopen", middleware.RequirePermission("incident", "write"), h.Reopen)
-		inc.POST("/:id/assign", middleware.RequirePermission("incident", "assign"), h.Assign)
+		inc.POST("/:id/assign", middleware.RequirePermission("incident", "write"), h.Assign)
 		inc.PUT("/:id/sla/pause", middleware.RequirePermission("incident", "write"), h.PauseSLA)
 		inc.PUT("/:id/sla/resume", middleware.RequirePermission("incident", "write"), h.ResumeSLA)
 		inc.POST("/:id/major-incident", middleware.RequirePermission("incident", "write"), h.EscalateMajor)

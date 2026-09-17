@@ -1597,6 +1597,20 @@ type permissionDef struct {
 
 // permissionDefinitions 返回权限定义种子清单（Permission 权威表的码空间）。
 // 守卫：pkg/seeder/role_permission_guard_test.go 锁定 builtinRolePermissionCodes() 引用的码必须都在此清单中。
+// AllDefinedPermissionCodes 返回权限码权威源（permissionDefinitions）的全部码。
+//
+// 供 CI 守卫测试校验「路由声明的 (resource, action) ⊆ 码空间」：
+// checkPermissionMatch 只做精确匹配，路由引用了码空间不存在的码时，
+// 该路由对除 super_admin 外的所有角色永久 403（B 类欠账，2026-09-17 清零）。
+func AllDefinedPermissionCodes() []string {
+	defs := permissionDefinitions()
+	out := make([]string, 0, len(defs))
+	for _, d := range defs {
+		out = append(out, d.Code)
+	}
+	return out
+}
+
 func permissionDefinitions() []permissionDef {
 	return []permissionDef{
 		// 工单权限
@@ -1790,6 +1804,10 @@ func permissionDefinitions() []permissionDef {
 		{"survey:read", "查看满意度调查", "survey", "read", "查看问卷定义与响应"},
 		{"marketplace:read", "查看扩展市场", "marketplace", "read", "查看扩展市场条目与安装记录"},
 		{"marketplace:write", "管理扩展市场", "marketplace", "write", "安装、卸载与配置扩展"},
+		// 租户管理（MSP 多租户核心面，批次 2 补码）：码空间无语义归宿的独立管理面，
+		// 收敛进 system/system_config 会丢失租户边界，故新增；授予 admin/sysadmin。
+		{"tenant:read", "查看租户", "tenant", "read", "查看租户列表与详情"},
+		{"tenant:write", "管理租户", "tenant", "write", "创建、更新、停用租户"},
 	}
 }
 
@@ -2423,6 +2441,7 @@ func builtinRolePermissionCodes() map[string][]string {
 			"dashboard:read", "dashboard:admin",
 			"knowledge:read", "knowledge:write", "knowledge:admin",
 			"cmdb:read", "cmdb:write", "cmdb:delete",
+			"tenant:read", "tenant:write",
 			"incident:read", "incident:write", "incident:force-update", "incident:admin",
 			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
 			"service_request:read", "service_request:write",
@@ -2490,6 +2509,59 @@ func builtinRolePermissionCodes() map[string][]string {
 		if codes, ok := m[role]; ok {
 			m[role] = appendMissingCodes(codes, "task:admin")
 		}
+	}
+
+	// 同义动作奇偶补齐（2026-09-17 批次 2/3）。
+	// 路由声明使用细分动作（create/update/...），历史种子只给了 write——
+	// 持有 write 的角色在路由级 RequirePermission 精确匹配下 403
+	// （实测 admin 缺 ticket:update/create，连更新工单都不可达）。
+	// 规则：write ⇒ 同义细分动作。这是**让已有 write 真正可用**的补齐，
+	// 不放大能力边界；delete/assign/approve 等非同义动作不在此自动授予。
+	synonymParity := map[string][]string{
+		"ticket":          {"create", "update"},
+		"ticket_category": {"create", "update"},
+		"ticket_tag":      {"create", "update"},
+		"ticket_template": {"create", "update"},
+		"department":      {"create", "update", "delete"},
+		"notification":    {"create"},
+		"system":          {"read"},
+	}
+	for role, codes := range m {
+		if role == "guest" {
+			continue
+		}
+		has := func(code string) bool {
+			for _, c := range codes {
+				if c == code {
+					return true
+				}
+			}
+			return false
+		}
+		var extras []string
+		for fam, acts := range synonymParity {
+			if !has(fam + ":write") {
+				continue
+			}
+			for _, a := range acts {
+				extras = append(extras, fam+":"+a)
+			}
+		}
+		if len(extras) > 0 {
+			m[role] = appendMissingCodes(codes, extras...)
+		}
+	}
+
+	// admin 显式补齐（2026-09-17 批次 2/3）：租内最高管理角色，
+	// 审批/派单/删除类动作由种子明确授予而非通配。
+	if codes, ok := m["admin"]; ok {
+		m["admin"] = appendMissingCodes(codes,
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"change:approve", "change:rollback",
+			"release:approve", "release:rollback",
+			"service_request:approve",
+			"incident:delete", "knowledge:delete",
+		)
 	}
 
 	return m

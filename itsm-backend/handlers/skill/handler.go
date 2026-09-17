@@ -112,7 +112,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 	// 读路径
 	markets := rg.Group("/skills")
-	markets.Use(middleware.RequirePermission("skill", "read"))
+	markets.Use(middleware.RequirePermission("marketplace", "read"))
 	{
 		markets.GET("", h.List)
 		markets.GET("/:code", h.Get)
@@ -120,7 +120,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 	// 写路径（admin 子路径）
 	admin := rg.Group("/admin/skills")
-	admin.Use(middleware.RequirePermission("skill", "write"))
+	admin.Use(middleware.RequirePermission("marketplace", "write"))
 	{
 		admin.POST("", h.Create)
 		admin.PUT("/:code", h.Update)

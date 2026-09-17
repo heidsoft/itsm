@@ -52,7 +52,7 @@ func (h *Handler) SetInboundDedup(d *connector.InboundDedup) { h.inboundDedup = 
 func (h *Handler) RegisterRoutes(auth *gin.RouterGroup, public *gin.RouterGroup) {
 	feishu := auth.Group("/feishu")
 	{
-		feishu.GET("/oauth/auth-url", middleware.RequirePermission("feishu", "use"), h.GetOAuthAuthURL)
+		feishu.GET("/oauth/auth-url", middleware.RequirePermission("connector", "write"), h.GetOAuthAuthURL)
 		feishu.POST("/sync/ticket/:ticket_id", middleware.RequirePermission("ticket", "update"), h.SyncTicketToFeishu)
 	}
 

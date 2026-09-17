@@ -644,7 +644,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		tenant.GET("/workflows", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
 		})
-		tenant.POST("/workflows", middleware.RequirePermission("workflow", "create"), func(c *gin.Context) {
+		tenant.POST("/workflows", middleware.RequirePermission("workflow", "write"), func(c *gin.Context) {
 			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
 		})
 

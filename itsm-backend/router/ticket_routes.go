@@ -19,11 +19,11 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		tickets.POST("", middleware.RequirePermission("ticket", "create"), config.TicketHandler.CreateTicket)
 
 		if config.TicketViewHandler != nil {
-			tickets.GET("/views", middleware.RequirePermission("view", "read"), config.TicketViewHandler.ListTicketViews)
-			tickets.POST("/views", middleware.RequirePermission("view", "create"), config.TicketViewHandler.CreateTicketView)
-			tickets.GET("/views/:id", middleware.RequirePermission("view", "read"), config.TicketViewHandler.GetTicketView)
-			tickets.PUT("/views/:id", middleware.RequirePermission("view", "update"), config.TicketViewHandler.UpdateTicketView)
-			tickets.DELETE("/views/:id", middleware.RequirePermission("view", "delete"), config.TicketViewHandler.DeleteTicketView)
+			tickets.GET("/views", middleware.RequirePermission("ticket", "read"), config.TicketViewHandler.ListTicketViews)
+			tickets.POST("/views", middleware.RequirePermission("ticket", "write"), config.TicketViewHandler.CreateTicketView)
+			tickets.GET("/views/:id", middleware.RequirePermission("ticket", "read"), config.TicketViewHandler.GetTicketView)
+			tickets.PUT("/views/:id", middleware.RequirePermission("ticket", "write"), config.TicketViewHandler.UpdateTicketView)
+			tickets.DELETE("/views/:id", middleware.RequirePermission("ticket", "write"), config.TicketViewHandler.DeleteTicketView)
 		}
 
 		tickets.GET("/search", middleware.RequirePermission("ticket", "read"), config.TicketHandler.SearchTickets)
@@ -36,14 +36,14 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		}
 
 		// 工单模板
-		tickets.GET("/templates", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplates)
-		tickets.GET("/templates/categories", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplateCategories)
-		tickets.POST("/templates", middleware.RequirePermission("template", "create"), config.TicketHandler.CreateTicketTemplate)
-		tickets.GET("/templates/:id", middleware.RequirePermission("template", "read"), config.TicketHandler.GetTicketTemplate)
-		tickets.PUT("/templates/:id", middleware.RequirePermission("template", "update"), config.TicketHandler.UpdateTicketTemplate)
-		tickets.PATCH("/templates/:id/status", middleware.RequirePermission("template", "update"), config.TicketHandler.UpdateTicketTemplateStatus)
-		tickets.POST("/templates/:id/copy", middleware.RequirePermission("template", "create"), config.TicketHandler.CopyTicketTemplate)
-		tickets.DELETE("/templates/:id", middleware.RequirePermission("template", "delete"), config.TicketHandler.DeleteTicketTemplate)
+		tickets.GET("/templates", middleware.RequirePermission("ticket_template", "read"), config.TicketHandler.GetTicketTemplates)
+		tickets.GET("/templates/categories", middleware.RequirePermission("ticket_template", "read"), config.TicketHandler.GetTicketTemplateCategories)
+		tickets.POST("/templates", middleware.RequirePermission("ticket_template", "create"), config.TicketHandler.CreateTicketTemplate)
+		tickets.GET("/templates/:id", middleware.RequirePermission("ticket_template", "read"), config.TicketHandler.GetTicketTemplate)
+		tickets.PUT("/templates/:id", middleware.RequirePermission("ticket_template", "update"), config.TicketHandler.UpdateTicketTemplate)
+		tickets.PATCH("/templates/:id/status", middleware.RequirePermission("ticket_template", "update"), config.TicketHandler.UpdateTicketTemplateStatus)
+		tickets.POST("/templates/:id/copy", middleware.RequirePermission("ticket_template", "create"), config.TicketHandler.CopyTicketTemplate)
+		tickets.DELETE("/templates/:id", middleware.RequirePermission("ticket_template", "delete"), config.TicketHandler.DeleteTicketTemplate)
 
 		tickets.POST("/:id/escalate", middleware.RequirePermission("ticket", "escalate"), config.TicketHandler.EscalateTicket)
 		tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicketActivity)
@@ -182,28 +182,28 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 			// 审批工作流CRUD
 			approvalWorkflows := tenant.Group("/approval-workflows")
 			{
-				approvalWorkflows.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.ListWorkflows)
-				approvalWorkflows.POST("", middleware.RequirePermission("approval_workflow", "create"), config.ApprovalHandler.CreateWorkflow)
-				approvalWorkflows.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetWorkflow)
-				approvalWorkflows.PUT("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.UpdateWorkflow)
-				approvalWorkflows.POST("/:id/migrate-to-bpmn", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.MigrateWorkflowToBPMN)
-				approvalWorkflows.PATCH("/:id", middleware.RequirePermission("approval_workflow", "update"), config.ApprovalHandler.PatchWorkflow)
-				approvalWorkflows.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalHandler.DeleteWorkflow)
+				approvalWorkflows.GET("", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.ListWorkflows)
+				approvalWorkflows.POST("", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.CreateWorkflow)
+				approvalWorkflows.GET("/:id", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetWorkflow)
+				approvalWorkflows.PUT("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.UpdateWorkflow)
+				approvalWorkflows.POST("/:id/migrate-to-bpmn", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.MigrateWorkflowToBPMN)
+				approvalWorkflows.PATCH("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.PatchWorkflow)
+				approvalWorkflows.DELETE("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.DeleteWorkflow)
 			}
 			// 兼容旧路径 /approvals
 			approvals := tenant.Group("/approvals")
 			{
-				approvals.GET("", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.ListWorkflows)
-				approvals.POST("", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.CreateWorkflow)
-				approvals.GET("/:id", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetWorkflow)
-				approvals.PUT("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.UpdateWorkflow)
-				approvals.PATCH("/:id", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.PatchWorkflow)
-				approvals.DELETE("/:id", middleware.RequirePermission("approval_workflow", "delete"), config.ApprovalHandler.DeleteWorkflow)
-				approvals.GET("/records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
-				approvals.POST("/submit", middleware.RequirePermission("approval_workflow", "write"), config.ApprovalHandler.SubmitApproval)
+				approvals.GET("", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.ListWorkflows)
+				approvals.POST("", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.CreateWorkflow)
+				approvals.GET("/:id", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetWorkflow)
+				approvals.PUT("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.UpdateWorkflow)
+				approvals.PATCH("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.PatchWorkflow)
+				approvals.DELETE("/:id", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.DeleteWorkflow)
+				approvals.GET("/records", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetApprovalRecords)
+				approvals.POST("/submit", middleware.RequirePermission("approval", "write"), config.ApprovalHandler.SubmitApproval)
 				// 兼容旧路径：/approval-records 和 /my-approvals
-				tenant.GET("/approval-records", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
-				tenant.GET("/my-approvals", middleware.RequirePermission("approval_workflow", "read"), config.ApprovalHandler.GetApprovalRecords)
+				tenant.GET("/approval-records", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetApprovalRecords)
+				tenant.GET("/my-approvals", middleware.RequirePermission("approval", "read"), config.ApprovalHandler.GetApprovalRecords)
 
 			}
 
@@ -211,15 +211,15 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 
 		// 工单流转工作流
 		if config.TicketWorkflowHandler != nil {
-			tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.AcceptTicket)
-			tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.RejectTicket)
-			tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.WithdrawTicket)
-			tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ForwardTicket)
-			tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.CCTicket)
-			tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ApproveTicket)
-			tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ResolveTicket)
-			tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.CloseTicket)
-			tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "update"), config.TicketWorkflowHandler.ReopenTicket)
+			tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.AcceptTicket)
+			tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.RejectTicket)
+			tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.WithdrawTicket)
+			tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ForwardTicket)
+			tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.CCTicket)
+			tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ApproveTicket)
+			tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ResolveTicket)
+			tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.CloseTicket)
+			tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ReopenTicket)
 			tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.ListTicketCCRecords)
 			tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowState)
 			// 工单详情体验增强：V2 聚合 BPMN 真实节点状态（当前/下一/历史）。
@@ -230,24 +230,24 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 
 		// 工单自动化规则
 		if config.TicketAutomationRuleHandler != nil {
-			tickets.GET("/automation-rules", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleHandler.ListAutomationRules)
-			tickets.POST("/automation-rules", middleware.RequirePermission("automation_rule", "create"), config.TicketAutomationRuleHandler.CreateAutomationRule)
-			tickets.GET("/automation-rules/:id", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleHandler.GetAutomationRule)
-			tickets.PUT("/automation-rules/:id", middleware.RequirePermission("automation_rule", "update"), config.TicketAutomationRuleHandler.UpdateAutomationRule)
-			tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("automation_rule", "delete"), config.TicketAutomationRuleHandler.DeleteAutomationRule)
-			tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("automation_rule", "update"), config.TicketAutomationRuleHandler.TestAutomationRule)
+			tickets.GET("/automation-rules", middleware.RequirePermission("system_config", "read"), config.TicketAutomationRuleHandler.ListAutomationRules)
+			tickets.POST("/automation-rules", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.CreateAutomationRule)
+			tickets.GET("/automation-rules/:id", middleware.RequirePermission("system_config", "read"), config.TicketAutomationRuleHandler.GetAutomationRule)
+			tickets.PUT("/automation-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.UpdateAutomationRule)
+			tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.DeleteAutomationRule)
+			tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.TestAutomationRule)
 		}
 
 		// 工单分配规则
 		if config.TicketAssignmentSmartHandler != nil {
-			tickets.POST("/:id/auto-assign", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartHandler.AutoAssign)
-			tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartHandler.GetAssignRecommendations)
-			tickets.GET("/assignment-rules", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartHandler.ListAssignmentRules)
-			tickets.POST("/assignment-rules", middleware.RequirePermission("assignment_rule", "create"), config.TicketAssignmentSmartHandler.CreateAssignmentRule)
-			tickets.POST("/assignment-rules/test", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartHandler.TestAssignmentRule)
-			tickets.GET("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartHandler.GetAssignmentRule)
-			tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "update"), config.TicketAssignmentSmartHandler.UpdateAssignmentRule)
-			tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "delete"), config.TicketAssignmentSmartHandler.DeleteAssignmentRule)
+			tickets.POST("/:id/auto-assign", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.AutoAssign)
+			tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.GetAssignRecommendations)
+			tickets.GET("/assignment-rules", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.ListAssignmentRules)
+			tickets.POST("/assignment-rules", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.CreateAssignmentRule)
+			tickets.POST("/assignment-rules/test", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.TestAssignmentRule)
+			tickets.GET("/assignment-rules/:id", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.GetAssignmentRule)
+			tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.UpdateAssignmentRule)
+			tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.DeleteAssignmentRule)
 		}
 
 		// 工单评分
@@ -269,7 +269,7 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		}
 
 		if config.AnalyticsHandler != nil {
-			tickets.POST("/analytics/export", middleware.RequirePermission("report", "export"), config.AnalyticsHandler.ExportAnalytics)
+			tickets.POST("/analytics/export", middleware.RequirePermission("ticket", "export"), config.AnalyticsHandler.ExportAnalytics)
 			// B8: GET /api/v1/analytics/tickets - 工单分析概览
 			// 挂在 tenant 顶层 group，路径 = /api/v1/analytics/tickets
 		}

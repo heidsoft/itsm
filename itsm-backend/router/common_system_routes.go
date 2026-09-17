@@ -61,14 +61,14 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 		if config.GroupHandler != nil {
 			groups := tenant.Group("/groups")
 			{
-				groups.GET("", middleware.RequirePermission("groups", "read"), config.GroupHandler.ListGroups)
-				groups.POST("", middleware.RequirePermission("groups", "write"), config.GroupHandler.CreateGroup)
-				groups.GET("/:id", middleware.RequirePermission("groups", "read"), config.GroupHandler.GetGroup)
-				groups.PUT("/:id", middleware.RequirePermission("groups", "write"), config.GroupHandler.UpdateGroup)
-				groups.DELETE("/:id", middleware.RequirePermission("groups", "write"), config.GroupHandler.DeleteGroup)
-				groups.POST("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupHandler.AddUserToGroup)
-				groups.DELETE("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupHandler.RemoveUserFromGroup)
-				groups.GET("/:id/members", middleware.RequirePermission("groups", "read"), config.GroupHandler.GetGroupMembers)
+				groups.GET("", middleware.RequirePermission("group", "read"), config.GroupHandler.ListGroups)
+				groups.POST("", middleware.RequirePermission("group", "write"), config.GroupHandler.CreateGroup)
+				groups.GET("/:id", middleware.RequirePermission("group", "read"), config.GroupHandler.GetGroup)
+				groups.PUT("/:id", middleware.RequirePermission("group", "write"), config.GroupHandler.UpdateGroup)
+				groups.DELETE("/:id", middleware.RequirePermission("group", "write"), config.GroupHandler.DeleteGroup)
+				groups.POST("/:id/members", middleware.RequirePermission("group", "write"), config.GroupHandler.AddUserToGroup)
+				groups.DELETE("/:id/members", middleware.RequirePermission("group", "write"), config.GroupHandler.RemoveUserFromGroup)
+				groups.GET("/:id/members", middleware.RequirePermission("group", "read"), config.GroupHandler.GetGroupMembers)
 			}
 		}
 
@@ -82,9 +82,9 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			org.DELETE("/departments/:id", middleware.RequirePermission("department", "delete"), config.CommonHandler.DeleteDepartment)
 			org.GET("/teams", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeams)
 			org.GET("/teams/:id", middleware.RequirePermission("team", "read"), config.CommonHandler.GetTeam)
-			org.POST("/teams", middleware.RequirePermission("team", "create"), config.CommonHandler.CreateTeam)
-			org.PUT("/teams/:id", middleware.RequirePermission("team", "update"), config.CommonHandler.UpdateTeam)
-			org.DELETE("/teams/:id", middleware.RequirePermission("team", "delete"), config.CommonHandler.DeleteTeam)
+			org.POST("/teams", middleware.RequirePermission("team", "write"), config.CommonHandler.CreateTeam)
+			org.PUT("/teams/:id", middleware.RequirePermission("team", "write"), config.CommonHandler.UpdateTeam)
+			org.DELETE("/teams/:id", middleware.RequirePermission("team", "write"), config.CommonHandler.DeleteTeam)
 		}
 
 		// Projects
@@ -112,8 +112,8 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 
 		sys := tenant.Group("/system")
 		{
-			sys.GET("/tags", middleware.RequirePermission("tag", "read"), config.CommonHandler.ListTags)
-			sys.GET("/audit-logs", middleware.RequirePermission("audit_log", "read"), config.CommonHandler.GetAuditLogs)
+			sys.GET("/tags", middleware.RequirePermission("ticket_tag", "read"), config.CommonHandler.ListTags)
+			sys.GET("/audit-logs", middleware.RequirePermission("audit", "read"), config.CommonHandler.GetAuditLogs)
 		}
 
 		// B7/Bug10: 顶层路由别名（兼容前端 /api/v1/{departments,teams,tags,admin/tenants} 旧路径）
@@ -122,7 +122,7 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			tenant.GET("/departments", middleware.RequirePermission("department", "read"), config.CommonHandler.ListDepartments)
 			tenant.GET("/departments/tree", middleware.RequirePermission("department", "read"), config.CommonHandler.GetDepartmentTree)
 			tenant.GET("/teams", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeams)
-			tenant.GET("/tags", middleware.RequirePermission("tag", "read"), config.CommonHandler.ListTags)
+			tenant.GET("/tags", middleware.RequirePermission("ticket_tag", "read"), config.CommonHandler.ListTags)
 		}
 		if config.TenantHandler != nil {
 			admin := tenant.Group("/admin")
@@ -136,11 +136,11 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			roles := tenant.Group("/roles")
 			{
 				roles.GET("", middleware.RequirePermission("role", "read"), config.RBACHandler.ListRoles)
-				roles.POST("", middleware.RequirePermission("role", "create"), config.RBACHandler.CreateRole)
+				roles.POST("", middleware.RequirePermission("role", "write"), config.RBACHandler.CreateRole)
 				roles.GET("/:id", middleware.RequirePermission("role", "read"), config.RBACHandler.GetRole)
-				roles.PUT("/:id", middleware.RequirePermission("role", "update"), config.RBACHandler.UpdateRole)
+				roles.PUT("/:id", middleware.RequirePermission("role", "write"), config.RBACHandler.UpdateRole)
 				roles.DELETE("/:id", middleware.RequirePermission("role", "delete"), config.RBACHandler.DeleteRole)
-				roles.POST("/:id/permissions", middleware.RequirePermission("role", "update"), config.RBACHandler.AssignPermissions)
+				roles.POST("/:id/permissions", middleware.RequirePermission("role", "write"), config.RBACHandler.AssignPermissions)
 			}
 		}
 
@@ -148,8 +148,8 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			permissions := tenant.Group("/permissions")
 			{
 				permissions.GET("", middleware.RequirePermission("permission", "read"), config.RBACHandler.ListPermissions)
-				permissions.POST("", middleware.RequirePermission("permission", "create"), config.RBACHandler.CreatePermission)
-				permissions.POST("/init", middleware.RequirePermission("permission", "create"), config.RBACHandler.InitDefaultPermissions)
+				permissions.POST("", middleware.RequirePermission("role", "write"), config.RBACHandler.CreatePermission)
+				permissions.POST("/init", middleware.RequirePermission("role", "write"), config.RBACHandler.InitDefaultPermissions)
 			}
 		}
 
@@ -157,12 +157,12 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 		if config.RBACHandler != nil {
 			menus := tenant.Group("/menus")
 			{
-				menus.GET("", middleware.RequirePermission("menu", "read"), config.RBACHandler.ListMenus)
-				menus.POST("", middleware.RequirePermission("menu", "create"), config.RBACHandler.CreateMenu)
-				menus.GET("/:id", middleware.RequirePermission("menu", "read"), config.RBACHandler.GetMenu)
-				menus.PUT("/:id", middleware.RequirePermission("menu", "update"), config.RBACHandler.UpdateMenu)
-				menus.DELETE("/:id", middleware.RequirePermission("menu", "delete"), config.RBACHandler.DeleteMenu)
-				menus.POST("/init", middleware.RequirePermission("menu", "create"), config.RBACHandler.InitDefaultMenus)
+				menus.GET("", middleware.RequirePermission("system_config", "read"), config.RBACHandler.ListMenus)
+				menus.POST("", middleware.RequirePermission("system_config", "write"), config.RBACHandler.CreateMenu)
+				menus.GET("/:id", middleware.RequirePermission("system_config", "read"), config.RBACHandler.GetMenu)
+				menus.PUT("/:id", middleware.RequirePermission("system_config", "write"), config.RBACHandler.UpdateMenu)
+				menus.DELETE("/:id", middleware.RequirePermission("system_config", "write"), config.RBACHandler.DeleteMenu)
+				menus.POST("/init", middleware.RequirePermission("system_config", "write"), config.RBACHandler.InitDefaultMenus)
 			}
 		}
 
@@ -171,11 +171,11 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			tenants := tenant.Group("/tenants")
 			{
 				tenants.GET("", middleware.RequirePermission("tenant", "read"), config.TenantHandler.ListTenants)
-				tenants.POST("", middleware.RequirePermission("tenant", "create"), config.TenantHandler.CreateTenant)
+				tenants.POST("", middleware.RequirePermission("tenant", "write"), config.TenantHandler.CreateTenant)
 				tenants.GET("/:id", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetTenant)
-				tenants.PUT("/:id", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenant)
-				tenants.DELETE("/:id", middleware.RequirePermission("tenant", "delete"), config.TenantHandler.DeleteTenant)
-				tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "update"), config.TenantHandler.UpdateTenantStatus)
+				tenants.PUT("/:id", middleware.RequirePermission("tenant", "write"), config.TenantHandler.UpdateTenant)
+				tenants.DELETE("/:id", middleware.RequirePermission("tenant", "write"), config.TenantHandler.DeleteTenant)
+				tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "write"), config.TenantHandler.UpdateTenantStatus)
 			}
 		}
 
@@ -189,9 +189,9 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 				notifPrefs.GET("/event-types", middleware.RequirePermission("notification", "read"), config.NotificationHandler.ListEventTypes)
 				notifPrefs.GET("/:event_type", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetPreference)
 				notifPrefs.POST("", middleware.RequirePermission("notification", "create"), config.NotificationHandler.CreateOrUpdatePreference)
-				notifPrefs.PUT("", middleware.RequirePermission("notification", "update"), config.NotificationHandler.BulkUpdatePreferences)
-				notifPrefs.DELETE("/:event_type", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeletePreference)
-				notifPrefs.POST("/reset", middleware.RequirePermission("notification", "update"), config.NotificationHandler.ResetPreferences)
+				notifPrefs.PUT("", middleware.RequirePermission("notification", "write"), config.NotificationHandler.BulkUpdatePreferences)
+				notifPrefs.DELETE("/:event_type", middleware.RequirePermission("notification", "write"), config.NotificationHandler.DeletePreference)
+				notifPrefs.POST("/reset", middleware.RequirePermission("notification", "write"), config.NotificationHandler.ResetPreferences)
 				notifPrefs.POST("/init", middleware.RequirePermission("notification", "create"), config.NotificationHandler.InitializeDefaultPreferences)
 			}
 		}
@@ -202,11 +202,11 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			{
 				notifications.GET("", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetNotifications)
 				notifications.GET("/unread-count", middleware.RequirePermission("notification", "read"), config.NotificationHandler.GetUnreadCount)
-				notifications.PUT("/:id/read", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkNotificationRead)
-				notifications.PUT("/read-all", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkAllNotificationsRead)
-				notifications.PUT("/batch/read", middleware.RequirePermission("notification", "update"), config.NotificationHandler.MarkNotificationsRead)
-				notifications.DELETE("/batch", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeleteNotifications)
-				notifications.DELETE("/:id", middleware.RequirePermission("notification", "delete"), config.NotificationHandler.DeleteNotification)
+				notifications.PUT("/:id/read", middleware.RequirePermission("notification", "write"), config.NotificationHandler.MarkNotificationRead)
+				notifications.PUT("/read-all", middleware.RequirePermission("notification", "write"), config.NotificationHandler.MarkAllNotificationsRead)
+				notifications.PUT("/batch/read", middleware.RequirePermission("notification", "write"), config.NotificationHandler.MarkNotificationsRead)
+				notifications.DELETE("/batch", middleware.RequirePermission("notification", "write"), config.NotificationHandler.DeleteNotifications)
+				notifications.DELETE("/:id", middleware.RequirePermission("notification", "write"), config.NotificationHandler.DeleteNotification)
 				notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationHandler.CreateNotification)
 			}
 		}

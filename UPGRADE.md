@@ -104,6 +104,32 @@ configured），但角色权限映射此前缺少 `admin` / `technician` 条目�
 
 ---
 
+### 1.7 权限码词表统一 + 预检映射全量对齐（2026-09-17，权限扩大提示）
+批次 2/3 治本批次落地后，**大量此前对普通管理角色不可达的管理面恢复可用**，属于权限扩大，
+私有化部署升级后建议复核各角色的实际可达面是否符合最小权限预期。
+
+**权限变化摘要**（DBOnly configured 态，种子收敛式写入，`itsm-init` 重跑即生效）：
+- **CMDB 全域恢复可达**：`cmdb_ci*`/`cmdb_cloud_*`/`cloud_*` 等 15 族路由码收敛到既有 `cmdb:*`，
+  持有 `cmdb:read/write/delete` 的角色即刻恢复配置项/CI 类型/关系/标签/视图/导入导出/云资源纳管全量访问。
+- **admin 能力补齐**：新增 `ticket:{assign,escalate,export}`、`change:{approve,rollback}`、
+  `release:{approve,rollback}`、`service_request:approve`、`incident:delete`、`knowledge:delete`、
+  `ticket:{create,update}`（此前 admin 缺 ticket:update/create，**更新工单会 403**）。
+- **write⇒同义细分动作奇偶补齐**（全角色）：ticket/ticket_category/ticket_tag/ticket_template 的
+  write 持有者自动获得 create/update；department write 持有者获得 create/update/delete；
+  notification write 持有者获得 create；system write 持有者获得 read。
+- **新增码**：`tenant:{read,write}`（授予 admin/sysadmin）。
+- **AI 端点预检放宽**：`/ai/chat`、`/ai/triage`、`/ai/rag/search`、`/ai/predictions`、
+  `/ai/*/analyze`、`/agent/tools/execute`、`/cmdb/cis/search`、`/tickets/prediction/*`、
+  `/sla/monitor*` 等 18 条 POST 端点预检对齐路由声明的 read——持有对应 read 码的角色
+  （如 technician/agent 的 ai:read）此前被预检层误拒，现在可用。若需限制 AI 消耗，
+  请用限流/配额机制而非 RBAC。
+- **预检映射对齐**：`/vendors /surveys /connectors /applications /reports /menus /tenants /cloud`
+  等路径的 403「推断失配」全部消除；`/audit-logs` 资源名错（audit_logs→audit）修复。
+
+**升级操作**：无手工步骤，重建 `itsm-init` 镜像并 `up -d` 即可（seeder 收敛式写入会
+补齐新码、删除已收敛的旧映射行）。验证：admin 登录后访问 `/cmdb/cis`、`/audit-logs`、
+`/tenants` 应 200。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

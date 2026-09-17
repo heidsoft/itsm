@@ -210,7 +210,9 @@ func TestGetPermissionFromPath(t *testing.T) {
 		perm := getPermissionFromPath("POST", "/api/v1/tickets")
 		assert.NotNil(t, perm)
 		assert.Equal(t, "ticket", perm.Resource)
-		assert.Equal(t, "write", perm.Action)
+		// 批次 3（2026-09-17）：预检以路由声明为权威——POST /tickets 声明 ticket:create，
+		// 预检从 write 对齐为 create（write⇒create 已在种子奇偶补齐，能力不缩水）
+		assert.Equal(t, "create", perm.Action)
 	})
 
 	t.Run("Assign Ticket Returns Assign Permission", func(t *testing.T) {
@@ -243,7 +245,7 @@ func TestPatchMethodUsesUpdateContract(t *testing.T) {
 		resource string
 		action   string
 	}{
-		{"PATCH", "/api/v1/tickets/123", "ticket", "write"},
+		{"PATCH", "/api/v1/tickets/123", "ticket", "update"},
 		{"PATCH", "/api/v1/incidents/1", "incident", "write"},
 		{"PATCH", "/api/v1/problems/1", "problem", "write"},
 		{"PATCH", "/api/v1/changes/1", "change", "write"},

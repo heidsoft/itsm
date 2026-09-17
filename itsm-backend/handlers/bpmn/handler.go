@@ -70,16 +70,16 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) registerWorkflowCompatibilityRoutes(r *gin.RouterGroup) {
 	workflow := r.Group("/workflow")
-	workflow.GET("/instances", middleware.RequirePermission("process_instance", "read"), h.workflow.ListProcessInstances)
-	workflow.GET("/instances/:id", middleware.RequirePermission("process_instance", "read"), h.workflow.GetProcessInstance)
-	workflow.POST("/instances", middleware.RequirePermission("process_instance", "create"), h.workflow.StartProcess)
-	workflow.PUT("/instances/:id/terminate", middleware.RequirePermission("process_instance", "update"), h.workflow.TerminateProcess)
-	workflow.PUT("/instances/:id/suspend", middleware.RequirePermission("process_instance", "update"), h.workflow.SuspendProcess)
-	workflow.PUT("/instances/:id/resume", middleware.RequirePermission("process_instance", "update"), h.workflow.ResumeProcess)
+	workflow.GET("/instances", middleware.RequirePermission("bpmn", "read"), h.workflow.ListProcessInstances)
+	workflow.GET("/instances/:id", middleware.RequirePermission("bpmn", "read"), h.workflow.GetProcessInstance)
+	workflow.POST("/instances", middleware.RequirePermission("bpmn", "write"), h.workflow.StartProcess)
+	workflow.PUT("/instances/:id/terminate", middleware.RequirePermission("bpmn", "write"), h.workflow.TerminateProcess)
+	workflow.PUT("/instances/:id/suspend", middleware.RequirePermission("bpmn", "write"), h.workflow.SuspendProcess)
+	workflow.PUT("/instances/:id/resume", middleware.RequirePermission("bpmn", "write"), h.workflow.ResumeProcess)
 	workflow.GET("/tasks", middleware.RequirePermission("task", "read"), h.workflow.ListUserTasks)
 	workflow.GET("/tasks/all", middleware.RequirePermission("task", "admin"), h.workflow.ListAllTasks)
 	workflow.PUT("/tasks/:id/complete", middleware.RequirePermission("task", "update"), h.workflow.CompleteTask)
 	workflow.POST("/tasks/:id/claim", middleware.RequirePermission("task", "update"), h.workflow.ClaimTask)
 	workflow.PUT("/tasks/:id/reassign", middleware.RequirePermission("task", "update"), h.workflow.ReassignTask)
-	workflow.PUT("/tasks/:id/terminate", middleware.RequirePermission("process_instance", "update"), h.workflow.TerminateTask)
+	workflow.PUT("/tasks/:id/terminate", middleware.RequirePermission("bpmn", "write"), h.workflow.TerminateTask)
 }

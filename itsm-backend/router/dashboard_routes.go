@@ -143,19 +143,19 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.GET("/config", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardConfig())
 		})
-		dashboard.POST("/config", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/config", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true})
 		})
 		dashboard.GET("/layout", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardLayout())
 		})
-		dashboard.POST("/layout", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/layout", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true})
 		})
 		dashboard.GET("/widgets/available", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardWidgets())
 		})
-		dashboard.POST("/widgets", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/widgets", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			widget := dashboardWidgetByID("custom_widget")
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err == nil {
@@ -171,10 +171,10 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.GET("/widgets/:widget_id/data", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 		})
-		dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/widgets/:widget_id/refresh", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, dashboardWidgetByID(c.Param("widget_id")))
 		})
-		dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.PUT("/widgets/:widget_id", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			widget := dashboardWidgetByID(c.Param("widget_id"))
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err == nil {
@@ -240,7 +240,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.GET("/reports", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
 		})
-		dashboard.POST("/reports/:report_type", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/reports/:report_type", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{
 				"id":         0,
 				"name":       c.Param("report_type"),
@@ -256,16 +256,16 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.GET("/reports/:report_id/download", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			c.Data(200, "text/plain; charset=utf-8", []byte("report is not generated yet"))
 		})
-		dashboard.POST("/export", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/export", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"downloadUrl": ""})
 		})
 		dashboard.GET("/templates", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, []gin.H{defaultDashboardTemplate()})
 		})
-		dashboard.POST("/templates", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/templates", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"template": defaultDashboardTemplate()})
 		})
-		dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("dashboard", "write"), func(c *gin.Context) {
+		dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
 		})
 	}

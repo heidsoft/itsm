@@ -132,7 +132,7 @@ func (c *AIGeneratorHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmnAI := r.Group("/bpmn/ai")
 	{
 		// 生成BPMN流程
-		bpmnAI.POST("/generate", middleware.RequirePermission("workflow", "create"), c.GenerateBPMN)
+		bpmnAI.POST("/generate", middleware.RequirePermission("workflow", "write"), c.GenerateBPMN)
 		// 预览流程结构
 		bpmnAI.POST("/preview", middleware.RequirePermission("workflow", "read"), c.PreviewBPMN)
 		// 获取模板建议
