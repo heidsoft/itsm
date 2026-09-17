@@ -818,7 +818,7 @@ func NewApplication() *Application {
 	// 初始化模板并部署默认流程
 	// 多租户语义:默认流程模板与流程绑定是每租户的基础设施,
 	// 部署到所有 active 租户,而不是硬编码 tenant_id=1。
-	go func() {
+	common.GoSafe(func() {
 		ctx := context.Background()
 		tenants, err := client.Tenant.Query().
 			Where(tenant.StatusEQ("active")).
@@ -835,7 +835,7 @@ func NewApplication() *Application {
 				sugar.Warnw("Failed to init default process bindings", "tenant_id", t.ID, "error", err)
 			}
 		}
-	}()
+	}, common.GoSafeOptions{Logger: sugar, TaskName: "bpmn-template-bootstrap-deploy"})
 
 	// Domain: Service Catalog (DDD)
 	scRepo := service_catalog.NewEntRepository(client)
