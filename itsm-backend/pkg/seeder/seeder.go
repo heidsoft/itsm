@@ -1700,8 +1700,8 @@ func permissionDefinitions() []permissionDef {
 		{"user:write", "管理用户", "user", "write", "创建、编辑用户"},
 		{"user:delete", "删除用户", "user", "delete", "删除用户"},
 		// 组权限
-		{"group:read", "查看组", "groups", "read", "查看组列表和详情"},
-		{"group:write", "管理组", "groups", "write", "创建、编辑、删除组"},
+		{"group:read", "查看组", "group", "read", "查看组列表和详情"},
+		{"group:write", "管理组", "group", "write", "创建、编辑、删除组"},
 		// 角色权限
 		{"role:read", "查看角色", "role", "read", "查看角色列表"},
 		{"role:write", "管理角色", "role", "write", "创建、编辑角色"},

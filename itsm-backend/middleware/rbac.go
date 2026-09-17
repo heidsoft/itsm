@@ -159,8 +159,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "application", Action: "read"},
 		{Resource: "application", Action: "write"},
 		// Groups management permissions
-		{Resource: "groups", Action: "read"},
-		{Resource: "groups", Action: "write"},
+		{Resource: "group", Action: "read"},
+		{Resource: "group", Action: "write"},
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
@@ -239,8 +239,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "license", Action: "read"},
 		{Resource: "license", Action: "write"},
 		// Groups management permissions
-		{Resource: "groups", Action: "read"},
-		{Resource: "groups", Action: "write"},
+		{Resource: "group", Action: "read"},
+		{Resource: "group", Action: "write"},
 		// Organization permissions
 		{Resource: "org", Action: "read"},
 		{Resource: "org", Action: "write"},
@@ -282,7 +282,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "alerts", Action: "read"},
 		{Resource: "ai", Action: "read"},
 		// Groups management permissions
-		{Resource: "groups", Action: "read"},
+		{Resource: "group", Action: "read"},
 		// BPMN Workflow permissions
 		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
 		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
@@ -306,7 +306,7 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "alerts", Action: "read"},
 		{Resource: "ai", Action: "read"},
 		// Groups management permissions
-		{Resource: "groups", Action: "read"},
+		{Resource: "group", Action: "read"},
 		// BPMN Workflow permissions
 		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
 		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
