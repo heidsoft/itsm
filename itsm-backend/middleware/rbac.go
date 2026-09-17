@@ -737,8 +737,6 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/workflow/tasks":     {Resource: "task", Action: "read"},
 		"/api/v1/workflow/tasks/all": {Resource: "task", Action: "admin"},
 		"/api/v1/workflow/tasks/*":   {Resource: "task", Action: "read"},
-		// BPMN XML 校验为只读分析：POST 方法但按 read 授权，与路由级 RequirePermission 一致
-		"/api/v1/bpmn/lint": {Resource: "bpmn", Action: "read"},
 		// MSP Permissions
 		"/api/v1/msp/status":              {Resource: "msp", Action: "read"},
 		"/api/v1/msp/context":             {Resource: "msp", Action: "read"},
@@ -795,7 +793,12 @@ var ResourceActionMap = map[string]map[string]Permission{
 		"/api/v1/org/*":                       {Resource: "org", Action: "write"},
 		"/api/v1/sla/*":                       {Resource: "sla", Action: "write"},
 		// BPMN Workflow permissions
-		"/api/v1/bpmn/*":             {Resource: "bpmn", Action: "write"},
+		"/api/v1/bpmn/*": {Resource: "bpmn", Action: "write"},
+		// BPMN XML 校验是「POST 方法但只读分析」——路由层 RequirePermission 声明 bpmn:read。
+		// 必须登记在 POST 段：登记到 GET 段对 POST 请求无效，预检会落到上一条
+		// "/api/v1/bpmn/*"=bpmn:write，导致只有 bpmn:read 的角色被 403
+		// （prod 探针实测 technician 403 / admin 400 即此因，2026-09-17）。
+		"/api/v1/bpmn/lint":          {Resource: "bpmn", Action: "read"},
 		"/api/v1/process-trigger":    {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-trigger/*":  {Resource: "bpmn", Action: "write"},
 		"/api/v1/process-bindings":   {Resource: "bpmn", Action: "write"},
