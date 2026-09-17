@@ -197,6 +197,13 @@ services:
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
 
+      # Metrics endpoint authentication.
+      # Default true: /metrics requires JWT (safe when port is unpublished).
+      # Set to false when the "monitoring" profile is active so Prometheus
+      # can scrape without a JWT. Only safe because the backend port is not
+      # published to untrusted networks in this compose file.
+      - METRICS_REQUIRE_AUTH=${METRICS_REQUIRE_AUTH:-true}
+
       # Proxy bypass for health checks
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
@@ -426,6 +433,148 @@ services:
       retries: 3
     restart: always
 
+  # ============================================
+  # Monitoring Stack (opt-in via "monitoring" profile)
+  # ============================================
+  # Prometheus + Alertmanager + Grafana + exporters.
+  # Not started by default; enable with:
+  #   docker compose --env-file .env.prod -f docker-compose.prod.yml --profile monitoring up -d
+  #
+  # When enabled, set METRICS_REQUIRE_AUTH=false in .env.prod so Prometheus
+  # can scrape /metrics without a JWT.
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: itsm-prometheus-prod
+    hostname: prometheus
+    profiles: ["monitoring"]
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/console_libraries'
+      - '--web.enable-lifecycle'
+    ports:
+      # localhost-only: access via SSH tunnel or reverse proxy, not directly.
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      itsm-backend:
+        condition: service_healthy
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: itsm-alertmanager-prod
+    hostname: alertmanager
+    profiles: ["monitoring"]
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: itsm-grafana-prod
+    hostname: grafana
+    profiles: ["monitoring"]
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set when monitoring profile is active}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: always
+
+  # Exporters: collect metrics from infrastructure components.
+  # All under "monitoring" profile.
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: itsm-postgres-exporter-prod
+    hostname: postgres-exporter
+    profiles: ["monitoring"]
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USER:-itsm}:${DB_PASSWORD:?}@postgres:5432/${DB_NAME:-itsm_prod}?sslmode=${DB_SSLMODE:-disable}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - itsm-prod-network
+    restart: always
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    container_name: itsm-redis-exporter-prod
+    hostname: redis-exporter
+    profiles: ["monitoring"]
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - itsm-prod-network
+    restart: always
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: itsm-node-exporter-prod
+    hostname: node-exporter
+    profiles: ["monitoring"]
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - itsm-prod-network
+    restart: always
+
 volumes:
   # 卷必须 external 指向既有数据卷：拆分项目名（-p itsm-prod）后 compose
   # 会按 "<project>_<volume>" 生成新卷名，若不锁定旧卷名，prod Postgres 将挂到
@@ -439,6 +588,13 @@ volumes:
   # minio 是 --profile storage 的可选服务且尚无历史数据卷，保持自动创建；
   # external 会因卷不存在使首次启用 storage profile 直接报错。
   minio_prod_data:
+    driver: local
+  # Monitoring stack volumes (--profile monitoring). Auto-created on first use.
+  prometheus_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  grafana_data:
     driver: local
 
 networks:
