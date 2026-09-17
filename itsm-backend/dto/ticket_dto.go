@@ -187,30 +187,12 @@ type TicketTemplate struct {
 	UpdatedAt     time.Time                `json:"updatedAt"`
 }
 
-// TicketWorkflowRequest 工单工作流请求
-type TicketWorkflowRequest struct {
-	TicketID       int    `json:"ticketId" binding:"required"`
-	Action         string `json:"action" binding:"required"`
-	Comment        string `json:"comment"`
-	UserID         int    `json:"userId" binding:"required"`
-	NextAssigneeID int    `json:"nextAssigneeId"`
-}
-
 // TicketAssignmentRequest 工单分配请求
 type TicketAssignmentRequest struct {
 	TicketIDs      []int  `json:"ticketIds" binding:"required"`
 	AssigneeID     int    `json:"assigneeId" binding:"required"`
 	Reason         string `json:"reason"`
 	NotifyAssignee bool   `json:"notifyAssignee"`
-}
-
-// TicketEscalationRequest 工单升级请求
-type TicketEscalationRequest struct {
-	TicketID      int    `json:"ticketId" binding:"required"`
-	Reason        string `json:"reason" binding:"required"`
-	NewPriority   string `json:"newPriority"`
-	NewAssigneeID int    `json:"newAssigneeId"`
-	UserID        int    `json:"userId" binding:"required"`
 }
 
 // TicketSLARequest SLA设置请求
