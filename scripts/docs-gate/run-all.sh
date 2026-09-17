@@ -9,12 +9,12 @@
 #   C.4 发布报告无 revision 断言
 #   C.5 代码 <-> 文档同步新鲜度（make 目标存在性 / ROADMAP 与 CHANGELOG 新鲜度）
 #
-# 当前阶段（v1.5）全部 advisory：仅日志报告，不阻断构建。
-# v2.0 起升级为 hard：缺失任意关键字段阻断。
+# 当前阶段（v2.0）全部 hard：缺失任意关键字段阻断构建。
+# 此前（v1.5）advisory 模式已废弃；--strict 保留向后兼容但不再需要。
 #
 # 用法：
-#   ./scripts/docs-gate/run-all.sh          # advisory 模式
-#   ./scripts/docs-gate/run-all.sh --strict # hard 模式（v2.0+ 启用）
+#   ./scripts/docs-gate/run-all.sh          # hard 模式（默认阻断）
+#   ./scripts/docs-gate/run-all.sh --strict # 向后兼容，等同于默认行为
 #
 
 set -uo pipefail
@@ -61,17 +61,13 @@ echo "########################################"
 echo "# Docs Gates Summary: ${TOTAL} total, ${FAILED} failed"
 echo "########################################"
 
-if [ "${STRICT}" = "--strict" ]; then
-  if [ "${FAILED}" -gt 0 ]; then
-    echo "Failed gates:"
-    for n in "${FAILED_NAMES[@]}"; do
-      echo "  - ${n}"
-    done
-    exit 1
-  fi
-  echo "All docs gates passed (strict mode)."
-else
-  echo "[advisory mode] Gates run but do not block. Failed count: ${FAILED}."
-  echo "Tip: re-run with --strict to enable blocking mode (v2.0+)."
+if [ "${FAILED}" -gt 0 ]; then
+  echo "Failed gates:"
+  for n in "${FAILED_NAMES[@]}"; do
+    echo "  - ${n}"
+  done
+  echo ""
+  echo "ERROR: Documentation quality gates failed. Fix the above violations before merging."
+  exit 1
 fi
-exit 0
+echo "All docs gates passed."

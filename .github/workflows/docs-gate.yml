@@ -1,7 +1,7 @@
 name: docs-gate
 
 # Purpose:
-#   Enforce documentation quality gates (advisory in v1.5, hard in v2.0):
+#   Enforce documentation quality gates (hard since v2.0):
 #     C.1 Hardcoded production credentials
 #     C.2 Duplicate roadmap content
 #     C.3 Broken internal markdown links
@@ -13,9 +13,7 @@ name: docs-gate
 #
 # Behavior:
 #   - Runs scripts/docs-gate/run-all.sh on every relevant change.
-#   - Current mode (v1.5): advisory only — logs violations but does not block.
-#   - Future mode (v2.0+): add `--strict` flag input or change run-all.sh default
-#     to hard gate.
+#   - Mode: hard gate — violations block the build.
 #   - Uploads violation report as artifact regardless of pass/fail.
 
 on:
@@ -60,12 +58,9 @@ concurrency:
   group: docs-gate-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  STRICT_MODE: ${{ inputs.strict == true && '--strict' || '' }}
-
 jobs:
   gate:
-    name: Docs Gate (v1.5 advisory)
+    name: Docs Gate (v2.0 hard)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -81,14 +76,8 @@ jobs:
         id: gate
         run: |
           set -uo pipefail
-          STRICT="${STRICT_MODE:-}"
-          if [ -n "${STRICT}" ]; then
-            echo "[docs-gate] Strict mode enabled — violations will block the build."
-            ./scripts/docs-gate/run-all.sh --strict | tee docs-gate-report.txt
-          else
-            echo "[docs-gate] Advisory mode (v1.5) — violations logged but do not block."
-            ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
-          fi
+          echo "[docs-gate] Hard mode (v2.0) — violations will block the build."
+          ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
 
       - name: Annotate violations
         if: always()

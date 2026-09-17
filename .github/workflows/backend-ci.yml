@@ -132,19 +132,53 @@ jobs:
       - name: Code quality checks
         run: |
           cd itsm-backend
-          echo "=== File Size Check (>800 lines warning) ==="
-          large_files=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" | while read f; do
+          echo "=== File Size Check (>800 lines) ==="
+
+          # Identify newly added files in this PR/commit
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            NEW_FILES=$(git diff --name-only --diff-filter=A "$BASE_SHA" HEAD -- '*.go' | grep -v '^vendor/' | grep -v '^ent/' || true)
+          else
+            # For push events, compare against previous commit
+            NEW_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- '*.go' | grep -v '^vendor/' | grep -v '^ent/' || true)
+          fi
+
+          NEW_VIOLATIONS=""
+          EXISTING_WARNINGS=""
+
+          # Check new files (hard gate)
+          if [ -n "$NEW_FILES" ]; then
+            for f in $NEW_FILES; do
+              if [ -f "$f" ]; then
+                lines=$(wc -l < "$f")
+                if [ "$lines" -gt 800 ]; then
+                  NEW_VIOLATIONS="$NEW_VIOLATIONS\n  FAIL: $f ($lines lines) — new file exceeds 800 lines"
+                fi
+              fi
+            done
+          fi
+
+          # Check all files (advisory for existing large files)
+          existing_large=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" | while read f; do
             lines=$(wc -l < "$f")
             if [ "$lines" -gt 800 ]; then
               echo "  WARNING: $f ($lines lines)"
             fi
           done)
-          if [ -n "$large_files" ]; then
-            echo "$large_files"
-            echo "::warning::Found large files (>800 lines). Consider refactoring."
-          else
-            echo "No large files found"
+
+          if [ -n "$existing_large" ]; then
+            echo "$existing_large"
+            echo "::warning::Found existing large files (>800 lines). Consider refactoring."
           fi
+
+          # Hard gate: fail if new files violate the limit
+          if [ -n "$NEW_VIOLATIONS" ]; then
+            echo -e "$NEW_VIOLATIONS"
+            echo "::error::New Go files exceed 800 lines. Split into smaller files before merging."
+            exit 1
+          fi
+
+          echo "No new large files detected"
 
   build:
     name: Build

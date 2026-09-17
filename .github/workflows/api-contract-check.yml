@@ -128,8 +128,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 50  # Need history for diff
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -137,19 +139,41 @@ jobs:
       - name: Check for snake_case in frontend API calls
         run: |
           echo "=== Checking for snake_case in frontend API calls ==="
-          # Look for common snake_case patterns in frontend API files
-          SNAPE_CASE_PATTERNS=$(grep -rn --include="*.ts" --include="*.tsx" \
+
+          # Determine base ref for diff
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_REF="HEAD~1"
+          fi
+
+          # Check for snake_case patterns in NEW lines only (hard gate)
+          NEW_VIOLATIONS=$(git diff -U0 "$BASE_REF" HEAD -- 'itsm-frontend/src/lib/api/*.ts' 'itsm-frontend/src/lib/api/*.tsx' 2>/dev/null | \
+            grep -E '^\+[^+]' | \
+            grep -E '(assignee_id|ticket_number|service_catalog_id|created_by|updated_by|page_size)' || true)
+
+          # Check all files for existing violations (advisory)
+          EXISTING_VIOLATIONS=$(grep -rn --include="*.ts" --include="*.tsx" \
             -E '(assignee_id|ticket_number|service_catalog_id|created_by|updated_by|page_size)' \
             itsm-frontend/src/lib/api/ 2>/dev/null || true)
 
-          if [ -n "$SNAPE_CASE_PATTERNS" ]; then
-            echo "WARNING: Found snake_case field names in frontend API calls:"
-            echo "$SNAPE_CASE_PATTERNS"
-            echo "Consider using camelCase for API contracts."
-            # Don't fail the build, just warn - some legacy APIs may use snake_case
-          else
-            echo "No snake_case field names detected in frontend API calls."
+          if [ -n "$EXISTING_VIOLATIONS" ]; then
+            echo "WARNING: Found existing snake_case field names in frontend API calls:"
+            echo "$EXISTING_VIOLATIONS"
+            echo "Consider migrating to camelCase for API contracts."
           fi
+
+          # Hard gate: fail if new code introduces snake_case
+          if [ -n "$NEW_VIOLATIONS" ]; then
+            echo ""
+            echo "ERROR: New code introduces snake_case field names:"
+            echo "$NEW_VIOLATIONS"
+            echo ""
+            echo "::error::New frontend API code uses snake_case. Use camelCase for all API field names."
+            exit 1
+          fi
+
+          echo "No new snake_case field names detected in frontend API calls."
 
   backend-route-registration:
     name: Backend Route Registration Check
