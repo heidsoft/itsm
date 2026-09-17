@@ -5,6 +5,7 @@ package sla_template
 
 import (
 	"itsm-backend/common"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -84,12 +85,14 @@ func (h *Handler) InstallTemplate(ctx *gin.Context) {
 	common.Success(ctx, result)
 }
 
-// RegisterRoutes 注册路由（兼容旧接口）
+// RegisterRoutes 注册路由（兼容旧接口）。
+// 2026-09-17 P0：此前三个路由均未挂 RequirePermission（同文件 /sla/policies 全挂），
+// 任何登录用户可读模板、可安装模板（写操作）。补齐 sla 资源权限校验。
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	templates := r.Group("/sla/templates")
 	{
-		templates.GET("", h.ListTemplates)
-		templates.GET("/:key", h.GetTemplate)
-		templates.POST("/:key/install", h.InstallTemplate)
+		templates.GET("", middleware.RequirePermission("sla", "read"), h.ListTemplates)
+		templates.GET("/:key", middleware.RequirePermission("sla", "read"), h.GetTemplate)
+		templates.POST("/:key/install", middleware.RequirePermission("sla", "write"), h.InstallTemplate)
 	}
 }

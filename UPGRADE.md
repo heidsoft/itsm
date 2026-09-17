@@ -48,6 +48,24 @@ Ticket / Incident / SLA / BPMN 响应不再暴露 snake_case 字段：
 五个页面的 `Space` / `Steps` 组件改用 `orientation="vertical"`（Ant Design v6 API）。
 CI 守卫 `itsm-frontend/tools/check-antd-direction.sh` 会在 `direction="vertical"` 重现时构建失败。
 
+### 1.5 内置角色 admin / technician 权限种子补齐（2026-09-17，权限扩大提示）
+`BuiltinRoles()` 种子会将 `users.role` 词表角色写入 `roles` 表（DBOnly 权威态判定为
+configured），但角色权限映射此前缺少 `admin` / `technician` 条目，导致这两个角色的
+`role_permissions` 为空集——DBOnly 语义下空集=显式撤销，`users.role=admin|technician`
+的用户除个别未挂权限中间件的路由外全部 403。
+
+本次补齐：
+- `pkg/seeder`：`builtinRolePermissionCodes()` 补 `admin`（91 码，与硬编码兜底全等）
+  / `technician`（16 码）条目；`permissionDefinitions()` 补 25 个缺失权限码。
+- `handlers/sla_template`：`/sla/templates` 三个路由补挂 `RequirePermission`（此前裸奔）。
+- 守卫测试 `pkg/seeder/role_permission_guard_test.go`：词表角色空集、码空间漂移、
+  admin/technician 与硬编码兜底不一致，三者任一出现即 CI 红。
+
+**自部署用户注意**：升级后重启时 seeder 会自动为已存在的 admin / technician 角色行补建
+权限行（幂等，只增不删）。这是对角色设计语义（"租户内系统管理"/"二线技术处理"）的恢复，
+属**权限扩大**——如你曾依赖"空集拒绝"的行为或自行配置过这两个角色，请升级后审计
+`roles` 表权限绑定。
+
 ---
 
 ## 2. 环境变量变更

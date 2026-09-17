@@ -561,7 +561,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
-	s.seedGroups(ctx) // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
+	s.seedGroups(ctx)               // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
 	s.seedPermissions(ctx)          // 新增：初始化权限
 	s.seedMenus(ctx)                // 新增：初始化菜单
@@ -573,8 +573,8 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedSLAAlertRules(ctx)
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
-	s.seedBPMNWorkflows(ctx)        // 部署BPMN工作流模板
-	s.seedWorkflowTemplates(ctx)    // 初始化工作流模板目录
+	s.seedBPMNWorkflows(ctx)     // 部署BPMN工作流模板
+	s.seedWorkflowTemplates(ctx) // 初始化工作流模板目录
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
 	s.seedTicketTypes(ctx)            // 新增：初始化工单类型
@@ -1586,21 +1586,19 @@ func (s *Seeder) seedTicketViews(ctx context.Context) {
 }
 
 // seedPermissions 初始化系统权限
-func (s *Seeder) seedPermissions(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
-	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip permissions seed", "error", err)
-		return
-	}
+// permissionDef 权限定义种子条目。
+type permissionDef struct {
+	Code        string
+	Name        string
+	Resource    string
+	Action      string
+	Description string
+}
 
-	// 定义所有权限
-	permissions := []struct {
-		Code        string
-		Name        string
-		Resource    string
-		Action      string
-		Description string
-	}{
+// permissionDefinitions 返回权限定义种子清单（Permission 权威表的码空间）。
+// 守卫：pkg/seeder/role_permission_guard_test.go 锁定 builtinRolePermissionCodes() 引用的码必须都在此清单中。
+func permissionDefinitions() []permissionDef {
+	return []permissionDef{
 		// 工单权限
 		{"ticket:read", "查看工单", "ticket", "read", "查看工单列表和详情"},
 		{"ticket:write", "管理工单", "ticket", "write", "创建、编辑工单"},
@@ -1748,7 +1746,50 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 		{"msp_allocation:write", "管理分配", "msp_allocation", "write", "创建、编辑MSP分配"},
 		{"msp_report:read", "查看报表", "msp_report", "read", "查看MSP报表"},
 		{"msp_report:write", "管理报表", "msp_report", "write", "生成和管理MSP报表"},
+		// 2026-09-17 P0 补齐：middleware.RolePermissions 硬编码表引用但 DB 码空间缺失的 16 个码。
+		// 缺失后果：role_permissions 无法授予这些 (resource,action)，admin/technician 权限集不完整。
+		{"notification:write", "更新通知", "notification", "write", "更新/标记已读通知"},
+		{"ticket_tag:write", "管理工单标签", "ticket_tag", "write", "创建、编辑工单标签"},
+		{"ticket_template:write", "管理工单模板", "ticket_template", "write", "创建、编辑工单模板"},
+		{"dashboard:admin", "仪表盘管理", "dashboard", "admin", "管理仪表盘配置"},
+		{"knowledge:admin", "知识库管理配置", "knowledge", "admin", "管理知识库配置和分类"},
+		{"incident:force-update", "强制更新事件", "incident", "force-update", "绕过状态机限制强制更新事件"},
+		{"incident:admin", "事件管理配置", "incident", "admin", "管理事件规则和配置"},
+		{"alert:read", "查看告警", "alert", "read", "查看告警列表"},
+		{"alert:write", "管理告警", "alert", "write", "处理/确认告警"},
+		{"alerts:read", "查看告警中心", "alerts", "read", "查看告警中心列表"},
+		{"alerts:write", "管理告警中心", "alerts", "write", "管理告警中心规则"},
+		{"permission:read", "查看权限", "permission", "read", "查看权限定义列表"},
+		{"department:create", "创建部门", "department", "create", "创建部门"},
+		{"department:update", "更新部门", "department", "update", "更新部门信息"},
+		{"department:delete", "删除部门", "department", "delete", "删除部门"},
+		{"project:delete", "删除项目", "project", "delete", "删除项目"},
+		// BPMN 工作流（DB 已有但种子清单缺失，2026-09-17 守卫测试发现补齐）
+		{"bpmn:read", "查看BPMN流程", "bpmn", "read", "查看BPMN流程定义和实例"},
+		{"bpmn:write", "管理BPMN流程", "bpmn", "write", "设计、部署BPMN流程"},
+		{"bpmn:delete", "删除BPMN流程", "bpmn", "delete", "删除BPMN流程定义"},
+		// 以下为 DB 已有但种子清单缺失、硬编码兜底引用的码（2026-09-17 守卫测试发现补齐）
+		{"ticket_category:write", "管理工单分类", "ticket_category", "write", "创建、编辑工单分类"},
+		{"ticket_type:write", "管理工单类型", "ticket_type", "write", "创建、编辑工单类型"},
+		{"ticket_type:create", "创建工单类型", "ticket_type", "create", "创建工单类型"},
+		{"ticket_type:update", "更新工单类型", "ticket_type", "update", "更新工单类型"},
+		{"ticket_type:delete", "删除工单类型", "ticket_type", "delete", "删除工单类型"},
+		{"dashboard:read", "查看仪表盘", "dashboard", "read", "查看仪表盘"},
+		{"role:delete", "删除角色", "role", "delete", "删除角色"},
+		{"system_config:read", "查看系统配置", "system_config", "read", "查看系统配置"},
+		{"system_config:write", "管理系统配置", "system_config", "write", "管理系统配置"},
 	}
+}
+
+func (s *Seeder) seedPermissions(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip permissions seed", "error", err)
+		return
+	}
+
+	// 定义所有权限
+	permissions := permissionDefinitions()
 	s.expectedPermissions = make([]string, 0, len(permissions))
 	for _, p := range permissions {
 		s.expectedPermissions = append(s.expectedPermissions, p.Code)
@@ -2142,31 +2183,14 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 }
 
 // seedRolePermissions 为角色分配权限关联
-func (s *Seeder) seedRolePermissions(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
-	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip role permissions seed", "error", err)
-		return
-	}
-
-	// 查询所有权限，构建 code -> id 映射
-	perms, err := s.client.Permission.Query().Where(permission.TenantIDEQ(t.ID)).All(ctx)
-	if err != nil {
-		s.sugar.Warnw("query permissions failed; skip role permissions seed", "error", err)
-		return
-	}
-	if len(perms) == 0 {
-		s.sugar.Infow("no permissions found; skip role permissions seed")
-		return
-	}
-
-	permByCode := make(map[string]int, len(perms))
-	for _, p := range perms {
-		permByCode[p.Code] = p.ID
-	}
-
-	// 定义角色权限映射
-	rolePermissionMap := map[string][]string{
+// builtinRolePermissionCodes 返回角色→权限码映射（DBOnly 权威态的数据源）。
+// 契约：users.role 内置词表角色（domain/role）除 super_admin（Login ["*"] 旁路）外
+// 都必须有非空条目，否则 DBOnly configured 态空集=显式撤销，该角色全 403。
+// 2026-09-17 P0：补齐 admin/technician（此前角色行存在但权限行空集，
+// DBOnly P0 修复后暴露为 admin/technician 用户全 403）。
+// 守卫：pkg/seeder/role_permission_guard_test.go 锁定与 middleware.RolePermissions 的对齐。
+func builtinRolePermissionCodes() map[string][]string {
+	return map[string][]string{
 		// 系统管理员：所有权限
 		"sysadmin": allPermissionCodes(),
 		// IT总监：全局读写（不含系统管理）
@@ -2374,7 +2398,86 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 		"guest": {
 			"knowledge:read",
 		},
+		// 租户管理员（users.role=admin 对齐；与 middleware.RolePermissions["admin"] 91 对全等，
+		// 2026-09-17 P0：此前缺条目导致 roles 表 admin 行权限空集=DB 显式撤销，admin 用户全 403）
+		"admin": {
+			"ticket:read", "ticket:write", "ticket:delete", "ticket:admin",
+			"notification:read", "notification:write",
+			"ticket_category:read", "ticket_category:write", "ticket_category:delete",
+			"ticket_tag:read", "ticket_tag:write", "ticket_tag:delete",
+			"ticket_template:read", "ticket_template:write", "ticket_template:delete",
+			"ticket_type:read", "ticket_type:write", "ticket_type:create", "ticket_type:update", "ticket_type:delete", "ticket_type:manage", "ticket_type:archive",
+			"user:read", "user:write", "user:delete",
+			"dashboard:read", "dashboard:admin",
+			"knowledge:read", "knowledge:write", "knowledge:admin",
+			"cmdb:read", "cmdb:write", "cmdb:delete",
+			"incident:read", "incident:write", "incident:force-update", "incident:admin",
+			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
+			"service_request:read", "service_request:write",
+			"change:read", "change:write", "change:delete",
+			"problem:read", "problem:write", "problem:delete",
+			"release:read", "release:write", "release:delete",
+			"sla:read", "sla:write", "sla:delete",
+			"alert:read", "alert:write",
+			"alerts:read", "alerts:write",
+			"audit:read",
+			"ai:read", "ai:write",
+			"role:read", "role:write", "role:delete",
+			"permission:read",
+			"system_config:read", "system_config:write",
+			"org:read", "org:write",
+			"department:read", "department:create", "department:update", "department:delete",
+			"project:read", "project:write", "project:delete",
+			"application:read", "application:write",
+			"group:read", "group:write",
+			"bpmn:read", "bpmn:write", "bpmn:delete",
+			"asset:read", "asset:write", "asset:delete",
+			"license:read", "license:write", "license:delete",
+			"report:read",
+			"msp:read",
+		},
+		// 二线技术员（users.role=technician 对齐；与 middleware.RolePermissions["technician"] 16 对全等，2026-09-17 P0 补齐）
+		"technician": {
+			"ticket:read", "ticket:write",
+			"notification:read",
+			"knowledge:read",
+			"cmdb:read",
+			"incident:read", "incident:write",
+			"service_catalog:read",
+			"service_request:read", "service_request:write",
+			"alert:read",
+			"alerts:read",
+			"ai:read",
+			"group:read",
+			"bpmn:read", "bpmn:write",
+		},
 	}
+}
+
+func (s *Seeder) seedRolePermissions(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip role permissions seed", "error", err)
+		return
+	}
+
+	// 查询所有权限，构建 code -> id 映射
+	perms, err := s.client.Permission.Query().Where(permission.TenantIDEQ(t.ID)).All(ctx)
+	if err != nil {
+		s.sugar.Warnw("query permissions failed; skip role permissions seed", "error", err)
+		return
+	}
+	if len(perms) == 0 {
+		s.sugar.Infow("no permissions found; skip role permissions seed")
+		return
+	}
+
+	permByCode := make(map[string]int, len(perms))
+	for _, p := range perms {
+		permByCode[p.Code] = p.ID
+	}
+
+	rolePermissionMap := builtinRolePermissionCodes()
 	s.expectedRolePermissions = rolePermissionMap
 
 	// 查询所有角色并为每个角色分配权限
