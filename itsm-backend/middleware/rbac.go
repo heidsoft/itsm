@@ -949,6 +949,18 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 		// Phase 1 多角色：判定取全部生效角色（主角色 + m2m 附加角色）并集。
 		// 无 "roles" 键时退化为仅主角色（兼容未物化角色的旧链路）。
 		if !AuthorizeResource(c.Request.Context(), client, GetContextRoles(c), resource, action, tenantID) {
+			// 2026-09-17 L4：deny 路径补 Warn 日志，便于排查权限问题
+			// （RBACMiddleware 路径预检 deny 已有，本次补齐路由级 RequirePermission）
+			zap.S().Warnw(
+				"RequirePermission: denied",
+				"resource", resource,
+				"action", action,
+				"path", c.Request.URL.Path,
+				"method", c.Request.Method,
+				"role", roleStr,
+				"tenant_id", tenantID,
+				"roles", GetContextRoles(c),
+			)
 			common.Fail(c, common.ForbiddenCode, "权限不足")
 			c.Abort()
 			return
