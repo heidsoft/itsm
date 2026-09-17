@@ -1033,7 +1033,7 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := strconv.Atoi(versionStr)
+	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1074,7 +1074,7 @@ func (c *WorkflowHandler) ActivateVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := strconv.Atoi(versionStr)
+	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1095,7 +1095,7 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 	versionStr := ctx.Param("version")
 	tenantID := ctx.GetInt("tenant_id")
 
-	version, err := strconv.Atoi(versionStr)
+	version, err := service.ParseVersionNumber(versionStr)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
@@ -1128,13 +1128,13 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 		return
 	}
 
-	base, err := strconv.Atoi(baseVersion)
+	base, err := service.ParseVersionNumber(baseVersion)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的基础版本号")
 		return
 	}
 
-	target, err := strconv.Atoi(targetVersion)
+	target, err := service.ParseVersionNumber(targetVersion)
 	if err != nil {
 		common.Fail(ctx, common.BadRequestCode, "无效的目标版本号")
 		return

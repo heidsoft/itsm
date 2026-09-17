@@ -173,7 +173,10 @@ func (s *BPMNVersionService) GetVersion(ctx context.Context, processKey string, 
 	// }
 
 	// 解析版本号
-	versionNumber, _ := strconv.Atoi(processDef.Version)
+	versionNumber, err := ParseVersionNumber(processDef.Version)
+	if err != nil {
+		return nil, fmt.Errorf("解析版本号失败: %w", err)
+	}
 
 	return &ProcessVersion{
 		ID:                   fmt.Sprintf("%d", processDef.ID), // ID是int类型，转换为string
@@ -216,7 +219,10 @@ func (s *BPMNVersionService) ListVersions(ctx context.Context, processKey string
 		// }
 
 		// 解析版本号
-		versionNumber, _ := strconv.Atoi(processDef.Version)
+		versionNumber, err := ParseVersionNumber(processDef.Version)
+		if err != nil {
+			continue
+		}
 
 		version := &ProcessVersion{
 			ID:                   fmt.Sprintf("%d", processDef.ID), // ID是int类型，转换为string
@@ -357,6 +363,21 @@ func (s *BPMNVersionService) CompareVersions(ctx context.Context, processKey str
 	}, nil
 }
 
+// ParseVersionNumber 将版本字符串解析为整数版本号。
+// 支持纯整数（"1","2"）和 semver（"1.0.0","1.1.0"）两种格式，semver 取主版本号。
+func ParseVersionNumber(versionStr string) (int, error) {
+	if v, err := strconv.Atoi(versionStr); err == nil {
+		return v, nil
+	}
+	parts := strings.Split(versionStr, ".")
+	if len(parts) > 0 {
+		if v, err := strconv.Atoi(parts[0]); err == nil {
+			return v, nil
+		}
+	}
+	return 0, fmt.Errorf("无效的版本格式: %s", versionStr)
+}
+
 // getCurrentVersion 获取当前最高版本号
 func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey string, tenantID int) (int, error) {
 	processDef, err := s.client.ProcessDefinition.Query().
@@ -370,28 +391,7 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 		return 0, fmt.Errorf("获取流程定义失败: %w", err)
 	}
 
-	// Version是string类型，可能是整数("1","2")或semver("1.0.0","1.1.0")
-	versionStr := processDef.Version
-	var version int
-
-	// 先尝试直接解析为整数
-	if v, err := strconv.Atoi(versionStr); err == nil {
-		version = v
-	} else {
-		// 尝试解析semver格式，取主版本号
-		parts := strings.Split(versionStr, ".")
-		if len(parts) > 0 {
-			if v, err := strconv.Atoi(parts[0]); err == nil {
-				version = v
-			} else {
-				return 0, fmt.Errorf("解析版本号失败: %w", err)
-			}
-		} else {
-			return 0, fmt.Errorf("解析版本号失败: 无效的版本格式 %s", versionStr)
-		}
-	}
-
-	return version, nil
+	return ParseVersionNumber(processDef.Version)
 }
 
 // recordVersionChangeLog 记录版本变更日志

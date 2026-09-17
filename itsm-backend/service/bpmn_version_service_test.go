@@ -478,3 +478,33 @@ func seedDefinitionWithXML(t *testing.T, f versionFixture, key, version, bpmnXML
 	require.NoError(t, err)
 	return def.ID
 }
+
+func TestParseVersionNumber(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    int
+		wantErr bool
+	}{
+		{"纯整数", "1", 1, false},
+		{"大整数", "42", 42, false},
+		{"semver 三段", "1.0.0", 1, false},
+		{"semver 带预发布", "2.1.3-beta.1", 2, false},
+		{"semver 大版本", "10.20.30", 10, false},
+		{"两段式", "3.5", 3, false},
+		{"空字符串", "", 0, true},
+		{"纯字母", "abc", 0, true},
+		{"前缀v", "v1.0.0", 0, true},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := ParseVersionNumber(tc.input)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
