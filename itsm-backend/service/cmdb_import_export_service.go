@@ -285,21 +285,9 @@ func (s *CMDBImportExportService) processImportTask(parent context.Context, task
 		tmpFile.Close()
 
 		// 读取Excel
-		f, err := excelize.OpenFile(tmpFile.Name())
-		if err != nil {
-			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("打开Excel文件失败: %v", err))
-			return
-		}
-		defer f.Close()
-
-		sheetName := req.SheetName
-		if sheetName == "" {
-			sheetName = f.GetSheetName(0)
-		}
-
-		rows, err := f.GetRows(sheetName)
-		if err != nil {
-			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("读取Excel Sheet失败: %v", err))
+		rows, readErr := safeExcelizeGetRows(tmpFile.Name(), req.SheetName)
+		if readErr != nil {
+			s.failImportTask(ctx, taskID, tenantID, fmt.Sprintf("读取Excel Sheet失败: %v", readErr))
 			return
 		}
 		records = rows
@@ -1320,4 +1308,32 @@ func (s *CMDBImportExportService) convertToExportDTO(task *ent.CMDBExportTask) *
 type FieldError struct {
 	Field   string
 	Message string
+}
+
+// safeExcelizeGetRows wraps excelize OpenFile + GetRows with panic recovery.
+// GO-2026-6452: excelize v2.11.0 can panic on malformed shared-string indices;
+// this converts the panic into a returned error.
+func safeExcelizeGetRows(filePath, sheetName string) (rows [][]string, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			rows = nil
+			err = fmt.Errorf("excelize panic: %v", r)
+		}
+	}()
+
+	f, err := excelize.OpenFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("打开Excel文件失败: %w", err)
+	}
+	defer f.Close()
+
+	if sheetName == "" {
+		sheetName = f.GetSheetName(0)
+	}
+
+	rows, err = f.GetRows(sheetName)
+	if err != nil {
+		return nil, fmt.Errorf("读取Sheet失败: %w", err)
+	}
+	return rows, nil
 }

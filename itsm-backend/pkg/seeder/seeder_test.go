@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/rolepermission"
 	_ "itsm-backend/ent/runtime"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/systemconfig"
@@ -384,6 +385,15 @@ func TestProductionInitializersRepairMissingServiceCatalogWithoutOverwritingTena
 	require.NoError(t, managed.Update().SetDescription("tenant customized description").Exec(ctx))
 
 	missing := seeder.config.ServiceCatalog[1]
+	missingCatalog, queryErr := seeder.client.ServiceCatalog.Query().Where(
+		servicecatalog.TenantIDEQ(rootTenant.ID),
+		servicecatalog.NameEQ(missing.Name),
+	).Only(ctx)
+	require.NoError(t, queryErr)
+	_, err = seeder.client.ServiceCatalogItem.Delete().Where(
+		servicecatalogitem.CatalogIDEQ(missingCatalog.ID),
+	).Exec(ctx)
+	require.NoError(t, err)
 	_, err = seeder.client.ServiceCatalog.Delete().Where(
 		servicecatalog.TenantIDEQ(rootTenant.ID),
 		servicecatalog.NameEQ(missing.Name),
