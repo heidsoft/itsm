@@ -20,6 +20,7 @@ import type {
   InstanceStats,
 } from '@/types/workflow';
 import { WorkflowStatus, WorkflowType, WorkflowInstanceStatus, ValidationError } from '@/types/workflow';
+import type { ApprovalConfig, SLAConfig } from '@/components/workflow/designer/WorkflowTypes';
 
 // Re-export commonly used workflow types for page imports
 export type {
@@ -261,8 +262,8 @@ export class WorkflowApi {
       description: item.description,
       bpmnXml: item.bpmnXml,
       category: item.category || item.type || 'general',
-      approvalConfig: item.approvalConfig,
-      slaConfig: item.slaConfig,
+      approvalConfig: item.approvalConfig as ApprovalConfig | undefined,
+      slaConfig: item.slaConfig as SLAConfig | undefined,
     };
   }
 
@@ -310,6 +311,8 @@ export class WorkflowApi {
         category: request.category,
         bpmnXml: request.bpmnXml,
         processVariables: request.variables,
+        approvalConfig: request.approvalConfig,
+        slaConfig: request.slaConfig,
       }
     );
   }
@@ -509,6 +512,8 @@ export class WorkflowApi {
       category: request.category,
       bpmnXml: request.bpmnXml,
       processVariables: request.variables,
+      approvalConfig: request.approvalConfig,
+      slaConfig: request.slaConfig,
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.

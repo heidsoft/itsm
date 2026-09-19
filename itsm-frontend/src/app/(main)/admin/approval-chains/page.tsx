@@ -21,6 +21,14 @@ type BackendApprovalStep = {
   role?: string;
   name?: string;
   isRequired?: boolean;
+  approvalType?: string;
+  threshold?: number;
+  fallbackAction?: string;
+  fallbackApproverId?: number;
+  fallbackRole?: string;
+  conditionPriorities?: string[];
+  conditionAmountMin?: number;
+  conditionAmountMax?: number;
 };
 
 type BackendApprovalChain = {
@@ -62,6 +70,14 @@ const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
     approverId: step.approverId || 0,
     approverName: step.role || '',
     isRequired: step.isRequired !== false,
+    approvalType: step.approvalType,
+    threshold: step.threshold,
+    fallbackAction: step.fallbackAction,
+    fallbackApproverId: step.fallbackApproverId,
+    fallbackRole: step.fallbackRole,
+    conditionPriorities: step.conditionPriorities,
+    conditionAmountMin: step.conditionAmountMin,
+    conditionAmountMax: step.conditionAmountMax,
     createdAt: chain.createdAt,
     updatedAt: chain.updatedAt,
   })),
@@ -74,11 +90,18 @@ const toBackendPayload = (data: ApprovalChainSubmitData, fallback?: ApprovalChai
   status: data.isActive ?? fallback?.isActive ? 'active' : 'inactive',
   chain: (data.steps || fallback?.steps || []).map((step, index) => ({
     level: index + 1,
-    // 后端契约：name=步骤名，role=角色名（role 类型步骤），approverId=用户ID（user 类型步骤）
     approverId: step.approverType === 'user' && step.approverId > 0 ? step.approverId : undefined,
     role: step.approverType === 'role' ? step.approverName : '',
     name: step.stepName || `步骤 ${index + 1}`,
     isRequired: step.isRequired !== false,
+    approvalType: step.approvalType,
+    threshold: step.threshold,
+    fallbackAction: step.fallbackAction,
+    fallbackApproverId: step.fallbackApproverId,
+    fallbackRole: step.fallbackRole,
+    conditionPriorities: step.conditionPriorities,
+    conditionAmountMin: step.conditionAmountMin,
+    conditionAmountMax: step.conditionAmountMax,
   })),
 });
 

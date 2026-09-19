@@ -219,7 +219,7 @@ export const useTenantStore = create<TenantState>(set => ({
 
 export const PERMISSIONS = {
   // 工单权限
-  TICKET_VIEW: 'ticket:view',
+  TICKET_VIEW: 'ticket:read',
   TICKET_CREATE: 'ticket:create',
   TICKET_UPDATE: 'ticket:update',
   TICKET_DELETE: 'ticket:delete',
@@ -230,13 +230,13 @@ export const PERMISSIONS = {
   TICKET_CLOSE: 'ticket:close',
 
   // 用户权限
-  USER_VIEW: 'user:view',
+  USER_VIEW: 'user:read',
   USER_CREATE: 'user:create',
   USER_UPDATE: 'user:update',
   USER_DELETE: 'user:delete',
 
   // 事件权限
-  INCIDENT_VIEW: 'incident:view',
+  INCIDENT_VIEW: 'incident:read',
   INCIDENT_CREATE: 'incident:create',
   INCIDENT_UPDATE: 'incident:update',
   INCIDENT_DELETE: 'incident:delete',
@@ -246,11 +246,11 @@ export const PERMISSIONS = {
   SYSTEM_LOGS: 'system:logs',
 
   // 报告权限
-  REPORT_VIEW: 'report:view',
+  REPORT_VIEW: 'report:read',
   REPORT_EXPORT: 'report:export',
 
   // 审计权限
-  AUDIT_VIEW: 'audit:view',
+  AUDIT_VIEW: 'audit:read',
   AUDIT_EXPORT: 'audit:export',
 } as const;
 

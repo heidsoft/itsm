@@ -264,14 +264,14 @@ describe('useAuthStore', () => {
         email: 'test@example.com',
         role: 'admin',
         tenantId: 1,
-        permissions: ['ticket:view', 'ticket:create'],
+        permissions: ['ticket:read', 'ticket:create'],
       };
 
       act(() => {
         useAuthStore.getState().login(mockUser, 'mock-token');
       });
 
-      expect(useAuthStore.getState().hasPermission('ticket:view')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(true);
       expect(useAuthStore.getState().hasPermission('ticket:create')).toBe(true);
     });
 
@@ -285,7 +285,7 @@ describe('useAuthStore', () => {
         email: 'test@example.com',
         role: 'user',
         tenantId: 1,
-        permissions: ['ticket:view'],
+        permissions: ['ticket:read'],
       };
 
       act(() => {
@@ -298,7 +298,7 @@ describe('useAuthStore', () => {
     it('用户为 null 时应返回 false', async () => {
       const { useAuthStore } = await import('../auth-store');
       
-      expect(useAuthStore.getState().hasPermission('ticket:view')).toBe(false);
+      expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(false);
     });
 
     it('super_admin 的 ["*"] 通配符应匹配任意权限码（管理菜单判定依赖）', async () => {
@@ -368,7 +368,7 @@ describe('useAuthStore', () => {
         useAuthStore.getState().login(mockUser, 'mock-token');
       });
 
-      expect(useAuthStore.getState().hasPermission('ticket:view')).toBe(false);
+      expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(false);
     });
   });
 
@@ -598,10 +598,10 @@ describe('权限常量', () => {
   it('PERMISSIONS 应包含所有预期权限', async () => {
     const { PERMISSIONS } = await import('../auth-store');
     
-    expect(PERMISSIONS.TICKET_VIEW).toBe('ticket:view');
+    expect(PERMISSIONS.TICKET_VIEW).toBe('ticket:read');
     expect(PERMISSIONS.TICKET_CREATE).toBe('ticket:create');
     expect(PERMISSIONS.TICKET_DELETE).toBe('ticket:delete');
-    expect(PERMISSIONS.USER_VIEW).toBe('user:view');
+    expect(PERMISSIONS.USER_VIEW).toBe('user:read');
     expect(PERMISSIONS.SYSTEM_CONFIG).toBe('system:config');
   });
 

@@ -35,9 +35,9 @@ import { usePermissions } from '@/lib/hooks/use-permissions';
 const { Title, Text } = Typography;
 
 const categoryIcons: Record<string, typeof HardDrive> = {
-  云资源服务: HardDrive,
-  账号与权限: UserCog,
-  安全服务: ShieldCheck,
+  云计算: HardDrive,
+  支持: UserCog,
+  安全: ShieldCheck,
   [ServiceCategory.IT_SERVICE]: HardDrive,
   [ServiceCategory.BUSINESS_SERVICE]: UserCog,
   [ServiceCategory.SUPPORT_SERVICE]: ShieldCheck,

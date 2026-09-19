@@ -53,9 +53,9 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
             onChange={onCategoryFilterChange}
             style={{ width: '100%' }}
             options={[
-              { value: '云资源服务', label: t('serviceCatalog.cloudResources') },
-              { value: '账号与权限', label: t('serviceCatalog.accountPermissions') },
-              { value: '安全服务', label: t('serviceCatalog.securityServices') },
+              { value: '云计算', label: t('serviceCatalog.cloudResources') },
+              { value: '支持', label: t('serviceCatalog.accountPermissions') },
+              { value: '安全', label: t('serviceCatalog.securityServices') },
             ]}
           />
         </Col>

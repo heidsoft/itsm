@@ -4,6 +4,7 @@
  */
 
 import type { TicketStatus, TicketPriority } from './ticket';
+import type { ApprovalConfig, SLAConfig } from '@/components/workflow/designer/WorkflowTypes';
 
 // ==================== 工作流基础类型 ====================
 
@@ -52,8 +53,8 @@ export interface WorkflowDefinition {
   departmentId?: number;
   bpmnXml?: string;
   category?: string;
-  approvalConfig?: Record<string, unknown>;
-  slaConfig?: Record<string, unknown>;
+  approvalConfig?: ApprovalConfig;
+  slaConfig?: SLAConfig;
 }
 
 // ==================== 工作流节点 ====================
@@ -509,6 +510,8 @@ export interface UpdateWorkflowRequest {
   triggers?: WorkflowTrigger[];
   settings?: Partial<WorkflowSettings>;
   departmentId?: number;
+  approvalConfig?: ApprovalConfig;
+  slaConfig?: SLAConfig;
 }
 
 /**

@@ -43,7 +43,7 @@ export default function WorkflowSettingsModal({
                 <>
                   <Form.Item
                     label={t('workflow.settingsModal.approvalType')}
-                    name={['approval_config', 'approval_type']}
+                    name={['approvalConfig', 'approvalType']}
                     rules={[{ required: true, message: t('workflow.settingsModal.approvalTypeRequired') }]}
                   >
                     <Select options={[
@@ -54,7 +54,7 @@ export default function WorkflowSettingsModal({
                     ]} />
                   </Form.Item>
 
-                  <Form.Item label={t('workflow.settingsModal.approvers')} name={['approval_config', 'approvers']}>
+                  <Form.Item label={t('workflow.settingsModal.approvers')} name={['approvalConfig', 'approvers']}>
                     <Select mode="multiple" placeholder={t('workflow.settingsModal.approversPlaceholder')}>
                       {/* 用户列表通过 Context 获取 */}
                     </Select>
@@ -71,7 +71,7 @@ export default function WorkflowSettingsModal({
                     <Col span={12}>
                       <Form.Item
                         label={t('workflow.settingsModal.responseTimeHours')}
-                        name={['sla_config', 'response_time_hours']}
+                        name={['slaConfig', 'responseTimeHours']}
                       >
                         <Input type="number" />
                       </Form.Item>
@@ -79,7 +79,7 @@ export default function WorkflowSettingsModal({
                     <Col span={12}>
                       <Form.Item
                         label={t('workflow.settingsModal.resolutionTimeHours')}
-                        name={['sla_config', 'resolution_time_hours']}
+                        name={['slaConfig', 'resolutionTimeHours']}
                       >
                         <Input type="number" />
                       </Form.Item>
@@ -88,7 +88,7 @@ export default function WorkflowSettingsModal({
 
                   <Form.Item
                     label={t('workflow.settingsModal.businessHoursSetting')}
-                    name={['sla_config', 'business_hours_only']}
+                    name={['slaConfig', 'businessHoursOnly']}
                     valuePropName="checked"
                   >
                     <Checkbox>{t('workflow.settingsModal.businessHoursOnly')}</Checkbox>

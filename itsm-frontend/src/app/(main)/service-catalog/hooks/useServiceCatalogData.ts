@@ -45,9 +45,9 @@ export const useServiceCatalogData = () => {
   useEffect(() => {
     // 与页面分类标签保持一致的过滤逻辑（使用部分匹配）
     const categoryCountMap: Record<string, string[]> = {
-      cloud: ['云资源服务', 'Cloud Service'],
-      account: ['账号与权限', 'Account Service'],
-      security: ['安全服务', 'Security Service'],
+      cloud: ['云计算', '云资源'],
+      account: ['支持', '账号'],
+      security: ['安全'],
     };
 
     const countByCategory = (keywords: string[]) => {

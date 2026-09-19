@@ -152,11 +152,11 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
     },
     {
       title: '状态',
-      dataIndex:'isPublished',
+      dataIndex: 'status',
       width: 100,
-      render: (isPublished: boolean) => {
-        const status = isPublished ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
-        return <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>;
+      render: (status: string) => {
+        const s = status === 'published' ? KnowledgeStatus.PUBLISHED : KnowledgeStatus.DRAFT;
+        return <Tag color={KnowledgeStatusColors[s]}>{KnowledgeStatusLabels[s]}</Tag>;
       },
     },
     {
