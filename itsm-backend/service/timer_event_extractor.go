@@ -241,24 +241,6 @@ func extractNumber(s string, unit byte) int {
 	return num
 }
 
-// parseCycleExpression 解析循环表达式（如 R5/PT10M）
-func parseCycleExpression(expression string, now time.Time) (time.Time, error) {
-	// 简化实现：取第一次触发的 duration
-	// 完整实现需要支持重复调度
-	parts := splitCycleExpression(expression)
-	if len(parts) < 2 {
-		return time.Time{}, fmt.Errorf("invalid cycle expression: %s", expression)
-	}
-
-	// 解析 duration 部分
-	duration, err := parseISO8601Duration(parts[1])
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return now.Add(duration), nil
-}
-
 // splitCycleExpression 分割循环表达式
 func splitCycleExpression(expression string) []string {
 	// 支持 R5/PT10M 或 PT10M 格式

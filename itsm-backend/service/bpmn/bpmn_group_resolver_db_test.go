@@ -221,12 +221,12 @@ func TestGroupResolver_ExpandGroupsToUsers_RoleFallback(t *testing.T) {
 	// 组与角色同名时组优先：显式建的组是对角色的窄化/覆盖，不再叠加角色回退
 	groupUser := createTestUser(t, client, tenant.ID, "group-member", "gm@example.com")
 	_ = createTestGroup(t, client, tenant.ID, "it_admin", groupUser.ID)
-	ids, names, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "it_admin")
+	ids, _, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "it_admin")
 	require.NoError(t, err)
 	assert.ElementsMatch(t, []int{groupUser.ID}, ids, "同名组存在时按组解析，角色回退不叠加")
 
 	// 纯幽灵名仍容忍，组名 + 角色名混排各自解析
-	ids, names, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "ghost-group,managers-group")
+	ids, _, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "ghost-group,managers-group")
 	require.NoError(t, err)
 	assert.Empty(t, ids, "幽灵名被容忍不报错")
 	ids, _, err = resolver.ExpandGroupsToUsers(ctx, tenant.ID, "ghost-group,it_admin")

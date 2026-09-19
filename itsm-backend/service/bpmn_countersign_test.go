@@ -207,6 +207,7 @@ func TestVote_Parallel_ThresholdMet_CompletesParent(t *testing.T) {
 		Where(processtask.ParentTaskID(f.parentID), processtask.TenantID(f.tenantID),
 			processtask.StatusNEQ("completed"), processtask.StatusNEQ("cancelled")).
 		All(f.ctx)
+	require.NoError(t, err)
 	assert.Empty(t, remainingSubTasks,
 		"threshold met: remaining sub-tasks should be cancelled or completed")
 }
