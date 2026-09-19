@@ -235,6 +235,19 @@ graphify-out/
 # 补丁冲突与合并残留（严禁入仓）
 *.rej
 *.orig
+*.patch
+
+# Go coverage 产物
+coverage.out
+service_coverage.out
+
+# 临时/敏感文件
+cookies.txt
+nohup.out
+
+# 公众号文章创作稿（产品推广内容，不属于代码仓库）
+wechat-itsm-*.html
+covers/wechat-itsm-*.html
 
 # Go build cache
 itsm-backend/.cache/

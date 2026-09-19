@@ -186,8 +186,10 @@ services:
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
       - ITSM_PROCESS_MODE=api
-      # RLS pilot — driver decorator wired, policies enforced on changes/vectors
-      - RLS_MODE=${RLS_MODE:-enforce}
+      # RLS pilot — 默认 off 与后端 config.go 安全默认一致；enforce 会拦截
+      # 未携带租户上下文的登录/注册等 public 路由查询（fail-closed → 401），
+      # 仅在 R2B 灰度闭环后由部署方显式开启。
+      - RLS_MODE=${RLS_MODE:-off}
       - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
 
       # 对象存储（生产用 S3 或 MinIO）
@@ -325,8 +327,8 @@ services:
       - ITSM_AUTO_MIGRATE=false
       - ITSM_AUTO_SEED=false
       - ITSM_PROCESS_MODE=worker
-      # RLS pilot — worker uses enforce mode same as backend
-      - RLS_MODE=${RLS_MODE:-enforce}
+      # RLS pilot — worker 默认 off，与 backend 保持一致
+      - RLS_MODE=${RLS_MODE:-off}
       - RLS_TENANT_VAR_NAME=${RLS_TENANT_VAR_NAME:-app.current_tenant}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-}

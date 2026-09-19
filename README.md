@@ -463,7 +463,7 @@ make prod-health      # 检查状态
 | [开源产品能力说明](./docs/product/open-source-release-capability.md) | 角色、业务闭环、成熟度、限制与验收入口 |
 | [商业能力契约](./docs/product/itsm-commercial-capability-contract.md) | 能力成熟度、商业 MVP 和非目标 |
 | [商业化架构](./docs/architecture/commercial-ready-architecture.md) | 生产级总体架构 |
-| [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB GA/Pilot 边界和验收门槛 |
+| [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB 可用/预览边界和验收门槛 |
 | [Outbox 架构](./docs/architecture/operational-command-outbox.md) | 可靠异步执行规范 |
 | [API 参考](./docs/api/API_REFERENCE.md) | HTTP 接口文档 |
 | [本地开发命令](./docs/dev-commands-reference.md) | 开发命令、调试与故障排查 |

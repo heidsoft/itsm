@@ -4,7 +4,7 @@
 
 为避免仓库出现两份中文 README，本文件不再维护项目内容。
 
-**中文 README 的唯一事实源是 [根目录 README.md](./README.md)。** 其他语种入口：[English](./README.en.md) · [日本語](./README.ja.md)。
+**中文 README 的唯一事实源是 [根目录 README.md](./README.md)。** 其他语种入口：[English](./README.en.md)。
 
 保留本文件是为了不破坏已存在的外部链接与文档站点引用；请勿在此补充内容，新增或修改请直接编辑 `README.md`。
 

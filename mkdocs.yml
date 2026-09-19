@@ -130,7 +130,6 @@ exclude_docs: |
   product/
   rbac/
   review/
-  superpowers/
   tools/
   v1-ga/
   release/

@@ -48,7 +48,7 @@ Docs and code are one bidirectional loop, not a one-way afterthought. In every c
    | user-visible fix / capability | `CHANGELOG.md` `[Unreleased]` |
    | API contract change (breaking or not) | `CHANGELOG.md` + `docs/api/API_REFERENCE.md` (+ `UPGRADE.md` if breaking) |
    | domain maturity change (GA candidate / Pilot) | `README.md` maturity table + `docs/product/` — verify against source/tests first |
-   | make targets / dev commands / compose usage | `README.md` (+ `README.en.md`/`README.ja.md` if referenced there) |
+   | make targets / dev commands / compose usage | `README.md` (+ `README.en.md` if referenced there) |
    | roadmap status change | `ROADMAP.md` + refresh its `Last synced` date |
 
 2. **Docs → code (drive obligation).** Start iterations from `ROADMAP.md` convergence items and `docs/prd/`; after hardening/fix work, write the new capability baseline back into ROADMAP "已落地" and the README maturity table, citing the test/acceptance evidence.
