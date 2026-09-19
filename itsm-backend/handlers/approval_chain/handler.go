@@ -64,19 +64,25 @@ func (h *Handler) ListChains(c *gin.Context) {
 	page, pageSize := pagination.Page, pagination.PageSize
 	entityType := c.Query("entityType")
 	status := c.Query("status")
+	name := c.Query("name")
 
-	chains, total, err := h.chainService.ListApprovalChains(c.Request.Context(), tid, entityType, status, page, pageSize)
+	chains, total, err := h.chainService.ListApprovalChains(c.Request.Context(), tid, entityType, status, name, page, pageSize)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
 	chainResponses := dto.ToApprovalChainResponseList(chains)
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
 	common.Success(c, dto.ApprovalChainListResponse{
-		Items: chainResponses,
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      chainResponses,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	})
 }
 

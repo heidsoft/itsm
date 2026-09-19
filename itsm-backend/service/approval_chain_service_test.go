@@ -282,10 +282,66 @@ func TestApprovalChainService_ListApprovalChains_Success(t *testing.T) {
 	}
 
 	// 测试列表查询
-	chains, total, err := service.ListApprovalChains(ctx, testTenant.ID, "", "", 1, 100)
+	chains, total, err := service.ListApprovalChains(ctx, testTenant.ID, "", "", "", 1, 100)
 	require.NoError(t, err)
 	assert.Equal(t, 3, total)
 	assert.Len(t, chains, 3)
+}
+
+func TestApprovalChainService_ListApprovalChains_NameFilterIsTenantScoped(t *testing.T) {
+	client, service, ctx := setupApprovalChainTest(t)
+	defer client.Close()
+
+	testTenant1, err := createApprovalChainTestTenant(ctx, client, "namefilter1")
+	require.NoError(t, err)
+
+	testTenant2, err := createApprovalChainTestTenant(ctx, client, "namefilter2")
+	require.NoError(t, err)
+
+	testUser, err := createApprovalChainTestUser(ctx, client, testTenant1.ID, "namefilter")
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		tenantID int
+		name     string
+	}{
+		{testTenant1.ID, "Network Change Approval"},
+		{testTenant1.ID, "Database Access Request"},
+		{testTenant2.ID, "Network Change Approval"},
+	} {
+		_, err = client.ApprovalChain.Create().
+			SetName(tc.name).
+			SetEntityType("ticket").
+			SetChain([]schema.ApprovalChainStep{
+				{Level: 1, ApproverID: testUser.ID, Role: "test", Name: "测试", IsRequired: true},
+			}).
+			SetStatus("active").
+			SetTenantID(tc.tenantID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		require.NoError(t, err)
+	}
+
+	// 大小写不敏感的子串匹配，且只返回当前租户的记录
+	chains, total, err := service.ListApprovalChains(ctx, testTenant1.ID, "", "", "network change", 1, 100)
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	require.Len(t, chains, 1)
+	assert.Equal(t, "Network Change Approval", chains[0].Name)
+
+	// 相同名称在另一租户下也应被检索到，但只暴露本租户的记录
+	chains, total, err = service.ListApprovalChains(ctx, testTenant2.ID, "", "", "network change", 1, 100)
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	require.Len(t, chains, 1)
+	assert.Equal(t, testTenant2.ID, chains[0].TenantID)
+
+	// 无匹配时返回空列表而不是错误
+	chains, total, err = service.ListApprovalChains(ctx, testTenant1.ID, "", "", "no-such-chain", 1, 100)
+	require.NoError(t, err)
+	assert.Equal(t, 0, total)
+	assert.Len(t, chains, 0)
 }
 
 func TestApprovalChainService_ListApprovalChains_Empty(t *testing.T) {
@@ -295,7 +351,7 @@ func TestApprovalChainService_ListApprovalChains_Empty(t *testing.T) {
 	testTenant, err := createApprovalChainTestTenant(ctx, client, "empty")
 	require.NoError(t, err)
 
-	chains, total, err := service.ListApprovalChains(ctx, testTenant.ID, "", "", 1, 100)
+	chains, total, err := service.ListApprovalChains(ctx, testTenant.ID, "", "", "", 1, 100)
 	require.NoError(t, err)
 	assert.Equal(t, 0, total)
 	assert.Len(t, chains, 0)
@@ -330,13 +386,13 @@ func TestApprovalChainService_ListApprovalChains_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	// 租户2应该看不到租户1的审批链
-	chains, total, err := service.ListApprovalChains(ctx, testTenant2.ID, "", "", 1, 100)
+	chains, total, err := service.ListApprovalChains(ctx, testTenant2.ID, "", "", "", 1, 100)
 	require.NoError(t, err)
 	assert.Equal(t, 0, total)
 	assert.Len(t, chains, 0)
 
 	// 租户1可以看到自己的审批链
-	chains, total, err = service.ListApprovalChains(ctx, testTenant1.ID, "", "", 1, 100)
+	chains, total, err = service.ListApprovalChains(ctx, testTenant1.ID, "", "", "", 1, 100)
 	require.NoError(t, err)
 	assert.Equal(t, 1, total)
 	assert.Len(t, chains, 1)

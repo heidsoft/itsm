@@ -87,7 +87,7 @@ func (s *ApprovalChainService) GetApprovalChain(ctx context.Context, id int, ten
 }
 
 // ListApprovalChains 获取审批链列表
-func (s *ApprovalChainService) ListApprovalChains(ctx context.Context, tenantID int, entityType string, status string, page, pageSize int) ([]*ent.ApprovalChain, int, error) {
+func (s *ApprovalChainService) ListApprovalChains(ctx context.Context, tenantID int, entityType, status, name string, page, pageSize int) ([]*ent.ApprovalChain, int, error) {
 	query := s.client.ApprovalChain.Query().
 		Where(approvalchain.TenantIDEQ(tenantID))
 
@@ -96,6 +96,9 @@ func (s *ApprovalChainService) ListApprovalChains(ctx context.Context, tenantID 
 	}
 	if status != "" {
 		query = query.Where(approvalchain.StatusEQ(status))
+	}
+	if name != "" {
+		query = query.Where(approvalchain.NameContainsFold(name))
 	}
 
 	total, err := query.Count(ctx)

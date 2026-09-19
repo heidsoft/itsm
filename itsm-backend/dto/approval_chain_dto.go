@@ -52,10 +52,11 @@ type ApprovalChainResponse struct {
 
 // ApprovalChainListResponse 审批链列表响应
 type ApprovalChainListResponse struct {
-	Items []ApprovalChainResponse `json:"items"`
-	Total int                     `json:"total"`
-	Page  int                     `json:"page"`
-	Size  int                     `json:"size"`
+	Items      []ApprovalChainResponse `json:"items"`
+	Total      int                     `json:"total"`
+	Page       int                     `json:"page"`
+	PageSize   int                     `json:"pageSize"`
+	TotalPages int                     `json:"totalPages"`
 }
 
 // ApprovalChainStats 审批链统计

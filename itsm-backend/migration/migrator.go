@@ -156,8 +156,9 @@ func (m *Migrator) ApplyMigration(ctx context.Context, mig Migration) error {
 	m.logger.Infow("Applying migration", "version", mig.Version, "description", mig.Description)
 
 	started := time.Now()
-	// Execute migration SQL
-	if _, err := tx.ExecContext(ctx, sql); err != nil {
+	// 脚本内的 BEGIN;/COMMIT; 会提前提交托管事务并导致 Commit 落在 idle
+	// 连接上（pq: unexpected transaction status idle）；执行前剥离，checksum 仍按原始 SQL 计算。
+	if _, err := tx.ExecContext(ctx, stripEmbeddedTxControl(sql)); err != nil {
 		return fmt.Errorf("failed to execute migration SQL: %w", err)
 	}
 
@@ -196,7 +197,7 @@ func (m *Migrator) applyNonTransactional(ctx context.Context, mig Migration, sql
 		"version", mig.Version, "description", mig.Description)
 
 	started := time.Now()
-	for _, stmt := range splitSQLStatements(sql) {
+	for _, stmt := range splitSQLStatements(stripEmbeddedTxControl(sql)) {
 		trimmed := strings.TrimSpace(stmt)
 		if trimmed == "" || trimmed == ";" {
 			continue
@@ -238,8 +239,8 @@ func (m *Migrator) RollbackMigration(ctx context.Context, mig Migration) error {
 
 	m.logger.Infow("Rolling back migration", "version", mig.Version)
 
-	// Execute rollback SQL
-	if _, err := tx.ExecContext(ctx, mig.RollbackSQL); err != nil {
+	// Execute rollback SQL（_down 脚本同样可能自带 BEGIN;/COMMIT;，剥离后再执行）
+	if _, err := tx.ExecContext(ctx, stripEmbeddedTxControl(mig.RollbackSQL)); err != nil {
 		return fmt.Errorf("failed to execute rollback: %w", err)
 	}
 
