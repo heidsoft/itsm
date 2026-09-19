@@ -132,6 +132,8 @@ output/
 !itsm-backend/migrations/passwordresettoken/
 !itsm-backend/migrations/passwordresettoken/**
 !itsm-backend/migrations/passwordresettoken*.go
+# Exception: docs-gate security check script (not a secret)
+!scripts/docs-gate/check-hardcoded-passwords.sh
 !itsm-backend/ent/passwordresettoken/
 !itsm-backend/ent/passwordresettoken/**
 !itsm-backend/ent/passwordresettoken*.go
