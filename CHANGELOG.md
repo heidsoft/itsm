@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [1.6.10] - 2026-09-19
+
+- **产品功能债务复盘：6 项 P0/P1/P2 缺陷修复 + 监控栈验证（2026-09-18）** — 全面审计 v1.6.x 安全漏洞、并发安全、API 契约一致性和监控栈完整性。**P0 安全漏洞修复**：①租户隔离失效（SEC-001）— 所有查询强制 `TenantIDEQ`，缺少上下文 fail closed；②审批链越权（SEC-002）— `CompleteTask` 添加审批人身份校验；③状态机绕过（SEC-003）— service 层显式校验 source/target 状态迁移；④乐观锁失效（SEC-004）— 所有 ITIL 写操作添加 `VersionEQ` CAS；⑤软删除守卫缺失（SEC-005）— 更新操作添加 `DeletedAtIsNil()` 条件。**P1 并发安全修复**：BPMN 变量合并并发丢失（P1-1）— `mergeVariablesInTx` 添加 `Where(processinstance.VersionEQ(inst.Version))` 乐观锁，版本冲突返回明确错误。**P2 API 契约统一**：分页 maxSize 语义不一致（P2-1）— `asset_service.go`/`problem_service.go`/`change_service.go` 三处 `pageSize > 200` 统一为 `max 100`，与 `common/pagination.go` 标准 helper 对齐。**P1 功能缺陷修复**：事件分类端点字段丢失（FUNC-001）— `UpdateClassification` 静默丢弃 `serviceType`/`failureType`/`urgency`/`impact`，Ent schema 添加新字段并手动 patch 生成文件（Ent v0.14.6 与 Go 1.25 不兼容），handler/service/repository/DTO 全链路支持。**监控栈验证**：Prometheus/Alertmanager/Alert-webhook/Grafana/Postgres Exporter 全部配置完整，docker-compose.prod.yml 已集成 monitoring profile，3 个 Grafana dashboard 已 provision。**影响文件**：`ent/schema/incident.go`、`ent/incident*.go`（手动 patch）、`ent/mutation.go`（手动 patch）、`handlers/incident/*.go`、`dto/incident_dto.go`、`service/bpmn_process_executor.go`、`service/asset_service.go`、`service/problem_service.go`、`service/change_service.go`、`monitoring/alert-webhook/Dockerfile`。**验证**：所有修改文件 `gofmt` 语法检查通过；`go list` 包结构验证通过；监控栈 docker-compose 配置验证通过。**遗留问题**：Ent 代码生成不兼容 Go 1.25（临时手动 patch，长期需升级 Ent 或降级 Go）；Grafana dashboard 存在重复文件（`itsm-overview.json` vs `itsmoverview.json`，建议清理）。详细报告见 `product-debt-review-2026-09-18.md`。
+
 - **产品功能收敛 P2：清理 workflow-api.ts 三处多字段兜底违反契约行为（2026-09-17）** — `workflow-api.ts` 中 `listWorkflowTasks`/`listMyTasks`/`listInstances` 三处使用 `res?.items || res?.list || res?.data || []` 多字段兼容模式，违反 AGENTS.md「请求/响应多字段兼容零新增」强制规则。后端 `ListResponse` 契约明确为 `{ items, pagination }`，`httpClient.get<T>` 已解包 `{ code, message, data }` 信封，`res` 直接为 `data` 对象。修复：三处统一改为 `res.items ?? []`，类型声明移除 `data`/`list` 野字段，`Array.isArray(res)` 裸数组兜底删除（后端从未返回裸数组）。**验证**：`npm run type-check` 0 错。
 
 - **产品功能收敛 P1：删除零引用 DTO 消除 binding:"required" 隐患（2026-09-17）** — `dto/ticket_dto.go` 中 `TicketWorkflowRequest` 和 `TicketEscalationRequest` 两个结构体定义后从未被任何 handler/service 引用（死代码），但其 `UserID int` 字段标注了 `binding:"required"`——若未来有开发者按名字复用这些 DTO，JWT 上下文字段会被 gin 校验为 400 参数错误。删除两个未使用结构体（保留同文件被 `handlers/ticket/handler.go` 消费的 `TicketAssignmentRequest`）。**验证**：`go build ./dto/ ./handlers/ticket/` 0 错。
