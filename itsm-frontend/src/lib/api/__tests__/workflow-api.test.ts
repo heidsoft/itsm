@@ -176,16 +176,19 @@ describe('WorkflowApi', () => {
 
   describe('listWorkflowInstances', () => {
     it('should fetch workflow instances', async () => {
-      const mockData = [
-        {
-          id: '1',
-          instanceId: '1',
-          processDefinitionKey: 'approval_workflow',
-          businessKey: 'ticket-123',
-          status: 'running',
-          startTime: '2024-01-01T10:00:00Z',
-        },
-      ];
+      const mockData = {
+        items: [
+          {
+            id: '1',
+            instanceId: '1',
+            processDefinitionKey: 'approval_workflow',
+            businessKey: 'ticket-123',
+            status: 'running',
+            startTime: '2024-01-01T10:00:00Z',
+          },
+        ],
+        total: 1,
+      };
 
       (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
 
@@ -619,8 +622,8 @@ describe('WorkflowApi', () => {
   });
 
   describe('listMyTasks', () => {
-    it('should list my tasks with array response', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce([{ id: '1', taskName: 'Review', status: 'pending', assignee: '10' }]);
+    it('should list my tasks with paginated response', async () => {
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: [{ id: '1', taskName: 'Review', status: 'pending', assignee: '10' }], total: 1 });
       const result = await WorkflowApi.listMyTasks({ page: 1, pageSize: 20 });
       expect(result.items).toHaveLength(1);
       expect(result.items[0].nodeName).toBe('Review');

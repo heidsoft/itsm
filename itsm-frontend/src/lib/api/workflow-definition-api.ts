@@ -40,6 +40,10 @@ export class WorkflowDefinitionApi {
       }>
     >('/api/v1/bpmn/process-definitions', params);
 
+    if (!res) {
+      return { workflows: [], total: 0 };
+    }
+
     const raw = res as unknown as { items?: Array<{id: number; key: string; name: string; description?: string; version: number; status: string; createdAt: string; updatedAt: string}>; total?: number };
     const list = Array.isArray(res) ? res : (raw.items ?? []);
     const workflows: WorkflowDefinition[] = list.map(item => ({

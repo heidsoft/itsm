@@ -122,8 +122,8 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
       expect(screen.getByText('单人审批')).toBeInTheDocument();
       expect(screen.getByText(/^仅提醒/)).toBeInTheDocument();
       expect(screen.getByText('终止流程')).toBeInTheDocument();
-      expect(screen.getByText('委托（未就绪）')).toBeInTheDocument();
-      expect(screen.getByText('加签（未就绪）')).toBeInTheDocument();
+      expect(screen.getByText('允许委托')).toBeInTheDocument();
+      expect(screen.getByText('允许加签')).toBeInTheDocument();
       expect(screen.getByText('拒绝意见必填')).toBeInTheDocument();
     });
   });
@@ -183,19 +183,19 @@ describe('WorkflowNodeInspector — 审批语义 panel', () => {
     fireEvent.click(commentSwitch);
     expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { commentRequiredOnReject: false });
 
-    // 未接线能力必须禁用，不能生成看似有效、运行时却被忽略的配置。
+    // 委托和加签开关已接线，可以正常切换
     onUpdateProperties.mockClear();
     const delegateSwitch = switches[0];
     expect(delegateSwitch).not.toBeChecked();
-    expect(delegateSwitch).toBeDisabled();
+    expect(delegateSwitch).not.toBeDisabled();
     fireEvent.click(delegateSwitch);
-    expect(onUpdateProperties).not.toHaveBeenCalled();
+    expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowDelegate: true });
 
     const addApproverSwitch = switches[1];
     expect(addApproverSwitch).not.toBeChecked();
-    expect(addApproverSwitch).toBeDisabled();
+    expect(addApproverSwitch).not.toBeDisabled();
     fireEvent.click(addApproverSwitch);
-    expect(onUpdateProperties).not.toHaveBeenCalled();
+    expect(onUpdateProperties).toHaveBeenCalledWith('Task_Approve', { allowAddApprover: true });
   });
 
   it('does not render the 审批语义 panel for non-UserTask nodes', () => {
@@ -334,8 +334,8 @@ describe('WorkflowNodeInspector — moddle 值回读', () => {
     const comboboxes = screen.getAllByRole('combobox');
     fireEvent.mouseDown(comboboxes[2]);
 
-    const option = await screen.findByText('进入拒绝分支（运行时未实现）');
-    expect(option.closest('.ant-select-item')).toHaveClass('ant-select-item-option-disabled');
+    const option = await screen.findByText('进入拒绝分支');
+    expect(option.closest('.ant-select-item')).not.toHaveClass('ant-select-item-option-disabled');
     expect(onUpdateProperties).not.toHaveBeenCalled();
   });
 });
