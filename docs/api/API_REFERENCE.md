@@ -78,13 +78,13 @@ Content-Type: application/json
 
 **响应示例:**
 
+登录和刷新接口不再在 JSON 响应中返回令牌，改为通过 HttpOnly cookie 下发（`access_token` 15 分钟，`refresh_token` 7 天）。前端只需读取 `user` 上下文。
+
 ```json
 {
   "code": 0,
   "message": "success",
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
     "user": {
       "id": 1,
       "username": "admin",
@@ -92,13 +92,6 @@ Content-Type: application/json
       "name": "管理员",
       "role": "admin",
       "tenantId": 1
-    },
-    "tenant": {
-      "id": 1,
-      "name": "默认租户",
-      "code": "default",
-      "type": "standard",
-      "status": "active"
     }
   }
 }

@@ -79,7 +79,7 @@ type AuditLog struct {
 
 // AuthResult contains tokens and user context
 type AuthResult struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
+	AccessToken  string `json:"-"`
+	RefreshToken string `json:"-"`
 	User         *User  `json:"user"`
 }

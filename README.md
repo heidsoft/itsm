@@ -12,7 +12,7 @@
 [![Frontend CI](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml)
 [![Stars](https://img.shields.io/github/stars/heidsoft/itsm?style=flat)](https://github.com/heidsoft/itsm/stargazers)
 
-[简体中文](./README.md) · [English](./README.en.md) · [日本語](./README.ja.md)
+[简体中文](./README.md) · [English](./README.en.md)
 
 </div>
 
@@ -56,7 +56,7 @@
 - **AI 是辅助不是替代**：分诊、摘要、知识检索可以用 AI，但必须能降级、有审计记录，不会绕过人工审批
 - **异步操作要可靠**：工作流启动、通知发送等关键操作用事务 + outbox 模式，不依赖 goroutine  fire-and-forget
 
-> **当前版本 v1.6.x**：处于生产加固阶段。核心 ITIL 流程（工单、事件、问题、变更、SLA、CMDB）已经可用，但不同模块成熟度不同。有些功能还在 Pilot 阶段，生产使用前建议先看[开源产品能力说明](./docs/product/open-source-release-capability.md)。
+> **当前版本 v1.6.x**：处于生产加固阶段。核心 ITIL 流程（工单、事件、问题、变更、SLA、CMDB）已经可用，但不同模块成熟度不同。有些功能还在预览阶段，生产使用前建议先看[开源产品能力说明](./docs/product/open-source-release-capability.md)。
 
 ## 适用场景
 
@@ -70,21 +70,21 @@
 
 | 能力域 | 状态 | 说明 |
 |:---|:---:|:---|
-| 工单与事件 | GA 候选 | 状态流转、分派、SLA、BPMN 绑定、租户隔离已完整 |
-| 工单类型与动态表单 | GA 候选 | 自定义字段、表单 Preset、Workflow/SLA 绑定 |
-| 变更管理 | GA 候选 | 风险评估、审批链（会签/或签/CAB）、回滚方案、PIR |
-| 问题与 Known Error | Pilot | 根因分析、临时方案、关联事件、知识沉淀 |
-| 服务目录与请求 | Pilot | 目录管理、请求审批、服务任务 |
-| CMDB | GA 候选 | CI 类型、配置项、关系、拓扑、影响分析 |
-| CMDB 云发现 | Pilot | 阿里云适配，自动发现和同步 |
-| BPMN 与审批 | Pilot | 流程定义、实例、任务、变量、执行历史 |
-| SLA | GA 候选 | 策略、截止时间、预警、违规统计 |
-| 知识与 RAG | Pilot | 文章管理、关键词/向量检索、问答降级 |
-| AI 辅助 | Pilot | LLM Gateway、分诊、摘要、RAG |
-| 通知与连接器 | Pilot | 站内通知、投递审计、连接器框架 |
-| RBAC/多租户 | GA 候选 | 角色权限、Endpoint ACL、租户隔离、审计日志 |
+| 工单与事件 | 可用 | 状态流转、分派、SLA、BPMN 绑定、租户隔离已完整 |
+| 工单类型与动态表单 | 可用 | 自定义字段、表单 Preset、Workflow/SLA 绑定 |
+| 变更管理 | 可用 | 风险评估、审批链（会签/或签/CAB）、回滚方案、PIR |
+| 问题与 Known Error | 预览 | 根因分析、临时方案、关联事件、知识沉淀 |
+| 服务目录与请求 | 预览 | 目录管理、请求审批、服务任务 |
+| CMDB | 可用 | CI 类型、配置项、关系、拓扑、影响分析 |
+| CMDB 云发现 | 预览 | 阿里云适配，自动发现和同步 |
+| BPMN 与审批 | 预览 | 流程定义、实例、任务、变量、执行历史 |
+| SLA | 可用 | 策略、截止时间、预警、违规统计 |
+| 知识与 RAG | 预览 | 文章管理、关键词/向量检索、问答降级 |
+| AI 辅助 | 预览 | LLM Gateway、分诊、摘要、RAG |
+| 通知与连接器 | 预览 | 站内通知、投递审计、连接器框架 |
+| RBAC/多租户 | 可用 | 角色权限、Endpoint ACL、租户隔离、审计日志 |
 
-> **成熟度说明**：GA 候选 = 核心功能完整，可进入生产验收；Pilot = 有真实实现，但闭环或运维还需补齐。详细限制和验收要点见各模块文档。
+> **成熟度说明**：**可用** = 核心功能完整，可进入生产验收；**预览** = 功能已实现但仍在打磨，生产使用前请评估限制条件。详细限制和验收要点见各模块文档。
 
 ## 快速开始
 
@@ -202,7 +202,7 @@ docker compose --env-file .env -f docker-compose.dev.yml \
 
 ```bash
 # 1. 登录并保存 HttpOnly 会话 Cookie（示例账号仅限本地开发）
-curl -X POST http://localhost:8090/api/v1/login \
+curl -X POST http://localhost:8090/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -c /tmp/itsm-cookies.txt \
   -d '{"username":"admin","password":"admin123"}'

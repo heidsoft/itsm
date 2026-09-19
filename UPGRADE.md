@@ -98,6 +98,20 @@ configured），但角色权限映射此前缺少 `admin` / `technician` 条目�
 
 **升级注意**：`pkg/seeder` 的 `builtinRolePermissionCodes()` 会在启动时幂等地把上述码写入
 `role_permissions`（只增不删、按受管权限集替换）。变更后请重启 backend 以刷新权限缓存
+
+### 1.7 登录/刷新响应令牌收敛（2026-09-20，安全加固）
+`POST /api/v1/auth/login` 和 `POST /api/v1/auth/refresh`（含遗留 `/api/v1/refresh-token`）
+的 JSON 响应不再返回 `accessToken` 和 `refreshToken` 字段，改为仅通过 HttpOnly cookie 下发
+（`access_token` 15 分钟，`refresh_token` 7 天）。响应 `data` 仅保留 `user` 上下文。
+
+**影响范围**：
+- 前端从 `response.data.accessToken` 读取令牌的代码将失效，必须改为依赖 HttpOnly cookie
+  自动携带（浏览器行为，无需手动处理）
+- API 集成方若通过 JSON 解析令牌，需改为 cookie 模式或联系后端获取替代方案
+- CSRF 保护已启用，写操作需携带 CSRF token（从 `GET /api/v1/csrf-token` 获取）
+
+**升级注意**：此变更为安全加固，防止 XSS 攻击窃取令牌。升级后所有客户端必须适配
+cookie 模式，否则将无法完成认证。
 （TTL 5 分钟且无失效端点）。升级后建议用 `admin` 与 `technician` 两个账号各取一个写端点
 （如 `POST /api/v1/bpmn/process-definitions`）与一个任务端点（`GET /api/v1/bpmn/tasks`）
 复验预期：admin 全通、technician 写 403 / 任务 200。
