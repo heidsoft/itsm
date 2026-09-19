@@ -93,22 +93,23 @@ test_json_endpoint() {
     local url=$2
     local method=${3:-GET}
     local body=${4:-""}
-    local auth_token=${5:-""}
-    
+    local use_cookies=${5:-false}
+
     echo -e "${BLUE}测试: $name${NC}"
     echo "  URL: $url"
-    
+
     headers="-H Content-Type: application/json"
-    if [ -n "$auth_token" ]; then
-        headers="$headers -H Authorization: Bearer $auth_token"
+    cookie_file=""
+    if [ "$use_cookies" = "true" ] && [ -f /tmp/cookies.txt ]; then
+        cookie_file="-b /tmp/cookies.txt"
     fi
-    
+
     if [ -n "$body" ]; then
-        response=$(curl -sf "$url" $headers -X "$method" -d "$body" 2>&1 || true)
+        response=$(curl -sf "$url" $headers $cookie_file -X "$method" -d "$body" 2>&1 || true)
     else
-        response=$(curl -sf "$url" $headers -X "$method" 2>&1 || true)
+        response=$(curl -sf "$url" $headers $cookie_file -X "$method" 2>&1 || true)
     fi
-    
+
     if [ $? -eq 0 ]; then
         # 验证是否为有效JSON
         if echo "$response" | jq . > /dev/null 2>&1; then
@@ -124,7 +125,6 @@ test_json_endpoint() {
     else
         echo -e "${RED}  ✗ 请求失败${NC}"
         FAILED=$((FAILED + 1))
-        return 1
     fi
 }
 
@@ -148,17 +148,24 @@ echo ""
 echo -e "${YELLOW}[阶段 2/5] 登录功能测试${NC}"
 echo "----------------------------------------"
 
-# 获取token
+# 获取token（HttpOnly cookie 模式）
 echo -e "${BLUE}测试: 用户登录${NC}"
-login_response=$(curl -sf -X POST "$BACKEND_URL/api/v1/auth/login" \
+login_response=$(curl -sf -c /tmp/cookies.txt -X POST "$BACKEND_URL/api/v1/auth/login" \
     -H "Content-Type: application/json" \
     -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}" 2>&1 || true)
 
 if echo "$login_response" | jq . > /dev/null 2>&1; then
-    # Backend login response shape (see auth_controller.go Login):
-    #   { code: 0, message: "success", data: { accessToken, refreshToken, user } }
-    # Supports both camelCase (current) and snake_case (legacy) field names.
-    token=$(echo "$login_response" | jq -r '.data.accessToken // .data.access_token // .data.token // .token // .access_token // empty' 2>/dev/null || true)
+    # 登录成功后，token 存储在 HttpOnly cookie 中
+    # 从 cookie 文件提取 accessToken
+    if [ -f /tmp/cookies.txt ]; then
+        token=$(grep -E 'accessToken|access_token' /tmp/cookies.txt | awk '{print $NF}' | head -1 || true)
+    fi
+
+    # 兜底：尝试从响应体提取（兼容旧版本）
+    if [ -z "$token" ] || [ "$token" = "null" ]; then
+        token=$(echo "$login_response" | jq -r '.data.accessToken // .data.access_token // .data.token // .token // .access_token // empty' 2>/dev/null || true)
+    fi
+
     if [ -n "$token" ] && [ "$token" != "null" ]; then
         echo -e "${GREEN}  ✓ 登录成功，获取到Token${NC}"
         PASSED=$((PASSED + 1))
@@ -182,10 +189,10 @@ echo -e "${YELLOW}[阶段 3/5] 核心API可用性${NC}"
 echo "----------------------------------------"
 
 if [ -n "$token" ]; then
-    test_json_endpoint "获取用户信息" "$BACKEND_URL/api/v1/auth/me" "GET" "" "$token"
-    test_json_endpoint "获取仪表盘数据" "$BACKEND_URL/api/v1/dashboard/stats" "GET" "" "$token"
-    test_json_endpoint "获取事件列表" "$BACKEND_URL/api/v1/incidents" "GET" "" "$token"
-    test_json_endpoint "获取工单列表" "$BACKEND_URL/api/v1/tickets" "GET" "" "$token"
+    test_json_endpoint "获取用户信息" "$BACKEND_URL/api/v1/auth/me" "GET" "" "true"
+    test_json_endpoint "获取仪表盘数据" "$BACKEND_URL/api/v1/dashboard/stats" "GET" "" "true"
+    test_json_endpoint "获取事件列表" "$BACKEND_URL/api/v1/incidents" "GET" "" "true"
+    test_json_endpoint "获取工单列表" "$BACKEND_URL/api/v1/tickets" "GET" "" "true"
 else
     echo -e "${YELLOW}  跳过API测试（无有效Token）${NC}"
 fi

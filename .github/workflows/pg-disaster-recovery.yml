@@ -93,7 +93,7 @@ jobs:
           docker run --rm --network host \
             -e DB_HOST=127.0.0.1 -e DB_PORT=5432 \
             -e DB_USER=postgres -e DB_PASSWORD=postgres -e DB_NAME=itsm_test -e DB_SSLMODE=disable \
-            -e JWT_SECRET=dr-test-only-jwt-secret-with-more-than-32-characters \
+            -e JWT_SECRET=dr-test-only-signing-key-with-more-than-32-characters-long \
             -e DEPLOYMENT_MODE=private -e ITSM_BOOTSTRAP_ONLY=true \
             -e ITSM_AUTO_MIGRATE=true -e ITSM_AUTO_SEED=false -e RLS_MODE=off \
             itsm-backend:dr
@@ -214,7 +214,7 @@ jobs:
           docker run --rm --network host \
             -e DB_HOST=127.0.0.1 -e DB_PORT=5432 \
             -e DB_USER=postgres -e DB_PASSWORD=postgres -e DB_NAME=itsm_test -e DB_SSLMODE=disable \
-            -e JWT_SECRET=rls-test-only-jwt-secret-with-more-than-32-characters \
+            -e JWT_SECRET=rls-test-only-signing-key-with-more-than-32-characters-long \
             -e DEPLOYMENT_MODE=private -e ITSM_BOOTSTRAP_ONLY=true \
             -e ITSM_AUTO_MIGRATE=true -e ITSM_AUTO_SEED=false -e RLS_MODE=off \
             itsm-backend:rls
