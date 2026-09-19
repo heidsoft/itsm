@@ -15,7 +15,6 @@ import {
   Card,
   Space,
   Select,
-  InputNumber,
   Divider,
   Typography,
   message,
@@ -118,14 +117,21 @@ export function ApprovalChainModal({
         });
         setSteps(
           editingChain.steps.map((step: ApprovalStep) => ({
+            level: step.level,
             stepOrder: step.stepOrder,
             stepName: step.stepName,
             approverType: step.approverType,
             approverId: step.approverId,
             approverName: step.approverName,
             isRequired: step.isRequired,
-            timeoutHours: step.timeoutHours,
-            conditions: step.conditions,
+            approvalType: step.approvalType,
+            threshold: step.threshold,
+            fallbackAction: step.fallbackAction,
+            fallbackApproverId: step.fallbackApproverId,
+            fallbackRole: step.fallbackRole,
+            conditionPriorities: step.conditionPriorities,
+            conditionAmountMin: step.conditionAmountMin,
+            conditionAmountMax: step.conditionAmountMax,
           }))
         );
       } else {
@@ -178,14 +184,14 @@ export function ApprovalChainModal({
   // 添加步骤
   const handleAddStep = useCallback(() => {
     const newStep: Omit<ApprovalStep, 'id' | 'chainId' | 'createdAt' | 'updatedAt'> = {
+      level: steps.length + 1,
       stepOrder: steps.length + 1,
       stepName: `步骤 ${steps.length + 1}`,
       approverType: 'user',
       approverId: 0,
       approverName: '',
       isRequired: true,
-      timeoutHours: 24,
-      conditions: [],
+      approvalType: 'serial',
     };
     setSteps(prev => [...prev, newStep]);
   }, [steps.length]);
@@ -301,14 +307,16 @@ export function ApprovalChainModal({
 
               <Col span={8}>
                 <div className="mb-2">
-                  <Text strong>超时时间(小时)</Text>
+                  <Text strong>审批方式</Text>
                 </div>
-                <InputNumber
-                  value={step.timeoutHours}
-                  onChange={value => handleUpdateStep(index, 'timeoutHours', value)}
-                  min={1}
-                  max={168}
+                <Select
+                  value={step.approvalType || 'serial'}
+                  onChange={value => handleUpdateStep(index, 'approvalType', value)}
                   style={{ width: '100%' }}
+                  options={[
+                    { value: 'serial', label: '或签（任一人通过）' },
+                    { value: 'parallel', label: '会签（多人通过）' },
+                  ]}
                 />
               </Col>
             </Row>

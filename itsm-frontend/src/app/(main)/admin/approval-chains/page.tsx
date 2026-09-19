@@ -10,6 +10,8 @@ import type {
   ApprovalChain,
   ApprovalChainFilters as Filters,
   ApprovalChainStats,
+  ApprovalType,
+  FallbackAction,
 } from '@/types/approval-chain';
 import { httpClient } from '@/lib/api/http-client';
 
@@ -21,9 +23,9 @@ type BackendApprovalStep = {
   role?: string;
   name?: string;
   isRequired?: boolean;
-  approvalType?: string;
+  approvalType?: ApprovalType;
   threshold?: number;
-  fallbackAction?: string;
+  fallbackAction?: FallbackAction;
   fallbackApproverId?: number;
   fallbackRole?: string;
   conditionPriorities?: string[];
@@ -64,6 +66,7 @@ const normalizeChain = (chain: BackendApprovalChain): ApprovalChain => ({
   steps: (chain.chain || []).map((step, index) => ({
     id: index + 1,
     chainId: chain.id,
+    level: step.level || index + 1,
     stepOrder: step.level || index + 1,
     stepName: step.name || `步骤 ${index + 1}`,
     approverType: step.role ? 'role' : 'user',

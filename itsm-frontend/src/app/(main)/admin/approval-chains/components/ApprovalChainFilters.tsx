@@ -5,16 +5,12 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Card, Row, Col, Input, Select, DatePicker, Button, Space } from 'antd';
-import { Search as SearchIcon, RefreshCw, Filter } from 'lucide-react';
+import { Card, Row, Col, Input, Select, Button, Space } from 'antd';
+import { RefreshCw, Filter } from 'lucide-react';
 import type { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
 import { useDebouncedCallback } from '@/lib/component-utils';
-import dayjs from 'dayjs';
-import type { Dayjs } from 'dayjs';
 
 const { Search } = Input;
-
-const { RangePicker } = DatePicker;
 
 interface ApprovalChainFiltersProps {
   filters: ApprovalChainFiltersType;
@@ -31,7 +27,6 @@ export function ApprovalChainFilters({
 }: ApprovalChainFiltersProps) {
   const [localFilters, setLocalFilters] = useState<ApprovalChainFiltersType>(filters);
 
-  // 防抖搜索
   const debouncedSearch = useDebouncedCallback((...args: unknown[]) => {
     const keyword = args[0] as string;
     onFilterChange({ ...localFilters, name: keyword });
@@ -46,28 +41,8 @@ export function ApprovalChainFilters({
   );
 
   const handleStatusChange = useCallback(
-    (status: ('active' | 'inactive')[]) => {
-      const newFilters = { ...localFilters, status };
-      setLocalFilters(newFilters);
-      onFilterChange(newFilters);
-    },
-    [localFilters, onFilterChange]
-  );
-
-  const handleDateRangeChange = useCallback(
-     
-    (dates: any, dateStrings: [string, string]) => {
-      const newFilters = {
-        ...localFilters,
-        dateRange:
-          dates && dateStrings
-            ? {
-                field: 'created' as const,
-                start: dateStrings[0],
-                end: dateStrings[1],
-              }
-            : undefined,
-      };
+    (status: 'active' | 'inactive') => {
+      const newFilters = { ...localFilters, status: status || undefined };
       setLocalFilters(newFilters);
       onFilterChange(newFilters);
     },
@@ -101,7 +76,6 @@ export function ApprovalChainFilters({
             <span className="text-sm font-medium text-gray-700">状态</span>
           </div>
           <Select
-            mode="multiple"
             placeholder="选择状态"
             value={localFilters.status}
             onChange={handleStatusChange}
@@ -111,22 +85,6 @@ export function ApprovalChainFilters({
               { value: 'active', label: '活跃' },
               { value: 'inactive', label: '非活跃' },
             ]}
-          />
-        </Col>
-
-        <Col xs={24} sm={12} md={8} lg={6}>
-          <div className="mb-2">
-            <span className="text-sm font-medium text-gray-700">创建时间</span>
-          </div>
-          <RangePicker
-            placeholder={['开始日期', '结束日期']}
-            value={
-              localFilters.dateRange
-                ? [dayjs(localFilters.dateRange.start), dayjs(localFilters.dateRange.end)]
-                : null
-            }
-            onChange={handleDateRangeChange}
-            style={{ width: '100%' }}
           />
         </Col>
 
