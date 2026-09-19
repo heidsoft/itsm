@@ -38,6 +38,10 @@ const (
 	FieldRequiresApproval = "requires_approval"
 	// FieldEstimatedDays holds the string denoting the estimated_days field in the database.
 	FieldEstimatedDays = "estimated_days"
+	// FieldBusinessSubType holds the string denoting the business_sub_type field in the database.
+	FieldBusinessSubType = "business_sub_type"
+	// FieldProcessDefinitionKey holds the string denoting the process_definition_key field in the database.
+	FieldProcessDefinitionKey = "process_definition_key"
 	// FieldTenantID holds the string denoting the tenant_id field in the database.
 	FieldTenantID = "tenant_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -72,6 +76,8 @@ var Columns = []string{
 	FieldIsActive,
 	FieldRequiresApproval,
 	FieldEstimatedDays,
+	FieldBusinessSubType,
+	FieldProcessDefinitionKey,
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -169,6 +175,16 @@ func ByRequiresApproval(opts ...sql.OrderTermOption) OrderOption {
 // ByEstimatedDays orders the results by the estimated_days field.
 func ByEstimatedDays(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEstimatedDays, opts...).ToFunc()
+}
+
+// ByBusinessSubType orders the results by the business_sub_type field.
+func ByBusinessSubType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBusinessSubType, opts...).ToFunc()
+}
+
+// ByProcessDefinitionKey orders the results by the process_definition_key field.
+func ByProcessDefinitionKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProcessDefinitionKey, opts...).ToFunc()
 }
 
 // ByTenantID orders the results by the tenant_id field.

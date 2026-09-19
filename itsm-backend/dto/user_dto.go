@@ -49,21 +49,21 @@ type ListUsersRequest struct {
 
 // UserDetailResponse 用户详细响应
 type UserDetailResponse struct {
-	ID         int       `json:"id"`
-	Username   string    `json:"username"`
-	Email      string    `json:"email"`
-	Name       string    `json:"name"`
-	Department string    `json:"department"`
-	Phone      string    `json:"phone"`
-	Active     bool      `json:"active"`
-	TenantID   int       `json:"tenantId"`
-	Role       string    `json:"role"`
+	ID         int    `json:"id"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Department string `json:"department"`
+	Phone      string `json:"phone"`
+	Active     bool   `json:"active"`
+	TenantID   int    `json:"tenantId"`
+	Role       string `json:"role"`
 	// RBAC 多角色（user_roles M2M 边），供前端编辑表单回填
 	RoleIDs   []int     `json:"roleIds,omitempty"`
 	RoleNames []string  `json:"roleNames,omitempty"`
 	MSPRole   *string   `json:"mspRole,omitempty"`
-	CreatedAt  time.Time `json:"createdAt"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // PagedUsersResponse 分页用户响应

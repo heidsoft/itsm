@@ -176,7 +176,7 @@ func (r *EntRepository) GetCloudService(ctx context.Context, tenantID int, id in
 }
 
 func (r *EntRepository) UpdateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {
-	e, err := r.client.CloudService.UpdateOneID(cs.ID).
+	update := r.client.CloudService.UpdateOneID(cs.ID).
 		Where(cloudservice.TenantID(cs.TenantID)).
 		SetProvider(cs.Provider).
 		SetCategory(cs.Category).
@@ -186,8 +186,13 @@ func (r *EntRepository) UpdateCloudService(ctx context.Context, cs *CloudService
 		SetResourceTypeName(cs.ResourceTypeName).
 		SetAPIVersion(cs.APIVersion).
 		SetAttributeSchema(cs.AttributeSchema).
-		SetIsActive(cs.IsActive).
-		Save(ctx)
+		SetIsActive(cs.IsActive)
+	if cs.ParentID > 0 {
+		update = update.SetParentID(cs.ParentID)
+	} else {
+		update = update.ClearParentID()
+	}
+	e, err := update.Save(ctx)
 	if err != nil {
 		return nil, err
 	}

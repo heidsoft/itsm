@@ -147,6 +147,11 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 			info.Name = "发布审批流程"
 			info.Category = "release"
 			info.Description = "软件发布审批管理流程"
+		case "dev_approval_ops_flow":
+			info.Name = "开发审批运维流程"
+			info.Category = "ticket"
+			info.SubCategory = "approval"
+			info.Description = "开发提交→主管审批→运维操作三级流程"
 		default:
 			info.Name = key
 			info.Category = "default"

@@ -102,11 +102,11 @@ func TestSeedAllSaaSModeCreatesPlatformTenantAndAdmin(t *testing.T) {
 }
 
 // TestSeedGroupsAndProvisionClones 验证审批组种子链路（2026-09-15 复盘 R2）：
-// 1. SeedAll 后 default 租户装上 BuiltinGroups 全部组；
-// 2. 组名以 approvers- 为前缀，与全部角色 code 无交集（同名组优先语义下，
-//    与角色码同名的空组会挡住角色回退，导致任务候选集为空）；
-// 3. ProvisionTenant 把组克隆到目标租户（validateTenantReadiness 含 groups 检查）；
-// 4. 幂等：重复 SeedAll 不重复建组。
+//  1. SeedAll 后 default 租户装上 BuiltinGroups 全部组；
+//  2. 组名以 approvers- 为前缀，与全部角色 code 无交集（同名组优先语义下，
+//     与角色码同名的空组会挡住角色回退，导致任务候选集为空）；
+//  3. ProvisionTenant 把组克隆到目标租户（validateTenantReadiness 含 groups 检查）；
+//  4. 幂等：重复 SeedAll 不重复建组。
 func TestSeedGroupsAndProvisionClones(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaS)
 	seeder.SeedAll(ctx)
@@ -155,7 +155,8 @@ func TestSeedGroupsAndProvisionClones(t *testing.T) {
 	assert.Equal(t, len(rootGroups), targetCount)
 }
 
-func TestSeedAllSaaSMSPModeCreatesOnlyProviderTenant(t *testing.T) {	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
+func TestSeedAllSaaSMSPModeCreatesOnlyProviderTenant(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaSMSP)
 
 	seeder.SeedAll(ctx)
 

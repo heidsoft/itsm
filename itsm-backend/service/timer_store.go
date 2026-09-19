@@ -25,9 +25,9 @@ const (
 type TimerType string
 
 const (
-	TimerTypeStart         TimerType = "start"
-	TimerTypeIntermediate  TimerType = "intermediate"
-	TimerTypeBoundary      TimerType = "boundary"
+	TimerTypeStart        TimerType = "start"
+	TimerTypeIntermediate TimerType = "intermediate"
+	TimerTypeBoundary     TimerType = "boundary"
 	// TimerTypeTaskDue 任务截止定时器（Phase 4）：BPMN userTask 配置 dueDate
 	// 属性时注册，到期由 TimerEventHandler 分发 TimeoutScanner 四动作；
 	// TimeoutScanner 轮询降级为恢复兜底（claim-once 保护下双路径安全）。
@@ -52,16 +52,16 @@ const (
 )
 
 type CreateTimerRequest struct {
-	TimerType          TimerType
+	TimerType            TimerType
 	ProcessDefinitionKey string
-	ProcessInstanceID  *int
-	ActivityID         string
-	TimerExpression    string
-	ExpressionType     ExpressionType
-	FireAt             time.Time
-	ContextVariables   map[string]interface{}
+	ProcessInstanceID    *int
+	ActivityID           string
+	TimerExpression      string
+	ExpressionType       ExpressionType
+	FireAt               time.Time
+	ContextVariables     map[string]interface{}
 	TotalDurationSeconds *float64
-	TenantID           int
+	TenantID             int
 }
 
 type TimerStore interface {
@@ -80,13 +80,13 @@ type TimerStore interface {
 }
 
 type TimerListFilter struct {
-	TenantID           int
-	Status             string
-	TimerType          string
-	ProcessInstanceID  *int
+	TenantID             int
+	Status               string
+	TimerType            string
+	ProcessInstanceID    *int
 	ProcessDefinitionKey string
-	Page               int
-	PageSize           int
+	Page                 int
+	PageSize             int
 }
 
 type TimerStats struct {

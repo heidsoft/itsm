@@ -121,6 +121,8 @@ type IncidentResponse struct {
 	RelatedCIs            []CIInfo               `json:"relatedCIs"`
 	Category              string                 `json:"category" example:"performance"`
 	Subcategory           string                 `json:"subcategory" example:"cpu"`
+	ServiceType           string                 `json:"serviceType,omitempty" example:"application"`
+	FailureType           string                 `json:"failureType,omitempty" example:"hardware"`
 	ImpactAnalysis        *ImpactAnalysis        `json:"impactAnalysis"`
 	RootCause             *RootCause             `json:"rootCause"`
 	ResolutionSteps       []ResolutionStep       `json:"resolutionSteps"`

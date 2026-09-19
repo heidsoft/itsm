@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
@@ -65,7 +66,7 @@ func (s *TicketTypeService) InstallPreset(ctx context.Context, presetID string, 
 		}
 		return created, nil
 	}
-	return nil, fmt.Errorf("工单类型预设不存在")
+	return nil, common.NewNotFoundError("工单类型预设")
 }
 
 func NewTicketTypeService(client *ent.Client, logger *zap.SugaredLogger) *TicketTypeService {
@@ -80,19 +81,19 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 	s.logger.Infow("Creating ticket type", "code", req.Code, "tenant_id", tenantID)
 	req.Code, req.Name = strings.TrimSpace(req.Code), strings.TrimSpace(req.Name)
 	if req.Code == "" || req.Name == "" {
-		return nil, fmt.Errorf("工单类型编码和名称不能为空")
+		return nil, common.NewValidationError("工单类型编码和名称不能为空", nil)
 	}
 	if !regexp.MustCompile(`^[a-z][a-z0-9_]*$`).MatchString(req.Code) {
-		return nil, fmt.Errorf("工单类型编码只能包含小写字母、数字和下划线")
+		return nil, common.NewValidationError("工单类型编码只能包含小写字母、数字和下划线", nil)
 	}
 	if len(req.Code) > 50 || len(req.Name) > 100 {
-		return nil, fmt.Errorf("工单类型编码或名称过长")
+		return nil, common.NewValidationError("工单类型编码或名称过长", nil)
 	}
 	if !validTicketPriority(defaultPriority(req.DefaultPriority)) {
-		return nil, fmt.Errorf("无效的默认优先级")
+		return nil, common.NewValidationError("无效的默认优先级", nil)
 	}
 	if req.SortOrder < 0 {
-		return nil, fmt.Errorf("排序值不能为负数")
+		return nil, common.NewValidationError("排序值不能为负数", nil)
 	}
 	// 不校验 ApprovalEnabled/ApprovalChain：审批级次的唯一权威表达是绑定工作流里的审批节点，
 	// resolveApprovalWorkflow 只查 ProcessBinding 与 legacy ApprovalWorkflow，从不读这两个字段。
@@ -107,7 +108,7 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 		return nil, fmt.Errorf("failed to check code existence: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("工单类型编码已存在: %s", req.Code)
+		return nil, common.NewConflictError("工单类型编码", req.Code)
 	}
 
 	// Serialize complex JSON fields
@@ -187,10 +188,10 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 
 	existing, err := s.client.TicketType.Get(ctx, int(id))
 	if err != nil {
-		return nil, fmt.Errorf("ticket type not found: %w", err)
+		return nil, common.NewNotFoundError("工单类型")
 	}
 	if int(existing.TenantID) != tenantID {
-		return nil, fmt.Errorf("ticket type not found")
+		return nil, common.NewNotFoundError("工单类型")
 	}
 
 	// Check code uniqueness if being changed (code is immutable; skip for updates)
@@ -201,7 +202,7 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 	update := s.client.TicketType.UpdateOne(existing)
 	if req.Name != nil {
 		if strings.TrimSpace(*req.Name) == "" {
-			return nil, fmt.Errorf("工单类型名称不能为空")
+			return nil, common.NewValidationError("工单类型名称不能为空", nil)
 		}
 		update.SetName(*req.Name)
 	}
@@ -216,7 +217,7 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 	}
 	if req.Status != nil {
 		if *req.Status != dto.TicketTypeStatusActive && *req.Status != dto.TicketTypeStatusInactive && *req.Status != dto.TicketTypeStatusDraft {
-			return nil, fmt.Errorf("无效的工单类型状态: %s", *req.Status)
+			return nil, common.NewValidationError(fmt.Sprintf("无效的工单类型状态: %s", *req.Status), nil)
 		}
 		update.SetStatus(string(*req.Status))
 	}
@@ -225,13 +226,13 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 	}
 	if req.DefaultPriority != nil {
 		if !validTicketPriority(*req.DefaultPriority) {
-			return nil, fmt.Errorf("无效的默认优先级")
+			return nil, common.NewValidationError("无效的默认优先级", nil)
 		}
 		update.SetDefaultPriority(defaultPriority(*req.DefaultPriority))
 	}
 	if req.SortOrder != nil {
 		if *req.SortOrder < 0 {
-			return nil, fmt.Errorf("排序值不能为负数")
+			return nil, common.NewValidationError("排序值不能为负数", nil)
 		}
 		update.SetSortOrder(*req.SortOrder)
 	}
@@ -311,10 +312,10 @@ func (s *TicketTypeService) updateTicketType(ctx context.Context, id int, req *d
 func (s *TicketTypeService) GetTicketType(ctx context.Context, id, tenantID int) (*dto.TicketTypeDefinition, error) {
 	obj, err := s.client.TicketType.Get(ctx, int(id))
 	if err != nil {
-		return nil, fmt.Errorf("ticket type not found: %w", err)
+		return nil, common.NewNotFoundError("工单类型")
 	}
 	if int(obj.TenantID) != tenantID {
-		return nil, fmt.Errorf("ticket type not found")
+		return nil, common.NewNotFoundError("工单类型")
 	}
 	return s.toDefinition(obj), nil
 }
@@ -387,11 +388,11 @@ func (s *TicketTypeService) DeleteTicketType(ctx context.Context, id, tenantID, 
 	existing, err := txc.TicketType.Get(ctx, int(id))
 	if err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("ticket type not found: %w", err)
+		return common.NewNotFoundError("工单类型")
 	}
 	if int(existing.TenantID) != tenantID {
 		_ = tx.Rollback()
-		return fmt.Errorf("ticket type not found")
+		return common.NewNotFoundError("工单类型")
 	}
 
 	_, err = txc.TicketType.UpdateOne(existing).SetStatus(string(dto.TicketTypeStatusInactive)).SetArchivedAt(time.Now()).SetArchivedBy(int64(userID)).SetUpdatedBy(int64(userID)).SetUpdatedAt(time.Now()).Save(ctx)
@@ -420,15 +421,15 @@ func (s *TicketTypeService) RestoreTicketType(ctx context.Context, id, tenantID,
 	existing, err := txc.TicketType.Get(ctx, int(id))
 	if err != nil {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("ticket type not found: %w", err)
+		return nil, common.NewNotFoundError("工单类型")
 	}
 	if int(existing.TenantID) != tenantID {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("ticket type not found")
+		return nil, common.NewNotFoundError("工单类型")
 	}
 	if existing.ArchivedAt == nil {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("工单类型未归档，无需恢复")
+		return nil, common.NewValidationError("工单类型未归档，无需恢复", nil)
 	}
 
 	restored, err := txc.TicketType.UpdateOne(existing).
@@ -522,25 +523,25 @@ func (s *TicketTypeService) validateBindings(ctx context.Context, tenantID int, 
 	if categoryID != nil {
 		exists, err := s.client.TicketCategory.Query().Where(ticketcategory.IDEQ(*categoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("工单分类不存在、已停用或不属于当前租户")
+			return common.NewValidationError("工单分类不存在、已停用或不属于当前租户", nil)
 		}
 	}
 	if strings.TrimSpace(workflowKey) != "" {
 		exists, err := s.client.ProcessDefinition.Query().Where(processdefinition.KeyEQ(workflowKey), processdefinition.TenantIDEQ(tenantID), processdefinition.IsActiveEQ(true), processdefinition.IsLatestEQ(true)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("工作流不存在、未激活或不属于当前租户")
+			return common.NewValidationError("工作流不存在、未激活或不属于当前租户", nil)
 		}
 	}
 	if slaID != nil {
 		exists, err := s.client.SLADefinition.Query().Where(sladefinition.IDEQ(*slaID), sladefinition.TenantIDEQ(tenantID), sladefinition.IsActiveEQ(true)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("SLA不存在、已停用或不属于当前租户")
+			return common.NewValidationError("SLA不存在、已停用或不属于当前租户", nil)
 		}
 	}
 	if assignmentRuleID != nil {
 		exists, err := s.client.TicketAssignmentRule.Query().Where(ticketassignmentrule.IDEQ(*assignmentRuleID), ticketassignmentrule.TenantIDEQ(tenantID), ticketassignmentrule.IsActiveEQ(true)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("分配规则不存在、已停用或不属于当前租户")
+			return common.NewValidationError("分配规则不存在、已停用或不属于当前租户", nil)
 		}
 	}
 	return nil
@@ -756,13 +757,13 @@ func validateCustomFields(fields []dto.CustomFieldDefinition) error {
 	for i, field := range fields {
 		field.Name = strings.TrimSpace(field.Name)
 		if !customFieldNamePattern.MatchString(field.Name) {
-			return fmt.Errorf("第%d个字段的 name 无效", i+1)
+			return common.NewValidationError(fmt.Sprintf("第%d个字段的 name 无效", i+1), nil)
 		}
 		if strings.TrimSpace(field.Label) == "" {
-			return fmt.Errorf("字段 %s 的 label 不能为空", field.Name)
+			return common.NewValidationError(fmt.Sprintf("字段 %s 的 label 不能为空", field.Name), nil)
 		}
 		if _, ok := seen[field.Name]; ok {
-			return fmt.Errorf("字段 name 重复: %s", field.Name)
+			return common.NewValidationError(fmt.Sprintf("字段 name 重复: %s", field.Name), nil)
 		}
 		seen[field.Name] = struct{}{}
 		switch field.Type {
@@ -772,14 +773,14 @@ func validateCustomFields(fields []dto.CustomFieldDefinition) error {
 			dto.CustomFieldTypeFile, dto.CustomFieldTypeUserPicker, dto.CustomFieldTypeDepartmentPicker,
 			dto.CustomFieldTypeBoolean, dto.CustomFieldTypeUser, dto.CustomFieldTypeDepartment, dto.CustomFieldTypeCI:
 		default:
-			return fmt.Errorf("字段 %s 的类型不受支持: %s", field.Name, field.Type)
+			return common.NewValidationError(fmt.Sprintf("字段 %s 的类型不受支持: %s", field.Name, field.Type), nil)
 		}
 		if (field.Type == dto.CustomFieldTypeSelect || field.Type == dto.CustomFieldTypeMultiSelect || field.Type == dto.CustomFieldTypeRadio) && len(field.Options) == 0 {
-			return fmt.Errorf("字段 %s 必须配置选项", field.Name)
+			return common.NewValidationError(fmt.Sprintf("字段 %s 必须配置选项", field.Name), nil)
 		}
 		// 只读字段用户无法填值；若同时必填则必须提供默认值，否则工单永远无法创建
 		if field.Readonly && field.Required && field.DefaultValue == nil {
-			return fmt.Errorf("只读字段 %s 为必填项时必须配置默认值", field.Name)
+			return common.NewValidationError(fmt.Sprintf("只读字段 %s 为必填项时必须配置默认值", field.Name), nil)
 		}
 	}
 	return nil

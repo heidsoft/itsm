@@ -34,9 +34,11 @@ func (f *fakeWorkflowTrigger) TriggerProcess(_ context.Context, req *dto.Process
 func (f *fakeWorkflowTrigger) TriggerByBusinessType(_ context.Context, _ dto.BusinessType, _ int, _ map[string]interface{}, _ string, _ int) (*dto.ProcessTriggerResponse, error) {
 	return nil, nil
 }
+
 func (f *fakeWorkflowTrigger) CancelProcess(_ context.Context, _ int, _ string, _ int) error {
 	return nil
 }
+
 func (f *fakeWorkflowTrigger) SuspendProcess(_ context.Context, _ int, _ string, _ int) error {
 	return nil
 }

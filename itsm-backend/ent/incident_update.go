@@ -486,6 +486,46 @@ func (_u *IncidentUpdate) ClearSubcategory() *IncidentUpdate {
 	return _u
 }
 
+// SetServiceType sets the "service_type" field.
+func (_u *IncidentUpdate) SetServiceType(v string) *IncidentUpdate {
+	_u.mutation.SetServiceType(v)
+	return _u
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableServiceType(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetServiceType(*v)
+	}
+	return _u
+}
+
+// ClearServiceType clears the value of the "service_type" field.
+func (_u *IncidentUpdate) ClearServiceType() *IncidentUpdate {
+	_u.mutation.ClearServiceType()
+	return _u
+}
+
+// SetFailureType sets the "failure_type" field.
+func (_u *IncidentUpdate) SetFailureType(v string) *IncidentUpdate {
+	_u.mutation.SetFailureType(v)
+	return _u
+}
+
+// SetNillableFailureType sets the "failure_type" field if the given value is not nil.
+func (_u *IncidentUpdate) SetNillableFailureType(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetFailureType(*v)
+	}
+	return _u
+}
+
+// ClearFailureType clears the value of the "failure_type" field.
+func (_u *IncidentUpdate) ClearFailureType() *IncidentUpdate {
+	_u.mutation.ClearFailureType()
+	return _u
+}
+
 // SetImpactAnalysis sets the "impact_analysis" field.
 func (_u *IncidentUpdate) SetImpactAnalysis(v map[string]interface{}) *IncidentUpdate {
 	_u.mutation.SetImpactAnalysis(v)
@@ -1316,6 +1356,18 @@ func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.SubcategoryCleared() {
 		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.ServiceType(); ok {
+		_spec.SetField(incident.FieldServiceType, field.TypeString, value)
+	}
+	if _u.mutation.ServiceTypeCleared() {
+		_spec.ClearField(incident.FieldServiceType, field.TypeString)
+	}
+	if value, ok := _u.mutation.FailureType(); ok {
+		_spec.SetField(incident.FieldFailureType, field.TypeString, value)
+	}
+	if _u.mutation.FailureTypeCleared() {
+		_spec.ClearField(incident.FieldFailureType, field.TypeString)
 	}
 	if value, ok := _u.mutation.ImpactAnalysis(); ok {
 		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
@@ -2337,6 +2389,46 @@ func (_u *IncidentUpdateOne) ClearSubcategory() *IncidentUpdateOne {
 	return _u
 }
 
+// SetServiceType sets the "service_type" field.
+func (_u *IncidentUpdateOne) SetServiceType(v string) *IncidentUpdateOne {
+	_u.mutation.SetServiceType(v)
+	return _u
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableServiceType(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetServiceType(*v)
+	}
+	return _u
+}
+
+// ClearServiceType clears the value of the "service_type" field.
+func (_u *IncidentUpdateOne) ClearServiceType() *IncidentUpdateOne {
+	_u.mutation.ClearServiceType()
+	return _u
+}
+
+// SetFailureType sets the "failure_type" field.
+func (_u *IncidentUpdateOne) SetFailureType(v string) *IncidentUpdateOne {
+	_u.mutation.SetFailureType(v)
+	return _u
+}
+
+// SetNillableFailureType sets the "failure_type" field if the given value is not nil.
+func (_u *IncidentUpdateOne) SetNillableFailureType(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetFailureType(*v)
+	}
+	return _u
+}
+
+// ClearFailureType clears the value of the "failure_type" field.
+func (_u *IncidentUpdateOne) ClearFailureType() *IncidentUpdateOne {
+	_u.mutation.ClearFailureType()
+	return _u
+}
+
 // SetImpactAnalysis sets the "impact_analysis" field.
 func (_u *IncidentUpdateOne) SetImpactAnalysis(v map[string]interface{}) *IncidentUpdateOne {
 	_u.mutation.SetImpactAnalysis(v)
@@ -3197,6 +3289,18 @@ func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err 
 	}
 	if _u.mutation.SubcategoryCleared() {
 		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
+	}
+	if value, ok := _u.mutation.ServiceType(); ok {
+		_spec.SetField(incident.FieldServiceType, field.TypeString, value)
+	}
+	if _u.mutation.ServiceTypeCleared() {
+		_spec.ClearField(incident.FieldServiceType, field.TypeString)
+	}
+	if value, ok := _u.mutation.FailureType(); ok {
+		_spec.SetField(incident.FieldFailureType, field.TypeString, value)
+	}
+	if _u.mutation.FailureTypeCleared() {
+		_spec.ClearField(incident.FieldFailureType, field.TypeString)
 	}
 	if value, ok := _u.mutation.ImpactAnalysis(); ok {
 		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)

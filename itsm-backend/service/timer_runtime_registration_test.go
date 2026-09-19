@@ -72,10 +72,10 @@ func TestExtractTimerExpression(t *testing.T) {
 	engine := &CustomProcessEngine{}
 
 	tests := []struct {
-		name              string
-		def               *BPMNTimerEventDefinition
-		expectedExpr      string
-		expectedType      string
+		name         string
+		def          *BPMNTimerEventDefinition
+		expectedExpr string
+		expectedType string
 	}{
 		{"duration priority", &BPMNTimerEventDefinition{TimeDuration: "PT30M", TimeDate: "2026-01-01T00:00:00Z"}, "PT30M", "duration"},
 		{"date when no duration", &BPMNTimerEventDefinition{TimeDate: "2026-01-01T00:00:00Z", TimeCycle: "R3/PT10M"}, "2026-01-01T00:00:00Z", "date"},

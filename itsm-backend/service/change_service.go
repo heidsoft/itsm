@@ -359,8 +359,8 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 	if pageSize < 1 {
 		pageSize = 20
 	}
-	if pageSize > 200 {
-		pageSize = 200
+	if pageSize > 100 {
+		pageSize = 100
 	}
 	query := s.client.Change.Query().Where(change.TenantID(tenantID))
 

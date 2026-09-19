@@ -114,6 +114,12 @@ func (Incident) Fields() []ent.Field {
 		field.String("subcategory").
 			Comment("事件子分类").
 			Optional(),
+		field.String("service_type").
+			Comment("服务类型").
+			Optional(),
+		field.String("failure_type").
+			Comment("故障类型").
+			Optional(),
 		field.JSON("impact_analysis", map[string]interface{}{}).
 			Comment("影响分析").
 			Optional(),

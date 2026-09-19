@@ -190,10 +190,10 @@ const (
 	ProcessTaskStatusAssigned  = "assigned"
 	ProcessTaskStatusStarted   = "started"
 	ProcessTaskStatusDelegated = "delegated"
-	ProcessTaskStatusCompleted  = "completed"
-	ProcessTaskStatusCancelled  = "cancelled"
-	ProcessTaskStatusTimeout    = "timeout"
-	ProcessTaskStatusEscalated  = "escalated"
+	ProcessTaskStatusCompleted = "completed"
+	ProcessTaskStatusCancelled = "cancelled"
+	ProcessTaskStatusTimeout   = "timeout"
+	ProcessTaskStatusEscalated = "escalated"
 )
 
 // ===================================

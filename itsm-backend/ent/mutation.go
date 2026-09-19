@@ -63429,6 +63429,8 @@ type IncidentMutation struct {
 	addconfiguration_item_id   *int
 	category                   *string
 	subcategory                *string
+	service_type               *string
+	failure_type               *string
 	impact_analysis            *map[string]interface{}
 	root_cause                 *map[string]interface{}
 	resolution_steps           *[]map[string]interface{}
@@ -64712,6 +64714,104 @@ func (m *IncidentMutation) SubcategoryCleared() bool {
 func (m *IncidentMutation) ResetSubcategory() {
 	m.subcategory = nil
 	delete(m.clearedFields, incident.FieldSubcategory)
+}
+
+// SetServiceType sets the "service_type" field.
+func (m *IncidentMutation) SetServiceType(s string) {
+	m.service_type = &s
+}
+
+// ServiceType returns the value of the "service_type" field in the mutation.
+func (m *IncidentMutation) ServiceType() (r string, exists bool) {
+	v := m.service_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServiceType returns the old "service_type" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldServiceType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServiceType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServiceType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServiceType: %w", err)
+	}
+	return oldValue.ServiceType, nil
+}
+
+// ClearServiceType clears the value of the "service_type" field.
+func (m *IncidentMutation) ClearServiceType() {
+	m.service_type = nil
+	m.clearedFields[incident.FieldServiceType] = struct{}{}
+}
+
+// ServiceTypeCleared returns if the "service_type" field was cleared in this mutation.
+func (m *IncidentMutation) ServiceTypeCleared() bool {
+	_, ok := m.clearedFields[incident.FieldServiceType]
+	return ok
+}
+
+// ResetServiceType resets all changes to the "service_type" field.
+func (m *IncidentMutation) ResetServiceType() {
+	m.service_type = nil
+	delete(m.clearedFields, incident.FieldServiceType)
+}
+
+// SetFailureType sets the "failure_type" field.
+func (m *IncidentMutation) SetFailureType(s string) {
+	m.failure_type = &s
+}
+
+// FailureType returns the value of the "failure_type" field in the mutation.
+func (m *IncidentMutation) FailureType() (r string, exists bool) {
+	v := m.failure_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFailureType returns the old "failure_type" field's value of the Incident entity.
+// If the Incident object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *IncidentMutation) OldFailureType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFailureType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFailureType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFailureType: %w", err)
+	}
+	return oldValue.FailureType, nil
+}
+
+// ClearFailureType clears the value of the "failure_type" field.
+func (m *IncidentMutation) ClearFailureType() {
+	m.failure_type = nil
+	m.clearedFields[incident.FieldFailureType] = struct{}{}
+}
+
+// FailureTypeCleared returns if the "failure_type" field was cleared in this mutation.
+func (m *IncidentMutation) FailureTypeCleared() bool {
+	_, ok := m.clearedFields[incident.FieldFailureType]
+	return ok
+}
+
+// ResetFailureType resets all changes to the "failure_type" field.
+func (m *IncidentMutation) ResetFailureType() {
+	m.failure_type = nil
+	delete(m.clearedFields, incident.FieldFailureType)
 }
 
 // SetImpactAnalysis sets the "impact_analysis" field.
@@ -66080,7 +66180,7 @@ func (m *IncidentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *IncidentMutation) Fields() []string {
-	fields := make([]string, 0, 41)
+	fields := make([]string, 0, 43)
 	if m.title != nil {
 		fields = append(fields, incident.FieldTitle)
 	}
@@ -66152,6 +66252,12 @@ func (m *IncidentMutation) Fields() []string {
 	}
 	if m.subcategory != nil {
 		fields = append(fields, incident.FieldSubcategory)
+	}
+	if m.service_type != nil {
+		fields = append(fields, incident.FieldServiceType)
+	}
+	if m.failure_type != nil {
+		fields = append(fields, incident.FieldFailureType)
 	}
 	if m.impact_analysis != nil {
 		fields = append(fields, incident.FieldImpactAnalysis)
@@ -66260,6 +66366,10 @@ func (m *IncidentMutation) Field(name string) (ent.Value, bool) {
 		return m.Category()
 	case incident.FieldSubcategory:
 		return m.Subcategory()
+	case incident.FieldServiceType:
+		return m.ServiceType()
+	case incident.FieldFailureType:
+		return m.FailureType()
 	case incident.FieldImpactAnalysis:
 		return m.ImpactAnalysis()
 	case incident.FieldRootCause:
@@ -66351,6 +66461,10 @@ func (m *IncidentMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCategory(ctx)
 	case incident.FieldSubcategory:
 		return m.OldSubcategory(ctx)
+	case incident.FieldServiceType:
+		return m.OldServiceType(ctx)
+	case incident.FieldFailureType:
+		return m.OldFailureType(ctx)
 	case incident.FieldImpactAnalysis:
 		return m.OldImpactAnalysis(ctx)
 	case incident.FieldRootCause:
@@ -66561,6 +66675,20 @@ func (m *IncidentMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSubcategory(v)
+		return nil
+	case incident.FieldServiceType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServiceType(v)
+		return nil
+	case incident.FieldFailureType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFailureType(v)
 		return nil
 	case incident.FieldImpactAnalysis:
 		v, ok := value.(map[string]interface{})
@@ -66840,6 +66968,12 @@ func (m *IncidentMutation) ClearedFields() []string {
 	if m.FieldCleared(incident.FieldSubcategory) {
 		fields = append(fields, incident.FieldSubcategory)
 	}
+	if m.FieldCleared(incident.FieldServiceType) {
+		fields = append(fields, incident.FieldServiceType)
+	}
+	if m.FieldCleared(incident.FieldFailureType) {
+		fields = append(fields, incident.FieldFailureType)
+	}
 	if m.FieldCleared(incident.FieldImpactAnalysis) {
 		fields = append(fields, incident.FieldImpactAnalysis)
 	}
@@ -66919,6 +67053,12 @@ func (m *IncidentMutation) ClearField(name string) error {
 		return nil
 	case incident.FieldSubcategory:
 		m.ClearSubcategory()
+		return nil
+	case incident.FieldServiceType:
+		m.ClearServiceType()
+		return nil
+	case incident.FieldFailureType:
+		m.ClearFailureType()
 		return nil
 	case incident.FieldImpactAnalysis:
 		m.ClearImpactAnalysis()
@@ -67023,6 +67163,12 @@ func (m *IncidentMutation) ResetField(name string) error {
 		return nil
 	case incident.FieldSubcategory:
 		m.ResetSubcategory()
+		return nil
+	case incident.FieldServiceType:
+		m.ResetServiceType()
+		return nil
+	case incident.FieldFailureType:
+		m.ResetFailureType()
 		return nil
 	case incident.FieldImpactAnalysis:
 		m.ResetImpactAnalysis()
@@ -136144,33 +136290,35 @@ func (m *ServiceCatalogMutation) ResetEdge(name string) error {
 // ServiceCatalogItemMutation represents an operation that mutates the ServiceCatalogItem nodes in the graph.
 type ServiceCatalogItemMutation struct {
 	config
-	op                   Op
-	typ                  string
-	id                   *int
-	name                 *string
-	description          *string
-	details              *string
-	category             *string
-	icon                 *string
-	form_schema          *map[string]interface{}
-	sla_id               *int
-	addsla_id            *int
-	approval_chain_id    *int
-	addapproval_chain_id *int
-	is_active            *bool
-	requires_approval    *bool
-	estimated_days       *int
-	addestimated_days    *int
-	tenant_id            *int
-	addtenant_id         *int
-	created_at           *time.Time
-	updated_at           *time.Time
-	clearedFields        map[string]struct{}
-	catalog              *int
-	clearedcatalog       bool
-	done                 bool
-	oldValue             func(context.Context) (*ServiceCatalogItem, error)
-	predicates           []predicate.ServiceCatalogItem
+	op                     Op
+	typ                    string
+	id                     *int
+	name                   *string
+	description            *string
+	details                *string
+	category               *string
+	icon                   *string
+	form_schema            *map[string]interface{}
+	sla_id                 *int
+	addsla_id              *int
+	approval_chain_id      *int
+	addapproval_chain_id   *int
+	is_active              *bool
+	requires_approval      *bool
+	estimated_days         *int
+	addestimated_days      *int
+	business_sub_type      *string
+	process_definition_key *string
+	tenant_id              *int
+	addtenant_id           *int
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	catalog                *int
+	clearedcatalog         bool
+	done                   bool
+	oldValue               func(context.Context) (*ServiceCatalogItem, error)
+	predicates             []predicate.ServiceCatalogItem
 }
 
 var _ ent.Mutation = (*ServiceCatalogItemMutation)(nil)
@@ -136856,6 +137004,104 @@ func (m *ServiceCatalogItemMutation) ResetEstimatedDays() {
 	m.addestimated_days = nil
 }
 
+// SetBusinessSubType sets the "business_sub_type" field.
+func (m *ServiceCatalogItemMutation) SetBusinessSubType(s string) {
+	m.business_sub_type = &s
+}
+
+// BusinessSubType returns the value of the "business_sub_type" field in the mutation.
+func (m *ServiceCatalogItemMutation) BusinessSubType() (r string, exists bool) {
+	v := m.business_sub_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBusinessSubType returns the old "business_sub_type" field's value of the ServiceCatalogItem entity.
+// If the ServiceCatalogItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceCatalogItemMutation) OldBusinessSubType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBusinessSubType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBusinessSubType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBusinessSubType: %w", err)
+	}
+	return oldValue.BusinessSubType, nil
+}
+
+// ClearBusinessSubType clears the value of the "business_sub_type" field.
+func (m *ServiceCatalogItemMutation) ClearBusinessSubType() {
+	m.business_sub_type = nil
+	m.clearedFields[servicecatalogitem.FieldBusinessSubType] = struct{}{}
+}
+
+// BusinessSubTypeCleared returns if the "business_sub_type" field was cleared in this mutation.
+func (m *ServiceCatalogItemMutation) BusinessSubTypeCleared() bool {
+	_, ok := m.clearedFields[servicecatalogitem.FieldBusinessSubType]
+	return ok
+}
+
+// ResetBusinessSubType resets all changes to the "business_sub_type" field.
+func (m *ServiceCatalogItemMutation) ResetBusinessSubType() {
+	m.business_sub_type = nil
+	delete(m.clearedFields, servicecatalogitem.FieldBusinessSubType)
+}
+
+// SetProcessDefinitionKey sets the "process_definition_key" field.
+func (m *ServiceCatalogItemMutation) SetProcessDefinitionKey(s string) {
+	m.process_definition_key = &s
+}
+
+// ProcessDefinitionKey returns the value of the "process_definition_key" field in the mutation.
+func (m *ServiceCatalogItemMutation) ProcessDefinitionKey() (r string, exists bool) {
+	v := m.process_definition_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessDefinitionKey returns the old "process_definition_key" field's value of the ServiceCatalogItem entity.
+// If the ServiceCatalogItem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceCatalogItemMutation) OldProcessDefinitionKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessDefinitionKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessDefinitionKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessDefinitionKey: %w", err)
+	}
+	return oldValue.ProcessDefinitionKey, nil
+}
+
+// ClearProcessDefinitionKey clears the value of the "process_definition_key" field.
+func (m *ServiceCatalogItemMutation) ClearProcessDefinitionKey() {
+	m.process_definition_key = nil
+	m.clearedFields[servicecatalogitem.FieldProcessDefinitionKey] = struct{}{}
+}
+
+// ProcessDefinitionKeyCleared returns if the "process_definition_key" field was cleared in this mutation.
+func (m *ServiceCatalogItemMutation) ProcessDefinitionKeyCleared() bool {
+	_, ok := m.clearedFields[servicecatalogitem.FieldProcessDefinitionKey]
+	return ok
+}
+
+// ResetProcessDefinitionKey resets all changes to the "process_definition_key" field.
+func (m *ServiceCatalogItemMutation) ResetProcessDefinitionKey() {
+	m.process_definition_key = nil
+	delete(m.clearedFields, servicecatalogitem.FieldProcessDefinitionKey)
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (m *ServiceCatalogItemMutation) SetTenantID(i int) {
 	m.tenant_id = &i
@@ -137045,7 +137291,7 @@ func (m *ServiceCatalogItemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceCatalogItemMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 17)
 	if m.catalog != nil {
 		fields = append(fields, servicecatalogitem.FieldCatalogID)
 	}
@@ -137081,6 +137327,12 @@ func (m *ServiceCatalogItemMutation) Fields() []string {
 	}
 	if m.estimated_days != nil {
 		fields = append(fields, servicecatalogitem.FieldEstimatedDays)
+	}
+	if m.business_sub_type != nil {
+		fields = append(fields, servicecatalogitem.FieldBusinessSubType)
+	}
+	if m.process_definition_key != nil {
+		fields = append(fields, servicecatalogitem.FieldProcessDefinitionKey)
 	}
 	if m.tenant_id != nil {
 		fields = append(fields, servicecatalogitem.FieldTenantID)
@@ -137123,6 +137375,10 @@ func (m *ServiceCatalogItemMutation) Field(name string) (ent.Value, bool) {
 		return m.RequiresApproval()
 	case servicecatalogitem.FieldEstimatedDays:
 		return m.EstimatedDays()
+	case servicecatalogitem.FieldBusinessSubType:
+		return m.BusinessSubType()
+	case servicecatalogitem.FieldProcessDefinitionKey:
+		return m.ProcessDefinitionKey()
 	case servicecatalogitem.FieldTenantID:
 		return m.TenantID()
 	case servicecatalogitem.FieldCreatedAt:
@@ -137162,6 +137418,10 @@ func (m *ServiceCatalogItemMutation) OldField(ctx context.Context, name string) 
 		return m.OldRequiresApproval(ctx)
 	case servicecatalogitem.FieldEstimatedDays:
 		return m.OldEstimatedDays(ctx)
+	case servicecatalogitem.FieldBusinessSubType:
+		return m.OldBusinessSubType(ctx)
+	case servicecatalogitem.FieldProcessDefinitionKey:
+		return m.OldProcessDefinitionKey(ctx)
 	case servicecatalogitem.FieldTenantID:
 		return m.OldTenantID(ctx)
 	case servicecatalogitem.FieldCreatedAt:
@@ -137260,6 +137520,20 @@ func (m *ServiceCatalogItemMutation) SetField(name string, value ent.Value) erro
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEstimatedDays(v)
+		return nil
+	case servicecatalogitem.FieldBusinessSubType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBusinessSubType(v)
+		return nil
+	case servicecatalogitem.FieldProcessDefinitionKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessDefinitionKey(v)
 		return nil
 	case servicecatalogitem.FieldTenantID:
 		v, ok := value.(int)
@@ -137384,6 +137658,12 @@ func (m *ServiceCatalogItemMutation) ClearedFields() []string {
 	if m.FieldCleared(servicecatalogitem.FieldApprovalChainID) {
 		fields = append(fields, servicecatalogitem.FieldApprovalChainID)
 	}
+	if m.FieldCleared(servicecatalogitem.FieldBusinessSubType) {
+		fields = append(fields, servicecatalogitem.FieldBusinessSubType)
+	}
+	if m.FieldCleared(servicecatalogitem.FieldProcessDefinitionKey) {
+		fields = append(fields, servicecatalogitem.FieldProcessDefinitionKey)
+	}
 	return fields
 }
 
@@ -137418,6 +137698,12 @@ func (m *ServiceCatalogItemMutation) ClearField(name string) error {
 		return nil
 	case servicecatalogitem.FieldApprovalChainID:
 		m.ClearApprovalChainID()
+		return nil
+	case servicecatalogitem.FieldBusinessSubType:
+		m.ClearBusinessSubType()
+		return nil
+	case servicecatalogitem.FieldProcessDefinitionKey:
+		m.ClearProcessDefinitionKey()
 		return nil
 	}
 	return fmt.Errorf("unknown ServiceCatalogItem nullable field %s", name)
@@ -137462,6 +137748,12 @@ func (m *ServiceCatalogItemMutation) ResetField(name string) error {
 		return nil
 	case servicecatalogitem.FieldEstimatedDays:
 		m.ResetEstimatedDays()
+		return nil
+	case servicecatalogitem.FieldBusinessSubType:
+		m.ResetBusinessSubType()
+		return nil
+	case servicecatalogitem.FieldProcessDefinitionKey:
+		m.ResetProcessDefinitionKey()
 		return nil
 	case servicecatalogitem.FieldTenantID:
 		m.ResetTenantID()

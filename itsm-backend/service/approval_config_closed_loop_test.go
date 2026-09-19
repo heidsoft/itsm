@@ -87,9 +87,9 @@ func TestApprovalConfigClosedLoop_ProcessBindingToTaskVariables(t *testing.T) {
 	// 工单创建时通过 TicketType.WorkflowDefinitionKey 解析到正确的流程定义
 	typeService := NewTicketTypeService(client, logger)
 	configuredType, err := typeService.CreateTicketType(ctx, &dto.CreateTicketTypeRequest{
-		Code:                    "approval_test",
-		Name:                    "Approval Test Type",
-		WorkflowDefinitionKey:   "ticket_approval_flow",
+		Code:                  "approval_test",
+		Name:                  "Approval Test Type",
+		WorkflowDefinitionKey: "ticket_approval_flow",
 	}, tenant.ID, requester.ID)
 	require.NoError(t, err)
 
@@ -99,11 +99,11 @@ func TestApprovalConfigClosedLoop_ProcessBindingToTaskVariables(t *testing.T) {
 	ticketService.SetProcessTriggerService(NewProcessTriggerService(client, engine))
 
 	created, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
-		Title:         "审批配置闭环测试",
-		Description:   "验证 TicketType.WorkflowDefinitionKey → BPMN → TaskVariables 完整链路",
-		Priority:      "medium",
-		RequesterID:   requester.ID,
-		TicketTypeID:  &configuredType.ID,
+		Title:        "审批配置闭环测试",
+		Description:  "验证 TicketType.WorkflowDefinitionKey → BPMN → TaskVariables 完整链路",
+		Priority:     "medium",
+		RequesterID:  requester.ID,
+		TicketTypeID: &configuredType.ID,
 	}, tenant.ID)
 	require.NoError(t, err)
 
@@ -250,11 +250,11 @@ func TestApprovalConfigClosedLoop_AllowDelegateFalse(t *testing.T) {
 	ticketService.SetProcessTriggerService(NewProcessTriggerService(client, engine))
 
 	created, err := ticketService.CreateTicket(ctx, &dto.CreateTicketRequest{
-		Title:         "禁止委托测试",
-		Description:   "验证 allowDelegate=false 时委托失败",
-		Priority:      "medium",
-		RequesterID:   requester.ID,
-		TicketTypeID:  &configuredType.ID,
+		Title:        "禁止委托测试",
+		Description:  "验证 allowDelegate=false 时委托失败",
+		Priority:     "medium",
+		RequesterID:  requester.ID,
+		TicketTypeID: &configuredType.ID,
 	}, tenant.ID)
 	require.NoError(t, err)
 

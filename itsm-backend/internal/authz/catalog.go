@@ -2,10 +2,10 @@
 // role bindings (2026-09-17 批次 6，P0-E 治本收官)。
 //
 // 历史背景：权限码与角色绑定原本分散在四处手写——
-//   1. router/ + handlers/ 中的 RequirePermission 家族声明（路径 → (resource, action)）
-//   2. middleware/rbac.go 的 ResourceActionMap 预检映射
-//   3. pkg/seeder/seeder.go 的 permissionDefinitions() + builtinRolePermissionCodes()
-//   4. DB 表 permissions / role_permissions
+//  1. router/ + handlers/ 中的 RequirePermission 家族声明（路径 → (resource, action)）
+//  2. middleware/rbac.go 的 ResourceActionMap 预检映射
+//  3. pkg/seeder/seeder.go 的 permissionDefinitions() + builtinRolePermissionCodes()
+//  4. DB 表 permissions / role_permissions
 //
 // 批次 5 已把 1↔2 通过 cmd/authz-gen 单向消解（路由声明 codegen 为预检映射）。
 // 本包是消解 3↔4 的治本步骤：把 (3) 抽到本包作为唯一权威源，seeder 启动时
@@ -31,9 +31,9 @@ type PermissionDef struct {
 // Definitions 返回权限码权威清单（Permission 表的码空间唯一源）。
 //
 // 增删权限码的唯一入口。新增码必须满足：
-//   1. 独立的资源面（避免把已有码的不同 action 重复定义）；
-//   2. 至少一个路由 RequirePermission 引用（否则永远没人能用到，等于死码）；
-//   3. 至少一个角色通过 builtinRoleBindings 授权（否则同上）。
+//  1. 独立的资源面（避免把已有码的不同 action 重复定义）；
+//  2. 至少一个路由 RequirePermission 引用（否则永远没人能用到，等于死码）；
+//  3. 至少一个角色通过 builtinRoleBindings 授权（否则同上）。
 //
 // 守卫：
 //   - pkg/seeder/role_permission_guard_test.go：码不重复 + 角色引用必须 ⊆ 本清单；

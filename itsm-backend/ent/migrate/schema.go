@@ -2045,6 +2045,8 @@ var (
 		{Name: "configuration_item_id", Type: field.TypeInt, Nullable: true},
 		{Name: "category", Type: field.TypeString, Nullable: true},
 		{Name: "subcategory", Type: field.TypeString, Nullable: true},
+		{Name: "service_type", Type: field.TypeString, Nullable: true},
+		{Name: "failure_type", Type: field.TypeString, Nullable: true},
 		{Name: "impact_analysis", Type: field.TypeJSON, Nullable: true},
 		{Name: "root_cause", Type: field.TypeJSON, Nullable: true},
 		{Name: "resolution_steps", Type: field.TypeJSON, Nullable: true},
@@ -2073,13 +2075,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "incidents_email_conversations_incidents",
-				Columns:    []*schema.Column{IncidentsColumns[40]},
+				Columns:    []*schema.Column{IncidentsColumns[42]},
 				RefColumns: []*schema.Column{EmailConversationsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "incidents_groups_assigned_incidents",
-				Columns:    []*schema.Column{IncidentsColumns[41]},
+				Columns:    []*schema.Column{IncidentsColumns[43]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -2088,12 +2090,12 @@ var (
 			{
 				Name:    "incident_tenant_id_email_conversation_id",
 				Unique:  true,
-				Columns: []*schema.Column{IncidentsColumns[35], IncidentsColumns[40]},
+				Columns: []*schema.Column{IncidentsColumns[37], IncidentsColumns[42]},
 			},
 			{
 				Name:    "incident_tenant_id_assignment_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{IncidentsColumns[35], IncidentsColumns[41]},
+				Columns: []*schema.Column{IncidentsColumns[37], IncidentsColumns[43]},
 			},
 		},
 	}
@@ -4331,6 +4333,8 @@ var (
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "requires_approval", Type: field.TypeBool, Default: true},
 		{Name: "estimated_days", Type: field.TypeInt, Default: 1},
+		{Name: "business_sub_type", Type: field.TypeString, Nullable: true},
+		{Name: "process_definition_key", Type: field.TypeString, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -4344,7 +4348,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "service_catalog_items_service_catalogs_items",
-				Columns:    []*schema.Column{ServiceCatalogItemsColumns[15]},
+				Columns:    []*schema.Column{ServiceCatalogItemsColumns[17]},
 				RefColumns: []*schema.Column{ServiceCatalogsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

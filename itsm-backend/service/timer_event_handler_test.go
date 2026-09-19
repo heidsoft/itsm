@@ -35,7 +35,7 @@ func createTestProcessDefinition(t *testing.T, client *ent.Client, tenantID int,
 
 	def, err := client.ProcessDefinition.Create().
 		SetKey(key).
-		SetName("Test Process "+key).
+		SetName("Test Process " + key).
 		SetVersion("1.0").
 		SetBpmnXML([]byte(bpmnXML)).
 		SetIsActive(true).

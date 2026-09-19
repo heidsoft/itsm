@@ -1225,6 +1225,8 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 		AssigneeID:            i.AssigneeID,
 		Category:              i.Category,
 		Subcategory:           i.Subcategory,
+		ServiceType:           i.ServiceType,
+		FailureType:           i.FailureType,
 		Version:               i.Version,
 		IsMajorIncident:       i.IsMajorIncident,
 		ImpactAnalysis:        impactAnalysis,
@@ -1471,6 +1473,10 @@ func (h *IncidentHandler) GetClassification(c *gin.Context) {
 		"incidentId":  incident.ID,
 		"category":    incident.Category,
 		"subcategory": incident.Subcategory,
+		"serviceType": incident.ServiceType,
+		"failureType": incident.FailureType,
+		"urgency":     incident.Urgency,
+		"impact":      incident.Impact,
 	})
 }
 
@@ -1499,6 +1505,10 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 	var req struct {
 		Category    string `json:"category"`
 		Subcategory string `json:"subcategory"`
+		ServiceType string `json:"serviceType"`
+		FailureType string `json:"failureType"`
+		Urgency     string `json:"urgency"`
+		Impact      string `json:"impact"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -1506,7 +1516,14 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 	}
 
 	tenantID := c.GetInt("tenant_id")
-	updates := &Incident{Category: req.Category, Subcategory: req.Subcategory}
+	updates := &Incident{
+		Category:    req.Category,
+		Subcategory: req.Subcategory,
+		ServiceType: req.ServiceType,
+		FailureType: req.FailureType,
+		Urgency:     req.Urgency,
+		Impact:      req.Impact,
+	}
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {

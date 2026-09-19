@@ -224,8 +224,8 @@ const phase5PlainStartEndBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 func createTimerTenantWithTZ(t *testing.T, client *ent.Client, suffix, tz string) int {
 	t.Helper()
 	tenant, err := client.Tenant.Create().
-		SetName("Timer TZ Tenant "+suffix).
-		SetCode("timer-tz-"+suffix).
+		SetName("Timer TZ Tenant " + suffix).
+		SetCode("timer-tz-" + suffix).
 		SetDomain("timer-tz-" + suffix + ".example.com").
 		SetStatus("active").
 		SetTimezone(tz).

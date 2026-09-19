@@ -146,6 +146,7 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		apply: func(ctx context.Context, transactional *Seeder) error {
 			transactional.seedTicketViews(ctx)
 			transactional.seedServiceCatalog(ctx)
+			transactional.seedServiceCatalogItems(ctx)
 			return nil
 		},
 		verify: func(ctx context.Context, target *Seeder) error {

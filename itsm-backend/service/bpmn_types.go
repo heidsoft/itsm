@@ -50,13 +50,13 @@ type BPMNOutgoingRef struct {
 
 // BPMNStartEvent 开始事件
 type BPMNStartEvent struct {
-	ID                    string                  `xml:"id,attr"`
-	Name                  string                  `xml:"name,attr"`
-	EventType             string                  `xml:"eventType,attr"`
-	MessageRef            string                  `xml:"messageRef,attr"`
-	TimerRef              string                  `xml:"timerRef,attr"`
-	SignalRef             string                  `xml:"signalRef,attr"`
-	TimerEventDefinition  *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
+	ID                   string                    `xml:"id,attr"`
+	Name                 string                    `xml:"name,attr"`
+	EventType            string                    `xml:"eventType,attr"`
+	MessageRef           string                    `xml:"messageRef,attr"`
+	TimerRef             string                    `xml:"timerRef,attr"`
+	SignalRef            string                    `xml:"signalRef,attr"`
+	TimerEventDefinition *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
 }
 
 // GetID 获取ID
@@ -352,11 +352,11 @@ func (e *BPMNDataStore) GetType() string { return "DataStore" }
 
 // BPMNBoundaryEvent 边界事件
 type BPMNBoundaryEvent struct {
-	ID                    string                    `xml:"id,attr"`
-	Name                  string                    `xml:"name,attr"`
-	AttachedToRef         string                    `xml:"attachedToRef,attr"`
-	CancelActivity        bool                      `xml:"cancelActivity,attr"`
-	TimerEventDefinition  *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
+	ID                   string                    `xml:"id,attr"`
+	Name                 string                    `xml:"name,attr"`
+	AttachedToRef        string                    `xml:"attachedToRef,attr"`
+	CancelActivity       bool                      `xml:"cancelActivity,attr"`
+	TimerEventDefinition *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
 }
 
 // GetID 获取ID
@@ -370,13 +370,13 @@ func (e *BPMNBoundaryEvent) GetType() string { return "BoundaryEvent" }
 
 // BPMNIntermediateEvent 中间事件
 type BPMNIntermediateEvent struct {
-	ID                    string                    `xml:"id,attr"`
-	Name                  string                    `xml:"name,attr"`
-	EventType             string                    `xml:"eventType,attr"`
-	MessageRef            string                    `xml:"messageRef,attr"`
-	TimerRef              string                    `xml:"timerRef,attr"`
-	SignalRef             string                    `xml:"signalRef,attr"`
-	TimerEventDefinition  *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
+	ID                   string                    `xml:"id,attr"`
+	Name                 string                    `xml:"name,attr"`
+	EventType            string                    `xml:"eventType,attr"`
+	MessageRef           string                    `xml:"messageRef,attr"`
+	TimerRef             string                    `xml:"timerRef,attr"`
+	SignalRef            string                    `xml:"signalRef,attr"`
+	TimerEventDefinition *BPMNTimerEventDefinition `xml:"timerEventDefinition"`
 }
 
 // GetID 获取ID

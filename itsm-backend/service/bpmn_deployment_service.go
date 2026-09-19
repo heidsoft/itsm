@@ -372,4 +372,3 @@ func (s *BPMNDeploymentService) registerStartTimers(ctx context.Context, definit
 	_, err := SyncStartTimersFromDefinitions(ctx, s.client, s.timerStore, definitions, processKey, tenantID)
 	return err
 }
-

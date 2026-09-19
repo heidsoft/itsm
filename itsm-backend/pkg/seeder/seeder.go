@@ -2,15 +2,16 @@ package seeder
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 	"time"
 
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
-	"itsm-backend/internal/authz"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
@@ -27,6 +28,7 @@ import (
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/servicecatalog"
+	"itsm-backend/ent/servicecatalogitem"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slapolicy"
@@ -37,6 +39,7 @@ import (
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/authz"
 	"itsm-backend/service"
 
 	"itsm-backend/config"
@@ -46,6 +49,11 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// seedWorkflowTemplateFS holds complete BPMN templates for the workflow_templates seed.
+//
+//go:embed templates/*.bpmn
+var seedWorkflowTemplateFS embed.FS
 
 // Force import usage for ent packages (use predicate functions)
 var (
@@ -64,17 +72,18 @@ var (
 
 // SeedConfig 种子数据配置结构
 type SeedConfig struct {
-	Departments       []DepartmentSeed       `json:"departments"`
-	Teams             []TeamSeed             `json:"teams"`
-	Roles             []RoleSeed             `json:"roles"`
-	Groups            []GroupSeed            `json:"groups"`
-	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
-	SLAPolicies       []SLAPolicySeed        `json:"sla_policies"`
-	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
-	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
-	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
-	TicketViews       []TicketViewSeed       `json:"ticket_views"`
-	CITypes           []CITypeSeed           `json:"ci_types"`
+	Departments         []DepartmentSeed         `json:"departments"`
+	Teams               []TeamSeed               `json:"teams"`
+	Roles               []RoleSeed               `json:"roles"`
+	Groups              []GroupSeed              `json:"groups"`
+	SLADefinitions      []SLADefinitionSeed      `json:"sla_definitions"`
+	SLAPolicies         []SLAPolicySeed          `json:"sla_policies"`
+	ServiceCatalog      []ServiceCatalogSeed     `json:"service_catalog"`
+	ServiceCatalogItems []ServiceCatalogItemSeed `json:"service_catalog_items"`
+	ApprovalWorkflows   []ApprovalWorkflowSeed   `json:"approval_workflows"`
+	ProcessBindings     []ProcessBindingSeed     `json:"process_bindings"`
+	TicketViews         []TicketViewSeed         `json:"ticket_views"`
+	CITypes             []CITypeSeed             `json:"ci_types"`
 	// 新增：可配置的种子数据
 	Incidents          []IncidentSeed         `json:"incidents"`
 	Problems           []ProblemSeed          `json:"problems"`
@@ -133,6 +142,16 @@ type ServiceCatalogSeed struct {
 	ServiceType      string `json:"service_type"`
 	RequiresApproval bool   `json:"requires_approval"`
 	DeliveryTime     int    `json:"delivery_time"`
+}
+
+type ServiceCatalogItemSeed struct {
+	CatalogName          string `json:"catalog_name"`
+	Name                 string `json:"name"`
+	Description          string `json:"description"`
+	BusinessSubType      string `json:"business_sub_type"`
+	ProcessDefinitionKey string `json:"process_definition_key"`
+	RequiresApproval     bool   `json:"requires_approval"`
+	EstimatedDays        int    `json:"estimated_days"`
 }
 
 type ApprovalWorkflowSeed struct {
@@ -380,6 +399,9 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 	if override.ServiceCatalog != nil {
 		base.ServiceCatalog = override.ServiceCatalog
 	}
+	if override.ServiceCatalogItems != nil {
+		base.ServiceCatalogItems = override.ServiceCatalogItems
+	}
 	if override.ApprovalWorkflows != nil {
 		base.ApprovalWorkflows = override.ApprovalWorkflows
 	}
@@ -531,6 +553,23 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "CI/CD流水线", Description: "自动化部署", Category: "开发", ServiceType: "custom", RequiresApproval: false, DeliveryTime: 0},
 			{Name: "测试环境", Description: "预发布测试环境", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 2},
 			{Name: "API网关", Description: "API接口管理", Category: "开发", ServiceType: "custom", RequiresApproval: true, DeliveryTime: 3},
+		},
+		ServiceCatalogItems: []ServiceCatalogItemSeed{
+			{CatalogName: "云服务器 ECS", Name: "ECS 实例申请", Description: "申请新建弹性云服务器实例", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "云服务器 ECS", Name: "ECS 配置变更", Description: "变更现有 ECS 实例规格", BusinessSubType: "change", ProcessDefinitionKey: "change_normal_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "云服务器 ECS", Name: "ECS 故障报修", Description: "ECS 实例运行异常报修", BusinessSubType: "incident", ProcessDefinitionKey: "incident_emergency_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "云数据库 RDS", Name: "RDS 实例申请", Description: "申请新建数据库实例", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "云数据库 RDS", Name: "数据库备份恢复", Description: "申请数据库备份恢复服务", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "IT服务台", Name: "IT 问题咨询", Description: "IT 相关问题咨询与解答", BusinessSubType: "ticket", ProcessDefinitionKey: "ticket_general_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "IT服务台", Name: "密码重置", Description: "账户密码重置服务", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "软件安装", Name: "标准软件安装", Description: "安装公司授权的标准软件", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 1},
+			{CatalogName: "账户申请", Name: "新员工账户开通", Description: "新员工 IT 账户与权限开通", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "网络接入", Name: "办公网络接入", Description: "申请办公网络接入权限", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "域名申请", Name: "内部域名注册", Description: "注册内部系统域名", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 3},
+			{CatalogName: "代码仓库", Name: "Git 仓库创建", Description: "申请创建新的 Git 代码仓库", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
+			{CatalogName: "测试环境", Name: "测试环境申请", Description: "申请预发布测试环境", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
+			{CatalogName: "漏洞扫描", Name: "Web 漏洞扫描", Description: "申请 Web 应用安全漏洞扫描", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "渗透测试", Name: "安全渗透测试", Description: "申请系统安全渗透测试", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 5},
 		},
 		ApprovalWorkflows: []ApprovalWorkflowSeed{
 			{Name: "P0/P1事件审批", Desc: "紧急和高优先级事件需要主管审批", TicketType: "incident", Priority: "urgent,high", Nodes: []map[string]interface{}{{"type": "approval", "name": "主管审批", "approver_type": "manager", "timeout": 60}}},
@@ -1441,69 +1480,15 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
 	}
 
 	type tplSeed struct {
-		key, name, desc, domain, bpmn string
+		key, name, desc, domain, bpmnFile string
 	}
 	templates := []tplSeed{
-		{
-			key: "generic_request", name: "通用申请流程", desc: "适用于各类行政、IT、设施等通用申请场景",
-			domain: "it",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="generic_request" name="通用申请流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
-		{
-			key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与 CAB 审批",
-			domain: "change",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="change_request" name="变更申请流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
-		{
-			key: "incident_response", name: "事件响应流程", desc: "ITIL 事件管理流程，包含分级、分派、解决与回顾",
-			domain: "incident",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="incident_response" name="事件响应流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
-		{
-			key: "service_request", name: "服务请求流程", desc: "标准服务请求履行流程，支持审批与自动履行",
-			domain: "service_request",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="service_request" name="服务请求流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
-		{
-			key: "leave_request", name: "请假审批流程", desc: "员工请假申请与多级审批流程",
-			domain: "hr",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="leave_request" name="请假审批流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
-		{
-			key: "expense_approval", name: "费用报销流程", desc: "员工费用报销申请与财务审批流程",
-			domain: "expense",
-			bpmn: `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="expense_approval" name="费用报销流程" isExecutable="true">
-    <bpmn:startEvent id="Start"/><bpmn:endEvent id="End"/>
-  </bpmn:process>
-</bpmn:definitions>`,
-		},
+		{key: "generic_request", name: "通用申请流程", desc: "适用于各类行政、IT、设施等通用申请场景", domain: "it", bpmnFile: "templates/generic_request.bpmn"},
+		{key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与 CAB 审批", domain: "change", bpmnFile: "templates/change_request.bpmn"},
+		{key: "incident_response", name: "事件响应流程", desc: "ITIL 事件管理流程，包含分级、分派、解决与回顾", domain: "incident", bpmnFile: "templates/incident_response.bpmn"},
+		{key: "service_request", name: "服务请求流程", desc: "标准服务请求履行流程，支持审批与自动履行", domain: "service_request", bpmnFile: "templates/service_request.bpmn"},
+		{key: "leave_request", name: "请假审批流程", desc: "员工请假申请与多级审批流程", domain: "hr", bpmnFile: "templates/leave_request.bpmn"},
+		{key: "expense_approval", name: "费用报销流程", desc: "员工费用报销申请与财务审批流程", domain: "expense", bpmnFile: "templates/expense_approval.bpmn"},
 	}
 
 	db := database.GetRawDB()
@@ -1513,6 +1498,12 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
 	}
 
 	for _, tpl := range templates {
+		bpmnXML, readErr := fs.ReadFile(seedWorkflowTemplateFS, tpl.bpmnFile)
+		if readErr != nil {
+			s.sugar.Warnw("read embedded bpmn template failed", "file", tpl.bpmnFile, "error", readErr)
+			continue
+		}
+
 		var count int
 		err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM workflow_templates WHERE tenant_id=$1 AND key=$2", tenantID, tpl.key).Scan(&count)
 		if err != nil {
@@ -1520,11 +1511,21 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
 			continue
 		}
 		if count > 0 {
+			// Repair existing records that were seeded with placeholder BPMN
+			// (no BPMNDiagram — causes disconnected nodes in the designer).
+			res, updateErr := db.ExecContext(ctx,
+				`UPDATE workflow_templates SET bpmn_xml=to_jsonb($1::text),updated_at=NOW() WHERE tenant_id=$2 AND key=$3 AND bpmn_xml::text NOT LIKE '%BPMNDiagram%'`,
+				string(bpmnXML), tenantID, tpl.key)
+			if updateErr != nil {
+				s.sugar.Warnw("repair workflow template bpmn failed", "key", tpl.key, "error", updateErr)
+			} else if rows, _ := res.RowsAffected(); rows > 0 {
+				s.sugar.Infow("repaired workflow template bpmn", "key", tpl.key)
+			}
 			continue
 		}
 		_, err = db.ExecContext(ctx,
 			`INSERT INTO workflow_templates (key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,tenant_id,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,'{}','{}','{}','{}',to_jsonb($5::text),'1.0.0','published',true,$6,$7,NOW(),NOW())`,
-			tpl.key, tpl.name, tpl.desc, tpl.domain, tpl.bpmn, tenantID, createdBy)
+			tpl.key, tpl.name, tpl.desc, tpl.domain, string(bpmnXML), tenantID, createdBy)
 		if err != nil {
 			s.sugar.Warnw("insert workflow template failed", "key", tpl.key, "error", err)
 			continue
@@ -2173,6 +2174,74 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 		created++
 	}
 	s.sugar.Infow("service catalog reconciled", "expected", len(s.config.ServiceCatalog), "created", created)
+}
+
+func (s *Seeder) seedServiceCatalogItems(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip service catalog items seed", "error", err)
+		return
+	}
+
+	if len(s.config.ServiceCatalogItems) == 0 {
+		return
+	}
+
+	catalogs, err := s.client.ServiceCatalog.Query().Where(
+		servicecatalog.TenantIDEQ(t.ID),
+	).All(ctx)
+	if err != nil {
+		s.sugar.Warnw("query service catalogs for items seed failed", "error", err)
+		return
+	}
+	catalogByName := map[string]*ent.ServiceCatalog{}
+	for _, c := range catalogs {
+		catalogByName[c.Name] = c
+	}
+
+	created := 0
+	for _, item := range s.config.ServiceCatalogItems {
+		parent, ok := catalogByName[item.CatalogName]
+		if !ok {
+			s.sugar.Warnw("parent catalog not found; skip item", "item", item.Name, "catalog", item.CatalogName)
+			continue
+		}
+
+		exists, err := s.client.ServiceCatalogItem.Query().Where(
+			servicecatalogitem.TenantIDEQ(t.ID),
+			servicecatalogitem.CatalogIDEQ(parent.ID),
+			servicecatalogitem.NameEQ(item.Name),
+		).Exist(ctx)
+		if err != nil {
+			s.sugar.Warnw("check service catalog item failed", "error", err, "name", item.Name)
+			continue
+		}
+		if exists {
+			continue
+		}
+
+		b := s.client.ServiceCatalogItem.Create().
+			SetCatalogID(parent.ID).
+			SetName(item.Name).
+			SetDescription(item.Description).
+			SetRequiresApproval(item.RequiresApproval).
+			SetEstimatedDays(item.EstimatedDays).
+			SetIsActive(true).
+			SetTenantID(t.ID)
+		if item.BusinessSubType != "" {
+			b = b.SetBusinessSubType(item.BusinessSubType)
+		}
+		if item.ProcessDefinitionKey != "" {
+			b = b.SetProcessDefinitionKey(item.ProcessDefinitionKey)
+		}
+		_, err = b.Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed service catalog item failed", "error", err, "name", item.Name)
+			continue
+		}
+		created++
+	}
+	s.sugar.Infow("service catalog items reconciled", "expected", len(s.config.ServiceCatalogItems), "created", created)
 }
 
 // seedTicketTypes 初始化默认工单类型

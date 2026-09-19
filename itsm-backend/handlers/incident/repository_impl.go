@@ -73,6 +73,8 @@ func (r *EntRepository) toDomain(e *ent.Incident) *Incident {
 		IsMajorIncident:       e.IsMajorIncident,
 		Category:              e.Category,
 		Subcategory:           e.Subcategory,
+		ServiceType:           e.ServiceType,
+		FailureType:           e.FailureType,
 		ImpactAnalysis:        e.ImpactAnalysis,
 		RootCause:             e.RootCause,
 		ResolutionSteps:       e.ResolutionSteps,
@@ -285,9 +287,9 @@ func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, err
 	// P1-乐观锁修复：追加 VersionEQ 条件并 AddVersion(1)。此前是 read-then-
 	// unconditional-write，UpdateIncidentRequest.Version 从未被消费，陈旧客户端可
 	// 静默覆盖他人写入；且版本不自增，使 lifecycle 操作的 CAS 也失去意义。
-	// impact/urgency/is_major_incident 不在此写回：ent schema 的 Validate 拒绝空串，
-	// 且本包没有任何路径经 Update 修改它们（SetIsMajorIncident 在 legacy service 内
-	// 直接操作 ent），原样回写只会引入校验失败风险。
+	// impact/urgency 写回安全：entity 从 DB 加载时已带默认值（"medium"），
+	// service 层仅在非空时覆盖，ent Validate 接受 low/medium/high/critical。
+	// service_type/failure_type 为 Optional，空串也合法。
 	u := r.client.Incident.UpdateOneID(i.ID).
 		Where(
 			incident.TenantIDEQ(i.TenantID),
@@ -303,6 +305,10 @@ func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, err
 		SetSeverity(i.Severity).
 		SetCategory(i.Category).
 		SetSubcategory(i.Subcategory).
+		SetServiceType(i.ServiceType).
+		SetFailureType(i.FailureType).
+		SetImpact(i.Impact).
+		SetUrgency(i.Urgency).
 		SetImpactAnalysis(i.ImpactAnalysis).
 		SetRootCause(i.RootCause).
 		SetResolutionSteps(i.ResolutionSteps).

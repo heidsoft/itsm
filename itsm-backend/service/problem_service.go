@@ -221,8 +221,8 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 	if pageSize <= 0 {
 		pageSize = 10
 	}
-	if pageSize > 200 {
-		pageSize = 200
+	if pageSize > 100 {
+		pageSize = 100
 	}
 
 	problems, err := query.

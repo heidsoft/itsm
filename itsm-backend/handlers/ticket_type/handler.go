@@ -42,7 +42,7 @@ func (h *Handler) CreateTicketType(c *gin.Context) {
 	ticketType, err := h.ticketTypeService.CreateTicketType(c.Request.Context(), &req, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket type", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) UpdateTicketType(c *gin.Context) {
 	ticketType, err := h.ticketTypeService.UpdateTicketType(c.Request.Context(), id, &req, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -116,7 +116,7 @@ func (h *Handler) ListTicketTypes(c *gin.Context) {
 	response, err := h.ticketTypeService.ListTicketTypes(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket types", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) DeleteTicketType(c *gin.Context) {
 	err = h.ticketTypeService.DeleteTicketType(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket type", "error", err, "id", id, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -162,7 +162,7 @@ func (h *Handler) setStatus(c *gin.Context, status dto.TicketTypeStatus) {
 	}
 	result, err := h.ticketTypeService.SetStatus(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), status)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -185,7 +185,7 @@ func (h *Handler) CloneTicketType(c *gin.Context) {
 	}
 	result, err := h.ticketTypeService.CloneTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), req.Code, req.Name)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)
@@ -200,7 +200,7 @@ func (h *Handler) RestoreTicketType(c *gin.Context) {
 	}
 	result, err := h.ticketTypeService.RestoreTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"))
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, result)

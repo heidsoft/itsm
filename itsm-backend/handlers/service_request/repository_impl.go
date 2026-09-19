@@ -250,12 +250,12 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, req *Serv
 	}
 
 	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
-		TenantID:      req.TenantID,
-		CommandType:   commandbus.CommandStartBPMN,
-		AggregateType: "service_request",
-		AggregateID:   saved.ID,
+		TenantID:       req.TenantID,
+		CommandType:    commandbus.CommandStartBPMN,
+		AggregateType:  "service_request",
+		AggregateID:    saved.ID,
 		IdempotencyKey: fmt.Sprintf("service_request:%d:workflow:start", saved.ID),
-		Payload:       map[string]interface{}{"businessType": "service_request", "businessId": saved.ID},
+		Payload:        map[string]interface{}{"businessType": "service_request", "businessId": saved.ID},
 	})
 	if err != nil {
 		return rollback(fmt.Errorf("enqueue service request workflow: %w", err))

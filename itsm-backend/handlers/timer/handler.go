@@ -19,12 +19,12 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	filter := service.TimerListFilter{
-		TenantID:           c.GetInt("tenant_id"),
-		Status:             c.Query("status"),
-		TimerType:          c.Query("timerType"),
+		TenantID:             c.GetInt("tenant_id"),
+		Status:               c.Query("status"),
+		TimerType:            c.Query("timerType"),
 		ProcessDefinitionKey: c.Query("processDefinitionKey"),
-		Page:               page,
-		PageSize:           pageSize,
+		Page:                 page,
+		PageSize:             pageSize,
 	}
 
 	result, err := h.service.List(c.Request.Context(), filter)

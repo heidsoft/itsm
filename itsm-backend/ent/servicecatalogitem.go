@@ -43,6 +43,10 @@ type ServiceCatalogItem struct {
 	RequiresApproval bool `json:"requires_approval,omitempty"`
 	// 预计完成天数
 	EstimatedDays int `json:"estimated_days,omitempty"`
+	// 业务子类型，用于通过 ProcessBinding 路由到对应流程
+	BusinessSubType string `json:"business_sub_type,omitempty"`
+	// 直接绑定的流程定义 key，优先于 ProcessBinding 路由
+	ProcessDefinitionKey string `json:"process_definition_key,omitempty"`
 	// 租户ID
 	TenantID int `json:"tenant_id,omitempty"`
 	// 创建时间
@@ -86,7 +90,7 @@ func (*ServiceCatalogItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case servicecatalogitem.FieldID, servicecatalogitem.FieldCatalogID, servicecatalogitem.FieldSLAID, servicecatalogitem.FieldApprovalChainID, servicecatalogitem.FieldEstimatedDays, servicecatalogitem.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case servicecatalogitem.FieldName, servicecatalogitem.FieldDescription, servicecatalogitem.FieldDetails, servicecatalogitem.FieldCategory, servicecatalogitem.FieldIcon:
+		case servicecatalogitem.FieldName, servicecatalogitem.FieldDescription, servicecatalogitem.FieldDetails, servicecatalogitem.FieldCategory, servicecatalogitem.FieldIcon, servicecatalogitem.FieldBusinessSubType, servicecatalogitem.FieldProcessDefinitionKey:
 			values[i] = new(sql.NullString)
 		case servicecatalogitem.FieldCreatedAt, servicecatalogitem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -185,6 +189,18 @@ func (_m *ServiceCatalogItem) assignValues(columns []string, values []any) error
 			} else if value.Valid {
 				_m.EstimatedDays = int(value.Int64)
 			}
+		case servicecatalogitem.FieldBusinessSubType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field business_sub_type", values[i])
+			} else if value.Valid {
+				_m.BusinessSubType = value.String
+			}
+		case servicecatalogitem.FieldProcessDefinitionKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field process_definition_key", values[i])
+			} else if value.Valid {
+				_m.ProcessDefinitionKey = value.String
+			}
 		case servicecatalogitem.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
@@ -279,6 +295,12 @@ func (_m *ServiceCatalogItem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("estimated_days=")
 	builder.WriteString(fmt.Sprintf("%v", _m.EstimatedDays))
+	builder.WriteString(", ")
+	builder.WriteString("business_sub_type=")
+	builder.WriteString(_m.BusinessSubType)
+	builder.WriteString(", ")
+	builder.WriteString("process_definition_key=")
+	builder.WriteString(_m.ProcessDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))

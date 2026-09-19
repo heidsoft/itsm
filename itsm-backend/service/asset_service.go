@@ -86,7 +86,7 @@ func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageS
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 200 {
+	if pageSize < 1 || pageSize > 100 {
 		pageSize = 20
 	}
 	query := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID))

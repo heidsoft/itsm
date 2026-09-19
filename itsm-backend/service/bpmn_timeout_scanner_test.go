@@ -31,16 +31,16 @@ func setupTimeoutScannerTenant(t *testing.T, client *ent.Client, suffix string) 
 	t.Helper()
 	ctx := context.Background()
 	tenant, err := client.Tenant.Create().
-		SetName("Timeout Tenant "+suffix).
-		SetCode("timeout-"+suffix).
-		SetDomain("timeout-"+suffix+".example.com").
+		SetName("Timeout Tenant " + suffix).
+		SetCode("timeout-" + suffix).
+		SetDomain("timeout-" + suffix + ".example.com").
 		SetStatus("active").
 		Save(ctx)
 	require.NoError(t, err)
 	user, err := client.User.Create().
-		SetUsername("timeout-user-"+suffix).
-		SetEmail("timeout-"+suffix+"@example.com").
-		SetName("Timeout User "+suffix).
+		SetUsername("timeout-user-" + suffix).
+		SetEmail("timeout-" + suffix + "@example.com").
+		SetName("Timeout User " + suffix).
 		SetPasswordHash("hash").
 		SetRole("agent").
 		SetActive(true).

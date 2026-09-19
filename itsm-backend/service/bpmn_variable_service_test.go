@@ -197,18 +197,18 @@ func TestBPMNVariable_ListWithFiltersAndPagination(t *testing.T) {
 	}
 
 	vars, total, err := f.svc.ListVariables(ctx, &ListVariablesRequest{
-		TenantID:  f.tenantID,
-		Page:      1,
-		PageSize:  3,
+		TenantID: f.tenantID,
+		Page:     1,
+		PageSize: 3,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 5, total)
 	assert.Len(t, vars, 3)
 
 	vars2, total2, err := f.svc.ListVariables(ctx, &ListVariablesRequest{
-		TenantID:  f.tenantID,
-		Page:      2,
-		PageSize:  3,
+		TenantID: f.tenantID,
+		Page:     2,
+		PageSize: 3,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 5, total2)

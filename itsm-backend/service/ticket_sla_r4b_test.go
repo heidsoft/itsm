@@ -12,11 +12,11 @@ import (
 func TestParseBusinessHoursConfig_LegacyKeys(t *testing.T) {
 	// 场景 A：旧键名 workdays/work_hour_start/work_hour_end
 	cfg := parseBusinessHoursConfig(map[string]interface{}{
-		"time_zone":        "Asia/Shanghai",
-		"workdays":         []interface{}{float64(1), float64(2), float64(3), float64(4), float64(5)},
-		"work_hour_start":  float64(9),
-		"work_hour_end":    float64(18),
-		"is_24_7":          false,
+		"time_zone":       "Asia/Shanghai",
+		"workdays":        []interface{}{float64(1), float64(2), float64(3), float64(4), float64(5)},
+		"work_hour_start": float64(9),
+		"work_hour_end":   float64(18),
+		"is_24_7":         false,
 	})
 	if cfg.startHour != 9 || cfg.startMin != 0 || cfg.endHour != 18 || cfg.endMin != 0 {
 		t.Fatalf("legacy keys not honored: start=%02d:%02d end=%02d:%02d", cfg.startHour, cfg.startMin, cfg.endHour, cfg.endMin)

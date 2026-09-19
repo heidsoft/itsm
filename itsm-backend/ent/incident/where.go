@@ -175,6 +175,16 @@ func Subcategory(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldSubcategory, v))
 }
 
+// ServiceType applies equality check predicate on the "service_type" field. It's identical to ServiceTypeEQ.
+func ServiceType(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldServiceType, v))
+}
+
+// FailureType applies equality check predicate on the "failure_type" field. It's identical to FailureTypeEQ.
+func FailureType(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldFailureType, v))
+}
+
 // DetectedAt applies equality check predicate on the "detected_at" field. It's identical to DetectedAtEQ.
 func DetectedAt(v time.Time) predicate.Incident {
 	return predicate.Incident(sql.FieldEQ(FieldDetectedAt, v))
@@ -1623,6 +1633,156 @@ func SubcategoryEqualFold(v string) predicate.Incident {
 // SubcategoryContainsFold applies the ContainsFold predicate on the "subcategory" field.
 func SubcategoryContainsFold(v string) predicate.Incident {
 	return predicate.Incident(sql.FieldContainsFold(FieldSubcategory, v))
+}
+
+// ServiceTypeEQ applies the EQ predicate on the "service_type" field.
+func ServiceTypeEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldServiceType, v))
+}
+
+// ServiceTypeNEQ applies the NEQ predicate on the "service_type" field.
+func ServiceTypeNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldServiceType, v))
+}
+
+// ServiceTypeIn applies the In predicate on the "service_type" field.
+func ServiceTypeIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeNotIn applies the NotIn predicate on the "service_type" field.
+func ServiceTypeNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldServiceType, vs...))
+}
+
+// ServiceTypeGT applies the GT predicate on the "service_type" field.
+func ServiceTypeGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldServiceType, v))
+}
+
+// ServiceTypeGTE applies the GTE predicate on the "service_type" field.
+func ServiceTypeGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldServiceType, v))
+}
+
+// ServiceTypeLT applies the LT predicate on the "service_type" field.
+func ServiceTypeLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldServiceType, v))
+}
+
+// ServiceTypeLTE applies the LTE predicate on the "service_type" field.
+func ServiceTypeLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldServiceType, v))
+}
+
+// ServiceTypeContains applies the Contains predicate on the "service_type" field.
+func ServiceTypeContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldServiceType, v))
+}
+
+// ServiceTypeHasPrefix applies the HasPrefix predicate on the "service_type" field.
+func ServiceTypeHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldServiceType, v))
+}
+
+// ServiceTypeHasSuffix applies the HasSuffix predicate on the "service_type" field.
+func ServiceTypeHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldServiceType, v))
+}
+
+// ServiceTypeIsNil applies the IsNil predicate on the "service_type" field.
+func ServiceTypeIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldServiceType))
+}
+
+// ServiceTypeNotNil applies the NotNil predicate on the "service_type" field.
+func ServiceTypeNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldServiceType))
+}
+
+// ServiceTypeEqualFold applies the EqualFold predicate on the "service_type" field.
+func ServiceTypeEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldServiceType, v))
+}
+
+// ServiceTypeContainsFold applies the ContainsFold predicate on the "service_type" field.
+func ServiceTypeContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldServiceType, v))
+}
+
+// FailureTypeEQ applies the EQ predicate on the "failure_type" field.
+func FailureTypeEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEQ(FieldFailureType, v))
+}
+
+// FailureTypeNEQ applies the NEQ predicate on the "failure_type" field.
+func FailureTypeNEQ(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldNEQ(FieldFailureType, v))
+}
+
+// FailureTypeIn applies the In predicate on the "failure_type" field.
+func FailureTypeIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldIn(FieldFailureType, vs...))
+}
+
+// FailureTypeNotIn applies the NotIn predicate on the "failure_type" field.
+func FailureTypeNotIn(vs ...string) predicate.Incident {
+	return predicate.Incident(sql.FieldNotIn(FieldFailureType, vs...))
+}
+
+// FailureTypeGT applies the GT predicate on the "failure_type" field.
+func FailureTypeGT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGT(FieldFailureType, v))
+}
+
+// FailureTypeGTE applies the GTE predicate on the "failure_type" field.
+func FailureTypeGTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldGTE(FieldFailureType, v))
+}
+
+// FailureTypeLT applies the LT predicate on the "failure_type" field.
+func FailureTypeLT(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLT(FieldFailureType, v))
+}
+
+// FailureTypeLTE applies the LTE predicate on the "failure_type" field.
+func FailureTypeLTE(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldLTE(FieldFailureType, v))
+}
+
+// FailureTypeContains applies the Contains predicate on the "failure_type" field.
+func FailureTypeContains(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContains(FieldFailureType, v))
+}
+
+// FailureTypeHasPrefix applies the HasPrefix predicate on the "failure_type" field.
+func FailureTypeHasPrefix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasPrefix(FieldFailureType, v))
+}
+
+// FailureTypeHasSuffix applies the HasSuffix predicate on the "failure_type" field.
+func FailureTypeHasSuffix(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldHasSuffix(FieldFailureType, v))
+}
+
+// FailureTypeIsNil applies the IsNil predicate on the "failure_type" field.
+func FailureTypeIsNil() predicate.Incident {
+	return predicate.Incident(sql.FieldIsNull(FieldFailureType))
+}
+
+// FailureTypeNotNil applies the NotNil predicate on the "failure_type" field.
+func FailureTypeNotNil() predicate.Incident {
+	return predicate.Incident(sql.FieldNotNull(FieldFailureType))
+}
+
+// FailureTypeEqualFold applies the EqualFold predicate on the "failure_type" field.
+func FailureTypeEqualFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldEqualFold(FieldFailureType, v))
+}
+
+// FailureTypeContainsFold applies the ContainsFold predicate on the "failure_type" field.
+func FailureTypeContainsFold(v string) predicate.Incident {
+	return predicate.Incident(sql.FieldContainsFold(FieldFailureType, v))
 }
 
 // ImpactAnalysisIsNil applies the IsNil predicate on the "impact_analysis" field.

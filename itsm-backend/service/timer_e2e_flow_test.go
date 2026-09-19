@@ -804,36 +804,47 @@ type failingTimerStore struct{}
 func (s *failingTimerStore) Create(_ context.Context, _ *CreateTimerRequest) (*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) GetByTimerID(_ context.Context, _ string) (*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) FindPendingDue(_ context.Context, _ int, _ time.Time) ([]*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) FindPendingFuture(_ context.Context, _ int, _ time.Time) ([]*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) FindFiredStale(_ context.Context, _ time.Time) ([]*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) FindFailedRetryable(_ context.Context, _ int) ([]*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) CASFire(_ context.Context, _ string, _ time.Time) (*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) CASFail(_ context.Context, _ string, _ string, _ int, _ *time.Time) (*ent.ProcessTimer, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) CancelByProcessInstance(_ context.Context, _, _ int) (int, error) {
 	return 0, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) CancelByTimerID(_ context.Context, _ string) error {
 	return fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) List(_ context.Context, _ TimerListFilter) ([]*ent.ProcessTimer, int, error) {
 	return nil, 0, fmt.Errorf("simulated DB failure")
 }
+
 func (s *failingTimerStore) Stats(_ context.Context, _ int) (*TimerStats, error) {
 	return nil, fmt.Errorf("simulated DB failure")
 }

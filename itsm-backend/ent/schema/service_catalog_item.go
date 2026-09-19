@@ -53,6 +53,12 @@ func (ServiceCatalogItem) Fields() []ent.Field {
 		field.Int("estimated_days").
 			Comment("预计完成天数").
 			Default(1),
+		field.String("business_sub_type").
+			Comment("业务子类型，用于通过 ProcessBinding 路由到对应流程").
+			Optional(),
+		field.String("process_definition_key").
+			Comment("直接绑定的流程定义 key，优先于 ProcessBinding 路由").
+			Optional(),
 		field.Int("tenant_id").
 			Comment("租户ID").
 			Positive(),

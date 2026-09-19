@@ -22,6 +22,8 @@ type Incident struct {
 	IsMajorIncident       bool
 	Category              string `json:"category"`
 	Subcategory           string `json:"subcategory"`
+	ServiceType           string `json:"serviceType"`
+	FailureType           string `json:"failureType"`
 	ImpactAnalysis        map[string]interface{}
 	RootCause             map[string]interface{}
 	ResolutionSteps       []map[string]interface{}

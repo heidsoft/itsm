@@ -202,11 +202,11 @@ func TestGroupResolver_ExpandGroupsToUsers_RoleFallback(t *testing.T) {
 		return u
 	}
 
-	_ = newUser(tenant.ID, "enum-admin", "it_admin")                    // 仅主角色枚举命中
+	_ = newUser(tenant.ID, "enum-admin", "it_admin")                   // 仅主角色枚举命中
 	m2mUser := newUser(tenant.ID, "m2m-admin", "end_user", itAdmin.ID) // 仅 M2M 命中
 	_ = m2mUser
-	_ = newUser(tenant.ID, "plain", "end_user")                         // 无关角色
-	_ = newUser(otherTenant.ID, "foreign-admin", "it_admin")            // 他租户排除
+	_ = newUser(tenant.ID, "plain", "end_user")              // 无关角色
+	_ = newUser(otherTenant.ID, "foreign-admin", "it_admin") // 他租户排除
 	inactive := newUser(tenant.ID, "inactive-admin", "it_admin")
 	_, err = inactive.Update().SetActive(false).Save(ctx)
 	require.NoError(t, err)

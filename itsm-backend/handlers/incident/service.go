@@ -314,6 +314,18 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 	if updates.Subcategory != "" {
 		current.Subcategory = updates.Subcategory
 	}
+	if updates.ServiceType != "" {
+		current.ServiceType = updates.ServiceType
+	}
+	if updates.FailureType != "" {
+		current.FailureType = updates.FailureType
+	}
+	if updates.Urgency != "" {
+		current.Urgency = updates.Urgency
+	}
+	if updates.Impact != "" {
+		current.Impact = updates.Impact
+	}
 	if updates.Metadata != nil {
 		current.Metadata = updates.Metadata
 	}

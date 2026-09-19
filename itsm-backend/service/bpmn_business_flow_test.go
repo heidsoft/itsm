@@ -945,7 +945,6 @@ func TestBiz_ExclusiveGateway_NoMatchStuck(t *testing.T) {
 	instance, err := engine.StartProcess(ctx, "exclusive_gw", "BK-BIZ-021", map[string]interface{}{
 		"priority": "medium",
 	})
-
 	if err != nil {
 		return
 	}

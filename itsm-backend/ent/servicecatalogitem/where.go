@@ -110,6 +110,16 @@ func EstimatedDays(v int) predicate.ServiceCatalogItem {
 	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldEstimatedDays, v))
 }
 
+// BusinessSubType applies equality check predicate on the "business_sub_type" field. It's identical to BusinessSubTypeEQ.
+func BusinessSubType(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldBusinessSubType, v))
+}
+
+// ProcessDefinitionKey applies equality check predicate on the "process_definition_key" field. It's identical to ProcessDefinitionKeyEQ.
+func ProcessDefinitionKey(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldProcessDefinitionKey, v))
+}
+
 // TenantID applies equality check predicate on the "tenant_id" field. It's identical to TenantIDEQ.
 func TenantID(v int) predicate.ServiceCatalogItem {
 	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldTenantID, v))
@@ -678,6 +688,156 @@ func EstimatedDaysLT(v int) predicate.ServiceCatalogItem {
 // EstimatedDaysLTE applies the LTE predicate on the "estimated_days" field.
 func EstimatedDaysLTE(v int) predicate.ServiceCatalogItem {
 	return predicate.ServiceCatalogItem(sql.FieldLTE(FieldEstimatedDays, v))
+}
+
+// BusinessSubTypeEQ applies the EQ predicate on the "business_sub_type" field.
+func BusinessSubTypeEQ(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeNEQ applies the NEQ predicate on the "business_sub_type" field.
+func BusinessSubTypeNEQ(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNEQ(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeIn applies the In predicate on the "business_sub_type" field.
+func BusinessSubTypeIn(vs ...string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldIn(FieldBusinessSubType, vs...))
+}
+
+// BusinessSubTypeNotIn applies the NotIn predicate on the "business_sub_type" field.
+func BusinessSubTypeNotIn(vs ...string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNotIn(FieldBusinessSubType, vs...))
+}
+
+// BusinessSubTypeGT applies the GT predicate on the "business_sub_type" field.
+func BusinessSubTypeGT(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldGT(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeGTE applies the GTE predicate on the "business_sub_type" field.
+func BusinessSubTypeGTE(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldGTE(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeLT applies the LT predicate on the "business_sub_type" field.
+func BusinessSubTypeLT(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldLT(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeLTE applies the LTE predicate on the "business_sub_type" field.
+func BusinessSubTypeLTE(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldLTE(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeContains applies the Contains predicate on the "business_sub_type" field.
+func BusinessSubTypeContains(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldContains(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeHasPrefix applies the HasPrefix predicate on the "business_sub_type" field.
+func BusinessSubTypeHasPrefix(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldHasPrefix(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeHasSuffix applies the HasSuffix predicate on the "business_sub_type" field.
+func BusinessSubTypeHasSuffix(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldHasSuffix(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeIsNil applies the IsNil predicate on the "business_sub_type" field.
+func BusinessSubTypeIsNil() predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldIsNull(FieldBusinessSubType))
+}
+
+// BusinessSubTypeNotNil applies the NotNil predicate on the "business_sub_type" field.
+func BusinessSubTypeNotNil() predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNotNull(FieldBusinessSubType))
+}
+
+// BusinessSubTypeEqualFold applies the EqualFold predicate on the "business_sub_type" field.
+func BusinessSubTypeEqualFold(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEqualFold(FieldBusinessSubType, v))
+}
+
+// BusinessSubTypeContainsFold applies the ContainsFold predicate on the "business_sub_type" field.
+func BusinessSubTypeContainsFold(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldContainsFold(FieldBusinessSubType, v))
+}
+
+// ProcessDefinitionKeyEQ applies the EQ predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyEQ(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEQ(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyNEQ applies the NEQ predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyNEQ(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNEQ(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyIn applies the In predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyIn(vs ...string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldIn(FieldProcessDefinitionKey, vs...))
+}
+
+// ProcessDefinitionKeyNotIn applies the NotIn predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyNotIn(vs ...string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNotIn(FieldProcessDefinitionKey, vs...))
+}
+
+// ProcessDefinitionKeyGT applies the GT predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyGT(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldGT(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyGTE applies the GTE predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyGTE(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldGTE(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyLT applies the LT predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyLT(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldLT(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyLTE applies the LTE predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyLTE(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldLTE(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyContains applies the Contains predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyContains(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldContains(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyHasPrefix applies the HasPrefix predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyHasPrefix(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldHasPrefix(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyHasSuffix applies the HasSuffix predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyHasSuffix(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldHasSuffix(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyIsNil applies the IsNil predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyIsNil() predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldIsNull(FieldProcessDefinitionKey))
+}
+
+// ProcessDefinitionKeyNotNil applies the NotNil predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyNotNil() predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldNotNull(FieldProcessDefinitionKey))
+}
+
+// ProcessDefinitionKeyEqualFold applies the EqualFold predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyEqualFold(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldEqualFold(FieldProcessDefinitionKey, v))
+}
+
+// ProcessDefinitionKeyContainsFold applies the ContainsFold predicate on the "process_definition_key" field.
+func ProcessDefinitionKeyContainsFold(v string) predicate.ServiceCatalogItem {
+	return predicate.ServiceCatalogItem(sql.FieldContainsFold(FieldProcessDefinitionKey, v))
 }
 
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.

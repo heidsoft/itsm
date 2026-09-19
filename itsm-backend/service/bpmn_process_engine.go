@@ -226,4 +226,3 @@ func requireBPMNTenantContext(ctx context.Context) (int, error) {
 	}
 	return tenantID, nil
 }
-

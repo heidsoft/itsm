@@ -328,6 +328,9 @@ func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, task
 
 // mergeVariablesInTx 在事务内合并流程实例变量并返回更新后的实例。
 // 与 mergeVariablesWithOptimisticLock 不同：调用方已持有事务，无需再开事务或重试。
+// P2-并发修复：添加乐观锁 CAS，防止并发 CompleteTask 调用导致变量丢失。
+// 读取时记录版本号，更新时通过 VersionEQ 确保版本未被其他事务推进；
+// 若 Save 返回 NotFound 说明版本冲突，返回明确错误供调用方重试或回滚。
 func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.Client, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
 	inst, err := txc.ProcessInstance.Get(ctx, instanceID)
 	if err != nil {
@@ -341,10 +344,14 @@ func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.C
 		merged[k] = v
 	}
 	updated, err := txc.ProcessInstance.UpdateOneID(instanceID).
+		Where(processinstance.VersionEQ(inst.Version)).
 		SetVariables(merged).
 		SetVersion(inst.Version + 1).
 		Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("流程实例版本冲突（当前版本 %d），请重试", inst.Version)
+		}
 		return nil, fmt.Errorf("更新实例变量失败: %w", err)
 	}
 	return updated, nil
@@ -922,11 +929,11 @@ func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.C
 
 	now := time.Now()
 	vars := map[string]interface{}{
-		"approvalAction":   "approve",
-		"approvalResult":   "approved",
-		"approvalComment":  "发起人角色命中 auto_approve_roles，系统自动通过",
-		"autoAction":       "auto_approve_roles",
-		"autoApproveRole":  strings.Join(cfg.AutoApproveRoles, ","),
+		"approvalAction":  "approve",
+		"approvalResult":  "approved",
+		"approvalComment": "发起人角色命中 auto_approve_roles，系统自动通过",
+		"autoAction":      "auto_approve_roles",
+		"autoApproveRole": strings.Join(cfg.AutoApproveRoles, ","),
 	}
 
 	// 1. 任务置完成（CAS：仅当仍活跃，防并发/幂等重入）
@@ -981,6 +988,7 @@ func (e *CustomProcessEngine) tryAutoApproveTask(ctx context.Context, txc *ent.C
 		"requesterID", requesterID, "requesterRoles", requesterRoles)
 	return true, nil
 }
+
 // 到期由 TimerEventHandler 分发 TimeoutScanner 四动作；已过期的截止时间不注册
 // （由恢复兜底扫描处理）。best-effort：注册失败仅告警，扫描器仍在兜底。
 func (e *CustomProcessEngine) registerTaskDueTimer(ctx context.Context, instance *ent.ProcessInstance, task *ent.ProcessTask, dueAt time.Time) {
@@ -997,8 +1005,8 @@ func (e *CustomProcessEngine) registerTaskDueTimer(ctx context.Context, instance
 		ExpressionType:       ExprTypeDate,
 		FireAt:               dueAt,
 		ContextVariables: map[string]interface{}{
-			"task_id":       task.TaskID,
-			"task_def_key":  task.TaskDefinitionKey,
+			"task_id":        task.TaskID,
+			"task_def_key":   task.TaskDefinitionKey,
 			"timeout_action": task.TaskVariables["timeoutAction"],
 		},
 		TenantID: instance.TenantID,
@@ -1511,12 +1519,12 @@ func (e *CustomProcessEngine) cancelBoundaryTimers(ctx context.Context, instance
 		}
 
 		timers, _, err := e.timerStore.List(ctx, TimerListFilter{
-			TenantID:           instance.TenantID,
-			TimerType:          string(TimerTypeBoundary),
-			ProcessInstanceID:  &instance.ID,
-			Status:             string(TimerStatusPending),
-			PageSize:           100,
-			Page:               1,
+			TenantID:          instance.TenantID,
+			TimerType:         string(TimerTypeBoundary),
+			ProcessInstanceID: &instance.ID,
+			Status:            string(TimerStatusPending),
+			PageSize:          100,
+			Page:              1,
 		})
 		if err != nil {
 			e.logger.Warnw("Failed to list boundary timers for cancellation",

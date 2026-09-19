@@ -52,13 +52,13 @@ func TestFindActiveUsersByRole_DualSource(t *testing.T) {
 		return u.ID
 	}
 
-	enumMgr := newUser(tenantA.ID, "enum-manager", "manager", "IT", true)                            // 仅枚举命中
-	m2mOnly := newUser(tenantA.ID, "m2m-itadmin", "end_user", "IT", true, itAdminA.ID)               // 仅 M2M 命中
-	both := newUser(tenantA.ID, "both-manager", "manager", "IT", true, mgrA.ID, itAdminA.ID)         // 双命中须去重
-	inactiveMgr := newUser(tenantA.ID, "inactive-mgr", "manager", "IT", false)                       // 非活跃排除
-	hrMgr := newUser(tenantA.ID, "hr-manager", "manager", "HR", true)                                // 部门过滤
-	_ = newUser(tenantA.ID, "other-role", "end_user", "IT", true)                                    // 无关角色
-	_ = newUser(tenantB.ID, "tenant-b-itadmin", "end_user", "IT", true)                              // 他租户排除
+	enumMgr := newUser(tenantA.ID, "enum-manager", "manager", "IT", true)                    // 仅枚举命中
+	m2mOnly := newUser(tenantA.ID, "m2m-itadmin", "end_user", "IT", true, itAdminA.ID)       // 仅 M2M 命中
+	both := newUser(tenantA.ID, "both-manager", "manager", "IT", true, mgrA.ID, itAdminA.ID) // 双命中须去重
+	inactiveMgr := newUser(tenantA.ID, "inactive-mgr", "manager", "IT", false)               // 非活跃排除
+	hrMgr := newUser(tenantA.ID, "hr-manager", "manager", "HR", true)                        // 部门过滤
+	_ = newUser(tenantA.ID, "other-role", "end_user", "IT", true)                            // 无关角色
+	_ = newUser(tenantB.ID, "tenant-b-itadmin", "end_user", "IT", true)                      // 他租户排除
 
 	repo := NewEntRepository(client)
 

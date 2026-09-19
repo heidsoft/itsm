@@ -52,7 +52,7 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 	}
 
 	// 创建服务项
-	item, err := s.client.ServiceCatalogItem.Create().
+	create := s.client.ServiceCatalogItem.Create().
 		SetCatalogID(req.CatalogID).
 		SetName(req.Name).
 		SetDescription(req.Description).
@@ -64,8 +64,14 @@ func (s *ServiceCatalogItemService) CreateServiceCatalogItem(ctx context.Context
 		SetNillableApprovalChainID(&req.ApprovalChainID).
 		SetRequiresApproval(req.RequiresApproval).
 		SetEstimatedDays(req.EstimatedDays).
-		SetTenantID(tenantID).
-		Save(ctx)
+		SetTenantID(tenantID)
+	if req.BusinessSubType != "" {
+		create = create.SetBusinessSubType(req.BusinessSubType)
+	}
+	if req.ProcessDefinitionKey != "" {
+		create = create.SetProcessDefinitionKey(req.ProcessDefinitionKey)
+	}
+	item, err := create.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to create service catalog item", "error", err, "name", req.Name)
 		return nil, fmt.Errorf("failed to create service item: %w", err)
@@ -178,6 +184,12 @@ func (s *ServiceCatalogItemService) UpdateServiceCatalogItem(ctx context.Context
 		}
 		update.SetEstimatedDays(*req.EstimatedDays)
 	}
+	if req.BusinessSubType != nil {
+		update.SetBusinessSubType(*req.BusinessSubType)
+	}
+	if req.ProcessDefinitionKey != nil {
+		update.SetProcessDefinitionKey(*req.ProcessDefinitionKey)
+	}
 
 	// 执行更新
 	updatedItem, err := update.Save(ctx)
@@ -222,20 +234,22 @@ func (s *ServiceCatalogItemService) DeleteServiceCatalogItem(ctx context.Context
 // toItemResponse 转换为响应对象
 func (s *ServiceCatalogItemService) toItemResponse(item *ent.ServiceCatalogItem) *dto.ServiceCatalogItemResponse {
 	return &dto.ServiceCatalogItemResponse{
-		ID:               item.ID,
-		Name:             item.Name,
-		Description:      item.Description,
-		Details:          item.Details,
-		Category:         item.Category,
-		Icon:             item.Icon,
-		FormSchema:       item.FormSchema,
-		SlaID:            item.SLAID,
-		ApprovalChainID:  item.ApprovalChainID,
-		IsActive:         item.IsActive,
-		RequiresApproval: item.RequiresApproval,
-		EstimatedDays:    item.EstimatedDays,
-		TenantID:         item.TenantID,
-		CreatedAt:        item.CreatedAt,
-		UpdatedAt:        item.UpdatedAt,
+		ID:                   item.ID,
+		Name:                 item.Name,
+		Description:          item.Description,
+		Details:              item.Details,
+		Category:             item.Category,
+		Icon:                 item.Icon,
+		FormSchema:           item.FormSchema,
+		SlaID:                item.SLAID,
+		ApprovalChainID:      item.ApprovalChainID,
+		IsActive:             item.IsActive,
+		RequiresApproval:     item.RequiresApproval,
+		EstimatedDays:        item.EstimatedDays,
+		BusinessSubType:      item.BusinessSubType,
+		ProcessDefinitionKey: item.ProcessDefinitionKey,
+		TenantID:             item.TenantID,
+		CreatedAt:            item.CreatedAt,
+		UpdatedAt:            item.UpdatedAt,
 	}
 }

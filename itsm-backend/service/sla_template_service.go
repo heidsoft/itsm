@@ -190,7 +190,7 @@ func (s *SLATemplateService) initCatalog() {
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
 				"time_zone": "Asia/Shanghai",
-				"is_24_7":  true,
+				"is_24_7":   true,
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{

@@ -165,6 +165,34 @@ func (_c *ServiceCatalogItemCreate) SetNillableEstimatedDays(v *int) *ServiceCat
 	return _c
 }
 
+// SetBusinessSubType sets the "business_sub_type" field.
+func (_c *ServiceCatalogItemCreate) SetBusinessSubType(v string) *ServiceCatalogItemCreate {
+	_c.mutation.SetBusinessSubType(v)
+	return _c
+}
+
+// SetNillableBusinessSubType sets the "business_sub_type" field if the given value is not nil.
+func (_c *ServiceCatalogItemCreate) SetNillableBusinessSubType(v *string) *ServiceCatalogItemCreate {
+	if v != nil {
+		_c.SetBusinessSubType(*v)
+	}
+	return _c
+}
+
+// SetProcessDefinitionKey sets the "process_definition_key" field.
+func (_c *ServiceCatalogItemCreate) SetProcessDefinitionKey(v string) *ServiceCatalogItemCreate {
+	_c.mutation.SetProcessDefinitionKey(v)
+	return _c
+}
+
+// SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
+func (_c *ServiceCatalogItemCreate) SetNillableProcessDefinitionKey(v *string) *ServiceCatalogItemCreate {
+	if v != nil {
+		_c.SetProcessDefinitionKey(*v)
+	}
+	return _c
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_c *ServiceCatalogItemCreate) SetTenantID(v int) *ServiceCatalogItemCreate {
 	_c.mutation.SetTenantID(v)
@@ -374,6 +402,14 @@ func (_c *ServiceCatalogItemCreate) createSpec() (*ServiceCatalogItem, *sqlgraph
 	if value, ok := _c.mutation.EstimatedDays(); ok {
 		_spec.SetField(servicecatalogitem.FieldEstimatedDays, field.TypeInt, value)
 		_node.EstimatedDays = value
+	}
+	if value, ok := _c.mutation.BusinessSubType(); ok {
+		_spec.SetField(servicecatalogitem.FieldBusinessSubType, field.TypeString, value)
+		_node.BusinessSubType = value
+	}
+	if value, ok := _c.mutation.ProcessDefinitionKey(); ok {
+		_spec.SetField(servicecatalogitem.FieldProcessDefinitionKey, field.TypeString, value)
+		_node.ProcessDefinitionKey = value
 	}
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(servicecatalogitem.FieldTenantID, field.TypeInt, value)

@@ -341,6 +341,34 @@ func (_c *IncidentCreate) SetNillableSubcategory(v *string) *IncidentCreate {
 	return _c
 }
 
+// SetServiceType sets the "service_type" field.
+func (_c *IncidentCreate) SetServiceType(v string) *IncidentCreate {
+	_c.mutation.SetServiceType(v)
+	return _c
+}
+
+// SetNillableServiceType sets the "service_type" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableServiceType(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetServiceType(*v)
+	}
+	return _c
+}
+
+// SetFailureType sets the "failure_type" field.
+func (_c *IncidentCreate) SetFailureType(v string) *IncidentCreate {
+	_c.mutation.SetFailureType(v)
+	return _c
+}
+
+// SetNillableFailureType sets the "failure_type" field if the given value is not nil.
+func (_c *IncidentCreate) SetNillableFailureType(v *string) *IncidentCreate {
+	if v != nil {
+		_c.SetFailureType(*v)
+	}
+	return _c
+}
+
 // SetImpactAnalysis sets the "impact_analysis" field.
 func (_c *IncidentCreate) SetImpactAnalysis(v map[string]interface{}) *IncidentCreate {
 	_c.mutation.SetImpactAnalysis(v)
@@ -993,6 +1021,14 @@ func (_c *IncidentCreate) createSpec() (*Incident, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Subcategory(); ok {
 		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
 		_node.Subcategory = value
+	}
+	if value, ok := _c.mutation.ServiceType(); ok {
+		_spec.SetField(incident.FieldServiceType, field.TypeString, value)
+		_node.ServiceType = value
+	}
+	if value, ok := _c.mutation.FailureType(); ok {
+		_spec.SetField(incident.FieldFailureType, field.TypeString, value)
+		_node.FailureType = value
 	}
 	if value, ok := _c.mutation.ImpactAnalysis(); ok {
 		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)

@@ -32,9 +32,9 @@ func newTimerTestClient(t *testing.T, name string) *ent.Client {
 func createTimerTenant(t *testing.T, client *ent.Client, suffix string) int {
 	t.Helper()
 	tenant, err := client.Tenant.Create().
-		SetName("Timer Tenant "+suffix).
-		SetCode("timer-"+suffix).
-		SetDomain("timer-"+suffix+".example.com").
+		SetName("Timer Tenant " + suffix).
+		SetCode("timer-" + suffix).
+		SetDomain("timer-" + suffix + ".example.com").
 		SetStatus("active").
 		Save(context.Background())
 	require.NoError(t, err)

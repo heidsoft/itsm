@@ -99,13 +99,13 @@ func TestAddApproverTask_Allowed_CreatesChildTaskAndAudit(t *testing.T) {
 	require.Len(t, children, 2)
 
 	var added *struct {
-		taskID  string
+		taskID   string
 		assignee string
 	}
 	for _, c := range children {
 		if c.TaskID != "TASK-ADDAPPROVER-1" {
 			added = &struct {
-				taskID  string
+				taskID   string
 				assignee string
 			}{c.TaskID, c.Assignee}
 			assert.Equal(t, "newapprover", c.Assignee)

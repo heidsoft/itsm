@@ -62,6 +62,10 @@ const (
 	FieldCategory = "category"
 	// FieldSubcategory holds the string denoting the subcategory field in the database.
 	FieldSubcategory = "subcategory"
+	// FieldServiceType holds the string denoting the service_type field in the database.
+	FieldServiceType = "service_type"
+	// FieldFailureType holds the string denoting the failure_type field in the database.
+	FieldFailureType = "failure_type"
 	// FieldImpactAnalysis holds the string denoting the impact_analysis field in the database.
 	FieldImpactAnalysis = "impact_analysis"
 	// FieldRootCause holds the string denoting the root_cause field in the database.
@@ -212,6 +216,8 @@ var Columns = []string{
 	FieldConfigurationItemID,
 	FieldCategory,
 	FieldSubcategory,
+	FieldServiceType,
+	FieldFailureType,
 	FieldImpactAnalysis,
 	FieldRootCause,
 	FieldResolutionSteps,
@@ -433,6 +439,16 @@ func ByCategory(opts ...sql.OrderTermOption) OrderOption {
 // BySubcategory orders the results by the subcategory field.
 func BySubcategory(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubcategory, opts...).ToFunc()
+}
+
+// ByServiceType orders the results by the service_type field.
+func ByServiceType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldServiceType, opts...).ToFunc()
+}
+
+// ByFailureType orders the results by the failure_type field.
+func ByFailureType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldFailureType, opts...).ToFunc()
 }
 
 // ByDetectedAt orders the results by the detected_at field.

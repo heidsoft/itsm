@@ -252,6 +252,46 @@ func (_u *ServiceCatalogItemUpdate) AddEstimatedDays(v int) *ServiceCatalogItemU
 	return _u
 }
 
+// SetBusinessSubType sets the "business_sub_type" field.
+func (_u *ServiceCatalogItemUpdate) SetBusinessSubType(v string) *ServiceCatalogItemUpdate {
+	_u.mutation.SetBusinessSubType(v)
+	return _u
+}
+
+// SetNillableBusinessSubType sets the "business_sub_type" field if the given value is not nil.
+func (_u *ServiceCatalogItemUpdate) SetNillableBusinessSubType(v *string) *ServiceCatalogItemUpdate {
+	if v != nil {
+		_u.SetBusinessSubType(*v)
+	}
+	return _u
+}
+
+// ClearBusinessSubType clears the value of the "business_sub_type" field.
+func (_u *ServiceCatalogItemUpdate) ClearBusinessSubType() *ServiceCatalogItemUpdate {
+	_u.mutation.ClearBusinessSubType()
+	return _u
+}
+
+// SetProcessDefinitionKey sets the "process_definition_key" field.
+func (_u *ServiceCatalogItemUpdate) SetProcessDefinitionKey(v string) *ServiceCatalogItemUpdate {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
+}
+
+// SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
+func (_u *ServiceCatalogItemUpdate) SetNillableProcessDefinitionKey(v *string) *ServiceCatalogItemUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
+	}
+	return _u
+}
+
+// ClearProcessDefinitionKey clears the value of the "process_definition_key" field.
+func (_u *ServiceCatalogItemUpdate) ClearProcessDefinitionKey() *ServiceCatalogItemUpdate {
+	_u.mutation.ClearProcessDefinitionKey()
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *ServiceCatalogItemUpdate) SetTenantID(v int) *ServiceCatalogItemUpdate {
 	_u.mutation.ResetTenantID()
@@ -442,6 +482,18 @@ func (_u *ServiceCatalogItemUpdate) sqlSave(ctx context.Context) (_node int, err
 	}
 	if value, ok := _u.mutation.AddedEstimatedDays(); ok {
 		_spec.AddField(servicecatalogitem.FieldEstimatedDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.BusinessSubType(); ok {
+		_spec.SetField(servicecatalogitem.FieldBusinessSubType, field.TypeString, value)
+	}
+	if _u.mutation.BusinessSubTypeCleared() {
+		_spec.ClearField(servicecatalogitem.FieldBusinessSubType, field.TypeString)
+	}
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
+		_spec.SetField(servicecatalogitem.FieldProcessDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.ProcessDefinitionKeyCleared() {
+		_spec.ClearField(servicecatalogitem.FieldProcessDefinitionKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(servicecatalogitem.FieldTenantID, field.TypeInt, value)
@@ -727,6 +779,46 @@ func (_u *ServiceCatalogItemUpdateOne) AddEstimatedDays(v int) *ServiceCatalogIt
 	return _u
 }
 
+// SetBusinessSubType sets the "business_sub_type" field.
+func (_u *ServiceCatalogItemUpdateOne) SetBusinessSubType(v string) *ServiceCatalogItemUpdateOne {
+	_u.mutation.SetBusinessSubType(v)
+	return _u
+}
+
+// SetNillableBusinessSubType sets the "business_sub_type" field if the given value is not nil.
+func (_u *ServiceCatalogItemUpdateOne) SetNillableBusinessSubType(v *string) *ServiceCatalogItemUpdateOne {
+	if v != nil {
+		_u.SetBusinessSubType(*v)
+	}
+	return _u
+}
+
+// ClearBusinessSubType clears the value of the "business_sub_type" field.
+func (_u *ServiceCatalogItemUpdateOne) ClearBusinessSubType() *ServiceCatalogItemUpdateOne {
+	_u.mutation.ClearBusinessSubType()
+	return _u
+}
+
+// SetProcessDefinitionKey sets the "process_definition_key" field.
+func (_u *ServiceCatalogItemUpdateOne) SetProcessDefinitionKey(v string) *ServiceCatalogItemUpdateOne {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
+}
+
+// SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
+func (_u *ServiceCatalogItemUpdateOne) SetNillableProcessDefinitionKey(v *string) *ServiceCatalogItemUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
+	}
+	return _u
+}
+
+// ClearProcessDefinitionKey clears the value of the "process_definition_key" field.
+func (_u *ServiceCatalogItemUpdateOne) ClearProcessDefinitionKey() *ServiceCatalogItemUpdateOne {
+	_u.mutation.ClearProcessDefinitionKey()
+	return _u
+}
+
 // SetTenantID sets the "tenant_id" field.
 func (_u *ServiceCatalogItemUpdateOne) SetTenantID(v int) *ServiceCatalogItemUpdateOne {
 	_u.mutation.ResetTenantID()
@@ -947,6 +1039,18 @@ func (_u *ServiceCatalogItemUpdateOne) sqlSave(ctx context.Context) (_node *Serv
 	}
 	if value, ok := _u.mutation.AddedEstimatedDays(); ok {
 		_spec.AddField(servicecatalogitem.FieldEstimatedDays, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.BusinessSubType(); ok {
+		_spec.SetField(servicecatalogitem.FieldBusinessSubType, field.TypeString, value)
+	}
+	if _u.mutation.BusinessSubTypeCleared() {
+		_spec.ClearField(servicecatalogitem.FieldBusinessSubType, field.TypeString)
+	}
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
+		_spec.SetField(servicecatalogitem.FieldProcessDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.ProcessDefinitionKeyCleared() {
+		_spec.ClearField(servicecatalogitem.FieldProcessDefinitionKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(servicecatalogitem.FieldTenantID, field.TypeInt, value)

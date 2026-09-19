@@ -363,7 +363,7 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 	//     且策略为阻断）→ 失败关闭；无激活链 → 回退旧逻辑（调用方传入 / 默认创建人）。
 	var plan []ApprovalLevelPlan
 	if s.approvalChain != nil {
-		chainPlan, cerr := s.resolveChangeChainPlan(ctx, tenantID, c.ID, c.CreatedBy)
+		chainPlan, cerr := s.resolveChangeChainPlan(ctx, tenantID, c.ID, c.CreatedBy, c.Priority)
 		if cerr != nil {
 			return nil, fmt.Errorf("变更审批链解析失败，无法提交：%w", cerr)
 		}
@@ -421,11 +421,12 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 // 输出审批计划（含每层的 approval_type / threshold / required / approver_ids）。
 // 返回 (nil, nil) 表示无激活链（调用方应回退旧逻辑）；
 // 返回 (nil, err) 表示链存在但被阻塞（必需层无审批人且策略为阻断），调用方应失败关闭。
-func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID, submitterID int) ([]ApprovalLevelPlan, error) {
+func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID, submitterID int, priority string) ([]ApprovalLevelPlan, error) {
 	evalCtx := service.ApprovalEvalContext{
 		TenantID:    tenantID,
 		EntityType:  "change",
 		RequesterID: submitterID,
+		Priority:    priority,
 	}
 	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "change", evalCtx, nil)
 	if err != nil {

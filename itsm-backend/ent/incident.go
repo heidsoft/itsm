@@ -68,6 +68,10 @@ type Incident struct {
 	Category string `json:"category,omitempty"`
 	// 事件子分类
 	Subcategory string `json:"subcategory,omitempty"`
+	// 服务类型
+	ServiceType string `json:"service_type,omitempty"`
+	// 故障类型
+	FailureType string `json:"failure_type,omitempty"`
 	// 影响分析
 	ImpactAnalysis map[string]interface{} `json:"impact_analysis,omitempty"`
 	// 根本原因
@@ -251,7 +255,7 @@ func (*Incident) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case incident.FieldID, incident.FieldSLADefinitionID, incident.FieldReporterID, incident.FieldAssigneeID, incident.FieldAssignmentGroupID, incident.FieldEmailConversationID, incident.FieldConfigurationItemID, incident.FieldEscalationLevel, incident.FieldTenantID, incident.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSLAStatus, incident.FieldSLAPauseReason, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldSource:
+		case incident.FieldTitle, incident.FieldDescription, incident.FieldStatus, incident.FieldType, incident.FieldPriority, incident.FieldSLAStatus, incident.FieldSLAPauseReason, incident.FieldSeverity, incident.FieldImpact, incident.FieldUrgency, incident.FieldIncidentNumber, incident.FieldCategory, incident.FieldSubcategory, incident.FieldServiceType, incident.FieldFailureType, incident.FieldSource:
 			values[i] = new(sql.NullString)
 		case incident.FieldSLAResponseDeadline, incident.FieldSLAResolutionDeadline, incident.FieldSLAFirstResponseAt, incident.FieldSLAResolvedAt, incident.FieldSLAPausedAt, incident.FieldDetectedAt, incident.FieldResolvedAt, incident.FieldClosedAt, incident.FieldEscalatedAt, incident.FieldCreatedAt, incident.FieldUpdatedAt, incident.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
@@ -421,6 +425,18 @@ func (_m *Incident) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field subcategory", values[i])
 			} else if value.Valid {
 				_m.Subcategory = value.String
+			}
+		case incident.FieldServiceType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field service_type", values[i])
+			} else if value.Valid {
+				_m.ServiceType = value.String
+			}
+		case incident.FieldFailureType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field failure_type", values[i])
+			} else if value.Valid {
+				_m.FailureType = value.String
 			}
 		case incident.FieldImpactAnalysis:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -699,6 +715,12 @@ func (_m *Incident) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("subcategory=")
 	builder.WriteString(_m.Subcategory)
+	builder.WriteString(", ")
+	builder.WriteString("service_type=")
+	builder.WriteString(_m.ServiceType)
+	builder.WriteString(", ")
+	builder.WriteString("failure_type=")
+	builder.WriteString(_m.FailureType)
 	builder.WriteString(", ")
 	builder.WriteString("impact_analysis=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ImpactAnalysis))
