@@ -14764,18 +14764,28 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "description": "角色，可选；不提供时使用后端默认值（end_user）",
+                    "description": "角色，可选；不提供时使用后端默认值（end_user）\n词表单一源=domain/role（security 为存量 legacy 值，user 为前端别名归一为 end_user）",
                     "type": "string",
                     "enum": [
                         "super_admin",
                         "admin",
                         "manager",
+                        "it_admin",
+                        "security_admin",
+                        "sysadmin",
                         "agent",
                         "technician",
                         "security",
                         "end_user",
                         "user"
                     ]
+                },
+                "roleIds": {
+                    "description": "RBAC 多角色（roles 表实体 ID，写入 user_roles M2M 边）；与 Role 主角色并存取并集",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "tenantId": {
                     "type": "integer"
@@ -15517,6 +15527,10 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 1
                 },
+                "failureType": {
+                    "type": "string",
+                    "example": "hardware"
+                },
                 "id": {
                     "type": "integer",
                     "example": 1
@@ -15574,6 +15588,10 @@ const docTemplate = `{
                 },
                 "rootCause": {
                     "$ref": "#/definitions/dto.RootCause"
+                },
+                "serviceType": {
+                    "type": "string",
+                    "example": "application"
                 },
                 "severity": {
                     "type": "string",
@@ -17056,12 +17074,22 @@ const docTemplate = `{
                         "super_admin",
                         "admin",
                         "manager",
+                        "it_admin",
+                        "security_admin",
+                        "sysadmin",
                         "agent",
                         "technician",
                         "security",
                         "end_user",
                         "user"
                     ]
+                },
+                "roleIds": {
+                    "description": "RBAC 多角色替换集（非 nil 时整体替换 user_roles 边）；空数组表示清空",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "username": {
                     "type": "string",
@@ -17119,6 +17147,19 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
+                },
+                "roleIds": {
+                    "description": "RBAC 多角色（user_roles M2M 边），供前端编辑表单回填",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roleNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tenantId": {
                     "type": "integer"
@@ -19731,6 +19772,10 @@ const docTemplate = `{
                     "description": "升级级别",
                     "type": "integer"
                 },
+                "failure_type": {
+                    "description": "故障类型",
+                    "type": "string"
+                },
                 "id": {
                     "description": "ID of the ent.",
                     "type": "integer"
@@ -19785,6 +19830,10 @@ const docTemplate = `{
                     "description": "根本原因",
                     "type": "object",
                     "additionalProperties": true
+                },
+                "service_type": {
+                    "description": "服务类型",
+                    "type": "string"
                 },
                 "severity": {
                     "description": "严重程度",
@@ -21518,6 +21567,14 @@ const docTemplate = `{
         "ent.ProcessDefinition": {
             "type": "object",
             "properties": {
+                "approval_config": {
+                    "description": "流程级审批配置（require_approval/approval_type/approvers/auto_approve_roles/escalation_rules），列由 20260621 迁移创建",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/schema.ApprovalConfig"
+                        }
+                    ]
+                },
                 "bpmn_xml": {
                     "description": "BPMN XML定义内容",
                     "type": "array",
@@ -21579,6 +21636,11 @@ const docTemplate = `{
                 },
                 "process_variables": {
                     "description": "流程变量定义",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "sla_config": {
+                    "description": "流程级 SLA 配置（response_time_hours/resolution_time_hours/business_hours_only 等），列由 20260621 迁移创建，当前仅透传存储",
                     "type": "object",
                     "additionalProperties": true
                 },
@@ -21939,6 +22001,13 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/ent.ProcessVariable"
                     }
+                },
+                "timers": {
+                    "description": "流程定时器",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ent.ProcessTimer"
+                    }
                 }
             }
         },
@@ -22057,6 +22126,133 @@ const docTemplate = `{
             }
         },
         "ent.ProcessTaskEdges": {
+            "type": "object",
+            "properties": {
+                "process_instance": {
+                    "description": "ProcessInstance holds the value of the process_instance edge.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessInstance"
+                        }
+                    ]
+                }
+            }
+        },
+        "ent.ProcessTimer": {
+            "type": "object",
+            "properties": {
+                "activity_id": {
+                    "description": "绑定的活动 ID（boundary timer 必填）",
+                    "type": "string"
+                },
+                "context_variables": {
+                    "description": "触发时注入流程的变量",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "created_at": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "edges": {
+                    "description": "Edges holds the relations/edges for other nodes in the graph.\nThe values are being populated by the ProcessTimerQuery when eager-loading is set.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ent.ProcessTimerEdges"
+                        }
+                    ]
+                },
+                "elapsed_seconds": {
+                    "description": "已消耗时间（暂停时计算）",
+                    "type": "number"
+                },
+                "expression_type": {
+                    "description": "表达式类型：duration / cron / date",
+                    "type": "string"
+                },
+                "failure_reason": {
+                    "description": "失败原因",
+                    "type": "string"
+                },
+                "fire_at": {
+                    "description": "计划触发时间",
+                    "type": "string"
+                },
+                "fired_at": {
+                    "description": "实际触发时间（审计用）",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the ent.",
+                    "type": "integer"
+                },
+                "idempotency_key": {
+                    "description": "幂等 key = timer_id + fire_at + tenant_id",
+                    "type": "string"
+                },
+                "last_fire_attempt": {
+                    "description": "上次触发尝试时间",
+                    "type": "string"
+                },
+                "max_retries": {
+                    "description": "最大重试次数",
+                    "type": "integer"
+                },
+                "parent_timer_id": {
+                    "description": "恢复时创建的新 timer 指向原始 timer",
+                    "type": "integer"
+                },
+                "pause_state": {
+                    "description": "暂停状态：running / paused",
+                    "type": "string"
+                },
+                "process_definition_key": {
+                    "description": "流程定义 Key",
+                    "type": "string"
+                },
+                "process_instance_id": {
+                    "description": "流程实例 ID（start timer 无此字段）",
+                    "type": "integer"
+                },
+                "retry_count": {
+                    "description": "已重试次数",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态：pending / fired / cancelled / failed",
+                    "type": "string"
+                },
+                "tenant_id": {
+                    "description": "租户 ID",
+                    "type": "integer"
+                },
+                "timer_expression": {
+                    "description": "ISO 8601 duration 或 cron 表达式，支持 ${variable} 占位符",
+                    "type": "string"
+                },
+                "timer_id": {
+                    "description": "全局唯一 Timer ID",
+                    "type": "string"
+                },
+                "timer_type": {
+                    "description": "Timer 类型：start / intermediate / boundary",
+                    "type": "string"
+                },
+                "total_duration_seconds": {
+                    "description": "总时长（从 timer_expression 解析，用于 SLA 暂停/恢复）",
+                    "type": "number"
+                },
+                "updated_at": {
+                    "description": "更新时间",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "乐观锁版本号",
+                    "type": "integer"
+                }
+            }
+        },
+        "ent.ProcessTimerEdges": {
             "type": "object",
             "properties": {
                 "process_instance": {
@@ -24810,7 +25006,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "description": "角色",
+                    "description": "角色（词表单一源=domain/role；security 为存量 legacy 值，新代码禁用）",
                     "allOf": [
                         {
                             "$ref": "#/definitions/user.Role"
@@ -25694,6 +25890,54 @@ const docTemplate = `{
                 "DataScopeOwner"
             ]
         },
+        "schema.ApprovalConfig": {
+            "type": "object",
+            "properties": {
+                "approval_type": {
+                    "description": "single | parallel | sequential | conditional",
+                    "type": "string"
+                },
+                "approvers": {
+                    "description": "流程级兜底用户 ID 列表（主要走 BPMN 节点级 candidateGroups）",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "auto_approve_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "escalation_rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schema.EscalationRule"
+                    }
+                },
+                "require_approval": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "schema.EscalationRule": {
+            "type": "object",
+            "properties": {
+                "after_hours": {
+                    "type": "integer"
+                },
+                "notify": {
+                    "type": "boolean"
+                },
+                "to_group": {
+                    "type": "string"
+                },
+                "to_user": {
+                    "type": "integer"
+                }
+            }
+        },
         "service.SLAComplianceData": {
             "type": "object",
             "properties": {
@@ -25782,6 +26026,9 @@ const docTemplate = `{
                 "super_admin",
                 "admin",
                 "manager",
+                "it_admin",
+                "security_admin",
+                "sysadmin",
                 "agent",
                 "technician",
                 "security",
@@ -25792,6 +26039,9 @@ const docTemplate = `{
                 "RoleSuperAdmin",
                 "RoleAdmin",
                 "RoleManager",
+                "RoleItAdmin",
+                "RoleSecurityAdmin",
+                "RoleSysadmin",
                 "RoleAgent",
                 "RoleTechnician",
                 "RoleSecurity",
