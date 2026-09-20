@@ -71,7 +71,7 @@ jobs:
             -e POSTGRES_PASSWORD=postgres \
             -e POSTGRES_DB=itsm_test \
             -p 5432:5432 \
-            postgres:17
+            pgvector/pgvector:pg17
 
       - name: Wait for PostgreSQL
         run: |
@@ -193,7 +193,7 @@ jobs:
             -e POSTGRES_PASSWORD=postgres \
             -e POSTGRES_DB=itsm_test \
             -p 5432:5432 \
-            postgres:17
+            pgvector/pgvector:pg17
 
       - name: Wait for PostgreSQL
         run: |
