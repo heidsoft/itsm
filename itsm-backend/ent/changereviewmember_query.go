@@ -5,9 +5,8 @@ package ent
 import (
 	"context"
 	"fmt"
+	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/predicate"
-	"itsm-backend/ent/workflowinstance"
-	"itsm-backend/ent/workflowtask"
 	"math"
 
 	"entgo.io/ent"
@@ -16,87 +15,64 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// WorkflowTaskQuery is the builder for querying WorkflowTask entities.
-type WorkflowTaskQuery struct {
+// ChangeReviewMemberQuery is the builder for querying ChangeReviewMember entities.
+type ChangeReviewMemberQuery struct {
 	config
-	ctx          *QueryContext
-	order        []workflowtask.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.WorkflowTask
-	withInstance *WorkflowInstanceQuery
+	ctx        *QueryContext
+	order      []changereviewmember.OrderOption
+	inters     []Interceptor
+	predicates []predicate.ChangeReviewMember
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the WorkflowTaskQuery builder.
-func (_q *WorkflowTaskQuery) Where(ps ...predicate.WorkflowTask) *WorkflowTaskQuery {
+// Where adds a new predicate for the ChangeReviewMemberQuery builder.
+func (_q *ChangeReviewMemberQuery) Where(ps ...predicate.ChangeReviewMember) *ChangeReviewMemberQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *WorkflowTaskQuery) Limit(limit int) *WorkflowTaskQuery {
+func (_q *ChangeReviewMemberQuery) Limit(limit int) *ChangeReviewMemberQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *WorkflowTaskQuery) Offset(offset int) *WorkflowTaskQuery {
+func (_q *ChangeReviewMemberQuery) Offset(offset int) *ChangeReviewMemberQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *WorkflowTaskQuery) Unique(unique bool) *WorkflowTaskQuery {
+func (_q *ChangeReviewMemberQuery) Unique(unique bool) *ChangeReviewMemberQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *WorkflowTaskQuery) Order(o ...workflowtask.OrderOption) *WorkflowTaskQuery {
+func (_q *ChangeReviewMemberQuery) Order(o ...changereviewmember.OrderOption) *ChangeReviewMemberQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// QueryInstance chains the current query on the "instance" edge.
-func (_q *WorkflowTaskQuery) QueryInstance() *WorkflowInstanceQuery {
-	query := (&WorkflowInstanceClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(workflowtask.Table, workflowtask.FieldID, selector),
-			sqlgraph.To(workflowinstance.Table, workflowinstance.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, workflowtask.InstanceTable, workflowtask.InstanceColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first WorkflowTask entity from the query.
-// Returns a *NotFoundError when no WorkflowTask was found.
-func (_q *WorkflowTaskQuery) First(ctx context.Context) (*WorkflowTask, error) {
+// First returns the first ChangeReviewMember entity from the query.
+// Returns a *NotFoundError when no ChangeReviewMember was found.
+func (_q *ChangeReviewMemberQuery) First(ctx context.Context) (*ChangeReviewMember, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{workflowtask.Label}
+		return nil, &NotFoundError{changereviewmember.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) FirstX(ctx context.Context) *WorkflowTask {
+func (_q *ChangeReviewMemberQuery) FirstX(ctx context.Context) *ChangeReviewMember {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -104,22 +80,22 @@ func (_q *WorkflowTaskQuery) FirstX(ctx context.Context) *WorkflowTask {
 	return node
 }
 
-// FirstID returns the first WorkflowTask ID from the query.
-// Returns a *NotFoundError when no WorkflowTask ID was found.
-func (_q *WorkflowTaskQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first ChangeReviewMember ID from the query.
+// Returns a *NotFoundError when no ChangeReviewMember ID was found.
+func (_q *ChangeReviewMemberQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{workflowtask.Label}
+		err = &NotFoundError{changereviewmember.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) FirstIDX(ctx context.Context) int {
+func (_q *ChangeReviewMemberQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -127,10 +103,10 @@ func (_q *WorkflowTaskQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single WorkflowTask entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one WorkflowTask entity is found.
-// Returns a *NotFoundError when no WorkflowTask entities are found.
-func (_q *WorkflowTaskQuery) Only(ctx context.Context) (*WorkflowTask, error) {
+// Only returns a single ChangeReviewMember entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one ChangeReviewMember entity is found.
+// Returns a *NotFoundError when no ChangeReviewMember entities are found.
+func (_q *ChangeReviewMemberQuery) Only(ctx context.Context) (*ChangeReviewMember, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -139,14 +115,14 @@ func (_q *WorkflowTaskQuery) Only(ctx context.Context) (*WorkflowTask, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{workflowtask.Label}
+		return nil, &NotFoundError{changereviewmember.Label}
 	default:
-		return nil, &NotSingularError{workflowtask.Label}
+		return nil, &NotSingularError{changereviewmember.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) OnlyX(ctx context.Context) *WorkflowTask {
+func (_q *ChangeReviewMemberQuery) OnlyX(ctx context.Context) *ChangeReviewMember {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -154,10 +130,10 @@ func (_q *WorkflowTaskQuery) OnlyX(ctx context.Context) *WorkflowTask {
 	return node
 }
 
-// OnlyID is like Only, but returns the only WorkflowTask ID in the query.
-// Returns a *NotSingularError when more than one WorkflowTask ID is found.
+// OnlyID is like Only, but returns the only ChangeReviewMember ID in the query.
+// Returns a *NotSingularError when more than one ChangeReviewMember ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *WorkflowTaskQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ChangeReviewMemberQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -166,15 +142,15 @@ func (_q *WorkflowTaskQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{workflowtask.Label}
+		err = &NotFoundError{changereviewmember.Label}
 	default:
-		err = &NotSingularError{workflowtask.Label}
+		err = &NotSingularError{changereviewmember.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) OnlyIDX(ctx context.Context) int {
+func (_q *ChangeReviewMemberQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -182,18 +158,18 @@ func (_q *WorkflowTaskQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of WorkflowTasks.
-func (_q *WorkflowTaskQuery) All(ctx context.Context) ([]*WorkflowTask, error) {
+// All executes the query and returns a list of ChangeReviewMembers.
+func (_q *ChangeReviewMemberQuery) All(ctx context.Context) ([]*ChangeReviewMember, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*WorkflowTask, *WorkflowTaskQuery]()
-	return withInterceptors[[]*WorkflowTask](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*ChangeReviewMember, *ChangeReviewMemberQuery]()
+	return withInterceptors[[]*ChangeReviewMember](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) AllX(ctx context.Context) []*WorkflowTask {
+func (_q *ChangeReviewMemberQuery) AllX(ctx context.Context) []*ChangeReviewMember {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -201,20 +177,20 @@ func (_q *WorkflowTaskQuery) AllX(ctx context.Context) []*WorkflowTask {
 	return nodes
 }
 
-// IDs executes the query and returns a list of WorkflowTask IDs.
-func (_q *WorkflowTaskQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of ChangeReviewMember IDs.
+func (_q *ChangeReviewMemberQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(workflowtask.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(changereviewmember.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) IDsX(ctx context.Context) []int {
+func (_q *ChangeReviewMemberQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -223,16 +199,16 @@ func (_q *WorkflowTaskQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *WorkflowTaskQuery) Count(ctx context.Context) (int, error) {
+func (_q *ChangeReviewMemberQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*WorkflowTaskQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ChangeReviewMemberQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) CountX(ctx context.Context) int {
+func (_q *ChangeReviewMemberQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -241,7 +217,7 @@ func (_q *WorkflowTaskQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *WorkflowTaskQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *ChangeReviewMemberQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -254,7 +230,7 @@ func (_q *WorkflowTaskQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *WorkflowTaskQuery) ExistX(ctx context.Context) bool {
+func (_q *ChangeReviewMemberQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -262,34 +238,22 @@ func (_q *WorkflowTaskQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the WorkflowTaskQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the ChangeReviewMemberQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *WorkflowTaskQuery) Clone() *WorkflowTaskQuery {
+func (_q *ChangeReviewMemberQuery) Clone() *ChangeReviewMemberQuery {
 	if _q == nil {
 		return nil
 	}
-	return &WorkflowTaskQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]workflowtask.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.WorkflowTask{}, _q.predicates...),
-		withInstance: _q.withInstance.Clone(),
+	return &ChangeReviewMemberQuery{
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]changereviewmember.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.ChangeReviewMember{}, _q.predicates...),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
-}
-
-// WithInstance tells the query-builder to eager-load the nodes that are connected to
-// the "instance" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *WorkflowTaskQuery) WithInstance(opts ...func(*WorkflowInstanceQuery)) *WorkflowTaskQuery {
-	query := (&WorkflowInstanceClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withInstance = query
-	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -298,19 +262,19 @@ func (_q *WorkflowTaskQuery) WithInstance(opts ...func(*WorkflowInstanceQuery)) 
 // Example:
 //
 //	var v []struct {
-//		TaskID string `json:"task_id,omitempty"`
+//		UserID int `json:"user_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.WorkflowTask.Query().
-//		GroupBy(workflowtask.FieldTaskID).
+//	client.ChangeReviewMember.Query().
+//		GroupBy(changereviewmember.FieldUserID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *WorkflowTaskQuery) GroupBy(field string, fields ...string) *WorkflowTaskGroupBy {
+func (_q *ChangeReviewMemberQuery) GroupBy(field string, fields ...string) *ChangeReviewMemberGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &WorkflowTaskGroupBy{build: _q}
+	grbuild := &ChangeReviewMemberGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = workflowtask.Label
+	grbuild.label = changereviewmember.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -321,26 +285,26 @@ func (_q *WorkflowTaskQuery) GroupBy(field string, fields ...string) *WorkflowTa
 // Example:
 //
 //	var v []struct {
-//		TaskID string `json:"task_id,omitempty"`
+//		UserID int `json:"user_id,omitempty"`
 //	}
 //
-//	client.WorkflowTask.Query().
-//		Select(workflowtask.FieldTaskID).
+//	client.ChangeReviewMember.Query().
+//		Select(changereviewmember.FieldUserID).
 //		Scan(ctx, &v)
-func (_q *WorkflowTaskQuery) Select(fields ...string) *WorkflowTaskSelect {
+func (_q *ChangeReviewMemberQuery) Select(fields ...string) *ChangeReviewMemberSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &WorkflowTaskSelect{WorkflowTaskQuery: _q}
-	sbuild.label = workflowtask.Label
+	sbuild := &ChangeReviewMemberSelect{ChangeReviewMemberQuery: _q}
+	sbuild.label = changereviewmember.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a WorkflowTaskSelect configured with the given aggregations.
-func (_q *WorkflowTaskQuery) Aggregate(fns ...AggregateFunc) *WorkflowTaskSelect {
+// Aggregate returns a ChangeReviewMemberSelect configured with the given aggregations.
+func (_q *ChangeReviewMemberQuery) Aggregate(fns ...AggregateFunc) *ChangeReviewMemberSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *WorkflowTaskQuery) prepareQuery(ctx context.Context) error {
+func (_q *ChangeReviewMemberQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -352,7 +316,7 @@ func (_q *WorkflowTaskQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !workflowtask.ValidColumn(f) {
+		if !changereviewmember.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -366,21 +330,17 @@ func (_q *WorkflowTaskQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *WorkflowTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*WorkflowTask, error) {
+func (_q *ChangeReviewMemberQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ChangeReviewMember, error) {
 	var (
-		nodes       = []*WorkflowTask{}
-		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
-			_q.withInstance != nil,
-		}
+		nodes = []*ChangeReviewMember{}
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*WorkflowTask).scanValues(nil, columns)
+		return (*ChangeReviewMember).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &WorkflowTask{config: _q.config}
+		node := &ChangeReviewMember{config: _q.config}
 		nodes = append(nodes, node)
-		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -392,46 +352,10 @@ func (_q *WorkflowTaskQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := _q.withInstance; query != nil {
-		if err := _q.loadInstance(ctx, query, nodes, nil,
-			func(n *WorkflowTask, e *WorkflowInstance) { n.Edges.Instance = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
-func (_q *WorkflowTaskQuery) loadInstance(ctx context.Context, query *WorkflowInstanceQuery, nodes []*WorkflowTask, init func(*WorkflowTask), assign func(*WorkflowTask, *WorkflowInstance)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*WorkflowTask)
-	for i := range nodes {
-		fk := nodes[i].InstanceID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(workflowinstance.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "instance_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-
-func (_q *WorkflowTaskQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *ChangeReviewMemberQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -440,8 +364,8 @@ func (_q *WorkflowTaskQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *WorkflowTaskQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(workflowtask.Table, workflowtask.Columns, sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt))
+func (_q *ChangeReviewMemberQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(changereviewmember.Table, changereviewmember.Columns, sqlgraph.NewFieldSpec(changereviewmember.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -450,14 +374,11 @@ func (_q *WorkflowTaskQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, workflowtask.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, changereviewmember.FieldID)
 		for i := range fields {
-			if fields[i] != workflowtask.FieldID {
+			if fields[i] != changereviewmember.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
-		}
-		if _q.withInstance != nil {
-			_spec.Node.AddColumnOnce(workflowtask.FieldInstanceID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -483,12 +404,12 @@ func (_q *WorkflowTaskQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *WorkflowTaskQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *ChangeReviewMemberQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(workflowtask.Table)
+	t1 := builder.Table(changereviewmember.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = workflowtask.Columns
+		columns = changereviewmember.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -515,28 +436,28 @@ func (_q *WorkflowTaskQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// WorkflowTaskGroupBy is the group-by builder for WorkflowTask entities.
-type WorkflowTaskGroupBy struct {
+// ChangeReviewMemberGroupBy is the group-by builder for ChangeReviewMember entities.
+type ChangeReviewMemberGroupBy struct {
 	selector
-	build *WorkflowTaskQuery
+	build *ChangeReviewMemberQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *WorkflowTaskGroupBy) Aggregate(fns ...AggregateFunc) *WorkflowTaskGroupBy {
+func (_g *ChangeReviewMemberGroupBy) Aggregate(fns ...AggregateFunc) *ChangeReviewMemberGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *WorkflowTaskGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *ChangeReviewMemberGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkflowTaskQuery, *WorkflowTaskGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*ChangeReviewMemberQuery, *ChangeReviewMemberGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *WorkflowTaskGroupBy) sqlScan(ctx context.Context, root *WorkflowTaskQuery, v any) error {
+func (_g *ChangeReviewMemberGroupBy) sqlScan(ctx context.Context, root *ChangeReviewMemberQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -563,28 +484,28 @@ func (_g *WorkflowTaskGroupBy) sqlScan(ctx context.Context, root *WorkflowTaskQu
 	return sql.ScanSlice(rows, v)
 }
 
-// WorkflowTaskSelect is the builder for selecting fields of WorkflowTask entities.
-type WorkflowTaskSelect struct {
-	*WorkflowTaskQuery
+// ChangeReviewMemberSelect is the builder for selecting fields of ChangeReviewMember entities.
+type ChangeReviewMemberSelect struct {
+	*ChangeReviewMemberQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *WorkflowTaskSelect) Aggregate(fns ...AggregateFunc) *WorkflowTaskSelect {
+func (_s *ChangeReviewMemberSelect) Aggregate(fns ...AggregateFunc) *ChangeReviewMemberSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *WorkflowTaskSelect) Scan(ctx context.Context, v any) error {
+func (_s *ChangeReviewMemberSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*WorkflowTaskQuery, *WorkflowTaskSelect](ctx, _s.WorkflowTaskQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*ChangeReviewMemberQuery, *ChangeReviewMemberSelect](ctx, _s.ChangeReviewMemberQuery, _s, _s.inters, v)
 }
 
-func (_s *WorkflowTaskSelect) sqlScan(ctx context.Context, root *WorkflowTaskQuery, v any) error {
+func (_s *ChangeReviewMemberSelect) sqlScan(ctx context.Context, root *ChangeReviewMemberQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

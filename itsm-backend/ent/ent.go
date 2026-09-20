@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
+	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
@@ -137,11 +138,7 @@ import (
 	"itsm-backend/ent/toolinvocation"
 	"itsm-backend/ent/user"
 	"itsm-backend/ent/vendor"
-	"itsm-backend/ent/workflow"
-	"itsm-backend/ent/workflowinstance"
-	"itsm-backend/ent/workflowtask"
 	"itsm-backend/ent/workflowtemplate"
-	"itsm-backend/ent/workflowversion"
 	"reflect"
 	"sync"
 
@@ -229,6 +226,7 @@ func checkColumn(t, c string) error {
 			cmdbsavedview.Table:               cmdbsavedview.ValidColumn,
 			change.Table:                      change.ValidColumn,
 			changepir.Table:                   changepir.ValidColumn,
+			changereviewmember.Table:          changereviewmember.ValidColumn,
 			cloudaccount.Table:                cloudaccount.ValidColumn,
 			cloudresource.Table:               cloudresource.ValidColumn,
 			cloudservice.Table:                cloudservice.ValidColumn,
@@ -339,11 +337,7 @@ func checkColumn(t, c string) error {
 			toolinvocation.Table:              toolinvocation.ValidColumn,
 			user.Table:                        user.ValidColumn,
 			vendor.Table:                      vendor.ValidColumn,
-			workflow.Table:                    workflow.ValidColumn,
-			workflowinstance.Table:            workflowinstance.ValidColumn,
-			workflowtask.Table:                workflowtask.ValidColumn,
 			workflowtemplate.Table:            workflowtemplate.ValidColumn,
-			workflowversion.Table:             workflowversion.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

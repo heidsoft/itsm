@@ -40,8 +40,6 @@ const (
 	EdgeUsers = "users"
 	// EdgeTickets holds the string denoting the tickets edge name in mutations.
 	EdgeTickets = "tickets"
-	// EdgeWorkflows holds the string denoting the workflows edge name in mutations.
-	EdgeWorkflows = "workflows"
 	// EdgeCategories holds the string denoting the categories edge name in mutations.
 	EdgeCategories = "categories"
 	// EdgeProjects holds the string denoting the projects edge name in mutations.
@@ -72,13 +70,6 @@ const (
 	TicketsInverseTable = "tickets"
 	// TicketsColumn is the table column denoting the tickets relation/edge.
 	TicketsColumn = "department_tickets"
-	// WorkflowsTable is the table that holds the workflows relation/edge.
-	WorkflowsTable = "workflows"
-	// WorkflowsInverseTable is the table name for the Workflow entity.
-	// It exists in this package in order to avoid circular dependency with the "workflow" package.
-	WorkflowsInverseTable = "workflows"
-	// WorkflowsColumn is the table column denoting the workflows relation/edge.
-	WorkflowsColumn = "department_id"
 	// CategoriesTable is the table that holds the categories relation/edge.
 	CategoriesTable = "ticket_categories"
 	// CategoriesInverseTable is the table name for the TicketCategory entity.
@@ -247,20 +238,6 @@ func ByTickets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByWorkflowsCount orders the results by workflows count.
-func ByWorkflowsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newWorkflowsStep(), opts...)
-	}
-}
-
-// ByWorkflows orders the results by workflows terms.
-func ByWorkflows(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkflowsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByCategoriesCount orders the results by categories count.
 func ByCategoriesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -328,13 +305,6 @@ func newTicketsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TicketsTable, TicketsColumn),
-	)
-}
-func newWorkflowsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkflowsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, WorkflowsTable, WorkflowsColumn),
 	)
 }
 func newCategoriesStep() *sqlgraph.Step {

@@ -42,9 +42,6 @@ type BootstrapToken func(*sql.Selector)
 // CABMember is the predicate function for cabmember builders.
 type CABMember func(*sql.Selector)
 
-// ChangeReviewMember is the predicate function for changereviewmember builders.
-type ChangeReviewMember func(*sql.Selector)
-
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 
@@ -71,6 +68,9 @@ type Change func(*sql.Selector)
 
 // ChangePIR is the predicate function for changepir builders.
 type ChangePIR func(*sql.Selector)
+
+// ChangeReviewMember is the predicate function for changereviewmember builders.
+type ChangeReviewMember func(*sql.Selector)
 
 // CloudAccount is the predicate function for cloudaccount builders.
 type CloudAccount func(*sql.Selector)
@@ -402,17 +402,5 @@ type User func(*sql.Selector)
 // Vendor is the predicate function for vendor builders.
 type Vendor func(*sql.Selector)
 
-// Workflow is the predicate function for workflow builders.
-type Workflow func(*sql.Selector)
-
-// WorkflowInstance is the predicate function for workflowinstance builders.
-type WorkflowInstance func(*sql.Selector)
-
-// WorkflowTask is the predicate function for workflowtask builders.
-type WorkflowTask func(*sql.Selector)
-
 // WorkflowTemplate is the predicate function for workflowtemplate builders.
 type WorkflowTemplate func(*sql.Selector)
-
-// WorkflowVersion is the predicate function for workflowversion builders.
-type WorkflowVersion func(*sql.Selector)

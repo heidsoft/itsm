@@ -100,9 +100,9 @@ func DepartmentID(v int) predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldEQ(FieldDepartmentID, v))
 }
 
-// WorkflowID applies equality check predicate on the "workflow_id" field. It's identical to WorkflowIDEQ.
-func WorkflowID(v int) predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowID, v))
+// WorkflowDefinitionKey applies equality check predicate on the "workflow_definition_key" field. It's identical to WorkflowDefinitionKeyEQ.
+func WorkflowDefinitionKey(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowDefinitionKey, v))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -510,34 +510,79 @@ func DepartmentIDNotNil() predicate.TicketCategory {
 	return predicate.TicketCategory(sql.FieldNotNull(FieldDepartmentID))
 }
 
-// WorkflowIDEQ applies the EQ predicate on the "workflow_id" field.
-func WorkflowIDEQ(v int) predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowID, v))
+// WorkflowDefinitionKeyEQ applies the EQ predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyEQ(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEQ(FieldWorkflowDefinitionKey, v))
 }
 
-// WorkflowIDNEQ applies the NEQ predicate on the "workflow_id" field.
-func WorkflowIDNEQ(v int) predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldNEQ(FieldWorkflowID, v))
+// WorkflowDefinitionKeyNEQ applies the NEQ predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNEQ(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNEQ(FieldWorkflowDefinitionKey, v))
 }
 
-// WorkflowIDIn applies the In predicate on the "workflow_id" field.
-func WorkflowIDIn(vs ...int) predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldIn(FieldWorkflowID, vs...))
+// WorkflowDefinitionKeyIn applies the In predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyIn(vs ...string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIn(FieldWorkflowDefinitionKey, vs...))
 }
 
-// WorkflowIDNotIn applies the NotIn predicate on the "workflow_id" field.
-func WorkflowIDNotIn(vs ...int) predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldNotIn(FieldWorkflowID, vs...))
+// WorkflowDefinitionKeyNotIn applies the NotIn predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNotIn(vs ...string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotIn(FieldWorkflowDefinitionKey, vs...))
 }
 
-// WorkflowIDIsNil applies the IsNil predicate on the "workflow_id" field.
-func WorkflowIDIsNil() predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldIsNull(FieldWorkflowID))
+// WorkflowDefinitionKeyGT applies the GT predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyGT(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldGT(FieldWorkflowDefinitionKey, v))
 }
 
-// WorkflowIDNotNil applies the NotNil predicate on the "workflow_id" field.
-func WorkflowIDNotNil() predicate.TicketCategory {
-	return predicate.TicketCategory(sql.FieldNotNull(FieldWorkflowID))
+// WorkflowDefinitionKeyGTE applies the GTE predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyGTE(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldGTE(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyLT applies the LT predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyLT(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldLT(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyLTE applies the LTE predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyLTE(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldLTE(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyContains applies the Contains predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyContains(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldContains(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyHasPrefix applies the HasPrefix predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyHasPrefix(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldHasPrefix(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyHasSuffix applies the HasSuffix predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyHasSuffix(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldHasSuffix(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyIsNil applies the IsNil predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyIsNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldIsNull(FieldWorkflowDefinitionKey))
+}
+
+// WorkflowDefinitionKeyNotNil applies the NotNil predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyNotNil() predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldNotNull(FieldWorkflowDefinitionKey))
+}
+
+// WorkflowDefinitionKeyEqualFold applies the EqualFold predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyEqualFold(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldEqualFold(FieldWorkflowDefinitionKey, v))
+}
+
+// WorkflowDefinitionKeyContainsFold applies the ContainsFold predicate on the "workflow_definition_key" field.
+func WorkflowDefinitionKeyContainsFold(v string) predicate.TicketCategory {
+	return predicate.TicketCategory(sql.FieldContainsFold(FieldWorkflowDefinitionKey, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -704,29 +749,6 @@ func HasDepartment() predicate.TicketCategory {
 func HasDepartmentWith(preds ...predicate.Department) predicate.TicketCategory {
 	return predicate.TicketCategory(func(s *sql.Selector) {
 		step := newDepartmentStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasWorkflow applies the HasEdge predicate on the "workflow" edge.
-func HasWorkflow() predicate.TicketCategory {
-	return predicate.TicketCategory(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, WorkflowTable, WorkflowColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasWorkflowWith applies the HasEdge predicate on the "workflow" edge with a given conditions (other predicates).
-func HasWorkflowWith(preds ...predicate.Workflow) predicate.TicketCategory {
-	return predicate.TicketCategory(func(s *sql.Selector) {
-		step := newWorkflowStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

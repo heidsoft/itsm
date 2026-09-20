@@ -32,8 +32,8 @@ const (
 	FieldTenantID = "tenant_id"
 	// FieldDepartmentID holds the string denoting the department_id field in the database.
 	FieldDepartmentID = "department_id"
-	// FieldWorkflowID holds the string denoting the workflow_id field in the database.
-	FieldWorkflowID = "workflow_id"
+	// FieldWorkflowDefinitionKey holds the string denoting the workflow_definition_key field in the database.
+	FieldWorkflowDefinitionKey = "workflow_definition_key"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -46,8 +46,6 @@ const (
 	EdgeParent = "parent"
 	// EdgeDepartment holds the string denoting the department edge name in mutations.
 	EdgeDepartment = "department"
-	// EdgeWorkflow holds the string denoting the workflow edge name in mutations.
-	EdgeWorkflow = "workflow"
 	// Table holds the table name of the ticketcategory in the database.
 	Table = "ticket_categories"
 	// TicketsTable is the table that holds the tickets relation/edge. The primary key declared below.
@@ -70,13 +68,6 @@ const (
 	DepartmentInverseTable = "departments"
 	// DepartmentColumn is the table column denoting the department relation/edge.
 	DepartmentColumn = "department_id"
-	// WorkflowTable is the table that holds the workflow relation/edge.
-	WorkflowTable = "ticket_categories"
-	// WorkflowInverseTable is the table name for the Workflow entity.
-	// It exists in this package in order to avoid circular dependency with the "workflow" package.
-	WorkflowInverseTable = "workflows"
-	// WorkflowColumn is the table column denoting the workflow relation/edge.
-	WorkflowColumn = "workflow_id"
 )
 
 // Columns holds all SQL columns for ticketcategory fields.
@@ -91,7 +82,7 @@ var Columns = []string{
 	FieldIsActive,
 	FieldTenantID,
 	FieldDepartmentID,
-	FieldWorkflowID,
+	FieldWorkflowDefinitionKey,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -125,6 +116,8 @@ var (
 	DefaultIsActive bool
 	// TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	TenantIDValidator func(int) error
+	// WorkflowDefinitionKeyValidator is a validator for the "workflow_definition_key" field. It is called by the builders before save.
+	WorkflowDefinitionKeyValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -186,9 +179,9 @@ func ByDepartmentID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDepartmentID, opts...).ToFunc()
 }
 
-// ByWorkflowID orders the results by the workflow_id field.
-func ByWorkflowID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldWorkflowID, opts...).ToFunc()
+// ByWorkflowDefinitionKey orders the results by the workflow_definition_key field.
+func ByWorkflowDefinitionKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldWorkflowDefinitionKey, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -242,13 +235,6 @@ func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
 	}
 }
-
-// ByWorkflowField orders the results by workflow field.
-func ByWorkflowField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newWorkflowStep(), sql.OrderByField(field, opts...))
-	}
-}
 func newTicketsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -275,12 +261,5 @@ func newDepartmentStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DepartmentInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
-	)
-}
-func newWorkflowStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(WorkflowInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, WorkflowTable, WorkflowColumn),
 	)
 }

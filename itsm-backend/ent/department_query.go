@@ -13,7 +13,6 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 	"math"
 
 	"entgo.io/ent"
@@ -33,7 +32,6 @@ type DepartmentQuery struct {
 	withChildren   *DepartmentQuery
 	withUsers      *UserQuery
 	withTickets    *TicketQuery
-	withWorkflows  *WorkflowQuery
 	withCategories *TicketCategoryQuery
 	withProjects   *ProjectQuery
 	withTags       *TagQuery
@@ -154,28 +152,6 @@ func (_q *DepartmentQuery) QueryTickets() *TicketQuery {
 			sqlgraph.From(department.Table, department.FieldID, selector),
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, department.TicketsTable, department.TicketsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryWorkflows chains the current query on the "workflows" edge.
-func (_q *DepartmentQuery) QueryWorkflows() *WorkflowQuery {
-	query := (&WorkflowClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(department.Table, department.FieldID, selector),
-			sqlgraph.To(workflow.Table, workflow.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, department.WorkflowsTable, department.WorkflowsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -445,7 +421,6 @@ func (_q *DepartmentQuery) Clone() *DepartmentQuery {
 		withChildren:   _q.withChildren.Clone(),
 		withUsers:      _q.withUsers.Clone(),
 		withTickets:    _q.withTickets.Clone(),
-		withWorkflows:  _q.withWorkflows.Clone(),
 		withCategories: _q.withCategories.Clone(),
 		withProjects:   _q.withProjects.Clone(),
 		withTags:       _q.withTags.Clone(),
@@ -496,17 +471,6 @@ func (_q *DepartmentQuery) WithTickets(opts ...func(*TicketQuery)) *DepartmentQu
 		opt(query)
 	}
 	_q.withTickets = query
-	return _q
-}
-
-// WithWorkflows tells the query-builder to eager-load the nodes that are connected to
-// the "workflows" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *DepartmentQuery) WithWorkflows(opts ...func(*WorkflowQuery)) *DepartmentQuery {
-	query := (&WorkflowClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withWorkflows = query
 	return _q
 }
 
@@ -621,12 +585,11 @@ func (_q *DepartmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*D
 	var (
 		nodes       = []*Department{}
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [7]bool{
 			_q.withParent != nil,
 			_q.withChildren != nil,
 			_q.withUsers != nil,
 			_q.withTickets != nil,
-			_q.withWorkflows != nil,
 			_q.withCategories != nil,
 			_q.withProjects != nil,
 			_q.withTags != nil,
@@ -674,13 +637,6 @@ func (_q *DepartmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*D
 		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *Department) { n.Edges.Tickets = []*Ticket{} },
 			func(n *Department, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withWorkflows; query != nil {
-		if err := _q.loadWorkflows(ctx, query, nodes,
-			func(n *Department) { n.Edges.Workflows = []*Workflow{} },
-			func(n *Department, e *Workflow) { n.Edges.Workflows = append(n.Edges.Workflows, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -824,36 +780,6 @@ func (_q *DepartmentQuery) loadTickets(ctx context.Context, query *TicketQuery, 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "department_tickets" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (_q *DepartmentQuery) loadWorkflows(ctx context.Context, query *WorkflowQuery, nodes []*Department, init func(*Department), assign func(*Department, *Workflow)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Department)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(workflow.FieldDepartmentID)
-	}
-	query.Where(predicate.Workflow(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(department.WorkflowsColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.DepartmentID
-		node, ok := nodeids[fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "department_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

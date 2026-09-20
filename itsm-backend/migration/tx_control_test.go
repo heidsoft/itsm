@@ -137,6 +137,7 @@ func TestApplyMigration_EmbeddedTxControl(t *testing.T) {
 	table := "test_tx_control_regression"
 
 	m := NewMigrator(db, zap.NewNop().Sugar())
+	require.NoError(t, m.EnsureMigrationsTable(ctx))
 
 	// 幂等预清理（脚本自身 DROP IF EXISTS，这里额外清账本与残留表）
 	_, _ = db.ExecContext(ctx, `DELETE FROM schema_migrations WHERE version = $1`, version)

@@ -9,7 +9,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalchain"
-	"itsm-backend/ent/cabmember"
+	"itsm-backend/ent/changereviewmember"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/user"
 	"itsm-backend/service/approver"
@@ -385,8 +385,8 @@ func resolveReviewMembers(ctx context.Context, client *ent.Client, tenantID int,
 	if boardType != "REVIEW" && boardType != "EREVIEW" {
 		return nil, nil, fmt.Errorf("无效的评审组类型: %s", boardType)
 	}
-	members, err := client.CABMember.Query().
-		Where(cabmember.Type(boardType), cabmember.TenantID(tenantID), cabmember.IsActive(true)).
+	members, err := client.ChangeReviewMember.Query().
+		Where(changereviewmember.Type(boardType), changereviewmember.TenantID(tenantID), changereviewmember.IsActive(true)).
 		All(ctx)
 	if err != nil {
 		return nil, nil, err

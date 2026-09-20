@@ -51,7 +51,7 @@ interface TicketCategory {
   level: number;
   sortOrder: number;
   isActive: boolean;
-  workflowId: number | null;
+  workflowDefinitionKey: string;
   departmentId: number | null;
   createdAt: string;
   updatedAt: string;
@@ -84,12 +84,12 @@ interface CategoryFormValues {
   parentId?: number;
   sortOrder?: number;
   isActive?: boolean;
-  workflowId?: number;
+  workflowDefinitionKey?: string;
   departmentId?: number;
 }
 
 interface WorkflowOption {
-  id: number;
+  key: string;
   name: string;
 }
 
@@ -138,7 +138,7 @@ const TicketCategoryManagementPage = () => {
       ]);
       if (workflowRes.status === 'fulfilled') {
         setWorkflows(
-          (workflowRes.value?.workflows || []).map(w => ({ id: Number(w.id), name: w.name }))
+          (workflowRes.value?.workflows || []).map(w => ({ key: String(w.id), name: w.name }))
         );
       }
       if (departmentRes.status === 'fulfilled') {
@@ -164,7 +164,7 @@ const TicketCategoryManagementPage = () => {
     level: category.level || 1,
     sortOrder: category.sortOrder ?? 0,
     isActive: category.isActive ?? true,
-    workflowId: category.workflowId ?? null,
+    workflowDefinitionKey: category.workflowDefinitionKey || '',
     departmentId: category.departmentId ?? null,
     createdAt: category.createdAt || '',
     updatedAt: category.updatedAt || '',
@@ -203,7 +203,7 @@ const TicketCategoryManagementPage = () => {
       parentId: category.parentId ?? undefined,
       sortOrder: category.sortOrder,
       isActive: category.isActive,
-      workflowId: category.workflowId ?? undefined,
+      workflowDefinitionKey: category.workflowDefinitionKey || undefined,
       departmentId: category.departmentId ?? undefined,
     });
     setModalVisible(true);
@@ -218,7 +218,7 @@ const TicketCategoryManagementPage = () => {
         parentId: category.parentId || undefined,
         sortOrder: category.sortOrder,
         isActive: category.isActive,
-        workflowId: category.workflowId || undefined,
+        workflowDefinitionKey: category.workflowDefinitionKey || undefined,
         departmentId: category.departmentId || undefined,
       });
       message.success('分类复制成功');
@@ -255,7 +255,7 @@ const TicketCategoryManagementPage = () => {
           parentId: values.parentId ?? 0,
           sortOrder: values.sortOrder,
           isActive: values.isActive,
-          workflowId: values.workflowId ?? 0,
+          workflowDefinitionKey: values.workflowDefinitionKey || '',
           departmentId: values.departmentId ?? 0,
         });
         message.success('分类更新成功');
@@ -267,7 +267,7 @@ const TicketCategoryManagementPage = () => {
           parentId: values.parentId,
           sortOrder: values.sortOrder,
           isActive: values.isActive ?? true,
-          workflowId: values.workflowId,
+          workflowDefinitionKey: values.workflowDefinitionKey,
           departmentId: values.departmentId,
         });
         message.success('分类创建成功');
@@ -299,8 +299,8 @@ const TicketCategoryManagementPage = () => {
     }
   };
 
-  const workflowNameOf = (id: number | null) =>
-    id ? workflows.find(w => w.id === id)?.name || `工作流 #${id}` : null;
+  const workflowNameOf = (key: string) =>
+    key ? workflows.find(w => w.key === key)?.name || key : null;
   const departmentNameOf = (id: number | null) =>
     id ? departments.find(d => d.id === id)?.name || `部门 #${id}` : null;
 
@@ -324,7 +324,7 @@ const TicketCategoryManagementPage = () => {
           </p>
           <p>
             <Text strong>关联工作流：</Text>
-            {workflowNameOf(category.workflowId) || '-'}
+            {workflowNameOf(category.workflowDefinitionKey) || '-'}
           </p>
           <p>
             <Text strong>所属部门：</Text>
@@ -382,10 +382,10 @@ const TicketCategoryManagementPage = () => {
     },
     {
       title: '关联工作流',
-      dataIndex: 'workflowId',
-      key: 'workflowId',
-      render: (workflowId: number | null) => {
-        const name = workflowNameOf(workflowId);
+      dataIndex: 'workflowDefinitionKey',
+      key: 'workflowDefinitionKey',
+      render: (workflowDefinitionKey: string) => {
+        const name = workflowNameOf(workflowDefinitionKey);
         return name ? <Tag color="purple">{name}</Tag> : <Text type="secondary">-</Text>;
       },
     },
@@ -616,8 +616,8 @@ const TicketCategoryManagementPage = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="workflowId" label="关联工作流" tooltip="该分类下的工单将默认走此工作流">
-                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.id, label: w.name }))} />
+              <Form.Item name="workflowDefinitionKey" label="关联工作流" tooltip="该分类下的工单将默认走此工作流">
+                <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.key, label: w.name }))} />
               </Form.Item>
             </Col>
             <Col span={12}>

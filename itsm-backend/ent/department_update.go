@@ -13,7 +13,6 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -240,21 +239,6 @@ func (_u *DepartmentUpdate) AddTickets(v ...*Ticket) *DepartmentUpdate {
 	return _u.AddTicketIDs(ids...)
 }
 
-// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (_u *DepartmentUpdate) AddWorkflowIDs(ids ...int) *DepartmentUpdate {
-	_u.mutation.AddWorkflowIDs(ids...)
-	return _u
-}
-
-// AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (_u *DepartmentUpdate) AddWorkflows(v ...*Workflow) *DepartmentUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddWorkflowIDs(ids...)
-}
-
 // AddCategoryIDs adds the "categories" edge to the TicketCategory entity by IDs.
 func (_u *DepartmentUpdate) AddCategoryIDs(ids ...int) *DepartmentUpdate {
 	_u.mutation.AddCategoryIDs(ids...)
@@ -372,27 +356,6 @@ func (_u *DepartmentUpdate) RemoveTickets(v ...*Ticket) *DepartmentUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTicketIDs(ids...)
-}
-
-// ClearWorkflows clears all "workflows" edges to the Workflow entity.
-func (_u *DepartmentUpdate) ClearWorkflows() *DepartmentUpdate {
-	_u.mutation.ClearWorkflows()
-	return _u
-}
-
-// RemoveWorkflowIDs removes the "workflows" edge to Workflow entities by IDs.
-func (_u *DepartmentUpdate) RemoveWorkflowIDs(ids ...int) *DepartmentUpdate {
-	_u.mutation.RemoveWorkflowIDs(ids...)
-	return _u
-}
-
-// RemoveWorkflows removes "workflows" edges to Workflow entities.
-func (_u *DepartmentUpdate) RemoveWorkflows(v ...*Workflow) *DepartmentUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveWorkflowIDs(ids...)
 }
 
 // ClearCategories clears all "categories" edges to the TicketCategory entity.
@@ -722,51 +685,6 @@ func (_u *DepartmentUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.WorkflowsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.WorkflowsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1135,21 +1053,6 @@ func (_u *DepartmentUpdateOne) AddTickets(v ...*Ticket) *DepartmentUpdateOne {
 	return _u.AddTicketIDs(ids...)
 }
 
-// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (_u *DepartmentUpdateOne) AddWorkflowIDs(ids ...int) *DepartmentUpdateOne {
-	_u.mutation.AddWorkflowIDs(ids...)
-	return _u
-}
-
-// AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (_u *DepartmentUpdateOne) AddWorkflows(v ...*Workflow) *DepartmentUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.AddWorkflowIDs(ids...)
-}
-
 // AddCategoryIDs adds the "categories" edge to the TicketCategory entity by IDs.
 func (_u *DepartmentUpdateOne) AddCategoryIDs(ids ...int) *DepartmentUpdateOne {
 	_u.mutation.AddCategoryIDs(ids...)
@@ -1267,27 +1170,6 @@ func (_u *DepartmentUpdateOne) RemoveTickets(v ...*Ticket) *DepartmentUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveTicketIDs(ids...)
-}
-
-// ClearWorkflows clears all "workflows" edges to the Workflow entity.
-func (_u *DepartmentUpdateOne) ClearWorkflows() *DepartmentUpdateOne {
-	_u.mutation.ClearWorkflows()
-	return _u
-}
-
-// RemoveWorkflowIDs removes the "workflows" edge to Workflow entities by IDs.
-func (_u *DepartmentUpdateOne) RemoveWorkflowIDs(ids ...int) *DepartmentUpdateOne {
-	_u.mutation.RemoveWorkflowIDs(ids...)
-	return _u
-}
-
-// RemoveWorkflows removes "workflows" edges to Workflow entities.
-func (_u *DepartmentUpdateOne) RemoveWorkflows(v ...*Workflow) *DepartmentUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _u.RemoveWorkflowIDs(ids...)
 }
 
 // ClearCategories clears all "categories" edges to the TicketCategory entity.
@@ -1647,51 +1529,6 @@ func (_u *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.WorkflowsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.WorkflowsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

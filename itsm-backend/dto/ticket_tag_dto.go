@@ -23,7 +23,7 @@ type TicketCategoryResponse struct {
 	ParentID     *int      `json:"parentId,omitempty"`
 	SortOrder    int       `json:"sortOrder"`
 	IsActive     bool      `json:"isActive"`
-	WorkflowID   *int      `json:"workflowId,omitempty"`
+	WorkflowDefinitionKey string    `json:"workflowDefinitionKey,omitempty"`
 	DepartmentID *int      `json:"departmentId,omitempty"`
 	TenantID     int       `json:"tenantId"`
 	CreatedAt    time.Time `json:"createdAt"`

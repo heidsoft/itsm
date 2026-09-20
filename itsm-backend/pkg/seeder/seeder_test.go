@@ -231,10 +231,6 @@ func TestSeedAllProductDefaultsDoNotCreateBusinessSamples(t *testing.T) {
 	require.NoError(t, err)
 	assert.Zero(t, processInstanceCount)
 
-	workflowInstanceCount, err := seeder.client.WorkflowInstance.Query().Count(ctx)
-	require.NoError(t, err)
-	assert.Zero(t, workflowInstanceCount)
-
 	notificationCount, err := seeder.client.Notification.Query().Count(ctx)
 	require.NoError(t, err)
 	assert.Zero(t, notificationCount)

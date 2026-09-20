@@ -57,8 +57,8 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 	if req.ParentID > 0 {
 		create.SetParentID(req.ParentID)
 	}
-	if req.WorkflowID != nil && *req.WorkflowID > 0 {
-		create.SetWorkflowID(*req.WorkflowID)
+	if req.WorkflowDefinitionKey != nil && *req.WorkflowDefinitionKey != "" {
+		create.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
 	}
 	if req.DepartmentID != nil && *req.DepartmentID > 0 {
 		create.SetDepartmentID(*req.DepartmentID)
@@ -224,11 +224,11 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 	if req.IsActive != nil {
 		update.SetIsActive(*req.IsActive)
 	}
-	if req.WorkflowID != nil {
-		if *req.WorkflowID > 0 {
-			update.SetWorkflowID(*req.WorkflowID)
+	if req.WorkflowDefinitionKey != nil {
+		if *req.WorkflowDefinitionKey != "" {
+			update.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
 		} else {
-			update.ClearWorkflowID()
+			update.ClearWorkflowDefinitionKey()
 		}
 	}
 	if req.DepartmentID != nil {
@@ -411,7 +411,7 @@ type CreateCategoryRequest struct {
 	ParentID     int    `json:"parentId"`
 	SortOrder    int    `json:"sortOrder"`
 	IsActive     bool   `json:"isActive"`
-	WorkflowID   *int   `json:"workflowId"`
+	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
 	DepartmentID *int   `json:"departmentId"`
 	TenantID     int    `json:"tenantId"`
 }
@@ -424,7 +424,7 @@ type UpdateCategoryRequest struct {
 	ParentID     *int   `json:"parentId"`
 	SortOrder    *int   `json:"sortOrder"`
 	IsActive     *bool  `json:"isActive"`
-	WorkflowID   *int   `json:"workflowId"`
+	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
 	DepartmentID *int   `json:"departmentId"`
 }
 

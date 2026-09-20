@@ -9,7 +9,6 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -125,16 +124,16 @@ func (_c *TicketCategoryCreate) SetNillableDepartmentID(v *int) *TicketCategoryC
 	return _c
 }
 
-// SetWorkflowID sets the "workflow_id" field.
-func (_c *TicketCategoryCreate) SetWorkflowID(v int) *TicketCategoryCreate {
-	_c.mutation.SetWorkflowID(v)
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_c *TicketCategoryCreate) SetWorkflowDefinitionKey(v string) *TicketCategoryCreate {
+	_c.mutation.SetWorkflowDefinitionKey(v)
 	return _c
 }
 
-// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (_c *TicketCategoryCreate) SetNillableWorkflowID(v *int) *TicketCategoryCreate {
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_c *TicketCategoryCreate) SetNillableWorkflowDefinitionKey(v *string) *TicketCategoryCreate {
 	if v != nil {
-		_c.SetWorkflowID(*v)
+		_c.SetWorkflowDefinitionKey(*v)
 	}
 	return _c
 }
@@ -205,11 +204,6 @@ func (_c *TicketCategoryCreate) SetParent(v *TicketCategory) *TicketCategoryCrea
 // SetDepartment sets the "department" edge to the Department entity.
 func (_c *TicketCategoryCreate) SetDepartment(v *Department) *TicketCategoryCreate {
 	return _c.SetDepartmentID(v.ID)
-}
-
-// SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (_c *TicketCategoryCreate) SetWorkflow(v *Workflow) *TicketCategoryCreate {
-	return _c.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the TicketCategoryMutation object of the builder.
@@ -304,6 +298,11 @@ func (_c *TicketCategoryCreate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.WorkflowDefinitionKey(); ok {
+		if err := ticketcategory.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.workflow_definition_key": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketCategory.created_at"`)}
 	}
@@ -363,6 +362,10 @@ func (_c *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.CreateS
 	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketcategory.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
+	}
+	if value, ok := _c.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(ticketcategory.FieldWorkflowDefinitionKey, field.TypeString, value)
+		_node.WorkflowDefinitionKey = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcategory.FieldCreatedAt, field.TypeTime, value)
@@ -436,23 +439,6 @@ func (_c *TicketCategoryCreate) createSpec() (*TicketCategory, *sqlgraph.CreateS
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.DepartmentID = nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.WorkflowIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   ticketcategory.WorkflowTable,
-			Columns: []string{ticketcategory.WorkflowColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.WorkflowID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

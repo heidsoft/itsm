@@ -10,7 +10,6 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -196,23 +195,23 @@ func (_u *TicketCategoryUpdate) ClearDepartmentID() *TicketCategoryUpdate {
 	return _u
 }
 
-// SetWorkflowID sets the "workflow_id" field.
-func (_u *TicketCategoryUpdate) SetWorkflowID(v int) *TicketCategoryUpdate {
-	_u.mutation.SetWorkflowID(v)
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_u *TicketCategoryUpdate) SetWorkflowDefinitionKey(v string) *TicketCategoryUpdate {
+	_u.mutation.SetWorkflowDefinitionKey(v)
 	return _u
 }
 
-// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (_u *TicketCategoryUpdate) SetNillableWorkflowID(v *int) *TicketCategoryUpdate {
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_u *TicketCategoryUpdate) SetNillableWorkflowDefinitionKey(v *string) *TicketCategoryUpdate {
 	if v != nil {
-		_u.SetWorkflowID(*v)
+		_u.SetWorkflowDefinitionKey(*v)
 	}
 	return _u
 }
 
-// ClearWorkflowID clears the value of the "workflow_id" field.
-func (_u *TicketCategoryUpdate) ClearWorkflowID() *TicketCategoryUpdate {
-	_u.mutation.ClearWorkflowID()
+// ClearWorkflowDefinitionKey clears the value of the "workflow_definition_key" field.
+func (_u *TicketCategoryUpdate) ClearWorkflowDefinitionKey() *TicketCategoryUpdate {
+	_u.mutation.ClearWorkflowDefinitionKey()
 	return _u
 }
 
@@ -276,11 +275,6 @@ func (_u *TicketCategoryUpdate) SetDepartment(v *Department) *TicketCategoryUpda
 	return _u.SetDepartmentID(v.ID)
 }
 
-// SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (_u *TicketCategoryUpdate) SetWorkflow(v *Workflow) *TicketCategoryUpdate {
-	return _u.SetWorkflowID(v.ID)
-}
-
 // Mutation returns the TicketCategoryMutation object of the builder.
 func (_u *TicketCategoryUpdate) Mutation() *TicketCategoryMutation {
 	return _u.mutation
@@ -340,12 +334,6 @@ func (_u *TicketCategoryUpdate) ClearDepartment() *TicketCategoryUpdate {
 	return _u
 }
 
-// ClearWorkflow clears the "workflow" edge to the Workflow entity.
-func (_u *TicketCategoryUpdate) ClearWorkflow() *TicketCategoryUpdate {
-	_u.mutation.ClearWorkflow()
-	return _u
-}
-
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *TicketCategoryUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -399,6 +387,11 @@ func (_u *TicketCategoryUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		if err := ticketcategory.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.workflow_definition_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -446,6 +439,12 @@ func (_u *TicketCategoryUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketcategory.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(ticketcategory.FieldWorkflowDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.WorkflowDefinitionKeyCleared() {
+		_spec.ClearField(ticketcategory.FieldWorkflowDefinitionKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcategory.FieldCreatedAt, field.TypeTime, value)
@@ -594,35 +593,6 @@ func (_u *TicketCategoryUpdate) sqlSave(ctx context.Context) (_node int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.WorkflowCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   ticketcategory.WorkflowTable,
-			Columns: []string{ticketcategory.WorkflowColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.WorkflowIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   ticketcategory.WorkflowTable,
-			Columns: []string{ticketcategory.WorkflowColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -815,23 +785,23 @@ func (_u *TicketCategoryUpdateOne) ClearDepartmentID() *TicketCategoryUpdateOne 
 	return _u
 }
 
-// SetWorkflowID sets the "workflow_id" field.
-func (_u *TicketCategoryUpdateOne) SetWorkflowID(v int) *TicketCategoryUpdateOne {
-	_u.mutation.SetWorkflowID(v)
+// SetWorkflowDefinitionKey sets the "workflow_definition_key" field.
+func (_u *TicketCategoryUpdateOne) SetWorkflowDefinitionKey(v string) *TicketCategoryUpdateOne {
+	_u.mutation.SetWorkflowDefinitionKey(v)
 	return _u
 }
 
-// SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (_u *TicketCategoryUpdateOne) SetNillableWorkflowID(v *int) *TicketCategoryUpdateOne {
+// SetNillableWorkflowDefinitionKey sets the "workflow_definition_key" field if the given value is not nil.
+func (_u *TicketCategoryUpdateOne) SetNillableWorkflowDefinitionKey(v *string) *TicketCategoryUpdateOne {
 	if v != nil {
-		_u.SetWorkflowID(*v)
+		_u.SetWorkflowDefinitionKey(*v)
 	}
 	return _u
 }
 
-// ClearWorkflowID clears the value of the "workflow_id" field.
-func (_u *TicketCategoryUpdateOne) ClearWorkflowID() *TicketCategoryUpdateOne {
-	_u.mutation.ClearWorkflowID()
+// ClearWorkflowDefinitionKey clears the value of the "workflow_definition_key" field.
+func (_u *TicketCategoryUpdateOne) ClearWorkflowDefinitionKey() *TicketCategoryUpdateOne {
+	_u.mutation.ClearWorkflowDefinitionKey()
 	return _u
 }
 
@@ -895,11 +865,6 @@ func (_u *TicketCategoryUpdateOne) SetDepartment(v *Department) *TicketCategoryU
 	return _u.SetDepartmentID(v.ID)
 }
 
-// SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (_u *TicketCategoryUpdateOne) SetWorkflow(v *Workflow) *TicketCategoryUpdateOne {
-	return _u.SetWorkflowID(v.ID)
-}
-
 // Mutation returns the TicketCategoryMutation object of the builder.
 func (_u *TicketCategoryUpdateOne) Mutation() *TicketCategoryMutation {
 	return _u.mutation
@@ -956,12 +921,6 @@ func (_u *TicketCategoryUpdateOne) ClearParent() *TicketCategoryUpdateOne {
 // ClearDepartment clears the "department" edge to the Department entity.
 func (_u *TicketCategoryUpdateOne) ClearDepartment() *TicketCategoryUpdateOne {
 	_u.mutation.ClearDepartment()
-	return _u
-}
-
-// ClearWorkflow clears the "workflow" edge to the Workflow entity.
-func (_u *TicketCategoryUpdateOne) ClearWorkflow() *TicketCategoryUpdateOne {
-	_u.mutation.ClearWorkflow()
 	return _u
 }
 
@@ -1031,6 +990,11 @@ func (_u *TicketCategoryUpdateOne) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		if err := ticketcategory.WorkflowDefinitionKeyValidator(v); err != nil {
+			return &ValidationError{Name: "workflow_definition_key", err: fmt.Errorf(`ent: validator failed for field "TicketCategory.workflow_definition_key": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1095,6 +1059,12 @@ func (_u *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TicketCa
 	}
 	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketcategory.FieldTenantID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.WorkflowDefinitionKey(); ok {
+		_spec.SetField(ticketcategory.FieldWorkflowDefinitionKey, field.TypeString, value)
+	}
+	if _u.mutation.WorkflowDefinitionKeyCleared() {
+		_spec.ClearField(ticketcategory.FieldWorkflowDefinitionKey, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcategory.FieldCreatedAt, field.TypeTime, value)
@@ -1243,35 +1213,6 @@ func (_u *TicketCategoryUpdateOne) sqlSave(ctx context.Context) (_node *TicketCa
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if _u.mutation.WorkflowCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   ticketcategory.WorkflowTable,
-			Columns: []string{ticketcategory.WorkflowColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := _u.mutation.WorkflowIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   ticketcategory.WorkflowTable,
-			Columns: []string{ticketcategory.WorkflowColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

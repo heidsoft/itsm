@@ -12,7 +12,6 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/user"
-	"itsm-backend/ent/workflow"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -176,21 +175,6 @@ func (_c *DepartmentCreate) AddTickets(v ...*Ticket) *DepartmentCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddTicketIDs(ids...)
-}
-
-// AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (_c *DepartmentCreate) AddWorkflowIDs(ids ...int) *DepartmentCreate {
-	_c.mutation.AddWorkflowIDs(ids...)
-	return _c
-}
-
-// AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (_c *DepartmentCreate) AddWorkflows(v ...*Workflow) *DepartmentCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return _c.AddWorkflowIDs(ids...)
 }
 
 // AddCategoryIDs adds the "categories" edge to the TicketCategory entity by IDs.
@@ -431,22 +415,6 @@ func (_c *DepartmentCreate) createSpec() (*Department, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := _c.mutation.WorkflowsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.WorkflowsTable,
-			Columns: []string{department.WorkflowsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(workflow.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

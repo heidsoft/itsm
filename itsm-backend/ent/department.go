@@ -51,8 +51,6 @@ type DepartmentEdges struct {
 	Users []*User `json:"users,omitempty"`
 	// 部门工单
 	Tickets []*Ticket `json:"tickets,omitempty"`
-	// 部门工作流
-	Workflows []*Workflow `json:"workflows,omitempty"`
 	// 部门工单分类
 	Categories []*TicketCategory `json:"categories,omitempty"`
 	// 部门项目
@@ -61,7 +59,7 @@ type DepartmentEdges struct {
 	Tags []*Tag `json:"tags,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [7]bool
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -102,19 +100,10 @@ func (e DepartmentEdges) TicketsOrErr() ([]*Ticket, error) {
 	return nil, &NotLoadedError{edge: "tickets"}
 }
 
-// WorkflowsOrErr returns the Workflows value or an error if the edge
-// was not loaded in eager-loading.
-func (e DepartmentEdges) WorkflowsOrErr() ([]*Workflow, error) {
-	if e.loadedTypes[4] {
-		return e.Workflows, nil
-	}
-	return nil, &NotLoadedError{edge: "workflows"}
-}
-
 // CategoriesOrErr returns the Categories value or an error if the edge
 // was not loaded in eager-loading.
 func (e DepartmentEdges) CategoriesOrErr() ([]*TicketCategory, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[4] {
 		return e.Categories, nil
 	}
 	return nil, &NotLoadedError{edge: "categories"}
@@ -123,7 +112,7 @@ func (e DepartmentEdges) CategoriesOrErr() ([]*TicketCategory, error) {
 // ProjectsOrErr returns the Projects value or an error if the edge
 // was not loaded in eager-loading.
 func (e DepartmentEdges) ProjectsOrErr() ([]*Project, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[5] {
 		return e.Projects, nil
 	}
 	return nil, &NotLoadedError{edge: "projects"}
@@ -132,7 +121,7 @@ func (e DepartmentEdges) ProjectsOrErr() ([]*Project, error) {
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e DepartmentEdges) TagsOrErr() ([]*Tag, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[6] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -256,11 +245,6 @@ func (_m *Department) QueryUsers() *UserQuery {
 // QueryTickets queries the "tickets" edge of the Department entity.
 func (_m *Department) QueryTickets() *TicketQuery {
 	return NewDepartmentClient(_m.config).QueryTickets(_m)
-}
-
-// QueryWorkflows queries the "workflows" edge of the Department entity.
-func (_m *Department) QueryWorkflows() *WorkflowQuery {
-	return NewDepartmentClient(_m.config).QueryWorkflows(_m)
 }
 
 // QueryCategories queries the "categories" edge of the Department entity.

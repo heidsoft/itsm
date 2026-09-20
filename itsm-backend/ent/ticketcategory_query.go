@@ -10,7 +10,6 @@ import (
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/ent/workflow"
 	"math"
 
 	"entgo.io/ent"
@@ -30,7 +29,6 @@ type TicketCategoryQuery struct {
 	withChildren   *TicketCategoryQuery
 	withParent     *TicketCategoryQuery
 	withDepartment *DepartmentQuery
-	withWorkflow   *WorkflowQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -148,28 +146,6 @@ func (_q *TicketCategoryQuery) QueryDepartment() *DepartmentQuery {
 			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketcategory.DepartmentTable, ticketcategory.DepartmentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryWorkflow chains the current query on the "workflow" edge.
-func (_q *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
-	query := (&WorkflowClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(ticketcategory.Table, ticketcategory.FieldID, selector),
-			sqlgraph.To(workflow.Table, workflow.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, ticketcategory.WorkflowTable, ticketcategory.WorkflowColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -373,7 +349,6 @@ func (_q *TicketCategoryQuery) Clone() *TicketCategoryQuery {
 		withChildren:   _q.withChildren.Clone(),
 		withParent:     _q.withParent.Clone(),
 		withDepartment: _q.withDepartment.Clone(),
-		withWorkflow:   _q.withWorkflow.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -421,17 +396,6 @@ func (_q *TicketCategoryQuery) WithDepartment(opts ...func(*DepartmentQuery)) *T
 		opt(query)
 	}
 	_q.withDepartment = query
-	return _q
-}
-
-// WithWorkflow tells the query-builder to eager-load the nodes that are connected to
-// the "workflow" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *TicketCategoryQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *TicketCategoryQuery {
-	query := (&WorkflowClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withWorkflow = query
 	return _q
 }
 
@@ -513,12 +477,11 @@ func (_q *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*TicketCategory{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [4]bool{
 			_q.withTickets != nil,
 			_q.withChildren != nil,
 			_q.withParent != nil,
 			_q.withDepartment != nil,
-			_q.withWorkflow != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -562,12 +525,6 @@ func (_q *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if query := _q.withDepartment; query != nil {
 		if err := _q.loadDepartment(ctx, query, nodes, nil,
 			func(n *TicketCategory, e *Department) { n.Edges.Department = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withWorkflow; query != nil {
-		if err := _q.loadWorkflow(ctx, query, nodes, nil,
-			func(n *TicketCategory, e *Workflow) { n.Edges.Workflow = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -723,35 +680,6 @@ func (_q *TicketCategoryQuery) loadDepartment(ctx context.Context, query *Depart
 	}
 	return nil
 }
-func (_q *TicketCategoryQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Workflow)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*TicketCategory)
-	for i := range nodes {
-		fk := nodes[i].WorkflowID
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(workflow.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "workflow_id" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
 
 func (_q *TicketCategoryQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -783,9 +711,6 @@ func (_q *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if _q.withDepartment != nil {
 			_spec.Node.AddColumnOnce(ticketcategory.FieldDepartmentID)
-		}
-		if _q.withWorkflow != nil {
-			_spec.Node.AddColumnOnce(ticketcategory.FieldWorkflowID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

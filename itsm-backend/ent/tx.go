@@ -54,6 +54,8 @@ type Tx struct {
 	Change *ChangeClient
 	// ChangePIR is the client for interacting with the ChangePIR builders.
 	ChangePIR *ChangePIRClient
+	// ChangeReviewMember is the client for interacting with the ChangeReviewMember builders.
+	ChangeReviewMember *ChangeReviewMemberClient
 	// CloudAccount is the client for interacting with the CloudAccount builders.
 	CloudAccount *CloudAccountClient
 	// CloudResource is the client for interacting with the CloudResource builders.
@@ -274,16 +276,8 @@ type Tx struct {
 	User *UserClient
 	// Vendor is the client for interacting with the Vendor builders.
 	Vendor *VendorClient
-	// Workflow is the client for interacting with the Workflow builders.
-	Workflow *WorkflowClient
-	// WorkflowInstance is the client for interacting with the WorkflowInstance builders.
-	WorkflowInstance *WorkflowInstanceClient
-	// WorkflowTask is the client for interacting with the WorkflowTask builders.
-	WorkflowTask *WorkflowTaskClient
 	// WorkflowTemplate is the client for interacting with the WorkflowTemplate builders.
 	WorkflowTemplate *WorkflowTemplateClient
-	// WorkflowVersion is the client for interacting with the WorkflowVersion builders.
-	WorkflowVersion *WorkflowVersionClient
 
 	// lazily loaded.
 	client     *Client
@@ -436,6 +430,7 @@ func (tx *Tx) init() {
 	tx.CMDBSavedView = NewCMDBSavedViewClient(tx.config)
 	tx.Change = NewChangeClient(tx.config)
 	tx.ChangePIR = NewChangePIRClient(tx.config)
+	tx.ChangeReviewMember = NewChangeReviewMemberClient(tx.config)
 	tx.CloudAccount = NewCloudAccountClient(tx.config)
 	tx.CloudResource = NewCloudResourceClient(tx.config)
 	tx.CloudService = NewCloudServiceClient(tx.config)
@@ -546,11 +541,7 @@ func (tx *Tx) init() {
 	tx.ToolInvocation = NewToolInvocationClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.Vendor = NewVendorClient(tx.config)
-	tx.Workflow = NewWorkflowClient(tx.config)
-	tx.WorkflowInstance = NewWorkflowInstanceClient(tx.config)
-	tx.WorkflowTask = NewWorkflowTaskClient(tx.config)
 	tx.WorkflowTemplate = NewWorkflowTemplateClient(tx.config)
-	tx.WorkflowVersion = NewWorkflowVersionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

@@ -639,15 +639,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			SetupCloudRoutes(tenant.(*gin.RouterGroup), config.CloudHandler)
 		}
 
-		// ==================== Legacy Compatibility Routes ====================
-		// Legacy /workflows → /bpmn/process-definitions (BPMN handler handles /bpmn/*)
-		tenant.GET("/workflows", middleware.RequirePermission("workflow", "read"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
-		})
-		tenant.POST("/workflows", middleware.RequirePermission("workflow", "write"), func(c *gin.Context) {
-			common.Fail(c, common.BadRequestCode, "请使用 /api/v1/bpmn/process-definitions")
-		})
-
 		if config.TicketTypeHandler != nil {
 			SetupTicketTypeRoutes(tenant.(*gin.RouterGroup), config.TicketTypeHandler)
 		}

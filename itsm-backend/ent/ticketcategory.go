@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/ticketcategory"
-	"itsm-backend/ent/workflow"
 	"strings"
 	"time"
 
@@ -37,8 +36,8 @@ type TicketCategory struct {
 	TenantID int `json:"tenant_id,omitempty"`
 	// 所属部门ID
 	DepartmentID int `json:"department_id,omitempty"`
-	// 关联工作流ID
-	WorkflowID int `json:"workflow_id,omitempty"`
+	// 关联BPMN流程定义Key
+	WorkflowDefinitionKey string `json:"workflow_definition_key,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -59,11 +58,9 @@ type TicketCategoryEdges struct {
 	Parent *TicketCategory `json:"parent,omitempty"`
 	// 所属部门
 	Department *Department `json:"department,omitempty"`
-	// 关联工作流
-	Workflow *Workflow `json:"workflow,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [4]bool
 }
 
 // TicketsOrErr returns the Tickets value or an error if the edge
@@ -106,17 +103,6 @@ func (e TicketCategoryEdges) DepartmentOrErr() (*Department, error) {
 	return nil, &NotLoadedError{edge: "department"}
 }
 
-// WorkflowOrErr returns the Workflow value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TicketCategoryEdges) WorkflowOrErr() (*Workflow, error) {
-	if e.Workflow != nil {
-		return e.Workflow, nil
-	} else if e.loadedTypes[4] {
-		return nil, &NotFoundError{label: workflow.Label}
-	}
-	return nil, &NotLoadedError{edge: "workflow"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*TicketCategory) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -124,9 +110,9 @@ func (*TicketCategory) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case ticketcategory.FieldIsActive:
 			values[i] = new(sql.NullBool)
-		case ticketcategory.FieldID, ticketcategory.FieldParentID, ticketcategory.FieldLevel, ticketcategory.FieldSortOrder, ticketcategory.FieldTenantID, ticketcategory.FieldDepartmentID, ticketcategory.FieldWorkflowID:
+		case ticketcategory.FieldID, ticketcategory.FieldParentID, ticketcategory.FieldLevel, ticketcategory.FieldSortOrder, ticketcategory.FieldTenantID, ticketcategory.FieldDepartmentID:
 			values[i] = new(sql.NullInt64)
-		case ticketcategory.FieldName, ticketcategory.FieldDescription, ticketcategory.FieldCode:
+		case ticketcategory.FieldName, ticketcategory.FieldDescription, ticketcategory.FieldCode, ticketcategory.FieldWorkflowDefinitionKey:
 			values[i] = new(sql.NullString)
 		case ticketcategory.FieldCreatedAt, ticketcategory.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -205,11 +191,11 @@ func (_m *TicketCategory) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.DepartmentID = int(value.Int64)
 			}
-		case ticketcategory.FieldWorkflowID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
+		case ticketcategory.FieldWorkflowDefinitionKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field workflow_definition_key", values[i])
 			} else if value.Valid {
-				_m.WorkflowID = int(value.Int64)
+				_m.WorkflowDefinitionKey = value.String
 			}
 		case ticketcategory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -254,11 +240,6 @@ func (_m *TicketCategory) QueryParent() *TicketCategoryQuery {
 // QueryDepartment queries the "department" edge of the TicketCategory entity.
 func (_m *TicketCategory) QueryDepartment() *DepartmentQuery {
 	return NewTicketCategoryClient(_m.config).QueryDepartment(_m)
-}
-
-// QueryWorkflow queries the "workflow" edge of the TicketCategory entity.
-func (_m *TicketCategory) QueryWorkflow() *WorkflowQuery {
-	return NewTicketCategoryClient(_m.config).QueryWorkflow(_m)
 }
 
 // Update returns a builder for updating this TicketCategory.
@@ -311,8 +292,8 @@ func (_m *TicketCategory) String() string {
 	builder.WriteString("department_id=")
 	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
-	builder.WriteString("workflow_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowID))
+	builder.WriteString("workflow_definition_key=")
+	builder.WriteString(_m.WorkflowDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

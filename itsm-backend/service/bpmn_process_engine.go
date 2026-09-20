@@ -7,7 +7,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/workflowtask"
+	"itsm-backend/ent/processtask"
 	"itsm-backend/service/bpmn"
 
 	"go.uber.org/zap"
@@ -146,9 +146,9 @@ func (e *CustomProcessEngine) registerProcessFunctions() {
 	// 获取任务列表
 	e.exprEngine.RegisterFunction("getTasks", func(ctx context.Context, assignee string) []interface{} {
 		// 从数据库查询任务
-		tasks, err := e.client.WorkflowTask.Query().
-			Where(workflowtask.Assignee(assignee)).
-			Where(workflowtask.CompletedAtIsNil()).
+		tasks, err := e.client.ProcessTask.Query().
+			Where(processtask.Assignee(assignee)).
+			Where(processtask.CompletedTimeIsNil()).
 			All(ctx)
 		if err != nil {
 			e.logger.Warnw("Failed to query tasks", "error", err)
@@ -158,8 +158,8 @@ func (e *CustomProcessEngine) registerProcessFunctions() {
 		for i, task := range tasks {
 			result[i] = map[string]interface{}{
 				"id":          task.TaskID,
-				"name":        task.Name,
-				"instance_id": task.InstanceID,
+				"name":        task.TaskName,
+				"instance_id": task.ProcessInstanceID,
 			}
 		}
 		return result

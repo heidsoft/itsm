@@ -3,7 +3,6 @@ package dto
 import (
 	"encoding/json"
 	"strings"
-	"time"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
@@ -778,146 +777,6 @@ func ToSLAPolicyResponseList(policies []*ent.SLAPolicy) []*SLAPolicyResponse {
 // ===================================
 // Workflow Mappers
 // ===================================
-
-// WorkflowResponse 工作流响应
-type WorkflowResponse struct {
-	ID           int                    `json:"id"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	Type         string                 `json:"type"`
-	Definition   map[string]interface{} `json:"definition"`
-	Version      string                 `json:"version"`
-	IsActive     bool                   `json:"isActive"`
-	TenantID     int                    `json:"tenantId"`
-	DepartmentID *int                   `json:"departmentId,omitempty"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
-}
-
-// WorkflowInstanceResponse 工作流实例响应
-type WorkflowInstanceResponse struct {
-	ID          int                    `json:"id"`
-	Status      string                 `json:"status"`
-	CurrentStep string                 `json:"currentStep"`
-	Context     map[string]interface{} `json:"context"`
-	WorkflowID  int                    `json:"workflowId"`
-	EntityID    int                    `json:"entityId"`
-	EntityType  string                 `json:"entityType"`
-	TenantID    int                    `json:"tenantId"`
-	StartedAt   time.Time              `json:"startedAt"`
-	CompletedAt *time.Time             `json:"completedAt,omitempty"`
-	CreatedAt   time.Time              `json:"createdAt"`
-	UpdatedAt   time.Time              `json:"updatedAt"`
-}
-
-type WorkflowListResponse struct {
-	Workflows []*WorkflowResponse `json:"workflows"`
-	Total     int                 `json:"total"`
-	Page      int                 `json:"page"`
-	PageSize  int                 `json:"pageSize"`
-}
-
-type WorkflowInstanceListResponse struct {
-	Instances []*WorkflowInstanceResponse `json:"instances"`
-	Total     int                         `json:"total"`
-	Page      int                         `json:"page"`
-	PageSize  int                         `json:"pageSize"`
-}
-
-// ToWorkflowResponse converts an ent.Workflow to WorkflowResponse
-func ToWorkflowResponse(workflow *ent.Workflow) *WorkflowResponse {
-	if workflow == nil {
-		return nil
-	}
-
-	// Parse definition JSON bytes to map
-	var definition map[string]interface{}
-	if workflow.Definition != nil {
-		_ = json.Unmarshal(workflow.Definition, &definition)
-	}
-
-	response := &WorkflowResponse{
-		ID:          workflow.ID,
-		Name:        workflow.Name,
-		Description: workflow.Description,
-		Type:        workflow.Type,
-		Definition:  definition,
-		Version:     workflow.Version,
-		IsActive:    workflow.IsActive,
-		TenantID:    workflow.TenantID,
-		CreatedAt:   workflow.CreatedAt,
-		UpdatedAt:   workflow.UpdatedAt,
-	}
-
-	if workflow.DepartmentID > 0 {
-		response.DepartmentID = &workflow.DepartmentID
-	}
-
-	return response
-}
-
-// ToWorkflowResponseList converts a slice of ent.Workflow to WorkflowResponse slice
-func ToWorkflowResponseList(workflows []*ent.Workflow) []*WorkflowResponse {
-	if workflows == nil {
-		return nil
-	}
-	responses := make([]*WorkflowResponse, 0, len(workflows))
-	for _, workflow := range workflows {
-		if workflow != nil {
-			responses = append(responses, ToWorkflowResponse(workflow))
-		}
-	}
-	return responses
-}
-
-// ToWorkflowInstanceResponse converts an ent.WorkflowInstance to WorkflowInstanceResponse
-func ToWorkflowInstanceResponse(instance *ent.WorkflowInstance) *WorkflowInstanceResponse {
-	if instance == nil {
-		return nil
-	}
-
-	// Parse context JSON bytes to map
-	var context map[string]interface{}
-	if instance.Context != nil {
-		_ = json.Unmarshal(instance.Context, &context)
-	}
-
-	response := &WorkflowInstanceResponse{
-		ID:          instance.ID,
-		Status:      instance.Status,
-		CurrentStep: instance.CurrentStep,
-		Context:     context,
-		WorkflowID:  instance.WorkflowID,
-		EntityID:    instance.EntityID,
-		EntityType:  instance.EntityType,
-		TenantID:    instance.TenantID,
-		StartedAt:   instance.StartedAt,
-		CreatedAt:   instance.CreatedAt,
-		UpdatedAt:   instance.UpdatedAt,
-	}
-
-	if !instance.CompletedAt.IsZero() {
-		response.CompletedAt = &instance.CompletedAt
-	}
-
-	return response
-}
-
-// ToWorkflowInstanceResponseList converts a slice of ent.WorkflowInstance to WorkflowInstanceResponse slice
-func ToWorkflowInstanceResponseList(instances []*ent.WorkflowInstance) []*WorkflowInstanceResponse {
-	if instances == nil {
-		return nil
-	}
-	responses := make([]*WorkflowInstanceResponse, 0, len(instances))
-	for _, instance := range instances {
-		if instance != nil {
-			responses = append(responses, ToWorkflowInstanceResponse(instance))
-		}
-	}
-	return responses
-}
-
-// ===================================
 // TicketTag Mappers
 // ===================================
 
@@ -978,8 +837,8 @@ func ToTicketCategoryResponse(category *ent.TicketCategory) *TicketCategoryRespo
 	if category.ParentID > 0 {
 		response.ParentID = &category.ParentID
 	}
-	if category.WorkflowID > 0 {
-		response.WorkflowID = &category.WorkflowID
+	if category.WorkflowDefinitionKey != "" {
+		response.WorkflowDefinitionKey = category.WorkflowDefinitionKey
 	}
 	if category.DepartmentID > 0 {
 		response.DepartmentID = &category.DepartmentID

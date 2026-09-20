@@ -260,6 +260,18 @@ func (f ChangePIRFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChangePIRMutation", m)
 }
 
+// The ChangeReviewMemberFunc type is an adapter to allow the use of ordinary
+// function as ChangeReviewMember mutator.
+type ChangeReviewMemberFunc func(context.Context, *ent.ChangeReviewMemberMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ChangeReviewMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ChangeReviewMemberMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ChangeReviewMemberMutation", m)
+}
+
 // The CloudAccountFunc type is an adapter to allow the use of ordinary
 // function as CloudAccount mutator.
 type CloudAccountFunc func(context.Context, *ent.CloudAccountMutation) (ent.Value, error)
@@ -1580,42 +1592,6 @@ func (f VendorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VendorMutation", m)
 }
 
-// The WorkflowFunc type is an adapter to allow the use of ordinary
-// function as Workflow mutator.
-type WorkflowFunc func(context.Context, *ent.WorkflowMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f WorkflowFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.WorkflowMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowMutation", m)
-}
-
-// The WorkflowInstanceFunc type is an adapter to allow the use of ordinary
-// function as WorkflowInstance mutator.
-type WorkflowInstanceFunc func(context.Context, *ent.WorkflowInstanceMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f WorkflowInstanceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.WorkflowInstanceMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowInstanceMutation", m)
-}
-
-// The WorkflowTaskFunc type is an adapter to allow the use of ordinary
-// function as WorkflowTask mutator.
-type WorkflowTaskFunc func(context.Context, *ent.WorkflowTaskMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f WorkflowTaskFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.WorkflowTaskMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowTaskMutation", m)
-}
-
 // The WorkflowTemplateFunc type is an adapter to allow the use of ordinary
 // function as WorkflowTemplate mutator.
 type WorkflowTemplateFunc func(context.Context, *ent.WorkflowTemplateMutation) (ent.Value, error)
@@ -1626,18 +1602,6 @@ func (f WorkflowTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.V
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowTemplateMutation", m)
-}
-
-// The WorkflowVersionFunc type is an adapter to allow the use of ordinary
-// function as WorkflowVersion mutator.
-type WorkflowVersionFunc func(context.Context, *ent.WorkflowVersionMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f WorkflowVersionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.WorkflowVersionMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.WorkflowVersionMutation", m)
 }
 
 // Condition is a hook condition function.

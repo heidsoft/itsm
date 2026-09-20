@@ -61,8 +61,6 @@ func (Department) Edges() []ent.Edge {
 			Comment("部门成员"),
 		edge.To("tickets", Ticket.Type).
 			Comment("部门工单"),
-		edge.To("workflows", Workflow.Type).
-			Comment("部门工作流"),
 		edge.To("categories", TicketCategory.Type).
 			Comment("部门工单分类"),
 		edge.To("projects", Project.Type).

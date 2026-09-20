@@ -15,7 +15,7 @@ export interface TicketCategory {
   path?: string;
   sortOrder: number;
   isActive: boolean;
-  workflowId?: number | null;
+  workflowDefinitionKey?: string;
   departmentId?: number | null;
   ticketCount?: number;
   children?: TicketCategory[];
@@ -31,7 +31,7 @@ export interface CreateCategoryRequest {
   parentId?: number;
   sortOrder?: number;
   isActive?: boolean;
-  workflowId?: number;
+  workflowDefinitionKey?: string;
   departmentId?: number;
 }
 
@@ -43,7 +43,7 @@ export interface UpdateCategoryRequest {
   parentId?: number;
   sortOrder?: number;
   isActive?: boolean;
-  workflowId?: number;
+  workflowDefinitionKey?: string;
   departmentId?: number;
 }
 
