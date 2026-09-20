@@ -38,7 +38,7 @@ import {
   ChangeRiskLabels,
 } from '@/constants/change';
 import type { Change, ApprovalChainItem } from '@/types/biz/change';
-import CabStepBadge from '@/components/cab/CabStepBadge';
+import ReviewStepBadge from '@/components/change-review/ReviewStepBadge';
 import ChangeRiskAssessment from './ChangeRiskAssessment';
 import ChangeCMDBImpactPanel from './ChangeCMDBImpactPanel';
 import ChangeImpactAnalysis from './ChangeImpactAnalysis';
@@ -540,7 +540,7 @@ const ChangeDetail: React.FC = () => {
                           title={
                             <Space wrap>
                               <Text strong>{record.approverName}</Text>
-                              <CabStepBadge role={record.role} isRequired={record.isRequired} />
+                              <ReviewStepBadge role={record.role} isRequired={record.isRequired} />
                               <Tag color={statusColors[record.status]}>
                                 {ChangeStatusLabels[record.status as ChangeStatus]}
                               </Tag>

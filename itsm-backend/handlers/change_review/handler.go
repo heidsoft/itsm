@@ -1,4 +1,4 @@
-package cab
+package change_review
 
 import (
 	"strconv"
@@ -11,13 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// Handler CAB 成员名册 HTTP 层（仅名册管理；CAB 审批流转由审批链引擎驱动）。
+// Handler 变更评审组成员名册 HTTP 层（仅名册管理；评审审批流转由审批链引擎驱动）。
 type Handler struct {
-	svc *service.CABService
+	svc *service.ChangeReviewService
 }
 
-// NewHandler 创建 CAB handler
-func NewHandler(svc *service.CABService, _ *zap.SugaredLogger) *Handler {
+// NewHandler 创建变更评审组 handler
+func NewHandler(svc *service.ChangeReviewService, _ *zap.SugaredLogger) *Handler {
 	return &Handler{svc: svc}
 }
 
@@ -31,18 +31,18 @@ func tenantIDFromCtx(c *gin.Context) (int, bool) {
 	return tid, ok
 }
 
-// ListCABMembers GET /api/v1/cab/members?type=CAB|ECAB
-func (h *Handler) ListCABMembers(c *gin.Context) {
+// ListMembers GET /api/v1/change-review/members?type=REVIEW|EREVIEW
+func (h *Handler) ListMembers(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
-	boardType := c.DefaultQuery("type", "CAB")
-	if boardType != "CAB" && boardType != "ECAB" {
-		boardType = "CAB"
+	boardType := c.DefaultQuery("type", "REVIEW")
+	if boardType != "REVIEW" && boardType != "EREVIEW" {
+		boardType = "REVIEW"
 	}
-	members, err := h.svc.ListCABMembers(c.Request.Context(), boardType, tenantID)
+	members, err := h.svc.ListMembers(c.Request.Context(), boardType, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -50,19 +50,19 @@ func (h *Handler) ListCABMembers(c *gin.Context) {
 	common.Success(c, members)
 }
 
-// AddCABMember POST /api/v1/cab/members
-func (h *Handler) AddCABMember(c *gin.Context) {
+// AddMember POST /api/v1/change-review/members
+func (h *Handler) AddMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
 		return
 	}
-	var req dto.AddCABMemberRequest
+	var req dto.AddChangeReviewMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	member, err := h.svc.AddCABMember(c.Request.Context(), &req, tenantID)
+	member, err := h.svc.AddMember(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -70,8 +70,8 @@ func (h *Handler) AddCABMember(c *gin.Context) {
 	common.Success(c, member)
 }
 
-// UpdateCABMember PUT /api/v1/cab/members/:id
-func (h *Handler) UpdateCABMember(c *gin.Context) {
+// UpdateMember PUT /api/v1/change-review/members/:id
+func (h *Handler) UpdateMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
@@ -82,12 +82,12 @@ func (h *Handler) UpdateCABMember(c *gin.Context) {
 		common.Fail(c, common.BadRequestCode, "无效的成员ID")
 		return
 	}
-	var req dto.UpdateCABMemberRequest
+	var req dto.UpdateChangeReviewMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	member, err := h.svc.UpdateCABMember(c.Request.Context(), id, tenantID, req.Role, req.IsActive)
+	member, err := h.svc.UpdateMember(c.Request.Context(), id, tenantID, req.Role, req.IsActive)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -95,8 +95,8 @@ func (h *Handler) UpdateCABMember(c *gin.Context) {
 	common.Success(c, member)
 }
 
-// RemoveCABMember DELETE /api/v1/cab/members/:id
-func (h *Handler) RemoveCABMember(c *gin.Context) {
+// RemoveMember DELETE /api/v1/change-review/members/:id
+func (h *Handler) RemoveMember(c *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
 		common.Fail(c, common.AuthFailedCode, "租户信息缺失")
@@ -107,7 +107,7 @@ func (h *Handler) RemoveCABMember(c *gin.Context) {
 		common.Fail(c, common.BadRequestCode, "无效的成员ID")
 		return
 	}
-	if err := h.svc.RemoveCABMember(c.Request.Context(), id, tenantID); err != nil {
+	if err := h.svc.RemoveMember(c.Request.Context(), id, tenantID); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}

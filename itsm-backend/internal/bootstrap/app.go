@@ -49,7 +49,7 @@ import (
 	authHandler "itsm-backend/handlers/auth"
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
-	"itsm-backend/handlers/cab"
+	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/change"
 	cloudHandler "itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
@@ -902,9 +902,9 @@ func NewApplication() *Application {
 	standardChangeHandler := standard_change.NewHandler(stdChangeService, sugar)
 	changeHandler := change.NewHandler(changeServiceDomain)
 
-	// CAB 成员名册 handler（审批流转由审批链引擎 cab: 解析器驱动，handler 仅管名册）
-	cabService := service.NewCABService(client, sugar)
-	cabHandler := cab.NewHandler(cabService, sugar)
+	// 变更评审组名册 handler（审批流转由审批链引擎 review: 解析器驱动，handler 仅管名册）
+	changeReviewService := service.NewChangeReviewService(client, sugar)
+	changeReviewHandler := change_review.NewHandler(changeReviewService, sugar)
 
 	// Analytics & Prediction Controllers
 
@@ -1171,7 +1171,7 @@ func NewApplication() *Application {
 		ProblemHandler:              problemHandler,
 		ProblemInvestigationHandler: problemInvestigationHandler,
 		ChangeHandler:               changeHandler,
-		CABHandler:                  cabHandler,
+		ChangeReviewHandler:           changeReviewHandler,
 		KnowledgeHandler:            knowledgeHandler,
 		SLAHandler:                  slaHandler,
 		SLATemplateHandler:          slaTemplateHandler.NewHandler(slaTemplateService),

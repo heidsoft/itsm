@@ -593,10 +593,10 @@ export const routes: RouteConfig[] = [
         },
       },
       {
-        path: '/admin/cab',
-        name: 'cab-management',
-        title: 'CAB 成员管理',
-        component: 'CabManagement',
+        path: '/admin/change-review',
+        name: 'change-review-management',
+        title: '评审组管理',
+        component: 'ChangeReviewManagement',
         permissions: [{ resource: 'change', action: 'read' }],
         meta: {
           requireAuth: true,

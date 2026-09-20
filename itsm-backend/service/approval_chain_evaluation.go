@@ -370,20 +370,20 @@ func resolveChainApprovers(ctx context.Context, client *ent.Client, logger *zap.
 			return nil, nil, err
 		}
 		return approverInfosToIDs(infos)
-	case "cab":
-		// CAB/ECAB 委员会成员，租户隔离、仅活跃成员。使「CAB 必须审批」成为
+	case "review":
+		// 评审组成员，租户隔离、仅活跃成员。使「评审组必须审批」成为
 		// 审批链上普通一步，自动获得引擎的租户隔离 + 会签/或签 + fallback。
-		return resolveCABMembers(ctx, client, evalCtx.TenantID, assigneeValue)
+		return resolveReviewMembers(ctx, client, evalCtx.TenantID, assigneeValue)
 	default:
 		// 当作纯角色名处理
 		return usersByRole(client, evalCtx.TenantID, assigneeType)
 	}
 }
 
-// resolveCABMembers 按委员会类型（CAB/ECAB）解析活跃成员用户，租户隔离。
-func resolveCABMembers(ctx context.Context, client *ent.Client, tenantID int, boardType string) ([]int, []string, error) {
-	if boardType != "CAB" && boardType != "ECAB" {
-		return nil, nil, fmt.Errorf("无效的 CAB 委员会类型: %s", boardType)
+// resolveReviewMembers 按评审组类型（REVIEW/EREVIEW）解析活跃成员用户，租户隔离。
+func resolveReviewMembers(ctx context.Context, client *ent.Client, tenantID int, boardType string) ([]int, []string, error) {
+	if boardType != "REVIEW" && boardType != "EREVIEW" {
+		return nil, nil, fmt.Errorf("无效的评审组类型: %s", boardType)
 	}
 	members, err := client.CABMember.Query().
 		Where(cabmember.Type(boardType), cabmember.TenantID(tenantID), cabmember.IsActive(true)).

@@ -100,7 +100,7 @@ func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int,
 
 func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, actorRole string) (*Change, error) {
 	// P1-2: Guard governance fields. Changes must be in draft status to freely edit fields that
-	// feed CAB approval / risk snapshot. Reject silent post-submission mutations and force the
+	// feed review approval / risk snapshot. Reject silent post-submission mutations and force the
 	// caller to return to draft for re-approval instead.
 	existing, err := s.repo.Get(ctx, c.ID, c.TenantID)
 	if err != nil || existing == nil {
@@ -233,7 +233,7 @@ var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis 
 
 // validateSubmitGate 提交前影响分析门禁（P1-③ GA 收敛项）。
 //
-// 此前 GetCMDBImpactSummary 已产出 RequiresCAB / RequiresBackoutPlan 推荐，
+// 此前 GetCMDBImpactSummary 已产出 RequiresReview / RequiresBackoutPlan 推荐，
 // 但仅用于前端展示（WorkflowHints），SubmitChange 从不消费——绑定受影响 CI
 // 的变更在实施/回滚计划为空时照样提交成功，风险分析与提交流程断链。
 //
@@ -477,7 +477,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 
 	// P0-1 修复：审批人来源只能取自本变更的审批链（change_approval_chains），
 	// 禁止请求体任意指定。否则持 change:write 的用户可注入以自己为审批人的
-	// pending 记录再调用 /transition 直接 approved，绕过 CAB / quorum / 标准
+	// pending 记录再调用 /transition 直接 approved，绕过评审 / quorum / 标准
 	// 变更门禁。
 	// 1) 审批人必须属于本租户。
 	belongs, err := s.repo.ValidateApproverBelongsToTenant(ctx, record.ApproverID, tenantID)
@@ -858,7 +858,7 @@ func (s *Service) GetCMDBImpactSummary(ctx context.Context, changeID, tenantID i
 		summary.CriticalCICount,
 		summary.HighRiskDependencyCount,
 	)
-	summary.RequiresCAB = summary.RecommendedRiskLevel == "high" || changeEntity.Type == "emergency" || summary.CriticalCICount > 0
+	summary.RequiresReview = summary.RecommendedRiskLevel == "high" || changeEntity.Type == "emergency" || summary.CriticalCICount > 0
 	summary.RequiresBackoutPlan = summary.TotalAffectedCIs > 0
 	summary.WorkflowHints = buildWorkflowHints(summary, changeEntity.Type)
 	summary.ITILPractices = append(summary.ITILPractices, inferITILPractices(summary)...)
@@ -900,7 +900,7 @@ func buildWorkflowHints(summary *dto.ChangeCMDBImpactSummary, changeType string)
 		hints = append(hints, "补充受影响 CI 后再发起审批，以便自动执行风险分流。")
 	}
 	if summary.CriticalCICount > 0 {
-		hints = append(hints, "命中关键 CI，建议走 CAB 审批并校验变更窗口。")
+		hints = append(hints, "命中关键 CI，建议走评审组审批并校验变更窗口。")
 	}
 	if summary.OpenIncidentCount > 0 {
 		hints = append(hints, "受影响 CI 当前存在未关闭事件，建议先做冲突检查和实施前健康确认。")
@@ -925,7 +925,7 @@ func inferITILPractices(summary *dto.ChangeCMDBImpactSummary) []string {
 	if summary.HighRiskDependencyCount > 0 {
 		practices = append(practices, "risk_management")
 	}
-	if summary.RequiresCAB {
+	if summary.RequiresReview {
 		practices = append(practices, "change_enablement")
 	}
 	if summary.CriticalCICount > 0 {

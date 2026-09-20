@@ -343,7 +343,7 @@ type ChangeCMDBImpactSummary struct {
 	OpenIncidentCount       int      `json:"openIncidentCount"`
 	RecommendedRiskLevel    string   `json:"recommendedRiskLevel"`
 	RecommendedImpactScope  string   `json:"recommendedImpactScope"`
-	RequiresCAB             bool     `json:"requiresCAB"`
+	RequiresReview          bool     `json:"requiresReview"`
 	RequiresBackoutPlan     bool     `json:"requiresBackoutPlan"`
 	WorkflowHints           []string `json:"workflowHints"`
 	ITILPractices           []string `json:"itilPractices"`
@@ -457,34 +457,34 @@ type ChangeCalendarResponse struct {
 	Total int                  `json:"total"`
 }
 
-// CABMemberResponse CAB成员响应
-type CABMemberResponse struct {
+// ChangeReviewMemberResponse 变更评审组成员响应
+type ChangeReviewMemberResponse struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"userId"`
 	UserName  string    `json:"userName"`
 	Email     string    `json:"email"`
-	Type      string    `json:"type"` // CAB 或 ECAB
+	Type      string    `json:"type"` // REVIEW 或 EREVIEW
 	Role      string    `json:"role"` // member, chair, secretary
 	IsActive  bool      `json:"isActive"`
 	TenantID  int       `json:"tenantId"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-// AddCABMemberRequest 添加CAB成员请求
-type AddCABMemberRequest struct {
+// AddChangeReviewMemberRequest 添加评审组成员请求
+type AddChangeReviewMemberRequest struct {
 	UserID int    `json:"userId" binding:"required"`
-	Type   string `json:"type" binding:"required,oneof=CAB ECAB"`
+	Type   string `json:"type" binding:"required,oneof=REVIEW EREVIEW"`
 	Role   string `json:"role" binding:"omitempty,oneof=member chair secretary"`
 }
 
-// UpdateCABMemberRequest 更新CAB成员请求（角色 / 激活状态）
-type UpdateCABMemberRequest struct {
+// UpdateChangeReviewMemberRequest 更新评审组成员请求（角色 / 激活状态）
+type UpdateChangeReviewMemberRequest struct {
 	Role     string `json:"role" binding:"required,oneof=member chair secretary"`
 	IsActive bool   `json:"isActive"`
 }
 
-// CABApprovalRequest CAB审批请求
-type CABApprovalRequest struct {
+// ChangeReviewApprovalRequest 变更评审审批请求
+type ChangeReviewApprovalRequest struct {
 	ChangeID   int                  `json:"changeId" binding:"required"`
 	ApprovalID int                  `json:"approvalId" binding:"required"`
 	ApproverID int                  `json:"approverId" binding:"required"`

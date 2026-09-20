@@ -131,8 +131,8 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	}
 
 	if req.Type == string(dto.ChangeTypeEmergency) {
-		// 紧急变更：记录特殊标记，后续走ECAB快速审批流程
-		s.logger.Infow("Emergency change created per ITIL standard - requires ECAB approval", "change_id", changeEntity.ID, "tenant_id", tenantID)
+		// 紧急变更：记录特殊标记，后续走紧急评审组快速审批流程
+		s.logger.Infow("Emergency change created per ITIL standard - requires emergency review approval", "change_id", changeEntity.ID, "tenant_id", tenantID)
 	}
 
 	// 获取创建人信息
@@ -793,7 +793,7 @@ func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) erro
 // 根据ITIL标准，不同类型的变更有不同的状态转换规则
 func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
 	// 历史兼容：handlers/change 模块使用 "pending"，而 common 常量用 "submitted"，
-	// 两者是等价的状态（变更已提交等待CAB审批）。在此处做归一化，避免状态机误判。
+	// 两者是等价的状态（变更已提交等待评审组审批）。在此处做归一化，避免状态机误判。
 	if currentStatus == "pending" {
 		currentStatus = common.ChangeStatusSubmitted
 	}

@@ -72,7 +72,7 @@ Key design choices:
 |:---|:---:|:---|
 | Tickets & Incidents | Available | Status transitions, dispatch, SLA, BPMN binding, tenant isolation |
 | Ticket Types & Dynamic Forms | Available | Custom fields, form presets, Workflow/SLA bindings |
-| Change Management | Available | Risk assessment, approval chains (countersign/or-sign/CAB), rollback plans, PIR |
+| Change Management | Available | Risk assessment, approval chains (countersign/or-sign/review board), rollback plans, PIR |
 | Problems & Known Errors | Preview | Root cause analysis, workarounds, linked incidents, knowledge distillation |
 | Service Catalog & Requests | Preview | Catalog management, request approvals, service tasks |
 | CMDB | Available | CI types, configuration items, relationships, topology, impact analysis |

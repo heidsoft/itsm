@@ -605,7 +605,7 @@ describe('ChangeApi', () => {
             id: 1,
             changeId: 1,
             approverId: 10,
-            approverName: 'CAB Chair',
+            approverName: 'Review Chair',
             status: 'approved',
             comment: 'Approved',
             approvedAt: '2024-01-15T10:00:00Z',
@@ -631,7 +631,7 @@ describe('ChangeApi', () => {
       );
 
       expect(result).toHaveLength(1);
-      expect(result[0].approverName).toBe('CAB Chair');
+      expect(result[0].approverName).toBe('Review Chair');
     });
   });
 

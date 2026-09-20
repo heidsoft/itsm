@@ -279,26 +279,26 @@ func TestChange_Advancement_ThresholdNofM(t *testing.T) {
 	require.Equal(t, string(dto.ChangeStatusApproved), queryChangeStatus(t, client, changeID), "达到 2 票阈值应 approved")
 }
 
-// TestChange_Advancement_CABResolver 验证：审批链步骤 role=cab:CAB 时，引擎解析出
-// CAB 活跃成员作为审批人；parallel 需全员通过才整体 approved（消除原独立 CAB 双路径）。
-func TestChange_Advancement_CABResolver(t *testing.T) {
+// TestChange_Advancement_ReviewResolver 验证：审批链步骤 role=review:REVIEW 时，引擎解析出
+// 评审组活跃成员作为审批人；parallel 需全员通过才整体 approved（消除原独立评审双路径）。
+func TestChange_Advancement_ReviewResolver(t *testing.T) {
 	svc, client, db, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()
 
 	ca := mkChangeUser(t, client, tenantID, "manager")
 	cb := mkChangeUser(t, client, tenantID, "security")
-	_, err := client.CABMember.Create().SetUserID(ca).SetType("CAB").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)
+	_, err := client.ChangeReviewMember.Create().SetUserID(ca).SetType("REVIEW").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)
 	require.NoError(t, err)
-	_, err = client.CABMember.Create().SetUserID(cb).SetType("CAB").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)
+	_, err = client.ChangeReviewMember.Create().SetUserID(cb).SetType("REVIEW").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)
 	require.NoError(t, err)
 
-	// 激活链：CAB 步骤（cab:CAB），parallel 全员通过。
+	// 激活链：评审步骤（review:REVIEW），parallel 全员通过。
 	chainReq := &dto.ApprovalChainRequest{
-		Name:       "CAB Chain",
+		Name:       "Review Chain",
 		EntityType: "change",
 		Status:     "active",
 		Chain: []dto.ApprovalChainStepDTO{
-			{Level: 1, Role: "cab:CAB", Name: "CAB", IsRequired: true, ApprovalType: "parallel"},
+			{Level: 1, Role: "review:REVIEW", Name: "Review", IsRequired: true, ApprovalType: "parallel"},
 		},
 	}
 	acs := service.NewApprovalChainService(client, zaptest.NewLogger(t).Sugar())
@@ -313,9 +313,9 @@ func TestChange_Advancement_CABResolver(t *testing.T) {
 	require.NoError(t, err)
 
 	approvers := queryChangeChainApprovers(t, db, changeID, tenantID)
-	require.ElementsMatch(t, []int{ca, cb}, approvers, "cab:CAB 步骤应解析出 CAB 活跃成员")
+	require.ElementsMatch(t, []int{ca, cb}, approvers, "review:REVIEW 步骤应解析出评审组活跃成员")
 
-	// CAB parallel 全员通过：先一人 → pending，再一人 → approved
+	// 评审 parallel 全员通过：先一人 → pending，再一人 → approved
 	seedApprovalDecisions(t, client, tenantID, changeID, creator, []int{ca})
 	require.NoError(t, svc.checkAndTransitionChange(ctx, changeID, tenantID))
 	require.Equal(t, string(dto.ChangeStatusPending), queryChangeStatus(t, client, changeID))

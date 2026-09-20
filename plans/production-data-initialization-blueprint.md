@@ -25,7 +25,7 @@
 | 身份与组织 | user、department、team、group | 只创建 bootstrap 管理员；部门/团队属于可选租户模板 |
 | RBAC | role、permission、role_permission、endpoint_acl、menu | 权限目录为平台基线；角色与菜单按租户模板安装 |
 | 工单 | ticket、category、tag、template、view、assignment/automation rule | 类型/分类/视图可作租户模板；工单本身绝不初始化 |
-| ITIL 流程 | incident、problem、known error、change、CAB、PIR、release | 只初始化状态/分类/模板；不创建业务单据 |
+| ITIL 流程 | incident、problem、known error、change、change_review、PIR、release | 只初始化状态/分类/模板；不创建业务单据 |
 | 服务请求 | service catalog、service request、approval、provisioning | 目录项、表单和交付模板可选；请求/交付任务不初始化 |
 | BPMN | definition、deployment、binding、instance、task、variable、history | 只安装版本化流程定义和默认绑定；运行实例不初始化 |
 | SLA | definition、policy、alert/escalation rule | 安装可版本化策略模板，允许租户覆盖 |

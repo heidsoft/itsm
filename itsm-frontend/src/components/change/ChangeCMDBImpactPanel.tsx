@@ -88,8 +88,8 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
               {data.recommendedImpactScope?.toUpperCase()}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="需要 CAB 审批">
-            {data.requiresCAB ? <Tag color="red">是</Tag> : <Tag color="green">否</Tag>}
+          <Descriptions.Item label="需要评审组审批">
+            {data.requiresReview ? <Tag color="red">是</Tag> : <Tag color="green">否</Tag>}
           </Descriptions.Item>
           <Descriptions.Item label="需要回滚计划">
             {data.requiresBackoutPlan ? <Tag color="orange">是</Tag> : <Tag color="default">否</Tag>}

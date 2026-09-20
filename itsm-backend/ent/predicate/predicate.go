@@ -42,6 +42,9 @@ type BootstrapToken func(*sql.Selector)
 // CABMember is the predicate function for cabmember builders.
 type CABMember func(*sql.Selector)
 
+// ChangeReviewMember is the predicate function for changereviewmember builders.
+type ChangeReviewMember func(*sql.Selector)
+
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 

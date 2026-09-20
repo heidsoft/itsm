@@ -81,7 +81,7 @@ func Definitions() []PermissionDef {
 		{"change:read", "查看变更", "change", "read", "查看变更列表和详情"},
 		{"change:write", "管理变更", "change", "write", "创建、编辑变更"},
 		{"change:delete", "删除变更", "change", "delete", "删除变更"},
-		{"change:approve", "审批变更", "change", "approve", "变更CAB审批/驳回/回滚"},
+		{"change:approve", "审批变更", "change", "approve", "变更评审审批/驳回/回滚"},
 		{"change:rollback", "回滚变更", "change", "rollback", "变更实施后回滚"},
 		// 发布权限
 		{"release:read", "查看发布", "release", "read", "查看发布列表和详情"},

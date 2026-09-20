@@ -23,7 +23,7 @@ const setupSteps = [
   },
   {
     title: '流程设计',
-    description: '设计并发布 BPMN 流程；变更场景可补充 CAB。',
+    description: '设计并发布 BPMN 流程；变更场景可补充评审组。',
     href: '/workflow/designer',
     label: '设计流程',
     icon: Workflow,

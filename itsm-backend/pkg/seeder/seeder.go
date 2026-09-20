@@ -1484,7 +1484,7 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
 	}
 	templates := []tplSeed{
 		{key: "generic_request", name: "通用申请流程", desc: "适用于各类行政、IT、设施等通用申请场景", domain: "it", bpmnFile: "templates/generic_request.bpmn"},
-		{key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与 CAB 审批", domain: "change", bpmnFile: "templates/change_request.bpmn"},
+		{key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与评审组审批", domain: "change", bpmnFile: "templates/change_request.bpmn"},
 		{key: "incident_response", name: "事件响应流程", desc: "ITIL 事件管理流程，包含分级、分派、解决与回顾", domain: "incident", bpmnFile: "templates/incident_response.bpmn"},
 		{key: "service_request", name: "服务请求流程", desc: "标准服务请求履行流程，支持审批与自动履行", domain: "service_request", bpmnFile: "templates/service_request.bpmn"},
 		{key: "leave_request", name: "请假审批流程", desc: "员工请假申请与多级审批流程", domain: "hr", bpmnFile: "templates/leave_request.bpmn"},
@@ -1791,7 +1791,7 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "租户管理", Path: "/admin/tenants", Icon: "Building", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 235},
 		{Name: "部门管理", Path: "/admin/departments", Icon: "Building", ParentPath: "/admin", PermissionCode: "department:read", SortOrder: 240},
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", ParentPath: "/admin", PermissionCode: "team:read", SortOrder: 250},
-		{Name: "CAB 成员管理", Path: "/admin/cab", Icon: "Users", ParentPath: "/admin", PermissionCode: "change:read", SortOrder: 255},
+		{Name: "评审组管理", Path: "/admin/change-review", Icon: "Users", ParentPath: "/admin", PermissionCode: "change:read", SortOrder: 255},
 		{Name: "工单分类", Path: "/admin/ticket-categories", Icon: "Tag", ParentPath: "/admin", PermissionCode: "ticket_category:update", SortOrder: 260},
 		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 265},
 		{Name: "自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 270},

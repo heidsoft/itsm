@@ -372,7 +372,7 @@ export const changeHandlers = {
         id: 1,
         changeId: id,
         approverId: 10,
-        approverName: 'CAB Chair',
+        approverName: 'Review Chair',
         status: 'approved',
         comment: 'Approved with conditions',
         approvedAt: new Date().toISOString(),

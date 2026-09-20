@@ -26,7 +26,7 @@ import (
 	authHandler "itsm-backend/handlers/auth"
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
-	"itsm-backend/handlers/cab"
+	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/cloud"
@@ -199,7 +199,7 @@ type RouterConfig struct {
 
 	ProblemHandler     *problem.Handler
 	ChangeHandler      *change.Handler
-	CABHandler         *cab.Handler
+	ChangeReviewHandler  *change_review.Handler
 	KnowledgeHandler   *knowledge.Handler
 	SLAHandler         *sla.Handler
 	SLATemplateHandler *slaTemplateHandler.Handler
@@ -505,11 +505,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			SetupChangeRoutes(tenant.(*gin.RouterGroup), config.ChangeHandler)
 		}
 
-		// ==================== CAB (Change Advisory Board) ====================
-		// 名册管理走 change 权限（CAB 属变更管理范畴，变更管理员/管理员已持该权限）。
-		// CAB 审批流转由审批链引擎（cab:CAB / cab:ECAB 解析器）统一驱动，不在此暴露。
-		if config.CABHandler != nil {
-			SetupCABRoutes(tenant.(*gin.RouterGroup), config.CABHandler)
+		// ==================== Change Review (变更评审组) ====================
+		// 名册管理走 change 权限（评审组属变更管理范畴，变更管理员/管理员已持该权限）。
+		// 评审审批流转由审批链引擎（review:REVIEW / review:EREVIEW 解析器）统一驱动，不在此暴露。
+		if config.ChangeReviewHandler != nil {
+			SetupChangeReviewRoutes(tenant.(*gin.RouterGroup), config.ChangeReviewHandler)
 		}
 
 		// ==================== Releases ====================

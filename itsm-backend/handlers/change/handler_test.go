@@ -1122,10 +1122,10 @@ func TestBuildWorkflowHints(t *testing.T) {
 		assert.NotContains(t, hints, "紧急变更建议启用快速审批路径，并在实施后自动创建 PIR 任务。")
 	})
 
-	t.Run("critical CI triggers CAB hint", func(t *testing.T) {
+	t.Run("critical CI triggers review hint", func(t *testing.T) {
 		summary := &dto.ChangeCMDBImpactSummary{TotalAffectedCIs: 1, CriticalCICount: 1}
 		hints := buildWorkflowHints(summary, "normal")
-		assert.Contains(t, hints, "命中关键 CI，建议走 CAB 审批并校验变更窗口。")
+		assert.Contains(t, hints, "命中关键 CI，建议走评审组审批并校验变更窗口。")
 	})
 
 	t.Run("open incidents trigger conflict check hint", func(t *testing.T) {
@@ -1172,7 +1172,7 @@ func TestInferITILPractices(t *testing.T) {
 			CriticalCICount:         1,
 			HighRiskDependencyCount: 1,
 			OpenIncidentCount:       1,
-			RequiresCAB:             true,
+			RequiresReview:         true,
 		}
 		got := inferITILPractices(summary)
 		assert.ElementsMatch(t, []string{

@@ -145,7 +145,7 @@ export interface ChangeCMDBImpactSummary {
   openIncidentCount: number;
   recommendedRiskLevel: string;
   recommendedImpactScope: string;
-  requiresCAB: boolean;
+  requiresReview: boolean;
   requiresBackoutPlan: boolean;
   workflowHints: string[];
   itilPractices: string[];

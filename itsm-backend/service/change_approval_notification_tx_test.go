@@ -48,7 +48,7 @@ func changeApprovalTxFixture(t *testing.T) (*ent.Client, context.Context, *ent.T
 	approver, err := client.User.Create().
 		SetUsername("approver-d").
 		SetEmail("approver-d@example.com").
-		SetName("CAB Approver").
+		SetName("Review Approver").
 		SetPasswordHash("hash").
 		SetRole("security").
 		SetActive(true).

@@ -5,7 +5,7 @@ package authz
 // 派生规则说明：
 //   - 同义奇偶补齐（write ⇒ {create, update} 等）：修 admin/technician 等持有 write 但路由声明
 //     细分动作（create/update）的角色在路由级 RequirePermission 精确匹配下 403 的问题
-//   - task:read/update 全角色基线（除 guest）：任何角色都可能被流程指派任务（变更 CAB 评审、
+//   - task:read/update 全角色基线（除 guest）：任何角色都可能被流程指派任务（变更评审、
 //     服务请求审批、工单流转），粒度控制不在角色层（ListUserTasks 只返回本人/候选任务）
 //   - task:admin 13 个管理/监督角色加权：跨用户全量任务视图
 //
@@ -114,7 +114,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"incident:read", "incident:write", "incident:delete",
 			// 问题（2）：坐席发现/登记问题
 			"problem:read", "problem:write",
-			// 变更（1）：只读，不能 write/approve/rollback（变更由 CAB 走流程）
+			// 变更（1）：只读，不能 write/approve/rollback（变更由评审组走流程）
 			"change:read",
 			// 知识库（2）：坐席维护 KKB
 			"knowledge:read", "knowledge:write",
@@ -288,7 +288,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 	}
 
 	// 任务面基线（2026-09-17 P0「越权写收口」）。
-	// 任何角色都可能被流程指派任务（变更 CAB 评审、服务请求审批、工单流转），
+	// 任何角色都可能被流程指派任务（变更评审、服务请求审批、工单流转），
 	// 因此 task:read / task:update 是全角色基线，而不是个别角色的特权。
 	// 粒度控制不在角色层：ListUserTasks 只返回本人/候选任务；task:update 的每一步
 	// （认领态区分、自审批防护、委托/加签目标校验）由 handler 层 authorizeTaskActor 收口。
