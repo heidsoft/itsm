@@ -1,5 +1,7 @@
 # SLA 监控模块测试用例文档
 
+> Status: current
+
 ## 文档信息
 
 | 项目 | ITSM (IT Service Management) |

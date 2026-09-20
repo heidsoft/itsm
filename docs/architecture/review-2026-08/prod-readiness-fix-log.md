@@ -1,5 +1,7 @@
 # 生产就绪评估修复日志(2026-08-29)
 
+> Status: current
+
 > 对应报告:`reports/prod-readiness/2026-08-29-production-readiness-assessment.md`(NO-GO,4 项 P0)
 > 状态图例:✅代码已修并测试 🚧待部署验证 🔴未开始
 

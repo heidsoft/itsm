@@ -56,7 +56,7 @@ jobs:
 
   # Documentation quality gates (advisory in v1.5, hard in v2.0).
   # Runs in parallel with `build` so reviewers see the violation report.
-  # See scripts/docs-gate/run-all.sh and docs/release/README.md for rationale.
+  # See scripts/docs-gate/run-all.sh and docs/delivery/release-guide.md for rationale.
   docs-gate:
     name: Docs Gate (advisory)
     uses: ./.github/workflows/docs-gate.yml

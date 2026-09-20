@@ -1,11 +1,12 @@
 # 测试夹具与运行时不变量
 
+> Status: current
+
 > **Status**: current. 自 v1.5 起强制。
 > **迁移来源**：
 > - [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md) §2（控制器测试 fixture 修复）
 > - [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md) §3（Jest 退出异常）
 > - [`docs/review/architecture-review-2026-06-14.md`](../review/architecture-review-2026-06-14.md) §3（CMDB 跨租户）
-> - [`docs/test-plan/itst-test-plan-v1.md`](../archive/testing-reports/itst-test-plan-v1.md)（测试环境分层与优先级定义）
 
 本文档沉淀"在多个历史评审中反复触发，并被当前架构仍然依赖"的测试不变量。
 
@@ -30,7 +31,7 @@ P0 集合必须覆盖：用户认证与权限、工单/事件/变更完整生命
 | 开发（dev） | mock + sqlite in-memory | 本地快速反馈 | `make dev-test` |
 | 测试（CI） | enttest.NewClient() + sqlite in-memory | 单元 + 集成 | `backend-ci.yml` |
 | 组装（gate） | `docker compose -f docker-compose.dev.yml --profile dev up` | 端到端冒烟 | `ga-gate.yml` |
-| 生产等价（cert） | `docker-compose.prod.yml --env-file .env.prod` | 发布证据 | `docs/release/` |
+| 生产等价（cert） | `docker-compose.prod.yml --env-file .env.prod` | 发布证据 | `docs/delivery/` |
 
 **禁止**把生产数据脱敏导入开发环境；脱敏数据也只能用于预生产。
 

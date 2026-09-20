@@ -1,5 +1,7 @@
 # 国内企业ITSM工作流设计方案
 
+> Status: historical
+
 ## 设计理念
 
 参考黑湖小工单等国内SaaS产品，结合国内企业ITSM最佳实践，强调:

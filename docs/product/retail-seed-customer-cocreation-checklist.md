@@ -1,6 +1,8 @@
 # 零售行业种子客户共创清单
 
-> 日期:2026-08-29 · 上游:[行业业务需求分析](./industry-verticals-analysis-2026-08.md) §2.3/§5.4 · [生产就绪与行业蓝图](../../plans/production-readiness-industry-blueprint.md) P3
+> Status: current
+
+> 日期:2026-08-29 · 上游:[行业业务需求分析](./industry-verticals-analysis-2026-08-01.md) §2.3/§5.4 · [生产就绪与行业蓝图](../../plans/production-readiness-industry-blueprint.md) P3
 > 目的:零售模板包立项前,用 1-2 家真实连锁客户验证模板的**行业真实性**(SLA 数值、审批层级、设备分类、流程颗粒度),产出经验证的模板包 + 1 个可引用案例。
 > 原则:共创验证的是"模板质量",不是接定制需求;一切定制诉求进公开路线图排期。
 

@@ -28,7 +28,7 @@ func (RolePermission) Edges() []ent.Edge {
 
 // Index of the RolePermission.
 // 唯一索引防止同一角色对同一权限出现重复行（并发授权或手工 SQL 可能造成）。
-// 注意：新增索引需跑 entc 重新生成（~6GB 内存前提，见 docs/entc-codegen-runbook.md）。
+// 注意：新增索引需跑 entc 重新生成（~6GB 内存前提，见 docs/delivery/entc-codegen-runbook.md）。
 func (RolePermission) Index() []ent.Index {
 	return []ent.Index{
 		index.Fields("role_id", "permission_id", "tenant_id").Unique(),

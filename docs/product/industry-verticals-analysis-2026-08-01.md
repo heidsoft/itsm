@@ -1,5 +1,7 @@
 # ITSM 五行业业务需求分析(工业 / 医疗 / 零售 / 电商 / 物流)
 
+> Status: current
+
 > 日期:2026-08-29 · 配套:[生产就绪与行业蓝图](../../plans/production-readiness-industry-blueprint.md)、[商业化能力契约](./itsm-commercial-capability-contract.md)
 > 能力基线来自代码核实(非宣传口径):标注 ✅=已具备 · 🔶=具备基础待产品化 · ❌=缺失
 

@@ -1,5 +1,7 @@
 # ITSM 产品完整复盘报告
 
+> Status: historical
+
 > **复盘日期**: 2026-05-21
 > **审查范围**: AI-Native ITSM 全栈系统（后端 Go + 前端 Next.js + AI 引擎）
 

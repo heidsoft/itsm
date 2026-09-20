@@ -1,5 +1,7 @@
 # AI-Native ITSM 产品路线商业价值审查报告
 
+> Status: historical
+
 **审查日期：** 2026-05-02  
 **审查范围：** AI-Native ITSM 完整技术栈（后端Go/前端Next.js/AI引擎）  
 **整体评估：** 成熟度 **82/100** ⭐⭐⭐⭐☆

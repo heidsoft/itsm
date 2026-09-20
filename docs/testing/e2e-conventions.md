@@ -1,5 +1,7 @@
 # E2E Conventions (golden / multi-tenant / business-flows)
 
+> Status: current
+
 > Companion to **PR-0.4** of the Test Improvement Plan. See plan section
 > "阶段 0 / PR-0.4" for originating rationale.
 >

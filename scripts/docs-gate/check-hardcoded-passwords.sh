@@ -6,7 +6,7 @@
 #
 # 扫描目标：
 #   - .env / .env.prod / .env.dev
-#   - docs/release/** 下的所有 markdown frontmatter 与正文
+#   - docs/delivery/** 下的所有 markdown frontmatter 与正文
 #   - docs/initialization-release-certification.md（历史，但保留防回归）
 #   - docs/release-v1.5.0-certification-evidence.md（同上）
 #   - mkdocs.yml / 部署相关 *.md（防止把 admin123 等写进部署示例）
@@ -14,7 +14,7 @@
 # 豁免：
 #   - .env.example / .env.dev.example / .env.prod.example（必须明确标注"占位"）
 #   - scripts/itsm-test-utils.sh / tests/ 下的 fixture
-#   - docs/ci/postmortem-v1.0-GA.md（历史复盘，标注为已修复）
+#   - docs/delivery/postmortem-v1.0-ga.md（历史复盘，标注为已修复）
 #   - 任何带 "EXAMPLE" / "<请替换>" / "<CHANGE_ME>" / "PLACEHOLDER" / "TODO" 注释
 #
 # 当前阶段（v1.5）advisory：仅日志报告，不阻断。
@@ -48,7 +48,7 @@ PATTERNS=(
 )
 
 # 豁免路径
-EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/ci/postmortem-v1\.0-GA\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/dev-environment-test-report\.md|/browser-?test|/multi-role-|/production-mode-test-report|/production-deployment-test-report|/browser-functional|/browser-e2e|/frontend-ux-review|/system-function-review|/deep-business-test|/commercial-readiness-acceptance|/module-function-retrospective|/architecture-review-2026|/system-function-review-checklist|/system-function-review-result|/servicenow-benchmark|/browser-button-functional|/browser-module|/itsm-test-report|/full-product-smoke|/system-test-report|/role-based-product-test-plan|/e2e-conventions|/coverage-audit|/controller-failing-list|/ai-eval|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|/output/)'
+EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/delivery/postmortem-v1\.0-ga\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/dev-environment-test-report\.md|/browser-?test|/multi-role-|/production-mode-test-report|/production-deployment-test-report|/browser-functional|/browser-e2e|/frontend-ux-review|/system-function-review|/deep-business-test|/commercial-readiness-acceptance|/module-function-retrospective|/architecture-review-2026|/system-function-review-checklist|/system-function-review-result|/servicenow-benchmark|/browser-button-functional|/browser-module|/itsm-test-report|/full-product-smoke|/system-test-report|/role-based-product-test-plan|/e2e-conventions|/coverage-audit|/controller-failing-list|/ai-eval|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|/output/)'
 
 # 命中模式
 scan_hits() {
@@ -57,7 +57,7 @@ scan_hits() {
   while IFS= read -r -d '' file; do
     [[ "${file}" =~ ${EXEMPT_REGEX} ]] && continue
     case "${file}" in
-      .env|.env.prod|.env.dev|docker-compose.prod.yml|mkdocs.yml|docs/release/*|docs/*certification*.md|docs/*deployment*.md|scripts/*prod*.sh|.github/workflows/*) ;;
+      .env|.env.prod|.env.dev|docker-compose.prod.yml|mkdocs.yml|docs/delivery/*|docs/*certification*.md|docs/*deployment*.md|scripts/*prod*.sh|.github/workflows/*) ;;
       *) continue ;;
     esac
     hits="$(grep -nE "${pattern}" "${file}" 2>/dev/null || true)"

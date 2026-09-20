@@ -1,5 +1,7 @@
 # 审批节点类型语义（Approval Node Semantics）
 
+> Status: current
+
 > 适用于 ITSM 流程设计器中「流程配置」Tab 的 `approval_config.approval_type` 字段，
 > 以及 BPMN Designer 节点属性面板中每个 `userTask` 的审批行为约定。
 > 版本：v1.0  /  日期：2026-06-21

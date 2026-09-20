@@ -1,5 +1,7 @@
 # Go 工具链对齐（GOTOOLCHAIN）
 
+> Status: current
+
 > Companion to **PR-0.2** of the Test Improvement Plan. See plan section
 > "阶段 0 / PR-0.2" for the originating rationale.
 
@@ -12,7 +14,7 @@
 | GH Actions 公共 README badge | `Go 1.25.13` | `README.md:9` |
 | Dockerfile.prod 基础镜像 | `mirror.gcr.io/library/golang:1.25.13-alpine` | `itsm-backend/Dockerfile.prod:16` |
 | Dockerfile dev 基础镜像 | `golang:1.25.13-alpine` | `itsm-backend/Dockerfile:18` |
-| 本地开发机 | 通常 `1.25.x` 系列但与上游有偏差 | docs/ci/coverage-v1.1.md 记录 macOS Go `1.25.6` |
+| 本地开发机 | 通常 `1.25.x` 系列但与上游有偏差 | docs/delivery/coverage-v1.1.md 记录 macOS Go `1.25.6` |
 | README 给出的提示 | `GOTOOLCHAIN=auto go test ./...` | `README.md:248` |
 
 ## 2. 为什么需要 `GOTOOLCHAIN=auto`

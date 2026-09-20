@@ -1,5 +1,7 @@
 # Raw SQL 治理清单（v1.0 GA 准入）
 
+> Status: current
+
 > 本文档跟踪所有非 Ent ORM 的直接 SQL 调用，作为 `P0-1 raw SQL 治理` 任务的源数据。
 >
 > **基线扫描时间**：2026-06-27

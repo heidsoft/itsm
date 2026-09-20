@@ -1,5 +1,7 @@
 # AI功能模块测试用例
 
+> Status: current
+
 ## 测试模块：AI功能 (AI Features)
 
 **测试文件路径**: `TC-AI.md`

@@ -17,7 +17,7 @@
 
 ## 已迁移文件
 
-- `servicenow-benchmark-2026-06-18.md` → [`docs/archive/reviews/servicenow-benchmark-2026-06-18.md`](../archive/reviews/servicenow-benchmark-2026-06-18.md)
+- `servicenow-benchmark-2026-06-18.md` → 已删除（2026-09 归档清理）
   - 原因：报告中的 v1.1 / v1.2 / v1.4 / v2.0 / v3.0 路线已完全被 [`ROADMAP.md`](../../ROADMAP.md) 取代；ServiceNow GAP 列表已迁移到 [`docs/product/`](../product/) 阶段改进计划。
 
 ## 仍保留的报告

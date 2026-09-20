@@ -1,9 +1,11 @@
 # ITSM 系统模块功能复盘与改善迭代计划
 
+> Status: historical
+
 **日期**: 2026-07-10  
 **范围**: 产品模块、前后端契约、质量门禁、企业级能力、AI Native 演进  
 **目标**: 按模块复盘当前系统功能成熟度，并形成可执行的 v1.1-v1.5 改善迭代计划。  
-**依据**: 当前代码扫描、`README.zh-CN.md`、`ROADMAP.md`、`docs/v1-ga/capability-matrix.md`、`docs/review/system-function-review-result-2026-07-01.md`、`docs/product/phased-improvement-plan.md`、`docs/review/servicenow-benchmark-2026-06-18.md`。
+**依据**: 当前代码扫描、`README.zh-CN.md`、`ROADMAP.md`、`docs/archive/capability-matrix.md`、`docs/review/system-function-review-result-2026-07-01.md`、`docs/product/phased-improvement-plan.md`、`docs/review/servicenow-benchmark-2026-06-18.md`（已删除，结论已迁移至 `docs/product/phased-improvement-plan.md`）。
 
 ---
 

@@ -1,5 +1,7 @@
 # ITSM Production Readiness Program
 
+> Status: current
+
 ## Objective
 
 Turn the current open-source ITSM system into a production-usable release train with measurable gates, parallel workstreams, and clear agent ownership.

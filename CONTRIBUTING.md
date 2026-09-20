@@ -273,7 +273,7 @@ func TestUserCreationFunction
 ## CI 失败排查 SOP
 
 > **必读**。v1.0 GA 修复时我们曾因不遵守本 SOP 误判 3 个 commit。
-> 完整复盘见 [docs/ci/postmortem-v1.0-GA.md](docs/ci/postmortem-v1.0-GA.md)。
+> 完整复盘见 [docs/delivery/postmortem-v1.0-ga.md](docs/delivery/postmortem-v1.0-ga.md)。
 
 当 CI 出现红色叉时，**不要**直接看错误信息就开始改代码。先按以下步骤定位真根因：
 

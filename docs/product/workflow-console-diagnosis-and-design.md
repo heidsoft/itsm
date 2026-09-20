@@ -1,5 +1,7 @@
 # Workflow 控制台诊断与功能设计
 
+> Status: current
+
 ## 目标
 
 `/workflow` 不是单纯的列表页，而应该成为 ITSM 的工作流控制台入口，承担：

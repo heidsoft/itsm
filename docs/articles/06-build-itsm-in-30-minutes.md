@@ -1,5 +1,7 @@
 # 30分钟搭建一套完整的ITSM系统
 
+> Status: current
+
 ## Docker一键部署，从零到生产可用的完整指南
 
 ---

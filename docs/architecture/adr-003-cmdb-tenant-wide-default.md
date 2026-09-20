@@ -1,5 +1,7 @@
 # ADR-003: CMDB 行级权限默认 tenant-wide
 
+> Status: current
+
 ## 状态
 
 Accepted（2026-09-16）

@@ -1,5 +1,7 @@
 # v1.1 覆盖率审计报告（2026-06-28）
 
+> Status: current
+
 > **Status: superseded（2026-09-12 复核）**
 >
 > 本文数据是 2026-06-28 的历史快照，**不得用于判断当前覆盖率**：
@@ -20,7 +22,7 @@ v1.1 Sprint 的核心目标是把整体覆盖率从 **1%（v1.0 GA floor）提�
 
 审计同时暴露一个 **上游 P0 bug**：`commit 12491c74 "refactor(cmdb): 重构CMDB控制器以提升模块化和可维护性"` 引入了大面积的 dto/service 命名不一致，导致 `go build ./service/...` 全部失败。
 
-## 一、Sprint 目标（来自 postmortem-v1.0-GA.md v1.1 章节）
+## 一、Sprint 目标（来自 postmortem-v1.0-ga.md v1.1 章节）
 
 | 任务 | 优先级 | 文件范围 | 验收 |
 |------|--------|----------|------|
@@ -168,7 +170,7 @@ go tool cover -func=/tmp/cov-svc-incident.out | grep incident_service.go
 
 ## 八、参考
 
-- v1.0 GA 复盘：`docs/ci/postmortem-v1.0-GA.md`（v1.1 章节）
+- v1.0 GA 复盘：`docs/delivery/postmortem-v1.0-ga.md`（v1.1 章节）
 - 上游 broken commit：`12491c74 refactor(cmdb): 重构CMDB控制器以提升模块化和可维护性`
 - 审计命令：`/tmp/cov-all.out`、`/tmp/cov-func.txt`
 - 临时绕过：`git revert 12491c74 --no-commit`（已 abort，未污染历史）

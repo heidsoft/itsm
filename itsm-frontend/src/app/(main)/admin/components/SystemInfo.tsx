@@ -79,7 +79,7 @@ export const SystemInfo: React.FC = () => {
           <List
             dataSource={[
               { title: t('admin.productReadme'), href: REPO_URL },
-              { title: t('admin.apiDocs'), href: `${REPO_URL}/blob/main/docs/api/API_REFERENCE.md` },
+              { title: t('admin.apiDocs'), href: `${REPO_URL}/blob/main/docs/api-reference.md` },
               { title: t('admin.updateLog'), href: `${REPO_URL}/blob/main/CHANGELOG.md` },
               { title: t('admin.techSupport'), href: `${REPO_URL}/issues` },
             ]}

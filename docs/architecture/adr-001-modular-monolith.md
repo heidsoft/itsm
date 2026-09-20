@@ -1,5 +1,7 @@
 # ADR-001：模块化单体与 PostgreSQL 可靠命令基座
 
+> Status: current
+
 ## 状态
 
 Accepted（2026-08-11）

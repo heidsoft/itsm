@@ -1,5 +1,7 @@
 # ITSM 深度业务流程测试报告
 
+> Status: historical
+
 > 测试日期: 2026-06-18
 > 测试方式: API 端到端调用 + 浏览器验证
 > 测试环境: localhost:8090 (backend) + localhost:3001 (frontend dev)

@@ -1,5 +1,7 @@
 # ADR-002: 引入事件驱动架构
 
+> Status: current
+
 ## Status
 **Proposed** (提议中)
 

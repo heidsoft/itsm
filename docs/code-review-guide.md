@@ -1,5 +1,7 @@
 # Code Review 流程规范
 
+> Status: current
+
 > 适用于 1-2 人小团队的轻量级 Code Review 流程
 
 ## 1. 流程概述
@@ -307,6 +309,5 @@ jobs:
 
 ### 8.3 相关文档
 
-- [团队技术提升指导](./archive/plans/team-tech-improvement-guide.md)（已归档，指标为时点快照）
 - [Go 代码规范](https://go.dev/wiki/CodeReviewComments)
 - [Google Go Style Guide](https://google.github.io/styleguide/go/)

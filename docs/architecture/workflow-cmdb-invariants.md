@@ -1,5 +1,7 @@
 # Workflow / CMDB Invariants
 
+> Status: current
+
 > **Status**: current. 自 v1.5 起强制。
 > **迁移来源**：[`docs/review/architecture-review-2026-06-14.md`](../review/architecture-review-2026-06-14.md) 第 2、3 节（已识别但尚未迁移）。
 > **维护人**：Workflow 域 owner / CMDB 域 owner。

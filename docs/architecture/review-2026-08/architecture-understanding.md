@@ -1,5 +1,7 @@
 # ITSM 系统架构评审与优化建议（2026-08-29）
 
+> Status: current
+
 - **评审方法**：`risk-quality-reviewer` + `system-modeler`（架构技能包），证据优先，所有结论标注文件路径。
 - **范围**：当前状态（current-state）评审，不含目标态设计。
 - **配套图表**：`itsm-containers.dsl`（C4 容器视图）、`backend-dual-layering.dot`（双分层图）、`risk-map.dot`（风险地图）。

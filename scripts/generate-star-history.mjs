@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 const owner = process.env.GITHUB_REPOSITORY?.split("/")[0] || "heidsoft";
 const repo = process.env.GITHUB_REPOSITORY?.split("/")[1] || "itsm";
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-const output = resolve(process.argv[2] || "docs/assets/star-history.svg");
+const output = resolve(process.argv[2] || "docs/images/star-history.svg");
 
 if (!token) {
   throw new Error("GITHUB_TOKEN or GH_TOKEN is required");

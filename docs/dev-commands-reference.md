@@ -1,5 +1,7 @@
 # ITSM 本地开发命令最佳实践
 
+> Status: current
+
 > 基于 Makefile + scripts/deploy-dev.sh + scripts/deploy-prod.sh + docker-compose 配置整理。
 > 三种调用方式任选其一：`make xxx` ≈ `./scripts/deploy-xxx.sh cmd` ≈ `docker compose ...`
 

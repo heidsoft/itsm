@@ -1,5 +1,7 @@
 # CMDB 与工作流 / ITIL 4 集成设计
 
+> Status: current
+
 ## 设计目标
 
 CMDB 不应该只是“配置项台账”，而应成为：

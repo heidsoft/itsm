@@ -1,5 +1,7 @@
 # Label Schema
 
+> Status: current
+
 > **目的**：统一 Issue / PR 标签语义，便于维护者分类、过滤和统计。
 >
 > **生效范围**：itsm-backend、itsm-frontend、itsm-cli、itsm-skill、itsm-agent、itsm-ai-service、itsm-rag、docs。

@@ -75,7 +75,7 @@ TicketType 是运行时配置，不是前端静态枚举。创建工单时会校
 4. 确认工单保存类型/表单快照，并产生预期的 SLA、流程实例、任务和审计记录。
 5. 生产前执行后端全量测试、前端类型检查与构建、API 契约检查、数据库迁移演练、备份恢复和目标环境 E2E。
 
-具体命令与运维要求见[部署指南](../DEPLOYMENT_OPTIMIZATION.md)、[生产初始化运行手册](../runbooks/production-initialization.md)和[测试指南](../testing/README.md)。运行时是否向当前用户开放某能力，以认证后的 `GET /api/v1/capabilities` 为准。
+具体命令与运维要求见[部署指南](../deployment-optimization.md)、[生产初始化运行手册](../delivery/production-initialization.md)和[测试指南](../testing/README.md)。运行时是否向当前用户开放某能力，以认证后的 `GET /api/v1/capabilities` 为准。
 
 ## 明确不承诺
 

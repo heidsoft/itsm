@@ -68,7 +68,7 @@ test('C.3 resolves links relative to each markdown file', (t) => {
 
 test('C.4 accepts an evidence anchor after a release claim', (t) => {
   const root = fixture({
-    'docs/release/report.md': '## Result\n全部通过\ncontext\n证据日期：2026-09-05\n',
+    'docs/delivery/report.md': '## Result\n全部通过\ncontext\n证据日期：2026-09-05\n',
   });
   t.after(() => rmSync(root, { recursive: true, force: true }));
 

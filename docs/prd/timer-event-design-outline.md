@@ -1,5 +1,7 @@
 # BPMN Timer Event 调度基础设施设计大纲
 
+> Status: current
+
 **文档编号**: ITSM-PRD-2026-002
 **版本**: v0.5
 **日期**: 2026-09-15

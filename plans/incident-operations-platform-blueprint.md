@@ -1187,7 +1187,7 @@ lib/api/
 
 - `CLAUDE.md`：补充 Incident Operations Platform 章节
 - `docs/architecture/incident-operations.md`：架构图 + 数据流
-- `docs/runbooks/incident-operations.md`：值班手册
+- `docs/delivery/incident-operations.md`：值班手册
 - `README.md`：补充 Phase 1 视频 / 截图
 - `CHANGELOG.md`：按 Epic 标注 Phase 1 / 2 / 3
 

@@ -88,7 +88,7 @@
 
 ## 快速开始
 
-> **语言说明**：v1.6.x 产品界面为**中文优先**（面向中国私有化部署场景），英文/日文 README 提供入门指引；完整界面多语言（en-US 等）规划在 v1.7，详见 [ROADMAP](ROADMAP.md)。
+> **语言说明**：v1.6.x 产品界面为**中文优先**（面向中国私有化部署场景），英文 README 提供入门指引；完整界面多语言（en-US 等）规划在 v1.7，详见 [ROADMAP](ROADMAP.md)。
 
 ### 环境要求
 
@@ -288,7 +288,7 @@ open http://localhost:8090/swagger/index.html
 | 知识库检索 | `GET /api/v1/knowledge/search?q=关键词` 搜索知识文章 |
 | 接入外部告警 | 配置 `ALERT_SOURCE_CONFIG` 后，通过 `POST /api/v1/alerts/sources/:source/ingest` 接收告警 Webhook |
 
-完整 API 文档见 [API 参考](./docs/api/API_REFERENCE.md)。
+完整 API 文档见 [API 参考](./docs/api-reference.md)。
 
 ## 核心业务流程
 
@@ -453,7 +453,7 @@ make prod-health      # 检查状态
 - [ ] 测试容量、故障恢复和死信重放
 - [ ] 验收 CMDB、AI、连接器等已启用模块
 
-> 不要把开发默认配置用于生产。详细步骤见[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维手册](./docs/runbooks/production-initialization.md)。
+> 不要把开发默认配置用于生产。详细步骤见[生产就绪计划](./docs/delivery/production-readiness-program.md)和[运维手册](./docs/delivery/production-initialization.md)。
 
 ## 文档导航
 
@@ -465,7 +465,7 @@ make prod-health      # 检查状态
 | [商业化架构](./docs/architecture/commercial-ready-architecture.md) | 生产级总体架构 |
 | [CMDB 商业 MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB 可用/预览边界和验收门槛 |
 | [Outbox 架构](./docs/architecture/operational-command-outbox.md) | 可靠异步执行规范 |
-| [API 参考](./docs/api/API_REFERENCE.md) | HTTP 接口文档 |
+| [API 参考](./docs/api-reference.md) | HTTP 接口文档 |
 | [本地开发命令](./docs/dev-commands-reference.md) | 开发命令、调试与故障排查 |
 | [测试指南](./docs/testing/README.md) | 单元、集成、契约和 E2E 测试 |
 | [Roadmap](./ROADMAP.md) | 当前迭代方向唯一事实源 |
@@ -521,7 +521,7 @@ git push origin feature/your-feature
 
 ## Star 趋势
 
-[![GitHub Star 增长趋势](./docs/assets/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
+[![GitHub Star 增长趋势](./docs/images/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
 ## License
 

@@ -1,5 +1,7 @@
 # Approval Runtime Contract
 
+> Status: current
+
 ## Decision
 
 BPMN process execution is the target runtime source of truth for approval state:

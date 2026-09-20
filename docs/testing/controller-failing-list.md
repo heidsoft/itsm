@@ -1,5 +1,7 @@
 # Controller 测试失败与零覆盖清单（v1.1 → v1.5）
 
+> Status: current
+
 > Companion to **PR-0.3** of the Test Improvement Plan. See plan section
 > "阶段 0 / PR-0.3" for originating rationale.
 >

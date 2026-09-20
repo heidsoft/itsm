@@ -1,5 +1,7 @@
 # CMDB 对标 ServiceNow 差距与改进建议
 
+> Status: current
+
 ## 当前基础能力
 
 当前项目已经具备了 CMDB 的第一层基础：

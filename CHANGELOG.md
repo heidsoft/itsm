@@ -314,9 +314,9 @@ make dev-up
 
 ### Documentation
 
-- [Development Guide](./docs/getting-started/install.md)
-- [Deployment Guide](./docs/DEPLOYMENT_OPTIMIZATION.md)
-- [API Documentation](./docs/api/API_REFERENCE.md)
+- [Development Guide](./docs/install.md)
+- [Deployment Guide](./docs/deployment-optimization.md)
+- [API Documentation](./docs/api-reference.md)
 
 ---
 

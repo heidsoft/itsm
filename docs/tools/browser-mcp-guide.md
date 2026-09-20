@@ -1,5 +1,7 @@
 # 浏览器 MCP 方案对比与配置指南
 
+> Status: current
+
 > 本文档整理当前主流浏览器 MCP（Model Context Protocol）实现方案，涵盖配置方法、实现原理、架构差异及选型建议。
 
 ---

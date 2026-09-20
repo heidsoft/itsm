@@ -1,5 +1,7 @@
 # Static Analysis Gates
 
+> Status: current
+
 本文档定义了 v1.1 收尾阶段 (Stage 5) 的 5 条静态门禁。每条门禁对应一个
 shell 脚本，位于 `scripts/static-gates/`，由 `scripts/static-gates/run-all.sh`
 统一调用。

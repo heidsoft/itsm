@@ -1,5 +1,7 @@
 # 系统管理模块测试用例
 
+> Status: current
+
 - **模块**: 系统管理 (System Administration)
 - **版本**: v1.0
 - **最后更新**: 2026-09-12

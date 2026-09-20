@@ -1,5 +1,7 @@
 # 架构评审执行记录(2026-08-29)
 
+> Status: current
+
 > 技能路径:`architecture-visualization:explore` → `risk-quality-reviewer` + `system-modeler`
 > 证据基线:3 个并行 Explore 代理(后端/前端/部署) + 主代理关键事实核验(`wc -l`、路由 grep、`dot` 语法校验)。
 

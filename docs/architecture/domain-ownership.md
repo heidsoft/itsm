@@ -1,5 +1,7 @@
 # 领域所有权与迁移边界
 
+> Status: current
+
 | 领域 | 当前生产入口 | 目标所有者 | 事务所有者 | 当前策略 |
 |---|---|---|---|---|
 | Ticket | legacy controller/service | Ticket application service | Ticket service | 首版保留，不并入通用 Ticket 抽象 |

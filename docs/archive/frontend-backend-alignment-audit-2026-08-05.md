@@ -1,5 +1,7 @@
 # ITSM 前后端业务对齐审查报告
 
+> Status: historical
+
 > 审查时间: 2026-08-05
 > 范围: `itsm-backend` (Go/Gin) + `itsm-frontend` (Next.js/TS)
 > 目标: 端点对齐、字段命名、响应包装、错误处理四个维度的业务对齐状况

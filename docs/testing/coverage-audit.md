@@ -1,5 +1,7 @@
 # 后端覆盖率审计报告（Sprint v1.1）
 
+> Status: current
+
 > **生成时间**：2026-06-28
 > **基线命令**：`go test ./service/... ./controller/... -coverprofile=cov.out -covermode=set`
 > **范围**：itsm-backend（排除 ent 自动生成代码、migrations）

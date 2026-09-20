@@ -1,5 +1,7 @@
 # 服务目录模块 (Service Catalog) 测试用例
 
+> Status: current
+
 > 生成时间: 2026-05-10
 > 测试级别: E2E / Integration / Unit
 > 覆盖模块: 目录浏览、服务请求、请求状态跟踪、审批流程、服务评价、服务管理、审批链配置

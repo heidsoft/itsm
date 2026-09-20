@@ -36,7 +36,7 @@ echo "# Gate C.2 — Roadmap 重复检测"
 echo "########################################"
 
 # 豁免：ROADMAP.md 本身、文档治理说明、release README（描述如何写发布报告而非路线）
-EXEMPT_REGEX='(^ROADMAP\.md$|^docs/documentation-governance\.md$|^docs/roadmap\.md$|^docs/release/README\.md$|^docs/release/REPORT_TEMPLATE\.md$|^AGENTS\.md$|^CHANGELOG\.md$)'
+EXEMPT_REGEX='(^ROADMAP\.md$|^docs/documentation-governance\.md$|^docs/roadmap\.md$|^docs/delivery/release-guide\.md$|^docs/delivery/report-template\.md$|^AGENTS\.md$|^CHANGELOG\.md$)'
 
 scan_roadmap_table() {
   local file="$1"

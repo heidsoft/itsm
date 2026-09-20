@@ -1,5 +1,7 @@
 # Coverage Report Conventions
 
+> Status: current
+
 > Companion to `scripts/coverage-summarize.js` and `scripts/coverage-report.sh`.
 > See plan section "阶段 0" / PR-0.1 for context.
 

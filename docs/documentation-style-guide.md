@@ -1,5 +1,7 @@
 # 文档命名与维护规范
 
+> Status: current
+
 本文档定义 `docs/` 目录的长期维护规则。目标是让新用户能快速找到当前有效文档，同时保留项目演进过程中的历史材料。
 
 ## 目录分层
@@ -25,7 +27,7 @@
 
 ```text
 dev-commands-reference.md
-pg-upgrade-runbook.md
+delivery/pg-upgrade-runbook.md
 browser-e2e-test-report-2026-06-18.md
 ```
 

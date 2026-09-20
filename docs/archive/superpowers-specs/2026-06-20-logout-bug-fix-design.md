@@ -1,5 +1,7 @@
 # Logout Bug Fix Design
 
+> Status: historical
+
 **Date:** 2026-06-20
 **Scope:** Fix — Header logout not clearing httpOnly cookies
 

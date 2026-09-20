@@ -1,5 +1,7 @@
 # ITSM 分阶段完善总控计划
 
+> Status: current
+
 **状态**: Draft  
 **日期**: 2026-06-28  
 **适用范围**: 产品功能、架构治理、业务流程、开源交付、AI Native 演进  
@@ -31,7 +33,7 @@
 
 ### Surfaces
 
-- 产品文档：`docs/product/*`、`docs/v1-ga/*`、`docs/review/*`
+- 产品文档：`docs/product/*`、`docs/archive/*`、`docs/review/*`
 - 后端：`itsm-backend/router/router.go`、`controller/`、`handlers/`、`service/`、`dto/`、`ent/schema/`
 - 前端：`itsm-frontend/src/app/`、`src/lib/api/`、`src/lib/auth/`、`src/components/`
 - 交付：`.github/workflows/*`、`docker-compose*.yml`、`scripts/smoke-test.sh`

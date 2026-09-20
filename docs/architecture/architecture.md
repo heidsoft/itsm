@@ -1,5 +1,7 @@
 # ITSM 系统架构设计文档
 
+> Status: current
+
 ## 1. 系统概览
 
 ### 1.1 项目定位
@@ -432,8 +434,8 @@ Confluence API → JSON → 分块 → Embedding → ChromaDB → Rerank → LLM
 
 ### 8.3 相关文档
 
-- [API 文档](../api/API_REFERENCE.md)
-- [架构与数据库设计](./ARCHITECTURE_DESIGN.md)
-- [部署指南](../DEPLOYMENT_OPTIMIZATION.md)
+- [API 文档](../api-reference.md)
+- [架构与数据库设计](./architecture-design.md)
+- [部署指南](../deployment-optimization.md)
 - [BPMN 审批语义](./approval-node-semantics.md)
 - [AI 产品能力](../product/itsm-commercial-capability-contract.md)

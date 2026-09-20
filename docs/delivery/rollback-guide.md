@@ -1,5 +1,7 @@
 # 数据库迁移回滚指南
 
+> Status: current
+
 > 本文档配套 `itsm-backend/migrations/` 下所有 `YYYYMMDD_xxx.sql` 文件使用。
 > 每个迁移文件头部应包含 `ROLLBACK:` 注释指向回滚方案（手写或脚本生成）。
 > v1.0 GA 准入要求：所有 `2026-06-01` 之后的迁移必须有可执行的回滚 SQL。

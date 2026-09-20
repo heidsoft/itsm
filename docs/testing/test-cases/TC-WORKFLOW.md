@@ -1,5 +1,7 @@
 # TC-WORKFLOW: 工作流/BPMN模块测试用例文档
 
+> Status: current
+
 **项目**: ITSM (IT Service Management) 系统
 **模块**: 工作流/BPMN (Workflow Engine)
 **版本**: v1.0

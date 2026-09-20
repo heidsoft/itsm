@@ -1,5 +1,7 @@
 # PostgreSQL Upgrade Runbook
 
+> Status: current
+
 ## Overview
 
 This document records the PostgreSQL upgrade procedure from v16 to v17, including pre-upgrade checks, migration steps, and validation.

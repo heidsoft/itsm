@@ -1,5 +1,7 @@
 # AI-Native ITSM的架构进化论：Guidance-Harness-Skill三层体系设计
 
+> Status: current
+
 ## 从"AI功能"到"AI引擎"，让LLM真正可控可测可扩展
 
 ---

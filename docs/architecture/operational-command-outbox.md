@@ -1,5 +1,7 @@
 # Operational Command / Outbox 基座
 
+> Status: current
+
 ## 目标
 
 `operational_commands` 是跨领域副作用的统一可靠执行基座。业务事务只负责持久化业务实体和命令；Worker 负责可恢复执行。首批接入 `incident`、`change` 的 BPMN 启动，后续通知、连接器、AI、知识索引和 CMDB 同步必须复用同一状态机，不再在 HTTP 请求中启动无记录 goroutine。

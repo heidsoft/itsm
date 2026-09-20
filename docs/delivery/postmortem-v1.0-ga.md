@@ -1,5 +1,7 @@
 # v1.0 GA CI 修复复盘（Postmortem）
 
+> Status: current
+
 > **时间**：2026-06-27
 > **范围**：4 个 GitHub Actions workflow（backend-ci / frontend-ci / ga-gate / Security Scan）
 > **作者**：AI 协助 + 人工 review

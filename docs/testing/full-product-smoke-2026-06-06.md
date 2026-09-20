@@ -1,5 +1,7 @@
 # ITSM 全产品烟测记录 - 2026-06-06
 
+> Status: current
+
 ## 环境
 
 - 前端: `http://localhost:3000`, `itsm-frontend-prod`

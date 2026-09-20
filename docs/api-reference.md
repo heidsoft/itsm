@@ -1,5 +1,7 @@
 # ITSM API 参考文档
 
+> Status: current
+
 ## 概述
 
 本文档描述了 ITSM 系统的所有 API 接口。所有接口遵循 RESTful 设计原则，使用 JSON 格式进行数据交换。

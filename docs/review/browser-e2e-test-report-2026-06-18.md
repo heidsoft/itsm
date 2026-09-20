@@ -1,5 +1,7 @@
 # ITSM 系统浏览器端到端测试报告
 
+> Status: historical
+
 **测试日期**: 2026-06-18
 **测试方式**: agent-browser (Chromium) 自动化测试
 **测试环境**:

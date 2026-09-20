@@ -4,14 +4,14 @@
 #
 # Gate C.4 — 发布报告无 revision 锚点断言检测。
 #
-# 规则（见 docs/release/README.md §禁止出现的表述 与 docs/documentation-governance.md §维护规则 #6）：
+# 规则（见 docs/delivery/release-guide.md §禁止出现的表述 与 docs/documentation-governance.md §维护规则 #6）：
 #   任何 release / certification / readiness 文档若出现"全部通过""立即上线"
 #   "零阻断""完美""彻底解决""100% 覆盖"等无 revision 锚点的总结性断言，
 #   必须保证同一段落（或紧邻上下文）出现 commit SHA + 日期 + 镜像 digest 之一。
 #   缺失即视为不可签字证据。
 #
 # 检测方式：
-#   1. 扫描 docs/release/** 与 docs/*certification* 与 docs/*release-*.md。
+#   1. 扫描 docs/delivery/** 与 docs/*certification* 与 docs/*release-*.md。
 #   2. 匹配禁用表述列表。
 #   3. 抽取同一段（前后 5 行窗口）是否含 commit SHA / 日期 / 镜像 digest。
 #
@@ -85,7 +85,7 @@ scan_claims() {
 }
 
 while IFS= read -r -d '' f; do
-  [[ "${f}" =~ (docs/release/|docs/.*certification|docs/.*readiness|docs/.*release-|docs/.*GA-) ]] || continue
+  [[ "${f}" =~ (docs/delivery/|docs/.*certification|docs/.*readiness|docs/.*release-|docs/.*GA-) ]] || continue
   for phrase in "${BANNED_PHRASES[@]}"; do
     HITS="$(scan_claims "${f}" "${phrase}" 2>/dev/null || true)"
     if [ -n "${HITS}" ]; then

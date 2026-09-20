@@ -1,5 +1,7 @@
 # Test Trend — PR Comment Pipeline
 
+> Status: current
+
 > Companion to **PR-0.5** of the Test Improvement Plan. See plan section
 > "阶段 0 / PR-0.5" for the originating rationale.
 

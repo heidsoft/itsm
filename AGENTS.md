@@ -46,7 +46,7 @@ Docs and code are one bidirectional loop, not a one-way afterthought. In every c
    | Change | Update |
    |:---|:---|
    | user-visible fix / capability | `CHANGELOG.md` `[Unreleased]` |
-   | API contract change (breaking or not) | `CHANGELOG.md` + `docs/api/API_REFERENCE.md` (+ `UPGRADE.md` if breaking) |
+   | API contract change (breaking or not) | `CHANGELOG.md` + `docs/api-reference.md` (+ `UPGRADE.md` if breaking) |
    | domain maturity change (GA candidate / Pilot) | `README.md` maturity table + `docs/product/` — verify against source/tests first |
    | make targets / dev commands / compose usage | `README.md` (+ `README.en.md` if referenced there) |
    | roadmap status change | `ROADMAP.md` + refresh its `Last synced` date |

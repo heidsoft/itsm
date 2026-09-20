@@ -88,7 +88,7 @@ Key design choices:
 
 ## Quick Start
 
-> **Language note**: through v1.6.x the product UI is **Chinese-first** (targeting China private-deployment scenarios). English/Japanese READMEs cover onboarding; full UI localization (en-US etc.) is planned for v1.7 — see the [ROADMAP](ROADMAP.md).
+> **Language note**: through v1.6.x the product UI is **Chinese-first** (targeting China private-deployment scenarios). The English README covers onboarding; full UI localization (en-US etc.) is planned for v1.7 — see the [ROADMAP](ROADMAP.md).
 
 ### Prerequisites
 
@@ -285,7 +285,7 @@ open http://localhost:8090/swagger/index.html
 | Knowledge search | `GET /api/v1/knowledge/search?q=keyword` — search knowledge articles |
 | Ingest external alerts | After configuring `ALERT_SOURCE_CONFIG`, `POST /api/v1/alerts/sources/:source/ingest` to receive alert webhooks |
 
-Full API documentation: [API Reference](./docs/api/API_REFERENCE.md).
+Full API documentation: [API Reference](./docs/api-reference.md).
 
 ## Core Business Flows
 
@@ -451,7 +451,7 @@ Pre-launch checklist:
 - [ ] Test capacity, failure recovery, and dead-letter replay
 - [ ] Validate enabled modules (CMDB, AI, connectors, etc.)
 
-> Never use development defaults in production. See [Production Readiness Program](./docs/delivery/production-readiness-program.md) and [Operations Runbook](./docs/runbooks/production-initialization.md) for detailed steps.
+> Never use development defaults in production. See [Production Readiness Program](./docs/delivery/production-readiness-program.md) and [Operations Runbook](./docs/delivery/production-initialization.md) for detailed steps.
 
 ## Documentation
 
@@ -463,7 +463,7 @@ Pre-launch checklist:
 | [Commercial-Ready Architecture](./docs/architecture/commercial-ready-architecture.md) | Production-grade overall architecture |
 | [CMDB Commercial MVP](./docs/product/cmdb-commercial-mvp.md) | CMDB Available/Preview boundaries and acceptance criteria |
 | [Outbox Architecture](./docs/architecture/operational-command-outbox.md) | Reliable async execution specification |
-| [API Reference](./docs/api/API_REFERENCE.md) | HTTP API documentation |
+| [API Reference](./docs/api-reference.md) | HTTP API documentation |
 | [Local Development Commands](./docs/dev-commands-reference.md) | Development commands, debugging, and troubleshooting |
 | [Testing Guide](./docs/testing/README.md) | Unit, integration, contract, and E2E testing |
 | [Roadmap](./ROADMAP.md) | Single source of truth for current iteration direction |
@@ -519,7 +519,7 @@ Before submitting, stage files explicitly and confirm the staging area contains 
 
 ## Star History
 
-[![GitHub Star History](./docs/assets/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
+[![GitHub Star History](./docs/images/star-history.svg)](https://github.com/heidsoft/itsm/stargazers)
 
 ## License
 

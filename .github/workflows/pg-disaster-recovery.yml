@@ -14,7 +14,7 @@ on:
       - 'itsm-backend/internal/initialization/**'
       - 'scripts/backup.sh'
       - 'scripts/restore.sh'
-      - 'docs/pg-upgrade-runbook.md'
+      - 'docs/delivery/pg-upgrade-runbook.md'
       - '.github/workflows/pg-disaster-recovery.yml'
   workflow_dispatch:
     inputs:
@@ -322,10 +322,10 @@ jobs:
 
       - name: Verify runbook exists
         run: |
-          if [ -f "docs/pg-upgrade-runbook.md" ]; then
+          if [ -f "docs/delivery/pg-upgrade-runbook.md" ]; then
             echo "pg-upgrade-runbook.md exists"
             echo "---"
-            head -30 docs/pg-upgrade-runbook.md
+            head -30 docs/delivery/pg-upgrade-runbook.md
           else
             echo "ERROR: pg-upgrade-runbook.md not found"
             exit 1
@@ -340,7 +340,7 @@ jobs:
             "Rollback Procedure"
           )
           for section in "${required_sections[@]}"; do
-            if grep -q "$section" docs/pg-upgrade-runbook.md; then
+            if grep -q "$section" docs/delivery/pg-upgrade-runbook.md; then
               echo "✓ Found: $section"
             else
               echo "✗ Missing: $section"
@@ -377,7 +377,7 @@ jobs:
           for artifact in \
             "scripts/backup.sh" \
             "scripts/restore.sh" \
-            "docs/pg-upgrade-runbook.md" \
+            "docs/delivery/pg-upgrade-runbook.md" \
             "itsm-backend/internal/initialization/fence_test.go" \
             "itsm-backend/migration/migrations.go"; do
             if [ -f "$artifact" ]; then
@@ -392,7 +392,7 @@ jobs:
         with:
           name: pg-dr-evidence
           path: |
-            docs/pg-upgrade-runbook.md
+            docs/delivery/pg-upgrade-runbook.md
             scripts/backup.sh
             scripts/restore.sh
           retention-days: 30
