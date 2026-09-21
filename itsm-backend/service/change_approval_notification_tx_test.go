@@ -81,7 +81,7 @@ func TestNotifyChangeApprovalRequiredTxSinksIntoTx(t *testing.T) {
 	require.NoError(t, notificationSvc.NotifyChangeApprovalRequiredTx(
 		ctx, tx,
 		change.ID, approver.ID, tenant.ID,
-		1, "cab_chair",
+		1, "chair",
 	))
 	require.NoError(t, tx.Commit())
 
@@ -128,7 +128,7 @@ func TestNotifyChangeApprovalRequiredTxRollsBackWithChangeWrite(t *testing.T) {
 	err = notificationSvc.NotifyChangeApprovalRequiredTx(
 		ctx, tx,
 		999999, approver.ID, tenant.ID, // changeID=999999 在 tx 中不存在
-		1, "cab_chair",
+		1, "chair",
 	)
 	require.Error(t, err, "不存在的 changeID 应让通知方法整体失败")
 	require.NoError(t, tx.Rollback())
@@ -159,7 +159,7 @@ func TestNotifyChangeApprovalRequiredTxFailClosedWhenOutboxDisabled(t *testing.T
 	err = notificationSvc.NotifyChangeApprovalRequiredTx(
 		ctx, tx,
 		change.ID, approver.ID, tenant.ID,
-		1, "cab_chair",
+		1, "chair",
 	)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "transactional notification outbox disabled")
@@ -211,7 +211,7 @@ func TestNotifyChangeApprovalRequiredTxRejectsCrossTenantApprover(t *testing.T) 
 	err = notificationSvc.NotifyChangeApprovalRequiredTx(
 		ctx, tx,
 		change.ID, approver.ID, otherTenant.ID, // approver 属于 phase-d tenant，但 request tenantID 是 otherTenant
-		1, "cab_chair",
+		1, "chair",
 	)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tenant mismatch")
