@@ -44,7 +44,7 @@ done
 
 # 反向保护：保证目标文件已经迁移到 orientation（避免有人把代码回退到无任何 vertical 设置）
 ORIENTATION_FILES=(
-  'src/app/(main)/admin/cab/page.tsx'
+  'src/app/(main)/admin/change-review/page.tsx'
   'src/app/(main)/ai/audit/page.tsx'
   'src/app/(main)/email-intake/on-call/page.tsx'
   'src/app/(main)/admin/config-inheritance/page.tsx'

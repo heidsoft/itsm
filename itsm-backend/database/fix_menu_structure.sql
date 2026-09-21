@@ -89,7 +89,7 @@ INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, ten
 SELECT '变更审批', '/changes/approvals', 'GitMerge', id, 'change:approve', 53, 1, true, true FROM menus WHERE path = '/changes';
 
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT 'CAB会议', '/changes/cab', 'Users', id, 'change:manage', 54, 1, true, true FROM menus WHERE path = '/changes';
+SELECT '评审组', '/admin/change-review', 'Users', id, 'change:manage', 54, 1, true, true FROM menus WHERE path = '/changes';
 
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
 SELECT '变更日历', '/changes/calendar', 'Calendar', id, 'change:read', 55, 1, true, true FROM menus WHERE path = '/changes';
