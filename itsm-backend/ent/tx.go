@@ -34,8 +34,6 @@ type Tx struct {
 	BPMNPermission *BPMNPermissionClient
 	// BootstrapToken is the client for interacting with the BootstrapToken builders.
 	BootstrapToken *BootstrapTokenClient
-	// CABMember is the client for interacting with the CABMember builders.
-	CABMember *CABMemberClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
@@ -420,7 +418,6 @@ func (tx *Tx) init() {
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.BPMNPermission = NewBPMNPermissionClient(tx.config)
 	tx.BootstrapToken = NewBootstrapTokenClient(tx.config)
-	tx.CABMember = NewCABMemberClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CITag = NewCITagClient(tx.config)

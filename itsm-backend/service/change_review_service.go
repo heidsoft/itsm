@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/cabmember"
+	"itsm-backend/ent/changereviewmember"
 	entuser "itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -40,11 +40,11 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
 
-	exists, err := s.client.CABMember.Query().
+	exists, err := s.client.ChangeReviewMember.Query().
 		Where(
-			cabmember.UserID(req.UserID),
-			cabmember.Type(req.Type),
-			cabmember.TenantID(tenantID),
+			changereviewmember.UserID(req.UserID),
+			changereviewmember.Type(req.Type),
+			changereviewmember.TenantID(tenantID),
 		).
 		Exist(ctx)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 		return nil, fmt.Errorf("user is already a member of this review group")
 	}
 
-	member, err := s.client.CABMember.Create().
+	member, err := s.client.ChangeReviewMember.Create().
 		SetUserID(req.UserID).
 		SetType(req.Type).
 		SetRole(req.Role).
@@ -87,10 +87,10 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 
 // RemoveMember 移除评审组成员
 func (s *ChangeReviewService) RemoveMember(ctx context.Context, memberID int, tenantID int) error {
-	member, err := s.client.CABMember.Query().
+	member, err := s.client.ChangeReviewMember.Query().
 		Where(
-			cabmember.ID(memberID),
-			cabmember.TenantID(tenantID),
+			changereviewmember.ID(memberID),
+			changereviewmember.TenantID(tenantID),
 		).
 		Only(ctx)
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *ChangeReviewService) RemoveMember(ctx context.Context, memberID int, te
 		return fmt.Errorf("failed to get member: %w", err)
 	}
 
-	err = s.client.CABMember.DeleteOneID(memberID).Exec(ctx)
+	err = s.client.ChangeReviewMember.DeleteOneID(memberID).Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to remove change review member", "error", err, "member_id", memberID)
 		return fmt.Errorf("failed to remove member: %w", err)
@@ -113,10 +113,10 @@ func (s *ChangeReviewService) RemoveMember(ctx context.Context, memberID int, te
 // ListMembers 获取评审组成员列表（含未激活，便于管理端展示与启停）。
 // 审批链引擎 review: 解析器另行按 is_active=true 过滤，二者互不干扰。
 func (s *ChangeReviewService) ListMembers(ctx context.Context, boardType string, tenantID int) ([]*dto.ChangeReviewMemberResponse, error) {
-	members, err := s.client.CABMember.Query().
+	members, err := s.client.ChangeReviewMember.Query().
 		Where(
-			cabmember.Type(boardType),
-			cabmember.TenantID(tenantID),
+			changereviewmember.Type(boardType),
+			changereviewmember.TenantID(tenantID),
 		).
 		All(ctx)
 	if err != nil {
@@ -150,10 +150,10 @@ func (s *ChangeReviewService) ListMembers(ctx context.Context, boardType string,
 
 // UpdateMember 更新评审组成员（角色 / 激活状态）
 func (s *ChangeReviewService) UpdateMember(ctx context.Context, memberID, tenantID int, role string, isActive bool) (*dto.ChangeReviewMemberResponse, error) {
-	_, err := s.client.CABMember.Query().
+	_, err := s.client.ChangeReviewMember.Query().
 		Where(
-			cabmember.ID(memberID),
-			cabmember.TenantID(tenantID),
+			changereviewmember.ID(memberID),
+			changereviewmember.TenantID(tenantID),
 		).
 		Only(ctx)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *ChangeReviewService) UpdateMember(ctx context.Context, memberID, tenant
 		return nil, fmt.Errorf("failed to get member: %w", err)
 	}
 
-	member, err := s.client.CABMember.UpdateOneID(memberID).
+	member, err := s.client.ChangeReviewMember.UpdateOneID(memberID).
 		SetRole(role).
 		SetIsActive(isActive).
 		Save(ctx)

@@ -39,9 +39,6 @@ type BPMNPermission func(*sql.Selector)
 // BootstrapToken is the predicate function for bootstraptoken builders.
 type BootstrapToken func(*sql.Selector)
 
-// CABMember is the predicate function for cabmember builders.
-type CABMember func(*sql.Selector)
-
 // CIAttributeDefinition is the predicate function for ciattributedefinition builders.
 type CIAttributeDefinition func(*sql.Selector)
 

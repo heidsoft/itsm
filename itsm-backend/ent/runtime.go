@@ -14,7 +14,6 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
-	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
@@ -571,38 +570,6 @@ func init() {
 	bootstraptokenDescTenantID := bootstraptokenFields[5].Descriptor()
 	// bootstraptoken.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	bootstraptoken.TenantIDValidator = bootstraptokenDescTenantID.Validators[0].(func(int) error)
-	cabmemberFields := schema.CABMember{}.Fields()
-	_ = cabmemberFields
-	// cabmemberDescUserID is the schema descriptor for user_id field.
-	cabmemberDescUserID := cabmemberFields[0].Descriptor()
-	// cabmember.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
-	cabmember.UserIDValidator = cabmemberDescUserID.Validators[0].(func(int) error)
-	// cabmemberDescType is the schema descriptor for type field.
-	cabmemberDescType := cabmemberFields[1].Descriptor()
-	// cabmember.TypeValidator is a validator for the "type" field. It is called by the builders before save.
-	cabmember.TypeValidator = cabmemberDescType.Validators[0].(func(string) error)
-	// cabmemberDescRole is the schema descriptor for role field.
-	cabmemberDescRole := cabmemberFields[2].Descriptor()
-	// cabmember.DefaultRole holds the default value on creation for the role field.
-	cabmember.DefaultRole = cabmemberDescRole.Default.(string)
-	// cabmemberDescIsActive is the schema descriptor for is_active field.
-	cabmemberDescIsActive := cabmemberFields[3].Descriptor()
-	// cabmember.DefaultIsActive holds the default value on creation for the is_active field.
-	cabmember.DefaultIsActive = cabmemberDescIsActive.Default.(bool)
-	// cabmemberDescTenantID is the schema descriptor for tenant_id field.
-	cabmemberDescTenantID := cabmemberFields[4].Descriptor()
-	// cabmember.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
-	cabmember.TenantIDValidator = cabmemberDescTenantID.Validators[0].(func(int) error)
-	// cabmemberDescCreatedAt is the schema descriptor for created_at field.
-	cabmemberDescCreatedAt := cabmemberFields[5].Descriptor()
-	// cabmember.DefaultCreatedAt holds the default value on creation for the created_at field.
-	cabmember.DefaultCreatedAt = cabmemberDescCreatedAt.Default.(func() time.Time)
-	// cabmemberDescUpdatedAt is the schema descriptor for updated_at field.
-	cabmemberDescUpdatedAt := cabmemberFields[6].Descriptor()
-	// cabmember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	cabmember.DefaultUpdatedAt = cabmemberDescUpdatedAt.Default.(func() time.Time)
-	// cabmember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	cabmember.UpdateDefaultUpdatedAt = cabmemberDescUpdatedAt.UpdateDefault.(func() time.Time)
 	ciattributedefinitionFields := schema.CIAttributeDefinition{}.Fields()
 	_ = ciattributedefinitionFields
 	// ciattributedefinitionDescName is the schema descriptor for name field.

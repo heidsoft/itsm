@@ -22,7 +22,6 @@ import (
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/bootstraptoken"
 	"itsm-backend/ent/bpmnpermission"
-	"itsm-backend/ent/cabmember"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/changereviewmember"
@@ -178,8 +177,6 @@ type Client struct {
 	BPMNPermission *BPMNPermissionClient
 	// BootstrapToken is the client for interacting with the BootstrapToken builders.
 	BootstrapToken *BootstrapTokenClient
-	// CABMember is the client for interacting with the CABMember builders.
-	CABMember *CABMemberClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
@@ -444,7 +441,6 @@ func (c *Client) init() {
 	c.AuditLog = NewAuditLogClient(c.config)
 	c.BPMNPermission = NewBPMNPermissionClient(c.config)
 	c.BootstrapToken = NewBootstrapTokenClient(c.config)
-	c.CABMember = NewCABMemberClient(c.config)
 	c.CIAttributeDefinition = NewCIAttributeDefinitionClient(c.config)
 	c.CIRelationship = NewCIRelationshipClient(c.config)
 	c.CITag = NewCITagClient(c.config)
@@ -669,7 +665,6 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
 		BootstrapToken:              NewBootstrapTokenClient(cfg),
-		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CITag:                       NewCITagClient(cfg),
@@ -821,7 +816,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AuditLog:                    NewAuditLogClient(cfg),
 		BPMNPermission:              NewBPMNPermissionClient(cfg),
 		BootstrapToken:              NewBootstrapTokenClient(cfg),
-		CABMember:                   NewCABMemberClient(cfg),
 		CIAttributeDefinition:       NewCIAttributeDefinitionClient(cfg),
 		CIRelationship:              NewCIRelationshipClient(cfg),
 		CITag:                       NewCITagClient(cfg),
@@ -974,13 +968,13 @@ func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
 		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
-		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
-		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
-		c.Change, c.ChangePIR, c.ChangeReviewMember, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.ConfigurationItemHistory,
-		c.ConnectorConfig, c.ConnectorInboundDedup, c.Contract, c.Conversation,
-		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.BootstrapToken, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
+		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
+		c.ChangeReviewMember, c.CloudAccount, c.CloudResource, c.CloudService,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
+		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
+		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
+		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
 		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
@@ -1017,13 +1011,13 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AIAnalysisResult, c.Alert, c.Application, c.ApprovalChain, c.ApprovalRecord,
 		c.ApprovalWorkflow, c.Asset, c.AssetLicense, c.AuditLog, c.BPMNPermission,
-		c.BootstrapToken, c.CABMember, c.CIAttributeDefinition, c.CIRelationship,
-		c.CITag, c.CIType, c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView,
-		c.Change, c.ChangePIR, c.ChangeReviewMember, c.CloudAccount, c.CloudResource,
-		c.CloudService, c.ConfigurationItem, c.ConfigurationItemHistory,
-		c.ConnectorConfig, c.ConnectorInboundDedup, c.Contract, c.Conversation,
-		c.CustomerBranch, c.Department, c.DiscoveryJob, c.DiscoveryResult,
-		c.DiscoverySource, c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
+		c.BootstrapToken, c.CIAttributeDefinition, c.CIRelationship, c.CITag, c.CIType,
+		c.CMDBExportTask, c.CMDBImportTask, c.CMDBSavedView, c.Change, c.ChangePIR,
+		c.ChangeReviewMember, c.CloudAccount, c.CloudResource, c.CloudService,
+		c.ConfigurationItem, c.ConfigurationItemHistory, c.ConnectorConfig,
+		c.ConnectorInboundDedup, c.Contract, c.Conversation, c.CustomerBranch,
+		c.Department, c.DiscoveryJob, c.DiscoveryResult, c.DiscoverySource,
+		c.DomainConfig, c.EmailConversation, c.EmailIntakeAnalysis,
 		c.EmailOutboundMessage, c.EndpointACL, c.EngineerSkill,
 		c.ExternalContractReference, c.FeishuTicketSync, c.Group,
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
@@ -1079,8 +1073,6 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.BPMNPermission.mutate(ctx, m)
 	case *BootstrapTokenMutation:
 		return c.BootstrapToken.mutate(ctx, m)
-	case *CABMemberMutation:
-		return c.CABMember.mutate(ctx, m)
 	case *CIAttributeDefinitionMutation:
 		return c.CIAttributeDefinition.mutate(ctx, m)
 	case *CIRelationshipMutation:
@@ -2932,139 +2924,6 @@ func (c *BootstrapTokenClient) mutate(ctx context.Context, m *BootstrapTokenMuta
 		return (&BootstrapTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown BootstrapToken mutation op: %q", m.Op())
-	}
-}
-
-// CABMemberClient is a client for the CABMember schema.
-type CABMemberClient struct {
-	config
-}
-
-// NewCABMemberClient returns a client for the CABMember from the given config.
-func NewCABMemberClient(c config) *CABMemberClient {
-	return &CABMemberClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `cabmember.Hooks(f(g(h())))`.
-func (c *CABMemberClient) Use(hooks ...Hook) {
-	c.hooks.CABMember = append(c.hooks.CABMember, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `cabmember.Intercept(f(g(h())))`.
-func (c *CABMemberClient) Intercept(interceptors ...Interceptor) {
-	c.inters.CABMember = append(c.inters.CABMember, interceptors...)
-}
-
-// Create returns a builder for creating a CABMember entity.
-func (c *CABMemberClient) Create() *CABMemberCreate {
-	mutation := newCABMemberMutation(c.config, OpCreate)
-	return &CABMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of CABMember entities.
-func (c *CABMemberClient) CreateBulk(builders ...*CABMemberCreate) *CABMemberCreateBulk {
-	return &CABMemberCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *CABMemberClient) MapCreateBulk(slice any, setFunc func(*CABMemberCreate, int)) *CABMemberCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &CABMemberCreateBulk{err: fmt.Errorf("calling to CABMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*CABMemberCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &CABMemberCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for CABMember.
-func (c *CABMemberClient) Update() *CABMemberUpdate {
-	mutation := newCABMemberMutation(c.config, OpUpdate)
-	return &CABMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *CABMemberClient) UpdateOne(_m *CABMember) *CABMemberUpdateOne {
-	mutation := newCABMemberMutation(c.config, OpUpdateOne, withCABMember(_m))
-	return &CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *CABMemberClient) UpdateOneID(id int) *CABMemberUpdateOne {
-	mutation := newCABMemberMutation(c.config, OpUpdateOne, withCABMemberID(id))
-	return &CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for CABMember.
-func (c *CABMemberClient) Delete() *CABMemberDelete {
-	mutation := newCABMemberMutation(c.config, OpDelete)
-	return &CABMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *CABMemberClient) DeleteOne(_m *CABMember) *CABMemberDeleteOne {
-	return c.DeleteOneID(_m.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CABMemberClient) DeleteOneID(id int) *CABMemberDeleteOne {
-	builder := c.Delete().Where(cabmember.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &CABMemberDeleteOne{builder}
-}
-
-// Query returns a query builder for CABMember.
-func (c *CABMemberClient) Query() *CABMemberQuery {
-	return &CABMemberQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeCABMember},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a CABMember entity by its id.
-func (c *CABMemberClient) Get(ctx context.Context, id int) (*CABMember, error) {
-	return c.Query().Where(cabmember.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *CABMemberClient) GetX(ctx context.Context, id int) *CABMember {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *CABMemberClient) Hooks() []Hook {
-	return c.hooks.CABMember
-}
-
-// Interceptors returns the client interceptors.
-func (c *CABMemberClient) Interceptors() []Interceptor {
-	return c.inters.CABMember
-}
-
-func (c *CABMemberClient) mutate(ctx context.Context, m *CABMemberMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&CABMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&CABMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&CABMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&CABMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown CABMember mutation op: %q", m.Op())
 	}
 }
 
@@ -22814,8 +22673,8 @@ type (
 	hooks struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
 		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
-		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
-		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
+		BootstrapToken, CIAttributeDefinition, CIRelationship, CITag, CIType,
+		CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
 		ChangeReviewMember, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
 		ConnectorInboundDedup, Contract, Conversation, CustomerBranch, Department,
@@ -22847,8 +22706,8 @@ type (
 	inters struct {
 		AIAnalysisResult, Alert, Application, ApprovalChain, ApprovalRecord,
 		ApprovalWorkflow, Asset, AssetLicense, AuditLog, BPMNPermission,
-		BootstrapToken, CABMember, CIAttributeDefinition, CIRelationship, CITag,
-		CIType, CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
+		BootstrapToken, CIAttributeDefinition, CIRelationship, CITag, CIType,
+		CMDBExportTask, CMDBImportTask, CMDBSavedView, Change, ChangePIR,
 		ChangeReviewMember, CloudAccount, CloudResource, CloudService,
 		ConfigurationItem, ConfigurationItemHistory, ConnectorConfig,
 		ConnectorInboundDedup, Contract, Conversation, CustomerBranch, Department,

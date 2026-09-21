@@ -140,18 +140,6 @@ func (f BootstrapTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BootstrapTokenMutation", m)
 }
 
-// The CABMemberFunc type is an adapter to allow the use of ordinary
-// function as CABMember mutator.
-type CABMemberFunc func(context.Context, *ent.CABMemberMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f CABMemberFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.CABMemberMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CABMemberMutation", m)
-}
-
 // The CIAttributeDefinitionFunc type is an adapter to allow the use of ordinary
 // function as CIAttributeDefinition mutator.
 type CIAttributeDefinitionFunc func(context.Context, *ent.CIAttributeDefinitionMutation) (ent.Value, error)
