@@ -1,0 +1,19 @@
+# Gate C.6.4 — 产品表面棘轮基线（ratchet baseline）
+#
+# 语义：这些数字是**上限**，只允许下降，不允许无声明增长。
+#   current > baseline  -> FAIL（必须在同一个 commit 里显式上调基线并说明理由）
+#   current <= baseline -> PASS（下降是好事，不会失败）
+#
+# 上调基线的正确做法：
+#   1. 在本文件改值，行尾用 `# ` 追加一行说明（谁批准、对应哪条能力契约主链路）；
+#   2. 在 CHANGELOG.md [Unreleased] 写一条记录；
+#   3. 在 PR 描述里指向能力契约的主链路 —— 只加页面不加链路的增长应被拒绝。
+#
+# 格式：key=value[  # 说明]
+# 基线建立日期：2026-09-22（来源：output/product-drift-overdesign-audit-2026-09-22.md §1.2）
+
+handlers_dirs=68          # itsm-backend/handlers/ 一级域包数（2026-09-22 移除空目录 handlers/team 后）
+service_go_files=326      # itsm-backend/service/*.go 文件数（8 月评审 281 → 本次 326，已反向恶化）
+bootstrap_app_lines=1776  # itsm-backend/internal/bootstrap/app.go 行数（目标 <300）
+ent_schema_files=132      # itsm-backend/ent/schema/*.go 实体数
+frontend_pages=168        # itsm-frontend/src/app/**/page.tsx 页面数（新增页面需指向契约主链路）

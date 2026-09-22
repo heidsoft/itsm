@@ -270,6 +270,11 @@ and the **target** for the next major release.
 > **2026-09-12 实测基线**（防止与上表历史口径混淆）：`go test -cover ./handlers/...` 为 **26.2%**。
 > 该口径仅覆盖 `handlers/` 垂直分层包；历史 v1.0 基线的 ~2% 为 `service` + `controller` 口径，
 > 两者不可直接比较。覆盖率数据应由 CI 生成并写入，避免手抄导致漂移。
+>
+> **前端覆盖率口径**（同样为防止误读）：`itsm-frontend/jest.config.js` 的 `collectCoverageFrom`
+> 仅包含 `src/lib/**`，不含 `src/app/**` 与 `src/components/**`。因此上表 Frontend coverage 与
+> 80% 门槛都是 **`src/lib` 的局部口径**，不等于产品代码覆盖率；把口径扩到页面/组件，
+> 或明确按局部口径对外表述，两者必须二选一（由 Gate C.6.5 守卫）。
 
 ---
 

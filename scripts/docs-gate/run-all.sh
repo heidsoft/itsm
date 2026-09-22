@@ -2,19 +2,25 @@
 #
 # scripts/docs-gate/run-all.sh
 #
-# 一键运行 docs-gate 的 5 条规则：
+# 一键运行 docs-gate 的 6 条规则：
 #   C.1 硬编码生产密码（hardcoded passwords）
 #   C.2 Roadmap 重复
 #   C.3 内部 markdown 链接失效（advisory）
 #   C.4 发布报告无 revision 断言
 #   C.5 代码 <-> 文档同步新鲜度（make 目标存在性 / ROADMAP 与 CHANGELOG 新鲜度）
+#   C.6 产品口径漂移（成熟度口径一致性 / 领域清单 / 零路由域包 / 表面棘轮 / 覆盖率口径）
 #
-# 当前阶段（v2.0）全部 hard：缺失任意关键字段阻断构建。
-# 此前（v1.5）advisory 模式已废弃；--strict 保留向后兼容但不再需要。
+# 阻断强度（重要，勿凭注释判断，以脚本实际退出码为准）：
+#   - C.6 **默认 hard**：存在 FAIL 即退出码 1，无需 --strict。
+#   - C.1–C.5 **仅在传 --strict 时 hard**；不带参数时为 advisory（只报告不阻断）。
+#     ⚠️ CI（.github/workflows/docs-gate.yml）当前调用本脚本时**未传 --strict**，
+#     因此 C.1–C.5 在 CI 上实际并未阻断（2026-09-22 实测：C.3 有 59 条断链、
+#     C.4 有 22 条无锚点断言，但 Summary 仍为 0 failed）。升级为 hard 前需先清零存量，
+#     这属于独立的收敛项，不要与本脚本的注释混为一谈。
 #
 # 用法：
-#   ./scripts/docs-gate/run-all.sh          # hard 模式（默认阻断）
-#   ./scripts/docs-gate/run-all.sh --strict # 向后兼容，等同于默认行为
+#   ./scripts/docs-gate/run-all.sh          # C.6 hard + C.1–C.5 advisory
+#   ./scripts/docs-gate/run-all.sh --strict # 全部 hard（C.1–C.5 存量清零后才可用）
 #
 
 set -uo pipefail
@@ -55,6 +61,7 @@ run_gate "C.2 duplicate roadmap"    "${ROOT_DIR}/scripts/docs-gate/check-duplica
 run_gate "C.3 broken internal links" "${ROOT_DIR}/scripts/docs-gate/check-broken-links.sh"
 run_gate "C.4 release claims"       "${ROOT_DIR}/scripts/docs-gate/check-release-claims.sh"
 run_gate "C.5 doc sync freshness"   "${ROOT_DIR}/scripts/docs-gate/check-doc-sync.sh"
+run_gate "C.6 product drift"        "${ROOT_DIR}/scripts/docs-gate/check-product-drift.sh"
 
 echo ""
 echo "########################################"

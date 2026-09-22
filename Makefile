@@ -122,9 +122,13 @@ release-evidence: ## 生成发布证据包（SHA/digest/迁移/E2E 聚合；outp
 	@echo "$(BLUE)生成发布证据包...$(NC)"
 	@bash scripts/release-evidence.sh
 
-docs-gate: ## 运行文档质量门禁（advisory；--strict 传 DOCS_GATE_ARGS=--strict）
+docs-gate: ## 运行文档质量门禁（C.6 产品口径漂移默认 hard；C.1–C.5 传 DOCS_GATE_ARGS=--strict 才 hard）
 	@echo "$(BLUE)运行文档质量门禁...$(NC)"
 	@bash scripts/docs-gate/run-all.sh $(DOCS_GATE_ARGS)
+
+product-drift: ## 检查产品口径漂移（成熟度口径/领域清单/零路由域包/表面棘轮/覆盖率口径；默认 hard，--advisory 仅报告）
+	@echo "$(BLUE)检查产品口径漂移（Gate C.6）...$(NC)"
+	@bash scripts/docs-gate/check-product-drift.sh $(PRODUCT_DRIFT_ARGS)
 
 check-handlers-hygiene: ## 检查 handlers 垂直切片卫生（裸奔域/域间 import；--strict 传 HANDLERS_GATE_ARGS=--strict）
 	@echo "$(BLUE)检查 handlers 分层卫生...$(NC)"

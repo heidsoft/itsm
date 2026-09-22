@@ -1,0 +1,36 @@
+# Gate C.6 — 产品口径漂移豁免登记（waivers）
+#
+# 用途：本文件让 Gate C.6 可以「今天就是 hard（阻断构建）」，同时不为存量问题
+#       制造假绿。任何 C.6 违规想放行，都必须在这里登记，并且必须带上：
+#         owner（谁负责解决）+ expires（到期日）+ reason（为什么不现在就改）
+#
+# 格式：<rule>|<subject>|<owner>|<expires YYYY-MM-DD>|<reason>
+#   - `#` 开头的行是注释；
+#   - 到期日采用字典序比较（YYYY-MM-DD 字符串天然可比）；
+#     expires 与 today **同日**仍判定为有效 —— 完整当天保留给 owner 收尾；
+#     次日（expires+1）立即反向 FAIL，无宽限期。
+#   - 豁免是**债务登记**，不是解决方案。到期前必须二选一：修掉，或重新拍板。
+#
+# 当前存量债务：
+#   D2 成熟度口径三套互斥（README/能力契约/CHANGELOG）
+#   D4 新层零路由（8 月评审 R2 复发）
+#
+# 本文件不是 v1.x 的临时措施，而是长期机制：允许「已知且被认领」的漂移存在，
+# 不允许「无人认领」的漂移存在。
+
+# ---- D2：README 与能力契约对「变更」给出相反结论 ----
+# README:75 写「变更管理 = 可用（可进入生产验收）」
+# 能力契约:23 写「变更 = Pilot，发布前需重新评估 GA 候选资格」
+# 二者不可能同时为真。降级 README 的公开承诺属产品决策，故不擅自修改，
+# 而是登记为债务并强制在到期前由产品侧拍板。
+C.6.1|变更管理|齐活林|2026-10-31|README 标"可用"、能力契约标"Pilot 需重评 GA"；待产品拍板统一口径（改 README 或改契约）
+
+# ---- D4：零路由的 handler 包（新层建了但从未接线）----
+# 三个包均确认在 router/、service/、internal/、main.go 中 0 引用：
+#   handlers/department  → 与 config.CommonHandler 的 /departments 端点构成双实现
+#   handlers/root_cause  → 自 controller/ 迁移而来，迁移后从未接线
+#   handlers/dashboard   → router/dashboard_routes.go 用的是 handlers/ticket，与本包无关
+# 删除属代码删减决策（涉及 CHANGELOG 与前端契约），故登记债务而非擅自删除。
+C.6.3|department|齐活林|2026-10-31|零路由孤儿包，且与 CommonHandler 的 /departments 构成双实现；待决定删除或接线
+C.6.3|root_cause|齐活林|2026-10-31|零路由孤儿包（controller 迁移后未接线）；待决定删除或接线
+C.6.3|dashboard|齐活林|2026-10-31|零路由孤儿包（/dashboard 路由实际由 handlers/ticket 提供）；待决定删除或接线

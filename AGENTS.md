@@ -109,7 +109,7 @@ ADMIN_PASSWORD=admin123
 
 ### Backend Structure
 
-- **handlers/<domain>/** - **Target architecture.** Domain-sliced vertical slices. Each package owns: `handler.go` (HTTP), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). Existing domains: ai, cab, capability, change, cmdb, dashboard, email_intake, incident, knowledge, known_error, operations, problem, service_catalog, service_request, skill, sla, standard_change. Shared helpers live in `handlers/common/` and `handlers/shared/`.
+- **handlers/<domain>/** - **Target architecture.** Domain-sliced vertical slices. Each package owns: `handler.go` (HTTP), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). The domain list is enumerated by the filesystem, not by this document — run `ls itsm-backend/handlers/`. Do not hard-code it here: a hand-maintained list drifts (it previously claimed a `cab` domain that never existed). Every `handlers/<domain>/` package must be wired by `router/` or explicitly waived, enforced by `scripts/docs-gate/check-product-drift.sh` (Gate C.6.2 / C.6.3). Shared helpers live in `handlers/common/` and `handlers/shared/`.
 - **service/** - Business logic used by both legacy `controller/` and `handlers/<domain>/`. Do not add new business logic here without a clear owner.
 - **controller/** - **Legacy horizontal layering.** Hosts thin HTTP facades that delegate to `service/`. This directory is frozen for new code. Existing controllers are gradually migrated to `handlers/<domain>/` as part of normal development.
 - **ent/schema/** - Database schema definitions (Ent ORM)
