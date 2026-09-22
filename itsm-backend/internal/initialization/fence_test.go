@@ -2,341 +2,328 @@ package initialization
 
 import (
 	"context"
-	"database/sql"
+	"errors"
+	"sync"
 	"testing"
 	"time"
 
-	_ "github.com/lib/pq"
-	"github.com/stretchr/testify/assert"
+	"entgo.io/ent/dialect"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 
-// TestFencingTokenPreventsStaleWriter tests that the fencing token mechanism
-// prevents a stale writer from completing a transaction after a fresh writer
-// has already acquired the lease.
-func TestFencingTokenPreventsStaleWriter(t *testing.T) {
-	// This test requires a running PostgreSQL instance.
-	// Skip if no database is available.
-	db, err := sql.Open("postgres", "host=127.0.0.1 port=5432 user=itsm dbname=itsm sslmode=disable")
-	if err != nil {
-		t.Skip("Database not available, skipping integration test")
+func TestInitializationTestDatabaseGuard(t *testing.T) {
+	for _, name := range []string{"itsm", "postgres", "", "itsm_init_test_", "customer_itsm_init_test_1", "ITSM_INIT_TEST_1"} {
+		t.Run("reject_"+name, func(t *testing.T) {
+			require.Error(t, validateInitializationTestDatabase(name))
+		})
 	}
-	defer db.Close()
+	require.NoError(t, validateInitializationTestDatabase("itsm_init_test_regressions"))
+}
 
-	ctx := context.Background()
-	if err := db.PingContext(ctx); err != nil {
-		t.Skip("Cannot ping database, skipping integration test: " + err.Error())
+func TestPostgresSQLStoreRejectsLostAndExpiredHeartbeats(t *testing.T) {
+	for _, scenario := range []string{"wrong_owner", "wrong_token", "expired", "taken_over", "released"} {
+		t.Run(scenario, func(t *testing.T) {
+			f := newInitializationPostgresFixture(t)
+			request := initializationRequest("executor-old")
+			const component = "rbac"
+			lease, err := f.store.AcquireLease(f.ctx, request.Scope, component, request.ExecutorID, time.Hour)
+			require.NoError(t, err)
+			require.NoError(t, f.store.Heartbeat(f.ctx, request.Scope, component, request.ExecutorID, lease.FencingToken, 2*time.Hour))
+			owner, token := request.ExecutorID, lease.FencingToken
+			switch scenario {
+			case "wrong_owner":
+				owner = "other-executor"
+			case "wrong_token":
+				token++
+			case "expired":
+				f.expireLease(t, request.Scope, component)
+			case "taken_over":
+				f.expireLease(t, request.Scope, component)
+				fresh, err := f.second.AcquireLease(f.ctx, request.Scope, component, "executor-new", time.Hour)
+				require.NoError(t, err)
+				require.Greater(t, fresh.FencingToken, lease.FencingToken)
+			case "released":
+				require.NoError(t, f.store.ReleaseLease(f.ctx, request.Scope, component, owner, token))
+			}
+			before := f.installation(t, request.Scope)
+			err = f.store.Heartbeat(f.ctx, request.Scope, component, owner, token, time.Hour)
+			require.ErrorContains(t, err, "lease lost or fencing token rejected")
+			require.Equal(t, before, f.installation(t, request.Scope), "rejected heartbeat must not renew or mutate the lease")
+		})
 	}
+}
 
-	// Note: RLS is enabled but applies only to tenant-scoped tables.
-	// test_fence_installation is a standalone test table owned by itsm user,
-	// so RLS does not block the test operations.
-
-	// Setup: create test installation record
-	setupSQL := `
-		CREATE TABLE IF NOT EXISTS test_fence_installation (
-			id BIGSERIAL PRIMARY KEY,
-			scope_type VARCHAR(16) NOT NULL,
-			scope_id BIGINT NOT NULL,
-			component VARCHAR(100) NOT NULL,
-			status VARCHAR(24) NOT NULL DEFAULT 'running',
-			fencing_token BIGINT NOT NULL DEFAULT 1,
-			lease_owner VARCHAR(255) NOT NULL DEFAULT '',
-			lease_expires_at TIMESTAMPTZ,
-			UNIQUE(scope_type, scope_id, component)
-		);
-
-		TRUNCATE TABLE test_fence_installation;
-	`
-	_, err = db.ExecContext(ctx, setupSQL)
+func TestPostgresEngineTakeoverRollsBackStaleBusinessWrite(t *testing.T) {
+	f := newInitializationPostgresFixture(t)
+	request := initializationRequest("executor-old")
+	written := make(chan struct{})
+	resume := make(chan struct{})
+	var resumeOnce sync.Once
+	release := func() { resumeOnce.Do(func() { close(resume) }) }
+	runCtx, cancelRun := context.WithCancel(f.ctx)
+	defer cancelRun()
+	component := &testInitializer{name: "rbac", apply: func(ctx context.Context, scope Scope, plan Plan, driver dialect.Driver) (Result, error) {
+		result, err := writeAndVerifyInitializationFixture(ctx, scope, plan, driver)
+		if err != nil {
+			return result, err
+		}
+		close(written)
+		select {
+		case <-resume:
+			return result, nil
+		case <-ctx.Done():
+			return result, ctx.Err()
+		}
+	}}
+	engine, err := NewEngine(f.store, []Initializer{component}, time.Hour)
 	require.NoError(t, err)
-
-	// Helper to acquire lease — uses UPDATE-then-INSERT to avoid CTE race conditions
-	acquireLease := func(executorID string, ttl time.Duration) (int64, error) {
-		// Try to claim or extend an existing lease
-		var token int64
-		err := db.QueryRowContext(ctx, `
-			UPDATE test_fence_installation
-			SET status = 'running',
-			    fencing_token = fencing_token + 1,
-			    lease_owner = $1,
-			    lease_expires_at = NOW() + ($2 * INTERVAL '1 millisecond')
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
-			  AND (lease_expires_at IS NULL OR lease_expires_at < NOW())
-			RETURNING fencing_token
-		`, executorID, ttl.Milliseconds()).Scan(&token)
-		if err == nil {
-			return token, nil // updated existing row
-		}
-		if err != sql.ErrNoRows {
-			return 0, err // real error
-		}
-		// No active lease — insert new record
-		err = db.QueryRowContext(ctx, `
-			INSERT INTO test_fence_installation
-				(scope_type, scope_id, component, status, fencing_token, lease_owner, lease_expires_at)
-			VALUES ('tenant', 1, 'test-component', 'running', 1, $1, NOW() + ($2 * INTERVAL '1 millisecond'))
-			ON CONFLICT (scope_type, scope_id, component) DO NOTHING
-			RETURNING fencing_token
-		`, executorID, ttl.Milliseconds()).Scan(&token)
-		if err == nil {
-			return token, nil // inserted new row
-		}
-		if err == sql.ErrNoRows {
-			// Another caller raced and inserted first — re-query the token
-			err = db.QueryRowContext(ctx, `
-				SELECT fencing_token FROM test_fence_installation
-				WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
-			`).Scan(&token)
-			return token, err
-		}
-		return 0, err
+	type outcome struct {
+		runID int64
+		err   error
 	}
-
-	// Helper to heartbeat with token
-	heartbeat := func(executorID string, token int64, ttl time.Duration) error {
-		result, err := db.ExecContext(ctx, `
-			UPDATE test_fence_installation
-			SET lease_expires_at = NOW() + ($1 * INTERVAL '1 millisecond')
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
-			  AND lease_owner = $2 AND fencing_token = $3 AND status = 'running'
-		`, ttl.Milliseconds(), executorID, token)
-		if err != nil {
-			return err
+	done := make(chan outcome, 1)
+	finished := make(chan struct{})
+	go func() {
+		defer close(finished)
+		runID, err := engine.Apply(runCtx, request)
+		done <- outcome{runID, err}
+	}()
+	t.Cleanup(func() {
+		cancelRun()
+		release()
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+		defer cancel()
+		select {
+		case <-finished:
+		case <-cleanupCtx.Done():
+			t.Error("initializer did not stop before database cleanup")
 		}
-		affected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-		if affected != 1 {
-			return ErrLeaseLost
-		}
-		return nil
-	}
-
-	// Helper to complete component (requires correct token)
-	completeComponent := func(executorID string, token int64) error {
-		result, err := db.ExecContext(ctx, `
-			UPDATE test_fence_installation
-			SET status = 'succeeded', lease_owner = '', lease_expires_at = NULL
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'test-component'
-			  AND lease_owner = $1 AND fencing_token = $2
-		`, executorID, token)
-		if err != nil {
-			return err
-		}
-		affected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-		if affected != 1 {
-			return ErrLeaseLost
-		}
-		return nil
-	}
-
-	// Test 1: Fresh writer acquires lease successfully
-	t.Run("fresh_writer_acquires_lease", func(t *testing.T) {
-		token, err := acquireLease("executor-fresh", 5*time.Second)
-		require.NoError(t, err)
-		assert.Greater(t, token, int64(0))
 	})
-
-	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
-	time.Sleep(10 * time.Millisecond)
-	// Test 2: Stale writer (old token) cannot complete
-	t.Run("stale_writer_token_rejected", func(t *testing.T) {
-		// Executor A acquires lease with 50ms TTL
-		tokenA, err := acquireLease("executor-A", 50*time.Millisecond)
-		require.NoError(t, err)
-
-		// Wait for A's lease to fully expire
-		time.Sleep(60 * time.Millisecond)
-
-		// Executor B acquires the now-expired lease (token increments)
-		tokenB, err := acquireLease("executor-B", 5*time.Second)
-		require.NoError(t, err)
-		assert.Greater(t, tokenB, tokenA, "token should be incremented after expiry")
-
-		// Executor A (stale) tries to complete with old token - should fail
-		err = completeComponent("executor-A", tokenA)
-		assert.ErrorIs(t, err, ErrLeaseLost, "stale writer should be rejected")
-
-		// Executor B (fresh) completes successfully
-		err = completeComponent("executor-B", tokenB)
-		assert.NoError(t, err, "fresh writer should succeed")
-
-		// Cleanup: delete test row
-		_, _ = db.ExecContext(ctx, "DELETE FROM test_fence_installation WHERE scope_type = 'tenant'")
-	})
-
-	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
-	time.Sleep(10 * time.Millisecond)
-	// Test 3: Heartbeat extends lease
-	t.Run("heartbeat_extends_lease", func(t *testing.T) {
-		token, err := acquireLease("executor-heartbeat", 2*time.Second)
-		require.NoError(t, err)
-
-		// Wait 1 second, heartbeat should still work
-		time.Sleep(1 * time.Second)
-		err = heartbeat("executor-heartbeat", token, 5*time.Second)
-		assert.NoError(t, err)
-
-		// Wait another 2 seconds (total 3s > original 2s TTL)
-		// Stale heartbeat with same token should still work (we extended it)
-		err = heartbeat("executor-heartbeat", token, 5*time.Second)
-		assert.NoError(t, err)
-	})
-
-	// Reset for next test
-	_, _ = db.ExecContext(ctx, "TRUNCATE TABLE test_fence_installation RESTART IDENTITY CASCADE")
-	time.Sleep(10 * time.Millisecond)
-	// Test 4: Stale heartbeat (wrong token) is rejected
-	t.Run("stale_heartbeat_rejected", func(t *testing.T) {
-		// Executor A acquires lease with a short TTL
-		tokenA, err := acquireLease("executor-A", 50*time.Millisecond)
-		require.NoError(t, err)
-
-		// Wait for A's lease to expire
-		time.Sleep(60 * time.Millisecond)
-
-		// Executor B acquires the expired lease (token increments)
-		tokenB, err := acquireLease("executor-B", 5*time.Second)
-		require.NoError(t, err)
-		assert.Greater(t, tokenB, tokenA, "token should be incremented after expiry")
-
-		// Executor A (stale) tries heartbeat with tokenA - should fail
-		err = heartbeat("executor-A", tokenA, 5*time.Second)
-		assert.ErrorIs(t, err, ErrLeaseLost)
-
-		// Executor B (fresh) heartbeat works
-		err = heartbeat("executor-B", tokenB, 5*time.Second)
-		assert.NoError(t, err)
-
-		// Cleanup: delete test row
-		_, _ = db.ExecContext(ctx, "DELETE FROM test_fence_installation WHERE scope_type = 'tenant'")
-	})
-
-	// Cleanup
-	_, _ = db.ExecContext(ctx, "DROP TABLE IF EXISTS test_fence_installation")
-}
-
-// TestFencingTokenCrashRecovery tests that after a crash, the fencing token
-// prevents the crashed executor from resuming work that was taken over.
-func TestFencingTokenCrashRecovery(t *testing.T) {
-	db, err := sql.Open("postgres", "host=127.0.0.1 port=5432 user=itsm dbname=itsm sslmode=disable")
-	if err != nil {
-		t.Skip("Database not available, skipping integration test")
+	select {
+	case <-written:
+	case result := <-done:
+		t.Fatalf("initializer exited before its business write: %v", result.err)
+	case <-f.ctx.Done():
+		t.Fatal("initializer did not reach its business write")
 	}
-	defer db.Close()
+	require.Zero(t, f.businessCount(t), "even nested transaction Commit must not publish the business write")
+	oldLease := f.installation(t, request.Scope)
+	var oldRunID int64
+	require.NoError(t, f.secondDB.QueryRowContext(f.ctx, "SELECT run_id FROM initialization_component_attempts").Scan(&oldRunID))
+	f.assertRunAndAttempt(t, oldRunID, "running")
 
-	ctx := context.Background()
-	if err := db.PingContext(ctx); err != nil {
-		t.Skip("Cannot ping database, skipping integration test: " + err.Error())
-	}
-
-	// Note: RLS is enabled but applies only to tenant-scoped tables.
-	// test_crash_installation is a standalone test table owned by itsm user,
-	// so RLS does not block the test operations.
-
-	// Setup
-	setupSQL := `
-		CREATE TABLE IF NOT EXISTS test_crash_installation (
-			id BIGSERIAL PRIMARY KEY,
-			scope_type VARCHAR(16) NOT NULL,
-			scope_id BIGINT NOT NULL,
-			component VARCHAR(100) NOT NULL,
-			status VARCHAR(24) NOT NULL DEFAULT 'running',
-			fencing_token BIGINT NOT NULL DEFAULT 1,
-			lease_owner VARCHAR(255) NOT NULL DEFAULT '',
-			lease_expires_at TIMESTAMPTZ,
-			UNIQUE(scope_type, scope_id, component)
-		);
-		TRUNCATE TABLE test_crash_installation;
-	`
-	_, err = db.ExecContext(ctx, setupSQL)
+	// A real second SQLStore takes over while the first transaction is still open.
+	f.expireLease(t, request.Scope, component.Name())
+	fresh, err := f.second.AcquireLease(f.ctx, request.Scope, component.Name(), "executor-new", time.Hour)
 	require.NoError(t, err)
+	require.Greater(t, fresh.FencingToken, oldLease.FencingToken)
+	f.assertRunAndAttempt(t, oldRunID, "failed")
+	newRequest := initializationRequest("executor-new")
+	newRunID, err := f.second.BeginRun(f.ctx, newRequest)
+	require.NoError(t, err)
+	plan, err := component.Plan(f.ctx, request.Scope)
+	require.NoError(t, err)
+	plan.Component = component.Name()
+	newAttemptID, err := f.second.StartAttempt(f.ctx, newRunID, request.Scope, plan, fresh.FencingToken)
+	require.NoError(t, err)
+	before := f.installationSnapshot(t, request.Scope)
 
-	// Test scenario: executor crashes mid-transaction
-	t.Run("crashed_executor_cannot_resume", func(t *testing.T) {
-		// Executor A starts and acquires lease
-		var tokenA int64
-		err := db.QueryRowContext(ctx, `
-			INSERT INTO test_crash_installation
-				(scope_type, scope_id, component, status, fencing_token, lease_owner, lease_expires_at)
-			VALUES ('tenant', 1, 'crash-test', 'running', 1, 'executor-A', NOW() + '5 seconds')
-			ON CONFLICT (scope_type, scope_id, component) DO NOTHING
-			RETURNING fencing_token
-		`).Scan(&tokenA)
-		require.NoError(t, err)
+	release()
+	select {
+	case result := <-done:
+		require.Equal(t, oldRunID, result.runID)
+		require.ErrorContains(t, result.err, "lease lost or fencing token rejected")
+	case <-f.ctx.Done():
+		t.Fatal("stale initializer did not finish")
+	}
+	require.Zero(t, f.businessCount(t))
+	f.assertRunAndAttempt(t, oldRunID, "failed")
+	f.assertRunAndAttempt(t, newRunID, "running")
+	require.Equal(t, before, f.installationSnapshot(t, request.Scope), "old failure writeback must not pollute the successor lease")
+	var abandonedReason string
+	require.NoError(t, f.secondDB.QueryRowContext(f.ctx, "SELECT error_message FROM initialization_runs WHERE id = $1", oldRunID).Scan(&abandonedReason))
+	require.Equal(t, "initialization lease superseded", abandonedReason, "late FinishRun must not overwrite takeover evidence")
+	require.ErrorContains(t, f.store.ReleaseLease(f.ctx, request.Scope, component.Name(), request.ExecutorID, oldLease.FencingToken), "lease lost")
+	require.Equal(t, before, f.installationSnapshot(t, request.Scope))
 
-		// Simulate: executor-A starts transaction, writes some data
-		tx, err := db.BeginTx(ctx, nil)
-		require.NoError(t, err)
-
-		// Executor writes partial work
-		_, err = tx.ExecContext(ctx, `
-			UPDATE test_crash_installation
-			SET status = 'running'  -- still running
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'crash-test'
-		`)
-		require.NoError(t, err)
-
-		// CRASH: executor-A dies, connection drops (simulated by rollback)
-		tx.Rollback()
-
-		// Meanwhile, executor-B takes over by directly inserting with fence increment
-		// The key invariant: executor-B's fencing_token must be > executor-A's
-		var tokenB int64
-		err = db.QueryRowContext(ctx, `
-			INSERT INTO test_crash_installation
-				(scope_type, scope_id, component, status, fencing_token, lease_owner, lease_expires_at)
-			VALUES ('tenant', 1, 'crash-test', 'running', $1 + 1, 'executor-B', NOW() + '5 seconds'::interval)
-			ON CONFLICT (scope_type, scope_id, component) DO UPDATE
-			SET status = 'running',
-			    fencing_token = test_crash_installation.fencing_token + 1,
-			    lease_owner = 'executor-B',
-			    lease_expires_at = NOW() + '5 seconds'::interval
-			RETURNING fencing_token
-		`, tokenA).Scan(&tokenB)
-		require.NoError(t, err)
-		assert.Greater(t, tokenB, tokenA, "token should be incremented by new owner")
-
-		// Executor-B completes successfully
-		_, err = db.ExecContext(ctx, `
-			UPDATE test_crash_installation
-			SET status = 'succeeded', lease_owner = '', lease_expires_at = NULL
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'crash-test'
-			  AND lease_owner = 'executor-B' AND fencing_token = $1
-		`, tokenB)
-		require.NoError(t, err)
-
-		// Verify: executor-A (crashed) cannot complete with old token
-		result, err := db.ExecContext(ctx, `
-			UPDATE test_crash_installation
-			SET status = 'succeeded', lease_owner = '', lease_expires_at = NULL
-			WHERE scope_type = 'tenant' AND scope_id = 1 AND component = 'crash-test'
-			  AND lease_owner = 'executor-A' AND fencing_token = $1
-		`, tokenA)
-		require.NoError(t, err)
-		affected, _ := result.RowsAffected()
-		assert.Equal(t, int64(0), affected, "crashed executor's stale token should not affect rows")
-	})
-
-	// Cleanup
-	_, _ = db.ExecContext(ctx, "DROP TABLE IF EXISTS test_crash_installation")
+	// The successor still owns a usable lease and can commit normally.
+	require.NoError(t, f.second.Heartbeat(f.ctx, request.Scope, component.Name(), newRequest.ExecutorID, fresh.FencingToken, time.Hour))
+	tx, err := f.second.BeginComponent(f.ctx, newAttemptID, newRunID, request.Scope, plan, newRequest.ExecutorID, fresh.FencingToken)
+	require.NoError(t, err)
+	defer tx.Rollback()
+	result, err := writeAndVerifyInitializationFixture(f.ctx, request.Scope, plan, tx.Driver())
+	require.NoError(t, err)
+	require.NoError(t, tx.Complete(f.ctx, result))
+	require.NoError(t, tx.Commit())
+	require.NoError(t, f.second.FinishRun(f.ctx, newRunID, "succeeded", result.Summary, nil))
+	f.assertRunAndAttempt(t, newRunID, "succeeded")
+	require.Equal(t, 1, f.businessCount(t))
 }
 
-// ErrLeaseLost is returned when the lease is held by another executor
-var ErrLeaseLost = &LeaseError{message: "lease lost or fencing token rejected"}
-
-// LeaseError represents a lease-related error
-type LeaseError struct {
-	message string
+func TestPostgresEngineRejectsExpiredFenceAfterBusinessWrite(t *testing.T) {
+	f := newInitializationPostgresFixture(t)
+	request := initializationRequest("executor-old")
+	component := &testInitializer{name: "rbac", apply: func(ctx context.Context, scope Scope, plan Plan, driver dialect.Driver) (Result, error) {
+		result, err := writeAndVerifyInitializationFixture(ctx, scope, plan, driver)
+		if err != nil {
+			return result, err
+		}
+		f.expireLease(t, scope, plan.Component)
+		return result, nil
+	}}
+	engine, err := NewEngine(f.store, []Initializer{component}, time.Hour)
+	require.NoError(t, err)
+	runID, err := engine.Apply(f.ctx, request)
+	require.ErrorContains(t, err, "lease lost or fencing token rejected")
+	require.Zero(t, f.businessCount(t))
+	f.assertRunAndAttempt(t, runID, "failed")
+	status := f.installation(t, request.Scope)
+	require.Equal(t, "failed", status.Status)
+	require.Empty(t, status.InstalledVersion)
+	require.Empty(t, status.SourceChecksum)
 }
 
-func (e *LeaseError) Error() string {
-	return e.message
+func TestPostgresEngineFailureRollsBackBusinessAndSuccessLedger(t *testing.T) {
+	verificationErr := errors.New("in-transaction verification rejected initialized data")
+	for _, scenario := range []struct {
+		name, ddl, constraint string
+	}{
+		{name: "verification"},
+		{
+			name:       "installation_ledger",
+			ddl:        `ALTER TABLE initialization_installations ADD CONSTRAINT reject_installation_success CHECK (status <> 'succeeded')`,
+			constraint: "reject_installation_success",
+		},
+		{
+			name:       "attempt_ledger",
+			ddl:        `ALTER TABLE initialization_component_attempts ADD CONSTRAINT reject_attempt_success CHECK (status <> 'succeeded')`,
+			constraint: "reject_attempt_success",
+		},
+		{
+			name: "commit",
+			// A deferred constraint trigger raises only at the real PostgreSQL COMMIT,
+			// after both fenced success updates and all business writes have succeeded.
+			ddl: `CREATE FUNCTION reject_initialization_commit() RETURNS trigger LANGUAGE plpgsql AS $$
+				BEGIN
+					RAISE EXCEPTION 'injected deferred commit failure' USING ERRCODE = '23514', CONSTRAINT = 'reject_deferred_success';
+				END;
+			$$;
+			CREATE CONSTRAINT TRIGGER reject_deferred_success AFTER UPDATE ON initialization_component_attempts
+			DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (NEW.status = 'succeeded')
+			EXECUTE FUNCTION reject_initialization_commit()`,
+			constraint: "reject_deferred_success",
+		},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			f := newInitializationPostgresFixture(t)
+			if scenario.ddl != "" {
+				_, err := f.db.ExecContext(f.ctx, scenario.ddl)
+				require.NoError(t, err)
+			}
+			verified := false
+			component := &testInitializer{name: "rbac", apply: func(ctx context.Context, scope Scope, plan Plan, driver dialect.Driver) (Result, error) {
+				result, err := writeAndVerifyInitializationFixture(ctx, scope, plan, driver)
+				if err != nil {
+					return result, err
+				}
+				verified = true
+				require.Zero(t, f.businessCount(t), "business data must remain invisible until the Engine commits")
+				if scenario.name == "verification" {
+					return result, verificationErr
+				}
+				return result, nil
+			}}
+			engine, err := NewEngine(f.store, []Initializer{component}, time.Hour)
+			require.NoError(t, err)
+			request := initializationRequest("executor-1")
+			runID, err := engine.Apply(f.ctx, request)
+			require.Error(t, err)
+			require.True(t, verified, "failure must occur after transaction-local business write and verification")
+			if scenario.name == "verification" {
+				require.ErrorIs(t, err, verificationErr)
+			} else {
+				var pgErr *pq.Error
+				require.ErrorAs(t, err, &pgErr)
+				require.Equal(t, pq.ErrorCode("23514"), pgErr.Code)
+				require.Equal(t, scenario.constraint, pgErr.Constraint)
+			}
+			require.Zero(t, f.businessCount(t), "business write must roll back with success ledger/commit failure")
+			f.assertRunAndAttempt(t, runID, "failed")
+			status := f.installation(t, request.Scope)
+			require.Equal(t, "failed", status.Status)
+			require.Empty(t, status.InstalledVersion)
+			require.Empty(t, status.SourceChecksum)
+			require.Empty(t, status.ResultSummary)
+			require.Empty(t, status.LeaseOwner)
+			require.Nil(t, status.LeaseExpiresAt)
+			var successMetadata bool
+			require.NoError(t, f.secondDB.QueryRowContext(f.ctx, `SELECT result_summary <> '{}'::jsonb OR rollback_metadata <> '{}'::jsonb
+				FROM initialization_component_attempts WHERE run_id = $1`, runID).Scan(&successMetadata))
+			require.False(t, successMetadata, "rolled-back success metadata must not survive in the failed attempt")
+		})
+	}
+}
+
+func TestPostgresEngineCancellationClosesFailedRun(t *testing.T) {
+	f := newInitializationPostgresFixture(t)
+	ctx, cancel := context.WithCancel(f.ctx)
+	defer cancel()
+	component := &testInitializer{name: "rbac", apply: func(ctx context.Context, scope Scope, plan Plan, driver dialect.Driver) (Result, error) {
+		result, err := writeAndVerifyInitializationFixture(ctx, scope, plan, driver)
+		if err != nil {
+			return result, err
+		}
+		cancel()
+		return result, ctx.Err()
+	}}
+	engine, err := NewEngine(f.store, []Initializer{component}, time.Hour)
+	require.NoError(t, err)
+	request := initializationRequest("executor-1")
+	runID, err := engine.Apply(ctx, request)
+	require.ErrorIs(t, err, context.Canceled)
+	require.Zero(t, f.businessCount(t))
+	f.assertRunAndAttempt(t, runID, "failed")
+	status := f.installation(t, request.Scope)
+	require.Equal(t, "failed", status.Status)
+	require.Empty(t, status.LeaseOwner)
+	require.Nil(t, status.LeaseExpiresAt)
+}
+
+func TestPostgresEngineRepeatedSuccessIsIdempotentAndScopeIsolated(t *testing.T) {
+	f := newInitializationPostgresFixture(t)
+	component := &testInitializer{name: "rbac", apply: writeAndVerifyInitializationFixture}
+	engine, err := NewEngine(f.store, []Initializer{component}, time.Hour)
+	require.NoError(t, err)
+	request := initializationRequest("executor-1")
+	var priorToken int64
+	for range 2 {
+		runID, err := engine.Apply(f.ctx, request)
+		require.NoError(t, err)
+		f.assertRunAndAttempt(t, runID, "succeeded")
+		require.Equal(t, 1, f.businessCount(t), "retry must not duplicate initialized business data")
+		status := f.installation(t, request.Scope)
+		require.Equal(t, "succeeded", status.Status)
+		require.Equal(t, "1", status.InstalledVersion)
+		require.Equal(t, "rbac-checksum", status.SourceChecksum)
+		require.Equal(t, map[string]any{"verified": true}, status.ResultSummary)
+		require.Greater(t, status.FencingToken, priorToken)
+		require.Empty(t, status.LeaseOwner)
+		require.Nil(t, status.LeaseExpiresAt)
+		priorToken = status.FencingToken
+	}
+	before := f.installation(t, request.Scope)
+	otherTenant := request
+	otherTenant.Scope.ID = 43
+	otherRunID, err := engine.Apply(f.ctx, otherTenant)
+	require.NoError(t, err)
+	f.assertRunAndAttempt(t, otherRunID, "succeeded")
+	require.Equal(t, 2, f.businessCount(t))
+	require.Equal(t, before, f.installation(t, request.Scope), "tenant B must not modify tenant A's installation")
+	require.Equal(t, int64(1), f.installation(t, otherTenant.Scope).FencingToken)
+	var running, attempts int
+	require.NoError(t, f.db.QueryRowContext(f.ctx, "SELECT COUNT(*) FROM initialization_component_attempts WHERE status = 'running'").Scan(&running))
+	require.Zero(t, running)
+	require.NoError(t, f.db.QueryRowContext(f.ctx, "SELECT COUNT(*) FROM initialization_component_attempts").Scan(&attempts))
+	require.Equal(t, 3, attempts, "each invocation remains auditable without duplicate product data")
 }

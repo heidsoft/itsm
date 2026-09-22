@@ -1302,7 +1302,10 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		if err := client.Schema.Create(ctx); err != nil {
 			return fmt.Errorf("create schema resources: %w", err)
 		}
-		migrator := migration.NewMigrator(database.GetRawDB(), sugar)
+		migrator := &databasePostSchemaMigrator{
+			Migrator: migration.NewMigrator(database.GetRawDB(), sugar),
+			db:       database.GetRawDB(),
+		}
 		if err := runPostSchemaMigrations(ctx, migrator, sugar); err != nil {
 			return fmt.Errorf("apply versioned post-schema migrations: %w", err)
 		}
@@ -1380,6 +1383,28 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 type postSchemaMigrator interface {
 	EnsureMigrationsTable(context.Context) error
 	RunMigrations(context.Context, []migration.Migration) (int, error)
+	FilesystemMigrations() ([]migration.Migration, error)
+	RecordLegacyMigrationsApplied(context.Context, migrationLogger) error
+	AdoptUnrecordedFilesystemMigrations(context.Context, []migration.Migration, migrationLogger) (int, error)
+}
+
+// databasePostSchemaMigrator keeps filesystem and ledger access behind the same
+// boundary as execution, so bootstrap tests never need a process-global database.
+type databasePostSchemaMigrator struct {
+	*migration.Migrator
+	db *sql.DB
+}
+
+func (m *databasePostSchemaMigrator) FilesystemMigrations() ([]migration.Migration, error) {
+	return migration.FilesystemMigrations("")
+}
+
+func (m *databasePostSchemaMigrator) RecordLegacyMigrationsApplied(ctx context.Context, logger migrationLogger) error {
+	return migration.RecordLegacyMigrationsApplied(ctx, m.db, logger)
+}
+
+func (m *databasePostSchemaMigrator) AdoptUnrecordedFilesystemMigrations(ctx context.Context, fs []migration.Migration, logger migrationLogger) (int, error) {
+	return migration.AdoptUnrecordedFilesystemMigrations(ctx, m.db, fs, logger)
 }
 
 // migrationLogger 抽象日志接口，使 runPostSchemaMigrations 可单测且不依赖 zap 包。
@@ -1406,37 +1431,29 @@ func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator, l
 	// 历史迁移体系是「Go 硬编码注册表 + 孤儿 SQL 目录」双轨制，导致
 	// migrations/*.sql 自 5 月以来从未自动加载（add_missing_indexes.sql
 	// 4 个月没执行，75 张表只剩 PK 索引）。本步骤以磁盘为真相补全迁移
-	// 流，并启动告警存在未登记条目。失败不致命（事务已在前一步成功），
-	// 但记 ERROR 便于排查。
-	fsMigs, discErr := migration.FilesystemMigrations("")
-	if discErr != nil {
-		logger.Errorw("filesystem migration discovery failed",
-			"error", discErr,
-			"hint", "MIGRATIONS_DIR env / 默认相对 migrations 目录")
-	} else {
-		// 账本调和（只登记不执行）：①legacy 001-006 无条件收养；②既有安装上
-		// 发现机制上线前已生效的日期化磁盘迁移收养（全新安装照常执行）。
-		// 两者都不收养会被发现机制当 pending 重放而炸（2026-09-10 实证 23502）。
-		if err := migration.RecordLegacyMigrationsApplied(ctx, database.GetRawDB(), logger); err != nil {
-			logger.Errorw("legacy migration ledger backfill failed",
-				"error", err,
-				"hint", "非致命：账本缺 001-006 不阻塞启动，但 status 视图不完整")
-		}
-		if adopted, err := migration.AdoptUnrecordedFilesystemMigrations(ctx, database.GetRawDB(), fsMigs, logger); err != nil {
-			logger.Errorw("filesystem migration adoption failed", "error", err)
-		} else if adopted > 0 {
-			logger.Infow("pre-discovery filesystem migrations adopted", "count", adopted)
-		}
-		merged := migration.MergeWithRegistered(fsMigs)
-		logger.Infow("filesystem migration stream merged",
-			"disk_only", len(fsMigs),
-			"registered", len(migration.PostSchemaMigrations()),
-			"merged_unique", len(merged))
-		if _, err := migrator.RunMigrations(ctx, merged); err != nil {
-			logger.Errorw("filesystem migrations apply failed",
-				"error", err,
-				"merged_count", len(merged))
-		}
+	// 流；发现、账本调和或执行失败都必须返回，阻止后续初始化和 AutoSeed。
+	fsMigs, err := migrator.FilesystemMigrations()
+	if err != nil {
+		return fmt.Errorf("discover filesystem migrations: %w", err)
+	}
+	// 账本调和（只登记不执行）：①legacy 001-006 无条件收养；②既有安装上
+	// 发现机制上线前已生效的日期化磁盘迁移收养（全新安装照常执行）。
+	// 两者都不收养会被发现机制当 pending 重放而炸（2026-09-10 实证 23502）。
+	if err := migrator.RecordLegacyMigrationsApplied(ctx, logger); err != nil {
+		return fmt.Errorf("backfill legacy migration ledger: %w", err)
+	}
+	if adopted, err := migrator.AdoptUnrecordedFilesystemMigrations(ctx, fsMigs, logger); err != nil {
+		return fmt.Errorf("adopt filesystem migrations: %w", err)
+	} else if adopted > 0 {
+		logger.Infow("pre-discovery filesystem migrations adopted", "count", adopted)
+	}
+	merged := migration.MergeWithRegistered(fsMigs)
+	logger.Infow("filesystem migration stream merged",
+		"disk_only", len(fsMigs),
+		"registered", len(migration.PostSchemaMigrations()),
+		"merged_unique", len(merged))
+	if _, err := migrator.RunMigrations(ctx, merged); err != nil {
+		return fmt.Errorf("run filesystem migrations: %w", err)
 	}
 	return nil
 }

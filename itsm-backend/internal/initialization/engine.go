@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"entgo.io/ent/dialect"
 )
 
 var ErrLeaseHeld = errors.New("initialization component lease is held by another executor")
@@ -46,8 +48,15 @@ type Initializer interface {
 	Name() string
 	Dependencies() []string
 	Plan(context.Context, Scope) (Plan, error)
-	Apply(context.Context, Scope, Plan, int64) (Result, error)
+	Apply(context.Context, Scope, Plan, dialect.Driver) (Result, error)
 	Verify(context.Context, Scope, Plan) error
+}
+
+type ComponentTransaction interface {
+	Driver() dialect.Driver
+	Complete(context.Context, Result) error
+	Commit() error
+	Rollback() error
 }
 
 type Lease struct {
@@ -61,7 +70,8 @@ type Store interface {
 	Heartbeat(context.Context, Scope, string, string, int64, time.Duration) error
 	ReleaseLease(context.Context, Scope, string, string, int64) error
 	StartAttempt(context.Context, int64, Scope, Plan, int64) (int64, error)
-	CompleteComponent(context.Context, int64, int64, Scope, Plan, string, int64, Result, error) error
+	BeginComponent(context.Context, int64, int64, Scope, Plan, string, int64) (ComponentTransaction, error)
+	FailComponent(context.Context, int64, int64, Scope, Plan, string, int64, error) error
 }
 
 type Engine struct {
@@ -127,10 +137,9 @@ func (e *Engine) Apply(ctx context.Context, request Request) (runID int64, err e
 		if err != nil {
 			runStatus = "failed"
 		}
-		finishErr := e.store.FinishRun(ctx, runID, runStatus, runSummary, err)
-		if err == nil && finishErr != nil {
-			err = finishErr
-		}
+		finishCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		err = errors.Join(err, e.store.FinishRun(finishCtx, runID, runStatus, runSummary, err))
 	}()
 
 	plans, err := e.Plan(ctx, request.Scope)
@@ -162,27 +171,33 @@ func (e *Engine) Apply(ctx context.Context, request Request) (runID int64, err e
 			cancelApply,
 			heartbeatErr,
 		)
-		result, applyErr := component.Apply(applyCtx, request.Scope, plan, lease.FencingToken)
+		tx, applyErr := e.store.BeginComponent(
+			applyCtx, attemptID, runID, request.Scope, plan, request.ExecutorID, lease.FencingToken,
+		)
+		var result Result
 		if applyErr == nil {
-			applyErr = component.Verify(applyCtx, request.Scope, plan)
+			result, applyErr = component.Apply(applyCtx, request.Scope, plan, tx.Driver())
 		}
 		stopHeartbeat()
+		applyErr = errors.Join(applyErr, <-heartbeatErr)
+		if applyErr == nil {
+			applyErr = tx.Complete(applyCtx, result)
+		}
+		if applyErr == nil {
+			applyErr = tx.Commit()
+		}
+		if tx != nil {
+			_ = tx.Rollback()
+		}
 		cancelApply()
-		if leaseErr := <-heartbeatErr; applyErr == nil && leaseErr != nil {
-			applyErr = leaseErr
-		}
-		completeErr := e.store.CompleteComponent(
-			ctx, attemptID, runID, request.Scope, plan, request.ExecutorID,
-			lease.FencingToken, result, applyErr,
-		)
 		if applyErr != nil {
-			if completeErr != nil {
-				applyErr = errors.Join(applyErr, completeErr)
-			}
-			return runID, fmt.Errorf("apply component %s: %w", plan.Component, applyErr)
-		}
-		if completeErr != nil {
-			return runID, completeErr
+			failureCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			completeErr := e.store.FailComponent(
+				failureCtx, attemptID, runID, request.Scope, plan, request.ExecutorID,
+				lease.FencingToken, applyErr,
+			)
+			cancel()
+			return runID, fmt.Errorf("apply component %s: %w", plan.Component, errors.Join(applyErr, completeErr))
 		}
 		runSummary["components"] = runSummary["components"].(int) + 1
 	}
@@ -212,19 +227,16 @@ func (e *Engine) maintainLease(
 			if err := e.store.Heartbeat(
 				ctx, scope, component, executorID, token, e.leaseTTL,
 			); err != nil {
+				if ctx.Err() != nil {
+					result <- nil
+					return
+				}
 				cancelApply()
 				result <- fmt.Errorf("heartbeat component %s: %w", component, err)
 				return
 			}
 		}
 	}
-}
-
-func statusFor(err error) string {
-	if err != nil {
-		return "failed"
-	}
-	return "succeeded"
 }
 
 func orderComponents(index map[string]Initializer) ([]Initializer, error) {

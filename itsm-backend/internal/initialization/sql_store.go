@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
 )
 
 type SQLStore struct {
@@ -112,8 +115,13 @@ func (s *SQLStore) AcquireLease(
 	component, executorID string,
 	ttl time.Duration,
 ) (Lease, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return Lease{}, err
+	}
+	defer tx.Rollback()
 	var token int64
-	err := s.db.QueryRowContext(ctx, `
+	err = tx.QueryRowContext(ctx, `
 		INSERT INTO initialization_installations
 			(scope_type, scope_id, component, status, fencing_token, lease_owner, heartbeat_at, lease_expires_at)
 		VALUES ($1, $2, $3, 'running', 1, $4, NOW(), NOW() + ($5 * INTERVAL '1 millisecond'))
@@ -131,7 +139,24 @@ func (s *SQLStore) AcquireLease(
 	if errors.Is(err, sql.ErrNoRows) {
 		return Lease{}, ErrLeaseHeld
 	}
-	return Lease{FencingToken: token}, err
+	if err != nil {
+		return Lease{}, err
+	}
+	if _, err := tx.ExecContext(ctx, `
+		WITH abandoned AS (
+			UPDATE initialization_component_attempts
+			SET status = 'failed', completed_at = NOW(), error_message = 'initialization lease superseded'
+			WHERE scope_type = $1 AND scope_id = $2 AND component = $3
+			  AND status = 'running' AND fencing_token < $4
+			RETURNING run_id
+		)
+		UPDATE initialization_runs SET status = 'failed', completed_at = NOW(),
+		    error_message = 'initialization lease superseded'
+		WHERE id IN (SELECT run_id FROM abandoned) AND status = 'running'
+	`, scope.Type, scope.ID, component, token); err != nil {
+		return Lease{}, err
+	}
+	return Lease{FencingToken: token}, tx.Commit()
 }
 
 func (s *SQLStore) Heartbeat(
@@ -148,6 +173,7 @@ func (s *SQLStore) Heartbeat(
 		    updated_at = NOW()
 		WHERE scope_type = $2 AND scope_id = $3 AND component = $4
 		  AND lease_owner = $5 AND fencing_token = $6 AND status = 'running'
+		  AND lease_expires_at > clock_timestamp()
 	`, ttl.Milliseconds(), scope.Type, scope.ID, component, executorID, token)
 	return requireOneFencedRow(result, err)
 }
@@ -179,25 +205,56 @@ func (s *SQLStore) StartAttempt(
 		INSERT INTO initialization_component_attempts
 			(run_id, scope_type, scope_id, component, attempt, from_version,
 			 target_version, source_checksum, fencing_token, status)
-		VALUES (
-			$1, $2::text, $3, $4::text,
-			COALESCE((SELECT MAX(attempt) + 1 FROM initialization_component_attempts
-			          WHERE scope_type = $2::text AND scope_id = $3 AND component = $4::text), 1),
-			$5, $6, $7, $8, 'running'
-		)
+		SELECT $1, $2::text, $3, $4::text,
+		       COALESCE((SELECT MAX(attempt) + 1 FROM initialization_component_attempts
+		                 WHERE scope_type = $2::text AND scope_id = $3 AND component = $4::text), 1),
+		       $5, $6, $7, $8, 'running'
+		FROM initialization_installations
+		WHERE scope_type = $2::text AND scope_id = $3 AND component = $4::text
+		  AND fencing_token = $8 AND status = 'running' AND lease_expires_at > clock_timestamp()
+		FOR UPDATE
 		RETURNING id
 	`, runID, scope.Type, scope.ID, plan.Component, plan.FromVersion,
 		plan.TargetVersion, plan.SourceChecksum, token).Scan(&id)
 	return id, err
 }
 
-func (s *SQLStore) FinishAttempt(
-	ctx context.Context,
-	attemptID int64,
-	status string,
-	result Result,
-	attemptErr error,
-) error {
+type componentTransaction struct {
+	*sql.Tx
+	attemptID, runID int64
+	scope            Scope
+	plan             Plan
+	executorID       string
+	token            int64
+}
+
+func (s *SQLStore) BeginComponent(ctx context.Context, attemptID, runID int64, scope Scope, plan Plan, executorID string, token int64) (ComponentTransaction, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &componentTransaction{Tx: tx, attemptID: attemptID, runID: runID, scope: scope, plan: plan, executorID: executorID, token: token}, nil
+}
+
+func (t *componentTransaction) Driver() dialect.Driver {
+	return NewTransactionDriver(&entsql.Tx{Conn: entsql.Conn{ExecQuerier: t.Tx}, Tx: t.Tx}, dialect.Postgres)
+}
+
+// NewTransactionDriver keeps nested Ent mutations inside the caller-owned transaction.
+func NewTransactionDriver(tx dialect.Tx, name string) dialect.Driver {
+	return &transactionDriver{ExecQuerier: tx, name: name}
+}
+
+type transactionDriver struct {
+	dialect.ExecQuerier
+	name string
+}
+
+func (d *transactionDriver) Dialect() string                        { return d.name }
+func (d *transactionDriver) Close() error                           { return nil }
+func (d *transactionDriver) Tx(context.Context) (dialect.Tx, error) { return dialect.NopTx(d), nil }
+
+func (t *componentTransaction) Complete(ctx context.Context, result Result) error {
 	summary, err := json.Marshal(result.Summary)
 	if err != nil {
 		return err
@@ -206,90 +263,53 @@ func (s *SQLStore) FinishAttempt(
 	if err != nil {
 		return err
 	}
-	_, err = s.db.ExecContext(ctx, `
+	// The fenced update locks the lease through the business commit, excluding takeover.
+	installationResult, err := t.ExecContext(ctx, `
+		UPDATE initialization_installations
+		SET installed_version = $1, source_checksum = $2, status = 'succeeded',
+		    last_run_id = $3, result_summary = $4, error_message = '', error_code = '',
+		    lease_owner = '', lease_expires_at = NULL, heartbeat_at = clock_timestamp(), updated_at = clock_timestamp()
+		WHERE scope_type = $5 AND scope_id = $6 AND component = $7
+		  AND lease_owner = $8 AND fencing_token = $9 AND status = 'running'
+		  AND lease_expires_at > clock_timestamp()
+	`, t.plan.TargetVersion, t.plan.SourceChecksum, t.runID, summary,
+		t.scope.Type, t.scope.ID, t.plan.Component, t.executorID, t.token)
+	if err := requireOneFencedRow(installationResult, err); err != nil {
+		return err
+	}
+	attemptResult, err := t.ExecContext(ctx, `
 		UPDATE initialization_component_attempts
-		SET status = $1, completed_at = NOW(), result_summary = $2,
-		    rollback_metadata = $3, error_message = $4
-		WHERE id = $5 AND status = 'running'
-	`, status, summary, rollback, errorMessage(attemptErr), attemptID)
-	return err
+		SET status = 'succeeded', completed_at = clock_timestamp(), result_summary = $1,
+		    rollback_metadata = $2, error_message = ''
+		WHERE id = $3 AND run_id = $4 AND fencing_token = $5 AND status = 'running'
+	`, summary, rollback, t.attemptID, t.runID, t.token)
+	return requireOneFencedRow(attemptResult, err)
 }
 
-func (s *SQLStore) CompleteComponent(
-	ctx context.Context,
-	attemptID, runID int64,
-	scope Scope,
-	plan Plan,
-	executorID string,
-	token int64,
-	componentResult Result,
-	applyErr error,
-) error {
-	summary, err := json.Marshal(componentResult.Summary)
-	if err != nil {
-		return err
-	}
-	rollback, err := json.Marshal(componentResult.RollbackMetadata)
-	if err != nil {
-		return err
-	}
+func (s *SQLStore) FailComponent(ctx context.Context, attemptID, runID int64, scope Scope, plan Plan, executorID string, token int64, applyErr error) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	status := statusFor(applyErr)
-	attemptResult, err := tx.ExecContext(ctx, `
-		UPDATE initialization_component_attempts
-		SET status = $1, completed_at = NOW(), result_summary = $2,
-		    rollback_metadata = $3, error_message = $4
-		WHERE id = $5 AND status = 'running' AND fencing_token = $6
-	`, status, summary, rollback, errorMessage(applyErr), attemptID, token)
-	if err := requireOneFencedRow(attemptResult, err); err != nil {
+	// A stale executor may close its own attempt, but must not change its successor's lease.
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE initialization_installations
+		SET status = 'failed', last_run_id = $1, error_message = $2,
+		    lease_owner = '', lease_expires_at = NULL, updated_at = clock_timestamp()
+		WHERE scope_type = $3 AND scope_id = $4 AND component = $5
+		  AND lease_owner = $6 AND fencing_token = $7 AND status = 'running'
+	`, runID, errorMessage(applyErr), scope.Type, scope.ID, plan.Component, executorID, token); err != nil {
 		return err
 	}
-	installationResult, err := tx.ExecContext(ctx, `
-		UPDATE initialization_installations
-		SET installed_version = CASE WHEN $1::text = 'succeeded' THEN $2 ELSE installed_version END,
-		    source_checksum = CASE WHEN $1::text = 'succeeded' THEN $3 ELSE source_checksum END,
-		    status = $1::text, last_run_id = $4, result_summary = $5,
-		    error_message = $6, lease_owner = '', lease_expires_at = NULL,
-		    heartbeat_at = NOW(), updated_at = NOW()
-		WHERE scope_type = $7 AND scope_id = $8 AND component = $9
-		  AND lease_owner = $10 AND fencing_token = $11
-	`, status, plan.TargetVersion, plan.SourceChecksum, runID, summary,
-		errorMessage(applyErr), scope.Type, scope.ID, plan.Component, executorID, token)
-	if err := requireOneFencedRow(installationResult, err); err != nil {
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE initialization_component_attempts
+		SET status = 'failed', completed_at = clock_timestamp(), error_message = $1
+		WHERE id = $2 AND run_id = $3 AND fencing_token = $4 AND status = 'running'
+	`, errorMessage(applyErr), attemptID, runID, token); err != nil {
 		return err
 	}
 	return tx.Commit()
-}
-
-func (s *SQLStore) MarkInstallation(
-	ctx context.Context,
-	runID int64,
-	scope Scope,
-	plan Plan,
-	token int64,
-	result Result,
-	applyErr error,
-) error {
-	summary, err := json.Marshal(result.Summary)
-	if err != nil {
-		return err
-	}
-	status := statusFor(applyErr)
-	resultSQL, err := s.db.ExecContext(ctx, `
-		UPDATE initialization_installations
-		SET installed_version = CASE WHEN $1::text = 'succeeded' THEN $2 ELSE installed_version END,
-		    source_checksum = CASE WHEN $1::text = 'succeeded' THEN $3 ELSE source_checksum END,
-		    status = $1::text, last_run_id = $4, result_summary = $5,
-		    error_message = $6, updated_at = NOW()
-		WHERE scope_type = $7 AND scope_id = $8 AND component = $9
-		  AND fencing_token = $10
-	`, status, plan.TargetVersion, plan.SourceChecksum, runID, summary,
-		errorMessage(applyErr), scope.Type, scope.ID, plan.Component, token)
-	return requireOneFencedRow(resultSQL, err)
 }
 
 func requireOneFencedRow(result sql.Result, err error) error {
