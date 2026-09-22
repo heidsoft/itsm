@@ -100,16 +100,6 @@
       "priority_score": 3
     }
   ],
-  "service_catalog": [
-    {"name": "账号申请", "description": "新员工或岗位变更账号开通", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 1},
-    {"name": "权限变更", "description": "业务系统、数据库或基础设施权限调整", "category": "账号与权限", "service_type": "access", "requires_approval": true, "delivery_time": 2},
-    {"name": "软件安装", "description": "标准办公软件和开发工具安装", "category": "终端支持", "service_type": "software", "requires_approval": false, "delivery_time": 1},
-    {"name": "网络接入", "description": "办公网络、VPN、无线网络接入申请", "category": "网络", "service_type": "network", "requires_approval": true, "delivery_time": 2},
-    {"name": "云服务器申请", "description": "云主机、虚拟机或容器资源申请", "category": "云资源", "service_type": "vm", "requires_approval": true, "delivery_time": 2},
-    {"name": "数据库申请", "description": "数据库实例、账号或备份策略申请", "category": "数据库", "service_type": "database", "requires_approval": true, "delivery_time": 3},
-    {"name": "安全扫描", "description": "漏洞扫描、基线检查或渗透测试申请", "category": "安全", "service_type": "security", "requires_approval": true, "delivery_time": 5},
-    {"name": "代码仓库", "description": "代码仓库、CI/CD流水线与制品库申请", "category": "研发效能", "service_type": "devops", "requires_approval": false, "delivery_time": 1}
-  ],
   "approval_workflows": [
     {"name": "服务请求审批", "description": "涉及资源、权限或费用的服务请求需要部门负责人审批", "ticket_type": "service_request", "priority": "", "nodes": [{"type": "approval", "name": "部门负责人审批", "approver_type": "role", "role": "dept_manager", "timeout": 480}]},
     {"name": "普通变更审批", "description": "普通变更需要技术负责人和变更经理审批", "ticket_type": "change", "priority": "medium,high", "nodes": [{"type": "approval", "name": "技术负责人审批", "approver_type": "role", "role": "ops_manager", "timeout": 480}, {"type": "approval", "name": "变更经理审批", "approver_type": "role", "role": "change_manager", "timeout": 480}]},

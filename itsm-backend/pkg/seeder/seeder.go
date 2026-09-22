@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -37,6 +38,7 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/authz"
@@ -46,6 +48,8 @@ import (
 	"itsm-backend/database"
 	"itsm-backend/pkg/tenantmode"
 
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -307,6 +311,7 @@ type menuSpec struct {
 // Seeder manages database seeding operations
 type Seeder struct {
 	client                  *ent.Client
+	sqlDriver               dialect.Driver
 	sugar                   *zap.SugaredLogger
 	config                  *SeedConfig
 	appConfig               *config.Config
@@ -318,13 +323,39 @@ type Seeder struct {
 
 // NewSeeder creates a new Seeder instance
 func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger, appConfig *config.Config) *Seeder {
-	return &Seeder{
-		client:              client,
-		sugar:               sugar,
-		config:              loadSeedConfig(sugar),
-		appConfig:           appConfig,
-		bpmnTemplateService: service.NewBPMNTemplateService(client),
+	permissions, menus, rolePermissions := identityRBACExpectations()
+	var sqlDriver dialect.Driver
+	if db := database.GetRawDB(); db != nil {
+		sqlDriver = entsql.OpenDB(dialect.Postgres, db)
 	}
+	return &Seeder{
+		client:                  client,
+		sqlDriver:               sqlDriver,
+		sugar:                   sugar,
+		config:                  loadSeedConfig(sugar),
+		appConfig:               appConfig,
+		bpmnTemplateService:     service.NewBPMNTemplateService(client),
+		expectedPermissions:     permissions,
+		expectedMenus:           menus,
+		expectedRolePermissions: rolePermissions,
+	}
+}
+
+// identityRBACExpectations derives the verification baseline without database
+// access. A fresh verify-only process must not depend on seed/Apply side effects.
+func identityRBACExpectations() ([]string, []string, map[string][]string) {
+	permissions := AllDefinedPermissionCodes()
+	specs := menuDefinitions()
+	menus := make([]string, 0, len(specs))
+	for _, spec := range specs {
+		menus = append(menus, spec.Path)
+	}
+	rolePermissions := authz.BuiltinRolePermissionCodes()
+	for _, codes := range rolePermissions {
+		// The catalog derives some grants by iterating maps; stabilize diagnostics.
+		sort.Strings(codes)
+	}
+	return permissions, menus, rolePermissions
 }
 
 // loadSeedConfig 从 JSON 文件加载种子配置
@@ -386,6 +417,9 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 	}
 	if override.Teams != nil {
 		base.Teams = override.Teams
+	}
+	if override.Groups != nil {
+		base.Groups = override.Groups
 	}
 	if override.Roles != nil {
 		base.Roles = override.Roles
@@ -564,6 +598,7 @@ func getEmbeddedConfig() *SeedConfig {
 			{CatalogName: "IT服务台", Name: "密码重置", Description: "账户密码重置服务", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
 			{CatalogName: "软件安装", Name: "标准软件安装", Description: "安装公司授权的标准软件", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 1},
 			{CatalogName: "账户申请", Name: "新员工账户开通", Description: "新员工 IT 账户与权限开通", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 1},
+			{CatalogName: "账户申请", Name: "业务权限变更", Description: "业务系统、数据库或基础设施权限调整", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
 			{CatalogName: "网络接入", Name: "办公网络接入", Description: "申请办公网络接入权限", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 2},
 			{CatalogName: "域名申请", Name: "内部域名注册", Description: "注册内部系统域名", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: true, EstimatedDays: 3},
 			{CatalogName: "代码仓库", Name: "Git 仓库创建", Description: "申请创建新的 Git 代码仓库", BusinessSubType: "service_request", ProcessDefinitionKey: "service_request_flow", RequiresApproval: false, EstimatedDays: 0},
@@ -594,11 +629,20 @@ func getEmbeddedConfig() *SeedConfig {
 	}
 }
 
-// SeedAll runs all seeding operations
+// SeedAll runs all seeding operations.
+//
+// It is the legacy dev/test convenience: a failing step is logged and the run
+// continues. Production initialization uses the audited component DAG, where
+// every step propagates its error and the whole component rolls back.
 func (s *Seeder) SeedAll(ctx context.Context) {
+	attempt := func(step string, fn func(context.Context) error) {
+		if err := fn(ctx); err != nil {
+			s.sugar.Errorw("seed step failed", "step", step, "error", err)
+		}
+	}
 	// 首先确保 default 租户存在
 	s.seedDefaultTenant(ctx)
-	s.seedDepartments(ctx)
+	attempt("departments", s.seedDepartments)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
 	s.seedGroups(ctx)               // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
@@ -610,21 +654,22 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	// 使用配置的初始化数据
 	s.seedSLADefinitions(ctx)
 	s.seedSLAPolicies(ctx)
-	s.seedSLAAlertRules(ctx)
+	attempt("sla-alert-rules", s.seedSLAAlertRules)
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
-	s.seedBPMNWorkflows(ctx)     // 部署BPMN工作流模板
-	s.seedWorkflowTemplates(ctx) // 初始化工作流模板目录
+	attempt("bpmn-workflows", s.seedBPMNWorkflows)
+	attempt("workflow-templates", s.seedWorkflowTemplates)
 	s.seedTicketViews(ctx)
-	s.seedServiceCatalog(ctx)
-	s.seedTicketTypes(ctx)            // 新增：初始化工单类型
-	s.seedCITypes(ctx)                // 新增：初始化CI类型
-	s.seedIncidentCategories(ctx)     // 新增：初始化事件分类
-	s.seedStandardChanges(ctx)        // 新增：初始化标准变更模板
-	s.seedTicketTags(ctx)             // 新增：初始化标签
-	s.seedMenuAndPermissionFixes(ctx) // 修复：更新菜单路径和补充缺失权限
-	s.seedRolePermissions(ctx)        // 新增：为角色分配权限
-	s.seedBusinessRecords(ctx)        // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
+	attempt("service-catalog", s.seedServiceCatalog)
+	attempt("service-catalog-items", s.seedServiceCatalogItems)
+	attempt("ticket-types", s.seedTicketTypes) // 新增：初始化工单类型
+	s.seedCITypes(ctx)                         // 新增：初始化CI类型
+	s.seedIncidentCategories(ctx)              // 新增：初始化事件分类
+	s.seedStandardChanges(ctx)                 // 新增：初始化标准变更模板
+	s.seedTicketTags(ctx)                      // 新增：初始化标签
+	s.seedMenuAndPermissionFixes(ctx)          // 修复：更新菜单路径和补充缺失权限
+	s.seedRolePermissions(ctx)                 // 新增：为角色分配权限
+	s.seedBusinessRecords(ctx)                 // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
 }
 
 // SeedProduction applies product defaults and then verifies the minimum
@@ -900,35 +945,74 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 	}
 }
 
-func (s *Seeder) seedDepartments(ctx context.Context) {
+// seedDepartments reconciles the configured organization tree per item:
+// missing departments are created and a missing parent link is backfilled,
+// so an already-installed tenant can be repaired without a wipe. Existing
+// names, descriptions and parent links are never overwritten, which keeps
+// customer edits intact.
+func (s *Seeder) seedDepartments(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip departments seed", "error", err)
-		return
+		return fmt.Errorf("departments tenant: %w", err)
+	}
+	if len(s.config.Departments) == 0 {
+		return fmt.Errorf("departments baseline is empty")
 	}
 
-	existing, err := s.client.Department.Query().Where(department.TenantIDEQ(t.ID), department.DeletedAtIsNil()).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing departments failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("departments already seeded")
-		return
-	}
-
-	// 使用配置文件中的数据
+	idsByCode := make(map[string]int, len(s.config.Departments))
+	created := 0
 	for _, d := range s.config.Departments {
-		if _, err := s.client.Department.Create().
-			SetName(d.Name).
-			SetCode(d.Code).
-			SetDescription(d.Desc).
-			SetTenantID(t.ID).
-			Save(ctx); err != nil {
-			s.sugar.Warnw("seed department failed", "error", err, "name", d.Name)
+		existing, err := s.client.Department.Query().
+			Where(department.TenantIDEQ(t.ID), department.CodeEQ(d.Code), department.DeletedAtIsNil()).
+			First(ctx)
+		switch {
+		case ent.IsNotFound(err):
+			saved, err := s.client.Department.Create().
+				SetName(d.Name).
+				SetCode(d.Code).
+				SetDescription(d.Desc).
+				SetTenantID(t.ID).
+				Save(ctx)
+			if err != nil {
+				return fmt.Errorf("seed department %s: %w", d.Code, err)
+			}
+			idsByCode[d.Code] = saved.ID
+			created++
+		case err != nil:
+			return fmt.Errorf("query department %s: %w", d.Code, err)
+		default:
+			idsByCode[d.Code] = existing.ID
 		}
 	}
-	s.sugar.Infow("departments seeded", "count", len(s.config.Departments))
+
+	repaired := 0
+	for _, d := range s.config.Departments {
+		if d.ParentCode == "" {
+			continue
+		}
+		existing, err := s.client.Department.Query().
+			Where(department.TenantIDEQ(t.ID), department.CodeEQ(d.Code), department.DeletedAtIsNil()).
+			Only(ctx)
+		if err != nil {
+			return fmt.Errorf("reload department %s: %w", d.Code, err)
+		}
+		if existing.ParentID != 0 {
+			continue
+		}
+		parentID, ok := idsByCode[d.ParentCode]
+		if !ok {
+			return fmt.Errorf("department %s references unknown parent_code %s", d.Code, d.ParentCode)
+		}
+		if parentID == existing.ID {
+			return fmt.Errorf("department %s cannot be its own parent", d.Code)
+		}
+		if _, err := s.client.Department.UpdateOneID(existing.ID).SetParentID(parentID).Save(ctx); err != nil {
+			return fmt.Errorf("link department %s to parent %s: %w", d.Code, d.ParentCode, err)
+		}
+		repaired++
+	}
+	s.sugar.Infow("departments reconciled", "created", created, "parent_links_set", repaired, "total", len(s.config.Departments))
+	return nil
 }
 
 func (s *Seeder) seedTeams(ctx context.Context) {
@@ -1283,73 +1367,67 @@ func defaultSLAPolicySeeds() []SLAPolicySeed {
 	}
 }
 
-func (s *Seeder) seedSLAAlertRules(ctx context.Context) {
+// seedSLAAlertRules derives the alert baseline from the tenant's actual SLA
+// definitions instead of a hardcoded name list, so a seed config that renames
+// or replaces SLA definitions cannot silently produce zero rules. Idempotent
+// per definition: a definition that already owns rules is left untouched.
+func (s *Seeder) seedSLAAlertRules(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip SLA alert rules seed", "error", err)
-		return
+		return fmt.Errorf("SLA alert rules tenant: %w", err)
 	}
 
-	existing, err := s.client.SLAAlertRule.Query().Where(slaalertrule.TenantIDEQ(t.ID)).Count(ctx)
+	slas, err := s.client.SLADefinition.Query().
+		Where(sladefinition.TenantIDEQ(t.ID)).
+		All(ctx)
 	if err != nil {
-		s.sugar.Warnw("check existing SLA alert rules failed", "error", err)
-		return
+		return fmt.Errorf("query SLA definitions: %w", err)
 	}
-	if existing > 0 {
-		s.sugar.Infow("SLA alert rules already seeded")
-		return
+	if len(slas) == 0 {
+		return fmt.Errorf("no SLA definitions in default tenant; seed SLA definitions before alert rules")
 	}
 
-	// 简化版告警规则
-	alertRules := []struct {
-		Name              string
-		SLAKey            string
-		AlertLevel        string
-		Threshold         int
-		NotificationChans []string
-	}{
-		{"SLA-P0-响应告警", "SLA-P0-紧急", "warning", 50, []string{"email"}},
-		{"SLA-P0-解决告警", "SLA-P0-紧急", "critical", 80, []string{"email", "sms"}},
-		{"SLA-P1-响应告警", "SLA-P1-高", "warning", 50, []string{"email"}},
-		{"SLA-P1-解决告警", "SLA-P1-高", "warning", 80, []string{"email"}},
-		{"SLA-P2-响应告警", "SLA-P2-中", "info", 50, []string{"email"}},
-		{"SLA-P2-解决告警", "SLA-P2-中", "warning", 80, []string{"email"}},
-		{"SLA-服务请求-响应告警", "SLA-服务请求", "info", 50, []string{"email"}},
-		{"SLA-变更-响应告警", "SLA-变更", "warning", 50, []string{"email"}},
-	}
-
-	// 获取 SLA 定义
-	slas, err := s.client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(t.ID)).All(ctx)
-	if err != nil || len(slas) == 0 {
-		s.sugar.Warnw("no SLA definitions found; skip alert rules seed")
-		return
-	}
-
-	slaMap := make(map[string]int)
+	created := 0
 	for _, sla := range slas {
-		slaMap[sla.Name] = sla.ID
-	}
-
-	for _, rule := range alertRules {
-		slaID, ok := slaMap[rule.SLAKey]
-		if !ok {
+		existing, err := s.client.SLAAlertRule.Query().
+			Where(slaalertrule.TenantIDEQ(t.ID), slaalertrule.SLADefinitionIDEQ(sla.ID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check SLA alert rules for %s: %w", sla.Name, err)
+		}
+		if existing {
 			continue
 		}
-		_, err := s.client.SLAAlertRule.Create().
-			SetName(rule.Name).
-			SetSLADefinitionID(slaID).
-			SetAlertLevel(rule.AlertLevel).
-			SetThresholdPercentage(rule.Threshold).
-			SetNotificationChannels(rule.NotificationChans).
-			SetEscalationEnabled(true).
-			SetIsActive(true).
-			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed SLA alert rule failed", "error", err, "name", rule.Name)
+		channels := []string{"email"}
+		if sla.Priority == "urgent" {
+			channels = append(channels, "sms")
+		}
+		rules := []struct {
+			Name       string
+			AlertLevel string
+			Threshold  int
+		}{
+			{Name: sla.Name + "-响应告警", AlertLevel: "warning", Threshold: 50},
+			{Name: sla.Name + "-解决告警", AlertLevel: "critical", Threshold: 80},
+		}
+		for _, rule := range rules {
+			if _, err := s.client.SLAAlertRule.Create().
+				SetName(rule.Name).
+				SetSLADefinitionID(sla.ID).
+				SetAlertLevel(rule.AlertLevel).
+				SetThresholdPercentage(rule.Threshold).
+				SetNotificationChannels(channels).
+				SetEscalationEnabled(true).
+				SetIsActive(true).
+				SetTenantID(t.ID).
+				Save(ctx); err != nil {
+				return fmt.Errorf("seed SLA alert rule %s: %w", rule.Name, err)
+			}
+			created++
 		}
 	}
-	s.sugar.Infow("SLA alert rules seeded", "count", len(alertRules))
+	s.sugar.Infow("SLA alert rules ensured", "created", created, "sla_definitions", len(slas))
+	return nil
 }
 
 func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
@@ -1441,97 +1519,76 @@ func (s *Seeder) seedProcessBindings(ctx context.Context) {
 }
 
 // seedBPMNWorkflows 部署BPMN工作流模板
-func (s *Seeder) seedBPMNWorkflows(ctx context.Context) {
-	// 检查是否已配置部署工作流
+func (s *Seeder) seedBPMNWorkflows(ctx context.Context) error {
 	if s.config == nil || !s.config.SeedWorkflows {
 		s.sugar.Infow("workflow seeding is disabled in config")
-		return
+		return nil
 	}
-
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip BPMN workflows seed", "error", err)
-		return
+		return fmt.Errorf("BPMN workflows tenant: %w", err)
 	}
-
-	// 使用BPMNTemplateService加载并部署内置模板
 	templates, err := s.bpmnTemplateService.LoadAndDeployTemplates(ctx, t.ID)
 	if err != nil {
-		s.sugar.Warnw("failed to deploy BPMN templates", "error", err)
-		return
+		return fmt.Errorf("deploy BPMN templates: %w", err)
 	}
-
 	s.sugar.Infow("BPMN workflows seeded", "count", len(templates))
+	return nil
 }
 
 // seedWorkflowTemplates 初始化工作流模板目录（workflow_templates 表）
-func (s *Seeder) seedWorkflowTemplates(ctx context.Context) {
+func (s *Seeder) seedWorkflowTemplates(ctx context.Context) error {
+	if s.sqlDriver == nil {
+		return fmt.Errorf("workflow template SQL driver is required")
+	}
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip workflow templates seed", "error", err)
-		return
+		return fmt.Errorf("workflow templates tenant: %w", err)
 	}
 	tenantID := t.ID
-
-	admin, err := s.client.User.Query().First(ctx)
-	createdBy := 1
-	if err == nil {
-		createdBy = admin.ID
+	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(tenantID)).First(ctx)
+	if err != nil {
+		return fmt.Errorf("workflow templates administrator: %w", err)
 	}
+	createdBy := admin.ID
 
-	type tplSeed struct {
-		key, name, desc, domain, bpmnFile string
-	}
-	templates := []tplSeed{
-		{key: "generic_request", name: "通用申请流程", desc: "适用于各类行政、IT、设施等通用申请场景", domain: "it", bpmnFile: "templates/generic_request.bpmn"},
-		{key: "change_request", name: "变更申请流程", desc: "ITIL 标准变更管理流程，包含风险评估与评审组审批", domain: "change", bpmnFile: "templates/change_request.bpmn"},
-		{key: "incident_response", name: "事件响应流程", desc: "ITIL 事件管理流程，包含分级、分派、解决与回顾", domain: "incident", bpmnFile: "templates/incident_response.bpmn"},
-		{key: "service_request", name: "服务请求流程", desc: "标准服务请求履行流程，支持审批与自动履行", domain: "service_request", bpmnFile: "templates/service_request.bpmn"},
-		{key: "leave_request", name: "请假审批流程", desc: "员工请假申请与多级审批流程", domain: "hr", bpmnFile: "templates/leave_request.bpmn"},
-		{key: "expense_approval", name: "费用报销流程", desc: "员工费用报销申请与财务审批流程", domain: "expense", bpmnFile: "templates/expense_approval.bpmn"},
-	}
-
-	db := database.GetRawDB()
-	if db == nil {
-		s.sugar.Warnw("raw DB not available; skip workflow templates seed")
-		return
-	}
-
-	for _, tpl := range templates {
-		bpmnXML, readErr := fs.ReadFile(seedWorkflowTemplateFS, tpl.bpmnFile)
-		if readErr != nil {
-			s.sugar.Warnw("read embedded bpmn template failed", "file", tpl.bpmnFile, "error", readErr)
-			continue
-		}
-
-		var count int
-		err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM workflow_templates WHERE tenant_id=$1 AND key=$2", tenantID, tpl.key).Scan(&count)
+	for _, tpl := range workflowTemplateDefinitions() {
+		bpmnXML, err := fs.ReadFile(seedWorkflowTemplateFS, tpl.bpmnFile)
 		if err != nil {
-			s.sugar.Warnw("check workflow template exists failed", "key", tpl.key, "error", err)
-			continue
+			return fmt.Errorf("read workflow template %s: %w", tpl.key, err)
+		}
+		rows := &entsql.Rows{}
+		if err := s.sqlDriver.Query(ctx, "SELECT COUNT(*) FROM workflow_templates WHERE tenant_id=$1 AND key=$2", []any{tenantID, tpl.key}, rows); err != nil {
+			return fmt.Errorf("query workflow template %s: %w", tpl.key, err)
+		}
+		count, err := entsql.ScanInt(rows)
+		closeErr := rows.Close()
+		if err != nil {
+			return fmt.Errorf("scan workflow template %s: %w", tpl.key, err)
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+		encoded, err := json.Marshal(string(bpmnXML))
+		if err != nil {
+			return err
 		}
 		if count > 0 {
-			// Repair existing records that were seeded with placeholder BPMN
-			// (no BPMNDiagram — causes disconnected nodes in the designer).
-			res, updateErr := db.ExecContext(ctx,
-				`UPDATE workflow_templates SET bpmn_xml=to_jsonb($1::text),updated_at=NOW() WHERE tenant_id=$2 AND key=$3 AND bpmn_xml::text NOT LIKE '%BPMNDiagram%'`,
-				string(bpmnXML), tenantID, tpl.key)
-			if updateErr != nil {
-				s.sugar.Warnw("repair workflow template bpmn failed", "key", tpl.key, "error", updateErr)
-			} else if rows, _ := res.RowsAffected(); rows > 0 {
-				s.sugar.Infow("repaired workflow template bpmn", "key", tpl.key)
-			}
-			continue
+			// Preserve tenant-edited BPMN; repair only legacy placeholders without diagram coordinates.
+			err = s.sqlDriver.Exec(ctx,
+				`UPDATE workflow_templates SET bpmn_xml=$1,updated_at=CURRENT_TIMESTAMP WHERE tenant_id=$2 AND key=$3 AND CAST(bpmn_xml AS TEXT) NOT LIKE '%BPMNDiagram%'`,
+				[]any{string(encoded), tenantID, tpl.key}, nil)
+		} else {
+			err = s.sqlDriver.Exec(ctx,
+				`INSERT INTO workflow_templates (key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,tenant_id,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,'{}','{}','{}','{}',$5,'1.0.0','published',true,$6,$7,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`,
+				[]any{tpl.key, tpl.name, tpl.desc, tpl.domain, string(encoded), tenantID, createdBy}, nil)
 		}
-		_, err = db.ExecContext(ctx,
-			`INSERT INTO workflow_templates (key,name,description,domain,form_schema,approval_policy,ontology_bindings,sla_config,bpmn_xml,version,status,is_public,tenant_id,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,'{}','{}','{}','{}',to_jsonb($5::text),'1.0.0','published',true,$6,$7,NOW(),NOW())`,
-			tpl.key, tpl.name, tpl.desc, tpl.domain, string(bpmnXML), tenantID, createdBy)
 		if err != nil {
-			s.sugar.Warnw("insert workflow template failed", "key", tpl.key, "error", err)
-			continue
+			return fmt.Errorf("write workflow template %s: %w", tpl.key, err)
 		}
 	}
-	s.sugar.Infow("workflow templates seeded", "count", len(templates))
+	s.sugar.Infow("workflow templates seeded", "count", len(workflowTemplateDefinitions()))
+	return nil
 }
 
 func (s *Seeder) seedTicketViews(ctx context.Context) {
@@ -1629,10 +1686,6 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 
 	// 定义所有权限
 	permissions := permissionDefinitions()
-	s.expectedPermissions = make([]string, 0, len(permissions))
-	for _, p := range permissions {
-		s.expectedPermissions = append(s.expectedPermissions, p.Code)
-	}
 
 	created := 0
 	updated := 0
@@ -1670,22 +1723,15 @@ func (s *Seeder) seedPermissions(ctx context.Context) {
 	s.sugar.Infow("permissions ensured", "total", len(permissions), "created", created, "updated", updated)
 }
 
-// seedMenus 初始化系统菜单（层级化：父菜单在前，子菜单通过 parent_path 关联）
-//
+// menuDefinitions is the single menu manifest shared by seeding and verification.
 // 菜单来源必须与前端 menu-config.ts（getMenuConfig 的旧实现）保持字段一致，
 // 保证切到动态菜单后业务模块入口不丢失。后端 seed 仅为初始化兜底，
 // 真正的运行时入口是 MenuController.GetUserMenus → /api/v1/auth/menus。
-func (s *Seeder) seedMenus(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
-	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip menus seed", "error", err)
-		return
-	}
-
+func menuDefinitions() []menuSpec {
 	// 菜单规格（与前端 menu-config.ts 的 getMenuConfig() 保持一致：
 	// - 服务运营 / 服务保障 / 报告分析 / 自动化 / AI / 扩展模块 / MSP与发布
 	// - 系统管理（admin 域，路径以 /admin 开头由 buildMenuTree 归到 admin 域）
-	specs := []menuSpec{
+	return []menuSpec{
 		// ===== 顶级主菜单（parent_path 为空） =====
 		{Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", PermissionCode: "", SortOrder: 10, Description: "服务台概览"},
 		{Name: "服务请求", Path: "/service-requests", Icon: "FileText", ParentPath: "", PermissionCode: "ticket:read", SortOrder: 20, Description: "服务请求管理"},
@@ -1810,12 +1856,16 @@ func (s *Seeder) seedMenus(ctx context.Context) {
 		{Name: "菜单管理", Path: "/admin/menus", Icon: "Menu", ParentPath: "/admin", PermissionCode: "system:write", SortOrder: 345},
 		{Name: "工作流配置", Path: "/admin/workflows", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "workflow:write", SortOrder: 350},
 	}
+}
 
-	// 收集所有菜单路径，便于运行时排错 & 兼容性回归
-	s.expectedMenus = make([]string, 0, len(specs))
-	for _, item := range specs {
-		s.expectedMenus = append(s.expectedMenus, item.Path)
+// seedMenus 初始化系统菜单（层级化：父菜单在前，子菜单通过 parent_path 关联）。
+func (s *Seeder) seedMenus(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip menus seed", "error", err)
+		return
 	}
+	specs := menuDefinitions()
 
 	// 第一遍：创建所有顶级菜单（ParentPath 为空）
 	// 必须先保证父菜单有 ID，才能在第二遍反查创建子菜单
@@ -1852,12 +1902,13 @@ func (s *Seeder) upsertMenu(ctx context.Context, tenantID int, m menuSpec, paren
 		Where(menu.PathEQ(m.Path), menu.TenantIDEQ(tenantID)).
 		Only(ctx)
 	if err == nil {
+		// Visibility and enablement are operator-owned: a tenant that hid a
+		// managed menu must stay hidden across re-initialization. The manifest
+		// only sets them when the row is created.
 		updateBuilder := existing.Update().
 			SetName(m.Name).
 			SetIcon(m.Icon).
 			SetSortOrder(m.SortOrder).
-			SetIsVisible(true).
-			SetIsEnabled(true).
 			SetPermissionCode(m.PermissionCode)
 		if parentID != nil {
 			updateBuilder = updateBuilder.SetParentID(*parentID)
@@ -2055,7 +2106,6 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 	}
 
 	rolePermissionMap := authz.BuiltinRolePermissionCodes()
-	s.expectedRolePermissions = rolePermissionMap
 
 	// 查询所有角色并为每个角色分配权限
 	roles, err := s.client.Role.Query().Where(role.TenantIDEQ(t.ID)).All(ctx)
@@ -2134,11 +2184,13 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 
 // allExcept 返回除指定代码外的所有权限代码
 
-func (s *Seeder) seedServiceCatalog(ctx context.Context) {
+func (s *Seeder) seedServiceCatalog(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip service catalog seed", "error", err)
-		return
+		return fmt.Errorf("service catalog tenant: %w", err)
+	}
+	if len(s.config.ServiceCatalog) == 0 {
+		return fmt.Errorf("service catalog baseline is empty")
 	}
 
 	created := 0
@@ -2148,8 +2200,7 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 			servicecatalog.NameEQ(svc.Name),
 		).Exist(ctx)
 		if err != nil {
-			s.sugar.Warnw("check default service catalog failed", "error", err, "name", svc.Name)
-			continue
+			return fmt.Errorf("check service catalog %s: %w", svc.Name, err)
 		}
 		if exists {
 			// Existing rows may contain tenant-owned customizations. Initialization
@@ -2168,60 +2219,58 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 			SetTenantID(t.ID).
 			Save(ctx)
 		if err != nil {
-			s.sugar.Warnw("seed service catalog failed", "error", err, "name", svc.Name)
-			continue
+			return fmt.Errorf("seed service catalog %s: %w", svc.Name, err)
 		}
 		created++
 	}
 	s.sugar.Infow("service catalog reconciled", "expected", len(s.config.ServiceCatalog), "created", created)
+	return nil
 }
 
-func (s *Seeder) seedServiceCatalogItems(ctx context.Context) {
+// seedServiceCatalogItems refuses to skip an item whose parent catalog is
+// missing: a silently dropped item is indistinguishable from a completed
+// baseline, which is how the manifest drift went unnoticed.
+func (s *Seeder) seedServiceCatalogItems(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip service catalog items seed", "error", err)
-		return
+		return fmt.Errorf("service catalog items tenant: %w", err)
 	}
-
 	if len(s.config.ServiceCatalogItems) == 0 {
-		return
+		return fmt.Errorf("service catalog item baseline is empty")
 	}
 
 	catalogs, err := s.client.ServiceCatalog.Query().Where(
 		servicecatalog.TenantIDEQ(t.ID),
 	).All(ctx)
 	if err != nil {
-		s.sugar.Warnw("query service catalogs for items seed failed", "error", err)
-		return
+		return fmt.Errorf("query service catalogs: %w", err)
 	}
-	catalogByName := map[string]*ent.ServiceCatalog{}
+	parentIDs := make(map[string]int, len(catalogs))
 	for _, c := range catalogs {
-		catalogByName[c.Name] = c
+		parentIDs[c.Name] = c.ID
 	}
 
 	created := 0
 	for _, item := range s.config.ServiceCatalogItems {
-		parent, ok := catalogByName[item.CatalogName]
+		parentID, ok := parentIDs[item.CatalogName]
 		if !ok {
-			s.sugar.Warnw("parent catalog not found; skip item", "item", item.Name, "catalog", item.CatalogName)
-			continue
+			return fmt.Errorf("service catalog item %s references unknown catalog %s", item.Name, item.CatalogName)
 		}
 
 		exists, err := s.client.ServiceCatalogItem.Query().Where(
 			servicecatalogitem.TenantIDEQ(t.ID),
-			servicecatalogitem.CatalogIDEQ(parent.ID),
+			servicecatalogitem.CatalogIDEQ(parentID),
 			servicecatalogitem.NameEQ(item.Name),
 		).Exist(ctx)
 		if err != nil {
-			s.sugar.Warnw("check service catalog item failed", "error", err, "name", item.Name)
-			continue
+			return fmt.Errorf("check service catalog item %s: %w", item.Name, err)
 		}
 		if exists {
 			continue
 		}
 
-		b := s.client.ServiceCatalogItem.Create().
-			SetCatalogID(parent.ID).
+		builder := s.client.ServiceCatalogItem.Create().
+			SetCatalogID(parentID).
 			SetName(item.Name).
 			SetDescription(item.Description).
 			SetRequiresApproval(item.RequiresApproval).
@@ -2229,107 +2278,54 @@ func (s *Seeder) seedServiceCatalogItems(ctx context.Context) {
 			SetIsActive(true).
 			SetTenantID(t.ID)
 		if item.BusinessSubType != "" {
-			b = b.SetBusinessSubType(item.BusinessSubType)
+			builder = builder.SetBusinessSubType(item.BusinessSubType)
 		}
 		if item.ProcessDefinitionKey != "" {
-			b = b.SetProcessDefinitionKey(item.ProcessDefinitionKey)
+			builder = builder.SetProcessDefinitionKey(item.ProcessDefinitionKey)
 		}
-		_, err = b.Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed service catalog item failed", "error", err, "name", item.Name)
-			continue
+		if _, err := builder.Save(ctx); err != nil {
+			return fmt.Errorf("seed service catalog item %s: %w", item.Name, err)
 		}
 		created++
 	}
 	s.sugar.Infow("service catalog items reconciled", "expected", len(s.config.ServiceCatalogItems), "created", created)
+	return nil
 }
 
 // seedTicketTypes 初始化默认工单类型
-func (s *Seeder) seedTicketTypes(ctx context.Context) {
+func (s *Seeder) seedTicketTypes(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip ticket types seed", "error", err)
-		return
+		return fmt.Errorf("ticket types tenant: %w", err)
 	}
-
-	// 获取admin用户ID
 	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("admin user not found; skip ticket types seed", "error", err)
-		return
+		return fmt.Errorf("ticket types administrator: %w", err)
 	}
-
-	// 检查ticket_types表是否存在
-	rawDB := database.GetRawDB()
-	if rawDB == nil {
-		s.sugar.Warnw("rawDB not available; skip ticket types seed")
-		return
-	}
-
-	// 检查 ticket_types 表是否存在
-	var tableExists bool
-	err = rawDB.QueryRowContext(ctx, "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ticket_types')").Scan(&tableExists)
-	if err != nil || !tableExists {
-		s.sugar.Infow("ticket_types table does not exist; skip seed")
-		return
-	}
-
-	// 检查是否已有工单类型
-	var count int
-	err = rawDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM ticket_types WHERE tenant_id = $1", t.ID).Scan(&count)
+	count, err := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(t.ID))).Count(ctx)
 	if err != nil {
-		s.sugar.Warnw("check existing ticket types failed", "error", err)
-		return
+		return fmt.Errorf("query ticket types: %w", err)
 	}
 	if count > 0 {
-		s.sugar.Infow("ticket types already seeded")
-		return
+		return nil
 	}
 
 	// 定义默认工单类型（与前端ticket-type-presets.ts保持一致）
-	ticketTypes := []struct {
-		Code        string
-		Name        string
-		Description string
-		Icon        string
-		Color       string
-	}{
-		{"k8s_scale", "K8S扩缩容", "Kubernetes容器集群扩容或缩容请求", "Container", "#1890ff"},
-		{"ddl_execute", "DDL执行", "数据库表结构变更、索引创建等DDL操作", "Database", "#722ed1"},
-		{"data_export", "数据导出", "从数据库或系统导出数据", "Download", "#13c2c2"},
-		{"vm_apply", "虚拟机申请", "申请新的虚拟机资源", "Desktop", "#2f54eb"},
-		{"account_apply", "账号申请", "申请系统账号、VPN账号、堡垒机账号等", "User", "#52c41a"},
-		{"gitlab_repo_apply", "GitLab代码仓库申请", "申请创建新的GitLab代码仓库", "Code", "#fa541c"},
-		{"domain_apply", "域名申请", "申请新的域名或域名解析变更", "Global", "#eb2f96"},
-		{"firewall_apply", "防火墙规则申请", "申请开放或变更防火墙端口规则", "Safety", "#fa8c16"},
-		{"app_apply", "应用申请", "申请在K8S集群中部署新应用服务", "Appstore", "#1890ff"},
-		{"project_apply", "项目申请", "申请创建新项目或项目空间", "Project", "#722ed1"},
-		{"db_account_apply", "数据库账号申请", "申请数据库读写账号、只读账号等", "Key", "#faad14"},
-		{"general", "其他工单", "通用工单类型，用于不属于以上分类的请求", "FileText", "#8c8c8c"},
-	}
-
-	for _, tt := range ticketTypes {
-		_, err := rawDB.ExecContext(
-			ctx, `
-			INSERT INTO ticket_types (
-				code, name, description, icon, color, status,
-				custom_fields, approval_enabled, approval_chain,
-				sla_enabled, auto_assign_enabled, assignment_rules,
-				notification_config, permission_config,
-				created_by, tenant_id, created_at, updated_at, usage_count
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 0)
-		`,
-			tt.Code, tt.Name, tt.Description, tt.Icon, tt.Color, "active",
-			"{}", false, "[]",
-			false, false, "[]",
-			"{}", "{}",
-			admin.ID, t.ID, time.Now(), time.Now(),
-		)
+	for _, tt := range ticketTypeDefinitions() {
+		_, err := s.client.TicketType.Create().
+			SetCode(tt.Code).SetName(tt.Name).SetDescription(tt.Description).
+			SetIcon(tt.Icon).SetColor(tt.Color).SetStatus("active").
+			SetCustomFields(map[string]interface{}{}).SetApprovalChain([]interface{}{}).
+			SetAssignmentRules([]interface{}{}).SetNotificationConfig(map[string]interface{}{}).
+			SetPermissionConfig(map[string]interface{}{}).
+			SetCreatedBy(int64(admin.ID)).SetTenantID(int64(t.ID)).
+			SetCreatedAt(time.Now()).SetUpdatedAt(time.Now()).Save(ctx)
 		if err != nil {
-			s.sugar.Warnw("seed ticket type failed", "error", err, "code", tt.Code)
+			return fmt.Errorf("seed ticket type %s: %w", tt.Code, err)
 		}
 	}
-	s.sugar.Infow("ticket types seeded", "count", len(ticketTypes))
+	s.sugar.Infow("ticket types seeded", "count", len(ticketTypeDefinitions()))
+	return nil
 }
 
 // seedCITypes 初始化CI类型种子数据

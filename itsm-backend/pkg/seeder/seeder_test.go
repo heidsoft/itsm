@@ -2,10 +2,14 @@ package seeder
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strconv"
 	"testing"
 
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/enttest"
@@ -49,7 +53,25 @@ func newTestSeeder(t *testing.T, mode string) (*Seeder, context.Context) {
 		},
 	}
 
-	return NewSeeder(client, zap.NewNop().Sugar(), cfg), context.Background()
+	seeder := NewSeeder(client, zap.NewNop().Sugar(), cfg)
+	db, err := sql.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+	seeder.sqlDriver = entsql.OpenDB(dialect.SQLite, db)
+	return seeder, tenantctx.SystemContext(context.Background(), "initialization:test", "isolated initialization regression")
+}
+
+func applyTestComponent(ctx context.Context, s *Seeder, component initialization.Initializer, scope initialization.Scope, plan initialization.Plan) (initialization.Result, error) {
+	tx, err := s.sqlDriver.Tx(ctx)
+	if err != nil {
+		return initialization.Result{}, err
+	}
+	defer tx.Rollback()
+	result, err := component.Apply(ctx, scope, plan, initialization.NewTransactionDriver(tx, dialect.SQLite))
+	if err != nil {
+		return result, err
+	}
+	return result, tx.Commit()
 }
 
 func TestSeedDefaultTenantPrivateMode(t *testing.T) {
@@ -348,10 +370,10 @@ func TestProductionInitializersApplyAndVerifyCompleteDAG(t *testing.T) {
 	require.NoError(t, err)
 	scope := initialization.Scope{Type: "platform", ID: 0}
 
-	for index, component := range components {
+	for _, component := range components {
 		plan, err := component.Plan(ctx, scope)
 		require.NoError(t, err)
-		_, err = component.Apply(ctx, scope, plan, int64(index+1))
+		_, err = applyTestComponent(ctx, seeder, component, scope, plan)
 		require.NoError(t, err, component.Name())
 		require.NoError(t, component.Verify(ctx, scope, plan), component.Name())
 	}
@@ -363,10 +385,10 @@ func TestProductionInitializersRepairMissingServiceCatalogWithoutOverwritingTena
 	require.NoError(t, err)
 	scope := initialization.Scope{Type: "platform", ID: 0}
 
-	for index, component := range components {
+	for _, component := range components {
 		plan, planErr := component.Plan(ctx, scope)
 		require.NoError(t, planErr)
-		_, applyErr := component.Apply(ctx, scope, plan, int64(index+1))
+		_, applyErr := applyTestComponent(ctx, seeder, component, scope, plan)
 		require.NoError(t, applyErr, component.Name())
 	}
 
@@ -399,7 +421,7 @@ func TestProductionInitializersRepairMissingServiceCatalogWithoutOverwritingTena
 	extension := components[len(components)-1]
 	plan, err := extension.Plan(ctx, scope)
 	require.NoError(t, err)
-	_, err = extension.Apply(ctx, scope, plan, 100)
+	_, err = applyTestComponent(ctx, seeder, extension, scope, plan)
 	require.NoError(t, err)
 	require.NoError(t, extension.Verify(ctx, scope, plan))
 
@@ -429,12 +451,7 @@ func TestProductionComponentRollsBackWhenTransactionalVerificationFails(t *testi
 
 	plan, err := identity.Plan(ctx, initialization.Scope{Type: "platform", ID: 0})
 	require.NoError(t, err)
-	_, err = identity.Apply(
-		ctx,
-		initialization.Scope{Type: "platform", ID: 0},
-		plan,
-		1,
-	)
+	_, err = applyTestComponent(ctx, seeder, identity, initialization.Scope{Type: "platform", ID: 0}, plan)
 	require.ErrorContains(t, err, "injected verification failure")
 
 	tenantCount, err := seeder.client.Tenant.Query().Count(ctx)
