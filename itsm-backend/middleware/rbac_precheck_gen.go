@@ -390,6 +390,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/system/vector-store":                          {Resource: "system", Action: "read"},
 			"/api/v1/tenants":                                      {Resource: "tenant", Action: "read"},
 			"/api/v1/tenants/*":                                    {Resource: "tenant", Action: "read"},
+			"/api/v1/tenants/*/initialization":                     {Resource: "tenant", Action: "read"},
 			"/api/v1/ticket-categories":                            {Resource: "ticket_category", Action: "read"},
 			"/api/v1/ticket-categories/*":                          {Resource: "ticket_category", Action: "read"},
 			"/api/v1/ticket-categories/tree":                       {Resource: "ticket_category", Action: "read"},

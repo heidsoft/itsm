@@ -38,6 +38,7 @@ const (
 	CommandSendIntakeEmail         = "email_intake.email.send"
 	CommandProcessIntakeEmail      = "email_intake.message.process"
 	CommandSyncKnowledgeVector     = "knowledge.vector.sync"
+	CommandTenantBootstrapInstall  = "tenant.bootstrap.install"
 )
 
 var ErrLeaseLost = errors.New("operational command lease lost")

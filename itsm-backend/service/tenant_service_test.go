@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/tenant"
+	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,6 +31,63 @@ func setupTenantTest(t *testing.T) (*ent.Client, *TenantService, context.Context
 }
 
 // ==================== 创建租户测试 ====================
+
+// 基线安装是租户可用性的前提：命令必须与租户创建同事务入队，
+// 入队失败必须回滚租户，不能留下"存在但无基线"的孤儿租户。
+func TestTenantService_CreateTenant_EnqueuesBaselineInstall(t *testing.T) {
+	client, service, ctx := setupTenantTest(t)
+	defer client.Close()
+
+	created, err := service.CreateTenant(ctx, &dto.CreateTenantRequest{
+		Name: "Outbox Tenant", Code: "OUTBOX-TENANT", Type: "standard",
+	})
+	require.NoError(t, err)
+
+	command, err := client.OperationalCommand.Query().Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, commandbus.CommandTenantBootstrapInstall, command.CommandType)
+	assert.Equal(t, "tenant", command.AggregateType)
+	assert.Equal(t, created.ID, command.AggregateID)
+	assert.Equal(t, created.ID, command.TenantID)
+	assert.Equal(t, fmt.Sprintf("tenant:%d:bootstrap:install:initial", created.ID), command.IdempotencyKey)
+	assert.Equal(t, "pending", command.Status)
+
+	// 幂等身份必须稳定：再次创建别的租户产生新的身份，不复用旧 key。
+	second, err := service.CreateTenant(ctx, &dto.CreateTenantRequest{
+		Name: "Outbox Tenant 2", Code: "OUTBOX-TENANT-2", Type: "standard",
+	})
+	require.NoError(t, err)
+	assert.NotEqual(t, command.IdempotencyKey, fmt.Sprintf("tenant:%d:bootstrap:install:initial", second.ID))
+	total, err := client.OperationalCommand.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 2, total)
+}
+
+func TestTenantService_CreateTenant_RollsBackWhenEnqueueFails(t *testing.T) {
+	client, service, ctx := setupTenantTest(t)
+	defer client.Close()
+
+	enqueueErr := errors.New("injected enqueue failure")
+	client.OperationalCommand.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
+			if mutation.Op() == ent.OpCreate {
+				return nil, enqueueErr
+			}
+			return next.Mutate(ctx, mutation)
+		})
+	})
+
+	_, err := service.CreateTenant(ctx, &dto.CreateTenantRequest{
+		Name: "Rollback Tenant", Code: "ROLLBACK-TENANT", Type: "standard",
+	})
+	require.ErrorIs(t, err, enqueueErr)
+
+	_, err = client.Tenant.Query().Where(tenant.CodeEQ("ROLLBACK-TENANT")).Only(ctx)
+	require.True(t, ent.IsNotFound(err), "入队失败必须连同租户创建一起回滚")
+	commands, err := client.OperationalCommand.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, commands)
+}
 
 func TestTenantService_CreateTenant_Success(t *testing.T) {
 	client, service, ctx := setupTenantTest(t)

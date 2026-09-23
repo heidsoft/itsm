@@ -12,13 +12,35 @@ import (
 
 // Handler HTTP handler for tenant domain
 type Handler struct {
-	svc    Service
-	logger *zap.SugaredLogger
+	svc            Service
+	initialization *InitializationService
+	logger         *zap.SugaredLogger
 }
 
 // NewHandler creates a new tenant handler
-func NewHandler(svc Service, logger *zap.SugaredLogger) *Handler {
-	return &Handler{svc: svc, logger: logger}
+func NewHandler(svc Service, initialization *InitializationService, logger *zap.SugaredLogger) *Handler {
+	return &Handler{svc: svc, initialization: initialization, logger: logger}
+}
+
+// GetInitializationStatus 返回租户产品基线的真实安装状态：
+// 逐组件只读验证 + outbox 命令状态 + 历史版本标记。只读，不写任何数据。
+func (h *Handler) GetInitializationStatus(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, common.ParamErrorCode, "无效的租户ID")
+		return
+	}
+	if h.initialization == nil {
+		common.Fail(c, common.ServerErrorCode, "初始化状态服务未配置")
+		return
+	}
+	status, err := h.initialization.Status(c.Request.Context(), id)
+	if err != nil {
+		h.logger.Errorf("读取租户初始化状态失败: %v", err)
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+	common.Success(c, status)
 }
 
 // protectedSystemTenantCode 是平台默认/系统租户的稳定标识。它一旦被暂停或过期，

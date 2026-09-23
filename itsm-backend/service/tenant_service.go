@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/commandbus"
 
 	"go.uber.org/zap"
 )
@@ -25,7 +26,9 @@ func NewTenantService(client *ent.Client, logger *zap.SugaredLogger) *TenantServ
 	}
 }
 
-// CreateTenant 创建租户
+// CreateTenant 创建租户，并在同一事务中投递产品基线安装命令。
+// 命令入队失败必须回滚租户创建：否则会留下一个"存在但不可用"的租户
+// （无角色/权限/菜单），且没有可追踪的补装入口。
 func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantRequest) (*ent.Tenant, error) {
 	// 检查租户代码是否已存在
 	exists, err := s.client.Tenant.Query().
@@ -39,8 +42,20 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		return nil, fmt.Errorf("租户代码已存在: %s", req.Code)
 	}
 
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		s.logger.Errorf("开启租户创建事务失败: %v", err)
+		return nil, fmt.Errorf("开启租户创建事务失败: %w", err)
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
 	// 创建租户
-	tenantEntity, err := s.client.Tenant.
+	tenantEntity, err := tx.Tenant.
 		Create().
 		SetName(req.Name).
 		SetCode(req.Code).
@@ -63,7 +78,28 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		return nil, fmt.Errorf("创建租户失败: %w", err)
 	}
 
-	s.logger.Infof("成功创建租户: %s (%s)", tenantEntity.Name, tenantEntity.Code)
+	// 幂等键以租户创建事件为身份：每个租户只安装一次产品基线，
+	// 重复请求会被 outbox 去重，而不是绕过重复保护再装一遍。
+	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:       tenantEntity.ID,
+		CommandType:    commandbus.CommandTenantBootstrapInstall,
+		AggregateType:  "tenant",
+		AggregateID:    tenantEntity.ID,
+		IdempotencyKey: fmt.Sprintf("tenant:%d:bootstrap:install:initial", tenantEntity.ID),
+		Payload:        map[string]interface{}{"occurrence": "initial"},
+		MaxAttempts:    5,
+	}); err != nil {
+		s.logger.Errorf("入队租户基线安装命令失败: %v", err)
+		return nil, fmt.Errorf("入队租户基线安装命令失败: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		s.logger.Errorf("提交租户创建事务失败: %v", err)
+		return nil, fmt.Errorf("提交租户创建事务失败: %w", err)
+	}
+	committed = true
+
+	s.logger.Infof("成功创建租户: %s (%s)，产品基线安装已入队", tenantEntity.Name, tenantEntity.Code)
 	return tenantEntity, nil
 }
 

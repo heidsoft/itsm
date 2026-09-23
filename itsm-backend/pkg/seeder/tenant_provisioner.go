@@ -99,6 +99,46 @@ func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVers
 	return s.validateTenantReadiness(ctx, tenantID)
 }
 
+// ComponentVerification reports one component's read-only verification result
+// for a tenant scope. It is what the tenant initialization status API returns.
+type ComponentVerification struct {
+	Component string
+	Verified  bool
+	Error     string
+}
+
+// VerifyTenantBaseline verifies a tenant's product baseline without writing.
+// Unlike ProvisionTenant it reports every component instead of stopping at the
+// first failure, so an operator can see the whole gap at once.
+func (s *Seeder) VerifyTenantBaseline(ctx context.Context, tenantID int) ([]ComponentVerification, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("tenant id must be positive")
+	}
+	if _, err := s.client.Tenant.Get(ctx, tenantID); err != nil {
+		return nil, fmt.Errorf("load target tenant: %w", err)
+	}
+	components, err := ProductionInitializers(s)
+	if err != nil {
+		return nil, fmt.Errorf("create verification components: %w", err)
+	}
+	scope := initialization.Scope{Type: "tenant", ID: int64(tenantID)}
+	results := make([]ComponentVerification, 0, len(components))
+	for _, component := range components {
+		plan, err := component.Plan(ctx, scope)
+		if err != nil {
+			return results, fmt.Errorf("plan verification for %s: %w", component.Name(), err)
+		}
+		entry := ComponentVerification{Component: component.Name()}
+		if verifyErr := component.Verify(ctx, scope, plan); verifyErr != nil {
+			entry.Error = verifyErr.Error()
+		} else {
+			entry.Verified = true
+		}
+		results = append(results, entry)
+	}
+	return results, nil
+}
+
 // recordTenantTemplateVersion keeps the historical version marker readable for
 // one release while the initialization ledger stays the source of truth.
 func (s *Seeder) recordTenantTemplateVersion(ctx context.Context, tenantID int, templateVersion string) error {

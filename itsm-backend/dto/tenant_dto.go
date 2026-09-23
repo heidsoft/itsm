@@ -77,6 +77,28 @@ type TenantResponse struct {
 	UpdatedAt       time.Time              `json:"updatedAt"`
 }
 
+// TenantInitializationStatusResponse 租户产品基线安装状态。
+// 就绪判定来自逐组件只读验证，而不是开通命令的表面成功。
+type TenantInitializationStatusResponse struct {
+	TenantID        int    `json:"tenantId"`
+	TemplateVersion string `json:"templateVersion"`
+	// RecordedVersion 是历史版本标记（兼容读取），真值来自逐组件验证。
+	RecordedVersion string                                `json:"recordedVersion,omitempty"`
+	RecordedAt      *time.Time                            `json:"recordedAt,omitempty"`
+	CommandStatus   string                                `json:"commandStatus"`
+	CommandAttempts int                                   `json:"commandAttempts"`
+	CommandError    string                                `json:"commandError,omitempty"`
+	Ready           bool                                  `json:"ready"`
+	Components      []TenantComponentVerificationResponse `json:"components"`
+}
+
+// TenantComponentVerificationResponse 单个产品组件的只读验证结果
+type TenantComponentVerificationResponse struct {
+	Component string `json:"component"`
+	Verified  bool   `json:"verified"`
+	Error     string `json:"error,omitempty"`
+}
+
 // TenantListResponse 租户列表响应
 type TenantListResponse struct {
 	Tenants  []TenantResponse `json:"tenants"`

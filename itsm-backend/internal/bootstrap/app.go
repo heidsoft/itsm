@@ -1027,7 +1027,36 @@ func NewApplication() *Application {
 
 	// Tenant handler
 	tenantService := service.NewTenantService(client, sugar)
-	tenantHTTPHandler := tenantHandler.NewHandler(tenantService, sugar)
+	// 租户产品基线安装走事务型 outbox：worker 消费 tenant.bootstrap.install，
+	// 复用与平台初始化同一套组件与校验，不复制第二份实现。
+	productBaselineSeeder := seeder.NewSeeder(client, sugar, cfg)
+	tenantInitializationService := tenantHandler.NewInitializationService(
+		client,
+		func(ctx context.Context, tenantID int) ([]tenantHandler.ComponentVerification, error) {
+			results, err := productBaselineSeeder.VerifyTenantBaseline(ctx, tenantID)
+			if err != nil {
+				return nil, err
+			}
+			verifications := make([]tenantHandler.ComponentVerification, 0, len(results))
+			for _, result := range results {
+				verifications = append(verifications, tenantHandler.ComponentVerification{
+					Component: result.Component,
+					Verified:  result.Verified,
+					Error:     result.Error,
+				})
+			}
+			return verifications, nil
+		},
+		seeder.CurrentTenantTemplateVersion,
+		sugar,
+	)
+	tenantHTTPHandler := tenantHandler.NewHandler(tenantService, tenantInitializationService, sugar)
+	tenantBootstrapCommandHandler := tenantHandler.NewProvisioningCommandHandler(
+		client, productBaselineSeeder, seeder.CurrentTenantTemplateVersion, sugar,
+	)
+	if err := commandRegistry.Register(commandbus.CommandTenantBootstrapInstall, tenantBootstrapCommandHandler.Handle); err != nil {
+		log.Fatalf("Failed to register tenant bootstrap command handler: %v", err)
+	}
 
 	// System Config Handler（2026-09-02 迁移至 handlers/systemconfig）
 	systemConfigService := service.NewSystemConfigService(client, sugar)

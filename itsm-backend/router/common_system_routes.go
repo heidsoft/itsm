@@ -176,6 +176,7 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 				tenants.PUT("/:id", middleware.RequirePermission("tenant", "write"), config.TenantHandler.UpdateTenant)
 				tenants.DELETE("/:id", middleware.RequirePermission("tenant", "write"), config.TenantHandler.DeleteTenant)
 				tenants.PUT("/:id/status", middleware.RequirePermission("tenant", "write"), config.TenantHandler.UpdateTenantStatus)
+				tenants.GET("/:id/initialization", middleware.RequirePermission("tenant", "read"), config.TenantHandler.GetInitializationStatus)
 			}
 		}
 

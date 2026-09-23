@@ -70,6 +70,26 @@ export interface TenantListResponse {
   size: number;
 }
 
+// 租户产品基线的单组件只读验证结果
+export interface TenantComponentVerification {
+  component: string;
+  verified: boolean;
+  error?: string;
+}
+
+// 租户产品基线安装状态：ready 由逐组件只读验证决定，不看命令表面状态
+export interface TenantInitializationStatus {
+  tenantId: number;
+  templateVersion: string;
+  recordedVersion?: string;
+  recordedAt?: string;
+  commandStatus: 'none' | 'pending' | 'processing' | 'succeeded' | 'dead_letter';
+  commandAttempts: number;
+  commandError?: string;
+  ready: boolean;
+  components: TenantComponentVerification[];
+}
+
 export interface CreateTenantRequest {
   name: string;
   code: string;

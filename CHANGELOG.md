@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 租户创建不再留下"已建但无基线"的孤儿租户：`POST /api/v1/tenants` 在同一事务内投递 `tenant.bootstrap.install` outbox 命令，入队失败连同租户一起回滚；worker 消费后按命令租户重新加载校验并安装产品基线（复用平台初始化同一套组件，不复制第二套实现），新增 `GET /api/v1/tenants/:id/initialization` 只读接口如实报告逐组件验证结果与命令状态
 - 修复生产环境数据库迁移失败问题：部分迁移脚本内嵌事务控制语句导致整批迁移中止
 - 修复初始化失败被静默吞掉：迁移发现、账本调和与执行任一环节失败都会中止启动；组件写入、事务内校验、租约 fencing 与成功账本现在同一次提交，失败整体回滚，不再残留半成品基线
 - 修复独立 `initialize -action verify` 依赖上一次 Apply 内存基线的问题：验证基线改为从代码内产品清单确定性派生，缺失菜单/权限/角色授权、跨租户授权和悬空授权均可被检出

@@ -68,7 +68,7 @@ func (m *mockTenantService) DeleteTenant(ctx context.Context, tenantID int) erro
 
 func newTenantHandler(m *mockTenantService) *Handler {
 	gin.SetMode(gin.TestMode)
-	return NewHandler(m, zap.NewNop().Sugar())
+	return NewHandler(m, nil, zap.NewNop().Sugar())
 }
 
 func doJSON(h *Handler, method, path, body string) (*httptest.ResponseRecorder, *gin.Context) {

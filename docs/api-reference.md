@@ -1176,6 +1176,62 @@ GET /dashboard/sla-stats
 Authorization: Bearer <accessToken>
 ```
 
+## 租户管理接口
+
+### 创建租户
+
+创建租户与产品基线安装命令在同一事务中提交：命令入队失败会连同租户创建一起回滚，
+因此不会出现"已创建但没有任何角色/权限/菜单"的孤儿租户。基线由 `tenant.bootstrap.install`
+命令异步安装，安装结果用下面的状态接口查询。
+
+```http
+POST /tenants
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "name": "客户名称",
+  "code": "customer-code",
+  "type": "saas_customer"
+}
+```
+
+### 获取租户初始化状态
+
+只读接口，返回真实安装状态：逐组件只读验证决定 `ready`，`commandStatus` 单独如实
+呈现 outbox 命令状态（`none`/`pending`/`processing`/`succeeded`/`dead_letter`），
+`recordedVersion` 是历史版本标记，仅作兼容读取。需要 `tenant:read` 权限。
+
+```http
+GET /tenants/{id}/initialization
+Authorization: Bearer <accessToken>
+```
+
+响应：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "tenantId": 2,
+    "templateVersion": "1.0.0",
+    "recordedVersion": "1.0.0",
+    "recordedAt": "2026-09-23T09:37:00Z",
+    "commandStatus": "succeeded",
+    "commandAttempts": 0,
+    "ready": true,
+    "components": [
+      { "component": "identity-rbac", "verified": true },
+      { "component": "workflow-core", "verified": true }
+    ]
+  }
+}
+```
+
+安装失败进入 `dead_letter` 后，可由运维命令的重放入口（保留原幂等键）重放，
+不新建第二次安装身份。
+
 ## 系统配置接口
 
 ### 获取系统配置列表

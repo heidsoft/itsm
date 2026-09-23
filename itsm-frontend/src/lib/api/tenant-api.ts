@@ -1,6 +1,7 @@
 import { httpClient } from './http-client';
 import type {
   Tenant,
+  TenantInitializationStatus,
   TenantListResponse,
   CreateTenantRequest,
   UpdateTenantRequest,
@@ -31,6 +32,11 @@ export class TenantAPI {
   // 删除租户
   static async deleteTenant(id: number): Promise<void> {
     return httpClient.delete<void>(`/api/v1/tenants/${id}`);
+  }
+
+  // 获取租户产品基线安装状态（只读，逐组件验证）
+  static async getInitializationStatus(id: number): Promise<TenantInitializationStatus> {
+    return httpClient.get<TenantInitializationStatus>(`/api/v1/tenants/${id}/initialization`);
   }
 
   // 获取当前用户的租户信息
