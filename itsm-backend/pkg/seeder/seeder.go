@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
+	"itsm-backend/ent/citype"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
@@ -308,6 +309,10 @@ type menuSpec struct {
 	Description    string
 }
 
+// platformTenantCode is the tenant that receives the platform baseline in a
+// private deployment and the template source for per-tenant provisioning.
+const platformTenantCode = "default"
+
 // Seeder manages database seeding operations
 type Seeder struct {
 	client                  *ent.Client
@@ -316,9 +321,42 @@ type Seeder struct {
 	config                  *SeedConfig
 	appConfig               *config.Config
 	bpmnTemplateService     *service.BPMNTemplateService
+	baselineTenantID        int
 	expectedPermissions     []string
 	expectedMenus           []string
 	expectedRolePermissions map[string][]string
+}
+
+// installsPlatformTenant reports whether this seeder writes the platform
+// baseline. Tenant-scoped provisioning must not create tenants or the platform
+// bootstrap administrator.
+func (s *Seeder) installsPlatformTenant() bool { return s.baselineTenantID == 0 }
+
+// withBaselineTenant returns a view of the seeder that installs the product
+// baseline into a specific tenant instead of the platform default tenant.
+func (s *Seeder) withBaselineTenant(tenantID int) *Seeder {
+	view := *s
+	view.baselineTenantID = tenantID
+	return &view
+}
+
+// baselineTenant resolves the tenant that receives product baseline records.
+// Platform initialization keeps the historical "default" tenant; per-tenant
+// provisioning pins it to the target tenant so the same helpers can never
+// write into a different tenant.
+func (s *Seeder) baselineTenant(ctx context.Context) (*ent.Tenant, error) {
+	if s.baselineTenantID > 0 {
+		target, err := s.client.Tenant.Get(ctx, s.baselineTenantID)
+		if err != nil {
+			return nil, fmt.Errorf("load baseline tenant %d: %w", s.baselineTenantID, err)
+		}
+		return target, nil
+	}
+	root, err := s.client.Tenant.Query().Where(tenant.CodeEQ(platformTenantCode)).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("load default baseline tenant: %w", err)
+	}
+	return root, nil
 }
 
 // NewSeeder creates a new Seeder instance
@@ -663,10 +701,10 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	attempt("service-catalog", s.seedServiceCatalog)
 	attempt("service-catalog-items", s.seedServiceCatalogItems)
 	attempt("ticket-types", s.seedTicketTypes) // 新增：初始化工单类型
-	s.seedCITypes(ctx)                         // 新增：初始化CI类型
-	s.seedIncidentCategories(ctx)              // 新增：初始化事件分类
-	s.seedStandardChanges(ctx)                 // 新增：初始化标准变更模板
-	s.seedTicketTags(ctx)                      // 新增：初始化标签
+	attempt("ci-types", s.seedCITypes)         // 新增：初始化CI类型
+	attempt("incident-categories", s.seedIncidentCategories) // 新增：初始化事件分类
+	attempt("standard-changes", s.seedStandardChanges)        // 新增：初始化标准变更模板
+	attempt("ticket-tags", s.seedTicketTags)                  // 新增：初始化标签
 	s.seedMenuAndPermissionFixes(ctx)          // 修复：更新菜单路径和补充缺失权限
 	s.seedRolePermissions(ctx)                 // 新增：为角色分配权限
 	s.seedBusinessRecords(ctx)                 // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
@@ -684,11 +722,9 @@ func (s *Seeder) SeedProduction(ctx context.Context) error {
 
 // VerifyProduction checks the complete managed baseline without writing data.
 func (s *Seeder) VerifyProduction(ctx context.Context) error {
-	rootTenant, err := s.client.Tenant.Query().
-		Where(tenant.CodeEQ("default")).
-		Only(ctx)
+	rootTenant, err := s.baselineTenant(ctx)
 	if err != nil {
-		return fmt.Errorf("verify default tenant: %w", err)
+		return fmt.Errorf("verify baseline tenant: %w", err)
 	}
 
 	checks := []struct {
@@ -840,7 +876,7 @@ func (s *Seeder) seedDefaultTenant(ctx context.Context) *ent.Tenant {
 		rootName = "MSP Provider Tenant"
 	}
 
-	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ(platformTenantCode)).First(ctx)
 	if err == nil && existing != nil {
 		updated, updateErr := existing.Update().
 			SetName(rootName).
@@ -892,7 +928,7 @@ func nilIfEmpty(value string) *string {
 }
 
 func (s *Seeder) seedAdmin(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ(platformTenantCode)).First(ctx)
 	if err != nil {
 		s.sugar.Warnw("default tenant not found; skip admin seed", "error", err)
 		return
@@ -951,7 +987,7 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 // names, descriptions and parent links are never overwritten, which keeps
 // customer edits intact.
 func (s *Seeder) seedDepartments(ctx context.Context) error {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("departments tenant: %w", err)
 	}
@@ -1016,9 +1052,9 @@ func (s *Seeder) seedDepartments(ctx context.Context) error {
 }
 
 func (s *Seeder) seedTeams(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip teams seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip teams seed", "error", err)
 		return
 	}
 
@@ -1069,9 +1105,9 @@ func BuiltinGroups() []GroupSeed {
 // 任务无人可见（2026-09-15 复盘 R2）。组名以 approvers- 前缀避开全部角色 code，
 // 防止「同名组优先」语义下空组挡住角色回退。幂等：组已存在则跳过，不覆盖描述。
 func (s *Seeder) seedGroups(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip groups seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip groups seed", "error", err)
 		return
 	}
 
@@ -1123,9 +1159,9 @@ func BuiltinRoles() []RoleSeed {
 }
 
 func (s *Seeder) seedRoles(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip roles seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip roles seed", "error", err)
 		return
 	}
 
@@ -1232,9 +1268,9 @@ func (s *Seeder) seedCloudServiceTemplates(ctx context.Context) {
 // 以下是使用配置文件的初始化函数
 
 func (s *Seeder) seedSLADefinitions(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip SLA definitions seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip SLA definitions seed", "error", err)
 		return
 	}
 
@@ -1271,9 +1307,9 @@ func (s *Seeder) seedSLADefinitions(ctx context.Context) {
 }
 
 func (s *Seeder) seedSLAPolicies(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip SLA policies seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip SLA policies seed", "error", err)
 		return
 	}
 
@@ -1372,7 +1408,7 @@ func defaultSLAPolicySeeds() []SLAPolicySeed {
 // or replaces SLA definitions cannot silently produce zero rules. Idempotent
 // per definition: a definition that already owns rules is left untouched.
 func (s *Seeder) seedSLAAlertRules(ctx context.Context) error {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("SLA alert rules tenant: %w", err)
 	}
@@ -1431,9 +1467,9 @@ func (s *Seeder) seedSLAAlertRules(ctx context.Context) error {
 }
 
 func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip approval workflows seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip approval workflows seed", "error", err)
 		return
 	}
 
@@ -1465,9 +1501,9 @@ func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
 }
 
 func (s *Seeder) seedProcessBindings(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip process bindings seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip process bindings seed", "error", err)
 		return
 	}
 
@@ -1524,7 +1560,7 @@ func (s *Seeder) seedBPMNWorkflows(ctx context.Context) error {
 		s.sugar.Infow("workflow seeding is disabled in config")
 		return nil
 	}
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("BPMN workflows tenant: %w", err)
 	}
@@ -1541,16 +1577,16 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) error {
 	if s.sqlDriver == nil {
 		return fmt.Errorf("workflow template SQL driver is required")
 	}
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("workflow templates tenant: %w", err)
 	}
 	tenantID := t.ID
-	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(tenantID)).First(ctx)
+	creator, err := s.baselineCreator(ctx, tenantID)
 	if err != nil {
-		return fmt.Errorf("workflow templates administrator: %w", err)
+		return fmt.Errorf("workflow templates creator: %w", err)
 	}
-	createdBy := admin.ID
+	createdBy := creator.ID
 
 	for _, tpl := range workflowTemplateDefinitions() {
 		bpmnXML, err := fs.ReadFile(seedWorkflowTemplateFS, tpl.bpmnFile)
@@ -1592,9 +1628,9 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) error {
 }
 
 func (s *Seeder) seedTicketViews(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip ticket views seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip ticket views seed", "error", err)
 		return
 	}
 
@@ -1678,9 +1714,9 @@ func builtinRolePermissionCodes() map[string][]string {
 }
 
 func (s *Seeder) seedPermissions(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip permissions seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip permissions seed", "error", err)
 		return
 	}
 
@@ -1860,9 +1896,9 @@ func menuDefinitions() []menuSpec {
 
 // seedMenus 初始化系统菜单（层级化：父菜单在前，子菜单通过 parent_path 关联）。
 func (s *Seeder) seedMenus(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip menus seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip menus seed", "error", err)
 		return
 	}
 	specs := menuDefinitions()
@@ -1958,9 +1994,9 @@ func (s *Seeder) upsertMenu(ctx context.Context, tenantID int, m menuSpec, paren
 // 不再补录菜单本身：seedMenus 现在覆盖完整菜单树（含子菜单、parent_id 层级），
 // 不需要在此处再追加缺失菜单条目。
 func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip fixes", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip fixes", "error", err)
 		return
 	}
 
@@ -2083,9 +2119,9 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 // appendMissingCodes 返回在 codes 基础上补齐 extra 缺失项的新切片（保序、去重）。
 
 func (s *Seeder) seedRolePermissions(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip role permissions seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip role permissions seed", "error", err)
 		return
 	}
 
@@ -2185,7 +2221,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 // allExcept 返回除指定代码外的所有权限代码
 
 func (s *Seeder) seedServiceCatalog(ctx context.Context) error {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("service catalog tenant: %w", err)
 	}
@@ -2231,7 +2267,7 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) error {
 // missing: a silently dropped item is indistinguishable from a completed
 // baseline, which is how the manifest drift went unnoticed.
 func (s *Seeder) seedServiceCatalogItems(ctx context.Context) error {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("service catalog items tenant: %w", err)
 	}
@@ -2294,13 +2330,13 @@ func (s *Seeder) seedServiceCatalogItems(ctx context.Context) error {
 
 // seedTicketTypes 初始化默认工单类型
 func (s *Seeder) seedTicketTypes(ctx context.Context) error {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		return fmt.Errorf("ticket types tenant: %w", err)
 	}
-	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
+	creator, err := s.baselineCreator(ctx, t.ID)
 	if err != nil {
-		return fmt.Errorf("ticket types administrator: %w", err)
+		return fmt.Errorf("ticket types creator: %w", err)
 	}
 	count, err := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(t.ID))).Count(ctx)
 	if err != nil {
@@ -2318,7 +2354,7 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) error {
 			SetCustomFields(map[string]interface{}{}).SetApprovalChain([]interface{}{}).
 			SetAssignmentRules([]interface{}{}).SetNotificationConfig(map[string]interface{}{}).
 			SetPermissionConfig(map[string]interface{}{}).
-			SetCreatedBy(int64(admin.ID)).SetTenantID(int64(t.ID)).
+			SetCreatedBy(int64(creator.ID)).SetTenantID(int64(t.ID)).
 			SetCreatedAt(time.Now()).SetUpdatedAt(time.Now()).Save(ctx)
 		if err != nil {
 			return fmt.Errorf("seed ticket type %s: %w", tt.Code, err)
@@ -2329,170 +2365,71 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) error {
 }
 
 // seedCITypes 初始化CI类型种子数据
-func (s *Seeder) seedCITypes(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+// seedCITypes reconciles the CI type baseline for the baseline tenant. The
+// existence check is per tenant and per type: a global "any row exists" guard
+// silently skips every tenant installed after the first one.
+func (s *Seeder) seedCITypes(ctx context.Context) error {
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip CI types seed", "error", err)
-		return
+		return fmt.Errorf("CI types tenant: %w", err)
 	}
 
-	// 检查是否已有CI类型
-	existing, err := s.client.CIType.Query().Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("failed to query CI types; skip seed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("CI types already seeded", "count", existing)
-		return
-	}
-
-	// 使用配置中的CI类型，如果没有配置则使用默认值
-	ciTypes := s.config.CITypes
-	if len(ciTypes) == 0 {
-		// 默认CI类型（is_active 省略，走 schema 默认启用）
-		ciTypes = []CITypeSeed{
-			{Name: "server", Description: "服务器", Icon: "server", Color: "#28a745"},
-			{Name: "database", Description: "数据库", Icon: "database", Color: "#fd7e14"},
-			{Name: "network", Description: "网络设备", Icon: "network", Color: "#17a2b8"},
-			{Name: "storage", Description: "存储设备", Icon: "storage", Color: "#e83e8c"},
-			{Name: "application", Description: "应用服务", Icon: "app", Color: "#6610f2"},
-			{Name: "middleware", Description: "中间件", Icon: "middleware", Color: "#e74c3c"},
-			{Name: "cloud_vm", Description: "云虚拟机", Icon: "cloud", Color: "#6f42c1"},
-			{Name: "kubernetes", Description: "Kubernetes资源", Icon: "kubernetes", Color: "#20c997"},
+	created := 0
+	for _, ciType := range s.expectedCITypes() {
+		exists, err := s.client.CIType.Query().
+			Where(citype.TenantIDEQ(t.ID), citype.NameEQ(ciType.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check CI type %s: %w", ciType.Name, err)
 		}
-	}
-
-	for _, ct := range ciTypes {
-		create := s.client.CIType.Create().
-			SetName(ct.Name).
-			SetDescription(ct.Description).
-			SetIcon(ct.Icon).
-			SetColor(ct.Color).
+		if exists {
+			continue
+		}
+		builder := s.client.CIType.Create().
+			SetName(ciType.Name).
+			SetDescription(ciType.Description).
+			SetIcon(ciType.Icon).
+			SetColor(ciType.Color).
 			SetTenantID(t.ID)
 		// 仅在配置显式声明时覆盖；省略时保持 schema 默认 is_active=true，
 		// 避免 Go 零值 false 把预置类型隐式种为禁用。
-		if ct.IsActive != nil {
-			create.SetIsActive(*ct.IsActive)
+		if ciType.IsActive != nil {
+			builder.SetIsActive(*ciType.IsActive)
 		}
-		if _, err := create.Save(ctx); err != nil {
-			s.sugar.Warnw("seed CI type failed", "error", err, "name", ct.Name)
+		if _, err := builder.Save(ctx); err != nil {
+			return fmt.Errorf("seed CI type %s: %w", ciType.Name, err)
 		}
+		created++
 	}
-	s.sugar.Infow("CI types seeded", "count", len(ciTypes))
+	s.sugar.Infow("CI types reconciled", "created", created, "tenant_id", t.ID)
+	return nil
 }
 
 // seedStandardChanges 初始化标准变更模板种子数据
-func (s *Seeder) seedStandardChanges(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+// seedStandardChanges reconciles the standard change templates per tenant and
+// per title, preserving rows a tenant already owns.
+func (s *Seeder) seedStandardChanges(ctx context.Context) error {
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip standard changes seed", "error", err)
-		return
+		return fmt.Errorf("standard changes tenant: %w", err)
 	}
-
-	// 检查是否已有标准变更模板
-	existing, err := s.client.StandardChange.Query().Count(ctx)
+	creator, err := s.baselineCreator(ctx, t.ID)
 	if err != nil {
-		s.sugar.Warnw("failed to query standard changes; skip seed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("standard changes already seeded", "count", existing)
-		return
+		return fmt.Errorf("standard changes creator: %w", err)
 	}
 
-	// 获取测试用户
-	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
-	if err != nil || len(users) == 0 {
-		s.sugar.Warnw("no users found; skip standard changes seed", "error", err)
-		return
-	}
-	creatorID := users[0].ID
-
-	// 使用配置中的数据，如果没有配置则使用默认值
-	standardChanges := s.config.StandardChanges
-	if len(standardChanges) == 0 {
-		standardChanges = []StandardChangeSeed{
-			{
-				Title:              "服务器重启",
-				Description:        "标准服务器重启流程，用于常规维护",
-				ImplementationPlan: "1. 通知相关用户\n2. 停止服务\n3. 重启服务器\n4. 验证服务恢复",
-				RollbackPlan:       "如果重启失败，立即回滚到重启前状态",
-				Justification:      "例行维护",
-				Category:           "服务器",
-				RiskLevel:          "low",
-				ImpactScope:        "low",
-				ExpectedDuration:   30,
-				ApprovalRequired:   false,
-				AffectedCIs:        []string{"服务器"},
-				Prerequisites:      []string{"提前通知用户", "备份重要数据"},
-				Remarks:            "仅适用于非关键业务服务器",
-			},
-			{
-				Title:              "SSL证书更新",
-				Description:        "更新即将过期的SSL证书",
-				ImplementationPlan: "1. 申请新证书\n2. 在测试环境验证\n3. 生产环境部署\n4. 验证证书生效",
-				RollbackPlan:       "保留旧证书，发现问题可立即回滚",
-				Justification:      "证书即将过期，必须更新",
-				Category:           "安全",
-				RiskLevel:          "low",
-				ImpactScope:        "low",
-				ExpectedDuration:   60,
-				ApprovalRequired:   false,
-				AffectedCIs:        []string{"负载均衡器", "Web服务器"},
-				Prerequisites:      []string{"新证书已申请", "获取证书文件"},
-				Remarks:            "",
-			},
-			{
-				Title:              "数据库备份",
-				Description:        "执行数据库全量备份",
-				ImplementationPlan: "1. 停止数据库写入\n2. 执行全量备份\n3. 验证备份完整性\n4. 恢复数据库服务",
-				RollbackPlan:       "备份失败时取消备份操作",
-				Justification:      "数据安全要求",
-				Category:           "数据库",
-				RiskLevel:          "low",
-				ImpactScope:        "medium",
-				ExpectedDuration:   120,
-				ApprovalRequired:   false,
-				AffectedCIs:        []string{"数据库服务器"},
-				Prerequisites:      []string{"确认备份存储空间充足", "检查备份工具可用性"},
-				Remarks:            "",
-			},
-			{
-				Title:              "防火墙规则添加",
-				Description:        "添加新的防火墙放行规则",
-				ImplementationPlan: "1. 准备规则变更申请\n2. 在测试环境验证\n3. 生产环境应用新规则\n4. 监控网络流量",
-				RollbackPlan:       "发现异常时立即删除新添加的规则",
-				Justification:      "业务需要开放新端口",
-				Category:           "网络安全",
-				RiskLevel:          "medium",
-				ImpactScope:        "medium",
-				ExpectedDuration:   45,
-				ApprovalRequired:   true,
-				AffectedCIs:        []string{"防火墙", "网络交换机"},
-				Prerequisites:      []string{"已完成安全评估", "相关业务部门确认"},
-				Remarks:            "需安全部门审批",
-			},
-			{
-				Title:              "应用配置更新",
-				Description:        "更新应用程序配置文件中的参数",
-				ImplementationPlan: "1. 备份当前配置\n2. 修改配置参数\n3. 重启应用服务\n4. 验证功能正常",
-				RollbackPlan:       "回滚到备份的配置文件",
-				Justification:      "优化系统性能",
-				Category:           "应用",
-				RiskLevel:          "low",
-				ImpactScope:        "low",
-				ExpectedDuration:   30,
-				ApprovalRequired:   false,
-				AffectedCIs:        []string{"应用服务器"},
-				Prerequisites:      []string{"新配置已测试通过"},
-				Remarks:            "",
-			},
+	created := 0
+	for _, sc := range s.expectedStandardChanges() {
+		exists, err := s.client.StandardChange.Query().
+			Where(standardchange.TenantIDEQ(t.ID), standardchange.TitleEQ(sc.Title)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check standard change %s: %w", sc.Title, err)
 		}
-	}
-
-	for _, sc := range standardChanges {
-		_, err := s.client.StandardChange.Create().
+		if exists {
+			continue
+		}
+		_, err = s.client.StandardChange.Create().
 			SetTitle(sc.Title).
 			SetDescription(sc.Description).
 			SetImplementationPlan(sc.ImplementationPlan).
@@ -2506,127 +2443,93 @@ func (s *Seeder) seedStandardChanges(ctx context.Context) {
 			SetAffectedCis(sc.AffectedCIs).
 			SetPrerequisites(sc.Prerequisites).
 			SetRemarks(sc.Remarks).
-			SetCreatedBy(creatorID).
+			SetCreatedBy(creator.ID).
 			SetTenantID(t.ID).
 			SetIsActive(true).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
 			Save(ctx)
 		if err != nil {
-			s.sugar.Warnw("seed standard change failed", "error", err, "title", sc.Title)
+			return fmt.Errorf("seed standard change %s: %w", sc.Title, err)
 		}
+		created++
 	}
-	s.sugar.Infow("standard changes seeded", "count", len(standardChanges))
+	s.sugar.Infow("standard changes reconciled", "created", created, "tenant_id", t.ID)
+	return nil
 }
 
 // seedTicketTags 初始化标签种子数据
-func (s *Seeder) seedTicketTags(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+// seedTicketTags reconciles the tag baseline per tenant and per code.
+func (s *Seeder) seedTicketTags(ctx context.Context) error {
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip ticket tags seed", "error", err)
-		return
+		return fmt.Errorf("ticket tags tenant: %w", err)
 	}
 
-	// 检查是否已有标签
-	existing, err := s.client.Tag.Query().Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("failed to query ticket tags; skip seed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("ticket tags already seeded", "count", existing)
-		return
-	}
-
-	// 使用配置中的数据，如果没有配置则使用默认值
-	ticketTags := s.config.TicketTags
-	if len(ticketTags) == 0 {
-		ticketTags = []TicketTagSeed{
-			{Name: "紧急", Code: "urgent", Description: "紧急处理的问题", Color: "#ff4d4f"},
-			{Name: "重要", Code: "important", Description: "重要但不紧急", Color: "#fa8c16"},
-			{Name: "bug", Code: "bug", Description: "程序缺陷", Color: "#f5222d"},
-			{Name: "功能需求", Code: "feature", Description: "新功能请求", Color: "#1890ff"},
-			{Name: "性能问题", Code: "performance", Description: "系统性能相关", Color: "#722ed1"},
-			{Name: "安全", Code: "security", Description: "安全问题", Color: "#eb2f96"},
-			{Name: "网络", Code: "network", Description: "网络相关问题", Color: "#13c2c2"},
-			{Name: "数据库", Code: "database", Description: "数据库相关问题", Color: "#52c41a"},
-			{Name: "待反馈", Code: "pending-feedback", Description: "等待用户反馈", Color: "#faad14"},
-			{Name: "重复", Code: "duplicate", Description: "重复问题", Color: "#8c8c8c"},
-			{Name: "无法复现", Code: "cannot-reproduce", Description: "无法复现的问题", Color: "#d9d9d9"},
-			{Name: "已解决", Code: "resolved", Description: "已解决的问题", Color: "#52c41a"},
-			{Name: "需要审核", Code: "needs-review", Description: "需要上级审核", Color: "#1677ff"},
-			{Name: "高可用", Code: "high-availability", Description: "高可用相关", Color: "#fa541c"},
-			{Name: "监控告警", Code: "monitoring", Description: "监控和告警相关", Color: "#fa8c16"},
+	created := 0
+	for _, ticketTag := range s.expectedTicketTags() {
+		exists, err := s.client.Tag.Query().
+			Where(tag.TenantIDEQ(t.ID), tag.CodeEQ(ticketTag.Code)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check ticket tag %s: %w", ticketTag.Code, err)
 		}
-	}
-
-	for _, tag := range ticketTags {
-		_, err := s.client.Tag.Create().
-			SetName(tag.Name).
-			SetCode(tag.Code).
-			SetDescription(tag.Description).
-			SetColor(tag.Color).
+		if exists {
+			continue
+		}
+		if _, err := s.client.Tag.Create().
+			SetName(ticketTag.Name).
+			SetCode(ticketTag.Code).
+			SetDescription(ticketTag.Description).
+			SetColor(ticketTag.Color).
 			SetTenantID(t.ID).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed ticket tag failed", "error", err, "name", tag.Name)
+			Save(ctx); err != nil {
+			return fmt.Errorf("seed ticket tag %s: %w", ticketTag.Code, err)
 		}
+		created++
 	}
-	s.sugar.Infow("ticket tags seeded", "count", len(ticketTags))
+	s.sugar.Infow("ticket tags reconciled", "created", created, "tenant_id", t.ID)
+	return nil
 }
 
 // seedIncidentCategories 初始化事件分类种子数据
-func (s *Seeder) seedIncidentCategories(ctx context.Context) {
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+// seedIncidentCategories reconciles the incident category baseline per tenant
+// and per code.
+func (s *Seeder) seedIncidentCategories(ctx context.Context) error {
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip incident categories seed", "error", err)
-		return
+		return fmt.Errorf("incident categories tenant: %w", err)
 	}
 
-	// 检查是否已有分类数据
-	existing, err := s.client.TicketCategory.Query().Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("failed to query categories; skip seed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("incident categories already seeded", "count", existing)
-		return
-	}
-
-	// 使用配置中的数据，如果没有配置则使用默认值
-	categories := s.config.IncidentCategories
-	if len(categories) == 0 {
-		categories = []TicketCategorySeed{
-			{Name: "硬件故障", Code: "hardware", Description: "服务器、存储、网络设备等硬件故障"},
-			{Name: "软件故障", Code: "software", Description: "操作系统、应用软件故障"},
-			{Name: "网络故障", Code: "network", Description: "网络连接、网络设备问题"},
-			{Name: "数据库问题", Code: "database", Description: "数据库性能、连接问题"},
-			{Name: "安全问题", Code: "security", Description: "安全事件、漏洞"},
-			{Name: "性能问题", Code: "performance", Description: "系统响应慢、卡顿"},
-			{Name: "配置问题", Code: "config", Description: "系统配置错误"},
-			{Name: "其他", Code: "other", Description: "其他类型事件"},
-		}
-	}
-
-	for _, cat := range categories {
+	created := 0
+	for _, cat := range s.expectedIncidentCategories() {
 		code := cat.Code
 		if code == "" {
 			code = strings.ToLower(strings.ReplaceAll(cat.Name, " ", "_"))
 		}
-		_, err := s.client.TicketCategory.Create().
+		exists, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.TenantIDEQ(t.ID), ticketcategory.CodeEQ(code)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check incident category %s: %w", code, err)
+		}
+		if exists {
+			continue
+		}
+		if _, err := s.client.TicketCategory.Create().
 			SetName(cat.Name).
 			SetCode(code).
 			SetDescription(cat.Description).
 			SetTenantID(t.ID).
 			SetCreatedAt(time.Now()).
 			SetUpdatedAt(time.Now()).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed incident category failed", "error", err, "name", cat.Name)
+			Save(ctx); err != nil {
+			return fmt.Errorf("seed incident category %s: %w", code, err)
 		}
+		created++
 	}
-	s.sugar.Infow("incident categories seeded", "count", len(categories))
+	s.sugar.Infow("incident categories reconciled", "created", created, "tenant_id", t.ID)
+	return nil
 }
