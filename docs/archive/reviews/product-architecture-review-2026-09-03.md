@@ -36,7 +36,7 @@
 | 后端测试文件 | 261 | 排除 Ent 生成目录 |
 | 前端测试文件 | 200 | `*.test.ts(x)` |
 
-规模证据应结合结构理解：总路由装配集中在 [`router/router.go`](../../itsm-backend/router/router.go)，领域装配在 [`internal/bootstrap/app.go`](../../itsm-backend/internal/bootstrap/app.go)；前端页面位于 [`src/app`](../../itsm-frontend/src/app)。大而全的文件数说明覆盖面，不说明流程已通过生产验收。
+规模证据应结合结构理解：总路由装配集中在 [`router/router.go`](../../../itsm-backend/router/router.go)，领域装配在 [`internal/bootstrap/app.go`](../../../itsm-backend/internal/bootstrap/app.go)；前端页面位于 [`src/app`](../../../itsm-frontend/src/app)。大而全的文件数说明覆盖面，不说明流程已通过生产验收。
 
 ### 2.2 成熟度定义
 
@@ -70,39 +70,39 @@
 
 ### 3.2 ITIL 四件套
 
-**事件管理。** 真实入口从 [`router/router.go`](../../itsm-backend/router/router.go) 的 `/incidents` 进入 [`handlers/incident/handler.go`](../../itsm-backend/handlers/incident/handler.go)，经 [`service.go`](../../itsm-backend/handlers/incident/service.go) 和 [`repository_impl.go`](../../itsm-backend/handlers/incident/repository_impl.go) 落库；生命周期契约见 [`lifecycle_contract_test.go`](../../itsm-backend/handlers/incident/lifecycle_contract_test.go)。重大事件、监控指标和告警分别由 [`incident_monitoring_service.go`](../../itsm-backend/service/incident_monitoring_service.go) 与 [`incident_alerting_service.go`](../../itsm-backend/service/incident_alerting_service.go) 支撑。缺口是生产告警源接入与去重/抑制、战情协同和完整恢复旅程，而非基础 CRUD。
+**事件管理。** 真实入口从 [`router/router.go`](../../../itsm-backend/router/router.go) 的 `/incidents` 进入 [`handlers/incident/handler.go`](../../../itsm-backend/handlers/incident/handler.go)，经 [`service.go`](../../../itsm-backend/handlers/incident/service.go) 和 [`repository_impl.go`](../../../itsm-backend/handlers/incident/repository_impl.go) 落库；生命周期契约见 [`lifecycle_contract_test.go`](../../../itsm-backend/handlers/incident/lifecycle_contract_test.go)。重大事件、监控指标和告警分别由 [`incident_monitoring_service.go`](../../../itsm-backend/service/incident_monitoring_service.go) 与 [`incident_alerting_service.go`](../../../itsm-backend/service/incident_alerting_service.go) 支撑。缺口是生产告警源接入与去重/抑制、战情协同和完整恢复旅程，而非基础 CRUD。
 
-**问题管理。** [`handlers/problem`](../../itsm-backend/handlers/problem) 已形成垂直切片，另有 [`problem_investigation_service.go`](../../itsm-backend/service/problem_investigation_service.go)、[`root_cause_analysis_service.go`](../../itsm-backend/service/root_cause_analysis_service.go) 和 Known Error Handler。当前受影响 CI 仍存在弱引用路径，事件聚类、根因 CI 与知识发布未形成强制事务闭环，因此保持 Pilot。
+**问题管理。** [`handlers/problem`](../../../itsm-backend/handlers/problem) 已形成垂直切片，另有 [`problem_investigation_service.go`](../../../itsm-backend/service/problem_investigation_service.go)、[`root_cause_analysis_service.go`](../../../itsm-backend/service/root_cause_analysis_service.go) 和 Known Error Handler。当前受影响 CI 仍存在弱引用路径，事件聚类、根因 CI 与知识发布未形成强制事务闭环，因此保持 Pilot。
 
-**变更管理。** 生产路由 `/changes` 接入 [`handlers/change`](../../itsm-backend/handlers/change)，具备审批历史/outbox 测试、BPMN bridge、CAB、PIR 与标准变更。关键风险是流程推进与领域状态落库不是单一原子提交；影响摘要未成为提交审批的服务端门禁，维护窗口冲突与自动回滚仍不足。证据见 [`service_bpmn_bridge_test.go`](../../itsm-backend/handlers/change/service_bpmn_bridge_test.go)、[`repository_approval_outbox_test.go`](../../itsm-backend/handlers/change/repository_approval_outbox_test.go) 和 [`pir_service.go`](../../itsm-backend/service/pir_service.go)。
+**变更管理。** 生产路由 `/changes` 接入 [`handlers/change`](../../../itsm-backend/handlers/change)，具备审批历史/outbox 测试、BPMN bridge、CAB、PIR 与标准变更。关键风险是流程推进与领域状态落库不是单一原子提交；影响摘要未成为提交审批的服务端门禁，维护窗口冲突与自动回滚仍不足。证据见 [`service_bpmn_bridge_test.go`](../../../itsm-backend/handlers/change/service_bpmn_bridge_test.go)、[`repository_approval_outbox_test.go`](../../../itsm-backend/handlers/change/repository_approval_outbox_test.go) 和 [`pir_service.go`](../../../itsm-backend/service/pir_service.go)。
 
-**服务请求。** `/service-requests` 从 Router 进入 [`handlers/service_request`](../../itsm-backend/handlers/service_request)，已有 BPMN bridge 和审批链回归测试；目录在 [`handlers/service_catalog`](../../itsm-backend/handlers/service_catalog)。主要缺少可追溯的目录版本快照、失败补偿、履约任务/SLA/CI 更新的统一事务或 Saga 语义。
+**服务请求。** `/service-requests` 从 Router 进入 [`handlers/service_request`](../../../itsm-backend/handlers/service_request)，已有 BPMN bridge 和审批链回归测试；目录在 [`handlers/service_catalog`](../../../itsm-backend/handlers/service_catalog)。主要缺少可追溯的目录版本快照、失败补偿、履约任务/SLA/CI 更新的统一事务或 Saga 语义。
 
 ### 3.3 BPMN 工作流与审批
 
-生产调用链为：`router.go -> handlers/bpmn.Handler.RegisterRoutes -> workflow/process trigger services -> CustomProcessEngine -> Ent + operational_commands worker`。装配证据在 [`handlers/bpmn/handler.go`](../../itsm-backend/handlers/bpmn/handler.go) 和 [`internal/bootstrap/app.go`](../../itsm-backend/internal/bootstrap/app.go)。
+生产调用链为：`router.go -> handlers/bpmn.Handler.RegisterRoutes -> workflow/process trigger services -> CustomProcessEngine -> Ent + operational_commands worker`。装配证据在 [`handlers/bpmn/handler.go`](../../../itsm-backend/handlers/bpmn/handler.go) 和 [`internal/bootstrap/app.go`](../../../itsm-backend/internal/bootstrap/app.go)。
 
-已支持定义/部署、实例、用户任务、变量、排他/并行/包容网关、会签、审批记录、监控、Lint 和 AI 生成。ServiceTask 不在事务内调用远端：[`bpmn_process_engine.go`](../../itsm-backend/service/bpmn_process_engine.go) 写 durable command，Worker 再由 [`bpmn_service_task_command_handler.go`](../../itsm-backend/service/bpmn_service_task_command_handler.go) 执行并用 lease/fencing 校验完成。
+已支持定义/部署、实例、用户任务、变量、排他/并行/包容网关、会签、审批记录、监控、Lint 和 AI 生成。ServiceTask 不在事务内调用远端：[`bpmn_process_engine.go`](../../../itsm-backend/service/bpmn_process_engine.go) 写 durable command，Worker 再由 [`bpmn_service_task_command_handler.go`](../../../itsm-backend/service/bpmn_service_task_command_handler.go) 执行并用 lease/fencing 校验完成。
 
-**技术选型复盘：** `go.mod` 引入 `github.com/nitram509/lib-bpmn-engine v0.2.4`，封装见 [`pkg/bpmn/engine_adapter.go`](../../itsm-backend/pkg/bpmn/engine_adapter.go)；该适配器明确写明上游不支持状态导出/恢复。生产持久化、任务、网关、历史和可靠 ServiceTask 语义主要来自 [`CustomProcessEngine`](../../itsm-backend/service/bpmn_process_engine.go)。因此应将选型描述为“**BPMN XML/运行时能力参考与适配 + 自研持久化流程内核**”，不能简单宣称第三方引擎天然具备企业恢复能力。
+**技术选型复盘：** `go.mod` 引入 `github.com/nitram509/lib-bpmn-engine v0.2.4`，封装见 [`pkg/bpmn/engine_adapter.go`](../../../itsm-backend/pkg/bpmn/engine_adapter.go)；该适配器明确写明上游不支持状态导出/恢复。生产持久化、任务、网关、历史和可靠 ServiceTask 语义主要来自 [`CustomProcessEngine`](../../../itsm-backend/service/bpmn_process_engine.go)。因此应将选型描述为“**BPMN XML/运行时能力参考与适配 + 自研持久化流程内核**”，不能简单宣称第三方引擎天然具备企业恢复能力。
 
 处理器方面，当前适配层注册 Ticket、Incident、Change、ServiceRequest 和 Generic Handler；通知与 Webhook 更多通过 connector/notification command 解耦，而不是每种 BPMN 元素都有独立完备的原生 handler。缺少边界事件、定时器精确恢复、补偿事务、子流程/消息关联等企业 BPMN 语义的系统验收。
 
 ### 3.4 AI、知识库与 RAG
 
-生产 AI API 位于 `/ai`，实现见 [`handlers/ai`](../../itsm-backend/handlers/ai)。底层包括 [`llm_gateway.go`](../../itsm-backend/service/llm_gateway.go)、[`triage_service.go`](../../itsm-backend/service/triage_service.go)、[`summarize_service.go`](../../itsm-backend/service/summarize_service.go)、[`rag_service.go`](../../itsm-backend/service/rag_service.go) 与 [`vector_store.go`](../../itsm-backend/service/vector_store.go)。
+生产 AI API 位于 `/ai`，实现见 [`handlers/ai`](../../../itsm-backend/handlers/ai)。底层包括 [`llm_gateway.go`](../../../itsm-backend/service/llm_gateway.go)、[`triage_service.go`](../../../itsm-backend/service/triage_service.go)、[`summarize_service.go`](../../../itsm-backend/service/summarize_service.go)、[`rag_service.go`](../../../itsm-backend/service/rag_service.go) 与 [`vector_store.go`](../../../itsm-backend/service/vector_store.go)。
 
 - Chat/Triage/Summarize/RAG Search 均有真实路径，不是单纯聊天页面。
 - 模型调用经 LLM Gateway，便于 provider 切换、超时和错误分类；无模型时保留确定性 fallback，ITIL 主链不应被 AI 阻断。
 - RAG 支持向量与关键词路径，但默认关键词后备是进程内能力；向量删除、文章发布版本与索引一致性仍不足。
-- [`ai_evaluator.go`](../../itsm-backend/service/ai_evaluator.go) 与 telemetry 已存在，但 confidence、模型/prompt 版本、接受/拒绝反馈没有成为所有 AI 能力的强制数据契约。
+- [`ai_evaluator.go`](../../../itsm-backend/service/ai_evaluator.go) 与 telemetry 已存在，但 confidence、模型/prompt 版本、接受/拒绝反馈没有成为所有 AI 能力的强制数据契约。
 - 工具/技能框架存在，但高风险操作仍应坚持建议优先、显式授权、审计和 durable command；当前不足以承诺自治运维。
 
 ### 3.5 CMDB
 
-生产路由单独定义于 [`router/cmdb_routes.go`](../../itsm-backend/router/cmdb_routes.go)，核心执行经 [`handlers/cmdb/production_service.go`](../../itsm-backend/handlers/cmdb/production_service.go) 及顶层 CI type/item/relationship/history 服务。CI 类型、动态属性、CI 实例、关系类型、拓扑、影响分析、历史、导入导出、保存视图均已存在，且近期测试覆盖根 CI 与关联资源租户隔离，见 [`production_topology_test.go`](../../itsm-backend/handlers/cmdb/production_topology_test.go)。
+生产路由单独定义于 [`router/cmdb_routes.go`](../../../itsm-backend/router/cmdb_routes.go)，核心执行经 [`handlers/cmdb/production_service.go`](../../../itsm-backend/handlers/cmdb/production_service.go) 及顶层 CI type/item/relationship/history 服务。CI 类型、动态属性、CI 实例、关系类型、拓扑、影响分析、历史、导入导出、保存视图均已存在，且近期测试覆盖根 CI 与关联资源租户隔离，见 [`production_topology_test.go`](../../../itsm-backend/handlers/cmdb/production_topology_test.go)。
 
-云发现仍是明确 Pilot：[`internal/bootstrap/app.go`](../../itsm-backend/internal/bootstrap/app.go) 将 `WorkerReady` 设为 `false`，并注释 tenant secret resolver 与 durable worker 后续补齐；[`handler_capabilities_test.go`](../../itsm-backend/handlers/cmdb/handler_capabilities_test.go) 也断言缺少 `tenantSecretResolver`、`discoveryWorker`。现阶段主要有阿里云适配与资源身份/任务生命周期基础，尚缺生产采集 worker、多云适配、来源优先级、Diff/对账、孤儿资源退役和规模测试。
+云发现仍是明确 Pilot：[`internal/bootstrap/app.go`](../../../itsm-backend/internal/bootstrap/app.go) 将 `WorkerReady` 设为 `false`，并注释 tenant secret resolver 与 durable worker 后续补齐；[`handler_capabilities_test.go`](../../../itsm-backend/handlers/cmdb/handler_capabilities_test.go) 也断言缺少 `tenantSecretResolver`、`discoveryWorker`。现阶段主要有阿里云适配与资源身份/任务生命周期基础，尚缺生产采集 worker、多云适配、来源优先级、Diff/对账、孤儿资源退役和规模测试。
 
 拓扑最大深度有限制，但每层可取全部关系，缺总节点/边预算与分页/截断契约；高扇出图存在资源消耗风险。CI 保存与历史写入也需要进一步确认原子性。
 
@@ -110,29 +110,29 @@
 
 服务目录和服务请求已有独立实体与审批链，但目录项到表单 schema、BPMN definition version、SLA policy、CI type/provisioning template 的绑定还不是统一的发布快照。建议引入 `catalog_item_version`，已发布版本不可变，实例仅引用版本 ID。
 
-SLA 有策略、模板、监控、告警、暂停/恢复与升级服务，生产入口位于 `/sla`，实现证据为 [`handlers/sla`](../../itsm-backend/handlers/sla)、[`sla_monitor_service.go`](../../itsm-backend/service/sla_monitor_service.go) 和 [`sla_alert_service.go`](../../itsm-backend/service/sla_alert_service.go)。不足是工作日历、节假日、跨地域时区、分布式权威时间以及事件/请求/变更统一适用性。
+SLA 有策略、模板、监控、告警、暂停/恢复与升级服务，生产入口位于 `/sla`，实现证据为 [`handlers/sla`](../../../itsm-backend/handlers/sla)、[`sla_monitor_service.go`](../../../itsm-backend/service/sla_monitor_service.go) 和 [`sla_alert_service.go`](../../../itsm-backend/service/sla_alert_service.go)。不足是工作日历、节假日、跨地域时区、分布式权威时间以及事件/请求/变更统一适用性。
 
 NOC 页面 [`app/(main)/noc/page.tsx`](<../../itsm-frontend/src/app/(main)/noc/page.tsx>) 查询真实重大事件，但“高优事件”“正在处理”由当前 20 条分页数据计算，不能代表全量；页面也没有消费已有 IncidentAlert/Metric 服务。它目前是重大事件列表视图，不是完整 NOC 作战台。
 
 ### 3.7 资产与 License
 
-[`handlers/asset/routes.go`](../../itsm-backend/handlers/asset/routes.go) 注册资产与许可证 CRUD、分配、退役和统计；[`asset_license_service.go`](../../itsm-backend/service/asset_license_service.go) 对席位分配使用事务和条件更新，具备基础并发保护。
+[`handlers/asset/routes.go`](../../../itsm-backend/handlers/asset/routes.go) 注册资产与许可证 CRUD、分配、退役和统计；[`asset_license_service.go`](../../../itsm-backend/service/asset_license_service.go) 对席位分配使用事务和条件更新，具备基础并发保护。
 
 产品完整性仍有限：缺采购、合同、供应商履约、成本/折旧、盘点、资产发现与 CMDB reconciliation 闭环；License 缺回收/转移席位、软件安装发现与合规核算、续费工作流。`CheckLicenseStatus` 扫描全部租户记录，应明确 system context、分租户批处理、租约、审计和失败恢复后再进入生产 Worker。
 
 ### 3.8 多租户与 MSP
 
-请求链有 tenant middleware，领域仓储广泛使用 `TenantIDEQ`，数据库侧还有 [`database/rls`](../../itsm-backend/database/rls)；MSP `/api/v1/msp` 提供 context、allocation、客户工单和报表入口。异步跨租户扫描使用显式 system context 的设计已经出现。
+请求链有 tenant middleware，领域仓储广泛使用 `TenantIDEQ`，数据库侧还有 [`database/rls`](../../../itsm-backend/database/rls)；MSP `/api/v1/msp` 提供 context、allocation、客户工单和报表入口。异步跨租户扫描使用显式 system context 的设计已经出现。
 
 风险在“一致性”而非“完全没有隔离”：133 个 schema、旧顶层 service 与后台任务使手工 predicate 容易遗漏；部分管理员角色和 system bypass 范围仍需统一。MSP 目前更接近委派访问 Pilot，计费、套餐/配额、白标、客户级密钥与审计视图仍不完整。所有新增租户资源应继续要求真实 Router 跨租户拒绝测试，RLS 只作为纵深防御。
 
 ### 3.9 飞书、邮件 Intake、报表
 
-飞书真实入口在 [`router/feishu_routes.go`](../../itsm-backend/router/feishu_routes.go)：OAuth、公开 callback、公开 Webhook、工单同步；异步同步 command 在 bootstrap 注册。最大风险是公开入口必须有强制验签、时间窗/nonce 重放防护、instance 到 tenant 的安全解析，以及失败投递审计。还缺卡片交互、审批/评论/状态的稳定双向映射和连接器健康检查闭环。
+飞书真实入口在 [`router/feishu_routes.go`](../../../itsm-backend/router/feishu_routes.go)：OAuth、公开 callback、公开 Webhook、工单同步；异步同步 command 在 bootstrap 注册。最大风险是公开入口必须有强制验签、时间窗/nonce 重放防护、instance 到 tenant 的安全解析，以及失败投递审计。还缺卡片交互、审批/评论/状态的稳定双向映射和连接器健康检查闭环。
 
-邮件 Intake 的实现深度高于一般 Pilot：[`handlers/email_intake/orchestrator.go`](../../itsm-backend/handlers/email_intake/orchestrator.go) 将入站处理和出站邮件接入 operational command，相关事务测试在 [`service_test.go`](../../itsm-backend/handlers/email_intake/service_test.go)。上线前仍需 MIME/附件大小与恶意内容治理、Message-ID/线程幂等、退信处理、邮箱限流和真实 provider 故障演练。
+邮件 Intake 的实现深度高于一般 Pilot：[`handlers/email_intake/orchestrator.go`](../../../itsm-backend/handlers/email_intake/orchestrator.go) 将入站处理和出站邮件接入 operational command，相关事务测试在 [`service_test.go`](../../../itsm-backend/handlers/email_intake/service_test.go)。上线前仍需 MIME/附件大小与恶意内容治理、Message-ID/线程幂等、退信处理、邮箱限流和真实 provider 故障演练。
 
-报表入口 `/reports` 与 dashboard service 已存在，但前端 [`components/reports/RealTimeMonitoring.tsx`](../../itsm-frontend/src/components/reports/RealTimeMonitoring.tsx) 和 [`AdvancedAnalytics.tsx`](../../itsm-frontend/src/components/reports/AdvancedAnalytics.tsx) 仍内置 Mock 数据，且 [`product-capabilities.ts`](../../itsm-frontend/src/config/product-capabilities.ts) 显式关闭 advanced reporting。现阶段应只承诺只读局部汇总；管理驾驶舱、指标版本、计划分发、钻取、导出审计和 MSP 安全聚合均待补。
+报表入口 `/reports` 与 dashboard service 已存在，但前端 [`components/reports/RealTimeMonitoring.tsx`](../../../itsm-frontend/src/components/reports/RealTimeMonitoring.tsx) 和 [`AdvancedAnalytics.tsx`](../../../itsm-frontend/src/components/reports/AdvancedAnalytics.tsx) 仍内置 Mock 数据，且 [`product-capabilities.ts`](../../../itsm-frontend/src/config/product-capabilities.ts) 显式关闭 advanced reporting。现阶段应只承诺只读局部汇总；管理驾驶舱、指标版本、计划分发、钻取、导出审计和 MSP 安全聚合均待补。
 
 ## 4. 架构质量评估
 
@@ -149,7 +149,7 @@ NOC 页面 [`app/(main)/noc/page.tsx`](<../../itsm-frontend/src/app/(main)/noc/p
 
 ### 4.2 异步可靠性
 
-[`internal/commandbus/commandbus.go`](../../itsm-backend/internal/commandbus/commandbus.go) 已实现 durable `operational_commands`、唯一幂等键、claim/lease、heartbeat、fencing token、指数退避、最大次数和 dead-letter；运维 API 在 `/admin/operations/commands` 提供列表、详情、重放和取消。BPMN ServiceTask、通知、邮件、工单/事件规则、飞书同步、CMDB 导入导出等已逐步接入。
+[`internal/commandbus/commandbus.go`](../../../itsm-backend/internal/commandbus/commandbus.go) 已实现 durable `operational_commands`、唯一幂等键、claim/lease、heartbeat、fencing token、指数退避、最大次数和 dead-letter；运维 API 在 `/admin/operations/commands` 提供列表、详情、重放和取消。BPMN ServiceTask、通知、邮件、工单/事件规则、飞书同步、CMDB 导入导出等已逐步接入。
 
 这是项目的重要竞争资产，但仍需收口：
 
@@ -230,7 +230,7 @@ ServiceNow 当前套餐把 Service Catalog、Incident、Asset/CMDB、Virtual Age
 
 1. **领域所有权分散**：67 个 handler 领域与 160 个顶层 service 并存，容易形成绕过公开用例的调用。
 2. **BPMN 引擎定位模糊**：第三方 adapter 与自研生产内核并存，需要 ADR 明确每层职责、支持的 BPMN 子集、恢复语义和迁移策略。
-3. **超大 Router**：[`router.go`](../../itsm-backend/router/router.go) 约 1,991 行，应按领域拆注册文件并生成路由清单，但不能改变现有 URL/ACL。
+3. **超大 Router**：[`router.go`](../../../itsm-backend/router/router.go) 约 1,991 行，应按领域拆注册文件并生成路由清单，但不能改变现有 URL/ACL。
 4. **前端契约兼容**：多字段 fallback 会掩盖 DTO 漂移；NOC 已有实例，应逐项按契约测试删除。
 5. **页面面大于交付面**：166 个页面中存在 Disabled 能力和 Mock 展示，应由 runtime capability 驱动，避免“可见即承诺”。
 6. **测试数量不等于覆盖质量**：261/200 个测试文件是良好基础，但当前全量 Go 测试仍有已知编译阻塞记录；需要以真实 Router/Worker、跨租户和失败恢复为准。

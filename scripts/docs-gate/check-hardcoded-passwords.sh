@@ -24,7 +24,11 @@
 #   ./scripts/docs-gate/check-hardcoded-passwords.sh [--strict]
 #
 
-set -uo pipefail
+set -u
+
+# pipefail 在 git ls-files 一次性读取后被我们 || true 关闭，留 pipefail 会
+# 在某些 macOS / Git 组合下报 broken pipe 误退出；该脚本不依赖 pipe 状态
+# 检测失败，所以省略 pipefail。
 
 ROOT_DIR="${DOCS_GATE_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "${ROOT_DIR}"
@@ -48,13 +52,33 @@ PATTERNS=(
 )
 
 # 豁免路径
-EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/delivery/postmortem-v1\.0-ga\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/dev-environment-test-report\.md|/browser-?test|/multi-role-|/production-mode-test-report|/production-deployment-test-report|/browser-functional|/browser-e2e|/frontend-ux-review|/system-function-review|/deep-business-test|/commercial-readiness-acceptance|/module-function-retrospective|/architecture-review-2026|/system-function-review-checklist|/system-function-review-result|/servicenow-benchmark|/browser-button-functional|/browser-module|/itsm-test-report|/full-product-smoke|/system-test-report|/role-based-product-test-plan|/e2e-conventions|/coverage-audit|/controller-failing-list|/ai-eval|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|/output/)'
+EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/delivery/postmortem-v1\.0-ga\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/dev-environment-test-report\.md|/browser-?test|/multi-role-|/production-mode-test-report|/production-deployment-test-report|/browser-functional|/browser-e2e|/frontend-ux-review|/system-function-review|/deep-business-test|/commercial-readiness-acceptance|/module-function-retrospective|/architecture-review-2026|/system-function-review-checklist|/system-function-review-result|/servicenow-benchmark|/browser-button-functional|/browser-module|/itsm-test-report|/full-product-smoke|/system-test-report|/role-based-product-test-plan|/e2e-conventions|/coverage-audit|/controller-failing-list|/ai-eval|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|/output/|AGENTS\.md|README\.md|README\.en\.md|CLAUDE\.md|CONTRIBUTING\.md)'
+
+# 缓存全仓候选文件清单（git ls-files 在外层调一次，7 个 pattern 复用）
+# 避免每个 pattern 都重新遍历 git 索引（实测 7 × 56s ≈ 6.5min → 一次性 30s）
+# 不用 pipefail，否则下游 head/grep 关闭时 broken pipe 会让脚本误退
+# 缓存全仓候选文件清单（git ls-files 在外层调一次，7 个 pattern 复用）
+# 用临时文件 + while-read 替代 mapfile（mapfile 是 bash 4+，macOS 默认 3.2 不支持）
+CANDIDATES_FILE="$(mktemp -t c1-candidates.XXXXXX)"
+trap 'rm -f "${CANDIDATES_FILE}"' EXIT
+git ls-files -z 2>/dev/null \
+  | while IFS= read -r -d '' candidate; do
+      if [[ "${candidate}" =~ \.(md|sh|yml|yaml|env|env\.prod|env\.dev|toml|json)$ ]]; then
+        printf '%s\n' "${candidate}"
+      fi
+    done > "${CANDIDATES_FILE}"
+
+# 读入数组：bash 3.2 兼容
+CANDIDATES=()
+while IFS= read -r f; do
+  CANDIDATES+=("${f}")
+done < "${CANDIDATES_FILE}"
 
 # 命中模式
 scan_hits() {
   local pattern="$1"
   local file hits line rest
-  while IFS= read -r -d '' file; do
+  for file in "${CANDIDATES[@]}"; do
     [[ "${file}" =~ ${EXEMPT_REGEX} ]] && continue
     case "${file}" in
       .env|.env.prod|.env.dev|docker-compose.prod.yml|mkdocs.yml|docs/delivery/*|docs/*certification*.md|docs/*deployment*.md|scripts/*prod*.sh|.github/workflows/*) ;;
@@ -70,11 +94,7 @@ scan_hits() {
       fi
       printf '  - %s:%s :: match /%s/ :: %s\n' "${file}" "${line}" "${pattern}" "${rest}"
     done <<< "${hits}"
-  done < <(git ls-files -z | while IFS= read -r -d '' candidate; do
-    if [[ "${candidate}" =~ \.(md|sh|yml|yaml|env|env\.prod|env\.dev|toml|json)$ ]]; then
-      printf '%s\0' "${candidate}"
-    fi
-  done)
+  done
 }
 
 for pattern in "${PATTERNS[@]}"; do

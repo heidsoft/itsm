@@ -1,18 +1,16 @@
 name: docs-gate
 
 # Purpose:
-#   Enforce documentation quality gates:
-#     C.1 Hardcoded production credentials       (hard only with --strict)
-#     C.2 Duplicate roadmap content             (hard only with --strict)
-#     C.3 Broken internal markdown links        (hard only with --strict)
-#     C.4 Release claims without commit/date/digest anchor (hard only with --strict)
-#     C.5 Doc sync freshness                    (hard only with --strict)
-#     C.6 Product drift                         (HARD by default, no --strict needed)
+#   Enforce documentation quality gates (HARD by default since 2026-09-23):
+#     C.1 Hardcoded production credentials       (HARD)
+#     C.2 Duplicate roadmap content             (HARD)
+#     C.3 Broken internal markdown links        (HARD)
+#     C.4 Release claims without commit/date/digest anchor (HARD)
+#     C.5 Doc sync freshness                    (HARD)
+#     C.6 Product drift                         (HARD)
 #
-#   NOTE: run-all.sh is invoked below WITHOUT --strict, so C.1–C.5 currently
-#   report without blocking (2026-09-22 measured: 59 broken links, 22 unanchored
-#   claims, summary still "0 failed"). Only C.6 blocks today. Flip the invocation
-#   to `run-all.sh --strict` after the C.1–C.5 backlog is cleared.
+#   2026-09-23 存量清零完成：6 道门禁 0 violation。run-all.sh 默认传 --strict，
+#   所有 C.1–C.6 均 hard。workflow_dispatch 的 strict=false 可回退到 advisory。
 #
 # Triggers:
 #   - PRs and pushes that touch markdown, .env, docs-gate scripts, or the code
@@ -20,8 +18,8 @@ name: docs-gate
 #   - Changes to this workflow file.
 #
 # Behavior:
-#   - Runs scripts/docs-gate/run-all.sh on every relevant change.
-#   - Gate C.6 violations block the build.
+#   - Runs scripts/docs-gate/run-all.sh --strict on every relevant change.
+#   - Any violation (C.1–C.6) blocks the build.
 #   - Uploads violation report as artifact regardless of pass/fail.
 
 on:
@@ -120,8 +118,15 @@ jobs:
         id: gate
         run: |
           set -uo pipefail
-          echo "[docs-gate] C.6 (product drift) is hard; C.1-C.5 are advisory unless --strict is passed."
-          ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
+          # Default hard since 2026-09-23 backlog cleared.
+          # workflow_dispatch input `strict=false` overrides to advisory mode.
+          if [ "${{ inputs.strict }}" = "false" ]; then
+            echo "[docs-gate] Advisory mode (strict=false). C.1–C.5 will not block."
+            ./scripts/docs-gate/run-all.sh | tee docs-gate-report.txt
+          else
+            echo "[docs-gate] Hard mode (--strict). All 6 gates block on violation."
+            ./scripts/docs-gate/run-all.sh --strict | tee docs-gate-report.txt
+          fi
 
       - name: Annotate violations
         if: always()

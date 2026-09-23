@@ -67,6 +67,8 @@ check_links_in_file() {
 }
 
 while IFS= read -r -d '' f; do
+  # 模板/指南文件中的"链接"是样例，目标文件不一定存在
+  [[ "${f}" =~ (-template\.md$|-guide\.md$) ]] && continue
   HITS="$(check_links_in_file "${f}" 2>/dev/null || true)"
   if [ -n "${HITS}" ]; then
     echo "${HITS}"

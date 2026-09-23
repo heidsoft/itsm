@@ -95,7 +95,7 @@ make dev-start-docker
 #   本地开发账号 admin / admin123（禁止用于生产）
 ```
 
-完整步骤见 [快速开始 - 安装](getting-started/install.md)。
+完整步骤见 [快速开始 - 安装](install.md)。
 
 📖 **完整命令参考**：开发/测试/生产环境的常用命令、排查技巧、Docker 维护等详见 [开发命令参考](./dev-commands-reference.md)。
 

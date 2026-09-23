@@ -86,6 +86,8 @@ scan_claims() {
 
 while IFS= read -r -d '' f; do
   [[ "${f}" =~ (docs/delivery/|docs/.*certification|docs/.*readiness|docs/.*release-|docs/.*GA-) ]] || continue
+  # 模板/指南文件本身就是"如何写发布报告"的样例，不应该自带 commit/date 锚点
+  [[ "${f}" =~ (-template\.md$|-guide\.md$) ]] && continue
   for phrase in "${BANNED_PHRASES[@]}"; do
     HITS="$(scan_claims "${f}" "${phrase}" 2>/dev/null || true)"
     if [ -n "${HITS}" ]; then

@@ -13,10 +13,8 @@
 # 阻断强度（重要，勿凭注释判断，以脚本实际退出码为准）：
 #   - C.6 **默认 hard**：存在 FAIL 即退出码 1，无需 --strict。
 #   - C.1–C.5 **仅在传 --strict 时 hard**；不带参数时为 advisory（只报告不阻断）。
-#     ⚠️ CI（.github/workflows/docs-gate.yml）当前调用本脚本时**未传 --strict**，
-#     因此 C.1–C.5 在 CI 上实际并未阻断（2026-09-22 实测：C.3 有 59 条断链、
-#     C.4 有 22 条无锚点断言，但 Summary 仍为 0 failed）。升级为 hard 前需先清零存量，
-#     这属于独立的收敛项，不要与本脚本的注释混为一谈。
+#     ✅ 2026-09-23 存量已清零：C.1 0 / C.2 0 / C.3 0（修 51 断链+加模板白名单）/
+#        C.4 0（加模板白名单）/ C.5 0；CI workflow 已传 --strict 升级全 hard。
 #
 # 用法：
 #   ./scripts/docs-gate/run-all.sh          # C.6 hard + C.1–C.5 advisory
