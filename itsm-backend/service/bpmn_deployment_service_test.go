@@ -227,14 +227,14 @@ func TestBPMNDeploymentService_GetDeployment(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("获取存在的部署记录", func(t *testing.T) {
-		result, err := deployService.GetDeployment(ctx, "DEP-TEST-001")
+		result, err := deployService.GetDeployment(ctx, "DEP-TEST-001", testTenant.ID)
 		require.NoError(t, err)
 		assert.Equal(t, deployment.ID, result.ID)
 		assert.Equal(t, "Test Deployment", result.DeploymentName)
 	})
 
 	t.Run("获取不存在的部署记录", func(t *testing.T) {
-		_, err := deployService.GetDeployment(ctx, "DEP-NOTFOUND")
+		_, err := deployService.GetDeployment(ctx, "DEP-NOTFOUND", testTenant.ID)
 		assert.Error(t, err)
 	})
 }
@@ -380,11 +380,11 @@ func TestBPMNDeploymentService_UndeployProcessDefinition(t *testing.T) {
 		require.NoError(t, err)
 
 		// 取消部署应该成功
-		err = deployService.UndeployProcessDefinition(ctx, "DEP-UNDEPLOY-001")
+		err = deployService.UndeployProcessDefinition(ctx, "DEP-UNDEPLOY-001", testTenant.ID)
 		require.NoError(t, err)
 
 		// 验证部署记录已停用
-		result, err := deployService.GetDeployment(ctx, "DEP-UNDEPLOY-001")
+		result, err := deployService.GetDeployment(ctx, "DEP-UNDEPLOY-001", testTenant.ID)
 		require.NoError(t, err)
 		assert.False(t, result.IsActive)
 	})
@@ -425,7 +425,7 @@ func TestBPMNDeploymentService_UndeployProcessDefinition(t *testing.T) {
 		require.NoError(t, err)
 
 		// 取消部署应该失败
-		err = deployService.UndeployProcessDefinition(ctx, "DEP-UNDEPLOY-002")
+		err = deployService.UndeployProcessDefinition(ctx, "DEP-UNDEPLOY-002", testTenant.ID)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "正在运行")
 	})
@@ -480,7 +480,7 @@ func TestBPMNDeploymentService_RedeployProcessDefinition(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试租户（仅用于创建环境）
-	_, err := client.Tenant.Create().
+	testTenant, err := client.Tenant.Create().
 		SetName("Test Tenant").
 		SetCode("test").
 		SetDomain("test.com").
@@ -492,7 +492,7 @@ func TestBPMNDeploymentService_RedeployProcessDefinition(t *testing.T) {
 		// 重新部署功能需要从原始部署中获取BPMN XML
 		// 由于ProcessDeployment表结构限制，该功能暂未完整实现
 		// 测试预期会失败
-		_, err := deployService.RedeployProcessDefinition(ctx, "DEP-NONEXISTENT")
+		_, err := deployService.RedeployProcessDefinition(ctx, "DEP-NONEXISTENT", testTenant.ID)
 		// 应该返回错误（获取原始部署记录失败）
 		assert.Error(t, err)
 	})
@@ -595,4 +595,39 @@ func TestBPMNDeploymentService_TenantIsolation(t *testing.T) {
 		assert.Len(t, deployments, 1)
 		assert.Equal(t, "Tenant 2 Deployment", deployments[0].DeploymentName)
 	})
+}
+
+// deployment_id 仅租户内唯一后，跨租户读取必须被租户谓词挡住。
+func TestBPMNDeploymentService_GetDeploymentRejectsOtherTenant(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	deployService := NewBPMNDeploymentService(client)
+	ctx := context.Background()
+
+	tenantA, err := client.Tenant.Create().SetName("Tenant A").SetCode("dep-a").SetDomain("a.com").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+	tenantB, err := client.Tenant.Create().SetName("Tenant B").SetCode("dep-b").SetDomain("b.com").SetStatus("active").Save(ctx)
+	require.NoError(t, err)
+
+	for _, ownerID := range []int{tenantA.ID, tenantB.ID} {
+		_, err := client.ProcessDeployment.Create().
+			SetDeploymentID("shared-deployment-id").
+			SetDeploymentName("Shared").
+			SetTenantID(ownerID).
+			SetIsActive(true).
+			Save(ctx)
+		require.NoError(t, err, "每个租户都要能部署同名 deployment_id")
+	}
+
+	found, err := deployService.GetDeployment(ctx, "shared-deployment-id", tenantA.ID)
+	require.NoError(t, err)
+	assert.Equal(t, tenantA.ID, found.TenantID)
+
+	_, err = deployService.GetDeployment(ctx, "shared-deployment-id", 999999)
+	require.Error(t, err, "未知租户必须读不到任何部署")
+	_, err = deployService.GetDeployment(ctx, "shared-deployment-id", 0)
+	require.Error(t, err, "缺少租户上下文必须 fail closed")
+	require.Error(t, deployService.UndeployProcessDefinition(ctx, "shared-deployment-id", 0))
+	_, err = deployService.RedeployProcessDefinition(ctx, "shared-deployment-id", 0)
+	require.Error(t, err)
 }

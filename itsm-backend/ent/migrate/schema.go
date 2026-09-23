@@ -3266,7 +3266,7 @@ var (
 	// ProcessDeploymentsColumns holds the columns for the "process_deployments" table.
 	ProcessDeploymentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "deployment_id", Type: field.TypeString, Unique: true},
+		{Name: "deployment_id", Type: field.TypeString},
 		{Name: "deployment_name", Type: field.TypeString},
 		{Name: "deployment_source", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "deployment_time", Type: field.TypeTime},
@@ -3286,9 +3286,9 @@ var (
 		PrimaryKey: []*schema.Column{ProcessDeploymentsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "processdeployment_deployment_id",
+				Name:    "processdeployment_tenant_id_deployment_id",
 				Unique:  true,
-				Columns: []*schema.Column{ProcessDeploymentsColumns[1]},
+				Columns: []*schema.Column{ProcessDeploymentsColumns[10], ProcessDeploymentsColumns[1]},
 			},
 			{
 				Name:    "processdeployment_deployment_name",

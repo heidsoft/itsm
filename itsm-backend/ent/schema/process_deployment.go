@@ -19,7 +19,6 @@ func (ProcessDeployment) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("deployment_id").
 			Comment("部署ID，BPMN标准").
-			Unique().
 			NotEmpty(),
 		field.String("deployment_name").
 			Comment("部署名称").
@@ -69,7 +68,9 @@ func (ProcessDeployment) Edges() []ent.Edge {
 // Indexes of the ProcessDeployment.
 func (ProcessDeployment) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("deployment_id").
+		// 部署记录属于租户：内置模板在每个租户都部署同名 deployment_id，
+		// 全局唯一会让第二个租户开通失败。
+		index.Fields("tenant_id", "deployment_id").
 			Unique(),
 		index.Fields("deployment_name"),
 		index.Fields("deployment_time"),

@@ -185,10 +185,13 @@ func (s *BPMNDeploymentService) generateNextVersion(currentVersion string) strin
 	return fmt.Sprintf("%d.%d.0", maj, min)
 }
 
-// GetDeployment 获取部署记录
-func (s *BPMNDeploymentService) GetDeployment(ctx context.Context, deploymentID string) (*ent.ProcessDeployment, error) {
+// GetDeployment 获取部署记录。deployment_id 只在租户内唯一，因此必须带租户谓词。
+func (s *BPMNDeploymentService) GetDeployment(ctx context.Context, deploymentID string, tenantID int) (*ent.ProcessDeployment, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("get deployment: tenant id is required")
+	}
 	return s.client.ProcessDeployment.Query().
-		Where(processdeployment.DeploymentID(deploymentID)).
+		Where(processdeployment.DeploymentID(deploymentID), processdeployment.TenantID(tenantID)).
 		First(ctx)
 }
 
@@ -238,10 +241,13 @@ func (s *BPMNDeploymentService) ListDeployments(ctx context.Context, req *ListDe
 }
 
 // UndeployProcessDefinition 取消部署流程定义
-func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, deploymentID string) error {
+func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, deploymentID string, tenantID int) error {
+	if tenantID <= 0 {
+		return fmt.Errorf("undeploy: tenant id is required")
+	}
 	// 获取部署记录
 	deployment, err := s.client.ProcessDeployment.Query().
-		Where(processdeployment.DeploymentID(deploymentID)).
+		Where(processdeployment.DeploymentID(deploymentID), processdeployment.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return fmt.Errorf("获取部署记录失败: %w", err)
@@ -293,10 +299,13 @@ func (s *BPMNDeploymentService) UndeployProcessDefinition(ctx context.Context, d
 }
 
 // RedeployProcessDefinition 重新部署流程定义
-func (s *BPMNDeploymentService) RedeployProcessDefinition(ctx context.Context, deploymentID string) (*ent.ProcessDeployment, error) {
+func (s *BPMNDeploymentService) RedeployProcessDefinition(ctx context.Context, deploymentID string, tenantID int) (*ent.ProcessDeployment, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("redeploy: tenant id is required")
+	}
 	// 获取原始部署记录
 	originalDeployment, err := s.client.ProcessDeployment.Query().
-		Where(processdeployment.DeploymentID(deploymentID)).
+		Where(processdeployment.DeploymentID(deploymentID), processdeployment.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取原始部署记录失败: %w", err)
