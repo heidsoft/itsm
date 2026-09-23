@@ -122,6 +122,12 @@ output/
 *.png
 !docs/images/*.png
 
+# Local side-car material: not part of the product
+# - covers/   公众号封面物料（PNG 已被 *.png 忽略；这里忽略 .py/.html 模板）
+# 注：specs/、.specify/、website/ 均为已入库的合法仓库内容（产品规范/设计稿/
+# 站点实验），不在此处忽略。
+covers/
+
 # API keys and secrets
 *apikey*
 *secret*
