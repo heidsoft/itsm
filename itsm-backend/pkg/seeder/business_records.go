@@ -19,7 +19,6 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/problem"
-	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 )
 
@@ -34,9 +33,9 @@ func (s *Seeder) seedBusinessRecords(ctx context.Context) {
 		return
 	}
 
-	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip business records seed", "error", err)
+		s.sugar.Warnw("baseline tenant not found; skip business records seed", "error", err)
 		return
 	}
 	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)

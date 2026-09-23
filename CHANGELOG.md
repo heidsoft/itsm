@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复审批组未随生产初始化创建：`identity-rbac` 现在写入审批组并纳入验证，JSON 种子配置中的 `groups` 段不再被合并逻辑丢弃
 - 修复 SLA 告警规则按硬编码名称匹配：改为按租户实际 SLA 定义派生，引用缺失直接失败（此前静默跳过且日志谎报创建数量）
 - 修复部门 `parent_code` 未落库导致组织树平铺：现在按 code 补齐父子关系，可前滚修复已安装环境且不覆盖客户改名
+- 修复多租户基线种子撞全局唯一键：ticket_categories.code 与 tags.code 从全局 `Unique()` 改为 `index.Fields("tenant_id","code").Unique()`，与 AGENTS.md「业务唯一键默认按 tenant 组合唯一」一致；迁移脚本 `20260923_tenant_scope_baseline_unique_keys.sql` 先放旧约束 → 显式检测 `(tenant_id, code)` 重复 → 重建组合索引；迁移失败立刻停止，绝不留下半索引状态
+- 修复租户基线种子运行时引用 `default` 租户硬编码：`Seeder.baselineTenant(ctx)` 抽象替出，平台初始化时仍落到 default 租户，按租户 provisioning 时落到目标租户；新增 `system-baseline-<id>` 不可登录审计账号（bcrypt 永不可通过的 `!` 哈希）让 template 表的 `user_id` 引用有主；避免「customer data 假扮 product template」的复制陷阱
+- 修复 `SeedAll` 中新增种子函数签名升级后未对应 `attempt` 包装的 4 行旧调用：CI/types/standard-changes/ticket-tags 与原 ticket-types 一致用 `attempt("...", fn)` 包裹，失败仅 sugar.Errorw 不阻断，与 SeedAll 容错继续哲学一致
 - 修复服务目录子项父目录缺失时被静默跳过（约 12/15 子项丢失）：现在初始化失败并给出具体条目，验证也逐条检查子项存在性
 - 修复菜单初始化每次运行都重置运维设置的隐藏/停用状态
 - 修复种子配置合并遗漏 `groups` 段：JSON 种子配置中的审批组定义此前被静默丢弃，现按整段替换内置默认并保留未覆盖段（含回归测试）

@@ -61,6 +61,15 @@ func manifestDigestInputs(component string) ([]string, error) {
 			inputs = append(inputs, fmt.Sprintf("ticket-type=%s|%s|%s|%s|%s",
 				tt.Code, tt.Name, tt.Description, tt.Icon, tt.Color))
 		}
+		for _, sc := range standardChangeDefinitions() {
+			inputs = append(inputs, "standard-change-default="+sc.Title)
+		}
+		for _, category := range incidentCategoryDefinitions() {
+			inputs = append(inputs, "incident-category-default="+category.Code)
+		}
+		for _, ticketTag := range ticketTagDefinitions() {
+			inputs = append(inputs, "ticket-tag-default="+ticketTag.Code)
+		}
 		return inputs, nil
 
 	case "workflow-core":
@@ -89,8 +98,16 @@ func manifestDigestInputs(component string) ([]string, error) {
 		}
 		return inputs, nil
 
-	case "cmdb-core", "extension-core":
-		// Both components write exclusively from the JSON seed manifest.
+	case "cmdb-core":
+		inputs := make([]string, 0, len(ciTypeDefinitions()))
+		for _, ciType := range ciTypeDefinitions() {
+			inputs = append(inputs, fmt.Sprintf("ci-type-default=%s|%s|%s|%s",
+				ciType.Name, ciType.Description, ciType.Icon, ciType.Color))
+		}
+		return inputs, nil
+
+	case "extension-core":
+		// Extension core writes exclusively from the JSON seed manifest.
 		return nil, nil
 
 	default:

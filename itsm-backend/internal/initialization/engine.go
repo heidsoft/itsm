@@ -63,6 +63,24 @@ type Lease struct {
 	FencingToken int64
 }
 
+// ValidateScope keeps scope type and id consistent: the platform baseline is a
+// single unnamed scope, while a tenant scope must name an existing tenant.
+func ValidateScope(scope Scope) error {
+	switch scope.Type {
+	case "platform":
+		if scope.ID != 0 {
+			return fmt.Errorf("platform scope must have id 0, got %d", scope.ID)
+		}
+	case "tenant":
+		if scope.ID <= 0 {
+			return fmt.Errorf("tenant scope requires a positive id, got %d", scope.ID)
+		}
+	default:
+		return fmt.Errorf("unsupported scope type %q", scope.Type)
+	}
+	return nil
+}
+
 type Store interface {
 	BeginRun(context.Context, Request) (int64, error)
 	FinishRun(context.Context, int64, string, map[string]any, error) error
@@ -121,8 +139,8 @@ func (e *Engine) Plan(ctx context.Context, scope Scope) ([]Plan, error) {
 }
 
 func (e *Engine) Apply(ctx context.Context, request Request) (runID int64, err error) {
-	if request.Scope.Type != "platform" && request.Scope.Type != "tenant" {
-		return 0, fmt.Errorf("unsupported scope type %q", request.Scope.Type)
+	if err := ValidateScope(request.Scope); err != nil {
+		return 0, err
 	}
 	if request.ExecutorID == "" || request.RequestedBy == "" {
 		return 0, fmt.Errorf("executor and requester are required")

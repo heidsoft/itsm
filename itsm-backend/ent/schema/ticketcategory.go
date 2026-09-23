@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // TicketCategory holds the schema definition for the TicketCategory entity.
@@ -24,7 +25,6 @@ func (TicketCategory) Fields() []ent.Field {
 			Optional(),
 		field.String("code").
 			Comment("分类代码").
-			Unique().
 			NotEmpty(),
 		field.Int("parent_id").
 			Comment("父分类ID").
@@ -75,5 +75,13 @@ func (TicketCategory) Edges() []ent.Edge {
 			Field("department_id").
 			Unique().
 			Comment("所属部门"),
+	}
+}
+
+// Indexes makes the category code unique per tenant: baseline categories are
+// installed into every tenant, so a global unique code blocks provisioning.
+func (TicketCategory) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "code").Unique(),
 	}
 }

@@ -26,7 +26,9 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/standardchange"
-	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/tag"
+	"itsm-backend/ent/ticketcategory"
+	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/service"
@@ -78,7 +80,11 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		name:     "identity-rbac",
 		checksum: checksums["identity-rbac"],
 		apply: func(ctx context.Context, transactional *Seeder) error {
-			transactional.seedDefaultTenant(ctx)
+			if transactional.installsPlatformTenant() {
+				transactional.seedDefaultTenant(ctx)
+			} else if _, err := transactional.ensureTenantSystemAccount(ctx, transactional.baselineTenantID); err != nil {
+				return err
+			}
 			if err := transactional.seedDepartments(ctx); err != nil {
 				return err
 			}
@@ -87,7 +93,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			transactional.seedRoles(ctx)
 			transactional.seedPermissions(ctx)
 			transactional.seedMenus(ctx)
-			transactional.seedAdmin(ctx)
+			if transactional.installsPlatformTenant() {
+				transactional.seedAdmin(ctx)
+			}
 			transactional.seedMenuAndPermissionFixes(ctx)
 			transactional.seedRolePermissions(ctx)
 			return nil
@@ -105,10 +113,13 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			if err := transactional.seedTicketTypes(ctx); err != nil {
 				return err
 			}
-			transactional.seedIncidentCategories(ctx)
-			transactional.seedStandardChanges(ctx)
-			transactional.seedTicketTags(ctx)
-			return nil
+			if err := transactional.seedIncidentCategories(ctx); err != nil {
+				return err
+			}
+			if err := transactional.seedStandardChanges(ctx); err != nil {
+				return err
+			}
+			return transactional.seedTicketTags(ctx)
 		},
 		verify: func(ctx context.Context, target *Seeder) error {
 			return target.verifyITILTemplates(ctx)
@@ -151,7 +162,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		dependencies: []string{"identity-rbac"},
 		checksum:     checksums["cmdb-core"],
 		apply: func(ctx context.Context, transactional *Seeder) error {
-			transactional.seedCITypes(ctx)
+			if err := transactional.seedCITypes(ctx); err != nil {
+				return err
+			}
 			transactional.seedCloudServiceTemplates(ctx)
 			return nil
 		},
@@ -176,6 +189,19 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		},
 	}
 	return []initialization.Initializer{identity, itil, workflow, sla, cmdb, extension}, nil
+}
+
+// scopedSeeder binds a component run to the tenant that receives the baseline.
+// Platform runs keep the historical default tenant; tenant runs pin the target
+// so the same audited helpers can never write into another tenant.
+func (i *productionComponentInitializer) scopedSeeder(scope initialization.Scope) (*Seeder, error) {
+	if err := initialization.ValidateScope(scope); err != nil {
+		return nil, err
+	}
+	if scope.Type == "tenant" {
+		return i.seeder.withBaselineTenant(int(scope.ID)), nil
+	}
+	return i.seeder, nil
 }
 
 func (i *productionComponentInitializer) Name() string { return i.name }
@@ -204,8 +230,12 @@ func (i *productionComponentInitializer) Apply(
 	_ initialization.Plan,
 	driver dialect.Driver,
 ) (initialization.Result, error) {
-	if scope.Type != "platform" || scope.ID != 0 || !tenantctx.IsSystemBypass(ctx) {
-		return initialization.Result{}, fmt.Errorf("%s requires platform scope and explicit system context", i.name)
+	target, err := i.scopedSeeder(scope)
+	if err != nil {
+		return initialization.Result{}, fmt.Errorf("%s: %w", i.name, err)
+	}
+	if !tenantctx.IsSystemBypass(ctx) {
+		return initialization.Result{}, fmt.Errorf("%s requires explicit system context", i.name)
 	}
 	if driver == nil {
 		return initialization.Result{}, fmt.Errorf("%s requires a component transaction", i.name)
@@ -224,7 +254,7 @@ func (i *productionComponentInitializer) Apply(
 		})
 	})
 	database.RegisterSecurityInterceptors(client, mode)
-	transactional := i.seeder.withClient(client)
+	transactional := target.withClient(client)
 	transactional.sqlDriver = driver
 	applyErr := i.apply(ctx, transactional)
 	if err := errors.Join(applyErr, mutationErr); err != nil {
@@ -241,17 +271,16 @@ func (i *productionComponentInitializer) Apply(
 	}, nil
 }
 
+// withClient returns a view of the seeder bound to another Ent client. The
+// whole struct is copied so scope fields (baseline tenant, SQL driver) cannot
+// be silently dropped when a field is added.
 func (s *Seeder) withClient(client *ent.Client) *Seeder {
-	return &Seeder{
-		client:                  client,
-		sugar:                   s.sugar,
-		config:                  s.config,
-		appConfig:               s.appConfig,
-		bpmnTemplateService:     service.NewBPMNTemplateService(client),
-		expectedPermissions:     append([]string(nil), s.expectedPermissions...),
-		expectedMenus:           append([]string(nil), s.expectedMenus...),
-		expectedRolePermissions: s.expectedRolePermissions,
-	}
+	view := *s
+	view.client = client
+	view.bpmnTemplateService = service.NewBPMNTemplateService(client)
+	view.expectedPermissions = append([]string(nil), s.expectedPermissions...)
+	view.expectedMenus = append([]string(nil), s.expectedMenus...)
+	return &view
 }
 
 func (i *productionComponentInitializer) Verify(
@@ -259,10 +288,11 @@ func (i *productionComponentInitializer) Verify(
 	scope initialization.Scope,
 	_ initialization.Plan,
 ) error {
-	if scope.Type != "platform" || scope.ID != 0 {
-		return fmt.Errorf("%s requires platform scope", i.name)
+	target, err := i.scopedSeeder(scope)
+	if err != nil {
+		return fmt.Errorf("%s: %w", i.name, err)
 	}
-	return i.verify(ctx, i.seeder)
+	return i.verify(ctx, target)
 }
 
 func (s *Seeder) verifyIdentityRBAC(ctx context.Context) error {
@@ -270,18 +300,23 @@ func (s *Seeder) verifyIdentityRBAC(ctx context.Context) error {
 		len(s.config.Groups) == 0 || len(s.config.Departments) == 0 {
 		return fmt.Errorf("verify identity-rbac: expected baseline is empty")
 	}
-	root, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+	root, err := s.baselineTenant(ctx)
 	if err != nil {
-		return fmt.Errorf("verify default tenant: %w", err)
+		return fmt.Errorf("verify baseline tenant: %w", err)
 	}
-	adminExists, err := s.client.User.Query().
-		Where(user.UsernameEQ("admin"), user.TenantIDEQ(root.ID)).
-		Exist(ctx)
-	if err != nil {
-		return fmt.Errorf("verify bootstrap administrator: %w", err)
-	}
-	if !adminExists {
-		return fmt.Errorf("verify bootstrap administrator: missing")
+	// The bootstrap administrator belongs to the platform tenant only. Tenant
+	// users arrive through the bootstrap-token or invite flow, so a provisioned
+	// tenant must not be judged by an account it is not meant to own.
+	if root.Code == platformTenantCode {
+		adminExists, err := s.client.User.Query().
+			Where(user.UsernameEQ("admin"), user.TenantIDEQ(root.ID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify bootstrap administrator: %w", err)
+		}
+		if !adminExists {
+			return fmt.Errorf("verify bootstrap administrator: missing")
+		}
 	}
 
 	// Compare keys rather than counts: duplicates or customer-owned additions
@@ -420,8 +455,8 @@ func (s *Seeder) verifyIdentityRBAC(ctx context.Context) error {
 	return nil
 }
 
-func (s *Seeder) defaultTenantID(ctx context.Context) (int, error) {
-	root, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
+func (s *Seeder) resolveBaselineTenantID(ctx context.Context) (int, error) {
+	root, err := s.baselineTenant(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -429,19 +464,63 @@ func (s *Seeder) defaultTenantID(ctx context.Context) (int, error) {
 }
 
 func (s *Seeder) verifyITILTemplates(ctx context.Context) error {
-	tenantID, err := s.defaultTenantID(ctx)
+	tenantID, err := s.resolveBaselineTenantID(ctx)
 	if err != nil {
 		return err
 	}
-	count, err := s.client.StandardChange.Query().Where(standardchange.TenantIDEQ(tenantID)).Count(ctx)
-	if err != nil || count < len(s.config.StandardChanges) {
-		return fmt.Errorf("verify standard changes: expected>=%d actual=%d err=%w", len(s.config.StandardChanges), count, err)
+	expectedStandardChanges := s.expectedStandardChanges()
+	if len(expectedStandardChanges) == 0 {
+		return fmt.Errorf("verify itil-core: expected standard change baseline is empty")
+	}
+	for _, expected := range expectedStandardChanges {
+		exists, err := s.client.StandardChange.Query().Where(
+			standardchange.TenantIDEQ(tenantID), standardchange.TitleEQ(expected.Title),
+		).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify standard change %s: %w", expected.Title, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify standard changes: missing %s", expected.Title)
+		}
+	}
+	for _, expected := range s.expectedIncidentCategories() {
+		exists, err := s.client.TicketCategory.Query().Where(
+			ticketcategory.TenantIDEQ(tenantID), ticketcategory.CodeEQ(expected.Code),
+		).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify incident category %s: %w", expected.Code, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify incident categories: missing %s", expected.Code)
+		}
+	}
+	for _, expected := range s.expectedTicketTags() {
+		exists, err := s.client.Tag.Query().Where(
+			tag.TenantIDEQ(tenantID), tag.CodeEQ(expected.Code),
+		).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify ticket tag %s: %w", expected.Code, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify ticket tags: missing %s", expected.Code)
+		}
+	}
+	for _, expected := range ticketTypeDefinitions() {
+		exists, err := s.client.TicketType.Query().Where(
+			tickettype.TenantIDEQ(int64(tenantID)), tickettype.CodeEQ(expected.Code),
+		).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify ticket type %s: %w", expected.Code, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify ticket types: missing %s", expected.Code)
+		}
 	}
 	return nil
 }
 
 func (s *Seeder) verifyWorkflowTemplates(ctx context.Context) error {
-	tenantID, err := s.defaultTenantID(ctx)
+	tenantID, err := s.resolveBaselineTenantID(ctx)
 	if err != nil {
 		return err
 	}
@@ -468,7 +547,7 @@ func (s *Seeder) verifyWorkflowTemplates(ctx context.Context) error {
 }
 
 func (s *Seeder) verifySLATemplates(ctx context.Context) error {
-	tenantID, err := s.defaultTenantID(ctx)
+	tenantID, err := s.resolveBaselineTenantID(ctx)
 	if err != nil {
 		return err
 	}
@@ -498,19 +577,30 @@ func (s *Seeder) verifySLATemplates(ctx context.Context) error {
 }
 
 func (s *Seeder) verifyCMDBTemplates(ctx context.Context) error {
-	tenantID, err := s.defaultTenantID(ctx)
+	tenantID, err := s.resolveBaselineTenantID(ctx)
 	if err != nil {
 		return err
 	}
-	exists, err := s.client.CIType.Query().Where(citype.TenantIDEQ(tenantID)).Exist(ctx)
-	if err != nil || !exists {
-		return fmt.Errorf("verify CI types: exists=%t err=%w", exists, err)
+	expected := s.expectedCITypes()
+	if len(expected) == 0 {
+		return fmt.Errorf("verify cmdb-core: expected CI type baseline is empty")
+	}
+	for _, ciType := range expected {
+		exists, err := s.client.CIType.Query().Where(
+			citype.TenantIDEQ(tenantID), citype.NameEQ(ciType.Name),
+		).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify CI type %s: %w", ciType.Name, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify CI types: missing %s", ciType.Name)
+		}
 	}
 	return nil
 }
 
 func (s *Seeder) verifyExtensionTemplates(ctx context.Context) error {
-	tenantID, err := s.defaultTenantID(ctx)
+	tenantID, err := s.resolveBaselineTenantID(ctx)
 	if err != nil {
 		return err
 	}

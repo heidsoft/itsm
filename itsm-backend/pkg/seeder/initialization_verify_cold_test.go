@@ -245,17 +245,39 @@ func TestColdVerifyPropagatesPermissionQueryError(t *testing.T) {
 	require.ErrorIs(t, err, queryErr)
 }
 
-func TestColdVerifyRejectsNonPlatformScope(t *testing.T) {
+func TestColdVerifyScopeContract(t *testing.T) {
 	s, db, ctx := newColdVerifyFixture(t)
+	empty, err := s.client.Tenant.Create().
+		SetCode("tenant-empty").SetName("Empty Tenant").
+		SetType(tenant.TypeSaasCustomer).Save(ctx)
+	require.NoError(t, err)
 	require.NoError(t, verifyColdReadOnly(t, s, db, ctx, nil))
+
 	components, err := ProductionInitializers(NewSeeder(s.client, zap.NewNop().Sugar(), s.appConfig))
 	require.NoError(t, err)
-	for _, scope := range []initialization.Scope{{Type: "tenant", ID: 1}, {Type: "platform", ID: 1}, {}} {
+
+	// Malformed scopes are rejected before any read happens.
+	for _, scope := range []initialization.Scope{
+		{Type: "platform", ID: 1},
+		{Type: "tenant", ID: 0},
+		{Type: "tenant", ID: -1},
+		{Type: "enterprise", ID: 3},
+		{},
+	} {
 		for _, component := range components {
 			plan, err := component.Plan(ctx, scope)
 			require.NoError(t, err)
-			require.ErrorContains(t, component.Verify(ctx, scope, plan), "requires platform scope")
+			require.ErrorContains(t, component.Verify(ctx, scope, plan), "scope", component.Name())
 		}
+	}
+
+	// A tenant scope resolves its own baseline and must not borrow the platform
+	// tenant's installed records: every component fails on the empty tenant.
+	tenantScope := initialization.Scope{Type: "tenant", ID: int64(empty.ID)}
+	for _, component := range components {
+		plan, err := component.Plan(ctx, tenantScope)
+		require.NoError(t, err)
+		require.Error(t, component.Verify(ctx, tenantScope, plan), component.Name())
 	}
 }
 

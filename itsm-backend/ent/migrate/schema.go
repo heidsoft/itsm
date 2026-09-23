@@ -4727,7 +4727,7 @@ var (
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "code", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "color", Type: field.TypeString, Default: "#1890ff"},
 		{Name: "tenant_id", Type: field.TypeInt},
@@ -4739,6 +4739,13 @@ var (
 		Name:       "tags",
 		Columns:    TagsColumns,
 		PrimaryKey: []*schema.Column{TagsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tag_tenant_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{TagsColumns[5], TagsColumns[2]},
+			},
+		},
 	}
 	// TeamsColumns holds the columns for the "teams" table.
 	TeamsColumns = []*schema.Column{
@@ -5165,7 +5172,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "code", Type: field.TypeString},
 		{Name: "level", Type: field.TypeInt, Default: 1},
 		{Name: "sort_order", Type: field.TypeInt, Default: 0},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
@@ -5193,6 +5200,13 @@ var (
 				Columns:    []*schema.Column{TicketCategoriesColumns[12]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ticketcategory_tenant_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{TicketCategoriesColumns[7], TicketCategoriesColumns[3]},
 			},
 		},
 	}

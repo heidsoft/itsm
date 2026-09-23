@@ -592,29 +592,45 @@ func TestProvisionTenantReadinessAcrossDeploymentModes(t *testing.T) {
 	}
 }
 
-func TestProvisionTenantRollsBackWhenSourceTemplateIsIncomplete(t *testing.T) {
-	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModeSaaS)
+// Provisioning runs the whole component DAG inside one transaction, so a
+// failure in a late component must leave no partial tenant baseline behind.
+func TestProvisionTenantRollsBackWhenALateComponentFails(t *testing.T) {
+	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
 	require.NoError(t, seeder.SeedProduction(ctx))
-	root, err := seeder.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
-	require.NoError(t, err)
-	_, err = seeder.client.CIType.Delete().Where(citype.TenantIDEQ(root.ID)).Exec(ctx)
-	require.NoError(t, err)
 	target, err := seeder.client.Tenant.Create().
-		SetName("Incomplete Target").SetCode("incomplete-target").
+		SetName("Rollback Target").SetCode("rollback-target").
 		SetType(tenant.TypeSaasCustomer).Save(ctx)
 	require.NoError(t, err)
 
-	err = seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion)
-	require.ErrorContains(t, err, "validate tenant template before commit")
-
-	roleCount, err := seeder.client.Role.Query().Where(role.TenantIDEQ(target.ID)).Count(ctx)
+	db, err := sql.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	require.NoError(t, err)
-	assert.Zero(t, roleCount)
+	t.Cleanup(func() { require.NoError(t, db.Close()) })
+	_, err = db.ExecContext(ctx, `CREATE TRIGGER fail_ci_type AFTER INSERT ON ci_types
+		BEGIN SELECT RAISE(ABORT, 'injected CI type failure'); END`)
+	require.NoError(t, err)
+
+	err = seeder.ProvisionTenant(ctx, target.ID, CurrentTenantTemplateVersion)
+	require.ErrorContains(t, err, "injected CI type failure")
+
+	for name, count := range map[string]func() (int, error){
+		"roles": func() (int, error) { return seeder.client.Role.Query().Where(role.TenantIDEQ(target.ID)).Count(ctx) },
+		"permissions": func() (int, error) {
+			return seeder.client.Permission.Query().Where(permission.TenantIDEQ(target.ID)).Count(ctx)
+		},
+		"menus": func() (int, error) { return seeder.client.Menu.Query().Where(menu.TenantIDEQ(target.ID)).Count(ctx) },
+		"ci types": func() (int, error) {
+			return seeder.client.CIType.Query().Where(citype.TenantIDEQ(target.ID)).Count(ctx)
+		},
+	} {
+		installed, err := count()
+		require.NoError(t, err)
+		assert.Zero(t, installed, "%s must roll back with the failed component", name)
+	}
 	versionExists, err := seeder.client.SystemConfig.Query().
 		Where(systemconfig.KeyEQ("tenant.bootstrap.version." + strconv.Itoa(target.ID))).
 		Exist(ctx)
 	require.NoError(t, err)
-	assert.False(t, versionExists)
+	assert.False(t, versionExists, "a rolled back provisioning must not record a template version")
 }
 
 type productionSeedCounts struct {

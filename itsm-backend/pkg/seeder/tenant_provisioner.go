@@ -4,26 +4,26 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
-	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
-	"itsm-backend/ent/processbinding"
-	"itsm-backend/ent/processdefinition"
-	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/systemconfig"
-	"itsm-backend/ent/tenant"
+	"itsm-backend/internal/initialization"
 )
 
 const CurrentTenantTemplateVersion = "1.0.0"
 
-// ProvisionTenant installs the tenant-scoped operating baseline from the
-// verified default tenant. The operation is transactional and idempotent.
+// ProvisionTenant installs the product baseline into one tenant by running the
+// same audited component DAG used for platform initialization, inside a single
+// transaction. It deliberately does not copy rows out of the default tenant:
+// that tenant is a live customer tenant in a private deployment, so copying it
+// would spread customer data as if it were a product template.
 func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVersion string) error {
 	if tenantID <= 0 {
 		return fmt.Errorf("tenant id must be positive")
@@ -31,309 +31,94 @@ func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVers
 	if templateVersion != CurrentTenantTemplateVersion {
 		return fmt.Errorf("unsupported tenant template version %q", templateVersion)
 	}
-	source, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).Only(ctx)
-	if err != nil {
-		return fmt.Errorf("load product template tenant: %w", err)
+	if !tenantctx.IsSystemBypass(ctx) {
+		return fmt.Errorf("tenant provisioning requires an explicit system context")
 	}
-	if _, err := s.client.Tenant.Get(ctx, tenantID); err != nil {
+	if s.sqlDriver == nil {
+		return fmt.Errorf("tenant provisioning requires the baseline SQL driver")
+	}
+	target, err := s.client.Tenant.Get(ctx, tenantID)
+	if err != nil {
 		return fmt.Errorf("load target tenant: %w", err)
 	}
-	if source.ID == tenantID {
+	if target.Code == platformTenantCode {
+		// The platform tenant owns the platform-only steps and is installed by
+		// the bootstrap DAG; re-provisioning it here would run them out of order.
 		return s.validateTenantReadiness(ctx, tenantID)
 	}
 
-	tx, err := s.client.Tx(ctx)
+	scope := initialization.Scope{Type: "tenant", ID: int64(tenantID)}
+	components, err := ProductionInitializers(s)
+	if err != nil {
+		return fmt.Errorf("create tenant initializers: %w", err)
+	}
+	tx, err := s.sqlDriver.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("begin tenant provisioning: %w", err)
 	}
-	defer tx.Rollback()
-	c := tx.Client()
-
-	sourceRoles, err := c.Role.Query().Where(role.TenantIDEQ(source.ID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	targetRoles := make(map[string]*ent.Role, len(sourceRoles))
-	for _, item := range sourceRoles {
-		target, err := c.Role.Query().Where(role.CodeEQ(item.Code), role.TenantIDEQ(tenantID)).Only(ctx)
-		if ent.IsNotFound(err) {
-			target, err = c.Role.Create().
-				SetCode(item.Code).SetName(item.Name).SetDescription(item.Description).
-				SetIsSystem(item.IsSystem).SetIsActive(item.IsActive).SetTenantID(tenantID).Save(ctx)
+	driver := initialization.NewTransactionDriver(tx, s.sqlDriver.Dialect())
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
 		}
+	}()
+
+	for _, component := range components {
+		plan, err := component.Plan(ctx, scope)
 		if err != nil {
-			return fmt.Errorf("provision role %s: %w", item.Code, err)
+			return fmt.Errorf("plan %s for tenant %d: %w", component.Name(), tenantID, err)
 		}
-		targetRoles[item.Code] = target
-	}
-
-	sourcePermissions, err := c.Permission.Query().Where(permission.TenantIDEQ(source.ID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	targetPermissions := make(map[string]*ent.Permission, len(sourcePermissions))
-	for _, item := range sourcePermissions {
-		target, err := c.Permission.Query().Where(permission.CodeEQ(item.Code), permission.TenantIDEQ(tenantID)).Only(ctx)
-		if ent.IsNotFound(err) {
-			target, err = c.Permission.Create().
-				SetCode(item.Code).SetName(item.Name).SetDescription(item.Description).
-				SetResource(item.Resource).SetAction(item.Action).SetTenantID(tenantID).Save(ctx)
+		if _, err := component.Apply(ctx, scope, plan, driver); err != nil {
+			return fmt.Errorf("provision %s into tenant %d: %w", component.Name(), tenantID, err)
 		}
-		if err != nil {
-			return fmt.Errorf("provision permission %s: %w", item.Code, err)
-		}
-		targetPermissions[item.Code] = target
-	}
-
-	for _, sourceRole := range sourceRoles {
-		bindings, err := c.RolePermission.Query().
-			Where(rolepermission.RoleIDEQ(sourceRole.ID), rolepermission.TenantIDEQ(source.ID)).
-			All(ctx)
-		if err != nil {
-			return err
-		}
-		for _, binding := range bindings {
-			sourcePermission, err := c.Permission.Get(ctx, binding.PermissionID)
-			if err != nil {
-				return err
-			}
-			targetRole := targetRoles[sourceRole.Code]
-			targetPermission := targetPermissions[sourcePermission.Code]
-			exists, err := c.RolePermission.Query().Where(
-				rolepermission.RoleIDEQ(targetRole.ID),
-				rolepermission.PermissionIDEQ(targetPermission.ID),
-				rolepermission.TenantIDEQ(tenantID),
-			).Exist(ctx)
-			if err != nil {
-				return err
-			}
-			if !exists {
-				if _, err := c.RolePermission.Create().
-					SetRoleID(targetRole.ID).SetPermissionID(targetPermission.ID).
-					SetTenantID(tenantID).Save(ctx); err != nil {
-					return fmt.Errorf("provision role permission: %w", err)
-				}
-			}
-		}
-	}
-
-	sourceMenus, err := c.Menu.Query().Where(menu.TenantIDEQ(source.ID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range sourceMenus {
-		exists, err := c.Menu.Query().Where(menu.PathEQ(item.Path), menu.TenantIDEQ(tenantID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if _, err := c.Menu.Create().
-				SetName(item.Name).SetPath(item.Path).SetIcon(item.Icon).
-				SetPermissionCode(item.PermissionCode).SetSortOrder(item.SortOrder).
-				SetIsVisible(item.IsVisible).SetIsEnabled(item.IsEnabled).
-				SetDescription(item.Description).SetTenantID(tenantID).Save(ctx); err != nil {
-				return fmt.Errorf("provision menu %s: %w", item.Path, err)
-			}
-		}
-	}
-
-	// 审批组克隆：BPMN candidateGroups / assignee_type(group) 依赖 groups 表，
-	// 缺失时任务候选集为空（2026-09-15 复盘 R2）。组是租户级骨架数据，成员关系
-	// 不克隆（成员用户尚未开通），由管理员开通后从角色人员中拉入。
-	sourceGroups, err := c.Group.Query().Where(group.TenantIDEQ(source.ID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range sourceGroups {
-		exists, err := c.Group.Query().Where(group.NameEQ(item.Name), group.TenantIDEQ(tenantID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if _, err := c.Group.Create().
-				SetName(item.Name).SetDescription(item.Description).
-				SetTenantID(tenantID).Save(ctx); err != nil {
-				return fmt.Errorf("provision group %s: %w", item.Name, err)
-			}
-		}
-	}
-
-	if err := cloneTenantTemplates(ctx, c, source.ID, tenantID); err != nil {
-		return err
-	}
-	if err := validateTenantClone(ctx, c, source.ID, tenantID); err != nil {
-		return fmt.Errorf("validate tenant template before commit: %w", err)
-	}
-	versionKey := fmt.Sprintf("tenant.bootstrap.version.%d", tenantID)
-	version, err := c.SystemConfig.Query().Where(systemconfig.KeyEQ(versionKey), systemconfig.DeletedAtIsNil()).Only(ctx)
-	if ent.IsNotFound(err) {
-		_, err = c.SystemConfig.Create().
-			SetKey(versionKey).SetValue(templateVersion).SetCategory("bootstrap").
-			SetDescription("Tenant product template version").SetCreatedBy("system").
-			SetTenantID(tenantID).Save(ctx)
-	} else if err == nil {
-		_, err = version.Update().SetValue(templateVersion).Save(ctx)
-	}
-	if err != nil {
-		return fmt.Errorf("record tenant template version: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit tenant provisioning: %w", err)
 	}
-	return validateTenantReadinessWithClient(ctx, s.client, tenantID)
+	committed = true
+
+	// Post-commit verification is read-only and compares against the code
+	// baseline, so a partially installed tenant can never be reported as ready.
+	verified, err := ProductionInitializers(s)
+	if err != nil {
+		return fmt.Errorf("create verification components: %w", err)
+	}
+	for _, component := range verified {
+		plan, err := component.Plan(ctx, scope)
+		if err != nil {
+			return fmt.Errorf("plan verification for %s: %w", component.Name(), err)
+		}
+		if err := component.Verify(ctx, scope, plan); err != nil {
+			return fmt.Errorf("verify tenant %d after provisioning %s: %w", tenantID, component.Name(), err)
+		}
+	}
+	if err := s.recordTenantTemplateVersion(ctx, tenantID, templateVersion); err != nil {
+		return err
+	}
+	return s.validateTenantReadiness(ctx, tenantID)
 }
 
-func cloneTenantTemplates(ctx context.Context, c *ent.Client, sourceID, tenantID int) error {
-	slas, err := c.SLADefinition.Query().Where(sladefinition.TenantIDEQ(sourceID)).All(ctx)
+// recordTenantTemplateVersion keeps the historical version marker readable for
+// one release while the initialization ledger stays the source of truth.
+func (s *Seeder) recordTenantTemplateVersion(ctx context.Context, tenantID int, templateVersion string) error {
+	versionKey := fmt.Sprintf("tenant.bootstrap.version.%d", tenantID)
+	version, err := s.client.SystemConfig.Query().
+		Where(systemconfig.KeyEQ(versionKey), systemconfig.DeletedAtIsNil()).
+		Only(ctx)
+	switch {
+	case err == nil:
+		_, err = version.Update().SetValue(templateVersion).Save(ctx)
+	case ent.IsNotFound(err):
+		_, err = s.client.SystemConfig.Create().
+			SetKey(versionKey).SetValue(templateVersion).SetCategory("bootstrap").
+			SetDescription("Tenant product template version").SetCreatedBy("system").
+			SetTenantID(tenantID).Save(ctx)
+	default:
+		return fmt.Errorf("lookup tenant template version: %w", err)
+	}
 	if err != nil {
-		return err
-	}
-	for _, item := range slas {
-		exists, err := c.SLADefinition.Query().Where(sladefinition.NameEQ(item.Name), sladefinition.TenantIDEQ(tenantID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if _, err := c.SLADefinition.Create().
-				SetName(item.Name).SetDescription(item.Description).SetServiceType(item.ServiceType).
-				SetPriority(item.Priority).SetResponseTime(item.ResponseTime).SetResolutionTime(item.ResolutionTime).
-				SetBusinessHours(item.BusinessHours).SetEscalationRules(item.EscalationRules).
-				SetConditions(item.Conditions).SetIsActive(item.IsActive).SetTenantID(tenantID).Save(ctx); err != nil {
-				return fmt.Errorf("provision SLA %s: %w", item.Name, err)
-			}
-		}
-	}
-	ciTypes, err := c.CIType.Query().Where(citype.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range ciTypes {
-		exists, err := c.CIType.Query().Where(citype.NameEQ(item.Name), citype.TenantIDEQ(tenantID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if _, err := c.CIType.Create().
-				SetName(item.Name).SetDescription(item.Description).SetIcon(item.Icon).SetColor(item.Color).
-				SetAttributeSchema(item.AttributeSchema).SetIsActive(item.IsActive).SetTenantID(tenantID).Save(ctx); err != nil {
-				return fmt.Errorf("provision CI type %s: %w", item.Name, err)
-			}
-		}
-	}
-	workflows, err := c.ApprovalWorkflow.Query().Where(approvalworkflow.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range workflows {
-		exists, err := c.ApprovalWorkflow.Query().Where(approvalworkflow.NameEQ(item.Name), approvalworkflow.TenantIDEQ(tenantID)).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			if _, err := c.ApprovalWorkflow.Create().
-				SetName(item.Name).SetDescription(item.Description).SetTicketType(item.TicketType).
-				SetPriority(item.Priority).SetNodes(item.Nodes).SetStatus(item.Status).
-				SetIsActive(item.IsActive).SetTenantID(tenantID).Save(ctx); err != nil {
-				return fmt.Errorf("provision approval workflow %s: %w", item.Name, err)
-			}
-		}
-	}
-	definitions, err := c.ProcessDefinition.Query().Where(processdefinition.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range definitions {
-		exists, err := c.ProcessDefinition.Query().Where(
-			processdefinition.KeyEQ(item.Key),
-			processdefinition.VersionEQ(item.Version),
-			processdefinition.TenantIDEQ(tenantID),
-		).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if exists {
-			continue
-		}
-		sourceDeployment, err := c.ProcessDeployment.Get(ctx, item.DeploymentID)
-		if err != nil {
-			return fmt.Errorf("load process deployment for %s: %w", item.Key, err)
-		}
-		targetDeploymentID := fmt.Sprintf("%s-tenant-%d", sourceDeployment.DeploymentID, tenantID)
-		targetDeployment, err := c.ProcessDeployment.Query().
-			Where(processdeployment.DeploymentIDEQ(targetDeploymentID)).
-			Only(ctx)
-		if ent.IsNotFound(err) {
-			targetDeployment, err = c.ProcessDeployment.Create().
-				SetDeploymentID(targetDeploymentID).
-				SetDeploymentName(sourceDeployment.DeploymentName).
-				SetDeploymentSource(sourceDeployment.DeploymentSource).
-				SetDeployedBy("tenant-provisioner").
-				SetDeploymentComment(sourceDeployment.DeploymentComment).
-				SetIsActive(sourceDeployment.IsActive).
-				SetDeploymentCategory(sourceDeployment.DeploymentCategory).
-				SetDeploymentMetadata(sourceDeployment.DeploymentMetadata).
-				SetTenantID(tenantID).
-				Save(ctx)
-		}
-		if err != nil {
-			return fmt.Errorf("provision process deployment %s: %w", sourceDeployment.DeploymentID, err)
-		}
-		if _, err := c.ProcessDefinition.Create().
-			SetKey(item.Key).SetName(item.Name).SetDescription(item.Description).
-			SetVersion(item.Version).SetCategory(item.Category).SetBpmnXML(item.BpmnXML).
-			SetProcessVariables(item.ProcessVariables).SetIsActive(item.IsActive).
-			SetIsLatest(item.IsLatest).SetDeploymentID(targetDeployment.ID).
-			SetDeploymentName(targetDeployment.DeploymentName).SetTenantID(tenantID).Save(ctx); err != nil {
-			return fmt.Errorf("provision process definition %s: %w", item.Key, err)
-		}
-	}
-	bindings, err := c.ProcessBinding.Query().Where(
-		processbinding.TenantIDEQ(sourceID),
-		processbinding.IsActiveEQ(true),
-	).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range bindings {
-		subTypePredicate := processbinding.BusinessSubTypeEQ(item.BusinessSubType)
-		if item.BusinessSubType == "" {
-			subTypePredicate = processbinding.Or(
-				processbinding.BusinessSubTypeEQ(""),
-				processbinding.BusinessSubTypeIsNil(),
-			)
-		}
-		exists, err := c.ProcessBinding.Query().Where(
-			processbinding.BusinessTypeEQ(item.BusinessType),
-			subTypePredicate,
-			processbinding.DepartmentIDEQ(item.DepartmentID),
-			processbinding.TeamIDEQ(item.TeamID),
-			processbinding.ScenarioEQ(item.Scenario),
-			processbinding.CategoryEQ(item.Category),
-			processbinding.IsActiveEQ(true),
-			processbinding.TenantIDEQ(tenantID),
-		).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			targetDefinition, err := c.ProcessDefinition.Query().Where(
-				processdefinition.KeyEQ(item.ProcessDefinitionKey),
-				processdefinition.TenantIDEQ(tenantID),
-				processdefinition.IsActiveEQ(true),
-			).Order(ent.Desc(processdefinition.FieldVersion)).First(ctx)
-			if err != nil {
-				return fmt.Errorf("resolve process definition %s: %w", item.ProcessDefinitionKey, err)
-			}
-			if _, err := c.ProcessBinding.Create().
-				SetBusinessType(item.BusinessType).SetBusinessSubType(item.BusinessSubType).
-				SetProcessDefinitionKey(item.ProcessDefinitionKey).SetProcessVersion(item.ProcessVersion).
-				SetIsDefault(item.IsDefault).SetPriority(item.Priority).SetIsActive(item.IsActive).
-				SetScenario(item.Scenario).SetCategory(item.Category).SetConditions(item.Conditions).
-				SetOverrides(item.Overrides).SetTenantID(tenantID).
-				SetProcessDefinitionID(targetDefinition.ID).Save(ctx); err != nil {
-				return fmt.Errorf("provision process binding: %w", err)
-			}
-		}
+		return fmt.Errorf("record tenant template version: %w", err)
 	}
 	return nil
 }
@@ -355,6 +140,9 @@ func validateTenantReadinessWithClient(ctx context.Context, client *ent.Client, 
 			return client.RolePermission.Query().Where(rolepermission.TenantIDEQ(tenantID)).Count(ctx)
 		}},
 		{"menus", func() (int, error) { return client.Menu.Query().Where(menu.TenantIDEQ(tenantID)).Count(ctx) }},
+		{"nested menus", func() (int, error) {
+			return client.Menu.Query().Where(menu.TenantIDEQ(tenantID), menu.ParentIDNotNil()).Count(ctx)
+		}},
 		{"groups", func() (int, error) { return client.Group.Query().Where(group.TenantIDEQ(tenantID)).Count(ctx) }},
 		{"SLA definitions", func() (int, error) {
 			return client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(tenantID)).Count(ctx)
@@ -371,138 +159,4 @@ func validateTenantReadinessWithClient(ctx context.Context, client *ent.Client, 
 		}
 	}
 	return nil
-}
-
-func validateTenantClone(ctx context.Context, client *ent.Client, sourceID, targetID int) error {
-	sourceRoles, err := client.Role.Query().Where(role.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, sourceRole := range sourceRoles {
-		targetRole, err := client.Role.Query().
-			Where(role.CodeEQ(sourceRole.Code), role.TenantIDEQ(targetID)).
-			Only(ctx)
-		if err != nil {
-			return fmt.Errorf("managed role %s missing: %w", sourceRole.Code, err)
-		}
-		sourceGrants, err := client.RolePermission.Query().
-			Where(rolepermission.RoleIDEQ(sourceRole.ID), rolepermission.TenantIDEQ(sourceID)).
-			All(ctx)
-		if err != nil {
-			return err
-		}
-		for _, sourceGrant := range sourceGrants {
-			sourcePermission, err := client.Permission.Get(ctx, sourceGrant.PermissionID)
-			if err != nil {
-				return err
-			}
-			targetPermission, err := client.Permission.Query().Where(
-				permission.CodeEQ(sourcePermission.Code),
-				permission.TenantIDEQ(targetID),
-			).Only(ctx)
-			if err != nil {
-				return fmt.Errorf("managed permission %s missing: %w", sourcePermission.Code, err)
-			}
-			exists, err := client.RolePermission.Query().Where(
-				rolepermission.RoleIDEQ(targetRole.ID),
-				rolepermission.PermissionIDEQ(targetPermission.ID),
-				rolepermission.TenantIDEQ(targetID),
-			).Exist(ctx)
-			if err != nil {
-				return err
-			}
-			if !exists {
-				return fmt.Errorf("managed grant %s -> %s missing", sourceRole.Code, sourcePermission.Code)
-			}
-		}
-	}
-	sourceMenus, err := client.Menu.Query().Where(menu.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range sourceMenus {
-		exists, err := client.Menu.Query().
-			Where(menu.PathEQ(item.Path), menu.TenantIDEQ(targetID)).
-			Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("managed menu %s missing", item.Path)
-		}
-	}
-	sourceGroups, err := client.Group.Query().Where(group.TenantIDEQ(sourceID)).All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, item := range sourceGroups {
-		exists, err := client.Group.Query().
-			Where(group.NameEQ(item.Name), group.TenantIDEQ(targetID)).
-			Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("managed group %s missing", item.Name)
-		}
-	}
-	sourceDefinitions, err := client.ProcessDefinition.Query().
-		Where(processdefinition.TenantIDEQ(sourceID)).
-		All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, definition := range sourceDefinitions {
-		exists, err := client.ProcessDefinition.Query().Where(
-			processdefinition.KeyEQ(definition.Key),
-			processdefinition.VersionEQ(definition.Version),
-			processdefinition.TenantIDEQ(targetID),
-		).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("managed process definition %s@%s missing", definition.Key, definition.Version)
-		}
-	}
-	sourceBindings, err := client.ProcessBinding.Query().
-		Where(processbinding.TenantIDEQ(sourceID)).
-		All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, binding := range sourceBindings {
-		exists, err := client.ProcessBinding.Query().Where(
-			processbinding.BusinessTypeEQ(binding.BusinessType),
-			processbinding.BusinessSubTypeEQ(binding.BusinessSubType),
-			processbinding.ProcessDefinitionKeyEQ(binding.ProcessDefinitionKey),
-			processbinding.TenantIDEQ(targetID),
-		).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("managed process binding %s/%s missing", binding.BusinessType, binding.BusinessSubType)
-		}
-	}
-	bindings, err := client.ProcessBinding.Query().
-		Where(processbinding.TenantIDEQ(targetID), processbinding.IsActiveEQ(true)).
-		All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, binding := range bindings {
-		exists, err := client.ProcessDefinition.Query().Where(
-			processdefinition.KeyEQ(binding.ProcessDefinitionKey),
-			processdefinition.TenantIDEQ(targetID),
-			processdefinition.IsActiveEQ(true),
-		).Exist(ctx)
-		if err != nil {
-			return err
-		}
-		if !exists {
-			return fmt.Errorf("active binding %s has no active process definition", binding.ProcessDefinitionKey)
-		}
-	}
-	return validateTenantReadinessWithClient(ctx, client, targetID)
 }

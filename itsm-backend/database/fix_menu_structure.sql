@@ -233,16 +233,16 @@ SELECT '自动化规则', '/workflow/automation', 'Zap', id, 'workflow:write', 1
 -- 14. AI助手子菜单
 -- ============================================
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT 'AI对话', '/ai/chat', 'MessageSquare', id, 'ai:use', 131, 1, true, true FROM menus WHERE path = '/ai/chat';
+SELECT 'AI对话', '/ai/chat', 'MessageSquare', id, 'ai:use', 131, 1, true, true FROM menus WHERE path = '/ai/chat' AND parent_id IS NULL;
 
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT 'AI创建工单', '/tickets/ai-create', 'Sparkles', id, 'ai:use', 132, 1, true, true FROM menus WHERE path = '/ai/chat';
+SELECT 'AI创建工单', '/tickets/ai-create', 'Sparkles', id, 'ai:use', 132, 1, true, true FROM menus WHERE name = 'AI对话' AND path = '/ai/chat';
 
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT '故障分析', '/ai/analyze', 'Search', id, 'ai:use', 133, 1, true, true FROM menus WHERE path = '/ai/chat';
+SELECT '故障分析', '/ai/analyze', 'Search', id, 'ai:use', 133, 1, true, true FROM menus WHERE name = 'AI对话' AND path = '/ai/chat';
 
 INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT '智能推荐', '/ai/recommend', 'Lightbulb', id, 'ai:use', 134, 1, true, true FROM menus WHERE path = '/ai/chat';
+SELECT '智能推荐', '/ai/recommend', 'Lightbulb', id, 'ai:use', 134, 1, true, true FROM menus WHERE name = 'AI对话' AND path = '/ai/chat';
 
 -- ============================================
 -- 15. 访问管理子菜单

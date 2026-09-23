@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Tag holds the schema definition for the Tag entity.
@@ -21,7 +22,6 @@ func (Tag) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("code").
 			Comment("标签代码").
-			Unique().
 			NotEmpty(),
 		field.Text("description").
 			Comment("标签描述").
@@ -60,5 +60,13 @@ func (Tag) Edges() []ent.Edge {
 		edge.From("teams", Team.Type).
 			Ref("tags").
 			Comment("关联的团队"),
+	}
+}
+
+// Indexes makes the tag code unique per tenant for the same reason as ticket
+// categories: the baseline tag set is installed into every tenant.
+func (Tag) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "code").Unique(),
 	}
 }

@@ -53,7 +53,12 @@ func TestManifestDigestInputsCoverTheirComponents(t *testing.T) {
 
 	itil, err := manifestDigestInputs("itil-core")
 	require.NoError(t, err)
-	assert.Len(t, itil, len(ticketTypeDefinitions()))
+	assert.Len(t, itil, len(ticketTypeDefinitions())+len(standardChangeDefinitions())+
+		len(incidentCategoryDefinitions())+len(ticketTagDefinitions()))
+
+	cmdb, err := manifestDigestInputs("cmdb-core")
+	require.NoError(t, err)
+	assert.Len(t, cmdb, len(ciTypeDefinitions()))
 
 	workflow, err := manifestDigestInputs("workflow-core")
 	require.NoError(t, err)

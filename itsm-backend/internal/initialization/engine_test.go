@@ -482,6 +482,21 @@ func TestEngineRejectsConcurrentRunWithSameExecutorIdentity(t *testing.T) {
 	}
 }
 
+func TestValidateScope(t *testing.T) {
+	require.NoError(t, ValidateScope(Scope{Type: "platform", ID: 0}))
+	require.NoError(t, ValidateScope(Scope{Type: "tenant", ID: 42}))
+	for _, scope := range []Scope{{Type: "platform", ID: 1}, {Type: "tenant"}, {Type: "tenant", ID: -3}, {Type: "enterprise", ID: 1}} {
+		require.Error(t, ValidateScope(scope), scope)
+	}
+	engine, err := NewEngine(newMemoryStore(), []Initializer{&testInitializer{name: "rbac"}}, time.Hour)
+	require.NoError(t, err)
+	request := initializationRequest("executor-1")
+	request.Scope = Scope{Type: "platform", ID: 1}
+	runID, err := engine.Apply(context.Background(), request)
+	require.Error(t, err)
+	require.Zero(t, runID, "an invalid scope must not open a run")
+}
+
 func TestEngineRejectsDependencyCycle(t *testing.T) {
 	_, err := NewEngine(newMemoryStore(), []Initializer{
 		&testInitializer{name: "a", dependencies: []string{"b"}},
