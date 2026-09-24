@@ -217,6 +217,14 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 		common.Fail(c, common.ForbiddenCode, "非MSP用户")
 		return
 	}
+	// 防御：customerTenantID 来自 URL param，必须落在 MSP 员工授权列表内，
+	// 防止通过篡改路径绕过 X-Customer-Tenant-ID 中间件的授权检查。
+	if !mspCtx.IsCustomerAllowed(customerTenantID) {
+		h.logger.Warnw("Rejected MSP customer tickets for unauthorized customer",
+			"customer_tenant_id", customerTenantID, "allowed", mspCtx.AllowedCustomers, "user_id", c.GetInt("user_id"))
+		common.Fail(c, common.ForbiddenCode, "无权访问指定客户租户")
+		return
+	}
 	userID := mspCtx.MSPUserID
 
 	tickets, err := h.ticketService.GetCustomerTicketsForMSP(c.Request.Context(), userID, customerTenantID, &status, page, pageSize)
@@ -249,6 +257,21 @@ func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 	assignerID := c.GetInt("user_id")
 	if assignerID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
+
+	// 防御：req.CustomerTenantID 来自请求体，必须校验是否在 MSP 员工授权列表内，
+	// 防止通过篡改 body 绕过 X-Customer-Tenant-ID 中间件的授权检查。
+	mspCtx, exists := middleware.GetMSPContext(c)
+	if !exists || !mspCtx.IsMSP {
+		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		return
+	}
+	if !mspCtx.IsCustomerAllowed(req.CustomerTenantID) {
+		h.logger.Warnw("Rejected MSP technician assignment for unauthorized customer",
+			"ticket_id", ticketID, "customer_tenant_id", req.CustomerTenantID,
+			"allowed", mspCtx.AllowedCustomers, "assigner_id", assignerID)
+		common.Fail(c, common.ForbiddenCode, "无权访问指定客户租户")
 		return
 	}
 

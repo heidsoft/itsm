@@ -27,8 +27,8 @@ export class WorkflowDefinitionApi {
     if (query?.page) params.page = query.page;
     if (query?.pageSize) params.pageSize = query.pageSize;
 
-    const res = await httpClient.get<
-      Array<{
+    const res = await httpClient.get<{
+      items: Array<{
         id: number;
         key: string;
         name: string;
@@ -37,15 +37,15 @@ export class WorkflowDefinitionApi {
         status: string;
         createdAt: string;
         updatedAt: string;
-      }>
-    >('/api/v1/bpmn/process-definitions', params);
+      }>;
+      total?: number;
+    }>('/api/v1/bpmn/process-definitions', params);
 
     if (!res) {
       return { workflows: [], total: 0 };
     }
 
-    const raw = res as unknown as { items?: Array<{id: number; key: string; name: string; description?: string; version: number; status: string; createdAt: string; updatedAt: string}>; total?: number };
-    const list = Array.isArray(res) ? res : (raw.items ?? []);
+    const list = res.items ?? [];
     const workflows: WorkflowDefinition[] = list.map(item => ({
       id: String(item.id || ''),
       code: item.key || '',
@@ -68,7 +68,7 @@ export class WorkflowDefinitionApi {
       updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       description: item.description,
     })) as WorkflowDefinition[];
-    return { workflows, total: raw.total ?? list.length };
+    return { workflows, total: res.total ?? list.length };
   }
 
   /**

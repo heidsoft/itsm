@@ -91,6 +91,28 @@ func isPrivateWebhookIP(ip netip.Addr) bool {
 		!ip.IsGlobalUnicast()
 }
 
+// blockedWebhookHeaders 是用户自定义配置不得设置的 header：Host/转发类/逐跳类。
+// 防止虚拟主机路由绕过、缓存投毒与连接控制被劫持。
+var blockedWebhookHeaders = map[string]bool{
+	"host":              true,
+	"x-forwarded-host":  true,
+	"x-forwarded-for":   true,
+	"x-real-ip":         true,
+	"connection":        true,
+	"keep-alive":        true,
+	"proxy-authorization": true,
+	"proxy-authenticate":  true,
+	"te":                true,
+	"trailer":           true,
+	"transfer-encoding": true,
+	"upgrade":           true,
+}
+
+// isBlockedWebhookHeader 大小写不敏感地判断 header 是否在禁止列表内。
+func isBlockedWebhookHeader(name string) bool {
+	return blockedWebhookHeaders[strings.ToLower(strings.TrimSpace(name))]
+}
+
 // GetTaskType 返回任务类型
 func (h *WebhookHandler) GetTaskType() string {
 	return "webhook_task"
@@ -165,6 +187,12 @@ func (h *WebhookHandler) callWebhook(ctx context.Context, variables map[string]i
 		var headerMap map[string]string
 		if err := json.Unmarshal([]byte(headers), &headerMap); err == nil {
 			for k, v := range headerMap {
+				// 禁止用户覆盖 Host / 转发相关 / 逐跳 header，防止虚拟主机路由绕过与缓存投毒。
+				// Host 在 Go net/http 中由 req.Host 控制，此处显式拦截避免误用。
+				if isBlockedWebhookHeader(k) {
+					h.logger.Warnw("Blocked user-supplied webhook header", "header", k)
+					continue
+				}
 				req.Header.Set(k, v)
 			}
 		}

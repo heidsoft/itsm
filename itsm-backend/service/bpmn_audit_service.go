@@ -83,10 +83,16 @@ type AuditContext struct {
 
 // RecordAudit 记录审计日志
 func (s *BPMNAuditService) RecordAudit(ctx context.Context, auditCtx *AuditContext) error {
+	return s.RecordAuditWithClient(ctx, s.client, auditCtx)
+}
+
+// RecordAuditWithClient 在调用方提供的客户端（可为事务客户端）内写入审计日志。
+// 用于需要与业务写入同事务提交的场景，保证审计与业务状态原子一致。
+func (s *BPMNAuditService) RecordAuditWithClient(ctx context.Context, client *ent.Client, auditCtx *AuditContext) error {
 	startTime := time.Now()
 
 	// 构建审计日志
-	create := s.client.ProcessAuditLog.Create().
+	create := client.ProcessAuditLog.Create().
 		SetProcessInstanceID(auditCtx.ProcessInstanceID).
 		SetProcessInstanceKey(auditCtx.ProcessInstanceKey).
 		SetProcessDefinitionKey(auditCtx.ProcessDefinitionKey).
@@ -232,8 +238,14 @@ func (s *BPMNAuditService) RecordTaskClaimed(ctx context.Context, task *ent.Proc
 
 // RecordTaskCompleted 记录任务完成
 func (s *BPMNAuditService) RecordTaskCompleted(ctx context.Context, task *ent.ProcessTask, userID int, userName string, variablesBefore, variablesAfter map[string]interface{}) error {
+	return s.RecordTaskCompletedWithClient(ctx, s.client, task, userID, userName, variablesBefore, variablesAfter)
+}
+
+// RecordTaskCompletedWithClient 在调用方提供的事务客户端内写入任务完成审计。
+// 用于 CompleteTask 事务内保证"任务完成 + 审计"原子性，避免审计丢失。
+func (s *BPMNAuditService) RecordTaskCompletedWithClient(ctx context.Context, client *ent.Client, task *ent.ProcessTask, userID int, userName string, variablesBefore, variablesAfter map[string]interface{}) error {
 	// Get process instance to get the process instance key
-	instance, err := s.client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
+	instance, err := client.ProcessInstance.Get(ctx, task.ProcessInstanceID)
 	processInstanceKey := ""
 	processDefinitionID := 0
 	tenantID := 0
@@ -243,7 +255,7 @@ func (s *BPMNAuditService) RecordTaskCompleted(ctx context.Context, task *ent.Pr
 		tenantID = instance.TenantID
 	}
 
-	return s.RecordAudit(ctx, &AuditContext{
+	return s.RecordAuditWithClient(ctx, client, &AuditContext{
 		ProcessInstanceID:    task.ProcessInstanceID,
 		ProcessInstanceKey:   processInstanceKey,
 		ProcessDefinitionKey: task.ProcessDefinitionKey,

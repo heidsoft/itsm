@@ -188,8 +188,8 @@ export const retry = async <T>(
 /**
  * 创建空分页响应
  */
-export const emptyPagination = <T>(data: T[] = []): PaginationResponse<T> => ({
-  data,
+export const emptyPagination = <T>(items: T[] = []): PaginationResponse<T> => ({
+  items,
   total: 0,
   page: 1,
   pageSize: 10,

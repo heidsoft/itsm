@@ -43,8 +43,8 @@ export default function NOCPage() {
         pageSize: PAGE_SIZE,
         ...(status ? { status } : {}),
       });
-      setIncidents(resp.incidents || resp.items || []);
-      setTotal(resp.total ?? 0);
+      setIncidents(resp.items ?? []);
+      setTotal(resp.total);
     } catch {
       message.error('加载重大事件失败');
     } finally {

@@ -44,7 +44,7 @@ describe('useIncidentsQuery', () => {
 
   it('starts empty and idle, then loads data on mount', async () => {
     (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({
-      incidents: [mockIncident()],
+      items: [mockIncident()],
       total: 1,
     });
     (UserApi.getUsers as jest.Mock).mockResolvedValue({
@@ -78,7 +78,7 @@ describe('useIncidentsQuery', () => {
 
   it('still returns data when user-name enrichment fails', async () => {
     (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({
-      incidents: [mockIncident({ reporterId: 7 })],
+      items: [mockIncident({ reporterId: 7 })],
       total: 1,
     });
     (UserApi.getUsers as jest.Mock).mockRejectedValue(new Error('users down'));
@@ -94,7 +94,7 @@ describe('useIncidentsQuery', () => {
 
   it('refresh() re-fetches without losing existing data on error', async () => {
     (IncidentAPI.listIncidents as jest.Mock)
-      .mockResolvedValueOnce({ incidents: [mockIncident()], total: 1 })
+      .mockResolvedValueOnce({ items: [mockIncident()], total: 1 })
       .mockRejectedValueOnce(new Error('boom'));
 
     (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
@@ -112,7 +112,7 @@ describe('useIncidentsQuery', () => {
   });
 
   it('refetches when filter inputs change', async () => {
-    (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ incidents: [], total: 0 });
+    (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ items: [], total: 0 });
     (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
 
     const { result, rerender } = renderHook(
@@ -131,7 +131,7 @@ describe('useIncidentsQuery', () => {
   });
 
   it('setPage() updates page and pageSize', async () => {
-    (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ incidents: [], total: 0 });
+    (IncidentAPI.listIncidents as jest.Mock).mockResolvedValue({ items: [], total: 0 });
     (UserApi.getUsers as jest.Mock).mockResolvedValue({ users: [] });
 
     const { result } = renderHook(() => useIncidentsQuery({ search: '' }), { wrapper });

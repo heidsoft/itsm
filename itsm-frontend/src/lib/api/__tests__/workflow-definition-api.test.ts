@@ -25,7 +25,7 @@ describe('WorkflowDefinitionApi', () => {
       const backendRes = [
         { id: 1, key: 'proc1', name: 'Process 1', version: 1, status: 'active', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
       ];
-      mockGet.mockResolvedValue(backendRes);
+      mockGet.mockResolvedValue({ items: backendRes, total: 1 });
       const res = await WorkflowDefinitionApi.getWorkflows({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/process-definitions', { page: 1, pageSize: 10 });
       expect(res.workflows).toHaveLength(1);

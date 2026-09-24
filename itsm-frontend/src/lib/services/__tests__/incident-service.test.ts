@@ -26,7 +26,7 @@ describe('IncidentService', () => {
 
   describe('listIncidents', () => {
     it('should call GET /api/v1/incidents with params', async () => {
-      const mockData = { incidents: [{ id: 1 }], items: [{ id: 1 }], total: 1, page: 1, pageSize: 20 };
+      const mockData = { items: [{ id: 1 }], total: 1, page: 1, pageSize: 20 };
       mockGet.mockResolvedValueOnce(mockData);
 
       const result = await incidentService.listIncidents({ page: 1, status: IncidentStatus.NEW });
@@ -35,17 +35,8 @@ describe('IncidentService', () => {
       expect(result).toEqual(mockData);
     });
 
-    it('should populate items from incidents when items is missing', async () => {
-      const incidents = [{ id: 1, title: 'Test' }];
-      mockGet.mockResolvedValueOnce({ incidents, total: 1, page: 1, pageSize: 20 });
-
-      const result = await incidentService.listIncidents();
-
-      expect(result.items).toEqual(incidents);
-    });
-
     it('should call with empty params by default', async () => {
-      mockGet.mockResolvedValueOnce({ incidents: [], items: [], total: 0, page: 1, pageSize: 20 });
+      mockGet.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20 });
 
       await incidentService.listIncidents();
 
@@ -55,7 +46,7 @@ describe('IncidentService', () => {
 
   describe('getIncidents (alias)', () => {
     it('should delegate to listIncidents', async () => {
-      mockGet.mockResolvedValueOnce({ incidents: [], items: [], total: 0, page: 1, pageSize: 20 });
+      mockGet.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20 });
 
       await incidentService.getIncidents({ priority: IncidentPriority.HIGH });
 

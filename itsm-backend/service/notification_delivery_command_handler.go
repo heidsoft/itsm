@@ -279,15 +279,23 @@ func (h *NotificationDeliveryCommandHandler) deliverConnector(ctx context.Contex
 		return safeErr
 	}
 	now := time.Now()
+	// Send 已成功，消息已送达。状态更新失败不应触发重试，否则会导致重复投递。
+	// 此处 best-effort 更新并记录告警，由运维/对账任务兜底修复状态。
 	_, err = h.client.NotificationDelivery.UpdateOneID(delivery.ID).SetStatus("sent").SetAttempt(cmd.Attempt).
 		SetProviderMessageID(messageID).ClearErrorCode().ClearErrorMessage().SetSentAt(now).Save(ctx)
 	if err != nil {
-		return err
+		h.logger.Errorw("failed to mark notification delivery as sent after successful send (message already delivered)",
+			"delivery_id", delivery.ID, "channel", channel, "tenant_id", cmd.TenantID,
+			"command_id", cmd.ID, "error", err)
+		return nil
 	}
 	if ticketNotificationID > 0 {
-		_, err = h.client.TicketNotification.UpdateOneID(ticketNotificationID).SetStatus("sent").SetSentAt(now).Save(ctx)
+		if _, err = h.client.TicketNotification.UpdateOneID(ticketNotificationID).SetStatus("sent").SetSentAt(now).Save(ctx); err != nil {
+			h.logger.Warnw("failed to mark ticket notification as sent",
+				"ticket_notification_id", ticketNotificationID, "error", err)
+		}
 	}
-	return err
+	return nil
 }
 
 func payloadInt(payload map[string]interface{}, key string) (int, error) {

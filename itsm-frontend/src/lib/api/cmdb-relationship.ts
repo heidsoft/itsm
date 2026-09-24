@@ -158,10 +158,10 @@ export interface RelationshipTypeInfo {
 export const CIRelationshipAPI = {
   // 获取关系类型列表
   async getRelationshipTypes(): Promise<RelationshipTypeInfo[]> {
-	const response = await httpClient.get<RelationshipTypeInfo[] | { types: RelationshipTypeInfo[] }>(
+	const response = await httpClient.get<{ types: RelationshipTypeInfo[] }>(
 	  '/api/v1/configuration-items/relationship-types'
 	);
-	return Array.isArray(response) ? response : response.types ?? [];
+	return response.types ?? [];
   },
 
   // 创建关系

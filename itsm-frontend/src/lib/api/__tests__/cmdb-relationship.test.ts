@@ -20,17 +20,18 @@ describe('CIRelationshipAPI', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('getRelationshipTypes', () => {
-    it('should get relationship types (array response)', async () => {
-      mockGet.mockResolvedValue([{ type: 'depends_on', name: 'Depends On' }]);
+    it('should get relationship types', async () => {
+      mockGet.mockResolvedValue({ types: [{ type: 'depends_on', name: 'Depends On' }] });
       const result = await CIRelationshipAPI.getRelationshipTypes();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/relationship-types');
       expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('depends_on');
     });
 
-    it('should handle object response with types', async () => {
-      mockGet.mockResolvedValue({ types: [{ type: 'hosts', name: 'Hosts' }] });
+    it('should return empty array when types is missing', async () => {
+      mockGet.mockResolvedValue({});
       const result = await CIRelationshipAPI.getRelationshipTypes();
-      expect(result).toHaveLength(1);
+      expect(result).toEqual([]);
     });
   });
 

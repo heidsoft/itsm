@@ -88,7 +88,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			if err := transactional.seedDepartments(ctx); err != nil {
 				return err
 			}
-			transactional.seedTeams(ctx)
+			if err := transactional.seedTeams(ctx); err != nil {
+				return err
+			}
 			transactional.seedGroups(ctx)
 			transactional.seedRoles(ctx)
 			transactional.seedPermissions(ctx)

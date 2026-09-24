@@ -12,9 +12,9 @@ export interface ApiResponse<T = unknown> {
   data: T;
 }
 
-/** 分页响应结构 */
+/** 分页响应结构 — 列表字段统一为 items（与后端 SuccessWithPagination 契约一致） */
 export interface PaginationResponse<T = unknown> {
-  data: T[];
+  items: T[];
   total: number;
   page: number;
   pageSize: number;

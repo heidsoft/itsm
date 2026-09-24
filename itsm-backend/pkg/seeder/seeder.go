@@ -681,7 +681,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	// 首先确保 default 租户存在
 	s.seedDefaultTenant(ctx)
 	attempt("departments", s.seedDepartments)
-	s.seedTeams(ctx)
+	attempt("teams", s.seedTeams)
 	s.seedRoles(ctx)
 	s.seedGroups(ctx)               // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
@@ -700,14 +700,14 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTicketViews(ctx)
 	attempt("service-catalog", s.seedServiceCatalog)
 	attempt("service-catalog-items", s.seedServiceCatalogItems)
-	attempt("ticket-types", s.seedTicketTypes) // 新增：初始化工单类型
-	attempt("ci-types", s.seedCITypes)         // 新增：初始化CI类型
+	attempt("ticket-types", s.seedTicketTypes)               // 新增：初始化工单类型
+	attempt("ci-types", s.seedCITypes)                       // 新增：初始化CI类型
 	attempt("incident-categories", s.seedIncidentCategories) // 新增：初始化事件分类
-	attempt("standard-changes", s.seedStandardChanges)        // 新增：初始化标准变更模板
-	attempt("ticket-tags", s.seedTicketTags)                  // 新增：初始化标签
-	s.seedMenuAndPermissionFixes(ctx)          // 修复：更新菜单路径和补充缺失权限
-	s.seedRolePermissions(ctx)                 // 新增：为角色分配权限
-	s.seedBusinessRecords(ctx)                 // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
+	attempt("standard-changes", s.seedStandardChanges)       // 新增：初始化标准变更模板
+	attempt("ticket-tags", s.seedTicketTags)                 // 新增：初始化标签
+	s.seedMenuAndPermissionFixes(ctx)                        // 修复：更新菜单路径和补充缺失权限
+	s.seedRolePermissions(ctx)                               // 新增：为角色分配权限
+	s.seedBusinessRecords(ctx)                               // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
 }
 
 // SeedProduction applies product defaults and then verifies the minimum
@@ -1051,40 +1051,50 @@ func (s *Seeder) seedDepartments(ctx context.Context) error {
 	return nil
 }
 
-func (s *Seeder) seedTeams(ctx context.Context) {
+// seedTeams reconciles the team baseline per tenant and per code. A global
+// "any row exists" guard would skip every tenant that owns a partial set, which
+// blocks forward-fixing an already-installed environment.
+func (s *Seeder) seedTeams(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("baseline tenant not found; skip teams seed", "error", err)
-		return
+		return fmt.Errorf("teams tenant: %w", err)
 	}
 
-	existing, err := s.client.Team.Query().Where(team.TenantIDEQ(t.ID), team.DeletedAtIsNil()).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing teams failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("teams already seeded")
-		return
-	}
-
-	for _, tm := range s.config.Teams {
-		code := tm.Code
-		if code == "" {
-			// 从名称生成代码：去除空格，转小写
-			code = strings.ToLower(strings.ReplaceAll(tm.Name, " ", "-"))
+	created := 0
+	for _, spec := range s.config.Teams {
+		code := teamCode(spec)
+		exists, err := s.client.Team.Query().
+			Where(team.TenantIDEQ(t.ID), team.CodeEQ(code), team.DeletedAtIsNil()).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check team %s: %w", code, err)
+		}
+		if exists {
+			continue
 		}
 		if _, err := s.client.Team.Create().
-			SetName(tm.Name).
+			SetName(spec.Name).
 			SetCode(code).
-			SetDescription(tm.Description).
+			SetDescription(spec.Description).
 			SetStatus("active").
 			SetTenantID(t.ID).
 			Save(ctx); err != nil {
-			s.sugar.Warnw("seed team failed", "error", err, "name", tm.Name)
+			return fmt.Errorf("seed team %s: %w", code, err)
 		}
+		created++
 	}
-	s.sugar.Infow("teams seeded", "count", len(s.config.Teams))
+	s.sugar.Infow("teams reconciled", "created", created, "total", len(s.config.Teams), "tenant_id", t.ID)
+	return nil
+}
+
+// teamCode resolves a team's stable key the same way for seeding and tests:
+// code fields live in user-supplied manifests, so the fallback must be a single
+// shared rule instead of two drifting copies.
+func teamCode(spec TeamSeed) string {
+	if spec.Code != "" {
+		return spec.Code
+	}
+	return strings.ToLower(strings.ReplaceAll(spec.Name, " ", "-"))
 }
 
 // BuiltinGroups 返回内置审批组种子。
@@ -2338,17 +2348,20 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("ticket types creator: %w", err)
 	}
-	count, err := s.client.TicketType.Query().Where(tickettype.TenantIDEQ(int64(t.ID))).Count(ctx)
-	if err != nil {
-		return fmt.Errorf("query ticket types: %w", err)
-	}
-	if count > 0 {
-		return nil
-	}
 
 	// 定义默认工单类型（与前端ticket-type-presets.ts保持一致）
+	created := 0
 	for _, tt := range ticketTypeDefinitions() {
-		_, err := s.client.TicketType.Create().
+		exists, err := s.client.TicketType.Query().
+			Where(tickettype.TenantIDEQ(int64(t.ID)), tickettype.CodeEQ(tt.Code)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check ticket type %s: %w", tt.Code, err)
+		}
+		if exists {
+			continue
+		}
+		_, err = s.client.TicketType.Create().
 			SetCode(tt.Code).SetName(tt.Name).SetDescription(tt.Description).
 			SetIcon(tt.Icon).SetColor(tt.Color).SetStatus("active").
 			SetCustomFields(map[string]interface{}{}).SetApprovalChain([]interface{}{}).
@@ -2359,8 +2372,9 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("seed ticket type %s: %w", tt.Code, err)
 		}
+		created++
 	}
-	s.sugar.Infow("ticket types seeded", "count", len(ticketTypeDefinitions()))
+	s.sugar.Infow("ticket types reconciled", "created", created, "total", len(ticketTypeDefinitions()), "tenant_id", t.ID)
 	return nil
 }
 

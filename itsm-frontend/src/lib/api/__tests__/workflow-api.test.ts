@@ -44,7 +44,7 @@ describe('WorkflowApi', () => {
         },
       ];
 
-      (httpClient.get as jest.Mock).mockResolvedValueOnce(mockData);
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: mockData, total: 1 });
 
       const result = await WorkflowApi.getWorkflows();
 
@@ -58,7 +58,7 @@ describe('WorkflowApi', () => {
     });
 
     it('should handle empty workflow list', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce([]);
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: [], total: 0 });
 
       const result = await WorkflowApi.getWorkflows();
 
@@ -67,7 +67,7 @@ describe('WorkflowApi', () => {
     });
 
     it('should pass pagination parameters correctly', async () => {
-      (httpClient.get as jest.Mock).mockResolvedValueOnce([]);
+      (httpClient.get as jest.Mock).mockResolvedValueOnce({ items: [], total: 0 });
 
       await WorkflowApi.getWorkflows({ page: 2, pageSize: 10 });
 

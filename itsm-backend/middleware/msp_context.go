@@ -37,6 +37,17 @@ func GetMSPContext(c *gin.Context) (*MSPContext, bool) {
 	return ctx, ok
 }
 
+// IsCustomerAllowed 校验目标客户租户是否在该 MSP 员工的授权列表内。
+// 空 AllowedCustomers 视为无授权（fail-closed）。
+func (m *MSPContext) IsCustomerAllowed(customerTenantID int) bool {
+	for _, allowedID := range m.AllowedCustomers {
+		if allowedID == customerTenantID {
+			return true
+		}
+	}
+	return false
+}
+
 // mspCustomerTenantIDKey 是放在 Go context 上的 typed key，避免与其他
 // 中间件传值的字符串 key 冲突。
 type mspCustomerTenantIDKey struct{}

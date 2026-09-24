@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	action := flag.String("action", "status", "plan|apply|status|verify|retry|generate-bootstrap-token")
+	action := flag.String("action", "status", "plan|apply|status|verify|retry|audit-tenants|generate-bootstrap-token")
 	releaseVersion := flag.String("release-version", os.Getenv("ITSM_RELEASE_VERSION"), "release version")
 	requestedBy := flag.String("requested-by", "operator", "audited requester identity")
 	bootstrapToken := flag.String("bootstrap-token", "", "bootstrap token for first admin creation (used with apply action)")
@@ -131,6 +131,14 @@ func main() {
 			exitf("initialization run %d failed: %v", runID, err)
 		}
 		writeJSON(map[string]any{"runId": runID, "status": "succeeded"})
+	case "audit-tenants":
+		// 只读：逐租户跑产品基线的逐组件验证，输出差异报告；
+		// 这是前滚修复方案的输入，不做任何写入。
+		audits, err := productSeeder.AuditTenantBaselines(ctx)
+		if err != nil {
+			exitf("audit tenant baselines: %v", err)
+		}
+		writeJSON(audits)
 	case "status":
 		status, err := store.Status(ctx, scope)
 		if err != nil {

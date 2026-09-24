@@ -144,13 +144,17 @@ func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, v
 		return err
 	}
 
-	// 7. 提交事务；任一步骤失败已在上方回滚
+	// 7. 记录审计日志 - 任务完成（事务内，保证审计与任务状态原子一致；
+	//    审计写入失败则回滚整个任务完成操作，避免出现"任务已完成但无审计"的状态）
+	if err := e.recordTaskCompletedAudit(ctx, txc, task, variables); err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("记录任务完成审计失败: %w", err)
+	}
+
+	// 8. 提交事务；任一步骤失败已在上方回滚
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败: %w", err)
 	}
-
-	// 8. 记录审计日志 - 任务完成（事务外，仅审计，失败不阻断）
-	e.recordTaskCompletedAudit(ctx, task, variables)
 	return nil
 }
 
@@ -313,7 +317,7 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	return task, nil
 }
 
-func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, task *ent.ProcessTask, variables map[string]interface{}) {
+func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, client *ent.Client, task *ent.ProcessTask, variables map[string]interface{}) error {
 	userID := 0
 	userName := ""
 	if u, ok := ctx.Value("user").(*ent.User); ok {
@@ -321,9 +325,7 @@ func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, task
 		userName = u.Name
 	}
 	variablesBefore := task.TaskVariables
-	if err := e.auditService.RecordTaskCompleted(ctx, task, userID, userName, variablesBefore, variables); err != nil {
-		e.logger.Warnw("audit record failed", "error", err)
-	}
+	return e.auditService.RecordTaskCompletedWithClient(ctx, client, task, userID, userName, variablesBefore, variables)
 }
 
 // mergeVariablesInTx 在事务内合并流程实例变量并返回更新后的实例。

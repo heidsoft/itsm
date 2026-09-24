@@ -118,35 +118,8 @@ export class WorkflowApi {
 
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
     const res = await httpClient.get<
-      | Array<{ id: number; key: string; name: string; description?: string; version: number; status: string; createdAt: string; updatedAt: string; }>
-      | {
-          data?: Array<{
-            id: number;
-            key: string;
-            name: string;
-            description?: string;
-            version: number | string;
-            status?: string;
-            isActive?: boolean;
-            category?: string;
-            bpmnXml?: string;
-            createdAt: string;
-            updatedAt: string;
-          }>;
-          items?: Array<{
-            id: number;
-            key: string;
-            name: string;
-            description?: string;
-            version: number | string;
-            status?: string;
-            isActive?: boolean;
-            category?: string;
-            bpmnXml?: string;
-            createdAt: string;
-            updatedAt: string;
-          }>;
-          list?: Array<{
+      {
+          items: Array<{
             id: number;
             key: string;
             name: string;
@@ -164,8 +137,8 @@ export class WorkflowApi {
         }
     >('/api/v1/bpmn/process-definitions', params);
 
-    const list = Array.isArray(res) ? res : (res.items ?? []);
-    const total = Array.isArray(res) ? list.length : (res.pagination?.total ?? list.length);
+    const list = res.items ?? [];
+    const total = res.pagination?.total ?? list.length;
     const workflows: WorkflowDefinition[] = list.map((item: {
       id: number;
       key: string;
@@ -648,11 +621,6 @@ export class WorkflowApi {
       [key: string]: unknown;
     }
 
-    interface PaginatedResponse<T> {
-      data?: T[];
-      items?: T[];
-    }
-
     // 使用新的版本 API
     const res = await httpClient.get<
       Array<{
@@ -868,18 +836,6 @@ export class WorkflowApi {
       [key: string]: unknown;
     }
 
-    interface PaginatedResponse<T> {
-      data?: T[];
-      items?: T[];
-      instances?: T[];
-      pagination?: {
-        page: number;
-        pageSize: number;
-        total: number;
-      };
-      total?: number;
-    }
-
     const query: Record<string, string | number> = {};
     if (params?.workflowId) query.processDefinitionKey = params.workflowId;
     if (params?.status) query.status = params.status;
@@ -993,11 +949,6 @@ export class WorkflowApi {
       createdTime?: string;
       dueDate?: string;
       [key: string]: unknown;
-    }
-
-    interface PaginatedResponse<T> {
-      data?: T[];
-      items?: T[];
     }
 
     // 后端暂无专用节点实例API，尝试从任务列表获取

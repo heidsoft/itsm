@@ -12,9 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - **登录/刷新响应令牌收敛** — access token 和 refresh token 不再通过 JSON 响应返回，改为仅通过 HttpOnly cookie 下发，防止 XSS 窃取
+- **MSP 跨租户访问加固** — `handlers/msp` 的 `GetCustomerTickets` 与 `AssignMSPTechnician` 现在校验 `AllowedCustomers`，MSP operator 只能访问已授权客户租户，越权访问 fail-closed
+- **Webhook 出站 Header 注入防护** — BPMN Webhook Connector 不再透传用户配置的 `Host`、`X-Forwarded-Host`、`X-Forwarded-For`、`X-Real-IP` 等 12 个敏感 header，防止 SSRF 虚拟主机绕过与 IP 伪造
 
 ### Tooling
 
+- `initialize -action audit-tenants`：逐租户只读基线审计，输出每组件 verified/error 的 JSON 差异报告，作为存量前滚修复方案的输入（写入拦截 + total_changes 不变的测试锁死只读）
 - **Gate C.6 产品口径漂移守卫**（[docs-gate/check-product-drift.sh](./scripts/docs-gate/check-product-drift.sh)）— 把"口径不一致 = 构建失败"作为机器守卫生效，对应 2026-09-22 审计的 5 项无守卫平面（C.6.1 成熟度双向闭合 / C.6.2 领域清单走目录 / C.6.3 零路由域包 / C.6.4 表面棘轮 / C.6.5 覆盖率口径披露）。CI 默认 hard；存量债务（变更管理口径冲突、department/root_cause/dashboard 三个孤儿包）已在 [product-drift-waivers.txt](./scripts/docs-gate/product-drift-waivers.txt) 登记 owner+到期日，**10-31 到期未解决自动反向 FAIL**。详见 [output/product-drift-overdesign-audit-2026-09-22.md](./output/product-drift-overdesign-audit-2026-09-22.md) §5
 - **AGENTS.md 不再硬编码领域清单** — `handlers/<domain>/` 域包清单以目录为准，文档不再漂移；Ghost domain `cab` 已移除
 - **ROADMAP 披露前端覆盖率口径** — 显式声明 jest `collectCoverageFrom` 仅含 `src/lib/**`，避免 80% 门槛被误读为产品覆盖率
@@ -22,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- teams 与工单类型改为按租户按条目 reconcile：存量租户的部分集合可前滚补齐（此前"任一行存在即整段跳过"会让缺口永远补不上），不覆盖客户改名
 - 租户创建不再留下"已建但无基线"的孤儿租户：`POST /api/v1/tenants` 在同一事务内投递 `tenant.bootstrap.install` outbox 命令，入队失败连同租户一起回滚；worker 消费后按命令租户重新加载校验并安装产品基线（复用平台初始化同一套组件，不复制第二套实现），新增 `GET /api/v1/tenants/:id/initialization` 只读接口如实报告逐组件验证结果与命令状态
 - 修复生产环境数据库迁移失败问题：部分迁移脚本内嵌事务控制语句导致整批迁移中止
 - 修复初始化失败被静默吞掉：迁移发现、账本调和与执行任一环节失败都会中止启动；组件写入、事务内校验、租约 fencing 与成功账本现在同一次提交，失败整体回滚，不再残留半成品基线
@@ -36,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复菜单初始化每次运行都重置运维设置的隐藏/停用状态
 - 修复种子配置合并遗漏 `groups` 段：JSON 种子配置中的审批组定义此前被静默丢弃，现按整段替换内置默认并保留未覆盖段（含回归测试）
 - 修复生产部署登录失败：docker-compose 默认 RLS 模式从 `enforce` 改为 `off`，避免未携带租户上下文的公共路由（登录/注册）返回 401
+- **修复通知重复投递** — `notification_delivery_command_handler` 在 connector `Send` 成功后，若更新 `NotificationDelivery` 状态为 `sent` 失败，不再返回 error 触发 worker 重试（消息已送达），改为记录告警并返回 nil，避免同一通知被重复发送
+- **修复 BPMN 任务完成审计丢失** — `CustomProcessEngine.CompleteTask` 现在将任务完成审计（`ProcessAuditLog`）写入与任务状态更新同一事务内，审计写入失败则整体回滚，杜绝"任务已完成但无审计记录"的不一致状态
 
 ### Changed
 

@@ -246,15 +246,10 @@ export interface ListIncidentsRequest extends ListQueryParams {
   [key: string]: unknown;
 }
 
-export interface ListIncidentsResponse extends PaginationResponse<Incident> {
-  incidents: Incident[];
-  items?: Incident[]; // 保持向后兼容
-}
+export type ListIncidentsResponse = PaginationResponse<Incident>;
 
 interface IncidentListPayload {
-  incidents?: Incident[];
   items?: Incident[];
-  data?: Incident[];
   total?: number;
   page?: number;
   pageSize?: number;
@@ -373,14 +368,12 @@ export class IncidentAPI {
       );
 
       const response = await httpClient.get<IncidentListPayload>(API_URLS.INCIDENTS(), cleanParams);
-      const incidents = response.incidents ?? [];
+      const items = response.items ?? [];
       const page = response.page ?? 1;
       const pageSize = response.pageSize ?? 10;
       const total = response.total ?? 0;
       return {
-        incidents,
-        items: incidents,
-        data: incidents,
+        items,
         total,
         page,
         pageSize,
@@ -858,7 +851,7 @@ export class IncidentAPI {
     return {
       list: (params?: ListIncidentsRequest) => this.listIncidents(params),
       items: (params?: ListIncidentsRequest) =>
-        this.listIncidents(params).then((r: ListIncidentsResponse) => r.incidents || r.data || []),
+        this.listIncidents(params).then((r: ListIncidentsResponse) => r.items ?? []),
     };
   }
 

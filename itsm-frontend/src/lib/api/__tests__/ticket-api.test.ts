@@ -192,7 +192,7 @@ describe('TicketApi', () => {
 
   describe('getSubtasks', () => {
     it('should return tickets array', async () => {
-      mockGet.mockResolvedValue({ tickets: [{ id: 2 }] });
+      mockGet.mockResolvedValue([{ id: 2 }]);
       const result = await TicketApi.getSubtasks(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/1/subtasks');
       expect(result).toEqual([{ id: 2 }]);

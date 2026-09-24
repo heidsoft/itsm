@@ -175,11 +175,10 @@ export class TicketApi {
 
   // Get subtasks (child tickets)
   static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
-    const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(
+    const response = await httpClient.get<Ticket[]>(
       `/api/v1/tickets/${parentTicketId}/subtasks`
     );
-     
-    return (response as any).tickets || (response as any).data || response || [];
+    return response ?? [];
   }
 
   // Create subtask

@@ -32,10 +32,10 @@ describe('IncidentAPI', () => {
 
   describe('listIncidents', () => {
     it('should list incidents', async () => {
-      mockGet.mockResolvedValue({ incidents: [{ id: 1, title: 'Server down' }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1, title: 'Server down' }], total: 1 });
       const result = await IncidentAPI.listIncidents({});
       expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents', expect.any(Object));
-      expect(result.incidents).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 
@@ -347,13 +347,13 @@ describe('IncidentAPI', () => {
 
   describe('incidents accessor', () => {
     it('should have list method', async () => {
-      mockGet.mockResolvedValue({ incidents: [{ id: 1 }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1 }], total: 1 });
       const result = await IncidentAPI.incidents.list();
-      expect(result.incidents).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
 
     it('should have items method that extracts items', async () => {
-      mockGet.mockResolvedValue({ incidents: [{ id: 1 }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1 }], total: 1 });
       const result = await IncidentAPI.incidents.items();
       expect(result).toEqual([{ id: 1 }]);
     });

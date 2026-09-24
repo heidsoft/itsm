@@ -102,9 +102,9 @@ func (s *Seeder) ProvisionTenant(ctx context.Context, tenantID int, templateVers
 // ComponentVerification reports one component's read-only verification result
 // for a tenant scope. It is what the tenant initialization status API returns.
 type ComponentVerification struct {
-	Component string
-	Verified  bool
-	Error     string
+	Component string `json:"component"`
+	Verified  bool   `json:"verified"`
+	Error     string `json:"error,omitempty"`
 }
 
 // VerifyTenantBaseline verifies a tenant's product baseline without writing.

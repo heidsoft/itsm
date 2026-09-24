@@ -84,7 +84,7 @@ export function useIncidentsQuery(
         source: filters.source,
       });
       if (requestIdRef.current !== requestId) return;
-      const items = response.incidents || response.data || [];
+      const items = response.items ?? [];
 
       // H3: only fetch the user directory when at least one row has a
       // reporterId to enrich. Skips the round-trip entirely for lists of
@@ -117,7 +117,7 @@ export function useIncidentsQuery(
       });
 
       setIncidents(enriched);
-      setTotal(response.total ?? enriched.length);
+      setTotal(response.total);
     } catch (error) {
       if (requestIdRef.current !== requestId) return;
       console.error('Failed to fetch incidents:', error);

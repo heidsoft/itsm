@@ -109,8 +109,7 @@ export interface ListIncidentsParams {
 
 // 事件列表响应
 export interface ListIncidentsResponse {
-  incidents: Incident[];
-  items: Incident[]; // 为了兼容 global-search-api
+  items: Incident[];
   total: number;
   page: number;
   pageSize: number;
@@ -134,12 +133,7 @@ class IncidentService {
 
   // 获取事件列表
   async listIncidents(params: ListIncidentsParams = {}): Promise<ListIncidentsResponse> {
-    const response = await httpClient.get<ListIncidentsResponse>(this.baseUrl, params);
-    // 确保 items 存在，兼容 global-search-api
-    if (!response.items && response.incidents) {
-      response.items = response.incidents;
-    }
-    return response;
+    return httpClient.get<ListIncidentsResponse>(this.baseUrl, params);
   }
 
   // 兼容 global-search-api 的别名方法

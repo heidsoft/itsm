@@ -15,7 +15,7 @@ import {
   type ProblemRemoveAssociationRequest,
 } from '@/lib/api/problem-api';
 import { TicketApi } from '@/lib/api/ticket-api';
-import { IncidentAPI } from '@/lib/api/incident-api';
+import { IncidentAPI, type Incident } from '@/lib/api/incident-api';
 import { ChangeApi } from '@/lib/api/change-api';
 
 interface ProblemAssociationsTabProps {
@@ -132,7 +132,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         }
         case 'incident': {
           const data = await IncidentAPI.listIncidents({ keyword: value, page: 1, pageSize: 20 });
-          results = (data.incidents || data.data || []).map((i: any) => ({
+          results = (data.items ?? []).map((i: Incident) => ({
             id: i.id,
             title: i.title,
             status: i.status,

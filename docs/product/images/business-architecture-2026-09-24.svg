@@ -1,0 +1,175 @@
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif">
+  <!-- 背景 -->
+  <rect width="1280" height="720" fill="#fafbfc"/>
+
+  <!-- 标题 -->
+  <text x="40" y="30" font-size="20" font-weight="600" fill="#111827">ITSM 业务架构图</text>
+  <text x="180" y="30" font-size="14" font-weight="400" fill="#6b7280">2026-09-24 快照 · 对内治理版</text>
+  <text x="40" y="50" font-size="11" fill="#9ca3af">颜色 = 成熟度(🟢GA候选 / 🟡Pilot / ⚪Disabled) · 图标 = 优先级(🔥P0 / ⭐P1 / ·P2) · 角标 W = waiver 债务(2026-10-31 到期)</text>
+
+  <!-- 箭头标记 -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-light" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"/>
+    </marker>
+    <marker id="arrow-cmdb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- ========== Layer 标签 ========== -->
+  <text x="14" y="105" font-size="10" font-weight="600" fill="#9ca3af">L0</text>
+  <text x="14" y="118" font-size="9" fill="#9ca3af">入口</text>
+  <text x="14" y="200" font-size="10" font-weight="600" fill="#9ca3af">L1</text>
+  <text x="14" y="213" font-size="9" fill="#9ca3af">编排</text>
+  <text x="14" y="295" font-size="10" font-weight="600" fill="#9ca3af">L2</text>
+  <text x="14" y="308" font-size="9" fill="#9ca3af">业务域</text>
+  <text x="14" y="408" font-size="10" font-weight="600" fill="#9ca3af">L3</text>
+  <text x="14" y="421" font-size="9" fill="#9ca3af">上下文</text>
+  <text x="14" y="510" font-size="10" font-weight="600" fill="#9ca3af">L4</text>
+  <text x="14" y="523" font-size="9" fill="#9ca3af">横切</text>
+  <text x="14" y="610" font-size="10" font-weight="600" fill="#9ca3af">L5</text>
+  <text x="14" y="623" font-size="9" fill="#9ca3af">运营</text>
+
+  <!-- ========== Layer 0: 入口 ========== -->
+  <g>
+    <rect x="360" y="80" width="220" height="55" rx="6" fill="#ffffff" stroke="#10b981" stroke-width="1.5"/>
+    <text x="470" y="102" font-size="13" font-weight="600" fill="#065f46" text-anchor="middle">邮件接入</text>
+    <text x="470" y="121" font-size="10" fill="#6b7280" text-anchor="middle">🟢 GA候选 · 🔥 P0</text>
+  </g>
+  <g>
+    <rect x="700" y="80" width="220" height="55" rx="6" fill="#ffffff" stroke="#10b981" stroke-width="1.5"/>
+    <text x="810" y="102" font-size="13" font-weight="600" fill="#065f46" text-anchor="middle">IM / Webhook 入站</text>
+    <text x="810" y="121" font-size="10" fill="#6b7280" text-anchor="middle">🟢 GA候选 · 🔥 P0</text>
+  </g>
+
+  <!-- ========== Layer 1: 编排(BPMN 加粗) ========== -->
+  <g>
+    <rect x="490" y="170" width="320" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+    <text x="650" y="194" font-size="15" font-weight="700" fill="#92400e" text-anchor="middle">★ BPMN 引擎</text>
+    <text x="650" y="210" font-size="9" fill="#92400e" text-anchor="middle">能力契约 CONSTRAINTS#3 · 唯一流程编排层</text>
+    <text x="650" y="223" font-size="10" fill="#6b7280" text-anchor="middle">🟡 Pilot · 🔥 P0-waiver (D-1 待拍板)</text>
+  </g>
+
+  <!-- ========== Layer 2: 业务域(4 主链路) ========== -->
+  <g>
+    <rect x="60" y="265" width="240" height="60" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="180" y="287" font-size="13" font-weight="600" fill="#065f46" text-anchor="middle">工单 / 事件</text>
+    <text x="180" y="303" font-size="10" fill="#6b7280" text-anchor="middle">链路 A: 告警→事件→CI→SLA→恢复</text>
+    <text x="180" y="317" font-size="10" fill="#065f46" text-anchor="middle">🟢 GA候选 · 🔥 P0</text>
+  </g>
+  <g>
+    <rect x="340" y="265" width="240" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="460" y="287" font-size="13" font-weight="600" fill="#713f12" text-anchor="middle">变更</text>
+    <text x="460" y="303" font-size="10" fill="#6b7280" text-anchor="middle">链路 C: 受影响 CI → 风险 → CAB</text>
+    <text x="460" y="317" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · 🔥 P0-waiver (D-W1)</text>
+  </g>
+  <g>
+    <rect x="620" y="265" width="240" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="740" y="287" font-size="13" font-weight="600" fill="#713f12" text-anchor="middle">问题 / 已知错误</text>
+    <text x="740" y="303" font-size="10" fill="#6b7280" text-anchor="middle">链路 B: 重复→问题→KE→知识</text>
+    <text x="740" y="317" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · ⭐ P1</text>
+  </g>
+  <g>
+    <rect x="900" y="265" width="240" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="1020" y="287" font-size="13" font-weight="600" fill="#713f12" text-anchor="middle">服务目录 / 请求</text>
+    <text x="1020" y="303" font-size="10" fill="#6b7280" text-anchor="middle">链路 D: 目录→表单→交付</text>
+    <text x="1020" y="317" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · ⭐ P1</text>
+  </g>
+
+  <!-- ========== Layer 3: 上下文(CMDB 加宽) ========== -->
+  <g>
+    <rect x="370" y="380" width="540" height="60" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="640" y="403" font-size="14" font-weight="700" fill="#065f46" text-anchor="middle">CMDB</text>
+    <text x="640" y="418" font-size="10" fill="#6b7280" text-anchor="middle">业务引用同一 CI 身份 / 关系 / 来源语义 (CONSTRAINTS#2)</text>
+    <text x="640" y="432" font-size="10" fill="#065f46" text-anchor="middle">🟢 GA核心 + 🟡 发现 · 🔥 P0 · ADR-003 tenant-wide</text>
+  </g>
+
+  <!-- ========== Layer 4: 横切(5) ========== -->
+  <g>
+    <rect x="40" y="475" width="220" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="150" y="497" font-size="12" font-weight="600" fill="#713f12" text-anchor="middle">AI 原生</text>
+    <text x="150" y="513" font-size="10" fill="#6b7280" text-anchor="middle">LLM Gateway / 分诊</text>
+    <text x="150" y="527" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · · P2</text>
+  </g>
+  <g>
+    <rect x="280" y="475" width="220" height="60" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="390" y="497" font-size="12" font-weight="600" fill="#065f46" text-anchor="middle">SLA</text>
+    <text x="390" y="513" font-size="10" fill="#6b7280" text-anchor="middle">截止 / 违规 / 预警</text>
+    <text x="390" y="527" font-size="10" fill="#065f46" text-anchor="middle">🟢 GA候选 · ⭐ P1</text>
+  </g>
+  <g>
+    <rect x="520" y="475" width="220" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="630" y="497" font-size="12" font-weight="600" fill="#713f12" text-anchor="middle">知识 / RAG</text>
+    <text x="630" y="513" font-size="10" fill="#6b7280" text-anchor="middle">文章 / 向量检索</text>
+    <text x="630" y="527" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · ⭐ P1</text>
+  </g>
+  <g>
+    <rect x="760" y="475" width="220" height="60" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="870" y="497" font-size="12" font-weight="600" fill="#713f12" text-anchor="middle">连接器 / 通知</text>
+    <text x="870" y="513" font-size="10" fill="#6b7280" text-anchor="middle">飞书 / 钉钉 / 企微 / Webhook</text>
+    <text x="870" y="527" font-size="10" fill="#713f12" text-anchor="middle">🟡/⚪ · 🔥 P0-waiver (D-2)</text>
+  </g>
+  <g>
+    <rect x="1000" y="475" width="220" height="60" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="1110" y="497" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle">RBAC / 多租户 / 审计</text>
+    <text x="1110" y="513" font-size="10" fill="#6b7280" text-anchor="middle">5 道守卫 · ADR-003</text>
+    <text x="1110" y="527" font-size="10" fill="#065f46" text-anchor="middle">🟢 GA候选 · 🔥 P0</text>
+  </g>
+
+  <!-- ========== Layer 5: 运营 ========== -->
+  <g>
+    <rect x="520" y="575" width="240" height="55" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5"/>
+    <text x="640" y="597" font-size="13" font-weight="600" fill="#713f12" text-anchor="middle">报表 / 运营</text>
+    <text x="640" y="614" font-size="10" fill="#6b7280" text-anchor="middle">局部指标 + Dashboard</text>
+    <text x="640" y="627" font-size="10" fill="#713f12" text-anchor="middle">🟡 Pilot · · P2</text>
+  </g>
+
+  <!-- ========== 关系箭头 ========== -->
+  <!-- Layer 0 → Layer 2 (入口到工单、变更、问题) -->
+  <line x1="470" y1="135" x2="180" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="810" y1="135" x2="180" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="810" y1="135" x2="460" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="810" y1="135" x2="740" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Layer 1 BPMN → Layer 2 (4 主链路) -->
+  <line x1="590" y1="230" x2="180" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="620" y1="230" x2="460" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="680" y1="230" x2="740" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="710" y1="230" x2="1020" y2="265" stroke="#6b7280" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2 → Layer 3 CMDB (业务域引用 CMDB) -->
+  <line x1="180" y1="325" x2="450" y2="380" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cmdb)"/>
+  <line x1="460" y1="325" x2="580" y2="380" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cmdb)"/>
+  <line x1="740" y1="325" x2="700" y2="380" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cmdb)"/>
+  <line x1="1020" y1="325" x2="830" y2="380" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-cmdb)"/>
+
+  <!-- Layer 4 横切 → Layer 2 (虚线,可选) -->
+  <!-- AI → 工单/事件(AI 分诊) -->
+  <line x1="150" y1="475" x2="150" y2="325" stroke="#9ca3af" stroke-width="0.8" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+  <!-- SLA → 工单/事件 -->
+  <line x1="350" y1="475" x2="200" y2="325" stroke="#9ca3af" stroke-width="0.8" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+  <!-- SLA → 变更 -->
+  <line x1="430" y1="475" x2="460" y2="325" stroke="#9ca3af" stroke-width="0.8" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+  <!-- 知识/RAG → 问题 -->
+  <line x1="630" y1="475" x2="740" y2="325" stroke="#9ca3af" stroke-width="0.8" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+  <!-- 连接器 → 业务域全部(虚线轻) -->
+  <line x1="830" y1="475" x2="1040" y2="325" stroke="#9ca3af" stroke-width="0.8" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+  <line x1="830" y1="475" x2="180" y2="325" stroke="#9ca3af" stroke-width="0.5" stroke-dasharray="2,3" marker-end="url(#arrow-light)"/>
+
+  <!-- RBAC 横切所有(强虚线,警示色) -->
+  <line x1="1110" y1="475" x2="1110" y2="335" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <line x1="1100" y1="475" x2="180" y2="335" stroke="#ef4444" stroke-width="0.6" stroke-dasharray="3,3"/>
+  <line x1="1100" y1="475" x2="640" y2="445" stroke="#ef4444" stroke-width="0.6" stroke-dasharray="3,3"/>
+
+  <!-- 底部说明 -->
+  <g transform="translate(40, 658)">
+    <text x="0" y="0" font-size="11" font-weight="600" fill="#111827">治理闭环参考:</text>
+    <text x="0" y="16" font-size="10" fill="#6b7280">授权平面 5 道守卫(零漂移: cmd/authz-gen + 5 项测试) · 产品口径 Gate C.6.1-C.6.5(hard,10-31 反向 FAIL)</text>
+    <text x="0" y="30" font-size="10" fill="#6b7280">CONSTRAINTS 强约束: BPMN 唯一编排(#3) + CMDB 上下文(#2) + 后端状态机权威(#5) · 多租户失败关闭(#9)</text>
+    <text x="0" y="44" font-size="10" fill="#9ca3af">快照来源: product-canonical-2026-09-16 + drift-audit-2026-09-22 + decision-memo-2026-09-23 + global-p0-2026-09-16</text>
+  </g>
+</svg>
