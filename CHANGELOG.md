@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **修复通知重复投递** — `notification_delivery_command_handler` 在 connector `Send` 成功后，若更新 `NotificationDelivery` 状态为 `sent` 失败，不再返回 error 触发 worker 重试（消息已送达），改为记录告警并返回 nil，避免同一通知被重复发送
 - **修复 BPMN 任务完成审计丢失** — `CustomProcessEngine.CompleteTask` 现在将任务完成审计（`ProcessAuditLog`）写入与任务状态更新同一事务内，审计写入失败则整体回滚，杜绝"任务已完成但无审计记录"的不一致状态
 - **修复单条连接器配置解密失败导致全部连接器不可用** — `PersistentConfigStore.LoadAll` 逐条容错：单条解密或反序列化失败跳过并记录 ID，不影响其余连接器正常加载；新增 `LoadAllWithFailures` 返回失败 ID 列表供运维排查
+- **修复批量关闭/更新工单部分失败中断** — `BatchCloseTickets` 与 `BatchUpdatePriority` 改为逐条容错，单条状态机校验失败不阻塞其余工单，结果通过 `BatchResult` 返回成功数与失败 ID 列表
+- **优化工单分析查询** — `GetTicketAnalytics` 使用 `Select` 仅加载 status/priority/created_at/updated_at 四列，合并二次查询为单次遍历，减少内存占用和 DB IO
 
 ### Changed
 

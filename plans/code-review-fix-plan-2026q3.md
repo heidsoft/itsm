@@ -806,7 +806,7 @@ cd itsm-frontend && npm run type-check && npm run test:unit
 
 ---
 
-> **计划状态：** In Progress。Batch 1-2 已完成（2026-09-24），按 Batch 3 → 6 顺序继续。
+> **计划状态：** In Progress。Batch 1-3 已完成（2026-09-24），按 Batch 4 → 6 顺序继续。
 
 ### Batch 1 执行记录（2026-09-24）
 
@@ -828,5 +828,14 @@ cd itsm-frontend && npm run type-check && npm run test:unit
 | B-1 HKDF 密钥派生 + 版本字节 | ✅ | `middleware/encryption.go` 新加密用 HKDF+随机盐+版本前缀，旧密文 fallback 解密 |
 | B-2 单条解密失败不阻塞 | ✅ | `connector/persistent_store.go` LoadAll 逐条容错，新增 LoadAllWithFailures 返回失败 ID |
 | B-3 敏感字段白名单扩充 | ✅ | `middleware/mask.go` 新增 signing_secret/corp_secret/agent_secret/encrypt_key/app_key/bot_token |
+
+验证：`go build ./...` ✅、`go vet ./...` ✅
+
+### Batch 3 执行记录（2026-09-24）
+
+| 任务 | 状态 | 说明 |
+|:---|:---|:---|
+| D-1 批量操作容错返回 | ✅ | `ticket_service.go` BatchCloseTickets/BatchUpdatePriority 改为 BatchResult 逐条容错 |
+| D-2 Analytics 查询优化 | ✅ | `ticket_service.go` GetTicketAnalytics 用 Select 仅加载 4 列 + 合并二次查询 |
 
 验证：`go build ./...` ✅、`go vet ./...` ✅

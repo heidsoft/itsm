@@ -2039,35 +2039,55 @@ func (s *TicketService) AssignTickets(ctx context.Context, tenantID int, ticketI
 	return nil
 }
 
-// BatchCloseTickets 批量关闭工单
-func (s *TicketService) BatchCloseTickets(ctx context.Context, ticketIDs []int, tenantID int, closeReason string) error {
+// BatchCloseTickets 批量关闭工单。
+// 逐条执行状态机校验，单条失败不阻塞其余工单，结果通过 BatchResult 返回。
+func (s *TicketService) BatchCloseTickets(ctx context.Context, ticketIDs []int, tenantID int, closeReason string) *BatchResult {
+	result := &BatchResult{Total: len(ticketIDs)}
 	for _, ticketID := range ticketIDs {
 		if _, err := s.CloseTicket(ctx, ticketID, tenantID, closeReason); err != nil {
-			return fmt.Errorf("关闭工单 %d 失败: %v", ticketID, err)
+			result.FailedIDs = append(result.FailedIDs, ticketID)
+			s.logger.Warnw("batch close: skip ticket", "ticket_id", ticketID, "error", err)
+		} else {
+			result.Succeeded++
 		}
 	}
-	return nil
+	return result
 }
 
-// BatchUpdatePriority 批量更新优先级
-func (s *TicketService) BatchUpdatePriority(ctx context.Context, ticketIDs []int, priority string, tenantID int) error {
+// BatchUpdatePriority 批量更新优先级。
+// 逐条执行，单条失败不阻塞其余工单，结果通过 BatchResult 返回。
+func (s *TicketService) BatchUpdatePriority(ctx context.Context, ticketIDs []int, priority string, tenantID int) *BatchResult {
+	result := &BatchResult{Total: len(ticketIDs)}
 	for _, ticketID := range ticketIDs {
 		current, err := s.repo.GetByID(ctx, ticketID, tenantID)
 		if err != nil {
-			return fmt.Errorf("查询工单 %d 失败: %v", ticketID, err)
+			result.FailedIDs = append(result.FailedIDs, ticketID)
+			s.logger.Warnw("batch update priority: skip ticket", "ticket_id", ticketID, "error", err)
+			continue
 		}
 		p := ticket.Priority(priority)
 		_, err = s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{
 			Priority: &p, Version: current.Version,
 		}, tenantID, "batch_priority_updated")
 		if err != nil {
-			return fmt.Errorf("更新工单 %d 优先级失败: %v", ticketID, err)
+			result.FailedIDs = append(result.FailedIDs, ticketID)
+			s.logger.Warnw("batch update priority: skip ticket", "ticket_id", ticketID, "error", err)
+		} else {
+			result.Succeeded++
 		}
 	}
-	return nil
+	return result
 }
 
-// GetTicketAnalytics 获取工单分析数据
+// BatchResult 批量操作结果
+type BatchResult struct {
+	Total     int   `json:"total"`
+	Succeeded int   `json:"succeeded"`
+	FailedIDs []int `json:"failedIds"`
+}
+
+// GetTicketAnalytics 获取工单分析数据。
+// 使用 Select 查询仅加载状态、优先级和时间字段，避免全量拉取所有 Ticket 列。
 func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, dateFrom, dateTo time.Time) (*dto.TicketAnalyticsResponse, error) {
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for analytics")
@@ -2079,32 +2099,35 @@ func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, da
 	if !dateTo.IsZero() {
 		query = query.Where(entTicket.CreatedAtLTE(dateTo))
 	}
+
+	// 1. 总数
 	total, err := query.Count(ctx)
 	if err != nil {
 		return nil, err
 	}
-	tickets, err := query.All(ctx)
+
+	// 2. 仅加载状态/优先级/时间字段（不加载 title/description/body 等大字段）
+	// Select 告诉 Ent 只 SELECT 这四列，减少 IO；结果仍是 []*ent.Ticket，字段按需填充。
+	rows, err := query.
+		Select(entTicket.FieldStatus, entTicket.FieldPriority, entTicket.FieldCreatedAt, entTicket.FieldUpdatedAt).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	statusStats := make(map[string]int)
 	priorityStats := make(map[string]int)
-	for _, t := range tickets {
-		statusStats[t.Status]++
-		priorityStats[t.Priority]++
-	}
-	resolvedTickets, err := query.Where(entTicket.StatusEQ("resolved")).All(ctx)
-	if err != nil {
-		return nil, err
-	}
 	var totalResolutionTime time.Duration
 	resolvedCount := 0
-	for _, t := range resolvedTickets {
-		if !t.UpdatedAt.IsZero() {
+	for _, t := range rows {
+		statusStats[t.Status]++
+		priorityStats[t.Priority]++
+		if t.Status == "resolved" && !t.UpdatedAt.IsZero() {
 			totalResolutionTime += t.UpdatedAt.Sub(t.CreatedAt)
 			resolvedCount++
 		}
 	}
+
 	avgResolutionTime := time.Duration(0)
 	if resolvedCount > 0 {
 		avgResolutionTime = totalResolutionTime / time.Duration(resolvedCount)
