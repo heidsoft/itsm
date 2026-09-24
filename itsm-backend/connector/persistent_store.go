@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 
 	"itsm-backend/ent"
@@ -69,24 +68,45 @@ func (s *PersistentConfigStore) Delete(ctx context.Context, tenantID int, name, 
 	return err
 }
 
+// LoadAllResult 包含加载成功的配置和加载失败的记录 ID。
+type LoadAllResult struct {
+	Configs   []Config
+	FailedIDs []int
+}
+
+// LoadAll 加载所有已启用连接器配置。
+// 单条解密失败不阻塞其余记录，失败 ID 通过 LoadAllResult.FailedIDs 返回。
 func (s *PersistentConfigStore) LoadAll(ctx context.Context) ([]Config, error) {
+	result, err := s.LoadAllWithFailures(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return result.Configs, nil
+}
+
+// LoadAllWithFailures 加载所有已启用连接器配置，并返回解密失败的记录 ID。
+// 单条解密或反序列化失败时跳过该条，记录到 FailedIDs，不影响其余记录加载。
+func (s *PersistentConfigStore) LoadAllWithFailures(ctx context.Context) (*LoadAllResult, error) {
 	entities, err := s.client.ConnectorConfig.Query().Where(connectorconfig.EnabledEQ(true)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	configs := make([]Config, 0, len(entities))
+	var failedIDs []int
 	for _, entity := range entities {
 		plain, decryptErr := s.encryption.Decrypt(entity.EncryptedCredentials)
 		if decryptErr != nil {
-			return nil, fmt.Errorf("decrypt connector config %d: %w", entity.ID, decryptErr)
+			failedIDs = append(failedIDs, entity.ID)
+			continue
 		}
 		credentials := map[string]string{}
 		if plain != "" {
 			if decodeErr := json.Unmarshal([]byte(plain), &credentials); decodeErr != nil {
-				return nil, fmt.Errorf("decode connector credentials %d: %w", entity.ID, decodeErr)
+				failedIDs = append(failedIDs, entity.ID)
+				continue
 			}
 		}
 		configs = append(configs, Config{TenantID: entity.TenantID, Name: entity.Name, Provider: entity.Provider, Type: ConnectorType(entity.ConnectorType), Enabled: entity.Enabled, Credentials: credentials, Settings: entity.Settings, Labels: entity.Labels, CreatedAt: entity.CreatedAt, UpdatedAt: entity.UpdatedAt})
 	}
-	return configs, nil
+	return &LoadAllResult{Configs: configs, FailedIDs: failedIDs}, nil
 }

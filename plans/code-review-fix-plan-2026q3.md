@@ -806,7 +806,7 @@ cd itsm-frontend && npm run type-check && npm run test:unit
 
 ---
 
-> **计划状态：** In Progress。Batch 1 已完成（2026-09-24），按 Batch 2 → 6 顺序继续。
+> **计划状态：** In Progress。Batch 1-2 已完成（2026-09-24），按 Batch 3 → 6 顺序继续。
 
 ### Batch 1 执行记录（2026-09-24）
 
@@ -820,3 +820,13 @@ cd itsm-frontend && npm run type-check && npm run test:unit
 | C-2 BPMN 审计事务内 | ✅ | `bpmn_process_executor.go` + `bpmn_audit_service.go` 审计写入移入 CompleteTask 事务 |
 
 验证：`go build ./...` ✅、`go vet ./...` ✅；窄包 ent 测试因环境无 C 编译器（clang/gcc 缺失，CGO SQLite 无法编译）未能本地运行，需在有 CGO 的 CI 环境执行。
+
+### Batch 2 执行记录（2026-09-24）
+
+| 任务 | 状态 | 说明 |
+|:---|:---|:---|
+| B-1 HKDF 密钥派生 + 版本字节 | ✅ | `middleware/encryption.go` 新加密用 HKDF+随机盐+版本前缀，旧密文 fallback 解密 |
+| B-2 单条解密失败不阻塞 | ✅ | `connector/persistent_store.go` LoadAll 逐条容错，新增 LoadAllWithFailures 返回失败 ID |
+| B-3 敏感字段白名单扩充 | ✅ | `middleware/mask.go` 新增 signing_secret/corp_secret/agent_secret/encrypt_key/app_key/bot_token |
+
+验证：`go build ./...` ✅、`go vet ./...` ✅

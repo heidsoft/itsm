@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **登录/刷新响应令牌收敛** — access token 和 refresh token 不再通过 JSON 响应返回，改为仅通过 HttpOnly cookie 下发，防止 XSS 窃取
 - **MSP 跨租户访问加固** — `handlers/msp` 的 `GetCustomerTickets` 与 `AssignMSPTechnician` 现在校验 `AllowedCustomers`，MSP operator 只能访问已授权客户租户，越权访问 fail-closed
 - **Webhook 出站 Header 注入防护** — BPMN Webhook Connector 不再透传用户配置的 `Host`、`X-Forwarded-Host`、`X-Forwarded-For`、`X-Real-IP` 等 12 个敏感 header，防止 SSRF 虚拟主机绕过与 IP 伪造
+- **加密密钥派生升级** — `EncryptionService` 从确定性 `SHA256(secret)` 升级为 HKDF-SHA256 + 随机盐 + 版本字节；新密文格式 `version(1) || salt_len(2) || salt || nonce(12) || ciphertext`，旧密文自动 fallback 解密（迁移期兼容），为未来密钥轮换奠定基础
+- **审计日志敏感字段掩码扩充** — `MaskSensitiveFields` 新增 `signing_secret`、`corp_secret`、`agent_secret`、`encrypt_key`、`app_key`、`bot_token` 等 connector 密钥字段的正则规则，防止审计日志泄露连接器凭据
 
 ### Tooling
 
@@ -42,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复生产部署登录失败：docker-compose 默认 RLS 模式从 `enforce` 改为 `off`，避免未携带租户上下文的公共路由（登录/注册）返回 401
 - **修复通知重复投递** — `notification_delivery_command_handler` 在 connector `Send` 成功后，若更新 `NotificationDelivery` 状态为 `sent` 失败，不再返回 error 触发 worker 重试（消息已送达），改为记录告警并返回 nil，避免同一通知被重复发送
 - **修复 BPMN 任务完成审计丢失** — `CustomProcessEngine.CompleteTask` 现在将任务完成审计（`ProcessAuditLog`）写入与任务状态更新同一事务内，审计写入失败则整体回滚，杜绝"任务已完成但无审计记录"的不一致状态
+- **修复单条连接器配置解密失败导致全部连接器不可用** — `PersistentConfigStore.LoadAll` 逐条容错：单条解密或反序列化失败跳过并记录 ID，不影响其余连接器正常加载；新增 `LoadAllWithFailures` 返回失败 ID 列表供运维排查
 
 ### Changed
 

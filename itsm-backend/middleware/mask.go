@@ -16,7 +16,7 @@ var maskRules = []struct {
 	{regexp.MustCompile(`(?i)"(password|passwd|pwd|current_password|new_password|confirm_password)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(api[_-]?key|apikey|x-api-key)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(access[_-]?token|refresh[_-]?token|id[_-]?token|auth[_-]?token|bearer[_-]?token|jwt|session[_-]?token|csrf[_-]?token)"\s*:\s*"[^"]*"`), `"$1":"***"`},
-	{regexp.MustCompile(`(?i)"(secret|client[_-]?secret|app[_-]?secret|private[_-]?key|signing[_-]?key|hmac[_-]?key)"\s*:\s*"[^"]*"`), `"$1":"***"`},
+	{regexp.MustCompile(`(?i)"(secret|client[_-]?secret|app[_-]?secret|signing[_-]?secret|corp[_-]?secret|agent[_-]?secret|encrypt[_-]?key|private[_-]?key|signing[_-]?key|hmac[_-]?key)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(authorization|proxy-authorization)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(cookie|set-cookie)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(credit[_-]?card|card[_-]?number|cc[_-]?num|cvv|cvc)"\s*:\s*"[^"]*"`), `"$1":"***"`},
@@ -25,8 +25,8 @@ var maskRules = []struct {
 	{regexp.MustCompile(`(?i)"(phone|mobile|tel|telephone)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(email|e-mail)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	{regexp.MustCompile(`(?i)"(address|street|postal[_-]?code|zip[_-]?code)"\s*:\s*"[^"]*"`), `"$1":"***"`},
-	{regexp.MustCompile(`(?i)"(id[_-]?token|oauth[_-]?token|feishu[_-]?token|wecom[_-]?token|dingtalk[_-]?token)"\s*:\s*"[^"]*"`), `"$1":"***"`},
-	{regexp.MustCompile(`(?i)"(db[_-]?password|database[_-]?password|redis[_-]?password|smtp[_-]?password)"\s*:\s*"[^"]*"`), `"$1":"***"`},
+	{regexp.MustCompile(`(?i)"(id[_-]?token|oauth[_-]?token|feishu[_-]?token|wecom[_-]?token|dingtalk[_-]?token|bot[_-]?token)"\s*:\s*"[^"]*"`), `"$1":"***"`},
+	{regexp.MustCompile(`(?i)"(app[_-]?key|db[_-]?password|database[_-]?password|redis[_-]?password|smtp[_-]?password)"\s*:\s*"[^"]*"`), `"$1":"***"`},
 	// Generic "token" fallback — apply last so more specific rules above win
 	{regexp.MustCompile(`(?i)"token"\s*:\s*"[^"]*"`), `"token":"***"`},
 }
