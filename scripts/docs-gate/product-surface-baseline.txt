@@ -13,7 +13,7 @@
 # 基线建立日期：2026-09-22（来源：output/product-drift-overdesign-audit-2026-09-22.md §1.2）
 
 handlers_dirs=68          # itsm-backend/handlers/ 一级域包数（2026-09-22 移除空目录 handlers/team 后）
-service_go_files=326      # itsm-backend/service/*.go 文件数（8 月评审 281 → 本次 326，已反向恶化）
-bootstrap_app_lines=1776  # itsm-backend/internal/bootstrap/app.go 行数（目标 <300）
+service_go_files=327      # itsm-backend/service/*.go 文件数（8 月评审 281 → 326 已反向恶化；2026-09-24 +1=bpmn_template_digest.go，为组件 checksum 提供内嵌 BPMN 内容摘要，属租户基线版本化主链路）
+bootstrap_app_lines=1805  # itsm-backend/internal/bootstrap/app.go 行数（目标 <300；2026-09-24 +29=租户开通 outbox 命令接线，POST /api/v1/tenants 的 tenant.bootstrap.install 主链路）
 ent_schema_files=132      # itsm-backend/ent/schema/*.go 实体数
 frontend_pages=168        # itsm-frontend/src/app/**/page.tsx 页面数（新增页面需指向契约主链路）

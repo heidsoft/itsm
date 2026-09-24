@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
+- 产品表面棘轮基线上调 `service_go_files` 326→327、`bootstrap_app_lines` 1776→1805：分别对应组件 checksum 的内嵌 BPMN 摘要（`service/bpmn_template_digest.go`）与租户开通 outbox 接线（`POST /api/v1/tenants` 的 `tenant.bootstrap.install` 主链路），理由已登记在 `scripts/docs-gate/product-surface-baseline.txt`；部署与回归记录见 [docs/testing/deploy-regression-2026-09-24.md](./docs/testing/deploy-regression-2026-09-24.md)
 - `initialize -action audit-tenants`：逐租户只读基线审计，输出每组件 verified/error 的 JSON 差异报告，作为存量前滚修复方案的输入（写入拦截 + total_changes 不变的测试锁死只读）
 - **Gate C.6 产品口径漂移守卫**（[docs-gate/check-product-drift.sh](./scripts/docs-gate/check-product-drift.sh)）— 把"口径不一致 = 构建失败"作为机器守卫生效，对应 2026-09-22 审计的 5 项无守卫平面（C.6.1 成熟度双向闭合 / C.6.2 领域清单走目录 / C.6.3 零路由域包 / C.6.4 表面棘轮 / C.6.5 覆盖率口径披露）。CI 默认 hard；存量债务（变更管理口径冲突、department/root_cause/dashboard 三个孤儿包）已在 [product-drift-waivers.txt](./scripts/docs-gate/product-drift-waivers.txt) 登记 owner+到期日，**10-31 到期未解决自动反向 FAIL**。详见 [output/product-drift-overdesign-audit-2026-09-22.md](./output/product-drift-overdesign-audit-2026-09-22.md) §5
 - **AGENTS.md 不再硬编码领域清单** — `handlers/<domain>/` 域包清单以目录为准，文档不再漂移；Ghost domain `cab` 已移除
