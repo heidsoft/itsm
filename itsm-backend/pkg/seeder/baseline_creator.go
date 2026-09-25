@@ -6,11 +6,13 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/user"
+	"itsm-backend/service"
 )
 
 // Tenant-scoped baseline rows still need an audit owner, and the template
 // tables reference users(id) with NOT NULL. This account is that owner.
-const tenantSystemAccountPrefix = "system-baseline-"
+// 前缀与租户生命周期共用同一常量（删除守卫据此排除基线归属账号）。
+const tenantSystemAccountPrefix = service.BaselineSystemAccountPrefix
 
 // unusablePasswordHash can never satisfy bcrypt comparison, so the account
 // cannot authenticate even if it were activated. No credential is seeded.

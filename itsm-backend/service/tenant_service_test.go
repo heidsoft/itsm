@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
 
 	"github.com/stretchr/testify/assert"
@@ -95,6 +97,39 @@ func TestTenantService_CreateTenant_EnqueueSurvivesTenantWriteGuard(t *testing.T
 	assert.Equal(t, commandbus.CommandTenantBootstrapInstall, command.CommandType)
 	assert.Equal(t, created.ID, command.TenantID, "命令归属目标租户")
 	assert.Equal(t, created.ID, command.AggregateID)
+}
+
+// 产品基线安装的归属账号（system-baseline-*）不可登录、只是模板行审计归属：
+// 不得阻止租户删除，否则开通过基线的租户永远删不掉；真实用户仍必须阻止。
+func TestTenantService_DeleteTenant_IgnoresBaselineSystemAccount(t *testing.T) {
+	client, service, ctx := setupTenantTest(t)
+	defer client.Close()
+
+	created, err := service.CreateTenant(ctx, &dto.CreateTenantRequest{
+		Name: "Deletable", Code: "DELETABLE-TENANT", Type: "standard",
+	})
+	require.NoError(t, err)
+	_, err = client.User.Create().
+		SetUsername(BaselineSystemAccountPrefix + strconv.Itoa(created.ID)).
+		SetEmail(BaselineSystemAccountPrefix + strconv.Itoa(created.ID) + "@tenant.invalid").
+		SetName("系统基线账号").SetPasswordHash("!").
+		SetRole(user.RoleEndUser).SetActive(false).SetTenantID(created.ID).Save(ctx)
+	require.NoError(t, err)
+
+	require.NoError(t, service.DeleteTenant(ctx, created.ID), "基线归属账号不得阻止删除")
+
+	kept, err := service.CreateTenant(ctx, &dto.CreateTenantRequest{
+		Name: "Kept", Code: "KEPT-TENANT", Type: "standard",
+	})
+	require.NoError(t, err)
+	_, err = client.User.Create().
+		SetUsername("real-user-" + strconv.Itoa(kept.ID)).
+		SetEmail("real-user-" + strconv.Itoa(kept.ID) + "@example.com").
+		SetName("真实用户").SetPasswordHash("x").
+		SetRole(user.RoleEndUser).SetActive(true).SetTenantID(kept.ID).Save(ctx)
+	require.NoError(t, err)
+
+	require.ErrorContains(t, service.DeleteTenant(ctx, kept.ID), "租户下还有用户", "真实用户仍必须阻止删除")
 }
 
 func TestTenantService_CreateTenant_RollsBackWhenEnqueueFails(t *testing.T) {

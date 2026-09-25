@@ -8,107 +8,51 @@ import { test as base, expect } from '@playwright/test';
 
 /**
  * 执行登录并返回认证后的页面
+ *
+ * 鉴权自令牌 Cookie 化（仅 HttpOnly cookie）后，登录响应不再返回 access_token：
+ * 这里只依赖 page.request 与页面共享的 cookie 罐，不再手工种 cookie/localStorage。
+ * 口令必须来自环境变量，禁止在仓库里硬编码凭据。
  */
 export async function loginAndReturn(
   page: Page,
   username: string = 'admin',
-  password: string = 'AdminProd2026!',
+  password?: string,
   landingPath: string = '/dashboard'
 ) {
-  const appURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-  const apiBase = appURL.replace(/:\d+$/, ''); // strip port suffix for API calls
-  // 清除之前的认证状态
+  const secret = password || process.env.E2E_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
+  if (!secret) {
+    throw new Error('缺少 E2E_ADMIN_PASSWORD（或 ADMIN_PASSWORD）：e2e 不接受硬编码口令');
+  }
   await page.context().clearCookies();
 
-  // Ant Design v5 inputs can miss React form updates in browser automation.
-  // Use the real login API, then seed the same browser auth state the app uses.
-  const loginResponse = await page.request.post(`${apiBase}/api/v1/auth/login`, {
-    data: { username, password },
+  // 相对路径走页面同源；page.request 与浏览器上下文共享 cookie 罐。
+  const loginResponse = await page.request.post('/api/v1/auth/login', {
+    data: { username, password: secret },
     timeout: 30_000,
   });
   if (!loginResponse.ok()) {
-    throw new Error(`登录失败: HTTP ${loginResponse.status()}`);
+    throw new Error(`登录失败: HTTP ${loginResponse.status()} ${await loginResponse.text()}`);
   }
 
-  const loginJson = await loginResponse.json();
+  // 兼容仍返回令牌的旧形态（仅用于填充本地会话元数据，缺失不报错）。
+  const loginJson = await loginResponse.json().catch(() => ({ data: {} }));
   const data = loginJson.data || {};
-  const accessToken = data.accessToken || data.access_token;
-  const refreshToken = data.refreshToken || data.refresh_token;
   const user = data.user || {};
-  if (!accessToken) {
-    throw new Error('登录失败: 响应中缺少 access_token');
-  }
-
   const tenantId = Number(user.tenantId || user.tenant_id || 1);
-  const tenant = {
-    id: tenantId,
-    name: '默认租户',
-    code: tenantId === 1 ? 'default' : `tenant-${tenantId}`,
-    type: 'standard',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  await page.context().addCookies([
-    {
-      name: 'auth-token',
-      value: accessToken,
-      url: appURL,
-      httpOnly: false,
-      sameSite: 'Lax',
-      expires: Math.floor(Date.now() / 1000) + 900,
-    },
-    {
-      name: 'access_token',
-      value: accessToken,
-      url: appURL,
-      httpOnly: true,
-      sameSite: 'Lax',
-      expires: Math.floor(Date.now() / 1000) + 900,
-    },
-    ...(refreshToken
-      ? [
-          {
-            name: 'refresh_token',
-            value: refreshToken,
-            url: appURL,
-            httpOnly: true,
-            sameSite: 'Lax' as const,
-            expires: Math.floor(Date.now() / 1000) + 604800,
-          },
-        ]
-      : []),
-  ]);
-
-  await page.goto('/site.webmanifest', { waitUntil: 'domcontentloaded' });
+  await page.goto(landingPath, { waitUntil: 'networkidle' });
+  if (page.url().includes('/login')) {
+    throw new Error(`登录后被重定向到 ${page.url()}：会话未生效`);
+  }
+  // 供依赖本地会话元数据的旧代码读取；token 字段留空，真源是 HttpOnly cookie。
   await page.evaluate(
-    ({ token, currentUser, currentTenant }) => {
-      const normalizedUser = {
-        id: Number(currentUser.id || 0),
-        username: String(currentUser.username || ''),
-        email: String(currentUser.email || ''),
-        name: String(currentUser.name || currentUser.full_name || ''),
-        role: String(currentUser.role || 'end_user'),
-        tenantId: currentUser.tenant_id
-          ? Number(currentUser.tenant_id)
-          : currentUser.tenantId
-            ? Number(currentUser.tenantId)
-            : undefined,
-        department: currentUser.department,
-        permissions: currentUser.permissions,
-        createdAt: currentUser.created_at || currentUser.createdAt,
-        updatedAt: currentUser.updated_at || currentUser.updatedAt,
-      };
-
-      localStorage.setItem('access_token', token);
+    ({ currentUser, currentTenant }) => {
       localStorage.setItem('current_tenant_id', String(currentTenant.id));
       localStorage.setItem('current_tenant_code', currentTenant.code);
       localStorage.setItem(
         'auth-storage',
         JSON.stringify({
           state: {
-            user: normalizedUser,
+            user: currentUser,
             token: null,
             currentTenant,
             isAuthenticated: true,
@@ -117,10 +61,19 @@ export async function loginAndReturn(
         })
       );
     },
-    { token: accessToken, currentUser: user, currentTenant: tenant }
+    {
+      currentUser: { ...user, tenantId },
+      currentTenant: {
+        id: tenantId,
+        name: '默认租户',
+        code: tenantId === 1 ? 'default' : `tenant-${tenantId}`,
+        type: 'standard',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    }
   );
-
-  await page.goto(landingPath, { waitUntil: 'domcontentloaded' });
 
   return page;
 }

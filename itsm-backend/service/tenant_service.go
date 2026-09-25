@@ -27,6 +27,10 @@ func NewTenantService(client *ent.Client, logger *zap.SugaredLogger) *TenantServ
 	}
 }
 
+// BaselineSystemAccountPrefix 标识产品基线安装的归属账号（不可登录）。
+// 租户生命周期（如删除守卫）需要把它与真实用户区分开。
+const BaselineSystemAccountPrefix = "system-baseline-"
+
 // CreateTenant 创建租户，并在同一事务中投递产品基线安装命令。
 // 命令入队失败必须回滚租户创建：否则会留下一个"存在但不可用"的租户
 // （无角色/权限/菜单），且没有可追踪的补装入口。
@@ -291,9 +295,14 @@ func (s *TenantService) DeleteTenant(ctx context.Context, tenantID int) error {
 		return fmt.Errorf("租户不存在: %d", tenantID)
 	}
 
-	// 检查租户下是否有用户
+	// 检查租户下是否有真实用户。产品基线安装的 system-baseline-* 账号
+	// 不可登录，只是模板行的审计归属，不应阻止租户删除（否则开通过基线的
+	// 租户永远删不掉）。
 	userCount, err := s.client.User.Query().
-		Where(user.TenantID(tenantID)).
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.Not(user.UsernameHasPrefix(BaselineSystemAccountPrefix)),
+		).
 		Count(ctx)
 	if err != nil {
 		s.logger.Errorf("检查租户用户失败: %v", err)
