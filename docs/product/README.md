@@ -9,6 +9,8 @@
 - [开源发布能力说明](./open-source-release-capability.md)
 - [分阶段完善总控计划](./phased-improvement-plan.md)
 - [工作流控制台诊断与设计](./workflow-console-diagnosis-and-design.md)
+- [AI + 自动化产品功能矩阵（v1.6.x）](./ai-automation-status.md)
+- [业务快照（2026-09-24）](./business-snapshot-2026-09-24.md)
 
 ## 维护规则
 

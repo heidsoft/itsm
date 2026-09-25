@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and what
-> is parked.** Updated as part of every release. Last synced: 2026-09-17.
+> is parked.** Updated as part of every release. Last synced: 2026-09-25.
 >
 > Cross-references:
 > - PRD library: [docs/prd/](./docs/prd)
