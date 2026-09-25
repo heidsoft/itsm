@@ -99,12 +99,14 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 	}
 
 	// 6. 记录审计日志 - 流程启动
-	// 从context中获取用户信息
-	userID := 0
+	// 从 typed BPMN context 取认证操作人；userName 在事务内按 ID 反查，
+	// 与 recordApprovalDecision 同一模式，避免新增 context key 导致 33 处测试同步。
+	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	userName := ""
-	if u, ok := ctx.Value("user").(*ent.User); ok {
-		userID = u.ID
-		userName = u.Name
+	if userID > 0 {
+		if actor, err := txc.User.Get(ctx, userID); err == nil {
+			userName = actor.Name
+		}
 	}
 	if err := NewBPMNAuditService(txc, e.logger).RecordProcessStarted(ctx, instance, userID, userName, variables); err != nil {
 		return nil, fmt.Errorf("记录流程启动审计失败: %w", err)
@@ -318,11 +320,14 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 }
 
 func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, client *ent.Client, task *ent.ProcessTask, variables map[string]interface{}) error {
-	userID := 0
+	// 与 StartProcess 同模式：从 typed BPMN context 取认证操作人，再在事务内反查姓名。
+	// 修复前走 ctx.Value("user").(*ent.User) 永远拿不到，导致审计 user_id/user_name 均为 0/空。
+	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	userName := ""
-	if u, ok := ctx.Value("user").(*ent.User); ok {
-		userID = u.ID
-		userName = u.Name
+	if userID > 0 {
+		if actor, err := client.User.Get(ctx, userID); err == nil {
+			userName = actor.Name
+		}
 	}
 	variablesBefore := task.TaskVariables
 	return e.auditService.RecordTaskCompletedWithClient(ctx, client, task, userID, userName, variablesBefore, variables)

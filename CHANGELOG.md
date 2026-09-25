@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **修复 BPMN 流程审计操作人恒为空** — 流程启动与任务完成审计此前从 `ctx.Value("user")` 取操作人，而生产链路从未写入该 key，审计记录 operator 恒为 0/空名；现统一改走 `bpmn.BPMNUserIDContextKey` 并在事务内解析用户名，与审批决策审计同一模式（含回归测试）
 - **修复市场页恒为空** — 生产初始化新增 `marketplace-items` 组件：写入 5 条内置市场条目（连接器/技能/插件，状态 published、纳入版本账本 checksum 与逐项验证），存量环境可前滚补齐；此前生产 DAG 无该组件、列表按 published 过滤后恒为空。市场列表/详情同步改为返回 DTO（`MarketplaceItemResponse`，camelCase），不再直接序列化 Ent 模型
 - 修复工单/事件 SLA 暂停与恢复的假成功：工单侧此前直接返回"SLA已暂停"却完全不落库，事件侧返回"尚未接入"，而底层 `SLAMonitorService.PauseSLA/ResumeSLA` 早已是真实现；现两域统一接线，暂停真实落库并记录原因、恢复顺延截止时间，重复暂停/未暂停恢复按 409 冲突、跨租户按 404 拒绝
 - 知识/问题评论占位接口不再伪装成功：评论能力尚未落地（无存储模型），统一显式返回 5003 unready；此前知识侧返回假的评论对象、问题侧用空列表假装"暂无评论"
