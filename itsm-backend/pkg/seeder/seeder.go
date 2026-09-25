@@ -690,7 +690,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedAdmin(ctx)
 	s.seedCloudServiceTemplates(ctx)
 	// 使用配置的初始化数据
-	s.seedSLADefinitions(ctx)
+	attempt("sla-definitions", s.seedSLADefinitions)
 	s.seedSLAPolicies(ctx)
 	attempt("sla-alert-rules", s.seedSLAAlertRules)
 	s.seedApprovalWorkflows(ctx)
@@ -1277,26 +1277,26 @@ func (s *Seeder) seedCloudServiceTemplates(ctx context.Context) {
 
 // 以下是使用配置文件的初始化函数
 
-func (s *Seeder) seedSLADefinitions(ctx context.Context) {
+// seedSLADefinitions 按条目补齐受管 SLA 定义：整批 skip 会让存量库永远补不上
+// 清单新增条目（2026-09-25 演练实证：verify 要 Incident-P0-紧急，而"已有即跳过"一直拒绝创建）。
+func (s *Seeder) seedSLADefinitions(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("baseline tenant not found; skip SLA definitions seed", "error", err)
-		return
+		return fmt.Errorf("SLA definitions tenant: %w", err)
 	}
 
-	existing, err := s.client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing SLA definitions failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("SLA definitions already seeded")
-		return
-	}
-
-	slaIDMap := make(map[string]int)
+	created := 0
 	for _, sla := range s.config.SLADefinitions {
-		entity, err := s.client.SLADefinition.Create().
+		exists, err := s.client.SLADefinition.Query().
+			Where(sladefinition.TenantIDEQ(t.ID), sladefinition.NameEQ(sla.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check SLA definition %s: %w", sla.Name, err)
+		}
+		if exists {
+			continue
+		}
+		if _, err := s.client.SLADefinition.Create().
 			SetName(sla.Name).
 			SetDescription(sla.Description).
 			SetServiceType(sla.ServiceType).
@@ -1305,15 +1305,13 @@ func (s *Seeder) seedSLADefinitions(ctx context.Context) {
 			SetResolutionTime(sla.ResolutionTime).
 			SetIsActive(true).
 			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed SLA definition failed", "error", err, "name", sla.Name)
-			continue
+			Save(ctx); err != nil {
+			return fmt.Errorf("seed SLA definition %s: %w", sla.Name, err)
 		}
-		slaIDMap[sla.Name] = entity.ID
+		created++
 	}
-	s.sugar.Infow("SLA definitions seeded", "count", len(s.config.SLADefinitions))
-	_ = slaIDMap
+	s.sugar.Infow("SLA definitions reconciled", "created", created, "total", len(s.config.SLADefinitions), "tenant_id", t.ID)
+	return nil
 }
 
 func (s *Seeder) seedSLAPolicies(ctx context.Context) {

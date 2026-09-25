@@ -150,7 +150,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		dependencies: []string{"itil-core"},
 		checksum:     checksums["sla-core"],
 		apply: func(ctx context.Context, transactional *Seeder) error {
-			transactional.seedSLADefinitions(ctx)
+			if err := transactional.seedSLADefinitions(ctx); err != nil {
+				return err
+			}
 			transactional.seedSLAPolicies(ctx)
 			return transactional.seedSLAAlertRules(ctx)
 		},
