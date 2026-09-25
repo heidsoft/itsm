@@ -452,29 +452,43 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, fmt.Errorf("校验审批人失败: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("审批人不存在或已停用")
+		return nil, common.NewForbiddenError("审批人不存在或已停用")
 	}
 	if actorID == releaseEntity.CreatedBy {
 		return nil, fmt.Errorf("发布创建人不能审批自己的发布")
 	}
 
-	// P0-1：审批先桥接完成对应的 BPMN 待办任务，失败则中止（fail-closed）
+	// P0-1：BPMN 任务完成与业务状态更新必须在同一事务内，防止"流程已批、业务未批"的不一致。
+	targetStatus := string(dto.ReleaseStatusScheduled)
+	if action == "reject" {
+		targetStatus = string(dto.ReleaseStatusCancelled)
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启审批事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
 	if s.approvalBridge != nil {
-		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
+		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+			ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
 		); bridgeErr != nil {
 			return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 		}
 	}
 
-	targetStatus := string(dto.ReleaseStatusScheduled)
-	if action == "reject" {
-		targetStatus = string(dto.ReleaseStatusCancelled)
-	}
-	updated, err := releaseEntity.Update().SetStatus(targetStatus).Save(ctx)
+	updated, err := tx.Release.UpdateOneID(id).
+		Where(release.TenantIDEQ(tenantID)).
+		SetStatus(targetStatus).
+		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update release approval status", "error", err, "release_id", id, "status", targetStatus)
 		return nil, fmt.Errorf("failed to update release status: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("提交审批事务失败: %w", err)
 	}
 
 	s.logger.Infow("Release approval applied",

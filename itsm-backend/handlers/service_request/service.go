@@ -65,10 +65,11 @@ type Service struct {
 	repo           Repository
 	scRepo         service_catalog.Repository
 	cmdbRepo       cmdb.Repository
+	client         *ent.Client
 	logger         *zap.SugaredLogger
 	approvalBridge *service.BPMNApprovalBridge
-	// approvalChain 审批链求值引擎：驱动服务请求的分级/会签/或签/fallback 审批。
-	// 仅当 BPMN 桥接未处理（无运行中流程实例）时消费，避免双轨推进。
+	// approvalChain 解析审批展示/投影层级；审批写入必须先成功完成 BPMN 待办，
+	// 不再允许无运行中实例或无待办时回退到业务侧裁决。
 	approvalChain         *service.ApprovalChainService
 	workflowOutboxEnabled bool
 }
@@ -78,6 +79,7 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 		repo:          repo,
 		scRepo:        scRepo,
 		cmdbRepo:      cmdbRepo,
+		client:        entClient,
 		logger:        logger,
 		approvalChain: approvalChain,
 	}
@@ -310,7 +312,13 @@ func (s *Service) Get(ctx context.Context, id, tenantID int) (*ServiceRequest, [
 
 // ApplyApproval processes an approval action
 func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, action, comment string, userRole, userDept string) (*ServiceRequest, []*ServiceRequestApproval, error) {
-	// 1. Validate Inputs
+	// 1. Validate Inputs before any tenant-scoped reads.
+	if tenantID <= 0 || actorID <= 0 {
+		return nil, nil, common.NewUnauthorizedError("缺少审批身份或租户上下文")
+	}
+	if id <= 0 {
+		return nil, nil, common.NewBadRequestError("Invalid ID", nil)
+	}
 	if action != "approve" && action != "reject" {
 		return nil, nil, common.NewBadRequestError("Invalid action: "+action, nil)
 	}
@@ -355,16 +363,22 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		return nil, nil, err
 	}
 
-	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源，
-	// 仅流程任务指派人才可完成；无关联运行中流程实例时该调用为 no-op）。
-	// 桥接仅完成流程任务、做操作人鉴权，不改变服务请求状态；请求状态的层级/
-	// quorum 推进仍由下方逻辑统一处理（审批链驱动或遗留三级），避免双轨分叉。
-	if s.approvalBridge != nil {
-		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
-		); bridgeErr != nil {
-			return nil, nil, common.NewInternalError("同步流程审批任务失败", bridgeErr)
-		}
+	// BPMN 待办是审批写入的前置条件，缺少 bridge/实例/待办均不得回退直批。
+	// P0-1：BPMN 任务完成与业务写入必须在同一事务内，防止"流程已批、业务未批"的不一致。
+	if s.approvalBridge == nil || s.client == nil {
+		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("开启审批事务失败: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
+	); bridgeErr != nil {
+		return nil, nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 	}
 
 	// 5. Process
@@ -423,8 +437,11 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 				currentApproval.ApproverID = &actorID
 				currentApproval.ApproverName = actorName
 				currentApproval.ProcessedAt = &now
-				if err := s.repo.UpdateApproval(ctx, currentApproval); err != nil {
+				if err := s.repo.UpdateApprovalWithClient(ctx, tx.Client(), currentApproval); err != nil {
 					return nil, nil, common.NewDatabaseError("Failed to update approval", err)
+				}
+				if err := tx.Commit(); err != nil {
+					return nil, nil, fmt.Errorf("提交审批事务失败: %w", err)
 				}
 				return s.Get(ctx, id, tenantID)
 			}
@@ -457,8 +474,12 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		req.CurrentLevel = nextLevel
 	}
 
-	if err := s.repo.UpdateRequestAndApproval(ctx, req, currentApproval); err != nil {
+	if err := s.repo.UpdateRequestAndApprovalWithClient(ctx, tx.Client(), req, currentApproval); err != nil {
 		return nil, nil, common.NewDatabaseError("Failed to update request", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, nil, fmt.Errorf("提交审批事务失败: %w", err)
 	}
 
 	return s.Get(ctx, id, tenantID)

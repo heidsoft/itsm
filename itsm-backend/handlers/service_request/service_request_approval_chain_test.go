@@ -2,12 +2,16 @@ package service_request
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -72,8 +76,8 @@ func chainReqData(title string) *ServiceRequest {
 
 func timePtr(t time.Time) *time.Time { return &t }
 
-// TestServiceRequest_ApprovalChain_SerialProgression 验证：租户级激活审批链被
-// ResolveApprovalPlan 解析并驱动分级审批（manager -> agent），层级推进与遗留三级一致。
+// Serial approval configuration alone cannot authorize a write. Once a real
+// BPMN graph is present, its two tasks drive the corresponding business levels.
 func TestServiceRequest_ApprovalChain_SerialProgression(t *testing.T) {
 	svc, client, tenantID, catalogID := setupApprovalChainTest(t)
 	ctx := context.Background()
@@ -106,6 +110,16 @@ func TestServiceRequest_ApprovalChain_SerialProgression(t *testing.T) {
 	require.NotNil(t, approvals[0].Node, "首级审批应写入 chain node")
 	require.NotEmpty(t, approvals[0].Node["approver_ids"], "首级 node 应含解析出的审批人")
 
+	before := approvalWriteSnapshot(t, client)
+	for attempt := 0; attempt < 2; attempt++ {
+		_, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, "approve", "ok", "manager", "IT")
+		var businessErr *common.BusinessError
+		require.ErrorAs(t, err, &businessErr)
+		require.Equal(t, common.ConflictCode, businessErr.Code)
+		require.Equal(t, before, approvalWriteSnapshot(t, client))
+	}
+	instanceID := srCreateSerialBPMNFixture(t, client, tenantID, created.ID, mgr, it)
+
 	// L1 manager 审批 -> manager_approved, currentLevel=2
 	req, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, "approve", "ok", "manager", "IT")
 	require.NoError(t, err)
@@ -117,11 +131,18 @@ func TestServiceRequest_ApprovalChain_SerialProgression(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, SRStatusSecurityApproved, req.Status, "末级审批应落到 security_approved（履约门禁）")
 	require.Equal(t, 2, req.CurrentLevel, "末级后 CurrentLevel 应等于 TotalLevels(2)")
+	instance, err := client.ProcessInstance.Get(ctx, instanceID)
+	require.NoError(t, err)
+	require.Equal(t, "completed", instance.Status)
+	decisions, err := client.ProcessApprovalDecision.Query().Count(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 2, decisions)
 }
 
-// TestServiceRequest_ApprovalChain_ParallelQuorum 验证：会签层级（阈值=审批人数）
-// 需全员批准才推进；单人批准仅记录进度，不推进请求状态。
-func TestServiceRequest_ApprovalChain_ParallelQuorum(t *testing.T) {
+// Retirement contract: the old parallel quorum evaluator must not collect votes
+// or approve a request without BPMN tasks, even after all configured users retry.
+// This is not a test of BPMN countersign voting (a separate execution path).
+func TestServiceRequest_ApprovalChain_ParallelQuorumRequiresBPMN(t *testing.T) {
 	svc, client, tenantID, catalogID := setupApprovalChainTest(t)
 	ctx := context.Background()
 
@@ -146,15 +167,123 @@ func TestServiceRequest_ApprovalChain_ParallelQuorum(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, created.TotalLevels)
 
-	// mgrA 批准：quorum 未满足 -> 仍为 submitted，不推进
-	req, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgrA, "approve", "a", "manager", "IT")
-	require.NoError(t, err)
-	require.Equal(t, SRStatusSubmitted, req.Status)
-	require.Equal(t, 1, req.CurrentLevel)
+	before := approvalWriteSnapshot(t, client)
+	for _, actorID := range []int{mgrA, mgrB, mgrA, mgrB} {
+		r := gin.New()
+		r.Use(_srAuthRole(tenantID, actorID, "manager", "IT"))
+		r.POST("/api/v1/service-requests/:id/approval", NewHandler(svc).ApplyApproval)
+		status, resp := srDoHTTPReq(t, r, http.MethodPost, fmt.Sprintf("/api/v1/service-requests/%d/approval", created.ID),
+			dto.ServiceRequestApprovalActionRequest{Action: "approve", Comment: "must not collect a legacy vote"})
+		require.Equal(t, http.StatusConflict, status, "body=%s", srStr(resp))
+		require.Equal(t, common.ConflictCode, resp.Code)
+		require.Nil(t, resp.Data)
+		require.Equal(t, before, approvalWriteSnapshot(t, client))
+	}
+}
 
-	// mgrB 批准：quorum 满足（末级）-> security_approved
-	req, _, err = svc.ApplyApproval(ctx, created.ID, tenantID, mgrB, "approve", "b", "manager", "IT")
+// L1 审批成功后再次尝试 L1 必须被拒绝，且不得产生任何写入。
+func TestServiceRequest_ApprovalChain_DuplicateApprovalRejected(t *testing.T) {
+	svc, client, tenantID, catalogID := setupApprovalChainTest(t)
+	ctx := context.Background()
+
+	chainReq := &dto.ApprovalChainRequest{
+		Name:       "SR Dup Chain",
+		EntityType: "service_request",
+		Status:     "active",
+		Chain: []dto.ApprovalChainStepDTO{
+			{Level: 1, Role: "manager", Name: "Mgr", IsRequired: true, ApprovalType: "serial"},
+			{Level: 2, Role: "agent", Name: "IT", IsRequired: true, ApprovalType: "serial"},
+		},
+	}
+	acs := service.NewApprovalChainService(client, zaptest.NewLogger(t).Sugar())
+	_, err := acs.CreateApprovalChain(ctx, chainReq, tenantID)
 	require.NoError(t, err)
-	require.Equal(t, SRStatusSecurityApproved, req.Status)
-	require.Equal(t, 1, req.CurrentLevel, "末级后 CurrentLevel 应等于 TotalLevels(1)")
+
+	mgr := mkChainUser(t, client, tenantID, "manager", "IT")
+	it := mkChainUser(t, client, tenantID, "agent", "IT")
+	requester := mkChainUser(t, client, tenantID, "end_user", "IT")
+
+	created, err := svc.Create(ctx, tenantID, requester, catalogID, chainReqData("Dup SR"))
+	require.NoError(t, err)
+	require.Equal(t, 2, created.TotalLevels)
+
+	srCreateSerialBPMNFixture(t, client, tenantID, created.ID, mgr, it)
+
+	req, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, "approve", "ok", "manager", "IT")
+	require.NoError(t, err)
+	require.Equal(t, SRStatusManagerApproved, req.Status)
+	require.Equal(t, 2, req.CurrentLevel)
+
+	snapAfterL1 := approvalWriteSnapshot(t, client)
+
+	for _, action := range []string{"approve", "reject"} {
+		t.Run(action, func(t *testing.T) {
+			_, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, action, "重复", "manager", "IT")
+			require.Error(t, err, "L1 已审批不得再次审批")
+			require.Equal(t, snapAfterL1, approvalWriteSnapshot(t, client))
+		})
+	}
+}
+
+// 业务更新失败时 BPMN 任务必须回滚，防止"流程已批、业务未批"的不一致。
+func TestServiceRequest_ApprovalChain_AtomicCommit_RollbackOnBusinessFailure(t *testing.T) {
+	svc, client, tenantID, catalogID := setupApprovalChainTest(t)
+	ctx := context.Background()
+
+	chainReq := &dto.ApprovalChainRequest{
+		Name:       "SR Rollback Chain",
+		EntityType: "service_request",
+		Status:     "active",
+		Chain: []dto.ApprovalChainStepDTO{
+			{Level: 1, Role: "manager", Name: "Mgr", IsRequired: true, ApprovalType: "serial"},
+		},
+	}
+	acs := service.NewApprovalChainService(client, zaptest.NewLogger(t).Sugar())
+	_, err := acs.CreateApprovalChain(ctx, chainReq, tenantID)
+	require.NoError(t, err)
+
+	mgr := mkChainUser(t, client, tenantID, "manager", "IT")
+	requester := mkChainUser(t, client, tenantID, "end_user", "IT")
+
+	created, err := svc.Create(ctx, tenantID, requester, catalogID, chainReqData("Rollback SR"))
+	require.NoError(t, err)
+	require.Equal(t, 1, created.TotalLevels)
+
+	_ = srCreateSerialBPMNFixture(t, client, tenantID, created.ID, mgr, mgr)
+
+	taskBefore, err := client.ProcessTask.Query().First(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "assigned", taskBefore.Status)
+
+	failServiceRequestUpdates := true
+	client.Use(func(next ent.Mutator) ent.Mutator {
+		return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
+			if _, ok := mutation.(*ent.ServiceRequestMutation); ok && failServiceRequestUpdates {
+				return nil, fmt.Errorf("simulated service request update failure")
+			}
+			return next.Mutate(ctx, mutation)
+		})
+	})
+
+	req, _, err := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, "approve", "ok", "manager", "IT")
+	require.Error(t, err, "业务更新失败时审批必须失败")
+	require.Nil(t, req)
+
+	sr, _, gerr := svc.Get(ctx, created.ID, tenantID)
+	require.NoError(t, gerr)
+	require.NotNil(t, sr)
+	require.NotEqual(t, SRStatusManagerApproved, sr.Status, "服务请求状态不得变更")
+
+	taskAfter, terr := client.ProcessTask.Get(ctx, taskBefore.ID)
+	require.NoError(t, terr)
+	require.Equal(t, "assigned", taskAfter.Status, "BPMN 任务必须回滚到原始状态")
+
+	failServiceRequestUpdates = false
+	req2, _, err2 := svc.ApplyApproval(ctx, created.ID, tenantID, mgr, "approve", "重试", "manager", "IT")
+	require.NoError(t, err2)
+	require.NotNil(t, req2)
+
+	taskRetry, terr2 := client.ProcessTask.Get(ctx, taskBefore.ID)
+	require.NoError(t, terr2)
+	require.Equal(t, "completed", taskRetry.Status, "重试后 BPMN 任务必须完成")
 }

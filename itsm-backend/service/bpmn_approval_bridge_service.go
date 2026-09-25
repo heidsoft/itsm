@@ -29,21 +29,60 @@ func NewBPMNApprovalBridge(client *ent.Client, logger *zap.SugaredLogger) *BPMNA
 	return &BPMNApprovalBridge{client: client, logger: logger}
 }
 
-// CompleteBusinessApprovalTask 按业务键查找运行中的流程实例，并以 actorUserID 身份
-// 完成其当前待办用户任务（写入 approvalAction/approvalResult/approvalComment 决策变量）。
-//
-// 返回值 handled：
-//   - true  已找到并完成对应 BPMN 任务，调用方仍可继续维护业务侧审批记录；
-//   - false 业务对象没有关联的运行中流程实例或无待办用户任务，调用方按旧逻辑处理（兼容未绑定流程的历史数据）。
-//
-// 若存在待办任务但完成失败（如操作人不是任务审批人/候选人），返回错误，调用方必须中止业务侧审批，
-// 避免业务状态与流程状态分叉。
-func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
-	if action != "approve" && action != "reject" {
-		return false, nil
+// CompleteBusinessApprovalTaskWithClient 使用调用方事务绑定的 Ent client 完成审批任务。
+// 它不创建或提交事务，任何失败都由外层事务连同业务状态一起回滚。
+func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.Context, txc *ent.Client, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
+	if tenantID <= 0 || actorUserID <= 0 {
+		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
 	}
-	if tenantID <= 0 || businessID <= 0 {
-		return false, nil
+	if businessID <= 0 || strings.TrimSpace(businessType) == "" || (action != "approve" && action != "reject") {
+		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
+	}
+
+	_, task, err := b.findPendingApprovalTaskWithClient(ctx, txc, tenantID, businessType, businessID)
+	if err != nil {
+		return false, err
+	}
+	if task == nil {
+		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	}
+
+	approvalResult := "approved"
+	if action == "reject" {
+		approvalResult = "rejected"
+	}
+	variables := map[string]interface{}{
+		"approvalAction":  action,
+		"approvalResult":  approvalResult,
+		"approvalComment": strings.TrimSpace(comment),
+	}
+
+	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
+
+	engine := NewCustomProcessEngine(txc, b.logger)
+	if customEngine, ok := engine.(*CustomProcessEngine); ok {
+		if err := customEngine.CompleteTaskWithClient(workflowCtx, txc, task.TaskID, variables); err != nil {
+			return false, fmt.Errorf("完成流程审批任务失败: %w", err)
+		}
+	} else {
+		if err := engine.CompleteTask(workflowCtx, task.TaskID, variables); err != nil {
+			return false, fmt.Errorf("完成流程审批任务失败: %w", err)
+		}
+	}
+
+	b.logger.Infow("业务审批已桥接完成BPMN任务(事务内)",
+		"businessType", businessType, "businessId", businessID, "taskId", task.TaskID, "action", action, "actorUserId", actorUserID)
+	return true, nil
+}
+
+// 没有 BPMN 待办不代表审批通过，必须阻止业务侧回退直批。
+func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
+	if tenantID <= 0 || actorUserID <= 0 {
+		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
+	}
+	if businessID <= 0 || strings.TrimSpace(businessType) == "" || (action != "approve" && action != "reject") {
+		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
 	}
 
 	_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
@@ -51,7 +90,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 		return false, err
 	}
 	if task == nil {
-		return false, nil
+		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
 
 	approvalResult := "approved"
@@ -78,17 +117,12 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 	return true, nil
 }
 
-// DelegateBusinessApprovalTask 将业务侧的审批委派同步到 BPMN 待办任务：
-// 按业务键反查运行中实例的当前待办用户任务，校验操作人是任务审批人/候选人后，
-// 重新指派给 newAssigneeUserID，避免业务侧委派后流程任务仍停留在原审批人（双轨分叉）。
-//
-// 返回语义与 CompleteBusinessApprovalTask 一致：
-//   - (true, nil)  已同步委派对应 BPMN 任务；
-//   - (false, nil) 无关联运行中实例或无待办用户任务，调用方按旧逻辑处理；
-//   - (false, err) 存在待办任务但同步失败，调用方必须中止业务侧委派。
 func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID, newAssigneeUserID int) (bool, error) {
-	if tenantID <= 0 || businessID <= 0 || newAssigneeUserID <= 0 {
-		return false, nil
+	if tenantID <= 0 || actorUserID <= 0 {
+		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
+	}
+	if businessID <= 0 || newAssigneeUserID <= 0 || strings.TrimSpace(businessType) == "" {
+		return false, common.NewBusinessError(common.ParamErrorCode, "委派参数无效", "")
 	}
 
 	_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
@@ -96,7 +130,7 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 		return false, err
 	}
 	if task == nil {
-		return false, nil
+		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
 
 	// 注入认证操作人与租户，委派前校验操作人必须是当前任务的审批人/候选人，防止越权改派
@@ -171,9 +205,6 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 	return handled, nil
 }
 
-// findPendingApprovalTask 按业务键查找运行中流程实例及其当前待办用户任务。
-// 无关联实例或无待办任务时返回 (nil, nil, nil)，调用方回退旧逻辑。
-// 待办状态包含 delegated，保证委派后的任务仍可被新审批人通过桥接完成。
 func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
 	return b.findPendingApprovalTaskWithClient(ctx, b.client, tenantID, businessType, businessID)
 }
@@ -211,7 +242,6 @@ func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Conte
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			// 实例在运行但当前无待办用户任务（例如停留在自动节点），不桥接，交由旧逻辑处理
 			b.logger.Warnw("业务审批桥接：流程实例无待办用户任务",
 				"businessKey", businessKey, "processInstanceID", instance.ID)
 			return nil, nil, nil

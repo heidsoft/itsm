@@ -454,6 +454,33 @@ func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceReq
 	return update.Exec(ctx)
 }
 
+func (r *EntRepository) UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error {
+	update := txc.ServiceRequestApproval.UpdateOneID(approval.ID).
+		Where(
+			servicerequestapproval.TenantIDEQ(approval.TenantID),
+			servicerequestapproval.ServiceRequestIDEQ(approval.ServiceRequestID),
+			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+		).
+		SetStatus(approval.Status).
+		SetAction(approval.Action).
+		SetComment(approval.Comment)
+
+	if approval.ApproverID != nil {
+		update.SetApproverID(*approval.ApproverID)
+	}
+	if approval.ApproverName != "" {
+		update.SetApproverName(approval.ApproverName)
+	}
+	if approval.ProcessedAt != nil {
+		update.SetProcessedAt(*approval.ProcessedAt)
+	}
+	if approval.Node != nil {
+		update.SetNode(approval.Node)
+	}
+
+	return update.Exec(ctx)
+}
+
 func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error {
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
@@ -506,6 +533,48 @@ func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *Servi
 	}
 
 	return tx.Commit()
+}
+
+func (r *EntRepository) UpdateRequestAndApprovalWithClient(ctx context.Context, txc *ent.Client, req *ServiceRequest, approval *ServiceRequestApproval) error {
+	reqUpdate := txc.ServiceRequest.UpdateOneID(req.ID).
+		Where(
+			servicerequest.TenantIDEQ(req.TenantID),
+			servicerequest.DeletedAtIsNil(),
+			servicerequest.VersionEQ(req.Version),
+		).
+		SetStatus(req.Status).
+		SetCurrentLevel(req.CurrentLevel).
+		AddVersion(1)
+	if req.Status == SRStatusSecurityApproved {
+		reqUpdate.SetApprovedAt(time.Now())
+	}
+	if err := reqUpdate.Exec(ctx); err != nil {
+		return err
+	}
+
+	appUpdate := txc.ServiceRequestApproval.UpdateOneID(approval.ID).
+		Where(
+			servicerequestapproval.TenantIDEQ(req.TenantID),
+			servicerequestapproval.ServiceRequestIDEQ(req.ID),
+			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+		).
+		SetStatus(approval.Status).
+		SetAction(approval.Action).
+		SetComment(approval.Comment)
+
+	if approval.ApproverID != nil {
+		appUpdate.SetApproverID(*approval.ApproverID)
+	}
+	if approval.ApproverName != "" {
+		appUpdate.SetApproverName(approval.ApproverName)
+	}
+	if approval.ProcessedAt != nil {
+		appUpdate.SetProcessedAt(*approval.ProcessedAt)
+	}
+	if approval.Node != nil {
+		appUpdate.SetNode(approval.Node)
+	}
+	return appUpdate.Exec(ctx)
 }
 
 func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error) {

@@ -130,14 +130,14 @@ func createBridgeProcessFixtureWithDelegate(t *testing.T, client *ent.Client, te
 	return instance.ID, task.ID
 }
 
-func TestBPMNApprovalBridge_NoInstanceFallsBack(t *testing.T) {
+func TestBPMNApprovalBridge_NoInstanceFailsClosed(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "bridge_no_instance")
 	tenantID, actorID := setupBridgeTenantAndActor(t, client, "none")
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
 	handled, err := bridge.CompleteBusinessApprovalTask(context.Background(), tenantID, actorID, "ticket", 999, "approve", "")
-	require.NoError(t, err)
-	assert.False(t, handled, "无关联流程实例时应回退旧逻辑")
+	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+	assert.False(t, handled)
 }
 
 func TestBPMNApprovalBridge_CompletesTaskAndRecordsDecision(t *testing.T) {
@@ -192,9 +192,8 @@ func TestBPMNApprovalBridge_TenantIsolation(t *testing.T) {
 	createBridgeProcessFixture(t, client, tenantB, "tb1", "ticket:123", actorA)
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
-	// 租户 A 审批同名业务键：不应命中租户 B 的实例，应回退旧逻辑
 	handled, err := bridge.CompleteBusinessApprovalTask(context.Background(), tenantA, actorA, "ticket", 123, "approve", "")
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
 	assert.False(t, handled, "跨租户不得命中其他租户的流程实例")
 
 	// 租户 B 的任务未被动过
@@ -203,14 +202,52 @@ func TestBPMNApprovalBridge_TenantIsolation(t *testing.T) {
 	assert.Equal(t, 1, count)
 }
 
-func TestBPMNApprovalBridge_DelegateNoInstanceFallsBack(t *testing.T) {
+func TestBPMNApprovalBridge_DelegateNoInstanceFailsClosed(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "bridge_delegate_none")
 	tenantID, actorID := setupBridgeTenantAndActor(t, client, "dnone")
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
 	handled, err := bridge.DelegateBusinessApprovalTask(context.Background(), tenantID, actorID, "ticket", 999, actorID+1)
-	require.NoError(t, err)
-	assert.False(t, handled, "无关联流程实例时应回退旧逻辑")
+	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+	assert.False(t, handled)
+}
+
+func TestBPMNApprovalBridge_NoActionableTaskFailsClosed(t *testing.T) {
+	for _, state := range []string{"suspended", "completed", "noPendingTask"} {
+		for _, action := range []string{"approve", "reject", "delegate"} {
+			t.Run(state+"/"+action, func(t *testing.T) {
+				client := newApprovalBridgeTestClient(t, "bridge_"+state+action)
+				tenantID, actorID := setupBridgeTenantAndActor(t, client, state+action)
+				instanceID, taskID := createBridgeProcessFixture(t, client, tenantID, state+action, "ticket:123", actorID)
+				ctx := context.Background()
+				if state == "noPendingTask" {
+					require.NoError(t, client.ProcessTask.UpdateOneID(taskID).SetStatus("completed").Exec(ctx))
+				} else {
+					require.NoError(t, client.ProcessInstance.UpdateOneID(instanceID).SetStatus(state).Exec(ctx))
+				}
+				before, err := client.ProcessTask.Get(ctx, taskID)
+				require.NoError(t, err)
+				bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
+				for attempt := 0; attempt < 2; attempt++ {
+					var handled bool
+					if action == "delegate" {
+						handled, err = bridge.DelegateBusinessApprovalTask(ctx, tenantID, actorID, "ticket", 123, actorID)
+					} else {
+						handled, err = bridge.CompleteBusinessApprovalTask(ctx, tenantID, actorID, "ticket", 123, action, "")
+					}
+					require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+					assert.False(t, handled)
+				}
+				after, err := client.ProcessTask.Get(ctx, taskID)
+				require.NoError(t, err)
+				assert.Equal(t, before.Status, after.Status)
+				assert.Equal(t, before.Assignee, after.Assignee)
+				count, err := client.ProcessApprovalDecision.Query().Count(ctx)
+				require.NoError(t, err)
+				assert.Zero(t, count)
+			})
+		}
+	}
 }
 
 func TestBPMNApprovalBridge_DelegateReassignsTaskAndAllowsNewAssigneeToComplete(t *testing.T) {
