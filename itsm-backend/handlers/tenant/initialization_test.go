@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common/tenantctx"
+	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
@@ -20,6 +21,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+// newGuardedClient 打开带生产安全拦截器（软删除 + 租户写护栏）的测试客户端：
+// 命令消费与初始化状态都必须在真实护栏下验证，否则跨租户写缺陷会被漏掉。
+func newGuardedClient(t *testing.T) *ent.Client {
+	t.Helper()
+	client := enttest.Open(t, "sqlite3", "file:tenantinit?mode=memory&cache=shared&_fk=1")
+	database.RegisterSecurityInterceptors(client, "off")
+	return client
+}
 
 type recordingInstaller struct {
 	tenantIDs    []int
@@ -48,7 +58,7 @@ func bootstrapCommand(tenantID int) *ent.OperationalCommand {
 // 命令消费者不得信任 payload 自报身份：必须按命令租户重新加载权威租户，
 // 缺失/已删除/平台租户都不能触发安装，失败要上抛让 outbox 记录可观察失败。
 func TestProvisioningCommandHandlerInstallsWithReloadedTenant(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:tenantinit?mode=memory&cache=shared&_fk=1")
+	client := newGuardedClient(t)
 	defer client.Close()
 	ctx := context.Background()
 	installer := &recordingInstaller{}
@@ -65,7 +75,7 @@ func TestProvisioningCommandHandlerInstallsWithReloadedTenant(t *testing.T) {
 }
 
 func TestProvisioningCommandHandlerRejectsUnsafeCommands(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:tenantinit?mode=memory&cache=shared&_fk=1")
+	client := newGuardedClient(t)
 	defer client.Close()
 	ctx := context.Background()
 	installer := &recordingInstaller{}
@@ -117,7 +127,7 @@ func TestProvisioningCommandHandlerRejectsUnsafeCommands(t *testing.T) {
 // 状态接口必须报告真实安装结果，而不是命令表面成功：
 // 逐组件只读验证决定 ready，命令状态与历史版本标记单独如实呈现。
 func TestInitializationServiceStatusReportsRealState(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:tenantinit?mode=memory&cache=shared&_fk=1")
+	client := newGuardedClient(t)
 	defer client.Close()
 	ctx := context.Background()
 	target, err := client.Tenant.Create().SetName("Status Tenant").SetCode("status-tenant").

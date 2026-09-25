@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
@@ -80,7 +81,15 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 
 	// 幂等键以租户创建事件为身份：每个租户只安装一次产品基线，
 	// 重复请求会被 outbox 去重，而不是绕过重复保护再装一遍。
-	if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+	// 命令行归属目标租户，而本请求运行在操作者租户上下文里：这是
+	// 跨租户系统任务，必须用显式 system context 并留审计（否则租户写
+	// 护栏按跨租户插入拦截，开通接口整体 500）。
+	enqueueCtx := tenantctx.SystemContext(
+		ctx,
+		"tenant:create",
+		fmt.Sprintf("enqueue baseline install command for tenant %s (%d)", tenantEntity.Code, tenantEntity.ID),
+	)
+	if _, err := commandbus.EnqueueTx(enqueueCtx, tx, commandbus.EnqueueRequest{
 		TenantID:       tenantEntity.ID,
 		CommandType:    commandbus.CommandTenantBootstrapInstall,
 		AggregateType:  "tenant",

@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common/tenantctx"
+	"itsm-backend/database"
+
 	_ "github.com/mattn/go-sqlite3"
 
 	"itsm-backend/dto"
@@ -22,8 +25,13 @@ import (
 
 // ==================== 测试设置辅助函数 ====================
 
+// setupTenantTest 返回的客户端注册了与生产完全相同的安全拦截器
+// （软删除 + 租户写护栏）。测试必须跑在真实护栏下，否则跨租户写类缺陷
+// 会被漏掉——浏览器回归曾实测到 outbox 入队被护栏拦下导致开通接口 500。
 func setupTenantTest(t *testing.T) (*ent.Client, *TenantService, context.Context) {
+	t.Helper()
 	client := enttest.Open(t, "sqlite3", testDSN())
+	database.RegisterSecurityInterceptors(client, "off")
 	logger := zaptest.NewLogger(t).Sugar()
 	service := NewTenantService(client, logger)
 	ctx := context.Background()
@@ -61,6 +69,32 @@ func TestTenantService_CreateTenant_EnqueuesBaselineInstall(t *testing.T) {
 	total, err := client.OperationalCommand.Query().Count(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, 2, total)
+}
+
+// 浏览器回归实测暴露的缺陷：真实客户端注册了租户写护栏后，outbox 命令行归属
+// 目标租户，而创建请求运行在操作者租户上下文里，直接入队会被护栏按跨租户
+// 插入拦截，导致 POST /api/v1/tenants 整体 500。基线安装是 bootstrap/seed 类
+// 跨租户任务，必须走显式 system context（带审计）。
+func TestTenantService_CreateTenant_EnqueueSurvivesTenantWriteGuard(t *testing.T) {
+	client, service, _ := setupTenantTest(t)
+	defer client.Close()
+	operatorCtx := tenantctx.WithTenantID(context.Background(), 55)
+
+	_, err := client.OperationalCommand.Create().
+		SetTenantID(1).SetCommandType("guard-probe").SetAggregateType("tenant").
+		SetAggregateID(1).SetIdempotencyKey("guard-probe").Save(operatorCtx)
+	require.ErrorContains(t, err, "cross-tenant insert blocked", "护栏必须在位，否则本测试无意义")
+
+	created, err := service.CreateTenant(operatorCtx, &dto.CreateTenantRequest{
+		Name: "Guarded Tenant", Code: "GUARDED-TENANT", Type: "standard",
+	})
+	require.NoError(t, err, "基线安装命令的入队必须通过租户写护栏")
+
+	command, err := client.OperationalCommand.Query().Only(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, commandbus.CommandTenantBootstrapInstall, command.CommandType)
+	assert.Equal(t, created.ID, command.TenantID, "命令归属目标租户")
+	assert.Equal(t, created.ID, command.AggregateID)
 }
 
 func TestTenantService_CreateTenant_RollsBackWhenEnqueueFails(t *testing.T) {

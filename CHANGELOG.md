@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 修复新建租户接口 500：产品基线安装的 outbox 命令归属目标租户，而创建请求运行在操作者租户上下文，被租户写护栏按跨租户插入拦截（浏览器回归实测发现）；跨租户的 bootstrap/seed 类命令入队改走显式 system context 并留审计，测试 fixture 同步注册生产安全拦截器，杜绝只测裸客户端漏掉真实入口
 - teams 与工单类型改为按租户按条目 reconcile：存量租户的部分集合可前滚补齐（此前"任一行存在即整段跳过"会让缺口永远补不上），不覆盖客户改名
 - 租户创建不再留下"已建但无基线"的孤儿租户：`POST /api/v1/tenants` 在同一事务内投递 `tenant.bootstrap.install` outbox 命令，入队失败连同租户一起回滚；worker 消费后按命令租户重新加载校验并安装产品基线（复用平台初始化同一套组件，不复制第二套实现），新增 `GET /api/v1/tenants/:id/initialization` 只读接口如实报告逐组件验证结果与命令状态
 - 修复生产环境数据库迁移失败问题：部分迁移脚本内嵌事务控制语句导致整批迁移中止
