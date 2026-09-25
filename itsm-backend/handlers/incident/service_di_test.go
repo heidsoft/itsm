@@ -15,11 +15,13 @@ func TestNewServiceWiresProductionIncidentDependencies(t *testing.T) {
 	monitoringSvc := production.NewIncidentMonitoringService(nil, zap.NewNop().Sugar())
 	alertingSvc := production.NewIncidentAlertingService(nil, zap.NewNop().Sugar())
 	rootCauseSvc := production.NewRootCauseAnalysisService(nil)
+	slaMonitor := production.NewSLAMonitorService(nil, zap.NewNop().Sugar())
 
-	svc := NewService(repo, incidentSvc, monitoringSvc, alertingSvc, rootCauseSvc, zap.NewNop().Sugar())
+	svc := NewService(repo, incidentSvc, monitoringSvc, alertingSvc, rootCauseSvc, slaMonitor, zap.NewNop().Sugar())
 
 	require.Same(t, incidentSvc, svc.productionService)
 	require.Same(t, monitoringSvc, svc.monitoringService)
 	require.Same(t, alertingSvc, svc.alertingSvc)
 	require.Same(t, rootCauseSvc, svc.rootCauseSvc)
+	require.Same(t, slaMonitor, svc.slaMonitor)
 }

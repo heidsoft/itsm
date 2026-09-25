@@ -382,7 +382,10 @@ func NewApplication() *Application {
 	// bootstrap 没注入，router 看到的字段为 nil，路由被 if 守卫跳过
 	applicationHTTPHandler := applicationHandler.NewHandler(service.NewApplicationService(client))
 	incidentRepo := incident.NewEntRepository(client)
-	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, sugar)
+	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用（此前两域均为假成功或未接入）。
+	slaMonitorService := service.NewSLAMonitorService(client, sugar)
+	slaMonitorService.SetNotificationService(ticketNotificationService)
+	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, slaMonitorService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
@@ -539,7 +542,7 @@ func NewApplication() *Application {
 	})
 	ticketService.EnableWorkflowOutbox()
 	ticketRepo := ticket.NewEntRepository(ticketRepoImpl)
-	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, sugar)
+	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, slaMonitorService, sugar)
 	ticketHandler := ticket.NewHandler(ticketHandlerService)
 	// Dashboard handler v1.1 回归：之前未初始化导致 /api/v1/dashboard/overview 等全部 404
 	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；
@@ -1067,12 +1070,10 @@ func NewApplication() *Application {
 	// Approval Chain Controller
 
 	// SLA Monitor & Alert Services (legacy, for background tasks)
-	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaAlertService := service.NewSLAAlertService(client, sugar)
 	escalationService := service.NewEscalationService(client, sugar)
 
 	// Wire up notification service
-	slaMonitorService.SetNotificationService(ticketNotificationService)
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
 

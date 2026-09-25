@@ -14,6 +14,7 @@ import (
 	"itsm-backend/database"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
@@ -351,15 +352,15 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context, tenantID int) (*dt
 	}, nil
 }
 
-// getIncidentMetrics 获取事件指标
+// getIncidentMetrics 获取事件指标（真实事件域数据；此前平均解决时长是 240 分钟模拟值）
 func (s *DashboardService) getIncidentMetrics(ctx context.Context, tenantID int) (*dto.IncidentMetrics, error) {
 	// 获取高优先级事件数量
-	highPriorityCount, err := s.client.Ticket.Query().
+	highPriorityCount, err := s.client.Incident.Query().
 		Where(
-			ticket.TenantID(tenantID),
-			ticket.PriorityIn("high", "critical"),
-			ticket.StatusNEQ("closed"),
-			ticket.DeletedAtIsNil(),
+			incident.TenantID(tenantID),
+			incident.PriorityIn("high", "critical"),
+			incident.StatusNEQ("closed"),
+			incident.DeletedAtIsNil(),
 		).
 		Count(ctx)
 	if err != nil {
@@ -367,45 +368,81 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context, tenantID int)
 	}
 
 	// 获取总事件数
-	totalIncidents, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+	totalIncidents, err := s.client.Incident.Query().
+		Where(incident.TenantID(tenantID), incident.DeletedAtIsNil()).
 		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	// 平均解决时长：已解决事件的 (resolved_at - created_at) 均值，无数据如实为 0
+	resolved, err := s.client.Incident.Query().
+		Where(
+			incident.TenantID(tenantID),
+			incident.DeletedAtIsNil(),
+			incident.ResolvedAtNotNil(),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	avgMinutes := 0.0
+	if len(resolved) > 0 {
+		total := 0.0
+		for _, item := range resolved {
+			total += item.ResolvedAt.Sub(item.CreatedAt).Minutes()
+		}
+		avgMinutes = total / float64(len(resolved))
+	}
+
 	return &dto.IncidentMetrics{
 		HighPriorityCount: highPriorityCount,
 		TotalIncidents:    totalIncidents,
-		AvgResolutionTime: 240, // 模拟数据：4小时
+		AvgResolutionTime: int(math.Round(avgMinutes)),
 	}, nil
 }
 
-// getChangeMetrics 获取变更指标
+// getChangeMetrics 获取变更指标（真实变更域数据；此前成功率是 95.5% 模拟值）
 func (s *DashboardService) getChangeMetrics(ctx context.Context, tenantID int) (*dto.ChangeMetrics, error) {
-	// 获取待审批的变更数量
-	pendingApproval, err := s.client.Ticket.Query().
+	// 待审批：已提交等待审批决策的变更
+	pendingApproval, err := s.client.Change.Query().
 		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusEQ("pending"),
-			ticket.DeletedAtIsNil(),
+			change.TenantID(tenantID),
+			change.StatusEQ(common.ChangeStatusSubmitted),
 		).
 		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// 获取总变更数
-	totalChanges, err := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+	totalChanges, err := s.client.Change.Query().
+		Where(change.TenantID(tenantID)).
 		Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	// 成功率 = completed / (completed + failed)；尚无已落地变更时如实为 0
+	completed, err := s.client.Change.Query().
+		Where(change.TenantID(tenantID), change.StatusEQ(common.ChangeStatusCompleted)).
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	failed, err := s.client.Change.Query().
+		Where(change.TenantID(tenantID), change.StatusEQ(common.ChangeStatusFailed)).
+		Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	successRate := 0.0
+	if finished := completed + failed; finished > 0 {
+		successRate = math.Round(float64(completed)/float64(finished)*10000) / 100
+	}
+
 	return &dto.ChangeMetrics{
 		PendingApproval: pendingApproval,
-		SuccessRate:     95.5, // 模拟数据
+		SuccessRate:     successRate,
 		TotalChanges:    totalChanges,
 	}, nil
 }

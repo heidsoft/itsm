@@ -64,7 +64,7 @@ func newListContractFixture(t *testing.T) *listContractFixture {
 		client: client,
 		handler: NewHandler(NewService(NewEntRepository(client),
 			service.NewIncidentService(client, zap.NewNop().Sugar(), nil),
-			nil, nil, nil, zap.NewNop().Sugar())),
+			nil, nil, nil, nil, zap.NewNop().Sugar())),
 		tenantA: tenantA.ID,
 		tenantB: tenantB.ID,
 		agentA:  mkUser("agent-a", tenantA.ID),

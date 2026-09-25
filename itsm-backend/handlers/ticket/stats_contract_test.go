@@ -30,7 +30,7 @@ func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {
 			client.Ticket.Create().SetTitle(status).SetTicketNumber(suffix + status).SetStatus(status).SetRequesterID(user.ID).SetTenantID(tenant.ID).SetSLAResolutionDeadline(time.Now().Add(-time.Hour)).SaveX(ctx)
 		}
 	}
-	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, nil, zap.NewNop().Sugar()))
 	r := gin.New()
 	r.GET("/api/v1/tickets/stats", func(c *gin.Context) {
 		c.Set("tenant_id", 1)

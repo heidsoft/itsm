@@ -411,22 +411,14 @@ func (h *Handler) DeleteArticle(c *gin.Context) {
 }
 
 // GetArticleComments handles GET /api/v1/knowledge/articles/:id/comments
+// 评论尚未落地（无存储模型）：显式返回 unready，而不是空成功伪装成"暂无评论"。
 func (h *Handler) GetArticleComments(c *gin.Context) {
-	// Stub implementation
-	common.Success(c, gin.H{
-		"comments": []interface{}{},
-		"total":    0,
-	})
+	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
 }
 
 // AddArticleComment handles POST /api/v1/knowledge/articles/:id/comments
 func (h *Handler) AddArticleComment(c *gin.Context) {
-	// Stub implementation
-	common.Success(c, gin.H{
-		"id":        "stub_comment_id",
-		"content":   "This is a stub comment",
-		"createdAt": "2024-01-01T00:00:00Z",
-	})
+	common.Fail(c, common.ServiceUnavailableCode, "知识文章评论功能尚未实现")
 }
 
 // ListRestrictedCategories handles GET /api/v1/knowledge/categories/restricted

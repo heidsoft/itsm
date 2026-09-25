@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -739,6 +740,15 @@ func (s *SLAMonitorService) StartSLAWatcher(ctx context.Context, interval time.D
 	}
 }
 
+// slaLookupError 把暂停/恢复入口的实体查询错误收敛成哨兵语义：
+// 不存在是业务拒绝（404），其余为内部错误交由 handler 兜底。
+func slaLookupError(entity string, err error) error {
+	if ent.IsNotFound(err) {
+		return common.NewBusinessError(common.NotFoundCode, entity+"不存在", "")
+	}
+	return fmt.Errorf("查询%s失败: %w", entity, err)
+}
+
 // PauseSLA 暂停工单/事件的SLA计时（P0-2）
 func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityType string, entityID int, reason string) error {
 	now := time.Now()
@@ -749,10 +759,10 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("查询工单失败: %w", err)
+			return slaLookupError("工单", err)
 		}
 		if t.SLAStatus == "paused" {
-			return fmt.Errorf("工单SLA已处于暂停状态")
+			return common.NewBusinessError(common.ConflictCode, "工单SLA已处于暂停状态", "")
 		}
 		return s.client.Ticket.UpdateOneID(entityID).
 			SetSLAStatus("paused").
@@ -765,10 +775,10 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("查询事件失败: %w", err)
+			return slaLookupError("事件", err)
 		}
 		if inc.SLAStatus == "paused" {
-			return fmt.Errorf("事件SLA已处于暂停状态")
+			return common.NewBusinessError(common.ConflictCode, "事件SLA已处于暂停状态", "")
 		}
 		return s.client.Incident.UpdateOneID(entityID).
 			SetSLAStatus("paused").
@@ -791,10 +801,10 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("查询工单失败: %w", err)
+			return slaLookupError("工单", err)
 		}
 		if t.SLAStatus != "paused" {
-			return fmt.Errorf("工单SLA未处于暂停状态")
+			return common.NewBusinessError(common.ConflictCode, "工单SLA未处于暂停状态", "")
 		}
 
 		// 计算暂停时长，延长deadline
@@ -819,10 +829,10 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("查询事件失败: %w", err)
+			return slaLookupError("事件", err)
 		}
 		if inc.SLAStatus != "paused" {
-			return fmt.Errorf("事件SLA未处于暂停状态")
+			return common.NewBusinessError(common.ConflictCode, "事件SLA未处于暂停状态", "")
 		}
 
 		updater := s.client.Incident.UpdateOneID(entityID).

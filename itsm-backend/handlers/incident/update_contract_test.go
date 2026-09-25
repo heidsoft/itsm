@@ -63,7 +63,7 @@ func newUpdateContractFixture(t *testing.T) *updateContractFixture {
 
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	repo := NewEntRepository(client)
-	handler := NewHandler(NewService(repo, production, nil, nil, nil, zap.NewNop().Sugar()))
+	handler := NewHandler(NewService(repo, production, nil, nil, nil, nil, zap.NewNop().Sugar()))
 
 	return &updateContractFixture{
 		client:   client,

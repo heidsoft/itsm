@@ -28,6 +28,7 @@ type Service struct {
 	monitoringService     *service.IncidentMonitoringService
 	alertingSvc           *service.IncidentAlertingService
 	rootCauseSvc          *service.RootCauseAnalysisService
+	slaMonitor            *service.SLAMonitorService
 	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
@@ -62,13 +63,14 @@ type IncidentMetricsReadModel struct {
 	MetricsCount int
 }
 
-func NewService(repo Repository, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
 	return &Service{
 		repo:              repo,
 		productionService: productionSvc,
 		monitoringService: monitoringSvc,
 		alertingSvc:       alertingSvc,
 		rootCauseSvc:      rootCauseSvc,
+		slaMonitor:        slaMonitor,
 		logger:            logger,
 	}
 }
@@ -136,12 +138,18 @@ func (s *Service) Delete(ctx context.Context, id, tenantID int, actorID int, act
 	return lifecycleError(s.productionService.DeleteIncident(ctx, id, tenantID))
 }
 
-func (s *Service) PauseSLA(_ context.Context, _, _ int) error {
-	return common.NewBusinessError(common.ServiceUnavailableCode, "事件 SLA 暂停尚未接入计时服务", "")
+func (s *Service) PauseSLA(ctx context.Context, id, tenantID int) error {
+	if s.slaMonitor == nil {
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+	}
+	return s.slaMonitor.PauseSLA(ctx, tenantID, "incident", id, "事件SLA人工暂停")
 }
 
-func (s *Service) ResumeSLA(_ context.Context, _, _ int) error {
-	return common.NewBusinessError(common.ServiceUnavailableCode, "事件 SLA 恢复尚未接入计时服务", "")
+func (s *Service) ResumeSLA(ctx context.Context, id, tenantID int) error {
+	if s.slaMonitor == nil {
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+	}
+	return s.slaMonitor.ResumeSLA(ctx, tenantID, "incident", id)
 }
 
 func (s *Service) CreateIncidentEvent(ctx context.Context, req *dto.CreateIncidentEventRequest, tenantID int) (*dto.IncidentEventResponse, error) {

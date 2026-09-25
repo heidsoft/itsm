@@ -1112,9 +1112,11 @@ func (h *Handler) PauseSLA(c *gin.Context) {
 		return
 	}
 
-	// SLA pause requires the SLAMonitorService; delegate via common.Success
-	// with a note that the real implementation lives in controller layer.
-	common.Success(c, gin.H{"message": "SLA已暂停", "ticketId": id})
+	if err := h.service.PauseSLA(c.Request.Context(), tenantID, id, req.Reason); err != nil {
+		common.RespondError(c, err, "暂停SLA失败")
+		return
+	}
+	common.Success(c, gin.H{"message": "SLA已暂停", "ticketId": id, "slaStatus": "paused"})
 }
 
 // ResumeSLA handles PUT /api/v1/tickets/:id/sla/resume
@@ -1134,7 +1136,11 @@ func (h *Handler) ResumeSLA(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{"message": "SLA已恢复", "ticketId": id})
+	if err := h.service.ResumeSLA(c.Request.Context(), tenantID, id); err != nil {
+		common.RespondError(c, err, "恢复SLA失败")
+		return
+	}
+	common.Success(c, gin.H{"message": "SLA已恢复", "ticketId": id, "slaStatus": "active"})
 }
 
 // -----------------------------------------------------------------------------

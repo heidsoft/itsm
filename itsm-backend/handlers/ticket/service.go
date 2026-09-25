@@ -18,12 +18,29 @@ import (
 type Service struct {
 	repo          Repository
 	productionSvc *service.TicketService
+	slaMonitor    *service.SLAMonitorService
 	logger        *zap.SugaredLogger
 }
 
 // NewService creates a new ticket service.
-func NewService(repo Repository, productionSvc *service.TicketService, logger *zap.SugaredLogger) *Service {
-	return &Service{repo: repo, productionSvc: productionSvc, logger: logger}
+func NewService(repo Repository, productionSvc *service.TicketService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
+	return &Service{repo: repo, productionSvc: productionSvc, slaMonitor: slaMonitor, logger: logger}
+}
+
+// PauseSLA 暂停工单 SLA 计时，落到 SLA 领域的权威实现。
+func (s *Service) PauseSLA(ctx context.Context, tenantID, ticketID int, reason string) error {
+	if s.slaMonitor == nil {
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+	}
+	return s.slaMonitor.PauseSLA(ctx, tenantID, "ticket", ticketID, reason)
+}
+
+// ResumeSLA 恢复工单 SLA 计时（暂停时长顺延截止时间）。
+func (s *Service) ResumeSLA(ctx context.Context, tenantID, ticketID int) error {
+	if s.slaMonitor == nil {
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 计时服务未接入", "")
+	}
+	return s.slaMonitor.ResumeSLA(ctx, tenantID, "ticket", ticketID)
 }
 
 // Create creates a new ticket.

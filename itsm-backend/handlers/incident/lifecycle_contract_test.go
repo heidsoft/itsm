@@ -31,7 +31,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 	// repo 不能为 nil。接真实 Ent repo：reporter 本人操作守卫放行，跨租户由
 	// repo.Get 返回 ent NotFound（404），既有契约断言不变。
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
 	for _, tc := range []struct {
 		name, path           string
 		tenant, status, code int
@@ -39,7 +39,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 		{"transition", "acknowledge", tenant.ID, 409, 4090},
 		{"foreign", "acknowledge", tenant.ID + 1, 404, 4004},
 		{"missing identity", "acknowledge", 0, 401, 2001},
-		{"sla unavailable", "sla/pause", tenant.ID, 503, 5003},
+		{"sla pause", "sla/pause", tenant.ID, 200, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := gin.New()
@@ -63,6 +63,37 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 		})
 	}
 	require.Equal(t, "closed", client.Incident.GetX(ctx, inc.ID).Status)
+
+	// SLA 暂停契约（2026-09-25 假成功收口）：暂停必须真实落库；重复暂停、
+	// 未暂停时恢复都是 409 冲突，不再是假成功或"未接入"。
+	paused := client.Incident.GetX(ctx, inc.ID)
+	require.Equal(t, "paused", paused.SLAStatus, "暂停必须落库")
+	require.False(t, paused.SLAPausedAt.IsZero())
+
+	r := gin.New()
+	r.Use(func(c *gin.Context) { c.Set("tenant_id", tenant.ID); c.Set("user_id", user.ID) })
+	r.PUT("/api/v1/incidents/:id/sla/pause", h.PauseSLA)
+	r.PUT("/api/v1/incidents/:id/sla/resume", h.ResumeSLA)
+	call := func(method, path string) (int, int) {
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, httptest.NewRequest(method, path, nil))
+		var response struct {
+			Code int `json:"code"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+		return w.Code, response.Code
+	}
+
+	status, code := call(http.MethodPut, "/api/v1/incidents/"+strconv.Itoa(inc.ID)+"/sla/pause")
+	require.Equal(t, 409, status, "重复暂停必须是冲突")
+	require.Equal(t, 4090, code)
+	status, code = call(http.MethodPut, "/api/v1/incidents/"+strconv.Itoa(inc.ID)+"/sla/resume")
+	require.Equal(t, 200, status)
+	require.Equal(t, 0, code)
+	require.Equal(t, "active", client.Incident.GetX(ctx, inc.ID).SLAStatus)
+	status, code = call(http.MethodPut, "/api/v1/incidents/"+strconv.Itoa(inc.ID)+"/sla/resume")
+	require.Equal(t, 409, status, "未暂停时恢复必须是冲突")
+	require.Equal(t, 4090, code)
 }
 
 // TestLifecycleGuard_SQLite_AllowedByRelation 用真实 Ent + 真实 production
@@ -83,7 +114,7 @@ func TestLifecycleGuard_SQLite_AllowedByRelation(t *testing.T) {
 
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
 
 	// 每个事件单单号唯一（incidents.incident_number 全局唯一约束），
 	// actorID 取真实租户用户（createIncidentEventTx 校验 actor 必须是
@@ -176,7 +207,7 @@ func TestAssignGuard_SQLite_NotRowLevelEnforced(t *testing.T) {
 
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
 
 	inc := client.Incident.Create().
 		SetTitle("assign boundary").SetIncidentNumber("INC-GA-ASSIGN").

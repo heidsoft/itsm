@@ -890,7 +890,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 
 // GetProblemComments handles GET /api/v1/problems/:id/comments
 // @Summary 获取问题评论
-// @Description 获取问题评论列表（评论功能暂未实现，返回空列表）
+// @Description 获取问题评论列表（评论功能尚未实现，返回 5003 unready）
 // @Tags 问题管理
 // @Produce json
 // @Param id path int true "问题ID"
@@ -921,17 +921,14 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		return
 	}
 
-	// Problem comments are not yet stored in a dedicated table;
-	// return an empty list to satisfy the API contract.
-	common.Success(c, gin.H{
-		"comments": []interface{}{},
-		"total":    0,
-	})
+	// Problem comments are not yet stored in a dedicated table: 显式 unready，
+	// 不用空成功伪装"暂无评论"。
+	common.Fail(c, common.ServiceUnavailableCode, "问题评论功能尚未实现")
 }
 
 // AddProblemComment handles POST /api/v1/problems/:id/comments
 // @Summary 添加问题评论
-// @Description 为问题添加评论（评论功能暂未实现，返回501错误）
+// @Description 为问题添加评论（评论功能尚未实现，返回 5003 unready）
 // @Tags 问题管理
 // @Accept json
 // @Produce json
@@ -964,5 +961,5 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 	}
 
 	// Problem comments are not yet stored in a dedicated table.
-	common.Fail(c, common.InternalErrorCode, "problem comments are not yet supported")
+	common.Fail(c, common.ServiceUnavailableCode, "问题评论功能尚未实现")
 }
