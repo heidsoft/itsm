@@ -85,6 +85,7 @@ type TenantInitializationStatusResponse struct {
 	// RecordedVersion 是历史版本标记（兼容读取），真值来自逐组件验证。
 	RecordedVersion string                                `json:"recordedVersion,omitempty"`
 	RecordedAt      *time.Time                            `json:"recordedAt,omitempty"`
+	CommandID       int64                                 `json:"commandId,omitempty"`
 	CommandStatus   string                                `json:"commandStatus"`
 	CommandAttempts int                                   `json:"commandAttempts"`
 	CommandError    string                                `json:"commandError,omitempty"`

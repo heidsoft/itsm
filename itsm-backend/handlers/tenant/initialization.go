@@ -105,6 +105,7 @@ func (s *InitializationService) Status(ctx context.Context, tenantID int) (*dto.
 		First(systemContextFor(ctx, tenantID))
 	switch {
 	case err == nil:
+		response.CommandID = int64(command.ID)
 		response.CommandStatus = command.Status
 		response.CommandAttempts = command.Attempt
 		if command.LastError != "" {

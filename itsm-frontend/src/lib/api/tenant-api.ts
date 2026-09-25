@@ -39,6 +39,11 @@ export class TenantAPI {
     return httpClient.get<TenantInitializationStatus>(`/api/v1/tenants/${id}/initialization`);
   }
 
+  // 重放产品基线安装命令（复用运维命令重放入口，保留原幂等键）
+  static async replayInitializationCommand(commandId: number): Promise<void> {
+    return httpClient.post<void>(`/api/v1/admin/operations/commands/${commandId}/replay`);
+  }
+
   // 获取当前用户的租户信息
   static async getCurrentTenant(): Promise<Tenant> {
     return httpClient.get<Tenant>('/api/v1/tenants/current');

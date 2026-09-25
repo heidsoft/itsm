@@ -167,6 +167,7 @@ func TestInitializationServiceStatusReportsRealState(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, status.Ready, "dead_letter 命令不能掩盖未就绪的基线")
 	assert.Equal(t, commandbus.StatusDeadLetter, status.CommandStatus)
+	assert.Positive(t, status.CommandID, "重放入口需要命令 ID")
 	assert.Equal(t, 5, status.CommandAttempts)
 	assert.Equal(t, "install failed", status.CommandError)
 	assert.Equal(t, "1.0.0", status.RecordedVersion)

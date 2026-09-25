@@ -37,9 +37,12 @@ import {
   App,
   Tag,
   DatePicker,
+  Drawer,
+  Descriptions,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { TenantAPI } from '@/lib/api/tenant-api';
+import type { TenantInitializationStatus } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
 
@@ -82,6 +85,8 @@ type Tenant = {
   expiresAt?: string;
 };
 
+type InitStatusEntry = TenantInitializationStatus | 'loading' | 'error';
+
 type TenantFormValues = {
   name: string;
   code: string;
@@ -102,6 +107,11 @@ export default function TenantManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  // 初始化状态按需加载并缓存：状态接口逐组件验证较重，不在列表加载时强拉，
+  // 而是后台限流补齐当前页，单行也可手动查询。
+  const [initStatuses, setInitStatuses] = useState<Record<number, InitStatusEntry>>({});
+  const [initDrawerTenant, setInitDrawerTenant] = useState<Tenant | null>(null);
+  const [replaying, setReplaying] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -120,6 +130,8 @@ export default function TenantManagement() {
       });
 
       setTenants(response.tenants as Tenant[]);
+      // 后台串行补齐当前页初始化状态：不阻塞表格渲染，单元格按需点亮
+      void loadInitStatusesFor(response.tenants as Tenant[]);
 
       // 计算统计数据
       const total = response.tenants.length;
@@ -223,6 +235,48 @@ export default function TenantManagement() {
     }
   };
 
+  // 查询并缓存单个租户的初始化状态（只读）
+  const loadInitStatus = async (tenantId: number) => {
+    setInitStatuses(prev => ({ ...prev, [tenantId]: 'loading' }));
+    try {
+      const status = await TenantAPI.getInitializationStatus(tenantId);
+      setInitStatuses(prev => ({ ...prev, [tenantId]: status }));
+    } catch {
+      setInitStatuses(prev => ({ ...prev, [tenantId]: 'error' }));
+    }
+  };
+
+  // 后台限流补齐当前页状态：状态接口逐组件验证较重，逐个串行拉取避免压垮后端
+  const loadInitStatusesFor = async (list: Tenant[]) => {
+    for (const tenant of list) {
+      if (initStatuses[tenant.id] === undefined) {
+        await loadInitStatus(tenant.id);
+      }
+    }
+  };
+
+  const openInitDrawer = async (record: Tenant) => {
+    setInitDrawerTenant(record);
+    await loadInitStatus(record.id);
+  };
+
+  const handleReplayInstallation = async () => {
+    const entry = initDrawerTenant ? initStatuses[initDrawerTenant.id] : undefined;
+    if (!entry || typeof entry === 'string' || !entry.commandId) {
+      return;
+    }
+    setReplaying(true);
+    try {
+      await TenantAPI.replayInitializationCommand(entry.commandId);
+      message.success('已重放产品基线安装命令');
+      await loadInitStatus(initDrawerTenant!.id);
+    } catch (error) {
+      message.error('重放失败，请查看运维命令详情');
+    } finally {
+      setReplaying(false);
+    }
+  };
+
   // 表格列定义
   const columns: ColumnsType<Tenant> = [
     {
@@ -281,6 +335,42 @@ export default function TenantManagement() {
           {expiresAt ? new Date(expiresAt).toLocaleDateString() : '无'}
         </div>
       ),
+    },
+    {
+      title: '初始化',
+      key: 'initialization',
+      width: 150,
+      render: (_: unknown, record: Tenant) => {
+        const entry = initStatuses[record.id];
+        if (entry === 'loading') {
+          return <Text type="secondary">查询中…</Text>;
+        }
+        if (entry === 'error') {
+          return (
+            <Button type="link" size="small" onClick={() => void loadInitStatus(record.id)}>
+              重试
+            </Button>
+          );
+        }
+        if (!entry) {
+          return (
+            <Button type="link" size="small" onClick={() => void openInitDrawer(record)}>
+              查询
+            </Button>
+          );
+        }
+        const failed = entry.components.filter(item => !item.verified);
+        return (
+          <div className="space-y-1">
+            <Tag color={entry.ready ? 'success' : 'error'}>
+              {entry.ready ? '基线就绪' : `${failed.length} 项未就绪`}
+            </Tag>
+            <Button type="link" size="small" onClick={() => void openInitDrawer(record)}>
+              详情
+            </Button>
+          </div>
+        );
+      },
     },
     {
       title: '操作',
@@ -475,6 +565,101 @@ export default function TenantManagement() {
           className="enterprise-table"
         />
       </Card>
+
+      {/* 产品基线安装状态抽屉 */}
+      <Drawer
+        title={initDrawerTenant ? `初始化状态 · ${initDrawerTenant.name}` : '初始化状态'}
+        open={Boolean(initDrawerTenant)}
+        onClose={() => setInitDrawerTenant(null)}
+        width={560}
+        extra={
+          initDrawerTenant ? (
+            <Space>
+              <Button
+                size="small"
+                onClick={() => void loadInitStatus(initDrawerTenant.id)}
+              >
+                刷新
+              </Button>
+              {(() => {
+                const entry = initStatuses[initDrawerTenant.id];
+                const replayable =
+                  entry &&
+                  typeof entry !== 'string' &&
+                  entry.commandId !== undefined &&
+                  entry.commandStatus === 'dead_letter';
+                return replayable ? (
+                  <Button
+                    size="small"
+                    type="primary"
+                    loading={replaying}
+                    onClick={() => void handleReplayInstallation()}
+                  >
+                    重放安装
+                  </Button>
+                ) : null;
+              })()}
+            </Space>
+          ) : null
+        }
+      >
+        {(() => {
+          const entry = initDrawerTenant ? initStatuses[initDrawerTenant.id] : undefined;
+          if (!entry) {
+            return <Text type="secondary">尚未查询</Text>;
+          }
+          if (entry === 'loading') {
+            return <Text type="secondary">查询中…</Text>;
+          }
+          if (entry === 'error') {
+            return <Text type="danger">状态获取失败，请点击刷新重试</Text>;
+          }
+          return (
+            <div className="space-y-4">
+              <Descriptions column={1} size="small" bordered>
+                <Descriptions.Item label="基线就绪">
+                  <Tag color={entry.ready ? 'success' : 'error'}>{entry.ready ? '是' : '否'}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="安装命令">
+                  {entry.commandStatus}
+                  {entry.commandAttempts > 0 ? `（第 ${entry.commandAttempts} 次尝试）` : ''}
+                </Descriptions.Item>
+                <Descriptions.Item label="模板版本">{entry.templateVersion}</Descriptions.Item>
+                {entry.recordedVersion ? (
+                  <Descriptions.Item label="历史版本标记">{entry.recordedVersion}</Descriptions.Item>
+                ) : null}
+                {entry.commandError ? (
+                  <Descriptions.Item label="命令错误">
+                    <Text type="danger">{entry.commandError}</Text>
+                  </Descriptions.Item>
+                ) : null}
+              </Descriptions>
+              <Table<{ component: string; verified: boolean; error?: string }>
+                rowKey="component"
+                size="small"
+                pagination={false}
+                dataSource={entry.components}
+                columns={[
+                  { title: '组件', dataIndex: 'component' },
+                  {
+                    title: '状态',
+                    dataIndex: 'verified',
+                    width: 90,
+                    render: (verified: boolean) => (
+                      <Tag color={verified ? 'success' : 'error'}>{verified ? '就绪' : '未就绪'}</Tag>
+                    ),
+                  },
+                  {
+                    title: '缺口',
+                    dataIndex: 'error',
+                    render: (error?: string) => error || '—',
+                  },
+                ]}
+              />
+            </div>
+          );
+        })()}
+      </Drawer>
 
       {/* 租户编辑模态框 */}
       <Modal

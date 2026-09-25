@@ -83,6 +83,7 @@ export interface TenantInitializationStatus {
   templateVersion: string;
   recordedVersion?: string;
   recordedAt?: string;
+  commandId?: number;
   commandStatus: 'none' | 'pending' | 'processing' | 'succeeded' | 'dead_letter';
   commandAttempts: number;
   commandError?: string;
