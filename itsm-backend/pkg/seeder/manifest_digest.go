@@ -110,6 +110,18 @@ func manifestDigestInputs(component string) ([]string, error) {
 		// Extension core writes exclusively from the JSON seed manifest.
 		return nil, nil
 
+	case "marketplace-items":
+		// Marketplace 商品目录种子来自 in-code 默认（飞书/钉钉/WeCom/AI/Jira），
+		// 而非 JSON 配置：商品是全局（无 tenant），name 唯一，JSON seed 主要承载
+		// 私有商品覆盖；因此把 in-code 列表当作 version ledger 的事实来源。
+		inputs := make([]string, 0, len(marketplaceItemDefinitions()))
+		for _, item := range marketplaceItemDefinitions() {
+			inputs = append(inputs, fmt.Sprintf("marketplace-item-default=%s|%s|%s|%s|%s|%s|%t|%t|%s",
+				item.Name, item.Type, item.Title, item.Provider, item.LatestVersion,
+				item.MinSystemVersion, item.IsOfficial, item.IsFree, item.License))
+		}
+		return inputs, nil
+
 	default:
 		return nil, fmt.Errorf("unknown component %q", component)
 	}

@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/processbinding"
@@ -50,6 +51,7 @@ var ProductionComponentNames = []string{
 	"sla-core",
 	"cmdb-core",
 	"extension-core",
+	"marketplace-items",
 }
 
 // ProductionInitializers returns the audited production component DAG. The
@@ -192,7 +194,23 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			return target.verifyExtensionTemplates(ctx)
 		},
 	}
-	return []initialization.Initializer{identity, itil, workflow, sla, cmdb, extension}, nil
+	// marketplace-items: 全局商品目录（无 tenant_id），依赖 identity-rbac 以保证
+	// 至少有 platform 租户存在；其他 ITIL 域不需要 marketplace 才能跑。
+	// 与 cmdb/extension 不同，市场商品本身不归任何租户，apply/verify 都跳过 tenant
+	// scope（scopedSeeder 走 platform 分支）。
+	marketplace := &productionComponentInitializer{
+		seeder:       seeder,
+		name:         "marketplace-items",
+		dependencies: []string{"identity-rbac"},
+		checksum:     checksums["marketplace-items"],
+		apply: func(ctx context.Context, transactional *Seeder) error {
+			return transactional.seedMarketplaceItems(ctx)
+		},
+		verify: func(ctx context.Context, target *Seeder) error {
+			return target.verifyMarketplaceItems(ctx)
+		},
+	}
+	return []initialization.Initializer{identity, itil, workflow, sla, cmdb, extension, marketplace}, nil
 }
 
 // scopedSeeder binds a component run to the tenant that receives the baseline.
@@ -201,6 +219,11 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 func (i *productionComponentInitializer) scopedSeeder(scope initialization.Scope) (*Seeder, error) {
 	if err := initialization.ValidateScope(scope); err != nil {
 		return nil, err
+	}
+	// marketplace-items 是全局商品目录（无 tenant_id），不属于任何租户基线：
+	// 强制走 platform 分支，避免空 tenant scope 误报 "baseline missing"。
+	if i.name == "marketplace-items" {
+		return i.seeder, nil
 	}
 	if scope.Type == "tenant" {
 		return i.seeder.withBaselineTenant(int(scope.ID)), nil
@@ -295,6 +318,11 @@ func (i *productionComponentInitializer) Verify(
 	target, err := i.scopedSeeder(scope)
 	if err != nil {
 		return fmt.Errorf("%s: %w", i.name, err)
+	}
+	// marketplace-items 不属于任何租户基线，tenant scope 下无须校验本地副本：
+	// 全局商品目录由 platform 域负责，tenant scope verify 视为不适用。
+	if i.name == "marketplace-items" && scope.Type == "tenant" {
+		return nil
 	}
 	return i.verify(ctx, target)
 }
@@ -598,6 +626,28 @@ func (s *Seeder) verifyCMDBTemplates(ctx context.Context) error {
 		}
 		if !exists {
 			return fmt.Errorf("verify CI types: missing %s", ciType.Name)
+		}
+	}
+	return nil
+}
+
+// verifyMarketplaceItems 校验全局市场商品基线（无 tenant 维度）。
+// 与 CMDB/Extension 不同：MarketplaceItem 表无 tenant_id，name 是唯一键。
+// 校验每条 seed 期望项都已存在；缺失即视为基线破坏，调用方会让 init 退出。
+func (s *Seeder) verifyMarketplaceItems(ctx context.Context) error {
+	expected := s.expectedMarketplaceItems()
+	if len(expected) == 0 {
+		return fmt.Errorf("verify marketplace-items: expected marketplace item baseline is empty")
+	}
+	for _, item := range expected {
+		exists, err := s.client.MarketplaceItem.Query().
+			Where(marketplaceitem.NameEQ(item.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("verify marketplace item %s: %w", item.Name, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify marketplace items: missing %s", item.Name)
 		}
 	}
 	return nil

@@ -272,11 +272,18 @@ func TestColdVerifyScopeContract(t *testing.T) {
 	}
 
 	// A tenant scope resolves its own baseline and must not borrow the platform
-	// tenant's installed records: every component fails on the empty tenant.
+	// tenant's installed records: every tenant-scoped component fails on the
+	// empty tenant. marketplace-items is a platform-owned global catalog
+	// (no tenant_id); it intentionally succeeds on any tenant scope because
+	// its records live in a shared table, not per-tenant state.
 	tenantScope := initialization.Scope{Type: "tenant", ID: int64(empty.ID)}
 	for _, component := range components {
 		plan, err := component.Plan(ctx, tenantScope)
 		require.NoError(t, err)
+		if component.Name() == "marketplace-items" {
+			require.NoError(t, component.Verify(ctx, tenantScope, plan), component.Name())
+			continue
+		}
 		require.Error(t, component.Verify(ctx, tenantScope, plan), component.Name())
 	}
 }

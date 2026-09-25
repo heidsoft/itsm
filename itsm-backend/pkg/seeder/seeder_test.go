@@ -36,6 +36,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// findProductionComponent 通过 name 查找 production component，避免脆弱测试硬编码
+// `components[len(components)-1]` 这种随 ProductionComponentNames 顺序而漂移的下标。
+// 未来若再加 component（譬如 marketplace-items），extension-core 的查找仍然稳定。
+func findProductionComponent(t *testing.T, components []initialization.Initializer, name string) initialization.Initializer {
+	t.Helper()
+	for _, component := range components {
+		if component.Name() == name {
+			return component
+		}
+	}
+	t.Fatalf("production component %q not found", name)
+	return nil
+}
+
 func newTestSeeder(t *testing.T, mode string) (*Seeder, context.Context) {
 	t.Helper()
 	t.Setenv("ADMIN_PASSWORD", "test-admin-password")
@@ -418,7 +432,7 @@ func TestProductionInitializersRepairMissingServiceCatalogWithoutOverwritingTena
 	).Exec(ctx)
 	require.NoError(t, err)
 
-	extension := components[len(components)-1]
+	extension := findProductionComponent(t, components, "extension-core")
 	plan, err := extension.Plan(ctx, scope)
 	require.NoError(t, err)
 	_, err = applyTestComponent(ctx, seeder, extension, scope, plan)

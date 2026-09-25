@@ -22,6 +22,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knownerror"
+	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/menu"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
@@ -99,6 +100,10 @@ type SeedConfig struct {
 	StandardChanges []StandardChangeSeed `json:"standard_changes"`
 	KnownErrors     []KnownErrorSeed     `json:"known_errors"`
 	TicketTags      []TicketTagSeed      `json:"ticket_tags"`
+	// 新增：市场商品种子。MarketplaceItem 是全局表（无 tenant_id），
+	// 用于初始化「飞书/钉钉/WeCom 等」连接器、Skill、Plugin 目录，
+	// 修复 §8 市场空页 bug。
+	MarketplaceItems []MarketplaceItemSeed `json:"marketplace_items"`
 	// 工作流种子配置
 	SeedWorkflows bool `json:"seed_workflows"`
 }
@@ -188,6 +193,32 @@ type CITypeSeed struct {
 	Color       string `json:"color"`
 	// IsActive 缺省为启用：预置 CI 类型应开箱可用，配置省略时不得隐式禁用
 	IsActive *bool `json:"is_active"`
+}
+
+// MarketplaceItemSeed 市场商品种子结构。
+// MarketplaceItem 表无 tenant_id（全局商品目录），name 唯一。
+// 仅作为 seed/manifest 的传输载体；持久化字段由 ent.MarketplaceItem 创建器负责。
+// 缺省发布状态必须为 published，否则 ListItems 的 StatusEQ 过滤会忽略种子。
+type MarketplaceItemSeed struct {
+	Name             string   `json:"name"`
+	Type             string   `json:"type"`
+	Title            string   `json:"title"`
+	Provider         string   `json:"provider"`
+	Description      string   `json:"description"`
+	LongDescription  string   `json:"long_description"`
+	IconURL          string   `json:"icon_url"`
+	Tags             []string `json:"tags"`
+	Category         string   `json:"category"`
+	Capabilities     []string `json:"capabilities"`
+	RequiredPerms    []string `json:"required_permissions"`
+	LatestVersion    string   `json:"latest_version"`
+	MinSystemVersion string   `json:"min_system_version"`
+	IsOfficial       bool     `json:"is_official"`
+	IsFree           bool     `json:"is_free"`
+	Price            float64  `json:"price"`
+	License          string   `json:"license"`
+	Homepage         string   `json:"homepage"`
+	Repository       string   `json:"repository"`
 }
 
 // IncidentSeed 事件种子数据结构
@@ -510,6 +541,9 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 	if override.TicketTags != nil {
 		base.TicketTags = override.TicketTags
 	}
+	if override.MarketplaceItems != nil {
+		base.MarketplaceItems = override.MarketplaceItems
+	}
 	if override.SeedWorkflows {
 		base.SeedWorkflows = true
 	}
@@ -705,6 +739,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	attempt("incident-categories", s.seedIncidentCategories) // 新增：初始化事件分类
 	attempt("standard-changes", s.seedStandardChanges)       // 新增：初始化标准变更模板
 	attempt("ticket-tags", s.seedTicketTags)                 // 新增：初始化标签
+	attempt("marketplace-items", s.seedMarketplaceItems)     // 新增：初始化市场商品（修复 §8 市场空页 bug）
 	s.seedMenuAndPermissionFixes(ctx)                        // 修复：更新菜单路径和补充缺失权限
 	s.seedRolePermissions(ctx)                               // 新增：为角色分配权限
 	s.seedBusinessRecords(ctx)                               // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
@@ -2543,5 +2578,57 @@ func (s *Seeder) seedIncidentCategories(ctx context.Context) error {
 		created++
 	}
 	s.sugar.Infow("incident categories reconciled", "created", created, "tenant_id", t.ID)
+	return nil
+}
+
+// seedMarketplaceItems reconciles the marketplace item baseline.
+//
+// MarketplaceItem 表是全局商品目录（无 tenant_id），name 唯一。
+// 与其他域不同的是：不存在跨租户隔离，每个 seed 项全局唯一。
+// 已存在记录直接跳过，缺失则创建并立即置为 published（这是
+// Service.ListItems 唯一可见的状态）。
+func (s *Seeder) seedMarketplaceItems(ctx context.Context) error {
+	created := 0
+	for _, item := range s.expectedMarketplaceItems() {
+		exists, err := s.client.MarketplaceItem.Query().
+			Where(marketplaceitem.NameEQ(item.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check marketplace item %s: %w", item.Name, err)
+		}
+		if exists {
+			continue
+		}
+		builder := s.client.MarketplaceItem.Create().
+			SetName(item.Name).
+			SetType(marketplaceitem.Type(item.Type)).
+			SetTitle(item.Title).
+			SetProvider(item.Provider).
+			SetDescription(item.Description).
+			SetLongDescription(item.LongDescription).
+			SetIconURL(item.IconURL).
+			SetTags(item.Tags).
+			SetCategory(item.Category).
+			SetCapabilities(item.Capabilities).
+			SetRequiredPermissions(item.RequiredPerms).
+			SetLatestVersion(item.LatestVersion).
+			SetMinSystemVersion(item.MinSystemVersion).
+			SetStatus(marketplaceitem.StatusPublished).
+			SetIsOfficial(item.IsOfficial).
+			SetIsFree(item.IsFree).
+			SetPrice(item.Price).
+			SetLicense(item.License).
+			SetHomepage(item.Homepage).
+			SetRepository(item.Repository).
+			SetRating(0).
+			SetInstallCount(0).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now())
+		if _, err := builder.Save(ctx); err != nil {
+			return fmt.Errorf("seed marketplace item %s: %w", item.Name, err)
+		}
+		created++
+	}
+	s.sugar.Infow("marketplace items reconciled", "created", created, "total_expected", len(s.expectedMarketplaceItems()))
 	return nil
 }

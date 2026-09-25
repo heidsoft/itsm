@@ -11,6 +11,17 @@ func (s *Seeder) expectedCITypes() []CITypeSeed {
 	return ciTypeDefinitions()
 }
 
+// expectedMarketplaceItems is the effective-manifest accessor for marketplace seeds.
+// 与 CI 类型不同，市场商品表无 tenant_id，但同样存在“JSON 配置为空时回退到
+// 内置默认”的契约：seed 与 verify 必须看到同一份列表，否则空 JSON 会
+// 安装内置种子而校验器仍认为应为空。
+func (s *Seeder) expectedMarketplaceItems() []MarketplaceItemSeed {
+	if len(s.config.MarketplaceItems) > 0 {
+		return s.config.MarketplaceItems
+	}
+	return marketplaceItemDefinitions()
+}
+
 func (s *Seeder) expectedStandardChanges() []StandardChangeSeed {
 	if len(s.config.StandardChanges) > 0 {
 		return s.config.StandardChanges
@@ -199,5 +210,125 @@ func incidentCategoryDefinitions() []TicketCategorySeed {
 		{Name: "性能问题", Code: "performance", Description: "系统响应慢、卡顿"},
 		{Name: "配置问题", Code: "config", Description: "系统配置错误"},
 		{Name: "其他", Code: "other", Description: "其他类型事件"},
+	}
+}
+
+// marketplaceItemDefinitions 修复 §8 市场空页 bug 的内置商品目录。
+//
+// 设计原则：
+//   - 全部 status=published（ListItems 唯一可见的状态）。
+//   - 全部 is_official=true（首批预置必须由平台背书，避免来源不明）。
+//   - 全部 is_free=true（私有部署场景禁止“未配置收费”造成隐性账单）。
+//   - name 唯一；global catalog，无 tenant_id；不会与租户安装记录冲突。
+//   - 涵盖连接器/技能/插件三类，与 Schema.Type enum 对齐。
+//
+// 当 JSON 配置中显式提供 marketplace_items 时，回退不生效（见 expectedMarketplaceItems）。
+func marketplaceItemDefinitions() []MarketplaceItemSeed {
+	return []MarketplaceItemSeed{
+		{
+			Name:             "feishu-connector",
+			Type:             "connector",
+			Title:            "飞书审批增强连接器",
+			Provider:         "ITSM Foundation",
+			Description:      "将 ITSM 工单与飞书审批原生打通，支持审批实例双向同步、消息卡片回调",
+			LongDescription:  "飞书审批增强连接器提供与飞书开放平台的原生集成：审批实例创建、状态回调、消息卡片推送、用户身份映射。可用于变更请求、服务请求等场景的飞书端审批入口。",
+			IconURL:          "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Feishu%20logo%20badge%20blue%20square&image_size=square",
+			Tags:             []string{"飞书", "审批", "IM", "OA"},
+			Category:         "im",
+			Capabilities:     []string{"approval.sync", "im.notify", "user.map"},
+			RequiredPerms:    []string{"feishu.app.read", "feishu.approval.write"},
+			LatestVersion:    "1.2.0",
+			MinSystemVersion: "v1.6.0",
+			IsOfficial:       true,
+			IsFree:           true,
+			Price:            0,
+			License:          "Apache-2.0",
+			Homepage:         "https://open.feishu.cn",
+			Repository:       "https://github.com/itsm-marketplace/feishu-connector",
+		},
+		{
+			Name:             "dingtalk-ai-assistant",
+			Type:             "skill",
+			Title:            "钉钉 AI 工单助手",
+			Provider:         "ITSM Foundation",
+			Description:      "钉钉群聊内的 AI 工单助理，支持自然语言创建工单、查询状态、催办",
+			LongDescription:  "钉钉 AI 工单助手是面向运维/客服群聊的 Skill：识别用户文本中的工单意图，调用 ITSM API 创建/查询/催办；支持「帮我开个 P2 工单」「这个工单处理到哪一步了」「催一下张三」等表达工单操作。",
+			IconURL:          "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=DingTalk%20logo%20blue%20square&image_size=square",
+			Tags:             []string{"钉钉", "AI", "skill", "工单"},
+			Category:         "ai-skill",
+			Capabilities:     []string{"ticket.create", "ticket.query", "ticket.escalate"},
+			RequiredPerms:    []string{"dingtalk.robot.send", "ticket.write"},
+			LatestVersion:    "0.9.1",
+			MinSystemVersion: "v1.6.0",
+			IsOfficial:       true,
+			IsFree:           true,
+			Price:            0,
+			License:          "Apache-2.0",
+			Homepage:         "https://open.dingtalk.com",
+			Repository:       "https://github.com/itsm-marketplace/dingtalk-ai-assistant",
+		},
+		{
+			Name:             "wecom-connector",
+			Type:             "connector",
+			Title:            "企业微信连接器",
+			Provider:         "ITSM Foundation",
+			Description:      "与企微通讯录、审批、应用消息集成，承接内网审批与告警推送",
+			LongDescription:  "企业微信连接器提供通讯录同步、自建应用消息推送、审批回调等能力，适合与企微深度绑定的客户在 IT 服务台场景中复用现有账号体系与审批流。",
+			IconURL:          "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=WeCom%20logo%20green%20square&image_size=square",
+			Tags:             []string{"企业微信", "通讯录", "审批"},
+			Category:         "im",
+			Capabilities:     []string{"contact.sync", "approval.sync", "im.notify"},
+			RequiredPerms:    []string{"wecom.contact.read", "wecom.message.send"},
+			LatestVersion:    "1.0.3",
+			MinSystemVersion: "v1.6.0",
+			IsOfficial:       true,
+			IsFree:           true,
+			Price:            0,
+			License:          "Apache-2.0",
+			Homepage:         "https://developer.work.weixin.qq.com",
+			Repository:       "https://github.com/itsm-marketplace/wecom-connector",
+		},
+		{
+			Name:             "ai-ticket-classify",
+			Type:             "skill",
+			Title:            "AI 工单分类与优先级建议",
+			Provider:         "ITSM Foundation",
+			Description:      "基于 LLM 的工单自动分类、优先级推荐、标签补全 Skill",
+			LongDescription:  "AI 工单分类 Skill 在工单创建后异步运行，结合知识库与历史工单给出分类、优先级、标签建议，置信度高于阈值时直接接受，否则回到人工确认流程。",
+			IconURL:          "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=AI%20brain%20neural%20network%20square&image_size=square",
+			Tags:             []string{"AI", "skill", "分类", "triage"},
+			Category:         "ai-skill",
+			Capabilities:     []string{"ticket.classify", "ticket.priority", "ticket.suggest.tags"},
+			RequiredPerms:    []string{"llm.invoke", "knowledge.read"},
+			LatestVersion:    "1.4.0",
+			MinSystemVersion: "v1.6.0",
+			IsOfficial:       true,
+			IsFree:           true,
+			Price:            0,
+			License:          "Apache-2.0",
+			Homepage:         "https://github.com/itsm-marketplace",
+			Repository:       "https://github.com/itsm-marketplace/ai-ticket-classify",
+		},
+		{
+			Name:             "jira-sync-plugin",
+			Type:             "plugin",
+			Title:            "Jira 双向同步插件",
+			Provider:         "Community",
+			Description:      "Jira Issue 与 ITSM 工单双向同步，状态/评论/附件双向同步",
+			LongDescription:  "Jira 同步插件把 Jira Project/Issue 作为外部系统接入：可配置字段映射、定时同步或事件触发同步，处理 Issue 与 ITSM 工单之间的状态/评论/附件双向同步。",
+			IconURL:          "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Jira%20logo%20blue%20square&image_size=square",
+			Tags:             []string{"Jira", "plugin", "sync"},
+			Category:         "integration",
+			Capabilities:     []string{"issue.sync", "comment.sync", "attachment.sync"},
+			RequiredPerms:    []string{"jira.api.read", "jira.api.write"},
+			LatestVersion:    "0.8.0",
+			MinSystemVersion: "v1.6.0",
+			IsOfficial:       false,
+			IsFree:           true,
+			Price:            0,
+			License:          "MIT",
+			Homepage:         "https://www.atlassian.com/software/jira",
+			Repository:       "https://github.com/itsm-marketplace/jira-sync",
+		},
 	}
 }

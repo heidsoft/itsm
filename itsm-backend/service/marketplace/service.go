@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/connector"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/marketplaceitem"
 	"itsm-backend/ent/predicate"
@@ -46,7 +47,8 @@ func (s *Service) SetConnectorManager(mgr *connector.Manager) {
 }
 
 // ListItems 查询市场商品列表
-func (s *Service) ListItems(ctx context.Context, itemType, category, search string, isOfficial *bool, page, pageSize int) ([]*ent.MarketplaceItem, int, error) {
+// 返回 camelCase DTO，禁止 ent 模型直接序列化（违反 AGENTS.md snake_case 零新增规则）。
+func (s *Service) ListItems(ctx context.Context, itemType, category, search string, isOfficial *bool, page, pageSize int) ([]*dto.MarketplaceItemResponse, int, error) {
 	query := s.db.MarketplaceItem.Query().
 		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished))
 
@@ -90,11 +92,12 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 		return nil, 0, fmt.Errorf("failed to list items: %w", err)
 	}
 
-	return items, total, nil
+	return dto.ToMarketplaceItemResponseList(items), total, nil
 }
 
 // GetItem 获取商品详情
-func (s *Service) GetItem(ctx context.Context, itemID int) (*ent.MarketplaceItem, error) {
+// 返回 camelCase DTO，禁止 ent 模型直接序列化（违反 AGENTS.md snake_case 零新增规则）。
+func (s *Service) GetItem(ctx context.Context, itemID int) (*dto.MarketplaceItemResponse, error) {
 	item, err := s.db.MarketplaceItem.Query().
 		Where(marketplaceitem.ID(itemID)).
 		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished)).
@@ -106,7 +109,7 @@ func (s *Service) GetItem(ctx context.Context, itemID int) (*ent.MarketplaceItem
 		}
 		return nil, fmt.Errorf("failed to get item: %w", err)
 	}
-	return item, nil
+	return dto.ToMarketplaceItemResponse(item), nil
 }
 
 // reactivateUninstalledInstallation 复用并重置历史卸载记录

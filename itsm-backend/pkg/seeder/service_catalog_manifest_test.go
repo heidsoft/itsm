@@ -79,7 +79,7 @@ func TestProductionInitializerSeedsEveryCatalogItem(t *testing.T) {
 		assert.True(t, exists, "item %s must exist under %s", item.Name, item.CatalogName)
 	}
 
-	extension := components[len(components)-1]
+	extension := findProductionComponent(t, components, "extension-core")
 	plan, err := extension.Plan(ctx, scope)
 	require.NoError(t, err)
 
