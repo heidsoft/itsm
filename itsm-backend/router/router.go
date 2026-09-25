@@ -556,13 +556,15 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Skill Registry v1 ====================
 		// Sprint C：技能管理与调用入口。
 		// 路径：
-		//   GET    /api/v1/skills                  列表
+		//   GET    /api/v1/skills                  列表（市场发现）
 		//   GET    /api/v1/skills/:code            详情
+		//   GET    /api/v1/admin/skills            管理端列表（与市场发现共享 List 实现 + 分页契约）
+		//   GET    /api/v1/admin/skills/:code      管理端详情
 		//   POST   /api/v1/admin/skills            注册（custom）
 		//   PUT    /api/v1/admin/skills/:code      更新
 		//   POST   /api/v1/admin/skills/:code/promote  pilot → ga
 		//   DELETE /api/v1/admin/skills/:code      禁用
-		//   POST   /api/v1/admin/skills/:code/invoke   统一调用入口
+		//   POST   /api/v1/admin/skills/:code/invoke   统一调用入口（ai:read）
 		if config.SkillHandler != nil {
 			config.SkillHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}

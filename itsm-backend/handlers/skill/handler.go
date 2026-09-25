@@ -4,11 +4,13 @@
 //
 //   - GET    /api/v1/skills                       列出全部 Skill（市场发现）
 //   - GET    /api/v1/skills/:code                 拉取单个 Skill 的可序列化视图
+//   - GET    /api/v1/admin/skills                 管理端列表（与市场发现共享筛选/分页契约）
+//   - GET    /api/v1/admin/skills/:code           管理端按 code 读取单个 Skill
 //   - POST   /api/v1/admin/skills                 注册（运行时）自定义 Skill
 //   - PUT    /api/v1/admin/skills/:code           更新版本号 / 描述 / 权限
 //   - POST   /api/v1/admin/skills/:code/promote   将 Skill 从 pilot 晋升为 ga
 //   - DELETE /api/v1/admin/skills/:code           禁用 / 卸载 Skill
-//   - POST   /api/v1/skills/:code/invoke          统一调用入口（pilot）
+//   - POST   /api/v1/admin/skills/:code/invoke   统一调用入口（pilot）
 //
 // 所有写操作需要 skill:write 权限，所有读操作需要 skill:read。
 package skill
@@ -17,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -122,6 +125,8 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	admin := rg.Group("/admin/skills")
 	admin.Use(middleware.RequirePermission("marketplace", "write"))
 	{
+		admin.GET("", h.List)
+		admin.GET("/:code", h.Get)
 		admin.POST("", h.Create)
 		admin.PUT("/:code", h.Update)
 		admin.POST("/:code/promote", h.Promote)
@@ -141,13 +146,18 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 // Handlers
 // ----------------------------------------------------------------------------
 
-// List GET /api/v1/skills
+// List GET /api/v1/skills 与 GET /api/v1/admin/skills 共享实现。
 //
 // 可选 query：
 //   - tag：按 tag 过滤
 //   - category：按 category 过滤（ga / pilot / experimental）
 //   - status：按 status 过滤（active / disabled）
 //   - q：按 code/name/description 模糊匹配
+//   - page：1-based 页码，默认 1；非法值（≤0/非数字）回退到 1
+//   - pageSize：每页条数，默认 20，上限 100；非法值回退到 20，越界截断到 1..100
+//
+// 返回统一列表契约：{ items, total, page, pageSize, totalPages }，
+// 与 AGENTS.md "API 契约单一事实来源" 规范保持一致。
 func (h *Handler) List(c *gin.Context) {
 	tag := strings.TrimSpace(c.Query("tag"))
 	category := strings.TrimSpace(c.Query("category"))
@@ -176,10 +186,53 @@ func (h *Handler) List(c *gin.Context) {
 		filtered = append(filtered, e)
 	}
 
+	page, pageSize := parseSkillListPagination(c)
+	total := len(filtered)
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+	start := (page - 1) * pageSize
+	if start < 0 {
+		start = 0
+	}
+	if start > total {
+		start = total
+	}
+	end := start + pageSize
+	if end > total {
+		end = total
+	}
+
 	common.Success(c, gin.H{
-		"items": filtered,
-		"total": len(filtered),
+		"items":      filtered[start:end],
+		"total":      total,
+		"page":       page,
+		"pageSize":   pageSize,
+		"totalPages": totalPages,
 	})
+}
+
+// parseSkillListPagination 解析 page / pageSize 查询参数，
+// 对非法值或越界值回退到安全默认值，保证响应契约稳定。
+func parseSkillListPagination(c *gin.Context) (page, pageSize int) {
+	page = 1
+	pageSize = 20
+
+	if raw := strings.TrimSpace(c.Query("page")); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			page = v
+		}
+	}
+	if raw := strings.TrimSpace(c.Query("pageSize")); raw != "" {
+		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
+			pageSize = v
+		}
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	return page, pageSize
 }
 
 // Get GET /api/v1/skills/:code

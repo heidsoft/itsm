@@ -3,6 +3,7 @@ package skill_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -75,6 +76,8 @@ func setupRouter(reg *service.SkillRegistry) *gin.Engine {
 	}
 	admin := v1.Group("/admin/skills")
 	{
+		admin.GET("", h.List)
+		admin.GET("/:code", h.Get)
 		admin.POST("", h.Create)
 		admin.PUT("/:code", h.Update)
 		admin.POST("/:code/promote", h.Promote)
@@ -326,4 +329,105 @@ func TestList_FilterByQuery(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	data := parseData(t, w)
 	assert.EqualValues(t, 1, data["total"])
+}
+
+// 14. Admin 列表：覆盖 bug #1 — GET /api/v1/admin/skills 必须存在
+//
+// 修复前的预期：404（路由未注册）。
+// 修复后：返回 200 + items/total/page/pageSize/totalPages 完整列表。
+func TestAdminList_ReturnsAllSkills(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	// 准备：先注册一个自定义 skill
+	create := skill.SkillUpsertRequest{
+		Code:                "user.admin_list",
+		Version:             "v1",
+		Title:               "Admin List Test",
+		Category:            "pilot",
+		RequiredPermissions: []string{"skill:read"},
+		Capabilities:        []string{"custom.admin_list"},
+	}
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+
+	// 调用 admin 列表
+	w2 := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills", nil)
+	assert.Equal(t, http.StatusOK, w2.Code, w2.Body.String())
+
+	data := parseData(t, w2)
+	// 修复后的契约：{ items, total, page, pageSize, totalPages }
+	assert.Contains(t, data, "items", "admin list response must include items")
+	assert.Contains(t, data, "total")
+	assert.Contains(t, data, "page")
+	assert.Contains(t, data, "pageSize")
+	assert.Contains(t, data, "totalPages")
+
+	items, ok := data["items"].([]interface{})
+	require.True(t, ok, "items must be an array")
+	assert.GreaterOrEqual(t, len(items), 1, "admin list must include the registered skill")
+}
+
+// 15. Admin 详情：覆盖 bug #1 — GET /api/v1/admin/skills/:code 必须存在
+func TestAdminGet_ReturnsFullEntry(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	create := skill.SkillUpsertRequest{
+		Code:                "user.admin_detail",
+		Version:             "v1",
+		Title:               "Admin Detail",
+		Category:            "pilot",
+		RequiredPermissions: []string{"skill:read"},
+		Capabilities:        []string{"custom.admin_detail"},
+	}
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	// 修复前：404
+	// 修复后：返回完整 entry
+	w2 := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills/user.admin_detail", nil)
+	assert.Equal(t, http.StatusOK, w2.Code, w2.Body.String())
+
+	data := parseData(t, w2)
+	assert.Equal(t, "user.admin_detail", data["code"])
+	assert.Equal(t, "v1", data["version"])
+}
+
+// 16. Admin 列表支持 page/pageSize 分页
+func TestAdminList_Pagination(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	// 注册 3 个 skill
+	for i := 0; i < 3; i++ {
+		body := skill.SkillUpsertRequest{
+			Code:                fmt.Sprintf("user.page_%d", i),
+			Version:             "v1",
+			RequiredPermissions: []string{"skill:read"},
+			Capabilities:        []string{"custom.pagination"},
+		}
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
+		require.Equal(t, http.StatusOK, w.Code)
+	}
+
+	// pageSize=2
+	w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills?page=1&pageSize=2", nil)
+	assert.Equal(t, http.StatusOK, w.Code)
+	data := parseData(t, w)
+	assert.EqualValues(t, 2, data["pageSize"])
+	assert.EqualValues(t, 1, data["page"])
+	items, _ := data["items"].([]interface{})
+	assert.Len(t, items, 2)
+	assert.EqualValues(t, 3, data["total"])
+	assert.EqualValues(t, 2, data["totalPages"])
+}
+
+// 17. Admin 详情找不到 → 404
+func TestAdminGet_NotFound(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills/does.not.exist", nil)
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }

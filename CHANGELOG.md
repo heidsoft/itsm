@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
+- 新增技能管理端只读列表与详情：`GET /api/v1/admin/skills`、`GET /api/v1/admin/skills/:code`（`ai:read`，与市场发现共享实现），列表接入统一分页契约 `{items, total, page, pageSize, totalPages}`（page 默认 1、pageSize 默认 20 上限 100，非法入参回退默认值）
 - 租户管理页新增「初始化」列与状态抽屉：按需加载并缓存每租户的产品基线安装状态（基线就绪/未就绪组件、安装命令状态与尝试次数、模板版本、命令错误），`dead_letter` 可一键重放安装（复用运维命令重放入口、保留原幂等键）；状态接口新增 `commandId` 以支撑重放
 - e2e 登录工具适配令牌 Cookie 化（不再读取已废弃的 `accessToken`、移除硬编码口令改走 `E2E_ADMIN_PASSWORD`/`ADMIN_PASSWORD`），并新增 `tests/e2e/tenant-provisioning.spec.ts` 固化「新建租户 → outbox 安装基线 → 状态就绪」全链路
 - 产品表面棘轮基线上调 `service_go_files` 326→327、`bootstrap_app_lines` 1776→1805：分别对应组件 checksum 的内嵌 BPMN 摘要（`service/bpmn_template_digest.go`）与租户开通 outbox 接线（`POST /api/v1/tenants` 的 `tenant.bootstrap.install` 主链路），理由已登记在 `scripts/docs-gate/product-surface-baseline.txt`；部署与回归记录见 [docs/testing/deploy-regression-2026-09-24.md](./docs/testing/deploy-regression-2026-09-24.md)
