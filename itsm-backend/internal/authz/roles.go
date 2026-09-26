@@ -266,6 +266,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"license:read", "license:write", "license:delete",
 			"report:read",
 			"msp:read",
+			"marketplace:read", "marketplace:write",
 		},
 		// 二线技术员（users.role=technician 对齐；与 middleware.RolePermissions["technician"] 16 对全等，2026-09-17 P0 补齐）
 		"technician": {
@@ -434,6 +435,7 @@ func allPermissionCodes() []string {
 		"msp_ticket:read", "msp_ticket:write",
 		"msp_allocation:read", "msp_allocation:write",
 		"msp_report:read", "msp_report:write",
+		"marketplace:read", "marketplace:write",
 	}
 }
 

@@ -722,16 +722,15 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedPermissions(ctx)          // 新增：初始化权限
 	s.seedMenus(ctx)                // 新增：初始化菜单
 	s.seedAdmin(ctx)
-	s.seedCloudServiceTemplates(ctx)
 	// 使用配置的初始化数据
 	attempt("sla-definitions", s.seedSLADefinitions)
 	s.seedSLAPolicies(ctx)
 	attempt("sla-alert-rules", s.seedSLAAlertRules)
-	s.seedApprovalWorkflows(ctx)
+	attempt("approval-workflows", s.seedApprovalWorkflows)
 	s.seedProcessBindings(ctx)
 	attempt("bpmn-workflows", s.seedBPMNWorkflows)
 	attempt("workflow-templates", s.seedWorkflowTemplates)
-	s.seedTicketViews(ctx)
+	attempt("ticket-views", s.seedTicketViews)
 	attempt("service-catalog", s.seedServiceCatalog)
 	attempt("service-catalog-items", s.seedServiceCatalogItems)
 	attempt("ticket-types", s.seedTicketTypes)               // 新增：初始化工单类型
@@ -1303,13 +1302,6 @@ func (s *Seeder) MigrateUserRolesBackfill(ctx context.Context) {
 	s.sugar.Infow("user_roles 边回填完成", "backfilled_count", backfilled)
 }
 
-// seedCloudServiceTemplates 保留云服务模板种子入口（历史演示数据 seeder 已移除：
-// 默认初始化只创建产品模板/配置，不创建假客户业务数据）
-
-func (s *Seeder) seedCloudServiceTemplates(ctx context.Context) {
-	// 保留原有实现...
-}
-
 // 以下是使用配置文件的初始化函数
 
 // seedSLADefinitions 按条目补齐受管 SLA 定义：整批 skip 会让存量库永远补不上
@@ -1509,25 +1501,24 @@ func (s *Seeder) seedSLAAlertRules(ctx context.Context) error {
 	return nil
 }
 
-func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
+func (s *Seeder) seedApprovalWorkflows(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("baseline tenant not found; skip approval workflows seed", "error", err)
-		return
+		return fmt.Errorf("approval workflows tenant: %w", err)
 	}
 
-	existing, err := s.client.ApprovalWorkflow.Query().Where(approvalworkflow.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing approval workflows failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("approval workflows already seeded")
-		return
-	}
-
+	created := 0
 	for _, wf := range s.config.ApprovalWorkflows {
-		_, err := s.client.ApprovalWorkflow.Create().
+		exists, err := s.client.ApprovalWorkflow.Query().
+			Where(approvalworkflow.TenantIDEQ(t.ID), approvalworkflow.NameEQ(wf.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check approval workflow %s: %w", wf.Name, err)
+		}
+		if exists {
+			continue
+		}
+		if _, err := s.client.ApprovalWorkflow.Create().
 			SetName(wf.Name).
 			SetDescription(wf.Desc).
 			SetTicketType(wf.TicketType).
@@ -1535,12 +1526,13 @@ func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
 			SetNodes(wf.Nodes).
 			SetIsActive(true).
 			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed approval workflow failed", "error", err, "name", wf.Name)
+			Save(ctx); err != nil {
+			return fmt.Errorf("seed approval workflow %s: %w", wf.Name, err)
 		}
+		created++
 	}
-	s.sugar.Infow("approval workflows seeded", "count", len(s.config.ApprovalWorkflows))
+	s.sugar.Infow("approval workflows reconciled", "created", created, "total", len(s.config.ApprovalWorkflows), "tenant_id", t.ID)
+	return nil
 }
 
 func (s *Seeder) seedProcessBindings(ctx context.Context) {
@@ -1670,30 +1662,30 @@ func (s *Seeder) seedWorkflowTemplates(ctx context.Context) error {
 	return nil
 }
 
-func (s *Seeder) seedTicketViews(ctx context.Context) {
+func (s *Seeder) seedTicketViews(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
-		s.sugar.Warnw("baseline tenant not found; skip ticket views seed", "error", err)
-		return
+		return fmt.Errorf("ticket views tenant: %w", err)
 	}
 
 	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("admin user not found; skip ticket views seed", "error", err)
-		return
+		s.sugar.Warnw("admin user not found; skip ticket views seed", "tenant_id", t.ID)
+		return nil
 	}
 
-	existing, err := s.client.TicketView.Query().Where(ticketview.TenantIDEQ(t.ID)).Count(ctx)
-	if err != nil {
-		s.sugar.Warnw("check existing ticket views failed", "error", err)
-		return
-	}
-	if existing > 0 {
-		s.sugar.Infow("ticket views already seeded")
-		return
-	}
-
+	created := 0
 	for _, v := range s.config.TicketViews {
+		exists, err := s.client.TicketView.Query().
+			Where(ticketview.TenantIDEQ(t.ID), ticketview.NameEQ(v.Name)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check ticket view %s: %w", v.Name, err)
+		}
+		if exists {
+			continue
+		}
+
 		filters := map[string]interface{}{}
 		if v.Name == "我的待办工单" {
 			filters = map[string]interface{}{"assignee_id": admin.ID, "status": []string{"open", "in_progress", "pending"}}
@@ -1707,7 +1699,7 @@ func (s *Seeder) seedTicketViews(ctx context.Context) {
 			filters = map[string]interface{}{"status": []string{"closed", "resolved"}}
 		}
 
-		_, err := s.client.TicketView.Create().
+		if _, err := s.client.TicketView.Create().
 			SetName(v.Name).
 			SetDescription(v.Desc).
 			SetFilters(filters).
@@ -1715,12 +1707,13 @@ func (s *Seeder) seedTicketViews(ctx context.Context) {
 			SetIsShared(v.IsShared).
 			SetCreatedBy(admin.ID).
 			SetTenantID(t.ID).
-			Save(ctx)
-		if err != nil {
-			s.sugar.Warnw("seed ticket view failed", "error", err, "name", v.Name)
+			Save(ctx); err != nil {
+			return fmt.Errorf("seed ticket view %s: %w", v.Name, err)
 		}
+		created++
 	}
-	s.sugar.Infow("ticket views seeded", "count", len(s.config.TicketViews))
+	s.sugar.Infow("ticket views reconciled", "created", created, "total", len(s.config.TicketViews), "tenant_id", t.ID)
+	return nil
 }
 
 // seedPermissions 初始化系统权限
@@ -1833,6 +1826,16 @@ func menuDefinitions() []menuSpec {
 		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
 		{Name: "发布管理", Path: "/releases", Icon: "Rocket", ParentPath: "", PermissionCode: "release:read", SortOrder: 130, Description: "发布管理"},
 
+		// ===== 顶级扩展业务菜单（2026-09-26 补齐） =====
+		// 前端 page.tsx 已存在但未注册菜单导致用户不可见的入口。
+		{Name: "报表中心", Path: "/reports", Icon: "PieChart", ParentPath: "", PermissionCode: "report:read", SortOrder: 140, Description: "ITSM 业务报表中心"},
+		{Name: "标准变更库", Path: "/standard-changes", Icon: "BookCopy", ParentPath: "", PermissionCode: "change:read", SortOrder: 150, Description: "标准变更模板库"},
+		{Name: "持续改进", Path: "/improvements", Icon: "TrendingUp", ParentPath: "", PermissionCode: "problem:read", SortOrder: 155, Description: "持续改进跟踪"},
+		{Name: "应用市场", Path: "/marketplace", Icon: "Store", ParentPath: "", PermissionCode: "marketplace:read", SortOrder: 160, Description: "连接器 / 技能 / 插件市场"},
+		{Name: "我的应用", Path: "/installations", Icon: "Package", ParentPath: "", PermissionCode: "marketplace:read", SortOrder: 165, Description: "已安装的扩展应用"},
+		{Name: "项目管理", Path: "/projects", Icon: "GanttChart", ParentPath: "", PermissionCode: "project:read", SortOrder: 170, Description: "项目管理"},
+		{Name: "应用与服务", Path: "/applications", Icon: "Layers", ParentPath: "", PermissionCode: "application:read", SortOrder: 175, Description: "应用系统与微服务管理"},
+
 		// ===== 顶级独立业务条线菜单（2026-08-30 归位新增） =====
 		// 审计与通知是独立业务条线，不应埋在系统管理 /admin 下，否则运营/审计专员找不到入口。
 		{Name: "审计日志", Path: "/audit-logs", Icon: "Shield", ParentPath: "", PermissionCode: "audit:read", SortOrder: 210, Description: "审计日志"},
@@ -1847,18 +1850,24 @@ func menuDefinitions() []menuSpec {
 		// 历史 seed 把它俩放在 /service-requests 下导致用户找不到入口（2026-08-30 归位）。
 		{Name: "工单类型", Path: "/tickets/types", Icon: "ClipboardList", ParentPath: "/tickets", PermissionCode: "ticket_type:read", SortOrder: 21},
 		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 22, Description: "工单统计视图"},
+		{Name: "工单仪表盘", Path: "/tickets/dashboard", Icon: "LayoutDashboard", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单综合仪表盘"},
+		{Name: "我的抄送", Path: "/tickets/cc", Icon: "Mail", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 24, Description: "抄送给我的工单"},
+		{Name: "工单模板", Path: "/tickets/templates", Icon: "Copy", ParentPath: "/tickets", PermissionCode: "ticket:write", SortOrder: 25, Description: "工单模板管理"},
 
 		// ===== 子菜单：事件管理 =====
 		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},
 
 		// ===== 子菜单：问题管理 =====
 		{Name: "已知错误", Path: "/problems/known-errors", Icon: "AlertCircle", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 42},
+		{Name: "问题趋势", Path: "/problems/trends", Icon: "TrendingUp", ParentPath: "/problems", PermissionCode: "problem:read", SortOrder: 43, Description: "问题趋势分析"},
 
 		// ===== 子菜单：变更管理 =====
 		{Name: "新建变更", Path: "/changes/new", Icon: "Plus", ParentPath: "/changes", PermissionCode: "change:write", SortOrder: 52},
+		{Name: "实施后审查", Path: "/changes/pirs", Icon: "ClipboardCheck", ParentPath: "/changes", PermissionCode: "change:read", SortOrder: 53, Description: "变更实施后审查 (PIR)"},
 
 		// ===== 子菜单：知识库 =====
 		{Name: "新建文章", Path: "/knowledge/articles/new", Icon: "Plus", ParentPath: "/knowledge", PermissionCode: "knowledge:write", SortOrder: 63},
+		{Name: "知识审核", Path: "/knowledge/reviews", Icon: "CheckSquare", ParentPath: "/knowledge", PermissionCode: "knowledge:write", SortOrder: 64, Description: "知识库文章审核"},
 
 		// ===== 子菜单：邮件报障 =====
 		{Name: "客户资料", Path: "/email-intake/customers", Icon: "Users", ParentPath: "/email-intake", PermissionCode: "customer_master:read", SortOrder: 652},
@@ -1874,6 +1883,12 @@ func menuDefinitions() []menuSpec {
 		{Name: "新建CI", Path: "/cmdb/cis/create", Icon: "Plus", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 752},
 		{Name: "关系管理", Path: "/cmdb/relationships", Icon: "GitBranch", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 753},
 		{Name: "拓扑图", Path: "/cmdb/topology", Icon: "Share2", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 754},
+		// CMDB 云管理与核对（2026-09-26 补齐）
+		{Name: "云账号管理", Path: "/cmdb/cloud-accounts", Icon: "Cloud", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 755, Description: "云平台账号管理"},
+		{Name: "云资源列表", Path: "/cmdb/cloud-resources", Icon: "CloudLightning", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 756, Description: "已发现云资源"},
+		{Name: "云服务目录", Path: "/cmdb/cloud-services", Icon: "CloudDrizzle", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 757, Description: "云服务产品目录"},
+		{Name: "Service Graph", Path: "/cmdb/registry", Icon: "Compass", ParentPath: "/cmdb", PermissionCode: "cmdb:read", SortOrder: 758, Description: "Service Graph 注册表"},
+		{Name: "云资源核对", Path: "/cmdb/reconciliation", Icon: "RefreshCw", ParentPath: "/cmdb", PermissionCode: "cmdb:write", SortOrder: 759, Description: "云资源与 CI 核对"},
 
 		// ===== 子菜单：资产管理 =====
 		{Name: "新建资产", Path: "/assets/new", Icon: "Plus", ParentPath: "/assets", PermissionCode: "asset:write", SortOrder: 82},
@@ -1925,6 +1940,7 @@ func menuDefinitions() []menuSpec {
 		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/admin", PermissionCode: "connector:write", SortOrder: 285},
 		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
+		{Name: "全局标签", Path: "/admin/tags", Icon: "Tags", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 298, Description: "全局标签管理"},
 		// 通知配置 / 审计日志 / 操作日志：2026-08-30 归位后已移出 /admin，详见顶级菜单与 /workflow 子菜单。
 		{Name: "CMDB 类型", Path: "/admin/cmdb-types", Icon: "Database", ParentPath: "/admin", PermissionCode: "cmdb:write", SortOrder: 315},
 		{Name: "升级规则", Path: "/admin/escalation-rules", Icon: "AlertTriangle", ParentPath: "/admin", PermissionCode: "sla:write", SortOrder: 320},

@@ -291,8 +291,8 @@ func TestColdVerifyScopeContract(t *testing.T) {
 func TestColdVerifyExpectationsAreDeterministicAndIndependent(t *testing.T) {
 	permissions, menus, grants := identityRBACExpectations()
 	require.Equal(t, AllDefinedPermissionCodes(), permissions)
-	require.Len(t, menuDefinitions(), 78)
-	require.Len(t, menus, 78)
+	require.Len(t, menuDefinitions(), 97)
+	require.Len(t, menus, 97)
 	for code, expected := range authz.BuiltinRolePermissionCodes() {
 		require.ElementsMatch(t, expected, grants[code], code)
 	}
