@@ -25,6 +25,10 @@ ADMIN_PASS=${ITSM_ADMIN_PASS:-"admin123"}
 MAX_RETRIES=${MAX_RETRIES:-30}
 RETRY_INTERVAL=${RETRY_INTERVAL:-2}
 
+# Per-run HttpOnly cookie jar; never reuse another smoke run's session.
+COOKIE_FILE=$(mktemp "${TMPDIR:-/tmp}/itsm-smoke-cookies.XXXXXX")
+trap 'rm -f "$COOKIE_FILE"' EXIT
+
 # 测试计数器
 PASSED=0
 FAILED=0
@@ -98,32 +102,21 @@ test_json_endpoint() {
     echo -e "${BLUE}测试: $name${NC}"
     echo "  URL: $url"
 
-    headers="-H Content-Type: application/json"
-    cookie_file=""
-    if [ "$use_cookies" = "true" ] && [ -f /tmp/cookies.txt ]; then
-        cookie_file="-b /tmp/cookies.txt"
+    local response
+    local args=(-fsS --max-time 30 -H "Content-Type: application/json" -X "$method")
+    if [ "$use_cookies" = "true" ]; then
+        args+=(-b "$COOKIE_FILE" -c "$COOKIE_FILE")
     fi
-
     if [ -n "$body" ]; then
-        response=$(curl -sf "$url" $headers $cookie_file -X "$method" -d "$body" 2>&1 || true)
-    else
-        response=$(curl -sf "$url" $headers $cookie_file -X "$method" 2>&1 || true)
+        args+=(-d "$body")
     fi
 
-    if [ $? -eq 0 ]; then
-        # 验证是否为有效JSON
-        if echo "$response" | jq . > /dev/null 2>&1; then
-            echo -e "${GREEN}  ✓ 返回有效JSON${NC}"
-            PASSED=$((PASSED + 1))
-            return 0
-        else
-            echo -e "${RED}  ✗ 返回不是有效JSON${NC}"
-            echo "  响应: $response"
-            FAILED=$((FAILED + 1))
-            return 1
-        fi
+    if response=$(curl "${args[@]}" "$url") &&
+        jq -e '.code == 0 and has("data")' <<< "$response" > /dev/null 2>&1; then
+        printf '%s\n' '  API request succeeded (HTTP success, code=0)'
+        PASSED=$((PASSED + 1))
     else
-        echo -e "${RED}  ✗ 请求失败${NC}"
+        printf '%s\n' '  API request failed (HTTP or business response)'
         FAILED=$((FAILED + 1))
     fi
 }
@@ -148,38 +141,21 @@ echo ""
 echo -e "${YELLOW}[阶段 2/5] 登录功能测试${NC}"
 echo "----------------------------------------"
 
-# 获取token（HttpOnly cookie 模式）
-echo -e "${BLUE}测试: 用户登录${NC}"
-login_response=$(curl -sf -c /tmp/cookies.txt -X POST "$BACKEND_URL/api/v1/auth/login" \
-    -H "Content-Type: application/json" \
-    -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}" 2>&1 || true)
-
-if echo "$login_response" | jq . > /dev/null 2>&1; then
-    # 登录成功后，token 存储在 HttpOnly cookie 中
-    # 从 cookie 文件提取 accessToken
-    if [ -f /tmp/cookies.txt ]; then
-        token=$(grep -E 'accessToken|access_token' /tmp/cookies.txt | awk '{print $NF}' | head -1 || true)
-    fi
-
-    # 兜底：尝试从响应体提取（兼容旧版本）
-    if [ -z "$token" ] || [ "$token" = "null" ]; then
-        token=$(echo "$login_response" | jq -r '.data.accessToken // .data.access_token // .data.token // .token // .access_token // empty' 2>/dev/null || true)
-    fi
-
-    if [ -n "$token" ] && [ "$token" != "null" ]; then
-        echo -e "${GREEN}  ✓ 登录成功，获取到Token${NC}"
-        PASSED=$((PASSED + 1))
-    else
-        echo -e "${RED}  ✗ 登录响应格式异常${NC}"
-        echo "  响应: $login_response"
-        FAILED=$((FAILED + 1))
-        token=""
-    fi
+# Cookie-only login: validate the DTO, then prove authentication with /auth/me.
+# Never extract a bearer token or fall back to legacy JSON token fields.
+printf '%s\n' 'Testing Cookie login'
+login_ok=false
+login_body=$(jq -n --arg username "$ADMIN_USER" --arg password "$ADMIN_PASS" \
+    '{username: $username, password: $password}')
+if login_response=$(curl -fsS --max-time 30 -c "$COOKIE_FILE" -X POST "$BACKEND_URL/api/v1/auth/login" \
+    -H "Content-Type: application/json" -d "$login_body") &&
+    jq -e '.code == 0 and (.data.user.id | type == "number")' <<< "$login_response" > /dev/null 2>&1; then
+    login_ok=true
+    printf '%s\n' '  Login succeeded; validating session on protected APIs'
+    PASSED=$((PASSED + 1))
 else
-    echo -e "${RED}  ✗ 登录请求失败${NC}"
-    echo "  响应: $login_response"
+    printf '%s\n' '  Login failed (HTTP or business response)'
     FAILED=$((FAILED + 1))
-    token=""
 fi
 
 echo ""
@@ -188,13 +164,13 @@ echo ""
 echo -e "${YELLOW}[阶段 3/5] 核心API可用性${NC}"
 echo "----------------------------------------"
 
-if [ -n "$token" ]; then
+if [ "$login_ok" = "true" ]; then
     test_json_endpoint "获取用户信息" "$BACKEND_URL/api/v1/auth/me" "GET" "" "true"
     test_json_endpoint "获取仪表盘数据" "$BACKEND_URL/api/v1/dashboard/stats" "GET" "" "true"
     test_json_endpoint "获取事件列表" "$BACKEND_URL/api/v1/incidents" "GET" "" "true"
     test_json_endpoint "获取工单列表" "$BACKEND_URL/api/v1/tickets" "GET" "" "true"
 else
-    echo -e "${YELLOW}  跳过API测试（无有效Token）${NC}"
+    printf '%s\n' '  Protected API checks cannot run: login failed (gate fails)'
 fi
 
 echo ""
@@ -255,7 +231,7 @@ if [ $FAILED -eq 0 ]; then
     echo "  🔧 后端: $BACKEND_URL"
     echo "  📚 API文档: $BACKEND_URL/swagger"
     echo ""
-    echo "默认登录: $ADMIN_USER / $ADMIN_PASS"
+    printf '登录用户: %s\n' "$ADMIN_USER"
     exit 0
 else
     echo -e "${RED}⚠ 部分测试失败，请检查日志${NC}"

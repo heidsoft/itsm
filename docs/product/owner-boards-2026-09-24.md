@@ -98,47 +98,23 @@ gh run view <run-id> --json status,conclusion > ci-evidence.json
 
 ## 我的 P0（止血期 · 5 项）
 
-### P0-1 · 审批三运行时去留拍板（主导）
+### P0-1 · 审批执行旁路收敛（主导）
 
-**截止**：本周内拍板 + T+1.5 周工程完成
-**关联决策**：D-1（[决策对话](../../output/decision-memo-2026-09-23.md) 我的倾向 A 收敛到 BPMN）
-**协作**：product 决策权
+**2026-09-25 更正**：构造器数量不能证明存在三套运行时。`TriggerApproval` 已停写旧记录；`ApprovalChainService` 仍承担配置与求值，不得删除。原方案误列的 `bpmn_approval_tasks` / `bpmn_approval_history` 不是当前权威表，不能据此删 schema。
 
-#### Verification（可执行步骤）
+**已获授权并实现**：旧 `ApprovalService.SubmitApproval` 拒绝所有写动作，两条旧 HTTP 提交入口返回 410；BPMN 桥接找不到待办时返回冲突，不再回退直批。保留历史查询、审批配置、迁移接口与数据库记录，不新增灰度旁路。
+
+#### Verification
 
 ```bash
-# 阶段 1:立项（拍板后）
-git checkout -b refactor/approval-converge-to-bpmn
-gh issue create --title "refactor(approval): 收敛到 BPMN (D-1)"
-
-# 阶段 2:legacy 标记
-grep -rn "NewApprovalService\|NewApprovalChainService" internal/bootstrap/app.go
-# 应输出 2 行 → 改成 legacy=true 包裹
-
-# 阶段 3:灰度开关(环境变量)
-# 在 config_loader 增加 APPROVAL_USE_BPMN_ONLY (default=false)
-# 在 router/approval_chain_routes.go 加 middleware 校验
-
-# 阶段 4:删除
-git rm ent/schema/approval_records.go ent/schema/approval_workflow.go \
-       ent/schema/approvalchain.go ent/schema/process_approval_decision.go \
-       ent/schema/servicerequestapproval.go
-rm service/approval_service.go service/approval_chain_service.go
-
-# 阶段 5:跑全量
-go build ./... && go test ./... -count=1
-
-# 阶段 6:CHANGELOG 撤回
-# 在 CHANGELOG.md 1.6.10 加 "上版本描述不准确" 段
+(cd itsm-backend && go test ./handlers/approval ./handlers/ticket_workflow ./service/bpmn)
+(cd itsm-backend && go test ./service -run 'Test(BPMNApprovalBridge|ApproveTicket|ApprovalService_SubmitApproval)')
 ```
 
-#### 验收（最终态）
-- [ ] `grep -c "NewApprovalService\|NewApprovalChainService" internal/bootstrap/app.go` = 1（仅 BPMN 装配点）
-- [ ] `ls ent/schema | grep -i approval` = 2（`bpmn_approval_tasks` + `bpmn_approval_history`）
-- [ ] `go build ./...` 通过
-- [ ] frontend 8 入口 → 2 入口（`admin/approvals` 走 BPMN + `admin/approval-chains` 只读历史）
-- [ ] CHANGELOG 撤回段可见
-- [ ] 探针矩阵 0 异常（跑一周生产）
+#### 剩余验收
+- [ ] BPMN 决策、业务审批投影与业务状态在同一事务内提交，或通过可恢复命令收敛。
+- [ ] 存量待办按租户、实例与审批层级核对后另行制定迁移方案；不自动迁移或删表。
+- [ ] 全量回归与隔离 HTTP/Worker 验收完成后再评估成熟度；不得以本轮止血宣称审批完全统一。
 
 ### P0-3 · 3 个孤儿包删除（department / root_cause / dashboard）
 

@@ -32,9 +32,16 @@ jobs:
   ga-approved:
     name: GA Gate · Approved
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       DEPLOYMENT_MODE: private
+      COMPOSE_PROJECT_NAME: ga-gate-${{ github.run_id }}-${{ github.run_attempt }}
+      # Disposable fixture only: docker-compose.dev.yml pins ADMIN_PASSWORD=admin123.
+      ITSM_ADMIN_USER: admin
+      ITSM_ADMIN_PASS: admin123
+      E2E_ADMIN_PASSWORD: admin123
+      ITSM_E2E_ISOLATED_STACK: '1'
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
       MAX_RETRIES: '120'
       RETRY_INTERVAL: '3'
       # Use official Docker Hub images in CI (GitHub runners have direct access)
@@ -49,12 +56,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Install E2E dependencies and Chromium
+        working-directory: itsm-frontend
+        run: |
+          npm ci --legacy-peer-deps
+          npx playwright install --with-deps chromium
+
       - name: Validate Compose configuration
-        run: docker compose -f docker-compose.dev.yml --profile dev config --quiet
+        run: docker compose --env-file /dev/null -f docker-compose.dev.yml --profile dev config --quiet
 
       - name: Start core stack
         run: >-
-          docker compose -f docker-compose.dev.yml --profile dev
+          docker compose --env-file /dev/null -f docker-compose.dev.yml --profile dev
           up -d --build postgres redis itsm-init itsm-backend itsm-frontend
 
       - name: Wait for backend and frontend
@@ -78,6 +98,25 @@ jobs:
         # PR-0.5: emit junit so the test-trend workflow has data to render
         env:
           SMOKE_JUNIT: ${{ runner.temp }}/smoke-junit.xml
+
+      - name: Run TicketType HTTP and worker full-chain gate
+        working-directory: itsm-frontend
+        timeout-minutes: 5
+        run: >-
+          npx playwright test --config=playwright.ticket-type.config.ts
+          ticket-type-full-chain.spec.ts --project=chromium
+
+      - name: Upload TicketType E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ga-gate-ticket-type-full-chain
+          path: |
+            itsm-frontend/playwright-report/ticket-type-full-chain/
+            itsm-frontend/test-results/ticket-type-full-chain/
+            itsm-frontend/test-results/ticket-type-full-chain.xml
+          retention-days: 14
+          if-no-files-found: warn
 
       - name: Generate test trend summary
         # PR-0.5: keep the trend markdown alongside the gate so reviewers
@@ -104,7 +143,7 @@ jobs:
       - name: Upload failure logs
         if: failure()
         run: >-
-          docker compose -f docker-compose.dev.yml --profile dev logs
+          docker compose --env-file /dev/null -f docker-compose.dev.yml --profile dev logs
           --no-color --tail=200 > ga-gate-compose.log
 
       - name: Save failure logs
@@ -117,4 +156,4 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: docker compose -f docker-compose.dev.yml --profile dev down -v --remove-orphans
+        run: docker compose --env-file /dev/null -f docker-compose.dev.yml --profile dev down -v --remove-orphans

@@ -324,7 +324,7 @@ check_handlers_wiring() {
       continue
     fi
 
-    refs="$(grep -rl "\"itsm-backend/handlers/${n}\"" "${BE}" --include='*.go' 2>/dev/null \
+    refs="$(grep -rl "\"itsm-backend/handlers/${n}\"" "${BE}" --include='*.go' --exclude='*_test.go' 2>/dev/null \
       | grep -v "/handlers/${n}/" | wc -l | tr -d ' ')"
     if [ "${refs}" -eq 0 ]; then
       waived "C.6.3" "${n}" ||

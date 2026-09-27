@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 发布审批的跨租户、已停用或不存在的审批人现在返回 403（业务码 2003），不再误报 5001；拒绝时不修改发布、流程任务或审计记录。
 - **修复 BPMN 流程审计操作人恒为空** — 流程启动与任务完成审计此前从 `ctx.Value("user")` 取操作人，而生产链路从未写入该 key，审计记录 operator 恒为 0/空名；现统一改走 `bpmn.BPMNUserIDContextKey` 并在事务内解析用户名，与审批决策审计同一模式（含回归测试）
 - **修复市场页恒为空** — 生产初始化新增 `marketplace-items` 组件：写入 5 条内置市场条目（连接器/技能/插件，状态 published、纳入版本账本 checksum 与逐项验证），存量环境可前滚补齐；此前生产 DAG 无该组件、列表按 published 过滤后恒为空。市场列表/详情同步改为返回 DTO（`MarketplaceItemResponse`，camelCase），不再直接序列化 Ent 模型
 - 修复工单/事件 SLA 暂停与恢复的假成功：工单侧此前直接返回"SLA已暂停"却完全不落库，事件侧返回"尚未接入"，而底层 `SLAMonitorService.PauseSLA/ResumeSLA` 早已是真实现；现两域统一接线，暂停真实落库并记录原因、恢复顺延截止时间，重复暂停/未暂停恢复按 409 冲突、跨租户按 404 拒绝
@@ -60,6 +61,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **修复单条连接器配置解密失败导致全部连接器不可用** — `PersistentConfigStore.LoadAll` 逐条容错：单条解密或反序列化失败跳过并记录 ID，不影响其余连接器正常加载；新增 `LoadAllWithFailures` 返回失败 ID 列表供运维排查
 - **修复批量关闭/更新工单部分失败中断** — `BatchCloseTickets` 与 `BatchUpdatePriority` 改为逐条容错，单条状态机校验失败不阻塞其余工单，结果通过 `BatchResult` 返回成功数与失败 ID 列表
 - **优化工单分析查询** — `GetTicketAnalytics` 使用 `Select` 仅加载 status/priority/created_at/updated_at 四列，合并二次查询为单次遍历，减少内存占用和 DB IO
+- **工单前端契约收敛为单一来源** — `Ticket`/状态/优先级/类型及请求体现在只在 `itsm-frontend/src/lib/api/ticket-api.ts` 声明（逐字段对齐后端 `dto/ticket_dto.go`），删掉 `lib/api/types.ts`、`api-config.ts`、`types/ticket.ts`、`lib/services/ticket-service.ts` 四处并行定义与四套各自手写的状态/优先级配色表
+- 修复工单列表、看板与表格的状态徽标：映射键写成 camelCase（`inProgress`）而后端返回 snake_case（`in_progress`），"处理中/已分配/已批准/已拒绝"长期显示原始枚举值；现统一取自 `constants/taxonomy`
+- 修复看板泳道与筛选面板提供后端不可能的取值：`pending_approval` 不是工单状态（该泳道恒为空），状态/优先级/类型选项现由后端 10 值状态机与 `oneof` 白名单派生
+- 修复工单详情 SLA 卡片读取后端从不返回的 `slaName`/`isBreached`/`responseTimeRemaining`，改为 `slaDefinitionName`、`isResponseBreached`、`responseTimeLeftMinutes`；无 SLA 定义时不再渲染空卡片
+- 清理请求体里后端不接收的字段：分配不再发 `comment`、升级不再发 `level`、解决不再双写 `resolutionCode`；创建工单不再由客户端提交 `requesterId`（身份只来自认证上下文）；分页参数统一为 `pageSize`，去掉 `size`/`pageSize` 双轨与 `response.size ?? response.pageSize` 猜测
+- 修复仪表盘"最近工单"伪造 `category`/`tags`/`source`/`dueTime` 并把 `tenantId` 兜底成 1；批量导出不再发送后端不支持的 `ticketIds`（后端导出只按状态/优先级过滤，此前会把"导出 N 条选中"实为"导出全量"）
+- 修复 BPMN 流程指标的时间范围参数静默失效：前端发送 `time_range` 而后端 `handlers/bpmn/monitoring.go` 读取 `timeRange`，导致"近 7 天/近 30 天"查询全部退回默认 24h；参数名与契约测试同步更正
+- 修复工单类型弹窗的流程/分类下拉恒为空：依赖列表按 `definitions`、`categories` 等别名取值，而对应 handler 实际返回标准外壳 `items`（`common.NewListResponse`、`ListCategories`）；改按 `items` 读取后审批节点预览与"打开流程设计器"入口恢复
 
 ### Changed
 

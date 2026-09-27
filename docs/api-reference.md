@@ -592,6 +592,13 @@ Content-Type: application/json
 }
 ```
 
+### 发布审批
+
+- `POST /api/v1/releases/{id}/approve`：可选请求体 `{"comment":"同意"}`。
+- `POST /api/v1/releases/{id}/reject`：请求体 `{"reason":"拒绝原因"}`，`reason` 必填。
+
+两者均要求 `release:approve` 权限，审批人和租户来自认证上下文。审批人不属于当前租户、已停用或不存在时返回 HTTP 403，响应为 `{"code":2003,"message":"审批人不存在或已停用"}`，不写入发布、流程任务或审批审计。请求其他租户的发布资源仍返回 HTTP 404（业务码 4004），不泄露资源存在性。
+
 ### 删除发布
 
 ```http

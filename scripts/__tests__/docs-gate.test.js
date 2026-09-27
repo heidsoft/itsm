@@ -247,6 +247,19 @@ test('C.6.3 blocks a handler package no production code imports', (t) => {
   assert.doesNotMatch(result.stdout, /零路由域包 handlers\/incident/);
 });
 
+test('C.6.3 rejects a handler imported only by tests', (t) => {
+  const root = driftFixture({
+    'itsm-backend/handlers/orphan/handler.go': 'package orphan\n',
+    'itsm-backend/router/orphan_test.go':
+      'package router\n\nimport _ "itsm-backend/handlers/orphan"\n',
+  });
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const result = runDrift(root, driftEnv(root));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /零路由域包 handlers\/orphan/);
+});
+
 test('C.6.3 blocks an empty handler directory', (t) => {
   const root = driftFixture({
     'itsm-backend/handlers/ghost/.keep': '',
