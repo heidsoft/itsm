@@ -11,7 +11,7 @@ import (
 // TenantTimestamps 提供乐观锁和审计时间戳字段。
 // tenant_id 和 created_at 保留在各 Schema 的 Fields() 中，
 // 因为 Ent v0.14.6 不支持 Mixin 字段出现在 Indexes() 定义中。
-// 接入 Schema：Ticket, Incident, Problem, Change, Release, ServiceRequest
+// 接入 Schema：SLAState
 type TenantTimestamps struct {
 	mixin.Schema
 }
