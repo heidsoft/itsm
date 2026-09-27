@@ -297,6 +297,11 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 			common.RespondError(c, err, "操作失败")
 			return
 		}
+		var bizErr *common.BusinessError
+		if errors.As(err, &bizErr) {
+			common.RespondError(c, err, "操作失败")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -1183,6 +1188,11 @@ func isForbiddenErr(err error) bool {
 // FailWithErr 兜底被吞成 500。
 func failTicketOperation(c *gin.Context, err error) {
 	if isForbiddenErr(err) {
+		common.RespondError(c, err, "操作失败")
+		return
+	}
+	var bizErr *common.BusinessError
+	if errors.As(err, &bizErr) {
 		common.RespondError(c, err, "操作失败")
 		return
 	}

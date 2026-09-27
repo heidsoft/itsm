@@ -243,8 +243,7 @@ func (h *ReleaseHandler) applyReleaseApproval(c *gin.Context, action, comment st
 	}
 	release, err := h.releaseService.ApplyReleaseApproval(c.Request.Context(), releaseID, tenantID, userID, action, comment)
 	if err != nil {
-		h.logger.Errorw("Release approval failed", "error", err, "release_id", releaseID, "action", action)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	if release == nil {

@@ -11,6 +11,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -123,6 +124,7 @@ func (f *listContractFixture) doList(t *testing.T, query string, tenantID, actor
 
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 		c.Set("tenant_id", tenantID)
 		c.Set("user_id", actorID)
 		c.Set("role", "admin")

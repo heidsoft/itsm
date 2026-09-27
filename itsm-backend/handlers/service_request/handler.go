@@ -1,11 +1,13 @@
 package service_request
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
@@ -18,7 +20,8 @@ type Handler struct {
 }
 
 func failServiceRequest(c *gin.Context, err error) {
-	if appErr, ok := common.AsAppError(err); ok {
+	var appErr *common.AppError
+	if errors.As(err, &appErr) {
 		switch appErr.Code {
 		case common.ErrCodeBadRequest, common.ErrCodeValidation:
 			common.Fail(c, common.ParamErrorCode, appErr.Message)
@@ -39,7 +42,7 @@ func failServiceRequest(c *gin.Context, err error) {
 		common.Fail(c, common.NotFoundErrorCode, "Service request not found")
 		return
 	}
-	common.FailWithErr(c, err, "操作失败")
+	common.RespondError(c, err, "操作失败")
 }
 
 func NewHandler(service *Service) *Handler {
@@ -173,7 +176,10 @@ func (h *Handler) Get(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid ID")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	req, approvals, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -218,7 +224,10 @@ func (h *Handler) List(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid parameters")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得。
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
@@ -245,15 +254,15 @@ func (h *Handler) List(c *gin.Context) {
 		Status:        normalizeServiceRequestStatus(req.Status),
 		UserID:        userID,
 		Page:          req.Page,
-		Size:          req.Size,
+		PageSize:      req.PageSize,
 		CurrentUserID: currentUserID,
 		DataScope:     dataScope,
 	}
 	if filters.Page == 0 {
 		filters.Page = 1
 	}
-	if filters.Size == 0 {
-		filters.Size = 10
+	if filters.PageSize == 0 {
+		filters.PageSize = 10
 	}
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID, filters)
@@ -267,19 +276,24 @@ func (h *Handler) List(c *gin.Context) {
 		dtos[i] = *h.toDTO(v, nil)
 	}
 
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + filters.PageSize - 1) / filters.PageSize
+	}
 	common.Success(c, map[string]interface{}{
-		"requests": dtos,
-		"total":    total,
-		"page":     filters.Page,
-		"size":     filters.Size,
+		"items":      dtos,
+		"total":      total,
+		"page":       filters.Page,
+		"pageSize":   filters.PageSize,
+		"totalPages": totalPages,
 	})
 }
 
 func (h *Handler) ApplyApproval(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		common.Fail(c, 1001, "Invalid ID")
+	if err != nil || id <= 0 {
+		common.Fail(c, common.ParamErrorCode, "Invalid ID")
 		return
 	}
 
@@ -289,7 +303,10 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	userID := c.GetInt("user_id")
 	role, _ := c.Get("role")
 	dept, _ := c.Get("department")
@@ -312,7 +329,10 @@ func (h *Handler) ListPending(c *gin.Context) {
 		common.Fail(c, 1001, "Invalid parameters")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	userID := c.GetInt("user_id")
 	role, _ := c.Get("role")
 	roleStr, _ := role.(string)
@@ -320,11 +340,11 @@ func (h *Handler) ListPending(c *gin.Context) {
 	if req.Page < 1 {
 		req.Page = 1
 	}
-	if req.Size < 1 {
-		req.Size = 10
+	if req.PageSize < 1 {
+		req.PageSize = 10
 	}
 
-	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID, userID, roleStr, req.Page, req.Size)
+	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID, userID, roleStr, req.Page, req.PageSize)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
@@ -342,11 +362,16 @@ func (h *Handler) ListPending(c *gin.Context) {
 		dtos[i] = *h.toDTO(v, nil)
 	}
 
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + req.PageSize - 1) / req.PageSize
+	}
 	common.Success(c, map[string]interface{}{
-		"requests": dtos,
-		"total":    total,
-		"page":     req.Page,
-		"size":     req.Size,
+		"items":      dtos,
+		"total":      total,
+		"page":       req.Page,
+		"pageSize":   req.PageSize,
+		"totalPages": totalPages,
 	})
 }
 

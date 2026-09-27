@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func TestHandlerListUsesCamelCaseContractAndTenantScope(t *testing.T) {
 	handler := NewHandler(NewService(client))
 	router := gin.New()
 	router.GET("/commands", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 7})
 		c.Set("tenant_id", 7)
 		handler.List(c)
 	})
@@ -56,6 +58,7 @@ func TestHandlerListAcceptsCommandTypeAndAggregateTypeFilters(t *testing.T) {
 	handler := NewHandler(NewService(client))
 	router := gin.New()
 	router.GET("/commands", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 5})
 		c.Set("tenant_id", 5)
 		handler.List(c)
 	})
@@ -83,6 +86,7 @@ func TestHandlerBulkReplayExposesAuditAndMatchedIds(t *testing.T) {
 	handler := NewHandler(NewService(client))
 	router := gin.New()
 	router.POST("/bulk-replay", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 9})
 		c.Set("tenant_id", 9)
 		c.Set("user_id", 42)
 		c.Set("request_id", "req-bulk-1")
@@ -114,6 +118,7 @@ func TestHandlerBulkReplayRejectsEmptyFilterWith404(t *testing.T) {
 	handler := NewHandler(NewService(client))
 	router := gin.New()
 	router.POST("/bulk-replay", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 9})
 		c.Set("tenant_id", 9)
 		handler.BulkReplay(c)
 	})
@@ -132,6 +137,7 @@ func TestHandlerBulkCancelRejectsWrongStatus(t *testing.T) {
 	handler := NewHandler(NewService(client))
 	router := gin.New()
 	router.POST("/bulk-cancel", func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 3})
 		c.Set("tenant_id", 3)
 		c.Set("user_id", 7)
 		handler.BulkCancel(c)

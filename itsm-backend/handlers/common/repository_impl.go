@@ -138,8 +138,10 @@ func (r *EntRepository) GetUserByUsername(ctx context.Context, username string, 
 	return toUserDomain(e), nil
 }
 
-func (r *EntRepository) GetUserByID(ctx context.Context, id int) (*User, error) {
-	e, err := r.client.User.Get(ctx, id)
+func (r *EntRepository) GetUserByID(ctx context.Context, id int, tenantID int) (*User, error) {
+	e, err := r.client.User.Query().
+		Where(user.ID(id), user.TenantID(tenantID)).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -336,13 +336,13 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 	if filters.Page < 1 {
 		filters.Page = 1
 	}
-	if filters.Size < 1 {
-		filters.Size = 10
+	if filters.PageSize < 1 {
+		filters.PageSize = 10
 	}
-	if filters.Size > 100 {
-		filters.Size = 100
+	if filters.PageSize > 100 {
+		filters.PageSize = 100
 	}
-	query.Limit(filters.Size).Offset((filters.Page - 1) * filters.Size)
+	query.Limit(filters.PageSize).Offset((filters.Page - 1) * filters.PageSize)
 
 	// Default sort by CreatedAt DESC
 	rows, err := query.Order(ent.Desc(servicerequest.FieldCreatedAt)).All(ctx)

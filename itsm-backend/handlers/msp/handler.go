@@ -11,6 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/middleware"
+	"itsm-backend/repository/ticket"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -282,7 +283,7 @@ func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticket)
+	common.Success(c, domainTicketToResponse(ticket))
 }
 
 // GetCustomerReports 获取客户服务报表
@@ -375,4 +376,56 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 		"reports": reports,
 		"total":   len(reports),
 	})
+}
+
+// domainTicketToResponse 将领域模型 *ticket.Ticket 映射为 API 响应 DTO。
+func domainTicketToResponse(t *ticket.Ticket) *dto.TicketResponse {
+	if t == nil {
+		return nil
+	}
+	resp := &dto.TicketResponse{
+		ID:                    t.ID,
+		TicketNumber:          t.TicketNumber,
+		Title:                 t.Title,
+		Description:           t.Description,
+		Status:                string(t.Status),
+		Priority:              string(t.Priority),
+		Type:                  string(t.Type),
+		TicketTypeCode:        t.TicketTypeCode,
+		TicketTypeName:        t.TicketTypeName,
+		FormFields:            t.FormFields,
+		RequesterID:           t.RequesterID,
+		TenantID:              t.TenantID,
+		Version:               t.Version,
+		CreatedAt:             t.CreatedAt,
+		UpdatedAt:             t.UpdatedAt,
+		TemplateID:            t.TemplateID,
+		FirstResponseAt:       t.FirstResponseAt,
+		ResolvedAt:            t.ResolvedAt,
+		ClosedAt:              t.ClosedAt,
+		SLAResponseDeadline:   t.SLAResponseDeadline,
+		SLAResolutionDeadline: t.SLAResolutionDeadline,
+	}
+	if t.AssigneeID != nil {
+		resp.AssigneeID = *t.AssigneeID
+	}
+	if t.TicketTypeID != nil {
+		resp.TicketTypeID = *t.TicketTypeID
+	}
+	if t.CategoryID != nil {
+		resp.CategoryID = *t.CategoryID
+	}
+	if t.DepartmentID != nil {
+		resp.DepartmentID = *t.DepartmentID
+	}
+	if t.ParentTicketID != nil {
+		resp.ParentTicketID = *t.ParentTicketID
+	}
+	if t.Resolution != nil {
+		resp.Resolution = *t.Resolution
+	}
+	if t.Rating != nil {
+		resp.Rating = *t.Rating
+	}
+	return resp
 }

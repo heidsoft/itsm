@@ -2,6 +2,7 @@ package timer
 
 import (
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,12 @@ type Handler struct{ service *Service }
 func NewHandler(service *Service) *Handler { return &Handler{service: service} }
 
 func (h *Handler) List(c *gin.Context) {
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
 	page := parseIntParam(c.DefaultQuery("page", "1"), 1)
 	pageSize := parseIntParam(c.DefaultQuery("pageSize", "20"), 20)
 	if pageSize > 100 {
@@ -19,7 +26,7 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	filter := service.TimerListFilter{
-		TenantID:             c.GetInt("tenant_id"),
+		TenantID:             tenantID,
 		Status:               c.Query("status"),
 		TimerType:            c.Query("timerType"),
 		ProcessDefinitionKey: c.Query("processDefinitionKey"),
@@ -42,7 +49,13 @@ func (h *Handler) Get(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.Get(c.Request.Context(), c.GetInt("tenant_id"), timerID)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	result, err := h.service.Get(c.Request.Context(), tenantID, timerID)
 	if err != nil {
 		if IsNotFound(err) {
 			common.NotFound(c, "timer not found")
@@ -55,7 +68,13 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 func (h *Handler) Stats(c *gin.Context) {
-	result, err := h.service.Stats(c.Request.Context(), c.GetInt("tenant_id"))
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
+	result, err := h.service.Stats(c.Request.Context(), tenantID)
 	if err != nil {
 		common.InternalError(c, "failed to get timer stats")
 		return

@@ -375,10 +375,14 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 	defer tx.Rollback()
 
-	if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+	completed, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
 		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeServiceRequest), id, action, comment,
-	); bridgeErr != nil {
+	)
+	if bridgeErr != nil {
 		return nil, nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+	}
+	if !completed {
+		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
 
 	// 5. Process
@@ -612,6 +616,10 @@ func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requ
 		RequesterID: requesterID,
 	}
 	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "service_request", evalCtx, nil)
+	
+	// 影子双轨：新路径（BPMN Service Task）影子执行并对比，差异写日志
+	s.approvalChain.ShadowCompare(ctx, tenantID, "service_request", evalCtx, nil, plan, err)
+	
 	if err != nil {
 		return nil, err
 	}

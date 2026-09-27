@@ -34,7 +34,10 @@ func tenantIDFromCtx(c *gin.Context) (int, bool) {
 		return 0, false
 	}
 	tid, ok := v.(int)
-	return tid, ok
+	if !ok || tid == 0 {
+		return 0, false
+	}
+	return tid, true
 }
 
 // ==================== Asset CRUD ====================

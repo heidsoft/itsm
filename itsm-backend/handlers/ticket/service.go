@@ -2,6 +2,7 @@ package ticket
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -12,6 +13,11 @@ import (
 
 	"go.uber.org/zap"
 )
+
+// ErrTicketInvalidTransition 是工单状态机非法迁移的哨兵错误。
+// 与 incident 领域的 ErrIncidentInvalidTransition 对齐：service 层 wrap 后返回，
+// handler 层通过 errors.Is 识别并映射为 409 Conflict + BusinessError。
+var ErrTicketInvalidTransition = fmt.Errorf("invalid ticket status transition")
 
 // Service handles ticket business logic.
 // All operations go through the Repository interface (tenant-isolated).
@@ -153,6 +159,9 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 	if params.Version == 0 {
 		params.Version = current.Version
 	}
+	if params.Status != nil && !common.IsValidTicketStatusTransition(current.Status, *params.Status) {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to '%s'", ErrTicketInvalidTransition, current.Status, *params.Status))
+	}
 
 	updated, err := s.repo.Update(ctx, id, params, tenantID)
 	if err != nil {
@@ -201,8 +210,12 @@ func (s *Service) AssignTicket(ctx context.Context, ticketID int, assigneeID int
 // P1-DataScope：升级是生命周期写操作，与 Update/Delete 同风险面——行级校验
 // 写权限 ⊆ 读权限（普通角色仅创建人/受理人/管理员）。
 func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int, actorRole string) (*Ticket, error) {
-	if err := s.lifecycleGuard(ctx, ticketID, escalatedBy, actorRole, tenantID, "升级"); err != nil {
+	current, err := s.lifecycleGuard(ctx, ticketID, escalatedBy, actorRole, tenantID, "升级")
+	if err != nil {
 		return nil, err
+	}
+	if !common.IsValidTicketStatusTransition(current.Status, "in_progress") {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to 'in_progress'", ErrTicketInvalidTransition, current.Status))
 	}
 	return s.repo.EscalateTicket(ctx, ticketID, reason, tenantID, escalatedBy)
 }
@@ -210,8 +223,12 @@ func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason strin
 // ResolveTicket resolves a ticket with a resolution note.
 // P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
 func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, actorID int, actorRole string) (*Ticket, error) {
-	if err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "解决"); err != nil {
+	current, err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "解决")
+	if err != nil {
 		return nil, err
+	}
+	if !common.IsValidTicketStatusTransition(current.Status, "resolved") {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to 'resolved'", ErrTicketInvalidTransition, current.Status))
 	}
 	return s.repo.ResolveTicket(ctx, ticketID, resolution, tenantID)
 }
@@ -219,8 +236,12 @@ func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution st
 // CloseTicket closes a ticket.
 // P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
 func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, actorID int, actorRole string) (*Ticket, error) {
-	if err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "关闭"); err != nil {
+	current, err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "关闭")
+	if err != nil {
 		return nil, err
+	}
+	if !common.IsValidTicketStatusTransition(current.Status, "closed") {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to 'closed'", ErrTicketInvalidTransition, current.Status))
 	}
 	return s.repo.CloseTicket(ctx, ticketID, tenantID)
 }
@@ -229,8 +250,12 @@ func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, a
 // P1-DataScope：状态流转是生命周期写操作，行级校验对齐 Update/Delete
 // （写权限 ⊆ 读权限，普通角色仅创建人/受理人/管理员）。
 func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string, tenantID int, userID int, actorRole string) (*Ticket, error) {
-	if err := s.lifecycleGuard(ctx, ticketID, userID, actorRole, tenantID, "变更状态"); err != nil {
+	current, err := s.lifecycleGuard(ctx, ticketID, userID, actorRole, tenantID, "变更状态")
+	if err != nil {
 		return nil, err
+	}
+	if !common.IsValidTicketStatusTransition(current.Status, status) {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to '%s'", ErrTicketInvalidTransition, current.Status, status))
 	}
 	return s.repo.UpdateStatus(ctx, ticketID, status, tenantID)
 }
@@ -238,15 +263,25 @@ func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string,
 // lifecycleGuard 是 resolve/close/escalate/updateStatus 共用的行级守卫。
 // 与 Update/Delete 的 CanWriteResource 校验语义一致：加载单据后校验
 // 写权限 ⊆ 读权限，拒绝返回 403 Forbidden AppError。
-func (s *Service) lifecycleGuard(ctx context.Context, ticketID, actorID int, actorRole string, tenantID int, action string) error {
+// 返回加载的单据以避免调用方重复查询（调用方还需要当前状态做状态机校验）。
+func (s *Service) lifecycleGuard(ctx context.Context, ticketID, actorID int, actorRole string, tenantID int, action string) (*Ticket, error) {
 	current, err := s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !datascope.CanWriteResource(actorID, actorRole, current.RequesterID, current.AssigneeID) {
-		return common.NewForbiddenError(fmt.Sprintf("无权限%s该工单：仅创建人、受理人或管理员可操作", action))
+		return nil, common.NewForbiddenError(fmt.Sprintf("无权限%s该工单：仅创建人、受理人或管理员可操作", action))
 	}
-	return nil
+	return current, nil
+}
+
+// lifecycleError 将状态机哨兵错误映射为 409 BusinessError，
+// 与 incident 领域的 lifecycleError 对齐。
+func lifecycleError(err error) error {
+	if errors.Is(err, ErrTicketInvalidTransition) {
+		return common.NewBusinessError(common.ConflictCode, "当前工单状态不允许此操作", "")
+	}
+	return err
 }
 
 // Search searches tickets by keyword.
@@ -373,6 +408,9 @@ func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int
 	// 仅当该工单不是子任务（无父工单）时拒绝。
 	if current.ParentTicketID == nil {
 		return nil, common.NewBadRequestError("subtask does not belong to parent", nil)
+	}
+	if params.Status != nil && !common.IsValidTicketStatusTransition(current.Status, *params.Status) {
+		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to '%s'", ErrTicketInvalidTransition, current.Status, *params.Status))
 	}
 	return s.repo.Update(ctx, subtaskID, params, tenantID)
 }

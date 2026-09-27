@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	"itsm-backend/handlers/skill"
+	"itsm-backend/middleware"
 	"itsm-backend/service"
 )
 
@@ -63,6 +64,7 @@ func setupRouter(reg *service.SkillRegistry) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	// 跳过 RequirePermission 中间件，专注于 handler 行为。
 	v1.Use(func(c *gin.Context) {
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Set("tenant_id", 1)
 		c.Set("user_id", 42)
 		c.Set("role", "admin")

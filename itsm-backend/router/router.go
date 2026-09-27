@@ -49,7 +49,6 @@ import (
 	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/problem_investigation"
-	projectHandler "itsm-backend/handlers/project"
 	provisioningHandler "itsm-backend/handlers/provisioning"
 	rbacHandler "itsm-backend/handlers/rbac"
 	releaseHandler "itsm-backend/handlers/release"
@@ -78,6 +77,7 @@ import (
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
 	wecomHandler "itsm-backend/handlers/wecom"
+	workbenchHandler "itsm-backend/handlers/workbench"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -155,8 +155,7 @@ type RouterConfig struct {
 	A2UIHandler      *a2uiHandler.Handler
 	DashboardHandler *handlers.DashboardHandler
 
-	// Organization & Project
-	ProjectHandler     *projectHandler.Handler
+	// Organization & Application
 	ApplicationHandler *applicationHandler.Handler
 
 	// Ticket related controllers
@@ -220,6 +219,9 @@ type RouterConfig struct {
 
 	// Global Search
 	GlobalSearchHandler *globalSearchHandler.Handler
+
+	// Workbench (统一工作台)
+	WorkbenchHandler *workbenchHandler.Handler
 
 	// Standard Change Handler (标准变更模板库)
 	StandardChangeHandler *standard_change.Handler
@@ -597,6 +599,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// Global Search Controller (全局搜索)
 		if config.GlobalSearchHandler != nil {
 			config.GlobalSearchHandler.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// ==================== Workbench (统一工作台) ====================
+		if config.WorkbenchHandler != nil {
+			SetupWorkbenchRoutes(tenant.(*gin.RouterGroup), config.WorkbenchHandler)
 		}
 
 		// Standard Change Handler (标准变更模板库)

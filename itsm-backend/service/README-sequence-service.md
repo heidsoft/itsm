@@ -135,5 +135,5 @@ redis:
 
 ## 相关文件
 
-- `internal/container/container.go` - 依赖注入容器
-- `service/ticket_service.go` - 工单服务（使用序列号）
+- `internal/bootstrap/app.go` - 生产依赖装配
+- `handlers/ticket/service.go` - 工单服务

@@ -137,7 +137,8 @@ func (h *Handler) Logout(c *gin.Context) {
 
 func (h *Handler) GetMe(c *gin.Context) {
 	userID := c.GetInt("user_id")
-	u, err := h.svc.GetUser(c.Request.Context(), userID)
+	tenantID := c.GetInt("tenant_id")
+	u, err := h.svc.GetUser(c.Request.Context(), userID, tenantID)
 	if err != nil {
 		common.NotFound(c, "User not found")
 		return

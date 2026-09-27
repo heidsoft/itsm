@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -36,7 +37,11 @@ func (h *Handler) CreateTicketType(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	ticketType, err := h.ticketTypeService.CreateTicketType(c.Request.Context(), &req, tenantID, userID)
@@ -63,7 +68,11 @@ func (h *Handler) UpdateTicketType(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	ticketType, err := h.ticketTypeService.UpdateTicketType(c.Request.Context(), id, &req, tenantID, userID)
@@ -84,7 +93,11 @@ func (h *Handler) GetTicketType(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 
 	ticketType, err := h.ticketTypeService.GetTicketType(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -111,7 +124,11 @@ func (h *Handler) ListTicketTypes(c *gin.Context) {
 		req.PageSize = 20
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 
 	response, err := h.ticketTypeService.ListTicketTypes(c.Request.Context(), &req, tenantID)
 	if err != nil {
@@ -131,7 +148,11 @@ func (h *Handler) DeleteTicketType(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	err = h.ticketTypeService.DeleteTicketType(c.Request.Context(), id, tenantID, userID)
@@ -160,7 +181,12 @@ func (h *Handler) setStatus(c *gin.Context, status dto.TicketTypeStatus) {
 		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
 		return
 	}
-	result, err := h.ticketTypeService.SetStatus(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), status)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	result, err := h.ticketTypeService.SetStatus(c.Request.Context(), id, tenantID, c.GetInt("user_id"), status)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
 		return
@@ -183,7 +209,12 @@ func (h *Handler) CloneTicketType(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	result, err := h.ticketTypeService.CloneTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"), req.Code, req.Name)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	result, err := h.ticketTypeService.CloneTicketType(c.Request.Context(), id, tenantID, c.GetInt("user_id"), req.Code, req.Name)
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
 		return
@@ -198,7 +229,12 @@ func (h *Handler) RestoreTicketType(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "无效的工单类型ID")
 		return
 	}
-	result, err := h.ticketTypeService.RestoreTicketType(c.Request.Context(), id, c.GetInt("tenant_id"), c.GetInt("user_id"))
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	result, err := h.ticketTypeService.RestoreTicketType(c.Request.Context(), id, tenantID, c.GetInt("user_id"))
 	if err != nil {
 		common.RespondError(c, err, "操作失败")
 		return
@@ -218,7 +254,12 @@ func (h *Handler) InstallPreset(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	result, err := h.ticketTypeService.InstallPreset(c.Request.Context(), c.Param("presetId"), &req, c.GetInt("tenant_id"), c.GetInt("user_id"))
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	result, err := h.ticketTypeService.InstallPreset(c.Request.Context(), c.Param("presetId"), &req, tenantID, c.GetInt("user_id"))
 	if err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return

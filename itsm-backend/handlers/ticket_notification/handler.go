@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -29,8 +30,16 @@ func NewHandler(notificationService *service.TicketNotificationService, logger *
 }
 
 // tenantUserID 提取租户和用户 ID
-func tenantUserID(c *gin.Context) (tenantID, userID int) {
-	return c.GetInt("tenant_id"), c.GetInt("user_id")
+func tenantUserID(c *gin.Context) (tenantID, userID int, ok bool) {
+	tenantID, ok = handlerctx.ResolveTenantID(c)
+	if !ok {
+		return 0, 0, false
+	}
+	userID = c.GetInt("user_id")
+	if userID == 0 {
+		return 0, 0, false
+	}
+	return tenantID, userID, true
 }
 
 // pathID 提取路径参数 ID
@@ -50,7 +59,11 @@ func (h *Handler) ListTicketNotifications(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := tenantUserID(c)
+	tenantID, _, ok := tenantUserID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	notifications, err := h.notificationService.ListTicketNotifications(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket notifications", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
@@ -77,7 +90,11 @@ func (h *Handler) SendTicketNotification(c *gin.Context) {
 		return
 	}
 
-	tenantID, _ := tenantUserID(c)
+	tenantID, _, ok := tenantUserID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	err := h.notificationService.SendNotification(c.Request.Context(), ticketID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to send ticket notification", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
@@ -90,7 +107,11 @@ func (h *Handler) SendTicketNotification(c *gin.Context) {
 
 // ListUserNotifications 获取用户通知列表
 func (h *Handler) ListUserNotifications(c *gin.Context) {
-	userID, tenantID := tenantUserID(c)
+	userID, tenantID, ok := tenantUserID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	pagination := common.GetPaginationFromQuery(c)
 	page, pageSize := pagination.Page, pagination.PageSize
 
@@ -122,7 +143,11 @@ func (h *Handler) MarkNotificationRead(c *gin.Context) {
 		return
 	}
 
-	userID, tenantID := tenantUserID(c)
+	userID, tenantID, ok := tenantUserID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	err := h.notificationService.MarkNotificationRead(c.Request.Context(), notificationID, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to mark notification as read", "error", err, "notification_id", notificationID, "user_id", userID)
@@ -135,7 +160,11 @@ func (h *Handler) MarkNotificationRead(c *gin.Context) {
 
 // MarkAllNotificationsRead 标记所有通知为已读
 func (h *Handler) MarkAllNotificationsRead(c *gin.Context) {
-	userID, tenantID := tenantUserID(c)
+	userID, tenantID, ok := tenantUserID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	err := h.notificationService.MarkAllNotificationsRead(c.Request.Context(), userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to mark all notifications as read", "error", err, "user_id", userID)

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -507,9 +508,13 @@ func (h *Handler) Invoke(c *gin.Context) {
 	}
 
 	// 注入 tenant_id/user_id（若调用方未传）。这两项是大部分 Skill 的必填字段。
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	userID := c.GetInt("user_id")
-	if _, ok := input["tenantId"]; !ok && tenantID != 0 {
+	if _, ok := input["tenantId"]; !ok {
 		input["tenantId"] = tenantID
 	}
 	if _, ok := input["userId"]; !ok && userID != 0 {

@@ -8,7 +8,7 @@ import (
 type Repository interface {
 	// Auth & User
 	GetUserByUsername(ctx context.Context, username string, tenantID int) (*User, error)
-	GetUserByID(ctx context.Context, id int) (*User, error)
+	GetUserByID(ctx context.Context, id int, tenantID int) (*User, error)
 	ListUsers(ctx context.Context, tenantID int) ([]*User, error)
 	CreateUser(ctx context.Context, u *User) (*User, error)
 	UpdateUser(ctx context.Context, u *User) (*User, error)

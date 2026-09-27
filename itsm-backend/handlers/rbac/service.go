@@ -36,4 +36,6 @@ type MenuService interface {
 	UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error)
 	DeleteMenu(ctx context.Context, id int, tenantID int) error
 	GetUserMenus(ctx context.Context, userID int, tenantID int) (*dto.MenuTreeResponse, error)
+	ExportMenus(ctx context.Context, tenantID int) ([]dto.MenuExportItem, error)
+	InitMenusFromBaseline(ctx context.Context, tenantID int) (*dto.MenuInitDiffResponse, error)
 }

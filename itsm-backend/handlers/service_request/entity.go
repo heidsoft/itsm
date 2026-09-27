@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
 )
 
@@ -64,8 +65,8 @@ type ServiceRequestApproval struct {
 type ListFilters struct {
 	Status string
 	UserID int // Requester ID
-	Page   int
-	Size   int
+	Page      int
+	PageSize  int
 	// 行级数据权限（推广自 ticket DataScope 模式）。
 	// DataScopeOwnedOrAssigned 时 repository 强制收窄到本人创建或处理的请求单；
 	// CurrentUserID 为调用者身份，<=0 时 repository fail-closed 返回空集。
@@ -86,7 +87,9 @@ type Repository interface {
 	// Approval related
 	GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error)
 	UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error
+	UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error
 	UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error
+	UpdateRequestAndApprovalWithClient(ctx context.Context, txc *ent.Client, req *ServiceRequest, approval *ServiceRequestApproval) error
 
 	// Pending approvals for approver
 	ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error)

@@ -605,7 +605,19 @@ func TestHandler_LifecycleOps_RowLevelForbidden(t *testing.T) {
 		})
 	}
 
-	// owner（user 7）close 正常放行
+	// owner（user 7）先走 new → open（合法迁移）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "open"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
+
+	// owner（user 7）再走 open → resolved（合法迁移）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "resolved"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
+
+	// owner（user 7）最后走 resolved → close（合法迁移）
 	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/close", dto.CloseTicketRequest{},
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
 	)
@@ -629,11 +641,78 @@ func TestHandler_LifecycleOps_AdminLikeBypass(t *testing.T) {
 	}
 	idStr := strconv.Itoa(id)
 
+	// 先由 owner 把工单从 new 转到 open（合法迁移），再测 admin-like 角色 resolve
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "open"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, w.Body.String())
+
 	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/resolve",
 		dto.ResolveTicketRequest{Resolution: "fixed by admin"},
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "9", "X-Test-Role": "manager"},
 	)
 	assert.Equal(t, 200, w.Code, w.Body.String())
+}
+
+// TestHandler_StateMachineWhitelist 验证工单状态机白名单：非法迁移返回 4090，合法迁移放行。
+func TestHandler_StateMachineWhitelist(t *testing.T) {
+	r, _ := newTestHarness(t)
+
+	// 创建工单（status=new）
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "State machine test", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code)
+
+	// 从响应解析 ID
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("解析响应失败: %v", err)
+	}
+	data := resp["data"].(map[string]interface{})
+	id := int(data["id"].(float64))
+	idStr := strconv.Itoa(id)
+
+	// 非法迁移：new → closed（不允许）
+	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/close", dto.CloseTicketRequest{},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 409, w.Code, "new → closed 应返回 409")
+	assert.Contains(t, w.Body.String(), "4090", "业务错误码必须是 4090")
+	assert.Contains(t, w.Body.String(), "当前工单状态不允许此操作")
+
+	// 非法迁移：new → resolved（不允许）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "resolved"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 409, w.Code, "new → resolved 应返回 409")
+	assert.Contains(t, w.Body.String(), "4090")
+
+	// 合法迁移：new → open（允许）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "open"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, "new → open 应放行", w.Body.String())
+
+	// 合法迁移：open → resolved（允许）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "resolved"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, "open → resolved 应放行", w.Body.String())
+
+	// 合法迁移：resolved → closed（允许）
+	w = doJSON(t, r, http.MethodPost, "/api/v1/tickets/"+idStr+"/close", dto.CloseTicketRequest{},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 200, w.Code, "resolved → closed 应放行", w.Body.String())
+
+	// 终态验证：closed → 任何状态（不允许）
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr+"/status", map[string]string{"status": "open"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, 409, w.Code, "closed → open 应返回 409")
+	assert.Contains(t, w.Body.String(), "4090")
 }
 
 func TestHandler_AssignTicket(t *testing.T) {

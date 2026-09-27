@@ -346,7 +346,8 @@ func (h *Handler) InitDefaultPermissions(c *gin.Context) {
 // Menu Handlers
 // =============================================================================
 
-// ListMenus lists menus for a tenant
+// ListMenus lists menus for a tenant.
+// Super-admin may pass ?tenantId= to inspect another tenant's menu configuration.
 func (h *Handler) ListMenus(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
@@ -357,6 +358,20 @@ func (h *Handler) ListMenus(c *gin.Context) {
 	if !ok2 {
 		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
 		return
+	}
+
+	if override := c.Query("tenantId"); override != "" {
+		role, _ := c.Get("role")
+		if role != "super_admin" {
+			common.Fail(c, common.ForbiddenCode, "仅超级管理员可查看其他租户菜单")
+			return
+		}
+		overrideID, err := strconv.Atoi(override)
+		if err != nil || overrideID <= 0 {
+			common.Fail(c, common.ParamErrorCode, "无效的租户ID")
+			return
+		}
+		tenantID = overrideID
 	}
 
 	menus, err := h.menuService.ListMenus(c.Request.Context(), tenantID)
@@ -514,7 +529,29 @@ func (h *Handler) GetUserMenus(c *gin.Context) {
 	common.Success(c, menus)
 }
 
-// InitDefaultMenus initializes default menus
+// ExportMenus exports menus in seeder-compatible format (parentPath instead of parentId).
+func (h *Handler) ExportMenus(c *gin.Context) {
+	tid, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
+		return
+	}
+	tenantID, ok2 := tid.(int)
+	if !ok2 {
+		common.Fail(c, common.UnauthorizedCode, "租户上下文类型错误")
+		return
+	}
+
+	items, err := h.menuService.ExportMenus(c.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
+		return
+	}
+
+	common.Success(c, items)
+}
+
+// InitDefaultMenus seeds missing menus from the canonical baseline and returns a diff report.
 func (h *Handler) InitDefaultMenus(c *gin.Context) {
 	tid, ok := c.Get("tenant_id")
 	if !ok {
@@ -527,17 +564,11 @@ func (h *Handler) InitDefaultMenus(c *gin.Context) {
 		return
 	}
 
-	// Check if menus already exist
-	existing, err := h.menuService.ListMenus(c.Request.Context(), tenantID)
-	if err == nil && len(existing) > 0 {
-		common.Success(c, dto.MenuInitResponse{
-			Message: "菜单已初始化",
-			Count:   len(existing),
-		})
+	diff, err := h.menuService.InitMenusFromBaseline(c.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(c, common.InternalErrorCode, err.Error())
 		return
 	}
 
-	common.Success(c, dto.MenuInitResponse{
-		Message: "请通过种子数据初始化菜单",
-	})
+	common.Success(c, diff)
 }

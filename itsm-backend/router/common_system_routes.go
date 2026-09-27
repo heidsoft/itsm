@@ -87,18 +87,6 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			org.DELETE("/teams/:id", middleware.RequirePermission("team", "write"), config.CommonHandler.DeleteTeam)
 		}
 
-		// Projects
-		if config.ProjectHandler != nil {
-			projects := tenant.Group("/projects")
-			{
-				projects.GET("", middleware.RequirePermission("project", "read"), config.ProjectHandler.ListProjects)
-				projects.POST("", middleware.RequirePermission("project", "write"), config.ProjectHandler.CreateProject)
-				projects.GET("/:id", middleware.RequirePermission("project", "read"), config.ProjectHandler.GetProject)
-				projects.PUT("/:id", middleware.RequirePermission("project", "write"), config.ProjectHandler.UpdateProject)
-				projects.DELETE("/:id", middleware.RequirePermission("project", "write"), config.ProjectHandler.DeleteProject)
-			}
-		}
-
 		// Applications
 		if config.ApplicationHandler != nil {
 			applications := tenant.Group("/applications")
@@ -159,6 +147,7 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			{
 				menus.GET("", middleware.RequirePermission("system_config", "read"), config.RBACHandler.ListMenus)
 				menus.POST("", middleware.RequirePermission("system_config", "write"), config.RBACHandler.CreateMenu)
+				menus.GET("/export", middleware.RequirePermission("system_config", "read"), config.RBACHandler.ExportMenus)
 				menus.GET("/:id", middleware.RequirePermission("system_config", "read"), config.RBACHandler.GetMenu)
 				menus.PUT("/:id", middleware.RequirePermission("system_config", "write"), config.RBACHandler.UpdateMenu)
 				menus.DELETE("/:id", middleware.RequirePermission("system_config", "write"), config.RBACHandler.DeleteMenu)

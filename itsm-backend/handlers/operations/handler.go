@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,13 +16,19 @@ type Handler struct{ service *Service }
 func NewHandler(service *Service) *Handler { return &Handler{service: service} }
 
 func (h *Handler) List(c *gin.Context) {
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
 	page := positiveInt(c.DefaultQuery("page", "1"), 1)
 	pageSize := positiveInt(c.DefaultQuery("pageSize", "20"), 20)
 	if pageSize > 100 {
 		pageSize = 100
 	}
 	result, err := h.service.List(c.Request.Context(), ListRequest{
-		TenantID:      c.GetInt("tenant_id"),
+		TenantID:      tenantID,
 		Status:        c.Query("status"),
 		CommandType:   c.Query("commandType"),
 		AggregateType: c.Query("aggregateType"),
@@ -40,7 +47,12 @@ func (h *Handler) Get(c *gin.Context) {
 	if !ok {
 		return
 	}
-	result, err := h.service.Get(c.Request.Context(), c.GetInt("tenant_id"), id)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	result, err := h.service.Get(c.Request.Context(), tenantID, id)
 	h.respond(c, result, err)
 }
 
@@ -55,6 +67,11 @@ func (h *Handler) mutate(c *gin.Context, replay bool) {
 	if !ok {
 		return
 	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	actor := Actor{
 		UserID: c.GetInt("user_id"), RequestID: c.GetString("request_id"),
 		IP: c.ClientIP(), Path: c.Request.URL.Path, Method: c.Request.Method,
@@ -62,9 +79,9 @@ func (h *Handler) mutate(c *gin.Context, replay bool) {
 	var result *CommandDTO
 	var err error
 	if replay {
-		result, err = h.service.Replay(c.Request.Context(), c.GetInt("tenant_id"), id, actor)
+		result, err = h.service.Replay(c.Request.Context(), tenantID, id, actor)
 	} else {
-		result, err = h.service.Cancel(c.Request.Context(), c.GetInt("tenant_id"), id, actor)
+		result, err = h.service.Cancel(c.Request.Context(), tenantID, id, actor)
 	}
 	h.respond(c, result, err)
 }
@@ -78,6 +95,11 @@ type bulkRequestBody struct {
 }
 
 func (h *Handler) bulk(c *gin.Context, replay bool) {
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	actor := Actor{
 		UserID: c.GetInt("user_id"), RequestID: c.GetString("request_id"),
 		IP: c.ClientIP(), Path: c.Request.URL.Path, Method: c.Request.Method,
@@ -90,7 +112,7 @@ func (h *Handler) bulk(c *gin.Context, replay bool) {
 		}
 	}
 	filter := BulkFilter{
-		TenantID:      c.GetInt("tenant_id"),
+		TenantID:      tenantID,
 		Status:        body.Status,
 		CommandType:   body.CommandType,
 		AggregateType: body.AggregateType,

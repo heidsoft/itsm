@@ -184,7 +184,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 		return nil, fmt.Errorf("refresh token has been revoked")
 	}
 
-	user, err := s.repo.GetUserByID(ctx, claims.UserID)
+	user, err := s.repo.GetUserByID(ctx, claims.UserID, claims.TenantID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -220,8 +220,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 // 前端刷新页面后由 AuthGuard 重建 user，若此处不带 permissions，
 // hasPermission 会全部返回 false，导致 Sidebar 管理功能区等权限驱动 UI 消失。
 // 因此与 Login 相同，按角色填充权限列表（super_admin → ["*"]）。
-func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
-	u, err := s.repo.GetUserByID(ctx, id)
+func (s *Service) GetUser(ctx context.Context, id int, tenantID int) (*User, error) {
+	u, err := s.repo.GetUserByID(ctx, id, tenantID)
 	if err != nil {
 		return nil, err
 	}

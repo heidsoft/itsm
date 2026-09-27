@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
@@ -53,7 +54,10 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 		return
 	}
 
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	def := &SLADefinition{
 		Name:            req.Name,
 		Description:     req.Description,
@@ -81,7 +85,10 @@ func (h *Handler) CreateSLADefinition(c *gin.Context) {
 func (h *Handler) GetSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	res, err := h.svc.GetDefinition(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
@@ -96,7 +103,10 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 func (h *Handler) ListSLADefinitions(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size := queryIntParam(c, "pageSize", "size", 10)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal, page, size)
 	if err != nil {
@@ -121,7 +131,10 @@ func (h *Handler) ListSLADefinitions(c *gin.Context) {
 func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	var req dto.UpdateSLADefinitionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -179,7 +192,10 @@ func (h *Handler) UpdateSLADefinition(c *gin.Context) {
 func (h *Handler) DeleteSLADefinition(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	if err := h.svc.DeleteDefinition(c.Request.Context(), id, tenantIDVal); err != nil {
 		common.InternalError(c, "删除SLA定义失败: "+err.Error())
@@ -196,7 +212,10 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	rule := &SLAAlertRule{
 		SLADefinitionID:      req.SLADefinitionID,
 		Name:                 req.Name,
@@ -216,7 +235,10 @@ func (h *Handler) CreateAlertRule(c *gin.Context) {
 
 // ListAlertRules handles GET /api/v1/sla/alert-rules
 func (h *Handler) ListAlertRules(c *gin.Context) {
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	filters := make(map[string]interface{})
 	if slaID := c.Query("sla_definition_id"); slaID != "" {
 		id, _ := strconv.Atoi(slaID)
@@ -234,7 +256,10 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 func (h *Handler) GetAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	res, err := h.svc.GetAlertRule(c.Request.Context(), id, tenantIDVal)
 	if err != nil {
@@ -248,7 +273,10 @@ func (h *Handler) GetAlertRule(c *gin.Context) {
 func (h *Handler) UpdateAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	var req dto.UpdateSLAAlertRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -290,7 +318,10 @@ func (h *Handler) UpdateAlertRule(c *gin.Context) {
 func (h *Handler) DeleteAlertRule(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	if err := h.svc.DeleteAlertRule(c.Request.Context(), id, tenantIDVal); err != nil {
 		common.InternalError(c, "删除SLA告警规则失败: "+err.Error())
@@ -301,7 +332,10 @@ func (h *Handler) DeleteAlertRule(c *gin.Context) {
 
 // GetSLAMetrics handles GET /api/v1/sla/metrics
 func (h *Handler) GetSLAMetrics(c *gin.Context) {
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	filters := make(map[string]interface{})
 	// 查询参数契约为 camelCase，与前端 API client 保持逐字段一致。
 	if slaID := c.Query("slaDefinitionId"); slaID != "" {
@@ -344,7 +378,10 @@ func queryIntParam(c *gin.Context, camel, snake string, fallback int) int {
 
 // GetSLAViolations handles GET /api/v1/sla/violations
 func (h *Handler) GetSLAViolations(c *gin.Context) {
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	filters := make(map[string]interface{})
 	if isResolved := queryParam(c, "isResolved", "is_resolved"); isResolved != "" {
 		if val, err := strconv.ParseBool(isResolved); err == nil {
@@ -383,7 +420,10 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 func (h *Handler) UpdateViolationStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	var req struct {
 		IsResolved bool   `json:"isResolved"`
@@ -413,7 +453,10 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 		common.ParamError(c, "参数错误: "+err.Error())
 		return
 	}
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	start, err := parseSLATimeParam(req.StartTime)
 	if err != nil {
@@ -441,7 +484,10 @@ func (h *Handler) GetSLAMonitoring(c *gin.Context) {
 // 它们限制统计种群而不是对已分页的结果集做二次筛选。
 // 本路由是新增接口，查询参数只有一套 camelCase 契约，不再兼容 snake_case 别名。
 func (h *Handler) GetSLAPerformance(c *gin.Context) {
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	dimension := strings.TrimSpace(c.Query("dimension"))
 	if dimension == "" {
@@ -551,7 +597,10 @@ func failSLAQuery(c *gin.Context, err error, publicMsg string) {
 func (h *Handler) CheckSLACompliance(c *gin.Context) {
 	ticketIDStr := c.Param("ticketId")
 	ticketID, _ := strconv.Atoi(ticketIDStr)
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	res, err := h.svc.CheckSLACompliance(c.Request.Context(), ticketID, tenantIDVal)
 	if err != nil {
@@ -563,7 +612,10 @@ func (h *Handler) CheckSLACompliance(c *gin.Context) {
 
 // GetAlertHistory handles GET /api/v1/sla/alert-history
 func (h *Handler) GetAlertHistory(c *gin.Context) {
-	tenantIDVal := c.GetInt("tenant_id")
+	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	// filters 的 key 是仓储层/数据库列名（snake_case），不是 HTTP 契约；
 	// 查询参数按 camelCase 读取。
 	filters := make(map[string]interface{})
@@ -599,7 +651,10 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 
 // GetSLAStats handles GET /api/v1/sla/stats
 func (h *Handler) GetSLAStats(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	stats, err := h.svc.GetSLAStats(c.Request.Context(), tenantID)
 	if err != nil {
@@ -612,7 +667,10 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 
 // GetSLAComplianceReport handles GET /api/v1/sla/compliance-report
 func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	// Parse query parameters.
 	// camelCase 是查询参数的契约写法，snake_case 仅兼容存量调用方。

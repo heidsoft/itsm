@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -36,8 +37,8 @@ func NewHandler(
 }
 
 // tenantID 提取租户上下文
-func tenantID(c *gin.Context) int {
-	return c.GetInt("tenant_id")
+func tenantID(c *gin.Context) (int, bool) {
+	return handlerctx.ResolveTenantID(c)
 }
 
 // pathID 提取路径参数 ID
@@ -57,7 +58,12 @@ func (h *Handler) AutoAssign(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+
 	response, err := h.smartService.AutoAssign(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to auto assign ticket", "error", err, "ticket_id", ticketID)
@@ -75,7 +81,11 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	recommendations, err := h.smartService.GetAssignRecommendations(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get assignment recommendations", "error", err, "ticket_id", ticketID)
@@ -91,7 +101,11 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 
 // ListAssignmentRules 获取分配规则列表
 func (h *Handler) ListAssignmentRules(c *gin.Context) {
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	rules, err := h.ruleService.ListAssignmentRules(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list assignment rules", "error", err, "tenant_id", tenantID)
@@ -112,7 +126,11 @@ func (h *Handler) GetAssignmentRule(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	rule, err := h.ruleService.GetAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get assignment rule", "error", err, "rule_id", ruleID)
@@ -131,7 +149,11 @@ func (h *Handler) CreateAssignmentRule(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	rule, err := h.ruleService.CreateAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to create assignment rule", "error", err, "tenant_id", tenantID)
@@ -155,7 +177,11 @@ func (h *Handler) UpdateAssignmentRule(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	rule, err := h.ruleService.UpdateAssignmentRule(c.Request.Context(), ruleID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update assignment rule", "error", err, "rule_id", ruleID)
@@ -173,7 +199,11 @@ func (h *Handler) DeleteAssignmentRule(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	err := h.ruleService.DeleteAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete assignment rule", "error", err, "rule_id", ruleID)
@@ -192,7 +222,11 @@ func (h *Handler) TestAssignmentRule(c *gin.Context) {
 		return
 	}
 
-	tenantID := tenantID(c)
+	tenantID, ok := tenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	response, err := h.ruleService.TestAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to test assignment rule", "error", err, "rule_id", req.RuleID, "ticket_id", req.TicketID)

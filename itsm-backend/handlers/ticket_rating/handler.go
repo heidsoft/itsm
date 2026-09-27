@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/service"
 
@@ -45,7 +46,11 @@ func (h *Handler) SubmitRating(c *gin.Context) {
 	}
 
 	userID := c.GetInt("user_id")
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 
 	rating, err := h.ratingService.SubmitRating(c.Request.Context(), ticketID, &req, userID, tenantID)
 	if err != nil {
@@ -65,7 +70,11 @@ func (h *Handler) GetRating(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 
 	rating, err := h.ratingService.GetRating(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
@@ -90,7 +99,12 @@ func (h *Handler) GetRatingStats(c *gin.Context) {
 		return
 	}
 
-	req.TenantID = c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
+	req.TenantID = tenantID
 
 	stats, err := h.ratingService.GetRatingStats(c.Request.Context(), &req)
 	if err != nil {

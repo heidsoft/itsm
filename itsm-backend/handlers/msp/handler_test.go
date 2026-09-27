@@ -38,6 +38,8 @@ func newMSPTestRouter(t *testing.T, client *ent.Client, userID int, mspCtx *midd
 	r.Use(gin.Recovery())
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", userID)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+		c.Set("tenant_id", 1)
 		if mspCtx != nil {
 			// 与 MSPMiddleware 的写入方式保持一致（键名 + 指针类型）。
 			c.Set(middleware.MSPContextKey, mspCtx)
@@ -212,9 +214,10 @@ func TestGetCustomerTickets_WithMSPContext(t *testing.T) {
 	require.NoError(t, err)
 
 	r := newMSPTestRouter(t, client, 1, &middleware.MSPContext{
-		IsMSP:     true,
-		MSPUserID: 42,
-		Role:      "provider_agent",
+		IsMSP:            true,
+		MSPUserID:        42,
+		Role:             "provider_agent",
+		AllowedCustomers: []int{customer.ID},
 	})
 	status, body := doMSPRequest(t, r, "/api/v1/msp/customers/"+strconv.Itoa(customer.ID)+"/tickets")
 

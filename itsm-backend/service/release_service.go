@@ -470,12 +470,17 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	}
 	defer tx.Rollback()
 
-	if s.approvalBridge != nil {
-		if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
-			ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
-		); bridgeErr != nil {
-			return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
-		}
+	if s.approvalBridge == nil {
+		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	}
+	completed, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+		ctx, tx.Client(), tenantID, actorID, string(dto.BusinessTypeRelease), id, action, comment,
+	)
+	if bridgeErr != nil {
+		return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+	}
+	if !completed {
+		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
 
 	updated, err := tx.Release.UpdateOneID(id).

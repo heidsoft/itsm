@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/knowledgeaccess"
 	"itsm-backend/middleware"
@@ -374,7 +375,11 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -390,7 +395,11 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -495,7 +504,11 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	userID := c.GetInt("user_id")
 	requestID := c.GetString("request_id")
 	if requestID == "" {
@@ -582,7 +595,11 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 // 输出 AI 评估报告：按场景的有用率、置信度校准、平台级 LLM 成功率/延迟。
 func (h *Handler) GetEvaluation(c *gin.Context) {
 	days := queryInt(c, "days", 30)
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	report, err := h.svc.Evaluate(c.Request.Context(), tenantID, days)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
@@ -598,7 +615,11 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 	pageSize := queryInt(c, "pageSize", 20)
 	days := queryInt(c, "days", 90)
 	kind := c.Query("kind")
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		return
+	}
 	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, page, pageSize, kind, days)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")

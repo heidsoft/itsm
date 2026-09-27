@@ -755,11 +755,14 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 	return results, nil
 }
 
-// TriageTicket provides ticket classification and recommendations using LLM
+// TriageTicket provides ticket classification and recommendations.
+//
+// Phase 3 Step 3.2（2026-09-27）：移除内联关键词 fallback，统一委托
+// service/triage_service.go（Guidance → LLM → keyword 三级链）。
+// triageService 不可用时返回 unclassified + confidence=0，不再维护第二套分类枚举。
 func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, description, category, priority string) (interface{}, error) {
-	s.logger.Infow("Ticket Triage with LLM", "title", title, "tenantID", tenantID)
+	s.logger.Infow("Ticket Triage", "title", title, "tenantID", tenantID)
 
-	// Use LLM-powered TriageService if available
 	if s.triageService != nil {
 		result := s.triageService.Suggest(ctx, title, description)
 		return map[string]interface{}{
@@ -775,59 +778,17 @@ func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, descrip
 		}, nil
 	}
 
-	// Fallback to keyword-based classification
-	result := map[string]interface{}{
+	return map[string]interface{}{
 		"title":       title,
 		"description": description,
-		"suggestions": make(map[string]interface{}),
-	}
-
-	suggestedCategory := category
-	suggestedPriority := priority
-	suggestedUrgency := "medium"
-
-	titleLower := title
-	if len(titleLower) > 0 {
-		switch {
-		case containsAny(titleLower, "网络", "网速", "连接", "wifi", "网络"):
-			suggestedCategory = "network"
-		case containsAny(titleLower, "软件", "应用", "系统", "程序", "app"):
-			suggestedCategory = "software"
-		case containsAny(titleLower, "硬件", "电脑", "设备", "服务器", "hardware"):
-			suggestedCategory = "hardware"
-		case containsAny(titleLower, "账号", "密码", "权限", "登录", "access"):
-			suggestedCategory = "access"
-		case containsAny(titleLower, "打印机", "打印", "print"):
-			suggestedCategory = "printer"
-		case containsAny(titleLower, "邮箱", "邮件", "email", "outlook"):
-			suggestedCategory = "email"
-		default:
-			suggestedCategory = "general"
-		}
-	}
-
-	descLower := description
-	if containsAny(descLower, "紧急", "严重", "无法工作", "critical", "urgent", "emergency") {
-		suggestedPriority = "critical"
-		suggestedUrgency = "high"
-	} else if containsAny(descLower, "重要", "影响工作", "high", "important") {
-		suggestedPriority = "high"
-		suggestedUrgency = "high"
-	} else if containsAny(descLower, "不紧急", "low", "minor") {
-		suggestedPriority = "low"
-		suggestedUrgency = "low"
-	}
-
-	suggestions := make(map[string]interface{})
-	suggestions["category"] = suggestedCategory
-	suggestions["priority"] = suggestedPriority
-	suggestions["urgency"] = suggestedUrgency
-	suggestions["confidence"] = 0.7
-	suggestions["reasoning"] = "Based on keyword analysis"
-
-	result["suggestions"] = suggestions
-
-	return result, nil
+		"suggestions": map[string]interface{}{
+			"category":   "unclassified",
+			"priority":   "unclassified",
+			"confidence": 0,
+			"reasoning":  "triage service unavailable",
+			"urgency":    "medium",
+		},
+	}, nil
 }
 
 func (s *Service) determineUrgency(priority string) string {
@@ -861,32 +822,6 @@ func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize in
 	return s.aiTelemetryService.ListAuditLogs(ctx, tenantID, page, pageSize, kind, days)
 }
 
-// containsAny checks if string contains any of the keywords
-func containsAny(s string, keywords ...string) bool {
-	for _, kw := range keywords {
-		if len(s) >= len(kw) {
-			for i := 0; i <= len(s)-len(kw); i++ {
-				if len(s[i:i+len(kw)]) >= len(kw) {
-					// Simple case-insensitive check
-					sub := ""
-					for j := 0; j < len(kw); j++ {
-						if i+j < len(s) {
-							c := s[i+j]
-							if c >= 'A' && c <= 'Z' {
-								c = c + 32
-							}
-							sub += string(c)
-						}
-					}
-					if sub == kw {
-						return true
-					}
-				}
-			}
-		}
-	}
-	return false
-}
 
 // parseDate parses date string in YYYY-MM-DD format
 func parseDate(s string) time.Time {

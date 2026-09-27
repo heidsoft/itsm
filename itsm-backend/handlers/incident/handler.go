@@ -396,7 +396,10 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -443,7 +446,10 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 func (h *IncidentHandler) Lists(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
@@ -928,7 +934,11 @@ func (h *IncidentHandler) AcknowledgeAlert(c *gin.Context) {
 	if !ok {
 		return
 	}
-	err := h.service.alertingSvc.AcknowledgeAlert(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"))
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	err := h.service.alertingSvc.AcknowledgeAlert(c.Request.Context(), id, c.GetInt("user_id"), tenantID)
 	if err != nil {
 		if err.Error() == "alert not found" {
 			common.Fail(c, common.NotFoundErrorCode, "告警不存在")
@@ -970,7 +980,11 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 		common.Fail(c, common.ParamErrorCode, "结束时间格式无效")
 		return
 	}
-	statistics, err := h.service.alertingSvc.GetAlertStatistics(c.Request.Context(), c.GetInt("tenant_id"), startTime, endTime)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	statistics, err := h.service.alertingSvc.GetAlertStatistics(c.Request.Context(), tenantID, startTime, endTime)
 	if err != nil {
 		h.service.logger.Errorw("Failed to get alert statistics", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取告警统计失败")
@@ -1002,7 +1016,11 @@ func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	if size > 100 {
 		size = 100
 	}
-	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), c.GetInt("tenant_id"), page, size)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), tenantID, page, size)
 	if err != nil {
 		h.service.logger.Errorw("Failed to get active alerts", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取活跃告警失败")
@@ -1026,7 +1044,11 @@ func (h *IncidentHandler) AnalyzeImpact(c *gin.Context) {
 	if !ok {
 		return
 	}
-	analysis, err := h.service.monitoringService.AnalyzeIncidentImpact(c.Request.Context(), id, c.GetInt("tenant_id"))
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	analysis, err := h.service.monitoringService.AnalyzeIncidentImpact(c.Request.Context(), id, tenantID)
 	if err != nil {
 		h.service.logger.Errorw("Failed to analyze incident impact", "error", err, "id", id)
 		common.Fail(c, common.InternalErrorCode, "分析事件影响失败")
@@ -1058,7 +1080,11 @@ func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	problem, err := h.service.rootCauseSvc.CreateProblemFromIncident(c.Request.Context(), id, c.GetInt("user_id"), c.GetInt("tenant_id"), &req)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+	problem, err := h.service.rootCauseSvc.CreateProblemFromIncident(c.Request.Context(), id, c.GetInt("user_id"), tenantID, &req)
 	if err != nil {
 		h.service.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", id)
 		common.Fail(c, common.InternalErrorCode, "转换失败: "+err.Error())
@@ -1178,7 +1204,10 @@ func (h *IncidentHandler) Escalate(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	updated, err := h.service.Escalate(c.Request.Context(), tenantID, id, req.EscalationLevel, req.Reason, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
@@ -1269,9 +1298,8 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/stats [get]
 func (h *IncidentHandler) GetStats(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-	if tenantID == 0 {
-		common.Fail(c, common.AuthErrorCode, "Tenant ID missing")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
 		return
 	}
 
@@ -1304,7 +1332,10 @@ func (h *IncidentHandler) GetRootCause(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
@@ -1349,7 +1380,10 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	updates := &Incident{}
 	if req.RootCause != nil {
 		updates.RootCause = req.RootCause
@@ -1384,7 +1418,10 @@ func (h *IncidentHandler) GetImpactAssessment(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
@@ -1427,7 +1464,10 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	updates := &Incident{}
 	if req.ImpactAnalysis != nil {
 		updates.ImpactAnalysis = req.ImpactAnalysis
@@ -1462,7 +1502,10 @@ func (h *IncidentHandler) GetClassification(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	incident, err := h.service.Get(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.Fail(c, common.NotFoundErrorCode, "Incident not found")
@@ -1515,7 +1558,10 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	updates := &Incident{
 		Category:    req.Category,
 		Subcategory: req.Subcategory,
@@ -1544,7 +1590,10 @@ func (h *IncidentHandler) GetIncidentEvents(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	events, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -1577,7 +1626,10 @@ func (h *IncidentHandler) GetIncidentAlerts(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	alerts, err := h.service.GetIncidentAlerts(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -1610,7 +1662,10 @@ func (h *IncidentHandler) GetIncidentMetrics(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	inc, err := h.service.GetIncidentMetricsData(c.Request.Context(), id, tenantID)
 	if err != nil {
@@ -1651,7 +1706,10 @@ func (h *IncidentHandler) GetIncidentComments(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	// 验证事件存在且属于该租户
 	if _, err := h.service.GetIncidentEvents(c.Request.Context(), id, tenantID); err != nil {
@@ -1710,7 +1768,10 @@ func (h *IncidentHandler) CreateIncidentComment(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	userID := c.GetInt("user_id")
 
 	event, err := h.service.CreateIncidentComment(c.Request.Context(), id, tenantID, userID, req.Content, req.IsInternal)
