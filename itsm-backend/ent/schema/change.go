@@ -32,9 +32,22 @@ func (Change) Fields() []ent.Field {
 		field.String("type").
 			Comment("变更类型").
 			Default("normal"),
-		field.String("status").
+		field.Enum("status").
 			Comment("状态").
-			Default("draft"),
+			Default("draft").
+			NamedValues(
+				"Draft", "draft",
+				"Pending", "pending",
+				"Approved", "approved",
+				"Rejected", "rejected",
+				"Scheduled", "scheduled",
+				"InProgress", "in_progress",
+				"Completed", "completed",
+				"Failed", "failed",
+				"RolledBack", "rolled_back",
+				"Cancelled", "cancelled",
+				"Closed", "closed",
+			),
 		field.String("priority").
 			Comment("优先级").
 			Default("medium"),
@@ -95,5 +108,7 @@ func (Change) Edges() []ent.Edge {
 			Comment("关联的问题"),
 		edge.To("pir", ChangePIR.Type).
 			Comment("实施后审查"),
+		edge.To("releases", Release.Type).
+			Comment("关联的发布"),
 	}
 }

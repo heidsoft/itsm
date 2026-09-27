@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/release"
 	"math"
 
 	"entgo.io/ent"
@@ -27,6 +28,7 @@ type ChangeQuery struct {
 	predicates   []predicate.Change
 	withProblems *ProblemQuery
 	withPir      *ChangePIRQuery
+	withReleases *ReleaseQuery
 	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -101,6 +103,28 @@ func (_q *ChangeQuery) QueryPir() *ChangePIRQuery {
 			sqlgraph.From(change.Table, change.FieldID, selector),
 			sqlgraph.To(changepir.Table, changepir.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, change.PirTable, change.PirColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReleases chains the current query on the "releases" edge.
+func (_q *ChangeQuery) QueryReleases() *ReleaseQuery {
+	query := (&ReleaseClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(change.Table, change.FieldID, selector),
+			sqlgraph.To(release.Table, release.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, change.ReleasesTable, change.ReleasesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +326,7 @@ func (_q *ChangeQuery) Clone() *ChangeQuery {
 		predicates:   append([]predicate.Change{}, _q.predicates...),
 		withProblems: _q.withProblems.Clone(),
 		withPir:      _q.withPir.Clone(),
+		withReleases: _q.withReleases.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -327,6 +352,17 @@ func (_q *ChangeQuery) WithPir(opts ...func(*ChangePIRQuery)) *ChangeQuery {
 		opt(query)
 	}
 	_q.withPir = query
+	return _q
+}
+
+// WithReleases tells the query-builder to eager-load the nodes that are connected to
+// the "releases" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ChangeQuery) WithReleases(opts ...func(*ReleaseQuery)) *ChangeQuery {
+	query := (&ReleaseClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReleases = query
 	return _q
 }
 
@@ -409,9 +445,10 @@ func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chang
 		nodes       = []*Change{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withProblems != nil,
 			_q.withPir != nil,
+			_q.withReleases != nil,
 		}
 	)
 	if withFKs {
@@ -446,6 +483,13 @@ func (_q *ChangeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Chang
 		if err := _q.loadPir(ctx, query, nodes,
 			func(n *Change) { n.Edges.Pir = []*ChangePIR{} },
 			func(n *Change, e *ChangePIR) { n.Edges.Pir = append(n.Edges.Pir, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReleases; query != nil {
+		if err := _q.loadReleases(ctx, query, nodes,
+			func(n *Change) { n.Edges.Releases = []*Release{} },
+			func(n *Change, e *Release) { n.Edges.Releases = append(n.Edges.Releases, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -539,6 +583,39 @@ func (_q *ChangeQuery) loadPir(ctx context.Context, query *ChangePIRQuery, nodes
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "change_pir" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ChangeQuery) loadReleases(ctx context.Context, query *ReleaseQuery, nodes []*Change, init func(*Change), assign func(*Change, *Release)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Change)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(release.FieldChangeID)
+	}
+	query.Where(predicate.Release(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(change.ReleasesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ChangeID
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "change_id" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "change_id" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

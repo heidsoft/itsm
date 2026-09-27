@@ -4134,6 +4134,22 @@ func (c *ChangeClient) QueryPir(_m *Change) *ChangePIRQuery {
 	return query
 }
 
+// QueryReleases queries the releases edge of a Change.
+func (c *ChangeClient) QueryReleases(_m *Change) *ReleaseQuery {
+	query := (&ReleaseClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(change.Table, change.FieldID, id),
+			sqlgraph.To(release.Table, release.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, change.ReleasesTable, change.ReleasesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChangeClient) Hooks() []Hook {
 	return c.hooks.Change
@@ -15511,6 +15527,22 @@ func (c *ReleaseClient) GetX(ctx context.Context, id int) *Release {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryChange queries the change edge of a Release.
+func (c *ReleaseClient) QueryChange(_m *Release) *ChangeQuery {
+	query := (&ChangeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(release.Table, release.FieldID, id),
+			sqlgraph.To(change.Table, change.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, release.ChangeTable, release.ChangeColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

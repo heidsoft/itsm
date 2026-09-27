@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -27,9 +28,18 @@ func (Release) Fields() []ent.Field {
 		field.String("type").
 			Comment("发布类型: major/minor/patch/hotfix").
 			Default("minor"),
-		field.String("status").
+		field.Enum("status").
 			Comment("状态: draft/scheduled/in-progress/completed/cancelled").
-			Default("draft"),
+			Default("draft").
+			NamedValues(
+				"Draft", "draft",
+				"Scheduled", "scheduled",
+				"InProgress", "in-progress",
+				"Completed", "completed",
+				"Cancelled", "cancelled",
+				"Failed", "failed",
+				"RolledBack", "rolled_back",
+			),
 		field.String("severity").
 			Comment("严重程度: low/medium/high/critical").
 			Default("medium"),
@@ -100,7 +110,13 @@ func (Release) Fields() []ent.Field {
 }
 
 func (Release) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("change", Change.Type).
+			Ref("releases").
+			Unique().
+			Field("change_id").
+			Comment("关联的变更"),
+	}
 }
 
 func (Release) Indexes() []ent.Index {

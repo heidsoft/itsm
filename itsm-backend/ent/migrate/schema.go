@@ -805,7 +805,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "justification", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "type", Type: field.TypeString, Default: "normal"},
-		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "pending", "approved", "rejected", "scheduled", "in_progress", "completed", "failed", "rolled_back", "cancelled", "closed"}, Default: "draft"},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
 		{Name: "impact_scope", Type: field.TypeString, Default: "medium"},
 		{Name: "risk_level", Type: field.TypeString, Default: "medium"},
@@ -3918,10 +3918,9 @@ var (
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "type", Type: field.TypeString, Default: "minor"},
-		{Name: "status", Type: field.TypeString, Default: "draft"},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"draft", "scheduled", "in-progress", "completed", "cancelled", "failed", "rolled_back"}, Default: "draft"},
 		{Name: "severity", Type: field.TypeString, Default: "medium"},
 		{Name: "environment", Type: field.TypeString, Default: "staging"},
-		{Name: "change_id", Type: field.TypeInt, Nullable: true},
 		{Name: "owner_id", Type: field.TypeInt, Nullable: true},
 		{Name: "created_by", Type: field.TypeInt},
 		{Name: "tenant_id", Type: field.TypeInt},
@@ -3940,12 +3939,21 @@ var (
 		{Name: "requires_approval", Type: field.TypeBool, Default: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "change_id", Type: field.TypeInt, Nullable: true},
 	}
 	// ReleasesTable holds the schema information for the "releases" table.
 	ReleasesTable = &schema.Table{
 		Name:       "releases",
 		Columns:    ReleasesColumns,
 		PrimaryKey: []*schema.Column{ReleasesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "releases_changes_releases",
+				Columns:    []*schema.Column{ReleasesColumns[26]},
+				RefColumns: []*schema.Column{ChangesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "release_release_number",
@@ -3955,7 +3963,7 @@ var (
 			{
 				Name:    "release_change_id",
 				Unique:  false,
-				Columns: []*schema.Column{ReleasesColumns[8]},
+				Columns: []*schema.Column{ReleasesColumns[26]},
 			},
 			{
 				Name:    "release_status",
@@ -3965,7 +3973,7 @@ var (
 			{
 				Name:    "release_tenant_id",
 				Unique:  false,
-				Columns: []*schema.Column{ReleasesColumns[11]},
+				Columns: []*schema.Column{ReleasesColumns[10]},
 			},
 		},
 	}
@@ -6290,6 +6298,7 @@ func init() {
 	ProcessVersionChangelogsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessVersionChangelogsTable.ForeignKeys[1].RefTable = UsersTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	ReleasesTable.ForeignKeys[0].RefTable = ChangesTable
 	RolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	RolePermissionsTable.ForeignKeys[0].RefTable = PermissionDefinitionsTable
 	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable

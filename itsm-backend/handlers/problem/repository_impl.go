@@ -93,7 +93,7 @@ func (r *EntRepository) toDomainWithAssociations(e *ent.Problem) *Problem {
 			p.Changes = append(p.Changes, &AssociatedItem{
 				ID:     ch.ID,
 				Title:  ch.Title,
-				Status: ch.Status,
+				Status: string(ch.Status),
 				Type:   "change",
 			})
 		}

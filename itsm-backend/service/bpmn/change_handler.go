@@ -150,7 +150,7 @@ func (h *ChangeServiceTaskHandler) updateChange(ctx context.Context, variables m
 		updateQuery.SetDescription(description)
 	}
 	if status, ok := variables["status"].(string); ok && status != "" {
-		updateQuery.SetStatus(status)
+		updateQuery.SetStatus(change.Status(status))
 	}
 
 	_, err = updateQuery.Save(ctx)
@@ -312,7 +312,7 @@ func (h *ChangeServiceTaskHandler) verifyChange(ctx context.Context, variables m
 	}
 
 	_, err = h.client.Change.UpdateOneID(changeID).
-		SetStatus(newStatus).
+		SetStatus(change.Status(newStatus)).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("验证变更失败: %w", err)

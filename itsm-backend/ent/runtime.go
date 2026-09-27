@@ -821,10 +821,6 @@ func init() {
 	changeDescType := changeFields[4].Descriptor()
 	// change.DefaultType holds the default value on creation for the type field.
 	change.DefaultType = changeDescType.Default.(string)
-	// changeDescStatus is the schema descriptor for status field.
-	changeDescStatus := changeFields[5].Descriptor()
-	// change.DefaultStatus holds the default value on creation for the status field.
-	change.DefaultStatus = changeDescStatus.Default.(string)
 	// changeDescPriority is the schema descriptor for priority field.
 	changeDescPriority := changeFields[6].Descriptor()
 	// change.DefaultPriority holds the default value on creation for the priority field.
@@ -3725,10 +3721,6 @@ func init() {
 	releaseDescType := releaseFields[3].Descriptor()
 	// release.DefaultType holds the default value on creation for the type field.
 	release.DefaultType = releaseDescType.Default.(string)
-	// releaseDescStatus is the schema descriptor for status field.
-	releaseDescStatus := releaseFields[4].Descriptor()
-	// release.DefaultStatus holds the default value on creation for the status field.
-	release.DefaultStatus = releaseDescStatus.Default.(string)
 	// releaseDescSeverity is the schema descriptor for severity field.
 	releaseDescSeverity := releaseFields[5].Descriptor()
 	// release.DefaultSeverity holds the default value on creation for the severity field.

@@ -29,7 +29,7 @@ type Change struct {
 	// 变更类型
 	Type string `json:"type,omitempty"`
 	// 状态
-	Status string `json:"status,omitempty"`
+	Status change.Status `json:"status,omitempty"`
 	// 优先级
 	Priority string `json:"priority,omitempty"`
 	// 影响范围
@@ -75,9 +75,11 @@ type ChangeEdges struct {
 	Problems []*Problem `json:"problems,omitempty"`
 	// 实施后审查
 	Pir []*ChangePIR `json:"pir,omitempty"`
+	// 关联的发布
+	Releases []*Release `json:"releases,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // ProblemsOrErr returns the Problems value or an error if the edge
@@ -96,6 +98,15 @@ func (e ChangeEdges) PirOrErr() ([]*ChangePIR, error) {
 		return e.Pir, nil
 	}
 	return nil, &NotLoadedError{edge: "pir"}
+}
+
+// ReleasesOrErr returns the Releases value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChangeEdges) ReleasesOrErr() ([]*Release, error) {
+	if e.loadedTypes[2] {
+		return e.Releases, nil
+	}
+	return nil, &NotLoadedError{edge: "releases"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -168,7 +179,7 @@ func (_m *Change) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				_m.Status = value.String
+				_m.Status = change.Status(value.String)
 			}
 		case change.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -300,6 +311,11 @@ func (_m *Change) QueryPir() *ChangePIRQuery {
 	return NewChangeClient(_m.config).QueryPir(_m)
 }
 
+// QueryReleases queries the "releases" edge of the Change entity.
+func (_m *Change) QueryReleases() *ReleaseQuery {
+	return NewChangeClient(_m.config).QueryReleases(_m)
+}
+
 // Update returns a builder for updating this Change.
 // Note that you need to call Change.Unwrap() before calling this method if this Change
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -339,7 +355,7 @@ func (_m *Change) String() string {
 	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(_m.Status)
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
 	builder.WriteString(_m.Priority)

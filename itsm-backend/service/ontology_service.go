@@ -427,7 +427,7 @@ func (s *OntologyService) expandRelease(ctx context.Context, tenantID int, rel *
 		ID:         rel.ID,
 		Number:     rel.ReleaseNumber,
 		Title:      rel.Title,
-		Status:     rel.Status,
+		Status:     string(rel.Status),
 		Snippet:    truncate(rel.Description, 160),
 		Neighbors:  make([]string, 0, 4),
 	}
@@ -489,7 +489,7 @@ func (s *OntologyService) expandChange(ctx context.Context, tenantID int, c *ent
 		ID:         c.ID,
 		Number:     c.ChangeNumber,
 		Title:      c.Title,
-		Status:     c.Status,
+		Status:     string(c.Status),
 		Snippet:    truncate(c.Description, 160),
 		Neighbors:  make([]string, 0, 8),
 	}

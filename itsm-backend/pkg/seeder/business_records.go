@@ -149,7 +149,7 @@ func (s *Seeder) seedChangeRecords(ctx context.Context, tenantID, adminID int) {
 		builder := s.client.Change.Create().
 			SetTitle(seed.Title).
 			SetType(seed.Type).
-			SetStatus(seed.Status).
+			SetStatus(change.Status(seed.Status)).
 			SetPriority(seed.Priority).
 			SetTenantID(tenantID).
 			SetCreatedBy(adminID)

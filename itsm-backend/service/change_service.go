@@ -80,7 +80,7 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetDescription(req.Description).
 		SetJustification(req.Justification).
 		SetType(req.Type).
-		SetStatus(string(initialStatus)).
+		SetStatus(change.Status(initialStatus)).
 		SetPriority(req.Priority).
 		SetImpactScope(req.ImpactScope).
 		SetRiskLevel(req.RiskLevel).
@@ -267,15 +267,15 @@ func optionalInt(value int) *int {
 }
 
 // API 使用 pending 表达待审批，持久化层和 BPMN 流程统一使用 submitted。
-func persistedChangeStatus(status string) string {
+func persistedChangeStatus(status string) change.Status {
 	if status == string(dto.ChangeStatusPending) {
-		return common.ChangeStatusSubmitted
+		return change.Status(common.ChangeStatusSubmitted)
 	}
-	return status
+	return change.Status(status)
 }
 
-func apiChangeStatus(status string) dto.ChangeStatus {
-	if status == common.ChangeStatusSubmitted {
+func apiChangeStatus(status change.Status) dto.ChangeStatus {
+	if string(status) == common.ChangeStatusSubmitted {
 		return dto.ChangeStatusPending
 	}
 	return dto.ChangeStatus(status)
@@ -366,7 +366,7 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 
 	// 状态筛选
 	if status != "" && status != "全部" {
-		query = query.Where(change.Status(persistedChangeStatus(status)))
+		query = query.Where(change.StatusEQ(persistedChangeStatus(status)))
 	}
 
 	// 搜索筛选
@@ -516,7 +516,7 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 		s.logger.Errorw("Failed to get change for update", "error", err, "change_id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to get change: %w", err)
 	}
-	if changeEntity.Status != string(dto.ChangeStatusDraft) {
+	if changeEntity.Status != change.Status(dto.ChangeStatusDraft) {
 		return nil, fmt.Errorf("只有草稿状态的变更可以修改")
 	}
 	if req.Type != nil && !isValidChangeType(string(*req.Type)) {
@@ -614,7 +614,7 @@ func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) 
 		}
 		return fmt.Errorf("failed to get change: %w", err)
 	}
-	if changeEntity.Status != string(dto.ChangeStatusDraft) && changeEntity.Status != string(dto.ChangeStatusCancelled) {
+	if changeEntity.Status != change.Status(dto.ChangeStatusDraft) && changeEntity.Status != change.Status(dto.ChangeStatusCancelled) {
 		return fmt.Errorf("只有草稿或已取消的变更可以删除")
 	}
 
@@ -642,23 +642,23 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 	stats := &dto.ChangeStatsResponse{Total: len(rows)}
 	for _, item := range rows {
 		switch item.Status {
-		case string(dto.ChangeStatusDraft), string(dto.ChangeStatusPending), common.ChangeStatusSubmitted:
+		case change.Status(dto.ChangeStatusDraft), change.Status(dto.ChangeStatusPending), change.Status(common.ChangeStatusSubmitted):
 			stats.Pending++
-		case string(dto.ChangeStatusApproved):
+		case change.Status(dto.ChangeStatusApproved):
 			stats.Approved++
-		case string(dto.ChangeStatusScheduled):
+		case change.Status(dto.ChangeStatusScheduled):
 			stats.Scheduled++
-		case string(dto.ChangeStatusInProgress):
+		case change.Status(dto.ChangeStatusInProgress):
 			stats.InProgress++
-		case string(dto.ChangeStatusCompleted):
+		case change.Status(dto.ChangeStatusCompleted):
 			stats.Completed++
-		case string(dto.ChangeStatusFailed):
+		case change.Status(dto.ChangeStatusFailed):
 			stats.Failed++
-		case string(dto.ChangeStatusRolledBack):
+		case change.Status(dto.ChangeStatusRolledBack):
 			stats.RolledBack++
-		case string(dto.ChangeStatusRejected):
+		case change.Status(dto.ChangeStatusRejected):
 			stats.Rejected++
-		case string(dto.ChangeStatusCancelled):
+		case change.Status(dto.ChangeStatusCancelled):
 			stats.Cancelled++
 		default:
 			return nil, fmt.Errorf("unknown change status %q for change %d", item.Status, item.ID)
@@ -687,12 +687,12 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	}
 
 	// 验证状态转换
-	if !IsValidChangeStatusTransition(changeEntity.Status, persistedStatus, changeEntity.Type) {
+	if !IsValidChangeStatusTransition(string(changeEntity.Status), string(persistedStatus), changeEntity.Type) {
 		return fmt.Errorf("invalid status transition from '%s' to '%s'", changeEntity.Status, status)
 	}
 
 	// 是否进入终态，若是则收口 pending 审批链
-	isTerminal := isTerminalChangeStatus(persistedStatus)
+	isTerminal := isTerminalChangeStatus(string(persistedStatus))
 
 	// 开启事务：状态更新 + 收口 pending chains 必须原子
 	tx, err := s.client.Tx(ctx)
@@ -1001,7 +1001,7 @@ func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, start
 
 	// 状态过滤
 	if status != "" {
-		query = query.Where(change.Status(persistedChangeStatus(status)))
+		query = query.Where(change.StatusEQ(persistedChangeStatus(status)))
 	}
 
 	// 获取变更列表

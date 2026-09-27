@@ -199,7 +199,7 @@ func queryChangeStatus(t *testing.T, client *ent.Client, changeID int) string {
 	t.Helper()
 	c, err := client.Change.Get(context.Background(), changeID)
 	require.NoError(t, err)
-	return c.Status
+	return string(c.Status)
 }
 
 // TestChange_Advancement_ParallelAllMustApprove 验证：同一级 parallel（会签）要求

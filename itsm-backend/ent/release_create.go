@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/release"
 	"time"
 
@@ -61,13 +62,13 @@ func (_c *ReleaseCreate) SetNillableType(v *string) *ReleaseCreate {
 }
 
 // SetStatus sets the "status" field.
-func (_c *ReleaseCreate) SetStatus(v string) *ReleaseCreate {
+func (_c *ReleaseCreate) SetStatus(v release.Status) *ReleaseCreate {
 	_c.mutation.SetStatus(v)
 	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_c *ReleaseCreate) SetNillableStatus(v *string) *ReleaseCreate {
+func (_c *ReleaseCreate) SetNillableStatus(v *release.Status) *ReleaseCreate {
 	if v != nil {
 		_c.SetStatus(*v)
 	}
@@ -320,6 +321,11 @@ func (_c *ReleaseCreate) SetNillableUpdatedAt(v *time.Time) *ReleaseCreate {
 	return _c
 }
 
+// SetChange sets the "change" edge to the Change entity.
+func (_c *ReleaseCreate) SetChange(v *Change) *ReleaseCreate {
+	return _c.SetChangeID(v.ID)
+}
+
 // Mutation returns the ReleaseMutation object of the builder.
 func (_c *ReleaseCreate) Mutation() *ReleaseMutation {
 	return _c.mutation
@@ -413,6 +419,11 @@ func (_c *ReleaseCreate) check() error {
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Release.status"`)}
 	}
+	if v, ok := _c.mutation.Status(); ok {
+		if err := release.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Release.status": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "Release.severity"`)}
 	}
@@ -490,7 +501,7 @@ func (_c *ReleaseCreate) createSpec() (*Release, *sqlgraph.CreateSpec) {
 		_node.Type = value
 	}
 	if value, ok := _c.mutation.Status(); ok {
-		_spec.SetField(release.FieldStatus, field.TypeString, value)
+		_spec.SetField(release.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
 	if value, ok := _c.mutation.Severity(); ok {
@@ -500,10 +511,6 @@ func (_c *ReleaseCreate) createSpec() (*Release, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
 		_node.Environment = value
-	}
-	if value, ok := _c.mutation.ChangeID(); ok {
-		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
-		_node.ChangeID = &value
 	}
 	if value, ok := _c.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
@@ -576,6 +583,23 @@ func (_c *ReleaseCreate) createSpec() (*Release, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if nodes := _c.mutation.ChangeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   release.ChangeTable,
+			Columns: []string{release.ChangeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ChangeID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/release"
 	"time"
@@ -92,13 +93,13 @@ func (_u *ReleaseUpdate) SetNillableType(v *string) *ReleaseUpdate {
 }
 
 // SetStatus sets the "status" field.
-func (_u *ReleaseUpdate) SetStatus(v string) *ReleaseUpdate {
+func (_u *ReleaseUpdate) SetStatus(v release.Status) *ReleaseUpdate {
 	_u.mutation.SetStatus(v)
 	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *ReleaseUpdate) SetNillableStatus(v *string) *ReleaseUpdate {
+func (_u *ReleaseUpdate) SetNillableStatus(v *release.Status) *ReleaseUpdate {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
@@ -135,7 +136,6 @@ func (_u *ReleaseUpdate) SetNillableEnvironment(v *string) *ReleaseUpdate {
 
 // SetChangeID sets the "change_id" field.
 func (_u *ReleaseUpdate) SetChangeID(v int) *ReleaseUpdate {
-	_u.mutation.ResetChangeID()
 	_u.mutation.SetChangeID(v)
 	return _u
 }
@@ -145,12 +145,6 @@ func (_u *ReleaseUpdate) SetNillableChangeID(v *int) *ReleaseUpdate {
 	if v != nil {
 		_u.SetChangeID(*v)
 	}
-	return _u
-}
-
-// AddChangeID adds value to the "change_id" field.
-func (_u *ReleaseUpdate) AddChangeID(v int) *ReleaseUpdate {
-	_u.mutation.AddChangeID(v)
 	return _u
 }
 
@@ -489,9 +483,20 @@ func (_u *ReleaseUpdate) SetUpdatedAt(v time.Time) *ReleaseUpdate {
 	return _u
 }
 
+// SetChange sets the "change" edge to the Change entity.
+func (_u *ReleaseUpdate) SetChange(v *Change) *ReleaseUpdate {
+	return _u.SetChangeID(v.ID)
+}
+
 // Mutation returns the ReleaseMutation object of the builder.
 func (_u *ReleaseUpdate) Mutation() *ReleaseMutation {
 	return _u.mutation
+}
+
+// ClearChange clears the "change" edge to the Change entity.
+func (_u *ReleaseUpdate) ClearChange() *ReleaseUpdate {
+	_u.mutation.ClearChange()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -542,6 +547,11 @@ func (_u *ReleaseUpdate) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Release.title": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Status(); ok {
+		if err := release.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Release.status": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := release.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Release.created_by": %w`, err)}
@@ -583,22 +593,13 @@ func (_u *ReleaseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_spec.SetField(release.FieldType, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(release.FieldStatus, field.TypeString, value)
+		_spec.SetField(release.FieldStatus, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(release.FieldSeverity, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.ChangeID(); ok {
-		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedChangeID(); ok {
-		_spec.AddField(release.FieldChangeID, field.TypeInt, value)
-	}
-	if _u.mutation.ChangeIDCleared() {
-		_spec.ClearField(release.FieldChangeID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
@@ -719,6 +720,35 @@ func (_u *ReleaseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if _u.mutation.ChangeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   release.ChangeTable,
+			Columns: []string{release.ChangeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChangeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   release.ChangeTable,
+			Columns: []string{release.ChangeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{release.Label}
@@ -802,13 +832,13 @@ func (_u *ReleaseUpdateOne) SetNillableType(v *string) *ReleaseUpdateOne {
 }
 
 // SetStatus sets the "status" field.
-func (_u *ReleaseUpdateOne) SetStatus(v string) *ReleaseUpdateOne {
+func (_u *ReleaseUpdateOne) SetStatus(v release.Status) *ReleaseUpdateOne {
 	_u.mutation.SetStatus(v)
 	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_u *ReleaseUpdateOne) SetNillableStatus(v *string) *ReleaseUpdateOne {
+func (_u *ReleaseUpdateOne) SetNillableStatus(v *release.Status) *ReleaseUpdateOne {
 	if v != nil {
 		_u.SetStatus(*v)
 	}
@@ -845,7 +875,6 @@ func (_u *ReleaseUpdateOne) SetNillableEnvironment(v *string) *ReleaseUpdateOne 
 
 // SetChangeID sets the "change_id" field.
 func (_u *ReleaseUpdateOne) SetChangeID(v int) *ReleaseUpdateOne {
-	_u.mutation.ResetChangeID()
 	_u.mutation.SetChangeID(v)
 	return _u
 }
@@ -855,12 +884,6 @@ func (_u *ReleaseUpdateOne) SetNillableChangeID(v *int) *ReleaseUpdateOne {
 	if v != nil {
 		_u.SetChangeID(*v)
 	}
-	return _u
-}
-
-// AddChangeID adds value to the "change_id" field.
-func (_u *ReleaseUpdateOne) AddChangeID(v int) *ReleaseUpdateOne {
-	_u.mutation.AddChangeID(v)
 	return _u
 }
 
@@ -1199,9 +1222,20 @@ func (_u *ReleaseUpdateOne) SetUpdatedAt(v time.Time) *ReleaseUpdateOne {
 	return _u
 }
 
+// SetChange sets the "change" edge to the Change entity.
+func (_u *ReleaseUpdateOne) SetChange(v *Change) *ReleaseUpdateOne {
+	return _u.SetChangeID(v.ID)
+}
+
 // Mutation returns the ReleaseMutation object of the builder.
 func (_u *ReleaseUpdateOne) Mutation() *ReleaseMutation {
 	return _u.mutation
+}
+
+// ClearChange clears the "change" edge to the Change entity.
+func (_u *ReleaseUpdateOne) ClearChange() *ReleaseUpdateOne {
+	_u.mutation.ClearChange()
+	return _u
 }
 
 // Where appends a list predicates to the ReleaseUpdate builder.
@@ -1265,6 +1299,11 @@ func (_u *ReleaseUpdateOne) check() error {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Release.title": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Status(); ok {
+		if err := release.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Release.status": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := release.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Release.created_by": %w`, err)}
@@ -1323,22 +1362,13 @@ func (_u *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err er
 		_spec.SetField(release.FieldType, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
-		_spec.SetField(release.FieldStatus, field.TypeString, value)
+		_spec.SetField(release.FieldStatus, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(release.FieldSeverity, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.ChangeID(); ok {
-		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
-	}
-	if value, ok := _u.mutation.AddedChangeID(); ok {
-		_spec.AddField(release.FieldChangeID, field.TypeInt, value)
-	}
-	if _u.mutation.ChangeIDCleared() {
-		_spec.ClearField(release.FieldChangeID, field.TypeInt)
 	}
 	if value, ok := _u.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
@@ -1458,6 +1488,35 @@ func (_u *ReleaseUpdateOne) sqlSave(ctx context.Context) (_node *Release, err er
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ChangeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   release.ChangeTable,
+			Columns: []string{release.ChangeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChangeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   release.ChangeTable,
+			Columns: []string{release.ChangeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Release{config: _u.config}
 	_spec.Assign = _node.assignValues

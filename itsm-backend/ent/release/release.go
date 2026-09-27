@@ -3,9 +3,11 @@
 package release
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -65,8 +67,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeChange holds the string denoting the change edge name in mutations.
+	EdgeChange = "change"
 	// Table holds the table name of the release in the database.
 	Table = "releases"
+	// ChangeTable is the table that holds the change relation/edge.
+	ChangeTable = "releases"
+	// ChangeInverseTable is the table name for the Change entity.
+	// It exists in this package in order to avoid circular dependency with the "change" package.
+	ChangeInverseTable = "changes"
+	// ChangeColumn is the table column denoting the change relation/edge.
+	ChangeColumn = "change_id"
 )
 
 // Columns holds all SQL columns for release fields.
@@ -117,8 +128,6 @@ var (
 	TitleValidator func(string) error
 	// DefaultType holds the default value on creation for the "type" field.
 	DefaultType string
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
 	// DefaultSeverity holds the default value on creation for the "severity" field.
 	DefaultSeverity string
 	// DefaultEnvironment holds the default value on creation for the "environment" field.
@@ -138,6 +147,37 @@ var (
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusDraft is the default value of the Status enum.
+const DefaultStatus = StatusDraft
+
+// Status values.
+const (
+	StatusDraft      Status = "draft"
+	StatusScheduled  Status = "scheduled"
+	StatusInProgress Status = "in-progress"
+	StatusCompleted  Status = "completed"
+	StatusCancelled  Status = "cancelled"
+	StatusFailed     Status = "failed"
+	StatusRolledBack Status = "rolled_back"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusDraft, StatusScheduled, StatusInProgress, StatusCompleted, StatusCancelled, StatusFailed, StatusRolledBack:
+		return nil
+	default:
+		return fmt.Errorf("release: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Release queries.
 type OrderOption func(*sql.Selector)
@@ -255,4 +295,18 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByChangeField orders the results by change field.
+func ByChangeField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChangeStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newChangeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChangeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ChangeTable, ChangeColumn),
+	)
 }

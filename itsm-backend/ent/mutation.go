@@ -24371,7 +24371,7 @@ type ChangeMutation struct {
 	description           *string
 	justification         *string
 	_type                 *string
-	status                *string
+	status                *change.Status
 	priority              *string
 	impact_scope          *string
 	risk_level            *string
@@ -24400,6 +24400,9 @@ type ChangeMutation struct {
 	pir                   map[int]struct{}
 	removedpir            map[int]struct{}
 	clearedpir            bool
+	releases              map[int]struct{}
+	removedreleases       map[int]struct{}
+	clearedreleases       bool
 	done                  bool
 	oldValue              func(context.Context) (*Change, error)
 	predicates            []predicate.Change
@@ -24723,12 +24726,12 @@ func (m *ChangeMutation) ResetType() {
 }
 
 // SetStatus sets the "status" field.
-func (m *ChangeMutation) SetStatus(s string) {
-	m.status = &s
+func (m *ChangeMutation) SetStatus(c change.Status) {
+	m.status = &c
 }
 
 // Status returns the value of the "status" field in the mutation.
-func (m *ChangeMutation) Status() (r string, exists bool) {
+func (m *ChangeMutation) Status() (r change.Status, exists bool) {
 	v := m.status
 	if v == nil {
 		return
@@ -24739,7 +24742,7 @@ func (m *ChangeMutation) Status() (r string, exists bool) {
 // OldStatus returns the old "status" field's value of the Change entity.
 // If the Change object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChangeMutation) OldStatus(ctx context.Context) (v string, err error) {
+func (m *ChangeMutation) OldStatus(ctx context.Context) (v change.Status, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
@@ -25652,6 +25655,60 @@ func (m *ChangeMutation) ResetPir() {
 	m.removedpir = nil
 }
 
+// AddReleaseIDs adds the "releases" edge to the Release entity by ids.
+func (m *ChangeMutation) AddReleaseIDs(ids ...int) {
+	if m.releases == nil {
+		m.releases = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.releases[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReleases clears the "releases" edge to the Release entity.
+func (m *ChangeMutation) ClearReleases() {
+	m.clearedreleases = true
+}
+
+// ReleasesCleared reports if the "releases" edge to the Release entity was cleared.
+func (m *ChangeMutation) ReleasesCleared() bool {
+	return m.clearedreleases
+}
+
+// RemoveReleaseIDs removes the "releases" edge to the Release entity by IDs.
+func (m *ChangeMutation) RemoveReleaseIDs(ids ...int) {
+	if m.removedreleases == nil {
+		m.removedreleases = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.releases, ids[i])
+		m.removedreleases[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReleases returns the removed IDs of the "releases" edge to the Release entity.
+func (m *ChangeMutation) RemovedReleasesIDs() (ids []int) {
+	for id := range m.removedreleases {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReleasesIDs returns the "releases" edge IDs in the mutation.
+func (m *ChangeMutation) ReleasesIDs() (ids []int) {
+	for id := range m.releases {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReleases resets all changes to the "releases" edge.
+func (m *ChangeMutation) ResetReleases() {
+	m.releases = nil
+	m.clearedreleases = false
+	m.removedreleases = nil
+}
+
 // Where appends a list predicates to the ChangeMutation builder.
 func (m *ChangeMutation) Where(ps ...predicate.Change) {
 	m.predicates = append(m.predicates, ps...)
@@ -25903,7 +25960,7 @@ func (m *ChangeMutation) SetField(name string, value ent.Value) error {
 		m.SetType(v)
 		return nil
 	case change.FieldStatus:
-		v, ok := value.(string)
+		v, ok := value.(change.Status)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -26256,12 +26313,15 @@ func (m *ChangeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChangeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.problems != nil {
 		edges = append(edges, change.EdgeProblems)
 	}
 	if m.pir != nil {
 		edges = append(edges, change.EdgePir)
+	}
+	if m.releases != nil {
+		edges = append(edges, change.EdgeReleases)
 	}
 	return edges
 }
@@ -26282,18 +26342,27 @@ func (m *ChangeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgeReleases:
+		ids := make([]ent.Value, 0, len(m.releases))
+		for id := range m.releases {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChangeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedproblems != nil {
 		edges = append(edges, change.EdgeProblems)
 	}
 	if m.removedpir != nil {
 		edges = append(edges, change.EdgePir)
+	}
+	if m.removedreleases != nil {
+		edges = append(edges, change.EdgeReleases)
 	}
 	return edges
 }
@@ -26314,18 +26383,27 @@ func (m *ChangeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgeReleases:
+		ids := make([]ent.Value, 0, len(m.removedreleases))
+		for id := range m.removedreleases {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChangeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedproblems {
 		edges = append(edges, change.EdgeProblems)
 	}
 	if m.clearedpir {
 		edges = append(edges, change.EdgePir)
+	}
+	if m.clearedreleases {
+		edges = append(edges, change.EdgeReleases)
 	}
 	return edges
 }
@@ -26338,6 +26416,8 @@ func (m *ChangeMutation) EdgeCleared(name string) bool {
 		return m.clearedproblems
 	case change.EdgePir:
 		return m.clearedpir
+	case change.EdgeReleases:
+		return m.clearedreleases
 	}
 	return false
 }
@@ -26359,6 +26439,9 @@ func (m *ChangeMutation) ResetEdge(name string) error {
 		return nil
 	case change.EdgePir:
 		m.ResetPir()
+		return nil
+	case change.EdgeReleases:
+		m.ResetReleases()
 		return nil
 	}
 	return fmt.Errorf("unknown Change edge %s", name)
@@ -121061,11 +121144,9 @@ type ReleaseMutation struct {
 	title                     *string
 	description               *string
 	_type                     *string
-	status                    *string
+	status                    *release.Status
 	severity                  *string
 	environment               *string
-	change_id                 *int
-	addchange_id              *int
 	owner_id                  *int
 	addowner_id               *int
 	created_by                *int
@@ -121092,6 +121173,8 @@ type ReleaseMutation struct {
 	created_at                *time.Time
 	updated_at                *time.Time
 	clearedFields             map[string]struct{}
+	change                    *int
+	clearedchange             bool
 	done                      bool
 	oldValue                  func(context.Context) (*Release, error)
 	predicates                []predicate.Release
@@ -121353,12 +121436,12 @@ func (m *ReleaseMutation) ResetType() {
 }
 
 // SetStatus sets the "status" field.
-func (m *ReleaseMutation) SetStatus(s string) {
-	m.status = &s
+func (m *ReleaseMutation) SetStatus(r release.Status) {
+	m.status = &r
 }
 
 // Status returns the value of the "status" field in the mutation.
-func (m *ReleaseMutation) Status() (r string, exists bool) {
+func (m *ReleaseMutation) Status() (r release.Status, exists bool) {
 	v := m.status
 	if v == nil {
 		return
@@ -121369,7 +121452,7 @@ func (m *ReleaseMutation) Status() (r string, exists bool) {
 // OldStatus returns the old "status" field's value of the Release entity.
 // If the Release object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ReleaseMutation) OldStatus(ctx context.Context) (v string, err error) {
+func (m *ReleaseMutation) OldStatus(ctx context.Context) (v release.Status, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
 	}
@@ -121462,13 +121545,12 @@ func (m *ReleaseMutation) ResetEnvironment() {
 
 // SetChangeID sets the "change_id" field.
 func (m *ReleaseMutation) SetChangeID(i int) {
-	m.change_id = &i
-	m.addchange_id = nil
+	m.change = &i
 }
 
 // ChangeID returns the value of the "change_id" field in the mutation.
 func (m *ReleaseMutation) ChangeID() (r int, exists bool) {
-	v := m.change_id
+	v := m.change
 	if v == nil {
 		return
 	}
@@ -121492,28 +121574,9 @@ func (m *ReleaseMutation) OldChangeID(ctx context.Context) (v *int, err error) {
 	return oldValue.ChangeID, nil
 }
 
-// AddChangeID adds i to the "change_id" field.
-func (m *ReleaseMutation) AddChangeID(i int) {
-	if m.addchange_id != nil {
-		*m.addchange_id += i
-	} else {
-		m.addchange_id = &i
-	}
-}
-
-// AddedChangeID returns the value that was added to the "change_id" field in this mutation.
-func (m *ReleaseMutation) AddedChangeID() (r int, exists bool) {
-	v := m.addchange_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ClearChangeID clears the value of the "change_id" field.
 func (m *ReleaseMutation) ClearChangeID() {
-	m.change_id = nil
-	m.addchange_id = nil
+	m.change = nil
 	m.clearedFields[release.FieldChangeID] = struct{}{}
 }
 
@@ -121525,8 +121588,7 @@ func (m *ReleaseMutation) ChangeIDCleared() bool {
 
 // ResetChangeID resets all changes to the "change_id" field.
 func (m *ReleaseMutation) ResetChangeID() {
-	m.change_id = nil
-	m.addchange_id = nil
+	m.change = nil
 	delete(m.clearedFields, release.FieldChangeID)
 }
 
@@ -122459,6 +122521,33 @@ func (m *ReleaseMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// ClearChange clears the "change" edge to the Change entity.
+func (m *ReleaseMutation) ClearChange() {
+	m.clearedchange = true
+	m.clearedFields[release.FieldChangeID] = struct{}{}
+}
+
+// ChangeCleared reports if the "change" edge to the Change entity was cleared.
+func (m *ReleaseMutation) ChangeCleared() bool {
+	return m.ChangeIDCleared() || m.clearedchange
+}
+
+// ChangeIDs returns the "change" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ChangeID instead. It exists only for internal usage by the builders.
+func (m *ReleaseMutation) ChangeIDs() (ids []int) {
+	if id := m.change; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetChange resets all changes to the "change" edge.
+func (m *ReleaseMutation) ResetChange() {
+	m.change = nil
+	m.clearedchange = false
+}
+
 // Where appends a list predicates to the ReleaseMutation builder.
 func (m *ReleaseMutation) Where(ps ...predicate.Release) {
 	m.predicates = append(m.predicates, ps...)
@@ -122515,7 +122604,7 @@ func (m *ReleaseMutation) Fields() []string {
 	if m.environment != nil {
 		fields = append(fields, release.FieldEnvironment)
 	}
-	if m.change_id != nil {
+	if m.change != nil {
 		fields = append(fields, release.FieldChangeID)
 	}
 	if m.owner_id != nil {
@@ -122731,7 +122820,7 @@ func (m *ReleaseMutation) SetField(name string, value ent.Value) error {
 		m.SetType(v)
 		return nil
 	case release.FieldStatus:
-		v, ok := value.(string)
+		v, ok := value.(release.Status)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -122892,9 +122981,6 @@ func (m *ReleaseMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ReleaseMutation) AddedFields() []string {
 	var fields []string
-	if m.addchange_id != nil {
-		fields = append(fields, release.FieldChangeID)
-	}
 	if m.addowner_id != nil {
 		fields = append(fields, release.FieldOwnerID)
 	}
@@ -122912,8 +122998,6 @@ func (m *ReleaseMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ReleaseMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case release.FieldChangeID:
-		return m.AddedChangeID()
 	case release.FieldOwnerID:
 		return m.AddedOwnerID()
 	case release.FieldCreatedBy:
@@ -122929,13 +123013,6 @@ func (m *ReleaseMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ReleaseMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case release.FieldChangeID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddChangeID(v)
-		return nil
 	case release.FieldOwnerID:
 		v, ok := value.(int)
 		if !ok {
@@ -123155,19 +123232,28 @@ func (m *ReleaseMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ReleaseMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.change != nil {
+		edges = append(edges, release.EdgeChange)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *ReleaseMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case release.EdgeChange:
+		if id := m.change; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ReleaseMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -123179,25 +123265,42 @@ func (m *ReleaseMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ReleaseMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedchange {
+		edges = append(edges, release.EdgeChange)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *ReleaseMutation) EdgeCleared(name string) bool {
+	switch name {
+	case release.EdgeChange:
+		return m.clearedchange
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *ReleaseMutation) ClearEdge(name string) error {
+	switch name {
+	case release.EdgeChange:
+		m.ClearChange()
+		return nil
+	}
 	return fmt.Errorf("unknown Release unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *ReleaseMutation) ResetEdge(name string) error {
+	switch name {
+	case release.EdgeChange:
+		m.ResetChange()
+		return nil
+	}
 	return fmt.Errorf("unknown Release edge %s", name)
 }
 

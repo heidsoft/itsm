@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ func persistChangeInEntClient(t *testing.T, client *ent.Client, c *Change) {
 		SetTitle(c.Title).
 		SetDescription(c.Description).
 		SetType(c.Type).
-		SetStatus(c.Status).
+		SetStatus(change.Status(c.Status)).
 		SetPriority(c.Priority).
 		SetImpactScope(c.ImpactScope).
 		SetRiskLevel(c.RiskLevel).

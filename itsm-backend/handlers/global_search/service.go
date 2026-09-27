@@ -60,7 +60,7 @@ func (s *Service) Search(ctx context.Context, tenantID int, keyword string) (*Se
 		return nil, err
 	}
 	for _, item := range changes {
-		results = append(results, &SearchResult{ID: item.ID, Type: "change", Title: item.Title, Description: item.Description, Status: item.Status})
+		results = append(results, &SearchResult{ID: item.ID, Type: "change", Title: item.Title, Description: item.Description, Status: string(item.Status)})
 	}
 
 	articles, err := s.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil(), knowledgearticle.Or(

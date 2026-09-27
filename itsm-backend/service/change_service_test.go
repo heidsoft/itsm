@@ -373,7 +373,7 @@ func TestChangeService_ListChanges_Filters(t *testing.T) {
 				SetTitle(fmt.Sprintf("Change %s-%s", status, changeType)).
 				SetDescription("Test description").
 				SetType(changeType).
-				SetStatus(status).
+				SetStatus(change.Status(status)).
 				SetPriority("medium").
 				SetImpactScope("medium").
 				SetRiskLevel("low").
@@ -695,7 +695,7 @@ func TestChangeService_GetChangeStats(t *testing.T) {
 				SetTitle(fmt.Sprintf("Stats Test %s %d", s.status, i)).
 				SetDescription("Test description").
 				SetType("normal").
-				SetStatus(s.status).
+				SetStatus(change.Status(s.status)).
 				SetPriority("medium").
 				SetImpactScope("medium").
 				SetRiskLevel("low").
@@ -742,7 +742,7 @@ func TestChangeService_UpdateChangeStatus_TenantIsolation(t *testing.T) {
 		SetTitle("Tenant 1 Change").
 		SetDescription("Should not be updatable by Tenant 2").
 		SetType("normal").
-		SetStatus(string(dto.ChangeStatusPending)). // Need submitted to transition to approved
+		SetStatus(change.Status(dto.ChangeStatusPending)). // Need submitted to transition to approved
 		SetPriority("medium").
 		SetImpactScope("medium").
 		SetRiskLevel("low").

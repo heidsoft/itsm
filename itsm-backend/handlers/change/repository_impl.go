@@ -53,7 +53,7 @@ func toDomain(ec *ent.Change) *Change {
 		Description:        ec.Description,
 		Justification:      ec.Justification,
 		Type:               ec.Type,
-		Status:             ec.Status,
+		Status:             string(ec.Status),
 		Priority:           ec.Priority,
 		ImpactScope:        ec.ImpactScope,
 		RiskLevel:          ec.RiskLevel,
@@ -139,7 +139,7 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 		SetDescription(c.Description).
 		SetJustification(c.Justification).
 		SetType(c.Type).
-		SetStatus(c.Status).
+		SetStatus(change.Status(c.Status)).
 		SetPriority(c.Priority).
 		SetImpactScope(c.ImpactScope).
 		SetRiskLevel(c.RiskLevel).
@@ -177,7 +177,7 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 	}
 	ec, err := tx.Change.Create().
 		SetTitle(c.Title).SetDescription(c.Description).SetJustification(c.Justification).
-		SetType(c.Type).SetStatus(c.Status).SetPriority(c.Priority).SetImpactScope(c.ImpactScope).
+		SetType(c.Type).SetStatus(change.Status(c.Status)).SetPriority(c.Priority).SetImpactScope(c.ImpactScope).
 		SetRiskLevel(c.RiskLevel).SetCreatedBy(c.CreatedBy).SetTenantID(c.TenantID).
 		SetImplementationPlan(c.ImplementationPlan).SetRollbackPlan(c.RollbackPlan).
 		SetNillablePlannedStartDate(c.PlannedStartDate).SetNillablePlannedEndDate(c.PlannedEndDate).
@@ -223,7 +223,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	q := r.client.Change.Query().Where(change.TenantID(tenantID))
 
 	if status != "" && status != "全部" {
-		q = q.Where(change.Status(status))
+		q = q.Where(change.StatusEQ(change.Status(status)))
 	}
 	if riskLevel != "" && riskLevel != "全部" {
 		q = q.Where(change.RiskLevel(riskLevel))
@@ -278,8 +278,8 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 // 的竞态窗口收敛为一次原子比较交换。状态已被其他请求抢先修改时返回 false。
 func (r *EntRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, expectedStatus, targetStatus string) (bool, error) {
 	affected, err := r.client.Change.Update().
-		Where(change.IDEQ(id), change.TenantIDEQ(tenantID), change.StatusEQ(expectedStatus)).
-		SetStatus(targetStatus).
+		Where(change.IDEQ(id), change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(expectedStatus))).
+		SetStatus(change.Status(targetStatus)).
 		Save(ctx)
 	if err != nil {
 		return false, err
@@ -296,7 +296,7 @@ func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) 
 		SetDescription(c.Description).
 		SetJustification(c.Justification).
 		SetType(c.Type).
-		SetStatus(c.Status).
+		SetStatus(change.Status(c.Status)).
 		SetPriority(c.Priority).
 		SetImpactScope(c.ImpactScope).
 		SetRiskLevel(c.RiskLevel).
@@ -597,7 +597,7 @@ func (r *EntRepository) ListByDateRange(ctx context.Context, tenantID int, start
 		)
 
 	if status != "" {
-		query = query.Where(change.StatusEQ(status))
+		query = query.Where(change.StatusEQ(change.Status(status)))
 	}
 
 	ecs, err := query.All(ctx)

@@ -3,6 +3,7 @@
 package change
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -62,6 +63,8 @@ const (
 	EdgeProblems = "problems"
 	// EdgePir holds the string denoting the pir edge name in mutations.
 	EdgePir = "pir"
+	// EdgeReleases holds the string denoting the releases edge name in mutations.
+	EdgeReleases = "releases"
 	// Table holds the table name of the change in the database.
 	Table = "changes"
 	// ProblemsTable is the table that holds the problems relation/edge. The primary key declared below.
@@ -76,6 +79,13 @@ const (
 	PirInverseTable = "change_pi_rs"
 	// PirColumn is the table column denoting the pir relation/edge.
 	PirColumn = "change_pir"
+	// ReleasesTable is the table that holds the releases relation/edge.
+	ReleasesTable = "releases"
+	// ReleasesInverseTable is the table name for the Release entity.
+	// It exists in this package in order to avoid circular dependency with the "release" package.
+	ReleasesInverseTable = "releases"
+	// ReleasesColumn is the table column denoting the releases relation/edge.
+	ReleasesColumn = "change_id"
 )
 
 // Columns holds all SQL columns for change fields.
@@ -139,8 +149,6 @@ var (
 	TitleValidator func(string) error
 	// DefaultType holds the default value on creation for the "type" field.
 	DefaultType string
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus string
 	// DefaultPriority holds the default value on creation for the "priority" field.
 	DefaultPriority string
 	// DefaultImpactScope holds the default value on creation for the "impact_scope" field.
@@ -158,6 +166,41 @@ var (
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
 )
+
+// Status defines the type for the "status" enum field.
+type Status string
+
+// StatusDraft is the default value of the Status enum.
+const DefaultStatus = StatusDraft
+
+// Status values.
+const (
+	StatusDraft      Status = "draft"
+	StatusPending    Status = "pending"
+	StatusApproved   Status = "approved"
+	StatusRejected   Status = "rejected"
+	StatusScheduled  Status = "scheduled"
+	StatusInProgress Status = "in_progress"
+	StatusCompleted  Status = "completed"
+	StatusFailed     Status = "failed"
+	StatusRolledBack Status = "rolled_back"
+	StatusCancelled  Status = "cancelled"
+	StatusClosed     Status = "closed"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
+// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
+func StatusValidator(s Status) error {
+	switch s {
+	case StatusDraft, StatusPending, StatusApproved, StatusRejected, StatusScheduled, StatusInProgress, StatusCompleted, StatusFailed, StatusRolledBack, StatusCancelled, StatusClosed:
+		return nil
+	default:
+		return fmt.Errorf("change: invalid enum value for status field: %q", s)
+	}
+}
 
 // OrderOption defines the ordering options for the Change queries.
 type OrderOption func(*sql.Selector)
@@ -294,6 +337,20 @@ func ByPir(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPirStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByReleasesCount orders the results by releases count.
+func ByReleasesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReleasesStep(), opts...)
+	}
+}
+
+// ByReleases orders the results by releases terms.
+func ByReleases(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReleasesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProblemsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -306,5 +363,12 @@ func newPirStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PirInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, PirTable, PirColumn),
+	)
+}
+func newReleasesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReleasesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReleasesTable, ReleasesColumn),
 	)
 }

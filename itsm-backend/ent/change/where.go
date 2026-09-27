@@ -80,11 +80,6 @@ func Type(v string) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldType, v))
 }
 
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v string) predicate.Change {
-	return predicate.Change(sql.FieldEQ(FieldStatus, v))
-}
-
 // Priority applies equality check predicate on the "priority" field. It's identical to PriorityEQ.
 func Priority(v string) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldPriority, v))
@@ -511,68 +506,23 @@ func TypeContainsFold(v string) predicate.Change {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v string) predicate.Change {
+func StatusEQ(v Status) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v string) predicate.Change {
+func StatusNEQ(v Status) predicate.Change {
 	return predicate.Change(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...string) predicate.Change {
+func StatusIn(vs ...Status) predicate.Change {
 	return predicate.Change(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...string) predicate.Change {
+func StatusNotIn(vs ...Status) predicate.Change {
 	return predicate.Change(sql.FieldNotIn(FieldStatus, vs...))
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v string) predicate.Change {
-	return predicate.Change(sql.FieldGT(FieldStatus, v))
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v string) predicate.Change {
-	return predicate.Change(sql.FieldGTE(FieldStatus, v))
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v string) predicate.Change {
-	return predicate.Change(sql.FieldLT(FieldStatus, v))
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v string) predicate.Change {
-	return predicate.Change(sql.FieldLTE(FieldStatus, v))
-}
-
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v string) predicate.Change {
-	return predicate.Change(sql.FieldContains(FieldStatus, v))
-}
-
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v string) predicate.Change {
-	return predicate.Change(sql.FieldHasPrefix(FieldStatus, v))
-}
-
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v string) predicate.Change {
-	return predicate.Change(sql.FieldHasSuffix(FieldStatus, v))
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v string) predicate.Change {
-	return predicate.Change(sql.FieldEqualFold(FieldStatus, v))
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v string) predicate.Change {
-	return predicate.Change(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // PriorityEQ applies the EQ predicate on the "priority" field.
@@ -1388,6 +1338,29 @@ func HasPir() predicate.Change {
 func HasPirWith(preds ...predicate.ChangePIR) predicate.Change {
 	return predicate.Change(func(s *sql.Selector) {
 		step := newPirStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReleases applies the HasEdge predicate on the "releases" edge.
+func HasReleases() predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReleasesTable, ReleasesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReleasesWith applies the HasEdge predicate on the "releases" edge with a given conditions (other predicates).
+func HasReleasesWith(preds ...predicate.Release) predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := newReleasesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

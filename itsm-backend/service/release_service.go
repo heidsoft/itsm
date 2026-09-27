@@ -56,7 +56,7 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		SetTitle(req.Title).
 		SetDescription(req.Description).
 		SetType(req.Type).
-		SetStatus(string(dto.ReleaseStatusDraft)).
+		SetStatus(release.Status(dto.ReleaseStatusDraft)).
 		SetSeverity(req.Severity).
 		SetEnvironment(req.Environment).
 		SetCreatedBy(createdBy).
@@ -173,7 +173,7 @@ func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, p
 	query := s.client.Release.Query().Where(release.TenantIDEQ(tenantID))
 
 	if status != "" {
-		query = query.Where(release.StatusEQ(status))
+		query = query.Where(release.StatusEQ(release.Status(status)))
 	}
 	if releaseType != "" {
 		query = query.Where(release.TypeEQ(releaseType))
@@ -353,11 +353,11 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 	}
 
 	// 1. 状态机白名单校验
-	if !isValidReleaseStatusTransition(releaseEntity.Status, status) {
+	if !isValidReleaseStatusTransition(string(releaseEntity.Status), status) {
 		return nil, fmt.Errorf("%w: %s -> %s", ErrInvalidReleaseTransition, releaseEntity.Status, status)
 	}
 
-	update := releaseEntity.Update().SetStatus(status)
+	update := releaseEntity.Update().SetStatus(release.Status(status))
 
 	// 如果状态是已完成，设置实际发布日期
 	if status == string(dto.ReleaseStatusCompleted) {
@@ -440,7 +440,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 
 	// 仅草稿态/失败态允许审批：失败态审批即「重新排期(reschedule)」，使发布历史不断裂、
 	// 关联变更不丢（P1 修复：放宽此前硬要求 draft 的死锁）。
-	if releaseEntity.Status != string(dto.ReleaseStatusDraft) && releaseEntity.Status != string(dto.ReleaseStatusFailed) {
+	if releaseEntity.Status != release.Status(dto.ReleaseStatusDraft) && releaseEntity.Status != release.Status(dto.ReleaseStatusFailed) {
 		return nil, fmt.Errorf("当前发布状态不允许审批: %s", releaseEntity.Status)
 	}
 
@@ -485,7 +485,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 
 	updated, err := tx.Release.UpdateOneID(id).
 		Where(release.TenantIDEQ(tenantID)).
-		SetStatus(targetStatus).
+		SetStatus(release.Status(targetStatus)).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update release approval status", "error", err, "release_id", id, "status", targetStatus)
@@ -559,13 +559,13 @@ func (s *ReleaseService) GetReleaseStats(ctx context.Context, tenantID int) (*dt
 	stats.Total = total
 
 	// 统计各状态数量
-	draft, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusDraft))).Count(ctx)
-	scheduled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusScheduled))).Count(ctx)
-	inProgress, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusInProgress))).Count(ctx)
-	completed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusCompleted))).Count(ctx)
-	cancelled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusCancelled))).Count(ctx)
-	failed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusFailed))).Count(ctx)
-	rolledBack, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(string(dto.ReleaseStatusRolledBack))).Count(ctx)
+	draft, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusDraft))).Count(ctx)
+	scheduled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusScheduled))).Count(ctx)
+	inProgress, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusInProgress))).Count(ctx)
+	completed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusCompleted))).Count(ctx)
+	cancelled, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusCancelled))).Count(ctx)
+	failed, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusFailed))).Count(ctx)
+	rolledBack, _ := s.client.Release.Query().Where(release.TenantIDEQ(tenantID), release.StatusEQ(release.Status(dto.ReleaseStatusRolledBack))).Count(ctx)
 
 	stats.Draft = draft
 	stats.Scheduled = scheduled

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Change/Release 状态枚举类型安全化** — Change 与 Release 的 status 字段从 `field.String` 迁移到 `field.Enum`，Ent 生成类型安全的枚举（`change.Status`、`release.Status`），编译期即可捕获非法状态值；新增 Release→Change 关联 edge，支持通过 Ent 关系查询关联变更
+
 ### Security
 
 - **登录/刷新响应令牌收敛** — access token 和 refresh token 不再通过 JSON 响应返回，改为仅通过 HttpOnly cookie 下发，防止 XSS 窃取

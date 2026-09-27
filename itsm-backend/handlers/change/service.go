@@ -569,7 +569,7 @@ func (s *Service) ProcessApproval(ctx context.Context, recordID int, status stri
 
 			if _, updateErr := tx.Change.UpdateOneID(c.ID).
 				Where(change.TenantID(tenantID)).
-				SetStatus(target).
+				SetStatus(change.Status(target)).
 				Save(ctx); updateErr != nil {
 				s.logger.Errorw("ProcessApproval: failed to update change status to rejected", "error", updateErr, "change_id", res.ChangeID)
 				return nil, fmt.Errorf("failed to update change status: %w", updateErr)
@@ -1069,8 +1069,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		defer tx.Rollback()
 
 		if _, updateErr := tx.Change.UpdateOneID(c.ID).
-			Where(change.TenantIDEQ(tenantID), change.StatusEQ(c.Status)).
-			SetStatus(targetStatus).
+			Where(change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
+			SetStatus(change.Status(targetStatus)).
 			Save(ctx); updateErr != nil {
 			// StatusEQ 未命中 → 状态已被并发请求抢先推进，属预期内的业务冲突。
 			if ent.IsNotFound(updateErr) {

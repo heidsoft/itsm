@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/release"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -85,13 +86,13 @@ func (_c *ChangeCreate) SetNillableType(v *string) *ChangeCreate {
 }
 
 // SetStatus sets the "status" field.
-func (_c *ChangeCreate) SetStatus(v string) *ChangeCreate {
+func (_c *ChangeCreate) SetStatus(v change.Status) *ChangeCreate {
 	_c.mutation.SetStatus(v)
 	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (_c *ChangeCreate) SetNillableStatus(v *string) *ChangeCreate {
+func (_c *ChangeCreate) SetNillableStatus(v *change.Status) *ChangeCreate {
 	if v != nil {
 		_c.SetStatus(*v)
 	}
@@ -320,6 +321,21 @@ func (_c *ChangeCreate) AddPir(v ...*ChangePIR) *ChangeCreate {
 	return _c.AddPirIDs(ids...)
 }
 
+// AddReleaseIDs adds the "releases" edge to the Release entity by IDs.
+func (_c *ChangeCreate) AddReleaseIDs(ids ...int) *ChangeCreate {
+	_c.mutation.AddReleaseIDs(ids...)
+	return _c
+}
+
+// AddReleases adds the "releases" edges to the Release entity.
+func (_c *ChangeCreate) AddReleases(v ...*Release) *ChangeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddReleaseIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_c *ChangeCreate) Mutation() *ChangeMutation {
 	return _c.mutation
@@ -406,6 +422,11 @@ func (_c *ChangeCreate) check() error {
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Change.status"`)}
 	}
+	if v, ok := _c.mutation.Status(); ok {
+		if err := change.StatusValidator(v); err != nil {
+			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Change.status": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Change.priority"`)}
 	}
@@ -484,7 +505,7 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 		_node.Type = value
 	}
 	if value, ok := _c.mutation.Status(); ok {
-		_spec.SetField(change.FieldStatus, field.TypeString, value)
+		_spec.SetField(change.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
 	}
 	if value, ok := _c.mutation.Priority(); ok {
@@ -576,6 +597,22 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(changepir.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ReleasesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   change.ReleasesTable,
+			Columns: []string{change.ReleasesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

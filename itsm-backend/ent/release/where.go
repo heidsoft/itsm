@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -72,11 +73,6 @@ func Description(v string) predicate.Release {
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
 func Type(v string) predicate.Release {
 	return predicate.Release(sql.FieldEQ(FieldType, v))
-}
-
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v string) predicate.Release {
-	return predicate.Release(sql.FieldEQ(FieldStatus, v))
 }
 
 // Severity applies equality check predicate on the "severity" field. It's identical to SeverityEQ.
@@ -435,68 +431,23 @@ func TypeContainsFold(v string) predicate.Release {
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v string) predicate.Release {
+func StatusEQ(v Status) predicate.Release {
 	return predicate.Release(sql.FieldEQ(FieldStatus, v))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v string) predicate.Release {
+func StatusNEQ(v Status) predicate.Release {
 	return predicate.Release(sql.FieldNEQ(FieldStatus, v))
 }
 
 // StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...string) predicate.Release {
+func StatusIn(vs ...Status) predicate.Release {
 	return predicate.Release(sql.FieldIn(FieldStatus, vs...))
 }
 
 // StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...string) predicate.Release {
+func StatusNotIn(vs ...Status) predicate.Release {
 	return predicate.Release(sql.FieldNotIn(FieldStatus, vs...))
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v string) predicate.Release {
-	return predicate.Release(sql.FieldGT(FieldStatus, v))
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v string) predicate.Release {
-	return predicate.Release(sql.FieldGTE(FieldStatus, v))
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v string) predicate.Release {
-	return predicate.Release(sql.FieldLT(FieldStatus, v))
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v string) predicate.Release {
-	return predicate.Release(sql.FieldLTE(FieldStatus, v))
-}
-
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v string) predicate.Release {
-	return predicate.Release(sql.FieldContains(FieldStatus, v))
-}
-
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v string) predicate.Release {
-	return predicate.Release(sql.FieldHasPrefix(FieldStatus, v))
-}
-
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v string) predicate.Release {
-	return predicate.Release(sql.FieldHasSuffix(FieldStatus, v))
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v string) predicate.Release {
-	return predicate.Release(sql.FieldEqualFold(FieldStatus, v))
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v string) predicate.Release {
-	return predicate.Release(sql.FieldContainsFold(FieldStatus, v))
 }
 
 // SeverityEQ applies the EQ predicate on the "severity" field.
@@ -647,26 +598,6 @@ func ChangeIDIn(vs ...int) predicate.Release {
 // ChangeIDNotIn applies the NotIn predicate on the "change_id" field.
 func ChangeIDNotIn(vs ...int) predicate.Release {
 	return predicate.Release(sql.FieldNotIn(FieldChangeID, vs...))
-}
-
-// ChangeIDGT applies the GT predicate on the "change_id" field.
-func ChangeIDGT(v int) predicate.Release {
-	return predicate.Release(sql.FieldGT(FieldChangeID, v))
-}
-
-// ChangeIDGTE applies the GTE predicate on the "change_id" field.
-func ChangeIDGTE(v int) predicate.Release {
-	return predicate.Release(sql.FieldGTE(FieldChangeID, v))
-}
-
-// ChangeIDLT applies the LT predicate on the "change_id" field.
-func ChangeIDLT(v int) predicate.Release {
-	return predicate.Release(sql.FieldLT(FieldChangeID, v))
-}
-
-// ChangeIDLTE applies the LTE predicate on the "change_id" field.
-func ChangeIDLTE(v int) predicate.Release {
-	return predicate.Release(sql.FieldLTE(FieldChangeID, v))
 }
 
 // ChangeIDIsNil applies the IsNil predicate on the "change_id" field.
@@ -1372,6 +1303,29 @@ func UpdatedAtLT(v time.Time) predicate.Release {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Release {
 	return predicate.Release(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasChange applies the HasEdge predicate on the "change" edge.
+func HasChange() predicate.Release {
+	return predicate.Release(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, ChangeTable, ChangeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChangeWith applies the HasEdge predicate on the "change" edge with a given conditions (other predicates).
+func HasChangeWith(preds ...predicate.Change) predicate.Release {
+	return predicate.Release(func(s *sql.Selector) {
+		step := newChangeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

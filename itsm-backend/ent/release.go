@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/release"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ type Release struct {
 	// 发布类型: major/minor/patch/hotfix
 	Type string `json:"type,omitempty"`
 	// 状态: draft/scheduled/in-progress/completed/cancelled
-	Status string `json:"status,omitempty"`
+	Status release.Status `json:"status,omitempty"`
 	// 严重程度: low/medium/high/critical
 	Severity string `json:"severity,omitempty"`
 	// 目标环境: dev/staging/production
@@ -69,8 +70,31 @@ type Release struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ReleaseQuery when eager-loading is set.
+	Edges        ReleaseEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ReleaseEdges holds the relations/edges for other nodes in the graph.
+type ReleaseEdges struct {
+	// 关联的变更
+	Change *Change `json:"change,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ChangeOrErr returns the Change value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ReleaseEdges) ChangeOrErr() (*Change, error) {
+	if e.Change != nil {
+		return e.Change, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: change.Label}
+	}
+	return nil, &NotLoadedError{edge: "change"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -137,7 +161,7 @@ func (_m *Release) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				_m.Status = value.String
+				_m.Status = release.Status(value.String)
 			}
 		case release.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -288,6 +312,11 @@ func (_m *Release) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
 }
 
+// QueryChange queries the "change" edge of the Release entity.
+func (_m *Release) QueryChange() *ChangeQuery {
+	return NewReleaseClient(_m.config).QueryChange(_m)
+}
+
 // Update returns a builder for updating this Release.
 // Note that you need to call Release.Unwrap() before calling this method if this Release
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -324,7 +353,7 @@ func (_m *Release) String() string {
 	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(_m.Status)
+	builder.WriteString(fmt.Sprintf("%v", _m.Status))
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
 	builder.WriteString(_m.Severity)
