@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 )
@@ -512,12 +513,49 @@ func (r *EntRepository) loadSLACohort(
 	}
 	if serviceTypeFilter != "" {
 		if serviceTypeFilter == SLAPerformanceUnassignedKey {
-			predicates = append(predicates, ticket.SLADefinitionIDIsNil())
+			// Tickets with NO sla_state record: find ticket IDs that DO have
+			// sla_states and exclude them.
+			slaStates, err := r.client.SLAState.Query().
+				Where(
+					slastate.TenantID(tenantID),
+					slastate.AggregateTypeEQ("ticket"),
+				).
+				Select(slastate.FieldAggregateID).
+				All(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("load sla states for unassigned filter: %w", err)
+			}
+			if len(slaStates) > 0 {
+				excludeIDs := make([]int, 0, len(slaStates))
+				for _, s := range slaStates {
+					excludeIDs = append(excludeIDs, s.AggregateID)
+				}
+				predicates = append(predicates, ticket.IDNotIn(excludeIDs...))
+			}
 		} else {
 			if len(filterDefinitionIDs) == 0 {
 				return cohort, nil
 			}
-			predicates = append(predicates, ticket.SLADefinitionIDIn(filterDefinitionIDs...))
+			// Tickets whose sla_state binds one of the matching definition IDs.
+			slaStates, err := r.client.SLAState.Query().
+				Where(
+					slastate.TenantID(tenantID),
+					slastate.AggregateTypeEQ("ticket"),
+					slastate.SLADefinitionIDIn(filterDefinitionIDs...),
+				).
+				Select(slastate.FieldAggregateID).
+				All(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("load sla states for service type filter: %w", err)
+			}
+			if len(slaStates) == 0 {
+				return cohort, nil
+			}
+			includeIDs := make([]int, 0, len(slaStates))
+			for _, s := range slaStates {
+				includeIDs = append(includeIDs, s.AggregateID)
+			}
+			predicates = append(predicates, ticket.IDIn(includeIDs...))
 		}
 	}
 
@@ -527,12 +565,9 @@ func (r *EntRepository) loadSLACohort(
 			ticket.FieldID,
 			ticket.FieldStatus,
 			ticket.FieldPriority,
-			ticket.FieldSLADefinitionID,
 			ticket.FieldCreatedAt,
 			ticket.FieldFirstResponseAt,
 			ticket.FieldResolvedAt,
-			ticket.FieldSLAResponseDeadline,
-			ticket.FieldSLAResolutionDeadline,
 		).
 		Limit(monitoringScanLimit + 1).
 		All(ctx)
@@ -540,18 +575,16 @@ func (r *EntRepository) loadSLACohort(
 		return nil, fmt.Errorf("load ticket cohort: %w", err)
 	}
 
+	// Build initial cohort tickets (without SLA fields yet).
 	cohort.tickets = make([]slaCohortTicket, 0, len(rows))
 	for _, t := range rows {
 		cohort.tickets = append(cohort.tickets, slaCohortTicket{
-			id:                    t.ID,
-			status:                t.Status,
-			priority:              t.Priority,
-			slaDefinitionID:       t.SLADefinitionID,
-			createdAt:             t.CreatedAt,
-			firstResponseAt:       t.FirstResponseAt,
-			resolvedAt:            t.ResolvedAt,
-			slaResponseDeadline:   t.SLAResponseDeadline,
-			slaResolutionDeadline: t.SLAResolutionDeadline,
+			id:              t.ID,
+			status:          t.Status,
+			priority:        t.Priority,
+			createdAt:       t.CreatedAt,
+			firstResponseAt: t.FirstResponseAt,
+			resolvedAt:      t.ResolvedAt,
 		})
 	}
 	if len(cohort.tickets) > monitoringScanLimit {
@@ -566,6 +599,36 @@ func (r *EntRepository) loadSLACohort(
 	for _, t := range cohort.tickets {
 		ids = append(ids, t.id)
 	}
+
+	// Batch-load sla_states for the fetched ticket IDs to populate SLA fields.
+	slaStates, err := r.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDIn(ids...),
+		).
+		Select(
+			slastate.FieldAggregateID,
+			slastate.FieldSLADefinitionID,
+			slastate.FieldResponseDeadline,
+			slastate.FieldResolutionDeadline,
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("load sla states for cohort: %w", err)
+	}
+	slaByTicket := make(map[int]*ent.SLAState, len(slaStates))
+	for _, s := range slaStates {
+		slaByTicket[s.AggregateID] = s
+	}
+	for i := range cohort.tickets {
+		if s, ok := slaByTicket[cohort.tickets[i].id]; ok {
+			cohort.tickets[i].slaDefinitionID = s.SLADefinitionID
+			cohort.tickets[i].slaResponseDeadline = s.ResponseDeadline
+			cohort.tickets[i].slaResolutionDeadline = s.ResolutionDeadline
+		}
+	}
+
 	var groups []struct {
 		TicketID int `json:"ticket_id"` // json tag matches SQL column for ent GroupBy().Scan()
 	}
@@ -799,7 +862,7 @@ func (r *EntRepository) listSLAAlertItems(
 	// 只加载本租户的工单列，跨租户的脏数据不得泄露优先级与截止时间。
 	tks, err := r.client.Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.IDIn(ticketIDs...)).
-		Select(ticket.FieldID, ticket.FieldPriority, ticket.FieldSLAResolutionDeadline).
+		Select(ticket.FieldID, ticket.FieldPriority).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load alert tickets: %w", err)
@@ -807,6 +870,23 @@ func (r *EntRepository) listSLAAlertItems(
 	ticketByID := make(map[int]*ent.Ticket, len(tks))
 	for _, t := range tks {
 		ticketByID[t.ID] = t
+	}
+
+	// Batch-load sla_states for resolution deadlines.
+	slaStates, err := r.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDIn(ticketIDs...),
+		).
+		Select(slastate.FieldAggregateID, slastate.FieldResolutionDeadline).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("load alert sla states: %w", err)
+	}
+	slaByTicket := make(map[int]*ent.SLAState, len(slaStates))
+	for _, s := range slaStates {
+		slaByTicket[s.AggregateID] = s
 	}
 
 	now := time.Now()
@@ -825,11 +905,11 @@ func (r *EntRepository) listSLAAlertItems(
 		}
 		if t, ok := ticketByID[e.TicketID]; ok {
 			item.Priority = t.Priority
-			if !t.SLAResolutionDeadline.IsZero() {
-				item.TimeRemaining = &SLATimeRemaining{
-					Hours:    math.Round(t.SLAResolutionDeadline.Sub(now).Hours()*10) / 10,
-					Deadline: t.SLAResolutionDeadline.UTC().Format(time.RFC3339),
-				}
+		}
+		if s, ok := slaByTicket[e.TicketID]; ok && !s.ResolutionDeadline.IsZero() {
+			item.TimeRemaining = &SLATimeRemaining{
+				Hours:    math.Round(s.ResolutionDeadline.Sub(now).Hours()*10) / 10,
+				Deadline: s.ResolutionDeadline.UTC().Format(time.RFC3339),
 			}
 		}
 		items = append(items, item)
@@ -1030,8 +1110,7 @@ func (r *EntRepository) GetTicketStats(ctx context.Context, tenantID int) (total
 func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt, slaResponseDeadline, slaResolutionDeadline time.Time, found bool, err error) {
 	t, err := r.client.Ticket.Query().
 		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).
-		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt,
-			ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline).
+		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -1039,5 +1118,22 @@ func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID
 		}
 		return time.Time{}, time.Time{}, time.Time{}, time.Time{}, time.Time{}, false, err
 	}
-	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, t.SLAResponseDeadline, t.SLAResolutionDeadline, true, nil
+
+	// Read SLA deadlines from sla_states table.
+	sla, err := r.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Select(slastate.FieldResponseDeadline, slastate.FieldResolutionDeadline).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// No sla_state record: deadlines remain zero.
+			return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, time.Time{}, time.Time{}, true, nil
+		}
+		return time.Time{}, time.Time{}, time.Time{}, time.Time{}, time.Time{}, false, err
+	}
+	return t.CreatedAt, t.FirstResponseAt, t.ResolvedAt, sla.ResponseDeadline, sla.ResolutionDeadline, true, nil
 }

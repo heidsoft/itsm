@@ -429,11 +429,42 @@ func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int
 }
 
 // GetTicketSLAInfo returns SLA info for a ticket.
+// Phase 3 切读：优先从 sla_states 表读取 SLA 字段，不存在时降级到工单内联字段。
 func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (map[string]interface{}, error) {
 	t, err := s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
+
+	// 优先从 sla_states 读取
+	if s.slaMonitor != nil {
+		slaSt, slaErr := s.slaMonitor.GetSLAState(ctx, tenantID, "ticket", ticketID)
+		if slaErr == nil && slaSt != nil {
+			var responseDeadline *time.Time
+			if !slaSt.ResponseDeadline.IsZero() {
+				responseDeadline = &slaSt.ResponseDeadline
+			}
+			var resolutionDeadline *time.Time
+			if !slaSt.ResolutionDeadline.IsZero() {
+				resolutionDeadline = &slaSt.ResolutionDeadline
+			}
+			var firstResponseAt *time.Time
+			if !slaSt.FirstResponseAt.IsZero() {
+				firstResponseAt = &slaSt.FirstResponseAt
+			}
+			return map[string]interface{}{
+				"ticket_id":                    t.ID,
+				"sla_definition_id":            slaSt.SLADefinitionID,
+				"sla_response_deadline":        responseDeadline,
+				"sla_resolution_deadline":      resolutionDeadline,
+				"first_response_at":            firstResponseAt,
+				"status":                       t.Status,
+				"resolution_deadline_breached": resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
+			}, nil
+		}
+	}
+
+	// 降级：使用工单内联字段
 	return map[string]interface{}{
 		"ticket_id":                    t.ID,
 		"sla_definition_id":            t.SLADefinitionID,

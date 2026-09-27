@@ -10,6 +10,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/service/sla"
 
@@ -191,20 +192,74 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 
 // GetOverdueTickets 获取逾期工单
 func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
-	// SLA 截止时间在建单时已落库，直接由数据库筛选，避免逐工单查询 SLA 定义的 N+1。
 	now := time.Now()
+
+	// Phase 3: prefer sla_states table for overdue detection
+	if s.slaStore != nil {
+		overdueIDs, err := s.slaStore.FindOverdueAggregateIDs(ctx, tenantID, "ticket", now)
+		if err != nil {
+			s.logger.Errorw("Failed to find overdue aggregate IDs from sla_states", "error", err)
+			// Fallback to inline query
+			return s.getOverdueTicketsInline(ctx, tenantID, now)
+		}
+		if len(overdueIDs) == 0 {
+			return []*ent.Ticket{}, nil
+		}
+		tickets, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantID(tenantID),
+				ticket.DeletedAtIsNil(),
+				ticket.StatusNEQ(common.TicketStatusClosed),
+				ticket.StatusNEQ(common.TicketStatusResolved),
+				ticket.IDIn(overdueIDs...),
+			).
+			All(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to query tickets by overdue IDs", "error", err)
+			return nil, err
+		}
+		return tickets, nil
+	}
+
+	return s.getOverdueTicketsInline(ctx, tenantID, now)
+}
+
+// getOverdueTicketsInline 使用 sla_states 表查询逾期工单
+func (s *TicketSLAService) getOverdueTicketsInline(ctx context.Context, tenantID int, now time.Time) ([]*ent.Ticket, error) {
+	// Phase 1: Query sla_states for overdue ticket aggregates
+	slaStates, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.ResolutionDeadlineNotNil(),
+			slastate.ResolutionDeadlineLT(now),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to query sla_states for overdue tickets", "error", err)
+		return nil, err
+	}
+	if len(slaStates) == 0 {
+		return []*ent.Ticket{}, nil
+	}
+
+	// Phase 2: Extract aggregate IDs and filter tickets
+	overdueIDs := make([]int, 0, len(slaStates))
+	for _, ss := range slaStates {
+		overdueIDs = append(overdueIDs, ss.AggregateID)
+	}
+
 	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.DeletedAtIsNil(),
 			ticket.StatusNEQ(common.TicketStatusClosed),
 			ticket.StatusNEQ(common.TicketStatusResolved),
-			ticket.SLAResolutionDeadlineNotNil(),
-			ticket.SLAResolutionDeadlineLT(now),
+			ticket.IDIn(overdueIDs...),
 		).
 		All(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to query tickets", "error", err)
+		s.logger.Errorw("Failed to query tickets by overdue IDs", "error", err)
 		return nil, err
 	}
 

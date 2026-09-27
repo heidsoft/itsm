@@ -227,6 +227,22 @@ func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Incident, err
 	return s.repo.Get(ctx, id, tenantID)
 }
 
+// GetSLAState 查询事件单的 SLA 状态（Phase 3 切读）。
+func (s *Service) GetSLAState(ctx context.Context, tenantID int, incidentID int) (*ent.SLAState, error) {
+	if s.slaMonitor == nil {
+		return nil, nil
+	}
+	return s.slaMonitor.GetSLAState(ctx, tenantID, "incident", incidentID)
+}
+
+// BatchGetSLAStates 批量查询事件单的 SLA 状态，返回 map[incidentID]*SLAState。
+func (s *Service) BatchGetSLAStates(ctx context.Context, tenantID int, incidentIDs []int) (map[int]*ent.SLAState, error) {
+	if s.slaMonitor == nil {
+		return map[int]*ent.SLAState{}, nil
+	}
+	return s.slaMonitor.BatchGetSLAStates(ctx, tenantID, "incident", incidentIDs)
+}
+
 // List 列出事件单。推广 ticket 的 DataScope 行级权限：
 // 管理角色可见全租户，其余角色仅可见本人创建或分配给自己的事件单。
 // currentUserID/currentRole 由 handler 从鉴权中间件注入的 user_id/role 取得。

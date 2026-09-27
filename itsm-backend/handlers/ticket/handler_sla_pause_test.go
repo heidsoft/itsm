@@ -18,6 +18,7 @@ import (
 	"itsm-backend/middleware"
 	ticketrepo "itsm-backend/repository/ticket"
 	"itsm-backend/service"
+	"itsm-backend/service/sla"
 )
 
 // 回归（2026-09-25 假成功收口）：PUT /tickets/:id/sla/pause|resume 此前直接返回
@@ -36,11 +37,23 @@ func TestSLAPauseResumeWiring(t *testing.T) {
 		SetRequesterID(user.ID).SetTenantID(tenant.ID).
 		SetSLAResponseDeadline(deadline).SetSLAResolutionDeadline(deadline.Add(2 * time.Hour)).
 		SaveX(ctx)
+	// Phase 3: SLA 暂停/恢复现在以 sla_states 为权威源
+	_, err := client.SLAState.Create().
+		SetTenantID(tenant.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(tk.ID).
+		SetResponseDeadline(deadline).
+		SetResolutionDeadline(deadline.Add(2 * time.Hour)).
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
 
+	slaMonitor := service.NewSLAMonitorService(client, logger)
+	slaMonitor.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
 	h := NewHandler(NewService(
 		NewEntRepository(ticketrepo.NewEntRepository(client, logger)),
 		nil,
-		service.NewSLAMonitorService(client, logger),
+		slaMonitor,
 		logger,
 	))
 	newRouter := func(tenantID int) *gin.Engine {

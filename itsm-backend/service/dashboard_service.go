@@ -18,9 +18,11 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -34,6 +36,12 @@ type DashboardService struct {
 	db     *sql.DB
 	repo   *dashboardRepository
 	logger *zap.SugaredLogger
+	slaStore *sla.Store // Phase 3: sla_states 读取
+}
+
+// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+func (s *DashboardService) SetSLAStore(store *sla.Store) {
+	s.slaStore = store
 }
 
 // 工单状态聚合统一口径（与 common.TicketStatus* 状态机保持一致）。
@@ -112,17 +120,34 @@ func (s *DashboardService) GetSLAComplianceData(ctx context.Context, tenantID in
 	}
 
 	// 即将超时（24小时内到期的有SLA工单）
-	atRiskTickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.DeletedAtIsNil(),
-			ticket.SLADefinitionIDNEQ(0),
-			ticket.SLAResponseDeadlineGTE(time.Now()),
-			ticket.SLAResponseDeadlineLTE(time.Now().Add(24*time.Hour)),
-		).
-		Count(ctx)
-	if err != nil {
-		atRiskTickets = 0
+	var atRiskTickets int
+	if s.slaStore != nil {
+		atRiskIDs, err := s.slaStore.FindAtRiskAggregateIDs(ctx, tenantID, "ticket", time.Now(), 24*time.Hour)
+		if err != nil {
+			s.logger.Warnw("failed to find at-risk ticket IDs from sla_states", "error", err)
+			atRiskTickets = 0
+		} else {
+			atRiskTickets = len(atRiskIDs)
+		}
+	} else {
+		// Fallback: query sla_states directly
+		now := time.Now()
+		slaStates, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantID(tenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.SLADefinitionIDNEQ(0),
+				slastate.ResponseDeadlineGTE(now),
+				slastate.ResponseDeadlineLTE(now.Add(24*time.Hour)),
+				slastate.StatusEQ("active"),
+			).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("failed to query sla_states for at-risk tickets", "error", err)
+			atRiskTickets = 0
+		} else {
+			atRiskTickets = len(slaStates)
+		}
 	}
 
 	var breachedTicketCount int
@@ -905,27 +930,79 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 	slaComplianceChange := math.Round((slaCompliance-slaCompliancePrev)*10) / 10
 
 	// 超时工单：未完结，且（尚未首次响应且已过响应时限）或（尚未解决且已过解决时限）
-	overdueTickets, _ := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.DeletedAtIsNil(),
-			ticket.StatusNotIn(
-				common.TicketStatusResolved,
-				common.TicketStatusClosed,
-				common.TicketStatusCancelled,
-			),
-			ticket.Or(
-				ticket.And(
-					ticket.FirstResponseAtIsNil(),
-					ticket.SLAResponseDeadlineLT(now),
+	var overdueTickets int
+	if s.slaStore != nil {
+		// Two-phase: get breached aggregate IDs from sla_states, then count matching tickets
+		responseBreachedIDs, err1 := s.slaStore.FindResponseBreachedAggregateIDs(ctx, tenantID, "ticket", now)
+		overdueIDs, err2 := s.slaStore.FindOverdueAggregateIDs(ctx, tenantID, "ticket", now)
+		if err1 != nil || err2 != nil {
+			s.logger.Warnw("failed to find overdue ticket IDs from sla_states", "err1", err1, "err2", err2)
+			overdueTickets = 0
+		} else {
+			// Union the two ID sets
+			idSet := make(map[int]struct{}, len(responseBreachedIDs)+len(overdueIDs))
+			for _, id := range responseBreachedIDs {
+				idSet[id] = struct{}{}
+			}
+			for _, id := range overdueIDs {
+				idSet[id] = struct{}{}
+			}
+			if len(idSet) > 0 {
+				ids := make([]int, 0, len(idSet))
+				for id := range idSet {
+					ids = append(ids, id)
+				}
+				overdueTickets, _ = s.client.Ticket.Query().
+					Where(
+						ticket.TenantID(tenantID),
+						ticket.DeletedAtIsNil(),
+						ticket.IDIn(ids...),
+						ticket.StatusNotIn(
+							common.TicketStatusResolved,
+							common.TicketStatusClosed,
+							common.TicketStatusCancelled,
+						),
+					).
+					Count(ctx)
+			}
+		}
+	} else {
+		// Fallback: query sla_states directly for overdue tickets
+		slaStates, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantID(tenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.Or(
+					slastate.ResponseDeadlineLT(now),
+					slastate.ResolutionDeadlineLT(now),
 				),
-				ticket.And(
-					ticket.ResolvedAtIsNil(),
-					ticket.SLAResolutionDeadlineLT(now),
-				),
-			),
-		).
-		Count(ctx)
+				slastate.StatusEQ("active"),
+			).
+			All(ctx)
+		if err != nil {
+			s.logger.Warnw("failed to query sla_states for overdue tickets", "error", err)
+			overdueTickets = 0
+		} else {
+			aggIDs := make([]int, 0, len(slaStates))
+			for _, ss := range slaStates {
+				aggIDs = append(aggIDs, ss.AggregateID)
+			}
+			if len(aggIDs) > 0 {
+				overdueTickets, _ = s.client.Ticket.Query().
+					Where(
+						ticket.TenantID(tenantID),
+						ticket.DeletedAtIsNil(),
+						ticket.IDIn(aggIDs...),
+						ticket.StatusNotIn(
+							common.TicketStatusResolved,
+							common.TicketStatusClosed,
+							common.TicketStatusCancelled,
+						),
+					).
+					Count(ctx)
+			}
+		}
+	}
 
 	return []KPIMetricData{
 		{

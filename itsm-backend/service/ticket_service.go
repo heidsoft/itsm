@@ -21,6 +21,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/group"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/slastate"
 	entTicket "itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	entTicketComment "itsm-backend/ent/ticketcomment"
@@ -31,6 +32,7 @@ import (
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -53,6 +55,8 @@ type TicketService struct {
 	processResolver         *ProcessResolver
 	workflowOutboxEnabled   bool
 	sideEffectOutboxEnabled bool
+
+	slaStore *sla.Store // Phase 3: sla_states 读取
 }
 
 // TicketServiceConfig 工单服务配置
@@ -128,6 +132,22 @@ func (s *TicketService) SetProcessTriggerService(p ProcessTriggerServiceInterfac
 // SetSLAService 注入 SLA 服务（运行时依赖注入）
 func (s *TicketService) SetSLAService(svc *TicketSLAService) {
 	s.slaSvc = svc
+}
+
+// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+func (s *TicketService) SetSLAStore(store *sla.Store) {
+	s.slaStore = store
+}
+
+// getSLAStore 返回可用的 SLA store，优先直接字段，其次从 slaSvc 获取。
+func (s *TicketService) getSLAStore() *sla.Store {
+	if s.slaStore != nil {
+		return s.slaStore
+	}
+	if s.slaSvc != nil {
+		return s.slaSvc.SLAStore()
+	}
+	return nil
 }
 
 // SetProcessResolver 注入流程解析器（运行时依赖注入）
@@ -1278,6 +1298,16 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		return nil, err
 	}
 
+	// Phase 3: batch lookup SLA states from sla_states table
+	var slaStates map[int]*ent.SLAState
+	if store := s.getSLAStore(); store != nil && len(result.Data) > 0 {
+		ids := make([]int, 0, len(result.Data))
+		for _, t := range result.Data {
+			ids = append(ids, t.ID)
+		}
+		slaStates, _ = store.BatchGetStates(ctx, tenantID, "ticket", ids)
+	}
+
 	// 转换为 DTO
 	response := &dto.ListTicketsResponse{
 		Total:    result.Total,
@@ -1287,7 +1317,11 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	}
 
 	for i, t := range result.Data {
-		response.Tickets[i] = s.toTicketResponse(t)
+		var st *ent.SLAState
+		if slaStates != nil {
+			st = slaStates[t.ID]
+		}
+		response.Tickets[i] = s.toTicketResponseWithSLA(t, st)
 	}
 
 	return response, nil
@@ -1451,7 +1485,24 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 // ==================== 辅助方法 ====================
 
 // toTicketResponse 转换为 DTO 响应
+// Phase 3: SLA 字段从 sla_states 表读取，不再使用 inline 字段
 func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
+	// Load SLAState from sla_states table
+	var slaState *ent.SLAState
+	if s.client != nil {
+		slaState, _ = s.client.SLAState.Query().
+			Where(
+				slastate.TenantID(t.TenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.AggregateIDEQ(t.ID),
+			).
+			Only(context.Background())
+	}
+	return s.toTicketResponseWithSLA(t, slaState)
+}
+
+// toTicketResponseWithSLA 转换为 DTO 响应，SLA 字段优先从 slaState 读取。
+func (s *TicketService) toTicketResponseWithSLA(t *ticket.Ticket, slaState *ent.SLAState) *dto.TicketResponse {
 	resp := &dto.TicketResponse{
 		ID:             t.ID,
 		TicketNumber:   t.TicketNumber,
@@ -1492,8 +1543,17 @@ func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
 	resp.ResolvedAt = t.ResolvedAt
 	resp.ClosedAt = t.ClosedAt
 	resp.FirstResponseAt = t.FirstResponseAt
-	resp.SLAResponseDeadline = t.SLAResponseDeadline
-	resp.SLAResolutionDeadline = t.SLAResolutionDeadline
+
+	// SLA fields — prefer sla_states table when available
+	if slaState != nil {
+		if !slaState.ResponseDeadline.IsZero() {
+			resp.SLAResponseDeadline = &slaState.ResponseDeadline
+		}
+		if !slaState.ResolutionDeadline.IsZero() {
+			resp.SLAResolutionDeadline = &slaState.ResolutionDeadline
+		}
+	}
+	// Phase 3: No fallback to inline ticket SLA fields; leave as nil if no SLAState
 
 	return resp
 }
@@ -1601,6 +1661,20 @@ type TicketSLAInfo struct {
 	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
 }
 
+// GetTicketSLAState 查询工单的 SLA 状态（Phase 3 切读：handler 层从 sla_states 读取）。
+func (s *TicketService) GetTicketSLAState(ctx context.Context, tenantID int, ticketID int) (*ent.SLAState, error) {
+	if s.client == nil {
+		return nil, nil
+	}
+	return s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Only(ctx)
+}
+
 // GetTicketSLAInfo 获取工单 SLA 信息
 func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (*TicketSLAInfo, error) {
 	tkt, err := s.repo.GetByID(ctx, ticketID, tenantID)
@@ -1615,20 +1689,42 @@ func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tena
 		SLADefinitionID:  0,
 		ResponseDeadline: time.Time{},
 	}
-	if tkt.SLADefinitionID != nil {
-		info.SLADefinitionID = *tkt.SLADefinitionID
-	}
-	if tkt.SLAResponseDeadline != nil {
-		info.ResponseDeadline = *tkt.SLAResponseDeadline
-	}
-	if tkt.SLAResolutionDeadline != nil {
-		info.ResolutionDeadline = *tkt.SLAResolutionDeadline
-	}
-	if tkt.FirstResponseAt != nil {
-		info.FirstResponseAt = tkt.FirstResponseAt
-	}
-	if tkt.ResolvedAt != nil {
-		info.ResolvedAt = tkt.ResolvedAt
+
+	// Phase 3: prefer sla_states table for SLA fields
+	slaState, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Only(ctx)
+	if err == nil && slaState != nil {
+		info.SLADefinitionID = slaState.SLADefinitionID
+		info.ResponseDeadline = slaState.ResponseDeadline
+		info.ResolutionDeadline = slaState.ResolutionDeadline
+		if !slaState.FirstResponseAt.IsZero() {
+			info.FirstResponseAt = &slaState.FirstResponseAt
+		}
+		if !slaState.ResolvedAt.IsZero() {
+			info.ResolvedAt = &slaState.ResolvedAt
+		}
+	} else {
+		// Fallback to inline fields
+		if tkt.SLADefinitionID != nil {
+			info.SLADefinitionID = *tkt.SLADefinitionID
+		}
+		if tkt.SLAResponseDeadline != nil {
+			info.ResponseDeadline = *tkt.SLAResponseDeadline
+		}
+		if tkt.SLAResolutionDeadline != nil {
+			info.ResolutionDeadline = *tkt.SLAResolutionDeadline
+		}
+		if tkt.FirstResponseAt != nil {
+			info.FirstResponseAt = tkt.FirstResponseAt
+		}
+		if tkt.ResolvedAt != nil {
+			info.ResolvedAt = tkt.ResolvedAt
+		}
 	}
 
 	// 获取 SLA 定义名称（通过 ent 客户端查询）

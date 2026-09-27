@@ -27,7 +27,18 @@ func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {
 		tenant := client.Tenant.Create().SetName(suffix).SetCode(suffix).SetDomain(suffix + ".test").SaveX(ctx)
 		user := client.User.Create().SetUsername(suffix).SetEmail(suffix + "@example.com").SetName("test").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(ctx)
 		for _, status := range []string{"open", "resolved", "closed", "cancelled"} {
-			client.Ticket.Create().SetTitle(status).SetTicketNumber(suffix + status).SetStatus(status).SetRequesterID(user.ID).SetTenantID(tenant.ID).SetSLAResolutionDeadline(time.Now().Add(-time.Hour)).SaveX(ctx)
+			tk := client.Ticket.Create().SetTitle(status).SetTicketNumber(suffix + status).SetStatus(status).SetRequesterID(user.ID).SetTenantID(tenant.ID).SetSLAResolutionDeadline(time.Now().Add(-time.Hour)).SaveX(ctx)
+			// Phase 3: overdue 统计现在以 sla_states 为权威源
+			if status == "open" {
+				_, err := client.SLAState.Create().
+					SetTenantID(tenant.ID).
+					SetAggregateType("ticket").
+					SetAggregateID(tk.ID).
+					SetResolutionDeadline(time.Now().Add(-time.Hour)).
+					SetStatus("active").
+					Save(ctx)
+				require.NoError(t, err)
+			}
 		}
 	}
 	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, nil, zap.NewNop().Sugar()))

@@ -147,8 +147,15 @@ func ToTicketResponseList(tickets []*ent.Ticket) []*TicketResponse {
 // Incident Mappers
 // ===================================
 
-// ToIncidentResponse converts an ent.Incident to IncidentResponse
+// ToIncidentResponse converts an ent.Incident to IncidentResponse using inline SLA fields.
+// Deprecated: use ToIncidentResponseWithSLA to read SLA from the sla_states table.
 func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
+	return ToIncidentResponseWithSLA(incident, nil)
+}
+
+// ToIncidentResponseWithSLA converts an ent.Incident to IncidentResponse.
+// When slaState is non-nil, SLA fields are read from it; otherwise SLA fields remain at zero values.
+func ToIncidentResponseWithSLA(incident *ent.Incident, slaState *ent.SLAState) *IncidentResponse {
 	if incident == nil {
 		return nil
 	}
@@ -234,27 +241,30 @@ func ToIncidentResponse(incident *ent.Incident) *IncidentResponse {
 		response.ClosedAt = &incident.ClosedAt
 	}
 
-	// SLA fields
-	if incident.SLADefinitionID > 0 {
-		response.SLADefinitionID = &incident.SLADefinitionID
+	// SLA fields — prefer sla_states table when available
+	if slaState != nil {
+		if slaState.SLADefinitionID > 0 {
+			id := slaState.SLADefinitionID
+			response.SLADefinitionID = &id
+		}
+		if !slaState.ResponseDeadline.IsZero() {
+			response.SLAResponseDeadline = &slaState.ResponseDeadline
+		}
+		if !slaState.ResolutionDeadline.IsZero() {
+			response.SLAResolutionDeadline = &slaState.ResolutionDeadline
+		}
+		if !slaState.FirstResponseAt.IsZero() {
+			response.SLAFirstResponseAt = &slaState.FirstResponseAt
+		}
+		if !slaState.ResolvedAt.IsZero() {
+			response.SLAResolvedAt = &slaState.ResolvedAt
+		}
+		response.SLAStatus = slaState.Status
+		if !slaState.PausedAt.IsZero() {
+			response.SLAPausedAt = &slaState.PausedAt
+		}
+		response.SLAPauseReason = slaState.PauseReason
 	}
-	if !incident.SLAResponseDeadline.IsZero() {
-		response.SLAResponseDeadline = &incident.SLAResponseDeadline
-	}
-	if !incident.SLAResolutionDeadline.IsZero() {
-		response.SLAResolutionDeadline = &incident.SLAResolutionDeadline
-	}
-	if !incident.SLAFirstResponseAt.IsZero() {
-		response.SLAFirstResponseAt = &incident.SLAFirstResponseAt
-	}
-	if !incident.SLAResolvedAt.IsZero() {
-		response.SLAResolvedAt = &incident.SLAResolvedAt
-	}
-	response.SLAStatus = incident.SLAStatus
-	if !incident.SLAPausedAt.IsZero() {
-		response.SLAPausedAt = &incident.SLAPausedAt
-	}
-	response.SLAPauseReason = incident.SLAPauseReason
 
 	return response
 }
@@ -268,6 +278,25 @@ func ToIncidentResponseList(incidents []*ent.Incident) []*IncidentResponse {
 	for _, incident := range incidents {
 		if incident != nil {
 			responses = append(responses, ToIncidentResponse(incident))
+		}
+	}
+	return responses
+}
+
+// ToIncidentResponseListWithSLA converts a slice of ent.Incident to IncidentResponse slice.
+// slaStates maps incident ID → *ent.SLAState; missing entries fall back to inline fields.
+func ToIncidentResponseListWithSLA(incidents []*ent.Incident, slaStates map[int]*ent.SLAState) []*IncidentResponse {
+	if incidents == nil {
+		return nil
+	}
+	responses := make([]*IncidentResponse, 0, len(incidents))
+	for _, incident := range incidents {
+		if incident != nil {
+			var st *ent.SLAState
+			if slaStates != nil {
+				st = slaStates[incident.ID]
+			}
+			responses = append(responses, ToIncidentResponseWithSLA(incident, st))
 		}
 	}
 	return responses

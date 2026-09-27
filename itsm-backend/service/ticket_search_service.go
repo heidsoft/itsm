@@ -11,12 +11,19 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/service/sla"
 )
 
 // TicketSearchService 工单搜索服务
 type TicketSearchService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client   *ent.Client
+	logger   *zap.SugaredLogger
+	slaStore *sla.Store // Phase 3: sla_states 读取
+}
+
+// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+func (s *TicketSearchService) SetSLAStore(store *sla.Store) {
+	s.slaStore = store
 }
 
 // TicketSearchServiceInterface 工单搜索服务接口
@@ -68,7 +75,50 @@ func (s *TicketSearchService) SearchTickets(ctx context.Context, searchTerm stri
 func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
 	now := time.Now()
 
-	// 查找响应超时或解决超时的工单
+	// Phase 3: prefer sla_states table for overdue detection
+	if s.slaStore != nil {
+		responseBreachedIDs, err1 := s.slaStore.FindResponseBreachedAggregateIDs(ctx, tenantID, "ticket", now)
+		overdueIDs, err2 := s.slaStore.FindOverdueAggregateIDs(ctx, tenantID, "ticket", now)
+		if err1 != nil {
+			s.logger.Warnw("Failed to find response-breached IDs from sla_states", "error", err1)
+		}
+		if err2 != nil {
+			s.logger.Warnw("Failed to find overdue IDs from sla_states", "error", err2)
+		}
+		if err1 == nil && err2 == nil {
+			// Union the two ID sets
+			idSet := make(map[int]struct{}, len(responseBreachedIDs)+len(overdueIDs))
+			for _, id := range responseBreachedIDs {
+				idSet[id] = struct{}{}
+			}
+			for _, id := range overdueIDs {
+				idSet[id] = struct{}{}
+			}
+			if len(idSet) == 0 {
+				return []*ent.Ticket{}, nil
+			}
+			ids := make([]int, 0, len(idSet))
+			for id := range idSet {
+				ids = append(ids, id)
+			}
+			tickets, err := s.client.Ticket.Query().
+				Where(
+					ticket.TenantID(tenantID),
+					ticket.StatusIn("open", "in_progress", "pending"),
+					ticket.IDIn(ids...),
+				).
+				All(ctx)
+			if err != nil {
+				s.logger.Errorw("Failed to query overdue tickets by IDs", "error", err)
+				return nil, fmt.Errorf("获取过期工单失败: %w", err)
+			}
+			s.logger.Infow("Overdue tickets retrieved via sla_states", "tenant_id", tenantID, "count", len(tickets))
+			return tickets, nil
+		}
+		// Fallback to inline query on error
+	}
+
+	// Fallback: inline SLA fields
 	tickets, err := s.client.Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),

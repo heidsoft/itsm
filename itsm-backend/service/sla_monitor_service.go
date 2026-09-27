@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/service/sla"
 
@@ -56,6 +57,39 @@ func (s *SLAMonitorService) SetNotificationService(notificationSvc *TicketNotifi
 // SetSLAStore 注入统一 SLA 持久化 store（双写阶段）。
 func (s *SLAMonitorService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
+}
+
+// GetSLAState 查询聚合根的 SLA 状态（Phase 3 切读：handler 层统一从 sla_states 读取）。
+func (s *SLAMonitorService) GetSLAState(ctx context.Context, tenantID int, aggregateType string, aggregateID int) (*ent.SLAState, error) {
+	return s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateID(aggregateID),
+		).
+		Only(ctx)
+}
+
+// BatchGetSLAStates 批量查询聚合根的 SLA 状态，返回 map[aggregateID]*SLAState。
+func (s *SLAMonitorService) BatchGetSLAStates(ctx context.Context, tenantID int, aggregateType string, aggregateIDs []int) (map[int]*ent.SLAState, error) {
+	if len(aggregateIDs) == 0 {
+		return map[int]*ent.SLAState{}, nil
+	}
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateIDIn(aggregateIDs...),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int]*ent.SLAState, len(states))
+	for _, st := range states {
+		result[st.AggregateID] = st
+	}
+	return result, nil
 }
 
 type SLACheckStats struct {
@@ -109,11 +143,27 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		slaDefMap[sd.ID] = sd.Name
 	}
 
+	// Phase 3: 从 sla_states 获取绑定了 SLA 的 ticket ID
+	slaBoundTicketIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "ticket")
+	if err != nil {
+		s.logger.Errorw("Failed to query SLA-bound ticket IDs", "error", err)
+		return nil, fmt.Errorf("failed to query SLA-bound tickets: %w", err)
+	}
+	if len(slaBoundTicketIDs) == 0 {
+		// 无 SLA 绑定的工单，跳过 ticket 检查
+		incidentStats := s.checkIncidentSLAViolations(ctx, tenantID, now, slaDefMap)
+		stats.TotalChecked += incidentStats.TotalChecked
+		stats.NewViolations += incidentStats.NewViolations
+		stats.ExistingViolations += incidentStats.ExistingViolations
+		s.logger.Infow("SLA violation check completed (no SLA-bound tickets)", "tenant_id", tenantID)
+		return stats, nil
+	}
+
 	for {
 		tickets, err := s.client.Ticket.Query().
 			Where(
 				ticket.TenantIDEQ(tenantID),
-				ticket.SLADefinitionIDNEQ(0),
+				ticket.IDIn(slaBoundTicketIDs...),
 				ticket.ResolvedAtIsNil(),
 				ticket.DeletedAtIsNil(),
 			).
@@ -130,30 +180,38 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 
 		stats.TotalChecked += len(tickets)
 
+		// 批量加载本页工单的 SLA 状态
+		ticketIDs := make([]int, len(tickets))
+		for i, t := range tickets {
+			ticketIDs[i] = t.ID
+		}
+		slaStateMap, err := s.slaStore.BatchGetStates(ctx, tenantID, "ticket", ticketIDs)
+		if err != nil {
+			s.logger.Errorw("Failed to batch load SLA states for tickets", "error", err)
+			slaStateMap = map[int]*ent.SLAState{}
+		}
+
 		for _, t := range tickets {
+			slState := slaStateMap[t.ID]
+
 			// 检查是否需要发送预警（在SLA截止前）
 			if s.alertService != nil {
-				if warned := s.checkAndTriggerWarning(ctx, t, now); warned {
+				if warned := s.checkAndTriggerWarning(ctx, t, slState, now); warned {
 					stats.WarningsTriggered++
 				}
 			}
 
 			// 检查响应时间SLA
-			if t.FirstResponseAt.IsZero() && !t.SLAResponseDeadline.IsZero() && now.After(t.SLAResponseDeadline) {
+			if slState != nil && slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() && now.After(slState.ResponseDeadline) {
 				existingMap := existingViolationMap[t.ID]
 				if existingMap == nil || !existingMap["response_time"] {
-					// 乐观检查未命中：尝试创建。
-					// 即使乐观检查在多 worker / 实例场景下产生“假命中”，createViolation
-					// 内部还会通过事务内检查与数据库唯一约束再次去重，
-					// 返回的 created 标志会准确反映“是否真的新增了一条记录”。
-					created, cErr := s.createViolation(ctx, t, "response_time", t.SLAResponseDeadline, slaDefMap)
+					created, cErr := s.createViolation(ctx, t, "response_time", slState.ResponseDeadline, slState.SLADefinitionID, slaDefMap)
 					if cErr != nil {
 						s.logger.Errorw("Failed to create response violation", "ticket_id", t.ID, "error", cErr)
 					} else if created {
 						stats.NewViolations++
 						s.logger.Warnw("Ticket violated response SLA (new)", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 					} else {
-						// 重复跳过：与现有违规的 stats 保持一致。
 						stats.ExistingViolations++
 						s.logger.Debugw("Ticket response SLA violation already exists, suppressed duplicate", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 					}
@@ -164,10 +222,10 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 			}
 
 			// 检查解决时间SLA
-			if !t.SLAResolutionDeadline.IsZero() && now.After(t.SLAResolutionDeadline) {
+			if slState != nil && !slState.ResolutionDeadline.IsZero() && now.After(slState.ResolutionDeadline) {
 				existingMap := existingViolationMap[t.ID]
 				if existingMap == nil || !existingMap["resolution_time"] {
-					created, cErr := s.createViolation(ctx, t, "resolution_time", t.SLAResolutionDeadline, slaDefMap)
+					created, cErr := s.createViolation(ctx, t, "resolution_time", slState.ResolutionDeadline, slState.SLADefinitionID, slaDefMap)
 					if cErr != nil {
 						s.logger.Errorw("Failed to create resolution violation", "ticket_id", t.ID, "error", cErr)
 					} else if created {
@@ -241,13 +299,22 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 		existingViolationMap[v.TicketID][v.ViolationType] = true
 	}
 
+	// Phase 3: 从 sla_states 获取绑定了 SLA 的 incident ID
+	slaBoundIncidentIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "incident")
+	if err != nil {
+		s.logger.Errorw("Failed to query SLA-bound incident IDs", "error", err)
+		return stats
+	}
+	if len(slaBoundIncidentIDs) == 0 {
+		return stats
+	}
+
 	incidents, err := s.client.Incident.Query().
 		Where(
 			incident.TenantIDEQ(tenantID),
-			incident.SLADefinitionIDNEQ(0),
+			incident.IDIn(slaBoundIncidentIDs...),
 			incident.ResolvedAtIsNil(),
 			incident.DeletedAtIsNil(),
-			incident.SLAStatusEQ("active"),
 		).
 		All(ctx)
 	if err != nil {
@@ -257,12 +324,25 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 
 	stats.TotalChecked = len(incidents)
 
+	// 批量加载 SLA 状态
+	incidentIDs := make([]int, len(incidents))
+	for i, inc := range incidents {
+		incidentIDs[i] = inc.ID
+	}
+	slaStateMap, err := s.slaStore.BatchGetStates(ctx, tenantID, "incident", incidentIDs)
+	if err != nil {
+		s.logger.Errorw("Failed to batch load SLA states for incidents", "error", err)
+		slaStateMap = map[int]*ent.SLAState{}
+	}
+
 	for _, inc := range incidents {
+		slState := slaStateMap[inc.ID]
+
 		// 响应时间 SLA
-		if inc.SLAFirstResponseAt.IsZero() && !inc.SLAResponseDeadline.IsZero() && now.After(inc.SLAResponseDeadline) {
+		if slState != nil && slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() && now.After(slState.ResponseDeadline) {
 			existingMap := existingViolationMap[inc.ID]
 			if existingMap == nil || !existingMap["response_time"] {
-				if created, cErr := s.createIncidentViolation(ctx, inc, "response_time", inc.SLAResponseDeadline, slaDefMap); cErr != nil {
+				if created, cErr := s.createIncidentViolation(ctx, inc, "response_time", slState.ResponseDeadline, slState.SLADefinitionID, slaDefMap); cErr != nil {
 					s.logger.Errorw("Failed to create incident response violation", "incident_id", inc.ID, "error", cErr)
 				} else if created {
 					stats.NewViolations++
@@ -275,10 +355,10 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 		}
 
 		// 解决时间 SLA
-		if !inc.SLAResolutionDeadline.IsZero() && now.After(inc.SLAResolutionDeadline) {
+		if slState != nil && !slState.ResolutionDeadline.IsZero() && now.After(slState.ResolutionDeadline) {
 			existingMap := existingViolationMap[inc.ID]
 			if existingMap == nil || !existingMap["resolution_time"] {
-				if created, cErr := s.createIncidentViolation(ctx, inc, "resolution_time", inc.SLAResolutionDeadline, slaDefMap); cErr != nil {
+				if created, cErr := s.createIncidentViolation(ctx, inc, "resolution_time", slState.ResolutionDeadline, slState.SLADefinitionID, slaDefMap); cErr != nil {
 					s.logger.Errorw("Failed to create incident resolution violation", "incident_id", inc.ID, "error", cErr)
 				} else if created {
 					stats.NewViolations++
@@ -295,7 +375,7 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 }
 
 // createIncidentViolation 为 Incident 创建 SLA 违规记录（P0-1）
-func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *ent.Incident, violationType string, deadline time.Time, slaDefMap map[int]string) (bool, error) {
+func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *ent.Incident, violationType string, deadline time.Time, slaDefinitionID int, slaDefMap map[int]string) (bool, error) {
 	exceededMinutes := time.Since(deadline).Minutes()
 	if exceededMinutes < 0 {
 		exceededMinutes = 0
@@ -316,11 +396,11 @@ func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *en
 	}
 
 	now := time.Now()
-	if inc.SLADefinitionID == 0 {
+	if slaDefinitionID == 0 {
 		return false, nil
 	}
 
-	slaName := slaDefMap[inc.SLADefinitionID]
+	slaName := slaDefMap[slaDefinitionID]
 	if slaName == "" {
 		slaName = "Default SLA"
 	}
@@ -357,7 +437,7 @@ func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *en
 		SetCreatedBy(0).
 		SetTicketID(inc.ID).
 		SetTicketType("incident").
-		SetSLADefinitionID(inc.SLADefinitionID).
+		SetSLADefinitionID(slaDefinitionID).
 		SetSLAName(slaName).
 		SetViolationType(violationType).
 		SetViolationTime(now).
@@ -389,15 +469,15 @@ func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *en
 
 // createViolation 创建SLA违规记录
 // 跨实例竞态保护（issue #85）：
-// CheckSLAViolations 内部预加载 existingViolationMap 仅是“乐观检查”；真正
+// CheckSLAViolations 内部预加载 existingViolationMap 仅是"乐观检查"；真正
 // 的互斥由以下两层保证：
-//  1. 事务内“再查一次”，保证普通重试幂等
+//  1. 事务内"再查一次"，保证普通重试幂等
 //  2. 数据库上的部分唯一索引
 //     (ticket_id, violation_type) WHERE is_resolved = false，收口跨实例竞态
 //
 // 同时，本函数会明确区分「插入成功」与「重复跳过」两种结果，仅在插入成功时才
 // 提交事务 + 发送通知，重复路径下会主动中止事务以避免重复入箱。
-func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefMap map[int]string) (created bool, err error) {
+func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, violationType string, deadline time.Time, slaDefinitionID int, slaDefMap map[int]string) (created bool, err error) {
 	// 计算超时时间（分钟）：从 deadline 到当前时间的差值
 	// response_time / resolution_time 的差异在于 deadline 语义不同，
 	// 由调用方决定传入哪种 deadline；这里的超时时间计算逻辑一致。
@@ -424,13 +504,11 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 	}
 
 	now := time.Now()
-	// 如果没有 SLA 定义，跳过创建违规记录
-	if t.SLADefinitionID == 0 {
+	if slaDefinitionID == 0 {
 		return false, nil
 	}
 
-	// 从预加载的map中获取SLA名称
-	slaName := slaDefMap[t.SLADefinitionID]
+	slaName := slaDefMap[slaDefinitionID]
 	if slaName == "" {
 		slaName = "Default SLA"
 	}
@@ -487,7 +565,7 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		SetCreatedBy(0).
 		SetTicketID(t.ID).
 		SetTicketType("ticket").
-		SetSLADefinitionID(t.SLADefinitionID).
+		SetSLADefinitionID(slaDefinitionID).
 		SetSLAName(slaName).
 		SetViolationType(violationType).
 		SetViolationTime(now).
@@ -519,41 +597,41 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 
 // checkAndTriggerWarning 检查是否需要发送SLA预警（在截止时间前触发）
 // 返回是否发送了预警
-func (s *SLAMonitorService) checkAndTriggerWarning(ctx context.Context, t *ent.Ticket, now time.Time) bool {
-	// SLA预警阈值：默认在截止时间前20%时预警
-	warningThreshold := 0.8
+func (s *SLAMonitorService) checkAndTriggerWarning(ctx context.Context, t *ent.Ticket, slState *ent.SLAState, now time.Time) bool {
+	if slState == nil {
+		return false
+	}
 
+	warningThreshold := 0.8
 	sentWarning := false
 
-	// 检查响应时间SLA预警
-	if t.FirstResponseAt.IsZero() && !t.SLAResponseDeadline.IsZero() {
-		totalDuration := t.SLAResponseDeadline.Sub(t.CreatedAt)
+	if slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() {
+		totalDuration := slState.ResponseDeadline.Sub(t.CreatedAt)
 		elapsed := now.Sub(t.CreatedAt)
 		progress := elapsed.Seconds() / totalDuration.Seconds()
 
-		if progress >= warningThreshold && now.Before(t.SLAResponseDeadline) {
+		if progress >= warningThreshold && now.Before(slState.ResponseDeadline) {
 			if s.alertService != nil {
 				if warned, _ := s.alertService.TriggerSLAWarning(ctx, t.ID, "response_time", t.TenantID); warned {
 					sentWarning = true
 					s.logger.Infow("SLA response warning sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber,
-						"deadline", t.SLAResponseDeadline)
+						"deadline", slState.ResponseDeadline)
 				}
 			}
 		}
 	}
 
-	// 检查解决时间SLA预警
-	if !t.SLAResolutionDeadline.IsZero() {
-		totalDuration := t.SLAResolutionDeadline.Sub(t.CreatedAt)
+	if !slState.ResolutionDeadline.IsZero() {
+		totalDuration := slState.ResolutionDeadline.Sub(t.CreatedAt)
 		elapsed := now.Sub(t.CreatedAt)
 		progress := elapsed.Seconds() / totalDuration.Seconds()
 
-		if progress >= warningThreshold && now.Before(t.SLAResolutionDeadline) {
+		if progress >= warningThreshold && now.Before(slState.ResolutionDeadline) {
 			if s.alertService != nil {
 				if warned, _ := s.alertService.TriggerSLAWarning(ctx, t.ID, "resolution_time", t.TenantID); warned {
 					sentWarning = true
 					s.logger.Infow("SLA resolution warning sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber,
-						"deadline", t.SLAResolutionDeadline)
+						"deadline", slState.ResolutionDeadline)
 				}
 			}
 		}
@@ -651,28 +729,34 @@ func (s *SLAMonitorService) GetSLAComplianceByDefinition(ctx context.Context, te
 
 	var stats []*SLAComplianceStat
 	for _, sla := range slas {
-		// 获取该SLA的工单数量
-		tickets, err := s.client.Ticket.Query().
+		// Phase 3: 从 sla_states 查询绑定该 SLA 定义的聚合根
+		boundStates, err := s.client.SLAState.Query().
 			Where(
-				ticket.TenantIDEQ(tenantID),
-				ticket.SLADefinitionID(sla.ID),
-				ticket.DeletedAtIsNil(),
+				slastate.TenantIDEQ(tenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.SLADefinitionIDEQ(sla.ID),
 			).
 			All(ctx)
-		if err != nil {
+		if err != nil || len(boundStates) == 0 {
 			continue
 		}
 
-		total := len(tickets)
-		if total == 0 {
+		boundTicketIDs := make([]int, len(boundStates))
+		for i, bs := range boundStates {
+			boundTicketIDs[i] = bs.AggregateID
+		}
+
+		total, err := s.client.Ticket.Query().
+			Where(
+				ticket.TenantIDEQ(tenantID),
+				ticket.IDIn(boundTicketIDs...),
+				ticket.DeletedAtIsNil(),
+			).
+			Count(ctx)
+		if err != nil || total == 0 {
 			continue
 		}
 
-		// 统计有SLA违规记录的工单数量（去重）
-		// 注意：不应使用 slaviolation.ResolvedAtIsNil() 过滤，
-		// 因为违规记录的 resolved_at 表示违规是否已处理，
-		// 与工单是否仍未解决是两个语义。
-		// 只要工单有过违规记录，就应计入违规数。
 		violated, _ := s.client.SLAViolation.Query().
 			Where(
 				slaviolation.SLADefinitionID(sla.ID),
@@ -762,13 +846,23 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 
 	switch entityType {
 	case "ticket":
-		t, err := s.client.Ticket.Query().
+		_, err := s.client.Ticket.Query().
 			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			return slaLookupError("工单", err)
 		}
-		if t.SLAStatus == "paused" {
+		slState, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantIDEQ(tenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.AggregateIDEQ(entityID),
+			).
+			Only(ctx)
+		if err != nil || slState == nil {
+			return common.NewBusinessError(common.ConflictCode, "工单SLA状态不存在", "")
+		}
+		if slState.Status == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "工单SLA已处于暂停状态", "")
 		}
 		err = s.client.Ticket.UpdateOneID(entityID).
@@ -788,13 +882,23 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		return nil
 
 	case "incident":
-		inc, err := s.client.Incident.Query().
+		_, err := s.client.Incident.Query().
 			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			return slaLookupError("事件", err)
 		}
-		if inc.SLAStatus == "paused" {
+		slState, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantIDEQ(tenantID),
+				slastate.AggregateTypeEQ("incident"),
+				slastate.AggregateIDEQ(entityID),
+			).
+			Only(ctx)
+		if err != nil || slState == nil {
+			return common.NewBusinessError(common.ConflictCode, "事件SLA状态不存在", "")
+		}
+		if slState.Status == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "事件SLA已处于暂停状态", "")
 		}
 		err = s.client.Incident.UpdateOneID(entityID).
@@ -824,13 +928,23 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 
 	switch entityType {
 	case "ticket":
-		t, err := s.client.Ticket.Query().
+		_, err := s.client.Ticket.Query().
 			Where(ticket.IDEQ(entityID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			return slaLookupError("工单", err)
 		}
-		if t.SLAStatus != "paused" {
+		slState, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantIDEQ(tenantID),
+				slastate.AggregateTypeEQ("ticket"),
+				slastate.AggregateIDEQ(entityID),
+			).
+			Only(ctx)
+		if err != nil || slState == nil {
+			return common.NewBusinessError(common.ConflictCode, "工单SLA状态不存在", "")
+		}
+		if slState.Status != "paused" {
 			return common.NewBusinessError(common.ConflictCode, "工单SLA未处于暂停状态", "")
 		}
 
@@ -840,13 +954,13 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
 
-		if !t.SLAPausedAt.IsZero() {
-			pausedDuration := now.Sub(t.SLAPausedAt)
-			if !t.SLAResponseDeadline.IsZero() {
-				updater.SetSLAResponseDeadline(t.SLAResponseDeadline.Add(pausedDuration))
+		if !slState.PausedAt.IsZero() {
+			pausedDuration := now.Sub(slState.PausedAt)
+			if !slState.ResponseDeadline.IsZero() {
+				updater.SetSLAResponseDeadline(slState.ResponseDeadline.Add(pausedDuration))
 			}
-			if !t.SLAResolutionDeadline.IsZero() {
-				updater.SetSLAResolutionDeadline(t.SLAResolutionDeadline.Add(pausedDuration))
+			if !slState.ResolutionDeadline.IsZero() {
+				updater.SetSLAResolutionDeadline(slState.ResolutionDeadline.Add(pausedDuration))
 			}
 		}
 		if err := updater.Exec(ctx); err != nil {
@@ -861,13 +975,23 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 		return nil
 
 	case "incident":
-		inc, err := s.client.Incident.Query().
+		_, err := s.client.Incident.Query().
 			Where(incident.IDEQ(entityID), incident.TenantIDEQ(tenantID), incident.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			return slaLookupError("事件", err)
 		}
-		if inc.SLAStatus != "paused" {
+		slState, err := s.client.SLAState.Query().
+			Where(
+				slastate.TenantIDEQ(tenantID),
+				slastate.AggregateTypeEQ("incident"),
+				slastate.AggregateIDEQ(entityID),
+			).
+			Only(ctx)
+		if err != nil || slState == nil {
+			return common.NewBusinessError(common.ConflictCode, "事件SLA状态不存在", "")
+		}
+		if slState.Status != "paused" {
 			return common.NewBusinessError(common.ConflictCode, "事件SLA未处于暂停状态", "")
 		}
 
@@ -876,13 +1000,13 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
 
-		if !inc.SLAPausedAt.IsZero() {
-			pausedDuration := now.Sub(inc.SLAPausedAt)
-			if !inc.SLAResponseDeadline.IsZero() {
-				updater.SetSLAResponseDeadline(inc.SLAResponseDeadline.Add(pausedDuration))
+		if !slState.PausedAt.IsZero() {
+			pausedDuration := now.Sub(slState.PausedAt)
+			if !slState.ResponseDeadline.IsZero() {
+				updater.SetSLAResponseDeadline(slState.ResponseDeadline.Add(pausedDuration))
 			}
-			if !inc.SLAResolutionDeadline.IsZero() {
-				updater.SetSLAResolutionDeadline(inc.SLAResolutionDeadline.Add(pausedDuration))
+			if !slState.ResolutionDeadline.IsZero() {
+				updater.SetSLAResolutionDeadline(slState.ResolutionDeadline.Add(pausedDuration))
 			}
 		}
 		if err := updater.Exec(ctx); err != nil {
@@ -935,19 +1059,38 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		TrendData:         make([]dto.SLATrendPoint, 0),
 	}
 
-	// 获取所有活跃工单（带有SLA定义的）
-	tickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantIDEQ(tenantID),
-			ticket.SLADefinitionIDNEQ(0),
-			ticket.DeletedAtIsNil(),
-		).
-		All(ctx)
+	// Phase 3: 从 sla_states 获取绑定了 SLA 的 ticket ID
+	slaBoundTicketIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "ticket")
 	if err != nil {
-		return nil, fmt.Errorf("failed to query tickets: %w", err)
+		return nil, fmt.Errorf("failed to query SLA-bound tickets: %w", err)
+	}
+
+	var tickets []*ent.Ticket
+	if len(slaBoundTicketIDs) > 0 {
+		tickets, err = s.client.Ticket.Query().
+			Where(
+				ticket.TenantIDEQ(tenantID),
+				ticket.IDIn(slaBoundTicketIDs...),
+				ticket.DeletedAtIsNil(),
+			).
+			All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query tickets: %w", err)
+		}
 	}
 
 	dashboard.TotalTickets = len(tickets)
+
+	// 批量加载 SLA 状态
+	ticketIDs := make([]int, len(tickets))
+	for i, t := range tickets {
+		ticketIDs[i] = t.ID
+	}
+	slaStateMap, err := s.slaStore.BatchGetStates(ctx, tenantID, "ticket", ticketIDs)
+	if err != nil {
+		s.logger.Errorw("Failed to batch load SLA states for dashboard", "error", err)
+		slaStateMap = map[int]*ent.SLAState{}
+	}
 
 	// 获取未解决的违规
 	violations, err := s.client.SLAViolation.Query().
@@ -974,6 +1117,7 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 	for _, t := range tickets {
 		ticketViolations := violationMap[t.ID]
 		hasViolation := len(ticketViolations) > 0
+		slState := slaStateMap[t.ID]
 
 		// 按优先级统计
 		priority := t.Priority
@@ -985,16 +1129,16 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		if hasViolation {
 			breachedCount++
 			priorityViolationMap[priority]++
-		} else if !t.FirstResponseAt.IsZero() || (!t.SLAResponseDeadline.IsZero() && now.After(t.SLAResponseDeadline)) {
+		} else if slState != nil {
 			// 检查是否处于风险中（接近SLA截止时间）
-			if !t.SLAResponseDeadline.IsZero() && now.Before(t.SLAResponseDeadline) {
-				timeLeft := t.SLAResponseDeadline.Sub(now)
+			if slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() && now.Before(slState.ResponseDeadline) {
+				timeLeft := slState.ResponseDeadline.Sub(now)
 				if timeLeft <= 30*time.Minute {
 					atRiskCount++
 				}
 			}
-			if !t.SLAResolutionDeadline.IsZero() && now.Before(t.SLAResolutionDeadline) {
-				timeLeft := t.SLAResolutionDeadline.Sub(now)
+			if !slState.ResolutionDeadline.IsZero() && now.Before(slState.ResolutionDeadline) {
+				timeLeft := slState.ResolutionDeadline.Sub(now)
 				if timeLeft <= 30*time.Minute {
 					atRiskCount++
 				}
@@ -1020,25 +1164,29 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		}
 	}
 
-	// 获取即将到期的工单（未来24小时内）
+	// 获取即将到期的工单（未来24小时内）—— Phase 3: 从 sla_states 查询
 	upcomingDeadline := now.Add(24 * time.Hour)
-	upcomingTickets, err := s.client.Ticket.Query().
+	upcomingSLAStates, err := s.client.SLAState.Query().
 		Where(
-			ticket.TenantIDEQ(tenantID),
-			ticket.SLADefinitionIDNEQ(0),
-			ticket.ResolvedAtIsNil(),
-			ticket.SLAResolutionDeadlineGT(now),
-			ticket.SLAResolutionDeadlineLT(upcomingDeadline),
+			slastate.TenantIDEQ(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.ResolutionDeadlineGT(now),
+			slastate.ResolutionDeadlineLT(upcomingDeadline),
 		).
 		All(ctx)
 	if err == nil {
-		for _, t := range upcomingTickets {
-			timeLeft := time.Until(t.SLAResolutionDeadline)
+		for _, slState := range upcomingSLAStates {
+			t, err := s.client.Ticket.Get(ctx, slState.AggregateID)
+			if err != nil || t == nil {
+				continue
+			}
+
+			timeLeft := time.Until(slState.ResolutionDeadline)
 			timeLeftStr := formatDuration(timeLeft)
 
 			slaName := "Default SLA"
-			if t.SLADefinitionID != 0 {
-				slaDef, err := s.client.SLADefinition.Get(ctx, t.SLADefinitionID)
+			if slState.SLADefinitionID != 0 {
+				slaDef, err := s.client.SLADefinition.Get(ctx, slState.SLADefinitionID)
 				if err == nil && slaDef != nil {
 					slaName = slaDef.Name
 				}
@@ -1047,7 +1195,7 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 			dashboard.UpcomingDeadlines = append(dashboard.UpcomingDeadlines, dto.SLADeadline{
 				TicketID:    t.ID,
 				TicketTitle: t.Title,
-				Deadline:    t.SLAResolutionDeadline,
+				Deadline:    slState.ResolutionDeadline,
 				SLAPolicy:   slaName,
 				TimeLeft:    timeLeftStr,
 			})

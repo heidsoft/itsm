@@ -17,6 +17,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/service"
+	"itsm-backend/service/sla"
 )
 
 func TestLifecycleHTTPErrorContract(t *testing.T) {
@@ -26,12 +27,22 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 	tenant := client.Tenant.Create().SetName("Lifecycle").SetCode("lifecycle").SetDomain("lifecycle.test").SaveX(ctx)
 	user := client.User.Create().SetUsername("lifecycle").SetName("test").SetEmail("lifecycle@example.com").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(ctx)
 	inc := client.Incident.Create().SetTitle("closed incident").SetIncidentNumber("INC-review").SetStatus("closed").SetReporterID(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	// Phase 3: SLA 暂停/恢复现在以 sla_states 为权威源
+	_, err := client.SLAState.Create().
+		SetTenantID(tenant.ID).
+		SetAggregateType("incident").
+		SetAggregateID(inc.ID).
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	// P1-DataScope：生命周期方法现在先经 repo.Get 行级守卫（CanWriteResource），
 	// repo 不能为 nil。接真实 Ent repo：reporter 本人操作守卫放行，跨租户由
 	// repo.Get 返回 ent NotFound（404），既有契约断言不变。
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
+	slaMonitor := service.NewSLAMonitorService(client, zap.NewNop().Sugar())
+	slaMonitor.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
+	h := NewHandler(NewService(repo, production, nil, nil, nil, slaMonitor, zap.NewNop().Sugar()))
 	for _, tc := range []struct {
 		name, path           string
 		tenant, status, code int

@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/repository/ticket"
 	"itsm-backend/service"
@@ -283,7 +284,7 @@ func (h *Handler) AssignMSPTechnician(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, domainTicketToResponse(ticket))
+	common.Success(c, h.domainTicketToResponse(c, ticket))
 }
 
 // GetCustomerReports 获取客户服务报表
@@ -379,7 +380,8 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 }
 
 // domainTicketToResponse 将领域模型 *ticket.Ticket 映射为 API 响应 DTO。
-func domainTicketToResponse(t *ticket.Ticket) *dto.TicketResponse {
+// Phase 3 切读：SLA 字段优先从 sla_states 读取。
+func (h *Handler) domainTicketToResponse(c *gin.Context, t *ticket.Ticket) *dto.TicketResponse {
 	if t == nil {
 		return nil
 	}
@@ -406,6 +408,25 @@ func domainTicketToResponse(t *ticket.Ticket) *dto.TicketResponse {
 		SLAResponseDeadline:   t.SLAResponseDeadline,
 		SLAResolutionDeadline: t.SLAResolutionDeadline,
 	}
+
+	// Phase 3 切读：从 sla_states 覆盖 SLA 字段。
+	if h.ticketService != nil {
+		tenantID := t.TenantID
+		if ctxTenant := c.GetInt("tenant_id"); ctxTenant > 0 {
+			tenantID = ctxTenant
+		}
+		var slaSt *ent.SLAState
+		slaSt, err := h.ticketService.GetTicketSLAState(c.Request.Context(), tenantID, t.ID)
+		if err == nil && slaSt != nil {
+			if !slaSt.ResponseDeadline.IsZero() {
+				resp.SLAResponseDeadline = &slaSt.ResponseDeadline
+			}
+			if !slaSt.ResolutionDeadline.IsZero() {
+				resp.SLAResolutionDeadline = &slaSt.ResolutionDeadline
+			}
+		}
+	}
+
 	if t.AssigneeID != nil {
 		resp.AssigneeID = *t.AssigneeID
 	}

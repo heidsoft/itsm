@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
@@ -307,14 +308,26 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 		return false, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	if ticketEntity.SLADefinitionID == 0 {
+	// 从 sla_states 表读取 SLA 状态（Phase 3 read migration）
+	slState, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Only(ctx)
+	if err != nil || slState == nil {
+		return false, nil // no SLA state, skip
+	}
+
+	if slState.SLADefinitionID == 0 {
 		return false, nil // 没有SLA定义，无需检查
 	}
 
 	// 获取该SLA定义的所有活跃预警规则
 	alertRules, err := s.client.SLAAlertRule.Query().
 		Where(
-			slaalertrule.SLADefinitionIDEQ(ticketEntity.SLADefinitionID),
+			slaalertrule.SLADefinitionIDEQ(slState.SLADefinitionID),
 			slaalertrule.TenantIDEQ(tenantID),
 			slaalertrule.IsActiveEQ(true),
 		).
@@ -333,8 +346,8 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 	alertTriggered := false
 
 	// 检查响应时间预警
-	if !ticketEntity.SLAResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
-		slaDeadline = ticketEntity.SLAResponseDeadline
+	if !slState.ResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
+		slaDeadline = slState.ResponseDeadline
 		timeRemaining = slaDeadline.Sub(now).Minutes()
 		if timeRemaining > 0 {
 			// 计算剩余时间百分比
@@ -350,8 +363,8 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 	}
 
 	// 检查解决时间预警
-	if !ticketEntity.SLAResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
-		slaDeadline = ticketEntity.SLAResolutionDeadline
+	if !slState.ResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
+		slaDeadline = slState.ResolutionDeadline
 		timeRemaining = slaDeadline.Sub(now).Minutes()
 		if timeRemaining > 0 {
 			// 计算剩余时间百分比
@@ -383,14 +396,26 @@ func (s *SLAAlertService) TriggerSLAWarning(ctx context.Context, ticketID int, w
 		return false, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	if ticketEntity.SLADefinitionID == 0 {
+	// 从 sla_states 表读取 SLA 状态（Phase 3 read migration）
+	slState, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(ticketID),
+		).
+		Only(ctx)
+	if err != nil || slState == nil {
+		return false, nil // no SLA state, skip
+	}
+
+	if slState.SLADefinitionID == 0 {
 		return false, nil
 	}
 
 	// 获取该SLA定义的所有活跃预警规则
 	alertRules, err := s.client.SLAAlertRule.Query().
 		Where(
-			slaalertrule.SLADefinitionIDEQ(ticketEntity.SLADefinitionID),
+			slaalertrule.SLADefinitionIDEQ(slState.SLADefinitionID),
 			slaalertrule.TenantIDEQ(tenantID),
 			slaalertrule.IsActiveEQ(true),
 		).
@@ -407,15 +432,15 @@ func (s *SLAAlertService) TriggerSLAWarning(ctx context.Context, ticketID int, w
 	var percentage float64
 	var slaDeadline time.Time
 
-	if warningType == "response_time" && !ticketEntity.SLAResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
-		slaDeadline = ticketEntity.SLAResponseDeadline
+	if warningType == "response_time" && !slState.ResponseDeadline.IsZero() && ticketEntity.FirstResponseAt.IsZero() {
+		slaDeadline = slState.ResponseDeadline
 		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
 		timeRemaining := slaDeadline.Sub(now).Minutes()
 		if totalTime > 0 && timeRemaining > 0 {
 			percentage = (timeRemaining / totalTime) * 100
 		}
-	} else if warningType == "resolution_time" && !ticketEntity.SLAResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
-		slaDeadline = ticketEntity.SLAResolutionDeadline
+	} else if warningType == "resolution_time" && !slState.ResolutionDeadline.IsZero() && ticketEntity.ResolvedAt.IsZero() {
+		slaDeadline = slState.ResolutionDeadline
 		totalTime := slaDeadline.Sub(ticketEntity.CreatedAt).Minutes()
 		timeRemaining := slaDeadline.Sub(now).Minutes()
 		if totalTime > 0 && timeRemaining > 0 {

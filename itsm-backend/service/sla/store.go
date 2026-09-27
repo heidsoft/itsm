@@ -146,6 +146,130 @@ func (s *Store) GetState(ctx context.Context, tenantID int, aggregateType string
 		Only(ctx)
 }
 
+// BatchGetStates 批量查询聚合根的 SLA 状态。
+// 返回 map[aggregateID]*SLAState。
+func (s *Store) BatchGetStates(ctx context.Context, tenantID int, aggregateType string, aggregateIDs []int) (map[int]*ent.SLAState, error) {
+	if len(aggregateIDs) == 0 {
+		return map[int]*ent.SLAState{}, nil
+	}
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.AggregateIDIn(aggregateIDs...),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int]*ent.SLAState, len(states))
+	for _, st := range states {
+		result[st.AggregateID] = st
+	}
+	return result, nil
+}
+
+// FindOverdueAggregateIDs 返回 resolution_deadline 已过且状态为 active 的聚合根 ID。
+func (s *Store) FindOverdueAggregateIDs(ctx context.Context, tenantID int, aggregateType string, now time.Time) ([]int, error) {
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.StatusEQ("active"),
+			slastate.ResolutionDeadlineNotNil(),
+			slastate.ResolutionDeadlineLT(now),
+		).
+		Select(slastate.FieldAggregateID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, len(states))
+	for i, st := range states {
+		ids[i] = st.AggregateID
+	}
+	return ids, nil
+}
+
+// FindResponseBreachedAggregateIDs 返回 response_deadline 已过且尚未首次响应的聚合根 ID。
+func (s *Store) FindResponseBreachedAggregateIDs(ctx context.Context, tenantID int, aggregateType string, now time.Time) ([]int, error) {
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.StatusEQ("active"),
+			slastate.ResponseDeadlineNotNil(),
+			slastate.ResponseDeadlineLT(now),
+			slastate.FirstResponseAtIsNil(),
+		).
+		Select(slastate.FieldAggregateID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, len(states))
+	for i, st := range states {
+		ids[i] = st.AggregateID
+	}
+	return ids, nil
+}
+
+// FindAtRiskAggregateIDs 返回 response_deadline 在 [now, now+within] 窗口内且尚未首次响应的聚合根 ID。
+func (s *Store) FindAtRiskAggregateIDs(ctx context.Context, tenantID int, aggregateType string, now time.Time, within time.Duration) ([]int, error) {
+	deadline := now.Add(within)
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.StatusEQ("active"),
+			slastate.ResponseDeadlineNotNil(),
+			slastate.ResponseDeadlineGTE(now),
+			slastate.ResponseDeadlineLTE(deadline),
+			slastate.FirstResponseAtIsNil(),
+		).
+		Select(slastate.FieldAggregateID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, len(states))
+	for i, st := range states {
+		ids[i] = st.AggregateID
+	}
+	return ids, nil
+}
+
+// CountBreached 返回已 breached 的聚合根数量。
+func (s *Store) CountBreached(ctx context.Context, tenantID int, aggregateType string) (int, error) {
+	return s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.StatusEQ("breached"),
+		).
+		Count(ctx)
+}
+
+// FindWithSLABound 返回绑定了 SLA（sla_definition_id > 0）的聚合根 ID。
+func (s *Store) FindWithSLABound(ctx context.Context, tenantID int, aggregateType string) ([]int, error) {
+	states, err := s.client.SLAState.Query().
+		Where(
+			slastate.TenantID(tenantID),
+			slastate.AggregateType(aggregateType),
+			slastate.SLADefinitionIDNotNil(),
+		).
+		Select(slastate.FieldAggregateID).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int, len(states))
+	for i, st := range states {
+		ids[i] = st.AggregateID
+	}
+	return ids, nil
+}
+
 // RecordFirstResponse 记录首次响应时间。
 func (s *Store) RecordFirstResponse(ctx context.Context, tenantID int, aggregateType string, aggregateID int, at time.Time) error {
 	n, err := s.client.SLAState.Update().

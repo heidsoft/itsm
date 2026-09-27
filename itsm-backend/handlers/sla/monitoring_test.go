@@ -91,7 +91,7 @@ func seedSLAMonitoringFixture(t *testing.T, client *ent.Client, tenantID int) sl
 	f.changeDefID = changeDef.ID
 
 	// 1) 响应达标 + 解决达标 + 已解决
-	_, err = client.Ticket.Create().
+	ticket1, err := client.Ticket.Create().
 		SetTitle("监控-按时解决-" + uid).
 		SetTicketNumber("TKT-MON-OK-" + uid).
 		SetStatus(common.TicketStatusResolved).
@@ -161,6 +161,45 @@ func seedSLAMonitoringFixture(t *testing.T, client *ent.Client, tenantID int) sl
 		SetCreatedAt(now.Add(-40 * 24 * time.Hour)).
 		Save(ctx)
 	require.NoError(t, err)
+
+	// Phase 3: 为绑定 SLA 的工单创建 sla_states 记录（双写阶段，测试也需同步）
+	createSLAState := func(ticketID, defID int, responseDeadline, resolutionDeadline, firstResponseAt, resolvedAt *time.Time, status string) {
+		b := client.SLAState.Create().
+			SetTenantID(tenantID).
+			SetAggregateType("ticket").
+			SetAggregateID(ticketID).
+			SetStatus(status)
+		if defID > 0 {
+			b.SetSLADefinitionID(defID)
+		}
+		if responseDeadline != nil {
+			b.SetResponseDeadline(*responseDeadline)
+		}
+		if resolutionDeadline != nil {
+			b.SetResolutionDeadline(*resolutionDeadline)
+		}
+		if firstResponseAt != nil {
+			b.SetFirstResponseAt(*firstResponseAt)
+		}
+		if resolvedAt != nil {
+			b.SetResolvedAt(*resolvedAt)
+		}
+		_, err := b.Save(ctx)
+		require.NoError(t, err)
+	}
+	respDeadline1 := now.Add(-9 * time.Hour)
+	resolDeadline1 := now.Add(-2 * time.Hour)
+	frap1 := now.Add(-9*time.Hour - 30*time.Minute)
+	resolved1 := now.Add(-3 * time.Hour)
+	createSLAState(ticket1.ID, incidentDef.ID, &respDeadline1, &resolDeadline1, &frap1, &resolved1, "resolved")
+
+	respDeadline2 := now.Add(-4 * time.Hour)
+	resolDeadline2 := now.Add(19 * time.Hour)
+	frap2 := now.Add(-3 * time.Hour)
+	createSLAState(f.overdueTicket.ID, incidentDef.ID, &respDeadline2, &resolDeadline2, &frap2, nil, "active")
+
+	// littleTicket: bound to changeDef but no deadlines
+	createSLAState(f.littleTicket.ID, changeDef.ID, nil, nil, nil, nil, "active")
 
 	repo := NewEntRepository(client)
 	newViolation := func(ticketID, defID int, vType string, resolved bool) {
@@ -266,8 +305,10 @@ func TestSLAHandler_MonitoringMetricsAreHonestRegression(t *testing.T) {
 		assert.Equal(t, float64(2), slaNum(t, data, "responseTimeSamples"))
 		assert.Equal(t, float64(1), slaNum(t, data, "responseTimeMet"))
 		assert.Equal(t, 50.0, slaNum(t, data, "responseTimeCompliance"))
-		assert.Equal(t, float64(2), slaNum(t, data, "resolutionTimeSamples"))
-		assert.Equal(t, float64(2), slaNum(t, data, "resolutionTimeMet"))
+		// Phase 3: resolution 样本只统计 sla_states 中有 resolution_deadline + resolved_at 的工单
+		// unboundTicket 无 sla_state，即使有内嵌 ResolvedAt 也不再计入
+		assert.Equal(t, float64(1), slaNum(t, data, "resolutionTimeSamples"))
+		assert.Equal(t, float64(1), slaNum(t, data, "resolutionTimeMet"))
 		assert.Equal(t, 100.0, slaNum(t, data, "resolutionTimeCompliance"))
 	})
 
@@ -520,7 +561,8 @@ func TestSLAHandler_PerformanceByServiceType(t *testing.T) {
 	unbound := rows[2]
 	assert.Equal(t, float64(1), slaNum(t, unbound, "totalTickets"))
 	assert.Equal(t, float64(1), slaNum(t, unbound, "resolvedTickets"))
-	assert.Equal(t, float64(1), slaNum(t, unbound, "resolutionSamples"))
+	// Phase 3: 未绑定 SLA 的工单无 sla_state 记录，解决样本数为 0
+	assert.Equal(t, float64(0), slaNum(t, unbound, "resolutionSamples"))
 }
 
 func TestSLAHandler_PerformanceByPriorityAndFilters(t *testing.T) {

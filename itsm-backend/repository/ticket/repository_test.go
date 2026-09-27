@@ -486,6 +486,16 @@ func TestRepository_List_ParentTypeAndOverdueFilters(t *testing.T) {
 	_, err = fx.client.Ticket.UpdateOneID(resolved.ID).SetSLAResolutionDeadline(past).SetStatus(string(StatusResolved)).Save(fx.ctx)
 	require.NoError(t, err)
 
+	// Phase 3: sla_states 是 overdue 过滤的权威源
+	_, err = fx.client.SLAState.Create().
+		SetTenantID(fx.tenant.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(overdue.ID).
+		SetResolutionDeadline(past).
+		SetStatus("active").
+		Save(fx.ctx)
+	require.NoError(t, err)
+
 	problemType := TypeProblem
 	result, err := fx.repo.List(fx.ctx, fx.tenant.ID, &FilterParams{
 		Type: &problemType, ParentTicketID: &parent.ID, IsOverdue: true,

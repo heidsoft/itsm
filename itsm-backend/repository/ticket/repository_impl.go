@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/database"
 	"itsm-backend/ent"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/repository/base"
 
@@ -454,11 +455,33 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 			query = query.Where(ticket.TemplateID(*filters.TemplateID))
 		}
 		if filters.IsOverdue {
-			query = query.Where(
-				ticket.SLAResolutionDeadlineNotNil(),
-				ticket.SLAResolutionDeadlineLT(time.Now()),
-				ticket.StatusNotIn(string(StatusResolved), string(StatusClosed), string(StatusCancelled)),
-			)
+			// Two-phase: find overdue aggregate IDs from sla_states, then filter tickets
+			now := time.Now()
+			slaStates, slaErr := r.Client().SLAState.Query().
+				Where(
+					slastate.TenantIDEQ(tenantID),
+					slastate.AggregateTypeEQ("ticket"),
+					slastate.ResolutionDeadlineNotNil(),
+					slastate.ResolutionDeadlineLT(now),
+					slastate.StatusEQ("active"),
+				).
+				All(ctx)
+			if slaErr != nil {
+				return nil, fmt.Errorf("list tickets: query overdue SLA states: %w", slaErr)
+			}
+			if len(slaStates) == 0 {
+				// No overdue SLA states means no overdue tickets; force empty result
+				query = query.Where(ticket.IDEQ(-1))
+			} else {
+				aggIDs := make([]int, len(slaStates))
+				for i, s := range slaStates {
+					aggIDs[i] = s.AggregateID
+				}
+				query = query.Where(
+					ticket.IDIn(aggIDs...),
+					ticket.StatusNotIn(string(StatusResolved), string(StatusClosed), string(StatusCancelled)),
+				)
+			}
 		}
 		if filters.Keyword != "" {
 			query = query.Where(ticket.Or(
@@ -597,14 +620,36 @@ func (r *EntRepository) FindByRequester(ctx context.Context, requesterID int, te
 // FindOverdue 查询逾期工单
 func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
 	now := time.Now()
+	// Phase 1: get overdue ticket IDs from sla_states
+	slaStates, err := r.Client().SLAState.Query().
+		Where(
+			slastate.TenantIDEQ(tenantID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.ResolutionDeadlineNotNil(),
+			slastate.ResolutionDeadlineLT(now),
+			slastate.StatusEQ("active"),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("find overdue SLA states: %w", err)
+	}
+	if len(slaStates) == 0 {
+		return []*Ticket{}, nil
+	}
+	aggIDs := make([]int, len(slaStates))
+	for i, s := range slaStates {
+		aggIDs[i] = s.AggregateID
+	}
+
+	// Phase 2: fetch tickets by those IDs
 	entities, err := r.Client().Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),
 			ticket.DeletedAtIsNil(),
+			ticket.IDIn(aggIDs...),
 			ticket.StatusNotIn(string(StatusClosed), string(StatusCancelled), string(StatusResolved)),
-			ticket.SLAResolutionDeadlineLT(now),
 		).
-		Order(ent.Asc(ticket.FieldSLAResolutionDeadline)).
+		Order(ent.Asc(ticket.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("find overdue tickets: %w", err)

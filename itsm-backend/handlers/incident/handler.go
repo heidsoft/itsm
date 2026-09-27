@@ -374,7 +374,8 @@ func (h *IncidentHandler) Create(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(created))
+	slaSt, _ := h.service.GetSLAState(c.Request.Context(), tenantID, created.ID)
+	common.Success(c, h.toDTO(created, slaSt))
 }
 
 // Get 事件管理-获取事件详情
@@ -410,7 +411,8 @@ func (h *IncidentHandler) Get(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(incident))
+	slaSt, _ := h.service.GetSLAState(c.Request.Context(), tenantID, incident.ID)
+	common.Success(c, h.toDTO(incident, slaSt))
 }
 
 // parseIncidentTimeFilter 兼容纯日期与 RFC3339 两种前端时间写法。
@@ -524,9 +526,16 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		return
 	}
 
+	// Phase 3 切读：批量加载 SLA 状态，避免 N+1。
+	incidentIDs := make([]int, 0, len(incidents))
+	for _, i := range incidents {
+		incidentIDs = append(incidentIDs, i.ID)
+	}
+	slaStates, _ := h.service.BatchGetSLAStates(c.Request.Context(), tenantID, incidentIDs)
+
 	var dtos []*dto.IncidentResponse
 	for _, i := range incidents {
-		dtos = append(dtos, h.toDTO(i))
+		dtos = append(dtos, h.toDTO(i, slaStates[i.ID]))
 	}
 
 	// 批量回填 reporterName/assigneeName：一次 IN 查询避免 N+1，
@@ -1174,7 +1183,8 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(updated))
+	slaSt, _ := h.service.GetSLAState(c.Request.Context(), tenantID, updated.ID)
+	common.Success(c, h.toDTO(updated, slaSt))
 }
 
 // Escalate 事件管理-升级事件
@@ -1215,10 +1225,11 @@ func (h *IncidentHandler) Escalate(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, h.toDTO(updated))
+	slaSt, _ := h.service.GetSLAState(c.Request.Context(), tenantID, updated.ID)
+	common.Success(c, h.toDTO(updated, slaSt))
 }
 
-func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
+func (h *IncidentHandler) toDTO(i *Incident, slaState *ent.SLAState) *dto.IncidentResponse {
 	if i == nil {
 		return nil
 	}
@@ -1238,6 +1249,50 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 	var resolutionSteps []dto.ResolutionStep
 	if i.ResolutionSteps != nil {
 		dto.MapSliceToStructSlice(i.ResolutionSteps, &resolutionSteps)
+	}
+
+	// Phase 3 切读：SLA 字段从 sla_states 读取，降级到内联字段。
+	var slaDefinitionID *int
+	var slaResponseDeadline *time.Time
+	var slaResolutionDeadline *time.Time
+	var slaFirstResponseAt *time.Time
+	var slaResolvedAt *time.Time
+	var slaStatus string
+	var slaPausedAt *time.Time
+	var slaPauseReason string
+
+	if slaState != nil {
+		if slaState.SLADefinitionID > 0 {
+			id := slaState.SLADefinitionID
+			slaDefinitionID = &id
+		}
+		if !slaState.ResponseDeadline.IsZero() {
+			slaResponseDeadline = &slaState.ResponseDeadline
+		}
+		if !slaState.ResolutionDeadline.IsZero() {
+			slaResolutionDeadline = &slaState.ResolutionDeadline
+		}
+		if !slaState.FirstResponseAt.IsZero() {
+			slaFirstResponseAt = &slaState.FirstResponseAt
+		}
+		if !slaState.ResolvedAt.IsZero() {
+			slaResolvedAt = &slaState.ResolvedAt
+		}
+		slaStatus = slaState.Status
+		if !slaState.PausedAt.IsZero() {
+			slaPausedAt = &slaState.PausedAt
+		}
+		slaPauseReason = slaState.PauseReason
+	} else {
+		// 降级：使用内联字段
+		slaDefinitionID = i.SLADefinitionID
+		slaResponseDeadline = i.SLAResponseDeadline
+		slaResolutionDeadline = i.SLAResolutionDeadline
+		slaFirstResponseAt = i.SLAFirstResponseAt
+		slaResolvedAt = i.SLAResolvedAt
+		slaStatus = i.SLAStatus
+		slaPausedAt = i.SLAPausedAt
+		slaPauseReason = i.SLAPauseReason
 	}
 
 	return &dto.IncidentResponse{
@@ -1263,14 +1318,14 @@ func (h *IncidentHandler) toDTO(i *Incident) *dto.IncidentResponse {
 		ResolutionSteps:       resolutionSteps,
 		DetectedAt:            i.DetectedAt,
 		ResolvedAt:            i.ResolvedAt,
-		SLADefinitionID:       i.SLADefinitionID,
-		SLAResponseDeadline:   i.SLAResponseDeadline,
-		SLAResolutionDeadline: i.SLAResolutionDeadline,
-		SLAFirstResponseAt:    i.SLAFirstResponseAt,
-		SLAResolvedAt:         i.SLAResolvedAt,
-		SLAStatus:             i.SLAStatus,
-		SLAPausedAt:           i.SLAPausedAt,
-		SLAPauseReason:        i.SLAPauseReason,
+		SLADefinitionID:       slaDefinitionID,
+		SLAResponseDeadline:   slaResponseDeadline,
+		SLAResolutionDeadline: slaResolutionDeadline,
+		SLAFirstResponseAt:    slaFirstResponseAt,
+		SLAResolvedAt:         slaResolvedAt,
+		SLAStatus:             slaStatus,
+		SLAPausedAt:           slaPausedAt,
+		SLAPauseReason:        slaPauseReason,
 		ClosedAt:              i.ClosedAt,
 		EscalatedAt:           i.EscalatedAt,
 		EscalationLevel:       i.EscalationLevel,
