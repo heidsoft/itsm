@@ -134,7 +134,39 @@ func TestApproveTicket_BridgeFailClosed(t *testing.T) {
 	assert.Equal(t, 0, recordCount)
 }
 
-// TestApproveTicket_RejectBridgesBPMNTask 拒绝路径：桥接完成流程任务并记录 rejected 决策。
+func TestApproveTicket_WithoutBPMNTaskDoesNotWrite(t *testing.T) {
+	for _, action := range []string{"approve", "reject", "delegate"} {
+		t.Run(action, func(t *testing.T) {
+			client := newApprovalBridgeTestClient(t, "ticket_no_bpmn_"+action)
+			tenantID, actorID := setupBridgeTenantAndActor(t, client, "no-bpmn-"+action)
+			svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+			ctx := context.Background()
+			tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, action)
+			for attempt := 0; attempt < 2; attempt++ {
+				err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+					TicketID: tk.ID, ApprovalID: approval.ID, Action: action, DelegateToUserID: &actorID,
+				}, actorID, tenantID)
+				require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+			}
+			updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
+			require.NoError(t, err)
+			assert.Equal(t, string(dto.ApprovalStatusPending), updatedApproval.Status)
+			updatedTicket, err := client.Ticket.Get(ctx, tk.ID)
+			require.NoError(t, err)
+			assert.Equal(t, "pending", updatedTicket.Status)
+			count, err := client.TicketApproval.Query().Count(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, 1, count)
+			count, err = client.TicketWorkflowRecord.Query().Count(ctx)
+			require.NoError(t, err)
+			assert.Zero(t, count)
+			count, err = client.ProcessApprovalDecision.Query().Count(ctx)
+			require.NoError(t, err)
+			assert.Zero(t, count)
+		})
+	}
+}
+
 func TestApproveTicket_RejectBridgesBPMNTask(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "ticket_bridge_reject")
 	tenantID, actorID := setupBridgeTenantAndActor(t, client, "tk-rej")

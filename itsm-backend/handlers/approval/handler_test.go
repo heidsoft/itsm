@@ -23,8 +23,9 @@ import (
 func setupTestHandler(t *testing.T) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
-	// 创建内存数据库
-	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	// Each test owns an isolated memory database, including repeated test runs.
+	client := enttest.Open(t, "sqlite3", fmt.Sprintf("file:%s?mode=memory&cache=shared&_fk=1", t.Name()))
+	t.Cleanup(func() { require.NoError(t, client.Close()) })
 
 	// 创建 logger
 	logger := zaptest.NewLogger(t).Sugar()

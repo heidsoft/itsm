@@ -62,10 +62,7 @@ func (h *ChangeServiceTaskHandler) Execute(ctx context.Context, task *ent.Proces
 	case "notify_stakeholders":
 		return h.notifyStakeholders(ctx, variables)
 	default:
-		return &dto.ServiceTaskResult{
-			Success: true,
-			Message: "无操作执行",
-		}, nil
+		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
 	}
 }
 

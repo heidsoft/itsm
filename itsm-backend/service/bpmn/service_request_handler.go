@@ -58,7 +58,7 @@ func (h *ServiceRequestServiceTaskHandler) Execute(ctx context.Context, task *en
 	case "cancel_request":
 		return h.cancelRequest(ctx, variables)
 	default:
-		return &dto.ServiceTaskResult{Success: true, Message: "无操作执行"}, nil
+		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
 	}
 }
 

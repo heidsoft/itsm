@@ -3,6 +3,7 @@ package ticket_workflow
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -199,8 +200,7 @@ func (h *Handler) ApproveTicket(c *gin.Context) {
 
 	err := h.workflowService.ApproveTicket(c.Request.Context(), &req, userID, tenantID)
 	if err != nil {
-		h.logger.Errorw("Failed to approve ticket", "error", err, "ticket_id", req.TicketID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "审批失败")
 		return
 	}
 
@@ -213,7 +213,8 @@ func (h *Handler) ApproveTicket(c *gin.Context) {
 	case "delegate":
 		message = "已委派"
 	default:
-		message = "操作成功"
+		common.Fail(c, 1001, fmt.Sprintf("无效的审批操作: %s", req.Action))
+		return
 	}
 
 	common.Success(c, gin.H{"message": message})

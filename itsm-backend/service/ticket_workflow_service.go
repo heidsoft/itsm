@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/connector"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -365,49 +367,42 @@ func (s *TicketWorkflowService) ListTicketCCRecords(ctx context.Context, ticketI
 	return s.buildCCListResponse(ctx, records)
 }
 
+// bpmnFirstMode 返回是否启用 BPMN 优先审批模式。
+// 启用后 ApproveTicket 将 BPMN bridge 调用移入事务内，以 BPMN 流程状态驱动工单状态，
+// 而非依赖 TicketApproval 待办计数。Phase 1 Step 1.2 引入，默认关闭。
+func bpmnFirstMode() bool {
+	return strings.EqualFold(strings.TrimSpace(os.Getenv("ITSM_APPROVAL_BPMN_FIRST")), "true")
+}
+
 // ApproveTicket 审批工单（事务保护，保证审批记录更新、工单状态变更与流转记录的原子性）
 func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.ApproveTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Approving ticket", "ticket_id", req.TicketID, "action", req.Action, "user_id", userID)
 
-	// 检查工单是否存在（读操作，事务外执行）
 	tk, err := s.getTicket(ctx, req.TicketID, tenantID)
 	if err != nil {
 		return err
 	}
 
-	// 检查审批记录是否存在
 	approval, err := s.client.TicketApproval.Query().
 		Where(ticketapproval.ID(req.ApprovalID), ticketapproval.TicketID(req.TicketID), ticketapproval.TenantID(tenantID)).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("审批记录不存在")
+		if ent.IsNotFound(err) {
+			return common.NewBusinessError(common.NotFoundCode, "审批记录不存在", "")
+		}
+		return fmt.Errorf("查询审批记录失败: %w", err)
 	}
 
 	if approval.Status != string(dto.ApprovalStatusPending) {
-		return fmt.Errorf("审批已处理，当前状态: %s", approval.Status)
+		return common.NewBusinessError(common.ConflictCode, "审批已处理", "")
 	}
 
 	if approval.ApproverID != userID {
-		return fmt.Errorf("无权限审批该记录")
+		return common.NewBusinessError(common.ForbiddenCode, "无权限审批该记录", "")
 	}
 
 	approvalLevel := approval.Level
 
-	// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
-	// 无关联运行中流程实例时回退为纯业务审批，兼容未绑定流程的历史工单；
-	// 若存在待办流程任务但完成失败（如操作人不是流程任务的审批人），则中止业务审批，避免双轨分叉。
-	bpmnHandled := false
-	if (req.Action == "approve" || req.Action == "reject") && s.approvalBridge != nil {
-		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
-		)
-		if bridgeErr != nil {
-			return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
-		}
-		bpmnHandled = handled
-	}
-
-	// 确定审批结果状态
 	var newApprovalStatus string
 	switch req.Action {
 	case "approve":
@@ -423,19 +418,135 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		return fmt.Errorf("无效的审批操作: %s", req.Action)
 	}
 
-	// P0-1 延伸：委派同步 BPMN 任务重新指派，保持流程侧审批人与业务侧委派结果一致；
-	// 同步失败时中止业务侧委派，避免流程任务仍停留在原审批人造成双轨分叉。
-	if req.Action == "delegate" && s.approvalBridge != nil {
+	if bpmnFirstMode() {
+		return s.approveTicketBPMNFirst(ctx, req, userID, tenantID, tk, approval, approvalLevel, newApprovalStatus)
+	}
+	return s.approveTicketLegacy(ctx, req, userID, tenantID, tk, approval, approvalLevel, newApprovalStatus)
+}
+
+// approveTicketBPMNFirst BPMN 优先路径：bridge 调用在事务内，工单状态由 BPMN 流程驱动。
+func (s *TicketWorkflowService) approveTicketBPMNFirst(
+	ctx context.Context,
+	req *dto.ApproveTicketRequest,
+	userID, tenantID int,
+	tk *ent.Ticket,
+	approval *ent.TicketApproval,
+	approvalLevel int,
+	newApprovalStatus string,
+) error {
+	// 委派只需重分配 BPMN 任务，不涉及事务性状态写入，在事务外执行。
+	bpmnHandled := false
+	if req.Action == "delegate" {
+		if s.approvalBridge == nil {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
 		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
 			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
 		)
 		if bridgeErr != nil {
 			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
 		}
+		if !handled {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
 		bpmnHandled = handled
 	}
 
-	// 开启事务，保证原子性
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+	txClient := tx.Client()
+
+	// approve/reject 在事务内完成 BPMN 任务，保证流程状态与业务状态原子性。
+	if req.Action == "approve" || req.Action == "reject" {
+		if s.approvalBridge == nil {
+			txErr = common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			return txErr
+		}
+		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+			ctx, txClient, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
+		)
+		if bridgeErr != nil {
+			txErr = fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			return txErr
+		}
+		if !handled {
+			txErr = common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			return txErr
+		}
+		bpmnHandled = handled
+	}
+
+	// TicketApproval 写入保留为读模型（GetTicketWorkflowState / ensureCanViewTicketCC 依赖）。
+	txErr = s.syncTicketApprovalTx(ctx, txClient, req, userID, tenantID, approval, newApprovalStatus)
+	if txErr != nil {
+		return txErr
+	}
+
+	// 工单状态由 BPMN 待办判定，不再依赖 TicketApproval 计数。
+	txErr = s.updateTicketStatusFromBPMN(ctx, txClient, req, tenantID)
+	if txErr != nil {
+		return txErr
+	}
+
+	txErr = s.createApprovalWorkflowRecord(ctx, txClient, req, tk, userID, tenantID, approvalLevel, bpmnHandled)
+	if txErr != nil {
+		return txErr
+	}
+
+	return tx.Commit()
+}
+
+// approveTicketLegacy 旧路径：BPMN bridge 在事务外调用，工单状态由 TicketApproval 计数驱动。
+func (s *TicketWorkflowService) approveTicketLegacy(
+	ctx context.Context,
+	req *dto.ApproveTicketRequest,
+	userID, tenantID int,
+	tk *ent.Ticket,
+	approval *ent.TicketApproval,
+	approvalLevel int,
+	newApprovalStatus string,
+) error {
+	bpmnHandled := false
+	if req.Action == "approve" || req.Action == "reject" {
+		if s.approvalBridge == nil {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
+		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
+		)
+		if bridgeErr != nil {
+			return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+		}
+		if !handled {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
+		bpmnHandled = handled
+	}
+
+	if req.Action == "delegate" {
+		if s.approvalBridge == nil {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
+		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
+			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
+		)
+		if bridgeErr != nil {
+			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
+		}
+		if !handled {
+			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+		}
+		bpmnHandled = handled
+	}
+
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("开启事务失败: %w", err)
@@ -449,7 +560,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 	txClient := tx.Client()
 
-	// 更新审批记录
 	updateBuilder := txClient.TicketApproval.UpdateOneID(req.ApprovalID).
 		SetStatus(newApprovalStatus).
 		SetAction(req.Action).
@@ -466,7 +576,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		return txErr
 	}
 
-	// 如果是委派，创建新的审批记录
 	if req.Action == "delegate" && req.DelegateToUserID != nil {
 		_, err = txClient.TicketApproval.Create().
 			SetTicketID(req.TicketID).
@@ -483,7 +592,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 	}
 
 	if req.Action == "approve" {
-		// 检查是否还有待审批的记录
 		pendingCount, err := txClient.TicketApproval.Query().
 			Where(ticketapproval.TicketID(req.TicketID),
 				ticketapproval.TenantID(tenantID),
@@ -503,7 +611,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 			}
 		}
 	} else if req.Action == "reject" {
-		// 审批拒绝，更新工单状态
 		_, err = txClient.Ticket.UpdateOneID(req.TicketID).
 			SetStatus("rejected").
 			Save(ctx)
@@ -512,7 +619,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 			return txErr
 		}
 
-		// 取消其他待审批记录
 		_, err = txClient.TicketApproval.Update().
 			Where(ticketapproval.TicketID(req.TicketID),
 				ticketapproval.TenantID(tenantID),
@@ -526,7 +632,6 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		}
 	}
 
-	// 记录流转记录
 	action := dto.WorkflowActionApprove
 	if req.Action == "reject" {
 		action = dto.WorkflowActionApproveReject
@@ -559,6 +664,132 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 
 	txErr = tx.Commit()
 	return txErr
+}
+
+// syncTicketApprovalTx 更新 TicketApproval 记录为读模型（BPMN 优先模式下保留向后兼容）。
+func (s *TicketWorkflowService) syncTicketApprovalTx(
+	ctx context.Context,
+	txClient *ent.Client,
+	req *dto.ApproveTicketRequest,
+	userID, tenantID int,
+	approval *ent.TicketApproval,
+	newApprovalStatus string,
+) error {
+	updateBuilder := txClient.TicketApproval.UpdateOneID(req.ApprovalID).
+		SetStatus(newApprovalStatus).
+		SetAction(req.Action).
+		SetComment(req.Comment).
+		SetProcessedAt(time.Now())
+
+	if req.DelegateToUserID != nil {
+		updateBuilder.SetDelegateToUserID(*req.DelegateToUserID)
+	}
+
+	if err := updateBuilder.Exec(ctx); err != nil {
+		return fmt.Errorf("failed to update approval: %w", err)
+	}
+
+	if req.Action == "delegate" && req.DelegateToUserID != nil {
+		_, err := txClient.TicketApproval.Create().
+			SetTicketID(req.TicketID).
+			SetLevel(approval.Level).
+			SetLevelName(approval.LevelName).
+			SetApproverID(*req.DelegateToUserID).
+			SetStatus(string(dto.ApprovalStatusPending)).
+			SetTenantID(tenantID).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("创建委派审批记录失败: %w", err)
+		}
+	}
+
+	if req.Action == "reject" {
+		_, err := txClient.TicketApproval.Update().
+			Where(ticketapproval.TicketID(req.TicketID),
+				ticketapproval.TenantID(tenantID),
+				ticketapproval.Status(string(dto.ApprovalStatusPending)),
+				ticketapproval.IDNEQ(req.ApprovalID)).
+			SetStatus(string(dto.ApprovalStatusCancelled)).
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("取消其他待审批记录失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// updateTicketStatusFromBPMN 根据 BPMN 待办状态决定工单状态（BPMN 优先模式专用）。
+func (s *TicketWorkflowService) updateTicketStatusFromBPMN(
+	ctx context.Context,
+	txClient *ent.Client,
+	req *dto.ApproveTicketRequest,
+	tenantID int,
+) error {
+	switch req.Action {
+	case "approve":
+		if s.approvalBridge == nil {
+			return nil
+		}
+		hasPending, err := s.approvalBridge.HasPendingUserTasksWithClient(
+			ctx, txClient, tenantID, string(dto.BusinessTypeTicket), req.TicketID,
+		)
+		if err != nil {
+			return fmt.Errorf("查询 BPMN 待办状态失败: %w", err)
+		}
+		if !hasPending {
+			_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+				SetStatus("approved").
+				Save(ctx)
+			if err != nil {
+				return fmt.Errorf("更新工单状态为已审批失败: %w", err)
+			}
+		}
+	case "reject":
+		_, err := txClient.Ticket.UpdateOneID(req.TicketID).
+			SetStatus("rejected").
+			Save(ctx)
+		if err != nil {
+			return fmt.Errorf("更新工单状态为已拒绝失败: %w", err)
+		}
+	}
+	return nil
+}
+
+// createApprovalWorkflowRecord 写入审批流转记录。
+func (s *TicketWorkflowService) createApprovalWorkflowRecord(
+	ctx context.Context,
+	txClient *ent.Client,
+	req *dto.ApproveTicketRequest,
+	tk *ent.Ticket,
+	userID, tenantID, approvalLevel int,
+	bpmnHandled bool,
+) error {
+	action := dto.WorkflowActionApprove
+	if req.Action == "reject" {
+		action = dto.WorkflowActionApproveReject
+	} else if req.Action == "delegate" {
+		action = dto.WorkflowActionDelegate
+	}
+
+	metadata := map[string]interface{}{
+		"approval_id":    req.ApprovalID,
+		"approval_level": approvalLevel,
+		"bpmn_handled":   bpmnHandled,
+	}
+	if req.DelegateToUserID != nil {
+		metadata["delegate_to_user_id"] = *req.DelegateToUserID
+	}
+
+	return s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
+		TicketID:   req.TicketID,
+		Action:     action,
+		FromStatus: &tk.Status,
+		Operator:   dto.WorkflowUserInfo{ID: userID},
+		Comment:    req.Comment,
+		CreatedAt:  time.Now(),
+		Metadata:   metadata,
+	}, tenantID)
 }
 
 // ResolveTicket 解决工单（事务保护，保证工单状态更新与流转记录的原子性）
@@ -1608,7 +1839,7 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("工单不存在")
+			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
 		}
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}

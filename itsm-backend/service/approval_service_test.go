@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,6 +12,9 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalrecord"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/operationalcommand"
+	"itsm-backend/internal/commandbus"
+	"itsm-backend/service/bpmn"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,6 +50,85 @@ func createApprovalTestUser(ctx context.Context, client *ent.Client, tenantID in
 		SetActive(true).
 		SetTenantID(tenantID).
 		Save(ctx)
+}
+
+// TestApprovalService_RetiredTaskWorker uses the production engine, registry and
+// command worker: legacy tasks must retry/dead-letter, never advance the process.
+func TestApprovalService_RetiredTaskWorker(t *testing.T) {
+	for _, action := range []string{"approve", "reject", "delegate", "escalate", "unknown"} {
+		t.Run(action, func(t *testing.T) {
+			client, approvalService, ctx := setupApprovalTest(t)
+			defer client.Close()
+			tenant, err := createApprovalTestTenant(ctx, client, "worker")
+			require.NoError(t, err)
+			actor, err := createApprovalTestUser(ctx, client, tenant.ID, "worker")
+			require.NoError(t, err)
+			workflow := client.ApprovalWorkflow.Create().SetName("Legacy workflow").SetTenantID(tenant.ID).
+				SetNodes([]map[string]interface{}{{"level": 1, "allowReject": true, "allowDelegate": true}}).SaveX(ctx)
+			ticket := client.Ticket.Create().SetTitle("Legacy ticket").SetDescription("test").SetTicketNumber("LEGACY-WORKER").
+				SetStatus("open").SetPriority("medium").SetType("ticket").SetRequesterID(actor.ID).SetTenantID(tenant.ID).SaveX(ctx)
+			record := client.ApprovalRecord.Create().SetWorkflowID(workflow.ID).SetWorkflowName(workflow.Name).
+				SetTicketID(ticket.ID).SetTicketNumber(ticket.TicketNumber).SetTicketTitle(ticket.Title).
+				SetApproverID(actor.ID).SetApproverName(actor.Name).SetCurrentLevel(1).SetTotalLevels(1).
+				SetStepOrder(1).SetStatus("pending").SetTenantID(tenant.ID).SaveX(ctx)
+			deployment := client.ProcessDeployment.Create().SetDeploymentID("DEP-RETIRED").SetDeploymentName("retired").SetTenantID(tenant.ID).SaveX(ctx)
+			xml := strings.ReplaceAll(durableServiceTaskBPMN, "test_durable_handler", "approval_task")
+			client.ProcessDefinition.Create().SetKey("retiredService").SetName("retired").SetBpmnXML([]byte(xml)).
+				SetDeploymentID(deployment.ID).SetTenantID(tenant.ID).SetIsActive(true).SetIsLatest(true).SaveX(ctx)
+			logger := zaptest.NewLogger(t).Sugar()
+			engine := NewCustomProcessEngine(client, logger).(*CustomProcessEngine)
+			engine.SetApprovalService(approvalService)
+			workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenant.ID)
+			// Persisted legacy BPMN variables use snake_case, not a new API contract.
+			instance, err := engine.StartProcess(workflowCtx, "retiredService", "ticket:legacy", map[string]interface{}{
+				"action": action, "tenant_id": tenant.ID, "user_id": actor.ID,
+				"approval_id": record.ID, "delegate_to_user_id": actor.ID,
+			})
+			require.NoError(t, err)
+			cmd := client.OperationalCommand.Query().Where(
+				operationalcommand.CommandTypeEQ(commandbus.CommandExecuteBPMNServiceTask),
+				operationalcommand.TenantIDEQ(tenant.ID), operationalcommand.AggregateIDEQ(instance.ID),
+			).OnlyX(ctx)
+			client.OperationalCommand.UpdateOneID(cmd.ID).SetMaxAttempts(2).SaveX(ctx)
+			instance = client.ProcessInstance.GetX(ctx, instance.ID)
+			businessMutations := 0
+			client.Use(func(next ent.Mutator) ent.Mutator {
+				return ent.MutateFunc(func(ctx context.Context, mutation ent.Mutation) (ent.Value, error) {
+					if mutation.Type() != "OperationalCommand" {
+						businessMutations++
+					}
+					return next.Mutate(ctx, mutation)
+				})
+			})
+			registry := commandbus.NewRegistry()
+			require.NoError(t, registry.Register(commandbus.CommandExecuteBPMNServiceTask, engine.HandleBPMNServiceTaskCommand))
+			worker := commandbus.NewWorker(client, registry, logger, "retired-approval-test")
+			for attempt := 1; attempt <= 2; attempt++ {
+				// Make the retry due only in this isolated memory database; no sleep.
+				client.OperationalCommand.UpdateOneID(cmd.ID).SetAvailableAt(time.Now().Add(-time.Second)).SaveX(ctx)
+				processed, err := worker.RunOnce(ctx)
+				require.NoError(t, err, "worker persists handler failures instead of returning them")
+				require.True(t, processed)
+				stored := client.OperationalCommand.GetX(ctx, cmd.ID)
+				assert.Equal(t, attempt, stored.Attempt)
+				assert.Equal(t, cmd.IdempotencyKey, stored.IdempotencyKey)
+				assert.Contains(t, stored.LastError, bpmn.ErrLegacyApprovalTaskRetired.Error())
+				if attempt == 1 {
+					assert.Equal(t, commandbus.StatusPending, stored.Status)
+				} else {
+					assert.Equal(t, commandbus.StatusDeadLetter, stored.Status)
+				}
+			}
+			assert.Zero(t, businessMutations)
+			unchanged := client.ProcessInstance.GetX(ctx, instance.ID)
+			assert.Equal(t, instance.Status, unchanged.Status)
+			assert.Equal(t, instance.CurrentActivityID, unchanged.CurrentActivityID)
+			assert.Empty(t, unchanged.Variables["_serviceTaskCompletedOccurrences"])
+			assert.Equal(t, "pending", client.ApprovalRecord.GetX(ctx, record.ID).Status)
+			assert.Equal(t, "open", client.Ticket.GetX(ctx, ticket.ID).Status)
+			assert.Equal(t, 1, client.ApprovalRecord.Query().CountX(ctx))
+		})
+	}
 }
 
 // ==================== 创建审批工作流测试 ====================
@@ -549,7 +632,7 @@ func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testi
 	assert.Equal(t, 0, recordCount, "Phase 2: No ApprovalRecord should be created after multiple calls")
 }
 
-func TestApprovalService_SubmitApproval_Approve_UpdatesTicketWhenLastPending(t *testing.T) {
+func TestApprovalService_SubmitApproval_Approve_RetiredPreservesLastPending(t *testing.T) {
 	client, service, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -603,21 +686,25 @@ func TestApprovalService_SubmitApproval_Approve_UpdatesTicketWhenLastPending(t *
 		Save(ctx)
 	require.NoError(t, err)
 
-	err = service.SubmitApproval(ctx, record.ID, approver.ID, "approve", "ok", nil, testTenant.ID)
-	require.NoError(t, err)
+	for attempt := 0; attempt < 2; attempt++ {
+		err = service.SubmitApproval(ctx, record.ID, approver.ID, "approve", "ok", nil, testTenant.ID)
+		require.ErrorIs(t, err, ErrLegacyApprovalRetired)
+	}
 
 	updatedRecord, err := client.ApprovalRecord.Get(ctx, record.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "approved", updatedRecord.Status)
-	assert.Equal(t, "approve", updatedRecord.Action)
-	assert.False(t, updatedRecord.ProcessedAt.IsZero())
+	assert.Equal(t, "pending", updatedRecord.Status)
+	assert.Empty(t, updatedRecord.Action)
+	assert.Empty(t, updatedRecord.Comment)
+	assert.True(t, updatedRecord.ProcessedAt.IsZero())
 
 	updatedTicket, err := client.Ticket.Get(ctx, ticketEntity.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "approved", updatedTicket.Status)
+	assert.Equal(t, "open", updatedTicket.Status)
+	assert.True(t, ticketEntity.UpdatedAt.Equal(updatedTicket.UpdatedAt))
 }
 
-func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *testing.T) {
+func TestApprovalService_SubmitApproval_Delegate_RetiredCreatesNoRecord(t *testing.T) {
 	client, service, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -677,12 +764,18 @@ func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *test
 		Save(ctx)
 	require.NoError(t, err)
 
-	err = service.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &delegate.ID, testTenant.ID)
-	require.NoError(t, err)
+	for attempt := 0; attempt < 2; attempt++ {
+		err = service.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &delegate.ID, testTenant.ID)
+		require.ErrorIs(t, err, ErrLegacyApprovalRetired)
+	}
 
 	updatedRecord, err := client.ApprovalRecord.Get(ctx, record.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "delegated", updatedRecord.Status)
+	assert.Equal(t, "pending", updatedRecord.Status)
+	assert.Empty(t, updatedRecord.Action)
+	assert.True(t, updatedRecord.ProcessedAt.IsZero())
+	require.NotNil(t, updatedRecord.DueDate)
+	assert.True(t, record.DueDate.Equal(*updatedRecord.DueDate))
 
 	records, err := client.ApprovalRecord.Query().
 		Where(
@@ -692,20 +785,14 @@ func TestApprovalService_SubmitApproval_Delegate_CreatesNewPendingRecord(t *test
 		).
 		All(ctx)
 	require.NoError(t, err)
-	require.Len(t, records, 2)
-
-	var pendingCount int
-	for _, r := range records {
-		if r.Status == "pending" {
-			pendingCount++
-			assert.Equal(t, delegate.ID, r.ApproverID)
-			assert.Equal(t, delegate.Name, r.ApproverName)
-		}
-	}
-	assert.Equal(t, 1, pendingCount)
+	require.Len(t, records, 1)
+	assert.Equal(t, approver.ID, records[0].ApproverID)
+	updatedTicket, err := client.Ticket.Get(ctx, ticketEntity.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "open", updatedTicket.Status)
 }
 
-func TestApprovalService_SubmitApproval_RollsBackWhenDelegationFails(t *testing.T) {
+func TestApprovalService_SubmitApproval_RetiredWithMissingDelegate(t *testing.T) {
 	client, approvalService, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -754,8 +841,10 @@ func TestApprovalService_SubmitApproval_RollsBackWhenDelegationFails(t *testing.
 	require.NoError(t, err)
 
 	missingDelegateID := 999999
-	err = approvalService.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &missingDelegateID, tenant.ID)
-	require.Error(t, err)
+	for attempt := 0; attempt < 2; attempt++ {
+		err = approvalService.SubmitApproval(ctx, record.ID, approver.ID, "delegate", "", &missingDelegateID, tenant.ID)
+		require.ErrorIs(t, err, ErrLegacyApprovalRetired)
+	}
 
 	unchanged, err := client.ApprovalRecord.Get(ctx, record.ID)
 	require.NoError(t, err)

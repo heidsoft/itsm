@@ -1,14 +1,13 @@
 package approval
 
 import (
-	"errors"
+	"net/http"
 	"strconv"
 	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -289,62 +288,29 @@ func (h *Handler) GetApprovalRecords(c *gin.Context) {
 	})
 }
 
-// SubmitApproval 提交审批
-// Deprecated: This API is deprecated. Use POST /api/v1/bpmn/tasks/:id/decisions instead.
-// Sunset: Sat, 01 Nov 2026 00:00:00 GMT
+// legacyApprovalRetiredCode is the stable business code for retired submissions.
+const legacyApprovalRetiredCode = 4100
+
+// SubmitApproval keeps both legacy routes visible but permanently rejects writes.
+// Deprecated: use POST /api/v1/bpmn/tasks/:id/decisions with a BPMN task ID.
 func (h *Handler) SubmitApproval(c *gin.Context) {
-	zap.S().Warnw("Deprecated API called", "path", c.FullPath(), "method", "POST /approvals/submit", "successor", "POST /api/v1/bpmn/tasks/:id/decisions")
-	c.Header("Deprecation", "true")
-	c.Header("Sunset", "Sat, 01 Nov 2026 00:00:00 GMT")
-	c.Header("Link", `</api/v1/bpmn/tasks/:id/decisions>; rel="successor-version"`)
-
-	var req struct {
-		TicketID         int    `json:"ticketId" binding:"required"`
-		ApprovalID       int    `json:"approvalId" binding:"required"`
-		Action           string `json:"action" binding:"required,oneof=approve reject delegate"`
-		Comment          string `json:"comment"`
-		DelegateToUserID *int   `json:"delegateToUserId,omitempty"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
-		return
-	}
-
 	tid, ok := tenantID(c)
 	if !ok {
 		return
 	}
-
 	uid, ok := userID(c)
 	if !ok {
 		return
 	}
 
-	if err := h.approvalService.SubmitApproval(
-		c.Request.Context(),
-		req.ApprovalID,
-		uid,
-		req.Action,
-		req.Comment,
-		req.DelegateToUserID,
-		tid,
-	); err != nil {
-		// 按领域哨兵错误分流：并发冲突/越级 → 409，记录不存在 → 404，
-		// 非指定审批人 → 403；仅真实故障保留 500（T-2 观察项修复）。
-		switch {
-		case errors.Is(err, service.ErrApprovalRecordProcessed),
-			errors.Is(err, service.ErrApprovalOutOfOrder):
-			common.Conflict(c, err.Error(), nil)
-		case errors.Is(err, service.ErrApprovalRecordNotFound):
-			common.Fail(c, common.NotFoundCode, "审批记录不存在")
-		case errors.Is(err, service.ErrApprovalNotAuthorized):
-			common.Fail(c, common.ForbiddenCode, "当前用户不是该审批记录的指定审批人")
-		default:
-			common.Fail(c, common.InternalErrorCode, "提交审批失败: "+err.Error())
-		}
-		return
-	}
-
-	common.Success(c, map[string]string{"message": "审批已提交"})
+	// Do not parse or look up legacy IDs: no payload may reactivate this path,
+	// reveal record existence, or implicitly migrate historical approval data.
+	zap.S().Warnw("Legacy approval submission rejected", "path", c.FullPath(),
+		"tenantId", tid, "actorId", uid, "errorClass", "legacy_approval_retired")
+	c.Header("Deprecation", "true")
+	c.Header("Link", `</api/v1/bpmn/tasks/:id/decisions>; rel="successor-version"`)
+	c.AbortWithStatusJSON(http.StatusGone, common.Response{
+		Code:    legacyApprovalRetiredCode,
+		Message: "旧审批提交已退役，请使用 BPMN 用户任务审批接口；历史记录仍可查询，不会自动迁移或删除。请使用 BPMN 任务 ID，勿复用旧审批记录 ID。",
+	})
 }

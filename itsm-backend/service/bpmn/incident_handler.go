@@ -59,7 +59,7 @@ func (h *IncidentServiceTaskHandler) Execute(ctx context.Context, task *ent.Proc
 	case "categorize_incident":
 		return h.categorizeIncident(ctx, variables)
 	default:
-		return &dto.ServiceTaskResult{Success: true, Message: "无操作执行"}, nil
+		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
 	}
 }
 

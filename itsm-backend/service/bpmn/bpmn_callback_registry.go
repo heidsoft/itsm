@@ -146,6 +146,8 @@ func (r *CallbackRegistry) registerDefaultHandlers() {
 	r.RegisterHandler(NewNotificationHandler(r.client, r.logger))
 	// 注册审批处理器
 	r.RegisterHandler(NewApprovalHandler(r.client, r.logger))
+	// 注册审批链配置读取处理器
+	r.RegisterHandler(NewApprovalChainServiceTaskHandler(r.client, r.logger))
 	// 注册Webhook处理器
 	// 注册抄送处理器
 	r.RegisterHandler(NewCCTaskHandler(r.client, r.logger))
@@ -177,6 +179,17 @@ func (r *CallbackRegistry) SetApprovalService(svc ApprovalServiceInterface) {
 	if h, ok := r.handlers["approval_handler"]; ok {
 		if ah, ok := h.(*ApprovalHandler); ok {
 			ah.SetApprovalService(svc)
+		}
+	}
+}
+
+// SetApprovalChainService 将 ApprovalChainResolver 注入到 ApprovalChainServiceTaskHandler（避免循环依赖）。
+func (r *CallbackRegistry) SetApprovalChainResolver(resolver ApprovalChainResolver) {
+	r.handlersMu.Lock()
+	defer r.handlersMu.Unlock()
+	if h, ok := r.handlers["approval_chain_handler"]; ok {
+		if ah, ok := h.(*ApprovalChainServiceTaskHandler); ok {
+			ah.SetApprovalChainResolver(resolver)
 		}
 	}
 }

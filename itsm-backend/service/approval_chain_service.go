@@ -204,6 +204,24 @@ func (s *ApprovalChainService) DeleteApprovalChain(ctx context.Context, id int, 
 	return nil
 }
 
+// ShadowCompare 影子双轨比较：旧路径（直接调用 ResolveApprovalPlan）已执行，
+// 新路径（经 ApprovalChainResolverAdapter）影子执行并对比结果，差异写日志。
+// 返回影子路径的结果供调用方审计。
+func (s *ApprovalChainService) ShadowCompare(
+	ctx context.Context,
+	tenantID int,
+	entityType string,
+	evalCtx ApprovalEvalContext,
+	approvals map[int][]int,
+	directPlan *ApprovalChainEvaluation,
+	directErr error,
+) *ShadowResult {
+	adapter := NewApprovalChainResolverAdapter(s.client, s.logger, s)
+	comparator := NewApprovalChainShadowComparator(adapter, s.logger)
+	result := comparator.Compare(ctx, tenantID, entityType, evalCtx.RequesterID, evalCtx.Priority, evalCtx.Amount, approvals, directPlan, directErr)
+	return &result
+}
+
 // GetApprovalChainStats 获取审批链统计
 func (s *ApprovalChainService) GetApprovalChainStats(ctx context.Context, tenantID int) (*dto.ApprovalChainStats, error) {
 	chains, err := s.client.ApprovalChain.Query().

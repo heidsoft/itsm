@@ -214,6 +214,11 @@ func (e *CustomProcessEngine) SetApprovalService(svc bpmn.ApprovalServiceInterfa
 	e.callbackRegistry.SetApprovalService(svc)
 }
 
+// SetApprovalChainResolver 注入审批链求值器，解决循环依赖
+func (e *CustomProcessEngine) SetApprovalChainResolver(resolver bpmn.ApprovalChainResolver) {
+	e.callbackRegistry.SetApprovalChainResolver(resolver)
+}
+
 // requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文（P1-4 fail-closed）。
 // 无租户上下文或 tenantID<=0 一律返回错误，禁止跨租户回退到全局无过滤查询。
 func requireBPMNTenantContext(ctx context.Context) (int, error) {

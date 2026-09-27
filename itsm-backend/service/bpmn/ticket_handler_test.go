@@ -448,16 +448,13 @@ func TestTicketServiceTaskHandler_Execute(t *testing.T) {
 			checkResult:   nil,
 		},
 		{
-			name: "默认动作",
+			name: "未知动作返回错误",
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "unknown_action",
 			},
-			expectedError: false,
-			checkResult: func(t *testing.T, result *dto.ServiceTaskResult) {
-				assert.True(t, result.Success)
-				assert.Equal(t, "无操作执行", result.Message)
-			},
+			expectedError: true,
+			checkResult:   nil,
 		},
 	}
 
@@ -525,4 +522,29 @@ func TestTicketServiceTaskHandler_Validate(t *testing.T) {
 
 	err := handler.Validate(ctx, config)
 	assert.NoError(t, err)
+}
+
+func TestTicketServiceTaskHandler_GetTenantID_FailClosed(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:ent_tenant_fail?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zaptest.NewLogger(t).Sugar()
+	handler := NewTicketServiceTaskHandler(client, logger)
+
+	t.Run("无上下文且无 variables 返回 0", func(t *testing.T) {
+		ctx := context.Background()
+		assert.Equal(t, 0, handler.getTenantID(ctx, nil))
+	})
+
+	t.Run("variables 含 tenant_id 也不回退", func(t *testing.T) {
+		ctx := context.Background()
+		vars := map[string]interface{}{"tenant_id": 42}
+		assert.Equal(t, 0, handler.getTenantID(ctx, vars),
+			"getTenantID 不得从 variables 取租户ID，防止跨租户注入")
+	})
+
+	t.Run("上下文有租户则返回", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), BPMNTenantIDContextKey, 7)
+		assert.Equal(t, 7, handler.getTenantID(ctx, nil))
+	})
 }

@@ -205,6 +205,44 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 	return handled, nil
 }
 
+// HasPendingUserTasksWithClient 检查指定业务键是否仍有待办 BPMN 用户任务（事务内）。
+// 用于审批完成后判定业务状态：approve 后无剩余待办 → 全部审批通过。
+func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (bool, error) {
+	businessKey := fmt.Sprintf("%s:%d", strings.ToLower(businessType), businessID)
+	instance, err := client.ProcessInstance.Query().
+		Where(
+			processinstance.BusinessKey(businessKey),
+			processinstance.TenantID(tenantID),
+			processinstance.Status("running"),
+		).
+		Order(ent.Desc(processinstance.FieldStartTime)).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+	}
+
+	exists, err := client.ProcessTask.Query().
+		Where(
+			processtask.ProcessInstanceID(instance.ID),
+			processtask.TenantID(tenantID),
+			processtask.TaskType("user_task"),
+			processtask.StatusIn(
+				common.ProcessTaskStatusCreated,
+				common.ProcessTaskStatusAssigned,
+				common.ProcessTaskStatusStarted,
+				common.ProcessTaskStatusDelegated,
+			),
+		).
+		Exist(ctx)
+	if err != nil {
+		return false, fmt.Errorf("查询流程待办任务失败: %w", err)
+	}
+	return exists, nil
+}
+
 func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
 	return b.findPendingApprovalTaskWithClient(ctx, b.client, tenantID, businessType, businessID)
 }
@@ -244,7 +282,7 @@ func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Conte
 		if ent.IsNotFound(err) {
 			b.logger.Warnw("业务审批桥接：流程实例无待办用户任务",
 				"businessKey", businessKey, "processInstanceID", instance.ID)
-			return nil, nil, nil
+			return instance, nil, nil
 		}
 		return nil, nil, fmt.Errorf("查询流程待办任务失败: %w", err)
 	}

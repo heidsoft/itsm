@@ -61,21 +61,11 @@ func (h *TicketServiceTaskHandler) GetHandlerID() string {
 	return "ticket_service_handler"
 }
 
-func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, variables map[string]interface{}) int {
+func (h *TicketServiceTaskHandler) getTenantID(ctx context.Context, _ map[string]interface{}) int {
 	if tenantID, ok := ctx.Value(BPMNTenantIDContextKey).(int); ok && tenantID > 0 {
 		return tenantID
 	}
-	if variables == nil {
-		return 0
-	}
-	switch v := variables["tenant_id"].(type) {
-	case int:
-		return v
-	case float64:
-		return int(v)
-	default:
-		return 0
-	}
+	return 0
 }
 
 func (h *TicketServiceTaskHandler) getTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
@@ -119,10 +109,7 @@ func (h *TicketServiceTaskHandler) Execute(ctx context.Context, task *ent.Proces
 		// 分配任务
 		return h.assignTicket(ctx, businessID, variables)
 	default:
-		return &dto.ServiceTaskResult{
-			Success: true,
-			Message: "无操作执行",
-		}, nil
+		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
 	}
 }
 

@@ -16,141 +16,23 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// ============================================================
-// 表驱动测试：canPerformAction
-// 覆盖阶段二重构的核心方法，验证强类型 ApprovalNodeConfig 的权限判断
-// ============================================================
-
-func TestCanPerformAction_TableDriven(t *testing.T) {
-	// 构造测试用的工作流（不同 level 有不同的权限配置）
-	min5 := 5
-	timeout24 := 24
-
-	workflows := map[string]*ent.ApprovalWorkflow{
-		"empty_nodes": {
-			Nodes: []map[string]interface{}{},
-		},
-		"level1_reject_yes_delegate_no": {
-			Nodes: []map[string]interface{}{
-				{
-					"level":         1,
-					"allowReject":   true,
-					"allowDelegate": false,
-					"approvalMode":  "any",
-					"approverType":  "user",
-					"approverIds":   []interface{}{1},
-					"rejectAction":  "end",
-					"name":          "L1",
-				},
-			},
-		},
-		"level1_reject_no_delegate_yes": {
-			Nodes: []map[string]interface{}{
-				{
-					"level":         1,
-					"allowReject":   false,
-					"allowDelegate": true,
-					"approvalMode":  "any",
-					"approverType":  "user",
-					"approverIds":   []interface{}{1},
-					"rejectAction":  "end",
-					"name":          "L1",
-				},
-			},
-		},
-		"multi_level": {
-			Nodes: []map[string]interface{}{
-				{
-					"level":         1,
-					"allowReject":   true,
-					"allowDelegate": false,
-					"approvalMode":  "any",
-					"approverType":  "user",
-					"approverIds":   []interface{}{1},
-					"rejectAction":  "end",
-					"name":          "L1",
-				},
-				{
-					"level":         2,
-					"allowReject":   false,
-					"allowDelegate": true,
-					"approvalMode":  "all",
-					"approverType":  "user",
-					"approverIds":   []interface{}{2, 3},
-					"rejectAction":  "return",
-					"name":          "L2",
-				},
-			},
-		},
-		"with_optional_fields": {
-			Nodes: []map[string]interface{}{
-				{
-					"level":            1,
-					"allowReject":      true,
-					"allowDelegate":    true,
-					"approvalMode":     "all",
-					"approverType":     "user",
-					"approverIds":      []interface{}{1, 2},
-					"rejectAction":     "end",
-					"name":             "L1",
-					"minimumApprovals": min5,
-					"timeoutHours":     timeout24,
-				},
-			},
-		},
-	}
-
-	service := &ApprovalService{
-		client: nil, // canPerformAction 不使用 client
-		logger: zaptest.NewLogger(t).Sugar(),
-	}
-
-	tests := []struct {
-		name        string
-		workflowKey string
-		level       int
-		action      string
-		want        bool
-	}{
-		// 空节点 → 缺配置默认拒绝（H2 修复：fail-closed，避免无节点配置被绕过）
-		{"empty_nodes approve", "empty_nodes", 1, "approve", false},
-		{"empty_nodes reject", "empty_nodes", 1, "reject", false},
-		{"empty_nodes delegate", "empty_nodes", 1, "delegate", false},
-
-		// Level1: allow_reject=true, allow_delegate=false
-		{"reject_yes approve", "level1_reject_yes_delegate_no", 1, "approve", true},
-		{"reject_yes reject", "level1_reject_yes_delegate_no", 1, "reject", true},
-		{"reject_yes delegate_no", "level1_reject_yes_delegate_no", 1, "delegate", false},
-
-		// Level1: allow_reject=false, allow_delegate=true
-		{"reject_no delegate_yes approve", "level1_reject_no_delegate_yes", 1, "approve", true},
-		{"reject_no reject", "level1_reject_no_delegate_yes", 1, "reject", false},
-		{"reject_no delegate_yes", "level1_reject_no_delegate_yes", 1, "delegate", true},
-
-		// 多级工作流
-		{"multi L1 approve", "multi_level", 1, "approve", true},
-		{"multi L1 reject", "multi_level", 1, "reject", true},
-		{"multi L1 delegate", "multi_level", 1, "delegate", false},
-		{"multi L2 approve", "multi_level", 2, "approve", true},
-		{"multi L2 reject", "multi_level", 2, "reject", false},
-		{"multi L2 delegate", "multi_level", 2, "delegate", true},
-
-		// 找不到对应的 level → 缺配置默认拒绝（H2 修复：fail-closed）
-		{"level_not_found approve", "level1_reject_yes_delegate_no", 99, "approve", false},
-		{"level_not_found reject", "level1_reject_yes_delegate_no", 99, "reject", false},
-		{"level_not_found delegate", "level1_reject_yes_delegate_no", 99, "delegate", false},
-
-		// 带 optional fields 的节点
-		{"optional_fields approve", "with_optional_fields", 1, "approve", true},
-		{"optional_fields reject", "with_optional_fields", 1, "reject", true},
-		{"optional_fields delegate", "with_optional_fields", 1, "delegate", true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			workflow := workflows[tt.workflowKey]
-			got := service.canPerformAction(workflow, tt.level, tt.action)
-			assert.Equal(t, tt.want, got)
+// TestSubmitApproval_RetiredWithoutDependencies replaces the retired permission
+// helper tests: no action or caller identity can reactivate the legacy writer.
+func TestSubmitApproval_RetiredWithoutDependencies(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	for _, action := range []string{"approve", "reject", "delegate", "escalate", "unknown", ""} {
+		t.Run(action, func(t *testing.T) {
+			for _, tenantID := range []int{0, -1, 7} {
+				for _, actorID := range []int{0, -1, 11} {
+					for _, svc := range []*ApprovalService{nil, NewApprovalService(nil, nil)} {
+						for attempt := 0; attempt < 2; attempt++ {
+							err := svc.SubmitApproval(ctx, 23, actorID, action, "private comment", nil, tenantID)
+							require.ErrorIs(t, err, ErrLegacyApprovalRetired)
+						}
+					}
+				}
+			}
 		})
 	}
 }
@@ -733,11 +615,11 @@ func TestMapsToNodesUnsafe_InvalidInput(t *testing.T) {
 }
 
 // ============================================================
-// 表驱动测试：SubmitApproval reject path
-// 验证拒绝操作的终止行为
+// 表驱动测试：SubmitApproval retired reject path
+// 退役后拒绝操作及重试不得裁决工单或取消后续审批记录。
 // ============================================================
 
-func TestSubmitApproval_Reject_TerminatesWorkflow(t *testing.T) {
+func TestSubmitApproval_Reject_RetiredPreservesWorkflow(t *testing.T) {
 	client, service, ctx := setupApprovalTest(t)
 	defer client.Close()
 
@@ -814,25 +696,28 @@ func TestSubmitApproval_Reject_TerminatesWorkflow(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// 审批人1拒绝
-	err = service.SubmitApproval(ctx, record1.ID, approver.ID, "reject", "rejected by approver", nil, tenant.ID)
-	require.NoError(t, err)
+	for attempt := 0; attempt < 2; attempt++ {
+		err = service.SubmitApproval(ctx, record1.ID, approver.ID, "reject", "rejected by approver", nil, tenant.ID)
+		require.ErrorIs(t, err, ErrLegacyApprovalRetired)
+	}
 
-	// 验证 record1 被标记为 rejected
+	// Retirement preserves both the submitted record and the next pending level.
 	updatedRecord1, err := client.ApprovalRecord.Get(ctx, record1.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "rejected", updatedRecord1.Status)
-	assert.Equal(t, "reject", updatedRecord1.Action)
+	assert.Equal(t, "pending", updatedRecord1.Status)
+	assert.Empty(t, updatedRecord1.Action)
+	assert.Empty(t, updatedRecord1.Comment)
+	assert.True(t, updatedRecord1.ProcessedAt.IsZero())
 
-	// 验证 record2 被取消（terminate 行为）
 	updatedRecord2, err := client.ApprovalRecord.Get(ctx, record2.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "cancelled", updatedRecord2.Status)
+	assert.Equal(t, "pending", updatedRecord2.Status)
+	assert.Empty(t, updatedRecord2.Action)
+	assert.True(t, updatedRecord2.ProcessedAt.IsZero())
 
-	// 验证工单状态变为 rejected
 	updatedTicket, err := client.Ticket.Get(ctx, ticket.ID)
 	require.NoError(t, err)
-	assert.Equal(t, "rejected", updatedTicket.Status)
+	assert.Equal(t, "open", updatedTicket.Status)
 }
 
 // ============================================================
@@ -847,34 +732,24 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 		userID       int
 		delegateTo   *int
 		recordStatus string
-		wantErr      bool
-		errContains  string
 	}{
 		{
 			name:         "wrong user rejected",
 			action:       "approve",
 			userID:       99999, // 不存在的用户
 			recordStatus: "pending",
-			wantErr:      true,
-			errContains:  "not authorized",
 		},
 		{
 			name:         "already processed record",
 			action:       "approve",
 			userID:       0, // 会在测试中设为正确的 approver ID
 			recordStatus: "approved",
-			wantErr:      true,
-			// 哨兵语义：非 pending 记录按"记录不存在"处理（→ handler 层 404），
-			// 并发竞态落败（pending→被抢）才映射 409 ErrApprovalRecordProcessed
-			errContains: ErrApprovalRecordNotFound.Error(),
 		},
 		{
 			name:         "invalid action",
 			action:       "invalid_action",
 			userID:       0,
 			recordStatus: "pending",
-			wantErr:      true,
-			errContains:  "invalid action",
 		},
 		{
 			name:         "delegate without target user",
@@ -882,8 +757,6 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 			userID:       0,
 			delegateTo:   nil,
 			recordStatus: "pending",
-			wantErr:      true,
-			errContains:  "delegate_to_user_id is required",
 		},
 	}
 
@@ -952,16 +825,16 @@ func TestSubmitApproval_ErrorPaths_TableDriven(t *testing.T) {
 				userID = approver.ID
 			}
 
-			err = service.SubmitApproval(ctx, record.ID, userID, tt.action, "comment", tt.delegateTo, tenant.ID)
-
-			if tt.wantErr {
-				require.Error(t, err)
-				if tt.errContains != "" {
-					assert.Contains(t, err.Error(), tt.errContains)
-				}
-			} else {
-				assert.NoError(t, err)
+			for attempt := 0; attempt < 2; attempt++ {
+				err = service.SubmitApproval(ctx, record.ID, userID, tt.action, "comment", tt.delegateTo, tenant.ID)
+				require.ErrorIs(t, err, ErrLegacyApprovalRetired)
 			}
+			unchanged, err := client.ApprovalRecord.Get(ctx, record.ID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.recordStatus, unchanged.Status)
+			assert.Empty(t, unchanged.Action)
+			assert.Empty(t, unchanged.Comment)
+			assert.True(t, unchanged.ProcessedAt.IsZero())
 		})
 	}
 }
