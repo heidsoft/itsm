@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"time"
@@ -224,6 +225,21 @@ func (_c *SLADefinitionCreate) AddAlertRules(v ...*SLAAlertRule) *SLADefinitionC
 		ids[i] = v[i].ID
 	}
 	return _c.AddAlertRuleIDs(ids...)
+}
+
+// AddStateIDs adds the "states" edge to the SLAState entity by IDs.
+func (_c *SLADefinitionCreate) AddStateIDs(ids ...int) *SLADefinitionCreate {
+	_c.mutation.AddStateIDs(ids...)
+	return _c
+}
+
+// AddStates adds the "states" edges to the SLAState entity.
+func (_c *SLADefinitionCreate) AddStates(v ...*SLAState) *SLADefinitionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddStateIDs(ids...)
 }
 
 // Mutation returns the SLADefinitionMutation object of the builder.
@@ -461,6 +477,22 @@ func (_c *SLADefinitionCreate) createSpec() (*SLADefinition, *sqlgraph.CreateSpe
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.StatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -48,6 +48,8 @@ const (
 	EdgeTickets = "tickets"
 	// EdgeAlertRules holds the string denoting the alert_rules edge name in mutations.
 	EdgeAlertRules = "alert_rules"
+	// EdgeStates holds the string denoting the states edge name in mutations.
+	EdgeStates = "states"
 	// Table holds the table name of the sladefinition in the database.
 	Table = "sla_definitions"
 	// ViolationsTable is the table that holds the violations relation/edge.
@@ -78,6 +80,13 @@ const (
 	AlertRulesInverseTable = "sla_alert_rules"
 	// AlertRulesColumn is the table column denoting the alert_rules relation/edge.
 	AlertRulesColumn = "sla_definition_id"
+	// StatesTable is the table that holds the states relation/edge.
+	StatesTable = "sla_states"
+	// StatesInverseTable is the table name for the SLAState entity.
+	// It exists in this package in order to avoid circular dependency with the "slastate" package.
+	StatesInverseTable = "sla_states"
+	// StatesColumn is the table column denoting the states relation/edge.
+	StatesColumn = "sla_definition_id"
 )
 
 // Columns holds all SQL columns for sladefinition fields.
@@ -255,6 +264,20 @@ func ByAlertRules(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAlertRulesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByStatesCount orders the results by states count.
+func ByStatesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStatesStep(), opts...)
+	}
+}
+
+// ByStates orders the results by states terms.
+func ByStates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newViolationsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -281,5 +304,12 @@ func newAlertRulesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AlertRulesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AlertRulesTable, AlertRulesColumn),
+	)
+}
+func newStatesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, StatesTable, StatesColumn),
 	)
 }

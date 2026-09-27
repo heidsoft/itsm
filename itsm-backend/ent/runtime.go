@@ -106,6 +106,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/standardchange"
@@ -4076,6 +4077,28 @@ func init() {
 	slapolicy.DefaultUpdatedAt = slapolicyDescUpdatedAt.Default.(func() time.Time)
 	// slapolicy.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	slapolicy.UpdateDefaultUpdatedAt = slapolicyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	slastateFields := schema.SLAState{}.Fields()
+	_ = slastateFields
+	// slastateDescCreatedAt is the schema descriptor for created_at field.
+	slastateDescCreatedAt := slastateFields[1].Descriptor()
+	// slastate.DefaultCreatedAt holds the default value on creation for the created_at field.
+	slastate.DefaultCreatedAt = slastateDescCreatedAt.Default.(func() time.Time)
+	// slastateDescAggregateType is the schema descriptor for aggregate_type field.
+	slastateDescAggregateType := slastateFields[2].Descriptor()
+	// slastate.AggregateTypeValidator is a validator for the "aggregate_type" field. It is called by the builders before save.
+	slastate.AggregateTypeValidator = slastateDescAggregateType.Validators[0].(func(string) error)
+	// slastateDescAggregateID is the schema descriptor for aggregate_id field.
+	slastateDescAggregateID := slastateFields[3].Descriptor()
+	// slastate.AggregateIDValidator is a validator for the "aggregate_id" field. It is called by the builders before save.
+	slastate.AggregateIDValidator = slastateDescAggregateID.Validators[0].(func(int) error)
+	// slastateDescStatus is the schema descriptor for status field.
+	slastateDescStatus := slastateFields[8].Descriptor()
+	// slastate.DefaultStatus holds the default value on creation for the status field.
+	slastate.DefaultStatus = slastateDescStatus.Default.(string)
+	// slastateDescPausedDurationSeconds is the schema descriptor for paused_duration_seconds field.
+	slastateDescPausedDurationSeconds := slastateFields[11].Descriptor()
+	// slastate.DefaultPausedDurationSeconds holds the default value on creation for the paused_duration_seconds field.
+	slastate.DefaultPausedDurationSeconds = slastateDescPausedDurationSeconds.Default.(int)
 	slaviolationFields := schema.SLAViolation{}.Fields()
 	_ = slaviolationFields
 	// slaviolationDescCreatedBy is the schema descriptor for created_by field.

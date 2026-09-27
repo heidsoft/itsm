@@ -4207,6 +4207,60 @@ var (
 		Columns:    SLAPoliciesColumns,
 		PrimaryKey: []*schema.Column{SLAPoliciesColumns[0]},
 	}
+	// SLAStatesColumns holds the columns for the "sla_states" table.
+	SLAStatesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "aggregate_type", Type: field.TypeString},
+		{Name: "aggregate_id", Type: field.TypeInt},
+		{Name: "sla_policy_id", Type: field.TypeString, Nullable: true},
+		{Name: "response_deadline", Type: field.TypeTime, Nullable: true},
+		{Name: "resolution_deadline", Type: field.TypeTime, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "paused_at", Type: field.TypeTime, Nullable: true},
+		{Name: "pause_reason", Type: field.TypeString, Nullable: true},
+		{Name: "paused_duration_seconds", Type: field.TypeInt, Default: 0},
+		{Name: "first_response_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
+	}
+	// SLAStatesTable holds the schema information for the "sla_states" table.
+	SLAStatesTable = &schema.Table{
+		Name:       "sla_states",
+		Columns:    SLAStatesColumns,
+		PrimaryKey: []*schema.Column{SLAStatesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_states_sla_definitions_states",
+				Columns:    []*schema.Column{SLAStatesColumns[14]},
+				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "slastate_tenant_id_aggregate_type_aggregate_id",
+				Unique:  true,
+				Columns: []*schema.Column{SLAStatesColumns[1], SLAStatesColumns[3], SLAStatesColumns[4]},
+			},
+			{
+				Name:    "slastate_tenant_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{SLAStatesColumns[1], SLAStatesColumns[8]},
+			},
+			{
+				Name:    "slastate_response_deadline",
+				Unique:  false,
+				Columns: []*schema.Column{SLAStatesColumns[6]},
+			},
+			{
+				Name:    "slastate_resolution_deadline",
+				Unique:  false,
+				Columns: []*schema.Column{SLAStatesColumns[7]},
+			},
+		},
+	}
 	// SLAViolationsColumns holds the columns for the "sla_violations" table.
 	SLAViolationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -6113,6 +6167,7 @@ var (
 		SLADefinitionsTable,
 		SLAMetricsTable,
 		SLAPoliciesTable,
+		SLAStatesTable,
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceCatalogItemsTable,
@@ -6244,6 +6299,7 @@ func init() {
 	SLAAlertRulesTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLADefinitionsTable.ForeignKeys[0].RefTable = SLAPoliciesTable
 	SLAMetricsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
+	SLAStatesTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[0].RefTable = IncidentsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[2].RefTable = TicketsTable

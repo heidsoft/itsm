@@ -727,6 +727,29 @@ func HasAlertRulesWith(preds ...predicate.SLAAlertRule) predicate.SLADefinition 
 	})
 }
 
+// HasStates applies the HasEdge predicate on the "states" edge.
+func HasStates() predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatesTable, StatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStatesWith applies the HasEdge predicate on the "states" edge with a given conditions (other predicates).
+func HasStatesWith(preds ...predicate.SLAState) predicate.SLADefinition {
+	return predicate.SLADefinition(func(s *sql.Selector) {
+		step := newStatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.SLADefinition) predicate.SLADefinition {
 	return predicate.SLADefinition(sql.AndPredicates(predicates...))

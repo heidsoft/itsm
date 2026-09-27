@@ -300,6 +300,9 @@ type SLAMetric func(*sql.Selector)
 // SLAPolicy is the predicate function for slapolicy builders.
 type SLAPolicy func(*sql.Selector)
 
+// SLAState is the predicate function for slastate builders.
+type SLAState func(*sql.Selector)
+
 // SLAViolation is the predicate function for slaviolation builders.
 type SLAViolation func(*sql.Selector)
 

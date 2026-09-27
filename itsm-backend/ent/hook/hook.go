@@ -1184,6 +1184,18 @@ func (f SLAPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAPolicyMutation", m)
 }
 
+// The SLAStateFunc type is an adapter to allow the use of ordinary
+// function as SLAState mutator.
+type SLAStateFunc func(context.Context, *ent.SLAStateMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAStateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAStateMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAStateMutation", m)
+}
+
 // The SLAViolationFunc type is an adapter to allow the use of ordinary
 // function as SLAViolation mutator.
 type SLAViolationFunc func(context.Context, *ent.SLAViolationMutation) (ent.Value, error)

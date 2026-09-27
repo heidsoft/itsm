@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"math"
@@ -31,6 +32,7 @@ type SLADefinitionQuery struct {
 	withMetrics    *SLAMetricQuery
 	withTickets    *TicketQuery
 	withAlertRules *SLAAlertRuleQuery
+	withStates     *SLAStateQuery
 	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -149,6 +151,28 @@ func (_q *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
 			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
 			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.AlertRulesTable, sladefinition.AlertRulesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStates chains the current query on the "states" edge.
+func (_q *SLADefinitionQuery) QueryStates() *SLAStateQuery {
+	query := (&SLAStateClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, selector),
+			sqlgraph.To(slastate.Table, slastate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.StatesTable, sladefinition.StatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -352,6 +376,7 @@ func (_q *SLADefinitionQuery) Clone() *SLADefinitionQuery {
 		withMetrics:    _q.withMetrics.Clone(),
 		withTickets:    _q.withTickets.Clone(),
 		withAlertRules: _q.withAlertRules.Clone(),
+		withStates:     _q.withStates.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -399,6 +424,17 @@ func (_q *SLADefinitionQuery) WithAlertRules(opts ...func(*SLAAlertRuleQuery)) *
 		opt(query)
 	}
 	_q.withAlertRules = query
+	return _q
+}
+
+// WithStates tells the query-builder to eager-load the nodes that are connected to
+// the "states" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *SLADefinitionQuery) WithStates(opts ...func(*SLAStateQuery)) *SLADefinitionQuery {
+	query := (&SLAStateClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withStates = query
 	return _q
 }
 
@@ -481,11 +517,12 @@ func (_q *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes       = []*SLADefinition{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withViolations != nil,
 			_q.withMetrics != nil,
 			_q.withTickets != nil,
 			_q.withAlertRules != nil,
+			_q.withStates != nil,
 		}
 	)
 	if withFKs {
@@ -534,6 +571,13 @@ func (_q *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		if err := _q.loadAlertRules(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.AlertRules = []*SLAAlertRule{} },
 			func(n *SLADefinition, e *SLAAlertRule) { n.Edges.AlertRules = append(n.Edges.AlertRules, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withStates; query != nil {
+		if err := _q.loadStates(ctx, query, nodes,
+			func(n *SLADefinition) { n.Edges.States = []*SLAState{} },
+			func(n *SLADefinition, e *SLAState) { n.Edges.States = append(n.Edges.States, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -647,6 +691,36 @@ func (_q *SLADefinitionQuery) loadAlertRules(ctx context.Context, query *SLAAler
 	}
 	query.Where(predicate.SLAAlertRule(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(sladefinition.AlertRulesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SLADefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "sla_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *SLADefinitionQuery) loadStates(ctx context.Context, query *SLAStateQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAState)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*SLADefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(slastate.FieldSLADefinitionID)
+	}
+	query.Where(predicate.SLAState(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sladefinition.StatesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -114,6 +114,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slapolicy"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/standardchange"
@@ -351,6 +352,8 @@ type Client struct {
 	SLAMetric *SLAMetricClient
 	// SLAPolicy is the client for interacting with the SLAPolicy builders.
 	SLAPolicy *SLAPolicyClient
+	// SLAState is the client for interacting with the SLAState builders.
+	SLAState *SLAStateClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -528,6 +531,7 @@ func (c *Client) init() {
 	c.SLADefinition = NewSLADefinitionClient(c.config)
 	c.SLAMetric = NewSLAMetricClient(c.config)
 	c.SLAPolicy = NewSLAPolicyClient(c.config)
+	c.SLAState = NewSLAStateClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceCatalogItem = NewServiceCatalogItemClient(c.config)
@@ -752,6 +756,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLADefinition:               NewSLADefinitionClient(cfg),
 		SLAMetric:                   NewSLAMetricClient(cfg),
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
+		SLAState:                    NewSLAStateClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
@@ -903,6 +908,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLADefinition:               NewSLADefinitionClient(cfg),
 		SLAMetric:                   NewSLAMetricClient(cfg),
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
+		SLAState:                    NewSLAStateClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
@@ -991,7 +997,7 @@ func (c *Client) Use(hooks ...Hook) {
 		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
 		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
+		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.ServiceCatalog,
 		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
 		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
 		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
@@ -1034,7 +1040,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
 		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAViolation, c.ServiceCatalog,
+		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.ServiceCatalog,
 		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
 		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
 		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
@@ -1247,6 +1253,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SLAMetric.mutate(ctx, m)
 	case *SLAPolicyMutation:
 		return c.SLAPolicy.mutate(ctx, m)
+	case *SLAStateMutation:
+		return c.SLAState.mutate(ctx, m)
 	case *SLAViolationMutation:
 		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
@@ -16479,6 +16487,22 @@ func (c *SLADefinitionClient) QueryAlertRules(_m *SLADefinition) *SLAAlertRuleQu
 	return query
 }
 
+// QueryStates queries the states edge of a SLADefinition.
+func (c *SLADefinitionClient) QueryStates(_m *SLADefinition) *SLAStateQuery {
+	query := (&SLAStateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sladefinition.Table, sladefinition.FieldID, id),
+			sqlgraph.To(slastate.Table, slastate.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.StatesTable, sladefinition.StatesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *SLADefinitionClient) Hooks() []Hook {
 	return c.hooks.SLADefinition
@@ -16815,6 +16839,155 @@ func (c *SLAPolicyClient) mutate(ctx context.Context, m *SLAPolicyMutation) (Val
 		return (&SLAPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown SLAPolicy mutation op: %q", m.Op())
+	}
+}
+
+// SLAStateClient is a client for the SLAState schema.
+type SLAStateClient struct {
+	config
+}
+
+// NewSLAStateClient returns a client for the SLAState from the given config.
+func NewSLAStateClient(c config) *SLAStateClient {
+	return &SLAStateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slastate.Hooks(f(g(h())))`.
+func (c *SLAStateClient) Use(hooks ...Hook) {
+	c.hooks.SLAState = append(c.hooks.SLAState, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slastate.Intercept(f(g(h())))`.
+func (c *SLAStateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAState = append(c.inters.SLAState, interceptors...)
+}
+
+// Create returns a builder for creating a SLAState entity.
+func (c *SLAStateClient) Create() *SLAStateCreate {
+	mutation := newSLAStateMutation(c.config, OpCreate)
+	return &SLAStateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAState entities.
+func (c *SLAStateClient) CreateBulk(builders ...*SLAStateCreate) *SLAStateCreateBulk {
+	return &SLAStateCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAStateClient) MapCreateBulk(slice any, setFunc func(*SLAStateCreate, int)) *SLAStateCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAStateCreateBulk{err: fmt.Errorf("calling to SLAStateClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAStateCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAStateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAState.
+func (c *SLAStateClient) Update() *SLAStateUpdate {
+	mutation := newSLAStateMutation(c.config, OpUpdate)
+	return &SLAStateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAStateClient) UpdateOne(_m *SLAState) *SLAStateUpdateOne {
+	mutation := newSLAStateMutation(c.config, OpUpdateOne, withSLAState(_m))
+	return &SLAStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAStateClient) UpdateOneID(id int) *SLAStateUpdateOne {
+	mutation := newSLAStateMutation(c.config, OpUpdateOne, withSLAStateID(id))
+	return &SLAStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAState.
+func (c *SLAStateClient) Delete() *SLAStateDelete {
+	mutation := newSLAStateMutation(c.config, OpDelete)
+	return &SLAStateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAStateClient) DeleteOne(_m *SLAState) *SLAStateDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAStateClient) DeleteOneID(id int) *SLAStateDeleteOne {
+	builder := c.Delete().Where(slastate.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAStateDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAState.
+func (c *SLAStateClient) Query() *SLAStateQuery {
+	return &SLAStateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAState},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAState entity by its id.
+func (c *SLAStateClient) Get(ctx context.Context, id int) (*SLAState, error) {
+	return c.Query().Where(slastate.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAStateClient) GetX(ctx context.Context, id int) *SLAState {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySLADefinition queries the sla_definition edge of a SLAState.
+func (c *SLAStateClient) QuerySLADefinition(_m *SLAState) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slastate.Table, slastate.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, slastate.SLADefinitionTable, slastate.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SLAStateClient) Hooks() []Hook {
+	return c.hooks.SLAState
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAStateClient) Interceptors() []Interceptor {
+	return c.inters.SLAState
+}
+
+func (c *SLAStateClient) mutate(ctx context.Context, m *SLAStateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAStateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAStateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAStateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAStateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAState mutation op: %q", m.Op())
 	}
 }
 
@@ -22693,7 +22866,7 @@ type (
 		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
 		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
 		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy, SLAState,
 		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
 		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
 		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
@@ -22726,7 +22899,7 @@ type (
 		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
 		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
 		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy, SLAState,
 		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
 		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
 		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,

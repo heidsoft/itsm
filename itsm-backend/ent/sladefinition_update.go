@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"time"
@@ -299,6 +300,21 @@ func (_u *SLADefinitionUpdate) AddAlertRules(v ...*SLAAlertRule) *SLADefinitionU
 	return _u.AddAlertRuleIDs(ids...)
 }
 
+// AddStateIDs adds the "states" edge to the SLAState entity by IDs.
+func (_u *SLADefinitionUpdate) AddStateIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.AddStateIDs(ids...)
+	return _u
+}
+
+// AddStates adds the "states" edges to the SLAState entity.
+func (_u *SLADefinitionUpdate) AddStates(v ...*SLAState) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStateIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (_u *SLADefinitionUpdate) Mutation() *SLADefinitionMutation {
 	return _u.mutation
@@ -386,6 +402,27 @@ func (_u *SLADefinitionUpdate) RemoveAlertRules(v ...*SLAAlertRule) *SLADefiniti
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAlertRuleIDs(ids...)
+}
+
+// ClearStates clears all "states" edges to the SLAState entity.
+func (_u *SLADefinitionUpdate) ClearStates() *SLADefinitionUpdate {
+	_u.mutation.ClearStates()
+	return _u
+}
+
+// RemoveStateIDs removes the "states" edge to SLAState entities by IDs.
+func (_u *SLADefinitionUpdate) RemoveStateIDs(ids ...int) *SLADefinitionUpdate {
+	_u.mutation.RemoveStateIDs(ids...)
+	return _u
+}
+
+// RemoveStates removes "states" edges to SLAState entities.
+func (_u *SLADefinitionUpdate) RemoveStates(v ...*SLAState) *SLADefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -707,6 +744,51 @@ func (_u *SLADefinitionUpdate) sqlSave(ctx context.Context) (_node int, err erro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.StatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStatesIDs(); len(nodes) > 0 && !_u.mutation.StatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{sladefinition.Label}
@@ -994,6 +1076,21 @@ func (_u *SLADefinitionUpdateOne) AddAlertRules(v ...*SLAAlertRule) *SLADefiniti
 	return _u.AddAlertRuleIDs(ids...)
 }
 
+// AddStateIDs adds the "states" edge to the SLAState entity by IDs.
+func (_u *SLADefinitionUpdateOne) AddStateIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.AddStateIDs(ids...)
+	return _u
+}
+
+// AddStates adds the "states" edges to the SLAState entity.
+func (_u *SLADefinitionUpdateOne) AddStates(v ...*SLAState) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStateIDs(ids...)
+}
+
 // Mutation returns the SLADefinitionMutation object of the builder.
 func (_u *SLADefinitionUpdateOne) Mutation() *SLADefinitionMutation {
 	return _u.mutation
@@ -1081,6 +1178,27 @@ func (_u *SLADefinitionUpdateOne) RemoveAlertRules(v ...*SLAAlertRule) *SLADefin
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveAlertRuleIDs(ids...)
+}
+
+// ClearStates clears all "states" edges to the SLAState entity.
+func (_u *SLADefinitionUpdateOne) ClearStates() *SLADefinitionUpdateOne {
+	_u.mutation.ClearStates()
+	return _u
+}
+
+// RemoveStateIDs removes the "states" edge to SLAState entities by IDs.
+func (_u *SLADefinitionUpdateOne) RemoveStateIDs(ids ...int) *SLADefinitionUpdateOne {
+	_u.mutation.RemoveStateIDs(ids...)
+	return _u
+}
+
+// RemoveStates removes "states" edges to SLAState entities.
+func (_u *SLADefinitionUpdateOne) RemoveStates(v ...*SLAState) *SLADefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStateIDs(ids...)
 }
 
 // Where appends a list predicates to the SLADefinitionUpdate builder.
@@ -1425,6 +1543,51 @@ func (_u *SLADefinitionUpdateOne) sqlSave(ctx context.Context) (_node *SLADefini
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.StatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStatesIDs(); len(nodes) > 0 && !_u.mutation.StatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sladefinition.StatesTable,
+			Columns: []string{sladefinition.StatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(slastate.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
