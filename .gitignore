@@ -183,6 +183,7 @@ itsm-backend/memory/run_tests.sh
 itsm-backend/itsm
 itsm-backend/itsm-backend
 itsm-backend/server
+itsm-backend/initialize
 
 # All deploy artifacts (binaries, builds, distributions)
 deploy/
