@@ -34,7 +34,7 @@ func TestAuditTenantBaselinesIsReadOnlyAndScoped(t *testing.T) {
 		})
 	})
 
-	audits, err := s.AuditTenantBaselines(ctx)
+	audits, err := s.AuditTenantBaselines(ctx, "")
 	require.NoError(t, err)
 	require.Len(t, audits, 2)
 

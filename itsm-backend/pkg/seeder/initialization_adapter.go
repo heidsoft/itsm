@@ -135,7 +135,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		dependencies: []string{"identity-rbac", "itil-core"},
 		checksum:     checksums["workflow-core"],
 		apply: func(ctx context.Context, transactional *Seeder) error {
-			transactional.seedApprovalWorkflows(ctx)
+			if err := transactional.seedApprovalWorkflows(ctx); err != nil {
+				return err
+			}
 			if err := transactional.seedBPMNWorkflows(ctx); err != nil {
 				return err
 			}
@@ -171,7 +173,6 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			if err := transactional.seedCITypes(ctx); err != nil {
 				return err
 			}
-			transactional.seedCloudServiceTemplates(ctx)
 			return nil
 		},
 		verify: func(ctx context.Context, target *Seeder) error {
@@ -184,7 +185,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 		dependencies: []string{"workflow-core", "sla-core", "cmdb-core"},
 		checksum:     checksums["extension-core"],
 		apply: func(ctx context.Context, transactional *Seeder) error {
-			transactional.seedTicketViews(ctx)
+			if err := transactional.seedTicketViews(ctx); err != nil {
+				return err
+			}
 			if err := transactional.seedServiceCatalog(ctx); err != nil {
 				return err
 			}

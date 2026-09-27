@@ -96,6 +96,7 @@ import (
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
 	vendorHandler "itsm-backend/handlers/vendor"
 	wecomHandler "itsm-backend/handlers/wecom"
+	workbenchHandler "itsm-backend/handlers/workbench"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/internal/initialization"
 	"itsm-backend/internal/schema"
@@ -107,6 +108,7 @@ import (
 	"itsm-backend/service"
 	cloudruntime "itsm-backend/service/cloud"
 	cloudaliyun "itsm-backend/service/cloud/aliyun"
+	slaEngine "itsm-backend/service/sla"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -359,6 +361,10 @@ func NewApplication() *Application {
 
 	// 初始化业务服务层
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
+	// SLA 统一引擎 + 持久化 store（Phase 3 Step 3.5 双写阶段）
+	unifiedSLAEngine := slaEngine.NewEngine(nil)
+	slaStore := slaEngine.NewStore(client, unifiedSLAEngine)
+	ticketSLAService.SetSLAStore(slaStore)
 	auditLogService := service.NewAuditLogService(client, sugar)
 	ticketTypeService := service.NewTicketTypeService(client, sugar)
 	ticketTagService := service.NewTicketTagService(client)
@@ -385,6 +391,7 @@ func NewApplication() *Application {
 	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用（此前两域均为假成功或未接入）。
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaMonitorService.SetNotificationService(ticketNotificationService)
+	slaMonitorService.SetSLAStore(slaStore)
 	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, slaMonitorService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)
 
@@ -527,13 +534,15 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register ticket feishu command handler", "error", err)
 	}
 
+	// Share the legacy configuration/history service; submission is retired.
+	approvalService := service.NewApprovalService(client, sugar)
 	// V2 工单服务（构造函数注入）
 	ticketService := service.NewTicketService(&service.TicketServiceConfig{
 		Repository:            ticketRepoImpl,
 		Client:                client,
 		Logger:                sugar,
 		NotificationService:   ticketNotificationService,
-		ApprovalService:       service.NewApprovalService(client, sugar),
+		ApprovalService:       approvalService,
 		AutomationRuleService: ticketAutomationRuleService,
 		SLAService:            ticketSLAService,
 		ProcessTriggerService: processTriggerService,
@@ -559,12 +568,6 @@ func NewApplication() *Application {
 	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
 	incidentService.SetSequenceService(sequenceService)
 	incidentService.SetRawDB(database.GetRawDB())
-
-	// MSP 服务初始化
-	// 审批服务
-	approvalService := service.NewApprovalService(client, sugar)
-	// 将 ApprovalService 注入 BPMN 引擎的 ApprovalHandler，解决循环依赖
-	processEngine.SetApprovalService(approvalService)
 
 	// problemService and changeService removed - using Handlers with domain services instead
 
@@ -815,9 +818,6 @@ func NewApplication() *Application {
 	ticketService.SetProcessTriggerService(processTriggerService)
 	incidentService.SetProcessTriggerService(processTriggerService)
 
-	// Set approval service for ticket workflow integration
-	ticketService.SetApprovalService(approvalService)
-
 	// 初始化模板并部署默认流程
 	// 多租户语义:默认流程模板与流程绑定是每租户的基础设施,
 	// 部署到所有 active 租户,而不是硬编码 tenant_id=1。
@@ -865,6 +865,8 @@ func NewApplication() *Application {
 
 	// Approval Chain Service（供服务请求审批链求值引擎消费）
 	approvalChainService := service.NewApprovalChainService(client, sugar)
+	// 将审批链求值器注入 BPMN Service Task handler（配置与编排分离）
+	customProcessEngine.SetApprovalChainResolver(service.NewApprovalChainResolverAdapter(client, sugar, approvalChainService))
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)
 	escalationMatrixService := service.NewEscalationMatrixService(sugar)
 	vendorService := service.NewVendorService(client, sugar)
@@ -1217,6 +1219,9 @@ func NewApplication() *Application {
 
 		// Global Search
 		GlobalSearchHandler: globalSearchHandler.NewHandler(globalSearchHandler.NewService(client)),
+
+		// Workbench (统一工作台)
+		WorkbenchHandler: workbenchHandler.NewHandler(workbenchHandler.NewService(workbenchHandler.NewRepository(database.GetRawDB()))),
 
 		// Standard Change Handler
 		StandardChangeHandler: standardChangeHandler,

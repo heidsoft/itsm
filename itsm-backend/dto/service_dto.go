@@ -62,7 +62,7 @@ type GetServiceCatalogsRequest struct {
 // GetServiceRequestsRequest 获取服务请求列表请求
 type GetServiceRequestsRequest struct {
 	Page   int    `json:"page" form:"page" binding:"omitempty,min=1"`
-	Size   int    `json:"size" form:"size" binding:"omitempty,min=1,max=100"`
+	PageSize int    `json:"pageSize" form:"pageSize" binding:"omitempty,min=1,max=100"`
 	Status string `json:"status" form:"status" binding:"omitempty"`
 	UserID int    `json:"-"` // 从认证中间件获取
 }

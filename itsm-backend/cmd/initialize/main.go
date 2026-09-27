@@ -25,6 +25,7 @@ func main() {
 	releaseVersion := flag.String("release-version", os.Getenv("ITSM_RELEASE_VERSION"), "release version")
 	requestedBy := flag.String("requested-by", "operator", "audited requester identity")
 	bootstrapToken := flag.String("bootstrap-token", "", "bootstrap token for first admin creation (used with apply action)")
+	tenantStatus := flag.String("tenant-status", "active", "filter tenants by status for audit-tenants (use \"all\" to include every status)")
 	flag.Parse()
 
 	cfg, err := config.LoadConfig()
@@ -134,7 +135,11 @@ func main() {
 	case "audit-tenants":
 		// 只读：逐租户跑产品基线的逐组件验证，输出差异报告；
 		// 这是前滚修复方案的输入，不做任何写入。
-		audits, err := productSeeder.AuditTenantBaselines(ctx)
+		statusFilter := *tenantStatus
+		if strings.EqualFold(statusFilter, "all") {
+			statusFilter = ""
+		}
+		audits, err := productSeeder.AuditTenantBaselines(ctx, statusFilter)
 		if err != nil {
 			exitf("audit tenant baselines: %v", err)
 		}

@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/user"
 	"itsm-backend/middleware"
+	"itsm-backend/pkg/menubaseline"
 
 	"go.uber.org/zap"
 )
@@ -713,4 +714,164 @@ func (s *MenuService) toMenuDTO(menuEntity *ent.Menu) *dto.MenuDTO {
 	}
 
 	return dto
+}
+
+// ExportMenus 导出当前租户菜单为 seeder 兼容格式（parentPath 替代 parentId）。
+func (s *MenuService) ExportMenus(ctx context.Context, tenantID int) ([]dto.MenuExportItem, error) {
+	menus, err := s.client.Menu.Query().
+		Where(menu.TenantID(tenantID)).
+		Order(ent.Asc(menu.FieldSortOrder)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("导出菜单失败: %w", err)
+	}
+
+	idToPath := make(map[int]string, len(menus))
+	for _, m := range menus {
+		idToPath[m.ID] = m.Path
+	}
+
+	items := make([]dto.MenuExportItem, 0, len(menus))
+	for _, m := range menus {
+		item := dto.MenuExportItem{
+			Name:           m.Name,
+			Path:           m.Path,
+			Icon:           m.Icon,
+			PermissionCode: m.PermissionCode,
+			SortOrder:      m.SortOrder,
+			Description:    m.Description,
+		}
+		if m.ParentID != nil {
+			if parentPath, ok := idToPath[*m.ParentID]; ok {
+				item.ParentPath = parentPath
+			}
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// InitMenusFromBaseline 从 pkg/menubaseline 基线补齐缺失菜单，返回 diff 报告。
+// 已存在的菜单不覆盖 isVisible/isEnabled 等运营字段。
+func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (*dto.MenuInitDiffResponse, error) {
+	specs := menubaseline.MenuDefinitions()
+
+	existing, err := s.client.Menu.Query().
+		Where(menu.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询现有菜单失败: %w", err)
+	}
+
+	pathSet := make(map[string]*ent.Menu, len(existing))
+	for _, m := range existing {
+		pathSet[m.Path] = m
+	}
+
+	// 第一遍：创建/检查顶级菜单
+	for i := range specs {
+		if specs[i].ParentPath != "" {
+			continue
+		}
+		s.upsertBaselineMenu(ctx, tenantID, &specs[i], pathSet)
+	}
+
+	// 刷新 pathSet 以包含刚创建的顶级菜单
+	refreshed, err := s.client.Menu.Query().
+		Where(menu.TenantID(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("刷新菜单失败: %w", err)
+	}
+	pathSet = make(map[string]*ent.Menu, len(refreshed))
+	for _, m := range refreshed {
+		pathSet[m.Path] = m
+	}
+
+	// 第二遍：创建/检查子菜单
+	for i := range specs {
+		if specs[i].ParentPath == "" {
+			continue
+		}
+		s.upsertBaselineMenu(ctx, tenantID, &specs[i], pathSet)
+	}
+
+	// 构建 diff
+	added := make([]dto.MenuExportItem, 0)
+	unchanged := make([]dto.MenuExportItem, 0)
+	for _, spec := range specs {
+		item := dto.MenuExportItem{
+			Name:           spec.Name,
+			Path:           spec.Path,
+			Icon:           spec.Icon,
+			ParentPath:     spec.ParentPath,
+			PermissionCode: spec.PermissionCode,
+			SortOrder:      spec.SortOrder,
+			Description:    spec.Description,
+		}
+		if _, existed := pathSet[spec.Path]; existed {
+			unchanged = append(unchanged, item)
+		} else {
+			added = append(added, item)
+		}
+	}
+
+	return &dto.MenuInitDiffResponse{
+		Added:      added,
+		Unchanged:  unchanged,
+		TotalAdded: len(added),
+	}, nil
+}
+
+// upsertBaselineMenu 按 (tenantID, path) 创建缺失菜单或更新已有菜单的基线字段。
+func (s *MenuService) upsertBaselineMenu(ctx context.Context, tenantID int, spec *menubaseline.MenuSpec, pathSet map[string]*ent.Menu) {
+	if m, exists := pathSet[spec.Path]; exists {
+		var parentID *int
+		if spec.ParentPath != "" {
+			if parent, ok := pathSet[spec.ParentPath]; ok {
+				parentID = &parent.ID
+			}
+		}
+		updater := m.Update().
+			SetName(spec.Name).
+			SetIcon(spec.Icon).
+			SetSortOrder(spec.SortOrder).
+			SetPermissionCode(spec.PermissionCode)
+		if parentID != nil {
+			updater = updater.SetParentID(*parentID)
+		} else {
+			updater = updater.ClearParentID()
+		}
+		if spec.Description != "" {
+			updater = updater.SetDescription(spec.Description)
+		}
+		if _, err := updater.Save(ctx); err != nil {
+			s.logger.Warnw("update baseline menu failed", "path", spec.Path, "error", err)
+		}
+		return
+	}
+
+	creator := s.client.Menu.Create().
+		SetName(spec.Name).
+		SetPath(spec.Path).
+		SetIcon(spec.Icon).
+		SetTenantID(tenantID).
+		SetSortOrder(spec.SortOrder).
+		SetIsVisible(true).
+		SetIsEnabled(true).
+		SetPermissionCode(spec.PermissionCode)
+	if spec.ParentPath != "" {
+		if parent, ok := pathSet[spec.ParentPath]; ok {
+			creator = creator.SetParentID(parent.ID)
+		}
+	}
+	if spec.Description != "" {
+		creator = creator.SetDescription(spec.Description)
+	}
+	created, err := creator.Save(ctx)
+	if err != nil {
+		s.logger.Warnw("create baseline menu failed", "path", spec.Path, "error", err)
+		return
+	}
+	pathSet[spec.Path] = created
 }
