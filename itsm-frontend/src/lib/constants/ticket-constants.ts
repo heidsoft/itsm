@@ -1,6 +1,13 @@
 /**
- * 工单状态和优先级统一配置
- * @deprecated 请使用 @/constants/taxonomy 中的统一分类系统
+ * 工单状态/优先级/类型配置的兼容转发层。
+ *
+ * @deprecated 请直接使用 @/constants/taxonomy；本文件只做名称转发，不再维护第二套映射。
+ *
+ * 这里曾经用 inProgress / pendingApproval / serviceRequest 等 camelCase 键自建映射表，
+ * 而后端返回的 ticket.status/priority/type 永远是 snake_case，
+ * 因此 getStatusConfig('in_progress') 一直落到 open 兜底，徽标颜色与文案长期错显示；
+ * pending_approval 也不属于工单状态词表（见 common/constants.go 的工单状态机）。
+ * 现在键名由 TicketStatus/TicketPriority 枚举值直接给出，与后端词表逐字一致。
  */
 
 import {
@@ -15,54 +22,29 @@ import {
 // 保持向后兼容的导出
 export { TicketStatus, TicketPriority, ITSMMainType };
 
-// 工单状态配置 (legacy)
-export const TICKET_STATUS_CONFIG = {
-  new: TicketStatusConfig[TicketStatus.NEW],
-  open: TicketStatusConfig[TicketStatus.OPEN],
-  inProgress: TicketStatusConfig[TicketStatus.IN_PROGRESS],
-  pendingApproval: TicketStatusConfig[TicketStatus.PENDING_APPROVAL],
-  resolved: TicketStatusConfig[TicketStatus.RESOLVED],
-  closed: TicketStatusConfig[TicketStatus.CLOSED],
-  cancelled: TicketStatusConfig[TicketStatus.CANCELLED],
-} as const;
+export const TICKET_STATUS_CONFIG = TicketStatusConfig;
+export const TICKET_PRIORITY_CONFIG = TicketPriorityConfig;
 
-// 工单优先级配置 (legacy)
-export const TICKET_PRIORITY_CONFIG = {
-  low: TicketPriorityConfig[TicketPriority.LOW],
-  medium: TicketPriorityConfig[TicketPriority.MEDIUM],
-  high: TicketPriorityConfig[TicketPriority.HIGH],
-  urgent: TicketPriorityConfig[TicketPriority.URGENT],
-  critical: TicketPriorityConfig[TicketPriority.CRITICAL],
-} as const;
-
-// 工单类型配置 (legacy - 转换 label -> text)
+// 工单类型配置（legacy - 转换 label -> text），键为后端 type 值
 export const TICKET_TYPE_CONFIG = {
-  incident: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: '事件' },
-  serviceRequest: { ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST], text: '服务请求' },
-  problem: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: '问题' },
-  change: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: '变更' },
+  [ITSMMainType.INCIDENT]: { ...ITSMMainTypeConfig[ITSMMainType.INCIDENT], text: '事件' },
+  [ITSMMainType.SERVICE_REQUEST]: {
+    ...ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST],
+    text: '服务请求',
+  },
+  [ITSMMainType.PROBLEM]: { ...ITSMMainTypeConfig[ITSMMainType.PROBLEM], text: '问题' },
+  [ITSMMainType.CHANGE]: { ...ITSMMainTypeConfig[ITSMMainType.CHANGE], text: '变更' },
 } as const;
 
-// 获取状态配置 (legacy)
-export const getStatusConfig = (status: string) => {
-  return (
-    TICKET_STATUS_CONFIG[status as keyof typeof TICKET_STATUS_CONFIG] ||
-    TICKET_STATUS_CONFIG.open
-  );
-};
+/** 未知/未来新增的状态值仍需要可渲染的兜底，因此保留显式 fallback。 */
+export const getStatusConfig = (status: string) =>
+  TICKET_STATUS_CONFIG[status as TicketStatus] ?? TICKET_STATUS_CONFIG[TicketStatus.OPEN];
 
-// 获取优先级配置 (legacy)
-export const getPriorityConfig = (priority: string) => {
-  return (
-    TICKET_PRIORITY_CONFIG[priority as keyof typeof TICKET_PRIORITY_CONFIG] ||
-    TICKET_PRIORITY_CONFIG.medium
-  );
-};
+export const getPriorityConfig = (priority: string) =>
+  TICKET_PRIORITY_CONFIG[priority as TicketPriority] ??
+  TICKET_PRIORITY_CONFIG[TicketPriority.MEDIUM];
 
-// 获取类型配置 (legacy)
 export const getTypeConfig = (type: string) => {
-  return (
-    TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG] ||
-    TICKET_TYPE_CONFIG.serviceRequest
-  );
+  const config = TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG];
+  return config ?? TICKET_TYPE_CONFIG[ITSMMainType.SERVICE_REQUEST];
 };

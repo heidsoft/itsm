@@ -7,7 +7,8 @@ import React from 'react';
 import { Table, Tag, Space, Button, Tooltip, Popconfirm } from 'antd';
 import { Pencil, Trash2, User, Eye } from 'lucide-react';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
-import type { Ticket } from '@/types/ticket';
+import type { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
+import { TicketPriorityConfig, TicketStatusConfig } from '@/constants/taxonomy';
 import { AvatarImage } from '@/components/ui/OptimizedImage';
 
 export interface TicketsTableViewProps {
@@ -40,27 +41,11 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   canEdit = true,
   canDelete = true,
 }) => {
-  // 状态颜色映射
-  const statusColorMap: Record<string, string> = {
-    new: 'blue',
-    open: 'cyan',
-    inProgress: 'processing',
-    pendingApproval: 'warning',
-    resolved: 'success',
-    closed: 'default',
-    cancelled: 'error',
-  };
-
-  // 优先级颜色映射
-  const priorityColorMap: Record<string, string> = {
-    low: 'default',
-    medium: 'blue',
-    high: 'orange',
-    urgent: 'red',
-    critical: 'red',
-  };
-
   // 表格列定义
+  // 状态/优先级文案与配色一律取自 @/constants/taxonomy。
+  // 旧的本地 map 用 inProgress/pendingApproval 等 camelCase 键索引，
+  // 而后端 ticket.status 永远是 snake_case（in_progress），因此永远命中不到，
+  // 处理中的工单只能显示原始枚举值；pending_approval 更不是工单状态词表里的值。
   const columns: ColumnsType<Ticket> = [
     {
       title: '工单编号',
@@ -89,17 +74,9 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       key: 'status',
       width: 100,
       render: (status: string) => {
-        const statusTextMap: Record<string, string> = {
-          new: '新建',
-          open: '待处理',
-          inProgress: '处理中',
-          pendingApproval: '待审批',
-          resolved: '已解决',
-          closed: '已关闭',
-          cancelled: '已取消',
-        };
+        const config = TicketStatusConfig[status as TicketStatus];
         return (
-          <Tag color={statusColorMap[status] || 'default'}>{statusTextMap[status] || status}</Tag>
+          <Tag color={config?.color ?? 'default'}>{config?.label ?? status}</Tag>
         );
       },
     },
@@ -109,17 +86,9 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       key: 'priority',
       width: 90,
       render: (priority: string) => {
-        const priorityTextMap: Record<string, string> = {
-          low: '低',
-          medium: '中',
-          high: '高',
-          urgent: '紧急',
-          critical: '紧急',
-        };
+        const config = TicketPriorityConfig[priority as TicketPriority];
         return (
-          <Tag color={priorityColorMap[priority] || 'default'}>
-            {priorityTextMap[priority] || priority}
-          </Tag>
+          <Tag color={config?.color ?? 'default'}>{config?.label ?? priority}</Tag>
         );
       },
     },

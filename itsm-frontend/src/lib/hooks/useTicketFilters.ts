@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import type { TicketType } from '@/lib/services/ticket-service';
-import { TicketStatus, TicketPriority } from '@/lib/services/ticket-service';
+import type { TicketType } from '@/lib/api/ticket-api';
+import { isTicketType } from '@/lib/api/ticket-api';
+import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
 import type { TicketQueryFilters } from './useTickets';
 
 export type TicketFilterState = {
@@ -92,7 +93,7 @@ export const useTicketFilters = (): UseTicketFiltersReturn => {
     return {
       status: df.status ? statusReverseMap[df.status] : 'all',
       priority: df.priority ? priorityReverseMap[df.priority] : 'all',
-      type: df.type || 'all',
+      type: df.type && isTicketType(df.type) ? df.type : 'all',
       keyword: df.keyword || '',
       dateStart: df.dateRange?.[0] || '',
       dateEnd: df.dateRange?.[1] || '',

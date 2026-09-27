@@ -1,10 +1,6 @@
 import { httpClient } from './http-client';
 import type {
-  ApiResponse,
   GetTenantsParams} from './api-config';
-import {
-  PaginationResponse
-} from './api-config';
 import type {
   MSPAllocation,
   CreateAllocationRequest,
@@ -22,22 +18,22 @@ export class MSPAPI {
   /**
    * 获取 MSP 分配列表（当前 MSP 用户）
    */
-  static async getAllocations(params?: GetTenantsParams): Promise<ApiResponse<MSPAllocationListResponse>> {
-    return httpClient.get<ApiResponse<MSPAllocationListResponse>>('/api/v1/msp/allocations', params);
+  static async getAllocations(params?: GetTenantsParams): Promise<MSPAllocationListResponse> {
+    return httpClient.get<MSPAllocationListResponse>('/api/v1/msp/allocations', params);
   }
 
   /**
    * 创建新的 MSP 分配（仅 MSP Manager 可用）
    */
-  static async createAllocation(data: CreateAllocationRequest): Promise<ApiResponse<MSPAllocation>> {
-    return httpClient.post<ApiResponse<MSPAllocation>>('/api/v1/msp/allocations', data);
+  static async createAllocation(data: CreateAllocationRequest): Promise<MSPAllocation> {
+    return httpClient.post<MSPAllocation>('/api/v1/msp/allocations', data);
   }
 
   /**
    * 解除 MSP 分配
    */
-  static async deallocate(mspUserId: number, customerTenantId: number, reason?: string): Promise<ApiResponse<void>> {
-    return httpClient.post<ApiResponse<void>>('/api/v1/msp/allocations/deallocate', {
+  static async deallocate(mspUserId: number, customerTenantId: number, reason?: string): Promise<void> {
+    return httpClient.post<void>('/api/v1/msp/allocations/deallocate', {
       mspUserId: mspUserId,
       customerTenantId: customerTenantId,
       reason,
@@ -49,8 +45,8 @@ export class MSPAPI {
   /**
    * 获取当前 MSP 员工有权访问的所有客户列表
    */
-  static async getCustomers(params?: GetTenantsParams): Promise<ApiResponse<MSPCustomersResponse>> {
-    return httpClient.get<ApiResponse<MSPCustomersResponse>>('/api/v1/msp/customers', params);
+  static async getCustomers(params?: GetTenantsParams): Promise<MSPCustomersResponse> {
+    return httpClient.get<MSPCustomersResponse>('/api/v1/msp/customers', params);
   }
 
   /**
@@ -59,8 +55,8 @@ export class MSPAPI {
   static async getCustomerTickets(
     customerTenantId: number,
     params?: { status?: string; page?: number; pageSize?: number }
-  ): Promise<ApiResponse<MSPCustomerTicketsResponse>> {
-    return httpClient.get<ApiResponse<MSPCustomerTicketsResponse>>(
+  ): Promise<MSPCustomerTicketsResponse> {
+    return httpClient.get<MSPCustomerTicketsResponse>(
       `/api/v1/msp/customers/${customerTenantId}/tickets`,
       params
     );
@@ -73,8 +69,8 @@ export class MSPAPI {
     ticketId: number,
     customerTenantId: number,
     assignerUserId?: number
-  ): Promise<ApiResponse<{ id: number; status: string }>> {
-    return httpClient.post<ApiResponse<{ id: number; status: string }>>(
+  ): Promise<{ id: number; status: string }> {
+    return httpClient.post<{ id: number; status: string }>(
       `/api/v1/msp/tickets/${ticketId}/assign`,
       {
         customerTenantId: customerTenantId,
@@ -90,8 +86,8 @@ export class MSPAPI {
    */
   static async getCustomerReports(
     params: { startDate: string; endDate: string; customerTenantId?: number }
-  ): Promise<ApiResponse<MSPCustomerReport[]>> {
-    return httpClient.get<ApiResponse<MSPCustomerReport[]>>('/api/v1/msp/reports/customers', params);
+  ): Promise<MSPCustomerReport[]> {
+    return httpClient.get<MSPCustomerReport[]>('/api/v1/msp/reports/customers', params);
   }
 
   /**
@@ -99,8 +95,8 @@ export class MSPAPI {
    */
   static async getMSPPerformanceReports(
     params: { startDate: string; endDate: string; mspUserId?: number }
-  ): Promise<ApiResponse<MSPCustomerReport[]>> {
-    return httpClient.get<ApiResponse<MSPCustomerReport[]>>('/api/v1/msp/reports/performance', params);
+  ): Promise<MSPCustomerReport[]> {
+    return httpClient.get<MSPCustomerReport[]>('/api/v1/msp/reports/performance', params);
   }
 
   // ==================== 辅助方法 ====================
@@ -110,10 +106,10 @@ export class MSPAPI {
    */
   static async isMSPUser(): Promise<{ isMSP: boolean; isAdmin: boolean }> {
     try {
-      const res = await httpClient.get<ApiResponse<{ isMsp: boolean; isAdmin?: boolean }>>('/api/v1/msp/status');
+      const res = await httpClient.get<{ isMsp: boolean; isAdmin?: boolean }>('/api/v1/msp/status');
       return {
-        isMSP: res.data?.isMsp || false,
-        isAdmin: res.data?.isAdmin || false,
+        isMSP: res.isMsp || false,
+        isAdmin: res.isAdmin || false,
       };
     } catch {
       return { isMSP: false, isAdmin: false };
@@ -123,8 +119,8 @@ export class MSPAPI {
   /**
    * 获取当前用户的 MSP 上下文
    */
-  static async getMSPContext(): Promise<ApiResponse<MSPContext>> {
-    return httpClient.get<ApiResponse<MSPContext>>('/api/v1/msp/context');
+  static async getMSPContext(): Promise<MSPContext> {
+    return httpClient.get<MSPContext>('/api/v1/msp/context');
   }
 
   // ==================== 审计与历史 ====================
@@ -134,7 +130,7 @@ export class MSPAPI {
    */
   static async getAllocationHistory(
     params: { mspUserId?: number; customerTenantId?: number; startDate?: string; endDate?: string }
-  ): Promise<ApiResponse<MSPAllocationHistory[]>> {
-    return httpClient.get<ApiResponse<MSPAllocationHistory[]>>('/api/v1/msp/allocations/history', params);
+  ): Promise<MSPAllocationHistory[]> {
+    return httpClient.get<MSPAllocationHistory[]>('/api/v1/msp/allocations/history', params);
   }
 }

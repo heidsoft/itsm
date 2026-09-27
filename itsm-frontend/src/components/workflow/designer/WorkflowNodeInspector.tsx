@@ -244,7 +244,7 @@ export default function WorkflowNodeInspector({
       setLoadingRoles(true);
       try {
         const resp = await RoleAPI.getRoles();
-        const list = (resp as unknown as { roles?: { id: number; name: string; code: string }[]; data?: { id: number; name: string; code: string }[] })?.roles ?? (resp as unknown as { roles?: { id: number; name: string; code: string }[]; data?: { id: number; name: string; code: string }[] })?.data ?? [];
+        const list = (resp as unknown as { roles?: { id: number; name: string; code: string }[] })?.roles ?? [];
         if (!cancelled) setRoles(list);
       } catch (err) {
         console.error('加载角色列表失败:', err);

@@ -31,7 +31,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { httpClient } from '@/lib/api/http-client';
 import { UserApi } from '@/lib/api/user-api';
-import { WorkflowDefinitionApi } from '@/lib/api/workflow-definition-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -105,7 +105,7 @@ export default function ApprovalManagement() {
   // 加载 BPMN 工作流定义列表
   const loadBpmnWorkflows = useCallback(async () => {
     try {
-      const result = await WorkflowDefinitionApi.getWorkflows({ page: 1, pageSize: 100 });
+      const result = await WorkflowApi.getWorkflows({ page: 1, pageSize: 100 });
       const list = (result.workflows || []).map(w => ({
         id: w.id,
         name: w.name,

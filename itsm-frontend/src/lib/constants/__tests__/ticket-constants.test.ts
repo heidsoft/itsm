@@ -1,11 +1,16 @@
 /**
  * Tests for ticket-constants.ts
+ *
+ * 关键回归点：配置表的键必须与后端工单词表逐字一致（snake_case）。
+ * 旧实现用 inProgress/pendingApproval 等 camelCase 键，导致
+ * getStatusConfig('in_progress') 静默落到 open 兜底，徽标长期错显示。
  */
 
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: { get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(), patch: jest.fn() },
 }));
 
+import { TicketStatus } from '@/constants/taxonomy';
 import {
   TICKET_STATUS_CONFIG,
   TICKET_PRIORITY_CONFIG,
@@ -17,14 +22,31 @@ import {
 
 describe('Ticket Constants', () => {
   describe('TICKET_STATUS_CONFIG', () => {
-    it('should have all status keys', () => {
-      expect(TICKET_STATUS_CONFIG.new).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.open).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.inProgress).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.pendingApproval).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.resolved).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.closed).toBeDefined();
-      expect(TICKET_STATUS_CONFIG.cancelled).toBeDefined();
+    it('covers every status in the backend ticket state machine', () => {
+      Object.values(TicketStatus).forEach((status) => {
+        expect(TICKET_STATUS_CONFIG[status]).toBeDefined();
+      });
+    });
+
+    it('keys the config with the backend snake_case vocabulary', () => {
+      expect(Object.keys(TICKET_STATUS_CONFIG).sort()).toEqual(
+        [
+          'new',
+          'open',
+          'assigned',
+          'in_progress',
+          'pending',
+          'resolved',
+          'closed',
+          'cancelled',
+          'approved',
+          'rejected',
+        ].sort()
+      );
+    });
+
+    it('does not treat pending_approval as a ticket status', () => {
+      expect(TICKET_STATUS_CONFIG['pending_approval' as TicketStatus]).toBeUndefined();
     });
   });
 
@@ -41,7 +63,7 @@ describe('Ticket Constants', () => {
   describe('TICKET_TYPE_CONFIG', () => {
     it('should have all type keys with text field', () => {
       expect(TICKET_TYPE_CONFIG.incident.text).toBe('事件');
-      expect(TICKET_TYPE_CONFIG.serviceRequest.text).toBe('服务请求');
+      expect(TICKET_TYPE_CONFIG.service_request.text).toBe('服务请求');
       expect(TICKET_TYPE_CONFIG.problem.text).toBe('问题');
       expect(TICKET_TYPE_CONFIG.change.text).toBe('变更');
     });
@@ -52,6 +74,13 @@ describe('Ticket Constants', () => {
       expect(getStatusConfig('new')).toBe(TICKET_STATUS_CONFIG.new);
       expect(getStatusConfig('open')).toBe(TICKET_STATUS_CONFIG.open);
       expect(getStatusConfig('resolved')).toBe(TICKET_STATUS_CONFIG.resolved);
+    });
+
+    it('resolves snake_case statuses instead of falling back to open', () => {
+      expect(getStatusConfig('in_progress')).toBe(TICKET_STATUS_CONFIG.in_progress);
+      expect(getStatusConfig('assigned')).toBe(TICKET_STATUS_CONFIG.assigned);
+      expect(getStatusConfig('approved')).toBe(TICKET_STATUS_CONFIG.approved);
+      expect(getStatusConfig('rejected')).toBe(TICKET_STATUS_CONFIG.rejected);
     });
 
     it('should return open config for unknown status', () => {
@@ -74,11 +103,10 @@ describe('Ticket Constants', () => {
   describe('getTypeConfig', () => {
     it('should return config for valid type', () => {
       expect(getTypeConfig('incident')).toBe(TICKET_TYPE_CONFIG.incident);
-      expect(getTypeConfig('problem')).toBe(TICKET_TYPE_CONFIG.problem);
     });
 
-    it('should return serviceRequest config for unknown type', () => {
-      expect(getTypeConfig('unknown')).toBe(TICKET_TYPE_CONFIG.serviceRequest);
+    it('should return service request config for unknown type', () => {
+      expect(getTypeConfig('unknown')).toBe(TICKET_TYPE_CONFIG.service_request);
     });
   });
 });

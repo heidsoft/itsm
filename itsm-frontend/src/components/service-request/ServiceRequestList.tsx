@@ -39,7 +39,7 @@ const ServiceRequestList: React.FC = () => {
   // 查询状态
   const [query, setQuery] = useState<ServiceRequestQuery>({
     page: 1,
-    size: 10,
+    pageSize: 10,
     scope: 'me',
   });
 
@@ -193,9 +193,9 @@ const ServiceRequestList: React.FC = () => {
         }}
         pagination={{
           current: query.page,
-          pageSize: query.size,
+          pageSize: query.pageSize,
           total: total,
-          onChange: (page, size) => setQuery(prev => ({ ...prev, page, size })),
+          onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: total => `共 ${total} 条记录`,

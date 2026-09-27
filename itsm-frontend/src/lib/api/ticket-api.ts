@@ -1,6 +1,226 @@
 import { httpClient } from './http-client';
 import { handleApiRequest } from './base-api-handler';
-import type { Ticket, TicketListResponse, CreateTicketRequest, GetTicketsParams } from './api-config';
+import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
+
+// 枚举本体（含展示配置）在 @/constants/taxonomy；此处以值形式再导出，
+// 使契约模块成为 status/priority 词表的唯一对外入口。
+export { TicketStatus, TicketPriority };
+
+/**
+ * 工单 API 契约的唯一声明处。
+ *
+ * 字段逐一对齐后端 itsm-backend/dto/ticket_dto.go
+ * （TicketResponse / ListTicketsResponse / CreateTicketRequest / UpdateTicketRequest /
+ * ListTicketsRequest），状态词表对齐 itsm-backend/common/constants.go 的工单状态机
+ * （单一事实来源，见 itsm-backend/repository/ticket/model.go CanTransitionTo）。
+ *
+ * lib/api/types.ts、lib/api/api-config.ts、types/ticket.ts 只能再导出本模块，
+ * 不得另立字段。后端 DTO 把 status/priority/type 声明为 string，前端按词表收窄以便渲染，
+ * 未知值仍由调用方的 Record<string, ...> 兜底。
+ */
+
+/** 工单 ITIL 类型词表；与后端 binding `oneof=incident service_request change ticket problem improvement` 一致 */
+export const TICKET_TYPES = [
+  'incident',
+  'service_request',
+  'change',
+  'problem',
+  'ticket',
+  'improvement',
+] as const;
+
+export type TicketType = (typeof TICKET_TYPES)[number];
+
+/** 把后端返回的自由字符串收窄为 TicketType */
+export const isTicketType = (value: string): value is TicketType =>
+  (TICKET_TYPES as readonly string[]).includes(value);
+
+/** 工单来源；后端 TicketResponse 不返回该字段，仅前端筛选/展示使用 */
+export type TicketSource = 'web' | 'email' | 'phone' | 'chat' | 'api' | 'mobile';
+
+/** 对应后端 dto.UserBasicInfo */
+export interface UserBasicInfo {
+  id: number;
+  username: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+/** 对应后端 dto.TicketResponse */
+export interface Ticket {
+  id: number;
+  ticketNumber: string;
+  title: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  type: string;
+  ticketTypeId?: number;
+  ticketTypeCode?: string;
+  ticketTypeName?: string;
+  formFields?: Record<string, unknown>;
+  requesterId: number;
+  assigneeId?: number;
+  tenantId: number;
+  categoryId?: number;
+  departmentId?: number;
+  parentTicketId?: number;
+  templateId?: number | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  requester?: UserBasicInfo;
+  assignee?: UserBasicInfo;
+  resolution?: string;
+  resolutionCategory?: string;
+  resolvedAt?: string;
+  closedAt?: string;
+  firstResponseAt?: string;
+  slaResponseDeadline?: string;
+  slaResolutionDeadline?: string;
+  rating?: number;
+}
+
+/** 对应后端 dto.ListTicketsResponse */
+export interface TicketListResponse {
+  tickets: Ticket[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** 对应后端 dto.CreateTicketRequest */
+export interface CreateTicketRequest {
+  title: string;
+  description?: string;
+  priority: TicketPriority;
+  type?: TicketType;
+  ticketTypeId?: number;
+  /** legacy 租户配置工单类型编码 */
+  typeId?: string;
+  category?: string;
+  categoryId?: number;
+  templateId?: number;
+  assigneeId?: number;
+  parentTicketId?: number;
+  tagIds?: number[];
+  tags?: string[];
+  formFields?: Record<string, unknown>;
+  attachments?: string[];
+  workflowDefinitionKey?: string;
+}
+
+/** 对应后端 dto.UpdateTicketRequest（PUT/PATCH 共用同一 handler） */
+export interface UpdateTicketRequest {
+  title?: string;
+  description?: string;
+  priority?: TicketPriority;
+  status?: TicketStatus;
+  type?: TicketType;
+  category?: string;
+  categoryId?: number;
+  assigneeId?: number;
+  tags?: string[];
+  resolution?: string;
+  formFields?: Record<string, unknown>;
+  /** 乐观锁版本；后端 Force 字段是 json:"-"，客户端不可传 */
+  version?: number;
+}
+
+/** PUT /tickets/:id/status 请求体（后端 handlers/ticket/handler.go:349 匿名 struct） */
+export interface UpdateStatusRequest {
+  status: TicketStatus;
+}
+
+/** 对应后端 dto.AssignTicketRequest；后端只绑定 assigneeId，没有 reason/comment */
+export interface AssignTicketRequest {
+  assigneeId: number;
+}
+
+/** 对应后端 dto.EscalateTicketRequest；reason 必填，后端没有 level/assigneeId 字段 */
+export interface EscalateTicketRequest {
+  reason: string;
+}
+
+/**
+ * 对应后端 dto.ResolveTicketRequest。
+ * 后端同时接受 resolution 与 solution 是历史兼容，前端统一只发 resolution，不再双写。
+ */
+export interface ResolveTicketRequest {
+  resolution: string;
+  resolutionCategory?: string;
+  workNotes?: string;
+}
+
+/** 对应后端 dto.CloseTicketRequest */
+export interface CloseTicketRequest {
+  closeReason?: string;
+  closeNotes?: string;
+  feedback?: string;
+}
+
+/**
+ * 对应后端 dto.TicketExportRequest（POST /tickets/export，JSON body）。
+ * 后端 handler 目前只消费 format 与 filters.status/priority。
+ */
+export interface TicketExportRequest {
+  format: 'csv' | 'excel' | 'pdf';
+  filters?: Pick<GetTicketsParams, 'status' | 'priority'>;
+}
+
+/** 对应后端 dto.ListTicketsRequest */
+export interface GetTicketsParams {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  priority?: string;
+  type?: string;
+  category?: string;
+  categoryId?: number;
+  assigneeId?: number;
+  requesterId?: number;
+  parentTicketId?: number;
+  templateId?: number;
+  keyword?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  isOverdue?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/** 对应后端 dto.TicketStatsResponse */
+export interface TicketStatsResponse {
+  total: number;
+  open: number;
+  inProgress: number;
+  resolved: number;
+  pending: number;
+  highPriority: number;
+  overdue: number;
+}
+
+/**
+ * 对应后端 service.TicketSLAInfo（GET /tickets/:id/sla 直接序列化该结构体）。
+ * 后端把响应/解决拆成两套剩余时间与违约标记，前端不得合并成单一 isBreached。
+ */
+export interface TicketSLAInfo {
+  ticketId: number;
+  ticketNumber: string;
+  priority: string;
+  slaDefinitionId: number;
+  slaDefinitionName: string;
+  responseDeadline: string;
+  resolutionDeadline: string;
+  responseTimeLeftMinutes: number;
+  isResponseBreached: boolean;
+  resolutionTimeLeftMinutes: number;
+  isResolutionBreached: boolean;
+  firstResponseAt?: string;
+  resolvedAt?: string;
+}
 
 // AI-Native：工单关联的配置项（受影响配置项区块使用）
 export interface TicketConfigurationItem {
@@ -14,17 +234,12 @@ export interface TicketConfigurationItem {
 export class TicketApi {
   // Get ticket list
   static async getTickets(
-    params?: GetTicketsParams & { [key: string]: unknown }
+    params?: GetTicketsParams
   ): Promise<TicketListResponse> {
-    const response = await handleApiRequest(httpClient.get<TicketListResponse>('/api/v1/tickets', params), {
+    return handleApiRequest(httpClient.get<TicketListResponse>('/api/v1/tickets', params), {
       errorMessage: 'Failed to fetch tickets',
       silent: true,
     });
-
-    return {
-      ...response,
-      size: response.pageSize ?? 20,
-    };
   }
 
   // Create ticket
@@ -54,7 +269,7 @@ export class TicketApi {
   }
 
   // Update ticket status
-  static async updateTicketStatus(id: number, status: string): Promise<Ticket> {
+  static async updateTicketStatus(id: number, status: TicketStatus): Promise<Ticket> {
     return handleApiRequest(httpClient.put<Ticket>(`/api/v1/tickets/${id}/status`, { status }), {
       errorMessage: 'Failed to update ticket status',
       showSuccess: true,
@@ -62,10 +277,7 @@ export class TicketApi {
   }
 
   // Update ticket information
-  static async updateTicket(
-    id: number,
-    data: Partial<Ticket> & { version?: number; force?: boolean }
-  ): Promise<Ticket> {
+  static async updateTicket(id: number, data: UpdateTicketRequest): Promise<Ticket> {
     return handleApiRequest(httpClient.put<Ticket>(`/api/v1/tickets/${id}`, data), {
       errorMessage: 'Failed to update ticket',
       showSuccess: true,
@@ -116,51 +328,23 @@ export class TicketApi {
   }
 
   // Assign ticket
-  static async assignTicket(
-    id: number,
-    assigneeIdOrData: number | { assigneeId: number; comment?: string }
-  ): Promise<Ticket> {
-    const payload =
-      typeof assigneeIdOrData === 'number' ? { assigneeId: assigneeIdOrData } : assigneeIdOrData;
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, payload);
+  static async assignTicket(id: number, data: AssignTicketRequest): Promise<Ticket> {
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, data);
   }
 
   // Escalate ticket
-  static async escalateTicket(
-    id: number,
-    reasonOrData: string | { level: string; reason: string; assigneeId?: number }
-  ): Promise<Ticket> {
-    const payload = typeof reasonOrData === 'string' ? { reason: reasonOrData } : reasonOrData;
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, payload);
+  static async escalateTicket(id: number, data: EscalateTicketRequest): Promise<Ticket> {
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, data);
   }
 
   // Resolve ticket
-  static async resolveTicket(
-    id: number,
-    resolutionOrData: string | { solution: string; resolutionCode?: string }
-  ): Promise<Ticket> {
-    const payload =
-      typeof resolutionOrData === 'string'
-        ? { resolution: resolutionOrData }
-        : {
-            resolution: resolutionOrData.solution,
-            resolutionCode: resolutionOrData.resolutionCode,
-          };
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, payload);
+  static async resolveTicket(id: number, data: ResolveTicketRequest): Promise<Ticket> {
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, data);
   }
 
   // Close ticket
-  static async closeTicket(
-    id: number,
-    feedbackOrData?: string | { closeNotes?: string }
-  ): Promise<Ticket> {
-    const payload =
-      typeof feedbackOrData === 'string'
-        ? { feedback: feedbackOrData }
-        : feedbackOrData
-          ? { feedback: feedbackOrData.closeNotes }
-          : {};
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, payload);
+  static async closeTicket(id: number, data: CloseTicketRequest = {}): Promise<Ticket> {
+    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, data);
   }
 
   // Search tickets
@@ -577,29 +761,19 @@ export class TicketApi {
   }
 
   // Get ticket statistics
-  static async getTicketStats(): Promise<{
-    total: number;
-    open: number;
-    inProgress: number;
-    resolved: number;
-    highPriority: number;
-    overdue: number;
-  }> {
+  static async getTicketStats(): Promise<TicketStatsResponse> {
     return httpClient.get('/api/v1/tickets/stats');
   }
 
   // Export tickets
-  static async exportTickets(params: {
-    format: 'excel' | 'csv' | 'pdf';
-    filters?: Record<string, unknown>;
-  }): Promise<Blob> {
-    const response = await httpClient.request({
-      method: 'GET',
+  static async exportTickets(data: TicketExportRequest): Promise<Blob> {
+    const response = await httpClient.request<Blob>({
+      method: 'POST',
       url: '/api/v1/tickets/export',
-      params,
+      data,
       responseType: 'blob',
     });
-    return response as Blob;
+    return response;
   }
 
   // Batch update tickets
@@ -696,23 +870,8 @@ export class TicketApi {
   }
 
   // Get ticket SLA info
-  static async getTicketSLA(id: number): Promise<{
-    ticketId: number;
-    slaDefinitionId: number;
-    slaName: string;
-    serviceType: string;
-    priority: string;
-    responseTime: number;
-    resolutionTime: number;
-    responseDeadline: string | null;
-    resolutionDeadline: string | null;
-    firstResponseAt: string | null;
-    resolvedAt: string | null;
-    isBreached: boolean;
-    responseTimeRemaining: number | null;
-    resolutionTimeRemaining: number | null;
-  }> {
-    return httpClient.get(`/api/v1/tickets/${id}/sla`);
+  static async getTicketSLA(id: number): Promise<TicketSLAInfo> {
+    return httpClient.get<TicketSLAInfo>(`/api/v1/tickets/${id}/sla`);
   }
 }
 

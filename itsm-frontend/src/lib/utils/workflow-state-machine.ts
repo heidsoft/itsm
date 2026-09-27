@@ -7,38 +7,43 @@ import { TicketStatus } from '@/constants/taxonomy';
 
 /**
  * 工单状态转换规则
- * 定义每个状态允许转换到的目标状态
+ * 与后端 common/constants.go IsValidTicketStatusTransition 保持一致（单一事实来源）
  */
 export const VALID_TICKET_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  [TicketStatus.NEW]: [TicketStatus.OPEN, TicketStatus.CANCELLED],
+  [TicketStatus.NEW]: [
+    TicketStatus.OPEN,
+    TicketStatus.ASSIGNED,
+    TicketStatus.IN_PROGRESS,
+    TicketStatus.CANCELLED,
+  ],
+  [TicketStatus.ASSIGNED]: [
+    TicketStatus.IN_PROGRESS,
+    TicketStatus.PENDING,
+    TicketStatus.RESOLVED,
+    TicketStatus.CANCELLED,
+  ],
   [TicketStatus.OPEN]: [
     TicketStatus.IN_PROGRESS,
     TicketStatus.PENDING,
-    TicketStatus.PENDING_APPROVAL,
     TicketStatus.RESOLVED,
     TicketStatus.CANCELLED,
   ],
-  [TicketStatus.IN_PROGRESS]: [
-    TicketStatus.PENDING,
-    TicketStatus.PENDING_APPROVAL,
-    TicketStatus.RESOLVED,
-    TicketStatus.CANCELLED,
-  ],
-  [TicketStatus.PENDING_APPROVAL]: [
-    TicketStatus.OPEN, // 审批通过后返回待处理
-    TicketStatus.REJECTED,
-    TicketStatus.CANCELLED,
-  ],
+  [TicketStatus.IN_PROGRESS]: [TicketStatus.RESOLVED, TicketStatus.PENDING, TicketStatus.CANCELLED],
   [TicketStatus.PENDING]: [
     TicketStatus.IN_PROGRESS,
-    TicketStatus.PENDING_APPROVAL,
     TicketStatus.RESOLVED,
+    TicketStatus.OPEN,
     TicketStatus.CANCELLED,
   ],
-  [TicketStatus.RESOLVED]: [TicketStatus.CLOSED, TicketStatus.OPEN], // 可重开
-  [TicketStatus.CLOSED]: [], // 已关闭不能转换
-  [TicketStatus.CANCELLED]: [], // 已取消不能转换
-  [TicketStatus.REJECTED]: [TicketStatus.OPEN, TicketStatus.CANCELLED], // 被拒绝可重新打开
+  [TicketStatus.RESOLVED]: [TicketStatus.CLOSED, TicketStatus.IN_PROGRESS, TicketStatus.OPEN],
+  [TicketStatus.CLOSED]: [], // 终态
+  [TicketStatus.CANCELLED]: [], // 终态
+  [TicketStatus.APPROVED]: [
+    TicketStatus.IN_PROGRESS,
+    TicketStatus.RESOLVED,
+    TicketStatus.CLOSED,
+  ],
+  [TicketStatus.REJECTED]: [TicketStatus.OPEN, TicketStatus.CANCELLED],
 };
 
 /**
@@ -49,15 +54,14 @@ export const STATUS_TRANSITION_ACTIONS: Record<string, string> = {
   // 解决
   'new:resolved': 'resolveTicket',
   'open:resolved': 'resolveTicket',
+  'assigned:resolved': 'resolveTicket',
   'in_progress:resolved': 'resolveTicket',
   'pending:resolved': 'resolveTicket',
+  'approved:resolved': 'resolveTicket',
 
   // 关闭
   'resolved:closed': 'closeTicket',
-
-  // 审批
-  'pending_approval:approved': 'approveTicket',
-  'pending_approval:rejected': 'rejectTicket',
+  'approved:closed': 'closeTicket',
 
   // 重开
   'resolved:open': 'reopenTicket',
@@ -65,12 +69,15 @@ export const STATUS_TRANSITION_ACTIONS: Record<string, string> = {
 };
 
 /**
- * 验证状态转换是否合法
+ * 验证状态转换是否合法（同状态视为合法，与后端一致）
  */
 export function isValidTransition(
   currentStatus: TicketStatus,
   targetStatus: TicketStatus
 ): boolean {
+  if (currentStatus === targetStatus) {
+    return true;
+  }
   const allowedTransitions = VALID_TICKET_TRANSITIONS[currentStatus];
   return allowedTransitions?.includes(targetStatus) ?? false;
 }

@@ -45,101 +45,37 @@ export interface BatchOperationResponse<T = unknown> {
   }>;
 }
 
-// ==================== 基础用户类型 ====================
-
-export interface UserBasicInfo {
-  id: number;
-  name: string;
-  username?: string;
-  email?: string;
-  avatar?: string;
-}
-
 // ==================== 工单相关类型 ====================
+// 契约唯一声明处 = ./ticket-api（与后端 dto/ticket_dto.go 逐字段对齐）。
+// 此处只做再导出，禁止再另立字段。
+import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
+import type {
+  UserBasicInfo,
+  Ticket,
+  TicketListResponse,
+  TicketType,
+  TicketSource,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  GetTicketsParams,
+  TicketStatsResponse,
+} from './ticket-api';
 
-/** 工单优先级 - 与 @/constants/taxonomy 保持一致 */
-export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
-export type TicketStatus = 'new' | 'open' | 'in_progress' | 'pending' | 'pending_approval' | 'resolved' | 'closed' | 'cancelled' | 'rejected' | 'approved';
-export type TicketType = 'incident' | 'problem' | 'change' | 'service_request';
+export { TicketStatus, TicketPriority };
+export type {
+  UserBasicInfo,
+  Ticket,
+  TicketListResponse,
+  TicketType,
+  TicketSource,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  GetTicketsParams,
+  TicketStatsResponse,
+};
 
-export interface Ticket {
-  id: number;
-  ticketNumber: string;
-  title: string;
-  description: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  type?: TicketType;
-  category?: string;
-  categoryId?: number;
-  tags?: string[];
-  requesterId: number;
-  assigneeId?: number;
-  assignee?: UserBasicInfo;
-  requester?: UserBasicInfo;
-  resolution?: string;
-  slaId?: number;
-  slaInfo?: SLAInfo;
-  /** 动态表单字段（与后端 DTO FormFields 对齐，键为 snake_case schema field.name） */
-  formFields?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  dueTime?: string;
-  closedAt?: string;
-  /** 版本号（用于乐观锁冲突检测） */
-  version?: number;
-}
-
-// TicketListResponse 已迁移到 api-config.ts（扩展 BaseTicket 含租户字段）
-// 引用: import type { TicketListResponse } from './api-config';
-
-export interface TicketCreateRequest {
-  title: string;
-  description?: string;
-  priority: TicketPriority;
-  type?: TicketType;
-  categoryId?: number;
-  tags?: string[];
-  assigneeId?: number;
-  formFields?: Record<string, unknown>;
-  attachments?: string[];
-}
-
-export interface TicketUpdateRequest {
-  title?: string;
-  description?: string;
-  priority?: TicketPriority;
-  status?: TicketStatus;
-  categoryId?: number;
-  tags?: string[];
-  assigneeId?: number;
-  resolution?: string;
-}
-
-export interface TicketAssignRequest {
-  assigneeId: number;
-  comment?: string;
-}
-
-export interface TicketWorkflowStep {
-  id: number;
-  stepName: string;
-  stepOrder: number;
-  status: string;
-  assigneeId?: number;
-  assignee?: UserBasicInfo;
-  startedAt?: string;
-  completedAt?: string;
-  comments?: string;
-}
-
-export interface SLAInfo {
-  slaName: string;
-  responseTime: number;
-  resolutionTime: number;
-  dueTime: string;
-  status: 'active' | 'completed' | 'breached';
-}
+// TicketListResponse 的列表字段是 tickets（后端 dto.ListTicketsResponse），不是 items。
+// 引用: import type { TicketListResponse } from './ticket-api';
 
 // ==================== 事件相关类型 ====================
 
@@ -218,7 +154,6 @@ export interface Change {
 export interface User extends UserBasicInfo {
   phone?: string;
   department?: string;
-  role?: string;
   permissions?: string[];
   status: 'active' | 'inactive' | 'locked';
   tenantId: number;
@@ -500,6 +435,3 @@ export function normalizeDateRangeParams(params: Record<string, unknown>): Recor
   if (params.dateTo !== undefined) normalized.dateTo = params.dateTo;
   return normalized;
 }
-
-// 兼容性重导出
-export type { UserBasicInfo as Permission } from './types';

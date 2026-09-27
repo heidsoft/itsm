@@ -2,8 +2,11 @@
  * 工单流转相关类型定义
  */
 
-import type { TicketStatus, TicketUser } from './ticket';
-import type { BpmnProcessState } from './ticket-workflow-state';
+import type { TicketStatus } from './ticket';
+import type {
+  BpmnProcessState,
+  WorkflowUserInfo,
+} from './ticket-workflow-state';
 
 /**
  * 工单流转操作类型
@@ -32,9 +35,9 @@ export interface TicketWorkflowRecord {
   action: TicketWorkflowAction;
   fromStatus?: TicketStatus;
   toStatus?: TicketStatus;
-  operator: TicketUser;
-  fromUser?: TicketUser;
-  toUser?: TicketUser;
+  operator: WorkflowUserInfo;
+  fromUser?: WorkflowUserInfo;
+  toUser?: WorkflowUserInfo;
   comment?: string;
   reason?: string;
   attachments?: Array<{
@@ -52,11 +55,11 @@ export interface TicketWorkflowRecord {
 export interface TicketWorkflowState {
   ticketId: number;
   currentStatus: TicketStatus;
-  currentAssignee?: TicketUser;
+  currentAssignee?: WorkflowUserInfo;
   approvalStatus?: ApprovalStatus;
   currentApprovalLevel?: number;
   totalApprovalLevels?: number;
-  pendingApprovers?: TicketUser[];
+  pendingApprovers?: WorkflowUserInfo[];
   completedApprovals?: ApprovalRecord[];
   canAccept: boolean;
   canReject: boolean;
@@ -89,7 +92,7 @@ export interface ApprovalRecord {
   ticketId: number;
   level: number;
   levelName: string;
-  approver: TicketUser;
+  approver: WorkflowUserInfo;
   status: ApprovalStatus;
   action?: 'approve' | 'reject' | 'delegate';
   comment?: string;
@@ -98,7 +101,7 @@ export interface ApprovalRecord {
     filename: string;
     url: string;
   }>;
-  delegateTo?: TicketUser;
+  delegateTo?: WorkflowUserInfo;
   processedAt?: string;
   createdAt: string;
 }
@@ -194,8 +197,8 @@ export interface ReopenTicketRequest {
 export interface TicketCC {
   id: number;
   ticketId: number;
-  user: TicketUser;
-  addedBy: TicketUser;
+  user: WorkflowUserInfo;
+  addedBy: WorkflowUserInfo;
   addedAt: string;
   isActive: boolean;
 }

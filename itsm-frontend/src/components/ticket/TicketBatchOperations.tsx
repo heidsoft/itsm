@@ -156,10 +156,10 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           try {
             switch (operation) {
               case 'assign':
-                const assignParams = values as { assigneeId: number; comment?: string };
+                // 后端 dto.AssignTicketRequest 只绑定 assigneeId，无 reason/comment 字段
+                const assignParams = values as { assigneeId: number };
                 await TicketAPI.assignTicket(ticket.id, {
                   assigneeId: assignParams.assigneeId,
-                  comment: assignParams.comment,
                 });
                 break;
               case 'update_status':
@@ -248,26 +248,25 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   // 批量导出
   const handleBatchExport = useCallback(async () => {
     try {
-      const ticketIds = selectedTickets.map(ticket => ticket.id);
-      const blob = await TicketAPI.exportTickets({
-        format: 'excel',
-        filters: { ticketIds: ticketIds },
-      });
+      // 后端 POST /tickets/export 的 filters 只有 status/priority（dto.ListTicketsRequest
+      // 无 ticketIds，service.ExportTickets 也只读这两项），无法按选中工单导出。
+      // 这里不发送 ticketIds，避免把“导出 N 条选中”伪装成“导出全量”。
+      const blob = await TicketAPI.exportTickets({ format: 'excel' });
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `tickets_batch_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.download = `tickets_export_${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      message.success(`成功导出 ${selectedTickets.length} 个工单`);
+      message.success('导出完成：文件包含本租户全部工单，不仅限于当前选中项');
     } catch (error) {
       message.error('导出失败');
     }
-  }, [selectedTickets]);
+  }, []);
 
   // 渲染操作表单
   const renderOperationForm = () => {
@@ -281,9 +280,6 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               rules={[{ required: true, message: '请选择处理人' }]}
             >
               <Select placeholder="选择处理人" showSearch filterOption options={[{ value: 1, label: "张三" }, { value: 2, label: "李四" }, { value: 3, label: "王五" }]} />
-            </Form.Item>
-            <Form.Item label="分配备注" name="comment">
-              <TextArea rows={3} placeholder="可选的分配备注" />
             </Form.Item>
           </>
         );

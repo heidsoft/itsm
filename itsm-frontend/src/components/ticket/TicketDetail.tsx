@@ -8,12 +8,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { TicketApi, type TicketConfigurationItem } from '@/lib/api/ticket-api';
+import { TicketApi, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
+import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
-import type { TicketPriority } from '@/types/ticket';
 import {
   ArrowLeft,
   AlertCircle,
@@ -101,13 +101,14 @@ interface AssigneeOption {
 }
 
 // 创建状态映射的工厂函数
+// 键必须是后端工单状态词表（common/constants.go）的值：
+// pending_approval 属于 Change/ServiceRequest 领域，工单永远不会返回它，故不在此列出。
 const createStatusMap = (t: (key: string) => string): Record<string, StatusConfig> => ({
   new: { text: t('ticketDetail.statusNew'), status: 'default' },
   open: { text: t('ticketDetail.statusOpen'), status: 'default' },
   in_progress: { text: t('ticketDetail.statusInProgress'), status: 'processing' },
   assigned: { text: t('ticketDetail.statusAssigned'), status: 'processing' },
   pending: { text: t('ticketDetail.statusPending'), status: 'warning' },
-  pending_approval: { text: t('ticketDetail.statusPendingApproval'), status: 'warning' },
   resolved: { text: t('ticketDetail.statusResolved'), status: 'success' },
   closed: { text: t('ticketDetail.statusClosed'), status: 'default' },
   cancelled: { text: t('ticketDetail.statusCancelled'), status: 'error' },
@@ -124,9 +125,19 @@ const createPriorityMap = (t: (key: string) => string): Record<string, string> =
   low: t('ticketDetail.priorityLow'),
 });
 
-const ticketPriorities: TicketPriority[] = ['low', 'medium', 'high', 'urgent', 'critical'];
+// 编辑弹窗的表单模型：只有这四项可编辑，提交时并入 UpdateTicketRequest
+interface TicketEditFormValues {
+  title: string;
+  description: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+}
+
+// 词表唯一来源 = @/constants/taxonomy（对齐后端状态机），不再手写字面量数组
 const toTicketPriority = (value: string): TicketPriority =>
-  ticketPriorities.includes(value as TicketPriority) ? (value as TicketPriority) : 'medium';
+  (Object.values(TicketPriority) as string[]).includes(value)
+    ? (value as TicketPriority)
+    : TicketPriority.MEDIUM;
 
 // 把任意 formFields 值渲染为只读文案。避免对 object / array 直接 toString 产生 [object Object]
 const renderFormFieldValue = (value: unknown): React.ReactNode => {
@@ -188,14 +199,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [cis, setCis] = useState<TicketConfigurationItem[]>([]);
   const [cisLoading, setCisLoading] = useState(false);
   // users / loadingUsers 由 useUserListQuery 提供（带缓存）
-  const [slaInfo, setSlaInfo] = useState<{
-    slaName: string;
-    responseDeadline: string | null;
-    resolutionDeadline: string | null;
-    isBreached: boolean;
-    responseTimeRemaining: number | null;
-    resolutionTimeRemaining: number | null;
-  } | null>(null);
+  const [slaInfo, setSlaInfo] = useState<TicketSLAInfo | null>(null);
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const [ccForm] = Form.useForm();
@@ -331,7 +335,10 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       }
       if (!submitted) {
         // 兜底：未发现审批链（例如简单审批工单），保留旧行为以不阻塞用户。
-        await TicketApi.updateTicketStatus(resolvedTicketId!, isApprove ? 'approved' : 'rejected');
+        await TicketApi.updateTicketStatus(
+          resolvedTicketId!,
+          isApprove ? TicketStatus.APPROVED : TicketStatus.REJECTED
+        );
       }
       antMessage.success(
         isApprove ? t('ticketDetail.approveSuccess') : t('ticketDetail.rejectSuccess'),
@@ -422,7 +429,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   };
 
   // Handle edit submit
-  const handleEditSubmit = async (values: Partial<Ticket>) => {
+  const handleEditSubmit = async (values: TicketEditFormValues) => {
     try {
       // 状态转换验证
       if (values.status && ticket?.status && values.status !== ticket.status) {
@@ -600,12 +607,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           description={ticket.description}
           onAccept={async suggestion => {
             // Bug 11 修复：onAccept 之前只打开编辑弹窗没有真正落库
-            // 现在直接调 updateTicket 写入 AI 建议的 category + priority
-            if (
-              suggestion.priority === ticket.priority &&
-              suggestion.category === ticket.category
-            ) {
-              antMessage.info('AI建议与当前分类/优先级一致，无需更新');
+            // 现在直接调 updateTicket 写入 AI 建议的 category + priority。
+            // 只比对 priority：后端 TicketResponse 不回传 category（写入口有、读出口无），
+            // ticket.category 恒为 undefined，比对它等于永不相等。
+            if (suggestion.priority === ticket.priority) {
+              antMessage.info('AI建议与当前优先级一致，无需更新');
               return;
             }
             try {
@@ -613,13 +619,13 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 category: suggestion.category,
                 priority: toTicketPriority(suggestion.priority),
                 version: ticket.version,
-              } as any);
+              });
               antMessage.success(
                 `已采纳AI建议：分类 ${suggestion.category}，优先级 ${suggestion.priority}`,
               );
               // Update local state immediately with the server response, then refetch in background
-              if (updated && (updated as any).id) {
-                setTicket(prev => (prev ? { ...prev, ...(updated as Partial<Ticket>) } : prev));
+              if (updated.id) {
+                setTicket(prev => (prev ? {...prev, ...updated} : prev));
               }
               await fetchTicket();
             } catch (err) {
@@ -708,50 +714,36 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           )}
 
           {/* SLA Information */}
-          {slaInfo && (
+          {slaInfo && slaInfo.slaDefinitionId > 0 && (
             <Card size="small" title={t('ticketDetail.slaInfo')} className="mt-4">
               <Space orientation="vertical" style={{ width: '100%' }}>
                 <div className="flex justify-between">
                   <Text type="secondary">{t('ticketDetail.slaDefinition')}:</Text>
-                  <Tag color={slaInfo.isBreached ? 'red' : 'blue'}>{slaInfo.slaName}</Tag>
+                  <Tag
+                    color={
+                      slaInfo.isResponseBreached || slaInfo.isResolutionBreached ? 'red' : 'blue'
+                    }
+                  >
+                    {slaInfo.slaDefinitionName}
+                  </Tag>
                 </div>
-                {slaInfo.responseDeadline && (
-                  <div className="flex justify-between">
-                    <Text type="secondary">{t('ticketDetail.responseDeadline')}:</Text>
-                    <Text
-                      type={
-                        slaInfo.responseTimeRemaining !== null &&
-                        slaInfo.responseTimeRemaining < 0
-                          ? 'danger'
-                          : undefined
-                      }
-                    >
-                      {new Date(slaInfo.responseDeadline).toLocaleString()}
-                      {slaInfo.responseTimeRemaining !== null &&
-                        slaInfo.responseTimeRemaining < 0 &&
-                        ` (${t('ticketDetail.responseTimeout')})`}
-                    </Text>
-                  </div>
+                <div className="flex justify-between">
+                  <Text type="secondary">{t('ticketDetail.responseDeadline')}:</Text>
+                  <Text type={slaInfo.isResponseBreached ? 'danger' : undefined}>
+                    {new Date(slaInfo.responseDeadline).toLocaleString()}
+                    {slaInfo.isResponseBreached && ` (${t('ticketDetail.responseTimeout')})`}
+                  </Text>
+                </div>
+                <div className="flex justify-between">
+                  <Text type="secondary">{t('ticketDetail.resolutionDeadline')}:</Text>
+                  <Text type={slaInfo.isResolutionBreached ? 'danger' : undefined}>
+                    {new Date(slaInfo.resolutionDeadline).toLocaleString()}
+                    {slaInfo.isResolutionBreached && ` (${t('ticketDetail.resolutionTimeout')})`}
+                  </Text>
+                </div>
+                {(slaInfo.isResponseBreached || slaInfo.isResolutionBreached) && (
+                  <Tag color="red">{t('ticketDetail.slaBreached')}</Tag>
                 )}
-                {slaInfo.resolutionDeadline && (
-                  <div className="flex justify-between">
-                    <Text type="secondary">{t('ticketDetail.resolutionDeadline')}:</Text>
-                    <Text
-                      type={
-                        slaInfo.resolutionTimeRemaining !== null &&
-                        slaInfo.resolutionTimeRemaining < 0
-                          ? 'danger'
-                          : undefined
-                      }
-                    >
-                      {new Date(slaInfo.resolutionDeadline).toLocaleString()}
-                      {slaInfo.resolutionTimeRemaining !== null &&
-                        slaInfo.resolutionTimeRemaining < 0 &&
-                        ` (${t('ticketDetail.resolutionTimeout')})`}
-                    </Text>
-                  </div>
-                )}
-                {slaInfo.isBreached && <Tag color="red">{t('ticketDetail.slaBreached')}</Tag>}
               </Space>
             </Card>
           )}

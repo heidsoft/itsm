@@ -90,26 +90,25 @@ export { SLAApi } from './sla-api';
 
 export { WorkflowApi } from './workflow-api';
 export { BPMNAIApi } from './bpmn-ai-api';
-export { BPMNWorkflowApi } from './bpmn-workflow-api';
 export { BPMNMonitoringApi } from './bpmn-monitoring-api';
 export { BPMNDashboardApi } from './bpmn-dashboard-api';
 export type {
-  ProcessDefinition,
-  ProcessDefinitionListResponse,
-  ProcessInstance,
-  ProcessInstanceListResponse,
-  UserTask,
-  UserTaskListResponse,
-  CounterSignTask,
-  CounterSignStatusResponse,
-  ProcessVersion,
-  ProcessVersionListResponse,
-  VersionCompareResponse,
-  InstanceStats,
-  TaskStats,
-  VersionChangeLog,
-  ChangeLogListResponse,
-} from './bpmn-workflow-api';
+  BpmnProcessDefinition as ProcessDefinition,
+  BpmnProcessDefinitionListResponse as ProcessDefinitionListResponse,
+  BpmnProcessInstance as ProcessInstance,
+  BpmnProcessInstanceListResponse as ProcessInstanceListResponse,
+  BpmnUserTask as UserTask,
+  BpmnUserTaskListResponse as UserTaskListResponse,
+  BpmnCounterSignTask as CounterSignTask,
+  BpmnCounterSignStatusResponse as CounterSignStatusResponse,
+  BpmnProcessVersion as ProcessVersion,
+  BpmnProcessVersionListResponse as ProcessVersionListResponse,
+  BpmnVersionCompareResponse as VersionCompareResponse,
+  BpmnInstanceStats as InstanceStats,
+  BpmnTaskStats as TaskStats,
+  BpmnVersionChangeLog as VersionChangeLog,
+  BpmnChangeLogListResponse as ChangeLogListResponse,
+} from './workflow-api';
 export type {
   ProcessMetrics,
   PerformanceMetrics,

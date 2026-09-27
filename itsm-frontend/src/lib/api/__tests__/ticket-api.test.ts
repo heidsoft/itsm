@@ -1,4 +1,5 @@
 import { TicketApi } from '../ticket-api';
+import { TicketStatus } from '@/constants/taxonomy';
 import { httpClient } from '../http-client';
 import { handleApiRequest } from '../base-api-handler';
 
@@ -28,19 +29,20 @@ describe('TicketApi', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('getTickets', () => {
-    it('should fetch tickets with params', async () => {
-      const resp = { tickets: [], total: 0, pageSize: 10 };
+    it('forwards pagination params and returns the backend envelope unchanged', async () => {
+      const resp = { tickets: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
       mockGet.mockResolvedValue(resp);
       const result = await TicketApi.getTickets({ page: 1, pageSize: 10 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets', { page: 1, pageSize: 10 });
       expect(handleApiRequest).toHaveBeenCalled();
-      expect(result.size).toBe(10);
+      expect(result).toEqual(resp);
     });
 
-    it('should default size to 20 when not provided', async () => {
-      const resp = { items: [] };
-      mockGet.mockResolvedValue(resp);
+    it('does not invent a size field next to backend pageSize', async () => {
+      mockGet.mockResolvedValue({ tickets: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       const result = await TicketApi.getTickets();
-      expect(result.size).toBe(20);
+      expect(result).not.toHaveProperty('size');
+      expect(result.pageSize).toBe(20);
     });
   });
 
@@ -67,7 +69,7 @@ describe('TicketApi', () => {
     it('should update status', async () => {
       const expected = { id: 1, status: 'closed' };
       mockPut.mockResolvedValue(expected);
-      const result = await TicketApi.updateTicketStatus(1, 'closed');
+      const result = await TicketApi.updateTicketStatus(1, TicketStatus.CLOSED);
       expect(result).toEqual(expected);
     });
   });
@@ -111,62 +113,43 @@ describe('TicketApi', () => {
   });
 
   describe('assignTicket', () => {
-    it('should assign with number', async () => {
+    it('posts only the fields dto.AssignTicketRequest binds', async () => {
       mockPost.mockResolvedValue({ id: 1, assigneeId: 5 });
-      await TicketApi.assignTicket(1, 5);
+      await TicketApi.assignTicket(1, { assigneeId: 5 });
       expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/assign', { assigneeId: 5 });
-    });
-
-    it('should assign with object', async () => {
-      mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.assignTicket(1, { assigneeId: 5, comment: 'note' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/assign', { assigneeId: 5, comment: 'note' });
     });
   });
 
   describe('escalateTicket', () => {
-    it('should escalate with string reason', async () => {
+    it('sends the required reason and no invented level/assigneeId', async () => {
       mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.escalateTicket(1, 'urgent');
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/escalate', { reason: 'urgent' });
-    });
-
-    it('should escalate with object', async () => {
-      const data = { level: 'L2', reason: 'complex' };
-      mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.escalateTicket(1, data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/escalate', data);
+      await TicketApi.escalateTicket(1, { reason: 'complex' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/escalate', { reason: 'complex' });
     });
   });
 
   describe('resolveTicket', () => {
-    it('should resolve with string', async () => {
+    it('uses resolution/resolutionCategory from dto.ResolveTicketRequest', async () => {
       mockPost.mockResolvedValue({ id: 1, status: 'resolved' });
-      await TicketApi.resolveTicket(1, 'fixed');
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/resolve', { resolution: 'fixed' });
-    });
-
-    it('should resolve with object', async () => {
-      mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.resolveTicket(1, { solution: 'patched', resolutionCode: 'RC1' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/resolve', { resolution: 'patched', resolutionCode: 'RC1' });
+      await TicketApi.resolveTicket(1, { resolution: 'patched', resolutionCategory: 'HW' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/resolve', {
+        resolution: 'patched',
+        resolutionCategory: 'HW',
+      });
     });
   });
 
   describe('closeTicket', () => {
-    it('should close with string', async () => {
+    it('maps closeNotes to the backend field of the same name', async () => {
       mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.closeTicket(1, 'satisfied');
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/close', { feedback: 'satisfied' });
+      await TicketApi.closeTicket(1, { closeReason: 'resolved', closeNotes: 'done' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/close', {
+        closeReason: 'resolved',
+        closeNotes: 'done',
+      });
     });
 
-    it('should close with object', async () => {
-      mockPost.mockResolvedValue({ id: 1 });
-      await TicketApi.closeTicket(1, { closeNotes: 'done' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/close', { feedback: 'done' });
-    });
-
-    it('should close without feedback', async () => {
+    it('closes without any optional field', async () => {
       mockPost.mockResolvedValue({ id: 1 });
       await TicketApi.closeTicket(1);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/close', {});
@@ -435,8 +418,15 @@ describe('TicketApi', () => {
     it('should export tickets', async () => {
       const blob = new Blob(['data']);
       mockRequest.mockResolvedValue(blob);
-      const result = await TicketApi.exportTickets({ format: 'csv' });
-      expect(mockRequest).toHaveBeenCalledWith(expect.objectContaining({ method: 'GET', url: '/api/v1/tickets/export', responseType: 'blob' }));
+      const result = await TicketApi.exportTickets({ format: 'csv', filters: { status: 'open' } });
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          method: 'POST',
+          url: '/api/v1/tickets/export',
+          data: { format: 'csv', filters: { status: 'open' } },
+          responseType: 'blob',
+        })
+      );
       expect(result).toBe(blob);
     });
   });
@@ -499,9 +489,23 @@ describe('TicketApi', () => {
 
   describe('getTicketSLA', () => {
     it('should get ticket SLA', async () => {
-      mockGet.mockResolvedValue({ ticketId: 1, isBreached: false });
-      await TicketApi.getTicketSLA(1);
+      mockGet.mockResolvedValue({
+        ticketId: 1,
+        ticketNumber: 'TKT-1',
+        priority: 'high',
+        slaDefinitionId: 2,
+        slaDefinitionName: 'P1 4h',
+        responseDeadline: '2026-09-27T10:00:00Z',
+        resolutionDeadline: '2026-09-27T18:00:00Z',
+        responseTimeLeftMinutes: 30,
+        isResponseBreached: false,
+        resolutionTimeLeftMinutes: -5,
+        isResolutionBreached: true,
+      });
+      const result = await TicketApi.getTicketSLA(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/1/sla');
+      expect(result.slaDefinitionName).toBe('P1 4h');
+      expect(result.isResolutionBreached).toBe(true);
     });
   });
 

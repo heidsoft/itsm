@@ -127,7 +127,7 @@ export default function WorkflowToolbar({
         <Breadcrumb
           items={[
             {
-              title: <Link href="/workflow">{t('workflow.designer.toolbarBreadcrumb')}</Link>,
+              title: <Link href="/admin/workflows">{t('workflow.designer.toolbarBreadcrumb')}</Link>,
             },
             {
               title: workflow?.name || t('workflow.designer.toolbarNewWorkflow'),

@@ -117,21 +117,34 @@ export interface GetTenantsParams {
   search?: string;
 }
 
-// 重新导出标准Ticket类型，并扩展租户相关字段
-import type { Ticket as BaseTicket } from './types';
+// 工单契约的唯一声明处在 ./ticket-api（对齐后端 dto/ticket_dto.go）。
+// 这里只补充历史遗留的前端视图字段，不得重复定义契约字段。
+import type { Ticket as TicketContract } from './ticket-api';
 
-export interface Ticket extends BaseTicket {
-  tenantId?: number;
-  templateId?: number;
+export type {
+  CreateTicketRequest,
+  GetTicketsParams,
+  TicketListResponse,
+  TicketSource,
+  TicketStatsResponse,
+  TicketType,
+  UpdateStatusRequest,
+  UpdateTicketRequest,
+  UserBasicInfo,
+} from './ticket-api';
+export { TicketStatus, TicketPriority } from '@/constants/taxonomy';
+
+/**
+ * 兼容旧页面使用的工单类型。
+ * 下列附加字段后端 dto.TicketResponse 并不返回，属于待清理的前端遗留视图字段；
+ * 新代码请使用 ./ticket-api 的 Ticket 契约类型。
+ */
+export interface Ticket extends TicketContract {
   tenant?: Tenant;
-  // 扩展字段
   subcategory?: string;
   impact?: string;
   urgency?: string;
   workNotes?: string;
-  dueDate?: string; // 兼容旧字段名
-  escalationLevel?: number;
-  source?: string;
   businessValue?: string;
   customFields?: Record<string, unknown>;
 }
@@ -213,44 +226,6 @@ export interface User {
   permissions?: string[];
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface TicketListResponse {
-  tickets: Ticket[];
-  total: number;
-  page: number;
-  pageSize?: number;
-  size: number;
-  totalPages?: number;
-}
-
-export interface CreateTicketRequest {
-  title: string;
-  description: string;
-  priority: string;
-  type?: 'incident' | 'service_request' | 'change' | 'problem' | string;
-	/** Tenant-scoped configured TicketType code. `type` remains the ITIL lifecycle domain. */
-	typeId?: string;
-	ticketTypeId?: number;
-  category?: string;
-  categoryId?: number;
-  formFields?: Record<string, unknown>;
-  assigneeId?: number;
-  workflowDefinitionKey?: string;
-}
-
-export interface UpdateStatusRequest {
-  status: string;
-}
-
-export interface GetTicketsParams {
-  page?: number;
-  pageSize?: number;
-  size?: number;
-  status?: string;
-  priority?: string;
-  tenantId?: number;
-  templateId?: number;
 }
 
 // 服务目录相关接口（添加租户支持）

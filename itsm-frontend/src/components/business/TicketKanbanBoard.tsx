@@ -39,6 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Ticket } from '@/lib/services/ticket-service';
+import { TicketStatus, TicketStatusConfig } from '@/constants/taxonomy';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -129,9 +130,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
             <div className="flex items-center gap-1">
               {ticket.assignee ? (
                 <>
-                  <Avatar size={16} src={ticket.assignee?.avatar}>
-                    {ticket.assignee.name?.[0]}
-                  </Avatar>
+                  <Avatar size={16}>{ticket.assignee.name?.[0]}</Avatar>
                   <span>{ticket.assignee.name}</span>
                 </>
               ) : (
@@ -147,16 +146,10 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
             </div>
           </div>
 
-          {/* 分类和标签 */}
-          {(ticket.category || (ticket.tags && ticket.tags.length > 0)) && (
+          {/* 工单类型：契约里只有 ticketTypeCode/ticketTypeName，没有自由文本分类与标签 */}
+          {ticket.ticketTypeName && (
             <div className="flex items-center gap-1 flex-wrap">
-              {ticket.category && <Tag color="blue">{ticket.category}</Tag>}
-              {ticket.tags &&
-                ticket.tags.slice(0, 2).map((tag, index) => (
-                  <Tag key={index} color="default">
-                    {tag}
-                  </Tag>
-                ))}
+              <Tag color="blue">{ticket.ticketTypeName}</Tag>
             </div>
           )}
         </div>
@@ -238,15 +231,22 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
     })
   );
 
-  // 状态列配置
+  // 看板泳道取自后端工单状态词表（@/constants/taxonomy），配色沿用同一份十六进制色值，
+  // 不再维护第三套调色板。旧泳道里的 pending_approval 不是工单状态，
+  // 该列永远分组不到任何工单。
   const statusColumns: Omit<KanbanColumn, 'tickets'>[] = [
-    { id: 'new', title: '新建', status: 'new', color: '#1890ff' },
-    { id: 'open', title: '待处理', status: 'open', color: '#fa8c16' },
-    { id: 'in_progress', title: '处理中', status: 'in_progress', color: '#13c2c2' },
-    { id: 'pending_approval', title: '待审批', status: 'pending_approval', color: '#faad14' },
-    { id: 'resolved', title: '已解决', status: 'resolved', color: '#52c41a' },
-    { id: 'closed', title: '已关闭', status: 'closed', color: '#8c8c8c' },
-  ];
+    TicketStatus.NEW,
+    TicketStatus.OPEN,
+    TicketStatus.IN_PROGRESS,
+    TicketStatus.PENDING,
+    TicketStatus.RESOLVED,
+    TicketStatus.CLOSED,
+  ].map((status) => ({
+    id: status,
+    title: TicketStatusConfig[status].label,
+    status,
+    color: TicketStatusConfig[status].textColor,
+  }));
 
   // 筛选后的工单
   const filteredTickets = useMemo(() => {

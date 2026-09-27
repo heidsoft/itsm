@@ -32,11 +32,15 @@ jest.mock('@/lib/api/workflow-api', () => ({
   },
 }));
 
+// 三个依赖接口的响应外壳以真实 handler 为准：
+// ticket-categories -> { items }（handlers/ticket_category/handler.go ListCategories）
+// bpmn/process-definitions -> { items }（common.NewListResponse）
+// tickets/assignment-rules -> { rules }（dto.ListAssignmentRulesResponse）
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
     get: jest.fn().mockImplementation((url: string) => {
-      if (url.includes('ticket-categories')) return Promise.resolve({ categories: [] });
-      if (url.includes('process-definitions')) return Promise.resolve({ definitions: [BOUND_WORKFLOW] });
+      if (url.includes('ticket-categories')) return Promise.resolve({ items: [] });
+      if (url.includes('process-definitions')) return Promise.resolve({ items: [BOUND_WORKFLOW] });
       if (url.includes('assignment-rules')) return Promise.resolve({ rules: [] });
       return Promise.resolve({});
     }),

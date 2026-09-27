@@ -52,6 +52,28 @@ export interface MenuRequest {
 }
 
 /**
+ * 菜单导出项——与后端 MenuExportItem / seeder menuSpec 字段对齐
+ */
+export interface MenuExportItem {
+  name: string;
+  path: string;
+  icon?: string;
+  parentPath?: string;
+  permissionCode?: string;
+  sortOrder: number;
+  description?: string;
+}
+
+/**
+ * 菜单初始化 diff 报告
+ */
+export interface MenuInitDiffResponse {
+  added: MenuExportItem[];
+  unchanged: MenuExportItem[];
+  totalAdded: number;
+}
+
+/**
  * 菜单管理 API
  * 后端路由：/api/v1/menus（tenant_id 通过 JWT claims 注入）
  */
@@ -67,9 +89,10 @@ export function notifyMenusUpdated(): void {
 export class MenuAdminAPI {
   private static readonly baseUrl = '/api/v1/menus';
 
-  /** 列表（管理员视图，包含禁用/隐藏项） */
-  static async list(): Promise<MenuListResponse> {
-    return httpClient.get<MenuListResponse>(this.baseUrl);
+  /** 列表（管理员视图，包含禁用/隐藏项）。超管可传 tenantId 查看其他租户菜单 */
+  static async list(tenantId?: number): Promise<MenuListResponse> {
+    const query = tenantId != null ? `?tenantId=${tenantId}` : '';
+    return httpClient.get<MenuListResponse>(`${this.baseUrl}${query}`);
   }
 
   /** 详情 */
@@ -92,9 +115,14 @@ export class MenuAdminAPI {
     return httpClient.delete(`${this.baseUrl}/${id}`);
   }
 
-  /** 重新初始化默认菜单（仅插入缺失项，已存在的不动） */
-  static async initDefaults(): Promise<{ message: string; count: number }> {
-    return httpClient.post<{ message: string; count: number }>(
+  /** 导出菜单为 seeder 兼容格式（parentPath 替代 parentId） */
+  static async export(): Promise<MenuExportItem[]> {
+    return httpClient.get<MenuExportItem[]>(`${this.baseUrl}/export`);
+  }
+
+  /** 从基线补齐缺失菜单，返回 added/unchanged diff 报告 */
+  static async initDefaults(): Promise<MenuInitDiffResponse> {
+    return httpClient.post<MenuInitDiffResponse>(
       `${this.baseUrl}/init`,
       {},
     );

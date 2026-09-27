@@ -1,7 +1,4 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 /**
  * 团队管理页面
@@ -9,11 +6,5 @@ import { useRouter } from 'next/navigation';
  * 保留 /teams 路由以兼容旧链接
  */
 export default function TeamsPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace('/admin/teams');
-  }, [router]);
-
-  return null;
+  redirect('/admin/teams');
 }

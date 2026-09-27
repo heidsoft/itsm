@@ -167,8 +167,7 @@ export class BPMNMonitoringApi {
   /** 获取单个流程 key 的指标 */
   static async getProcessMetricsByKey(processKey: string, timeRange?: string): Promise<ProcessMetrics> {
     const query: Record<string, string> = {};
-    // 后端 controller 读取 ctx.Query("time_range")，前端必须用 snake_case
-    if (timeRange) query.time_range = timeRange;
+    if (timeRange) query.timeRange = timeRange;
     const res = await httpClient.get<{ data?: ProcessMetrics } & ProcessMetrics>(
       `${this.baseUrl}/metrics/${encodeURIComponent(processKey)}`,
       query

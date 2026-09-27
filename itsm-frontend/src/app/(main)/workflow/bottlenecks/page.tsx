@@ -34,7 +34,7 @@ import {
 import { Search, Clock, AlertTriangle, BarChart3, Zap, Rocket } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { BPMNMonitoringApi, type BottleneckTask } from '@/lib/api/bpmn-monitoring-api';
-import { WorkflowDefinitionApi } from '@/lib/api/workflow-definition-api';
+import { WorkflowApi } from '@/lib/api/workflow-api';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -92,7 +92,7 @@ export default function BottlenecksPage() {
   // 不再用 dashboard topProcesses（仅统计有实例的流程，新环境会恒空）
   useEffect(() => {
     let alive = true;
-    WorkflowDefinitionApi.getWorkflows({ page: 1, pageSize: 200 })
+    WorkflowApi.getWorkflows({ page: 1, pageSize: 200 })
       .then(result => {
         if (!alive) return;
         const list = (result.workflows || [])

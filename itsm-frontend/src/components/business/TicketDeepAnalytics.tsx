@@ -483,7 +483,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               ))}
             </CheckboxGroup>
           </Form.Item>
-          <Form.Item name="chart_type" label="图表类型">
+          <Form.Item name="chartType" label="图表类型">
             <Radio.Group>
               <Radio value="line">折线图</Radio>
               <Radio value="bar">柱状图</Radio>
@@ -492,7 +492,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               <Radio value="table">表格</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name="group_by" label="分组方式">
+          <Form.Item name="groupBy" label="分组方式">
             <Select placeholder="请选择分组方式" allowClear options={availableDimensions
               .filter(d => d.type === 'category')
               .map(dim => ({

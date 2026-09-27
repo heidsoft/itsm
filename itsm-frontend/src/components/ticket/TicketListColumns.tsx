@@ -6,48 +6,49 @@ import { CheckCircle, Eye, Pencil } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { Ticket } from '@/lib/api/types';
 import type { TicketStatus, TicketPriority, TicketType } from '@/lib/api/types';
+import {
+  ITSMMainType,
+  ITSMMainTypeConfig,
+  TicketStatus as TicketStatusEnum,
+  TicketPriorityConfig,
+  TicketStatusConfig,
+} from '@/constants/taxonomy';
 
 interface StatusConfig {
   readonly color: string;
   readonly text: string;
 }
 
-// Keyed by `string` (not the api/types TicketStatus union) so runtime statuses
-// the backend emits but the shared union omits - cancelled, pending_approval,
-// rejected - still resolve to a label instead of rendering the raw enum value.
-// taxonomy.ts is the canonical source; this is a table-local colour mapping.
-export const TICKET_STATUS_CONFIG: Readonly<Record<string, StatusConfig>> = {
-  new: { color: 'blue', text: '新建' },
-  open: { color: 'blue', text: '待处理' },
-  in_progress: { color: 'orange', text: '处理中' },
-  pending: { color: 'yellow', text: '等待中' },
-  pending_approval: { color: 'gold', text: '待审批' },
-  resolved: { color: 'green', text: '已解决' },
-  closed: { color: 'default', text: '已关闭' },
-  cancelled: { color: 'red', text: '已取消' },
-  rejected: { color: 'red', text: '已拒绝' },
-} as const;
+// 词表与配色的唯一来源是 @/constants/taxonomy（状态词表对齐后端 common/constants.go）。
+// 下面的表只投影出表格需要的 color/text 两列，不再在组件层维护第二套映射，
+// 因此不会出现多出 pending_approval、缺少 assigned/approved 这类漂移。
+const projectStatusConfig = (config: Record<string, { color: string; label: string }>) =>
+  Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [key, { color: value.color, text: value.label }])
+  );
 
-export const PRIORITY_CONFIG: Readonly<Record<string, StatusConfig>> = {
-  low: { color: 'green', text: '低' },
-  medium: { color: 'orange', text: '中' },
-  high: { color: 'red', text: '高' },
-  urgent: { color: 'purple', text: '紧急' },
-  critical: { color: 'purple', text: '紧急' },
-} as const;
+export const TICKET_STATUS_CONFIG: Readonly<Record<string, StatusConfig>> = projectStatusConfig(
+  TicketStatusConfig
+);
 
+export const PRIORITY_CONFIG: Readonly<Record<string, StatusConfig>> = projectStatusConfig(
+  TicketPriorityConfig
+);
+
+/** 工单 ITIL 类型显示名，仅覆盖后端 type 词表中的 ITIL 主类型。 */
 export const TICKET_TYPE_CONFIG: Readonly<Record<string, string>> = {
-  incident: '事件',
-  problem: '问题',
-  change: '变更',
-  service_request: '服务请求',
-  request: '请求',
-  task: '任务',
-} as const;
+  [ITSMMainType.INCIDENT]: ITSMMainTypeConfig[ITSMMainType.INCIDENT].label,
+  [ITSMMainType.SERVICE_REQUEST]: ITSMMainTypeConfig[ITSMMainType.SERVICE_REQUEST].label,
+  [ITSMMainType.PROBLEM]: ITSMMainTypeConfig[ITSMMainType.PROBLEM].label,
+  [ITSMMainType.CHANGE]: ITSMMainTypeConfig[ITSMMainType.CHANGE].label,
+};
 
 // Terminal statuses hide the "close" action. `cancelled` is also terminal -
 // closing a cancelled ticket is a no-op, so don't offer the button.
-const TERMINAL_STATUSES: readonly string[] = ['closed', 'cancelled'];
+const TERMINAL_STATUSES: readonly TicketStatusEnum[] = [
+  TicketStatusEnum.CLOSED,
+  TicketStatusEnum.CANCELLED,
+];
 
 export interface TicketListColumnActions {
   readonly onOpen: (ticket: Ticket) => void;

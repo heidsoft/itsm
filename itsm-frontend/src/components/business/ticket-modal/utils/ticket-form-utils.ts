@@ -2,7 +2,8 @@
  * Ticket Modal 工具函数和常量
  */
 
-import { TicketType, TicketPriority } from '@/lib/services/ticket-service';
+import { TicketPriority } from '@/lib/services/ticket-service';
+import type { TicketType } from '@/lib/services/ticket-service';
 import type { FormStep, TicketTemplate, User } from '../types';
 
 // ============ 步骤配置常量 ============
@@ -55,11 +56,12 @@ export const PRIORITY_RULES = [
 
 // ============ 选项配置 ============
 
-export const TICKET_TYPE_OPTIONS = [
-  { value: TicketType.INCIDENT, label: '事件' },
-  { value: TicketType.SERVICE_REQUEST, label: '服务请求' },
-  { value: TicketType.PROBLEM, label: '问题' },
-  { value: TicketType.CHANGE, label: '变更' },
+// 值直接取后端 type 白名单词表（dto.CreateTicketRequest oneof=...），不再用前端自建枚举成员
+export const TICKET_TYPE_OPTIONS: { value: TicketType; label: string }[] = [
+  { value: 'incident', label: '事件' },
+  { value: 'service_request', label: '服务请求' },
+  { value: 'problem', label: '问题' },
+  { value: 'change', label: '变更' },
 ];
 
 export const PRIORITY_OPTIONS = [
@@ -90,7 +92,7 @@ export const MOCK_TICKET_TEMPLATES: TicketTemplate[] = [
   {
     id: 1,
     name: 'System Login Issue',
-    type: TicketType.INCIDENT,
+    type: 'incident',
     category: 'System Access',
     priority: TicketPriority.MEDIUM,
     description: 'User unable to login to system, technical support needed',
@@ -100,7 +102,7 @@ export const MOCK_TICKET_TEMPLATES: TicketTemplate[] = [
   {
     id: 2,
     name: 'Printer Malfunction',
-    type: TicketType.INCIDENT,
+    type: 'incident',
     category: 'Hardware Equipment',
     priority: TicketPriority.HIGH,
     description: 'Office printer not working properly',
@@ -110,7 +112,7 @@ export const MOCK_TICKET_TEMPLATES: TicketTemplate[] = [
   {
     id: 3,
     name: 'Software Installation Request',
-    type: TicketType.SERVICE_REQUEST,
+    type: 'service_request',
     category: 'Software Services',
     priority: TicketPriority.LOW,
     description: 'Need to install new office software',

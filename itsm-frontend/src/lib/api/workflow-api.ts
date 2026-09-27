@@ -43,6 +43,256 @@ export type {
 // Backward-compatible alias used by some pages
 export type WorkflowTask = NodeInstance;
 
+// ============================================================
+// BPMN 原始 DTO（对应后端 /api/v1/bpmn 接口的原生结构）
+// ============================================================
+
+export interface BpmnProcessDefinition {
+  id: number;
+  key: string;
+  name: string;
+  description?: string;
+  category?: string;
+  version: number;
+  bpmnXml: string;
+  deploymentId?: number;
+  deploymentTime?: string;
+  tenantId?: number;
+  createdBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BpmnProcessDefinitionListResponse {
+  items: BpmnProcessDefinition[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface BpmnCreateProcessDefinitionRequest {
+  key: string;
+  name: string;
+  description?: string;
+  category?: string;
+  bpmnXml: string;
+}
+
+export interface BpmnUpdateProcessDefinitionRequest {
+  name?: string;
+  description?: string;
+  category?: string;
+  bpmnXml?: string;
+}
+
+export interface BpmnCloneProcessDefinitionRequest {
+  newKey: string;
+  newName: string;
+  description?: string;
+}
+
+export interface BpmnProcessInstance {
+  id: string;
+  processDefinitionKey: string;
+  processDefinitionVersion?: number;
+  businessKey?: string;
+  status: 'created' | 'running' | 'completed' | 'terminated' | 'suspended';
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+  startUserId?: number;
+  tenantId?: number;
+  variables?: Record<string, unknown>;
+}
+
+export interface BpmnProcessInstanceListResponse {
+  items: BpmnProcessInstance[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BpmnStartProcessRequest {
+  processDefinitionKey: string;
+  businessKey?: string;
+  variables?: Record<string, unknown>;
+}
+
+export interface BpmnUserTask {
+  id: string;
+  name: string;
+  taskDefinitionKey: string;
+  processInstanceId: string;
+  processDefinitionKey?: string;
+  assignee?: number;
+  assigneeName?: string;
+  candidateUsers?: number[];
+  candidateGroups?: string[];
+  dueDate?: string;
+  priority?: number;
+  status?: string;
+  createdTime?: string;
+  claimedTime?: string;
+  completedTime?: string;
+}
+
+export interface BpmnUserTaskListResponse {
+  items: BpmnUserTask[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BpmnCompleteTaskRequest {
+  variables?: Record<string, unknown>;
+  comment?: string;
+}
+
+export interface BpmnSubmitApprovalDecisionRequest {
+  action: 'approve' | 'reject';
+  comment?: string;
+  variables?: Record<string, unknown>;
+}
+
+export interface BpmnAssignTaskRequest {
+  assignee: number;
+}
+
+export interface BpmnProcessApprovalDecision {
+  id: number;
+  processInstanceId: number;
+  processInstanceKey: string;
+  processTaskId: number;
+  taskId: string;
+  processDefinitionKey: string;
+  nodeKey: string;
+  businessType?: string;
+  businessId?: string;
+  actorId: number;
+  actorName?: string;
+  action: 'approve' | 'reject' | 'delegate' | 'transfer' | 'add_approver' | 'withdraw' | 'timeout' | 'system_decision';
+  decision: string;
+  comment?: string;
+  variablesSnapshot?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface BpmnLegacyApprovalMigrationResult {
+  workflowId: number;
+  processDefinitionKey: string;
+  bpmnXml?: string;
+  skipped: boolean;
+}
+
+export interface BpmnCounterSignRequest {
+  users: number[];
+  type: 'sequential' | 'parallel';
+  voteType: 'agree' | 'disagree' | 'abstain';
+}
+
+export interface BpmnVoteRequest {
+  vote: 'agree' | 'disagree' | 'abstain';
+  comment?: string;
+}
+
+export interface BpmnProcessVersion {
+  key: string;
+  version: number;
+  name: string;
+  description?: string;
+  bpmnXml: string;
+  status: string;
+  isActivated: boolean;
+  createdBy?: number;
+  createdAt?: string;
+}
+
+export interface BpmnProcessVersionListResponse {
+  items: BpmnProcessVersion[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BpmnCreateVersionRequest {
+  key: string;
+  name?: string;
+  description?: string;
+  xml: string;
+}
+
+export interface BpmnVersionChangeLog {
+  id: number;
+  processDefinitionKey: string;
+  version: number;
+  changeType: string;
+  changedFields: string[];
+  changeDetails?: string;
+  createdBy?: number;
+  createdAt?: string;
+}
+
+export interface BpmnChangeLogListResponse {
+  items: BpmnVersionChangeLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BpmnCounterSignTask {
+  id: string;
+  mainTaskId: string;
+  userId: number;
+  userName?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  comment?: string;
+  createdTime?: string;
+  completedTime?: string;
+}
+
+export interface BpmnCounterSignStatusResponse {
+  mainTaskId: string;
+  type: string;
+  total: number;
+  approved: number;
+  rejected: number;
+  abstained: number;
+  completed: boolean;
+  createdTime?: string;
+  completedTime?: string;
+}
+
+export interface BpmnVersionCompareResponse {
+  key: string;
+  version1: number;
+  version2: number;
+  diff: {
+    added: string[];
+    removed: string[];
+    modified: string[];
+  };
+}
+
+export interface BpmnInstanceStats {
+  totalInstances: number;
+  runningInstances: number;
+  completedInstances: number;
+  terminatedInstances: number;
+  suspendedInstances: number;
+  avgDurationMinutes?: number;
+  completionRate?: number;
+}
+
+export interface BpmnTaskStats {
+  totalTasks: number;
+  pendingTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  avgCompletionTimeMinutes?: number;
+  completionRate?: number;
+}
+
 // 后端 BPMN 任务原始结构（兼容多种字段命名）
 interface BpmnTaskRaw {
   id?: string | number;
@@ -1343,6 +1593,199 @@ export class WorkflowApi {
   }> {
     // No legacy bottlenecks endpoint; return empty analysis (see getWorkflowStats note).
     return { bottlenecks: [] };
+  }
+
+  // ==================== BPMN 原生接口（从 bpmn-workflow-api 收敛） ====================
+
+  /**
+   * 迁移旧审批工作流到 BPMN
+   */
+  static async migrateLegacyApprovalWorkflow(
+    workflowId: number,
+    dryRun = true
+  ): Promise<BpmnLegacyApprovalMigrationResult> {
+    const res = await httpClient.post<
+      { data?: BpmnLegacyApprovalMigrationResult } | BpmnLegacyApprovalMigrationResult
+    >(`/api/v1/approval-workflows/${workflowId}/migrate-to-bpmn?dryRun=${dryRun}`, {});
+    return (
+      (res as { data?: BpmnLegacyApprovalMigrationResult }).data ??
+      (res as BpmnLegacyApprovalMigrationResult)
+    );
+  }
+
+  /**
+   * 导出流程定义 XML
+   */
+  static async exportProcessDefinition(key: string): Promise<string> {
+    const res = await httpClient.get<string>(
+      `/api/v1/bpmn/process-definitions/${encodeURIComponent(key)}/export`
+    );
+    return typeof res === 'string' ? res : (res as unknown as string);
+  }
+
+  /**
+   * 克隆流程定义（服务端克隆）
+   */
+  static async cloneProcessDefinition(
+    key: string,
+    data: BpmnCloneProcessDefinitionRequest
+  ): Promise<BpmnProcessDefinition> {
+    const res = await httpClient.post<
+      { data?: BpmnProcessDefinition } & BpmnProcessDefinition
+    >(`/api/v1/bpmn/process-definitions/${encodeURIComponent(key)}/clone`, data);
+    return (res as { data?: BpmnProcessDefinition }).data ?? (res as BpmnProcessDefinition);
+  }
+
+  /**
+   * 设置流程实例变量
+   */
+  static async setProcessInstanceVariables(
+    id: string,
+    variables: Record<string, unknown>
+  ): Promise<void> {
+    await httpClient.put(
+      `/api/v1/bpmn/process-instances/${encodeURIComponent(id)}/variables`,
+      { variables }
+    );
+  }
+
+  /**
+   * 获取单个 BPMN 任务
+   */
+  static async getTask(id: string): Promise<BpmnUserTask> {
+    const res = await httpClient.get<{ data?: BpmnUserTask } & BpmnUserTask>(
+      `/api/v1/bpmn/tasks/${encodeURIComponent(id)}`
+    );
+    return (res as { data?: BpmnUserTask }).data ?? (res as BpmnUserTask);
+  }
+
+  /**
+   * 指派任务
+   */
+  static async assignTask(id: string, data: BpmnAssignTaskRequest): Promise<void> {
+    await httpClient.put(
+      `/api/v1/bpmn/tasks/${encodeURIComponent(id)}/assign`,
+      data
+    );
+  }
+
+  /**
+   * 完成任务
+   */
+  static async completeTask(id: string, data?: BpmnCompleteTaskRequest): Promise<void> {
+    await httpClient.put(
+      `/api/v1/bpmn/tasks/${encodeURIComponent(id)}/complete`,
+      data ?? {}
+    );
+  }
+
+  /**
+   * 获取审批历史
+   */
+  static async getApprovalHistory(
+    processInstanceKey: string
+  ): Promise<BpmnProcessApprovalDecision[]> {
+    const res = await httpClient.get<
+      { data?: BpmnProcessApprovalDecision[] } | BpmnProcessApprovalDecision[]
+    >(
+      `/api/v1/bpmn/process-instances/${encodeURIComponent(processInstanceKey)}/approval-history`
+    );
+    return (res as { data?: BpmnProcessApprovalDecision[] }).data ??
+      (res as BpmnProcessApprovalDecision[]);
+  }
+
+  /**
+   * 取消任务
+   */
+  static async cancelTask(id: string): Promise<void> {
+    await httpClient.put(
+      `/api/v1/bpmn/tasks/${encodeURIComponent(id)}/cancel`,
+      {}
+    );
+  }
+
+  /**
+   * 设置任务变量
+   */
+  static async setTaskVariables(
+    id: string,
+    variables: Record<string, unknown>
+  ): Promise<void> {
+    await httpClient.put(
+      `/api/v1/bpmn/tasks/${encodeURIComponent(id)}/variables`,
+      { variables }
+    );
+  }
+
+  /**
+   * 获取单个版本
+   */
+  static async getVersion(key: string, version: number): Promise<BpmnProcessVersion> {
+    const res = await httpClient.get<
+      { data?: BpmnProcessVersion } & BpmnProcessVersion
+    >(`/api/v1/bpmn/versions/${encodeURIComponent(key)}/${String(version)}`);
+    return (res as { data?: BpmnProcessVersion }).data ?? (res as BpmnProcessVersion);
+  }
+
+  /**
+   * 获取版本变更日志列表
+   */
+  static async getVersionChangeLogs(
+    key: string,
+    params?: { page?: number; pageSize?: number }
+  ): Promise<BpmnChangeLogListResponse> {
+    const query: Record<string, string> = {};
+    if (params?.page) query.page = String(params.page);
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
+
+    const res = await httpClient.get<
+      { data?: BpmnChangeLogListResponse } & BpmnChangeLogListResponse
+    >(`/api/v1/bpmn/versions/${encodeURIComponent(key)}/changelogs`, query);
+    return (res as { data?: BpmnChangeLogListResponse }).data ??
+      (res as BpmnChangeLogListResponse);
+  }
+
+  /**
+   * 获取单条版本变更日志
+   */
+  static async getVersionChangeLogById(id: number): Promise<BpmnVersionChangeLog> {
+    const res = await httpClient.get<
+      { data?: BpmnVersionChangeLog } & BpmnVersionChangeLog
+    >(`/api/v1/bpmn/versions/changelogs/${id}`);
+    return (res as { data?: BpmnVersionChangeLog }).data ?? (res as BpmnVersionChangeLog);
+  }
+
+  static async createCounterSignTask(
+    id: string,
+    data: BpmnCounterSignRequest
+  ): Promise<BpmnCounterSignTask[]> {
+    const res = await httpClient.post<
+      { data?: BpmnCounterSignTask[] } & BpmnCounterSignTask[]
+    >(`/api/v1/bpmn/tasks/${encodeURIComponent(id)}/counter-sign`, data);
+    return (res as { data?: BpmnCounterSignTask[] }).data ?? (res as BpmnCounterSignTask[]);
+  }
+
+  static async listVersions(
+    key: string,
+    params?: { page?: number; pageSize?: number }
+  ): Promise<BpmnProcessVersionListResponse> {
+    const query: Record<string, string> = {};
+    if (params?.page) query.page = String(params.page);
+    if (params?.pageSize) query.pageSize = String(params.pageSize);
+    const res = await httpClient.get<
+      { data?: BpmnProcessVersionListResponse } & BpmnProcessVersionListResponse
+    >(`/api/v1/bpmn/versions`, { ...query, processKey: key });
+    return (
+      (res as { data?: BpmnProcessVersionListResponse }).data ??
+      (res as BpmnProcessVersionListResponse)
+    );
+  }
+
+  static async createVersion(data: BpmnCreateVersionRequest): Promise<BpmnProcessVersion> {
+    const res = await httpClient.post<
+      { data?: BpmnProcessVersion } & BpmnProcessVersion
+    >(`/api/v1/bpmn/versions`, data);
+    return (res as { data?: BpmnProcessVersion }).data ?? (res as BpmnProcessVersion);
   }
 
   /**

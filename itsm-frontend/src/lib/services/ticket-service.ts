@@ -1,139 +1,36 @@
 import { httpClient } from '@/lib/api/http-client';
-import type { Ticket, TicketListResponse } from '@/lib/api/api-config';
+import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
+import type {
+  Ticket,
+  TicketListResponse,
+  TicketType,
+  TicketSource,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  AssignTicketRequest,
+  TicketExportRequest,
+  GetTicketsParams,
+  TicketStatsResponse,
+} from '@/lib/api/ticket-api';
 
-// 工单状态枚举
-export enum TicketStatus {
-  OPEN = 'open',
-  IN_PROGRESS = 'in_progress',
-  PENDING = 'pending',
-  RESOLVED = 'resolved',
-  CLOSED = 'closed',
-  CANCELLED = 'cancelled',
-}
-
-// 工单优先级枚举
-export enum TicketPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent',
-}
-
-// 工单类型枚举
-export enum TicketType {
-  INCIDENT = 'incident',
-  SERVICE_REQUEST = 'service_request',
-  PROBLEM = 'problem',
-  CHANGE = 'change',
-}
-
-// 移除旧的 Ticket 和 TicketListResponse 定义，使用 api-config 中的定义
-export { type Ticket };
-
-// 工单筛选参数（兼容旧版）
-export interface TicketFilterParams {
-  page?: number;
-  pageSize?: number;
-  size?: number;
-  status?: string;
-  priority?: string;
-  type?: string;
-  category?: string;
-  assigneeId?: number;
-  requesterId?: number;
-  keyword?: string;
-  search?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  createdAfter?: string; // 添加 created_after 字段
-  createdBefore?: string; // 添加 created_before 字段
-  tags?: string[];
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-// 创建工单请求（匹配后端DTO格式）
-export interface CreateTicketRequest {
-  title: string;
-  description: string;
-  type?: TicketType | string;
-  priority: TicketPriority | string; // 支持字符串格式
-  category: string;
-  categoryId?: number; // 分类ID（优先使用）
-  templateId?: number; // 模板ID
-  assigneeId?: number;
-  parentTicketId?: number;
-  tagIds?: number[]; // 标签ID列表（优先使用）
-  tags?: string[]; // 标签名称列表（兼容旧格式）
-  formFields?: Record<string, unknown>;
-  attachments?: string[];
-}
-
-// 更新工单请求
-export interface UpdateTicketRequest {
-  title?: string;
-  description?: string;
-  status?: TicketStatus;
-  priority?: TicketPriority;
-  type?: TicketType;
-  category?: string;
-  subcategory?: string;
-  assigneeId?: number;
-  tags?: string[];
-  source?: string;
-  impact?: string;
-  urgency?: string;
-  isOverdue?: boolean;
-  businessValue?: string;
-  customFields?: Record<string, unknown>;
-}
-
-// 工单列表查询参数
-export interface ListTicketsParams {
-  page?: number;
-  pageSize?: number;
-  status?: TicketStatus;
-  priority?: TicketPriority;
-  type?: TicketType;
-  category?: string;
-  assigneeId?: number;
-  requesterId?: number;
-  keyword?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  tags?: string[];
-  isOverdue?: boolean;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-// 移除旧的 ListTicketsResponse 定义
-
-// 工单统计响应
-export interface TicketStatsResponse {
-  total: number;
-  open: number;
-  inProgress: number;
-  resolved: number;
-  pending: number;
-  highPriority: number;
-  overdue: number;
-}
-
-// 工单分配请求
-export interface AssignTicketRequest {
-  assigneeId: number;
-  reason?: string;
-}
-
-// 工单状态变更请求
-export interface ChangeTicketStatusRequest {
-  status: TicketStatus;
-  comment?: string;
-  resolution?: string;
-  category?: string;
-  subcategory?: string;
-}
+/**
+ * 工单契约的唯一声明处是 `@/lib/api/ticket-api`（逐字段对齐后端 dto/ticket_dto.go，
+ * 状态词表对齐 itsm-backend/common/constants.go 的工单状态机）。
+ * 本模块只负责 HTTP 调用封装，禁止再自行声明状态/优先级/类型词表或请求 DTO。
+ */
+export { TicketStatus, TicketPriority };
+export type {
+  Ticket,
+  TicketListResponse,
+  TicketType,
+  TicketSource,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  TicketStatsResponse,
+  // 筛选/分页参数的唯一名字：与后端 dto.ListTicketsRequest 一致，
+  // 不再保留 size / search / created_after 等第二套别名。
+  GetTicketsParams,
+};
 
 // 工单评论接口
 export interface TicketComment {
@@ -160,25 +57,12 @@ export interface TicketAttachment {
   url: string;
 }
 
-// 工单活动日志接口
-export interface TicketActivity {
-  id: number;
-  ticketId: number;
-  userId: number;
-  userName: string;
-  action: string;
-  details: string;
-  timestamp: string;
-  oldValue?: string;
-  newValue?: string;
-}
-
 // 工单管理API服务类
 class TicketService {
   private readonly baseUrl = '/api/v1/tickets';
 
   // 获取工单列表
-  async listTickets(params: ListTicketsParams = {}): Promise<TicketListResponse> {
+  async listTickets(params: GetTicketsParams = {}): Promise<TicketListResponse> {
     return httpClient.get<TicketListResponse>(this.baseUrl, params);
   }
 
@@ -207,28 +91,7 @@ class TicketService {
 
   // 获取工单统计
   async getTicketStats(): Promise<TicketStatsResponse> {
-    const response = await httpClient.get<{
-      total?: number;
-      open?: number;
-      inProgress?: number;
-      resolved?: number;
-      pending?: number;
-      highPriority?: number;
-      overdue?: number;
-    }>(`${this.baseUrl}/stats`);
-
-    return {
-      total: response.total ?? 0,
-      open: response.open ?? 0,
-      // Bug 修复：之前写成 response.inProgress ?? response.inProgress ?? 0
-      // 重复 fallback 字段名相同，是复制粘贴残留。会导致运行时虽然
-      // 不会报错，但阅读时极易误导且如果 inProgress 缺失也没真正回退到 0 以外的来源。
-      inProgress: response.inProgress ?? 0,
-      resolved: response.resolved ?? 0,
-      pending: response.pending ?? 0,
-      highPriority: response.highPriority ?? 0,
-      overdue: response.overdue ?? 0,
-    };
+    return httpClient.get<TicketStatsResponse>(`${this.baseUrl}/stats`);
   }
 
   // 分配工单
@@ -238,17 +101,6 @@ class TicketService {
   ): Promise<{ message: string; ticketId: number }> {
     return httpClient.post<{ message: string; ticketId: number }>(
       `${this.baseUrl}/${id}/assign`,
-      data
-    );
-  }
-
-  // 变更工单状态
-  async changeTicketStatus(
-    id: number,
-    data: ChangeTicketStatusRequest
-  ): Promise<{ message: string; ticketId: number }> {
-    return httpClient.post<{ message: string; ticketId: number }>(
-      `${this.baseUrl}/${id}/status`,
       data
     );
   }
@@ -301,184 +153,14 @@ class TicketService {
     );
   }
 
-  // 获取工单活动日志
-  async getTicketActivities(id: number): Promise<TicketActivity[]> {
-    return httpClient.get<TicketActivity[]>(`${this.baseUrl}/${id}/activities`);
-  }
-
-  // 获取状态标签颜色
-  getStatusColor(status: TicketStatus): string {
-    switch (status) {
-      case TicketStatus.OPEN:
-        return 'processing';
-      case TicketStatus.IN_PROGRESS:
-        return 'processing';
-      case TicketStatus.PENDING:
-        return 'warning';
-      case TicketStatus.RESOLVED:
-        return 'success';
-      case TicketStatus.CLOSED:
-        return 'default';
-      case TicketStatus.CANCELLED:
-        return 'error';
-      default:
-        return 'default';
-    }
-  }
-
-  // 获取优先级标签颜色
-  getPriorityColor(priority: TicketPriority): string {
-    switch (priority) {
-      case TicketPriority.LOW:
-        return 'green';
-      case TicketPriority.MEDIUM:
-        return 'orange';
-      case TicketPriority.HIGH:
-        return 'red';
-      case TicketPriority.URGENT:
-        return 'red';
-      default:
-        return 'default';
-    }
-  }
-
-  // 获取类型标签颜色
-  getTypeColor(type: TicketType): string {
-    switch (type) {
-      case TicketType.INCIDENT:
-        return 'red';
-      case TicketType.SERVICE_REQUEST:
-        return 'blue';
-      case TicketType.PROBLEM:
-        return 'orange';
-      case TicketType.CHANGE:
-        return 'purple';
-      default:
-        return 'default';
-    }
-  }
-
-  // 获取状态中文名称
-  getStatusLabel(status: TicketStatus): string {
-    switch (status) {
-      case TicketStatus.OPEN:
-        return '待处理';
-      case TicketStatus.IN_PROGRESS:
-        return '处理中';
-      case TicketStatus.PENDING:
-        return '等待中';
-      case TicketStatus.RESOLVED:
-        return '已解决';
-      case TicketStatus.CLOSED:
-        return '已关闭';
-      case TicketStatus.CANCELLED:
-        return '已取消';
-      default:
-        return status;
-    }
-  }
-
-  // 获取优先级中文名称
-  getPriorityLabel(priority: TicketPriority): string {
-    switch (priority) {
-      case TicketPriority.LOW:
-        return '低';
-      case TicketPriority.MEDIUM:
-        return '中';
-      case TicketPriority.HIGH:
-        return '高';
-      case TicketPriority.URGENT:
-        return '紧急';
-      default:
-        return priority;
-    }
-  }
-
-  // 获取类型中文名称
-  getTypeLabel(type: TicketType): string {
-    switch (type) {
-      case TicketType.INCIDENT:
-        return '事件';
-      case TicketType.SERVICE_REQUEST:
-        return '服务请求';
-      case TicketType.PROBLEM:
-        return '问题';
-      case TicketType.CHANGE:
-        return '变更';
-      default:
-        return type;
-    }
-  }
-
-  // 获取状态标签中文
-  getStatusText(status: TicketStatus): string {
-    switch (status) {
-      case TicketStatus.OPEN:
-        return 'Open';
-      case TicketStatus.IN_PROGRESS:
-        return 'In Progress';
-      case TicketStatus.PENDING:
-        return 'Pending';
-      case TicketStatus.RESOLVED:
-        return 'Resolved';
-      case TicketStatus.CLOSED:
-        return 'Closed';
-      case TicketStatus.CANCELLED:
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  getPriorityText(priority: TicketPriority): string {
-    switch (priority) {
-      case TicketPriority.LOW:
-        return 'Low';
-      case TicketPriority.MEDIUM:
-        return 'Medium';
-      case TicketPriority.HIGH:
-        return 'High';
-      case TicketPriority.URGENT:
-        return 'Urgent';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  getTypeText(type: TicketType): string {
-    switch (type) {
-      case TicketType.INCIDENT:
-        return 'Incident';
-      case TicketType.SERVICE_REQUEST:
-        return 'Service Request';
-      case TicketType.PROBLEM:
-        return 'Problem';
-      case TicketType.CHANGE:
-        return 'Change';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  // 健康检查
-  async healthCheck(): Promise<boolean> {
-    try {
-      await httpClient.get(`${this.baseUrl}/health`);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  // 导出工单
-  async exportTickets(filters: TicketFilterParams = {}): Promise<Blob> {
-    const blob = await httpClient.request<Blob>({
+  // 导出工单（后端 POST /tickets/export，请求体为 dto.TicketExportRequest）
+  async exportTickets(data: TicketExportRequest): Promise<Blob> {
+    return httpClient.request<Blob>({
       method: 'POST',
       url: `${this.baseUrl}/export`,
-      data: filters,
+      data,
       responseType: 'blob',
     });
-    return blob;
   }
 }
 

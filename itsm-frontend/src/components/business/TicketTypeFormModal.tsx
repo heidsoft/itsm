@@ -157,9 +157,9 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
       ]);
 
       setSlas(slaResponse.items ?? []);
-      setCategories(categoryResponse.items ?? categoryResponse.categories ?? []);
-      setWorkflows(workflowResponse.definitions ?? workflowResponse.items ?? []);
-      setAssignmentRuleOptions(ruleResponse.rules ?? ruleResponse.items ?? []);
+      setCategories(categoryResponse.items ?? []);
+      setWorkflows(workflowResponse.items ?? []);
+      setAssignmentRuleOptions(ruleResponse.rules ?? []);
     } catch (error) {
       console.error('Failed to load dependencies:', error);
       message.error(t('ticketTypeForm.depsLoadFailed'));

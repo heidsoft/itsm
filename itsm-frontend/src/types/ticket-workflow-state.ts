@@ -8,8 +8,6 @@
  * 拉取真实 BPMN 节点状态，用于"当前节点 / 下一节点 / 已走节点 / 终态"展示。
  */
 
-import type { TicketUser } from './ticket';
-
 /**
  * BPMN 流程状态机取值。
  *
@@ -39,10 +37,27 @@ export type BpmnActivityType =
   | string;
 
 /**
- * 流程当前节点的处理人列表。
- * 与后端 WorkflowUserInfo 字段一一对应；前端可直接复用 TicketUser。
+ * 流程用户信息。
+ *
+ * 唯一对应后端 dto/ticket_workflow_dto.go 的 WorkflowUserInfo：FullName 由
+ * service.workflowUserInfoFromEnt 用 user.Name 回填，Avatar/Department 为 omitempty。
+ * 工单列表/详情的 requester、assignee 用的是另一个契约 dto.UserBasicInfo（字段名 name），
+ * 两者不可混用。
  */
-export type WorkflowAssignee = TicketUser;
+export interface WorkflowUserInfo {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  avatar?: string;
+  department?: string;
+}
+
+/**
+ * 流程当前节点的处理人列表。
+ */
+export type WorkflowAssignee = WorkflowUserInfo;
 
 /**
  * 单个"下一步候选活动"。

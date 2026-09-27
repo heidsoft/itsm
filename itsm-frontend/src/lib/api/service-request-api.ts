@@ -215,14 +215,14 @@ class ServiceRequestAPI {
   async getUserServiceRequests(
     params: {
       page?: number;
-      size?: number;
+      pageSize?: number;
       status?: string;
     } = {}
   ): Promise<ServiceRequestListResponse> {
     const searchParams = new URLSearchParams();
 
     if (params.page) searchParams.append('page', params.page.toString());
-    if (params.size) searchParams.append('size', params.size.toString());
+    if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString());
     if (params.status && params.status !== 'all') searchParams.append('status', params.status);
 
     const resp = await this.request<ServiceRequestListResponse>(
@@ -233,11 +233,11 @@ class ServiceRequestAPI {
 
   // Get pending approvals (approver inbox)
   async getPendingApprovals(
-    params: { page?: number; size?: number } = {}
+    params: { page?: number; pageSize?: number } = {}
   ): Promise<ServiceRequestListResponse> {
     const searchParams = new URLSearchParams();
     if (params.page) searchParams.append('page', params.page.toString());
-    if (params.size) searchParams.append('size', params.size.toString());
+    if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString());
     const qs = searchParams.toString();
     const resp = await this.request<ServiceRequestListResponse>(
       `/api/v1/service-requests/approvals/pending${qs ? `?${qs}` : ''}`

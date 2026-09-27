@@ -69,13 +69,31 @@ describe('MenuAdminAPI', () => {
     });
   });
 
+  describe('export', () => {
+    it('should export menus in baseline format', async () => {
+      const expected = [
+        { name: '服务台', path: '/dashboard', icon: 'LayoutDashboard', sortOrder: 10 },
+        { name: '事件管理', path: '/incidents', icon: 'AlertCircle', parentPath: '/dashboard', sortOrder: 30 },
+      ];
+      mockGet.mockResolvedValue(expected);
+      const res = await MenuAdminAPI.export();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/menus/export');
+      expect(res).toEqual(expected);
+    });
+  });
+
   describe('initDefaults', () => {
-    it('should init default menus', async () => {
-      const expected = { message: 'ok', count: 5 };
+    it('should init default menus and return diff', async () => {
+      const expected = {
+        added: [{ name: '新菜单', path: '/new', sortOrder: 99 }],
+        unchanged: [{ name: '服务台', path: '/dashboard', sortOrder: 10 }],
+        totalAdded: 1,
+      };
       mockPost.mockResolvedValue(expected);
       const res = await MenuAdminAPI.initDefaults();
       expect(mockPost).toHaveBeenCalledWith('/api/v1/menus/init', {});
       expect(res).toEqual(expected);
+      expect(res.totalAdded).toBe(1);
     });
   });
 });

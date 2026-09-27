@@ -43,7 +43,7 @@ const ImprovementListPage = () => {
     setLoading(true);
     try {
       const { TicketApi } = await import('@/lib/api/ticket-api');
-      const response: TicketListResponse = await TicketApi.getTickets({ type: 'improvement', page: 1, size: 100 });
+      const response: TicketListResponse = await TicketApi.getTickets({ type: 'improvement', page: 1, pageSize: 100 });
 
       const mappedImprovements: Improvement[] = response.tickets.map((ticket: Ticket) => ({
         id: ticket.ticketNumber || `IMP-${ticket.id}`,

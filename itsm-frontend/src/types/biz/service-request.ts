@@ -99,7 +99,7 @@ export interface ServiceRequestApprovalActionRequest {
 // 列表查询参数
 export interface ServiceRequestQuery {
   page?: number;
-  size?: number;
+  pageSize?: number;
   status?: ServiceRequestStatus;
   scope?: 'me' | 'all'; // me: 我的请求, all: 管理员查看所有
 }

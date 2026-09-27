@@ -261,7 +261,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
       if (!response || (!response.key && !response.id && !response.name)) {
         message.error(t('workflow.designer.loadWorkflowNotFound'));
-        router.push('/workflow');
+        router.push('/admin/workflows');
         return;
       }
 
@@ -989,7 +989,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           onClose={() => {
             setShowNewWorkflowModal(false);
             if (!workflow) {
-              router.push('/workflow');
+              router.push('/admin/workflows');
             }
           }}
           onSelectTemplate={templateWorkflow => {

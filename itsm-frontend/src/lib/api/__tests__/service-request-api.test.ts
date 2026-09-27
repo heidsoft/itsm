@@ -24,8 +24,8 @@ describe('ServiceRequestAPI', () => {
 
   describe('getUserServiceRequests', () => {
     it('should get user service requests', async () => {
-      mockSuccessResponse({ requests: [{ id: 1 }], total: 1, page: 1, size: 10 });
-      const result = await serviceRequestAPI.getUserServiceRequests({ page: 1, size: 10 });
+      mockSuccessResponse({ requests: [{ id: 1 }], total: 1, page: 1, pageSize: 10 });
+      const result = await serviceRequestAPI.getUserServiceRequests({ page: 1, pageSize: 10 });
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/service-requests/me'),
         expect.any(Object)
@@ -36,7 +36,7 @@ describe('ServiceRequestAPI', () => {
 
   describe('getPendingApprovals', () => {
     it('should get pending approvals', async () => {
-      mockSuccessResponse({ requests: [], total: 0, page: 1, size: 10 });
+      mockSuccessResponse({ requests: [], total: 0, page: 1, pageSize: 10 });
       const result = await serviceRequestAPI.getPendingApprovals({ page: 1 });
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/service-requests/approvals/pending'),

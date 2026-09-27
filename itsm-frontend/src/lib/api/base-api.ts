@@ -4,6 +4,7 @@
  */
 
 import { httpClient } from '@/lib/api/http-client';
+import { getTenantId, getTenantCode } from '@/lib/auth/tenant-context';
 import type {
   ApiResponse,
   PaginationResponse,
@@ -303,12 +304,20 @@ export abstract class BaseApi {
   ): Promise<Blob> {
     const path = this.getPath(`${endpoint}/export?format=${format}`);
     const url = `${httpClient.getBaseURL()}${path}`;
+    const currentTenantId = getTenantId();
+    const currentTenantCode = getTenantCode();
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         // 浏览器端 token 为 null，认证由 httpOnly cookie 承载；仅非浏览器调用方显式设置 token 时才带 Authorization
         ...(httpClient.getAuthToken() && {
           Authorization: `Bearer ${httpClient.getAuthToken()}`,
+        }),
+        ...(currentTenantId && {
+          'X-Tenant-ID': currentTenantId.toString(),
+        }),
+        ...(currentTenantCode && {
+          'X-Tenant-Code': currentTenantCode,
         }),
       },
     });

@@ -6,12 +6,13 @@
  */
 
 import React, { useEffect } from 'react';
-import { App, Layout, theme } from 'antd';
+import { App, Layout, Skeleton, theme } from 'antd';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import styles from './Sidebar.module.css';
 import type { MenuItem } from './menu-config';
+import { capabilityForPath } from './menu-config';
 import { getIconByName } from './icons';
 import { MenuItems } from './MenuItems';
 import { useUserMenusQuery } from '@/lib/hooks/useUserMenusQuery';
@@ -45,26 +46,6 @@ function convertApiMenuToSidebar(menus: MenuItemType[]): MenuItem[] {
     };
     return item;
   });
-}
-
-const capabilityPathRules: Array<[string, string]> = [
-  ['/service-requests', 'serviceRequest'],
-  ['/incidents', 'incident'],
-  ['/problems', 'problem'],
-  ['/changes', 'change'],
-  ['/knowledge', 'knowledge'],
-  ['/cmdb', 'cmdb'],
-  ['/sla', 'sla'],
-  ['/workflow', 'workflow'],
-  ['/ai', 'ai'],
-  ['/marketplace', 'marketplace'],
-  ['/installations', 'marketplace'],
-  ['/admin/connectors', 'marketplace'],
-];
-
-function capabilityForPath(path?: string): string | undefined {
-  if (!path) return undefined;
-  return capabilityPathRules.find(([prefix]) => path === prefix || path.startsWith(`${prefix}/`))?.[1];
 }
 
 /**
@@ -233,8 +214,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       </div>
 
       {/* 主菜单 */}
-      <div className={styles.mainMenu} style={{ flex: 1, overflowY: collapsed ? 'visible' : 'auto', opacity: capabilitiesLoading ? 0.85 : 1 }}>
-        <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+      <div className={styles.mainMenu} style={{ flex: 1, overflowY: collapsed ? 'visible' : 'auto' }}>
+        {capabilitiesLoading ? (
+          <Skeleton active paragraph={{ rows: 6 }} />
+        ) : (
+          <MenuItems items={mainMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+        )}
       </div>
 
       {/* 管理员菜单 */}
@@ -242,7 +227,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
         <div className={styles.adminMenuContainer}>
           {!collapsed && <div className={styles.adminMenuHeader}>管理功能</div>}
           <div className={styles.adminMenu}>
-            <MenuItems items={adminMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+            {capabilitiesLoading ? (
+              <Skeleton active paragraph={{ rows: 3 }} />
+            ) : (
+              <MenuItems items={adminMenus} selectedKeys={[pathname]} onMenuClick={handleMenuClick} />
+            )}
           </div>
         </div>
       )}

@@ -38,6 +38,12 @@ dayjs.extend(relativeTime);
 
 import type { TicketStats, UserStats, SystemStats } from '@/types/dashboard';
 import type { Ticket } from '@/types/ticket';
+import {
+  TicketStatus,
+  TicketPriority,
+  TicketStatusConfig,
+  TicketPriorityConfig,
+} from '@/constants/taxonomy';
 import type { User } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 
@@ -79,7 +85,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             response?: { avgResponseTime?: number; errorRate?: number };
             database?: { connections?: number };
           }>,
-          TicketApi.getTickets({ page: 1, size: 5, sort: 'created_at,desc' }),
+          TicketApi.getTickets({ page: 1, pageSize: 5, sortBy: 'created_at', sortOrder: 'desc' }),
           UserApi.getUsers({ page: 1, pageSize: 5, status: 'active' }),
         ]);
 
@@ -143,57 +149,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setUserStats(mappedUserStats);
       setSystemStats(mappedSystemStats);
 
-      // 转换最近工单
-      const mappedTickets = recentTicketsData.tickets.map((t) => {
-        const requester = t.requester ? {
-          id: t.requester.id,
-          fullName: t.requester.name,
-          username: t.requester.username,
-          email: t.requester.email,
-          role: (t.requester as any).role || 'user',
-        } : undefined;
-        const assignee = t.assignee ? {
-          id: t.assignee.id,
-          fullName: t.assignee.name,
-          username: t.assignee.username,
-          email: t.assignee.email,
-          role: (t.assignee as any).role || 'agent',
-        } : undefined;
-        
-        return {
-          ...t,
-          requester,
-          assignee,
-          description: t.description || '',
-          status: t.status as Ticket['status'],
-          priority: t.priority as Ticket['priority'],
-          source: t.source || 'web',
-          type: t.type || 'request',
-          category: undefined,
-          updatedAt: t.updatedAt || t.createdAt,
-          resolvedAt: undefined,
-          closedAt: undefined,
-          sla: undefined,
-          slaStatus: undefined,
-          responseDeadline: undefined,
-          resolutionDeadline: undefined,
-          resolution: undefined,
-          resolutionCategory: undefined,
-          satisfactionRating: undefined,
-          satisfactionComment: undefined,
-          escalationLevel: undefined,
-          escalationReason: undefined,
-          comments: undefined,
-          attachments: undefined,
-          relatedTickets: undefined,
-          customFields: undefined,
-          tenantId: (t as any).tenantId || 1,
-          isMajorIncident: (t as any).isMajorIncident || false,
-          tags: undefined,
-        } as Ticket;
-      });
-
-      setRecentTickets(mappedTickets);
+      // 最近工单：后端 dto.TicketResponse 已是契约形状，直接渲染，不再伪造字段
+      setRecentTickets(recentTicketsData.tickets);
 
       // 转换活跃用户（直接使用后端 User 形状，不再手工填充虚构偏好字段）
       const mappedUsers: User[] = (activeUsersData.users as User[]).map(u => ({
@@ -223,31 +180,16 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     }
   }, [timeRange, refreshInterval]);
 
-  // 状态标签渲染
+  // 状态标签渲染：词表与配色唯一来源 = @/constants/taxonomy（对齐后端状态机）
   const renderStatusTag = (status: string) => {
-    const statusConfig: Record<string, { color: string; text: string }> = {
-      open: { color: 'blue', text: '待处理' },
-      inProgress: { color: 'orange', text: '处理中' },
-      resolved: { color: 'green', text: '已解决' },
-      closed: { color: 'default', text: '已关闭' },
-    };
-
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    const config = TicketStatusConfig[status as TicketStatus];
+    return <Tag color={config?.color ?? 'default'}>{config?.label ?? status}</Tag>;
   };
 
   // 优先级标签渲染
   const renderPriorityTag = (priority: string) => {
-    const priorityConfig: Record<string, { color: string; text: string }> = {
-      low: { color: 'green', text: '低' },
-      medium: { color: 'blue', text: '中' },
-      high: { color: 'orange', text: '高' },
-      urgent: { color: 'red', text: '紧急' },
-      critical: { color: 'magenta', text: '严重' },
-    };
-
-    const config = priorityConfig[priority] || { color: 'default', text: priority };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    const config = TicketPriorityConfig[priority as TicketPriority];
+    return <Tag color={config?.color ?? 'default'}>{config?.label ?? priority}</Tag>;
   };
 
   // 最近工单表格列
@@ -284,7 +226,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       dataIndex: 'assignee',
       key: 'assignee',
       width: 100,
-      render: assignee => assignee?.fullName || '未分配',
+      render: assignee => assignee?.name || '未分配',
     },
     {
       title: '创建时间',

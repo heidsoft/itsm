@@ -293,12 +293,12 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
             </div>
           )}
 
-          {/* 截止时间 */}
-          {ticket.dueTime && (
+          {/* 截止时间：契约里没有 dueTime，SLA 解决截止是唯一权威截止时间 */}
+          {ticket.slaResolutionDeadline && (
             <div className="flex items-center mt-1">
               <Calendar className="mr-1 text-xs text-red-500" />
               <Text className="text-xs text-red-500">
-                截止: {dayjs(ticket.dueTime).format('MM-DD HH:mm')}
+                截止: {dayjs(ticket.slaResolutionDeadline).format('MM-DD HH:mm')}
               </Text>
             </div>
           )}

@@ -31,8 +31,8 @@ export default function ServiceRequestsPage() {
     try {
       // Use parallel requests with reasonable page sizes
       const [pendingData, allRequests] = await Promise.all([
-        serviceRequestAPI.getPendingApprovals({ page: 1, size: 20 }).catch(() => ({ requests: [], total: 0 })),
-        serviceRequestAPI.getUserServiceRequests({ page: 1, size: 100 }).catch(() => ({ requests: [], total: 0 })),
+        serviceRequestAPI.getPendingApprovals({ page: 1, pageSize: 20 }).catch(() => ({ requests: [], total: 0 })),
+        serviceRequestAPI.getUserServiceRequests({ page: 1, pageSize: 100 }).catch(() => ({ requests: [], total: 0 })),
       ]);
 
       setPendingApprovals(pendingData.requests.map((r: any) => ({

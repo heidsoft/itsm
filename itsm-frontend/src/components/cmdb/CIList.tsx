@@ -74,7 +74,7 @@ const CIList: React.FC = () => {
   const types: CIType[] = useMemo(() => {
     const res = typesQuery.data as unknown;
     if (!res) return [];
-    const list = (res as any)?.data ?? (res as any)?.items ?? res;
+    const list = (res as any)?.items ?? [];
     return Array.isArray(list) ? list : [];
   }, [typesQuery.data]);
 

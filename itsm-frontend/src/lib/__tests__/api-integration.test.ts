@@ -1,4 +1,5 @@
 import { TicketApi } from '@/lib/api/ticket-api';
+import { TicketPriority } from '@/constants/taxonomy';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
 
 jest.mock('@/lib/security', () => ({
@@ -144,9 +145,9 @@ describe('API Integration Tests', () => {
         const mockTicketData = {
           title: '新工单',
           description: '工单描述',
-          priority: 'medium',
+          priority: TicketPriority.MEDIUM,
           type: 'incident',
-        };
+        } as const;
 
         const mockResponse = {
           code: 0,

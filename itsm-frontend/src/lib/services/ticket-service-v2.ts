@@ -7,74 +7,28 @@
 
 import type { PaginatedResponse, ListParams } from './base-service';
 import { BaseService } from './base-service';
-import type { Ticket, TicketPriority, TicketStatus } from '@/lib/api/types';
+import { TicketStatus, TicketPriority } from '@/lib/api/ticket-api';
+import type {
+  Ticket,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  GetTicketsParams,
+  TicketStatsResponse,
+  TicketSLAInfo,
+} from '@/lib/api/ticket-api';
 
 // ==================== 类型定义 ====================
 
-/** 创建工单参数 */
-export interface CreateTicketParams {
-  title: string;
-  description?: string;
-  priority: TicketPriority;
-  type?: 'incident' | 'problem' | 'change' | 'service_request';
-  categoryId?: number;
-  tags?: string[];
-  assigneeId?: number;
-  requesterId: number;
-  formFields?: Record<string, unknown>;
-  attachments?: string[];
-}
-
-/** 更新工单参数 */
-export interface UpdateTicketParams {
-  title?: string;
-  description?: string;
-  priority?: TicketPriority;
-  status?: TicketStatus;
-  categoryId?: number;
-  tags?: string[];
-  assigneeId?: number;
-  resolution?: string;
-  version?: number; // 乐观锁
-}
-
-/** 工单查询参数 */
-export interface TicketQueryParams {
-  page?: number;
-  pageSize?: number;
-  status?: TicketStatus;
-  priority?: TicketPriority;
-  type?: string;
-  requesterId?: number;
-  assigneeId?: number;
-  categoryId?: number;
-  keyword?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-/** 工单统计 */
-export interface TicketStats {
-  total: number;
-  open: number;
-  inProgress: number;
-  resolved: number;
-  highPriority: number;
-  overdue: number;
-}
-
-/** SLA 信息 */
-export interface TicketSLAInfo {
-  ticketId: number;
-  slaName: string;
-  responseDeadline: string | null;
-  resolutionDeadline: string | null;
-  isBreached: boolean;
-  responseTimeRemaining: number | null;
-  resolutionTimeRemaining: number | null;
-}
+// 契约类型唯一来源 = @/lib/api/ticket-api（对齐后端 dto/ticket_dto.go 与
+// service.TicketSLAInfo）。本文件只为 BaseService 泛型保留旧名称别名，
+// 禁止在此重新声明字段：之前的 requesterId 必填、TicketStats 缺 pending、
+// TicketSLAInfo 用 slaName/isBreached/responseTimeRemaining 均与后端不符。
+export type CreateTicketParams = CreateTicketRequest;
+export type UpdateTicketParams = UpdateTicketRequest;
+export type TicketQueryParams = GetTicketsParams;
+export type TicketStats = TicketStatsResponse;
+export { TicketStatus, TicketPriority };
+export type { Ticket, TicketSLAInfo };
 
 /** 工单评论 */
 export interface TicketComment {
@@ -442,10 +396,10 @@ export class TicketService extends BaseService<Ticket, CreateTicketParams, Updat
    * 获取子任务
    */
   async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
-    const response = await this.get<{ tickets?: Ticket[]; data?: Ticket[] }>(
+    const response = await this.get<Ticket[]>(
       `/${parentTicketId}/subtasks`
     );
-    return (response as any).tickets || (response as any).data || [];
+    return Array.isArray(response) ? response : [];
   }
 
   /**

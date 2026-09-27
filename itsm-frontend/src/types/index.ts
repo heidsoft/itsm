@@ -25,23 +25,19 @@ export type {
   UpdateUserRequest,
 } from './user';
 
-// 工单相关（从types/ticket导入）
+// 工单视图模型（从types/ticket导入）。
+// 契约类型（Ticket/TicketStatus/TicketPriority/TicketType/TicketSource/
+// TicketListResponse/CreateTicketRequest/UpdateTicketRequest/TicketStatsResponse）
+// 已由上方 `export * from '../lib/api/types'` 再导出，唯一声明处是 @/lib/api/ticket-api，
+// 此处不得重复列出，否则同一类型会有两条导出路径。
 export type {
-  TicketPriority,
-  TicketStatus,
-  TicketSource,
-  TicketType,
   TicketCategory,
   TicketUser,
   TicketComment,
   TicketAttachment,
   TicketSLA,
-  Ticket,
-  CreateTicketRequest,
-  UpdateTicketRequest,
   TicketFilters,
   TicketSortOptions,
-  TicketListResponse,
   TicketStats,
   TicketActivity,
   TicketTemplate,

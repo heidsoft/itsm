@@ -16,7 +16,7 @@
  *   - error propagation when backend returns non-zero code
  */
 
-import { ticketService } from '../ticket-service-v2';
+import { ticketService, TicketPriority, TicketStatus } from '../ticket-service-v2';
 
 jest.mock('@/lib/security', () => ({
   security: {
@@ -86,8 +86,7 @@ describe('ticketService', () => {
       mockSuccess({ id: 1, ticketNumber: 'TKT-001' });
       await ticketService.createTicket({
         title: 'New',
-        priority: 'medium' as never,
-        requesterId: 1,
+        priority: TicketPriority.MEDIUM,
       });
 
       const [url, init] = fetchMock.mock.calls[0];
@@ -123,7 +122,7 @@ describe('ticketService', () => {
   describe('workflow actions', () => {
     it('updateStatus calls PUT /api/v1/tickets/:id/status with { status }', async () => {
       mockSuccess({ id: 1 });
-      await ticketService.updateStatus(1, 'in_progress' as never);
+      await ticketService.updateStatus(1, TicketStatus.IN_PROGRESS);
 
       const [url, init] = fetchMock.mock.calls[0];
       expect(url).toContain('/api/v1/tickets/1/status');
@@ -315,8 +314,7 @@ describe('ticketService', () => {
       await expect(
         ticketService.createTicket({
           title: '',
-          priority: 'medium' as never,
-          requesterId: 1,
+          priority: TicketPriority.MEDIUM,
         })
       ).rejects.toThrow('标题不能为空');
     });

@@ -1,18 +1,27 @@
 /**
  * 工单相关类型定义
+ *
+ * ⚠️ 契约类型（Ticket / TicketStatus / TicketPriority / TicketType / TicketSource /
+ * CreateTicketRequest / UpdateTicketRequest / TicketListResponse / TicketStatsResponse）
+ * 的唯一来源是 `@/lib/api/ticket-api`（与后端 dto/ticket_dto.go 逐字段对齐）。
+ * 本文件只保留前端视图/交互模型（筛选器、活动流、模板、批量操作等），
+ * 禁止在此另起契约定义，也不得为契约同名类型再起别名（例如 TicketStatsResponse as TicketStats）。
  */
 
-export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
-export type TicketStatus =
-  | 'new'
-  | 'open'
-  | 'in_progress'
-  | 'pending'
-  | 'resolved'
-  | 'closed'
-  | 'cancelled';
-export type TicketSource = 'web' | 'email' | 'phone' | 'chat' | 'api' | 'mobile';
-export type TicketType = 'incident' | 'request' | 'problem' | 'change' | 'task';
+import { TicketStatus, TicketPriority } from '@/lib/api/ticket-api';
+import type { Ticket, TicketListResponse, TicketType, TicketSource, CreateTicketRequest, UpdateTicketRequest, TicketStatsResponse, UserBasicInfo } from '@/lib/api/ticket-api';
+
+export { TicketStatus, TicketPriority };
+export type {
+  Ticket,
+  TicketListResponse,
+  TicketType,
+  TicketSource,
+  CreateTicketRequest,
+  UpdateTicketRequest,
+  TicketStatsResponse,
+  UserBasicInfo,
+};
 
 export interface TicketCategory {
   id: number;
@@ -22,13 +31,12 @@ export interface TicketCategory {
   isActive: boolean;
 }
 
+/** 工单关联人员的视图模型；接口响应用 UserBasicInfo（@/lib/api/ticket-api） */
 export interface TicketUser {
   id: number;
   username: string;
-  fullName: string;
+  name: string;
   email: string;
-  avatar?: string;
-  department?: string;
   role: string;
 }
 
@@ -65,89 +73,6 @@ export interface TicketSLA {
   isActive: boolean;
 }
 
-export interface Ticket {
-  id: number;
-  ticketNumber: string;
-  title: string;
-  description: string;
-  status: TicketStatus;
-  priority: TicketPriority;
-  source: TicketSource;
-  type: TicketType;
-  category?: TicketCategory;
-  requester: TicketUser;
-  assignee?: TicketUser;
-
-  // 版本控制（乐观锁）
-  version: number;
-
-  // 时间相关
-  createdAt: string;
-  updatedAt: string;
-  dueDate?: string;
-  resolvedAt?: string;
-  closedAt?: string;
-
-  // SLA相关
-  sla?: TicketSLA;
-  slaStatus?: 'on_track' | 'at_risk' | 'breached';
-  responseDeadline?: string;
-  resolutionDeadline?: string;
-
-  // 解决方案
-  resolution?: string;
-  resolutionCategory?: string;
-
-  // 满意度
-  satisfactionRating?: number;
-  satisfactionComment?: string;
-
-  // 升级相关
-  escalationLevel?: number;
-  escalationReason?: string;
-
-  // 关联数据
-  comments?: TicketComment[];
-  attachments?: TicketAttachment[];
-  relatedTickets?: number[];
-
-  // 自定义字段
-  customFields?: Record<string, unknown>;
-
-  // 元数据
-  tenantId: number;
-  isMajorIncident: boolean;
-  tags?: string[];
-}
-
-export interface CreateTicketRequest {
-  title: string;
-  description: string;
-  priority: TicketPriority;
-  type: TicketType;
-  source?: TicketSource;
-  categoryId?: number;
-  assigneeId?: number;
-  dueDate?: string;
-  customFields?: Record<string, unknown>;
-  tags?: string[];
-  attachments?: File[];
-}
-
-export interface UpdateTicketRequest {
-  title?: string;
-  description?: string;
-  priority?: TicketPriority;
-  status?: TicketStatus;
-  categoryId?: number;
-  assigneeId?: number;
-  dueDate?: string;
-  customFields?: Record<string, unknown>;
-  tags?: string[];
-  /** 版本号（用于乐观锁冲突检测） */
-  version?: number;
-}
-
 export interface TicketFilters {
   status?: TicketStatus[];
   priority?: TicketPriority[];
@@ -178,14 +103,6 @@ export interface TicketSortOptions {
     | 'updatedAt'
     | 'dueDate';
   order: 'asc' | 'desc';
-}
-
-export interface TicketListResponse {
-  tickets: Ticket[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
 }
 
 export interface TicketStats {

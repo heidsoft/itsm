@@ -7,6 +7,14 @@ import React from 'react';
 import { Form, Select, DatePicker, Input, Button, Space, Card, Tag } from 'antd';
 import { Search, Filter, X } from 'lucide-react';
 import type { TicketFilters } from '@/types/ticket';
+import {
+  ITSMMainType,
+  ITSMMainTypeConfig,
+  TicketPriority,
+  TicketPriorityConfig,
+  TicketStatus,
+  TicketStatusConfig,
+} from '@/constants/taxonomy';
 
 const { RangePicker } = DatePicker;
 
@@ -32,32 +40,26 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 }) => {
   const [form] = Form.useForm();
 
-  // 状态选项
-  const statusOptions = [
-    { label: '新建', value: 'new' },
-    { label: '处理中', value: 'in_progress' },
-    { label: '待审批', value: 'pending_approval' },
-    { label: '已解决', value: 'resolved' },
-    { label: '已关闭', value: 'closed' },
-    { label: '已取消', value: 'cancelled' },
-  ];
+  // 筛选项一律来自 @/constants/taxonomy，不在此手写字面量。
+  // 旧列表包含 pending_approval 与 request，两者都不在后端工单状态机/type 白名单内，
+  // 选中后后端筛选条件永远匹配不到任何工单。
+  const statusOptions = Object.values(TicketStatus).map((status) => ({
+    value: status,
+    label: TicketStatusConfig[status].label,
+  }));
 
-  // 优先级选项
-  const priorityOptions = [
-    { label: '低', value: 'low', color: 'default' },
-    { label: '中', value: 'medium', color: 'blue' },
-    { label: '高', value: 'high', color: 'orange' },
-    { label: '紧急', value: 'urgent', color: 'red' },
-    { label: '严重', value: 'critical', color: 'red' },
-  ];
+  const priorityOptions = Object.values(TicketPriority).map((priority) => ({
+    value: priority,
+    label: TicketPriorityConfig[priority].label,
+    color: TicketPriorityConfig[priority].color,
+  }));
 
-  // 类型选项
   const typeOptions = [
-    { label: '事件', value: 'incident' },
-    { label: '请求', value: 'request' },
-    { label: '问题', value: 'problem' },
-    { label: '变更', value: 'change' },
-  ];
+    ITSMMainType.INCIDENT,
+    ITSMMainType.SERVICE_REQUEST,
+    ITSMMainType.PROBLEM,
+    ITSMMainType.CHANGE,
+  ].map((type) => ({ value: type, label: ITSMMainTypeConfig[type].label }));
 
   // 处理表单值变化
   const handleValuesChange = (changedValues: Partial<TicketFilters>) => {

@@ -57,15 +57,18 @@ export const ITSMMainTypeConfig: Record<ITSMMainType, {
 };
 
 // ==================== 工单状态 (Ticket Status) ====================
+// 词表唯一来源 = 后端工单状态机 itsm-backend/common/constants.go（TicketStatusNew..TicketStatusRejected）。
+// pending_approval 属于 Change / ServiceRequest 领域，不是工单状态，禁止再加回本词表。
 export enum TicketStatus {
   NEW = 'new',
   OPEN = 'open',
+  ASSIGNED = 'assigned',
   IN_PROGRESS = 'in_progress',
-  PENDING_APPROVAL = 'pending_approval',
   PENDING = 'pending',
   RESOLVED = 'resolved',
   CLOSED = 'closed',
   CANCELLED = 'cancelled',
+  APPROVED = 'approved',
   REJECTED = 'rejected',
 }
 
@@ -93,6 +96,14 @@ export const TicketStatusConfig: Record<TicketStatus, {
     textColor: '#fa8c16',
     badgeStatus: 'warning',
   },
+  [TicketStatus.ASSIGNED]: {
+    label: '已分配',
+    text: '已分配',
+    color: 'geekblue',
+    bgColor: '#f0f5ff',
+    textColor: '#2f54eb',
+    badgeStatus: 'processing',
+  },
   [TicketStatus.IN_PROGRESS]: {
     label: '处理中',
     text: '处理中',
@@ -100,14 +111,6 @@ export const TicketStatusConfig: Record<TicketStatus, {
     bgColor: '#e6fffb',
     textColor: '#13c2c2',
     badgeStatus: 'processing',
-  },
-  [TicketStatus.PENDING_APPROVAL]: {
-    label: '待审批',
-    text: '待审批',
-    color: 'gold',
-    bgColor: '#fffbe6',
-    textColor: '#faad14',
-    badgeStatus: 'warning',
   },
   [TicketStatus.PENDING]: {
     label: '等待中',
@@ -140,6 +143,14 @@ export const TicketStatusConfig: Record<TicketStatus, {
     bgColor: '#fff1f0',
     textColor: '#ff4d4f',
     badgeStatus: 'error',
+  },
+  [TicketStatus.APPROVED]: {
+    label: '已审批',
+    text: '已审批',
+    color: 'green',
+    bgColor: '#f6ffed',
+    textColor: '#389e0d',
+    badgeStatus: 'success',
   },
   [TicketStatus.REJECTED]: {
     label: '已拒绝',

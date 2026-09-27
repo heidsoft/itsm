@@ -25,7 +25,8 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
           form.setFieldsValue({
             title: editingTicket.title,
             type: editingTicket.type,
-            category: editingTicket.category,
+            // category 只在写入契约里（dto.UpdateTicketRequest.Category），
+            // TicketResponse 不回传分类名，因此编辑时无值可回填，由必填校验要求重选。
             priority: editingTicket.priority,
             assigneeId: editingTicket.assigneeId,
             description: editingTicket.description,

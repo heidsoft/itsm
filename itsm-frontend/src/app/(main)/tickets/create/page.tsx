@@ -146,9 +146,9 @@ export default function CreateTicketPage() {
 			httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
 			httpClient.get<any>('/api/v1/configuration-items', { page: 1, size: 200 }),
 		]).then(([users, departments, cis]) => setReferenceOptions({
-			user: users.status === 'fulfilled' ? (users.value.users ?? users.value.items ?? []).map((item: any) => ({ label: item.name ?? item.username, value: item.id })) : [],
-			department: departments.status === 'fulfilled' ? (departments.value.departments ?? departments.value.items ?? departments.value ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
-			ci: cis.status === 'fulfilled' ? (cis.value.items ?? cis.value.cis ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
+			user: users.status === 'fulfilled' ? (users.value.users ?? []).map((item: any) => ({ label: item.name ?? item.username, value: item.id })) : [],
+			department: departments.status === 'fulfilled' ? (Array.isArray(departments.value) ? departments.value : []).map((item: any) => ({ label: item.name, value: item.id })) : [],
+			ci: cis.status === 'fulfilled' ? (cis.value.items ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
 		}));
 	}, []);
 

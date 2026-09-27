@@ -65,7 +65,7 @@ export const useTicketsQuery = (
           pageSize: pagination.pageSize,
           ...filters,
         });
-        const pageSize = response?.size ?? response?.pageSize ?? pagination.pageSize;
+        const pageSize = response?.pageSize ?? pagination.pageSize;
         const total = response?.total || 0;
         const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
         // 确保返回的数据结构完整

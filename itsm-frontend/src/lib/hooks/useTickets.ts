@@ -2,30 +2,17 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { message } from 'antd';
-import type {
-  Ticket,
-  TicketStatus,
-  TicketPriority,
-  TicketType,
-} from '../../lib/services/ticket-service';
+import type { Ticket, GetTicketsParams } from '@/lib/api/ticket-api';
 import { ticketService } from '../../lib/services/ticket-service';
 
-export interface TicketQueryFilters {
-  status?: TicketStatus;
-  priority?: TicketPriority;
-  type?: TicketType;
-  category?: string;
-  assigneeId?: number;
-  keyword?: string;
+/**
+ * 列表筛选的 UI 模型：请求字段直接取自 dto.ListTicketsRequest（GetTicketsParams），
+ * 只把 dateFrom/dateTo 换成控件形态 dateRange。
+ * 之前的 tags/source/impact/urgency 后端不支持筛选，发送后会被静默忽略。
+ */
+export type TicketQueryFilters = Omit<GetTicketsParams, 'dateFrom' | 'dateTo'> & {
   dateRange?: [string, string];
-  tags?: string[];
-  source?: string;
-  impact?: string;
-  urgency?: string;
-  isOverdue?: boolean;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
+};
 
 export interface BatchDeleteResult {
   readonly successCount: number;
@@ -108,7 +95,6 @@ export const useTickets = (): UseTicketsReturn => {
         keyword: currentFilters.keyword,
         dateFrom: dateRange?.[0],
         dateTo: dateRange?.[1],
-        tags: currentFilters.tags,
         isOverdue: currentFilters.isOverdue,
         sortBy: currentFilters.sortBy,
         sortOrder: currentFilters.sortOrder,
