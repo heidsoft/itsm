@@ -436,6 +436,13 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			if err != nil {
 				s.logger.Warnw("Failed to update SLA deadlines", "error", err)
 			}
+
+			// 双写：同步写入 sla_states（Phase 3 Step 3.5 阶段 1）
+			if store := s.slaSvc.SLAStore(); store != nil {
+				if err := store.SaveDeadlines(ctx, tenantID, "ticket", tkt.ID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
+					s.logger.Warnw("Failed to dual-write SLA state for ticket, continuing", "error", err)
+				}
+			}
 		}
 	}
 

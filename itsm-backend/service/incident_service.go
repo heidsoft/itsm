@@ -340,6 +340,13 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 				s.logger.Warnw("Failed to set SLA deadlines on incident, continuing", "error", err)
 			}
 			s.logger.Infow("SLA update exec done", "err", err)
+
+			// 双写：同步写入 sla_states（Phase 3 Step 3.5 阶段 1）
+			if store := s.slaSvc.SLAStore(); store != nil {
+				if err := store.SaveDeadlines(ctx, tenantID, "incident", incidentEntity.ID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
+					s.logger.Warnw("Failed to dual-write SLA state for incident, continuing", "error", err)
+				}
+			}
 		}
 	}
 

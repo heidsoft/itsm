@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -70,6 +71,7 @@ type TicketSLAService struct {
 	client  *ent.Client
 	logger  *zap.SugaredLogger
 	nowFunc func() time.Time
+	slaStore *sla.Store
 }
 
 // NewTicketSLAService 创建工单SLA服务
@@ -79,6 +81,16 @@ func NewTicketSLAService(client *ent.Client, logger *zap.SugaredLogger) *TicketS
 		logger:  logger,
 		nowFunc: time.Now,
 	}
+}
+
+// SetSLAStore 注入统一 SLA 持久化 store（双写阶段）。
+func (s *TicketSLAService) SetSLAStore(store *sla.Store) {
+	s.slaStore = store
+}
+
+// SLAStore 返回注入的 SLA store，供调用方直接做双写。
+func (s *TicketSLAService) SLAStore() *sla.Store {
+	return s.slaStore
 }
 
 // withNowFunc overrides the clock used for deadline calculation. Intended for tests.

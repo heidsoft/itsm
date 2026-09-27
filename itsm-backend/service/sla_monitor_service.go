@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -22,6 +23,7 @@ type SLAMonitorService struct {
 	logger          *zap.SugaredLogger
 	alertService    *SLAAlertService
 	notificationSvc *TicketNotificationService
+	slaStore        *sla.Store
 }
 
 type SLAMetrics struct {
@@ -49,6 +51,11 @@ func (s *SLAMonitorService) SetAlertService(alertService *SLAAlertService) {
 // SetNotificationService 设置通知服务
 func (s *SLAMonitorService) SetNotificationService(notificationSvc *TicketNotificationService) {
 	s.notificationSvc = notificationSvc
+}
+
+// SetSLAStore 注入统一 SLA 持久化 store（双写阶段）。
+func (s *SLAMonitorService) SetSLAStore(store *sla.Store) {
+	s.slaStore = store
 }
 
 type SLACheckStats struct {
@@ -764,11 +771,21 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		if t.SLAStatus == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "工单SLA已处于暂停状态", "")
 		}
-		return s.client.Ticket.UpdateOneID(entityID).
+		err = s.client.Ticket.UpdateOneID(entityID).
 			SetSLAStatus("paused").
 			SetSLAPausedAt(now).
 			SetSLAPauseReason(reason).
 			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		// 双写：同步暂停 sla_states
+		if s.slaStore != nil {
+			if pwErr := s.slaStore.Pause(ctx, tenantID, entityType, entityID, reason); pwErr != nil {
+				s.logger.Warnw("Failed to dual-write SLA pause for ticket", "error", pwErr)
+			}
+		}
+		return nil
 
 	case "incident":
 		inc, err := s.client.Incident.Query().
@@ -780,11 +797,21 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 		if inc.SLAStatus == "paused" {
 			return common.NewBusinessError(common.ConflictCode, "事件SLA已处于暂停状态", "")
 		}
-		return s.client.Incident.UpdateOneID(entityID).
+		err = s.client.Incident.UpdateOneID(entityID).
 			SetSLAStatus("paused").
 			SetSLAPausedAt(now).
 			SetSLAPauseReason(reason).
 			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		// 双写：同步暂停 sla_states
+		if s.slaStore != nil {
+			if pwErr := s.slaStore.Pause(ctx, tenantID, entityType, entityID, reason); pwErr != nil {
+				s.logger.Warnw("Failed to dual-write SLA pause for incident", "error", pwErr)
+			}
+		}
+		return nil
 
 	default:
 		return fmt.Errorf("不支持的实体类型: %s", entityType)
@@ -822,7 +849,16 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 				updater.SetSLAResolutionDeadline(t.SLAResolutionDeadline.Add(pausedDuration))
 			}
 		}
-		return updater.Exec(ctx)
+		if err := updater.Exec(ctx); err != nil {
+			return err
+		}
+		// 双写：同步恢复 sla_states
+		if s.slaStore != nil {
+			if pwErr := s.slaStore.Resume(ctx, tenantID, entityType, entityID); pwErr != nil {
+				s.logger.Warnw("Failed to dual-write SLA resume for ticket", "error", pwErr)
+			}
+		}
+		return nil
 
 	case "incident":
 		inc, err := s.client.Incident.Query().
@@ -849,7 +885,16 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 				updater.SetSLAResolutionDeadline(inc.SLAResolutionDeadline.Add(pausedDuration))
 			}
 		}
-		return updater.Exec(ctx)
+		if err := updater.Exec(ctx); err != nil {
+			return err
+		}
+		// 双写：同步恢复 sla_states
+		if s.slaStore != nil {
+			if pwErr := s.slaStore.Resume(ctx, tenantID, entityType, entityID); pwErr != nil {
+				s.logger.Warnw("Failed to dual-write SLA resume for incident", "error", pwErr)
+			}
+		}
+		return nil
 
 	default:
 		return fmt.Errorf("不支持的实体类型: %s", entityType)
