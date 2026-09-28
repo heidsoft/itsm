@@ -54,8 +54,6 @@ type Change struct {
 	ImplementationPlan string `json:"implementation_plan,omitempty"`
 	// 回滚计划
 	RollbackPlan string `json:"rollback_plan,omitempty"`
-	// 受影响的配置项
-	AffectedCis []string `json:"affected_cis,omitempty"`
 	// 相关工单
 	RelatedTickets []string `json:"related_tickets,omitempty"`
 	// 创建时间
@@ -77,9 +75,11 @@ type ChangeEdges struct {
 	Pir []*ChangePIR `json:"pir,omitempty"`
 	// 关联的发布
 	Releases []*Release `json:"releases,omitempty"`
+	// 受影响的配置项（CI）
+	AffectedCis []*ConfigurationItem `json:"affected_cis,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ProblemsOrErr returns the Problems value or an error if the edge
@@ -109,12 +109,21 @@ func (e ChangeEdges) ReleasesOrErr() ([]*Release, error) {
 	return nil, &NotLoadedError{edge: "releases"}
 }
 
+// AffectedCisOrErr returns the AffectedCis value or an error if the edge
+// was not loaded in eager-loading.
+func (e ChangeEdges) AffectedCisOrErr() ([]*ConfigurationItem, error) {
+	if e.loadedTypes[3] {
+		return e.AffectedCis, nil
+	}
+	return nil, &NotLoadedError{edge: "affected_cis"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Change) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case change.FieldAffectedCis, change.FieldRelatedTickets:
+		case change.FieldRelatedTickets:
 			values[i] = new([]byte)
 		case change.FieldID, change.FieldAssigneeID, change.FieldCreatedBy, change.FieldTenantID:
 			values[i] = new(sql.NullInt64)
@@ -253,14 +262,6 @@ func (_m *Change) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.RollbackPlan = value.String
 			}
-		case change.FieldAffectedCis:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field affected_cis", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &_m.AffectedCis); err != nil {
-					return fmt.Errorf("unmarshal field affected_cis: %w", err)
-				}
-			}
 		case change.FieldRelatedTickets:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field related_tickets", values[i])
@@ -314,6 +315,11 @@ func (_m *Change) QueryPir() *ChangePIRQuery {
 // QueryReleases queries the "releases" edge of the Change entity.
 func (_m *Change) QueryReleases() *ReleaseQuery {
 	return NewChangeClient(_m.config).QueryReleases(_m)
+}
+
+// QueryAffectedCis queries the "affected_cis" edge of the Change entity.
+func (_m *Change) QueryAffectedCis() *ConfigurationItemQuery {
+	return NewChangeClient(_m.config).QueryAffectedCis(_m)
 }
 
 // Update returns a builder for updating this Change.
@@ -392,9 +398,6 @@ func (_m *Change) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rollback_plan=")
 	builder.WriteString(_m.RollbackPlan)
-	builder.WriteString(", ")
-	builder.WriteString("affected_cis=")
-	builder.WriteString(fmt.Sprintf("%v", _m.AffectedCis))
 	builder.WriteString(", ")
 	builder.WriteString("related_tickets=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RelatedTickets))

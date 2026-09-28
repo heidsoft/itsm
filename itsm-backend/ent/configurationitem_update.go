@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -884,6 +885,21 @@ func (_u *ConfigurationItemUpdate) AddIncidents(v ...*Incident) *ConfigurationIt
 	return _u.AddIncidentIDs(ids...)
 }
 
+// AddChangeIDs adds the "changes" edge to the Change entity by IDs.
+func (_u *ConfigurationItemUpdate) AddChangeIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.AddChangeIDs(ids...)
+	return _u
+}
+
+// AddChanges adds the "changes" edges to the Change entity.
+func (_u *ConfigurationItemUpdate) AddChanges(v ...*Change) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChangeIDs(ids...)
+}
+
 // AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
 func (_u *ConfigurationItemUpdate) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdate {
 	_u.mutation.AddOutgoingRelationIDs(ids...)
@@ -1001,6 +1017,27 @@ func (_u *ConfigurationItemUpdate) RemoveIncidents(v ...*Incident) *Configuratio
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveIncidentIDs(ids...)
+}
+
+// ClearChanges clears all "changes" edges to the Change entity.
+func (_u *ConfigurationItemUpdate) ClearChanges() *ConfigurationItemUpdate {
+	_u.mutation.ClearChanges()
+	return _u
+}
+
+// RemoveChangeIDs removes the "changes" edge to Change entities by IDs.
+func (_u *ConfigurationItemUpdate) RemoveChangeIDs(ids ...int) *ConfigurationItemUpdate {
+	_u.mutation.RemoveChangeIDs(ids...)
+	return _u
+}
+
+// RemoveChanges removes "changes" edges to Change entities.
+func (_u *ConfigurationItemUpdate) RemoveChanges(v ...*Change) *ConfigurationItemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChangeIDs(ids...)
 }
 
 // ClearOutgoingRelations clears all "outgoing_relations" edges to the CIRelationship entity.
@@ -1535,6 +1572,51 @@ func (_u *ConfigurationItemUpdate) sqlSave(ctx context.Context) (_node int, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChangesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChangesIDs(); len(nodes) > 0 && !_u.mutation.ChangesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChangesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -2591,6 +2673,21 @@ func (_u *ConfigurationItemUpdateOne) AddIncidents(v ...*Incident) *Configuratio
 	return _u.AddIncidentIDs(ids...)
 }
 
+// AddChangeIDs adds the "changes" edge to the Change entity by IDs.
+func (_u *ConfigurationItemUpdateOne) AddChangeIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.AddChangeIDs(ids...)
+	return _u
+}
+
+// AddChanges adds the "changes" edges to the Change entity.
+func (_u *ConfigurationItemUpdateOne) AddChanges(v ...*Change) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddChangeIDs(ids...)
+}
+
 // AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
 func (_u *ConfigurationItemUpdateOne) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemUpdateOne {
 	_u.mutation.AddOutgoingRelationIDs(ids...)
@@ -2708,6 +2805,27 @@ func (_u *ConfigurationItemUpdateOne) RemoveIncidents(v ...*Incident) *Configura
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveIncidentIDs(ids...)
+}
+
+// ClearChanges clears all "changes" edges to the Change entity.
+func (_u *ConfigurationItemUpdateOne) ClearChanges() *ConfigurationItemUpdateOne {
+	_u.mutation.ClearChanges()
+	return _u
+}
+
+// RemoveChangeIDs removes the "changes" edge to Change entities by IDs.
+func (_u *ConfigurationItemUpdateOne) RemoveChangeIDs(ids ...int) *ConfigurationItemUpdateOne {
+	_u.mutation.RemoveChangeIDs(ids...)
+	return _u
+}
+
+// RemoveChanges removes "changes" edges to Change entities.
+func (_u *ConfigurationItemUpdateOne) RemoveChanges(v ...*Change) *ConfigurationItemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveChangeIDs(ids...)
 }
 
 // ClearOutgoingRelations clears all "outgoing_relations" edges to the CIRelationship entity.
@@ -3272,6 +3390,51 @@ func (_u *ConfigurationItemUpdateOne) sqlSave(ctx context.Context) (_node *Confi
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ChangesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedChangesIDs(); len(nodes) > 0 && !_u.mutation.ChangesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChangesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

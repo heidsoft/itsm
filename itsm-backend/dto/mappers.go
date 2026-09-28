@@ -486,56 +486,9 @@ func ToTenantResponseList(tenants []*ent.Tenant) []*TenantResponse {
 // Change Mappers
 // ===================================
 
-// ToChangeResponse converts an ent.Change to ChangeResponse
-func ToChangeResponse(change *ent.Change) *ChangeResponse {
-	if change == nil {
-		return nil
-	}
-
-	response := &ChangeResponse{
-		ID:                 change.ID,
-		Title:              change.Title,
-		Description:        change.Description,
-		Justification:      change.Justification,
-		Type:               ChangeType(change.Type),
-		Status:             ChangeStatus(change.Status),
-		Priority:           ChangePriority(change.Priority),
-		ImpactScope:        ChangeImpact(change.ImpactScope),
-		RiskLevel:          ChangeRisk(change.RiskLevel),
-		CreatedBy:          change.CreatedBy,
-		TenantID:           change.TenantID,
-		ImplementationPlan: change.ImplementationPlan,
-		RollbackPlan:       change.RollbackPlan,
-		AffectedCIs:        change.AffectedCis,
-		RelatedTickets:     change.RelatedTickets,
-		CreatedAt:          change.CreatedAt,
-		UpdatedAt:          change.UpdatedAt,
-		PlannedStartDate:   &change.PlannedStartDate,
-		PlannedEndDate:     &change.PlannedEndDate,
-		ActualStartDate:    &change.ActualStartDate,
-		ActualEndDate:      &change.ActualEndDate,
-	}
-
-	if change.AssigneeID > 0 {
-		response.AssigneeID = &change.AssigneeID
-	}
-
-	return response
-}
-
-// ToChangeResponseList converts a slice of ent.Change to ChangeResponse slice
-func ToChangeResponseList(changes []*ent.Change) []*ChangeResponse {
-	if changes == nil {
-		return nil
-	}
-	responses := make([]*ChangeResponse, 0, len(changes))
-	for _, change := range changes {
-		if change != nil {
-			responses = append(responses, ToChangeResponse(change))
-		}
-	}
-	return responses
-}
+// 注：原 ToChangeResponse / ToChangeResponseList 于 2026-09-28 删除 —— 全仓零引用
+// （仅自引用），且直接依赖已收敛为 edge 的 Change.affected_cis 字段，属于纯负担死代码。
+// 变更域的响应装配走 handlers/change 领域层，DTO 不再反向依赖 ent 实体做映射。
 
 // ===================================
 // Problem Mappers

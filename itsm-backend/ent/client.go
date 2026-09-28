@@ -4150,6 +4150,22 @@ func (c *ChangeClient) QueryReleases(_m *Change) *ReleaseQuery {
 	return query
 }
 
+// QueryAffectedCis queries the affected_cis edge of a Change.
+func (c *ChangeClient) QueryAffectedCis(_m *Change) *ConfigurationItemQuery {
+	query := (&ConfigurationItemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(change.Table, change.FieldID, id),
+			sqlgraph.To(configurationitem.Table, configurationitem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, change.AffectedCisTable, change.AffectedCisPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ChangeClient) Hooks() []Hook {
 	return c.hooks.Change
@@ -5133,6 +5149,22 @@ func (c *ConfigurationItemClient) QueryIncidents(_m *ConfigurationItem) *Inciden
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
 			sqlgraph.To(incident.Table, incident.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.IncidentsTable, configurationitem.IncidentsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChanges queries the changes edge of a ConfigurationItem.
+func (c *ConfigurationItemClient) QueryChanges(_m *ConfigurationItem) *ChangeQuery {
+	query := (&ChangeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, id),
+			sqlgraph.To(change.Table, change.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, configurationitem.ChangesTable, configurationitem.ChangesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

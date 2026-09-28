@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -34,6 +35,7 @@ type ConfigurationItemQuery struct {
 	withCloudResourceRef  *CloudResourceQuery
 	withTickets           *TicketQuery
 	withIncidents         *IncidentQuery
+	withChanges           *ChangeQuery
 	withOutgoingRelations *CIRelationshipQuery
 	withHistory           *ConfigurationItemHistoryQuery
 	withTags              *CITagQuery
@@ -156,6 +158,28 @@ func (_q *ConfigurationItemQuery) QueryIncidents() *IncidentQuery {
 			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
 			sqlgraph.To(incident.Table, incident.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.IncidentsTable, configurationitem.IncidentsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChanges chains the current query on the "changes" edge.
+func (_q *ConfigurationItemQuery) QueryChanges() *ChangeQuery {
+	query := (&ChangeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(configurationitem.Table, configurationitem.FieldID, selector),
+			sqlgraph.To(change.Table, change.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, configurationitem.ChangesTable, configurationitem.ChangesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -447,6 +471,7 @@ func (_q *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
 		withCloudResourceRef:  _q.withCloudResourceRef.Clone(),
 		withTickets:           _q.withTickets.Clone(),
 		withIncidents:         _q.withIncidents.Clone(),
+		withChanges:           _q.withChanges.Clone(),
 		withOutgoingRelations: _q.withOutgoingRelations.Clone(),
 		withHistory:           _q.withHistory.Clone(),
 		withTags:              _q.withTags.Clone(),
@@ -498,6 +523,17 @@ func (_q *ConfigurationItemQuery) WithIncidents(opts ...func(*IncidentQuery)) *C
 		opt(query)
 	}
 	_q.withIncidents = query
+	return _q
+}
+
+// WithChanges tells the query-builder to eager-load the nodes that are connected to
+// the "changes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ConfigurationItemQuery) WithChanges(opts ...func(*ChangeQuery)) *ConfigurationItemQuery {
+	query := (&ChangeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withChanges = query
 	return _q
 }
 
@@ -624,11 +660,12 @@ func (_q *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		nodes       = []*ConfigurationItem{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [8]bool{
+		loadedTypes = [9]bool{
 			_q.withCiTypeRef != nil,
 			_q.withCloudResourceRef != nil,
 			_q.withTickets != nil,
 			_q.withIncidents != nil,
+			_q.withChanges != nil,
 			_q.withOutgoingRelations != nil,
 			_q.withHistory != nil,
 			_q.withTags != nil,
@@ -679,6 +716,13 @@ func (_q *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook
 		if err := _q.loadIncidents(ctx, query, nodes,
 			func(n *ConfigurationItem) { n.Edges.Incidents = []*Incident{} },
 			func(n *ConfigurationItem, e *Incident) { n.Edges.Incidents = append(n.Edges.Incidents, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withChanges; query != nil {
+		if err := _q.loadChanges(ctx, query, nodes,
+			func(n *ConfigurationItem) { n.Edges.Changes = []*Change{} },
+			func(n *ConfigurationItem, e *Change) { n.Edges.Changes = append(n.Edges.Changes, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -860,6 +904,67 @@ func (_q *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *Inci
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "incidents" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (_q *ConfigurationItemQuery) loadChanges(ctx context.Context, query *ChangeQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Change)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*ConfigurationItem)
+	nids := make(map[int]map[*ConfigurationItem]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(configurationitem.ChangesTable)
+		s.Join(joinT).On(s.C(change.FieldID), joinT.C(configurationitem.ChangesPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(configurationitem.ChangesPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(configurationitem.ChangesPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*ConfigurationItem]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Change](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "changes" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

@@ -51,8 +51,6 @@ const (
 	FieldImplementationPlan = "implementation_plan"
 	// FieldRollbackPlan holds the string denoting the rollback_plan field in the database.
 	FieldRollbackPlan = "rollback_plan"
-	// FieldAffectedCis holds the string denoting the affected_cis field in the database.
-	FieldAffectedCis = "affected_cis"
 	// FieldRelatedTickets holds the string denoting the related_tickets field in the database.
 	FieldRelatedTickets = "related_tickets"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -65,6 +63,8 @@ const (
 	EdgePir = "pir"
 	// EdgeReleases holds the string denoting the releases edge name in mutations.
 	EdgeReleases = "releases"
+	// EdgeAffectedCis holds the string denoting the affected_cis edge name in mutations.
+	EdgeAffectedCis = "affected_cis"
 	// Table holds the table name of the change in the database.
 	Table = "changes"
 	// ProblemsTable is the table that holds the problems relation/edge. The primary key declared below.
@@ -86,6 +86,11 @@ const (
 	ReleasesInverseTable = "releases"
 	// ReleasesColumn is the table column denoting the releases relation/edge.
 	ReleasesColumn = "change_id"
+	// AffectedCisTable is the table that holds the affected_cis relation/edge. The primary key declared below.
+	AffectedCisTable = "change_affected_cis"
+	// AffectedCisInverseTable is the table name for the ConfigurationItem entity.
+	// It exists in this package in order to avoid circular dependency with the "configurationitem" package.
+	AffectedCisInverseTable = "configuration_items"
 )
 
 // Columns holds all SQL columns for change fields.
@@ -109,7 +114,6 @@ var Columns = []string{
 	FieldActualEndDate,
 	FieldImplementationPlan,
 	FieldRollbackPlan,
-	FieldAffectedCis,
 	FieldRelatedTickets,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -125,6 +129,9 @@ var (
 	// ProblemsPrimaryKey and ProblemsColumn2 are the table columns denoting the
 	// primary key for the problems relation (M2M).
 	ProblemsPrimaryKey = []string{"problem_id", "change_id"}
+	// AffectedCisPrimaryKey and AffectedCisColumn2 are the table columns denoting the
+	// primary key for the affected_cis relation (M2M).
+	AffectedCisPrimaryKey = []string{"change_id", "configuration_item_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -351,6 +358,20 @@ func ByReleases(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newReleasesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAffectedCisCount orders the results by affected_cis count.
+func ByAffectedCisCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAffectedCisStep(), opts...)
+	}
+}
+
+// ByAffectedCis orders the results by affected_cis terms.
+func ByAffectedCis(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAffectedCisStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProblemsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -370,5 +391,12 @@ func newReleasesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ReleasesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ReleasesTable, ReleasesColumn),
+	)
+}
+func newAffectedCisStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AffectedCisInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, AffectedCisTable, AffectedCisPrimaryKey...),
 	)
 }

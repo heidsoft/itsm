@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/cirelationship"
 	"itsm-backend/ent/citag"
 	"itsm-backend/ent/citype"
@@ -647,6 +648,21 @@ func (_c *ConfigurationItemCreate) AddIncidents(v ...*Incident) *ConfigurationIt
 	return _c.AddIncidentIDs(ids...)
 }
 
+// AddChangeIDs adds the "changes" edge to the Change entity by IDs.
+func (_c *ConfigurationItemCreate) AddChangeIDs(ids ...int) *ConfigurationItemCreate {
+	_c.mutation.AddChangeIDs(ids...)
+	return _c
+}
+
+// AddChanges adds the "changes" edges to the Change entity.
+func (_c *ConfigurationItemCreate) AddChanges(v ...*Change) *ConfigurationItemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddChangeIDs(ids...)
+}
+
 // AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by IDs.
 func (_c *ConfigurationItemCreate) AddOutgoingRelationIDs(ids ...int) *ConfigurationItemCreate {
 	_c.mutation.AddOutgoingRelationIDs(ids...)
@@ -1105,6 +1121,22 @@ func (_c *ConfigurationItemCreate) createSpec() (*ConfigurationItem, *sqlgraph.C
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ChangesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   configurationitem.ChangesTable,
+			Columns: configurationitem.ChangesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

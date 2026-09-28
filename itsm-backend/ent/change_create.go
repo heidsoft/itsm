@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/release"
 	"time"
@@ -251,12 +252,6 @@ func (_c *ChangeCreate) SetNillableRollbackPlan(v *string) *ChangeCreate {
 	return _c
 }
 
-// SetAffectedCis sets the "affected_cis" field.
-func (_c *ChangeCreate) SetAffectedCis(v []string) *ChangeCreate {
-	_c.mutation.SetAffectedCis(v)
-	return _c
-}
-
 // SetRelatedTickets sets the "related_tickets" field.
 func (_c *ChangeCreate) SetRelatedTickets(v []string) *ChangeCreate {
 	_c.mutation.SetRelatedTickets(v)
@@ -334,6 +329,21 @@ func (_c *ChangeCreate) AddReleases(v ...*Release) *ChangeCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddReleaseIDs(ids...)
+}
+
+// AddAffectedCiIDs adds the "affected_cis" edge to the ConfigurationItem entity by IDs.
+func (_c *ChangeCreate) AddAffectedCiIDs(ids ...int) *ChangeCreate {
+	_c.mutation.AddAffectedCiIDs(ids...)
+	return _c
+}
+
+// AddAffectedCis adds the "affected_cis" edges to the ConfigurationItem entity.
+func (_c *ChangeCreate) AddAffectedCis(v ...*ConfigurationItem) *ChangeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAffectedCiIDs(ids...)
 }
 
 // Mutation returns the ChangeMutation object of the builder.
@@ -556,10 +566,6 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 		_spec.SetField(change.FieldRollbackPlan, field.TypeString, value)
 		_node.RollbackPlan = value
 	}
-	if value, ok := _c.mutation.AffectedCis(); ok {
-		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
-		_node.AffectedCis = value
-	}
 	if value, ok := _c.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 		_node.RelatedTickets = value
@@ -613,6 +619,22 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AffectedCisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

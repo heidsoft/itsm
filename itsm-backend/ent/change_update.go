@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/changepir"
+	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/release"
@@ -365,24 +366,6 @@ func (_u *ChangeUpdate) ClearRollbackPlan() *ChangeUpdate {
 	return _u
 }
 
-// SetAffectedCis sets the "affected_cis" field.
-func (_u *ChangeUpdate) SetAffectedCis(v []string) *ChangeUpdate {
-	_u.mutation.SetAffectedCis(v)
-	return _u
-}
-
-// AppendAffectedCis appends value to the "affected_cis" field.
-func (_u *ChangeUpdate) AppendAffectedCis(v []string) *ChangeUpdate {
-	_u.mutation.AppendAffectedCis(v)
-	return _u
-}
-
-// ClearAffectedCis clears the value of the "affected_cis" field.
-func (_u *ChangeUpdate) ClearAffectedCis() *ChangeUpdate {
-	_u.mutation.ClearAffectedCis()
-	return _u
-}
-
 // SetRelatedTickets sets the "related_tickets" field.
 func (_u *ChangeUpdate) SetRelatedTickets(v []string) *ChangeUpdate {
 	_u.mutation.SetRelatedTickets(v)
@@ -466,6 +449,21 @@ func (_u *ChangeUpdate) AddReleases(v ...*Release) *ChangeUpdate {
 	return _u.AddReleaseIDs(ids...)
 }
 
+// AddAffectedCiIDs adds the "affected_cis" edge to the ConfigurationItem entity by IDs.
+func (_u *ChangeUpdate) AddAffectedCiIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.AddAffectedCiIDs(ids...)
+	return _u
+}
+
+// AddAffectedCis adds the "affected_cis" edges to the ConfigurationItem entity.
+func (_u *ChangeUpdate) AddAffectedCis(v ...*ConfigurationItem) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffectedCiIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdate) Mutation() *ChangeMutation {
 	return _u.mutation
@@ -532,6 +530,27 @@ func (_u *ChangeUpdate) RemoveReleases(v ...*Release) *ChangeUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveReleaseIDs(ids...)
+}
+
+// ClearAffectedCis clears all "affected_cis" edges to the ConfigurationItem entity.
+func (_u *ChangeUpdate) ClearAffectedCis() *ChangeUpdate {
+	_u.mutation.ClearAffectedCis()
+	return _u
+}
+
+// RemoveAffectedCiIDs removes the "affected_cis" edge to ConfigurationItem entities by IDs.
+func (_u *ChangeUpdate) RemoveAffectedCiIDs(ids ...int) *ChangeUpdate {
+	_u.mutation.RemoveAffectedCiIDs(ids...)
+	return _u
+}
+
+// RemoveAffectedCis removes "affected_cis" edges to ConfigurationItem entities.
+func (_u *ChangeUpdate) RemoveAffectedCis(v ...*ConfigurationItem) *ChangeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffectedCiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -705,17 +724,6 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
 	}
-	if value, ok := _u.mutation.AffectedCis(); ok {
-		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
-	}
-	if value, ok := _u.mutation.AppendedAffectedCis(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, change.FieldAffectedCis, value)
-		})
-	}
-	if _u.mutation.AffectedCisCleared() {
-		_spec.ClearField(change.FieldAffectedCis, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 	}
@@ -861,6 +869,51 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffectedCisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffectedCisIDs(); len(nodes) > 0 && !_u.mutation.AffectedCisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffectedCisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1221,24 +1274,6 @@ func (_u *ChangeUpdateOne) ClearRollbackPlan() *ChangeUpdateOne {
 	return _u
 }
 
-// SetAffectedCis sets the "affected_cis" field.
-func (_u *ChangeUpdateOne) SetAffectedCis(v []string) *ChangeUpdateOne {
-	_u.mutation.SetAffectedCis(v)
-	return _u
-}
-
-// AppendAffectedCis appends value to the "affected_cis" field.
-func (_u *ChangeUpdateOne) AppendAffectedCis(v []string) *ChangeUpdateOne {
-	_u.mutation.AppendAffectedCis(v)
-	return _u
-}
-
-// ClearAffectedCis clears the value of the "affected_cis" field.
-func (_u *ChangeUpdateOne) ClearAffectedCis() *ChangeUpdateOne {
-	_u.mutation.ClearAffectedCis()
-	return _u
-}
-
 // SetRelatedTickets sets the "related_tickets" field.
 func (_u *ChangeUpdateOne) SetRelatedTickets(v []string) *ChangeUpdateOne {
 	_u.mutation.SetRelatedTickets(v)
@@ -1322,6 +1357,21 @@ func (_u *ChangeUpdateOne) AddReleases(v ...*Release) *ChangeUpdateOne {
 	return _u.AddReleaseIDs(ids...)
 }
 
+// AddAffectedCiIDs adds the "affected_cis" edge to the ConfigurationItem entity by IDs.
+func (_u *ChangeUpdateOne) AddAffectedCiIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.AddAffectedCiIDs(ids...)
+	return _u
+}
+
+// AddAffectedCis adds the "affected_cis" edges to the ConfigurationItem entity.
+func (_u *ChangeUpdateOne) AddAffectedCis(v ...*ConfigurationItem) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAffectedCiIDs(ids...)
+}
+
 // Mutation returns the ChangeMutation object of the builder.
 func (_u *ChangeUpdateOne) Mutation() *ChangeMutation {
 	return _u.mutation
@@ -1388,6 +1438,27 @@ func (_u *ChangeUpdateOne) RemoveReleases(v ...*Release) *ChangeUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveReleaseIDs(ids...)
+}
+
+// ClearAffectedCis clears all "affected_cis" edges to the ConfigurationItem entity.
+func (_u *ChangeUpdateOne) ClearAffectedCis() *ChangeUpdateOne {
+	_u.mutation.ClearAffectedCis()
+	return _u
+}
+
+// RemoveAffectedCiIDs removes the "affected_cis" edge to ConfigurationItem entities by IDs.
+func (_u *ChangeUpdateOne) RemoveAffectedCiIDs(ids ...int) *ChangeUpdateOne {
+	_u.mutation.RemoveAffectedCiIDs(ids...)
+	return _u
+}
+
+// RemoveAffectedCis removes "affected_cis" edges to ConfigurationItem entities.
+func (_u *ChangeUpdateOne) RemoveAffectedCis(v ...*ConfigurationItem) *ChangeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAffectedCiIDs(ids...)
 }
 
 // Where appends a list predicates to the ChangeUpdate builder.
@@ -1591,17 +1662,6 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
 	}
-	if value, ok := _u.mutation.AffectedCis(); ok {
-		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
-	}
-	if value, ok := _u.mutation.AppendedAffectedCis(); ok {
-		_spec.AddModifier(func(u *sql.UpdateBuilder) {
-			sqljson.Append(u, change.FieldAffectedCis, value)
-		})
-	}
-	if _u.mutation.AffectedCisCleared() {
-		_spec.ClearField(change.FieldAffectedCis, field.TypeJSON)
-	}
 	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 	}
@@ -1747,6 +1807,51 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AffectedCisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAffectedCisIDs(); len(nodes) > 0 && !_u.mutation.AffectedCisCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AffectedCisIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   change.AffectedCisTable,
+			Columns: change.AffectedCisPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -174,6 +174,13 @@ func (ConfigurationItem) Edges() []ent.Edge {
 		edge.To("tickets", Ticket.Type),
 		// 与事件的关系
 		edge.To("incidents", Incident.Type),
+		// 与变更的关系（2026-09-28 B2）：与 Change.affected_cis 成对构成 M2M，
+		// 关联表为 change_affected_cis。缺此反向边时 ent 会把 Change.affected_cis
+		// 退化成 O2M，在 configuration_items 上加 change_affected_cis 外键列，
+		// 等于"一个 CI 只能属于一个变更"，语义错误且污染 CMDB 主表。
+		edge.From("changes", Change.Type).
+			Ref("affected_cis").
+			Comment("受该配置项影响的变更"),
 		// CI之间的关系 - 出边 (作为源)
 		edge.To("outgoing_relations", CIRelationship.Type),
 		// CI之间的关系 - 入边 (作为目标)

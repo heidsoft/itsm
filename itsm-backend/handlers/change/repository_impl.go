@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -41,6 +42,34 @@ func NewEntRepository(client *ent.Client, db *sql.DB) *EntRepository {
 	}
 }
 
+// affectedCIsToStrings 把 edge 加载到的 CI 实体还原为领域层约定的 ID 字符串。
+// 领域/API 契约保持 []string 不变（前端按数字 ID 字符串传入），只有存储层收敛为 M2M edge。
+func affectedCIsToStrings(cis []*ent.ConfigurationItem) []string {
+	if len(cis) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(cis))
+	for _, ci := range cis {
+		out = append(out, strconv.Itoa(ci.ID))
+	}
+	return out
+}
+
+// parseAffectedCIIDs 把领域层 []string 解析为 CI ID。
+// 非数字项（如标准变更模板里以名称书写的 "服务器"）无法构成关系，直接跳过 ——
+// 与迁移前 GetCMDBImpactSummary 中 strconv.Atoi 失败的语义一致，不会新增静默行为。
+func parseAffectedCIIDs(raw []string) []int {
+	ids := make([]int, 0, len(raw))
+	for _, s := range raw {
+		id, err := strconv.Atoi(s)
+		if err != nil || id <= 0 {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // Map ent entity to domain entity
 func toDomain(ec *ent.Change) *Change {
 	if ec == nil {
@@ -66,7 +95,7 @@ func toDomain(ec *ent.Change) *Change {
 		ActualEndDate:      &ec.ActualEndDate,
 		ImplementationPlan: ec.ImplementationPlan,
 		RollbackPlan:       ec.RollbackPlan,
-		AffectedCIs:        ec.AffectedCis,
+		AffectedCIs:        affectedCIsToStrings(ec.Edges.AffectedCis),
 		RelatedTickets:     ec.RelatedTickets,
 		CreatedAt:          ec.CreatedAt,
 		UpdatedAt:          ec.UpdatedAt,
@@ -149,8 +178,9 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 		SetRollbackPlan(c.RollbackPlan).
 		SetNillablePlannedStartDate(c.PlannedStartDate).
 		SetNillablePlannedEndDate(c.PlannedEndDate).
-		SetAffectedCis(c.AffectedCIs).
 		SetRelatedTickets(c.RelatedTickets).
+		// affected_cis 已由 JSON 字段收敛为 M2M edge（B2）；非数字项无法建关系，跳过。
+		AddAffectedCiIDs(parseAffectedCIIDs(c.AffectedCIs)...).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -181,7 +211,8 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 		SetRiskLevel(c.RiskLevel).SetCreatedBy(c.CreatedBy).SetTenantID(c.TenantID).
 		SetImplementationPlan(c.ImplementationPlan).SetRollbackPlan(c.RollbackPlan).
 		SetNillablePlannedStartDate(c.PlannedStartDate).SetNillablePlannedEndDate(c.PlannedEndDate).
-		SetAffectedCis(c.AffectedCIs).SetRelatedTickets(c.RelatedTickets).Save(ctx)
+		SetRelatedTickets(c.RelatedTickets).
+		AddAffectedCiIDs(parseAffectedCIIDs(c.AffectedCIs)...).Save(ctx)
 	if err != nil {
 		return rollback(err)
 	}
@@ -208,6 +239,7 @@ func (r *EntRepository) CreateWithWorkflowCommand(ctx context.Context, c *Change
 func (r *EntRepository) Get(ctx context.Context, id int, tenantID int) (*Change, error) {
 	ec, err := r.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
+		WithAffectedCis(). // affected_cis 现为 edge，显式预加载，避免 N+1
 		First(ctx)
 	if err != nil {
 		return nil, err
@@ -302,8 +334,13 @@ func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) 
 		SetRiskLevel(c.RiskLevel).
 		SetImplementationPlan(c.ImplementationPlan).
 		SetRollbackPlan(c.RollbackPlan).
-		SetAffectedCis(c.AffectedCIs).
-		SetRelatedTickets(c.RelatedTickets)
+		SetRelatedTickets(c.RelatedTickets).
+		ClearAffectedCis()
+
+	// affected_cis 已收敛为 M2M edge：更新语义为全量替换（先清空，再按请求重建）。
+	if ids := parseAffectedCIIDs(c.AffectedCIs); len(ids) > 0 {
+		update.AddAffectedCiIDs(ids...)
+	}
 
 	if c.AssigneeID != nil {
 		update.SetAssigneeID(*c.AssigneeID)

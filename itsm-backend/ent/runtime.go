@@ -842,11 +842,11 @@ func init() {
 	// change.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
 	change.TenantIDValidator = changeDescTenantID.Validators[0].(func(int) error)
 	// changeDescCreatedAt is the schema descriptor for created_at field.
-	changeDescCreatedAt := changeFields[20].Descriptor()
+	changeDescCreatedAt := changeFields[19].Descriptor()
 	// change.DefaultCreatedAt holds the default value on creation for the created_at field.
 	change.DefaultCreatedAt = changeDescCreatedAt.Default.(func() time.Time)
 	// changeDescUpdatedAt is the schema descriptor for updated_at field.
-	changeDescUpdatedAt := changeFields[21].Descriptor()
+	changeDescUpdatedAt := changeFields[20].Descriptor()
 	// change.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	change.DefaultUpdatedAt = changeDescUpdatedAt.Default.(func() time.Time)
 	// change.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

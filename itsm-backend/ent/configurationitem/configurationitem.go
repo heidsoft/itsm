@@ -112,6 +112,8 @@ const (
 	EdgeTickets = "tickets"
 	// EdgeIncidents holds the string denoting the incidents edge name in mutations.
 	EdgeIncidents = "incidents"
+	// EdgeChanges holds the string denoting the changes edge name in mutations.
+	EdgeChanges = "changes"
 	// EdgeOutgoingRelations holds the string denoting the outgoing_relations edge name in mutations.
 	EdgeOutgoingRelations = "outgoing_relations"
 	// EdgeHistory holds the string denoting the history edge name in mutations.
@@ -148,6 +150,11 @@ const (
 	// IncidentsInverseTable is the table name for the Incident entity.
 	// It exists in this package in order to avoid circular dependency with the "incident" package.
 	IncidentsInverseTable = "incidents"
+	// ChangesTable is the table that holds the changes relation/edge. The primary key declared below.
+	ChangesTable = "change_affected_cis"
+	// ChangesInverseTable is the table name for the Change entity.
+	// It exists in this package in order to avoid circular dependency with the "change" package.
+	ChangesInverseTable = "changes"
 	// OutgoingRelationsTable is the table that holds the outgoing_relations relation/edge.
 	OutgoingRelationsTable = "ci_relationships"
 	// OutgoingRelationsInverseTable is the table name for the CIRelationship entity.
@@ -236,6 +243,9 @@ var (
 	// IncidentsPrimaryKey and IncidentsColumn2 are the table columns denoting the
 	// primary key for the incidents relation (M2M).
 	IncidentsPrimaryKey = []string{"configuration_item_id", "incident_id"}
+	// ChangesPrimaryKey and ChangesColumn2 are the table columns denoting the
+	// primary key for the changes relation (M2M).
+	ChangesPrimaryKey = []string{"change_id", "configuration_item_id"}
 	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
 	// primary key for the tags relation (M2M).
 	TagsPrimaryKey = []string{"configuration_item_id", "ci_tag_id"}
@@ -544,6 +554,20 @@ func ByIncidents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByChangesCount orders the results by changes count.
+func ByChangesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChangesStep(), opts...)
+	}
+}
+
+// ByChanges orders the results by changes terms.
+func ByChanges(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChangesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByOutgoingRelationsCount orders the results by outgoing_relations count.
 func ByOutgoingRelationsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -625,6 +649,13 @@ func newIncidentsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(IncidentsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, IncidentsTable, IncidentsPrimaryKey...),
+	)
+}
+func newChangesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ChangesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ChangesTable, ChangesPrimaryKey...),
 	)
 }
 func newOutgoingRelationsStep() *sqlgraph.Step {

@@ -24387,8 +24387,6 @@ type ChangeMutation struct {
 	actual_end_date       *time.Time
 	implementation_plan   *string
 	rollback_plan         *string
-	affected_cis          *[]string
-	appendaffected_cis    []string
 	related_tickets       *[]string
 	appendrelated_tickets []string
 	created_at            *time.Time
@@ -24403,6 +24401,9 @@ type ChangeMutation struct {
 	releases              map[int]struct{}
 	removedreleases       map[int]struct{}
 	clearedreleases       bool
+	affected_cis          map[int]struct{}
+	removedaffected_cis   map[int]struct{}
+	clearedaffected_cis   bool
 	done                  bool
 	oldValue              func(context.Context) (*Change, error)
 	predicates            []predicate.Change
@@ -25345,71 +25346,6 @@ func (m *ChangeMutation) ResetRollbackPlan() {
 	delete(m.clearedFields, change.FieldRollbackPlan)
 }
 
-// SetAffectedCis sets the "affected_cis" field.
-func (m *ChangeMutation) SetAffectedCis(s []string) {
-	m.affected_cis = &s
-	m.appendaffected_cis = nil
-}
-
-// AffectedCis returns the value of the "affected_cis" field in the mutation.
-func (m *ChangeMutation) AffectedCis() (r []string, exists bool) {
-	v := m.affected_cis
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAffectedCis returns the old "affected_cis" field's value of the Change entity.
-// If the Change object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ChangeMutation) OldAffectedCis(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAffectedCis is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAffectedCis requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAffectedCis: %w", err)
-	}
-	return oldValue.AffectedCis, nil
-}
-
-// AppendAffectedCis adds s to the "affected_cis" field.
-func (m *ChangeMutation) AppendAffectedCis(s []string) {
-	m.appendaffected_cis = append(m.appendaffected_cis, s...)
-}
-
-// AppendedAffectedCis returns the list of values that were appended to the "affected_cis" field in this mutation.
-func (m *ChangeMutation) AppendedAffectedCis() ([]string, bool) {
-	if len(m.appendaffected_cis) == 0 {
-		return nil, false
-	}
-	return m.appendaffected_cis, true
-}
-
-// ClearAffectedCis clears the value of the "affected_cis" field.
-func (m *ChangeMutation) ClearAffectedCis() {
-	m.affected_cis = nil
-	m.appendaffected_cis = nil
-	m.clearedFields[change.FieldAffectedCis] = struct{}{}
-}
-
-// AffectedCisCleared returns if the "affected_cis" field was cleared in this mutation.
-func (m *ChangeMutation) AffectedCisCleared() bool {
-	_, ok := m.clearedFields[change.FieldAffectedCis]
-	return ok
-}
-
-// ResetAffectedCis resets all changes to the "affected_cis" field.
-func (m *ChangeMutation) ResetAffectedCis() {
-	m.affected_cis = nil
-	m.appendaffected_cis = nil
-	delete(m.clearedFields, change.FieldAffectedCis)
-}
-
 // SetRelatedTickets sets the "related_tickets" field.
 func (m *ChangeMutation) SetRelatedTickets(s []string) {
 	m.related_tickets = &s
@@ -25709,6 +25645,60 @@ func (m *ChangeMutation) ResetReleases() {
 	m.removedreleases = nil
 }
 
+// AddAffectedCiIDs adds the "affected_cis" edge to the ConfigurationItem entity by ids.
+func (m *ChangeMutation) AddAffectedCiIDs(ids ...int) {
+	if m.affected_cis == nil {
+		m.affected_cis = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.affected_cis[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAffectedCis clears the "affected_cis" edge to the ConfigurationItem entity.
+func (m *ChangeMutation) ClearAffectedCis() {
+	m.clearedaffected_cis = true
+}
+
+// AffectedCisCleared reports if the "affected_cis" edge to the ConfigurationItem entity was cleared.
+func (m *ChangeMutation) AffectedCisCleared() bool {
+	return m.clearedaffected_cis
+}
+
+// RemoveAffectedCiIDs removes the "affected_cis" edge to the ConfigurationItem entity by IDs.
+func (m *ChangeMutation) RemoveAffectedCiIDs(ids ...int) {
+	if m.removedaffected_cis == nil {
+		m.removedaffected_cis = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.affected_cis, ids[i])
+		m.removedaffected_cis[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAffectedCis returns the removed IDs of the "affected_cis" edge to the ConfigurationItem entity.
+func (m *ChangeMutation) RemovedAffectedCisIDs() (ids []int) {
+	for id := range m.removedaffected_cis {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AffectedCisIDs returns the "affected_cis" edge IDs in the mutation.
+func (m *ChangeMutation) AffectedCisIDs() (ids []int) {
+	for id := range m.affected_cis {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAffectedCis resets all changes to the "affected_cis" edge.
+func (m *ChangeMutation) ResetAffectedCis() {
+	m.affected_cis = nil
+	m.clearedaffected_cis = false
+	m.removedaffected_cis = nil
+}
+
 // Where appends a list predicates to the ChangeMutation builder.
 func (m *ChangeMutation) Where(ps ...predicate.Change) {
 	m.predicates = append(m.predicates, ps...)
@@ -25743,7 +25733,7 @@ func (m *ChangeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChangeMutation) Fields() []string {
-	fields := make([]string, 0, 22)
+	fields := make([]string, 0, 21)
 	if m.change_number != nil {
 		fields = append(fields, change.FieldChangeNumber)
 	}
@@ -25798,9 +25788,6 @@ func (m *ChangeMutation) Fields() []string {
 	if m.rollback_plan != nil {
 		fields = append(fields, change.FieldRollbackPlan)
 	}
-	if m.affected_cis != nil {
-		fields = append(fields, change.FieldAffectedCis)
-	}
 	if m.related_tickets != nil {
 		fields = append(fields, change.FieldRelatedTickets)
 	}
@@ -25854,8 +25841,6 @@ func (m *ChangeMutation) Field(name string) (ent.Value, bool) {
 		return m.ImplementationPlan()
 	case change.FieldRollbackPlan:
 		return m.RollbackPlan()
-	case change.FieldAffectedCis:
-		return m.AffectedCis()
 	case change.FieldRelatedTickets:
 		return m.RelatedTickets()
 	case change.FieldCreatedAt:
@@ -25907,8 +25892,6 @@ func (m *ChangeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldImplementationPlan(ctx)
 	case change.FieldRollbackPlan:
 		return m.OldRollbackPlan(ctx)
-	case change.FieldAffectedCis:
-		return m.OldAffectedCis(ctx)
 	case change.FieldRelatedTickets:
 		return m.OldRelatedTickets(ctx)
 	case change.FieldCreatedAt:
@@ -26050,13 +26033,6 @@ func (m *ChangeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRollbackPlan(v)
 		return nil
-	case change.FieldAffectedCis:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAffectedCis(v)
-		return nil
 	case change.FieldRelatedTickets:
 		v, ok := value.([]string)
 		if !ok {
@@ -26177,9 +26153,6 @@ func (m *ChangeMutation) ClearedFields() []string {
 	if m.FieldCleared(change.FieldRollbackPlan) {
 		fields = append(fields, change.FieldRollbackPlan)
 	}
-	if m.FieldCleared(change.FieldAffectedCis) {
-		fields = append(fields, change.FieldAffectedCis)
-	}
 	if m.FieldCleared(change.FieldRelatedTickets) {
 		fields = append(fields, change.FieldRelatedTickets)
 	}
@@ -26226,9 +26199,6 @@ func (m *ChangeMutation) ClearField(name string) error {
 		return nil
 	case change.FieldRollbackPlan:
 		m.ClearRollbackPlan()
-		return nil
-	case change.FieldAffectedCis:
-		m.ClearAffectedCis()
 		return nil
 	case change.FieldRelatedTickets:
 		m.ClearRelatedTickets()
@@ -26295,9 +26265,6 @@ func (m *ChangeMutation) ResetField(name string) error {
 	case change.FieldRollbackPlan:
 		m.ResetRollbackPlan()
 		return nil
-	case change.FieldAffectedCis:
-		m.ResetAffectedCis()
-		return nil
 	case change.FieldRelatedTickets:
 		m.ResetRelatedTickets()
 		return nil
@@ -26313,7 +26280,7 @@ func (m *ChangeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ChangeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.problems != nil {
 		edges = append(edges, change.EdgeProblems)
 	}
@@ -26322,6 +26289,9 @@ func (m *ChangeMutation) AddedEdges() []string {
 	}
 	if m.releases != nil {
 		edges = append(edges, change.EdgeReleases)
+	}
+	if m.affected_cis != nil {
+		edges = append(edges, change.EdgeAffectedCis)
 	}
 	return edges
 }
@@ -26348,13 +26318,19 @@ func (m *ChangeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgeAffectedCis:
+		ids := make([]ent.Value, 0, len(m.affected_cis))
+		for id := range m.affected_cis {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ChangeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedproblems != nil {
 		edges = append(edges, change.EdgeProblems)
 	}
@@ -26363,6 +26339,9 @@ func (m *ChangeMutation) RemovedEdges() []string {
 	}
 	if m.removedreleases != nil {
 		edges = append(edges, change.EdgeReleases)
+	}
+	if m.removedaffected_cis != nil {
+		edges = append(edges, change.EdgeAffectedCis)
 	}
 	return edges
 }
@@ -26389,13 +26368,19 @@ func (m *ChangeMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case change.EdgeAffectedCis:
+		ids := make([]ent.Value, 0, len(m.removedaffected_cis))
+		for id := range m.removedaffected_cis {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ChangeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedproblems {
 		edges = append(edges, change.EdgeProblems)
 	}
@@ -26404,6 +26389,9 @@ func (m *ChangeMutation) ClearedEdges() []string {
 	}
 	if m.clearedreleases {
 		edges = append(edges, change.EdgeReleases)
+	}
+	if m.clearedaffected_cis {
+		edges = append(edges, change.EdgeAffectedCis)
 	}
 	return edges
 }
@@ -26418,6 +26406,8 @@ func (m *ChangeMutation) EdgeCleared(name string) bool {
 		return m.clearedpir
 	case change.EdgeReleases:
 		return m.clearedreleases
+	case change.EdgeAffectedCis:
+		return m.clearedaffected_cis
 	}
 	return false
 }
@@ -26442,6 +26432,9 @@ func (m *ChangeMutation) ResetEdge(name string) error {
 		return nil
 	case change.EdgeReleases:
 		m.ResetReleases()
+		return nil
+	case change.EdgeAffectedCis:
+		m.ResetAffectedCis()
 		return nil
 	}
 	return fmt.Errorf("unknown Change edge %s", name)
@@ -33283,6 +33276,9 @@ type ConfigurationItemMutation struct {
 	incidents                  map[int]struct{}
 	removedincidents           map[int]struct{}
 	clearedincidents           bool
+	changes                    map[int]struct{}
+	removedchanges             map[int]struct{}
+	clearedchanges             bool
 	outgoing_relations         map[int]struct{}
 	removedoutgoing_relations  map[int]struct{}
 	clearedoutgoing_relations  bool
@@ -35669,6 +35665,60 @@ func (m *ConfigurationItemMutation) ResetIncidents() {
 	m.removedincidents = nil
 }
 
+// AddChangeIDs adds the "changes" edge to the Change entity by ids.
+func (m *ConfigurationItemMutation) AddChangeIDs(ids ...int) {
+	if m.changes == nil {
+		m.changes = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.changes[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChanges clears the "changes" edge to the Change entity.
+func (m *ConfigurationItemMutation) ClearChanges() {
+	m.clearedchanges = true
+}
+
+// ChangesCleared reports if the "changes" edge to the Change entity was cleared.
+func (m *ConfigurationItemMutation) ChangesCleared() bool {
+	return m.clearedchanges
+}
+
+// RemoveChangeIDs removes the "changes" edge to the Change entity by IDs.
+func (m *ConfigurationItemMutation) RemoveChangeIDs(ids ...int) {
+	if m.removedchanges == nil {
+		m.removedchanges = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.changes, ids[i])
+		m.removedchanges[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChanges returns the removed IDs of the "changes" edge to the Change entity.
+func (m *ConfigurationItemMutation) RemovedChangesIDs() (ids []int) {
+	for id := range m.removedchanges {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChangesIDs returns the "changes" edge IDs in the mutation.
+func (m *ConfigurationItemMutation) ChangesIDs() (ids []int) {
+	for id := range m.changes {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChanges resets all changes to the "changes" edge.
+func (m *ConfigurationItemMutation) ResetChanges() {
+	m.changes = nil
+	m.clearedchanges = false
+	m.removedchanges = nil
+}
+
 // AddOutgoingRelationIDs adds the "outgoing_relations" edge to the CIRelationship entity by ids.
 func (m *ConfigurationItemMutation) AddOutgoingRelationIDs(ids ...int) {
 	if m.outgoing_relations == nil {
@@ -37000,7 +37050,7 @@ func (m *ConfigurationItemMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ConfigurationItemMutation) AddedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.ci_type_ref != nil {
 		edges = append(edges, configurationitem.EdgeCiTypeRef)
 	}
@@ -37012,6 +37062,9 @@ func (m *ConfigurationItemMutation) AddedEdges() []string {
 	}
 	if m.incidents != nil {
 		edges = append(edges, configurationitem.EdgeIncidents)
+	}
+	if m.changes != nil {
+		edges = append(edges, configurationitem.EdgeChanges)
 	}
 	if m.outgoing_relations != nil {
 		edges = append(edges, configurationitem.EdgeOutgoingRelations)
@@ -37052,6 +37105,12 @@ func (m *ConfigurationItemMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case configurationitem.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.changes))
+		for id := range m.changes {
+			ids = append(ids, id)
+		}
+		return ids
 	case configurationitem.EdgeOutgoingRelations:
 		ids := make([]ent.Value, 0, len(m.outgoing_relations))
 		for id := range m.outgoing_relations {
@@ -37082,12 +37141,15 @@ func (m *ConfigurationItemMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ConfigurationItemMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.removedtickets != nil {
 		edges = append(edges, configurationitem.EdgeTickets)
 	}
 	if m.removedincidents != nil {
 		edges = append(edges, configurationitem.EdgeIncidents)
+	}
+	if m.removedchanges != nil {
+		edges = append(edges, configurationitem.EdgeChanges)
 	}
 	if m.removedoutgoing_relations != nil {
 		edges = append(edges, configurationitem.EdgeOutgoingRelations)
@@ -37117,6 +37179,12 @@ func (m *ConfigurationItemMutation) RemovedIDs(name string) []ent.Value {
 	case configurationitem.EdgeIncidents:
 		ids := make([]ent.Value, 0, len(m.removedincidents))
 		for id := range m.removedincidents {
+			ids = append(ids, id)
+		}
+		return ids
+	case configurationitem.EdgeChanges:
+		ids := make([]ent.Value, 0, len(m.removedchanges))
+		for id := range m.removedchanges {
 			ids = append(ids, id)
 		}
 		return ids
@@ -37150,7 +37218,7 @@ func (m *ConfigurationItemMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ConfigurationItemMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 8)
+	edges := make([]string, 0, 9)
 	if m.clearedci_type_ref {
 		edges = append(edges, configurationitem.EdgeCiTypeRef)
 	}
@@ -37162,6 +37230,9 @@ func (m *ConfigurationItemMutation) ClearedEdges() []string {
 	}
 	if m.clearedincidents {
 		edges = append(edges, configurationitem.EdgeIncidents)
+	}
+	if m.clearedchanges {
+		edges = append(edges, configurationitem.EdgeChanges)
 	}
 	if m.clearedoutgoing_relations {
 		edges = append(edges, configurationitem.EdgeOutgoingRelations)
@@ -37190,6 +37261,8 @@ func (m *ConfigurationItemMutation) EdgeCleared(name string) bool {
 		return m.clearedtickets
 	case configurationitem.EdgeIncidents:
 		return m.clearedincidents
+	case configurationitem.EdgeChanges:
+		return m.clearedchanges
 	case configurationitem.EdgeOutgoingRelations:
 		return m.clearedoutgoing_relations
 	case configurationitem.EdgeHistory:
@@ -37231,6 +37304,9 @@ func (m *ConfigurationItemMutation) ResetEdge(name string) error {
 		return nil
 	case configurationitem.EdgeIncidents:
 		m.ResetIncidents()
+		return nil
+	case configurationitem.EdgeChanges:
+		m.ResetChanges()
 		return nil
 	case configurationitem.EdgeOutgoingRelations:
 		m.ResetOutgoingRelations()

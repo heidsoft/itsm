@@ -53,6 +53,14 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 	}
 	affectedCIs := uniqueNonEmptyStrings(req.AffectedCIs)
 	relatedTickets := uniqueNonEmptyStrings(req.RelatedTickets)
+	// change.affected_cis 已由 JSON 字段收敛为 Change↔ConfigurationItem 的 M2M edge。
+	// 本 legacy 运行时的语义是「CI 名称」（validateChangeReferences 按 NameIn 校验），
+	// 与 handlers/change 的「数字 ID」语义互斥 —— 这是历史缺陷，此处在写入侧统一
+	// 落成 ID 关系，读取侧再还原为名称，保证 legacy 对外行为不变。
+	affectedCIIDs, err := s.resolveAffectedCIIDs(ctx, tenantID, affectedCIs)
+	if err != nil {
+		return nil, err
+	}
 	initialStatus := dto.ChangeStatusDraft
 
 	// 标准变更自动免审配置：环境变量 ENABLE_STANDARD_CHANGE_AUTO_APPROVE（默认 false）
@@ -90,7 +98,7 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetRollbackPlan(req.RollbackPlan).
 		SetNillablePlannedStartDate(req.PlannedStartDate).
 		SetNillablePlannedEndDate(req.PlannedEndDate).
-		SetAffectedCis(affectedCIs).
+		AddAffectedCiIDs(affectedCIIDs...).
 		SetRelatedTickets(relatedTickets).
 		Save(ctx)
 	if err != nil {
@@ -141,13 +149,13 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		s.logger.Warnw("Failed to get creator info", "error", err, "user_id", createdBy)
 	}
 
-	if creator != nil {
-		response.CreatedByName = creator.Name
+	// 设置受影响的配置项（legacy 语义为 CI 名称；create 时直接使用入参，无需回读 edge）
+	if len(affectedCIs) > 0 {
+		response.AffectedCIs = affectedCIs
 	}
 
-	// 设置受影响的配置项
-	if len(changeEntity.AffectedCis) > 0 {
-		response.AffectedCIs = changeEntity.AffectedCis
+	if creator != nil {
+		response.CreatedByName = creator.Name
 	}
 
 	// 设置相关工单
@@ -219,6 +227,37 @@ func (s *ChangeService) validateChangeReferences(ctx context.Context, affectedCI
 	return nil
 }
 
+// resolveAffectedCIIDs 把 legacy 语义的「CI 名称」解析为 CI ID，用于写入 M2M edge。
+// 名称不存在时 validateChangeReferences 已经先行拒绝，这里只做解析。
+func (s *ChangeService) resolveAffectedCIIDs(ctx context.Context, tenantID int, ciNames []string) ([]int, error) {
+	if len(ciNames) == 0 {
+		return nil, nil
+	}
+	cis, err := s.client.ConfigurationItem.Query().
+		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.NameIn(ciNames...)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("解析受影响配置项失败: %w", err)
+	}
+	ids := make([]int, 0, len(cis))
+	for _, ci := range cis {
+		ids = append(ids, ci.ID)
+	}
+	return ids, nil
+}
+
+// affectedCINames 从预加载的 edge 还原 legacy 对外约定的「CI 名称」列表。
+func affectedCINames(ec *ent.Change) []string {
+	if ec == nil || len(ec.Edges.AffectedCis) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(ec.Edges.AffectedCis))
+	for _, ci := range ec.Edges.AffectedCis {
+		names = append(names, ci.Name)
+	}
+	return names
+}
+
 func isValidChangeType(value string) bool {
 	return value == string(dto.ChangeTypeNormal) || value == string(dto.ChangeTypeStandard) || value == string(dto.ChangeTypeEmergency)
 }
@@ -285,6 +324,7 @@ func apiChangeStatus(status change.Status) dto.ChangeStatus {
 func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*dto.ChangeResponse, error) {
 	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
+		WithAffectedCis(). // affected_cis 现为 edge，需显式预加载才能还原 CI 名称
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -338,9 +378,9 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 		UpdatedAt:          changeEntity.UpdatedAt,
 	}
 
-	// 设置受影响的配置项
-	if len(changeEntity.AffectedCis) > 0 {
-		response.AffectedCIs = changeEntity.AffectedCis
+	// 设置受影响的配置项（edge 已预加载，还原为 legacy 的 CI 名称语义）
+	if names := affectedCINames(changeEntity); len(names) > 0 {
+		response.AffectedCIs = names
 	}
 
 	// 设置相关工单
@@ -391,6 +431,7 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		Order(ent.Desc(change.FieldCreatedAt)).
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
+		WithAffectedCis(). // affected_cis 现为 edge，显式预加载避免 N+1
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list changes", "error", err, "tenant_id", tenantID)
@@ -437,9 +478,9 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 			UpdatedAt:          changeEntity.UpdatedAt,
 		}
 
-		// 设置受影响的配置项
-		if len(changeEntity.AffectedCis) > 0 {
-			response.AffectedCIs = changeEntity.AffectedCis
+		// 设置受影响的配置项（edge 已预加载，还原为 legacy 的 CI 名称语义）
+		if names := affectedCINames(changeEntity); len(names) > 0 {
+			response.AffectedCIs = names
 		}
 
 		// 设置相关工单
@@ -582,9 +623,17 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 		update.SetRollbackPlan(*req.RollbackPlan)
 	}
 
-	// 更新受影响的配置项
+	// 更新受影响的配置项（M2M edge：先清空，再按「CI 名称」解析出的 ID 重建）
 	if req.AffectedCIs != nil {
-		update.SetAffectedCis(uniqueNonEmptyStrings(req.AffectedCIs))
+		ciNames := uniqueNonEmptyStrings(req.AffectedCIs)
+		ciIDs, err := s.resolveAffectedCIIDs(ctx, tenantID, ciNames)
+		if err != nil {
+			return nil, err
+		}
+		update.ClearAffectedCis()
+		if len(ciIDs) > 0 {
+			update.AddAffectedCiIDs(ciIDs...)
+		}
 	}
 
 	// 更新相关工单

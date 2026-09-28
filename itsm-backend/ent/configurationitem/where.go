@@ -2972,6 +2972,29 @@ func HasIncidentsWith(preds ...predicate.Incident) predicate.ConfigurationItem {
 	})
 }
 
+// HasChanges applies the HasEdge predicate on the "changes" edge.
+func HasChanges() predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ChangesTable, ChangesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChangesWith applies the HasEdge predicate on the "changes" edge with a given conditions (other predicates).
+func HasChangesWith(preds ...predicate.Change) predicate.ConfigurationItem {
+	return predicate.ConfigurationItem(func(s *sql.Selector) {
+		step := newChangesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasOutgoingRelations applies the HasEdge predicate on the "outgoing_relations" edge.
 func HasOutgoingRelations() predicate.ConfigurationItem {
 	return predicate.ConfigurationItem(func(s *sql.Selector) {

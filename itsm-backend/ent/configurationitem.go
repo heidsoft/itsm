@@ -127,6 +127,8 @@ type ConfigurationItemEdges struct {
 	Tickets []*Ticket `json:"tickets,omitempty"`
 	// Incidents holds the value of the incidents edge.
 	Incidents []*Incident `json:"incidents,omitempty"`
+	// 受该配置项影响的变更
+	Changes []*Change `json:"changes,omitempty"`
 	// OutgoingRelations holds the value of the outgoing_relations edge.
 	OutgoingRelations []*CIRelationship `json:"outgoing_relations,omitempty"`
 	// CI变更历史
@@ -137,7 +139,7 @@ type ConfigurationItemEdges struct {
 	IncomingRelations []*CIRelationship `json:"incoming_relations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [8]bool
+	loadedTypes [9]bool
 }
 
 // CiTypeRefOrErr returns the CiTypeRef value or an error if the edge
@@ -180,10 +182,19 @@ func (e ConfigurationItemEdges) IncidentsOrErr() ([]*Incident, error) {
 	return nil, &NotLoadedError{edge: "incidents"}
 }
 
+// ChangesOrErr returns the Changes value or an error if the edge
+// was not loaded in eager-loading.
+func (e ConfigurationItemEdges) ChangesOrErr() ([]*Change, error) {
+	if e.loadedTypes[4] {
+		return e.Changes, nil
+	}
+	return nil, &NotLoadedError{edge: "changes"}
+}
+
 // OutgoingRelationsOrErr returns the OutgoingRelations value or an error if the edge
 // was not loaded in eager-loading.
 func (e ConfigurationItemEdges) OutgoingRelationsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.OutgoingRelations, nil
 	}
 	return nil, &NotLoadedError{edge: "outgoing_relations"}
@@ -192,7 +203,7 @@ func (e ConfigurationItemEdges) OutgoingRelationsOrErr() ([]*CIRelationship, err
 // HistoryOrErr returns the History value or an error if the edge
 // was not loaded in eager-loading.
 func (e ConfigurationItemEdges) HistoryOrErr() ([]*ConfigurationItemHistory, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.History, nil
 	}
 	return nil, &NotLoadedError{edge: "history"}
@@ -201,7 +212,7 @@ func (e ConfigurationItemEdges) HistoryOrErr() ([]*ConfigurationItemHistory, err
 // TagsOrErr returns the Tags value or an error if the edge
 // was not loaded in eager-loading.
 func (e ConfigurationItemEdges) TagsOrErr() ([]*CITag, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[7] {
 		return e.Tags, nil
 	}
 	return nil, &NotLoadedError{edge: "tags"}
@@ -210,7 +221,7 @@ func (e ConfigurationItemEdges) TagsOrErr() ([]*CITag, error) {
 // IncomingRelationsOrErr returns the IncomingRelations value or an error if the edge
 // was not loaded in eager-loading.
 func (e ConfigurationItemEdges) IncomingRelationsOrErr() ([]*CIRelationship, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[8] {
 		return e.IncomingRelations, nil
 	}
 	return nil, &NotLoadedError{edge: "incoming_relations"}
@@ -569,6 +580,11 @@ func (_m *ConfigurationItem) QueryTickets() *TicketQuery {
 // QueryIncidents queries the "incidents" edge of the ConfigurationItem entity.
 func (_m *ConfigurationItem) QueryIncidents() *IncidentQuery {
 	return NewConfigurationItemClient(_m.config).QueryIncidents(_m)
+}
+
+// QueryChanges queries the "changes" edge of the ConfigurationItem entity.
+func (_m *ConfigurationItem) QueryChanges() *ChangeQuery {
+	return NewConfigurationItemClient(_m.config).QueryChanges(_m)
 }
 
 // QueryOutgoingRelations queries the "outgoing_relations" edge of the ConfigurationItem entity.

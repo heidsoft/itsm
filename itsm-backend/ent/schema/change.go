@@ -84,9 +84,6 @@ func (Change) Fields() []ent.Field {
 		field.Text("rollback_plan").
 			Comment("回滚计划").
 			Optional(),
-		field.JSON("affected_cis", []string{}).
-			Comment("受影响的配置项").
-			Optional(),
 		field.JSON("related_tickets", []string{}).
 			Comment("相关工单").
 			Optional(),
@@ -110,5 +107,11 @@ func (Change) Edges() []ent.Edge {
 			Comment("实施后审查"),
 		edge.To("releases", Release.Type).
 			Comment("关联的发布"),
+		// 受影响配置项：原先是 field.JSON("affected_cis") 存 CI ID 字符串，
+		// 影响分析只能 strconv.Atoi 后再按 ID 反查，既无参照完整性也无法 JOIN。
+		// 2026-09-28 收敛为真实多对多关系（B2）。关联表 change_affected_cis 无 tenant_id，
+		// 已在 internal/schema/tenant_guard.go 登记为 derived 豁免，否则生产 policy=fatal 会拒绝启动。
+		edge.To("affected_cis", ConfigurationItem.Type).
+			Comment("受影响的配置项（CI）"),
 	}
 }

@@ -818,7 +818,6 @@ var (
 		{Name: "actual_end_date", Type: field.TypeTime, Nullable: true},
 		{Name: "implementation_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "rollback_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
-		{Name: "affected_cis", Type: field.TypeJSON, Nullable: true},
 		{Name: "related_tickets", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -832,7 +831,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "changes_standard_changes_changes",
-				Columns:    []*schema.Column{ChangesColumns[23]},
+				Columns:    []*schema.Column{ChangesColumns[22]},
 				RefColumns: []*schema.Column{StandardChangesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -5700,6 +5699,31 @@ var (
 			},
 		},
 	}
+	// ChangeAffectedCisColumns holds the columns for the "change_affected_cis" table.
+	ChangeAffectedCisColumns = []*schema.Column{
+		{Name: "change_id", Type: field.TypeInt},
+		{Name: "configuration_item_id", Type: field.TypeInt},
+	}
+	// ChangeAffectedCisTable holds the schema information for the "change_affected_cis" table.
+	ChangeAffectedCisTable = &schema.Table{
+		Name:       "change_affected_cis",
+		Columns:    ChangeAffectedCisColumns,
+		PrimaryKey: []*schema.Column{ChangeAffectedCisColumns[0], ChangeAffectedCisColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "change_affected_cis_change_id",
+				Columns:    []*schema.Column{ChangeAffectedCisColumns[0]},
+				RefColumns: []*schema.Column{ChangesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "change_affected_cis_configuration_item_id",
+				Columns:    []*schema.Column{ChangeAffectedCisColumns[1]},
+				RefColumns: []*schema.Column{ConfigurationItemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// ConfigurationItemIncidentsColumns holds the columns for the "configuration_item_incidents" table.
 	ConfigurationItemIncidentsColumns = []*schema.Column{
 		{Name: "configuration_item_id", Type: field.TypeInt},
@@ -6211,6 +6235,7 @@ var (
 		VendorsTable,
 		WorkflowTemplatesTable,
 		ApplicationTagsTable,
+		ChangeAffectedCisTable,
 		ConfigurationItemIncidentsTable,
 		ConfigurationItemTagsTable,
 		DepartmentTagsTable,
@@ -6350,6 +6375,8 @@ func init() {
 	UsersTable.ForeignKeys[4].RefTable = TenantsTable
 	ApplicationTagsTable.ForeignKeys[0].RefTable = ApplicationsTable
 	ApplicationTagsTable.ForeignKeys[1].RefTable = TagsTable
+	ChangeAffectedCisTable.ForeignKeys[0].RefTable = ChangesTable
+	ChangeAffectedCisTable.ForeignKeys[1].RefTable = ConfigurationItemsTable
 	ConfigurationItemIncidentsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable
 	ConfigurationItemIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 	ConfigurationItemTagsTable.ForeignKeys[0].RefTable = ConfigurationItemsTable

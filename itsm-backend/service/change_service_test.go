@@ -10,6 +10,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
@@ -147,10 +148,19 @@ func TestChangeService_CreateChange_WithAffectedCIs(t *testing.T) {
 	// 验证变更已创建
 	assert.Equal(t, req.Title, response.Title)
 
-	// 通过 GetChange 重新获取以验证 AffectedCIs 已存储
-	savedChange, err := client.Change.Get(ctx, response.ID)
+	// 通过 GetChange 重新获取以验证 AffectedCIs 已存储。
+	// affected_cis 已由 JSON 字段收敛为 Change↔CI 的 M2M edge（B2），
+	// 因此这里读 edge 并还原 legacy 语义的 CI 名称后再断言。
+	savedChange, err := client.Change.Query().
+		Where(change.IDEQ(response.ID)).
+		WithAffectedCis().
+		Only(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"CI-001", "CI-002", "CI-003"}, savedChange.AffectedCis)
+	savedNames := make([]string, 0, len(savedChange.Edges.AffectedCis))
+	for _, ci := range savedChange.Edges.AffectedCis {
+		savedNames = append(savedNames, ci.Name)
+	}
+	assert.ElementsMatch(t, []string{"CI-001", "CI-002", "CI-003"}, savedNames)
 }
 
 func TestChangeService_CreateChange_EmergencyChange(t *testing.T) {

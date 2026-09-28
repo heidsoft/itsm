@@ -98,6 +98,9 @@ var TenantExemptTables = []ExemptTable{
 	// 关联表/纯关系表
 	{TableName: "configuration_item_incidents", Reason: "CI↔事件纯关联表", Owner: "cmdb", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "configuration_item_tags", Reason: "CI↔标签关联表", Owner: "cmdb", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
+	// 2026-09-28 新增：变更↔受影响配置项（原 field.JSON("affected_cis") 收敛为 M2M edge，见 B2）。
+	// 纯关联表无 tenant_id；租户隔离由两端实体（changes / configuration_items）保证。
+	{TableName: "change_affected_cis", Reason: "变更↔CI 纯关联表（原 affected_cis JSON 字段收敛而来）", Owner: "change", Scope: "derived", ReviewedAt: time.Date(2026, 9, 28, 0, 0, 0, 0, time.UTC)},
 	{TableName: "incident_related_incidents", Reason: "事件↔事件纯关联表", Owner: "incident", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "problem_changes", Reason: "问题↔变更纯关联表", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "problem_incidents", Reason: "问题↔事件纯关联表", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},

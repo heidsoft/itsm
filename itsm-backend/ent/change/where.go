@@ -1200,16 +1200,6 @@ func RollbackPlanContainsFold(v string) predicate.Change {
 	return predicate.Change(sql.FieldContainsFold(FieldRollbackPlan, v))
 }
 
-// AffectedCisIsNil applies the IsNil predicate on the "affected_cis" field.
-func AffectedCisIsNil() predicate.Change {
-	return predicate.Change(sql.FieldIsNull(FieldAffectedCis))
-}
-
-// AffectedCisNotNil applies the NotNil predicate on the "affected_cis" field.
-func AffectedCisNotNil() predicate.Change {
-	return predicate.Change(sql.FieldNotNull(FieldAffectedCis))
-}
-
 // RelatedTicketsIsNil applies the IsNil predicate on the "related_tickets" field.
 func RelatedTicketsIsNil() predicate.Change {
 	return predicate.Change(sql.FieldIsNull(FieldRelatedTickets))
@@ -1361,6 +1351,29 @@ func HasReleases() predicate.Change {
 func HasReleasesWith(preds ...predicate.Release) predicate.Change {
 	return predicate.Change(func(s *sql.Selector) {
 		step := newReleasesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAffectedCis applies the HasEdge predicate on the "affected_cis" edge.
+func HasAffectedCis() predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, AffectedCisTable, AffectedCisPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAffectedCisWith applies the HasEdge predicate on the "affected_cis" edge with a given conditions (other predicates).
+func HasAffectedCisWith(preds ...predicate.ConfigurationItem) predicate.Change {
+	return predicate.Change(func(s *sql.Selector) {
+		step := newAffectedCisStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

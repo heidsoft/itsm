@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Change/Release 状态枚举类型安全化** — Change 与 Release 的 status 字段从 `field.String` 迁移到 `field.Enum`，Ent 生成类型安全的枚举（`change.Status`、`release.Status`），编译期即可捕获非法状态值；新增 Release→Change 关联 edge，支持通过 Ent 关系查询关联变更
+- **变更域受影响配置项收敛为实体关系（B2）** — `change.affected_cis` 从 `field.JSON`（字符串数组）收敛为 Change ↔ ConfigurationItem 的多对多 edge，关联表 `change_affected_cis`，获得参照完整性与 JOIN 能力（影响分析不再靠 `strconv.Atoi` 反查）。API 契约 `affectedCis: string[]` 保持不变，前端无需改动。存量回填写入 [20260928_change_affected_cis_backfill.sql](./itsm-backend/ent/migrate/20260928_change_affected_cis_backfill.sql)（仅回填可解析为数字 CI ID 的项，名称形态保留在原列供人工核对）。关联表无 `tenant_id`，已在 `internal/schema/tenant_guard.go` 登记 derived 豁免——**未登记则生产 `policy=fatal` 会拒绝启动**。同时删除零引用的 `dto.ToChangeResponse/ToChangeResponseList`（死代码）。⚠️ 实证发现：同一列存在两套互斥语义——现行 `handlers/change` 按数字 CI ID 写入，已停用的 `service/change_service.go` 按 CI 名称写入并按 `NameIn` 校验；后者仅在测试中被引用，移植为「名称→ID 解析」以保持行为不变
 
 ### Security
 
@@ -23,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
-- **Gate C.7 产品需求收敛守卫**（[check-scope-creep.sh](./scripts/docs-gate/check-scope-creep.sh)）— 把"继续扩散 = 构建失败"作为机器守卫生效，对应 2026-09-28 盘点的三类扩散面：C.7.1 空壳前端模块零容忍（有 `page.tsx` 但穿透 `@/components` 引用后仍无后端调用的模块，存量 10 个模块/15 页已登记白名单 owner+到期 2026-11-15，**新增空壳无豁免通道**）/ C.7.2 预览域棘轮（README「预览」能力域数只减不增，当前 9）/ C.7.3 规划能力面冻结（ROADMAP v2.0+v3.0 未完条目只减不增，当前 14）。已接线 `run-all.sh`，新增 `make scope-creep` 目标；注入回归 5 用例验证生效（基线收紧/白名单过期/注入空壳均 FAIL，advisory 不阻断）。收敛方案与待拍板决策见 [output/product-scope-convergence-2026-09-28.md](./output/product-scope-convergence-2026-09-28.md)
+- **Gate C.7 产品需求收敛守卫**（[check-scope-creep.sh](./scripts/docs-gate/check-scope-creep.sh)）— 把"继续扩散 = 构建失败"作为机器守卫生效，对应 2026-09-28 盘点的三类扩散面：C.7.1 空壳前端模块零容忍（有 `page.tsx` 但穿透 `@/components` 引用后仍无后端调用的模块，**新增空壳无豁免通道**；⚠️ 修正：初版检出「10 个模块/15 页」经逐文件复核**全部为误判**——漏 `.tsx` 扩展名解析、漏 `lib/services/*` 封装层、未排除 `redirect()` 兼容路由页，真实空壳为 **0**，白名单已清空，三类教训写入脚本与白名单文件头）/ C.7.2 预览域棘轮（README「预览」能力域数只减不增，当前 9）/ C.7.3 规划能力面冻结（ROADMAP v2.0+v3.0 未完条目只减不增，当前 14）。已接线 `run-all.sh`，新增 `make scope-creep` 目标；注入回归 5 用例验证生效（基线收紧/白名单过期/注入空壳均 FAIL，advisory 不阻断）。收敛方案与待拍板决策见 [output/product-scope-convergence-2026-09-28.md](./output/product-scope-convergence-2026-09-28.md)
 - 新增技能管理端只读列表与详情：`GET /api/v1/admin/skills`、`GET /api/v1/admin/skills/:code`（`ai:read`，与市场发现共享实现），列表接入统一分页契约 `{items, total, page, pageSize, totalPages}`（page 默认 1、pageSize 默认 20 上限 100，非法入参回退默认值）
 - 租户管理页新增「初始化」列与状态抽屉：按需加载并缓存每租户的产品基线安装状态（基线就绪/未就绪组件、安装命令状态与尝试次数、模板版本、命令错误），`dead_letter` 可一键重放安装（复用运维命令重放入口、保留原幂等键）；状态接口新增 `commandId` 以支撑重放
 - e2e 登录工具适配令牌 Cookie 化（不再读取已废弃的 `accessToken`、移除硬编码口令改走 `E2E_ADMIN_PASSWORD`/`ADMIN_PASSWORD`），并新增 `tests/e2e/tenant-provisioning.spec.ts` 固化「新建租户 → outbox 安装基线 → 状态就绪」全链路
