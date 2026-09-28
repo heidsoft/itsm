@@ -12,8 +12,13 @@
 # 格式：key=value[  # 说明]
 # 基线建立日期：2026-09-22（来源：output/product-drift-overdesign-audit-2026-09-22.md §1.2）
 
-handlers_dirs=64          # 2026-09-26 删除 handlers/project（死代码：handler 从未构造，路由被 nil 守卫屏蔽）
-service_go_files=329      # 2026-09-25 补记 990f4cde/80a79594 已提交的 dashboard_domain_metrics_test.go、bpmn_process_executor_audit_test.go；仅增长业务指标/流程审计回归，无新增生产 service
-bootstrap_app_lines=1799  # itsm-backend/internal/bootstrap/app.go 行数（目标 <300；2026-09-26 收紧基线至实际值）
-ent_schema_files=132      # itsm-backend/ent/schema/*.go 实体数
-frontend_pages=168        # itsm-frontend/src/app/**/page.tsx 页面数（新增页面需指向契约主链路）
+handlers_dirs=65          # 2026-09-26 删除 handlers/project（死代码）→ 2026-09-28 +1 handlers/workbench（统一工作台，P0 根因"无跨域待办"正解，f0a87cea）
+service_go_files=333      # 2026-09-25 补记测试 → 2026-09-28 +4：lifecycle/phase.go + approval_chain 收敛三件套（resolver_adapter/shadow/bpmn handler，审批向 BPMN 收口）
+bootstrap_app_lines=1811  # 目标 <300；2026-09-26 收紧至实际值 → 2026-09-28 +12：租户开通 outbox 接线 + 上述装配（414ba5fd）
+ent_schema_files=133      # 2026-09-28 +1 sla_state.go（SLA 统一引擎 Phase 3 读切换，62867abb）
+frontend_pages=169        # 2026-09-28 +1 workbench 页面（3f38f93a）；空壳结论已证伪（真实空壳 0，见 plans §1.5），无页可清
+#
+# 注（2026-09-28）：上述 5 项增长经 git log --diff-filter=A --since=2026-09-21 归因，
+# 全部指向能力契约主链路，四项本身即 PM 评审要求的收敛动作（工作台/审批收口/SLA 统一）。
+# 按本文件规定的流程显式上调并逐条说明理由；不属于扩散。
+# 未来若出现下降（重复代码消除等），必须同步把本文件收紧到实际值——下降要锁死。

@@ -1,0 +1,33 @@
+# Gate C.7.1 — 前端空壳模块白名单（存量债务登记）
+#
+# 空壳定义：src/app/(main)/<module> 下有 page.tsx，但模块自身、其引用的
+#           @/components/* 组件、以及 lib/services/* 封装层都找不到后端调用
+#           —— 菜单里能点开，但没有数据。
+#
+# 当前状态（2026-09-28 复核后）：**0 项豁免。真实空壳 = 0。**
+# 首版曾登记 10 个模块 / 15 页，逐文件读代码后确认**全部是误判**，已清空。
+# 保留本文件是为了把三类误判原因固化下来，避免以后重犯。
+#
+# ⚠️ 首版误判的三类原因（改规则前务必读完）
+# -----------------------------------------
+#   1. 组件路径没补 `.tsx` 扩展名。
+#      `@/components/license/LicenseList` 被解析成不存在的文件，于是 licenses(4 页)
+#      判为空壳 —— 实际它 `import { AssetApi } from '@/lib/api/asset-api'`，是真功能。
+#   2. API 信号只认 `lib/api`，漏了 `lib/services/*-service.ts` 这层封装。
+#      applications(`baseUrl='/api/v1/applications'`)、tags(`baseUrl='/api/v1/tags'`)
+#      因此被误判 —— 两者都是真功能。
+#   3. 没排除**旧链接兼容重定向页**。
+#      enterprise/settings/sla-dashboard/system/teams/templates/workflows 共 7 个模块
+#      的页面只有 `redirect('/admin/...')` 或 `router.replace(...)`，是刻意保留的兼容路由，
+#      删掉会让历史链接 404 —— 不是缺陷，是设计。
+#
+# 教训：**静态检测的下游结论，在下判断前必须逐文件复核。**
+#       守卫的价值来自它的准确率；一个会误伤正确实现的守卫，比没有守卫更糟 ——
+#       它既会逼人删掉对的东西，又会让人从此不再信任门禁。
+#
+# 登记规则（未来真出现空壳时启用）：
+#   - 必须带 owner（谁负责解决）+ expires（到期日）+ reason（为什么现在不改）；
+#   - 到期日次日立即反向 FAIL，无宽限期；
+#   - 豁免是债务登记，不是解决方案。到期前必须二选一：接后端，或从菜单下线。
+#
+# 格式：<module>|<owner>|<expires YYYY-MM-DD>|<reason>

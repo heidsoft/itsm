@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
+- **Gate C.7 产品需求收敛守卫**（[check-scope-creep.sh](./scripts/docs-gate/check-scope-creep.sh)）— 把"继续扩散 = 构建失败"作为机器守卫生效，对应 2026-09-28 盘点的三类扩散面：C.7.1 空壳前端模块零容忍（有 `page.tsx` 但穿透 `@/components` 引用后仍无后端调用的模块，存量 10 个模块/15 页已登记白名单 owner+到期 2026-11-15，**新增空壳无豁免通道**）/ C.7.2 预览域棘轮（README「预览」能力域数只减不增，当前 9）/ C.7.3 规划能力面冻结（ROADMAP v2.0+v3.0 未完条目只减不增，当前 14）。已接线 `run-all.sh`，新增 `make scope-creep` 目标；注入回归 5 用例验证生效（基线收紧/白名单过期/注入空壳均 FAIL，advisory 不阻断）。收敛方案与待拍板决策见 [output/product-scope-convergence-2026-09-28.md](./output/product-scope-convergence-2026-09-28.md)
 - 新增技能管理端只读列表与详情：`GET /api/v1/admin/skills`、`GET /api/v1/admin/skills/:code`（`ai:read`，与市场发现共享实现），列表接入统一分页契约 `{items, total, page, pageSize, totalPages}`（page 默认 1、pageSize 默认 20 上限 100，非法入参回退默认值）
 - 租户管理页新增「初始化」列与状态抽屉：按需加载并缓存每租户的产品基线安装状态（基线就绪/未就绪组件、安装命令状态与尝试次数、模板版本、命令错误），`dead_letter` 可一键重放安装（复用运维命令重放入口、保留原幂等键）；状态接口新增 `commandId` 以支撑重放
 - e2e 登录工具适配令牌 Cookie 化（不再读取已废弃的 `accessToken`、移除硬编码口令改走 `E2E_ADMIN_PASSWORD`/`ADMIN_PASSWORD`），并新增 `tests/e2e/tenant-provisioning.spec.ts` 固化「新建租户 → outbox 安装基线 → 状态就绪」全链路

@@ -1,0 +1,18 @@
+# Gate C.7 — 产品需求收敛基线（scope baseline）
+#
+# 语义：这些数字是**上限**，只允许下降，不允许无声明增长。
+#   current > baseline  -> FAIL
+#   current <= baseline -> PASS（下降是收敛，正是本门禁想要的方向）
+#
+# 上调基线（= 开新能力面）的前置条件，两条都要满足：
+#   1. 先关掉一个老的（v2.0/v3.0 划掉一条、或把一个「预览」域转成「可用」）；
+#   2. 在 CHANGELOG.md [Unreleased] 写明新增能力面对应哪条能力契约主链路，
+#      并在 PR 描述里给出「谁来维护它」的答案。
+#
+# 只加页面/只加菜单、没有主链路和维护者的增长，应被评审拒绝。
+#
+# 格式：key=value[  # 说明]
+# 基线建立日期：2026-09-28（来源：output/product-scope-convergence-2026-09-28.md §2）
+
+preview_domains=9          # README 成熟度表中状态为「预览」的能力域数（共 14 域：5 可用 + 9 预览）
+roadmap_future_items=14    # ROADMAP v2.0 + v3.0 章节中未完成（- [ ]）条目总数

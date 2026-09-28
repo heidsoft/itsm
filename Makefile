@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene scope-creep product-drift verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -129,6 +129,10 @@ docs-gate: ## 运行文档质量门禁（C.6 产品口径漂移默认 hard；C.1
 product-drift: ## 检查产品口径漂移（成熟度口径/领域清单/零路由域包/表面棘轮/覆盖率口径；默认 hard，--advisory 仅报告）
 	@echo "$(BLUE)检查产品口径漂移（Gate C.6）...$(NC)"
 	@bash scripts/docs-gate/check-product-drift.sh $(PRODUCT_DRIFT_ARGS)
+
+scope-creep: ## 检查产品需求收敛（空壳前端模块/预览域棘轮/规划能力面冻结；默认 hard，--advisory 仅报告）
+	@echo "$(BLUE)检查产品需求收敛（Gate C.7）...$(NC)"
+	@bash scripts/docs-gate/check-scope-creep.sh $(SCOPE_CREEP_ARGS)
 
 check-handlers-hygiene: ## 检查 handlers 垂直切片卫生（裸奔域/域间 import；--strict 传 HANDLERS_GATE_ARGS=--strict）
 	@echo "$(BLUE)检查 handlers 分层卫生...$(NC)"

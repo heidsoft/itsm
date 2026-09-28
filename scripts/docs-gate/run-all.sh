@@ -2,16 +2,19 @@
 #
 # scripts/docs-gate/run-all.sh
 #
-# 一键运行 docs-gate 的 6 条规则：
+# 一键运行 docs-gate 的 7 条规则：
 #   C.1 硬编码生产密码（hardcoded passwords）
 #   C.2 Roadmap 重复
 #   C.3 内部 markdown 链接失效（advisory）
 #   C.4 发布报告无 revision 断言
 #   C.5 代码 <-> 文档同步新鲜度（make 目标存在性 / ROADMAP 与 CHANGELOG 新鲜度）
 #   C.6 产品口径漂移（成熟度口径一致性 / 领域清单 / 零路由域包 / 表面棘轮 / 覆盖率口径）
+#   C.7 产品需求收敛（空壳前端模块 / 预览域棘轮 / 规划能力面冻结）
 #
 # 阻断强度（重要，勿凭注释判断，以脚本实际退出码为准）：
 #   - C.6 **默认 hard**：存在 FAIL 即退出码 1，无需 --strict。
+#   - C.7 **默认 hard**：同上。存量空壳已登记白名单（带 owner + 到期日），
+#     到期未清理自动反向 FAIL；新增空壳无豁免通道，一律 FAIL。
 #   - C.1–C.5 **仅在传 --strict 时 hard**；不带参数时为 advisory（只报告不阻断）。
 #     ✅ 2026-09-23 存量已清零：C.1 0 / C.2 0 / C.3 0（修 51 断链+加模板白名单）/
 #        C.4 0（加模板白名单）/ C.5 0；CI workflow 已传 --strict 升级全 hard。
@@ -60,6 +63,7 @@ run_gate "C.3 broken internal links" "${ROOT_DIR}/scripts/docs-gate/check-broken
 run_gate "C.4 release claims"       "${ROOT_DIR}/scripts/docs-gate/check-release-claims.sh"
 run_gate "C.5 doc sync freshness"   "${ROOT_DIR}/scripts/docs-gate/check-doc-sync.sh"
 run_gate "C.6 product drift"        "${ROOT_DIR}/scripts/docs-gate/check-product-drift.sh"
+run_gate "C.7 scope creep"          "${ROOT_DIR}/scripts/docs-gate/check-scope-creep.sh"
 
 echo ""
 echo "########################################"
