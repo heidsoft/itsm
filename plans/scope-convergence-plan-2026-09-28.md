@@ -72,6 +72,49 @@
 
 ---
 
+---
+
+## 1.6 B2 执行中发现的四件事（均已处理，留档以免重踩）
+
+**① `edge.To` 单边定义会被 ent 当 O2M，不是 M2M。** 首轮生成出的是 `O2M` + 外键列
+`configuration_items.change_affected_cis` —— 等于"一个 CI 只能属于一个变更"，语义错误且会污染 CMDB
+主表。**必须**在 `ConfigurationItem` 上加反向边 `edge.From("changes", Change.Type).Ref("affected_cis")`，
+才是 M2M 关联表 `change_affected_cis`（先例：CI↔incidents 就是这样成对定义的）。
+代价：**多跑一轮 entc（约 19 分钟）**。
+
+**② 新建关联表必须登记 tenant_guard，否则生产起不来。** M2M 关联表无 `tenant_id`，
+`ApplyGuard` 在 `policy=fatal` 下遇到未豁免缺列的表会**拒绝启动**。已在
+`internal/schema/tenant_guard.go` 登记 `change_affected_cis`（Scope=derived, Owner=change）。
+
+**③ 生成方法名是 `AddAffectedCiIDs`（单数 Ci），不是 `AddAffectedCisIDs`。** 取实体是
+`AddAffectedCis(v ...*ConfigurationItem)`。命名不一致，编译期才发现。
+
+**④ 同一列存在两套互斥语义（重要，影响后续所有域的收敛判断）**：
+
+| 运行时 | affected_cis 语义 | 校验方式 | 生产是否接线 |
+|:---|:---|:---|:---|
+| `handlers/change`（现行） | **数字 CI ID** 字符串 | `strconv.Atoi` → `ConfigurationItem.IDIn` | ✅ 是 |
+| `service/change_service.go`（legacy） | **CI 名称** | `configurationitem.NameIn` | ❌ 否，仅测试引用 |
+
+legacy 已被移植为「名称→ID 解析」，对外行为不变。**`related_tickets` 同理**：现行侧是工单号字符串、
+从不解析为实体，转成 edge 需要产品决策（ID vs 编号），且没有任何代码按实体查询它 —— 因此 B2 不动它，
+另立决策项（见 §8）。
+
+> 推论：这类"同一份数据两套写法"很可能不止变更域一处，后续做域收敛时**先查是否存在第二运行时**。
+
+## 1.7 🔴 新发现：`service` 包测试在 HEAD 上编译不过（自引入判定之外）
+
+验证 B2 时顺带发现（**与本次改动无关，HEAD 既有**）：
+
+| 文件 | 问题 |
+|:---|:---|
+| `service/change_service_test.go` | 用了 `change.Status(...)` 但**未导入** `itsm-backend/ent/change`（应是 `662294e0` 枚举化时漏改） |
+| `service/sla_monitor_service_test.go` | `createViolation` 调用少一个参数（缺 `int`） |
+| `service/sla_violation_alert_tx_test.go` | 同上，5 处 |
+
+→ `go test ./service/` 目前**整包编译失败**，等于这个包的所有测试（含 SLA、变更、知识）**都在空转**。
+这比"某条用例失败"严重得多：**守卫存在但没在跑**。已列为 **F8，建议提到 B3 之前**。
+
 ## 2. 收敛三原则（PR 评审照此执行）
 
 1. **预览不转可用，就不开新能力面。** 新增能力域前，先把一个"预览"转成"可用"。
@@ -132,11 +175,15 @@ EOF
 > 复核后真实空壳 = 0，本批次撤销。详见 §1.5。
 > 可选替代：整理 7 个兼容重定向模块（低优先级，收益小，可不做）。
 
-### B2 · 变更域数据模型：JSON → Ent edge（2–3 天，**撤销 B1 后升为最高优先级重构**）
+### B2 · 变更域数据模型：JSON → Ent edge ✅ **已完成 2026-09-28（提交 `7e3344b0`）**
 
-- `ent/schema/change.go:87/90` 的 `affected_cis` / `related_tickets` 改为多对多 edge。
-- 配套：迁移脚本（存量 JSON 转关系行）、影响分析改为基于 edge 查询。
-- **这是影响分析在变更维度唯一能闭环的前提**，也是 v2.0 "Impact analysis skill" 被 Park 的原因（它依赖此项）。
+- `ent/schema/change.go:87/90` 的 `affected_cis` 改为多对多 edge（关联表 `change_affected_cis`）；
+  `related_tickets` **未动**（见 §1.6 决策）。
+- 配套：存量回填 SQL、tenant_guard 豁免登记、legacy 运行时「名称→ID」解析移植。
+- **验收**：`go build ./...` 通过；C.6/C.7 均 0 FAIL；
+  `handlers/change` 与 `service.ChangeService` 用例失败清单与 HEAD 基线**完全一致**（零新增失败，用干净 worktree 对比确认）。
+
+执行中发现的四个坑（都已处理，详见 §1.6）：O2M 陷阱、tenant_guard 硬耦合、方法名 `AddAffectedCiIDs`、语义分叉。
 
 **验收**：`grep -n 'field.JSON' ent/schema/change.go` 无关联字段；影响分析可 JOIN；`go test ./...` 绿。
 **风险**：entc 重新生成需 ~6GB 内存（`go build -o /tmp/entc entgo.io/ent/cmd/ent && cd ent && /tmp/entc generate ./schema`）；残片用 `git checkout -- itsm-backend/ent` 回退；**dev 改 schema 必须 `docker compose build itsm-init`**。
@@ -229,10 +276,11 @@ EOF
 
 | 批次 | 内容 | 顺序建议 |
 |:---|:---|:---|
-| **B0** | 收口工作区 + 上调基线 5 项 + 删 `.disabled` | **立即**（CI 当前红，唯一能转绿的动作） |
+| **B0** | 收口工作区 + 上调基线 5 项 + 删 `.disabled` | ✅ 已完成（`a4bc30bf`） |
 | ~~B1~~ | ~~空壳收敛（−15 页）~~ | **撤销** —— 真实空壳 0，见 §1.5 |
-| **B2** | `change` 关联字段 JSON → Ent edge | **B0 后立即**，见下方"为什么 B2 顶上" |
-| B3 | SLA 删内联双写 | B2 后（先校验后下线，不可反序） |
+| **B2** | `change.affected_cis` JSON → Ent edge | ✅ 已完成（`7e3344b0`），见 §1.6 四个坑 |
+| **F8** | 修复 `service` 包测试编译失败，让守卫真的跑起来 | **建议提到 B3 之前** —— 整包测试空转比单条失败严重，见 §1.7 |
+| B3 | SLA 删内联双写 | F8 后（先校验后下线，不可反序） |
 | B4 | 状态枚举对齐 6/6（当前 **2/6**）+ 审批收口 BPMN | B3 后，择低峰 |
 | B5 | AI 单一源 + 9 个预览域按序转可用 | 与 B2–B4 穿插 |
 | B6 | 门禁强化（CI 传 `--strict`） | 可并行，存量清零后切 |
@@ -246,7 +294,18 @@ EOF
 
 B2 顶上的理由：它是唯一同时满足「修缺陷」+「让一个预览域（变更）具备转可用条件」的事，且改动面收敛在单个实体，风险可控——这正是 B1 原本的生态位（高性价比、零架构风险）。
 
-> 一句话：**B0 是这个季度唯一必须现在做的**（让 CI 从红变绿、让守卫重新可信），
-> B2–B4 是硬骨头但都在既有能力内收口，不做完它们，9 个预览域永远转不了"可用"。
+> 一句话：**B0 已让 CI 从红变绿，B2 已让变更域的影响分析拿到真实关系**；
+> 接下来 **F8 优先级最高**（`service` 包测试整包编译不过 = 守卫空转），
+> B3–B4 是硬骨头但都在既有能力内收口，不做完它们，9 个预览域永远转不了"可用"。
 > ⚠️ 本轮两次修正（C.6.4 归因、空壳结论）都源于"用提交信息代替代码验证"，
 > 后续每批次的验收必须以代码实测为准，不得复用文档结论。
+
+---
+
+## 8. 待拍板（B2 未覆盖，需产品决策）
+
+| 项 | 现状 | 选项 | 建议 |
+|:---|:---|:---|:---|
+| `change.related_tickets` | JSON 字符串数组，存**工单号**；全仓**没有任何代码**把它解析成 Ticket 实体（只在治理字段白名单里允许提审后修改） | A 转 edge（需先定 ID vs 编号语义）/ B 保持 JSON / C 删除 | **先查用量再定**：若确认无业务依赖，C 最符合收敛；但它出现在 `governanceFieldsAlwaysEditable`，删除会改变提审后可编辑字段集合，属 API 契约变更，需单独评估 |
+| 变更域第二运行时 `service/change_service.go` | 生产零引用，仅被自身测试与 2 个场景测试引用；语义与现行侧互斥 | A 删除（含测试迁移）/ B 保留 | **B（暂保留）** —— 场景测试 `scenario3/scenario6` 覆盖审批链与租户隔离，删除会掉覆盖；待有等价 `handlers/change` 场景用例后再删 |
+| swagger `docs/docs.go` | 仍描述已移除的 `affected_cis` 字段 | 重新生成 | 低优先级，下次跑 swag 时一并更新 |
