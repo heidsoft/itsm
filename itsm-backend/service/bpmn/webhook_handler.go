@@ -94,18 +94,18 @@ func isPrivateWebhookIP(ip netip.Addr) bool {
 // blockedWebhookHeaders 是用户自定义配置不得设置的 header：Host/转发类/逐跳类。
 // 防止虚拟主机路由绕过、缓存投毒与连接控制被劫持。
 var blockedWebhookHeaders = map[string]bool{
-	"host":              true,
-	"x-forwarded-host":  true,
-	"x-forwarded-for":   true,
-	"x-real-ip":         true,
-	"connection":        true,
-	"keep-alive":        true,
+	"host":                true,
+	"x-forwarded-host":    true,
+	"x-forwarded-for":     true,
+	"x-real-ip":           true,
+	"connection":          true,
+	"keep-alive":          true,
 	"proxy-authorization": true,
 	"proxy-authenticate":  true,
-	"te":                true,
-	"trailer":           true,
-	"transfer-encoding": true,
-	"upgrade":           true,
+	"te":                  true,
+	"trailer":             true,
+	"transfer-encoding":   true,
+	"upgrade":             true,
 }
 
 // isBlockedWebhookHeader 大小写不敏感地判断 header 是否在禁止列表内。

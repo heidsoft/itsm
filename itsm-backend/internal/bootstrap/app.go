@@ -49,8 +49,8 @@ import (
 	authHandler "itsm-backend/handlers/auth"
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
-	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/change"
+	"itsm-backend/handlers/change_review"
 	cloudHandler "itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
@@ -1203,7 +1203,7 @@ func NewApplication() *Application {
 		ProblemHandler:              problemHandler,
 		ProblemInvestigationHandler: problemInvestigationHandler,
 		ChangeHandler:               changeHandler,
-		ChangeReviewHandler:           changeReviewHandler,
+		ChangeReviewHandler:         changeReviewHandler,
 		KnowledgeHandler:            knowledgeHandler,
 		SLAHandler:                  slaHandler,
 		SLATemplateHandler:          slaTemplateHandler.NewHandler(slaTemplateService),

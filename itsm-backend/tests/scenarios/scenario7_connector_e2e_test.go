@@ -156,9 +156,9 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 			"EventType": "event_callback",
 			"EventId":   "evt-001",
 			"Event": map[string]interface{}{
-				"sender":  map[string]interface{}{"sender_id": "user123"},
-				"text":    map[string]interface{}{"content": "帮我查工单"},
-				"chatId":  "chat-abc",
+				"sender": map[string]interface{}{"sender_id": "user123"},
+				"text":   map[string]interface{}{"content": "帮我查工单"},
+				"chatId": "chat-abc",
 			},
 		})
 		msg, err = dt.ParseInbound(eventBody)
@@ -206,8 +206,8 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 		validSig := hex.EncodeToString(h.Sum(nil))
 
 		headers := map[string]string{
-			"timestamp":  ts,
-			"nonce":      nonce,
+			"timestamp":     ts,
+			"nonce":         nonce,
 			"msg_signature": validSig,
 		}
 		if err := wc.VerifySignature(headers, body); err != nil {
@@ -215,8 +215,8 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 		}
 
 		badHeaders := map[string]string{
-			"timestamp":  ts,
-			"nonce":      nonce,
+			"timestamp":     ts,
+			"nonce":         nonce,
 			"msg_signature": "bad-sig",
 		}
 		if err := wc.VerifySignature(badHeaders, body); err == nil {
@@ -225,8 +225,8 @@ func TestScenario7_ConnectorE2E(t *testing.T) {
 
 		oldTs := strconv.FormatInt(time.Now().Unix()-10*60, 10)
 		oldHeaders := map[string]string{
-			"timestamp":  oldTs,
-			"nonce":      nonce,
+			"timestamp":     oldTs,
+			"nonce":         nonce,
 			"msg_signature": validSig,
 		}
 		if err := wc.VerifySignature(oldHeaders, body); err == nil {
@@ -428,7 +428,7 @@ type mockConnector struct {
 func (m *mockConnector) Manifest() connector.Manifest {
 	return connector.Manifest{
 		Name: "mock", Version: "1.0.0", Provider: "mock",
-		Type: connector.TypeIM,
+		Type:                connector.TypeIM,
 		Capabilities:        []connector.Capability{connector.CapSendMessage},
 		RequiredPermissions: []string{"connector:write"},
 	}

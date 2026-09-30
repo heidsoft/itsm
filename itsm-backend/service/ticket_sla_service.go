@@ -69,9 +69,9 @@ type TicketStats struct {
 
 // TicketSLAService 工单SLA服务
 type TicketSLAService struct {
-	client  *ent.Client
-	logger  *zap.SugaredLogger
-	nowFunc func() time.Time
+	client   *ent.Client
+	logger   *zap.SugaredLogger
+	nowFunc  func() time.Time
 	slaStore *sla.Store
 }
 

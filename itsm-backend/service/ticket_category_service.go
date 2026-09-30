@@ -405,27 +405,27 @@ func (s *TicketCategoryService) refreshDescendantLevels(ctx context.Context, par
 // CreateCategoryRequest 创建分类请求
 // TenantID 由控制器从认证上下文注入，不参与请求体校验
 type CreateCategoryRequest struct {
-	Name         string `json:"name" binding:"required"`
-	Description  string `json:"description"`
-	Code         string `json:"code" binding:"required"`
-	ParentID     int    `json:"parentId"`
-	SortOrder    int    `json:"sortOrder"`
-	IsActive     bool   `json:"isActive"`
+	Name                  string  `json:"name" binding:"required"`
+	Description           string  `json:"description"`
+	Code                  string  `json:"code" binding:"required"`
+	ParentID              int     `json:"parentId"`
+	SortOrder             int     `json:"sortOrder"`
+	IsActive              bool    `json:"isActive"`
 	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
-	DepartmentID *int   `json:"departmentId"`
-	TenantID     int    `json:"tenantId"`
+	DepartmentID          *int    `json:"departmentId"`
+	TenantID              int     `json:"tenantId"`
 }
 
 // UpdateCategoryRequest 更新分类请求
 type UpdateCategoryRequest struct {
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Code         string `json:"code"`
-	ParentID     *int   `json:"parentId"`
-	SortOrder    *int   `json:"sortOrder"`
-	IsActive     *bool  `json:"isActive"`
+	Name                  string  `json:"name"`
+	Description           string  `json:"description"`
+	Code                  string  `json:"code"`
+	ParentID              *int    `json:"parentId"`
+	SortOrder             *int    `json:"sortOrder"`
+	IsActive              *bool   `json:"isActive"`
 	WorkflowDefinitionKey *string `json:"workflowDefinitionKey"`
-	DepartmentID *int   `json:"departmentId"`
+	DepartmentID          *int    `json:"departmentId"`
 }
 
 // MoveCategoryRequest 移动分类请求

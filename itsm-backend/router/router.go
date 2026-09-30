@@ -26,9 +26,9 @@ import (
 	authHandler "itsm-backend/handlers/auth"
 	automationRuleHandler "itsm-backend/handlers/automation_rule"
 	bpmnHandler "itsm-backend/handlers/bpmn"
-	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
+	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
@@ -196,14 +196,14 @@ type RouterConfig struct {
 	ServiceRequestHandler *service_request.Handler
 	CMDBHandler           *cmdb.Handler
 
-	ProblemHandler     *problem.Handler
-	ChangeHandler      *change.Handler
-	ChangeReviewHandler  *change_review.Handler
-	KnowledgeHandler   *knowledge.Handler
-	SLAHandler         *sla.Handler
-	SLATemplateHandler *slaTemplateHandler.Handler
-	AIHandler          *ai.Handler
-	EmailIntakeHandler *email_intake.Handler
+	ProblemHandler      *problem.Handler
+	ChangeHandler       *change.Handler
+	ChangeReviewHandler *change_review.Handler
+	KnowledgeHandler    *knowledge.Handler
+	SLAHandler          *sla.Handler
+	SLATemplateHandler  *slaTemplateHandler.Handler
+	AIHandler           *ai.Handler
+	EmailIntakeHandler  *email_intake.Handler
 	// VectorStoreController 提供向量存储（RAG 检索底座）状态查看与连通性测试，
 	// 注册 /api/v1/system/vector-store*；为 nil 时路由不注册。
 	VectorStoreHandler *vectorStoreHandler.Handler

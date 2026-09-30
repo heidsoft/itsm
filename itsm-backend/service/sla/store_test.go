@@ -13,8 +13,8 @@ import (
 )
 
 type testEnv struct {
-	store       *Store
-	client      *ent.Client
+	store        *Store
+	client       *ent.Client
 	definitionID int
 }
 

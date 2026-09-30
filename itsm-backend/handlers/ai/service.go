@@ -822,7 +822,6 @@ func (s *Service) ListAuditLogs(ctx context.Context, tenantID, page, pageSize in
 	return s.aiTelemetryService.ListAuditLogs(ctx, tenantID, page, pageSize, kind, days)
 }
 
-
 // parseDate parses date string in YYYY-MM-DD format
 func parseDate(s string) time.Time {
 	t, err := time.Parse("2006-01-02", s)

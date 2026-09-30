@@ -24,12 +24,14 @@ func (i *testInitializer) Dependencies() []string { return i.dependencies }
 func (i *testInitializer) Plan(context.Context, Scope) (Plan, error) {
 	return Plan{TargetVersion: "1", SourceChecksum: i.name + "-checksum"}, nil
 }
+
 func (i *testInitializer) Apply(ctx context.Context, scope Scope, plan Plan, driver dialect.Driver) (Result, error) {
 	if i.apply != nil {
 		return i.apply(ctx, scope, plan, driver)
 	}
 	return Result{Summary: map[string]any{"component": i.name}}, nil
 }
+
 func (i *testInitializer) Verify(context.Context, Scope, Plan) error {
 	return errors.New("Engine.Apply must not call out-of-transaction Verify")
 }
@@ -70,6 +72,7 @@ func (s *memoryStore) record(event string) {
 	defer s.mu.Unlock()
 	s.events = append(s.events, event)
 }
+
 func (s *memoryStore) BeginRun(ctx context.Context, _ Request) (int64, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
@@ -80,6 +83,7 @@ func (s *memoryStore) BeginRun(ctx context.Context, _ Request) (int64, error) {
 	s.runStatuses[s.nextID] = "running"
 	return s.nextID, nil
 }
+
 func (s *memoryStore) FinishRun(ctx context.Context, id int64, status string, _ map[string]any, _ error) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -91,9 +95,11 @@ func (s *memoryStore) FinishRun(ctx context.Context, id int64, status string, _ 
 	s.runStatuses[id] = status
 	return nil
 }
+
 func leaseKey(scope Scope, component string) string {
 	return scope.Type + ":" + component + ":" + strconv.FormatInt(scope.ID, 10)
 }
+
 func (s *memoryStore) AcquireLease(_ context.Context, scope Scope, component, owner string, ttl time.Duration) (Lease, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -108,6 +114,7 @@ func (s *memoryStore) AcquireLease(_ context.Context, scope Scope, component, ow
 	s.leases[key] = current
 	return Lease{FencingToken: current.token}, nil
 }
+
 func (s *memoryStore) Heartbeat(ctx context.Context, scope Scope, component, owner string, token int64, ttl time.Duration) error {
 	if s.heartbeat != nil {
 		return s.heartbeat(ctx)
@@ -123,6 +130,7 @@ func (s *memoryStore) Heartbeat(ctx context.Context, scope Scope, component, own
 	s.leases[key] = current
 	return nil
 }
+
 func (s *memoryStore) ReleaseLease(_ context.Context, scope Scope, component, owner string, token int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -136,6 +144,7 @@ func (s *memoryStore) ReleaseLease(_ context.Context, scope Scope, component, ow
 	s.leases[key] = current // Preserve the monotonically increasing fencing token.
 	return nil
 }
+
 func (s *memoryStore) StartAttempt(context.Context, int64, Scope, Plan, int64) (int64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -144,6 +153,7 @@ func (s *memoryStore) StartAttempt(context.Context, int64, Scope, Plan, int64) (
 	s.attemptStatuses[s.nextID] = "running"
 	return s.nextID, nil
 }
+
 func (s *memoryStore) BeginComponent(ctx context.Context, attemptID, runID int64, scope Scope, plan Plan, owner string, token int64) (ComponentTransaction, error) {
 	s.record("begin:" + plan.Component)
 	if s.beginErr != nil {
@@ -153,6 +163,7 @@ func (s *memoryStore) BeginComponent(ctx context.Context, attemptID, runID int64
 	tx.driver.tx = tx
 	return tx, nil
 }
+
 func (s *memoryStore) FailComponent(ctx context.Context, attemptID, _ int64, scope Scope, plan Plan, owner string, token int64, _ error) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -197,6 +208,7 @@ func (tx *memoryComponentTransaction) Complete(ctx context.Context, _ Result) er
 	tx.completed = true
 	return nil
 }
+
 func (tx *memoryComponentTransaction) Commit() error {
 	tx.store.record("commit:" + tx.plan.Component)
 	if err := tx.ctx.Err(); err != nil {
@@ -215,6 +227,7 @@ func (tx *memoryComponentTransaction) Commit() error {
 	tx.closed = true
 	return tx.store.ReleaseLease(tx.ctx, tx.scope, tx.plan.Component, tx.owner, tx.token)
 }
+
 func (tx *memoryComponentTransaction) Rollback() error {
 	tx.store.record("rollback:" + tx.plan.Component)
 	tx.pending = 0
@@ -234,6 +247,7 @@ func (d *memoryDriver) Exec(ctx context.Context, _ string, _ any, _ any) error {
 	d.tx.pending++
 	return nil
 }
+
 func (d *memoryDriver) Query(ctx context.Context, _ string, _ any, dest any) error {
 	if err := ctx.Err(); err != nil {
 		return err

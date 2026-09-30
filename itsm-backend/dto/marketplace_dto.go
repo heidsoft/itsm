@@ -11,33 +11,33 @@ import (
 // 字段统一 camelCase：snake_case 只允许出现在 ent 列名、SQL 与数据库迁移中。
 // 严禁前端或第三方回退到 long_description / install_count / icon_url 等同名字段。
 type MarketplaceItemResponse struct {
-	ID                 int       `json:"id"`
-	Name               string    `json:"name"`
-	Type               string    `json:"type"`
-	Title              string    `json:"title"`
-	Provider           string    `json:"provider"`
-	Description        string    `json:"description,omitempty"`
-	LongDescription    string    `json:"longDescription,omitempty"`
-	IconURL            string    `json:"iconUrl,omitempty"`
-	Tags               []string  `json:"tags"`
-	Rating             float64   `json:"rating"`
-	InstallCount       int       `json:"installCount"`
-	LatestVersion      string    `json:"latestVersion"`
-	MinSystemVersion   string    `json:"minSystemVersion,omitempty"`
-	Status             string    `json:"status"`
-	IsOfficial         bool      `json:"isOfficial"`
-	IsFree             bool      `json:"isFree"`
-	Price              float64   `json:"price"`
-	Category           string    `json:"category,omitempty"`
-	Capabilities       []string  `json:"capabilities,omitempty"`
-	RequiredPerms      []string  `json:"requiredPermissions,omitempty"`
-	AuthorID           string    `json:"authorId,omitempty"`
-	AuthorName         string    `json:"authorName,omitempty"`
-	Homepage           string    `json:"homepage,omitempty"`
-	Repository         string    `json:"repository,omitempty"`
-	License            string    `json:"license,omitempty"`
-	CreatedAt          time.Time `json:"createdAt"`
-	UpdatedAt          time.Time `json:"updatedAt"`
+	ID               int       `json:"id"`
+	Name             string    `json:"name"`
+	Type             string    `json:"type"`
+	Title            string    `json:"title"`
+	Provider         string    `json:"provider"`
+	Description      string    `json:"description,omitempty"`
+	LongDescription  string    `json:"longDescription,omitempty"`
+	IconURL          string    `json:"iconUrl,omitempty"`
+	Tags             []string  `json:"tags"`
+	Rating           float64   `json:"rating"`
+	InstallCount     int       `json:"installCount"`
+	LatestVersion    string    `json:"latestVersion"`
+	MinSystemVersion string    `json:"minSystemVersion,omitempty"`
+	Status           string    `json:"status"`
+	IsOfficial       bool      `json:"isOfficial"`
+	IsFree           bool      `json:"isFree"`
+	Price            float64   `json:"price"`
+	Category         string    `json:"category,omitempty"`
+	Capabilities     []string  `json:"capabilities,omitempty"`
+	RequiredPerms    []string  `json:"requiredPermissions,omitempty"`
+	AuthorID         string    `json:"authorId,omitempty"`
+	AuthorName       string    `json:"authorName,omitempty"`
+	Homepage         string    `json:"homepage,omitempty"`
+	Repository       string    `json:"repository,omitempty"`
+	License          string    `json:"license,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 // ToMarketplaceItemResponse 将 ent.MarketplaceItem 转换为 camelCase DTO。

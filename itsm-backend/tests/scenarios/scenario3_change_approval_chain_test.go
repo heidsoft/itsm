@@ -81,14 +81,14 @@ func TestScenario3_ChangeApprovalChainAndRollback(t *testing.T) {
 
 	t.Run("change full lifecycle with rollback", func(t *testing.T) {
 		changeResp, err := changeSvc.CreateChange(ctx, &dto.CreateChangeRequest{
-			Title:            "数据库版本升级",
-			Description:      "将 MySQL 从 8.0 升级到 8.4",
-			Justification:    "安全补丁和性能提升",
-			Type:             "normal",
-			Priority:         "high",
-			ImpactScope:      "medium",
-			RiskLevel:        "high",
-			RollbackPlan:     "回退到 MySQL 8.0 快照",
+			Title:              "数据库版本升级",
+			Description:        "将 MySQL 从 8.0 升级到 8.4",
+			Justification:      "安全补丁和性能提升",
+			Type:               "normal",
+			Priority:           "high",
+			ImpactScope:        "medium",
+			RiskLevel:          "high",
+			RollbackPlan:       "回退到 MySQL 8.0 快照",
 			ImplementationPlan: "1. 备份 2. 升级 3. 验证",
 		}, userA.ID, tenantA.ID)
 		if err != nil {

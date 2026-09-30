@@ -152,7 +152,7 @@ func TestApprovalChainResolverAdapter_TenantIsolation(t *testing.T) {
 func mkConvergenceTenant(t *testing.T, ctx context.Context, client *ent.Client, suffix string) *ent.Tenant {
 	t.Helper()
 	tn, err := client.Tenant.Create().
-		SetName("ConvTN-"+suffix).
+		SetName("ConvTN-" + suffix).
 		SetCode("conv" + suffix).
 		SetDomain("conv" + suffix + ".test").
 		SetStatus("active").

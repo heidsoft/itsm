@@ -32,10 +32,10 @@ import (
 // db / repo 用于承载 PostgreSQL 专属的复杂聚合 SQL（FILTER / EXTRACT(EPOCH ...)），
 // 这些表达式无法用 Ent 表达且不通用，因此走 raw SQL；普通 CRUD / 状态过滤仍走 client。
 type DashboardService struct {
-	client *ent.Client
-	db     *sql.DB
-	repo   *dashboardRepository
-	logger *zap.SugaredLogger
+	client   *ent.Client
+	db       *sql.DB
+	repo     *dashboardRepository
+	logger   *zap.SugaredLogger
 	slaStore *sla.Store // Phase 3: sla_states 读取
 }
 

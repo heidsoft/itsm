@@ -616,10 +616,10 @@ func (s *Service) resolveServiceRequestChain(ctx context.Context, tenantID, requ
 		RequesterID: requesterID,
 	}
 	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "service_request", evalCtx, nil)
-	
+
 	// 影子双轨：新路径（BPMN Service Task）影子执行并对比，差异写日志
 	s.approvalChain.ShadowCompare(ctx, tenantID, "service_request", evalCtx, nil, plan, err)
-	
+
 	if err != nil {
 		return nil, err
 	}

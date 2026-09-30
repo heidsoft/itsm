@@ -293,7 +293,7 @@ func setupE2E(t *testing.T) *e2eEnv {
 func (e *e2eEnv) createTenant(t *testing.T, code string) int {
 	t.Helper()
 	tenant, err := e.client.Tenant.Create().
-		SetName("E2E-"+code).SetCode("e2e-"+code).SetStatus("active").
+		SetName("E2E-" + code).SetCode("e2e-" + code).SetStatus("active").
 		Save(context.Background())
 	require.NoError(t, err)
 	return tenant.ID
@@ -302,7 +302,7 @@ func (e *e2eEnv) createTenant(t *testing.T, code string) int {
 func (e *e2eEnv) createUser(t *testing.T, tenantID int, username string) int {
 	t.Helper()
 	user, err := e.client.User.Create().
-		SetUsername(username).SetEmail(username+"@e2e.test").SetName(username).
+		SetUsername(username).SetEmail(username + "@e2e.test").SetName(username).
 		SetPasswordHash("hash").SetRole("agent").SetActive(true).SetTenantID(tenantID).
 		Save(context.Background())
 	require.NoError(t, err)
@@ -351,20 +351,20 @@ func (e *e2eEnv) createBPMNFixture(t *testing.T, tenantID, ticketID, assigneeID 
 		`</bpmn:process></bpmn:definitions>`, defKey, defKey, suffix, allowDelegate, assigneeID)
 
 	dep, err := e.client.ProcessDeployment.Create().
-		SetDeploymentID("DEP-E2E-"+suffix).SetDeploymentName("E2E "+suffix).
+		SetDeploymentID("DEP-E2E-" + suffix).SetDeploymentName("E2E " + suffix).
 		SetDeploymentTime(time.Now()).SetDeployedBy("e2e").SetIsActive(true).SetTenantID(tenantID).
 		Save(ctx)
 	require.NoError(t, err)
 
 	def, err := e.client.ProcessDefinition.Create().
-		SetKey(defKey).SetName("E2E Approval "+suffix).SetVersion("1").SetIsLatest(true).
+		SetKey(defKey).SetName("E2E Approval " + suffix).SetVersion("1").SetIsLatest(true).
 		SetBpmnXML([]byte(bpmnXML)).SetDeploymentID(dep.ID).SetDeployedAt(time.Now()).SetTenantID(tenantID).
 		Save(ctx)
 	require.NoError(t, err)
 
 	businessKey := fmt.Sprintf("ticket:%d", ticketID)
 	instance, err := e.client.ProcessInstance.Create().
-		SetProcessInstanceID("PI-E2E-"+suffix).SetProcessDefinitionKey(def.Key).
+		SetProcessInstanceID("PI-E2E-" + suffix).SetProcessDefinitionKey(def.Key).
 		SetProcessDefinitionID(def.ID).SetBusinessKey(businessKey).SetStatus("running").
 		SetVariables(map[string]interface{}{
 			"business_type": "ticket",
@@ -375,7 +375,7 @@ func (e *e2eEnv) createBPMNFixture(t *testing.T, tenantID, ticketID, assigneeID 
 	require.NoError(t, err)
 
 	task, err := e.client.ProcessTask.Create().
-		SetTaskID("TASK-E2E-"+suffix).SetTaskDefinitionKey("Approval_1").SetTaskName("审批").
+		SetTaskID("TASK-E2E-" + suffix).SetTaskDefinitionKey("Approval_1").SetTaskName("审批").
 		SetTaskType("user_task").SetProcessDefinitionKey(def.Key).
 		SetProcessInstanceID(instance.ID).SetAssignee(strconv.Itoa(assigneeID)).SetStatus("assigned").
 		SetTaskVariables(map[string]interface{}{

@@ -4,17 +4,17 @@ import "time"
 
 // WorkbenchItem represents a unified work item from any ITIL domain.
 type WorkbenchItem struct {
-	ID           int       `json:"id"`
-	RecordType   string    `json:"recordType"`
-	Title        string    `json:"title"`
-	Description  string    `json:"description,omitempty"`
-	Priority     string    `json:"priority"`
-	Status       string    `json:"status"`
-	Phase        string    `json:"phase"`
-	AssigneeID   *int      `json:"assigneeId,omitempty"`
-	TenantID     int       `json:"tenantId"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	ID          int       `json:"id"`
+	RecordType  string    `json:"recordType"`
+	Title       string    `json:"title"`
+	Description string    `json:"description,omitempty"`
+	Priority    string    `json:"priority"`
+	Status      string    `json:"status"`
+	Phase       string    `json:"phase"`
+	AssigneeID  *int      `json:"assigneeId,omitempty"`
+	TenantID    int       `json:"tenantId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 // WorkbenchQuery represents query parameters for the workbench API.

@@ -1172,7 +1172,7 @@ func TestInferITILPractices(t *testing.T) {
 			CriticalCICount:         1,
 			HighRiskDependencyCount: 1,
 			OpenIncidentCount:       1,
-			RequiresReview:         true,
+			RequiresReview:          true,
 		}
 		got := inferITILPractices(summary)
 		assert.ElementsMatch(t, []string{

@@ -35,11 +35,11 @@ const (
 type Domain string
 
 const (
-	DomainTicket        Domain = "ticket"
-	DomainIncident      Domain = "incident"
-	DomainProblem       Domain = "problem"
-	DomainChange        Domain = "change"
-	DomainRelease       Domain = "release"
+	DomainTicket         Domain = "ticket"
+	DomainIncident       Domain = "incident"
+	DomainProblem        Domain = "problem"
+	DomainChange         Domain = "change"
+	DomainRelease        Domain = "release"
 	DomainServiceRequest Domain = "service_request"
 )
 
@@ -47,54 +47,54 @@ const (
 // This is the single source of truth for status→phase translation.
 var statusPhaseMap = map[Domain]map[string]Phase{
 	DomainTicket: {
-		"open":         PhaseSubmitted,
-		"assigned":     PhaseActive,
-		"in_progress":  PhaseActive,
-		"resolved":     PhaseResolved,
-		"closed":       PhaseClosed,
-		"cancelled":    PhaseClosed,
+		"open":        PhaseSubmitted,
+		"assigned":    PhaseActive,
+		"in_progress": PhaseActive,
+		"resolved":    PhaseResolved,
+		"closed":      PhaseClosed,
+		"cancelled":   PhaseClosed,
 	},
 	DomainIncident: {
-		"new":          PhaseSubmitted,
-		"open":         PhaseSubmitted,
-		"assigned":     PhaseActive,
-		"in_progress":  PhaseActive,
-		"resolved":     PhaseResolved,
-		"closed":       PhaseClosed,
-		"cancelled":    PhaseClosed,
+		"new":         PhaseSubmitted,
+		"open":        PhaseSubmitted,
+		"assigned":    PhaseActive,
+		"in_progress": PhaseActive,
+		"resolved":    PhaseResolved,
+		"closed":      PhaseClosed,
+		"cancelled":   PhaseClosed,
 	},
 	DomainProblem: {
-		"open":         PhaseSubmitted,
-		"assigned":     PhaseActive,
-		"in_progress":  PhaseActive,
-		"resolved":     PhaseResolved,
-		"closed":       PhaseClosed,
-		"cancelled":    PhaseClosed,
+		"open":        PhaseSubmitted,
+		"assigned":    PhaseActive,
+		"in_progress": PhaseActive,
+		"resolved":    PhaseResolved,
+		"closed":      PhaseClosed,
+		"cancelled":   PhaseClosed,
 	},
 	DomainChange: {
-		"draft":        PhaseDraft,
-		"submitted":    PhaseSubmitted,
-		"approved":     PhaseActive,
-		"in_progress":  PhaseActive,
-		"completed":    PhaseResolved,
-		"closed":       PhaseClosed,
-		"cancelled":    PhaseClosed,
-		"rejected":     PhaseClosed,
+		"draft":       PhaseDraft,
+		"submitted":   PhaseSubmitted,
+		"approved":    PhaseActive,
+		"in_progress": PhaseActive,
+		"completed":   PhaseResolved,
+		"closed":      PhaseClosed,
+		"cancelled":   PhaseClosed,
+		"rejected":    PhaseClosed,
 	},
 	DomainRelease: {
-		"draft":        PhaseDraft,
-		"scheduled":    PhaseSubmitted,
-		"in_progress":  PhaseActive,
-		"completed":    PhaseResolved,
-		"cancelled":    PhaseClosed,
+		"draft":       PhaseDraft,
+		"scheduled":   PhaseSubmitted,
+		"in_progress": PhaseActive,
+		"completed":   PhaseResolved,
+		"cancelled":   PhaseClosed,
 	},
 	DomainServiceRequest: {
-		"submitted":    PhaseSubmitted,
-		"approved":     PhaseActive,
-		"rejected":     PhaseClosed,
-		"in_progress":  PhaseActive,
-		"completed":    PhaseClosed,
-		"cancelled":    PhaseClosed,
+		"submitted":   PhaseSubmitted,
+		"approved":    PhaseActive,
+		"rejected":    PhaseClosed,
+		"in_progress": PhaseActive,
+		"completed":   PhaseClosed,
+		"cancelled":   PhaseClosed,
 	},
 }
 

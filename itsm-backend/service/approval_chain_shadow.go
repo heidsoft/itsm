@@ -26,12 +26,12 @@ func NewApprovalChainShadowComparator(adapter *ApprovalChainResolverAdapter, log
 
 // ShadowResult 记录影子路径的执行结果。
 type ShadowResult struct {
-	ChainID     int
-	Passed      bool
+	ChainID      int
+	Passed       bool
 	PendingLevel int
-	Blocked     bool
-	LevelsJSON  []byte
-	Err         error
+	Blocked      bool
+	LevelsJSON   []byte
+	Err          error
 }
 
 // Compare 对比直接路径结果与影子路径结果，差异写日志。
@@ -48,16 +48,15 @@ func (c *ApprovalChainShadowComparator) Compare(
 	directPlan *ApprovalChainEvaluation,
 	directErr error,
 ) ShadowResult {
-	shadowChainID, shadowLevelsJSON, shadowPassed, shadowPendingLevel, shadowBlocked, shadowErr :=
-		c.adapter.ResolveApprovalPlanRaw(ctx, tenantID, entityType, requesterID, priority, amount, approvals)
+	shadowChainID, shadowLevelsJSON, shadowPassed, shadowPendingLevel, shadowBlocked, shadowErr := c.adapter.ResolveApprovalPlanRaw(ctx, tenantID, entityType, requesterID, priority, amount, approvals)
 
 	result := ShadowResult{
-		ChainID:     shadowChainID,
-		Passed:      shadowPassed,
+		ChainID:      shadowChainID,
+		Passed:       shadowPassed,
 		PendingLevel: shadowPendingLevel,
-		Blocked:     shadowBlocked,
-		LevelsJSON:  shadowLevelsJSON,
-		Err:         shadowErr,
+		Blocked:      shadowBlocked,
+		LevelsJSON:   shadowLevelsJSON,
+		Err:          shadowErr,
 	}
 
 	c.logDifferences(tenantID, entityType, requesterID, directPlan, directErr, &result)

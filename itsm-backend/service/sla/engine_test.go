@@ -217,42 +217,42 @@ func TestSLAStatus(t *testing.T) {
 	now := time.Date(2026, 9, 27, 12, 0, 0, 0, time.UTC)
 
 	tests := []struct {
-		name              string
-		responseDeadline  *time.Time
+		name               string
+		responseDeadline   *time.Time
 		resolutionDeadline *time.Time
-		firstResponseAt   time.Time
-		resolvedAt        time.Time
-		want              string
+		firstResponseAt    time.Time
+		resolvedAt         time.Time
+		want               string
 	}{
 		{
-			name:     "ok - within deadline",
-			responseDeadline:  timePtr(now.Add(1 * time.Hour)),
+			name:               "ok - within deadline",
+			responseDeadline:   timePtr(now.Add(1 * time.Hour)),
 			resolutionDeadline: timePtr(now.Add(8 * time.Hour)),
-			want: "ok",
+			want:               "ok",
 		},
 		{
-			name:     "breached - response deadline passed",
+			name:             "breached - response deadline passed",
 			responseDeadline: timePtr(now.Add(-1 * time.Hour)),
 			want:             "breached",
 		},
 		{
-			name:     "warning - response deadline within 30 min",
+			name:             "warning - response deadline within 30 min",
 			responseDeadline: timePtr(now.Add(20 * time.Minute)),
 			want:             "warning",
 		},
 		{
-			name:            "ok - responded on time",
-			responseDeadline: timePtr(now.Add(1 * time.Hour)),
-			firstResponseAt: now.Add(-30 * time.Minute),
+			name:               "ok - responded on time",
+			responseDeadline:   timePtr(now.Add(1 * time.Hour)),
+			firstResponseAt:    now.Add(-30 * time.Minute),
 			resolutionDeadline: timePtr(now.Add(7 * time.Hour)),
-			want: "ok",
+			want:               "ok",
 		},
 		{
-			name:              "breached - resolution deadline passed",
-			responseDeadline:  timePtr(now.Add(-2 * time.Hour)),
+			name:               "breached - resolution deadline passed",
+			responseDeadline:   timePtr(now.Add(-2 * time.Hour)),
 			resolutionDeadline: timePtr(now.Add(-1 * time.Hour)),
-			firstResponseAt:   now.Add(-90 * time.Minute),
-			want:              "breached",
+			firstResponseAt:    now.Add(-90 * time.Minute),
+			want:               "breached",
 		},
 	}
 
@@ -268,10 +268,10 @@ func TestSLAStatus(t *testing.T) {
 
 func TestParseBusinessHoursConfig_LegacyKeys(t *testing.T) {
 	raw := map[string]interface{}{
-		"workdays":         []interface{}{float64(1), float64(2), float64(3), float64(4), float64(5)},
-		"work_hour_start":  float64(8),
-		"work_hour_end":    float64(17),
-		"timezone":         "America/New_York",
+		"workdays":        []interface{}{float64(1), float64(2), float64(3), float64(4), float64(5)},
+		"work_hour_start": float64(8),
+		"work_hour_end":   float64(17),
+		"timezone":        "America/New_York",
 	}
 
 	cfg := parseBusinessHoursConfig(raw)

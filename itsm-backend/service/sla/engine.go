@@ -9,9 +9,10 @@
 //   - 持久化无关：引擎只负责计算，由调用方决定写入哪张表
 //
 // 三阶段迁移（Task #18）：
-//   阶段 1 — 双写：调用方在旧逻辑基础上额外调用 ComputeDeadlines 写入 sla_state
-//   阶段 2 — 存量迁移：从旧内嵌字段回填 sla_states
-//   阶段 3 — 切读：读取切到 sla_states，移除旧内嵌字段
+//
+//	阶段 1 — 双写：调用方在旧逻辑基础上额外调用 ComputeDeadlines 写入 sla_state
+//	阶段 2 — 存量迁移：从旧内嵌字段回填 sla_states
+//	阶段 3 — 切读：读取切到 sla_states，移除旧内嵌字段
 package sla
 
 import (

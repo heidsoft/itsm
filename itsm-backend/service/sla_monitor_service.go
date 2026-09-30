@@ -11,8 +11,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/sladefinition"
-	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/slastate"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/service/sla"
 

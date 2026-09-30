@@ -429,10 +429,10 @@ func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID
 		Priority:    priority,
 	}
 	plan, err := s.approvalChain.ResolveApprovalPlan(ctx, tenantID, "change", evalCtx, nil)
-	
+
 	// 影子双轨：新路径（BPMN Service Task）影子执行并对比，差异写日志
 	s.approvalChain.ShadowCompare(ctx, tenantID, "change", evalCtx, nil, plan, err)
-	
+
 	if err != nil {
 		// 未找到激活链或解析异常 → 降级为旧逻辑（不阻断提交可用性，仅记录）
 		s.logger.Warnw("变更审批链解析降级为旧逻辑", "error", err, "change_id", changeID, "tenant_id", tenantID)
