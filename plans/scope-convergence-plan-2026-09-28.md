@@ -104,6 +104,8 @@ legacy 已被移植为「名称→ID 解析」，对外行为不变。**`related
 
 ## 1.7 🔴 新发现：`service` 包测试在 HEAD 上编译不过（自引入判定之外）
 
+> ✅ **F8 已于 2026-09-30 修复**（提交 `09cabc3c`）。以下为原始记录，修复后的实测结论见 §1.8。
+
 验证 B2 时顺带发现（**与本次改动无关，HEAD 既有**）：
 
 | 文件 | 问题 |
@@ -114,6 +116,28 @@ legacy 已被移植为「名称→ID 解析」，对外行为不变。**`related
 
 → `go test ./service/` 目前**整包编译失败**，等于这个包的所有测试（含 SLA、变更、知识）**都在空转**。
 这比"某条用例失败"严重得多：**守卫存在但没在跑**。已列为 **F8，建议提到 B3 之前**。
+
+## 1.8 F8 修复后的实测（2026-09-30）
+
+修复 F8 的同时发现 `backend-ci` 的 Lint job 本身长期红：`Check formatting`（gofumpt）28 个文件不合规，
+而 Build/Test 均 `needs: lint`，**因此远端 main 自 `662294e0`（09-27）起从未跑过后端测试**。
+提交 `dba76f92`（纯格式化）+ `09cabc3c`（语义修复）后 Lint 三项归零：`gofumpt -l`=0、staticcheck=0、`go build ./...` 通过。
+
+**过程中的一次误判值得留档**：staticcheck 在编译失败状态下报出 10 处 U1000「未使用代码」，
+其中 9 处（`parseWorkflowNodes`/`resolveApprover`/`getEscalationNotifyUsers`/`addTagsToTicket`/`withNowFunc` 等）
+实际只被测试引用——**编译失败导致测试文件未被加载，引用没被计入**。若按原清单删除，会连带删掉
+审批链、SLA 时区、升级通知、标签的测试覆盖，与收敛目标相反。F8 修好后真实未使用仅剩 `toTicketResponse` 1 处。
+> 推论：**门禁的报错清单本身也依赖守卫在跑**；先恢复执行能力，再解读失败。
+
+`go test ./service/` 首次真实执行暴露的存量问题（**未修，属 B3/B4 范畴**）：
+
+| 现象 | 位置 | 判断 |
+|:---|:---|:---|
+| panic：`invalid enum value for status field: "submitted"` | `service/dashboard_domain_metrics_test.go:39` | 枚举化（`662294e0`）收紧值域后，测试夹具仍用非枚举值建 Change；panic 会**中断整包后续用例**，优先级最高 |
+| 5 个 `TestChangeService_*` 失败 + `TestDashboardDomainMetricsAreReal` 失败 | `service/change_service_test.go` | legacy 变更 service 的存量断言/错误，与 §1.6「同一列两套互斥语义」和 §8「第二运行时去留」直接相关，应在 B4 或 §8 决策时一并处理 |
+
+`handlers/standard_change` 的断言已在 `09cabc3c` 内改到 B2 后的真实语义（名称型条目不构成 CI 关系；覆盖用例改为创建真实 CI 并断言边解析）。
+
 
 ## 2. 收敛三原则（PR 评审照此执行）
 
@@ -279,8 +303,8 @@ EOF
 | **B0** | 收口工作区 + 上调基线 5 项 + 删 `.disabled` | ✅ 已完成（`a4bc30bf`） |
 | ~~B1~~ | ~~空壳收敛（−15 页）~~ | **撤销** —— 真实空壳 0，见 §1.5 |
 | **B2** | `change.affected_cis` JSON → Ent edge | ✅ 已完成（`7e3344b0`），见 §1.6 四个坑 |
-| **F8** | 修复 `service` 包测试编译失败，让守卫真的跑起来 | **建议提到 B3 之前** —— 整包测试空转比单条失败严重，见 §1.7 |
-| B3 | SLA 删内联双写 | F8 后（先校验后下线，不可反序） |
+| **F8** | 修复 `service` 包测试编译失败，让守卫真的跑起来 | ✅ **已完成 2026-09-30**（`dba76f92` + `09cabc3c`），修复后暴露的存量失败见 §1.8 |
+| B3 | SLA 删内联双写 | F8 后（先校验后下线，不可反序）—— **F8 已清，B3 可启动** |
 | B4 | 状态枚举对齐 6/6（当前 **2/6**）+ 审批收口 BPMN | B3 后，择低峰 |
 | B5 | AI 单一源 + 9 个预览域按序转可用 | 与 B2–B4 穿插 |
 | B6 | 门禁强化（CI 传 `--strict`） | 可并行，存量清零后切 |

@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **恢复后端测试守卫的真实执行（F8）** — `service` 包测试自状态枚举化（`662294e0`）起整包编译失败，SLA／变更／知识的全部用例实际空转，门禁显示"绿"却没有任何保护。补齐 `createViolation` 缺失的 `slaDefinitionID` 参数、修正 B2 后 `standard_change` 仍读取已删除 `affected_cis` 字段的断言、补齐 rbac `mockMenuService` 缺失的接口方法、`pq.ErrorCode` 改用 `pqerror.CheckViolation`，并删除零引用的 `toTicketResponse`。同时修复 `backend-ci` Lint job：28 个文件不符合 gofumpt 会连带阻塞 Build 与 Test，远端 `main` 自 09-27 起即为红。⚠️ 此前 staticcheck 报的 10 处"未使用代码"有 9 处是编译失败导致测试文件未加载的假象，修好后真实未使用仅 1 处，避免误删审批链与 SLA 测试覆盖。测试首次真实执行暴露的 5 个存量失败与 1 个 panic（`dashboard_domain_metrics_test.go` 用枚举外的 `"submitted"` 建 Change）已记入收敛计划，另行处理。
 - 发布审批的跨租户、已停用或不存在的审批人现在返回 403（业务码 2003），不再误报 5001；拒绝时不修改发布、流程任务或审计记录。
 - **修复 BPMN 流程审计操作人恒为空** — 流程启动与任务完成审计此前从 `ctx.Value("user")` 取操作人，而生产链路从未写入该 key，审计记录 operator 恒为 0/空名；现统一改走 `bpmn.BPMNUserIDContextKey` 并在事务内解析用户名，与审批决策审计同一模式（含回归测试）
 - **修复市场页恒为空** — 生产初始化新增 `marketplace-items` 组件：写入 5 条内置市场条目（连接器/技能/插件，状态 published、纳入版本账本 checksum 与逐项验证），存量环境可前滚补齐；此前生产 DAG 无该组件、列表按 published 过滤后恒为空。市场列表/详情同步改为返回 DTO（`MarketplaceItemResponse`，camelCase），不再直接序列化 Ent 模型
