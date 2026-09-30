@@ -35,6 +35,7 @@
 | `deep-business-test-report-2026-06-18.md` | historical | 深度业务流测试（默认账号过时，但仍含 API 验证记录） |
 | `product-architecture-review-2026-09-03.md` | historical | 产品架构评审快照；2026-09-12 由 `docs/reviews/`（复数目录）合并入本目录 |
 | `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用，移动时已同步更新该引用 |
+| `scope-convergence-architecture-review-2026-09-30.md` | active | 收敛计划（`plans/scope-convergence-plan-2026-09-28.md`）B0–B5 落地状态实测审查；F8 空转、判据口径歧义与执行顺序建议 |
 
 ## 目录合并（2026-09-12）
 
