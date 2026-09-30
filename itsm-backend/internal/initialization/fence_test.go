@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	"github.com/lib/pq"
+	"github.com/lib/pq/pqerror"
 	"github.com/stretchr/testify/require"
 )
 
@@ -245,7 +246,7 @@ func TestPostgresEngineFailureRollsBackBusinessAndSuccessLedger(t *testing.T) {
 			} else {
 				var pgErr *pq.Error
 				require.ErrorAs(t, err, &pgErr)
-				require.Equal(t, pq.ErrorCode("23514"), pgErr.Code)
+				require.Equal(t, pqerror.CheckViolation, pgErr.Code)
 				require.Equal(t, scenario.constraint, pgErr.Constraint)
 			}
 			require.Zero(t, f.businessCount(t), "business write must roll back with success ledger/commit failure")

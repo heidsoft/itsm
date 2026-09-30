@@ -661,6 +661,22 @@ func (m *mockMenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.M
 	return nil, args.Error(1)
 }
 
+func (m *mockMenuService) ExportMenus(ctx context.Context, tenantID int) ([]dto.MenuExportItem, error) {
+	args := m.Called(ctx, tenantID)
+	if l, ok := args.Get(0).([]dto.MenuExportItem); ok {
+		return l, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *mockMenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (*dto.MenuInitDiffResponse, error) {
+	args := m.Called(ctx, tenantID)
+	if r, ok := args.Get(0).(*dto.MenuInitDiffResponse); ok {
+		return r, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *mockMenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	args := m.Called(ctx, id, req, tenantID)
 	if r, ok := args.Get(0).(*dto.MenuDTO); ok {

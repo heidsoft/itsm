@@ -1484,23 +1484,6 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 
 // ==================== 辅助方法 ====================
 
-// toTicketResponse 转换为 DTO 响应
-// Phase 3: SLA 字段从 sla_states 表读取，不再使用 inline 字段
-func (s *TicketService) toTicketResponse(t *ticket.Ticket) *dto.TicketResponse {
-	// Load SLAState from sla_states table
-	var slaState *ent.SLAState
-	if s.client != nil {
-		slaState, _ = s.client.SLAState.Query().
-			Where(
-				slastate.TenantID(t.TenantID),
-				slastate.AggregateTypeEQ("ticket"),
-				slastate.AggregateIDEQ(t.ID),
-			).
-			Only(context.Background())
-	}
-	return s.toTicketResponseWithSLA(t, slaState)
-}
-
 // toTicketResponseWithSLA 转换为 DTO 响应，SLA 字段优先从 slaState 读取。
 func (s *TicketService) toTicketResponseWithSLA(t *ticket.Ticket, slaState *ent.SLAState) *dto.TicketResponse {
 	resp := &dto.TicketResponse{

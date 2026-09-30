@@ -255,7 +255,7 @@ func TestSLAMonitorService_CreateViolation(t *testing.T) {
 	slaDefMap := map[int]string{slaDef.ID: slaDef.Name}
 	deadline := time.Now().Add(-1 * time.Hour) // 1小时前已经过期
 
-	created, err := service.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	created, err := service.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 	assert.True(t, created, "expected SLA violation to be created")
 
@@ -266,7 +266,7 @@ func TestSLAMonitorService_CreateViolation(t *testing.T) {
 	assert.GreaterOrEqual(t, len(violations), 1)
 
 	// 幂等：再次调用应当返回 created=false 而不创建新记录
-	created, err = service.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	created, err = service.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 	assert.False(t, created, "expected duplicate SLA violation to be suppressed")
 }

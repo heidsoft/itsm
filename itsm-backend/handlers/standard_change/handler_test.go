@@ -449,22 +449,42 @@ func TestInstantiateStandardChange_Defaults(t *testing.T) {
 	// Verify the Change was created from the template with the expected mapping.
 	created, err := client.Change.Query().
 		Where(change.ID(changeID), change.TenantID(1)).
+		WithAffectedCis().
 		Only(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, "发布模板", created.Title)
 	assert.Equal(t, "standard", created.Type)
-	assert.Equal(t, "draft", created.Status)
+	assert.Equal(t, change.StatusDraft, created.Status)
 	assert.Equal(t, "medium", created.Priority)
 	assert.Equal(t, "high", created.ImpactScope)
 	assert.Equal(t, "medium", created.RiskLevel)
 	assert.Equal(t, 9, created.CreatedBy)
-	assert.Equal(t, []string{"web"}, created.AffectedCis)
+	// affected_cis 自 B2 起是 CI 多对多关系，只接受数字 CI ID。模板里的名称型
+	// 条目（"web"）无法构成关系，按 parseAffectedCIIDs 的既定语义被丢弃。
+	assert.Empty(t, created.Edges.AffectedCis)
 	assert.Equal(t, "实施计划步骤", created.ImplementationPlan)
 	assert.Equal(t, "回滚计划步骤", created.RollbackPlan)
 }
 
 func TestInstantiateStandardChange_Overrides(t *testing.T) {
 	client := newTestClient(t)
+	ctx := context.Background()
+
+	// 实例化覆盖的 CI 必须是数字 CI ID（B2 起 affected_cis 为 CI 多对多关系）。
+	ciType, err := client.CIType.Create().
+		SetName("server").
+		SetTenantID(1).
+		Save(ctx)
+	require.NoError(t, err)
+	ci, err := client.ConfigurationItem.Create().
+		SetName("override-ci").
+		SetCiType("server").
+		SetCiTypeID(ciType.ID).
+		SetStatus("active").
+		SetTenantID(1).
+		Save(ctx)
+	require.NoError(t, err)
+
 	tmpl := createTemplate(t, client, 1, 5, func(b *ent.StandardChangeCreate) {
 		b.SetTitle("原模板").SetAffectedCis([]string{"old"})
 	})
@@ -472,7 +492,7 @@ func TestInstantiateStandardChange_Overrides(t *testing.T) {
 
 	req := dto.InstantiateStandardChangeRequest{
 		Title:       "覆盖标题",
-		AffectedCis: []string{"new1", "new2"},
+		AffectedCis: []string{strconv.Itoa(ci.ID)},
 	}
 	w := doRequest(r, "POST", "/api/v1/standard-changes/"+strconv.Itoa(tmpl.ID)+"/instantiate", req)
 	resp, data := decodeResponse(t, w)
@@ -482,10 +502,12 @@ func TestInstantiateStandardChange_Overrides(t *testing.T) {
 
 	created, err := client.Change.Query().
 		Where(change.ID(changeID), change.TenantID(1)).
-		Only(context.Background())
+		WithAffectedCis().
+		Only(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, "覆盖标题", created.Title)
-	assert.Equal(t, []string{"new1", "new2"}, created.AffectedCis)
+	require.Len(t, created.Edges.AffectedCis, 1)
+	assert.Equal(t, ci.ID, created.Edges.AffectedCis[0].ID)
 	// Untouched fields fall back to the template's values (implementation plan is unchanged).
 	assert.Equal(t, "实施计划步骤", created.ImplementationPlan)
 }

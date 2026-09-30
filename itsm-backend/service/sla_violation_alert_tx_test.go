@@ -101,7 +101,7 @@ func TestSLAMonitorCreateViolationSinksNotificationIntoTx(t *testing.T) {
 	slaDefMap := map[int]string{slaDef.ID: slaDef.Name}
 	deadline := time.Now().Add(-30 * time.Minute) // 已过期 30 分钟
 
-	created, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	created, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 	require.True(t, created, "expected first createViolation to insert a new violation")
 
@@ -145,7 +145,7 @@ func TestSLAMonitorCreateViolationRollsBackWhenTxOutboxDisabled(t *testing.T) {
 	slaDefMap := map[int]string{slaDef.ID: slaDef.Name}
 	deadline := time.Now().Add(-30 * time.Minute)
 
-	created, err := monitor.createViolation(ctx, ticket, "resolution_time", deadline, slaDefMap)
+	created, err := monitor.createViolation(ctx, ticket, "resolution_time", deadline, slaDef.ID, slaDefMap)
 	require.Error(t, err, "未开启 EnableTxOutbox 时 createViolation 必须 fail-closed")
 	require.False(t, created, "事务回滚后不得报告违规已创建")
 	require.Contains(t, err.Error(), "transactional notification outbox disabled")
@@ -189,12 +189,12 @@ func TestSLAMonitorCreateViolationRollsBackOnTxFailure(t *testing.T) {
 	deadline := time.Now().Add(-30 * time.Minute)
 
 	// 第一次 commit 成功
-	_, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	_, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 
 	// 第二次同样参数会被事务内检查跳过；生产环境另有数据库部分唯一索引
 	// (ticket_id, violation_type) WHERE is_resolved = false 收口跨实例竞态。
-	secondCreated, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	secondCreated, err := monitor.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 	require.False(t, secondCreated, "expected duplicate createViolation to be suppressed")
 
@@ -233,7 +233,7 @@ func TestSLAMonitorCreateViolationSkipsWhenNoSLA(t *testing.T) {
 
 	slaDefMap := map[int]string{}
 	deadline := time.Now().Add(-10 * time.Minute)
-	_, err = monitor.createViolation(ctx, ticket, "response_time", deadline, slaDefMap)
+	_, err = monitor.createViolation(ctx, ticket, "response_time", deadline, 0, slaDefMap)
 	require.NoError(t, err)
 
 	violations, err := client.SLAViolation.Query().
