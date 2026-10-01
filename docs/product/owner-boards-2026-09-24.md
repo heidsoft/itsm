@@ -459,7 +459,7 @@ ls itsm-frontend/src/app/admin/approval-chains/page.tsx  # 只读历史
 
 **截止**：T+1 周
 **协作**：product（决策权）
-**关联决策**：D-2（[决策对话](../../output/decision-memo-2026-09-23.md) 我的倾向 A 改契约允许多）
+**关联决策**：D-2（[决策对话](./decision-dialogue-2026-09-24.md) 我的倾向 A 改契约允许多）
 
 #### Verification（可执行步骤）
 
@@ -552,7 +552,7 @@ curl -X POST http://localhost:8090/api/v1/connectors/dingtalk/inbound \
 
 **截止**：2026-10-31（waiver 销账）
 **协作**：product（决策权）
-**关联决策**：D-W1（[决策对话](../../output/decision-memo-2026-09-23.md) 我的倾向 A README → Pilot）
+**关联决策**：D-W1（[决策对话](./decision-dialogue-2026-09-24.md) 我的倾向 A README → Pilot）
 
 #### Verification（可执行步骤）
 
@@ -800,8 +800,8 @@ ls docker-compose.prod.yml | xargs grep -E "itsm-ai-service|itsm-rag"
 |---|---|---|
 | 业务快照 | [business-snapshot-2026-09-24.md](./business-snapshot-2026-09-24.md) | §4 优先级看板的"按 owner 拆分版" |
 | 决策对话 | [decision-dialogue-2026-09-24.md](./decision-dialogue-2026-09-24.md) | 4 项决策的完整论证（@product 决策权） |
-| 全局 P0 看板 | [global-p0-2026-09-16.md](../../output/global-p0-2026-09-16.md) | 35 条历史项的完整列表 |
-| 决策备忘（简版） | [decision-memo-2026-09-23.md](../../output/decision-memo-2026-09-23.md) | "我的倾向 + 简略理由" |
+| 全局 P0 看板 | `output/global-p0-2026-09-16.md`（本地工作稿） | 35 条历史项的完整列表 |
+| 决策备忘（简版） | `output/decision-memo-2026-09-23.md`（本地工作稿） | "我的倾向 + 简略理由" |
 
 ---
 

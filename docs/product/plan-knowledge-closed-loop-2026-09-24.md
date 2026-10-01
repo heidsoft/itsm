@@ -417,7 +417,7 @@ Week 12    集成测试 + 文档同步 + v1.7 启动
 | [业务快照 §4.2](./business-snapshot-2026-09-24.md#42--p1-本季度v17-启动后必做) | 优先级来源 |
 | [商业能力契约 §链路 B](./itsm-commercial-capability-contract.md#链路-b重复事件到问题知识) | 主链路定义 |
 | [领域所有权 §Problem / Known Error / Knowledge](../architecture/domain-ownership.md) | 各域迁移状态 |
-| [itsm-rag README](../../itsm-rag/README.md) | RAG 服务接口 |
+| `itsm-rag/README.md`（本地独立目录，未纳入本仓库版本控制） | RAG 服务接口 |
 
 ---
 

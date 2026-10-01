@@ -2,7 +2,7 @@
 
 > 目标：**不写新功能，只做三件事** —— 把 CI 从红变绿、把 9 个"预览"做成真的能用、把数据模型的硬伤补上。
 > （原目标中的"把菜单里的空壳清掉"已撤销 —— 复核后真实空壳为 0，见 §1.5。）
-> 输入：[output/product-scope-convergence-2026-09-28.md](./../output/product-scope-convergence-2026-09-28.md)（盘点与 STOP/FIX/KEEP）
+> 输入：`output/product-scope-convergence-2026-09-28.md`（本地工作稿，`output/` 未纳入版本控制；盘点与 STOP/FIX/KEEP）
 > 执行纪律：分批次推进，**每批跑测试 + `git diff` 核对后再提交**；失败先用 `git stash` 判定是否自引入。
 
 ---

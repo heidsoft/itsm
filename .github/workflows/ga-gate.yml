@@ -36,10 +36,10 @@ jobs:
     env:
       DEPLOYMENT_MODE: private
       COMPOSE_PROJECT_NAME: ga-gate-${{ github.run_id }}-${{ github.run_attempt }}
-      # Disposable fixture only: docker-compose.dev.yml pins ADMIN_PASSWORD=admin123.
+      # 开发环境一次性夹具（不得用于生产）：docker-compose.dev.yml pins ADMIN_PASSWORD=admin123.
       ITSM_ADMIN_USER: admin
-      ITSM_ADMIN_PASS: admin123
-      E2E_ADMIN_PASSWORD: admin123
+      ITSM_ADMIN_PASS: admin123 # 开发环境一次性夹具，不得用于生产
+      E2E_ADMIN_PASSWORD: admin123 # 开发环境一次性夹具，不得用于生产
       ITSM_E2E_ISOLATED_STACK: '1'
       PLAYWRIGHT_BASE_URL: http://localhost:3000
       MAX_RETRIES: '120'

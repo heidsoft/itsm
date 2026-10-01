@@ -3,7 +3,7 @@
 > **受众**：齐活林
 > **目的**：把 [业务快照 §5](./business-snapshot-2026-09-24.md#5-决策清单等待对齐--齐活林) 的 4 项决策展开为**可拍板级**详细论证；每项给出**明确单一选择**（A 或 B 或 C）+ **详细根因分析** + **实施路线** + **验收**
 > **紧急度**：D-1 拍板后立即启动 1-2 周工程；D-W1 / D-W2 在 2026-10-31 前必须销账（否则 Gate C.6 反向 FAIL）；D-2 在 1 周内拍板
-> **关联**：本文是业务快照 §5 的"详写版"，与 [decision-memo-2026-09-23.md](../../output/decision-memo-2026-09-23.md) 互补——memo 是"我的简略倾向"，本文是"完整论证 + 可执行"
+> **关联**：本文是业务快照 §5 的"详写版"，与 `output/decision-memo-2026-09-23.md`（本地工作稿，未纳入版本控制）互补——memo 是"我的简略倾向"，本文是"完整论证 + 可执行"
 
 ---
 
@@ -374,7 +374,7 @@
 
 **期望回应方式**（任选其一）：
 - 在本文档对应决策段做 diff 标注（类似 code review）
-- 直接回 [decision-memo-2026-09-23.md](../../output/decision-memo-2026-09-23.md) 修订
+- 直接回 `output/decision-memo-2026-09-23.md`（本地工作稿）修订
 - 或开 GitHub PR：`docs(product/decision-dialogue): D-1/D-W1/D-W2/D-2 决策批准`，把批准的选项作为 PR 主体
 
 ---
@@ -395,8 +395,8 @@
 | 文档 | 路径 | 关系 |
 |---|---|---|
 | 业务快照 | [business-snapshot-2026-09-24.md](./business-snapshot-2026-09-24.md) | §5 决策清单的"详写来源" |
-| 决策备忘（简版） | [decision-memo-2026-09-23.md](../../output/decision-memo-2026-09-23.md) | "我的倾向 + 简略理由" |
-| 漂移审计 | [product-drift-overdesign-audit-2026-09-22.md](../../output/product-drift-overdesign-audit-2026-09-22.md) | D-1 / D-W1 / D-W2 / D-2 的代码事实来源 |
+| 决策备忘（简版） | `output/decision-memo-2026-09-23.md`（本地工作稿） | "我的倾向 + 简略理由" |
+| 漂移审计 | `output/product-drift-overdesign-audit-2026-09-22.md`（本地工作稿） | D-1 / D-W1 / D-W2 / D-2 的代码事实来源 |
 | 商业契约 | [itsm-commercial-capability-contract.md](./itsm-commercial-capability-contract.md) | CONSTRAINTS#3 + NON-GOALS 修改对象 |
 | 产品口径守卫 | [check-product-drift.sh](../../scripts/docs-gate/check-product-drift.sh) | 10-31 反向 FAIL 触发机制 |
 | Waiver 登记 | [product-drift-waivers.txt](../../scripts/docs-gate/product-drift-waivers.txt) | 5 项 waiver 当前状态 |
