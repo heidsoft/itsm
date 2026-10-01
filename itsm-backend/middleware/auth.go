@@ -20,6 +20,17 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// 会话凭证的唯一定义：cookie 名称与两类 token 的生命周期。
+// 设置 cookie、读取回退、Max-Age 和 expiresIn 都必须从这里派生；
+// 之前 handler 与 service 各自硬编码 900/604800/“access_token”，改一处就会让
+// 浏览器凭证和服务端校验窗口悄悄分叉。
+const (
+	AccessTokenCookie  = "access_token"
+	RefreshTokenCookie = "refresh_token"
+	AccessTokenTTL     = 15 * time.Minute
+	RefreshTokenTTL    = 7 * 24 * time.Hour
+)
+
 // ValidateAccessToken 验证 access token 并返回声明。
 func ValidateAccessToken(tokenString, jwtSecret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -119,7 +130,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// 如果没有 Authorization header，尝试从 cookie 中获取 (支持 httpOnly cookie)
 		if authHeader == "" {
-			if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
+			if cookieToken, err := c.Cookie(AccessTokenCookie); err == nil && cookieToken != "" {
 				authHeader = "Bearer " + cookieToken
 				zap.S().Infow(
 					"AuthMiddleware: using token from cookie",
@@ -232,7 +243,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 			// P1-2 修复：用户角色变更/停用/改密后，其存量 access token 需立即失效。
 			// 比对 token 签发时间与该用户的最低可接受签发时间（MinIssuedAt）。
-			store := currentAccessTokenRevocationStore()
+			store := currentTokenRevocationStore()
 			minIAT, minIATErr := store.MinIssuedAt(c.Request.Context(), claims.UserID)
 			if minIATErr != nil {
 				// 查询失败按安全默认拒绝（fail-closed），与吊销检查语义一致。

@@ -80,13 +80,14 @@ Content-Type: application/json
 
 **响应示例:**
 
-登录和刷新接口不再在 JSON 响应中返回令牌，改为通过 HttpOnly cookie 下发（`access_token` 15 分钟，`refresh_token` 7 天）。前端只需读取 `user` 上下文。
+登录和刷新接口不再在 JSON 响应中返回令牌，改为通过 HttpOnly cookie 下发（`access_token` 15 分钟，`refresh_token` 7 天）。`expiresIn` 是服务端时钟给出的 access token 剩余秒数，前端据此安排续签，不得用浏览器时间推算。
 
 ```json
 {
   "code": 0,
   "message": "success",
   "data": {
+    "expiresIn": 900,
     "user": {
       "id": 1,
       "username": "admin",
@@ -103,19 +104,43 @@ Content-Type: application/json
 
 ```http
 POST /auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
-}
 ```
+
+浏览器端以空 body 调用，后端回退读取 `refresh_token` httpOnly cookie（也接受 `{"refreshToken": "..."}`，供非浏览器调用方）。
+
+**refresh token 单次使用**：每次续签原子认领旧凭证并下发新凭证，重放旧值返回 `401`（业务码 2001）。并发续签中只有第一个请求能完成 rotation。
 
 ### 登出
 
 ```http
 POST /auth/logout
-Authorization: Bearer <accessToken>
 ```
+
+**不需要认证凭证。** access token 过期（15 分钟）后仍必须能登出，否则 7 天的 `refresh_token` cookie 会留在浏览器里把会话自动续签回来。登出先无条件清除两类 cookie，再吊销请求中携带的 access/refresh token；吊销存储故障时返回 `503`（业务码 5003）并说明凭证已清除、服务端吊销未完成。重复登出幂等返回成功。
+
+### 当前会话
+
+```http
+GET /auth/session
+```
+
+前端唯一的「是否已登录」真相：身份、可切换租户与服务端剩余有效期。前端不得再从 `document.cookie`、JWT 形状或持久化 store 推断登录态。
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "user": { "id": 1, "username": "admin", "role": "admin", "tenantId": 1 },
+    "tenants": [
+      { "id": 1, "name": "默认租户", "code": "default", "type": "standard", "status": "active" }
+    ],
+    "expiresIn": 847
+  }
+}
+```
+
+未携带有效凭证时返回 `401`（业务码 2001）。响应中不含任何令牌值。
 
 ### 注册
 

@@ -20,7 +20,11 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 		{
 			authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)
 			authGrp.GET("/tenants", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetUserTenants)
-			authGrp.POST("/logout", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.Logout)
+			// 会话真相唯一入口：身份 + 可切换租户 + 服务端时钟给出的剩余有效期。
+			authGrp.GET("/session", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetSession)
+			// 登出刻意不挂 AuthMiddleware：access token 过期（15 分钟）后前端仍必须能
+			// 清掉 7 天的 refresh cookie，否则旧会话会被自动续签「复活」。
+			authGrp.POST("/logout", config.CommonHandler.Logout)
 			if config.AuthHandler != nil {
 				authGrp.POST("/switch-tenant", middleware.AuthMiddleware(config.JWTSecret), config.AuthHandler.SwitchTenant)
 			}

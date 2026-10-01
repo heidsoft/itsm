@@ -195,6 +195,33 @@ cd itsm-backend && go test ./handlers/incident/... -run 'TestList_CanonicalEnvel
 cd itsm-backend && go test ./handlers/knowledge/... -run TestListArticles_CanonicalEnvelope
 ```
 
+### 1.9 会话真相统一到后端（2026-10-02，破坏性：续签与登出语义）
+
+三处对外行为变化，API 集成方与自研客户端必须适配：
+
+1. **`POST /api/v1/auth/logout` 不再要求认证凭证。** 此前它挂在鉴权中间件之后，access token
+   过期（15 分钟）后必然 401，浏览器留下 7 天的 `refresh_token` cookie 被自动续签，登出形同失效。
+   现在无条件清除两类 cookie 并吊销请求中携带的 access/refresh token；吊销存储不可用时返回
+   HTTP 503 / 业务码 5003（`会话凭证已清除，但服务端吊销未完成`），重复登出幂等返回 200。
+2. **refresh token 改为单次使用（含未配置 Redis 的部署）。** 每次
+   `POST /api/v1/auth/refresh` 原子认领旧凭证并下发新凭证，重放旧值返回 401 / 业务码 2001。
+   旧版本只有配置了 Redis 才生效，`REDIS_HOST` 为空时黑名单检查被静默跳过，同一枚 refresh token
+   可无限重放。客户端必须持久化**新签发的 cookie**而不是继续复用旧值；多副本部署若要吊销状态
+   跨副本共享，必须配置 `REDIS_HOST`（未配置时启动日志会显式告警，吊销仅覆盖处理该请求的副本）。
+3. **改密/停用/降权现在真正吊销存量 refresh token。** 此前该路径调用从未被装配构造的
+   `TokenBlacklistService`，属于死代码；`MinIssuedAt` 的 TTL 也只有 1 小时，短于 7 天 refresh
+   生命周期。现在 TTL 为 8 天且刷新链路会消费该约束。
+
+**新增端点**：`GET /api/v1/auth/session` → `{user, tenants, expiresIn}`，前端唯一的会话真相来源；
+`POST /api/v1/auth/login` 与 refresh 响应新增 `expiresIn`（服务端时钟的 access token 剩余秒数）。
+令牌值仍只在 HttpOnly cookie 中，响应体不返回。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/... -run TestSetupRoutes_\(AuthCookieOnlyResponses\|SessionTruthAndLogout\)
+cd itsm-backend && go test ./middleware/... -run 'TokenRevocation|InvalidateUserTokens'
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -375,7 +375,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 			update = update.SetRole(user.Role(role))
 			// P1-2 修复：角色变更后立即吊销该用户全部存量 access token，
 			// 防止旧角色权限在 token 有效期内（15 分钟）继续生效。
-			if err := middleware.InvalidateUserAccessTokens(ctx, id, time.Now()); err != nil {
+			if err := middleware.InvalidateUserTokens(ctx, id, time.Now()); err != nil {
 				// 吊销失败不阻断角色变更本身，但必须记录：降权延迟窗口存在安全影响。
 				s.logger.Errorw("用户角色变更后吊销存量token失败（降权延迟风险）",
 					"user_id", id, "old_role", existingUser.Role, "new_role", role, "error", err)
@@ -397,7 +397,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 			return nil, fmt.Errorf("替换用户角色边失败: %w", err)
 		}
 		// 角色集合变更影响权限，与主角色变更同语义：吊销存量 token。
-		if err := middleware.InvalidateUserAccessTokens(ctx, id, time.Now()); err != nil {
+		if err := middleware.InvalidateUserTokens(ctx, id, time.Now()); err != nil {
 			s.logger.Errorw("用户多角色变更后吊销存量token失败（降权延迟风险）",
 				"user_id", id, "role_ids", req.RoleIDs, "error", err)
 		}
@@ -456,7 +456,7 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 
 	// 停用账户时立即吊销其全部存量 access token（P1-2 延伸：停用不应等 token 自然过期）。
 	if !active {
-		if revokeErr := middleware.InvalidateUserAccessTokens(ctx, id, time.Now()); revokeErr != nil {
+		if revokeErr := middleware.InvalidateUserTokens(ctx, id, time.Now()); revokeErr != nil {
 			s.logger.Errorw("停用用户后吊销存量token失败", "user_id", id, "error", revokeErr)
 		} else {
 			s.logger.Infow("用户已停用，存量access token已吊销", "user_id", id)
@@ -495,7 +495,7 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	}
 
 	// 密码重置后立即吊销该用户全部存量 access token（防旧会话存活）。
-	if revokeErr := middleware.InvalidateUserAccessTokens(ctx, id, time.Now()); revokeErr != nil {
+	if revokeErr := middleware.InvalidateUserTokens(ctx, id, time.Now()); revokeErr != nil {
 		s.logger.Errorw("密码重置后吊销存量token失败", "user_id", id, "error", revokeErr)
 	}
 

@@ -22,16 +22,15 @@ import (
 )
 
 type Service struct {
-	client         *ent.Client
-	jwtSecret      string
-	logger         *zap.SugaredLogger
-	tokenBlacklist *service.TokenBlacklistService
-	emailService   *service.EmailService
-	baseURL        string
+	client       *ent.Client
+	jwtSecret    string
+	logger       *zap.SugaredLogger
+	emailService *service.EmailService
+	baseURL      string
 }
 
-func NewService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger, tokenBlacklist *service.TokenBlacklistService) *Service {
-	return &Service{client: client, jwtSecret: jwtSecret, logger: logger, tokenBlacklist: tokenBlacklist, baseURL: "http://localhost:3000"}
+func NewService(client *ent.Client, jwtSecret string, logger *zap.SugaredLogger) *Service {
+	return &Service{client: client, jwtSecret: jwtSecret, logger: logger, baseURL: "http://localhost:3000"}
 }
 
 func (s *Service) SetEmailService(emailService *service.EmailService) { s.emailService = emailService }
@@ -97,11 +96,11 @@ func (s *Service) SwitchTenant(ctx context.Context, userID, tenantID int) (*dto.
 	if !tenantEntity.ExpiresAt.IsZero() && tenantEntity.ExpiresAt.Before(time.Now()) {
 		return nil, fmt.Errorf("租户已过期")
 	}
-	accessToken, err := middleware.GenerateAccessToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, 15*time.Minute)
+	accessToken, err := middleware.GenerateAccessToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, middleware.AccessTokenTTL)
 	if err != nil {
 		return nil, fmt.Errorf("生成token失败")
 	}
-	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, 7*24*time.Hour)
+	refreshToken, err := middleware.GenerateRefreshToken(userEntity.ID, userEntity.Username, string(userEntity.Role), tenantID, s.jwtSecret, middleware.RefreshTokenTTL)
 	if err != nil {
 		return nil, fmt.Errorf("生成刷新令牌失败")
 	}
@@ -212,8 +211,11 @@ func (s *Service) ResetPassword(ctx context.Context, req *dto.PasswordResetReque
 	if err = tx.Commit(); err != nil {
 		return nil, fmt.Errorf("提交密码重置失败")
 	}
-	if s.tokenBlacklist != nil {
-		_ = s.tokenBlacklist.RevokeUserTokens(ctx, tokenEntity.UserID)
+	if err := middleware.InvalidateUserTokens(ctx, tokenEntity.UserID, time.Now()); err != nil {
+		// 改密后旧会话应立即失效。密码已写入，回滚更糟，所以只记录：
+		// 吊销存储故障时旧 token 仍可用，属于必须告警的安全延迟。
+		s.logger.Errorw("failed to invalidate tokens after password reset",
+			"user_id", tokenEntity.UserID, "error", err)
 	}
 	return &dto.PasswordResetResponse{Message: "密码重置成功，请使用新密码登录"}, nil
 }

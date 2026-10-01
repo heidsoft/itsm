@@ -8,6 +8,64 @@ definitions:
       message:
         type: string
     type: object
+  common.SessionResponse:
+    properties:
+      expiresIn:
+        type: integer
+      tenants:
+        items:
+          $ref: '#/definitions/common.TenantBrief'
+        type: array
+      user:
+        $ref: '#/definitions/common.User'
+    type: object
+  common.TenantBrief:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  common.User:
+    properties:
+      active:
+        type: boolean
+      createdAt:
+        type: string
+      department:
+        type: string
+      departmentId:
+        type: integer
+      email:
+        type: string
+      id:
+        type: integer
+      mspRole:
+        type: string
+      name:
+        type: string
+      permissions:
+        description: 用户权限列表
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      role:
+        type: string
+      tenantId:
+        type: integer
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
   dto.AddCITagsRequest:
     properties:
       tagIds:
@@ -4710,6 +4768,30 @@ paths:
       summary: 列出审计日志
       tags:
       - AuditLogs
+  /api/v1/auth/session:
+    get:
+      description: 返回认证用户身份、可切换租户列表，以及服务端时钟计算的 access token 剩余秒数
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/common.SessionResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取当前会话
+      tags:
+      - 认证
   /api/v1/bpmn/ai/generate:
     post:
       consumes:

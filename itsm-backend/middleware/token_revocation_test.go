@@ -13,9 +13,9 @@ import (
 
 func TestAuthMiddlewareRejectsRevokedAccessToken(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	original := currentAccessTokenRevocationStore()
-	setAccessTokenRevocationStore(newMemoryAccessTokenRevocationStore())
-	t.Cleanup(func() { setAccessTokenRevocationStore(original) })
+	original := currentTokenRevocationStore()
+	setTokenRevocationStore(newMemoryTokenRevocationStore())
+	t.Cleanup(func() { setTokenRevocationStore(original) })
 
 	const secret = "token-revocation-test-secret"
 	token, err := GenerateAccessToken(7, "operator", "admin", 3, secret, time.Hour)

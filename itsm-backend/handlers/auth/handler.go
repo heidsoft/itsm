@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -94,11 +95,17 @@ func (h *Handler) SwitchTenant(c *gin.Context) {
 	common.Success(c, response)
 }
 
+// authCookieAttrs 返回会话 cookie 的属性。名称与生命周期必须与 handlers/common
+// 设置凭证时同源，否则同一个浏览器会被两条链路写入不同 Max-Age 的同名 cookie。
+func authCookieAttrs(c *gin.Context) (domain string, secure bool) {
+	return "", c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
+}
+
 func setAuthCookies(c *gin.Context, accessToken, refreshToken string) {
+	domain, secure := authCookieAttrs(c)
 	c.SetSameSite(http.SameSiteLaxMode)
-	secure := c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
-	c.SetCookie("access_token", accessToken, 900, "/", "", secure, true)
+	c.SetCookie(middleware.AccessTokenCookie, accessToken, int(middleware.AccessTokenTTL.Seconds()), "/", domain, secure, true)
 	if refreshToken != "" {
-		c.SetCookie("refresh_token", refreshToken, 604800, "/", "", secure, true)
+		c.SetCookie(middleware.RefreshTokenCookie, refreshToken, int(middleware.RefreshTokenTTL.Seconds()), "/", domain, secure, true)
 	}
 }

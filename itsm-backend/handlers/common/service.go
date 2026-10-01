@@ -3,14 +3,12 @@ package common
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"itsm-backend/ent"
 	enttenant "itsm-backend/ent/tenant"
 	entuser "itsm-backend/ent/user"
 	"itsm-backend/middleware"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,7 +18,6 @@ type Service struct {
 	jwtSecret string
 	logger    *zap.SugaredLogger
 	client    *ent.Client // For legacy integrations if needed
-	redis     *redis.Client
 }
 
 func NewService(repo Repository, jwtSecret string, logger *zap.SugaredLogger, client *ent.Client) *Service {
@@ -30,35 +27,6 @@ func NewService(repo Repository, jwtSecret string, logger *zap.SugaredLogger, cl
 		logger:    logger,
 		client:    client,
 	}
-}
-
-// SetRedis 注入 Redis 客户端；启用 refresh token 黑名单（token rotation 后旧值失效）
-func (s *Service) SetRedis(r *redis.Client) {
-	s.redis = r
-}
-
-// refreshBlacklistKey Redis key for refresh token blacklist
-func refreshBlacklistKey(token string) string { return "refresh:blacklist:" + token }
-
-// blacklistRefreshToken 将 refresh token 加入黑名单，TTL = 剩余有效期
-func (s *Service) blacklistRefreshToken(ctx context.Context, token string, expiresAt time.Time) error {
-	if s.redis == nil {
-		return nil // 未注入 redis：降级为无黑名单（记 warn 由调用方处理）
-	}
-	ttl := time.Until(expiresAt)
-	if ttl <= 0 {
-		return nil
-	}
-	return s.redis.Set(ctx, refreshBlacklistKey(token), "1", ttl).Err()
-}
-
-// isRefreshBlacklisted 检查 refresh token 是否已拉黑
-func (s *Service) isRefreshBlacklisted(ctx context.Context, token string) (bool, error) {
-	if s.redis == nil {
-		return false, nil
-	}
-	n, err := s.redis.Exists(ctx, refreshBlacklistKey(token)).Result()
-	return n > 0, err
 }
 
 // Auth
@@ -148,12 +116,12 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 	}
 
 	// Generate tokens
-	accessToken, err := middleware.GenerateAccessToken(u.ID, u.Username, u.Role, u.TenantID, s.jwtSecret, 15*time.Minute)
+	accessToken, err := middleware.GenerateAccessToken(u.ID, u.Username, u.Role, u.TenantID, s.jwtSecret, middleware.AccessTokenTTL)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := middleware.GenerateRefreshToken(u.ID, u.Username, u.Role, u.TenantID, s.jwtSecret, 7*24*time.Hour)
+	refreshToken, err := middleware.GenerateRefreshToken(u.ID, u.Username, u.Role, u.TenantID, s.jwtSecret, middleware.RefreshTokenTTL)
 	if err != nil {
 		return nil, err
 	}
@@ -165,6 +133,7 @@ func (s *Service) Login(ctx context.Context, username, password string, tenantID
 	return &AuthResult{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		ExpiresIn:    int(middleware.AccessTokenTTL.Seconds()),
 		User:         u,
 	}, nil
 }
@@ -174,42 +143,69 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*AuthR
 	if err != nil {
 		return nil, fmt.Errorf("invalid refresh token")
 	}
+	if claims.ExpiresAt == nil || claims.IssuedAt == nil {
+		return nil, fmt.Errorf("invalid refresh token")
+	}
 
-	// 黑名单检查：token rotation 后旧值不允许再使用
-	if blacklisted, chkErr := s.isRefreshBlacklisted(ctx, refreshToken); chkErr != nil {
-		s.logger.Warnw("refresh blacklist check failed, deny by default", "error", chkErr)
+	// 吊销状态只有一份真相（middleware 的共享存储）：无 Redis 时退化为进程内存储，
+	// 但绝不再静默跳过检查——那会让单副本部署的旧 refresh token 可以无限重放。
+	revoked, err := middleware.IsRefreshTokenRevoked(ctx, refreshToken)
+	if err != nil {
+		s.logger.Errorw("refresh token revocation check failed, deny by default", "user_id", claims.UserID, "error", err)
 		return nil, fmt.Errorf("refresh token validation failed")
-	} else if blacklisted {
+	}
+	if revoked {
 		s.logger.Warnw("refresh token replay detected", "user_id", claims.UserID)
 		return nil, fmt.Errorf("refresh token has been revoked")
+	}
+
+	// 改密/停用/降权后的签发约束同样适用于 refresh token，否则 7 天凭证可以绕过重新登录。
+	minIAT, err := middleware.UserTokenMinIssuedAt(ctx, claims.UserID)
+	if err != nil {
+		s.logger.Errorw("refresh token min issued-at check failed, deny by default", "user_id", claims.UserID, "error", err)
+		return nil, fmt.Errorf("refresh token validation failed")
+	}
+	if !minIAT.IsZero() && claims.IssuedAt.Time.Before(minIAT) {
+		s.logger.Warnw("refresh token issued before account change, rejected",
+			"user_id", claims.UserID, "issued_at", claims.IssuedAt.Time, "min_issued_at", minIAT)
+		return nil, fmt.Errorf("账号信息已变更，请重新登录")
 	}
 
 	user, err := s.repo.GetUserByID(ctx, claims.UserID, claims.TenantID)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
 	}
+	if !user.Active {
+		return nil, fmt.Errorf("user account is inactive")
+	}
+
+	// 原子认领旧 token：并发续签里只有第一个请求能完成 rotation，
+	// 第二个即使拿着同一个 token 也只能失败。
+	claimed, err := middleware.RevokeRefreshToken(ctx, refreshToken, claims.ExpiresAt.Time)
+	if err != nil {
+		s.logger.Errorw("failed to revoke old refresh token during rotation", "user_id", user.ID, "error", err)
+		return nil, fmt.Errorf("refresh token revocation unavailable")
+	}
+	if !claimed {
+		s.logger.Warnw("refresh token rotation race detected", "user_id", user.ID)
+		return nil, fmt.Errorf("refresh token has been revoked")
+	}
 
 	// regenerate tokens
-	accessToken, err := middleware.GenerateAccessToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, 15*time.Minute)
+	accessToken, err := middleware.GenerateAccessToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, middleware.AccessTokenTTL)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefresh, err := middleware.GenerateRefreshToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, 7*24*time.Hour)
+	newRefresh, err := middleware.GenerateRefreshToken(user.ID, user.Username, user.Role, user.TenantID, s.jwtSecret, middleware.RefreshTokenTTL)
 	if err != nil {
 		return nil, err
-	}
-
-	// 拉黑旧 refresh token，TTL = 剩余有效期
-	if claims.ExpiresAt != nil {
-		if bErr := s.blacklistRefreshToken(ctx, refreshToken, claims.ExpiresAt.Time); bErr != nil {
-			s.logger.Warnw("failed to blacklist old refresh token", "user_id", user.ID, "error", bErr)
-		}
 	}
 
 	return &AuthResult{
 		AccessToken:  accessToken,
 		RefreshToken: newRefresh,
+		ExpiresIn:    int(middleware.AccessTokenTTL.Seconds()),
 		User:         user,
 	}, nil
 }
@@ -305,8 +301,8 @@ func (s *Service) GetAuditLogs(ctx context.Context, tenantID int, userID int) ([
 	return s.repo.ListAuditLogs(ctx, tenantID, userID, 100)
 }
 
-// GetUserTenants 获取用户所属的租户列表
-func (s *Service) GetUserTenants(ctx context.Context, userID int) ([]interface{}, error) {
+// GetUserTenants 获取用户可访问的租户列表。
+func (s *Service) GetUserTenants(ctx context.Context, userID int) ([]TenantBrief, error) {
 	// 直接使用 ent client 查询用户关联的租户
 	user, err := s.client.User.Get(ctx, userID)
 	if err != nil {
@@ -319,17 +315,30 @@ func (s *Service) GetUserTenants(ctx context.Context, userID int) ([]interface{}
 		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
-	if tenant == nil {
-		return []interface{}{}, nil
-	}
+	return []TenantBrief{{
+		ID:     tenant.ID,
+		Name:   tenant.Name,
+		Code:   tenant.Code,
+		Type:   string(tenant.Type),
+		Status: tenant.Status,
+	}}, nil
+}
 
-	return []interface{}{
-		map[string]interface{}{
-			"id":     tenant.ID,
-			"name":   tenant.Name,
-			"code":   tenant.Code,
-			"type":   tenant.Type,
-			"status": tenant.Status,
-		},
+// GetSession 组装「当前会话」的唯一后端真相。
+// 身份与权限复用 GetUser，避免前端再拼第二个探活请求；accessExpiresIn 由调用方
+// 从已认证 token 的服务端签发时间给出，禁止前端用浏览器时钟推算。
+func (s *Service) GetSession(ctx context.Context, userID int, tenantID int, accessExpiresIn int) (*SessionResponse, error) {
+	u, err := s.GetUser(ctx, userID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	tenants, err := s.GetUserTenants(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &SessionResponse{
+		User:      u,
+		Tenants:   tenants,
+		ExpiresIn: accessExpiresIn,
 	}, nil
 }

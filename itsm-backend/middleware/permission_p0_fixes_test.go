@@ -8,7 +8,7 @@ import (
 
 // P1-2 修复验证：用户级 token 最低签发时间（MinIssuedAt）机制。
 func TestMemoryStore_MinIssuedAt(t *testing.T) {
-	store := newMemoryAccessTokenRevocationStore()
+	store := newMemoryTokenRevocationStore()
 	ctx := context.Background()
 
 	// 初始无约束
@@ -63,17 +63,17 @@ func TestHasResourcePermission_SysadminNotHardcoded(t *testing.T) {
 	}
 }
 
-// InvalidateUserAccessTokens 对外语义：调用后该用户更早签发的 token 全部失效。
-func TestInvalidateUserAccessTokens(t *testing.T) {
-	store := newMemoryAccessTokenRevocationStore()
-	setAccessTokenRevocationStore(store)
-	defer setAccessTokenRevocationStore(newMemoryAccessTokenRevocationStore())
+// InvalidateUserTokens 对外语义：调用后该用户更早签发的 token 全部失效。
+func TestInvalidateUserTokens(t *testing.T) {
+	store := newMemoryTokenRevocationStore()
+	setTokenRevocationStore(store)
+	defer setTokenRevocationStore(newMemoryTokenRevocationStore())
 
 	now := time.Now()
-	if err := InvalidateUserAccessTokens(context.Background(), 7, now); err != nil {
-		t.Fatalf("InvalidateUserAccessTokens failed: %v", err)
+	if err := InvalidateUserTokens(context.Background(), 7, now); err != nil {
+		t.Fatalf("InvalidateUserTokens failed: %v", err)
 	}
-	minIAT, err := currentAccessTokenRevocationStore().MinIssuedAt(context.Background(), 7)
+	minIAT, err := currentTokenRevocationStore().MinIssuedAt(context.Background(), 7)
 	if err != nil || minIAT.IsZero() {
 		t.Fatalf("应已设置最低签发时间, got %v err %v", minIAT, err)
 	}

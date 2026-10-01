@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/middleware"
@@ -33,6 +34,45 @@ func cookieDomain(_ *gin.Context) string {
 	return ""
 }
 
+// setSessionCookies 写入服务端签发的凭证。Max-Age 全部从 middleware 的 TTL 常量派生，
+// 避免浏览器 cookie 生命周期与服务端校验窗口各自硬编码后分叉。
+func setSessionCookies(c *gin.Context, res *AuthResult) {
+	secure := shouldUseSecureCookies(c)
+	domain := cookieDomain(c)
+	// SameSite=Lax 防止跨站请求携带认证 cookie（CSRF 防护）；Secure 仅在生产 HTTPS 下启用。
+	// 浏览器会拒绝明文 HTTP 上的 Secure cookie，因此本地开发保持 host-only 且不带 Secure。
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(middleware.AccessTokenCookie, res.AccessToken, res.ExpiresIn, "/", domain, secure, true)
+	if res.RefreshToken != "" {
+		c.SetCookie(middleware.RefreshTokenCookie, res.RefreshToken, int(middleware.RefreshTokenTTL.Seconds()), "/", domain, secure, true)
+	}
+}
+
+// clearSessionCookies 无条件清除浏览器凭证。登出的第一步必须成功：吊销存储故障时
+// 先清 cookie 至少保证本浏览器不再自动续签，剩余风险由响应明确暴露。
+func clearSessionCookies(c *gin.Context) {
+	secure := shouldUseSecureCookies(c)
+	domain := cookieDomain(c)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(middleware.AccessTokenCookie, "", -1, "/", domain, secure, true)
+	c.SetCookie(middleware.RefreshTokenCookie, "", -1, "/", domain, secure, true)
+}
+
+// requestAccessToken 取原始 access token。AuthMiddleware 在时读它写入的上下文值；
+// 登出这类不再要求有效凭证的路由回退到 cookie 与 Authorization header。
+func requestAccessToken(c *gin.Context) string {
+	if tok := c.GetString("token"); tok != "" {
+		return tok
+	}
+	if tok, err := c.Cookie(middleware.AccessTokenCookie); err == nil && tok != "" {
+		return tok
+	}
+	if header := c.GetHeader("Authorization"); strings.HasPrefix(header, "Bearer ") {
+		return strings.TrimPrefix(header, "Bearer ")
+	}
+	return ""
+}
+
 // Auth
 
 func (h *Handler) Login(c *gin.Context) {
@@ -54,21 +94,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	secure := shouldUseSecureCookies(c)
-	domain := cookieDomain(c)
-	httpOnly := true
-
-	// Browsers reject Secure cookies over plain HTTP. We keep host-only cookies
-	// without Secure in local development so the same-origin frontend proxy can
-	// persist login state. Production HTTPS requests still get Secure cookies.
-
-	// SameSite=Lax 防止跨站请求携带认证 cookie（CSRF 防护）；Secure 仅在生产 HTTPS 下启用。
-	c.SetSameSite(http.SameSiteLaxMode)
-
-	// Access token: 15分钟
-	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, httpOnly)
-	// Refresh token: 7天
-	c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", domain, secure, httpOnly)
+	setSessionCookies(c, res)
 
 	common.Success(c, res)
 }
@@ -81,7 +107,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	// 此处回退读取 cookie。否则刷新永远 400，access_token(15min) 过期后会话必然丢失。
 	_ = c.ShouldBindJSON(&req)
 	if req.RefreshToken == "" {
-		if cookieToken, err := c.Cookie("refresh_token"); err == nil && cookieToken != "" {
+		if cookieToken, err := c.Cookie(middleware.RefreshTokenCookie); err == nil && cookieToken != "" {
 			req.RefreshToken = cookieToken
 		}
 	}
@@ -96,43 +122,81 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	secure := shouldUseSecureCookies(c)
-	domain := cookieDomain(c)
-
-	// 设置 httpOnly cookies (Secure only on HTTPS requests)
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("access_token", res.AccessToken, 900, "/", domain, secure, true)
-	if res.RefreshToken != "" {
-		c.SetCookie("refresh_token", res.RefreshToken, 604800, "/", domain, secure, true)
-	}
+	setSessionCookies(c, res)
 
 	common.Success(c, res)
 }
 
-// Users
-
-// Logout clears httpOnly auth cookies and returns success.
+// Logout 清除浏览器凭证并吊销本次会话的两类 token。
+// 本路由刻意不挂 AuthMiddleware：access token 过期（15 分钟）恰恰是最常见的登出场景，
+// 若要求有效凭证，登出会 401、7 天的 refresh cookie 原样留在浏览器并把用户重新登录进去。
 func (h *Handler) Logout(c *gin.Context) {
-	token := c.GetString("token")
-	claims, err := middleware.ValidateAccessToken(token, h.svc.jwtSecret)
-	if err != nil || claims.ExpiresAt == nil {
-		common.AuthFailed(c, "token无效")
+	accessTok := requestAccessToken(c)
+	refreshTok, _ := c.Cookie(middleware.RefreshTokenCookie)
+	clearSessionCookies(c)
+
+	ctx := c.Request.Context()
+	var revokeErr error
+	if accessTok != "" {
+		if claims, err := middleware.ValidateAccessToken(accessTok, h.svc.jwtSecret); err == nil && claims.ExpiresAt != nil {
+			if err := middleware.RevokeAccessToken(ctx, accessTok, claims.ExpiresAt.Time); err != nil {
+				revokeErr = err
+			}
+		}
+	}
+	if refreshTok != "" {
+		// refresh token 必须在登出时吊销，否则泄露/遗留的 7 天凭证仍可换新 access token。
+		if claims, err := middleware.ValidateRefreshToken(refreshTok, h.svc.jwtSecret); err == nil && claims.ExpiresAt != nil {
+			if _, err := middleware.RevokeRefreshToken(ctx, refreshTok, claims.ExpiresAt.Time); err != nil {
+				revokeErr = err
+			}
+		}
+	}
+	if revokeErr != nil {
+		h.svc.logger.Errorw("failed to revoke session tokens on logout", "error", revokeErr)
+		common.Fail(c, common.ServiceUnavailableCode, "会话凭证已清除，但服务端吊销未完成；请稍后重试，或由管理端强制下线该账号")
 		return
 	}
-	if err := middleware.RevokeAccessToken(c.Request.Context(), token, claims.ExpiresAt.Time); err != nil {
-		h.svc.logger.Errorw("failed to revoke access token on logout", "error", err)
-		common.InternalError(c, "登出失败")
-		return
-	}
-
-	secure := shouldUseSecureCookies(c)
-	domain := cookieDomain(c)
-
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("access_token", "", -1, "/", domain, secure, true)
-	c.SetCookie("refresh_token", "", -1, "/", domain, secure, true)
 
 	common.Success(c, nil)
+}
+
+// accessTokenRemainingSeconds 返回当前 access token 的剩余有效期（服务端时钟，秒）。
+// 前端据此安排刷新，不再依赖浏览器时间或固定间隔推断会话是否即将过期。
+func (h *Handler) accessTokenRemainingSeconds(c *gin.Context) int {
+	tok := requestAccessToken(c)
+	if tok == "" {
+		return 0
+	}
+	claims, err := middleware.ValidateAccessToken(tok, h.svc.jwtSecret)
+	if err != nil || claims.ExpiresAt == nil {
+		return 0
+	}
+	if remaining := int(time.Until(claims.ExpiresAt.Time).Seconds()); remaining > 0 {
+		return remaining
+	}
+	return 0
+}
+
+// GetSession 返回前端唯一的会话真相。
+// @Summary 获取当前会话
+// @Description 返回认证用户身份、可切换租户列表，以及服务端时钟计算的 access token 剩余秒数
+// @Tags 认证
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response{data=common.SessionResponse}
+// @Failure 401 {object} common.Response
+// @Router /api/v1/auth/session [get]
+func (h *Handler) GetSession(c *gin.Context) {
+	userID := c.GetInt("user_id")
+	tenantID := c.GetInt("tenant_id")
+	res, err := h.svc.GetSession(c.Request.Context(), userID, tenantID, h.accessTokenRemainingSeconds(c))
+	if err != nil {
+		h.svc.logger.Errorw("failed to resolve session identity", "user_id", userID, "error", err)
+		common.AuthFailed(c, "会话不可用，请重新登录")
+		return
+	}
+	common.Success(c, res)
 }
 
 func (h *Handler) GetMe(c *gin.Context) {

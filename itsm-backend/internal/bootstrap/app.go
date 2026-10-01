@@ -986,7 +986,8 @@ func NewApplication() *Application {
 	// Common Domain
 	commonRepo := domainCommon.NewEntRepository(client)
 	commonServiceDomain := domainCommon.NewService(commonRepo, cfg.JWT.Secret, sugar, client)
-	// 注入 Redis 客户端（如果可用），启用 refresh token 黑名单
+	// Token 吊销存储：默认进程内，配置 Redis 后改为跨实例共享。
+	// 未共享时登出/改密只能吊销处理该请求的副本上的凭证，必须留下可观察告警。
 	if cfg.Redis.Host != "" {
 		commonRedis := redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
@@ -995,20 +996,23 @@ func NewApplication() *Application {
 		})
 		pingCtx, pingCancel := context.WithTimeout(context.Background(), 2*time.Second)
 		if err := commonRedis.Ping(pingCtx).Err(); err != nil {
-			sugar.Warnw("common domain redis ping failed; refresh token blacklist disabled", "error", err)
+			sugar.Warnw("token revocation store stays process-local because redis is unreachable; "+
+				"logout/password-reset only invalidate tokens on the replica that handled the request", "error", err)
 		} else {
-			commonServiceDomain.SetRedis(commonRedis)
-			middleware.ConfigureAccessTokenRevocationRedis(commonRedis)
+			middleware.ConfigureTokenRevocationRedis(commonRedis)
 			// Phase 1 P1-4：权限缓存失效跨实例广播（多副本一致性）。
 			middleware.ConfigurePermissionCacheBroadcast(commonRedis)
-			sugar.Info("refresh token blacklist enabled via redis")
+			sugar.Info("token revocation shared across instances via redis")
 		}
 		pingCancel()
+	} else {
+		sugar.Warn("REDIS_HOST is empty: token revocation is process-local; " +
+			"single-token logout/password-reset cannot propagate to other replicas")
 	}
 	commonHandler := domainCommon.NewHandler(commonServiceDomain)
 
 	// Auth handler owns account self-service and tenant session switching.
-	authService := authHandler.NewService(client, cfg.JWT.Secret, sugar, nil)
+	authService := authHandler.NewService(client, cfg.JWT.Secret, sugar)
 	authHTTPHandler := authHandler.NewHandler(authService)
 
 	// Role Handler (in-memory for now)
