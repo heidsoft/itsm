@@ -574,8 +574,14 @@ func (s *Seeder) verifyWorkflowTemplates(ctx context.Context) error {
 			processdefinition.TenantIDEQ(tenantID),
 			processdefinition.IsActiveEQ(true),
 		).Exist(ctx)
-		if err != nil || !exists {
-			return fmt.Errorf("verify process definition %s: exists=%t err=%w", binding.ProcessDefinitionKey, exists, err)
+		if err != nil {
+			return fmt.Errorf("verify process definition %s (tenant %d, binding %s/%s): query failed: %w",
+				binding.ProcessDefinitionKey, tenantID, binding.BusinessType, binding.BusinessSubType, err)
+		}
+		if !exists {
+			return fmt.Errorf("verify process definition %s (tenant %d, binding %s/%s): 没有已部署的 active 流程定义；"+
+				"该绑定引用的 key 必须存在于 service/bpmn/*.bpmn 并由 BPMNTemplateService 部署，否则 workflow-core 组件回滚",
+				binding.ProcessDefinitionKey, tenantID, binding.BusinessType, binding.BusinessSubType)
 		}
 	}
 	return nil

@@ -259,3 +259,52 @@ cd itsm-backend && go test ./handlers/incident/... ./handlers/knowledge/... ./co
 cd itsm-backend && go run github.com/swaggo/swag/cmd/swag init -d . -g main.go -o docs --parseDependency --parseInternal && git diff --exit-code -- docs/
 cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts && npm run type-check
 ```
+
+## 9. 执行记录：流程绑定 key 单一来源 + verify 报错可读化（2026-10-02）
+
+用户排期第 3 项。真实生产入口：`POST /api/v1/departments/:id/init-processes`
+（`router` 注册于 `handlers/bpmn/process_trigger.go:63`，要求 `department:write`）→
+`ProcessTriggerHandler.InitDepartmentProcesses` → `service.ProcessBindingService.InitDepartmentDefaultBindings`。
+
+**实测到的缺陷（修复前）**：同一份「部门类型 → 流程 key」存在三处实现且已漂移——
+`service/bpmn_process_binding_service.go` 的私有 switch（真实入口消费）、
+`service/scenario/scenarios.go` 的部门模板目录、`service/department_process_service.go`
+（`DepartmentProcessService`，零调用方、零测试的重复实现，含第三份 scenario→业务类型映射）。
+三处引用的 11 个 key 中只有 `incident_emergency_flow`、`change_normal_flow`、
+`release_approval_flow` 在 `service/bpmn/*.bpmn` 有载体；其余 8 个
+（`change_emergency_flow`、`release_test_flow`、`change_requirement_flow`、`expense_approval_flow`、
+`budget_approval_flow`、`procurement_flow`、`leave_approval_flow`、`recruitment_approval_flow`）从未存在。
+旧循环对缺失一律 `continue`
+且仍返回 nil，因此财务/HR 部门初始化实际零绑定却提示成功——违反「禁止把未实现伪装成空成功结果」。
+另外两份死清单还带 `tech_review_flow`、`onboarding_approval_flow` 与 operations 的 `standard_change`：
+前两者既无载体也没有登记的业务类型映射，第三条会新增一条与 `change_release` 同 key 的绑定，
+真实入口从来不含它们，故按「对齐现有生产行为」删除，不擅自扩面。
+
+**收敛结果**：
+- 唯一来源 = `service/scenario` 目录，条目补齐 `businessType`/`businessSubType`/`category`，
+  内容与真实入口原行为逐条对齐（未擅自增删场景）。
+- 可用性不再手抄：新增 `service.BuiltinProcessTemplateKeys()`，直接枚举 `go:embed bpmn/*.bpmn`，
+  与 `LoadAndDeployTemplates` 的部署集合同源。
+- 私有 switch 与 `service/department_process_service.go` 删除（`git rm`，254 行零引用重复实现）。
+- `InitDepartmentDefaultBindings` 区分三类跳过：无模板载体 / 有载体但当前租户未部署（IsActive+IsLatest）/
+  已存在绑定。仅「一条未建且未命中已有绑定」时 fail-closed 返回错误并列出缺的 key，重复调用仍幂等。
+- `pkg/seeder/initialization_adapter.go` `verifyWorkflowTemplates`：`err != nil || !exists` 合并分支
+  配 `err=%w` 会打印 `err=%!w(<nil>)`；现拆为查询失败（带 tenant 与 businessType/businessSubType）
+  与定义缺失（说明需要 `service/bpmn/*.bpmn` 载体，否则 workflow-core 回滚）两条。
+
+**守卫**：`service/bpmn_department_bindings_guard_test.go` 对 ready（3）/unready（8）两集合做双向基线
+（补模板或删模板都必须显式改基线），并用 enttest 覆盖四种结果；`service/scenario/scenarios_test.go`
+锁清单形状（业务类型词表封闭、部门内标识唯一、category 与部门类型一致、priority>0、场景已登记）。
+`pkg/seeder/process_bindings_manifest_test.go` 顶部「部门级默认绑定另行处理」的说明已改为指向本守卫。
+
+**待拍板（新增 N4）**：财务/HR/需求变更等场景的产品形态——(a) 为 8 个 key 补独立 BPMN 模板，
+还是 (b) 把 `service_request` 类场景指向已部署的通用 `service_request_flow`（种子清单已用
+`ticket/service_request → service_request_flow`）。本批只做诚实失败，不代替产品决策，因此这些部门
+当前初始化会返回明确的「无 BPMN 载体」错误而不是静默成功。
+
+**验证命令**：
+```bash
+cd itsm-backend && go test ./service/ -run "TestDepartmentProcessCatalog_ReadinessBaseline|TestInitDepartmentDefaultBindings"
+cd itsm-backend && go test ./service/scenario/ ./pkg/seeder/ ./handlers/bpmn/
+cd itsm-backend && ~/go/bin/staticcheck ./service/... ./pkg/seeder/... && ~/go/bin/gofumpt -l service/ pkg/seeder/
+```

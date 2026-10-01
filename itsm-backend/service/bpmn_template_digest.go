@@ -5,8 +5,33 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"sort"
+	"strings"
 )
+
+// BuiltinProcessTemplateKeys returns the process definition keys that can
+// actually be deployed, derived from the embedded BPMN templates (the same set
+// LoadAndDeployTemplates writes into process_definitions). It is the single
+// authority for "does this key have a template carrier"; callers must not
+// maintain a second list of deployable keys.
+func BuiltinProcessTemplateKeys() (map[string]bool, error) {
+	entries, err := fs.ReadDir(bpmnTemplates, "bpmn")
+	if err != nil {
+		return nil, fmt.Errorf("read embedded bpmn templates: %w", err)
+	}
+	keys := make(map[string]bool, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() || filepath.Ext(entry.Name()) != ".bpmn" {
+			continue
+		}
+		keys[strings.TrimSuffix(entry.Name(), ".bpmn")] = true
+	}
+	if len(keys) == 0 {
+		return nil, fmt.Errorf("embedded bpmn templates are empty")
+	}
+	return keys, nil
+}
 
 // EmbeddedBPMNDigest returns a deterministic digest over the embedded BPMN
 // template files. Initialization component checksums include it so editing a

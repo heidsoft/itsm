@@ -12,6 +12,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/service/scenario"
 
 	"github.com/pkg/errors"
 )
@@ -469,17 +470,52 @@ func (s *ProcessBindingService) GetDepartmentBindings(ctx context.Context, tenan
 	return s.QueryBindings(ctx, req)
 }
 
-// InitDepartmentDefaultBindings initializes scenario-specific bindings for a department.
+// InitDepartmentDefaultBindings initializes scenario-specific bindings for a
+// department from the single department process template catalog
+// (service/scenario).
+//
+// 两类跳过都必须可观察，不能伪装成成功：
+//   - 清单里的 key 没有 service/bpmn 模板载体（产品尚未提供该流程）；
+//   - 有载体但当前租户还没部署该流程定义。
+//
+// 只有「一条都没建成、也没有命中已存在绑定」时才返回错误，重复调用仍然幂等。
 func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Context, tenantID, departmentID int, departmentType string) error {
-	bindings := getDepartmentDefaultBindings(departmentType)
-	if len(bindings) == 0 {
+	templates, ok := scenario.GetAllTemplates()[departmentType]
+	if !ok || len(templates) == 0 {
 		return fmt.Errorf("未知部门类型: %s", departmentType)
 	}
 
-	for _, binding := range bindings {
-		binding.TenantID = tenantID
-		binding.DepartmentID = departmentID
-		binding.IsActive = true
+	deployable, err := BuiltinProcessTemplateKeys()
+	if err != nil {
+		return errors.Wrap(err, "读取内置 BPMN 模板清单失败")
+	}
+
+	var (
+		created       int
+		alreadyExists int
+		noTemplate    []string
+		notDeployed   []string
+	)
+
+	for _, tmpl := range templates {
+		if !deployable[tmpl.ProcessKey] {
+			noTemplate = append(noTemplate, describeTemplate(tmpl))
+			continue
+		}
+
+		binding := dto.ProcessBinding{
+			BusinessType:         dto.BusinessType(tmpl.BusinessType),
+			BusinessSubType:      tmpl.BusinessSubType,
+			ProcessDefinitionKey: tmpl.ProcessKey,
+			ProcessVersion:       1,
+			Priority:             tmpl.Priority,
+			Scenario:             string(tmpl.Scenario),
+			Category:             tmpl.Category,
+			Conditions:           tmpl.Conditions,
+			TenantID:             tenantID,
+			DepartmentID:         departmentID,
+			IsActive:             true,
+		}
 
 		exists, err := s.client.ProcessBinding.Query().
 			Where(
@@ -494,6 +530,7 @@ func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Contex
 			return errors.Wrap(err, "检查部门流程绑定失败")
 		}
 		if exists {
+			alreadyExists++
 			continue
 		}
 
@@ -510,44 +547,35 @@ func (s *ProcessBindingService) InitDepartmentDefaultBindings(ctx context.Contex
 			return errors.Wrap(err, "检查流程定义失败")
 		}
 		if !definitionExists {
+			notDeployed = append(notDeployed, describeTemplate(tmpl))
 			continue
 		}
 
-		_, err = s.CreateBinding(ctx, &binding)
-		if err != nil {
+		if _, err = s.CreateBinding(ctx, &binding); err != nil {
 			return errors.Wrap(err, "初始化部门流程绑定失败")
 		}
+		created++
 	}
-	return nil
-}
 
-func getDepartmentDefaultBindings(departmentType string) []dto.ProcessBinding {
-	switch departmentType {
-	case "operations":
-		return []dto.ProcessBinding{
-			{BusinessType: dto.BusinessTypeIncident, BusinessSubType: "alert_p0", ProcessDefinitionKey: "incident_emergency_flow", ProcessVersion: 1, Scenario: "alert_handling", Category: "operations", Priority: 100, Conditions: map[string]interface{}{"severity": "p0"}},
-			{BusinessType: dto.BusinessTypeIncident, BusinessSubType: "alert_p1", ProcessDefinitionKey: "incident_emergency_flow", ProcessVersion: 1, Scenario: "alert_handling", Category: "operations", Priority: 90, Conditions: map[string]interface{}{"severity": "p1"}},
-			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "normal", ProcessDefinitionKey: "change_normal_flow", ProcessVersion: 1, Scenario: "change_release", Category: "operations", Priority: 70},
-			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "emergency", ProcessDefinitionKey: "change_emergency_flow", ProcessVersion: 1, Scenario: "emergency_change", Category: "operations", Priority: 90},
-		}
-	case "rd":
-		return []dto.ProcessBinding{
-			{BusinessType: dto.BusinessTypeRelease, BusinessSubType: "production", ProcessDefinitionKey: "release_approval_flow", ProcessVersion: 1, Scenario: "code_release_prod", Category: "rd", Priority: 90, Conditions: map[string]interface{}{"environment": "production"}},
-			{BusinessType: dto.BusinessTypeRelease, BusinessSubType: "testing", ProcessDefinitionKey: "release_test_flow", ProcessVersion: 1, Scenario: "code_release_test", Category: "rd", Priority: 70, Conditions: map[string]interface{}{"environment": "testing"}},
-			{BusinessType: dto.BusinessTypeChange, BusinessSubType: "requirement", ProcessDefinitionKey: "change_requirement_flow", ProcessVersion: 1, Scenario: "requirement_change", Category: "rd", Priority: 80},
-		}
-	case "finance":
-		return []dto.ProcessBinding{
-			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "expense", ProcessDefinitionKey: "expense_approval_flow", ProcessVersion: 1, Scenario: "expense_approval", Category: "finance", Priority: 80},
-			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "budget", ProcessDefinitionKey: "budget_approval_flow", ProcessVersion: 1, Scenario: "budget_approval", Category: "finance", Priority: 90},
-			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "procurement", ProcessDefinitionKey: "procurement_flow", ProcessVersion: 1, Scenario: "procurement", Category: "finance", Priority: 85},
-		}
-	case "hr":
-		return []dto.ProcessBinding{
-			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "leave", ProcessDefinitionKey: "leave_approval_flow", ProcessVersion: 1, Scenario: "leave_approval", Category: "hr", Priority: 70},
-			{BusinessType: dto.BusinessTypeServiceRequest, BusinessSubType: "recruitment", ProcessDefinitionKey: "recruitment_approval_flow", ProcessVersion: 1, Scenario: "recruitment_approval", Category: "hr", Priority: 80},
-		}
-	default:
+	if created > 0 || alreadyExists > 0 {
 		return nil
 	}
+
+	reasons := make([]string, 0, 2)
+	if len(noTemplate) > 0 {
+		reasons = append(reasons, "无 BPMN 模板载体: "+strings.Join(noTemplate, ", "))
+	}
+	if len(notDeployed) > 0 {
+		reasons = append(reasons, fmt.Sprintf("流程定义未在租户 %d 部署（IsActive+IsLatest）: %s",
+			tenantID, strings.Join(notDeployed, ", ")))
+	}
+	return fmt.Errorf("部门类型 %s 未创建任何流程绑定（%s）；缺载体的场景需先在 service/bpmn 提供同名模板并部署",
+		departmentType, strings.Join(reasons, "；"))
+}
+
+func describeTemplate(tmpl scenario.DepartmentProcessTemplate) string {
+	if tmpl.BusinessSubType == "" {
+		return fmt.Sprintf("%s(%s)", tmpl.ProcessKey, tmpl.BusinessType)
+	}
+	return fmt.Sprintf("%s(%s/%s)", tmpl.ProcessKey, tmpl.BusinessType, tmpl.BusinessSubType)
 }

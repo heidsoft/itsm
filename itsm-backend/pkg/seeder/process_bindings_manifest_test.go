@@ -17,8 +17,9 @@ import (
 // （2026-10-01 清卷全新部署实证：迁移写入的 incident_general_flow、
 // change_emergency_flow、release_test_flow、expense_approval_flow 均无载体）。
 //
-// 部门级默认绑定（service/bpmn_process_binding_service.go
-// getDepartmentDefaultBindings）同样引用了未部署的 key，属于运行期缺陷，另行处理。
+// 部门级默认绑定不再自建第二份 key 清单：service/bpmn_process_binding_service.go
+// 只消费 service/scenario 的唯一目录，可用性由 go:embed bpmn/*.bpmn 实测判定，
+// 见 service/bpmn_department_bindings_guard_test.go 的双向基线。
 func TestBuiltinProcessBindingsHaveDeployableTemplates(t *testing.T) {
 	templateDir := filepath.Join("..", "..", "service", "bpmn")
 	entries, err := os.ReadDir(templateDir)
