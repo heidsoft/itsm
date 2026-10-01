@@ -108,13 +108,51 @@ func TestStripEmbeddedTxControl_RepoMigrationsCleanAfterStrip(t *testing.T) {
 	}
 	assert.Greater(t, count, 0, "expected to scan at least one migration file")
 
-	// 实证危险样本：该文件的 COMMIT;(1507) 之后紧跟 dollar-quoted 函数体，
-	// 体内含 END;（1513）。剥离只能去掉顶层事务控制，函数体必须逐字节保留。
-	aclsRaw, err := os.ReadFile(filepath.Join(dir, "20260501_rbac_endpoint_acls.sql"))
-	require.NoError(t, err)
-	aclsStripped := stripEmbeddedTxControl(string(aclsRaw))
-	assert.Contains(t, aclsStripped, "END;\n$$ LANGUAGE plpgsql;", "function body END; must survive in real repo file")
-	assert.NotContains(t, aclsStripped, "\nCOMMIT;\n", "top-level COMMIT; must be stripped")
+	// 实证危险样本：顶层 COMMIT; 之后紧跟 dollar-quoted 函数体，体内含 END;。剥离只能去掉
+	// 顶层事务控制，函数体必须逐字节保留。原样本取自 20260501_rbac_endpoint_acls.sql
+	// （仓库内唯一带 $$ LANGUAGE plpgsql; 的脚本），2026-10-01 该迁移退役后改用内联夹具，
+	// 并改为扫描仓库内所有仍含 dollar-quoted 体的真实迁移。
+	dangerSample := "BEGIN;\nCREATE TABLE t (id INT);\nCOMMIT;\n" +
+		"CREATE OR REPLACE FUNCTION trg() RETURNS TRIGGER AS $$ BEGIN\nRETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n" +
+		"DO $$ BEGIN\n  IF EXISTS (SELECT 1 FROM t) THEN COMMIT; END IF;\nEND $$;\n"
+	dangerStripped := stripEmbeddedTxControl(dangerSample)
+	assert.Contains(t, dangerStripped, "END;\n$$ LANGUAGE plpgsql;", "dollar-quoted function body must survive in fixture")
+	assert.NotContains(t, dangerStripped, "\nCOMMIT;\n", "top-level COMMIT; must be stripped")
+	assert.Contains(t, dangerStripped, "IF EXISTS (SELECT 1 FROM t) THEN COMMIT; END IF;",
+		"COMMIT; inside a dollar-quoted body must not be touched")
+
+	dollarBodies := 0
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || !strings.HasSuffix(name, ".sql") {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(dir, name))
+		require.NoError(t, err)
+		body := stripSQLCommentLines(string(raw))
+		for _, marker := range []string{"$$", "$body$", "$func$"} {
+			if strings.Contains(body, marker) {
+				dollarBodies++
+				// 剥离后 dollar-quoted 体必须原样存在（体首字符不被破坏）
+				assert.Contains(t, stripEmbeddedTxControl(string(raw)), marker,
+					"%s: dollar-quoted body must survive strip", name)
+				break
+			}
+		}
+	}
+	assert.Greater(t, dollarBodies, 0, "expected at least one repo migration with a dollar-quoted body")
+}
+
+// stripSQLCommentLines 去掉 -- 行注释，避免把注释里对 dollar 标签的说明当成函数体。
+func stripSQLCommentLines(sql string) string {
+	var out []string
+	for _, line := range strings.Split(sql, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "--") {
+			continue
+		}
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
 }
 
 // TestApplyMigration_EmbeddedTxControl 是修复的端到端回归：

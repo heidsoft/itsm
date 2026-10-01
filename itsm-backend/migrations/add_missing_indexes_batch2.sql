@@ -12,7 +12,8 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_approval_records_tenant ON approval_
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_approval_workflows_tenant ON approval_workflows (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_audit_logs_tenant ON audit_logs (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bootstrap_tokens_tenant ON bootstrap_tokens (tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cab_members_tenant ON cab_members (tenant_id);
+-- cab_members 已由 20260921_drop_cab_members_table 退役（2026-10-01 移除该条）：
+-- 本脚本按字典序在 2026* 之后执行，全新安装里该表已被 DROP，索引语句必报 42P01 并中断初始化。
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_change_pi_rs_tenant ON change_pi_rs (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_contracts_tenant ON contracts (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conversations_tenant ON conversations (tenant_id);
@@ -61,9 +62,9 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ticket_views_tenant ON ticket_views 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ticket_workflow_records_tenant ON ticket_workflow_records (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_tenant ON users (tenant_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_vendors_tenant ON vendors (tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_tasks_tenant ON workflow_tasks (tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflow_versions_tenant ON workflow_versions (tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_workflows_tenant ON workflows (tenant_id);
+-- workflow_tasks / workflow_versions / workflows 已由 20260920_drop_legacy_workflow_tables
+-- 退役（2026-10-01 移除这三条）：本脚本按字典序在 2026* 之后执行，全新安装里这些表已被
+-- DROP，逐语句 CONCURRENTLY 路径首错即停，整条初始化被中断。
 
 -- ---- 非租户仅 PK 表：按访问模式补查询列索引 ----
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_application_tags_tag_id ON application_tags (tag_id);

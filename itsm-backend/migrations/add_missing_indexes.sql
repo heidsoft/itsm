@@ -70,12 +70,12 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS knowledge_category_idx ON knowledge_arti
 CREATE INDEX CONCURRENTLY IF NOT EXISTS knowledge_published_idx ON knowledge_articles (is_published)
 WHERE is_published = true;
 -- =====================================================
--- 7. 工作流实例表 (Workflow Instances) 索引优化 - 中优先级
+-- 7. 工作流实例表：本段已删除（2026-10-01）
+--    workflow_instances 是遗留死表，由 20260920_drop_legacy_workflow_tables 退役。
+--    本脚本版本号 "add_missing_indexes" 按字典序排在 2026* 之后，全新安装里先建表再被
+--    DROP，因此这两条 CONCURRENTLY 索引必然报 42P01 并中断初始化（逐语句执行、首错即停）。
+--    BPMN 权威表 process_instances 的索引由 20260920 自身负责。
 -- =====================================================
-CREATE INDEX CONCURRENTLY IF NOT EXISTS wf_instance_tenant_idx ON workflow_instances (tenant_id);
--- 2026-09-08 修正：原列名 ticket_workflow_instances 不存在（脚本笔误致首次执行该条失败）。
--- workflow_instances 实际通过 (entity_type, entity_id) 关联业务对象，按这两个列建组合索引。
-CREATE INDEX CONCURRENTLY IF NOT EXISTS wf_instance_entity_idx ON workflow_instances (entity_type, entity_id);
 -- =====================================================
 -- 8. 审批记录表 (Approval Records) 索引优化 - 中优先级
 -- =====================================================

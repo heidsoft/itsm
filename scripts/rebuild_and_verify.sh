@@ -117,7 +117,7 @@ if [ "$SKIP_BUILD" = "false" ]; then
   bash scripts/build-images.sh "$GIT_SHA" "" backend 2>&1 | tail -5
   bash scripts/build-images.sh "$GIT_SHA" "" frontend 2>&1 | tail -5
   docker tag itsm-backend:$GIT_SHA itsm-backend:latest
-  docker tag itsm-frontend:$GIT_SHA itsm-itsm-frontend:latest
+  docker tag itsm-frontend:$GIT_SHA itsm-frontend:latest
   echo "[ok] backend + frontend images built"
 else
   echo "[skip] --skip-build set"

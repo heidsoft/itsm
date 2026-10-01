@@ -31,39 +31,50 @@ if (!fs.existsSync(SCREENSHOT_ROOT)) {
 const ts = () => new Date().toISOString().replace(/[:.]/g, '-');
 const log = (msg) => console.log(`[${ts()}] ${msg}`);
 
-async function loginViaApi(page) {
-  log(`Login as ${ADMIN_USER}`);
-  const resp = await page.request.post(`${API_URL}/api/v1/auth/login`, {
-    headers: { 'Content-Type': 'application/json' },
-    data: { username: ADMIN_USER, password: ADMIN_PASSWORD },
-  });
-  if (!resp.ok()) {
-    throw new Error(`login failed: ${resp.status()} ${await resp.text()}`);
+// 令牌改为 HttpOnly cookie 下发后，前端路由守卫读的是 zustand `auth-storage`
+// （localStorage），只注入 cookie 会被重定向回 /login——实测截图全是登录页。
+// 因此旅程必须走真实 UI 登录：填表单提交，让 SPA 自己写入 store 与 cookie。
+async function loginViaUI(page) {
+  log(`Login as ${ADMIN_USER} through the SPA form`);
+  await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#username', { timeout: 30000 });
+  await page.fill('#username', ADMIN_USER);
+  await page.fill('#password', ADMIN_PASSWORD);
+  await page.click('button[type="submit"]');
+  await page
+    .waitForFunction(() => !window.location.pathname.startsWith('/login'), null, { timeout: 30000 })
+    .catch(() => {
+      throw new Error(`login did not leave /login: ${page.url()}`);
+    });
+  const cookies = await page.context().cookies();
+  if (!cookies.some((c) => c.name === 'access_token')) {
+    throw new Error('UI login did not set access_token cookie');
   }
-  const body = await resp.json();
-  const token = body.data?.accessToken;
-  if (!token) throw new Error('no accessToken in login response');
-  await page.goto(`${BASE_URL}/login`);
-  await page.evaluate((t) => {
-    localStorage.setItem('access_token', t);
-    localStorage.setItem('auth_token', t);
-    document.cookie = `auth-token=${t}; path=/; max-age=900`;
-  }, token);
-  log('Token stored in localStorage + cookie');
-  return token;
+
+  // 写操作走 Double Submit Cookie：取一次 csrf token，让 cookie 与 header 同源。
+  const csrfResp = await page.request.get(`${API_URL}/api/v1/csrf-token`);
+  if (!csrfResp.ok()) throw new Error(`csrf-token failed: ${csrfResp.status()}`);
+  const csrf = (await csrfResp.json()).data?.csrf_token;
+  if (!csrf) throw new Error('csrf-token response missing csrf_token');
+  log(`Authenticated, landed on ${page.url()}, csrf_len=${csrf.length}`);
 }
 
-async function authedFetch(token, url, options = {}) {
-  const resp = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...(options.headers || {}),
-    },
-  });
+async function authedFetch(page, url, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const cookies = await page.context().cookies();
+  const csrf = cookies.find((c) => c.name === 'csrf_token')?.value || '';
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+  if (csrf && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    headers['X-CSRF-Token'] = decodeURIComponent(csrf);
+  }
+  const init = { method, headers };
+  if (options.body !== undefined) init.data = options.body;
+  const resp = await page.request.fetch(url, init);
   const body = await resp.json().catch(() => ({}));
-  return { ok: resp.ok, status: resp.status, body };
+  return { ok: resp.ok(), status: resp.status(), body };
 }
 
 async function shoot(page, dir, name) {
@@ -93,12 +104,12 @@ async function visitDetail(page, dir, url) {
 
 // --------- Domain journeys ---------
 
-async function ticketJourney(page, token, summary) {
+async function ticketJourney(page, summary) {
   log('=== Ticket 域旅程开始 ===');
   await visitList(page, 'tickets', '/tickets');
 
   const title = `prod-stack-rls-pilot-ticket-${Date.now()}`;
-  const created = await authedFetch(token, `${API_URL}/api/v1/tickets`, {
+  const created = await authedFetch(page, `${API_URL}/api/v1/tickets`, {
     method: 'POST',
     body: JSON.stringify({
       title,
@@ -108,7 +119,10 @@ async function ticketJourney(page, token, summary) {
       categoryId: 8,
     }),
   });
-  if (!created.ok) throw new Error(`create ticket failed: ${JSON.stringify(created).body?.message || created.body}`);
+  if (!created.ok)
+    throw new Error(
+      `create ticket failed: http=${created.status} body=${JSON.stringify(created.body).slice(0, 300)}`
+    );
   const ticketId = created.body.data?.id || created.body.data?.ticket?.id;
   summary.tickets = { id: ticketId, title, created: true };
 
@@ -119,19 +133,19 @@ async function ticketJourney(page, token, summary) {
 
   if (ticketId) {
     await visitDetail(page, 'tickets', `/tickets/${ticketId}`);
-    const detail = await authedFetch(token, `${API_URL}/api/v1/tickets/${ticketId}`);
+    const detail = await authedFetch(page, `${API_URL}/api/v1/tickets/${ticketId}`);
     summary.tickets.detail_visible = detail.ok;
     summary.tickets.detail_status = detail.body?.data?.status;
   }
   log('=== Ticket 域旅程完成 ===');
 }
 
-async function incidentJourney(page, token, summary) {
+async function incidentJourney(page, summary) {
   log('=== Incident 域旅程开始 ===');
   await visitList(page, 'incidents', '/incidents');
 
   const title = `prod-stack-rls-pilot-incident-${Date.now()}`;
-  const created = await authedFetch(token, `${API_URL}/api/v1/incidents`, {
+  const created = await authedFetch(page, `${API_URL}/api/v1/incidents`, {
     method: 'POST',
     body: JSON.stringify({
       title,
@@ -158,7 +172,7 @@ async function incidentJourney(page, token, summary) {
 
     if (incidentId) {
       await visitDetail(page, 'incidents', `/incidents/${incidentId}`);
-      const detail = await authedFetch(token, `${API_URL}/api/v1/incidents/${incidentId}`);
+      const detail = await authedFetch(page, `${API_URL}/api/v1/incidents/${incidentId}`);
       summary.incidents.detail_visible = detail.ok;
       summary.incidents.detail_status = detail.body?.data?.status;
     }
@@ -166,12 +180,12 @@ async function incidentJourney(page, token, summary) {
   log('=== Incident 域旅程完成 ===');
 }
 
-async function problemJourney(page, token, summary) {
+async function problemJourney(page, summary) {
   log('=== Problem 域旅程开始 ===');
   await visitList(page, 'problems', '/problems');
 
   const title = `prod-stack-rls-pilot-problem-${Date.now()}`;
-  const created = await authedFetch(token, `${API_URL}/api/v1/problems`, {
+  const created = await authedFetch(page, `${API_URL}/api/v1/problems`, {
     method: 'POST',
     body: JSON.stringify({
       title,
@@ -196,7 +210,7 @@ async function problemJourney(page, token, summary) {
 
     if (problemId) {
       await visitDetail(page, 'problems', `/problems/${problemId}`);
-      const detail = await authedFetch(token, `${API_URL}/api/v1/problems/${problemId}`);
+      const detail = await authedFetch(page, `${API_URL}/api/v1/problems/${problemId}`);
       summary.problems.detail_visible = detail.ok;
       summary.problems.detail_status = detail.body?.data?.status;
     }
@@ -204,12 +218,12 @@ async function problemJourney(page, token, summary) {
   log('=== Problem 域旅程完成 ===');
 }
 
-async function changeJourney(page, token, summary) {
+async function changeJourney(page, summary) {
   log('=== Change 域旅程开始 ===');
   await visitList(page, 'changes', '/changes');
 
   const title = `prod-stack-rls-pilot-change-${Date.now()}`;
-  const created = await authedFetch(token, `${API_URL}/api/v1/changes`, {
+  const created = await authedFetch(page, `${API_URL}/api/v1/changes`, {
     method: 'POST',
     body: JSON.stringify({
       title,
@@ -235,7 +249,7 @@ async function changeJourney(page, token, summary) {
 
     if (changeId) {
       await visitDetail(page, 'changes', `/changes/${changeId}`);
-      const detail = await authedFetch(token, `${API_URL}/api/v1/changes/${changeId}`);
+      const detail = await authedFetch(page, `${API_URL}/api/v1/changes/${changeId}`);
       summary.changes.detail_visible = detail.ok;
       summary.changes.detail_status = detail.body?.data?.status;
     }
@@ -259,13 +273,13 @@ async function run() {
   page.on('pageerror', (err) => log(`[browser:pageerror] ${err.message}`));
 
   try {
-    const token = await loginViaApi(page);
-    summary.token_length = token.length;
+    await loginViaUI(page);
+    summary.auth = 'SPA form login + httpOnly cookie + csrf_token';
 
-    await ticketJourney(page, token, summary);
-    await incidentJourney(page, token, summary);
-    await problemJourney(page, token, summary);
-    await changeJourney(page, token, summary);
+    await ticketJourney(page, summary);
+    await incidentJourney(page, summary);
+    await problemJourney(page, summary);
+    await changeJourney(page, summary);
   } catch (e) {
     summary.error = e.message;
     log(`[fatal] ${e.message}`);

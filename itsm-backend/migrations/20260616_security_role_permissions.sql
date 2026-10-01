@@ -1,22 +1,19 @@
--- 修复 security 角色缺少基础读取权限的问题
--- 为 security 角色补充 ticket:read/list, notification:read/list, knowledge:read/list 等权限
-
--- 获取 security 角色 ID（所有租户），并插入缺失的权限
-INSERT INTO role_permissions (role_id, permission_id, created_at, updated_at)
-SELECT r.id, p.id, NOW(), NOW()
-FROM roles r
-CROSS JOIN permissions p
-WHERE r.code = 'security'
-AND (
-    (p.resource_type IN ('ticket', 'notification', 'knowledge_article') AND p.action IN ('read', 'list'))
-    OR (p.resource_type = 'incident' AND p.action IN ('read', 'list'))
-    OR (p.resource_type = 'problem' AND p.action IN ('read', 'list'))
-    OR (p.resource_type = 'change' AND p.action IN ('read', 'list'))
-    OR (p.resource_type = 'dashboard' AND p.action = 'read')
-    OR (p.resource_type = 'cmdb' AND p.action = 'read')
-    OR (p.resource_type = 'sla' AND p.action = 'read')
-)
-AND NOT EXISTS (
-    SELECT 1 FROM role_permissions rp
-    WHERE rp.role_id = r.id AND rp.permission_id = p.id
-);
+-- Retired 2026-10-01: security role grants are owned by the seeder, not by SQL
+--
+-- 原脚本在全新数据库上以 42703 失败并中断整个初始化（2026-10-01 清卷全新部署实证，
+--报错位置 5:55）。实测依据：
+--
+--  1. 引用的列不存在。role_permissions 只有 role_id / permission_id / tenant_id
+--     （ent/schema/role_permission.go:18-20），没有脚本写入的 created_at / updated_at；
+--     permissions 的资源列叫 resource（ent/schema/permission.go:28），不是 resource_type；
+--     tenant_id 是必填列，原 INSERT 也未提供。
+--  2. 角色授权已有唯一所有者。internal/authz/roles.go:208 定义 security 角色的权限码，
+--     pkg/seeder/seeder.go:2042 按该清单播种 role_permissions（含租户过滤与幂等检查）。
+--     在 SQL 里再补一遍会形成第二个授权来源，违反「一个用例只有一个业务规则所有者」。
+--  3. 该脚本从未在任何真实安装中生效：清卷前旧库账本里 20260616_security_role_permissions
+--     的 checksum 为空（migration/legacy_record.go「收养不执行」），security 角色权限实际
+--     由 seeder 提供。
+--
+-- 如 security 角色缺少某项读取权限，应修改 internal/authz/roles.go 的权限码清单，
+-- 让 seeder 播种并补 role_permission_guard 测试，不要在这里新增 SQL。
+SELECT 1;

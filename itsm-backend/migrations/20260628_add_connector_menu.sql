@@ -1,13 +1,17 @@
--- 2026-06-28 添加连接器市场菜单
--- 适用于所有租户
-
-INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
-SELECT '连接器市场', '/admin/connectors', 'Plug', id, 'connector:read', 317, t.id, true, true 
-FROM menus m
-CROSS JOIN tenants t
-WHERE m.path = '/admin' AND m.tenant_id = t.id
-ON CONFLICT (tenant_id, path) DO NOTHING;
-
--- 如果是单租户环境，也可以直接执行：
--- INSERT INTO menus (name, path, icon, parent_id, permission_code, sort_order, tenant_id, is_visible, is_enabled)
--- SELECT '连接器市场', '/admin/connectors', 'Plug', id, 'connector:read', 317, 1, true, true FROM menus WHERE path = '/admin' AND tenant_id = 1 ON CONFLICT DO NOTHING;
+-- Retired 2026-10-01: connector market menu is owned by the menu baseline
+--
+-- 原脚本在全新数据库上以 42702 失败并中断初始化（2026-10-01 清卷全新部署实证，报错位置 10）。
+--实测依据：
+--
+--  1. SQL 本身有缺陷：SELECT 列表里的裸 id 同时存在于 menus 和 tenants，
+--     parent_id 取值时 Postgres 报 column reference "id" is ambiguous。
+--  2. 菜单已有唯一所有者：pkg/menubaseline/baseline.go:144 定义
+--     「连接器/插件市场」→ /admin/connectors、permission_code connector:write、
+--     sort_order 285，按租户幂等播种。清卷前旧库实测每个租户都已有该菜单行，且 name 与
+--     permission_code 与 baseline 一致；本脚本写入的是被取代的旧定义
+--     （连接器市场 / connector:read / 317）。该版本账本 checksum 为空，从未执行。
+--  3. 即便修好 SQL，在全新安装里也不会生效：迁移在 seed 之前运行，此时 menus 为空表，
+--     WHERE m.path = '/admin' 匹配 0 行。
+--
+-- 需要调整该菜单请改 pkg/menubaseline/baseline.go 并跑 menus 相关 seeder 测试。
+SELECT 1;

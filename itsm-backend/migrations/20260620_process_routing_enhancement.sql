@@ -67,110 +67,29 @@ WHERE department_id IS NULL
    OR scenario IS NULL 
    OR category IS NULL;
 
--- Step 7: Insert sample routing rules for demonstration
-
--- Operations Department: Alert Handling
-INSERT INTO process_bindings (
-    business_type, business_sub_type, process_definition_key, 
-    department_id, scenario, category, priority, is_active, tenant_id,
-    created_at, updated_at
-) VALUES 
--- P0 Alert (Critical)
-('incident', 'alert_p0', 'incident_emergency_flow', 
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1), 
- 'alert_handling', 'operations', 100, true, 1,
- NOW(), NOW()),
--- P1 Alert (High)
-('incident', 'alert_p1', 'incident_emergency_flow',
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1),
- 'alert_handling', 'operations', 90, true, 1,
- NOW(), NOW()),
--- P2 Alert (Medium)
-('incident', 'alert_p2', 'incident_general_flow',
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1),
- 'alert_handling', 'operations', 80, true, 1,
- NOW(), NOW());
-
--- Operations Department: Change Release
-INSERT INTO process_bindings (
-    business_type, business_sub_type, process_definition_key,
-    department_id, scenario, category, priority, is_active, tenant_id,
-    created_at, updated_at
-) VALUES 
--- Normal Change
-('change', 'normal', 'change_normal_flow',
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1),
- 'change_release', 'operations', 70, true, 1,
- NOW(), NOW()),
--- Emergency Change
-('change', 'emergency', 'change_emergency_flow',
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1),
- 'change_release', 'operations', 80, true, 1,
- NOW(), NOW()),
--- Standard Change
-('change', 'standard', 'change_normal_flow',
- (SELECT id FROM departments WHERE code = 'OPS' LIMIT 1),
- 'change_release', 'operations', 60, true, 1,
- NOW(), NOW());
-
--- R&D Department: Code Release
-INSERT INTO process_bindings (
-    business_type, business_sub_type, process_definition_key,
-    department_id, scenario, category, priority, is_active, tenant_id,
-    created_at, updated_at
-) VALUES 
--- Production Release
-('release', 'production', 'release_approval_flow',
- (SELECT id FROM departments WHERE code = 'RD' LIMIT 1),
- 'code_release', 'rd', 90, true, 1,
- NOW(), NOW()),
--- Test Release
-('release', 'testing', 'release_test_flow',
- (SELECT id FROM departments WHERE code = 'RD' LIMIT 1),
- 'code_release', 'rd', 70, true, 1,
- NOW(), NOW());
-
--- Finance Department: Expense Approval
-INSERT INTO process_bindings (
-    business_type, business_sub_type, process_definition_key,
-    department_id, scenario, category, priority, is_active, tenant_id,
-    conditions, created_at, updated_at
-) VALUES 
--- Large Expense (>100000)
-('service_request', 'expense', 'expense_approval_flow',
- (SELECT id FROM departments WHERE code = 'FIN' LIMIT 1),
- 'expense_approval', 'finance', 100, true, 1,
- '{"min_amount": 100000}',
- NOW(), NOW()),
--- Normal Expense (<=100000)
-('service_request', 'expense', 'expense_approval_flow',
- (SELECT id FROM departments WHERE code = 'FIN' LIMIT 1),
- 'expense_approval', 'finance', 80, true, 1,
- '{"max_amount": 100000}',
- NOW(), NOW());
-
--- Global Default Bindings (lowest priority)
-INSERT INTO process_bindings (
-    business_type, business_sub_type, process_definition_key,
-    department_id, team_id, scenario, category, 
-    priority, is_default, is_active, tenant_id,
-    created_at, updated_at
-) VALUES 
--- Default Ticket Flow
-('ticket', '', 'ticket_general_flow',
- 0, 0, '', '',
- 10, true, true, 1,
- NOW(), NOW()),
--- Default Incident Flow
-('incident', '', 'incident_emergency_flow',
- 0, 0, '', '',
- 10, true, true, 1,
- NOW(), NOW()),
--- Default Change Flow
-('change', '', 'change_normal_flow',
- 0, 0, '', '',
- 10, true, true, 1,
- NOW(), NOW());
+-- Step 7（原“sample routing rules”INSERT 批次）已于 2026-10-01 移除：这批演示绑定
+-- 在全新安装上必然中断初始化，而且从来没有按设计生效过。
+--
+-- 1) 其中四个 process_definition_key 在仓库里没有任何可部署载体：
+--    incident_general_flow / change_emergency_flow / release_test_flow /
+--    expense_approval_flow 既不在 service/bpmn/*.bpmn（BPMNTemplateService
+--    LoadAndDeployTemplates 的唯一来源），也不在 pkg/seeder 的 workflow_templates
+--    清单里；service/incident_service.go:2161 就注明“incident_general_flow 不存在”。
+--    pkg/seeder/initialization_adapter.go:571 verifyWorkflowTemplates 要求每条 active
+--    绑定都能找到 active process_definition，于是 workflow-core 组件校验失败、整组
+--    事务回滚，全新私有部署起不来（实测 itsm-init exit 1）。
+--    存量安装看不到这个问题：本迁移日期早于 adoptionCutoff（2026-09-08），在已有
+--    安装上只被记账、从不执行。
+-- 2) 迁移在 seed 之前执行（实测 itsm-init：绑定写入 13:27:01，identity-rbac 组件
+--    13:27:02 才开始），所以 (SELECT id FROM departments WHERE code='OPS') 恒为
+--    NULL，落库的 department_id 全是 NULL，原本想要的按部门路由一条都没成立。
+-- 3) 全部语句硬编码 tenant_id = 1，与 MSP/多租户基线冲突。
+--
+-- 归属：流程绑定由 Go 清单负责——pkg/seeder/seeder.go:678 内置 ProcessBindings
+-- （6 条，key 全部对应 service/bpmn/*.bpmn）经 seedProcessBindings 按基线租户幂等
+-- 写入；部门级绑定属于 service/bpmn_process_binding_service.go
+-- getDepartmentDefaultBindings 的运行期能力。守卫见
+-- migration/fresh_install_reference_test.go。
 
 -- Verification: Count routing rules
 DO $$
