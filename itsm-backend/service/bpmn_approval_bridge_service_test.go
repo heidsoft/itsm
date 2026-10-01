@@ -130,13 +130,14 @@ func createBridgeProcessFixtureWithDelegate(t *testing.T, client *ent.Client, te
 	return instance.ID, task.ID
 }
 
-func TestBPMNApprovalBridge_NoInstanceFailsClosed(t *testing.T) {
+// 三态之一：业务对象从未绑定流程不是错误，必须回 (false, nil) 让调用方走旧审批链。
+func TestBPMNApprovalBridge_UnboundBusinessFallsBackToLegacyApproval(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "bridge_no_instance")
 	tenantID, actorID := setupBridgeTenantAndActor(t, client, "none")
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
 	handled, err := bridge.CompleteBusinessApprovalTask(context.Background(), tenantID, actorID, "ticket", 999, "approve", "")
-	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+	require.NoError(t, err, "未绑定流程不得返回错误，否则未配置 BPMN 的租户审批全线不可用")
 	assert.False(t, handled)
 }
 
@@ -193,7 +194,9 @@ func TestBPMNApprovalBridge_TenantIsolation(t *testing.T) {
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
 	handled, err := bridge.CompleteBusinessApprovalTask(context.Background(), tenantA, actorA, "ticket", 123, "approve", "")
-	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+	// 租户 A 视角下这个业务键从未绑定（查询带 tenant 谓词），因此是回退而不是冲突；
+	// 隔离的真正判据在下面：租户 B 的待办没有被动过。
+	require.NoError(t, err)
 	assert.False(t, handled, "跨租户不得命中其他租户的流程实例")
 
 	// 租户 B 的任务未被动过
@@ -202,13 +205,13 @@ func TestBPMNApprovalBridge_TenantIsolation(t *testing.T) {
 	assert.Equal(t, 1, count)
 }
 
-func TestBPMNApprovalBridge_DelegateNoInstanceFailsClosed(t *testing.T) {
+func TestBPMNApprovalBridge_DelegateUnboundBusinessFallsBack(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "bridge_delegate_none")
 	tenantID, actorID := setupBridgeTenantAndActor(t, client, "dnone")
 	bridge := NewBPMNApprovalBridge(client, zaptest.NewLogger(t).Sugar())
 
 	handled, err := bridge.DelegateBusinessApprovalTask(context.Background(), tenantID, actorID, "ticket", 999, actorID+1)
-	require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+	require.NoError(t, err, "未绑定流程的委派不得报错，调用方按旧审批链改派")
 	assert.False(t, handled)
 }
 
@@ -235,7 +238,7 @@ func TestBPMNApprovalBridge_NoActionableTaskFailsClosed(t *testing.T) {
 					} else {
 						handled, err = bridge.CompleteBusinessApprovalTask(ctx, tenantID, actorID, "ticket", 123, action, "")
 					}
-					require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+					require.ErrorContains(t, err, "流程已绑定但当前没有可处理的审批待办")
 					assert.False(t, handled)
 				}
 				after, err := client.ProcessTask.Get(ctx, taskID)

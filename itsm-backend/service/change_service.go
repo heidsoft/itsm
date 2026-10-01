@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/configurationitem"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
@@ -305,19 +306,26 @@ func optionalInt(value int) *int {
 	return &value
 }
 
-// API 使用 pending 表达待审批，持久化层和 BPMN 流程统一使用 submitted。
-func persistedChangeStatus(status string) change.Status {
-	if status == string(dto.ChangeStatusPending) {
-		return change.Status(common.ChangeStatusSubmitted)
-	}
-	return change.Status(status)
-}
+// 变更的待审批在 API、Ent 枚举与前端契约里统一是 pending。
+// common.ChangeStatusSubmitted 只是状态枚举化之前写入过的历史值，只允许读、不允许再写。
 
 func apiChangeStatus(status change.Status) dto.ChangeStatus {
 	if string(status) == common.ChangeStatusSubmitted {
 		return dto.ChangeStatusPending
 	}
 	return dto.ChangeStatus(status)
+}
+
+// changeStatusFilter 构造状态过滤条件。按 pending 过滤时必须同时命中存量库里枚举化之前
+// 写入的 submitted 行，否则新写入的 pending 与旧数据会被拆成两个互不可见的集合。
+func changeStatusFilter(status string) predicate.Change {
+	if status == string(dto.ChangeStatusPending) {
+		return change.Or(
+			change.StatusEQ(change.Status(dto.ChangeStatusPending)),
+			change.StatusEQ(change.Status(common.ChangeStatusSubmitted)),
+		)
+	}
+	return change.StatusEQ(change.Status(status))
 }
 
 // GetChange 获取变更详情
@@ -406,7 +414,7 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 
 	// 状态筛选
 	if status != "" && status != "全部" {
-		query = query.Where(change.StatusEQ(persistedChangeStatus(status)))
+		query = query.Where(changeStatusFilter(status))
 	}
 
 	// 搜索筛选
@@ -720,7 +728,7 @@ func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.
 // H-2 修复：进入终态（rejected/completed/cancelled/rolled_back）时在事务内收口残留的 pending 审批节点，
 // 防止后续新增审批节点把已终态变更“复活”。
 func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status dto.ChangeStatus, tenantID int) error {
-	persistedStatus := persistedChangeStatus(string(status))
+	persistedStatus := change.Status(status)
 	// 获取当前变更状态，验证租户所有权
 	changeEntity, err := s.client.Change.Query().
 		Where(
@@ -827,7 +835,15 @@ func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) erro
 	return err
 }
 
-// isValidChangeStatusTransition 检查变更状态转换是否合法
+// normalizeChangeTransitionStatus 把待审批的两个同义词归一到迁移表词表（submitted）。
+func normalizeChangeTransitionStatus(status string) string {
+	if status == string(dto.ChangeStatusPending) {
+		return common.ChangeStatusSubmitted
+	}
+	return status
+}
+
+// IsValidChangeStatusTransition 检查变更状态转换是否合法
 // Change状态转换规则:
 // draft -> submitted, cancelled
 // submitted -> approved, rejected, cancelled
@@ -838,14 +854,14 @@ func CloseChangeApprovalChains(ctx context.Context, changeID, tenantID int) erro
 // completed -> (不允许转换到其他状态)
 // failed -> scheduled, cancelled
 // cancelled -> (不允许转换到其他状态)
-// IsValidChangeStatusTransition 检查变更状态转换是否合法
+//
 // 根据ITIL标准，不同类型的变更有不同的状态转换规则
 func IsValidChangeStatusTransition(currentStatus, newStatus, changeType string) bool {
-	// 历史兼容：handlers/change 模块使用 "pending"，而 common 常量用 "submitted"，
-	// 两者是等价的状态（变更已提交等待评审组审批）。在此处做归一化，避免状态机误判。
-	if currentStatus == "pending" {
-		currentStatus = common.ChangeStatusSubmitted
-	}
+	// 词表归一：待审批在 API/枚举/存量库里分别是 pending 与 submitted，两者等价。
+	// 迁移表以 submitted 为词表，因此源和目标都要归一 —— 只归一源会让
+	// draft -> pending（提交审批）被判成非法迁移。
+	currentStatus = normalizeChangeTransitionStatus(currentStatus)
+	newStatus = normalizeChangeTransitionStatus(newStatus)
 
 	// 基础转换规则（适用于所有变更类型）
 	baseTransitions := map[string][]string{
@@ -1050,7 +1066,7 @@ func (s *ChangeService) GetCalendarView(ctx context.Context, tenantID int, start
 
 	// 状态过滤
 	if status != "" {
-		query = query.Where(change.StatusEQ(persistedChangeStatus(status)))
+		query = query.Where(changeStatusFilter(status))
 	}
 
 	// 获取变更列表

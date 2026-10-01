@@ -374,6 +374,20 @@ func bpmnFirstMode() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv("ITSM_APPROVAL_BPMN_FIRST")), "true")
 }
 
+// bpmnBridgeUnavailable 表示 BPMN 优先模式已开启但桥接服务未接线。
+// 这是部署配置缺失（operational unavailable），不是用户参数错误，也不能伪装成审批冲突。
+func bpmnBridgeUnavailable() error {
+	return common.NewBusinessError(common.ServiceUnavailableCode,
+		"BPMN 审批桥接未接线，无法按流程处理审批", "ITSM_APPROVAL_BPMN_FIRST 已开启但 bridge 未初始化")
+}
+
+// bpmnTicketUnbound 表示工单从未绑定流程实例。BPMN 优先模式下这是流程配置缺口，
+// 必须与 legacy 路径的「未绑定则回退审批链」区分开，让运维看出成因在流程绑定/启动而非待办。
+func bpmnTicketUnbound() error {
+	return common.NewBusinessError(common.ConflictCode,
+		"工单未绑定 BPMN 流程实例，请确认流程模板绑定与流程是否已启动", "")
+}
+
 // ApproveTicket 审批工单（事务保护，保证审批记录更新、工单状态变更与流转记录的原子性）
 func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.ApproveTicketRequest, userID, tenantID int) error {
 	s.logger.Infow("Approving ticket", "ticket_id", req.TicketID, "action", req.Action, "user_id", userID)
@@ -438,7 +452,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 	bpmnHandled := false
 	if req.Action == "delegate" {
 		if s.approvalBridge == nil {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			return bpmnBridgeUnavailable()
 		}
 		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
 			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
@@ -447,7 +461,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
 		}
 		if !handled {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			return bpmnTicketUnbound()
 		}
 		bpmnHandled = handled
 	}
@@ -467,7 +481,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 	// approve/reject 在事务内完成 BPMN 任务，保证流程状态与业务状态原子性。
 	if req.Action == "approve" || req.Action == "reject" {
 		if s.approvalBridge == nil {
-			txErr = common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			txErr = bpmnBridgeUnavailable()
 			return txErr
 		}
 		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
@@ -478,7 +492,7 @@ func (s *TicketWorkflowService) approveTicketBPMNFirst(
 			return txErr
 		}
 		if !handled {
-			txErr = common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			txErr = bpmnTicketUnbound()
 			return txErr
 		}
 		bpmnHandled = handled
@@ -515,36 +529,37 @@ func (s *TicketWorkflowService) approveTicketLegacy(
 	newApprovalStatus string,
 ) error {
 	bpmnHandled := false
+	// 旧路径以 TicketApproval 计数裁决审批：未接线 bridge 或工单从未绑定流程时，
+	// 回退审批链是这条路径的本意；只有「已绑定流程却拿不到可操作待办」才必须中止，
+	// 否则会绕过流程裁决让流程状态与工单状态分叉（bridge 已把该情形映射为 conflict）。
 	if req.Action == "approve" || req.Action == "reject" {
 		if s.approvalBridge == nil {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			s.logger.Warnw("BPMN 审批桥接未接线，工单审批回退审批链计数",
+				"ticket_id", req.TicketID, "tenant_id", tenantID, "actor_user_id", userID)
+		} else {
+			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+				ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
+			)
+			if bridgeErr != nil {
+				return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			}
+			bpmnHandled = handled
 		}
-		handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, req.Action, req.Comment,
-		)
-		if bridgeErr != nil {
-			return fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
-		}
-		if !handled {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
-		}
-		bpmnHandled = handled
 	}
 
 	if req.Action == "delegate" {
 		if s.approvalBridge == nil {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+			s.logger.Warnw("BPMN 审批桥接未接线，工单委派回退审批链",
+				"ticket_id", req.TicketID, "tenant_id", tenantID, "actor_user_id", userID)
+		} else {
+			handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
+				ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
+			)
+			if bridgeErr != nil {
+				return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
+			}
+			bpmnHandled = handled
 		}
-		handled, bridgeErr := s.approvalBridge.DelegateBusinessApprovalTask(
-			ctx, tenantID, userID, string(dto.BusinessTypeTicket), req.TicketID, *req.DelegateToUserID,
-		)
-		if bridgeErr != nil {
-			return fmt.Errorf("同步流程委派任务失败: %w", bridgeErr)
-		}
-		if !handled {
-			return common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
-		}
-		bpmnHandled = handled
 	}
 
 	tx, err := s.client.Tx(ctx)

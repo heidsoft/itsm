@@ -377,6 +377,19 @@ func approvalWriteSnapshot(t *testing.T, client *ent.Client) []byte {
 	return snapshot
 }
 
+// bpmnAbsentApprovalMessage 三态下两种 fail-closed 成因的文案不同，但业务码同为 conflict：
+// 本租户查不到流程实例（noInstance/foreignInstance）由调用方判定为「没有可处理的待办」；
+// 已绑定流程却拿不到可操作待办（completedInstance/noPendingTask/foreignTask）由 bridge
+// 判定为「流程已绑定但无待办」，后者必须能在响应里被区分出来，否则运维无法判断该补绑定还是补待办。
+func bpmnAbsentApprovalMessage(state string) string {
+	switch state {
+	case "noInstance", "foreignInstance":
+		return "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态"
+	default:
+		return "流程已绑定但当前没有可处理的审批待办，请勿直接业务审批"
+	}
+}
+
 func TestServiceRequestHandler_ApplyApproval_NoBPMNDoesNotWrite(t *testing.T) {
 	for _, state := range []string{"noInstance", "completedInstance", "noPendingTask", "foreignInstance", "foreignTask"} {
 		for _, action := range []string{"approve", "reject"} {
@@ -412,7 +425,7 @@ func TestServiceRequestHandler_ApplyApproval_NoBPMNDoesNotWrite(t *testing.T) {
 						dto.ServiceRequestApprovalActionRequest{Action: action, Comment: "decision"})
 					require.Equal(t, http.StatusConflict, status, "body=%s", srStr(resp))
 					require.Equal(t, common.ConflictCode, resp.Code)
-					require.Equal(t, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", resp.Message)
+					require.Equal(t, bpmnAbsentApprovalMessage(state), resp.Message)
 					require.Nil(t, resp.Data)
 					require.Equal(t, before, approvalWriteSnapshot(t, client), "attempt %d must not write", attempt)
 				}
@@ -485,7 +498,7 @@ func TestReleaseApprovalHTTP_NoBPMNDoesNotWrite(t *testing.T) {
 						releaseApprovalHTTPBody(action))
 					require.Equal(t, http.StatusConflict, status, "body=%s", srStr(resp))
 					require.Equal(t, common.ConflictCode, resp.Code)
-					require.Equal(t, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", resp.Message)
+					require.Equal(t, bpmnAbsentApprovalMessage(state), resp.Message)
 					require.Nil(t, resp.Data)
 					require.Equal(t, before, approvalWriteSnapshot(t, client))
 				}

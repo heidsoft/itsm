@@ -1001,17 +1001,22 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 
 		// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
-		// 无关联运行中流程实例时回退为纯业务审批；若存在待办流程任务但完成失败，
-		// 则中止业务审批，避免变更状态与流程状态分叉。
+		// 三态语义：无关联流程实例 → 回退纯业务审批；已绑定但无可操作待办 → bridge 返回
+		// conflict 并中止，避免业务状态与流程状态分叉。
 		if s.approvalBridge != nil {
 			action := "approve"
 			if targetStatus == "rejected" {
 				action = "reject"
 			}
-			if _, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
+			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
 				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
-			); bridgeErr != nil {
+			)
+			if bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
+			}
+			if !handled {
+				s.logger.Infow("变更未绑定运行中流程，按审批链直接业务审批",
+					"change_id", id, "tenant_id", tenantID, "actor_user_id", userID)
 			}
 		}
 	}

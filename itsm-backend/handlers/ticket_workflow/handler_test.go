@@ -163,63 +163,135 @@ func TestHandler_GetTicketWorkflowHistory_EmptyRecords(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
 }
 
-func TestHandler_ApproveTicket_RequiresBPMNTask(t *testing.T) {
+type approveResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Message string `json:"message"`
+	} `json:"data"`
+}
+
+func decodeApprove(t *testing.T, w *httptest.ResponseRecorder) approveResponse {
+	t.Helper()
+	var resp approveResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return resp
+}
+
+// 三态契约第二态：工单从未绑定流程实例时，审批回退审批链并正常完成，
+// 不能被误判成流程冲突；跨租户仍须 fail closed。
+func TestHandler_ApproveTicket_UnboundFallsBackToApprovalChain(t *testing.T) {
+	for _, tc := range []struct {
+		action         string
+		message        string
+		approvalStatus string
+		ticketStatus   string
+	}{
+		{"approve", "审批通过", "approved", "approved"},
+		{"reject", "审批拒绝", "rejected", "rejected"},
+		{"delegate", "已委派", "cancelled", "pending"},
+	} {
+		t.Run(tc.action, func(t *testing.T) {
+			ctx := context.Background()
+			env := setupE2E(t)
+			tenantA := env.createTenant(t, "unbound-a")
+			tenantB := env.createTenant(t, "unbound-b")
+			actor := env.createUser(t, tenantA, "approver-"+tc.action)
+			delegatee := env.createUser(t, tenantA, "delegatee-"+tc.action)
+			ticketID := env.createTicket(t, tenantA, actor, "pending")
+			approvalID := env.createApproval(t, tenantA, ticketID, actor, "pending")
+
+			payload := fmt.Sprintf(
+				`{"ticketId":%d,"approvalId":%d,"action":%q,"comment":"c","delegateToUserId":%d}`,
+				ticketID, approvalID, tc.action, delegatee)
+
+			// 主资源先按租户过滤：跨租户不得进入审批链，也不得留下任何写入。
+			w := env.postApprove(t, tenantB, actor, payload)
+			require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+			assert.Equal(t, 4004, decodeApprove(t, w).Code)
+			assert.NotContains(t, w.Body.String(), "password")
+
+			w = env.postApprove(t, tenantA, actor, payload)
+			require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+			resp := decodeApprove(t, w)
+			assert.Equal(t, 0, resp.Code)
+			assert.Equal(t, tc.message, resp.Data.Message)
+
+			// 重复提交不再由 BPMN 待办裁决，审批链状态仍是幂等闸门。
+			w = env.postApprove(t, tenantA, actor, payload)
+			require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
+			repeated := decodeApprove(t, w)
+			assert.Equal(t, 4090, repeated.Code)
+			assert.Equal(t, "审批已处理", repeated.Message)
+
+			ticket, err := env.client.Ticket.Get(ctx, ticketID)
+			require.NoError(t, err)
+			assert.Equal(t, tc.ticketStatus, ticket.Status)
+			approval, err := env.client.TicketApproval.Get(ctx, approvalID)
+			require.NoError(t, err)
+			assert.Equal(t, tc.approvalStatus, approval.Status)
+
+			if tc.action == "delegate" {
+				approvalCount, err := env.client.TicketApproval.Query().Count(ctx)
+				require.NoError(t, err)
+				assert.Equal(t, 2, approvalCount, "委派应为受托人追加新的待审批记录")
+				pendingForDelegatee, err := env.client.TicketApproval.Query().
+					Where(ticketapproval.ApproverID(delegatee), ticketapproval.Status("pending")).
+					Count(ctx)
+				require.NoError(t, err)
+				assert.Equal(t, 1, pendingForDelegatee)
+			}
+
+			records, err := env.client.TicketWorkflowRecord.Query().All(ctx)
+			require.NoError(t, err)
+			require.Len(t, records, 1)
+			assert.Equal(t, false, records[0].Metadata["bpmn_handled"],
+				"回退审批链必须留下可审计的 bpmn_handled=false 标记")
+		})
+	}
+}
+
+// 三态契约第三态：流程已绑定但当前没有可处理的审批待办时必须冲突中止，
+// 否则直接业务审批会绕过流程裁决，让流程状态与工单状态分叉。
+func TestHandler_ApproveTicket_BoundWithoutActionableTaskIsConflict(t *testing.T) {
 	for _, action := range []string{"approve", "reject", "delegate"} {
 		t.Run(action, func(t *testing.T) {
 			ctx := context.Background()
-			client := enttest.Open(t, "sqlite3", "file:"+t.Name()+"?mode=memory&cache=shared&_fk=1")
-			t.Cleanup(func() { client.Close() })
-			tenantA, err := client.Tenant.Create().SetName("A").SetCode("a").SetStatus("active").Save(ctx)
+			env := setupE2E(t)
+			tenantID := env.createTenant(t, "bound")
+			actor := env.createUser(t, tenantID, "approver-"+action)
+			delegatee := env.createUser(t, tenantID, "delegatee-"+action)
+			ticketID := env.createTicket(t, tenantID, actor, "pending")
+			approvalID := env.createApproval(t, tenantID, ticketID, actor, "pending")
+			taskID := env.createBPMNFixture(t, tenantID, ticketID, actor, true)
+
+			// 待办已被他人处理：流程实例仍在，只是没有可操作任务。
+			_, err := env.client.ProcessTask.UpdateOneID(taskID).SetStatus("completed").Save(ctx)
 			require.NoError(t, err)
-			tenantB, err := client.Tenant.Create().SetName("B").SetCode("b").SetStatus("active").Save(ctx)
+
+			payload := fmt.Sprintf(
+				`{"ticketId":%d,"approvalId":%d,"action":%q,"comment":"c","delegateToUserId":%d}`,
+				ticketID, approvalID, action, delegatee)
+			w := env.postApprove(t, tenantID, actor, payload)
+
+			require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
+			resp := decodeApprove(t, w)
+			assert.Equal(t, 4090, resp.Code)
+			assert.Contains(t, resp.Message, "流程已绑定但当前没有可处理的审批待办")
+			assert.NotContains(t, w.Body.String(), "password")
+
+			ticket, err := env.client.Ticket.Get(ctx, ticketID)
 			require.NoError(t, err)
-			actor, err := client.User.Create().SetUsername("approver").SetEmail("approver@example.com").
-				SetName("Approver").SetPasswordHash("test").SetRole("agent").SetTenantID(tenantA.ID).Save(ctx)
+			assert.Equal(t, "pending", ticket.Status, "冲突中止不得改变工单状态")
+			approval, err := env.client.TicketApproval.Get(ctx, approvalID)
 			require.NoError(t, err)
-			ticket, err := client.Ticket.Create().SetTitle("Approval").SetTicketNumber("APP-1").
-				SetStatus("pending").SetPriority("medium").SetRequesterID(actor.ID).SetTenantID(tenantA.ID).Save(ctx)
+			assert.Equal(t, "pending", approval.Status, "冲突中止不得写入审批链")
+			approvalCount, err := env.client.TicketApproval.Query().Count(ctx)
 			require.NoError(t, err)
-			approval, err := client.TicketApproval.Create().SetTicketID(ticket.ID).SetLevel(1).SetLevelName("审批").
-				SetApproverID(actor.ID).SetStatus("pending").SetTenantID(tenantA.ID).Save(ctx)
+			assert.Equal(t, 1, approvalCount, "冲突中止不得创建委派审批")
+			recordCount, err := env.client.TicketWorkflowRecord.Query().Count(ctx)
 			require.NoError(t, err)
-			logger := zaptest.NewLogger(t).Sugar()
-			h := NewHandler(service.NewTicketWorkflowService(client, logger), nil, logger)
-			for _, scope := range []struct{ tenantID, status, code int }{
-				{tenantA.ID, http.StatusConflict, 4090},
-				{tenantB.ID, http.StatusNotFound, 4004},
-			} {
-				r := gin.New()
-				r.Use(func(c *gin.Context) { c.Set("tenant_id", scope.tenantID); c.Set("user_id", actor.ID) })
-				r.POST("/api/v1/tickets/workflow/approve", h.ApproveTicket)
-				for attempt := 0; attempt < 2; attempt++ {
-					body := fmt.Sprintf(`{"ticketId":%d,"approvalId":%d,"action":%q,"delegateToUserId":%d}`, ticket.ID, approval.ID, action, actor.ID)
-					req := httptest.NewRequest(http.MethodPost, "/api/v1/tickets/workflow/approve", bytes.NewBufferString(body))
-					req.Header.Set("Content-Type", "application/json")
-					w := httptest.NewRecorder()
-					r.ServeHTTP(w, req)
-					require.Equal(t, scope.status, w.Code, w.Body.String())
-					var response struct {
-						Code    int    `json:"code"`
-						Message string `json:"message"`
-					}
-					require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
-					assert.Equal(t, scope.code, response.Code)
-					assert.NotEmpty(t, response.Message)
-					assert.NotContains(t, w.Body.String(), "password")
-				}
-			}
-			updated, err := client.Ticket.Get(ctx, ticket.ID)
-			require.NoError(t, err)
-			assert.Equal(t, "pending", updated.Status)
-			updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
-			require.NoError(t, err)
-			assert.Equal(t, "pending", updatedApproval.Status)
-			count, err := client.TicketApproval.Query().Count(ctx)
-			require.NoError(t, err)
-			assert.Equal(t, 1, count)
-			count, err = client.TicketWorkflowRecord.Query().Count(ctx)
-			require.NoError(t, err)
-			assert.Zero(t, count)
+			assert.Zero(t, recordCount, "冲突中止不得留下流转记录")
 		})
 	}
 }

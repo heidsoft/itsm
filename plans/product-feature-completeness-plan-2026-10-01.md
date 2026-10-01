@@ -34,8 +34,8 @@ cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts   # 1 failed
 | 簇 | 失败点 | 性质 |
 |:--|:--|:--|
 | C1 枚举类型化断言漂移 | handlers/change 3、integration 1、service/release 5 | **测试漂移**，生产值正确 |
-| C2 `submitted` 死词表 | service/change 2、scenario3 2 | **生产缺陷**（legacy 写入非法枚举） |
-| C3 BPMN 审批任务 4090 | scenario10 全部子用例、handlers/change 1 | **契约决策未定** |
+| C2 `submitted` 死词表 | service/change 2、scenario3 2 | **生产缺陷**（legacy 写入非法枚举）→ 已按 N1 修复 |
+| C3 BPMN 审批任务 4090 | scenario10 全部子用例、handlers/change 1 | **契约决策未定**→ 已按 N2 三态收敛，全绿 |
 | C4 `slaStore` 未注入 panic | service/sla 1、scenario5 1 | **生产缺陷**（缺 fail-closed） |
 | C5 sqlite `table is locked` | scenario2 1 | **测试隔离** |
 | C6 authz 生成物过期 | middleware 1 | **生成物漂移**，本次已重新生成 |
@@ -117,6 +117,14 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 
 `middleware`、`integration`、`handlers/change`（除 N2 一个）、`release`、SLA 全部子包均已绿。
 
+**N1/N2 收口（2026-10-01 同日，用户拍板「两个一起做，按三态方案落实」）**
+
+上表 4 个失败函数已全部消除，`cd itsm-backend && go test ./...` 81 个包 ok、0 个 FAIL：
+
+- **N1（C2）口径**：写入只允许枚举内的 `pending`，`submitted` 降级为「只读历史词表」。列表/日历按待审批过滤时用 `changeStatusFilter` 同时命中两种写法——原实现按 `submitted` 过滤，新写入的 `pending` 行在列表里不可见，这是第二个 C2 缺陷；迁移表两侧用 `normalizeChangeTransitionStatus` 归一到 `submitted` 词表，只归一源值会把 `draft -> pending`（提交审批）判成非法迁移。回归测试 `TestChangeService_LegacySubmittedStatusStaysReadableAndFilterable` 用 raw SQL 还原枚举校验生效前的存量行（Ent 的 `StatusValidator` 只在 builder 保存前触发，枚举外的值可读不可写），断言读取映射、过滤计数、统计三处；反证（临时删掉旧值 OR 分支）在 `change_service_test.go:680` 失败后恢复。
+- **N2（C3）口径**：`BPMNApprovalBridge` 三个公开方法改为三态返回——`(true,nil)` 已桥接、`(false,nil)` 从未绑定（按业务键查不到任何流程实例）、`(false,err)` 已绑定但无操作待办（4090）。`bound` 以「存在任意状态流程实例」判定，实例被挂起或已结束时仍返回冲突，防止已交流程裁决的对象被业务直批绕过。调用方按域处置：`handlers/change` 与 `ticket_workflow_service.go` 旧路径在未绑定时回退审批链并记 `bpmn_handled=false`；BPMN 优先分支保持严格，但成因文案与错误码分离（桥接未接线 5003、工单未绑定 4090、已绑定无待办 4090，见 `bpmnBridgeUnavailable` / `bpmnTicketUnbound`）；服务请求与发布维持「审批必须由流程待办裁决」，仅把「已绑定无待办」的错误换成 bridge 的精确文案（HTTP 仍 409/4090，快照断言不变）。
+- **scenario10**：此前 `service_request.NewService(..., entClient=nil, ...)` 不是生产装配，按 C3 保持 fail-closed 的口径它必然红。改为传入 ent client 并用新增的 `seedApprovalProcess` 播一个串行三级审批流程——只预建第一个待办，后续层级必须由真实 BPMN 引擎在完成当前待办时创建，三级指派人分别是 manager/it_admin/security_admin；7 个子用例转绿，服务目录→请求→审批→履约闭环首次真正覆盖生产装配。
+
 ### 批次 1：消灭假成功（2-3 天）
 
 对每个占位能力二选一：**接真实现**，或**显式 unready 且不注册路由**。禁止"注册了但恒失败"。
@@ -159,6 +167,8 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 - (b) 只删 `persistedChangeStatus` 的反转，保留 `submitted` key 与归一化 —— 改动最小，legacy 与 `handlers/change` 都能绿，但 `submitted` 幽灵继续留着。
 建议 **(b)** 先解阻塞，把 (a) 留给批次 4。
 
+> **已定并落地（2026-10-01）：按 (b) 的最小改动方向执行**——保留 `submitted` 迁移表词表与读映射，只删写入侧反转，另补两处的归一（过滤命中历史行、迁移表目标值）。批次 4 的 (a)（转换表 key 改 `pending`、删归一化）仍未做，`submitted` 作为只读历史词表继续存在。
+
 **N2：无 BPMN 绑定时审批该 fail-closed 还是回退（C3，阻塞 scenario10）**
 现状 `service/bpmn_approval_bridge_service.go:47,93,133` 无待办即返 4090 conflict，导致 service-catalog 多级审批在测试里全断。两个方向：
 - **保留 fail-closed**：则 scenario10 与 `TestTransitionStatus_NoBoundInstanceFallsBack` 的期望要改成断言 4090，且必须给"未绑定流程"的租户一条明确的运营可用路径（配置流程绑定），否则生产上未配 BPMN 的租户审批全线不可用。
@@ -166,6 +176,8 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 我倾向 **恢复回退 + 精确区分两种 4090**，因为这直接决定默认初始化（未配流程）的租户能不能用。
 
 > 与既有计划的关联：这实质是 `output/dev-improvement-plan-2026-09-27.md` §10 的 **D2（Legacy 审批读取端点是否在 Phase 1 移除，cutoff 2026-11-01）** 与 **D8（BPMN Service Task 配置读取失败降级：建议阻塞并告警，不用默认审批人）** 的同一处判定面。若按 D8 的"阻塞并告警"口径，N2 应选 fail-closed 分支，但需同时补齐"未绑定"与"已绑定无待办"两种可观测错误语义。
+
+> **已定并落地（2026-10-01）：三态方案**——「未绑定」与「已绑定无待办」不再是同一个 4090，因此两条分支可以同时成立：change/ticket 未绑定时回退审批链（默认初始化、未配流程的租户可用），已绑定无待办仍 fail-closed（不破坏 D8 口径）；服务请求与发布按既有 P0-1 决策保持「必须由流程待办裁决」，未绑定也冲突。此处遗留的产品问题只有一个：**未接 BPMN 的租户能否审批服务请求**。本次按"不能"保持实现并把 scenario10 改为真实流程装配；若产品要放开，需要单独评审并同步改 `handlers/service_request` 的 fail-closed 注释与断言。
 
 **N3：统一工作台在租户内的可见范围**
 `GET /api/v1/workbench` 认证+租户域已确认无问题（§2 P0#4 已撤销）。开放问题是同一租户内 agent 能否看到他人待办：现有 `handlers/workbench/handler.go:41-45` 支持按 `assigneeId` 传参过滤，但**未校验该 ID 是否等于当前用户**，即缺省返回整租户工作项、且允许指定他人。需定义为"默认仅本人 + 需权限才可跨人"，或确认租户内全员可见本就是产品意图。
@@ -187,3 +199,10 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 批次 0 与 1 合计约 4 天，可立刻开工且不动业务规则；批次 2、3 各约 2 天。
 批次 4 不独立排期 —— 它就是 `output/dev-improvement-plan-2026-09-27.md` Phase 1/Phase 4 的内容，本文只提供现状核对；`service/problem_service.go` 退役可直接挂到该计划 Phase 4「清理」。
 **N1、N2 必须先定**，否则批次 0 无法收口到全绿；N3 不阻塞批次 0，可并入既有 D5「统一工作台 MVP」的产品评审一起定。
+
+## 7. 批次 0 最终状态（2026-10-01）
+
+- N1、N2 已拍板并落地，批次 0 的 C2/C3 存量失败清零：`cd itsm-backend && go test ./...` 81 个包 ok、0 FAIL；`staticcheck ./handlers/ticket_workflow/... ./service/... ./handlers/change/... ./handlers/service_request/... ./tests/scenarios/...` 无告警，改动文件 `gofumpt -l` 为空。
+- 真实生产入口核对：工单审批 `POST /api/v1/tickets/workflow/approve`（`router/ticket_routes.go:219` → `handlers/ticket_workflow/routes.go:189` → `service.TicketWorkflowService.ApproveTicket` → 三态 `BPMNApprovalBridge` → 审批链计数或流程待办）、变更审批（`handlers/change/service.go:1003` 起）、服务请求 `POST /api/v1/service-requests/:id/approval`、发布 `POST /api/v1/releases/:id/{approve,reject}` 均已由测试覆盖，不再只测孤立 helper。
+- `handlers/ticket_workflow` 的 HTTP 层断言按三态拆成两个用例：`TestHandler_ApproveTicket_UnboundFallsBackToApprovalChain`（跨租户 404/4004 → 本租户 200 走审批链 → 重复提交 409「审批已处理」，并断言三种 action 的工单/审批状态与 `bpmn_handled=false` 审计标记）、`TestHandler_ApproveTicket_BoundWithoutActionableTaskIsConflict`（实例在、待办已被他人处理 → 409/4090 精确文案，工单/审批/流转记录零写入）。原 `TestHandler_ApproveTicket_RequiresBPMNTask` 把「未绑定」也当成冲突，与 N2 口径相反，已删除。
+- 仍待拍板：仅 **N3**（统一工作台跨人可见范围）。批次 1-4 未开工。

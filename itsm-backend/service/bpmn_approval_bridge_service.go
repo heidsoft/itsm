@@ -20,6 +20,14 @@ import (
 //
 // 约定：ProcessTriggerService 以 businessKey = "{business_type}:{business_id}" 启动流程实例，
 // 桥接层按同一约定反查运行中的实例及其待办用户任务。
+//
+// 返回语义（三态，与 AdvanceBusinessWorkflow 一致）：
+//   - (true, nil)   已桥接完成流程待办，调用方不得再自行裁决同一审批；
+//   - (false, nil)  业务对象从未绑定运行中流程，调用方按旧审批链处理；
+//   - (false, err)  已绑定流程但当前无可操作待办，或待办完成失败 —— 必须中止业务直批。
+//
+// (false, nil) 与 conflict 不能合并：前者是「本就不走 BPMN」的存量/未配置租户，
+// 后者是「该由流程裁决却没有待办」的绕过风险面，两者对调用方的处置完全不同。
 type BPMNApprovalBridge struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
@@ -39,13 +47,17 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.
 		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
 	}
 
-	_, task, err := b.findPendingApprovalTaskWithClient(ctx, txc, tenantID, businessType, businessID)
+	lookup, err := b.findPendingApprovalTaskWithClient(ctx, txc, tenantID, businessType, businessID)
 	if err != nil {
 		return false, err
 	}
-	if task == nil {
-		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	if !lookup.bound {
+		return false, nil
 	}
+	if lookup.task == nil {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
+	task := lookup.task
 
 	approvalResult := "approved"
 	if action == "reject" {
@@ -76,7 +88,7 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.
 	return true, nil
 }
 
-// 没有 BPMN 待办不代表审批通过，必须阻止业务侧回退直批。
+// CompleteBusinessApprovalTask 把业务审批桥接到流程待办；三态语义见类型注释。
 func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, tenantID, actorUserID int, businessType string, businessID int, action, comment string) (bool, error) {
 	if tenantID <= 0 || actorUserID <= 0 {
 		return false, common.NewBusinessError(common.UnauthorizedCode, "缺少审批身份或租户上下文", "")
@@ -85,13 +97,17 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 		return false, common.NewBusinessError(common.ParamErrorCode, "审批参数无效", "")
 	}
 
-	_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
+	lookup, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
 	if err != nil {
 		return false, err
 	}
-	if task == nil {
-		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	if !lookup.bound {
+		return false, nil
 	}
+	if lookup.task == nil {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
+	task := lookup.task
 
 	approvalResult := "approved"
 	if action == "reject" {
@@ -125,13 +141,17 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 		return false, common.NewBusinessError(common.ParamErrorCode, "委派参数无效", "")
 	}
 
-	_, task, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
+	lookup, err := b.findPendingApprovalTask(ctx, tenantID, businessType, businessID)
 	if err != nil {
 		return false, err
 	}
-	if task == nil {
-		return false, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
+	if !lookup.bound {
+		return false, nil
 	}
+	if lookup.task == nil {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
+	task := lookup.task
 
 	// 注入认证操作人与租户，委派前校验操作人必须是当前任务的审批人/候选人，防止越权改派
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
@@ -178,13 +198,14 @@ func (b *BPMNApprovalBridge) advanceBusinessWorkflow(ctx context.Context, client
 
 	handled := false
 	for step := 0; step < maxSteps; step++ {
-		_, task, err := b.findPendingApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
+		lookup, err := b.findPendingApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
 		if err != nil {
 			return handled, err
 		}
-		if task == nil {
+		if !lookup.bound || lookup.task == nil {
 			return handled, nil
 		}
+		task := lookup.task
 
 		workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
 		workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, actorUserID)
@@ -243,30 +264,61 @@ func (b *BPMNApprovalBridge) HasPendingUserTasksWithClient(ctx context.Context, 
 	return exists, nil
 }
 
-func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
-	return b.findPendingApprovalTaskWithClient(ctx, b.client, tenantID, businessType, businessID)
+// bpmnApprovalNotActionable 表示流程已绑定却拿不到可操作待办：待办可能已被并发消费，
+// 或流程停在别的节点上。此时业务侧直批会让流程状态与业务状态分叉，必须失败关闭。
+func bpmnApprovalNotActionable(businessType string, businessID int) error {
+	return common.NewBusinessError(
+		common.ConflictCode,
+		"流程已绑定但当前没有可处理的审批待办，请勿直接业务审批",
+		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
+	)
 }
 
-func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (*ent.ProcessInstance, *ent.ProcessTask, error) {
+// approvalTaskLookup 是按业务键反查流程待办的结果，必须区分「从未绑定」与「绑定过但此刻不可操作」：
+// 前者调用方回退旧审批链，后者回退就是绕过流程裁决。
+// bound 判据是业务键下存在过流程实例（任意状态），不能只看 running —— 实例被挂起或已结束时
+// 同样查不到 running 行，若据此回退直批就等于让已交流程裁决的对象绕过流程。
+type approvalTaskLookup struct {
+	bound bool
+	task  *ent.ProcessTask
+}
+
+func (b *BPMNApprovalBridge) findPendingApprovalTask(ctx context.Context, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
+	return b.findApprovalTaskWithClient(ctx, b.client, tenantID, businessType, businessID)
+}
+
+func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
+	return b.findApprovalTaskWithClient(ctx, client, tenantID, businessType, businessID)
+}
+
+func (b *BPMNApprovalBridge) findApprovalTaskWithClient(ctx context.Context, client *ent.Client, tenantID int, businessType string, businessID int) (approvalTaskLookup, error) {
 	businessKey := fmt.Sprintf("%s:%d", strings.ToLower(businessType), businessID)
-	instance, err := client.ProcessInstance.Query().
+
+	// 先确认该业务对象是否交过流程裁决，任意状态的实例都算绑定过。
+	boundInstance, err := client.ProcessInstance.Query().
 		Where(
 			processinstance.BusinessKey(businessKey),
 			processinstance.TenantID(tenantID),
-			processinstance.Status("running"),
 		).
 		Order(ent.Desc(processinstance.FieldStartTime)).
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil, nil
+			return approvalTaskLookup{}, nil
 		}
-		return nil, nil, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("查询业务关联流程实例失败: %w", err)
+	}
+	result := approvalTaskLookup{bound: true}
+
+	if boundInstance.Status != "running" {
+		b.logger.Warnw("业务审批桥接：流程实例非运行中，无待办可操作",
+			"businessKey", businessKey, "processInstanceID", boundInstance.ID, "status", boundInstance.Status)
+		return result, nil
 	}
 
 	task, err := client.ProcessTask.Query().
 		Where(
-			processtask.ProcessInstanceID(instance.ID),
+			processtask.ProcessInstanceID(boundInstance.ID),
 			processtask.TenantID(tenantID),
 			processtask.TaskType("user_task"),
 			processtask.StatusIn(
@@ -281,10 +333,11 @@ func (b *BPMNApprovalBridge) findPendingApprovalTaskWithClient(ctx context.Conte
 	if err != nil {
 		if ent.IsNotFound(err) {
 			b.logger.Warnw("业务审批桥接：流程实例无待办用户任务",
-				"businessKey", businessKey, "processInstanceID", instance.ID)
-			return instance, nil, nil
+				"businessKey", businessKey, "processInstanceID", boundInstance.ID)
+			return result, nil
 		}
-		return nil, nil, fmt.Errorf("查询流程待办任务失败: %w", err)
+		return approvalTaskLookup{}, fmt.Errorf("查询流程待办任务失败: %w", err)
 	}
-	return instance, task, nil
+	result.task = task
+	return result, nil
 }

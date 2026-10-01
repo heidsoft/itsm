@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticketworkflowrecord"
@@ -134,20 +135,31 @@ func TestApproveTicket_BridgeFailClosed(t *testing.T) {
 	assert.Equal(t, 0, recordCount)
 }
 
-func TestApproveTicket_WithoutBPMNTaskDoesNotWrite(t *testing.T) {
+// TestApproveTicket_BoundWithoutActionableTaskDoesNotWrite 三态之冲突档（防绕过）：
+// 工单已绑定流程实例但当前无可操作待办时，业务审批必须整体中止，双轨状态均不变。
+func TestApproveTicket_BoundWithoutActionableTaskDoesNotWrite(t *testing.T) {
 	for _, action := range []string{"approve", "reject", "delegate"} {
 		t.Run(action, func(t *testing.T) {
-			client := newApprovalBridgeTestClient(t, "ticket_no_bpmn_"+action)
-			tenantID, actorID := setupBridgeTenantAndActor(t, client, "no-bpmn-"+action)
+			client := newApprovalBridgeTestClient(t, "ticket_bound_no_task_"+action)
+			tenantID, actorID := setupBridgeTenantAndActor(t, client, "bound-none-"+action)
 			svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
 			ctx := context.Background()
 			tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, action)
+			_, taskID := createBridgeProcessFixture(t, client, tenantID, "bound-"+action,
+				fmt.Sprintf("ticket:%d", tk.ID), actorID)
+			// 待办已被消费：流程仍算绑定，此时回退业务直批就是绕过流程裁决。
+			require.NoError(t, client.ProcessTask.UpdateOneID(taskID).SetStatus("completed").Exec(ctx))
+
 			for attempt := 0; attempt < 2; attempt++ {
 				err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
 					TicketID: tk.ID, ApprovalID: approval.ID, Action: action, DelegateToUserID: &actorID,
 				}, actorID, tenantID)
-				require.ErrorContains(t, err, "没有可处理的 BPMN 审批任务")
+				require.ErrorContains(t, err, "流程已绑定但当前没有可处理的审批待办")
 			}
+
+			unchangedTask, err := client.ProcessTask.Get(ctx, taskID)
+			require.NoError(t, err)
+			assert.Equal(t, "completed", unchangedTask.Status)
 			updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
 			require.NoError(t, err)
 			assert.Equal(t, string(dto.ApprovalStatusPending), updatedApproval.Status)
@@ -165,6 +177,71 @@ func TestApproveTicket_WithoutBPMNTaskDoesNotWrite(t *testing.T) {
 			assert.Zero(t, count)
 		})
 	}
+}
+
+// TestApproveTicket_UnboundTicketFallsBackToApprovalChain 三态之回退档：
+// 工单从未绑定流程（未配置 BPMN 的租户）时，legacy 路径必须继续用审批链裁决，
+// 否则整条工单审批在该租户不可用。
+func TestApproveTicket_UnboundTicketFallsBackToApprovalChain(t *testing.T) {
+	client := newApprovalBridgeTestClient(t, "ticket_unbound_fallback")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "unbound")
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, "unbound")
+
+	require.NoError(t, svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+		TicketID: tk.ID, ApprovalID: approval.ID, Action: "approve", Comment: "同意",
+	}, actorID, tenantID))
+
+	updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ApprovalStatusApproved), updatedApproval.Status)
+
+	// 唯一一级审批已完成，工单由审批链计数推进到 approved
+	updatedTicket, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "approved", updatedTicket.Status)
+
+	// 回退路径不产生流程侧写入
+	count, err := client.ProcessApprovalDecision.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, count, "未绑定流程不得凭空生成流程审批决策")
+
+	record, err := client.TicketWorkflowRecord.Query().
+		Where(ticketworkflowrecord.TicketID(tk.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, false, record.Metadata["bpmn_handled"], "流转记录必须标明本次未走 BPMN")
+}
+
+// TestApproveTicket_BPMNFirstUnboundIsNotFallback 同一「未绑定流程」在三态下的两种处置：
+// legacy 路径回退审批链，BPMN 优先模式必须报流程绑定缺口而不是静默直批。
+// 文案要能区分成因（未接线 / 未绑定 / 已绑定无待办），否则运维无法定位配置缺在哪一层。
+func TestApproveTicket_BPMNFirstUnboundIsNotFallback(t *testing.T) {
+	t.Setenv("ITSM_APPROVAL_BPMN_FIRST", "true")
+	client := newApprovalBridgeTestClient(t, "ticket_bpmnfirst_unbound")
+	tenantID, actorID := setupBridgeTenantAndActor(t, client, "bf-unbound")
+	svc := NewTicketWorkflowService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tk, approval := createBridgeTestTicketWithApproval(t, client, tenantID, actorID, "bf")
+
+	err := svc.ApproveTicket(ctx, &dto.ApproveTicketRequest{
+		TicketID: tk.ID, ApprovalID: approval.ID, Action: "approve", Comment: "同意",
+	}, actorID, tenantID)
+	require.ErrorContains(t, err, "工单未绑定 BPMN 流程实例")
+
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	updatedApproval, err := client.TicketApproval.Get(ctx, approval.ID)
+	require.NoError(t, err)
+	assert.Equal(t, string(dto.ApprovalStatusPending), updatedApproval.Status, "BPMN 优先模式不得回退业务直批")
+	recordCount, err := client.TicketWorkflowRecord.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, recordCount)
 }
 
 func TestApproveTicket_RejectBridgesBPMNTask(t *testing.T) {

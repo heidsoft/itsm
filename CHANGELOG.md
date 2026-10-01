@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **变更「待审批」读写词表分裂（C2/N1）** — 状态枚举化后写入值改成 `pending`，但列表与日历过滤仍按枚举外的 `submitted` 匹配，存量待审批变更与新写入的待审批变更被切成两个互不可见的集合；同时迁移表仍以 `submitted` 为词表，只归一源值会把 `draft -> pending`（提交审批）误判为非法迁移。现在按待审批过滤同时命中两种历史写法、迁移表源值与目标值统一归一、写入只落枚举内的 `pending`，并用「还原枚举校验生效前写入的存量行」回归测试锁死读取映射、过滤与统计三处行为。
+- **未接流程的租户工单/变更审批被误判为冲突（C3/N2）** — BPMN 审批桥接原来只有「完成 / 没完成」两态，「工单从未绑定流程」与「已绑定流程却没有可操作待办」返回同一个错误：未配置流程的租户审批全线 4090 不可用，而简单放行又会让已交流程裁决的对象绕过流程。现按三态收敛——未绑定 → 变更/工单回退审批链继续可用；已绑定但无待办 → 4090 中止，提示能区分成因；桥接未接线 → 5003 依赖不可用（不再伪装成用户参数错误）。服务请求与发布维持严格口径（审批必须由流程待办裁决），`TestScenario10_ServiceCatalogFullLoop` 的三级审批闭环已改为按生产装配接真实 BPMN 串行待办，7 个存量失败子用例全部转绿。
 - **仪表盘「待审批变更」计数恒为 0** — 统计查询按 `"submitted"` 过滤 Change 状态，而状态枚举化后该值不在合法词表内（`draft/pending/approved/...`），库里不可能存在这种行，待审批变更永远统计不到。查询条件与测试 fixture 一并改为 `pending`。
 - **SLA 监控在依赖未注入时直接崩溃进程** — `SLAMonitorService` 的 `sla_states` store 由启动装配事后 `SetSLAStore()` 注入，漏注入时读路径会在 nil receiver 上解引用，panic 终止 SLA watcher goroutine。`CheckSLAViolations` / `GetDashboardMetrics` 现在按 fail-closed 返回 5003（依赖不可用），不再伪装成空检查结果，也不会带崩整个进程；含「去掉守卫即 panic」的回归测试。
 - **RBAC 预检生成物与路由不同步** — `middleware/rbac_precheck_gen.go` 落后于实际路由：仍登记已删除的 `/api/v1/projects*`，缺少 `/api/v1/admin/skills`、`/api/v1/admin/skills/:code`、`/api/v1/menus/export`，`TestPrecheckMapIsFresh` 因此失败。已用 `go run ./cmd/authz-gen` 重新生成。

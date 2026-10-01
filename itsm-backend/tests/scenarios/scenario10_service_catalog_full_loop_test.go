@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -39,8 +40,8 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 
 	tid := tenantA.ID
 
-	requester := mustCreateUser(ctx, t, client, tid, "requester", "req@a.com", "end_user")
-	managerUser := mustCreateUser(ctx, t, client, tid, "mgr_zhang", "mgr@a.com", "manager")
+	requester := mustCreateScopedUser(ctx, t, client, tid, "requester", "req@a.com", "end_user", "IT")
+	managerUser := mustCreateScopedUser(ctx, t, client, tid, "mgr_zhang", "mgr@a.com", "manager", "IT")
 	itAdmin := mustCreateUser(ctx, t, client, tid, "it_li", "it@a.com", "it_admin")
 	secAdmin := mustCreateUser(ctx, t, client, tid, "sec_wang", "sec@a.com", "security_admin")
 	operator := mustCreateUser(ctx, t, client, tid, "ops_chen", "ops@a.com", "agent")
@@ -52,8 +53,10 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 	scRepo := service_catalog.NewEntRepository(client)
 	scSvc := service_catalog.NewService(scRepo, logger)
 
+	// 审批写入必须先完成 BPMN 待办（无实例/无待办不得回退业务直批），
+	// 因此这里必须按生产装配传入 entClient，让服务自己桥接 BPMN 审批。
 	srRepo := service_request.NewEntRepository(client)
-	srSvc := service_request.NewService(srRepo, scRepo, nil, nil, logger, nil)
+	srSvc := service_request.NewService(srRepo, scRepo, nil, client, logger, nil)
 
 	// ========== 1. Create service catalog ==========
 	t.Run("create service catalog", func(t *testing.T) {
@@ -173,6 +176,10 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 	})
 
 	// ========== 9. Manager approval (level 1) ==========
+	// 三级审批各由一个串行 BPMN 用户任务承载，审批人与该层级的流程待办指派人必须一致。
+	seedApprovalProcess(t, client, tid, fmt.Sprintf("service_request:%d", srID), "loop10",
+		managerUser.ID, itAdmin.ID, secAdmin.ID)
+
 	t.Run("manager approves level 1", func(t *testing.T) {
 		req, approvals, err := srSvc.ApplyApproval(ctx, srID, tid, managerUser.ID, "approve", "同意", "manager", "")
 		require.NoError(t, err)
@@ -242,6 +249,7 @@ func TestScenario10_ServiceCatalogFullLoop(t *testing.T) {
 		})
 		require.NoError(t, err)
 		rejectID = sr.ID
+		seedApprovalProcess(t, client, tid, fmt.Sprintf("service_request:%d", rejectID), "loop10-reject", managerUser.ID)
 
 		req, _, err := srSvc.ApplyApproval(ctx, rejectID, tid, managerUser.ID, "reject", "预算不足，暂不批准", "manager", "")
 		require.NoError(t, err)

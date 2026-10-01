@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"testing"
 	"time"
@@ -613,6 +614,74 @@ func TestChangeService_SubmitChange_Success(t *testing.T) {
 	assert.Equal(t, dto.ChangeStatusPending, response.Status, "待审批状态应对应 API pending")
 	assert.Equal(t, testChange.ID, response.ID, "变更ID应保持不变")
 	assert.Equal(t, testChange.Title, response.Title, "变更标题应保持不变")
+}
+
+// C2 回归：待审批在状态枚举化之前以 submitted 写入存量库，枚举里已没有 submitted，
+// 因此它只能读不能写。读映射和按待审批过滤必须继续命中存量行，
+// 同时新写入必须落在枚举内的 pending —— 两者任一失守都会让待审批数据被切成两个集合。
+func TestChangeService_LegacySubmittedStatusStaysReadableAndFilterable(t *testing.T) {
+	dsn := testDSN()
+	// 共享缓存内存库：ent 客户端与 raw handle 指向同一个库，
+	// 用于还原枚举校验加入之前写入的存量 submitted 行。
+	client := enttest.Open(t, "sqlite3", dsn)
+	defer client.Close()
+	db, err := sql.Open("sqlite3", dsn)
+	require.NoError(t, err)
+	defer db.Close()
+
+	service := NewChangeService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	testTenant, err := createChangeTestTenant(ctx, client, "legacy")
+	require.NoError(t, err)
+	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "legacy")
+	require.NoError(t, err)
+
+	newPending, err := client.Change.Create().
+		SetTitle("枚举化后提交的变更").
+		SetDescription("写入值必须是枚举内的 pending").
+		SetType("normal").
+		SetStatus("draft").
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, service.UpdateChangeStatus(ctx, newPending.ID, dto.ChangeStatusPending, testTenant.ID))
+
+	legacy, err := client.Change.Create().
+		SetTitle("枚举化前提交的变更").
+		SetDescription("存量行保留 submitted 值").
+		SetType("normal").
+		SetStatus("draft").
+		SetPriority("medium").
+		SetImpactScope("medium").
+		SetRiskLevel("low").
+		SetCreatedBy(testUser.ID).
+		SetTenantID(testTenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	// Ent 的 StatusValidator 会拒绝 submitted，存量行只能用 raw SQL 还原。
+	_, err = db.ExecContext(ctx, `UPDATE changes SET status = 'submitted' WHERE id = ?`, legacy.ID)
+	require.NoError(t, err)
+
+	stored, err := client.Change.Get(ctx, newPending.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "pending", string(stored.Status), "提交审批的写入值不得是枚举外的 submitted")
+
+	legacyResp, err := service.GetChange(ctx, legacy.ID, testTenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, dto.ChangeStatusPending, legacyResp.Status, "存量 submitted 行必须映射为 API pending")
+
+	list, err := service.ListChanges(ctx, testTenant.ID, 1, 20, string(dto.ChangeStatusPending), "")
+	require.NoError(t, err)
+	assert.Equal(t, 2, list.Total, "按待审批过滤必须同时命中 pending 与存量 submitted")
+
+	stats, err := service.GetChangeStats(ctx, testTenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 2, stats.Pending, "待审批统计必须包含存量 submitted 行")
 }
 
 // ==================== 状态转换边界测试 ====================
