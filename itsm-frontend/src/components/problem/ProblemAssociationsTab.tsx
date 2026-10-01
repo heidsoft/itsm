@@ -121,7 +121,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
       switch (addType) {
         case 'ticket': {
           const data = await TicketApi.getTickets({ keyword: value, page: 1, pageSize: 20 });
-          results = (data.tickets || []).map((t: any) => ({
+          results = (data.items ?? []).map((t: any) => ({
             id: t.id,
             title: t.title,
             status: t.status,
@@ -143,7 +143,7 @@ const ProblemAssociationsTab: React.FC<ProblemAssociationsTabProps> = ({ problem
         }
         case 'change': {
           const data = await ChangeApi.getChanges({ search: value, page: 1, pageSize: 20 });
-          results = (data.changes || []).map((c: any) => ({
+          results = (data.items ?? []).map((c: any) => ({
             id: c.id,
             title: c.title,
             status: c.status,

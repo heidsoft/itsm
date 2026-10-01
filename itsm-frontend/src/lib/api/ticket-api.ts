@@ -82,9 +82,9 @@ export interface Ticket {
   rating?: number;
 }
 
-/** 对应后端 dto.ListTicketsResponse */
+/** 后端标准列表信封 common.ListResponse：集合只在 items 下 */
 export interface TicketListResponse {
-  tickets: Ticket[];
+  items: Ticket[];
   total: number;
   page: number;
   pageSize: number;

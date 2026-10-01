@@ -33,7 +33,7 @@ const TicketsReportPage = () => {
     setLoading(true);
     try {
       const response = await ticketService.listTickets({ pageSize: 200 });
-      const tickets = response?.tickets ?? [];
+      const tickets = response?.items ?? [];
 
       const total = tickets.length;
       const open = tickets.filter((t: any) => t.status === 'open' || t.status === 'in_progress').length;

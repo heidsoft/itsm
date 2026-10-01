@@ -74,10 +74,13 @@ export interface Change {
   updatedAt: string;
 }
 
-// 变更列表响应
+// 后端标准列表信封：集合只在 items 下
 export interface ChangeListResponse {
+  items: Change[];
   total: number;
-  changes: Change[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // 变更统计响应

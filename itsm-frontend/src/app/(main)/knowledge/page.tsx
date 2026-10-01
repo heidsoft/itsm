@@ -133,7 +133,7 @@ export default function KnowledgePage() {
           : [],
       });
 
-      const articles = articlesData.articles || [];
+      const articles = articlesData.items ?? [];
       const mappedArticles = articles.map((a: any) => ({
         id: String(a.id),
         title: a.title || '',

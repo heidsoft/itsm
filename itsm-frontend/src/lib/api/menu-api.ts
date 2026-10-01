@@ -91,8 +91,9 @@ export class MenuAdminAPI {
 
   /** 列表（管理员视图，包含禁用/隐藏项）。超管可传 tenantId 查看其他租户菜单 */
   static async list(tenantId?: number): Promise<MenuListResponse> {
-    const query = tenantId != null ? `?tenantId=${tenantId}` : '';
-    return httpClient.get<MenuListResponse>(`${this.baseUrl}${query}`);
+    return httpClient.get<MenuListResponse>(
+      tenantId != null ? `${this.baseUrl}?tenantId=${tenantId}` : `${this.baseUrl}`,
+    );
   }
 
   /** 详情 */

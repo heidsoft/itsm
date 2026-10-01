@@ -11,6 +11,11 @@ export const PRODUCT_CAPABILITIES = {
   changeClassification: false,
   collaborationAdvanced: false,
   knowledgeAdvancedActions: false,
+  // 后端没有注册 GET /api/v1/msp/allocations/history（router/msp_routes.go 只有
+  // /allocations 与 /allocations/deallocate），分配历史面板因此关闭。
+  // 重新开放前提：msp_allocations 补上 deallocation_reason / created_by 落库字段，
+  // 并在 handlers/msp 提供带租户与 RBAC 校验的历史查询。
+  mspAllocationHistory: false,
   notificationTemplateManagement: false,
   notificationChannelManagement: false,
   priorityMatrix: false,
@@ -50,6 +55,7 @@ export const DISABLED_API_CONTRACTS: readonly DisabledApiContract[] = [
   { capability: 'changeClassification', file: 'change-api.ts', path: /\/changes\/templates\//, reason: 'Template instantiation route is not registered' },
   { capability: 'collaborationAdvanced', file: 'collaboration-api.ts', reason: 'Advanced comments, mentions and presence routes are not registered' },
   { capability: 'knowledgeAdvancedActions', file: 'knowledge-base-api.ts', reason: 'Advanced knowledge lifecycle actions are not registered' },
+  { capability: 'mspAllocationHistory', file: 'msp-api.ts', path: /\/msp\/allocations\/history$/, reason: 'GET /api/v1/msp/allocations/history is not registered by router/msp_routes.go' },
   { capability: 'notificationTemplateManagement', file: 'notification-preference-api.ts', reason: 'Preference reset/template application routes are not registered' },
   { capability: 'priorityMatrix', file: 'priority-matrix-api.ts', reason: 'Priority matrix backend is not registered' },
   { capability: 'advancedReporting', file: 'reports-api.ts', reason: 'Only read-only report summaries are supported by the backend' },

@@ -79,7 +79,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
         categoryId: (values as unknown as { category?: number }).category ? String((values as unknown as { category?: number }).category) : undefined,
       });
       // HTTP client already extracts data, so resp is ListKnowledgeArticlesResponse
-      const articles = resp?.articles || [];
+      const articles = resp?.items ?? [];
       const total = resp?.total || 0;
       setData(articles as unknown as KnowledgeArticle[]);
       setTotal(total);

@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -87,24 +86,6 @@ type ListKnowledgeArticlesRequest struct {
 	Category string `form:"category"`
 	Status   string `form:"status"`
 	Search   string `form:"search"`
-}
-
-// 知识库文章列表响应
-type KnowledgeArticleListResponse struct {
-	Items    []KnowledgeArticleResponse `json:"items"`
-	Articles []KnowledgeArticleResponse `json:"articles"` // v1.1 回归：前端别名
-	Total    int                        `json:"total"`
-	Page     int                        `json:"page"`
-	PageSize int                        `json:"pageSize"`
-}
-
-// MarshalJSON 保证 articles 别名至少与 items 一致，避免前端列表为空。
-func (r KnowledgeArticleListResponse) MarshalJSON() ([]byte, error) {
-	if r.Articles == nil {
-		r.Articles = r.Items
-	}
-	type alias KnowledgeArticleListResponse
-	return json.Marshal(alias(r))
 }
 
 // KnowledgeStatsResponse 知识库统计响应

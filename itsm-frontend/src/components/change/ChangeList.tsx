@@ -92,7 +92,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         ...query,
         ...values,
       });
-      setData((resp.changes || []) as unknown as Change[]);
+      setData((resp.items || []) as unknown as Change[]);
       setTotal(resp.total || 0);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的

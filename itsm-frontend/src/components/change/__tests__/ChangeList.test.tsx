@@ -104,8 +104,11 @@ const mockChanges = [
 ];
 
 const mockChangeListResponse = {
-  changes: mockChanges,
+  items: mockChanges,
   total: 3,
+  page: 1,
+  pageSize: 20,
+  totalPages: 1,
 };
 
 // Dynamic import to ensure mocks are applied before component loads
@@ -250,7 +253,7 @@ describe('ChangeList', () => {
 
     it('renders empty state when no data', async () => {
       (ChangeApi.getChanges as jest.Mock).mockResolvedValue({
-        changes: [],
+        items: [],
         total: 0,
       });
 
@@ -404,7 +407,7 @@ describe('ChangeList', () => {
       }));
 
       (ChangeApi.getChanges as jest.Mock).mockResolvedValue({
-        changes: manyChanges,
+        items: manyChanges,
         total: 25,
       });
 
@@ -426,7 +429,7 @@ describe('ChangeList', () => {
 
         (ChangeApi.getChanges as jest.Mock).mockClear();
         (ChangeApi.getChanges as jest.Mock).mockResolvedValue({
-          changes: manyChanges.slice(10, 20),
+          items: manyChanges.slice(10, 20),
           total: 25,
         });
 

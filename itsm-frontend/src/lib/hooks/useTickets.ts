@@ -100,7 +100,7 @@ export const useTickets = (): UseTicketsReturn => {
         sortOrder: currentFilters.sortOrder,
       });
 
-      setTickets(response.tickets ?? []);
+      setTickets(response.items ?? []);
       setPagination(prev => ({ ...prev, total: response.total ?? 0 }));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load tickets';

@@ -53,7 +53,7 @@ export default function TicketTemplateDetailPage() {
         TicketApi.getTickets({ page: 1, pageSize: 50, templateId }),
       ]);
       setTemplate(templateData);
-      setTickets(ticketData.tickets || []);
+      setTickets(ticketData.items ?? []);
     } catch {
       message.error('加载模板详情失败');
       setTemplate(null);

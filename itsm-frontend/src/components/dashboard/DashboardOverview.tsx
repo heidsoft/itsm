@@ -150,7 +150,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setSystemStats(mappedSystemStats);
 
       // 最近工单：后端 dto.TicketResponse 已是契约形状，直接渲染，不再伪造字段
-      setRecentTickets(recentTicketsData.tickets);
+      setRecentTickets(recentTicketsData.items ?? []);
 
       // 转换活跃用户（直接使用后端 User 形状，不再手工填充虚构偏好字段）
       const mappedUsers: User[] = (activeUsersData.users as User[]).map(u => ({

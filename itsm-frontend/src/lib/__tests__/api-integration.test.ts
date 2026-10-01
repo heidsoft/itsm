@@ -46,7 +46,7 @@ describe('API Integration Tests', () => {
           code: 0,
           message: 'success',
           data: {
-            tickets: [
+            items: [
               {
                 id: 1,
                 title: '系统登录问题',
@@ -81,8 +81,8 @@ describe('API Integration Tests', () => {
         );
 
         // Verify response has expected fields (snake_case may be converted to camelCase)
-        expect(result).toHaveProperty('tickets');
-        expect(Array.isArray(result.tickets)).toBe(true);
+        expect(result).toHaveProperty('items');
+        expect(Array.isArray(result.items)).toBe(true);
         expect(result).toHaveProperty('total');
         expect(typeof result.total).toBe('number');
       });
@@ -113,7 +113,7 @@ describe('API Integration Tests', () => {
         const mockResponse = {
           code: 0,
           message: 'success',
-          data: { tickets: [], total: 0, page: 1, pageSize: 10 },
+          data: { items: [], total: 0, page: 1, pageSize: 10 },
         };
 
         (fetch as jest.Mock).mockResolvedValueOnce({
@@ -358,7 +358,7 @@ describe('API Integration Tests', () => {
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: { tickets: [] },
+        data: { items: [] },
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -414,7 +414,7 @@ describe('API Integration Tests', () => {
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: { tickets: [] },
+        data: { items: [] },
       };
 
       (fetch as jest.Mock).mockResolvedValue({
@@ -445,7 +445,7 @@ describe('API Integration Tests', () => {
         code: 0,
         message: 'success',
         data: {
-          tickets: largeTicketList,
+          items: largeTicketList,
           total: 1000,
           page: 1,
           pageSize: 1000,
@@ -460,7 +460,7 @@ describe('API Integration Tests', () => {
 
       const result = await TicketApi.getTickets({ pageSize: 1000 });
 
-      expect(result.tickets).toHaveLength(1000);
+      expect(result.items).toHaveLength(1000);
       expect(result.total).toBe(1000);
     });
   });
@@ -471,7 +471,7 @@ describe('API Integration Tests', () => {
         code: 0,
         message: 'success',
         data: {
-          tickets: [
+          items: [
             {
               id: 1,
               title: '工单标题',
@@ -489,8 +489,8 @@ describe('API Integration Tests', () => {
 
       const result = await TicketApi.getTickets();
 
-      expect(result.tickets).toHaveLength(1);
-      expect(result.tickets[0].id).toBe(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].id).toBe(1);
     });
 
     it('should validate response data structure', async () => {
@@ -499,7 +499,7 @@ describe('API Integration Tests', () => {
         message: 'success',
         data: {
           // Missing required fields
-          tickets: null,
+          items: null,
         },
       };
 

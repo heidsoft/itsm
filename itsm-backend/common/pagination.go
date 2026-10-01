@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/json"
 	"math"
-	"reflect"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -25,145 +24,32 @@ type PaginationResponse struct {
 	HasPrev    bool  `json:"hasPrev"`
 }
 
-// ListResponse 列表响应结构
+// ListResponse 列表响应结构（唯一权威信封）：
+// data = {items,total,page,pageSize,totalPages}。
 //
-// 标准契约使用扁平字段 (items/total/page/pageSize/totalPages)。同时
-// MarshalJSON 自动追加领域名别名（response.tickets/response.incidents/...），
-// 让仍依赖旧字段名的前端代码继续工作。
+// 历史上这里还会做两件事，均已删除：
+//   - 按 slice 元素类型追加领域名别名（items 与 tickets 同时返回）；
+//   - 再嵌套一个 pagination 对象，把同一组分页事实返回两遍。
+//
+// 两者都属于 AGENTS.md 禁止的双轨契约，消费方一律读平铺的 items/total/page/pageSize/totalPages。
 type ListResponse struct {
 	Items      interface{}         `json:"items"`
-	Pagination *PaginationResponse `json:"pagination,omitempty"`
+	Pagination *PaginationResponse `json:"-"`
 }
 
-// MarshalJSON 在标准契约之上输出领域别名，让前端无需修改即可继续工作。
+// MarshalJSON 平铺分页元数据。键集合固定，不随元素类型变化。
 func (l *ListResponse) MarshalJSON() ([]byte, error) {
-	flat := map[string]interface{}{}
-	if l.Items != nil {
-		flat["items"] = l.Items
+	flat := map[string]interface{}{
+		"items": l.Items,
 	}
 	if l.Pagination != nil {
 		flat["total"] = l.Pagination.Total
 		flat["page"] = l.Pagination.Page
 		flat["pageSize"] = l.Pagination.PageSize
 		flat["totalPages"] = l.Pagination.TotalPages
-		flat["pagination"] = l.Pagination
-	}
-
-	if alias := inferDomainAlias(l.Items); alias != "" {
-		flat[alias] = l.Items
 	}
 
 	return json.Marshal(flat)
-}
-
-// domainAliases 与前端代码里 response.<name> 使用的领域名保持一致。
-var domainAliases = []string{
-	"tickets",
-	"incidents",
-	"changes",
-	"problems",
-	"services",
-	"assets",
-	"applications",
-	"projects",
-	"releases",
-	"categories",
-	"types",
-	"records",
-	"list",
-	"templates",
-	"items_list",
-}
-
-// inferDomainAlias 根据 reflect 看到的 slice 元素类型名映射到领域别名。
-// 优先按业务约定名（domainAliases / singularAliases）查找，未命中时回退到
-// 类型名 lowerFirst()。避免出现类似 element=TicketResponse → alias=ticketResponse
-// 但前端期望 tickets 的不一致。
-func inferDomainAlias(items interface{}) string {
-	if items == nil {
-		return ""
-	}
-	t := reflect.TypeOf(items)
-	for t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	if t.Kind() != reflect.Slice && t.Kind() != reflect.Array {
-		return ""
-	}
-	elem := t.Elem()
-	for elem.Kind() == reflect.Ptr {
-		elem = elem.Elem()
-	}
-	if elem.Kind() != reflect.Struct {
-		return ""
-	}
-	name := elem.Name()
-	if name == "" {
-		return ""
-	}
-	lower := lowerFirst(name)
-	for _, alias := range domainAliases {
-		if alias == lower {
-			return alias
-		}
-	}
-	// 业务约定：TicketResponse / IncidentResponse 等领域响应类型映射到复数别名
-	for singular, plural := range singularAliases {
-		if singular == lower {
-			return plural
-		}
-	}
-	return lower
-}
-
-// singularAliases 显式映射：领域响应类型（单数）→ 列表字段名（复数）。
-// 这是 AGENTS.md 中规定的 API 契约，不允许因为 element 类型名差异而漏掉别名。
-var singularAliases = map[string]string{
-	"ticketResponse":         "tickets",
-	"incidentResponse":       "incidents",
-	"changeResponse":         "changes",
-	"problemResponse":        "problems",
-	"serviceResponse":        "services",
-	"assetResponse":          "assets",
-	"applicationResponse":    "applications",
-	"projectResponse":        "projects",
-	"releaseResponse":        "releases",
-	"categoryResponse":       "categories",
-	"typeDefinition":         "types",
-	"ticketTypeDefinition":   "types",
-	"knowledgeArticleResp":   "articles",
-	"knowledgeArticleRespon": "articles",
-	"knowledgeArticle":       "articles",
-	"workflowResponse":       "workflows",
-	"taskResponse":           "tasks",
-	"userResponse":           "users",
-	"roleResponse":           "roles",
-	"groupResponse":          "groups",
-	"departmentResponse":     "departments",
-	"approvalResponse":       "approvals",
-	"notificationResponse":   "notifications",
-	"surveyResponse":         "surveys",
-	"slaResponse":            "slas",
-	"commentResponse":        "comments",
-	"attachmentResponse":     "attachments",
-	"auditLogResponse":       "auditLogs",
-	"connectorResponse":      "connectors",
-	"vendorResponse":         "vendors",
-	"contractResponse":       "contracts",
-	"ciResponse":             "cis",
-	"relationResponse":       "relations",
-}
-
-func lowerFirst(s string) string {
-	if s == "" {
-		return s
-	}
-	if s[0] >= 'A' && s[0] <= 'Z' {
-		b := []byte(s)
-		b[0] = b[0] + ('a' - 'A')
-		return string(b)
-	}
-	return s
 }
 
 // GetPaginationFromQuery 从查询参数中获取分页信息

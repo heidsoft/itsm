@@ -53,10 +53,10 @@ cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts   # 1 failed
 
 ### P1 契约漂移与假状态
 
-7. **知识检索响应 snake_case** — `handlers/knowledge/handler.go:519-529` 返回 `map[string]interface{}`，键为 `is_published`、`relevance_score`、`created_at`、`updated_at`，违反 camelCase 单一契约，且未走 DTO/Mapper。
+7. **知识检索响应 snake_case**（2026-10-02 复核仍在，行号位移）— `handlers/knowledge/handler.go:514-531` 返回 `map[string]interface{}`，键为 `is_published`、`relevance_score`、`created_at`、`updated_at`，违反 camelCase 单一契约，且未走 DTO/Mapper。同时前端 `KnowledgeSearchResult.articles[]` 声明的形状与后端实际 `{items:[…]}` 完全不对应（见 §8）。
 8. **AI 审计可被客户端伪造** — `handlers/ai/service.go:540,557` 以 `model=""/confidence=0` 落库；`POST /ai/audit`（`handlers/ai/handler.go:533-591`）接受客户端自报 model/confidence/accepted。
 9. **邮件 intake 先提交后 enqueue** — `handlers/email_intake/orchestrator.go:173-186` commit，`:364` 才入队，崩溃窗口丢命令；`service/ticket_service.go:171` 同模式。
-10. **前端契约测试失败 2 处** — `menu-api.ts:95` 拼接 URL、`msp-api.ts:134` 指向不存在的后端路由（实测 `npx jest api-contract.test.ts` = 1 failed / 2 passed）。
+10. **~~前端契约测试失败 2 处~~ → 已修（2026-10-02，见 §8）** — `menu-api.ts:95` 拼接 URL 改为静态 base 常量分支；`msp-api.ts:134` 指向不存在的后端路由，按能力开关显式下线而不是补假接口。实测 `npx jest src/lib/__tests__/api-contract.test.ts` = 3 passed / 0 mismatch。
 11. **`/reports` 无视自身能力开关** — `app/(main)/reports/page.tsx:3,13` 渲染 `AdvancedReporting`，而 `product-capabilities.ts:55` 标 `advancedReporting:false` 且 reports 写侧在 allowlist 里。
 12. **8 个 service 包测试文件未传 ctx** — `change/incident/problem/ci_relationship/release/root_cause/recommendation_service_test.go` 调 `context.Background()`，与 `.Scan(ctx)` 修复处（`problem_service.go:128`）同类。
 
@@ -207,4 +207,55 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 - `handlers/ticket_workflow` 的 HTTP 层断言按三态拆成两个用例：`TestHandler_ApproveTicket_UnboundFallsBackToApprovalChain`（跨租户 404/4004 → 本租户 200 走审批链 → 重复提交 409「审批已处理」，并断言三种 action 的工单/审批状态与 `bpmn_handled=false` 审计标记）、`TestHandler_ApproveTicket_BoundWithoutActionableTaskIsConflict`（实例在、待办已被他人处理 → 409/4090 精确文案，工单/审批/流转记录零写入）。原 `TestHandler_ApproveTicket_RequiresBPMNTask` 把「未绑定」也当成冲突，与 N2 口径相反，已删除。
 - 推送后 CI 实测（`gh run list --limit 6` 于 `8113a471`）：`backend-ci`、`test-coverage-guard` 绿；`docs-gate`、`ga-gate`、`Security Scan` 红，但与前一 commit `04fd4cc7` 计数完全一致（C.1 4 处 / C.3 19 条），属存量红、非本批引入。⚠️ 上一版这里写的「docs-gate 通过」只在本地成立：`make docs-gate` 默认 advisory，CI 传 `--strict`，且 `output/`、`itsm-rag/` 被 gitignore 导致链接本地可解析、CI 缺失。
 - 存量红 ①② 已修（本批）：C.3 的 19 条内链改为指向仓库内文档或降级为行内代码并标注本地工作稿，C.1 的 `ga-gate.yml` 口令夹具补门禁认可的「开发环境…不得用于生产」注释；在 HEAD 干净 worktree 里 `run-all.sh --strict` 得 7 total / 0 failed。③ gosec / npm audit / `ga-gate` 的 Start core stack 失败仍未处理，需单独排期。
-- 仍待拍板：仅 **N3**（统一工作台跨人可见范围）。批次 1-4 未开工。
+- 仍待拍板：仅 **N3**（统一工作台跨人可见范围）。批次 1 只完成了其中的 api-contract 验收（见 §8），批次 2-4 未开工。
+
+## 8. 执行记录：列表信封契约收敛（2026-10-02）
+
+用户直接下达的四项排期中第 2 项（"列表信封契约收敛（含 api-contract-check 由红转绿并加响应键断言）"）。
+第 1 项 fresh-install-gate 见 `495b3b40`。
+
+**代码侧**：`common.ListResponse.MarshalJSON` 删除反射领域别名与嵌套 `pagination`，成为唯一平铺
+五键生产者；`ListChanges`（原 `gin.H{"changes":…}`）、知识文章列表（原重复 DTO、缺 `totalPages`）、
+活跃告警（缺 `totalPages`）改走标准生产者；`TicketTypeListResponse.Types`、`IncidentListResponse`
+旧形状、`KnowledgeArticleListResponse` 删除；事件列表/活跃告警读侧 `size` → `pageSize`，前端
+`IncidentAPI` 的 `pageSize→size` 翻译器与 BPMN 两处 `pagination.total` 读取移除。真实生产入口：
+`handlers/{change,incident,knowledge,ticket,ticket_type}/handler.go` → `common.SuccessWithPagination`。
+
+**守卫（本次新增，双向棘轮：新增违规与基线过期都失败）** — `itsm-backend/tests/contract/list_envelope_ratchet_test.go`：
+
+| 轴 | 判据 | 基线（2026-10-02 实测） |
+|:--|:--|:--|
+| `TestListEnvelopeRatchet` | List 信封出现 `items` 之外的集合键 | 30 |
+| `TestListEnvelopeKeys` | List 信封缺 `page`/`pageSize`/`totalPages` | 11 |
+| `TestListEnvelopePagingAliases` | List 信封带 `size`/`limit`/`offset`/`totalCount` 别名 | 9（CMDB 6 处 `DefaultQuery("size")` + 服务目录 + 通知） |
+
+真实路由键集合断言：`handlers/incident/list_contract_test.go`（`TestList_CanonicalEnvelope`、
+`TestList_SizeParamIsNotContract`）、`handlers/knowledge/list_envelope_test.go`
+（`TestListArticles_CanonicalEnvelope`，含租户 99 空结果返回 `[]` 而非 `null`）。
+
+**门禁由红转绿（实测）**：
+- `api-contract-check` 唯一失败项是 swagger 新鲜度 job。重新生成后定义 344→174（移除 171 个全是
+  Ent 生成模型/枚举，新增 1 个 `dto.IncidentListResponse`），路径数 159 不变但集合换 6 条：删
+  `/api/v1/projects`、`/api/v1/projects/{id}`、不存在的 `/api/v1/departments/{id}`，补 5 个真实注册的
+  部门路由注解；悬空 `$ref` 0，仍有 6 个 `ent.*` 定义由市场/安装路由泄漏（既有债务，未在本次处理）。
+- 前端 `src/lib/__tests__/api-contract.test.ts` 实测 3 passed / 0 mismatch（原 1 failed）。P1 #10 关闭。
+  ⚠️ 与批次 1 验收口径「allowlist 条目数不增」有 1 条偏离：`msp-api.ts` 的
+  `GET /api/v1/msp/allocations/history` 从未被 `router/msp_routes.go` 注册，属悬空接口而非命名漂移，
+  按 AGENTS.md 允许的「产品开关 + 明确原因」通道登记 `mspAllocationHistory:false` 并隐藏 MSP
+  「分配历史」Tab。选择下线该能力面而不是补假接口；重新开放前提写在 `product-capabilities.ts` 注释里
+  （`msp_allocations` 需补 `deallocation_reason`/`created_by`，并新增带租户与 RBAC 校验的历史查询）。
+
+**复核确认仍未修**：P1 #7 知识检索响应 snake_case 依旧存在，行号已随本批改动位移到
+`handlers/knowledge/handler.go:514-531`（`is_published`/`relevance_score`/`created_at`/`updated_at`，
+`map[string]interface{}` 未走 DTO）。顺带实测：前端 `KnowledgeSearchResult.articles[]`
+（`{article, score, highlights}`）与后端实际返回（`{items:[扁平文章字段]}`，无 `score` 包裹）
+完全不对应，`KnowledgeIntegration.tsx` 与 `useKnowledgeBase.ts` 拿不到声明的字段——批次 2 第 1 步
+需同时修后端 DTO 与前端声明，而不是只改一侧。
+
+**验证命令**：
+```bash
+cd itsm-backend && go test ./tests/contract/... -run TestListEnvelope
+cd itsm-backend && go test ./handlers/incident/... ./handlers/knowledge/... ./common/... ./dto/...
+cd itsm-backend && go run github.com/swaggo/swag/cmd/swag init -d . -g main.go -o docs --parseDependency --parseInternal && git diff --exit-code -- docs/
+cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts && npm run type-check
+```

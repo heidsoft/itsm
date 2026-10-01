@@ -144,6 +144,57 @@ cookie 模式，否则将无法完成认证。
 补齐新码、删除已收敛的旧映射行）。验证：admin 登录后访问 `/cmdb/cis`、`/audit-logs`、
 `/tenants` 应 200。
 
+---
+
+### 1.8 列表响应统一为 `{items,total,page,pageSize,totalPages}`（2026-10-02，破坏性）
+`common.ListResponse` 此前会在 `items` 之外**再返回一份同数组的领域名别名**（按切片元素类型
+反射推断，例如 `tickets`、`incidents`、`changes`、`articles`），并把同一组分页事实再嵌套一个
+`pagination` 对象。同一接口因此有两套真相，消费方读到哪一套取决于代码写的先后。现在
+`data` 只输出五个平铺键，别名与嵌套 `pagination` 一律删除。
+
+**旧 → 新**：
+
+```jsonc
+// 旧（GET /api/v1/changes）
+{ "code": 0, "data": {
+    "items": [ … ], "changes": [ … ],           // 同一份数组返回两遍
+    "total": 42, "page": 1, "pageSize": 10, "totalPages": 5,
+    "pagination": { "total": 42, "page": 1, "pageSize": 10, "totalPages": 5, "hasNext": true, "hasPrev": false }
+}}
+
+// 新
+{ "code": 0, "message": "success", "data": {
+    "items": [ … ], "total": 42, "page": 1, "pageSize": 10, "totalPages": 5 }}
+```
+
+**集成方必须改的三件事**：
+1. 集合一律读 `data.items`；不要再读领域名顶层键，也不要写 `items ?? tickets ?? []` 这类
+   多字段 fallback（AGENTS.md 已禁止，现在也没有第二份数据可供 fallback）。
+2. 分页元数据只读平铺的 `data.total` / `data.page` / `data.pageSize` / `data.totalPages`；
+   `data.pagination` 不再返回。
+3. 请求分页参数只发 `page` 与 `pageSize`。本次同时把事件域读侧从 `size` 改成 `pageSize`
+   （`GET /api/v1/incidents`、`GET /api/v1/incidents/alerts/active`），继续发 `size` 会被忽略并
+   回退默认 10 条——`TestList_SizeParamIsNotContract` 锁死了这一点。
+
+**本次已切到标准信封的生产入口**：`GET /api/v1/tickets`、`GET /api/v1/incidents`、
+`GET /api/v1/incidents/alerts/active`（补上此前缺失的 `totalPages`）、`GET /api/v1/changes`、
+`GET /api/v1/knowledge/articles`、`GET /api/v1/ticket-types`，以及所有走
+`common.SuccessWithPagination` / `common.NewListResponse` 的接口。`GET /api/v1/bpmn/process-definitions`、
+`GET /api/v1/bpmn/process-instances` 的 `pagination.total` 读取点同步改为 `total`。
+
+**尚未收敛（按棘轮基线登记，不构成本次破坏）**：`dto/*.go` 里 30 个手写 List 结构仍返回领域名
+集合键（`roles`、`menus`、`tenants`、`catalogs`、`allocations`、`notifications` 等），9 个 CMDB/服务目录/
+通知信封仍用 `size` 代替 `pageSize`，11 个信封仍缺 `page`/`pageSize`/`totalPages` 中的若干键。
+清单与收敛方法见 `itsm-backend/tests/contract/list_envelope_ratchet_test.go`——三条双向棘轮会让
+新增违规和"收敛后忘记收口"都构建失败，因此这些存量形状只减不增。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./tests/contract/... -run TestListEnvelope
+cd itsm-backend && go test ./handlers/incident/... -run 'TestList_CanonicalEnvelope|TestList_SizeParamIsNotContract'
+cd itsm-backend && go test ./handlers/knowledge/... -run TestListArticles_CanonicalEnvelope
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

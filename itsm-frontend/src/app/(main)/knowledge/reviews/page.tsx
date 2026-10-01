@@ -92,7 +92,7 @@ export default function KnowledgeReviewListPage() {
         status: statusFilter as unknown as ArticleStatus,
       });
       // 过滤出待审核的文章（兼容下划线/驼峰两种历史取值）
-      const items = (response.articles || []) as unknown as ArticleItem[];
+      const items = (response.items ?? []) as unknown as ArticleItem[];
       const pendingReview = items.filter(a => isPendingReview(a.status));
 
       if (isPendingReview(statusFilter) || !statusFilter) {

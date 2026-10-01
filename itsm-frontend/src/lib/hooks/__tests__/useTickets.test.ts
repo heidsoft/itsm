@@ -31,7 +31,7 @@ const mockTicketService = ticketService as jest.Mocked<typeof ticketService>;
 describe('useTickets', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTicketService.listTickets.mockResolvedValue({ tickets: [], total: 0 } as any);
+    mockTicketService.listTickets.mockResolvedValue({ items: [], total: 0 } as any);
     mockTicketService.getTicketStats.mockResolvedValue({
       total: 10,
       open: 5,
@@ -52,7 +52,7 @@ describe('useTickets', () => {
 
   it('should fetch tickets on mount', async () => {
     mockTicketService.listTickets.mockResolvedValue({
-      tickets: [{ id: 1, title: 'Test Ticket' }],
+      items: [{ id: 1, title: 'Test Ticket' }],
       total: 1,
     } as any);
 

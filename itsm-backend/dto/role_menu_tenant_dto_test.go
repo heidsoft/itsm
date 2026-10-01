@@ -82,22 +82,6 @@ func TestTenantListResponseUsesPageSizeJSON(t *testing.T) {
 	assert.NotContains(t, jsonStr, `"size"`)
 }
 
-func TestKnowledgeArticleListResponseUsesPageSizeJSON(t *testing.T) {
-	resp := KnowledgeArticleListResponse{
-		Articles: []KnowledgeArticleResponse{{ID: 1, Title: "KB"}},
-		Total:    1,
-		Page:     1,
-		PageSize: 10,
-	}
-
-	data, err := json.Marshal(resp)
-	assert.NoError(t, err)
-
-	jsonStr := string(data)
-	assert.Contains(t, jsonStr, `"pageSize":10`)
-	assert.NotContains(t, jsonStr, `"size"`)
-}
-
 func stringPtrForDTO(v string) *string {
 	return &v
 }

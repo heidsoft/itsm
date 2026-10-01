@@ -105,10 +105,11 @@ export interface ChangeQuery {
 
 // 列表响应
 export interface ChangeListResponse {
-  changes: Change[];
+  items: Change[];
   total: number;
   page: number;
-  size: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // 统计响应

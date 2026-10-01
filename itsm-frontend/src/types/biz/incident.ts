@@ -104,7 +104,6 @@ export interface IncidentQuery {
 
 // 列表响应
 export interface IncidentListResponse {
-  incidents?: Incident[];
   items: Incident[];
   total: number;
   page?: number;

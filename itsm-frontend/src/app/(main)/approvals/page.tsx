@@ -158,13 +158,14 @@ export default function ApprovalsCenterPage() {
     setLegacyLoading(true);
     try {
       // 查询参数统一 camelCase，与后端 DTO form tag 契约一致。
+      // 三个列表接口都返回标准信封，集合只在 data.items 下。
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ tickets?: any[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ tickets: [] })),
-        httpClient.get<{ changes?: any[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ changes: [] })),
-        httpClient.get<{ items?: any[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
+        httpClient.get<{ items?: unknown[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
+        httpClient.get<{ items?: unknown[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
+        httpClient.get<{ items?: unknown[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
       ]);
       const items: LegacyPendingItem[] = [
-        ...(ticketsResp.tickets || []).map((t: any) => ({
+        ...(ticketsResp.items ?? []).map((t: any) => ({
           id: t.id,
           type: 'ticket' as const,
           title: t.title || `工单 #${t.id}`,
@@ -174,7 +175,7 @@ export default function ApprovalsCenterPage() {
           url: `/tickets/${t.id}`,
           requester: t.requesterName,
         })),
-        ...(changesResp.changes || []).map((c: any) => ({
+        ...(changesResp.items ?? []).map((c: any) => ({
           id: c.id,
           type: 'change' as const,
           title: c.title || `变更 #${c.id}`,
@@ -184,7 +185,7 @@ export default function ApprovalsCenterPage() {
           url: `/changes/${c.id}`,
           requester: c.requesterName,
         })),
-        ...(srResp.items || []).map((s: any) => ({
+        ...(srResp.items ?? []).map((s: any) => ({
           id: s.id,
           type: 'service_request' as const,
           title: s.title || `服务请求 #${s.id}`,

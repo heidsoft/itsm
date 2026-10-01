@@ -95,7 +95,7 @@ export interface UpdateChangeRequest extends Partial<CreateChangeRequest> {
 }
 
 export interface ChangeListResponse {
-  changes: Change[];
+  items: Change[];
   total: number;
   page: number;
   pageSize: number;

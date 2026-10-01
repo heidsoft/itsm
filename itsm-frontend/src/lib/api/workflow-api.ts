@@ -383,12 +383,11 @@ export class WorkflowApi {
             updatedAt: string;
           }>;
           total?: number;
-          pagination?: { total: number };
         }
     >('/api/v1/bpmn/process-definitions', params);
 
     const list = res.items ?? [];
-    const total = res.pagination?.total ?? list.length;
+    const total = res.total ?? list.length;
     const workflows: WorkflowDefinition[] = list.map((item: {
       id: number;
       key: string;
@@ -1103,7 +1102,6 @@ export class WorkflowApi {
         startTime: string;
         endTime?: string;
       }>;
-      pagination?: { total: number };
       total?: number;
     }>('/api/v1/bpmn/process-instances', query);
     const list = res.items ?? [];
@@ -1121,7 +1119,7 @@ export class WorkflowApi {
     }));
     return {
       instances,
-      total: res?.pagination?.total || res?.total || list.length,
+      total: res?.total ?? list.length,
     };
   }
 

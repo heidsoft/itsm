@@ -77,7 +77,7 @@ describe('useTicketsQuery hooks', () => {
   describe('useTicketsQuery', () => {
     it('should fetch tickets with default params', async () => {
       mockService.listTickets.mockResolvedValue({
-        tickets: [{ id: 1, title: 'Test' }],
+        items: [{ id: 1, title: 'Test' }],
         total: 1,
         page: 1,
         pageSize: 20,
@@ -94,7 +94,7 @@ describe('useTicketsQuery hooks', () => {
 
     it('should pass filters to service', async () => {
       mockService.listTickets.mockResolvedValue({
-        tickets: [],
+        items: [],
         total: 0,
         page: 1,
         pageSize: 20,
@@ -117,7 +117,7 @@ describe('useTicketsQuery hooks', () => {
 
     it('should handle empty response gracefully', async () => {
       mockService.listTickets.mockResolvedValue({
-        tickets: null,
+        items: null,
         total: 0,
       } as any);
 
@@ -142,11 +142,10 @@ describe('useTicketsQuery hooks', () => {
 
     it('should calculate totalPages correctly', async () => {
       mockService.listTickets.mockResolvedValue({
-        tickets: [],
+        items: [],
         total: 45,
         page: 1,
         pageSize: 10,
-        size: 10,
       } as any);
 
       const { result } = renderHook(

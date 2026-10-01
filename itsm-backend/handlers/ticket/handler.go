@@ -218,7 +218,7 @@ func (h *Handler) ListTickets(c *gin.Context) {
 		return
 	}
 
-	// v1.1 回归：使用 SuccessWithPagination 自动产出 items+tickets 别名，避免前端 response.tickets 未定义导致列表为空
+	// 标准信封：data.items + total/page/pageSize/totalPages
 	common.SuccessWithPagination(c, ticketListToResponse(tickets), req.Page, req.PageSize, int64(total))
 }
 

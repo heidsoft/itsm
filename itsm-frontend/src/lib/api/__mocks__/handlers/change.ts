@@ -190,8 +190,11 @@ export const changeHandlers = {
     const paginatedChanges = changes.slice(startIndex, startIndex + pageSize);
 
     return {
+      items: paginatedChanges,
       total: changes.length,
-      changes: paginatedChanges,
+      page,
+      pageSize,
+      totalPages: Math.ceil(changes.length / pageSize),
     };
   },
 

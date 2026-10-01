@@ -381,12 +381,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 		dtos = append(dtos, *toDTO(item))
 	}
 
-	common.Success(c, gin.H{
-		"changes":  dtos,
-		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
-	})
+	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
 }
 
 // UpdateChange handles PUT /api/v1/changes/:id

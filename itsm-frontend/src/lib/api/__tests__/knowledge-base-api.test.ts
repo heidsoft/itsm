@@ -23,10 +23,10 @@ describe('KnowledgeBaseApi', () => {
 
   describe('getArticles', () => {
     it('should get articles', async () => {
-      mockGet.mockResolvedValue({ articles: [{ id: '1', title: 'Guide' }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: '1', title: 'Guide' }], total: 1 });
       const result = await KnowledgeBaseApi.getArticles({ page: 1 } as any);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/knowledge/articles', { page: 1 });
-      expect(result.articles).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 

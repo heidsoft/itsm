@@ -149,8 +149,10 @@ type IncidentResponse struct {
 	UpdatedAt             time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
+// IncidentListResponse 是 GET /api/v1/incidents 的响应模型，与
+// common.SuccessWithPagination 产出的平铺信封逐键一致（items 而非 incidents）。
 type IncidentListResponse struct {
-	Incidents  []*IncidentResponse `json:"incidents"`
+	Items      []*IncidentResponse `json:"items"`
 	Total      int                 `json:"total"`
 	Page       int                 `json:"page"`
 	PageSize   int                 `json:"pageSize"`
@@ -224,10 +226,11 @@ type IncidentAlertResponse struct {
 }
 
 type IncidentAlertListResponse struct {
-	Items    []*IncidentAlertResponse `json:"items"`
-	Total    int                      `json:"total"`
-	Page     int                      `json:"page"`
-	PageSize int                      `json:"pageSize"`
+	Items      []*IncidentAlertResponse `json:"items"`
+	Total      int                      `json:"total"`
+	Page       int                      `json:"page"`
+	PageSize   int                      `json:"pageSize"`
+	TotalPages int                      `json:"totalPages"`
 }
 
 // 事件指标DTO

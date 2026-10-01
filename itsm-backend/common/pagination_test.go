@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -319,7 +321,52 @@ func TestSuccessWithPagination(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, listResp["items"])
 	assert.NotContains(t, listResp, "data")
-	assert.NotNil(t, listResp["pagination"])
+	// pagination 嵌套对象已删除：同一组分页事实只返回一次
+	assert.NotContains(t, listResp, "pagination")
+}
+
+// ==================== 信封键集合测试 ====================
+
+// ticketResponse 故意使用小写类型名：历史上信封会按元素类型名反射出
+// tickets/incidents 这类领域别名，与 items 同时返回，形成 AGENTS.md 禁止的双轨契约。
+type ticketResponse struct {
+	ID         int    `json:"id"`
+	TicketName string `json:"ticketNumber"`
+}
+
+func TestListResponseEnvelopeKeysAreFixed(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	items := []ticketResponse{{ID: 1, TicketName: "TCK-1"}}
+	SuccessWithPagination(c, items, 1, 10, 1)
+
+	var resp Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+
+	listResp, ok := resp.Data.(map[string]interface{})
+	require.True(t, ok)
+
+	// 键集合封闭：既不允许多余的领域别名，也不允许缺分页字段。
+	keys := make([]string, 0, len(listResp))
+	for k := range listResp {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys)
+	assert.NotContains(t, listResp, "tickets")
+}
+
+func TestListResponse_EmptyItemsSerializesAsArray(t *testing.T) {
+	items := []ticketResponse{}
+	data, err := json.Marshal(NewListResponse(items, NewPaginationResponse(1, 20, 0)))
+	require.NoError(t, err)
+
+	var got map[string]interface{}
+	require.NoError(t, json.Unmarshal(data, &got))
+	assert.Equal(t, []interface{}{}, got["items"])
+	_, hasTickets := got["tickets"]
+	assert.False(t, hasTickets)
 }
 
 // ==================== 边界情况测试 ====================

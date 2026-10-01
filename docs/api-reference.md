@@ -185,7 +185,7 @@ Query Parameters:
   "code": 0,
   "message": "success",
   "data": {
-    "tickets": [
+    "items": [
       {
         "id": "1",
         "ticketNumber": "TK-2024-00001",
@@ -203,7 +203,8 @@ Query Parameters:
     ],
     "total": 100,
     "page": 1,
-    "pageSize": 20
+    "pageSize": 20,
+    "totalPages": 5
   }
 }
 ```
@@ -340,7 +341,7 @@ Authorization: Bearer <accessToken>
 
 Query Parameters:
 - page: 页码（默认 1）
-- size: 每页数量（默认 10；该接口尚未收敛到规范的 pageSize，已单独跟进）
+- pageSize: 每页数量（默认 10，上限 200；越界值回退默认或截断到上限）
 - status: 状态过滤
 - priority: 优先级过滤
 - keyword: 搜索关键词（匹配标题/描述/事件编号）
@@ -1362,6 +1363,10 @@ Query Parameters:
   "totalPages": 5
 }
 ```
+
+分页事实只出现在这一层：列表集合固定用 `items`（领域名只出现在 item 类型里），不再同时返回
+`tickets`/`changes`/`incidents`/`articles` 这类领域名别名，也不再嵌套重复的 `pagination` 对象。
+消费方按 `data.items` 读取即可。
 
 ## 排序
 

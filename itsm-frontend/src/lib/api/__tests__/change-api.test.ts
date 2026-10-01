@@ -42,7 +42,7 @@ describe('ChangeApi', () => {
         code: 0,
         message: 'success',
         data: {
-          changes: [
+          items: [
             {
               id: 1,
               title: 'Database Server Upgrade',
@@ -86,8 +86,8 @@ describe('ChangeApi', () => {
         })
       );
 
-      expect(result.changes).toHaveLength(1);
-      expect(result.changes[0].title).toBe('Database Server Upgrade');
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].title).toBe('Database Server Upgrade');
     });
 
     it('should handle empty change list', async () => {
@@ -95,7 +95,7 @@ describe('ChangeApi', () => {
         code: 0,
         message: 'success',
         data: {
-          changes: [],
+          items: [],
           total: 0,
         },
       };
@@ -109,7 +109,7 @@ describe('ChangeApi', () => {
 
       const result = await ChangeApi.getChanges();
 
-      expect(result.changes).toHaveLength(0);
+      expect(result.items).toHaveLength(0);
       expect(result.total).toBe(0);
     });
 
@@ -117,7 +117,7 @@ describe('ChangeApi', () => {
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: { changes: [], total: 0 },
+        data: { items: [], total: 0 },
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({

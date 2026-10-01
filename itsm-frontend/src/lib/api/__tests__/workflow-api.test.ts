@@ -710,11 +710,15 @@ describe('WorkflowApi', () => {
   });
 
   describe('getWorkflows with paginated response', () => {
-    it('should handle canonical {items, pagination:{total}} response', async () => {
-      // 规范契约：后端 common.NewListResponse → {items, pagination:{total,page,pageSize,...}}
+    it('should read total from the canonical flat envelope', async () => {
+      // 规范契约：common.SuccessWithPagination 只产出平铺
+      // {items,total,page,pageSize,totalPages}；嵌套 pagination 与领域名别名已删除。
       (httpClient.get as jest.Mock).mockResolvedValueOnce({
         items: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }],
-        pagination: { total: 5 },
+        total: 5,
+        page: 1,
+        pageSize: 1,
+        totalPages: 5,
       });
       const result = await WorkflowApi.getWorkflows();
       expect(result.workflows).toHaveLength(1);
@@ -723,10 +727,9 @@ describe('WorkflowApi', () => {
 
     it('rejects legacy {data: [...]} shape (S-9 single-source contract)', async () => {
       // Fix for S-9：旧实现用 response.data ?? response.items ?? response.list 多字段兜底，
-      // AGENTS.md 禁止。S-9 后只接受规范 {items, pagination}。
+      // AGENTS.md 禁止。现在只接受规范 {items,total,...}，data 不再被当成集合来源。
       (httpClient.get as jest.Mock).mockResolvedValueOnce({
         data: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }],
-        total: 1,
       });
       const result = await WorkflowApi.getWorkflows();
       expect(result.workflows).toHaveLength(0);

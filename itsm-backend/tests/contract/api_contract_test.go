@@ -19,6 +19,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -129,6 +131,26 @@ func TestContract_InternalErrorFormat(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Equal(t, common.InternalErrorCode, response.Code)
+}
+
+// assertListEnvelope 断言列表响应只按标准信封返回：
+// data.items 承载集合，分页统计平铺，且不再出现领域名别名。
+func assertListEnvelope(t *testing.T, data map[string]interface{}) {
+	t.Helper()
+
+	require.Contains(t, data, "items")
+	require.Contains(t, data, "total")
+	require.Contains(t, data, "page")
+	require.Contains(t, data, "pageSize")
+	require.Contains(t, data, "totalPages")
+	assert.NotContains(t, data, "pagination", "分页明细与平铺字段重复，属双轨契约")
+
+	var keys []string
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys)
 }
 
 // ============ 登录 API 契约测试 ============
@@ -369,20 +391,10 @@ func TestContract_ChangeAPI_List_Pagination(t *testing.T) {
 		page := c.DefaultQuery("page", "1")
 		pageSize := c.DefaultQuery("pageSize", "10")
 
-		common.Success(c, gin.H{
-			"changes": []interface{}{
-				gin.H{
-					"id":        1,
-					"title":     "Test Change",
-					"status":    "draft",
-					"priority":  "medium",
-					"createdAt": "2024-01-15T10:00:00Z",
-				},
-			},
-			"total":    1,
-			"page":     page,
-			"pageSize": pageSize,
-		})
+		// 与 handlers/change.ListChanges 走同一个信封构造函数，避免夹具与真实路由漂移
+		pageNum, _ := strconv.Atoi(page)
+		sizeNum, _ := strconv.Atoi(pageSize)
+		common.SuccessWithPagination(c, []gin.H{{"id": 1, "title": "Test Change", "status": "draft"}}, pageNum, sizeNum, 1)
 	})
 
 	w := doRequest(r, "GET", "/api/v1/changes?page=1&pageSize=10", nil)
@@ -393,6 +405,8 @@ func TestContract_ChangeAPI_List_Pagination(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, common.SuccessCode, response.Code)
+
+	assertListEnvelope(t, response.Data.(map[string]interface{}))
 }
 
 func TestContract_ChangeAPI_GetByID_InvalidID(t *testing.T) {
@@ -604,21 +618,15 @@ func TestContract_KnowledgeAPI_List_Pagination(t *testing.T) {
 		page := c.DefaultQuery("page", "1")
 		pageSize := c.DefaultQuery("pageSize", "10")
 
-		common.Success(c, gin.H{
-			"articles": []interface{}{
-				gin.H{
-					"id":        1,
-					"title":     "How to reset password",
-					"category":  "IT Support",
-					"status":    "published",
-					"createdAt": "2024-01-15T10:00:00Z",
-					"updatedAt": "2024-01-15T10:00:00Z",
-				},
-			},
-			"total":    1,
-			"page":     page,
-			"pageSize": pageSize,
-		})
+		// 与 handlers/knowledge.ListArticles 一致：集合只在 items 下
+		pageNum, _ := strconv.Atoi(page)
+		sizeNum, _ := strconv.Atoi(pageSize)
+		common.SuccessWithPagination(c, []gin.H{{
+			"id":       1,
+			"title":    "How to reset password",
+			"category": "IT Support",
+			"status":   "published",
+		}}, pageNum, sizeNum, 1)
 	})
 
 	w := doRequest(r, "GET", "/api/v1/knowledge-articles?page=1&pageSize=10", nil)
@@ -630,10 +638,7 @@ func TestContract_KnowledgeAPI_List_Pagination(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, common.SuccessCode, response.Code)
 
-	data := response.Data.(map[string]interface{})
-	assert.NotNil(t, data["articles"])
-	assert.Equal(t, "1", data["page"])
-	assert.Equal(t, "10", data["pageSize"])
+	assertListEnvelope(t, response.Data.(map[string]interface{}))
 }
 
 // ============ 智能分配 API 契约测试 ============

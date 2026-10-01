@@ -209,17 +209,14 @@ func (h *Handler) ListArticles(c *gin.Context) {
 		return
 	}
 
-	var dtos []dto.KnowledgeArticleResponse
+	// 空列表必须是 []，不能是 null：前端列表页直接 map 渲染
+	dtos := make([]dto.KnowledgeArticleResponse, 0, len(list))
 	for _, item := range list {
 		dtos = append(dtos, *h.toArticleDTO(item))
 	}
 
-	common.Success(c, dto.KnowledgeArticleListResponse{
-		Items:    dtos,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	})
+	// 标准信封：data.items + total/page/pageSize/totalPages
+	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
 }
 
 // UpdateArticle handles PUT /api/v1/knowledge-articles/:id

@@ -353,18 +353,9 @@ export class IncidentAPI {
   // 获取事件列表
   static async listIncidents(params: ListIncidentsRequest = {}): Promise<ListIncidentsResponse> {
     try {
-      // 标准化参数
-      const normalizedParams: Record<string, unknown> = { ...params };
-      // The incident handler uses `size`; keep the public client API aligned
-      // with the rest of the frontend by translating `pageSize` here.
-      if (params.pageSize !== undefined) {
-        normalizedParams.size = params.pageSize;
-        delete normalizedParams.pageSize;
-      }
-
       // 过滤掉undefined值
       const cleanParams = Object.fromEntries(
-        Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
+        Object.entries(params).filter(([, value]) => value !== undefined)
       );
 
       const response = await httpClient.get<IncidentListPayload>(API_URLS.INCIDENTS(), cleanParams);

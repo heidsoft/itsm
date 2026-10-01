@@ -748,8 +748,13 @@ func TestSuccessWithList(t *testing.T) {
 	if !strings.Contains(body, `"data"`) {
 		t.Errorf("expected data field, body=%s", body)
 	}
-	if !strings.Contains(body, `"pagination"`) {
-		t.Errorf("expected pagination field, body=%s", body)
+	if strings.Contains(body, `"pagination"`) {
+		t.Errorf("pagination 嵌套对象应已删除：同一组分页事实只返回一次, body=%s", body)
+	}
+	for _, key := range []string{`"total"`, `"page"`, `"pageSize"`, `"totalPages"`} {
+		if !strings.Contains(body, key) {
+			t.Errorf("expected flat pagination key %s, body=%s", key, body)
+		}
 	}
 }
 

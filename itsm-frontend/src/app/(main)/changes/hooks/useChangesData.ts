@@ -31,7 +31,7 @@ export const useChangesData = () => {
         status: filter === '全部' ? undefined : filter,
         search: searchText || undefined,
       });
-      setChanges(response.changes || []);
+      setChanges(response.items ?? []);
       setPagination(prev => ({ ...prev, total: response.total }));
     } catch (err) {
       console.error('获取变更列表失败:', err);

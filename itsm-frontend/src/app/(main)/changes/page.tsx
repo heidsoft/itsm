@@ -160,9 +160,10 @@ export default function ChangesPage() {
         risk: riskFilter,
         search: searchKeyword,
       });
-      const items = response.changes || [];
+      const items = response.items ?? [];
       setChanges(items);
-      setTotal(response.total || items.length);
+      // total 是信封必填字段，0 是合法值，禁止用 || 回退到当前页条数。
+      setTotal(response.total);
     } catch (error) {
       console.error('Failed to fetch changes:', error);
       message.error(t('changes.getFailed'));
@@ -183,7 +184,7 @@ export default function ChangesPage() {
         risk: riskFilter,
         search: searchKeyword,
       });
-      setChanges(response.changes || []);
+      setChanges(response.items ?? []);
     } catch (error) {
       console.error('Failed to fetch changes for kanban:', error);
       setLoadError(true);

@@ -21,6 +21,7 @@ import {
 } from 'antd';
 import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
+import { hasProductCapability } from '@/config/product-capabilities';
 import type { MSPAllocation, MSPCustomerReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
 
 const { RangePicker } = DatePicker;
@@ -486,7 +487,8 @@ export default function MSPDashboardPage() {
               </Card>
             ),
           },
-        ]}
+          // 分配历史面板依赖未注册的后端路由，见 PRODUCT_CAPABILITIES.mspAllocationHistory。
+        ].filter((item) => item.key !== 'history' || hasProductCapability('mspAllocationHistory'))}
       />
     </div>
   );

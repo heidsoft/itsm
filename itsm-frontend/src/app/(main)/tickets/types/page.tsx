@@ -24,7 +24,7 @@ export default function TicketTypesPage() {
     setLoading(true);
     try {
       const result = await TicketTypeApi.list({ keyword, includeArchived, page: 1, pageSize: 100 });
-      setItems(result.types ?? []);
+      setItems(result.items ?? []);
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载工单类型失败');
     } finally { setLoading(false); }

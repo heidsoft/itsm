@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strconv"
 	"sync"
 	"testing"
@@ -480,11 +481,16 @@ func TestChangeController_ListChanges(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, response.Code)
 
-			if response.Code == common.SuccessCode {
-				data := response.Data.(map[string]interface{})
-				assert.Contains(t, data, "changes")
-				assert.Contains(t, data, "total")
+			// 标准信封：键集合封闭，不再返回领域名 changes。无条件断言，
+			// 避免 handler 退化为失败响应时空断言假绿。
+			data, ok := response.Data.(map[string]interface{})
+			require.True(t, ok, w.Body.String())
+			keys := make([]string, 0, len(data))
+			for k := range data {
+				keys = append(keys, k)
 			}
+			sort.Strings(keys)
+			assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys, w.Body.String())
 		})
 	}
 }

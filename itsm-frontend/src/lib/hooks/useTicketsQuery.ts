@@ -70,7 +70,7 @@ export const useTicketsQuery = (
         const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
         // 确保返回的数据结构完整
         return {
-          tickets: Array.isArray(response?.tickets) ? response.tickets : [],
+          tickets: Array.isArray(response?.items) ? response.items : [],
           total,
           page: response?.page || pagination.current,
           pageSize: pageSize,

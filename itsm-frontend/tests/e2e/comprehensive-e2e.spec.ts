@@ -331,7 +331,7 @@ test.describe('ITSM 全面 E2E 业务流测试', () => {
     expect(cmdbResp.status()).toBe(403);
 
     // 不可读 incidents
-    const incResp = await page.request.get(`${API}/api/v1/incidents?page=1&page_size=3`, { headers });
+    const incResp = await page.request.get(`${API}/api/v1/incidents?page=1&pageSize=3`, { headers });
     expect(incResp.status()).toBe(403);
   });
 
@@ -343,7 +343,7 @@ test.describe('ITSM 全面 E2E 业务流测试', () => {
     const headers = { Authorization: `Bearer ${secToken}` };
 
     // 可读 incidents
-    const incResp = await page.request.get(`${API}/api/v1/incidents?page=1&page_size=3`, { headers });
+    const incResp = await page.request.get(`${API}/api/v1/incidents?page=1&pageSize=3`, { headers });
     expect(incResp.status()).toBe(200);
 
     // 不能访问审计日志

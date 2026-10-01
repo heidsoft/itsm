@@ -270,7 +270,7 @@ export interface TicketTypePresetDefinition {
  * 工单类型列表响应
  */
 export interface TicketTypeListResponse {
-  types: TicketTypeDefinition[];
+  items: TicketTypeDefinition[];
   total: number;
   page: number;
   pageSize: number;

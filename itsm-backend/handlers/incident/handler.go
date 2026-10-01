@@ -430,7 +430,7 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(10)
+// @Param pageSize query int false "每页数量" default(10)
 // @Param status query string false "状态过滤"
 // @Param priority query string false "优先级过滤"
 // @Param keyword query string false "搜索关键词"
@@ -442,12 +442,12 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 // @Param dateFrom query string false "创建时间下界（RFC3339 或 YYYY-MM-DD）"
 // @Param dateTo query string false "创建时间上界（RFC3339 或 YYYY-MM-DD）"
 // @Param scope query string false "范围过滤（me 表示仅我处理的事件）"
-// @Success 200 {object} common.Response{data=[]dto.IncidentResponse}
+// @Success 200 {object} common.Response{data=dto.IncidentListResponse}
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [get]
 func (h *IncidentHandler) Lists(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
@@ -533,7 +533,8 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	}
 	slaStates, _ := h.service.BatchGetSLAStates(c.Request.Context(), tenantID, incidentIDs)
 
-	var dtos []*dto.IncidentResponse
+	// 空列表必须是 []，不能是 null：前端列表页直接 map 渲染
+	dtos := make([]*dto.IncidentResponse, 0, len(incidents))
 	for _, i := range incidents {
 		dtos = append(dtos, h.toDTO(i, slaStates[i.ID]))
 	}
@@ -571,7 +572,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		// 姓名回填是增强信息：失败不阻断列表返回，前端回退显示用户 ID
 	}
 
-	// v1.1 回归：使用 SuccessWithPagination 产出 items+incidents 别名
+	// 标准信封：data.items + total/page/pageSize/totalPages
 	common.SuccessWithPagination(c, dtos, page, size, int64(total))
 }
 
@@ -1009,13 +1010,13 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param page query int false "页码" default(1)
-// @Param size query int false "每页数量" default(10)
+// @Param pageSize query int false "每页数量" default(10)
 // @Success 200 {object} common.Response{data=dto.IncidentAlertListResponse}
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/active [get]
 func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "10"))
+	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	if page < 1 {
 		page = 1
 	}
@@ -1035,7 +1036,13 @@ func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 		common.Fail(c, common.InternalErrorCode, "获取活跃告警失败")
 		return
 	}
-	common.Success(c, dto.IncidentAlertListResponse{Items: alerts, Total: total, Page: page, PageSize: size})
+	common.Success(c, dto.IncidentAlertListResponse{
+		Items:      alerts,
+		Total:      total,
+		Page:       page,
+		PageSize:   size,
+		TotalPages: (total + size - 1) / size,
+	})
 }
 
 // AnalyzeImpact 事件管理-分析事件影响

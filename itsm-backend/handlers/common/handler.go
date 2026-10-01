@@ -169,6 +169,16 @@ func (h *Handler) ListUsers(c *gin.Context) {
 
 // Departments
 
+// GetDepartment 获取部门详情
+// @Summary 获取部门详情
+// @Description 按 ID 读取当前租户下的部门
+// @Tags 组织管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "部门 ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Router /api/v1/org/departments/{id} [get]
 func (h *Handler) GetDepartment(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -185,6 +195,15 @@ func (h *Handler) GetDepartment(c *gin.Context) {
 	common.Success(c, dept)
 }
 
+// GetDepartmentTree 获取部门树
+// @Summary 获取部门树
+// @Description 返回当前租户的部门层级树
+// @Tags 组织管理
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response
+// @Router /api/v1/org/departments/tree [get]
+// @Router /api/v1/departments/tree [get]
 func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	tree, err := h.svc.GetDepartmentTree(c.Request.Context(), tenantID)
@@ -195,6 +214,14 @@ func (h *Handler) GetDepartmentTree(c *gin.Context) {
 	common.Success(c, tree)
 }
 
+// ListDepartments 获取部门列表
+// @Summary 获取部门列表
+// @Description 返回当前租户的平铺部门列表
+// @Tags 组织管理
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} common.Response
+// @Router /api/v1/departments [get]
 func (h *Handler) ListDepartments(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	deps, err := h.svc.ListDepartments(c.Request.Context(), tenantID)
@@ -205,6 +232,17 @@ func (h *Handler) ListDepartments(c *gin.Context) {
 	common.Success(c, deps)
 }
 
+// CreateDepartment 创建部门
+// @Summary 创建部门
+// @Description 在当前租户下创建部门（name、code 必填）
+// @Tags 组织管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body object true "部门信息（name、code、description、managerId、parentId）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Router /api/v1/org/departments [post]
 func (h *Handler) CreateDepartment(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`
@@ -235,6 +273,19 @@ func (h *Handler) CreateDepartment(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// UpdateDepartment 更新部门
+// @Summary 更新部门
+// @Description 更新当前租户下的部门；只覆盖请求中出现的非空字段
+// @Tags 组织管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "部门 ID"
+// @Param request body object true "部门信息（name、code、description、managerId、parentId）"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Router /api/v1/org/departments/{id} [put]
 func (h *Handler) UpdateDepartment(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -285,6 +336,16 @@ func (h *Handler) UpdateDepartment(c *gin.Context) {
 	common.Success(c, result)
 }
 
+// DeleteDepartment 删除部门
+// @Summary 删除部门
+// @Description 删除当前租户下的部门
+// @Tags 组织管理
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "部门 ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response
+// @Router /api/v1/org/departments/{id} [delete]
 func (h *Handler) DeleteDepartment(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

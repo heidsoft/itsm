@@ -37,7 +37,7 @@ export class KnowledgeBaseApi {
   // ==================== 文章管理 ====================
 
   static async getArticles(query?: ArticleQuery): Promise<{
-    articles: KnowledgeArticle[];
+    items: KnowledgeArticle[];
     total: number;
   }> {
     return httpClient.get(`${ARTICLES_PREFIX}`, query);

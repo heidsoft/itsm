@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"testing"
 	"time"
 
@@ -275,4 +276,40 @@ func TestList_FiltersStayWithinTenant(t *testing.T) {
 	// 从租户 B 发起同样查询，只能看到自己的那条。
 	data := f.listData(t, "source=monitoring", f.tenantB, f.agentB)
 	assert.Equal(t, float64(1), data["total"])
+}
+
+// TestList_CanonicalEnvelope 锁死 GET /api/v1/incidents 的响应键集合：
+// 只有平铺的 items/total/page/pageSize/totalPages，既没有 incidents 别名，
+// 也没有把同一组分页事实再返回一遍的 pagination 对象。
+func TestList_CanonicalEnvelope(t *testing.T) {
+	f := newListContractFixture(t)
+	f.baseSeed(t)
+
+	data := f.listData(t, "page=1&pageSize=2", f.tenantA, f.agentA)
+
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys)
+
+	items, ok := data["items"].([]interface{})
+	require.True(t, ok, "data.items 缺失")
+	assert.Len(t, items, 2, "pageSize=2 必须生效")
+	assert.Equal(t, float64(2), data["pageSize"])
+	assert.Equal(t, float64(3), data["totalPages"], "5 条 / 每页 2 条 = 3 页")
+}
+
+// TestList_SizeParamIsNotContract size 曾是事件列表的分页入参，已从契约移除：
+// 只发 size 不得影响结果，避免同一请求同时支持两套分页参数。
+func TestList_SizeParamIsNotContract(t *testing.T) {
+	f := newListContractFixture(t)
+	f.baseSeed(t)
+
+	data := f.listData(t, "size=1", f.tenantA, f.agentA)
+	items, ok := data["items"].([]interface{})
+	require.True(t, ok)
+	assert.Len(t, items, 5, "size 已不是分页参数，应回落默认每页 10 条")
+	assert.Equal(t, float64(10), data["pageSize"])
 }

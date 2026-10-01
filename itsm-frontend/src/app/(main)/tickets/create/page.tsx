@@ -128,7 +128,7 @@ export default function CreateTicketPage() {
 		TicketTypeApi.list({ status: 'active', page: 1, pageSize: 100 })
 			.then(result => {
 				if (cancelled) return;
-				setTicketTypes(result.types.map(type => ({
+				setTicketTypes(result.items.map(type => ({
 					id: type.id, code: type.code, name: type.name,
 					description: type.description ?? '', icon: type.icon ?? 'FileText', color: type.color ?? '#1677ff',
 					priority: type.defaultPriority ?? 'medium', workflowDefinitionKey: type.workflowDefinitionKey,
