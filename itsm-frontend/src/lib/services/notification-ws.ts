@@ -65,8 +65,9 @@ class NotificationWSService {
   /**
    * 连接 WebSocket
    * 流程：先 POST /api/v1/ws/ticket 获取短期票据，再用 ?ticket= 建立连接
+   * 认证走 httpOnly cookie，因此这里不接收任何 token 形参。
    */
-  async connect(userId: number, _token: string): Promise<void> {
+  async connect(userId: number): Promise<void> {
     this.userId = userId;
     this.shouldReconnect = true;
     this.isManualDisconnect = false;
@@ -244,7 +245,7 @@ class NotificationWSService {
 
     this.reconnectTimeout = setTimeout(() => {
       if (this.shouldReconnect && this.userId) {
-        this.connect(this.userId, '').catch(() => {
+        this.connect(this.userId).catch(() => {
           // 连接失败由 onclose 处理，会触发重连
         });
       }
@@ -319,7 +320,7 @@ class NotificationWSService {
     this.reconnectDelay = 0;
 
     if (this.userId) {
-      return this.connect(this.userId, '');
+      return this.connect(this.userId);
     }
 
     return Promise.reject(new Error('No userId available'));

@@ -1,11 +1,25 @@
-import type { Tenant } from '@/lib/api/api-config';
+import type { Tenant, User } from '@/lib/api/api-config';
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { loadSession, logoutSession, refreshSession, type SessionOutcome } from '@/lib/api/session-api';
 
+/**
+ * 认证入口。凭证只存在于后端下发的 httpOnly cookie 里，前端既不读取也不写入：
+ * 登录态的唯一真相是 GET /api/v1/auth/session（见 lib/api/session-api.ts）。
+ * 因此这里不存在 getAccessToken/setTokens 之类的 helper —— 它们在 JS 侧永远拿不到值。
+ */
 export class AuthService {
+  private constructor() {}
+
   /**
-   * 第三方登录
+   * 把后端会话写进 store。tenants[0] 是当前上下文租户；缺失时留空，
+   * 由租户切换接口决定，不再伪造「默认租户」。
    */
+  private static applySession(user: User, tenants: Tenant[]): void {
+    const currentTenant = tenants[0];
+    useAuthStore.getState().login(user, currentTenant);
+  }
+
   static async thirdPartyLogin(provider: string, code: string, state?: string | null): Promise<void> {
     // 例外：第三方 OAuth 回调路径（/api/auth/:provider/callback）不同于 SSO callback，无法走 AuthAPI
     // eslint-disable-next-line no-restricted-syntax
@@ -21,87 +35,37 @@ export class AuthService {
       throw new Error('登录失败');
     }
 
-    const data = await response.json();
-    // 不将令牌/用户信息写入 localStorage（避免 XSS 窃取）。
-    // 令牌由后端 httpOnly cookie 管理；前端仅写入 auth-token 标记位供 middleware 路由守卫使用。
-    if (typeof window !== 'undefined' && data.user) {
-      const secure = location.protocol === 'https:' ? '; Secure' : '';
-      // 仅写入标记位（非真值 token），供 middleware 路由守卫判断登录态
-      // 真值 token 由后端 httpOnly cookie 管理，JS 不可读，防 XSS 窃取
-      document.cookie = `auth-token=1; path=/; SameSite=Lax${secure}`;
+    // 回调只负责让后端签发会话；身份与租户范围一律回后端会话端点读取。
+    const outcome = await loadSession();
+    if (outcome.state !== 'authenticated') {
+      throw new Error('第三方登录已完成但会话不可用，请重新登录');
     }
-    if (data.user) {
-      const { login } = useAuthStore.getState();
-      const u = data.user as any;
-      login(
-        {
-          id: Number(u?.id || 0),
-          username: String(u?.username || ''),
-          role: String(u?.role || 'end_user'),
-          email: String(u?.email || ''),
-          name: String(u?.name || u?.fullName || ''),
-          tenantId: u?.tenantId ? Number(u.tenantId) : undefined,
-          department: u?.department,
-          permissions: u?.permissions,
-        },
-        String(data.token || 'authenticated'),
-        {
-          id: Number(u?.tenantId || 1),
-          name: '默认租户',
-          code: 'default',
-          type: 'standard' as any,
-          status: 'active' as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as Tenant
-      );
+    AuthService.applySession(outcome.user, outcome.tenants);
+  }
+
+  static getCurrentUser(): User | null {
+    return useAuthStore.getState().user;
+  }
+
+  /**
+   * 读取并向 store 同步后端会话真相，返回三态结果供调用方决定界面：
+   * authenticated 填充 store；unauthenticated 清空本地状态；
+   * unavailable 不触碰 store，避免一次网络抖动把有效会话变成假未登录。
+   */
+  static async syncSession(signal?: AbortSignal): Promise<SessionOutcome> {
+    const outcome = await loadSession(signal);
+    if (outcome.state === 'authenticated') {
+      AuthService.applySession(outcome.user, outcome.tenants);
     }
-  }
-
-  // Only non-sensitive UI marker cookies may be inspected in the browser.
-  // Authentication tokens are intentionally not read through this helper.
-  private static getCookie(name: string): string | null {
-    if (typeof document === 'undefined') return null;
-    for (const cookie of document.cookie.split(';')) {
-      const [cookieName, cookieValue] = cookie.trim().split('=');
-      if (cookieName === name) return decodeURIComponent(cookieValue || '');
+    if (outcome.state === 'unauthenticated') {
+      useAuthStore.getState().logout();
     }
-    return null;
+    return outcome;
   }
 
-  // 设置tokens（空实现，保留向后兼容）
-  // 安全：access_token 由后端 httpOnly cookie 管理，前端不存储 token 真值
-  // middleware 路由守卫依赖 auth-token 标记位 cookie（非真值）
-  static setTokens(accessToken: string, refreshToken: string) {
-    void accessToken;
-    void refreshToken;
-  }
-
-  // 获取access token
-  static getAccessToken(): string | null {
-	return null;
-  }
-
-  // Backward-compatible helpers used by some UI providers
-  static getToken(): string | null {
-    return this.getAccessToken();
-  }
-
-  static getCurrentUser() {
-    const { user } = useAuthStore.getState();
-    return user;
-  }
-
-  // 获取refresh token
-  static getRefreshToken(): string | null {
-	return null;
-  }
-
-  // 检查是否已认证
+  /** store 里最近一次后端确认过的会话，仅用于界面渲染；授权永远以后端为准。 */
   static isAuthenticated(): boolean {
-    const { isAuthenticated } = useAuthStore.getState();
-    if (isAuthenticated) return true;
-	return false;
+    return useAuthStore.getState().isAuthenticated;
   }
 
   // 直接使用fetch进行HTTP请求，避免循环依赖
@@ -143,60 +107,42 @@ export class AuthService {
     return responseData.data as T;
   }
 
-  // 刷新token
+  /** 主动续签；返回是否拿到新会话。并发调用共享一次请求（refresh token 单次使用）。 */
   static async refreshToken(): Promise<boolean> {
-    try {
-      await this.makeRequest<Record<string, never>>('/api/v1/auth/refresh', {
-        method: 'POST',
-        credentials: 'include', // Include httpOnly cookies
-		body: '{}',
-      });
-      return true;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      this.clearTokens();
+    const outcome = await refreshSession();
+    if (outcome.state !== 'refreshed') {
+      if (outcome.state === 'expired') {
+        useAuthStore.getState().logout();
+      }
       return false;
     }
+    return true;
   }
 
-  // 清除所有tokens
-  static clearTokens() {
-    const { logout } = useAuthStore.getState();
-    logout();
+  /**
+   * 登出：先清本地状态（界面立刻不可用），再让后端清 cookie 并吊销两类凭证。
+   * 后端吊销失败必须可见——cookie 清了但 7 天 refresh 凭证仍有效是运维需要知道的状态。
+   */
+  static logout(): void {
+    useAuthStore.getState().logout();
+    void logoutSession().then(result => {
+      if (!result.revoked) {
+        console.warn('[auth] 服务端会话吊销未完成:', result.reason);
+      }
+    });
   }
 
-  // 登出方法
-  static logout() {
-    const { logout } = useAuthStore.getState();
-    try {
-      // 例外：登出是 fire-and-forget，不阻塞 UI 跳转
-      // eslint-disable-next-line no-restricted-syntax
-      fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      }).catch(() => {});
-    } finally {
-      // 清除 auth-token cookie（middleware 路由守卫使用）
-      const secure = location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = `auth-token=; path=/; max-age=0; SameSite=Lax${secure}`;
-      logout();
-    }
-  }
-
-  // 修改login方法
+  /**
+   * 登录。响应只给出 `{user, expiresIn}`（凭证走 httpOnly cookie），
+   * 因此成功后回到会话端点确认后端真正接受了它下发的 cookie，并取得租户范围与权限。
+   */
   static async login(
     username: string,
     password: string,
-    tenantCode?: string,
-    rememberMe?: boolean
+    tenantCode?: string
   ): Promise<boolean> {
     try {
-      const data = await this.makeRequest<{
-        accessToken: string;
-        refreshToken: string;
-        user: unknown;
-        tenant?: unknown;
-      }>('/api/v1/auth/login', {
+      await this.makeRequest<{ user: User; expiresIn: number }>('/api/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           username,
@@ -205,49 +151,16 @@ export class AuthService {
         }),
       });
 
-      // Token 仅通过 httpOnly cookie 管理（由后端设置）
-      // 前端仅设置 auth-token cookie 供 middleware 路由守卫使用
-      if (typeof window !== 'undefined' && data.user) {
-        const cookieMaxAge = rememberMe ? `; max-age=${7 * 24 * 60 * 60}` : '';
-        const secure = location.protocol === 'https:' ? '; Secure' : '';
-        // 仅写入 auth-token 标记位供 middleware 路由守卫使用，不写真值 token
-		document.cookie = `auth-token=1; path=/; SameSite=Lax${cookieMaxAge}${secure}`;
+      const outcome = await loadSession();
+      if (outcome.state === 'authenticated') {
+        AuthService.applySession(outcome.user, outcome.tenants);
+        return true;
       }
-
-      // 使用store管理登录状态
-      const { login } = useAuthStore.getState();
-      const u = data.user as any;
-      const t = data.tenant as any;
-      login(
-        {
-          id: Number(u?.id || 0),
-          username: String(u?.username || username),
-          role: String(u?.role || 'end_user'),
-          email: String(u?.email || ''),
-          name: String(u?.name || u?.fullName || ''),
-          tenantId: u?.tenantId
-            ? Number(u.tenantId)
-            : u?.tenantId
-              ? Number(u.tenantId)
-              : undefined,
-          department: u?.department,
-          permissions: u?.permissions,
-          createdAt: u?.createdAt || u?.createdAt,
-          updatedAt: u?.updatedAt || u?.updatedAt,
-        },
-		'authenticated',
-        {
-          id: Number(t?.id || u?.tenantId || 1),
-          name: String(t?.name || '默认租户'),
-          code: String(t?.code || tenantCode || 'default'),
-          type: (t?.type || 'standard') as any,
-          status: (t?.status || 'active') as any,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as Tenant
-      );
-
-      return true;
+      if (outcome.state === 'unavailable') {
+        // 后端已接受凭据，但会话查询失败不能谎报「登录成功」，也不能说成密码错误。
+        throw new Error('登录已接受，但暂时无法确认会话，请稍后重试');
+      }
+      return false;
     } catch (error) {
       // P0-2（2026-09-06 UAT 修复）：限流响应 data.retryAfterSeconds 由 makeRequest
       // 附加到 Error 上，LoginForm 据此展示按钮倒计时。仅对限流错误 rethrow，
@@ -256,6 +169,10 @@ export class AuthService {
       if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
         throw e;
       }
+      if (e.message.includes('暂时无法确认会话')) {
+        throw e;
+      }
+      console.error('Login failed:', error);
       return false;
     }
   }

@@ -3,12 +3,10 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { Typography, Card, ConfigProvider, message, Flex } from 'antd';
+import { Typography, Card, ConfigProvider, Flex } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
-import { useAuthStore } from '@/lib/store/auth-store';
 import { logger } from '@/lib/env';
-import type { Tenant } from '@/lib/api/api-config';
 import { AuthAPI } from '@/lib/api/auth-api';
 
 const { Text, Title } = Typography;
@@ -23,9 +21,15 @@ function SSOCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const { login } = useAuthStore();
+  // 成功后延迟 1.5 秒展示结果页再跳转；定时器随组件卸载清理，避免卸载后仍在后台导航
+  useEffect(() => {
+    if (status !== 'success') return;
+    const timer = setTimeout(() => router.replace('/dashboard'), 1500);
+    return () => clearTimeout(timer);
+  }, [status, router]);
 
   useEffect(() => {
+    let cancelled = false;
     const processCallback = async () => {
       try {
         const code = searchParams.get('code');
@@ -60,45 +64,31 @@ function SSOCallbackContent() {
           throw new Error(ssoResult.error || 'SSO 登录失败');
         }
 
-        const { user, tenant, accessToken } = ssoResult.data;
-
-        // 后端 SSO 响应里 email/name 可能缺失，这里兜底默认值
-        const safeUser = {
-          id: user.id,
-          username: user.username,
-          email: user.email ?? '',
-          name: user.name ?? user.username,
-          tenantId: user.tenantId,
-          role: user.role,
-          department: user.department,
-          permissions: user.permissions,
-        };
-
-        // 仅写入 auth-token 标记位供前端判断登录态，不写真值 token（防止 XSS 窃取）
-        // 与 AuthService.login 保持一致；真值 token 由后端 httpOnly cookie 管理
-        if (typeof window !== 'undefined' && accessToken) {
-          const secure = location.protocol === 'https:' ? '; Secure' : '';
-          document.cookie = `auth-token=1; path=/; SameSite=Lax${secure}`;
+        // 回调只负责让后端基于授权码签发会话；身份、租户范围与权限一律回后端会话端点读取，
+        // 不采信回调响应里的 user/tenant/accessToken 字段。
+        const outcome = await AuthService.syncSession();
+        if (outcome.state === 'unauthenticated') {
+          throw new Error('SSO 回调已被接受，但后端未建立会话，请重新登录');
+        }
+        if (outcome.state === 'unavailable') {
+          throw new Error('暂时无法确认会话，请稍后重试');
         }
 
-        login(safeUser, accessToken, tenant);
-
+        if (cancelled) return;
         setStatus('success');
-        message.success('SSO登录成功');
-
-        // 跳转到仪表盘
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
       } catch (err) {
         logger.error('SSO回调处理失败:', err);
+        if (cancelled) return;
         setStatus('error');
         setErrorMessage(err instanceof Error ? err.message : 'SSO登录失败');
       }
     };
 
     processCallback();
-  }, [searchParams, router, login]);
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, router]);
 
   if (status === 'loading') {
     return (

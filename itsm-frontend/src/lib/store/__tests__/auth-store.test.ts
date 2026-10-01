@@ -40,7 +40,8 @@ describe('useAuthStore', () => {
       const state = useAuthStore.getState();
       
       expect(state.user).toBeNull();
-      expect(state.token).toBeNull();
+      // 前端不持有凭证：store 里不再有 token 字段，登录态只能来自会话端点
+      expect('token' in state).toBe(false);
       expect(state.currentTenant).toBeNull();
       expect(state.isAuthenticated).toBe(false);
       expect(state.isLoading).toBe(false);
@@ -74,7 +75,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token', mockTenant);
+        useAuthStore.getState().login(mockUser, mockTenant);
       });
 
       const state = useAuthStore.getState();
@@ -98,7 +99,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       const state = useAuthStore.getState();
@@ -121,7 +122,7 @@ describe('useAuthStore', () => {
       };
       
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       // 验证登录状态
@@ -134,7 +135,7 @@ describe('useAuthStore', () => {
 
       const state = useAuthStore.getState();
       expect(state.user).toBeNull();
-      expect(state.token).toBeNull();
+      expect('token' in state).toBe(false);
       expect(state.currentTenant).toBeNull();
       expect(state.isAuthenticated).toBe(false);
     });
@@ -154,7 +155,7 @@ describe('useAuthStore', () => {
       };
       
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       act(() => {
@@ -268,7 +269,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(true);
@@ -289,7 +290,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasPermission('ticket:delete')).toBe(false);
@@ -316,7 +317,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       // Sidebar isAdmin 判定的四个权限码都必须命中
@@ -340,7 +341,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasPermission('user:write')).toBe(true);
@@ -365,7 +366,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasPermission('ticket:read')).toBe(false);
@@ -386,7 +387,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasRole('admin')).toBe(true);
@@ -405,7 +406,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().hasRole('admin')).toBe(false);
@@ -426,7 +427,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().isAdmin()).toBe(true);
@@ -445,7 +446,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().isAdmin()).toBe(true);
@@ -464,7 +465,7 @@ describe('useAuthStore', () => {
       };
 
       act(() => {
-        useAuthStore.getState().login(mockUser, 'mock-token');
+        useAuthStore.getState().login(mockUser);
       });
 
       expect(useAuthStore.getState().isAdmin()).toBe(false);
@@ -613,5 +614,51 @@ describe('权限常量', () => {
     expect(ROLES.MANAGER).toBe('manager');
     expect(ROLES.AGENT).toBe('agent');
     expect(ROLES.END_USER).toBe('end_user');
+  });
+
+  // ============================================
+  // Hydration 与登录态来源
+  // ============================================
+  describe('hydration 不得恢复登录态', () => {
+    const legacyPayload = JSON.stringify({
+      state: {
+        token: 'leaked-legacy-token',
+        isAuthenticated: true,
+        user: { id: 1, username: 'stale' },
+        currentTenant: { id: 7, name: '租户 7', code: 't7', type: 'standard', status: 'active' },
+      },
+      version: 0,
+    });
+
+    it('旧版本 localStorage 里的 isAuthenticated/token 一律不生效', async () => {
+      window.localStorage.setItem('auth-storage', legacyPayload);
+      jest.resetModules();
+
+      const { useAuthStore } = await import('../auth-store');
+      await useAuthStore.persist.rehydrate();
+
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.user).toBeNull();
+      expect('token' in state).toBe(false);
+      // 租户上下文可以恢复：它只是范围提示，不是身份
+      expect(state.currentTenant?.code).toBe('t7');
+    });
+
+    it('会话端点确认过登录后，再次 rehydrate 不清空会话', async () => {
+      const { useAuthStore } = await import('../auth-store');
+
+      // 登录态来自后端会话端点，不是 localStorage。merge 只采纳 currentTenant，
+      // 因此 login() 之后再 rehydrate 不会把刚确认的会话清掉。
+      useAuthStore.getState().login(
+        { id: 1, name: 'Test User', username: 'testuser', email: 'test@example.com', role: 'agent', tenantId: 1 },
+        { id: 7, name: '租户 7', code: 't7', type: 'standard', status: 'active' }
+      );
+
+      await useAuthStore.persist.rehydrate();
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+      expect(useAuthStore.getState().user?.username).toBe('testuser');
+    });
   });
 });

@@ -134,7 +134,7 @@ const CHANNELS: ChannelConfig[] = [
 export default function NotificationsPage() {
   const { t } = useI18n();
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user } = useAuthStore();
   const { message } = App.useApp();
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
   const [unreadNotifications, setUnreadNotifications] = useState<TicketNotification[]>([]);
@@ -200,12 +200,12 @@ export default function NotificationsPage() {
     }
   }, [t, form]);
 
-  // 初始化 WebSocket 连接
+  // 初始化 WebSocket 连接（认证走 httpOnly cookie，会话确认后即可连接）
   useEffect(() => {
-    if (user?.id && token) {
+    if (user?.id) {
       // 连接 WebSocket
       notificationWS
-        .connect(user.id, token)
+        .connect(user.id)
         .then(() => {
           setWsConnected(true);
         })
@@ -233,7 +233,7 @@ export default function NotificationsPage() {
         notificationWS.disconnect();
       };
     }
-  }, [user?.id, token]);
+  }, [user?.id]);
 
   // 初始加载
   useEffect(() => {

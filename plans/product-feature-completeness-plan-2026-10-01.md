@@ -308,3 +308,41 @@ cd itsm-backend && go test ./service/ -run "TestDepartmentProcessCatalog_Readine
 cd itsm-backend && go test ./service/scenario/ ./pkg/seeder/ ./handlers/bpmn/
 cd itsm-backend && ~/go/bin/staticcheck ./service/... ./pkg/seeder/... && ~/go/bin/gofumpt -l service/ pkg/seeder/
 ```
+
+---
+
+## 10. 执行记录：会话真相统一到后端（2026-10-02，排期第 4 项）
+
+### 10.1 实测根因
+
+- **登出在生产里不可达**：`POST /api/v1/auth/logout` 挂在 `AuthMiddleware` 之后，而 access token 只有 15 分钟。用过期 access token 直接打到后端 → HTTP 401 / 业务码 2001，handler 从未执行。`itsm-frontend/src/app/api/[...path]/route.ts` 的代理在此之上又按「cookie 里是否存在三段式字符串」的形状校验自造 `{code:2001}` 401（连 `auth-token=1` 这种非 JWT 标记都算有效），于是过期凭证被当有效会话、Next 边缘中间件再把已登录用户从 `/login` 反复弹走。
+- **登出从不吊销 refresh token**：旧实现只调 access 吊销，浏览器 cookie 清掉后服务端那枚 7 天凭证照旧能换新 access token。
+- **无 Redis 时吊销检查静默跳过**：`s.redis == nil` 直接当作「没吊销」，单副本/开发环境可无限重放旧 refresh token。
+- **四套互不接线的吊销机制**：`middleware.tokenRevocationStore`（仅 access）、`handlers/common` 的 Redis-only refresh 黑名单、从未被生产装配构造的 `service.TokenBlacklistService`（264 行死代码）、TTL 只有 1 小时的 `MinIssuedAt`。
+- 顺带核实的旧语义：刷新链路本来就会下发新 `refresh_token` cookie，但**没有原子认领也没有已用检查**，旧值在 7 天内可无限重放；`MinIssuedAt` 的 TTL 只有 1 小时，短于 7 天 refresh 生命周期，且刷新链路从未读它。因此「单次使用」此前并不存在，本批是新建语义而非修好已有语义。
+
+### 10.2 后端改动与回归
+
+`POST /api/v1/auth/logout` 移出鉴权中间件：无条件清两类 cookie，再尽力吊销请求携带的两类 token，吊销存储不可用返回 5003（如实说明「cookie 已清但服务端未吊销」），无凭证重复登出幂等 200。`RevokeRefreshToken` 用 Redis `SET NX` 做原子认领（检查与标记之间无竞态），键名取 JWT 的 SHA-256 摘要（吊销列表存的是仍未过期的凭证，明文进 keyspace 等于泄漏给任何能读 Redis 键的工具）；`MinIssuedAt` TTL 提到 8 天以覆盖 7 天 refresh 生命周期并被刷新链路真正消费；改密/停用/降权统一走 `middleware.InvalidateUserTokens`。新增 `GET /api/v1/auth/session` → `{user, tenants, expiresIn}`，`/auth/login` 与 `/auth/refresh` 响应新增 `expiresIn`；cookie 名称与生命周期统一由 `middleware.AccessTokenCookie/RefreshTokenCookie/AccessTokenTTL/RefreshTokenTTL` 派生，`Set-Cookie Max-Age`、JWT 过期与契约测试同源。
+
+**实测**：`go test ./middleware/... ./router/... ./handlers/auth/... ./service/...` 绿（含过期 access + 有效 refresh cookie 的登出回归、同一枚 refresh cookie 续签第二次 401、cookie 名称与 Max-Age 断言）；`go build ./...`、`staticcheck`、`gofumpt` 通过；全量 `go test ./...` 与修复前的存量失败基线逐条比对**完全一致（13 个包，零新增）**——`tests` 那批失败是场景库缺 `sla_states` 与 `ticket_automation_rules` 的 fixture 存量问题（本批未触碰自动化与 SLA）。
+
+### 10.3 前端改动与实测
+
+新增 `src/lib/api/session-api.ts` 作为登录态唯一来源，三态 `authenticated | unauthenticated | unavailable`：401/403 才是后端判定的未登录，5xx、业务码非 0、响应缺 `user`、网络故障一律 unavailable——既不把瞬时故障当登出把人踢走，也不停在假登录态。删除的六处本地推断：JS 写入的 `auth-token=1` 标记 cookie（`token-storage.isAuthenticated()` 只检查它非空，等于把「曾经登录成功过」当身份）、落地页与服务请求客户端扫 `document.cookie`、`_hasConfirmedSession` 回放持久化 Zustand、边缘中间件按 JWT 形状放行、代理自造 `{code:2001}` 401、`/auth/me` + `/auth/tenants` 双探活失败即「保留会话」（曾伪造 `tenantId:1` 与 `new Date().toISOString()` 塞进 store）。`middleware.ts` 只做遗留菜单 307 重定向；`(main)` 布局在无法确认会话时渲染可重试的「暂时无法确认登录状态」。
+
+续签改由后端 `expiresIn` 驱动并**强制单飞**——单飞不是优化而是必需：refresh token 单次可用后，多个并行 401 各自续签会让后到的请求拿旧凭证认领失败，反而把有效会话判成过期。登出带 `keepalive`（调用方随后整页跳转会取消普通 fetch，服务端就收不到吊销请求），吊销失败返回 `revoked=false` 并由上层告警。删除的死代码与假能力：`lib/auth/jwt-decoder.ts`、`components/layout/RouteGuard.tsx`、`components/providers/Providers.tsx`（守卫挂在永不为真的 `AuthService.getToken()` 上）、废弃客户端 `authApi.refreshToken()/validateToken()` 与 legacy `/api/v1/refresh-token` 前端调用、按浏览器时钟的 10 分钟定时续签、登录页「记住我」（凭证在 httpOnly cookie 里，勾选框从未改变服务端窗口）。SSO 与第三方登录改为回调后回读会话端点，读不到如实报错而不是假装登录。
+
+删掉 store 里那个从未真正承载凭证的 `token` 字段（真凭证只在 httpOnly cookie，JS 读不到）时暴露出一个**静默失效的既有功能**：站内通知页与 Header 都用 `user?.id && token` 给 WebSocket 连接设门禁，而这个 `token` 自 cookie 化起就恒为 `undefined`，于是通知页的 WS 从来没能连上（`notificationWS.connect(userId, token)` 的第二形参也早已无用，认证走 cookie + `POST /api/v1/ws/ticket` 短期票据）。现改为只按 `user?.id`（会话端点确认后的身份）门禁，`connect(userId)` 单参。同时把 zustand persist 的默认浅合并换成显式 `merge`：旧版本写进 `localStorage['auth-storage']` 的 `user`/`isAuthenticated`/`token` 会被默认合并原样复活，等于「一份过期的用户对象 + 一个曾登录过的痕迹」继续伪装成会话；现在 hydration 只采纳 `currentTenant`，身份一律由会话端点重新给出，因此也不再需要运行时的「后端确认过」标记（该标记本批删除，无其他消费者）。
+
+**实测**：`npx jest --coverage=false` = 200 套件全绿 / 3418 通过 / 13 跳过；`npm run type-check` 0 错误；`npm run lint:antd` 0 命中；`npm run lint:check` 0 error（12 条存量 warning 全在未触碰文件：`improvements/[id]`、`sla-monitor`、`workflow/dashboard`、`workflow/instances`、`SmartAssignmentModal`、`ProblemInvestigationTab`、`WorkflowInstanceDetail`、`pwa.ts`、`security.ts`）；`api-contract.test.ts` 仍 0 mismatch。新增 `src/lib/api/__tests__/session-api.test.ts` 锁三态映射、并行续签只发一次请求、单飞锁释放、登出 keepalive；`auth-service.test.ts` 锁「登录成功仍须会话端点确认」「后端接受凭证但会话查询失败时抛错不谎报」「unavailable 不动 store」；`auth.test.ts` 断言 `isAuthenticated/getAccessToken/setAccessToken` 等本地推断入口已不存在；`auth-store.test.ts` 新增 hydration 回归——注入含 `token/isAuthenticated/user` 的旧版 `auth-storage` 后 `rehydrate()`，断言 `isAuthenticated=false`、`user=null`、状态里不存在 `token` 键、仅 `currentTenant.code==='t7'` 被恢复，另一条断言 `login()` 之后再 `rehydrate()` 不会清掉刚确认的会话。
+
+### 10.4 遗留（不在本批擅自扩大范围）
+
+1. 前端设计文档仍描述已删除的会话形态：`itsm-frontend/docs/class-diagram.mermaid:5`、`docs/sequence-diagram.mermaid:11-13`、`docs/system_design.md:97,127,216,237-239,393-394` 写着 4 参数的 `login(username, password, tenantCode?, rememberMe?)` 与 `{access_token, refresh_token, user, tenant}` 登录响应。`rememberMe` 与响应体里的 token 都不存在（`dto/auth_dto.go:19,50` 的 `AccessToken` 是 `json:"-"`），属上一批 cookie 化时就欠下的文档账，本批只核对未重写。
+2. 一批测试/脚本夹具仍在读会话真相不存在的位置：`itsm-frontend/tests/e2e/comprehensive-e2e.spec.ts:322,342`、`tests/e2e/business-flows/sla-monitoring.spec.ts`（5 处）、`tests/e2e/flows/flow-auth-journey.spec.ts:62` 与 `flow-ai-chat-stream.spec.ts:30`（读 `localStorage['access_token']`）、`scripts/regression_p1p2.py:60`、`scripts/stage4_runner.py:35`、`scripts/stage5_runner.py:23`、`scripts/test_permissions_and_menus.sh:52` 都取 `data.access_token`；`tests/{browser-e2e-verify*,screenshot-*,verify-designer-fix*}.cjs` 还用 `document.cookie = 'auth-token=…'` 自造登录标记。这些读取在 cookie 化后就已经恒为 `undefined`（不是本批造成），但本批删掉了 `auth-token` 标记 cookie 与本地推断，会让「靠标记 cookie 放行」的夹具彻底失效，应改走 `tests/e2e/auth-utils.ts` 的真实表单登录；`itsm-cli/src/commands/login.tsx:24-25` 同理存的是 `result.token/refresh_token`，需单独核实 CLI 登录是否已不可用。legacy `/api/v1/refresh-token`（`router/router.go:304`）仍注册且有契约测试，本批只移除前端调用方。
+3. **需拍板**：登录与切租户时旧 refresh token 未被吊销（会留下孤儿凭证直到 7 天到期）。要修需引入用户维度会话账本（`user_sessions` 表），涉及真实业务库迁移，按约定先给方案再施工，本批不做。
+4. `http-client` 的 SSR 形态内存 `token` 字段（`setToken/getAuthToken`）生产已无写入方，仅剩非浏览器调用方语义，按后续清理项处理。
+5. `GET /api/v1/auth/me` 仍注册着（注释写「供 middleware 验证」，但没有任何 middleware 调它），实际所有者已收敛为 `/auth/session`。为避免与 RBAC 预检生成物继续不同步，本批保留该路由未摘。
+
+**影响面**：登出/刷新/改密的行为契约已同步 `docs/api-reference.md`、`UPGRADE.md` §1.9（含前端删除清单与「客户端必须持久化新签发 cookie、续签必须单飞」）与 swagger；`scripts/docs-gate/product-surface-baseline.txt` 同批 `service_go_files` 333→332（删死代码）、`bootstrap_app_lines` 1811→1815（吊销存储接线，属收敛而非扩散）；前端删除的三个文件不在任何棘轮键统计内，无需改基线。

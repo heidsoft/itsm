@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, ROLES } from '@/lib/store/auth-store';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { isAuthenticated as checkCookieAuth } from '@/lib/auth/token-storage';
-import { httpClient } from '@/lib/api/http-client';
+import { AuthService } from '@/lib/services/auth-service';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -32,97 +31,21 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   const { isAuthenticated: storeIsAuth, user, isLoading, hasPermission, hasRole } = useAuthStore();
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // 会话真相只取自后端会话端点：不再用 cookie 标记位推断，也不再分别探活 /auth/me 与
+  // /auth/tenants（两者都失败时会保留伪登录态）。
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // 检查 httpOnly cookie 中是否有认证信息
-        const hasAuth = checkCookieAuth();
-
-        if (hasAuth) {
-          // 分别获取用户信息和租户信息，避免一个失败导致整体失败
-          let userResponse = null;
-          let tenantsResponse = null;
-
-          try {
-            userResponse = await httpClient.get<{
-              id: number;
-              username: string;
-              email: string;
-              name: string;
-              role: string;
-              department: string;
-              tenantId: number;
-              permissions?: string[];
-            }>('/api/v1/auth/me');
-          } catch (e) {
-            console.error('Failed to fetch user info:', e);
-          }
-
-          try {
-            tenantsResponse = await httpClient.get<{
-              tenants: Array<{
-                id: number;
-                name: string;
-                code: string;
-                domain: string;
-                type: string;
-                status: string;
-              }>;
-            }>('/api/v1/auth/tenants');
-          } catch (e) {
-            console.error('Failed to fetch tenants:', e);
-          }
-
-          // 如果两个都失败，则认为未认证
-          if (!userResponse && !tenantsResponse) {
-            setIsInitializing(false);
-            return;
-          }
-
-          const currentTenant = tenantsResponse?.tenants?.[0];
-          const { login } = useAuthStore.getState();
-          login(
-            {
-              id: userResponse?.id || 0,
-              username: userResponse?.username || '',
-              email: userResponse?.email || '',
-              name: userResponse?.name || '',
-              role: userResponse?.role || 'end_user',
-              department: userResponse?.department,
-              // 刷新后由 /auth/me 重建权限列表；缺失时 super_admin 等角色会丢失管理菜单
-              permissions: userResponse?.permissions,
-            },
-            'authenticated', // Token is in httpOnly cookie, not accessible here
-            currentTenant
-              ? {
-                  id: currentTenant.id,
-                  name: currentTenant.name,
-                  code: currentTenant.code,
-                  type: currentTenant.type as 'standard' | 'trial' | 'enterprise',
-                  status: currentTenant.status as 'active' | 'suspended' | 'expired',
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                }
-              : undefined
-          );
-        }
-
-        setIsInitializing(false);
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        setIsInitializing(false);
+    let cancelled = false;
+    void AuthService.syncSession().then(outcome => {
+      if (cancelled) return;
+      if (outcome.state === 'unauthenticated' && requireAuth && !fallback) {
+        router.replace(redirectTo);
       }
+      setIsInitializing(false);
+    });
+    return () => {
+      cancelled = true;
     };
-
-    initializeAuth();
-  }, []);
-
-  // 处理未认证重定向
-  useEffect(() => {
-    if (requireAuth && !storeIsAuth && !fallback) {
-      router.push(redirectTo);
-    }
-  }, [requireAuth, storeIsAuth, fallback, router, redirectTo]);
+  }, [requireAuth, fallback, redirectTo, router]);
 
   // 正在初始化或加载中
   if (isInitializing || isLoading) {

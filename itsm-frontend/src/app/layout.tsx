@@ -3,7 +3,6 @@ import Script from 'next/script';
 // 禁用 Google Fonts (build 离线环境) - 改用系统字体
 // import { Inter, Noto_Sans_SC } from 'next/font/google';
 import './globals.css';
-import { AuthGuard } from '@/components/auth/AuthGuard';
 import { AntdProvider } from '@/lib/providers/AntdProvider';
 import { ThemeProvider, ThemeConfig, useTheme } from '@/lib/design-system/theme';
 import { RecentVisitTracker } from '@/components/layout/RecentVisitTracker';

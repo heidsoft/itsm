@@ -151,7 +151,7 @@ describe('NotificationWSService', () => {
       process.env.NEXT_PUBLIC_WS_URL = 'ws://backend.local/api/v1/ws/notifications';
       const service = new NotificationWSService();
 
-      const promise = service.connect(42, 'tok-abc');
+      const promise = service.connect(42);
       await Promise.resolve();
       // The promise resolves on open.
       FakeWebSocket.instances[0].triggerOpen();
@@ -169,7 +169,7 @@ describe('NotificationWSService', () => {
       delete process.env.NEXT_PUBLIC_WS_URL;
       const service = new NotificationWSService();
 
-      const promise = service.connect(7, 'tok');
+      const promise = service.connect(7);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -185,7 +185,7 @@ describe('NotificationWSService', () => {
       const cb = jest.fn();
       service.onConnectionChange(cb);
 
-      const promise = service.connect(1, 't');
+      const promise = service.connect(1);
       await Promise.resolve();
       expect(cb).not.toHaveBeenCalled(); // not yet connected
       FakeWebSocket.instances[0].triggerOpen();
@@ -201,7 +201,7 @@ describe('NotificationWSService', () => {
 
     beforeEach(async () => {
       service = new NotificationWSService();
-      const promise = service.connect(1, 't');
+      const promise = service.connect(1);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -269,7 +269,7 @@ describe('NotificationWSService', () => {
   describe('disconnect', () => {
     it('marks the service as not connected and clears reconnect intent', async () => {
       const service = new NotificationWSService();
-      const promise = service.connect(1, 't');
+      const promise = service.connect(1);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -282,7 +282,7 @@ describe('NotificationWSService', () => {
 
     it('does not schedule a reconnect after a manual disconnect', async () => {
       const service = new NotificationWSService();
-      const promise = service.connect(1, 't');
+      const promise = service.connect(1);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -305,7 +305,7 @@ describe('NotificationWSService', () => {
         maxReconnectAttempts: 3,
       });
 
-      const promise = service.connect(1, 't');
+      const promise = service.connect(1);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -320,7 +320,7 @@ describe('NotificationWSService', () => {
       // Run the timer → service.connect should be called again.
       const connectSpy = jest.spyOn(service, 'connect');
       jest.runOnlyPendingTimers();
-      expect(connectSpy).toHaveBeenCalledWith(1, '');
+      expect(connectSpy).toHaveBeenCalledWith(1);
 
       service.disconnect();
     });
@@ -333,7 +333,7 @@ describe('NotificationWSService', () => {
       const maxCb = jest.fn();
       service2.onMaxAttemptsReached(maxCb);
 
-      const promise = service2.connect(1, 't');
+      const promise = service2.connect(1);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -354,14 +354,14 @@ describe('NotificationWSService', () => {
   });
 
   describe('manual reconnect', () => {
-    it('rejects when no credentials have been stored', async () => {
+    it('rejects when no userId has been stored', async () => {
       const service = new NotificationWSService();
       await expect(service.reconnect()).rejects.toThrow(/No userId available/);
     });
 
-    it('reuses stored credentials when called after connect', async () => {
+    it('reuses the stored userId when called after connect', async () => {
       const service = new NotificationWSService();
-      const promise = service.connect(7, 'stored-token');
+      const promise = service.connect(7);
       await Promise.resolve();
       FakeWebSocket.instances[0].triggerOpen();
       await promise;
@@ -374,7 +374,7 @@ describe('NotificationWSService', () => {
       FakeWebSocket.instances[1].triggerOpen();
       await reconnectPromise;
 
-      expect(connectSpy).toHaveBeenCalledWith(7, '');
+      expect(connectSpy).toHaveBeenCalledWith(7);
     });
   });
 });

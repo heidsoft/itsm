@@ -13,7 +13,6 @@ import {
   Form,
   Input,
   Button,
-  Checkbox,
   Card,
   Row,
   Col,
@@ -45,7 +44,6 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0); // P0-2：限流倒计时（秒）
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [rememberMe, setRememberMe] = useState(false);
 
   // 清理倒计时定时器
   useEffect(() => {
@@ -84,17 +82,13 @@ function LoginForm() {
 
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {
-    logger.info('开始登录:', values);
+    // 只记录用户名：表单值含明文密码，不得进入日志。
+    logger.info('开始登录:', { username: values.username });
     setLoading(true);
     setError('');
 
     try {
-      const success = await AuthService.login(
-        values.username,
-        values.password,
-        undefined,
-        rememberMe
-      );
+      const success = await AuthService.login(values.username, values.password);
 
       if (success) {
         logger.info('认证信息已存储，准备跳转');
@@ -212,14 +206,7 @@ function LoginForm() {
         </Form.Item>
 
         <Form.Item className='mb-5'>
-          <Flex justify='space-between' align='center'>
-            <Checkbox
-              checked={rememberMe}
-              onChange={e => setRememberMe(e.target.checked)}
-              disabled={loading}
-            >
-              {t('auth.login.rememberMe')}
-            </Checkbox>
+          <Flex justify='flex-end'>
             <Tooltip title={loading ? '登录中...' : ''}>
               <Link href='/forgot-password'>
                 <Button type='link' className='p-0 h-auto text-xs' disabled={loading}>

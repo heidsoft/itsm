@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Layout, App } from 'antd';
-import { usePathname, useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Button, Layout, App } from 'antd';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { httpClient } from '@/lib/api/http-client';
 import { LAYOUT_CONFIG } from '@/config/layout.config';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { NetworkStatus } from '@/components/common/NetworkStatus';
@@ -13,10 +12,36 @@ import { AdminRouteGuard } from '@/components/common/AdminRouteGuard';
 import { useLayoutStore } from '@/lib/store/layout-store';
 import PageTransition from '@/components/common/PageTransition';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
-import type { Tenant } from '@/lib/api/api-config';
+import { AuthService } from '@/lib/services/auth-service';
+import { refreshSession } from '@/lib/api/session-api';
 import { useTheme } from '@/lib/design-system/theme';
 
 const { Content } = Layout;
+
+type SessionView = 'checking' | 'ready' | 'anonymous' | 'unavailable';
+
+/** 会话续签提前量：留出请求往返时间，避免卡在过期边界上。 */
+const SESSION_REFRESH_MARGIN_MS = 60_000;
+/** 下限：后端未给出剩余时间或剩余极短时，也不得变成忙轮询。 */
+const SESSION_REFRESH_MIN_DELAY_MS = 30_000;
+/** 启动时遇到瞬时故障的有界重试；耗尽后明确进入「无法确认会话」而不是假登录态。 */
+const BOOT_RETRY_DELAYS_MS = [1_000, 3_000];
+
+function nextRefreshDelay(expiresIn: number): number {
+  const remainingMs = Math.max(expiresIn, 0) * 1000 - SESSION_REFRESH_MARGIN_MS;
+  return Math.max(remainingMs, SESSION_REFRESH_MIN_DELAY_MS);
+}
+
+function currentTargetPath(): string {
+  if (typeof window === 'undefined') return '/';
+  return `${window.location.pathname}${window.location.search}` || '/';
+}
+
+function loginPathForCurrentPage(expired = false): string {
+  const params = new URLSearchParams({ redirect: currentTargetPath() });
+  if (expired) params.set('expired', 'true');
+  return `/login?${params.toString()}`;
+}
 
 /**
  * 主应用布局
@@ -31,120 +56,104 @@ export default function MainLayout({
   const { collapsed, setCollapsed } = useLayoutStore();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const pathname = usePathname();
+  const [sessionView, setSessionView] = useState<SessionView>('checking');
+  const [sessionError, setSessionError] = useState('');
+  const [retryNonce, setRetryNonce] = useState(0);
   const router = useRouter();
+
+  // 续签时长只信后端下发的相对剩余秒数，不用浏览器时钟推算「15 分钟到了」
+  const expiresInRef = useRef(0);
 
   // 恢复持久化的 auth store，并同步租户上下文到内存
   useAuthStoreHydration();
 
-  // 处理客户端挂载和认证检查
   useEffect(() => {
     setMounted(true);
-    const checkAuth = async () => {
-      // 分别请求用户信息和租户信息，避免一个失败导致整体失败
-      let userInfo = null;
-      let tenantInfo = null;
-
-      try {
-        userInfo = await httpClient.get<any>('/api/v1/auth/me');
-      } catch (e) {
-        console.error('Failed to fetch user info:', e);
-      }
-
-      try {
-        tenantInfo = await httpClient.get<any>('/api/v1/auth/tenants');
-      } catch (e) {
-        console.error('Failed to fetch tenant info:', e);
-      }
-
-      // 如果两个都失败
-      if (!userInfo && !tenantInfo) {
-        const { isAuthenticated: storeIsAuth } = useAuthStore.getState();
-        // 仅当 store 也没有会话时才判定未认证。
-        // 接口瞬时失败（如 5xx）不应把已登录用户踢出；真实 401 已由
-        // http-client 的刷新失败兜底逻辑处理（自动跳转 /login）。
-        if (!storeIsAuth) {
-          setIsAuthenticated(false);
-          router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`);
-          setCheckingAuth(false);
-          return;
-        }
-        console.warn('Auth check endpoints failed but store session exists; keeping session');
-        setIsAuthenticated(true);
-        setCheckingAuth(false);
-        return;
-      }
-
-      const tenants = Array.isArray(tenantInfo?.tenants) ? tenantInfo.tenants : [];
-      const currentTenant = tenants[0];
-
-      const { login, setCurrentTenant } = useAuthStore.getState();
-      login(
-        {
-          id: Number(userInfo?.id || 0),
-          username: String(userInfo?.username || ''),
-          email: String(userInfo?.email || ''),
-          name: String(userInfo?.name || ''),
-          role: String(userInfo?.role || 'end_user'),
-          department: userInfo?.department,
-          tenantId: userInfo?.tenantId
-            ? Number(userInfo.tenantId)
-            : userInfo?.tenantId
-              ? Number(userInfo.tenantId)
-              : undefined,
-          permissions: userInfo?.permissions,
-          createdAt: userInfo?.createdAt || userInfo?.createdAt,
-          updatedAt: userInfo?.updatedAt || userInfo?.updatedAt,
-        },
-        'authenticated',
-        currentTenant
-          ? {
-              id: Number(currentTenant.id),
-              name: String(currentTenant.name),
-              code: String(currentTenant.code),
-              type: currentTenant.type,
-              status: currentTenant.status,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            }
-          : undefined
-      );
-      if (currentTenant) {
-        const tenantData: Tenant = {
-          id: Number(currentTenant.id),
-          name: String(currentTenant.name),
-          code: String(currentTenant.code),
-          type: currentTenant.type || 'standard',
-          status: currentTenant.status || 'active',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setCurrentTenant(tenantData);
-      }
-      setIsAuthenticated(true);
-      setCheckingAuth(false);
-    };
-    checkAuth();
-    // 仅在布局挂载时检查一次；SPA 内部导航不重复检查，避免瞬时故障误踢用户
-     
   }, []);
 
-  // access_token 有效期 15 分钟：每 10 分钟主动刷新一次会话，
-  // 防止 token 在操作期间过期导致被踢到 /login
+  // 会话真相：唯一来源是后端会话端点，本地持久化状态不参与推断。
   useEffect(() => {
-    if (!isAuthenticated) return;
-    const REFRESH_INTERVAL_MS = 10 * 60 * 1000;
-    const timer = setInterval(() => {
-      httpClient
-        .refreshToken()
-        .catch(() => {
-          // 刷新失败不主动登出；下一次请求的 401 兜底流程会处理
-        });
-    }, REFRESH_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [isAuthenticated]);
+    const controller = new AbortController();
+    let cancelled = false;
+
+    const checkSession = async () => {
+      for (let attempt = 0; ; attempt += 1) {
+        const outcome = await AuthService.syncSession(controller.signal);
+        if (cancelled) return;
+
+        if (outcome.state === 'authenticated') {
+          expiresInRef.current = outcome.expiresIn;
+          setSessionView('ready');
+          return;
+        }
+
+        if (outcome.state === 'unauthenticated') {
+          setSessionView('anonymous');
+          router.replace(loginPathForCurrentPage());
+          return;
+        }
+
+        const retryDelayMs = BOOT_RETRY_DELAYS_MS[attempt];
+        if (retryDelayMs === undefined) {
+          setSessionError(outcome.reason);
+          setSessionView('unavailable');
+          return;
+        }
+        // 未确认会话前保持 loading，既不渲染假登录界面也不登出用户。
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+        if (cancelled) return;
+      }
+    };
+
+    void checkSession();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [retryNonce, router]);
+
+  // 按后端剩余时间主动续签；续签结果会带回新的剩余时间并据此重排。
+  useEffect(() => {
+    if (sessionView !== 'ready') return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const schedule = (delayMs: number) => {
+      timer = setTimeout(async () => {
+        if (cancelled) return;
+        const outcome = await refreshSession();
+        if (cancelled) return;
+
+        if (outcome.state === 'refreshed') {
+          expiresInRef.current = outcome.expiresIn;
+          schedule(nextRefreshDelay(outcome.expiresIn));
+          return;
+        }
+
+        if (outcome.state === 'expired') {
+          useAuthStore.getState().logout();
+          setSessionView('anonymous');
+          router.replace(loginPathForCurrentPage(true));
+          return;
+        }
+
+        // 后端抖动：稍后按同一节奏再试，真实掉线由请求的 401 路径给结论。
+        schedule(SESSION_REFRESH_MIN_DELAY_MS);
+      }, delayMs);
+    };
+
+    schedule(nextRefreshDelay(expiresInRef.current));
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [sessionView, router]);
+
+  const retrySessionCheck = useCallback(() => {
+    setSessionView('checking');
+    setRetryNonce(prev => prev + 1);
+  }, []);
 
   // 响应式布局：在移动端自动折叠侧边栏；从移动端拉宽回桌面时恢复展开
   useEffect(() => {
@@ -180,8 +189,8 @@ export default function MainLayout({
     return null;
   }
 
-  // 正在检查认证状态时显示 loading
-  if (checkingAuth) {
+  // 正在向后端确认会话时显示 loading
+  if (sessionView === 'checking') {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="lg" />
@@ -189,9 +198,33 @@ export default function MainLayout({
     );
   }
 
-  // 未认证时不渲染布局，直接重定向（由上面的 useEffect 处理）
-  if (!isAuthenticated) {
+  // 后端确认无会话：不渲染布局，重定向由上面的 effect 处理
+  if (sessionView === 'anonymous') {
     return null;
+  }
+
+  // 无法确认会话：既不假登录也不把人踢出，给出可重试的明确状态
+  if (sessionView === 'unavailable') {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Alert
+          title="暂时无法确认登录状态"
+          description={
+            <span>
+              服务暂时不可用，当前页面无法判断会话是否仍然有效。
+              {sessionError ? <span className="block mt-1 text-gray-500">{sessionError}</span> : null}
+            </span>
+          }
+          type="warning"
+          showIcon
+          action={
+            <Button type="primary" onClick={retrySessionCheck}>
+              重新检查
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   // 根据官方布局模式，使用单一容器控制侧边栏占位

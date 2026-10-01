@@ -57,8 +57,10 @@ export interface Tenant {
     | 'professional'
     | 'enterprise';
   status: 'active' | 'suspended' | 'expired' | 'deleted';
-  createdAt: string;
-  updatedAt: string;
+  // 会话视图（/auth/session）只给租户摘要，不返回时间戳；此前这里必填，
+  // 前端只能伪造 new Date().toISOString() 来满足类型。
+  createdAt?: string;
+  updatedAt?: string;
   expiresAt?: string;
   settings?: Record<string, unknown>;
 }

@@ -291,7 +291,7 @@ export function A2UIFormRenderer() {
     });
   }, []);
 
-  // 检查是否已登录：使用 zustand 的 isAuthenticated（AuthGuard 已通过 /api/v1/auth/me 探活验证）
+  // 检查是否已登录：使用 zustand 的 isAuthenticated（AuthGuard 已从后端会话端点确认过）
   const checkAuth = (): boolean => {
     if (!useAuthStore.getState().isAuthenticated) {
       message.error('请先登录后再使用此功能');

@@ -1,6 +1,5 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { isValidJwtToken } from '@/lib/auth/jwt-decoder';
 
 const BACKEND_BASE_URL = process.env.ITSM_BACKEND_URL || 'http://localhost:8090';
 
@@ -11,51 +10,6 @@ const BLOCKED_PATHS = [
   '/api/v1/system', // 系统敏感操作
 ];
 
-// 公开路径（无需认证即可访问，用于登录、注册、刷新token等）
-const PUBLIC_PATHS = [
-  '/api/v1/auth/login',
-  '/api/v1/auth/register',
-  '/api/v1/auth/refresh',
-  // 旧版刷新端点（http-client.ts 使用）。必须放行，否则 access_token 过期时
-  // 刷新请求会被代理以 401 拦截，导致用户被错误地登出。
-  '/api/v1/refresh-token',
-  '/api/v1/auth/forgot-password',
-  '/api/v1/auth/reset-password',
-  '/api/v1/auth/sso',
-  // The browser must be able to bootstrap a CSRF token before any mutating request.
-  '/api/v1/csrf-token',
-  '/api/v1/health',
-  '/api/v1/connectors', // 连接器市场列表（公开）
-  '/api/v1/connectors/health', // 连接器健康（公开）
-];
-
-function getAuthToken(request: NextRequest): string | null {
-  // 优先检查 httpOnly access_token cookie（由后端 Set-Cookie 设置）
-  // 在同源代理模式下，Next.js 服务端可以读取 httpOnly cookie
-  const accessToken = request.cookies.get('access_token')?.value;
-  if (accessToken) return accessToken;
-
-  const authHeader = request.headers.get('Authorization');
-  if (authHeader) {
-    if (authHeader.startsWith('Bearer ')) return authHeader.substring(7);
-    return authHeader;
-  }
-
-  const customToken = request.headers.get('X-Auth-Token');
-  if (customToken) return customToken;
-
-  // auth-token 是前端设置的标记位（值为 "1"），不是 JWT
-  // 仅在 access_token cookie 不存在时作为最后手段，但 isValidToken 会拒绝它
-  const authToken = request.cookies.get('auth-token')?.value;
-  if (authToken && authToken !== '1') return authToken;
-
-  return null;
-}
-
-function isValidToken(token: string | null): boolean {
-  return isValidJwtToken(token);
-}
-
 function isPathBlocked(path: string[]): boolean {
   const fullPath = '/' + path.join('/');
   return BLOCKED_PATHS.some(blocked => fullPath.startsWith(blocked));
@@ -63,23 +17,6 @@ function isPathBlocked(path: string[]): boolean {
 
 async function proxyRequest(request: NextRequest, params: Promise<{ path: string[] }>) {
   const { path } = await params;
-
-  // 公开路径直接放行（不需要 token）
-  // path 数组来自 [...path] 捕获，不含 /api 前缀
-  // 例如请求 /api/v1/auth/login 时 path = ['v1', 'auth', 'login']
-  const fullPath = '/api/' + path.join('/');
-  if (PUBLIC_PATHS.some(p => fullPath === p || fullPath.startsWith(p + '/'))) {
-    // 跳过认证检查，继续代理
-  } else {
-  // 认证检查
-  const token = getAuthToken(request);
-  if (!isValidToken(token)) {
-    return NextResponse.json(
-      { code: 2001, message: 'Unauthorized: authentication required' },
-      { status: 401 }
-    );
-  }
-  }
 
   // 敏感路径检查
   if (isPathBlocked(path)) {

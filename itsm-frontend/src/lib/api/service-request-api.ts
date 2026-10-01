@@ -98,17 +98,8 @@ class ServiceRequestAPI {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const tenantCode = getTenantCode();
-    // 兼容多端：从 cookie 中读取 access_token 并补到 Authorization。
-    let authToken: string | null = null;
-    if (typeof document !== 'undefined') {
-      const match = document.cookie
-        .split(';')
-        .map(c => c.trim())
-        .find(c => c.startsWith('access_token='));
-      if (match) {
-        authToken = decodeURIComponent(match.split('=')[1] || '');
-      }
-    }
+    // 认证凭证只由后端 httpOnly cookie 承载，JS 读不到，因此这里不再从 cookie 里
+    // 拼 Authorization 头（该分支在浏览器中永远拿不到值，只会造成第二套认证假象）。
 
     // 为 mutating 请求添加 CSRF token（与 httpClient 保持一致）
     const method = (options.method || 'GET').toUpperCase();
@@ -131,7 +122,6 @@ class ServiceRequestAPI {
         headers: {
           'Content-Type': 'application/json',
           ...(tenantCode && { 'X-Tenant-Code': tenantCode }),
-          ...(authToken && { Authorization: `Bearer ${authToken}` }),
           ...csrfHeaders,
           ...options.headers,
         },

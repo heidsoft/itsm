@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { loadSession } from '@/lib/api/session-api';
 import {
   Github,
   Ticket,
@@ -24,20 +25,16 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Token 由后端 cookie 管理；不要从 localStorage/sessionStorage 读取 token。
-    const checkAuth = () => {
-      try {
-        const cookieToken =
-          document.cookie
-            .split('; ')
-            .find(row => row.startsWith('auth-token=') || row.startsWith('access_token='))
-            ?.split('=')[1] ?? null;
-        setIsLoggedIn(!!cookieToken);
-      } catch {
-        setIsLoggedIn(false);
-      }
+    let cancelled = false;
+    // 只问后端会话端点：httpOnly 凭证 JS 读不到，历史上靠 document.cookie 里是否存在
+    // auth-token 标记位判断，结果与真实登录态无关。这里瞬时故障按未登录处理，
+    // 影响范围仅是介绍页的「进入系统」入口按钮。
+    void loadSession().then(outcome => {
+      if (!cancelled) setIsLoggedIn(outcome.state === 'authenticated');
+    });
+    return () => {
+      cancelled = true;
     };
-    checkAuth();
   }, []);
 
   const features = [

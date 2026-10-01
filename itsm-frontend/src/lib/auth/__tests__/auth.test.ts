@@ -19,50 +19,18 @@ describe('token-storage', () => {
     });
   });
 
-  it('isAuthenticated returns false when no auth cookie', async () => {
-    tokenStorage = await import('../token-storage');
-    expect(tokenStorage.isAuthenticated()).toBe(false);
-  });
-
-  it('isAuthenticated returns true when auth-token cookie exists', async () => {
+  it('不再从 cookie 推断登录态：认证真相只由会话端点提供', async () => {
     Object.defineProperty(document, 'cookie', {
       writable: true,
-      value: 'auth-token=abc123; other=val',
+      value: 'auth-token=abc123; access_token=xyz',
     });
     tokenStorage = await import('../token-storage');
-    expect(tokenStorage.isAuthenticated()).toBe(true);
-  });
-
-  it('isAuthenticated returns true when access_token cookie exists', async () => {
-    Object.defineProperty(document, 'cookie', {
-      writable: true,
-      value: 'access_token=xyz',
-    });
-    tokenStorage = await import('../token-storage');
-    expect(tokenStorage.isAuthenticated()).toBe(true);
-  });
-
-  it('getAccessToken always returns null (httpOnly cookie)', async () => {
-    tokenStorage = await import('../token-storage');
-    expect(tokenStorage.getAccessToken()).toBeNull();
-  });
-
-  it('getRefreshToken always returns null', async () => {
-    tokenStorage = await import('../token-storage');
-    expect(tokenStorage.getRefreshToken()).toBeNull();
-  });
-
-  it('setAccessToken is a no-op', async () => {
-    tokenStorage = await import('../token-storage');
-    tokenStorage.setAccessToken('token123');
-    // no error, no storage
-    expect(localStorage.getItem('access_token')).toBeNull();
-  });
-
-  it('setRefreshToken is a no-op', async () => {
-    tokenStorage = await import('../token-storage');
-    tokenStorage.setRefreshToken('refresh123');
-    expect(localStorage.getItem('refresh_token')).toBeNull();
+    const storage = tokenStorage as unknown as Record<string, unknown>;
+    expect(storage.isAuthenticated).toBeUndefined();
+    expect(storage.getAccessToken).toBeUndefined();
+    expect(storage.getRefreshToken).toBeUndefined();
+    expect(storage.setAccessToken).toBeUndefined();
+    expect(storage.setRefreshToken).toBeUndefined();
   });
 
   it('getTenantCode returns stored value', async () => {
@@ -100,6 +68,7 @@ describe('token-storage', () => {
     localStorage.setItem('itsm_token', 'old2');
     localStorage.setItem('token', 'old3');
     localStorage.setItem('tenantCode', 'old4');
+    localStorage.setItem('auth-storage', '{"state":{}}');
     tokenStorage = await import('../token-storage');
     tokenStorage.clearAuthStorage();
     expect(localStorage.getItem('current_tenant_id')).toBeNull();
@@ -108,12 +77,13 @@ describe('token-storage', () => {
     expect(localStorage.getItem('itsm_token')).toBeNull();
     expect(localStorage.getItem('token')).toBeNull();
     expect(localStorage.getItem('tenantCode')).toBeNull();
+    expect(localStorage.getItem('auth-storage')).toBeNull();
   });
 
   it('STORAGE_KEYS are exported correctly', async () => {
     tokenStorage = await import('../token-storage');
-    expect(tokenStorage.STORAGE_KEYS.ACCESS_TOKEN).toBe('access_token');
     expect(tokenStorage.STORAGE_KEYS.TENANT_CODE).toBe('current_tenant_code');
+    expect(tokenStorage.STORAGE_KEYS.TENANT_ID).toBe('current_tenant_id');
   });
 });
 

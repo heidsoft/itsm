@@ -1,7 +1,11 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
+import { refreshSession, type RefreshOutcome } from '@/lib/api/session-api';
 import { security } from '@/lib/security';
 import { logger } from '@/lib/env';
 import { getTenantId, getTenantCode, setTenantId as setContextTenantId, setTenantCode as setContextTenantCode, subscribe } from '@/lib/auth/tenant-context';
+
+// 会话彻底过期后的登录页跳转只需发起一次；并行 401 不应重复导航。
+let expiredSessionRedirectInFlight = false;
 
 // 递归将对象的 key 从 snake_case 转换为 camelCase
 const toCamelCase = (obj: unknown): unknown => {
@@ -227,44 +231,49 @@ class HttpClient {
     return merged;
   }
 
-  // Independent token refresh method to avoid circular dependencies
-  private async refreshTokenInternal(): Promise<boolean> {
+  /**
+   * 续签统一走 session-api：后端 refresh 凭证是单次使用的，续签必须全局单飞，
+   * 否则并行 401 会各自重放同一枚已消费的凭证，把有效会话踢出。
+   * 返回 false 只表示「本次没能续签」，是否掉线由三态调用方判断（见 redirect到登录的逻辑）。
+   */
+  private async refreshTokenInternal(): Promise<RefreshOutcome> {
     try {
-      const response = await fetch(`${this.baseURL}/api/v1/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include httpOnly cookies
-		body: '{}',
-      });
-
-      if (response?.ok) {
-        const data = await response.json();
-        if (data.code === 0) {
-          // Token is stored in httpOnly cookie by backend
-          // Nothing to update in localStorage
-          return true;
-        }
-      }
-      return false;
+      return await refreshSession();
     } catch (error) {
       logger.error('Token refresh failed:', error);
-      return false;
+      return {
+        state: 'unavailable',
+        reason: error instanceof Error ? error.message : 'refresh error',
+      };
     }
   }
 
   /**
-   * 主动刷新会话（access_token 有效期 15 分钟）。
-   * 由布局层定时调用，避免 token 过期后才被动触发刷新。
+   * 会话到期（refresh 凭证也失效）才跳登录；瞬时故障保留当前会话并让调用方看到错误，
+   * 避免一次后端抖动把已登录用户登出。导航去重：并行 401 只发起一次跳转。
+   */
+  private redirectToLoginOnExpiredSession(): void {
+    if (typeof window === 'undefined') return;
+    if (expiredSessionRedirectInFlight) return;
+    if (window.location.pathname.startsWith('/login')) return;
+    expiredSessionRedirectInFlight = true;
+    const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+    window.location.href = `/login?redirect=${redirect}&expired=true`;
+  }
+
+  /**
+   * 主动刷新会话（access token 有效期由后端给出）。
+   * 由布局层按后端剩余时间定时调用，避免 token 过期后才被动触发刷新。
    * 刷新失败不抛错：下一次请求的 401 处理流程会兜底。
    */
   async refreshToken(): Promise<boolean> {
-    try {
-      return await this.refreshTokenInternal();
-    } catch {
+    const outcome = await this.refreshTokenInternal();
+    if (outcome.state === 'expired') {
+      this.clearToken();
+      this.redirectToLoginOnExpiredSession();
       return false;
     }
+    return outcome.state === 'refreshed';
   }
 
   // Core request method using fetch API (internal)
@@ -343,8 +352,8 @@ class HttpClient {
 
       // If 401 error, try to refresh token
       if (response?.status === 401) {
-        const refreshSuccess = await this.refreshTokenInternal();
-        if (refreshSuccess) {
+        const outcome = await this.refreshTokenInternal();
+        if (outcome.state === 'refreshed') {
           // Retry original request with credentials: 'include' to send cookies
           const retryHeaders = await this.addCSRFHeader(this.getHeaders(), config.method || 'GET');
           const retryConfig: RequestInit = {
@@ -374,17 +383,15 @@ class HttpClient {
           }
 
           return toCamelCase(retryData.data) as T;
-        } else {
-          // Refresh failed, clear token and redirect to login
-          this.clearToken();
-          if (typeof window !== 'undefined') {
-            // Only redirect if not already on login page to avoid loops
-            if (!window.location.pathname.startsWith('/login')) {
-              window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-            }
-          }
-          throw new Error('Authentication failed');
         }
+
+        this.clearToken();
+        if (outcome.state === 'expired') {
+          this.redirectToLoginOnExpiredSession();
+          throw new Error('会话已过期，请重新登录');
+        }
+        // unavailable：不能断定会话失效，交给调用方展示错误并重试。
+        throw new Error(`无法确认会话状态：${outcome.reason}`);
       }
 
       if (!response?.ok) {

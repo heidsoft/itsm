@@ -68,19 +68,11 @@ describe('AuthApiClient', () => {
     });
   });
 
-  describe('refreshToken', () => {
-    it('should refresh token successfully', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ token: 'new-token' }) });
-      const res = await authApiClient.refreshToken('old-token');
-      expect(res.success).toBe(true);
-      expect(res.token).toBe('new-token');
-    });
-
-    it('should handle failed refresh', async () => {
-      mockFetch.mockResolvedValue({ ok: false, json: async () => ({ message: 'Expired' }) });
-      const res = await authApiClient.refreshToken('old-token');
-      expect(res.success).toBe(false);
-      expect(res.error).toBe('Expired');
+  describe('refreshToken / validateToken 已从废弃客户端移除', () => {
+    it('不再保留第二套续签与 token 校验入口', () => {
+      const client = authApiClient as unknown as Record<string, unknown>;
+      expect(client.refreshToken).toBeUndefined();
+      expect(client.validateToken).toBeUndefined();
     });
   });
 
@@ -107,21 +99,6 @@ describe('AuthApiClient', () => {
     });
   });
 
-  describe('validateToken', () => {
-    it('should validate token', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ code: 0, data: { id: '1', username: 'admin' } }) });
-      const res = await authApiClient.validateToken();
-      expect(res.valid).toBe(true);
-      expect(res.user).toBeDefined();
-    });
-
-    it('should return invalid on non-ok', async () => {
-      mockFetch.mockResolvedValue({ ok: false });
-      const res = await authApiClient.validateToken();
-      expect(res.valid).toBe(false);
-    });
-  });
-
   describe('initiateSSOLogin', () => {
     it('should initiate SSO', async () => {
       mockFetch.mockResolvedValue({ ok: true, json: async () => ({ redirectUrl: 'https://sso.example.com' }) });
@@ -132,15 +109,15 @@ describe('AuthApiClient', () => {
   });
 
   describe('AuthAPI convenience object', () => {
-    it('should have all methods', () => {
+    it('只保留废弃客户端仍支持的入口，续签与校验走会话端点', () => {
       expect(AuthAPI.login).toBeDefined();
       expect(AuthAPI.logout).toBeDefined();
-      expect(AuthAPI.refreshToken).toBeDefined();
       expect(AuthAPI.getCsrfToken).toBeDefined();
       expect(AuthAPI.getWebAuthnChallenge).toBeDefined();
       expect(AuthAPI.verifyWebAuthn).toBeDefined();
       expect(AuthAPI.initiateSSOLogin).toBeDefined();
-      expect(AuthAPI.validateToken).toBeDefined();
+      expect((AuthAPI as unknown as Record<string, unknown>).refreshToken).toBeUndefined();
+      expect((AuthAPI as unknown as Record<string, unknown>).validateToken).toBeUndefined();
     });
   });
 });

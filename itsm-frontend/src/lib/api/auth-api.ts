@@ -1,8 +1,9 @@
 /**
  * @deprecated 此文件已废弃。请使用:
- * - lib/api/http-client.ts (已集成 httpOnly cookie refresh)
- * - lib/services/auth-service.ts (认证服务)
+ * - lib/api/session-api.ts（会话真相、续签单飞、登出吊销）
+ * - lib/services/auth-service.ts（认证入口）
  *
+ * 会话真相只有一个后端端点，这里不再保留第二套 token 校验/续签实现。
  * 此文件保留用于向后兼容，不应在新代码中使用。
  */
 
@@ -15,7 +16,6 @@
 export interface LoginRequest {
   username: string;
   password: string;
-  rememberMe?: boolean;
   totpCode?: string;
   csrfToken?: string;
 }
@@ -33,12 +33,6 @@ export interface LoginResponse {
     role: string;
     permissions: string[];
   };
-  error?: string;
-}
-
-export interface RefreshTokenResponse {
-  success: boolean;
-  token?: string;
   error?: string;
 }
 
@@ -63,9 +57,6 @@ import type { Tenant } from '@/lib/api/api-config';
 const API_ENDPOINTS = {
   LOGIN: '/api/v1/auth/login',
   LOGOUT: '/api/v1/auth/logout',
-  REFRESH: '/api/v1/auth/refresh',
-  PROFILE: '/api/v1/auth/profile',
-  VALIDATE: '/api/v1/auth/validate',
   CSRF: '/api/v1/csrf-token',
   WEBAUTHN_CHALLENGE: '/api/v1/auth/webauthn/challenge',
   WEBAUTHN_VERIFY: '/api/v1/auth/webauthn/verify',
@@ -135,7 +126,6 @@ class AuthApiClient {
         body: JSON.stringify({
           username: loginData.username,
           password: loginData.password,
-          rememberMe: loginData.rememberMe,
           totpCode: loginData.totpCode,
         }),
         signal: controller.signal,
@@ -187,48 +177,6 @@ class AuthApiClient {
       return {
         success: false,
         error: 'Network error',
-      };
-    }
-  }
-
-  /**
-   * 刷新Token
-   */
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.REFRESH}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${refreshToken}`,
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.message || 'Token refresh failed',
-        };
-      }
-
-      return {
-        success: true,
-        token: data.accessToken || data.token,
-      };
-    } catch (error) {
-      console.error('Token refresh error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -384,42 +332,6 @@ class AuthApiClient {
   }
 
   /**
-   * 验证当前token是否有效
-   * 通过调用后端 /api/v1/auth/me 接口来验证 httpOnly cookie 中的 token
-   */
-  async validateToken(): Promise<{ valid: boolean; user?: WebAuthnUser; error?: string }> {
-    try {
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.PROFILE}`, {
-        method: 'GET',
-        credentials: 'include', // 发送 httpOnly cookie
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        return { valid: false, error: 'Token validation failed' };
-      }
-
-      const data = await response.json();
-      if (data.code !== 0) {
-        return { valid: false, error: data.message || 'Token validation failed' };
-      }
-
-      return {
-        valid: true,
-        user: data.data,
-      };
-    } catch (error) {
-      console.error('Token validation error:', error);
-      return {
-        valid: false,
-        error: error instanceof Error ? error.message : 'Network error',
-      };
-    }
-  }
-
-  /**
    * SSO回调处理
    */
   async ssoCallback(
@@ -507,14 +419,12 @@ export interface WebAuthnUser {
 export const AuthAPI = {
   login: (data: LoginRequest) => authApiClient.login(data),
   logout: () => authApiClient.logout(),
-  refreshToken: (token: string) => authApiClient.refreshToken(token),
   getCsrfToken: () => authApiClient.getCsrfToken(),
   getWebAuthnChallenge: (username: string) => authApiClient.getWebAuthnChallenge(username),
   verifyWebAuthn: (credential: WebAuthnCredential) => authApiClient.verifyWebAuthn(credential),
   initiateSSOLogin: (provider?: string) => authApiClient.initiateSSOLogin(provider),
   ssoCallback: (code: string, state: string | null, provider?: string) =>
     authApiClient.ssoCallback(code, state, provider),
-  validateToken: () => authApiClient.validateToken(),
 };
 
 export default AuthAPI;

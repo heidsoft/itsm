@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, token, hasPermission, isAdmin } = useAuthStore();
+  const { user, hasPermission, isAdmin } = useAuthStore();
   const { isDark, toggleTheme } = useTheme();
   const { language, changeLanguage } = useI18n();
   useAuthStoreHydration();
@@ -98,11 +98,11 @@ export const Header: React.FC<HeaderProps> = ({
   }, [user?.id]);
 
   // 初始化通知和WebSocket
-  // token 存储在 httpOnly cookie 中，前端不持有；已登录（user.id 存在）即可发起请求
+  // 凭证只在 httpOnly cookie 里，会话端点确认后（user.id 存在）即可直接发起请求
   useEffect(() => {
     if (user?.id) {
       loadNotifications();
-      notificationWS.connect(user.id, token ?? '').catch(() => {
+      notificationWS.connect(user.id).catch(() => {
         // WebSocket server not available, ignore silently
       });
 
@@ -118,7 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
         notificationWS.disconnect();
       };
     }
-  }, [user?.id, token, loadNotifications]);
+  }, [user?.id, loadNotifications]);
 
   // 定期刷新通知
   useEffect(() => {

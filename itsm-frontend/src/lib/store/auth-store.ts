@@ -20,13 +20,12 @@ import { httpClient } from '@/lib/api/http-client';
 interface AuthState {
   // 状态
   user: User | null;
-  token: string | null;
   currentTenant: Tenant | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // 认证操作
-  login: (user: User, token: string, tenant?: Tenant) => void;
+  login: (user: User, tenant?: Tenant) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
@@ -50,22 +49,20 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       // 初始状态
       user: null,
-      token: null,
       currentTenant: null,
       isAuthenticated: false,
       isLoading: false,
 
       // 登录操作
-      // 注意：token 存储在 httpOnly cookie 中，前端不需要存储
-      login: (user: User, _token: string, tenant?: Tenant) => {
+      // 凭证只存在于后端下发的 httpOnly cookie 中，store 里不出现 token；
+      // 能被调用 login 的前提是会话端点已返回 authenticated。
+      login: (user: User, tenant?: Tenant) => {
         set({
           user,
-          token: null, // token 在 httpOnly cookie 中，不存储在前端
           isAuthenticated: true,
           isLoading: false,
           currentTenant: tenant || null,
-          _hasConfirmedSession: true,
-        } as Record<string, unknown>);
+        });
 
         // 只设置租户信息（不存储 token）
         if (tenant) {
@@ -78,7 +75,6 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
           isLoading: false,
           currentTenant: null,
@@ -159,19 +155,18 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: state => ({
-        // 安全：不持久化 user（含 PII/permissions），避免 XSS 读取与跨用户残留
-        token: null, // token 在 httpOnly cookie 中，不持久化
+        // 安全：只持久化租户上下文。user（含 PII/permissions）与 isAuthenticated 一律不落盘
+        // ——登录态必须是会话端点的结论，否则过期 cookie 的前端仍会显示伪登录态。
         currentTenant: state.currentTenant,
-        // 不持久化 isAuthenticated/user，由启动时的 /api/v1/auth/me 探活接口决定
-        // 避免 cookie 过期后前端仍显示已登录的伪登录态
       }),
       skipHydration: true, // 手动处理 SSR hydration
-      onRehydrateStorage: () => (state) => {
-        // 初次 hydration 时强制 isAuthenticated = false（因为没有持久化登录态）
-        // 但 login() 之后的 rehydrate 调用不得覆盖已确认的登录状态
-        if (state && !(state as unknown as Record<string, unknown>)._hasConfirmedSession) {
-          state.isAuthenticated = false;
-        }
+      // 默认是浅合并，旧版本写进 localStorage 的 user/isAuthenticated/token 会被原样复活，
+      // 于是「浏览器时间戳 + 一份过期的用户对象」又能伪装成登录态。这里只采纳租户上下文，
+      // 身份一律由后端会话端点重新给出；调用顺序让 rehydrate 在 login() 之后才跑时，
+      // current 就是刚确认的会话本身，不会被清掉。
+      merge: (persisted, current) => {
+        const tenant = (persisted as { currentTenant?: Tenant } | null | undefined)?.currentTenant;
+        return { ...current, currentTenant: tenant ?? null };
       },
     }
   )
