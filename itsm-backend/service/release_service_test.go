@@ -8,6 +8,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	entrelease "itsm-backend/ent/release"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -219,7 +220,7 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 		assert.Nil(t, result)
 		rel, qErr := client.Release.Get(ctx, release.ID)
 		require.NoError(t, qErr)
-		assert.Equal(t, "draft", rel.Status)
+		assert.Equal(t, entrelease.StatusDraft, rel.Status)
 	})
 
 	t.Run("draft->cancelled 允许（write 可取消草稿）", func(t *testing.T) {
@@ -400,7 +401,7 @@ func TestReleaseService_WritePath_RowLevelGuard(t *testing.T) {
 		// 状态未被改动
 		rel, qErr := client.Release.Get(ctx, created.ID)
 		require.NoError(t, qErr)
-		assert.Equal(t, "draft", rel.Status)
+		assert.Equal(t, entrelease.StatusDraft, rel.Status)
 	})
 
 	t.Run("非owner普通角色Delete被拒403且单据仍在", func(t *testing.T) {

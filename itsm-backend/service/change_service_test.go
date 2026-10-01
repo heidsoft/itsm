@@ -240,7 +240,7 @@ func TestChangeService_StatusTimestampsAndRollback(t *testing.T) {
 	require.NoError(t, service.UpdateChangeStatus(ctx, entity.ID, dto.ChangeStatusRolledBack, tenant.ID))
 	rolledBack, err := client.Change.Get(ctx, entity.ID)
 	require.NoError(t, err)
-	assert.Equal(t, string(dto.ChangeStatusRolledBack), rolledBack.Status)
+	assert.Equal(t, change.StatusRolledBack, rolledBack.Status)
 	assert.False(t, rolledBack.ActualEndDate.IsZero())
 
 	_, err = service.UpdateChange(ctx, entity.ID, &dto.UpdateChangeRequest{}, tenant.ID)
@@ -454,10 +454,11 @@ func TestChangeService_UpdateChange_StatusTransition(t *testing.T) {
 	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "status")
 	require.NoError(t, err)
 
-	// 使用 common 包中定义的状态常量，与服务层一致
-	// 有效状态转换: draft -> submitted -> approved -> scheduled -> in_progress -> completed
+	// 使用 dto 状态常量，与 handlers/change 的 API 契约一致
+	// API 契约用 pending 表达待审批（见 handlers/change 与 repo.SubmitForApproval）
+	// 有效状态转换: draft -> pending -> approved -> scheduled -> in_progress -> completed
 
-	t.Run("draft -> submitted", func(t *testing.T) {
+	t.Run("draft -> pending", func(t *testing.T) {
 		testChange, err := client.Change.Create().
 			SetTitle("Status Test").
 			SetDescription("Test").
@@ -471,8 +472,8 @@ func TestChangeService_UpdateChange_StatusTransition(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
-		// 使用 common 包中的状态常量
-		err = service.UpdateChangeStatus(ctx, testChange.ID, "submitted", testTenant.ID)
+		// API 契约用 pending 表达待审批
+		err = service.UpdateChangeStatus(ctx, testChange.ID, dto.ChangeStatusPending, testTenant.ID)
 		require.NoError(t, err)
 
 		// 验证状态已更新
@@ -481,12 +482,12 @@ func TestChangeService_UpdateChange_StatusTransition(t *testing.T) {
 		assert.Equal(t, dto.ChangeStatusPending, response.Status)
 	})
 
-	t.Run("submitted -> approved", func(t *testing.T) {
+	t.Run("pending -> approved", func(t *testing.T) {
 		testChange, err := client.Change.Create().
 			SetTitle("Status Test 2").
 			SetDescription("Test").
 			SetType("normal").
-			SetStatus("submitted").
+			SetStatus("pending").
 			SetPriority("medium").
 			SetImpactScope("medium").
 			SetRiskLevel("low").
@@ -600,16 +601,16 @@ func TestChangeService_SubmitChange_Success(t *testing.T) {
 	// 验证初始状态为 draft
 	assert.Equal(t, dto.ChangeStatus("draft"), dto.ChangeStatus(testChange.Status))
 
-	// 调用 UpdateChangeStatus 提交变更
-	err = service.UpdateChangeStatus(ctx, testChange.ID, "submitted", testTenant.ID)
+	// 调用 UpdateChangeStatus 提交变更（API 用 pending 表达待审批）
+	err = service.UpdateChangeStatus(ctx, testChange.ID, dto.ChangeStatusPending, testTenant.ID)
 	require.NoError(t, err, "提交变更应该成功")
 
 	// 调用 GetChange 获取更新后的变更
 	response, err := service.GetChange(ctx, testChange.ID, testTenant.ID)
 	require.NoError(t, err, "获取变更应该成功")
 
-	// 验证状态已变为 submitted
-	assert.Equal(t, dto.ChangeStatusPending, response.Status, "API 应将持久化 submitted 映射为 pending")
+	// 验证状态已变为 pending
+	assert.Equal(t, dto.ChangeStatusPending, response.Status, "待审批状态应对应 API pending")
 	assert.Equal(t, testChange.ID, response.ID, "变更ID应保持不变")
 	assert.Equal(t, testChange.Title, response.Title, "变更标题应保持不变")
 }
@@ -694,7 +695,7 @@ func TestChangeService_GetChangeStats(t *testing.T) {
 		count  int
 	}{
 		{"draft", 3},
-		{"submitted", 2},
+		{"pending", 2},
 		{"approved", 4},
 		{"completed", 1},
 	}
@@ -747,12 +748,12 @@ func TestChangeService_UpdateChangeStatus_TenantIsolation(t *testing.T) {
 	testUser1, err := createChangeTestUser(ctx, client, testTenant1.ID, "iso1")
 	require.NoError(t, err)
 
-	// Create a change for tenant 1 (status: submitted to allow approval transition)
-	change, err := client.Change.Create().
+	// Create a change for tenant 1 (pending 是合法的待审批持久化状态)
+	created, err := client.Change.Create().
 		SetTitle("Tenant 1 Change").
 		SetDescription("Should not be updatable by Tenant 2").
 		SetType("normal").
-		SetStatus(change.Status(dto.ChangeStatusPending)). // Need submitted to transition to approved
+		SetStatus(change.StatusPending).
 		SetPriority("medium").
 		SetImpactScope("medium").
 		SetRiskLevel("low").
@@ -762,12 +763,12 @@ func TestChangeService_UpdateChangeStatus_TenantIsolation(t *testing.T) {
 	require.NoError(t, err)
 
 	// Tenant 2 tries to update status to approved - should fail with cross-tenant error
-	err = service.UpdateChangeStatus(ctx, change.ID, dto.ChangeStatusApproved, testTenant2.ID)
+	err = service.UpdateChangeStatus(ctx, created.ID, dto.ChangeStatusApproved, testTenant2.ID)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "cross-tenant access denied", "Expected cross-tenant access denied error")
 
-	// Verify change status was NOT updated (still submitted)
-	updatedChange, err := client.Change.Get(ctx, change.ID)
+	// Verify change status was NOT updated (still pending)
+	updatedChange, err := client.Change.Get(ctx, created.ID)
 	require.NoError(t, err)
-	assert.Equal(t, string(dto.ChangeStatusPending), updatedChange.Status, "Change status should not have been updated by Tenant 2")
+	assert.Equal(t, change.StatusPending, updatedChange.Status, "Change status should not have been updated by Tenant 2")
 }

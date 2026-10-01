@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	entrelease "itsm-backend/ent/release"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -171,7 +172,7 @@ func TestApplyReleaseApproval_CreatorCannotSelfApprove(t *testing.T) {
 	// 状态未被改动
 	releaseEntity, gerr := client.Release.Get(context.Background(), releaseID)
 	require.NoError(t, gerr)
-	assert.Equal(t, "draft", releaseEntity.Status)
+	assert.Equal(t, entrelease.StatusDraft, releaseEntity.Status)
 }
 
 func TestApplyReleaseApproval_NonDraftStatusRejected(t *testing.T) {
@@ -269,7 +270,7 @@ func TestApplyReleaseApproval_BridgeFailClosedForUnauthorizedActor(t *testing.T)
 	// 发布状态未被改动
 	releaseEntity, gerr := client.Release.Get(context.Background(), releaseID)
 	require.NoError(t, gerr)
-	assert.Equal(t, "draft", releaseEntity.Status)
+	assert.Equal(t, entrelease.StatusDraft, releaseEntity.Status)
 }
 
 // 审批成功后再次审批必须被拒绝，状态与流程均不得变化。
@@ -326,7 +327,7 @@ func TestApplyReleaseApproval_AtomicCommit_RollbackOnBusinessFailure(t *testing.
 
 	rel, gerr := client.Release.Get(ctx, releaseID)
 	require.NoError(t, gerr)
-	assert.Equal(t, "draft", rel.Status, "发布状态不得变更")
+	assert.Equal(t, entrelease.StatusDraft, rel.Status, "发布状态不得变更")
 
 	task, terr := client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, terr)

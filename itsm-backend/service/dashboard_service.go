@@ -433,7 +433,7 @@ func (s *DashboardService) getChangeMetrics(ctx context.Context, tenantID int) (
 	pendingApproval, err := s.client.Change.Query().
 		Where(
 			change.TenantID(tenantID),
-			change.StatusEQ(common.ChangeStatusSubmitted),
+			change.StatusEQ(change.StatusPending),
 		).
 		Count(ctx)
 	if err != nil {

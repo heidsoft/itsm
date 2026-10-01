@@ -40,6 +40,10 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 
 	lifecycleSvc := service.NewTicketLifecycleService(client, logger)
 	incidentSvc := service.NewIncidentService(client, logger, nil)
+	// 与 internal/bootstrap/app.go:457-458 一致走事务型 outbox，
+	// 否则 CreateIncident 的 fire-and-forget goroutine 会与本用例后续事务争抢共享内存表。
+	incidentSvc.EnableWorkflowOutbox()
+	incidentSvc.EnableRulesOutbox()
 	changeSvc := service.NewChangeService(client, logger)
 	problemSvc := service.NewProblemService(client, logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)

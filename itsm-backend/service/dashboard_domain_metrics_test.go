@@ -36,7 +36,7 @@ func TestDashboardDomainMetricsAreReal(t *testing.T) {
 	client.Change.Create().SetTitle("c1").SetChangeNumber("CHG-M1").SetStatus("completed").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
 	client.Change.Create().SetTitle("c2").SetChangeNumber("CHG-M2").SetStatus("completed").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
 	client.Change.Create().SetTitle("c3").SetChangeNumber("CHG-M3").SetStatus("failed").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
-	client.Change.Create().SetTitle("c4").SetChangeNumber("CHG-M4").SetStatus("submitted").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
+	client.Change.Create().SetTitle("c4").SetChangeNumber("CHG-M4").SetStatus("pending").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
 	client.Change.Create().SetTitle("c5").SetChangeNumber("CHG-M5").SetStatus("draft").SetCreatedBy(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
 
 	incidents, err := svc.getIncidentMetrics(ctx, tenant.ID)

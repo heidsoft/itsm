@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	entchange "itsm-backend/ent/change"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/require"
@@ -195,7 +196,7 @@ func TestChangeManagementIntegration(t *testing.T) {
 	logger.Info("Created change request", "change_id", change.ID)
 
 	// 验证变更
-	require.Equal(t, "draft", change.Status)
+	require.Equal(t, entchange.StatusDraft, change.Status)
 	require.Equal(t, "standard", change.Type)
 
 	t.Log("Change management integration test completed successfully")

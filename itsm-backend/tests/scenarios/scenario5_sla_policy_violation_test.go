@@ -11,6 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/service"
+	"itsm-backend/service/sla"
 )
 
 // Scenario 5: SLA 策略绑定 + 违规统计 + 升级矩阵测试
@@ -34,6 +35,9 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 
 	policySvc := service.NewSLAPolicyService(client)
 	monitorSvc := service.NewSLAMonitorService(client, logger)
+	// 与 internal/bootstrap/app.go:366-394 一致：sla_states 读依赖由 SetSLAStore 事后注入，
+	// 未注入时监控服务按 fail closed 返回 5003，不再 panic。
+	monitorSvc.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
 	escalationSvc := service.NewEscalationMatrixService(logger)
 
 	t.Run("create SLA policy and match by priority", func(t *testing.T) {
@@ -86,7 +90,7 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 		}
 
 		overdueCreatedAt := time.Now().Add(-5 * time.Hour)
-		_, err = client.Ticket.Create().
+		overdueTicket, err := client.Ticket.Create().
 			SetTitle("超时事件 - 数据库宕机").
 			SetDescription("数据库服务已宕机 5 小时").
 			SetPriority("high").
@@ -102,6 +106,20 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 			Save(ctx)
 		if err != nil {
 			t.Fatalf("创建超时工单失败: %v", err)
+		}
+
+		// Phase 3 读路径以 sla_states 为权威源：CheckSLAViolations 只统计
+		// FindWithSLABound/BatchGetStates 命中的工单，仅写工单内嵌字段不会被检查到。
+		if _, err = client.SLAState.Create().
+			SetTenantID(tenantA.ID).
+			SetAggregateType("ticket").
+			SetAggregateID(overdueTicket.ID).
+			SetSLADefinitionID(slaDef.ID).
+			SetStatus("active").
+			SetResponseDeadline(time.Now().Add(-2 * time.Hour)).
+			SetResolutionDeadline(time.Now().Add(-1 * time.Hour)).
+			Save(ctx); err != nil {
+			t.Fatalf("创建超时工单 SLA 状态失败: %v", err)
 		}
 
 		stats, err := monitorSvc.CheckSLAViolations(ctx, tenantA.ID)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service/sla"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -192,13 +193,26 @@ func TestTicketSLAService_GetOverdueTicketsUsesPersistedDeadline(t *testing.T) {
 		SetTicketNumber("SLA-OVERDUE").SetRequesterID(requester.ID).SetTenantID(tenant.ID).
 		SetSLAResolutionDeadline(time.Now().Add(-time.Minute)).Save(ctx)
 	require.NoError(t, err)
-	_, err = client.Ticket.Create().
+	active, err := client.Ticket.Create().
 		SetTitle("未逾期").SetDescription("未逾期工单").SetPriority("high").SetStatus("open").
 		SetTicketNumber("SLA-ACTIVE").SetRequesterID(requester.ID).SetTenantID(tenant.ID).
 		SetSLAResolutionDeadline(time.Now().Add(time.Hour)).Save(ctx)
 	require.NoError(t, err)
 
+	// Phase 3: GetOverdueTickets 以 sla_states 为权威源，工单内嵌 deadline 只是 inline 回退。
+	_, err = client.SLAState.Create().
+		SetTenantID(tenant.ID).SetAggregateType("ticket").SetAggregateID(overdue.ID).
+		SetStatus("active").SetResolutionDeadline(time.Now().Add(-time.Minute)).
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = client.SLAState.Create().
+		SetTenantID(tenant.ID).SetAggregateType("ticket").SetAggregateID(active.ID).
+		SetStatus("active").SetResolutionDeadline(time.Now().Add(time.Hour)).
+		Save(ctx)
+	require.NoError(t, err)
+
 	service := NewTicketSLAService(client, zaptest.NewLogger(t).Sugar())
+	service.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
 	tickets, err := service.GetOverdueTickets(ctx, tenant.ID)
 	require.NoError(t, err)
 	require.Len(t, tickets, 1)

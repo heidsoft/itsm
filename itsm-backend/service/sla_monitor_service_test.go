@@ -8,8 +8,10 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service/sla"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,6 +24,8 @@ func setupSLAMonitorTest(t *testing.T) (*ent.Client, *SLAMonitorService, context
 	client := enttest.Open(t, "sqlite3", testDSN())
 	logger := zaptest.NewLogger(t).Sugar()
 	service := NewSLAMonitorService(client, logger)
+	// 与 internal/bootstrap/app.go 一致：sla_states 读路径依赖 SetSLAStore 注入的 store。
+	service.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
 	ctx := context.Background()
 	return client, service, ctx
 }
@@ -59,6 +63,28 @@ func createSLATestDefinition(ctx context.Context, client *ent.Client, tenantID i
 }
 
 // ==================== SLA检查测试 ====================
+
+// C4 回归：slaStore 由 bootstrap 事后 SetSLAStore 注入，漏注入必须在依赖边界 fail closed，
+// 不得在 nil *sla.Store 上解引用 client 触发 panic 并终止 SLA watcher goroutine。
+func TestSLAMonitorService_MissingSLAStoreFailsClosed(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+
+	monitor := NewSLAMonitorService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	testTenant, err := createSLATestTenant(ctx, client, "no_store")
+	require.NoError(t, err)
+
+	_, err = monitor.CheckSLAViolations(ctx, testTenant.ID)
+	require.Error(t, err, "SLA store 未注入时必须返回错误")
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code, "依赖缺失应为 operational unavailable，不得伪装成空结果")
+
+	_, err = monitor.GetDashboardMetrics(ctx, testTenant.ID)
+	require.Error(t, err)
+}
 
 func TestSLAMonitorService_CheckSLAViolations_Empty(t *testing.T) {
 	client, service, ctx := setupSLAMonitorTest(t)
@@ -166,7 +192,7 @@ func TestSLAMonitorService_GetSLAComplianceByDefinition(t *testing.T) {
 	require.NoError(t, err)
 
 	// 创建关联SLA定义的工单
-	_, err = client.Ticket.Create().
+	testTicket, err := client.Ticket.Create().
 		SetTitle("Compliance Test Ticket").
 		SetDescription("Test description").
 		SetPriority("medium").
@@ -179,11 +205,23 @@ func TestSLAMonitorService_GetSLAComplianceByDefinition(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// Phase 3 读路径以 sla_states 为权威源：只写工单内嵌 sla_definition_id 不会被统计到。
+	_, err = client.SLAState.Create().
+		SetTenantID(testTenant.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(testTicket.ID).
+		SetSLADefinitionID(slaDef.ID).
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
 	// 获取合规性统计
 	stats, err := service.GetSLAComplianceByDefinition(ctx, testTenant.ID)
 	require.NoError(t, err)
-	// 返回空列表而非nil
-	assert.NotNil(t, stats)
+	require.Len(t, stats, 1)
+	assert.Equal(t, slaDef.ID, stats[0].SLADefinitionID)
+	assert.Equal(t, 1, stats[0].TotalTickets)
+	assert.Equal(t, 100.0, stats[0].ComplianceRate)
 }
 
 // ==================== Dashboard指标测试 ====================

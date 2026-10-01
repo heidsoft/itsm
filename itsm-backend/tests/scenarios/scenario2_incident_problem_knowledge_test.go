@@ -33,6 +33,11 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	userB := mustCreateUser(ctx, t, client, tenantB.ID, "eng_b", "eng_b@test.com", "technician")
 
 	incidentSvc := service.NewIncidentService(client, logger, nil)
+	// 与 internal/bootstrap/app.go:457-458 一致：生产组装走事务型 outbox。
+	// 不开启时会落到 fire-and-forget goroutine 分支，后台写库与下一步事务抢同一张
+	// 共享内存表，触发 "database table is locked: incidents" 的偶发失败。
+	incidentSvc.EnableWorkflowOutbox()
+	incidentSvc.EnableRulesOutbox()
 	problemSvc := service.NewProblemService(client, logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 

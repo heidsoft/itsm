@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	entchange "itsm-backend/ent/change"
 	"itsm-backend/ent/operationalcommand"
 	"itsm-backend/internal/commandbus"
 
@@ -114,7 +115,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 		require.NoError(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)
-		require.Equal(t, "pending", stored.Status)
+		require.Equal(t, entchange.StatusPending, stored.Status)
 		task, err := client.ProcessTask.Get(ctx, taskID)
 		require.NoError(t, err)
 		require.Equal(t, "completed", task.Status)
@@ -132,7 +133,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 		require.Error(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)
-		require.Equal(t, "draft", stored.Status)
+		require.Equal(t, entchange.StatusDraft, stored.Status)
 		task, err := client.ProcessTask.Get(ctx, taskID)
 		require.NoError(t, err)
 		require.Equal(t, "assigned", task.Status)
@@ -145,7 +146,7 @@ func TestSubmitChangeCommitsBPMNAndBusinessStateAtomically(t *testing.T) {
 		require.Error(t, err)
 		stored, err := client.Change.Get(ctx, item.ID)
 		require.NoError(t, err)
-		require.Equal(t, "draft", stored.Status)
+		require.Equal(t, entchange.StatusDraft, stored.Status)
 		task, err := client.ProcessTask.Get(ctx, taskID)
 		require.NoError(t, err)
 		require.Equal(t, "assigned", task.Status)

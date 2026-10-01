@@ -59,6 +59,17 @@ func (s *SLAMonitorService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
 }
 
+// requireSLAStore 校验 sla_states 读依赖已注入。
+// slaStore 是 NewSLAMonitorService 之后由 internal/bootstrap/app.go 通过 SetSLAStore 注入的依赖，
+// 漏注入会让 *sla.Store 方法在 nil receiver 上解引用 client 并 panic，直接终止 SLA watcher goroutine。
+// 依赖缺失属于运维配置不可用，按 fail closed 返回可映射 503 的业务错误，不得伪装成空检查结果。
+func (s *SLAMonitorService) requireSLAStore() error {
+	if s.slaStore == nil {
+		return common.NewBusinessError(common.ServiceUnavailableCode, "SLA 状态存储未注入，无法执行 SLA 检查", "")
+	}
+	return nil
+}
+
 // GetSLAState 查询聚合根的 SLA 状态（Phase 3 切读：handler 层统一从 sla_states 读取）。
 func (s *SLAMonitorService) GetSLAState(ctx context.Context, tenantID int, aggregateType string, aggregateID int) (*ent.SLAState, error) {
 	return s.client.SLAState.Query().
@@ -102,6 +113,10 @@ type SLACheckStats struct {
 
 // CheckSLAViolations 检查所有工单的SLA违规情况
 func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int) (*SLACheckStats, error) {
+	if err := s.requireSLAStore(); err != nil {
+		return nil, err
+	}
+
 	s.logger.Infow("Starting SLA violation check", "tenant_id", tenantID)
 
 	now := time.Now()
@@ -1049,6 +1064,10 @@ func (s *SLAMonitorService) CheckAllTenantsSLA(ctx context.Context) error {
 
 // GetDashboardMetrics 获取SLA监控仪表板完整指标
 func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID int) (*dto.SLAMonitoringDashboard, error) {
+	if err := s.requireSLAStore(); err != nil {
+		return nil, err
+	}
+
 	s.logger.Infow("Getting SLA dashboard metrics", "tenant_id", tenantID)
 
 	now := time.Now()
