@@ -1,0 +1,74 @@
+name: fresh-install-gate
+
+# 空卷首装门禁：只证明「私有化全新部署能装起来」这一件事。
+#
+# 与 ga-gate 的分工：ga-gate 证明整栈可服务并跑 E2E；本门禁只起 postgres + redis + itsm-init，
+# 断言迁移入账、BPMN 模板已部署、流程绑定零悬空 key。日期化迁移在既有安装里「收养不执行」，
+# 所以引用不存在对象或依赖 seed 数据的 SQL 只在空卷首装时暴露（2026-10-01 清卷实测）。
+# 步骤廉价（不构建前端、不跑浏览器），适合升级为必需检查。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'itsm-backend/**'
+      - 'docker-compose.dev.yml'
+      - 'docker-compose.fresh-gate.yml'
+      - 'scripts/fresh-install-gate.sh'
+      - '.github/workflows/fresh-install-gate.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'itsm-backend/**'
+      - 'docker-compose.dev.yml'
+      - 'docker-compose.fresh-gate.yml'
+      - 'scripts/fresh-install-gate.sh'
+      - '.github/workflows/fresh-install-gate.yml'
+  workflow_dispatch:
+  schedule:
+    # 每日 18:40 UTC（02:40 CST）：即使没有相关提交，也保证这条链持续被证明。
+    - cron: '40 18 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fresh-install-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fresh-install:
+    name: Fresh install · empty volume
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DEPLOYMENT_MODE: private
+      # GitHub runner 可直连 Docker Hub；DaoCloud 代理对 runner 网段不通（同 ga-gate 的处理）。
+      POSTGRES_IMAGE: pgvector/pgvector:pg17
+      REDIS_IMAGE: redis:7-alpine
+      GATE_BUILD: '1'
+      MIN_MIGRATIONS: '50'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Validate compose configuration
+        run: >-
+          docker compose -p fresh-install-gate-${{ github.run_id }}-${{ github.run_attempt }}
+          -f docker-compose.dev.yml -f docker-compose.fresh-gate.yml config --quiet
+
+      - name: Run fresh-install gate
+        id: gate
+        run: |
+          chmod +x scripts/fresh-install-gate.sh
+          GATE_RUN_ID="${{ github.run_id }}-${{ github.run_attempt }}" \
+            ./scripts/fresh-install-gate.sh
+
+      - name: Upload init log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-install-gate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/fresh-install-gate/
+          if-no-files-found: warn
+          retention-days: 7

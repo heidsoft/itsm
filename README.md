@@ -441,6 +441,7 @@ python3 output/dev_business_flow_test.py
 ```bash
 make prod-init        # 生成生产配置
 # 编辑 .env.prod，修改密码、JWT、域名等
+make fresh-install-gate  # 交付前空卷首装自检：migrate+seed 链路必须通，账本/流程模板/绑定不变量必须成立
 make prod-deploy      # 部署
 make prod-health      # 检查状态
 ```

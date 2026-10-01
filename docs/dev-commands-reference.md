@@ -190,6 +190,8 @@ npm run test:smoke
 ```bash
 make check-contracts        # 校验 API 路径、部署配置、Docker 配置一致性
 make verify-scripts         # 验证构建/启动脚本语法
+make fresh-install-gate     # 空卷首装门禁：postgres+redis+itsm-init 全新安装，断言迁移入账/流程模板已部署/流程绑定零悬空
+                            # GATE_BUILD=0 复用镜像；GATE_KEEP=1 失败后保留现场；负向自检见 scripts/fixtures/fresh-gate-negative.override.yml
 ```
 
 ### 2.6 功能冒烟测试

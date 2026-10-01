@@ -1,0 +1,13 @@
+# fresh-install-gate 的「故意破坏」夹具：用来证明门禁真的会红（会红的守卫才有效）。
+#
+# 用法：
+#   GATE_BUILD=0 GATE_EXTRA_OVERRIDE=scripts/fixtures/fresh-gate-negative.override.yml \
+#     scripts/fresh-install-gate.sh   # 期望退出码非 0
+#
+# 原理：磁盘迁移是在运行时从容器内 ./migrations 目录读取的
+# （internal/bootstrap/app.go:1434 → migration.FilesystemMigrations("")，Dockerfile:68 把
+# migrations 目录 COPY 进镜像），所以启动前落一条引用不存在对象的脚本，就精确复现了
+# 「只在全新安装暴露」的缺陷形态：既有安装把它当历史收养、从不执行，空卷首装则必然 42P01。
+services:
+  itsm-init:
+    command: ["sh", "-c", "printf 'SELECT * FROM gate_negative_fixture_missing_table;\\n' > ./migrations/20991231_gate_negative_fixture.sql && exec ./main"]

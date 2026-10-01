@@ -1,5 +1,5 @@
 # ITSM Makefile - 构建和部署自动化
-.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene scope-creep product-drift verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
+.PHONY: help build build-backend build-frontend build-images build-parallel build-no-cache deploy deploy-backend deploy-frontend prod-init prod-deploy prod-health prod-status test test-backend test-frontend test-unit lint lint-backend lint-frontend type-check check-contracts docs-gate check-handlers-hygiene fresh-install-gate scope-creep product-drift verify-scripts health dev-health dev-start-docker dev-start-local dev-stop dev-stop-docker dev-stop-local dev-clean dev-reset dev-rebuild dev-backend-local dev-frontend-only dev-seed-demo swagger-gen clean clean-all logs restart status version
 
 # 默认版本
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "latest")
@@ -137,6 +137,10 @@ scope-creep: ## 检查产品需求收敛（空壳前端模块/预览域棘轮/�
 check-handlers-hygiene: ## 检查 handlers 垂直切片卫生（裸奔域/域间 import；--strict 传 HANDLERS_GATE_ARGS=--strict）
 	@echo "$(BLUE)检查 handlers 分层卫生...$(NC)"
 	@bash scripts/check-handlers-hygiene.sh $(HANDLERS_GATE_ARGS)
+
+fresh-install-gate: ## 空卷首装门禁：postgres+redis+itsm-init 全新安装，断言迁移入账/流程模板已部署/绑定零悬空（GATE_BUILD=0 复用镜像，GATE_KEEP=1 保留现场）
+	@echo "$(BLUE)运行空卷首装门禁...$(NC)"
+	@bash scripts/fresh-install-gate.sh
 
 # ========================
 # 生产语义化入口（README 引用的稳定目标名）

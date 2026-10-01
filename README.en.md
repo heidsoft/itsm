@@ -438,6 +438,7 @@ Three deployment modes are supported:
 ```bash
 make prod-init        # Generate production config
 # Edit .env.prod: change passwords, JWT secret, domain, etc.
+make fresh-install-gate  # Empty-volume install self-check before delivery
 make prod-deploy      # Deploy
 make prod-health      # Check status
 ```

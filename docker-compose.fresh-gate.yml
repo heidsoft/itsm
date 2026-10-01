@@ -1,0 +1,16 @@
+# fresh-install-gate 覆盖层：只服务于「空卷全新安装」证明，不改变 dev compose 的业务装配。
+#
+# 1) 宿主端口改为随机：门禁可能与本机其他 postgres/redis（含开发栈）并存，固定映射会抢不到端口。
+# 2) container_name 加运行号：基础文件里的固定容器名是全局的，唯一化后并发/多次运行不会互相顶掉，
+#    也不会误碰正在跑的 dev/prod 容器。
+services:
+  postgres:
+    container_name: itsm-gate-postgres-${GATE_RUN_ID:-local}
+    ports:
+      - "5432"
+  redis:
+    container_name: itsm-gate-redis-${GATE_RUN_ID:-local}
+    ports:
+      - "6379"
+  itsm-init:
+    container_name: itsm-gate-init-${GATE_RUN_ID:-local}
