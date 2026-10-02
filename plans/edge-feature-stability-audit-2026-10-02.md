@@ -118,3 +118,14 @@
 | 5 | 工单依赖影响分析 GET | 已修 | `handlers/ticket_dependency/handler.go` 改查询参数绑定 + 服务层 `ErrDependencyTicketNotFound`；`router/ticket_dependency_route_test.go` 打真实 `SetupRoutes`（10 子用例，修复前 7 个为红，含跨租户与自报 `tenantId` 均 404/4004）；契约见 `docs/api-reference.md`「工单依赖影响分析接口」 |
 
 仍待拍板（不在 E1 范围内动）：`tag` 第二张表的退役边界（`code` 列 + `pkg/seeder/seeder.go:2364` 清单按 Code 建键 + 5 张关联表外键）、只读别名 `GET /tags`/`GET /system/tags` 的下线，以及菜单基线 `PermissionCode: "system:read"`（`baseline.go:147`）与页面真实所需 `ticket_tag:*` 不一致 —— 该字段会随 `upsertMenu` 刷新到存量行，属访问控制变更。
+
+### E2 收口进度（2026-10-02 起，逐项提交）
+
+| # | 项 | 状态 | 证据 |
+|---|---|---|---|
+| 1 | vendor 吞错与 `list` 信封 | 已修 | `service/vendor_service.go` 不再 `total, _ :=`，新增 `ErrVendorNotFound`/`ErrVendorCodeExists`；`handlers/vendor/handler.go` 按 409/404/400/500 分语义、信封改 `common.SuccessWithList`；`router/vendor_routes_test.go` 打真实 `SetupRoutes`（含用第二连接 drop `vendors` 表制造的「仅供应商查询失败」故障），修复前两个测试函数全红 |
+| 2 | problem SLA `none` / 服务分析全零 / 云发现空切片 | 待实施 | — |
+| 3 | `handlers/*` 其余 12 处非 `items` 键并入信封棘轮 | 待实施 | — |
+| 4 | 收回 `frontend-menu-and-features.md` 6 条 ✅ 与两份产品文档的「优先级矩阵 = GA 证据」 | 待实施 | — |
+
+E2-1 附带发现（不在本批动，交 E5）：`ent/schema/vendor.go` 的 `code` 是**全局**唯一索引而不是 `(tenant_id, code)` 组合唯一，跨租户占用同编码会互相冲突；同一 schema 里 `vendor_type`/`contact_*`/`address`/`website` 全部是 Ent 必填字段（无 `Optional`），而 `CreateVendorRequest` 只把 `name`/`code` 声明为必填——这属于「后端可达性与归属裁决」条目，若 vendors 保留就必须连表结构与 DTO 一起重做。
