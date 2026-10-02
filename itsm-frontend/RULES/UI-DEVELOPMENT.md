@@ -443,7 +443,6 @@ find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1" lines"}'
 | 报表中心 | `app/(main)/reports/page.tsx` | 有"稳态渲染"提示 | NO-GO §2 |
 | 工作流管理 | `app/(main)/workflow/page.tsx` | 有"设计态与运行态"提示 | NO-GO §2 |
 | SLA服务级别 | `app/(main)/sla/page.tsx` | 合规率卡片有堆叠 Statistic，卡片高度不一致 | NO-GO §3 |
-| 高级分析 | `components/reports/AdvancedAnalytics.tsx` | KPI 卡片尺寸不一致 | NO-GO §3 |
 | 知识库新建 | `app/(main)/knowledge/articles/new/page.tsx` | 标签输入框缺少 tagRender，focus ring 过强 | NO-GO §5.2, §5.3 |
 | 用户组管理 | `app/(main)/admin/groups/page.tsx` | 权限标签样式不清晰 | NO-GO §1.2 |
 | 事件管理 | `app/(main)/tickets/page.tsx` | 看板卡片数字下方文字透明度太高 | NO-GO §0.5 |
@@ -463,6 +462,7 @@ find src -name "*.tsx" -exec wc -l {} \; | awk '$1 > 800 {print $2, $1" lines"}'
 | 2026-06-14 | `sla/page.tsx` | SLA 卡片改用 `align="stretch"` 和 `h-full w-full` 确保高度一致 | ✅ | NO-GO §3 |
 | 2026-06-14 | `knowledge/articles/new/page.tsx` | 标签使用自定义样式 `bg-blue-100 text-blue-800` | ✅ | NO-GO §5.2 |
 | 2026-06-14 | `admin/groups/page.tsx` | 权限标签使用自定义样式 | ✅ | NO-GO §1.2 |
+| 2026-10-02 | `components/reports/AdvancedAnalytics.tsx` | §9 待办行随组件删除而消失：它属于从任何路由都不可达的 `reports-api.ts` 平行死实现，批次 E3-2 整体清账（**不是**样式修复）。活的报表实现是 `components/business/AdvancedReporting` | 已删除 | NO-GO §3 |
 
 ---
 

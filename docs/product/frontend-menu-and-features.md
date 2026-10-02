@@ -302,8 +302,9 @@ filterByCapability(menus)：
 
 > 2026-10-02：`/admin/tags` → `tag`、`/templates` → `template` 两个 capability 已存在于后端注册表
 > （`itsm-backend/handlers/capability/handler.go`），成熟度从 GA 收回为 **Pilot**。实测理由：标签仍有
-> `ticket_tags` 与 `tags.code` 双表未收敛；模板只有 `/api/v1/tickets/templates*` 注册，`template-api.ts`
-> 调用的通用 `/api/v1/templates` 后端从未注册。侧边栏因此会显示 Pilot 徽标，`read/manage` 动作不变。
+> `ticket_tags` 与 `tags.code` 双表未收敛；模板只有 `/api/v1/tickets/templates*` 注册，曾经调用通用
+> `/api/v1/templates` 的 `template-api.ts` 已在 E3-2 连同其不可达组件链一起删除（该表里当时就不存在
+> 任何 `POST/PATCH/DELETE /api/v1/templates` 路由）。侧边栏因此会显示 Pilot 徽标，`read/manage` 动作不变。
 
 ### 4.3 单一来源状态（2026-10-02 实测）
 
@@ -423,12 +424,21 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 >    靠第 2 项隐藏。
 > 2. `itsm-frontend/src/config/product-capabilities.ts` 的 `PRODUCT_CAPABILITIES`（能力开关）与
 >    `DISABLED_API_CONTRACTS`（未注册契约豁免）。当前整份文件被禁用（无 `path` 限定）的 client 有：
->    `batch-operations-api.ts`、`change-classification-api.ts`、`collaboration-api.ts`、
->    `knowledge-base-api.ts`、`notification-preference-api.ts`、`priority-matrix-api.ts`、
->    `reports-api.ts`、`template-api.ts`、`ticket-relations-api.ts`、`ticket-root-cause-api.ts`。
+>    `knowledge-base-api.ts`、`notification-preference-api.ts`、`ticket-relations-api.ts`、
+>    `ticket-root-cause-api.ts`。
 >
-> 因此凡出现在上述清单里的行，测试绿只证明「前端自洽」，不证明后端可达。这类实现的生产消费方
-> 清账排在批次 E3。
+> 因此凡出现在上述清单里的行，测试绿只证明「前端自洽」，不证明后端可达。
+>
+> **2026-10-02 E3-2 清账结果**：整链不可达的六套平行实现已经删除，不再出现在本表——
+> `template-api.ts`、`batch-operations-api.ts`、`reports-api.ts`、`collaboration-api.ts`、
+> `change-classification-api.ts`、`priority-matrix-api.ts`、`ticket-service-v2.ts` 及其六个
+> `use*` hook、`src/components/{templates,batch-operations,reports,collaboration,
+> change-classification,priority-matrix}`、`src/components/business/{ticket-modal,
+> TicketDependencyManager.tsx}`、`src/lib/reports/report-engine.ts`、`src/lib/templates/**`。
+> 判定方法是实测：从 `src/app/**/(page|layout).tsx` 建 import 闭包（静态 import、动态
+> `import()`、`require()` 都算边），闭包外的文件即不可达。模板与报表的**唯一**活实现分别是
+> `TicketApi` 的 `/api/v1/tickets/templates*` 与 `src/app/(main)/reports/hooks/useReportData.ts`
+> → `components/business/AdvancedReporting`。
 
 ### 7.1 API client 清单（按域）
 
@@ -443,8 +453,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | Ticket | `ticket-api.ts` + 11 子文件 | 11 测试 | ✅ |
 | Incident | `incident-api.ts` | `incident-api.test.ts` | ✅ |
 | Problem | `problem-api.ts` | `problem-api.test.ts` | ✅ |
-| Change | `change-api.ts` | `change-api.test.ts` | ✅ |
-| Change 分类 | `change-classification-api.ts` | `change-classification-api.test.ts` | ⚠️ 后端路由未注册，`changeClassification` 开关为 false |
+| Change | `change-api.ts` | `change-api.test.ts` | ✅（`/changes/templates/:id/instantiate` 未注册，见豁免清单） |
 | Change 评审 | `change-review-api.ts` | （无测试） | ⚠️ |
 | Release | `release-api.ts` | `release-api.test.ts` | ✅ |
 | 标准变更 | `standard-change-api.ts` | `standard-change-api.test.ts` | ✅ |
@@ -458,28 +467,23 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | Asset | `asset-api.ts` | `asset-api.test.ts` | ✅ |
 | SLA | `sla-api.ts`、`sla-template-api.ts` | 2 测试 | ✅ |
 | 升级矩阵 | `escalation-matrix-api.ts` | `escalation-matrix-api.test.ts` | ✅ |
-| 优先级矩阵 | `priority-matrix-api.ts` | `priority-matrix-api.test.ts` | ⚠️ 后端零 `/api/v1/priority*` 路由，`priorityMatrix` 开关为 false |
 | Workflow | `workflow-api.ts` + 8 子文件 | 9 测试 | ✅ |
 | AI | `ai-api.ts`、`a2ui-api.ts`、`bpmn-ai-api.ts` | 3 测试 | ✅ |
-| Template | `template-api.ts` | `template-api.test.ts` | ⚠️ 后端只有 `/api/v1/tickets/templates*`；通用 `/api/v1/templates` 未注册，`genericTemplateMarketplace` 为 false |
 | Notification | `notification-preference-api.ts` | `notification-preference-api.test.ts` | ✅ |
 | MSP | `msp-api.ts` | `msp-api.test.ts` | ✅ |
-| Reports | `reports-api.ts` | `reports-api.test.ts` | ✅ |
 | Audit Log | `auditlog-api.ts` | `auditlog-api.test.ts` | ✅ |
 | Vector Store | `vector-store-api.ts` | （无测试） | ⚠️ |
 | Domain Config | `domain-config-api.ts` | `domain-config-api.test.ts` | ✅ |
 | Common / 系统配置 | `common-api.ts`、`system-config-api.ts`、`capability-api.ts` | 3 测试 | ✅ |
-| Batch Operations | `batch-operations-api.ts` | `batch-operations-api.test.ts` | ⚠️ 后端无 `/api/v1/tickets/batch/*` 路由，`advancedBatchOperations` 为 false |
-| Collaboration | `collaboration-api.ts` | `collaboration-api.test.ts` | ⚠️ 后端无 `/api/v1/mentions/*` 路由（仅 `/notifications` 复用已注册接口），`collaborationAdvanced` 为 false |
 | Global Search | `global-search-api.ts` | `global-search-api.test.ts` | ✅ |
 
 ### 7.2 业务 hooks 覆盖
 
-> 2026-10-02 实测：下表 ✅ 只表示「存在对应测试」。`useChangeClassification`、`usePriorityMatrix`、
-> `useReports`、`useTemplateQuery`、`useCollaboration`、`useBatchOperations` 六条已改标 ⚠️，因为
-> 除自身测试外没有任何生产消费方：`src/components/{change-classification,priority-matrix,batch-operations,
-> collaboration,templates,reports}` 六个目录对目录外引用数实测均为 0，`src/lib/hooks/useCollaboration.ts`、
-> `useReports.ts` 除自身测试外无人 import。测试绿只证明前端自洽，不能作为能力可用证据；死面清账在批次 E3。
+> 2026-10-02 实测：下表 ✅ 只表示「存在对应测试」。E3-2 已删除六个只有自身测试、没有任何路由可达
+> 的 hook：`useChangeClassification`、`usePriorityMatrix`、`useReports`、`useTemplateQuery`、
+> `useCollaboration`、`useBatchOperations`（判定依据同上：从 `src/app/**/(page|layout).tsx` 建
+> import 闭包，闭包外即不可达）。报表与模板的活实现分别是 `src/app/(main)/reports/hooks/useReportData.ts`
+> 与 `TicketApi`，不再有两套并行 hook。
 
 | Hook | 域 | 测试与消费方 |
 |------|----|------|
@@ -489,19 +493,13 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | `useTickets`、`useTicketsQuery` | Ticket | ✅ |
 | `useTicketFilters`、`useTicketRelations` | Ticket | ✅ |
 | `useIncidentsQuery`、`useIncidentFilters`、`useIncidentStats`、`useIncidentBatchOps` | Incident | ✅ |
-| `useChangeClassification` | Change | ⚠️ 仅自身测试引用，`components/change-classification` 外部引用 0 |
-| `usePriorityMatrix` | 优先级 | ⚠️ 仅自身测试引用；后端零 `/api/v1/priority*` 路由 |
 | `useDashboardData` | 看板 | ✅ |
-| `useReports` | 报表 | ⚠️ 仅自身测试引用 `useReports.ts`；模块内另定义了一个同名 `useTemplateQuery`（与 `useTemplateQuery.ts` 并存） |
 | `useServiceCatalog` | 服务目录 | ✅ |
 | `useKnowledgeBase` | 知识库 | ✅ |
 | `useCMDB` | CMDB | ✅ |
 | `useSLARealTime` | SLA | ✅ |
 | `useWorkflow` | 工作流 | ✅ |
-| `useTemplateQuery` | 模板 | ⚠️ 消费方只有 `components/templates/{TemplateList,TemplateEditor}.tsx`，而该目录外部引用 0 |
 | `useGlobalSearch` | 全局搜索 | ✅ |
-| `useCollaboration` | 协作 | ⚠️ 仅自身测试引用，`components/collaboration` 只有 `index.ts` 且外部引用 0 |
-| `useBatchOperations` | 批量 | ⚠️ 消费方只有 `components/batch-operations/*`，该目录外部引用 0；后端无 `/api/v1/tickets/batch/*` |
 | `useFeedback` | 反馈 | ✅ |
 | `useErrorHandler` | 错误处理 | ✅ |
 | `useAccessibility` | 无障碍 | ✅ |

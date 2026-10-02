@@ -215,15 +215,6 @@ describe('ServiceCatalogApi', () => {
     });
   });
 
-  describe('getServiceAnalytics', () => {
-    it('should fail explicitly instead of returning all-zero metrics', async () => {
-      await expect(ServiceCatalogApi.getServiceAnalytics('1', { startDate: '2024-01-01' })).rejects.toThrow(
-        /服务分析/
-      );
-      expect(mockGet).not.toHaveBeenCalled();
-    });
-  });
-
   describe('getFavorites', () => {
     it('should fail explicitly instead of an empty list', async () => {
       await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/服务收藏/);

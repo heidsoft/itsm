@@ -51,7 +51,6 @@ export { IncidentAPI as IncidentApi } from './incident-api';
 
 // 变更
 export { ChangeApi } from './change-api';
-export { ChangeClassificationApi } from './change-classification-api';
 
 // 评审组成员名册
 export { ChangeReviewApi } from './change-review-api';
@@ -131,7 +130,6 @@ export type {
 // ==================== 仪表盘和报表API ====================
 
 export { DashboardAPI } from './dashboard-api';
-export { ReportsApi } from './reports-api';
 
 // ==================== AI相关API ====================
 
@@ -140,8 +138,6 @@ export { AIApi } from './ai-api';
 
 // ==================== 其他功能API ====================
 
-export { BatchOperationsApi } from './batch-operations-api';
-export { CollaborationApi } from './collaboration-api';
 export { globalSearch } from './global-search-api';
 export {
   listAuditLogs,
@@ -149,8 +145,6 @@ export {
   type ListAuditLogsParams,
   type ListAuditLogsResponse,
 } from './auditlog-api';
-export { PriorityMatrixApi } from './priority-matrix-api';
-export { TemplateApi } from './template-api';
 export { BPMNWorkflowTemplateApi } from './bpmn-workflow-template-api';
 
 // ==================== 工具函数 ====================

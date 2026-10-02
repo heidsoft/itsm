@@ -333,41 +333,6 @@ export interface ServiceCatalogStats {
   categories: Record<string, number>;
 }
 
-/**
- * 服务分析
- */
-export interface ServiceAnalytics {
-  serviceId: string;
-  period: {
-    start: Date;
-    end: Date;
-  };
-
-  metrics: {
-    totalRequests: number;
-    completedRequests: number;
-    avgCompletionTime: number; // 小时
-    completionRate: number; // 完成率（%）
-    avgRating: number;
-    totalViews: number;
-  };
-
-  requestTrend: {
-    date: string;
-    count: number;
-  }[];
-
-  userSatisfaction: {
-    rating: number;
-    count: number;
-  }[];
-
-  peakHours: {
-    hour: number;
-    count: number;
-  }[];
-}
-
 // ==================== API请求/响应 ====================
 
 /**

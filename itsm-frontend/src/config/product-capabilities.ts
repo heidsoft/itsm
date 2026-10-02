@@ -7,10 +7,16 @@ export const PRODUCT_CAPABILITIES = {
   // 后端已注册 POST /api/v1/ai/rag/search（handlers/ai KnowledgeSearch），
   // ai-api.ts 已对齐契约（{results, degraded}），打开能力开关。
   aiKnowledgeSearch: true,
-  advancedBatchOperations: false,
-  changeClassification: false,
-  collaborationAdvanced: false,
+  // E3-2（2026-10-02）：advancedBatchOperations / collaborationAdvanced /
+  // priorityMatrix / advancedReporting / genericTemplateMarketplace 五个开关随其
+  // 前端实现一起删除。实测从 src/app/**/(page|layout).tsx 建 import 闭包，
+  // 这六条链（api client + hook + 组件目录）没有任何路由可达，对应的
+  // DISABLED_API_CONTRACTS 表项因此成为无用豁免；能力重新开放的前提是后端先注册
+  // 路由并新建可达入口，而不是把这些不可达实现恢复回来。
   knowledgeAdvancedActions: false,
+  // change-api.ts 仍是在用的客户端，只有 /changes/templates/:id/instantiate 这一条
+  // 路径后端从未注册，因此该开关与它的豁免一起保留。
+  changeClassification: false,
   // E3-1（2026-10-02）：router/msp_routes.go 已注册
   // GET /api/v1/msp/allocations/history（RequireMSPPermission msp_allocation:read），
   // handlers/msp 的历史查询按认证上下文的 MSP 租户收敛，返回标准 items 信封。
@@ -19,10 +25,7 @@ export const PRODUCT_CAPABILITIES = {
   mspAllocationHistory: true,
   notificationTemplateManagement: false,
   notificationChannelManagement: false,
-  priorityMatrix: false,
   advancedProblemActions: true,
-  advancedReporting: false,
-  genericTemplateMarketplace: false,
   advancedTicketRelations: false,
   rootCauseWorkflowActions: false,
   // P1-6：后端已完成 BPMN 监控/仪表盘/瓶颈分析服务实现：
@@ -51,15 +54,9 @@ export interface DisabledApiContract {
 
 /** Explicit audit allow-list for roadmap clients that are disabled in UI. */
 export const DISABLED_API_CONTRACTS: readonly DisabledApiContract[] = [
-  { capability: 'advancedBatchOperations', file: 'batch-operations-api.ts', reason: 'Advanced batch orchestration is roadmap-only' },
-  { capability: 'changeClassification', file: 'change-classification-api.ts', reason: 'Change classification/rule APIs are not registered' },
   { capability: 'changeClassification', file: 'change-api.ts', path: /\/changes\/templates\//, reason: 'Template instantiation route is not registered' },
-  { capability: 'collaborationAdvanced', file: 'collaboration-api.ts', reason: 'Advanced comments, mentions and presence routes are not registered' },
   { capability: 'knowledgeAdvancedActions', file: 'knowledge-base-api.ts', reason: 'Advanced knowledge lifecycle actions are not registered' },
   { capability: 'notificationTemplateManagement', file: 'notification-preference-api.ts', reason: 'Preference reset/template application routes are not registered' },
-  { capability: 'priorityMatrix', file: 'priority-matrix-api.ts', reason: 'Priority matrix backend is not registered' },
-  { capability: 'advancedReporting', file: 'reports-api.ts', reason: 'Only read-only report summaries are supported by the backend' },
-  { capability: 'genericTemplateMarketplace', file: 'template-api.ts', reason: 'Generic template marketplace is not registered; ticket templates use a separate supported API' },
   { capability: 'advancedTicketRelations', file: 'ticket-relations-api.ts', reason: 'Advanced relation analytics and batch routes are not registered' },
   { capability: 'rootCauseWorkflowActions', file: 'ticket-root-cause-api.ts', reason: 'Root-cause confirm/resolve routes are not registered' },
   // NOTE: workflowAnalytics is now enabled and the 4 legacy workflow-api.ts analytics/template
@@ -68,4 +65,8 @@ export const DISABLED_API_CONTRACTS: readonly DisabledApiContract[] = [
   // therefore removed from this list; canonical analytics use bpmn-dashboard-api.ts /
   // bpmn-monitoring-api.ts. The problem-relationships write endpoint is now registered
   // (router.go POST /api/v1/problem-relationships), so its exemption was removed as well.
+  // NOTE(E3-2): batch-operations-api / change-classification-api / collaboration-api /
+  // priority-matrix-api / reports-api / template-api 连同其 hook 与组件目录一起删除
+  // （实测从路由入口建 import 闭包不可达），因此这五条豁免不再存在。此清单只用于
+  // 「文件仍在、路径未注册」的情形；实现已不存在的能力不应继续留豁免。
 ] as const;

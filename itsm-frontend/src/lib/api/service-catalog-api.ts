@@ -11,7 +11,6 @@ import type {
   ServiceFavorite,
   ServiceRating,
   ServiceCatalogStats,
-  ServiceAnalytics,
   CreateServiceItemRequest,
   UpdateServiceItemRequest,
   CreateServiceRequestRequest,
@@ -516,21 +515,6 @@ export class ServiceCatalogApi {
     // 契约与 handlers/service_catalog.ServiceStats 逐字段一致：后端只给服务数量与分类计数。
     // 请求量/趋势/热门服务没有服务端实现，不得在这里补零，否则页面会把「没数据」显示成「0 个请求」。
     return httpClient.get<ServiceCatalogStats>('/api/v1/service-catalogs/stats');
-  }
-
-  /**
-   * 获取服务分析
-   */
-  static async getServiceAnalytics(
-    serviceId: string,
-    params?: {
-      startDate?: string;
-      endDate?: string;
-    }
-  ): Promise<ServiceAnalytics> {
-    const _args = { serviceId, params };
-    // 后端没有服务分析接口。返回全零指标会把「能力没接」显示成「这个服务没人用过」。
-    return ServiceCatalogApi.unsupportedFeature('服务分析');
   }
 
   /**

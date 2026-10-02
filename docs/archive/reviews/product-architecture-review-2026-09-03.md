@@ -132,7 +132,9 @@ NOC 页面 [`app/(main)/noc/page.tsx`](<../../itsm-frontend/src/app/(main)/noc/p
 
 邮件 Intake 的实现深度高于一般 Pilot：[`handlers/email_intake/orchestrator.go`](../../../itsm-backend/handlers/email_intake/orchestrator.go) 将入站处理和出站邮件接入 operational command，相关事务测试在 [`service_test.go`](../../../itsm-backend/handlers/email_intake/service_test.go)。上线前仍需 MIME/附件大小与恶意内容治理、Message-ID/线程幂等、退信处理、邮箱限流和真实 provider 故障演练。
 
-报表入口 `/reports` 与 dashboard service 已存在，但前端 [`components/reports/RealTimeMonitoring.tsx`](../../../itsm-frontend/src/components/reports/RealTimeMonitoring.tsx) 和 [`AdvancedAnalytics.tsx`](../../../itsm-frontend/src/components/reports/AdvancedAnalytics.tsx) 仍内置 Mock 数据，且 [`product-capabilities.ts`](../../../itsm-frontend/src/config/product-capabilities.ts) 显式关闭 advanced reporting。现阶段应只承诺只读局部汇总；管理驾驶舱、指标版本、计划分发、钻取、导出审计和 MSP 安全聚合均待补。
+报表入口 `/reports` 与 dashboard service 已存在，但前端 `components/reports/RealTimeMonitoring.tsx` 和 `components/reports/AdvancedAnalytics.tsx` 仍内置 Mock 数据，且 [`product-capabilities.ts`](../../../itsm-frontend/src/config/product-capabilities.ts) 显式关闭 advanced reporting。现阶段应只承诺只读局部汇总；管理驾驶舱、指标版本、计划分发、钻取、导出审计和 MSP 安全聚合均待补。
+
+> 2026-10-02 校订：上述两个组件连同 `components/reports/`、`lib/api/reports-api.ts`、`lib/hooks/useReports.ts`、`lib/reports/report-engine.ts` 整条不可达链已在 E3-2 删除（这些路径后端从未注册），所以「内置 Mock 数据」不再是活的代码事实，本段只保留为当时的评审记录；在用的报表实现是 `src/app/(main)/reports/page.tsx` → `components/business/AdvancedReporting`。两处链接改为行内代码，因为目标文件已不存在。
 
 ## 4. 架构质量评估
 

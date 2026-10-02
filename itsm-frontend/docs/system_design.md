@@ -637,7 +637,7 @@ graph LR
 以下事项明确排除在本轮改进之外，留给后续迭代：
 
 - **冗余依赖库清理**：`@ant-design/icons` vs `lucide-react`、`recharts` vs `@ant-design/charts`、`@tanstack/react-query` vs `swr`、`@hello-pangea/dnd` vs `@dnd-kit/*` — 涉及大规模重构
-- **200+ 处 `as any` 清理** — 集中在 workflow-api.ts、useTemplateQuery.ts、service-catalog-api.ts，需逐个确认类型
+- **200+ 处 `as any` 清理** — 集中在 workflow-api.ts、service-catalog-api.ts，需逐个确认类型（原列表里的 `useTemplateQuery.ts` 已在批次 E3-2 随其不可达链一起删除）
 - **386 处 console → logger 全量替换** — 使用 codemod 脚本自动化处理
 - **P2-8 首次登录 Onboarding** — 新功能开发，非修复
 - **useResponsive 两个实现统一** — 断点值不同（480/640/768/1024/1280 vs 0/576/768/992/1200），需确认各组件依赖哪个实现后再统一

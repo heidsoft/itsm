@@ -13,15 +13,6 @@ export type {
   ListParams,
 } from './base-service';
 
-// Ticket Service
-export { TicketService, ticketService } from './ticket-service-v2';
-export type {
-  CreateTicketParams,
-  UpdateTicketParams,
-  TicketQueryParams,
-  TicketStats,
-  TicketSLAInfo,
-  TicketComment,
-  TicketAttachment,
-  TicketActivity,
-} from './ticket-service-v2';
+// Ticket Service：唯一实现是 ./ticket-service（页面直接按路径导入，此处不再复制一层导出面）。
+export { ticketService } from './ticket-service';
+export type { TicketComment, TicketAttachment } from './ticket-service';
