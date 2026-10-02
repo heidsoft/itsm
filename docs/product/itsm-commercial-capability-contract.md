@@ -18,7 +18,7 @@
 
 | 能力域 | 当前成熟度 | 已有业务证据 | 商业化缺口 |
 |---|---|---|---|
-| 工单/事件 | GA 候选 | 事件状态机、CI 多选关联、优先级矩阵、重大事件、BPMN 触发、租户过滤；生产装配启用持久化 command/outbox | 仍需固化监控告警来源治理、积压恢复和目标容量验收 |
+| 工单/事件 | GA 候选 | 事件状态机、CI 多选关联、重大事件（`POST /api/v1/incidents/:id/major-incident`）、BPMN 触发、租户过滤；生产装配启用持久化 command/outbox | 仍需固化监控告警来源治理、积压恢复和目标容量验收；**优先级矩阵不是业务证据**（2026-10-02 实测：后端零 `/api/v1/priority*` 路由，`service/priority_matrix_service.go` 的 `SetPriorityMatrixService` 无任何调用点，因此 `incident_service.go:242,627` 的 impact×urgency 派生分支在生产里永不执行；前端 `priority-matrix-api.ts` ~20 端点已在 `DISABLED_API_CONTRACTS` 显式关闭） |
 | 问题/已知错误 | Pilot | 问题状态、工作流、从问题创建已知错误、受影响 CI 字段 | CI 关联仍有字符串/弱引用路径；重复事件聚类、根因 CI、解决后知识发布未形成强制闭环 |
 | 变更 | **Pilot** | 受影响 CI 校验、CMDB 影响摘要、关键 CI/高风险依赖/开放事件统计、风险与回滚建议、审批能力 | BPMN 审批与业务状态落库尚非原子；影响摘要尚未成为提交审批的后端门禁；窗口冲突和自动化回滚仍需强化；发布前需重新评估 GA 候选资格 |
 | 服务目录/服务请求 | Pilot | 目录、请求、审批、CI ID、云资源引用与 CI 创建/复用 | 目录项到 CI Type、交付模板、BPMN、SLA 的绑定不统一；Provisioning 生命周期与失败补偿不足 |

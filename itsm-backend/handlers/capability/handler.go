@@ -67,8 +67,11 @@ var registry = []definition{
 	{key: "marketplace", maturity: MaturityPilot, built: true, readOnly: true},
 	{key: "project", maturity: MaturityGA, built: true},
 	{key: "application", maturity: MaturityGA, built: true},
-	{key: "tag", maturity: MaturityGA, built: true},
-	{key: "template", maturity: MaturityGA, built: true},
+	// 标签双表（ticket_tags 与 tags.code）尚未收敛到单一事实源，不申报 GA。
+	{key: "tag", maturity: MaturityPilot, built: true},
+	// 只有 /api/v1/tickets/templates* 有真实路由；template-api.ts 调用的通用
+	// /api/v1/templates 市场后端从未注册。
+	{key: "template", maturity: MaturityPilot, built: true},
 	{key: "identity.oidc", maturity: MaturityDisabled, built: false},
 	{key: "connector.wecom", maturity: MaturityDisabled, built: false},
 	{key: "connector.dingtalk", maturity: MaturityDisabled, built: false},

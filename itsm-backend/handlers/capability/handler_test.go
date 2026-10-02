@@ -65,3 +65,35 @@ func TestHandlerDoesNotGrantActionsWithoutTenant(t *testing.T) {
 		require.Empty(t, item.AllowedActions)
 	}
 }
+
+// 未通过实测证据的能力不得申报 GA：标签仍有双表未收敛，模板只有
+// /api/v1/tickets/templates* 注册、通用 /api/v1/templates 市场从未注册。
+func TestUnprovenCapabilitiesAreNotDeclaredGA(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	t.Setenv("ITSM_FEISHU_READY", "false")
+
+	router := gin.New()
+	router.GET("/capabilities", func(c *gin.Context) {
+		c.Set("tenant_id", 7)
+		c.Set("role", "admin")
+		Handler(c)
+	})
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/capabilities", nil))
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var response struct {
+		Data struct {
+			Items []Capability `json:"items"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))
+
+	byKey := make(map[string]Capability)
+	for _, item := range response.Data.Items {
+		byKey[item.Key] = item
+	}
+	require.Equal(t, MaturityPilot, byKey["tag"].Maturity)
+	require.Equal(t, MaturityPilot, byKey["template"].Maturity)
+}

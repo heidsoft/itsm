@@ -295,10 +295,22 @@ filterByCapability(menus)：
 | `/marketplace` | marketplace | ⚠️ **menuDefinitions 未注册，被规则保护** |
 | `/installations` | marketplace | ⚠️ **menuDefinitions 未注册** |
 | `/admin/connectors` | marketplace | admin/connectors 已注册，归属正确 |
+| `/projects` | project | 2026-10-02 实测已在 `menu-config.ts:44` 注册 |
+| `/applications` | application | 2026-10-02 实测已在 `menu-config.ts:45` 注册 |
+| `/admin/tags` | tag | 2026-10-02 实测已在 `menu-config.ts:46` 注册（E1-4 收口入口） |
+| `/templates` | template | 2026-10-02 实测已在 `menu-config.ts:47` 注册 |
 
-### 4.3 已知重复声明
+> 2026-10-02：`/admin/tags` → `tag`、`/templates` → `template` 两个 capability 已存在于后端注册表
+> （`itsm-backend/handlers/capability/handler.go`），成熟度从 GA 收回为 **Pilot**。实测理由：标签仍有
+> `ticket_tags` 与 `tags.code` 双表未收敛；模板只有 `/api/v1/tickets/templates*` 注册，`template-api.ts`
+> 调用的通用 `/api/v1/templates` 后端从未注册。侧边栏因此会显示 Pilot 徽标，`read/manage` 动作不变。
 
-`capabilityPathRules` 在 `menu-config.ts` 与 `Sidebar.tsx` 各声明一份。**建议收敛**：从 `Sidebar.tsx` 改为 `import { capabilityPathRules, capabilityForPath } from './menu-config';`，避免后续漂移。
+### 4.3 单一来源状态（2026-10-02 实测）
+
+原先记录的"`capabilityPathRules` 在 `menu-config.ts` 与 `Sidebar.tsx` 各声明一份"**已消除**：
+`Sidebar.tsx:15` 只 `import { capabilityForPath } from './menu-config'`，规则文件唯一
+（`menu-config.ts:31`，16 条）。`filterByCapability` 仍在 `Sidebar.tsx:163` 内联，但它消费的是
+单一来源的 key，不再是第二份路径表。
 
 ---
 
@@ -403,6 +415,21 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 
 ## §7 前端 API client / hook 覆盖
 
+> **口径（2026-10-02 实测收紧）**：下表 ✅ 只代表「存在同名测试文件」，不代表该能力可用。
+> 一个 client 是否真的能形成业务结果，由两份清单共同决定，且都必须在代码里显式声明：
+>
+> 1. `itsm-frontend/src/lib/__tests__/api-contract.test.ts` 把 `src/lib/api/` 的每个请求路径与后端
+>    Gin Router 比对；`KNOWN_UNMATCHED_FRONTEND_PATHS` 当前为空（2026-10-02 实测），因此路径漂移只能
+>    靠第 2 项隐藏。
+> 2. `itsm-frontend/src/config/product-capabilities.ts` 的 `PRODUCT_CAPABILITIES`（能力开关）与
+>    `DISABLED_API_CONTRACTS`（未注册契约豁免）。当前整份文件被禁用（无 `path` 限定）的 client 有：
+>    `batch-operations-api.ts`、`change-classification-api.ts`、`collaboration-api.ts`、
+>    `knowledge-base-api.ts`、`notification-preference-api.ts`、`priority-matrix-api.ts`、
+>    `reports-api.ts`、`template-api.ts`、`ticket-relations-api.ts`、`ticket-root-cause-api.ts`。
+>
+> 因此凡出现在上述清单里的行，测试绿只证明「前端自洽」，不证明后端可达。这类实现的生产消费方
+> 清账排在批次 E3。
+
 ### 7.1 API client 清单（按域）
 
 | 域 | API 文件 | 测试文件 | 覆盖情况 |
@@ -417,7 +444,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | Incident | `incident-api.ts` | `incident-api.test.ts` | ✅ |
 | Problem | `problem-api.ts` | `problem-api.test.ts` | ✅ |
 | Change | `change-api.ts` | `change-api.test.ts` | ✅ |
-| Change 分类 | `change-classification-api.ts` | `change-classification-api.test.ts` | ✅ |
+| Change 分类 | `change-classification-api.ts` | `change-classification-api.test.ts` | ⚠️ 后端路由未注册，`changeClassification` 开关为 false |
 | Change 评审 | `change-review-api.ts` | （无测试） | ⚠️ |
 | Release | `release-api.ts` | `release-api.test.ts` | ✅ |
 | 标准变更 | `standard-change-api.ts` | `standard-change-api.test.ts` | ✅ |
@@ -431,10 +458,10 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | Asset | `asset-api.ts` | `asset-api.test.ts` | ✅ |
 | SLA | `sla-api.ts`、`sla-template-api.ts` | 2 测试 | ✅ |
 | 升级矩阵 | `escalation-matrix-api.ts` | `escalation-matrix-api.test.ts` | ✅ |
-| 优先级矩阵 | `priority-matrix-api.ts` | `priority-matrix-api.test.ts` | ✅ |
+| 优先级矩阵 | `priority-matrix-api.ts` | `priority-matrix-api.test.ts` | ⚠️ 后端零 `/api/v1/priority*` 路由，`priorityMatrix` 开关为 false |
 | Workflow | `workflow-api.ts` + 8 子文件 | 9 测试 | ✅ |
 | AI | `ai-api.ts`、`a2ui-api.ts`、`bpmn-ai-api.ts` | 3 测试 | ✅ |
-| Template | `template-api.ts` | `template-api.test.ts` | ✅ |
+| Template | `template-api.ts` | `template-api.test.ts` | ⚠️ 后端只有 `/api/v1/tickets/templates*`；通用 `/api/v1/templates` 未注册，`genericTemplateMarketplace` 为 false |
 | Notification | `notification-preference-api.ts` | `notification-preference-api.test.ts` | ✅ |
 | MSP | `msp-api.ts` | `msp-api.test.ts` | ✅ |
 | Reports | `reports-api.ts` | `reports-api.test.ts` | ✅ |
@@ -442,13 +469,19 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | Vector Store | `vector-store-api.ts` | （无测试） | ⚠️ |
 | Domain Config | `domain-config-api.ts` | `domain-config-api.test.ts` | ✅ |
 | Common / 系统配置 | `common-api.ts`、`system-config-api.ts`、`capability-api.ts` | 3 测试 | ✅ |
-| Batch Operations | `batch-operations-api.ts` | `batch-operations-api.test.ts` | ✅ |
-| Collaboration | `collaboration-api.ts` | `collaboration-api.test.ts` | ✅ |
+| Batch Operations | `batch-operations-api.ts` | `batch-operations-api.test.ts` | ⚠️ 后端无 `/api/v1/tickets/batch/*` 路由，`advancedBatchOperations` 为 false |
+| Collaboration | `collaboration-api.ts` | `collaboration-api.test.ts` | ⚠️ 后端无 `/api/v1/mentions/*` 路由（仅 `/notifications` 复用已注册接口），`collaborationAdvanced` 为 false |
 | Global Search | `global-search-api.ts` | `global-search-api.test.ts` | ✅ |
 
 ### 7.2 业务 hooks 覆盖
 
-| Hook | 域 | 测试 |
+> 2026-10-02 实测：下表 ✅ 只表示「存在对应测试」。`useChangeClassification`、`usePriorityMatrix`、
+> `useReports`、`useTemplateQuery`、`useCollaboration`、`useBatchOperations` 六条已改标 ⚠️，因为
+> 除自身测试外没有任何生产消费方：`src/components/{change-classification,priority-matrix,batch-operations,
+> collaboration,templates,reports}` 六个目录对目录外引用数实测均为 0，`src/lib/hooks/useCollaboration.ts`、
+> `useReports.ts` 除自身测试外无人 import。测试绿只证明前端自洽，不能作为能力可用证据；死面清账在批次 E3。
+
+| Hook | 域 | 测试与消费方 |
 |------|----|------|
 | `useUserMenusQuery` | 菜单缓存 | `useUserMenusQuery` 间接测试通过 menu-api.test.ts |
 | `useUserListQuery` | 用户 | （间接） |
@@ -456,19 +489,19 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | `useTickets`、`useTicketsQuery` | Ticket | ✅ |
 | `useTicketFilters`、`useTicketRelations` | Ticket | ✅ |
 | `useIncidentsQuery`、`useIncidentFilters`、`useIncidentStats`、`useIncidentBatchOps` | Incident | ✅ |
-| `useChangeClassification` | Change | ✅ |
-| `usePriorityMatrix` | 优先级 | ✅ |
+| `useChangeClassification` | Change | ⚠️ 仅自身测试引用，`components/change-classification` 外部引用 0 |
+| `usePriorityMatrix` | 优先级 | ⚠️ 仅自身测试引用；后端零 `/api/v1/priority*` 路由 |
 | `useDashboardData` | 看板 | ✅ |
-| `useReports` | 报表 | ✅ |
+| `useReports` | 报表 | ⚠️ 仅自身测试引用 `useReports.ts`；模块内另定义了一个同名 `useTemplateQuery`（与 `useTemplateQuery.ts` 并存） |
 | `useServiceCatalog` | 服务目录 | ✅ |
 | `useKnowledgeBase` | 知识库 | ✅ |
 | `useCMDB` | CMDB | ✅ |
 | `useSLARealTime` | SLA | ✅ |
 | `useWorkflow` | 工作流 | ✅ |
-| `useTemplateQuery` | 模板 | ✅ |
+| `useTemplateQuery` | 模板 | ⚠️ 消费方只有 `components/templates/{TemplateList,TemplateEditor}.tsx`，而该目录外部引用 0 |
 | `useGlobalSearch` | 全局搜索 | ✅ |
-| `useCollaboration` | 协作 | ✅ |
-| `useBatchOperations` | 批量 | ✅ |
+| `useCollaboration` | 协作 | ⚠️ 仅自身测试引用，`components/collaboration` 只有 `index.ts` 且外部引用 0 |
+| `useBatchOperations` | 批量 | ⚠️ 消费方只有 `components/batch-operations/*`，该目录外部引用 0；后端无 `/api/v1/tickets/batch/*` |
 | `useFeedback` | 反馈 | ✅ |
 | `useErrorHandler` | 错误处理 | ✅ |
 | `useAccessibility` | 无障碍 | ✅ |
@@ -520,10 +553,14 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 | `/admin` | 缺 `/admin/workflows` 已存在 ✅，但 `/admin/teams` 与独立 `/teams` 重复 | ✅ | 去重 |
 | `/system/organization`、`/system/users` | 无 page | — | 误识，删除 |
 
-### 8.3 Capability 治理漏洞
+### 8.3 Capability 治理漏洞（2026-10-02 复核）
 
-- `capabilityPathRules` 已保护 `/marketplace`、`/installations`、`/admin/connectors`，但**缺** `/projects`、`/applications`、`/templates`、`/sla-dashboard`、`/workflows`、`/improvements` 的 capability 规则。标签入口已于 2026-10-02 收口为 `/admin/tags` → `tag`。
-- 修复建议：补充 capability key（如 `project`、`application`、`tag`、`template`）并在 `useCapabilities` 中登记真实状态。
+- 已收口：`/projects` → `project`、`/applications` → `application`、`/admin/tags` → `tag`、
+  `/templates` → `template` 四条规则已在 `menu-config.ts` 注册，后端 `handlers/capability/handler.go`
+  也有对应 key（`project`/`application` 为 GA，`tag`/`template` 本次从 GA 收回为 Pilot）。
+- **仍缺**规则且页面确实存在的三个入口：`/sla-dashboard`、`/workflows`（复数，与已保护的
+  `/workflow` 不是同一路径）、`/improvements`。`capabilityForPath` 只做 `path === prefix` 或
+  `prefix + '/'` 前缀匹配，所以这三条不会被 `/sla`、`/workflow` 规则顺带覆盖，属于未保护入口。
 
 ### 8.4 路由别名/直连风险
 
@@ -544,8 +581,8 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 
 ### P1：能力治理收敛
 
-6. **去重 `capabilityPathRules`**：从 `Sidebar.tsx` 改为 `import { capabilityPathRules, capabilityForPath } from './menu-config';`。
-7. **补 capability 规则**：在两处都补 `/projects` → `project`、`/applications` → `application`、`/tags` → `tag`、`/templates` → `template`。
+6. ~~**去重 `capabilityPathRules`**~~ —— 2026-10-02 实测已完成：`Sidebar.tsx` 只 import `capabilityForPath`，路径表唯一。
+7. ~~**补 capability 规则**~~ —— 2026-10-02 实测已完成 `/projects`、`/applications`、`/admin/tags`、`/templates` 四条；`/sla-dashboard`、`/workflows`、`/improvements` 仍未保护（见 §8.3），需先拍板这三个入口是否属于产品面。
 8. **校验 capability 加载失败时 fail-closed**：当前 `filterByCapability` 已 fail-closed（capability 不存在就隐藏），需要 `useCapabilities` 在所有 capability 加载完成前不渲染菜单（避免闪现）。
 
 ### P2：菜单管理端能力
