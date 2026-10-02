@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **创建/重置用户密码不合规则返回 500「操作失败」** — `POST /api/v1/users` 与 `PUT /api/v1/users/:id/password` 把 service 的密码策略错误（缺大写、长度不足等）统一当成内部错误：HTTP 500 + 业务码 5001 + 不含原因的「操作失败」，真实原因只在服务端日志里。调用方无法区分是自己给的密码不合规还是后端故障，自动化夹具 provisioning 只能靠翻日志定位。现在策略错误带上 `common.ErrCodeValidation` 分类，handler 映射为 400 + 业务码 1002 + 具体原因；未分类错误仍按内部错误处理，不透出驱动层细节。回归：`handlers/user/handler_test.go` 两个用例断言 status/code/message 三元组，`service/user_service_test.go` 断言分类在源头生效。
 - **access token 一过期就登不出，7 天 refresh cookie 把会话「复活」** — `POST /api/v1/auth/logout` 挂在 `AuthMiddleware` 后面，而 access token 只有 15 分钟：用户放一会儿页面再点登出，请求在中间件里就 401，处理凭证的 handler 从未执行，两类 cookie 一个都没清。留下的 `refresh_token`（7 天、httpOnly）随后被自动续签，登出等于没发生。现在登出刻意不挂鉴权中间件：先无条件清 cookie，再尽力吊销请求里携带的 access/refresh token，吊销存储故障时返回 5003（5003 业务码）而不是伪装成功——cookie 已清、服务端未吊销是必须让运维看见的状态。无凭证重复登出幂等返回 200。回归：`router/auth_handler_routes_test.go` 用「过期 access token + 有效 refresh cookie」断言 200、两个 cookie 的 `Max-Age<0`、随后用同一枚 refresh cookie 续签必须 401。
 - **登出从不吊销 refresh token** — 旧实现只调 `RevokeAccessToken`，浏览器 cookie 清掉之后服务端那枚 7 天凭证仍然有效；任何拿到它的人（或那份遗留 cookie）都能继续换新 access token。现在登出同时吊销两类凭证。
 - **会话凭证的名称与生命周期只剩一处定义** — `900`/`604800`/`"access_token"` 这些字面量原先分散在 `handlers/common/handler.go`、`handlers/auth/handler.go`、`middleware/auth.go` 与 service 的签发调用里，改一处就让浏览器 cookie 窗口和服务端校验窗口悄悄分叉。现在统一由 `middleware.AccessTokenCookie`/`RefreshTokenCookie`/`AccessTokenTTL`/`RefreshTokenTTL` 派生，Set-Cookie 的 `Max-Age`、JWT 过期时间和契约测试断言都从同一处取。

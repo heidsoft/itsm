@@ -194,6 +194,54 @@ func TestCreateUser_DuplicateBusinessError(t *testing.T) {
 	assert.Equal(t, "请求参数错误", resp.Message)
 }
 
+func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
+	// 回归：密码策略属于输入校验，此前被 common.FailWithErr 归为 500/5001「操作失败」，
+	// 客户端拿不到原因，自动化夹具也无法判断是密码不合规还是服务端故障。
+	m := &mockUserService{}
+	h, _ := newTestHandler(m)
+	m.On("CreateUser", mock.Anything, mock.Anything, 1).Return(nil,
+		common.NewValidationError("密码必须同时包含大写字母、小写字母、数字和特殊字符", nil))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/users", bytes.NewBufferString(`{"username":"alice","email":"alice@example.com","name":"Alice","password":"lowercaseonly12345","role":"agent"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("tenant_id", 1)
+	c.Set("role", "admin")
+
+	h.CreateUser(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ValidationError, resp.Code)
+	assert.Equal(t, "密码必须同时包含大写字母、小写字母、数字和特殊字符", resp.Message)
+}
+
+func TestResetPassword_WeakPasswordMapsToValidationError(t *testing.T) {
+	m := &mockUserService{}
+	h, _ := newTestHandler(m)
+	m.On("ResetPassword", mock.Anything, 1, "lowercaseonly12345", 1).Return(
+		common.NewValidationError("密码长度必须为12到128位", nil))
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPut, "/api/v1/users/1/password", bytes.NewBufferString(`{"newPassword":"lowercaseonly12345"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Set("tenant_id", 1)
+	c.Set("user_id", 2)
+	c.Set("role", "admin")
+	c.Params = gin.Params{{Key: "id", Value: "1"}}
+
+	h.ResetPassword(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+	var resp common.Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, common.ValidationError, resp.Code)
+	assert.Equal(t, "密码长度必须为12到128位", resp.Message)
+}
+
 func TestResetPassword_Success(t *testing.T) {
 	m := &mockUserService{}
 	h, _ := newTestHandler(m)

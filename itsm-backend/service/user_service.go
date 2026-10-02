@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
@@ -602,9 +603,11 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 	return nil
 }
 
+// validatePassword 返回 common.ErrCodeValidation 分类错误，让 handler 能映射成 400；
+// 用普通 error 会被 handler 归为内部错误（500），把输入问题伪装成服务端故障。
 func validatePassword(password string) error {
 	if len(password) < 12 || len(password) > 128 {
-		return fmt.Errorf("密码长度必须为12到128位")
+		return common.NewValidationError("密码长度必须为12到128位", nil)
 	}
 	var upper, lower, digit, special bool
 	for _, r := range password {
@@ -620,7 +623,7 @@ func validatePassword(password string) error {
 		}
 	}
 	if !upper || !lower || !digit || !special {
-		return fmt.Errorf("密码必须同时包含大写字母、小写字母、数字和特殊字符")
+		return common.NewValidationError("密码必须同时包含大写字母、小写字母、数字和特殊字符", nil)
 	}
 	return nil
 }

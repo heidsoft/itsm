@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 
@@ -703,4 +705,22 @@ func BenchmarkUserService_GetUserByID(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = userService.GetUserByID(ctx, testUser.ID, testTenant.ID)
 	}
+}
+
+// 回归：密码策略错误必须是可分类的校验错误。
+// 此前是裸 fmt.Errorf，handler 只能统一归为 500/5001，客户端无法区分输入不合规与服务端故障。
+func TestValidatePassword_IsClassifiedValidationError(t *testing.T) {
+	var appErr *common.AppError
+
+	err := validatePassword("alllowercase123!")
+	require.Error(t, err)
+	require.True(t, errors.As(err, &appErr), "弱密码错误应为 *common.AppError, got %T", err)
+	assert.Equal(t, common.ErrCodeValidation, appErr.Code)
+
+	err = validatePassword("Short1@")
+	require.Error(t, err)
+	require.True(t, errors.As(err, &appErr))
+	assert.Equal(t, common.ErrCodeValidation, appErr.Code)
+
+	assert.NoError(t, validatePassword("Compliant1234!"))
 }

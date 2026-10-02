@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -23,6 +24,20 @@ func NewHandler(userService Service, logger *zap.SugaredLogger) *UserHandler {
 		userService: userService,
 		logger:      logger,
 	}
+}
+
+// mapUserServiceError 把 service 层已分类的输入校验错误映射为 400（业务码 1002）并透出原因。
+// 未分类错误返回 false，由调用方按内部错误处理，避免把驱动层细节透给客户端。
+func mapUserServiceError(c *gin.Context, err error) bool {
+	var appErr *common.AppError
+	if !errors.As(err, &appErr) {
+		return false
+	}
+	if appErr.Code != common.ErrCodeValidation {
+		return false
+	}
+	common.Fail(c, common.ValidationError, appErr.Message)
+	return true
 }
 
 // CreateUser 创建用户
@@ -81,6 +96,9 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	user, err := h.userService.CreateUser(c.Request.Context(), &req, targetTenantID)
 	if err != nil {
 		h.logger.Errorf("创建用户失败: %v", err)
+		if mapUserServiceError(c, err) {
+			return
+		}
 		// 业务错误：用户名/邮箱重复
 		if strings.Contains(err.Error(), "已存在") {
 			common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -377,6 +395,9 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 		h.logger.Errorf("重置密码失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
 			common.NotFound(c, "用户不存在")
+			return
+		}
+		if mapUserServiceError(c, err) {
 			return
 		}
 		common.FailWithErr(c, err, "操作失败")
