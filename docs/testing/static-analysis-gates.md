@@ -12,7 +12,7 @@ shell 脚本，位于 `scripts/static-gates/`；`run-all.sh` 只聚合后端契�
 | 5.2 | `common.Fail` 必须把 2002/2004/2005 映射到 401/403/404 | `check-http-status-mapping.sh` | **HARD** | ✅ |
 | 5.3 | 前端禁用 raw `fetch` / `axios`，统一走 BaseApi | `check-raw-fetch.sh` | ADVISORY | ❌ |
 | 5.4 | `service` 层 `go func` 内不得裸用 `context.Background()` | `check-context-bg.sh` | ADVISORY | ❌ |
-| 5.5 | `*ListResponse` 必须含 `items/total/page/pageSize/totalPages` 五元组 | `check-pagination-shape.sh` | ADVISORY | ❌ |
+| 5.5 | 列表信封只用 `items` + 标准分页键（分页列表五元组 / 不分页列表 `{items,total}`） | `check-pagination-shape.sh` → 委托 `tests/contract` 棘轮 | **HARD** | ✅（棘轮随 `go test ./...` 在 backend-ci 失败） |
 | 5.6 | `next.config.ts` 不得启用 `ignoreBuildErrors` / `ignoreDuringBuilds` | `check-next-ignore-build-errors.sh` | ADVISORY | ❌ |
 | 5.7 | 主要路由组必须具备 `loading.tsx` / `error.tsx` / `not-found.tsx` | `check-next-route-states.sh` | ADVISORY | ❌ |
 | 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh` | ADVISORY | ❌ |
@@ -40,14 +40,16 @@ shell 脚本，位于 `scripts/static-gates/`；`run-all.sh` 只聚合后端契�
     bash scripts/static-gates/check-list-envelope.sh
 ```
 
-`run-all.sh` 目前**没有任何 workflow 调用**，因此 5.1–5.5 只在本地执行。这直接掩盖了一条
+`run-all.sh` 目前**没有任何 workflow 调用**，因此 5.1–5.4 只在本地执行（5.5 的判定逻辑
+本身在 `tests/contract` 里，随 backend-ci 的 `go test` 硬失败，脚本只是本地入口）。
+这直接掩盖了一条
 已存在的 HARD 门禁违规：`check-bare-json.sh`（5.1）实测有 6 处命中（`handlers/dingtalk/handler.go`
 3 处、`handlers/wecom/handler.go` 2 处、`handlers/approval/routes.go` 1 处），本地 `run-all.sh`
 以退出码 1 结束，CI 却是绿的。把 `run-all.sh` 接进 CI 之前，需要先处置这 6 处（钉钉/企业微信
 是外部回调协议，响应形状由对方规定，属于 5.1 的合理豁免面，应显式登记而不是继续裸用）。
 
-> 5.3 / 5.4 / 5.5 为 advisory（exit 0），日志中可见违规命中；当历史
-> 命中全部迁移完成后会切换为硬门禁（exit 1）。
+> 5.3 / 5.4 为 advisory（exit 0），日志中可见违规命中；当历史命中全部迁移完成后会
+> 切换为硬门禁（exit 1）。5.5 已于 2026-10-03 改为委托棘轮并升为 HARD（见该节）。
 
 ---
 
@@ -174,46 +176,61 @@ go func() {
 
 ---
 
-## 5.5 — ListResponse 分页形状契约
+## 5.5 — 列表信封与分页形状契约
 
-**目的**：所有 `*ListResponse` 必须含
-`{items, total, page, pageSize, totalPages}` 五元组，避免前端拿到不一致的
-形状（审计文档列出过 5 套分页形状不统一的问题）。
+**目的**：列表响应只允许两种形状，且分页字段不得双轨。
 
-**实现**：
-1. 跑 `common.PaginationResponse` 单元测试（`totalPages` 字段存在性）。
-2. 静态扫描 `itsm-backend/dto/` 下所有 `*ListResponse` 结构体定义，
-   检查字段集合 + 拼写（拒绝 `TotalPage` 这种缺 s 的拼写错误）。
+- **分页列表**：`data: {items, total, page, pageSize, totalPages}`（由 `common.SuccessWithList` 产出）
+- **不分页列表**：`data: {items, total}`——`total` 必须是全量计数，契约见
+  [`docs/api-reference.md`](../api-reference.md)「不分页的列表」
 
-**当前状态**：⚠️ advisory。已修复以下拼写错误：
+两种形状都禁止把集合挂在领域名键下（`tickets`/`changes`/`releases`/`cloudAccounts` …），
+也禁止 `size`/`limit`/`offset`/`totalCount`/`totalPage` 这类分页别名。旧版本要求
+「所有 `*ListResponse` 必须含五元组」，与上面第二种形状直接矛盾，因此照该规则升硬
+只会永远无法满足；2026-10-03 已按实测改掉这个判定。
 
-| 文件 | 修复 |
-|------|------|
-| `dto/role_dto.go` | `RoleListResponse.TotalPage` → `TotalPages` |
-| `dto/user_dto.go` | `PaginationResponse.TotalPage` → `TotalPages` |
-| `controller/role_controller.go` | 调用点同步 |
-| `controller/group_controller.go` | 调用点同步 |
-| `service/user_service.go` | 调用点同步 |
+**实现（2026-10-03 起为委托）**：`check-pagination-shape.sh` 不再自带扫描器，只做两件事——
 
-剩余 violation 集中在以下模块（需独立 PR 修复）：
-- `dto/asset_license_dto.go` (LicenseListResponse)
-- `dto/change_pir_dto.go` (ChangePIRListResponse)
-- `dto/cmdb_dto.go` (ConfigurationItemListResponse, CIHistoryListResponse)
-- `dto/notification_dto.go` (NotificationListResponse)
-- `dto/project_dto.go` (ProjectListResponse)
-- `dto/survey_dto.go` (SurveyListResponse)
-- `dto/system_config_dto.go` (SystemConfigListResponse)
+1. 跑 `common` 的分页序列化单元测试（`totalPages` 由 `NewListResponse` 真实算出）；
+2. 跑 `itsm-backend/tests/contract/list_envelope_ratchet_test.go` 的三条棘轮
+   （`TestListEnvelopeRatchet` 领域名集合键、`TestListEnvelopeKeys` 分页键不完整、
+   `TestListEnvelopePagingAliases` 分页别名残留），任一失败即 **exit 1**。
+
+为什么交给棘轮而不是脚本自己扫：棘轮用 AST 扫 `dto/*.go`，判定条件是「名称含 List 且带
+total」，实测是旧文本扫描器的**超集**——当前 28 个 `*ListResponse` 全部命中且全部含
+`json:"total"`（本批删除 8 个死 DTO 前是 36 个），棘轮另外还覆盖 11 个不以 `ListResponse`
+结尾的信封（`ListTicketsResponse`/`ListCIsResponse`/`ListProblemsResponse`/
+`ListAuditLogsResponse` 等，旧扫描器对它们完全失明）。同一件债务写在两处正是本批次在消除的问题。
+
+**当前状态**：**HARD**（棘轮随 `go test ./...` 在 backend-ci 硬失败；脚本本身只在本地
+`run-all.sh` 里跑，而 `run-all.sh` 未接任何 workflow，见「接入位置」）。存量债务以基线
+形式登记在测试文件内，2026-10-03 实测 **40 条 / 33 个结构体**（25 领域名集合键 + 8 分页键
+不完整 + 7 分页别名；7 个结构体同时命中多类），只减不增：新增违规失败，**基线过期（收敛后
+忘记删条目）同样失败**。
+
+**接入位置的真实差别**（避免误读成「脚本变硬 = CI 变硬」）：
+
+| 层次 | 谁在跑 | 是否阻断 CI |
+|------|--------|------------|
+| 结构体层（`dto/`） | `tests/contract` 棘轮 ← backend-ci 的 `go test $TESTABLE_PKGS` | ✅ |
+| handler 层（就地拼的 `gin.H`） | 5.10 `check-list-envelope.sh` ← backend-ci lint job | ✅ |
+| 本地聚合 | `scripts/static-gates/run-all.sh`（无 workflow 调用） | ❌ |
+
+**收敛一条的做法**：把 json tag 改成 `items`（并按端点是否真分页补齐
+`page/pageSize/totalPages`，或确认属「不分页的列表」），同步 Mapper、真实路由契约测试、
+前端 `src/lib/api` 类型与调用点，然后从对应基线删除该条。
 
 **修复示例**：
 
 ```go
-// 反例（缺字段）：
+// 反例：集合挂在领域名键，且用 size 代替 pageSize
 type FooListResponse struct {
-    Items []Foo `json:"items"`
+    Foos  []Foo `json:"foos"`
     Total int   `json:"total"`
+    Size  int   `json:"size"`
 }
 
-// 正例：
+// 正例（分页列表）：
 type FooListResponse struct {
     Items      []Foo `json:"items"`
     Total      int   `json:"total"`
@@ -221,7 +238,18 @@ type FooListResponse struct {
     PageSize   int   `json:"pageSize"`
     TotalPages int   `json:"totalPages"`
 }
+
+// 正例（端点确实不分页）：
+type FooListResponse struct {
+    Items []Foo `json:"items"`
+    Total int   `json:"total"` // 必须是全量计数
+}
 ```
+
+历史拼写修复（`TotalPage` → `TotalPages`）已完成于 `dto/role_dto.go`、`dto/user_dto.go`
+及 `controller/role_controller.go`、`controller/group_controller.go`、`service/user_service.go`
+调用点；`totalPage` 现已作为分页别名之一登记进棘轮的 `forbiddenPagingKeys`，不需要再靠
+脚本里的文本 grep 兜住。
 
 ---
 

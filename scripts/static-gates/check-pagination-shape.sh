@@ -2,9 +2,28 @@
 #
 # scripts/static-gates/check-pagination-shape.sh
 #
-# Stage 5.5 — 分页响应形状统一。CI 扫描所有 *ListResponse 结构体，断言它们
-# 必须含有 {items, total, page, pageSize, totalPages} 五元组；常见的
-# totalPage（缺 s）拼写错误必须修。
+# Stage 5.5 — 列表信封的分页形状契约。
+#
+# 本脚本**只做委托**，不再自带扫描器。原因（2026-10-03 实测）：同一件债务此前有两个
+# 互相矛盾的判定：
+#
+#   1. 本脚本旧版：`grep 'type [A-Za-z]*ListResponse struct'` + 60 行文本窗口，断言每个
+#      列表结构体都含 {items,total,page,pageSize,totalPages} 五元组，且永远 exit 0
+#      （advisory）。
+#   2. itsm-backend/tests/contract/list_envelope_ratchet_test.go：AST 扫描 dto/*.go，
+#      三条棘轮基线（领域名集合键 / 分页键不完整 / 分页别名残留），随 `go test ./...`
+#      在 backend-ci 里**硬失败**。
+#
+# 覆盖关系实测为「棘轮是旧扫描器的超集」：当前 28 个 `*ListResponse` 结构体全部含
+# total 字段（棘轮的识别条件是 名称含 List 且带 total），而棘轮还额外覆盖 11 个不以
+# ListResponse 结尾的信封（ListTicketsResponse/ListCIsResponse/ListProblemsResponse/
+# ListAuditLogsResponse 等）——旧扫描器对它们完全失明。旧文本规则在本批删除 8 个死 DTO
+# 前实测报 67 处字段级违规、删除后仍有 47 处，且永远 exit 0。
+#
+# 判定冲突更要紧：旧扫描器要求「所有列表都带 page/pageSize/totalPages」，与
+# docs/api-reference.md 已承认并评审过的「不分页的列表」契约（`{items,total}`）直接矛盾。
+# 照字面把它升成硬门禁，等于锁死一条永远无法满足的规则，只会逼人放宽阈值。
+# 因此收敛方向是**删掉重复扫描器、把真相交给棘轮**，而不是给旧规则加硬。
 #
 # 用法：
 #   ./scripts/static-gates/check-pagination-shape.sh
@@ -13,78 +32,38 @@
 set -uo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-cd "${ROOT_DIR}"
+cd "${ROOT_DIR}/itsm-backend"
 
-cd itsm-backend
+echo "==== Static Gate 5.5: list envelope / pagination shape (hard) ===="
 
-# 1) 跑 common.PaginationResponse 单元测试，验证 totalPages 字段被序列化。
-echo "==== Static Gate 5.5: pagination shape (advisory) ===="
+# 1) common 的分页序列化单元测试：totalPages 必须由 NewListResponse 真实算出并序列化。
 GOTOOLCHAIN=auto go test \
   -run 'TestSuccess_WithPaginationResponse|TestNewPaginationResponse|TestNewListResponse' \
   -count=1 \
-  ./common/... 2>&1 | tail -20
-
-test_rc=$?
-if [[ "${test_rc}" -ne 0 ]]; then
-  echo "FAIL: common.PaginationResponse 单元测试失败。"
+  ./common/... > "${TMPDIR:-/tmp}/pagination-shape-common.log" 2>&1
+common_rc=$?
+tail -20 "${TMPDIR:-/tmp}/pagination-shape-common.log"
+if [[ "${common_rc}" -ne 0 ]]; then
+  echo "FAIL: common 分页序列化单元测试失败。"
   exit 1
 fi
 
-# 2) 静态扫描 dto 包中所有 *ListResponse 结构体，断言必须同时含 totalPages。
-TARGET="dto"
-
-if [[ ! -d "${TARGET}" ]]; then
-  echo "SKIP: dto 目录不存在，跳过静态扫描。"
-  exit 0
+# 2) 列表信封棘轮：新增违规与基线过期都会失败（双向比对见测试内 diffRatchet）。
+GOTOOLCHAIN=auto go test \
+  -run 'TestListEnvelope' \
+  -count=1 \
+  ./tests/contract/... > "${TMPDIR:-/tmp}/pagination-shape-ratchet.log" 2>&1
+ratchet_rc=$?
+tail -30 "${TMPDIR:-/tmp}/pagination-shape-ratchet.log"
+if [[ "${ratchet_rc}" -ne 0 ]]; then
+  echo "FAIL: 列表信封违反 data.items 单一契约或分页键双轨（见 tests/contract/list_envelope_ratchet_test.go）。"
+  exit 1
 fi
 
-# 找出 dto 包中所有 *ListResponse 类型定义。
-# 不依赖 mapfile（macOS bash 3.x 没有），改用 while + 临时文件。
-TMP_FILE="$(mktemp -t pagination.XXXXXX)"
-trap 'rm -f "${TMP_FILE}"' EXIT
-grep -rn 'type [A-Za-z]*ListResponse struct' "${TARGET}" 2>/dev/null > "${TMP_FILE}" || true
-
-VIOLATIONS=0
-REPORT_LINES=()
-
-while IFS= read -r decl; do
-  [[ -z "${decl}" ]] && continue
-  file=$(echo "${decl}" | cut -d: -f1)
-  line_no=$(echo "${decl}" | cut -d: -f2)
-  type_name=$(echo "${decl}" | sed -E 's/.*type ([A-Za-z]+ListResponse) struct.*/\1/')
-
-  # 检查该结构体内是否同时含 Items / Total / Page / PageSize / TotalPages
-  block=$(sed -n "${line_no},$((line_no + 60))p" "${file}")
-  for required in Items Total Page PageSize TotalPages; do
-    if ! echo "${block}" | grep -q "\b${required}\b"; then
-      VIOLATIONS=$((VIOLATIONS + 1))
-      REPORT_LINES+=("${file}:${line_no} ${type_name} 缺少字段 ${required}")
-    fi
-  done
-
-  # 显式拒绝 totalPage（缺 s）拼写错误
-  if echo "${block}" | grep -q '\bTotalPage\b'; then
-    VIOLATIONS=$((VIOLATIONS + 1))
-    REPORT_LINES+=("${file}:${line_no} ${type_name} 含拼写错误的 TotalPage（应为 TotalPages）")
-  fi
-done < "${TMP_FILE}"
-
-if [[ "${VIOLATIONS}" -gt 0 ]]; then
-  echo ""
-  echo "WARN: ${VIOLATIONS} 处 ListResponse 不符合标准分页形状。"
-  echo "        当前为 advisory 模式（不阻断构建）。详见 docs/testing/static-analysis-gates.md。"
-  echo ""
-  echo "Hits:"
-  printf '%s\n' "${REPORT_LINES[@]}"
-  echo ""
-  echo "修复建议：所有 *ListResponse 必须含 Items/Total/Page/PageSize/TotalPages 五元组。"
-  echo ""
-  echo "ADV: 已修复 RoleListResponse.TotalPage、user_dto.PaginationResponse.TotalPage"
-  echo "     拼写问题。剩余 violation 集中在 asset / change / cmdb / notification /"
-  echo "     survey / system_config / project 模块，需独立 PR 修复。"
-  exit 0
-fi
-
+# 3) 债务趋势可观察：基线条目数只减不增，收敛一条就从基线删除一条。
+BASELINE_COUNTS="$(grep -hoE '^\t"[^"]*\|[^"]*"' tests/contract/list_envelope_ratchet_test.go | wc -l | tr -d ' ')"
 echo ""
-echo "PASS: 所有 *ListResponse 满足分页形状契约。"
+echo "PASS: 列表信封棘轮为绿。存量基线条目 ${BASELINE_COUNTS}（领域名集合键 + 分页键不完整 + 分页别名）。"
+echo "      收敛一条 = 改 json tag 为 items 并补齐分页键，同步 Mapper/真实路由测试/前端 src/lib/api 类型与调用点，"
+echo "      再从对应基线删除该条。"
 exit 0

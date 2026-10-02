@@ -50,14 +50,6 @@ type SurveyAnalytics struct {
 	ResponseRate  float64 `json:"responseRate"`
 }
 
-// SurveyListResponse represents a list of surveys
-type SurveyListResponse struct {
-	Surveys  []*SurveyDTO `json:"surveys"`
-	Total    int          `json:"total"`
-	Page     int          `json:"page"`
-	PageSize int          `json:"pageSize"`
-}
-
 // CreateSurveyRequest represents a request to create a survey
 type CreateSurveyRequest struct {
 	Title       string     `json:"title" binding:"required"`

@@ -125,14 +125,6 @@ type ListArticleVersionsRequest struct {
 	PageSize int `form:"pageSize" binding:"min=1,max=50"`
 }
 
-// KnowledgeArticleVersionListResponse 文章版本列表响应
-type KnowledgeArticleVersionListResponse struct {
-	Versions []KnowledgeArticleVersionResponse `json:"versions"`
-	Total    int                               `json:"total"`
-	Page     int                               `json:"page"`
-	PageSize int                               `json:"pageSize"`
-}
-
 // RestoreArticleVersionRequest 恢复版本请求
 type RestoreArticleVersionRequest struct {
 	Version int `json:"version" binding:"required,min=1"`

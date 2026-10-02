@@ -177,14 +177,6 @@ type ServiceCatalogListResponse struct {
 	Size     int                      `json:"size"`
 }
 
-// ServiceRequestListResponse 服务请求列表响应
-type ServiceRequestListResponse struct {
-	Items []ServiceRequestResponse `json:"items"`
-	Total int                      `json:"total"`
-	Page  int                      `json:"page"`
-	Size  int                      `json:"size"`
-}
-
 // ToServiceCatalogResponse 转换为服务目录响应
 func ToServiceCatalogResponse(catalog *ent.ServiceCatalog) *ServiceCatalogResponse {
 	return &ServiceCatalogResponse{

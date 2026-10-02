@@ -64,14 +64,6 @@ type ConfigurationItemResponse struct {
 	ParentItems     []ConfigurationItemResponse `json:"parentItems,omitempty"`
 }
 
-// ConfigurationItemListResponse 配置项列表响应
-type ConfigurationItemListResponse struct {
-	Items []ConfigurationItemResponse `json:"items"`
-	Total int                         `json:"total"`
-	Page  int                         `json:"page"`
-	Size  int                         `json:"size"`
-}
-
 // ConfigurationItemStatsResponse 配置项统计响应
 type ConfigurationItemStatsResponse struct {
 	TotalCount              int            `json:"totalCount"`

@@ -109,14 +109,6 @@ type KEDBListRequest struct {
 	Keyword  string `form:"keyword"`
 }
 
-// KEDBListResponse 已知错误列表响应
-type KEDBListResponse struct {
-	Items    []*KEDBResponse `json:"items"`
-	Total    int             `json:"total"`
-	Page     int             `json:"page"`
-	PageSize int             `json:"pageSize"`
-}
-
 // KEDBStatsResponse KEDB统计响应
 type KEDBStatsResponse struct {
 	Total      int `json:"total"`

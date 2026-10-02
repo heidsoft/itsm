@@ -60,12 +60,6 @@ type UpdateStandardChangeRequest struct {
 	IsActive           *bool    `json:"isActive"`           // 是否启用
 }
 
-// StandardChangeListResponse 标准变更模板列表响应
-type StandardChangeListResponse struct {
-	Total     int                      `json:"total"`     // 总数
-	Templates []StandardChangeResponse `json:"templates"` // 模板列表
-}
-
 // InstantiateStandardChangeRequest 从模板实例化变更请求
 type InstantiateStandardChangeRequest struct {
 	Title            string     `json:"title"`            // 可选：自定义标题

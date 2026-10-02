@@ -37,6 +37,7 @@ var forbiddenPagingKeys = map[string]bool{
 	"totalCount":  true,
 	"total_count": true,
 	"page_size":   true,
+	"totalPage":   true, // 少一个 s 的旧拼写，5.5 门禁原来单独查它
 }
 
 // listEnvelope 是 dto/ 里一个「看起来是列表信封」的结构体。
@@ -60,7 +61,6 @@ var envelopeBaseline = []string{
 	"cloud_dto.go|CloudResourceListResponse|cloudResources",
 	"cloud_dto.go|CloudServiceListResponse|cloudServices",
 	"cmdb_dto.go|ListCIsResponse|cis",
-	"knowledge_dto.go|KnowledgeArticleVersionListResponse|versions",
 	"knowledge_dto.go|ListParticipantsResponse|participants",
 	"menu_dto.go|MenuListResponse|menus",
 	"msp_dto.go|MSPAllocationListResponse|allocations",
@@ -68,13 +68,9 @@ var envelopeBaseline = []string{
 	"msp_dto.go|MSPReportListResponse|reports",
 	"notification_dto.go|NotificationListResponse|notifications",
 	"problem_dto.go|ListProblemsResponse|problems",
-	"project_dto.go|ProjectListResponse|projects",
 	"release_dto.go|ReleaseListResponse|releases",
-	"role_dto.go|PermissionListResponse|permissions",
 	"role_dto.go|RoleListResponse|roles",
 	"service_dto.go|ServiceCatalogListResponse|catalogs",
-	"standard_change_dto.go|StandardChangeListResponse|templates",
-	"survey_dto.go|SurveyListResponse|surveys",
 	"tenant_dto.go|TenantListResponse|tenants",
 	"ticket_assignment_dto.go|ListAssignmentRulesResponse|rules",
 	"ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments",
@@ -94,9 +90,6 @@ var envelopeKeyBaseline = []string{
 	"cmdb_core_dto.go|CITagListResponse|pageSize,totalPages",
 	"cmdb_core_dto.go|CITypeListResponse|pageSize,totalPages",
 	"cmdb_dto.go|CIHistoryListResponse|pageSize,totalPages",
-	"cmdb_dto.go|ConfigurationItemListResponse|pageSize,totalPages",
-	"known_error_dto.go|KEDBListResponse|totalPages",
-	"service_dto.go|ServiceRequestListResponse|pageSize,totalPages",
 	"ticket_comment_dto.go|ListTicketCommentsResponse|page,pageSize,totalPages",
 	"ticket_view_dto.go|ListTicketViewsResponse|page,pageSize,totalPages",
 }
@@ -110,10 +103,8 @@ var envelopeAliasBaseline = []string{
 	"cmdb_core_dto.go|CITagListResponse|size",
 	"cmdb_core_dto.go|CITypeListResponse|size",
 	"cmdb_dto.go|CIHistoryListResponse|size",
-	"cmdb_dto.go|ConfigurationItemListResponse|size",
 	"notification_dto.go|NotificationListResponse|size",
 	"service_dto.go|ServiceCatalogListResponse|size",
-	"service_dto.go|ServiceRequestListResponse|size",
 }
 
 // TestListEnvelopeRatchet 禁止列表信封再引入领域名集合键（items 之外的第二个集合键）。

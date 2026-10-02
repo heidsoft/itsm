@@ -126,9 +126,3 @@ type PermissionDTO struct {
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
-
-// PermissionListResponse represents the response for listing permissions
-type PermissionListResponse struct {
-	Permissions []PermissionDTO `json:"permissions"`
-	Total       int             `json:"total"`
-}

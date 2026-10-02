@@ -17,9 +17,3 @@ type ProjectResponse struct {
 	CreatedAt    time.Time  `json:"createdAt"`
 	UpdatedAt    time.Time  `json:"updatedAt"`
 }
-
-// ProjectListResponse 项目列表响应
-type ProjectListResponse struct {
-	Projects []*ProjectResponse `json:"projects"`
-	Total    int                `json:"total"`
-}
