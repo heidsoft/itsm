@@ -12,12 +12,14 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
@@ -30,6 +32,9 @@ type mockRepository struct {
 	tickets     map[int]*Ticket
 	nextID      int
 	statsCalled bool
+	// 记录 List 收到的分页参数，用于断言 handler 在调用仓储前已归一化。
+	lastListPage int
+	lastListSize int
 }
 
 func newMockRepository() *mockRepository {
@@ -115,6 +120,8 @@ func (m *mockRepository) Delete(ctx context.Context, id int, tenantID int) error
 func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, ds datascope.DataScope, currentUserID int) ([]*Ticket, int, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	m.lastListPage = page
+	m.lastListSize = size
 	var out []*Ticket
 	for _, t := range m.tickets {
 		if t.TenantID == tenantID {
@@ -745,4 +752,105 @@ func TestHandler_SearchTickets_EmptyKeyword(t *testing.T) {
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
 	)
 	assert.Equal(t, 400, w.Code)
+}
+
+// listEnvelope 只声明本用例要断言的信封键；items 用 json.RawMessage 以免耦合工单字段。
+type listEnvelope struct {
+	Code int `json:"code"`
+	Data struct {
+		Items      []map[string]interface{} `json:"items"`
+		Total      int                      `json:"total"`
+		Page       int                      `json:"page"`
+		PageSize   int                      `json:"pageSize"`
+		TotalPages int                      `json:"totalPages"`
+	} `json:"data"`
+}
+
+func seedTickets(t *testing.T, r http.Handler, n int) {
+	t.Helper()
+	for i := 0; i < n; i++ {
+		w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+			dto.CreateTicketRequest{Title: "list seed", Priority: "low"},
+			map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+		)
+		require.Equal(t, 200, w.Code, w.Body.String())
+	}
+}
+
+// TestHandler_ListTickets_UnpagedRequest 锁死 2026-10-02 e2e 实测的缺陷：
+// GET /api/v1/tickets 省略 page/pageSize 时，DTO 零值被同时下传给仓储（负偏移）
+// 和信封（除零溢出），响应里出现 totalPages: -9223372036854775808。
+func TestHandler_ListTickets_UnpagedRequest(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTickets(t, r, 3)
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 0, got.Code)
+	assert.Len(t, got.Data.Items, 3)
+	assert.Equal(t, 3, got.Data.Total)
+	assert.Equal(t, 1, got.Data.Page)
+	assert.Equal(t, common.DefaultPageSize, got.Data.PageSize)
+	assert.Equal(t, 1, got.Data.TotalPages)
+
+	// 信封与真实查询必须说同一件事：归一化后的值要下传到仓储，而不是零值。
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, 1, repo.lastListPage, "page 必须在调用仓储前归一化")
+	assert.Equal(t, common.DefaultPageSize, repo.lastListSize, "pageSize 必须在调用仓储前归一化")
+}
+
+// TestHandler_ListTickets_NegativePagination 覆盖 ?page=-3&pageSize=0：
+// 数字但越界的分页参数能过绑定（DTO 未设 min），归一化后必须回到默认页，
+// 禁止把负偏移下传给仓储或让 totalPages 除零溢出。
+func TestHandler_ListTickets_NegativePagination(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTickets(t, r, 2)
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?page=-3&pageSize=0", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 1, got.Data.Page)
+	assert.Equal(t, common.DefaultPageSize, got.Data.PageSize)
+	assert.Equal(t, 1, got.Data.TotalPages)
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, 1, repo.lastListPage)
+	assert.Equal(t, common.DefaultPageSize, repo.lastListSize)
+}
+
+// TestHandler_ListTickets_NonNumericPagination 固定住另一侧边界：
+// 非数字分页参数属于输入错误，必须 400，而不是被静默当成默认页。
+func TestHandler_ListTickets_NonNumericPagination(t *testing.T) {
+	r, _ := newTestHarness(t)
+	seedTickets(t, r, 1)
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?page=abc", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	assert.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+}
+
+// TestHandler_ListTickets_ExplicitPaging 确认归一化没有把合法请求改坏：
+// 显式 pageSize=1 时必须逐键回显并算出 3 页。
+func TestHandler_ListTickets_ExplicitPaging(t *testing.T) {
+	r, _ := newTestHarness(t)
+	seedTickets(t, r, 3)
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?page=2&pageSize=1", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 2, got.Data.Page)
+	assert.Equal(t, 1, got.Data.PageSize)
+	assert.Equal(t, 3, got.Data.TotalPages)
 }

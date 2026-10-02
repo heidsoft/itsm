@@ -88,7 +88,16 @@ func (p *PaginationRequest) GetLimit() int {
 }
 
 // NewPaginationResponse 创建分页响应
+//
+// page/pageSize 必须先归一化再参与计算：调用方普遍把 ShouldBindQuery / strconv.Atoi 的结果
+// 直接传进来，客户端省略或写错分页参数时它们是 0，而 float64 除零得到 +Inf，
+// int(+Inf) 在 amd64 上是 int64 最小值——列表接口会把 totalPages: -9223372036854775808
+// 当成真实总页数返回给前端（2026-10-02 在 GET /api/v1/tickets 实测命中）。
 func NewPaginationResponse(page, pageSize int, total int64) *PaginationResponse {
+	page, pageSize = ValidatePagination(page, pageSize)
+	if total < 0 {
+		total = 0
+	}
 	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
 
 	return &PaginationResponse{

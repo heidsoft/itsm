@@ -403,3 +403,66 @@ func TestPagination_LastPageOfMany(t *testing.T) {
 	assert.False(t, resp.HasNext)
 	assert.True(t, resp.HasPrev)
 }
+
+// TestPagination_ZeroPageSizeDoesNotOverflow 锁死 2026-10-02 实测的缺陷类：
+// 客户端省略 page/pageSize 时 DTO 是零值，float64 除零得到 +Inf，
+// int(+Inf) 在 amd64 上是 int64 最小值，于是列表信封返回
+// totalPages: -9223372036854775808、page: 0、pageSize: 0。
+func TestPagination_ZeroPageSizeDoesNotOverflow(t *testing.T) {
+	resp := NewPaginationResponse(0, 0, 3)
+
+	assert.Equal(t, DefaultPage, resp.Page)
+	assert.Equal(t, DefaultPageSize, resp.PageSize)
+	assert.Equal(t, 1, resp.TotalPages)
+	assert.False(t, resp.HasNext)
+	assert.False(t, resp.HasPrev)
+}
+
+// TestPagination_NegativeAndNonNumericPageSize 覆盖 ?page=-3&pageSize=abc 这类
+// Atoi 失败/越界输入：归一化后必须仍是合法页码，且 totalPages 落在 [0, ceil(total)] 区间。
+func TestPagination_NegativeAndNonNumericPageSize(t *testing.T) {
+	cases := []struct {
+		name           string
+		page           int
+		pageSize       int
+		wantPage       int
+		wantPageSize   int
+		wantTotalPages int
+	}{
+		{"negative page", -3, 10, DefaultPage, 10, 1},
+		{"oversized page size", 1, 5000, 1, MaxPageSize, 1},
+		{"atoi failure zero", 0, 0, DefaultPage, DefaultPageSize, 1},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := NewPaginationResponse(tc.page, tc.pageSize, 3)
+
+			assert.Equal(t, tc.wantPage, resp.Page)
+			assert.Equal(t, tc.wantPageSize, resp.PageSize)
+			assert.Equal(t, tc.wantTotalPages, resp.TotalPages)
+			assert.GreaterOrEqual(t, resp.TotalPages, 0)
+			assert.LessOrEqual(t, resp.TotalPages, 3)
+		})
+	}
+}
+
+func TestPagination_NegativeTotalClampsToZero(t *testing.T) {
+	resp := NewPaginationResponse(1, 20, -5)
+
+	assert.Equal(t, int64(0), resp.Total)
+	assert.Equal(t, 0, resp.TotalPages)
+}
+
+// TestListResponse_UnpagedEnvelopeKeys 保证归一化后信封仍然齐全：
+// 缺页码不能退化成「只返回 items 和 total」，否则前端无法渲染分页器。
+func TestListResponse_UnpagedEnvelopeKeys(t *testing.T) {
+	data, err := json.Marshal(NewListResponse([]gin.H{{"id": 1}}, NewPaginationResponse(0, 0, 1)))
+	require.NoError(t, err)
+
+	var got map[string]interface{}
+	require.NoError(t, json.Unmarshal(data, &got))
+	for _, key := range []string{"items", "total", "page", "pageSize", "totalPages"} {
+		assert.Contains(t, got, key)
+	}
+	assert.Greater(t, got["totalPages"].(float64), 0.0)
+}

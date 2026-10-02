@@ -212,14 +212,18 @@ func (h *Handler) ListTickets(c *gin.Context) {
 		filters["is_overdue"] = true
 	}
 
-	tickets, total, err := h.service.List(c.Request.Context(), tenantID, req.Page, req.PageSize, filters, currentUserID, currentRole)
+	// 分页参数必须在使用前归一化：客户端省略 page/pageSize 时它们是零值，
+	// 直接下传会让仓储算出负偏移，直接回显又会让信封的 page/pageSize 变成 0。
+	page, pageSize := common.ValidatePagination(req.Page, req.PageSize)
+
+	tickets, total, err := h.service.List(c.Request.Context(), tenantID, page, pageSize, filters, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
 	// 标准信封：data.items + total/page/pageSize/totalPages
-	common.SuccessWithPagination(c, ticketListToResponse(tickets), req.Page, req.PageSize, int64(total))
+	common.SuccessWithPagination(c, ticketListToResponse(tickets), page, pageSize, int64(total))
 }
 
 // UpdateTicket handles PUT /api/v1/tickets/:id
