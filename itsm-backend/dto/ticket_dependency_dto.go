@@ -1,10 +1,10 @@
 package dto
 
-// 依赖关系影响分析相关DTO
+// RelationImpactAnalysisRequest 是 GET /api/v1/tickets/:id/dependencies 的查询参数契约。
+// 被分析的工单来自路径段 :id，不参与绑定，也不接受客户端自报；租户只来自认证上下文。
 type RelationImpactAnalysisRequest struct {
-	TicketID  int     `json:"ticketId" binding:"required" example:"1001"`
-	Action    string  `json:"action" binding:"required,oneof=close delete change_status" example:"close"`
-	NewStatus *string `json:"newStatus,omitempty" example:"closed"`
+	Action    string  `form:"action" json:"action" binding:"required,oneof=close delete change_status" example:"close"`
+	NewStatus *string `form:"newStatus" json:"newStatus,omitempty" example:"closed"`
 }
 
 type RelationImpactAnalysis struct {

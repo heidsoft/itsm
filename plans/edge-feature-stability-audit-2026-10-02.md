@@ -115,6 +115,6 @@
 | 2 | 附件下载/预览 | 已修 | `bdcae568`；`router/ticket_attachment_route_test.go` 含跨租户 404/403 拒绝，修复前 7 子用例 13 断言红 |
 | 3 | 标签写操作 | 已修 | `79d253ef`；写链统一到 `/api/v1/ticket-tags`，删除 `tag-service.ts` 死客户端；`router/ticket_tag_routes_test.go` 修复前 8/10 子用例红 |
 | 4 | 侧边栏「全局标签」死链 | 已修 | 页面 `git mv` 到 `src/app/(main)/admin/tags/page.tsx`（种子菜单 path 不变 ⇒ 存量租户零数据变更）；`capabilityPathRules` 同步 `/admin/tags`；新增门禁 C.6.6「基线 path ↔ 前端页面」，撤掉页面移动即实测 1 FAIL / exit 1，恢复后 97 条 path 全绿 |
-| 5 | 工单依赖影响分析 GET | 待修 | `handlers/ticket_dependency/handler.go:39-46` |
+| 5 | 工单依赖影响分析 GET | 已修 | `handlers/ticket_dependency/handler.go` 改查询参数绑定 + 服务层 `ErrDependencyTicketNotFound`；`router/ticket_dependency_route_test.go` 打真实 `SetupRoutes`（10 子用例，修复前 7 个为红，含跨租户与自报 `tenantId` 均 404/4004）；契约见 `docs/api-reference.md`「工单依赖影响分析接口」 |
 
 仍待拍板（不在 E1 范围内动）：`tag` 第二张表的退役边界（`code` 列 + `pkg/seeder/seeder.go:2364` 清单按 Code 建键 + 5 张关联表外键）、只读别名 `GET /tags`/`GET /system/tags` 的下线，以及菜单基线 `PermissionCode: "system:read"`（`baseline.go:147`）与页面真实所需 `ticket_tag:*` 不一致 —— 该字段会随 `upsertMenu` 刷新到存量行，属访问控制变更。

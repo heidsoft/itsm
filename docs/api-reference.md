@@ -428,6 +428,51 @@ Content-Type: application/json
 
 也可以用 `{"tags": ["网络"]}` 按名称绑定，缺失的标签会在当前租户内自动创建。解绑使用 `DELETE /tickets/{id}/tags`，请求体相同。
 
+## 工单依赖影响分析接口
+
+分析对象是当前租户内某工单的子工单集合（`parent_ticket_id`），权限 `ticket:read`。被分析的工单只能来自路径段，租户只来自认证上下文；请求里自报的 `tenantId` 不参与判定。
+
+```http
+GET /tickets/{id}/dependencies?action=close
+Authorization: Bearer <accessToken>
+```
+
+| 查询参数 | 必填 | 说明 |
+|---|---|---|
+| `action` | 是 | `close`、`delete`、`change_status` 三选一；缺失或非法取值返回 400/1001 |
+| `newStatus` | 否 | 仅 `action=change_status` 使用，例如 `closed`、`resolved` |
+
+响应 `data` 为分析结果，风险等级按告警数量分级（0 条 `low`，不超过 2 条 `medium`，更多 `high`）：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "ticketId": 1,
+    "ticketNumber": "T-2024-001",
+    "ticketTitle": "系统响应缓慢",
+    "action": "close",
+    "affectedCount": 2,
+    "affectedTickets": [
+      {
+        "id": 2,
+        "number": "T-2024-002",
+        "title": "数据库优化",
+        "status": "in_progress",
+        "impactType": "blocked",
+        "description": "父工单关闭可能导致此工单无法继续"
+      }
+    ],
+    "warnings": ["子工单 T-2024-002 (数据库优化) 尚未完成"],
+    "recommendations": ["建议先完成或取消所有子工单后再关闭父工单"],
+    "riskLevel": "medium"
+  }
+}
+```
+
+`impactType` 随 `action` 变化：`close` 为 `blocked`、`delete` 为 `orphaned`、`change_status` 为 `status_change`。工单不存在与跨租户访问统一返回 404/4004（不确认对方资源是否存在），底层错误只进日志。
+
 ## 事件管理接口
 
 ### 获取事件列表

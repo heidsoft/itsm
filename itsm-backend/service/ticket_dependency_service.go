@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/dto"
@@ -15,6 +16,10 @@ type TicketDependencyService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
 }
+
+// ErrDependencyTicketNotFound 表示目标工单在调用者租户内不存在。
+// 跨租户探测与真实不存在都走这一条，调用方不得据此确认对方资源是否存在。
+var ErrDependencyTicketNotFound = errors.New("dependency ticket not found")
 
 func NewTicketDependencyService(client *ent.Client, logger *zap.SugaredLogger) *TicketDependencyService {
 	return &TicketDependencyService{
@@ -35,7 +40,10 @@ func (s *TicketDependencyService) AnalyzeDependencyImpact(ctx context.Context, t
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("ticket not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("%w: ticket_id=%d tenant_id=%d", ErrDependencyTicketNotFound, ticketID, tenantID)
+		}
+		return nil, fmt.Errorf("load ticket for dependency impact: %w", err)
 	}
 
 	// 获取所有相关工单（通过parent_ticket_id）
