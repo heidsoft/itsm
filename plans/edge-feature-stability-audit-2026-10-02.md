@@ -125,7 +125,8 @@
 |---|---|---|---|
 | 1 | vendor 吞错与 `list` 信封 | 已修 | `service/vendor_service.go` 不再 `total, _ :=`，新增 `ErrVendorNotFound`/`ErrVendorCodeExists`；`handlers/vendor/handler.go` 按 409/404/400/500 分语义、信封改 `common.SuccessWithList`；`router/vendor_routes_test.go` 打真实 `SetupRoutes`（含用第二连接 drop `vendors` 表制造的「仅供应商查询失败」故障），修复前两个测试函数全红 |
 | 2 | problem SLA `none` 空成功 | 已修 | `handlers/problem/handler.go` `GetProblemSLA` 改显式 503/5003（资源存在性先判：404/4004、400/1001、401 不变）；`router/problem_sla_route_test.go` 打真实 `SetupRoutes`，修复前 4 条断言红；删除不可达的 `ProblemSLACard.tsx`、`ProblemApi.getProblemSLA` 与 `Problem` 上后端从不返回的 `slaStatus`/`responseDeadline`/`resolutionDeadline` 字段；`docs/api-reference.md` 新增「问题 SLA 与评论（能力未就绪）」，`make swagger-gen` 重生成 |
-| 2b | 服务分析全零 / 云发现空切片 / smart-assignment 语义不一致 | 待实施 | — |
+| 2b | 服务分析全零 / 云发现空切片 / smart-assignment 语义不一致 | 已修 | 服务目录四个不发请求的方法（`getServiceAnalytics`/`getServiceRatings`/`getFavorites`/`recordServiceView`）改为本文件既有的 `unsupportedFeature` 显式失败；`getCatalogStats` 停止补零，`ServiceCatalogStats` 减为后端真实三字段。删除两套并行死实现：`service/cloud_discovery_service.go`（674 行，AWS/Azure 返回空切片、国内三家 `return nil`，`upsertCloudResource:422` 查重缺租户条件；真实链路是 command-bus `cloud.DiscoveryWorker` + 已 fail-closed 的 `/api/v1/cmdb/discovery/jobs`）与 `src/lib/services/smart-assignment-service.ts`（455 行，与 `ticket-assignment-api.ts` 双实现且用 POST 打后端 GET 路由）。`service-catalog-api.test.ts` 修复前实测 6 个用例红 / 修复后 31 绿；`go build ./...`、`go test ./service/ ./service/cloud/... ./handlers/cmdb/`、staticcheck、type-check、eslint 全绿 |
+| 2c | 服务目录四个无消费方的死 hook 与 `ServiceAnalytics` 类型 | 待实施（并入 E3） | `useServiceAnalyticsQuery`/`useFavoritesQuery`/`usePortalConfigQuery`/`useCatalogStatsQuery` 只被自己的测试引用，删除应与 E3「不可达前端实现」清账一起做，避免本批扩大面 |
 | 3 | `handlers/*` 其余 12 处非 `items` 键并入信封棘轮 | 待实施 | — |
 | 4 | 收回 `frontend-menu-and-features.md` 6 条 ✅ 与两份产品文档的「优先级矩阵 = GA 证据」 | 待实施 | — |
 

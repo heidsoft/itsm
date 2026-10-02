@@ -111,18 +111,19 @@ describe('ServiceCatalogApi', () => {
   });
 
   describe('getCatalogStats', () => {
-    it('should get catalog stats', async () => {
-      mockGet.mockResolvedValue({ totalServices: 20, publishedServices: 15, categories: {} });
+    it('should pass through only the fields the backend returns', async () => {
+      mockGet.mockResolvedValue({ totalServices: 20, publishedServices: 15, categories: { it_service: 7 } });
       const result = await ServiceCatalogApi.getCatalogStats();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/service-catalogs/stats');
-      expect(result.totalServices).toBe(20);
+      expect(result).toEqual({ totalServices: 20, publishedServices: 15, categories: { it_service: 7 } });
+      expect(result).not.toHaveProperty('totalRequests');
+      expect(result).not.toHaveProperty('topServices');
     });
   });
 
   describe('getFavorites', () => {
-    it('should return empty array (not implemented)', async () => {
-      const result = await ServiceCatalogApi.getFavorites();
-      expect(result).toEqual([]);
+    it('should fail explicitly (no backend endpoint)', async () => {
+      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/服务收藏/);
     });
   });
 
@@ -215,30 +216,30 @@ describe('ServiceCatalogApi', () => {
   });
 
   describe('getServiceAnalytics', () => {
-    it('should return default analytics', async () => {
-      const result = await ServiceCatalogApi.getServiceAnalytics('1', { startDate: '2024-01-01' });
-      expect(result.serviceId).toBe('1');
-      expect(result.metrics.totalRequests).toBe(0);
+    it('should fail explicitly instead of returning all-zero metrics', async () => {
+      await expect(ServiceCatalogApi.getServiceAnalytics('1', { startDate: '2024-01-01' })).rejects.toThrow(
+        /服务分析/
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
   describe('getFavorites', () => {
-    it('should return empty array', async () => {
-      const result = await ServiceCatalogApi.getFavorites();
-      expect(result).toEqual([]);
+    it('should fail explicitly instead of an empty list', async () => {
+      await expect(ServiceCatalogApi.getFavorites()).rejects.toThrow(/服务收藏/);
     });
   });
 
   describe('getServiceRatings', () => {
-    it('should return empty ratings', async () => {
-      const result = await ServiceCatalogApi.getServiceRatings('1');
-      expect(result).toEqual({ ratings: [], total: 0, avgRating: 0 });
+    it('should fail explicitly instead of zero-filled ratings', async () => {
+      await expect(ServiceCatalogApi.getServiceRatings('1')).rejects.toThrow(/服务评分查询/);
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
   describe('recordServiceView', () => {
-    it('should not throw', async () => {
-      await expect(ServiceCatalogApi.recordServiceView('1')).resolves.toBeUndefined();
+    it('should fail explicitly instead of silently dropping the write', async () => {
+      await expect(ServiceCatalogApi.recordServiceView('1')).rejects.toThrow(/服务浏览记录/);
     });
   });
 

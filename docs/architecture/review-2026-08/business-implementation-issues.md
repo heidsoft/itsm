@@ -72,7 +72,7 @@
 | 工作流 | `bpmn_process_engine.go:2635-2658` | `DelegateTask` 无事务、受托人校验缺失、原审批人仍可完成 | 🔴 |
 | 工作流 | `bpmn_process_engine.go:1973-1984` | `SetProcessInstanceVariables` 覆盖式写入,可丢引擎保留变量 | 🔴 |
 | 工作流 | `bpmn_process_engine.go:536-546` | 排他网关不支持 default flow | 🔴 |
-| CMDB | `cloud_discovery_service.go:422-428` | `upsertCloudResource` 查重缺租户条件 | 🔴 |
+| CMDB | `cloud_discovery_service.go:422-428` | `upsertCloudResource` 查重缺租户条件 | ✅已消除（2026-10-02 该文件是零调用者的死实现，连同 AWS/Azure 空切片假成功一并删除；真实链路 `service/cloud/runner.go` + `cloud.DiscoveryWorker`，`/api/v1/cmdb/discovery/jobs` 已 fail-closed 503） |
 | CMDB | `service/cloud/runner.go:48-64` | `RunAll` 并发发现无互斥,绕过 DiscoveryJob lease | 🔴 |
 
 ## P2 改进(摘要)

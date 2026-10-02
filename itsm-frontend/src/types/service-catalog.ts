@@ -323,31 +323,14 @@ export interface ServiceRating {
 // ==================== 服务目录统计 ====================
 
 /**
- * 服务目录统计
+ * 服务目录统计 —— 与后端 handlers/service_catalog.ServiceStats 一一对应。
+ * 请求量、趋势、热门服务等字段后端没有实现，未接入前不得在此声明，
+ * 否则调用方只能靠补零来满足类型，把「能力未接」伪装成「数据为 0」。
  */
 export interface ServiceCatalogStats {
   totalServices: number;
   publishedServices: number;
-  totalRequests: number;
-  pendingRequests: number;
-  completedRequests: number;
-
-  servicesByCategory: Record<ServiceCategory, number>;
-  requestsByStatus: Record<ServiceRequestStatus, number>;
-
-  topServices: Array<{
-    service: ServiceItem;
-    requestCount: number;
-    avgRating: number;
-  }>;
-
-  recentRequests: ServiceRequest[];
-
-  trends: {
-    date: string;
-    requests: number;
-    completions: number;
-  }[];
+  categories: Record<string, number>;
 }
 
 /**

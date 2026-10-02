@@ -7,7 +7,6 @@ import type {
   ServiceItem,
   ServiceStatus,
   ServiceCategory,
-  ServiceRequestStatus,
   PortalConfig,
   ServiceFavorite,
   ServiceRating,
@@ -429,8 +428,8 @@ export class ServiceCatalogApi {
    * 获取收藏列表
    */
   static async getFavorites(): Promise<ServiceFavorite[]> {
-    // 后端未提供收藏列表接口。读取路径返回空列表，写入路径必须显式失败，避免用户误以为收藏已保存。
-    return [];
+    // 后端没有收藏接口。读取路径同样显式失败，空列表无法区分「没收藏」和「能力未接」。
+    return ServiceCatalogApi.unsupportedFeature('服务收藏');
   }
 
   /**
@@ -460,7 +459,8 @@ export class ServiceCatalogApi {
     total: number;
     avgRating: number;
   }> {
-    return { ratings: [], total: 0, avgRating: 0 };
+    const _args = { serviceId, params };
+    return ServiceCatalogApi.unsupportedFeature('服务评分查询');
   }
 
   /**
@@ -513,25 +513,9 @@ export class ServiceCatalogApi {
    * 获取服务目录统计
    */
   static async getCatalogStats(): Promise<ServiceCatalogStats> {
-    // 调用后端实际统计接口
-    const resp = await httpClient.get<{
-      totalServices: number;
-      publishedServices: number;
-      categories: Record<string, number>;
-    }>('/api/v1/service-catalogs/stats');
-
-    return {
-      totalServices: resp.totalServices || 0,
-      publishedServices: resp.publishedServices || 0,
-      totalRequests: 0,
-      pendingRequests: 0,
-      completedRequests: 0,
-      servicesByCategory: {} as Record<ServiceCategory, number>,
-      requestsByStatus: {} as Record<ServiceRequestStatus, number>,
-      topServices: [],
-      recentRequests: [],
-      trends: [],
-    };
+    // 契约与 handlers/service_catalog.ServiceStats 逐字段一致：后端只给服务数量与分类计数。
+    // 请求量/趋势/热门服务没有服务端实现，不得在这里补零，否则页面会把「没数据」显示成「0 个请求」。
+    return httpClient.get<ServiceCatalogStats>('/api/v1/service-catalogs/stats');
   }
 
   /**
@@ -544,37 +528,18 @@ export class ServiceCatalogApi {
       endDate?: string;
     }
   ): Promise<ServiceAnalytics> {
-    // 后端暂未实现服务分析，返回空数据
-     
-    const _unused = serviceId;
-    return {
-      serviceId,
-      period: {
-        start: params?.startDate
-          ? new Date(params.startDate)
-          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        end: params?.endDate ? new Date(params.endDate) : new Date(),
-      },
-      metrics: {
-        totalRequests: 0,
-        completedRequests: 0,
-        avgCompletionTime: 0,
-        completionRate: 0,
-        avgRating: 0,
-        totalViews: 0,
-      },
-      requestTrend: [],
-      userSatisfaction: [],
-      peakHours: [],
-    };
+    const _args = { serviceId, params };
+    // 后端没有服务分析接口。返回全零指标会把「能力没接」显示成「这个服务没人用过」。
+    return ServiceCatalogApi.unsupportedFeature('服务分析');
   }
 
   /**
    * 记录服务浏览
    */
   static async recordServiceView(serviceId: string): Promise<void> {
-    // V0：不做
-    return;
+    const _serviceId = serviceId;
+    // 写入路径必须显式失败，静默丢弃会让调用方以为浏览量已记录。
+    return ServiceCatalogApi.unsupportedFeature('服务浏览记录');
   }
 
   /**
