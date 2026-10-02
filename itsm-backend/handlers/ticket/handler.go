@@ -199,6 +199,9 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	if req.Priority != "" {
 		filters["priority"] = req.Priority
 	}
+	if req.Type != "" {
+		filters["type"] = req.Type
+	}
 	if req.Keyword != "" {
 		filters["keyword"] = req.Keyword
 	}
@@ -210,6 +213,25 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	}
 	if req.IsOverdue {
 		filters["is_overdue"] = true
+	}
+	// 指针字段必须显式判空下传：仓储层按 filters["assignee_id"] 等键位取过滤条件，
+	// 这里漏一个键不会报错，只会让筛选静默失效并返回租户全量工单
+	// （2026-10-02 实测 GET /api/v1/tickets?assigneeId=33 返回 41 条、受理人全是别人，
+	// 而 src/app/(main)/tickets/page.tsx 正在发送该参数）。
+	if req.AssigneeID != nil && *req.AssigneeID > 0 {
+		filters["assignee_id"] = *req.AssigneeID
+	}
+	if req.RequesterID != nil && *req.RequesterID > 0 {
+		filters["requester_id"] = *req.RequesterID
+	}
+	if req.CategoryID != nil && *req.CategoryID > 0 {
+		filters["category_id"] = *req.CategoryID
+	}
+	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
+		filters["parent_ticket_id"] = *req.ParentTicketID
+	}
+	if req.TemplateID != nil && *req.TemplateID > 0 {
+		filters["template_id"] = *req.TemplateID
 	}
 
 	// 分页参数必须在使用前归一化：客户端省略 page/pageSize 时它们是零值，

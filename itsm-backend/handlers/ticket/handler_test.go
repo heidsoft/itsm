@@ -32,9 +32,14 @@ type mockRepository struct {
 	tickets     map[int]*Ticket
 	nextID      int
 	statsCalled bool
-	// 记录 List 收到的分页参数，用于断言 handler 在调用仓储前已归一化。
-	lastListPage int
-	lastListSize int
+	// 记录 List 收到的分页与筛选参数，用于断言 handler 在调用仓储前已归一化并完整下传。
+	lastListPage    int
+	lastListSize    int
+	lastListFilters map[string]interface{}
+	// 行级数据权限同样要在 mock 里生效：mock 忽略 ds/currentUserID 时，
+	// 非管理角色读到租户全量也不会被任何测试发现。
+	lastListDataScope datascope.DataScope
+	lastListUserID    int
 }
 
 func newMockRepository() *mockRepository {
@@ -122,11 +127,43 @@ func (m *mockRepository) List(ctx context.Context, tenantID int, page, size int,
 	defer m.mu.Unlock()
 	m.lastListPage = page
 	m.lastListSize = size
+	m.lastListFilters = filters
+	m.lastListDataScope = ds
+	m.lastListUserID = currentUserID
+
+	// 与 EntRepository.List 消费同一套 filters 键位：handler 漏传一个键时
+	// 这里必须返回「未筛选」的结果，测试才能区分「筛选生效」和「静默失效」。
+	// 行级谓词也与仓储一致：非全量角色只能看到本人创建或受理的单据，身份缺失 fail closed。
+	if ds != datascope.DataScopeAll && currentUserID <= 0 {
+		return nil, 0, nil
+	}
 	var out []*Ticket
 	for _, t := range m.tickets {
-		if t.TenantID == tenantID {
-			out = append(out, t)
+		if t.TenantID != tenantID {
+			continue
 		}
+		if ds != datascope.DataScopeAll {
+			assigned := t.AssigneeID != nil && *t.AssigneeID == currentUserID
+			if t.RequesterID != currentUserID && !assigned {
+				continue
+			}
+		}
+		if v, ok := filters["status"].(string); ok && v != "" && t.Status != v {
+			continue
+		}
+		if v, ok := filters["priority"].(string); ok && v != "" && t.Priority != v {
+			continue
+		}
+		if v, ok := filters["type"].(string); ok && v != "" && t.Type != v {
+			continue
+		}
+		if v, ok := filters["assignee_id"].(int); ok && v > 0 && (t.AssigneeID == nil || *t.AssigneeID != v) {
+			continue
+		}
+		if v, ok := filters["requester_id"].(int); ok && v > 0 && t.RequesterID != v {
+			continue
+		}
+		out = append(out, t)
 	}
 	return out, len(out), nil
 }
@@ -777,6 +814,15 @@ func seedTickets(t *testing.T, r http.Handler, n int) {
 	}
 }
 
+// seedTicketWith 按指定字段创建一张工单，用于验证筛选键位真的能区分工单。
+func seedTicketWith(t *testing.T, r http.Handler, req dto.CreateTicketRequest) {
+	t.Helper()
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets", req,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	require.Equal(t, 200, w.Code, w.Body.String())
+}
+
 // TestHandler_ListTickets_UnpagedRequest 锁死 2026-10-02 e2e 实测的缺陷：
 // GET /api/v1/tickets 省略 page/pageSize 时，DTO 零值被同时下传给仓储（负偏移）
 // 和信封（除零溢出），响应里出现 totalPages: -9223372036854775808。
@@ -853,4 +899,124 @@ func TestHandler_ListTickets_ExplicitPaging(t *testing.T) {
 	assert.Equal(t, 2, got.Data.Page)
 	assert.Equal(t, 1, got.Data.PageSize)
 	assert.Equal(t, 3, got.Data.TotalPages)
+}
+
+// TestHandler_ListTickets_ForwardsEveryDeclaredFilter 锁死 2026-10-02 实测的筛选静默失效：
+// ListTicketsRequest 声明了 assigneeId/requesterId/type/categoryId/parentTicketId/templateId，
+// 仓储层也按这些键位实现筛选，但 handler 只下传 status/priority/keyword/排序，
+// 于是 GET /api/v1/tickets?assigneeId=33 返回租户全量工单（实测 41 条、受理人全是别人），
+// 而 src/app/(main)/tickets/page.tsx 正在发送 assigneeId。
+func TestHandler_ListTickets_ForwardsEveryDeclaredFilter(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTicketWith(t, r, dto.CreateTicketRequest{Title: "mine", Priority: "low", Type: "incident", AssigneeID: 7})
+	seedTicketWith(t, r, dto.CreateTicketRequest{Title: "theirs", Priority: "low", Type: "problem", AssigneeID: 8})
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?assigneeId=7&type=incident", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	require.Equal(t, 1, got.Data.Total, "assigneeId/type 必须真实生效，不能回全量")
+	require.Len(t, got.Data.Items, 1)
+	assert.Equal(t, "mine", got.Data.Items[0]["title"])
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	// 键位与仓储契约一致（filters["assignee_id"]/filters["type"]）。
+	assert.Equal(t, 7, repo.lastListFilters["assignee_id"])
+	assert.Equal(t, "incident", repo.lastListFilters["type"])
+}
+
+// TestHandler_ListTickets_FilterOwnershipKeys 断言其余归属类筛选同样下传，
+// 防止以后只修 assigneeId 又让 requesterId/categoryId 回到静默失效。
+func TestHandler_ListTickets_FilterOwnershipKeys(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTicketWith(t, r, dto.CreateTicketRequest{Title: "req 9", Priority: "low", RequesterID: 9})
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?requesterId=9&categoryId=3&parentTicketId=4&templateId=5&isOverdue=true", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, 9, repo.lastListFilters["requester_id"])
+	assert.Equal(t, 3, repo.lastListFilters["category_id"])
+	assert.Equal(t, 4, repo.lastListFilters["parent_ticket_id"])
+	assert.Equal(t, 5, repo.lastListFilters["template_id"])
+	assert.Equal(t, true, repo.lastListFilters["is_overdue"])
+}
+
+// TestHandler_ListTickets_AbsentFiltersAreNotSent 保证「未传」与「传 0」都不会污染查询：
+// 零值/缺省键位若下传，仓储的 >0 判断虽会忽略，但断言能挡住把 0 当成筛选条件的写法。
+func TestHandler_ListTickets_AbsentFiltersAreNotSent(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTicketWith(t, r, dto.CreateTicketRequest{Title: "plain", Priority: "low", AssigneeID: 7})
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets?assigneeId=0", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	_, sent := repo.lastListFilters["assignee_id"]
+	assert.False(t, sent, "assigneeId=0 是「未指定处理人」，不得作为筛选条件下传")
+}
+
+// TestHandler_ListTickets_RowLevelDataScope 锁住生产路由的行级数据权限：
+// 非管理角色的 GET /api/v1/tickets 必须被收窄到本人创建或受理的单据。
+// 存量 service/ticket_service_test.go 里的同名场景测试走的是旧 TicketService
+// 路径（直接使用仓储层枚举），因此生产路由把 DataScope 传丢时它仍然是绿的。
+func TestHandler_ListTickets_RowLevelDataScope(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTickets(t, r, 2) // 创建人 7
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "foreign", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "8"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	list := func(userID, role string) (int, int, datascope.DataScope) {
+		t.Helper()
+		lw := doJSON(t, r, http.MethodGet, "/api/v1/tickets?pageSize=100", nil,
+			map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": userID, "X-Test-Role": role})
+		require.Equal(t, 200, lw.Code, lw.Body.String())
+		var got listEnvelope
+		require.NoError(t, json.Unmarshal(lw.Body.Bytes(), &got))
+		repo.mu.Lock()
+		defer repo.mu.Unlock()
+		return got.Data.Total, len(got.Data.Items), repo.lastListDataScope
+	}
+
+	total, items, ds := list("7", "technician")
+	assert.Equal(t, datascope.DataScopeOwnedOrAssigned, ds, "非管理角色必须下传收窄档")
+	assert.Equal(t, 2, total, "technician 不应看到他人工单")
+	assert.Equal(t, 2, items)
+
+	total, _, ds = list("8", "end_user")
+	assert.Equal(t, datascope.DataScopeOwnedOrAssigned, ds)
+	assert.Equal(t, 1, total, "end_user 只应看到自己创建的那张")
+
+	total, _, ds = list("1", "admin")
+	assert.Equal(t, datascope.DataScopeAll, ds, "管理角色下传全量档")
+	assert.Equal(t, 3, total, "admin 可见全租户工单")
+}
+
+// TestHandler_ListTickets_MissingUserIDFailsClosed 覆盖身份缺失：
+// 非管理角色拿不到 user_id 时必须返回空集，而不是回落到租户全量。
+func TestHandler_ListTickets_MissingUserIDFailsClosed(t *testing.T) {
+	r, repo := newTestHarness(t)
+	seedTickets(t, r, 2)
+
+	w := doJSON(t, r, http.MethodGet, "/api/v1/tickets", nil,
+		map[string]string{"X-Test-TenantID": "1", "X-Test-Role": "end_user"})
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var got listEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &got))
+	assert.Equal(t, 0, got.Data.Total, "缺少 user_id 时行级权限必须 fail closed")
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	assert.Equal(t, datascope.DataScopeOwnedOrAssigned, repo.lastListDataScope)
+	assert.Equal(t, 0, repo.lastListUserID)
 }

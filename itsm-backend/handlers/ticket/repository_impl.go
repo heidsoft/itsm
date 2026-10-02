@@ -219,7 +219,16 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 			orderDir = "asc"
 		}
 	}
-	fp.DataScope = ticket.DataScope(dataScope)
+	// 两个包的 DataScope 是各自独立的枚举，不能数值转换：
+	// datascope 有 Department 档使 OwnedOrAssigned=2，仓储层只有两档(OwnedOrAssigned=1)。
+	// ticket.DataScope(dataScope) 会把 2 原样传下去，仓储层的行级谓词永不命中，
+	// 普通角色因此读到全租户工单（2026-10-02 实测 technician 看到 45 条而非本人 23 条）。
+	// 未知档位一律按最窄档处理，保证新增枚举值时不会静默放宽权限。
+	if dataScope == datascope.DataScopeAll {
+		fp.DataScope = ticket.DataScopeAll
+	} else {
+		fp.DataScope = ticket.DataScopeOwnedOrAssigned
+	}
 	fp.CurrentUserID = currentUserID
 
 	result, err := r.repo.List(ctx, tenantID, fp, &base.QueryParams{Page: page, PageSize: size, OrderBy: orderBy, OrderDir: orderDir})
