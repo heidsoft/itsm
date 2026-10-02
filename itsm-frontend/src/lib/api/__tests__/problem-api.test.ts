@@ -130,21 +130,6 @@ describe('ProblemApi', () => {
     });
   });
 
-  describe('getProblemSLA', () => {
-    it('should get problem SLA', async () => {
-      mockGet.mockResolvedValue({
-        slaStatus: 'ok',
-        responseBreached: false,
-        resolutionBreached: false,
-        responseTimeUsed: 10,
-        resolutionTimeUsed: 20,
-      });
-      const result = await ProblemApi.getProblemSLA(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/1/sla');
-      expect(result.slaStatus).toBe('ok');
-    });
-  });
-
   describe('lifecycle methods', () => {
     it('investigateProblem should call POST', async () => {
       mockPost.mockResolvedValue({ id: 1, status: 'investigating' });

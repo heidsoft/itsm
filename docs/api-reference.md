@@ -599,6 +599,18 @@ DELETE /problems/{id}
 Authorization: Bearer <accessToken>
 ```
 
+### 问题 SLA 与评论（能力未就绪）
+
+```http
+GET /problems/{id}/sla
+GET /problems/{id}/comments
+Authorization: Bearer <accessToken>
+```
+
+两个端点恒定返回 `503` + 业务码 `5003`（unready）：问题域没有 SLA 截止时间字段，也没有任何写入 `sla_states`（`aggregate_type=problem`）的代码路径，问题评论同样没有独立存储。此前 `/sla` 返回 `200` + `{slaStatus:"none", responseTimeUsed:0, ...}` 的空成功，调用方无法区分「能力没接」和「该问题 SLA 正常且未超时」，现改为显式不可用；前端 `ProblemSLACard` 随之删除（它本就不可从任何页面到达），`Problem` 类型里后端从不返回的 `slaStatus`/`responseDeadline`/`resolutionDeadline` 字段一并移除。
+
+问题不存在或跨租户访问仍是 `404`/`4004`（先按租户校验资源存在，再判能力），非数字 ID 是 `400`/`1001`。回归见 `itsm-backend/router/problem_sla_route_test.go`；接入真实问题 SLA 后需重开 `200` 契约并同步本节。
+
 ## 变更管理接口
 
 ### 获取变更列表

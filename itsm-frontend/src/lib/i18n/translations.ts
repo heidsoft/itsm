@@ -1574,22 +1574,6 @@ export const translations = {
         5: '非常满意',
       },
     },
-    problemSla: {
-      title: 'SLA信息',
-      responseDeadline: '响应截止',
-      resolutionDeadline: '解决截止',
-      remaining: '(剩余 {time})',
-      expired: '已超时',
-      status: {
-        ok: '正常',
-        warning: '即将到期',
-        breached: '已违规',
-      },
-      timeRemaining: {
-        daysHours: '{days}天{hours}小时',
-        hoursMinutes: '{hours}小时{minutes}分钟',
-      },
-    },
     asset: {
       title: '资产管理',
       list: {

@@ -66,10 +66,6 @@ export interface Problem {
   relatedChanges?: number[];
   createdAt: string;
   updatedAt: string;
-  // P0 修复暴露的预先 TS 错误：ProblemSLACard 引用 problem.slaStatus
-  slaStatus?: 'ok' | 'warning' | 'breached';
-  responseDeadline?: string;
-  resolutionDeadline?: string;
 }
 
 export interface ProblemListResponse {
@@ -228,23 +224,6 @@ export class ProblemApi {
       url: `/api/v1/problems/${problemId}/associations`,
       data: req,
     });
-  }
-
-  // ==================== SLA（P0 修复暴露的 TS 错误） ====================
-
-  /**
-   * 获取问题 SLA 信息
-   */
-  static async getProblemSLA(problemId: number): Promise<{
-    responseDeadline?: string;
-    resolutionDeadline?: string;
-    responseTimeUsed: number;
-    resolutionTimeUsed: number;
-    responseBreached: boolean;
-    resolutionBreached: boolean;
-    slaStatus: string;
-  }> {
-    return httpClient.get(`/api/v1/problems/${problemId}/sla`);
   }
 }
 

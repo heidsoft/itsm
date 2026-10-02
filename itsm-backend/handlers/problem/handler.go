@@ -846,14 +846,15 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 
 // GetProblemSLA handles GET /api/v1/problems/:id/sla
 // @Summary 获取问题SLA
-// @Description 获取问题SLA状态（当前问题暂未配置SLA，返回默认无SLA状态）
+// @Description 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回 5003 unready；此前它返回 slaStatus:"none" 的空成功，与「该问题确实没有触发 SLA」不可区分
 // @Tags 问题管理
 // @Produce json
 // @Param id path int true "问题ID"
-// @Success 200 {object} common.Response{data=object}
 // @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
+// @Failure 503 {object} common.Response
 // @Security BearerAuth
 // @Router /api/v1/problems/{id}/sla [get]
 func (h *Handler) GetProblemSLA(c *gin.Context) {
@@ -877,15 +878,11 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 		return
 	}
 
-	// Problems don't have SLA tracking in the current schema;
-	// return a sensible default indicating no SLA configured.
-	common.Success(c, gin.H{
-		"slaStatus":          "none",
-		"responseTimeUsed":   0,
-		"resolutionTimeUsed": 0,
-		"responseBreached":   false,
-		"resolutionBreached": false,
-	})
+	// 显式 unready：问题从未有 sla_state 写入路径，返回 0 值 + slaStatus:"none"
+	// 会让调用方把「能力没接」读成「这个问题的 SLA 正常且未超时」。
+	// ⚠️ 响应契约：本端点当前恒为 503/5003，不再返回 200；真正接入问题 SLA
+	// （建 sla_state 写入链 + 计算倒计时）后需一并重开 200 契约与文档。
+	common.Fail(c, common.ServiceUnavailableCode, "问题 SLA 尚未接入 SLA 引擎")
 }
 
 // GetProblemComments handles GET /api/v1/problems/:id/comments

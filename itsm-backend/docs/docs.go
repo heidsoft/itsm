@@ -10787,7 +10787,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "获取问题SLA状态（当前问题暂未配置SLA，返回默认无SLA状态）",
+                "description": "问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回 5003 unready；此前它返回 slaStatus:\"none\" 的空成功，与「该问题确实没有触发 SLA」不可区分",
                 "produces": [
                     "application/json"
                 ],
@@ -10805,26 +10805,14 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/common.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
@@ -10837,6 +10825,12 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
                         }
