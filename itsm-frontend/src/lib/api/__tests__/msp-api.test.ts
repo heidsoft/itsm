@@ -67,13 +67,13 @@ describe('MSPAPI', () => {
 
   describe('getCustomerTickets', () => {
     it('should get customer tickets', async () => {
-      mockGet.mockResolvedValue({ tickets: [], total: 0 });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await MSPAPI.getCustomerTickets(5, { status: 'open', page: 1 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/customers/5/tickets', { status: 'open', page: 1 });
     });
 
     it('should get customer tickets without params', async () => {
-      mockGet.mockResolvedValue({ tickets: [], total: 0 });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await MSPAPI.getCustomerTickets(5);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/customers/5/tickets', undefined);
     });
@@ -99,21 +99,24 @@ describe('MSPAPI', () => {
 
   describe('getCustomerReports', () => {
     it('should get customer reports', async () => {
-      mockGet.mockResolvedValue([]);
+      mockGet.mockResolvedValue({ items: [], total: 0 });
       await MSPAPI.getCustomerReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/reports/customers', { startDate: '2024-01-01', endDate: '2024-01-31' });
     });
 
-    it('should get customer reports with customer filter', async () => {
-      mockGet.mockResolvedValue([]);
-      await MSPAPI.getCustomerReports({ startDate: '2024-01-01', endDate: '2024-01-31', customerTenantId: 5 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/reports/customers', { startDate: '2024-01-01', endDate: '2024-01-31', customerTenantId: 5 });
+    it('只发送后端真正支持的区间参数', async () => {
+      // 报表聚合范围只来自认证上下文的租户：customerTenantId/mspUserId 都不在契约里，
+      // 传入会被后端 400 拒绝，客户端也不得继续发送。
+      mockGet.mockResolvedValue({ items: [], total: 0 });
+      await MSPAPI.getCustomerReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      const [, params] = mockGet.mock.calls[0];
+      expect(Object.keys(params).sort()).toEqual(['endDate', 'startDate']);
     });
   });
 
   describe('getMSPPerformanceReports', () => {
     it('should get performance reports', async () => {
-      mockGet.mockResolvedValue([]);
+      mockGet.mockResolvedValue({ items: [], total: 0 });
       await MSPAPI.getMSPPerformanceReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/reports/performance', { startDate: '2024-01-01', endDate: '2024-01-31' });
     });

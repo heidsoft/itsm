@@ -215,12 +215,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"instances": statuses,
-		"total":     total,
-		"page":      page,
-		"pageSize":  pageSize,
-	})
+	common.SuccessWithList(ctx, statuses, total, page, pageSize)
 }
 
 // GetProcessTimeline 获取流程实例完整时间线
@@ -345,10 +340,5 @@ func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"logs":     logs,
-		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
-	})
+	common.SuccessWithList(ctx, logs, total, page, pageSize)
 }

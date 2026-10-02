@@ -5,9 +5,9 @@ import type {
   MSPCustomersResponse,
   MSPCustomerTicketsResponse,
   MSPCustomerReport,
+  MSPPerformanceReport,
   MSPAllocationHistory,
   MSPContext,
-  TicketMSPInfo,
 } from '@/types/msp';
 
 export class MSPService {
@@ -69,27 +69,8 @@ export class MSPService {
   static async getCustomerTickets(
     customerTenantId: number,
     params?: { status?: string; page?: number; pageSize?: number }
-  ): Promise<{
-    tickets: Array<TicketMSPInfo & {
-      id: number;
-      title: string;
-      status: string;
-      assigneeId?: number;
-      assigneeName?: string;
-      createdAt: string;
-      tenant: { id: number; code: string; name: string };
-    }>;
-    total: number;
-  }> {
-    const res = await MSPAPI.getCustomerTickets(customerTenantId, params);
-    if (res && res.tickets) {
-      const tickets = Array.isArray(res.tickets) ? res.tickets : [res.tickets];
-      return {
-        tickets,
-        total: res.total || 0,
-      };
-    }
-    return { tickets: [], total: 0 };
+  ): Promise<MSPCustomerTicketsResponse> {
+    return MSPAPI.getCustomerTickets(customerTenantId, params);
   }
 
   /**
@@ -104,15 +85,27 @@ export class MSPService {
   }
 
   /**
-   * 获取客户服务报表
+   * 获取客户服务报表（后端按调用者租户做区间聚合，返回单行汇总）。
+   * 不接受 customerTenantId/mspUserId：后端从未实现按客户或员工分组，
+   * 传入会返回 400 而不是被静默忽略（见 docs/api-reference.md）。
    */
   static async getCustomerReports(params: {
     startDate: string;
     endDate: string;
-    customerTenantId?: number;
   }): Promise<MSPCustomerReport[]> {
     const res = await MSPAPI.getCustomerReports(params);
-    return res || [];
+    return res.items;
+  }
+
+  /**
+   * 获取绩效报表（后端按调用者租户做区间聚合，返回单行汇总；员工维度未实现）
+   */
+  static async getPerformanceReports(params: {
+    startDate: string;
+    endDate: string;
+  }): Promise<MSPPerformanceReport[]> {
+    const res = await MSPAPI.getMSPPerformanceReports(params);
+    return res.items;
   }
 
   /**

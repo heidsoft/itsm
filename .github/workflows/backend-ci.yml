@@ -180,6 +180,10 @@ jobs:
 
           echo "No new large files detected"
 
+      - name: List envelope gate (handlers must use items)
+        run: |
+          bash scripts/static-gates/check-list-envelope.sh
+
   build:
     name: Build
     runs-on: ubuntu-latest

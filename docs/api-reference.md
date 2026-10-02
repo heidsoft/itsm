@@ -1522,6 +1522,37 @@ Query Parameters:
 `tickets`/`changes`/`incidents`/`articles` 这类领域名别名，也不再嵌套重复的 `pagination` 对象。
 消费方按 `data.items` 读取即可。
 
+### 不分页的列表
+
+后端确实不支持分页的列表（去重后的分类、按日期区间的全量聚合）**只返回 `{items, total}`**，
+不得伪造 `page`/`pageSize`/`totalPages` 让调用方以为存在分页协议。静态门禁 5.10
+（`scripts/static-gates/check-list-envelope.sh`，已在 backend-ci 执行）锁死这条边界：
+带分页字段的响应体必须有 `items` 键。当前实例：
+
+| 接口 | `data` 形状 | 说明 |
+|------|------------|------|
+| `GET /api/v1/known-errors/categories` | `{items: string[], total}` | 去重后的全量分类，无分页 |
+| `GET /api/v1/known-errors/stats` | 聚合计数对象 | 不是列表，因此不带任何分页字段 |
+| `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
+| `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
+| `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |
+
+### MSP 报表的口径与限制
+
+两个报表接口的响应行是 `MSPCustomerReportResponse` / `MSPPerformanceReportResponse`：
+`{mspTenantId, dateFrom?, dateTo?, totalTickets, statusSummary}` 与
+`{mspTenantId, dateFrom?, dateTo?, totalTickets, resolvedTickets, avgResolutionHours}`。
+
+- `startDate`/`endDate`（camelCase，`YYYY-MM-DD`）为必填；snake_case 变体不再被读取，缺参是 400/1001。
+- 聚合范围**只来自认证上下文的租户**（`mspTenantId` 即调用者租户），不接受 `customerTenantId` 过滤；
+  `mspUserId`（按员工看绩效）从未实现，现在发送该参数会返回 400 并说明原因，而不是被静默忽略后
+  返回一份租户级汇总。
+- 报表**未按被服务的客户租户分组**，一次只产出一行汇总。这是已记录的功能缺口，
+  见 `plans/edge-feature-stability-audit-2026-10-02.md` 行 2d；前端已删除后端从不返回的
+  `customerName`/`slaComplianceRate` 等虚构列。
+- `GET /api/v1/msp/customers/:customerTenantId/tickets` 的 `total` 是该客户租户（叠加 `status`
+  过滤）的全量计数，不再用当前页长度冒充；元素统一过 `TicketResponse` DTO。
+
 ## 排序
 
 部分列表接口支持排序：

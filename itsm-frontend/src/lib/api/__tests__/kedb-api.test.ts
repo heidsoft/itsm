@@ -77,19 +77,21 @@ describe('KEDBApi', () => {
   });
 
   describe('searchKnownErrors', () => {
-    it('should search known errors', async () => {
-      mockGet.mockResolvedValue({ knownErrors: [], total: 0 });
-      await KEDBApi.searchKnownErrors('dns');
+    it('should search known errors with the standard list envelope', async () => {
+      const envelope = { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+      mockGet.mockResolvedValue(envelope);
+      const result = await KEDBApi.searchKnownErrors('dns');
       expect(mockGet).toHaveBeenCalledWith('/api/v1/known-errors/search', { q: 'dns' });
+      expect(result.items).toEqual([]);
     });
   });
 
   describe('getCategories', () => {
-    it('should get categories', async () => {
-      mockGet.mockResolvedValue({ categories: ['network', 'application'] });
+    it('should get categories from the items envelope', async () => {
+      mockGet.mockResolvedValue({ items: ['network', 'application'], total: 2 });
       const result = await KEDBApi.getCategories();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/known-errors/categories');
-      expect(result.categories).toContain('network');
+      expect(result.items).toContain('network');
     });
   });
 

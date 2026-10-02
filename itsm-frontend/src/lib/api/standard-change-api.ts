@@ -70,12 +70,13 @@ export interface InstantiateStandardChangeRequest {
   affectedCis?: string[];
 }
 
-// Standard Change 列表响应
+// Standard Change 列表响应：后端 GET /api/v1/standard-changes 返回标准列表信封。
 export interface StandardChangeListResponse {
+  items: StandardChange[];
   total: number;
-  templates: StandardChange[];
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 // Standard Change API 类

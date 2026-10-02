@@ -774,11 +774,11 @@ func (h *Handler) GetTicketTemplates(c *gin.Context) {
 	for _, tmpl := range templates {
 		normalized = append(normalized, normalizeTemplate(tmpl))
 	}
+	// 模板列表不分页，因此信封只带 items + total；历史实现伪造了 page=1、
+	// pageSize=len(templates)，让前端以为存在一个不存在的分页协议。
 	common.Success(c, gin.H{
-		"templates": normalized,
-		"total":     len(templates),
-		"page":      1,
-		"pageSize":  len(templates),
+		"items": normalized,
+		"total": len(normalized),
 	})
 }
 

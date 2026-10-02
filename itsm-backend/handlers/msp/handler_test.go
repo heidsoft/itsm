@@ -22,8 +22,8 @@ import (
 )
 
 // 契约：GET /api/v1/msp/reports/{customers,performance} 的查询参数是 camelCase
-// startDate / endDate / mspUserId。历史实现读取 snake_case，而前端 msp-api.ts
-// 一直按 camelCase 发送，导致两个报表接口在真实页面上永远命中「必填参数缺失」。
+// startDate / endDate，聚合租户只来自认证上下文。历史实现读取 snake_case，而前端
+// msp-api.ts 一直按 camelCase 发送，导致两个报表接口在真实页面上永远命中「必填参数缺失」。
 //
 // 同时覆盖 MSP 上下文缺失时的失败语义：必须 fail closed 返回 403，
 // 而不是丢弃 exists 标志后直接解引用空指针。
@@ -57,7 +57,7 @@ func newMSPTestRouter(t *testing.T, client *ent.Client, userID int, mspCtx *midd
 }
 
 // seedTicket 在 tenantID 下创建一张 createdAt 时间的工单。
-// 报表服务按 tenant 维度聚合，因此需要 mspUserId == tenantID 才能命中这批数据。
+// 报表服务按认证上下文里的 tenant_id 聚合，fixture 必须让工单落在调用者租户内。
 func seedTicket(t *testing.T, client *ent.Client, tenantID, requesterID int, number string, createdAt time.Time) {
 	t.Helper()
 	_, err := client.Ticket.Create().
@@ -88,12 +88,12 @@ func reportTotalTickets(t *testing.T, body map[string]interface{}) int {
 	t.Helper()
 	data, ok := body["data"].(map[string]interface{})
 	require.True(t, ok, "data 必须是报表对象，实际响应 %v", body)
-	reports, ok := data["reports"].([]interface{})
-	require.True(t, ok, "reports 必须是数组，实际响应 %v", data)
-	require.Len(t, reports, 1)
-	item, ok := reports[0].(map[string]interface{})
+	items, ok := data["items"].([]interface{})
+	require.True(t, ok, "items 必须是报表数组，实际响应 %v", data)
+	require.Len(t, items, 1)
+	item, ok := items[0].(map[string]interface{})
 	require.True(t, ok)
-	count, ok := item["total_tickets"].(float64)
+	count, ok := item["totalTickets"].(float64)
 	require.True(t, ok, "报表缺少聚合计数字段，实际 %v", item)
 	return int(count)
 }
@@ -140,35 +140,92 @@ func TestGetPerformanceReports_HonorsCamelCaseDateRange(t *testing.T) {
 	seedTicket(t, client, tenant.ID, user.ID, "PERF-IN-2", time.Date(2024, 4, 6, 0, 0, 0, 0, time.UTC))
 	seedTicket(t, client, tenant.ID, user.ID, "PERF-OUT-1", time.Date(2025, 9, 9, 0, 0, 0, 0, time.UTC))
 
-	r := newMSPTestRouter(t, client, user.ID, nil)
+	mspCtx := &middleware.MSPContext{IsMSP: true, MSPUserID: user.ID}
+	r := newMSPTestRouter(t, client, user.ID, mspCtx)
 
-	status, body := doMSPRequest(t, r,
-		"/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31&mspUserId="+strconv.Itoa(tenant.ID))
+	// 修复前：handler 读 start_date/end_date，camelCase 请求恒返回 1001。
+	status, body := doMSPRequest(t, r, "/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusOK, status, body["message"])
 	assert.Equal(t, float64(0), body["code"])
 	// 日期区间必须真正下推到查询：区间外的工单不得计入。
 	assert.Equal(t, 2, reportTotalTickets(t, body))
 
-	status, body = doMSPRequest(t, r,
-		"/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
+	// MSP 上下文缺失仍按授权失败 fail closed（与修复前一致，不放宽鉴权面）。
+	r = newMSPTestRouter(t, client, user.ID, nil)
+	status, body = doMSPRequest(t, r, "/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusForbidden, status, body["message"])
 	assert.Equal(t, float64(2003), body["code"])
-	assert.Contains(t, body["message"], "非MSP用户",
-		"缺少 mspUserId 时回落到 MSP 上下文，snake_case 变体不得被识别")
+	assert.Contains(t, body["message"], "非MSP用户")
 }
 
-func TestGetPerformanceReports_MSPUserIDMustBeNumeric(t *testing.T) {
+func TestGetPerformanceReports_MSPUserIDFilterIsRejected(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:msp_report_perf_badid?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
 
-	r := newMSPTestRouter(t, client, 1, nil)
-	status, body := doMSPRequest(t, r,
-		"/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31&mspUserId=abc")
+	ctx := context.Background()
+	tenant, err := client.Tenant.Create().SetName("MSP-C").SetCode("msp-c").SetType("msp").Save(ctx)
+	require.NoError(t, err)
+	user, err := client.User.Create().
+		SetUsername("msp_perf_c").SetEmail("msp-c@example.com").SetName("MSP Perf C").
+		SetPasswordHash("hash").SetTenantID(tenant.ID).Save(ctx)
+	require.NoError(t, err)
 
-	require.Equal(t, http.StatusBadRequest, status)
-	assert.Equal(t, float64(1001), body["code"])
-	// 错误提示必须点名 camelCase 参数；历史实现提示 msp_user_id，前端无法对应。
-	assert.Contains(t, body["message"], "mspUserId")
+	r := newMSPTestRouter(t, client, user.ID, &middleware.MSPContext{IsMSP: true, MSPUserID: user.ID})
+
+	// mspUserId 表达的「按员工过滤绩效」从未实现：旧实现把这个 user ID 当成
+	// tenant_id 传给查询。现在无论传什么值都显式 400，不得静默忽略后返回租户级汇总。
+	for _, value := range []string{"abc", strconv.Itoa(user.ID)} {
+		status, body := doMSPRequest(t, r,
+			"/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31&mspUserId="+value)
+		require.Equal(t, http.StatusBadRequest, status, "%s 返回 %v", value, body)
+		assert.Equal(t, float64(1001), body["code"])
+		// 错误提示必须点名 camelCase 参数并说明原因，不能让调用方以为值格式有问题而已。
+		assert.Contains(t, body["message"], "mspUserId")
+		assert.Contains(t, body["message"], "未实现")
+	}
+}
+
+// 报表聚合维度是 tenant，租户只能来自认证上下文。修复前 handler 把认证上下文里的
+// user_id 传给了按 tenant_id 过滤的服务方法，于是调用者读到的是「ID 恰好等于自己
+// user_id 的那个租户」的工单数——这是一份跨租户读数。
+func TestMSPReports_TenantScopeComesFromAuthContextNotUserID(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:msp_report_tenant_scope?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	ctx := context.Background()
+	ownTenant, err := client.Tenant.Create().SetName("MSP-Own").SetCode("msp-own").SetType("msp").Save(ctx)
+	require.NoError(t, err)
+	foreignTenant, err := client.Tenant.Create().SetName("Other").SetCode("other").SetType("customer").Save(ctx)
+	require.NoError(t, err)
+
+	// 先建一个不属于本租户的用户占住 ID 1，再建自己的调用者，
+	// 使 callerUserID == foreignTenant.ID，正好命中旧实现的混淆条件。
+	_, err = client.User.Create().
+		SetUsername("other_user").SetEmail("other@example.com").SetName("Other").
+		SetPasswordHash("hash").SetTenantID(foreignTenant.ID).Save(ctx)
+	require.NoError(t, err)
+	caller, err := client.User.Create().
+		SetUsername("msp_caller").SetEmail("msp-own@example.com").SetName("MSP Caller").
+		SetPasswordHash("hash").SetTenantID(ownTenant.ID).Save(ctx)
+	require.NoError(t, err)
+	require.Equal(t, foreignTenant.ID, caller.ID, "fixture 需要 user_id 与 foreign tenant id 相等")
+
+	seedTicket(t, client, ownTenant.ID, caller.ID, "OWN-1", time.Date(2024, 3, 5, 0, 0, 0, 0, time.UTC))
+	seedTicket(t, client, foreignTenant.ID, 1, "FOR-1", time.Date(2024, 3, 5, 0, 0, 0, 0, time.UTC))
+	seedTicket(t, client, foreignTenant.ID, 1, "FOR-2", time.Date(2024, 4, 5, 0, 0, 0, 0, time.UTC))
+
+	// 认证上下文：tenant = ownTenant（ID 1），user = caller（ID 2 == foreignTenant.ID）。
+	r := newMSPTestRouter(t, client, caller.ID, &middleware.MSPContext{IsMSP: true, MSPUserID: caller.ID})
+
+	for _, path := range []string{
+		"/api/v1/msp/reports/customers?startDate=2024-01-01&endDate=2024-12-31",
+		"/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31",
+	} {
+		status, body := doMSPRequest(t, r, path)
+		require.Equal(t, http.StatusOK, status, "%s 返回 %v", path, body)
+		// 只统计本租户的 1 张工单；修复前这里读到的是 foreign tenant 的 2 张。
+		assert.Equal(t, 1, reportTotalTickets(t, body), "%s 的聚合范围必须是认证租户", path)
+	}
 }
 
 // ==================== MSP context 缺失不得 panic ====================

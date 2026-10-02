@@ -10,6 +10,7 @@ jest.mock('@/lib/api/msp-api', () => ({
     getCustomerTickets: jest.fn(),
     assignTechnician: jest.fn(),
     getCustomerReports: jest.fn(),
+    getMSPPerformanceReports: jest.fn(),
     isMSPUser: jest.fn(),
     getMSPContext: jest.fn(),
     getAllocationHistory: jest.fn(),
@@ -23,6 +24,7 @@ const mockGetCustomers = MSPAPI.getCustomers as jest.Mock;
 const mockGetCustomerTickets = MSPAPI.getCustomerTickets as jest.Mock;
 const mockAssignTechnician = MSPAPI.assignTechnician as jest.Mock;
 const mockGetCustomerReports = MSPAPI.getCustomerReports as jest.Mock;
+const mockGetMSPPerformanceReports = MSPAPI.getMSPPerformanceReports as jest.Mock;
 const mockIsMSPUser = MSPAPI.isMSPUser as jest.Mock;
 const mockGetMSPContext = MSPAPI.getMSPContext as jest.Mock;
 const mockGetAllocationHistory = MSPAPI.getAllocationHistory as jest.Mock;
@@ -108,32 +110,26 @@ describe('MSPService', () => {
   });
 
   describe('getCustomerTickets', () => {
-    it('should return customer tickets', async () => {
-      const tickets = [{ id: 1, title: 'Ticket 1', status: 'open' }];
-      mockGetCustomerTickets.mockResolvedValue({ tickets, total: 1 });
+    it('should pass through the standard list envelope', async () => {
+      const envelope = {
+        items: [{ id: 1, ticketNumber: 'T-1', title: 'Ticket 1', status: 'open' }],
+        total: 12,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      };
+      mockGetCustomerTickets.mockResolvedValue(envelope);
 
       const result = await MSPService.getCustomerTickets(20, { status: 'open' });
 
       expect(mockGetCustomerTickets).toHaveBeenCalledWith(20, { status: 'open' });
-      expect(result.tickets).toEqual(tickets);
-      expect(result.total).toBe(1);
+      expect(result).toEqual(envelope);
     });
 
-    it('should handle non-array tickets response', async () => {
-      const ticket = { id: 1, title: 'Single Ticket', status: 'open' };
-      mockGetCustomerTickets.mockResolvedValue({ tickets: ticket, total: 1 });
+    it('should propagate errors', async () => {
+      mockGetCustomerTickets.mockRejectedValue(new Error('Tickets unavailable'));
 
-      const result = await MSPService.getCustomerTickets(20);
-
-      expect(result.tickets).toEqual([ticket]);
-    });
-
-    it('should return empty when no data', async () => {
-      mockGetCustomerTickets.mockResolvedValue(null);
-
-      const result = await MSPService.getCustomerTickets(20);
-
-      expect(result).toEqual({ tickets: [], total: 0 });
+      await expect(MSPService.getCustomerTickets(20)).rejects.toThrow('Tickets unavailable');
     });
   });
 
@@ -155,21 +151,41 @@ describe('MSPService', () => {
   });
 
   describe('getCustomerReports', () => {
-    it('should return customer reports', async () => {
-      const reports = [{ customerId: 1, ticketCount: 5 }];
-      mockGetCustomerReports.mockResolvedValue(reports);
+    it('should unwrap the items envelope', async () => {
+      const items = [
+        {
+          mspTenantId: 7,
+          dateFrom: '2024-01-01T00:00:00Z',
+          dateTo: '2024-01-31T00:00:00Z',
+          totalTickets: 5,
+          statusSummary: { open: 2, resolved: 3 },
+        },
+      ];
+      mockGetCustomerReports.mockResolvedValue({ items, total: 1 });
 
       const result = await MSPService.getCustomerReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
 
-      expect(result).toEqual(reports);
+      expect(mockGetCustomerReports).toHaveBeenCalledWith({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      expect(result).toEqual(items);
     });
+  });
 
-    it('should return empty array when no data', async () => {
-      mockGetCustomerReports.mockResolvedValue(null);
+  describe('getPerformanceReports', () => {
+    it('should unwrap the items envelope', async () => {
+      const items = [
+        {
+          mspTenantId: 7,
+          totalTickets: 5,
+          resolvedTickets: 3,
+          avgResolutionHours: 12.5,
+        },
+      ];
+      mockGetMSPPerformanceReports.mockResolvedValue({ items, total: 1 });
 
-      const result = await MSPService.getCustomerReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      const result = await MSPService.getPerformanceReports({ startDate: '2024-01-01', endDate: '2024-01-31' });
 
-      expect(result).toEqual([]);
+      expect(mockGetMSPPerformanceReports).toHaveBeenCalledWith({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      expect(result).toEqual(items);
     });
   });
 

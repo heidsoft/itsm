@@ -95,12 +95,8 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		templates = append(templates, *h.toResponse(sc))
 	}
 
-	common.Success(c, gin.H{
-		"templates": templates,
-		"total":     total,
-		"page":      page,
-		"pageSize":  pageSize,
-	})
+	// 信封统一为 items/total/page/pageSize/totalPages，不再返回 templates 键。
+	common.SuccessWithList(c, templates, total, page, pageSize)
 }
 
 func (h *Handler) GetStandardChange(c *gin.Context) {

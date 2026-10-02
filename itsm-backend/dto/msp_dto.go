@@ -84,6 +84,27 @@ type AssignMSPTechnicianRequest struct {
 	AssignerUserID   int `json:"assignerUserId,omitempty"`
 }
 
+// MSPCustomerReportResponse GET /api/v1/msp/reports/customers 的汇总行。
+// 历史实现返回 snake_case map（total_tickets / status_summary / date_from），
+// 前端类型却声明了 customerName、slaComplianceRate 等后端从未产出的字段。
+type MSPCustomerReportResponse struct {
+	MSPTenantID   int            `json:"mspTenantId"`
+	DateFrom      *time.Time     `json:"dateFrom,omitempty"`
+	DateTo        *time.Time     `json:"dateTo,omitempty"`
+	TotalTickets  int            `json:"totalTickets"`
+	StatusSummary map[string]int `json:"statusSummary"`
+}
+
+// MSPPerformanceReportResponse GET /api/v1/msp/reports/performance 的汇总行。
+type MSPPerformanceReportResponse struct {
+	MSPTenantID        int        `json:"mspTenantId"`
+	DateFrom           *time.Time `json:"dateFrom,omitempty"`
+	DateTo             *time.Time `json:"dateTo,omitempty"`
+	TotalTickets       int        `json:"totalTickets"`
+	ResolvedTickets    int        `json:"resolvedTickets"`
+	AvgResolutionHours float64    `json:"avgResolutionHours"`
+}
+
 // ==================== MSP 上下文 DTO ====================
 
 // MSPContext MSP 访问上下文

@@ -7,7 +7,8 @@ import type {
   MSPAllocationListResponse,
   MSPCustomersResponse,
   MSPCustomerTicketsResponse,
-  MSPCustomerReport,
+  MSPCustomerReportListResponse,
+  MSPPerformanceReportListResponse,
   MSPAllocationHistory,
   MSPContext,
 } from '@/types/msp';
@@ -82,21 +83,23 @@ export class MSPAPI {
   // ==================== MSP 报表 ====================
 
   /**
-   * 获取客户服务报表
+   * 获取客户服务报表（按调用者租户的区间聚合，不支持分页）。
+   * 契约只接受 startDate/endDate：按客户租户或按员工分组从未实现。
    */
   static async getCustomerReports(
-    params: { startDate: string; endDate: string; customerTenantId?: number }
-  ): Promise<MSPCustomerReport[]> {
-    return httpClient.get<MSPCustomerReport[]>('/api/v1/msp/reports/customers', params);
+    params: { startDate: string; endDate: string }
+  ): Promise<MSPCustomerReportListResponse> {
+    return httpClient.get<MSPCustomerReportListResponse>('/api/v1/msp/reports/customers', params);
   }
 
   /**
-   * 获取 MSP 员工绩效报表
+   * 获取绩效报表（按调用者租户的区间聚合，不支持分页）。
+   * 发送 mspUserId 会被后端拒绝（400），不是被忽略。
    */
   static async getMSPPerformanceReports(
-    params: { startDate: string; endDate: string; mspUserId?: number }
-  ): Promise<MSPCustomerReport[]> {
-    return httpClient.get<MSPCustomerReport[]>('/api/v1/msp/reports/performance', params);
+    params: { startDate: string; endDate: string }
+  ): Promise<MSPPerformanceReportListResponse> {
+    return httpClient.get<MSPPerformanceReportListResponse>('/api/v1/msp/reports/performance', params);
   }
 
   // ==================== 辅助方法 ====================

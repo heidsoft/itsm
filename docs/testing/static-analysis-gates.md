@@ -2,13 +2,13 @@
 
 > Status: current
 
-本文档定义了 v1.1 收尾阶段 (Stage 5) 的 5 条静态门禁。每条门禁对应一个
-shell 脚本，位于 `scripts/static-gates/`，由 `scripts/static-gates/run-all.sh`
-统一调用。
+本文档定义了 Stage 5 的静态门禁。每条门禁对应一个
+shell 脚本，位于 `scripts/static-gates/`；`run-all.sh` 只聚合后端契约类门禁
+（5.1–5.5 与 5.10），前端门禁 5.6–5.9 需单独调用对应脚本，见「接入位置」。
 
 | # | 规则 | 脚本 | 状态 | 阻断构建 |
 |---|------|------|------|---------|
-| 5.1 | 禁止 `c.JSON(...)` 绕过 `common.Success/Fail` | `check-bare-json.sh` | **HARD** | ✅ |
+| 5.1 | 禁止 `c.JSON(...)` 绕过 `common.Success/Fail` | `check-bare-json.sh` | **HARD** | ❌（见下） |
 | 5.2 | `common.Fail` 必须把 2002/2004/2005 映射到 401/403/404 | `check-http-status-mapping.sh` | **HARD** | ✅ |
 | 5.3 | 前端禁用 raw `fetch` / `axios`，统一走 BaseApi | `check-raw-fetch.sh` | ADVISORY | ❌ |
 | 5.4 | `service` 层 `go func` 内不得裸用 `context.Background()` | `check-context-bg.sh` | ADVISORY | ❌ |
@@ -17,6 +17,7 @@ shell 脚本，位于 `scripts/static-gates/`，由 `scripts/static-gates/run-al
 | 5.7 | 主要路由组必须具备 `loading.tsx` / `error.tsx` / `not-found.tsx` | `check-next-route-states.sh` | ADVISORY | ❌ |
 | 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh` | ADVISORY | ❌ |
 | 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh` | ADVISORY | ❌ |
+| 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
 
 > 5.6–5.9 迁移自 [`docs/review/frontend-ux-review-2026-06-19.md`](../review/frontend-ux-review-2026-06-19.md) 与 [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md)；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
 
@@ -30,15 +31,22 @@ shell 脚本，位于 `scripts/static-gates/`，由 `scripts/static-gates/run-al
 
 ### CI
 
-在 `.github/workflows/backend-ci.yml` 与 `frontend-ci.yml` 的最后一步
-加入：
+2026-10-02 实测（`grep -rn "static-gates" .github/workflows/`）：**只有 5.10 真正在 CI 里跑**，
+接在 `.github/workflows/backend-ci.yml` 的 lint job：
 
 ```yaml
-- name: Static analysis gates
-  run: ./scripts/static-gates/run-all.sh
+- name: List envelope gate (handlers must use items)
+  run: |
+    bash scripts/static-gates/check-list-envelope.sh
 ```
 
-> 当前 5.3 / 5.4 / 5.5 为 advisory（exit 0），日志中可见违规命中；当历史
+`run-all.sh` 目前**没有任何 workflow 调用**，因此 5.1–5.5 只在本地执行。这直接掩盖了一条
+已存在的 HARD 门禁违规：`check-bare-json.sh`（5.1）实测有 6 处命中（`handlers/dingtalk/handler.go`
+3 处、`handlers/wecom/handler.go` 2 处、`handlers/approval/routes.go` 1 处），本地 `run-all.sh`
+以退出码 1 结束，CI 却是绿的。把 `run-all.sh` 接进 CI 之前，需要先处置这 6 处（钉钉/企业微信
+是外部回调协议，响应形状由对方规定，属于 5.1 的合理豁免面，应显式登记而不是继续裸用）。
+
+> 5.3 / 5.4 / 5.5 为 advisory（exit 0），日志中可见违规命中；当历史
 > 命中全部迁移完成后会切换为硬门禁（exit 1）。
 
 ---
@@ -53,7 +61,8 @@ common.SuccessWithList`，确保 `{code, message, data}` 三元组与 HTTP 状�
 `itsm-backend/controller` 下的 `.go` 文件（排除 `_test.go` / `_mock.go`），
 匹配 `c.JSON(<digit>, …)`。
 
-**当前状态**：✅ 通过。最近一次扫描未发现违规。
+**当前状态**：❌ 失败（2026-10-02 实测 6 处命中，见「接入位置 / CI」）。本门禁标记为
+HARD，但因 `run-all.sh` 未接入 CI，实际不阻断任何合并。
 
 **修复示例**：
 
@@ -286,6 +295,45 @@ const nextConfig = {
 豁免：测试夹具必须含 `uniqueTestID()`、`uuid`、`fmt.Sprintf` 或 `time.Now()` 等唯一化逻辑。
 
 **当前状态**：⚠️ advisory。F-6..F-9 已在 2026-08-12 修复，但守门规则缺失；本门禁防止未来再次引入同类硬编码。
+
+---
+
+## 5.10 — handler 列表信封的集合键必须是 items
+
+**目的**：5.5 只看 `dto/*ListResponse` 结构体，管不到 handler 里就地拼的
+`gin.H{...}`。E2-3 盘点时 `handlers/` 下有一批响应把集合放在领域键
+（`tickets`/`reports`/`instances`/`logs`/`templates`/`notifications`/`categories`…）
+下，前端只能按每种别名取值；更糟的是几个**不分页**的接口为了凑形状伪造
+`page: 1, pageSize: len(list)`，调用方据此以为存在一套不存在的分页协议。
+本门禁把「分页字段与 `items` 键必须同生同灭」变成硬约束。
+
+**实现**：解析 `itsm-backend/handlers/**/*.go`（排除 `_test.go`）里每个
+`gin.H{...}` 字面量块，提取其中的键名后判定两条规则：
+
+1. 块内出现 `page` / `pageSize` / `totalPages` 但没有 `items` → 违规；
+2. 块内出现领域列表键黑名单（`tickets incidents problems changes releases reports
+   templates notifications instances logs records allocations customers users tasks
+   comments`）且同时带分页字段 → 违规。
+
+**当前状态**：✅ 通过，且已在 CI（backend-ci lint job）执行。新增于 2026-10-02，
+引入当轮即命中 `handlers/known_error` 的统计接口伪造分页与 `categories` 别名，
+顺带挖出 Ent 统计查询 AND 串联导致 6 个计数器恒为 0 的真实缺陷。
+
+**修复示例**：
+
+```go
+// 反例 1：分页信封缺 items
+common.Success(c, gin.H{"tickets": tickets, "total": total, "page": page, "pageSize": pageSize})
+
+// 反例 2：不分页的列表伪造分页
+common.Success(c, gin.H{"templates": normalized, "total": len(normalized), "page": 1, "pageSize": len(normalized)})
+
+// 正例 1：分页列表走统一构造
+common.SuccessWithList(c, tickets, total, page, pageSize)
+
+// 正例 2：全量列表只带诚实的子集
+common.Success(c, gin.H{"items": normalized, "total": len(normalized)})
+```
 
 ---
 

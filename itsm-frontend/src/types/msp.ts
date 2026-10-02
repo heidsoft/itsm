@@ -1,3 +1,5 @@
+import type { Ticket as ApiTicket } from '@/lib/api/ticket-api';
+
 /**
  * MSP (Managed Service Provider) 类型定义
  */
@@ -56,15 +58,35 @@ export interface MSPContext {
   allowedCustomers: number[];
 }
 
-// MSP 报表数据
+// MSP 客户服务报表行（对应后端 dto.MSPCustomerReportResponse）。
+// 后端按 MSP 自身租户做区间聚合，只产出一行；不含客户名称与 SLA 合规率。
 export interface MSPCustomerReport {
-  customerTenantId: number;
-  customerName: string;
-  period: string;
+  mspTenantId: number;
+  dateFrom?: string;
+  dateTo?: string;
+  totalTickets: number;
+  statusSummary: Record<string, number>;
+}
+
+// MSP 绩效报表行（对应后端 dto.MSPPerformanceReportResponse）
+export interface MSPPerformanceReport {
+  mspTenantId: number;
+  dateFrom?: string;
+  dateTo?: string;
   totalTickets: number;
   resolvedTickets: number;
-  mspHandlingTimeAvg: number; // 小时
-  slaComplianceRate: number; // 0-1
+  avgResolutionHours: number;
+}
+
+// 报表接口不支持分页，信封只有 items + total
+export interface MSPCustomerReportListResponse {
+  items: MSPCustomerReport[];
+  total: number;
+}
+
+export interface MSPPerformanceReportListResponse {
+  items: MSPPerformanceReport[];
+  total: number;
 }
 
 // MSP 分配历史
@@ -97,21 +119,14 @@ export interface MSPCustomersResponse {
   total: number;
 }
 
+// GET /api/v1/msp/customers/:id/tickets 使用后端标准列表信封，
+// item 与工单域 dto.TicketResponse 完全一致。
 export interface MSPCustomerTicketsResponse {
-  tickets: TicketMSPInfo & {
-    id: number;
-    title: string;
-    status: string;
-    assigneeId?: number;
-    assigneeName?: string;
-    createdAt: string;
-    tenant: {
-      id: number;
-      code: string;
-      name: string;
-    };
-  };
+  items: ApiTicket[];
   total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // 扩展 Tenant 类型

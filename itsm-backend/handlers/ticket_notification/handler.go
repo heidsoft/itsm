@@ -128,12 +128,10 @@ func (h *Handler) ListUserNotifications(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, gin.H{
-		"notifications": notifications,
-		"total":         total,
-		"page":          page,
-		"pageSize":      pageSize,
-	})
+	// 信封统一为 items/total/page/pageSize/totalPages。
+	// 注意：本 handler 包当前没有任何 Router 接线（真实入口是 handlers/notification），
+	// 删除该死代码属于 E3 批次，见 plans/edge-feature-stability-audit-2026-10-02.md。
+	common.SuccessWithList(c, notifications, total, page, pageSize)
 }
 
 // MarkNotificationRead 标记通知为已读

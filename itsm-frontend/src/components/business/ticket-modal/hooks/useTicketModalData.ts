@@ -39,7 +39,7 @@ export function useTicketModalData(enabled = true): TicketModalDataState {
         }))
       );
       setTemplates(
-        (templateResponse.templates ?? []).map(template => ({
+        (templateResponse.items ?? []).map(template => ({
           id: template.id,
           name: template.name,
           description: template.description,

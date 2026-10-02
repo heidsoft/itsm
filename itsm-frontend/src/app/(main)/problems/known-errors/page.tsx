@@ -105,7 +105,7 @@ export default function KnownErrorsPage() {
   const fetchCategories = async () => {
     try {
       const response = await KEDBApi.getCategories();
-      setCategories(response.categories || []);
+      setCategories(response.items);
     } catch (error) {
       console.error('获取分类失败', error);
     }

@@ -135,36 +135,47 @@ type Stats struct {
 }
 
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
-	baseQuery := s.client.KnownError.Query().Where(entknownerror.TenantID(tenantID))
-	total, err := baseQuery.Count(ctx)
+	// Ent 的 Where 会就地追加谓词：历史实现把 8 个统计串在同一条 query 上，
+	// 导致后一个条件必须同时满足前面所有 status/severity，除 total/active 外恒为 0。
+	// 每个维度都必须从租户基线 Clone() 起算。
+	base := s.client.KnownError.Query().Where(entknownerror.TenantID(tenantID))
+
+	total, err := base.Clone().Count(ctx)
 	if err != nil {
 		return nil, err
 	}
-	active, err := baseQuery.Where(entknownerror.Status("active")).Count(ctx)
+	countStatus := func(status string) (int, error) {
+		return base.Clone().Where(entknownerror.Status(status)).Count(ctx)
+	}
+	countSeverity := func(severity string) (int, error) {
+		return base.Clone().Where(entknownerror.Severity(severity)).Count(ctx)
+	}
+
+	active, err := countStatus("active")
 	if err != nil {
 		return nil, err
 	}
-	resolved, err := baseQuery.Where(entknownerror.Status("resolved")).Count(ctx)
+	resolved, err := countStatus("resolved")
 	if err != nil {
 		return nil, err
 	}
-	deprecated, err := baseQuery.Where(entknownerror.Status("deprecated")).Count(ctx)
+	deprecated, err := countStatus("deprecated")
 	if err != nil {
 		return nil, err
 	}
-	critical, err := baseQuery.Where(entknownerror.Severity("critical")).Count(ctx)
+	critical, err := countSeverity("critical")
 	if err != nil {
 		return nil, err
 	}
-	high, err := baseQuery.Where(entknownerror.Severity("high")).Count(ctx)
+	high, err := countSeverity("high")
 	if err != nil {
 		return nil, err
 	}
-	medium, err := baseQuery.Where(entknownerror.Severity("medium")).Count(ctx)
+	medium, err := countSeverity("medium")
 	if err != nil {
 		return nil, err
 	}
-	low, err := baseQuery.Where(entknownerror.Severity("low")).Count(ctx)
+	low, err := countSeverity("low")
 	if err != nil {
 		return nil, err
 	}

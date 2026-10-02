@@ -89,7 +89,7 @@ export default function StandardChangesPage() {
         search: search || undefined,
         activeOnly: true,
       });
-      setTemplates(data.templates);
+      setTemplates(data.items);
       setTotal(data.total);
     } catch (error) {
       console.error('Failed to fetch templates:', error);

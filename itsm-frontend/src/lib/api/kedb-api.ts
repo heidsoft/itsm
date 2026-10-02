@@ -61,15 +61,16 @@ export interface KEDBResponse {
   updatedAt: string;
 }
 
-// KEDB 列表响应
+// KEDB 列表响应（后端 common.SuccessWithList 标准信封）
 export interface KEDBListResponse {
   items: KEDBResponse[];
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
-// KEDB 统计响应
+// KEDB 统计响应：聚合计数对象，不带分页字段
 export interface KEDBStatsResponse {
   total: number;
   active: number;
@@ -120,14 +121,14 @@ export class KEDBApi {
     return httpClient.get<KEDBStatsResponse>('/api/v1/known-errors/stats');
   }
 
-  // 搜索已知错误
-  static async searchKnownErrors(query: string): Promise<{ knownErrors: KEDBResponse[]; total: number }> {
-    return httpClient.get<{ knownErrors: KEDBResponse[]; total: number }>('/api/v1/known-errors/search', { q: query });
+  // 搜索已知错误（与列表同一标准信封）
+  static async searchKnownErrors(query: string): Promise<KEDBListResponse> {
+    return httpClient.get<KEDBListResponse>('/api/v1/known-errors/search', { q: query });
   }
 
-  // 获取分类列表
-  static async getCategories(): Promise<{ categories: string[] }> {
-    return httpClient.get<{ categories: string[] }>('/api/v1/known-errors/categories');
+  // 获取分类列表（全量，不分页）
+  static async getCategories(): Promise<{ items: string[]; total: number }> {
+    return httpClient.get<{ items: string[]; total: number }>('/api/v1/known-errors/categories');
   }
 
   // 晋升为正式已知错误

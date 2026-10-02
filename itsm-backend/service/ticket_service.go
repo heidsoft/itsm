@@ -2572,14 +2572,20 @@ func (s *TicketService) parseExcel(data []byte) ([]map[string]interface{}, error
 
 // ==================== MSP 相关方法 ====================
 
-// GetCustomerTicketsForMSP 获取 MSP 视角下的客户工单
-func (s *TicketService) GetCustomerTicketsForMSP(ctx context.Context, userID, customerTenantID int, status *string, page, pageSize int) ([]*ticket.Ticket, error) {
+// GetCustomerTicketsForMSP 获取 MSP 视角下的客户工单。
+// 第二个返回值是该客户租户（叠加 status 过滤）的全量计数：分页信封的 total 必须是总量，
+// 历史实现只返回当前页列表，handler 只能用 len() 冒充 total。
+func (s *TicketService) GetCustomerTicketsForMSP(ctx context.Context, userID, customerTenantID int, status *string, page, pageSize int) ([]*ticket.Ticket, int, error) {
 	if s.client == nil {
-		return nil, fmt.Errorf("ent client not available for MSP query")
+		return nil, 0, fmt.Errorf("ent client not available for MSP query")
 	}
 	query := s.client.Ticket.Query().Where(entTicket.TenantIDEQ(customerTenantID))
 	if status != nil && *status != "" {
 		query = query.Where(entTicket.StatusEQ(*status))
+	}
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count customer tickets for MSP: %w", err)
 	}
 	if page > 0 && pageSize > 0 {
 		offset := (page - 1) * pageSize
@@ -2588,13 +2594,13 @@ func (s *TicketService) GetCustomerTicketsForMSP(ctx context.Context, userID, cu
 	query = query.Order(ent.Desc(entTicket.FieldCreatedAt))
 	ents, err := query.All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get customer tickets for MSP: %w", err)
+		return nil, 0, fmt.Errorf("failed to get customer tickets for MSP: %w", err)
 	}
 	result := make([]*ticket.Ticket, len(ents))
 	for i, e := range ents {
 		result[i] = s.entToDomain(e)
 	}
-	return result, nil
+	return result, total, nil
 }
 
 // AssignMSPTechnician 为工单分配 MSP 技术员
@@ -2667,8 +2673,12 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 	return updated, nil
 }
 
-// GetMSPCustomerReports 获取 MSP 客户报告
-func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspTenantID int, dateFrom, dateTo time.Time) ([]map[string]interface{}, error) {
+// GetMSPCustomerReports 获取 MSP 客户报告。
+//
+// 已知语义缺口（另见 plans/edge-feature-stability-audit-2026-10-02.md 行 2d）：本方法按
+// mspTenantID 聚合 MSP 自己租户下的工单，并没有按被服务的客户租户分组，因此一次只产出一行
+// 汇总。这里只统一字段契约（camelCase DTO），不改变统计口径。
+func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspTenantID int, dateFrom, dateTo time.Time) ([]*dto.MSPCustomerReportResponse, error) {
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for MSP reports")
 	}
@@ -2683,22 +2693,21 @@ func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspTenantID i
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MSP customer reports: %w", err)
 	}
-	reports := make([]map[string]interface{}, 0, len(tickets))
 	statusCount := make(map[string]int)
 	for _, t := range tickets {
 		statusCount[t.Status]++
 	}
-	reports = append(reports, map[string]interface{}{
-		"total_tickets":  len(tickets),
-		"status_summary": statusCount,
-		"date_from":      dateFrom,
-		"date_to":        dateTo,
-	})
-	return reports, nil
+	return []*dto.MSPCustomerReportResponse{{
+		MSPTenantID:   mspTenantID,
+		DateFrom:      reportTimePtr(dateFrom),
+		DateTo:        reportTimePtr(dateTo),
+		TotalTickets:  len(tickets),
+		StatusSummary: statusCount,
+	}}, nil
 }
 
-// GetMSPPerformanceReports 获取 MSP 性能报告
-func (s *TicketService) GetMSPPerformanceReports(ctx context.Context, mspTenantID int, dateFrom, dateTo time.Time) ([]map[string]interface{}, error) {
+// GetMSPPerformanceReports 获取 MSP 性能报告（口径限制同上，单行汇总）。
+func (s *TicketService) GetMSPPerformanceReports(ctx context.Context, mspTenantID int, dateFrom, dateTo time.Time) ([]*dto.MSPPerformanceReportResponse, error) {
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for MSP performance")
 	}
@@ -2727,14 +2736,20 @@ func (s *TicketService) GetMSPPerformanceReports(ctx context.Context, mspTenantI
 	if resolvedCount > 0 {
 		avgResolution = totalResolutionTime / time.Duration(resolvedCount)
 	}
-	return []map[string]interface{}{
-		{
-			"msp_tenant_id":       mspTenantID,
-			"total_tickets":       len(tickets),
-			"resolved_tickets":    resolvedCount,
-			"avg_resolution_time": avgResolution.Hours(),
-			"date_from":           dateFrom,
-			"date_to":             dateTo,
-		},
-	}, nil
+	return []*dto.MSPPerformanceReportResponse{{
+		MSPTenantID:        mspTenantID,
+		DateFrom:           reportTimePtr(dateFrom),
+		DateTo:             reportTimePtr(dateTo),
+		TotalTickets:       len(tickets),
+		ResolvedTickets:    resolvedCount,
+		AvgResolutionHours: avgResolution.Hours(),
+	}}, nil
+}
+
+// reportTimePtr 把零值时间映射为 nil，避免响应里出现 0001-01-01 这种伪日期。
+func reportTimePtr(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil
+	}
+	return &t
 }

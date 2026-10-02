@@ -57,8 +57,18 @@ describe('BPMNMonitoringApi', () => {
 
   describe('getProcessInstanceStatus', () => {
     it('should get instance status', async () => {
-      const expected = { instanceId: 'inst1', status: 'running', progress: 50 };
-      mockGet.mockResolvedValue({ data: expected });
+      const expected = {
+        processInstanceId: 'inst1',
+        status: 'running',
+        currentTask: '审批',
+        assignee: 'alice',
+        startTime: '2024-01-01T00:00:00Z',
+        progress: 50,
+        tenantId: 1,
+        estimatedDuration: 1000,
+        riskLevel: 'low',
+      };
+      mockGet.mockResolvedValue(expected);
       const res = await BPMNMonitoringApi.getProcessInstanceStatus('inst1');
       expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/instances/inst1/status');
       expect(res).toEqual(expected);
@@ -67,8 +77,8 @@ describe('BPMNMonitoringApi', () => {
 
   describe('listProcessInstancesStatus', () => {
     it('should list instances status with params', async () => {
-      const expected = { instances: [], total: 0, page: 1, pageSize: 10 };
-      mockGet.mockResolvedValue({ data: expected });
+      const expected = { items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 };
+      mockGet.mockResolvedValue(expected);
       const res = await BPMNMonitoringApi.listProcessInstancesStatus({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/bpmn/monitoring/instances/status', { page: '1', pageSize: '10' });
       expect(res).toEqual(expected);

@@ -96,8 +96,8 @@ export default function AuditLogsPage() {
         pageSize: pageSize,
       };
       const result = await BPMNDashboardApi.queryAuditLogs(request);
-      setLogs((result.list || []).map(normalizeAuditLog));
-      setTotal(result.total || 0);
+      setLogs((result.items ?? []).map(normalizeAuditLog));
+      setTotal(result.total);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
       setLogs([]);

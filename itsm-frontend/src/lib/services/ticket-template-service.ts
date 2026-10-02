@@ -44,11 +44,10 @@ export interface ListTemplatesParams {
   pageSize?: number;
 }
 
+// GET /api/v1/tickets/templates 是不分页的模板清单，信封只有 items + total。
 export interface TemplateListResponse {
-  templates: TicketTemplate[];
+  items: TicketTemplate[];
   total: number;
-  page: number;
-  pageSize: number;
 }
 
 class TicketTemplateService {

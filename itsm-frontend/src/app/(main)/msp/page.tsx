@@ -17,16 +17,18 @@ import {
   Select,
   Space,
   DatePicker,
-  message,
+  App,
 } from 'antd';
 import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { hasProductCapability } from '@/config/product-capabilities';
-import type { MSPAllocation, MSPCustomerReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
+import type { MSPAllocation, MSPCustomerReport, MSPPerformanceReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
+import type { Ticket as ApiTicket } from '@/lib/api/ticket-api';
 
 const { RangePicker } = DatePicker;
 
 export default function MSPDashboardPage() {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [isMSP, setIsMSP] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -38,11 +40,11 @@ export default function MSPDashboardPage() {
 
   // 客户工单状态
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
-  const [customerTickets, setCustomerTickets] = useState<any[]>([]);
+  const [customerTickets, setCustomerTickets] = useState<ApiTicket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
 
   // 绩效报表状态
-  const [performanceReports, setPerformanceReports] = useState<MSPCustomerReport[]>([]);
+  const [performanceReports, setPerformanceReports] = useState<MSPPerformanceReport[]>([]);
   const [perfLoading, setPerfLoading] = useState(false);
 
   // 分配历史状态
@@ -107,7 +109,7 @@ export default function MSPDashboardPage() {
     setTicketsLoading(true);
     try {
       const result = await MSPService.getCustomerTickets(customerId);
-      setCustomerTickets(result.tickets);
+      setCustomerTickets(result.items);
     } catch (err: any) {
       message.error(err.message || '加载客户工单失败');
       setCustomerTickets([]);
@@ -134,7 +136,7 @@ export default function MSPDashboardPage() {
     try {
       const end = endDate || new Date().toISOString().split('T')[0];
       const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const data = await MSPService.getCustomerReports({ startDate: start, endDate: end });
+      const data = await MSPService.getPerformanceReports({ startDate: start, endDate: end });
       setPerformanceReports(data);
     } catch (err: any) {
       message.error(err.message || '加载绩效报表失败');
@@ -176,41 +178,60 @@ export default function MSPDashboardPage() {
     },
   ];
 
+  // 后端 /msp/reports/customers 是按 MSP 租户的区间聚合，只有 mspTenantId/区间/总数/状态分布；
+  // 客户名称、解决率与 SLA 合规率需要按客户维度拆分，后端尚未产出，因此这里不展示这些列。
+  const reportPeriodRender = (_: unknown, record: MSPCustomerReport | MSPPerformanceReport) => {
+    const from = record.dateFrom ? record.dateFrom.slice(0, 10) : '不限';
+    const to = record.dateTo ? record.dateTo.slice(0, 10) : '不限';
+    return `${from} ~ ${to}`;
+  };
+
   const reportColumns = [
-    { title: '客户名称', dataIndex: 'customerName', key:'customerName' },
+    { title: 'MSP 租户', dataIndex: 'mspTenantId', key: 'mspTenantId' },
+    { title: '统计区间', key: 'period', render: reportPeriodRender },
     {
       title: '工单总数',
       dataIndex: 'totalTickets',
       key: 'totalTickets',
       sorter: (a: MSPCustomerReport, b: MSPCustomerReport) => a.totalTickets - b.totalTickets,
     },
-    { title: '已解决', dataIndex: 'resolvedTickets', key: 'resolvedTickets' },
     {
-      title: '解决率',
-      key:'resolutionRate',
-      render: (record: MSPCustomerReport) => {
-        const rate = record.totalTickets > 0 ? Number(((record.resolvedTickets / record.totalTickets) * 100).toFixed(1)) : 0;
-        return <Tag color={rate >= 90 ? 'green' : rate >= 70 ? 'orange' : 'red'}>{rate}%</Tag>;
-      },
-    },
-    {
-      title: '平均处理时长(小时)',
-      dataIndex: 'mspHandlingTimeAvg',
-      key: 'mspHandlingTimeAvg',
-      render: (val: number) => val?.toFixed(2) || '-',
-    },
-    {
-      title: 'SLA 合规率',
-      key: 'slaComplianceRate',
-      render: (_: any, record: MSPCustomerReport) => {
-        const val = record.slaComplianceRate;
-        const rate = (val * 100).toFixed(1);
-        return <Tag color={val >= 0.95 ? 'green' : val >= 0.8 ? 'orange' : 'red'}>{rate}%</Tag>;
+      title: '状态分布',
+      key: 'statusSummary',
+      render: (_: unknown, record: MSPCustomerReport) => {
+        const entries = Object.entries(record.statusSummary ?? {});
+        if (entries.length === 0) return '-';
+        return (
+          <Space size={[4, 4]} wrap>
+            {entries.map(([status, count]) => (
+              <Tag key={status}>{`${status}: ${count}`}</Tag>
+            ))}
+          </Space>
+        );
       },
     },
   ];
 
+  const performanceReportColumns = [
+    { title: 'MSP 租户', dataIndex: 'mspTenantId', key: 'mspTenantId' },
+    { title: '统计区间', key: 'period', render: reportPeriodRender },
+    {
+      title: '工单总数',
+      dataIndex: 'totalTickets',
+      key: 'totalTickets',
+      sorter: (a: MSPPerformanceReport, b: MSPPerformanceReport) => a.totalTickets - b.totalTickets,
+    },
+    { title: '已解决', dataIndex: 'resolvedTickets', key: 'resolvedTickets' },
+    {
+      title: '平均解决时长(小时)',
+      dataIndex: 'avgResolutionHours',
+      key: 'avgResolutionHours',
+      render: (val: number) => val.toFixed(2),
+    },
+  ];
+
   const ticketColumns = [
+    { title: '工单编号', dataIndex: 'ticketNumber', key: 'ticketNumber' },
     { title: '工单标题', dataIndex: 'title', key: 'title' },
     {
       title: '状态',
@@ -218,12 +239,16 @@ export default function MSPDashboardPage() {
       key: 'status',
       render: (status: string) => <Tag>{status}</Tag>,
     },
-    { title: '负责人', dataIndex: 'assigneeName', key: 'assigneeName', render: (v: string) => v || '未分配' },
+    {
+      title: '负责人',
+      key: 'assignee',
+      render: (_: unknown, record: ApiTicket) => record.assignee?.name || record.assignee?.username || '未分配',
+    },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: ApiTicket) => (
         <Button
           size="small"
           type="link"
@@ -325,7 +350,7 @@ export default function MSPDashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="本月工单"
+              title="近 30 天工单"
               value={reports.reduce((sum, r) => sum + r.totalTickets, 0)}
               prefix={<Clock />}
             />
@@ -334,8 +359,8 @@ export default function MSPDashboardPage() {
         <Col span={6}>
           <Card>
             <Statistic
-              title="已解决"
-              value={reports.reduce((sum, r) => sum + r.resolvedTickets, 0)}
+              title="近 30 天已解决"
+              value={reports.reduce((sum, r) => sum + (r.statusSummary?.resolved ?? 0), 0)}
               prefix={<CheckCircle />}
             />
           </Card>
@@ -404,7 +429,7 @@ export default function MSPDashboardPage() {
               <Table
                 columns={reportColumns}
                 dataSource={reports}
-                rowKey="customerTenantId"
+                rowKey="mspTenantId"
                 loading={loading}
                 pagination={{ pageSize: 10 }}
               />
@@ -425,9 +450,9 @@ export default function MSPDashboardPage() {
                   </Button>
                 </div>
                 <Table
-                  columns={reportColumns}
+                  columns={performanceReportColumns}
                   dataSource={performanceReports}
-                  rowKey="customerTenantId"
+                  rowKey="mspTenantId"
                   loading={perfLoading}
                   pagination={{ pageSize: 10 }}
                   locale={{ emptyText: '点击"加载绩效数据"按钮查看报表' }}

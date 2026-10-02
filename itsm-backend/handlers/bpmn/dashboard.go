@@ -242,6 +242,11 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 	if req.PageSize == 0 {
 		req.PageSize = 20
 	}
+	// page 必须与 pageSize 一起归一化：只给 pageSize 时 service 的分页分支
+	// (Page > 0 && PageSize > 0) 不生效，响应会声称 pageSize=20 却返回全量。
+	if req.Page == 0 {
+		req.Page = 1
+	}
 
 	logs, total, err := c.auditService.QueryAuditLogs(ctx.Request.Context(), req)
 	if err != nil {
@@ -249,11 +254,7 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, gin.H{
-		"list":  logs,
-		"total": total,
-		"page":  req.Page,
-	})
+	common.SuccessWithList(ctx, logs, total, req.Page, req.PageSize)
 }
 
 // GetProcessTimeline 获取流程时间线

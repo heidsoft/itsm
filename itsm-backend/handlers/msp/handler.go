@@ -229,17 +229,21 @@ func (h *Handler) GetCustomerTickets(c *gin.Context) {
 	}
 	userID := mspCtx.MSPUserID
 
-	tickets, err := h.ticketService.GetCustomerTicketsForMSP(c.Request.Context(), userID, customerTenantID, &status, page, pageSize)
+	tickets, total, err := h.ticketService.GetCustomerTicketsForMSP(c.Request.Context(), userID, customerTenantID, &status, page, pageSize)
 	if err != nil {
 		h.logger.Errorw("Failed to get customer tickets", "error", err, "customer_tenant_id", customerTenantID)
 		common.Fail(c, common.InternalErrorCode, "查询工单失败")
 		return
 	}
 
-	common.Success(c, gin.H{
-		"tickets": tickets,
-		"total":   len(tickets),
-	})
+	// 元素必须过 DTO Mapper：历史实现直接序列化 repository/ticket.Ticket，
+	// 前端拿到的是 Go 导出字段名（ID/TicketNumber/CreatedAt），页面永远读不到值。
+	responses := make([]*dto.TicketResponse, 0, len(tickets))
+	for _, t := range tickets {
+		responses = append(responses, h.domainTicketToResponse(c, t))
+	}
+
+	common.SuccessWithList(c, responses, total, page, pageSize)
 }
 
 // AssignMSPTechnician 为工单分配 MSP 技术员
@@ -297,12 +301,14 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt("user_id")
-	if userID == 0 {
-		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+	// 报表按 tenant 维度聚合，租户只能来自认证上下文。历史实现把 user_id 传进
+	// 这个位置，等于统计「ID 恰好等于调用者用户 ID 的那个租户」的工单，
+	// 是一份跨租户读数。
+	mspTenantID := c.GetInt("tenant_id")
+	if mspTenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
 		return
 	}
-	mspUserID := userID
 
 	dateFrom, err := parseDateOrZero(startDate)
 	if err != nil {
@@ -315,16 +321,17 @@ func (h *Handler) GetCustomerReports(c *gin.Context) {
 		return
 	}
 
-	reports, err := h.ticketService.GetMSPCustomerReports(c.Request.Context(), mspUserID, dateFrom, dateTo)
+	reports, err := h.ticketService.GetMSPCustomerReports(c.Request.Context(), mspTenantID, dateFrom, dateTo)
 	if err != nil {
 		h.logger.Errorw("Failed to get customer reports", "error", err)
 		common.Fail(c, common.InternalErrorCode, "生成报表失败")
 		return
 	}
 
+	// 报表是按日期区间的全量聚合，不支持分页，因此信封只带 items + total。
 	common.Success(c, gin.H{
-		"reports": reports,
-		"total":   len(reports),
+		"items": reports,
+		"total": len(reports),
 	})
 }
 
@@ -350,32 +357,39 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 		return
 	}
 
-	var mspUserID int
-	if mspUserIDStr == "" {
-		mspCtx, exists := middleware.GetMSPContext(c)
-		if !exists || !mspCtx.IsMSP {
-			common.Fail(c, common.ForbiddenCode, "非MSP用户")
-			return
-		}
-		mspUserID = mspCtx.MSPUserID
-	} else {
-		mspUserID, err = strconv.Atoi(mspUserIDStr)
-		if err != nil {
-			common.Fail(c, common.ParamErrorCode, "mspUserId格式错误")
-			return
-		}
+	// mspUserId 想表达「按某个 MSP 员工过滤绩效」，但服务层从未实现员工维度：
+	// 旧实现把这个 user ID 当作 tenant_id 传给查询，既没过滤到人，又读到了
+	// 另一个租户的工单数。现在显式拒绝该参数，而不是静默忽略后假装过滤生效。
+	if mspUserIDStr != "" {
+		common.Fail(c, common.ParamErrorCode, "暂不支持按 mspUserId 过滤绩效报表（员工维度尚未实现），请只传 startDate/endDate")
+		return
 	}
 
-	reports, err := h.ticketService.GetMSPPerformanceReports(c.Request.Context(), mspUserID, dateFrom, dateTo)
+	// 与历史实现保持一致：默认分支仍要求请求携带 MSP 上下文。
+	mspCtx, exists := middleware.GetMSPContext(c)
+	if !exists || !mspCtx.IsMSP {
+		common.Fail(c, common.ForbiddenCode, "非MSP用户")
+		return
+	}
+
+	// 聚合维度是 tenant，租户只能来自认证上下文（见 GetCustomerReports 同一问题）。
+	mspTenantID := c.GetInt("tenant_id")
+	if mspTenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
+		return
+	}
+
+	reports, err := h.ticketService.GetMSPPerformanceReports(c.Request.Context(), mspTenantID, dateFrom, dateTo)
 	if err != nil {
 		h.logger.Errorw("Failed to get performance reports", "error", err)
 		common.Fail(c, common.InternalErrorCode, "生成绩效报表失败")
 		return
 	}
 
+	// 报表是按日期区间的全量聚合，不支持分页，因此信封只带 items + total。
 	common.Success(c, gin.H{
-		"reports": reports,
-		"total":   len(reports),
+		"items": reports,
+		"total": len(reports),
 	})
 }
 

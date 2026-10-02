@@ -96,6 +96,15 @@ export interface QueryAuditLogsRequest {
   pageSize?: number;
 }
 
+/** GET /api/v1/bpmn/dashboard/audit-logs 的标准列表信封。 */
+export interface AuditLogListResponse {
+  items: ProcessAuditLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 /**
  * SLA 违规实体，字段与后端 handlers/sla/entity.go::SLAViolation 逐一对齐。
  * 旧版 resourceType/startTime/deadline/slaStatus/elapsedMinutes 后端根本不存在，
@@ -166,8 +175,10 @@ export class BPMNDashboardApi {
 
   /**
    * 查询审计日志
+   *
+   * GET /api/v1/bpmn/dashboard/audit-logs 返回标准列表信封。
    */
-  static async queryAuditLogs(request: QueryAuditLogsRequest): Promise<{ list: ProcessAuditLog[]; total: number; page: number }> {
+  static async queryAuditLogs(request: QueryAuditLogsRequest): Promise<AuditLogListResponse> {
     const params = new URLSearchParams();
     Object.entries(request).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -175,7 +186,7 @@ export class BPMNDashboardApi {
       }
     });
 
-    return httpClient.get<{ list: ProcessAuditLog[]; total: number; page: number }>(`${this.baseUrl}/audit-logs?${params}`);
+    return httpClient.get<AuditLogListResponse>(`${this.baseUrl}/audit-logs?${params}`);
   }
 
   /**

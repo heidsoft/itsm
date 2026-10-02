@@ -228,6 +228,8 @@ func (h *Handler) GetStats(c *gin.Context) {
 		return
 	}
 
+	// 统计接口返回聚合计数，不是列表：不得伪造 page/totalPages。
+	// 历史实现带 page=1、totalPages=1，让前端以为这是可分页集合。
 	common.Success(c, gin.H{
 		"total":      stats.Total,
 		"active":     stats.Active,
@@ -237,8 +239,6 @@ func (h *Handler) GetStats(c *gin.Context) {
 		"high":       stats.High,
 		"medium":     stats.Medium,
 		"low":        stats.Low,
-		"totalPages": 1,
-		"page":       1,
 	})
 }
 
@@ -289,7 +289,8 @@ func (h *Handler) GetCategories(c *gin.Context) {
 		}
 	}
 
-	common.Success(c, gin.H{"items": categories})
+	// 分类是去重后的全量字符串列表，不分页，因此信封只带 items + total。
+	common.Success(c, gin.H{"items": categories, "total": len(categories)})
 }
 
 func (h *Handler) PromoteToKnownError(c *gin.Context) {

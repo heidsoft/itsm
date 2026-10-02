@@ -1432,11 +1432,17 @@ func TestTicketService_GetMSPCustomerReports_AllocationAware(t *testing.T) {
 	dateTo, _ := time.Parse("2006-01-02", "2024-12-31")
 	reports, err := ticketService.GetMSPCustomerReports(ctx, mspTenant.ID, dateFrom, dateTo)
 	assert.NoError(t, err)
-	assert.NotNil(t, reports)
-	// V2 返回的 reports 至少包含 status_summary 等字段
-	if len(reports) > 0 {
-		assert.Contains(t, reports[0], "status_summary")
-		assert.Contains(t, reports[0], "total_tickets")
+	if assert.Len(t, reports, 1) {
+		// 契约改为类型化 DTO：字段名由结构体 json tag 保证，不再断言 snake_case map key。
+		// 口径仍是「按 MSP 自身租户单行汇总」，未按被服务客户租户分组（见审计行 2d）。
+		row := reports[0]
+		assert.Equal(t, mspTenant.ID, row.MSPTenantID)
+		assert.Zero(t, row.TotalTickets)
+		if assert.NotNil(t, row.DateFrom) && assert.NotNil(t, row.DateTo) {
+			assert.True(t, row.DateFrom.Equal(dateFrom), "dateFrom 应回显查询区间")
+			assert.True(t, row.DateTo.Equal(dateTo), "dateTo 应回显查询区间")
+		}
+		assert.NotNil(t, row.StatusSummary)
 	}
 
 	// Test: 验证未分配租户场景下 V2 仅返回 msp 租户维度统计，不会报错

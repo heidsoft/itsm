@@ -242,8 +242,9 @@ func TestListStandardChanges_Basic(t *testing.T) {
 	w := doRequest(r, "GET", "/api/v1/standard-changes", nil)
 	resp, data := decodeResponse(t, w)
 	assert.Equal(t, common.SuccessCode, resp.Code)
+	// 列表信封统一为 items/total/page/pageSize/totalPages，不再返回 templates 键。
 	assert.Equal(t, float64(2), data["total"])
-	templates := data["templates"].([]interface{})
+	templates := data["items"].([]interface{})
 	assert.Len(t, templates, 2)
 }
 
@@ -260,10 +261,11 @@ func TestListStandardChanges_Pagination(t *testing.T) {
 	resp, data := decodeResponse(t, w)
 	assert.Equal(t, common.SuccessCode, resp.Code)
 	assert.Equal(t, float64(5), data["total"])
-	templates := data["templates"].([]interface{})
+	templates := data["items"].([]interface{})
 	assert.Len(t, templates, 2)
 	assert.Equal(t, float64(2), data["page"])
 	assert.Equal(t, float64(2), data["pageSize"])
+	assert.Equal(t, float64(3), data["totalPages"])
 }
 
 func TestListStandardChanges_FilterByCategory(t *testing.T) {

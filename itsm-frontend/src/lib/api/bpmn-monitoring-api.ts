@@ -36,21 +36,27 @@ export interface PerformanceMetrics {
 }
 
 export interface ProcessInstanceStatus {
-  instanceId: string;
-  processDefinitionKey: string;
+  processInstanceId: string;
   status: string;
+  currentTask: string;
+  assignee: string;
   startTime: string;
-  endTime?: string;
-  currentActivities?: string[];
-  progress: number;
+  expectedEndTime?: string;
   variables?: Record<string, unknown>;
+  progress: number;
+  tenantId: number;
+  /** 已耗时（纳秒，Go time.Duration 的 JSON 形态）。 */
+  estimatedDuration: number;
+  riskLevel: 'low' | 'medium' | 'high';
 }
 
+/** GET /api/v1/bpmn/monitoring/instances/status 的标准列表信封。 */
 export interface ProcessInstanceStatusListResponse {
-  instances: ProcessInstanceStatus[];
+  items: ProcessInstanceStatus[];
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 // ─── 流程实例完整时间线（任务 3） ──────────────────────────
@@ -185,10 +191,9 @@ export class BPMNMonitoringApi {
 
   /** 获取单个流程实例状态 */
   static async getProcessInstanceStatus(instanceId: string): Promise<ProcessInstanceStatus> {
-    const res = await httpClient.get<
-      { data?: ProcessInstanceStatus } & ProcessInstanceStatus
-    >(`${this.baseUrl}/instances/${encodeURIComponent(instanceId)}/status`);
-    return (res as { data?: ProcessInstanceStatus }).data ?? (res as ProcessInstanceStatus);
+    return httpClient.get<ProcessInstanceStatus>(
+      `${this.baseUrl}/instances/${encodeURIComponent(instanceId)}/status`
+    );
   }
 
   /** 获取流程实例状态列表 */
@@ -203,13 +208,7 @@ export class BPMNMonitoringApi {
     if (params?.pageSize) query.pageSize = String(params.pageSize);
     if (params?.processKey) query.processKey = params.processKey;
     if (params?.status) query.status = params.status;
-    const res = await httpClient.get<
-      { data?: ProcessInstanceStatusListResponse } & ProcessInstanceStatusListResponse
-    >(`${this.baseUrl}/instances/status`, query);
-    return (
-      (res as { data?: ProcessInstanceStatusListResponse }).data ??
-      (res as ProcessInstanceStatusListResponse)
-    );
+    return httpClient.get<ProcessInstanceStatusListResponse>(`${this.baseUrl}/instances/status`, query);
   }
 
   /** 获取性能指标 */
