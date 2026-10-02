@@ -4,10 +4,12 @@
 package ticket_tag
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +50,31 @@ func pathID(c *gin.Context) (int, bool) {
 	return id, true
 }
 
+// failTagError 把标签写读失败映射为稳定语义。此前重复名、在用删除、跨租户取不到
+// 全都回 500/5001「操作失败」，调用方分不清是自己给的名字重了还是后端故障。
+// 原始错误只进日志，响应体固定为安全消息。
+func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID, tid int) {
+	switch {
+	case errors.Is(rawErr, service.ErrTicketTagNameExists):
+		h.logger.Warnw("Ticket tag name conflict", "error", rawErr, "tenant_id", tid)
+		common.Conflict(c, "标签名称已存在", nil)
+	case errors.Is(rawErr, service.ErrTicketTagInUse):
+		h.logger.Warnw("Ticket tag still in use", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
+		common.Conflict(c, "标签仍被工单使用，无法删除", nil)
+	case errors.Is(rawErr, service.ErrTicketTagNameBlank):
+		h.logger.Warnw("Ticket tag name blank", "error", rawErr, "tenant_id", tid)
+		common.Fail(c, common.ParamErrorCode, "标签名称不能为空")
+	case errors.Is(rawErr, service.ErrTicketTagNotFound), ent.IsNotFound(rawErr):
+		// 查询都带租户谓词，所以跨租户与真实不存在同样表现为 not found。
+		h.logger.Warnw("Ticket tag not found", "error", rawErr, "tag_id", tagID, "tenant_id", tid)
+		common.Fail(c, common.NotFoundCode, "标签不存在或无权访问")
+	default:
+		h.logger.Errorw("Ticket tag operation failed",
+			"error", rawErr, "operation", opMsg, "tag_id", tagID, "tenant_id", tid)
+		common.Fail(c, common.InternalErrorCode, opMsg)
+	}
+}
+
 // CreateTag 创建标签
 func (h *Handler) CreateTag(c *gin.Context) {
 	var req service.CreateTagRequest
@@ -64,8 +91,7 @@ func (h *Handler) CreateTag(c *gin.Context) {
 
 	tag, err := h.tagService.CreateTag(c.Request.Context(), &req)
 	if err != nil {
-		h.logger.Error("Failed to create tag", zap.Error(err), zap.Int("tenant_id", tid))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "创建标签失败", 0, tid)
 		return
 	}
 
@@ -92,8 +118,7 @@ func (h *Handler) UpdateTag(c *gin.Context) {
 
 	tag, err := h.tagService.UpdateTag(c.Request.Context(), tagID, &req, tid)
 	if err != nil {
-		h.logger.Error("Failed to update tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "更新标签失败", tagID, tid)
 		return
 	}
 
@@ -114,8 +139,7 @@ func (h *Handler) DeleteTag(c *gin.Context) {
 
 	err := h.tagService.DeleteTag(c.Request.Context(), tagID, tid)
 	if err != nil {
-		h.logger.Error("Failed to delete tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "删除标签失败", tagID, tid)
 		return
 	}
 
@@ -136,8 +160,7 @@ func (h *Handler) GetTag(c *gin.Context) {
 
 	tag, err := h.tagService.GetTag(c.Request.Context(), tagID, tid)
 	if err != nil {
-		h.logger.Error("Failed to get tag", zap.Error(err), zap.Int("tag_id", tagID))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "获取标签失败", tagID, tid)
 		return
 	}
 
@@ -171,8 +194,7 @@ func (h *Handler) ListTags(c *gin.Context) {
 
 	tags, total, err := h.tagService.ListTags(c.Request.Context(), req)
 	if err != nil {
-		h.logger.Error("Failed to list tags", zap.Error(err), zap.Int("tenant_id", tid))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "获取标签列表失败", 0, tid)
 		return
 	}
 
@@ -213,14 +235,13 @@ func (h *Handler) AssignTagsToTicket(c *gin.Context) {
 		tagIDs = resolved
 	}
 	if len(tagIDs) == 0 {
-		common.Fail(c, common.ParamErrorCode, "tag_ids 或 tags 必填")
+		common.Fail(c, common.ParamErrorCode, "tagIds 或 tags 必填")
 		return
 	}
 
 	err := h.tagService.AssignTagsToTicket(c.Request.Context(), ticketID, tagIDs, tid)
 	if err != nil {
-		h.logger.Error("Failed to assign tags to ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "标签分配失败", 0, tid)
 		return
 	}
 
@@ -258,14 +279,13 @@ func (h *Handler) RemoveTagsFromTicket(c *gin.Context) {
 		tagIDs = resolved
 	}
 	if len(tagIDs) == 0 {
-		common.Fail(c, common.ParamErrorCode, "tag_ids 或 tags 必填")
+		common.Fail(c, common.ParamErrorCode, "tagIds 或 tags 必填")
 		return
 	}
 
 	err := h.tagService.RemoveTagsFromTicket(c.Request.Context(), ticketID, tagIDs, tid)
 	if err != nil {
-		h.logger.Error("Failed to remove tags from ticket", zap.Error(err), zap.Int("ticket_id", ticketID))
-		common.FailWithErr(c, err, "操作失败")
+		h.failTagError(c, err, "标签移除失败", 0, tid)
 		return
 	}
 

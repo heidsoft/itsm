@@ -11,9 +11,18 @@ export interface TicketTag {
   updatedAt: string;
 }
 
+// 后端 data 信封固定为 { items, total }，不存在第二套列表键。
 export interface ListTagsResponse {
-  tags: TicketTag[];
+  items: TicketTag[];
   total: number;
+}
+
+// 可写字段。tenantId 只能由后端从认证上下文取，不接受客户端自报。
+export interface TicketTagInput {
+  name: string;
+  color?: string;
+  description?: string;
+  isActive?: boolean;
 }
 
 export interface ListTagsParams {
@@ -33,11 +42,11 @@ class TicketTagService {
     return httpClient.get<TicketTag>(`${this.baseUrl}/${id}`);
   }
 
-  async createTag(data: Partial<TicketTag>): Promise<TicketTag> {
+  async createTag(data: TicketTagInput): Promise<TicketTag> {
     return httpClient.post<TicketTag>(this.baseUrl, data);
   }
 
-  async updateTag(id: number, data: Partial<TicketTag>): Promise<TicketTag> {
+  async updateTag(id: number, data: Partial<TicketTagInput>): Promise<TicketTag> {
     return httpClient.put<TicketTag>(`${this.baseUrl}/${id}`, data);
   }
 

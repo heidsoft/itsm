@@ -374,6 +374,60 @@ GET /tickets/{id}/attachments/{attachmentId}/preview
 Authorization: Bearer <accessToken>
 ```
 
+## 工单标签接口
+
+标签的唯一可写所有者是工单标签（`ticket_tags`）。`GET /tags`、`GET /system/tags` 是历史只读别名，不承载写操作。
+
+### 获取标签列表
+
+```http
+GET /ticket-tags?page=1&pageSize=20&isActive=true
+Authorization: Bearer <accessToken>
+```
+
+响应 `data` 为 `{ items, total }`，只包含当前租户的标签。
+
+### 创建标签
+
+```http
+POST /ticket-tags
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "name": "网络",
+  "color": "#1890ff",
+  "description": "网络设备相关",
+  "isActive": true
+}
+```
+
+`tenantId` 只取自认证上下文，请求体不需要也不接受该字段。`color` 缺省时使用 `#1890ff`；`isActive` 缺省时为启用。同名（同租户）返回 `409`/`code:4090`。
+
+### 更新与删除标签
+
+```http
+PUT /ticket-tags/{id}
+DELETE /ticket-tags/{id}
+Authorization: Bearer <accessToken>
+```
+
+标签仍被本租户工单引用时删除返回 `409`/`code:4090`；跨租户访问统一返回 `404`/`code:4004`。
+
+### 工单绑定标签
+
+```http
+POST /tickets/{id}/tags
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "tagIds": [1, 2]
+}
+```
+
+也可以用 `{"tags": ["网络"]}` 按名称绑定，缺失的标签会在当前租户内自动创建。解绑使用 `DELETE /tickets/{id}/tags`，请求体相同。
+
 ## 事件管理接口
 
 ### 获取事件列表

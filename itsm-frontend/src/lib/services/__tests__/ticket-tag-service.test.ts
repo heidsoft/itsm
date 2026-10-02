@@ -26,14 +26,16 @@ describe('TicketTagService', () => {
 
   describe('listTags', () => {
     it('should call GET /api/v1/ticket-tags with params', async () => {
-      mockGet.mockResolvedValueOnce({ tags: [{ id: 1, name: 'urgent' }], total: 1 });
+      // 后端信封只有 items/total；这里必须按真实契约解码，不能用 tags 兜底。
+      mockGet.mockResolvedValueOnce({ items: [{ id: 1, name: 'urgent' }], total: 1 });
       const result = await ticketTagService.listTags({ page: 1, isActive: true });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/ticket-tags', { page: 1, isActive: true });
       expect(result.total).toBe(1);
+      expect(result.items).toHaveLength(1);
     });
 
     it('should use empty params by default', async () => {
-      mockGet.mockResolvedValueOnce({ tags: [], total: 0 });
+      mockGet.mockResolvedValueOnce({ items: [], total: 0 });
       await ticketTagService.listTags();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/ticket-tags', {});
     });

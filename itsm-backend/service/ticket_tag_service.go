@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -10,6 +11,25 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettag"
 )
+
+// 标签域的失败分类。此前重复名、在用删除都以普通 error 上抛，handler 只能一律
+// 回 500/5001「操作失败」，调用方无法区分「名字重了」「标签还在用」和后端故障。
+var (
+	// ErrTicketTagNameExists 表示同租户内已有同名标签。ticket_tags 没有 (tenant_id, name)
+	// 唯一索引，重名只靠下面的查询前置检查，所以归为 409 冲突而不是数据库故障。
+	ErrTicketTagNameExists = errors.New("ticket tag name already exists")
+	// ErrTicketTagInUse 表示标签仍被本租户工单引用，删除会被拒绝。
+	ErrTicketTagInUse = errors.New("ticket tag is in use")
+	// ErrTicketTagNameBlank 表示名称只含空白，trim 后为空。
+	ErrTicketTagNameBlank = errors.New("ticket tag name is blank")
+	// ErrTicketTagNotFound 表示绑定/解绑引用了本租户不存在的标签。
+	ErrTicketTagNotFound = errors.New("ticket tag not found")
+)
+
+// defaultTicketTagColor 与 ent/schema/tickettag.go 的 color 默认值保持一致。
+// Create 走的是显式 SetColor，Ent 的字段默认值不会生效，空颜色必须在服务层补上，
+// 否则标签在列表和工单上渲染成无色。
+const defaultTicketTagColor = "#1890ff"
 
 // TicketTagService 工单标签服务
 type TicketTagService struct {
@@ -87,23 +107,38 @@ func (s *TicketTagService) ResolveTagIDsByNames(ctx context.Context, names []str
 
 // CreateTag 创建工单标签
 func (s *TicketTagService) CreateTag(ctx context.Context, req *CreateTagRequest) (*ent.TicketTag, error) {
+	// 名称按 ResolveTagIDsByNames 的口径归一化，否则带空格的标签会按显示文本
+	// 与工单绑定路径自动创建的标签重复共存。
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, ErrTicketTagNameBlank
+	}
+
 	// 验证标签名称唯一性
 	exists, err := s.client.TicketTag.Query().
-		Where(tickettag.NameEQ(req.Name)).
+		Where(tickettag.NameEQ(name)).
 		Where(tickettag.TenantID(req.TenantID)).
 		Exist(ctx)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("标签名称已存在")
+		return nil, fmt.Errorf("%w: %s", ErrTicketTagNameExists, name)
 	}
 
+	color := strings.TrimSpace(req.Color)
+	if color == "" {
+		color = defaultTicketTagColor
+	}
+	// IsActive 是指针：未传视为启用（与 schema 默认一致）。此前的非指针 bool
+	// 让「前端没带 isActive」和「用户明确要求停用」无法区分，UI 新建的标签全被建成停用。
+	active := req.IsActive == nil || *req.IsActive
+
 	tag, err := s.client.TicketTag.Create().
-		SetName(req.Name).
-		SetColor(req.Color).
+		SetName(name).
+		SetColor(color).
 		SetDescription(req.Description).
-		SetIsActive(req.IsActive).
+		SetIsActive(active).
 		SetTenantID(req.TenantID).
 		Save(ctx)
 	if err != nil {
@@ -164,9 +199,13 @@ func (s *TicketTagService) UpdateTag(ctx context.Context, id int, req *UpdateTag
 		Where(tickettag.TenantID(tenantID))
 
 	if req.Name != "" {
+		name := strings.TrimSpace(req.Name)
+		if name == "" {
+			return nil, ErrTicketTagNameBlank
+		}
 		// 验证标签名称唯一性
 		exists, err := s.client.TicketTag.Query().
-			Where(tickettag.NameEQ(req.Name)).
+			Where(tickettag.NameEQ(name)).
 			Where(tickettag.TenantIDEQ(tenantID)).
 			Where(tickettag.IDNEQ(id)).
 			Exist(ctx)
@@ -174,9 +213,9 @@ func (s *TicketTagService) UpdateTag(ctx context.Context, id int, req *UpdateTag
 			return nil, err
 		}
 		if exists {
-			return nil, errors.New("标签名称已存在")
+			return nil, fmt.Errorf("%w: %s", ErrTicketTagNameExists, name)
 		}
-		update.SetName(req.Name)
+		update.SetName(name)
 	}
 	if req.Color != "" {
 		update.SetColor(req.Color)
@@ -206,7 +245,7 @@ func (s *TicketTagService) DeleteTag(ctx context.Context, id int, tenantID int) 
 		return err
 	}
 	if ticketsCount > 0 {
-		return errors.New("无法删除正在使用的标签")
+		return fmt.Errorf("%w: tag %d referenced by %d tickets", ErrTicketTagInUse, id, ticketsCount)
 	}
 
 	return s.client.TicketTag.DeleteOneID(id).
@@ -238,7 +277,7 @@ func (s *TicketTagService) AssignTagsToTicket(ctx context.Context, ticketID int,
 		return err
 	}
 	if len(tags) != len(tagIDs) {
-		return errors.New("部分标签不存在")
+		return fmt.Errorf("%w: %v", ErrTicketTagNotFound, tagIDs)
 	}
 
 	// 更新工单标签关联
@@ -273,7 +312,7 @@ func (s *TicketTagService) RemoveTagsFromTicket(ctx context.Context, ticketID in
 		return err
 	}
 	if len(tags) != len(tagIDs) {
-		return errors.New("部分标签不存在")
+		return fmt.Errorf("%w: %v", ErrTicketTagNotFound, tagIDs)
 	}
 
 	// 更新工单标签关联
@@ -289,8 +328,11 @@ type CreateTagRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Color       string `json:"color"`
 	Description string `json:"description"`
-	IsActive    bool   `json:"isActive"`
-	TenantID    int    `json:"tenantId" binding:"required"`
+	// 指针：未传 = 启用；显式 false = 停用。非指针会让 omit 与 false 同义。
+	IsActive *bool `json:"isActive"`
+	// 租户只能来自认证上下文，禁止客户端自报；此前 binding:"required" 让不带
+	// tenantId 的合法请求直接 400，页面上「新建标签」点了就失败。
+	TenantID int `json:"-"`
 }
 
 // UpdateTagRequest 更新标签请求
