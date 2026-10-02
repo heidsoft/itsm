@@ -346,3 +346,48 @@ cd itsm-backend && ~/go/bin/staticcheck ./service/... ./pkg/seeder/... && ~/go/b
 5. `GET /api/v1/auth/me` 仍注册着（注释写「供 middleware 验证」，但没有任何 middleware 调它），实际所有者已收敛为 `/auth/session`。为避免与 RBAC 预检生成物继续不同步，本批保留该路由未摘。
 
 **影响面**：登出/刷新/改密的行为契约已同步 `docs/api-reference.md`、`UPGRADE.md` §1.9（含前端删除清单与「客户端必须持久化新签发 cookie、续签必须单飞」）与 swagger；`scripts/docs-gate/product-surface-baseline.txt` 同批 `service_go_files` 333→332（删死代码）、`bootstrap_app_lines` 1811→1815（吊销存储接线，属收敛而非扩散）；前端删除的三个文件不在任何棘轮键统计内，无需改基线。
+
+## 11. 执行记录：e2e 隔离栈与工单读权限收敛（2026-10-02）
+
+对应排期「先起重建栈再修，端到端验证」这一条。两项决策由用户拍板：建一次性隔离栈再验（不碰 prod 容器与 `itsm_prod`），以及把隔离守卫做成**跑前自动证明**而不是文档约定。
+
+### 11.1 为什么 URL 白名单不够
+
+`itsm-frontend/next.config.ts:10` 与 `src/app/api/[...path]/route.ts:4` 的代理 upstream 默认值都是 `http://localhost:8090`。本机实测：`127.0.0.1:8090` 由 `itsm-backend-prod`（`DB_NAME=itsm_prod`）占用，`[::1]:8090` 由另一个会话起的宿主原生二进制占用。因此「测试只打环回 `:3000`」并不能保证写入落在预期的后端——`POST /api/v1/users` 会经代理进哪一个后端，只取决于 Node 解析 `localhost` 的顺序。结论：守卫必须**行为可证明**（写的行要在本栈数据库里数出来），不能只做地址匹配。
+
+### 11.2 隔离栈与 proof 契约
+
+`scripts/e2e-isolated-stack.sh` + `docker-compose.e2e.yml`（叠加在 dev compose 上）做三件事：
+
+1. 新 project（`itsm-e2e-$E2E_RUN_ID`）+ 唯一容器名 + 独占端口（`127.0.0.1:18090`/`127.0.0.1:3001`）；postgres/redis 不发布宿主端口，验证与清理一律 `docker exec` 进容器，避免任何脚本误连本机其他 postgres。被测后端镜像现场构建并断言运行中的容器镜像 ID 等于刚构建的那个，禁止复用 dev/prod 镜像。
+2. canary 证明：经 `:3001` 代理取 CSRF → 代理登录 → `POST /api/v1/users` 建随机名用户 → `docker exec` 进本栈 postgres 数出 `e2e-canary-%` 恰好 1 行。代理若指向别的后端，本栈库里就是 0 行，脚本立刻红。
+3. 把证明结果写成 0600 的 proof（`$TMPDIR/itsm-e2e-proofs/<project>.json`，含本栈随机 admin 口令；仓库内不出现可用口令）。
+
+compose 合并语义这一层踩过坑，记下来以免复发：`!reset` 只接受空值、会**丢弃**传入的列表项，`!override` 才整体替换序列。backend/frontend 的 `ports`/`volumes` 需要 `!override`（基础文件里是 `8090:8090`，与本机 prod 直接抢端口），postgres/redis 的端口与卷用 `!reset []`。
+
+Playwright 侧 `tests/e2e/harness.ts` 的 `isolatedBaseURL()` 是硬门禁：`ITSM_E2E_ISOLATED_STACK=1` + 显式 `PLAYWRIGHT_BASE_URL`（不允许有默认值）+ 环回白名单 + proof 未过期 + 地址与 proof 逐字符一致（`localhost` ≠ `127.0.0.1`，本机它们可能解析到不同后端）+ proof 的 `proxyUpstream` 不是环回地址。`playwright.config.ts` 在隔离模式下不再由宿主起 `:3000` dev server。
+
+实测八条分支：正向一次 proof-backed cookie 会话经 `:3001` 读到 `{items,total}` 信封并通过；四种篡改输入（无 proof、地址换成宿主 `:3000`、`proxyUpstream=http://localhost:8090`、proof 过期）逐条被拒且报错可读。这八条已固化成离线回归 `tests/e2e/isolated-stack-guard.spec.ts`（自己造 proof 文件，8 passed，不需要真实栈，可在 CI 跑）。
+
+顺带修掉一个自己造的错：`down` 曾打印「已拆除」而容器与卷一个没少。根因是 `itsm-init` 的 `${E2E_ADMIN_PASSWORD:?}` 在 compose **解析阶段**校验，拆栈不带该变量整条命令失败，而脚本把 stderr 和退出码一起吞了。现在拆栈/查状态先用 up 时留存的口令文件补一个只为让解析通过的值，失败输出可见、退出即报错，并按 `label=com.docker.compose.project` 复核残留，有残留就拒绝删 proof；`up` 里的预清理同样复核，并拒绝把拆栈占位值当真实口令起栈。实测修复后一次 `down` 清掉 5 容器 + 4 卷 + 网络，重复 `down` 幂等退出 0。
+
+### 11.3 工单读权限与筛选（在隔离栈里才测得出来）
+
+全新空卷栈没有存量工单，权限与筛选断言第一次变得可归因。实测数据（经 `:3001` 前端代理）：
+
+- 修复前：technician 名下 23 条却看到 45 条（全租户）。
+- 修复后：technician A `{total:3,items:3}`、technician B `{total:2,items:2}`、admin `{total:5}`，`foreign` 数组为空；把 B 的一张工单指派给 A 后，A 的可见范围正确扩到 4 条并含 `ds-b-assigned-a`。
+- 筛选下传：`assigneeId=A` 返回 1 条且受理人全等；`requesterId=B&type=incident` 返回 2 条无杂项；`categoryId=999999`（不存在）返回 0 条而不是全量。
+
+两处根因与修法见 `CHANGELOG.md` `[Unreleased]` Fixed 前两条；行级谓词的证据链是 `handlers/ticket/repository_impl_datascope_test.go`（enttest 打真实 `repository/ticket`）+ `handler_test.go`（mock 仓储真的执行谓词，经真实路由断言 2/1/3 与缺 `user_id` 的 fail-closed），两组在修复前实测为红。
+
+### 11.4 本批实测到的其他事实与遗留
+
+1. **不带 `assigneeId` 建单会被自动指派给 bootstrap admin（user 1）**。来源是 `service/ticket_service.go:428` 的 `assignmentSmartService` 兜底：工单无受理人时由智能指派决定，空库里落到 1 号用户。隔离栈 25 条工单里 18 条 `assignee_id=1`。这不是本批改动造成的，但会让「我的工单」类视图与行级 `OwnedOrAssigned` 语义在空库/新建租户下失真，需要单独判断是配置缺省（该由工单类型/队列决定）还是兜底本身错。
+2. 隔离栈镜像残留：`itsm-e2e-backend:02oct`、`itsm-e2e-init:02oct` 各 145MB。保留是为了下一次 `E2E_SKIP_BUILD=1` 提速；不要就 `docker rmi itsm-e2e-backend:02oct itsm-e2e-init:02oct`。
+3. 一次性验证脚本 `/tmp/verify-datascope.sh` 刻意不进仓库：它依赖 `docker exec` 进指定容器名、并直接读 proof 目录，属于人工取证工具而不是可复用门禁。仓库里被固化的只有 Go 测试与 `isolated-stack-guard.spec.ts`。
+4. `staticcheck ./handlers/ticket/` 有 2 处存量 `SA4023`（`handler.go:675,698` 对 `ExportTickets`/`ImportTickets` 的 nil 接口比较），不在本批 diff 里，未顺手改。`gofumpt -l` 对本批四个 Go 文件 0 命中。
+5. `cd itsm-backend && go test ./...` 本批实测退出 0（82 个包 ok、无 FAIL）；`npm run type-check` 0 错误。
+6. 下一步仍是 #25：`tests/e2e/roles/*.spec.ts` 七个夹具还在用固定口令演示账号（`user1/user123`、`tenant1admin/ta123`、`security1` 的 `password:'test'`）与 `data.access_token`/`Bearer` 写法，隔离栈里必然登不上——这正是本批把夹具底座（cookie 会话 + 缓存 + proof 守卫）建好之后要收的账。以及 #26：常驻栈/生产库里可能已被历史夹具写入的用户与工单，需要只读盘点后再决定清理，按约定先给方案。
+
+**影响面**：新增 `scripts/e2e-isolated-stack.sh`、`docker-compose.e2e.yml`、`itsm-frontend/tests/e2e/{harness.ts,isolated-stack-guard.spec.ts}`；改 `playwright.config.ts`、`tests/e2e/fixtures/auth.ts`、`handlers/ticket/{handler.go,handler_test.go,repository_impl.go}`；文档同步 `CHANGELOG.md`、`README.md`「开发与测试」、`docs/dev-commands-reference.md` §2.5（新增小节，后续编号顺延）与本计划 §11。无新增 API 契约字段（六个过滤参数 DTO 早已声明，本批只是让它真的生效），因此不动 `docs/api-reference.md`。

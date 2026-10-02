@@ -185,7 +185,38 @@ npm run test:e2e:flows
 npm run test:smoke
 ```
 
-### 2.5 工程契约检查
+### 2.5 e2e 一次性隔离栈
+
+写业务数据的 e2e（建用户、建工单、权限夹具）不得对着常驻栈跑。本机实测的污染路径是：
+`next.config.ts` 与 `src/app/api/[...path]/route.ts` 的代理 upstream 默认值是
+`http://localhost:8090`，而 `127.0.0.1:8090` 属于生产容器（`DB_NAME=itsm_prod`）——
+浏览器只打环回 `:3000` 依然会把 `POST /api/v1/users` 代理进生产库。所以隔离靠的不只是端口，
+而是**跑前自动证明**。
+
+```bash
+# 起栈：新 compose project + 唯一容器名 + 独占端口（127.0.0.1:18090 / :3001），
+# 空卷首装（migrate+seed），随后用 canary 写路径证明代理确实落在本栈数据库上。
+scripts/e2e-isolated-stack.sh up                      # 构建 + 起栈 + canary 证明
+eval "$(scripts/e2e-isolated-stack.sh up --print-env)" # 同时把 4 个测试环境变量注入当前 shell
+scripts/e2e-isolated-stack.sh status                   # 容器状态与 proof 摘要
+scripts/e2e-isolated-stack.sh down                     # 拆栈（含本栈卷）并删除 proof
+```
+
+`up` 成功后在 `$TMPDIR/itsm-e2e-proofs/`（0700）写出三个 0600 文件：`<project>.json` 是
+proof，`<project>.env` 是可直接 source 的环境变量，`<project>.password` 是本栈 admin 口令
+（不传 `E2E_ADMIN_PASSWORD` 时随机生成，仓库里不出现可用口令）。Playwright 侧
+`tests/e2e/harness.ts` 的 `isolatedBaseURL()` 会硬校验：`ITSM_E2E_ISOLATED_STACK=1`、
+显式 `PLAYWRIGHT_BASE_URL` 在环回白名单内、proof 未过期、proof 记录的地址与目标逐字符一致、
+且 proof 里的代理 upstream 不是环回地址。任一条不满足就拒绝发请求，跑不绿也不是「在生产上跑绿」。
+八条分支的离线回归见 `itsm-frontend/tests/e2e/isolated-stack-guard.spec.ts`（不需要真实栈）。
+
+可调变量：`E2E_RUN_ID`（运行号，默认 PID，决定 project/容器名/镜像 tag）、
+`E2E_ADMIN_PASSWORD`、`E2E_SKIP_BUILD=1`（复用已构建镜像提速）、`E2E_PROOF_DIR`、
+`E2E_UP_TIMEOUT`（默认 420s，含 Next 冷编译；本机 `/login` 首条请求实测 150s）。
+覆盖层是 `docker-compose.e2e.yml`（叠加在 `docker-compose.dev.yml` 上），
+只服务于验证，不改变 dev compose 的业务装配。
+
+### 2.6 工程契约检查
 
 ```bash
 make check-contracts        # 校验 API 路径、部署配置、Docker 配置一致性
@@ -194,7 +225,7 @@ make fresh-install-gate     # 空卷首装门禁：postgres+redis+itsm-init 全�
                             # GATE_BUILD=0 复用镜像；GATE_KEEP=1 失败后保留现场；负向自检见 scripts/fixtures/fresh-gate-negative.override.yml
 ```
 
-### 2.6 功能冒烟测试
+### 2.7 功能冒烟测试
 
 ```bash
 # Shell 版冒烟测试（健康检查 + 登录 + 核心API + 数据库连接）

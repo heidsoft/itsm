@@ -423,12 +423,19 @@ npm test
 cd ..
 make check-contracts
 
+# 会写业务数据的 e2e（建用户/建工单/权限夹具）一律对着一次性隔离栈跑，
+# 不对常驻栈跑：up 会用 canary 写路径证明前端代理确实落在本栈数据库上，
+# 证明不成立时 Playwright 侧守卫直接拒绝运行。
+eval "$(scripts/e2e-isolated-stack.sh up --print-env)"   # 起栈并把测试环境变量注入当前 shell
+cd itsm-frontend && npm run test:e2e:roles               # 用上面的环境变量跑夹具
+cd .. && scripts/e2e-isolated-stack.sh down              # 拆栈（含本栈卷）并删除证明文件
+
 # 业务流程回归（需先启动开发环境；覆盖事件/问题全生命周期、变更拒绝路径、
 # 状态机负例、伪造 token 负例与通知/仪表盘联动，共 27 项断言）
 python3 output/dev_business_flow_test.py
 ```
 
-详细分层、测试策略和 E2E 用法见[本地开发命令](./docs/dev-commands-reference.md)和[测试指南](./docs/testing/README.md)。
+详细分层、测试策略和 E2E 用法见[本地开发命令](./docs/dev-commands-reference.md)（隔离栈见 §2.5）和[测试指南](./docs/testing/README.md)。
 
 ## 生产部署
 
