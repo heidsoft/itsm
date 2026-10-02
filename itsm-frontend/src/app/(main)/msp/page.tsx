@@ -22,7 +22,7 @@ import {
 import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { hasProductCapability } from '@/config/product-capabilities';
-import type { MSPAllocation, MSPCustomerReport, MSPPerformanceReport, MSPContext, MSPAllocationHistory } from '@/types/msp';
+import type { MSPAllocation, MSPCustomerReport, MSPPerformanceReport, MSPContext } from '@/types/msp';
 import type { Ticket as ApiTicket } from '@/lib/api/ticket-api';
 
 const { RangePicker } = DatePicker;
@@ -48,7 +48,7 @@ export default function MSPDashboardPage() {
   const [perfLoading, setPerfLoading] = useState(false);
 
   // 分配历史状态
-  const [allocationHistory, setAllocationHistory] = useState<MSPAllocationHistory[]>([]);
+  const [allocationHistory, setAllocationHistory] = useState<MSPAllocation[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
@@ -149,8 +149,8 @@ export default function MSPDashboardPage() {
   const loadAllocationHistory = async () => {
     setHistoryLoading(true);
     try {
-      const data = await MSPService.getAllocationHistory({});
-      setAllocationHistory(data);
+      const res = await MSPService.getAllocationHistory({});
+      setAllocationHistory(res.items);
     } catch (err: any) {
       message.error(err.message || '加载分配历史失败');
     } finally {
@@ -160,7 +160,7 @@ export default function MSPDashboardPage() {
 
   const allocationColumns = [
     { title: 'MSP 员工', dataIndex: 'mspUsername', key:'mspUsername' },
-    { title: '客户租户', dataIndex: 'customerName', key:'customerName' },
+    { title: '客户租户', dataIndex: 'customerTenantName', key:'customerTenantName' },
     {
       title: '角色',
       dataIndex: 'role',
@@ -262,7 +262,7 @@ export default function MSPDashboardPage() {
 
   const historyColumns = [
     { title: 'MSP 员工', dataIndex: 'mspUsername', key:'mspUsername' },
-    { title: '客户', dataIndex: 'customerName', key:'customerName' },
+    { title: '客户', dataIndex: 'customerTenantName', key:'customerTenantName' },
     {
       title: '角色',
       dataIndex: 'role',
@@ -274,7 +274,6 @@ export default function MSPDashboardPage() {
     },
     { title: '分配时间', dataIndex: 'assignedAt', key:'assignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
     { title: '解除时间', dataIndex: 'deassignedAt', key:'deassignedAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
-    { title: '解除原因', dataIndex:'deallocationReason', key:'deallocationReason', render: (v: string) => v || '-' },
   ];
 
   if (!isMSP && !isAdmin) {
@@ -512,7 +511,7 @@ export default function MSPDashboardPage() {
               </Card>
             ),
           },
-          // 分配历史面板依赖未注册的后端路由，见 PRODUCT_CAPABILITIES.mspAllocationHistory。
+          // 分配历史依赖 GET /api/v1/msp/allocations/history，见 PRODUCT_CAPABILITIES.mspAllocationHistory。
         ].filter((item) => item.key !== 'history' || hasProductCapability('mspAllocationHistory'))}
       />
     </div>

@@ -147,23 +147,6 @@ type MSPPerformanceReport struct {
 	CustomerSatisfaction float64 `json:"customerSatisfaction,omitempty"`
 }
 
-// ==================== 分配历史 DTO ====================
-
-// MSPAllocationHistory 分配历史记录
-type MSPAllocationHistory struct {
-	ID                 int        `json:"id"`
-	MSPUserID          int        `json:"mspUserId"`
-	MSPUsername        string     `json:"mspUsername"`
-	CustomerTenantID   int        `json:"customerTenantId"`
-	CustomerName       string     `json:"customerName"`
-	Role               string     `json:"role"`
-	AssignedAt         time.Time  `json:"assignedAt"`
-	DeassignedAt       *time.Time `json:"deassignedAt,omitempty"`
-	DeallocationReason string     `json:"deallocationReason,omitempty"`
-	CreatedBy          int        `json:"createdBy"`
-	CreatedByName      string     `json:"createdByName,omitempty"`
-}
-
 // ==================== 工作流节点 MSP 配置 DTO ====================
 
 // WorkflowNodeMSPConfig 工作流节点的 MSP 配置

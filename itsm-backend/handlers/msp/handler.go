@@ -5,6 +5,7 @@
 package msp
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -162,12 +163,85 @@ func (h *Handler) Deallocate(c *gin.Context) {
 
 	err := h.mspAllocationService.Deactivate(c.Request.Context(), req.MSPUserID, req.CustomerTenantID)
 	if err != nil {
+		if errors.Is(err, service.ErrMSPAllocationNotFound) {
+			h.logger.Warnw("Deallocate matched no active allocation",
+				"msp_user_id", req.MSPUserID, "customer_tenant_id", req.CustomerTenantID, "operator", operatorID)
+			common.NotFound(c, "没有可解除的活跃分配")
+			return
+		}
 		h.logger.Errorw("Failed to deallocate", "error", err, "operator", operatorID)
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
 
 	common.Success(c, gin.H{"message": "分配已解除"})
+}
+
+// GetAllocationHistory 返回当前 MSP 租户的分配历史（含已解除记录）。
+//
+// 数据边界来自认证上下文：msp_allocations 没有 tenant_id 列，历史行通过
+// msp_user 所属 MSP 租户收敛，绝不允许调用方用查询参数指定租户。
+//
+//	GET /api/v1/msp/allocations/history
+//	?mspUserId=&customerTenantId=&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&page=1&pageSize=20
+func (h *Handler) GetAllocationHistory(c *gin.Context) {
+	if c.GetInt("user_id") == 0 {
+		common.Fail(c, common.UnauthorizedCode, "用户未认证")
+		return
+	}
+
+	mspTenantID := c.GetInt("tenant_id")
+	if mspTenantID == 0 {
+		common.Fail(c, common.UnauthorizedCode, "缺少租户上下文")
+		return
+	}
+
+	filter := service.MSPAllocationHistoryFilter{MSPTenantID: mspTenantID}
+
+	if raw := c.Query("mspUserId"); raw != "" {
+		v, err := strconv.Atoi(raw)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "mspUserId格式错误")
+			return
+		}
+		filter.MSPUserID = &v
+	}
+	if raw := c.Query("customerTenantId"); raw != "" {
+		v, err := strconv.Atoi(raw)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "customerTenantId格式错误")
+			return
+		}
+		filter.CustomerTenantID = &v
+	}
+	if raw := c.Query("startDate"); raw != "" {
+		v, err := parseDateOrZero(raw)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "startDate格式错误(YYYY-MM-DD)")
+			return
+		}
+		filter.AssignedFrom = &v
+	}
+	if raw := c.Query("endDate"); raw != "" {
+		v, err := parseDateOrZero(raw)
+		if err != nil {
+			common.Fail(c, common.ParamErrorCode, "endDate格式错误(YYYY-MM-DD)")
+			return
+		}
+		filter.AssignedTo = &v
+	}
+
+	pagination := common.GetPaginationFromQuery(c)
+	filter.Page, filter.PageSize = pagination.Page, pagination.PageSize
+
+	items, total, err := h.mspAllocationService.ListHistory(c.Request.Context(), filter)
+	if err != nil {
+		h.logger.Errorw("Failed to list allocation history", "error", err, "msp_tenant_id", mspTenantID)
+		common.Fail(c, common.InternalErrorCode, "查询分配历史失败")
+		return
+	}
+
+	common.SuccessWithList(c, items, total, filter.Page, filter.PageSize)
 }
 
 // GetAllCustomers 获取当前 MSP 员工可访问的所有客户

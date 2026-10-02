@@ -1536,6 +1536,7 @@ Query Parameters:
 | `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |
+| `GET /api/v1/msp/allocations/history` | `{items, total, page, pageSize, totalPages}` | 标准分页信封，元素是 `MSPAllocationDTO` |
 
 ### MSP 报表的口径与限制
 
@@ -1552,6 +1553,27 @@ Query Parameters:
   `customerName`/`slaComplianceRate` 等虚构列。
 - `GET /api/v1/msp/customers/:customerTenantId/tickets` 的 `total` 是该客户租户（叠加 `status`
   过滤）的全量计数，不再用当前页长度冒充；元素统一过 `TicketResponse` DTO。
+
+### MSP 分配历史
+
+`GET /api/v1/msp/allocations/history`（`middleware.RequireMSPPermission("msp_allocation","read")`）
+返回当前 MSP 租户的全部分配记录，**包含已解除的行**，按 `assignedAt` 倒序分页。
+
+- 查询参数：`mspUserId`、`customerTenantId`、`startDate`、`endDate`（`YYYY-MM-DD`）、`page`、`pageSize`，
+  全部可选；格式错误返回 400/1001。`endDate` 是日期，后端按「包含当天」处理（上界取次日 00:00 开区间），
+  否则当天 00:00 之后的分配会被静默丢掉。
+- 数据边界只能来自认证上下文：`msp_allocations` 没有 `tenant_id` 列，历史行通过 `msp_user` 所属的
+  MSP 租户收敛，因此**不接受任何租户形式的查询参数**；缺少 `tenant_id` 或 `user_id` 一律 401/2002，
+  不回退默认租户。
+- 响应行就是 `MSPAllocationDTO`：`{id, mspUserId, mspUsername?, customerTenantId, customerTenantName?,
+  role, assignedAt, deassignedAt?}`。表里没有解除原因和操作人列，所以契约里不存在
+  `deallocationReason`/`createdBy`/`createdByName`；此前 `dto.MSPAllocationHistory` 声明过这些字段
+  但没有任何生产代码能产出它们，已随本次接线删除。活跃行的 `deassignedAt` 直接缺省，不返回零值。
+- `POST /api/v1/msp/allocations/deallocate` 只有在确实命中一条活跃分配时才返回成功；没有活跃行
+  （不存在、已解除或不属于本 MSP 租户）返回 404/4004。历史上它忽略影响行数，把「什么都没解除」
+  报成成功。
+- 重新分配不再改写已归档行的 `deassigned_at`。此前 `Create` 会把同一「员工×客户」下所有已解除记录
+  的结束时间刷成当前时间，导致这份历史的「何时解除」不可信。
 
 ## 排序
 

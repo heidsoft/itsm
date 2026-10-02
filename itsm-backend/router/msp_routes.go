@@ -24,6 +24,7 @@ func SetupMSPRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// 分配管理 - 需要 msp_allocation 权限
 		msp.GET("/allocations", middleware.RequireMSPPermission("msp_allocation", "read"), config.MSPHandler.GetAllocations)
+		msp.GET("/allocations/history", middleware.RequireMSPPermission("msp_allocation", "read"), config.MSPHandler.GetAllocationHistory)
 		msp.POST("/allocations", middleware.RequireMSPPermission("msp_allocation", "write"), config.MSPHandler.CreateAllocation)
 		msp.POST("/allocations/deallocate", middleware.RequireMSPPermission("msp_allocation", "write"), config.MSPHandler.Deallocate)
 

@@ -115,7 +115,7 @@ export default function MSPManagementPage() {
   const handleDeallocate = async (allocation: MSPAllocation) => {
     Modal.confirm({
       title: '确认解除分配',
-      content: `确定要解除 ${allocation.mspUsername} 对客户 ${allocation.customerName} 的分配吗？`,
+      content: `确定要解除 ${allocation.mspUsername} 对客户 ${allocation.customerTenantName} 的分配吗？`,
       onOk: async () => {
         setDeallocateLoading(true);
         try {
@@ -139,8 +139,8 @@ export default function MSPManagementPage() {
     },
     {
       title: '客户',
-      dataIndex: 'customerName',
-      key:'customerName',
+      dataIndex: 'customerTenantName',
+      key:'customerTenantName',
     },
     {
       title: '角色',

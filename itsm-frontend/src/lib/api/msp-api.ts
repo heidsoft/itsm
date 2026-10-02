@@ -9,7 +9,7 @@ import type {
   MSPCustomerTicketsResponse,
   MSPCustomerReportListResponse,
   MSPPerformanceReportListResponse,
-  MSPAllocationHistory,
+  MSPAllocationHistoryResponse,
   MSPContext,
 } from '@/types/msp';
 
@@ -129,11 +129,21 @@ export class MSPAPI {
   // ==================== 审计与历史 ====================
 
   /**
-   * 获取分配历史记录
+   * 获取分配历史记录（含已解除记录，按 assignedAt 倒序分页）。
+   *
+   * 数据边界由后端认证上下文的 MSP 租户决定，前端不传租户参数。
+   * endDate 是日期，后端按「包含当天」处理。
    */
   static async getAllocationHistory(
-    params: { mspUserId?: number; customerTenantId?: number; startDate?: string; endDate?: string }
-  ): Promise<MSPAllocationHistory[]> {
-    return httpClient.get<MSPAllocationHistory[]>('/api/v1/msp/allocations/history', params);
+    params: {
+      mspUserId?: number;
+      customerTenantId?: number;
+      startDate?: string;
+      endDate?: string;
+      page?: number;
+      pageSize?: number;
+    } = {}
+  ): Promise<MSPAllocationHistoryResponse> {
+    return httpClient.get<MSPAllocationHistoryResponse>('/api/v1/msp/allocations/history', params);
   }
 }

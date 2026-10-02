@@ -256,22 +256,37 @@ describe('MSPService', () => {
   });
 
   describe('getAllocationHistory', () => {
-    it('should return allocation history', async () => {
-      const history = [{ id: 1, action: 'allocated' }];
-      mockGetAllocationHistory.mockResolvedValue(history);
+    it('passes through the standard list envelope', async () => {
+      const envelope = {
+        items: [
+          {
+            id: 1,
+            mspUserId: 10,
+            mspUsername: 'agent',
+            customerTenantId: 3,
+            customerTenantName: 'Customer A',
+            role: 'primary',
+            assignedAt: '2026-01-01T00:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      };
+      mockGetAllocationHistory.mockResolvedValue(envelope);
 
       const result = await MSPService.getAllocationHistory({ mspUserId: 10 });
 
       expect(mockGetAllocationHistory).toHaveBeenCalledWith({ mspUserId: 10 });
-      expect(result).toEqual(history);
+      expect(result).toEqual(envelope);
     });
 
-    it('should return empty array when no data', async () => {
-      mockGetAllocationHistory.mockResolvedValue(null);
+    it('does not fabricate a successful empty envelope when the backend errors', async () => {
+      // 历史实现在这里 `res || []`，把失败与「没有历史」混成同一种结果。
+      mockGetAllocationHistory.mockRejectedValue(new Error('permission denied'));
 
-      const result = await MSPService.getAllocationHistory({});
-
-      expect(result).toEqual([]);
+      await expect(MSPService.getAllocationHistory({})).rejects.toThrow('permission denied');
     });
   });
 });

@@ -13,13 +13,13 @@ export type MSPRole = 'msp_tech' | 'msp_specialist' | 'msp_manager' | 'msp_viewe
 // 分配角色
 export type AllocationRole = 'primary' | 'backup' | 'specialist';
 
-// MSP 分配 DTO
+// MSP 分配 DTO（对应后端 dto.MSPAllocationDTO）
 export interface MSPAllocation {
   id: number;
   mspUserId: number;
   mspUsername?: string;
   customerTenantId: number;
-  customerName?: string;
+  customerTenantName?: string;
   role: AllocationRole;
   assignedAt: string;
   deassignedAt?: string;
@@ -89,19 +89,15 @@ export interface MSPPerformanceReportListResponse {
   total: number;
 }
 
-// MSP 分配历史
-export interface MSPAllocationHistory {
-  id: number;
-  mspUserId: number;
-  mspUsername: string;
-  customerTenantId: number;
-  customerName: string;
-  role: AllocationRole;
-  assignedAt: string;
-  deassignedAt?: string;
-  deallocationReason?: string;
-  createdBy: number;
-  createdByName?: string;
+// 分配历史行与分配 DTO 同源（dto.MSPAllocationDTO）：
+// msp_allocations 只有 assigned_at / deassigned_at，没有解除原因或操作人列，
+// 因此历史类型不得再声明 deallocationReason / createdBy / createdByName。
+export interface MSPAllocationHistoryResponse {
+  items: MSPAllocation[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // API 响应类型

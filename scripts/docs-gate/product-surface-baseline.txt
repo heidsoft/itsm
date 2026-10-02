@@ -13,7 +13,7 @@
 # 基线建立日期：2026-09-22（来源：output/product-drift-overdesign-audit-2026-09-22.md §1.2）
 
 handlers_dirs=65          # 2026-09-26 删除 handlers/project（死代码）→ 2026-09-28 +1 handlers/workbench（统一工作台，P0 根因"无跨域待办"正解，f0a87cea）
-service_go_files=330      # 2026-09-28 +4：lifecycle/phase.go + approval_chain 收敛三件套 → 2026-10-02 -1：删除 service/token_blacklist_service.go（四套 token 吊销机制收敛为 middleware 一套，该服务在生产从未被构造） → 2026-10-02 -2：删除 service/cloud_discovery_service.go 及其测试（零调用者的假云发现，AWS/Azure 返回空切片、国内三家 return nil；真实链路是 service/cloud.Runner + cloud.DiscoveryWorker）
+service_go_files=331      # 2026-09-28 +4：lifecycle/phase.go + approval_chain 收敛三件套 → 2026-10-02 -1：删除 service/token_blacklist_service.go（四套 token 吊销机制收敛为 middleware 一套，该服务在生产从未被构造） → 2026-10-02 -2：删除 service/cloud_discovery_service.go 及其测试（零调用者的假云发现，AWS/Azure 返回空切片、国内三家 return nil；真实链路是 service/cloud.Runner + cloud.DiscoveryWorker） → 2026-10-02 +1：新增 service/msp_allocation_service_test.go（E3-1 回归锁：重新分配不得改写已归档分配的 deassigned_at，见 plans/edge-feature-stability-audit-2026-10-02.md 行 3c）。本项计数含 *_test.go，因此该增长是测试而非新增生产逻辑。
 bootstrap_app_lines=1815  # 目标 <300；2026-09-28 +12：租户开通 outbox 接线（414ba5fd）→ 2026-10-02 +4：会话真相/吊销收敛装配（middleware.ConfigureTokenRevocationRedis 接管吊销存储 + 未配 Redis 显式告警，删除 SetRedis 与 NewService(..., nil) 死参数）
 ent_schema_files=133      # 2026-09-28 +1 sla_state.go（SLA 统一引擎 Phase 3 读切换，62867abb）
 frontend_pages=169        # 2026-09-28 +1 workbench 页面（3f38f93a）；空壳结论已证伪（真实空壳 0，见 plans §1.5），无页可清

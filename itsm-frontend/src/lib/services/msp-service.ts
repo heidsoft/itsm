@@ -6,7 +6,7 @@ import type {
   MSPCustomerTicketsResponse,
   MSPCustomerReport,
   MSPPerformanceReport,
-  MSPAllocationHistory,
+  MSPAllocationHistoryResponse,
   MSPContext,
 } from '@/types/msp';
 
@@ -143,16 +143,25 @@ export class MSPService {
   }
 
   /**
-   * 获取分配历史
+   * 获取分配历史（含已解除记录）。
+   * 返回标准列表信封的真实字段，total 是租户内全量计数而不是当前页长度。
    */
   static async getAllocationHistory(params: {
     mspUserId?: number;
     customerTenantId?: number;
     startDate?: string;
     endDate?: string;
-  }): Promise<MSPAllocationHistory[]> {
+    page?: number;
+    pageSize?: number;
+  } = {}): Promise<MSPAllocationHistoryResponse> {
     const res = await MSPAPI.getAllocationHistory(params);
-    return res || [];
+    return {
+      items: res.items,
+      total: res.total,
+      page: res.page,
+      pageSize: res.pageSize,
+      totalPages: res.totalPages,
+    };
   }
 }
 

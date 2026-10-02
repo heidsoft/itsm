@@ -152,10 +152,25 @@ describe('MSPAPI', () => {
   });
 
   describe('getAllocationHistory', () => {
-    it('should get allocation history', async () => {
-      mockGet.mockResolvedValue([]);
-      await MSPAPI.getAllocationHistory({ mspUserId: 1, startDate: '2024-01-01', endDate: '2024-01-31' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/allocations/history', { mspUserId: 1, startDate: '2024-01-01', endDate: '2024-01-31' });
+    it('calls the registered history route with camelCase filters', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+      await MSPAPI.getAllocationHistory({
+        mspUserId: 1,
+        customerTenantId: 7,
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        page: 2,
+        pageSize: 50,
+      });
+      // 路径/参数必须与 router/msp_routes.go 注册的 GET 完全一致。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/msp/allocations/history', {
+        mspUserId: 1,
+        customerTenantId: 7,
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        page: 2,
+        pageSize: 50,
+      });
     });
   });
 
