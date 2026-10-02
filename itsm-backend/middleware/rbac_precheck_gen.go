@@ -399,6 +399,8 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/tickets":                                      {Resource: "ticket", Action: "read"},
 			"/api/v1/tickets/*":                                    {Resource: "ticket", Action: "read"},
 			"/api/v1/tickets/*/attachments":                        {Resource: "ticket", Action: "read"},
+			"/api/v1/tickets/*/attachments/*":                      {Resource: "ticket", Action: "read"},
+			"/api/v1/tickets/*/attachments/*/preview":              {Resource: "ticket", Action: "read"},
 			"/api/v1/tickets/*/cc":                                 {Resource: "workflow", Action: "read"},
 			"/api/v1/tickets/*/comments":                           {Resource: "ticket", Action: "read"},
 			"/api/v1/tickets/*/configuration-items":                {Resource: "ticket", Action: "read"},

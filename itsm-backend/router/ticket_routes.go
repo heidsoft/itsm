@@ -171,6 +171,9 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		if config.TicketAttachmentHandler != nil {
 			tickets.GET("/:id/attachments", middleware.RequirePermission("ticket", "read"), config.TicketAttachmentHandler.ListTicketAttachments)
 			tickets.POST("/:id/attachments", middleware.RequirePermission("ticket", "create"), config.TicketAttachmentHandler.UploadAttachment)
+			// 下载与预览此前只有 handler、从未注册路由，前端两个入口点了就 404。
+			tickets.GET("/:id/attachments/:attachment_id", middleware.RequirePermission("ticket", "read"), config.TicketAttachmentHandler.DownloadAttachment)
+			tickets.GET("/:id/attachments/:attachment_id/preview", middleware.RequirePermission("ticket", "read"), config.TicketAttachmentHandler.PreviewAttachment)
 			tickets.DELETE("/:id/attachments/:attachment_id", middleware.RequirePermission("ticket", "delete"), config.TicketAttachmentHandler.DeleteAttachment)
 		}
 

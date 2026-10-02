@@ -5,8 +5,26 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/ent"
+
 	"github.com/stretchr/testify/assert"
 )
+
+// fileUrl 必须由 (ticketId, id) 推导。库里存量行的 file_url 是
+// /attachments/<文件名>/download —— 该路由从未注册过，前端点击恒 404。
+// 如果 mapper 继续透传该列，修好路由也没用。
+func TestToTicketAttachmentResponseDerivesDownloadUrlFromIdentity(t *testing.T) {
+	resp := ToTicketAttachmentResponse(&ent.TicketAttachment{
+		ID:       11,
+		TicketID: 22,
+		FileName: "report.pdf",
+		FilePath: "uploads/tickets/22/report.pdf",
+		FileURL:  "/api/v1/tickets/attachments/report.pdf/download",
+	}, nil)
+
+	assert.Equal(t, "/api/v1/tickets/22/attachments/11", resp.FileURL,
+		"fileUrl 必须等于 router/ticket_routes.go 注册的下载路由，不得透传库里的死链")
+}
 
 func TestTicketAttachmentResponseUsesCamelCaseJSON(t *testing.T) {
 	resp := TicketAttachmentResponse{

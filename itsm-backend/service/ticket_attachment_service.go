@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -18,6 +19,16 @@ import (
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
+)
+
+// 附件访问的错误分类。此前所有失败都被包成普通 error，handler 只能一律回 500，
+// 「附件不存在」「跨租户无权」和「磁盘读失败」在调用方眼里长得一样。
+var (
+	// ErrAttachmentNotFound 表示工单/附件在本租户范围内不存在。跨租户探测也归此类，
+	// 避免用 403 告诉对方资源存在。
+	ErrAttachmentNotFound = errors.New("attachment not found")
+	// ErrAttachmentAccessDenied 表示同租户内当前用户不是工单相关方且角色无权。
+	ErrAttachmentAccessDenied = errors.New("attachment access denied")
 )
 
 type TicketAttachmentService struct {
@@ -161,15 +172,14 @@ func (s *TicketAttachmentService) UploadAttachment(
 		return nil, fmt.Errorf("file rejected by malware scan")
 	}
 
-	// 生成文件URL（相对路径，实际URL由前端或CDN提供）
-	fileURL := fmt.Sprintf("/api/v1/tickets/%d/attachments/%s/download", ticketID, fileName)
-
 	// 创建附件记录
+	// 下载入口不写进 file_url：它是 (ticketID, attachmentID) 的派生值，落库只会和真实
+	// 路由漂移（旧值 /attachments/<文件名>/download 从未注册过路由，存量行全是死链）。
+	// 响应由 dto.ToTicketAttachmentResponse 统一推导。
 	attachment, err := s.client.TicketAttachment.Create().
 		SetTicketID(ticketID).
 		SetFileName(safeName).
 		SetFilePath(filePath).
-		SetFileURL(fileURL).
 		SetFileSize(int(fileHeader.Size)).
 		SetFileType(mimeType).
 		SetMimeType(mimeType).
@@ -339,7 +349,7 @@ func (s *TicketAttachmentService) GetAttachmentFile(ctx context.Context, ticketI
 		).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("attachment not found: %w", err)
+		return nil, fmt.Errorf("%w: attachment %d not found in ticket %d: %w", ErrAttachmentNotFound, attachmentID, ticketID, err)
 	}
 
 	file, err := os.Open(attachment.FilePath)
@@ -411,24 +421,25 @@ func (s *TicketAttachmentService) saveFile(fileHeader *FileHeader, filePath stri
 
 func (s *TicketAttachmentService) authorizeTicketAttachmentAccess(ctx context.Context, ticketID, tenantID, userID int) error {
 	if userID <= 0 {
-		return fmt.Errorf("authentication required")
+		return fmt.Errorf("%w: authentication required", ErrAttachmentAccessDenied)
 	}
 	t, err := s.client.Ticket.Query().Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("ticket not found")
+		// 跨租户探测与真实不存在都给同一个分类，避免用错误码确认对方工单存在。
+		return fmt.Errorf("%w: ticket %d not found in tenant %d", ErrAttachmentNotFound, ticketID, tenantID)
 	}
 	if t.RequesterID == userID || (t.AssigneeID > 0 && t.AssigneeID == userID) {
 		return nil
 	}
 	u, err := s.client.User.Query().Where(user.ID(userID), user.TenantID(tenantID), user.Active(true)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("permission denied")
+		return fmt.Errorf("%w: user %d not resolvable in tenant %d", ErrAttachmentAccessDenied, userID, tenantID)
 	}
 	switch string(u.Role) {
 	case "super_admin", "admin", "manager", "agent", "technician", "security":
 		return nil
 	}
-	return fmt.Errorf("permission denied")
+	return fmt.Errorf("%w: role %s", ErrAttachmentAccessDenied, u.Role)
 }
 
 func SanitizeDownloadFilename(name string) string { return sanitizeFilename(name) }

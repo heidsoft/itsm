@@ -4,6 +4,7 @@
 package ticket_attachment
 
 import (
+	"errors"
 	"io"
 	"mime"
 	"strconv"
@@ -56,6 +57,23 @@ func pathIDs(c *gin.Context) (ticketID, attachmentID int, ok bool) {
 	return ticketID, attachmentID, true
 }
 
+// failAttachmentAccess 把附件访问失败映射为稳定的 HTTP 语义。
+// 此前所有失败都回 5001，「附件不存在」「跨租户」「磁盘读失败」在调用方眼里长得一样。
+// 原始错误只进日志；不存在与无权统一按 404 对外表达，避免确认对方工单存在。
+func (h *Handler) failAttachmentAccess(c *gin.Context, rawErr error, ticketID, tenantID int) {
+	switch {
+	case errors.Is(rawErr, service.ErrAttachmentAccessDenied):
+		h.logger.Warnw("Attachment access denied", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.ForbiddenCode, "无权访问该附件")
+	case errors.Is(rawErr, service.ErrAttachmentNotFound):
+		h.logger.Warnw("Attachment not found", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.NotFoundCode, "附件不存在或无权访问")
+	default:
+		h.logger.Errorw("Failed to read attachment", "error", rawErr, "ticket_id", ticketID, "tenant_id", tenantID)
+		common.Fail(c, common.InternalErrorCode, "附件读取失败")
+	}
+}
+
 // ListTicketAttachments 获取工单附件列表
 func (h *Handler) ListTicketAttachments(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
@@ -71,8 +89,7 @@ func (h *Handler) ListTicketAttachments(c *gin.Context) {
 
 	attachments, err := h.attachmentService.ListAttachments(c.Request.Context(), ticketID, tenantID, userID)
 	if err != nil {
-		h.logger.Errorw("Failed to list ticket attachments", "error", err, "ticket_id", ticketID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "获取附件列表失败")
+		h.failAttachmentAccess(c, err, ticketID, tenantID)
 		return
 	}
 
@@ -142,8 +159,7 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 
 	attachmentFile, err := h.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
-		h.logger.Errorw("Failed to get attachment file", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "附件不存在或无法访问")
+		h.failAttachmentAccess(c, err, ticketID, tenantID)
 		return
 	}
 	defer attachmentFile.File.Close()
@@ -176,8 +192,7 @@ func (h *Handler) PreviewAttachment(c *gin.Context) {
 
 	attachmentFile, err := h.attachmentService.GetAttachmentFile(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
-		h.logger.Errorw("Failed to get attachment file", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "附件不存在或无法访问")
+		h.failAttachmentAccess(c, err, ticketID, tenantID)
 		return
 	}
 	defer attachmentFile.File.Close()

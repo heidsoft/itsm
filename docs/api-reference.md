@@ -356,6 +356,24 @@ Content-Type: multipart/form-data
 file: [binary data]
 ```
 
+### 下载工单附件
+
+响应是文件流（`Content-Disposition: attachment`），不是 `{code, message, data}` 信封。列表与上传响应里的 `fileUrl` 就是这个地址，由 `(ticketId, id)` 推导，可直接点击。
+
+```http
+GET /tickets/{id}/attachments/{attachmentId}
+Authorization: Bearer <accessToken>
+```
+
+### 预览工单附件
+
+同一次下游读取，`Content-Disposition: inline`，供图片/PDF 在浏览器内打开。
+
+```http
+GET /tickets/{id}/attachments/{attachmentId}/preview
+Authorization: Bearer <accessToken>
+```
+
 ## 事件管理接口
 
 ### 获取事件列表

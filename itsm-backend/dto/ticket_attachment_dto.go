@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"fmt"
 	"time"
 
 	"itsm-backend/ent"
@@ -28,6 +29,10 @@ type ListTicketAttachmentsResponse struct {
 }
 
 // ToTicketAttachmentResponse 将 Ent 实体转换为 DTO
+//
+// fileUrl 由 (ticketId, id) 推导，不读 attachment.FileURL：库里存量值是
+// /attachments/<文件名>/download 这种从未注册过的死链，下载入口的唯一真相是
+// router/ticket_routes.go 注册的路由。
 func ToTicketAttachmentResponse(attachment *ent.TicketAttachment, uploader *ent.User) *TicketAttachmentResponse {
 	resp := &TicketAttachmentResponse{
 		ID:         attachment.ID,
@@ -38,7 +43,7 @@ func ToTicketAttachmentResponse(attachment *ent.TicketAttachment, uploader *ent.
 		FileType:   attachment.FileType,
 		UploadedBy: attachment.UploadedBy,
 		CreatedAt:  attachment.CreatedAt,
-		FileURL:    attachment.FileURL,
+		FileURL:    fmt.Sprintf("/api/v1/tickets/%d/attachments/%d", attachment.TicketID, attachment.ID),
 		MimeType:   attachment.MimeType,
 	}
 
