@@ -1,5 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isolatedStack = process.env.ITSM_E2E_ISOLATED_STACK === '1';
+// 一次性栈模式下不允许有默认地址，也不允许隐式起/复用宿主 :3000：
+// 那台 dev server 的代理 upstream 是 http://localhost:8090，本机该端口属于生产容器
+// （DB_NAME=itsm_prod），夹具写入会直接落到生产库。地址只能来自
+// scripts/e2e-isolated-stack.sh 导出的 PLAYWRIGHT_BASE_URL。
+if (isolatedStack && !process.env.PLAYWRIGHT_BASE_URL) {
+  throw new Error(
+    'ITSM_E2E_ISOLATED_STACK=1 必须显式提供 PLAYWRIGHT_BASE_URL（由 scripts/e2e-isolated-stack.sh up 生成）'
+  );
+}
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 const enableBrowserChannels = process.env.PLAYWRIGHT_SKIP_CHANNELS !== '1';
 const enableEdge = process.env.PLAYWRIGHT_ENABLE_EDGE === '1';
@@ -22,12 +32,15 @@ export default defineConfig({
     },
   },
   reporter: [['list'], ['html', { open: 'never' }]],
-  webServer: {
-    command: 'npm run dev',
-    port: 3000,
-    reuseExistingServer: true,
-    timeout: 60_000, // 减少启动超时
-  },
+  // 一次性栈里前端已在容器内跑 dev server，绝不能再由宿主起一个 :3000 顶掉它。
+  webServer: isolatedStack
+    ? undefined
+    : {
+        command: 'npm run dev',
+        port: 3000,
+        reuseExistingServer: true,
+        timeout: 60_000, // 减少启动超时
+      },
   projects: [
     ...(enableBrowserChannels
       ? [

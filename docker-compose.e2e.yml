@@ -1,0 +1,104 @@
+# 一次性 e2e 隔离栈覆盖层（配合 docker-compose.dev.yml 与新 project 名使用）。
+#
+# 为什么必须有这一层（2026-10-02 实测）：
+# 本机 `localhost:8090` 同时被两个后端监听——`itsm-backend-prod` 容器绑
+# 127.0.0.1:8090（`DB_NAME=itsm_prod`），另一个会话起的宿主原生 `./itsm-backend`
+# 绑 [::1]:8090。而 `next.config.ts` 与 `src/app/api/[...path]/route.ts` 的代理
+# upstream 默认值都是 `http://localhost:8090`。于是「浏览器只打环回 :3000」这个
+# 守卫根本挡不住写路径：夹具的 POST /users、工单写入会顺着 Next 代理落到哪一个
+# 后端，完全取决于 Node 解析 localhost 的顺序。本文件把三件事变成显式的：
+# 1. 容器名与 project 唯一化，绝不与 dev/prod 容器互相顶掉；
+# 2. 数据库不发布宿主端口，只有本栈自己的后端能连（compose 网络内 DNS）；
+# 3. 前端代理 upstream 固定为 `http://backend:8090`（本 project 内的服务名），
+#    不再出现 `localhost:8090`，从源头消除落到生产后端的可能。
+#
+# 用法见 scripts/e2e-isolated-stack.sh（起栈 + canary 证明 + 输出测试环境变量）。
+services:
+  postgres:
+    container_name: itsm-e2e-postgres-${E2E_RUN_ID:-local}
+    # 不发布宿主端口：验证与清理一律通过 docker exec 进容器，避免任何脚本
+    # 用 localhost:5432 之类的地址误连到本机其他 postgres。
+    ports: !reset []
+    volumes: !reset []
+
+  redis:
+    container_name: itsm-e2e-redis-${E2E_RUN_ID:-local}
+    ports: !reset []
+    volumes: !reset []
+
+  minio:
+    # e2e 不覆盖附件上传，省掉一个冷启动依赖。
+    profiles: ["disabled"]
+
+  ollama:
+    profiles: ["disabled"]
+
+  itsm-ai-service:
+    # guidance sidecar 要现场构建 python 镜像，e2e 断的是权限/列表契约而不是 AI 生成，
+    # 因此不启动它；下面把 GUIDANCE_URL 置空，后端会走 localhost:8091 立刻 ECONNREFUSED，
+    # 属于确定的「未配置降级」，不会变成容器网络里的 DNS 超时。
+    profiles: ["disabled"]
+
+  prometheus:
+    profiles: ["disabled"]
+
+  grafana:
+    profiles: ["disabled"]
+
+  itsm-init:
+    container_name: itsm-e2e-init-${E2E_RUN_ID:-local}
+    image: itsm-e2e-init:${E2E_RUN_ID:-local}
+    environment:
+      # 一次性栈：口令只从调用方环境注入，仓库里不留可用口令。
+      - ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD:?e2e 隔离栈需要显式 E2E_ADMIN_PASSWORD}
+
+  itsm-backend:
+    container_name: itsm-e2e-backend-${E2E_RUN_ID:-local}
+    image: itsm-e2e-backend:${E2E_RUN_ID:-local}
+    ports: !override
+      # 只绑 IPv4 环回：守卫与探针都用 127.0.0.1，不接受 ::1 与外部接口。
+      # 必须 !override（不是 !reset：规范里 !reset 只接受空值、会清空字段）：
+      # 基础文件的 8090:8090 与本机 prod 的 127.0.0.1:8090 直接抢端口。
+      - "127.0.0.1:18090:8090"
+    environment:
+      - ADMIN_PASSWORD=${E2E_ADMIN_PASSWORD:?e2e 隔离栈需要显式 E2E_ADMIN_PASSWORD}
+      # 一次性栈不注入宿主的付费 LLM key：AI 一律按「未配置」降级，
+      # 权限/列表断言必须确定可复现，也不能被 e2e 消耗真实额度。
+      - LLM_API_KEY=
+      - GUIDANCE_URL=
+      # 浏览器与 Playwright 都从 :3001 进来，CORS/WS 白名单必须跟着换端口。
+      - ITSM_CORS_ALLOWED_ORIGINS=http://127.0.0.1:3001,http://localhost:3001
+      - WEBSOCKET_ALLOWED_ORIGINS=http://127.0.0.1:3001,http://localhost:3001
+    volumes: !override
+      # 不共享宿主 ./logs、./uploads：那目录里混着 dev/prod 的日志与上传件，
+      # e2e 写入会污染排查现场，反向读取也会污染断言。
+      - itsm_e2e_backend_logs:/app/logs
+      - itsm_e2e_backend_uploads:/app/uploads
+
+  itsm-frontend:
+    container_name: itsm-e2e-frontend-${E2E_RUN_ID:-local}
+    # 直接复用 dev 镜像：该服务把 ./itsm-frontend 绑挂载进容器跑 `npm run dev`，
+    # 真正跑起来的页面与 e2e 代码都来自当前工作树，镜像只提供 node 依赖与入口。
+    # 后端则不允许复用（见 scripts/e2e-isolated-stack.sh 的 image id 断言），
+    # 因为被测的业务规则就编译在镜像里。
+    image: itsm-itsm-frontend:latest
+    ports: !override
+      - "127.0.0.1:3001:3000"
+    environment:
+      # 关键：代理 upstream 固定到本 project 的后端服务名，覆盖基础文件里
+      # 依赖 localhost:8090 的默认值。
+      - ITSM_BACKEND_URL=http://backend:8090
+      # 浏览器侧 WS 绕过 BFF，必须带本栈端口。
+      - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:18090/api/v1/ws/notifications
+    volumes: !override
+      - ./itsm-frontend:/app
+      # 独立命名卷：不与 dev 栈共享 node_modules/.next，两个 Next dev server
+      # 同时写同一份 .next 会互相覆盖编译缓存。
+      - itsm_e2e_frontend_node_modules:/app/node_modules
+      - itsm_e2e_frontend_next_cache:/app/.next
+
+volumes:
+  itsm_e2e_frontend_node_modules:
+  itsm_e2e_frontend_next_cache:
+  itsm_e2e_backend_logs:
+  itsm_e2e_backend_uploads:

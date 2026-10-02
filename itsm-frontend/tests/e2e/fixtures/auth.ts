@@ -1,148 +1,161 @@
-import { test as base, Page } from '@playwright/test';
-
 /**
- * 角色测试账号映射
- * 与 seeder.go 中 seedRoleTestAccounts 保持一致
+ * 角色权限 e2e 的夹具：cookie 会话 + 按需创建并复用的夹具用户。
+ *
+ * 用例侧契约保持不变（`loginAs(role)` 返回句柄，`apiGet/apiPost(句柄, path)` 发请求），
+ * 但句柄不再是 JWT：它只是本 worker 内一个独立 cookie 罐的标识。
+ * 之所以必须换掉令牌：登录响应自 v1.6.3 起不返回 access_token（只在 HttpOnly cookie 里），
+ * 旧夹具读 `data.accessToken` 只会拿到 undefined，于是所有权限用例都在断言
+ * `Authorization: Bearer undefined` 的 401，而不是真正的权限边界。
+ *
+ * 夹具用户按运行创建，原因有两条：
+ * - 后端基线 seed 禁止固定口令演示账号（`pkg/seeder/seeder_test.go`）；
+ * - 公共注册接口不应接受自选角色（自助声明 admin 等于提权），
+ *   所以权限身份必须由已认证的管理员通过 `POST /api/v1/users` 授予，
+ *   且权限走 `roleIds`（DBOnly 模式下只设主角色拿不到任何权限）。
+ *
+ * 创建结果与会话 cookie 都缓存在环回临时目录：登录接口是 10 次/分钟/IP 的进程内限流，
+ * 每个测试文件都重新供给一次必然把后续用例挡在 403/2003，那不是产品结论。
  */
-export const TEST_ACCOUNTS = {
-  admin: { username: 'admin', password: 'AdminProd2026!', role: 'admin' },
-  user1: { username: 'user1', password: 'user123456', role: 'end_user' },
-  security1: { username: 'security1', password: 'security123456', role: 'security' },
-  engineer1: { username: 'engineer1', password: 'eng123456', role: 'technician' },
-  manager1: { username: 'manager1', password: 'mgr123456', role: 'manager' },
-  tenant1admin: { username: 'tenant1admin', password: 'ta123456', role: 'admin' },
+import { test as base, expect, type APIRequestContext } from '@playwright/test';
+
+import {
+  adminPassword,
+  apiDelete as harnessDelete,
+  apiGet as harnessGet,
+  apiPatch as harnessPatch,
+  apiPost as harnessPost,
+  apiPut as harnessPut,
+  cachedSession,
+  dropFixtureUser,
+  getFixtureUser,
+  isolatedBaseURL,
+  openSession,
+  provisionRoleUser,
+  RateLimitedError,
+  storeFixtureUser,
+  type ApiResponse,
+} from '../harness';
+
+/** 角色夹具：username 只是前缀，真实用户名带运行时后缀，口令随机不落仓库。 */
+const ROLE_FIXTURES = {
+  admin: { role: 'admin', usernamePrefix: 'e2e_admin' },
+  user1: { role: 'end_user', usernamePrefix: 'e2e_user' },
+  security1: { role: 'security', usernamePrefix: 'e2e_sec' },
+  engineer1: { role: 'technician', usernamePrefix: 'e2e_eng' },
+  manager1: { role: 'manager', usernamePrefix: 'e2e_mgr' },
+  tenant1admin: { role: 'admin', usernamePrefix: 'e2e_t1admin' },
 } as const;
 
-// 密码最短长度（后端 RegisterRequest.Password min=6）
-const MIN_PASSWORD_LEN = 6;
+export type TestRole = keyof typeof ROLE_FIXTURES;
 
-export type TestRole = keyof typeof TEST_ACCOUNTS;
+/** 兼容仍按名字读取账号表的用例；这里只暴露角色，不含任何口令。 */
+export const TEST_ACCOUNTS: Record<TestRole, { username: string; role: string }> = Object.fromEntries(
+  (Object.keys(ROLE_FIXTURES) as TestRole[]).map(role => [
+    role,
+    { username: ROLE_FIXTURES[role].usernamePrefix, role: ROLE_FIXTURES[role].role },
+  ])
+) as Record<TestRole, { username: string; role: string }>;
 
-// 扩展 Playwright test 类型
+// 句柄 -> cookie 罐。同一 worker 内按角色复用，跨 worker 由磁盘缓存接力。
+const sessions = new Map<string, APIRequestContext>();
+
+async function adminSession(): Promise<APIRequestContext> {
+  return cachedSession('admin', () => openSession('admin', adminPassword()));
+}
+
+/**
+ * 非 admin 角色：会话同样走磁盘缓存，未命中才在锁内供给并落盘。
+ *
+ * 这里必须套 `cachedSession`：登录限流是 10 次/分钟/IP 的进程内计数，只缓存 admin
+ * 的话每个角色文件仍会各自重新登录（2026-10-02 实测：会话目录里只有 admin 的
+ * state 文件，5 个夹具账号都建好了却每个 worker 各登录一次，仍在 403/2003 上成片飘红）。
+ *
+ * 账号口令只在缓存缺失时才读盘复用；限流（RateLimitedError）不算账号失效——
+ * 丢弃它只会让下一次运行再撞一次限流并把账号白白重建成第二个用户。
+ */
+async function openRoleSession(role: Exclude<TestRole, 'admin'>): Promise<APIRequestContext> {
+  return cachedSession(role, async () => {
+    const spec = ROLE_FIXTURES[role];
+    const stored = getFixtureUser(role);
+    if (stored) {
+      try {
+        return await openSession(stored.username, stored.password);
+      } catch (error) {
+        if (error instanceof RateLimitedError) throw error;
+        dropFixtureUser(role);
+      }
+    }
+
+    const controller = await adminSession();
+    const provisioned = await provisionRoleUser(controller, spec.role, spec.usernamePrefix);
+    storeFixtureUser(role, {
+      username: provisioned.username,
+      password: provisioned.password,
+      roleCode: provisioned.roleCode,
+    });
+    return openSession(provisioned.username, provisioned.password);
+  });
+}
+
+async function sessionFor(role: TestRole): Promise<APIRequestContext> {
+  const existing = sessions.get(role);
+  if (existing) return existing;
+  const created =
+    role === 'admin' ? await adminSession() : await openRoleSession(role as Exclude<TestRole, 'admin'>);
+  sessions.set(role, created);
+  return created;
+}
+
 interface TestFixtures {
-  loginAs: (role: TestRole) => Promise<string>;
-  apiGet: (token: string, path: string) => Promise<any>;
-  apiPost: (token: string, path: string, body?: any) => Promise<any>;
+  loginAs: (role: TestRole) => Promise<TestRole>;
+  apiGet: (session: TestRole, path: string) => Promise<ApiResponse>;
+  apiPost: (session: TestRole, path: string, body?: unknown) => Promise<ApiResponse>;
+  apiPut: (session: TestRole, path: string, body?: unknown) => Promise<ApiResponse>;
+  apiPatch: (session: TestRole, path: string, body?: unknown) => Promise<ApiResponse>;
+  apiDelete: (session: TestRole, path: string) => Promise<ApiResponse>;
 }
 
 export const test = base.extend<TestFixtures>({
-  loginAs: async ({ page, request }, use) => {
+  // 会话是 worker 级资源：跨用例复用同一 cookie 罐，进程退出时由 Playwright 回收。
+  // 但 baseURL 必须在第一个夹具求值前就通过一次性栈守卫，所以这里显式调用一次。
+  loginAs: async ({}, use) => {
+    isolatedBaseURL();
     await use(async (role: TestRole) => {
-      const account = TEST_ACCOUNTS[role];
-      const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
-      const apiURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost';
-
-      // 确保密码满足后端最小长度要求
-      const password =
-        account.password.length >= MIN_PASSWORD_LEN
-          ? account.password
-          : account.password + '1'.repeat(MIN_PASSWORD_LEN - account.password.length);
-
-      const login = async (): Promise<any> =>
-        request.post(`${apiURL}/api/v1/auth/login`, {
-          data: { username: account.username, password },
-        });
-
-      const register = async (): Promise<any> =>
-        request.post(`${apiURL}/api/v1/auth/register`, {
-          data: {
-            username: account.username,
-            password,
-            role: account.role,
-            email: `${account.username}@example.com`,
-            fullName: account.username,
-            tenantId: 1,
-          },
-        });
-
-      // Token 缓存，避免同一 role 重复登录触发 rate limit
-      const cacheKey = `token_cache_${role}`;
-      const cachedToken = (globalThis as any)[cacheKey] as string | undefined;
-      if (cachedToken) {
-        const validateRes = await request.get(`${apiURL}/api/v1/auth/me`, {
-          headers: { Authorization: `Bearer ${cachedToken}` },
-        });
-        if (validateRes.ok()) {
-          return cachedToken;
-        }
-      }
-
-      // 登录，带重试（处理登录限流 429/403）
-      let response = await login();
-      if (!response.ok()) {
-        const bodyText: string = await response.text();
-        const status = response.status();
-        const isRateLimited = status === 429 || (status === 403 && bodyText.includes('过于频繁'));
-        if (isRateLimited && account.role !== 'admin') {
-          // 限流时等 3 秒再试
-          await new Promise(r => setTimeout(r, 3000));
-          response = await login();
-        }
-      }
-
-      // 非管理员账号若登录失败，尝试自动注册后再登录
-      if (!response.ok() && account.role !== 'admin') {
-        const regRes = await register();
-        // 注册可能因用户已存在而失败（400），此时直接重试登录
-        if (regRes.ok()) {
-          response = await login();
-        } else {
-          // 注册失败（用户已存在等），直接重试登录
-          response = await login();
-        }
-      }
-
-      if (!response.ok()) {
-        const errBody = await response.text();
-        throw new Error(`Login failed for ${role}: ${response.status()} ${errBody}`);
-      }
-
-      const json = await response.json();
-      const token = json.data?.accessToken || json.data?.access_token;
-
-      if (!token) {
-        throw new Error(`No access token for ${role}`);
-      }
-
-      // 缓存 token
-      (globalThis as any)[cacheKey] = token;
-
-      // 纯 API 测试不需要页面 cookie，token 直接通过 apiPost/apiGet 使用
-      return token;
+      // 句柄就是角色键：真正的凭证只在那个 cookie 罐里，不出现在任何变量或仓库里。
+      await sessionFor(role);
+      return role;
     });
   },
 
-  apiGet: async ({ request }, use) => {
-    await use(async (token: string, path: string) => {
-      const apiURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost';
-      const response = await request.get(`${apiURL}${path}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return {
-        status: response.status(),
-        data: response.ok() ? await response.json() : await response.text(),
-      };
-    });
+  apiGet: async ({}, use) => {
+    await use(async (session: TestRole, path: string) =>
+      harnessGet(await sessionFor(session), path, session)
+    );
   },
 
-  apiPost: async ({ request }, use) => {
-    await use(async (token: string, path: string, body?: any) => {
-      const apiURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost';
-      const response = await request.post(`${apiURL}${path}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        data: body,
-      });
-      return {
-        status: response.status(),
-        data: response.ok() ? await response.json() : await response.text(),
-      };
-    });
+  apiPost: async ({}, use) => {
+    await use(async (session: TestRole, path: string, body?: unknown) =>
+      harnessPost(await sessionFor(session), path, body, session)
+    );
+  },
+
+  apiPut: async ({}, use) => {
+    await use(async (session: TestRole, path: string, body?: unknown) =>
+      harnessPut(await sessionFor(session), path, body, session)
+    );
+  },
+
+  apiPatch: async ({}, use) => {
+    await use(async (session: TestRole, path: string, body?: unknown) =>
+      harnessPatch(await sessionFor(session), path, body, session)
+    );
+  },
+
+  apiDelete: async ({}, use) => {
+    await use(async (session: TestRole, path: string) =>
+      harnessDelete(await sessionFor(session), path, session)
+    );
   },
 });
 
-export { expect } from '@playwright/test';
+export { expect };
