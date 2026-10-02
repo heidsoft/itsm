@@ -550,7 +550,9 @@ func (s *Service) ListConversations(ctx context.Context, tenantID int, status st
 	}
 	items, err := query.
 		WithCustomer().WithBranch().WithSupportContract().WithIncidents().
-		Order(ent.Desc(emailconversation.FieldLastMessageAt)).
+		// last_message_at 不是唯一键（schema 只给它建了 (tenant_id,status,last_message_at)
+		// 复合索引），只按它排序时页边界不确定，同一条会话可能出现在两页或被跳过。
+		Order(ent.Desc(emailconversation.FieldLastMessageAt), ent.Asc(emailconversation.FieldID)).
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		All(ctx)

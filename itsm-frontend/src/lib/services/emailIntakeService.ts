@@ -141,11 +141,30 @@ interface ListResponse<T> {
   total: number;
 }
 
+/** GET /email-intake/conversations 的标准分页信封。 */
+export interface ConversationListResponse {
+  items: EmailConversation[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface ConversationListParams {
+  page: number;
+  pageSize: number;
+  status?: string;
+}
+
 class EmailIntakeService {
   private readonly baseUrl = '/api/v1/email-intake';
 
-  async conversations(status?: string): Promise<ListResponse<EmailConversation>> {
-    return httpClient.get(`${this.baseUrl}/conversations`, status ? { status } : undefined);
+  async conversations(params: ConversationListParams): Promise<ConversationListResponse> {
+    return httpClient.get(`${this.baseUrl}/conversations`, {
+      page: params.page,
+      pageSize: params.pageSize,
+      status: params.status,
+    });
   }
 
   async conversation(id: number): Promise<EmailConversationDetail> {

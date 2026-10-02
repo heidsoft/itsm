@@ -43,22 +43,41 @@ describe('EmailIntakeService', () => {
   });
 
   describe('conversations', () => {
-    it('GET /conversations 带 status 过滤', async () => {
-      mockGet.mockResolvedValueOnce({ items: [conversation], total: 1, page: 1, pageSize: 20 });
+    it('GET /conversations 必须显式发送 page/pageSize，否则后端默认只给 20 条', async () => {
+      const payload = {
+        items: [conversation],
+        total: 25,
+        page: 2,
+        pageSize: 10,
+        totalPages: 3,
+      };
+      mockGet.mockResolvedValueOnce(payload);
 
-      const result = await emailIntakeService.conversations('MANUAL_REVIEW');
+      const result = await emailIntakeService.conversations({
+        page: 2,
+        pageSize: 10,
+        status: 'MANUAL_REVIEW',
+      });
 
-      expect(mockGet).toHaveBeenCalledWith(`${BASE}/conversations`, { status: 'MANUAL_REVIEW' });
-      expect(result.items).toEqual([conversation]);
-      expect(result.total).toBe(1);
+      expect(mockGet).toHaveBeenCalledWith(`${BASE}/conversations`, {
+        page: 2,
+        pageSize: 10,
+        status: 'MANUAL_REVIEW',
+      });
+      expect(result).toEqual(payload);
     });
 
-    it('不带 status 时不发送查询对象，避免空参数污染契约', async () => {
-      mockGet.mockResolvedValueOnce({ items: [], total: 0 });
+    it('缺 status 时仍发送分页参数，status 留空由 httpClient 过滤', async () => {
+      mockGet.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
 
-      await emailIntakeService.conversations();
+      await emailIntakeService.conversations({ page: 1, pageSize: 20 });
 
-      expect(mockGet).toHaveBeenCalledWith(`${BASE}/conversations`, undefined);
+      const [url, query] = mockGet.mock.calls[0];
+      expect(url).toBe(`${BASE}/conversations`);
+      expect(query).toEqual(
+        expect.objectContaining({ page: 1, pageSize: 20 }) as Record<string, unknown>
+      );
+      expect(query.status).toBeUndefined();
     });
   });
 

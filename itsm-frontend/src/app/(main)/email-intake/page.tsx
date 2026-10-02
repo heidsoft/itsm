@@ -63,10 +63,14 @@ export default function EmailIntakePage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>();
   const [conversations, setConversations] = useState<EmailConversation[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const [detail, setDetail] = useState<EmailConversationDetail>();
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const detailRequest = useRef(0);
+  const listRequest = useRef(0);
   const [customers, setCustomers] = useState<ServiceCustomer[]>([]);
   const [contracts, setContracts] = useState<SupportContract[]>([]);
   const [sources, setSources] = useState<SourceOrganization[]>([]);
@@ -84,16 +88,21 @@ export default function EmailIntakePage() {
   const [overrideForm] = Form.useForm();
 
   const loadConversations = useCallback(async () => {
+    const requestId = ++listRequest.current;
     setLoading(true);
     try {
-      const response = await emailIntakeService.conversations(status);
-      setConversations(response.items ?? []);
+      const response = await emailIntakeService.conversations({ page, pageSize, status });
+      if (requestId !== listRequest.current) return;
+      setConversations(response.items);
+      setTotal(response.total);
     } catch (error) {
-      message.error(`加载邮件处理队列失败：${(error as Error).message}`);
+      if (requestId === listRequest.current) {
+        message.error(`加载邮件处理队列失败：${(error as Error).message}`);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === listRequest.current) setLoading(false);
     }
-  }, [message, status]);
+  }, [message, page, pageSize, status]);
 
   const loadMasterData = useCallback(async () => {
     try {
@@ -330,7 +339,10 @@ export default function EmailIntakePage() {
           allowClear
           placeholder='全部状态'
           value={status}
-          onChange={setStatus}
+          onChange={(value?: string) => {
+            setStatus(value);
+            setPage(1);
+          }}
           style={{ width: 180 }}
           options={Object.entries(statusMeta).map(([value, meta]) => ({
             value,
@@ -349,6 +361,17 @@ export default function EmailIntakePage() {
         dataSource={conversations}
         scroll={{ x: 1100 }}
         locale={{ emptyText: '暂无邮件报障记录' }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (value) => `共 ${value} 条会话`,
+          onChange: (nextPage, nextSize) => {
+            setPage(nextPage);
+            setPageSize(nextSize);
+          },
+        }}
       />
     </Card>
   );

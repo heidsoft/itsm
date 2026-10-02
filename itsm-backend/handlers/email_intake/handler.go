@@ -705,12 +705,9 @@ func (h *Handler) ListConversations(c *gin.Context) {
 	for _, item := range items {
 		result = append(result, mapConversation(item))
 	}
-	common.Success(c, gin.H{
-		"items":    result,
-		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
-	})
+	// 标准信封 {items,total,page,pageSize,totalPages}；此前手拼 gin.H 少 totalPages，
+	// 前端无法知道后端认定的页数。
+	common.SuccessWithList(c, result, total, page, pageSize)
 }
 
 func (h *Handler) GetConversation(c *gin.Context) {
