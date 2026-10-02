@@ -493,7 +493,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 |------|------|----------|---------|------|
 | `/marketplace` | 插件市场 | ✅ `marketplace/page.tsx` | ✅ `/api/v1/marketplace/items` (注册) | **新增顶级菜单** `marketplace`，permission `marketplace:read`；与 `/admin/connectors` 形成"用户浏览"+"管理员配置"双入口 |
 | `/installations` | 已安装组件 | ✅ `installations/page.tsx` | ✅ `/api/v1/marketplace/installations` | 作为 `/marketplace` 的子菜单或顶级独立菜单 |
-| `/tags` | 标签管理 | ✅ `tags/page.tsx` | ✅ `/api/v1/system/tags` | **新增顶级菜单**，permission `ticket_tag:read`，归属运营维度 |
+| `/admin/tags` | 全局标签 | ✅ `admin/tags/page.tsx` | ✅ `GET /api/v1/ticket-tags`（唯一可写所有者） | 已收口（2026-10-02 E1-4）：菜单基线一直是 `/admin/tags`，页面原先在 `/tags`，侧边栏点了就 404；页面已移到 `/admin/tags`，不再新增顶级菜单 |
 | `/teams` | 团队管理 | ✅ `teams/page.tsx` + ✅ `enterprise/teams/page.tsx` | ✅ `/api/v1/org/teams` | 建议作为 `/admin` 子菜单（已存在 `/admin/teams`，重复） |
 | `/projects` | 项目管理 | ✅ `projects/page.tsx` | ✅ `/api/v1/projects` | **新增顶级菜单**，permission `project:read` |
 | `/applications` | 应用管理 | ✅ `applications/page.tsx` | ✅ `/api/v1/applications` | **新增顶级菜单**，permission `application:read` |
@@ -522,7 +522,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 
 ### 8.3 Capability 治理漏洞
 
-- `capabilityPathRules` 已保护 `/marketplace`、`/installations`、`/admin/connectors`，但**缺** `/projects`、`/applications`、`/tags`、`/templates`、`/sla-dashboard`、`/workflows`、`/improvements` 的 capability 规则。
+- `capabilityPathRules` 已保护 `/marketplace`、`/installations`、`/admin/connectors`，但**缺** `/projects`、`/applications`、`/templates`、`/sla-dashboard`、`/workflows`、`/improvements` 的 capability 规则。标签入口已于 2026-10-02 收口为 `/admin/tags` → `tag`。
 - 修复建议：补充 capability key（如 `project`、`application`、`tag`、`template`）并在 `useCapabilities` 中登记真实状态。
 
 ### 8.4 路由别名/直连风险
@@ -537,7 +537,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 ### P0：菜单收口（影响可见性）
 
 1. **新增顶级菜单 `/marketplace`**（permission `marketplace:read`，icon `Store`）：解决 Bug #3 场景复现，让用户在前台看到插件列表。
-2. **新增顶级菜单 `/tags`**（permission `ticket_tag:read`）：工单标签运营入口。
+2. ~~新增顶级菜单 `/tags`~~ —— 2026-10-02 已按相反方向收口：菜单基线本就注册了 `/admin/tags`（`pkg/menubaseline/baseline.go:147`），是页面挂在 `/tags` 才导致侧边栏点击 404。改动页面归属（`git mv` 到 `src/app/(main)/admin/tags/page.tsx`）零数据变更即可让入口生效；改基线 path 反而会让已种子租户留下孤儿菜单行。新增顶级菜单不再是候选方案，且基线仍带 `PermissionCode: "system:read"`，与页面真实所需的 `ticket_tag:*` 不一致，口径待单独拍板。
 3. **新增顶级菜单 `/projects`**（permission `project:read`）：项目/工单关联运营入口。
 4. **新增顶级菜单 `/applications`**（permission `application:read`）：应用/微服务运营入口。
 5. **补全子菜单**：把 `/tickets/dashboard`、`/tickets/cc`、`/cmdb/ci-types`、`/cmdb/registry`、`/cmdb/cloud-resources`、`/cmdb/cloud-services`、`/cmdb/reconciliation`、`/knowledge/articles/[id]`、`/knowledge/reviews`、`/workflow/sla`（已存在）等补齐。

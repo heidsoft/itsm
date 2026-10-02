@@ -22,6 +22,7 @@
 #         没有加守卫，于是 department/root_cause/dashboard 以同样形态复发。
 #   C.6.4 产品表面棘轮：页面数/域包数/service 文件数/装配行数只降不升（基线可显式上调）
 #   C.6.5 覆盖率口径披露：jest 只统计 src/lib 时，ROADMAP 必须显式披露该 scope
+#   C.6.6 菜单入口可达性：pkg/menubaseline 每条 Path 必须有真实前端页面（防侧边栏死链）
 #
 # 豁免（waiver）
 # -------------
@@ -431,6 +432,56 @@ check_coverage_scope() {
   fi
 }
 
+# C.6.6 菜单入口可达性：menuBaseline 的每条 Path 必须有真实前端页面。
+#       2026-10-02 E1-4 的同类守卫 —— 种子菜单 /admin/tags 指向不存在的页面，
+#       97 条菜单里唯一一条死链，靠人工点侧边栏才会发现，文档与门禁当时都是绿的。
+
+check_menu_baseline_paths() {
+  echo "-- C.6.6 菜单入口可达性（基线 path ↔ 前端页面）"
+  local bl="${BE}/pkg/menubaseline/baseline.go"
+  if [ ! -f "${bl}" ]; then
+    skip "pkg/menubaseline/baseline.go 不存在，跳过"
+    return 0
+  fi
+  if [ ! -d "${FE}/src/app" ]; then
+    skip "前端 src/app 不存在，跳过"
+    return 0
+  fi
+
+  # 前端真实 URL 集合：page.tsx 的目录相对路径，剥掉 (route group) 段后加回前导 /。
+  local urls
+  urls="$(
+    cd "${FE}/src/app" &&
+      find . -name 'page.tsx' |
+      sed -e 's|^\./||' -e 's|/page\.tsx$||' |
+      awk -F/ '{
+        out = ""
+        for (i = 1; i <= NF; i++) if ($i !~ /^\(.*\)$/) out = out "/" $i
+        if (out == "") out = "/"
+        print out
+      }' |
+      sort -u
+  )"
+
+  local paths p hit=0 total=0
+  # 只取结构体的 Path 字段：`[,{] Path:` 前面必须是分隔符，因此不会命中 ParentPath（其前缀是字母）。
+  paths="$(grep -oE '[,{] Path: "[^"]+"' "${bl}" | sed -E 's/.*Path: "([^"]+)"/\1/' | sort -u)"
+  while IFS= read -r p; do
+    [ -n "${p}" ] || continue
+    total=$((total + 1))
+    if printf '%s\n' "${urls}" | grep -qxF "${p}"; then
+      continue
+    fi
+    hit=$((hit + 1))
+    waived "C.6.6" "${p}" ||
+      fail "菜单基线 path ${p} 没有对应的前端页面（侧边栏点了就是 404 死链）"
+  done <<<"${paths}"
+
+  if [ "${hit}" -eq 0 ]; then
+    pass "菜单基线 ${total} 条 path 全部解析到真实页面"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 
 echo "########################################"
@@ -444,6 +495,7 @@ check_agents_domain_list
 check_handlers_wiring
 check_surface_ratchet
 check_coverage_scope
+check_menu_baseline_paths
 
 echo ""
 echo "########################################"

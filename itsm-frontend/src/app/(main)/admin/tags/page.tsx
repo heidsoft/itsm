@@ -183,7 +183,7 @@ export default function TagsPage() {
     <PageContainer
       header={{
         title: '全局标签管理',
-        breadcrumb: { items: [{ title: '首页' }, { title: '标签管理' }] },
+        breadcrumb: { items: [{ title: '首页' }, { title: '系统管理' }, { title: '标签管理' }] },
       }}
       extra={[
         <Button key="refresh" icon={<RefreshCw />} onClick={() => reload()} loading={fetching}>

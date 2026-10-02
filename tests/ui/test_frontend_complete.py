@@ -674,7 +674,7 @@ class TestOtherModules:
 
     def test_tags_page(self, logged_in_client):
         """测试标签页面"""
-        logged_in_client.navigate_to('/tags')
+        logged_in_client.navigate_to('/admin/tags')
         logged_in_client.page.wait_for_timeout(2000)
         print("标签页: 已加载")
 

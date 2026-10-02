@@ -43,7 +43,7 @@ export const capabilityPathRules: Array<[string, string]> = [
   ['/admin/connectors', 'marketplace'],
   ['/projects', 'project'],
   ['/applications', 'application'],
-  ['/tags', 'tag'],
+  ['/admin/tags', 'tag'],
   ['/templates', 'template'],
 ];
 
