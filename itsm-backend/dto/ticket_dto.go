@@ -156,8 +156,9 @@ type BatchDeleteRequest struct {
 }
 
 // TicketExportRequest 工单导出请求
+// format 只声明 service 层真实实现的格式；pdf 从未实现，请求它会得到 400 而不是 500。
 type TicketExportRequest struct {
-	Format  string                 `json:"format" binding:"required,oneof=csv excel pdf"`
+	Format  string                 `json:"format" binding:"required,oneof=csv excel"`
 	Filters ListTicketsRequest     `json:"filters"`
 	Fields  []string               `json:"fields"`
 	Options map[string]interface{} `json:"options"`

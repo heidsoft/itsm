@@ -164,9 +164,10 @@ export interface CloseTicketRequest {
 /**
  * 对应后端 dto.TicketExportRequest（POST /tickets/export，JSON body）。
  * 后端 handler 目前只消费 format 与 filters.status/priority。
+ * format 只列后端真实实现的格式，pdf 会被后端拒绝为参数错误。
  */
 export interface TicketExportRequest {
-  format: 'csv' | 'excel' | 'pdf';
+  format: 'csv' | 'excel';
   filters?: Pick<GetTicketsParams, 'status' | 'priority'>;
 }
 

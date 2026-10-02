@@ -34,6 +34,7 @@ import (
 	"itsm-backend/repository/ticket"
 	"itsm-backend/service/sla"
 
+	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
 )
 
@@ -2018,6 +2019,9 @@ func (s *TicketService) entToDomain(e *ent.Ticket) *ticket.Ticket {
 
 // ==================== 导出/导入/批量分配/分析 ====================
 
+// ticketExportHeaders 是工单导出的列顺序，与 ExportTickets 写入的行 map key 一一对应。
+var ticketExportHeaders = []string{"工单编号", "标题", "描述", "状态", "优先级", "创建时间", "更新时间"}
+
 // ExportTickets 导出工单
 func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
 	if s.client == nil {
@@ -2030,7 +2034,8 @@ func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters
 	if priority, ok := filters["priority"].(string); ok && priority != "" {
 		query = query.Where(entTicket.PriorityEQ(priority))
 	}
-	tickets, err := query.All(ctx)
+	// 排序必须显式：此前按自然顺序返回，同一份数据两次导出的行序不一致。
+	tickets, err := query.Order(ent.Asc(entTicket.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -2048,9 +2053,9 @@ func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters
 	}
 	switch format {
 	case "csv":
-		return s.generateCSV(exportData)
+		return s.generateCSV(exportData, ticketExportHeaders)
 	case "excel":
-		return s.generateExcel(exportData)
+		return s.generateExcel(exportData, ticketExportHeaders)
 	case "json":
 		return json.Marshal(exportData)
 	default:
@@ -2472,16 +2477,11 @@ func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.
 // ==================== CSV / Excel / JSON 独立实现（V2 不依赖 V1） ====================
 
 // generateCSV 生成 CSV
-func (s *TicketService) generateCSV(data []map[string]interface{}) ([]byte, error) {
-	if len(data) == 0 {
-		return []byte{}, nil
-	}
+func (s *TicketService) generateCSV(data []map[string]interface{}, headers []string) ([]byte, error) {
 	var buf bytes.Buffer
+	// Excel/WPS 没有 UTF-8 BOM 会把中文列按本地编码解析成乱码。
+	buf.WriteString("\ufeff")
 	writer := csv.NewWriter(&buf)
-	var headers []string
-	for key := range data[0] {
-		headers = append(headers, key)
-	}
 	if err := writer.Write(headers); err != nil {
 		return nil, err
 	}
@@ -2506,9 +2506,39 @@ func (s *TicketService) generateCSV(data []map[string]interface{}) ([]byte, erro
 	return buf.Bytes(), nil
 }
 
-// generateExcel 生成 Excel（实际上返回 CSV，保持与 V1 一致的行为）
-func (s *TicketService) generateExcel(data []map[string]interface{}) ([]byte, error) {
-	return s.generateCSV(data)
+// generateExcel 生成 xlsx（此前直接返回 CSV 文本，导致下载的文件名与内容格式不一致）
+func (s *TicketService) generateExcel(data []map[string]interface{}, headers []string) ([]byte, error) {
+	const sheet = "Sheet1"
+	f := excelize.NewFile()
+	setCell := func(col, row int, value interface{}) error {
+		cell, err := excelize.CoordinatesToCellName(col, row)
+		if err != nil {
+			return err
+		}
+		f.SetCellValue(sheet, cell, value)
+		return nil
+	}
+	for i, header := range headers {
+		if err := setCell(i+1, 1, header); err != nil {
+			return nil, err
+		}
+	}
+	for rowIndex, row := range data {
+		for colIndex, header := range headers {
+			value := ""
+			if v := row[header]; v != nil {
+				value = fmt.Sprintf("%v", v)
+			}
+			if err := setCell(colIndex+1, rowIndex+2, sanitizeSpreadsheetCell(value)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	var buf bytes.Buffer
+	if err := f.Write(&buf); err != nil {
+		return nil, fmt.Errorf("生成Excel失败: %w", err)
+	}
+	return buf.Bytes(), nil
 }
 
 // parseCSV 解析 CSV

@@ -673,13 +673,24 @@ func (h *Handler) ExportTickets(c *gin.Context) {
 	}
 	data, err := h.service.ExportTickets(c.Request.Context(), tenantID, filters, req.Format)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.FailWithErr(c, err, "工单导出失败")
 		return
 	}
 
-	filename := "tickets." + req.Format
-	c.Header("Content-Disposition", "attachment; filename="+filename)
-	c.Data(200, "application/octet-stream", data)
+	contentType, filename := ticketExportDisposition(req.Format)
+	c.Header("Content-Disposition", `attachment; filename="`+filename+`"`)
+	c.Data(200, contentType, data)
+}
+
+// ticketExportDisposition 返回导出格式的 Content-Type 与下载文件名。
+// 格式集合与 dto.TicketExportRequest 的 oneof、service 层实现保持一致。
+func ticketExportDisposition(format string) (contentType, filename string) {
+	switch format {
+	case "excel":
+		return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "tickets.xlsx"
+	default:
+		return "text/csv; charset=utf-8", "tickets.csv"
+	}
 }
 
 // ImportTickets handles POST /api/v1/tickets/import

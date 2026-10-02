@@ -304,9 +304,12 @@ func (s *Service) GetStats(ctx context.Context, tenantID int) (*TicketStats, err
 	return s.repo.GetStats(ctx, tenantID)
 }
 
-// ExportTickets exports tickets (placeholder — delegates to existing service layer).
+// ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。
 func (s *Service) ExportTickets(ctx context.Context, tenantID int, filters map[string]interface{}, format string) ([]byte, error) {
-	return nil, fmt.Errorf("export not implemented in handlers layer")
+	if s.productionSvc == nil {
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "工单导出服务未接入", "")
+	}
+	return s.productionSvc.ExportTickets(ctx, tenantID, filters, format)
 }
 
 // ImportTickets imports tickets (placeholder).
