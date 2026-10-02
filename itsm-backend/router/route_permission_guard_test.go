@@ -34,7 +34,6 @@ var writeRouteExemptions = map[string]string{
 	"router.go POST /auth/reset-password":                                 "重置密码，凭一次性重置令牌",
 	"router.go POST /auth/validate-reset-token":                           "校验一次性重置令牌",
 	"feishu_routes.go POST /feishu/webhook/:instance_id":                  "飞书事件回调，走飞书签名校验",
-	"../handlers/feishu/handler.go POST /feishu/webhook/:instance_id":     "飞书事件回调，走飞书签名校验",
 	"../handlers/dingtalk/handler.go POST /dingtalk/webhook/:instance_id": "钉钉事件回调，走钉钉签名校验",
 	"../handlers/wecom/handler.go POST /wecom/webhook/:instance_id":       "企微事件回调，走企微签名校验",
 	"bootstrap_routes.go POST /create-admin":                              "初始化引导：仅在系统未初始化时可用，凭一次性 bootstrap token",

@@ -300,6 +300,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/menus/*":                                      {Resource: "system_config", Action: "read"},
 			"/api/v1/menus/export":                                 {Resource: "system_config", Action: "read"},
 			"/api/v1/msp/allocations":                              {Resource: "msp_allocation", Action: "read"},
+			"/api/v1/msp/allocations/history":                      {Resource: "msp_allocation", Action: "read"},
 			"/api/v1/msp/context":                                  {Resource: "msp", Action: "read"},
 			"/api/v1/msp/customers":                                {Resource: "msp_customer", Action: "read"},
 			"/api/v1/msp/customers/*/tickets":                      {Resource: "msp_ticket", Action: "read"},

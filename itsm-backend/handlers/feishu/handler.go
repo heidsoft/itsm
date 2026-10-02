@@ -11,7 +11,6 @@ import (
 	"itsm-backend/connector"
 	feishuConn "itsm-backend/connector/builtin/feishu"
 	"itsm-backend/dto"
-	"itsm-backend/middleware"
 	"itsm-backend/service"
 	marketplaceService "itsm-backend/service/marketplace"
 
@@ -48,18 +47,11 @@ func NewHandler(
 // nil 时退回 in-memory 实现，保留兼容。
 func (h *Handler) SetInboundDedup(d *connector.InboundDedup) { h.inboundDedup = d }
 
-// RegisterRoutes registers feishu routes
-func (h *Handler) RegisterRoutes(auth *gin.RouterGroup, public *gin.RouterGroup) {
-	feishu := auth.Group("/feishu")
-	{
-		feishu.GET("/oauth/auth-url", middleware.RequirePermission("connector", "write"), h.GetOAuthAuthURL)
-		feishu.POST("/sync/ticket/:ticket_id", middleware.RequirePermission("ticket", "update"), h.SyncTicketToFeishu)
-	}
-
-	// Public callbacks (no auth required)
-	public.GET("/feishu/oauth/callback/:instance_id", h.OAuthCallback)
-	public.POST("/feishu/webhook/:instance_id", h.Webhook)
-}
+// RegisterRoutes 已删除：飞书域唯一的路由所有者是 router.SetupFeishuRoutes（由 router.go 以
+// auth/public 两个分组注册）。此处曾有一份逐字重复的 4 条注册（oauth/auth-url、
+// oauth/callback/:instance_id、sync/ticket/:ticket_id、webhook/:instance_id），从未被调用；
+// 若与 router 那份同时生效，gin 会因重复路由直接 panic。它的两个分组参数由调用方决定，
+// 旧测试正是以 RegisterRoutes(api, api) 同一分组调用——按那种形态接线会把外部回调挪进鉴权组。
 
 // getFeishuConnector 获取当前租户的飞书连接器（仅从认证上下文取 tenant_id，禁止 query 参数绕过）
 func (h *Handler) getFeishuConnector(ctx *gin.Context) (*feishuConn.Feishu, int, bool) {
