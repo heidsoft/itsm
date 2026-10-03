@@ -4,29 +4,13 @@ import React from 'react';
 import { Card, Descriptions, Divider, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { problemPriorityLabel, problemStatusLabel } from '@/constants/problem';
+import type { Problem } from '@/lib/api/problem-api';
 
 const { Title, Paragraph } = Typography;
 
 interface BasicInfoCardProps {
-  data: {
-    id: number;
-    description: string;
-    status: string;
-    priority: string;
-    severity?: string;
-    category?: string;
-    rootCause?: string;
-    impact?: string;
-    reporterId?: number;
-    createdBy?: number;
-    assigneeId?: number;
-    // 后端 service 层 join user 表返回的中文姓名，优先展示姓名，缺失时退到 ID
-    createdByName?: string;
-    assigneeName?: string;
-    reporterName?: string;
-    createdAt: string;
-    updatedAt: string;
-  };
+  data: Problem;
 }
 
 /**
@@ -44,63 +28,58 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
     );
   }
 
-  // 优先用后端返回的中文姓名，否则回退到 ID（保持可追溯）。
-  const reporterDisplay = data.reporterName || data.createdByName || (data.reporterId ?? data.createdBy ?? '-');
-  const assigneeDisplay = data.assigneeName || (data.assigneeId ?? '-');
-  const createdAt = data.createdAt ?? '';
-  const updatedAt = data.updatedAt ?? '';
-  const noAnalysisText = t('problem.noAnalysis');
-  const noDescriptionText = t('problem.noDescription');
-  const rootCause = data.rootCause ?? noAnalysisText;
-  const impact = data.impact ?? noDescriptionText;
-  const priority = (data.priority ?? data.severity ?? '') as string;
-  const category = data.category ?? '-';
-  const description = data.description ?? '-';
-  const status = (data.status ?? '') as string;
+  // assigneeId/assigneeName/createdByName 是后端 omitempty 指针字段，
+  // 只有 undefined 才回退到 ID；ID 本身总有值，不参与兜底。
+  const reporterDisplay = data.createdByName ?? data.createdBy;
+  const assigneeDisplay =
+    data.assigneeId === undefined ? '-' : (data.assigneeName ?? data.assigneeId);
+  // 后端 rootCause/impact 是非 omitempty 的 string，未填写时返回 ""，
+  // 所以 ?? 永远不会触发，必须显式判空。
+  const hasRootCause = data.rootCause.trim() !== '';
+  const hasImpact = data.impact.trim() !== '';
 
-  const formatDate = (dateStr: string | number | undefined): string => {
+  const formatDate = (dateStr: string): string => {
     if (!dateStr) return '-';
     try {
-      return dayjs(dateStr as string).format('YYYY-MM-DD HH:mm:ss');
+      return dayjs(dateStr).format('YYYY-MM-DD HH:mm:ss');
     } catch {
       return String(dateStr);
     }
   };
 
-  const getPriorityLabel = (p: string): string => {
-    if (!p) return '-';
-    const key = p.toLowerCase();
-    const knownKeys = ['critical', 'high', 'medium', 'low'];
-    if (knownKeys.includes(key)) {
-      return t(`problem.priorityLabels.${key}`);
-    }
-    return p;
-  };
+  // 取值标签由 @/constants/problem 单点负责。卡片此前查的是另一份 i18n 词典，
+  // 同一个 critical 在列表显示「极高」、在详情卡片显示「紧急」；词典里的状态键
+  // 还写着 inProgress，而后端存量值是 in_progress，于是原样漏出英文。
+  const statusLabel = data.status === '' ? '-' : problemStatusLabel(data.status);
+  const priorityLabel = data.priority === '' ? '-' : problemPriorityLabel(data.priority);
 
-  const getStatusLabel = (s: string): string => {
-    if (!s) return '-';
-    const knownKeys = ['open', 'investigating', 'identified', 'resolved', 'closed', 'inProgress'];
-    if (knownKeys.includes(s)) {
-      return t(`problem.statusLabels.${s}`);
-    }
-    return s;
-  };
+  const category = data.category === '' ? '-' : data.category;
+  const description = data.description === '' ? '-' : data.description;
 
   return (
     <Card styles={{ body: { padding: '16px 24px' } }}>
       <Descriptions column={2}>
-        <Descriptions.Item label={t('problem.problemId')}>{data.id ?? '-'}</Descriptions.Item>
+        <Descriptions.Item label={t('problem.problemId')}>{data.id}</Descriptions.Item>
         <Descriptions.Item label={t('problem.status')}>
           <span
             style={{
               padding: '2px 8px',
               borderRadius: '4px',
               backgroundColor:
-                status === 'resolved' ? '#f6ffed' : status === 'open' ? '#fff7e6' : '#e6f7ff',
-              color: status === 'resolved' ? '#52c41a' : status === 'open' ? '#fa8c16' : '#1890ff',
+                data.status === 'resolved'
+                  ? '#f6ffed'
+                  : data.status === 'open'
+                    ? '#fff7e6'
+                    : '#e6f7ff',
+              color:
+                data.status === 'resolved'
+                  ? '#52c41a'
+                  : data.status === 'open'
+                    ? '#fa8c16'
+                    : '#1890ff',
             }}
           >
-            {getStatusLabel(status)}
+            {statusLabel}
           </span>
         </Descriptions.Item>
         <Descriptions.Item label={t('problem.reporterId')}>{reporterDisplay}</Descriptions.Item>
@@ -111,17 +90,29 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
               padding: '2px 8px',
               borderRadius: '4px',
               backgroundColor:
-                priority === 'critical' ? '#fff2f0' : priority === 'high' ? '#fff7e6' : '#e6f7ff',
+                data.priority === 'critical'
+                  ? '#fff2f0'
+                  : data.priority === 'high'
+                    ? '#fff7e6'
+                    : '#e6f7ff',
               color:
-                priority === 'critical' ? '#ff4d4f' : priority === 'high' ? '#fa8c16' : '#1890ff',
+                data.priority === 'critical'
+                  ? '#ff4d4f'
+                  : data.priority === 'high'
+                    ? '#fa8c16'
+                    : '#1890ff',
             }}
           >
-            {getPriorityLabel(priority)}
+            {priorityLabel}
           </span>
         </Descriptions.Item>
         <Descriptions.Item label={t('problem.category')}>{category}</Descriptions.Item>
-        <Descriptions.Item label={t('problem.createdAt')}>{formatDate(createdAt)}</Descriptions.Item>
-        <Descriptions.Item label={t('problem.updatedAt')}>{formatDate(updatedAt)}</Descriptions.Item>
+        <Descriptions.Item label={t('problem.createdAt')}>
+          {formatDate(data.createdAt)}
+        </Descriptions.Item>
+        <Descriptions.Item label={t('problem.updatedAt')}>
+          {formatDate(data.updatedAt)}
+        </Descriptions.Item>
       </Descriptions>
 
       <Divider />
@@ -132,17 +123,15 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
       <Divider />
 
       <Title level={5}>{t('problem.rootCause')}</Title>
-      <Paragraph
-        style={{ whiteSpace: 'pre-wrap', color: rootCause === noAnalysisText ? '#999' : '#333' }}
-      >
-        {rootCause}
+      <Paragraph style={{ whiteSpace: 'pre-wrap', color: hasRootCause ? '#333' : '#999' }}>
+        {hasRootCause ? data.rootCause : t('problem.noAnalysis')}
       </Paragraph>
 
       <Divider />
 
       <Title level={5}>{t('problem.impact')}</Title>
-      <Paragraph style={{ whiteSpace: 'pre-wrap', color: impact === noDescriptionText ? '#999' : '#333' }}>
-        {impact}
+      <Paragraph style={{ whiteSpace: 'pre-wrap', color: hasImpact ? '#333' : '#999' }}>
+        {hasImpact ? data.impact : t('problem.noDescription')}
       </Paragraph>
     </Card>
   );

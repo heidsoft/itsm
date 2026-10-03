@@ -781,7 +781,9 @@ export const translations = {
       viewDetails: '查看详情',
       editProblem: '编辑问题',
       loadError: '无法加载问题数据，请确保后端服务正在运行',
-      priorityCritical: '紧急',
+      // 与 constants/problem.ts 的 ProblemPriorityLabels 同一措辞：同一页的筛选下拉
+      // 曾写「紧急」、列表列写「极高」，同一个值两个名字。
+      priorityCritical: '极高',
       investigating: '调查中',
       identified: '已识别',
       export: '导出',
@@ -4771,20 +4773,6 @@ export const translations = {
       noData: '暂无数据',
       noAnalysis: '暂无分析',
       noDescription: '暂无描述',
-      statusLabels: {
-        open: '待处理',
-        investigating: '调查中',
-        identified: '已识别',
-        resolved: '已解决',
-        closed: '已关闭',
-        inProgress: '处理中',
-      },
-      priorityLabels: {
-        critical: '紧急',
-        high: '高',
-        medium: '中',
-        low: '低',
-      },
     },
     workbench: {
       title: '统一工作台',
@@ -9412,20 +9400,6 @@ export const translations = {
       noData: 'No data',
       noAnalysis: 'No analysis yet',
       noDescription: 'No description',
-      statusLabels: {
-        open: 'Open',
-        investigating: 'Investigating',
-        identified: 'Identified',
-        resolved: 'Resolved',
-        closed: 'Closed',
-        inProgress: 'In Progress',
-      },
-      priorityLabels: {
-        critical: 'Critical',
-        high: 'High',
-        medium: 'Medium',
-        low: 'Low',
-      },
     },
     workbench: {
       title: 'Unified Workbench',

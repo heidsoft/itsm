@@ -71,3 +71,23 @@ export const ProblemCategoryOptions: Array<{ value: ProblemCategory; label: stri
 export function isKnownProblemCategory(v: unknown): v is ProblemCategory {
   return typeof v === 'string' && (ProblemCategoryValues as readonly string[]).includes(v);
 }
+
+// 后端 Problem.status / .priority 在 Ent 里是无枚举约束的 string 列，值域只由
+// handlers/problem 的状态机与 isValidProblemPriority 保证，存量库还可能有历史值。
+// 所以实体类型按契约声明为 string，展示前用这两个守卫取标签，未知值原样显示，
+// 不用 as 把契约外的值伪装成枚举。
+export function isKnownProblemStatus(v: unknown): v is ProblemStatus {
+  return typeof v === 'string' && (Object.values(ProblemStatus) as string[]).includes(v);
+}
+
+export function isKnownProblemPriority(v: unknown): v is ProblemPriority {
+  return typeof v === 'string' && (Object.values(ProblemPriority) as string[]).includes(v);
+}
+
+export function problemStatusLabel(v: string): string {
+  return isKnownProblemStatus(v) ? ProblemStatusLabels[v] : v;
+}
+
+export function problemPriorityLabel(v: string): string {
+  return isKnownProblemPriority(v) ? ProblemPriorityLabels[v] : v;
+}

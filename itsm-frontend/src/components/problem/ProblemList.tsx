@@ -30,6 +30,8 @@ import {
   ProblemPriority,
   ProblemStatusLabels,
   ProblemPriorityLabels,
+  problemStatusLabel,
+  problemPriorityLabel,
 } from '@/constants/problem';
 import type { Problem, ProblemQuery } from '@/types/biz/problem';
 
@@ -98,12 +100,9 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ...query,
         ...values,
       });
-      // 后端信封只有 items 一个集合键（2026-10-03 E4-6c 收敛），空结果是 []，
-      // 不需要 || resp.items || [] 这种猜形状的多字段 fallback。
-      // 这里的断言与信封无关：ProblemApi.Problem 和 types/biz.Problem 是两套实体形状
-      // （前者有后端并不返回的 severity/reporterId/affectedIncidents），属于 E4-6d 待收敛的
-      // 实体契约重复，收敛后此断言必须删除。
-      setData(resp.items as unknown as Problem[]);
+      // 信封只有一个 items 键（E4-6c），实体只有一份 Problem（E4-6d），
+      // 因此这里既不需要多字段 fallback，也不需要 as unknown as 断言。
+      setData(resp.items);
       setTotal(resp.total);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
@@ -165,16 +164,16 @@ const ProblemList: React.FC<ProblemListProps> = ({
       title: '状态',
       dataIndex: 'status',
       width: 100,
-      render: (status: ProblemStatus) => (
-        <Tag color={statusColors[status]}>{ProblemStatusLabels[status]}</Tag>
+      render: (status: string) => (
+        <Tag color={statusColors[status]}>{problemStatusLabel(status)}</Tag>
       ),
     },
     {
       title: '优先级',
       dataIndex: 'priority',
       width: 100,
-      render: (priority: ProblemPriority) => (
-        <Tag color={priorityColors[priority]}>{ProblemPriorityLabels[priority]}</Tag>
+      render: (priority: string) => (
+        <Tag color={priorityColors[priority]}>{problemPriorityLabel(priority)}</Tag>
       ),
     },
     {

@@ -1,7 +1,10 @@
 /**
  * ProblemService unit tests
  */
-import { problemService, ProblemStatus, ProblemPriority } from '../problem-service';
+import { problemService } from '../problem-service';
+// 状态/优先级枚举只有 @/constants/problem 一份（台账 E4-6d），本文件此前从
+// problem-service 取用的是那份缺 investigating/identified 的副本。
+import { ProblemPriority, ProblemStatus } from '@/constants/problem';
 import { httpClient } from '@/lib/api/http-client';
 
 jest.mock('@/lib/api/http-client', () => ({
@@ -132,7 +135,12 @@ describe('ProblemService', () => {
       expect(problemService.getStatusLabel(ProblemStatus.IN_PROGRESS)).toBe('处理中');
       expect(problemService.getStatusLabel(ProblemStatus.RESOLVED)).toBe('已解决');
       expect(problemService.getStatusLabel(ProblemStatus.CLOSED)).toBe('已关闭');
-      expect(problemService.getStatusLabel('other' as ProblemStatus)).toBe('other');
+      expect(problemService.getStatusLabel('other')).toBe('other');
+    });
+
+    it('should label the statuses the old duplicate enum omitted', () => {
+      expect(problemService.getStatusLabel(ProblemStatus.INVESTIGATING)).toBe('调查中');
+      expect(problemService.getStatusLabel(ProblemStatus.IDENTIFIED)).toBe('已识别');
     });
   });
 
@@ -141,8 +149,9 @@ describe('ProblemService', () => {
       expect(problemService.getPriorityLabel(ProblemPriority.LOW)).toBe('低');
       expect(problemService.getPriorityLabel(ProblemPriority.MEDIUM)).toBe('中');
       expect(problemService.getPriorityLabel(ProblemPriority.HIGH)).toBe('高');
-      expect(problemService.getPriorityLabel(ProblemPriority.CRITICAL)).toBe('紧急');
-      expect(problemService.getPriorityLabel('x' as ProblemPriority)).toBe('x');
+      // 与列表/详情同一份 ProblemPriorityLabels，critical 不再叫「紧急」。
+      expect(problemService.getPriorityLabel(ProblemPriority.CRITICAL)).toBe('极高');
+      expect(problemService.getPriorityLabel('x')).toBe('x');
     });
   });
 

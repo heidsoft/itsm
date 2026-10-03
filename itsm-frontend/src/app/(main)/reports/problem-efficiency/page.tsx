@@ -30,29 +30,30 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import type {
-  ProblemStatsResponse,
-  Problem,
-  ProblemStatus,
-  ProblemPriority} from '@/lib/services/problem-service';
+import type { ProblemStatsResponse, Problem } from '@/lib/services/problem-service';
 import {
   problemService
 } from '@/lib/services/problem-service';
+import { ProblemPriority, ProblemStatus } from '@/constants/problem';
 
 const { Title, Text } = Typography;
 
+// 键用枚举计算而来，不再手抄字面量：此前这里写着 inProgress，
+// 后端存量值是 in_progress，该状态的饼图分片因此一直是默认灰。
 const STATUS_COLORS: Record<string, string> = {
-  open: '#1890ff',
-  inProgress: '#faad14',
-  resolved: '#52c41a',
-  closed: '#d9d9d9',
+  [ProblemStatus.OPEN]: '#1890ff',
+  [ProblemStatus.INVESTIGATING]: '#722ed1',
+  [ProblemStatus.IDENTIFIED]: '#fa8c16',
+  [ProblemStatus.IN_PROGRESS]: '#faad14',
+  [ProblemStatus.RESOLVED]: '#52c41a',
+  [ProblemStatus.CLOSED]: '#d9d9d9',
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low: '#52c41a',
-  medium: '#faad14',
-  high: '#ff4d4f',
-  critical: '#722ed1',
+  [ProblemPriority.LOW]: '#52c41a',
+  [ProblemPriority.MEDIUM]: '#faad14',
+  [ProblemPriority.HIGH]: '#ff4d4f',
+  [ProblemPriority.CRITICAL]: '#722ed1',
 };
 
 const ProblemEfficiencyPage = () => {
@@ -104,7 +105,7 @@ const ProblemEfficiencyPage = () => {
 
         setProblemsByStatus(
           Object.entries(byStatus).map(([name, value]) => ({
-            name: problemService.getStatusLabel(name as ProblemStatus),
+            name: problemService.getStatusLabel(name),
             value,
             color: STATUS_COLORS[name] || '#d9d9d9',
           }))
@@ -112,7 +113,7 @@ const ProblemEfficiencyPage = () => {
 
         setProblemsByPriority(
           Object.entries(byPriority).map(([name, value]) => ({
-            name: problemService.getPriorityLabel(name as ProblemPriority),
+            name: problemService.getPriorityLabel(name),
             value,
             color: PRIORITY_COLORS[name] || '#d9d9d9',
           }))
@@ -156,20 +157,22 @@ const ProblemEfficiencyPage = () => {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      open: 'processing',
-      inProgress: 'processing',
-      resolved: 'success',
-      closed: 'default',
+      [ProblemStatus.OPEN]: 'processing',
+      [ProblemStatus.INVESTIGATING]: 'processing',
+      [ProblemStatus.IDENTIFIED]: 'warning',
+      [ProblemStatus.IN_PROGRESS]: 'processing',
+      [ProblemStatus.RESOLVED]: 'success',
+      [ProblemStatus.CLOSED]: 'default',
     };
     return colors[status] || 'default';
   };
 
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      low: 'green',
-      medium: 'orange',
-      high: 'red',
-      critical: 'red',
+      [ProblemPriority.LOW]: 'green',
+      [ProblemPriority.MEDIUM]: 'orange',
+      [ProblemPriority.HIGH]: 'red',
+      [ProblemPriority.CRITICAL]: 'red',
     };
     return colors[priority] || 'default';
   };
@@ -381,7 +384,7 @@ const ProblemEfficiencyPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>处理人: {problem.assignee?.name || '未分配'}</span>
+                        <span>处理人: {problem.assigneeName ?? '未分配'}</span>
                         <span>创建时间: {new Date(problem.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>

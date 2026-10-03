@@ -48,24 +48,41 @@ export interface ProblemHotspotsData {
   avgPerCategory: number;
 }
 
+/**
+ * 问题实体的唯一形状：逐字段镜像后端 `dto.ProblemResponse`
+ * （itsm-backend/dto/problem_dto.go:59），GET /api/v1/problems 的 items 与
+ * GET /api/v1/problems/:id 都用它。
+ *
+ * 2026-10-03（台账 E4-6d）收敛前有同一份实体的三套声明：本文件这份带后端**从不返回**
+ * 的 `severity`/`reporterId`/`affectedIncidents`/`relatedChanges`，`types/biz/problem.ts`
+ * 与 `lib/services/problem-service.ts` 各有一份不含这些字段、但把 `status`/`priority`
+ * 定义成枚举的版本，消费点只能写 `resp.items as unknown as Problem[]`。
+ * `status`/`priority` 在 Ent 里是无枚举约束的 string 列，因此这里按契约声明为 string，
+ * 取标签请用 `@/constants/problem` 的 `problemStatusLabel` / `problemPriorityLabel`。
+ */
 export interface Problem {
   id: number;
+  /** 后端 omitempty：由 handlers/incident 侧构造的 ProblemResponse 不填此字段。 */
+  problemNumber?: string;
   title: string;
   description: string;
   status: string;
   priority: string;
-  severity: string;
-  category?: string;
-  impact?: string;
+  category: string;
+  rootCause: string;
+  workaround: string;
+  resolution: string;
+  impact: string;
   assigneeId?: number;
-  reporterId?: number;
-  rootCause?: string;
-  workaround?: string;
-  resolution?: string;
-  affectedIncidents?: number[];
-  relatedChanges?: number[];
+  assigneeName?: string;
+  createdBy: number;
+  createdByName?: string;
+  tenantId: number;
   createdAt: string;
   updatedAt: string;
+  associatedTickets?: AssociatedItem[];
+  associatedIncidents?: AssociatedItem[];
+  associatedChanges?: AssociatedItem[];
 }
 
 /**
@@ -97,13 +114,16 @@ export interface ProblemListParams {
 
 export type RelatedType = 'ticket' | 'incident' | 'change';
 
+/**
+ * `dto.AssociatedItemResponse` 的镜像：`{id,title,status}` 必填，
+ * `number`/`type` 后端是 omitempty，因此这里声明为可选。
+ */
 export interface AssociatedItem {
   id: number;
-  type: RelatedType;
   title: string;
   status: string;
   number?: string;
-  createdAt?: string;
+  type?: RelatedType;
 }
 
 export interface ProblemAssociations {

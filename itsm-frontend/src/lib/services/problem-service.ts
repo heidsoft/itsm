@@ -1,42 +1,20 @@
 import { httpClient } from '@/lib/api/http-client';
+import {
+  ProblemPriority,
+  ProblemStatus,
+  problemPriorityLabel,
+  problemStatusLabel,
+} from '@/constants/problem';
 
-// 问题状态枚举
-export enum ProblemStatus {
-  OPEN = 'open',
-  IN_PROGRESS = 'in_progress',
-  RESOLVED = 'resolved',
-  CLOSED = 'closed',
-}
+// 问题实体只有一份形状：@/lib/api/problem-api 的 Problem（逐字段镜像后端
+// dto.ProblemResponse）。本文件此前另有一份，含后端从不返回的 `assignee` 对象
+// —— 报表页因此把处理人显示成「未分配」，即使问题已指派（台账 E4-6d）。
+import type { Problem } from '@/lib/api/problem-api';
+export type { Problem };
 
-// 问题优先级枚举
-export enum ProblemPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
-}
-
-// 问题接口定义
-export interface Problem {
-  id: number;
-  title: string;
-  description: string;
-  status: ProblemStatus;
-  priority: ProblemPriority;
-  category: string;
-  rootCause: string;
-  impact: string;
-  assigneeId?: number;
-  assignee?: {
-    id: number;
-    name: string;
-    username: string;
-  };
-  createdBy: number;
-  createdAt: string;
-  updatedAt: string;
-  tenantId: number;
-}
+// 状态/优先级枚举同样只有 @/constants/problem 一份。本文件此前自有一份只列
+// open/in_progress/resolved/closed 的副本，缺 investigating/identified，
+// 用它做参数类型会把合法的后端值挡在类型之外。消费方请直接从常量层取用。
 
 // 创建问题请求
 export interface CreateProblemRequest {
@@ -196,35 +174,13 @@ class ProblemService {
   }
 
   // 获取状态中文名称
-  getStatusLabel(status: ProblemStatus): string {
-    switch (status) {
-      case ProblemStatus.OPEN:
-        return '待处理';
-      case ProblemStatus.IN_PROGRESS:
-        return '处理中';
-      case ProblemStatus.RESOLVED:
-        return '已解决';
-      case ProblemStatus.CLOSED:
-        return '已关闭';
-      default:
-        return status;
-    }
+  getStatusLabel(status: string): string {
+    return problemStatusLabel(status);
   }
 
   // 获取优先级中文名称
-  getPriorityLabel(priority: ProblemPriority): string {
-    switch (priority) {
-      case ProblemPriority.LOW:
-        return '低';
-      case ProblemPriority.MEDIUM:
-        return '中';
-      case ProblemPriority.HIGH:
-        return '高';
-      case ProblemPriority.CRITICAL:
-        return '紧急';
-      default:
-        return priority;
-    }
+  getPriorityLabel(priority: string): string {
+    return problemPriorityLabel(priority);
   }
 
   getStatusText(status: ProblemStatus): string {

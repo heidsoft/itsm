@@ -268,25 +268,21 @@ export default function ProblemListPage() {
       items={problems}
       loading={loading}
       getItemId={(problem: Problem) => problem.id}
-      getItemStatus={(problem: Problem) => problem.status || 'open'}
+      getItemStatus={(problem: Problem) => (problem.status === '' ? 'open' : problem.status)}
       getItemTitle={(problem: Problem) =>
-        problem.title || t('problems.itemTitleFallback', { id: problem.id })
+        problem.title === '' ? t('problems.itemTitleFallback', { id: problem.id }) : problem.title
       }
-      getItemNumber={(problem: Problem) => {
-        const data = problem as unknown as Record<string, unknown>;
-        return (data.problemNumber as string) || `P-${problem.id}`;
-      }}
-      getItemDescription={(problem: Problem) => problem.description || ''}
-      getItemPriority={(problem: Problem) => problem.priority || problem.severity || 'medium'}
+      // problemNumber/assigneeName 是后端 omitempty 字段，只有 undefined 才回退；
+      // 之前这两个字段不在 Problem 类型上，只能靠 as unknown as 偷出来。
+      getItemNumber={(problem: Problem) => problem.problemNumber ?? `P-${problem.id}`}
+      getItemDescription={(problem: Problem) => problem.description}
+      getItemPriority={(problem: Problem) => (problem.priority === '' ? 'medium' : problem.priority)}
       getItemAssignee={(problem: Problem) => {
-        const assigneeId = problem.assigneeId;
-        if (!assigneeId) return null;
-        const data = problem as unknown as Record<string, unknown>;
-        const assigneeName = data.assigneeName as string;
-        return { name: assigneeName || t('problems.userFallback', { id: assigneeId }) };
+        if (problem.assigneeId === undefined) return null;
+        return { name: problem.assigneeName ?? t('problems.userFallback', { id: problem.assigneeId }) };
       }}
-      getItemCreatedAt={(problem: Problem) => problem.createdAt || ''}
-      getItemUpdatedAt={(problem: Problem) => problem.updatedAt || ''}
+      getItemCreatedAt={(problem: Problem) => problem.createdAt}
+      getItemUpdatedAt={(problem: Problem) => problem.updatedAt}
       onItemClick={(problem: Problem) => router.push(`/problems/${problem.id}`)}
       onItemEdit={(problem: Problem) => router.push(`/problems/${problem.id}/edit`)}
       columnConfigs={kanbanColumns}

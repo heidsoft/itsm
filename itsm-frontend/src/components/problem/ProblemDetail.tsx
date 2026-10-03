@@ -12,7 +12,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ProblemApi } from '@/lib/api/';
 import { useI18n } from '@/lib/i18n/useI18n';
 import { KEDBApi } from '@/lib/api/kedb-api';
-import { ProblemStatus, ProblemStatusLabels } from '@/constants/problem';
+import { ProblemStatus, problemStatusLabel } from '@/constants/problem';
 import type { Problem } from '@/types/biz/problem';
 import ProblemInvestigationTab from './ProblemInvestigationTab';
 import BasicInfoCard from './BasicInfoCard';
@@ -45,7 +45,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     setLoading(true);
     try {
       const problem = await ProblemApi.getProblem(Number(id));
-      setData(problem as unknown as Problem);
+      setData(problem);
     } catch (error) {
       message.error(t('problemDetail.loadDetailFailed'));
     } finally {
@@ -168,7 +168,7 @@ const ProblemDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               {data.title}
             </Title>
             <Tag color={data.status === ProblemStatus.RESOLVED ? 'success' : 'blue'}>
-              {ProblemStatusLabels[data.status]}
+              {problemStatusLabel(data.status)}
             </Tag>
           </Space>
           <Space>

@@ -543,26 +543,6 @@ func ToProblemResponseWithUsers(problem *ent.Problem, userMap map[int]string) *P
 	return response
 }
 
-// ToProblemResponseList converts a slice of ent.Problem to ProblemResponse slice
-func ToProblemResponseList(problems []*ent.Problem) []*ProblemResponse {
-	return ToProblemResponseListWithUsers(problems, nil)
-}
-
-// ToProblemResponseListWithUsers converts a slice of ent.Problem to ProblemResponse
-// slice and resolves names via userMap. See ToProblemResponseWithUsers.
-func ToProblemResponseListWithUsers(problems []*ent.Problem, userMap map[int]string) []*ProblemResponse {
-	if problems == nil {
-		return nil
-	}
-	responses := make([]*ProblemResponse, 0, len(problems))
-	for _, problem := range problems {
-		if problem != nil {
-			responses = append(responses, ToProblemResponseWithUsers(problem, userMap))
-		}
-	}
-	return responses
-}
-
 // ===================================
 // Project Mappers
 // ===================================
