@@ -175,6 +175,26 @@ export interface CIRelationship {
   tenantId: number;
 }
 
+// CI 变更历史条目 —— 与后端 dto.CIHistoryResponse 逐字段一致
+export interface CIHistoryItem {
+  id: number;
+  ciId: number;
+  version: number;
+  // 实测写入值：create / update / delete / revert / lifecycle_update；未知值原样显示，不做枚举断言
+  operation: string;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  changedFields?: string[];
+  operatorId: number;
+  operatorName?: string;
+  remark?: string;
+  lifecycleStatus?: string;
+  effectiveAt?: string;
+  expireAt?: string;
+  type?: string;
+  createdAt: string;
+}
+
 // 统计信息
 export interface CMDBStats {
   totalCount: number;

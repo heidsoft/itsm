@@ -29,8 +29,10 @@ export const CIDetail: React.FC = () => {
     impactLoading,
     changeHistory,
     historyLoading,
+    historyError,
     loadImpactAnalysis,
     loadChangeHistory,
+    loadHistoryPage,
     typeInfo,
   } = useCIDetail();
 
@@ -129,7 +131,9 @@ export const CIDetail: React.FC = () => {
         <CIChangeHistoryTab
           changeHistory={changeHistory}
           historyLoading={historyLoading}
+          historyError={historyError}
           onLoad={loadChangeHistory}
+          onPageChange={loadHistoryPage}
         />
       ),
     },

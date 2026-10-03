@@ -10,6 +10,7 @@ import { httpClient } from './http-client';
 import type { PaginationResponse } from './types';
 import type {
   CIType,
+  CIHistoryItem,
   CloudService,
   CloudAccount,
   CloudResource,
@@ -247,7 +248,7 @@ export class CMDBApi {
   static async getCIChangeHistory(
     id: number,
     params?: { page?: number; pageSize?: number }
-  ): Promise<PaginationResponse<Record<string, unknown>>> {
+  ): Promise<PaginationResponse<CIHistoryItem>> {
     return httpClient.get(`${CIS_BASE}/${id}/history`, params);
   }
 

@@ -2,8 +2,8 @@
  * CI Detail 相关类型定义
  */
 
-import type { ConfigurationItem, CIType } from '@/types/biz/cmdb';
-import type { FC, ReactNode } from 'react';
+import type { CIHistoryItem, ConfigurationItem, CIType } from '@/types/biz/cmdb';
+import type { PaginationResponse } from '@/lib/api/types';
 
 // ============ 影响分析类型 ============
 
@@ -47,26 +47,9 @@ export interface AffectedIncident {
 
 // ============ 变更历史类型 ============
 
-export interface ChangeHistoryData {
-  logs: ChangeLog[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface ChangeLog {
-  id: number;
-  action: 'create' | 'update' | 'delete' | 'relationship_added' | 'relationship_removed';
-  resource?: string;
-  path?: string;
-  Method?: string;
-  StatusCode?: number | string;
-  createdAt?: string;
-  updatedBy?: string;
-  updatedAt?: string;
-  description?: string;
-  [key: string]: unknown;
-}
+// GET /api/v1/cmdb/cis/:id/history 就是平台五键信封（items/total/page/pageSize/totalPages），
+// 后端从未返回过 logs 键；条目字段以 dto.CIHistoryResponse 为唯一真相。
+export type ChangeHistoryData = PaginationResponse<CIHistoryItem>;
 
 // ============ Hook 返回类型 ============
 
@@ -78,9 +61,11 @@ export interface UseCIDetailReturn {
   impactLoading: boolean;
   changeHistory: ChangeHistoryData | null;
   historyLoading: boolean;
+  historyError: boolean;
   loadDetail: () => Promise<void>;
   loadImpactAnalysis: () => Promise<void>;
   loadChangeHistory: () => Promise<void>;
+  loadHistoryPage: (page: number) => Promise<void>;
   typeInfo: CIType | undefined;
 }
 

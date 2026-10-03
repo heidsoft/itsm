@@ -4,8 +4,9 @@
  * - loadXxx 改为 refetch 包装器，保留旧调用方契约（tab 切换时手动触发）
  */
 
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { message } from 'antd';
+import { App } from 'antd';
 
 import type { UseCIDetailReturn } from '../types';
 import type { CIType } from '@/types/biz/cmdb';
@@ -17,8 +18,11 @@ import {
 } from '@/lib/hooks/useCMDB';
 import type { ImpactAnalysisRequest } from '@/types/cmdb';
 
+const HISTORY_PAGE_SIZE = 20;
+
 export const useCIDetail = (): UseCIDetailReturn => {
   const { id } = useParams() as { id: string };
+  const { message } = App.useApp();
 
   // React Query：CI 详情（自动竞态/卸载/缓存/重试）
   const ciQuery = useCIQuery(id);
@@ -32,15 +36,23 @@ export const useCIDetail = (): UseCIDetailReturn => {
     maxDepth: 3,
   };
   const impactQuery = useImpactAnalysisQuery(impactRequest, !!id);
-  const historyQuery = useCIChangeHistoryQuery(id, undefined, !!id);
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyQuery = useCIChangeHistoryQuery(
+    id,
+    { page: historyPage, pageSize: HISTORY_PAGE_SIZE },
+    !!id
+  );
 
-  // 错误提示（保留旧 message.error 行为，仅在出错且已发生请求时弹一次）
-  if (ciQuery.isError && !ciQuery.data) {
-    message.error('加载资产详情失败');
-  }
+  // 错误提示只在失败后通知一次，不在 render 路径里产生副作用
+  const detailFailed = ciQuery.isError && !ciQuery.data;
+  useEffect(() => {
+    if (detailFailed) {
+      message.error('加载资产详情失败');
+    }
+  }, [detailFailed, message]);
 
   const ci = ciQuery.data ?? null;
-  const types: CIType[] = useMemoNormalizeTypes(typesQuery.data);
+  const types: CIType[] = typesQuery.data ?? [];
 
   // loadXxx 包装为 refetch，保留旧调用方契约（onClick/tab 切换）
   const loadDetail = async () => {
@@ -52,6 +64,9 @@ export const useCIDetail = (): UseCIDetailReturn => {
   const loadChangeHistory = async () => {
     await historyQuery.refetch();
   };
+  const loadHistoryPage = async (page: number) => {
+    setHistoryPage(page);
+  };
 
   const typeInfo = types.find(t => t.id === ci?.ciTypeId);
 
@@ -61,22 +76,13 @@ export const useCIDetail = (): UseCIDetailReturn => {
     loading: ciQuery.isLoading || (!!id && typesQuery.isLoading),
     impactAnalysis: (impactQuery.data as unknown as UseCIDetailReturn['impactAnalysis']) ?? null,
     impactLoading: impactQuery.isFetching,
-    changeHistory: (historyQuery.data as unknown as UseCIDetailReturn['changeHistory']) ?? null,
+    changeHistory: historyQuery.data ?? null,
     historyLoading: historyQuery.isFetching,
+    historyError: historyQuery.isError,
     loadDetail,
     loadImpactAnalysis,
     loadChangeHistory,
+    loadHistoryPage,
     typeInfo,
   };
 };
-
-// useCITypesQuery 在 CIList 中已对返回值做兼容（data 直接是数组，或包在 {data,items}），
-// 这里也按相同模式解析，避免单一 contract 假设。
-function useMemoNormalizeTypes(raw: unknown): CIType[] {
-  if (!raw) return [];
-  const v = raw as { data?: CIType[]; items?: CIType[] } | CIType[];
-  if (Array.isArray(v)) return v;
-  if (Array.isArray(v.data)) return v.data;
-  if (Array.isArray(v.items)) return v.items;
-  return [];
-}
