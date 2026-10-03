@@ -36,6 +36,7 @@
 | `product-architecture-review-2026-09-03.md` | historical | 产品架构评审快照；2026-09-12 由 `docs/reviews/`（复数目录）合并入本目录 |
 | `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用，移动时已同步更新该引用 |
 | `scope-convergence-architecture-review-2026-09-30.md` | active | 收敛计划（`plans/scope-convergence-plan-2026-09-28.md`）B0–B5 落地状态实测审查；F8 空转、判据口径歧义与执行顺序建议 |
+| `product-convergence-initialization-permission-review-2026-10-03.md` | active | 三轮只读审查合并：注册接口可无认证自选 `super_admin`（P0-1）；硬编码与 DB 播种两套权限权威对 `sysadmin` 等角色定义不一致、播种反而致 `dashboard:read` 等 89 个路由模式在 DBOnly 下 403（P0-2）；种子载体（`seed_data.sql` 死文件带毒 / `demo.json` 入生产镜像）、55 个孤儿组件中的假实现、三处门禁假绿；含审查者 7 次近似失误记录 |
 
 ## 目录合并（2026-09-12）
 
