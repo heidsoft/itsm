@@ -142,17 +142,28 @@ func TestGetNotifications_Success(t *testing.T) {
 	h := newNotificationHandler(n, &mockNotificationPreferenceService{})
 	n.On("GetCurrentUserID", mock.Anything).Return(7, nil)
 	n.On("GetCurrentTenantID", mock.Anything).Return(3, nil)
-	n.On("GetNotifications", mock.Anything, mock.Anything).Return(&dto.NotificationListResponse{
-		Total: 1, Notifications: []dto.Notification{{ID: 1, Title: "hi"}},
-	}, nil)
 
-	w, c := notifCtx(http.MethodGet, "/api/v1/notifications", "")
+	var forwarded *dto.GetNotificationsRequest
+	n.On("GetNotifications", mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) {
+			forwarded, _ = args.Get(1).(*dto.GetNotificationsRequest)
+		}).
+		Return(&dto.NotificationListResponse{
+			Total: 1, Items: []dto.Notification{{ID: 1, Title: "hi"}},
+		}, nil)
+
+	// 客户端自报的 userId/tenantId 不得参与查询，身份只能来自认证上下文。
+	w, c := notifCtx(http.MethodGet, "/api/v1/notifications?pageSize=5&userId=999&tenantId=999", "")
 	h.GetNotifications(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	var resp common.Response
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, common.SuccessCode, resp.Code)
+	require.NotNil(t, forwarded)
+	assert.Equal(t, 7, forwarded.UserID)
+	assert.Equal(t, 3, forwarded.TenantID)
+	assert.Equal(t, 5, forwarded.PageSize)
 	n.AssertExpectations(t)
 }
 

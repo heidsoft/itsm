@@ -685,6 +685,24 @@ POST /changes/{id}/rollback
 POST /changes/{id}/cancel
 ```
 
+### 获取变更 PIR 列表
+
+```http
+GET /changes/pirs
+Authorization: Bearer <accessToken>
+
+Query Parameters:
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- result: 整体结果过滤（`successful` / `failed`；`全部` 与空值不过滤）
+```
+
+真分页端点（`service/pir_service.go` 做 `Count` + `Offset/Limit`），`data` 为
+`{items, total, page, pageSize, totalPages}`，`total` 是过滤后的全量条数而非当前页长度。
+排序为 `review_date` 降序 + `ID` 升序：`review_date` 非唯一列，同一天录入的 PIR 需要 ID
+兜底才有确定的页边界归属。列表按认证上下文租户收敛，元素为 `ChangePIRResponse`。
+契约回归见 `itsm-backend/router/change_pir_route_test.go`。
+
 ## 发布管理接口
 
 ### 获取发布列表
@@ -1281,11 +1299,16 @@ GET /notifications
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
 - type: 类型过滤
 - read: 是否已读 (true/false)
 ```
+
+`data` 为 `{items, total, page, pageSize, totalPages}`：本端点实测真的做 `Count` + `Offset/Limit`，
+因此五键齐备，集合键只有 `items`（`notifications` 与 `size` 已删除）。`userId`/`tenantId` 不再从
+查询参数绑定，只取认证上下文，自报身份无法读取他人通知。旧版在 handler 与 service 各写一份
+夹紧规则，现在 HTTP 入口统一走 `common.GetPaginationFromQuery`。
 
 ### 标记通知已读
 
@@ -1536,6 +1559,7 @@ Query Parameters:
 | `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
 | `GET /api/v1/tickets/views` | `{items, total}` | 视图按租户全量返回（`service/ticket_view_service.go` 无 `Limit`），`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/{id}/comments` | `{items, total}` | 单工单评论全量返回，同上；分页若将来引入必须实装而非补键 |
+| `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |
 | `GET /api/v1/msp/allocations/history` | `{items, total, page, pageSize, totalPages}` | 标准分页信封，元素是 `MSPAllocationDTO` |

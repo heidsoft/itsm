@@ -84,11 +84,11 @@ export const Header: React.FC<HeaderProps> = ({
       const [response, unread] = await Promise.all([
         TicketNotificationApi.getUserNotifications({
           page: 1,
-          size: NOTIFICATION_PAGE_SIZE,
+          pageSize: NOTIFICATION_PAGE_SIZE,
         }),
         TicketNotificationApi.getUnreadCount().catch(() => null),
       ]);
-      setNotifications((response.notifications || []).map(toTicketNotification));
+      setNotifications(response.items.map(toTicketNotification));
       if (unread && typeof unread.count === 'number') setUnreadCount(unread.count);
     } catch (error) {
       console.error('Failed to load notifications:', error);

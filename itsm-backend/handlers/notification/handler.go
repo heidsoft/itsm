@@ -36,9 +36,10 @@ func NewHandler(
 // @Tags 通知管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param size query int false "每页数量"
-// @Param is_read query bool false "已读状态"
+// @Param page query int false "页码（默认 1）"
+// @Param pageSize query int false "每页数量（默认 20，上限 100）"
+// @Param type query string false "通知类型过滤"
+// @Param read query bool false "已读状态过滤"
 // @Success 200 {object} common.Response
 // @Router /api/v1/notifications [get]
 func (h *Handler) GetNotifications(ctx *gin.Context) {
@@ -63,14 +64,12 @@ func (h *Handler) GetNotifications(ctx *gin.Context) {
 	req.UserID = userID
 	req.TenantID = tenantID
 
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.Size <= 0 {
-		req.Size = 20
-	} else if req.Size > 100 {
-		req.Size = 100
-	}
+	// 分页统一走查询参数夹紧通道：page 缺省 1、pageSize 缺省 20，且只有落在 (0,100]
+	// 里的查询值会被采纳，越界值是回落到默认页长而不是夹到 100（common 里就这一个实现，
+	// 别再在这里写第二套规则）。直接读 ShouldBindQuery 的结果会把 pageSize=0 交给 service，
+	// 而 Ent 的 Limit(0) 等于不加 LIMIT（整表返回）。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page, req.PageSize = pg.Page, pg.PageSize
 
 	result, err := h.notificationService.GetNotifications(ctx, &req)
 	if err != nil {

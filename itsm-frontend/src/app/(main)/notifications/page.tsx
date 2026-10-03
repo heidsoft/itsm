@@ -160,15 +160,15 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const [allRes, unreadRes, readRes] = await Promise.all([
-        TicketNotificationApi.getUserNotifications({ page: 1, size: 100 }),
-        TicketNotificationApi.getUserNotifications({ page: 1, size: 100, read: false }),
-        TicketNotificationApi.getUserNotifications({ page: 1, size: 100, read: true }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: false }),
+        TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100, read: true }),
       ]);
 
-      const all = (allRes.notifications || []).map(toTicketNotification);
+      const all = allRes.items.map(toTicketNotification);
       setNotifications(all);
-      setUnreadNotifications((unreadRes.notifications || []).map(toTicketNotification));
-      setReadNotifications((readRes.notifications || []).map(toTicketNotification));
+      setUnreadNotifications(unreadRes.items.map(toTicketNotification));
+      setReadNotifications(readRes.items.map(toTicketNotification));
     } catch (error) {
       message.error(t('notifications.loadFailed'));
       console.error('Failed to load notifications:', error);
@@ -341,9 +341,9 @@ export default function NotificationsPage() {
       // 获取所有通知（含已读与未读），逐条删除
       const response = await TicketNotificationApi.getUserNotifications({
         page: 1,
-        size: 100,
+        pageSize: 100,
       });
-      const allItems = response.notifications || [];
+      const allItems = response.items;
       await Promise.all(
         allItems.map(item => TicketNotificationApi.deleteNotification(item.id))
       );

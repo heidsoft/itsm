@@ -9428,20 +9428,26 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "页码",
+                        "description": "页码（默认 1）",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认 20，上限 100）",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "通知类型过滤",
+                        "name": "type",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
-                        "description": "已读状态",
-                        "name": "is_read",
+                        "description": "已读状态过滤",
+                        "name": "read",
                         "in": "query"
                     }
                 ],

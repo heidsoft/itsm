@@ -70,7 +70,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
     setLoading(true);
     try {
       const response = await TicketNotificationApi.getTicketNotifications(ticketId);
-      setNotifications(response.notifications || []);
+      setNotifications(response.items);
     } catch (error) {
       antMessage.error('加载通知列表失败');
     } finally {

@@ -242,6 +242,32 @@ cd itsm-backend && go test ./middleware/... -run 'TokenRevocation|InvalidateUser
 认领失败，把有效会话判定为过期。登出请求带 `keepalive`，调用方随后整页跳转也不会取消吊销请求；
 服务端吊销失败不再沉默——本地状态清空，同时在控制台留下 `revoked=false` 的原因。
 
+### 1.10 通知列表信封与查询参数收敛（2026-10-03，破坏性）
+
+§1.8 登记为债务的 `notifications` 集合键在通知域落地，两个列表端点各自只有一个真相：
+
+- `GET /api/v1/notifications`：`data` 从 `{notifications,total,page,size}` 改为
+  `{items,total,page,pageSize,totalPages}`（该端点实测真的做 `Count` + `Offset/Limit`，
+  所以补齐三键而不是降级）。查询参数只认 `page`/`pageSize`/`type`/`read`；此前的
+  `size`、`is_read` 不再被读取，`pageSize` 越界或缺省回落到 20（上限 100），`page`
+  缺省或非法回落到 1。`userId`/`tenantId` 改为只来自认证上下文，请求里自报的同名
+  查询参数不再参与绑定。
+- `GET /api/v1/tickets/{id}/notifications`：集合键 `notifications` → `items`，形状保持
+  诚实的 `{items,total}`（服务层无 `Offset/Limit`，按 §「不分页的列表」不得伪造分页键）。
+
+```jsonc
+// 旧（GET /api/v1/notifications）
+{ "code": 0, "data": { "notifications": [ … ], "total": 42, "page": 1, "size": 20 } }
+
+// 新
+{ "code": 0, "message": "success", "data": {
+    "items": [ … ], "total": 42, "page": 1, "pageSize": 20, "totalPages": 3 } }
+```
+
+**集成方必须改的三件事**：读 `data.items` 而非 `data.notifications`；请求分页发
+`pageSize` 而非 `size`、已读过滤发 `read` 而非 `is_read`；不要再尝试用查询参数
+`userId`/`tenantId` 指定他人（此前该参数会被绑定，现在忽略——通知只会返回认证用户自己的）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

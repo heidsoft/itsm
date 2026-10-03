@@ -72,7 +72,6 @@ var envelopeBaseline = []string{
 	"msp_dto.go|MSPAllocationListResponse|allocations",
 	"msp_dto.go|MSPCustomerListResponse|customers",
 	"msp_dto.go|MSPReportListResponse|reports",
-	"notification_dto.go|NotificationListResponse|notifications",
 	"problem_dto.go|ListProblemsResponse|problems",
 	"release_dto.go|ReleaseListResponse|releases",
 	"role_dto.go|RoleListResponse|roles",
@@ -82,7 +81,6 @@ var envelopeBaseline = []string{
 	"ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments",
 	"ticket_automation_rule_dto.go|ListAutomationRulesResponse|rules",
 	"ticket_dto.go|ListTicketsResponse|tickets",
-	"ticket_notification_dto.go|ListTicketNotificationsResponse|notifications",
 	"ticket_workflow_dto.go|TicketCCListResponse|records",
 }
 
@@ -111,13 +109,16 @@ var envelopeKeyBaseline = []string{
 // envelopeAliasBaseline 是 2026-10-02 由扫描器实测的「分页别名残留」存量清单
 // （file|struct|jsonKey）。这些信封用 `size` 代替 `pageSize`（部分还缺 pageSize/totalPages），
 // 属于 AGENTS.md 禁止的双轨；清理时必须同时改请求参数、前端类型与调用点。
+//
+// 2026-10-03 E4-7 移除 notification_dto.go|NotificationListResponse|size：请求侧原本同时
+// 接受 `size` 与 `pageSize`，现在只认 `pageSize`（HTTP 入口走 common.GetPaginationFromQuery）。
+// 剩下的 6 条里 5 条是 CMDB 一侧（与 envelopeKeyBaseline 同一批结构体），1 条是服务目录。
 var envelopeAliasBaseline = []string{
 	"cmdb_advanced_dto.go|ListResponse|size",
 	"cmdb_core_dto.go|CIListResponse|size",
 	"cmdb_core_dto.go|CITagListResponse|size",
 	"cmdb_core_dto.go|CITypeListResponse|size",
 	"cmdb_dto.go|CIHistoryListResponse|size",
-	"notification_dto.go|NotificationListResponse|size",
 	"service_dto.go|ServiceCatalogListResponse|size",
 }
 

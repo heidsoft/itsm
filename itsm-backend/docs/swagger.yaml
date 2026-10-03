@@ -10224,17 +10224,21 @@ paths:
       - application/json
       description: 获取当前用户的所有通知，支持分页和状态过滤
       parameters:
-      - description: 页码
+      - description: 页码（默认 1）
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认 20，上限 100）
         in: query
-        name: size
+        name: pageSize
         type: integer
-      - description: 已读状态
+      - description: 通知类型过滤
         in: query
-        name: is_read
+        name: type
+        type: string
+      - description: 已读状态过滤
+        in: query
+        name: read
         type: boolean
       produces:
       - application/json

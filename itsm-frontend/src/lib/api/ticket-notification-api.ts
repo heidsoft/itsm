@@ -38,7 +38,7 @@ export interface TicketNotification {
 }
 
 export interface ListTicketNotificationsResponse {
-  notifications: TicketNotification[];
+  items: TicketNotification[];
   total: number;
 }
 
@@ -60,12 +60,17 @@ export interface UserNotification {
   updatedAt: string;
 }
 
+/**
+ * GET /api/v1/notifications 的响应信封。后端是真的 Count + Offset/Limit 分页，
+ * 因此五键齐备；集合键只有 items（`notifications` 属于 AGENTS.md 禁止的领域名第二键，
+ * `size` 属于禁止的 pageSize 别名）。
+ */
 export interface ListUserNotificationsResponse {
-  notifications: UserNotification[];
+  items: UserNotification[];
   total: number;
   page: number;
-  /** 后端分页字段是 size（不是 pageSize） */
-  size: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 const TICKET_EVENT_TYPES: ReadonlySet<string> = new Set([
@@ -146,10 +151,10 @@ export class TicketNotificationApi {
     return httpClient.post(`/api/v1/tickets/${ticketId}/notifications`, data);
   }
 
-  // 获取用户通知列表（后端 query 契约：page/size/read/type）
+  // 获取用户通知列表（后端 query 契约：page/pageSize/read/type）
   static async getUserNotifications(params?: {
     page?: number;
-    size?: number;
+    pageSize?: number;
     read?: boolean;
     type?: string;
   }): Promise<ListUserNotificationsResponse> {

@@ -21,10 +21,12 @@ describe('TicketNotificationApi', () => {
 
   describe('getTicketNotifications', () => {
     it('should get ticket notifications', async () => {
-      mockGet.mockResolvedValue({ notifications: [{ id: 1 }], total: 1 });
+      // 与后端 dto.ListTicketNotificationsResponse 逐键对齐：这是诚实的不分页形状
+      // （service 侧无 Offset/Limit），只有 {items,total}，不得伪造分页键。
+      mockGet.mockResolvedValue({ items: [{ id: 1 }], total: 1 });
       const result = await TicketNotificationApi.getTicketNotifications(10);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/10/notifications');
-      expect(result.notifications).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 
@@ -39,10 +41,13 @@ describe('TicketNotificationApi', () => {
 
   describe('getUserNotifications', () => {
     it('should get user notifications', async () => {
-      mockGet.mockResolvedValue({ notifications: [], total: 0, page: 1, pageSize: 10 });
-      const result = await TicketNotificationApi.getUserNotifications({ page: 1 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/notifications', { page: 1 });
-      expect(result.total).toBe(0);
+      // 与后端 dto.NotificationListResponse 逐键对齐：真分页 → 五键齐备，集合键只有 items。
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+      const result = await TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/notifications', { page: 1, pageSize: 20 });
+      expect(result.items).toEqual([]);
+      expect(result.pageSize).toBe(20);
+      expect(result.totalPages).toBe(0);
     });
   });
 

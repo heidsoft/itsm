@@ -154,9 +154,9 @@ const NotificationCenter: React.FC<{
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await TicketNotificationApi.getUserNotifications({ page: 1, size: 100 });
+      const response = await TicketNotificationApi.getUserNotifications({ page: 1, pageSize: 100 });
       // 后端契约：{title, message, read}；应用内通知列表固定 channel=in_app
-      const loadedNotifications: Notification[] = (response.notifications ?? []).map(item => ({
+      const loadedNotifications: Notification[] = response.items.map(item => ({
         id: item.id,
         title: item.title || item.type,
         message: item.message,

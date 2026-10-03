@@ -72,8 +72,8 @@ func (h *Handler) ListTicketNotifications(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListTicketNotificationsResponse{
-		Notifications: notifications,
-		Total:         len(notifications),
+		Items: notifications,
+		Total: len(notifications),
 	})
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/notification"
@@ -59,14 +60,10 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 	if req.UserID <= 0 || req.TenantID <= 0 {
 		return nil, fmt.Errorf("用户或租户信息无效")
 	}
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.Size <= 0 {
-		req.Size = 20
-	} else if req.Size > 100 {
-		req.Size = 100
-	}
+	// 归一只为落 Offset/Limit 服务：pageSize=0 在 Ent 里是 Limit(0)，等价于不加 LIMIT
+	// 整表返回，page<=0 会算出负 OFFSET。HTTP 入口已按 common 的查询通道夹紧，这里是
+	// 给直接调用方（其他 service/worker）的同一道保底，用的是同一个算法而非第二套规则。
+	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
 	query := s.client.Notification.Query().
 		Where(notification.UserID(req.UserID)).
 		Where(notification.TenantID(req.TenantID))
@@ -86,10 +83,11 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 	}
 
 	// 分页查询
+	// created_at 不是唯一列，同一秒入库的通知在页边界归属不确定，用 ID 兜底成全序。
 	notifications, err := query.
-		Order(ent.Desc(notification.FieldCreatedAt)).
-		Offset((req.Page - 1) * req.Size).
-		Limit(req.Size).
+		Order(ent.Desc(notification.FieldCreatedAt), ent.Asc(notification.FieldID)).
+		Offset((req.Page - 1) * req.PageSize).
+		Limit(req.PageSize).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取通知列表失败: %w", err)
@@ -101,11 +99,14 @@ func (s *NotificationService) GetNotifications(ctx context.Context, req *dto.Get
 		notificationDTOs[i] = *s.convertToDTO(n)
 	}
 
+	// 页码/页长/共几页由 common 的同一个算法算出，避免除法与四舍五入在这里再写一份。
+	pagination := common.NewPaginationResponse(req.Page, req.PageSize, int64(total))
 	return &dto.NotificationListResponse{
-		Notifications: notificationDTOs,
-		Total:         total,
-		Page:          req.Page,
-		Size:          req.Size,
+		Items:      notificationDTOs,
+		Total:      int(pagination.Total),
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

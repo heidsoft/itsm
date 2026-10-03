@@ -21,10 +21,13 @@ type TicketNotificationResponse struct {
 	User      *UserInfo  `json:"user,omitempty"` // 接收人信息
 }
 
-// ListTicketNotificationsResponse 工单通知列表响应
+// ListTicketNotificationsResponse 工单通知列表响应。
+//
+// 这是「不分页的列表」形状（docs/api-reference.md）：service 侧按 ticket+tenant 一次
+// 取全量、无 Offset/Limit，因此只有 {items,total}，不得伪造 page/pageSize/totalPages。
 type ListTicketNotificationsResponse struct {
-	Notifications []*TicketNotificationResponse `json:"notifications"`
-	Total         int                           `json:"total"`
+	Items []*TicketNotificationResponse `json:"items"`
+	Total int                           `json:"total"`
 }
 
 // SendTicketNotificationRequest 发送工单通知请求
