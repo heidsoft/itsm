@@ -456,26 +456,28 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 				firstResponseAt = &slaSt.FirstResponseAt
 			}
 			return map[string]interface{}{
-				"ticket_id":                    t.ID,
-				"sla_definition_id":            slaSt.SLADefinitionID,
-				"sla_response_deadline":        responseDeadline,
-				"sla_resolution_deadline":      resolutionDeadline,
-				"first_response_at":            firstResponseAt,
-				"status":                       t.Status,
-				"resolution_deadline_breached": resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
+				"ticketId":                t.ID,
+				"slaDefinitionId":        slaSt.SLADefinitionID,
+				"responseDeadline":       responseDeadline,
+				"resolutionDeadline":     resolutionDeadline,
+				"firstResponseAt":        firstResponseAt,
+				"status":                 t.Status,
+				"isResponseBreached":     responseDeadline != nil && time.Now().After(*responseDeadline),
+				"isResolutionBreached":   resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
 			}, nil
 		}
 	}
 
 	// 降级：使用工单内联字段
 	return map[string]interface{}{
-		"ticket_id":                    t.ID,
-		"sla_definition_id":            t.SLADefinitionID,
-		"sla_response_deadline":        t.SLAResponseDeadline,
-		"sla_resolution_deadline":      t.SLAResolutionDeadline,
-		"first_response_at":            t.FirstResponseAt,
-		"status":                       t.Status,
-		"resolution_deadline_breached": t.SLAResolutionDeadline != nil && time.Now().After(*t.SLAResolutionDeadline),
+		"ticketId":              t.ID,
+		"slaDefinitionId":      t.SLADefinitionID,
+		"responseDeadline":     t.SLAResponseDeadline,
+		"resolutionDeadline":   t.SLAResolutionDeadline,
+		"firstResponseAt":      t.FirstResponseAt,
+		"status":               t.Status,
+		"isResponseBreached":   t.SLAResponseDeadline != nil && time.Now().After(*t.SLAResponseDeadline),
+		"isResolutionBreached": t.SLAResolutionDeadline != nil && time.Now().After(*t.SLAResolutionDeadline),
 	}, nil
 }
 

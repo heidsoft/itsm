@@ -730,14 +730,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 <div className="flex justify-between">
                   <Text type="secondary">{t('ticketDetail.responseDeadline')}:</Text>
                   <Text type={slaInfo.isResponseBreached ? 'danger' : undefined}>
-                    {new Date(slaInfo.responseDeadline).toLocaleString()}
+                    {slaInfo.responseDeadline ? new Date(slaInfo.responseDeadline).toLocaleString() : '-'}
                     {slaInfo.isResponseBreached && ` (${t('ticketDetail.responseTimeout')})`}
                   </Text>
                 </div>
                 <div className="flex justify-between">
                   <Text type="secondary">{t('ticketDetail.resolutionDeadline')}:</Text>
                   <Text type={slaInfo.isResolutionBreached ? 'danger' : undefined}>
-                    {new Date(slaInfo.resolutionDeadline).toLocaleString()}
+                    {slaInfo.resolutionDeadline ? new Date(slaInfo.resolutionDeadline).toLocaleString() : '-'}
                     {slaInfo.isResolutionBreached && ` (${t('ticketDetail.resolutionTimeout')})`}
                   </Text>
                 </div>
