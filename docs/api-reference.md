@@ -154,10 +154,14 @@ Content-Type: application/json
   "password": "password123",
   "fullName": "新用户",
   "phone": "13800138000",
-  "company": "公司名称",
-  "role": "user"
+  "company": "公司名称"
 }
 ```
+
+角色与租户由服务端决定：注册是唯一未认证的写入入口，请求体中的 `role`/`tenantCode`
+字段已移除（历史字段，携带时不报错但不再产生任何效果），落库角色固定为 `end_user`。
+目标租户取系统中唯一的活跃租户；存在多个活跃租户时注册被拒绝（fail-closed），
+需由管理员开通账号。
 
 ### 忘记密码
 
