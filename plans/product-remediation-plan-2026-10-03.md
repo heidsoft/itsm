@@ -116,6 +116,15 @@
 
 **⚠️ 本批次不继承审查报告的一条错误结论。** 报告 §2 #3 曾写"`make dev-seed-demo` 在 Makefile 中不存在"，**这是错的**，该 target 存在于 `Makefile:240-249`、已列入 `.PHONY`（`:2`）、并有 `ROADMAP.md:94` 与 `README.md:142` 的文档。报告已就地划掉并记入 §6 #9。R3 的动作 ② 因此**不是"删掉一个不存在的入口"，而是"把一个真实存在的 dev 入口的产物移出生产镜像"**——`make dev-seed-demo` 本身要保留。
 
+> **状态（2026-10-03）：已落地，退出标准全部实测通过。**
+> - 动作①：`config/seed/seed_data.sql`（38,991 B）已删除；目录现存 `default.json` + `demo.json`。
+> - 动作②：`Dockerfile` 与 `Dockerfile.prod` 的 `COPY config/seed ./config/seed` 改为只 COPY `config/seed/default.json`（注释标明 demo.json 属 `make dev-seed-demo` 开发载体，不进生产镜像）。生产镜像内 `ls config/seed` 以 `docker run --rm` 实测为准（结果见本批次提交说明）。
+> - 动作③：`init_admin.sh` 重写——重跑改为幂等跳过（不重置口令、不调整角色，已提为 super_admin 的账号不再被降级）；口令/邮箱只经 stdin 与 `PGPASSWORD` 环境变量进入 psql，不再走 `psql -v` 进程列表；硬编码 id `'admin-001'` 与 `admin@itsm.com` 删除（id 由数据库自增，email 可用 `ADMIN_EMAIL` 覆盖，默认 `admin@example.com` 与 Go seeder 基线一致）；默认租户缺失时 fail closed（`RAISE EXCEPTION`），不再回退 `tenant_id=1`。
+> - 守卫：新增 `pkg/seeder/seed_carrier_guard_test.go`——扫描 `config/seed/` 全部文件（不限扩展名，防 seed_data.sql 式再引入），凡 `resource:action` 形状 token 必须 ⊆ `permissionDefinitions()`；基线 0 命中，负样例探针（`admin:write`）实测命中变红。
+> - 实测记录：演练库（一次性 postgres:16-alpine 容器，非业务库）首跑创建 admin（role=admin、tenant 取自 `tenants.code='default'`）；运维提权+改口令后重跑，`role` 仍为 `super_admin`、`password_hash` 与运维改后一致；无默认租户库重跑 exit 3 并报「默认租户不存在，不做租户回退」，0 行写入。
+> - 观察项（不在本批次扩权）：脚本只写 `users.role` 不写 `user_roles` 边；`MigrateUserRolesBackfill` 在每次 seeder Apply 时回填，下次服务启动自愈。
+> - 备注：`CHANGELOG.md [Unreleased]` 的 R3 条目因该文件正处于并行会话在途修改中，另行落账，不与本批次提交混入。
+
 ### R4　门禁补口 → scope-convergence B0
 
 | 缺口 | 动作 | 退出标准 |

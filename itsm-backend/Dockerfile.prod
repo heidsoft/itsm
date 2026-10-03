@@ -97,7 +97,9 @@ COPY --from=builder --chown=app:app /out/main ./main
 COPY --from=builder --chown=app:app /out/migrate-tool ./migrate-tool
 COPY --chown=app:app config.yaml ./
 COPY --chown=app:app migrations ./migrations
-COPY --chown=app:app config/seed ./config/seed
+# 生产运行只需要 default.json；demo.json 是 make dev-seed-demo 的开发载体，
+# 不得进生产镜像（R3 种子载体去毒）。
+COPY --chown=app:app config/seed/default.json ./config/seed/default.json
 COPY --chown=app:app docs/swagger.json ./docs/
 COPY --chown=app:app docs/swagger.yaml ./docs/
 

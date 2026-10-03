@@ -7,7 +7,7 @@
 #   - BuildKit cache mounts for go modules + build cache (repeat builds are fast)
 #   - trimpath + "-s -w" linker flags to shrink the binary
 #   - Static, non-root runtime on a pinned alpine:3.20
-#   - Only the binary + runtime assets (config.yaml, migrations, config/seed) ship
+#   - Only the binary + runtime assets (config.yaml, migrations, config/seed/default.json) ship
 #
 # NOTE: dev builds intentionally keep debug symbols off-net but the base image
 # matches the prod toolchain so dev/prod behavior stays aligned.
@@ -66,7 +66,9 @@ RUN addgroup -S app && adduser -S -G app app \
 COPY --from=builder --chown=app:app /out/main ./main
 COPY --chown=app:app config.yaml ./
 COPY --chown=app:app migrations ./migrations
-COPY --chown=app:app config/seed ./config/seed
+# 生产运行只需要 default.json；demo.json 是 make dev-seed-demo 的开发载体，
+# 不得进生产镜像（R3 种子载体去毒）。
+COPY --chown=app:app config/seed/default.json ./config/seed/default.json
 
 USER app
 
