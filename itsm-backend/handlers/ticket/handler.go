@@ -54,6 +54,8 @@ func ticketToResponse(t *Ticket) *dto.TicketResponse {
 	if t.CategoryID != nil {
 		resp.CategoryID = *t.CategoryID
 	}
+	resp.SLAResponseDeadline = t.SLAResponseDeadline
+	resp.SLAResolutionDeadline = t.SLAResolutionDeadline
 	return resp
 }
 

@@ -9,6 +9,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
+	repoTicket "itsm-backend/repository/ticket"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
@@ -103,25 +104,32 @@ func (s *Service) Create(ctx context.Context, tenantID int, params *CreateParams
 		return nil, err
 	}
 
-	// Convert domain ticket back to handler-layer ticket for response mapping.
+	return productionTicketToTicket(created), nil
+}
+
+// productionTicketToTicket 把 productionSvc 的创建结果转为 handler 层实体供响应映射。
+// 漏拷的字段会被 TicketResponse 的 omitempty 直接从 API 响应里吞掉
+// （ticketTypeId 曾因此从 POST /api/v1/tickets 响应中消失），新增字段必须同步。
+func productionTicketToTicket(t *repoTicket.Ticket) *Ticket {
 	return &Ticket{
-		ID:             created.ID,
-		TicketNumber:   created.TicketNumber,
-		Title:          created.Title,
-		Description:    created.Description,
-		Status:         string(created.Status),
-		Priority:       string(created.Priority),
-		Type:           string(created.Type),
-		TicketTypeCode: created.TicketTypeCode,
-		TicketTypeName: created.TicketTypeName,
-		FormFields:     created.FormFields,
-		RequesterID:    created.RequesterID,
-		AssigneeID:     created.AssigneeID,
-		TenantID:       created.TenantID,
-		Version:        created.Version,
-		CreatedAt:      created.CreatedAt,
-		UpdatedAt:      created.UpdatedAt,
-	}, nil
+		ID:             t.ID,
+		TicketNumber:   t.TicketNumber,
+		Title:          t.Title,
+		Description:    t.Description,
+		Status:         string(t.Status),
+		Priority:       string(t.Priority),
+		Type:           string(t.Type),
+		TicketTypeID:   t.TicketTypeID,
+		TicketTypeCode: t.TicketTypeCode,
+		TicketTypeName: t.TicketTypeName,
+		FormFields:     t.FormFields,
+		RequesterID:    t.RequesterID,
+		AssigneeID:     t.AssigneeID,
+		TenantID:       t.TenantID,
+		Version:        t.Version,
+		CreatedAt:      t.CreatedAt,
+		UpdatedAt:      t.UpdatedAt,
+	}
 }
 
 // Get retrieves a ticket by ID.
@@ -456,21 +464,21 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 				firstResponseAt = &slaSt.FirstResponseAt
 			}
 			return map[string]interface{}{
-				"ticketId":                t.ID,
-				"slaDefinitionId":        slaSt.SLADefinitionID,
-				"responseDeadline":       responseDeadline,
-				"resolutionDeadline":     resolutionDeadline,
-				"firstResponseAt":        firstResponseAt,
-				"status":                 t.Status,
-				"isResponseBreached":     responseDeadline != nil && time.Now().After(*responseDeadline),
-				"isResolutionBreached":   resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
+				"ticketId":             t.ID,
+				"slaDefinitionId":      slaSt.SLADefinitionID,
+				"responseDeadline":     responseDeadline,
+				"resolutionDeadline":   resolutionDeadline,
+				"firstResponseAt":      firstResponseAt,
+				"status":               t.Status,
+				"isResponseBreached":   responseDeadline != nil && time.Now().After(*responseDeadline),
+				"isResolutionBreached": resolutionDeadline != nil && time.Now().After(*resolutionDeadline),
 			}, nil
 		}
 	}
 
 	// 降级：使用工单内联字段
 	return map[string]interface{}{
-		"ticketId":              t.ID,
+		"ticketId":             t.ID,
 		"slaDefinitionId":      t.SLADefinitionID,
 		"responseDeadline":     t.SLAResponseDeadline,
 		"resolutionDeadline":   t.SLAResolutionDeadline,
