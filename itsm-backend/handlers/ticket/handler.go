@@ -75,17 +75,27 @@ func ticketListToResponse(ts []*Ticket) []*dto.TicketResponse {
 // ResolvedTickets / ClosedTickets / CriticalTickets / HighTickets / AvgResolutionMin。
 func ticketStatsToDTO(s *TicketStats) *dto.TicketStatsResponse {
 	if s == nil {
-		return &dto.TicketStatsResponse{}
+		return &dto.TicketStatsResponse{ByStatus: []dto.TicketStatusCount{}, ByPriority: []dto.TicketPriorityCount{}}
 	}
-	return &dto.TicketStatsResponse{
+	out := &dto.TicketStatsResponse{
 		Total:        s.TotalTickets,
 		Open:         s.OpenTickets,
 		InProgress:   s.InProgressTickets,
 		Resolved:     s.ResolvedTickets,
+		Closed:       s.ClosedTickets,
 		Pending:      s.PendingTickets,
 		HighPriority: s.HighTickets,
 		Overdue:      s.OverdueTickets,
+		ByStatus:     make([]dto.TicketStatusCount, 0, len(s.ByStatus)),
+		ByPriority:   make([]dto.TicketPriorityCount, 0, len(s.ByPriority)),
 	}
+	for _, item := range s.ByStatus {
+		out.ByStatus = append(out.ByStatus, dto.TicketStatusCount{Status: item.Status, Count: item.Count})
+	}
+	for _, item := range s.ByPriority {
+		out.ByPriority = append(out.ByPriority, dto.TicketPriorityCount{Priority: item.Priority, Count: item.Count})
+	}
+	return out
 }
 
 // CreateTicket handles POST /api/v1/tickets

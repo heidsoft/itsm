@@ -262,34 +262,6 @@ class TicketAnalyticsService {
     };
   }
 
-  // 获取工单统计：与 router.go line 549 对齐 → GET /api/v1/tickets/stats
-  async getStats(): Promise<{
-    total: number;
-    open: number;
-    inProgress: number;
-    pending: number;
-    resolved: number;
-    closed: number;
-  }> {
-    const response = await httpClient.get<{
-      total?: number;
-      open?: number;
-      inProgress?: number;
-      pending?: number;
-      resolved?: number;
-      closed?: number;
-    }>('/api/v1/tickets/stats');
-
-    return {
-      total: response.total ?? 0,
-      open: response.open ?? 0,
-      inProgress: response.inProgress ?? 0,
-      pending: response.pending ?? 0,
-      resolved: response.resolved ?? 0,
-      closed: response.closed ?? 0,
-    };
-  }
-
   // 导出分析报表：与 router.go line 766 对齐 → POST /api/v1/tickets/analytics/export
   async exportAnalytics(params: {
     dateFrom: string;

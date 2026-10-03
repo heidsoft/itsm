@@ -378,7 +378,9 @@ GET /tickets/{id}/attachments/{attachmentId}/preview
 Authorization: Bearer <accessToken>
 ```
 
-### 工单统计
+### 工单聚合统计
+
+工单域的租户级聚合端点，与仪表板章节的 `GET /dashboard/ticket-stats` 不是同一个接口。
 
 ```http
 GET /api/v1/tickets/stats

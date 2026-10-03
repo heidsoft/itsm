@@ -16,6 +16,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/handlers/common/datascope"
 	"itsm-backend/middleware"
+	ticketrepo "itsm-backend/repository/ticket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -218,12 +219,38 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*TicketSta
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.statsCalled = true
+	statusCounts := map[ticketrepo.Status]int{}
+	priorityCounts := map[ticketrepo.Priority]int{}
 	stats := &TicketStats{}
 	for _, t := range m.tickets {
-		if t.TenantID == tenantID {
-			stats.TotalTickets++
+		if t.TenantID != tenantID {
+			continue
+		}
+		statusCounts[ticketrepo.Status(t.Status)]++
+		priorityCounts[ticketrepo.Priority(t.Priority)]++
+		stats.TotalTickets++
+		switch t.Status {
+		case "new", "open":
+			stats.OpenTickets++
+		case "in_progress":
+			stats.InProgressTickets++
+		case "pending":
+			stats.PendingTickets++
+		case "resolved":
+			stats.ResolvedTickets++
+		case "closed":
+			stats.ClosedTickets++
+		}
+		switch t.Priority {
+		case "critical":
+			stats.CriticalTickets++
+		case "high":
+			stats.HighTickets++
 		}
 	}
+	// 与生产实现同一套聚合与排序，避免 mock 契约漂移掩盖真实分布缺陷。
+	stats.ByStatus = orderTicketStatuses(statusCounts)
+	stats.ByPriority = orderTicketPriorities(priorityCounts)
 	return stats, nil
 }
 

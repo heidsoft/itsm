@@ -3,6 +3,7 @@ package ticket
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"itsm-backend/handlers/common/datascope"
@@ -271,6 +272,60 @@ func (r *EntRepository) Search(ctx context.Context, keyword string, tenantID int
 	return r.toDomainList(result.Data), nil
 }
 
+// 分布输出的词表基准顺序（itsm-backend/common/constants.go 工单状态机 +
+// repository/ticket/model.go 优先级）。按此顺序输出前端才能稳定对齐标签与颜色；
+// 词表外的存量取值按字母序追加，既不丢计数，也不静默并进别的桶。
+var ticketStatusOrder = []string{
+	"new", "open", "assigned", "in_progress", "pending",
+	"resolved", "closed", "cancelled", "approved", "rejected",
+}
+
+var ticketPriorityOrder = []string{"low", "medium", "high", "urgent", "critical"}
+
+// orderedNames 保留真实存在的取值（count>0），先按基准顺序，再追加词表外值。
+func orderedNames(counts map[string]int, order []string) []string {
+	out := make([]string, 0, len(counts))
+	inOrder := make(map[string]bool, len(order))
+	for _, name := range order {
+		inOrder[name] = true
+		if counts[name] > 0 {
+			out = append(out, name)
+		}
+	}
+	extra := make([]string, 0, len(counts))
+	for name, count := range counts {
+		if count > 0 && !inOrder[name] {
+			extra = append(extra, name)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
+}
+
+func orderTicketStatuses(counts map[ticket.Status]int) []StatusCount {
+	flat := make(map[string]int, len(counts))
+	for status, count := range counts {
+		flat[string(status)] = count
+	}
+	out := []StatusCount{}
+	for _, name := range orderedNames(flat, ticketStatusOrder) {
+		out = append(out, StatusCount{Status: name, Count: flat[name]})
+	}
+	return out
+}
+
+func orderTicketPriorities(counts map[ticket.Priority]int) []PriorityCount {
+	flat := make(map[string]int, len(counts))
+	for priority, count := range counts {
+		flat[string(priority)] = count
+	}
+	out := []PriorityCount{}
+	for _, name := range orderedNames(flat, ticketPriorityOrder) {
+		out = append(out, PriorityCount{Priority: name, Count: flat[name]})
+	}
+	return out
+}
+
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*TicketStats, error) {
 	statusCounts, err := r.repo.CountByStatus(ctx, tenantID)
 	if err != nil {
@@ -310,6 +365,8 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*TicketStat
 			stats.HighTickets += count
 		}
 	}
+	stats.ByStatus = orderTicketStatuses(statusCounts)
+	stats.ByPriority = orderTicketPriorities(priorityCounts)
 	return stats, nil
 }
 

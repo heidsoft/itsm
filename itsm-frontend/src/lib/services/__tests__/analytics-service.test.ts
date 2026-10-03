@@ -176,19 +176,6 @@ describe('TicketAnalyticsService', () => {
     });
   });
 
-  describe('getStats', () => {
-    it('should fetch ticket stats', async () => {
-      const stats = { total: 100, open: 20, inProgress: 30, pending: 10, resolved: 25, closed: 15 };
-      mockGet.mockResolvedValue(stats);
-
-      const result = await ticketAnalyticsService.getStats();
-
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/stats');
-      expect(result.total).toBe(100);
-      expect(result.open).toBe(20);
-    });
-  });
-
   describe('exportAnalytics', () => {
     it('should export analytics as blob', async () => {
       const blob = new Blob(['data'], { type: 'text/csv' });

@@ -192,15 +192,32 @@ export interface GetTicketsParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/** 对应后端 dto.TicketStatusCount */
+export interface TicketStatusCount {
+  status: string;
+  count: number;
+}
+
+/** 对应后端 dto.TicketPriorityCount */
+export interface TicketPriorityCount {
+  priority: string;
+  count: number;
+}
+
 /** 对应后端 dto.TicketStatsResponse */
 export interface TicketStatsResponse {
   total: number;
   open: number;
   inProgress: number;
   resolved: number;
+  closed: number;
   pending: number;
   highPriority: number;
   overdue: number;
+  // 租户全量的分组计数，只含真实存在的取值，顺序按后端词表基准。
+  // 报表分布必须用它：前端拉一页列表自己数会被页长静默截断。
+  byStatus: TicketStatusCount[];
+  byPriority: TicketPriorityCount[];
 }
 
 /**

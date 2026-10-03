@@ -118,15 +118,32 @@ type ListTicketsResponse struct {
 	TotalPages int               `json:"totalPages"`
 }
 
+// TicketStatusCount 工单状态分布项
+type TicketStatusCount struct {
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
+// TicketPriorityCount 工单优先级分布项
+type TicketPriorityCount struct {
+	Priority string `json:"priority"`
+	Count    int    `json:"count"`
+}
+
 // TicketStatsResponse 工单统计响应
 type TicketStatsResponse struct {
 	Total        int `json:"total"`
 	Open         int `json:"open"`
 	InProgress   int `json:"inProgress"`
 	Resolved     int `json:"resolved"`
+	Closed       int `json:"closed"`
 	Pending      int `json:"pending"`
 	HighPriority int `json:"highPriority"`
 	Overdue      int `json:"overdue"`
+	// ByStatus/ByPriority 为租户全量分组计数，只含真实存在的取值；
+	// 报表分布必须用它，禁止改成前端拉一页数据自己数（页长外的工作量会被静默截断）。
+	ByStatus   []TicketStatusCount   `json:"byStatus"`
+	ByPriority []TicketPriorityCount `json:"byPriority"`
 }
 
 // TicketDetailResponse 工单详情响应

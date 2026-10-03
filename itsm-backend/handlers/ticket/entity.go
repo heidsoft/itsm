@@ -78,6 +78,18 @@ type TicketTemplate struct {
 	UpdatedAt     time.Time
 }
 
+// StatusCount 和 PriorityCount 保留分布维度：报表要的是按词表排序的完整分布，
+// 而不是折成 highPriority 这类单值后无法还原的计数。
+type StatusCount struct {
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
+type PriorityCount struct {
+	Priority string `json:"priority"`
+	Count    int    `json:"count"`
+}
+
 // TicketStats holds aggregated ticket statistics per tenant
 type TicketStats struct {
 	OverdueTickets    int `json:"overdueTickets"`
@@ -90,4 +102,8 @@ type TicketStats struct {
 	CriticalTickets   int `json:"criticalTickets"`
 	HighTickets       int `json:"highTickets"`
 	AvgResolutionMin  int `json:"avgResolutionMin"`
+	// ByStatus/ByPriority 只包含真实存在的取值（来自分组计数），
+	// 顺序按词表基准，词表外的历史值按字母序追加。
+	ByStatus   []StatusCount   `json:"byStatus"`
+	ByPriority []PriorityCount `json:"byPriority"`
 }
