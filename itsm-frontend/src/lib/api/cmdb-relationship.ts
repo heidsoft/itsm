@@ -3,6 +3,7 @@
  */
 
 import { httpClient } from '@/lib/api/http-client';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 
 // 关系类型
 export type CIRelationshipType =
@@ -240,18 +241,17 @@ export const CIRelationshipAPI = {
     return { createdCount: created, failedCount: failed, errors };
   },
 
-  // 获取可用的目标CI列表（通过 getCIs 搜索）
+  // 获取可用的目标CI列表（通过 CI 列表按 search 过滤）
   async getAvailableCIs(ciId: number, search?: string): Promise<TopologyNode[]> {
-    const { CMDBApi } = await import('./cmdb-api');
-	const result = await CMDBApi.getCIs({ search, size: 200 });
-	const items = result.items ?? [];
-    const filtered = items.filter((ci: any) => ci.id !== ciId);
-    return filtered.map((ci: any) => ({
+    // 平台页长上限 100，原先一次性索要 size:200 已被后端回落；候选集改为翻页读取。
+    const items = await CMDBApi.getAllCIs({ search }, 200);
+    const filtered = items.filter(ci => ci.id !== ciId);
+    return filtered.map(ci => ({
       id: ci.id,
       name: ci.name,
-      type: ci.ciType ?? ci.type ?? '',
-      typeName: ci.ciType ?? ci.type ?? '',
-      status: ci.status ?? '',
+      type: ci.type,
+      typeName: ci.type,
+      status: ci.status,
       criticality: ci.criticality ?? '',
       attributes: ci.attributes ?? {},
     }));

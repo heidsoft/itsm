@@ -91,10 +91,12 @@ export default function CreateIncidentPage() {
       const fetchCIs = async () => {
         setCISearching(true);
         try {
-          const results = await CMDBApi.searchCIs({ keyword: ciSearchTerm });
-          setCISearchResults(results.items || []);
+          // 后端 CI 列表只认 search；原先传 keyword 不参与绑定，搜索词被静默丢弃，
+          // 下拉里出来的是未过滤的第一页。
+          const result = await CMDBApi.getCIs({ search: ciSearchTerm });
+          setCISearchResults(result.items);
         } catch (error) {
-          handleError(error, 'searchCIs', '搜索配置项失败');
+          handleError(error, 'getCIs', '搜索配置项失败');
           setCISearchResults([]);
         } finally {
           setCISearching(false);

@@ -7,6 +7,7 @@
  */
 
 import { httpClient } from './http-client';
+import type { PaginationResponse } from './types';
 import type {
   CIType,
   CloudService,
@@ -60,13 +61,11 @@ export interface GetCIListRequest {
   status?: string;
   environment?: string;
   page?: number;
-  size?: number;
+  pageSize?: number;
 }
 
-export interface GetCIListResponse {
-  items: ConfigurationItem[];
-  total: number;
-}
+// 与后端 dto.CIListResponse 逐字段一致；不要再声明第二套键名。
+export type GetCIListResponse = PaginationResponse<ConfigurationItem>;
 
 export type CMDBCapabilityState = 'disabled' | 'unconfigured' | 'unready' | 'ready';
 
@@ -87,6 +86,9 @@ export interface CMDBCapabilitiesResponse {
 const CMDB_BASE = '/api/v1/cmdb';
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
 const CIS_BASE = '/api/v1/cmdb/cis';
+// 后端 common.MaxPageSize：请求更大的页长不会报错，而是被单点回落成默认 20。
+// 需要「尽量取全」的数据源只能翻页，不能靠放大页长实现。
+const MAX_PAGE_SIZE = 100;
 
 export class CMDBApi {
   static async getCapabilities(): Promise<CMDBCapabilitiesResponse> {
@@ -97,6 +99,36 @@ export class CMDBApi {
 
   static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {
     return httpClient.get(CIS_BASE, query);
+  }
+
+  private static async pageThrough<T>(
+    fetchPage: (page: number, pageSize: number) => Promise<PaginationResponse<T>>,
+    maxRecords = Number.POSITIVE_INFINITY,
+  ): Promise<T[]> {
+    const all: T[] = [];
+    for (let page = 1; ; page += 1) {
+      const response = await fetchPage(page, MAX_PAGE_SIZE);
+      all.push(...response.items);
+      // 终止条件用响应里的生效页长，不用请求值：后端回落时两者可能不同。
+      if (
+        response.items.length < response.pageSize ||
+        all.length >= Math.min(maxRecords, response.total)
+      ) {
+        break;
+      }
+    }
+    return all;
+  }
+
+  /** 翻页读满 maxRecords 或读到末页；用于下拉/穿梭框这类需要候选集的数据源。 */
+  static async getAllCIs(
+    params: Omit<GetCIListRequest, 'page' | 'pageSize'> = {},
+    maxRecords = 200,
+  ): Promise<ConfigurationItem[]> {
+    return this.pageThrough(
+      (page, pageSize) => httpClient.get<GetCIListResponse>(CIS_BASE, { ...params, page, pageSize }),
+      maxRecords,
+    );
   }
 
   static async getCI(id: string | number): Promise<ConfigurationItem> {
@@ -125,19 +157,10 @@ export class CMDBApi {
   }
 
   static async getCITypes(): Promise<CIType[]> {
-    const all: CIType[] = [];
-    const size = 200;
-    for (let page = 1; ; page += 1) {
-      const response = await httpClient.get<
-        CIType[] | { items: CIType[]; total?: number; page?: number; size?: number }
-      >(`${CMDB_BASE}/ci-types`, { page, size });
-      if (Array.isArray(response)) return response;
-      const items = response.items ?? [];
-      all.push(...items);
-      if (items.length < size || (response.total !== undefined && all.length >= response.total)) {
-        return all;
-      }
-    }
+    return this.pageThrough(
+      (page, pageSize) =>
+        httpClient.get<PaginationResponse<CIType>>(`${CMDB_BASE}/ci-types`, { page, pageSize }),
+    );
   }
 
   static async getCMDBTypes(): Promise<CIType[]> {
@@ -224,11 +247,7 @@ export class CMDBApi {
   static async getCIChangeHistory(
     id: number,
     params?: { page?: number; pageSize?: number }
-  ): Promise<{
-    items?: Array<Record<string, unknown>>;
-    data?: Array<Record<string, unknown>>;
-    total?: number;
-  }> {
+  ): Promise<PaginationResponse<Record<string, unknown>>> {
     return httpClient.get(`${CIS_BASE}/${id}/history`, params);
   }
 
@@ -339,20 +358,6 @@ export class CMDBApi {
 
   static async runDiscoveryRule(ruleId: string): Promise<void> {
     return httpClient.post(`${CMDB_BASE}/discovery/jobs`, { sourceId: ruleId });
-  }
-
-  // ==================== Search ====================
-
-  static async searchCIs(query: {
-    keyword?: string;
-    ciType?: string;
-    status?: string;
-  }): Promise<{ items: ConfigurationItem[]; total: number }> {
-    const result = await this.getCIs(query);
-    return {
-      items: result.items ?? [],
-      total: result.total,
-    };
   }
 
   // ==================== Batch ====================

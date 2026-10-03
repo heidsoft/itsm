@@ -42,11 +42,15 @@ type UpdateCIAttributeDefinitionRequest struct {
 }
 
 // CITypeListResponse CI类型列表响应。
+//
+// 信封与平台一致：{items,total,page,pageSize,totalPages}。此前只有 page+size，
+// 调用方无法核对总页数，把当前页当成该租户的全部 CI 类型。
 type CITypeListResponse struct {
-	Items []*CITypeResponse `json:"items"`
-	Total int               `json:"total"`
-	Page  int               `json:"page"`
-	Size  int               `json:"size"`
+	Items      []*CITypeResponse `json:"items"`
+	Total      int               `json:"total"`
+	Page       int               `json:"page"`
+	PageSize   int               `json:"pageSize"`
+	TotalPages int               `json:"totalPages"`
 }
 
 // ListCIRequest 获取配置项列表请求。
@@ -60,10 +64,17 @@ type CITypeListResponse struct {
 //   - 排序（sortBy/sortOrder）
 //   - 时间范围（dateFrom/dateTo）
 //   - 标签（tagIds，[]int）
-//   - 分页（page/size）
+//   - 分页（page/pageSize）
+//
+// 分页字段只由调用方显式赋值，不参与 query/form 绑定：HTTP 入口的生效页长由
+// common.GetPaginationFromQuery 单点决定（缺省 1/20，只采纳 (0,100]），原先的
+// `min=1,max=200` 是第二套真相——`size=0` 会被 validator 拦成业务码 1001，而平台语义是
+// 「回落默认页长」；上限 200 也和平台 MaxPageSize=100 冲突。
+// 非 HTTP 调用方（AI 工具注册表、导出任务）传 0/负数/超大值时由服务层
+// common.ValidatePagination 兜住。
 type ListCIRequest struct {
-	Page           int    `form:"page,default=1" binding:"omitempty,min=1"`
-	Size           int    `form:"size,default=20" binding:"omitempty,min=1,max=200"`
+	Page           int    `json:"page"`
+	PageSize       int    `json:"pageSize"`
 	CITypeID       int    `form:"ciTypeId"`
 	CIType         string `form:"ciType"`
 	Status         string `form:"status"`
@@ -93,10 +104,11 @@ type ListCIRequest struct {
 
 // CIListResponse 配置项列表响应。
 type CIListResponse struct {
-	Items []*CIResponse `json:"items"`
-	Total int           `json:"total"`
-	Page  int           `json:"page"`
-	Size  int           `json:"size"`
+	Items      []*CIResponse `json:"items"`
+	Total      int           `json:"total"`
+	Page       int           `json:"page"`
+	PageSize   int           `json:"pageSize"`
+	TotalPages int           `json:"totalPages"`
 }
 
 // CIStatsResponse 配置项统计响应。
@@ -147,10 +159,11 @@ type CITagResponse struct {
 
 // CITagListResponse CI标签列表响应
 type CITagListResponse struct {
-	Items []*CITagResponse `json:"items"`
-	Total int              `json:"total"`
-	Page  int              `json:"page"`
-	Size  int              `json:"size"`
+	Items      []*CITagResponse `json:"items"`
+	Total      int              `json:"total"`
+	Page       int              `json:"page"`
+	PageSize   int              `json:"pageSize"`
+	TotalPages int              `json:"totalPages"`
 }
 
 // AddCITagsRequest 给CI添加标签请求

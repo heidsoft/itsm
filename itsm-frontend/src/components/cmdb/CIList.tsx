@@ -55,13 +55,13 @@ const CIList: React.FC = () => {
 
   const [query, setQuery] = useState({
     page: 1,
-    size: 10,
+    pageSize: 10,
   });
 
   // React Query：CI 列表（自动竞态/缓存/重试；queryKey 含 filter+page 让缓存自然按维度隔离）
   const listQuery = useCIsQuery({
     page: query.page,
-    size: query.size,
+    pageSize: query.pageSize,
     ciTypeId: filters.ciTypeId,
     search: filters.search || undefined,
     status: filters.status,
@@ -163,7 +163,7 @@ const CIList: React.FC = () => {
       ...selectedData.map(item => [
         item.id,
         item.name,
-        types.find(t => t.id === item.ciTypeId)?.name || (item as any).ciType || '',
+        types.find(t => t.id === item.ciTypeId)?.name || item.type || '',
         item.cloudProvider || (item as any).cloudProvider || '',
         item.status,
         item.model || '',
@@ -380,13 +380,13 @@ const CIList: React.FC = () => {
           }}
           pagination={{
             current: query.page,
-            pageSize: query.size,
+            pageSize: query.pageSize,
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: total => `共 ${total} 条记录`,
             pageSizeOptions: ['10', '20', '50', '100'],
-            onChange: (page, pageSize) => setQuery({ ...query, page, size: pageSize }),
+            onChange: (page, pageSize) => setQuery({ ...query, page, pageSize }),
           }}
           scroll={{ x: 1200 }}
           getPopupContainer={node => node.parentElement || document.body}

@@ -305,6 +305,11 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 // P1-1 合并：覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
 // CISearchFilter / CISearchRequest 已 deprecated，handler 内部转 ListCIRequest 后统一走此处。
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
+	// 页长只在这里归一一次：HTTP 入口用 common.GetPaginationFromQuery 决定生效值，非 HTTP
+	// 调用方（AI 工具注册表、导出任务）传 0/负数/超大值时由本层兜住。不归一的后果在 Ent 侧
+	// 是静默的——Limit(0) 等于不加 LIMIT 直接返回整表，page<=0 会算出负 OFFSET。
+	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
+
 	query := s.client.ConfigurationItem.Query().
 		Where(configurationitem.TenantIDEQ(tenantID), configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped))
 
@@ -387,7 +392,13 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		} else {
 			query = query.Order(ent.Desc(sortField))
 		}
+	} else {
+		// 未指定排序时也必须给确定性顺序：原先无 Order，翻页由数据库返回顺序决定，
+		// 同一页可能重复出现或漏出条目。
+		query = query.Order(ent.Desc(configurationitem.FieldCreatedAt))
 	}
+	// 排序列（created_at/status/name…）都非唯一，补 ID 并列键才能保证翻页不重不漏。
+	query = query.Order(ent.Asc(configurationitem.FieldID))
 
 	// 统计总数
 	total, err := query.Count(ctx)
@@ -411,8 +422,8 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 
 	// 分页查询
 	ciList, err := query.
-		Offset((req.Page - 1) * req.Size).
-		Limit(req.Size).
+		Offset((req.Page - 1) * req.PageSize).
+		Limit(req.PageSize).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list configuration items", "error", err, "tenant_id", tenantID)
@@ -427,11 +438,13 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		items = dto.ToCIResponseList(ciList)
 	}
 
+	pagination := common.NewPaginationResponse(req.Page, req.PageSize, int64(total))
 	return &dto.CIListResponse{
-		Items: items,
-		Total: total,
-		Page:  req.Page,
-		Size:  req.Size,
+		Items:      items,
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 
@@ -1352,18 +1365,11 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 //
 // Deprecated: 自 v1.6.x 起，CMDB 列表与搜索统一收敛至 ListCIs。本方法保留向后兼容至 v1.7 末。
 func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, req *dto.CISearchRequest) (*dto.ListResponse[dto.CIResponse], error) {
-	// 默认值
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 || req.PageSize > 1000 {
-		req.PageSize = 20
-	}
-
-	// CISearchFilter → ListCIRequest 字段映射
+	// CISearchFilter → ListCIRequest 字段映射。页长不在这层另设规则：ListCIs 统一归一，
+	// 原先这里的 `PageSize>1000→20` 是第三套夹紧，会把导出任务请求的 10000 静默变成 20 条。
 	listReq := &dto.ListCIRequest{
 		Page:          req.Page,
-		Size:          req.PageSize,
+		PageSize:      req.PageSize,
 		CITypeID:      req.Filters.CITypeID,
 		Status:        req.Filters.Status,
 		Environment:   req.Filters.Environment,
@@ -1407,10 +1413,11 @@ func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, r
 		items[i] = *it
 	}
 	return &dto.ListResponse[dto.CIResponse]{
-		Items: items,
-		Total: resp.Total,
-		Page:  resp.Page,
-		Size:  resp.Size,
+		Items:      items,
+		Total:      resp.Total,
+		Page:       resp.Page,
+		PageSize:   resp.PageSize,
+		TotalPages: resp.TotalPages,
 	}, nil
 }
 

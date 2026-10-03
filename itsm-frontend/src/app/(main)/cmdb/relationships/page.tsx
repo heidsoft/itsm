@@ -15,8 +15,8 @@ type CiOption = {
 
 export default function RelationshipsPage() {
   const { message } = App.useApp();
-  // React Query：CI 全量（relationships 页用作根 CI 选择）
-  const cisQuery = useCIsQuery({ size: 200 });
+  // React Query：根 CI 候选集。平台页长上限 100，原先 size:200 会被回落成默认 20。
+  const cisQuery = useCIsQuery({ pageSize: 100 });
   const cis: CiOption[] = React.useMemo(() => {
     const items = (cisQuery.data?.items ?? []) as Array<{ id: number; name: string; type?: string }>;
     return items.map(item => ({ id: item.id, name: item.name, type: item.type || '配置项' }));

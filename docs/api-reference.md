@@ -1337,12 +1337,41 @@ GET /api/v1/cmdb/cis
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码（默认 1）
-- size: 每页数量（默认 20，上限 200）
-- ciType: 类型过滤
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- ciTypeId: CI 类型 ID（精确匹配）
+- ciType: CI 类型字符串（精确匹配）
+- status: 状态过滤（模糊匹配）
+- environment: 环境过滤（精确匹配）
 - ciNumber: 按 CI 业务编号精确过滤（如 CI-202609-000001）
 - search: 按名称/资产标签/序列号模糊搜索
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数，
+`items` 元素是 `dto.CIResponse`（camelCase，含 `ciTypeId`/`type`/`status`/`environment`/
+`cloudResourceId`）。空结果序列化为 `[]`。排序为 `created_at DESC, id ASC`（未显式传 `sortBy`
+时同样是这个固定顺序，`id` 兜底保证翻页不重不漏）。
+
+CMDB 列表统一口径（2026-10-03 E4-6e 实测收口）：
+
+- **七个列表端点共用一套五键信封**：`GET /cmdb/cis`、`/cmdb/ci-types`、`/cmdb/tags`、
+  `/cmdb/cis/{id}/history`、`/cmdb/views`、`/cmdb/import`、`/cmdb/export`。它们实测都做
+  `Count` + `Offset/Limit`，因此不再只回 `{items,total,page,size}`；`totalPages` 由
+  `common.NewPaginationResponse` 单点算出。集合键一直是 `items`，本批没有改名。
+- **分页只有一个所有者**：HTTP 入口统一 `common.GetPaginationFromQuery`。旧形态是三套并行——
+  `dto.ListCIRequest` 的 `binding:"omitempty,min=1,max=200"`（越界返回 400 / code 1001，而
+  `size=0` 因 `omitempty` 绕过校验，`Limit(0)` 在 Ent 里等于不加 LIMIT 而返回整表），其余六个
+  handler 用裸 `strconv.Atoi(ctx.DefaultQuery("size"))` 完全不夹紧（`size=abc` 变 0 → 整表），
+  `SearchCI` 里还有第三套 `>1000→20`。现在越界一律 200 / code 0 / 页长 20。
+- **`size` 不再是 `pageSize` 的别名**，`offset`/`limit` 同样不参与分页决策。要一次取全请翻页
+  （前端参考实现：`CMDBApi.getAllCIs(params, maxRecords)`、`CMDBApi.getCITypes()`）。
+- **`GET /cmdb/views` 的 `include_public` 改为 `includePublic`**（camelCase 契约；实测旧名只存在于
+  swagger，前端与测试零调用）。`includePublic=false` 只看本人视图。
+- **兼容别名 `/api/v1/configuration-items*` 返回同一份信封**（同一 handler）：
+  `GET /configuration-items`、`/configuration-items/types`、`/configuration-items/{id}/history`
+  与 `/{id}/change-history`。别名已弃用，勿新增端点。
+- `GET /cmdb/ontology` 的 `ciTypes[]` 现逐页读全该租户活跃类型；此前索要 `pageSize=500`
+  把「要整表」藏在越界页长里，超过 500 个类型会静默截断。
 
 ### 获取配置项详情
 

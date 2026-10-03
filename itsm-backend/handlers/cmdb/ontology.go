@@ -1,6 +1,7 @@
 package cmdb
 
 import (
+	"context"
 	"encoding/json"
 
 	"itsm-backend/common"
@@ -18,6 +19,22 @@ const cmdbOntologyVersion = "2026-09-04.1"
 
 // SetToolRegistry 注入 AI 工具注册表（bootstrap 装配；未注入时 ontology 响应不含 aiTools）。
 func (c *ProductionService) SetToolRegistry(tr *service.ToolRegistry) { c.toolRegistry = tr }
+
+// listAllCITypes 逐页取完该租户的活跃 CI 类型。
+// 终止条件用「本页不满页长」或「已累计到 total」两者之一，避免依赖单一带边界含义的字段。
+func (c *ProductionService) listAllCITypes(ctx context.Context, tenantID int) ([]*dto.CITypeResponse, error) {
+	all := make([]*dto.CITypeResponse, 0, common.MaxPageSize)
+	for page := 1; ; page++ {
+		res, err := c.ciTypeService.ListCITypes(ctx, tenantID, page, common.MaxPageSize, "")
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, res.Items...)
+		if len(res.Items) < res.PageSize || len(all) >= res.Total {
+			return all, nil
+		}
+	}
+}
 
 // GetOntology CMDB 本体自描述端点（AI-Native introspect 入口）
 // @Summary 获取 CMDB 本体自描述
@@ -42,13 +59,15 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 	}
 
 	// 1. CI 类型（含解析后的属性 schema + 类型级属性定义）
-	typeRes, err := c.ciTypeService.ListCITypes(ctx.Request.Context(), tenantID, 1, 500, "")
+	// 本体要覆盖该租户的全部 CI 类型，因此逐页取完：原先传 pageSize=500 是把「整表」意图
+	// 藏在越界页长里，而平台页长上限是 100（service 层现在会归一），继续那么传只会静默截断。
+	ciTypes, err := c.listAllCITypes(ctx.Request.Context(), tenantID)
 	if err != nil {
 		c.logger.Errorw("ontology: list ci types failed", "error", err, "tenant_id", tenantID)
 		common.InternalError(ctx, "获取CMDB本体失败")
 		return
 	}
-	for _, t := range typeRes.Items {
+	for _, t := range ciTypes {
 		entry := dto.CMDBOntologyCIType{
 			ID:           t.ID,
 			Name:         t.Name,

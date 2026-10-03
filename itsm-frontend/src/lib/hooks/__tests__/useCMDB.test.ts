@@ -64,7 +64,7 @@ describe('useCMDB hooks', () => {
 
   describe('useCIsQuery', () => {
     it('fetches CIs', async () => {
-      mockApi.getCIs.mockResolvedValue({ items: [] } as any);
+      mockApi.getCIs.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       const { result } = renderHook(() => useCIsQuery(), { wrapper: createWrapper() });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
     });
@@ -128,7 +128,13 @@ describe('useCMDB hooks', () => {
 
   describe('useCIChangeHistoryQuery', () => {
     it('fetches change history', async () => {
-      mockApi.getCIChangeHistory.mockResolvedValue({ items: [] } as any);
+      mockApi.getCIChangeHistory.mockResolvedValue({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      });
       const { result } = renderHook(() => useCIChangeHistoryQuery('c1', { page: 1 }), { wrapper: createWrapper() });
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
     });

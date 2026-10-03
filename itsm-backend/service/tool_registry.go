@@ -465,8 +465,17 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		search, _ := args["search"].(string)
 		ciType, _ := args["ci_type"].(string)
 		ciNumber, _ := args["ci_number"].(string)
+		// limit/offset 来自模型构造的工具参数，可能是 0 或负数：limit=0 会让下面的
+		// offset/limit 直接除零 panic，负 offset 会算出负 OFFSET。在工具边界收敛，不留给
+		// 服务层静默兜（服务层的归一只负责页长语义，不负责这个工具的参数语义）。
+		if limit <= 0 {
+			limit = 10
+		}
+		if offset < 0 {
+			offset = 0
+		}
 		page := offset/limit + 1
-		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, Size: limit, Search: search, CIType: ciType, CINumber: ciNumber})
+		result, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: page, PageSize: limit, Search: search, CIType: ciType, CINumber: ciNumber})
 		if err != nil {
 			return nil, err
 		}
@@ -658,7 +667,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		}
 		// ci_number 解析：用 list_cis 路径（避免新增 GetCIByNumber，list 已有 ci_number 精确过滤）
 		if ciID == 0 {
-			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
 			if err != nil {
 				return nil, fmt.Errorf("get_ci: lookup by ci_number failed: %w", err)
 			}
@@ -689,7 +698,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("get_ci_relationships: ci_number or ci_id is required")
 		}
 		if ciID == 0 {
-			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
 			if err != nil {
 				return nil, fmt.Errorf("get_ci_relationships: lookup failed: %w", err)
 			}
@@ -791,7 +800,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 			return nil, fmt.Errorf("get_ci_impact: ci_number or ci_id is required")
 		}
 		if ciID == 0 {
-			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, Size: 1, CINumber: ciNumber})
+			listResp, err := t.cmdb.ListCIs(ctx, tenantID, &dto.ListCIRequest{Page: 1, PageSize: 1, CINumber: ciNumber})
 			if err != nil {
 				return nil, fmt.Errorf("get_ci_impact: lookup failed: %w", err)
 			}

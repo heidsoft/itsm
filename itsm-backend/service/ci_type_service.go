@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ciattributedefinition"
@@ -71,6 +72,11 @@ func (s *CITypeService) GetCITypeByID(ctx context.Context, id, tenantID int) (*d
 
 // ListCITypes 获取CI类型列表
 func (s *CITypeService) ListCITypes(ctx context.Context, tenantID int, page, pageSize int, search string) (*dto.CITypeListResponse, error) {
+	// HTTP 入口的页长夹紧归 common.GetPaginationFromQuery；这一层只兜住绕过 HTTP 的调用方
+	// （如 /cmdb/ontology），否则 page<=0 会算出负 OFFSET、pageSize=0 在 Ent 的 sqlgraph 里
+	// 等于不加 LIMIT 而返回整表。
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	query := s.client.CIType.Query().Where(citype.TenantIDEQ(tenantID), citype.IsActiveEQ(true))
 
 	if search != "" {
@@ -84,20 +90,23 @@ func (s *CITypeService) ListCITypes(ctx context.Context, tenantID int, page, pag
 	}
 
 	ciTypes, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(citype.FieldCreatedAt)).
+		// created_at 非唯一列，补 ID 并列键，否则同秒写入的类型在翻页时可能重复或漏出。
+		Order(ent.Desc(citype.FieldCreatedAt), ent.Asc(citype.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list CI types", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list CI types: %w", err)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.CITypeListResponse{
-		Items: dto.ToCITypeResponseList(ciTypes),
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      dto.ToCITypeResponseList(ciTypes),
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

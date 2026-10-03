@@ -43,6 +43,7 @@ import { TicketApi } from '@/lib/api/ticket-api';
 import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { useI18n } from '@/lib/i18n';
 import { httpClient } from '@/lib/api/http-client';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { CustomFieldDefinition } from '@/types/ticket-type';
 
@@ -144,11 +145,11 @@ export default function CreateTicketPage() {
 		Promise.allSettled([
 			httpClient.get<any>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
 			httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
-			httpClient.get<any>('/api/v1/configuration-items', { page: 1, size: 200 }),
+			CMDBApi.getAllCIs({}, 200),
 		]).then(([users, departments, cis]) => setReferenceOptions({
 			user: users.status === 'fulfilled' ? (users.value.users ?? []).map((item: any) => ({ label: item.name ?? item.username, value: item.id })) : [],
 			department: departments.status === 'fulfilled' ? (Array.isArray(departments.value) ? departments.value : []).map((item: any) => ({ label: item.name, value: item.id })) : [],
-			ci: cis.status === 'fulfilled' ? (cis.value.items ?? []).map((item: any) => ({ label: item.name, value: item.id })) : [],
+			ci: cis.status === 'fulfilled' ? cis.value.map(item => ({ label: item.name, value: item.id })) : [],
 		}));
 	}, []);
 

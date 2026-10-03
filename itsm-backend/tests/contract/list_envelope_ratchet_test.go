@@ -61,6 +61,9 @@ type listEnvelope struct {
 //
 // 2026-10-03 E4-6c 移除 problem_dto.go|ListProblemsResponse|problems：GET /api/v1/problems
 // 的集合键改为 items，同时把三处各自夹紧的分页规则收给 common.GetPaginationFromQuery 单点。
+// 2026-10-03 E4-6e 移除 cmdb_dto.go|ListCIsResponse|cis：实测该结构体在非测试代码里零引用
+// （活的 CI 列表信封是 dto.CIListResponse，键已是 items），属只被本基线引用的死声明，按
+// E4-3 口径直接删除而不是改名保留。
 var envelopeBaseline = []string{
 	"asset_dto.go|AssetListResponse|assets",
 	"asset_license_dto.go|LicenseListResponse|licenses",
@@ -69,7 +72,6 @@ var envelopeBaseline = []string{
 	"cloud_dto.go|CloudAccountListResponse|cloudAccounts",
 	"cloud_dto.go|CloudResourceListResponse|cloudResources",
 	"cloud_dto.go|CloudServiceListResponse|cloudServices",
-	"cmdb_dto.go|ListCIsResponse|cis",
 	"knowledge_dto.go|ListParticipantsResponse|participants",
 	"menu_dto.go|MenuListResponse|menus",
 	"msp_dto.go|MSPAllocationListResponse|allocations",
@@ -100,13 +102,12 @@ var envelopeBaseline = []string{
 //   - change_pir_dto.go|ChangePIRListResponse —— 它**真的分页**（handlers/change/handler.go:957
 //     读 page/pageSize，service/pir_service.go:180 做 Offset/Limit），所以按补全五元组收口，
 //     而不是降级成「不分页」。
-var envelopeKeyBaseline = []string{
-	"cmdb_advanced_dto.go|ListResponse|pageSize,totalPages",
-	"cmdb_core_dto.go|CIListResponse|pageSize,totalPages",
-	"cmdb_core_dto.go|CITagListResponse|pageSize,totalPages",
-	"cmdb_core_dto.go|CITypeListResponse|pageSize,totalPages",
-	"cmdb_dto.go|CIHistoryListResponse|pageSize,totalPages",
-}
+//
+// 2026-10-03 E4-6e 把余下 5 条 CMDB 信封（ListResponse[T] / CIListResponse / CITagListResponse /
+// CITypeListResponse / CIHistoryListResponse）补成五元组并清零本基线：这些服务实测都做
+// Count + Offset/Limit，缺 totalPages 的 page+size 形状让调用方无法核对是否还有下一页。
+// 因此本基线现在是空集——CMDB 侧再引入「带分页键但不全」的信封会直接失败。
+var envelopeKeyBaseline = []string{}
 
 // envelopeAliasBaseline 是 2026-10-02 由扫描器实测的「分页别名残留」存量清单
 // （file|struct|jsonKey）。这些信封用 `size` 代替 `pageSize`（部分还缺 pageSize/totalPages），
@@ -114,13 +115,10 @@ var envelopeKeyBaseline = []string{
 //
 // 2026-10-03 E4-7 移除 notification_dto.go|NotificationListResponse|size：请求侧原本同时
 // 接受 `size` 与 `pageSize`，现在只认 `pageSize`（HTTP 入口走 common.GetPaginationFromQuery）。
-// 剩下的 6 条里 5 条是 CMDB 一侧（与 envelopeKeyBaseline 同一批结构体），1 条是服务目录。
+// 2026-10-03 E4-6e 移除 5 条 CMDB 信封的 size：响应键改 pageSize，请求侧 dto.ListCIRequest 的
+// `form:"size"` 一并删除（不保留双接受），前端 9 个 size 发送点同批改发 pageSize。
+// 余下 1 条是服务目录。
 var envelopeAliasBaseline = []string{
-	"cmdb_advanced_dto.go|ListResponse|size",
-	"cmdb_core_dto.go|CIListResponse|size",
-	"cmdb_core_dto.go|CITagListResponse|size",
-	"cmdb_core_dto.go|CITypeListResponse|size",
-	"cmdb_dto.go|CIHistoryListResponse|size",
 	"service_dto.go|ServiceCatalogListResponse|size",
 }
 

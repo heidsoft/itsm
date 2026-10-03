@@ -34,14 +34,75 @@ describe('CMDBApi', () => {
   });
 
   describe('getCIs', () => {
-    it('should get CI list', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1, name: 'Server-01' }], total: 1 });
-      const result = await CMDBApi.getCIs({ status: 'active' });
+    it('reads the five-key list envelope and sends pageSize (not size)', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, name: 'Server-01' }],
+        total: 25,
+        page: 2,
+        pageSize: 10,
+        totalPages: 3,
+      });
+      const result = await CMDBApi.getCIs({ status: 'active', page: 2, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith(
         '/api/v1/cmdb/cis',
-        expect.objectContaining({ status: 'active' })
+        expect.objectContaining({ status: 'active', page: 2, pageSize: 10 })
       );
       expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(25);
+      expect(result.pageSize).toBe(10);
+      expect(result.totalPages).toBe(3);
+    });
+  });
+
+  describe('getAllCIs', () => {
+    const ci = (id: number) => ({ id, name: `Server-${id}` });
+    const pageOf = (items: unknown[], page: number, total: number) => ({
+      items,
+      total,
+      page,
+      pageSize: 100,
+      totalPages: Math.ceil(total / 100),
+    });
+
+    it('按平台页长上限 100 翻页，读到末页即停', async () => {
+      mockGet.mockResolvedValueOnce(pageOf(Array.from({ length: 100 }, (_, i) => ci(i + 1)), 1, 150));
+      mockGet.mockResolvedValueOnce(pageOf(Array.from({ length: 50 }, (_, i) => ci(101 + i)), 2, 150));
+
+      const result = await CMDBApi.getAllCIs({ status: 'active' }, 400);
+
+      expect(result).toHaveLength(150);
+      expect(mockGet).toHaveBeenNthCalledWith(1, '/api/v1/cmdb/cis', {
+        status: 'active',
+        page: 1,
+        pageSize: 100,
+      });
+      expect(mockGet).toHaveBeenNthCalledWith(2, '/api/v1/cmdb/cis', {
+        status: 'active',
+        page: 2,
+        pageSize: 100,
+      });
+    });
+
+    it('达到 maxRecords 上限就停止翻页，不再多发请求', async () => {
+      mockGet.mockResolvedValueOnce(pageOf(Array.from({ length: 100 }, (_, i) => ci(i + 1)), 1, 900));
+      mockGet.mockResolvedValueOnce(pageOf(Array.from({ length: 100 }, (_, i) => ci(101 + i)), 2, 900));
+
+      const result = await CMDBApi.getAllCIs({}, 200);
+
+      expect(result).toHaveLength(200);
+      expect(mockGet).toHaveBeenCalledTimes(2);
+    });
+
+    it('search 透传给后端 search 查询参数', async () => {
+      mockGet.mockResolvedValue(pageOf([ci(1)], 1, 1));
+
+      await CMDBApi.getAllCIs({ search: 'server' }, 20);
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis', {
+        search: 'server',
+        page: 1,
+        pageSize: 100,
+      });
     });
   });
 
@@ -87,20 +148,49 @@ describe('CMDBApi', () => {
   });
 
   describe('getCITypes', () => {
-    it('should get CI types (array response)', async () => {
-      mockGet.mockResolvedValue([{ id: 1, name: 'Server' }]);
-      const result = await CMDBApi.getCITypes();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/ci-types', {
+    it('用 pageSize=100 请求 CI 类型字典并读出 items', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, name: 'Server' }],
+        total: 1,
         page: 1,
-        size: 200,
+        pageSize: 100,
+        totalPages: 1,
       });
+      const result = await CMDBApi.getCITypes();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/ci-types', { page: 1, pageSize: 100 });
       expect(result).toHaveLength(1);
     });
 
-    it('should handle object response with items', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1, name: 'Server' }] });
+    it('满页时继续翻页，将各页拼成完整字典', async () => {
+      const pageOf = (items: unknown[], page: number, total: number) => ({
+        items,
+        total,
+        page,
+        pageSize: 100,
+        totalPages: Math.ceil(total / 100),
+      });
+      mockGet.mockResolvedValueOnce(
+        pageOf(
+          Array.from({ length: 100 }, (_, i) => ({ id: i + 1, name: `T${i + 1}` })),
+          1,
+          120,
+        )
+      );
+      mockGet.mockResolvedValueOnce(
+        pageOf(
+          Array.from({ length: 20 }, (_, i) => ({ id: 101 + i, name: `T${101 + i}` })),
+          2,
+          120,
+        )
+      );
+
       const result = await CMDBApi.getCITypes();
-      expect(result).toHaveLength(1);
+
+      expect(result).toHaveLength(120);
+      expect(mockGet).toHaveBeenNthCalledWith(2, '/api/v1/cmdb/ci-types', {
+        page: 2,
+        pageSize: 100,
+      });
     });
   });
 
@@ -160,7 +250,13 @@ describe('CMDBApi', () => {
 
   describe('getCMDBTypes', () => {
     it('should delegate to getCITypes', async () => {
-      mockGet.mockResolvedValue([{ id: 1, name: 'Server' }]);
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, name: 'Server' }],
+        total: 1,
+        page: 1,
+        pageSize: 100,
+        totalPages: 1,
+      });
       const result = await CMDBApi.getCMDBTypes();
       expect(result).toHaveLength(1);
     });
@@ -204,7 +300,7 @@ describe('CMDBApi', () => {
 
   describe('getCIChangeHistory', () => {
     it('should get change history', async () => {
-      mockGet.mockResolvedValue({ items: [], total: 0 });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
       await CMDBApi.getCIChangeHistory(1, { page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/history', {
         page: 1,
@@ -344,15 +440,6 @@ describe('CMDBApi', () => {
       mockPost.mockResolvedValue(undefined);
       await CMDBApi.runDiscoveryRule('rule1');
       expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/discovery/jobs', { sourceId: 'rule1' });
-    });
-  });
-
-  describe('searchCIs', () => {
-    it('should search CIs', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1 }], total: 1 });
-      const result = await CMDBApi.searchCIs({ keyword: 'server' });
-      expect(result.items).toHaveLength(1);
-      expect(result.total).toBe(1);
     });
   });
 

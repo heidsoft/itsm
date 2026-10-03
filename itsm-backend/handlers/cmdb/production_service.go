@@ -65,7 +65,7 @@ func NewProductionService(
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Param search query string false "搜索关键词（名称）"
 // @Success 200 {object} common.Response{data=dto.CITypeListResponse}
 // @Router /api/v1/cmdb/ci-types [get]
@@ -75,14 +75,21 @@ func (c *ProductionService) operatorContext(ctx *gin.Context) context.Context {
 	return service.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), ctx.GetString("user_name"))
 }
 
+// cmdbPagination 取列表分页参数。唯一所有者是 common.GetPaginationFromQuery（缺省 1/20，
+// 只采纳落在 (0,100] 的查询值，越界回落默认页长）。CMDB 的列表端点原先各自用裸
+// strconv.Atoi 读 `size`，既没有夹紧也认别名，越界值会原样下传给 Ent。
+func cmdbPagination(ctx *gin.Context) (page, pageSize int) {
+	pagination := common.GetPaginationFromQuery(ctx)
+	return pagination.Page, pagination.PageSize
+}
+
 func (c *ProductionService) ListCITypes(ctx *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(ctx)
 	if !ok {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	page, pageSize := cmdbPagination(ctx)
 	search := ctx.Query("search")
 
 	result, err := c.ciTypeService.ListCITypes(ctx.Request.Context(), tenantID, page, pageSize, search)
@@ -374,7 +381,7 @@ func (c *ProductionService) DeleteCIAttributeDefinition(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码（默认1）"
-// @Param size query int false "每页数量（默认20，最大200）"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Param ciTypeId query int false "CI类型ID（精确匹配）"
 // @Param ciType query string false "CI类型字符串（精确匹配）"
 // @Param status query string false "状态（模糊匹配）"
@@ -406,6 +413,8 @@ func (c *ProductionService) ListCIs(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
+	// 分页不来自 ShouldBindQuery：DTO 的分页字段不参与绑定，生效值只由 HTTP 所有者给出。
+	req.Page, req.PageSize = cmdbPagination(ctx)
 
 	result, err := c.ciService.ListCIs(ctx.Request.Context(), tenantID, &req)
 	if err != nil {
@@ -867,7 +876,7 @@ func (c *ProductionService) GetCIImpactAnalysis(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Param search query string false "搜索关键词（标签名/值）"
 // @Success 200 {object} common.Response{data=dto.CITagListResponse}
 // @Router /api/v1/cmdb/tags [get]
@@ -877,8 +886,7 @@ func (c *ProductionService) ListCITags(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	page, pageSize := cmdbPagination(ctx)
 	search := ctx.Query("search")
 
 	result, err := c.ciTagService.ListCITags(ctx.Request.Context(), tenantID, page, pageSize, search)
@@ -1097,7 +1105,7 @@ func (c *ProductionService) RemoveTagsFromCI(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "CI ID"
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Success 200 {object} common.Response{data=dto.CIHistoryListResponse}
 // @Router /api/v1/cmdb/cis/{id}/history [get]
 func (c *ProductionService) GetCIHistory(ctx *gin.Context) {
@@ -1113,8 +1121,7 @@ func (c *ProductionService) GetCIHistory(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	page, pageSize := cmdbPagination(ctx)
 
 	result, err := c.ciHistoryService.GetCIHistory(ctx.Request.Context(), id, tenantID, page, pageSize)
 	if err != nil {
@@ -1290,13 +1297,8 @@ func (c *ProductionService) SearchCI(ctx *gin.Context) {
 		return
 	}
 
-	// 分页参数默认值
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 || req.PageSize > 1000 {
-		req.PageSize = 20
-	}
+	// 页长归一在 ListCIs 单点完成（本方法内部转 ListCIRequest）；原先这里的
+	// `>1000→20` 是第三套夹紧，会把大批量请求静默截断。
 
 	result, err := c.ciService.SearchCI(ctx.Request.Context(), tenantID, &req)
 	if err != nil {
@@ -1355,8 +1357,8 @@ func (c *ProductionService) CreateSavedView(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
-// @Param include_public query bool false "是否包含公开视图，默认true"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
+// @Param includePublic query bool false "是否包含公开视图，默认true"
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.CISavedView]}
 // @Router /api/v1/cmdb/views [get]
 func (c *ProductionService) ListSavedViews(ctx *gin.Context) {
@@ -1369,9 +1371,10 @@ func (c *ProductionService) ListSavedViews(ctx *gin.Context) {
 	if !uidOK {
 		return
 	}
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
-	includePublic, _ := strconv.ParseBool(ctx.DefaultQuery("include_public", "true"))
+	page, pageSize := cmdbPagination(ctx)
+	// 查询参数按平台契约用 camelCase；原先的 include_public 只有 swagger 提到，
+	// 前端与测试都无调用方，属未使用的旧形态。
+	includePublic, _ := strconv.ParseBool(ctx.DefaultQuery("includePublic", "true"))
 
 	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID, includePublic, page, pageSize)
 	if err != nil {
@@ -1551,7 +1554,7 @@ func (c *ProductionService) GetImportTaskStatus(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.ImportCIResult]}
 // @Router /api/v1/cmdb/import [get]
 func (c *ProductionService) ListImportTasks(ctx *gin.Context) {
@@ -1560,8 +1563,7 @@ func (c *ProductionService) ListImportTasks(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	page, pageSize := cmdbPagination(ctx)
 
 	result, err := c.importExportService.ListImportTasks(ctx.Request.Context(), tenantID, page, pageSize)
 	if err != nil {
@@ -1649,7 +1651,7 @@ func (c *ProductionService) GetExportTaskStatus(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
-// @Param size query int false "每页数量"
+// @Param pageSize query int false "每页数量（默认20，最大100；越界回落默认页长）"
 // @Success 200 {object} common.Response{data=dto.ListResponse[dto.ExportCIResult]}
 // @Router /api/v1/cmdb/export [get]
 func (c *ProductionService) ListExportTasks(ctx *gin.Context) {
@@ -1658,8 +1660,7 @@ func (c *ProductionService) ListExportTasks(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("size", "20"))
+	page, pageSize := cmdbPagination(ctx)
 
 	result, err := c.importExportService.ListExportTasks(ctx.Request.Context(), tenantID, page, pageSize)
 	if err != nil {

@@ -130,17 +130,10 @@ const CMDBQualityReport = () => {
     setLoading(true);
     setHasData(false);
     try {
-      // 拉取 CI 列表（带 stats 用于兜底），按 type 分组后计算真实质量指标。
-      // 注意：分页尽量大，但若后端 size 上限有限，分页拉完所有 CIs。
-      const collected: ConfigurationItem[] = [];
-      const pageSize = 200;
-      for (let page = 1; page <= 20; page += 1) {
-        const resp: any = await CMDBApi.getCIs({ page, size: pageSize });
-        const batch: ConfigurationItem[] = (resp?.items || []) as ConfigurationItem[];
-        collected.push(...batch);
-        const total = resp?.total ?? collected.length;
-        if (batch.length < pageSize || collected.length >= total) break;
-      }
+      // 拉取 CI 列表，按 type 分组后计算真实质量指标。
+      // 平台页长上限 100，一次性索要 size:200 会被后端回落成默认 20；
+      // 这里按页读到与原先 20 页 × 200 相同的 4000 条上限。
+      const collected = await CMDBApi.getAllCIs({}, 4000);
 
       if (collected.length === 0) {
         setQualityData([]);

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citag"
@@ -80,6 +81,10 @@ func (s *CITagService) GetCITagByID(ctx context.Context, id, tenantID int) (*dto
 
 // ListCITags 获取CI标签列表
 func (s *CITagService) ListCITags(ctx context.Context, tenantID int, page, pageSize int, search string) (*dto.CITagListResponse, error) {
+	// 本查询真分页（Count + Offset/Limit），所以五个信封键都得如实填；页长在此归一，
+	// 兜住不走 HTTP 入口的调用方（pageSize=0 在 Ent 里等于不加 LIMIT，page<=0 是负 OFFSET）。
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	query := s.client.CITag.Query().Where(citag.TenantIDEQ(tenantID))
 
 	if search != "" {
@@ -99,20 +104,22 @@ func (s *CITagService) ListCITags(ctx context.Context, tenantID int, page, pageS
 	}
 
 	tags, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(citag.FieldCreatedAt)).
+		Order(ent.Desc(citag.FieldCreatedAt), ent.Asc(citag.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list CI tags", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list tags: %w", err)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.CITagListResponse{
-		Items: dto.ToCITagResponseList(tags),
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      dto.ToCITagResponseList(tags),
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

@@ -112,7 +112,7 @@ export default function TopologyPage() {
   // React Query：CI 选项（按搜索值变化自动失效/拉取）
   const cisQuery = useCIsQuery({
     search: debouncedSearch || undefined,
-    size: 20,
+    pageSize: 20,
   });
   const ciOptions = useMemo(
     () =>
@@ -125,7 +125,7 @@ export default function TopologyPage() {
       }>).map(ci => ({
         id: ci.id,
         name: ci.name,
-        type: ci.ciType || ci.type || '',
+        type: ci.type || '',
         status: ci.status,
       })),
     [cisQuery.data]

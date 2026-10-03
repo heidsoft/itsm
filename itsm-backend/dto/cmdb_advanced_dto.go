@@ -180,10 +180,16 @@ type BatchUpdateLifecycleRequest struct {
 	Remark string `json:"remark,omitempty" max:"500"`
 }
 
-// ListResponse 通用列表响应
+// ListResponse 通用列表响应。
+//
+// 分页键按平台信封 `{items,total,page,pageSize,totalPages}` 交付：CMDB 侧的
+// 保存视图 / CI 搜索 / 导入导出任务都用 Count + Offset/Limit 真分页，只回 `size`
+// 且缺 `totalPages` 会让调用方把当前页当成整表。值由 service 用
+// common.NewPaginationResponse 单点算出，避免除零与两套页长真相。
 type ListResponse[T any] struct {
-	Items []T `json:"items"`
-	Total int `json:"total"`
-	Page  int `json:"page"`
-	Size  int `json:"size"`
+	Items      []T `json:"items"`
+	Total      int `json:"total"`
+	Page       int `json:"page"`
+	PageSize   int `json:"pageSize"`
+	TotalPages int `json:"totalPages"`
 }

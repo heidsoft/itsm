@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
@@ -124,6 +125,10 @@ func (s *CIHistoryService) nextHistoryVersion(ctx context.Context, ciID, tenantI
 
 // GetCIHistory 获取CI历史记录列表
 func (s *CIHistoryService) GetCIHistory(ctx context.Context, ciID, tenantID int, page, pageSize int) (*dto.CIHistoryListResponse, error) {
+	// 分页形状在本层如实归一：HTTP 入口走 common.GetPaginationFromQuery，直接调用 service 的
+	// 调用方由这里兜住，否则 pageSize=0 会退化成「不加 LIMIT 的整表查询」、page<=0 是负 OFFSET。
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	// 检查CI是否存在
 	exists, err := s.client.ConfigurationItem.Query().
 		Where(
@@ -152,20 +157,22 @@ func (s *CIHistoryService) GetCIHistory(ctx context.Context, ciID, tenantID int,
 	}
 
 	histories, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(configurationitemhistory.FieldVersion)).
+		Order(ent.Desc(configurationitemhistory.FieldVersion), ent.Asc(configurationitemhistory.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list CI history", "error", err, "ci_id", ciID)
 		return nil, fmt.Errorf("failed to list history: %w", err)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.CIHistoryListResponse{
-		Items: dto.ToCIHistoryResponseList(histories),
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      dto.ToCIHistoryResponseList(histories),
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

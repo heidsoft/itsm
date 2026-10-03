@@ -198,20 +198,3 @@ export interface ReconciliationResponse {
   orphanCIs: ConfigurationItem[];
   unlinkedCIs: ConfigurationItem[];
 }
-
-// 列表响应
-export interface CIListResponse {
-  items: ConfigurationItem[];
-  total: number;
-  page: number;
-  size: number;
-}
-
-// 查询参数
-export interface CIQuery {
-  page?: number;
-  pageSize?: number;
-  status?: string;
-  ciTypeId?: number;
-  search?: string;
-}

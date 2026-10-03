@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
@@ -186,6 +187,8 @@ func (s *CMDBImportExportService) GetImportTaskStatus(ctx context.Context, taskI
 
 // ListImportTasks 获取导入任务列表
 func (s *CMDBImportExportService) ListImportTasks(ctx context.Context, tenantID int, page, pageSize int) (*dto.ListResponse[dto.ImportCIResult], error) {
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	query := s.client.CMDBImportTask.Query().
 		Where(cmdbimporttask.TenantID(tenantID))
 
@@ -196,9 +199,9 @@ func (s *CMDBImportExportService) ListImportTasks(ctx context.Context, tenantID 
 	}
 
 	tasks, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(cmdbimporttask.FieldCreatedAt)).
+		Order(ent.Desc(cmdbimporttask.FieldCreatedAt), ent.Asc(cmdbimporttask.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list import tasks", "error", err, "tenant_id", tenantID)
@@ -210,11 +213,13 @@ func (s *CMDBImportExportService) ListImportTasks(ctx context.Context, tenantID 
 		items[i] = *s.convertToImportDTO(task)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.ListResponse[dto.ImportCIResult]{
-		Items: items,
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      items,
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 
@@ -493,6 +498,8 @@ func (s *CMDBImportExportService) GetExportTaskStatus(ctx context.Context, taskI
 
 // ListExportTasks 获取导出任务列表
 func (s *CMDBImportExportService) ListExportTasks(ctx context.Context, tenantID int, page, pageSize int) (*dto.ListResponse[dto.ExportCIResult], error) {
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	query := s.client.CMDBExportTask.Query().
 		Where(cmdbexporttask.TenantID(tenantID))
 
@@ -503,9 +510,9 @@ func (s *CMDBImportExportService) ListExportTasks(ctx context.Context, tenantID 
 	}
 
 	tasks, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(cmdbexporttask.FieldCreatedAt)).
+		Order(ent.Desc(cmdbexporttask.FieldCreatedAt), ent.Asc(cmdbexporttask.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list export tasks", "error", err, "tenant_id", tenantID)
@@ -517,11 +524,13 @@ func (s *CMDBImportExportService) ListExportTasks(ctx context.Context, tenantID 
 		items[i] = *s.convertToExportDTO(task)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.ListResponse[dto.ExportCIResult]{
-		Items: items,
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      items,
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 
@@ -546,21 +555,35 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 	if req.Filters != nil {
 		filters = *req.Filters
 	}
-	searchReq := &dto.CISearchRequest{
-		Filters:   filters,
-		Page:      1,
-		PageSize:  10000, // 最多导出1万条
-		SortBy:    "id",
-		SortOrder: "asc",
+
+	// 导出上限 1 万条，但页长归平台单一所有者夹紧（MaxPageSize=100），不能一次性索要 1 万：
+	// 按页读到上限。原先这里把 PageSize: 10000 直接下传，会被服务层静默夹紧（合并前夹到 20），
+	// 导出结果远少于用户勾选的范围。
+	const exportMaxRecords = 10000
+	items := make([]dto.CIResponse, 0, common.MaxPageSize)
+	for page := 1; ; page++ {
+		searchReq := &dto.CISearchRequest{
+			Filters:   filters,
+			Page:      page,
+			PageSize:  common.MaxPageSize,
+			SortBy:    "id",
+			SortOrder: "asc",
+		}
+		pageRes, err := s.ciService.SearchCI(ctx, tenantID, searchReq)
+		if err != nil {
+			s.failExportTask(ctx, taskID, tenantID, fmt.Sprintf("查询CI数据失败: %v", err))
+			return
+		}
+		items = append(items, pageRes.Items...)
+		if len(pageRes.Items) < pageRes.PageSize || len(items) >= exportMaxRecords {
+			break
+		}
+	}
+	if len(items) > exportMaxRecords {
+		items = items[:exportMaxRecords]
 	}
 
-	searchResult, err := s.ciService.SearchCI(ctx, tenantID, searchReq)
-	if err != nil {
-		s.failExportTask(ctx, taskID, tenantID, fmt.Sprintf("查询CI数据失败: %v", err))
-		return
-	}
-
-	if len(searchResult.Items) == 0 {
+	if len(items) == 0 {
 		s.failExportTask(ctx, taskID, tenantID, "没有符合条件的CI数据")
 		return
 	}
@@ -576,9 +599,9 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 
 	// 生成导出文件
 	// Convert []dto.CIResponse to []*dto.CIResponse for export functions
-	ciPtrs := make([]*dto.CIResponse, len(searchResult.Items))
-	for i := range searchResult.Items {
-		ciPtrs[i] = &searchResult.Items[i]
+	ciPtrs := make([]*dto.CIResponse, len(items))
+	for i := range items {
+		ciPtrs[i] = &items[i]
 	}
 	if req.ExportType == "csv" {
 		fileURL, fileSize, err = s.generateCSVExport(ciPtrs, exportFields)
@@ -595,7 +618,7 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 	_, err = s.client.CMDBExportTask.Update().
 		Where(cmdbexporttask.TaskID(taskID), cmdbexporttask.TenantID(tenantID)).
 		SetStatus("completed").
-		SetTotalCount(len(searchResult.Items)).
+		SetTotalCount(len(items)).
 		SetFileURL(fileURL).
 		SetFileSize(fileSize).
 		SetCompletedAt(time.Now()).
@@ -604,7 +627,7 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 		s.logger.Errorw("Failed to update export task result", "error", err, "task_id", taskID)
 	}
 
-	s.logger.Infow("Export task completed", "task_id", taskID, "count", len(searchResult.Items), "file_size", fileSize)
+	s.logger.Infow("Export task completed", "task_id", taskID, "count", len(items), "file_size", fileSize)
 }
 
 // failImportTask 标记导入任务失败

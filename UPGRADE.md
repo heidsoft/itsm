@@ -375,6 +375,51 @@ cd itsm-backend && go test ./router/ -run TestServiceRequestListRouteEnvelopeAnd
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/service-request-api.test.ts src/lib/api/__tests__/service-catalog-api.test.ts
 ```
 
+### 1.14 CMDB 列表信封、页长单一所有者与 `size` 别名移除（2026-10-03，破坏性）
+
+受影响端点（`/api/v1/configuration-items/*` 兼容别名同批生效，两者是同一 handler）：
+
+| 端点 | 集合键 | 信封来源 DTO |
+| --- | --- | --- |
+| `GET /api/v1/cmdb/cis` | `items`（未变） | `dto.CIListResponse` |
+| `GET /api/v1/cmdb/ci-types` | `items`（未变） | `dto.CITypeListResponse` |
+| `GET /api/v1/cmdb/tags` | `items`（未变） | `dto.CITagListResponse` |
+| `GET /api/v1/cmdb/cis/{id}/history` | `items`（未变） | `dto.CIHistoryListResponse` |
+| `GET /api/v1/cmdb/views` | `items`（未变） | `dto.ListResponse[CISavedView]` |
+| `GET /api/v1/cmdb/import` | `items`（未变） | `dto.ListResponse[ImportCIResult]` |
+| `GET /api/v1/cmdb/export` | `items`（未变） | `dto.ListResponse[ExportCIResult]` |
+
+这 7 个端点**实测都真的分页**（`Count` + `Offset/Limit`），响应却只回 `{items,total,page,size}`：
+没有 `totalPages`，调用方无法核对是否还有下一页，把当前页当成该租户的全部 CI / CI 类型 / 历史。
+`size` 同时是请求侧的分页别名（`dto.ListCIRequest` 的 `form:"size"`）。JSON 键名变化只有
+`size`→`pageSize` 与新增 `totalPages`，`items` 从未改过名。
+
+| 项目 | 旧行为 | 新行为 |
+| --- | --- | --- |
+| 响应分页键 | `page` + `size`，无 `totalPages` | `page` + `pageSize` + `totalPages`（`common.NewPaginationResponse` 单点算出） |
+| 请求页长键 | `size`（`pageSize` 不被读取） | **只有 `pageSize`**，`size`/`limit`/`offset` 一律不参与分页决策 |
+| `GET /cmdb/cis` 越界页长 | `binding:"min=1,max=200"` → **HTTP 400 / code 1001**（`size=0` 因 `omitempty` 绕过校验，`Limit(0)` 在 Ent 等于不加 LIMIT，**返回整表**） | **HTTP 200 / code 0**，回落默认页长 20 |
+| 其余 6 个端点越界页长 | handler 用裸 `strconv.Atoi`，**完全不夹紧**：`size=300` 原样下传取 300 条；`size=abc` 解析失败变 0 → `Limit(0)` **返回整表** | 统一 `common.GetPaginationFromQuery`：缺省 1/20，只采纳 `(0,100]`，越界回落 **20** |
+| 默认页长 | 各处 `DefaultQuery("size","20")`，无单一所有者 | 20（平台值） |
+| `include_public`（`/cmdb/views`） | 查询参数 `include_public` | **`includePublic`**（camelCase 契约；旧名实测只有 swagger 提到，前端与测试零调用） |
+| CI 列表排序 | 无 `sortBy` 时**完全没有 `ORDER BY`**，翻页顺序由数据库返回顺序决定，同一条可能重复或漏出 | 固定 `created_at DESC, id ASC`；类型/标签/历史/视图/导入导出同样补 `id` 并列键 |
+| CI 导出记录数 | 任务内 `PageSize: 10000` 一次性下传，被服务层静默夹成 **20 条** | 按 `MaxPageSize` 逐页读到 10000 上限，导出范围与用户勾选一致 |
+| `GET /cmdb/ontology` 的 `ciTypes` | 索要 `pageSize=500`（把「要整表」藏在越界页长里），超过 500 个类型静默截断 | 逐页读全该租户活跃类型 |
+
+**集成方必须改的三件事**：
+1. 读响应的地方把 `data.size` 改成 `data.pageSize`，并可直接使用新增的 `data.totalPages`。
+2. 请求侧删除 `size`，改发 `pageSize`。想要大页必须显式发 `pageSize`（上限 100）；
+   **越界值现在意味着「用默认页长 20」，不再意味着「取全部」**，也不会再返回 400/1001。
+   原先依赖 `size=500`/`size=10000` 一次取全量的调用方会静默只拿 20 条，必须改成翻页读取
+   （前端已提供 `CMDBApi.getAllCIs(params, maxRecords)` / `getCITypes()` 作为参考实现）。
+3. `/cmdb/views` 的 `include_public` 改 `includePublic`。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestCMDBListRoutesEnvelopeAndPagination
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/cmdb-api.test.ts src/lib/api/__tests__/cmdb-relationship.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

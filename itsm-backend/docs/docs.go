@@ -3892,8 +3892,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量（默认20，最大200）",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -4497,8 +4497,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -4911,8 +4911,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -5048,8 +5048,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     }
                 ],
@@ -5484,8 +5484,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -5708,14 +5708,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
-                        "name": "size",
+                        "description": "每页数量（默认20，最大100；越界回落默认页长）",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
                         "description": "是否包含公开视图，默认true",
-                        "name": "include_public",
+                        "name": "includePublic",
                         "in": "query"
                     }
                 ],
@@ -12112,10 +12112,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -12280,10 +12283,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -12764,10 +12770,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -15587,10 +15596,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -15607,10 +15619,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -15627,10 +15642,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -15647,10 +15665,13 @@ const docTemplate = `{
                 "page": {
                     "type": "integer"
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }

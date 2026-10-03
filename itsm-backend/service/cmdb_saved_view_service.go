@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/cmdbsavedview"
@@ -93,6 +94,8 @@ func (s *CMDBSavedViewService) GetSavedView(ctx context.Context, id int, tenantI
 
 // ListSavedViews 获取视图列表
 func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int, userID int, includePublic bool, page, pageSize int) (*dto.ListResponse[dto.CISavedView], error) {
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	query := s.client.CMDBSavedView.Query().
 		Where(cmdbsavedview.TenantID(tenantID))
 
@@ -112,9 +115,9 @@ func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int,
 
 	// 查询列表
 	views, err := query.
-		Offset((page - 1) * pageSize).
+		Offset((page-1)*pageSize).
 		Limit(pageSize).
-		Order(ent.Desc(cmdbsavedview.FieldCreatedAt)).
+		Order(ent.Desc(cmdbsavedview.FieldCreatedAt), ent.Asc(cmdbsavedview.FieldID)).
 		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list saved views", "error", err, "tenant_id", tenantID)
@@ -127,11 +130,13 @@ func (s *CMDBSavedViewService) ListSavedViews(ctx context.Context, tenantID int,
 		items[i] = *s.convertToViewDTO(view)
 	}
 
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.ListResponse[dto.CISavedView]{
-		Items: items,
-		Total: total,
-		Page:  page,
-		Size:  pageSize,
+		Items:      items,
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

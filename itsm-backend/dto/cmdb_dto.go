@@ -176,12 +176,6 @@ type ListCIsRequest struct {
 	Offset   int    `json:"offset,omitempty"`
 }
 
-// ListCIsResponse 配置项列表响应
-type ListCIsResponse struct {
-	CIs   []*CIResponse `json:"cis"`
-	Total int           `json:"total"`
-}
-
 // UpdateCIRequest 更新配置项请求
 type UpdateCIRequest struct {
 	CITypeID           int                    `json:"ciTypeId,omitempty"`
@@ -493,10 +487,11 @@ type CIHistoryResponse struct {
 
 // CIHistoryListResponse CI历史列表响应
 type CIHistoryListResponse struct {
-	Items []*CIHistoryResponse `json:"items"`
-	Total int                  `json:"total"`
-	Page  int                  `json:"page"`
-	Size  int                  `json:"size"`
+	Items      []*CIHistoryResponse `json:"items"`
+	Total      int                  `json:"total"`
+	Page       int                  `json:"page"`
+	PageSize   int                  `json:"pageSize"`
+	TotalPages int                  `json:"totalPages"`
 }
 
 // RevertCIVersionRequest 回滚CI版本请求

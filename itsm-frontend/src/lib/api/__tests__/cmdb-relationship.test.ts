@@ -98,6 +98,31 @@ describe('CIRelationshipAPI', () => {
     });
   });
 
+  describe('getAvailableCIs', () => {
+    it('按 CI 列表契约取候选并排除自身，类型名取后端唯一的 type 字段', async () => {
+      mockGet.mockResolvedValue({
+        items: [
+          { id: 1, name: 'Self', type: 'Server', status: 'active', criticality: 'high' },
+          { id: 2, name: 'DB-01', type: 'Database', status: 'active' },
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 100,
+        totalPages: 1,
+      });
+
+      const result = await CIRelationshipAPI.getAvailableCIs(1, 'db');
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis', {
+        search: 'db',
+        page: 1,
+        pageSize: 100,
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: 2, name: 'DB-01', type: 'Database', typeName: 'Database' });
+    });
+  });
+
   describe('batchCreateRelationships', () => {
     it('should batch create relationships', async () => {
       mockPost.mockResolvedValue({ id: 1 });

@@ -390,9 +390,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CIHistoryResponse:
@@ -504,9 +506,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CIRelationshipListResponse:
@@ -842,9 +846,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CITagResponse:
@@ -2857,9 +2863,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.ListResponse-dto_CISavedView:
@@ -2870,9 +2878,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.ListResponse-dto_ExportCIResult:
@@ -2883,9 +2893,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.ListResponse-dto_ImportCIResult:
@@ -2896,9 +2908,11 @@ definitions:
         type: array
       page:
         type: integer
-      size:
+      pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.MultiCloudResourceData:
@@ -6799,9 +6813,9 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量（默认20，最大200）
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       - description: CI类型ID（精确匹配）
         in: query
@@ -7015,9 +7029,9 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       produces:
       - application/json
@@ -7421,9 +7435,9 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       produces:
       - application/json
@@ -7502,9 +7516,9 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       produces:
       - application/json
@@ -7761,9 +7775,9 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       - description: 搜索关键词（标签名/值）
         in: query
@@ -7897,13 +7911,13 @@ paths:
         in: query
         name: page
         type: integer
-      - description: 每页数量
+      - description: 每页数量（默认20，最大100；越界回落默认页长）
         in: query
-        name: size
+        name: pageSize
         type: integer
       - description: 是否包含公开视图，默认true
         in: query
-        name: include_public
+        name: includePublic
         type: boolean
       produces:
       - application/json

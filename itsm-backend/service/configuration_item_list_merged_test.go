@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -49,7 +50,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("SortBy+SortOrder=name asc", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			SortBy: "name", SortOrder: "asc",
 		})
 		require.NoError(t, err)
@@ -61,7 +62,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("SortBy+SortOrder=criticality desc", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			SortBy: "criticality", SortOrder: "desc",
 		})
 		require.NoError(t, err)
@@ -74,7 +75,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("DateFrom+DateTo 范围过滤", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			DateFrom: ptrTimeOrNil(now.Add(-2*time.Hour - 30*time.Minute)),
 			DateTo:   ptrTimeOrNil(now.Add(-30 * time.Minute)),
 		})
@@ -88,7 +89,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("TagIDs 过滤", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			TagIDs: []int{tag.ID},
 		})
 		require.NoError(t, err)
@@ -97,7 +98,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("WithRelations=true 不 panic", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			WithRelations: true,
 		})
 		require.NoError(t, err)
@@ -106,7 +107,7 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("Search 关键词宽模糊命中 name", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			Search: "alpha",
 		})
 		require.NoError(t, err)
@@ -116,11 +117,38 @@ func TestListCIsMergedFields(t *testing.T) {
 
 	t.Run("Status 半匹配（合并后改为 Contains 语义）", func(t *testing.T) {
 		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{
-			Page: 1, Size: 10,
+			Page: 1, PageSize: 10,
 			Status: "act", // 半匹配
 		})
 		require.NoError(t, err)
 		require.GreaterOrEqual(t, len(resp.Items), 3)
+	})
+
+	t.Run("信封分页键如实填写且越界页长被单点兜住", func(t *testing.T) {
+		resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{Page: 0, PageSize: 1000})
+		require.NoError(t, err)
+		require.Equal(t, common.DefaultPage, resp.Page)
+		require.Equal(t, common.MaxPageSize, resp.PageSize)
+		require.Equal(t, 3, resp.Total)
+		// totalPages 必须由 total/pageSize 算出，缺键时调用方只能拿当前页条数猜总量。
+		require.Equal(t, 1, resp.TotalPages)
+	})
+
+	t.Run("翻页不重不漏", func(t *testing.T) {
+		seen := map[int]bool{}
+		for page := 1; page <= 3; page++ {
+			resp, err := svc.ListCIs(ctx, tenant.ID, &dto.ListCIRequest{Page: page, PageSize: 2})
+			require.NoError(t, err)
+			require.Equal(t, page, resp.Page)
+			for _, it := range resp.Items {
+				require.False(t, seen[it.ID], "第 %d 页返回了重复 CI %d", page, it.ID)
+				seen[it.ID] = true
+			}
+			if len(resp.Items) < resp.PageSize {
+				break
+			}
+		}
+		require.Len(t, seen, 3)
 	})
 }
 

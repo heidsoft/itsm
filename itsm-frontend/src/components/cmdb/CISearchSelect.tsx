@@ -62,7 +62,7 @@ const CISearchSelect: React.FC<CISearchSelectProps> = ({
   // 挂载时即预加载第一页（保证未输入关键字也有候选）
   const listQuery = useCIsQuery({
     search: debouncedSearch || undefined,
-    size: searchSize,
+    pageSize: searchSize,
   });
 
   const options: CISelectOption[] = useMemo(() => {
