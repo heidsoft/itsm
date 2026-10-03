@@ -18,6 +18,23 @@ import type {
   ServiceRequestQuery,
 } from '@/types/service-catalog';
 
+// 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
+const SERVICE_CATALOGS_PATH = '/api/v1/service-catalogs';
+// 后端 common.MaxPageSize=100。超过它的页长不报错，而是被单点回落成默认 20，
+// 所以「取全」只能翻页表达。
+const MAX_PAGE_SIZE = 100;
+// 导出的硬上限。超过它必须显式报错并让调用方收窄过滤条件，禁止静默导出半截 CSV。
+const MAX_EXPORT_RECORDS = 5000;
+
+/** GET /api/v1/service-catalogs 的信封；集合键只有 items，页长只有 pageSize。 */
+interface ServiceCatalogListEnvelope {
+  items: unknown[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export class ServiceCatalogApi {
   // ==================== 内部适配（对齐后端 /api/v1/service-catalogs & /api/v1/service-requests） ====================
 
@@ -141,45 +158,81 @@ export class ServiceCatalogApi {
   // ==================== 服务项管理 ====================
 
   /**
-   * 获取服务列表
+   * 获取服务列表（单页）。
+   *
+   * 集合键固定为 items，页长固定为 pageSize；后端 common.GetPaginationFromQuery 是
+   * 唯一的夹紧所有者（缺省 1/20，只采纳 (0,100]）。需要读全量的调用方走
+   * ServiceCatalogApi.getAllServices，不要靠放大 pageSize 表达「全部」。
    */
   static async getServices(query?: ServiceQuery): Promise<{
     services: ServiceItem[];
     total: number;
   }> {
     const page = query?.page ?? 1;
-    const size = query?.pageSize ?? 10;
     const category = query?.category ? String(query.category) : undefined;
     const status = ServiceCatalogApi.toBackendStatus(query?.status);
 
-    const resp = await httpClient.get<{
-      catalogs: unknown[];
-      services: unknown[];
-      total: number;
-      page: number;
-      size: number;
-    }>('/api/v1/service-catalogs', {
+    const resp = await httpClient.get<ServiceCatalogListEnvelope>(SERVICE_CATALOGS_PATH, {
       page,
-      size,
+      pageSize: query?.pageSize ?? 10,
       ...(category ? { category } : {}),
       ...(status ? { status } : {}),
     });
 
-    // 优先使用 services 字段，否则降级使用 catalogs
-    const rawItems = resp.services || resp.catalogs || [];
-
-    let services = rawItems.map(ServiceCatalogApi.toServiceItem);
-    // 后端当前不支持 search；先在前端做兜底过滤
+    const services = resp.items.map(ServiceCatalogApi.toServiceItem);
+    // 后端列表端点没有关键词参数，这里只过滤「当前页」，因此 total 会大于返回条数。
+    // 补齐服务端 search 属于账本 E4-24，不得由调用方误当成全集。
     if (query?.search) {
       const q = query.search.toLowerCase();
-      services = services.filter(
-        s =>
-          (s.name || '').toLowerCase().includes(q) ||
-          (s.shortDescription || '').toLowerCase().includes(q)
-      );
+      return {
+        services: services.filter(
+          s =>
+            (s.name || '').toLowerCase().includes(q) ||
+            (s.shortDescription || '').toLowerCase().includes(q),
+        ),
+        total: resp.total,
+      };
     }
 
-    return { services, total: resp.total || 0 };
+    return { services, total: resp.total };
+  }
+
+  /**
+   * 翻页读满 maxRecords 条或读到末页。
+   *
+   * 后端 common.MaxPageSize=100：请求更大的页长不报错，而是被单点回落成默认 20，
+   * 所以「取全」只能翻页。返回 complete=false 表示数据源被 maxRecords 截断，
+   * 调用方（导出/报表）必须显式处理，不能把截断结果当成全集。
+   */
+  static async getAllServices(
+    query?: Omit<ServiceQuery, 'page' | 'pageSize'>,
+    maxRecords = 200,
+  ): Promise<{ services: ServiceItem[]; total: number; complete: boolean }> {
+    const category = query?.category ? String(query.category) : undefined;
+    const status = ServiceCatalogApi.toBackendStatus(query?.status);
+    const services: ServiceItem[] = [];
+    let total = 0;
+
+    for (let page = 1; ; page += 1) {
+      const resp = await httpClient.get<ServiceCatalogListEnvelope>(SERVICE_CATALOGS_PATH, {
+        page,
+        pageSize: MAX_PAGE_SIZE,
+        ...(category ? { category } : {}),
+        ...(status ? { status } : {}),
+      });
+      total = resp.total;
+      services.push(...resp.items.map(ServiceCatalogApi.toServiceItem));
+
+      // 终止条件用响应里的生效页长，不用请求值：后端回落时两者可能不同。
+      if (
+        resp.items.length < resp.pageSize ||
+        services.length >= Math.min(maxRecords, resp.total)
+      ) {
+        break;
+      }
+    }
+
+    return { services, total, complete: services.length >= total };
   }
 
   /**
@@ -545,7 +598,18 @@ export class ServiceCatalogApi {
    * 导出服务目录
    */
   static async exportCatalog(format: 'excel' | 'pdf'): Promise<Blob> {
-    const response = await ServiceCatalogApi.getServices({ page: 1, pageSize: 1000 });
+    // 原先发 size=1000：后端 binding 允许到 1000，但 handler 又静默夹成 100，
+    // 所以导出从来就没有拿到 1000 条；信封收敛后同样的请求会回落成 20 条。
+    // 两种都说明「放大页长取全」不成立 —— 取全必须翻页，且截断要显式失败。
+    const { services, total, complete } = await ServiceCatalogApi.getAllServices(
+      undefined,
+      MAX_EXPORT_RECORDS,
+    );
+    if (!complete) {
+      throw new Error(
+        `服务目录共 ${total} 条，超过单次导出上限 ${MAX_EXPORT_RECORDS} 条，请按分类或状态收窄条件后重试。`,
+      );
+    }
     const header = [
       'ID',
       '服务名称',
@@ -556,7 +620,7 @@ export class ServiceCatalogApi {
       '创建时间',
       '更新时间',
     ];
-    const rows = response.services.map(service => [
+    const rows = services.map(service => [
       service.id,
       service.name,
       service.category,

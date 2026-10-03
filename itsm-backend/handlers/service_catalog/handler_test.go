@@ -148,22 +148,29 @@ func TestHandler_List(t *testing.T) {
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustSC(resp))
 	data := resp.Data.(map[string]interface{})
 	assert.GreaterOrEqual(t, int(data["total"].(float64)), 1)
-	assert.IsType(t, []interface{}{}, data["catalogs"])
+	// 平台五键信封：集合键 items（原 catalogs）、页长键 pageSize（原 size）、
+	// 并带上 totalPages，调用方才能核对是否还有下一页。
+	assert.ElementsMatch(t, []string{"items", "total", "page", "pageSize", "totalPages"}, keysOf(data))
+	assert.IsType(t, []interface{}{}, data["items"])
+	// HTTP 入口的默认页长是 20（common.GetPaginationFromQuery 里的平台值）。
+	assert.Equal(t, float64(20), data["pageSize"])
 }
 
-func TestHandler_List_AcceptsSize1000(t *testing.T) {
+// TestHandler_List_PageSizeAliasIsInert 锁住 E4-6f 的契约变更：
+// 请求侧 size 不再是 pageSize 的别名，越界页长不再返回 1001 参数错误，
+// 而是回落平台默认页长 20（唯一所有者 common.GetPaginationFromQuery）。
+// 原 TestHandler_List_AcceptsSize1000 / _RejectsSize1001 断言的是「max=1000 放行、
+// 1001 报 1001」那套第四页长真相，已随别名一起删除。
+func TestHandler_List_PageSizeAliasIsInert(t *testing.T) {
 	r, _, _ := scSetup(t)
-	// Fix for #2: 导出 exportCatalog(pageSize:1000) 此前因 Size max=100 被拒，
-	// 现 max=1000 应能通过。
-	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs?size=1000", nil)
-	assert.Equal(t, common.SuccessCode, resp.Code, "size=1000 应被允许，body=%s", mustSC(resp))
-}
 
-func TestHandler_List_RejectsSize1001(t *testing.T) {
-	r, _, _ := scSetup(t)
-	// 越界上限必须仍被拒，避免放开 cap 后被滥用
-	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs?size=1001", nil)
-	assert.NotEqual(t, common.SuccessCode, resp.Code, "size=1001 必须返回 1001")
+	for _, query := range []string{"?size=1000", "?size=1001", "?pageSize=0", "?pageSize=300"} {
+		resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs"+query, nil)
+		require.Equal(t, common.SuccessCode, resp.Code, "%s 应为 200/code 0，body=%s", query, mustSC(resp))
+		data := resp.Data.(map[string]interface{})
+		assert.Equal(t, float64(20), data["pageSize"],
+			"%s 必须回落默认页长 20，而不是按别名取 1000 条或报参数错误", query)
+	}
 }
 
 func TestHandler_Get_Success(t *testing.T) {
@@ -282,7 +289,7 @@ func TestHandler_Search(t *testing.T) {
 	})
 	resp := scDoReq(t, r, "GET", "/api/v1/service-catalogs/search?q=SearchCat", nil)
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustSC(resp))
-	assert.IsType(t, []interface{}{}, resp.Data.(map[string]interface{})["catalogs"])
+	assert.IsType(t, []interface{}{}, resp.Data.(map[string]interface{})["items"])
 }
 
 func TestHandler_Stats(t *testing.T) {
@@ -295,6 +302,15 @@ func TestHandler_Stats(t *testing.T) {
 	require.Equal(t, common.SuccessCode, resp.Code, "body=%s", mustSC(resp))
 	data := resp.Data.(map[string]interface{})
 	assert.Contains(t, data, "totalServices")
+}
+
+// keysOf 返回响应对象的键集合，用于断言信封是精确的五键而不是「包含某几个键」。
+func keysOf(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func mustSC(resp *common.Response) string {

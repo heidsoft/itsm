@@ -420,6 +420,53 @@ cd itsm-backend && go test ./router/ -run TestCMDBListRoutesEnvelopeAndPaginatio
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/cmdb-api.test.ts src/lib/api/__tests__/cmdb-relationship.test.ts
 ```
 
+### 1.15 服务目录列表信封与 `size` 别名移除（2026-10-03，破坏性）
+
+受影响端点（4 个 URL 共用同一个 `Handler.List`，`/search` 共用 `Handler.Search`）：
+
+| 端点 | 集合键 | 信封来源 DTO |
+| --- | --- | --- |
+| `GET /api/v1/service-catalog` | `items`（原 `catalogs`） | `dto.ServiceCatalogListResponse` |
+| `GET /api/v1/service-catalogs` | `items`（原 `catalogs`） | `dto.ServiceCatalogListResponse` |
+| `GET /api/v1/service-catalog-services` | `items`（原 `catalogs`） | `dto.ServiceCatalogListResponse` |
+| `GET /api/v1/service-catalogs/search` | `items`（原 `catalogs`） | `dto.ServiceCatalogListResponse` |
+
+这是列表信封棘轮里**最后一条 `size` 别名基线**，删除后 `envelopeAliasBaseline` 为空集。
+四个服务目录列表端点实测都做 `Count` + `Offset/Limit` 真分页，响应却只回
+`{catalogs,total,page,size}`：领域名集合键 + `size` 别名 + 没有 `totalPages`。
+页长同时有 4 个所有者（实测互不一致）：
+
+| 项目 | 旧行为（120 条种子实测） | 新行为 |
+| --- | --- | --- |
+| 响应集合键 | `catalogs` | **`items`** |
+| 响应分页键 | `page` + `size`，无 `totalPages` | `page` + `pageSize` + `totalPages`（`common.NewPaginationResponse` 单点算出） |
+| 请求页长键 | 只认 `size`（`dto.GetServiceCatalogsRequest` 的 `form:"size"`） | **只有 `pageSize`**，`size` 完全不参与分页决策 |
+| `?size=1000` | 通过 `binding:"max=1000"`，再被 handler 静默夹成 **100 条** | HTTP 200 / code 0，回落默认页长 **20** |
+| `?size=1001` | `binding` 拒绝 → **业务 code 1001 参数错误** | HTTP 200 / code 0，回落默认页长 **20** |
+| 缺省页长 | `Handler.List` 10、`Service.List` 10、`Service.Search` 20，三处各写一遍 | 20（平台值，单点） |
+| `GET /service-catalogs/search` 翻页 | `Page`/`Size` 写死 `1`/`20`，**第二页永远拿不到数据** | 与 `List` 共用同一入口所有者，`page`/`pageSize` 真正生效 |
+| 空结果 | `var responses []dto.ServiceCatalogResponse` → `"catalogs": null` | `"items": []` |
+| 排序 | `created_at DESC`（同秒数据页边界不确定） | `created_at DESC, id ASC` |
+| 非 HTTP 调用方零值分页 | `Offset(0)+Limit(0)`，Ent 的 `Limit(0)` 等于不加 LIMIT → **整表读出** | `EntRepository.List/Search` 用 `common.ValidatePagination` 兜底（缺省 10） |
+
+**集成方必须改的三件事**：
+1. 读响应的地方把 `data.catalogs` 改成 `data.items`、`data.size` 改成 `data.pageSize`，并可直接使用新增的 `data.totalPages`。
+2. 请求侧删除 `size`，改发 `pageSize`（上限 100）。**越界值现在意味着「用默认页长 20」，
+   不再意味着「取全部」，也不会再返回 1001**；原先发 `size=1000` 想一次取全的调用方
+   （旧实现其实只拿到 100 条）必须改成翻页读取。前端已提供
+   `ServiceCatalogApi.getAllServices(params, maxRecords)`，`exportCatalog` 已改为翻页取全并在
+   超过 5000 条时显式报错，而不是静默导出半截 CSV。
+3. 关键词搜索走 `GET /api/v1/service-catalogs/search?q=`（现在支持 `page`/`pageSize`）。
+   列表端点仍不接受 `search`/`q`，前端 `getServices({search})` 只做当前页过滤并如实回显
+   后端 `total`，服务端 search 属于账本 E4-24。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestServiceCatalogListRoutesEnvelopeAndPagination
+cd itsm-backend && go test ./handlers/service_catalog/ ./tests/contract/
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/service-catalog-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

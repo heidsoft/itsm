@@ -207,10 +207,15 @@ total」，实测是旧文本扫描器的**超集**——当前 28 个 `*ListRes
 
 **当前状态**：**HARD**（棘轮随 `go test ./...` 在 backend-ci 硬失败；脚本本身只在本地
 `run-all.sh` 里跑，而 `run-all.sh` 未接任何 workflow，见「接入位置」）。存量债务以基线
-形式登记在测试文件内，2026-10-03（E4-6e 收敛 CMDB 五个信封、把 `envelopeKeyBaseline` 清零并删掉零引用的
-`ListCIsResponse` 后）实测 **22 条 / 21 个结构体**（21 领域名集合键 + 0 分页键不完整 + 1 分页别名；
-实测 1 个结构体同时命中多类），只减不增：新增违规失败，
+形式登记在测试文件内，2026-10-03（E4-6f 收敛服务目录信封后）实测 **20 条 / 20 个结构体**
+（20 领域名集合键 + 0 分页键不完整 + 0 分页别名；`envelopeKeyBaseline` 与 `envelopeAliasBaseline`
+均为空集，因此「带分页键但不全」和「用 `size` 顶替 `pageSize`」两类违规已从存量债务变成硬失败），
+只减不增：新增违规失败，
 **基线过期（收敛后忘记删条目）同样失败**。
+轨迹：33 条 / 27 个结构体 →（E4-6e 把 CMDB 五个信封补成五元组、删掉零引用的 `ListCIsResponse`、
+`envelopeKeyBaseline` 清零）22 条 / 21 个结构体 →（E4-6f 把 `ServiceCatalogListResponse` 的
+`catalogs`→`items`、`size`→`pageSize`+`totalPages`，并删掉 `dto.GetServiceCatalogsRequest`
+的 `page`/`size`——第四条页长真相）20 条 / 20 个结构体。
 
 分页键那条只判**部分分页**：信封里出现了 `page`/`pageSize`/`totalPages` 任一键就必须凑满
 五元组，纯 `{items,total}` 属上面第二种合法形状、不登记为违规——此前该规则与文档矛盾，

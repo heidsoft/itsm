@@ -842,23 +842,62 @@ Authorization: Bearer <accessToken>
 
 ## 服务目录接口
 
-### 获取服务目录
+路由以 `router/service_catalog_routes.go` 注册的 4 个列表 URL 为准，全部要求
+`service_catalog:read` 权限，租户只取认证上下文。
+
+### 获取服务目录列表
 
 ```http
 GET /service-catalog
+GET /service-catalogs
+GET /service-catalog-services
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- categoryId: 分类过滤
-- search: 搜索关键词
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- category: 分类过滤（精确匹配）
+- status: 状态过滤，只接受 enabled | disabled
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `dto.ServiceCatalogResponse`（camelCase）。空结果序列化为 `[]`。
+排序固定为 `created_at DESC, id ASC`。三个 URL 是同一个 handler，契约完全一致。
+
+> 破坏性变更（2026-10-03 E4-6f）：集合键 `catalogs`→`items`、页长键 `size`→`pageSize`、
+> 新增 `totalPages`，请求侧不再接受 `size`。见 UPGRADE.md §1.15。
+
+### 搜索服务目录
+
+```http
+GET /service-catalogs/search
+Authorization: Bearer <accessToken>
+
+Query Parameters:
+- q: 关键词，对 name / description 做包含匹配
+- category: 可选分类过滤
+- page / pageSize: 与列表端点同一套分页规则（2026-10-03 起真正生效，此前固定第一页 20 条）
+```
+
+`search` 只返回当前租户 `enabled`/`active` 的服务目录，响应信封与列表端点一致。
 
 ### 获取服务项详情
 
 ```http
-GET /service-catalog/{id}
+GET /service-catalogs/{id}
+GET /service-catalog-services/{id}
 Authorization: Bearer <accessToken>
 ```
+
+### 服务目录统计
+
+```http
+GET /service-catalogs/stats
+Authorization: Bearer <accessToken>
+```
+
+返回 `dto` 口径的服务数量与分类计数；请求量、趋势、热门服务没有服务端实现，接口不会补零
+伪装成「0 个请求」。
 
 ## 服务请求接口
 

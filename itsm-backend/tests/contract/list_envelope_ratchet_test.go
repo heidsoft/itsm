@@ -64,6 +64,9 @@ type listEnvelope struct {
 // 2026-10-03 E4-6e 移除 cmdb_dto.go|ListCIsResponse|cis：实测该结构体在非测试代码里零引用
 // （活的 CI 列表信封是 dto.CIListResponse，键已是 items），属只被本基线引用的死声明，按
 // E4-3 口径直接删除而不是改名保留。
+// 2026-10-03 E4-6f 移除 service_dto.go|ServiceCatalogListResponse|catalogs：四个 URL
+// （/service-catalog、/service-catalogs、/service-catalog-services、/service-catalogs/search）
+// 共用同一个 h.List/h.Search，实测都做 Count + Offset/Limit，集合键统一为 items。
 var envelopeBaseline = []string{
 	"asset_dto.go|AssetListResponse|assets",
 	"asset_license_dto.go|LicenseListResponse|licenses",
@@ -79,7 +82,6 @@ var envelopeBaseline = []string{
 	"msp_dto.go|MSPReportListResponse|reports",
 	"release_dto.go|ReleaseListResponse|releases",
 	"role_dto.go|RoleListResponse|roles",
-	"service_dto.go|ServiceCatalogListResponse|catalogs",
 	"tenant_dto.go|TenantListResponse|tenants",
 	"ticket_assignment_dto.go|ListAssignmentRulesResponse|rules",
 	"ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments",
@@ -117,10 +119,12 @@ var envelopeKeyBaseline = []string{}
 // 接受 `size` 与 `pageSize`，现在只认 `pageSize`（HTTP 入口走 common.GetPaginationFromQuery）。
 // 2026-10-03 E4-6e 移除 5 条 CMDB 信封的 size：响应键改 pageSize，请求侧 dto.ListCIRequest 的
 // `form:"size"` 一并删除（不保留双接受），前端 9 个 size 发送点同批改发 pageSize。
-// 余下 1 条是服务目录。
-var envelopeAliasBaseline = []string{
-	"service_dto.go|ServiceCatalogListResponse|size",
-}
+// 2026-10-03 E4-6f 移除最后一条 service_dto.go|ServiceCatalogListResponse|size：响应 catalogs→items、
+// size→pageSize+totalPages，请求侧 dto.GetServiceCatalogsRequest 的 page/size（含
+// binding:"max=1000" 这第四套页长真相）整体删除，分页只由 HTTP 入口的
+// common.GetPaginationFromQuery 决定；前端 size 发送点同批改发 pageSize。
+// 因此本基线现在是空集——任何再用 `size` 顶替 `pageSize` 的信封都会在这里失败。
+var envelopeAliasBaseline = []string{}
 
 // TestListEnvelopeRatchet 禁止列表信封再引入领域名集合键（items 之外的第二个集合键）。
 func TestListEnvelopeRatchet(t *testing.T) {

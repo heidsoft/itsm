@@ -58,18 +58,12 @@ func (h *Handler) List(c *gin.Context) {
 	filters := ListFilters{
 		Category: req.Category,
 		Status:   req.Status,
-		Page:     req.Page,
-		Size:     req.Size,
 	}
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.Size < 1 {
-		filters.Size = 10
-	}
-	if filters.Size > 100 {
-		filters.Size = 100
-	}
+	// 分页在 HTTP 入口只夹紧一次：common.GetPaginationFromQuery（缺省 1/20，只采纳
+	// (0,100]，越界回落默认页长）。原先这里、Service.List、Service.Search 各有一套
+	// 夹紧，且 DTO 的 binding:"max=1000" 是第四套页长真相。
+	pagination := common.GetPaginationFromQuery(c)
+	filters.Page, filters.PageSize = pagination.Page, pagination.PageSize
 
 	catalogs, total, err := h.service.List(c.Request.Context(), tenantID, filters)
 	if err != nil {
@@ -77,17 +71,13 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	var responses []dto.ServiceCatalogResponse
+	// 显式 make 而不是 var：nil slice 序列化成 null，前端契约要求空集合是 []。
+	responses := make([]dto.ServiceCatalogResponse, 0, len(catalogs))
 	for _, cat := range catalogs {
 		responses = append(responses, h.toDTO(cat))
 	}
 
-	common.Success(c, dto.ServiceCatalogListResponse{
-		Catalogs: responses,
-		Total:    total,
-		Page:     filters.Page,
-		Size:     filters.Size,
-	})
+	common.Success(c, serviceCatalogListResponse(responses, total, filters.Page, filters.PageSize))
 }
 
 // Get handles GetServiceCatalogByID
@@ -332,9 +322,11 @@ func (h *Handler) Search(c *gin.Context) {
 	filters := ListFilters{
 		Category: c.Query("category"),
 		Status:   "enabled",
-		Page:     1,
-		Size:     20,
 	}
+	// 原实现把 Page/Size 写死成 1/20，因此 /search 永远只能拿到第一页；
+	// 现在与 List 共用同一个 HTTP 入口所有者，翻页参数真正生效。
+	pagination := common.GetPaginationFromQuery(c)
+	filters.Page, filters.PageSize = pagination.Page, pagination.PageSize
 
 	catalogs, total, err := h.service.Search(c.Request.Context(), tenantID, keyword, filters)
 	if err != nil {
@@ -342,17 +334,13 @@ func (h *Handler) Search(c *gin.Context) {
 		return
 	}
 
-	var responses []dto.ServiceCatalogResponse
+	// 显式 make 而不是 var：nil slice 序列化成 null，前端契约要求空集合是 []。
+	responses := make([]dto.ServiceCatalogResponse, 0, len(catalogs))
 	for _, cat := range catalogs {
 		responses = append(responses, h.toDTO(cat))
 	}
 
-	common.Success(c, dto.ServiceCatalogListResponse{
-		Catalogs: responses,
-		Total:    total,
-		Page:     filters.Page,
-		Size:     filters.Size,
-	})
+	common.Success(c, serviceCatalogListResponse(responses, total, filters.Page, filters.PageSize))
 }
 
 // Stats handles GET /api/v1/service-catalogs/stats
@@ -370,6 +358,19 @@ func (h *Handler) Stats(c *gin.Context) {
 	}
 
 	common.Success(c, stats)
+}
+
+// serviceCatalogListResponse 用同一份 common.NewPaginationResponse 计算五键信封，
+// 避免 List 与 Search 各自用本地除法算 totalPages。
+func serviceCatalogListResponse(items []dto.ServiceCatalogResponse, total, page, pageSize int) dto.ServiceCatalogListResponse {
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
+	return dto.ServiceCatalogListResponse{
+		Items:      items,
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
+	}
 }
 
 func (h *Handler) toDTO(c *ServiceCatalog) dto.ServiceCatalogResponse {

@@ -38,7 +38,7 @@ type ListFilters struct {
 	Category string
 	Status   string
 	Page     int
-	Size     int
+	PageSize int
 }
 
 // ServiceStats holds statistics for service catalog

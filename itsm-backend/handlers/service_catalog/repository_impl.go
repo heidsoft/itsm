@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/ent/cloudservice"
@@ -92,10 +93,16 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 		return nil, 0, err
 	}
 
+	// 兜底而非所有者：HTTP 入口已经用 common.GetPaginationFromQuery 夹紧过一次，
+	// 这里保护的是非 HTTP 调用方（tests/scenarios 直接 repo.List(...) 传零值）。
+	// 零值 Page/Size 会算出 Offset(0) + Limit(0)，而 Ent 的 Limit(0) 等于不加 LIMIT
+	// —— 一次「没传分页参数」的调用就会把该租户的服务目录整表读出来。
+	filters.Page, filters.PageSize = common.ValidatePagination(filters.Page, filters.PageSize)
+
 	entList, err := query.
-		Order(ent.Desc(servicecatalog.FieldCreatedAt)).
-		Offset((filters.Page - 1) * filters.Size).
-		Limit(filters.Size).
+		Order(ent.Desc(servicecatalog.FieldCreatedAt), ent.Asc(servicecatalog.FieldID)).
+		Offset((filters.Page - 1) * filters.PageSize).
+		Limit(filters.PageSize).
 		All(ctx)
 	if err != nil {
 		return nil, 0, err
@@ -245,12 +252,13 @@ func (r *EntRepository) Search(ctx context.Context, tenantID int, keyword string
 		return nil, 0, err
 	}
 
-	// 分页
-	offset := (filters.Page - 1) * filters.Size
+	// 分页：兜底规则与 List 一致（零值会退化成整表读取）
+	filters.Page, filters.PageSize = common.ValidatePagination(filters.Page, filters.PageSize)
+	offset := (filters.Page - 1) * filters.PageSize
 	catalogs, err := query.
-		Order(ent.Desc(servicecatalog.FieldCreatedAt)).
+		Order(ent.Desc(servicecatalog.FieldCreatedAt), ent.Asc(servicecatalog.FieldID)).
 		Offset(offset).
-		Limit(filters.Size).
+		Limit(filters.PageSize).
 		All(ctx)
 	if err != nil {
 		return nil, 0, err

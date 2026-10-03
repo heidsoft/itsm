@@ -61,15 +61,9 @@ func (s *Service) Get(ctx context.Context, tenantID int, id int) (*ServiceCatalo
 }
 
 func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceCatalog, int, error) {
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.Size < 1 {
-		filters.Size = 10
-	}
-	if filters.Size > 100 {
-		filters.Size = 100
-	}
+	// 页长不在这里夹紧：HTTP 入口用 common.GetPaginationFromQuery 做唯一所有者，
+	// 非 HTTP 调用方（tests/scenarios 直接打 repo）由 EntRepository.List 兜底。
+	// 原先 handler / Service.List / Service.Search 三套夹紧各写一遍，是同一件事的三个所有者。
 	return s.repo.List(ctx, tenantID, filters)
 }
 
@@ -187,15 +181,7 @@ func (s *Service) Delete(ctx context.Context, tenantID int, id int) error {
 }
 
 func (s *Service) Search(ctx context.Context, tenantID int, keyword string, filters ListFilters) ([]*ServiceCatalog, int, error) {
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.Size < 1 {
-		filters.Size = 20
-	}
-	if filters.Size > 100 {
-		filters.Size = 100
-	}
+	// 页长夹紧见 List 上的说明：唯一的 HTTP 所有者在 handler 入口，兜底在 repository。
 	return s.repo.Search(ctx, tenantID, strings.TrimSpace(keyword), filters)
 }
 
