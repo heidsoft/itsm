@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/assetlicense"
@@ -81,6 +82,10 @@ func (s *AssetLicenseService) GetLicenseByID(ctx context.Context, id, tenantID i
 
 // ListLicenses 获取许可证列表
 func (s *AssetLicenseService) ListLicenses(ctx context.Context, tenantID int, page, pageSize int, licenseType, status string) (*dto.LicenseListResponse, error) {
+	// 实测原实现是 `if page > 0 && pageSize > 0` 才加 Offset/Limit：调用方漏写或写错分页
+	// 参数时条件为假，查询不带 LIMIT，一次把该租户整表读出来。这里无条件分页，
+	// HTTP 入口用 common.GetPaginationFromQuery 归一，本道只兜非 HTTP 调用方。
+	page, pageSize = common.ValidatePagination(page, pageSize)
 	query := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID))
 
 	if licenseType != "" {
@@ -91,29 +96,31 @@ func (s *AssetLicenseService) ListLicenses(ctx context.Context, tenantID int, pa
 	}
 
 	// 统计总数
-	total, err := query.Count(ctx)
+	total, err := query.Clone().Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count licenses", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to count licenses: %w", err)
 	}
 
-	// 分页查询
-	if page > 0 && pageSize > 0 {
-		offset := (page - 1) * pageSize
-		query = query.Offset(offset).Limit(pageSize)
-	}
-
-	licenseEntities, err := query.Order(ent.Desc(assetlicense.FieldCreatedAt)).All(ctx)
+	offset := (page - 1) * pageSize
+	// created_at 非唯一，缺 ID 并列键时翻页归属由数据库返回顺序决定，会重或漏。
+	licenseEntities, err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Order(ent.Desc(assetlicense.FieldCreatedAt), ent.Asc(assetlicense.FieldID)).
+		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list licenses", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list licenses: %w", err)
 	}
 
-	licenses := dto.ToLicenseResponseList(licenseEntities)
-
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.LicenseListResponse{
-		Total:    total,
-		Licenses: licenses,
+		Items:      dto.ToLicenseResponseList(licenseEntities),
+		Total:      total,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

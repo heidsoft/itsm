@@ -378,6 +378,37 @@ GET /tickets/{id}/attachments/{attachmentId}/preview
 Authorization: Bearer <accessToken>
 ```
 
+### 工单统计
+
+```http
+GET /api/v1/tickets/stats
+```
+
+`data` 是租户全量的聚合计数，不是列表，因此不带任何分页字段：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 201,
+    "open": 41,
+    "inProgress": 40,
+    "resolved": 50,
+    "closed": 60,
+    "pending": 5,
+    "highPriority": 12,
+    "overdue": 7,
+    "byStatus": [{ "status": "in_progress", "count": 40 }],
+    "byPriority": [{ "priority": "high", "count": 12 }]
+  }
+}
+```
+
+- `open` 含 `new`；`overdue` 由 `sla_states` 判定，工单状态词表里并没有 `overdue` 这个取值。
+- `byStatus`/`byPriority` 只含真实存在的取值，顺序按后端词表基准，词表外的历史值按字母序追加；两者各自求和恒等于 `total`，且严格按租户过滤（`handlers/ticket/stats_contract_test.go` 锁死这几条）。
+- 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：页长之外的工作量会被静默截断，界面却仍然把它当成全量读数。
+
 ## 工单标签接口
 
 标签的唯一可写所有者是工单标签（`ticket_tags`）。`GET /tags`、`GET /system/tags` 是历史只读别名，不承载写操作。
@@ -1183,16 +1214,24 @@ Authorization: Bearer <accessToken>
 ### 获取资产列表
 
 ```http
-GET /assets
+GET /api/v1/assets
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
-- status: 状态过滤
-- type: 类型过滤
-- search: 搜索关键词
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- status: 状态过滤（精确匹配）
+- type: 类型过滤（精确匹配）
+- category: 分类过滤（精确匹配）
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `dto.AssetResponse`（camelCase）。空结果序列化为 `[]`。
+排序固定为 `created_at DESC, id ASC`。`search` 参数后端不读取，文档此前把它列为可用过滤项属漂移。
+
+> 破坏性变更（2026-10-04 E4-6g）：集合键 `assets`→`items`，新增 `page/pageSize/totalPages`；
+> 非法或越界的 `pageSize` 原先由 handler 返回 400（且上限自称 200，与服务层的 100 相互矛盾），
+> 现在统一由 `common.GetPaginationFromQuery` 回落默认页长。见 UPGRADE.md §1.16。
 
 ### 获取资产详情
 
@@ -1279,15 +1318,23 @@ Authorization: Bearer <accessToken>
 ### 获取许可证列表
 
 ```http
-GET /licenses
+GET /api/v1/licenses
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
-- status: 状态过滤
-- search: 搜索关键词
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- type: 类型过滤（精确匹配）
+- status: 状态过滤（精确匹配）
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `dto.LicenseResponse`（camelCase）。空结果序列化为 `[]`。
+排序固定为 `created_at DESC, id ASC`。`search` 参数后端不读取。
+
+> 破坏性变更（2026-10-04 E4-6g）：集合键 `licenses`→`items`，新增 `page/pageSize/totalPages`。
+> 此前服务层只在 `page>0 && pageSize>0` 时才分页，因此不带页码（或把页码写成非数字，handler
+> 会吞掉转换错误传 0）会把该租户的许可证全表读出来；现在缺省与非法值一律回落 1/20。
 
 ### 获取许可证详情
 

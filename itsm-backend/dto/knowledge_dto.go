@@ -152,20 +152,3 @@ type SessionHeartbeatRequest struct {
 	SessionToken string `json:"sessionToken" binding:"required"`
 	CursorPos    *int   `json:"cursorPosition"`
 }
-
-// ArticleParticipantResponse 参与者响应
-type ArticleParticipantResponse struct {
-	UserID       int       `json:"userId"`
-	UserName     string    `json:"userName"`
-	Avatar       string    `json:"avatar"`
-	CursorPos    int       `json:"cursorPosition"`
-	IsActive     bool      `json:"isActive"`
-	JoinedAt     time.Time `json:"joinedAt"`
-	LastActivity time.Time `json:"lastActivity"`
-}
-
-// ListParticipantsResponse 参与者列表响应
-type ListParticipantsResponse struct {
-	Participants []ArticleParticipantResponse `json:"participants"`
-	Total        int                          `json:"total"`
-}

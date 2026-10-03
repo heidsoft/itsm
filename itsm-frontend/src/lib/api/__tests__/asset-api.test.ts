@@ -20,11 +20,20 @@ describe('AssetApi', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('getAssets', () => {
-    it('should get asset list', async () => {
-      mockGet.mockResolvedValue({ assets: [{ id: 1, name: 'Server' }], total: 1 });
-      const result = await AssetApi.getAssets({ page: 1 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/assets', { page: 1 });
-      expect(result.assets).toHaveLength(1);
+    it('reads the platform items envelope and never the assets key', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, name: 'Server' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+      const result = await AssetApi.getAssets({ page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/assets', { page: 1, pageSize: 20 });
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.totalPages).toBe(1);
+      expect(result).not.toHaveProperty('assets');
     });
   });
 
@@ -97,11 +106,19 @@ describe('AssetApi', () => {
   });
 
   describe('getLicenses', () => {
-    it('should get license list', async () => {
-      mockGet.mockResolvedValue({ licenses: [{ id: 1, name: 'Office' }], total: 1 });
-      const result = await AssetApi.getLicenses({ page: 1 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/licenses', { page: 1 });
-      expect(result.licenses).toHaveLength(1);
+    it('reads the platform items envelope and never the licenses key', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, name: 'Office' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+      const result = await AssetApi.getLicenses({ page: 1, pageSize: 20 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/licenses', { page: 1, pageSize: 20 });
+      expect(result.items).toHaveLength(1);
+      expect(result.totalPages).toBe(1);
+      expect(result).not.toHaveProperty('licenses');
     });
   });
 

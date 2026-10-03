@@ -68,8 +68,8 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
         ...query,
         ...values,
       });
-      setData(resp.assets || []);
-      setTotal(resp.total || 0);
+      setData(resp.items);
+      setTotal(resp.total);
     } catch (error) {
       setLoadError(true);
       message.error('加载资产列表失败');

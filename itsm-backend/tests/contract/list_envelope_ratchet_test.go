@@ -67,19 +67,20 @@ type listEnvelope struct {
 // 2026-10-03 E4-6f 移除 service_dto.go|ServiceCatalogListResponse|catalogs：四个 URL
 // （/service-catalog、/service-catalogs、/service-catalog-services、/service-catalogs/search）
 // 共用同一个 h.List/h.Search，实测都做 Count + Offset/Limit，集合键统一为 items。
+// 2026-10-04 E4-6g 移除 asset_dto.go|AssetListResponse|assets 与
+// asset_license_dto.go|LicenseListResponse|licenses：两个端点都做 Count + Offset/Limit，
+// 但许可列表连 page/pageSize/totalPages 都没有，且服务层的 `if page>0 && pageSize>0`
+// 让漏写的调用方拿到整表；同时删除零引用的 ListParticipantsResponse 与
+// MSPReportListResponse（按 E4-3 口径删除而不是改名保留）。
 var envelopeBaseline = []string{
-	"asset_dto.go|AssetListResponse|assets",
-	"asset_license_dto.go|LicenseListResponse|licenses",
 	"auditlog_dto.go|ListAuditLogsResponse|logs",
 	"change_dto.go|ChangeListResponse|changes",
 	"cloud_dto.go|CloudAccountListResponse|cloudAccounts",
 	"cloud_dto.go|CloudResourceListResponse|cloudResources",
 	"cloud_dto.go|CloudServiceListResponse|cloudServices",
-	"knowledge_dto.go|ListParticipantsResponse|participants",
 	"menu_dto.go|MenuListResponse|menus",
 	"msp_dto.go|MSPAllocationListResponse|allocations",
 	"msp_dto.go|MSPCustomerListResponse|customers",
-	"msp_dto.go|MSPReportListResponse|reports",
 	"release_dto.go|ReleaseListResponse|releases",
 	"role_dto.go|RoleListResponse|roles",
 	"tenant_dto.go|TenantListResponse|tenants",

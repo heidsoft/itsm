@@ -467,6 +467,45 @@ cd itsm-backend && go test ./handlers/service_catalog/ ./tests/contract/
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/service-catalog-api.test.ts
 ```
 
+### 1.16 资产/许可证列表信封收敛与第三个页长所有者删除（2026-10-04，破坏性）
+
+| 端点 | 旧响应 | 新响应 |
+| --- | --- | --- |
+| `GET /api/v1/assets` | `{total, assets, page, pageSize, totalPages}` | `{items, total, page, pageSize, totalPages}` |
+| `GET /api/v1/licenses` | `{total, licenses}`（只有两键，无分页回显） | `{items, total, page, pageSize, totalPages}` |
+
+这两个端点原先有**三套**页长真相同时生效，且 `licenses` 那条会静默读整表：
+
+| 项目 | 旧行为 | 新行为 |
+| --- | --- | --- |
+| `assets` 缺省页长 | handler `DefaultQuery("pageSize","10")` → **10**，服务层再判 `<1 或 >100 → 20` | **20**（`common.GetPaginationFromQuery` 单点） |
+| `assets ?pageSize=150` | handler 自称允许到 200 并放行，服务层判 `>100` 静默改成 **20** | HTTP 200 / code 0，回落默认页长 **20**（只采纳 `(0,100]`） |
+| `assets ?pageSize=201` / `?page=abc` | handler 手写 `strconv.Atoi` 失败 → **HTTP 400 / code 4000** | HTTP 200 / code 0，回落 1/20，不再用 400 表达「参数写错」 |
+| `licenses ?page=abc` | handler 用 `page, _ := strconv.Atoi(...)` **吞掉错误**传 0；服务层条件是 `if page > 0 && pageSize > 0` 才加 `Offset/Limit` → 条件为假，**不带 `LIMIT` 把该租户许可证整表读出** | 无条件分页，非法页码回落 1，页长回落 20 |
+| `licenses` 非 HTTP 调用方 | 传 0/0 即等价于「不加 LIMIT」 | `common.ValidatePagination` 兜底（缺省 1/10） |
+| 排序 | `created_at DESC`（非唯一列，同秒数据页边界归属不确定） | `created_at DESC, id ASC` |
+| 空结果 | `"assets": null` / `"licenses": null` | `"items": []` |
+
+同一批删除三条**零引用死声明**（只被棘轮基线和自身测试引用，不是 HTTP 契约的一部分）：
+`dto.ListParticipantsResponse` 与其元素类型 `dto.ArticleParticipantResponse`（知识文章参与者：
+没有注册路由、没有 service 方法、前端无调用方），以及泛型 `dto.MSPReportListResponse[T]`
+（活的 MSP 报表信封是别的结构体）。按 E4-3 口径直接删除而非改名保留。
+
+**集成方必须改的两件事**：
+1. 把 `data.assets` / `data.licenses` 改成 `data.items`，`licenses` 端点现在开始回显
+   `page`/`pageSize`/`totalPages`，可以直接用它判断是否还有下一页。
+2. 原先依赖「`pageSize` 越大取得越多」或「非法参数返回 400」的调用方需要重看：越界与非法值
+   现在都是 HTTP 200 + code 0 + 默认页长 20，想取全量必须翻页。
+   前端 `AssetList`/`LicenseList` 已改为直接读五键信封，并删掉 `|| []`、`|| 0` 兜底
+   （`total: 0` 是合法值，兜底会把「无数据」与「请求失败」混为一谈）。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run "TestAssetAndLicenseListRoutesEnvelopeAndPagination|TestAssetListDTOKeys"
+cd itsm-backend && go test ./service/ -run TestAsset && go test ./tests/contract/
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/asset-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

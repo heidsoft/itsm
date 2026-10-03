@@ -91,10 +91,13 @@ type LicenseResponse struct {
 	UpdatedAt         time.Time `json:"updatedAt"`         // 更新时间
 }
 
-// LicenseListResponse 许可证列表响应
+// LicenseListResponse 许可证列表响应（平台五键信封）
 type LicenseListResponse struct {
-	Total    int               `json:"total"`    // 总数
-	Licenses []LicenseResponse `json:"licenses"` // 许可证列表
+	Items      []LicenseResponse `json:"items"`
+	Total      int               `json:"total"`      // 总数
+	Page       int               `json:"page"`       // 当前页
+	PageSize   int               `json:"pageSize"`   // 每页数量
+	TotalPages int               `json:"totalPages"` // 总页数
 }
 
 // LicenseStatsResponse 许可证统计响应

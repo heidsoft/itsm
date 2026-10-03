@@ -111,10 +111,10 @@ type AssetResponse struct {
 	UpdatedAt       time.Time         `json:"updatedAt"`       // 更新时间
 }
 
-// AssetListResponse 资产列表响应
+// AssetListResponse 资产列表响应（平台五键信封）
 type AssetListResponse struct {
+	Items      []AssetResponse `json:"items"`
 	Total      int             `json:"total"`      // 总数
-	Assets     []AssetResponse `json:"assets"`     // 资产列表
 	Page       int             `json:"page"`       // 当前页
 	PageSize   int             `json:"pageSize"`   // 每页数量
 	TotalPages int             `json:"totalPages"` // 总页数

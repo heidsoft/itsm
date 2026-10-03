@@ -174,11 +174,6 @@ type MSPCustomerListResponse struct {
 	Total     int            `json:"total"`
 }
 
-type MSPReportListResponse[T any] struct {
-	Reports []T `json:"reports"`
-	Total   int `json:"total"`
-}
-
 // ==================== 查询参数 DTO ====================
 
 // MSPAllocationQueryParam MSP 分配查询参数

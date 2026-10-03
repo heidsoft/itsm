@@ -3,6 +3,7 @@
  */
 
 import { httpClient } from './http-client';
+import type { PaginationResponse } from './types';
 
 // 资产状态类型
 export type AssetStatus = 'available' | 'in-use' | 'maintenance' | 'retired' | 'disposed';
@@ -73,10 +74,7 @@ export interface Asset {
 }
 
 // 资产列表响应
-export interface AssetListResponse {
-  total: number;
-  assets: Asset[];
-}
+export type AssetListResponse = PaginationResponse<Asset>;
 
 // 资产统计响应
 export interface AssetStatsResponse {
@@ -166,10 +164,7 @@ export interface License {
 }
 
 // 许可证列表响应
-export interface LicenseListResponse {
-  total: number;
-  licenses: License[];
-}
+export type LicenseListResponse = PaginationResponse<License>;
 
 // 许可证统计响应
 export interface LicenseStatsResponse {

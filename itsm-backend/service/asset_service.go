@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/asset"
@@ -83,12 +84,9 @@ func (s *AssetService) GetAssetByID(ctx context.Context, id, tenantID int) (*dto
 
 // ListAssets 获取资产列表
 func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageSize int, assetType, status, category string) (*dto.AssetListResponse, error) {
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
-	}
+	// HTTP 入口已用 common.GetPaginationFromQuery 归一，这里的一道只兜非 HTTP 调用方，
+	// 避免绕过 controller 时 Limit(0) 变成整表查询。
+	page, pageSize = common.ValidatePagination(page, pageSize)
 	query := s.client.Asset.Query().Where(asset.TenantIDEQ(tenantID))
 
 	if assetType != "" {
@@ -102,35 +100,31 @@ func (s *AssetService) ListAssets(ctx context.Context, tenantID int, page, pageS
 	}
 
 	// 统计总数
-	total, err := query.Count(ctx)
+	total, err := query.Clone().Count(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to count assets", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to count assets: %w", err)
 	}
 
-	// 分页查询。服务层强制上限，避免调用方绕过 controller 触发无界查询。
 	offset := (page - 1) * pageSize
-	query = query.Offset(offset).Limit(pageSize)
-
-	assetEntities, err := query.Order(ent.Desc(asset.FieldCreatedAt)).All(ctx)
+	// created_at 非唯一，缺 ID 并列键时翻页归属由数据库返回顺序决定，会重或漏。
+	assetEntities, err := query.
+		Offset(offset).
+		Limit(pageSize).
+		Order(ent.Desc(asset.FieldCreatedAt), ent.Asc(asset.FieldID)).
+		All(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to list assets", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list assets: %w", err)
 	}
 
-	assets := dto.ToAssetResponseList(assetEntities)
-
-	totalPages := 0
-	if pageSize > 0 {
-		totalPages = (total + pageSize - 1) / pageSize
-	}
-
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.AssetListResponse{
+		Items:      dto.ToAssetResponseList(assetEntities),
 		Total:      total,
-		Assets:     assets,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: totalPages,
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

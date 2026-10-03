@@ -67,8 +67,8 @@ const LicenseList: React.FC = () => {
         ...query,
         ...values,
       });
-      setData(resp.licenses || []);
-      setTotal(resp.total || 0);
+      setData(resp.items);
+      setTotal(resp.total);
     } catch (error) {
       message.error('加载许可证列表失败');
     } finally {

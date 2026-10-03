@@ -50,21 +50,15 @@ func (h *Handler) ListAssets(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil || page < 1 {
-		common.Fail(c, common.BadRequestCode, "page 必须是正整数")
-		return
-	}
-	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
-	if err != nil || pageSize < 1 || pageSize > 200 {
-		common.Fail(c, common.BadRequestCode, "pageSize 必须在 1 到 200 之间")
-		return
-	}
+	// 页长规则由 common.GetPaginationFromQuery 单点负责：缺省 1/20，只采纳 (0,100]，
+	// 越界或写错一律回落默认页长（原实现允许 pageSize 到 200，而服务层又夹到 100，
+	// 两套真相同时存在）。
+	pagination := common.GetPaginationFromQuery(c)
 	assetType := c.Query("type")
 	status := c.Query("status")
 	category := c.Query("category")
 
-	assets, err := h.svc.ListAssets(c.Request.Context(), tenantID, page, pageSize, assetType, status, category)
+	assets, err := h.svc.ListAssets(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, assetType, status, category)
 	if err != nil {
 		h.logger.Errorw("List assets failed", "error", err, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")
@@ -297,12 +291,11 @@ func (h *Handler) ListLicenses(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	pagination := common.GetPaginationFromQuery(c)
 	licenseType := c.Query("type")
 	status := c.Query("status")
 
-	licenses, err := h.licenseSvc.ListLicenses(c.Request.Context(), tenantID, page, pageSize, licenseType, status)
+	licenses, err := h.licenseSvc.ListLicenses(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, licenseType, status)
 	if err != nil {
 		h.logger.Errorw("List licenses failed", "error", err, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")

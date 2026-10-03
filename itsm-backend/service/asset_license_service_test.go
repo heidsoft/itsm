@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
 
@@ -166,11 +167,16 @@ func TestAssetLicenseService_ListLicenses(t *testing.T) {
 
 	// 测试获取列表
 	t.Run("获取所有许可证", func(t *testing.T) {
+		// 0/0 是「调用方没写分页」的形态。原实现在这里连 Offset/Limit 都不加，
+		// 直接把该租户整表读出来；现在一律归一后再分页。
 		result, err := licenseService.ListLicenses(ctx, testTenant.ID, 0, 0, "", "")
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, 2, result.Total)
-		assert.Equal(t, 2, len(result.Licenses))
+		assert.Equal(t, 2, len(result.Items))
+		assert.Equal(t, 1, result.Page)
+		assert.Equal(t, common.DefaultPageSize, result.PageSize)
+		assert.Equal(t, 1, result.TotalPages)
 	})
 
 	// 测试按类型过滤
@@ -179,7 +185,7 @@ func TestAssetLicenseService_ListLicenses(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, 1, result.Total)
-		assert.Equal(t, "subscription", result.Licenses[0].LicenseType)
+		assert.Equal(t, "subscription", result.Items[0].LicenseType)
 	})
 
 	// 测试分页
@@ -188,7 +194,8 @@ func TestAssetLicenseService_ListLicenses(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, 2, result.Total)
-		assert.Equal(t, 1, len(result.Licenses))
+		assert.Equal(t, 1, len(result.Items))
+		assert.Equal(t, 2, result.TotalPages, "总页数必须由 total 与生效页长算出")
 	})
 }
 
