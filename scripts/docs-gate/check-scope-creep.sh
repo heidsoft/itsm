@@ -42,6 +42,11 @@
 #         新增能力域前，必须先把一个既有的「预览」转成「可用」。
 #   C.7.3 规划能力面冻结：ROADMAP v2.0 + v3.0 未勾选项总数只减不增。
 #         想开新能力面，先关掉一个老的。
+#   C.7.4 文件级孤儿检测：`src/components/**` 与 `src/lib/api/**` 中不被任何
+#         `src/app/**` 页面（含其传递引用）到达的文件。通过 BFS 从所有 app router
+#         入口点（page.tsx/layout.tsx/loading.tsx/error.tsx + 根 layout + middleware）
+#         出发，解析静态/动态 import 构建可达集合，报告不可达文件。首版为 advisory
+#         （仅 WARN 不 FAIL），等 R5 人工复核清理后再转 blocking。
 #
 # 豁免（waiver）
 # -------------
@@ -245,6 +250,33 @@ if [ "$future_now" -gt "$future_base" ]; then
   fail "未来规划条目增加：${future_now} > 基线 ${future_base}。想开新能力面，先划掉一个老的；v2.0/v3.0 在预览域清零前不得扩容。"
 else
   pass "未来规划条目未增加（${future_now} ≤ ${future_base}）"
+fi
+
+# ---------------------------------------------------------------- C.7.4
+say "-- C.7.4 文件级孤儿检测（src/components/** 与 src/lib/api/** 不可达文件）"
+
+ORPHAN_HELPER="$SCRIPT_DIR/find-frontend-orphans.py"
+ORPHAN_LIST=""
+ORPHAN_COUNT=0
+if [ -f "$ORPHAN_HELPER" ] && command -v python3 >/dev/null 2>&1; then
+  ORPHAN_LIST="$(python3 "$ORPHAN_HELPER" "$FRONTEND_DIR" 2>/dev/null)" || ORPHAN_LIST=""
+  if [ -n "$ORPHAN_LIST" ]; then
+    ORPHAN_COUNT="$(printf '%s\n' "$ORPHAN_LIST" | grep -c .)"
+  fi
+fi
+
+say "  -- 检出不可达文件 ${ORPHAN_COUNT} 个"
+
+if [ "$ORPHAN_COUNT" -gt 0 ]; then
+  # 首版设为 advisory：只报告不阻断，等 R5 人工复核清理后再转 blocking。
+  # 理由：check-scope-creep.sh:22-33 的教训——静态检测假阳性会逼人删掉正确的东西。
+  while IFS= read -r orphan; do
+    [ -n "$orphan" ] || continue
+    warn "不可达文件：${orphan}"
+  done <<< "$ORPHAN_LIST"
+  say "  -- C.7.4 当前为 advisory 模式（仅报告，不阻断）"
+else
+  pass "无文件级孤儿"
 fi
 
 # ---------------------------------------------------------------- 汇总

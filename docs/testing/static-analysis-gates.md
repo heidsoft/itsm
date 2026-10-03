@@ -421,6 +421,38 @@ exit 1（缺类别按 0 处理）。`npm run lint:antd -- --list` 打印全部 f
 
 ---
 
+## 5.12 — 文件级孤儿检测（C.7.4）
+
+**目的**：发现 `src/components/**` 与 `src/lib/api/**` 中不被任何 `src/app/**` 页面到达的文件。
+
+**脚本**：`scripts/docs-gate/check-scope-creep.sh` 的 C.7.4 段，委托 `scripts/docs-gate/find-frontend-orphans.py` 执行 BFS 可达性分析。
+
+**算法**：
+1. 种子：`src/app/**` 下所有 `.tsx/.ts` 文件 + 根 `layout.tsx` + `middleware.ts`
+2. 从种子出发，解析静态 `import`/`export from`、动态 `import()`、`require()` 三种形式
+3. 解析 `@/` 别名到 `src/`，相对路径按当前文件位置展开，尝试 `.ts`/`.tsx`/`index.ts`/`index.tsx` 四种后缀
+4. BFS 遍历构建可达文件集合
+5. 扫描 `src/components/**` 和 `src/lib/api/**`，报告不在可达集合中的文件
+
+**当前状态**：advisory（仅 WARN，不阻断）。原因：`check-scope-creep.sh:22-33` 记录的教训——静态检测假阳性会逼人删掉正确的东西。需要 R5 人工复核清理后再转 blocking。
+
+**用法**：
+
+```bash
+# 仅报告（advisory）
+./scripts/docs-gate/check-scope-creep.sh --advisory
+
+# 单独运行孤儿检测
+python3 scripts/docs-gate/find-frontend-orphans.py itsm-frontend
+```
+
+**已知限制**：
+- 不识别 `React.lazy(() => import(...))` 以外的间接动态引用
+- barrel 文件（`index.ts`）的 re-export 链会被跟踪，但如果 barrel 自身不可达，其下所有文件都报为孤儿
+- 测试文件（`__tests__/`、`*.test.tsx`）不作为种子，因此只被测试引用的生产文件会报为孤儿（这通常是正确的——如果生产代码只被测试引用，说明生产侧确实没用到）
+
+---
+
 ## 升级 advisory → hard 的条件
 
 当以下条件同时满足时，对应门禁切换为硬门禁（`exit 1`）：
