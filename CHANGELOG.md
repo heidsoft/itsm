@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
+- **`lint:antd` 弃用 API 门禁从 3 类补齐到 9 类，并加组件归属判定与基线棘轮（5.11）** — 原脚本只覆盖 `Space direction=`、`Tabs.TabPane`、`Form.*` 三类全局文本，`visible`/`destroyOnClose`/`bodyStyle`/`overlay`/`dropdownRender`/`onDropdownVisibleChange` 六类（Modal/Drawer/Dropdown/Card/Select 的 v4/v5 遗留 API）完全无门禁。现在六类 prop 只在本文件从 `'antd'` 具名导入（含 `as` 别名）的组件标签上判定：提取开标签 → 剥离 `{...}` 与引号串 → 按裸属性名匹配，布尔简写与值形式都命中，表达式内同名词（`title={visible ? ...}`）与项目自有同名组件不误报；弃用面逐一对照 antd 6.2.2 `.d.ts` @deprecated 注释核实。命中数与 `tools/antd-legacy-baseline.txt` 棘轮比较，超基线 exit 1、低于基线提示收紧，`--list` 打印明细。正反探针验证：六类各造一例全部命中（含布尔简写），自有组件零误报；真实存量仅 `bodyStyle 5`（`AISuggestionPanel.tsx` ×4 + `LazyLoadWrapper.tsx` ×1），已登记基线。文档见 [static-analysis-gates.md](./docs/testing/static-analysis-gates.md) §5.11；仍为本地门禁（frontend-ci 只跑 eslint），接 CI 前需先清掉这 5 处存量。
 - **发布流程优化** — 新增 `scripts/prepare-release.sh` 发布准备脚本（支持 `--dry-run` / `--tag-only`），自动校验 CHANGELOG 条目、提取 release notes、创建 annotated tag 并推送；`release.yml` 新增 `workflow_dispatch` 手动重跑能力（输入已有 tag 即可重新触发发布），CHANGELOG 提取的 release notes 替代 GitHub 自动生成笔记（缺失时回退），Release 完成后输出 `$GITHUB_STEP_SUMMARY` 汇总所有产物链接
 
 ## [1.6.11] - 2026-10-03

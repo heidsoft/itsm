@@ -3,8 +3,9 @@
 > Status: current
 
 本文档定义了 Stage 5 的静态门禁。每条门禁对应一个
-shell 脚本，位于 `scripts/static-gates/`；`run-all.sh` 只聚合后端契约类门禁
-（5.1–5.5 与 5.10），前端门禁 5.6–5.9 需单独调用对应脚本，见「接入位置」。
+shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-frontend/tools/`）；
+`run-all.sh` 只聚合后端契约类门禁
+（5.1–5.5 与 5.10），前端门禁 5.6–5.9 与 5.11 需单独调用对应脚本，见「接入位置」。
 
 | # | 规则 | 脚本 | 状态 | 阻断构建 |
 |---|------|------|------|---------|
@@ -18,6 +19,7 @@ shell 脚本，位于 `scripts/static-gates/`；`run-all.sh` 只聚合后端契�
 | 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh` | ADVISORY | ❌ |
 | 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh` | ADVISORY | ❌ |
 | 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
+| 5.11 | Ant Design v4/v5 弃用 API 零新增（9 类，组件归属判定 + 基线棘轮） | `itsm-frontend/tools/check-antd-legacy.sh` | HARD（本地棘轮） | ❌（未接 CI） |
 
 > 5.6–5.9 迁移自 [`docs/review/frontend-ux-review-2026-06-19.md`](../review/frontend-ux-review-2026-06-19.md) 与 [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md)；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
 
@@ -370,6 +372,52 @@ common.SuccessWithList(c, tickets, total, page, pageSize)
 // 正例 2：全量列表只带诚实的子集
 common.Success(c, gin.H{"items": normalized, "total": len(normalized)})
 ```
+
+---
+
+## 5.11 — Ant Design 弃用 API 零新增（lint:antd）
+
+**目的**：项目使用 antd v6，v4/v5 遗留 API 禁止新增（AGENTS.md「Ant Design v6 旧 API
+零新增规则」）。原脚本只覆盖 3 类全局文本模式，`visible=`/`destroyOnClose`/`bodyStyle`/
+`overlay`/`dropdownRender`/`onDropdownVisibleChange` 六类完全无门禁。2026-10-03 补齐。
+
+**接入**：`cd itsm-frontend && npm run lint:antd`（本地门禁；frontend-ci 只跑 eslint，
+未接 CI）。
+
+**两层检测**：
+
+1. **全局模式**（历史行为不变，按行匹配）：`Space direction=`、`<Tabs.TabPane`、
+   `Form.(Input|TextArea|Select|DatePicker|Radio|Checkbox)` 复合组件。
+2. **组件归属模式**：六类 prop 仅当 JSX 标签是**本文件从 `'antd'` 具名导入**（含
+   `as` 别名与 `import type`）的组件时才判违规。项目自有组件可以合法拥有同名
+   prop（如自研 `Drawer` 的 `visible`），归属由 import 决定，不做全局文本误伤。
+
+   判定算法：提取 `<Alias` 到下一个 `>` 的开标签区域 → 迭代剥离平衡 `{...}` 与
+   引号字符串 → 对剩余裸属性名匹配。因此布尔简写（`<Drawer destroyOnClose`）与
+   值形式（`visible={x}`）都能命中，而表达式内部的同名词（`title={visible ? ...}`、
+   `a.visible ===`）不会误报。
+
+**弃用面**（已逐一对照 `node_modules/antd` 6.2.2 的 `.d.ts` @deprecated 注释核实）：
+
+| 类别 | 触发组件 | 替换 |
+|------|---------|------|
+| `visible` | Modal / Drawer（v6 已移除） | `open` |
+| `destroyOnClose` | Modal / Drawer | `destroyOnHidden` |
+| `bodyStyle` | Card / Modal / Drawer | `styles={{ body }}` |
+| `overlay` | Dropdown（v6 已移除） | `menu` |
+| `dropdownRender` | Select / TreeSelect / AutoComplete / Cascader / Dropdown | `popupRender` |
+| `onDropdownVisibleChange` | Select / TreeSelect / AutoComplete / Cascader | `onOpenChange` |
+
+**基线棘轮**：各类别命中数与 `itsm-frontend/tools/antd-legacy-baseline.txt` 比较——
+超过基线 → exit 1；低于基线 → 提示收紧（只许降不许升）；新类别命中且未登记 →
+exit 1（缺类别按 0 处理）。`npm run lint:antd -- --list` 打印全部 file:line 明细，
+用于收紧基线前核对。
+
+**当前状态**：✅ 通过。基线登记于 2026-10-03：仅 `bodyStyle 5`
+（`src/components/business/AISuggestionPanel.tsx` ×4 + `src/components/common/LazyLoadWrapper.tsx`
+×1，均为 Card 的旧式 `bodyStyle`，待迁移为 `styles={{ body }}` 后同步下调基线），
+其余 8 类为 0。检测逻辑经正反探针验证：六类各造一例违规全部命中（含布尔简写），
+项目自有同名组件零误报。
 
 ---
 
