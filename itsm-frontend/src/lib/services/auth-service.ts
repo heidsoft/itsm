@@ -177,7 +177,7 @@ export class AuthService {
     }
   }
 
-  // 注册
+  // 注册（角色由服务端固定指派 end_user，不接受前端指定）
   static async register(params: {
     username: string;
     email: string;
@@ -185,7 +185,6 @@ export class AuthService {
     fullName: string;
     phone?: string;
     company?: string;
-    role?: string;
   }): Promise<boolean> {
     try {
       await this.makeRequest<{ id: number; username: string; email: string; message: string }>(
@@ -199,7 +198,6 @@ export class AuthService {
             fullName: params.fullName,
             phone: params.phone,
             company: params.company,
-            role: params.role,
           }),
         }
       );

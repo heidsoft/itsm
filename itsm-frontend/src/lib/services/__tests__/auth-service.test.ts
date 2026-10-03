@@ -265,10 +265,13 @@ describe('AuthService', () => {
         fullName: 'New User',
         phone: '1234567890',
         company: 'Test Company',
-        role: 'user',
       });
 
       expect(result).toBe(true);
+      // P0-1：注册是未认证入口，角色与租户由服务端决定，请求体不得携带同名字段
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      expect(body).not.toHaveProperty('role');
+      expect(body).not.toHaveProperty('tenantCode');
     });
 
     it('should return false on registration failure', async () => {

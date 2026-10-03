@@ -26,7 +26,6 @@ import {
   Divider,
   ConfigProvider,
   message,
-  Select,
   Alert,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
@@ -67,7 +66,6 @@ export default function RegisterPage() {
         fullName: values.fullName,
         phone: values.phone,
         company: values.company,
-        role: values.role,
       });
 
       if (success) {
@@ -256,19 +254,6 @@ export default function RegisterPage() {
                       placeholder={t('auth.register.companyPlaceholder')}
                       disabled={loading}
                     />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="role"
-                    label={t('auth.register.roleLabel')}
-                    rules={[{ required: true, message: t('auth.register.roleRequired') }]}
-                  >
-                    <Select placeholder={t('auth.register.rolePlaceholder')} disabled={loading}>
-                      <Select.Option value="developer">开发人员</Select.Option>
-                      <Select.Option value="manager">项目经理</Select.Option>
-                      <Select.Option value="admin">系统管理员</Select.Option>
-                      <Select.Option value="user">普通用户</Select.Option>
-                    </Select>
                   </Form.Item>
 
                   <Form.Item>
