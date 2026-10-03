@@ -15,13 +15,12 @@ import {
   Popover,
   Collapse,
   Typography,
-  message,
 } from 'antd';
-import { Search, Filter, Save, RotateCcw } from 'lucide-react';
-import type { FormInstance } from 'antd';
+import { Search, Filter, RotateCcw } from 'lucide-react';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import { AppDateRangePicker } from '@/components/ui/AppDatePicker';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
@@ -71,13 +70,6 @@ export interface AdvancedSearchFilters {
   metadata?: Record<string, unknown>;
 }
 
-interface SavedSearch {
-  id: number;
-  name: string;
-  filters: Partial<AdvancedSearchFilters>;
-  createdAt: string;
-}
-
 export interface TicketAdvancedSearchProps {
   onSearch: (filters: AdvancedSearchFilters) => void;
   onReset: () => void;
@@ -121,14 +113,16 @@ const TICKET_SOURCE_OPTIONS = [
   { label: '手动', value: 'manual' },
 ];
 
-// 预设搜索模板
+// 预设搜索模板 — assigneeId 使用 CURRENT_USER_ID 占位符，在 applyTemplate 时由认证上下文替换
+const CURRENT_USER_ID = Symbol('currentUserId');
+
 const SEARCH_TEMPLATES = [
   {
     name: '我的待办工单',
     description: '分配给我且未完成的工单',
     filters: {
       status: ['new', 'open', 'in_progress'],
-      assigneeId: 1, // 当前用户ID
+      assigneeId: CURRENT_USER_ID as unknown as number,
     },
   },
   {
@@ -171,7 +165,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [activeTemplate, setActiveTemplate] = useState<string>('');
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+  const currentUserId = useAuthStore(state => state.user?.id);
 
   // 快速日期范围（需要在面板定义之前）
   const quickDateRanges: RangePickerProps['ranges'] = {
@@ -322,31 +316,22 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
     </Row>
   );
 
-  // 应用搜索模板
+  // 应用搜索模板 — 将 CURRENT_USER_ID 占位符替换为实际用户 ID
   const applyTemplate = useCallback(
     (template: (typeof SEARCH_TEMPLATES)[0]) => {
-      form.setFieldsValue(template.filters);
+      const resolvedFilters: Record<string, unknown> = { ...template.filters };
+      if (resolvedFilters.assigneeId === (CURRENT_USER_ID as unknown)) {
+        if (currentUserId != null) {
+          resolvedFilters.assigneeId = currentUserId;
+        } else {
+          delete resolvedFilters.assigneeId;
+        }
+      }
+      form.setFieldsValue(resolvedFilters);
       setActiveTemplate(template.name);
     },
-    [form]
+    [form, currentUserId]
   );
-
-  // 保存当前搜索条件
-  const saveSearch = useCallback(() => {
-    const values = form.getFieldsValue() as Partial<AdvancedSearchFilters>;
-    const searchName = `搜索_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}`;
-
-    setSavedSearches(prev => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: searchName,
-        filters: values,
-        createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      },
-    ]);
-    message.success('搜索条件已保存');
-  }, [form]);
 
   // 执行搜索
   const handleSearch = useCallback(() => {
@@ -380,16 +365,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   return (
     <Card
       title={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Filter className="mr-2" />
-            <span>高级搜索</span>
-          </div>
-          <Space>
-            <Button size="small" icon={<Save />} onClick={saveSearch}>
-              保存搜索
-            </Button>
-          </Space>
+        <div className="flex items-center">
+          <Filter className="mr-2" />
+          <span>高级搜索</span>
         </div>
       }
       size="small"
@@ -438,22 +416,6 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
               重置
             </Button>
           </Space>
-
-          {savedSearches.length > 0 && (
-            <Select
-              placeholder="已保存的搜索"
-              style={{ width: 200 }}
-              onChange={value => {
-                const search = savedSearches.find(s => s.id === value);
-                if (search) {
-                  form.setFieldsValue(search.filters);
-                }
-              }}
-              allowClear
-             options={savedSearches.map(search => ({ value: search.id, label: <>
-                  {search.name} ({dayjs(search.createdAt).fromNow()})
-                </> }))} />
-          )}
         </div>
       </Form>
     </Card>

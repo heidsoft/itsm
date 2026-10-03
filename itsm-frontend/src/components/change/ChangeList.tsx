@@ -78,7 +78,6 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
       form.setFieldsValue({
         search: search || undefined,
         status: status || undefined,
-        type: undefined, // risk在API中可能对应type，这里先不处理
       });
       setQuery(prev => ({ ...prev, page: 1 }));
     }
@@ -91,6 +90,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
       const resp = await ChangeApi.getChanges({
         ...query,
         ...values,
+        riskLevel: risk || undefined,
       });
       setData(resp.items as unknown as Change[]);
       setTotal(resp.total);

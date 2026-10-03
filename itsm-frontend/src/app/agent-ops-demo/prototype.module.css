@@ -1,3 +1,16 @@
+.demoBanner {
+  position: relative;
+  z-index: 4;
+  padding: 10px 30px;
+  background: #fff3cd;
+  border-bottom: 2px solid #ffc107;
+  color: #664d03;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+
 .shell {
   --ink: #111916;
   --muted: #6e7974;

@@ -65,6 +65,9 @@ export default function AgentOpsDemoPage() {
   return (
     <main className={styles.shell}>
       <div className={styles.gridGlow} />
+      <div className={styles.demoBanner}>
+        演示原型 · 所有数据、指标与操作记录均为虚构，不代表真实系统状态
+      </div>
       <header className={styles.topbar}>
         <div className={styles.brand}>
           <span className={styles.brandMark}><CircleDot size={18} /></span>
