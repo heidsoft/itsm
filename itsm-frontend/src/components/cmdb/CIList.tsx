@@ -8,7 +8,7 @@
  *  - useDeleteCIMutation 成功后自动 invalidate 列表
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   Table,
   Tag,
@@ -69,28 +69,33 @@ const CIList: React.FC = () => {
   const data = useMemo(() => listQuery.data?.items ?? [], [listQuery.data]);
   const total = useMemo(() => listQuery.data?.total ?? 0, [listQuery.data]);
 
-  // React Query：CI 类型列表（缓存 10 分钟，避免重复请求）
   const typesQuery = useCITypesQuery();
-  const types: CIType[] = useMemo(() => {
-    const res = typesQuery.data as unknown;
-    if (!res) return [];
-    const list = (res as any)?.items ?? [];
-    return Array.isArray(list) ? list : [];
-  }, [typesQuery.data]);
+  const types: CIType[] = useMemo(() => typesQuery.data ?? [], [typesQuery.data]);
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // 搜索框变化：300ms 防抖后自动查询（节流）
+  // 搜索框变化：300ms 防抖后自动查询
+  // - searchInput 作为受控值提供即时输入反馈
+  // - filters.search 在防抖延迟后才更新，驱动 React Query 重新请求
+  // - 用 useRef 持有 timeout ID，新输入前清理旧定时器，避免重复请求
   const [searchInput, setSearchInput] = useState('');
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // 组件卸载时清理未触发的防抖定时器，避免对已卸载组件 setState
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, []);
+
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
-    // React Query 由 queryKey 驱动，filters.search 通过 useMemo 派生；
-    // 防抖通过延迟设置 filters 实现。
-    const t = setTimeout(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
       setFilters(prev => ({ ...prev, search: value }));
       if (query.page !== 1) setQuery(prev => ({ ...prev, page: 1 }));
+      searchTimerRef.current = null;
     }, 300);
-    return () => clearTimeout(t);
   };
 
   // 下拉筛选变化：即时自动查询
@@ -278,7 +283,7 @@ const CIList: React.FC = () => {
           <Input
             placeholder="搜索名称/序列号"
             allowClear
-            value={filters.search}
+            value={searchInput}
             onChange={event => handleSearchInputChange(event.target.value)}
             onClear={() => handleSearchInputChange('')}
             prefix={<Search className="text-gray-400" />}

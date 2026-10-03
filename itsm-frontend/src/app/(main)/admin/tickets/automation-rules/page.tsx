@@ -116,7 +116,7 @@ const AutomationRulesPage: React.FC = () => {
       const ruleData: CreateAutomationRuleRequest | UpdateAutomationRuleRequest = {
         name: values.name,
         description: values.description,
-        priority: values.priority || 1,
+        priority: values.priority ?? 1,
         isActive: values.isActive,
         conditions: values.conditions || [],
         actions: values.actions || [],

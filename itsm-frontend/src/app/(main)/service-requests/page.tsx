@@ -13,6 +13,7 @@ const priorityColors: Record<string, string> = {
   '高': 'red',
   '中': 'orange',
   '低': 'default',
+  '-': 'default',
 };
 
 export default function ServiceRequestsPage() {
@@ -41,7 +42,8 @@ export default function ServiceRequestsPage() {
         title: r.title || r.catalog?.name || '服务请求',
         applicant: r.requester?.name || r.requester?.username || '-',
         date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-',
-        priority: '中',
+        // 服务请求模型暂未包含 priority 字段，展示占位而非硬编码「中」
+        priority: r.priority ? String(r.priority) : '-',
       })));
 
       const requests = allRequests.requests || [];

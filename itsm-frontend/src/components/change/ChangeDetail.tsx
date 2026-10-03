@@ -410,7 +410,10 @@ const ChangeDetail: React.FC = () => {
                       type="primary"
                       icon={<CheckCircle />}
                       loading={processing}
-                      onClick={() => setApprovalModalVisible(true)}
+                      onClick={() => {
+                        setApprovalComment('');
+                        setApprovalModalVisible(true);
+                      }}
                     >
                       {t('changeDetail.approve')}
                     </Button>
@@ -418,7 +421,10 @@ const ChangeDetail: React.FC = () => {
                       danger
                       icon={<XCircle />}
                       loading={processing}
-                      onClick={() => setRejectModalVisible(true)}
+                      onClick={() => {
+                        setApprovalComment('');
+                        setRejectModalVisible(true);
+                      }}
                     >
                       {t('changeDetail.reject')}
                     </Button>
@@ -626,9 +632,18 @@ const ChangeDetail: React.FC = () => {
       <Modal
         title={t('changeDetail.approveTitle')}
         open={approvalModalVisible}
-        onCancel={() => setApprovalModalVisible(false)}
+        onCancel={() => {
+          setApprovalModalVisible(false);
+          setApprovalComment('');
+        }}
         footer={[
-          <Button key="cancel" onClick={() => setApprovalModalVisible(false)}>
+          <Button
+            key="cancel"
+            onClick={() => {
+              setApprovalModalVisible(false);
+              setApprovalComment('');
+            }}
+          >
             {t('changeDetail.cancel')}
           </Button>,
           <Button key="approve" type="primary" loading={processing} onClick={handleApprove}>
@@ -651,9 +666,18 @@ const ChangeDetail: React.FC = () => {
       <Modal
         title={t('changeDetail.rejectTitle')}
         open={rejectModalVisible}
-        onCancel={() => setRejectModalVisible(false)}
+        onCancel={() => {
+          setRejectModalVisible(false);
+          setApprovalComment('');
+        }}
         footer={[
-          <Button key="cancel" onClick={() => setRejectModalVisible(false)}>
+          <Button
+            key="cancel"
+            onClick={() => {
+              setRejectModalVisible(false);
+              setApprovalComment('');
+            }}
+          >
             {t('changeDetail.cancel')}
           </Button>,
           <Button key="reject" danger loading={processing} onClick={handleReject}>

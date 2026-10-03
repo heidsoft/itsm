@@ -186,8 +186,13 @@ const SLADefinitionManagement = () => {
       setLoading(true);
 
       // 直接使用分钟值，响应时间固定为分钟，解决时间转换为分钟
-      const responseTimeMinutes = values.responseTimeValue || 60;
-      const resolutionTimeMinutes = (values.resolutionTimeValue || 4) * 60; // 小时转分钟
+      // 用 ?? 而非 ||，允许用户显式设置 0（即时响应/即时解决）
+      const responseTimeMinutes = values.responseTimeValue ?? 60;
+      const resolutionTimeMinutes = (values.resolutionTimeValue ?? 4) * 60; // 小时转分钟
+
+      // 可用性：parseFloat 返回 NaN 时才回退默认值，0% 是合法值
+      const availabilityNum = parseFloat(String(values.availability).replace('%', ''));
+      const availability = Number.isNaN(availabilityNum) ? 99.9 : availabilityNum;
 
       // 转换表单值格式 - 后端使用 camelCase 格式
       const apiData = {
@@ -197,7 +202,7 @@ const SLADefinitionManagement = () => {
         priority: values.priority,
         responseTime: responseTimeMinutes,
         resolutionTime: resolutionTimeMinutes,
-        availability: parseFloat(String(values.availability).replace('%', '')) || 99.9,
+        availability,
       };
 
       if (selectedSLA) {
@@ -363,10 +368,12 @@ const SLADefinitionManagement = () => {
                 form.setFieldsValue({
                   ...record,
                   // 回填真实分钟/小时数值，而非展示文本
-                  responseTimeValue: record.responseTimeMinutes || 60,
-                  resolutionTimeValue: record.resolutionTimeMinutes
-                    ? Math.round(record.resolutionTimeMinutes / 60)
-                    : 4,
+                  // 用 ?? 保留 0 值（即时响应/即时解决）
+                  responseTimeValue: record.responseTimeMinutes ?? 60,
+                  resolutionTimeValue:
+                    record.resolutionTimeMinutes != null
+                      ? Math.round(record.resolutionTimeMinutes / 60)
+                      : 4,
                 });
                 setShowCreateModal(true);
               }}

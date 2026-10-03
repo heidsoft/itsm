@@ -143,7 +143,7 @@ export default function AssignmentRulesPage() {
       const payload: CreateAssignmentRuleRequest | UpdateAssignmentRuleRequest = {
         name: values.name,
         description: values.description,
-        priority: values.priority || 1,
+        priority: values.priority ?? 1,
         isActive: values.isActive ?? true,
         conditions,
         actions,
