@@ -85,6 +85,8 @@
 - 退出标准：守卫在扩范围后**必须是红的**（否则说明差集已被别处修掉，需重新取证）。红出来的差集清单要原样贴进本文 §3 N4 的决策材料。
 - 注意：这一步会让 CI 变红，**必须先与 §3 N4 的拍板同批进行**，或者以 `t.Skip` + 明确 TODO 的形式落地并在同一提交里登记待拍板事项，不得留一个长期红的 CI。
 
+> **状态（2026-10-03，已落地，与差集登记同一提交）**：守卫按「词表角色 ∩ `middleware.RolePermissions` 同名键」结构性扩围，不再手工维护角色清单。实测口径：`middleware.RolePermissions` 共 **9 个键**（`rbac.go:65`：super_admin/sysadmin/admin/manager/agent/technician/security/end_user/msp_viewer），与 `domainrole.All` 同名的 **7 个**（`it_admin`、`security_admin` 无 middleware 条目；middleware 的 `security`、`msp_viewer` 不在领域词表），扣除 super_admin 的 `Login ["*"]` 旁路后实际校验 **6 个**——硬档 admin/technician（差异即红，实测 0 缺失）+ 待拍板档 manager/agent/sysadmin/end_user（子测试 `t.Skip` 登记真实差集，共 50 对）。本文上文的"13 个键 ∩ 32 个键"为过时数字，以本实测为准。差集清单原样登记在 §3 N4。
+
 **R2-b　修掉错误前提（无争议）**
 
 `middleware/rbac.go:1004-1007` 的注释断言：
@@ -197,6 +199,22 @@ AGENTS.md 的 Documentation Sync Discipline 是强制的，本轮欠账：
 | **C：混合** | 仪表盘类只读聚合改"认证即可"；其余缺失码按角色逐个补 | 工作量最大，但语义最准 |
 
 **审查者不代选。** 建议 R2-a 先把真实差集红出来，用差集清单作为拍板材料。
+
+**R2-a 实测差集（2026-10-03，守卫红出，原样登记为拍板材料）**
+
+| 角色 | DB 码集缺少的 (resource,action) 对 | 计 |
+|:--|:--|:--|
+| manager | ticket:assign, ticket:escalate, ticket:export, notification:read, notification:write, incident:write, dashboard:read, cmdb:read, service_catalog:read, sla:read, bpmn:read, release:read, release:write, asset:read, asset:write, license:read, license:write, group:read, group:write, org:read, org:write, project:read, project:write, application:read, application:write, ai:read | 26 |
+| agent | notification:write, dashboard:read, service_catalog:read, change:write, alert:read, alerts:read, group:read, bpmn:read | 8 |
+| sysadmin | `*:*` —— middleware 条目本身是字面通配符（`rbac.go:65`），DB 侧是 129 个枚举码，无法按对比较 | 表示差异，非真实缺口 |
+| end_user | notification:write, dashboard:read, ai:read, ai:write, sla:read, system_config:read, org:read, department:read, cmdb:read, incident:read, change:read, problem:read, bpmn:read, release:read, asset:read, license:read | 15 |
+| admin / technician | ——（硬档全绿：DB 码集是硬编码兜底的完整镜像） | 0 |
+
+三条口径说明与附带发现：
+
+1. **差集口径**：上表 = `middleware.RolePermissions[role]` 的 (resource,action) 对 − 该角色 DB 播种码集展开的对，衡量的是"unconfigured 兜底 vs configured 实际授权"的差异，**不是**"路由所需 vs 角色持有"的直接测量。N4 若走收权路线（选项 B/C），应以 `rbac_precheck_gen.go` 的路由预检需求为基准重新计算；本表头部"`sysadmin` 少 28 个码"的实测事实对应的是 DB 播种（129）与 catalog（160）的差，与 middleware 侧通配表示是两件事。
+2. **middleware 自身词汇漂移**：agent 条目同时持有 `alert:read` 与 `alerts:read` 两种拼写，而 DB 码集两者皆无——硬编码兜底内部先漂移了。无论 N4 选哪项，这两个拼写需先收敛为一个。
+3. **sysadmin 通配表示**：middleware 给 sysadmin 的是 `*:*` 字面量，DB 给的是枚举码。N5 选项 C（codegen 生成 RolePermissions）必须解决这对表达差异，本行是其首个具体样例。
 
 ### N5　`middleware.RolePermissions` 这份硬编码权威最终留不留？
 
