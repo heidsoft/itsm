@@ -1015,7 +1015,7 @@ Authorization: Bearer <accessToken>
 ### 获取 SLA 统计
 
 ```http
-GET /sla/statistics
+GET /api/v1/sla/stats
 Authorization: Bearer <accessToken>
 ```
 
@@ -1025,6 +1025,15 @@ Authorization: Bearer <accessToken>
 GET /sla/violations
 Authorization: Bearer <accessToken>
 ```
+
+### 获取 SLA 合规报表
+
+```http
+GET /api/v1/sla/compliance-report?startDate=2026-01-01T00:00:00Z&endDate=2026-01-31T23:59:59Z
+Authorization: Bearer <accessToken>
+```
+
+权限 `sla:read`。`startDate`/`endDate` 必填且必须是 RFC3339 完整时间戳：只传 `2026-01-31` 这类 date-only 值会被判为非法并返回 400 / code 1001，不会退化成「统计全部时间」。响应 `data` 为 `dto.SLAComplianceReport`：`totalTickets`、`metSla`、`violatedSla`、`complianceRate`、`avgResponseTime`、`avgResolutionTime`、`reportPeriod`。该端点与 `GET /api/v1/sla/stats` 口径不同（报表按窗口内的工单计率，stats 为全量口径），调用方不得在前者失败时静默改用后者数字冒充同一指标。
 
 ## 工作流接口
 
@@ -1056,6 +1065,18 @@ Content-Type: application/json
   }
 }
 ```
+
+### BPMN 运行时监控
+
+```http
+GET /api/v1/bpmn/monitoring/metrics?timeRange=24h
+GET /api/v1/bpmn/monitoring/metrics/{processKey}?timeRange=7d
+GET /api/v1/bpmn/monitoring/instances/status?page=1&pageSize=20
+GET /api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=20
+Authorization: Bearer <accessToken>
+```
+
+四个端点都接受可选的 `startTime`/`endTime`，取值必须是 RFC3339；非法值返回 400 / code 1001（此前行为是静默忽略该过滤条件，响应看不出差异）。未传这两个参数时按 `timeRange`（默认 `24h`）。这些路由由 `handlers/bpmn/monitoring.go` 的 `RegisterRoutes` 挂在认证租户组下，实测**没有** `RequirePermission` 声明，只做认证与租户范围收敛。
 
 ## 用户管理接口
 
@@ -1508,6 +1529,21 @@ Authorization: Bearer <accessToken>
 GET /dashboard/sla-stats
 Authorization: Bearer <accessToken>
 ```
+
+## 统一工作台
+
+跨域（事件 / 变更 / 问题 / 工单）待办列表，按统一阶段（phase）聚合。
+
+```http
+GET /api/v1/workbench?phase=active,submitted&priority=critical&recordType=incident&assigneeId=7&page=1&pageSize=20
+Authorization: Bearer <accessToken>
+```
+
+- `phase` 取值 `draft|submitted|active|resolved|closed`，逗号分隔。阶段到各域 `status` 的映射由 `service/lifecycle` 单点提供并展开成 SQL 谓词，因此 `total`、分页与过滤同口径（不是在分页之后于内存里过滤）。
+- `recordType` 取值 `incident|change|problem|ticket`；`priority`、`assigneeId` 为可选过滤，`assigneeId` 非法值当前被忽略。
+- `page` 缺省 1，`pageSize` 缺省 20 且只采纳 `1..100`，越界回落默认值而不是报错。
+- 租户上下文取自认证会话，缺失返回 2001 / HTTP 401；该路由实测没有 `RequirePermission` 声明。
+- 响应 `data` 为平台列表信封 `{items,total,page,pageSize,totalPages}`，空结果序列化为 `[]`。
 
 ## 租户管理接口
 
