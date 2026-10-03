@@ -151,10 +151,11 @@ const data = await BaseApi.get('/foo')
 **实现**：扫描 `itsm-backend/service/` 下同时包含 `go func` 与
 `context.Background()` 的文件。
 
-**当前状态**：⚠️ advisory。仓库现存 16 处历史命中（详见
-`scripts/static-gates/run-all.sh` 输出）。集中在 `ticket_service.go`、
-`incident_service.go`、`problem_service.go`、`change_service.go`、
-`event_bus.go`。
+**当前状态**：⚠️ advisory。仓库现存 7 处历史命中（2026-10-03 实测，详见
+`scripts/static-gates/run-all.sh` 输出）。集中在 `service/ticket_service.go`
+（4）、`service/incident_service.go`（2）、`service/common/event/event_bus.go`
+（1）。原先并列的 `problem_service.go` 与 `change_service.go` 已不在名单里：
+前者是零生产构造的死第二实现，已整文件删除（台账 E4-13）。
 
 **修复示例**：
 

@@ -62,7 +62,7 @@ RAG 检索：用户/AI 检索 → 关键词降级 → 向量命中 → 权限过
 
 **改动清单**：
 - `ent/schema/problem.go`：加 `root_cause_required` 字段（枚举：`identified` / `workaround_only` / `unresolved`）
-- `service/problem_service.go::CloseProblem`：校验必填项，缺则返回 409
+- `handlers/problem/service.go::CloseProblem`（2026-10-03 校正：原写 `service/problem_service.go`，该文件是零生产构造的死第二实现，已随台账 E4-13 整文件删除；问题生命周期唯一所有者是 `handlers/problem`）：校验必填项，缺则返回 409
 - `handlers/problem/handler.go::CloseProblem`：返回 409 错误码 + 字段名
 - 前端 `ProblemDetail.tsx`：关闭按钮加表单校验
 
@@ -125,7 +125,7 @@ curl -X POST ... -d '{"ci_ids":[<other_tenant_ci>]}'
   - 输入：`problem_id` + `ke_id` + `solution`
   - 输出：knowledge article 草稿（标题 + body + tags）
   - 模板：LLM 生成（走 gateway） + 模板 fallback
-- `service/problem_service.go::CloseProblem`：关闭时调用 draft generator
+- `handlers/problem/service.go::CloseProblem`：关闭时调用 draft generator（同上，文件归属已按 E4-13 校正）
 - `handlers/knowledge/handler.go`：新增 `POST /api/v1/knowledge/drafts/from-problem/{problem_id}`（备用入口）
 - 前端 `ProblemDetail.tsx`：关闭后跳转知识草稿编辑页（可编辑）
 

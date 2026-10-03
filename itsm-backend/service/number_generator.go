@@ -101,7 +101,8 @@ var globalGenerator = NewNumberGenerator()
 // 已迁移到:
 //   - TicketCoreService.generateTicketNumber() 使用 Redis SequenceService
 //   - IncidentService.generateIncidentNumber() 使用 Redis SequenceService
-//   - ProblemService.generateProblemNumber() 使用 Redis SequenceService
+//   - 问题编号不在这里：实测由 handlers/problem/repository_impl.go 的 Create 用
+//     time.Now()+自增 ID 拼出 PRB-YYYYMMDD-XXXX，未走 Redis 序列（跨实例不保证租户内日序列）
 //   - ChangeService.generateChangeNumber() 使用 Redis SequenceService
 func GenerateTicketNumberGlobal() string {
 	return globalGenerator.GenerateTicketNumber()

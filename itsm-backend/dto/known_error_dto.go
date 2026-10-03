@@ -38,22 +38,6 @@ const (
 	KnownErrorSeverityLow      = "low"
 )
 
-// KEDBCreateRequest 创建已知错误请求 (KEDB专用)
-type KEDBCreateRequest struct {
-	Title            string   `json:"title" binding:"required"`
-	Description      string   `json:"description"`
-	Symptoms         string   `json:"symptoms"`
-	RootCause        string   `json:"rootCause"`
-	Workaround       string   `json:"workaround"`
-	Resolution       string   `json:"resolution"`
-	Category         string   `json:"category"`
-	Severity         string   `json:"severity"`
-	AffectedProducts []string `json:"affectedProducts"`
-	AffectedCIs      []string `json:"affectedCis"`
-	Keywords         []string `json:"keywords"`
-	ProblemID        *int     `json:"problemId"`
-}
-
 // KEDBUpdateRequest 更新已知错误请求
 type KEDBUpdateRequest struct {
 	Title            *string  `json:"title"`

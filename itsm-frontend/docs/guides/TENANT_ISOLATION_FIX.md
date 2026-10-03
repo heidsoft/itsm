@@ -82,7 +82,9 @@ if req.RequesterID > 0 {
    - `CreateChange` 使用 `SetTenantID(tenantID)` 
 
 2. **IncidentService** - 需要检查
-3. **ProblemService** - 需要检查
+3. **问题域** ✅（2026-10-03 实测校正）
+   - 原先这里写的 `ProblemService` 指 `itsm-backend/service/problem_service.go`，实测是零生产构造的死第二实现，已整文件删除（台账 E4-13）；唯一线上实现是 `handlers/problem`（`router/problem_routes.go` 装配）。
+   - `EntRepository.Get`（`repository_impl.go:226`）与 `List`（`:260`）都带 `problem.TenantID(tenantID)` 谓词；`tests/scenarios/scenario6_tenant_isolation_test.go` 逐行核对集合归属，删除该谓词即转红（注入已还原）。
 4. **SLAMonitorService** ✅
    - `CheckSLAViolations` 包含 `ticket.TenantID(tenantID)` 验证
 

@@ -8,7 +8,8 @@
 #
 # 实现：扫描 service 层下同时包含 "go func" 与 "context.Background()"
 # 的文件，输出报告。该门禁当前为 advisory（不阻断构建），因为仓库已
-# 积累 16 处历史用法（详见 docs/testing/static-analysis-gates.md）。当所有
+# 有多处历史用法（实测命中数与名单见 docs/testing/static-analysis-gates.md，
+# 本脚本输出为权威，注释不再钉死数字以免腐化）。当所有
 # 命中都迁移到 common.WithTimeout(ctx, ...) 之后，将恢复为硬门禁。
 #
 # 用法：

@@ -1,4 +1,4 @@
-package service
+package problem
 
 import "testing"
 
@@ -32,6 +32,16 @@ func TestIsValidProblemStatusTransition(t *testing.T) {
 
 		// Unknown states fail closed.
 		{"unknown_legacy", "legacy", "resolved", false},
+		{"empty_current", "", "open", false},
+
+		// 以下几例是线上实现与已删除的死副本真正分叉的地方：死副本允许
+		// open/investigating/identified 直接跳到 closed，本实现要求先经 resolved。
+		{"open_to_closed", "open", "closed", false},
+		{"investigating_to_closed", "investigating", "closed", false},
+		{"identified_to_closed", "identified", "closed", false},
+		// 存量 in_progress 数据只能进入规范状态，且不能直达 closed。
+		{"in_progress_to_resolved", "in_progress", "resolved", true},
+		{"in_progress_to_closed", "in_progress", "closed", false},
 	}
 
 	for _, tc := range tests {

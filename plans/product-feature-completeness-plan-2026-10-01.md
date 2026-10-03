@@ -58,7 +58,7 @@ cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts   # 1 failed
 9. **邮件 intake 先提交后 enqueue** — `handlers/email_intake/orchestrator.go:173-186` commit，`:364` 才入队，崩溃窗口丢命令；`service/ticket_service.go:171` 同模式。
 10. **~~前端契约测试失败 2 处~~ → 已修（2026-10-02，见 §8）** — `menu-api.ts:95` 拼接 URL 改为静态 base 常量分支；`msp-api.ts:134` 指向不存在的后端路由，按能力开关显式下线而不是补假接口。实测 `npx jest src/lib/__tests__/api-contract.test.ts` = 3 passed / 0 mismatch。
 11. **`/reports` 无视自身能力开关** — `app/(main)/reports/page.tsx:3,13` 渲染 `AdvancedReporting`，而 `product-capabilities.ts:55` 标 `advancedReporting:false` 且 reports 写侧在 allowlist 里。
-12. **8 个 service 包测试文件未传 ctx** — `change/incident/problem/ci_relationship/release/root_cause/recommendation_service_test.go` 调 `context.Background()`，与 `.Scan(ctx)` 修复处（`problem_service.go:128`）同类。
+12. **8 个 service 包测试文件未传 ctx**（2026-10-03 复核：现存 5 个） — 原列 `change/incident/problem/ci_relationship/release/root_cause/recommendation_service_test.go` 调 `context.Background()`，与 `.Scan(ctx)` 修复处同类。`problem_service_test.go` 已随台账 E4-13 作为死第二实现的测试删除（其状态机表测 `git mv` 迁到 `handlers/problem/problem_status_machine_test.go`，覆盖线上实现）；`recommendation_service_test.go` 实测在 HEAD 就已不存在，属本清单既有漂移、非本批删除。其余 5 个（change/incident/ci_relationship/release/root_cause）仍在。
 
 ### P2 占位与未接线（假成功风险最高的一组）
 
@@ -80,7 +80,7 @@ cd itsm-frontend && npx jest src/lib/__tests__/api-contract.test.ts   # 1 failed
 
 ### P3 架构双轨（本次梳理新增的实测发现）
 
-26. **`service/problem_service.go`（695 行）100% 死代码** — `NewProblemService` 零非测试调用方，活逻辑在 `handlers/problem/service.go`。**这是 change 域 legacy 双轨的第二例，且比 change 更彻底。**
+26. ~~**`service/problem_service.go`（695 行）100% 死代码**~~ → **已实施（2026-10-03，台账 E4-13）** — 实测 `NewProblemService(` 零非测试调用方后整文件删除（695 行 + 其测试 467 行）；`tests/scenarios/` 两条业务流回归改打线上装配的 `problem.NewService(problem.NewEntRepository(client), logger)`，状态机表测迁入 `handlers/problem/`，租户谓词与迁移宽松度三例注入证明断言真的在咬。**这是 change 域 legacy 双轨的第二例，change 那一例仍在（台账 E4-12）。**
 27. **change 域状态机词表未收敛** — `IsValidChangeStatusTransition` 三张转换表 key 是 `submitted`，靠 `:844-848` 把 `pending` 归一化才能与 `handlers/change` 协作。
 28. **`service/change_service.go` 的 `apiChangeStatus` 读映射不是死代码** — 枚举只在**写入**校验（`ent/change/change.go:201` 注释确认 `StatusValidator` 仅 builder save 前调用），存量库若有 `submitted` 行，删读映射会让它以 `submitted` 出现在 API 上。
 29. 其余沿用收敛计划已有条目：`ticket_workflow` 在 handler 里跑裸 SQL（`handlers/ticket_workflow/routes.go:353-416`，实为 middleware-free 而非无守卫）、`dashboard_service.go:276` 直查 Ent、`handlers/approval/handler.go:16` 仍挂 legacy `service.ApprovalService`。
@@ -155,7 +155,7 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 
 ### 批次 4：双轨收敛（另立排期，改动面大）
 
-1. 删除 `service/problem_service.go`（确认零调用方后 `git rm`，保留测试断言到 `handlers/problem`）。
+1. ~~删除 `service/problem_service.go`（确认零调用方后 `git rm`，保留测试断言到 `handlers/problem`）~~ → **已实施（2026-10-03，台账 E4-13）**：按此口径完成——死实现删除、场景测改接线上实现、状态机断言迁入 `handlers/problem`。
 2. change 状态机词表统一为 `pending`：转换表 key 改 `pending`、删 `:844-848` 归一化；`apiChangeStatus` 读映射**保留**并加存量数据说明。
 3. 旧审批 HTTP 面下线（依赖收敛计划 §4 契约测试清单）。
 
@@ -187,7 +187,7 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 梳理阶段共 5 条结论经复核**不成立**，已从清单中删除或修正：
 
 1. ~~"`/api/v1/menus/*` 的端点权限 map 为空，读菜单无权限门"~~ → **错**。引用的 `handlers/rbac/routes.go:31-39` **文件不存在**（`ls handlers/rbac/` 只有 handler.go/handler_test.go/service.go）；真实注册在 `router/common_system_routes.go:146-151`，逐条带 `middleware.RequirePermission("system_config", "read"/"write")`。
-2. ~~"`service/notification_service.go` 与 `ticket_comment_service.go` 无生产调用方、可退役"~~ → **错**。两者分别由 `internal/bootstrap/app.go:722`、`:375` 构造并驱动通知与评论 HTTP 面。真正零非测试调用方的只有 `NewProblemService` 与 `NewChangeService`。
+2. ~~"`service/notification_service.go` 与 `ticket_comment_service.go` 无生产调用方、可退役"~~ → **错**。两者分别由 `internal/bootstrap/app.go:722`、`:375` 构造并驱动通知与评论 HTTP 面。真正零非测试调用方的只有 `NewProblemService` 与 `NewChangeService`（前者已于 2026-10-03 随台账 E4-13 删除，后者仍在，见台账 E4-12）。
 3. ~~"工单评论 DTO `CreatedAt` 无 json tag 且从不赋值"~~ → **错**。`dto/ticket_comment_dto.go:34` 为 `CreatedAt time.Time `+"`json:\"createdAt\"`"+`，`:57` 由 `comment.CreatedAt` 赋值。
 4. ~~"MCP `tools/call` 直接 `ExecuteTool`，绕开带 RBAC 3-gate + audit 的路径"~~ → **不成立**。全仓无 `tools/call` 端点（grep 零命中）；`handlers/ai/service.go:118` 的 `ExecuteTool` 是唯一工具执行入口，并由 `:407` 在同一服务内调用， cited 行 `handlers/ai/handler.go:419-442` 实际是 `AnalyzeTicketWithAudit`。
 5. ~~"`GET /api/v1/workbench` 缺端点权限，是 RBAC 缺口"~~ → **观察属实、定性错误**。该路由确实无 `RequirePermission`，但按 `output/dev-improvement-plan-2026-09-27.md` §6 的三方裁定，身份自读类路由用 AuthMiddleware+租户上下文即为正确设计；已降级为产品口径问题（§4 N3）。
@@ -197,7 +197,7 @@ C2（change `submitted`）与 C3（4090 契约）**不进批次 0**，见 §4 �
 ## 6. 排期建议
 
 批次 0 与 1 合计约 4 天，可立刻开工且不动业务规则；批次 2、3 各约 2 天。
-批次 4 不独立排期 —— 它就是 `output/dev-improvement-plan-2026-09-27.md` Phase 1/Phase 4 的内容，本文只提供现状核对；`service/problem_service.go` 退役可直接挂到该计划 Phase 4「清理」。
+批次 4 不独立排期 —— 它就是 `output/dev-improvement-plan-2026-09-27.md` Phase 1/Phase 4 的内容，本文只提供现状核对；`service/problem_service.go` 退役已按该计划 Phase 4「清理」口径于 2026-10-03 完成（台账 E4-13）。
 **N1、N2 必须先定**，否则批次 0 无法收口到全绿；N3 不阻塞批次 0，可并入既有 D5「统一工作台 MVP」的产品评审一起定。
 
 ## 7. 批次 0 最终状态（2026-10-01）

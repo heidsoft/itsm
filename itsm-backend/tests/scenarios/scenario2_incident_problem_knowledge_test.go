@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
+	problemdomain "itsm-backend/handlers/problem"
 	"itsm-backend/service"
 )
 
@@ -38,8 +39,15 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	// 共享内存表，触发 "database table is locked: incidents" 的偶发失败。
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
-	problemSvc := service.NewProblemService(client, logger)
+	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
+	// problem.NewService(problem.NewEntRepository(client), logger)）。此前这里构造
+	// service.NewProblemService，而它实测零生产构造——业务流回归测的是死第二实现。
+	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
+
+	// tenant A 在闭环里创建的问题 ID，供后面的跨租户拒绝用例复用。
+	// 此前那个用例只传 99999，测的是「记录不存在」而不是「租户不匹配」。
+	var problemIDA int
 
 	t.Run("incident → resolve → problem → knowledge within tenant A", func(t *testing.T) {
 		incResp, err := incidentSvc.CreateIncident(ctx, &dto.CreateIncidentRequest{
@@ -66,19 +74,21 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 			t.Fatalf("解决事件失败: %v", err)
 		}
 
-		probResp, err := problemSvc.CreateProblem(ctx, &dto.CreateProblemRequest{
+		prob, err := problemSvc.Create(ctx, tenantA.ID, &problemdomain.Problem{
 			Title:       "数据库连接池配置不足导致高峰期服务不可用",
 			Description: "MySQL 连接池在高峰期持续耗尽，根因是连接池最大连接数配置过低",
 			Priority:    "high",
 			Category:    "database",
 			RootCause:   "连接池 max_connections 配置为 100，高峰期需要 500+",
-		}, userA.ID, tenantA.ID)
+			CreatedBy:   userA.ID,
+		})
 		if err != nil {
 			t.Fatalf("创建问题失败: %v", err)
 		}
-		if probResp.Status != "open" {
-			t.Fatalf("问题初始状态应为 open, 实际: %s", probResp.Status)
+		if prob.Status != "open" {
+			t.Fatalf("问题初始状态应为 open, 实际: %s", prob.Status)
 		}
+		problemIDA = prob.ID
 
 		article, err := knowledgeSvc.CreateArticle(ctx, &dto.CreateKnowledgeArticleRequest{
 			Title:    "MySQL 连接池耗尽排查与扩容方案",
@@ -93,7 +103,7 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 			t.Fatal("知识文章标题不应为空")
 		}
 
-		t.Logf("闭环完成: 事件#%d → 问题#%d → 知识#%d", incResp.ID, probResp.ID, article.ID)
+		t.Logf("闭环完成: 事件#%d → 问题#%d → 知识#%d", incResp.ID, prob.ID, article.ID)
 	})
 
 	t.Run("tenant B cannot access tenant A incident", func(t *testing.T) {
@@ -106,9 +116,10 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	})
 
 	t.Run("tenant B cannot access tenant A problem", func(t *testing.T) {
-		_, err := problemSvc.UpdateProblem(ctx, 99999, &dto.UpdateProblemRequest{
-			Status: strPtr("resolved"),
-		}, tenantB.ID)
+		if problemIDA == 0 {
+			t.Fatal("前序用例未创建 tenant A 的问题，跨租户断言会退化成不存在")
+		}
+		_, err := problemSvc.Update(ctx, tenantB.ID, problemIDA, &problemdomain.Problem{Status: "resolved"}, userB.ID, "technician")
 		if err == nil {
 			t.Fatal("tenant B 不应能操作不属于自己的问题")
 		}
