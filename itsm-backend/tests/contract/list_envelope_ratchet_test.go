@@ -28,6 +28,12 @@ import (
 // canonicalListKeys 是标准列表信封必须出现的 JSON 键。
 var canonicalListKeys = []string{"items", "page", "pageSize", "total", "totalPages"}
 
+// pagingKeys 是「这个信封声称自己分页」的键。docs/api-reference.md「不分页的列表」
+// 明确允许只返回 {items,total}，并要求**不得伪造** page/pageSize/totalPages 让调用方
+// 以为存在分页协议（历史实例：/tickets/templates 曾伪造 page=1、pageSize=len(items)）。
+// 因此本棘轮判定的是「声明了分页却只给出一半分页键」，而不是「所有列表都必须分页」。
+var pagingKeys = map[string]bool{"page": true, "pageSize": true, "totalPages": true}
+
 // forbiddenPagingKeys 是 AGENTS.md 明确禁止与 pageSize 并存的分页别名。
 // 它们是历史双轨的残留：同一响应把同一个事实说两遍，消费方无法判断哪个权威。
 var forbiddenPagingKeys = map[string]bool{
@@ -45,7 +51,7 @@ type listEnvelope struct {
 	file        string
 	name        string
 	domainKeys  []string // 切片字段上除 items 之外的 json tag
-	missingKeys []string // 标准五键里没出现的
+	missingKeys []string // 信封声明了分页时：标准五键里还没出现的
 	aliasKeys   []string // 与 pageSize 并存的分页别名
 	hasItemsKey bool
 }
@@ -80,18 +86,26 @@ var envelopeBaseline = []string{
 	"ticket_workflow_dto.go|TicketCCListResponse|records",
 }
 
-// envelopeKeyBaseline 是 2026-10-02 由扫描器实测的「标准分页键不完整」存量清单
-// （file|struct|缺失键）。这些信封已经用 items，但漏掉 page/pageSize/totalPages 中的
-// 若干项，消费方只能自己猜总页数。
+// envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键），
+// 2026-10-03 按新判定重新实测。判定只看**部分分页**：出现了 page/pageSize/totalPages 里
+// 的任一键，就必须凑满五元组。纯 {items,total} 不在这里，因为 docs/api-reference.md
+// 「不分页的列表」承认它是合法形状，且明确要求不得伪造分页键。
+//
+// 因此这 5 条全是 CMDB 一侧「带 page 但用 size 顶替 pageSize、也没有 totalPages」的信封，
+// 服务层实测真的做 Offset/Limit（如 service/ci_tag_service.go:102），消费方无法核对页数。
+// 2026-10-03 从本清单移除的两条是按实测改判，不是放宽规则：
+//   - ticket_view_dto.go|ListTicketViewsResponse、ticket_comment_dto.go|ListTicketCommentsResponse
+//     —— service/ticket_view_service.go:28 与 service/ticket_comment_service.go:104 都是
+//     无 Limit 的 All(ctx)，handler 里 Total=len(items) 诚实，属合法不分页形状；
+//   - change_pir_dto.go|ChangePIRListResponse —— 它**真的分页**（handlers/change/handler.go:957
+//     读 page/pageSize，service/pir_service.go:180 做 Offset/Limit），所以按补全五元组收口，
+//     而不是降级成「不分页」。
 var envelopeKeyBaseline = []string{
-	"change_pir_dto.go|ChangePIRListResponse|page,pageSize,totalPages",
 	"cmdb_advanced_dto.go|ListResponse|pageSize,totalPages",
 	"cmdb_core_dto.go|CIListResponse|pageSize,totalPages",
 	"cmdb_core_dto.go|CITagListResponse|pageSize,totalPages",
 	"cmdb_core_dto.go|CITypeListResponse|pageSize,totalPages",
 	"cmdb_dto.go|CIHistoryListResponse|pageSize,totalPages",
-	"ticket_comment_dto.go|ListTicketCommentsResponse|page,pageSize,totalPages",
-	"ticket_view_dto.go|ListTicketViewsResponse|page,pageSize,totalPages",
 }
 
 // envelopeAliasBaseline 是 2026-10-02 由扫描器实测的「分页别名残留」存量清单
@@ -252,9 +266,21 @@ func scanListEnvelopes(t *testing.T, project func(listEnvelope) []string) []stri
 				}
 				sort.Strings(aliases)
 				env.aliasKeys = aliases
-				for _, key := range canonicalListKeys {
-					if !present[key] {
-						env.missingKeys = append(env.missingKeys, key)
+				// 只有「已经出现过分页键」的信封才要求凑满五元组。
+				// 纯 {items,total} 属 docs/api-reference.md「不分页的列表」承认的形状，
+				// 给它补 page/pageSize/totalPages 反而是伪造分页契约。
+				declaresPaging := false
+				for key := range present {
+					if pagingKeys[key] {
+						declaresPaging = true
+						break
+					}
+				}
+				if declaresPaging {
+					for _, key := range canonicalListKeys {
+						if !present[key] {
+							env.missingKeys = append(env.missingKeys, key)
+						}
 					}
 				}
 				out = append(out, project(env)...)

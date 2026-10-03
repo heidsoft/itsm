@@ -210,9 +210,15 @@ export interface PIRResponse {
 
 
 // PIR列表响应
+//
+// 后端 service/pir_service.go 用 Count + Offset/Limit 真实分页，因此信封带全套
+// page/pageSize/totalPages；调用方必须按这五个键读取，不得再对 items 做二次分页。
 export interface PIRListResponse {
-  total: number;
   items: PIRResponse[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // 日历视图项

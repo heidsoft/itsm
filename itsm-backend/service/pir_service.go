@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
@@ -156,6 +157,10 @@ func (s *ChangePIRService) ListPIRs(ctx context.Context, tenantID int, page, pag
 	query := s.client.ChangePIR.Query().
 		Where(changepir.TenantID(tenantID))
 
+	// 分页参数必须先归一再落到 Offset/Limit：pageSize=0 在 Ent 里是 Limit(0)
+	// （等价于不加 LIMIT，整表返回），page<=0 会算出负 Offset，两者都让响应和请求不一致。
+	page, pageSize = common.ValidatePagination(page, pageSize)
+
 	// 结果筛选
 	if result != "" && result != "全部" {
 		query = query.Where(changepir.OverallResult(result))
@@ -168,9 +173,10 @@ func (s *ChangePIRService) ListPIRs(ctx context.Context, tenantID int, page, pag
 	}
 
 	// 分页查询
+	// review_date 不是唯一列，同一天录入的 PIR 在页边界归属不确定，用 ID 兜底成全序。
 	pirs, err := query.
 		WithChange().
-		Order(ent.Desc(changepir.FieldReviewDate)).
+		Order(ent.Desc(changepir.FieldReviewDate), ent.Asc(changepir.FieldID)).
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		All(ctx)
@@ -195,9 +201,14 @@ func (s *ChangePIRService) ListPIRs(ctx context.Context, tenantID int, page, pag
 		items = append(items, response)
 	}
 
+	// 页码/页长/共几页由 common 的同一个算法算出，避免除零与四舍五入在这里各写一份。
+	pagination := common.NewPaginationResponse(page, pageSize, int64(total))
 	return &dto.ChangePIRListResponse{
-		Total: total,
-		Items: items,
+		Items:      items,
+		Total:      int(pagination.Total),
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	}, nil
 }
 

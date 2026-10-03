@@ -51,8 +51,15 @@ type ChangePIRResponse struct {
 	UpdatedAt                  time.Time  `json:"updatedAt"`
 }
 
-// ChangePIRListResponse 变更PIR列表响应
+// ChangePIRListResponse 变更PIR列表响应。
+//
+// 这个端点是真的分页（service/pir_service.go 用 Count + Offset/Limit），所以必须把
+// 「第几页、每页多少、共几页」如实交出去：只带 {items,total} 会让调用方把当前页
+// 当成整个结果集。五个键由 common.NewPaginationResponse 统一算出，避免除零溢出。
 type ChangePIRListResponse struct {
-	Total int                  `json:"total"`
-	Items []*ChangePIRResponse `json:"items"`
+	Items      []*ChangePIRResponse `json:"items"`
+	Total      int                  `json:"total"`
+	Page       int                  `json:"page"`
+	PageSize   int                  `json:"pageSize"`
+	TotalPages int                  `json:"totalPages"`
 }

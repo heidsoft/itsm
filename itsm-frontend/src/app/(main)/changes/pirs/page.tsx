@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   Table,
@@ -36,7 +36,11 @@ export default function PIRListPage() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // 翻页/切过滤会并发触发多次请求，慢的旧响应不得覆盖新条件的结果。
+  const listRequest = useRef(0);
+
   const fetchPIRs = useCallback(async () => {
+    const seq = ++listRequest.current;
     setLoading(true);
     try {
       const response = await ChangeApi.getPIRs({
@@ -44,13 +48,15 @@ export default function PIRListPage() {
         pageSize: pageSize,
         result: resultFilter as any,
       });
-      setPirs(response.items || []);
-      setTotal(response.total || 0);
+      if (seq !== listRequest.current) return;
+      setPirs(response.items);
+      setTotal(response.total);
     } catch (error) {
+      if (seq !== listRequest.current) return;
       console.error('Failed to fetch PIRs:', error);
       message.error('获取PIR列表失败');
     } finally {
-      setLoading(false);
+      if (seq === listRequest.current) setLoading(false);
     }
   }, [page, pageSize, resultFilter]);
 

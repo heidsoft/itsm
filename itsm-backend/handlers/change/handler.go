@@ -946,14 +946,15 @@ func (h *Handler) GetPIR(c *gin.Context) {
 //	@Produce	json
 //	@Security	BearerAuth
 //	@Param	page	query	int	false	"页码（默认 1）"
-//	@Param	pageSize	query	int	false	"每页数量（默认 10）"
+//	@Param	pageSize	query	int	false	"每页数量（默认 20，上限 100）"
 //	@Param	result	query	string	false	"评审结论过滤"
 //	@Success	200	{object}	common.Response
 //	@Failure	500	{object}	common.Response
 //	@Router	/api/v1/changes/pirs [get]
 func (h *Handler) ListPIRs(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	// 分页必须走统一的夹紧通道：裸 strconv.Atoi 会把 pageSize=0 原样交给 service，
+	// 而 Ent 的 Limit(0) 等于不加 LIMIT（整表返回）；page=0 会算出负 Offset。
+	pg := common.GetPaginationFromQuery(c)
 	result := c.Query("result")
 
 	tenantID, ok := tenantIDFromCtx(c)
@@ -961,7 +962,7 @@ func (h *Handler) ListPIRs(c *gin.Context) {
 		return
 	}
 
-	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, page, pageSize, result)
+	pirs, err := h.svc.ListPIRs(c.Request.Context(), tenantID, pg.Page, pg.PageSize, result)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

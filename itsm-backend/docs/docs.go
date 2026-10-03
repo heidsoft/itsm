@@ -1195,7 +1195,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量（默认 10）",
+                        "description": "每页数量（默认 20，上限 100）",
                         "name": "pageSize",
                         "in": "query"
                     },
