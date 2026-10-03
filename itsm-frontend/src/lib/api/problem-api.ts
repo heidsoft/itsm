@@ -68,12 +68,29 @@ export interface Problem {
   updatedAt: string;
 }
 
+/**
+ * GET /api/v1/problems 的列表信封：{items,total,page,pageSize,totalPages}，只有一套契约。
+ * 2026-10-03 后端（E4-6c）把集合键从 problems 收敛为 items，并把三处各自夹紧的分页规则
+ * 收给 common 单点。
+ */
 export interface ProblemListResponse {
-  problems: Problem[];
-  items?: Problem[];
+  items: Problem[];
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
+}
+
+// GET /api/v1/problems 的请求契约，与后端 dto.ListProblemsRequest 逐字段一致。
+// 分页夹紧由后端 common.GetPaginationFromQuery 单点负责：page 缺省 1、pageSize 缺省 20，
+// 越界值回落默认页长，因此前端不得再自己猜一套页长规则。
+export interface ProblemListParams {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  priority?: string;
+  category?: string;
+  keyword?: string;
 }
 
 // ==================== 问题关联 ====================
@@ -108,9 +125,10 @@ export interface ProblemRemoveAssociationRequest {
 export class ProblemApi {
   /**
    * 获取问题列表
+   * 后端: GET /api/v1/problems（query 契约见 ProblemListParams，响应见 ProblemListResponse）
    */
-  static async getProblems(params?: any): Promise<ProblemListResponse> {
-    return httpClient.get('/api/v1/problems', params);
+  static async getProblems(params?: ProblemListParams): Promise<ProblemListResponse> {
+    return httpClient.get<ProblemListResponse>('/api/v1/problems', params);
   }
 
   /**

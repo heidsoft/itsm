@@ -26,7 +26,7 @@ describe('ProblemService', () => {
 
   describe('listProblems', () => {
     it('should call GET /api/v1/problems with params', async () => {
-      const mockData = { problems: [], total: 0, page: 1, pageSize: 20 };
+      const mockData = { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
       mockGet.mockResolvedValueOnce(mockData);
 
       const result = await problemService.listProblems({ page: 2, status: ProblemStatus.OPEN });
@@ -36,7 +36,7 @@ describe('ProblemService', () => {
     });
 
     it('should use empty params by default', async () => {
-      mockGet.mockResolvedValueOnce({ problems: [], total: 0, page: 1, pageSize: 20 });
+      mockGet.mockResolvedValueOnce({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await problemService.listProblems();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problems', {});
     });

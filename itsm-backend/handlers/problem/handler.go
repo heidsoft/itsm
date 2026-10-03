@@ -376,11 +376,13 @@ func (h *Handler) RemoveAssociation(c *gin.Context) {
 
 // List 问题管理-获取问题列表
 // @Summary 获取问题列表
-// @Description 分页获取问题列表，支持状态、优先级、分类和关键词过滤
+// @Description 分页获取问题列表，支持状态、优先级、分类和关键词过滤。
+// @Description 分页只有一套夹紧规则：page 缺省 1、pageSize 缺省 20，只有落在 (0,100] 的查询值会被采纳，
+// @Description 越界值回落默认页长（不是夹到 100）。响应固定为 {items,total,page,pageSize,totalPages}。
 // @Tags 问题管理
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param pageSize query int false "每页数量" default(10)
+// @Param page query int false "页码（默认 1，<=0 回落 1）" default(1)
+// @Param pageSize query int false "每页数量（默认 20，超出 (0,100] 回落默认页长）" default(20)
 // @Param status query string false "状态过滤"
 // @Param priority query string false "优先级过滤"
 // @Param category query string false "分类过滤"
@@ -396,6 +398,14 @@ func (h *Handler) List(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
+
+	// 分页夹紧只有一个所有者（common.GetPaginationFromQuery），SQL 侧与声明侧读同一份值。
+	// 此前 handler 把 ShouldBindQuery 的原值交给 repository，repository 自己按 size>200→200
+	// 截断，而响应末尾又按另一套规则回显未夹紧的原值：205 条数据 + pageSize=250 时响应写着
+	// pageSize:250、totalPages:1，实际只返回 200 条，客户端按声明的契约翻完第 1 页就停，
+	// 第 201~205 条在任何一页里都拿不到。
+	pg := common.GetPaginationFromQuery(c)
+	req.Page, req.PageSize = pg.Page, pg.PageSize
 
 	tenantID, tenantOK := middleware.TenantIDOrUnauthorized(c)
 	if !tenantOK {
@@ -435,19 +445,14 @@ func (h *Handler) List(c *gin.Context) {
 		dtoProblems = append(dtoProblems, h.toDTOWithUsers(p, userMap))
 	}
 
-	page, pageSize := req.Page, req.PageSize
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 {
-		pageSize = 10
-	}
+	// totalPages 由 common 单点算出，不在这里再写一遍除法。
+	pagination := common.NewPaginationResponse(req.Page, req.PageSize, int64(total))
 	common.Success(c, &dto.ListProblemsResponse{
-		Problems:   dtoProblems,
-		Total:      total,
-		Page:       page,
-		PageSize:   pageSize,
-		TotalPages: (total + pageSize - 1) / pageSize,
+		Items:      dtoProblems,
+		Total:      int(pagination.Total),
+		Page:       pagination.Page,
+		PageSize:   pagination.PageSize,
+		TotalPages: pagination.TotalPages,
 	})
 }
 

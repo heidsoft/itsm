@@ -302,6 +302,40 @@ cd itsm-backend && go test ./router/ -run TestChangeListRoute
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/change-api.test.ts
 ```
 
+### 1.12 问题列表信封、分页夹紧与查询参数收敛（2026-10-03，破坏性）
+
+`GET /api/v1/problems` 此前有**三套**页长规则同时生效：handler 把绑定到的原值直接下传，
+repository 自己按 `page<1→1、size<1→10、size>200→200` 截断，响应末尾再手写一遍
+`page<1→1、pageSize<1→10` 和一个没有上限的除法，把未夹紧的原值回显出去。与 §1.10、
+§1.11 是同一个缺陷类，但这里的后果是**静默丢数据**而不是多取：205 条数据配 `pageSize=250`
+时 SQL 只返回 200 条，响应却声明 `pageSize:250、totalPages:1`——按响应声明翻页的调用方翻完
+第 1 页就停，第 201~205 条在任何一页都拿不到。现在与通知、变更列表共用
+`common.GetPaginationFromQuery` 单点夹紧。
+
+| 项目 | 旧行为 | 新行为 |
+| --- | --- | --- |
+| 响应集合键 | `data.problems` | **`data.items`**（标准五键信封 `{items,total,page,pageSize,totalPages}`） |
+| `pageSize` 缺省或非法 | 声明侧默认 10 | **默认 20** |
+| `pageSize=0` | 走 repository 的 `size<1→10`，与声明侧 10 恰好一致但无保证 | 夹紧为默认页长 20，SQL 与响应同源 |
+| `page=0` / 负数 | SQL 侧与响应侧各自兜到第 1 页（同一规则两处兜底，谁先改谁分叉） | 由 HTTP 入口单点回落第 1 页 |
+| `pageSize=300` | SQL 截断为 200、响应声明 300（两个真相） | 回落默认页长 20（只采纳 `(0,100]`，**不是夹到 100**） |
+| `sortBy`/`sortOrder`/`dateFrom`/`dateTo` | DTO 声明，但 handler 与 repository 从不读取 | **从请求 DTO 删除**，未识别参数一律忽略 |
+
+排序固定为 `created_at DESC, id ASC`：`created_at` 非唯一列，此前同一秒创建的问题在页边界的
+归属不确定，补 `ID` 兜底成全序。
+
+**集成方必须改的两件事**：
+1. 读列表用 `data.items`，不要再读 `data.problems`；需要整表或大页时显式发 `pageSize`
+   （上限 100），`pageSize=0` 与越界值现在都表示「用默认页长」而不是「取全部」。
+2. 删除对 `sortBy`/`sortOrder`/`dateFrom`/`dateTo` 的依赖。这四个参数此前就不生效，任何按
+   它们排序或按时间过滤的集成逻辑本来已经是错的，只是没有报错。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestProblemListRouteEnvelopeAndPagination
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/problem-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

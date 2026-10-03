@@ -254,15 +254,9 @@ func (r *EntRepository) GetWithAssociations(ctx context.Context, id int, tenantI
 }
 
 func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, dataScope datascope.DataScope, currentUserID int) ([]*Problem, int, error) {
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 {
-		size = 10
-	}
-	if size > 200 {
-		size = 200
-	}
+	// 分页参数由 HTTP 入口的 common.GetPaginationFromQuery 夹紧后再传下来，这里不再写第二套
+	// 规则——原来 repo 自己按 page<1→1、size<1→10、size>200→200 夹紧，而响应用未夹紧的原值
+	// 回显 pageSize，两侧对同一个请求给两个答案，翻页会整段跳过数据。
 	query := r.client.Problem.Query().Where(problem.TenantID(tenantID), problem.DeletedAtIsNil())
 
 	if v, ok := filters["status"].(string); ok && v != "" {
@@ -301,10 +295,11 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 		return nil, 0, err
 	}
 
+	// created_at 不是唯一列：同一秒创建的问题在页边界的归属不确定，用 ID 兜底成全序。
 	list, err := query.
-		Offset((page - 1) * size).
+		Offset((page-1)*size).
 		Limit(size).
-		Order(ent.Desc(problem.FieldCreatedAt)).
+		Order(ent.Desc(problem.FieldCreatedAt), ent.Asc(problem.FieldID)).
 		All(ctx)
 	if err != nil {
 		return nil, 0, err

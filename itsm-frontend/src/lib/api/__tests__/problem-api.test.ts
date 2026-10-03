@@ -26,14 +26,15 @@ describe('ProblemApi', () => {
   describe('getProblems', () => {
     it('should get problems list', async () => {
       mockGet.mockResolvedValue({
-        problems: [{ id: 1, title: 'Memory leak' }],
+        items: [{ id: 1, title: 'Memory leak' }],
         total: 1,
         page: 1,
-        pageSize: 10,
+        pageSize: 20,
+        totalPages: 1,
       });
       const result = await ProblemApi.getProblems({ page: 1 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problems', { page: 1 });
-      expect(result.problems).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 

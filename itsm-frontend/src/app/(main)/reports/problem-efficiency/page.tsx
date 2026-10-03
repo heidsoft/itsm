@@ -72,7 +72,7 @@ const ProblemEfficiencyPage = () => {
       try {
         statsData = await problemService.getProblemStats();
         const problemsRes = await problemService.listProblems({ page: 1, pageSize: 100 });
-        problemsData = problemsRes.problems;
+        problemsData = problemsRes.items;
       } catch (e) {
         console.warn('获取问题数据失败，使用空数据');
       }

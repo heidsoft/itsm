@@ -239,7 +239,7 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 	dtoProblems := dto.ToProblemResponseListWithUsers(problems, userMap)
 
 	return &dto.ListProblemsResponse{
-		Problems: dtoProblems,
+		Items:    dtoProblems,
 		Total:    total,
 		Page:     page,
 		PageSize: pageSize,

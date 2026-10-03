@@ -209,13 +209,13 @@ func TestProblemService_ListProblems_Pagination(t *testing.T) {
 	response, err := service.ListProblems(ctx, &dto.ListProblemsRequest{Page: 1, PageSize: 10}, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Problems, 10)
+	assert.Len(t, response.Items, 10)
 
 	// 测试第二页
 	response, err = service.ListProblems(ctx, &dto.ListProblemsRequest{Page: 2, PageSize: 10}, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Problems, 5)
+	assert.Len(t, response.Items, 5)
 }
 
 func TestProblemService_ListProblems_Filters(t *testing.T) {

@@ -58,6 +58,9 @@ type listEnvelope struct {
 
 // envelopeBaseline 是 2026-10-02 由扫描器实测的「领域名集合键」存量清单（file|struct|jsonKey）。
 // 新条目必须经评审才能加入；每收敛一个都应删除条目并配前端契约更新。
+//
+// 2026-10-03 E4-6c 移除 problem_dto.go|ListProblemsResponse|problems：GET /api/v1/problems
+// 的集合键改为 items，同时把三处各自夹紧的分页规则收给 common.GetPaginationFromQuery 单点。
 var envelopeBaseline = []string{
 	"asset_dto.go|AssetListResponse|assets",
 	"asset_license_dto.go|LicenseListResponse|licenses",
@@ -72,7 +75,6 @@ var envelopeBaseline = []string{
 	"msp_dto.go|MSPAllocationListResponse|allocations",
 	"msp_dto.go|MSPCustomerListResponse|customers",
 	"msp_dto.go|MSPReportListResponse|reports",
-	"problem_dto.go|ListProblemsResponse|problems",
 	"release_dto.go|ReleaseListResponse|releases",
 	"role_dto.go|RoleListResponse|roles",
 	"service_dto.go|ServiceCatalogListResponse|catalogs",

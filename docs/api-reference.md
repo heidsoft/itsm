@@ -554,11 +554,34 @@ GET /problems
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
-- status: 状态过滤
-- priority: 优先级过滤
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- status: 状态过滤（精确匹配单个值：`open`/`investigating`/`resolved`/`closed`/`identified`；`in_progress` 仅存在于历史数据）
+- priority: 优先级过滤（精确匹配单个值：`low`/`medium`/`high`/`critical`）
+- category: 分类过滤（精确匹配）
+- keyword: 标题或描述关键词（`Contains`，两条 OR）
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `ProblemResponse`（camelCase，含 `problemNumber`/`assigneeId`/`assigneeName`/
+`createdBy`/`createdByName`）。空结果序列化为 `[]`。排序固定为 `created_at DESC, id ASC`，
+`id` 兜底是为了让同一秒创建的问题在页边界归属确定。
+
+口径说明（2026-10-03 E4-6c 实测收口）：
+
+- **集合键只有一个 `items`。** 历史响应键是 `problems`，前端有三份列表响应类型声明（`problem-api.ts`、`problem-service.ts`、`types/biz/problem.ts`）、
+  消费点写成 `resp.problems || resp.items || []`，属 AGENTS「请求/响应多字段兼容零新增」禁止项；
+  现已按标准信封收敛，契约测试锁死五键集合。
+- **分页夹紧只有一个所有者。** 此前 handler 传原值、repository 自己按 `size>200→200` 截断、
+  响应又回显未夹紧的原值：205 条数据配 `pageSize=250` 时响应写着 `pageSize:250、totalPages:1`
+  却只给 200 条，客户端按声明翻完第 1 页就停，第 201~205 条在任何一页都拿不到。现在 SQL 侧与
+  声明侧读同一份 `common.GetPaginationFromQuery` 结果。
+- **`sortBy`/`sortOrder`/`dateFrom`/`dateTo` 已从请求 DTO 删除。** 实测这四个字段既不在 handler
+  的 filters 里也不在 repository 的查询条件里，传与不传结果完全相同，属假契约。排序需求请走固定
+  排序或等后端实现后再宣传；未识别的查询参数一律忽略，不报错也不生效。
+- **行级数据权限**：非管理角色（`super_admin`/`admin`/`manager`/`sysadmin` 之外）只返回
+  `createdBy` 或 `assigneeId` 等于本人的问题；上下文缺失 `user_id` 时 fail-closed 返回空集。
+  租户收敛与软删除排除在上游按 `tenant_id`、`deleted_at IS NULL` 生效。
 
 ### 创建问题
 

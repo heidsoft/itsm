@@ -43,7 +43,8 @@ export interface UpdateProblemRequest {
   assigneeId?: number;
 }
 
-// 列表查询参数
+// 列表查询参数：权威契约是 ProblemApi.ProblemListParams（与后端 dto.ListProblemsRequest
+// 逐字段一致），这里的类型只是本模块状态用的同构别名，字段增删必须同步那边。
 export interface ProblemQuery {
   page?: number;
   pageSize?: number;
@@ -51,15 +52,6 @@ export interface ProblemQuery {
   priority?: string;
   category?: string;
   keyword?: string;
-}
-
-// 列表响应
-export interface ProblemListResponse {
-  problems?: Problem[];
-  items?: Problem[];
-  total: number;
-  page?: number;
-  pageSize?: number;
 }
 
 // 统计响应

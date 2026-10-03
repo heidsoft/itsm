@@ -9759,7 +9759,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "分页获取问题列表，支持状态、优先级、分类和关键词过滤",
+                "description": "分页获取问题列表，支持状态、优先级、分类和关键词过滤。\n分页只有一套夹紧规则：page 缺省 1、pageSize 缺省 20，只有落在 (0,100] 的查询值会被采纳，\n越界值回落默认页长（不是夹到 100）。响应固定为 {items,total,page,pageSize,totalPages}。",
                 "produces": [
                     "application/json"
                 ],
@@ -9771,14 +9771,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 1,
-                        "description": "页码",
+                        "description": "页码（默认 1，\u003c=0 回落 1）",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "default": 20,
+                        "description": "每页数量（默认 20，超出 (0,100] 回落默认页长）",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -15555,17 +15555,17 @@ const docTemplate = `{
         "dto.ListProblemsResponse": {
             "type": "object",
             "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProblemResponse"
+                    }
+                },
                 "page": {
                     "type": "integer"
                 },
                 "pageSize": {
                     "type": "integer"
-                },
-                "problems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ProblemResponse"
-                    }
                 },
                 "total": {
                     "type": "integer"

@@ -62,6 +62,9 @@ export interface UpdateProblemRequest {
 }
 
 // 问题列表查询参数
+// 与 dto.ListProblemsRequest 逐字段一致：后端在 2026-10-03（E4-6c）删掉了 sortBy/
+// sortOrder/dateFrom/dateTo —— 它们既不在 handler 的 filters 里，也不在 repository 的
+// 查询条件里，传与不传结果完全相同，属假契约。
 export interface ListProblemsParams {
   page?: number;
   pageSize?: number;
@@ -69,18 +72,16 @@ export interface ListProblemsParams {
   priority?: ProblemPriority;
   category?: string;
   keyword?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
 }
 
-// 问题列表响应
+// 问题列表响应：GET /api/v1/problems 的 {items,total,page,pageSize,totalPages} 信封，
+// 与 ProblemApi.ProblemListResponse 是同一套契约，不再有 problems 别名键。
 export interface ListProblemsResponse {
-  problems: Problem[];
+  items: Problem[];
   total: number;
   page: number;
   pageSize: number;
+  totalPages: number;
 }
 
 // 问题统计响应

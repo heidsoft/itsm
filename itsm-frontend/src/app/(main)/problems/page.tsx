@@ -129,9 +129,10 @@ export default function ProblemListPage() {
         priority: priorityFilter,
         keyword: searchKeyword,
       });
-      const items = response.problems || [];
+      // 后端信封固定返回 items（空结果序列化为 []），不再需要 problems 别名或 || [] 兜底。
+      const { items } = response;
       setProblems(items);
-      setTotal(response.total || items.length);
+      setTotal(response.total);
     } catch (error) {
       console.error('Failed to fetch problems:', error);
       message.error(t('problems.getFailed'));
@@ -152,7 +153,9 @@ export default function ProblemListPage() {
         priority: priorityFilter,
         keyword: searchKeyword,
       });
-      setProblems(response.problems || []);
+      // 看板视图同样只读 items。注意它仍是一次 pageSize=100 的截断读取，
+      // 与列表视图是两套请求，刷新时机也不同（债务见 E4-14）。
+      setProblems(response.items);
     } catch (error) {
       console.error('Failed to fetch problems for kanban:', error);
       setLoadError(true);

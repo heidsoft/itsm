@@ -98,8 +98,13 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ...query,
         ...values,
       });
-      setData((resp.problems || resp.items || []) as unknown as Problem[]);
-      setTotal(resp.total || 0);
+      // 后端信封只有 items 一个集合键（2026-10-03 E4-6c 收敛），空结果是 []，
+      // 不需要 || resp.items || [] 这种猜形状的多字段 fallback。
+      // 这里的断言与信封无关：ProblemApi.Problem 和 types/biz.Problem 是两套实体形状
+      // （前者有后端并不返回的 severity/reporterId/affectedIncidents），属于 E4-6d 待收敛的
+      // 实体契约重复，收敛后此断言必须删除。
+      setData(resp.items as unknown as Problem[]);
+      setTotal(resp.total);
     } catch (error) {
       // 只在有实际错误时显示失败消息，不是因为表单验证导致的
       if (
