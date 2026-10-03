@@ -180,6 +180,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         <Space>
           <Tooltip title="预览版本">
             <Button
+              aria-label="预览版本"
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => handlePreviewVersion(record)}
@@ -193,7 +194,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 description={`确定要恢复到版本 ${record.version} 吗？`}
                 onConfirm={() => handleRestoreVersion(record.version)}
               >
-                <Button type="text" icon={<RotateCcw className="w-4 h-4 text-orange-500" />} />
+                <Button aria-label="恢复到此版本" type="text" icon={<RotateCcw className="w-4 h-4 text-orange-500" />} />
               </Popconfirm>
             </Tooltip>
           )}

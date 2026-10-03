@@ -353,6 +353,7 @@ const SLADefinitionManagement = () => {
         <Space>
           <Tooltip title="查看详情">
             <Button
+              aria-label="查看详情"
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => handleViewDetail(record)}
@@ -360,6 +361,7 @@ const SLADefinitionManagement = () => {
           </Tooltip>
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => {
@@ -381,6 +383,7 @@ const SLADefinitionManagement = () => {
           </Tooltip>
           <Tooltip title={record.status === 'active' ? '停用' : '启用'}>
             <Button
+              aria-label={record.status === 'active' ? '停用' : '启用'}
               type="text"
               icon={
                 record.status === 'active' ? (
@@ -400,7 +403,7 @@ const SLADefinitionManagement = () => {
             cancelText="取消"
             okType="danger"
           >
-            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+            <Button aria-label="删除" type="text" danger icon={<Trash2 className="w-4 h-4" />} />
           </Popconfirm>
         </Space>
       ),

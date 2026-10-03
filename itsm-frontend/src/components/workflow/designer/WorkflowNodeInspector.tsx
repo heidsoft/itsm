@@ -680,9 +680,9 @@ export default function WorkflowNodeInspector({
                     options={[{ label: '仅提醒', value: 'notify' }, { label: '升级审批', value: 'escalate' }, { label: '自动拒绝', value: 'auto_reject' }, { label: '自动通过', value: 'auto_approve' }]}
                     className="w-full" size="small" />
                   <Space wrap>
-                    <Switch size="small" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />允许委托
-                    <Switch size="small" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />允许加签
-                    <Switch size="small" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
+                    <Switch size="small" aria-label="允许委托" checked={currentAllowDelegate} onChange={v => apply({ allowDelegate: v })} />允许委托
+                    <Switch size="small" aria-label="允许加签" checked={currentAllowAddApprover} onChange={v => apply({ allowAddApprover: v })} />允许加签
+                    <Switch size="small" aria-label="拒绝意见必填" checked={currentCommentRequiredOnReject} onChange={v => apply({ commentRequiredOnReject: v })} />拒绝意见必填
                   </Space>
                 </Space>
               )}
@@ -939,6 +939,7 @@ export default function WorkflowNodeInspector({
                 异步执行
               </Text>
               <Switch
+                aria-label="异步执行"
                 checked={currentAsync}
                 onChange={checked => apply({ async: checked })}
                 disabled
@@ -1067,6 +1068,7 @@ export default function WorkflowNodeInspector({
                 发送通知
               </Text>
               <Switch
+                aria-label="发送通知"
                 checked={currentCCNotify}
                 onChange={checked => apply({ ccNotify: checked })}
                 checkedChildren="开启"
@@ -1192,6 +1194,7 @@ export default function WorkflowNodeInspector({
                 异步执行
               </Text>
               <Switch
+                aria-label="异步执行"
                 checked={currentAsync}
                 onChange={checked => apply({ async: checked })}
                 size="small"
@@ -1376,6 +1379,7 @@ export default function WorkflowNodeInspector({
                 </Text>
                 <Switch
                   size="small"
+                  aria-label={isBoundaryEvent ? '定时边界事件' : '定时启动事件'}
                   checked={false}
                   onChange={checked => {
                     if (checked) apply({ timeDuration: 'PT1H' });
@@ -1587,6 +1591,7 @@ export default function WorkflowNodeInspector({
                 中断原任务
               </Text>
               <Switch
+                aria-label="中断原任务"
                 checked={currentCancelActivity}
                 onChange={checked => apply({ cancelActivity: checked })}
                 size="small"
@@ -1609,6 +1614,7 @@ export default function WorkflowNodeInspector({
                 事件触发
               </Text>
               <Switch
+                aria-label="事件触发"
                 checked={currentTriggeredByEvent}
                 onChange={checked => apply({ triggeredByEvent: checked })}
                 size="small"
@@ -1624,6 +1630,7 @@ export default function WorkflowNodeInspector({
                 补偿流程
               </Text>
               <Switch
+                aria-label="补偿流程"
                 checked={currentIsForCompensation}
                 onChange={checked => apply({ isForCompensation: checked })}
                 size="small"
@@ -1679,6 +1686,7 @@ export default function WorkflowNodeInspector({
                 继承变量
               </Text>
               <Switch
+                aria-label="继承变量"
                 checked={currentInheritVariables}
                 onChange={checked => apply({ inheritVariables: checked })}
                 size="small"
@@ -1694,6 +1702,7 @@ export default function WorkflowNodeInspector({
                 继承业务主键
               </Text>
               <Switch
+                aria-label="继承业务主键"
                 checked={currentInheritBusinessKey}
                 onChange={checked => apply({ inheritBusinessKey: checked })}
                 size="small"

@@ -255,9 +255,9 @@ export default function OnCallPage() {
       width: 120,
       render: (_: unknown, r: OnCallShift) => (
         <Space size='small'>
-          <Button size='small' icon={<EditOutlined />} onClick={() => openEditShift(r)} />
+          <Button size='small' aria-label='编辑班次' icon={<EditOutlined />} onClick={() => openEditShift(r)} />
           <Popconfirm title='确定删除此班次？' onConfirm={() => removeShift(r.id)}>
-            <Button size='small' danger icon={<DeleteOutlined />} />
+            <Button size='small' aria-label='删除班次' danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),

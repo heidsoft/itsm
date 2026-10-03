@@ -213,6 +213,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
           </Tooltip>
           <Tooltip title="删除">
             <Button
+              aria-label="删除"
               type="text"
               danger
               icon={<Trash2 />}
@@ -284,7 +285,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
               <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
-              <Button icon={<RefreshCw />} onClick={loadData} />
+              <Button aria-label="刷新" icon={<RefreshCw />} onClick={loadData} />
             </Space>
           </Form.Item>
         </Form>

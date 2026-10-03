@@ -357,6 +357,7 @@ export default function RoleManagement() {
         <Space size="small">
           <Tooltip title={t('roles.editTooltip')}>
             <Button
+              aria-label={t('roles.editTooltip')}
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => {
@@ -388,7 +389,7 @@ export default function RoleManagement() {
             cancelText={t('roles.cancel')}
           >
             <Tooltip title={t('roles.deleteTooltip')}>
-              <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+              <Button aria-label={t('roles.deleteTooltip')} type="text" danger icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -442,7 +443,10 @@ export default function RoleManagement() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{t('roles.selectAll')}</span>
-                  <Checkbox onChange={e => handleSelectAllModule(resource, e.target.checked)} />
+                  <Checkbox
+                    aria-label={`${t('roles.selectAll')} ${resource}`}
+                    onChange={e => handleSelectAllModule(resource, e.target.checked)}
+                  />
                 </div>
                 <Divider className="my-2" />
                 <div className="grid grid-cols-2 gap-2">

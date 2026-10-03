@@ -380,6 +380,7 @@ export default function TenantManagement() {
         <Space size="small">
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => openTenantModal(record)}
@@ -387,6 +388,7 @@ export default function TenantManagement() {
           </Tooltip>
           <Tooltip title="查看">
             <Button
+              aria-label="查看"
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => openTenantModal(record, true)}
@@ -395,11 +397,12 @@ export default function TenantManagement() {
           {record.status === 'active' ? (
             record.code === 'default' ? (
               <Tooltip title="系统默认租户不可暂停（会导致整站无法访问）">
-                <Button type="text" disabled icon={<PauseCircle className="w-4 h-4" />} />
+                <Button aria-label="系统默认租户不可暂停（会导致整站无法访问）" type="text" disabled icon={<PauseCircle className="w-4 h-4" />} />
               </Tooltip>
             ) : (
               <Tooltip title="暂停租户">
                 <Button
+                  aria-label="暂停租户"
                   type="text"
                   icon={<PauseCircle className="w-4 h-4" />}
                   onClick={() => handleChangeTenantStatus(record, 'suspended')}
@@ -409,6 +412,7 @@ export default function TenantManagement() {
           ) : (
             <Tooltip title="恢复租户">
               <Button
+                aria-label="恢复租户"
                 type="text"
                 icon={<PlayCircle className="w-4 h-4" />}
                 onClick={() => handleChangeTenantStatus(record, 'active')}
@@ -417,7 +421,7 @@ export default function TenantManagement() {
           )}
           {record.code === 'default' ? (
             <Tooltip title="系统默认租户不可删除">
-              <Button type="text" danger disabled icon={<Trash2 className="w-4 h-4" />} />
+              <Button aria-label="系统默认租户不可删除" type="text" danger disabled icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           ) : (
             <Popconfirm
@@ -428,7 +432,7 @@ export default function TenantManagement() {
               cancelText="取消"
             >
               <Tooltip title="删除">
-                <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+                <Button aria-label="删除" type="text" danger icon={<Trash2 className="w-4 h-4" />} />
               </Tooltip>
             </Popconfirm>
           )}

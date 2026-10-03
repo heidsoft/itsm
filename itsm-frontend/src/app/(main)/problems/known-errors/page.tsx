@@ -266,6 +266,7 @@ export default function KnownErrorsPage() {
         <Space size="small">
           <Tooltip title="查看详情">
             <Button
+              aria-label="查看详情"
               type="link"
               size="small"
               icon={<Eye />}
@@ -274,6 +275,7 @@ export default function KnownErrorsPage() {
           </Tooltip>
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               type="link"
               size="small"
               icon={<Pencil />}
@@ -283,6 +285,7 @@ export default function KnownErrorsPage() {
           {record.status === 'draft' && (
             <Tooltip title="晋升为正式已知错误">
               <Button
+                aria-label="晋升为正式已知错误"
                 type="link"
                 size="small"
                 icon={<CheckCircle />}
@@ -298,7 +301,7 @@ export default function KnownErrorsPage() {
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button type="link" size="small" danger icon={<Trash2 />} />
+              <Button aria-label="删除" type="link" size="small" danger icon={<Trash2 />} />
             </Tooltip>
           </Popconfirm>
         </Space>

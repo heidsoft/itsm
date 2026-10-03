@@ -515,6 +515,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                               <Button
                                 type="text"
                                 size="small"
+                                aria-label={t('ticketTypeForm.moveFieldUp')}
                                 icon={<ArrowUp />}
                                 disabled={index === 0}
                                 onClick={() => moveField(index, 'up')}
@@ -522,6 +523,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                               <Button
                                 type="text"
                                 size="small"
+                                aria-label={t('ticketTypeForm.moveFieldDown')}
                                 icon={<ArrowDown />}
                                 disabled={index === customFields.length - 1}
                                 onClick={() => moveField(index, 'down')}
@@ -530,7 +532,13 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                                 title={t('ticketTypeForm.deleteFieldConfirm')}
                                 onConfirm={() => removeCustomField(index)}
                               >
-                                <Button type="text" size="small" danger icon={<Trash2 />} />
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  danger
+                                  aria-label={t('ticketTypeForm.deleteField')}
+                                  icon={<Trash2 />}
+                                />
                               </Popconfirm>
                             </Space>
                           }
@@ -695,6 +703,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                             <div className="flex items-center">
                               <Switch
                                 size="small"
+                                aria-label={t('ticketTypeForm.required')}
                                 checked={field.required}
                                 onChange={required => updateCustomField(index, { required })}
                               />
@@ -705,6 +714,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                             <div className="flex items-center">
                               <Switch
                                 size="small"
+                                aria-label={t('ticketTypeForm.visibleLabel')}
                                 checked={field.visible !== false}
                                 onChange={visible => updateCustomField(index, { visible })}
                               />
@@ -715,6 +725,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                             <div className="flex items-center">
                               <Switch
                                 size="small"
+                                aria-label={t('ticketTypeForm.readonlyLabel')}
                                 checked={field.readonly === true}
                                 onChange={readonly => updateCustomField(index, { readonly })}
                               />

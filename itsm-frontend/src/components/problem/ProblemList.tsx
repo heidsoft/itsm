@@ -196,6 +196,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           <Tooltip title="查看详情">
             <Button
               type="text"
+              aria-label={`查看问题 ${record.id}`}
               icon={<Eye />}
               onClick={() => router.push(`/problems/${record.id}`)}
             />
@@ -203,6 +204,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
           <Tooltip title="编辑">
             <Button
               type="text"
+              aria-label={`编辑问题 ${record.id}`}
               icon={<Pencil />}
               onClick={() => router.push(`/problems/${record.id}/edit`)}
             />
@@ -211,6 +213,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
             <Button
               type="text"
               danger
+              aria-label={`删除问题 ${record.id}`}
               icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
             />

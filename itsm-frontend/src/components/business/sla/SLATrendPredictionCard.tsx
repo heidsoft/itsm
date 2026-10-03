@@ -124,6 +124,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
           </Radio.Group>
           <Tooltip title="刷新预测">
             <Button
+              aria-label="刷新预测"
               size="small"
               icon={<RefreshCw size={14} />}
               onClick={() => void load()}

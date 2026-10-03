@@ -333,7 +333,7 @@ export default function MenuManagementPage() {
       render: (_: unknown, record) => (
         <Space size="small">
           <Tooltip title={t('common.edit')}>
-            <Button type="text" icon={<Edit className="w-4 h-4" />} onClick={() => openEdit(record)} />
+            <Button aria-label={t('common.edit')} type="text" icon={<Edit className="w-4 h-4" />} onClick={() => openEdit(record)} />
           </Tooltip>
           <Popconfirm
             title={t('common.confirmDelete')}
@@ -344,7 +344,7 @@ export default function MenuManagementPage() {
             okButtonProps={{ danger: true }}
           >
             <Tooltip title={t('common.delete')}>
-              <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+              <Button aria-label={t('common.delete')} type="text" danger icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           </Popconfirm>
         </Space>

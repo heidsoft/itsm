@@ -350,7 +350,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
               {/* 更多操作下拉菜单 */}
               {extraActions.length > 0 && (
                 <Dropdown menu={{ items: actionMenuItems }} placement="bottomRight">
-                  <Button icon={<MoreVertical />} />
+                  <Button aria-label="更多操作" icon={<MoreVertical />} />
                 </Dropdown>
               )}
             </Space>
@@ -497,6 +497,7 @@ export const BusinessPageTemplate: React.FC<BusinessPageTemplateProps> = ({
       {primaryAction && (
         <div className="fixed bottom-6 right-6 z-50 md:hidden">
           <Button
+            aria-label="新增"
             type="primary"
             shape="circle"
             size="large"

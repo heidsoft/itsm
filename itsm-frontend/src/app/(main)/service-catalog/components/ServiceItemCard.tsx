@@ -188,6 +188,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
           </Button>
           {canManageCatalog && <Dropdown menu={{ items: actionItems }} trigger={['click']} placement="bottomRight">
             <Button
+              aria-label="更多操作"
               icon={<MoreHorizontal size={16} />}
               onClick={e => e.stopPropagation()}
               loading={deleting}

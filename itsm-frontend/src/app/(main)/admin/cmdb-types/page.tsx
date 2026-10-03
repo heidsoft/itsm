@@ -331,6 +331,7 @@ const CMDBTypesManagement = () => {
         <Space>
           <Tooltip title='编辑'>
             <Button
+              aria-label="编辑"
               type='text'
               icon={<Edit className='w-4 h-4' />}
               onClick={() => handleEdit(record)}
@@ -345,7 +346,7 @@ const CMDBTypesManagement = () => {
             cancelText='取消'
           >
             <Tooltip title='删除'>
-              <Button type='text' icon={<Trash2 className='w-4 h-4' />} danger size='small' />
+              <Button aria-label="删除" type='text' icon={<Trash2 className='w-4 h-4' />} danger size='small' />
             </Tooltip>
           </Popconfirm>
         </Space>

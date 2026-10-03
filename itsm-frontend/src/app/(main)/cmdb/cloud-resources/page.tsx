@@ -250,6 +250,7 @@ export default function CloudResourcePage() {
         <Space>
           <Tooltip title='查看详情'>
             <Button
+              aria-label="查看详情"
               type='text'
               icon={<Eye />}
               onClick={() => handleViewDetail(record)}

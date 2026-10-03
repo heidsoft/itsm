@@ -424,6 +424,7 @@ const NotificationCenter: React.FC<{
           <Button
             size="small"
             danger
+            aria-label={t('notificationCenter.actions.deleteNotification')}
             icon={<Trash2 className="w-3 h-3" />}
             onClick={() => {
               Modal.confirm({
@@ -703,6 +704,7 @@ const NotificationCenter: React.FC<{
                               size="small"
                               danger
                               type="link"
+                              aria-label={t('notificationCenter.actions.deleteNotification')}
                               icon={<Trash2 className="w-3 h-3" />}
                               onClick={() => {
                                 Modal.confirm({

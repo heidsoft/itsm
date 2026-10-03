@@ -383,6 +383,7 @@ export default function ProfilePage() {
                 {/* 编辑按钮 */}
                 <Button
                   type="text"
+                  aria-label={t('profile.editProfile')}
                   icon={<Settings size={18} />}
                   onClick={() => setEditing(!editing)}
                   style={{

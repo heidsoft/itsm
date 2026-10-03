@@ -177,7 +177,7 @@ const WorkflowAutomationPage = () => {
       key: 'isActive',
       width: 100,
       render: (isActive: boolean, record: AutomationRule) => (
-        <Switch checked={isActive} onChange={() => handleToggleRule(record)} size='small' />
+        <Switch aria-label={`切换规则 ${record.name} 的启用状态`} checked={isActive} onChange={() => handleToggleRule(record)} size='small' />
       ),
     },
     {
@@ -197,13 +197,14 @@ const WorkflowAutomationPage = () => {
         <Space>
           <Tooltip title='编辑'>
             <Button
+              aria-label="编辑"
               type='text'
               icon={<Edit className='w-4 h-4' />}
               onClick={() => handleEditRule(record)}
             />
           </Tooltip>
           <Tooltip title='复制'>
-            <Button type='text' icon={<Copy className='w-4 h-4' />} />
+            <Button aria-label="复制" type='text' icon={<Copy className='w-4 h-4' />} />
           </Tooltip>
           <Popconfirm
             title='确认删除该自动化规则？'
@@ -214,7 +215,7 @@ const WorkflowAutomationPage = () => {
             onConfirm={() => handleDeleteRule(record.id)}
           >
             <Tooltip title='删除'>
-              <Button type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+              <Button aria-label="删除" type='text' danger icon={<Trash2 className='w-4 h-4' />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -247,7 +248,7 @@ const WorkflowAutomationPage = () => {
         <Row gutter={[16, 16]} align='middle'>
           <Col xs={24} sm={12}>
             <div className='flex items-center space-x-4'>
-              <Switch checked={automationEnabled} onChange={setAutomationEnabled} />
+              <Switch aria-label="启用或禁用所有工作流自动化规则" checked={automationEnabled} onChange={setAutomationEnabled} />
               <div>
                 <Title level={5} className='!mb-1'>
                   工作流自动化
@@ -404,7 +405,8 @@ const WorkflowAutomationPage = () => {
               setModalVisible(false);
               loadRules();
             } catch (error) {
-              message.error(t('common.operationFailed') + (error as Error).message);
+              const detail = error instanceof Error ? error.message : '';
+              message.error(detail ? `${t('common.operationFailed')}: ${detail}` : t('common.operationFailed'));
             }
           }}
         >

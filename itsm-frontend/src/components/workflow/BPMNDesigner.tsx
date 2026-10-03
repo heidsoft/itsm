@@ -1265,11 +1265,12 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         }}
       >
         <Tooltip title={t('bpmnDesigner.buttons.saveShortcut')} placement="right">
-          <Button type="text" icon={<Save size={18} />} onClick={handleSave} disabled={readOnly} />
+          <Button aria-label={t('bpmnDesigner.buttons.saveShortcut')} type="text" icon={<Save size={18} />} onClick={handleSave} disabled={readOnly} />
         </Tooltip>
         {onDeploy && (
           <Tooltip title={t('bpmnDesigner.buttons.deploy')} placement="right">
             <Button
+              aria-label={t('bpmnDesigner.buttons.deploy')}
               type="text"
               icon={<PlayCircle size={18} />}
               onClick={handleDeploy}
@@ -1279,6 +1280,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         )}
         <Tooltip title={t('bpmnDesigner.buttons.undoShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.undoShortcut')}
             type="text"
             icon={<Undo size={18} />}
             onClick={handleUndo}
@@ -1287,6 +1289,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.redoShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.redoShortcut')}
             type="text"
             icon={<Redo size={18} />}
             onClick={handleRedo}
@@ -1298,6 +1301,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
         <Tooltip title={t('bpmnDesigner.buttons.copyShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.copyShortcut')}
             type="text"
             icon={<Copy size={18} />}
             onClick={handleCopy}
@@ -1306,6 +1310,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.pasteShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.pasteShortcut')}
             type="text"
             icon={<ClipboardPaste size={18} />}
             onClick={handlePaste}
@@ -1314,6 +1319,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.selectAllShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.selectAllShortcut')}
             type="text"
             icon={<ListChecks size={18} />}
             onClick={handleSelectAll}
@@ -1322,6 +1328,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.deleteShortcut')} placement="right">
           <Button
+            aria-label={t('bpmnDesigner.buttons.deleteShortcut')}
             type="text"
             icon={<Trash2 size={18} />}
             onClick={handleDelete}
@@ -1334,13 +1341,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
         <Dropdown menu={{ items: alignMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title={t('bpmnDesigner.buttons.align')} placement="right">
-            <Button type="text" icon={<AlignLeft size={18} />} disabled={selectedElements.length < 2 || readOnly} />
+            <Button aria-label={t('bpmnDesigner.buttons.align')} type="text" icon={<AlignLeft size={18} />} disabled={selectedElements.length < 2 || readOnly} />
           </Tooltip>
         </Dropdown>
 
         <Dropdown menu={{ items: distributeMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title={t('bpmnDesigner.buttons.distribute')} placement="right">
-          <Button type="text" icon={<AlignHorizontalDistributeCenter size={18} />} disabled={selectedElements.length < 3 || readOnly} />
+          <Button aria-label={t('bpmnDesigner.buttons.distribute')} type="text" icon={<AlignHorizontalDistributeCenter size={18} />} disabled={selectedElements.length < 3 || readOnly} />
           </Tooltip>
         </Dropdown>
 
@@ -1348,15 +1355,15 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
         <Dropdown menu={{ items: settingsMenuItems }} placement="bottomRight" trigger={['click']}>
           <Tooltip title={t('bpmnDesigner.buttons.settings')} placement="right">
-            <Button type="text" icon={<Settings size={18} />} />
+            <Button type="text" aria-label={t('bpmnDesigner.buttons.settings')} icon={<Settings size={18} />} />
           </Tooltip>
         </Dropdown>
 
         <Tooltip title={t('bpmnDesigner.buttons.exportSvg')} placement="right">
-          <Button type="text" icon={<Download size={18} />} onClick={handleExportSVG} />
+          <Button aria-label={t('bpmnDesigner.buttons.exportSvg')} type="text" icon={<Download size={18} />} onClick={handleExportSVG} />
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.exportBpmn')} placement="right">
-          <Button type="text" icon={<FileJson size={18} />} onClick={handleExportXML} />
+          <Button aria-label={t('bpmnDesigner.buttons.exportBpmn')} type="text" icon={<FileJson size={18} />} onClick={handleExportXML} />
         </Tooltip>
         <label>
           <input
@@ -1366,7 +1373,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
             onChange={handleImportXML}
           />
           <Tooltip title={t('bpmnDesigner.buttons.importBpmn')} placement="right">
-            <Button type="text" icon={<Upload size={18} />} />
+            <Button aria-label={t('bpmnDesigner.buttons.importBpmn')} type="text" icon={<Upload size={18} />} />
           </Tooltip>
         </label>
       </div>
@@ -1448,6 +1455,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       >
         <Tooltip title={t('bpmnDesigner.buttons.zoomOut')}>
           <Button
+            aria-label={t('bpmnDesigner.buttons.zoomOut')}
             type="text"
             size="small"
             icon={<ZoomOut size={16} />}
@@ -1459,6 +1467,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </span>
         <Tooltip title={t('bpmnDesigner.buttons.zoomIn')}>
           <Button
+            aria-label={t('bpmnDesigner.buttons.zoomIn')}
             type="text"
             size="small"
             icon={<ZoomIn size={16} />}
@@ -1467,6 +1476,7 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
         </Tooltip>
         <Tooltip title={t('bpmnDesigner.buttons.fit')}>
           <Button
+            aria-label={t('bpmnDesigner.buttons.fit')}
             type="text"
             size="small"
             icon={<Maximize size={16} />}

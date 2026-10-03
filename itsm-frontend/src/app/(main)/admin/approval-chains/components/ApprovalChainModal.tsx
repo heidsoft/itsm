@@ -231,6 +231,7 @@ export function ApprovalChainModal({
               </div>
               <Button
                 type="text"
+                aria-label={`删除第 ${index + 1} 个审批步骤`}
                 danger
                 icon={<MinusCircle className="w-4 h-4" />}
                 onClick={() => handleRemoveStep(index)}
@@ -323,6 +324,7 @@ export function ApprovalChainModal({
 
             <div className="mt-4">
               <Switch
+                aria-label="该步骤是否为必审步骤"
                 checked={step.isRequired}
                 onChange={checked => handleUpdateStep(index, 'isRequired', checked)}
                 checkedChildren="必审"

@@ -297,6 +297,7 @@ const UserManagement: React.FC = () => {
       key: 'active',
       render: (active: boolean, record: User) => (
         <Switch
+          aria-label={`切换用户 ${record.name} 的启用状态`}
           checked={active}
           loading={loading}
           onChange={() => handleToggleUserStatus(record.id, active)}

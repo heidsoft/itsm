@@ -204,6 +204,7 @@ export default function CloudAccountPage() {
       width: 100,
       render: (value: boolean, record: CloudAccount) => (
         <Switch
+          aria-label="切换该云账号的启用状态"
           checked={value}
           checkedChildren='启用'
           unCheckedChildren='停用'

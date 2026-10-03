@@ -208,6 +208,7 @@ export default function TeamManagement() {
       render: (_: unknown, record: Team) => (
         <Space size="small">
           <Button
+            aria-label="编辑"
             type="text"
             icon={<Edit size={16} />}
             onClick={() => handleEdit(record)}
@@ -219,7 +220,7 @@ export default function TeamManagement() {
             okText={t("common.confirm")}
             cancelText={t("common.cancel")}
           >
-            <Button type="text" danger icon={<Trash2 size={16} />} />
+            <Button aria-label="删除" type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),

@@ -751,6 +751,7 @@ export default function NotificationsPage() {
                   <Col xs={24} md={5}>
                     <Form.Item name={`${event.type}_email`} valuePropName="checked" noStyle>
                       <Switch
+                        aria-label={`${t(event.nameKey)} ${t('notifications.emailEnabled')}`}
                         checkedChildren={t('workflow.statusEnabled')}
                         unCheckedChildren={t('workflow.statusDisabled')}
                       />
@@ -759,6 +760,7 @@ export default function NotificationsPage() {
                   <Col xs={24} md={5}>
                     <Form.Item name={`${event.type}_in_app`} valuePropName="checked" noStyle>
                       <Switch
+                        aria-label={`${t(event.nameKey)} ${t('notifications.inAppEnabled')}`}
                         checkedChildren={t('workflow.statusEnabled')}
                         unCheckedChildren={t('workflow.statusDisabled')}
                       />
@@ -767,6 +769,7 @@ export default function NotificationsPage() {
                   <Col xs={24} md={6}>
                     <Form.Item name={`${event.type}_sms`} valuePropName="checked" noStyle>
                       <Switch
+                        aria-label={`${t(event.nameKey)} ${t('notifications.smsEnabled')}`}
                         checkedChildren={t('workflow.statusEnabled')}
                         unCheckedChildren={t('workflow.statusDisabled')}
                       />

@@ -376,7 +376,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
             label='关系类型'
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
-            <Select placeholder='选择关系类型' style={{ width: '100%' }} options={relationshipTypes.map(type => ({ value: type.type, label: <Tooltip title={type.description}>
+            <Select placeholder='选择关系类型' style={{ width: '100%' }} options={relationshipTypes.map(type => ({ value: type.type, label: <Tooltip title={type.description ? type.description : undefined}>
                     <Space>
                       <span>{type.name}</span>
                       <Tag>{type.direction === 'bi-directional' ? '双向' : '单向'}</Tag>

@@ -215,6 +215,7 @@ export default function DepartmentManagement() {
       render: (_: unknown, record: Department) => (
         <Space size="small">
           <Button
+            aria-label="编辑"
             type="text"
             icon={<Edit size={16} />}
             onClick={() => handleEdit(record)}
@@ -226,7 +227,7 @@ export default function DepartmentManagement() {
             okText="确认"
             cancelText="取消"
           >
-            <Button type="text" danger icon={<Trash2 size={16} />} />
+            <Button aria-label="删除" type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),

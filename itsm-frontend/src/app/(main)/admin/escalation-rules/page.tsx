@@ -404,6 +404,7 @@ const EscalationRuleManagement = () => {
         <Space>
           <Tooltip title="查看详情">
             <Button
+              aria-label="查看详情"
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => handleViewDetail(record)}
@@ -411,6 +412,7 @@ const EscalationRuleManagement = () => {
           </Tooltip>
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => {
@@ -422,6 +424,7 @@ const EscalationRuleManagement = () => {
           </Tooltip>
           <Tooltip title="复制">
             <Button
+              aria-label="复制"
               type="text"
               icon={<Copy className="w-4 h-4" />}
               onClick={() => handleDuplicate(record)}
@@ -429,6 +432,7 @@ const EscalationRuleManagement = () => {
           </Tooltip>
           <Tooltip title={record.status === 'active' ? '停用' : '启用'}>
             <Button
+              aria-label={record.status === 'active' ? '停用' : '启用'}
               type="text"
               icon={
                 record.status === 'active' ? (
@@ -448,7 +452,7 @@ const EscalationRuleManagement = () => {
             cancelText="取消"
             okType="danger"
           >
-            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+            <Button aria-label="删除" type="text" danger icon={<Trash2 className="w-4 h-4" />} />
           </Popconfirm>
         </Space>
       ),

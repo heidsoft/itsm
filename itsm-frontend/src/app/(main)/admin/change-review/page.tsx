@@ -155,6 +155,7 @@ const ChangeReviewManagementPage: React.FC = () => {
       key: 'isActive',
       render: (active: boolean, m: ReviewMember) => (
         <Switch
+          aria-label={`切换 ${m.userName} 的启用状态`}
           checked={active}
           checkedChildren="启用"
           unCheckedChildren="停用"

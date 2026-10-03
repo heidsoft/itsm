@@ -395,6 +395,7 @@ const AIChat: React.FC = () => {
                     okButtonProps={{ danger: true, size: 'small' }}
                   >
                     <Button
+                      aria-label="删除"
                       type="text"
                       size="small"
                       danger

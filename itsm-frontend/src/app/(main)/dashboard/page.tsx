@@ -161,7 +161,7 @@ export default function DashboardPage() {
           onClick={e => e.stopPropagation()}
         >
           <span className='text-sm font-medium'>自动刷新</span>
-          <Switch checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
+          <Switch aria-label='自动刷新' checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
         </div>
       ),
     },

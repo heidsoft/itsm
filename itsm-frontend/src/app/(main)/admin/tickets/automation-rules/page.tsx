@@ -175,6 +175,7 @@ const AutomationRulesPage: React.FC = () => {
       width: 100,
       render: (active: boolean, record: AutomationRule) => (
         <Switch
+          aria-label={`切换规则 ${record.name} 的启用状态`}
           checked={active}
           checkedChildren="启用"
           unCheckedChildren="禁用"
@@ -189,7 +190,7 @@ const AutomationRulesPage: React.FC = () => {
       render: (_: unknown, record: AutomationRule) => (
         <Space>
           <Tooltip title="编辑">
-            <Button size="small" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+            <Button aria-label="编辑" size="small" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
             title="确定要删除这个规则吗？"
@@ -198,7 +199,7 @@ const AutomationRulesPage: React.FC = () => {
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button size="small" danger icon={<Delete size={14} />} />
+              <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>

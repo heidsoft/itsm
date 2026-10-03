@@ -200,7 +200,7 @@ export default function SLATemplatesPage() {
       render: (_: unknown, t: SLATemplate) => (
         <Space>
           <Tooltip title="查看模板详情">
-            <Button type="text" icon={<Eye />} onClick={() => setDetail(t)} />
+            <Button aria-label="查看模板详情" type="text" icon={<Eye />} onClick={() => setDetail(t)} />
           </Tooltip>
           <Popconfirm
             title={`确认安装模板「${t.name}」？`}

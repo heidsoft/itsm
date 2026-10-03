@@ -137,10 +137,11 @@ export default function ProjectsPage() {
       key: 'action',
       render: (_: unknown, record: Project) => (
         <Space size="middle">
-          <Button type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
+          <Button aria-label="编辑项目" type="text" icon={<Pencil />} onClick={() => handleEdit(record)} />
           <Button
             type="text"
             danger
+            aria-label="删除项目"
             icon={<Trash2 />}
             onClick={() => handleDelete(record)}
           />

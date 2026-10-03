@@ -93,12 +93,14 @@ export default function ApplicationsPage() {
         <Space size="middle">
           <Button
             type="text"
+            aria-label="编辑应用"
             icon={<Pencil />}
             onClick={() => handleEdit(record as ApplicationRecord, 'application')}
           />
           <Button
             type="text"
             danger
+            aria-label="删除应用"
             icon={<Trash2 />}
             onClick={() => handleDelete(record as ApplicationRecord)}
           />
@@ -143,12 +145,14 @@ export default function ApplicationsPage() {
         <Space size="middle">
           <Button
             type="text"
+            aria-label="编辑微服务"
             icon={<Pencil />}
             onClick={() => handleEdit(record as MicroserviceRecord, 'microservice')}
           />
           <Button
             type="text"
             danger
+            aria-label="删除微服务"
             icon={<Trash2 />}
             onClick={() => handleDelete(record as MicroserviceRecord)}
           />

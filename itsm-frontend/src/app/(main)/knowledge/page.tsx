@@ -363,7 +363,7 @@ export default function KnowledgePage() {
             onSearch={handleAISearch}
             loading={aiSearchLoading}
             enterButton={
-              <Button type="text" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
+              <Button type="text" aria-label="AI 搜索" icon={<Sparkles className="w-4 h-4 text-yellow-500" />} />
             }
             style={{ width: 300 }}
             onPressEnter={handleAISearch}

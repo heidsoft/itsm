@@ -482,6 +482,7 @@ const PermissionConfiguration = () => {
                   <span>{modConf.label}</span>
                   <Switch
                     size="small"
+                    aria-label={`启用模块 ${modConf.label}`}
                     checked={moduleState?.isEnabled || false}
                     onChange={() => handleToggleModule(moduleKey)}
                   />
@@ -497,6 +498,7 @@ const PermissionConfiguration = () => {
                   </Tag>
                   <Switch
                     size="small"
+                    aria-label={`${modConf.label} ${actionConf.label} 权限`}
                     checked={moduleState?.actions[actionKey] || false}
                     onChange={() => handleToggleAction(moduleKey, actionKey)}
                   />
@@ -555,6 +557,7 @@ const PermissionConfiguration = () => {
                           </div>
                           <Switch
                             size="small"
+                            aria-label={`启用模块 ${modConf.label}`}
                             checked={moduleState?.isEnabled || false}
                             onChange={() => handleToggleModule(moduleKey)}
                           />
@@ -567,7 +570,7 @@ const PermissionConfiguration = () => {
                       <div className="space-y-2">
                         {Object.entries(actionConfig).map(([actionKey, actionConf]) => (
                           <div key={actionKey} className="flex items-center justify-between">
-                            <Tooltip title={actionConf.description}>
+                            <Tooltip title={actionConf.description ? actionConf.description : undefined}>
                               <Tag
                                 color={moduleState?.actions[actionKey] ? actionConf.color : 'default'}
                                 className="text-xs cursor-help"
@@ -577,6 +580,7 @@ const PermissionConfiguration = () => {
                             </Tooltip>
                             <Switch
                               size="small"
+                              aria-label={`${modConf.label} ${actionConf.label} 权限`}
                               checked={moduleState?.actions[actionKey] || false}
                               onChange={() => handleToggleAction(moduleKey, actionKey)}
                               disabled={!moduleState?.isEnabled}

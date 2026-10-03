@@ -270,13 +270,14 @@ export default function StandardChangesPage() {
         <Space>
           <Tooltip title='从模板创建变更'>
             <Button
+              aria-label="从模板创建变更"
               type='link'
               icon={<PlayCircle size={14} />}
               onClick={() => handleInstantiate(record)}
             />
           </Tooltip>
           <Tooltip title='编辑'>
-            <Button type='link' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+            <Button aria-label="编辑" type='link' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
             title='确定要删除此模板吗？'
@@ -285,7 +286,7 @@ export default function StandardChangesPage() {
             cancelText='取消'
           >
             <Tooltip title='删除'>
-              <Button type='link' danger icon={<Delete size={14} />} />
+              <Button aria-label="删除" type='link' danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>

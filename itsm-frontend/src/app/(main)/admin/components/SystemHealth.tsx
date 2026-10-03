@@ -167,7 +167,13 @@ export const SystemHealth: React.FC = () => {
         </Space>
       }
       extra={
-        <Button type="text" icon={<RefreshCw className="w-4 h-4" />} size="small" onClick={() => void loadStats()} />
+        <Button
+          type="text"
+          icon={<RefreshCw className="w-4 h-4" />}
+          size="small"
+          aria-label="刷新系统健康状态"
+          onClick={() => void loadStats()}
+        />
       }
     >
       <div style={{ marginBottom: token.marginLG }}>

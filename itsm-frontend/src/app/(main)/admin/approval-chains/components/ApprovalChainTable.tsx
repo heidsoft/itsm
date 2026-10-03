@@ -150,6 +150,7 @@ export function ApprovalChainTable({
             <Space>
               <Tooltip title="查看详情">
                 <Button
+                  aria-label="查看详情"
                   type="text"
                   icon={<Eye className="w-4 h-4" />}
                   onClick={() => onView(record)}
@@ -158,6 +159,7 @@ export function ApprovalChainTable({
               </Tooltip>
               <Tooltip title="编辑">
                 <Button
+                  aria-label="编辑"
                   type="text"
                   icon={<Edit className="w-4 h-4" />}
                   onClick={() => onEdit(record)}
@@ -165,7 +167,7 @@ export function ApprovalChainTable({
                 />
               </Tooltip>
               <Dropdown menu={menuProps} trigger={['click']}>
-                <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
+                <Button aria-label="更多操作" type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
               </Dropdown>
             </Space>
           );

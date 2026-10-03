@@ -164,7 +164,7 @@ export default function EmailIntakePage() {
       message.success('操作已完成');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      message.error((error as Error).message);
+      message.error(error instanceof Error && error.message ? error.message : '操作失败');
     } finally {
       setActionLoading(false);
     }
@@ -179,7 +179,7 @@ export default function EmailIntakePage() {
       message.success('修正已保存并重新核验');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      if (error instanceof Error) message.error(error.message);
+      if (error instanceof Error) message.error(error.message ? error.message : '保存修正失败');
     } finally {
       setActionLoading(false);
     }
@@ -196,7 +196,7 @@ export default function EmailIntakePage() {
       message.success('已记录强制开单原因并创建事件');
       await Promise.all([loadConversations(), openDetail(updated)]);
     } catch (error) {
-      if (error instanceof Error) message.error(error.message);
+      if (error instanceof Error) message.error(error.message ? error.message : '强制开单失败');
     } finally {
       setActionLoading(false);
     }
@@ -270,7 +270,7 @@ export default function EmailIntakePage() {
       form.resetFields();
       await loadMasterData();
     } catch (error) {
-      if (error instanceof Error) message.error(error.message);
+      if (error instanceof Error) message.error(error.message ? error.message : '保存失败');
     }
   };
 

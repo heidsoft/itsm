@@ -219,7 +219,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         }}
         actions={[
           <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
-            <Button type="text" icon={<MoreHorizontal />} size="small" />
+            <Button aria-label="更多操作" type="text" icon={<MoreHorizontal />} size="small" />
           </Dropdown>,
         ]}
       >
@@ -263,7 +263,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           </div>
 
           {/* 工单描述：CSS 行截断（不依赖 antd JS 测量），超长内容固定 2 行 */}
-          <Tooltip title={ticket.description}>
+          <Tooltip title={ticket.description ? ticket.description : undefined}>
             <div
               className="text-xs text-gray-500 mb-2"
               style={{

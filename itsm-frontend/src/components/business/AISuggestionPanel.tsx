@@ -235,6 +235,7 @@ export function AISuggestionPanel({
       }
       extra={
         <Button
+          aria-label="关闭"
           type="text"
           size="small"
           icon={<X className="w-3 h-3" />}

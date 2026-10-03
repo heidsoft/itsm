@@ -174,6 +174,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           <Tooltip title="编辑">
             <Button
               size="small"
+              aria-label={`编辑文章 ${record.title}`}
               icon={<Pencil />}
               onClick={() => router.push(`/knowledge/articles/${record.id}/edit`)}
               style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none' }}
@@ -182,6 +183,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           <Tooltip title="删除">
             <Button
               size="small"
+              aria-label={`删除文章 ${record.title}`}
               icon={<Trash2 />}
               onClick={() => handleDelete(record.id)}
               style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none' }}

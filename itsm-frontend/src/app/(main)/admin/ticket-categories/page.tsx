@@ -278,7 +278,7 @@ const TicketCategoryManagementPage = () => {
       loadCategories();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message);
+        message.error(error.message ? error.message : '保存分类失败');
       }
       console.error('保存分类失败:', error);
     } finally {
@@ -404,6 +404,7 @@ const TicketCategoryManagementPage = () => {
       width: 90,
       render: (record: TicketCategory) => (
         <Switch
+          aria-label={`切换分类 ${record.name} 的启用状态`}
           checked={record.isActive}
           size="small"
           onChange={checked => handleToggleStatus(record, checked)}
@@ -417,10 +418,11 @@ const TicketCategoryManagementPage = () => {
       render: (record: TicketCategory) => (
         <Space>
           <Tooltip title="查看详情">
-            <Button size="small" icon={<Eye size={14} />} onClick={() => handleViewCategory(record)} />
+            <Button aria-label="查看详情" size="small" icon={<Eye size={14} />} onClick={() => handleViewCategory(record)} />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               size="small"
               icon={<Edit size={14} />}
               onClick={() => handleEditCategory(record)}
@@ -428,6 +430,7 @@ const TicketCategoryManagementPage = () => {
           </Tooltip>
           <Tooltip title="复制">
             <Button
+              aria-label="复制"
               size="small"
               icon={<Copy size={14} />}
               onClick={() => handleCopyCategory(record)}
@@ -439,7 +442,7 @@ const TicketCategoryManagementPage = () => {
             okText="确定"
             cancelText="取消"
           >
-            <Button size="small" danger icon={<Delete size={14} />} />
+            <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
           </Popconfirm>
         </Space>
       ),
@@ -460,11 +463,13 @@ const TicketCategoryManagementPage = () => {
         </div>
         <div className="flex items-center gap-1">
           <Switch
+            aria-label={`切换分类 ${category.name} 的启用状态`}
             checked={category.isActive}
             size="small"
             onChange={checked => handleToggleStatus(category, checked)}
           />
           <Button
+            aria-label="编辑"
             size="small"
             icon={<Edit size={12} />}
             onClick={e => {

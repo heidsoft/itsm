@@ -498,6 +498,7 @@ const WorkflowManagement = () => {
           </Tooltip>
           <Tooltip title="设计流程">
             <Button
+              aria-label="设计流程"
               type="text"
               icon={<GitBranch className="w-4 h-4" />}
               onClick={() => router.push(`/workflow/designer?id=${record.id}`)}
@@ -525,6 +526,7 @@ const WorkflowManagement = () => {
           </Tooltip>
           <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}>
             <Button
+              aria-label={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}
               type="text"
               icon={
                 record.status === WORKFLOW_STATUS.ACTIVE ? (

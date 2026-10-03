@@ -161,7 +161,7 @@ export default function AssignmentRulesPage() {
       await loadRules();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message);
+        message.error(error.message ? error.message : '保存分配规则失败');
       }
     } finally {
       setSaving(false);
@@ -268,6 +268,7 @@ export default function AssignmentRulesPage() {
       width: 110,
       render: (active: boolean, record) => (
         <Switch
+          aria-label={`切换规则 ${record.name} 的启用状态`}
           checked={active}
           checkedChildren="启用"
           unCheckedChildren="禁用"
@@ -282,10 +283,10 @@ export default function AssignmentRulesPage() {
       render: (_, record) => (
         <div className="flex items-center gap-2">
           <Tooltip title="测试">
-            <Button size="small" icon={<FlaskConical size={14} />} onClick={() => openTestModal(record)} />
+            <Button aria-label="测试" size="small" icon={<FlaskConical size={14} />} onClick={() => openTestModal(record)} />
           </Tooltip>
           <Tooltip title="编辑">
-            <Button size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)} />
+            <Button aria-label="编辑" size="small" icon={<Edit size={14} />} onClick={() => openEditModal(record)} />
           </Tooltip>
           <Popconfirm
             title="确认删除该分配规则？"
@@ -295,7 +296,7 @@ export default function AssignmentRulesPage() {
             onConfirm={() => deleteRule(record.id)}
           >
             <Tooltip title="删除">
-              <Button size="small" danger icon={<Delete size={14} />} />
+              <Button aria-label="删除" size="small" danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </div>
@@ -315,7 +316,7 @@ export default function AssignmentRulesPage() {
           </div>
           <div className="flex items-center gap-2">
             <Tooltip title="刷新">
-              <Button icon={<RefreshCw size={16} />} onClick={loadRules} />
+              <Button aria-label="刷新" icon={<RefreshCw size={16} />} onClick={loadRules} />
             </Tooltip>
             <Button type="primary" icon={<Plus size={16} />} onClick={openCreateModal}>
               创建规则

@@ -417,10 +417,11 @@ const ServiceCatalogManagement = () => {
       render: (_: unknown, record: ServiceItem) => (
         <Space>
           <Tooltip title="查看详情">
-            <Button type="text" icon={<Eye className="w-4 h-4" />} size="small" />
+            <Button aria-label="查看详情" type="text" icon={<Eye className="w-4 h-4" />} size="small" />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
+              aria-label="编辑"
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => handleEdit(record)}
@@ -434,7 +435,7 @@ const ServiceCatalogManagement = () => {
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button type="text" icon={<Trash2 className="w-4 h-4" />} danger size="small" />
+              <Button aria-label="删除" type="text" icon={<Trash2 className="w-4 h-4" />} danger size="small" />
             </Tooltip>
           </Popconfirm>
           <Dropdown
@@ -466,7 +467,7 @@ const ServiceCatalogManagement = () => {
               ],
             }}
           >
-            <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
+            <Button aria-label="更多操作" type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
           </Dropdown>
         </Space>
       ),
