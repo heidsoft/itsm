@@ -237,20 +237,19 @@ export interface ChangeCalendarItem {
 // 变更API类
 export class ChangeApi {
   // 获取变更列表
+  // 后端 query 契约：page/pageSize/status/search/riskLevel（camelCase，只有一套名字）。
+  // type/priority 目前不被后端识别，发出去会被静默忽略——债务见
+  // plans/edge-feature-stability-audit-2026-10-02.md 的 E4-11，不得当成已实现的筛选能力。
   static async getChanges(params?: {
     page?: number;
     pageSize?: number;
     status?: ChangeStatus;
     type?: ChangeType;
     priority?: ChangePriority;
-    risk?: string;
+    riskLevel?: string;
     search?: string;
   }): Promise<ChangeListResponse> {
-    return httpClient.get<ChangeListResponse>('/api/v1/changes', params && {
-      ...params,
-      riskLevel: params.risk,
-      risk: undefined,
-    });
+    return httpClient.get<ChangeListResponse>('/api/v1/changes', params);
   }
 
   // 获取单个变更

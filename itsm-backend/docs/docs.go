@@ -887,7 +887,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量（默认 10）",
+                        "description": "每页数量（默认 20，超出 (0,100] 回落默认页长）",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -923,7 +923,7 @@ const docTemplate = `{
                             "high"
                         ],
                         "type": "string",
-                        "description": "风险等级过滤（同时兼容 risk_level）",
+                        "description": "风险等级过滤",
                         "name": "riskLevel",
                         "in": "query"
                     }
@@ -1195,7 +1195,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量（默认 20，上限 100）",
+                        "description": "每页数量（默认 20，超出 (0,100] 回落默认页长）",
                         "name": "pageSize",
                         "in": "query"
                     },

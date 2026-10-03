@@ -268,6 +268,40 @@ cd itsm-backend && go test ./middleware/... -run 'TokenRevocation|InvalidateUser
 `pageSize` 而非 `size`、已读过滤发 `read` 而非 `is_read`；不要再尝试用查询参数
 `userId`/`tenantId` 指定他人（此前该参数会被绑定，现在忽略——通知只会返回认证用户自己的）。
 
+### 1.11 变更列表分页夹紧与风险等级参数名单一化（2026-10-03，破坏性）
+
+`GET /api/v1/changes` 此前用裸 `strconv.Atoi` 读查询参数并忽略错误，值原样传进 Ent 的
+`Offset/Limit`，而响应的分页元数据在 `SuccessWithPagination` 里另走一遍
+`ValidatePagination`——同一个非法入参在 SQL 侧和声明侧有两个答案。属于 §1.10 之前同一批
+未修的缺陷类。现在 HTTP 入口统一走 `common.GetPaginationFromQuery`，与通知、变更 PIR
+列表共用同一套夹紧规则。
+
+| 查询入参 | 旧行为 | 新行为 |
+| --- | --- | --- |
+| `pageSize` 缺省或非法 | 默认 10 | **默认 20** |
+| `pageSize=0` | SQL 不加 `LIMIT`，**整表返回**，同时响应写 `pageSize:10` | 夹紧为默认页长 20，响应与行数一致 |
+| `page=0` / 负数 | SQL 收到负 `OFFSET`（Postgres 报错） | 回落第 1 页 |
+| `pageSize=5000` | SQL 用 5000、响应声明 100（两套夹紧） | 回落默认页长 20（`GetPaginationFromQuery` 只采纳 `(0,100]`，**不是夹到 100**） |
+| `risk_level=high` | 生效 | **不再读取**，只认 `riskLevel` |
+
+`risk_level` 的移除不是因为有人用它——实测前端从未发送过该名字（`change-api.ts` 一直发
+`riskLevel`）——而是「先读 snake_case、空则读 camelCase」属于 AGENTS.md 禁止的多字段兼容，
+保留会让两套参数名长期共存且无法判定哪套是契约。
+
+列表排序同时补了 `ID` 并列键：`created_at` 非唯一，同一秒创建的变更在页边界的归属此前不确定。
+
+**集成方必须改的两件事**：
+1. 需要整表或大页时显式发 `pageSize`（上限 100），不要依赖 `pageSize=0`「取全部」——
+   该写法此前会返回整个租户的变更表，现在返回 20 条。
+2. 风险等级过滤只发 `riskLevel`。同时注意 `type`、`priority` 两个查询参数后端**从不识别**
+   （静默忽略，前端表单和 mock 却在按它们过滤）；该缺口已登记为待收敛债务，不要当成可用契约。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestChangeListRoute
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/change-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

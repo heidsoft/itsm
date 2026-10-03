@@ -288,7 +288,8 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 		return nil, 0, err
 	}
 
-	ecs, err := q.Order(ent.Desc(change.FieldCreatedAt)).
+	// created_at 不是唯一列：同一秒创建的变更在页边界归属不确定，用 ID 兜底成全序。
+	ecs, err := q.Order(ent.Desc(change.FieldCreatedAt), ent.Asc(change.FieldID)).
 		Offset((page - 1) * size).
 		Limit(size).
 		All(ctx)

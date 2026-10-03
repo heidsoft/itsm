@@ -67,6 +67,9 @@ describe('ChangeApi', () => {
             },
           ],
           total: 1,
+          page: 1,
+          pageSize: 20,
+          totalPages: 1,
         },
       };
 
@@ -97,6 +100,9 @@ describe('ChangeApi', () => {
         data: {
           items: [],
           total: 0,
+          page: 1,
+          pageSize: 20,
+          totalPages: 0,
         },
       };
 
@@ -114,10 +120,11 @@ describe('ChangeApi', () => {
     });
 
     it('should pass query parameters correctly', async () => {
+      // 与后端 dto/信封逐键对齐：变更列表是真分页，五键齐备。
       const mockResponse = {
         code: 0,
         message: 'success',
-        data: { items: [], total: 0 },
+        data: { items: [], total: 0, page: 2, pageSize: 10, totalPages: 0 },
       };
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -129,7 +136,39 @@ describe('ChangeApi', () => {
 
       await ChangeApi.getChanges({ page: 2, pageSize: 10, status: 'pending' });
 
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('page=2'), expect.any(Object));
+      const [calledUrl] = (fetch as jest.Mock).mock.calls[0];
+      const parsed = new URL(String(calledUrl), 'http://localhost:8090');
+      expect(parsed.pathname).toBe('/api/v1/changes');
+      expect(Object.fromEntries(parsed.searchParams)).toEqual({
+        page: '2',
+        pageSize: '10',
+        status: 'pending',
+      });
+    });
+
+    it('风险等级只有一套 camelCase 参数名', async () => {
+      // 后端曾有 risk_level/riskLevel 两套名字（先读 snake 再兜 camel），属 AGENTS 禁止的
+      // 多字段兼容；实测前端也从未发送 risk_level，这里把单一名锁住防止再次分叉。
+      const mockResponse = {
+        code: 0,
+        message: 'success',
+        data: { items: [], total: 0, page: 1, pageSize: 100, totalPages: 0 },
+      };
+
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers(),
+        status: 200,
+        json: async () => mockResponse,
+      });
+
+      await ChangeApi.getChanges({ pageSize: 100, riskLevel: 'high' });
+
+      const [calledUrl] = (fetch as jest.Mock).mock.calls[0];
+      const parsed = new URL(String(calledUrl), 'http://localhost:8090');
+      expect(parsed.searchParams.get('riskLevel')).toBe('high');
+      expect(parsed.searchParams.has('risk')).toBe(false);
+      expect(parsed.searchParams.has('risk_level')).toBe(false);
     });
 
     it('should handle API error response', async () => {

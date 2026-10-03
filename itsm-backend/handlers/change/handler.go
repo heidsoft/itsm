@@ -3,7 +3,6 @@ package change
 import (
 	"errors"
 	"io"
-	"strconv"
 	"strings"
 
 	"itsm-backend/common"
@@ -344,23 +343,23 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 //	@Produce	json
 //	@Security	BearerAuth
 //	@Param	page	query	int	false	"页码（默认 1）"
-//	@Param	pageSize	query	int	false	"每页数量（默认 10）"
+//	@Param	pageSize	query	int	false	"每页数量（默认 20，超出 (0,100] 回落默认页长）"
 //	@Param	status	query	string	false	"状态过滤"	Enums(draft,pending,approved,rejected,scheduled,in_progress,completed,failed,rolled_back,cancelled,closed)
 //	@Param	search	query	string	false	"标题/描述关键词"
-//	@Param	riskLevel	query	string	false	"风险等级过滤（同时兼容 risk_level）"	Enums(low,medium,high)
+//	@Param	riskLevel	query	string	false	"风险等级过滤"	Enums(low,medium,high)
 //	@Success	200	{object}	common.Response
 //	@Failure	500	{object}	common.Response
 //	@Router	/api/v1/changes [get]
 func (h *Handler) ListChanges(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	// 分页只有一套夹紧通道：page 缺省 1、pageSize 缺省 20，只有落在 (0,100] 里的查询值会被
+	// 采纳。此前这里是裸 strconv.Atoi 且忽略错误，pageSize=0 会一路传到 Ent 的 Limit(0)，
+	// 而 sqlgraph 对 Limit(0) 是「不加 LIMIT」——整表返回；page<=0 则算出负 OFFSET。
+	pg := common.GetPaginationFromQuery(c)
 	status := c.Query("status")
 	search := c.Query("search")
-	// 支持 risk_level 与 riskLevel 两种命名，前端一般发 camelCase
-	riskLevel := c.Query("risk_level")
-	if riskLevel == "" {
-		riskLevel = c.Query("riskLevel")
-	}
+	// 参数名只有 camelCase 一套。曾同时读 risk_level，属 AGENTS 禁止的多字段兼容，
+	// 且实测前端从未发送过 risk_level（change-api.ts 发 riskLevel）。
+	riskLevel := c.Query("riskLevel")
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {
 		return
@@ -369,7 +368,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
-	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, page, pageSize, status, search, riskLevel, currentUserID, currentRole)
+	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, pg.Page, pg.PageSize, status, search, riskLevel, currentUserID, currentRole)
 	if err != nil {
 		common.InternalError(c, "查询变更列表失败: "+err.Error())
 		return
@@ -381,7 +380,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 		dtos = append(dtos, *toDTO(item))
 	}
 
-	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
+	common.SuccessWithPagination(c, dtos, pg.Page, pg.PageSize, int64(total))
 }
 
 // UpdateChange handles PUT /api/v1/changes/:id
@@ -946,7 +945,7 @@ func (h *Handler) GetPIR(c *gin.Context) {
 //	@Produce	json
 //	@Security	BearerAuth
 //	@Param	page	query	int	false	"页码（默认 1）"
-//	@Param	pageSize	query	int	false	"每页数量（默认 20，上限 100）"
+//	@Param	pageSize	query	int	false	"每页数量（默认 20，超出 (0,100] 回落默认页长）"
 //	@Param	result	query	string	false	"评审结论过滤"
 //	@Success	200	{object}	common.Response
 //	@Failure	500	{object}	common.Response

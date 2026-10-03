@@ -427,44 +427,95 @@ func createTestChange(repo *mockRepository, tenantID, userID int) *Change {
 func TestChangeController_ListChanges(t *testing.T) {
 	r, _, repo := setupTestHandler(t)
 
-	// Create test data
+	// Create test data：两条不同风险等级，用于把「riskLevel 只有一套参数名」测出差别。
 	createTestChange(repo, 1, 1)
+	highRisk := createTestChange(repo, 1, 1)
+	highRisk.RiskLevel = "high"
 
 	tests := []struct {
 		name           string
 		queryParams    string
 		expectedStatus int
 		expectedCode   int
+		expectedTotal  int
+		expectedPage   int
+		expectedSize   int
 	}{
 		{
 			name:           "成功获取变更列表",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   20,
 		},
 		{
 			name:           "带分页参数",
 			queryParams:    "?page=1&pageSize=10",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   10,
 		},
 		{
 			name:           "按状态筛选",
 			queryParams:    "?status=draft",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   20,
 		},
 		{
-			name:           "按风险等级筛选(snake_case)",
-			queryParams:    "?risk_level=low",
+			// 修复前 handler 先读 risk_level 再兜 riskLevel，同一用例两套参数名；
+			// 实测前端只发 riskLevel，snake_case 一支属 AGENTS 禁止的多字段兼容。
+			name:           "snake_case 参数名不再生效，不再被当成过滤器",
+			queryParams:    "?risk_level=high",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   20,
 		},
 		{
 			name:           "按风险等级筛选(camelCase)",
-			queryParams:    "?riskLevel=low",
+			queryParams:    "?riskLevel=high",
 			expectedStatus: http.StatusOK,
 			expectedCode:   common.SuccessCode,
+			expectedTotal:  1,
+			expectedPage:   1,
+			expectedSize:   20,
+		},
+		{
+			// 修复前是裸 strconv.Atoi：pageSize=0 原样落库查询（Ent Limit(0) = 不加 LIMIT），
+			// page<=0 会算出负 Offset。夹紧只有一套通道。
+			name:           "pageSize=0 夹紧为默认页长",
+			queryParams:    "?page=1&pageSize=0",
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   20,
+		},
+		{
+			name:           "page 为负回落第 1 页",
+			queryParams:    "?page=-1&pageSize=10",
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   10,
+		},
+		{
+			name:           "越界页长回落默认页长而不是整表",
+			queryParams:    "?pageSize=5000",
+			expectedStatus: http.StatusOK,
+			expectedCode:   common.SuccessCode,
+			expectedTotal:  2,
+			expectedPage:   1,
+			expectedSize:   20,
 		},
 	}
 
@@ -491,6 +542,12 @@ func TestChangeController_ListChanges(t *testing.T) {
 			}
 			sort.Strings(keys)
 			assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys, w.Body.String())
+
+			assert.Equal(t, float64(tt.expectedTotal), data["total"],
+				"total 必须是过滤后的全量条数: %s", w.Body.String())
+			assert.Equal(t, float64(tt.expectedPage), data["page"], "响应页码必须是夹紧后的值: %s", w.Body.String())
+			assert.Equal(t, float64(tt.expectedSize), data["pageSize"],
+				"响应页长必须是夹紧后的值: %s", w.Body.String())
 		})
 	}
 }

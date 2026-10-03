@@ -620,11 +620,34 @@ GET /changes
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码
-- pageSize: 每页数量
-- status: 状态过滤
-- risk: 风险等级过滤
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- status: 状态过滤（`draft`/`pending`/`approved`/`rejected`/`scheduled`/`in_progress`/`completed`/`failed`/`rolled_back`/`cancelled`/`closed`；`全部` 与空值不过滤）
+- search: 标题/描述关键词（`Contains`，两条 OR）
+- riskLevel: 风险等级过滤（`low`/`medium`/`high`）
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `ChangeResponse`（camelCase，含 `assigneeId`/`createdBy`/`riskLevel`）。空结果
+序列化为 `[]`。
+
+口径说明（2026-10-03 E4-10 实测收口）：
+
+- **`risk_level` 不再是第二套参数名。** 历史实现先读 `risk_level`、为空再读 `riskLevel`，属
+  AGENTS「请求/响应多字段兼容零新增」禁止项；实测前端从未发送 `risk_level`，因此按只保留
+  camelCase 收口。未识别的查询参数一律忽略，不会报错也不会生效。
+- **`type`、`priority` 目前不被后端识别**（`handlers/change/repository_impl.go` 的 `List` 只
+  构造 status/riskLevel/search 三个谓词）。前端 `ChangeApi.getChanges` 与本地 mock 仍接受这两个
+  参数，因此「按类型/优先级筛选」在真实接口上是静默无效的——已登记为债务，见
+  `plans/edge-feature-stability-audit-2026-10-02.md` 的 E4-11，不得当成已实现能力宣传。
+- **行级数据权限**：非管理角色（`super_admin`/`admin`/`manager`/`sysadmin` 之外）只返回
+  `createdBy` 或 `assigneeId` 等于本人的变更；缺失 `user_id` 时 fail-closed 返回空集。
+  租户收敛在上游按 `tenant_id` 生效。
+
+回归：`itsm-backend/router/change_list_route_test.go`（真实 `SetupRoutes` + `RequirePermission("change","read")`：
+五键集合、三页拼接不重不漏、`pageSize=0`/`page=-1`/`pageSize=5000` 夹紧、`riskLevel` 收敛、
+`risk_level` 不再生效、`status` 过滤与空 `[]`、agent 行级范围、租户 B 收敛、未认证 401）与
+`itsm-backend/handlers/change/handler_test.go`。
 
 ### 创建变更
 
@@ -637,11 +660,20 @@ Content-Type: application/json
   "title": "升级数据库版本",
   "description": "升级 PostgreSQL 到 14 版本",
   "type": "standard",
-  "risk": "medium",
-  "plannedStartAt": "2024-01-15T00:00:00Z",
-  "plannedEndAt": "2024-01-15T02:00:00Z"
+  "priority": "medium",
+  "impactScope": "high",
+  "riskLevel": "medium",
+  "plannedStartDate": "2024-01-15T00:00:00Z",
+  "plannedEndDate": "2024-01-15T02:00:00Z",
+  "implementationPlan": "分两批滚动升级",
+  "rollbackPlan": "恢复原版本快照",
+  "affectedCis": ["pg-prod-01"],
+  "relatedTickets": ["TKT-1024"]
 }
 ```
+
+字段名以 `dto.CreateChangeRequest` 为准（`riskLevel`、`plannedStartDate`、`plannedEndDate`、
+`affectedCis`）；旧文档里的 `risk`/`plannedStartAt` 从未被后端绑定。
 
 ### 获取变更详情
 
@@ -660,10 +692,12 @@ Content-Type: application/json
 {
   "title": "更新后的标题",
   "description": "更新后的描述",
-  "status": "approved",
-  "risk": "low"
+  "riskLevel": "low"
 }
 ```
+
+`dto.UpdateChangeRequest` 的可选标量字段全部使用指针、切片按 nil 判断，未传字段不会被覆盖（`affectedCis` 传
+`[]` 表示清空关联）；`status` 不在更新请求里，状态推进只能走下面的状态流转端点（由领域 service 校验允许的迁移）。
 
 ### 删除变更
 
