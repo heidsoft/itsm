@@ -102,21 +102,30 @@ type RiskAssessment struct {
 	UpdatedAt          time.Time
 }
 
+// TypeCount 是某个变更类型的数量，来自真实的 GROUP BY type 聚合。
+type TypeCount struct {
+	Type  string `json:"type"`
+	Count int    `json:"count"`
+}
+
 // Stats represents change statistics.
 // Field names and JSON tags mirror dto.ChangeStatsResponse so callers can either
 // consume the domain struct directly or map it through the DTO. Status values
 // follow the canonical set defined in dto.ChangeStatus (draft, pending, approved,
-// scheduled, in_progress, completed, failed, rolled_back, rejected, cancelled).
+// scheduled, in_progress, completed, failed, rolled_back, rejected, cancelled,
+// closed).
 type Stats struct {
-	Total      int `json:"total"`
-	Draft      int `json:"draft"`
-	Pending    int `json:"pending"`
-	Approved   int `json:"approved"`
-	Scheduled  int `json:"scheduled"`
-	InProgress int `json:"inProgress"`
-	Completed  int `json:"completed"`
-	Failed     int `json:"failed"`
-	RolledBack int `json:"rolledBack"`
-	Rejected   int `json:"rejected"`
-	Cancelled  int `json:"cancelled"`
+	Total      int         `json:"total"`
+	Draft      int         `json:"draft"`
+	Pending    int         `json:"pending"`
+	Approved   int         `json:"approved"`
+	Scheduled  int         `json:"scheduled"`
+	InProgress int         `json:"inProgress"`
+	Completed  int         `json:"completed"`
+	Failed     int         `json:"failed"`
+	RolledBack int         `json:"rolledBack"`
+	Rejected   int         `json:"rejected"`
+	Cancelled  int         `json:"cancelled"`
+	Closed     int         `json:"closed"`
+	ByType     []TypeCount `json:"byType"`
 }

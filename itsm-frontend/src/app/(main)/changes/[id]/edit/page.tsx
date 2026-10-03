@@ -63,8 +63,10 @@ const RISK_OPTIONS: Array<{ value: ChangeRequest['riskLevel']; label: string }> 
   { value: 'low', label: '低' },
 ];
 
-// 不允许编辑的状态列表（已审批通过/实施中/已完成）
-const READONLY_STATUSES = ['approved', 'implementing', 'completed', 'closed'];
+// 不允许编辑的状态列表（已审批通过/实施中/已完成/已关闭）。
+// 此前写着 implementing：后端从未返回该值（存量值是 in_progress），
+// 因此实施中的变更一直可以被编辑，守卫形同不存在。
+const READONLY_STATUSES: string[] = ['approved', 'in_progress', 'completed', 'closed'];
 
 const EditChangePage: React.FC = () => {
   const router = useRouter();

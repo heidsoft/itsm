@@ -127,18 +127,28 @@ type ChangeListResponse struct {
 	TotalPages int              `json:"totalPages"` // 总页数
 }
 
+// ChangeTypeCount 变更类型分布中的一项。Type 是后端 canonical 值
+// (standard/normal/emergency)，中文标签由前端 constants/taxonomy 单点提供。
+type ChangeTypeCount struct {
+	Type  ChangeType `json:"type"`  // 变更类型
+	Count int        `json:"count"` // 该类型的变更数量
+}
+
 // ChangeStatsResponse 变更统计响应
 type ChangeStatsResponse struct {
-	Total      int `json:"total"`      // 总变更数
-	Pending    int `json:"pending"`    // 待审批
-	Approved   int `json:"approved"`   // 已批准
-	Scheduled  int `json:"scheduled"`  // 已排期
-	InProgress int `json:"inProgress"` // 实施中
-	Completed  int `json:"completed"`  // 已完成
-	Failed     int `json:"failed"`     // 实施失败
-	RolledBack int `json:"rolledBack"` // 已回滚
-	Rejected   int `json:"rejected"`   // 已拒绝
-	Cancelled  int `json:"cancelled"`  // 已取消
+	Total      int               `json:"total"`      // 总变更数
+	Draft      int               `json:"draft"`      // 草稿
+	Pending    int               `json:"pending"`    // 待审批
+	Approved   int               `json:"approved"`   // 已批准
+	Scheduled  int               `json:"scheduled"`  // 已排期
+	InProgress int               `json:"inProgress"` // 实施中
+	Completed  int               `json:"completed"`  // 已完成
+	Failed     int               `json:"failed"`     // 实施失败
+	RolledBack int               `json:"rolledBack"` // 已回滚
+	Rejected   int               `json:"rejected"`   // 已拒绝
+	Cancelled  int               `json:"cancelled"`  // 已取消
+	Closed     int               `json:"closed"`     // 已关闭
+	ByType     []ChangeTypeCount `json:"byType"`     // 按变更类型的真实分布
 }
 
 // ChangeApprovalRequest 变更审批请求

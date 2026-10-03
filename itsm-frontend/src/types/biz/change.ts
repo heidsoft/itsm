@@ -112,14 +112,11 @@ export interface ChangeListResponse {
   totalPages: number;
 }
 
-// 统计响应
-export interface ChangeStats {
-  total: number;
-  pending: number;
-  approved: number;
-  inProgress: number;
-  completed: number;
-  rolledBack: number;
-  rejected: number;
-  cancelled: number;
-}
+// 统计响应只有一份形状：`@/lib/api/change-api` 的 `ChangeStatsResponse`，
+// 它逐字段镜像后端 `dto.ChangeStatsResponse`。这里只做 re-export，
+// 不再维护副本 —— 2026-10-03 之前本文件、`lib/api/change-api.ts` 和
+// `lib/services/change-service.ts` 各有一份互不一致的统计类型：
+// 只有中间那份声明了后端从不返回的 `implementing`（后端字段是 `inProgress`），
+// 报表页因此把「实施中」恒显示为 0，并用 total 的 30/50/20 伪造类型分布。
+export type { ChangeStatsResponse as ChangeStats } from '@/lib/api/change-api';
+export type { ChangeTypeCount } from '@/lib/api/change-api';

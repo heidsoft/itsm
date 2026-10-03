@@ -387,6 +387,8 @@ common.Success(c, gin.H{"items": normalized, "total": len(normalized)})
 **目的**：项目使用 antd v6，v4/v5 遗留 API 禁止新增（AGENTS.md「Ant Design v6 旧 API
 零新增规则」）。原脚本只覆盖 3 类全局文本模式，`visible=`/`destroyOnClose`/`bodyStyle`/
 `overlay`/`dropdownRender`/`onDropdownVisibleChange` 六类完全无门禁。2026-10-03 补齐。
+同批次的变更统计修复又暴露出两类仍然空白的废弃面（改报表页时写进 `Statistic valueStyle`
+与 `Spin tip`，门禁报绿、只在 Jest 里从 antd 的 `warningOnce` 露出），故再补两类。
 
 **接入**：`cd itsm-frontend && npm run lint:antd`（本地门禁；frontend-ci 只跑 eslint，
 未接 CI）。
@@ -395,7 +397,7 @@ common.Success(c, gin.H{"items": normalized, "total": len(normalized)})
 
 1. **全局模式**（历史行为不变，按行匹配）：`Space direction=`、`<Tabs.TabPane`、
    `Form.(Input|TextArea|Select|DatePicker|Radio|Checkbox)` 复合组件。
-2. **组件归属模式**：六类 prop 仅当 JSX 标签是**本文件从 `'antd'` 具名导入**（含
+2. **组件归属模式**：八类 prop 仅当 JSX 标签是**本文件从 `'antd'` 具名导入**（含
    `as` 别名与 `import type`）的组件时才判违规。项目自有组件可以合法拥有同名
    prop（如自研 `Drawer` 的 `visible`），归属由 import 决定，不做全局文本误伤。
 
@@ -414,6 +416,8 @@ common.Success(c, gin.H{"items": normalized, "total": len(normalized)})
 | `overlay` | Dropdown（v6 已移除） | `menu` |
 | `dropdownRender` | Select / TreeSelect / AutoComplete / Cascader / Dropdown | `popupRender` |
 | `onDropdownVisibleChange` | Select / TreeSelect / AutoComplete / Cascader | `onOpenChange` |
+| `valueStyle` | Statistic | `styles={{ content }}` |
+| `Spin.tip` | Spin | `description` |
 
 **基线棘轮**：各类别命中数与 `itsm-frontend/tools/antd-legacy-baseline.txt` 比较——
 超过基线 → exit 1；低于基线 → 提示收紧（只许降不许升）；新类别命中且未登记 →

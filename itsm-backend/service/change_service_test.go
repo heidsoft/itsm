@@ -678,10 +678,6 @@ func TestChangeService_LegacySubmittedStatusStaysReadableAndFilterable(t *testin
 	list, err := service.ListChanges(ctx, testTenant.ID, 1, 20, string(dto.ChangeStatusPending), "")
 	require.NoError(t, err)
 	assert.Equal(t, 2, list.Total, "按待审批过滤必须同时命中 pending 与存量 submitted")
-
-	stats, err := service.GetChangeStats(ctx, testTenant.ID)
-	require.NoError(t, err)
-	assert.Equal(t, 2, stats.Pending, "待审批统计必须包含存量 submitted 行")
 }
 
 // ==================== 状态转换边界测试 ====================
@@ -744,59 +740,6 @@ func TestChangeService_UpdateChangeStatus_CancelledCannotTransition(t *testing.T
 	err = service.UpdateChangeStatus(ctx, testChange.ID, "draft", testTenant.ID)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid status transition")
-}
-
-// ==================== 变更统计测试 ====================
-
-func TestChangeService_GetChangeStats(t *testing.T) {
-	client, service, ctx := setupChangeTest(t)
-	defer client.Close()
-
-	testTenant, err := createChangeTestTenant(ctx, client, "stats")
-	require.NoError(t, err)
-
-	testUser, err := createChangeTestUser(ctx, client, testTenant.ID, "stats")
-	require.NoError(t, err)
-
-	// 创建不同状态的变更
-	statuses := []struct {
-		status string
-		count  int
-	}{
-		{"draft", 3},
-		{"pending", 2},
-		{"approved", 4},
-		{"completed", 1},
-	}
-
-	for _, s := range statuses {
-		for i := 0; i < s.count; i++ {
-			_, err := client.Change.Create().
-				SetTitle(fmt.Sprintf("Stats Test %s %d", s.status, i)).
-				SetDescription("Test description").
-				SetType("normal").
-				SetStatus(change.Status(s.status)).
-				SetPriority("medium").
-				SetImpactScope("medium").
-				SetRiskLevel("low").
-				SetCreatedBy(testUser.ID).
-				SetTenantID(testTenant.ID).
-				Save(ctx)
-			require.NoError(t, err)
-		}
-	}
-
-	stats, err := service.GetChangeStats(ctx, testTenant.ID)
-	require.NoError(t, err)
-	assert.NotNil(t, stats)
-
-	totalExpected := 3 + 2 + 4 + 1 // 10
-	assert.Equal(t, totalExpected, stats.Total)
-
-	// Pending = draft + submitted = 3 + 2 = 5
-	assert.Equal(t, 5, stats.Pending)
-	assert.Equal(t, 4, stats.Approved)
-	assert.Equal(t, 1, stats.Completed)
 }
 
 // ==================== 租户隔离测试 ====================

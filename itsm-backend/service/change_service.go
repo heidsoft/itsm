@@ -690,40 +690,6 @@ func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) 
 	return nil
 }
 
-// GetChangeStats 获取变更统计
-func (s *ChangeService) GetChangeStats(ctx context.Context, tenantID int) (*dto.ChangeStatsResponse, error) {
-	rows, err := s.client.Change.Query().Where(change.TenantID(tenantID)).All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query change statistics: %w", err)
-	}
-	stats := &dto.ChangeStatsResponse{Total: len(rows)}
-	for _, item := range rows {
-		switch item.Status {
-		case change.Status(dto.ChangeStatusDraft), change.Status(dto.ChangeStatusPending), change.Status(common.ChangeStatusSubmitted):
-			stats.Pending++
-		case change.Status(dto.ChangeStatusApproved):
-			stats.Approved++
-		case change.Status(dto.ChangeStatusScheduled):
-			stats.Scheduled++
-		case change.Status(dto.ChangeStatusInProgress):
-			stats.InProgress++
-		case change.Status(dto.ChangeStatusCompleted):
-			stats.Completed++
-		case change.Status(dto.ChangeStatusFailed):
-			stats.Failed++
-		case change.Status(dto.ChangeStatusRolledBack):
-			stats.RolledBack++
-		case change.Status(dto.ChangeStatusRejected):
-			stats.Rejected++
-		case change.Status(dto.ChangeStatusCancelled):
-			stats.Cancelled++
-		default:
-			return nil, fmt.Errorf("unknown change status %q for change %d", item.Status, item.ID)
-		}
-	}
-	return stats, nil
-}
-
 // UpdateChangeStatus 更新变更状态
 // H-2 修复：进入终态（rejected/completed/cancelled/rolled_back）时在事务内收口残留的 pending 审批节点，
 // 防止后续新增审批节点把已终态变更“复活”。

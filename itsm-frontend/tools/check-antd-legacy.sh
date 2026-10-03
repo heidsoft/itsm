@@ -14,6 +14,8 @@
 #        overlay            Dropdown（v6 已移除，须用 menu）
 #        dropdownRender     Select/TreeSelect/AutoComplete/Cascader/Dropdown（改 popupRender）
 #        onDropdownVisibleChange Select/TreeSelect/AutoComplete/Cascader（改 onOpenChange）
+#        valueStyle         Statistic（改 styles.content）
+#        Spin.tip           Spin（改 description）
 #
 # 基线棘轮：各类别命中数与 tools/antd-legacy-baseline.txt 比较——
 #   超过基线 → exit 1；低于基线 → 提示收紧基线（只许降不许升）。
@@ -63,6 +65,8 @@ my @ATTR = (
   ["overlay",                 ["Dropdown"],                                                    qr/(?<![.\w])overlay\b/],
   ["dropdownRender",          ["Select","TreeSelect","AutoComplete","Cascader","Dropdown"],    qr/(?<![.\w])dropdownRender\b/],
   ["onDropdownVisibleChange", ["Select","TreeSelect","AutoComplete","Cascader"],               qr/(?<![.\w])onDropdownVisibleChange\b/],
+  ["valueStyle",              ["Statistic"],                                                   qr/(?<![.\w])valueStyle\b/],
+  ["Spin.tip",                ["Spin"],                                                        qr/(?<![.\w])tip\b/],
 );
 
 # 历史全局模式（保持原行级语义，不加归属判定）。

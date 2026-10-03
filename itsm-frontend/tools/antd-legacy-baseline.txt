@@ -5,7 +5,12 @@ Tabs.TabPane 0
 Form.compound 0
 visible 0
 destroyOnClose 0
-bodyStyle 5
+bodyStyle 4
 overlay 0
 dropdownRender 0
 onDropdownVisibleChange 0
+# 以下为本次新增检测面（对照 antd 6.2.2 .d.ts 的 @deprecated 注释核实）：
+# valueStyle(Statistic) 与 Spin.tip 此前完全没有门禁，报表页改动因此引入过告警。
+# 存量命中分布在 11 个未触及的页面，先冻结为棘轮基线，只许降不许升。
+valueStyle 11
+Spin.tip 7

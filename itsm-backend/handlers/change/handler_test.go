@@ -192,28 +192,43 @@ func (m *mockRepository) Delete(ctx context.Context, id int, tenantID int) error
 }
 
 func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	stats := &Stats{}
+	typeRows := make([]countsByType, 0, len(m.changes))
 	for _, c := range m.changes {
-		if c.TenantID == tenantID {
-			stats.Total++
-			switch c.Status {
-			case "pending":
-				stats.Pending++
-			case "approved":
-				stats.Approved++
-			case "in_progress":
-				stats.InProgress++
-			case "completed":
-				stats.Completed++
-			case "rolled_back":
-				stats.RolledBack++
-			case "rejected":
-				stats.Rejected++
-			case "cancelled":
-				stats.Cancelled++
-			}
+		if c.TenantID != tenantID {
+			continue
+		}
+		stats.Total++
+		typeRows = append(typeRows, countsByType{Type: c.Type, Count: 1})
+		// 与生产 stats_repository.GetStats 同一折叠口径，否则契约测试证明的是 mock。
+		switch c.Status {
+		case "draft":
+			stats.Draft++
+		case "pending", "pending_review", "submitted":
+			stats.Pending++
+		case "approved":
+			stats.Approved++
+		case "scheduled":
+			stats.Scheduled++
+		case "in_progress":
+			stats.InProgress++
+		case "completed":
+			stats.Completed++
+		case "failed":
+			stats.Failed++
+		case "rolled_back":
+			stats.RolledBack++
+		case "rejected":
+			stats.Rejected++
+		case "cancelled":
+			stats.Cancelled++
+		case "closed":
+			stats.Closed++
 		}
 	}
+	stats.ByType = orderChangeTypes(typeRows)
 	return stats, nil
 }
 
@@ -924,15 +939,22 @@ func TestChangeController_DeleteChange(t *testing.T) {
 }
 
 // TestChangeController_GetStats tests GET /api/v1/changes/stats
+//
+// 断言的是响应契约本身：封闭的 camelCase 键集合 + 每个状态桶都可达 + byType 恒为数组。
+// 修复前 dto.ChangeStatsResponse 没有 draft/closed/byType，toStatsDTO 也把 Draft
+// 直接丢掉，导致报表页的「草稿」扇区恒为 0、类型分布只能用 total 伪造。
 func TestChangeController_GetStats(t *testing.T) {
 	r, _, repo := setupTestHandler(t)
 
 	// Create test data with different statuses
-	for i, status := range []string{"draft", "pending", "approved", "in_progress", "completed"} {
+	statuses := []string{"draft", "pending", "approved", "in_progress", "completed", "closed"}
+	types := []string{"standard", "normal", "emergency", "normal", "standard", "normal"}
+	for i, status := range statuses {
 		c := &Change{
 			ID:        i + 1,
 			Title:     "Change " + strconv.Itoa(i),
 			Status:    status,
+			Type:      types[i],
 			TenantID:  1,
 			CreatedBy: 1,
 			CreatedAt: time.Now(),
@@ -952,9 +974,40 @@ func TestChangeController_GetStats(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, common.SuccessCode, response.Code)
 
-	data := response.Data.(map[string]interface{})
-	// Stats struct uses camelCase/lowercase JSON tags
-	assert.Contains(t, data, "total")
+	data, ok := response.Data.(map[string]interface{})
+	require.True(t, ok, w.Body.String())
+
+	keys := make([]string, 0, len(data))
+	for k := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	assert.Equal(t, []string{
+		"approved", "byType", "cancelled", "closed", "completed", "draft", "failed",
+		"inProgress", "pending", "rejected", "rolledBack", "scheduled", "total",
+	}, keys, "统计响应键集合必须封闭且全为 camelCase: %s", w.Body.String())
+
+	assert.Equal(t, float64(6), data["total"])
+	assert.Equal(t, float64(1), data["draft"], "draft 必须由 toStatsDTO 映射，不得静默丢成 0")
+	assert.Equal(t, float64(1), data["closed"], "closed 曾因 DTO 缺字段而只出现在 total 里")
+
+	byType, ok := data["byType"].([]interface{})
+	require.True(t, ok, "byType 必须是数组而不是 null: %s", w.Body.String())
+	assert.Len(t, byType, 3)
+	first, ok := byType[0].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, []string{"count", "type"}, sortedKeys(first))
+	assert.Equal(t, "standard", first["type"])
+	assert.Equal(t, float64(2), first["count"])
+}
+
+func sortedKeys(m map[string]interface{}) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // TestChangeController_SubmitChange tests POST /api/v1/changes/:id/submit

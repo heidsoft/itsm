@@ -4,7 +4,9 @@
 
 import { httpClient } from './http-client';
 
-// 变更状态类型
+// 变更状态类型：与后端 dto.ChangeStatus / ent/schema/change.go 的枚举逐值一致。
+// 历史值 submitted 只在持久化层存在，后端读映射会把它转成 pending，
+// 因此前端类型不得出现 submitted，也不得出现后端不存在的 implementing。
 export type ChangeStatus =
   | 'draft'
   | 'pending'
@@ -15,7 +17,8 @@ export type ChangeStatus =
   | 'completed'
   | 'failed'
   | 'rolled_back'
-  | 'cancelled';
+  | 'cancelled'
+  | 'closed';
 
 // 变更类型
 export type ChangeType = 'normal' | 'standard' | 'emergency';
@@ -83,16 +86,33 @@ export interface ChangeListResponse {
   totalPages: number;
 }
 
-// 变更统计响应
+// 变更类型分布中的一项，来自后端真实 GROUP BY type。
+// type 声明为 string 而不是 ChangeType：Ent 的 type 是无约束字符串列，
+// 后端会原样返回枚举外的历史值（按字典序追加在 canonical 类型之后），
+// 丢弃它们会让分布总数与 total 对不上账。展示标签见 constants/change.ts。
+export interface ChangeTypeCount {
+  type: string;
+  count: number;
+}
+
+// 变更统计响应：逐字段镜像后端 dto.ChangeStatsResponse。
+// 本接口是变更统计的唯一契约来源。types/biz/change.ts 只做 re-export；
+// lib/services/change-service.ts 里那份互不一致的副本（含后端从不返回的
+// implementing）已随该重复模块一并删除。
 export interface ChangeStatsResponse {
   total: number;
+  draft: number;
   pending: number;
   approved: number;
+  scheduled: number;
   inProgress: number;
   completed: number;
+  failed: number;
   rolledBack: number;
   rejected: number;
   cancelled: number;
+  closed: number;
+  byType: ChangeTypeCount[];
 }
 
 // 变更审批请求

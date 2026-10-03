@@ -282,17 +282,39 @@ export const changeHandlers = {
   },
 
   // GET /api/v1/changes/stats - Get change statistics
+  // 与后端 stats_repository 同一口径：全部桶来自真实聚合，类型按 canonical 顺序输出，
+  // 枚举外的历史类型追加在尾部而不是丢弃。
   getChangeStats: (): ChangeStatsResponse => {
     const changes = Array.from(mockChanges.values());
+    const countByStatus = (status: ChangeStatus) =>
+      changes.filter(c => c.status === status).length;
+
+    const typeCounts = new Map<string, number>();
+    for (const change of changes) {
+      typeCounts.set(change.type, (typeCounts.get(change.type) ?? 0) + 1);
+    }
+    const knownTypes: ChangeType[] = ['standard', 'normal', 'emergency'];
+    const orderedTypes = [
+      ...knownTypes.filter(type => typeCounts.has(type)),
+      ...[...typeCounts.keys()]
+        .filter(type => !knownTypes.includes(type as ChangeType))
+        .sort(),
+    ];
+
     return {
       total: changes.length,
-      pending: changes.filter(c => c.status === 'pending').length,
-      approved: changes.filter(c => c.status === 'approved').length,
-      inProgress: changes.filter(c => c.status === 'in_progress').length,
-      completed: changes.filter(c => c.status === 'completed').length,
-      rolledBack: changes.filter(c => c.status === 'rolled_back').length,
-      rejected: changes.filter(c => c.status === 'rejected').length,
-      cancelled: changes.filter(c => c.status === 'cancelled').length,
+      draft: countByStatus('draft'),
+      pending: countByStatus('pending'),
+      approved: countByStatus('approved'),
+      scheduled: countByStatus('scheduled'),
+      inProgress: countByStatus('in_progress'),
+      completed: countByStatus('completed'),
+      failed: countByStatus('failed'),
+      rolledBack: countByStatus('rolled_back'),
+      rejected: countByStatus('rejected'),
+      cancelled: countByStatus('cancelled'),
+      closed: countByStatus('closed'),
+      byType: orderedTypes.map(type => ({ type, count: typeCounts.get(type) ?? 0 })),
     };
   },
 

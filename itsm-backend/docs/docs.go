@@ -13269,12 +13269,27 @@ const docTemplate = `{
                     "description": "已批准",
                     "type": "integer"
                 },
+                "byType": {
+                    "description": "按变更类型的真实分布",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ChangeTypeCount"
+                    }
+                },
                 "cancelled": {
                     "description": "已取消",
                     "type": "integer"
                 },
+                "closed": {
+                    "description": "已关闭",
+                    "type": "integer"
+                },
                 "completed": {
                     "description": "已完成",
+                    "type": "integer"
+                },
+                "draft": {
+                    "description": "草稿",
                     "type": "integer"
                 },
                 "failed": {
@@ -13384,6 +13399,23 @@ const docTemplate = `{
                 "ChangeTypeStandard",
                 "ChangeTypeEmergency"
             ]
+        },
+        "dto.ChangeTypeCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "该类型的变更数量",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "变更类型",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ChangeType"
+                        }
+                    ]
+                }
+            }
         },
         "dto.ChangeUserStatusRequest": {
             "type": "object",

@@ -594,21 +594,26 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 // toStatsDTO maps the change.Stats domain struct to dto.ChangeStatsResponse.
 func toStatsDTO(s *Stats) *dto.ChangeStatsResponse {
+	out := &dto.ChangeStatsResponse{ByType: []dto.ChangeTypeCount{}}
 	if s == nil {
-		return &dto.ChangeStatsResponse{}
+		return out
 	}
-	return &dto.ChangeStatsResponse{
-		Total:      s.Total,
-		Pending:    s.Pending,
-		Approved:   s.Approved,
-		Scheduled:  s.Scheduled,
-		InProgress: s.InProgress,
-		Completed:  s.Completed,
-		Failed:     s.Failed,
-		RolledBack: s.RolledBack,
-		Rejected:   s.Rejected,
-		Cancelled:  s.Cancelled,
+	out.Total = s.Total
+	out.Draft = s.Draft
+	out.Pending = s.Pending
+	out.Approved = s.Approved
+	out.Scheduled = s.Scheduled
+	out.InProgress = s.InProgress
+	out.Completed = s.Completed
+	out.Failed = s.Failed
+	out.RolledBack = s.RolledBack
+	out.Rejected = s.Rejected
+	out.Cancelled = s.Cancelled
+	out.Closed = s.Closed
+	for _, t := range s.ByType {
+		out.ByType = append(out.ByType, dto.ChangeTypeCount{Type: dto.ChangeType(t.Type), Count: t.Count})
 	}
+	return out
 }
 
 // TransitionStatus handles status transition actions

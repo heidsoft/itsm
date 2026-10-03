@@ -1190,11 +1190,22 @@ definitions:
       approved:
         description: 已批准
         type: integer
+      byType:
+        description: 按变更类型的真实分布
+        items:
+          $ref: '#/definitions/dto.ChangeTypeCount'
+        type: array
       cancelled:
         description: 已取消
         type: integer
+      closed:
+        description: 已关闭
+        type: integer
       completed:
         description: 已完成
+        type: integer
+      draft:
+        description: 草稿
         type: integer
       failed:
         description: 实施失败
@@ -1286,6 +1297,16 @@ definitions:
     - ChangeTypeNormal
     - ChangeTypeStandard
     - ChangeTypeEmergency
+  dto.ChangeTypeCount:
+    properties:
+      count:
+        description: 该类型的变更数量
+        type: integer
+      type:
+        allOf:
+        - $ref: '#/definitions/dto.ChangeType'
+        description: 变更类型
+    type: object
   dto.ChangeUserStatusRequest:
     properties:
       active:
