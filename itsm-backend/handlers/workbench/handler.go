@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,19 +22,13 @@ func NewHandler(service Service) *Handler {
 
 // Query handles GET /api/v1/workbench
 func (h *Handler) Query(c *gin.Context) {
-	tenantID, exists := c.Get("tenantID")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "tenant context missing")
-		return
-	}
-	tenantIDInt, ok := tenantID.(int)
+	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.InternalErrorCode, "invalid tenant context")
 		return
 	}
 
 	query := WorkbenchQuery{
-		TenantID: tenantIDInt,
+		TenantID: tenantID,
 		Page:     1,
 		PageSize: 20,
 	}

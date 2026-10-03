@@ -13,6 +13,22 @@ type repositoryImpl struct {
 	db *sql.DB
 }
 
+// workbenchDomain 描述一个参与统一工作台的 ITIL 领域及其物理表。
+// softDelete 必须与 ent/schema 实际列一致：changes 没有 deleted_at，
+// 给它加 deleted_at IS NULL 会让整条 UNION 直接报错。
+type workbenchDomain struct {
+	name       string
+	table      string
+	softDelete bool
+}
+
+var workbenchDomains = []workbenchDomain{
+	{name: "incident", table: "incidents", softDelete: true},
+	{name: "change", table: "changes", softDelete: false},
+	{name: "problem", table: "problems", softDelete: true},
+	{name: "ticket", table: "tickets", softDelete: true},
+}
+
 // NewRepository creates a new workbench repository.
 func NewRepository(db *sql.DB) Repository {
 	return &repositoryImpl{db: db}
@@ -28,23 +44,39 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 	var unions []string
 	var args []interface{}
 
-	domains := []struct {
-		name  string
-		table string
-	}{
-		{"incident", "incidents"},
-		{"change", "changes"},
-		{"problem", "problems"},
-		{"ticket", "tickets"},
+	for _, d := range workbenchDomains {
+		statuses, ok := lifecycle.StatusesForPhases(lifecycle.Domain(d.name), query.Phase)
+		if !ok {
+			continue
+		}
+
+		conds := []string{fmt.Sprintf("tenant_id = %s", nextArg())}
+		args = append(args, query.TenantID)
+		if d.softDelete {
+			conds = append(conds, "deleted_at IS NULL")
+		}
+		if len(statuses) > 0 {
+			placeholders := make([]string, len(statuses))
+			for i, s := range statuses {
+				placeholders[i] = nextArg()
+				args = append(args, s)
+			}
+			conds = append(conds, fmt.Sprintf("status IN (%s)", strings.Join(placeholders, ",")))
+		}
+
+		unions = append(unions, fmt.Sprintf(
+			"SELECT '%s' as record_type, id, title, description, priority, status, assignee_id, tenant_id, created_at, updated_at FROM %s WHERE %s",
+			d.name, d.table, strings.Join(conds, " AND "),
+		))
 	}
 
-	for _, d := range domains {
-		tenantPlaceholder := nextArg()
-		unions = append(unions, fmt.Sprintf(
-			"SELECT '%s' as record_type, id, title, description, priority, status, assignee_id, tenant_id, created_at, updated_at FROM %s WHERE tenant_id = %s AND deleted_at IS NULL",
-			d.name, d.table, tenantPlaceholder,
-		))
-		args = append(args, query.TenantID)
+	if len(unions) == 0 {
+		return &WorkbenchResponse{
+			Items:    []WorkbenchItem{},
+			Total:    0,
+			Page:     query.Page,
+			PageSize: query.PageSize,
+		}, nil
 	}
 
 	unionSQL := strings.Join(unions, "\nUNION ALL\n")
@@ -73,18 +105,18 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 		whereClauses = append(whereClauses, fmt.Sprintf("record_type IN (%s)", strings.Join(placeholders, ",")))
 	}
 
-	outerQuery := fmt.Sprintf("SELECT * FROM (%s) AS combined", unionSQL)
+	baseQuery := fmt.Sprintf("SELECT * FROM (%s) AS combined", unionSQL)
 	if len(whereClauses) > 0 {
-		outerQuery += " WHERE " + strings.Join(whereClauses, " AND ")
+		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
 	}
 
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s)", outerQuery)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS counted", baseQuery)
 	var total int
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, fmt.Errorf("count workbench items: %w", err)
 	}
 
-	outerQuery += " ORDER BY created_at DESC"
+	outerQuery := baseQuery + " ORDER BY created_at DESC"
 	if query.PageSize > 0 {
 		outerQuery += fmt.Sprintf(" LIMIT %d", query.PageSize)
 		if query.Page > 0 {
@@ -99,7 +131,7 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 	}
 	defer rows.Close()
 
-	var items []WorkbenchItem
+	items := []WorkbenchItem{}
 	for rows.Next() {
 		var item WorkbenchItem
 		var assigneeID sql.NullInt64
@@ -131,21 +163,6 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("iterate workbench rows: %w", err)
-	}
-
-	if len(query.Phase) > 0 {
-		phaseSet := make(map[string]bool)
-		for _, p := range query.Phase {
-			phaseSet[p] = true
-		}
-		var filtered []WorkbenchItem
-		for _, item := range items {
-			if phaseSet[item.Phase] {
-				filtered = append(filtered, item)
-			}
-		}
-		items = filtered
-		total = len(items)
 	}
 
 	totalPages := 0

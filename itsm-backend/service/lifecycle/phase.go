@@ -6,6 +6,8 @@
 // and workbench views across different ITIL domains.
 package lifecycle
 
+import "sort"
+
 // Phase represents a stage in the work item lifecycle.
 // Unlike domain-specific status values, Phase provides a consistent
 // vocabulary across ticket, incident, problem, change, release, and service_request.
@@ -113,6 +115,38 @@ func StatusToPhase(domain Domain, status string) Phase {
 		return PhaseUnknown
 	}
 	return phase
+}
+
+// StatusesForPhases returns the statuses of a domain that map into any of the
+// given phases, so cross-domain phase filters can be pushed down into SQL
+// instead of filtering an already-paginated page.
+//
+// Empty phases means "no phase restriction" and returns (nil, true).
+// An unknown domain returns ok=false so callers skip that domain rather than
+// silently treating the filter as unrestricted.
+// Results are sorted for deterministic SQL.
+func StatusesForPhases(domain Domain, phases []string) ([]string, bool) {
+	domainMap, ok := statusPhaseMap[domain]
+	if !ok {
+		return nil, false
+	}
+	if len(phases) == 0 {
+		return nil, true
+	}
+
+	wanted := make(map[Phase]struct{}, len(phases))
+	for _, p := range phases {
+		wanted[Phase(p)] = struct{}{}
+	}
+
+	statuses := make([]string, 0, len(domainMap))
+	for status, phase := range domainMap {
+		if _, hit := wanted[phase]; hit {
+			statuses = append(statuses, status)
+		}
+	}
+	sort.Strings(statuses)
+	return statuses, true
 }
 
 // IsValidPhase checks if the given string is a valid Phase value.
