@@ -390,9 +390,7 @@ go test -race ./middleware ./service -run 'RBAC|Permission|Role|Menu' -count=1
 - 自定义角色/菜单升级后保持不变；
 - 无权限或未初始化角色默认拒绝访问。
 
-**回滚**
-
-在一个版本内保留 `users.role` 只读兼容；数据双读验证通过后再移除。
+> **状态修订（2026-10-03，R2-d 已落地）**：本步"系统角色权限采用精确集合 reconcile"与退出标准"从系统角色模板删除权限后数据库关联同步删除"已按只增不减契约修订——`seedRolePermissions` 不再按内置码集反向删除清单外授权（否则运维手工热修在下一次播种被静默撤销，且 N4 拍板前会阻塞任何手工收口）；收缩唯一通道是显式退役清单 `authz.RetiredRolePermissionCodes()`（模板移除权限码时同提交登记），由 `applyRetiredRolePermissions` 删除。退出标准相应改为：手工补的授权在下一次播种后仍在；退役清单内的码被移除且重跑不复活；守卫覆盖两条路径（`pkg/seeder/role_permission_guard_test.go`、`role_permissions_reconcile_test.go`）。
 
 ### Step 5：实现 ITIL、BPMN、SLA、CMDB 租户模板
 

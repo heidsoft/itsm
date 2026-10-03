@@ -108,6 +108,8 @@
 - 动作：把 managed 集合的收敛改成"只增不减 + 显式退役清单"，或者要求删除动作走 `initialization_installations` 账本记录并输出 diff 日志。
 - 归属：`production-data-initialization-blueprint.md` Step 4。
 
+> **状态（2026-10-03）：已落地（选"只增不减 + 显式退役清单"）。** 收敛 Delete 块已移除：`seedRolePermissions` 现在只按内置码集补齐缺失授权行，清单外的既有授权（含运维手工热修）不再被撤销。收缩走唯一通道 `authz.RetiredRolePermissionCodes()`（当前为空清单）——产品从 `BuiltinRolePermissionCodes` 移除某角色的权限码时，必须同提交登记 (角色, 码)，由 `applyRetiredRolePermissions` 按角色+租户+退役码删除。守卫三条契约（键 ⊆ 内置键、值 ⊆ 权限清单、值与该角色现行码集不重叠）锁在 `pkg/seeder/role_permission_guard_test.go`；行为回归（手工热修存活 + 退役生效且重跑不复活）在 `pkg/seeder/role_permissions_reconcile_test.go`。退役清单经 `NewSeeder` 注入 Seeder 字段，测试通过 `withBaselineTenant` 视图覆盖注入，走真实 `seedRolePermissions` 入口。备选方案"删除走 initialization_installations 账本 + diff 日志"未采用：当前删除仅发生在显式登记的退役清单内，范围可审计，账本机制留给未来批次评估。
+
 ### R3　种子载体去毒 → 初始化蓝图 Step 1
 
 | 项 | 内容 |

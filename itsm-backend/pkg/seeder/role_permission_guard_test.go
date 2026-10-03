@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	domainrole "itsm-backend/domain/role"
+	"itsm-backend/internal/authz"
 	"itsm-backend/middleware"
 )
 
@@ -104,5 +105,46 @@ func TestPermissionDefinitions_NoDuplicateCodes(t *testing.T) {
 			continue
 		}
 		seen[d.Code] = true
+	}
+}
+
+// TestRetiredRolePermissionCodes_Guard 显式退役清单守卫（2026-10-03 R2-d）。
+//
+// 「只增不减」契约下 applyRetiredRolePermissions 是播种器唯一的收缩通道，
+// 清单写错就会静默删掉线上授权行，故锁三条契约：
+//  1. 键 ⊆ BuiltinRolePermissionCodes() 的键——退役只对内置角色有意义，
+//     拼错角色名会让 delete 静默空转（无法靠运行时发现）；
+//  2. 值 ⊆ 权限清单（Definitions()）——退役清单引用不存在或不在 seedPermissions
+//     创建范围内的码，等于宣告一次永不生效的退役；
+//  3. 值与该角色现行内置码集不得重叠——既授予又退役 = 配置矛盾，
+//     播种顺序会让最终状态依赖实现细节。
+func TestRetiredRolePermissionCodes_Guard(t *testing.T) {
+	roleCodes := builtinRolePermissionCodes()
+	defs := permissionDefinitions()
+
+	defByCode := make(map[string]bool, len(defs))
+	for _, d := range defs {
+		defByCode[d.Code] = true
+	}
+
+	for role, retired := range authz.RetiredRolePermissionCodes() {
+		set, ok := roleCodes[role]
+		if !ok {
+			t.Errorf("退役清单的键 %q 不在 builtinRolePermissionCodes() 中：applyRetiredRolePermissions 将静默空转", role)
+			continue
+		}
+		builtin := make(map[string]bool, len(set))
+		for _, code := range set {
+			builtin[code] = true
+		}
+		for _, code := range retired {
+			if !defByCode[code] {
+				t.Errorf("角色 %q 退役的权限码 %q 不在 permissionDefinitions() 清单中：seedPermissions 不会创建该码，退役永不生效", role, code)
+				continue
+			}
+			if builtin[code] {
+				t.Errorf("角色 %q 的权限码 %q 同时出现在内置码集与退役清单中：既授予又退役，播种结果依赖顺序，属配置矛盾", role, code)
+			}
+		}
 	}
 }

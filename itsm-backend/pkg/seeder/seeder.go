@@ -348,6 +348,7 @@ type Seeder struct {
 	expectedPermissions     []string
 	expectedMenus           []string
 	expectedRolePermissions map[string][]string
+	retiredRolePermissions  map[string][]string
 }
 
 // installsPlatformTenant reports whether this seeder writes the platform
@@ -399,6 +400,7 @@ func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger, appConfig *config.C
 		expectedPermissions:     permissions,
 		expectedMenus:           menus,
 		expectedRolePermissions: rolePermissions,
+		retiredRolePermissions:  authz.RetiredRolePermissionCodes(),
 	}
 }
 
@@ -2006,16 +2008,13 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 	}
 }
 
-// seedRolePermissions 为角色分配权限关联
-// builtinRolePermissionCodes 返回角色→权限码映射（DBOnly 权威态的数据源）。
-// 契约：users.role 内置词表角色（domain/role）除 super_admin（Login ["*"] 旁路）外
-// 都必须有非空条目，否则 DBOnly configured 态空集=显式撤销，该角色全 403。
-// 2026-09-17 P0：补齐 admin/technician（此前角色行存在但权限行空集，
-// DBOnly P0 修复后暴露为 admin/technician 用户全 403）。
+// seedRolePermissions 为角色分配权限关联。
+//
+// 收敛契约（2026-10-03 R2-d）：只增不减。播种只补齐内置码集缺失的授权行，
+// 不再反向删除清单外的授权——运维手工热修在下一次播种后必须仍然存活；
+// 唯一的收缩通道是显式退役清单（applyRetiredRolePermissions）。
+// 码集权威源：internal/authz BuiltinRolePermissionCodes()；
 // 守卫：pkg/seeder/role_permission_guard_test.go 锁定与 middleware.RolePermissions 的对齐。
-
-// appendMissingCodes 返回在 codes 基础上补齐 extra 缺失项的新切片（保序、去重）。
-
 func (s *Seeder) seedRolePermissions(ctx context.Context) {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
@@ -2062,27 +2061,10 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 				permIDs = append(permIDs, id)
 			}
 		}
-		if len(permIDs) == 0 {
-			continue
-		}
-		managedPermissionIDs := make([]int, 0, len(s.expectedPermissions))
-		for _, code := range s.expectedPermissions {
-			if id, exists := permByCode[code]; exists {
-				managedPermissionIDs = append(managedPermissionIDs, id)
-			}
-		}
-		if _, err := s.client.RolePermission.Delete().
-			Where(
-				rolepermission.RoleIDEQ(r.ID),
-				rolepermission.TenantIDEQ(t.ID),
-				rolepermission.PermissionIDIn(managedPermissionIDs...),
-				rolepermission.PermissionIDNotIn(permIDs...),
-			).
-			Exec(ctx); err != nil {
-			s.sugar.Warnw("remove obsolete role permissions failed", "error", err, "role", r.Code)
-		}
 
-		// 为角色添加权限（直接写入 role_permissions 联表）
+		// 为角色添加权限（直接写入 role_permissions 联表）——只增不减：
+		// 内置清单之外的既有授权（含运维手工热修）不得在播种时被撤销；
+		// 收缩只允许走显式退役清单（R2-d）。
 		created := 0
 		for _, pid := range permIDs {
 			exists, err := s.client.RolePermission.Query().
@@ -2110,13 +2092,41 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 			s.sugar.Infow("role permissions ensured", "role", r.Code, "created", created)
 			assigned++
 		}
+
+		s.applyRetiredRolePermissions(ctx, r, t.ID, permByCode)
 	}
 	s.sugar.Infow("role permissions seed completed", "roles_assigned", assigned)
 }
 
-// allPermissionCodes 返回所有权限代码
-
-// allExcept 返回除指定代码外的所有权限代码
+// applyRetiredRolePermissions 删除显式退役清单内的授权行——「只增不减」契约下
+// 播种器唯一的收缩通道。清单由 authz.RetiredRolePermissionCodes() 权威定义并经
+// NewSeeder 注入；清单外的授权（无论来自内置码集演化还是运维手工热修）不受影响。
+func (s *Seeder) applyRetiredRolePermissions(ctx context.Context, r *ent.Role, tenantID int, permByCode map[string]int) {
+	retired, ok := s.retiredRolePermissions[r.Code]
+	if !ok || len(retired) == 0 {
+		return
+	}
+	retiredIDs := make([]int, 0, len(retired))
+	for _, code := range retired {
+		if id, exists := permByCode[code]; exists {
+			retiredIDs = append(retiredIDs, id)
+		}
+	}
+	if len(retiredIDs) == 0 {
+		return
+	}
+	if _, err := s.client.RolePermission.Delete().
+		Where(
+			rolepermission.RoleIDEQ(r.ID),
+			rolepermission.TenantIDEQ(tenantID),
+			rolepermission.PermissionIDIn(retiredIDs...),
+		).
+		Exec(ctx); err != nil {
+		s.sugar.Warnw("remove retired role permissions failed", "error", err, "role", r.Code)
+		return
+	}
+	s.sugar.Infow("retired role permissions applied", "role", r.Code, "codes", retired)
+}
 
 func (s *Seeder) seedServiceCatalog(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)

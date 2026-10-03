@@ -452,3 +452,21 @@ func allExcept(exclude []string) []string {
 	}
 	return result
 }
+
+// RetiredRolePermissionCodes 返回「角色 → 显式退役权限码」清单（2026-10-03 R2-d）。
+//
+// 播种收敛契约自此为「只增不减」：seedRolePermissions 不再按内置码集反向删除
+// role_permissions 中多出的授权行——否则运维在数据库里手工补的授权（如为
+// sysadmin 补授 catalog 中内置清单缺失的码）会在下一次播种时被静默撤销。
+// 产品若在某版本中故意从 BuiltinRolePermissionCodes 移除某角色的权限码，
+// 必须在同一提交里把该 (角色, 码) 登记到本清单，播种器才会从既有安装中移除。
+//
+// 守卫契约（pkg/seeder/role_permission_guard_test.go 锁定）：
+//   - 键 ⊆ BuiltinRolePermissionCodes() 的键；
+//   - 值 ⊆ 权限清单（Definitions()）；
+//   - 值与该角色现行内置码集不得重叠（既授予又退役 = 配置矛盾）。
+//
+// 当前为空清单：尚无需要退役的授权。
+func RetiredRolePermissionCodes() map[string][]string {
+	return map[string][]string{}
+}
