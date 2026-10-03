@@ -64,6 +64,16 @@
 | 为什么排第一 | 改动小、无产品语义争议、不需要拍板（`role` 本来就不该由客户端选）。而 R2 需要拍板，不能被 R2 阻塞 |
 | 归属 | `ROADMAP.md:234` Security 轨；同步登记到 `production-data-initialization-blueprint.md` Step 1 |
 
+> **状态回写（2026-10-03，已落地）**
+>
+> - **代码**：后端 `19500ae6`——`RegisterRequest` 移除 `role`/`tenantCode`，目标租户服务端单源解析（唯一活跃租户自动落、多活跃租户 fail-closed、零活跃租户报"系统尚未初始化"），落库角色固定 `user.RoleEndUser`；前端 `9a5b3f3a`——注册页移除角色选择器，请求体不再携带 `role`/`tenantCode`，契约测试断言请求体不含这两个字段，并清理 6 个 i18n 孤儿键。说明：后端提交由并发会话代为提交（本计划执行者的已验证暂存内容被并入其提交，提交信息与内容相符，按共享工作区纪律报告坐标、不另造重复提交）；前端提交为执行者本人。
+> - **动作③不执行，实测为无操作**：三处 `super_admin` 短路（`middleware/rbac.go` 的 `AuthorizeResourceForRole`、同文件 `hasPermission`、`middleware/smart_permission.go` 的 `SmartCheckPermission`）中，后两处在 DBOnly 分支上最终委托给第一处，移动短路位置不改变任何判定结果；而彻底移除短路会让 DBOnly 生产库的 `super_admin` 被锁死——其 Role 行存在即视为"已配置"，空权限集按显式收回处理返回 403，正是 2026-09-17 P0（合法管理员被锁死）缺陷类的复现。super_admin 的显式出口问题归入 R2/N5 授权平面收敛，不在 R1 偷渡。
+> - **测试证据**（均在落库前实测为绿）：路由级回归打在真实 `SetupRoutes` 上——多活跃租户下带 `role: "super_admin"` 的攻击 payload 返回 401、业务码非 0、用户表零落库；单租户部署下同 payload 落库角色为 `end_user`，真实登录拿到 cookie 后访问 `GET /api/v1/admin/operations/commands` 返回 403（若提权成立，super_admin 短路会直接放行，该断言即失败）。后端 `go test ./handlers/auth/... ./router/...` ok、`go build ./...`、`go vet`、gofumpt 干净；前端 jest auth-service 30/30、api-contract 3/3、`npm run type-check` 干净。
+> - **退出标准修正一处**：原标准要求 dashboard 与 admin 路由都返回 403，实测 `middleware.RolePermissions["end_user"]` 本就包含 `dashboard:read`，dashboard 返回 200 是合法行为而非提权；判别断言以 admin 路由 403 为准。
+> - **文档同步**：`docs/api-reference.md` 注册节（移除 `role` 示例 + 说明角色与租户由服务端决定）随 `7146337f` 落库，CHANGELOG P0-1 条目随 `e83e5016` 落库（v1.6.11 发布整理；两笔均为并发会话代为提交，注册节文本为本文执行者所写）。标签 `v1.6.11` 经 `git tag --contains 19500ae6` 验证已包含后端修复提交。
+> - **归属修正**：原表写"同步登记到 blueprint Step 1"，重读 `production-data-initialization-blueprint.md` Step 1 后确认其任务面是 Seeder/演示数据/固定密码，与注册入口契约无交集，不做强行登记；ROADMAP Security 轨为程序级清单（扫描/威胁建模/渗透测试）而非漏洞修复台账，P0-1 的权威记录在 CHANGELOG 与 api-reference。此条按本文 §6 纪律（引用坐标动手前重测）执行。
+> - **UPGRADE.md 不需要更新**：历史字段为静默忽略而非报错，属非破坏性契约变更，按 AGENTS.md 规则仅破坏性变更触发 UPGRADE.md。
+
 ### R2　双权限权威对齐（P0-2）→ 授权平面收敛 批次 6
 
 分三步，**第一步不改行为，只让 CI 红出真实差集**：
