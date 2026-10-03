@@ -316,6 +316,9 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     } catch (error) {
       console.error('加载工作流失败:', error);
       message.error(t('workflow.designer.loadWorkflowFailed'));
+      // 加载失败时不能留在空白画布：页面标题会显示"新工作流设计"，
+      // 用户会以为在编辑原流程，点保存则新建一份定义。
+      router.push('/admin/workflows');
     }
   };
 
@@ -920,6 +923,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                           {t('workflow.designer.validationRevalidate')}
                         </Button>
                         <Switch 
+                          aria-label="自动校验"
                           checked={autoValidate} 
                           onChange={setAutoValidate} 
                           checkedChildren={t('workflow.designer.validationAutoOn')}

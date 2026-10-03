@@ -17,7 +17,6 @@ import {
   Row,
   Col,
   Flex,
-  Tooltip,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -207,13 +206,11 @@ function LoginForm() {
 
         <Form.Item className='mb-5'>
           <Flex justify='flex-end'>
-            <Tooltip title={loading ? '登录中...' : ''}>
-              <Link href='/forgot-password'>
-                <Button type='link' className='p-0 h-auto text-xs' disabled={loading}>
-                  {t('auth.login.forgotPassword')}
-                </Button>
-              </Link>
-            </Tooltip>
+            <Link href='/forgot-password'>
+              <Button type='link' className='p-0 h-auto text-xs' disabled={loading}>
+                {t('auth.login.forgotPassword')}
+              </Button>
+            </Link>
           </Flex>
         </Form.Item>
 

@@ -354,8 +354,9 @@ const TicketTemplatesPage = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Switch checked={template.isActive} size="small" />
-          <Text className="text-xs">{template.isActive ? '启用' : '停用'}</Text>
+          <Tag color={template.isActive ? 'green' : 'default'}>
+            {template.isActive ? '启用' : '停用'}
+          </Tag>
         </div>
       </div>
     </Card>

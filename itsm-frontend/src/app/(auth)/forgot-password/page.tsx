@@ -39,11 +39,11 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      const success = await AuthService.forgotPassword(values.email);
-      if (success) {
+      const result = await AuthService.forgotPassword(values.email);
+      if (result.ok) {
         setSubmitted(true);
       } else {
-        setError(t('auth.forgotPassword.sendFailed'));
+        setError(result.message);
       }
     } catch (err) {
       logger.error('发送失败:', err);
@@ -56,9 +56,11 @@ export default function ForgotPasswordPage() {
   const handleResend = async () => {
     setLoading(true);
     try {
-      const success = await AuthService.forgotPassword(email);
-      if (success) {
+      const result = await AuthService.forgotPassword(email);
+      if (result.ok) {
         message.success(t('auth.forgotPassword.sendSuccess'));
+      } else {
+        message.error(result.message);
       }
     } catch (err) {
       message.error(t('auth.forgotPassword.sendFailed'));

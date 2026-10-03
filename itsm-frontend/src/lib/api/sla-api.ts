@@ -1,5 +1,13 @@
 import { httpClient } from './http-client';
 
+// 后端 handlers/sla 用 time.Parse(time.RFC3339, ...) 解析时间过滤参数，
+// 只带日期（YYYY-MM-DD）无法通过。
+const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+function isRFC3339Timestamp(value: string): boolean {
+  return RFC3339.test(value) && !Number.isNaN(Date.parse(value));
+}
+
 // SLA定义接口 (camelCase - httpClient 自动转换)
 export interface SLADefinition {
   id: number;
@@ -278,10 +286,20 @@ export class SLAApi {
   // 获取SLA合规报告
   // 使用后端 /sla/compliance-report 端点
   // 查询参数统一使用 camelCase，与请求体/响应体保持一致。
+  // 后端按 time.RFC3339 解析，日期必须带时间部分（例如 2024-01-01T00:00:00Z）。
   static async getSLAComplianceReport(params: {
     startDate: string;
     endDate: string;
   }): Promise<SLAComplianceReport> {
+    // 只传 YYYY-MM-DD 会被后端判为 invalid startDate 返回 400；
+    // 调用方多用 Promise.allSettled，400 会静默降级成回退数据，所以在边界先拒绝。
+    if (!isRFC3339Timestamp(params.startDate) || !isRFC3339Timestamp(params.endDate)) {
+      throw new Error(
+        'SLAApi.getSLAComplianceReport 需要 RFC3339 时间戳（例如 2024-01-01T00:00:00Z），' +
+          `收到 startDate=${params.startDate}, endDate=${params.endDate}`,
+      );
+    }
+
     const report = await httpClient.get<SLAComplianceReport>('/api/v1/sla/compliance-report', {
       startDate: params.startDate,
       endDate: params.endDate,

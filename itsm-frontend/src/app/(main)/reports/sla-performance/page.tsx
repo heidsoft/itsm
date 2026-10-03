@@ -50,8 +50,9 @@ const SLAPerformanceReport = () => {
     setLoading(true);
     setHasData(false);
     try {
-      const endDate = dayjs().format('YYYY-MM-DD');
-      const startDate = dayjs().subtract(DEFAULT_RANGE_DAYS, 'day').format('YYYY-MM-DD');
+      // 后端按 RFC3339 解析日期，只传 YYYY-MM-DD 会 400 并静默回退到统计接口
+      const endDate = dayjs().endOf('day').toISOString();
+      const startDate = dayjs().subtract(DEFAULT_RANGE_DAYS, 'day').startOf('day').toISOString();
 
       // 并行获取 SLA 总体合规率和按类型分布
       const [complianceReport, stats, definitions] = await Promise.allSettled([

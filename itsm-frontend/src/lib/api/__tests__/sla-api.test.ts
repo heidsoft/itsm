@@ -95,18 +95,28 @@ describe('SLAApi', () => {
 
   describe('getSLAComplianceReport', () => {
     it('should get compliance report and transform data', async () => {
-      mockGet.mockResolvedValue({ totalTickets: 100, metSla: 90, violatedSla: 10, complianceRate: 90, avgResponseTime: 30, avgResolutionTime: 120, reportPeriod: { startDate: '2024-01-01', endDate: '2024-01-31' } });
-      const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01', endDate: '2024-01-31' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { startDate: '2024-01-01', endDate: '2024-01-31' });
+      mockGet.mockResolvedValue({ totalTickets: 100, metSla: 90, violatedSla: 10, complianceRate: 90, avgResponseTime: 30, avgResolutionTime: 120, reportPeriod: { startDate: '2024-01-01T00:00:00Z', endDate: '2024-01-31T23:59:59Z' } });
+      const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01T00:00:00Z', endDate: '2024-01-31T23:59:59Z' });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/compliance-report', { startDate: '2024-01-01T00:00:00Z', endDate: '2024-01-31T23:59:59Z' });
       expect(result.totalTickets).toBe(100);
       expect(result.complianceRate).toBe(90);
     });
 
     it('should handle missing fields with defaults', async () => {
       mockGet.mockResolvedValue({});
-      const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      const result = await SLAApi.getSLAComplianceReport({ startDate: '2024-01-01T00:00:00Z', endDate: '2024-01-31T23:59:59Z' });
       expect(result.totalTickets).toBe(0);
-      expect(result.reportPeriod.startDate).toBe('2024-01-01');
+      expect(result.reportPeriod.startDate).toBe('2024-01-01T00:00:00Z');
+    });
+
+    // 后端按 RFC3339 解析，date-only 会返回 400。调用方普遍用 Promise.allSettled，
+    // 400 会被静默降级成回退统计，因此客户端边界必须直接拒绝而不是发请求。
+    it.each([
+      ['2024-01-01', '2024-01-31T23:59:59Z'],
+      ['2024-01-01T00:00:00Z', '2024-01-31'],
+    ])('should reject date-only bounds instead of sending them (%s, %s)', async (startDate, endDate) => {
+      await expect(SLAApi.getSLAComplianceReport({ startDate, endDate })).rejects.toThrow(/RFC3339/);
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 

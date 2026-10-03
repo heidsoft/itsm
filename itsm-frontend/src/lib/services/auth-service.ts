@@ -210,7 +210,7 @@ export class AuthService {
   }
 
   // 发送密码重置邮件
-  static async forgotPassword(email: string, tenantCode?: string): Promise<boolean> {
+  static async forgotPassword(email: string, tenantCode?: string): Promise<{ ok: true } | { ok: false; message: string }> {
     try {
       await this.makeRequest<{ message: string }>('/api/v1/auth/forgot-password', {
         method: 'POST',
@@ -220,10 +220,11 @@ export class AuthService {
         }),
       });
 
-      return true;
+      return { ok: true };
     } catch (error) {
       console.error('Forgot password request failed:', error);
-      return false;
+      const msg = error instanceof Error ? error.message : '请求失败';
+      return { ok: false, message: msg };
     }
   }
 

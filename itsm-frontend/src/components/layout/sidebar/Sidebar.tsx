@@ -127,9 +127,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       return;
     }
     const normalizedPath = normalizeMenuPath(key);
-    if (normalizedPath !== key) {
-      console.debug('[Sidebar] 菜单路径已规范化', { from: key, to: normalizedPath });
-    }
     try {
       router.push(normalizedPath);
     } catch (error) {
@@ -170,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse, mobile 
       const children = menu.children ? filterByCapability(menu.children) : undefined;
       return [{
         ...menu,
-        badge: capability?.maturity === 'pilot' ? 'Pilot' : menu.badge,
+        badge: capability?.maturity === 'pilot' ? '预览' : menu.badge,
         children,
       }];
     });

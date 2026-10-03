@@ -209,7 +209,7 @@ const MarketplaceDetailPage = () => {
                 <div className="md:text-right">
                   {!canManageMarketplace ? (
                     <div className="max-w-52 text-left">
-                      <Badge className="bg-yellow-100 text-yellow-800">Pilot · 只读</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800">预览 · 只读</Badge>
                       <p className="text-xs text-gray-500 mt-2">
                         {findCapability('marketplace')?.degradedReason || '安装、卸载和配置将在飞书生产闭环验收后开放。'}
                       </p>

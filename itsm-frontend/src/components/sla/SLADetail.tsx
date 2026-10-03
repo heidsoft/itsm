@@ -17,7 +17,7 @@ import {
   message,
   Divider,
 } from 'antd';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { SLAApi } from '@/lib/api/';
@@ -87,15 +87,10 @@ const SLADetail: React.FC = () => {
 
       <Card
         className="rounded-lg shadow-sm border border-gray-200"
-       
         title={<span className="text-lg font-bold">{data.name}</span>}
         extra={
-          <Button
-            type="primary"
-            icon={<Pencil />}
-            onClick={() => router.push(`/sla/definitions/${data.id}/edit`)}
-          >
-            编辑
+          <Button icon={<ArrowLeft />} onClick={() => router.push('/sla')}>
+            返回列表
           </Button>
         }
       >

@@ -299,15 +299,15 @@ describe('AuthService', () => {
 
         const result = await AuthService.forgotPassword('test@example.com', 'test');
 
-        expect(result).toBe(true);
+        expect(result).toEqual({ ok: true });
       });
 
-      it('should return false on forgot password failure', async () => {
+      it('should surface the failure reason instead of a bare boolean', async () => {
         mockFetch.mockRejectedValueOnce(new Error('Failed to send email'));
 
         const result = await AuthService.forgotPassword('test@example.com');
 
-        expect(result).toBe(false);
+        expect(result).toEqual({ ok: false, message: 'Failed to send email' });
       });
     });
 
