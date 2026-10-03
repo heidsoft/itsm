@@ -69,6 +69,24 @@ func tenantIDFromCtx(ctx *gin.Context) (int, bool) {
 	return id, true
 }
 
+// parseTimeFilter 解析 RFC3339 时间过滤参数。
+// 参数缺省返回 (nil, true)，表示不加该过滤；格式非法时返回参数错误并 (nil, false)。
+//
+// 历史实现写成 `if parsed, err := ...; err == nil`，非法时间被静默丢弃，
+// 前端日期选择器因此变成"改了没反应"的假功能，且没有任何错误可诊断。
+func parseTimeFilter(ctx *gin.Context, name string) (*time.Time, bool) {
+	raw := ctx.Query(name)
+	if raw == "" {
+		return nil, true
+	}
+	parsed, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		common.Fail(ctx, common.ParamErrorCode, name+" 需使用 ISO 8601 时间（例如 2024-01-01T00:00:00Z）")
+		return nil, false
+	}
+	return &parsed, true
+}
+
 // GetProcessMetrics 获取流程指标
 func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 	tenantID, ok := tenantIDFromCtx(ctx)
@@ -86,17 +104,16 @@ func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 		TimeRange: timeRange,
 	}
 
-	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
-		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
-			req.StartTime = &startTime
-		}
+	startTime, ok := parseTimeFilter(ctx, "startTime")
+	if !ok {
+		return
 	}
-
-	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
-		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
-			req.EndTime = &endTime
-		}
+	endTime, ok := parseTimeFilter(ctx, "endTime")
+	if !ok {
+		return
 	}
+	req.StartTime = startTime
+	req.EndTime = endTime
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
@@ -131,17 +148,16 @@ func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 		TimeRange:            timeRange,
 	}
 
-	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
-		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
-			req.StartTime = &startTime
-		}
+	startTime, ok := parseTimeFilter(ctx, "startTime")
+	if !ok {
+		return
 	}
-
-	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
-		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
-			req.EndTime = &endTime
-		}
+	endTime, ok := parseTimeFilter(ctx, "endTime")
+	if !ok {
+		return
 	}
+	req.StartTime = startTime
+	req.EndTime = endTime
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
@@ -198,16 +214,16 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 		Assignee:   assignee,
 	}
 
-	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
-		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
-			query.StartTime = &startTime
-		}
+	startTime, ok := parseTimeFilter(ctx, "startTime")
+	if !ok {
+		return
 	}
-	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
-		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
-			query.EndTime = &endTime
-		}
+	endTime, ok := parseTimeFilter(ctx, "endTime")
+	if !ok {
+		return
 	}
+	query.StartTime = startTime
+	query.EndTime = endTime
 
 	statuses, total, err := c.monitoringService.ListProcessInstancesStatus(ctx, query)
 	if err != nil {
@@ -322,17 +338,16 @@ func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 		ResourceID:   resourceID,
 	}
 
-	if startTimeStr := ctx.Query("startTime"); startTimeStr != "" {
-		if startTime, err := time.Parse(time.RFC3339, startTimeStr); err == nil {
-			req.StartTime = &startTime
-		}
+	startTime, ok := parseTimeFilter(ctx, "startTime")
+	if !ok {
+		return
 	}
-
-	if endTimeStr := ctx.Query("endTime"); endTimeStr != "" {
-		if endTime, err := time.Parse(time.RFC3339, endTimeStr); err == nil {
-			req.EndTime = &endTime
-		}
+	endTime, ok := parseTimeFilter(ctx, "endTime")
+	if !ok {
+		return
 	}
+	req.StartTime = startTime
+	req.EndTime = endTime
 
 	logs, total, err := c.monitoringService.GetAuditLogs(ctx, req)
 	if err != nil {
