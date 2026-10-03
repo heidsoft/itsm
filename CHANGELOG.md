@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Tooling
+
+- **发布流程优化** — 新增 `scripts/prepare-release.sh` 发布准备脚本（支持 `--dry-run` / `--tag-only`），自动校验 CHANGELOG 条目、提取 release notes、创建 annotated tag 并推送；`release.yml` 新增 `workflow_dispatch` 手动重跑能力（输入已有 tag 即可重新触发发布），CHANGELOG 提取的 release notes 替代 GitHub 自动生成笔记（缺失时回退），Release 完成后输出 `$GITHUB_STEP_SUMMARY` 汇总所有产物链接
+
 ## [1.6.11] - 2026-10-03
 
 ### Added
