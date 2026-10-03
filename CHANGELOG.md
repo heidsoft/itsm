@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.11] - 2026-10-03
+
 ### Added
 
 - **会话真相端点 `GET /api/v1/auth/session`** — 后端一次返回 `{user, tenants, expiresIn}`：身份与权限复用 `/auth/me` 的同一个组装入口，租户列表复用同一个查询，`expiresIn` 由服务端从已认证 access token 的签发时间算出剩余秒数。此前前端要靠 `/auth/me` + `/auth/tenants` 两个探活再加本地推断来决定「我是否已登录」，任一瞬时失败都会产生与后端不一致的会话判断。响应不含任何令牌值（契约测试断言 body 里搜不到 cookie 中的 JWT）。
@@ -26,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Webhook 出站 Header 注入防护** — BPMN Webhook Connector 不再透传用户配置的 `Host`、`X-Forwarded-Host`、`X-Forwarded-For`、`X-Real-IP` 等 12 个敏感 header，防止 SSRF 虚拟主机绕过与 IP 伪造
 - **加密密钥派生升级** — `EncryptionService` 从确定性 `SHA256(secret)` 升级为 HKDF-SHA256 + 随机盐 + 版本字节；新密文格式 `version(1) || salt_len(2) || salt || nonce(12) || ciphertext`，旧密文自动 fallback 解密（迁移期兼容），为未来密钥轮换奠定基础
 - **审计日志敏感字段掩码扩充** — `MaskSensitiveFields` 新增 `signing_secret`、`corp_secret`、`agent_secret`、`encrypt_key`、`app_key`、`bot_token` 等 connector 密钥字段的正则规则，防止审计日志泄露连接器凭据
+- **注册接口移除 role/tenantCode（P0-1）** — 自助注册此前接受请求体中的 `role` 和 `tenantCode`，攻击者可提权为任意租户的 super_admin。现在角色固定为 `end_user`，租户取系统唯一活跃租户；多活跃租户时 fail-closed 拒绝注册，需管理员开通
 
 ### Tooling
 
@@ -150,6 +153,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `config/seed/default.json` 不再整段替换服务目录清单，内置 Go 清单成为唯一权威来源（原 8 条与内置子项引用冲突的目录已移除，"权限变更"并入账户申请子项）
 - 初始化组件 checksum 现在覆盖代码内产品清单（权限目录、菜单规格、内置角色/审批组/角色授权、工单类型、BPMN 模板内容），修改这些定义会被版本账本察觉，无需手工升版
 - 生产部署配置：`RLS_MODE` 默认值调整为 `off`（与后端安全默认对齐）。已配置 `.env.prod` 的部署不受影响
+- **SLA 信息字段统一 camelCase** — `GetTicketSLAInfo` 返回的 map key 从 `snake_case` 迁移到 `camelCase`（`ticket_id`→`ticketId`、`sla_response_deadline`→`responseDeadline` 等），`resolution_deadline_breached` 拆分为 `isResponseBreached` + `isResolutionBreached`；前端 `TicketDetail` 对空 deadline 做 null-safe 兜底
+- **前端零值安全修复** — SLA 定义、分配规则、自动化规则页面的 `||` 改为 `??`，允许 `0` 作为合法值（如响应时间 0 分钟 = 立即、优先级 0、可用性 0%）
+- **CIList 双信封违规收敛** — 移除 `Array.isArray` + `{items}` 双形式兜底，收敛到 API 契约声明的单一 `CIType[]` 形式
+- **ChangeDetail 审批模态框状态重置** — 打开/关闭审批和驳回弹窗时重置 `approvalComment`，避免残留上次输入
+- **服务请求优先级显示修复** — 移除硬编码 `priority: '中'`，改为读取后端返回值
 
 ---
 
