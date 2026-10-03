@@ -1002,8 +1002,13 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 // Uses Smart Permission Checker (4-layer fallback architecture)
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
 	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
-	// sysadmin 不再短路：DBOnly 模式下其权限来自 role_permissions 播种数据
-	// （seeder.go allPermissionCodes() 全量授权），权限收回/降级因此可生效。
+	// sysadmin 不再短路：DBOnly 模式下判定走 AuthorizeResourceForRole →
+	// loadPermissionsByMode，configured 态尊重 role_permissions（空集=显式撤销），
+	// 收回/降级机制上可生效——但"全量授权"不成立：其播种码集来自
+	// internal/authz/roles.go 的 allPermissionCodes() 手工枚举清单（实测 129 码），
+	// 权限清单 authz.Definitions()（160 码）中有 31 码不在其内，且手工清单不随
+	// catalog 新增自动跟上。差集收敛待 plans/product-remediation-plan-2026-10-03.md
+	// §3 N4/N5 拍板；此处数字为 2026-10-03 实测快照，引用前请重新测量。
 	if role == "super_admin" {
 		return true
 	}

@@ -95,6 +95,8 @@
 
 而 `allPermissionCodes()` 返回 **129** 个码，catalog 有 **160** 个，差 **28** 个码，且这 28 个码全部只出现在 `internal/authz/roles.go:232-262` 的 `admin` 块里。前提为假 → 注释必须改，或者代码必须补齐到真。**这条不需要产品拍板，因为它是"注释撒谎"，不是"语义选择"。**
 
+> **状态（2026-10-03）：已落地（选"改注释"，最小改动）。** 复测快照：`allPermissionCodes()` 实测 129 码（uniq 129，off-catalog 0），catalog 160 码中 **31** 码不在其内——本文上文的"差 28 码"为过时数字，差集随 catalog 演化漂移，以注释内快照日期为准。已核实判定链 `hasPermission → AuthorizeResourceForRole → loadPermissionsByMode`：DBOnly configured 态确实尊重 role_permissions（空集=显式撤销），"收回/降级机制上可生效"为真；为假的是"全量授权"与 "seeder.go" 文件引用（函数实际位于 `internal/authz/roles.go:388`）。`rbac.go:1004-1009` 注释已按实测改写：保留机制层为真的断言，标注码集覆盖缺口（129/160、不随 catalog 自动跟上），指向 §3 N4/N5 拍板。补齐代码（授予 31 个缺失码）属语义选择，不属本条。
+
 **R2-c　产品决策后实施（见 §3 N4）**
 
 无论选扩权还是收权，退出标准都包含：`sysadmin` 与 `end_user` 打 `/api/v1/dashboard` 的跨角色回归测试，且测试在修复前必须失败。
