@@ -59,12 +59,15 @@ type GetServiceCatalogsRequest struct {
 	Status   string `json:"status" form:"status" binding:"omitempty,oneof=enabled disabled"`
 }
 
-// GetServiceRequestsRequest 获取服务请求列表请求
+// GetServiceRequestsRequest 获取服务请求列表请求。
+//
+// page/pageSize 不在这里绑定：分页夹紧的唯一所有者是 HTTP 入口的
+// common.GetPaginationFromQuery（缺省 1/20，只采纳 (0,100]，越界回落默认页长）。
+// 原先 DTO 上的 binding:"min=1,max=100" 会在越界时先返回 1001 参数错误，
+// 与「回落默认页长」的平台口径是两套真相；UserID 字段则从未生效
+// （操作者身份只取认证上下文），一并删除。
 type GetServiceRequestsRequest struct {
-	Page     int    `json:"page" form:"page" binding:"omitempty,min=1"`
-	PageSize int    `json:"pageSize" form:"pageSize" binding:"omitempty,min=1,max=100"`
-	Status   string `json:"status" form:"status" binding:"omitempty"`
-	UserID   int    `json:"-"` // 从认证中间件获取
+	Status string `json:"status" form:"status" binding:"omitempty"`
 }
 
 // ServiceCatalogResponse 服务目录响应

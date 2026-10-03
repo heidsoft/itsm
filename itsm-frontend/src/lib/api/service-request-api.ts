@@ -1,21 +1,14 @@
 import { API_BASE_URL } from '@/lib/api/api-config';
 import { getTenantCode } from '@/lib/auth/token-storage';
 import { httpClient } from '@/lib/api/http-client';
+import { ServiceRequestStatus } from '@/constants/service-request';
 
 export interface ServiceRequest {
   id: number;
+  requestNumber: string;
   catalogId: number;
   requesterId: number;
-  status:
-    | 'submitted'
-    | 'manager_approved'
-    | 'it_approved'
-    | 'security_approved'
-    | 'provisioning'
-    | 'delivered'
-    | 'failed'
-    | 'rejected'
-    | 'cancelled';
+  status: ServiceRequestStatus;
   title?: string;
   reason?: string;
   formData?: Record<string, unknown>;
@@ -24,9 +17,9 @@ export interface ServiceRequest {
   needsPublicIp?: boolean;
   sourceIpWhitelist?: string[];
   expireAt?: string | null;
-  complianceAck?: boolean;
-  currentLevel?: number;
-  totalLevels?: number;
+  complianceAck: boolean;
+  currentLevel: number;
+  totalLevels: number;
   version: number;
   processorId?: number;
   approvedAt?: string;
@@ -35,6 +28,8 @@ export interface ServiceRequest {
   completionNote?: string;
   lastError?: string;
   createdAt: string;
+  updatedAt: string;
+  approvals?: ServiceRequestApproval[];
   catalog?: {
     id: number;
     name: string;
@@ -51,11 +46,35 @@ export interface ServiceRequest {
   };
 }
 
+/**
+ * 审批步骤记录：与后端 dto.ServiceRequestApprovalResponse 逐字段对齐。
+ * 原先只在 types/biz/service-request.ts 里另存一份，和接口实体并行维护两套真相。
+ */
+export interface ServiceRequestApproval {
+  id: number;
+  serviceRequestId: number;
+  level: number;
+  step: string;
+  status: string;
+  approverId?: number;
+  approverName?: string;
+  action?: string;
+  comment?: string;
+  createdAt: string;
+  processedAt?: string;
+  timeoutHours?: number;
+  dueAt?: string;
+  isEscalated?: boolean;
+  delegatedToId?: number;
+  escalationReason?: string;
+}
+
 export interface ServiceRequestListResponse {
-  requests: ServiceRequest[];
+  items: ServiceRequest[];
   total: number;
   page: number;
-  size: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface CreateServiceRequestRequest {
@@ -191,14 +210,13 @@ class ServiceRequestAPI {
     } as ServiceRequest;
   }
 
-  private normalizeList(raw: ServiceRequestListResponse): ServiceRequestListResponse {
-    const requests = (raw.requests || (raw as any).items || []).map(item => this.normalizeRequest(item));
-    return {
-      requests,
-      total: raw.total || 0,
-      page: raw.page || 1,
-      size: raw.size || (raw as any).pageSize || requests.length,
-    };
+  /**
+   * 列表信封只有一个形状：`{items,total,page,pageSize,totalPages}`。
+   * 这里只逐项补全展示字段，分页元数据原样透传；键名与默认值的猜测已随
+   * normalizeList 一起删除，因为后端 common.SuccessWithPagination 恒定输出五键。
+   */
+  private mapList(raw: ServiceRequestListResponse): ServiceRequestListResponse {
+    return { ...raw, items: raw.items.map(item => this.normalizeRequest(item)) };
   }
 
   // Get current user's service request list
@@ -218,7 +236,7 @@ class ServiceRequestAPI {
     const resp = await this.request<ServiceRequestListResponse>(
       `/api/v1/service-requests/me?${searchParams.toString()}`
     );
-    return this.normalizeList(resp);
+    return this.mapList(resp);
   }
 
   // Get pending approvals (approver inbox)
@@ -232,7 +250,7 @@ class ServiceRequestAPI {
     const resp = await this.request<ServiceRequestListResponse>(
       `/api/v1/service-requests/approvals/pending${qs ? `?${qs}` : ''}`
     );
-    return this.normalizeList(resp);
+    return this.mapList(resp);
   }
 
   // Get service request details
@@ -309,12 +327,7 @@ class ServiceRequestAPI {
 
   // ==================== 兼容别名 ====================
 
-  /** @deprecated 使用 getUserServiceRequests */
-  async getServiceRequests(params?: any): Promise<ServiceRequestListResponse> {
-    return this.getUserServiceRequests(params);
-  }
-
-  /** @deprecated 使用 getUserServiceRequests */
+  /** @deprecated 使用 getServiceRequestDetails */
   async getServiceRequest(id: number): Promise<ServiceRequest> {
     return this.getServiceRequestDetails(id);
   }

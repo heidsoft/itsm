@@ -39,7 +39,7 @@ export default function ServiceApprovalsPage() {
       const data = await ServiceCatalogApi.getServiceRequests({
         status: ServiceRequestStatus.PENDING_APPROVAL,
       });
-      setRequests((data.requests || []) as ServiceRequestRecord[]);
+      setRequests(data.items as ServiceRequestRecord[]);
     } catch (error) {
       message.error(t('common.getFailed'));
     } finally {

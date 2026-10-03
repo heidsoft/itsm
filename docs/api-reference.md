@@ -860,6 +860,64 @@ GET /service-catalog/{id}
 Authorization: Bearer <accessToken>
 ```
 
+## 服务请求接口
+
+### 获取服务请求列表
+
+```http
+GET /service-requests
+GET /service-requests/me
+Authorization: Bearer <accessToken>
+需要权限: service_request:read
+
+Query Parameters:
+- page: 页码（缺省或非法回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
+- status: 状态过滤（精确匹配单个值）
+```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`items` 元素是 `ServiceRequestResponse`（camelCase，含 `requestNumber`/`status`/`processorId`/
+`createdAt`/`updatedAt`）。空结果序列化为 `[]`。排序固定为 `created_at DESC, id ASC`。
+
+口径说明（2026-10-03 E4-4 实测收口）：
+
+- **两个 URL 走同一个 handler。** `/me` 与显式 `scope=me` 把范围收窄到「本人创建或本人处理」，
+  身份只取认证上下文；`userId` 查询参数不参与绑定，客户端无法自报身份放大或收窄可见范围。
+- **`status` 有一层遗留别名归一。** `pending_approval`/`pending`→`submitted`、
+  `approved`→`security_approved`、`in_progress`→`provisioning`、`completed`→`delivered`，
+  其余值原样精确匹配。规范值集合是 `submitted`/`manager_approved`/`it_approved`/
+  `security_approved`/`provisioning`/`delivered`/`failed`/`rejected`/`cancelled`。
+- **行级数据权限**：`super_admin`/`admin`/`manager`/`sysadmin` 可见全租户，其余角色按
+  DataScope（本人创建或本人处理）收敛。
+- **分页夹紧只有一个所有者。** 此前请求 DTO 的 `binding:"min=1,max=100"`、handler 私有默认 10、
+  repository 的 `>100→100` 三处同时生效，越界值先在绑定阶段返回 **HTTP 400 / code 1001**，
+  与 handler 的「补默认值」是两种结局。现在 HTTP 入口单点夹紧，响应元数据由
+  `common.SuccessWithPagination` 用同一组值算出；repository 只保留一道
+  `common.ValidatePagination` 服务非 HTTP 调用方。破坏面见 [UPGRADE.md](../UPGRADE.md) §1.13。
+
+### 获取待审批服务请求
+
+```http
+GET /service-requests/approvals/pending
+Authorization: Bearer <accessToken>
+需要权限: service_request:read
+
+Query Parameters:
+- page / pageSize: 同上（缺省 1 / 20）
+```
+
+收件箱**不接受任何查询过滤条件**：待办范围由审批记录的 pending 状态与认证上下文里的审批人、
+角色决定，响应同样是五键分页信封，元素为请求单本身（不含审批步骤）。待办明细请另取
+`GET /service-requests/{id}/approvals`。
+
+### 创建/审批服务请求
+
+`POST /service-requests`（`service_request:write`）创建请求单；审批动作为
+`POST /service-requests/{id}/approvals`（`service_request:approve`），body 为
+`{action, comment}`。⚠️ 实测 `/:id/approval` 与 `/:id/approvals` 两条路径注册到同一个
+handler，而前端两个客户端各用其中一条（台账 E4-19）；新代码统一使用复数形式 `/:id/approvals`。
+
 ## 知识库接口
 
 ### 获取知识文章列表

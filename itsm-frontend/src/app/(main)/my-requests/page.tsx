@@ -153,9 +153,9 @@ const MyRequestsPage = () => {
         status: (status === 'all' ? undefined : status) as any,
       });
 
-      setRequests((data.requests || []) as ServiceRequest[]);
-      setTotal(data.total || 0);
-      setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)));
+      setRequests(data.items as ServiceRequest[]);
+      setTotal(data.total);
+      setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {
       console.error('API调用失败:', error);
       setError('加载失败，请重试');

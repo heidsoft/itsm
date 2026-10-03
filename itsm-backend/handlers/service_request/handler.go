@@ -232,15 +232,11 @@ func (h *Handler) List(c *gin.Context) {
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
-	// If listing "me", we need user ID
+	// 「我的请求」由路径或显式 scope=me 触发；操作者身份只取认证上下文，
+	// 从不读取查询参数里的 userId（旧代码在此还读过 req.UserID，那个字段其实从未生效）。
 	userID := 0
-	if c.Request.URL.Path == "/me" || c.Query("scope") == "me" {
-		userID = c.GetInt("user_id")
-	}
-	// For compatibility with legacy controller which injects UserID from token into DTO if needed
-	if req.UserID == 0 && (c.Request.URL.Path == "/api/v1/service-requests/me" || strings.Contains(c.Request.URL.Path, "/me")) {
-		uid := c.GetInt("user_id")
-		userID = uid
+	if strings.Contains(c.Request.URL.Path, "/me") || c.Query("scope") == "me" {
+		userID = currentUserID
 	}
 
 	// 行级数据权限（推广自 ticket DataScope 模式）：管理角色可见全租户，
@@ -250,19 +246,18 @@ func (h *Handler) List(c *gin.Context) {
 		dataScope = datascope.DataScopeOwnedOrAssigned
 	}
 
+	// 分页只有一个所有者：HTTP 入口夹紧（缺省 1/20，只采纳 (0,100]，越界回落默认页长）。
+	// 响应侧的分页元数据由 common.SuccessWithPagination 用同一组值算出。
+	pagination := common.GetPaginationFromQuery(c)
+	page, pageSize := pagination.Page, pagination.PageSize
+
 	filters := ListFilters{
 		Status:        normalizeServiceRequestStatus(req.Status),
 		UserID:        userID,
-		Page:          req.Page,
-		PageSize:      req.PageSize,
+		Page:          page,
+		PageSize:      pageSize,
 		CurrentUserID: currentUserID,
 		DataScope:     dataScope,
-	}
-	if filters.Page == 0 {
-		filters.Page = 1
-	}
-	if filters.PageSize == 0 {
-		filters.PageSize = 10
 	}
 
 	list, total, err := h.service.List(c.Request.Context(), tenantID, filters)
@@ -276,17 +271,7 @@ func (h *Handler) List(c *gin.Context) {
 		dtos[i] = *h.toDTO(v, nil)
 	}
 
-	totalPages := 0
-	if total > 0 {
-		totalPages = (total + filters.PageSize - 1) / filters.PageSize
-	}
-	common.Success(c, map[string]interface{}{
-		"items":      dtos,
-		"total":      total,
-		"page":       filters.Page,
-		"pageSize":   filters.PageSize,
-		"totalPages": totalPages,
-	})
+	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
 }
 
 func (h *Handler) ApplyApproval(c *gin.Context) {
@@ -324,11 +309,8 @@ func (h *Handler) ApplyApproval(c *gin.Context) {
 }
 
 func (h *Handler) ListPending(c *gin.Context) {
-	var req dto.GetServiceRequestsRequest
-	if err := c.ShouldBindQuery(&req); err != nil {
-		common.Fail(c, 1001, "Invalid parameters")
-		return
-	}
+	// 待办审批收件箱不接受任何查询过滤条件：状态范围由审批记录的 pending 决定，
+	// 审批人身份取认证上下文，因此这里没有请求 DTO 可绑定。
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
@@ -337,14 +319,10 @@ func (h *Handler) ListPending(c *gin.Context) {
 	role, _ := c.Get("role")
 	roleStr, _ := role.(string)
 
-	if req.Page < 1 {
-		req.Page = 1
-	}
-	if req.PageSize < 1 {
-		req.PageSize = 10
-	}
+	// 分页与 List 同一个所有者：HTTP 入口夹紧，响应元数据用同一组值算出。
+	pagination := common.GetPaginationFromQuery(c)
 
-	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID, userID, roleStr, req.Page, req.PageSize)
+	list, total, err := h.service.ListPendingApprovals(c.Request.Context(), tenantID, userID, roleStr, pagination.Page, pagination.PageSize)
 	if err != nil {
 		failServiceRequest(c, err)
 		return
@@ -352,27 +330,12 @@ func (h *Handler) ListPending(c *gin.Context) {
 
 	dtos := make([]dto.ServiceRequestResponse, len(list))
 	for i, v := range list {
-		// ListPendingApprovals in Service returns []*ServiceRequest.
-		// Approvals are pre-loaded? Repository implementation says:
-		// return list, total, nil
-		// It uses request.QueryApprovals()... but we need to check if toDTO handles nil approvals gracefully (it currently allocates generic slice if not nil, else leaves field empty).
-		// For pending list, likely we want to see approvals?
-		// The Service implementation of ListPendingApprovals calls repo.ListPendingApprovals.
-		// Let's assume for now we return the request details.
+		// repo.ListPendingApprovals 只返回请求单本身，不带审批步骤；
+		// 待办明细由 GET /service-requests/:id/approvals 单独取。
 		dtos[i] = *h.toDTO(v, nil)
 	}
 
-	totalPages := 0
-	if total > 0 {
-		totalPages = (total + req.PageSize - 1) / req.PageSize
-	}
-	common.Success(c, map[string]interface{}{
-		"items":      dtos,
-		"total":      total,
-		"page":       req.Page,
-		"pageSize":   req.PageSize,
-		"totalPages": totalPages,
-	})
+	common.SuccessWithPagination(c, dtos, pagination.Page, pagination.PageSize, int64(total))
 }
 
 func (h *Handler) Update(c *gin.Context) {

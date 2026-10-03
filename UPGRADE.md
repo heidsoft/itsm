@@ -336,6 +336,45 @@ cd itsm-backend && go test ./router/ -run TestProblemListRouteEnvelopeAndPaginat
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/problem-api.test.ts
 ```
 
+### 1.13 服务请求列表信封与分页夹紧收敛（2026-10-03，破坏性）
+
+`GET /api/v1/service-requests`、`GET /api/v1/service-requests/me` 与
+`GET /api/v1/service-requests/approvals/pending` 原先有**三套**页长规则同时生效：请求 DTO 的
+`binding:"omitempty,min=1,max=100"`、handler 里手写的 `Page==0→1 / PageSize==0→10`、
+`handlers/service_request/repository_impl.go` 私有的 `page<1→1、PageSize<1→10、>100→100`；
+响应末尾再手拼一遍 `map[string]interface{}` 和 `(total+pageSize-1)/pageSize`。
+前端 `src/lib/api/service-request-api.ts` 声明的响应形状是**第四套**
+`{requests,total,page,size}`，靠 `normalizeList` 的 `raw.requests || raw.items || []`、
+`raw.size || raw.pageSize || requests.length` 猜后端到底返回什么，`total` 缺失时静默变成
+「当前页长度」。后端 JSON 键名这次**没有变化**（两个 handler 本来就手拼 `items/total/page/
+pageSize/totalPages`），变化的是夹紧归属、默认页长与越界值的 HTTP 结果。
+
+| 项目 | 旧行为 | 新行为 |
+| --- | --- | --- |
+| 缺省 `pageSize` | handler 私有默认 **10**，`totalPages` 按 10 算 | **20**（`common.GetPaginationFromQuery`） |
+| `pageSize=0` | 绑定 `min=1` 先失败 → **HTTP 400 / code 1001** | **HTTP 200 / code 0**，回落默认页长 20，且不退化成不加 `LIMIT` |
+| `pageSize=5000` | 绑定 `max=100` 失败 → **HTTP 400 / code 1001** | **HTTP 200 / code 0**，回落 **20**（只采纳 `(0,100]`，**不是夹到 100**），SQL 与声明同源 |
+| `page=0` / `page=-1` | 绑定 `min=1` 失败 → **HTTP 400 / code 1001** | 由 HTTP 入口单点回落第 1 页，负 `OFFSET` 不出现 |
+| 分页夹紧归属 | DTO binding + handler + repository 三处 | HTTP 入口 `common.GetPaginationFromQuery` 单点；repository 保留一道 `common.ValidatePagination` 只服务**非 HTTP 调用方** |
+| `size`/`limit`/`sortBy` | DTO 从未声明，前端 `normalizeList` 却按 `size` 优先读 | 前端只读 `items/total/page/pageSize/totalPages`，别名读取全部删除 |
+| `userId` | 旧 handler 读 `req.UserID`（该字段无 `form` tag，实测从不生效） | 从请求 DTO 删除；操作者身份只取认证上下文，`/me` 由路径或 `scope=me` 判定 |
+| `status`（待审批收件箱） | 绑定但从不参与查询 | **收件箱不再绑定任何查询过滤**，条件只由审批记录的 pending 与认证上下文决定 |
+| 排序 | `created_at DESC`（非唯一列，同秒入库的请求单在页边界归属不确定） | `created_at DESC, id ASC` |
+
+**集成方必须改的两件事**：
+1. 按「缺省即 20 条」核对分页预期；`pageSize` 越界或为 0 不再返回 400/1001，而是
+   **HTTP 200 + code 0 + 页长 20**，把 400 当成「参数非法」信号来处理的那段逻辑需要重看。
+   想要大页请显式发 `pageSize`（上限 100）；越界值现在表示「用默认页长」，不表示「取全部」。
+2. 前端调用方删除对 `requests` / `size` 的读取。`src/types/biz/service-request.ts`（第三份
+   服务请求实体声明，含 `ServiceRequestListResponse{requests,total,page,size}`）已随本批删除，
+   唯一类型来源是 `src/lib/api/service-request-api.ts`。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestServiceRequestListRouteEnvelopeAndPagination
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/service-request-api.test.ts src/lib/api/__tests__/service-catalog-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

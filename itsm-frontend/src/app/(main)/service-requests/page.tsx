@@ -1,25 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, message } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Tabs, Table, Button } from 'antd';
 import ServiceRequestList from '@/components/service-request/ServiceRequestList';
-import { FileText, Clock, CheckCircle, XCircle, Plus, Inbox } from 'lucide-react';
+import { FileText, Clock, CheckCircle, Inbox } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
+import { ServiceRequestStatus } from '@/constants/service-request';
 
 const { Title, Text } = Typography;
 
-const priorityColors: Record<string, string> = {
-  '高': 'red',
-  '中': 'orange',
-  '低': 'default',
-  '-': 'default',
-};
+// 审批待办收件箱行：只承载后端 ServiceRequestResponse 真实存在的字段。
+// 原来的「优先级」列取自 r.priority，而服务请求 DTO 从未定义该字段，
+// 每一行都只能渲染成占位符「-」，属于把未实现伪装成已有能力，故整列删除。
+interface PendingApprovalRow {
+  id: number;
+  requestNumber: string;
+  title: string;
+  applicant: string;
+  createdAt: string;
+}
 
 export default function ServiceRequestsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('requests');
-  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [pendingApprovals, setPendingApprovals] = useState<PendingApprovalRow[]>([]);
   const [stats, setStats] = useState({
     totalRequests: 0,
     pending: 0,
@@ -30,32 +35,36 @@ export default function ServiceRequestsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Use parallel requests with reasonable page sizes
-      const [pendingData, allRequests] = await Promise.all([
-        serviceRequestAPI.getPendingApprovals({ page: 1, pageSize: 20 }).catch(() => ({ requests: [], total: 0 })),
-        serviceRequestAPI.getUserServiceRequests({ page: 1, pageSize: 100 }).catch(() => ({ requests: [], total: 0 })),
+      // 两个收件箱并行取数；单个请求失败只让对应指标为 0，不阻塞整个页面。
+      const [pendingResp, mineResp] = await Promise.all([
+        serviceRequestAPI.getPendingApprovals({ page: 1, pageSize: 20 }).catch(() => null),
+        serviceRequestAPI.getUserServiceRequests({ page: 1, pageSize: 100 }).catch(() => null),
       ]);
 
-      setPendingApprovals(pendingData.requests.map((r: any) => ({
-        id: r.id,
-        requestNo: r.id,
-        title: r.title || r.catalog?.name || '服务请求',
-        applicant: r.requester?.name || r.requester?.username || '-',
-        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '-',
-        // 服务请求模型暂未包含 priority 字段，展示占位而非硬编码「中」
-        priority: r.priority ? String(r.priority) : '-',
-      })));
+      setPendingApprovals(
+        (pendingResp?.items ?? []).map(r => ({
+          id: r.id,
+          requestNumber: r.requestNumber,
+          title: r.title || r.catalog?.name || '服务请求',
+          applicant: r.requester?.name || r.requester?.username || '-',
+          createdAt: r.createdAt,
+        }))
+      );
 
-      const requests = allRequests.requests || [];
-      const pending = requests.filter((r: any) => r.status === 'submitted' || r.status === 'manager_approved' || r.status === 'it_approved' || r.status === 'security_approved').length;
-      const processing = requests.filter((r: any) => r.status === 'provisioning').length;
-      const completed = requests.filter((r: any) => r.status === 'delivered').length;
-
+      // 分状态计数来自 /me 的第一页（最多 100 条），只覆盖当前页而非全租户权威统计；
+      // 需要精确口径时应由后端统计接口负责，已登记为待办。
+      const mine = mineResp?.items ?? [];
       setStats({
-        totalRequests: allRequests.total || 0,
-        pending,
-        processing,
-        completed,
+        totalRequests: mineResp?.total ?? 0,
+        pending: mine.filter(
+          r =>
+            r.status === ServiceRequestStatus.SUBMITTED ||
+            r.status === ServiceRequestStatus.MANAGER_APPROVED ||
+            r.status === ServiceRequestStatus.IT_APPROVED ||
+            r.status === ServiceRequestStatus.SECURITY_APPROVED
+        ).length,
+        processing: mine.filter(r => r.status === ServiceRequestStatus.PROVISIONING).length,
+        completed: mine.filter(r => r.status === ServiceRequestStatus.DELIVERED).length,
       });
     } catch (error) {
       console.error('Failed to fetch service request stats:', error);
@@ -69,9 +78,8 @@ export default function ServiceRequestsPage() {
   const approvalColumns = [
     {
       title: '请求号',
-      dataIndex: 'requestNo',
-      key: 'requestNo',
-      render: (text: string) => <a>{text}</a>,
+      dataIndex: 'requestNumber',
+      key: 'requestNumber',
     },
     {
       title: '标题',
@@ -85,19 +93,14 @@ export default function ServiceRequestsPage() {
     },
     {
       title: '申请时间',
-      dataIndex: 'date',
-      key: 'date',
-    },
-    {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      render: (priority: string) => <Tag color={priorityColors[priority]}>{priority}</Tag>,
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (value: string) => new Date(value).toLocaleDateString(),
     },
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: PendingApprovalRow) => (
         <Button
           size="small"
           type="link"
@@ -128,7 +131,7 @@ export default function ServiceRequestsPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm">
             <Statistic
-              title="请求总数"
+              title="我的请求"
               value={stats.totalRequests}
               prefix={<FileText className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}

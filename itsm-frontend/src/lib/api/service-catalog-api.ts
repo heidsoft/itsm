@@ -274,13 +274,20 @@ export class ServiceCatalogApi {
 
   /**
    * 获取服务请求列表
+   *
+   * 服务请求列表的信封只有一个形状：`{items,total,page,pageSize,totalPages}`。
+   * 这里不再读 `requests` 别名，也不再发送 `size`（后端分页参数的唯一名字是 `pageSize`）。
+   * 同一资源在本文件与 `service-request-api.ts` 各有一套客户端实体，已登记为待收敛债务。
    */
   static async getServiceRequests(query?: ServiceRequestQuery): Promise<{
-    requests: unknown[];
+    items: unknown[];
     total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
   }> {
     const page = query?.page ?? 1;
-    const size = query?.pageSize ?? 10;
+    const pageSize = query?.pageSize ?? 10;
     const requestedStatus = query?.status ? String(query.status) : undefined;
     const isPendingApproval =
       requestedStatus === 'pending_approval' || requestedStatus === 'pending';
@@ -291,15 +298,23 @@ export class ServiceCatalogApi {
       ? undefined
       : ServiceCatalogApi.toBackendRequestStatus(requestedStatus);
 
-    const resp = await httpClient.get<any>(endpoint, {
+    const resp = await httpClient.get<{
+      items: unknown[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>(endpoint, {
       page,
-      size,
+      pageSize,
       ...(status ? { status } : {}),
     });
-    const rawRequests = resp.requests || resp.items || [];
     return {
-      requests: rawRequests.map(ServiceCatalogApi.toServiceRequest),
-      total: resp.total || 0,
+      items: resp.items.map(ServiceCatalogApi.toServiceRequest),
+      total: resp.total,
+      page: resp.page,
+      pageSize: resp.pageSize,
+      totalPages: resp.totalPages,
     };
   }
 

@@ -23,25 +23,58 @@ describe('ServiceRequestAPI', () => {
   };
 
   describe('getUserServiceRequests', () => {
-    it('should get user service requests', async () => {
-      mockSuccessResponse({ requests: [{ id: 1 }], total: 1, page: 1, pageSize: 10 });
-      const result = await serviceRequestAPI.getUserServiceRequests({ page: 1, pageSize: 10 });
+    it('解析五键信封并原样透传分页元数据', async () => {
+      mockSuccessResponse({
+        items: [{ id: 1, requestNumber: 'SR-202609-000001', status: 'submitted' }],
+        total: 25,
+        page: 2,
+        pageSize: 10,
+        totalPages: 3,
+      });
+
+      const result = await serviceRequestAPI.getUserServiceRequests({ page: 2, pageSize: 10 });
+
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/service-requests/me'),
+        'http://localhost:8090/api/v1/service-requests/me?page=2&pageSize=10',
         expect.any(Object)
       );
-      expect(result.requests).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(25);
+      expect(result.page).toBe(2);
+      expect(result.pageSize).toBe(10);
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('只发送 page/pageSize，不再发送 size、userId 等后端不识别的别名', async () => {
+      mockSuccessResponse({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
+
+      await serviceRequestAPI.getUserServiceRequests({ page: 1, status: 'delivered' });
+
+      const [url] = mockFetch.mock.calls[0] as [string];
+      expect(url).toBe('http://localhost:8090/api/v1/service-requests/me?page=1&status=delivered');
+      expect(url).not.toContain('size=');
+      expect(url).not.toContain('userId=');
     });
   });
 
   describe('getPendingApprovals', () => {
-    it('should get pending approvals', async () => {
-      mockSuccessResponse({ requests: [], total: 0, page: 1, pageSize: 10 });
+    it('待办收件箱同样按五键信封解析', async () => {
+      mockSuccessResponse({
+        items: [{ id: 7, requestNumber: 'SR-202609-000007', status: 'submitted' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
+
       const result = await serviceRequestAPI.getPendingApprovals({ page: 1 });
+
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/service-requests/approvals/pending'),
+        'http://localhost:8090/api/v1/service-requests/approvals/pending?page=1',
         expect.any(Object)
       );
+      expect(result.items).toHaveLength(1);
+      expect(result.totalPages).toBe(1);
     });
   });
 

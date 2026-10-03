@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/servicerequest"
@@ -333,19 +334,16 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 		return nil, 0, err
 	}
 
-	if filters.Page < 1 {
-		filters.Page = 1
-	}
-	if filters.PageSize < 1 {
-		filters.PageSize = 10
-	}
-	if filters.PageSize > 100 {
-		filters.PageSize = 100
-	}
+	// HTTP 入口（common.GetPaginationFromQuery）已经把 filters 归一化过了，这里那道
+	// 只是给非 HTTP 调用方保底（例如 repair.go 传 size=500，按平台 MaxPageSize 收敛）。
+	filters.Page, filters.PageSize = common.ValidatePagination(filters.Page, filters.PageSize)
 	query.Limit(filters.PageSize).Offset((filters.Page - 1) * filters.PageSize)
 
-	// Default sort by CreatedAt DESC
-	rows, err := query.Order(ent.Desc(servicerequest.FieldCreatedAt)).All(ctx)
+	// created_at 不是唯一列，同秒入库的请求单在页边界归属不确定，补 ID 并列键。
+	rows, err := query.Order(
+		ent.Desc(servicerequest.FieldCreatedAt),
+		ent.Asc(servicerequest.FieldID),
+	).All(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -608,15 +606,9 @@ func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, 
 			servicerequest.DeletedAtIsNil(),
 			servicerequest.IDIn(requestIDs...),
 		)
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 {
-		size = 10
-	}
-	if size > 100 {
-		size = 100
-	}
+	// 页长归一的唯一所有者在 common：HTTP 侧已在入口夹紧，这里是 repair.go 这类
+	// 非 HTTP 调用方的保底（其 size=500 同样按平台 MaxPageSize 收敛）。
+	page, size = common.ValidatePagination(page, size)
 
 	if targetLevel > 0 {
 		query = query.Where(
@@ -656,7 +648,10 @@ func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, 
 	}
 
 	rows, err := query.
-		Order(ent.Desc(servicerequest.FieldCreatedAt)).
+		Order(
+			ent.Desc(servicerequest.FieldCreatedAt),
+			ent.Asc(servicerequest.FieldID),
+		).
 		Offset((page - 1) * size).
 		Limit(size).
 		All(ctx)

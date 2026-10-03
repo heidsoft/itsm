@@ -1,5 +1,6 @@
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { httpClient } from '@/lib/api/http-client';
+import { ServiceRequestStatus } from '@/types/service-catalog';
 
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
@@ -77,15 +78,6 @@ describe('ServiceCatalogApi', () => {
     });
   });
 
-  describe('getServiceRequests', () => {
-    it('should get service requests', async () => {
-      mockGet.mockResolvedValue({ requests: [{ id: 1 }], total: 1 });
-      const result = await ServiceCatalogApi.getServiceRequests({ page: 1 } as any);
-      expect(mockGet).toHaveBeenCalled();
-      expect(result.total).toBe(1);
-    });
-  });
-
   describe('cancelServiceRequest', () => {
     it('should cancel a service request', async () => {
       mockPut.mockResolvedValue(undefined);
@@ -135,17 +127,33 @@ describe('ServiceCatalogApi', () => {
   });
 
   describe('getServiceRequests', () => {
-    it('should get service requests', async () => {
-      mockGet.mockResolvedValue({ requests: [{ id: 1 }], total: 1 });
+    it('发送 pageSize 并按五键信封解析 items', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, requestNumber: 'SR-202609-000001' }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
+
       const result = await ServiceCatalogApi.getServiceRequests({ page: 1, pageSize: 10 });
-      expect(mockGet).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ page: 1, size: 10 }));
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/service-requests/me', { page: 1, pageSize: 10 });
+      expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
+      expect(result.pageSize).toBe(10);
+      expect(result.totalPages).toBe(1);
     });
 
-    it('should use pending approvals endpoint for pending status', async () => {
-      mockGet.mockResolvedValue({ requests: [], total: 0 });
-      await ServiceCatalogApi.getServiceRequests({ status: 'pending_approval' } as any);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/service-requests/approvals/pending', expect.any(Object));
+    it('待审批状态走收件箱路径且不携带 status 过滤', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
+
+      await ServiceCatalogApi.getServiceRequests({ status: ServiceRequestStatus.PENDING_APPROVAL });
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/service-requests/approvals/pending', {
+        page: 1,
+        pageSize: 10,
+      });
     });
   });
 

@@ -24,8 +24,8 @@ import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { ServiceRequestApi } from '@/lib/api/';
-import { ServiceRequestStatus, ApprovalStatus, ApprovalAction } from '@/constants/service-request';
-import type { ServiceRequest, ServiceRequestApproval } from '@/types/biz/service-request';
+import { ServiceRequestStatus, ApprovalStatus, ApprovalAction, serviceRequestStatusLabel } from '@/constants/service-request';
+import type { ServiceRequest, ServiceRequestApproval } from '@/lib/api/service-request-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const { Title, Text } = Typography;
@@ -189,8 +189,8 @@ const ServiceRequestDetail: React.FC = () => {
             </div>
             <div style={{ textAlign: 'right' }}>
               <Title level={4} style={{ margin: 0 }}>
-                <Tag color={request.status === 'completed' ? 'green' : 'blue'}>
-                  {request.status.toUpperCase()}
+                <Tag color={request.status === ServiceRequestStatus.DELIVERED ? 'green' : 'blue'}>
+                  {serviceRequestStatusLabel(request.status)}
                 </Tag>
               </Title>
             </div>

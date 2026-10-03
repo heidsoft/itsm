@@ -15,6 +15,23 @@ export enum ServiceRequestStatus {
   CANCELLED = 'cancelled', // 已取消
 }
 
+// 状态中文标签映射（HTTP 层展示用，枚举值本身保持后端契约）
+export const ServiceRequestStatusLabels: Record<ServiceRequestStatus, string> = {
+  [ServiceRequestStatus.SUBMITTED]: '已提交',
+  [ServiceRequestStatus.MANAGER_APPROVED]: '经理已审批',
+  [ServiceRequestStatus.IT_APPROVED]: 'IT已审批',
+  [ServiceRequestStatus.SECURITY_APPROVED]: '安全部门已审批',
+  [ServiceRequestStatus.PROVISIONING]: '履约中',
+  [ServiceRequestStatus.DELIVERED]: '已交付',
+  [ServiceRequestStatus.FAILED]: '履约失败',
+  [ServiceRequestStatus.REJECTED]: '已拒绝',
+  [ServiceRequestStatus.CANCELLED]: '已取消',
+};
+
+export function serviceRequestStatusLabel(status: string): string {
+  return ServiceRequestStatusLabels[status as ServiceRequestStatus] ?? status;
+}
+
 // 审批状态枚举
 export enum ApprovalStatus {
   PENDING = 'pending', // 待审批
