@@ -130,9 +130,9 @@ func TestService_Register(t *testing.T) {
 	fx := newAuthFixture(t)
 	defer fx.client.Close()
 
-	t.Run("多活跃租户时未指定租户代码须被拒绝", func(t *testing.T) {
-		// fixture 有两个 active 租户(tenant/tenant2)，注册不指定 TenantCode
-		// 必须失败 closed，禁止回退硬编码默认租户
+	t.Run("多活跃租户时注册被拒绝(fail-closed)", func(t *testing.T) {
+		// fixture 有两个 active 租户(tenant/tenant2)。目标租户不再接受请求体
+		// 指定(P0-1)，多活跃租户无法推断归属，注册必须失败 closed。
 		req := &dto.RegisterRequest{
 			Username:    "bob",
 			Email:       "bob@example.com",
@@ -140,14 +140,13 @@ func TestService_Register(t *testing.T) {
 			DisplayName: "Bob Builder",
 			Phone:       "13900000000",
 			Company:     "Acme",
-			Role:        "end_user",
 		}
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "租户")
 	})
 
-	t.Run("单一活跃租户时未指定租户代码注册到该租户", func(t *testing.T) {
+	t.Run("单一活跃租户时注册落入该租户且角色固定为end_user", func(t *testing.T) {
 		// 挂起 tenant2 模拟单租户私有部署
 		_, err := fx.client.Tenant.UpdateOneID(fx.tenant2.ID).
 			SetStatus("suspended").
@@ -161,7 +160,6 @@ func TestService_Register(t *testing.T) {
 			DisplayName: "Bob Builder",
 			Phone:       "13900000000",
 			Company:     "Acme",
-			Role:        "end_user",
 		}
 		resp, err := fx.service.Register(fx.ctx, req)
 		require.NoError(t, err)
@@ -179,6 +177,8 @@ func TestService_Register(t *testing.T) {
 		assert.Equal(t, "Acme", saved.Department)
 		assert.True(t, saved.Active)
 		assert.Equal(t, fx.tenant.ID, saved.TenantID)
+		// P0-1：注册是未认证入口，角色必须由服务端固定指派，不能被请求体影响
+		assert.Equal(t, "end_user", string(saved.Role))
 	})
 
 	t.Run("用户名重复返回错误", func(t *testing.T) {
@@ -203,36 +203,6 @@ func TestService_Register(t *testing.T) {
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "邮箱已被注册")
-	})
-
-	t.Run("指定租户 code 成功注册", func(t *testing.T) {
-		req := &dto.RegisterRequest{
-			Username:    "diana",
-			Email:       "diana@example.com",
-			Password:    "securePass1",
-			DisplayName: "Diana",
-			TenantCode:  "tenant2",
-		}
-		resp, err := fx.service.Register(fx.ctx, req)
-		require.NoError(t, err)
-		assert.Equal(t, "diana", resp.Username)
-
-		saved, err := fx.client.User.Get(fx.ctx, resp.ID)
-		require.NoError(t, err)
-		assert.Equal(t, fx.tenant2.ID, saved.TenantID)
-	})
-
-	t.Run("指定不存在的租户 code 返回错误", func(t *testing.T) {
-		req := &dto.RegisterRequest{
-			Username:    "eve",
-			Email:       "eve@example.com",
-			Password:    "securePass1",
-			DisplayName: "Eve",
-			TenantCode:  "ghost-tenant",
-		}
-		_, err := fx.service.Register(fx.ctx, req)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "租户不存在")
 	})
 }
 

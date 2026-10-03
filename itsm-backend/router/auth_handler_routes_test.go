@@ -13,6 +13,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/user"
 	authHandler "itsm-backend/handlers/auth"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/middleware"
@@ -42,16 +43,73 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 	router := gin.New()
 	SetupRoutes(router, &RouterConfig{JWTSecret: jwtSecret, Logger: logger, Client: client, AuthHandler: handler, CommonHandler: commonHandler})
 
-	t.Run("register retains request and response contract", func(t *testing.T) {
-		body := []byte(`{"username":"newuser","email":"new@example.com","password":"password123","fullName":"New User","tenantCode":"TENANT-A"}`)
+	t.Run("register ignores body role/tenantCode and fails closed with multiple active tenants", func(t *testing.T) {
+		// P0-1 回归：未认证注册入口曾接受 body 指定 role/tenantCode，可直接注册成
+		// 任意租户管理员。字段已从 DTO 移除（gin 静默丢弃未知字段），攻击 payload
+		// 必须被整体忽略；多活跃租户时归属无法推断，注册 fail-closed 且不产生用户。
+		body := []byte(`{"username":"attacker","email":"attacker@example.com","password":"password123","fullName":"Attacker","role":"super_admin","tenantCode":"TENANT-A"}`)
+		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
+		request.Header.Set("Content-Type", "application/json")
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusUnauthorized, response.Code, response.Body.String())
+		var envelope common.Response
+		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
+		require.NotEqual(t, common.SuccessCode, envelope.Code)
+
+		created, err := client.User.Query().Where(user.UsernameEQ("attacker")).Count(context.Background())
+		require.NoError(t, err)
+		require.Zero(t, created, "fail-closed register must not create any user")
+	})
+
+	t.Run("register in single-tenant deployment lands as end_user without admin access", func(t *testing.T) {
+		// 挂起 tenantB 模拟单租户私有部署
+		_, err := client.Tenant.UpdateOneID(tenantB.ID).SetStatus("suspended").Save(context.Background())
+		require.NoError(t, err)
+
+		body := []byte(`{"username":"selfuser","email":"self@example.com","password":"password123","fullName":"Self User","role":"super_admin"}`)
 		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, request)
 		require.Equal(t, http.StatusOK, response.Code, response.Body.String())
-		var envelope common.Response
-		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
-		require.Equal(t, common.SuccessCode, envelope.Code)
+
+		var registerEnvelope struct {
+			Code int `json:"code"`
+			Data struct {
+				ID int `json:"id"`
+			} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &registerEnvelope))
+		require.Equal(t, common.SuccessCode, registerEnvelope.Code)
+
+		saved, err := client.User.Get(context.Background(), registerEnvelope.Data.ID)
+		require.NoError(t, err)
+		require.Equal(t, "end_user", string(saved.Role), "role must be server-assigned end_user, body role must be ignored")
+		require.Equal(t, tenantA.ID, saved.TenantID)
+
+		// 真实登录拿到会话后访问管理路由：end_user 必须被 RBAC 拒绝(403)。若提权
+		// 成立（role 变成 super_admin），AuthorizeResourceForRole 的 super_admin 短路
+		// 会直接放行，此断言即失败——这正是 P0-1 的端到端证明。
+		loginRequest := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(`{"username":"selfuser","password":"password123","tenantCode":"TENANT-A"}`))
+		loginRequest.Header.Set("Content-Type", "application/json")
+		loginResponse := httptest.NewRecorder()
+		router.ServeHTTP(loginResponse, loginRequest)
+		require.Equal(t, http.StatusOK, loginResponse.Code, loginResponse.Body.String())
+
+		var token string
+		for _, cookie := range loginResponse.Result().Cookies() {
+			if cookie.Name == middleware.AccessTokenCookie {
+				token = cookie.Value
+			}
+		}
+		require.NotEmpty(t, token, "login must set the access token cookie")
+
+		adminRequest := httptest.NewRequest(http.MethodGet, "/api/v1/admin/operations/commands", nil)
+		adminRequest.AddCookie(&http.Cookie{Name: middleware.AccessTokenCookie, Value: token})
+		adminResponse := httptest.NewRecorder()
+		router.ServeHTTP(adminResponse, adminRequest)
+		require.Equal(t, http.StatusForbidden, adminResponse.Code, adminResponse.Body.String())
 	})
 
 	t.Run("switch tenant rejects cross-tenant access", func(t *testing.T) {

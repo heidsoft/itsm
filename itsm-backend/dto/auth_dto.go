@@ -92,8 +92,9 @@ type RegisterRequest struct {
 	FullName    string `json:"fullName" binding:"omitempty"`
 	Phone       string `json:"phone" binding:"omitempty"`
 	Company     string `json:"company,omitempty"`
-	Role        string `json:"role" binding:"omitempty"`
-	TenantCode  string `json:"tenantCode,omitempty"`
+	// 注册是唯一未认证的写入入口：角色固定为服务端指派的 end_user，目标租户
+	// 不接受请求体（曾允许 body 携带 role/tenantCode 直接注册成任意租户管理员，
+	// 见 review-2026-10-03 P0-1）。多活跃租户时 fail-closed，要求管理员介入。
 }
 
 // ResolvedDisplayName 返回归一后的显示名，两者皆空时回退为用户名。
