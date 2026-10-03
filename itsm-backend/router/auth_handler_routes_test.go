@@ -125,6 +125,40 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 	})
 }
 
+func TestSetupRoutes_AdminConsoleRoutesResolveTenantContext(t *testing.T) {
+	// operations/commands 与 timers 注册在 auth 组、且早于 TenantMiddleware 挂载，
+	// 曾导致任何已认证用户（含 super_admin）都拿到 401"租户上下文缺失"。
+	// 回归必须在真实 Router 链上证明 JWT→RBAC→Tenant→handler 全链可走通。
+	gin.SetMode(gin.TestMode)
+	client := enttest.Open(t, "sqlite3", "file:admin-console-tenant-routes?mode=memory&cache=shared&_fk=1")
+	logger := zaptest.NewLogger(t).Sugar()
+	const jwtSecret = "admin-console-tenant-route-secret"
+	handler := authHandler.NewHandler(authHandler.NewService(client, jwtSecret, logger))
+	commonHandler := domainCommon.NewHandler(domainCommon.NewService(domainCommon.NewEntRepository(client), jwtSecret, logger, client))
+
+	tenantA, err := client.Tenant.Create().SetName("Console Tenant").SetCode("CONSOLE-A").SetDomain("console.example.com").SetStatus("active").Save(context.Background())
+	require.NoError(t, err)
+	admin, err := client.User.Create().SetUsername("console-admin").SetEmail("console-admin@example.com").SetName("Console Admin").SetPasswordHash("unused").SetRole("super_admin").SetTenantID(tenantA.ID).SetActive(true).Save(context.Background())
+	require.NoError(t, err)
+
+	router := gin.New()
+	SetupRoutes(router, &RouterConfig{JWTSecret: jwtSecret, Logger: logger, Client: client, AuthHandler: handler, CommonHandler: commonHandler})
+
+	token, err := middleware.GenerateAccessToken(admin.ID, admin.Username, string(admin.Role), tenantA.ID, jwtSecret, 15*time.Minute)
+	require.NoError(t, err)
+
+	for _, path := range []string{"/api/v1/admin/operations/commands", "/api/v1/timers"} {
+		request := httptest.NewRequest(http.MethodGet, path, nil)
+		request.AddCookie(&http.Cookie{Name: middleware.AccessTokenCookie, Value: token})
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusOK, response.Code, path+" must resolve tenant context for an authorized session: "+response.Body.String())
+		var envelope common.Response
+		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
+		require.Equal(t, common.SuccessCode, envelope.Code, path)
+	}
+}
+
 func TestSetupRoutes_AuthCookieOnlyResponses(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	client := enttest.Open(t, "sqlite3", "file:auth-cookie-responses?mode=memory&cache=shared&_fk=1")

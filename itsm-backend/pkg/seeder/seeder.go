@@ -1196,7 +1196,28 @@ func BuiltinRoles() []RoleSeed {
 	}
 }
 
+// reconcileRolesIDSequence 把 roles_id_seq 对齐到 max(roles.id)。
+// 20260501_enable_rbac_from_db.sql 以显式 id(100-112) 插入平台内置角色但不推进
+// 序列；串行分配追上 100（第 4 个引导租户之后）即撞 roles_pkey，且 PostgreSQL
+// 序列不随事务回滚，重试永远停在同一个冲突值上，租户引导随之死信。SQLite 按
+// max(rowid)+1 分配，不存在该缺陷类，因此仅在 Postgres 方言执行。幂等：每次
+// 种子/租户引导都会重新对齐，同时修复已脱序的存量库。
+func (s *Seeder) reconcileRolesIDSequence(ctx context.Context) {
+	if s.sqlDriver == nil || s.sqlDriver.Dialect() != dialect.Postgres {
+		return
+	}
+	if err := s.sqlDriver.Exec(ctx, `
+		SELECT setval(
+			pg_get_serial_sequence('roles', 'id'),
+			GREATEST((SELECT COALESCE(MAX(id), 0) FROM roles), 1),
+			true
+		)`, []any{}, nil); err != nil {
+		s.sugar.Warnw("reconcile roles_id_seq failed (non-fatal)", "error", err)
+	}
+}
+
 func (s *Seeder) seedRoles(ctx context.Context) {
+	s.reconcileRolesIDSequence(ctx)
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
 		s.sugar.Warnw("baseline tenant not found; skip roles seed", "error", err)
