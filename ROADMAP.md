@@ -104,6 +104,10 @@ Concretely that means:
 - [x] **性能与运维** — 变更列表与 RAG 向量检索两处热路径 N+1 修复；prod 备份自动化（`scripts/prod-backup.sh` + 恢复演练 + launchd 每日调度）、compose 项目名隔离（`itsm-prod` / `itsm`）与诊断端口参数化。
 - [x] **变更审批-状态原子性（P0）** — `handlers/change.SubmitApproval` 把审批记录写入与目标状态 CAS 推进合并到同一 `*sql.Tx`：`SubmitApprovalRecordTx` 仓储方法以 `record.ChangeID + tenantID + status='draft' expected` 一次提交，任一子步失败整笔回滚；同时拒绝审批人不在审批链上的提交，避免越权。回归 `handlers/change/submit_approval_atomicity_test.go` 5 例：原子成功提交 / 事务失败零副作用 / CAS 守卫不会回退状态 / 拒绝非链上审批人 / 时间戳由调用方注入不被时钟漂移。
 - [x] **工单关联写入面（P0）** — 补齐 `PATCH /api/v1/tickets/:id/relations` 路由并接入 `service.UpdateTicketAssociations`：父子环、跨租户、缺失父工单三类拒绝都返回 `*common.BusinessError`（422/4004/4004）而非 500/5001；缺省 `tenantID<=0` fail-closed，读端点透出的字段不含底层 ent 错误串。回归 `router/ticket_relations_write_route_test.go` 7 例打在真实 `SetupRoutes` 上：同租户写入反射 / 跨租户 404 且零副作用 / 父子环 422 保留原状态 / 不存在 404 / 非法 body 与非法 ID 均为 400/1001 / childrenTree 反映父子关系；既有 `TestTicketRelationsRoutesTenantScope` 仍绿。同批 `dto.ChangeListResponse` 复原以修复 `service/change_service.go` 残留死引用（`go build ./...` 与 `go vet` 退出码 0）。
+- [x] **P0-2 R2-a 权限奇偶守卫红态前置** — `TestBuiltinRolePermissionCodes_Guard` 范围从手工枚举 `{admin, technician}` 扩到 `domainrole.All` ∩ `middleware.RolePermissions` 同名键（结构性扩围在 `a852b45dc`）；按 `plans/product-remediation-plan-2026-10-03.md` §2 R2-a 约束分两档：硬档 `admin`/`technician` 差异即红，待拍板档 `manager`/`agent`/`sysadmin`/`end_user` 以 `t.Skipf` 子测试登记差异清单（实测 21/8/`*:*`/16 缺），等 §3 N4 拍板后让守卫真正红出。台账 E4-41 伴生残留（`middleware.RolePermissions` 留不留 / `security_admin`/`it_admin` 同名缺口）交 N4、N5 拍板。
+- [ ] **P0-2 N4 拍板：内置角色权限码集扩权还是收权** — R2-a 已前置出 4 个待拍板档角色的真实差异；待评审者就 `manager`/`agent`/`sysadmin`/`end_user` 四组扩权/收权/混合选项拍板，并裁决伴生项 `middleware.RolePermissions` 是否保留为「硬编码权威兜底」（台账 E4-41 / `plans` §3 N4-N5）。拍板那一批同步把 R2-a 守卫 `t.Skipf` 替换为 `t.Errorf`，让 CI 真红并锁定收敛后形态。
+  - 已完成：差异清单已实测并落 CHANGELOG；守卫骨架就位、CI 绿。
+  - 剩余：扩权/收权/混合的产品决策；`authz.BuiltinRolePermissionCodes()` 与 `middleware.RolePermissions` 的同源化方案。
 
 ### 当前收敛项
 
