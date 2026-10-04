@@ -249,12 +249,12 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 
 	// 在事务内 enqueue 规则执行命令，保证原子性
 	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
-		TenantID:      tenantID,
-		CommandType:   commandbus.CommandExecuteIncidentRules,
-		AggregateType: "incident",
-		AggregateID:   created.ID,
+		TenantID:       tenantID,
+		CommandType:    commandbus.CommandExecuteIncidentRules,
+		AggregateType:  "incident",
+		AggregateID:    created.ID,
 		IdempotencyKey: fmt.Sprintf("incident:%d:rules:create", created.ID),
-		Payload:       map[string]interface{}{"event": "created"},
+		Payload:        map[string]interface{}{"event": "created"},
 	})
 	if err != nil {
 		return rollback(fmt.Errorf("failed to enqueue incident rules command: %w", err))
