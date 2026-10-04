@@ -831,7 +831,7 @@ definitions:
         additionalProperties:
           type: integer
         type: object
-      totalCount:
+      total:
         type: integer
       typeDistribution:
         additionalProperties:
@@ -1319,7 +1319,7 @@ definitions:
     type: object
   dto.CloudAccountListResponse:
     properties:
-      cloudAccounts:
+      items:
         items:
           $ref: '#/definitions/dto.CloudAccountResponse'
         type: array
@@ -1328,6 +1328,8 @@ definitions:
       pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CloudAccountResponse:
@@ -1373,7 +1375,7 @@ definitions:
     type: object
   dto.CloudResourceListResponse:
     properties:
-      cloudResources:
+      items:
         items:
           $ref: '#/definitions/dto.CloudResourceResponse'
         type: array
@@ -1382,6 +1384,8 @@ definitions:
       pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CloudResourceResponse:
@@ -1462,7 +1466,7 @@ definitions:
     type: object
   dto.CloudServiceListResponse:
     properties:
-      cloudServices:
+      items:
         items:
           $ref: '#/definitions/dto.CloudServiceResponse'
         type: array
@@ -1471,6 +1475,8 @@ definitions:
       pageSize:
         type: integer
       total:
+        type: integer
+      totalPages:
         type: integer
     type: object
   dto.CloudServiceResponse:
@@ -11328,6 +11334,109 @@ paths:
       summary: 触发流程
       tags:
       - BPMN-ProcessTrigger
+  /api/v1/projects:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有项目列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取项目列表
+      tags:
+      - 项目管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的项目
+      parameters:
+      - description: 项目信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建项目
+      tags:
+      - 项目管理
+  /api/v1/projects/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定项目
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除项目
+      tags:
+      - 项目管理
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的详细信息
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取单个项目
+      tags:
+      - 项目管理
+    put:
+      consumes:
+      - application/json
+      description: 更新项目信息
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 项目信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新项目
+      tags:
+      - 项目管理
   /api/v1/system/vector-store:
     get:
       description: 获取向量存储配置视图与能力状态

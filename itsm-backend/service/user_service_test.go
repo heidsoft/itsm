@@ -388,8 +388,8 @@ func TestUserService_SearchUsers(t *testing.T) {
 		{
 			name: "搜索邮箱",
 			request: &dto.SearchUsersRequest{
-				Keyword: "admin@example.com",
-				PageSize:   10,
+				Keyword:  "admin@example.com",
+				PageSize: 10,
 			},
 			expectedCount: 1,
 			expectedError: false,
@@ -397,8 +397,8 @@ func TestUserService_SearchUsers(t *testing.T) {
 		{
 			name: "搜索姓名",
 			request: &dto.SearchUsersRequest{
-				Keyword: "Smith",
-				PageSize:   10,
+				Keyword:  "Smith",
+				PageSize: 10,
 			},
 			expectedCount: 1,
 			expectedError: false,
@@ -406,8 +406,8 @@ func TestUserService_SearchUsers(t *testing.T) {
 		{
 			name: "无结果搜索",
 			request: &dto.SearchUsersRequest{
-				Keyword: "nonexistent",
-				PageSize:   10,
+				Keyword:  "nonexistent",
+				PageSize: 10,
 			},
 			expectedCount: 0,
 			expectedError: false,

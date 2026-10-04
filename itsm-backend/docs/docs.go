@@ -11035,6 +11035,162 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/projects": {
+            "get": {
+                "description": "获取所有项目列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "获取项目列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的项目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "创建项目",
+                "parameters": [
+                    {
+                        "description": "项目信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/{id}": {
+            "get": {
+                "description": "获取指定项目的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "获取单个项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新项目信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "更新项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "项目信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定项目",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "项目管理"
+                ],
+                "summary": "删除项目",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/system/vector-store": {
             "get": {
                 "description": "获取向量存储配置视图与能力状态",
@@ -12816,7 +12972,7 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
-                "totalCount": {
+                "total": {
                     "type": "integer"
                 },
                 "typeDistribution": {
@@ -13505,7 +13661,7 @@ const docTemplate = `{
         "dto.CloudAccountListResponse": {
             "type": "object",
             "properties": {
-                "cloudAccounts": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CloudAccountResponse"
@@ -13518,6 +13674,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -13584,7 +13743,7 @@ const docTemplate = `{
         "dto.CloudResourceListResponse": {
             "type": "object",
             "properties": {
-                "cloudResources": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CloudResourceResponse"
@@ -13597,6 +13756,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }
@@ -13715,7 +13877,7 @@ const docTemplate = `{
         "dto.CloudServiceListResponse": {
             "type": "object",
             "properties": {
-                "cloudServices": {
+                "items": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CloudServiceResponse"
@@ -13728,6 +13890,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
                     "type": "integer"
                 }
             }

@@ -270,6 +270,7 @@ const AUTH_ONLY = new Set([
   "/api/v1/auth/tenants",
   "/api/v1/auth/logout",
   "/api/v1/auth/menus",
+  "/api/v1/auth/session",       // 会话信息：JWT 认证即可，无需 RBAC 资源权限
   "/api/v1/auth/switch-tenant",  // 租户切换：JWT 认证即可，无需 RBAC 资源权限
   "/api/v1/users/profile",
   "/api/v1/users/me",
