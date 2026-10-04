@@ -42,21 +42,37 @@ type DeclaredRoute struct {
 // 路径前缀按函数粒度追踪 `x := y.Group("/p")` 的累积关系；
 // 组根统一视为 /api/v1（router/ 与 handlers/ 的 RegisterRoutes 均挂在该前缀下）。
 func ScanDeclaredPermissionRoutes() ([]DeclaredRoute, error) {
+	declared, _, err := scanPermissionRoutes()
+	return declared, err
+}
+
+// ScanUnresolvedPermissionRoutes 返回「声明了权限但扫描器无法定位完整路径」的路由。
+//
+// 这类声明不会进入预检映射，非 super_admin 角色会在 RBACMiddleware 路径预检处
+// 被 DBOnly fail-closed 直接 403（2026-10-04 P0：工单类型、teams、tags、
+// problem-relationships、approval-records 等 21 个端点的真实根因）。
+// 生成层把它当作硬错误，保证这类漂移不能再静默发生。
+func ScanUnresolvedPermissionRoutes() ([]DeclaredRoute, error) {
+	_, unresolved, err := scanPermissionRoutes()
+	return unresolved, err
+}
+
+func scanPermissionRoutes() ([]DeclaredRoute, []DeclaredRoute, error) {
 	// 以本文件位置锚定仓库内 itsm-backend 目录，调用方 cwd 无关
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
-		return nil, fmt.Errorf("无法定位 route_scan.go 所在目录")
+		return nil, nil, fmt.Errorf("无法定位 route_scan.go 所在目录")
 	}
 	base := filepath.Dir(thisFile)
 	return scanDeclaredPermissionRoutesFrom(base)
 }
 
-func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
+func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredRoute, error) {
 	var files []string
 	for _, pattern := range []string{filepath.Join(base, "..", "router", "*.go"), filepath.Join(base, "..", "handlers", "*", "*.go")} {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("glob %s: %w", pattern, err)
+			return nil, nil, fmt.Errorf("glob %s: %w", pattern, err)
 		}
 		for _, m := range matches {
 			if strings.HasSuffix(m, "_test.go") {
@@ -72,15 +88,16 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
 	}
 
 	var out []DeclaredRoute
+	var unresolved []DeclaredRoute
 	for _, file := range files {
 		src, err := os.ReadFile(file)
 		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", file, err)
+			return nil, nil, fmt.Errorf("read %s: %w", file, err)
 		}
 		fset := token.NewFileSet()
 		f, err := parser.ParseFile(fset, file, src, 0)
 		if err != nil {
-			return nil, fmt.Errorf("parse %s: %w", file, err)
+			return nil, nil, fmt.Errorf("parse %s: %w", file, err)
 		}
 		rel := filepath.ToSlash(file)
 
@@ -94,6 +111,21 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
 			groupPath := map[string]string{}
 			// var -> 组级声明的 (resource, action)
 			groupDecl := map[string][][2]string{}
+			// 分组参数根：SetupXxxRoutes(tenant *gin.RouterGroup, ...) 里 tenant 是参数，
+			// 函数体内没有 `x := y.Group(...)` 赋值可追，历史实现把它当成空前缀，
+			// 于是 /ticket-types 通不过 /api/v1 过滤被**静默丢弃**。
+			paramRoot := groupParamRoots(fn)
+
+			// resolveGroupVar 返回变量前缀；known=false 表示无法定位。
+			resolveGroupVar := func(name string) (string, bool) {
+				if p, ok := groupPath[name]; ok {
+					return p, true
+				}
+				if p, ok := paramRoot[name]; ok {
+					return p, true
+				}
+				return "", false
+			}
 
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				switch node := n.(type) {
@@ -110,12 +142,31 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
 						return true
 					}
 					sel, ok := call.Fun.(*ast.SelectorExpr)
-					if !ok || sel.Sel.Name != "Group" || len(call.Args) == 0 {
+					if !ok || len(call.Args) == 0 {
+						return true
+					}
+					// `tenant := auth.Use(mw)` 返回同一个分组，前缀与父组一致；
+					// 生产 router.go 的 tenant 组正是这样从 auth 派生的。
+					if sel.Sel.Name == "Use" {
+						if p, ok := sel.X.(*ast.Ident); ok {
+							if parent, known := resolveGroupVar(p.Name); known {
+								groupPath[ident.Name] = parent
+							}
+							groupDecl[ident.Name] = append(groupDecl[ident.Name], groupDecl[p.Name]...)
+						}
+						if perms := permissionPairs(call.Args); len(perms) > 0 {
+							groupDecl[ident.Name] = append(groupDecl[ident.Name], perms...)
+						}
+						return true
+					}
+					if sel.Sel.Name != "Group" {
 						return true
 					}
 					parent := "/api/v1"
 					if p, ok := sel.X.(*ast.Ident); ok {
 						if known, exists := groupPath[p.Name]; exists {
+							parent = known
+						} else if known, exists := paramRoot[p.Name]; exists {
 							parent = known
 						}
 					}
@@ -183,8 +234,21 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
 				if err != nil {
 					return true
 				}
-				full := normalizeRoutePath(groupPath[recv.Name] + seg)
-				if !strings.HasPrefix(full, "/api/v1/") && full != "/api/v1" {
+				prefix, known := resolveGroupVar(recv.Name)
+				full := normalizeRoutePath(prefix + seg)
+				if !known || (!strings.HasPrefix(full, "/api/v1/") && full != "/api/v1") {
+					// 无法定位完整路径的权限声明必须显式暴露：它们不会进入预检映射，
+					// 非 super_admin 会在 RBACMiddleware 的 DBOnly fail-closed 处恒 403。
+					for _, p := range perms {
+						unresolved = append(unresolved, DeclaredRoute{
+							File:      rel,
+							Method:    sel.Sel.Name,
+							FullPath:  normalizeRoutePath(prefix + seg),
+							Resource:  p[0],
+							Action:    p[1],
+							RouteLine: fset.Position(call.Pos()).Line,
+						})
+					}
 					return true
 				}
 
@@ -202,7 +266,61 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, error) {
 			})
 		}
 	}
-	return out, nil
+	return out, unresolved, nil
+}
+
+// groupParamRoots 返回函数参数里分组变量的根前缀。
+//
+// 本仓库的注册约定（2026-10-04 实测确认，全部调用点均成立）：
+//   - router/ 的 SetupXxxRoutes(tenant *gin.RouterGroup, ...) 与 handlers/ 的
+//     RegisterRoutes(group *gin.RouterGroup) 收到的组都挂在 /api/v1 下
+//     （router.go 里 public := r.Group("/api/v1")、auth := r.Group("/api/v1")、
+//     tenant := auth.Use(...)）；
+//   - 直接收 *gin.Engine 的注册函数（SetupRoutes/SetupMSPRoutes/
+//     SetupCommonSystemRoutes(r, ...)）用绝对路径段注册，根前缀为空。
+//
+// 类型不是这两种（例如自定义 wrapper）时不猜测，交给 unresolved 暴露。
+func groupParamRoots(fn *ast.FuncDecl) map[string]string {
+	roots := map[string]string{}
+	if fn.Type.Params == nil {
+		return roots
+	}
+	for _, field := range fn.Type.Params.List {
+		root, ok := ginGroupRootType(field.Type)
+		if !ok {
+			continue
+		}
+		for _, name := range field.Names {
+			roots[name.Name] = root
+		}
+	}
+	return roots
+}
+
+// ginGroupRootType 把 gin 分组/引擎类型映射为路径根前缀。
+func ginGroupRootType(expr ast.Expr) (string, bool) {
+	if ell, ok := expr.(*ast.Ellipsis); ok {
+		expr = ell.Elt
+	}
+	if star, ok := expr.(*ast.StarExpr); ok {
+		expr = star.X
+	}
+	sel, ok := expr.(*ast.SelectorExpr)
+	if !ok {
+		return "", false
+	}
+	pkg, ok := sel.X.(*ast.Ident)
+	if !ok || pkg.Name != "gin" {
+		return "", false
+	}
+	switch sel.Sel.Name {
+	case "RouterGroup":
+		return "/api/v1", true
+	case "Engine":
+		return "", true
+	default:
+		return "", false
+	}
 }
 
 // permissionPairs 从参数列表中提取 RequirePermission 家族的 (resource, action) 对。

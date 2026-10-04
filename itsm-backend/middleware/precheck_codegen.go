@@ -32,9 +32,20 @@ import (
 //   - 不同声明点声明了不同权限对 → 视为口径冲突，返回错误
 //     （生成层面即暴露，而不是静默取其一掩盖问题）。
 func generatePrecheckMap() (map[string]map[string]Permission, error) {
-	routes, err := ScanDeclaredPermissionRoutes()
+	routes, unresolved, err := scanPermissionRoutes()
 	if err != nil {
 		return nil, fmt.Errorf("扫描路由声明: %w", err)
+	}
+	if len(unresolved) > 0 {
+		var b strings.Builder
+		for _, u := range unresolved {
+			fmt.Fprintf(&b, "\n  %s:%d %s %s -> %s:%s", u.File, u.RouteLine, u.Method, u.FullPath, u.Resource, u.Action)
+		}
+		return nil, fmt.Errorf(
+			"%d 条权限声明无法定位完整路径，不会进入预检映射（非 super_admin 会在 RBACMiddleware 路径预检处恒 403）：%s\n"+
+				"修复：把该域路由注册到函数内显式派生的分组（grp := tenant.Group(\"/xxx\"）并让 grp 继承组根，"+
+				"或在 route_scan.go 的注册约定里补该形态。",
+			len(unresolved), b.String())
 	}
 
 	type key struct{ method, path string }
