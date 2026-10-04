@@ -206,6 +206,9 @@ services:
       # published to untrusted networks in this compose file.
       - METRICS_REQUIRE_AUTH=${METRICS_REQUIRE_AUTH:-true}
 
+      # Connector encryption key (required in production)
+      - CONNECTOR_CONFIG_ENCRYPTION_KEY=${CONNECTOR_CONFIG_ENCRYPTION_KEY:?CONNECTOR_CONFIG_ENCRYPTION_KEY must be set in production}
+
       # Proxy bypass for health checks
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
@@ -335,6 +338,12 @@ services:
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-}
       - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
       - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
+      - CONNECTOR_CONFIG_ENCRYPTION_KEY=${CONNECTOR_CONFIG_ENCRYPTION_KEY:?CONNECTOR_CONFIG_ENCRYPTION_KEY must be set in production}
+      # LLM 配置（worker 需要处理 AI 相关命令）
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_ENDPOINT=${LLM_ENDPOINT:-}
       - no_proxy=localhost,127.0.0.1
       - NO_PROXY=localhost,127.0.0.1
     depends_on:
