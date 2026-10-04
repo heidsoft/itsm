@@ -42,7 +42,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 	repo := NewEntRepository(client)
 	slaMonitor := service.NewSLAMonitorService(client, zap.NewNop().Sugar())
 	slaMonitor.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
-	h := NewHandler(NewService(repo, production, nil, nil, nil, slaMonitor, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, nil, production, nil, nil, nil, slaMonitor, zap.NewNop().Sugar()))
 	for _, tc := range []struct {
 		name, path           string
 		tenant, status, code int
@@ -125,7 +125,7 @@ func TestLifecycleGuard_SQLite_AllowedByRelation(t *testing.T) {
 
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, nil, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
 
 	// 每个事件单单号唯一（incidents.incident_number 全局唯一约束），
 	// actorID 取真实租户用户（createIncidentEventTx 校验 actor 必须是
@@ -218,7 +218,7 @@ func TestAssignGuard_SQLite_NotRowLevelEnforced(t *testing.T) {
 
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
 	repo := NewEntRepository(client)
-	h := NewHandler(NewService(repo, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
+	h := NewHandler(NewService(repo, nil, production, nil, nil, nil, service.NewSLAMonitorService(client, zap.NewNop().Sugar()), zap.NewNop().Sugar()))
 
 	inc := client.Incident.Create().
 		SetTitle("assign boundary").SetIncidentNumber("INC-GA-ASSIGN").

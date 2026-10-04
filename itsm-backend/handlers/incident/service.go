@@ -491,53 +491,6 @@ func (s *Service) escalateIncident(ctx context.Context, tenantID int, id int, le
 	return updated, nil
 }
 
-// executeRules Logic
-func (s *Service) executeRules(ctx context.Context, incident *Incident, tenantID int) {
-	rules, err := s.repo.ListActiveRules(ctx, tenantID)
-	if err != nil {
-		s.logger.Errorw("Failed to list active rules", "error", err)
-		return
-	}
-
-	for _, rule := range rules {
-		if s.evaluateCondition(rule.Conditions, incident) {
-			s.executeAction(ctx, rule, incident, tenantID)
-		}
-	}
-}
-
-func (s *Service) evaluateCondition(conditions map[string]interface{}, incident *Incident) bool {
-	// Simplified evaluation logic
-	if priority, ok := conditions["priority"].([]string); ok {
-		match := false
-		for _, p := range priority {
-			if incident.Priority == p {
-				match = true
-				break
-			}
-		}
-		if !match {
-			return false
-		}
-	}
-	if status, ok := conditions["status"].(string); ok {
-		if incident.Status != status {
-			return false
-		}
-	}
-	// Add more conditions as needed
-	return true
-}
-
-func (s *Service) executeAction(ctx context.Context, rule *IncidentRule, incident *Incident, tenantID int) {
-	// Execute implementation
-	// ... (Simplification: updating stats and logging for now to avoid circular service dependencies if action updates incident again)
-	s.logger.Infow("Rule Executed", "rule_id", rule.ID, "incident_id", incident.ID)
-
-	// Update stats
-	s.repo.UpdateRuleStats(ctx, rule.ID, rule.ExecutionCount+1, time.Now())
-}
-
 // GetStats 聚合事件统计（按 tenant 隔离）
 // 该方法仅做租户透传，业务规则（如缓存、敏感字段脱敏）由调用层决定；
 // 当前实现直接返回仓储聚合结果，后续若启用 Redis 缓存（见方案「不在本方案范围」）

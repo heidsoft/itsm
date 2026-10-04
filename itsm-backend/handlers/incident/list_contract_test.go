@@ -64,7 +64,7 @@ func newListContractFixture(t *testing.T) *listContractFixture {
 
 	return &listContractFixture{
 		client: client,
-		handler: NewHandler(NewService(NewEntRepository(client),
+		handler: NewHandler(NewService(NewEntRepository(client), nil,
 			service.NewIncidentService(client, zap.NewNop().Sugar(), nil),
 			nil, nil, nil, nil, zap.NewNop().Sugar())),
 		tenantA: tenantA.ID,
