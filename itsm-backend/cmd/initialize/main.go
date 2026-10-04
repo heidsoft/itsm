@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/config"
@@ -44,22 +43,15 @@ func main() {
 	}
 	defer client.Close()
 
-	store, err := initialization.NewSQLStore(database.GetRawDB())
+	assembly, err := seeder.NewProductionAssembly(database.GetRawDB(), client, sugar, cfg)
 	if err != nil {
-		exitf("create initialization store: %v", err)
+		exitf("assemble production initialization: %v", err)
 	}
-	productSeeder := seeder.NewSeeder(client, sugar, cfg)
-	components, err := seeder.ProductionInitializers(productSeeder)
-	if err != nil {
-		exitf("create initializer: %v", err)
-	}
-	engine, err := initialization.NewEngine(
-		store, components, 30*time.Second,
-	)
-	if err != nil {
-		exitf("create engine: %v", err)
-	}
-	scope := initialization.Scope{Type: "platform", ID: 0}
+	engine := assembly.Engine
+	store := assembly.Store
+	components := assembly.Components
+	productSeeder := assembly.Seeder
+	scope := seeder.PlatformScope()
 	ctx := tenantctx.SystemContext(
 		context.Background(),
 		"initialization:cli",
@@ -92,8 +84,9 @@ func main() {
 		}
 		writeJSON(plans)
 	case "apply", "retry":
-		if strings.TrimSpace(*releaseVersion) == "" {
-			exitf("-release-version or ITSM_RELEASE_VERSION is required")
+		request, err := seeder.PlatformRequest(*requestedBy, *releaseVersion, false)
+		if err != nil {
+			exitf("prepare initialization request: %v", err)
 		}
 
 		// If bootstrap token is provided, consume it to create admin.
@@ -116,18 +109,7 @@ func main() {
 			return
 		}
 
-		executorID, _ := os.Hostname()
-		executorID, err = initialization.NewExecutorID(executorID)
-		if err != nil {
-			exitf("create executor id: %v", err)
-		}
-		runID, err := engine.Apply(ctx, initialization.Request{
-			Scope:          scope,
-			TargetVersion:  seeder.CurrentTenantTemplateVersion,
-			ReleaseVersion: *releaseVersion,
-			RequestedBy:    *requestedBy,
-			ExecutorID:     executorID,
-		})
+		runID, err := engine.Apply(ctx, request)
 		if err != nil {
 			exitf("initialization run %d failed: %v", runID, err)
 		}

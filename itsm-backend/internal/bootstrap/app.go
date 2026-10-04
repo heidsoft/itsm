@@ -98,7 +98,6 @@ import (
 	wecomHandler "itsm-backend/handlers/wecom"
 	workbenchHandler "itsm-backend/handlers/workbench"
 	"itsm-backend/internal/commandbus"
-	"itsm-backend/internal/initialization"
 	"itsm-backend/internal/schema"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
@@ -1383,42 +1382,15 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 				sugar.Warnw("bootstrap credential risk detected", "code", risk.Code, "message", risk.Message)
 			}
 		}
-		s := seeder.NewSeeder(client, sugar, cfg)
-		components, err := seeder.ProductionInitializers(s)
+		assembly, err := seeder.NewProductionAssembly(database.GetRawDB(), client, sugar, cfg)
 		if err != nil {
-			return fmt.Errorf("create production initializers: %w", err)
+			return err
 		}
-		store, err := initialization.NewSQLStore(database.GetRawDB())
+		request, err := seeder.PlatformRequest("bootstrap-job", os.Getenv("ITSM_RELEASE_VERSION"), true)
 		if err != nil {
-			return fmt.Errorf("create initialization store: %w", err)
+			return fmt.Errorf("prepare initialization request: %w", err)
 		}
-		engine, err := initialization.NewEngine(
-			store,
-			components,
-			30*time.Second,
-		)
-		if err != nil {
-			return fmt.Errorf("create initialization engine: %w", err)
-		}
-		executorID, err := os.Hostname()
-		if err != nil {
-			executorID = "bootstrap-job"
-		}
-		executorID, err = initialization.NewExecutorID(executorID)
-		if err != nil {
-			return fmt.Errorf("create initialization executor id: %w", err)
-		}
-		releaseVersion := strings.TrimSpace(os.Getenv("ITSM_RELEASE_VERSION"))
-		if releaseVersion == "" {
-			releaseVersion = "unversioned"
-		}
-		runID, err := engine.Apply(ctx, initialization.Request{
-			Scope:          initialization.Scope{Type: "platform", ID: 0},
-			TargetVersion:  seeder.CurrentTenantTemplateVersion,
-			ReleaseVersion: releaseVersion,
-			RequestedBy:    "bootstrap-job",
-			ExecutorID:     executorID,
-		})
+		runID, err := assembly.Engine.Apply(ctx, request)
 		if err != nil {
 			return fmt.Errorf("initialize production defaults (run %d): %w", runID, err)
 		}
