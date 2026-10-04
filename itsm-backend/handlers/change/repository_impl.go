@@ -401,6 +401,54 @@ func (r *EntRepository) SubmitForApproval(
 	return r.SubmitForApprovalWithWorkflow(ctx, changeID, tenantID, plan, comment, nil)
 }
 
+// SubmitApprovalRecordTx 是 P0-1 修复的关键原语：
+// 在同一 *sql.Tx 中"写 change_approvals + CAS 推进 draft→pending"原子化，
+// 避免出现"有审批记录但状态未推进"或"状态推进但没有审批记录"的部分失败。
+//
+// 仓储内部开闭事务（使用 EntRepository.db），无需 service 传入 *sql.DB。
+// 返回 rec 为本事务写入的审批记录（已回填 ID/CreatedAt），promoted 表示本轮
+// 是否把变更从 draft 推进到 pending。
+func (r *EntRepository) SubmitApprovalRecordTx(
+	ctx context.Context,
+	changeID, tenantID, approverID int,
+	comment string,
+	now time.Time,
+) (*ApprovalRecord, bool, error) {
+	if r.db == nil {
+		return nil, false, fmt.Errorf("change approval transaction database is unavailable")
+	}
+	if r.approvalRecords == nil {
+		return nil, false, fmt.Errorf("change approval record repository not initialised")
+	}
+	if r.statusTx == nil {
+		return nil, false, fmt.Errorf("change status tx repository not initialised")
+	}
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, false, fmt.Errorf("begin SubmitApprovalRecordTx: %w", err)
+	}
+	defer tx.Rollback()
+
+	// 1) 写审批记录（pending）并 RETURNING 回填 ID/CreatedAt；
+	//    service 层直接复用 rec 返回前端，不再二次 CreateApprovalRecord。
+	rec, err := r.approvalRecords.CreateReturningTx(ctx, tx, changeID, tenantID, approverID, comment, now)
+	if err != nil {
+		return nil, false, fmt.Errorf("write change approval record: %w", err)
+	}
+
+	// 2) 若变更仍处于 draft 则推进到 pending；否则保持当前状态不变。
+	// PromoteDraftToPending 内部走条件 UPDATE，未匹配时返回 false（非错误）。
+	promoted, err := r.statusTx.PromoteDraftToPending(ctx, tx, changeID, tenantID, now)
+	if err != nil {
+		return nil, false, fmt.Errorf("promote change draft to pending: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, false, fmt.Errorf("commit SubmitApprovalRecordTx: %w", err)
+	}
+	return rec, promoted, nil
+}
+
 // SubmitForApprovalWithWorkflow 在同一底层数据库事务内推进 BPMN 并提交变更审批。
 // workflow 收到的 Ent client 绑定到当前 sql.Tx，禁止在回调内自行提交事务。
 //

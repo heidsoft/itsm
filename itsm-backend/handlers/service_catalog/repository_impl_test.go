@@ -43,8 +43,7 @@ func TestEntRepository_Search_IncludesLegacyActiveStatus(t *testing.T) {
 // 等于不加 LIMIT，一次调用就会把该租户整表读出来。
 //
 // 这里断言的是「有界」而不是具体页长：repository 兜底走 common.ValidatePagination
-// （DefaultPageSize=10），HTTP 入口走 common.GetPaginationFromQuery（缺省 20）。
-// 两套缺省页长的统一属于账本 E4-9，不在本片范围内。
+// （DefaultPageSize=20），HTTP 入口走 common.GetPaginationFromQuery（同读 DefaultPageSize）。
 func TestEntRepository_ListZeroValueFiltersCannotReadWholeTable(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ent_list_zero_value?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

@@ -57,7 +57,7 @@ func (l *ListResponse) MarshalJSON() ([]byte, error) {
 // 旧的 page_size 形态不再解析，存量调用方需按 API 契约迁移。
 func GetPaginationFromQuery(c *gin.Context) *PaginationRequest {
 	page := 1
-	pageSize := 20
+	pageSize := DefaultPageSize
 
 	if pageStr := c.Query("page"); pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {

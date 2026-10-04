@@ -56,6 +56,35 @@ func (r *changeApprovalRecordRepository) CreateTx(ctx context.Context, tx *sql.T
 	return err
 }
 
+// CreateReturningTx 在调用方已开启的 *sql.Tx 中插入并通过 RETURNING 回填
+// ID 与 CreatedAt，让 service 层一次事务就能拿到完整的审批记录字段，
+// 避免"先 atomic tx 再 CreateApprovalRecord"造成的重复写入。
+// 专为 SubmitApprovalRecordTx（P0-1 修复原语）准备，外部不应绕过。
+func (r *changeApprovalRecordRepository) CreateReturningTx(ctx context.Context, tx *sql.Tx, changeID, tenantID, approverID int, comment string, now time.Time) (*ApprovalRecord, error) {
+	const query = `
+		INSERT INTO change_approvals
+			(change_id, tenant_id, approver_id, status, comment, created_at, updated_at)
+		VALUES ($1, $2, $3, 'pending', $4, $5, $5)
+		RETURNING id, created_at
+	`
+	rec := &ApprovalRecord{
+		ChangeID:   changeID,
+		TenantID:   tenantID,
+		ApproverID: approverID,
+		Status:     "pending",
+	}
+	if comment != "" {
+		c := comment
+		rec.Comment = &c
+	}
+	if err := tx.QueryRowContext(ctx, query,
+		changeID, tenantID, approverID, comment, now, now,
+	).Scan(&rec.ID, &rec.CreatedAt); err != nil {
+		return nil, err
+	}
+	return rec, nil
+}
+
 // Update 条件更新审批记录（C-5 修复：必须加 AND status='pending' 守卫）。
 // 校验 RowsAffected == 1，否则返回冲突错误，避免幂等问题。
 func (r *changeApprovalRecordRepository) Update(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {

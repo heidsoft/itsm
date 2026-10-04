@@ -322,7 +322,7 @@ const (
 // Pagination Defaults
 // ===================================
 const (
-	DefaultPageSize = 10
+	DefaultPageSize = 20
 	MaxPageSize     = 100
 	MinPageSize     = 1
 	DefaultPage     = 1

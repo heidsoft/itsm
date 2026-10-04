@@ -472,6 +472,11 @@ func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID
 }
 
 // Approval methods
+//
+// P0-1 修复：审批记录写入与变更状态推进（draft → pending）合并到同一 sql.Tx，
+// 由 repository.SubmitApprovalRecordTx 通过条件 UPDATE 统一保证原子性与幂等性。
+// 旧逻辑先 CreateApprovalRecord 再用非 CAS 的 repo.Update 改 status，
+// 存在"审批记录已写入但状态推进失败"或"状态推进成功但没有审批记录"的部分失败窗口。
 func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, tenantID int) (*ApprovalRecord, error) {
 	// Custom business logic: when submitting, we check if change exists
 	c, err := s.repo.Get(ctx, record.ChangeID, tenantID)
@@ -504,23 +509,25 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 		return nil, fmt.Errorf("用户 %d 不是变更 %d 的指定审批人，无法提交审批", record.ApproverID, record.ChangeID)
 	}
 
-	record.Status = "pending"
-	record.TenantID = tenantID
-	res, err := s.repo.CreateApprovalRecord(ctx, record)
+	// 3) 在同一 *sql.Tx 中"写审批记录 + CAS 推进 draft→pending"。
+	// 仓储负责事务边界与条件 UPDATE；service 不再调用非 CAS 的 Update(c)。
+	// 当变更已处于 pending/approved 等状态时仍允许追加审批记录（不同审批人
+	// 分轮次提交），返回 promoted=false 表示本轮没有推进状态。
+	// rec 已在本事务内 RETURNING 出 ID/CreatedAt，service 直接复用作为响应，
+	// 不再二次 CreateApprovalRecord 造成重复写入。
+	now := time.Now()
+	comment := ""
+	if record.Comment != nil {
+		comment = *record.Comment
+	}
+	rec, promoted, err := s.repo.SubmitApprovalRecordTx(ctx, record.ChangeID, tenantID, record.ApproverID, comment, now)
 	if err != nil {
-		return nil, err
+		s.logger.Errorw("SubmitApproval: atomic submit failed", "error", err, "change_id", c.ID, "approver_id", record.ApproverID)
+		return nil, fmt.Errorf("提交审批失败: %w", err)
 	}
-
-	// Update change status to pending if needed
-	if c.Status == "draft" {
-		c.Status = "pending"
-		if _, err := s.repo.Update(ctx, c); err != nil {
-			s.logger.Errorw("SubmitApproval: failed to update change status to pending", "error", err, "change_id", c.ID)
-			return nil, fmt.Errorf("failed to update change status: %w", err)
-		}
-	}
-
-	return res, nil
+	s.logger.Infow("SubmitApproval: atomic submit succeeded",
+		"change_id", c.ID, "approver_id", record.ApproverID, "tenant_id", tenantID, "promoted", promoted)
+	return rec, nil
 }
 
 func (s *Service) ProcessApproval(ctx context.Context, recordID int, status string, comment *string, tenantID int) (*ApprovalRecord, error) {

@@ -343,9 +343,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			// 统一响应信封 {code,message,data}，前端 httpClient 按 data 解包。
 			common.Success(c, gin.H{"version": version, "build": "release"})
 		})
-		public.GET("/readiness/ga", func(c *gin.Context) {
-			common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
-		})
 
 		// Prometheus metrics endpoint.
 		//
@@ -377,6 +374,10 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
 	auth.GET("/capabilities", capability.Handler)
+	// GA 就绪检查：跨租户系统级统计，需认证 + system:read 权限。
+	auth.GET("/readiness/ga", middleware.RequirePermission("system", "read"), func(c *gin.Context) {
+		common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
+	})
 	if config.Client != nil {
 		operationHandler := operations.NewHandler(operations.NewService(config.Client))
 		operationRoutes := auth.Group("/admin/operations/commands")

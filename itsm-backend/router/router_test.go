@@ -224,11 +224,12 @@ func TestSetupRoutes_GAReadinessEndpoint(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// P0-1 修复：端点已移到 auth 组，未认证请求必须返回 401
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/readiness/ga", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 // =====================================================================

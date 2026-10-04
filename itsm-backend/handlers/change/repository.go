@@ -28,6 +28,15 @@ type Repository interface {
 	UpdateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)
 	GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error)
 
+	// SubmitApprovalRecordTx 在同一 *sql.Tx 中原子写入审批记录并按需
+	// 把变更从 draft 推进到 pending（CAS：仅当当前 status='draft'）。
+	// 仓储内部开闭事务，无需 service 传入 *sql.DB。
+	// 返回：
+	//   - rec:     本事务写入的审批记录（已回填 ID/CreatedAt），调用方直接返回给前端；
+	//   - promoted: 本次提交是否把变更从 draft 推进到 pending。
+	// 这是 P0-1 修复（变更审批-状态原子性）的关键原语，禁止绕过。
+	SubmitApprovalRecordTx(ctx context.Context, changeID, tenantID, approverID int, comment string, now time.Time) (rec *ApprovalRecord, promoted bool, err error)
+
 	// Approval Workflow/Chain
 	GetApprovalChain(ctx context.Context, changeID int, tenantID int) ([]*ApprovalChain, error)
 	DeleteApprovalChain(ctx context.Context, changeID int, tenantID int) error

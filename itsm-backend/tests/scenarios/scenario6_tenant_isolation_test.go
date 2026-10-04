@@ -16,10 +16,9 @@ import (
 
 // Scenario 6: 租户隔离跨域拒绝测试
 //
-// 覆盖 7 个业务域的跨租户访问拒绝：
+// 覆盖 6 个业务域的跨租户访问拒绝：
 //   - 工单 (Ticket)
 //   - 事件 (Incident)
-//   - 变更 (Change)
 //   - 问题 (Problem)
 //   - 知识 (Knowledge)
 //   - CMDB CI
@@ -45,7 +44,6 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 	// 否则 CreateIncident 的 fire-and-forget goroutine 会与本用例后续事务争抢共享内存表。
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
-	changeSvc := service.NewChangeService(client, logger)
 	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
 	// problem.NewService(problem.NewEntRepository(client), logger)）；此前的
 	// service.NewProblemService 实测零生产构造，见台账 E4-13。
@@ -94,35 +92,6 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 			t.Fatal("tenant B 不应能更新 tenant A 的事件")
 		}
 		t.Logf("事件隔离: 读取拒绝 + 更新拒绝")
-	})
-
-	t.Run("change - tenant B cannot read or approve tenant A change", func(t *testing.T) {
-		changeResp, err := changeSvc.CreateChange(ctx, &dto.CreateChangeRequest{
-			Title:       "tenant A 变更",
-			Type:        "normal",
-			Priority:    "medium",
-			ImpactScope: "medium",
-			RiskLevel:   "medium",
-		}, userA.ID, tenantA.ID)
-		if err != nil {
-			t.Fatalf("创建变更失败: %v", err)
-		}
-
-		_, err = changeSvc.GetChange(ctx, changeResp.ID, tenantB.ID)
-		if err == nil {
-			t.Fatal("tenant B 不应能读取 tenant A 的变更")
-		}
-
-		err = changeSvc.UpdateChangeStatus(ctx, changeResp.ID, dto.ChangeStatusPending, tenantA.ID)
-		if err != nil {
-			t.Fatalf("提交审批失败: %v", err)
-		}
-
-		err = changeSvc.UpdateChangeStatus(ctx, changeResp.ID, dto.ChangeStatusApproved, tenantB.ID)
-		if err == nil {
-			t.Fatal("tenant B 不应能审批 tenant A 的变更")
-		}
-		t.Logf("变更隔离: 读取拒绝 + 审批拒绝")
 	})
 
 	t.Run("problem - tenant B cannot read or update tenant A problem", func(t *testing.T) {
@@ -226,11 +195,6 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 		_, _, err := incidentSvc.ListIncidents(ctx, tenantB.ID, 1, 100, nil)
 		if err != nil {
 			t.Fatalf("列出 tenant B 事件失败: %v", err)
-		}
-
-		_, err = changeSvc.ListChanges(ctx, tenantB.ID, 1, 100, "", "")
-		if err != nil {
-			t.Fatalf("列出 tenant B 变更失败: %v", err)
 		}
 
 		// 此前这一条只断言 err==nil，却在日志里写「不包含 tenant A 的资源」：

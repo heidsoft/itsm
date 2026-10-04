@@ -4,6 +4,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -137,6 +138,43 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 					return
 				}
 				common.Success(c, items)
+			})
+
+			// P0-2 修复：工单关联写入面。
+			//
+			// 此前 service.UpdateTicketAssociations 已具备完整能力（事务、租户收敛、父子
+			// 环检测、关联工单反向边、标签校验），但 router 里只有三个读取端点，前端在
+			// 工单详情页「修改关联」或「设置父工单 / 标签」只能 404 走不到 service。本
+			// 路由用 PATCH 表达部分更新：
+			//   - body 里出现字段才更新（指针 + 切片语义与 UpdateTicketAssociations 一致）；
+			//   - parentId=0 表示「清空父工单」（service 内部已约定）；
+			//   - 关联工单/标签列表空切片表示「清空」；
+			//   - service 已用 Ticket.ParentTicketID 链上的租户谓词防止跨租户关系注入。
+			//
+			// 失败的语义由 service 透传：跨租户/不存在工单 → 404/4004，循环引用 →
+			// 422/4220，标签/关联工单不在本租户 → 4001/ParamErrorCode；路由只负责把错误
+			// 写到响应里，不在此处二次校验业务规则。
+			tickets.PATCH("/:id/relations", middleware.RequirePermission("ticket", "update"), func(c *gin.Context) {
+				ticketID, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(c, "工单")
+				if !ok {
+					return
+				}
+				var req service.UpdateAssociationsRequest
+				if err := c.ShouldBindJSON(&req); err != nil {
+					common.Fail(c, common.ParamErrorCode, "请求参数格式错误")
+					return
+				}
+				if err := config.TicketAssociationService.UpdateTicketAssociations(
+					c.Request.Context(), ticketID, tenantID, &req); err != nil {
+					common.RespondError(c, err, "更新工单关联失败")
+					return
+				}
+				common.Success(c, gin.H{
+					"ticketId":   ticketID,
+					"parentId":   req.ParentID,
+					"relatedIds": req.RelatedIDs,
+					"tagIds":     req.TagIDs,
+				})
 			})
 		} else {
 			// 兼容：服务未初始化时返回空

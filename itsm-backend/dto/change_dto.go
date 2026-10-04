@@ -119,15 +119,6 @@ type ChangeResponse struct {
 	UpdatedAt          time.Time      `json:"updatedAt"`              // 更新时间
 }
 
-// ChangeListResponse 变更列表响应
-type ChangeListResponse struct {
-	Items      []ChangeResponse `json:"items"`      // 变更列表
-	Total      int              `json:"total"`      // 总数
-	Page       int              `json:"page"`       // 当前页
-	PageSize   int              `json:"pageSize"`   // 每页数量
-	TotalPages int              `json:"totalPages"` // 总页数
-}
-
 // ChangeTypeCount 变更类型分布中的一项。Type 是后端 canonical 值
 // (standard/normal/emergency)，中文标签由前端 constants/taxonomy 单点提供。
 type ChangeTypeCount struct {

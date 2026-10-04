@@ -237,9 +237,8 @@ func TestNotificationService_GetNotifications_ClampsInvalidPagination(t *testing
 	// 直接调用方（其他 service/worker）不经过 HTTP 查询通道，这里锁的是落到 Ent 前的
 	// 不变量：页长必须为正、且绝不能等于整表。
 	//
-	// 注意两套默认页长是存量债务而非本用例的断言目标：common.ValidatePagination 回落到
-	// common.DefaultPageSize（10），HTTP 入口的 GetPaginationFromQuery 回落到 20。
-	// HTTP 侧的 20 由 router/notification_envelope_route_test.go 在真实路由上锁死。
+	// 这里锁的是 service 边界的缺省页长归一：common.ValidatePagination 回落到
+	// common.DefaultPageSize（20），HTTP 入口的 GetPaginationFromQuery 同读该常量。
 	response, err := service.GetNotifications(ctx, &dto.GetNotificationsRequest{
 		UserID:   testUser.ID,
 		TenantID: testTenant.ID,

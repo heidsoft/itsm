@@ -1637,13 +1637,16 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 	if app.ServiceRequestRepo != nil {
 		safeGo("service-request-approval-repair", func() {
 			repairer := service_request.NewPendingApprovalRepairer(app.ServiceRequestRepo, app.Logger)
-			tenants, err := app.DBClient.Tenant.Query().All(ctx)
+			sysCtx := tenantctx.SystemContext(ctx, "bootstrap:service-request-approval-repair",
+				"repair pending service request approvals across all tenants")
+			tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
 			if err != nil {
 				app.Logger.Warnw("service-request approval repair: query tenants failed", "error", err)
 				return
 			}
 			for _, t := range tenants {
-				repaired, err := repairer.RunOnce(ctx, t.ID)
+				tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+				repaired, err := repairer.RunOnce(tenantCtx, t.ID)
 				if err != nil {
 					app.Logger.Warnw("service-request approval repair failed", "tenant_id", t.ID, "error", err)
 					continue
@@ -1659,17 +1662,17 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 	safeGo("embedding-pipeline", func() {
 		pipeline := service.NewEmbeddingPipeline(app.DBClient, app.Embedder, app.Logger, app.LegacyVectorStore)
 		// initial full-ish pass per tenant
-		tenants, err := app.DBClient.Tenant.Query().All(ctx)
-		if err == nil {
-			for _, t := range tenants {
-				if err := pipeline.RunOnce(ctx, t.ID, 200); err != nil {
-					app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", t.ID)
-				}
-			}
-		} else {
-			// fallback default tenant 1
-			if err := pipeline.RunOnce(ctx, 1, 200); err != nil {
-				app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", 1)
+		sysCtx := tenantctx.SystemContext(ctx, "bootstrap:embedding-pipeline",
+			"initial embedding pass across all tenants")
+		tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
+		if err != nil {
+			app.Logger.Warnw("embedding pipeline tenant scan failed", "error", err)
+			return
+		}
+		for _, t := range tenants {
+			tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+			if err := pipeline.RunOnce(tenantCtx, t.ID, 200); err != nil {
+				app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", t.ID)
 			}
 		}
 		// periodic incremental per tenant
@@ -1681,12 +1684,16 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 				return
 			case <-ticker.C:
 			}
-			tenants, err := app.DBClient.Tenant.Query().All(ctx)
+			sysCtx := tenantctx.SystemContext(ctx, "bootstrap:embedding-pipeline-periodic",
+				"periodic incremental embedding across all tenants")
+			tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
 			if err != nil {
+				app.Logger.Warnw("embedding pipeline periodic tenant scan failed", "error", err)
 				continue
 			}
 			for _, t := range tenants {
-				if err := pipeline.RunOnce(ctx, t.ID, 50); err != nil {
+				tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+				if err := pipeline.RunOnce(tenantCtx, t.ID, 50); err != nil {
 					app.Logger.Warnw("embedding pipeline failed", "error", err, "tenant_id", t.ID)
 				}
 			}
@@ -1744,12 +1751,16 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				tenants, err := app.DBClient.Tenant.Query().All(ctx)
+				sysCtx := tenantctx.SystemContext(ctx, "bootstrap:bpmn-timeout-scanner",
+					"scan all tenants for overdue BPMN tasks")
+				tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
 				if err != nil {
+					app.Logger.Warnw("BPMN timeout scanner tenant scan failed", "error", err)
 					continue
 				}
 				for _, t := range tenants {
-					processed, err := scanner.ScanOverdueTasks(ctx, t.ID)
+					tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+					processed, err := scanner.ScanOverdueTasks(tenantCtx, t.ID)
 					if err != nil {
 						app.Logger.Warnw("BPMN timeout scan failed", "error", err, "tenant_id", t.ID)
 						continue

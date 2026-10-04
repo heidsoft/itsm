@@ -150,20 +150,23 @@ func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context,
 
 func validateParentAssignment(ctx context.Context, client *ent.Client, child *ent.Ticket, parentID int) error {
 	if parentID == child.ID {
-		return fmt.Errorf("工单不能作为自己的父工单")
+		return common.NewBusinessError(common.UnprocessableEntityCode, "工单不能作为自己的父工单", "")
 	}
 	visited := map[int]struct{}{child.ID: {}}
 	currentID := parentID
 	for currentID != 0 {
 		if _, exists := visited[currentID]; exists {
-			return fmt.Errorf("父工单关系不能形成循环")
+			return common.NewBusinessError(common.UnprocessableEntityCode, "父工单关系不能形成循环", "")
 		}
 		visited[currentID] = struct{}{}
 		parent, err := client.Ticket.Query().
 			Where(ticket.ID(currentID), ticket.TenantIDEQ(child.TenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
-			return fmt.Errorf("父工单不存在")
+			if ent.IsNotFound(err) {
+				return common.NewBusinessError(common.NotFoundCode, "父工单不存在", "")
+			}
+			return fmt.Errorf("查询父工单失败: %w", err)
 		}
 		currentID = parent.ParentTicketID
 	}

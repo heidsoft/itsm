@@ -76,6 +76,10 @@ type mockRepository struct {
 	approverValid bool
 	submitErr     error
 	replaceErr    error
+	// submitApprovalErr 是 P0-1 回归测试的事务失败注入点：
+	// 测试可以让 mock 的 SubmitApprovalRecordTx 直接返回错误，
+	// 断言 service 把错误透传出去且不在 mock 上留下任何部分写入。
+	submitApprovalErr error
 }
 
 func newMockRepository() *mockRepository {
@@ -256,6 +260,41 @@ func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenant
 		}
 	}
 	return nil
+}
+
+// SubmitApprovalRecordTx 在 mock 上语义对齐真实实现：写一条审批记录并在变更
+// 仍为 draft 时把它推进到 pending（原子地）。mock 这里串行执行两条写入
+// （无 sql.Tx），但语义与生产保持一致——足以支撑 service.SubmitApproval 单测。
+//
+// 支持事务失败注入（submitApprovalErr 非空时在写记录前返回错误），用于
+// P0-1 回归测试断言"事务失败不留任何副作用"。
+func (m *mockRepository) SubmitApprovalRecordTx(ctx context.Context, changeID, tenantID, approverID int, comment string, now time.Time) (*ApprovalRecord, bool, error) {
+	if m.submitApprovalErr != nil {
+		return nil, false, m.submitApprovalErr
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.changes[changeID]
+	if !ok || c.TenantID != tenantID {
+		return nil, false, fmt.Errorf("change not found")
+	}
+	record := &ApprovalRecord{
+		ID:         m.nextID,
+		ChangeID:   changeID,
+		TenantID:   tenantID,
+		ApproverID: approverID,
+		Status:     "pending",
+		Comment:    &comment,
+		CreatedAt:  now,
+	}
+	m.nextID++
+	m.approvals[record.ID] = record
+	promoted := false
+	if c.Status == "draft" {
+		c.Status = "pending"
+		promoted = true
+	}
+	return record, promoted, nil
 }
 
 func (m *mockRepository) CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error) {
