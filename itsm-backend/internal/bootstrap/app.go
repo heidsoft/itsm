@@ -133,6 +133,13 @@ type Application struct {
 	// ServiceRequestRepo 服务请求仓储（供后台审批链自愈任务使用；路由侧另有独立构造）。
 	ServiceRequestRepo service_request.Repository
 
+	// SLAMonitorService / EscalationService 是已完成依赖注入的唯一实例，
+	// 同时服务 HTTP 路由与后台定时扫描。后台任务必须复用它们：自行 new 私有副本
+	// 会缺少 slaStore（CheckSLAViolations 每轮 fail closed 返回 503）、
+	// alertService（预警/告警计数恒 0）和 notificationSvc（升级不发通知）。
+	SLAMonitorService *service.SLAMonitorService
+	EscalationService *service.EscalationService
+
 	// backgroundWG 跟踪由 startBackgroundTasks 启动的所有后台 goroutine。
 	// 在 Stop() 中等待它们退出，避免应用关闭时强制杀死进行中的任务。
 	backgroundWG sync.WaitGroup
@@ -1074,13 +1081,17 @@ func NewApplication() *Application {
 
 	// Approval Chain Controller
 
-	// SLA Monitor & Alert Services (legacy, for background tasks)
+	// SLA 告警与升级服务：与上方 slaMonitorService 是同一套实例，
+	// 由 Application 暴露给后台定时任务复用。
 	slaAlertService := service.NewSLAAlertService(client, sugar)
 	escalationService := service.NewEscalationService(client, sugar)
 
 	// Wire up notification service
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
+	// 预警/告警触发依赖 alertService；缺失时 CheckSLAViolations 会跳过
+	// TriggerSLAWarning 与 CheckAndTriggerAlerts，统计恒为 0。
+	slaMonitorService.SetAlertService(slaAlertService)
 
 	// Survey Service & Controller
 
@@ -1276,6 +1287,10 @@ func NewApplication() *Application {
 
 		// 存量 pending 请求审批链自愈任务的数据源（P1-A 修复配套）
 		ServiceRequestRepo: srRepo,
+
+		// SLA 后台定时扫描复用这两个已注入实例，不再自建私有副本。
+		SLAMonitorService: slaMonitorService,
+		EscalationService: escalationService,
 	}
 }
 
@@ -1682,11 +1697,8 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		}
 	})
 
-	// SLA Monitoring and Escalation background tasks
+	// SLA 违规检查与升级处理：复用 NewApplication 已注入依赖的服务实例。
 	safeGo("sla-monitor-escalation", func() {
-		slaMonitorService := service.NewSLAMonitorService(app.DBClient, app.Logger)
-		escalationService := service.NewEscalationService(app.DBClient, app.Logger)
-
 		// Run SLA check every 5 minutes
 		slaTicker := time.NewTicker(5 * time.Minute)
 		defer slaTicker.Stop()
@@ -1700,22 +1712,22 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-slaTicker.C:
-				tenants, err := app.DBClient.Tenant.Query().All(ctx)
-				if err != nil {
-					continue
-				}
-				for _, t := range tenants {
-					if _, err := slaMonitorService.CheckSLAViolations(ctx, t.ID); err != nil {
-						app.Logger.Warnw("SLA violation check failed", "error", err, "tenant_id", t.ID)
-					}
+				// CheckAllTenantsSLA 负责跨租户枚举与逐租户上下文收窄。
+				if err := app.SLAMonitorService.CheckAllTenantsSLA(ctx); err != nil {
+					app.Logger.Warnw("SLA violation scan failed", "error", err)
 				}
 			case <-escalationTicker.C:
-				tenants, err := app.DBClient.Tenant.Query().All(ctx)
+				// 跨租户枚举是系统任务，逐租户处理必须收窄到该租户。
+				sysCtx := tenantctx.SystemContext(ctx, "bootstrap:escalation-scan",
+					"scan all tenants for escalation processing")
+				tenants, err := app.DBClient.Tenant.Query().All(sysCtx)
 				if err != nil {
+					app.Logger.Warnw("escalation tenant scan failed", "error", err)
 					continue
 				}
 				for _, t := range tenants {
-					if err := escalationService.ProcessEscalations(ctx, t.ID); err != nil {
+					tenantCtx := tenantctx.WithTenantID(sysCtx, t.ID)
+					if err := app.EscalationService.ProcessEscalations(tenantCtx, t.ID); err != nil {
 						app.Logger.Warnw("escalation processing failed", "error", err, "tenant_id", t.ID)
 					}
 				}
