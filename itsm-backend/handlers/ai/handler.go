@@ -377,7 +377,6 @@ func (h *Handler) GetDeepAnalytics(c *gin.Context) {
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	res, err := h.svc.GetDeepAnalytics(c.Request.Context(), &req, tenantID)
@@ -397,7 +396,6 @@ func (h *Handler) GetTrendPrediction(c *gin.Context) {
 	}
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	res, err := h.svc.GetTrendPrediction(c.Request.Context(), &req, tenantID)
@@ -506,7 +504,6 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -597,7 +594,6 @@ func (h *Handler) GetEvaluation(c *gin.Context) {
 	days := queryInt(c, "days", 30)
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	report, err := h.svc.Evaluate(c.Request.Context(), tenantID, days)

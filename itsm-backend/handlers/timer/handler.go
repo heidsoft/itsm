@@ -15,7 +15,6 @@ func NewHandler(service *Service) *Handler { return &Handler{service: service} }
 func (h *Handler) List(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 
@@ -51,7 +50,6 @@ func (h *Handler) Get(c *gin.Context) {
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 
@@ -70,7 +68,6 @@ func (h *Handler) Get(c *gin.Context) {
 func (h *Handler) Stats(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 

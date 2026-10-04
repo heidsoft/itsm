@@ -510,7 +510,6 @@ func (h *Handler) Invoke(c *gin.Context) {
 	// 注入 tenant_id/user_id（若调用方未传）。这两项是大部分 Skill 的必填字段。
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	userID := c.GetInt("user_id")

@@ -1029,6 +1029,82 @@ cd itsm-backend && go test ./handlers/bpmn/ -count=1
 `tenant_id` 这类 snake_case 且把租户 ID 本身发给前端（违反 camelCase 与 DTO 规则）。
 本批只收页长，未触碰表面归属、鉴权声明与 DTO 序列化。
 
+### 1.27 `handlerctx.Resolve*` 拒绝后不再补写第二份响应（2026-10-04）
+
+E4-45 在 `GET /api/v1/ai/audit-logs` 上实测到一个响应完整性缺陷：
+`handlerctx.ResolveTenantID(c)` 失败时委托 `middleware.AbortIfTenantError`
+（`middleware/msp_tenant_resolver.go`），后者对 401/403/500 三种情形都**已写体并 abort**；
+但 handler 形如：
+
+```go
+tenantID, ok := handlerctx.ResolveTenantID(c)
+if !ok {
+    common.Fail(c, common.UnauthorizedCode, "未授权访问")
+    return
+}
+```
+
+实际上是**两次写响应**——`common.Fail` 写第二份 `{code:2002,...}` 拼接在已写体之后，
+客户端按 `{code,message,data}` 严格解析时报 `invalid character '{' after top-level value`。
+
+成功路径完全正常，所以此前从未被报成 bug——但任何按平台信封解析的集成方在这 24 个端点的
+**鉴权失败路径**上都会拿到无法解析的响应。
+
+**变更范围**（24 处 / 6 文件，仅删除双写，不改文案、不改 status、不改业务规则）：
+
+| 文件 | 删除的 `!ok` 写响应行 |
+|:---|:---|
+| `itsm-backend/handlers/ticket_type/handler.go` | 9 |
+| `itsm-backend/handlers/ai/handler.go` | 4 |
+| `itsm-backend/handlers/operations/handler.go` | 4 |
+| `itsm-backend/handlers/ticket_rating/handler.go` | 3 |
+| `itsm-backend/handlers/timer/handler.go` | 3 |
+| `itsm-backend/handlers/skill/handler.go` | 1 |
+
+全部统一收敛为：
+
+```go
+tenantID, ok := handlerctx.ResolveTenantID(c)
+if !ok {
+    return
+}
+```
+
+并在 `common/handlerctx/handlerctx.go` 的 `ResolveTenantID` / `RequireTenantID` 函数注释里
+写明「失败时 `middleware.AbortIfTenantError` **已写响应并 abort**；调用方在 `!ok` 分支
+**禁止**再调用 `common.Fail` / `common.FailWithErr` / `common.ParamError` / `c.JSON` /
+`c.AbortWithStatusJSON`，只能 `return`」。
+
+**集成检查**：
+
+1. 任何抓 `*gin.Context` 自渲染的中间件若在 `handlerctx.Resolve*` 之后又读 `c.Writer.Written()`
+   来判定「是否写过响应」：现在更可靠——失败时一定 `Written() > 0`，成功时一定为 0。
+2. 跨域统一文案（`未授权访问` vs `租户上下文缺失` vs E4-40③ 的 `Invalid request body`/
+   `请求参数错误`）是同一类问题，但**本批不动**——只删除双写、不改文案。集成方在
+   401/403 路径上仍可能看到两种文案，需等后续单独批次统一。
+3. 鉴权失败时实际响应的 HTTP status / 业务 code 全部由 `middleware.AbortIfTenantError` 决定
+   （401 / code 2001、403 / code 2003、500 / code 5000），本批不引入新 status / 新 code。
+
+**验证**：
+
+```bash
+cd itsm-backend && go test ./tests/contract/ ./common/... ./handlers/... ./service/ -count=1 -run 'HandlerCtx|PageSize|ListEnvelope|AuditLogs|Pagination'
+```
+
+回归 `tests/contract/handlerctx_no_double_write_test.go`（双向 AST 棘轮）：
+所有 `handlers/*.go` 里 `tenantID, ok := handlerctx.Resolve*` / `userID, ok := handlerctx.Resolve*` /
+`tenantID, ok := handlerctx.Require*` 形态的 `!ok` 分支必须只含 `return`、不得包含
+`common.Fail` / `common.FailWithErr` / `common.ParamError` / `c.JSON` / `c.AbortWithStatusJSON`
+等任何再写响应调用；同时校验 `handlerctx.Resolve*` / `Require*` 自身的契约注释 token
+（防止未来给 `Resolve*` 增一个不写响应的返回值时这条注释被悄悄删除）。
+
+**负证明**：把任一文件改回 `common.Fail`（或任何再写响应调用）即红。
+
+**未触碰**（实测登记、本批范围外）：
+
+- `handlers/sla_template/handler.go:32-34` 仍以 `common.Fail(..., AuthFailedCode, ...)` 写第二份（1 处未收口）。
+- `handlers/dashboard_handler.go:528-530` 的 `!ok` 分支体不是裸 `return` 而是给本地变量赋空值（按上下文判断是否构成双写，需读全函数后才能定）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

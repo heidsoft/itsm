@@ -48,7 +48,6 @@ func (h *Handler) SubmitRating(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 
@@ -72,7 +71,6 @@ func (h *Handler) GetRating(c *gin.Context) {
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 
@@ -101,7 +99,6 @@ func (h *Handler) GetRatingStats(c *gin.Context) {
 
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID
