@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.13] - 2026-10-04
+
 ### Security
 
 - **CMDB 云表面的跨租户读写不再报成功，租户缺失改为 fail closed** — `/api/v1/cmdb/cloud-{accounts,services,resources}` 的 15 条路由此前把「行属于别的租户」和「行不存在」都当成服务故障：`ent` 的 NotFound 没人分类，`GET`/`PUT` `/{id}` 返回 500 / `5001`；`DELETE` 更严重——仓储只回 `error`，而 `Delete().Where(tenant_id, id)` 命中 0 行时 `error` 恰是 `nil`，于是**跨租户删除对外报 200 成功**、对方的数据一行没少。现在三个 `DeleteCloud*` 返回受影响行数，service 把 0 行与 `ErrNotFound` 统一翻成 404 / `4004`，文案按资源固定（`cloud service not found` 等），跨租户与真实不存在是同一份报文且不回露对方字段，无法再用状态码差异枚举对方的 ID；云资源写入还会校验 `cloudAccountId`/`serviceId` 属于本租户（引用他租户各自 404，账号与服务厂商矛盾 400 / `4000`），补上「只校验主资源租户不足以阻断跨租户关系注入」。同批把 CMDB handler 剩下的 **17 处** `c.GetInt("tenant_id")` 换成 `handlerctx.ResolveTenantID`（缺上下文即 401 / `2001`，不再用 0 去查「租户 0」），`GET /api/v1/cmdb/capabilities` 因此从该域自定义的 `2002` 收敛到统一的 `2001`。回归：新增 `router/cmdb_cloud_authz_route_test.go`，打在真实 `SetupRoutes` → `TenantMiddleware` → `RequirePermission("cmdb", …)` 上（缺租户上下文 5 条路径 401/`2001` 且响应不含任何列表载荷、跨租户 GET/PUT/DELETE 逐资源 404 且零泄漏、DELETE 命中 0 行不再成功、provider 枚举、厂商矛盾 400/`4000`、合法写入的派生 identity 回填）；缺租户那一组断言的是链路级结果，handler 内的 `ResolveTenantID` 分支在生产链路上被中间件先拦、不可达，仍由 `handlers/cmdb` 单元测试覆盖，不拿它伪造路由级回归。
