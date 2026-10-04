@@ -15,7 +15,18 @@ package contract
 // 查询与信封都用 pg.Page / pg.PageSize，配套路由测试锁住缺省、越界、非数字、
 // 非正页码与上界采纳，然后从基线删掉这一条。
 //
-// 跑测命令：cd itsm-backend && go test ./tests/contract/... -run TestPageSizeOwner
+// 判定形态（2026-10-04 扩展，台账 E4-47a）：handler 层只要把 "pageSize" 或 "size"
+// 作为字面量实参传给任何被调函数，就算一处自建页长读取点，因此同时覆盖
+//   - ctx.Query("pageSize") 与 ctx.DefaultQuery("pageSize", "20")
+//   - 自定义 helper：queryIntParam(c, "pageSize", "size", 10）、parseSkillListPagination
+//     内部的 c.Query("pageSize")、inputInt(in, "pageSize", 20)
+//
+// 此前只匹配 DefaultQuery("pageSize", 字面量)，于是「没有上界」「camelCase 与 size 双别名」
+// 「手抄 (0,100]」这些形态既不在 9 处基线里、新增也不会转红（实测漏掉 8 处）。
+// 结构体 json tag 与 gin.H 的键不是调用的直接实参，所以 `json:"pageSize"` 和
+// gin.H{"pageSize": size} 不会被误计。
+//
+// 跑测命令：cd itsm-backend && go test ./tests/contract/ -run TestPageSizeSingleOwnerRatchet
 
 import (
 	"go/ast"
@@ -30,18 +41,31 @@ import (
 )
 
 // selfParsedPageSizeBaseline 是 2026-10-04 由扫描器实测的存量清单，
-// 条目格式 <相对 itsm-backend 的文件路径>|<自建缺省页长>；同一文件同一页长
-// 有多处就重复多行，计数一并比对。
+// 条目格式 <相对 itsm-backend 的文件路径>|<被调函数名>|<该处写死的缺省页长，
+// 无法从实参看出时为 ?>；同一键有多处就重复多行，计数一并比对。
+//
+// 扩展判定形态后新增的 8 处（原先 DefaultQuery-only 扫描器看不见）：
+// handlers/sla/handler.go 的 queryIntParam 两处（还多带 size 别名）与 c.Query 一处、
+// handlers/skill/handler.go 与 handlers/workbench/handler.go 各自的 c.Query、
+// handlers/approval/routes.go 两处 c.Query、handlers/ai/skills.go 的 inputInt。
 var selfParsedPageSizeBaseline = []string{
-	"handlers/bpmn/workflow_template.go|20",
-	"handlers/known_error/handler.go|20",
-	"handlers/known_error/handler.go|20",
-	"handlers/knowledge/handler.go|10",
-	"handlers/operations/handler.go|20",
-	"handlers/release/handler.go|10",
-	"handlers/sla/handler.go|20",
-	"handlers/standard_change/handler.go|20",
-	"handlers/timer/handler.go|20",
+	"handlers/ai/skills.go|inputInt|20",
+	"handlers/approval/routes.go|Query|?",
+	"handlers/approval/routes.go|Query|?",
+	"handlers/bpmn/workflow_template.go|DefaultQuery|20",
+	"handlers/knowledge/handler.go|DefaultQuery|10",
+	"handlers/known_error/handler.go|DefaultQuery|20",
+	"handlers/known_error/handler.go|DefaultQuery|20",
+	"handlers/operations/handler.go|DefaultQuery|20",
+	"handlers/release/handler.go|DefaultQuery|10",
+	"handlers/skill/handler.go|Query|?",
+	"handlers/sla/handler.go|DefaultQuery|20",
+	"handlers/sla/handler.go|Query|?",
+	"handlers/sla/handler.go|queryIntParam|10",
+	"handlers/sla/handler.go|queryIntParam|20",
+	"handlers/standard_change/handler.go|DefaultQuery|20",
+	"handlers/timer/handler.go|DefaultQuery|20",
+	"handlers/workbench/handler.go|Query|?",
 }
 
 // pageSizeOwnerDirs 是被扫描的 HTTP 入口层。业务 service 层的兜底夹紧走
@@ -108,7 +132,7 @@ func TestPageSizeSingleOwnerRatchet(t *testing.T) {
 	if len(added) > 0 || len(stale) > 0 {
 		var b strings.Builder
 		if len(added) > 0 {
-			b.WriteString("新增 handler 自建分页缺省值，分页解析必须走 common.GetPaginationFromQuery 单一所有者：\n  ")
+			b.WriteString("新增 handler 自建分页页长读取点，HTTP 入口必须走 common.GetPaginationFromQuery 单一所有者：\n  ")
 			b.WriteString(strings.Join(added, "\n  "))
 			b.WriteString("\n")
 		}
@@ -128,9 +152,12 @@ func TestPageSizeSingleOwnerRatchet(t *testing.T) {
 	}
 }
 
-// scanSelfParsedPageSize 用 AST 找出 DefaultQuery("pageSize", <字面量>) 调用。
-// 只看真正的调用表达式，因此注释与被注释掉的历史代码不会被误计；
-// 参数不是字符串字面量（动态缺省）时同样报违规，因为缺省值必须来自 common。
+// scanSelfParsedPageSize 用 AST 找出 handler 层把 "pageSize"/"size" 当字面量实参
+// 传下去的调用点。只看真正的调用表达式及其**直接**实参，因此：
+//   - 注释掉的历史代码不会被误计；
+//   - `json:"pageSize"` 结构体标签、gin.H{"pageSize": ...} 的键都不是直接实参，不会误计；
+//   - 嵌套调用会被 ast.Inspect 单独访问，所以 strconv.Atoi(ctx.DefaultQuery("pageSize","20"))
+//     只算一处，defaultString(c.Query("pageSize"), "20") 也只算一处。
 func scanSelfParsedPageSize(t *testing.T, dir string) []selfParsedSite {
 	t.Helper()
 
@@ -162,26 +189,16 @@ func scanSelfParsedPageSize(t *testing.T, dir string) []selfParsedSite {
 
 		ast.Inspect(file, func(n ast.Node) bool {
 			call, ok := n.(*ast.CallExpr)
-			if !ok {
-				return true
-			}
-			sel, ok := call.Fun.(*ast.SelectorExpr)
-			if !ok || sel.Sel.Name != "DefaultQuery" || len(call.Args) < 2 {
-				return true
-			}
-			if lit, ok := call.Args[0].(*ast.BasicLit); !ok || strings.Trim(lit.Value, `"`) != "pageSize" {
+			if !ok || !readsPageSizeLiteral(call) {
 				return true
 			}
 
-			key := rel + "|?"
-			if def, ok := call.Args[1].(*ast.BasicLit); ok && def.Kind == token.STRING {
-				key = rel + "|" + strings.Trim(def.Value, `"`)
-			}
-			pos := fset.Position(call.Pos())
+			key := rel + "|" + calleeName(call.Fun) + "|" + literalDefault(call)
+			line := fset.Position(call.Pos()).Line
 			sites = append(sites, selfParsedSite{
 				key:   key,
-				line:  pos.Line,
-				debug: rel + ":" + strconv.Itoa(pos.Line),
+				line:  line,
+				debug: rel + ":" + strconv.Itoa(line) + " (" + key + ")",
 			})
 			return true
 		})
@@ -191,4 +208,53 @@ func scanSelfParsedPageSize(t *testing.T, dir string) []selfParsedSite {
 		t.Fatalf("扫描 %s 失败: %v", dir, err)
 	}
 	return sites
+}
+
+// pageSizeLiteralNames 是分页长度在读取点里出现过的字面量名。
+// size 是 sla 域仍在接受的别名（AGENTS「禁止同时发送 pageSize 与 size」），
+// 因此按读取点登记而不是按合法别名放行。
+var pageSizeLiteralNames = map[string]bool{"pageSize": true, "size": true}
+
+// readsPageSizeLiteral 判断该调用的直接实参里是否出现分页长度字面量。
+func readsPageSizeLiteral(call *ast.CallExpr) bool {
+	for _, arg := range call.Args {
+		lit, ok := arg.(*ast.BasicLit)
+		if !ok || lit.Kind != token.STRING {
+			continue
+		}
+		if pageSizeLiteralNames[strings.Trim(lit.Value, `"`)] {
+			return true
+		}
+	}
+	return false
+}
+
+// calleeName 取被调函数名，用于在基线里区分同一文件里的不同形态。
+func calleeName(fun ast.Expr) string {
+	switch f := fun.(type) {
+	case *ast.SelectorExpr:
+		return f.Sel.Name
+	case *ast.Ident:
+		return f.Name
+	default:
+		return "expr"
+	}
+}
+
+// literalDefault 取该调用最后一个字面量实参作为写死的缺省页长。
+// DefaultQuery("pageSize","20") 取到 20，queryIntParam(c,"pageSize","size",10) 取到 10，
+// inputInt(in,"pageSize",20) 取到 20；c.Query("pageSize") 的缺省不在这次调用里，记 ?。
+func literalDefault(call *ast.CallExpr) string {
+	if len(call.Args) == 0 {
+		return "?"
+	}
+	lit, ok := call.Args[len(call.Args)-1].(*ast.BasicLit)
+	if !ok {
+		return "?"
+	}
+	value := strings.Trim(lit.Value, `"`)
+	if pageSizeLiteralNames[value] {
+		return "?"
+	}
+	return value
 }
