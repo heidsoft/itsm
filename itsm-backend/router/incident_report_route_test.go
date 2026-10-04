@@ -80,7 +80,7 @@ func TestIncidentReportRouteIsRegisteredAndTenantScoped(t *testing.T) {
 		JWTSecret:       secret,
 		Logger:          logger,
 		Client:          client,
-		IncidentHandler: incidentHandler.NewHandler(incidentHandler.NewService(incidentHandler.NewEntRepository(client), nil, nil, nil, nil, nil, logger)),
+		IncidentHandler: incidentHandler.NewHandler(incidentHandler.NewService(incidentHandler.NewEntRepository(client), client, nil, nil, nil, nil, nil, logger)),
 	})
 
 	do := func(t *testing.T, path string, user *ent.User) (int, incidentReportEnvelope) {

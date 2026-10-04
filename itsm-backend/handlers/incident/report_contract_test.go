@@ -71,7 +71,7 @@ func newReportContractFixture(t *testing.T) *reportContractFixture {
 
 	return &reportContractFixture{
 		client:   client,
-		handler:  NewHandler(NewService(NewEntRepository(client), nil, nil, nil, nil, nil, zap.NewNop().Sugar())),
+		handler:  NewHandler(NewService(NewEntRepository(client), client, nil, nil, nil, nil, nil, zap.NewNop().Sugar())),
 		tenantA:  tenantA.ID,
 		tenantB:  tenantB.ID,
 		agentA:   agentA.ID,

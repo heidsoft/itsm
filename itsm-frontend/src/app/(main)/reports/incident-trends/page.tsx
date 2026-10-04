@@ -71,12 +71,16 @@ interface Slice {
 }
 
 // 后端已按词表顺序返回且只含真实存在的取值，前端不再二次聚合。
-function toSlices(counts: IncidentStatCount[], label: (value: string) => string): Slice[] {
+function toSlices(
+  counts: IncidentStatCount[],
+  labelOf: (value: string) => string,
+  colorOf: (value: string) => string,
+): Slice[] {
   return counts.map(entry => ({
     key: entry.value,
-    name: label(entry.value),
+    name: labelOf(entry.value),
     value: entry.count,
-    color: entry.value,
+    color: colorOf(entry.value),
   }));
 }
 
@@ -206,8 +210,8 @@ const IncidentTrendsPage = () => {
   }
 
   const { report } = state;
-  const statusSlices = toSlices(report.byStatus, incidentStatusLabel);
-  const prioritySlices = toSlices(report.byPriority, incidentPriorityLabel);
+  const statusSlices = toSlices(report.byStatus, incidentStatusLabel, statusColor);
+  const prioritySlices = toSlices(report.byPriority, incidentPriorityLabel, priorityColor);
   const isEmptyWindow = report.createdInWindow === 0 && report.resolvedInWindow === 0;
 
   const cards = [
@@ -299,7 +303,7 @@ const IncidentTrendsPage = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" tickFormatter={shortDate} minTickGap={16} />
                     <YAxis allowDecimals={false} />
-                    <Tooltip labelFormatter={value => `${value}`} />
+                    <Tooltip />
                     <Legend />
                     {/* 两条曲线各自独立：created 按创建时间归日、resolved 按解决时间归日，
                         堆叠会把两者加成一条无意义的合计曲线。 */}
@@ -341,7 +345,7 @@ const IncidentTrendsPage = () => {
                     <Legend />
                     <Bar dataKey="value" name="事件数量" fill="#1890ff">
                       {prioritySlices.map(slice => (
-                        <Cell key={slice.key} fill={priorityColor(slice.color)} />
+                        <Cell key={slice.key} fill={slice.color} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -359,7 +363,7 @@ const IncidentTrendsPage = () => {
                     <Legend />
                     <Bar dataKey="value" name="事件数量" fill="#1890ff">
                       {statusSlices.map(slice => (
-                        <Cell key={slice.key} fill={statusColor(slice.color)} />
+                        <Cell key={slice.key} fill={slice.color} />
                       ))}
                     </Bar>
                   </BarChart>

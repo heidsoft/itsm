@@ -585,6 +585,55 @@ DELETE /incidents/{id}
 Authorization: Bearer <accessToken>
 ```
 
+### 事件趋势报表
+
+事件域唯一的时间窗口聚合端点，`/reports/incident-trends` 的曲线、分布与均值只能以它为准；
+`GET /incidents` 的列表页长不构成统计来源。需要 `incident:read` 权限。
+
+```http
+GET /api/v1/incidents/stats/report
+Authorization: Bearer <accessToken>
+
+Query Parameters:
+- dateFrom / dateTo: 窗口两端，接受 RFC3339 或 YYYY-MM-DD；必须成对提供，都不传取最近 30 天（含当天）
+```
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "window": { "dateFrom": "2026-09-05", "dateTo": "2026-10-04", "days": 30 },
+    "createdInWindow": 6,
+    "resolvedInWindow": 3,
+    "avgResolutionMinutes": 90,
+    "byStatus": [
+      { "value": "new", "count": 2 },
+      { "value": "in_progress", "count": 1 },
+      { "value": "resolved", "count": 2 },
+      { "value": "awaiting_vendor", "count": 1 }
+    ],
+    "byPriority": [{ "value": "critical", "count": 2 }],
+    "dailyTrend": [
+      { "date": "2026-10-02", "created": 2, "resolved": 0 },
+      { "date": "2026-10-03", "created": 1, "resolved": 2 },
+      { "date": "2026-10-04", "created": 0, "resolved": 0 }
+    ]
+  }
+}
+```
+
+口径（`itsm-backend/handlers/incident/report_contract_test.go` + `router/incident_report_route_test.go` 锁死）：
+
+- 窗口是服务器本地时区的整日半开区间 `[Start, End)`，`dateTo` 为闭区间日；`window` 回显实际生效窗口，前端显示回显值而不是自己请求的值。
+- 两个集合不是同一批记录：`createdInWindow` 按 `created_at` 归 cohort，`resolvedInWindow` 按 `resolved_at` 归窗口（状态取词表内的已解决/已关闭且 `resolved_at` 非空）。因此曲线两条线各自独立，堆叠会加成一条无意义的合计线。
+- `byStatus` 与 `byPriority` 之和各自恒等于 `createdInWindow`；只含窗口内真实存在的取值，按后端词表顺序排列，词表外的历史脏值按字典序追加并原样返回（前端原样显示、不并进已知桶）。
+- `avgResolutionMinutes` 单位是**分钟**（`resolved_at - created_at` 的均值，四舍五入到整数分钟）；`resolvedInWindow` 为 0 时后端返回 0，语义是「无样本」而不是「0 分钟」，消费方不得把它渲染成读数 0。
+- `dailyTrend` 按窗口天数补零，没有事件的日子是 `created: 0, resolved: 0` 而不是缺项。
+- 参数错误统一 HTTP 400 + 业务码 `1001`：只传一端（`dateFrom 与 dateTo 必须同时提供`）、区间倒置、日期无法解析、跨度超过 366 天；这些一律拒绝，不回落到默认窗口。
+- 缺少租户上下文 HTTP 401 + `2001`，fail closed；查询始终带 `tenant_id` 与 `deleted_at IS NULL`，跨租户记录不进任何计数。
+- `GET /incidents/stats` 是另一个端点：PostgreSQL 专有 SQL（`COUNT(*) FILTER`、`EXTRACT(EPOCH)`）的租户全量标量快照，不接受窗口参数，也不含分布；两者不要混用。
+
 ## 问题管理接口
 
 ### 获取问题列表
