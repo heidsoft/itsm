@@ -55,12 +55,17 @@ POST /api/v1/bpmn/ai/templates/{key}/archive
 
 ### 状态码说明
 
+业务码与 HTTP 状态由 `itsm-backend/common/response.go` 的 `codeStatusPairs` 单点登记，
+完整口径见本文「常见错误码」一节。
+
 | 状态码 | 说明 |
 |--------|------|
 | 0 | 请求成功 |
 | 1001 | 参数错误 |
 | 2001 | 认证失败 |
-| 4001 | 权限不足 |
+| 2003 | 权限不足（禁止访问） |
+| 4004 | 资源不存在（含跨租户探测） |
+| 4090 | 状态/版本冲突 |
 | 5001 | 服务器内部错误 |
 
 ## 认证接口
@@ -1877,19 +1882,42 @@ Query Parameters:
 
 ### 常见错误码
 
+下表就是 `itsm-backend/common/response.go` 的 `codeStatusPairs` 登记表，两个方向都由这一张表读出。
+此前本节列出的 `4001/4002/4003/5002` 实测在仓库里没有任何定义点与发射点（`grep` 全仓非测试代码零命中），
+属于文档漂移，2026-10-04 按代码实测更正。
+
 | 错误码 | 描述 | HTTP 状态码 |
 |--------|------|------------|
 | 0 | 成功 | 200 |
 | 1001 | 参数错误 | 400 |
 | 1002 | 数据验证失败 | 400 |
-| 2001 | 认证失败 | 401 |
-| 2002 | Token 已过期 | 401 |
-| 2003 | Token 无效 | 401 |
-| 4001 | 权限不足 | 403 |
-| 4002 | 资源不存在 | 404 |
-| 4003 | 资源已存在 | 409 |
-| 5001 | 服务器内部错误 | 500 |
-| 5002 | 服务暂不可用 | 503 |
+| 2001 | 认证失败（token 缺失/无效/过期，由认证中间件发出） | 401 |
+| 2002 | 未授权访问（handler 侧缺租户或用户上下文） | 401 |
+| 2003 | 禁止访问（权限不足） | 403 |
+| 2004 | 工具权限不足（AI 工具 RBAC 拒绝） | 403 |
+| 2005 | 未知工具 | 404 |
+| 4000 | 请求错误 | 400 |
+| 4004 | 资源不存在；跨租户探测与「不存在」返回同一个 4004，不确认对方资源是否存在 | 404 |
+| 4090 | 冲突（非法状态迁移、唯一键冲突、乐观锁版本冲突） | 409 |
+| 4220 | 请求格式合法但业务上无法处理 | 422 |
+| 5001 | 服务器内部错误（仅用于 SQL/驱动/provider 等真实服务端故障） | 500 |
+| 5003 | 服务暂不可用（connector/LLM/BPMN 等依赖未配置或未接线，不是用户参数错误） | 503 |
+
+错误分类只有一个入口 `common.classifyError`：经 `errors.As` 识别 `AppError`、`BusinessError`
+与 `VersionConflictError`，因此领域层用 `%w` 包装后的业务拒绝仍会映射成正确的 status/code；
+无法识别的错误一律 500/`5001`，且原始错误串只进服务端日志，不出现在响应里。
+`Fail` 对**未登记**的业务码仍回落 HTTP 200（既有兜底语义），新增业务码必须显式登记到这张表，
+不能靠 default 分支蒙混。
+
+版本冲突（`VersionConflictError`）的响应 `data` 携带冲突详情，供调用方做「重新拉取后重试」：
+
+```json
+{
+  "code": 4090,
+  "message": "工单已被他人修改，请刷新后重试",
+  "data": { "resourceId": "123", "currentVersion": 3, "serverVersion": 5 }
+}
+```
 
 ## 分页
 
@@ -1932,8 +1960,8 @@ Query Parameters:
 | `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `system_config:read` |
 | `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
 | `GET /api/v1/tickets/cc/my` | `{items: TicketCCRecordResponse[], total}` | 抄送给当前用户的记录，按 `tenant_id + user_id + is_active` 全量返回，排序 `added_at DESC, id ASC`（`id` 是并列键）；`user`/`addedBy` 是 `WorkflowUserInfo`，姓名键是 `fullName`，没有 `name` |
-| `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `workflow:read` 且调用者是工单相关方/审批人/管理角色。跨租户探测当前是 500/5001 而非 404（`common.FailWithErr` 把所有错误压成内部错误，见台账 E4-29），但零泄漏 |
-| `GET /api/v1/tickets/assign-recommendations/{id}` | `{items: AssignmentRecommendation[], total}` | 按评分降序全量返回本租户的可用候选（`service/ticket_assignment_smart_service.go:116`：`user.TenantIDEQ` + `ActiveEQ(true)` 整表取回后排序），`total=len(items)` 诚实；item 是 `{userId,username,name,email,score,reason,workload,skills?,categories?}`，**没有** `userName`/`userEmail`/`userAvatar`/`factors`。读取需 `system_config:read`；跨租户工单当前是 500/5001 而非 404（同 E4-29），零泄漏 |
+| `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `workflow:read` 且调用者是工单相关方/审批人/管理角色。跨租户探测与工单不存在返回同一个 404/`4004`（不确认对方资源存在），同租户但非相关方的用户是 403/`2003`；三种失败都不携带 `items` 载荷（2026-10-04 由 500/`5001` 纠正，见 UPGRADE §1.20） |
+| `GET /api/v1/tickets/assign-recommendations/{id}` | `{items: AssignmentRecommendation[], total}` | 按评分降序全量返回本租户的可用候选（`service/ticket_assignment_smart_service.go:116`：`user.TenantIDEQ` + `ActiveEQ(true)` 整表取回后排序），`total=len(items)` 诚实；item 是 `{userId,username,name,email,score,reason,workload,skills?,categories?}`，**没有** `userName`/`userEmail`/`userAvatar`/`factors`。读取需 `system_config:read`；工单不存在与跨租户返回同一个 404/`4004`（同样是 E4-5 本片由 500/`5001` 纠正），不泄漏对方租户候选 |
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |

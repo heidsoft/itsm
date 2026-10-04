@@ -616,6 +616,69 @@ cd itsm-backend && go test ./tests/contract/ -run TestListEnvelope
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-assignment-api.test.ts
 ```
 
+### 1.20 业务拒绝不再伪装成服务故障：错误分类收敛到单一分类器（2026-10-04，破坏性）
+
+本节只改**响应语义**，不改任何字段名、集合键或分页键。
+
+**旧行为**：`common.FailWithErr`、`common.RespondError` 与 `ErrorHandler` 中间件各自持有
+一套错误→状态的映射，其中 `FailWithErr` 无条件写 `Fail(c, 5001, publicMsg)`，也就是
+HTTP **500**：service 层明确返回的 `common.BusinessError(NotFoundCode)`、`ForbiddenCode`、
+`ConflictCode` 业务码在 handler 边界被整条丢弃。结果是「工单不存在」「你没权限看」
+「版本冲突」在客户端、前端拦截器和监控里全部长成服务端故障。
+
+**新行为**：`code ⇄ HTTP status` 只有一张登记表（`common/response.go` 的
+`codeStatusPairs`），错误分类只有一个入口（`common.classifyError`，经 `errors.As` 识别
+`AppError`/`BusinessError`/`VersionConflictError`），发响应只有一个落点（`common.writeClassified`）。
+`Fail`、`FailWithData`、`FailWithErr`、`RespondError`、`ErrorHandler` 全部读这三件东西。
+
+调用方会观察到的变化：
+
+| 场景 | 旧响应 | 新响应 |
+| --- | --- | --- |
+| service 返回 `NotFoundCode` 业务错误 | `500` / `5001` | `404` / `4004` |
+| service 返回 `ForbiddenCode` 业务错误 | `500` / `5001` | `403` / `2003` |
+| service 返回 `ConflictCode` 业务错误 | `500` / `5001` | `409` / `4090` |
+| service 返回 `UnprocessableEntityCode` | `500` / `5001` | `422` / `4220` |
+| `AppError{HTTPStatus: 503}`（依赖未接线/不可用） | `500` / `5001` | `503` / `5003` |
+| `VersionConflictError`（乐观锁冲突） | `409` / `4090`，`data` 为空 | `409` / `4090`，`data` 为 `{resourceId, currentVersion, serverVersion}` |
+| 驱动/SQL/provider 原始错误（非业务错误） | `500` / `5001` + 安全文案 | 不变：仍 `500` / `5001` |
+
+**已在本片锁定精确 status 的真实入口**（其余 292 处 `FailWithErr` 调用点无需改动即继承
+正确映射，因为收敛发生在 helper 内部而不是逐个 handler）：
+
+- `POST /api/v1/tickets/workflow/accept`：工单不存在/跨租户 → `404` / `4004`
+- `GET /api/v1/tickets/cc/my`、`GET /api/v1/tickets/:id/cc`：跨租户 → `404` / `4004`；
+  同租户但非发起人/受理人/审批人/抄送人 → `403` / `2003`
+- `POST /api/v1/tickets/:id/auto-assign`、`GET /api/v1/tickets/assign-recommendations/:id`：
+  工单不存在与跨租户返回**同一个** `404` / `4004`，探测方无法据此确认工单存在于别的租户
+  （这修正了 §1.19 末尾登记的「已知缺陷」）
+
+**不变的部分**（避免误判成更大范围的重构）：
+
+- 公共文案的所有权仍按入口点区分：`FailWithErr` 继续用 handler 传入的 `publicMsg`
+  （领域错误消息可能是英文，直接透出会破坏中文界面文案）；`RespondError` 透出领域消息。
+- `Fail`/`FailWithData` 对未登记业务码仍然回落 HTTP 200，新码必须显式登记，不靠 default 蒙混。
+- 响应信封结构 `{code, message, data}` 未变；`data` 只在版本冲突这一种情况下新增载荷。
+
+**集成方需要检查的**：任何把「HTTP 500」当作「该端点服务端坏了」来告警或兜底的客户端，
+现在会收到 404/403/409/422/503。按 HTTP 语义分流的逻辑（4xx 不重试、5xx 才重试）在
+本片之后才真正成立；此前把用户探测记成服务端故障的告警面板需要重新设阈值。
+
+**防新增机制**：`itsm-backend/tests/contract/error_leak_ratchet_test.go` 冻结了
+「把 `err.Error()` 当公共消息写进响应」的存量面（2026-10-04 实测 **421 处 / 37 个文件**，
+前三名占近半数：`handlers/cmdb/production_service.go` 73、`handlers/bpmn/workflow.go` 67、
+`handlers/notification/handler.go` 29）。计数上升即红；下降也必须先把基线改小并写进
+CHANGELOG，不允许悄悄少几处却没人知道。重新采集：
+`cd itsm-backend && ERROR_LEAK_RATCHET_DUMP=1 go test ./tests/contract/ -run TestErrorLeakRatchet -v`。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./common/ -run 'TestFailWithErr|TestRespondError|TestFail_Unauthorized|TestFailWithData'
+cd itsm-backend && go test ./handlers/ticket_workflow/ -run TestHandler_AcceptTicket
+cd itsm-backend && go test ./router/ -run 'TestTicketCCListRoutesEnvelope|TestTicketRuleAttachmentListRoutes'
+cd itsm-backend && go test ./tests/contract/ -run TestErrorLeakRatchet
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
