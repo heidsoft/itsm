@@ -7067,14 +7067,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 1,
-                        "description": "页码",
+                        "description": "页码（下界 1，非正值回落 1）",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "default": 20,
+                        "description": "每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -7304,14 +7304,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 1,
-                        "description": "页码",
+                        "description": "页码（下界 1，非正值回落 1）",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "default": 20,
+                        "description": "每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）",
                         "name": "pageSize",
                         "in": "query"
                     }

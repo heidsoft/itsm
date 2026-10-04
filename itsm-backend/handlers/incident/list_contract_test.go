@@ -310,6 +310,8 @@ func TestList_SizeParamIsNotContract(t *testing.T) {
 	data := f.listData(t, "size=1", f.tenantA, f.agentA)
 	items, ok := data["items"].([]interface{})
 	require.True(t, ok)
-	assert.Len(t, items, 5, "size 已不是分页参数，应回落默认每页 10 条")
-	assert.Equal(t, float64(10), data["pageSize"])
+	// 2026-10-04 分页收敛到 common.GetPaginationFromQuery 单一所有者后，
+	// 缺省页长与平台契约一致为 20（此前事件列表自建 10）。
+	assert.Len(t, items, 5, "size 已不是分页参数，应回落平台缺省每页 20 条")
+	assert.Equal(t, float64(20), data["pageSize"])
 }

@@ -429,8 +429,8 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 // @Tags 事件管理
 // @Produce json
 // @Security BearerAuth
-// @Param page query int false "页码" default(1)
-// @Param pageSize query int false "每页数量" default(10)
+// @Param page query int false "页码（下界 1，非正值回落 1）" default(1)
+// @Param pageSize query int false "每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）" default(20)
 // @Param status query string false "状态过滤"
 // @Param priority query string false "优先级过滤"
 // @Param keyword query string false "搜索关键词"
@@ -446,8 +446,10 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents [get]
 func (h *IncidentHandler) Lists(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	// 分页只有 common.GetPaginationFromQuery 一个所有者：缺省 20、只采纳 1-100、
+	// 越界与非数字回落缺省。此前这里自建 DefaultQuery("pageSize","10") 且把未校验的
+	// 解析结果直接下传给 Offset/Limit，导致 pageSize=abc/0 走成整表读取、page=0 走成负偏移。
+	pg := common.GetPaginationFromQuery(c)
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
@@ -520,7 +522,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		filters["assignee_id"] = currentUserID
 	}
 
-	incidents, total, err := h.service.List(c.Request.Context(), tenantID, page, size, filters, currentUserID, currentRole)
+	incidents, total, err := h.service.List(c.Request.Context(), tenantID, pg.Page, pg.PageSize, filters, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -573,7 +575,8 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 	}
 
 	// 标准信封：data.items + total/page/pageSize/totalPages
-	common.SuccessWithPagination(c, dtos, page, size, int64(total))
+	// 回显的是实际采纳的读取参数，信封声称的页长与数据库 LIMIT 必须同源。
+	common.SuccessWithPagination(c, dtos, pg.Page, pg.PageSize, int64(total))
 }
 
 // CreateAlert 事件管理-创建事件告警
@@ -1009,28 +1012,18 @@ func (h *IncidentHandler) GetAlertStatistics(c *gin.Context) {
 // @Tags 事件管理
 // @Produce json
 // @Security BearerAuth
-// @Param page query int false "页码" default(1)
-// @Param pageSize query int false "每页数量" default(10)
+// @Param page query int false "页码（下界 1，非正值回落 1）" default(1)
+// @Param pageSize query int false "每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）" default(20)
 // @Success 200 {object} common.Response{data=dto.IncidentAlertListResponse}
 // @Failure 500 {object} common.Response
 // @Router /api/v1/incidents/alerts/active [get]
 func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 {
-		size = 10
-	}
-	if size > 100 {
-		size = 100
-	}
+	pg := common.GetPaginationFromQuery(c)
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
-	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), tenantID, page, size)
+	alerts, total, err := h.service.alertingSvc.GetActiveAlerts(c.Request.Context(), tenantID, pg.Page, pg.PageSize)
 	if err != nil {
 		h.service.logger.Errorw("Failed to get active alerts", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取活跃告警失败")
@@ -1039,9 +1032,9 @@ func (h *IncidentHandler) GetActiveAlerts(c *gin.Context) {
 	common.Success(c, dto.IncidentAlertListResponse{
 		Items:      alerts,
 		Total:      total,
-		Page:       page,
-		PageSize:   size,
-		TotalPages: (total + size - 1) / size,
+		Page:       pg.Page,
+		PageSize:   pg.PageSize,
+		TotalPages: (total + pg.PageSize - 1) / pg.PageSize,
 	})
 }
 

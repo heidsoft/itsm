@@ -882,6 +882,58 @@ cd itsm-frontend && npx jest src/lib/api/__tests__/cmdb-api.test.ts
 `ResolveTenantID` 分支在路由级不可达，该分支由 `handlers/cmdb` 的单元测试覆盖，
 本片不用它伪造「回归」。
 
+### 1.24 事件列表与活跃告警的页长规则收敛到 `common` 单一所有者（2026-10-04，破坏性）
+
+台账 E4-9b。`GET /api/v1/incidents` 和 `GET /api/v1/incidents/alerts/active` 此前各自解析
+`page`/`pageSize`，与平台规则（`common.GetPaginationFromQuery`：缺省 1/20，只采纳 `(0,100]`，
+越界或非数字**回落缺省页长**而非夹到上限）不一致。
+
+**行为变更**（变更前取值来自 `HEAD` 的实现，逐例实测）：
+
+| 请求 | 变更前 | 变更后 |
+| --- | --- | --- |
+| `GET /api/v1/incidents`（不带分页参数） | 10 条 | 20 条（平台缺省） |
+| `pageSize=abc` / `0` / 负数 | `strconv.Atoi` 的错误被丢弃 ⇒ `Limit(0)`，Ent 在该分支**不加 `LIMIT`** ⇒ 整租户表一次返回（实测 105 条种子全量返回，响应还回显 `pageSize:0`） | 回落 20，且响应回显的就是实际采纳值 |
+| `pageSize=500` | 不设上限，SQL 真去取 500 条 | 回落 20 |
+| `page=0` / `page=-5` | 算出负 `OFFSET`；SQLite 当 0 吞掉，**Postgres 按规范报 `OFFSET must not be negative` ⇒ 500** | 回落第 1 页 |
+| `GET /api/v1/incidents/alerts/active`（不带分页参数） | 10 条（handler 与 service **各写一份** `1/10/100` 字面量，同一规则两处真相） | 20 条，两层都只读 `common` 的常量 |
+| `…alerts/active?pageSize=5000` | 夹到 100（handler 侧夹紧，service 侧再夹一次） | 回落 20（平台语义） |
+
+`docs/api-reference.md` 事件段原先写的「默认 10，上限 200」与两份实现都不符（代码里从未出现
+200 这个上限），已按实测改写；swagger 注解的 `default(10)` 同批改为 `default(1)` /
+`default(20)`，`docs/swagger.{go,json,yaml}` 已在同一提交重生成。
+
+**需要检查的集成方**：
+
+1. 依赖「不传 `pageSize` 就是 10 条」的调用方现在会拿到 20 条。要固定页长请显式传 `pageSize`。
+2. 若曾用 `pageSize` 传一个足够大的值来「一次拉完」，该写法现在失效（回落到 20）；
+   请改为按 `page` 翻页，页长上限是 100。
+3. 非数字页长在旧实现里是整表读取通道，修复后同一请求只返回 20 条。若之前有集成方在
+   依赖这个错误行为做全量导出，需要改成分页拉取。
+
+**未收口项（本片只登记，不改）**：`common.GetPaginationFromQuery`（越界回落 20，26 个非测试调用点）
+与 `common.ValidatePagination`（越界夹到 100，19 个调用点）仍是两套夹紧语义，归一要一次性核对
+全部既有端点与前端分页预期，属独立批次；`handlers/`/`controller/` 内仍有 11 处自建
+`DefaultQuery("pageSize", <字面量>)`（分布在 8 个文件），本片新建了双向棘轮
+`tests/contract/page_size_owner_ratchet_test.go` 把它们钉在基线内、新增即红，按域逐片收敛。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./handlers/incident/ -run 'TestList_|TestActiveAlerts_' -count=1
+cd itsm-backend && go test ./tests/contract/ -run 'TestPageSizeSingleOwnerRatchet' -count=1
+cd itsm-frontend && npm run type-check && npm run test:unit -- --runTestsByPath src/lib/__tests__/api-contract.test.ts
+```
+
+回归形态说明：`handlers/incident/list_pagination_contract_test.go`（7 例）锁缺省页长、整表读取
+通道、非数字/零/负值回落、100 边界与回显一致性；`handlers/incident/alert_pagination_route_test.go`
+（1 例 6 子例）打在真实 `IncidentHandler` + 真实 `IncidentAlertingService` 装配上（本域路由未走
+`router.SetupRoutes`，夹具自行注册该路径并注入租户上下文，因此证明的是 handler+service 两层
+只剩一套规则，不是路由级装配）。**负证明**：把 `handlers/incident/handler.go` 与
+`service/incident_alerting_service.go` 还原到 `HEAD` 后，10 条断言转红（最直观一条是
+`should have 20 item(s), but has 105`）；另有 3 例修复前后皆绿，锁的是既有正确行为。
+前端 `incident-api.ts` 同批删除对信封键的 `?? ` 猜测与自算 `totalPages`，改为直接透传
+`PaginationResponse<Incident>`，因此后端缺省页长的变化会立刻在契约测试里可见，而不是被前端兜底掩盖。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

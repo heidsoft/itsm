@@ -579,8 +579,8 @@ GET /incidents
 Authorization: Bearer <accessToken>
 
 Query Parameters:
-- page: 页码（默认 1）
-- pageSize: 每页数量（默认 10，上限 200；越界值回退默认或截断到上限）
+- page: 页码（缺省 1；非正值回落 1）
+- pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
 - status: 状态过滤
 - priority: 优先级过滤
 - keyword: 搜索关键词（匹配标题/描述/事件编号）
@@ -592,6 +592,17 @@ Query Parameters:
 - dateFrom / dateTo: 创建时间区间（RFC3339 或 YYYY-MM-DD，格式错误返回 400/1001）
 - scope: 取值 me 时仅返回分配给当前登录用户的事件；缺少认证上下文返回 401
 ```
+
+响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
+`GET /api/v1/incidents/alerts/active` 用同一套分页规则与信封。
+
+> 破坏性变更（2026-10-04 E4-9b）：分页解析收敛到 `common.GetPaginationFromQuery` 单一所有者，
+> 缺省页长由 handler 私有的 10 改为平台缺省 20，上界由文档自称的 200 收敛为 100。
+> 此前 handler 把未经校验的解析结果直接下传给 Ent 的 `Offset/Limit`，而 `Limit(0)` 等于不加
+> LIMIT 子句：`pageSize=abc`、`pageSize=0` 或 `page=0` 会让一次写错分页参数的请求把该租户的
+> 事件整表读穿，同时信封又回显另一套夹紧后的页长，页数统计与实际读取分家。
+> 回归见 `itsm-backend/handlers/incident/list_pagination_contract_test.go`、
+> `alert_pagination_route_test.go`，新增同类写法由 `tests/contract/page_size_owner_ratchet_test.go` 拦下。
 
 ### 创建事件
 

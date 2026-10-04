@@ -32,10 +32,26 @@ describe('IncidentAPI', () => {
 
   describe('listIncidents', () => {
     it('should list incidents', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1, title: 'Server down' }], total: 1 });
+      // 后端 GET /api/v1/incidents 只有一套信封：五键（2026-10-04 E4-9b 起缺省页长是平台值 20）。
+      // 夹具必须写全，否则前端重新引入 ?? 兜底或自己重算 totalPages 时测不出来。
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, title: 'Server down' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
       const result = await IncidentAPI.listIncidents({});
       expect(mockGet).toHaveBeenCalledWith('/api/v1/incidents', expect.any(Object));
       expect(result.items).toHaveLength(1);
+      // 分页统计原样来自后端，前端不再猜缺省。
+      expect(result).toEqual({
+        items: [{ id: 1, title: 'Server down' }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
     });
   });
 

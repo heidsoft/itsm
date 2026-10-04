@@ -8822,12 +8822,12 @@ paths:
       description: 分页获取事件列表，支持状态、优先级、关键词、来源、类型、分类、处理人、重大事件与创建时间过滤
       parameters:
       - default: 1
-        description: 页码
+        description: 页码（下界 1，非正值回落 1）
         in: query
         name: page
         type: integer
-      - default: 10
-        description: 每页数量
+      - default: 20
+        description: 每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）
         in: query
         name: pageSize
         type: integer
@@ -9960,12 +9960,12 @@ paths:
       description: 分页获取当前活跃的事件告警
       parameters:
       - default: 1
-        description: 页码
+        description: 页码（下界 1，非正值回落 1）
         in: query
         name: page
         type: integer
-      - default: 10
-        description: 每页数量
+      - default: 20
+        description: 每页数量（只采纳 1-100，越界或非数字回落平台缺省 20）
         in: query
         name: pageSize
         type: integer

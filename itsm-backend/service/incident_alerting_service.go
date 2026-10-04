@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/connector"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -585,15 +586,8 @@ func (s *IncidentAlertingService) validateAlertActor(ctx context.Context, userID
 
 // GetActiveAlerts 获取活跃告警
 func (s *IncidentAlertingService) GetActiveAlerts(ctx context.Context, tenantID int, page, size int) ([]*dto.IncidentAlertResponse, int, error) {
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 {
-		size = 10
-	}
-	if size > 100 {
-		size = 100
-	}
+	// 页长规则只有 common 一个所有者：这里只兜非 HTTP 调用方，不再自建 1/10/100 字面量。
+	page, size = common.ValidatePagination(page, size)
 	query := s.client.IncidentAlert.Query().
 		Where(
 			incidentalert.TenantIDEQ(tenantID),

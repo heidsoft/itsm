@@ -248,14 +248,6 @@ export interface ListIncidentsRequest extends ListQueryParams {
 
 export type ListIncidentsResponse = PaginationResponse<Incident>;
 
-interface IncidentListPayload {
-  items?: Incident[];
-  total?: number;
-  page?: number;
-  pageSize?: number;
-  totalPages?: number;
-}
-
 export interface IncidentMetrics {
   // camelCase
   totalIncidents?: number;
@@ -400,18 +392,14 @@ export class IncidentAPI {
         Object.entries(params).filter(([, value]) => value !== undefined)
       );
 
-      const response = await httpClient.get<IncidentListPayload>(API_URLS.INCIDENTS(), cleanParams);
-      const items = response.items ?? [];
-      const page = response.page ?? 1;
-      const pageSize = response.pageSize ?? 10;
-      const total = response.total ?? 0;
-      return {
-        items,
-        total,
-        page,
-        pageSize,
-        totalPages: response.totalPages ?? (pageSize > 0 ? Math.ceil(total / pageSize) : 0),
-      };
+      const response = await httpClient.get<PaginationResponse<Incident>>(
+        API_URLS.INCIDENTS(),
+        cleanParams
+      );
+      // 后端只有一套信封：{items,total,page,pageSize,totalPages}（2026-10-04 E4-9b 起
+      // 缺省页长是平台值 20）。这里不得再用 ?? 猜第二套缺省或自己重算 totalPages，
+      // 否则缺省漂移时界面不报错、只是静默少页/多页。
+      return response;
     } catch (error) {
       console.error('IncidentAPI.listIncidents error:', error);
       throw error;
@@ -888,8 +876,7 @@ export class IncidentAPI {
   static get incidents() {
     return {
       list: (params?: ListIncidentsRequest) => this.listIncidents(params),
-      items: (params?: ListIncidentsRequest) =>
-        this.listIncidents(params).then((r: ListIncidentsResponse) => r.items ?? []),
+      items: (params?: ListIncidentsRequest) => this.listIncidents(params).then((r) => r.items),
     };
   }
 
