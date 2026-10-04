@@ -47,6 +47,23 @@ type ProblemStats struct {
 	Resolved     int
 	Closed       int
 	HighPriority int
+	// ByStatus/ByPriority 是租户全量的分组计数，只含真实存在的取值。
+	// 折叠后的单值字段无法还原分布（identified 从来不在任何桶里），
+	// 报表要分布必须用这两项，禁止前端拉一页列表自己数。
+	ByStatus   []StatusCount
+	ByPriority []PriorityCount
+}
+
+// StatusCount 状态分布项
+type StatusCount struct {
+	Status string
+	Count  int
+}
+
+// PriorityCount 优先级分布项
+type PriorityCount struct {
+	Priority string
+	Count    int
 }
 
 // CategoryCount represents a category and its count.

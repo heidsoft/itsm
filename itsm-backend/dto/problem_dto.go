@@ -130,6 +130,21 @@ type ProblemStatsResponse struct {
 	Resolved     int `json:"resolved"`
 	Closed       int `json:"closed"`
 	HighPriority int `json:"highPriority"`
+	// ByStatus/ByPriority 为租户全量分组计数，只含真实存在的取值，并按词表顺序返回。
+	ByStatus   []ProblemStatusCount   `json:"byStatus"`
+	ByPriority []ProblemPriorityCount `json:"byPriority"`
+}
+
+// ProblemStatusCount 问题状态分布项
+type ProblemStatusCount struct {
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
+// ProblemPriorityCount 问题优先级分布项
+type ProblemPriorityCount struct {
+	Priority string `json:"priority"`
+	Count    int    `json:"count"`
 }
 
 // ProblemDetailResponse 问题详情响应

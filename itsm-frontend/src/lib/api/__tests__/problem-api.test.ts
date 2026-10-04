@@ -75,11 +75,29 @@ describe('ProblemApi', () => {
   });
 
   describe('getProblemStats', () => {
-    it('should get problem stats', async () => {
-      mockGet.mockResolvedValue({ total: 10, open: 5 });
+    it('should get problem stats with the authoritative distributions', async () => {
+      mockGet.mockResolvedValue({
+        total: 10,
+        open: 5,
+        inProgress: 2,
+        resolved: 2,
+        closed: 1,
+        highPriority: 3,
+        byStatus: [
+          { status: 'open', count: 5 },
+          { status: 'identified', count: 1 },
+        ],
+        byPriority: [{ priority: 'critical', count: 1 }],
+      });
       const result = await ProblemApi.getProblemStats();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/stats', undefined);
+      // 后端无查询参数（租户取认证上下文），因此不得再发送 params。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/stats');
       expect(result.total).toBe(10);
+      expect(result.byStatus).toEqual([
+        { status: 'open', count: 5 },
+        { status: 'identified', count: 1 },
+      ]);
+      expect(result.byPriority).toEqual([{ priority: 'critical', count: 1 }]);
     });
   });
 

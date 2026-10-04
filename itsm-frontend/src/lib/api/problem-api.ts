@@ -56,7 +56,8 @@ export interface ProblemHotspotsData {
  * 2026-10-03（台账 E4-6d）收敛前有同一份实体的三套声明：本文件这份带后端**从不返回**
  * 的 `severity`/`reporterId`/`affectedIncidents`/`relatedChanges`，`types/biz/problem.ts`
  * 与 `lib/services/problem-service.ts` 各有一份不含这些字段、但把 `status`/`priority`
- * 定义成枚举的版本，消费点只能写 `resp.items as unknown as Problem[]`。
+ * 定义成枚举的版本，消费点只能写 `resp.items as unknown as Problem[]`（后者已在台账
+ * E4-16 收口时整文件删除，本文件因此是该实体的唯一前端声明）。
  * `status`/`priority` 在 Ent 里是无枚举约束的 string 列，因此这里按契约声明为 string，
  * 取标签请用 `@/constants/problem` 的 `problemStatusLabel` / `problemPriorityLabel`。
  */
@@ -108,6 +109,42 @@ export interface ProblemListParams {
   priority?: string;
   category?: string;
   keyword?: string;
+}
+
+// ==================== 问题统计 ====================
+
+/**
+ * GET /api/v1/problems/stats 的分布条目，镜像 `dto.ProblemStatusCount` /
+ * `dto.ProblemPriorityCount`。后端按词表基准顺序返回、只含真实存在的取值
+ * （历史脏值按字典序追加），所以前端直接渲染，不再拉列表自己二次聚合。
+ * status/priority 与实体一样是无枚举约束的 string：取标签用 `@/constants/problem`
+ * 的守卫，词表外的值原样显示。
+ */
+export interface ProblemStatusCount {
+  status: string;
+  count: number;
+}
+
+export interface ProblemPriorityCount {
+  priority: string;
+  count: number;
+}
+
+/**
+ * `dto.ProblemStatsResponse` 的唯一前端声明。
+ * 注意 open/inProgress/resolved/closed 是折叠口径（investigating 与 in_progress 同进
+ * inProgress），identified 不属于任何单值桶，因此单值之和会小于 total；
+ * 需要与 total 对账时读 byStatus/byPriority。
+ */
+export interface ProblemStatsResponse {
+  total: number;
+  open: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+  highPriority: number;
+  byStatus: ProblemStatusCount[];
+  byPriority: ProblemPriorityCount[];
 }
 
 // ==================== 问题关联 ====================
@@ -181,9 +218,10 @@ export class ProblemApi {
 
   /**
    * 获取问题统计
+   * 后端: GET /api/v1/problems/stats（无查询参数，租户取认证上下文）
    */
-  static async getProblemStats(params?: any): Promise<any> {
-    return httpClient.get('/api/v1/problems/stats', params);
+  static async getProblemStats(): Promise<ProblemStatsResponse> {
+    return httpClient.get<ProblemStatsResponse>('/api/v1/problems/stats');
   }
 
   /**

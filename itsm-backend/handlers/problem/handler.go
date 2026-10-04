@@ -759,6 +759,14 @@ func (h *Handler) GetStats(c *gin.Context) {
 		Resolved:     stats.Resolved,
 		Closed:       stats.Closed,
 		HighPriority: stats.HighPriority,
+		ByStatus:     make([]dto.ProblemStatusCount, 0, len(stats.ByStatus)),
+		ByPriority:   make([]dto.ProblemPriorityCount, 0, len(stats.ByPriority)),
+	}
+	for _, item := range stats.ByStatus {
+		resp.ByStatus = append(resp.ByStatus, dto.ProblemStatusCount{Status: item.Status, Count: item.Count})
+	}
+	for _, item := range stats.ByPriority {
+		resp.ByPriority = append(resp.ByPriority, dto.ProblemPriorityCount{Priority: item.Priority, Count: item.Count})
 	}
 	common.Success(c, resp)
 }

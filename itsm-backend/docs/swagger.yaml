@@ -3067,6 +3067,13 @@ definitions:
           $ref: '#/definitions/dto.AssociatedItemResponse'
         type: array
     type: object
+  dto.ProblemPriorityCount:
+    properties:
+      count:
+        type: integer
+      priority:
+        type: string
+    type: object
   dto.ProblemRemoveAssociationRequest:
     properties:
       relatedId:
@@ -3136,6 +3143,15 @@ definitions:
     type: object
   dto.ProblemStatsResponse:
     properties:
+      byPriority:
+        items:
+          $ref: '#/definitions/dto.ProblemPriorityCount'
+        type: array
+      byStatus:
+        description: ByStatus/ByPriority 为租户全量分组计数，只含真实存在的取值，并按词表顺序返回。
+        items:
+          $ref: '#/definitions/dto.ProblemStatusCount'
+        type: array
       closed:
         type: integer
       highPriority:
@@ -3148,6 +3164,13 @@ definitions:
         type: integer
       total:
         type: integer
+    type: object
+  dto.ProblemStatusCount:
+    properties:
+      count:
+        type: integer
+      status:
+        type: string
     type: object
   dto.ProcessTriggerRequest:
     properties:

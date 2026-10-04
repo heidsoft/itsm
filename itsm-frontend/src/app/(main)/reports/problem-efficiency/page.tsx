@@ -1,46 +1,49 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Typography,
-  Spin,
-  message,
-  Progress,
+  Alert,
   Button,
+  Card,
+  Col,
+  Empty,
+  Progress,
+  Row,
+  Spin,
+  Statistic,
   Tag,
-  List,
-  Space,
+  Typography,
 } from 'antd';
-import { AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { RotateCcw } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, RotateCcw, XCircle } from 'lucide-react';
 import {
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from 'recharts';
-import type { ProblemStatsResponse, Problem } from '@/lib/services/problem-service';
+import { ProblemApi } from '@/lib/api/problem-api';
+import type { Problem, ProblemStatsResponse } from '@/lib/api/problem-api';
 import {
-  problemService
-} from '@/lib/services/problem-service';
-import { ProblemPriority, ProblemStatus } from '@/constants/problem';
+  ProblemPriority,
+  ProblemStatus,
+  isKnownProblemPriority,
+  isKnownProblemStatus,
+  problemPriorityLabel,
+  problemStatusLabel,
+} from '@/constants/problem';
 
 const { Title, Text } = Typography;
 
 // 键用枚举计算而来，不再手抄字面量：此前这里写着 inProgress，
 // 后端存量值是 in_progress，该状态的饼图分片因此一直是默认灰。
-const STATUS_COLORS: Record<string, string> = {
+const STATUS_COLORS: Record<ProblemStatus, string> = {
   [ProblemStatus.OPEN]: '#1890ff',
   [ProblemStatus.INVESTIGATING]: '#722ed1',
   [ProblemStatus.IDENTIFIED]: '#fa8c16',
@@ -49,310 +52,293 @@ const STATUS_COLORS: Record<string, string> = {
   [ProblemStatus.CLOSED]: '#d9d9d9',
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
+const PRIORITY_COLORS: Record<ProblemPriority, string> = {
   [ProblemPriority.LOW]: '#52c41a',
   [ProblemPriority.MEDIUM]: '#faad14',
   [ProblemPriority.HIGH]: '#ff4d4f',
   [ProblemPriority.CRITICAL]: '#722ed1',
 };
 
+// 词表外的历史取值不猜测颜色，统一灰色并原样显示标签，避免把脏数据伪装成已知状态。
+const UNKNOWN_COLOR = '#d9d9d9';
+
+function statusColor(status: string): string {
+  return isKnownProblemStatus(status) ? STATUS_COLORS[status] : UNKNOWN_COLOR;
+}
+
+function priorityColor(priority: string): string {
+  return isKnownProblemPriority(priority) ? PRIORITY_COLORS[priority] : UNKNOWN_COLOR;
+}
+
+interface Slice {
+  key: string;
+  name: string;
+  value: number;
+  color: string;
+}
+
+// 后端已按词表顺序返回且只含真实存在的取值，前端不再二次聚合。
+function toStatusSlices(stats: ProblemStatsResponse): Slice[] {
+  return stats.byStatus.map(entry => ({
+    key: entry.status,
+    name: problemStatusLabel(entry.status),
+    value: entry.count,
+    color: statusColor(entry.status),
+  }));
+}
+
+function toPrioritySlices(stats: ProblemStatsResponse): Slice[] {
+  return stats.byPriority.map(entry => ({
+    key: entry.priority,
+    name: problemPriorityLabel(entry.priority),
+    value: entry.count,
+    color: priorityColor(entry.priority),
+  }));
+}
+
+const STATUS_TAG_COLORS: Record<ProblemStatus, string> = {
+  [ProblemStatus.OPEN]: 'processing',
+  [ProblemStatus.INVESTIGATING]: 'processing',
+  [ProblemStatus.IDENTIFIED]: 'warning',
+  [ProblemStatus.IN_PROGRESS]: 'processing',
+  [ProblemStatus.RESOLVED]: 'success',
+  [ProblemStatus.CLOSED]: 'default',
+};
+
+const PRIORITY_TAG_COLORS: Record<ProblemPriority, string> = {
+  [ProblemPriority.LOW]: 'green',
+  [ProblemPriority.MEDIUM]: 'orange',
+  [ProblemPriority.HIGH]: 'red',
+  [ProblemPriority.CRITICAL]: 'red',
+};
+
+function statusTagColor(status: string): string {
+  return isKnownProblemStatus(status) ? STATUS_TAG_COLORS[status] : 'default';
+}
+
+function priorityTagColor(priority: string): string {
+  return isKnownProblemPriority(priority) ? PRIORITY_TAG_COLORS[priority] : 'default';
+}
+
+type LoadState =
+  | { kind: 'loading' }
+  | { kind: 'error'; reason: string }
+  | { kind: 'ready'; stats: ProblemStatsResponse; recent: Problem[] };
+
+const RECENT_PAGE_SIZE = 10;
+
 const ProblemEfficiencyPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState<ProblemStatsResponse | null>(null);
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [problemsByStatus, setProblemsByStatus] = useState<any[]>([]);
-  const [problemsByPriority, setProblemsByPriority] = useState<any[]>([]);
+  const [state, setState] = useState<LoadState>({ kind: 'loading' });
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = useCallback(async () => {
+    setState({ kind: 'loading' });
     try {
-      // 获取统计数据
-      let statsData: ProblemStatsResponse | null = null;
-      let problemsData: Problem[] = [];
-
-      try {
-        statsData = await problemService.getProblemStats();
-        const problemsRes = await problemService.listProblems({ page: 1, pageSize: 100 });
-        problemsData = problemsRes.items;
-      } catch (e) {
-        console.warn('获取问题数据失败，使用空数据');
-      }
-
-      if (statsData) {
-        setStats(statsData);
-      } else {
-        // 无真实数据时，使用空状态
-        statsData = {
-          total: 0,
-          open: 0,
-          inProgress: 0,
-          resolved: 0,
-          closed: 0,
-          highPriority: 0,
-        };
-        setStats(statsData);
-      }
-
-      // 计算状态分布
-      if (problemsData.length > 0) {
-        const byStatus: Record<string, number> = {};
-        const byPriority: Record<string, number> = {};
-
-        problemsData.forEach(p => {
-          byStatus[p.status] = (byStatus[p.status] || 0) + 1;
-          byPriority[p.priority] = (byPriority[p.priority] || 0) + 1;
-        });
-
-        setProblemsByStatus(
-          Object.entries(byStatus).map(([name, value]) => ({
-            name: problemService.getStatusLabel(name),
-            value,
-            color: STATUS_COLORS[name] || '#d9d9d9',
-          }))
-        );
-
-        setProblemsByPriority(
-          Object.entries(byPriority).map(([name, value]) => ({
-            name: problemService.getPriorityLabel(name),
-            value,
-            color: PRIORITY_COLORS[name] || '#d9d9d9',
-          }))
-        );
-
-        setProblems(problemsData.slice(0, 10));
-      } else {
-        // 无真实数据时，使用空状态
-        setProblemsByStatus([]);
-        setProblemsByPriority([]);
-        setProblems([]);
-      }
-    } catch (error) {
-      console.error('加载问题效率数据失败:', error);
-      message.error('加载数据失败');
-
-      // 不再使用演示数据，保持空数据状态
-      setStats({
-        total: 0,
-        open: 0,
-        inProgress: 0,
-        resolved: 0,
-        closed: 0,
-        highPriority: 0,
-      });
-
-      setProblemsByStatus([]);
-      setProblemsByPriority([]);
-      setProblems([]);
-    } finally {
-      setLoading(false);
+      // 分布的权威来源是 GET /api/v1/problems/stats 的租户全量分组计数。
+      // 修复前这里拉 listProblems({page:1,pageSize:100}) 在浏览器里自己数：第 100 条
+      // 之后的问题被静默截断后仍当成全量读数，而 identified 从来不在任何单值桶里，
+      // 页面因此无法自证总数对得上。列表只用于「最新问题列表」，按后端倒序取一页即可。
+      const [stats, recent] = await Promise.all([
+        ProblemApi.getProblemStats(),
+        ProblemApi.getProblems({ page: 1, pageSize: RECENT_PAGE_SIZE }),
+      ]);
+      setState({ kind: 'ready', stats, recent: recent.items });
+    } catch (err) {
+      setState({ kind: 'error', reason: err instanceof Error ? err.message : '未知错误' });
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
 
-  const resolutionRate = stats ? (stats.resolved / stats.total) * 100 : 0;
-  const inProgressRate = stats ? (stats.inProgress / stats.total) * 100 : 0;
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      [ProblemStatus.OPEN]: 'processing',
-      [ProblemStatus.INVESTIGATING]: 'processing',
-      [ProblemStatus.IDENTIFIED]: 'warning',
-      [ProblemStatus.IN_PROGRESS]: 'processing',
-      [ProblemStatus.RESOLVED]: 'success',
-      [ProblemStatus.CLOSED]: 'default',
-    };
-    return colors[status] || 'default';
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colors: Record<string, string> = {
-      [ProblemPriority.LOW]: 'green',
-      [ProblemPriority.MEDIUM]: 'orange',
-      [ProblemPriority.HIGH]: 'red',
-      [ProblemPriority.CRITICAL]: 'red',
-    };
-    return colors[priority] || 'default';
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
-          <p
-            className="text-sm"
-            style={{ color: payload[0].color }}
-          >{`数量: ${payload[0].value}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="p-6 bg-gray-50 min-h-full">
-      <header className="mb-6">
+  if (state.kind === 'loading') {
+    return (
+      <div className="p-6 bg-gray-50 min-h-full">
         <Title level={2}>问题管理效率报表</Title>
-        <p className="text-gray-500 mt-1">展示问题管理的处理效率和处理趋势</p>
-      </header>
-
-      {/* 控制栏 */}
-      <Card className="mb-6">
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Text className="text-gray-600">问题处理效率监控</Text>
-          </Col>
-          <Col>
-            <Button icon={<RotateCcw />} onClick={loadData}>
-              刷新数据
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
-      {loading ? (
         <div className="flex items-center justify-center h-64">
           <Spin size="large" description="加载报表数据..." />
         </div>
+      </div>
+    );
+  }
+
+  if (state.kind === 'error') {
+    // 失败态不得渲染全 0 卡片或空图表：那会把接口故障伪装成「没有问题记录」。
+    return (
+      <div className="p-6 bg-gray-50 min-h-full">
+        <Title level={2}>问题管理效率报表</Title>
+        <Alert
+          type="error"
+          showIcon
+          title="问题统计加载失败"
+          description={`${state.reason}。请确认已登录且拥有问题读取权限，或稍后重试。`}
+          action={
+            <Button size="small" icon={<RotateCcw />} onClick={loadData}>
+              重试
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const { stats, recent } = state;
+  const statusSlices = toStatusSlices(stats);
+  const prioritySlices = toPrioritySlices(stats);
+  const total = stats.total;
+
+  const cards = [
+    {
+      title: '问题总数',
+      value: total,
+      color: '#1890ff',
+      icon: <AlertTriangle size={20} style={{ color: '#1890ff' }} />,
+    },
+    {
+      title: '已解决问题',
+      value: stats.resolved,
+      color: '#52c41a',
+      icon: <CheckCircle size={20} />,
+    },
+    {
+      // 折叠口径：investigating 与 in_progress 同进本卡片，与后端 stats 一致。
+      title: problemStatusLabel(ProblemStatus.IN_PROGRESS),
+      value: stats.inProgress,
+      color: '#faad14',
+      icon: <Clock size={20} />,
+    },
+    {
+      // 折叠口径：high 与 critical 同进本卡片。
+      title: '高优先级',
+      value: stats.highPriority,
+      color: '#ff4d4f',
+      icon: <XCircle size={20} />,
+    },
+  ];
+
+  // 占比的分母是租户全量问题数，total 为 0 时整块效率指标已被空态替换，
+  // 因此这里只在有分母时计算，修复前的 (0/0)*100 会把 NaN 写成读数。
+  const resolutionPercent = (stats.resolved / total) * 100;
+  const metrics = [
+    {
+      title: '解决率',
+      label: '已解决',
+      part: stats.resolved,
+      percent: resolutionPercent,
+      // 解决率低于 70% 用警示色，与修复前的判定阈值保持一致。
+      color: resolutionPercent < 70 ? '#faad14' : '#52c41a',
+    },
+    {
+      title: '处理中比例',
+      label: problemStatusLabel(ProblemStatus.IN_PROGRESS),
+      part: stats.inProgress,
+      percent: (stats.inProgress / total) * 100,
+      color: '#1890ff',
+    },
+    {
+      title: '高优先级占比',
+      label: '高优先级',
+      part: stats.highPriority,
+      percent: (stats.highPriority / total) * 100,
+      color: '#ff4d4f',
+    },
+  ];
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-full space-y-6">
+      <header>
+        <Title level={2}>问题管理效率报表</Title>
+        <Text className="text-gray-500">
+          统计口径为当前租户全量问题记录；分布数据来自后端分组计数，不是当前页列表。
+        </Text>
+      </header>
+
+      <Row justify="end">
+        <Button icon={<RotateCcw />} onClick={loadData}>
+          刷新数据
+        </Button>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        {cards.map(card => (
+          <Col xs={24} sm={12} lg={6} key={card.title}>
+            <Card>
+              <Statistic
+                title={card.title}
+                value={card.value}
+                prefix={card.icon}
+                styles={{ content: { color: card.color } }}
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      {total === 0 ? (
+        <Card>
+          <Empty description="当前租户还没有问题记录" />
+        </Card>
       ) : (
         <>
-          {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="问题总数"
-                  value={stats?.total || 0}
-                  prefix={<AlertTriangle size={20} style={{ color: '#1890ff' }} />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="已解决问题"
-                  value={stats?.resolved || 0}
-                  styles={{ content: { color: '#52c41a' } }}
-                  prefix={<CheckCircle size={20} />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="处理中"
-                  value={stats?.inProgress || 0}
-                  styles={{ content: { color: '#faad14' } }}
-                  prefix={<Clock size={20} />}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <Card>
-                <Statistic
-                  title="高优先级"
-                  value={stats?.highPriority || 0}
-                  styles={{ content: { color: '#ff4d4f' } }}
-                  prefix={<XCircle size={20} />}
-                />
-              </Card>
-            </Col>
+          <Row gutter={[16, 16]}>
+            {metrics.map(metric => (
+              <Col xs={24} lg={8} key={metric.title}>
+                <Card title={metric.title}>
+                  <div className="text-center py-4">
+                    <div className="text-4xl font-bold mb-2" style={{ color: metric.color }}>
+                      {metric.percent.toFixed(1)}%
+                    </div>
+                    <Progress
+                      percent={metric.percent}
+                      strokeColor={metric.color}
+                      showInfo={false}
+                    />
+                    <Text type="secondary" className="mt-2 block">
+                      {metric.label} {metric.part} / 总数 {total}
+                    </Text>
+                  </div>
+                </Card>
+              </Col>
+            ))}
           </Row>
 
-          {/* 效率指标 */}
-          <Row gutter={[16, 16]} className="mb-6">
-            <Col xs={24} lg={8}>
-              <Card title="解决率">
-                <div className="text-center py-4">
-                  <div
-                    className="text-4xl font-bold mb-2"
-                    style={{ color: resolutionRate >= 70 ? '#52c41a' : '#faad14' }}
-                  >
-                    {resolutionRate.toFixed(1)}%
-                  </div>
-                  <Progress
-                    percent={resolutionRate}
-                    strokeColor={resolutionRate >= 70 ? '#52c41a' : '#faad14'}
-                    showInfo={false}
-                  />
-                  <Text type="secondary" className="mt-2 block">
-                    已解决 {stats?.resolved || 0} / 总数 {stats?.total || 0}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} lg={8}>
-              <Card title="处理中比例">
-                <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: '#1890ff' }}>
-                    {inProgressRate.toFixed(1)}%
-                  </div>
-                  <Progress percent={inProgressRate} strokeColor="#1890ff" showInfo={false} />
-                  <Text type="secondary" className="mt-2 block">
-                    处理中 {stats?.inProgress || 0} / 总数 {stats?.total || 0}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} lg={8}>
-              <Card title="高优先级占比">
-                <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: '#ff4d4f' }}>
-                    {stats ? ((stats.highPriority / stats.total) * 100).toFixed(1) : 0}%
-                  </div>
-                  <Progress
-                    percent={stats ? (stats.highPriority / stats.total) * 100 : 0}
-                    strokeColor="#ff4d4f"
-                    showInfo={false}
-                  />
-                  <Text type="secondary" className="mt-2 block">
-                    高优先级 {stats?.highPriority || 0} / 总数 {stats?.total || 0}
-                  </Text>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* 图表区域 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
               <Card title="问题状态分布">
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={problemsByStatus}
+                      data={statusSlices}
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
                       dataKey="value"
                       nameKey="name"
-                      label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     >
-                      {problemsByStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {statusSlices.map(slice => (
+                        <Cell key={slice.key} fill={slice.color} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </Card>
             </Col>
+
             <Col xs={24} lg={12}>
               <Card title="问题优先级分布">
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={problemsByPriority}>
+                  <BarChart data={prioritySlices}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
                     <Legend />
                     <Bar dataKey="value" name="问题数量" fill="#1890ff">
-                      {problemsByPriority.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {prioritySlices.map(slice => (
+                        <Cell key={slice.key} fill={slice.color} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -361,36 +347,35 @@ const ProblemEfficiencyPage = () => {
             </Col>
           </Row>
 
-          {/* 问题列表 */}
-          {problems.length > 0 && (
-            <Card title="最新问题列表" className="mb-6">
-              <List
-                dataSource={problems}
-                renderItem={problem => (
-                  <List.Item>
-                    <div className="w-full">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-blue-600">#{problem.id}</span>
-                          <span className="font-medium">{problem.title}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Tag color={getStatusColor(problem.status)}>
-                            {problemService.getStatusLabel(problem.status)}
-                          </Tag>
-                          <Tag color={getPriorityColor(problem.priority)}>
-                            {problemService.getPriorityLabel(problem.priority)}
-                          </Tag>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>处理人: {problem.assigneeName ?? '未分配'}</span>
-                        <span>创建时间: {new Date(problem.createdAt).toLocaleDateString()}</span>
-                      </div>
+          {recent.length > 0 && (
+            <Card title="最新问题列表">
+              {/* antd v6 已弃用 List（运行时告警），这里用与本表其余部分一致的
+                  Tailwind 结构渲染，行为与视觉不变。 */}
+              <div className="flex flex-col">
+                {recent.map(problem => (
+                  <div
+                    key={problem.id}
+                    className="flex flex-col gap-2 border-b border-gray-100 py-3 last:border-b-0 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium text-blue-600">#{problem.id}</span>
+                      <span className="font-medium">{problem.title}</span>
                     </div>
-                  </List.Item>
-                )}
-              />
+                    <div className="flex items-center gap-2">
+                      <Tag color={statusTagColor(problem.status)}>
+                        {problemStatusLabel(problem.status)}
+                      </Tag>
+                      <Tag color={priorityTagColor(problem.priority)}>
+                        {problemPriorityLabel(problem.priority)}
+                      </Tag>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>处理人: {problem.assigneeName ?? '未分配'}</span>
+                      <span>创建时间: {new Date(problem.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
         </>

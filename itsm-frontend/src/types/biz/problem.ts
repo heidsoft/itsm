@@ -40,12 +40,6 @@ export interface UpdateProblemRequest {
 // 逐字段一致），不再维护同构副本。
 export type ProblemQuery = ProblemListParams;
 
-// 统计响应
-export interface ProblemStats {
-  total: number;
-  open: number;
-  inProgress: number;
-  resolved: number;
-  closed: number;
-  highPriority: number;
-}
+// 统计响应同样只有一份：复用 ProblemApi 的 ProblemStatsResponse，不再维护缺
+// byStatus/byPriority 的同构副本。
+export type { ProblemStatsResponse } from '@/lib/api/problem-api';

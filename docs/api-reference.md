@@ -666,6 +666,47 @@ DELETE /problems/{id}
 Authorization: Bearer <accessToken>
 ```
 
+### 问题聚合统计
+
+问题域的租户级聚合端点。`/reports/problem-efficiency` 的状态与优先级分布只能以它为准，
+`GET /problems` 的列表页长不构成统计来源。
+
+```http
+GET /api/v1/problems/stats
+```
+
+`data` 是租户全量的聚合计数，不带分页字段，也不接受查询参数（租户取自认证上下文）：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "total": 150,
+    "open": 60,
+    "inProgress": 50,
+    "resolved": 30,
+    "closed": 7,
+    "highPriority": 22,
+    "byStatus": [
+      { "status": "open", "count": 60 },
+      { "status": "investigating", "count": 35 },
+      { "status": "identified", "count": 2 },
+      { "status": "in_progress", "count": 15 },
+      { "status": "resolved", "count": 30 },
+      { "status": "closed", "count": 7 },
+      { "status": "awaiting_vendor", "count": 1 }
+    ],
+    "byPriority": [{ "priority": "low", "count": 40 }]
+  }
+}
+```
+
+- 单值字段是折叠口径：`inProgress` = `investigating` + `in_progress`，`highPriority` = `high` + `critical`，`open` 只含 `open`。`identified` 历史上不属于任何单值桶，因此单值之和小于 `total` 是预期行为，不是丢数；需要与 `total` 对账时读分布。
+- `byStatus`/`byPriority` 只含真实存在的取值，顺序按后端词表基准（状态 `open,investigating,identified,in_progress,resolved,closed`，优先级 `low,medium,high,critical`），词表外的历史值按字母序追加；两者各自求和恒等于 `total`，排除软删除记录并严格按租户过滤（`itsm-backend/handlers/problem/stats_contract_test.go` 锁死这几条）。
+- 缺少租户上下文返回 HTTP 401 + 业务码 `2001`，不回落到默认租户、也不返回空成功。
+- 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：2026-10-03 之前 `/reports/problem-efficiency` 正是取 `pageSize=100` 的第一页在浏览器里计数，第 101 条之后的问题被静默截断，界面却仍把它当全量读数展示。
+
 ### 问题 SLA 与评论（能力未就绪）
 
 ```http

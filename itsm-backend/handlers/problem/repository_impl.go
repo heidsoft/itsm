@@ -3,6 +3,7 @@ package problem
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"itsm-backend/ent"
@@ -384,47 +385,121 @@ func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, st
 
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*ProblemStats, error) {
 	base := []entpredicate.Problem{problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil()}
-	query := r.client.Problem.Query().Where(base...)
 
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Simple count queries. Optimization: group by status/priority?
-	// For now keeping it simple as per original service.
-	count := func(pred entpredicate.Problem) (int, error) {
-		return r.client.Problem.Query().Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil(), pred).Count(ctx)
-	}
-	open, err := count(problem.StatusEQ("open"))
-	if err != nil {
-		return nil, err
-	}
-	inProgress, err := count(problem.StatusIn("investigating", "in_progress"))
-	if err != nil {
-		return nil, err
-	}
-	resolved, err := count(problem.StatusEQ("resolved"))
-	if err != nil {
-		return nil, err
-	}
-	closed, err := count(problem.StatusEQ("closed"))
-	if err != nil {
-		return nil, err
-	}
-	high, err := count(problem.PriorityIn("high", "critical"))
+	total, err := r.client.Problem.Query().Where(base...).Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ProblemStats{
-		Total:        total,
-		Open:         open,
-		InProgress:   inProgress,
-		Resolved:     resolved,
-		Closed:       closed,
-		HighPriority: high,
-	}, nil
+	statusRows := []statusCountRow{}
+	if err := r.client.Problem.Query().
+		Where(base...).
+		GroupBy(problem.FieldStatus).
+		Aggregate(ent.Count()).
+		Scan(ctx, &statusRows); err != nil {
+		return nil, err
+	}
+
+	priorityRows := []priorityCountRow{}
+	if err := r.client.Problem.Query().
+		Where(base...).
+		GroupBy(problem.FieldPriority).
+		Aggregate(ent.Count()).
+		Scan(ctx, &priorityRows); err != nil {
+		return nil, err
+	}
+
+	stats := &ProblemStats{
+		Total:      total,
+		ByStatus:   orderStatusCounts(statusRows),
+		ByPriority: orderPriorityCounts(priorityRows),
+	}
+	// 折叠口径保持与修复前一致，报表才不会出现读数突变：
+	// open 单独一桶，investigating 与 in_progress 并进 InProgress，
+	// identified 历史上不属于任何单值桶（因此单值之和小于 total），
+	// 但它在 ByStatus 里必须可见，否则问题被静默漏计。
+	for _, row := range statusRows {
+		switch row.Status {
+		case "open":
+			stats.Open += row.Count
+		case "investigating", "in_progress":
+			stats.InProgress += row.Count
+		case "resolved":
+			stats.Resolved += row.Count
+		case "closed":
+			stats.Closed += row.Count
+		}
+	}
+	for _, row := range priorityRows {
+		if row.Priority == "high" || row.Priority == "critical" {
+			stats.HighPriority += row.Count
+		}
+	}
+	return stats, nil
+}
+
+// statusCountRow 是 GroupBy(status) Scan 的目标结构。
+type statusCountRow struct {
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
+// priorityCountRow 是 GroupBy(priority) Scan 的目标结构。
+type priorityCountRow struct {
+	Priority string `json:"priority"`
+	Count    int    `json:"count"`
+}
+
+// 分布的展示基准顺序，与后端问题状态机/优先级词表一致。
+// ent 的 status/priority 是无强校验字符串字段，词表外的历史值按字典序追加而不是丢弃，
+// 这样报表总数能与 total 对账，且输出顺序确定、不会抖动。
+var (
+	problemStatusOrder   = []string{"open", "investigating", "identified", "in_progress", "resolved", "closed"}
+	problemPriorityOrder = []string{"low", "medium", "high", "critical"}
+)
+
+func orderStatusCounts(rows []statusCountRow) []StatusCount {
+	counts := make(map[string]int, len(rows))
+	for _, row := range rows {
+		counts[row.Status] += row.Count
+	}
+	out := []StatusCount{}
+	for _, name := range orderedVocabulary(counts, problemStatusOrder) {
+		out = append(out, StatusCount{Status: name, Count: counts[name]})
+	}
+	return out
+}
+
+func orderPriorityCounts(rows []priorityCountRow) []PriorityCount {
+	counts := make(map[string]int, len(rows))
+	for _, row := range rows {
+		counts[row.Priority] += row.Count
+	}
+	out := []PriorityCount{}
+	for _, name := range orderedVocabulary(counts, problemPriorityOrder) {
+		out = append(out, PriorityCount{Priority: name, Count: counts[name]})
+	}
+	return out
+}
+
+// orderedVocabulary 只保留真实存在的取值（count>0），先按词表基准顺序，再按字典序追加词表外值。
+func orderedVocabulary(counts map[string]int, order []string) []string {
+	out := make([]string, 0, len(counts))
+	inOrder := make(map[string]bool, len(order))
+	for _, name := range order {
+		inOrder[name] = true
+		if counts[name] > 0 {
+			out = append(out, name)
+		}
+	}
+	extra := make([]string, 0, len(counts))
+	for name, count := range counts {
+		if count > 0 && !inOrder[name] {
+			extra = append(extra, name)
+		}
+	}
+	sort.Strings(extra)
+	return append(out, extra...)
 }
 
 // LoadUserNames 批量加载 user 显示名（id -> name）。当前租户范围，name 为空回退 username。

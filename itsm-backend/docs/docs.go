@@ -15894,6 +15894,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ProblemPriorityCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ProblemRemoveAssociationRequest": {
             "type": "object",
             "required": [
@@ -15996,6 +16007,19 @@ const docTemplate = `{
         "dto.ProblemStatsResponse": {
             "type": "object",
             "properties": {
+                "byPriority": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProblemPriorityCount"
+                    }
+                },
+                "byStatus": {
+                    "description": "ByStatus/ByPriority 为租户全量分组计数，只含真实存在的取值，并按词表顺序返回。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProblemStatusCount"
+                    }
+                },
                 "closed": {
                     "type": "integer"
                 },
@@ -16013,6 +16037,17 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.ProblemStatusCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
