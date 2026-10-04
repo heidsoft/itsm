@@ -1041,7 +1041,7 @@ export class WorkflowApi {
     };
     const item = await httpClient.post<{
       id: string;
-      processInstanceId: string;
+      instanceId: string;
       processDefinitionKey: string;
       businessKey: string;
       status: string;
@@ -1049,7 +1049,7 @@ export class WorkflowApi {
       endTime?: string;
     }>('/api/v1/bpmn/process-instances', payload);
     return {
-      id: item.processInstanceId || item.id || '',
+      id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
@@ -1106,7 +1106,7 @@ export class WorkflowApi {
     }>('/api/v1/bpmn/process-instances', query);
     const list = res.items ?? [];
     const instances: WorkflowInstance[] = list.map(item => ({
-      id: item.instanceId || item.id || '',
+      id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,
@@ -1137,7 +1137,7 @@ export class WorkflowApi {
       endTime?: string;
     }>(`/api/v1/bpmn/process-instances/${instanceId}`);
     return {
-      id: item.instanceId || item.id || '',
+      id: item.instanceId,
       workflowId: item.processDefinitionKey || '',
       workflowName: '',
       version: 1,

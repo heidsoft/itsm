@@ -83,8 +83,9 @@ function getBusinessLink(task: BpmnMyTask): { label: string; url: string } | nul
       return { label: `${meta.label} #${task.businessId}`, url: meta.url(task.businessId) };
     }
   }
-  if (task.processInstanceId) {
-    return { label: `流程实例 #${task.processInstanceId}`, url: `/workflow/instances/${task.processInstanceId}` };
+  // 流程实例统一以 PI-* 业务键寻址（processInstanceKey）；数字 Ent ID 不再是任何端点的寻址键。
+  if (task.processInstanceKey) {
+    return { label: `流程实例 #${task.processInstanceKey}`, url: `/workflow/instances/${task.processInstanceKey}` };
   }
   return null;
 }

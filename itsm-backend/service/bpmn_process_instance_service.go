@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"itsm-backend/ent"
@@ -60,17 +59,16 @@ type bpmnProcessInstanceService struct {
 
 // Queries
 
+// GetProcessInstance 按 BPMN processInstanceId（PI-* 业务键，schema 全局唯一）读取实例。
+// /process-instances/:id 家族里 suspend/resume/terminate/approval-history 与 monitoring
+// 表面都以该键寻址；数字 Ent ID 仅出现在响应 DTO 的 id 字段，不再是任何端点的寻址键。
 func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, processInstanceID string) (*ent.ProcessInstance, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	id, err := strconv.Atoi(processInstanceID)
-	if err != nil {
-		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
-	}
 	instance, err := s.client.ProcessInstance.Query().
-		Where(processinstance.ID(id), processinstance.TenantID(tenantID)).
+		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
@@ -147,18 +145,20 @@ func (s *bpmnProcessInstanceService) SetProcessInstanceVariables(ctx context.Con
 // History
 
 func (s *bpmnProcessInstanceService) GetProcessInstanceHistory(ctx context.Context, processInstanceID string) ([]*ent.ProcessExecutionHistory, error) {
+	// 历史表按数字实例 ID 存外键，但对外寻址键与 GetProcessInstance 一致（PI 业务键），
+	// 先经租户谓词解析实例，再以实例 ID 读历史。
+	instance, err := s.GetProcessInstance(ctx, processInstanceID)
+	if err != nil {
+		return nil, err
+	}
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	id, err := strconv.Atoi(processInstanceID)
-	if err != nil {
-		return nil, fmt.Errorf("无效的流程实例ID: %w", err)
-	}
 
 	query := s.client.ProcessExecutionHistory.Query().
 		Where(
-			processexecutionhistory.ProcessInstanceID(id),
+			processexecutionhistory.ProcessInstanceID(instance.ID),
 			processexecutionhistory.TenantID(tenantID),
 		)
 

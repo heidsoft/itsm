@@ -1105,6 +1105,45 @@ cd itsm-backend && go test ./tests/contract/ ./common/... ./handlers/... ./servi
 - `handlers/sla_template/handler.go:32-34` 仍以 `common.Fail(..., AuthFailedCode, ...)` 写第二份（1 处未收口）。
 - `handlers/dashboard_handler.go:528-530` 的 `!ok` 分支体不是裸 `return` 而是给本地变量赋空值（按上下文判断是否构成双写，需读全函数后才能定）。
 
+### 1.28 流程实例端点统一以 `processInstanceId`（PI-* 业务键）寻址（2026-10-05，破坏性）
+
+`/api/v1/bpmn/process-instances/:id` 家族此前存在**双寻址键**缺陷：同族六个端点里只有
+`GET` 详情把 `:id` 当**数字 Ent 主键**（`strconv.Atoi` 后按 `ID` 查），而
+`suspend` / `resume` / `terminate` / `variables` / `approval-history` 与
+`monitoring/instances/:instanceId/timeline` 全部按 **PI-* 业务键**（`process_instance_id` 列，
+schema 全局唯一）寻址。调用方拿到列表响应里的 `instanceId` 再去打 GET 详情必然 404——
+这正是 ga-gate 全链路 E2E（`ticket-type-full-chain.spec.ts` 轮询实例状态至 completed）
+连续红的根因。
+
+**变更**：
+
+1. `service.BPMNProcessInstanceService.GetProcessInstance` / `GetProcessInstanceHistory`
+   改按 PI 业务键 + 租户谓词查询。**数字 Ent ID 从此不是任何端点的寻址键**，用数字打
+   `GET /process-instances/:id` 或 `/:id/approval-history` 返回 404（fail-closed，不再
+   猜测调用方意图）。
+2. `POST /api/v1/bpmn/process-instances`（启动流程）的响应从直接序列化 Ent 模型改为
+   `dto.BPMNProcessInstanceResponse`——响应键从 snake_case（`process_instance_id`）修正为
+   camelCase（`instanceId`），与 GET/List 同族契约一致。
+3. 前端 `WorkflowApi.getInstances` / `getInstance` / `startWorkflow` 的实例标识只读
+   `item.instanceId`（删除 `instanceId || id` 多字段兜底）；审批中心待办的流程实例深链
+   从数字 `task.processInstanceId` 改为 `task.processInstanceKey`（PI）。
+
+**集成检查**：
+
+- 任何外部集成若曾依赖「GET 详情可用数字 ID 命中」：改为使用列表/创建响应中的
+  `instanceId`（PI 键）。响应 DTO 的 `id` 字段仍是数字 Ent ID，仅作展示与关联用途。
+- 解析 `POST /process-instances` 响应的代码需从 snake_case 键改为 camelCase 键。
+
+**验证**：
+
+```bash
+cd itsm-backend && go test ./service/ ./handlers/bpmn/ ./tests/contract/ -count=1
+```
+
+回归锁：`service/bpmn_process_instance_get_test.go`（PI 命中 / 跨租户拒绝 / **数字 ID
+必须 404**）、`service/bpmn_process_instance_history_test.go`（approval-history 同键）。
+负证明：把查询改回按 `ID` 即红。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

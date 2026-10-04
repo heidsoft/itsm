@@ -560,7 +560,8 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithMessage(ctx, "流程实例启动成功", instance)
+	// 与 GET/List 同族契约：统一返回 DTO，寻址键 instanceId（PI-*）在 camelCase 字段中透出。
+	common.SuccessWithMessage(ctx, "流程实例启动成功", dto.ToBPMNProcessInstanceResponse(instance))
 }
 
 // ListProcessInstances 获取流程实例列表

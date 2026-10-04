@@ -1282,6 +1282,24 @@ Authorization: Bearer <accessToken>
 
 ## 工作流接口
 
+### BPMN 流程实例寻址键（`/api/v1/bpmn/process-instances/{id}` 家族）
+
+```http
+POST /api/v1/bpmn/process-instances                       # 启动，返回 BPMNProcessInstanceResponse（camelCase DTO）
+GET  /api/v1/bpmn/process-instances?page=1&pageSize=20     # 列表，同 DTO
+GET  /api/v1/bpmn/process-instances/{id}                  # 详情
+GET  /api/v1/bpmn/process-instances/{id}/approval-history
+PUT  /api/v1/bpmn/process-instances/{id}/variables
+PUT  /api/v1/bpmn/process-instances/{id}/suspend
+PUT  /api/v1/bpmn/process-instances/{id}/resume
+PUT  /api/v1/bpmn/process-instances/{id}/terminate
+```
+
+`{id}` 全家族统一使用 BPMN 业务键 `processInstanceId`（`PI-*` 字符串，schema 全局唯一），即
+响应中的 `instanceId` 字段；数字 Ent 主键只出现在响应 `id` 字段，**不再是任何端点的寻址键**，
+传数字返回 404。查询与变更均收敛在认证租户范围内（跨租户 PI 同样 404）。详见
+[UPGRADE.md](./UPGRADE.md) §1.28。
+
 ### 获取工作流列表
 
 ```http

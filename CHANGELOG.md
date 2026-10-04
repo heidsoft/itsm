@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- 修复流程实例详情 404：`/api/v1/bpmn/process-instances/:id` 家族此前只有 GET 详情按数字主键寻址，暂停/恢复/终止/变量/审批历史都按 `PI-*` 业务键寻址，调用方拿列表返回的实例键回打详情必然 404（ga-gate 全链路 E2E 因此连续红）。现全家族统一以 `PI-*` 业务键寻址，数字主键不再作为寻址入口，见 UPGRADE.md §1.28
+- 启动流程实例的响应从直接序列化数据库模型改为标准 DTO，响应键修正为 camelCase（此前返回 `process_instance_id` 等 snake_case 键）；前端实例标识改为只读唯一契约字段，审批中心待办的流程实例深链改传业务键
+
 ## [1.6.13] - 2026-10-04
 
 ### Security

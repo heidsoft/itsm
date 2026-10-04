@@ -30,7 +30,7 @@ func TestBPMNProcessInstanceService_GetProcessInstanceHistory_ReturnsOrderedHist
 	createBPMNExecutionHistory(t, ctx, client, instance.ID, 1, "hist-2", "task_1", "审批任务", "user_task", "complete", t2)
 	createBPMNExecutionHistory(t, ctx, client, instance.ID, 1, "hist-1", "start", "开始", "start_event", "start", t1)
 
-	history, err := svc.GetProcessInstanceHistory(ctx, "1")
+	history, err := svc.GetProcessInstanceHistory(ctx, "PI-HISTORY-001")
 	require.NoError(t, err)
 	require.Len(t, history, 2)
 	assert.Equal(t, "hist-1", history[0].HistoryID)
@@ -52,8 +52,9 @@ func TestBPMNProcessInstanceService_GetProcessInstanceHistory_RespectsTenantIsol
 
 	createBPMNExecutionHistory(t, ctxTenant1, client, instanceTenant1.ID, 1, "tenant1-hist", "start", "开始", "start_event", "start", time.Now().UTC())
 
-	history, err := svc.GetProcessInstanceHistory(ctxTenant2, "1")
-	require.NoError(t, err)
+	// 跨租户读历史必须 fail closed：解析实例即被租户谓词拒绝。
+	history, err := svc.GetProcessInstanceHistory(ctxTenant2, "PI-HISTORY-002")
+	require.Error(t, err)
 	assert.Empty(t, history)
 }
 
