@@ -1021,9 +1021,6 @@ func NewApplication() *Application {
 	authService := authHandler.NewService(client, cfg.JWT.Secret, sugar)
 	authHTTPHandler := authHandler.NewHandler(authService)
 
-	// Role Handler (in-memory for now)
-	roleHandler := common.NewRoleHandler(client, sugar)
-
 	// User Handler
 	userService := service.NewUserService(client, sugar)
 	userHTTPHandler := userHandler.NewHandler(userService, sugar)
@@ -1226,7 +1223,6 @@ func NewApplication() *Application {
 		EmailIntakeHandler:          emailIntakeHandler,
 		CommonHandler:               commonHandler,
 		AuthHandler:                 authHTTPHandler,
-		RoleHandler:                 roleHandler,
 
 		// Sprint C — Skill Registry v1
 		SkillHandler: skillHandler,

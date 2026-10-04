@@ -28,10 +28,16 @@ export class RoleAPI {
 
   // 获取角色列表
   static async getRoles(params?: GetRolesParams): Promise<RoleListResponse> {
-    const response = await httpClient.get<RoleListResponse>('/api/v1/roles', params);
+    const { items, total, page, pageSize, totalPages } = await httpClient.get<RoleListResponse>(
+      '/api/v1/roles',
+      params,
+    );
     return {
-      ...response,
-      roles: (response.roles || []).map(role => this.normalizeRole(role)),
+      items: items.map(role => this.normalizeRole(role)),
+      total,
+      page,
+      pageSize,
+      totalPages,
     };
   }
 

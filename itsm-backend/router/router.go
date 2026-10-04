@@ -209,7 +209,6 @@ type RouterConfig struct {
 	VectorStoreHandler *vectorStoreHandler.Handler
 	CommonHandler      *domainCommon.Handler
 	AuthHandler        *authHandler.Handler
-	RoleHandler        *common.RoleHandler
 
 	// Sprint C — Skill Registry v1
 	SkillHandler *skill.Handler

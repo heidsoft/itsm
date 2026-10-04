@@ -215,11 +215,11 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadRoleList = async () => {
     setLoadingRoles(true);
     try {
-      const response = (await RoleAPI.getRoles()) as any;
-      const roles = (response.roles || response.data || []).map((r: any) => ({
+      const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
+      const roles = response.items.map(r => ({
         id: r.id,
         name: r.name || r.code || t('workflow.designer.unknownRole'),
-        code: r.code,
+        code: r.code ?? '',
       }));
       setRoleList(roles);
     } catch (error) {

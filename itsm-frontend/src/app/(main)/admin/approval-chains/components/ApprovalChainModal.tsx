@@ -83,7 +83,7 @@ export function ApprovalChainModal({
     try {
       setRolesLoading(true);
       const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
-      setRoles(response.roles || []);
+      setRoles(response.items);
     } catch (error) {
       message.error('获取角色列表失败');
     } finally {

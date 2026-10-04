@@ -292,7 +292,7 @@ const PermissionConfiguration = () => {
     setRolesLoading(true);
     try {
       const response = await RoleAPI.getRoles({ page: 1, pageSize: 100 });
-      setRoles(response.roles || []);
+      setRoles(response.items);
       const catalog = await RoleAPI.getPermissionCatalog();
       setPermissionCatalogCount(catalog.filter(item => item.id > 0).length);
     } catch (error) {

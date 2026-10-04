@@ -533,16 +533,18 @@ export async function provisionRoleUser(
   roleCode: string,
   usernamePrefix: string
 ): Promise<ProvisionedUser> {
-  const rolesResponse = await apiGet(admin, '/api/v1/roles?page=1&pageSize=200', 'admin');
+  // pageSize 只用平台接受的上限 100：200 会被 common.GetPaginationFromQuery 静默回落成 20，
+  // 于是第 21 个以后的角色在夹具里根本读不到，报「角色不存在」而不是「页长被截断」。
+  const rolesResponse = await apiGet(admin, '/api/v1/roles?page=1&pageSize=100', 'admin');
   if (rolesResponse.status !== 200) {
     throw new Error(
       `夹具无法读取角色：GET /api/v1/roles → ${rolesResponse.status} ${JSON.stringify(rolesResponse.data)}`
     );
   }
-  // /api/v1/roles 的集合键当前是 roles（收敛进 items 前以真实 Router 为准）。
+  // /api/v1/roles 的集合键是平台标准 items（dto.RoleListResponse.Items）。
   const envelope = rolesResponse.data as ApiEnvelope;
-  const payload = envelope.data as { roles?: RoleRow[]; total?: number };
-  const roles = payload.roles ?? [];
+  const payload = envelope.data as { items?: RoleRow[]; total?: number };
+  const roles = payload.items ?? [];
   const role = roles.find(candidate => candidate.code === roleCode);
   if (!role) {
     throw new Error(

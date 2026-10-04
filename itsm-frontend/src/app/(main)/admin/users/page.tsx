@@ -114,8 +114,9 @@ const UserManagement: React.FC = () => {
 
   // 加载 RBAC 角色列表（表单下拉数据源）
   useEffect(() => {
-    RoleAPI.getRoles({ page: 1, pageSize: 200 })
-      .then(res => setRbacRoles(res.roles || []))
+    // 100 是平台接受的上限：200 会被后端静默回落成 20 条，下拉里的角色因此凭空少一批。
+    RoleAPI.getRoles({ page: 1, pageSize: 100 })
+      .then(res => setRbacRoles(res.items))
       .catch(() => {
         // 角色加载失败不阻断用户管理主流程
         setRbacRoles([]);

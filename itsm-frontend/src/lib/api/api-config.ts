@@ -278,9 +278,9 @@ export interface Role {
   updatedAt: string;
 }
 
-// 与后端 dto.RoleListResponse 逐字段对齐
+// 与后端 dto.RoleListResponse 逐字段对齐（集合键是平台标准的 items）
 export interface RoleListResponse {
-  roles: Role[];
+  items: Role[];
   total: number;
   page: number;
   pageSize: number;

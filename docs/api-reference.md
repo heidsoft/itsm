@@ -1361,6 +1361,55 @@ DELETE /users/{id}
 Authorization: Bearer <accessToken>
 ```
 
+## 角色接口
+
+### 获取角色列表
+
+```http
+GET /api/v1/roles
+Authorization: Bearer <accessToken>
+
+Query Parameters:
+- page: 页码，缺省 1
+- pageSize: 每页数量，缺省 20，只采纳 (0,100]，越界回落 20
+- status: active | inactive，其他取值 400/1001（不静默回退）
+- search: 按名称/编码模糊匹配
+```
+
+读取需 `role:read`，结果按当前租户收敛。响应 `data` 是平台五键信封 `{items,total,page,pageSize,totalPages}`
+（`totalPages` 为 0 时省略），集合键是 `items` 而不是 `roles`：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "name": "Agent",
+        "code": "agent",
+        "permissions": ["ticket:read", "ticket:write"],
+        "status": "active",
+        "createdAt": "2026-10-04T00:00:00Z",
+        "updatedAt": "2026-10-04T00:00:00Z",
+        "tenantId": 2,
+        "dataScope": "owner"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 20,
+    "totalPages": 1
+  }
+}
+```
+
+`permissions` 是权限码字符串数组（`dto.RoleDTO` 由 `role.Permissions` 折叠出 `code`），`status` 只有
+`active`/`inactive` 两个取值；不存在 `roles`、`page_size`、`isActive` 这些键，前端读取时不得做多字段兼容。
+同一资源的创建/更新/删除/授权在 `/api/v1/roles`、`/api/v1/roles/{id}`、`/api/v1/roles/{id}/permissions`，
+分别需要 `role:write` 与 `role:delete`。
+
 ## 资产管理接口
 
 ### 获取资产列表

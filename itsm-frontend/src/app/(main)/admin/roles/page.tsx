@@ -145,7 +145,7 @@ export default function RoleManagement() {
 
       if (seq !== requestSeqRef.current) return;
 
-      setRoles(rolesResponse.roles);
+      setRoles(rolesResponse.items);
       setRolesTotal(rolesResponse.total);
 
       // 后端 status 由 is_active 布尔映射，只可能是 active/inactive，两者之和即全量

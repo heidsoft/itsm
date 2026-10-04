@@ -21,19 +21,36 @@ describe('RoleAPI', () => {
 
   describe('getRoles', () => {
     it('should get roles with params', async () => {
-      const expected = { roles: [{ id: 1, name: 'Admin', permissions: ['read'] }], total: 1 };
+      // 逐字段对齐 dto.RoleListResponse：集合键只有 items，没有 roles
+      const expected = {
+        items: [{ id: 1, name: 'Admin', permissions: ['read'] }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      };
       mockGet.mockResolvedValue(expected);
       const res = await RoleAPI.getRoles({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/roles', expect.objectContaining({ page: 1, pageSize: 10 }));
-      expect(res.roles).toHaveLength(1);
-      expect(res.roles[0].permissions).toEqual(['read']);
+      expect(res.items).toHaveLength(1);
+      expect(res.items[0].permissions).toEqual(['read']);
+      expect(res.total).toBe(1);
+      expect(res.totalPages).toBe(1);
+      // 信封只有五键：旧实现 `...response` 展开后再补 `roles`，会把第二个集合键留给调用方。
+      expect(Object.keys(res).sort()).toEqual(['items', 'page', 'pageSize', 'total', 'totalPages']);
     });
 
     it('should normalize object permissions', async () => {
-      const expected = { roles: [{ id: 1, name: 'Admin', permissions: [{ code: 'read:all' }] }], total: 1 };
+      const expected = {
+        items: [{ id: 1, name: 'Admin', permissions: [{ code: 'read:all' }] }],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      };
       mockGet.mockResolvedValue(expected);
       const res = await RoleAPI.getRoles();
-      expect(res.roles[0].permissions).toEqual(['read:all']);
+      expect(res.items[0].permissions).toEqual(['read:all']);
     });
   });
 
