@@ -146,6 +146,30 @@ type TicketStatsResponse struct {
 	ByPriority []TicketPriorityCount `json:"byPriority"`
 }
 
+// AnalyticsTicketStatsResponse 工单分析统计响应（/api/v1/analytics/tickets）
+type AnalyticsTicketStatsResponse struct {
+	Total          int                      `json:"total"`
+	StatusGroups   []TicketStatusGroup      `json:"statusGroups"`
+	PriorityGroups []TicketPriorityGroup    `json:"priorityGroups"`
+	Trend30d       []TicketTrendPoint       `json:"trend30d"`
+	GeneratedAt    string                   `json:"generatedAt"`
+}
+
+type TicketStatusGroup struct {
+	Status string `json:"status"`
+	Count  int    `json:"count"`
+}
+
+type TicketPriorityGroup struct {
+	Priority string `json:"priority"`
+	Count    int    `json:"count"`
+}
+
+type TicketTrendPoint struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
 // TicketDetailResponse 工单详情响应
 type TicketDetailResponse struct {
 	Ticket     *TicketResponse   `json:"ticket"`
@@ -229,23 +253,6 @@ type TicketNotificationRequest struct {
 	Recipients []string               `json:"recipients"`
 	Template   string                 `json:"template"`
 	Data       map[string]interface{} `json:"data"`
-}
-
-// TicketAnalyticsRequest 工单分析请求
-type TicketAnalyticsRequest struct {
-	DateFrom time.Time              `json:"dateFrom" binding:"required"`
-	DateTo   time.Time              `json:"dateTo" binding:"required"`
-	GroupBy  string                 `json:"groupBy" binding:"required,oneof=day week month category priority assignee"`
-	Metrics  []string               `json:"metrics" binding:"required"`
-	Filters  map[string]interface{} `json:"filters"`
-}
-
-// TicketAnalyticsResponse 工单分析响应
-type TicketAnalyticsResponse struct {
-	Data        []map[string]interface{} `json:"data"`
-	Summary     map[string]interface{}   `json:"summary"`
-	Trends      []map[string]interface{} `json:"trends"`
-	GeneratedAt time.Time                `json:"generatedAt"`
 }
 
 // AssignTicketRequest 分配工单请求

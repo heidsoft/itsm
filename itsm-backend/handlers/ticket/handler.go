@@ -749,27 +749,6 @@ func (h *Handler) AssignTickets(c *gin.Context) {
 	})
 }
 
-// GetTicketAnalytics handles POST /api/v1/tickets/analytics
-func (h *Handler) GetTicketAnalytics(c *gin.Context) {
-	var req dto.TicketAnalyticsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(c, err, "请求参数错误")
-		return
-	}
-
-	tenantID, ok := handlerctx.ResolveTenantID(c)
-	if !ok {
-		return
-	}
-	analytics, err := h.service.GetTicketAnalytics(c.Request.Context(), tenantID, req.DateFrom.Format("2006-01-02"), req.DateTo.Format("2006-01-02"))
-	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
-		return
-	}
-
-	common.Success(c, analytics)
-}
-
 // GetTicketTemplates handles GET /api/v1/tickets/templates
 func (h *Handler) GetTicketTemplates(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)

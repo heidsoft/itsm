@@ -336,19 +336,6 @@ func (s *Service) AssignTickets(ctx context.Context, tenantID int, ticketIDs []i
 	return nil
 }
 
-// GetTicketAnalytics returns analytics data.
-func (s *Service) GetTicketAnalytics(ctx context.Context, tenantID int, dateFrom, dateTo string) (map[string]interface{}, error) {
-	stats, err := s.repo.GetStats(ctx, tenantID)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]interface{}{
-		"stats":     stats,
-		"date_from": dateFrom,
-		"date_to":   dateTo,
-	}, nil
-}
-
 // GetTicketTemplates returns all ticket templates.
 func (s *Service) GetTicketTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error) {
 	return s.repo.ListTemplates(ctx, tenantID)

@@ -329,13 +329,9 @@ func (s *AnalyticsService) exportToPDF(response *dto.DeepAnalyticsResponse) ([]b
 }
 
 // GetTicketStats 获取工单分析概览（轻量聚合，/api/v1/analytics/tickets 用）
-func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (map[string]interface{}, error) {
+func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (*dto.AnalyticsTicketStatsResponse, error) {
 	// 1. 按状态分组
-	type StatusGroup struct {
-		Status string `json:"status"`
-		Count  int    `json:"count"`
-	}
-	var statusGroups []StatusGroup
+	var statusGroups []dto.TicketStatusGroup
 	err := s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldStatus).
@@ -362,22 +358,18 @@ func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (ma
 	if err != nil {
 		return nil, fmt.Errorf("failed to query trend: %w", err)
 	}
-	trend := make(map[string]int)
+	trendMap := make(map[string]int)
 	for _, t := range rawDB {
 		day := t.CreatedAt.Format("2006-01-02")
-		trend[day]++
+		trendMap[day]++
 	}
-	trendSlice := make([]map[string]interface{}, 0, len(trend))
-	for day, cnt := range trend {
-		trendSlice = append(trendSlice, map[string]interface{}{"date": day, "count": cnt})
+	trendSlice := make([]dto.TicketTrendPoint, 0, len(trendMap))
+	for day, cnt := range trendMap {
+		trendSlice = append(trendSlice, dto.TicketTrendPoint{Date: day, Count: cnt})
 	}
 
 	// 4. 按优先级
-	type PriorityGroup struct {
-		Priority string `json:"priority"`
-		Count    int    `json:"count"`
-	}
-	var priorityGroups []PriorityGroup
+	var priorityGroups []dto.TicketPriorityGroup
 	err = s.client.Ticket.Query().
 		Where(ticket.TenantIDEQ(tenantID)).
 		GroupBy(ticket.FieldPriority).
@@ -387,11 +379,11 @@ func (s *AnalyticsService) GetTicketStats(ctx context.Context, tenantID int) (ma
 		return nil, fmt.Errorf("failed to group by priority: %w", err)
 	}
 
-	return map[string]interface{}{
-		"total":           total,
-		"status_groups":   statusGroups,
-		"priority_groups": priorityGroups,
-		"trend_30d":       trendSlice,
-		"generated_at":    time.Now().Format(time.RFC3339),
+	return &dto.AnalyticsTicketStatsResponse{
+		Total:          total,
+		StatusGroups:   statusGroups,
+		PriorityGroups: priorityGroups,
+		Trend30d:       trendSlice,
+		GeneratedAt:    time.Now().Format(time.RFC3339),
 	}, nil
 }

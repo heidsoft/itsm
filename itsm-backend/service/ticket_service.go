@@ -2182,68 +2182,6 @@ type BatchResult struct {
 	FailedIDs []int `json:"failedIds"`
 }
 
-// GetTicketAnalytics 获取工单分析数据。
-// 使用 Select 查询仅加载状态、优先级和时间字段，避免全量拉取所有 Ticket 列。
-func (s *TicketService) GetTicketAnalytics(ctx context.Context, tenantID int, dateFrom, dateTo time.Time) (*dto.TicketAnalyticsResponse, error) {
-	if s.client == nil {
-		return nil, fmt.Errorf("ent client not available for analytics")
-	}
-	query := s.client.Ticket.Query().Where(entTicket.TenantID(tenantID))
-	if !dateFrom.IsZero() {
-		query = query.Where(entTicket.CreatedAtGTE(dateFrom))
-	}
-	if !dateTo.IsZero() {
-		query = query.Where(entTicket.CreatedAtLTE(dateTo))
-	}
-
-	// 1. 总数
-	total, err := query.Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 2. 仅加载状态/优先级/时间字段（不加载 title/description/body 等大字段）
-	// Select 告诉 Ent 只 SELECT 这四列，减少 IO；结果仍是 []*ent.Ticket，字段按需填充。
-	rows, err := query.
-		Select(entTicket.FieldStatus, entTicket.FieldPriority, entTicket.FieldCreatedAt, entTicket.FieldUpdatedAt).
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	statusStats := make(map[string]int)
-	priorityStats := make(map[string]int)
-	var totalResolutionTime time.Duration
-	resolvedCount := 0
-	for _, t := range rows {
-		statusStats[t.Status]++
-		priorityStats[t.Priority]++
-		if t.Status == "resolved" && !t.UpdatedAt.IsZero() {
-			totalResolutionTime += t.UpdatedAt.Sub(t.CreatedAt)
-			resolvedCount++
-		}
-	}
-
-	avgResolutionTime := time.Duration(0)
-	if resolvedCount > 0 {
-		avgResolutionTime = totalResolutionTime / time.Duration(resolvedCount)
-	}
-	return &dto.TicketAnalyticsResponse{
-		Data: []map[string]interface{}{
-			{"total": total},
-			{"status_distribution": statusStats},
-			{"priority_distribution": priorityStats},
-			{"avg_resolution_time": avgResolutionTime.Hours()},
-			{"resolved_count": resolvedCount},
-		},
-		Summary: map[string]interface{}{
-			"total":    total,
-			"resolved": resolvedCount,
-		},
-		GeneratedAt: time.Now(),
-	}, nil
-}
-
 // ==================== 模板 CRUD ====================
 
 // CreateTicketTemplate 创建工单模板
