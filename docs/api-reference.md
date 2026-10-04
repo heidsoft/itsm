@@ -1882,6 +1882,8 @@ Query Parameters:
 | `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `system_config:read` |
 | `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
+| `GET /api/v1/tickets/cc/my` | `{items: TicketCCRecordResponse[], total}` | 抄送给当前用户的记录，按 `tenant_id + user_id + is_active` 全量返回，排序 `added_at DESC, id ASC`（`id` 是并列键）；`user`/`addedBy` 是 `WorkflowUserInfo`，姓名键是 `fullName`，没有 `name` |
+| `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `workflow:read` 且调用者是工单相关方/审批人/管理角色。跨租户探测当前是 500/5001 而非 404（`common.FailWithErr` 把所有错误压成内部错误，见台账 E4-29），但零泄漏 |
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |

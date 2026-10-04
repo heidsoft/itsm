@@ -5,23 +5,20 @@ import Link from 'next/link';
 import { App, Button, Card, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Inbox, RefreshCw } from 'lucide-react';
-import { TicketApi } from '@/lib/api/ticket-api';
+import { TicketApi, type TicketCCRecord } from '@/lib/api/ticket-api';
+import type { WorkflowUserInfo } from '@/types/ticket-workflow-state';
 import { formatDateTime } from '@/lib/formatters';
 
 const { Title, Text } = Typography;
 
-interface TicketCCRecord {
-  id: number;
-  ticketId: number;
-  ticketNumber: string;
-  title: string;
-  status: string;
-  priority: string;
-  user: { id: number; name: string; username: string; email: string };
-  addedBy: { id: number; name: string; username: string; email: string };
-  addedAt: string;
-  isActive: boolean;
-}
+/**
+ * 抄送人/添加人列的显示值。
+ *
+ * 契约字段是 fullName（后端 WorkflowUserInfo 从不发 name）。抄送记录可以比用户活得久，
+ * 后端此时回填全零的 WorkflowUserInfo，所以按 id 判定而不是按文案猜测。
+ */
+const ccActorLabel = (info: WorkflowUserInfo): string =>
+  info.id > 0 ? info.fullName : '已删除用户';
 
 const priorityColor: Record<string, string> = {
   critical: 'red',
@@ -52,7 +49,7 @@ export default function MyTicketCCPage() {
     try {
       setLoading(true);
       const resp = await TicketApi.getMyCCRecords();
-      setRecords(resp.records || []);
+      setRecords(resp.items);
     } catch (error) {
       message.error(error instanceof Error ? error.message : '加载抄送记录失败');
     } finally {
@@ -94,18 +91,17 @@ export default function MyTicketCCPage() {
     },
     {
       title: '抄送人',
-      dataIndex: ['user', 'name'],
+      dataIndex: ['user', 'fullName'],
       key: 'user',
       width: 140,
-      render: (_, record) => record.user?.name || record.user?.username || `User#${record.user?.id}`,
+      render: (_, record) => ccActorLabel(record.user),
     },
     {
       title: '添加人',
-      dataIndex: ['addedBy', 'name'],
+      dataIndex: ['addedBy', 'fullName'],
       key: 'addedBy',
       width: 140,
-      render: (_, record) =>
-        record.addedBy?.name || record.addedBy?.username || `User#${record.addedBy?.id}`,
+      render: (_, record) => ccActorLabel(record.addedBy),
     },
     {
       title: '抄送时间',

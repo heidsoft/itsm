@@ -333,19 +333,57 @@ describe('TicketApi', () => {
     });
   });
 
+  // 抄送列表：两个端点实测都不分页，契约只有 {items,total}（2026-10-04 E4-6i）。
+  // 断言透传的是 items 信封本身，而不是只断言 URL，这样后端把集合键改回 records 会立刻转红。
   describe('getMyCCRecords', () => {
-    it('should get my cc records', async () => {
-      mockGet.mockResolvedValue({ records: [], total: 0 });
-      await TicketApi.getMyCCRecords();
+    it('returns the {items,total} envelope and reads fullName as the actor name', async () => {
+      const resp = {
+        items: [
+          {
+            id: 7,
+            ticketId: 12,
+            ticketNumber: 'TKT-12',
+            title: '打印机不可用',
+            status: 'open',
+            priority: 'medium',
+            user: {
+              id: 3,
+              username: 'zhang.san',
+              fullName: '张三',
+              email: 'zhang@example.com',
+              role: 'agent',
+            },
+            addedBy: {
+              id: 1,
+              username: 'li.si',
+              fullName: '李四',
+              email: 'li@example.com',
+              role: 'super_admin',
+            },
+            addedAt: '2026-10-04T12:00:00Z',
+            isActive: true,
+          },
+        ],
+        total: 1,
+      };
+      mockGet.mockResolvedValue(resp);
+      const result = await TicketApi.getMyCCRecords();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/cc/my');
+      expect(result).toEqual(resp);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].user.fullName).toBe('张三');
+      expect(result.total).toBe(1);
     });
   });
 
   describe('getTicketCCRecords', () => {
-    it('should get ticket cc records', async () => {
-      mockGet.mockResolvedValue({ records: [], total: 0 });
-      await TicketApi.getTicketCCRecords(1);
+    it('returns the {items,total} envelope for one ticket', async () => {
+      const resp = { items: [], total: 0 };
+      mockGet.mockResolvedValue(resp);
+      const result = await TicketApi.getTicketCCRecords(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/1/cc');
+      expect(result).toEqual(resp);
+      expect(result.items).toEqual([]);
     });
   });
 

@@ -77,6 +77,9 @@ type listEnvelope struct {
 // ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments：三个端点实测都**不分页**
 // （service 整表取回、handler 写 Total: len(items)），所以只把集合键收敛为 items 并保留诚实的
 // {items,total}，**不补** page/pageSize/totalPages——给不存在的分页协议补键等于伪造契约。
+// 2026-10-04 E4-6i 移除 ticket_workflow_dto.go|TicketCCListResponse|records：GET /tickets/cc/my
+// 与 GET /tickets/:id/cc 的 service 实测都是 Where(tenant_id)+All(ctx) 整表取回、
+// Total=len(records)，同为不分页形状；同批给两条 added_at DESC 排序补 id 并列键。
 var envelopeBaseline = []string{
 	"auditlog_dto.go|ListAuditLogsResponse|logs",
 	"change_dto.go|ChangeListResponse|changes",
@@ -90,7 +93,6 @@ var envelopeBaseline = []string{
 	"role_dto.go|RoleListResponse|roles",
 	"tenant_dto.go|TenantListResponse|tenants",
 	"ticket_dto.go|ListTicketsResponse|tickets",
-	"ticket_workflow_dto.go|TicketCCListResponse|records",
 }
 
 // envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键），

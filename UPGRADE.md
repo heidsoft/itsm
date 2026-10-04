@@ -540,6 +540,45 @@ cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-attac
   src/lib/api/__tests__/ticket-assignment-api.test.ts src/lib/api/__tests__/ticket-automation-rule-api.test.ts
 ```
 
+### 1.18 工单抄送两个列表的集合键改为 `items`，姓名键是 `fullName`（2026-10-04，破坏性）
+
+| 端点 | 旧响应 | 新响应 |
+| --- | --- | --- |
+| `GET /api/v1/tickets/cc/my` | `{records, total}` | `{items, total}` |
+| `GET /api/v1/tickets/{id}/cc` | `{records, total}` | `{items, total}` |
+
+两个端点实测**不分页**（`service/ticket_workflow_service.go:339/351` 都是
+`Where(tenant_id)` + `All(ctx)`、`Total=len(records)`），所以同样只收敛集合键，
+保留诚实的两键形状，**不补** `page`/`pageSize`/`totalPages`。
+
+**同时修一处从未生效的字段读取**：`item.user` / `item.addedBy` 是后端
+`dto.WorkflowUserInfo`，姓名键一直是 `fullName`，**从未发出 `name`**。前端类型和
+「我的抄送」页面读的是 `user.name`，因此这两列在所有历史版本里都落到 `username`。
+本次把前端类型改为复用 `WorkflowUserInfo`，页面改读 `fullName`。
+集成方若也按 `user.name` 取姓名，需要同步改为 `user.fullName`。
+
+其他行为变化只有一处：两条列表的排序从 `added_at DESC` 改为
+`added_at DESC, id ASC`。此前同一时刻抄送多人时顺序由数据库随意决定，现在是确定的
+（自增 id 升序），重复请求不会漂。
+
+权限与租户边界不变：两端都要 `workflow:read`，`cc/my` 只返回收件人为当前用户的记录，
+`{id}/cc` 需要调用者是工单申请人/受理人/审批人/被抄送人或管理角色。**已知缺陷**：跨租户
+探测 `{id}/cc` 时 service 返回的是 `NotFoundCode`，但 handler 用 `common.FailWithErr`
+透传，实测固定成 HTTP 500 + `5001`（把「工单不存在」伪装成内部错误）。这与全站 286 处
+`common.Fail(..., err.Error())` 一起登记为 E4-29，等 E4-5 错误分类收敛统一处理；
+本次未改语义，只保证零泄漏。
+
+**同一批删除一处死声明**：`src/types/ticket-workflow.ts` 的 `TicketCC` 接口零消费方，
+且缺 `ticketNumber/title/status/priority` 四个字段（不是后端形状），按 E4-3 口径删除而
+不是改名保留。唯一真相是 `src/lib/api/ticket-api.ts` 的 `TicketCCRecord`。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestTicketCCListRoutesEnvelope
+cd itsm-backend && go test ./tests/contract/ -run TestListEnvelope
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

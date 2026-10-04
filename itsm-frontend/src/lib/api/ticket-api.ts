@@ -1,6 +1,7 @@
 import { httpClient } from './http-client';
 import { handleApiRequest } from './base-api-handler';
 import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
+import type { WorkflowUserInfo } from '@/types/ticket-workflow-state';
 
 // 枚举本体（含展示配置）在 @/constants/taxonomy；此处以值形式再导出，
 // 使契约模块成为 status/priority 词表的唯一对外入口。
@@ -247,6 +248,39 @@ export interface TicketConfigurationItem {
   ciType: string;
   status: string;
   serialNumber?: string;
+}
+
+/**
+ * 单条工单抄送记录。
+ *
+ * 字段逐一对齐后端 itsm-backend/dto/ticket_workflow_dto.go 的 TicketCCRecordResponse。
+ * user/addedBy 复用 WorkflowUserInfo（后端同名结构体，由 service.workflowUserInfoFromEnt
+ * 用 user.Name 回填 fullName）：后端从未发出 `name` 键，旧前端类型里的 `user.name`
+ * 是实测漂移，导致「抄送人/添加人」两列一直落到 username。
+ */
+export interface TicketCCRecord {
+  id: number;
+  ticketId: number;
+  ticketNumber: string;
+  title: string;
+  status: string;
+  priority: string;
+  user: WorkflowUserInfo;
+  addedBy: WorkflowUserInfo;
+  addedAt: string;
+  isActive: boolean;
+}
+
+/**
+ * 抄送列表信封。
+ *
+ * GET /api/v1/tickets/cc/my 与 GET /api/v1/tickets/:id/cc 实测都不分页
+ * （service 用 Where(tenant_id)+All(ctx) 整表取回、Total=len(records)），
+ * 所以契约只有 {items,total}，前端不得伪造 page/pageSize/totalPages。
+ */
+export interface ListTicketCCRecordsResponse {
+  items: TicketCCRecord[];
+  total: number;
 }
 
 export class TicketApi {
@@ -631,40 +665,12 @@ export class TicketApi {
     });
   }
 
-  static async getMyCCRecords(): Promise<{
-    records: Array<{
-      id: number;
-      ticketId: number;
-      ticketNumber: string;
-      title: string;
-      status: string;
-      priority: string;
-      user: { id: number; name: string; username: string; email: string };
-      addedBy: { id: number; name: string; username: string; email: string };
-      addedAt: string;
-      isActive: boolean;
-    }>;
-    total: number;
-  }> {
-    return httpClient.get(`/api/v1/tickets/cc/my`);
+  static async getMyCCRecords(): Promise<ListTicketCCRecordsResponse> {
+    return httpClient.get<ListTicketCCRecordsResponse>(`/api/v1/tickets/cc/my`);
   }
 
-  static async getTicketCCRecords(ticketId: number): Promise<{
-    records: Array<{
-      id: number;
-      ticketId: number;
-      ticketNumber: string;
-      title: string;
-      status: string;
-      priority: string;
-      user: { id: number; name: string; username: string; email: string };
-      addedBy: { id: number; name: string; username: string; email: string };
-      addedAt: string;
-      isActive: boolean;
-    }>;
-    total: number;
-  }> {
-    return httpClient.get(`/api/v1/tickets/${ticketId}/cc`);
+  static async getTicketCCRecords(ticketId: number): Promise<ListTicketCCRecordsResponse> {
+    return httpClient.get<ListTicketCCRecordsResponse>(`/api/v1/tickets/${ticketId}/cc`);
   }
 
   // Reopen ticket (重开)

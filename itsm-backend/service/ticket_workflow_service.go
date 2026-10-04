@@ -339,7 +339,7 @@ func (s *TicketWorkflowService) CCTicket(ctx context.Context, req *dto.CCTicketR
 func (s *TicketWorkflowService) ListMyCCRecords(ctx context.Context, userID, tenantID int) (*dto.TicketCCListResponse, error) {
 	records, err := s.client.TicketCC.Query().
 		Where(ticketcc.UserID(userID), ticketcc.TenantID(tenantID), ticketcc.IsActive(true)).
-		Order(ent.Desc(ticketcc.FieldAddedAt)).
+		Order(ent.Desc(ticketcc.FieldAddedAt), ent.Asc(ticketcc.FieldID)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("查询我的抄送失败: %w", err)
@@ -359,7 +359,7 @@ func (s *TicketWorkflowService) ListTicketCCRecords(ctx context.Context, ticketI
 
 	records, err := s.client.TicketCC.Query().
 		Where(ticketcc.TicketID(ticketID), ticketcc.TenantID(tenantID), ticketcc.IsActive(true)).
-		Order(ent.Desc(ticketcc.FieldAddedAt)).
+		Order(ent.Desc(ticketcc.FieldAddedAt), ent.Asc(ticketcc.FieldID)).
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("查询工单抄送记录失败: %w", err)
@@ -1794,8 +1794,8 @@ func (s *TicketWorkflowService) createCCNotifications(ctx context.Context, tk *e
 
 func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records []*ent.TicketCC) (*dto.TicketCCListResponse, error) {
 	response := &dto.TicketCCListResponse{
-		Records: make([]dto.TicketCCRecordResponse, 0, len(records)),
-		Total:   len(records),
+		Items: make([]dto.TicketCCRecordResponse, 0, len(records)),
+		Total: len(records),
 	}
 	if len(records) == 0 {
 		return response, nil
@@ -1842,7 +1842,7 @@ func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records
 			row.Status = tk.Status
 			row.Priority = tk.Priority
 		}
-		response.Records = append(response.Records, row)
+		response.Items = append(response.Items, row)
 	}
 
 	return response, nil

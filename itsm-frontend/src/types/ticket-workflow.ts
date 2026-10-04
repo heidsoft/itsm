@@ -192,18 +192,6 @@ export interface ReopenTicketRequest {
 }
 
 /**
- * 抄送人
- */
-export interface TicketCC {
-  id: number;
-  ticketId: number;
-  user: WorkflowUserInfo;
-  addedBy: WorkflowUserInfo;
-  addedAt: string;
-  isActive: boolean;
-}
-
-/**
  * 工单流转统计
  */
 export interface TicketWorkflowStats {
