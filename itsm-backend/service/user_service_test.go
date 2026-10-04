@@ -379,8 +379,8 @@ func TestUserService_SearchUsers(t *testing.T) {
 		{
 			name: "搜索用户名",
 			request: &dto.SearchUsersRequest{
-				Keyword: "john",
-				PageSize:   10,
+				Keyword:  "john",
+				PageSize: 10,
 			},
 			expectedCount: 1,
 			expectedError: false,

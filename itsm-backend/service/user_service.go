@@ -269,10 +269,15 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 	response := &dto.PagedUsersResponse{
 		Users: userResponses,
 		Pagination: dto.PaginationResponse{
-			Page:       req.Page,
-			PageSize:   req.PageSize,
-			Total:      total,
-			TotalPages: func() int { if req.PageSize > 0 { return (total + req.PageSize - 1) / req.PageSize }; return 0 }(),
+			Page:     req.Page,
+			PageSize: req.PageSize,
+			Total:    total,
+			TotalPages: func() int {
+				if req.PageSize > 0 {
+					return (total + req.PageSize - 1) / req.PageSize
+				}
+				return 0
+			}(),
 		},
 	}
 
