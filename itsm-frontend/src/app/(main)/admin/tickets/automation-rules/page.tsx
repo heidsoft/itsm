@@ -45,7 +45,7 @@ const AutomationRulesPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await TicketAutomationRuleApi.listRules();
-      setRules(response.rules || []);
+      setRules(response.items);
     } catch (error) {
       message.error('加载自动化规则失败');
     } finally {

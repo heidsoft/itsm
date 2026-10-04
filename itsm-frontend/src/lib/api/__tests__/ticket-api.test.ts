@@ -256,14 +256,6 @@ describe('TicketApi', () => {
     });
   });
 
-  describe('getTicketAttachments', () => {
-    it('should get attachments', async () => {
-      mockGet.mockResolvedValue({ attachments: [], total: 0 });
-      await TicketApi.getTicketAttachments(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/1/attachments');
-    });
-  });
-
   describe('uploadTicketAttachment', () => {
     it('should upload attachment', async () => {
       const file = new File(['data'], 'test.txt');

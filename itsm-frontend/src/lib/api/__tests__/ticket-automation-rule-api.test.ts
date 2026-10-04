@@ -21,10 +21,12 @@ describe('TicketAutomationRuleApi', () => {
 
   describe('listRules', () => {
     it('should list automation rules', async () => {
-      mockGet.mockResolvedValue({ rules: [{ id: 1, name: 'Auto close' }], total: 1 });
+      // 契约：后端 dto.ListAutomationRulesResponse 是不分页的 {items,total}。
+      mockGet.mockResolvedValue({ items: [{ id: 1, name: 'Auto close' }], total: 1 });
       const result = await TicketAutomationRuleApi.listRules();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/automation-rules');
-      expect(result.rules).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result).not.toHaveProperty('rules');
     });
   });
 

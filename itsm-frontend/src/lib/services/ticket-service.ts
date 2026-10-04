@@ -125,11 +125,6 @@ class TicketService {
     );
   }
 
-  // 获取工单附件
-  async getTicketAttachments(id: number): Promise<TicketAttachment[]> {
-    return httpClient.get<TicketAttachment[]>(`${this.baseUrl}/${id}/attachments`);
-  }
-
   // 上传工单附件
   async uploadTicketAttachment(
     id: number,

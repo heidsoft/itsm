@@ -72,6 +72,11 @@ type listEnvelope struct {
 // 但许可列表连 page/pageSize/totalPages 都没有，且服务层的 `if page>0 && pageSize>0`
 // 让漏写的调用方拿到整表；同时删除零引用的 ListParticipantsResponse 与
 // MSPReportListResponse（按 E4-3 口径删除而不是改名保留）。
+// 2026-10-04 E4-6h 移除 ticket_assignment_dto.go|ListAssignmentRulesResponse|rules、
+// ticket_automation_rule_dto.go|ListAutomationRulesResponse|rules、
+// ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments：三个端点实测都**不分页**
+// （service 整表取回、handler 写 Total: len(items)），所以只把集合键收敛为 items 并保留诚实的
+// {items,total}，**不补** page/pageSize/totalPages——给不存在的分页协议补键等于伪造契约。
 var envelopeBaseline = []string{
 	"auditlog_dto.go|ListAuditLogsResponse|logs",
 	"change_dto.go|ChangeListResponse|changes",
@@ -84,9 +89,6 @@ var envelopeBaseline = []string{
 	"release_dto.go|ReleaseListResponse|releases",
 	"role_dto.go|RoleListResponse|roles",
 	"tenant_dto.go|TenantListResponse|tenants",
-	"ticket_assignment_dto.go|ListAssignmentRulesResponse|rules",
-	"ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments",
-	"ticket_automation_rule_dto.go|ListAutomationRulesResponse|rules",
 	"ticket_dto.go|ListTicketsResponse|tickets",
 	"ticket_workflow_dto.go|TicketCCListResponse|records",
 }

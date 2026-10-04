@@ -1,14 +1,13 @@
 import { TicketAttachmentApi } from '@/lib/api/ticket-attachment-api';
-import type { AttachmentAdapter, AttachmentItem } from '../types';
+import type { AttachmentAdapter } from '../types';
 
 export const ticketAttachmentAdapter: AttachmentAdapter = {
   async list(targetId) {
     const res = await TicketAttachmentApi.listAttachments(Number(targetId));
-    return (res.attachments || []) as unknown as AttachmentItem[];
+    return res.items;
   },
   async upload(targetId, file, onProgress) {
-    const res = await TicketAttachmentApi.uploadAttachment(Number(targetId), file, onProgress);
-    return res as unknown as AttachmentItem;
+    return TicketAttachmentApi.uploadAttachment(Number(targetId), file, onProgress);
   },
   getDownloadUrl(targetId, attachmentId) {
     return TicketAttachmentApi.getDownloadUrl(Number(targetId), attachmentId);

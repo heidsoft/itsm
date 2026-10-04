@@ -116,8 +116,9 @@ export interface GetAssignRecommendationsResponse {
   total: number;
 }
 
+// 该端点实测不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键。
 export interface ListAssignmentRulesResponse {
-  rules: AssignmentRule[];
+  items: AssignmentRule[];
   total: number;
 }
 
@@ -206,8 +207,7 @@ export class TicketAssignmentApi {
   static async listRules(): Promise<ListAssignmentRulesResponse> {
     const response = await httpClient.get<ListAssignmentRulesResponse>('/api/v1/tickets/assignment-rules');
     return {
-      ...response,
-      rules: (response.rules || []).map(normalizeRule),
+      items: response.items.map(normalizeRule),
       total: response.total,
     };
   }

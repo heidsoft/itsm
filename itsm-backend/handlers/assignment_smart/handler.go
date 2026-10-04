@@ -114,7 +114,7 @@ func (h *Handler) ListAssignmentRules(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListAssignmentRulesResponse{
-		Rules: rules,
+		Items: rules,
 		Total: len(rules),
 	})
 }

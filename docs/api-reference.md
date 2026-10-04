@@ -350,6 +350,13 @@ GET /tickets/{id}/attachments
 Authorization: Bearer <accessToken>
 ```
 
+响应是**不分页**的两键信封：`data = {items: TicketAttachmentResponse[], total}`，
+`total` 等于 `items` 长度（后端按 ticket+tenant 全量返回，`created_at DESC` 排序，
+无 `id` 次序键）。条目字段：`id`、`ticketId`、`fileName`、`filePath`、`fileUrl`、
+`fileSize`、`fileType`、`mimeType`、`uploadedBy`、`uploader?`、`createdAt`。
+`fileUrl` 由 `(ticketId, id)` 推导，等于下面的下载路由。集合键在 2026-10-04 之前叫
+`attachments`，见 UPGRADE §1.17。
+
 ### 上传工单附件
 
 ```http
@@ -1831,6 +1838,9 @@ Query Parameters:
 | `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
 | `GET /api/v1/tickets/views` | `{items, total}` | 视图按租户全量返回（`service/ticket_view_service.go` 无 `Limit`），`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/{id}/comments` | `{items, total}` | 单工单评论全量返回，同上；分页若将来引入必须实装而非补键 |
+| `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实 |
+| `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `system_config:read` |
+| `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |

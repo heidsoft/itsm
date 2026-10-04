@@ -94,8 +94,8 @@ func (h *Handler) ListTicketAttachments(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListTicketAttachmentsResponse{
-		Attachments: attachments,
-		Total:       len(attachments),
+		Items: attachments,
+		Total: len(attachments),
 	})
 }
 

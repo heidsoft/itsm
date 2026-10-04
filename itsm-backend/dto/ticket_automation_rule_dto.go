@@ -59,8 +59,10 @@ type AutomationRuleResponse struct {
 }
 
 // ListAutomationRulesResponse 自动化规则列表响应
+//
+// 该端点实测不分页（handler 用 Total: len(rules)），只保留诚实的 {items,total}。
 type ListAutomationRulesResponse struct {
-	Rules []*AutomationRuleResponse `json:"rules"`
+	Items []*AutomationRuleResponse `json:"items"`
 	Total int                       `json:"total"`
 }
 

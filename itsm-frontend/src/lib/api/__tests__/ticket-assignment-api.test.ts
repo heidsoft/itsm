@@ -39,10 +39,12 @@ describe('TicketAssignmentApi', () => {
 
   describe('listRules', () => {
     it('should list assignment rules', async () => {
-      mockGet.mockResolvedValue({ rules: [{ id: 1, name: 'Rule1', conditions: [], actions: { type: 'user' }, isActive: true, executionCount: 0, createdAt: '', updatedAt: '' }], total: 1 });
+      // 契约：后端 dto.ListAssignmentRulesResponse 是不分页的 {items,total}。
+      mockGet.mockResolvedValue({ items: [{ id: 1, name: 'Rule1', conditions: [], actions: { type: 'user' }, isActive: true, executionCount: 0, createdAt: '', updatedAt: '' }], total: 1 });
       const result = await TicketAssignmentApi.listRules();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/assignment-rules');
-      expect(result.rules).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result).not.toHaveProperty('rules');
     });
   });
 

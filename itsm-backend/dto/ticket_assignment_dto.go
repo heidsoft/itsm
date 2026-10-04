@@ -69,8 +69,11 @@ type UpdateAssignmentRuleRequest struct {
 }
 
 // ListAssignmentRulesResponse 分配规则列表响应
+//
+// 该端点实测不分页（handler 用 Total: len(rules) 且 service 整表取回），
+// 因此只保留诚实的 {items,total} 两键，不补假的 page/pageSize/totalPages。
 type ListAssignmentRulesResponse struct {
-	Rules []*AssignmentRuleResponse `json:"rules"`
+	Items []*AssignmentRuleResponse `json:"items"`
 	Total int                       `json:"total"`
 }
 

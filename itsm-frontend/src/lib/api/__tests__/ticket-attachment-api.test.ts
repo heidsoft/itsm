@@ -25,11 +25,13 @@ describe('TicketAttachmentApi', () => {
 
   describe('listAttachments', () => {
     it('should list attachments for a ticket', async () => {
-      const mockData = { attachments: [{ id: 1, fileName: 'test.pdf' }], total: 1 };
+      // 与后端 dto.ListTicketAttachmentsResponse 逐键一致：不分页的端点只有 items + total。
+      const mockData = { items: [{ id: 1, fileName: 'test.pdf' }], total: 1 };
       mockGet.mockResolvedValue(mockData);
       const result = await TicketAttachmentApi.listAttachments(10);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/10/attachments');
-      expect(result.attachments).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result).not.toHaveProperty('attachments');
     });
   });
 

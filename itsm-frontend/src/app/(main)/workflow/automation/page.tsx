@@ -65,7 +65,7 @@ const WorkflowAutomationPage = () => {
     setLoading(true);
     try {
       const response = await TicketAutomationRuleApi.listRules();
-      setRules(response.rules || []);
+      setRules(response.items);
     } catch (error) {
       console.error('加载自动化规则失败:', error);
       message.error(t('common.loadRulesFailed'));

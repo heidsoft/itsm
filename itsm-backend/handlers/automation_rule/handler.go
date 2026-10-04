@@ -55,7 +55,7 @@ func (h *Handler) ListAutomationRules(c *gin.Context) {
 	}
 
 	common.Success(c, dto.ListAutomationRulesResponse{
-		Rules: rules,
+		Items: rules,
 		Total: len(rules),
 	})
 }

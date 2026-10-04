@@ -23,9 +23,11 @@ type TicketAttachmentResponse struct {
 }
 
 // ListTicketAttachmentsResponse 工单附件列表响应
+//
+// 该端点实测不分页（handler 用 Total: len(attachments)），只保留诚实的 {items,total}。
 type ListTicketAttachmentsResponse struct {
-	Attachments []*TicketAttachmentResponse `json:"attachments"`
-	Total       int                         `json:"total"`
+	Items []*TicketAttachmentResponse `json:"items"`
+	Total int                         `json:"total"`
 }
 
 // ToTicketAttachmentResponse 将 Ent 实体转换为 DTO

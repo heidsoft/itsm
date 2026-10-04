@@ -506,6 +506,40 @@ cd itsm-backend && go test ./service/ -run TestAsset && go test ./tests/contract
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/asset-api.test.ts
 ```
 
+### 1.17 工单规则与附件三个列表的集合键改为 `items`（2026-10-04，破坏性）
+
+| 端点 | 旧响应 | 新响应 |
+| --- | --- | --- |
+| `GET /api/v1/tickets/assignment-rules` | `{rules, total}` | `{items, total}` |
+| `GET /api/v1/tickets/automation-rules` | `{rules, total}` | `{items, total}` |
+| `GET /api/v1/tickets/{id}/attachments` | `{attachments, total}` | `{items, total}` |
+
+这三个端点实测**不分页**：service 整表取回（`Where(tenant_id)` + `All(ctx)`，无 `Count`、无
+`Offset/Limit`），handler 里 `Total: len(items)`。因此本批**只**收敛集合键，保留诚实的两键形状，
+**没有**补 `page`/`pageSize`/`totalPages`——给不存在的分页协议补键等于用响应伪造契约
+（AGENTS「能力状态与失败语义」，`docs/api-reference.md`「不分页的列表」）。
+
+其他行为不变：排序仍是规则 `priority DESC, created_at DESC`、附件 `created_at DESC`；
+查询参数仍然一个都没有（发送 `page`/`pageSize` 不报错也不生效）；空结果一直是 `[]`
+（service 用 `make(..., 0, len)`）。权限与租户边界不变：规则列表要 `system_config:read`，
+附件列表要 `ticket:read` 且调用者须是工单相关方或管理角色，跨租户工单回 404/`4004`。
+
+**同一批删除两条并行声明**（`GET /api/v1/tickets/{id}/attachments` 此前有**三份**前端声明）：
+`TicketApi.getTicketAttachments()`（声明 `{attachments,...}`，收敛后必然恒错，零生产调用方）与
+`ticketService.getTicketAttachments()`（声明返回**裸数组** `TicketAttachment[]`，后端从不这样返回，
+零调用方）。唯一真相是 `TicketAttachmentApi.listAttachments()`。按 E4-3 口径删除而非改名保留。
+
+**集成方必须改的一件事**：把 `data.rules` / `data.attachments` 改成 `data.items`。
+如果此前用 `pageSize` 想少取一点，注意这三个端点后端不做分页，返回的是该租户/该工单的全量。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run "TestTicketRuleAndAttachmentListRoutesEnvelope|TestTicketAttachmentDownloadRoute"
+cd itsm-backend && go test ./tests/contract/ -run TestListEnvelope
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-attachment-api.test.ts \
+  src/lib/api/__tests__/ticket-assignment-api.test.ts src/lib/api/__tests__/ticket-automation-rule-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

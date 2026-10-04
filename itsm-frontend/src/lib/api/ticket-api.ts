@@ -521,34 +521,6 @@ export class TicketApi {
     return httpClient.delete(`/api/v1/tickets/${ticketId}/comments/${commentId}`);
   }
 
-  // Get ticket attachments
-  static async getTicketAttachments(id: number): Promise<{
-    attachments: Array<{
-      id: number;
-      ticketId: number;
-      fileName: string;
-      filePath: string;
-      fileUrl: string;
-      fileSize: number;
-      fileType: string;
-      mimeType: string;
-      uploadedBy: number;
-      uploader?: {
-        id: number;
-        username: string;
-        name: string;
-        email: string;
-        role?: string;
-        department?: string;
-        tenantId?: number;
-      };
-      createdAt: string;
-    }>;
-    total: number;
-  }> {
-    return httpClient.get(`/api/v1/tickets/${id}/attachments`);
-  }
-
   // Upload ticket attachment
   static async uploadTicketAttachment(
     id: number,

@@ -28,6 +28,7 @@ import type {
   TicketTypeDefinition,
 } from '@/types/ticket-type';
 import { CustomFieldType } from '@/types/ticket-type';
+import type { ListAssignmentRulesResponse } from '@/lib/api/ticket-assignment-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const { TextArea } = Input;
@@ -153,13 +154,13 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
         SLAApi.getSLADefinitions(),
         httpClient.get<any>('/api/v1/ticket-categories', { page: 1, pageSize: 200, isActive: true }),
         httpClient.get<any>('/api/v1/bpmn/process-definitions', { page: 1, pageSize: 200, isActive: true }),
-        httpClient.get<any>('/api/v1/tickets/assignment-rules'),
+        httpClient.get<ListAssignmentRulesResponse>('/api/v1/tickets/assignment-rules'),
       ]);
 
       setSlas(slaResponse.items ?? []);
       setCategories(categoryResponse.items ?? []);
       setWorkflows(workflowResponse.items ?? []);
-      setAssignmentRuleOptions(ruleResponse.rules ?? []);
+      setAssignmentRuleOptions(ruleResponse.items);
     } catch (error) {
       console.error('Failed to load dependencies:', error);
       message.error(t('ticketTypeForm.depsLoadFailed'));

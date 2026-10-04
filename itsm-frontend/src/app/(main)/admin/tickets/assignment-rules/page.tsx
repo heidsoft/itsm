@@ -92,7 +92,7 @@ export default function AssignmentRulesPage() {
     setLoading(true);
     try {
       const response = await TicketAssignmentApi.listRules();
-      setRules(response.rules || []);
+      setRules(response.items);
     } catch {
       message.error('加载分配规则失败');
     } finally {

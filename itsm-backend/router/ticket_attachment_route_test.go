@@ -175,19 +175,19 @@ func TestTicketAttachmentDownloadRoute(t *testing.T) {
 		var body struct {
 			Code int `json:"code"`
 			Data struct {
-				Attachments []struct {
+				Items []struct {
 					ID       int    `json:"id"`
 					TicketID int    `json:"ticketId"`
 					FileURL  string `json:"fileUrl"`
-				} `json:"attachments"`
+				} `json:"items"`
 				Total int `json:"total"`
 			} `json:"data"`
 		}
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-		require.Len(t, body.Data.Attachments, 2)
+		require.Len(t, body.Data.Items, 2)
 
 		var got string
-		for _, a := range body.Data.Attachments {
+		for _, a := range body.Data.Items {
 			if a.ID == fx.attachmentA.ID {
 				got = a.FileURL
 			}
