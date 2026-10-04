@@ -247,7 +247,7 @@ func TestHandler_GetProblemKnowledgeArticles(t *testing.T) {
 		Code int `json:"code"`
 		Data struct {
 			ProblemID         int           `json:"problemId"`
-			KnowledgeArticles []interface{} `json:"knowledgeArticles"`
+			KnowledgeArticles []interface{} `json:"items"`
 		} `json:"data"`
 	}
 	require.NoError(t, json.Unmarshal(w2.Body.Bytes(), &resp))

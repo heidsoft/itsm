@@ -50,7 +50,7 @@ func (h *Handler) ListTools(c *gin.Context) {
 			visible = append(visible, t)
 		}
 	}
-	common.Success(c, gin.H{"tools": visible})
+	common.Success(c, gin.H{"items": visible})
 }
 
 // ExecuteTool handles POST /api/v1/agent/tools/execute
@@ -265,7 +265,7 @@ func (h *Handler) ListConversations(c *gin.Context) {
 		common.FailWithErr(c, err, "获取会话列表失败")
 		return
 	}
-	common.Success(c, gin.H{"conversations": convs})
+	common.Success(c, gin.H{"items": convs})
 }
 
 // GetConversation handles GET /api/v1/ai/conversations/:id
@@ -285,7 +285,7 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		common.FailWithErr(c, err, "获取会话详情失败")
 		return
 	}
-	common.Success(c, gin.H{"messages": messages})
+	common.Success(c, gin.H{"items": messages})
 }
 
 // DeleteConversation handles DELETE /api/v1/ai/conversations/:id
@@ -326,7 +326,7 @@ func (h *Handler) ListAIAnalysisResults(c *gin.Context) {
 		common.FailWithErr(c, err, "获取分析历史失败")
 		return
 	}
-	common.Success(c, gin.H{"results": results})
+	common.Success(c, gin.H{"items": results})
 }
 
 // GetAIAnalysisResult handles GET /api/v1/ai/analysis-results/:id
@@ -692,14 +692,14 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	if err != nil {
 		h.svc.logger.Warnw("AI知识搜索失败，返回降级响应", "error", err, "tenantID", tenantID)
 		common.Success(c, gin.H{
-			"results":  []interface{}{},
+			"items":    []interface{}{},
 			"degraded": true,
 			"message":  "AI 搜索服务暂时不可用，请稍后重试",
 		})
 		return
 	}
 	common.Success(c, gin.H{
-		"results":  result,
+		"items":    result,
 		"degraded": false,
 	})
 }

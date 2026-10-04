@@ -54,7 +54,7 @@ describe('AI API', () => {
 
   describe('aiSearchKB', () => {
     it('should search knowledge base', async () => {
-      mockPost.mockResolvedValue({ results: [{ id: 1, objectType: 'article', snippet: 'found' }] });
+      mockPost.mockResolvedValue({ items: [{ id: 1, objectType: 'article', snippet: 'found' }] });
       const result = await aiSearchKB('password reset', 3);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'password reset', limit: 3, type: 'kb' });
       expect(result.answers).toHaveLength(1);
@@ -69,7 +69,7 @@ describe('AI API', () => {
 
   describe('aiSimilarIncidents', () => {
     it('should find similar incidents', async () => {
-      mockPost.mockResolvedValue({ results: [{ id: 1, objectType: 'incident', snippet: 'similar' }] });
+      mockPost.mockResolvedValue({ items: [{ id: 1, objectType: 'incident', snippet: 'similar' }] });
       const result = await aiSimilarIncidents('server crash', 5);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'server crash', limit: 5, type: 'incident' });
       expect(result.incidents).toHaveLength(1);
@@ -176,13 +176,13 @@ describe('AI API', () => {
     });
 
     it('searchKB should delegate', async () => {
-      mockPost.mockResolvedValue({ results: [] });
+      mockPost.mockResolvedValue({ items: [] });
       const result = await AIApi.searchKB('test');
       expect(result.answers).toEqual([]);
     });
 
     it('similarIncidents should delegate', async () => {
-      mockPost.mockResolvedValue({ results: [] });
+      mockPost.mockResolvedValue({ items: [] });
       const result = await AIApi.similarIncidents('test');
       expect(result.incidents).toEqual([]);
     });
@@ -243,7 +243,7 @@ describe('AI API', () => {
     ];
 
     it('should map rag results to solution suggestions', async () => {
-      mockPost.mockResolvedValue({ results: answers });
+      mockPost.mockResolvedValue({ items: answers });
       const result = await aiSuggestSolutions({ query: 'password reset', limit: 5 });
       expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'password reset', limit: 5, type: 'kb' });
       expect(result).toHaveLength(2);
@@ -254,7 +254,7 @@ describe('AI API', () => {
     });
 
     it('should default limit to 5 when not provided or invalid', async () => {
-      mockPost.mockResolvedValue({ results: [] });
+      mockPost.mockResolvedValue({ items: [] });
       await aiSuggestSolutions({ query: 'test', limit: 0 });
       expect(mockPost).toHaveBeenCalledWith('/api/v1/ai/rag/search', { query: 'test', limit: 5, type: 'kb' });
     });

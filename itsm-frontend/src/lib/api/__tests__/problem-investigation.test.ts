@@ -45,7 +45,7 @@ describe('ProblemInvestigationAPI', () => {
 
   describe('getSteps', () => {
     it('should get steps', async () => {
-      mockGet.mockResolvedValue({ steps: [{ id: 1, stepTitle: 'Step 1' }] });
+      mockGet.mockResolvedValue({ items: [{ id: 1, stepTitle: 'Step 1' }] });
       const result = await ProblemInvestigationAPI.getSteps(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problem-investigation/investigations/1/steps');
       expect(result).toHaveLength(1);
@@ -97,7 +97,7 @@ describe('ProblemInvestigationAPI', () => {
 
   describe('getSolutions', () => {
     it('should get solutions', async () => {
-      mockGet.mockResolvedValue({ solutions: [{ id: 1 }] });
+      mockGet.mockResolvedValue({ items: [{ id: 1 }] });
       const result = await ProblemInvestigationAPI.getSolutions(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problem-investigation/problems/1/solutions');
       expect(result).toHaveLength(1);
@@ -131,7 +131,7 @@ describe('ProblemInvestigationAPI', () => {
 
   describe('getRelationships', () => {
     it('should get relationships', async () => {
-      mockGet.mockResolvedValue({ relationships: [{ id: 1 }] });
+      mockGet.mockResolvedValue({ items: [{ id: 1 }] });
       const result = await ProblemInvestigationAPI.getRelationships(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/1/relationships');
       expect(result).toHaveLength(1);
@@ -159,7 +159,7 @@ describe('ProblemInvestigationAPI', () => {
 
   describe('getKnowledgeArticles', () => {
     it('should get knowledge articles', async () => {
-      mockGet.mockResolvedValue({ knowledgeArticles: [{ id: 1 }] });
+      mockGet.mockResolvedValue({ items: [{ id: 1 }] });
       const result = await ProblemInvestigationAPI.getKnowledgeArticles(1);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/problem-knowledge-articles/problems/1');
       expect(result).toHaveLength(1);

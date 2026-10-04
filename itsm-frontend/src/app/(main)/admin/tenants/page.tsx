@@ -129,19 +129,19 @@ export default function TenantManagement() {
         type: typeFilter !== 'all' ? typeFilter : undefined,
       });
 
-      setTenants(response.tenants as Tenant[]);
+      setTenants(response.items as Tenant[]);
       // 后台串行补齐当前页初始化状态：不阻塞表格渲染，单元格按需点亮
-      void loadInitStatusesFor(response.tenants as Tenant[]);
+      void loadInitStatusesFor(response.items as Tenant[]);
 
       // 计算统计数据
-      const total = response.tenants.length;
-      const active = response.tenants.filter(
+      const total = response.items.length;
+      const active = response.items.filter(
         (t: { status: string }) => t.status === 'active'
       ).length;
-      const suspended = response.tenants.filter(
+      const suspended = response.items.filter(
         (t: { status: string }) => t.status === 'suspended'
       ).length;
-      const expired = response.tenants.filter(
+      const expired = response.items.filter(
         (t: { status: string }) => t.status === 'expired'
       ).length;
 

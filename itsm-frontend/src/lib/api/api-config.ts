@@ -66,10 +66,11 @@ export interface Tenant {
 }
 
 export interface TenantListResponse {
-  tenants: Tenant[];
+  items: Tenant[];
   total: number;
   page: number;
-  size: number;
+  pageSize: number;
+  totalPages?: number;
 }
 
 // 租户产品基线的单组件只读验证结果

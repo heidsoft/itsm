@@ -5,7 +5,7 @@ import { httpClient } from '@/lib/api/http-client';
 import type { ReportSummary } from '../types';
 
 interface ReportSummaryResponse {
-  reports: ReportSummary[];
+  items: ReportSummary[];
 }
 
 export function useReportSummaries() {
@@ -18,7 +18,7 @@ export function useReportSummaries() {
     setError(null);
     try {
       const response = await httpClient.get<ReportSummaryResponse>('/api/v1/reports');
-      setReports(response.reports ?? []);
+      setReports(response.items ?? []);
     } catch (requestError) {
       setReports([]);
       setError(requestError instanceof Error ? requestError.message : '报表目录加载失败');

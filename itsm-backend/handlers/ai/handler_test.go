@@ -307,7 +307,7 @@ func TestKnowledgeSearch_VisibilityEndToEnd(t *testing.T) {
 
 	data := resp["data"].(map[string]interface{})
 	require.Equal(t, false, data["degraded"])
-	results := data["results"].([]interface{})
+	results := data["items"].([]interface{})
 	require.Len(t, results, 1, "租户1 只应看到自己的已发布文章")
 
 	first := results[0].(map[string]interface{})

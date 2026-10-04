@@ -322,7 +322,7 @@ func (h *Handler) GetProblemSolutions(c *gin.Context) {
 
 	common.Success(c, gin.H{
 		"problemId": problemID,
-		"solutions": summary.Solutions,
+		"items":     summary.Solutions,
 	})
 }
 
@@ -378,7 +378,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 
 	common.Success(c, gin.H{
 		"investigationId": investigationID,
-		"steps":           summary.Steps,
+		"items":           summary.Steps,
 	})
 }
 
@@ -427,8 +427,8 @@ func (h *Handler) GetProblemRelationships(c *gin.Context) {
 	h.logger.Info("Getting problem relationships", "problem_id", problemID, "tenant_id", tid)
 
 	common.Success(c, gin.H{
-		"problemId":     problemID,
-		"relationships": []interface{}{},
+		"problemId": problemID,
+		"items":     []interface{}{},
 	})
 }
 
@@ -505,7 +505,7 @@ func (h *Handler) GetProblemKnowledgeArticles(c *gin.Context) {
 	}
 
 	common.Success(c, gin.H{
-		"problemId":         problemID,
-		"knowledgeArticles": result,
+		"problemId": problemID,
+		"items":     result,
 	})
 }

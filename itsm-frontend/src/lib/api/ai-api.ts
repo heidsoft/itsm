@@ -129,8 +129,8 @@ export async function recordAIAudit(req: AIAuditRequest): Promise<void> {
 }
 
 export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
-  // 后端契约：POST /api/v1/ai/rag/search 返回 { results, degraded }（见 handlers/ai KnowledgeSearch）
-  const res = await httpClient.post<{ results: RagAnswer[]; degraded?: boolean }>(
+  // 后端契约：POST /api/v1/ai/rag/search 返回 { items, degraded }（见 handlers/ai KnowledgeSearch）
+  const res = await httpClient.post<{ items: RagAnswer[]; degraded?: boolean }>(
     `/api/v1/ai/rag/search`,
     {
       query,
@@ -138,14 +138,14 @@ export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: R
       type: 'kb',
     }
   );
-  return { answers: Array.isArray(res?.results) ? res.results : [] };
+  return { answers: Array.isArray(res?.items) ? res.items : [] };
 }
 
 export async function aiSimilarIncidents(
   query: string,
   limit = 5
 ): Promise<{ incidents: RagAnswer[] }> {
-  const res = await httpClient.post<{ results: RagAnswer[]; degraded?: boolean }>(
+  const res = await httpClient.post<{ items: RagAnswer[]; degraded?: boolean }>(
     `/api/v1/ai/rag/search`,
     {
       query,
@@ -153,7 +153,7 @@ export async function aiSimilarIncidents(
       type: 'incident',
     }
   );
-  return { incidents: Array.isArray(res?.results) ? res.results : [] };
+  return { incidents: Array.isArray(res?.items) ? res.items : [] };
 }
 
 export async function aiSummarize(text: string, maxLen = 200): Promise<{ summary: string }> {
@@ -430,7 +430,7 @@ export async function aiSuggestSolutions(
   request: SolutionSearchRequest
 ): Promise<SolutionSuggestion[]> {
   const limit = request.limit && request.limit > 0 ? request.limit : 5;
-  const res = await httpClient.post<{ results: any[]; degraded?: boolean }>(
+  const res = await httpClient.post<{ items: any[]; degraded?: boolean }>(
     `/api/v1/ai/rag/search`,
     {
       query: request.query,
@@ -439,7 +439,7 @@ export async function aiSuggestSolutions(
     }
   );
 
-  const list = Array.isArray(res?.results) ? res.results : [];
+  const list = Array.isArray(res?.items) ? res.items : [];
   return list.map((item, idx) => {
     const title = String(item?.title || item?.source || `知识项 ${idx + 1}`);
     const snippet = String(item?.snippet || item?.content || item?.text || '');
@@ -698,14 +698,14 @@ export async function aiChatStream(
 
 /** 列出当前用户的 AI 会话历史 */
 export async function listConversations(): Promise<ConversationSummary[]> {
-  const res = await httpClient.get<{ conversations: ConversationSummary[] }>('/api/v1/ai/conversations');
-  return Array.isArray(res?.conversations) ? res.conversations : [];
+  const res = await httpClient.get<{ items: ConversationSummary[] }>('/api/v1/ai/conversations');
+  return Array.isArray(res?.items) ? res.items : [];
 }
 
 /** 获取指定会话的所有消息 */
 export async function getConversationMessages(conversationId: number): Promise<AIMessage[]> {
-  const res = await httpClient.get<{ messages: AIMessage[] }>(`/api/v1/ai/conversations/${conversationId}`);
-  return Array.isArray(res?.messages) ? res.messages : [];
+  const res = await httpClient.get<{ items: AIMessage[] }>(`/api/v1/ai/conversations/${conversationId}`);
+  return Array.isArray(res?.items) ? res.items : [];
 }
 
 /** 删除指定会话 */
@@ -736,7 +736,7 @@ export interface AIAnalysisResultDTO {
 }
 
 export interface AIAnalysisResultListResponse {
-  results: AIAnalysisResultDTO[];
+  items: AIAnalysisResultDTO[];
 }
 
 /** 列出分析历史（可按 type 过滤） */
@@ -745,7 +745,7 @@ export async function listAnalysisResults(params?: {
   limit?: number;
 }): Promise<AIAnalysisResultDTO[]> {
   const res = await httpClient.get<AIAnalysisResultListResponse>('/api/v1/ai/analysis-results', { params });
-  return res?.results ?? [];
+  return res?.items ?? [];
 }
 
 /** 获取单条分析结果 */

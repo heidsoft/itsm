@@ -248,7 +248,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		// /reports/* 与 /templates/* 视为高级报表生成，仍以 dashboard:read|write 收敛
 		// （避免引入 DBOnly 模式下词表无 entry 的 report/widget 资源）
 		dashboard.GET("/reports", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
-			common.Success(c, gin.H{"reports": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
+			common.Success(c, gin.H{"items": []gin.H{}, "total": 0, "page": 1, "pageSize": 20})
 		})
 		dashboard.POST("/reports/:report_type", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			common.Success(c, gin.H{
@@ -290,7 +290,7 @@ func SetupReportsRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler) {
 	{
 		reports.GET("", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
-				"reports": []gin.H{
+				"items": []gin.H{
 					{"id": "tickets", "name": "工单报表", "path": "/reports/tickets"},
 					{"id": "incidents", "name": "事件报表", "path": "/reports/incidents"},
 					{"id": "problems", "name": "问题报表", "path": "/reports/problems"},

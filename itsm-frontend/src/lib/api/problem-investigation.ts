@@ -183,17 +183,17 @@ interface SolutionMutationResponse {
 
 interface StepsResponse {
   investigationId: number;
-  steps: InvestigationStep[];
+  items: InvestigationStep[];
 }
 
 interface SolutionsResponse {
   problemId: number;
-  solutions: ProblemSolution[];
+  items: ProblemSolution[];
 }
 
 interface RelationshipsResponse {
   problemId: number;
-  relationships: ProblemRelationship[];
+  items: ProblemRelationship[];
 }
 
 interface KnowledgeArticleMutationResponse {
@@ -204,7 +204,7 @@ interface KnowledgeArticleMutationResponse {
 
 interface KnowledgeArticlesResponse {
   problemId: number;
-  knowledgeArticles: ProblemKnowledgeArticle[];
+  items: ProblemKnowledgeArticle[];
 }
 
 // 问题调查摘要
@@ -342,7 +342,7 @@ export const ProblemInvestigationAPI = {
     const response = await httpClient.get<StepsResponse>(
       `/api/v1/problem-investigation/investigations/${investigationId}/steps`
     );
-    return response.steps || [];
+    return response.items || [];
   },
 
   // 创建调查步骤
@@ -386,7 +386,7 @@ export const ProblemInvestigationAPI = {
     const response = await httpClient.get<SolutionsResponse>(
       `/api/v1/problem-investigation/problems/${problemId}/solutions`
     );
-    return response.solutions || [];
+    return response.items || [];
   },
 
   // 创建解决方案
@@ -412,7 +412,7 @@ export const ProblemInvestigationAPI = {
     const response = await httpClient.get<RelationshipsResponse>(
       `/api/v1/problems/${problemId}/relationships`
     );
-    return response.relationships || [];
+    return response.items || [];
   },
 
   // 创建关联
@@ -442,7 +442,7 @@ export const ProblemInvestigationAPI = {
     const response = await httpClient.get<KnowledgeArticlesResponse>(
       `/api/v1/problem-knowledge-articles/problems/${problemId}`
     );
-    return response.knowledgeArticles || [];
+    return response.items || [];
   },
 };
 

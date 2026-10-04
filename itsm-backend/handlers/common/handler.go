@@ -218,7 +218,7 @@ func (h *Handler) GetUserTenants(c *gin.Context) {
 		common.InternalError(c, "获取用户租户列表失败: "+err.Error())
 		return
 	}
-	common.Success(c, gin.H{"tenants": tenants})
+	common.Success(c, gin.H{"items": tenants})
 }
 
 func (h *Handler) ListUsers(c *gin.Context) {
