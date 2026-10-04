@@ -5,9 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -214,18 +216,26 @@ func TestService_ForgotPassword(t *testing.T) {
 	fx := newAuthFixture(t)
 	defer fx.client.Close()
 
-	t.Run("用户存在且 email service 为 nil 时静默成功", func(t *testing.T) {
+	t.Run("用户存在且 email_service 为 nil 时返回服务不可用错误", func(t *testing.T) {
+		// R6-1: emailService 为 nil 属于 operational unavailable，必须返回 5003
 		req := &dto.ForgotPasswordRequest{Email: "alice@example.com"}
 		resp, err := fx.service.ForgotPassword(fx.ctx, req)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Contains(t, resp.Message, "如果该邮箱已注册")
+		require.Error(t, err)
+		assert.Nil(t, resp)
+		var bizErr *common.BusinessError
+		require.ErrorAs(t, err, &bizErr)
+		assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code)
+		assert.Contains(t, bizErr.Message, "密码重置功能未启用：邮件服务未配置")
 
-		// 验证 alice 的 token 已生成
+		// 不应生成 token
 		count, err := fx.client.PasswordResetToken.Query().Count(fx.ctx)
 		require.NoError(t, err)
-		assert.GreaterOrEqual(t, count, 1, "应该至少生成一个重置令牌")
+		assert.Equal(t, 0, count, "email_service 为 nil 时不应生成重置令牌")
 	})
+
+	// 后续子测试需要 emailService 非 nil 才能走到用户查找/token 生成逻辑
+	emailSvc := service.NewEmailService(service.EmailConfig{}, fx.service.logger)
+	fx.service.SetEmailService(emailSvc)
 
 	t.Run("用户不存在时仍返回成功（安全考虑）", func(t *testing.T) {
 		req := &dto.ForgotPasswordRequest{Email: "ghost@example.com"}
@@ -263,6 +273,7 @@ func TestService_ForgotPassword(t *testing.T) {
 		resp, err := fx.service.ForgotPassword(fx.ctx, req)
 		require.NoError(t, err)
 		require.NotNil(t, resp)
+		assert.Contains(t, resp.Message, "如果该邮箱已注册")
 		count, _ := fx.client.PasswordResetToken.Query().Count(fx.ctx)
 		assert.GreaterOrEqual(t, count, 1)
 	})
@@ -438,6 +449,10 @@ func TestGenerateResetToken_Distinct(t *testing.T) {
 	// 通过多次调用 ForgotPassword 触发 token 生成，间接验证 token 唯一性
 	fx := newAuthFixture(t)
 	defer fx.client.Close()
+
+	// ForgotPassword 要求 emailService 非 nil，否则直接返回 5003
+	emailSvc := service.NewEmailService(service.EmailConfig{}, fx.service.logger)
+	fx.service.SetEmailService(emailSvc)
 
 	const N = 5
 	seen := make(map[string]struct{}, N)

@@ -191,7 +191,8 @@ func TestConcurrentUpdateSameTicket(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			_, err := svc.UpdateTicket(ctx, tk.ID, &dto.UpdateTicketRequest{
-				Title: fmt.Sprintf("Updated by goroutine %d", idx),
+				Title:   fmt.Sprintf("Updated by goroutine %d", idx),
+				Version: tk.Version,
 			}, tenantID, user.ID, "admin")
 			errs <- err
 		}(i)

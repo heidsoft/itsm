@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -45,11 +46,15 @@ func (s *TicketAssignmentSmartService) AutoAssign(
 	// 获取工单信息
 	ticketEntity, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("ticket not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+		}
+		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
+	// 跨租户与「不存在」返回同一个 404 语义，探测者无法据此确认工单存在于别的租户。
 	if ticketEntity.TenantID != tenantID {
-		return nil, fmt.Errorf("ticket not found")
+		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
 	}
 
 	// 1. 先尝试基于规则分配
@@ -122,11 +127,15 @@ func (s *TicketAssignmentSmartService) GetAssignRecommendations(
 	// 获取工单信息
 	ticketEntity, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
-		return nil, fmt.Errorf("ticket not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+		}
+		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
+	// 跨租户与「不存在」返回同一个 404 语义，探测者无法据此确认工单存在于别的租户。
 	if ticketEntity.TenantID != tenantID {
-		return nil, fmt.Errorf("ticket not found")
+		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
 	}
 
 	// 构建分配请求

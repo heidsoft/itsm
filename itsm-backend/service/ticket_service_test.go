@@ -778,6 +778,8 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	currentVersion := testTicket.Version
+
 	tests := []struct {
 		name          string
 		ticketID      int
@@ -794,6 +796,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 				Priority:    "high",
 				Status:      "in_progress",
 				UserID:      testUser.ID,
+				Version:     currentVersion,
 			},
 			tenantID:      testTenant.ID,
 			expectedError: false,
@@ -804,6 +807,7 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 			request: &dto.UpdateTicketRequest{
 				Priority: "critical",
 				UserID:   testUser.ID,
+				Version:  0, // placeholder — filled before execution
 			},
 			tenantID:      testTenant.ID,
 			expectedError: false,
@@ -812,8 +816,9 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 			name:     "工单不存在",
 			ticketID: 99999,
 			request: &dto.UpdateTicketRequest{
-				Title:  "新标题",
-				UserID: testUser.ID,
+				Title:   "新标题",
+				UserID:  testUser.ID,
+				Version: 1,
 			},
 			tenantID:      testTenant.ID,
 			expectedError: true,
@@ -822,6 +827,11 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Fill in the current version for tests that use the placeholder
+			if tt.request.Version == 0 && !tt.expectedError {
+				tt.request.Version = currentVersion
+			}
+
 			updatedTicket, err := ticketService.UpdateTicket(ctx, tt.ticketID, tt.request, tt.tenantID, testUser.ID, "end_user")
 
 			if tt.expectedError {
@@ -830,6 +840,9 @@ func TestTicketService_UpdateTicket(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, updatedTicket)
+
+				// Track version for subsequent sub-tests
+				currentVersion = updatedTicket.Version
 
 				if tt.request.Title != "" {
 					assert.Equal(t, tt.request.Title, updatedTicket.Title)

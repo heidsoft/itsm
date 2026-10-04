@@ -43,6 +43,57 @@ const (
 	ForbiddenErrorCode = ForbiddenCode
 )
 
+// codeStatusPairs 是「应用业务码 ⇄ HTTP 状态码」的唯一事实来源。
+// 此前 Fail 与 FailWithData 各写一份正向 switch（2026-10-04 实测两份映射内容一致，但只有
+// Fail 那份带审计 P0 #3 的理由注释），而 statusToAppCode 又独立写了第三份反向映射，
+// 反向那份缺 ServiceUnavailable(503)：AppError 明确带 503 语义时会被降级成 5001/500。
+// 两个方向都从这一张表读出，正向与反向不可能再各自漂移。
+//
+// 同组内的顺序即反向查找（statusToAppCode）的优先级：把契约测试已锁定的规范码放前面
+// （400→4000、401→2002、403→2003、404→4004）。
+var codeStatusPairs = []struct {
+	code   int
+	status int
+}{
+	{BadRequestCode, http.StatusBadRequest},
+	{ParamErrorCode, http.StatusBadRequest},
+	{ValidationError, http.StatusBadRequest},
+	{UnauthorizedCode, http.StatusUnauthorized},
+	{AuthFailedCode, http.StatusUnauthorized},
+	{ForbiddenCode, http.StatusForbidden},
+	{ToolPermissionDeniedCode, http.StatusForbidden},
+	{NotFoundCode, http.StatusNotFound},
+	{UnknownToolCode, http.StatusNotFound},
+	{ConflictCode, http.StatusConflict},
+	{UnprocessableEntityCode, http.StatusUnprocessableEntity},
+	{InternalErrorCode, http.StatusInternalServerError},
+	{ServiceUnavailableCode, http.StatusServiceUnavailable},
+}
+
+// statusForCode 是「应用业务码 → HTTP 状态码」方向的唯一入口。
+// 未登记的业务码返回 200：这是既有 Fail 的兜底语义（未定义码不猜 HTTP 语义），
+// 新业务码必须显式登记，不能靠 default 分支蒙混。
+func statusForCode(code int) int {
+	for _, p := range codeStatusPairs {
+		if p.code == code {
+			return p.status
+		}
+	}
+	return http.StatusOK
+}
+
+// statusToAppCode 是「HTTP 状态码 → 应用业务码」方向的唯一入口，供 AppError.HTTPStatus
+// 反查业务码。未登记的状态（如 408 请求超时、429 限流）目前在 common 码体系里没有对应
+// 业务码，按内部错误处理；需要支持时要先评审新增业务码，而不是在此处随意映射。
+func statusToAppCode(httpStatus int) int {
+	for _, p := range codeStatusPairs {
+		if p.status == httpStatus {
+			return p.code
+		}
+	}
+	return InternalErrorCode
+}
+
 // Success 成功响应
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, Response{
@@ -54,30 +105,7 @@ func Success(c *gin.Context, data interface{}) {
 
 // Fail 失败响应
 func Fail(c *gin.Context, code int, message string) {
-	statusCode := http.StatusOK
-	switch code {
-	case ParamErrorCode, ValidationError, BadRequestCode:
-		statusCode = http.StatusBadRequest
-	case AuthFailedCode, UnauthorizedCode:
-		// 对齐审计 P0 #3:2001/2002 都映射到 401,避免未授权仍然 200。
-		statusCode = http.StatusUnauthorized
-	case ForbiddenCode, ToolPermissionDeniedCode:
-		// 对齐审计 P0 #3:2003/2004 都映射到 403,工具 RBAC 拒绝同样不允许 200。
-		statusCode = http.StatusForbidden
-	case NotFoundCode, UnknownToolCode:
-		// 对齐审计 P0 #3:未知工具(2005)与未找到资源(4004)都映射到 404。
-		statusCode = http.StatusNotFound
-	case ConflictCode:
-		statusCode = http.StatusConflict
-	case UnprocessableEntityCode:
-		statusCode = http.StatusUnprocessableEntity
-	case InternalErrorCode:
-		statusCode = http.StatusInternalServerError
-	case ServiceUnavailableCode:
-		statusCode = http.StatusServiceUnavailable
-	}
-
-	c.JSON(statusCode, Response{
+	c.JSON(statusForCode(code), Response{
 		Code:    code,
 		Message: message,
 	})
@@ -86,27 +114,7 @@ func Fail(c *gin.Context, code int, message string) {
 
 // FailWithData 失败响应（带数据）
 func FailWithData(c *gin.Context, code int, message string, data interface{}) {
-	statusCode := http.StatusOK
-	switch code {
-	case ParamErrorCode, ValidationError, BadRequestCode:
-		statusCode = http.StatusBadRequest
-	case AuthFailedCode, UnauthorizedCode:
-		statusCode = http.StatusUnauthorized
-	case ForbiddenCode, ToolPermissionDeniedCode:
-		statusCode = http.StatusForbidden
-	case NotFoundCode, UnknownToolCode:
-		statusCode = http.StatusNotFound
-	case ConflictCode:
-		statusCode = http.StatusConflict
-	case UnprocessableEntityCode:
-		statusCode = http.StatusUnprocessableEntity
-	case InternalErrorCode:
-		statusCode = http.StatusInternalServerError
-	case ServiceUnavailableCode:
-		statusCode = http.StatusServiceUnavailable
-	}
-
-	c.JSON(statusCode, Response{
+	c.JSON(statusForCode(code), Response{
 		Code:    code,
 		Message: message,
 		Data:    data,
@@ -170,6 +178,8 @@ func InternalErrorf(c *gin.Context, format string, args ...any) {
 // FailWithErr 是 Fail 的安全包装：
 //   - rawErr 会被 zap.S().Error 记录到服务端日志（包含 request_id / method / path）。
 //   - publicMsg 是真正返回给客户端的内容，绝不包含 err.Error()。
+//   - 业务码由 classifyError 决定：领域错误（AppError/BusinessError/版本冲突）不再
+//     被兜底成 5001，而是映射回 4004/4090/2003/…；只有真正未知的错误才走 5001。
 //
 // 用法：
 //
@@ -180,17 +190,23 @@ func InternalErrorf(c *gin.Context, format string, args ...any) {
 //
 // 这样既保留了诊断所需的堆栈与驱动层错误信息（pq: ... / ent: ...），
 // 又不把内部错误字符串原样透出给客户端。
+//
+// 注意：这里保留 handler 传入的 publicMsg 而不是采用领域错误自带文案。领域文案可能是
+// 英文构造串（"Ticket not found"），透传会让中文界面出现混合文案；需要领域文案时用
+// RespondError。
 func FailWithErr(c *gin.Context, rawErr error, publicMsg string) {
+	code, _, _ := classifyError(rawErr)
 	if rawErr != nil {
 		zap.S().Errorw(
-			"handler returned internal error",
+			"handler returned error",
 			"err", rawErr.Error(),
+			"error_class", code,
 			"method", c.Request.Method,
 			"path", c.Request.URL.Path,
 			"public_message", publicMsg,
 		)
 	}
-	Fail(c, InternalErrorCode, publicMsg)
+	writeClassified(c, rawErr, code, publicMsg)
 }
 
 // ParamErrorWithErr 与 FailWithErr 类似，但状态码是 1001 参数错误。
@@ -310,11 +326,8 @@ func humanizeTag(tag string) string {
 }
 
 // RespondError 是 handler 的统一错误出口：把领域错误转成统一响应结构。
-// 匹配链（均用 errors.As，兼容包装）：
-//  1. *AppError：按其 HTTPStatus 映射到应用业务码（400→4000、401→2002、403→2003、
-//     404→4004、409→4090、422→4220、其余→5001），Message 直接透出（构造时已是面向用户的安全文案）。
-//  2. *BusinessError：原样业务码透出（incident/approval 域哨兵错误模式）。
-//  3. 其他错误：按内部错误处理（5001），原始错误仅记入日志，客户端收到 fallbackMsg。
+// 分类由 classifyError 唯一决定，消息权威在本入口保留领域错误自带文案
+// （构造/哨兵时已是面向用户的安全文案）；未分类错误走 FailWithErr（5001 + fallbackMsg）。
 //
 // 用法：
 //
@@ -329,38 +342,60 @@ func RespondError(c *gin.Context, err error, fallbackMsg string) {
 	if err == nil {
 		return
 	}
+	code, safeMsg, ok := classifyError(err)
+	if !ok {
+		FailWithErr(c, err, fallbackMsg)
+		return
+	}
+	// safeMsg 为空时（业务码显式但文案缺失）退回 handler 的兜底文案，绝不透出 err.Error()。
+	if safeMsg == "" {
+		safeMsg = fallbackMsg
+	}
+	writeClassified(c, err, code, safeMsg)
+}
+
+// classifyError 是「领域错误 → 应用业务码 + 领域安全文案」的唯一所有者。
+// 三条匹配链均用 errors.As，兼容 fmt.Errorf 包装：
+//  1. *AppError：按 HTTPStatus 反查业务码（400→4000、401→2002、403→2003、404→4004、
+//     409→4090、422→4220、其余→5001），文案取 AppError.Message。
+//  2. *BusinessError：原样业务码与文案（incident/approval 域哨兵错误模式）。
+//  3. *VersionConflictError：ConflictCode(4090)，文案取自带的版本说明。
+//
+// ok=false 表示未分类（驱动层错误、第三方错误等），调用方必须按内部错误处理，
+// 且不得透出原始错误字符串。
+func classifyError(err error) (code int, safeMsg string, ok bool) {
+	if err == nil {
+		return InternalErrorCode, "", false
+	}
 	var appErr *AppError
 	if errors.As(err, &appErr) {
-		Fail(c, statusToAppCode(appErr.HTTPStatus), appErr.Message)
-		return
+		return statusToAppCode(appErr.HTTPStatus), appErr.Message, true
 	}
 	var bizErr *BusinessError
 	if errors.As(err, &bizErr) {
-		Fail(c, bizErr.Code, bizErr.Message)
-		return
+		return bizErr.Code, bizErr.Message, true
 	}
-	FailWithErr(c, err, fallbackMsg)
+	var conflictErr *VersionConflictError
+	if errors.As(err, &conflictErr) {
+		return ConflictCode, conflictErr.Error(), true
+	}
+	return InternalErrorCode, "", false
 }
 
-// statusToAppCode 将 HTTP 状态码映射到统一响应的应用业务码。
-// AppError.HTTPStatus 来自 http.Status* 常量，此处反查 common 业务码体系。
-func statusToAppCode(httpStatus int) int {
-	switch httpStatus {
-	case http.StatusBadRequest:
-		return BadRequestCode
-	case http.StatusUnauthorized:
-		return UnauthorizedCode
-	case http.StatusForbidden:
-		return ForbiddenCode
-	case http.StatusNotFound:
-		return NotFoundCode
-	case http.StatusConflict:
-		return ConflictCode
-	case http.StatusUnprocessableEntity:
-		return UnprocessableEntityCode
-	default:
-		return InternalErrorCode
+// writeClassified 是 FailWithErr 与 RespondError 共用的落点：把已分类的业务码写成响应。
+// 版本冲突需要携带 {resourceId,currentVersion,serverVersion} 载荷，让乐观锁冲突可被
+// 客户端直接处理，而不是只有一段文字；其余分类走统一 Fail。
+func writeClassified(c *gin.Context, rawErr error, code int, message string) {
+	var conflictErr *VersionConflictError
+	if code == ConflictCode && errors.As(rawErr, &conflictErr) {
+		FailWithData(c, ConflictCode, message, gin.H{
+			"resourceId":     conflictErr.ResourceID,
+			"currentVersion": conflictErr.CurrentVersion,
+			"serverVersion":  conflictErr.ServerVersion,
+		})
+		return
 	}
+	Fail(c, code, message)
 }
 
 // SuccessWithList 返回列表数据的成功响应
