@@ -126,10 +126,10 @@ func (m *slaMockRepository) GetStats(ctx context.Context, tenantID int) (*Incide
 			continue
 		}
 		stats.TotalIncidents++
-		switch inc.Status {
-		case "open", "in_progress":
+		if IsOpenIncidentStatus(inc.Status) {
 			stats.OpenIncidents++
-		case "resolved", "closed":
+		}
+		if IsResolvedIncidentStatus(inc.Status) {
 			stats.ResolvedIncidents++
 		}
 		switch inc.Priority {
@@ -140,6 +140,11 @@ func (m *slaMockRepository) GetStats(ctx context.Context, tenantID int) (*Incide
 		}
 	}
 	return stats, nil
+}
+
+// GetReport 测试替身：见 mockRepository.GetReport 的同一说明。
+func (m *slaMockRepository) GetReport(ctx context.Context, tenantID int, period ReportPeriod) (*IncidentReport, error) {
+	return nil, errors.New("slaMockRepository.GetReport: not implemented")
 }
 
 func (m *slaMockRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {

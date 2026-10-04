@@ -29,6 +29,11 @@ type Repository interface {
 	// Stats operations
 	GetStats(ctx context.Context, tenantID int) (*IncidentStats, error)
 
+	// GetReport 返回事件趋势报表读模型（窗口内分布与每日趋势）。
+	// 与 GetStats 的租户全量标量是两套口径：本方法全部限定在 period 内，
+	// 且只用 Ent 查询表达，以便在 SQLite 测试库上做契约验证。
+	GetReport(ctx context.Context, tenantID int, period ReportPeriod) (*IncidentReport, error)
+
 	// Event operations
 	CreateEvent(ctx context.Context, event *IncidentEvent) (*IncidentEvent, error)
 	ListEvents(ctx context.Context, incidentID int, tenantID int) ([]*IncidentEvent, error)
@@ -48,10 +53,13 @@ type Repository interface {
 	GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error)
 }
 
-// IncidentStats 聚合统计（按 tenant 隔离）
+// IncidentStats 聚合统计（按 tenant 隔离，全量口径，不受报表窗口影响）
 // 字段名已统一为 camelCase JSON tag，对外暴露即前端期望字段。
 type IncidentStats struct {
-	TotalIncidents    int `json:"totalIncidents"`
+	TotalIncidents int `json:"totalIncidents"`
+	// OpenIncidents 统计未终结事件，状态集合见 incidentOpenStatuses。
+	// 2026-10 之前这里按 status='open' 过滤，而 'open' 不是事件域合法取值，
+	// 导致新建/已确认/已分配等全部漏计，读数长期接近 0。
 	OpenIncidents     int `json:"openIncidents"`
 	CriticalIncidents int `json:"criticalIncidents"`
 	MajorIncidents    int `json:"majorIncidents"`

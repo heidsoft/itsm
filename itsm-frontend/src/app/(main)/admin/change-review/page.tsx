@@ -211,8 +211,7 @@ const ChangeReviewManagementPage: React.FC = () => {
           className="mb-4"
           type="info"
           showIcon
-          message="常规评审组用于评审常规或高风险变更；紧急评审组用于紧急变更"
-          description="先选择评审组，再添加具备变更决策职责的用户并赋予其在会议中的职责。成员启用后，审批链引擎（review:{board} 步骤）才会将其纳入候选审批人；停用不会删除历史评审记录。"
+          message="添加评审成员并启用后，其将纳入对应评审组的候选审批人"
         />
         <Table
           rowKey="id"

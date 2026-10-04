@@ -171,7 +171,7 @@ const ImprovementListPage = () => {
         {filteredImprovements.length === 0 && !loading ? (
           <Empty description="暂无改进计划">
             <Button type="primary" onClick={() => router.push('/tickets/create?type=improvement')}>
-              创建第一个改进计划
+              创建改进计划
             </Button>
           </Empty>
         ) : (

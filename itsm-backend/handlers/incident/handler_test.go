@@ -169,10 +169,11 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*IncidentS
 			continue
 		}
 		stats.TotalIncidents++
-		switch inc.Status {
-		case "open", "in_progress":
+		// 折叠口径复用生产词表，测试替身不得自造 'open' 这类事件域不存在的状态。
+		if IsOpenIncidentStatus(inc.Status) {
 			stats.OpenIncidents++
-		case "resolved", "closed":
+		}
+		if IsResolvedIncidentStatus(inc.Status) {
 			stats.ResolvedIncidents++
 		}
 		switch inc.Priority {
@@ -189,6 +190,12 @@ func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*IncidentS
 		stats.AvgResolutionTime /= stats.ResolvedIncidents
 	}
 	return stats, nil
+}
+
+// GetReport 测试替身：报表口径由 EntRepository 的契约测试覆盖，
+// 这里只满足 Repository 接口，不提供第二套聚合实现。
+func (m *mockRepository) GetReport(ctx context.Context, tenantID int, period ReportPeriod) (*IncidentReport, error) {
+	return nil, errors.New("mockRepository.GetReport: not implemented")
 }
 
 func (m *mockRepository) CreateEvent(ctx context.Context, e *IncidentEvent) (*IncidentEvent, error) {

@@ -741,7 +741,7 @@ func (s *ConfigurationItemService) GetCIStats(ctx context.Context, tenantID int)
 
 	// 构建响应
 	response := &dto.CIStatsResponse{
-		TotalCount:              total,
+		Total:                   total,
 		StatusDistribution:      make(map[string]int),
 		TypeDistribution:        make(map[string]int),
 		EnvironmentDistribution: make(map[string]int),

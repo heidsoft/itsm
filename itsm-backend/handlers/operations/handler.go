@@ -91,7 +91,7 @@ type bulkRequestBody struct {
 	CommandType   string `json:"commandType"`
 	AggregateType string `json:"aggregateType"`
 	LeaseExpired  bool   `json:"leaseExpired"`
-	Limit         int    `json:"limit"`
+	PageSize      int    `json:"pageSize"`
 }
 
 func (h *Handler) bulk(c *gin.Context, replay bool) {
@@ -117,7 +117,7 @@ func (h *Handler) bulk(c *gin.Context, replay bool) {
 		CommandType:   body.CommandType,
 		AggregateType: body.AggregateType,
 		LeaseExpired:  body.LeaseExpired,
-		Limit:         body.Limit,
+		PageSize:      body.PageSize,
 	}
 	var (
 		result *BulkResult

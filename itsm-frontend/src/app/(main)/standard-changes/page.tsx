@@ -370,7 +370,7 @@ export default function StandardChangesPage() {
                         暂无标准变更模板
                         <br />
                         <Button type='link' onClick={handleCreate}>
-                          点击创建第一个模板
+                          创建模板
                         </Button>
                       </span>
                     ) : (

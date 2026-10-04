@@ -123,7 +123,7 @@ func (h *Handler) ListTenants(c *gin.Context) {
 	}
 
 	response := &dto.TenantListResponse{
-		Tenants:  tenantResponses,
+		Items:    tenantResponses,
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
@@ -282,7 +282,7 @@ func (h *Handler) ListTenantsAdmin(c *gin.Context) {
 	}
 
 	response := &dto.TenantListResponse{
-		Tenants:  tenantResponses,
+		Items:    tenantResponses,
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/mspallocation"
@@ -148,6 +149,9 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 }
 
 func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordRequest) (*dto.ForgotPasswordResponse, error) {
+	if s.emailService == nil {
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "密码重置功能未启用：邮件服务未配置", "")
+	}
 	genericOK := &dto.ForgotPasswordResponse{Message: "如果该邮箱已注册，我们将发送密码重置链接"}
 	query := s.client.User.Query().Where(user.EmailEQ(req.Email))
 	if req.TenantCode != "" {
@@ -168,10 +172,8 @@ func (s *Service) ForgotPassword(ctx context.Context, req *dto.ForgotPasswordReq
 	if _, err = s.client.PasswordResetToken.Create().SetUserID(userEntity.ID).SetEmail(req.Email).SetToken(token).SetExpiresAt(time.Now().Add(time.Hour)).Save(ctx); err != nil {
 		return nil, fmt.Errorf("生成重置令牌失败")
 	}
-	if s.emailService != nil {
-		if err := s.emailService.SendPasswordResetEmail(ctx, []string{req.Email}, token, s.baseURL); err != nil {
-			s.logger.Errorw("Failed to send password reset email", "user_id", userEntity.ID, "error", err)
-		}
+	if err := s.emailService.SendPasswordResetEmail(ctx, []string{req.Email}, token, s.baseURL); err != nil {
+		s.logger.Errorw("Failed to send password reset email", "user_id", userEntity.ID, "error", err)
 	}
 	return genericOK, nil
 }

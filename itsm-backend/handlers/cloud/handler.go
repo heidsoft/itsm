@@ -208,10 +208,11 @@ func (h *Handler) ListCloudAccounts(c *gin.Context) {
 	}
 
 	response := &dto.CloudAccountListResponse{
-		CloudAccounts: responses,
-		Total:         total,
-		Page:          req.Page,
-		PageSize:      req.PageSize,
+		Items:      responses,
+		Total:      total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: (total + req.PageSize - 1) / req.PageSize,
 	}
 
 	common.Success(c, response)
@@ -399,10 +400,11 @@ func (h *Handler) ListCloudServices(c *gin.Context) {
 	}
 
 	response := &dto.CloudServiceListResponse{
-		CloudServices: responses,
-		Total:         total,
-		Page:          req.Page,
-		PageSize:      req.PageSize,
+		Items:      responses,
+		Total:      total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: (total + req.PageSize - 1) / req.PageSize,
 	}
 
 	common.Success(c, response)
@@ -591,10 +593,11 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 	}
 
 	response := &dto.CloudResourceListResponse{
-		CloudResources: responses,
-		Total:          total,
-		Page:           req.Page,
-		PageSize:       req.PageSize,
+		Items:      responses,
+		Total:      total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: (total + req.PageSize - 1) / req.PageSize,
 	}
 
 	common.Success(c, response)

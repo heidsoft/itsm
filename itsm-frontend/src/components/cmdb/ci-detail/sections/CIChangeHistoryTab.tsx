@@ -49,7 +49,7 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
           type="error"
           showIcon
           title="变更历史加载失败"
-          description="后端未能返回该配置项的历史记录，请重试；若持续失败请确认当前账号具备 cmdb:read 权限。"
+          description="加载失败，请重试或确认具备 cmdb:read 权限"
         />
       ) : items.length === 0 ? (
         <Empty description={historyLoading ? '加载中...' : '暂无历史审计记录'} />

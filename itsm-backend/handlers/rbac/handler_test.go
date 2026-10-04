@@ -203,7 +203,7 @@ func TestListRoles_TenantIsolation(t *testing.T) {
 	list := parseRoleList(t, w)
 
 	require.Equal(t, 2, list.Total, "租户 A 只应看到自己的 2 个角色")
-	for _, r := range list.Roles {
+	for _, r := range list.Items {
 		assert.Equal(t, tenantA, r.TenantID, "角色 %s 不属于租户 A，发生跨租户泄漏", r.Code)
 		assert.NotEqual(t, tenantB, r.TenantID)
 	}
@@ -238,9 +238,9 @@ func TestListRoles_SearchFiltersWithinTenant(t *testing.T) {
 	list := parseRoleList(t, w)
 
 	require.Equal(t, 1, list.Total, "搜索结果必须限定在本租户内")
-	require.Len(t, list.Roles, 1)
-	assert.Equal(t, "role-a-ops", list.Roles[0].Code)
-	assert.Equal(t, tenantA, list.Roles[0].TenantID)
+	require.Len(t, list.Items, 1)
+	assert.Equal(t, "role-a-ops", list.Items[0].Code)
+	assert.Equal(t, tenantA, list.Items[0].TenantID)
 }
 
 func TestListRoles_PaginationMath(t *testing.T) {
@@ -259,7 +259,7 @@ func TestListRoles_PaginationMath(t *testing.T) {
 	assert.Equal(t, 2, list.Page)
 	assert.Equal(t, 2, list.PageSize)
 	assert.Equal(t, 3, list.TotalPages, "5 条 / 每页 2 条 = 3 页（向上取整）")
-	assert.Len(t, list.Roles, 2)
+	assert.Len(t, list.Items, 2)
 }
 
 func TestListRoles_MapsStatusScopeAndPermissions(t *testing.T) {
@@ -274,10 +274,10 @@ func TestListRoles_MapsStatusScopeAndPermissions(t *testing.T) {
 	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
-	require.Len(t, list.Roles, 2)
+	require.Len(t, list.Items, 2)
 
-	byCode := make(map[string]dto.RoleDTO, len(list.Roles))
-	for _, r := range list.Roles {
+	byCode := make(map[string]dto.RoleDTO, len(list.Items))
+	for _, r := range list.Items {
 		byCode[r.Code] = r
 	}
 
@@ -411,12 +411,12 @@ func TestListRoles_StatusFilter(t *testing.T) {
 
 	inactive := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&status=inactive"))
 	assert.Equal(t, 1, inactive.Total, "status=inactive 只应命中 1 个禁用角色")
-	require.Len(t, inactive.Roles, 1)
-	assert.Equal(t, "role-a-off", inactive.Roles[0].Code)
+	require.Len(t, inactive.Items, 1)
+	assert.Equal(t, "role-a-off", inactive.Items[0].Code)
 
 	active := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20&status=active"))
 	assert.Equal(t, 2, active.Total, "status=active 只应命中 2 个启用角色")
-	for _, r := range active.Roles {
+	for _, r := range active.Items {
 		assert.Equal(t, "active", r.Status)
 	}
 
@@ -442,11 +442,11 @@ func TestListRoles_RejectsSnakeCasePageSize(t *testing.T) {
 
 	snake := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&page_size=2"))
 	assert.Equal(t, 20, snake.PageSize, "snake_case page_size 必须被忽略并回落默认值")
-	assert.Len(t, snake.Roles, 5, "被忽略的 page_size 不得截断结果")
+	assert.Len(t, snake.Items, 5, "被忽略的 page_size 不得截断结果")
 
 	camel := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=2"))
 	assert.Equal(t, 2, camel.PageSize, "camelCase pageSize 必须生效")
-	assert.Len(t, camel.Roles, 2)
+	assert.Len(t, camel.Items, 2)
 	assert.Equal(t, 5, camel.Total)
 }
 
@@ -507,9 +507,9 @@ func TestListRoles_PermissionsAreTenantScoped(t *testing.T) {
 	w := doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, w.Code)
 	list := parseRoleList(t, w)
-	require.Len(t, list.Roles, 1)
-	assert.Equal(t, []string{"ticket:read"}, list.Roles[0].Permissions)
-	assert.NotContains(t, list.Roles[0].Permissions, "secret:read", "不得泄漏他租户权限码")
+	require.Len(t, list.Items, 1)
+	assert.Equal(t, []string{"ticket:read"}, list.Items[0].Permissions)
+	assert.NotContains(t, list.Items[0].Permissions, "secret:read", "不得泄漏他租户权限码")
 }
 
 // 走真实授权写入路径（AssignPermissions → RolePermission 实体），验证授权结果
@@ -527,8 +527,8 @@ func TestAssignPermissions_ThenListRoles_ReflectsGrants(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code, "授权应成功，响应体: %s", w.Body.String())
 
 	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
-	require.Len(t, list.Roles, 1)
-	assert.ElementsMatch(t, []string{"ticket:read", "ticket:write"}, list.Roles[0].Permissions,
+	require.Len(t, list.Items, 1)
+	assert.ElementsMatch(t, []string{"ticket:read", "ticket:write"}, list.Items[0].Permissions,
 		"写入 RolePermission 后必须能在列表读回")
 
 	// 重新授权为单一权限，验证 Replace 语义（旧关联被清除，不是追加）。
@@ -537,8 +537,8 @@ func TestAssignPermissions_ThenListRoles_ReflectsGrants(t *testing.T) {
 	require.Equal(t, http.StatusOK, w.Code)
 
 	list = parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
-	require.Len(t, list.Roles, 1)
-	assert.Equal(t, []string{"ticket:read"}, list.Roles[0].Permissions,
+	require.Len(t, list.Items, 1)
+	assert.Equal(t, []string{"ticket:read"}, list.Items[0].Permissions,
 		"重复授权应 Replace 而非 Append")
 }
 
@@ -558,8 +558,8 @@ func TestAssignPermissions_RejectsCrossTenantPermission(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, w.Code, "跨租户授权必须 400 拒绝，响应体: %s", w.Body.String())
 
 	list := parseRoleList(t, doRBACRequest(t, h, tenantA, "/roles?page=1&pageSize=20"))
-	require.Len(t, list.Roles, 1)
-	assert.NotContains(t, list.Roles[0].Permissions, "secret:read", "被拒绝的授权不得落库")
+	require.Len(t, list.Items, 1)
+	assert.NotContains(t, list.Items[0].Permissions, "secret:read", "被拒绝的授权不得落库")
 }
 
 // =============================================================================

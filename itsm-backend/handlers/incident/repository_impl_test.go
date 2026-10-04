@@ -53,15 +53,21 @@ func TestService_GetStats_TableDriven(t *testing.T) {
 			wantAvgEqExact: 30,
 		},
 		{
-			name: "open + critical + high 混合统计",
+			name: "未终结 + critical + high 混合统计",
 			seed: func(repo *mockRepository) {
-				repo.incidents[1] = &Incident{ID: 1, TenantID: 1, Status: "open", Priority: "critical"}
+				// 事件域没有 'open'：新建落库是 'new'。修复前 SQL 与测试替身都按
+				// status IN ('open','in_progress') 折叠，new/acknowledged/assigned/
+				// triaged/escalated/on_hold 全部漏计，openIncidents 长期接近 0。
+				repo.incidents[1] = &Incident{ID: 1, TenantID: 1, Status: "new", Priority: "critical"}
 				repo.incidents[2] = &Incident{ID: 2, TenantID: 1, Status: "in_progress", Priority: "high"}
 				repo.incidents[3] = &Incident{ID: 3, TenantID: 1, Status: "resolved", Priority: "medium"}
+				repo.incidents[4] = &Incident{ID: 4, TenantID: 1, Status: "acknowledged", Priority: "low"}
+				// 已取消既不是未终结也不是已解决，不得被并进任一桶。
+				repo.incidents[5] = &Incident{ID: 5, TenantID: 1, Status: "cancelled", Priority: "low"}
 			},
 			tenantID:     1,
-			wantTotal:    3,
-			wantOpen:     2,
+			wantTotal:    5,
+			wantOpen:     3,
 			wantCritical: 1,
 			wantMajor:    1,
 			wantResolved: 1,

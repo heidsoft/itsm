@@ -355,13 +355,13 @@ func TestChangeService_ListChanges_Pagination(t *testing.T) {
 	response, err := service.ListChanges(ctx, testTenant.ID, 1, 10, "", "")
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Changes, 10)
+	assert.Len(t, response.Items, 10)
 
 	// 测试第二页
 	response, err = service.ListChanges(ctx, testTenant.ID, 2, 10, "", "")
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Changes, 5)
+	assert.Len(t, response.Items, 5)
 }
 
 func TestChangeService_ListChanges_Filters(t *testing.T) {

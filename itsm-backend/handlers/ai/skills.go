@@ -193,7 +193,7 @@ type ChatSkillInput struct {
 	TenantID int    `json:"tenantId"`
 	UserID   int    `json:"userId"`
 	Query    string `json:"query"`
-	Limit    int    `json:"limit"`
+	PageSize int    `json:"pageSize"`
 	ConvID   int    `json:"conversationId"`
 }
 
@@ -291,7 +291,7 @@ type KnowledgeSearchSkillInput struct {
 	TenantID   int    `json:"tenantId"`
 	Query      string `json:"query"`
 	SearchType string `json:"searchType"`
-	Limit      int    `json:"limit"`
+	PageSize   int    `json:"pageSize"`
 }
 
 type KnowledgeSearchSkill struct {

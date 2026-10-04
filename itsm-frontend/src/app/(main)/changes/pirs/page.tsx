@@ -198,7 +198,7 @@ export default function PIRListPage() {
   ];
 
   return (
-    <PageContainer title="实施后审查列表 (PIR)" description="查看所有变更的实施后审查记录">
+    <PageContainer title="实施后审查 (PIR)" description="变更实施后的审查记录">
       <Card className="shadow-sm rounded-lg">
         <div className="mb-4">
           <Space wrap>

@@ -171,7 +171,7 @@ export default function IncidentEditPage() {
                   { value: 'low', label: '低' },
                   { value: 'medium', label: '中' },
                   { value: 'high', label: '高' },
-                  { value: 'urgent', label: '紧急' },
+                  { value: 'critical', label: '紧急' },
                 ]} />
               </Form.Item>
             </Col>

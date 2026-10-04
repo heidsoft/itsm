@@ -267,6 +267,48 @@ export interface IncidentMetrics {
   mttr?: number;
 }
 
+// 事件趋势报表读模型（GET /api/v1/incidents/stats/report）。
+// 与 IncidentMetrics 的租户全量标量是两套口径，不可混用：分布/趋势/均值都限定在 window 内。
+export interface IncidentStatCount {
+  // 数据库原始取值。事件 status 是无约束字符串列，词表外的历史取值原样返回，
+  // 由调用方映射标签、缺失时显示原始值。
+  value: string;
+  count: number;
+}
+
+export interface IncidentTrendPoint {
+  // created 按 created_at 归日，resolved 按 resolved_at 归日，两者不是同一集合。
+  date: string;
+  created: number;
+  resolved: number;
+}
+
+export interface IncidentReportWindow {
+  // 后端回显实际使用的窗口，dateTo 为闭区间；前端不得自行推断或改写。
+  dateFrom: string;
+  dateTo: string;
+  days: number;
+}
+
+export interface IncidentReport {
+  window: IncidentReportWindow;
+  createdInWindow: number;
+  resolvedInWindow: number;
+  // 窗口内解决集合的 (resolved_at - created_at) 分钟均值，无样本时为 0。
+  avgResolutionMinutes: number;
+  // byStatus/byPriority 各自之和恒等于 createdInWindow。
+  byStatus: IncidentStatCount[];
+  byPriority: IncidentStatCount[];
+  // 窗口内每一天都出现（无事件为 0），长度等于 window.days。
+  dailyTrend: IncidentTrendPoint[];
+}
+
+export interface GetIncidentReportRequest {
+  // 必须成对提供：只传一端是参数错误，后端不会静默补另一端。
+  dateFrom?: string;
+  dateTo?: string;
+}
+
 // 阿里云告警事件
 export interface AlibabaCloudAlertRequest {
   alertId: string;
@@ -562,6 +604,11 @@ export class IncidentAPI {
   static async getIncidentMetrics(): Promise<IncidentMetrics> {
     const response = await httpClient.get<IncidentMetrics>('/api/v1/incidents/stats');
     return response;
+  }
+
+  // 获取事件趋势报表（窗口分布 + 每日趋势）。不传窗口时后端使用最近 30 天。
+  static async getIncidentReport(params: GetIncidentReportRequest = {}): Promise<IncidentReport> {
+    return httpClient.get<IncidentReport>('/api/v1/incidents/stats/report', params);
   }
 
   // 根因分析相关API

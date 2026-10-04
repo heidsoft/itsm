@@ -323,7 +323,7 @@ export default function DashboardPage() {
                       <div className='w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 mb-3'>
                         <Ticket className='w-6 h-6' />
                       </div>
-                      <h3 className='text-base font-semibold text-gray-900 mb-1'>创建第一个工单</h3>
+                      <h3 className='text-base font-semibold text-gray-900 mb-1'>创建工单</h3>
                       <p className='text-sm text-gray-500 mb-4'>提交 IT 服务请求或报告问题</p>
                       <Button type='primary' onClick={() => router.push('/tickets/create')}>
                         去创建

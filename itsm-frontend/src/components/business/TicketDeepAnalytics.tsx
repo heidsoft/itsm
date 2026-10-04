@@ -44,7 +44,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { Filter, Save, Download, Settings, RotateCcw, CheckCircle, BarChart3, Table2 } from 'lucide-react';
+import { Filter, Download, Settings, RotateCcw, CheckCircle, BarChart3, Table2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import dayjs from 'dayjs';
@@ -227,15 +227,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       antMessage.success('导出成功');
     } catch (error) {
       console.error('导出失败:', error);
-      // 如果后端不支持，使用降级提示
-      if (
-        error instanceof Error &&
-        (error.message.includes('404') || error.message.includes('not found'))
-      ) {
-        antMessage.info('导出功能即将推出');
-      } else {
         antMessage.error('导出失败，请稍后再试');
-      }
     }
   }, [config, antMessage]);
 
@@ -355,11 +347,9 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               配置
             </Button>
             {canExport && (
-              <AntTooltip title="导出功能即将推出">
-                <Button icon={<Download />} disabled onClick={handleExport}>
-                  导出
-                </Button>
-              </AntTooltip>
+              <Button icon={<Download />} onClick={handleExport}>
+                导出
+              </Button>
             )}
             <Button icon={<RotateCcw />} onClick={loadAnalyticsData} loading={loading}>
               刷新

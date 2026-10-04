@@ -132,7 +132,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 func (h *Handler) Chat(c *gin.Context) {
 	var req struct {
 		Query          string `json:"query" binding:"required"`
-		Limit          int    `json:"limit"`
+		PageSize       int    `json:"pageSize"`
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -152,7 +152,7 @@ func (h *Handler) Chat(c *gin.Context) {
 	// 不注入则按匿名处理，已纳管的受限分类一律不可见（fail-closed）。
 	chatCtx := knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role})
 
-	answers, convID, err := h.svc.Chat(chatCtx, tenantID, userID, req.Query, req.Limit, req.ConversationID)
+	answers, convID, err := h.svc.Chat(chatCtx, tenantID, userID, req.Query, req.PageSize, req.ConversationID)
 	if err != nil {
 		// RAG 失败时降级处理：返回空结果而非 500 错误，避免前端崩溃
 		h.svc.logger.Warnw("AI Chat RAG 检索失败，返回降级响应", "error", err, "tenantID", tenantID)
@@ -180,7 +180,7 @@ func (h *Handler) Chat(c *gin.Context) {
 func (h *Handler) ChatStream(c *gin.Context) {
 	var req struct {
 		Query          string `json:"query" binding:"required"`
-		Limit          int    `json:"limit"`
+		PageSize       int    `json:"pageSize"`
 		ConversationID int    `json:"conversationId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -209,7 +209,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 		// client still gets an answer.
 		answers, convID, err := h.svc.Chat(
 			knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
-			tenantID, userID, req.Query, req.Limit, req.ConversationID)
+			tenantID, userID, req.Query, req.PageSize, req.ConversationID)
 		if err != nil {
 			common.FailWithErr(c, err, "操作失败")
 			return
@@ -239,7 +239,7 @@ func (h *Handler) ChatStream(c *gin.Context) {
 	// 注入访问者身份：AI 助手主链路，RAG 据此做知识分类可见性过滤（L0 权限边界）
 	convID, _, err := h.svc.ChatStream(
 		knowledgeaccess.WithViewer(c.Request.Context(), knowledgeaccess.Viewer{UserID: userID, Role: role}),
-		tenantID, userID, role, req.Query, req.Limit, req.ConversationID, onSources, onDelta)
+		tenantID, userID, role, req.Query, req.PageSize, req.ConversationID, onSources, onDelta)
 	if err != nil {
 		h.svc.logger.Warnw("AI ChatStream 失败", "error", err, "tenantID", tenantID)
 		writeEvent("error", map[string]string{"message": err.Error()})
@@ -662,9 +662,9 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 // KnowledgeSearch handles POST /api/v1/ai/rag/search - RAG search over knowledge base
 func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	var req struct {
-		Query string `json:"query" binding:"required"`
-		Limit int    `json:"limit"`
-		Type  string `json:"type"` // kb|incident
+		Query    string `json:"query" binding:"required"`
+		PageSize int    `json:"pageSize"`
+		Type     string `json:"type"` // kb|incident
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -679,7 +679,7 @@ func (h *Handler) KnowledgeSearch(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
 
-	limit := req.Limit
+	limit := req.PageSize
 	if limit <= 0 {
 		limit = 5
 	}

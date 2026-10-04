@@ -226,13 +226,7 @@ const AIAuditConsole: React.FC = () => {
               </div>
             </Space>
           ) : (
-            <Empty
-              description={
-                <span>
-                  AI 功能使用后会自动产生评估数据，可在此查看健康分和采纳率。
-                </span>
-              }
-            />
+            <Empty description="暂无 AI 评估数据" />
           )}
         </Card>
 

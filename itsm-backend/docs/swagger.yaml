@@ -4387,6 +4387,54 @@ definitions:
       resolved:
         type: integer
     type: object
+  incident.IncidentReport:
+    properties:
+      avgResolutionMinutes:
+        type: integer
+      byPriority:
+        items:
+          $ref: '#/definitions/incident.IncidentStatCount'
+        type: array
+      byStatus:
+        items:
+          $ref: '#/definitions/incident.IncidentStatCount'
+        type: array
+      createdInWindow:
+        type: integer
+      dailyTrend:
+        items:
+          $ref: '#/definitions/incident.IncidentTrendPoint'
+        type: array
+      resolvedInWindow:
+        type: integer
+      window:
+        $ref: '#/definitions/incident.IncidentReportWindow'
+    type: object
+  incident.IncidentReportWindow:
+    properties:
+      dateFrom:
+        type: string
+      dateTo:
+        type: string
+      days:
+        type: integer
+    type: object
+  incident.IncidentStatCount:
+    properties:
+      count:
+        type: integer
+      value:
+        type: string
+    type: object
+  incident.IncidentTrendPoint:
+    properties:
+      created:
+        type: integer
+      date:
+        type: string
+      resolved:
+        type: integer
+    type: object
   itemversion.Status:
     enum:
     - draft
@@ -10050,6 +10098,48 @@ paths:
       security:
       - BearerAuth: []
       summary: 获取事件统计
+      tags:
+      - 事件管理
+  /api/v1/incidents/stats/report:
+    get:
+      description: 按创建/解决时间窗口返回事件的状态分布、优先级分布与每日新建/解决趋势；窗口默认最近 30 天，dateFrom/dateTo
+        需成对提供且最长 366 天
+      parameters:
+      - description: 窗口起始日（YYYY-MM-DD 或 RFC3339，需与 dateTo 同时提供）
+        in: query
+        name: dateFrom
+        type: string
+      - description: 窗口结束日（闭区间，YYYY-MM-DD 或 RFC3339）
+        in: query
+        name: dateTo
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/incident.IncidentReport'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取事件趋势报表
       tags:
       - 事件管理
   /api/v1/marketplace/installations:

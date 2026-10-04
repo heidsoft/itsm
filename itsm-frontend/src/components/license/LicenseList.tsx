@@ -345,7 +345,7 @@ const LicenseList: React.FC = () => {
             emptyText: (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无许可证数据">
                 <Button type="primary" onClick={() => router.push('/licenses/new')}>
-                  创建第一个许可证
+                  创建许可证
                 </Button>
               </Empty>
             ),

@@ -36,8 +36,8 @@ import type { User } from '@/lib/api/user-api';
 import {
   IncidentStatus,
   IncidentStatusLabels,
-  IncidentPriorityLabels,
   IncidentSeverityLabels,
+  incidentPriorityLabel,
 } from '@/constants/incident';
 import type { Incident } from '@/types/biz/incident';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
@@ -614,7 +614,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Descriptions.Item label="报告人">{getUserName(data.reporterId)}</Descriptions.Item>
             <Descriptions.Item label="负责人">{getUserName(data.assigneeId)}</Descriptions.Item>
             <Descriptions.Item label="优先级">
-              {IncidentPriorityLabels[data.priority]}
+              {incidentPriorityLabel(data.priority)}
             </Descriptions.Item>
             <Descriptions.Item label="严重程度">
               {IncidentSeverityLabels[data.severity]}

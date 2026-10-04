@@ -16,6 +16,8 @@ func SetupIncidentRoutes(tenant *gin.RouterGroup, h *incidentHandler.IncidentHan
 		inc.GET("", middleware.RequirePermission("incident", "read"), h.Lists)
 		inc.POST("", middleware.RequirePermission("incident", "write"), h.Create)
 		inc.GET("/stats", middleware.RequirePermission("incident", "read"), h.GetStats)
+		// 报表读模型：窗口内的分布与每日趋势（Ent 聚合，口径见 handlers/incident/report.go）。
+		inc.GET("/stats/report", middleware.RequirePermission("incident", "read"), h.GetReport)
 		inc.GET("/:id", middleware.RequirePermission("incident", "read"), h.Get)
 		inc.PUT("/:id", middleware.RequirePermission("incident", "write"), h.Update)
 		inc.DELETE("/:id", middleware.RequirePermission("incident", "delete"), h.Delete)

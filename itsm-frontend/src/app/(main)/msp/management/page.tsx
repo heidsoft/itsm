@@ -186,8 +186,7 @@ export default function MSPManagementPage() {
         }
       >
         <Alert
-          message="使用说明"
-          description="MSP Manager 可以为 MSP 员工分配客户租户。分配后，MSP 员工即可通过 X-Customer-Tenant-ID 头访问对应客户的工单。"
+          message="MSP Manager 可为员工分配客户租户，分配后通过 X-Customer-Tenant-ID 头访问对应工单"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

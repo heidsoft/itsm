@@ -65,7 +65,7 @@ type BatchImportCIsRequest struct {
 }
 
 type BatchImportCIsResponse struct {
-	TotalCount   int      `json:"totalCount"`
+	Total        int      `json:"total"`
 	SuccessCount int      `json:"successCount"`
 	FailureCount int      `json:"failureCount"`
 	Errors       []string `json:"errors"`

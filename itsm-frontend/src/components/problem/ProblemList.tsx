@@ -302,7 +302,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         {data.length === 0 && !loading ? (
           <Empty description="暂无问题记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/problems/new')}>
-              创建第一个问题
+              创建问题
             </Button>
           </Empty>
         ) : (

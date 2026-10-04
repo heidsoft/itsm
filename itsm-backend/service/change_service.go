@@ -505,8 +505,9 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 	}
 
 	return &dto.ChangeListResponse{
+		Items:      changeResponses,
 		Total:      total,
-		Changes:    changeResponses,
+		Page:       page,
 		PageSize:   pageSize,
 		TotalPages: totalPages,
 	}, nil

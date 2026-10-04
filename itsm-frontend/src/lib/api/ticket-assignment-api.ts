@@ -5,36 +5,11 @@
 
 import { httpClient } from './http-client';
 
-export interface AssignRecommendation {
-  userId: number;
-  userName: string;
-  userEmail?: string;
-  userAvatar?: string;
-  score: number;
-  reason: string;
-  factors: {
-    skillMatch?: number;
-    workload?: number;
-    historySuccess?: number;
-    availability?: number;
-  };
-}
-
-type RawAssignRecommendation = Partial<AssignRecommendation> & {
-  userId?: number;
-  username?: string;
-  name?: string;
-  userName?: string;
-  userEmail?: string;
-  userAvatar?: string;
-  workload?: number;
-  skills?: string[];
-};
-
 export interface AutoAssignResponse {
   ticketId: number;
   assignedTo?: number;
-  assignmentType: 'rule' | 'smart' | 'manual';
+  // 后端实测 emits: auto / rule / ticket_type_rule / manual（service/ticket_assignment_*.go）
+  assignmentType: 'auto' | 'rule' | 'ticket_type_rule' | 'manual';
   reason: string;
   score?: number;
 }
@@ -111,8 +86,22 @@ export interface TestAssignmentRuleResponse {
   score?: number;
 }
 
-export interface GetAssignRecommendationsResponse {
-  recommendations: AssignRecommendation[];
+// 与后端 dto.AssignmentRecommendation 逐字段一致，禁止自行发明 userName/factors。
+export interface AssignRecommendation {
+  userId: number;
+  username: string;
+  name: string;
+  email: string;
+  score: number;
+  reason: string;
+  workload: number;
+  skills?: string[];
+  categories?: number[];
+}
+
+// 该端点实测不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键。
+export interface AssignRecommendationListResponse {
+  items: AssignRecommendation[];
   total: number;
 }
 
@@ -122,52 +111,14 @@ export interface ListAssignmentRulesResponse {
   total: number;
 }
 
-function normalizeRecommendation(item: RawAssignRecommendation): AssignRecommendation {
-  return {
-    userId: item.userId ?? 0,
-    userName: item.userName ?? item.name ?? item.username ?? `用户${item.userId ?? ''}`.trim(),
-    userEmail: item.userEmail,
-    userAvatar: item.userAvatar,
-    score: item.score ?? 0,
-    reason: item.reason ?? '',
-    factors: item.factors ?? {
-      workload: item.workload,
-      skillMatch: item.skills?.length ? 100 : undefined,
-    },
-  };
-}
-
-function normalizeAutoAssign(response: AutoAssignResponse): AutoAssignResponse {
-  const assignedTo = response.assignedTo;
-  const ticketId = response.ticketId ?? 0;
-  const assignmentType = response.assignmentType ?? 'smart';
-
-  return {
-    ...response,
-    ticketId,
-    assignedTo,
-    assignmentType,
-  };
-}
-
 function normalizeRule(rule: AssignmentRule): AssignmentRule {
-  const rawRule = rule as AssignmentRule & {
-    isActive?: boolean;
-    executionCount?: number;
-    lastExecutedAt?: string;
-    createdAt?: string;
-    updatedAt?: string;
-  };
-
+  // 后端 AssignmentRuleResponse 里 isActive/executionCount/createdAt/updatedAt 是非指针
+  // 字段，响应里必然存在，无需兜底；只有 conditions/actions 可能为 nil，lastExecutedAt
+  // 是 *string,omitempty。
   return {
-    ...rawRule,
-    actions: rawRule.actions || { type: 'user', value: 0 },
-    conditions: rawRule.conditions || [],
-    isActive: rawRule.isActive ?? rawRule.isActive ?? false,
-    executionCount: rawRule.executionCount ?? rawRule.executionCount ?? 0,
-    lastExecutedAt: rawRule.lastExecutedAt ?? rawRule.lastExecutedAt,
-    createdAt: rawRule.createdAt ?? rawRule.createdAt ?? '',
-    updatedAt: rawRule.updatedAt ?? rawRule.updatedAt ?? '',
+    ...rule,
+    actions: rule.actions ?? { type: 'user', value: 0 },
+    conditions: rule.conditions ?? [],
   };
 }
 
@@ -183,22 +134,16 @@ export class TicketAssignmentApi {
    * 自动分配工单
    */
   static async autoAssign(ticketId: number): Promise<AutoAssignResponse> {
-    const response = await httpClient.post<AutoAssignResponse>(`/api/v1/tickets/${ticketId}/auto-assign`);
-    return normalizeAutoAssign(response);
+    return httpClient.post<AutoAssignResponse>(`/api/v1/tickets/${ticketId}/auto-assign`);
   }
 
   /**
    * 获取分配推荐
    */
-  static async getRecommendations(ticketId: number): Promise<GetAssignRecommendationsResponse> {
-    const response = await httpClient.get<GetAssignRecommendationsResponse>(
+  static async getRecommendations(ticketId: number): Promise<AssignRecommendationListResponse> {
+    return httpClient.get<AssignRecommendationListResponse>(
       `/api/v1/tickets/assign-recommendations/${ticketId}`
     );
-    return {
-      ...response,
-      recommendations: (response.recommendations || []).map(normalizeRecommendation),
-      total: response.total,
-    };
   }
 
   /**
@@ -256,16 +201,9 @@ export class TicketAssignmentApi {
    * 测试分配规则
    */
   static async testRule(data: TestAssignmentRuleRequest): Promise<TestAssignmentRuleResponse> {
-    const response = await httpClient.post<TestAssignmentRuleResponse>(
-      '/api/v1/tickets/assignment-rules/test',
-      {
-        ruleId: data.ruleId ?? data.ruleId,
-        ticketId: data.ticketId ?? data.ticketId,
-      }
-    );
-    return {
-      ...response,
-      assignedTo: response.assignedTo,
-    };
+    return httpClient.post<TestAssignmentRuleResponse>('/api/v1/tickets/assignment-rules/test', {
+      ruleId: data.ruleId,
+      ticketId: data.ticketId,
+    });
   }
 }

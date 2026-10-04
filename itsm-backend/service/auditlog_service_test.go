@@ -65,7 +65,7 @@ func TestAuditLogService_ListAuditLogs_Empty(t *testing.T) {
 	response, err := service.ListAuditLogs(ctx, req, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, response.Total)
-	assert.Empty(t, response.Logs)
+	assert.Empty(t, response.Items)
 }
 
 func TestAuditLogService_ListAuditLogs_WithLogs(t *testing.T) {
@@ -102,7 +102,7 @@ func TestAuditLogService_ListAuditLogs_WithLogs(t *testing.T) {
 	response, err := service.ListAuditLogs(ctx, req, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 5, response.Total)
-	assert.Len(t, response.Logs, 5)
+	assert.Len(t, response.Items, 5)
 }
 
 func TestAuditLogService_ListAuditLogs_Pagination(t *testing.T) {
@@ -136,14 +136,14 @@ func TestAuditLogService_ListAuditLogs_Pagination(t *testing.T) {
 	response, err := service.ListAuditLogs(ctx, req, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Logs, 10)
+	assert.Len(t, response.Items, 10)
 
 	// 测试第二页
 	req.Page = 2
 	response, err = service.ListAuditLogs(ctx, req, testTenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Logs, 5)
+	assert.Len(t, response.Items, 5)
 }
 
 func TestAuditLogService_ListAuditLogs_FilterByUser(t *testing.T) {
@@ -463,7 +463,7 @@ func TestAuditLogService_GetCIAuditLogs_Empty(t *testing.T) {
 	response, err := service.GetCIAuditLogs(ctx, testTenant.ID, 99999, 1, 10)
 	require.NoError(t, err)
 	assert.Equal(t, 0, response.Total)
-	assert.Empty(t, response.Logs)
+	assert.Empty(t, response.Items)
 }
 
 func TestAuditLogService_GetCIAuditLogs_WithLogs(t *testing.T) {
@@ -530,11 +530,11 @@ func TestAuditLogService_GetCIAuditLogs_Pagination(t *testing.T) {
 	response, err := service.GetCIAuditLogs(ctx, testTenant.ID, 456, 1, 10)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Logs, 10)
+	assert.Len(t, response.Items, 10)
 
 	// 测试第二页
 	response, err = service.GetCIAuditLogs(ctx, testTenant.ID, 456, 2, 10)
 	require.NoError(t, err)
 	assert.Equal(t, 15, response.Total)
-	assert.Len(t, response.Logs, 5)
+	assert.Len(t, response.Items, 5)
 }

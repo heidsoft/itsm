@@ -501,7 +501,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         {impactScore >= 80 && (
           <Alert
             title="关键影响警告"
-            description="该变更被评定为关键影响，建议：1. 安排在业务低峰期实施 2. 准备完整的回滚方案 3. 通知所有相关方 4. 准备应急预案 5. 增加监控和巡检"
+            description="该变更被评定为关键影响，建议安排在低峰期实施、准备回滚方案并通知所有相关方"
             type="error"
             showIcon
             icon={<AlertTriangle className="w-4 h-4" />}

@@ -687,7 +687,7 @@ export default function CreateTicketPage() {
                       )}
                     </div>
                   ) : (
-                    <Text type="secondary">点击下方按钮获取AI智能分类建议</Text>
+                    <Text type="secondary">获取AI智能分类建议</Text>
                   )}
                 </Spin>
                 <Button

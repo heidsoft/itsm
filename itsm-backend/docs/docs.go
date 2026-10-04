@@ -7547,6 +7547,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/incidents/stats/report": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按创建/解决时间窗口返回事件的状态分布、优先级分布与每日新建/解决趋势；窗口默认最近 30 天，dateFrom/dateTo 需成对提供且最长 366 天",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "事件管理"
+                ],
+                "summary": "获取事件趋势报表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "窗口起始日（YYYY-MM-DD 或 RFC3339，需与 dateTo 同时提供）",
+                        "name": "dateFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "窗口结束日（闭区间，YYYY-MM-DD 或 RFC3339）",
+                        "name": "dateTo",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/incident.IncidentReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/incidents/{id}": {
             "get": {
                 "security": [
@@ -17817,6 +17886,80 @@ const docTemplate = `{
                 },
                 "open": {
                     "type": "integer"
+                },
+                "resolved": {
+                    "type": "integer"
+                }
+            }
+        },
+        "incident.IncidentReport": {
+            "type": "object",
+            "properties": {
+                "avgResolutionMinutes": {
+                    "type": "integer"
+                },
+                "byPriority": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/incident.IncidentStatCount"
+                    }
+                },
+                "byStatus": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/incident.IncidentStatCount"
+                    }
+                },
+                "createdInWindow": {
+                    "type": "integer"
+                },
+                "dailyTrend": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/incident.IncidentTrendPoint"
+                    }
+                },
+                "resolvedInWindow": {
+                    "type": "integer"
+                },
+                "window": {
+                    "$ref": "#/definitions/incident.IncidentReportWindow"
+                }
+            }
+        },
+        "incident.IncidentReportWindow": {
+            "type": "object",
+            "properties": {
+                "dateFrom": {
+                    "type": "string"
+                },
+                "dateTo": {
+                    "type": "string"
+                },
+                "days": {
+                    "type": "integer"
+                }
+            }
+        },
+        "incident.IncidentStatCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "incident.IncidentTrendPoint": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
                 },
                 "resolved": {
                     "type": "integer"

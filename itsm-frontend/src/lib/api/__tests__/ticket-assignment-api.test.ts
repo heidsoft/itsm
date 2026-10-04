@@ -21,19 +21,27 @@ describe('TicketAssignmentApi', () => {
 
   describe('autoAssign', () => {
     it('should auto-assign a ticket', async () => {
-      mockPost.mockResolvedValue({ ticketId: 1, assignedTo: 5, assignmentType: 'smart', reason: 'best match' });
+      // 契约：后端 dto.AutoAssignResponse.assignmentType 实测只发 auto/rule/ticket_type_rule/manual。
+      mockPost.mockResolvedValue({ ticketId: 1, assignedTo: 5, assignmentType: 'rule', reason: 'matched rule', score: 80 });
       const result = await TicketAssignmentApi.autoAssign(1);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/auto-assign');
       expect(result.assignedTo).toBe(5);
+      expect(result.assignmentType).toBe('rule');
     });
   });
 
   describe('getRecommendations', () => {
-    it('should fetch assign recommendations', async () => {
-      mockGet.mockResolvedValue({ recommendations: [{ userId: 1, userName: 'John', score: 90, reason: 'skill', factors: {} }], total: 1 });
+    it('should fetch assign recommendations as an items envelope', async () => {
+      // 契约：后端 dto.AssignRecommendationListResponse 是不分页的 {items,total}。
+      mockGet.mockResolvedValue({
+        items: [{ userId: 1, username: 'john', name: 'John', email: 'j@e.com', score: 90, reason: 'skill', workload: 2 }],
+        total: 1,
+      });
       const result = await TicketAssignmentApi.getRecommendations(10);
       expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/assign-recommendations/10');
-      expect(result.recommendations).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result).not.toHaveProperty('recommendations');
     });
   });
 

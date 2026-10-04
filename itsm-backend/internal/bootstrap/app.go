@@ -41,6 +41,7 @@ import (
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
 	applicationHandler "itsm-backend/handlers/application"
+	projectHandler "itsm-backend/handlers/project"
 	"itsm-backend/handlers/approval"
 	approvalChainHandler "itsm-backend/handlers/approval_chain"
 	assetHandler "itsm-backend/handlers/asset"
@@ -344,7 +345,7 @@ func NewApplication() *Application {
 
 	// 3. 生产权限必须以数据库为唯一事实来源并在缺失时 fail closed。
 	// 只有显式 development/test/local 环境允许使用开发期硬编码回退。
-	configurePermissionMode(os.Getenv("ENV"))
+	configurePermissionMode(resolveEnvironment())
 
 	if err := ValidateWebStartupConfig(cfg); err != nil {
 		log.Fatalf("Unsafe web startup configuration: %v", err)
@@ -387,12 +388,13 @@ func NewApplication() *Application {
 	// Application handler v1.1 回归：handlers/<domain>/ 已迁移但
 	// bootstrap 没注入，router 看到的字段为 nil，路由被 if 守卫跳过
 	applicationHTTPHandler := applicationHandler.NewHandler(service.NewApplicationService(client))
+	projectHTTPHandler := projectHandler.NewHandler(service.NewProjectService(client))
 	incidentRepo := incident.NewEntRepository(client)
 	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用（此前两域均为假成功或未接入）。
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaMonitorService.SetNotificationService(ticketNotificationService)
 	slaMonitorService.SetSLAStore(slaStore)
-	incidentHandlerService := incident.NewService(incidentRepo, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, slaMonitorService, sugar)
+	incidentHandlerService := incident.NewService(incidentRepo, client, incidentService, incidentMonitoringService, incidentAlertingService, rootCauseAnalysisService, slaMonitorService, sugar)
 	incidentHandler := incident.NewHandler(incidentHandlerService)
 
 	// 初始化 Redis 序列服务（用于工单编号生成）
@@ -486,7 +488,7 @@ func NewApplication() *Application {
 	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, client, alertDevelopmentMode())
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
 	if connectorEncryptionKey == "" {
-		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+		if resolveEnvironment() == "production" || os.Getenv("GIN_MODE") == "release" {
 			log.Fatal("CONNECTOR_CONFIG_ENCRYPTION_KEY is required in production")
 		}
 		connectorEncryptionKey = "development-connector-key-" + cfg.JWT.Secret
@@ -604,7 +606,7 @@ func NewApplication() *Application {
 	// - 占位符/空值：在开发环境 Warn，在生产环境终止启动（生产硬约束见 memory）。
 	// - 真实密钥：仅输出 MaskSecret 脱敏值，便于诊断配置是否生效，绝不输出明文。
 	if common.IsPlaceholderSecret(llmConfig.APIKey) {
-		if os.Getenv("ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+		if resolveEnvironment() == "production" || os.Getenv("GIN_MODE") == "release" {
 			sugar.Errorw("LLM API Key 未配置或为占位符，生产环境禁止以此状态启动",
 				"provider", llmConfig.Provider, "api_key", common.MaskSecret(llmConfig.APIKey))
 			// NewApplication 返回 *Application（无 error），生产硬约束用 log.Fatalf 终止。
@@ -1204,6 +1206,7 @@ func NewApplication() *Application {
 		ServiceCatalogHandler:       scHandler,
 		ServiceRequestHandler:       srHandler,
 		ApplicationHandler:          applicationHTTPHandler,
+		ProjectHandler:              projectHTTPHandler,
 		ProblemHandler:              problemHandler,
 		ProblemInvestigationHandler: problemInvestigationHandler,
 		ChangeHandler:               changeHandler,
@@ -1280,8 +1283,17 @@ func NewApplication() *Application {
 	}
 }
 
+// resolveEnvironment 返回当前运行环境标识。SERVER_ENV 优先于 ENV，
+// 避免部署侧两套环境变量并行时出现不一致（如 SERVER_ENV=production 但 ENV=development）。
+func resolveEnvironment() string {
+	if v := os.Getenv("SERVER_ENV"); v != "" {
+		return strings.ToLower(strings.TrimSpace(v))
+	}
+	return strings.ToLower(strings.TrimSpace(os.Getenv("ENV")))
+}
+
 func configurePermissionMode(environment string) {
-	switch strings.ToLower(strings.TrimSpace(environment)) {
+	switch environment {
 	case "development", "dev", "test", "local":
 		middleware.PermissionConfig.Mode = middleware.PermissionConfigModeFallback
 	default:
@@ -1290,7 +1302,7 @@ func configurePermissionMode(environment string) {
 }
 
 func alertDevelopmentMode() bool {
-	switch strings.ToLower(strings.TrimSpace(os.Getenv("ENV"))) {
+	switch resolveEnvironment() {
 	case "development", "dev", "test", "testing", "local":
 		return true
 	default:
@@ -1562,10 +1574,7 @@ func (app *Application) Run() {
 	if err != nil {
 		app.Logger.Fatalw("invalid process mode", "error", err)
 	}
-	environment := os.Getenv("SERVER_ENV")
-	if environment == "" {
-		environment = os.Getenv("ENV")
-	}
+	environment := resolveEnvironment()
 	if err := ValidateProcessMode(mode, environment); err != nil {
 		app.Logger.Fatalw("unsafe process mode", "error", err)
 	}

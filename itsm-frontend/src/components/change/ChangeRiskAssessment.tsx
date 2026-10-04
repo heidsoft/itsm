@@ -307,7 +307,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
         {riskScore >= 60 && (
           <Alert
             message="高风险警告"
-            description="该变更被评定为高风险，建议：1. 制定详细的应急计划 2. 安排在业务低峰期实施 3. 准备充分的回滚方案 4. 增加监控和巡检频率"
+            description="该变更被评定为高风险，建议制定应急计划、安排在低峰期实施并准备回滚方案"
             type="error"
             showIcon
             icon={<AlertTriangle className="w-4 h-4" />}

@@ -502,8 +502,8 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 	}
 
 	// 设置默认限制
-	if req.Limit <= 0 {
-		req.Limit = 10
+	if req.PageSize <= 0 {
+		req.PageSize = 10
 	}
 
 	tenantID := c.GetInt("tenant_id")

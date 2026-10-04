@@ -116,8 +116,11 @@ func (h *Handler) GetAllocations(c *gin.Context) {
 	}
 
 	common.Success(c, dto.MSPAllocationListResponse{
-		Allocations: allocations,
-		Total:       len(allocations),
+		Items:      allocations,
+		Total:      len(allocations),
+		Page:       1,
+		PageSize:   len(allocations),
+		TotalPages: 1,
 	})
 }
 
@@ -269,8 +272,11 @@ func (h *Handler) GetAllCustomers(c *gin.Context) {
 	}
 
 	common.Success(c, dto.MSPCustomerListResponse{
-		Customers: customerDTOs,
-		Total:     len(customerDTOs),
+		Items:      customerDTOs,
+		Total:      len(customerDTOs),
+		Page:       1,
+		PageSize:   len(customerDTOs),
+		TotalPages: 1,
 	})
 }
 

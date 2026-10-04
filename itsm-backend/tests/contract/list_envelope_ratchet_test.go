@@ -80,20 +80,13 @@ type listEnvelope struct {
 // 2026-10-04 E4-6i 移除 ticket_workflow_dto.go|TicketCCListResponse|records：GET /tickets/cc/my
 // 与 GET /tickets/:id/cc 的 service 实测都是 Where(tenant_id)+All(ctx) 整表取回、
 // Total=len(records)，同为不分页形状；同批给两条 added_at DESC 排序补 id 并列键。
-var envelopeBaseline = []string{
-	"auditlog_dto.go|ListAuditLogsResponse|logs",
-	"change_dto.go|ChangeListResponse|changes",
-	"cloud_dto.go|CloudAccountListResponse|cloudAccounts",
-	"cloud_dto.go|CloudResourceListResponse|cloudResources",
-	"cloud_dto.go|CloudServiceListResponse|cloudServices",
-	"menu_dto.go|MenuListResponse|menus",
-	"msp_dto.go|MSPAllocationListResponse|allocations",
-	"msp_dto.go|MSPCustomerListResponse|customers",
-	"release_dto.go|ReleaseListResponse|releases",
-	"role_dto.go|RoleListResponse|roles",
-	"tenant_dto.go|TenantListResponse|tenants",
-	"ticket_dto.go|ListTicketsResponse|tickets",
-}
+// 2026-10-04 E4-6j 移除全部 12 条存量基线：11 个 ListResponse 的领域名集合键
+// （changes/cloudAccounts/cloudServices/cloudResources/menus/allocations/customers/
+// releases/roles/tenants/tickets/logs）统一收敛为 items 并补齐分页五元组；
+// 3 个统计 DTO（BatchImportCIsResponse/CIStatsResponse/ConfigurationItemStatsResponse）
+// 的 totalCount 统一为 total；9 处请求 DTO 的 limit 统一为 pageSize。
+// 因此本基线现在是空集——任何再引入领域名集合键或 totalCount/limit 的信封都会在这里失败。
+var envelopeBaseline = []string{}
 
 // envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键），
 // 2026-10-03 按新判定重新实测。判定只看**部分分页**：出现了 page/pageSize/totalPages 里

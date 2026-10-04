@@ -273,14 +273,7 @@ export default function SLATemplatesPage() {
 
       <Card>
         <Alert
-          message="使用说明"
-          description={
-            <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
-              <li>安装模板后，系统会为当前租户创建对应的 SLA 定义，即可对相关工单生效。</li>
-              <li>重复安装同一模板不会产生重复配置，可放心操作。</li>
-              <li>安装完成后，可在「SLA 配置」页面查看和调整已启用的 SLA 定义。</li>
-            </ul>
-          }
+          message="安装模板后系统会为当前租户创建 SLA 定义，重复安装不会产生重复配置"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

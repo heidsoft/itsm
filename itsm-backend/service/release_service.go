@@ -219,9 +219,17 @@ func (s *ReleaseService) ListReleases(ctx context.Context, tenantID int, page, p
 
 	releases := dto.ToReleaseResponseList(releaseEntities)
 
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+
 	return &dto.ReleaseListResponse{
-		Total:    total,
-		Releases: releases,
+		Items:      releases,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -425,7 +426,7 @@ func identityRBACExpectations() ([]string, []string, map[string][]string) {
 func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
 	// 配置加载优先级（简化版）：
 	// 1. 环境变量 ITSM_SEED_CONFIG 指定文件
-	// 2. ./config/seed/default.json
+	// 2. 可执行文件所在目录下的 config/seed/default.json
 	// 3. 内置默认
 
 	// 1. 环境变量
@@ -434,29 +435,45 @@ func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
 			var config SeedConfig
 			if err := json.Unmarshal(data, &config); err == nil {
 				sugar.Infow("loaded seed config from env", "path", configPath)
-				return mergeSeedConfig(getProductDefaultConfig(), &config)
+				return mergeSeedConfig(sugar, getProductDefaultConfig(), &config)
 			}
 		}
 	}
 
-	// 2. 项目配置文件
-	paths := []string{
-		"config/seed/default.json",
-		"../config/seed/default.json",
-	}
-	for _, path := range paths {
-		if data, err := os.ReadFile(path); err == nil {
-			var config SeedConfig
-			if err := json.Unmarshal(data, &config); err == nil {
-				sugar.Infow("loaded seed config from file", "path", path)
-				return mergeSeedConfig(getProductDefaultConfig(), &config)
-			}
+	// 2. 项目配置文件（相对于可执行文件位置解析，避免 cwd 依赖）
+	if resolvedPath, data := resolveSeedConfigFile(sugar); data != nil {
+		var config SeedConfig
+		if err := json.Unmarshal(data, &config); err == nil {
+			sugar.Infow("loaded seed config from file", "path", resolvedPath)
+			return mergeSeedConfig(sugar, getProductDefaultConfig(), &config)
 		}
 	}
 
 	// 3. 内置默认
 	sugar.Infow("using embedded default seed config")
 	return getProductDefaultConfig()
+}
+
+// resolveSeedConfigFile 尝试从可执行文件所在目录加载配置文件。
+// 返回 (解析后的绝对路径, 文件内容)；若未找到则返回 ("", nil)。
+func resolveSeedConfigFile(sugar *zap.SugaredLogger) (string, []byte) {
+	exe, err := os.Executable()
+	if err != nil {
+		sugar.Debugw("resolveSeedConfigFile: cannot determine executable path", "error", err)
+		return "", nil
+	}
+	exeDir := filepath.Dir(exe)
+	candidates := []string{
+		filepath.Join(exeDir, "config", "seed", "default.json"),
+		filepath.Join(exeDir, "..", "config", "seed", "default.json"),
+	}
+	for _, path := range candidates {
+		if data, err := os.ReadFile(path); err == nil {
+			abs, _ := filepath.Abs(path)
+			return abs, data
+		}
+	}
+	return "", nil
 }
 
 func getProductDefaultConfig() *SeedConfig {
@@ -468,7 +485,16 @@ func getProductDefaultConfig() *SeedConfig {
 	return cfg
 }
 
-func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
+func containsRoleCode(roles []RoleSeed, code string) bool {
+	for _, r := range roles {
+		if r.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func mergeSeedConfig(sugar *zap.SugaredLogger, base *SeedConfig, override *SeedConfig) *SeedConfig {
 	if base == nil {
 		return override
 	}
@@ -476,16 +502,59 @@ func mergeSeedConfig(base *SeedConfig, override *SeedConfig) *SeedConfig {
 		return base
 	}
 	if override.Departments != nil {
+		if len(base.Departments) > 0 && len(override.Departments) != len(base.Departments) {
+			sugar.Warnw("mergeSeedConfig: departments override drops builtin entries", "builtin", len(base.Departments), "override", len(override.Departments))
+		}
 		base.Departments = override.Departments
 	}
 	if override.Teams != nil {
+		if len(base.Teams) > 0 && len(override.Teams) != len(base.Teams) {
+			sugar.Warnw("mergeSeedConfig: teams override drops builtin entries", "builtin", len(base.Teams), "override", len(override.Teams))
+		}
 		base.Teams = override.Teams
 	}
 	if override.Groups != nil {
+		if len(base.Groups) > 0 && len(override.Groups) != len(base.Groups) {
+			sugar.Warnw("mergeSeedConfig: groups override drops builtin entries", "builtin", len(base.Groups), "override", len(override.Groups))
+		}
 		base.Groups = override.Groups
 	}
 	if override.Roles != nil {
-		base.Roles = override.Roles
+		// Roles 按 Code 合并：override 中同 Code 的条目覆盖内置，内置中未被 override
+		// 提及的条目保留。避免客户 JSON 只写 2 个角色就丢掉其余 17 个默认角色。
+		byCode := make(map[string]RoleSeed, len(base.Roles))
+		for _, r := range base.Roles {
+			byCode[r.Code] = r
+		}
+		var dropped int
+		for _, r := range override.Roles {
+			if _, exists := byCode[r.Code]; exists {
+				dropped++
+			}
+			byCode[r.Code] = r
+		}
+		merged := make([]RoleSeed, 0, len(byCode))
+		// 保留 base 顺序，override 的新条目追加到末尾
+		seen := make(map[string]bool, len(override.Roles))
+		for _, r := range override.Roles {
+			seen[r.Code] = true
+		}
+		for _, r := range base.Roles {
+			if o, ok := byCode[r.Code]; ok && seen[r.Code] {
+				merged = append(merged, o)
+			} else {
+				merged = append(merged, r)
+			}
+		}
+		for _, r := range override.Roles {
+			if !containsRoleCode(base.Roles, r.Code) {
+				merged = append(merged, r)
+			}
+		}
+		if dropped > 0 {
+			sugar.Infow("mergeSeedConfig: roles merged by code", "overridden", dropped, "total", len(merged))
+		}
+		base.Roles = merged
 	}
 	if override.SLADefinitions != nil {
 		base.SLADefinitions = override.SLADefinitions
@@ -1149,30 +1218,39 @@ func (s *Seeder) seedGroups(ctx context.Context) {
 		return
 	}
 
-	created := 0
+	var created, updated int
 	for _, gs := range s.config.Groups {
-		exists, err := s.client.Group.Query().
+		existing, err := s.client.Group.Query().
 			Where(group.NameEQ(gs.Name), group.TenantIDEQ(t.ID)).
-			Exist(ctx)
+			Only(ctx)
+		if ent.IsNotFound(err) {
+			if _, err := s.client.Group.Create().
+				SetName(gs.Name).
+				SetDescription(gs.Description).
+				SetTenantID(t.ID).
+				Save(ctx); err != nil {
+				s.sugar.Warnw("seed group failed", "error", err, "name", gs.Name)
+				continue
+			}
+			created++
+			continue
+		}
 		if err != nil {
 			s.sugar.Warnw("check existing group failed", "error", err, "name", gs.Name)
 			continue
 		}
-		if exists {
-			continue
+		if existing.Description != gs.Description {
+			if _, err := s.client.Group.UpdateOne(existing).
+				SetDescription(gs.Description).
+				Save(ctx); err != nil {
+				s.sugar.Warnw("update group description failed", "error", err, "name", gs.Name)
+				continue
+			}
+			updated++
 		}
-		if _, err := s.client.Group.Create().
-			SetName(gs.Name).
-			SetDescription(gs.Description).
-			SetTenantID(t.ID).
-			Save(ctx); err != nil {
-			s.sugar.Warnw("seed group failed", "error", err, "name", gs.Name)
-			continue
-		}
-		created++
 	}
-	if created > 0 {
-		s.sugar.Infow("groups seeded", "created", created, "total", len(s.config.Groups))
+	if created > 0 || updated > 0 {
+		s.sugar.Infow("groups seeded", "created", created, "updated", updated, "total", len(s.config.Groups))
 	} else {
 		s.sugar.Infow("groups already seeded")
 	}
@@ -1224,7 +1302,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		return
 	}
 
-	// 内置词表在前，config Roles 在后；去重时后者（config）优先。
+	// 内置词表在前，config Roles 在后；去重时内置优先（config 只追加不覆盖）。
 	merged := BuiltinRoles()
 	seen := make(map[string]bool, len(merged))
 	for _, r := range merged {

@@ -165,13 +165,19 @@ type MSPStatusResponse struct {
 }
 
 type MSPAllocationListResponse struct {
-	Allocations []*MSPAllocationDTO `json:"allocations"`
-	Total       int                 `json:"total"`
+	Items      []*MSPAllocationDTO `json:"items"`
+	Total      int                 `json:"total"`
+	Page       int                 `json:"page"`
+	PageSize   int                 `json:"pageSize"`
+	TotalPages int                 `json:"totalPages"`
 }
 
 type MSPCustomerListResponse struct {
-	Customers []*CustomerDTO `json:"customers"`
-	Total     int            `json:"total"`
+	Items      []*CustomerDTO `json:"items"`
+	Total      int            `json:"total"`
+	Page       int            `json:"page"`
+	PageSize   int            `json:"pageSize"`
+	TotalPages int            `json:"totalPages"`
 }
 
 // ==================== 查询参数 DTO ====================

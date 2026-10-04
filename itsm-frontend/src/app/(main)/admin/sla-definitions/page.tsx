@@ -534,8 +534,7 @@ const SLADefinitionManagement = () => {
       <Card className="enterprise-card">
         {filteredSLAs.length === 0 && !loading ? (
           <Alert
-            message="暂无SLA定义"
-            description="点击右上角按钮创建第一个SLA定义"
+            message="暂无SLA定义，点击右上角按钮创建"
             type="info"
             showIcon
           />

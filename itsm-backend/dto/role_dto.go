@@ -51,7 +51,7 @@ type RoleDTO struct {
 
 // RoleListResponse represents the response for listing roles
 type RoleListResponse struct {
-	Roles      []RoleDTO `json:"roles"`
+	Items      []RoleDTO `json:"items"`
 	Total      int       `json:"total"`
 	Page       int       `json:"page"`
 	PageSize   int       `json:"pageSize"`

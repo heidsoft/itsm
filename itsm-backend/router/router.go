@@ -18,6 +18,7 @@ import (
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
 	applicationHandler "itsm-backend/handlers/application"
+	projectHandler "itsm-backend/handlers/project"
 	approvalHandler "itsm-backend/handlers/approval"
 	approvalChainHandler "itsm-backend/handlers/approval_chain"
 	assetHandler "itsm-backend/handlers/asset"
@@ -157,6 +158,7 @@ type RouterConfig struct {
 
 	// Organization & Application
 	ApplicationHandler *applicationHandler.Handler
+	ProjectHandler     *projectHandler.Handler
 
 	// Ticket related controllers
 	TicketCategoryHandler *ticketCategoryHandler.Handler
@@ -381,6 +383,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	if config.Client != nil {
 		operationHandler := operations.NewHandler(operations.NewService(config.Client))
 		operationRoutes := auth.Group("/admin/operations/commands")
+		operationRoutes.Use(middleware.TenantMiddleware(config.Client))
 		operationRoutes.Use(middleware.RequirePermission("system", "write"))
 		operationRoutes.GET("", operationHandler.List)
 		operationRoutes.GET("/:id", operationHandler.Get)
@@ -395,6 +398,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		timerSvc := timerHandler.NewService(timerStore)
 		timerH := timerHandler.NewHandler(timerSvc)
 		timerRoutes := auth.Group("/timers")
+		timerRoutes.Use(middleware.TenantMiddleware(config.Client))
 		timerRoutes.Use(middleware.RequirePermission("system", "read"))
 		timerRoutes.GET("", timerH.List)
 		timerRoutes.GET("/stats", timerH.Stats)

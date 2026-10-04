@@ -1,7 +1,13 @@
 package seeder
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
+
+	"go.uber.org/zap"
 
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/internal/authz"
@@ -93,6 +99,50 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		t.Run("parity/"+role, func(t *testing.T) {
 			t.Skipf("DB 码集缺少硬编码兜底 %v；属 2026-09-07 有意裁剪的子集，是否收敛待 plans/product-remediation-plan-2026-10-03.md §3 N4 拍板", missingPairs)
 		})
+	}
+}
+
+// TestBuiltinRolePermissionCodes_NoDeadKeys 权限码映射的键必须 ⊆ 实际播种的角色 code。
+//
+// 背景（2026-10-03 R7-6）：BuiltinRolePermissionCodes() 的键必须对应实际会被播种到
+// roles 表的角色。播种来源有二：1) BuiltinRoles() 返回的 domainrole.All 9 个核心角色；
+// 2) 默认种子配置 config/seed/default.json 中的 roles 清单（18 个扩展角色）。
+// 死键（不在任一来源中的键）永远不会被 seedRolePermissions 匹配，携带的权限码会
+// 与真实角色漂移，增加审计与维护负担。
+func TestBuiltinRolePermissionCodes_NoDeadKeys(t *testing.T) {
+	seededRoles := make(map[string]bool)
+	for _, r := range domainrole.All {
+		seededRoles[r] = true
+	}
+	for _, r := range BuiltinRoles() {
+		seededRoles[r.Code] = true
+	}
+	cfg := loadSeedConfig(zap.NewNop().Sugar())
+	for _, r := range cfg.Roles {
+		seededRoles[r.Code] = true
+	}
+
+	// loadSeedConfig 在测试上下文中无法通过 resolveSeedConfigFile 找到 JSON 配置
+	// （测试二进制运行在临时目录），因此需要直接读取项目中的 JSON 配置文件，
+	// 把仅存在于 JSON 中的角色（如 change_manager、service_catalog_admin）也纳入允许集。
+	_, testFile, _, _ := runtime.Caller(0)
+	jsonPath := filepath.Join(filepath.Dir(testFile), "..", "..", "config", "seed", "default.json")
+	if data, err := os.ReadFile(jsonPath); err == nil {
+		var jsonCfg SeedConfig
+		if err := json.Unmarshal(data, &jsonCfg); err == nil {
+			for _, r := range jsonCfg.Roles {
+				seededRoles[r.Code] = true
+			}
+		}
+	}
+
+	for role := range authz.BuiltinRolePermissionCodes() {
+		if role == domainrole.SuperAdmin {
+			continue // Login ["*"] 旁路，不依赖 DB 权限行
+		}
+		if !seededRoles[role] {
+			t.Errorf("BuiltinRolePermissionCodes() 包含死键 %q：该角色不在 domainrole.All 或默认种子配置中，seedRolePermissions 永远不会匹配到它", role)
+		}
 	}
 }
 

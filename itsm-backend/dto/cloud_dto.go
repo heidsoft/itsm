@@ -33,10 +33,11 @@ type ListCloudAccountsRequest struct {
 
 // CloudAccountListResponse 云账号列表响应
 type CloudAccountListResponse struct {
-	CloudAccounts []CloudAccountResponse `json:"cloudAccounts"`
-	Total         int                    `json:"total"`
-	Page          int                    `json:"page"`
-	PageSize      int                    `json:"pageSize"`
+	Items      []CloudAccountResponse `json:"items"`
+	Total      int                    `json:"total"`
+	Page       int                    `json:"page"`
+	PageSize   int                    `json:"pageSize"`
+	TotalPages int                    `json:"totalPages"`
 }
 
 // ===================================
@@ -82,10 +83,11 @@ type ListCloudServicesRequest struct {
 
 // CloudServiceListResponse 云服务列表响应
 type CloudServiceListResponse struct {
-	CloudServices []CloudServiceResponse `json:"cloudServices"`
-	Total         int                    `json:"total"`
-	Page          int                    `json:"page"`
-	PageSize      int                    `json:"pageSize"`
+	Items      []CloudServiceResponse `json:"items"`
+	Total      int                    `json:"total"`
+	Page       int                    `json:"page"`
+	PageSize   int                    `json:"pageSize"`
+	TotalPages int                    `json:"totalPages"`
 }
 
 // ===================================
@@ -130,8 +132,9 @@ type ListCloudResourcesRequest struct {
 
 // CloudResourceListResponse 云资源列表响应
 type CloudResourceListResponse struct {
-	CloudResources []CloudResourceResponse `json:"cloudResources"`
-	Total          int                     `json:"total"`
-	Page           int                     `json:"page"`
-	PageSize       int                     `json:"pageSize"`
+	Items      []CloudResourceResponse `json:"items"`
+	Total      int                     `json:"total"`
+	Page       int                     `json:"page"`
+	PageSize   int                     `json:"pageSize"`
+	TotalPages int                     `json:"totalPages"`
 }

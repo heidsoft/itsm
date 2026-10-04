@@ -742,14 +742,12 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 	s.logger.Infow("Knowledge Search", "query", query, "type", searchType, "tenantID", tenantID)
 
 	if s.rag == nil {
-		// Fallback to basic search if RAG is not available
-		return []map[string]interface{}{}, nil
+		return nil, fmt.Errorf("RAG 服务未配置")
 	}
 
 	results, err := s.rag.Ask(ctx, tenantID, query, limit)
 	if err != nil {
-		s.logger.Warnw("RAG search failed", "error", err)
-		return []map[string]interface{}{}, nil
+		return nil, fmt.Errorf("RAG 搜索失败: %w", err)
 	}
 
 	return results, nil

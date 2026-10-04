@@ -1452,7 +1452,7 @@ export default function WorkflowNodeInspector({
                       size="small"
                     />
                     <Text type="secondary" className="text-xs mt-1 block">
-                      支持重复执行格式 R[次数]/[间隔时间]；cron 表达式后端暂未支持，暂用 R/间隔 格式
+                      支持重复执行格式 R[次数]/[间隔时间]，例如 R/PT1H 表示每小时执行一次
                     </Text>
                   </div>
                 )}

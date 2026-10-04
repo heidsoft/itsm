@@ -354,7 +354,7 @@ const ReleaseList: React.FC = () => {
             emptyText: (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无发布数据">
                 <Button type="primary" onClick={() => router.push('/releases/new')}>
-                  创建第一个发布
+                  创建发布
                 </Button>
               </Empty>
             ),

@@ -187,7 +187,6 @@ const ServiceRequestList: React.FC = () => {
               state="empty"
               empty={{
                 title: '暂无服务请求数据',
-                description: '当前没有服务请求记录，点击下方按钮创建第一个服务请求',
                 actionText: '新建服务请求',
                 onAction: () => router.push('/service-requests/new'),
                 showAction: true,

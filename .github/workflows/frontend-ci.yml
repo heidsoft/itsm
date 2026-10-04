@@ -41,6 +41,8 @@ jobs:
       - name: Install dependencies
         working-directory: itsm-frontend
         run: npm ci --legacy-peer-deps
+      - name: P0 quality guards
+        run: bash scripts/check-frontend-p0-guards.sh
       - name: Lint
         working-directory: itsm-frontend
         run: npm run lint:check -- --quiet

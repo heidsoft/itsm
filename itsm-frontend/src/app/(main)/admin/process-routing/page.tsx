@@ -23,7 +23,6 @@ import {
   Statistic,
   Alert,
 } from 'antd';
-import Link from 'next/link';
 import { Plus, Edit, Delete, Copy, Search, Settings } from 'lucide-react';
 import type {
   ProcessBinding,
@@ -307,14 +306,6 @@ export default function ProcessRoutingPage() {
         type="info"
         showIcon
         message="流程路由规则决定业务单据匹配到哪个工作流"
-        description={
-          <Space wrap>
-            <span>相关配置：</span>
-            <Link href="/admin/department-processes">部门流程配置</Link>
-            <Link href="/admin/workflows">工作流管理</Link>
-            <Link href="/workflow/designer">流程设计器</Link>
-          </Space>
-        }
       />
       {/* Statistics */}
       <Row gutter={16}>

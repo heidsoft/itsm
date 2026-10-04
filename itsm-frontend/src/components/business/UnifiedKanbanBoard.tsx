@@ -15,7 +15,7 @@ import {
   App,
   Dropdown,
 } from 'antd';
-import { Search as SearchIcon, Filter, Plus, Save, Pencil, Eye, Settings, Share2, MoreHorizontal } from 'lucide-react';
+import { Search as SearchIcon, Filter, Plus, Pencil, Eye, MoreHorizontal } from 'lucide-react';
 import type { MenuProps, DropDownProps } from 'antd';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -467,31 +467,6 @@ export function UnifiedKanbanBoard<T>({
                 ]}
               />
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: 'save',
-                    label: '保存当前视图',
-                    icon: <Save />,
-                    disabled: true,
-                    onClick: () => antMessage.info('保存视图功能即将推出，敬请期待'),
-                  },
-                  {
-                    key: 'share',
-                    label: '共享视图',
-                    icon: <Share2 />,
-                    disabled: true,
-                    onClick: () => antMessage.info('共享功能即将推出，敬请期待'),
-                  },
-                ],
-              }}
-              trigger={['click']}
-            >
-              <Button icon={<Settings />}>视图设置</Button>
-            </Dropdown>
           </div>
         </div>
       )}

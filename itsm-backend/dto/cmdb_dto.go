@@ -66,7 +66,7 @@ type ConfigurationItemResponse struct {
 
 // ConfigurationItemStatsResponse 配置项统计响应
 type ConfigurationItemStatsResponse struct {
-	TotalCount              int            `json:"totalCount"`
+	Total                   int            `json:"total"`
 	ActiveCount             int            `json:"activeCount"`
 	InactiveCount           int            `json:"inactiveCount"`
 	MaintenanceCount        int            `json:"maintenanceCount"`

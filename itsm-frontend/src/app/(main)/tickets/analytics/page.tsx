@@ -437,7 +437,7 @@ const TicketAnalytics: React.FC = () => {
                     rowKey="assigneeName"
                     pagination={false}
                     size="small"
-                    locale={{ emptyText: <Empty description="暂无团队表现数据（后端未提供明细）" /> }}
+                    locale={{ emptyText: <Empty description="暂无团队表现数据" /> }}
                   />
                 </Card>
               ),
@@ -453,7 +453,7 @@ const TicketAnalytics: React.FC = () => {
                     rowKey="category"
                     pagination={false}
                     size="small"
-                    locale={{ emptyText: <Empty description="暂无热门类别数据（后端未提供明细）" /> }}
+                    locale={{ emptyText: <Empty description="暂无热门类别数据" /> }}
                   />
                 </Card>
               ),

@@ -569,8 +569,7 @@ export default function SystemConfiguration() {
       {/* 操作提示 */}
       {hasChanges && (
         <Alert
-          message="配置已修改"
-          description="您有未保存的配置更改，请及时保存。"
+          message="配置已修改，请及时保存"
           type="warning"
           showIcon
           closable

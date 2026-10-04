@@ -491,7 +491,7 @@ func TestTicketService_GetTickets(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, response)
-				assert.Len(t, response.Tickets, tt.expectedCount)
+				assert.Len(t, response.Items, tt.expectedCount)
 				assert.Equal(t, 3, response.Total) // 总数始终为3
 				assert.Equal(t, tt.request.Page, response.Page)
 				assert.Equal(t, tt.request.PageSize, response.PageSize)
@@ -613,7 +613,7 @@ func TestTicketService_ListTickets_DataScope(t *testing.T) {
 	aliceResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, alice.ID, "end_user")
 	require.NoError(t, err)
 	assert.Equal(t, 3, aliceResp.Total, "Alice 应只看到自己创建或分配给自己的工单")
-	for _, tk := range aliceResp.Tickets {
+	for _, tk := range aliceResp.Items {
 		assert.NotEqual(t, "DSCOPE-3", tk.TicketNumber,
 			"Alice 不应看到 Bob 的薪酬敏感工单")
 	}
@@ -647,7 +647,7 @@ func TestTicketService_ListTickets_DataScope(t *testing.T) {
 	// Alice 只能看到 DSCOPE-4（分配给自己），看不到 DSCOPE-3（Bob 独有）。
 	assert.Equal(t, 1, aliceBypassResp.Total,
 		"Alice 以 requesterID=bob 过滤时只应看到分配给自己的 DSCOPE-4")
-	for _, tk := range aliceBypassResp.Tickets {
+	for _, tk := range aliceBypassResp.Items {
 		assert.NotEqual(t, "DSCOPE-3", tk.TicketNumber,
 			"Alice 不应通过 RequesterID 过滤绕过 DataScope 看到 Bob 的薪酬敏感工单")
 	}
@@ -1264,7 +1264,7 @@ func TestTicketService_ListTickets_RowScope(t *testing.T) {
 	t.Run("alice 仅见自己的工单", func(t *testing.T) {
 		resp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{Page: 1, PageSize: 50}, tenant.ID, alice.ID, "end_user")
 		require.NoError(t, err)
-		ids := scopeTicketIDs(resp.Tickets)
+		ids := scopeTicketIDs(resp.Items)
 		assert.Contains(t, ids, tA.ID)
 		assert.NotContains(t, ids, tB.ID)
 	})
@@ -1272,7 +1272,7 @@ func TestTicketService_ListTickets_RowScope(t *testing.T) {
 	t.Run("admin 见全租户工单", func(t *testing.T) {
 		resp, err := ticketService.ListTickets(ctx, &dto.ListTicketsRequest{Page: 1, PageSize: 50}, tenant.ID, admin.ID, "admin")
 		require.NoError(t, err)
-		ids := scopeTicketIDs(resp.Tickets)
+		ids := scopeTicketIDs(resp.Items)
 		assert.Contains(t, ids, tA.ID)
 		assert.Contains(t, ids, tB.ID)
 	})

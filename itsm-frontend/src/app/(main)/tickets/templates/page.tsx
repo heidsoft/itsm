@@ -575,7 +575,7 @@ const TicketTemplatesPage = () => {
             </Title>
             <p className="text-gray-500 mb-4">未找到匹配的工单模板</p>
             <Button type="primary" onClick={() => setModalVisible(true)}>
-              创建第一个模板
+              创建模板
             </Button>
           </div>
         </Card>

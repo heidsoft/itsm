@@ -127,8 +127,11 @@ type ReleaseResponse struct {
 
 // ReleaseListResponse 发布列表响应
 type ReleaseListResponse struct {
-	Total    int               `json:"total"`    // 总数
-	Releases []ReleaseResponse `json:"releases"` // 发布列表
+	Items      []ReleaseResponse `json:"items"`      // 发布列表
+	Total      int               `json:"total"`      // 总数
+	Page       int               `json:"page"`       // 当前页
+	PageSize   int               `json:"pageSize"`   // 每页数量
+	TotalPages int               `json:"totalPages"` // 总页数
 }
 
 // ReleaseStatsResponse 发布统计响应

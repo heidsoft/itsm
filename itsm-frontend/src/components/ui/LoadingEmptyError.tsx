@@ -50,49 +50,49 @@ const getDefaultEmptyConfig = (context?: string, t?: (key: string) => string) =>
     case 'tickets':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有工单数据，点击下方按钮创建第一个工单',
+        description: t ? t('common.noData') : '暂无工单数据',
         actionText: t ? t('common.create') : '创建工单',
         icon: <FileText size={48} />,
       };
     case 'incidents':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有事件数据，点击下方按钮创建第一个事件',
+        description: t ? t('common.noData') : '暂无事件数据',
         actionText: t ? t('common.create') : '创建事件',
         icon: <AlertTriangle size={48} />,
       };
     case 'problems':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有问题数据，点击下方按钮创建第一个问题',
+        description: t ? t('common.noData') : '暂无问题数据',
         actionText: t ? t('common.create') : '创建问题',
         icon: <AlertTriangle size={48} />,
       };
     case 'changes':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有变更数据，点击下方按钮创建第一个变更',
+        description: t ? t('common.noData') : '暂无变更数据',
         actionText: t ? t('common.create') : '创建变更',
         icon: <Settings size={48} />,
       };
     case 'cmdb':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有配置项数据，点击下方按钮创建第一个配置项',
+        description: t ? t('common.noData') : '暂无配置项数据',
         actionText: t ? t('common.create') : '创建配置项',
         icon: <Database size={48} />,
       };
     case 'users':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有用户数据，点击下方按钮创建第一个用户',
+        description: t ? t('common.noData') : '暂无用户数据',
         actionText: t ? t('common.create') : '创建用户',
         icon: <User size={48} />,
       };
     case 'workflows':
       return {
         title: defaultTitle,
-        description: t ? t('common.noData') : '当前没有工作流数据，点击下方按钮创建第一个工作流',
+        description: t ? t('common.noData') : '暂无工作流数据',
         actionText: t ? t('common.create') : '创建工作流',
         icon: <Settings size={48} />,
       };

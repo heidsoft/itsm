@@ -161,7 +161,7 @@ func (h *Handler) ListRoles(c *gin.Context) {
 	}
 
 	common.Success(c, dto.RoleListResponse{
-		Roles:      roleItems,
+		Items:      roleItems,
 		Total:      total,
 		Page:       params.Page,
 		PageSize:   params.PageSize,
@@ -381,8 +381,11 @@ func (h *Handler) ListMenus(c *gin.Context) {
 	}
 
 	common.Success(c, dto.MenuListResponse{
-		Menus: menus,
-		Total: len(menus),
+		Items:      menus,
+		Total:      len(menus),
+		Page:       1,
+		PageSize:   len(menus),
+		TotalPages: 1,
 	})
 }
 

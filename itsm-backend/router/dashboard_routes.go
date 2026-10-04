@@ -144,13 +144,23 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			common.Success(c, defaultDashboardConfig())
 		})
 		dashboard.POST("/config", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Success(c, gin.H{"success": true})
+			var payload map[string]interface{}
+			if err := c.ShouldBindJSON(&payload); err != nil {
+				common.Fail(c, 1001, "参数错误: "+err.Error())
+				return
+			}
+			common.Success(c, payload)
 		})
 		dashboard.GET("/layout", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardLayout())
 		})
 		dashboard.POST("/layout", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Success(c, gin.H{"success": true})
+			var payload map[string]interface{}
+			if err := c.ShouldBindJSON(&payload); err != nil {
+				common.Fail(c, 1001, "参数错误: "+err.Error())
+				return
+			}
+			common.Success(c, payload)
 		})
 		dashboard.GET("/widgets/available", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, defaultDashboardWidgets())
@@ -185,7 +195,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			common.Success(c, gin.H{"widget": widget})
 		})
 		dashboard.DELETE("/widgets/:widget_id", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Success(c, gin.H{"success": true})
+			common.Success(c, gin.H{"deletedId": c.Param("widget_id")})
 		})
 		dashboard.GET("/charts/:chart_type", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
 			common.Success(c, gin.H{
@@ -266,7 +276,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 			common.Success(c, gin.H{"template": defaultDashboardTemplate()})
 		})
 		dashboard.POST("/templates/:template_id/apply", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
-			common.Success(c, gin.H{"success": true, "config": defaultDashboardConfig()})
+			common.Success(c, gin.H{"templateId": c.Param("template_id"), "config": defaultDashboardConfig()})
 		})
 	}
 }

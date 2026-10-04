@@ -153,8 +153,7 @@ export default function EscalationMatricesPage() {
       </div>
 
       <Alert
-        message="只读预览"
-        description="升级矩阵为系统内置策略，当前仅支持查看，暂不提供在线编辑。后续版本将开放租户级自定义配置。"
+        message="升级矩阵为系统内置策略，当前仅支持查看"
         type="info"
         showIcon
       />

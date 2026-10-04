@@ -139,8 +139,10 @@ func (s *Seeder) VerifyTenantBaseline(ctx context.Context, tenantID int) ([]Comp
 	return results, nil
 }
 
-// recordTenantTemplateVersion keeps the historical version marker readable for
-// one release while the initialization ledger stays the source of truth.
+// recordTenantTemplateVersion records the product template version applied to
+// a tenant. Tenant provisioning uses SystemConfig version markers plus
+// VerifyTenantBaseline for readiness checks; it does not write to the
+// initialization_installations ledger (that ledger covers platform bootstrap).
 func (s *Seeder) recordTenantTemplateVersion(ctx context.Context, tenantID int, templateVersion string) error {
 	versionKey := fmt.Sprintf("tenant.bootstrap.version.%d", tenantID)
 	version, err := s.client.SystemConfig.Query().

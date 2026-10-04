@@ -1100,12 +1100,12 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 		return nil, fmt.Errorf("解决工单时必须填写解决方案")
 	}
 
-	// 转换更新参数
-	params := &ticket.UpdateParams{
-		Version: current.Version,
+	// 转换更新参数——乐观锁要求客户端必须传入 version，禁止回退到 current.Version 绕过检查
+	if req.Version <= 0 {
+		return nil, fmt.Errorf("缺少 version 字段，更新必须携带当前版本号")
 	}
-	if req.Version > 0 {
-		params.Version = req.Version
+	params := &ticket.UpdateParams{
+		Version: req.Version,
 	}
 
 	if req.Title != "" {
@@ -1310,11 +1310,16 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	}
 
 	// 转换为 DTO
+	totalPages := 0
+	if req.PageSize > 0 {
+		totalPages = (result.Total + req.PageSize - 1) / req.PageSize
+	}
 	response := &dto.ListTicketsResponse{
-		Total:    result.Total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-		Tickets:  make([]*dto.TicketResponse, len(result.Data)),
+		Total:      result.Total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: totalPages,
+		Items:      make([]*dto.TicketResponse, len(result.Data)),
 	}
 
 	for i, t := range result.Data {
@@ -1322,7 +1327,7 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		if slaStates != nil {
 			st = slaStates[t.ID]
 		}
-		response.Tickets[i] = s.toTicketResponseWithSLA(t, st)
+		response.Items[i] = s.toTicketResponseWithSLA(t, st)
 	}
 
 	return response, nil

@@ -27,10 +27,16 @@ type AssignmentRecommendation struct {
 	Categories []int    `json:"categories,omitempty"`
 }
 
-// GetAssignRecommendationsResponse 获取分配推荐响应
-type GetAssignRecommendationsResponse struct {
-	Recommendations []*AssignmentRecommendation `json:"recommendations"`
-	Total           int                         `json:"total"`
+// AssignRecommendationListResponse 分配推荐列表响应
+//
+// GET /api/v1/tickets/assign-recommendations/:id 实测不分页：service 将租户内全部可用
+// 用户排序后整表返回，handler 写 Total=len(items)，因此按 docs/api-reference.md
+// 「不分页的列表」保留诚实的两键，不补 page/pageSize/totalPages。
+// 结构体名带 List 是为了让它落进 tests/contract 的信封棘轮扫描范围（棘轮只扫名字含
+// List 且带 total 的结构体，旧名 GetAssignRecommendationsResponse 因此静默逃逸过守卫）。
+type AssignRecommendationListResponse struct {
+	Items []*AssignmentRecommendation `json:"items"`
+	Total int                         `json:"total"`
 }
 
 // AssignmentRuleResponse 分配规则响应

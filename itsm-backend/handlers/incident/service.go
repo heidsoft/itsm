@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"itsm-backend/common"
-	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/commandbus"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"
@@ -24,6 +24,7 @@ type ProcessTriggerServiceInterface interface {
 
 type Service struct {
 	repo                  Repository
+	client                *ent.Client
 	productionService     *service.IncidentService
 	monitoringService     *service.IncidentMonitoringService
 	alertingSvc           *service.IncidentAlertingService
@@ -63,9 +64,10 @@ type IncidentMetricsReadModel struct {
 	MetricsCount int
 }
 
-func NewService(repo Repository, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, client *ent.Client, productionSvc *service.IncidentService, monitoringSvc *service.IncidentMonitoringService, alertingSvc *service.IncidentAlertingService, rootCauseSvc *service.RootCauseAnalysisService, slaMonitor *service.SLAMonitorService, logger *zap.SugaredLogger) *Service {
 	return &Service{
 		repo:              repo,
+		client:            client,
 		productionService: productionSvc,
 		monitoringService: monitoringSvc,
 		alertingSvc:       alertingSvc,
@@ -180,27 +182,87 @@ func (s *Service) Create(ctx context.Context, tenantID int, i *Incident) (*Incid
 		i.DetectedAt = time.Now()
 	}
 
-	created, err := s.repo.Create(ctx, i)
+	// 使用事务保证工单创建与 command outbox 的原子性
+	tx, err := s.client.Tx(ctx)
 	if err != nil {
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
+	}
+	rollback := func(err error) (*Incident, error) {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return nil, fmt.Errorf("%v; rollback failed: %v", err, rbErr)
+		}
 		return nil, err
 	}
 
-	// Audit Log
-	s.repo.CreateEvent(ctx, &IncidentEvent{
-		IncidentID:  created.ID,
-		EventType:   "creation",
-		EventName:   "事件创建",
-		Description: fmt.Sprintf("事件 %s 已创建", number),
-		Status:      "active",
-		Severity:    "info",
-		Source:      "system",
-		UserID:      i.ReporterID,
-		OccurredAt:  time.Now(),
-		TenantID:    tenantID,
-	})
+	// 在事务内创建工单
+	createdEnt, err := tx.Incident.Create().
+		SetTenantID(i.TenantID).
+		SetIncidentNumber(i.IncidentNumber).
+		SetTitle(i.Title).
+		SetDescription(i.Description).
+		SetStatus(i.Status).
+		SetPriority(i.Priority).
+		SetReporterID(i.ReporterID).
+		SetNillableAssigneeID(i.AssigneeID).
+		SetCategory(i.Category).
+		SetDetectedAt(i.DetectedAt).
+		SetNillableResolvedAt(i.ResolvedAt).
+		Save(ctx)
+	if err != nil {
+		return rollback(fmt.Errorf("failed to create incident: %w", err))
+	}
 
-	// Execute Rules Async（派生带租户上下文的独立 context，避免 RLS enforce 后异步规则失效）
-	go s.executeRules(tenantctx.WithTenantID(context.Background(), tenantID), created, tenantID)
+	// 转换为领域对象
+	created := &Incident{
+		ID:             createdEnt.ID,
+		TenantID:       createdEnt.TenantID,
+		IncidentNumber: createdEnt.IncidentNumber,
+		Title:          createdEnt.Title,
+		Description:    createdEnt.Description,
+		Status:         createdEnt.Status,
+		Priority:       createdEnt.Priority,
+		ReporterID:     createdEnt.ReporterID,
+		AssigneeID:     i.AssigneeID,
+		Category:       createdEnt.Category,
+		DetectedAt:     createdEnt.DetectedAt,
+		ResolvedAt:     i.ResolvedAt,
+		CreatedAt:      createdEnt.CreatedAt,
+		UpdatedAt:      createdEnt.UpdatedAt,
+	}
+
+	// Audit Log
+	_, err = tx.IncidentEvent.Create().
+		SetIncidentID(created.ID).
+		SetEventType("creation").
+		SetEventName("事件创建").
+		SetDescription(fmt.Sprintf("事件 %s 已创建", number)).
+		SetStatus("active").
+		SetSeverity("info").
+		SetSource("system").
+		SetUserID(i.ReporterID).
+		SetOccurredAt(time.Now()).
+		SetTenantID(tenantID).
+		Save(ctx)
+	if err != nil {
+		return rollback(fmt.Errorf("failed to create audit event: %w", err))
+	}
+
+	// 在事务内 enqueue 规则执行命令，保证原子性
+	_, err = commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:      tenantID,
+		CommandType:   commandbus.CommandExecuteIncidentRules,
+		AggregateType: "incident",
+		AggregateID:   created.ID,
+		IdempotencyKey: fmt.Sprintf("incident:%d:rules:create", created.ID),
+		Payload:       map[string]interface{}{"event": "created"},
+	})
+	if err != nil {
+		return rollback(fmt.Errorf("failed to enqueue incident rules command: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return rollback(fmt.Errorf("failed to commit transaction: %w", err))
+	}
 
 	return created, nil
 }

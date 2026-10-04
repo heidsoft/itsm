@@ -285,19 +285,8 @@ export default function MSPDashboardPage() {
               <Avatar size={80} icon={<User />} style={{ backgroundColor: '#1890ff' }} />
             </div>
             <Alert
-              message="MSP 管理控制台"
-              description={
-                <div>
-                  <p>您当前不是 MSP 员工，无法访问 MSP 管理功能。</p>
-                  <p style={{ marginTop: 8, color: '#888' }}>
-                    MSP（Managed Service Provider）管理控制台用于管理多租户服务。
-                  </p>
-                  <p style={{ marginTop: 16, fontSize: 12, color: '#999' }}>
-                    如需访问，请联系系统管理员为您分配 MSP 员工角色。
-                  </p>
-                </div>
-              }
-              type="info"
+              message="您当前不是 MSP 员工，请联系系统管理员分配角色"
+              type="warning"
               showIcon
               style={{ maxWidth: 500, margin: '0 auto' }}
             />

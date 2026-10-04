@@ -141,11 +141,16 @@ func (s *AuditLogService) ListAuditLogs(ctx context.Context, req *dto.ListAuditL
 		logs = append(logs, log)
 	}
 
+	totalPages := 0
+	if req.PageSize > 0 {
+		totalPages = (total + req.PageSize - 1) / req.PageSize
+	}
 	return &dto.ListAuditLogsResponse{
-		Logs:     logs,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
+		Items:      logs,
+		Total:      total,
+		Page:       req.Page,
+		PageSize:   req.PageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 
@@ -225,9 +230,10 @@ func (s *AuditLogService) GetCIAuditLogs(ctx context.Context, tenantID, ciID, pa
 	}
 
 	return &dto.ListAuditLogsResponse{
-		Logs:     logs,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
+		Items:      logs,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
 	}, nil
 }

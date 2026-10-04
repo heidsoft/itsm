@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"itsm-backend/ent"
@@ -113,16 +114,29 @@ func main() {
 			sugar.Warn("API_KEY 环境变量未设置，开发环境下临时以无认证模式启动；生产环境请务必设置")
 		}
 	}
+	// 租户 ID 必须显式配置，禁止硬编码默认值
+	tenantIDStr := os.Getenv("TENANT_ID")
+	if tenantIDStr == "" {
+		if isProdTier {
+			sugar.Fatal("TENANT_ID 环境变量缺失！CMDB 独立服务必须指定所属租户")
+		}
+		sugar.Warn("TENANT_ID 未设置，开发环境默认使用 tenant_id=1；生产环境必须显式配置")
+		tenantIDStr = "1"
+	}
+	tenantID, err := strconv.Atoi(tenantIDStr)
+	if err != nil {
+		sugar.Fatalf("TENANT_ID 必须是整数，当前值: %s", tenantIDStr)
+	}
 	r.Use(func(c *gin.Context) {
 		if apiKey == "" {
-			c.Set("tenant_id", 1)
-			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+			c.Set("tenant_id", tenantID)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 			c.Next()
 			return
 		}
 		if c.GetHeader("X-API-Key") == apiKey {
-			c.Set("tenant_id", 1)
-			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
+			c.Set("tenant_id", tenantID)
+			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
 			c.Next()
 			return
 		}

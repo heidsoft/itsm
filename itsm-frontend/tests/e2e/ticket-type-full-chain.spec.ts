@@ -7,7 +7,6 @@ import {
   login,
   mutate,
   single,
-  success,
   write,
   type PageDTO,
   type SessionUser,
@@ -380,20 +379,18 @@ test('TicketType preset → HTTP ticket → real outbox worker → task → audi
       const otherPage = await otherContext.newPage();
       const username = `other${suffix}`;
       const otherPassword = `E2e!${randomBytes(16).toString('hex')}`;
-      // tenantCode here is the registration contract, not a forged tenant
-      // header/body on protected endpoints. Subsequent scope comes from login.
-      await success(
-        await otherPage.request.post('/api/v1/auth/register', {
-          data: {
-            username,
-            email: `${username}@example.invalid`,
-            password: otherPassword,
-            displayName: 'E2E Other',
-            tenantCode,
-          },
-          maxRedirects: 0,
-        })
-      );
+      // P0-1 removed the tenantCode registration contract: self-registration
+      // fail-closes with multiple active tenants. Tenant B's user is provisioned
+      // by the super_admin switching into the tenant, then creating through the
+      // standard own-tenant user API.
+      await login(otherPage, 'admin', password);
+      await write(otherPage, 'POST', '/api/v1/auth/switch-tenant', { tenantId: otherTenant.id });
+      await write(otherPage, 'POST', '/api/v1/users', {
+        username,
+        email: `${username}@example.invalid`,
+        password: otherPassword,
+        name: 'E2E Other',
+      });
       const other = await login(otherPage, username, otherPassword);
       expect(other.tenantId).toBe(otherTenant.id);
       expect(other.id).not.toBe(admin.id);

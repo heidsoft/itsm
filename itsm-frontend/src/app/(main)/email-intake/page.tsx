@@ -583,8 +583,7 @@ export default function EmailIntakePage() {
       <Alert
         type='info'
         showIcon
-        message='自动开单默认关闭'
-        description='建议先使用 observeOnly 或 manualConfirm 验证 Golden Set，再按租户启用 autoCreate。'
+        message='自动开单默认关闭，建议先用观察模式验证后再启用'
       />
       <Tabs
         items={[

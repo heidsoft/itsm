@@ -293,7 +293,7 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
         {data.length === 0 && !loading ? (
           <Empty description="暂无变更记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type="primary" onClick={() => router.push('/changes/new')}>
-              创建第一个变更
+              创建变更
             </Button>
           </Empty>
         ) : (

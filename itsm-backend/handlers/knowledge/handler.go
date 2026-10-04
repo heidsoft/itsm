@@ -474,7 +474,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 	var req struct {
 		Query    string `json:"query" binding:"required"`
 		Category string `json:"category"`
-		Limit    int    `json:"limit"`
+		PageSize int    `json:"pageSize"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "参数错误: "+err.Error())
@@ -493,7 +493,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		return
 	}
 
-	limit := req.Limit
+	limit := req.PageSize
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}

@@ -38,8 +38,9 @@ type ListAuditLogsRequest struct {
 
 // ListAuditLogsResponse 审计日志查询响应结构
 type ListAuditLogsResponse struct {
-	Logs     []*AuditLog `json:"logs"`
-	Total    int         `json:"total"`
-	Page     int         `json:"page"`
-	PageSize int         `json:"pageSize"`
+	Items      []*AuditLog `json:"items"`
+	Total      int         `json:"total"`
+	Page       int         `json:"page"`
+	PageSize   int         `json:"pageSize"`
+	TotalPages int         `json:"totalPages"`
 }

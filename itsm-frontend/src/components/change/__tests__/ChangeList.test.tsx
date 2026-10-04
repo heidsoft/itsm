@@ -269,7 +269,7 @@ describe('ChangeList', () => {
           { timeout: 5000 }
         );
 
-        expect(screen.getByText('创建第一个变更')).toBeInTheDocument();
+        expect(screen.getByText('创建变更')).toBeInTheDocument();
       } finally {
         spy.mockRestore();
       }

@@ -3,6 +3,7 @@ package incident
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"itsm-backend/database"
@@ -360,14 +361,115 @@ func (r *EntRepository) CountByPeriod(ctx context.Context, tenantID int, start, 
 		Count(ctx)
 }
 
-// GetStats 单次聚合查询返回全量指标。
+// GetStats 单次聚合查询返回租户全量标量。
 // 已封装到 incidentStatsRepository：保留 PostgreSQL FILTER 聚合与 EXTRACT(EPOCH)
 // 语法以便单查询完成多指标统计，调用方不再接触 SQL。
+// 报表需要分布/趋势/窗口时请使用 GetReport，不要在这里加列。
 func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*IncidentStats, error) {
 	if r.stats == nil {
 		return nil, fmt.Errorf("incident stats repository not initialised")
 	}
 	return r.stats.GetStats(ctx, tenantID)
+}
+
+// incidentCohortRow 是窗口内新建事件的投影行（只要分组与归日需要的三列）。
+type incidentCohortRow struct {
+	CreatedAt time.Time `json:"created_at"`
+	Status    string    `json:"status"`
+	Priority  string    `json:"priority"`
+}
+
+// incidentResolvedRow 是窗口内解决事件的投影行（平均时长与归日只需要两列）。
+type incidentResolvedRow struct {
+	CreatedAt  time.Time `json:"created_at"`
+	ResolvedAt time.Time `json:"resolved_at"`
+}
+
+// GetReport 用两条投影查询返回事件趋势报表，行数由窗口长度界定，不加载完整实体。
+//
+// 口径：
+//   - 队列（cohort）按 created_at 落在 [period.Start, period.End) 界定，
+//     状态/优先级分布与每日新建都来自这一集合，因此分布之和恒等于 createdInWindow；
+//   - 每日解决与平均解决时长按 resolved_at 落在同一窗口界定，
+//     包含窗口之前创建、窗口内解决的事件，与 cohort 不是同一集合。
+//
+// 这里刻意只用 Ent 查询（GroupBy 之外的部分用 Select+Scan 投影），PostgreSQL 与 SQLite
+// 都能执行，所以报表口径有 enttest 契约测试；PostgreSQL 专属的 FILTER/EXTRACT 聚合
+// 只服务 GetStats 的既有标量，见 stats_repository.go。
+func (r *EntRepository) GetReport(ctx context.Context, tenantID int, period ReportPeriod) (*IncidentReport, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("incident report requires tenantID")
+	}
+	labels := period.DayLabels()
+	if len(labels) == 0 {
+		return nil, fmt.Errorf("incident report requires a non-empty window")
+	}
+
+	cohort := []incidentCohortRow{}
+	if err := r.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
+			incident.CreatedAtGTE(period.Start),
+			incident.CreatedAtLT(period.End),
+		).
+		Select(incident.FieldCreatedAt, incident.FieldStatus, incident.FieldPriority).
+		Scan(ctx, &cohort); err != nil {
+		return nil, fmt.Errorf("scan incident cohort: %w", err)
+	}
+
+	resolved := []incidentResolvedRow{}
+	if err := r.client.Incident.Query().
+		Where(
+			incident.TenantIDEQ(tenantID),
+			incident.DeletedAtIsNil(),
+			incident.StatusIn(incidentResolvedStatuses...),
+			incident.ResolvedAtNotNil(),
+			incident.ResolvedAtGTE(period.Start),
+			incident.ResolvedAtLT(period.End),
+		).
+		Select(incident.FieldCreatedAt, incident.FieldResolvedAt).
+		Scan(ctx, &resolved); err != nil {
+		return nil, fmt.Errorf("scan incident resolved window: %w", err)
+	}
+
+	createdByDay := make(map[string]int, len(labels))
+	statusCounts := make(map[string]int, len(labels))
+	priorityCounts := make(map[string]int, len(labels))
+	for _, row := range cohort {
+		createdByDay[dayLabel(row.CreatedAt)]++
+		statusCounts[row.Status]++
+		priorityCounts[row.Priority]++
+	}
+
+	resolvedByDay := make(map[string]int, len(labels))
+	var totalMinutes float64
+	for _, row := range resolved {
+		resolvedByDay[dayLabel(row.ResolvedAt)]++
+		totalMinutes += row.ResolvedAt.Sub(row.CreatedAt).Minutes()
+	}
+
+	trend := make([]IncidentTrendPoint, 0, len(labels))
+	for _, label := range labels {
+		trend = append(trend, IncidentTrendPoint{
+			Date:     label,
+			Created:  createdByDay[label],
+			Resolved: resolvedByDay[label],
+		})
+	}
+
+	report := &IncidentReport{
+		Window:           period.Window(),
+		CreatedInWindow:  len(cohort),
+		ResolvedInWindow: len(resolved),
+		ByStatus:         orderedIncidentCounts(statusCounts, incidentStatusOrder),
+		ByPriority:       orderedIncidentCounts(priorityCounts, incidentPriorityOrder),
+		DailyTrend:       trend,
+	}
+	if len(resolved) > 0 {
+		report.AvgResolutionMinutes = int(math.Round(totalMinutes / float64(len(resolved))))
+	}
+	return report, nil
 }
 
 func (r *EntRepository) GenerateIncidentNumber(ctx context.Context, tenantID int, year int, month int) (string, error) {

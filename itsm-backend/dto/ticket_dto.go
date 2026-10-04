@@ -111,7 +111,7 @@ type TicketResponse struct {
 
 // ListTicketsResponse 工单列表响应
 type ListTicketsResponse struct {
-	Tickets    []*TicketResponse `json:"tickets"`
+	Items      []*TicketResponse `json:"items"`
 	Total      int               `json:"total"`
 	Page       int               `json:"page"`
 	PageSize   int               `json:"pageSize"`

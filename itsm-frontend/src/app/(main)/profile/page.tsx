@@ -812,59 +812,6 @@ export default function ProfilePage() {
                           </div>
                         </Card>
 
-                        <Card
-                          size="small"
-                          style={{
-                            borderRadius: DESIGN.radius.md,
-                            border: `1px solid ${DESIGN.colors.border}`,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
-                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                                为账户添加额外的安全保护
-                              </div>
-                            </div>
-                            <Tooltip title="该功能即将推出">
-                              <Button type="primary" ghost disabled>
-                                启用
-                              </Button>
-                            </Tooltip>
-                          </div>
-                        </Card>
-
-                        <Card
-                          size="small"
-                          style={{
-                            borderRadius: DESIGN.radius.md,
-                            border: `1px solid ${DESIGN.colors.border}`,
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <div>
-                              <div style={{ fontWeight: 600, marginBottom: 4 }}>登录历史</div>
-                              <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
-                                查看账户的登录历史记录
-                              </div>
-                            </div>
-                            <Tooltip title="该功能即将推出">
-                              <Button disabled>查看</Button>
-                            </Tooltip>
-                          </div>
-                        </Card>
                       </>
                     ),
                   },

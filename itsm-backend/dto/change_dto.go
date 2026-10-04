@@ -121,8 +121,9 @@ type ChangeResponse struct {
 
 // ChangeListResponse 变更列表响应
 type ChangeListResponse struct {
+	Items      []ChangeResponse `json:"items"`      // 变更列表
 	Total      int              `json:"total"`      // 总数
-	Changes    []ChangeResponse `json:"changes"`    // 变更列表
+	Page       int              `json:"page"`       // 当前页
 	PageSize   int              `json:"pageSize"`   // 每页数量
 	TotalPages int              `json:"totalPages"` // 总页数
 }

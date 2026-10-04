@@ -112,7 +112,7 @@ type BulkFilter struct {
 	CommandType   string
 	AggregateType string
 	LeaseExpired  bool
-	Limit         int
+	PageSize      int
 }
 
 func (f *BulkFilter) validate() error {
@@ -122,11 +122,11 @@ func (f *BulkFilter) validate() error {
 	if f.Status != "" && !isKnownStatus(f.Status) {
 		return fmt.Errorf("unsupported status filter: %s", f.Status)
 	}
-	if f.Limit <= 0 {
-		f.Limit = defaultBulkLimit
+	if f.PageSize <= 0 {
+		f.PageSize = defaultBulkLimit
 	}
-	if f.Limit > maxBulkLimit {
-		f.Limit = maxBulkLimit
+	if f.PageSize > maxBulkLimit {
+		f.PageSize = maxBulkLimit
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ type BulkResult struct {
 	MatchedIDs []int `json:"matchedIds"`
 	Updated    int   `json:"updated"`
 	Skipped    int   `json:"skipped"`
-	Limit      int   `json:"limit"`
+	PageSize   int   `json:"pageSize"`
 }
 
 func (s *Service) List(ctx context.Context, request ListRequest) (*Page, error) {
@@ -315,7 +315,7 @@ func (s *Service) bulkTransition(ctx context.Context, filter BulkFilter, actor A
 	if filter.LeaseExpired && filter.Status == commandbus.StatusProcessing {
 		query = query.Where(operationalcommand.LeaseExpiresAtLT(s.now()))
 	}
-	matched, err := query.Limit(filter.Limit).All(ctx)
+	matched, err := query.Limit(filter.PageSize).All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load bulk commands: %w", err)
 	}
@@ -364,7 +364,7 @@ func (s *Service) bulkTransition(ctx context.Context, filter BulkFilter, actor A
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("commit bulk operation: %w", err)
 	}
-	return &BulkResult{MatchedIDs: updatedIDs, Updated: len(updatedIDs), Limit: filter.Limit}, nil
+	return &BulkResult{MatchedIDs: updatedIDs, Updated: len(updatedIDs), PageSize: filter.PageSize}, nil
 }
 
 func (s *Service) get(ctx context.Context, tenantID, commandID int) (*ent.OperationalCommand, error) {

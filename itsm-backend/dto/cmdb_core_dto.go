@@ -113,7 +113,7 @@ type CIListResponse struct {
 
 // CIStatsResponse 配置项统计响应。
 type CIStatsResponse struct {
-	TotalCount              int            `json:"totalCount"`
+	Total                   int            `json:"total"`
 	StatusDistribution      map[string]int `json:"statusDistribution"`
 	TypeDistribution        map[string]int `json:"typeDistribution"`
 	EnvironmentDistribution map[string]int `json:"environmentDistribution"`

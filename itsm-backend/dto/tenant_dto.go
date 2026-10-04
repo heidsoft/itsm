@@ -102,8 +102,9 @@ type TenantComponentVerificationResponse struct {
 
 // TenantListResponse 租户列表响应
 type TenantListResponse struct {
-	Tenants  []TenantResponse `json:"tenants"`
-	Total    int              `json:"total"`
-	Page     int              `json:"page"`
-	PageSize int              `json:"pageSize"`
+	Items      []TenantResponse `json:"items"`
+	Total      int              `json:"total"`
+	Page       int              `json:"page"`
+	PageSize   int              `json:"pageSize"`
+	TotalPages int              `json:"totalPages"`
 }

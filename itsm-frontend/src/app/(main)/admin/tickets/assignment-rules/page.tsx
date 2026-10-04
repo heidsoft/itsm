@@ -328,8 +328,7 @@ export default function AssignmentRulesPage() {
           className="mb-4"
           type="info"
           showIcon
-          message="顺序：先建规则 → 在工单类型里绑定 → 用真实工单测一下"
-          description={'规则只定义“什么条件分给谁”。新建工单要自动派单，去“工单类型”启用自动分配并选这条规则。保存前可以“测试”输入已有工单 ID 预览匹配结果。审批和任务流转走流程，跟派单不冲突。'}
+          message="定义匹配条件后，在工单类型中启用自动分配并绑定本规则"
         />
 
         <UsageGuideCard

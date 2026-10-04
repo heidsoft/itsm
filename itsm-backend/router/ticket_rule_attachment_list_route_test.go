@@ -227,6 +227,198 @@ func TestTicketRuleAndAttachmentListRoutesEnvelope(t *testing.T) {
 	})
 }
 
+// assignRecommendationListWire 只按后端 dto.AssignmentRecommendation 的真实字段声明。
+// 前端旧类型曾发明 userName/userEmail/userAvatar/factors，这里刻意不放这些键，
+// 好让断言能证明服务端从未发出它们。
+type assignRecommendationListWire struct {
+	Items []struct {
+		UserID     int      `json:"userId"`
+		Username   string   `json:"username"`
+		Name       string   `json:"name"`
+		Email      string   `json:"email"`
+		Score      float64  `json:"score"`
+		Reason     string   `json:"reason"`
+		Workload   int      `json:"workload"`
+		Skills     []string `json:"skills"`
+		Categories []int    `json:"categories"`
+	} `json:"items"`
+	Total int `json:"total"`
+}
+
+// 回归（2026-10-04 边缘功能收口 E4-27a）：
+// GET /api/v1/tickets/assign-recommendations/:id 旧响应把集合放在 recommendations 键下，
+// 结构体名又不含 List，因此静默逃逸过 tests/contract 的信封棘轮扫描。本批把它收敛为
+// 平台唯一的 {items,total}（实测不分页，service 整表取回、handler 写 Total=len(items)），
+// 并改名 AssignRecommendationListResponse 让它落进守卫范围。
+//
+// 测试打在**生产注册**上（SetupRoutes → router/ticket_routes.go:247，含
+// RequirePermission("system_config","read")）。
+func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
+	ctx := context.Background()
+	dsn := fmt.Sprintf("file:router_assign_reco_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano())
+	client := enttest.Open(t, "sqlite3", dsn)
+	t.Cleanup(func() { client.Close() })
+
+	logger := zaptest.NewLogger(t).Sugar()
+	r := setupTicketRuleListRouter(t, client, logger)
+
+	tenantA := seedTicketRuleTenant(ctx, t, client, "reco-a", 1)
+	tenantB := seedTicketRuleTenant(ctx, t, client, "reco-b", 1)
+	// 生产路由是 /tickets/assign-recommendations/:id，id 即工单 ID。
+	path := fmt.Sprintf("/api/v1/tickets/assign-recommendations/%d", tenantA.ticketID)
+
+	doAs := func(t *testing.T, tenant ticketRuleListTenant, target string) (*httptest.ResponseRecorder, []byte) {
+		t.Helper()
+		token, err := middleware.GenerateAccessToken(tenant.userID, tenant.username, "super_admin", tenant.tenantID, ticketRuleListSecret, time.Hour)
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodGet, target, nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w, w.Body.Bytes()
+	}
+
+	// 再给租户 A 加一名活跃可分配用户，让 total==len(items) 不是一页数据自证。
+	extra, err := client.User.Create().
+		SetUsername("reco-a-agent").
+		SetEmail("reco-a-agent@example.com").
+		SetName("reco-a-agent").
+		SetPasswordHash("hash").
+		SetRole("agent").
+		SetActive(true).
+		SetTenantID(tenantA.tenantID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 1. 信封恰好是诚实的两键：领域名集合键永不存在，也不许出现伪造的分页键。
+	t.Run("只返回 items+total 两键", func(t *testing.T) {
+		w, body := doAs(t, tenantA, path)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", body)
+
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.Equal(t, 0, envelope.Code)
+		assert.Equal(t, []string{"items", "total"}, ticketRuleListKeys(t, envelope.Data), "body=%s", body)
+		assert.NotContains(t, string(envelope.Data), `"recommendations":`)
+		assert.NotContains(t, string(envelope.Data), `"page"`)
+		assert.NotContains(t, string(envelope.Data), `"pageSize"`)
+		assert.NotContains(t, string(envelope.Data), `"totalPages"`)
+	})
+
+	// 2. total 等于 items 真实条数，item 字段用后端 DTO 的 camelCase；
+	//    前端旧类型发明的 userName/userEmail/userAvatar/factors 永不存在。
+	t.Run("total 等于 items 长度且字段与后端 DTO 一致", func(t *testing.T) {
+		w, body := doAs(t, tenantA, path)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", body)
+
+		var data assignRecommendationListWire
+		require.NoError(t, json.Unmarshal(rawData(t, body), &data), "body=%s", body)
+		assert.Equal(t, 2, data.Total)
+		require.Len(t, data.Items, data.Total, "total 必须等于 items 真实长度")
+
+		names := []string{data.Items[0].Username, data.Items[1].Username}
+		sort.Strings(names)
+		assert.Equal(t, []string{"reco-a-admin", "reco-a-agent"}, names)
+		assert.Contains(t, []int{data.Items[0].UserID, data.Items[1].UserID}, extra.ID)
+		for _, item := range data.Items {
+			assert.NotZero(t, item.UserID)
+			assert.Equal(t, item.Username+"@example.com", item.Email)
+			assert.Equal(t, item.Username, item.Name)
+			assert.Zero(t, item.Workload, "fixture 里没有指派给任何人的工单")
+			assert.NotEmpty(t, item.Reason)
+		}
+		assert.NotContains(t, string(body), `"userName"`)
+		assert.NotContains(t, string(body), `"userEmail"`)
+		assert.NotContains(t, string(body), `"userAvatar"`)
+		assert.NotContains(t, string(body), `"factors"`)
+	})
+
+	// 3. 候选用户按租户谓词取（user.TenantIDEQ），不得出现对方租户用户。
+	t.Run("租户 A 的推荐不含租户 B 的用户", func(t *testing.T) {
+		w, body := doAs(t, tenantA, path)
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", body)
+		assert.NotContains(t, string(body), "reco-b-admin", "跨租户用户不得进入推荐列表")
+	})
+
+	// 4. 无候选用户时序列化成 []，不是 null（前端按数组渲染）。
+	t.Run("空推荐序列化为 []", func(t *testing.T) {
+		emptyTenantID, emptyUserID := seedInactiveOnlyTenant(ctx, t, client, "reco-empty")
+		emptyTicketID, err := createRuleListTicket(ctx, t, client, emptyTenantID, emptyUserID, "reco-empty")
+		require.NoError(t, err)
+
+		empty := ticketRuleListTenant{
+			tenantID: emptyTenantID,
+			userID:   emptyUserID,
+			username: "reco-empty-admin",
+			ticketID: emptyTicketID,
+		}
+		w, body := doAs(t, empty, fmt.Sprintf("/api/v1/tickets/assign-recommendations/%d", emptyTicketID))
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", body)
+		assert.Contains(t, string(body), `"items":[]`)
+		assert.NotContains(t, string(body), `"items":null`)
+		assert.Contains(t, string(body), `"total":0`)
+	})
+
+	// 5. 跨租户工单 fail closed，且不确认对方工单存在、不返回任何推荐载荷。
+	//    实测映射是 500/5001（handler 走 common.FailWithErr，见 common/response.go:183），
+	//    语义上应为 404/4004；该错配属 E4-5 错误分类收敛范围，E4-5 落地时需同步把这两行
+	//    改成 StatusNotFound / 4004。这里先锁定「绝不泄漏」这一半。
+	t.Run("跨租户工单不泄漏推荐载荷", func(t *testing.T) {
+		w, body := doAs(t, tenantB, path)
+		assert.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", body)
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.Equal(t, 5001, envelope.Code)
+		assert.NotContains(t, string(body), `"items"`, "失败响应不得带列表载荷")
+		assert.NotContains(t, string(body), "reco-a-admin")
+		assert.NotContains(t, string(body), "reco-a-agent")
+	})
+
+	// 6. 非法 ID 参数 → 400/1001，且不回落到某个默认工单。
+	t.Run("非法工单ID返回参数错误", func(t *testing.T) {
+		w, body := doAs(t, tenantA, "/api/v1/tickets/assign-recommendations/not-a-number")
+		assert.Equal(t, http.StatusBadRequest, w.Code, "body=%s", body)
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.Equal(t, 1001, envelope.Code)
+		assert.NotContains(t, string(body), `"items"`)
+	})
+
+	// 7. 未认证不得返回推荐载荷。
+	t.Run("未认证不得返回推荐载荷", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code, "body=%s", w.Body)
+		assert.NotContains(t, w.Body.String(), `"items"`)
+	})
+}
+
+// seedInactiveOnlyTenant 建一个只有停用用户的租户，用来证明推荐列表的空形状。
+func seedInactiveOnlyTenant(ctx context.Context, t *testing.T, client *ent.Client, code string) (int, int) {
+	t.Helper()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Recommendation empty " + code).
+		SetCode(code).
+		SetDomain(code + ".example.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	admin, err := client.User.Create().
+		SetUsername(code + "-admin").
+		SetEmail(code + "-admin@example.com").
+		SetName(code + "-admin").
+		SetPasswordHash("hash").
+		SetRole("super_admin").
+		SetActive(false).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	return tenant.ID, admin.ID
+}
+
 func rawData(t *testing.T, body []byte) []byte {
 	t.Helper()
 	var envelope rawEnvelope
@@ -240,13 +432,23 @@ func setupTicketRuleListRouter(t *testing.T, client *ent.Client, logger *zap.Sug
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	assignmentRuleService := service.NewTicketAssignmentRuleService(client, logger)
 	SetupRoutes(r, &RouterConfig{
-		JWTSecret:                    ticketRuleListSecret,
-		Logger:                       logger,
-		Client:                       client,
-		TicketAssignmentSmartHandler: assignmentSmartHandler.NewHandler(nil, service.NewTicketAssignmentRuleService(client, logger), logger),
-		TicketAutomationRuleHandler:  automationRuleHandler.NewHandler(service.NewTicketAutomationRuleService(client, logger), logger),
-		TicketAttachmentHandler:      ticketAttachmentHandler.NewHandler(service.NewTicketAttachmentService(client, logger), logger),
+		JWTSecret: ticketRuleListSecret,
+		Logger:    logger,
+		Client:    client,
+		TicketAssignmentSmartHandler: assignmentSmartHandler.NewHandler(
+			service.NewTicketAssignmentSmartService(
+				client,
+				logger,
+				service.NewTicketAssignmentService(client, logger),
+				assignmentRuleService,
+			),
+			assignmentRuleService,
+			logger,
+		),
+		TicketAutomationRuleHandler: automationRuleHandler.NewHandler(service.NewTicketAutomationRuleService(client, logger), logger),
+		TicketAttachmentHandler:     ticketAttachmentHandler.NewHandler(service.NewTicketAttachmentService(client, logger), logger),
 	})
 	return r
 }

@@ -694,8 +694,7 @@ const WorkflowManagement = () => {
       <Card className="enterprise-card">
         {filteredWorkflows.length === 0 && !loading ? (
           <Alert
-            title="暂无工作流"
-            description="点击右上角按钮创建第一个工作流"
+            title="暂无工作流，点击右上角按钮创建"
             type="info"
             showIcon
           />

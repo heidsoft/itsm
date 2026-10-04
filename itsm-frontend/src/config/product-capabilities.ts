@@ -4,9 +4,6 @@
  * presenting controls that can only fail or mutate local mock state.
  */
 export const PRODUCT_CAPABILITIES = {
-  // 后端已注册 POST /api/v1/ai/rag/search（handlers/ai KnowledgeSearch），
-  // ai-api.ts 已对齐契约（{results, degraded}），打开能力开关。
-  aiKnowledgeSearch: true,
   // E3-2（2026-10-02）：advancedBatchOperations / collaborationAdvanced /
   // priorityMatrix / advancedReporting / genericTemplateMarketplace 五个开关随其
   // 前端实现一起删除。实测从 src/app/**/(page|layout).tsx 建 import 闭包，
@@ -25,18 +22,8 @@ export const PRODUCT_CAPABILITIES = {
   mspAllocationHistory: true,
   notificationTemplateManagement: false,
   notificationChannelManagement: false,
-  advancedProblemActions: true,
   advancedTicketRelations: false,
   rootCauseWorkflowActions: false,
-  // P1-6：后端已完成 BPMN 监控/仪表盘/瓶颈分析服务实现：
-  //   controller/bpmn_monitoring_controller.go 注册 /api/v1/bpmn/monitoring/*
-  //   controller/bpmn_dashboard_controller.go 注册 /api/v1/bpmn/dashboard/* (含 /bottlenecks)
-  //   service/bpmn_monitoring_service.go + service/bpmn_metrics_service.go 有单元测试
-  // 前端使用 bpmn-monitoring-api.ts / bpmn-dashboard-api.ts 而非 workflow-api.ts。
-  // capability 已打开；workflow-api.ts 中 4 个遗留分析/模板入口已改为不再发起未注册请求
-  // （getTemplates/getNodeStats/getBottleneckAnalysis 返回空，getWorkflowStats 返回零快照），
-  // 因此原有 4 条 workflowAnalytics 豁免表项已一并从 DISABLED_API_CONTRACTS 移除。
-  workflowAnalytics: true,
 } as const;
 
 export type ProductCapability = keyof typeof PRODUCT_CAPABILITIES;

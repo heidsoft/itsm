@@ -1375,6 +1375,33 @@ func (h *IncidentHandler) GetStats(c *gin.Context) {
 	common.Success(c, stats)
 }
 
+// GetReport 事件管理-获取事件趋势报表
+// @Summary 获取事件趋势报表
+// @Description 按创建/解决时间窗口返回事件的状态分布、优先级分布与每日新建/解决趋势；窗口默认最近 30 天，dateFrom/dateTo 需成对提供且最长 366 天
+// @Tags 事件管理
+// @Produce json
+// @Security BearerAuth
+// @Param dateFrom query string false "窗口起始日（YYYY-MM-DD 或 RFC3339，需与 dateTo 同时提供）"
+// @Param dateTo query string false "窗口结束日（闭区间，YYYY-MM-DD 或 RFC3339）"
+// @Success 200 {object} common.Response{data=incident.IncidentReport}
+// @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Router /api/v1/incidents/stats/report [get]
+func (h *IncidentHandler) GetReport(c *gin.Context) {
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+
+	report, err := h.service.GetReport(c.Request.Context(), tenantID, c.Query("dateFrom"), c.Query("dateTo"))
+	if err != nil {
+		failIncidentOperation(c, err)
+		return
+	}
+	common.Success(c, report)
+}
+
 // GetRootCause 事件管理-获取根因分析
 // @Summary 获取根因分析
 // @Description 获取指定事件的根因分析信息

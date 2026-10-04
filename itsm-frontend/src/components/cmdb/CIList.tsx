@@ -372,7 +372,7 @@ const CIList: React.FC = () => {
                     title: '暂无配置项数据',
                     description: '当前没有配置项数据',
                     icon: <Database size={48} />,
-                    actionText: '创建第一个配置项',
+                    actionText: '创建配置项',
                     onAction: () => router.push('/cmdb/cis/create'),
                   }}
                 />

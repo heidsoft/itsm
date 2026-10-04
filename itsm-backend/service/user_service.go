@@ -272,7 +272,7 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest, 
 			Page:       req.Page,
 			PageSize:   req.PageSize,
 			Total:      total,
-			TotalPages: (total + req.PageSize - 1) / req.PageSize,
+			TotalPages: func() int { if req.PageSize > 0 { return (total + req.PageSize - 1) / req.PageSize }; return 0 }(),
 		},
 	}
 
@@ -651,7 +651,7 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 	query = query.Where(user.ActiveEQ(true))
 
 	users, err := query.
-		Limit(req.Limit).
+		Limit(req.PageSize).
 		Order(ent.Asc(user.FieldName)).
 		All(ctx)
 	if err != nil {

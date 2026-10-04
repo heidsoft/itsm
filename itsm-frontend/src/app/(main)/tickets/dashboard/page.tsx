@@ -13,8 +13,6 @@ import {
   Button,
   Select,
   Tabs,
-  Avatar,
-  Badge,
   Alert,
   Timeline,
   Rate,
@@ -308,40 +306,11 @@ const TicketDashboardPage = () => {
       <Table
         dataSource={[]}
         columns={[
-          {
-            title: '团队成员',
-            key: 'member',
-            render: () => (
-              <div className="flex items-center">
-                <Avatar size="small" className="mr-2">
-                  -
-                </Avatar>
-                <div>
-                  <div className="font-medium">暂无数据</div>
-                </div>
-              </div>
-            ),
-          },
-          {
-            title: '已分配工单',
-            key: 'assigned',
-            render: () => <Badge count={0} showZero />,
-          },
-          {
-            title: '已解决工单',
-            key: 'resolved',
-            render: () => <Badge count={0} showZero />,
-          },
-          {
-            title: '平均解决时间',
-            key: 'avgTime',
-            render: () => <Text>-</Text>,
-          },
-          {
-            title: 'SLA合规率',
-            key: 'sla',
-            render: () => <Text>-</Text>,
-          },
+          { title: '团队成员', key: 'member', render: () => '-' },
+          { title: '已分配工单', key: 'assigned', render: () => '-' },
+          { title: '已解决工单', key: 'resolved', render: () => '-' },
+          { title: '平均解决时间', key: 'avgTime', render: () => '-' },
+          { title: 'SLA合规率', key: 'sla', render: () => '-' },
         ]}
         pagination={false}
         size="small"
@@ -474,9 +443,8 @@ const TicketDashboardPage = () => {
           <Col xs={24} lg={8}>
             <Card title="团队效率" size="small">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">-</div>
-                <Text type="secondary">整体效率</Text>
-                <Progress percent={0} strokeColor="#52c41a" showInfo={false} />
+                <div className="text-3xl font-bold text-gray-400 mb-2">-</div>
+                <Text type="secondary">暂无数据</Text>
               </div>
             </Card>
           </Col>

@@ -65,7 +65,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         type="info"
         showIcon
         message="AI 智能摘要"
-        description="基于事件标题、描述、评论与历史，自动生成结构化摘要，便于快速了解事件全貌。AI 摘要属于辅助决策，重要信息请以人工确认为准。"
+        description="基于标题、描述与历史自动生成摘要，辅助快速了解事件全貌，重要信息请以人工确认为准。"
       />
       <Space className="mt-3 mb-3">
         <Button

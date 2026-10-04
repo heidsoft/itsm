@@ -129,8 +129,8 @@ type BatchUpdateUsersRequest struct {
 // 不含租户字段：租户范围由 handler 从认证上下文取出后单独传给 service，
 // 避免出现可被调用方覆盖的租户谓词（跨租户 IDOR）。
 type SearchUsersRequest struct {
-	Keyword string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
-	Limit   int    `json:"limit" form:"limit,default=10" binding:"min=1,max=50"`
+	Keyword  string `json:"keyword" form:"keyword" binding:"omitempty,min=1"`
+	PageSize int    `json:"pageSize" form:"pageSize,default=10" binding:"min=1,max=50"`
 }
 
 // ImportUsersRequest 批量导入用户请求

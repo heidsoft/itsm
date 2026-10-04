@@ -93,9 +93,9 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, dto.GetAssignRecommendationsResponse{
-		Recommendations: recommendations,
-		Total:           len(recommendations),
+	common.Success(c, dto.AssignRecommendationListResponse{
+		Items: recommendations,
+		Total: len(recommendations),
 	})
 }
 

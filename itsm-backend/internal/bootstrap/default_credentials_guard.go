@@ -120,9 +120,10 @@ func LogDefaultCredentialRisks(risks []DefaultCredentialRisk, logger *zap.Sugare
 	}
 }
 
-// isProductionEnvironment 判定是否为生产部署
+// isProductionEnvironment 判定是否为生产部署。
+// 优先使用 resolveEnvironment()（SERVER_ENV > ENV），其次使用传入的 env 参数（通常来自 cfg.Deployment.Mode）。
 func isProductionEnvironment(env string) bool {
-	stage := strings.ToLower(strings.TrimSpace(os.Getenv("ENV")))
+	stage := resolveEnvironment()
 	switch stage {
 	case "development", "dev", "test", "testing", "local":
 		return false

@@ -39,7 +39,7 @@ export class ServiceCatalogApi {
   // ==================== 内部适配（对齐后端 /api/v1/service-catalogs & /api/v1/service-requests） ====================
 
   private static unsupportedFeature(feature: string): never {
-    throw new Error(`${feature}暂未接入后端，请在能力开放前关闭入口或补齐服务端接口。`);
+    throw new Error(`${feature}暂未开放`);
   }
 
   private static toBackendStatus(status?: unknown): 'enabled' | 'disabled' | undefined {

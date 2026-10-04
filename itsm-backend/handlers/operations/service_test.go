@@ -164,7 +164,7 @@ func TestBulkReplayRestoresCommandsAndKeepsIdempotencyKey(t *testing.T) {
 	service := NewService(client)
 
 	result, err := service.BulkReplay(context.Background(), BulkFilter{
-		TenantID: 1, Limit: 10,
+		TenantID: 1, PageSize: 10,
 	}, Actor{UserID: 7, Path: "/bulk-replay", Method: "POST"})
 	require.NoError(t, err)
 	require.Equal(t, 2, result.Updated)

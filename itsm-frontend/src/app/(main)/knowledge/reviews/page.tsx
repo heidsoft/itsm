@@ -242,7 +242,7 @@ export default function KnowledgeReviewListPage() {
   ];
 
   return (
-    <PageContainer title="知识库审核" description="审核和批准待发布的知识库文章">
+    <PageContainer title="知识库审核" description="审核待发布的知识文章">
       <Card className="shadow-sm rounded-lg">
         <div className="mb-4">
           <Space wrap>

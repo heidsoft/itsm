@@ -303,8 +303,7 @@ export default function ApprovalManagement() {
     <div className="space-y-6">
       {/* 历史数据提示：运行时审批已切到 BPMN 工作流引擎，本页仅保留历史工作流只读查询 */}
       <Alert
-        message="本页为历史审批工作流只读视图"
-        description="运行时审批已全面切换到 BPMN 工作流引擎（工作流管理）。新建/编排审批流程请前往「工作流管理」，本页仅用于查看已迁移的历史工作流数据。"
+        message="本页为历史审批工作流只读视图，新建审批流程请前往工作流管理"
         type="info"
         showIcon
         closable

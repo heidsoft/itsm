@@ -300,7 +300,6 @@ const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
                 state="empty"
                 empty={{
                   title: '暂无资产数据',
-                  description: '当前没有资产记录，点击下方按钮创建第一个资产',
                   actionText: '新增资产',
                   onAction: () => router.push('/assets/new'),
                   showAction: true,

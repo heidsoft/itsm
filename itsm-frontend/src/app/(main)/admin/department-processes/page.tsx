@@ -21,7 +21,6 @@ import {
   Tooltip,
   Popconfirm,
 } from 'antd';
-import Link from 'next/link';
 import {
   Building2,
   Plus,
@@ -186,13 +185,6 @@ export default function DepartmentProcessPage() {
         type="info"
         showIcon
         message="部门流程配置用于查看各部门已绑定的流程"
-        description={
-          <Space wrap>
-            <span>相关配置：</span>
-            <Link href="/admin/process-routing">流程路由规则</Link>
-            <Link href="/admin/workflows">工作流管理</Link>
-          </Space>
-        }
       />
       <Card title="部门流程配置">
         <Row gutter={24}>

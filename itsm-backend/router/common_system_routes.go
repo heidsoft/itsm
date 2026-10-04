@@ -102,6 +102,18 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			}
 		}
 
+		// Projects
+		if config.ProjectHandler != nil {
+			projects := tenant.Group("/projects")
+			{
+				projects.GET("", middleware.RequirePermission("project", "read"), config.ProjectHandler.ListProjects)
+				projects.POST("", middleware.RequirePermission("project", "write"), config.ProjectHandler.CreateProject)
+				projects.GET("/:id", middleware.RequirePermission("project", "read"), config.ProjectHandler.GetProject)
+				projects.PUT("/:id", middleware.RequirePermission("project", "write"), config.ProjectHandler.UpdateProject)
+				projects.DELETE("/:id", middleware.RequirePermission("project", "delete"), config.ProjectHandler.DeleteProject)
+			}
+		}
+
 		sys := tenant.Group("/system")
 		{
 			sys.GET("/tags", middleware.RequirePermission("ticket_tag", "read"), config.CommonHandler.ListTags)
