@@ -227,26 +227,13 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		}
 	}
 
-	if v := ctx.Query("page"); v != "" {
-		if page, err := strconv.Atoi(v); err == nil {
-			req.Page = page
-		}
-	}
-
-	if v := ctx.Query("pageSize"); v != "" {
-		if pageSize, err := strconv.Atoi(v); err == nil {
-			req.PageSize = pageSize
-		}
-	}
-
-	if req.PageSize == 0 {
-		req.PageSize = 20
-	}
-	// page 必须与 pageSize 一起归一化：只给 pageSize 时 service 的分页分支
-	// (Page > 0 && PageSize > 0) 不生效，响应会声称 pageSize=20 却返回全量。
-	if req.Page == 0 {
-		req.Page = 1
-	}
+	// 页长/页码只有 common.GetPaginationFromQuery 一个所有者：缺省 1/20，
+	// 只采纳 [1,100]，越界与非数字回落缺省。手写 strconv.Atoi 会把
+	// pageSize=0/负值原样下传，而服务层的分页分支要求 Page>0 && PageSize>0，
+	// 于是整个 LIMIT 子句被跳过——一次写错参数的请求就把该租户的审计读穿。
+	pg := common.GetPaginationFromQuery(ctx)
+	req.Page = pg.Page
+	req.PageSize = pg.PageSize
 
 	logs, total, err := c.auditService.QueryAuditLogs(ctx.Request.Context(), req)
 	if err != nil {
@@ -254,7 +241,7 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithList(ctx, logs, total, req.Page, req.PageSize)
+	common.SuccessWithList(ctx, logs, total, pg.Page, pg.PageSize)
 }
 
 // GetProcessTimeline 获取流程时间线

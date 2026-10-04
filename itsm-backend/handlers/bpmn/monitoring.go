@@ -198,8 +198,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(ctx)
 
 	processKey := ctx.Query("processKey")
 	status := ctx.Query("status")
@@ -207,8 +206,8 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 
 	query := &service.ListProcessInstanceStatusQuery{
 		TenantID:   tenantID,
-		Page:       page,
-		PageSize:   pageSize,
+		Page:       pg.Page,
+		PageSize:   pg.PageSize,
 		ProcessKey: processKey,
 		Status:     status,
 		Assignee:   assignee,
@@ -231,7 +230,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithList(ctx, statuses, total, page, pageSize)
+	common.SuccessWithList(ctx, statuses, total, pg.Page, pg.PageSize)
 }
 
 // GetProcessTimeline 获取流程实例完整时间线
@@ -321,8 +320,7 @@ func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(ctx)
 	userID := ctx.Query("userId")
 	action := ctx.Query("action")
 	resourceType := ctx.Query("resourceType")
@@ -330,8 +328,8 @@ func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 
 	req := &service.AuditLogRequest{
 		TenantID:     tenantID,
-		Page:         page,
-		PageSize:     pageSize,
+		Page:         pg.Page,
+		PageSize:     pg.PageSize,
 		UserID:       userID,
 		Action:       action,
 		ResourceType: resourceType,
@@ -355,5 +353,5 @@ func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithList(ctx, logs, total, page, pageSize)
+	common.SuccessWithList(ctx, logs, total, pg.Page, pg.PageSize)
 }

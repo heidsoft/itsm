@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processauditlog"
 
@@ -339,10 +340,12 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 		return nil, 0, fmt.Errorf("查询审计日志总数失败: %w", err)
 	}
 
-	// 分页查询
-	if req.Page > 0 && req.PageSize > 0 {
-		query = query.Offset((req.Page - 1) * req.PageSize).Limit(req.PageSize)
-	}
+	// 分页：HTTP 入口由 common.GetPaginationFromQuery 单点决定页长，这里只兜非 HTTP
+	// 调用方。旧写法是 `if req.Page > 0 && req.PageSize > 0 { Offset/Limit }`，
+	// 于是页长为 0 或负值时分页分支整体不成立、LIMIT 子句被跳过——审计日志按
+	// 过滤条件整表读出（台账 E4-47⑤）。归一后任何取值都必然带 LIMIT。
+	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
+	query = query.Offset((req.Page - 1) * req.PageSize).Limit(req.PageSize)
 
 	// 排序
 	if req.SortBy != "" {

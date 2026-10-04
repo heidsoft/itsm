@@ -1318,10 +1318,15 @@ GET /api/v1/bpmn/monitoring/metrics?timeRange=24h
 GET /api/v1/bpmn/monitoring/metrics/{processKey}?timeRange=7d
 GET /api/v1/bpmn/monitoring/instances/status?page=1&pageSize=20
 GET /api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=20
+GET /api/v1/bpmn/dashboard/audit-logs?page=1&pageSize=20
 Authorization: Bearer <accessToken>
 ```
 
-四个端点都接受可选的 `startTime`/`endTime`，取值必须是 RFC3339；非法值返回 400 / code 1001（此前行为是静默忽略该过滤条件，响应看不出差异）。未传这两个参数时按 `timeRange`（默认 `24h`）。这些路由由 `handlers/bpmn/monitoring.go` 的 `RegisterRoutes` 挂在认证租户组下，实测**没有** `RequirePermission` 声明，只做认证与租户范围收敛。
+四个端点都接受可选的 `startTime`/`endTime`，取值必须是 RFC3339；非法值返回 400 / code 1001（此前行为是静默忽略该过滤条件，响应看不出差异）。未传这两个参数时按 `timeRange`（默认 `24h`）。这些路由由 `handlers/bpmn/monitoring.go` 的 `RegisterRoutes` 挂在认证租户组下，实测**没有** `RequirePermission` 声明，只做认证与租户范围收敛；`handlers/bpmn/dashboard.go` 的 `RegisterRoutes` 同样是 0 条 `RequirePermission`。
+
+三个列表端点（`instances/status`、两个 `audit-logs`）的页长只有 `common.GetPaginationFromQuery` 一个所有者：缺省 `page=1`、`pageSize=20`，只采纳落在 `(0,100]` 的查询值，越界（`150`、`5000`）、非数字（`abc`）与 `0`/负数一律回落缺省，页码下界为 1；响应回显的就是真正进入 SQL `LIMIT` 的值，`data` 为平台五键 `{items,total,page,pageSize,totalPages}`。此前 `pageSize` 写错会让服务层的条件式分页分支整体不成立、`LIMIT` 子句消失从而把该租户的审计整表读出，越界值则按原值执行而信封另报 100，见 [UPGRADE.md](./UPGRADE.md) §1.26。
+
+`dashboard/audit-logs` 与 `monitoring/audit-logs` 目前是同一用例的两套已注册表面（后者委托到同一个 `BPMNAuditService.QueryAuditLogs`），且前者直接序列化 Ent 模型、响应项键为 snake_case（`process_instance_key`、`tenant_id` 等）；该重复面与鉴权缺失登记为台账 E4-48，尚未收敛。
 
 ## 用户管理接口
 

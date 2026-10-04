@@ -33,8 +33,6 @@ import (
 // 条目格式 <相对 itsm-backend 的文件路径>|<自建缺省页长>；同一文件同一页长
 // 有多处就重复多行，计数一并比对。
 var selfParsedPageSizeBaseline = []string{
-	"handlers/bpmn/monitoring.go|20",
-	"handlers/bpmn/monitoring.go|20",
 	"handlers/bpmn/workflow_template.go|20",
 	"handlers/known_error/handler.go|20",
 	"handlers/known_error/handler.go|20",

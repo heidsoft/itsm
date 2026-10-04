@@ -982,6 +982,53 @@ cd itsm-frontend && npm run type-check && npx jest src/lib/api/__tests__/ai-api.
 前端 `AIAuditLogsResponse` 同批改为复用平台 `PaginationResponse<AIAuditEntry>`，
 `ai/audit/page.tsx` 删掉 `res.items ?? []`、`res.page || page`、`res.total ?? 0` 三处兜底。
 
+### 1.26 BPMN 审计日志与流程实例列表的页长收敛（2026-10-04，破坏性）
+
+`GET /api/v1/bpmn/dashboard/audit-logs`、`GET /api/v1/bpmn/monitoring/audit-logs` 与
+`GET /api/v1/bpmn/monitoring/instances/status` 的页长原先有两套 HTTP 解析加两套 service 规则，
+其中 service 的分页分支是条件式的（`if req.Page > 0 && req.PageSize > 0 { Offset/Limit }`），
+条件不成立时**整条 `LIMIT`/`OFFSET` 子句消失**。HEAD 实测（单租户 25 条种子）：
+
+| 输入 | 修复前实测 | 修复后 |
+|:---|:---|:---|
+| 不带 `page`/`pageSize` | dashboard 20（`==0` 补默认）、monitoring 20 | 20（`common.DefaultPageSize`） |
+| `pageSize=150` / `5000` | 按原值进 `LIMIT`，25 条一次返回；信封却由 `common.SuccessWithList` 内的另一套夹紧回显 `pageSize:100`、`totalPages:1` | 20，且回显 20 |
+| `pageSize=-5` | dashboard 只判 `==0`，负值原样下传 ⇒ 分页分支不成立 ⇒ **该租户审计整表返回**（实测 25 条） | 20 |
+| `pageSize=abc` | dashboard 回落 20；monitoring 的 `DefaultQuery` + 丢弃 `Atoi` 错误得到 **0** ⇒ 同样整表返回 | 20 |
+| `page=abc`（`pageSize=10`） | dashboard 解析失败即保留缺省、回落第 1 页；monitoring 的 `DefaultQuery` + 丢弃错误得到 **0** ⇒ 分页分支不成立 ⇒ 整表返回 25 条 | 第 1 页、10 条 |
+| `page=-3`（`pageSize=10`） | dashboard 只补 `==0`，负页码原样下传 ⇒ 分页分支不成立 ⇒ 整表返回 25 条 | 第 1 页、10 条 |
+| 非 HTTP 调用方传零值 | `ListProcessInstancesStatus` 自建缺省 1/20 且**无上界**；审计查询走「条件不成立即不分页」 | `common.ValidatePagination`（`page<=0→1`、`pageSize<=0→20`、`>100→100`），任何取值都带 `LIMIT` |
+
+**集成检查**：
+
+1. 用 `pageSize=5000` 之类越界值表达「一次拉完」的调用现在拿到 20 条，需按 `page` 翻页（上限 100）。
+2. 依赖「不传分页参数即返回全部」的调用行为改变：过去是整表读取，现在返回第 1 页 20 条，
+   需要全量请显式逐页读取或走导出类端点。
+3. 三个端点的响应键集合本就已是标准五键（`items,total,page,pageSize,totalPages`），未改名；
+   变化只在 `page`/`pageSize`/`totalPages` 的**取值**与 `items` 的行数。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./handlers/bpmn/ -count=1
+```
+
+回归形态说明：`handlers/bpmn/audit_pagination_contract_test.go`（6 例）打在
+`DashboardHandler.RegisterRoutes` + `MonitoringHandler.RegisterRoutes` 的真实注册上，锁默认页长 20、
+越界与非法页长一律回落且只回 20 条、非法页码回落第 1 页、末页余数如实 5 条、
+越界页长下租户 2 仍只见自己的 3 条，以及回显页长等于实际进入 `LIMIT` 的值。
+**负证明**：在 HEAD 的独立工作区只拷入这两份测试文件（实现全是修复前形态）跑同一夹具，
+6 例转红 3 例，实测报文为 `should have 20 item(s), but has 25`（`pageSize=abc/-5/150/5000`、
+`page=abc&pageSize=10`、`page=-3&pageSize=10` 各自的整表读数）与
+`expected: 20 / actual: 100`（`pageSize` 回显）、`expected: 2 / actual: 1`（`totalPages`）；
+修复前后皆绿的 3 例锁的是既有默认页长、末页余数与租户收敛行为。
+
+同批实测登记而未改的三项（台账 **E4-48，待裁**）：dashboard 与 monitoring 的 `audit-logs`
+是同一用例的两套 HTTP 表面（后者委托到同一个 `BPMNAuditService.QueryAuditLogs`）；
+两条路由注册时都没有 `RequirePermission`，只做认证与租户范围收敛；
+`dashboard.go` 直接序列化 Ent 模型，响应项的键是 `process_instance_key`、`activity_id`、
+`tenant_id` 这类 snake_case 且把租户 ID 本身发给前端（违反 camelCase 与 DTO 规则）。
+本批只收页长，未触碰表面归属、鉴权声明与 DTO 序列化。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

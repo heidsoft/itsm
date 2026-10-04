@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processexecutionhistory"
 	"itsm-backend/ent/processinstance"
@@ -1220,15 +1221,9 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 		return nil, 0, fmt.Errorf("查询流程实例总数失败: %w", err)
 	}
 
-	// 分页
-	page := query.Page
-	if page <= 0 {
-		page = 1
-	}
-	pageSize := query.PageSize
-	if pageSize <= 0 {
-		pageSize = 20
-	}
+	// 分页：页长由 HTTP 入口的 common.GetPaginationFromQuery 决定，这里只兜非 HTTP
+	// 调用方。旧写法自建缺省 1/20 且**没有上界**，pageSize=5000 会原样进 LIMIT。
+	page, pageSize := common.ValidatePagination(query.Page, query.PageSize)
 	dbQuery = dbQuery.Order(ent.Desc(processinstance.FieldStartTime)).
 		Offset((page - 1) * pageSize).Limit(pageSize)
 

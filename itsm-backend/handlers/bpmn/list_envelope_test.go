@@ -126,17 +126,22 @@ func decodeEnvelope(t *testing.T, r *gin.Engine, path string, tenant string) map
 
 // assertListEnvelope 断言 data 恰好是标准列表信封：只有 items + 四个分页字段，
 // 且 total/pageSize/totalPages 来自后端真实计数而不是 len(items)。
-func assertListEnvelope(t *testing.T, data map[string]interface{}, wantTotal, wantPage, wantPageSize, wantTotalPages, wantItems int) {
+// 可选传入本次请求的查询串，失败时能一眼看出是哪组分页参数。
+func assertListEnvelope(t *testing.T, data map[string]interface{}, wantTotal, wantPage, wantPageSize, wantTotalPages, wantItems int, query ...string) {
 	t.Helper()
+	tag := ""
+	if len(query) > 0 {
+		tag = " [查询: " + query[0] + "]"
+	}
 	assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, sortedKeys(data),
-		"data 键集合必须等于标准列表信封，实际 %v", data)
+		"data 键集合必须等于标准列表信封，实际 %v%s", data, tag)
 	items, ok := data["items"].([]interface{})
-	require.True(t, ok, "items 必须是数组，实际 %v", data["items"])
-	assert.Len(t, items, wantItems)
-	assert.Equal(t, float64(wantTotal), data["total"])
-	assert.Equal(t, float64(wantPage), data["page"])
-	assert.Equal(t, float64(wantPageSize), data["pageSize"])
-	assert.Equal(t, float64(wantTotalPages), data["totalPages"])
+	require.True(t, ok, "items 必须是数组，实际 %v%s", data["items"], tag)
+	assert.Len(t, items, wantItems, tag)
+	assert.Equal(t, float64(wantTotal), data["total"], "total%s", tag)
+	assert.Equal(t, float64(wantPage), data["page"], "page%s", tag)
+	assert.Equal(t, float64(wantPageSize), data["pageSize"], "pageSize%s", tag)
+	assert.Equal(t, float64(wantTotalPages), data["totalPages"], "totalPages%s", tag)
 }
 
 func sortedKeys(data map[string]interface{}) []string {
