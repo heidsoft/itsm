@@ -129,7 +129,7 @@ export default function NOCPage() {
               title="重大事件总数"
               value={total}
               prefix={<Zap size={18} className="text-red-500 mr-2" />}
-              valueStyle={{ color: '#cf1322' }}
+              styles={{ content: { color: '#cf1322' } }}
             />
           </Card>
         </Col>
@@ -139,7 +139,7 @@ export default function NOCPage() {
               title="高优事件"
               value={(priorityCounts['critical'] || 0) + (priorityCounts['urgent'] || 0) + (priorityCounts['high'] || 0)}
               prefix={<AlertTriangle size={18} className="text-orange-500 mr-2" />}
-              valueStyle={{ color: '#fa8c16' }}
+              styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
@@ -149,7 +149,7 @@ export default function NOCPage() {
               title="正在处理"
               value={incidents.filter(i => ['in_progress', 'open'].includes((i.status || '').toLowerCase())).length}
               prefix={<Activity size={18} className="text-blue-500 mr-2" />}
-              valueStyle={{ color: '#1890ff' }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>

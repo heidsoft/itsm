@@ -358,7 +358,7 @@ export default function CloudResourcePage() {
         onOk={handleBindExisting}
         confirmLoading={bindMutation.isPending}
         okText='绑定'
-        destroyOnClose
+        destroyOnHidden
         width={480}
       >
         <Form form={bindForm} layout='vertical'>

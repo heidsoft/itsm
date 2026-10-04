@@ -36,7 +36,7 @@ export default function WorkflowVersionModal({
     >
       <div className="space-y-4">
         <Alert
-          message={t('workflow.versionModal.alertTitle')}
+          title={t('workflow.versionModal.alertTitle')}
           description={t('workflow.versionModal.alertDesc')}
           type="info"
           showIcon

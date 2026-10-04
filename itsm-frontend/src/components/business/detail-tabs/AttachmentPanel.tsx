@@ -194,12 +194,11 @@ export const AttachmentPanel: React.FC<AttachmentPanelProps> = ({
     <div className="p-6">
       {error && (
         <Alert
-          message={error}
+          title={error}
           type="error"
           showIcon
-          closable
+          closable={{ onClose: () => setError(null) }}
           className="mb-4"
-          onClose={() => setError(null)}
           action={
             <Button size="small" type="link" onClick={() => void fetchList()}>
               {t('common.retry')}

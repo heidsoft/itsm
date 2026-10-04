@@ -67,7 +67,7 @@ export default function ChangeCMDBImpactPanel({ changeId }: ChangeCMDBImpactPane
   }
 
   if (error) {
-    return <Alert type="error" message={`CMDB 影响摘要加载失败：${error}`} />;
+    return <Alert type="error" title={`CMDB 影响摘要加载失败：${error}`} />;
   }
 
   if (!data) {

@@ -604,7 +604,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </div>
           {(data.escalationLevel ?? 0) > 0 && (
             <Alert className="mt-4" type="warning" showIcon
-              message={`该事件已升级至 ${data.escalationLevel} 级，请优先处理并保持沟通记录。`} />
+              title={`该事件已升级至 ${data.escalationLevel} 级，请优先处理并保持沟通记录。`} />
           )}
         </Card>
 

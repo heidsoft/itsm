@@ -64,7 +64,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
       <Alert
         type="info"
         showIcon
-        message="AI 智能摘要"
+        title="AI 智能摘要"
         description="基于标题、描述与历史自动生成摘要，辅助快速了解事件全貌，重要信息请以人工确认为准。"
       />
       <Space className="mt-3 mb-3">
@@ -90,7 +90,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="error"
           showIcon
-          message="AI 摘要调用失败"
+          title="AI 摘要调用失败"
           description={state.error}
           className="mt-2"
         />
@@ -100,7 +100,7 @@ function AISummaryPanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="warning"
           showIcon
-          message={state.message || 'AI 摘要服务暂时不可用'}
+          title={state.message || 'AI 摘要服务暂时不可用'}
           description="可能原因：LLM 网关未配置、模型调用失败或网络异常。请稍后重试或联系管理员。"
           className="mt-2"
         />
@@ -142,7 +142,7 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
       <Alert
         type="info"
         showIcon
-        message="AI 影响分析"
+        title="AI 影响分析"
         description="基于事件内容与历史数据，分析潜在影响范围、关联资源与处置建议。结果仅供辅助决策。"
       />
       <Space className="mt-3 mb-3">
@@ -166,7 +166,7 @@ function AIAnalyzePanel({ incidentId }: { incidentId: number }) {
         <Alert
           type="error"
           showIcon
-          message="AI 分析失败"
+          title="AI 分析失败"
           description={state.error}
           className="mt-2"
         />

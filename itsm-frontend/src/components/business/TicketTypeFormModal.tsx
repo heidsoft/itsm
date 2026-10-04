@@ -755,7 +755,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                     type="info"
                     showIcon
                     className="!mb-4"
-                    message={t('ticketTypeForm.approvalSourceHint')}
+                    title={t('ticketTypeForm.approvalSourceHint')}
                     description={t('ticketTypeForm.approvalSourceHintDetail')}
                   />
 
@@ -793,7 +793,7 @@ export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({
                   </div>
 
                   {approvalNodesError ? (
-                    <Alert type="warning" showIcon message={approvalNodesError} />
+                    <Alert type="warning" showIcon title={approvalNodesError} />
                   ) : approvalNodesLoading ? (
                     <div className="text-center py-8">
                       <Spin />

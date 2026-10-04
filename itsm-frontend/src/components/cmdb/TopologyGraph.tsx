@@ -333,7 +333,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               <Alert
                 type='warning'
                 showIcon
-                message='拓扑图暂不可用'
+                title='拓扑图暂不可用'
                 description={loadError}
                 action={
                   <Button size='small' onClick={loadTopology}>
@@ -430,7 +430,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                   | 'info'
                   | 'success'
               }
-              message='影响摘要'
+              title='影响摘要'
               description={impactAnalysis.summary}
               showIcon
               style={{ marginBottom: 16 }}
@@ -489,7 +489,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               <Card title='关键依赖' size='small' style={{ marginBottom: 16 }}>
                 <Alert
                   type='error'
-                  message='以下为关键依赖，变更需谨慎'
+                  title='以下为关键依赖，变更需谨慎'
                   description={
                     <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
                       {impactAnalysis.criticalDependencies.map((dep, idx) => (

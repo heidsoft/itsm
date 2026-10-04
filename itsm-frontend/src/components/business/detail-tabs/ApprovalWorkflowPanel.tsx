@@ -434,7 +434,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           type="success"
           showIcon
           icon={<CheckCircle size={16} />}
-          message={
+          title={
             <Text>
               <Tag color="success" className="mr-2">
                 {t('detailTabs.approvalStatusApproved') || '流程已完成'}
@@ -460,7 +460,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
           type="error"
           showIcon
           icon={<CircleAlert size={16} />}
-          message={t('detailTabs.approvalStatusRejected') || '流程已终止'}
+          title={t('detailTabs.approvalStatusRejected') || '流程已终止'}
         />
       )}
 
@@ -468,7 +468,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
         <Alert
           type="info"
           showIcon
-          message={
+          title={
             t('detailTabs.workflowNotMatched') ||
             '该工单未绑定 BPMN 流程，使用简化审批模式。'
           }
@@ -537,7 +537,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
               <Alert
                 type="info"
                 showIcon
-                message={
+                title={
                   <Text>
                     {t('detailTabs.currentLevelIntro')}{' '}
                     <Text strong>{t('detailTabs.levelLabel', { level: currentLevel })}</Text>
@@ -558,7 +558,7 @@ export const ApprovalWorkflowPanel: React.FC<ApprovalWorkflowPanelProps> = ({
         <Alert
           type="warning"
           showIcon
-          message={t('detailTabs.workflowNotMatched')}
+          title={t('detailTabs.workflowNotMatched')}
           className="text-xs"
         />
       )}

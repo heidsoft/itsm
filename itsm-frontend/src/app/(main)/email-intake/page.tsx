@@ -583,7 +583,7 @@ export default function EmailIntakePage() {
       <Alert
         type='info'
         showIcon
-        message='自动开单默认关闭，建议先用观察模式验证后再启用'
+        title='自动开单默认关闭，建议先用观察模式验证后再启用'
       />
       <Tabs
         items={[
@@ -741,7 +741,7 @@ export default function EmailIntakePage() {
         <Alert
           type='warning'
           showIcon
-          message='此操作会绕过合同状态限制，并记录操作者、原因及输入快照。'
+          title='此操作会绕过合同状态限制，并记录操作者、原因及输入快照。'
           className='mb-4'
         />
         <Form form={overrideForm} layout='vertical'>

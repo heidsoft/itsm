@@ -102,7 +102,7 @@ export function AdminSetupGuide() {
           className="mt-5"
           type="info"
           showIcon
-          message="验收标准：测试工单应产生处理人、SLA 截止时间和流程实例；如配置了审批，还应出现待审批任务。"
+          title="验收标准：测试工单应产生处理人、SLA 截止时间和流程实例；如配置了审批，还应出现待审批任务。"
         />
       </div>
     </Card>

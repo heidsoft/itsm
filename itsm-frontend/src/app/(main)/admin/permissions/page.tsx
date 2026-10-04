@@ -686,7 +686,7 @@ const PermissionConfiguration = () => {
       {/* 未选择角色提示 */}
       {!selectedRoleId && (
         <Alert
-          message={t('permissions.alerts.selectRoleMessage')}
+          title={t('permissions.alerts.selectRoleMessage')}
           description={t('permissions.alerts.selectRoleDescription')}
           type="info"
           showIcon
@@ -695,7 +695,7 @@ const PermissionConfiguration = () => {
 
       {permissionCatalogCount === 0 && (
         <Alert
-          message={t('permissions.alerts.catalogNotInitMessage')}
+          title={t('permissions.alerts.catalogNotInitMessage')}
           description={t('permissions.alerts.catalogNotInitDescription')}
           type="warning"
           showIcon
@@ -753,7 +753,7 @@ const PermissionConfiguration = () => {
       {/* 配置变更提醒 */}
       {hasChanges && selectedRoleId && (
         <Alert
-          message={t('permissions.alerts.unsavedMessage')}
+          title={t('permissions.alerts.unsavedMessage')}
           description={t('permissions.alerts.unsavedDescription')}
           type="warning"
           showIcon

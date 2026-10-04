@@ -876,7 +876,7 @@ export default function EnhancedSystemConfiguration() {
               title="系统运行时间"
               value={systemStats.uptime}
               prefix={<Clock className="w-5 h-5" />}
-              valueStyle={{ color: '#52c41a', fontSize: '1.25rem' }}
+              styles={{ content: { color: '#52c41a', fontSize: '1.25rem' } }}
             />
           </Card>
         </Col>
@@ -886,7 +886,7 @@ export default function EnhancedSystemConfiguration() {
               title="Goroutine 数"
               value={systemStats.goroutines}
               prefix={<Network className="w-5 h-5" />}
-              valueStyle={{ color: '#1890ff', fontSize: '1.25rem' }}
+              styles={{ content: { color: '#1890ff', fontSize: '1.25rem' } }}
             />
           </Card>
         </Col>
@@ -919,7 +919,7 @@ export default function EnhancedSystemConfiguration() {
       {/* 操作提示 */}
       {hasChanges && (
         <Alert
-          message="配置已修改"
+          title="配置已修改"
           description="您有未保存的配置更改，请及时保存。"
           type="warning"
           showIcon

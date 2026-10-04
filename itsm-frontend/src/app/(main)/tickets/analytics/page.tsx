@@ -252,7 +252,7 @@ const TicketAnalytics: React.FC = () => {
         </Col>
         <Col xs={12} sm={8} lg={4}>
           <Card size="small">
-            <Statistic title="已超期" value={analyticsData.overdueTickets} valueStyle={{ color: analyticsData.overdueTickets > 0 ? '#cf1322' : undefined }} />
+            <Statistic title="已超期" value={analyticsData.overdueTickets} styles={{ content: { color: analyticsData.overdueTickets > 0 ? '#cf1322' : undefined } }} />
           </Card>
         </Col>
         <Col xs={12} sm={8} lg={4}>

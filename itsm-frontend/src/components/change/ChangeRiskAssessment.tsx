@@ -306,7 +306,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
         {/* 风险提示 */}
         {riskScore >= 60 && (
           <Alert
-            message="高风险警告"
+            title="高风险警告"
             description="该变更被评定为高风险，建议制定应急计划、安排在低峰期实施并准备回滚方案"
             type="error"
             showIcon
@@ -317,7 +317,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
 
         {riskScore >= 30 && riskScore < 60 && (
           <Alert
-            message="中等风险提示"
+            title="中等风险提示"
             description="该变更存在一定风险，建议仔细检查缓解措施和应急计划的完备性。"
             type="warning"
             showIcon
@@ -327,7 +327,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
 
         {riskScore < 30 && (
           <Alert
-            message="低风险确认"
+            title="低风险确认"
             description="该变更风险较低，但仍建议按照标准流程实施。"
             type="success"
             showIcon

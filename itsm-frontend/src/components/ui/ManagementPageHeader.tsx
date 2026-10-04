@@ -51,6 +51,6 @@ export function ManagementNotice({
   description,
   type = 'info',
 }: ManagementNoticeProps) {
-  return <Alert showIcon type={type} message={message} description={description} />;
+  return <Alert showIcon type={type} title={message} description={description} />;
 }
 

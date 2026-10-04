@@ -125,7 +125,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
         <Alert
           type="info"
           showIcon
-          message="该工单尚未绑定 BPMN 流程，使用简化审批模式。"
+          title="该工单尚未绑定 BPMN 流程，使用简化审批模式。"
           className="text-xs"
         />
       </Card>
@@ -168,7 +168,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
               type="error"
               showIcon
               icon={<CircleAlert size={14} />}
-              message="流程已终止，不会继续流转。"
+              title="流程已终止，不会继续流转。"
               className="text-xs"
             />
           )}
@@ -191,7 +191,7 @@ export const WorkflowProgressCard: React.FC<WorkflowProgressCardProps> = ({
           </Space>
         }
       >
-        <Alert type="warning" showIcon message="流程已被挂起，恢复后才能继续流转。" className="text-xs" />
+        <Alert type="warning" showIcon title="流程已被挂起，恢复后才能继续流转。" className="text-xs" />
       </Card>
     );
   }

@@ -141,7 +141,7 @@ export default function SLAPage() {
           className="mb-4"
           type="error"
           showIcon
-          message={error}
+          title={error}
           action={
             <Button size="small" onClick={() => void loadData()}>
               {t('sla.retry')}
@@ -155,7 +155,7 @@ export default function SLAPage() {
           type="error"
           showIcon
           icon={<AlertTriangle />}
-          message={t('sla.openViolationsAlert', { count: stats.openViolations })}
+          title={t('sla.openViolationsAlert', { count: stats.openViolations })}
           description={t('sla.openViolationsDesc')}
           action={
             <Button danger onClick={() => router.push('/sla-monitor')}>
@@ -173,10 +173,10 @@ export default function SLAPage() {
               value={report?.complianceRate ?? stats.overallComplianceRate}
               precision={1}
               suffix="%"
-              valueStyle={{
+              styles={{ content: {
                 color:
                   (report?.complianceRate ?? stats.overallComplianceRate) >= 95 ? '#389e0d' : '#d46b08',
-              }}
+              } }}
             />
           </Card>
         </Col>

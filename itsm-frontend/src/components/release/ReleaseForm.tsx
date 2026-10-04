@@ -159,7 +159,7 @@ const ReleaseForm: React.FC = () => {
           type="warning"
           showIcon
           icon={<Lock />}
-          message="该发布已进入不可编辑状态"
+          title="该发布已进入不可编辑状态"
           description="已发布、已部署或已完成的发布不允许修改。"
           className="mb-4"
           action={

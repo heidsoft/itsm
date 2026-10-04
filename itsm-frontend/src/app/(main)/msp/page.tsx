@@ -285,7 +285,7 @@ export default function MSPDashboardPage() {
               <Avatar size={80} icon={<User />} style={{ backgroundColor: '#1890ff' }} />
             </div>
             <Alert
-              message="您当前不是 MSP 员工，请联系系统管理员分配角色"
+              title="您当前不是 MSP 员工，请联系系统管理员分配角色"
               type="warning"
               showIcon
               style={{ maxWidth: 500, margin: '0 auto' }}
@@ -308,7 +308,7 @@ export default function MSPDashboardPage() {
     return (
       <div style={{ padding: 24 }}>
         <Alert
-          message="加载错误"
+          title="加载错误"
           description={error}
           type="error"
           showIcon
@@ -405,7 +405,7 @@ export default function MSPDashboardPage() {
                     locale={{ emptyText: '暂无工单数据' }}
                   />
                 ) : (
-                  <Alert message="请先选择一个客户以查看其工单" type="info" showIcon />
+                  <Alert title="请先选择一个客户以查看其工单" type="info" showIcon />
                 )}
               </div>
             ),

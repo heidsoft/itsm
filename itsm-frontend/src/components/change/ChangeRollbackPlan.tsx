@@ -456,7 +456,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
         {/* 时间窗口建议 */}
         <Alert
-          message="回滚时间窗口建议"
+          title="回滚时间窗口建议"
           description={
             <div>
               <p>建议设置以下时间窗口进行回滚操作：</p>

@@ -130,7 +130,7 @@ function WelcomeStep() {
         <Alert
           type="info"
           showIcon
-          message="本引导为功能演示，不会写入实际数据"
+          title="本引导为功能演示，不会写入实际数据"
         />
       }
     />

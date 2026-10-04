@@ -401,7 +401,7 @@ export default function RoleManagement() {
   const PermissionConfigTab = () => (
     <div className="space-y-6">
       <Alert
-        message={t('roles.permissionInfo')}
+        title={t('roles.permissionInfo')}
         description={t('roles.permissionInfoDesc')}
         type="info"
         showIcon
@@ -409,7 +409,7 @@ export default function RoleManagement() {
 
       {permissionsError && (
         <Alert
-          message={permissionsError}
+          title={permissionsError}
           type="warning"
           showIcon
           action={

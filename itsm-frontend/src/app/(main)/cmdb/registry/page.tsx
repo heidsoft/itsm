@@ -233,7 +233,7 @@ export default function ServiceGraphRegistryPage() {
         <Alert
           type="warning"
           showIcon
-          message="云资源自动发现尚未就绪"
+          title="云资源自动发现尚未就绪"
           description={
             discoveryCapability
               ? `当前状态：${discoveryCapability.state}；缺失条件：${discoveryCapability.missingRequirements.join('、') || '租户配置'}`

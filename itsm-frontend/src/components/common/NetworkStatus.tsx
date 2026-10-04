@@ -71,7 +71,7 @@ export const NetworkStatus: React.FC = () => {
         }}
       >
         <Alert
-          message="网络连接已断开"
+          title="网络连接已断开"
           description="请检查您的网络连接，部分功能可能不可用。"
           type="error"
           showIcon
@@ -96,7 +96,7 @@ export const NetworkStatus: React.FC = () => {
         }}
       >
         <Alert
-          message="网络已恢复"
+          title="网络已恢复"
           description="网络连接已恢复正常。"
           type="success"
           showIcon

@@ -560,7 +560,7 @@ const CMDBTypesManagement = () => {
                 className='mb-3'
                 type='warning'
                 showIcon
-                message='检测到历史属性格式'
+                title='检测到历史属性格式'
                 description='为避免静默丢失未知字段，当前页面禁止覆盖保存。请先通过受控迁移转换模板格式。'
               />
             )}
@@ -568,7 +568,7 @@ const CMDBTypesManagement = () => {
               className='mb-3'
               type='info'
               showIcon
-              message='不用手写 JSON，按字段逐项配置即可'
+              title='不用手写 JSON，按字段逐项配置即可'
               description='字段标识用于保存数据，建议使用英文小写和下划线；枚举类型的选项可用换行或逗号分隔。'
             />
             <Form.List name='schemaFields'>

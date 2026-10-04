@@ -7,7 +7,8 @@
 #   2. 组件归属模式 —— 仅当 JSX 标签是本文件从 'antd' 具名导入（含 `as` 别名）
 #      的 antd 组件时才判定违规。项目自有组件可以合法拥有同名 prop
 #      （visible/overlay/...），归属由 import 决定，不做全局文本误伤。
-#      弃用面已逐一对照 node_modules/antd 6.2.2 的 .d.ts @deprecated 注释核实：
+#      弃用面已逐一对照 node_modules/antd 的 .d.ts @deprecated 注释核实
+#      （Statistic/Spin/Alert 三项按 6.3.1 核实，其余按 6.2.2）：
 #        visible            Modal/Drawer（v6 已移除，须用 open）
 #        destroyOnClose     Modal/Drawer（改 destroyOnHidden）
 #        bodyStyle          Card/Modal/Drawer（改 styles.body）
@@ -16,6 +17,9 @@
 #        onDropdownVisibleChange Select/TreeSelect/AutoComplete/Cascader（改 onOpenChange）
 #        valueStyle         Statistic（改 styles.content）
 #        Spin.tip           Spin（改 description）
+#        Alert.message      Alert（`mergedTitle = title ?? message`，仍能渲染但每次打
+#                           dev 弃用告警；改 title）
+#        Alert.onClose      Alert（改 closable={{ onClose }}）
 #
 # 基线棘轮：各类别命中数与 tools/antd-legacy-baseline.txt 比较——
 #   超过基线 → exit 1；低于基线 → 提示收紧基线（只许降不许升）。
@@ -67,6 +71,8 @@ my @ATTR = (
   ["onDropdownVisibleChange", ["Select","TreeSelect","AutoComplete","Cascader"],               qr/(?<![.\w])onDropdownVisibleChange\b/],
   ["valueStyle",              ["Statistic"],                                                   qr/(?<![.\w])valueStyle\b/],
   ["Spin.tip",                ["Spin"],                                                        qr/(?<![.\w])tip\b/],
+  ["Alert.message",           ["Alert"],                                                       qr/(?<![.\w])message\b/],
+  ["Alert.onClose",           ["Alert"],                                                       qr/(?<![.\w])onClose\b/],
 );
 
 # 历史全局模式（保持原行级语义，不加归属判定）。
@@ -118,17 +124,31 @@ foreach my $file (@ARGV) {
     for my $comp (@$comps) {
       my $aliases = $real2aliases{$comp} or next;
       for my $alias (@$aliases) {
-        # 逐个开标签检查：<Alias ...> 区域内剥离 {...}（迭代去嵌套）与引号串后，
-        # 只剩裸属性名；不会越过标签边界窜进子元素。
-        while ($src =~ /<\Q$alias\E\b/g) {
-          my $tag_start = $-[0];
-          my $gt = index($src, ">", $tag_start);
-          next if $gt < 0;
-          my $t = substr($src, $tag_start, $gt - $tag_start);
-          1 while $t =~ s/\{[^{}]*\}//g;
-          $t =~ s/"[^"]*"//g;
-          $t =~ s/\x27[^\x27]*\x27//g;
-          if ($t =~ $re) {
+        # 逐个开标签扫描：按字符走一遍标签开括号区域，{} 深度与引号串都要跟踪，
+        # 只有深度 0 的 > 才是标签结束。之前的「找第一个 >」或「两层花括号」写法
+        # 会被 `onClose={() => x}` 里的 `=>` 与 `extra={<Space><Button/>…}` 这种
+        # 深层 JSX 提前截断，于是同一标签后面的弃用属性永远看不见——实测因此
+        # 漏过 valueStyle 9 处、destroyOnClose 2 处（台账 E4-34）。
+        my $cursor = 0;
+        while ((my $tag_start = index($src, "<$alias", $cursor)) >= 0) {
+          $cursor = $tag_start + 1;
+          my $name_end = $tag_start + 1 + length($alias);
+          my $nx = substr($src, $name_end, 1);
+          next if defined $nx && $nx =~ /[\w\-]/;   # <AlertDialog 等同名前缀组件不算
+          my $i = $name_end;
+          my ($depth, $quote, $attrs) = (0, "", "");
+          while ($i < length($src)) {
+            my $ch = substr($src, $i, 1);
+            if    ($quote ne "") { $quote = "" if $ch eq $quote; }
+            elsif ($ch eq "\x22" or $ch eq "\x27") { $quote = $ch; }
+            elsif ($ch eq "{") { $depth++; }
+            elsif ($ch eq "}") { $depth--; $depth = 0 if $depth < 0; }
+            elsif ($ch eq ">" and $depth == 0) { last; }
+            elsif ($depth == 0) { $attrs .= $ch; }
+            $i++;
+          }
+          $cursor = $i + 1 if $i > $cursor;
+          if ($attrs =~ $re) {
             my $line = 1 + (substr($src, 0, $tag_start) =~ tr/\n//);
             my $snip = substr($src, $tag_start, 100);
             $snip =~ s/\s+/ /g;

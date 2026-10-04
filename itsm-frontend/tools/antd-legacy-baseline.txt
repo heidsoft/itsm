@@ -9,8 +9,15 @@ bodyStyle 4
 overlay 0
 dropdownRender 0
 onDropdownVisibleChange 0
-# 以下为本次新增检测面（对照 antd 6.2.2 .d.ts 的 @deprecated 注释核实）：
-# valueStyle(Statistic) 与 Spin.tip 此前完全没有门禁，报表页改动因此引入过告警。
-# 存量命中分布在 11 个未触及的页面，先冻结为棘轮基线，只许降不许升。
-valueStyle 11
+# 以下为新增检测面（对照 antd 的 .d.ts @deprecated 注释核实）：
+#   valueStyle(Statistic) 与 Spin.tip 此前完全没有门禁，报表页改动因此引入过告警。
+#   Spin.tip 存量 7 处分布在未触及的页面，先冻结为棘轮基线，只许降不许升。
+#   valueStyle 已在 E4-34 同批全部改为 styles.content（实测 20 处，含旧扫描器
+#   因 `=>` 提前截断标签而漏掉的 9 处），基线降到 0。
+valueStyle 0
 Spin.tip 7
+# Alert.message / Alert.onClose：对照 antd 6.3.1 es/alert/Alert.d.ts 核实均为
+#   @deprecated（message→title，onClose→closable.onClose）。台账 E4-34 实测存量
+#   62 个文件 / 98 处，已同批改完，因此基线直接为 0（新增即红）。
+Alert.message 0
+Alert.onClose 0

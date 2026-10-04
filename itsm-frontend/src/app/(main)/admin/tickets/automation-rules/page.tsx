@@ -226,7 +226,7 @@ const AutomationRulesPage: React.FC = () => {
           className="mb-4"
           type="info"
           showIcon
-          message="条件触发自动处理工单；审批和多阶段流转请使用 BPMN 流程"
+          title="条件触发自动处理工单；审批和多阶段流转请使用 BPMN 流程"
         />
 
         <UsageGuideCard
@@ -246,7 +246,7 @@ const AutomationRulesPage: React.FC = () => {
           <Alert
             type="info"
             showIcon
-            message="暂无自动化规则，点击上方按钮创建"
+            title="暂无自动化规则，点击上方按钮创建"
           />
         ) : (
           <Table

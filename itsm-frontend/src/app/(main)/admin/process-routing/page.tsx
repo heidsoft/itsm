@@ -305,7 +305,7 @@ export default function ProcessRoutingPage() {
       <Alert
         type="info"
         showIcon
-        message="流程路由规则决定业务单据匹配到哪个工作流"
+        title="流程路由规则决定业务单据匹配到哪个工作流"
       />
       {/* Statistics */}
       <Row gutter={16}>
@@ -316,7 +316,7 @@ export default function ProcessRoutingPage() {
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="已启用" value={stats.active} valueStyle={{ color: '#3f8600' }} />
+            <Statistic title="已启用" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
           </Card>
         </Col>
         <Col span={6}>

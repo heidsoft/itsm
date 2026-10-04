@@ -89,7 +89,7 @@ const CreateProblemPageContent = () => {
         >
           {searchParams.get('fromIncidentId') && (
             <Alert
-              message={`此问题由事件 ${searchParams.get('fromIncidentId')} 触发`}
+              title={`此问题由事件 ${searchParams.get('fromIncidentId')} 触发`}
               type="info"
               showIcon
               className="mb-6"

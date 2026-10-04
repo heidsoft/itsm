@@ -211,7 +211,7 @@ const ChangeReviewManagementPage: React.FC = () => {
           className="mb-4"
           type="info"
           showIcon
-          message="添加评审成员并启用后，其将纳入对应评审组的候选审批人"
+          title="添加评审成员并启用后，其将纳入对应评审组的候选审批人"
         />
         <Table
           rowKey="id"

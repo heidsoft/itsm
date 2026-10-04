@@ -294,7 +294,7 @@ export default function ConnectorsAdminPage() {
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message={t('connectors.pageDescription')}
+        title={t('connectors.pageDescription')}
         description={t('connectors.description')}
       />
 
@@ -370,7 +370,7 @@ export default function ConnectorsAdminPage() {
                 <Input placeholder={t('connectors.provision.providerPlaceholder')} />
               </Form.Item>
               {provisionTarget.name === 'email' ? <>
-                <Alert type="warning" showIcon message="请使用 QQ 邮箱授权码，不要填写登录密码。凭据只会加密保存在服务端，后续不会回显。" style={{ marginBottom: 16 }} />
+                <Alert type="warning" showIcon title="请使用 QQ 邮箱授权码，不要填写登录密码。凭据只会加密保存在服务端，后续不会回显。" style={{ marginBottom: 16 }} />
                 <Form.Item name="emailUsername" label="邮箱地址" rules={[{ required: true, type: 'email' }]}><Input autoComplete="off" /></Form.Item>
                 <Form.Item name="emailPassword" label="邮箱授权码" rules={[{ required: true }]}><Input.Password autoComplete="new-password" /></Form.Item>
                 <Space align="start" wrap>

@@ -470,7 +470,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                   <Title level={5}>{t('problemInvestigation.overview.rootCauseAnalysis')}</Title>
                   <Alert
                     type="info"
-                    message={t('problemInvestigation.overview.analysisMethodLabel', {
+                    title={t('problemInvestigation.overview.analysisMethodLabel', {
                       method: getMethodLabel(summary.rootCauseAnalysis.analysisMethod),
                     })}
                     description={

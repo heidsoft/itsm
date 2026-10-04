@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
             {error && (
               <Alert
-                message={t('auth.register.registerFailed')}
+                title={t('auth.register.registerFailed')}
                 description={error}
                 type="error"
                 className="mb-4"

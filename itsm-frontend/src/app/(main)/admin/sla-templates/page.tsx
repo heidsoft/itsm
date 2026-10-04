@@ -256,7 +256,7 @@ export default function SLATemplatesPage() {
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="推荐模板" value={stats.recommended} suffix="个" valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="推荐模板" value={stats.recommended} suffix="个" styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
@@ -265,7 +265,7 @@ export default function SLATemplatesPage() {
               title="覆盖行业"
               value={Object.keys(stats.byIndustry).length}
               suffix="个"
-              valueStyle={{ color: '#1677ff' }}
+              styles={{ content: { color: '#1677ff' } }}
             />
           </Card>
         </Col>
@@ -273,7 +273,7 @@ export default function SLATemplatesPage() {
 
       <Card>
         <Alert
-          message="安装模板后系统会为当前租户创建 SLA 定义，重复安装不会产生重复配置"
+          title="安装模板后系统会为当前租户创建 SLA 定义，重复安装不会产生重复配置"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

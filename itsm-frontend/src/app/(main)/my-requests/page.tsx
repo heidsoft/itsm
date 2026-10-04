@@ -212,7 +212,7 @@ const MyRequestsPage = () => {
         {/* 错误提示 */}
         {error && (
           <Alert
-            message={error}
+            title={error}
             description="请检查网络连接或稍后重试"
             type="error"
             showIcon

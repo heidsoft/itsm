@@ -52,7 +52,7 @@ export default function MSPManagementPage() {
   if (accessError) {
     return (
       <div style={{ padding: 24 }}>
-        <Alert message={accessError} type="error" showIcon />
+        <Alert title={accessError} type="error" showIcon />
       </div>
     );
   }
@@ -186,7 +186,7 @@ export default function MSPManagementPage() {
         }
       >
         <Alert
-          message="MSP Manager 可为员工分配客户租户，分配后通过 X-Customer-Tenant-ID 头访问对应工单"
+          title="MSP Manager 可为员工分配客户租户，分配后通过 X-Customer-Tenant-ID 头访问对应工单"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

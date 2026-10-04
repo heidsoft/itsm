@@ -266,14 +266,14 @@ const TicketDashboardPage = () => {
           <Card title="SLA告警" className="h-full">
             <div className="space-y-3">
               <Alert
-                message="即将超时工单"
+                title="即将超时工单"
                 description={`${slaData.atRiskTickets || 0} 个工单即将超时`}
                 type="warning"
                 showIcon
                 icon={<Clock size={16} />}
               />
               <Alert
-                message="SLA合规状态"
+                title="SLA合规状态"
                 description={`当前合规率: ${slaData.complianceRate?.toFixed(1) || 0}%`}
                 type={slaData.complianceRate >= 95 ? 'success' : 'warning'}
                 showIcon

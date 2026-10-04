@@ -184,7 +184,7 @@ export default function ProblemTrendsPage() {
                     title="问题总数"
                     value={trendData.totalProblems || 0}
                     prefix={<BarChart3 className="text-blue-500" />}
-                    valueStyle={{ color: '#1890ff' }}
+                    styles={{ content: { color: '#1890ff' } }}
                   />
                 </Card>
               </Col>
@@ -194,7 +194,7 @@ export default function ProblemTrendsPage() {
                     title="已解决"
                     value={trendData.resolvedProblems || 0}
                     prefix={<LineChart className="text-green-500" />}
-                    valueStyle={{ color: '#52c41a' }}
+                    styles={{ content: { color: '#52c41a' } }}
                   />
                 </Card>
               </Col>
@@ -204,7 +204,7 @@ export default function ProblemTrendsPage() {
                     title="待处理"
                     value={trendData.openProblems || 0}
                     prefix={<PieChart className="text-orange-500" />}
-                    valueStyle={{ color: '#fa8c16' }}
+                    styles={{ content: { color: '#fa8c16' } }}
                   />
                 </Card>
               </Col>
@@ -216,7 +216,7 @@ export default function ProblemTrendsPage() {
                     precision={1}
                     suffix="%"
                     prefix={<LineChart className="text-purple-500" />}
-                    valueStyle={{ color: trendData.resolutionRate >= 0.7 ? '#52c41a' : '#fa8c16' }}
+                    styles={{ content: { color: trendData.resolutionRate >= 0.7 ? '#52c41a' : '#fa8c16' } }}
                   />
                 </Card>
               </Col>

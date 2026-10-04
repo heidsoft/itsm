@@ -201,7 +201,7 @@ export const BatchActionBar: React.FC<BatchActionBarProps> = ({
       type="info"
       showIcon={false}
       className={`mb-4 ${className || ''}`}
-      message={content}
+      title={content}
     />
   );
 };

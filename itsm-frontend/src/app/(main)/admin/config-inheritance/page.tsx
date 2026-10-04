@@ -209,7 +209,7 @@ export default function ConfigInheritancePage() {
               <Alert
                 style={{ marginTop: 16 }}
                 type="success"
-                message={`来源：${effectiveConfig.source} / 模式：${effectiveConfig.inheritMode} / 版本：${effectiveConfig.version}`}
+                title={`来源：${effectiveConfig.source} / 模式：${effectiveConfig.inheritMode} / 版本：${effectiveConfig.version}`}
                 description={<pre style={{ margin: 0 }}>{JSON.stringify(effectiveConfig.value, null, 2)}</pre>}
               />
             )}
@@ -218,7 +218,7 @@ export default function ConfigInheritancePage() {
                 style={{ marginTop: 16 }}
                 type="info"
                 showIcon
-                message="全链路未命中配置"
+                title="全链路未命中配置"
                 description="全局 → 租户 → 部门 → 团队 各层级均未定义该配置，运行时使用代码默认值。"
               />
             )}

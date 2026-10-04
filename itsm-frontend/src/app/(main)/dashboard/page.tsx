@@ -532,7 +532,7 @@ export default function DashboardPage() {
         width={420}
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        destroyOnClose
+        destroyOnHidden
         extra={
           <Space>
             <Button

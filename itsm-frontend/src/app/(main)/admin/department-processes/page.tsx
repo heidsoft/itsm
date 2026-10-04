@@ -184,7 +184,7 @@ export default function DepartmentProcessPage() {
       <Alert
         type="info"
         showIcon
-        message="部门流程配置用于查看各部门已绑定的流程"
+        title="部门流程配置用于查看各部门已绑定的流程"
       />
       <Card title="部门流程配置">
         <Row gutter={24}>
@@ -232,7 +232,7 @@ export default function DepartmentProcessPage() {
                   </Col>
                   <Col span={8}>
                     <Card size="small">
-                      <Statistic title="已启用" value={stats.active} valueStyle={{ color: '#3f8600' }} />
+                      <Statistic title="已启用" value={stats.active} styles={{ content: { color: '#3f8600' } }} />
                     </Card>
                   </Col>
                   <Col span={8}>
@@ -292,7 +292,7 @@ export default function DepartmentProcessPage() {
         onOk={handleInitDefaults}
       >
         <Alert
-          message="将为所选部门创建默认流程模板（不会影响已有配置）"
+          title="将为所选部门创建默认流程模板（不会影响已有配置）"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

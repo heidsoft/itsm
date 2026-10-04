@@ -555,7 +555,7 @@ export default function CreateTicketPage() {
                     type="info"
                     showIcon
                     className="mb-4"
-                    message="填写最少信息即可提交，补充说明建议写在详细描述中。"
+                    title="填写最少信息即可提交，补充说明建议写在详细描述中。"
                   />
                   <Form.Item
                     name="title"

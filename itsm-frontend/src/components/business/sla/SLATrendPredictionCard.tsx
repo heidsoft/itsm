@@ -139,7 +139,7 @@ export const SLATrendPredictionCard: React.FC<Props> = ({
           className="mb-3"
           type="error"
           showIcon
-          message="预测请求失败"
+          title="预测请求失败"
           description={error}
           action={
             <Button size="small" onClick={() => void load()}>

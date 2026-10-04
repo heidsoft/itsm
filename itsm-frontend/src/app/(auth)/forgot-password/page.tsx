@@ -153,7 +153,7 @@ export default function ForgotPasswordPage() {
 
             {error && (
               <Alert
-                message={t('auth.forgotPassword.sendFailed')}
+                title={t('auth.forgotPassword.sendFailed')}
                 description={error}
                 type="error"
                 className="mb-4"

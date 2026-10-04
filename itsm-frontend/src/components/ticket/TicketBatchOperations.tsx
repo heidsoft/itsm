@@ -331,7 +331,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'delete':
         return (
           <Alert
-            message="删除确认"
+            title="删除确认"
             description={`即将删除 ${selectedTickets.length} 个工单，此操作不可恢复。请确认是否继续？`}
             type="error"
             showIcon

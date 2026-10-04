@@ -87,7 +87,7 @@ export default function TicketTypesPage() {
       className="mb-4"
       type="info"
       showIcon
-      message="绑定工作流、SLA、分配规则和审批层级后启用，建议创建测试工单验收"
+      title="绑定工作流、SLA、分配规则和审批层级后启用，建议创建测试工单验收"
     />
     <Input.Search className="mb-4 max-w-sm" allowClear placeholder="搜索名称或编码" onSearch={setKeyword} />
     <div className="mb-3"><label className="inline-flex cursor-pointer items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />显示已归档类型</label></div>

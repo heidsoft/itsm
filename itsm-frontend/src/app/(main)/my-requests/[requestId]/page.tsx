@@ -310,7 +310,7 @@ export default function MyRequestDetailPage() {
             <>
               <Title level={4}>交付操作</Title>
               <Alert
-                message="审批已全部通过"
+                title="审批已全部通过"
                 description="可以启动交付任务，系统将自动创建云资源"
                 type="success"
                 showIcon

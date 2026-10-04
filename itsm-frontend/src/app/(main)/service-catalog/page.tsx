@@ -245,7 +245,7 @@ export default function ServiceCatalogPage() {
 
       {/* 筛选和搜索 */}
       {error && (
-        <Alert className="mb-4" type="error" showIcon message={t('serviceCatalog.loadFailed')} description={error}
+        <Alert className="mb-4" type="error" showIcon title={t('serviceCatalog.loadFailed')} description={error}
           action={<Button onClick={loadServiceCatalogs}>{t('serviceCatalog.reload')}</Button>} />
       )}
       <ServiceCatalogFilters

@@ -256,7 +256,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
           <Alert
             type="error"
             showIcon
-            message="知识库文章加载失败"
+            title="知识库文章加载失败"
             description={error}
             action={<Button size="small" onClick={loadData}>重试</Button>}
           />

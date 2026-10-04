@@ -315,7 +315,7 @@ export default function BottlenecksPage() {
                 <Statistic
                   title="严重程度"
                   value={analysis?.severity?.toUpperCase() ?? '-'}
-                  valueStyle={{ color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' }}
+                  styles={{ content: { color: severityColorMap[analysis?.severity ?? 'low'] ?? 'green' } }}
                   prefix={<AlertTriangle />}
                 />
               </Card>
@@ -331,7 +331,7 @@ export default function BottlenecksPage() {
             </Col>
             <Col xs={24} sm={6}>
               <Card>
-                <Statistic title="总等待时间" value={formatSeconds(totalWait)} valueStyle={{ color: '#fa8c16' }} />
+                <Statistic title="总等待时间" value={formatSeconds(totalWait)} styles={{ content: { color: '#fa8c16' } }} />
               </Card>
             </Col>
             <Col xs={24} sm={6}>
@@ -339,7 +339,7 @@ export default function BottlenecksPage() {
                 <Statistic
                   title="总处理时间"
                   value={formatSeconds(totalProcessing)}
-                  valueStyle={{ color: '#1677ff' }}
+                  styles={{ content: { color: '#1677ff' } }}
                 />
               </Card>
             </Col>
@@ -349,7 +349,7 @@ export default function BottlenecksPage() {
             <Alert
               type={analysis.severity === 'critical' ? 'error' : 'warning'}
               showIcon
-              message="系统优化建议"
+              title="系统优化建议"
               description={
                 <ul style={{ marginBottom: 0, paddingLeft: 20 }}>
                   {analysis.recommendations.map((r, i) => (

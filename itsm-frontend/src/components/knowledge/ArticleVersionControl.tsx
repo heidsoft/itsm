@@ -210,7 +210,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
     return (
       <div className="space-y-4">
         <Alert
-          message="版本差异"
+          title="版本差异"
           description={`比较版本 ${selectedVersions?.[0]} 和版本 ${selectedVersions?.[1]}`}
           type="info"
           showIcon

@@ -203,7 +203,7 @@ const EditChangePage: React.FC = () => {
           type="warning"
           showIcon
           icon={<Lock />}
-          message="该变更已进入不可编辑状态"
+          title="该变更已进入不可编辑状态"
           description="已审批通过、实施中或已完成的变更不允许修改。如需修改，请发起变更申请。"
           className="mb-4"
           action={

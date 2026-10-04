@@ -365,7 +365,7 @@ export default function MenuManagementPage() {
       <Alert
         type="info"
         showIcon
-        message={t('menus.usageTip')}
+        title={t('menus.usageTip')}
         description={
           <div>
             <div>• {t('menus.usageTipLine1')}</div>

@@ -210,7 +210,7 @@ export default function PIRPage() {
             type="info"
             showIcon
             className="mb-5"
-            message="按结果、问题、经验和改进建议四部分填写即可，不必每项都写很长。"
+            title="按结果、问题、经验和改进建议四部分填写即可，不必每项都写很长。"
           />
           <Form
             form={form}

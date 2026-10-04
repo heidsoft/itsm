@@ -283,7 +283,7 @@ export default function SLAMonitoringPage() {
         }
       >
         {violations.length === 0 ? (
-          <Alert message={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
+          <Alert title={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
         ) : (
           <Table
             dataSource={violations}

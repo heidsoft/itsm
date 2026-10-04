@@ -252,7 +252,7 @@ export default function ReconciliationPage() {
         okButtonProps={{ disabled: !bindCIID }}
         confirmLoading={bindMutation.isPending}
         okText="绑定"
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 12 }}>
           搜索并选择一个已存在的配置项，云资源信息将写入该配置项。

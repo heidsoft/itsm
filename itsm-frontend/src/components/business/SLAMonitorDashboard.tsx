@@ -584,7 +584,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           type="error"
           showIcon
           className="mb-6"
-          message={`数据加载失败：${loadError}`}
+          title={`数据加载失败：${loadError}`}
           description={
             monitoring
               ? `当前展示的是 ${updatedAt ? format(updatedAt, 'yyyy-MM-dd HH:mm:ss') : '未知时间'} 成功加载的数据。`
@@ -603,7 +603,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           type="warning"
           showIcon
           className="mb-6"
-          message="窗口内工单数超过扫描上限，以下指标基于部分样本计算，不代表全量结果。"
+          title="窗口内工单数超过扫描上限，以下指标基于部分样本计算，不代表全量结果。"
         />
       ) : null}
 

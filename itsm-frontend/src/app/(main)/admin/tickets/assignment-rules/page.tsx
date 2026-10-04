@@ -328,7 +328,7 @@ export default function AssignmentRulesPage() {
           className="mb-4"
           type="info"
           showIcon
-          message="定义匹配条件后，在工单类型中启用自动分配并绑定本规则"
+          title="定义匹配条件后，在工单类型中启用自动分配并绑定本规则"
         />
 
         <UsageGuideCard
@@ -347,7 +347,7 @@ export default function AssignmentRulesPage() {
           <Alert
             type="info"
             showIcon
-            message="暂无分配规则"
+            title="暂无分配规则"
             description="创建规则后，工单可按优先级、状态、分类或部门等条件自动推荐处理人。"
           />
         ) : (
@@ -422,7 +422,7 @@ export default function AssignmentRulesPage() {
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
-        {testResult ? <Alert className="mt-3" type="success" showIcon message={testResult} /> : null}
+        {testResult ? <Alert className="mt-3" type="success" showIcon title={testResult} /> : null}
       </Modal>
     </div>
   );

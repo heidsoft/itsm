@@ -153,7 +153,7 @@ export default function EscalationMatricesPage() {
       </div>
 
       <Alert
-        message="升级矩阵为系统内置策略，当前仅支持查看"
+        title="升级矩阵为系统内置策略，当前仅支持查看"
         type="info"
         showIcon
       />
@@ -179,7 +179,7 @@ export default function EscalationMatricesPage() {
         </Col>
         <Col xs={24} sm={8}>
           <Card>
-            <Statistic title="升级级别总数" value={stats.totalLevels} suffix="级" valueStyle={{ color: '#1677ff' }} />
+            <Statistic title="升级级别总数" value={stats.totalLevels} suffix="级" styles={{ content: { color: '#1677ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
@@ -188,7 +188,7 @@ export default function EscalationMatricesPage() {
               title="通知目标数"
               value={stats.totalTargets}
               suffix="个"
-              valueStyle={{ color: '#722ed1' }}
+              styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>
