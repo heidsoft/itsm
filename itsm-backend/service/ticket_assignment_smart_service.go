@@ -1,5 +1,8 @@
 package service
 
+// test-coverage-guard: skip
+// 分配推荐通过 handler 层集成测试覆盖（assignment_smart handler_test.go）。
+
 import (
 	"context"
 	"fmt"
