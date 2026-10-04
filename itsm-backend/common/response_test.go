@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -565,4 +566,174 @@ func TestRespondError_FallbackOnInternal(t *testing.T) {
 	assert.Equal(t, InternalErrorCode, resp.Code)
 	assert.Equal(t, "操作失败", resp.Message)
 	assert.NotContains(t, w.Body.String(), "connection refused")
+}
+
+// ==================== E4-5 错误分类单一所有者 ====================
+
+// statusForCode 收敛后，Fail 与 FailWithData 必须对每个业务码给出同一个 HTTP 状态。
+// 这是把两份 switch 合并成唯一所有者之后才可能成立的不变量。
+func TestStatusForCode_FailAndFailWithDataAgree(t *testing.T) {
+	codes := []struct {
+		code     int
+		wantHTTP int
+	}{
+		{ParamErrorCode, http.StatusBadRequest},
+		{ValidationError, http.StatusBadRequest},
+		{BadRequestCode, http.StatusBadRequest},
+		{AuthFailedCode, http.StatusUnauthorized},
+		{UnauthorizedCode, http.StatusUnauthorized},
+		{ForbiddenCode, http.StatusForbidden},
+		{ToolPermissionDeniedCode, http.StatusForbidden},
+		{NotFoundCode, http.StatusNotFound},
+		{UnknownToolCode, http.StatusNotFound},
+		{ConflictCode, http.StatusConflict},
+		{UnprocessableEntityCode, http.StatusUnprocessableEntity},
+		{InternalErrorCode, http.StatusInternalServerError},
+		{ServiceUnavailableCode, http.StatusServiceUnavailable},
+		{9999, http.StatusOK},
+	}
+	for _, tc := range codes {
+		failW := httptest.NewRecorder()
+		failC, _ := gin.CreateTestContext(failW)
+		Fail(failC, tc.code, "m")
+
+		withW := httptest.NewRecorder()
+		withC, _ := gin.CreateTestContext(withW)
+		FailWithData(withC, tc.code, "m", gin.H{"k": "v"})
+
+		assert.Equal(t, tc.wantHTTP, failW.Code, "code=%d via Fail", tc.code)
+		assert.Equal(t, tc.wantHTTP, withW.Code, "code=%d via FailWithData", tc.code)
+	}
+}
+
+// FailWithErr 过去把所有错误一律压成 500/5001，领域错误自带的 HTTP 语义被丢掉；
+// RespondError 又单独分类，同一个 service 错误经两个 helper 得到两种状态码。
+// 收敛后 classifyError 是唯一分类者：状态码跟随领域语义，消息仍是 handler 的 publicMsg
+// （领域文案可能是英文，不能在这里替换掉中文 UX 文案）。
+func TestFailWithErr_ClassifiesDomainErrors(t *testing.T) {
+	cases := []struct {
+		name     string
+		err      error
+		wantCode int
+		wantHTTP int
+	}{
+		{"app_not_found", NewNotFoundError("ticket"), NotFoundCode, http.StatusNotFound},
+		{"app_forbidden", NewForbiddenError("no permission"), ForbiddenCode, http.StatusForbidden},
+		{"app_bad_request", NewBadRequestError("title is required", nil), BadRequestCode, http.StatusBadRequest},
+		{"app_conflict", NewConflictError("ticket", "dup"), ConflictCode, http.StatusConflict},
+		{"app_unavailable", NewAppError(ErrCodeInternal, "db down", http.StatusServiceUnavailable, nil), ServiceUnavailableCode, http.StatusServiceUnavailable},
+		{"business_error", NewBusinessError(4220, "无法受理", "detail leaks"), UnprocessableEntityCode, http.StatusUnprocessableEntity},
+		{"wrapped_app_not_found", fmt.Errorf("load: %w", NewNotFoundError("ticket")), NotFoundCode, http.StatusNotFound},
+		{"version_conflict", NewVersionConflictError("工单", 7, 2, 5), ConflictCode, http.StatusConflict},
+		{"unclassified", errors.New("pq: duplicate key value violates unique constraint"), InternalErrorCode, http.StatusInternalServerError},
+		{"nil", nil, InternalErrorCode, http.StatusInternalServerError},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest("GET", "/api/v1/test", nil)
+
+			FailWithErr(c, tc.err, "操作失败")
+
+			assert.Equal(t, tc.wantHTTP, w.Code)
+			var resp Response
+			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, tc.wantCode, resp.Code)
+			assert.Equal(t, "操作失败", resp.Message, "消息必须是 handler 文案，不得透领域/驱动文本")
+			assert.NotContains(t, w.Body.String(), "pq:")
+			assert.NotContains(t, w.Body.String(), "duplicate key")
+			assert.NotContains(t, w.Body.String(), "not found", "领域英文文案也不得替换掉 UX 文案")
+			assert.NotContains(t, w.Body.String(), "detail leaks")
+		})
+	}
+}
+
+// 版本冲突除状态码外还要带载荷，客户端才能拿 currentVersion/serverVersion 做冲突处理；
+// 只有一段中文文字等于把乐观锁退化成不可编程的错误。
+func TestFailWithErr_VersionConflictCarriesPayload(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("PATCH", "/api/v1/tickets/7", nil)
+
+	FailWithErr(c, NewVersionConflictError("工单", 7, 2, 5), "操作失败")
+
+	assert.Equal(t, http.StatusConflict, w.Code)
+	var resp Response
+	assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, ConflictCode, resp.Code)
+	assert.Equal(t, "操作失败", resp.Message)
+	data, ok := resp.Data.(map[string]interface{})
+	is := assert.New(t)
+	is.True(ok, "版本冲突必须带 data 载荷，got=%v", resp.Data)
+	is.Equal(float64(7), data["resourceId"])
+	is.Equal(float64(2), data["currentVersion"])
+	is.Equal(float64(5), data["serverVersion"])
+}
+
+// RespondError 与 FailWithErr 的唯一差异是消息权威：前者透出领域安全文案。
+// 分类结果（业务码 + HTTP 状态）必须完全一致。
+func TestRespondError_MatchesFailWithErrClassification(t *testing.T) {
+	errs := []error{
+		NewNotFoundError("ticket"),
+		NewForbiddenError("no permission"),
+		NewConflictError("ticket", "dup"),
+		NewBusinessError(4220, "无法受理", ""),
+		NewVersionConflictError("工单", 7, 2, 5),
+		errors.New("pq: duplicate key"),
+	}
+	for _, err := range errs {
+		respondW := httptest.NewRecorder()
+		respondC, _ := gin.CreateTestContext(respondW)
+		respondC.Request = httptest.NewRequest("GET", "/api/v1/test", nil)
+		RespondError(respondC, err, "兜底")
+
+		failW := httptest.NewRecorder()
+		failC, _ := gin.CreateTestContext(failW)
+		failC.Request = httptest.NewRequest("GET", "/api/v1/test", nil)
+		FailWithErr(failC, err, "兜底")
+
+		var r1, r2 Response
+		assert.NoError(t, json.Unmarshal(respondW.Body.Bytes(), &r1))
+		assert.NoError(t, json.Unmarshal(failW.Body.Bytes(), &r2))
+		assert.Equal(t, respondW.Code, failW.Code, "err=%v", err)
+		assert.Equal(t, r1.Code, r2.Code, "err=%v", err)
+	}
+}
+
+// ErrorHandler 中间件此前用类型断言，只认顶层错误；被 %w 包装的业务拒绝掉进 500。
+// 分类收敛到 classifyError（errors.As）后，包装同样识别。
+func TestErrorHandler_Middleware_ClassifiesWrappedErrors(t *testing.T) {
+	cases := []struct {
+		name      string
+		err       error
+		wantHTTP  int
+		wantCode  int
+		wantInMsg string
+	}{
+		{"wrapped_not_found", fmt.Errorf("svc: %w", NewNotFoundError("ticket")), http.StatusNotFound, NotFoundCode, "ticket not found"},
+		{"top_level_business", NewBusinessError(4090, "状态冲突", ""), http.StatusConflict, ConflictCode, "状态冲突"},
+		{"wrapped_conflict", fmt.Errorf("save: %w", NewVersionConflictError("工单", 7, 2, 5)), http.StatusConflict, ConflictCode, "版本冲突"},
+		{"unclassified", errors.New("pq: connection refused"), http.StatusInternalServerError, InternalErrorCode, "内部服务器错误"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			engine := gin.New()
+			engine.Use(ErrorHandler(zap.NewNop().Sugar()))
+			engine.GET("/probe", func(c *gin.Context) {
+				// c.Error 记录后由中间件统一分流，handler 不写响应。
+				_ = c.Error(tc.err)
+			})
+
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, httptest.NewRequest("GET", "/probe", nil))
+
+			assert.Equal(t, tc.wantHTTP, w.Code)
+			var resp Response
+			assert.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+			assert.Equal(t, tc.wantCode, resp.Code)
+			assert.Contains(t, resp.Message, tc.wantInMsg)
+			assert.NotContains(t, w.Body.String(), "pq:")
+		})
+	}
 }

@@ -373,16 +373,17 @@ func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 		assert.NotContains(t, string(body), `"items"`)
 	})
 
-	// 5. 跨租户工单 fail closed，且不确认对方工单存在、不返回任何推荐载荷。
-	//    实测映射是 500/5001（handler 走 common.FailWithErr，见 common/response.go:183），
-	//    语义应为 404/4004；按台账 E4-29 既有口径**故意不锁定该 status**，等 E4-5
-	//    错误分类收敛时再补精确值。这里只锁「非 2xx + 零泄漏」这一半。
-	t.Run("跨租户工单不泄漏推荐载荷", func(t *testing.T) {
+	// 5. 跨租户工单 fail closed：与「工单不存在」同一个 404/4004，不确认对方工单存在，
+	//    也不返回任何推荐载荷。
+	//    E4-5 之前这里是 500/5001：service 的 4004 领域错误被 common.FailWithErr 压成内部
+	//    错误，客户端分不清「不存在」「跨租户」「服务挂了」。现在错误分类由
+	//    common.classifyError 唯一决定，handler 走 RespondError，故可锁精确 status/code。
+	t.Run("跨租户工单返回 404 且不泄漏推荐载荷", func(t *testing.T) {
 		w, body := doAs(t, tenantB, path)
-		assert.GreaterOrEqual(t, w.Code, http.StatusBadRequest, "跨租户探测不得成功", "body=%s", body)
+		assert.Equal(t, http.StatusNotFound, w.Code, "跨租户探测必须与不存在同码", "body=%s", body)
 		var envelope rawEnvelope
 		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
-		assert.NotEqual(t, 0, envelope.Code, "body=%s", body)
+		assert.Equal(t, 4004, envelope.Code, "body=%s", body)
 		assert.NotContains(t, string(body), `"items"`, "失败响应不得带列表载荷")
 		assert.NotContains(t, string(body), "reco-a-admin")
 		assert.NotContains(t, string(body), "reco-a-agent")

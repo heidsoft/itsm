@@ -155,7 +155,7 @@ func (h *Handler) ListMyCCRecords(c *gin.Context) {
 	resp, err := h.workflowService.ListMyCCRecords(c.Request.Context(), userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list my CC records", "error", err, "user_id", userID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "查询抄送列表失败")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *Handler) ListTicketCCRecords(c *gin.Context) {
 	resp, err := h.workflowService.ListTicketCCRecords(c.Request.Context(), ticketID, userID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket CC records", "error", err, "ticket_id", ticketID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "查询工单抄送失败")
 		return
 	}
 

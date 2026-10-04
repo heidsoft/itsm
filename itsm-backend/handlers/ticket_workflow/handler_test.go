@@ -14,6 +14,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processtask"
@@ -85,7 +86,11 @@ func TestHandler_AcceptTicket_EmptyBody(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
+	// AcceptTicketRequest 无 binding required → 空对象绑定成功，TicketID=0 走 service 后
+	// 得到「工单不存在」领域错误，分类收敛后是 404/4004（此前被压成 500）。
+	// 残留：ticketId 本应是必填参数（400），缺 binding:"required"；记台账 E4-5b，不在本片顺手加校验。
+	assert.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+	assert.Equal(t, common.NotFoundCode, decodeWorkflowCode(t, w), "body=%s", w.Body.String())
 }
 
 func TestHandler_AcceptTicket_TicketNotFound(t *testing.T) {
@@ -98,8 +103,31 @@ func TestHandler_AcceptTicket_TicketNotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	// service 层对不存在工单返回错误 → 500（与旧契约一致）
-	assert.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
+	// E4-5：service 用 common.NewBusinessError(NotFoundCode,"工单不存在") 表达「工单不存在」，
+	// 分类收敛后 handler 必须按 404/4004 出去。此前 FailWithErr 把它压成 500，
+	// 客户端无法区分「工单不存在」和「数据库挂了」。
+	// 消息仍是 handler 的 publicMsg：FailWithErr 只统一分类，文案权威要透出领域消息时用 RespondError。
+	assert.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+	assert.Equal(t, common.NotFoundCode, decodeWorkflowCode(t, w), "body=%s", w.Body.String())
+	assert.Equal(t, "操作失败", decodeWorkflowMessage(t, w), "body=%s", w.Body.String())
+}
+
+func decodeWorkflowCode(t *testing.T, w *httptest.ResponseRecorder) int {
+	t.Helper()
+	var resp struct {
+		Code int `json:"code"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return resp.Code
+}
+
+func decodeWorkflowMessage(t *testing.T, w *httptest.ResponseRecorder) string {
+	t.Helper()
+	var resp struct {
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	return resp.Message
 }
 
 func TestHandler_AcceptTicket_MissingTenant(t *testing.T) {

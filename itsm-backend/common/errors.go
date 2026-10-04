@@ -68,19 +68,10 @@ func ErrorHandler(logger *zap.SugaredLogger) gin.HandlerFunc {
 			err := c.Errors.Last().Err
 			logger.Errorw("Request error", "error", err, "path", c.Request.URL.Path)
 
-			if businessErr, ok := err.(*BusinessError); ok {
-				Fail(c, businessErr.Code, businessErr.Message)
-			} else if appErr, ok := err.(*AppError); ok {
-				// AppError 自带 HTTP 语义（400/401/403/404/409...），
-				// 映射到统一业务码，避免被兜底成 500。
-				Fail(c, statusToAppCode(appErr.HTTPStatus), appErr.Message)
-			} else if conflictErr, ok := err.(*VersionConflictError); ok {
-				// 处理版本冲突错误
-				Conflict(c, conflictErr.Error(), gin.H{
-					"resourceId":     conflictErr.ResourceID,
-					"currentVersion": conflictErr.CurrentVersion,
-					"serverVersion":  conflictErr.ServerVersion,
-				})
+			// 分类唯一所有者是 classifyError；此前的类型断言链只认顶层错误，
+			// 被 fmt.Errorf 包装过的业务拒绝会掉进 500 兜底。
+			if code, safeMsg, ok := classifyError(err); ok {
+				writeClassified(c, err, code, safeMsg)
 			} else {
 				Fail(c, InternalErrorCode, "内部服务器错误")
 			}

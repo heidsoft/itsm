@@ -1708,7 +1708,7 @@ func (s *TicketWorkflowService) ensureCanCCTicket(ctx context.Context, tk *ent.T
 
 func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *ent.Ticket, userID, tenantID int) error {
 	if tk == nil {
-		return fmt.Errorf("工单不存在")
+		return common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
 	}
 	if tk.RequesterID == userID || tk.AssigneeID == userID {
 		return nil
@@ -1718,7 +1718,9 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		Where(user.ID(userID), user.TenantID(tenantID), user.Active(true)).
 		Only(ctx)
 	if err != nil {
-		return fmt.Errorf("用户不存在或无权限")
+		// 权限拒绝是 403，不是内部错误；此前 fmt.Errorf 会被 handler 压成 500，
+		// 让「你没权限看」看起来像「服务挂了」。
+		return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
 	}
 	switch currentUser.Role {
 	case "super_admin", "admin", "manager", "technician":
@@ -1745,7 +1747,7 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		return nil
 	}
 
-	return fmt.Errorf("无权访问该工单抄送信息")
+	return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
 }
 
 func normalizeNotifyChannels(channels []string) []string {

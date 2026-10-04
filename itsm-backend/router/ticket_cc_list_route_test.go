@@ -325,19 +325,51 @@ func TestTicketCCListRoutesEnvelope(t *testing.T) {
 		}
 	})
 
-	// 9. 跨租户探测必须 fail closed 且不泄漏对方抄送。
+	// 9. 跨租户探测必须 fail closed：与「工单不存在」同一个 404/4004，不泄漏对方抄送。
 	//
-	// 不锁定具体 status/code：service 返回的是 common.NewBusinessError(NotFoundCode, ...)，
-	// 但 handler 用 common.FailWithErr 透传，实测固定映射成 HTTP 500 + code 5001，
-	// 把「工单不存在」伪装成内部错误。这属于 E4-29 登记的错误语义债（与全站 286 处
-	// err.Error()/7 处 AppError 的分类收敛一起在 E4-5 拍板），本片不顺手改语义，
-	// 因此只断言「非 2xx + 零泄漏」，等错误分类收敛后再补精确 status。
-	t.Run("跨租户工单抄送不泄漏", func(t *testing.T) {
+	// E4-5 之前这里是 500/5001：service 返回 common.NewBusinessError(NotFoundCode,...)，
+	// 但 handler 用 common.FailWithErr 一律压成内部错误，把「工单不存在/跨租户」伪装成
+	// 服务故障，且与同域附件/变更的 404/4004 口径并存两套真相。分类收敛到
+	// common.classifyError 并把 handler 切到 RespondError 后，这里锁精确 status/code。
+	t.Run("跨租户工单抄送返回 404 且不泄漏", func(t *testing.T) {
 		w, body := doCCAs(t, tenantB.admin, fmt.Sprintf("/api/v1/tickets/%d/cc", tenantA.ticketID))
-		assert.GreaterOrEqual(t, w.Code, http.StatusBadRequest, "body=%s", body)
+		assert.Equal(t, http.StatusNotFound, w.Code, "跨租户必须与不存在同码: body=%s", body)
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.Equal(t, 4004, envelope.Code, "body=%s", body)
 		assert.NotContains(t, string(body), ccListTicketNumberA, "跨租户不得返回对方工单号")
 		assert.NotContains(t, string(body), "cc-a-admin", "跨租户不得返回对方抄送人")
 		assert.NotContains(t, string(body), `"items"`, "跨租户不得返回抄送列表载荷")
+	})
+
+	// 9b. 同租户但既非发起人/受理人/审批人/抄送人的普通用户：权限拒绝必须是 403/2003。
+	//     此前 service 用 fmt.Errorf("无权访问该工单抄送信息") 表达拒绝，被压成 500/5001，
+	//     「你没权限看」看起来像「服务挂了」。
+	t.Run("同租户无权用户返回 403", func(t *testing.T) {
+		stranger, err := client.User.Create().
+			SetUsername("cc-a-stranger").
+			SetEmail("cc-a-stranger@example.com").
+			SetName("姓名-cc-a-stranger").
+			SetPasswordHash("hash").
+			SetRole("end_user").
+			SetActive(true).
+			SetTenantID(tenantA.tenantID).
+			Save(ctx)
+		require.NoError(t, err)
+
+		w, body := doCCAs(t, ccListActor{
+			tenantID: tenantA.tenantID,
+			userID:   stranger.ID,
+			username: stranger.Username,
+			name:     stranger.Name,
+		}, fmt.Sprintf("/api/v1/tickets/%d/cc", tenantA.ticketID))
+		assert.Equal(t, http.StatusForbidden, w.Code, "body=%s", body)
+
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.Equal(t, 2003, envelope.Code, "body=%s", body)
+		assert.NotContains(t, string(body), `"items"`, "权限拒绝不得带抄送载荷")
+		assert.NotContains(t, string(body), ccListTicketNumberA)
 	})
 
 	// 10. 未认证不得返回列表载荷。
