@@ -42,9 +42,12 @@ var errorLeakScanDirs = []string{"handlers", "router"}
 // 若将来出现多行形态，应先扩展规则并保持基线可复现，而不是绕过棘轮。
 var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|ValidationErrorResponse|AuthFailed|Forbidden|NotFound|InternalError)[A-Za-z]*\(.*err\.Error\(\)`)
 
-// errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 421 处 / 37 个文件）。
+// errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 418 处 / 36 个文件）。
 // 前三名占了近半数：handlers/cmdb/production_service.go 73、handlers/bpmn/workflow.go 67、
 // handlers/notification/handler.go 29，收敛应从它们按文件整片推进。
+//
+// router/ticket_routes.go 原有 3 处已清零：工单关联的三个读取端点改走
+// common.RespondError，业务拒绝由 service 的 common.BusinessError 决定状态码。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -82,7 +85,6 @@ var errorLeakBaseline = map[string]int{
 	"handlers/user/handler.go":              2,
 	"handlers/workbench/handler.go":         1,
 	"router/dashboard_routes.go":            2,
-	"router/ticket_routes.go":               3,
 }
 
 // measuredErrorLeaks 扫描真实源码，返回「相对 itsm-backend 的路径 -> 泄漏计数」。

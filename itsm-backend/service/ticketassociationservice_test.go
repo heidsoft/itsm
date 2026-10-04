@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
@@ -26,27 +28,27 @@ func TestTicketAssociationService_ConfigurationItemAssociations(t *testing.T) {
 
 	service := NewTicketAssociationService(client)
 
-	err := service.AddConfigurationItem(ctx, ticket.ID, ci1.ID)
+	err := service.AddConfigurationItem(ctx, ticket.ID, ci1.ID, tenant.ID)
 	require.NoError(t, err)
 
-	items, err := service.GetConfigurationItems(ctx, ticket.ID)
+	items, err := service.GetConfigurationItems(ctx, ticket.ID, tenant.ID)
 	require.NoError(t, err)
 	require.Len(t, items, 1)
 	assert.Equal(t, ci1.ID, items[0].ID)
 	assert.Equal(t, "server", items[0].CIType)
 
-	err = service.SetConfigurationItems(ctx, ticket.ID, []int{ci2.ID})
+	err = service.SetConfigurationItems(ctx, ticket.ID, []int{ci2.ID}, tenant.ID)
 	require.NoError(t, err)
 
-	items, err = service.GetConfigurationItems(ctx, ticket.ID)
+	items, err = service.GetConfigurationItems(ctx, ticket.ID, tenant.ID)
 	require.NoError(t, err)
 	require.Len(t, items, 1)
 	assert.Equal(t, ci2.ID, items[0].ID)
 
-	err = service.RemoveConfigurationItem(ctx, ticket.ID, ci2.ID)
+	err = service.RemoveConfigurationItem(ctx, ticket.ID, ci2.ID, tenant.ID)
 	require.NoError(t, err)
 
-	items, err = service.GetConfigurationItems(ctx, ticket.ID)
+	items, err = service.GetConfigurationItems(ctx, ticket.ID, tenant.ID)
 	require.NoError(t, err)
 	assert.Empty(t, items)
 }
@@ -67,13 +69,56 @@ func TestTicketAssociationService_RejectsCrossTenantConfigurationItemAssociation
 
 	service := NewTicketAssociationService(client)
 
-	err := service.AddConfigurationItem(ctx, ticket.ID, foreignCI.ID)
+	err := service.AddConfigurationItem(ctx, ticket.ID, foreignCI.ID, tenantA.ID)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "配置项不存在")
 
-	items, err := service.GetConfigurationItems(ctx, ticket.ID)
+	items, err := service.GetConfigurationItems(ctx, ticket.ID, tenantA.ID)
 	require.NoError(t, err)
 	assert.Empty(t, items)
+}
+
+// TestTicketAssociationService_RejectsForeignTenantTicketReads 覆盖租户收敛的根因入口：
+// 所有关联读写都必须先按调用者租户定位工单，而不是先按 ID 取行再决定是否过滤。
+// router/ticket_relations_tenant_scope_route_test.go 在同一不变量上打真实 HTTP 端点。
+func TestTicketAssociationService_RejectsForeignTenantTicketReads(t *testing.T) {
+	ctx := context.Background()
+	client := enttest.Open(t, "sqlite3", "file:ticketassoc-tenant?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	tenantA := createTicketAssociationTenant(t, ctx, client, "read-a")
+	tenantB := createTicketAssociationTenant(t, ctx, client, "read-b")
+	userA := createTicketAssociationUser(t, ctx, client, tenantA.ID, "read-user-a")
+	ticketA := createTicketAssociationTicket(t, ctx, client, tenantA.ID, userA.ID, "TKT-READ-A")
+	// 乙租户的一行把 parent_ticket_id 指向甲租户的工单：缺少租户谓词时
+	// getChildrenTree 会把它当成自己的子工单返回。
+	foreignChild := createTicketAssociationTicket(t, ctx, client, tenantB.ID, userA.ID, "TKT-READ-B")
+	if _, err := client.Ticket.UpdateOne(foreignChild).SetParentTicketID(ticketA.ID).Save(ctx); err != nil {
+		t.Fatalf("注入跨租户口子工单失败: %v", err)
+	}
+
+	service := NewTicketAssociationService(client)
+
+	err := service.UpdateTicketAssociations(ctx, ticketA.ID, tenantB.ID, &UpdateAssociationsRequest{})
+	requireTicketAssociationNotFound(t, err)
+
+	_, err = service.GetRelatedTickets(ctx, ticketA.ID, tenantB.ID)
+	requireTicketAssociationNotFound(t, err)
+
+	_, err = service.GetConfigurationItems(ctx, ticketA.ID, tenantB.ID)
+	requireTicketAssociationNotFound(t, err)
+
+	// 同租户读取不受影响，且子工单里不出现对方租户的行。
+	deps, err := service.GetTicketDependencies(ctx, ticketA.ID, tenantA.ID)
+	require.NoError(t, err)
+	for _, item := range deps.ChildrenTree {
+		assert.Equal(t, tenantA.ID, item.TenantID, "childrenTree 不得包含其他租户的行")
+	}
+	assert.Empty(t, deps.ChildrenTree)
+
+	// 缺少租户上下文（<=0）必须 fail-closed，而不是退化成无租户过滤的全库读取。
+	_, err = service.GetTicketDependencies(ctx, ticketA.ID, 0)
+	requireTicketAssociationNotFound(t, err)
 }
 
 func TestTicketAssociationService_MaintainsBidirectionalRelatedTickets(t *testing.T) {
@@ -88,17 +133,17 @@ func TestTicketAssociationService_MaintainsBidirectionalRelatedTickets(t *testin
 	ticketC := createTicketAssociationTicket(t, ctx, client, tenant.ID, user.ID, "TKT-REL-003")
 	service := NewTicketAssociationService(client)
 
-	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketB.ID}}))
-	relatedToB, err := service.GetRelatedTickets(ctx, ticketB.ID)
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketB.ID}}))
+	relatedToB, err := service.GetRelatedTickets(ctx, ticketB.ID, tenant.ID)
 	require.NoError(t, err)
 	require.Len(t, relatedToB, 1)
 	assert.Equal(t, ticketA.ID, relatedToB[0].ID)
 
-	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketC.ID}}))
-	relatedToB, err = service.GetRelatedTickets(ctx, ticketB.ID)
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{RelatedIDs: []int{ticketC.ID}}))
+	relatedToB, err = service.GetRelatedTickets(ctx, ticketB.ID, tenant.ID)
 	require.NoError(t, err)
 	assert.Empty(t, relatedToB)
-	relatedToC, err := service.GetRelatedTickets(ctx, ticketC.ID)
+	relatedToC, err := service.GetRelatedTickets(ctx, ticketC.ID, tenant.ID)
 	require.NoError(t, err)
 	require.Len(t, relatedToC, 1)
 	assert.Equal(t, ticketA.ID, relatedToC[0].ID)
@@ -118,14 +163,14 @@ func TestTicketAssociationService_RejectsInvalidParentRelationships(t *testing.T
 	foreignTicket := createTicketAssociationTicket(t, ctx, client, otherTenant.ID, otherUser.ID, "TKT-PARENT-003")
 	service := NewTicketAssociationService(client)
 
-	err := service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID})
+	err := service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID})
 	require.ErrorContains(t, err, "自己的父工单")
 
-	err = service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &foreignTicket.ID})
+	err = service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &foreignTicket.ID})
 	require.ErrorContains(t, err, "父工单不存在")
 
-	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketB.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID}))
-	err = service.UpdateTicketAssociations(ctx, ticketA.ID, &UpdateAssociationsRequest{ParentID: &ticketB.ID})
+	require.NoError(t, service.UpdateTicketAssociations(ctx, ticketB.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &ticketA.ID}))
+	err = service.UpdateTicketAssociations(ctx, ticketA.ID, tenant.ID, &UpdateAssociationsRequest{ParentID: &ticketB.ID})
 	require.ErrorContains(t, err, "不能形成循环")
 }
 
@@ -194,4 +239,14 @@ func createTicketAssociationCI(t *testing.T, ctx context.Context, client *ent.Cl
 		Save(ctx)
 	require.NoError(t, err)
 	return ci
+}
+
+// requireTicketAssociationNotFound 断言错误是可分类的 4004 业务拒绝，而不是一条会
+// 被 router 映射成 500/5001 并透出底层错误串的裸 error。
+func requireTicketAssociationNotFound(t *testing.T, err error) {
+	t.Helper()
+
+	var bizErr *common.BusinessError
+	require.True(t, errors.As(err, &bizErr), "必须是可分类的业务拒绝: %v", err)
+	assert.Equal(t, common.NotFoundCode, bizErr.Code)
 }

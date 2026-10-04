@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/ticket"
@@ -42,59 +43,14 @@ type TicketResponse struct {
 	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
-// GetTicketWithAssociations 获取工单及其关联信息
-func (s *TicketAssociationService) GetTicketWithAssociations(ctx context.Context, ticketID int) (*TicketResponse, error) {
-	ticketEntity, err := s.client.Ticket.Query().
-		WithTags().
-		WithRelatedTickets().
-		Where(ticket.ID(ticketID)).
-		Only(ctx)
+// UpdateTicketAssociations 更新工单关联关系。
+//
+// tenantID 必须是认证上下文里的调用者租户：锚点工单与后续每一处关联写入都按它收敛，
+// 缺租户上下文（<=0）时 getTicketForAssociation 直接 fail-closed 成 404。
+func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context, ticketID, tenantID int, req *UpdateAssociationsRequest) error {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
-	}
-
-	return s.buildTicketResponse(ticketEntity), nil
-}
-
-// GetTicketHierarchy 获取工单层级结构
-func (s *TicketAssociationService) GetTicketHierarchy(ctx context.Context, ticketID int) (*TicketHierarchy, error) {
-	ticketEntity, err := s.client.Ticket.Query().
-		WithTags().
-		Where(ticket.ID(ticketID)).
-		Only(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
-	}
-
-	// 获取子工单
-	children, err := s.client.Ticket.Query().
-		WithTags().
-		Where(ticket.ParentTicketID(ticketID)).
-		All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("获取子工单失败: %w", err)
-	}
-
-	// 构建层级结构
-	hierarchy := &TicketHierarchy{
-		Ticket:   s.buildTicketResponse(ticketEntity),
-		Children: make([]*TicketResponse, len(children)),
-	}
-
-	for i, child := range children {
-		hierarchy.Children[i] = s.buildTicketResponse(child)
-	}
-
-	return hierarchy, nil
-}
-
-// UpdateTicketAssociations 更新工单关联关系
-func (s *TicketAssociationService) UpdateTicketAssociations(ctx context.Context, ticketID int, req *UpdateAssociationsRequest) error {
-	ticketEntity, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID), ticket.DeletedAtIsNil()).
-		Only(ctx)
-	if err != nil {
-		return fmt.Errorf("工单不存在: %w", err)
+		return err
 	}
 
 	tx, err := s.client.Tx(ctx)
@@ -214,17 +170,18 @@ func validateParentAssignment(ctx context.Context, client *ent.Client, child *en
 	return nil
 }
 
-// GetRelatedTickets 获取关联工单
-func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticketID int) ([]*TicketResponse, error) {
-	ticketEntity, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID)).
-		Only(ctx)
+// GetRelatedTickets 获取关联工单。
+//
+// 锚点与关联行都按 tenantID 过滤：related_tickets 是自关联 M2M 边，历史上只按锚点行
+// 自己的租户过滤，等于把「谁在读」交给数据行决定，跨租户读取因此毫无阻力。
+func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticketID, tenantID int) ([]*TicketResponse, error) {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("获取工单失败: %w", err)
+		return nil, err
 	}
 
 	related, err := ticketEntity.QueryRelatedTickets().
-		Where(ticket.TenantIDEQ(ticketEntity.TenantID), ticket.DeletedAtIsNil()).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 		WithTags().
 		All(ctx)
 	if err != nil {
@@ -237,22 +194,29 @@ func (s *TicketAssociationService) GetRelatedTickets(ctx context.Context, ticket
 	return responses, nil
 }
 
-// GetTicketDependencies 获取工单依赖关系
-func (s *TicketAssociationService) GetTicketDependencies(ctx context.Context, ticketID int) (*TicketDependencies, error) {
+// GetTicketDependencies 获取工单依赖关系。
+//
+// 先按调用者租户确认锚点工单，再遍历三条关联路径：跨租户与「工单不存在」在这里就返回
+// 同一个 404，调用者无法用响应差异探测对方租户是否存在某个工单 ID。
+func (s *TicketAssociationService) GetTicketDependencies(ctx context.Context, ticketID, tenantID int) (*TicketDependencies, error) {
+	if _, err := s.getTicketForAssociation(ctx, ticketID, tenantID); err != nil {
+		return nil, err
+	}
+
 	// 获取父工单链
-	parentChain, err := s.getParentChain(ctx, ticketID)
+	parentChain, err := s.getParentChain(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取子工单树
-	childrenTree, err := s.getChildrenTree(ctx, ticketID)
+	childrenTree, err := s.getChildrenTree(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取关联工单
-	relatedTickets, err := s.GetRelatedTickets(ctx, ticketID)
+	relatedTickets, err := s.GetRelatedTickets(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -269,12 +233,6 @@ type UpdateAssociationsRequest struct {
 	ParentID   *int  `json:"parentId,omitempty"`
 	RelatedIDs []int `json:"relatedIds,omitempty"`
 	TagIDs     []int `json:"tagIds,omitempty"`
-}
-
-// TicketHierarchy 工单层级结构
-type TicketHierarchy struct {
-	Ticket   *TicketResponse   `json:"ticket"`
-	Children []*TicketResponse `json:"children"`
 }
 
 // TicketDependencies 工单依赖关系
@@ -341,25 +299,36 @@ func uniqueIDs(ids []int) []int {
 	return result
 }
 
-// getParentChain 获取父工单链
-func (s *TicketAssociationService) getParentChain(ctx context.Context, ticketID int) ([]*TicketResponse, error) {
-	var chain []*TicketResponse
+// getParentChain 沿 parent_ticket_id 向上收集祖先工单，全部限定在 tenantID 内。
+//
+// 每一跳都按租户过滤：parent_ticket_id 只是普通 int 字段，没有外键保证它指向同租户的
+// 工单，缺少谓词时这条链会把别的租户的祖先工单一并读出来。visited 与深度上限保证
+// 脏数据里的父子环不会让请求挂死。
+func (s *TicketAssociationService) getParentChain(ctx context.Context, ticketID, tenantID int) ([]*TicketResponse, error) {
+	const maxDepth = 64
+
+	chain := []*TicketResponse{}
+	visited := map[int]struct{}{}
 	currentID := ticketID
 
-	for {
+	for currentID != 0 && len(visited) < maxDepth {
+		if _, seen := visited[currentID]; seen {
+			break
+		}
+		visited[currentID] = struct{}{}
+
 		ticketEntity, err := s.client.Ticket.Query().
-			Where(ticket.ID(currentID)).
+			Where(ticket.ID(currentID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			break
 		}
-
 		if ticketEntity.ParentTicketID == 0 {
 			break
 		}
 
 		parent, err := s.client.Ticket.Query().
-			Where(ticket.ID(ticketEntity.ParentTicketID)).
+			Where(ticket.ID(ticketEntity.ParentTicketID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 			Only(ctx)
 		if err != nil {
 			break
@@ -372,24 +341,28 @@ func (s *TicketAssociationService) getParentChain(ctx context.Context, ticketID 
 	return chain, nil
 }
 
-// getChildrenTree 获取子工单树
-func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID int) ([]*TicketResponse, error) {
+// getChildrenTree 收集直接子工单。
+//
+// tenantID 谓词不可省：这里按 parent_ticket_id 匹配，修复前是**全库**扫描，所以只要
+// 别的租户有一行的 parent_ticket_id 恰好等于本次的工单 ID，它就会被当作本租户的子工单
+// 返回。关联表因此成为绕过租户隔离的第二条读取通道。
+func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID, tenantID int) ([]*TicketResponse, error) {
 	children, err := s.client.Ticket.Query().
-		Where(ticket.ParentTicketID(ticketID)).
+		Where(
+			ticket.ParentTicketID(ticketID),
+			ticket.TenantIDEQ(tenantID),
+			ticket.DeletedAtIsNil(),
+		).
 		All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var tree []*TicketResponse
+	tree := []*TicketResponse{}
 	for _, child := range children {
-		childResponse := s.buildTicketResponse(child)
-
-		// 递归获取子工单的子工单
-		// 这里可以扩展结构来支持树形显示
-		// 暂时只返回扁平列表
-
-		tree = append(tree, childResponse)
+		// 只返回直接子工单并压平：更深的后代在它们各自的 childrenTree 里，
+		// 在此递归会让同一工单在响应中重复出现。
+		tree = append(tree, s.buildTicketResponse(child))
 	}
 
 	return tree, nil
@@ -405,8 +378,8 @@ type ConfigurationItemResponse struct {
 }
 
 // AddConfigurationItem 添加配置项关联
-func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, ticketID, ciID int) error {
-	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID)
+func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, ticketID, ciID, tenantID int) error {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
 		return err
 	}
@@ -426,8 +399,8 @@ func (s *TicketAssociationService) AddConfigurationItem(ctx context.Context, tic
 }
 
 // RemoveConfigurationItem 移除配置项关联
-func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, ticketID, ciID int) error {
-	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID)
+func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, ticketID, ciID, tenantID int) error {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
 		return err
 	}
@@ -447,8 +420,8 @@ func (s *TicketAssociationService) RemoveConfigurationItem(ctx context.Context, 
 }
 
 // GetConfigurationItems 获取配置项列表
-func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ticketID int) ([]*ConfigurationItemResponse, error) {
-	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID)
+func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ticketID, tenantID int) ([]*ConfigurationItemResponse, error) {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -478,8 +451,8 @@ func (s *TicketAssociationService) GetConfigurationItems(ctx context.Context, ti
 }
 
 // SetConfigurationItems 批量设置配置项
-func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ticketID int, ciIDs []int) error {
-	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID)
+func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ticketID int, ciIDs []int, tenantID int) error {
+	ticketEntity, err := s.getTicketForAssociation(ctx, ticketID, tenantID)
 	if err != nil {
 		return err
 	}
@@ -502,7 +475,7 @@ func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ti
 	}
 
 	for _, ciID := range ciIDs {
-		if err := s.AddConfigurationItem(ctx, ticketID, ciID); err != nil {
+		if err := s.AddConfigurationItem(ctx, ticketID, ciID, tenantID); err != nil {
 			return err
 		}
 	}
@@ -510,12 +483,22 @@ func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ti
 	return nil
 }
 
-func (s *TicketAssociationService) getTicketForAssociation(ctx context.Context, ticketID int) (*ent.Ticket, error) {
+// getTicketForAssociation 是本服务定位工单的唯一入口：任何一次读取或写入都必须带上
+// 调用者租户，租户谓词缺失（tenantID<=0）时结果集自然为空并按「不存在」处理，
+// 因此缺少租户上下文的调用是 fail-closed，而不是退化成全库可见。
+//
+// 跨租户与真实不存在必须返回同一个 404/4004 与同一句文案；此前这里把 ent 的错误包进
+// fmt.Errorf("工单不存在") 再由 router 原样写进响应，既泄漏底层错误串，又让不存在的
+// 工单返回 500/5001、与真实存在但无权的工单可被区分。
+func (s *TicketAssociationService) getTicketForAssociation(ctx context.Context, ticketID, tenantID int) (*ent.Ticket, error) {
 	ticketEntity, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID)).
+		Where(ticket.ID(ticketID), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("工单不存在")
+		if ent.IsNotFound(err) {
+			return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在", "")
+		}
+		return nil, fmt.Errorf("获取工单失败: %w", err)
 	}
 	return ticketEntity, nil
 }

@@ -75,7 +75,7 @@ func TestTicketAssociationRoutes_ReadsURLParamNotContext(t *testing.T) {
 		SaveX(ctx)
 
 	assoc := service.NewTicketAssociationService(client)
-	require.NoError(t, assoc.AddConfigurationItem(ctx, ticket.ID, ci.ID))
+	require.NoError(t, assoc.AddConfigurationItem(ctx, ticket.ID, ci.ID, tenant.ID))
 
 	logger := zaptest.NewLogger(t).Sugar()
 	const secret = "assoc-urlparam-secret"

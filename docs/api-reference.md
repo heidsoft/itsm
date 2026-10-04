@@ -522,6 +522,54 @@ Authorization: Bearer <accessToken>
 
 `impactType` 随 `action` 变化：`close` 为 `blocked`、`delete` 为 `orphaned`、`change_status` 为 `status_change`。工单不存在与跨租户访问统一返回 404/4004（不确认对方资源是否存在），底层错误只进日志。
 
+## 工单关联查询接口
+
+三条只读端点，权限均为 `ticket:read`，实现在 `service/ticketassociationservice.go`。工单 ID 只来自路径段，租户只来自认证上下文；请求体或查询参数里自报的 `tenantId` 不参与判定。
+
+```http
+GET  /tickets/{id}/relations
+GET  /tickets/{id}/relations/stats
+GET  /tickets/{id}/configuration-items
+Authorization: Bearer <accessToken>
+```
+
+`/relations` 的 `data` 是三条遍历路径的扁平集合（`parentChain` 自根向下、`childrenTree` 为直接子工单、`relatedTickets` 来自 `related_tickets` M2M 边），三项都是同一份 `service.TicketResponse` 投影：必有 `id`、`title`、`description`、`priority`、`status`、`tenantId`、`createdAt`、`updatedAt`，可选 `categoryId`、`templateId`、`parentId`、`relatedIds`、`tagIds`、`assignedTo`、`customFields`（零值/空值按 `omitempty` 省略）。三个集合恒为数组，没有关联时是 `[]` 而不是 `null`。
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "childrenTree": [
+      {"id": 2, "title": "数据库优化", "description": "…", "priority": "medium", "status": "open", "parentId": 1, "tenantId": 1, "assignedTo": 7, "createdAt": "2026-10-04T12:16:11+08:00", "updatedAt": "2026-10-04T12:16:11+08:00"}
+    ],
+    "parentChain": [
+      {"id": 1, "title": "数据库性能劣化", "description": "…", "priority": "high", "status": "open", "tenantId": 1, "createdAt": "2026-10-04T12:16:11+08:00", "updatedAt": "2026-10-04T12:16:11+08:00"}
+    ],
+    "relatedTickets": [
+      {"id": 3, "title": "网络抖动", "description": "…", "priority": "medium", "status": "open", "relatedIds": [4], "tenantId": 1, "createdAt": "2026-10-04T12:16:11+08:00", "updatedAt": "2026-10-04T12:16:11+08:00"}
+    ]
+  }
+}
+```
+
+（外层 `data` 由 handler 用 `gin.H` 组装，所以键是按字典序输出的，上例即实测顺序。）
+
+`/relations/stats` 与 `/configuration-items` 都不分页：前者返回十个计数键（`totalRelations`、`relationsByType`、`inboundCount`、`outboundCount`、`parentCount`、`childrenCount`、`blockedByCount`、`blockingCount`、`relatedCount`、`duplicateCount`），后者 `data` 直接是配置项数组 `{id, name, ciType, status, serialNumber?}`，无关联时同样是 `[]` 而非 `null`。
+
+失败语义（由 `common.classifyError` 单点决定，回归见 `itsm-backend/router/ticket_relations_tenant_scope_route_test.go`）：
+
+| 情况 | HTTP | 业务 code | 说明 |
+|---|---|---|---|
+| `id` 非正整数 | 400 | `1001` | `无效的工单ID`，不与「不存在」混淆 |
+| 缺租户上下文 | 401 | `2001` | fail-closed，不回退默认租户 |
+| 工单不存在 **与** 工单属于对方租户 | 404 | `4004` | 两种情况**逐字节相同**，调用者无法据此枚举其他租户的工单 ID |
+| 数据库真实故障 | 500 | `5001` | 原始错误只进日志，响应文案是固定安全串 |
+
+`parentChain` 遍历有 64 层深度上限与环检测，脏数据里的父子环不会让请求挂死。
+
+> **如实申报**：`/relations/stats` 的 `blockedByCount`、`blockingCount`、`duplicateCount` 恒为 `0`、`relationsByType` 恒为 `{}`——该端点只统计 parent/related 三条路径，没有依赖关系（blocks/duplicates）的数据来源，这些键是为前端既有形状保留的占位读数，不代表「已计算且结果为零」。关联的**写入**端点（`UpdateTicketAssociations`、`Add/Remove/SetConfigurationItems`）目前只有 service 实现、没有任何注册路由，见台账 E4-35b。
+
 ## 事件管理接口
 
 ### 获取事件列表

@@ -666,6 +666,7 @@ HTTP **500**：service 层明确返回的 `common.BusinessError(NotFoundCode)`�
 
 **防新增机制**：`itsm-backend/tests/contract/error_leak_ratchet_test.go` 冻结了
 「把 `err.Error()` 当公共消息写进响应」的存量面（2026-10-04 实测 **421 处 / 37 个文件**，
+§1.21 已把该基线收敛到 418 处 / 36 个文件，
 前三名占近半数：`handlers/cmdb/production_service.go` 73、`handlers/bpmn/workflow.go` 67、
 `handlers/notification/handler.go` 29）。计数上升即红；下降也必须先把基线改小并写进
 CHANGELOG，不允许悄悄少几处却没人知道。重新采集：
@@ -676,6 +677,73 @@ CHANGELOG，不允许悄悄少几处却没人知道。重新采集：
 cd itsm-backend && go test ./common/ -run 'TestFailWithErr|TestRespondError|TestFail_Unauthorized|TestFailWithData'
 cd itsm-backend && go test ./handlers/ticket_workflow/ -run TestHandler_AcceptTicket
 cd itsm-backend && go test ./router/ -run 'TestTicketCCListRoutesEnvelope|TestTicketRuleAttachmentListRoutes'
+cd itsm-backend && go test ./tests/contract/ -run TestErrorLeakRatchet
+```
+
+### 1.21 工单关联查询端点：跨租户读取通道关闭带来的响应变更（2026-10-04）
+
+**受影响端点**（三条，均为 `itsm-backend/router/ticket_routes.go` 注册、前端 `ticket-relations-api.ts` 之外的真实入口）：
+
+- `GET /api/v1/tickets/:id/relations`
+- `GET /api/v1/tickets/:id/relations/stats`
+- `GET /api/v1/tickets/:id/configuration-items`
+
+**变更前实际行为。** `service/ticketassociationservice.go` 定位工单只用
+`Where(ticket.ID(ticketID))`，没有任何租户谓词；`getChildrenTree` 进一步用
+`Where(ticket.ParentTicketID(ticketID))` 做**全表扫描**。也就是说，只要另一租户的工单把
+`parent_ticket_id` 指向本租户的工单 ID（该列是普通 int，没有跨租户外键约束保证），子工单的
+`title`、`description`、`priority`、`status`、`assignedTo` 就会经由 `buildTicketResponse`
+出现在本租户的响应里；`related_tickets` 自关联 M2M 与 `configuration_items` 边是同一形态的
+第二、第三条读取通道。同时三条 handler 用 `common.Fail(c, common.InternalErrorCode,
+err.Error())` 回应 service 错误，把「工单不存在」和「Ent 内部错误」一起写成 HTTP 500 /
+业务码 5001，并把原始错误串透出。
+
+**变更后行为。**
+
+| 场景 | 变更前 | 变更后 |
+| --- | --- | --- |
+| 工单属于当前租户 | 200 / 0 | 200 / 0（不变） |
+| 工单属于当前租户、无关联 | `{"childrenTree":null,"parentChain":null,"relatedTickets":[]}` | 三个集合都是 `[]` |
+| 工单不存在 | 500 / 5001 + 原始 Ent 文本 | 404 / 4004 `工单不存在` |
+| 工单属于其他租户 | 200 / 0 + **对方工单内容** | 404 / 4004，且响应体与「不存在」**逐字节相同** |
+| `:id` 非法 | 400 / 1001 `invalid ticket id` | 400 / 1001 `无效的工单ID` |
+| 缺少租户上下文 | 按无租户读取执行 | 401 / 2001（认证上下文解析失败即拒绝） |
+
+逐字节相同是刻意的：如果跨租户返回 403 而不存在返回 404，调用方就能用状态码差异枚举其他
+租户的工单 ID。回归测试把这条写成了 `assert.Equal(t, string(nfBody), string(body))`，不是
+只比较状态码。
+
+**集成方需要检查的**：
+
+1. 任何依赖「工单不存在返回 500」的兜底或告警必须改判 404；这类请求现在根本不是服务端故障。
+2. 任何此前从 `/relations` 拿到过跨租户子工单的部署，说明存在**脏数据**（`parent_ticket_id`
+   跨租户指向）。修复后这些行不再出现在响应里，但库里仍然错着；清理属于存量数据修复，需按
+   「停用不删、先给引用计数」另行约定，本片没有改动任何数据。
+3. 父链遍历新增 64 层上限与环检测，超深/成环的存量数据不再导致无限递归或长时间请求。
+4. `data: []` / 全 0 统计并不总是「确实没有关联」：handler 里还有一条 `else` 分支在关联服务
+   未装配时返回假成功空结果，`stats` 有三个键恒为 0。已在 `docs/api-reference.md` 如实申报，
+   收敛排期记为 E4-35b，不要把它当成可用能力。
+
+**删掉的公共方法**（避免有人继续以为它们可用）：`GetTicketWithAssociations`、`GetTicketHierarchy`
+与 `TicketHierarchy` 类型，全仓库零调用方，属于把跨租户读取通道固化下来的死门面。
+
+**防新增机制**：本片把 `router/ticket_routes.go` 的 3 处 `common.Fail(c, InternalErrorCode,
+err.Error())` 泄漏点改为 `common.RespondError`，使 `tests/contract/error_leak_ratchet_test.go`
+的基线从 §1.20 记录的 421 处 / 37 个文件收敛到 **418 处 / 36 个文件**（该文件键被删除）。
+这是棘轮第一次向下收敛——它本来在计数下降时也会红，必须同批把基线改小并写进文档，
+不允许「悄悄少了几处」。
+新增回归：`itsm-backend/router/ticket_relations_tenant_scope_route_test.go`（5 叶，打在
+`SetupRoutes` 真实注册上）+ `service/ticketassociationservice_test.go` 的
+`TestTicketAssociationService_RejectsForeignTenantTicketReads`。负证明实测（HEAD 实现 + 本片
+新夹具，用 `git worktree` 在 HEAD 上单独跑）：5 叶里 4 叶转红——同租户正例拿到对方子工单、
+跨租户三端点 200 且响应含 `PROBE-*` 探针行、不存在工单 500/`5001`、空关联实测
+`{"childrenTree":null,"parentChain":null,"relatedTickets":[]}`；只有「非法 ID 400/`1001`」
+锁的是既有行为因此常绿。修复后 5 叶全绿。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./service/ -run TestTicketAssociationService
+cd itsm-backend && go test ./router/ -run 'TestTicketAssociationRoutes|TestTicketRelationsRoutesTenantScope'
 cd itsm-backend && go test ./tests/contract/ -run TestErrorLeakRatchet
 ```
 

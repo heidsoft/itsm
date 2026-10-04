@@ -1,9 +1,8 @@
 package router
 
 import (
-	"strconv"
-
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -79,18 +78,21 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		tickets.DELETE("/:id/subtasks/:subtask_id", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.DeleteSubtask)
 
 		// 工单关联（已接入 TicketAssociationService）
+		//
+		// 三个读取端点都必须把认证上下文里的租户传给 service：service 只按 ticket ID
+		// 定位工单时，带 ticket:read 的任何用户凭对方工单 ID 就能读到标题、描述、状态与
+		// assignedTo（AGENTS「tenant scope 必须覆盖 Get/Only/Exist/List/关联表」）。
+		// URL :id 必须通过 c.Param 读取；c.GetInt 只能拿到 context store 里的
+		// tenant_id/user_id/role 等键值，URL 参数不在该 store 中。
 		if config.TicketAssociationService != nil {
 			tickets.GET("/:id/relations", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-				// URL :id 必须通过 c.Param 读取；c.GetInt 只能拿到 context store 里的
-				// tenant_id/user_id/role 等键值，URL 参数不在该 store 中。
-				ticketID, err := strconv.Atoi(c.Param("id"))
-				if err != nil || ticketID == 0 {
-					common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+				ticketID, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(c, "工单")
+				if !ok {
 					return
 				}
-				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID)
+				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.Fail(c, common.InternalErrorCode, err.Error())
+					common.RespondError(c, err, "获取工单关联失败")
 					return
 				}
 				common.Success(c, gin.H{
@@ -100,14 +102,13 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				})
 			})
 			tickets.GET("/:id/relations/stats", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-				ticketID, err := strconv.Atoi(c.Param("id"))
-				if err != nil || ticketID == 0 {
-					common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+				ticketID, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(c, "工单")
+				if !ok {
 					return
 				}
-				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID)
+				deps, err := config.TicketAssociationService.GetTicketDependencies(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.Fail(c, common.InternalErrorCode, err.Error())
+					common.RespondError(c, err, "获取工单关联统计失败")
 					return
 				}
 				common.Success(c, gin.H{
@@ -126,14 +127,13 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 			// 工单→配置项反向查询：复用 TicketAssociationService.GetConfigurationItems
 			// （AI 本体链路落地后，工单详情页可展示其影响的配置项）
 			tickets.GET("/:id/configuration-items", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-				ticketID, err := strconv.Atoi(c.Param("id"))
-				if err != nil || ticketID == 0 {
-					common.Fail(c, common.ParamErrorCode, "invalid ticket id")
+				ticketID, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(c, "工单")
+				if !ok {
 					return
 				}
-				items, err := config.TicketAssociationService.GetConfigurationItems(c.Request.Context(), ticketID)
+				items, err := config.TicketAssociationService.GetConfigurationItems(c.Request.Context(), ticketID, tenantID)
 				if err != nil {
-					common.Fail(c, common.InternalErrorCode, err.Error())
+					common.RespondError(c, err, "获取工单配置项失败")
 					return
 				}
 				common.Success(c, items)
