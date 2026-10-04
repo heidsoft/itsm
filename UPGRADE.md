@@ -983,6 +983,7 @@ cd itsm-frontend && npm run type-check && npx jest src/lib/api/__tests__/ai-api.
 `ai/audit/page.tsx` 删掉 `res.items ?? []`、`res.page || page`、`res.total ?? 0` 三处兜底。
 
 ## 2. 环境变量变更
+
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
 
 ### 2.1 已移除的变量（从 `.env*` 示例中删除）

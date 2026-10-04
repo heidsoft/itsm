@@ -66,6 +66,8 @@ func newAuditLogsRouter(t *testing.T, db *sql.DB, tenantID int, withTenant bool)
 	r.Use(func(c *gin.Context) {
 		if withTenant {
 			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})
+			// 边界：以下 snake_case 是 gin Context 键，与 middleware 常量同义，
+			// 不属于 HTTP/JSON 契约，不得替换为 camelCase。后端服务内仍读小写键。
 			c.Set("tenant_id", tenantID)
 			c.Set("user_id", 1)
 			c.Set("role", "admin")
