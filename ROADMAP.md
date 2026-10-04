@@ -108,6 +108,7 @@ Concretely that means:
 - [ ] **P0-2 N4 拍板：内置角色权限码集扩权还是收权** — R2-a 已前置出 4 个待拍板档角色的真实差异；待评审者就 `manager`/`agent`/`sysadmin`/`end_user` 四组扩权/收权/混合选项拍板，并裁决伴生项 `middleware.RolePermissions` 是否保留为「硬编码权威兜底」（台账 E4-41 / `plans` §3 N4-N5）。拍板那一批同步把 R2-a 守卫 `t.Skipf` 替换为 `t.Errorf`，让 CI 真红并锁定收敛后形态。
   - 已完成：差异清单已实测并落 CHANGELOG；守卫骨架就位、CI 绿。
   - 剩余：扩权/收权/混合的产品决策；`authz.BuiltinRolePermissionCodes()` 与 `middleware.RolePermissions` 的同源化方案。
+- [x] **P0-2 E4-9b 后续切片：AI 审计日志端点页长/信封/双写响应三缺陷同片收口（E4-45）** — `GET /api/v1/ai/audit-logs` 修复 ① handler 私有 `queryInt` 无上界 ② `service/ai_evaluator.go` 私有 `auditMaxPageSize=200` 第三套 owner ③ 四键手拼信封无 `totalPages` 且回显未采纳值 ④ `handlerctx.ResolveTenantID` 拒绝后 handler 再 `common.Fail` 写第二份响应（拼接 JSON）。修法：HTTP 入口走 `common.GetPaginationFromQuery` 单点、service 侧仅 `common.ValidatePagination` 兜非 HTTP 调用方、信封走 `common.SuccessWithPagination`、`common/pagination.go:69` 裸 `100` 换 `MaxPageSize`、handler 拒绝分支只 `return`、前端类型复用 `PaginationResponse<AIAuditEntry>` 并删三处 `??/||` 兜底。回归 `tests/contract/ai_audit_logs_envelope_test.go` 8 例（五键精确集合 / 缺省 20 / 越界不越平台界 / 回显等于采纳值 4 输入 / 第二页余数 / 租户收敛 / 缺租户只写一份 / 空结果 `[]`），负证明在 HEAD 独立工作区跑同一夹具 ⇒ 7 例转红、唯一常绿例锁既有租户收敛；`go test ./handlers/ai/... ./service/... ./tests/contract/... ./common/...` 与前端 `npm run type-check` 全绿。同批台账新登记 E4-46（同一双写形态 24 处/6 文件）与 E4-47（`page_size_owner_ratchet_test.go` 只扫 `DefaultQuery` 漏掉的多处自建 owner，含 bpmn dashboard 真实整表读取通道），均交下一批裁。`UPGRADE.md` §1.25 写 `pageSize` 在 `(100,200]` 的行为变化与新增 `totalPages` 字段。
 
 ### 当前收敛项
 

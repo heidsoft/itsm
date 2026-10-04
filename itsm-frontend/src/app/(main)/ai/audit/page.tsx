@@ -74,8 +74,10 @@ const AIAuditConsole: React.FC = () => {
       setLogsLoading(true);
       try {
         const res = await aiGetAuditLogs({ page, pageSize, kind: kind || undefined, days: 90 });
-        setLogs(res.items ?? []);
-        setPagination({ current: res.page || page, pageSize: res.pageSize || pageSize, total: res.total ?? 0 });
+        // 信封五键由后端单一所有者给出，这里不再用 ?? / || 猜第二套缺省：
+        // 静默回退会让页码与真实读数分家。
+        setLogs(res.items);
+        setPagination({ current: res.page, pageSize: res.pageSize, total: res.total });
       } catch (e) {
         message.error(`加载 AI 审计日志失败：${(e as Error).message}`);
       } finally {

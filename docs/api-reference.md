@@ -41,6 +41,18 @@ POST /api/v1/bpmn/ai/templates/{key}/archive
 
 创建模板会生成新的草稿版本（例如 `1.0.0`、`1.1.0`），编辑只允许作用于草稿；发布成功后状态为 `published`，停用只将最新已发布版本标记为 `archived`，不会删除历史版本。
 
+## AI 审计记录
+
+需要 `ai:read` 权限，租户范围只取认证上下文，查询参数中的同名字段不生效。
+
+```http
+GET /api/v1/ai/audit-logs?page=1&pageSize=20&days=90&kind=triage
+```
+
+分页规则由 `common.GetPaginationFromQuery` 单点决定：缺省 `page=1`、`pageSize=20`，只采纳 `1–100`，越界或非数字回落 20，`page<=0` 归一为 1。响应 `data` 是标准五键列表信封 `{items,total,page,pageSize,totalPages}`，`page`/`pageSize` 回显的是**实际采纳值**而不是客户端原值。`days` 是回溯窗口天数（缺省及非正值均为 90），`kind` 为空时不加该过滤。
+
+`items` 为 `AIAuditEntry`：`id`、`createdAt`、`tenantId`、`userId`、`requestId`、`scenario`、`inputRef`、`promptVersion`、`model`、`confidence`、`accepted`、`suggestion`、`notes`。排序固定为 `created_at DESC, id DESC`；只统计 `item_type='ai_audit'` 的记录，空结果集序列化为 `[]`。缺少租户上下文返回 401 / `2001` 且响应体只有这一份 JSON。
+
 ## 通用响应格式
 
 所有 API 响应遵循以下格式：

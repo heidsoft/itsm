@@ -142,7 +142,13 @@ describe('AI API', () => {
 
   describe('aiGetAuditLogs', () => {
     it('should fetch audit logs with all params', async () => {
-      mockGet.mockResolvedValue({ items: [{ id: 1, scenario: 'analyze' }], total: 3, page: 1, pageSize: 20 });
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, scenario: 'analyze' }],
+        total: 3,
+        page: 2,
+        pageSize: 10,
+        totalPages: 1,
+      });
       const result = await aiGetAuditLogs({ page: 2, pageSize: 10, kind: 'analyze', days: 90 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/audit-logs?page=2&pageSize=10&kind=analyze&days=90');
       expect(result.items).toHaveLength(1);
@@ -150,15 +156,29 @@ describe('AI API', () => {
     });
 
     it('should omit empty params', async () => {
-      mockGet.mockResolvedValue({ items: [], total: 0 });
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 });
       await aiGetAuditLogs();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/ai/audit-logs');
     });
 
-    it('should handle missing items as empty list', async () => {
-      mockGet.mockResolvedValue({ total: 0 });
-      const result = await aiGetAuditLogs({ page: 1 });
-      expect(result.items).toBeUndefined();
+    // 后端只有 common.SuccessWithPagination 一套信封（items/total/page/pageSize/totalPages）。
+    // 客户端不得再猜测缺省或重算 totalPages，否则缺省漂移时界面静默少页/多页。
+    it('should pass the five-key envelope through unchanged', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1 }, { id: 2 }],
+        total: 42,
+        page: 3,
+        pageSize: 20,
+        totalPages: 3,
+      });
+      const result = await aiGetAuditLogs({ page: 3 });
+      expect(result).toEqual({
+        items: [{ id: 1 }, { id: 2 }],
+        total: 42,
+        page: 3,
+        pageSize: 20,
+        totalPages: 3,
+      });
     });
   });
 

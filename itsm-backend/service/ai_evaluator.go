@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"itsm-backend/common"
 )
 
 // ==================== AI 评估器 ====================
@@ -20,7 +22,6 @@ import (
 
 const (
 	auditBucketCount = 5
-	auditMaxPageSize = 200
 )
 
 // AIEvaluationReport 是 /api/v1/ai/evaluation 的返回契约（camelCase）。
@@ -383,12 +384,8 @@ type AIAuditEntry struct {
 // ListAuditLogs 分页查询租户的 AI 审计记录（item_type='ai_audit'）。
 // kind 过滤通过占位符参数化，查询骨架为固定字符串，不拼接用户输入。
 func (s *AITelemetryService) ListAuditLogs(ctx context.Context, tenantID int, page, pageSize int, kind string, lookbackDays int) ([]AIAuditEntry, int, error) {
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 || pageSize > auditMaxPageSize {
-		pageSize = 20
-	}
+	// 页长只有 common 一个所有者：这里只兜非 HTTP 调用方，不再自建 20/200 字面量。
+	page, pageSize = common.ValidatePagination(page, pageSize)
 	if lookbackDays <= 0 {
 		lookbackDays = 90
 	}

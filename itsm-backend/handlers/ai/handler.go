@@ -611,21 +611,20 @@ func (h *Handler) GetEvaluation(c *gin.Context) {
 // GetAuditLogs handles GET /api/v1/ai/audit-logs.
 // 分页查询 AI 审计记录（item_type='ai_audit'），可按场景 kind 过滤。
 func (h *Handler) GetAuditLogs(c *gin.Context) {
-	page := queryInt(c, "page", 1)
-	pageSize := queryInt(c, "pageSize", 20)
+	pg := common.GetPaginationFromQuery(c)
 	days := queryInt(c, "days", 90)
 	kind := c.Query("kind")
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
-		common.Fail(c, common.UnauthorizedCode, "未授权访问")
+		// ResolveTenantID 已按中间件契约写入 401/403/500，不能再写第二个响应体。
 		return
 	}
-	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, page, pageSize, kind, days)
+	entries, total, err := h.svc.ListAuditLogs(c.Request.Context(), tenantID, pg.Page, pg.PageSize, kind, days)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
-	common.Success(c, gin.H{"items": entries, "total": total, "page": page, "pageSize": pageSize})
+	common.SuccessWithPagination(c, entries, pg.Page, pg.PageSize, int64(total))
 }
 
 // queryInt 解析正整数查询参数，非法/缺失时回退到默认值。

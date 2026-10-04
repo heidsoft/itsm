@@ -66,7 +66,7 @@ func GetPaginationFromQuery(c *gin.Context) *PaginationRequest {
 	}
 
 	if pageSizeStr := c.Query("pageSize"); pageSizeStr != "" {
-		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= 100 {
+		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 && ps <= MaxPageSize {
 			pageSize = ps
 		}
 	}

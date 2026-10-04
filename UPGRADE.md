@@ -934,8 +934,55 @@ cd itsm-frontend && npm run type-check && npm run test:unit -- --runTestsByPath 
 前端 `incident-api.ts` 同批删除对信封键的 `?? ` 猜测与自算 `totalPages`，改为直接透传
 `PaginationResponse<Incident>`，因此后端缺省页长的变化会立刻在契约测试里可见，而不是被前端兜底掩盖。
 
-## 2. 环境变量变更
+### 1.25 `GET /api/v1/ai/audit-logs` 的页长与信封收敛（2026-10-04，破坏性）
 
+AI 审计日志端点的页长规则原先有三处真相，且响应信封只有四键：
+
+| 输入 | 修复前实测 | 修复后 |
+|:---|:---|:---|
+| 不带 `pageSize` | handler 缺省 20、service 缺省也是 20（巧合一致） | 20（`common.DefaultPageSize`） |
+| `pageSize=150` | 落在 service 自建的 `auditMaxPageSize=200` 上界内 ⇒ 一次返回 130 条并回显 `pageSize:150` | 20（平台只采纳 `(0,100]`） |
+| `pageSize=300` | service 把越界值改回 20，**信封却回显 300** ⇒ 客户端按 300 条/页去翻页 | 20，且回显 20 |
+| `pageSize=abc` / `0` | handler 回落 20 | 20 |
+| `page=-3` / `abc` | handler 回落 1 | 1 |
+| 响应 `data` 键 | `{items,total,page,pageSize}`（无 `totalPages`） | `{items,total,page,pageSize,totalPages}` |
+| 缺租户上下文 | 200 长度之外还出现**拼接的两个 JSON 文档**：`{"code":2001,…}{"code":2002,"message":"未授权访问"}` | 单个 401/`2001` 文档 |
+
+最后一条不是分页问题而是响应完整性问题：`handlerctx.ResolveTenantID` 在拒绝时已经写过一份
+401 并终止请求（`middleware.AbortIfTenantError` 必然写响应），handler 紧接着又 `common.Fail` 写第二份。
+`net/http` 只会把第二份的 status 记成 superfluous WriteHeader，**两份 JSON 字节都会发给客户端**，
+任何严格 JSON 解析都会失败。本批把这一处（`handlers/ai/handler.go:620`）的重复写删掉；
+同一形态在全仓 `handlers/` 修复后仍剩 **24 处 / 6 个文件**（`ticket_type` 10、`ai` 4、`operations` 4、
+`ticket_rating` 3、`timer` 3、`skill` 1），登记为台账 E4-46 交后续统一收敛，本批未动。
+
+**集成检查**：
+
+1. 依赖 `pageSize` 传大值「一次拉完」的调用失效（现回落 20），需改为按 `page` 翻页，上限 100。
+2. 直接解析 `data` 四键的客户端需接受新增的 `totalPages`；集合键名 `items` 未变。
+3. 非 HTTP 调用方（`service.AITelemetryService.ListAuditLogs`）的页长语义随之改变：`pageSize>100`
+   现在是**夹到 100**（`common.ValidatePagination`），而不是旧实现的「>200 才回落 20、
+   (100,200] 照原值执行」。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./tests/contract/ -run TestAIAuditLogs -count=1
+cd itsm-frontend && npm run type-check && npx jest src/lib/api/__tests__/ai-api.test.ts
+```
+
+回归形态说明：`tests/contract/ai_audit_logs_envelope_test.go` 8 例（回显一例覆盖 `pageSize=5000`、
+`pageSize=abc`、`pageSize=0`、`page=-3` 四组输入）打在按 `router/ai_routes.go:37` 与
+`internal/bootstrap/app.go:944` 复现的注册与装配上（`RequirePermission` 不在信封契约范围内，夹具自行注入租户上下文），
+锁五键精确集合、缺省页长 20、越界页长无法越过平台边界、回显等于实际采纳值、第二页余数、
+租户收敛、缺租户只写一份响应、空结果序列化 `[]`。**负证明**：在 HEAD 的独立工作区里跑同一份夹具
+（只拷入本批新增测试，实现全部是修复前形态），8 例中 **7 例转红**，实测报文分别是
+`should have 20 item(s), but has 130`（`pageSize=150` 整段读出）、回显 `pageSize` 为 `150`/`5000`
+（信封声明与真实读取分家）、`data` 键集合缺 `totalPages`（含空结果一例），以及缺租户响应体
+`{"code":2001,"message":"租户上下文缺失"}{"code":2002,"message":"未授权访问"}` 解析失败
+（`invalid character '{' after top-level value`）；唯一修复前后皆绿的一例锁的是既有的租户收敛行为。
+前端 `AIAuditLogsResponse` 同批改为复用平台 `PaginationResponse<AIAuditEntry>`，
+`ai/audit/page.tsx` 删掉 `res.items ?? []`、`res.page || page`、`res.total ?? 0` 三处兜底。
+
+## 2. 环境变量变更
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
 
 ### 2.1 已移除的变量（从 `.env*` 示例中删除）

@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import type { PaginationResponse } from './types';
 import { security } from '@/lib/security';
 
 export interface TriageResult {
@@ -230,12 +231,9 @@ export interface AIAuditEntry {
   notes: string;
 }
 
-export interface AIAuditLogsResponse {
-  items: AIAuditEntry[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
+// 后端 GET /api/v1/ai/audit-logs 走 common.SuccessWithPagination，
+// 信封只有 {items,total,page,pageSize,totalPages} 这一套形状。
+export type AIAuditLogsResponse = PaginationResponse<AIAuditEntry>;
 
 export async function aiGetEvaluation(days = 30): Promise<AIEvaluationReport> {
   return httpClient.get<AIEvaluationReport>(`/api/v1/ai/evaluation?days=${days}`);
