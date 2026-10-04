@@ -579,6 +579,43 @@ cd itsm-backend && go test ./tests/contract/ -run TestListEnvelope
 cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-api.test.ts
 ```
 
+### 1.19 分配推荐列表的集合键改为 `items`，item 字段名与后端 DTO 对齐（2026-10-04，破坏性）
+
+| 端点 | 旧响应 | 新响应 |
+| --- | --- | --- |
+| `GET /api/v1/tickets/assign-recommendations/{id}` | `{recommendations, total}` | `{items, total}` |
+
+该端点实测**不分页**：`service/ticket_assignment_smart_service.go:116` 把租户内全部可用
+用户排序后整表返回，handler 写 `Total=len(items)`，因此只收敛集合键并保留诚实的两键，
+**不补** `page`/`pageSize`/`totalPages`。
+
+item 的字段一直是后端 `dto.AssignmentRecommendation` 的形状，本次未改：
+`{userId, username, name, email, score, reason, workload, skills?, categories?}`。
+前端 `src/lib/api/ticket-assignment-api.ts` 此前的类型是**凭空发明**的
+`userName/userEmail/userAvatar/factors{skillMatch,workload,historySuccess,availability}`，
+后端从未发出任何一个键，消费方按它取值只会拿到 `undefined`；现已逐字段对齐后端 DTO。
+
+**同一批删掉三处自我冗余的兜底**（同文件）：`normalizeRule` 里四处
+`x ?? x`、`testRule` 请求体里两处 `data.ruleId ?? data.ruleId`，以及
+`normalizeAutoAssign` 给 `assignmentType` 编造的 `'smart'` 默认值。后端实测只发
+`auto` / `rule` / `ticket_type_rule` / `manual`（`service/ticket_assignment_service.go:110/138/435`、
+`service/ticket_assignment_smart_service.go:112/239`），`'smart'` 是不存在的取值；
+`AutoAssignResponse.assignmentType` 的联合类型已改为这四个真实值。
+
+**已知缺陷（本片未改语义）**：跨租户工单推荐实测是 HTTP 500 + `5001`（service 返回
+`ticket not found` 后被 `common.FailWithErr` 固定映射成内部错误，`common/response.go:183`），
+语义应为 404 + `4004`；与全站 286 处 `common.Fail(..., err.Error())` 一并登记 E4-29，
+等 E4-5 错误分类收敛统一裁定。测试已锁定「失败响应绝不携带 `items` 载荷、不泄漏对方
+租户用户名」这一半。另有一处待裁：`assign-recommendations/{id}` 与 `{id}/auto-assign`
+在前端**零生产调用方**（只有 API client 自身与它的单测），是否退役或补 UI 交 E5 裁决。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run TestTicketAssignRecommendationsRouteEnvelope
+cd itsm-backend && go test ./tests/contract/ -run TestListEnvelope
+cd itsm-frontend && npx jest --runTestsByPath src/lib/api/__tests__/ticket-assignment-api.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -340,35 +340,49 @@ func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 		assert.NotContains(t, string(body), "reco-b-admin", "跨租户用户不得进入推荐列表")
 	})
 
-	// 4. 无候选用户时序列化成 []，不是 null（前端按数组渲染）。
-	t.Run("空推荐序列化为 []", func(t *testing.T) {
-		emptyTenantID, emptyUserID := seedInactiveOnlyTenant(ctx, t, client, "reco-empty")
-		emptyTicketID, err := createRuleListTicket(ctx, t, client, emptyTenantID, emptyUserID, "reco-empty")
-		require.NoError(t, err)
-
-		empty := ticketRuleListTenant{
-			tenantID: emptyTenantID,
-			userID:   emptyUserID,
-			username: "reco-empty-admin",
-			ticketID: emptyTicketID,
-		}
-		w, body := doAs(t, empty, fmt.Sprintf("/api/v1/tickets/assign-recommendations/%d", emptyTicketID))
+	// 4. 没有可用候选时序列化成 []，不是 null（前端按数组渲染）。
+	//    这里用「唯一活跃用户已达 medium 优先级负载上限 8」构造真实的空候选，
+	//    而不是靠删用户或停用用户糊过去。
+	t.Run("无可用候选时序列化为 []", func(t *testing.T) {
+		full := seedFullWorkloadTenant(ctx, t, client, "reco-full")
+		w, body := doAs(t, full, fmt.Sprintf("/api/v1/tickets/assign-recommendations/%d", full.ticketID))
 		require.Equal(t, http.StatusOK, w.Code, "body=%s", body)
+		assert.Equal(t, []string{"items", "total"}, ticketRuleListKeys(t, rawData(t, body)), "body=%s", body)
 		assert.Contains(t, string(body), `"items":[]`)
 		assert.NotContains(t, string(body), `"items":null`)
 		assert.Contains(t, string(body), `"total":0`)
 	})
 
-	// 5. 跨租户工单 fail closed，且不确认对方工单存在、不返回任何推荐载荷。
-	//    实测映射是 500/5001（handler 走 common.FailWithErr，见 common/response.go:183），
-	//    语义上应为 404/4004；该错配属 E4-5 错误分类收敛范围，E4-5 落地时需同步把这两行
-	//    改成 StatusNotFound / 4004。这里先锁定「绝不泄漏」这一半。
-	t.Run("跨租户工单不泄漏推荐载荷", func(t *testing.T) {
-		w, body := doAs(t, tenantB, path)
-		assert.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", body)
+	// 4b. 停用账号即使持有有效 token 也被 RBAC 拒绝，且不返回任何推荐载荷。
+	t.Run("停用账号返回 403 且不泄漏载荷", func(t *testing.T) {
+		disabledTenantID, disabledUserID := seedDisabledUserTenant(ctx, t, client, "reco-off")
+		disabledTicketID, err := createRuleListTicket(ctx, t, client, disabledTenantID, disabledUserID, "reco-off")
+		require.NoError(t, err)
+
+		disabled := ticketRuleListTenant{
+			tenantID: disabledTenantID,
+			userID:   disabledUserID,
+			username: "reco-off-admin",
+			ticketID: disabledTicketID,
+		}
+		w, body := doAs(t, disabled, fmt.Sprintf("/api/v1/tickets/assign-recommendations/%d", disabledTicketID))
+		assert.Equal(t, http.StatusForbidden, w.Code, "body=%s", body)
 		var envelope rawEnvelope
 		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
-		assert.Equal(t, 5001, envelope.Code)
+		assert.Equal(t, 2003, envelope.Code)
+		assert.NotContains(t, string(body), `"items"`)
+	})
+
+	// 5. 跨租户工单 fail closed，且不确认对方工单存在、不返回任何推荐载荷。
+	//    实测映射是 500/5001（handler 走 common.FailWithErr，见 common/response.go:183），
+	//    语义应为 404/4004；按台账 E4-29 既有口径**故意不锁定该 status**，等 E4-5
+	//    错误分类收敛时再补精确值。这里只锁「非 2xx + 零泄漏」这一半。
+	t.Run("跨租户工单不泄漏推荐载荷", func(t *testing.T) {
+		w, body := doAs(t, tenantB, path)
+		assert.GreaterOrEqual(t, w.Code, http.StatusBadRequest, "跨租户探测不得成功", "body=%s", body)
+		var envelope rawEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope), "body=%s", body)
+		assert.NotEqual(t, 0, envelope.Code, "body=%s", body)
 		assert.NotContains(t, string(body), `"items"`, "失败响应不得带列表载荷")
 		assert.NotContains(t, string(body), "reco-a-admin")
 		assert.NotContains(t, string(body), "reco-a-agent")
@@ -394,12 +408,12 @@ func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 	})
 }
 
-// seedInactiveOnlyTenant 建一个只有停用用户的租户，用来证明推荐列表的空形状。
-func seedInactiveOnlyTenant(ctx context.Context, t *testing.T, client *ent.Client, code string) (int, int) {
+// seedDisabledUserTenant 建一个只有停用用户的租户，用来验证停用账号仍被后端拒绝。
+func seedDisabledUserTenant(ctx context.Context, t *testing.T, client *ent.Client, code string) (int, int) {
 	t.Helper()
 
 	tenant, err := client.Tenant.Create().
-		SetName("Recommendation empty " + code).
+		SetName("Recommendation disabled " + code).
 		SetCode(code).
 		SetDomain(code + ".example.com").
 		SetStatus("active").
@@ -417,6 +431,57 @@ func seedInactiveOnlyTenant(ctx context.Context, t *testing.T, client *ent.Clien
 		Save(ctx)
 	require.NoError(t, err)
 	return tenant.ID, admin.ID
+}
+
+// seedFullWorkloadTenant 建一名活跃用户并把其负载填满到 getMaxActiveTickets（medium=8）
+// 之上，再另建一张待分配的工单：推荐服务层因此把该用户排除，返回真实的空候选。
+func seedFullWorkloadTenant(ctx context.Context, t *testing.T, client *ent.Client, code string) ticketRuleListTenant {
+	t.Helper()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Recommendation full " + code).
+		SetCode(code).
+		SetDomain(code + ".example.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	admin, err := client.User.Create().
+		SetUsername(code + "-admin").
+		SetEmail(code + "-admin@example.com").
+		SetName(code + "-admin").
+		SetPasswordHash("hash").
+		SetRole("super_admin").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// medium 优先级的负载上限是 8，这里压满 8 张活跃工单让唯一候选被剔除。
+	for i := 1; i <= 8; i++ {
+		_, err := client.Ticket.Create().
+			SetTicketNumber(fmt.Sprintf("TKT-FULL-%s-%02d", strings.ToUpper(code), i)).
+			SetTitle("负载工单").
+			SetDescription("用于把唯一候选用户的活跃工单数压到上限").
+			SetType("incident").
+			SetPriority("medium").
+			SetStatus("open").
+			SetRequesterID(admin.ID).
+			SetAssigneeID(admin.ID).
+			SetTenantID(tenant.ID).
+			Save(ctx)
+		require.NoError(t, err)
+	}
+
+	openID, err := createRuleListTicket(ctx, t, client, tenant.ID, admin.ID, code)
+	require.NoError(t, err)
+
+	return ticketRuleListTenant{
+		tenantID: tenant.ID,
+		userID:   admin.ID,
+		username: code + "-admin",
+		ticketID: openID,
+	}
 }
 
 func rawData(t *testing.T, body []byte) []byte {
