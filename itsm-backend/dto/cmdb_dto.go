@@ -215,9 +215,15 @@ type UpdateCIRequest struct {
 }
 
 // CloudService DTOs
+//
+// Provider 的取值集合在 ent/schema/cloud_service.go 的字段注释、前端云厂商选择器和
+// service/cloud.NormalizeProvider 三处都只认这六个规范值；写入侧过去没有任何校验，
+// 一个拼错的厂商名会一路落到数据库并在发现阶段表现为「没有适配器」。
+// 别名（alibaba/alicloud/huaweicloud/qcloud/amazon/private 等）只在适配器边界由
+// NormalizeProvider 归一化，不作为可写入的取值。
 type CloudServiceRequest struct {
 	ParentID         int                    `json:"parentId,omitempty"`
-	Provider         string                 `json:"provider" binding:"required"`
+	Provider         string                 `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure onprem"`
 	Category         string                 `json:"category,omitempty"`
 	ServiceCode      string                 `json:"serviceCode" binding:"required"`
 	ServiceName      string                 `json:"serviceName" binding:"required"`
@@ -255,7 +261,7 @@ type CloudServiceResponse struct {
 
 // CloudAccount DTOs
 type CloudAccountRequest struct {
-	Provider        string   `json:"provider" binding:"required"`
+	Provider        string   `json:"provider" binding:"required,oneof=aliyun tencent huawei aws azure onprem"`
 	AccountID       string   `json:"accountId" binding:"required"`
 	AccountName     string   `json:"accountName" binding:"required"`
 	CredentialRef   string   `json:"credentialRef,omitempty"`

@@ -235,8 +235,10 @@ describe('CMDBApi', () => {
   describe('getCloudServices', () => {
     it('读取 {items,total} 选择器信封', async () => {
       mockGet.mockResolvedValue({ items: [{ id: 1, serviceName: 'ECS' }], total: 1 });
-      const result = await CMDBApi.getCloudServices('alibaba');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-services', { provider: 'alibaba' });
+      // provider 只接受六个规范值（aliyun/tencent/huawei/aws/azure/onprem）；
+      // 'alibaba' 这类别名只在后端适配器边界归一化，不是合法的查询取值。
+      const result = await CMDBApi.getCloudServices('aliyun');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-services', { provider: 'aliyun' });
       expect(result.items).toHaveLength(1);
       expect(result.total).toBe(1);
     });

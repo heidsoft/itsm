@@ -803,7 +803,8 @@ cd itsm-backend && go test ./tests/contract/ -run TestErrorLeakRatchet
 4. 写入侧一处**校验强度差异**需如实说明：被删表面在 `provider` 上带
    `oneof=aliyun tencent huawei aws azure onprem`，活表面的 `dto.CloudAccountRequest` /
    `dto.CloudServiceRequest` 只有 `required`。迁移到活表面后枚举校验变弱了，已登记为台账
-   E4-20b 遗留项；本片不顺手收紧，以免让原本合法的写入突然变 400。
+   E4-20b 遗留项。**该差异已在 §1.23 补齐**（写入与查询两侧现在都认这六个规范值），
+   因此原本合法的别名写入现在会变成 400，请按 §1.23 的口径核对存量数据与调用方。
 
 **ACL/预检同步**：`middleware/rbac_precheck_gen.go`（`go run ./cmd/authz-gen` 重新生成，diff 为
 纯删除 15 条）与手工维护的 `middleware/precheck_fallback.go`（删除 7 条 `/api/v1/cloud*` 兜底项，
@@ -829,6 +830,57 @@ cd itsm-backend && go test ./handlers/cmdb/ ./dto/ ./middleware/ ./tests/contrac
 cd itsm-frontend && npm run type-check && npm run lint:antd
 cd itsm-frontend && npx jest src/lib/api/__tests__/cmdb-api.test.ts src/lib/__tests__/api-contract.test.ts
 ```
+
+### 1.23 `/api/v1/cmdb/cloud-*` 补齐租户 fail-closed、404 语义与 provider 枚举（2026-10-04，破坏性）
+
+§1.22 把云表面收敛成一套之后，活表面自身还留着三类问题；本片按台账 E4-20b/E4-20c 收口，
+以下变更对**已在调用 `/api/v1/cmdb/cloud-*` 的集成方**是可见的。
+
+**行为变更**（逐条实测，变更前取值来自 `HEAD` 的实现）：
+
+| 场景 | 变更前 | 变更后 |
+| --- | --- | --- |
+| `provider` 写入（`POST`/`PUT` 云账号、云服务、云资源） | 只有 `required`，`alibaba`/`qcloud`/`private` 这类别名照样 200 落库，到发现阶段才表现为「没有适配器」 | `required,oneof=aliyun tencent huawei aws azure onprem`，别名一律 400 / code `1001`（绑定失败，公共文案 `Invalid request body`） |
+| `provider` 查询（三个列表） | 无校验，拼错即静默返回空列表 | `omitempty,oneof=…`，省略=不过滤，别名 400 / code `1001` |
+| `GET …/{id}` 命中他租户行 | `ent: *_not found` 未分类 → 500 / code `5001` + 「操作失败」 | 404 / code `4004`，文案按资源固定（`cloud service not found` 等） |
+| `DELETE …/{id}` 命中 0 行 | 仓储只返回 `error`，0 行也是 `nil` → **200 报删除成功**，对方的行原封不动 | 返回受影响行数，0 行 → 404 / `4004` |
+| `PUT …/{id}` 命中他租户行 | `UpdateOneID` 的 `ErrNotFound` 未分类 → 500 / `5001` | 404 / `4004`，且已实测对方的行保持原值 |
+| 云资源写入引用他租户的 `cloudAccountId`/`serviceId` | 只按 ID 写入，不做归属校验（跨租户关系注入） | 各自返回 404 / `4004`；账号与服务厂商矛盾返回 400 / `4000` |
+| CMDB 其余读取端点（17 处） | `c.GetInt("tenant_id")`，缺上下文退化为「租户 0」查询 | 全部改 `handlerctx.ResolveTenantID`，缺上下文 401 / `2001` fail closed |
+| `GET /api/v1/cmdb/capabilities` 缺租户 | 该域自定义 401 / `2002`「缺少租户认证上下文」 | 与其他 CMDB 端点一致：401 / `2001`「租户信息缺失/租户上下文缺失」 |
+| CMDB handler 的错误映射 | 域内私有 `failCMDBError` 用 `switch appErr.Code` 复刻一份「领域错误 → 状态码 + 文案」，是 §1.20 单一分类器之外的第二套真相 | 删除该函数，15 条云/发现端点统一走 `common.RespondError`；`errorLeakBaseline` 中 `handlers/cmdb/handler.go` 由 2 清零，棘轮基线 **415 处 / 36 文件 → 413 处 / 35 文件** |
+| Swagger | 15 条活路由零覆盖（注解原本只写在已删除的 `handlers/cloud` 上） | 15 条全部有 `@Router`/`@Success`/`@Failure` 与响应模型；`docs/swagger.{json,yaml,go}` 重生成后 157→163 paths、216→231 operations、新增 11 个 definition、删除 0 个 |
+
+**需要检查的集成方**：
+
+1. 若曾用别名 `provider`（`alibaba`、`alicloud`、`qcloud`、`huaweicloud`、`tencentcloud`、`amazon`、
+   `private`）写入或过滤，请改为六个规范值，否则现在是 400。别名只在
+   `service/cloud.NormalizeProvider` 的适配器边界归一化，不再是 API 取值。
+2. 存量数据库里若有别名厂商名，读取路径不受影响（查询不带 `provider` 过滤时仍返回该行），
+   但**再次保存**会被拒绝。是否需要一次性数据订正请单独拍板；本片不动存量数据。
+3. 若集成方曾把「跨租户 500」或「删除返回 200」当作轮询/幂等依据，需要改成按 404 处理。
+   跨租户与真实不存在现在是同一份 404 报文，无法再据此区分。
+4. 前端 `CMDBApi.getCloudServices('alibaba')` 这类调用（此前只存在于测试夹具）现在会得到 400，
+   夹具已同步为 `aliyun`。
+
+**未收口项（本片只登记，不改）**：`ListCloudAccounts`/`ListCloudServices` 仍是无上限整表读取，
+「选择器端点」要不要资源上限或改真分页需产品拍板；`GET /api/v1/cmdb/discovery/sources`、
+`/discovery/results` 返回裸数组（无信封键），后者的过滤参数仍绑定 snake_case `job_id`；
+绑定失败的公共文案在仓库里仍是 `Invalid request body` 与 `请求参数错误` 两套并存。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run 'TestCMDBCloud'
+cd itsm-backend && go test ./handlers/cmdb/ ./dto/ ./tests/contract/ -count=1
+cd itsm-frontend && npm run type-check && npm run lint:antd
+cd itsm-frontend && npx jest src/lib/api/__tests__/cmdb-api.test.ts
+```
+
+契约测试：`router/cmdb_cloud_authz_route_test.go`（新增，打在真实 `SetupRoutes` +
+`RequirePermission("cmdb", …)` + `TenantMiddleware` 上）。缺租户上下文那一组断言的是**链路级**
+401/`2001`——`middleware.TenantMiddleware` 先于任何 handler 中止，因此 handler 内的
+`ResolveTenantID` 分支在路由级不可达，该分支由 `handlers/cmdb` 的单元测试覆盖，
+本片不用它伪造「回归」。
 
 ## 2. 环境变量变更
 

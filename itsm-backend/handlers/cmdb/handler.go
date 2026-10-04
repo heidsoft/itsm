@@ -1,7 +1,6 @@
 package cmdb
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -128,30 +127,13 @@ func (h *Handler) ListRelationshipTypes(c *gin.Context) { h.svc.ListRelationship
 
 func (h *Handler) GetOntology(c *gin.Context) { h.svc.GetOntology(c) }
 
-func failCMDBError(c *gin.Context, err error, publicMessage string) {
-	var appErr *common.AppError
-	if errors.As(err, &appErr) {
-		switch appErr.Code {
-		case common.ErrCodeForbidden:
-			common.Forbidden(c, appErr.Message)
-		case common.ErrCodeNotFound:
-			common.NotFound(c, appErr.Message)
-		case common.ErrCodeConflict:
-			common.Fail(c, common.ConflictCode, appErr.Message)
-		case common.ErrCodeValidation, common.ErrCodeBadRequest:
-			common.ParamError(c, appErr.Message)
-		default:
-			common.FailWithErr(c, err, publicMessage)
-		}
-		return
-	}
-	common.FailWithErr(c, err, publicMessage)
-}
+// failCMDBError 已删除：它用 switch(appErr.Code) 复刻了 common.classifyError 已有的
+// 「领域错误 → 状态码 + 公开文案」映射（E4-5 的第二个分类真相）。域内 15 条云路由与
+// 发现端点现在统一走 common.RespondError，分类只剩 common 一处所有者。
 
 func (h *Handler) GetCapabilities(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-	if tenantID <= 0 {
-		common.Fail(c, common.UnauthorizedCode, "缺少租户认证上下文")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
 		return
 	}
 	capability, err := h.svc.GetDiscoveryCapability(c.Request.Context(), tenantID)
@@ -248,11 +230,14 @@ func toCloudResourceDTO(resource *CloudResource) *dto.CloudResourceResponse {
 
 // GetReconciliation handles GET /api/v1/cmdb/reconciliation
 func (h *Handler) GetReconciliation(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	result, err := h.svc.GetReconciliation(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, "获取对账信息失败: "+err.Error())
+		common.FailWithErr(c, err, "获取对账信息失败")
 		return
 	}
 
@@ -287,15 +272,31 @@ func (h *Handler) GetReconciliation(c *gin.Context) {
 	common.Success(c, resp)
 }
 
-// Cloud services
+// ListCloudServices 云服务类型列表。
+//
+// @Summary  云服务类型列表
+// @Description 当前租户的云服务类型目录，是 CI 表单「厂商→服务→资源类型」级联选择的数据源。刻意不分页，因此只返回诚实的 {items,total}，没有 page/pageSize/totalPages。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param provider query string false "云厂商过滤（省略=全部）" Enums(aliyun,tencent,huawei,aws,azure,onprem)
+// @Success 200 {object} common.Response{data=dto.CloudServiceListResponse}
+// @Failure 400 {object} common.Response "provider 不在六个规范值内"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Router /api/v1/cmdb/cloud-services [get]
 func (h *Handler) ListCloudServices(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
-	provider := c.Query("provider")
+	// provider 过滤的唯一校验者是这里的 binding，不再是「任意字符串进精确匹配」。
+	var req dto.ListCloudSelectorRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
 
-	list, err := h.svc.ListCloudServices(c.Request.Context(), tenantID, provider)
+	list, err := h.svc.ListCloudServices(c.Request.Context(), tenantID, req.Provider)
 	if err != nil {
 		common.RespondError(c, err, "查询云服务列表失败")
 		return
@@ -333,17 +334,34 @@ func toCloudServiceDTO(item *CloudService) *dto.CloudServiceResponse {
 	}
 }
 
+// CreateCloudService 新增云服务类型。
+//
+// @Summary  新增云服务类型
+// @Description 租户级云服务类型目录。provider 只接受六个规范值，别名（alibaba/alicloud/qcloud 等）属于适配器边界输入，不可写入。attributeSchema.fields 若非空，必须每项都带 type=select 和非空 options。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body dto.CloudServiceRequest true "云服务类型"
+// @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
+// @Failure 400 {object} common.Response "provider 枚举外 / 必填缺失 / attributeSchema 结构非法"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 cmdb write 权限"
+// @Router /api/v1/cmdb/cloud-services [post]
 func (h *Handler) CreateCloudService(c *gin.Context) {
 	var req dto.CloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 	if err := validateAttributeSchema(req.AttributeSchema); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -416,14 +434,31 @@ func validateAttributeSchema(schema map[string]interface{}) error {
 }
 
 // Cloud accounts
+
+// ListCloudAccounts 云账号列表。
+//
+// @Summary  云账号列表
+// @Description 当前租户的云账号，是云资源页与 CI 表单的选择器数据源。刻意不分页，只返回诚实的 {items,total}。credentialRef 属于凭据引用，永不外露，只返回 hasCredential 布尔。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param provider query string false "云厂商过滤（省略=全部）" Enums(aliyun,tencent,huawei,aws,azure,onprem)
+// @Success 200 {object} common.Response{data=dto.CloudAccountListResponse}
+// @Failure 400 {object} common.Response "provider 不在六个规范值内"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Router /api/v1/cmdb/cloud-accounts [get]
 func (h *Handler) ListCloudAccounts(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
-	provider := c.Query("provider")
+	var req dto.ListCloudSelectorRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
 
-	list, err := h.svc.ListCloudAccounts(c.Request.Context(), tenantID, provider)
+	list, err := h.svc.ListCloudAccounts(c.Request.Context(), tenantID, req.Provider)
 	if err != nil {
 		common.RespondError(c, err, "查询云账号列表失败")
 		return
@@ -455,6 +490,20 @@ func toCloudAccountDTO(item *CloudAccount) *dto.CloudAccountResponse {
 	}
 }
 
+// CreateCloudAccount 新增云账号。
+//
+// @Summary  新增云账号
+// @Description 租户级云账号。credentialRef 只是凭据的引用标识（不落明文密钥），写入后经校验保存，读取侧仅外露 hasCredential。provider 只接受六个规范值。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body dto.CloudAccountRequest true "云账号"
+// @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
+// @Failure 400 {object} common.Response "provider 枚举外 / 必填缺失 / credentialRef 跨租户引用"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 cmdb write 权限"
+// @Router /api/v1/cmdb/cloud-accounts [post]
 func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	var req dto.CloudAccountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -465,7 +514,10 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -481,13 +533,33 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 	}
 	res, err := h.svc.CreateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudAccountDTO(res))
 }
 
 // Cloud resources
+
+// ListCloudResources 云资源分页列表。
+//
+// @Summary  云资源分页列表
+// @Description 三个云列表里唯一真分页的一个：total 来自仓储 Count，items 是当前页，page/pageSize/totalPages 回显生效值（缺省 1/20，pageSize 越界回落 20）。provider 走云账号边而不是资源自报表字段。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param provider query string false "云厂商过滤" Enums(aliyun,tencent,huawei,aws,azure,onprem)
+// @Param cloudAccountId query int false "云账号ID过滤"
+// @Param serviceId query int false "云服务类型ID过滤"
+// @Param region query string false "Region 过滤"
+// @Param status query string false "资源状态过滤"
+// @Param search query string false "搜索关键词（云资源唯一ID前缀）"
+// @Param page query int false "页码，缺省 1"
+// @Param pageSize query int false "页长，缺省 20，最大 100；越界回落 20"
+// @Success 200 {object} common.Response{data=dto.CloudResourceListResponse}
+// @Failure 400 {object} common.Response "provider 枚举外 / 查询参数类型非法（含旧的 snake_case service_id）"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Router /api/v1/cmdb/cloud-resources [get]
 func (h *Handler) ListCloudResources(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
@@ -529,15 +601,30 @@ func (h *Handler) ListCloudResources(c *gin.Context) {
 }
 
 // GetCloudService handles GET /api/v1/cmdb/cloud-services/:id
+//
+// @Summary  云服务类型详情
+// @Description 按 tenant + id 读取；行不存在或属于其他租户统一返回 404，不回露存在性差异。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云服务类型ID"
+// @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云服务不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-services/{id} [get]
 func (h *Handler) GetCloudService(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 	result, err := h.svc.GetCloudService(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -560,13 +647,30 @@ func (h *Handler) GetCloudService(c *gin.Context) {
 }
 
 // UpdateCloudService handles PUT /api/v1/cmdb/cloud-services/:id
+//
+// @Summary  更新云服务类型
+// @Description 全量覆盖语义：请求体沿用创建 DTO，缺席字段按零值写入。id 取自路径，tenant 取自认证上下文，body 无法自报归属。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云服务类型ID"
+// @Param body body dto.CloudServiceRequest true "云服务类型"
+// @Success 200 {object} common.Response{data=dto.CloudServiceResponse}
+// @Failure 400 {object} common.Response "provider 枚举外 / 必填缺失"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云服务不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-services/{id} [put]
 func (h *Handler) UpdateCloudService(c *gin.Context) {
 	var req dto.CloudServiceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
@@ -591,7 +695,7 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudService(c.Request.Context(), cs)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudServiceResponse{
@@ -614,30 +718,60 @@ func (h *Handler) UpdateCloudService(c *gin.Context) {
 }
 
 // DeleteCloudService handles DELETE /api/v1/cmdb/cloud-services/:id
+//
+// @Summary  删除云服务类型
+// @Description 删除按 tenant + id 条件执行；命中 0 行不再报「删除成功」，而是 404，避免跨租户删除对外表现为成功。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云服务类型ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云服务不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-services/{id} [delete]
 func (h *Handler) DeleteCloudService(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 	err := h.svc.DeleteCloudService(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
 }
 
 // GetCloudAccount handles GET /api/v1/cmdb/cloud-accounts/:id
+//
+// @Summary  云账号详情
+// @Description 按 tenant + id 读取。凭据引用（credentialRef）不外露，只返回 hasCredential。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云账号ID"
+// @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云账号不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-accounts/{id} [get]
 func (h *Handler) GetCloudAccount(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 	result, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -655,20 +789,37 @@ func (h *Handler) GetCloudAccount(c *gin.Context) {
 }
 
 // UpdateCloudAccount handles PUT /api/v1/cmdb/cloud-accounts/:id
+//
+// @Summary  更新云账号
+// @Description PATCH 语义的可选字段（指针）：未传即保留原值。provider 与 accountId 不在请求体里，创建后不可改；改凭证前会先按当前租户读取账号，跨租户统一 404。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云账号ID"
+// @Param body body dto.CMDBCloudAccountUpdateRequest true "可更新字段"
+// @Success 200 {object} common.Response{data=dto.CloudAccountResponse}
+// @Failure 400 {object} common.Response "字段超长 / credentialRef 跨租户引用"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云账号不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-accounts/{id} [put]
 func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	var req dto.CMDBCloudAccountUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
 	existing, err := h.svc.GetCloudAccount(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	credentialRef := existing.CredentialRef
@@ -703,7 +854,7 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudAccount(c.Request.Context(), ca)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.CloudAccountResponse{
@@ -721,56 +872,92 @@ func (h *Handler) UpdateCloudAccount(c *gin.Context) {
 }
 
 // DeleteCloudAccount handles DELETE /api/v1/cmdb/cloud-accounts/:id
+//
+// @Summary  删除云账号
+// @Description 删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云账号ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云账号不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-accounts/{id} [delete]
 func (h *Handler) DeleteCloudAccount(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	err := h.svc.DeleteCloudAccount(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
 }
 
 // GetCloudResource handles GET /api/v1/cmdb/cloud-resources/:id
+//
+// @Summary  云资源详情
+// @Description 按 tenant + id 读取；identity 字段（provider/partition/canonicalAccountId/identityHash 等）由 service 从云账号与云服务派生后外露。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云资源ID"
+// @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云资源不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-resources/{id} [get]
 func (h *Handler) GetCloudResource(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	result, err := h.svc.GetCloudResource(c.Request.Context(), tenantID, id)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
 }
 
 // CreateCloudResource handles POST /api/v1/cmdb/cloud-resources
+//
+// @Summary  登记云资源
+// @Description cloudAccountId 与 serviceId 会先按当前租户重新加载：查不到即 404（跨租户与不存在同义，不回露差异）；两者厂商不一致是 400。identity 字段与 firstSeenAt/lastSeenAt 由 service 派生，请求体无法自报 tenantId。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body dto.CreateCloudResourceRequest true "云资源"
+// @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
+// @Failure 400 {object} common.Response "必填缺失 / 云账号与云服务厂商不一致"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 403 {object} common.Response "缺少 cmdb write 权限"
+// @Failure 404 {object} common.Response "引用的云账号或云服务不存在/不属于当前租户"
+// @Router /api/v1/cmdb/cloud-resources [post]
 func (h *Handler) CreateCloudResource(c *gin.Context) {
-	var req struct {
-		CloudAccountID int                    `json:"cloudAccountId" binding:"required"`
-		ServiceID      int                    `json:"serviceId" binding:"required"`
-		ResourceID     string                 `json:"resourceId" binding:"required"`
-		ResourceName   string                 `json:"resourceName"`
-		Region         string                 `json:"region"`
-		Zone           string                 `json:"zone"`
-		Status         string                 `json:"status"`
-		Tags           map[string]string      `json:"tags"`
-		Metadata       map[string]interface{} `json:"metadata"`
-		LifecycleState string                 `json:"lifecycleState"`
-	}
+	var req dto.CreateCloudResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	now := time.Now()
 	cr := &CloudResource{
 		CloudAccountID: req.CloudAccountID,
@@ -789,26 +976,29 @@ func (h *Handler) CreateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.CreateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		failCMDBError(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
 }
 
 // UpdateCloudResource handles PUT /api/v1/cmdb/cloud-resources/:id
+//
+// @Summary  更新云资源
+// @Description 全量覆盖语义：缺席字段按零值写入（区分「未传/传零值」属于 PATCH 契约，尚未拍板）。identity 字段在写入前按当前租户重新解析，跨租户引用为 404/403。
+// @Tags CMDB-云资源
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云资源ID"
+// @Param body body dto.UpdateCloudResourceRequest true "云资源"
+// @Success 200 {object} common.Response{data=dto.CloudResourceResponse}
+// @Failure 400 {object} common.Response "字段类型非法 / 必填标识缺失 / 账号与云服务厂商不一致"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云资源不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-resources/{id} [put]
 func (h *Handler) UpdateCloudResource(c *gin.Context) {
-	var req struct {
-		CloudAccountID int                    `json:"cloudAccountId"`
-		ServiceID      int                    `json:"serviceId"`
-		ResourceID     string                 `json:"resourceId"`
-		ResourceName   string                 `json:"resourceName"`
-		Region         string                 `json:"region"`
-		Zone           string                 `json:"zone"`
-		Status         string                 `json:"status"`
-		Tags           map[string]string      `json:"tags"`
-		Metadata       map[string]interface{} `json:"metadata"`
-		LifecycleState string                 `json:"lifecycleState"`
-	}
+	var req dto.UpdateCloudResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamError(c, "Invalid request body")
 		return
@@ -817,7 +1007,10 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	if !ok {
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	cr := &CloudResource{
 		ID:             id,
@@ -835,23 +1028,38 @@ func (h *Handler) UpdateCloudResource(c *gin.Context) {
 	}
 	result, err := h.svc.UpdateCloudResource(c.Request.Context(), cr)
 	if err != nil {
-		failCMDBError(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, toCloudResourceDTO(result))
 }
 
 // DeleteCloudResource handles DELETE /api/v1/cmdb/cloud-resources/:id
+//
+// @Summary  删除云资源
+// @Description 删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。
+// @Tags CMDB-云资源
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "云资源ID"
+// @Success 200 {object} common.Response
+// @Failure 400 {object} common.Response "id 非正整数"
+// @Failure 401 {object} common.Response "租户上下文缺失"
+// @Failure 404 {object} common.Response "云资源不存在或不属于当前租户"
+// @Router /api/v1/cmdb/cloud-resources/{id} [delete]
 func (h *Handler) DeleteCloudResource(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
 	if !ok {
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 
 	err := h.svc.DeleteCloudResource(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, nil)
@@ -859,10 +1067,13 @@ func (h *Handler) DeleteCloudResource(c *gin.Context) {
 
 // Discovery sources
 func (h *Handler) ListDiscoverySources(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	list, err := h.svc.ListDiscoverySources(c.Request.Context(), tenantID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	resp := make([]*dto.DiscoverySourceResponse, 0, len(list))
@@ -891,7 +1102,10 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 		common.ParamError(c, "Invalid request body")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	isActive := true
 	if req.IsActive != nil {
 		isActive = *req.IsActive
@@ -909,7 +1123,7 @@ func (h *Handler) CreateDiscoverySource(c *gin.Context) {
 	}
 	res, err := h.svc.CreateDiscoverySource(c.Request.Context(), ds)
 	if err != nil {
-		failCMDBError(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	common.Success(c, &dto.DiscoverySourceResponse{
@@ -941,11 +1155,14 @@ func (h *Handler) CreateDiscoveryJob(c *gin.Context) {
 }
 
 func (h *Handler) ListDiscoveryResults(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	jobID, _ := common.ParsePositiveIDFromQuery(c, "job_id")
 	list, err := h.svc.ListDiscoveryResults(c.Request.Context(), tenantID, jobID)
 	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 	resp := make([]*dto.DiscoveryResultResponse, 0, len(list))

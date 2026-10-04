@@ -215,11 +215,11 @@ func (r *EntRepository) UpdateCloudService(ctx context.Context, cs *CloudService
 	}, nil
 }
 
-func (r *EntRepository) DeleteCloudService(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.CloudService.Delete().
+func (r *EntRepository) DeleteCloudService(ctx context.Context, id int, tenantID int) (int, error) {
+	n, err := r.client.CloudService.Delete().
 		Where(cloudservice.ID(id), cloudservice.TenantID(tenantID)).
 		Exec(ctx)
-	return err
+	return n, err
 }
 
 // Cloud accounts
@@ -327,11 +327,11 @@ func (r *EntRepository) UpdateCloudAccount(ctx context.Context, ca *CloudAccount
 	}, nil
 }
 
-func (r *EntRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.CloudAccount.Delete().
+func (r *EntRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID int) (int, error) {
+	n, err := r.client.CloudAccount.Delete().
 		Where(cloudaccount.ID(id), cloudaccount.TenantID(tenantID)).
 		Exec(ctx)
-	return err
+	return n, err
 }
 
 // Cloud resources
@@ -599,11 +599,11 @@ func (r *EntRepository) UpdateCloudResource(ctx context.Context, cr *CloudResour
 	}, nil
 }
 
-func (r *EntRepository) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.CloudResource.Delete().
+func (r *EntRepository) DeleteCloudResource(ctx context.Context, id int, tenantID int) (int, error) {
+	n, err := r.client.CloudResource.Delete().
 		Where(cloudresource.ID(id), cloudresource.TenantID(tenantID)).
 		Exec(ctx)
-	return err
+	return n, err
 }
 
 func (r *EntRepository) ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {

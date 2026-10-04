@@ -4126,6 +4126,1014 @@
                 }
             }
         },
+        "/api/v1/cmdb/cloud-accounts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "当前租户的云账号，是云资源页与 CI 表单的选择器数据源。刻意不分页，只返回诚实的 {items,total}。credentialRef 属于凭据引用，永不外露，只返回 hasCredential 布尔。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云账号列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "aliyun",
+                            "tencent",
+                            "huawei",
+                            "aws",
+                            "azure",
+                            "onprem"
+                        ],
+                        "type": "string",
+                        "description": "云厂商过滤（省略=全部）",
+                        "name": "provider",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 不在六个规范值内",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "租户级云账号。credentialRef 只是凭据的引用标识（不落明文密钥），写入后经校验保存，读取侧仅外露 hasCredential。provider 只接受六个规范值。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "新增云账号",
+                "parameters": [
+                    {
+                        "description": "云账号",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CloudAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 枚举外 / 必填缺失 / credentialRef 跨租户引用",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 cmdb write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cloud-accounts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 tenant + id 读取。凭据引用（credentialRef）不外露，只返回 hasCredential。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云账号详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云账号不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "PATCH 语义的可选字段（指针）：未传即保留原值。provider 与 accountId 不在请求体里，创建后不可改；改凭证前会先按当前租户读取账号，跨租户统一 404。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "更新云账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "可更新字段",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CMDBCloudAccountUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudAccountResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "字段超长 / credentialRef 跨租户引用",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云账号不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "删除云账号",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云账号ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云账号不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cloud-resources": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "三个云列表里唯一真分页的一个：total 来自仓储 Count，items 是当前页，page/pageSize/totalPages 回显生效值（缺省 1/20，pageSize 越界回落 20）。provider 走云账号边而不是资源自报表字段。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云资源分页列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "aliyun",
+                            "tencent",
+                            "huawei",
+                            "aws",
+                            "azure",
+                            "onprem"
+                        ],
+                        "type": "string",
+                        "description": "云厂商过滤",
+                        "name": "provider",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云账号ID过滤",
+                        "name": "cloudAccountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "云服务类型ID过滤",
+                        "name": "serviceId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Region 过滤",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "资源状态过滤",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（云资源唯一ID前缀）",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码，缺省 1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页长，缺省 20，最大 100；越界回落 20",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 枚举外 / 查询参数类型非法（含旧的 snake_case service_id）",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "cloudAccountId 与 serviceId 会先按当前租户重新加载：查不到即 404（跨租户与不存在同义，不回露差异）；两者厂商不一致是 400。identity 字段与 firstSeenAt/lastSeenAt 由 service 派生，请求体无法自报 tenantId。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "登记云资源",
+                "parameters": [
+                    {
+                        "description": "云资源",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCloudResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "必填缺失 / 云账号与云服务厂商不一致",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 cmdb write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "引用的云账号或云服务不存在/不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cloud-resources/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 tenant + id 读取；identity 字段（provider/partition/canonicalAccountId/identityHash 等）由 service 从云账号与云服务派生后外露。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云资源详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云资源不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "全量覆盖语义：缺席字段按零值写入（区分「未传/传零值」属于 PATCH 契约，尚未拍板）。identity 字段在写入前按当前租户重新解析，跨租户引用为 404/403。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "更新云资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "云资源",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCloudResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudResourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "字段类型非法 / 必填标识缺失 / 账号与云服务厂商不一致",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云资源不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "删除云资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云资源ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云资源不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cloud-services": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "当前租户的云服务类型目录，是 CI 表单「厂商→服务→资源类型」级联选择的数据源。刻意不分页，因此只返回诚实的 {items,total}，没有 page/pageSize/totalPages。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云服务类型列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "aliyun",
+                            "tencent",
+                            "huawei",
+                            "aws",
+                            "azure",
+                            "onprem"
+                        ],
+                        "type": "string",
+                        "description": "云厂商过滤（省略=全部）",
+                        "name": "provider",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 不在六个规范值内",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "租户级云服务类型目录。provider 只接受六个规范值，别名（alibaba/alicloud/qcloud 等）属于适配器边界输入，不可写入。attributeSchema.fields 若非空，必须每项都带 type=select 和非空 options。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "新增云服务类型",
+                "parameters": [
+                    {
+                        "description": "云服务类型",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CloudServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 枚举外 / 必填缺失 / attributeSchema 结构非法",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "缺少 cmdb write 权限",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/cmdb/cloud-services/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按 tenant + id 读取；行不存在或属于其他租户统一返回 404，不回露存在性差异。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "云服务类型详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云服务不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "全量覆盖语义：请求体沿用创建 DTO，缺席字段按零值写入。id 取自路径，tenant 取自认证上下文，body 无法自报归属。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "更新云服务类型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "云服务类型",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CloudServiceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CloudServiceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "provider 枚举外 / 必填缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云服务不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除按 tenant + id 条件执行；命中 0 行不再报「删除成功」，而是 404，避免跨租户删除对外表现为成功。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CMDB-云资源"
+                ],
+                "summary": "删除云服务类型",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "云服务类型ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "id 非正整数",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "租户上下文缺失",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "云服务不存在或不属于当前租户",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/cmdb/export": {
             "get": {
                 "description": "查询历史导出任务列表",
@@ -12310,6 +13318,28 @@
                 }
             }
         },
+        "dto.CMDBCloudAccountUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "accountName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "credentialRef": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "dto.CMDBOntologyCIType": {
             "type": "object",
             "properties": {
@@ -12895,6 +13925,392 @@
                 }
             }
         },
+        "dto.CloudAccountListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudAccountResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudAccountRequest": {
+            "type": "object",
+            "required": [
+                "accountId",
+                "accountName",
+                "provider"
+            ],
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "accountName": {
+                    "type": "string"
+                },
+                "credentialRef": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "aliyun",
+                        "tencent",
+                        "huawei",
+                        "aws",
+                        "azure",
+                        "onprem"
+                    ]
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CloudAccountResponse": {
+            "type": "object",
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "accountName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "hasCredential": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "regionWhitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CloudResourceListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudResourceResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "totalPages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudResourceResponse": {
+            "type": "object",
+            "properties": {
+                "canonicalAccountId": {
+                    "type": "string"
+                },
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "firstSeenAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identityHash": {
+                    "type": "string"
+                },
+                "identityVersion": {
+                    "type": "integer"
+                },
+                "lastSeenAt": {
+                    "type": "string"
+                },
+                "lifecycleState": {
+                    "type": "string"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "missingCount": {
+                    "type": "integer"
+                },
+                "partition": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceName": {
+                    "type": "string"
+                },
+                "resourceScope": {
+                    "type": "string"
+                },
+                "resourceType": {
+                    "type": "string"
+                },
+                "serviceCode": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer"
+                },
+                "sourceFingerprint": {
+                    "type": "string"
+                },
+                "sourceId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CloudServiceListResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CloudServiceResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CloudServiceRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "resourceTypeCode",
+                "resourceTypeName",
+                "serviceCode",
+                "serviceName"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string"
+                },
+                "attributeSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "aliyun",
+                        "tencent",
+                        "huawei",
+                        "aws",
+                        "azure",
+                        "onprem"
+                    ]
+                },
+                "resourceTypeCode": {
+                    "type": "string"
+                },
+                "resourceTypeName": {
+                    "type": "string"
+                },
+                "serviceCode": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CloudServiceResponse": {
+            "type": "object",
+            "properties": {
+                "apiVersion": {
+                    "type": "string"
+                },
+                "attributeSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "category": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "effectiveAt": {
+                    "type": "string"
+                },
+                "expireAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "isSystem": {
+                    "type": "boolean"
+                },
+                "lifecycleStatus": {
+                    "description": "生命周期管理",
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "parentId": {
+                    "type": "integer"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "resourceTypeCode": {
+                    "type": "string"
+                },
+                "resourceTypeName": {
+                    "type": "string"
+                },
+                "serviceCode": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Type is optional; will be set from CIType if not provided",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ConvertIncidentToProblemRequest": {
             "type": "object",
             "properties": {
@@ -13365,6 +14781,50 @@
                 },
                 "type": {
                     "description": "变更类型: normal, standard, emergency",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateCloudResourceRequest": {
+            "type": "object",
+            "required": [
+                "cloudAccountId",
+                "resourceId",
+                "serviceId"
+            ],
+            "properties": {
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "lifecycleState": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceName": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "zone": {
                     "type": "string"
                 }
             }
@@ -15789,6 +17249,45 @@
                             "$ref": "#/definitions/dto.ChangeType"
                         }
                     ]
+                }
+            }
+        },
+        "dto.UpdateCloudResourceRequest": {
+            "type": "object",
+            "properties": {
+                "cloudAccountId": {
+                    "type": "integer"
+                },
+                "lifecycleState": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "region": {
+                    "type": "string"
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceName": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "zone": {
+                    "type": "string"
                 }
             }
         },

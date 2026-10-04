@@ -246,6 +246,18 @@ func (s *Service) GetDiscoveryCapability(ctx context.Context, tenantID int) (*Ca
 // 未注册路由的 CI / CIType / 关系相关方法属死代码，已删除；
 // 线上 CI 能力由 service/configuration_item_service.go 提供。
 
+// mapCloudNotFound 把 Ent 的「按 tenant+id 查不到这一行」翻成 404 语义。
+//
+// 不这么做时它是一起内部错误：handler 会把 500/5001 返回给一个只是 ID 写错或
+// 资源属于别的租户的请求，客户端无法区分「不存在」和「服务坏了」。
+// 其余错误原样透传，交给 common.classifyError 决定状态码。
+func mapCloudNotFound(err error, resource string) error {
+	if ent.IsNotFound(err) {
+		return common.NewNotFoundError(resource)
+	}
+	return err
+}
+
 // Cloud services
 func (s *Service) CreateCloudService(ctx context.Context, cs *CloudService) (*CloudService, error) {
 	s.logger.Infow("Creating cloud service", "provider", cs.Provider, "service_code", cs.ServiceCode, "tenant_id", cs.TenantID)
@@ -274,7 +286,7 @@ func (s *Service) GetCloudService(ctx context.Context, tenantID int, id int) (*C
 	result, err := s.repo.GetCloudService(ctx, tenantID, id)
 	if err != nil {
 		s.logger.Errorw("Failed to get cloud service", "error", err, "id", id, "tenant_id", tenantID)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud service")
 	}
 	s.logger.Infow("Got cloud service successfully", "id", id, "provider", result.Provider)
 	return result, nil
@@ -285,7 +297,7 @@ func (s *Service) UpdateCloudService(ctx context.Context, cs *CloudService) (*Cl
 	result, err := s.repo.UpdateCloudService(ctx, cs)
 	if err != nil {
 		s.logger.Errorw("Failed to update cloud service", "error", err, "id", cs.ID, "provider", cs.Provider)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud service")
 	}
 	s.logger.Infow("Cloud service updated successfully", "id", result.ID, "provider", result.Provider)
 	return result, nil
@@ -293,10 +305,14 @@ func (s *Service) UpdateCloudService(ctx context.Context, cs *CloudService) (*Cl
 
 func (s *Service) DeleteCloudService(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting cloud service", "id", id, "tenant_id", tenantID)
-	err := s.repo.DeleteCloudService(ctx, id, tenantID)
+	affected, err := s.repo.DeleteCloudService(ctx, id, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to delete cloud service", "error", err, "id", id, "tenant_id", tenantID)
 		return err
+	}
+	if affected == 0 {
+		s.logger.Warnw("Cloud service delete matched no row", "id", id, "tenant_id", tenantID)
+		return common.NewNotFoundError("cloud service")
 	}
 	s.logger.Infow("Cloud service deleted successfully", "id", id, "tenant_id", tenantID)
 	return nil
@@ -330,7 +346,7 @@ func (s *Service) GetCloudAccount(ctx context.Context, tenantID int, id int) (*C
 	result, err := s.repo.GetCloudAccount(ctx, tenantID, id)
 	if err != nil {
 		s.logger.Errorw("Failed to get cloud account", "error", err, "id", id, "tenant_id", tenantID)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud account")
 	}
 	s.logger.Infow("Got cloud account successfully", "id", id, "provider", result.Provider, "account_id", result.AccountID)
 	return result, nil
@@ -341,7 +357,7 @@ func (s *Service) UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*Cl
 	result, err := s.repo.UpdateCloudAccount(ctx, ca)
 	if err != nil {
 		s.logger.Errorw("Failed to update cloud account", "error", err, "id", ca.ID, "provider", ca.Provider)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud account")
 	}
 	s.logger.Infow("Cloud account updated successfully", "id", result.ID, "provider", result.Provider, "account_id", result.AccountID)
 	return result, nil
@@ -349,10 +365,14 @@ func (s *Service) UpdateCloudAccount(ctx context.Context, ca *CloudAccount) (*Cl
 
 func (s *Service) DeleteCloudAccount(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting cloud account", "id", id, "tenant_id", tenantID)
-	err := s.repo.DeleteCloudAccount(ctx, id, tenantID)
+	affected, err := s.repo.DeleteCloudAccount(ctx, id, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to delete cloud account", "error", err, "id", id, "tenant_id", tenantID)
 		return err
+	}
+	if affected == 0 {
+		s.logger.Warnw("Cloud account delete matched no row", "id", id, "tenant_id", tenantID)
+		return common.NewNotFoundError("cloud account")
 	}
 	s.logger.Infow("Cloud account deleted successfully", "id", id, "tenant_id", tenantID)
 	return nil
@@ -381,7 +401,7 @@ func (s *Service) GetCloudResource(ctx context.Context, tenantID int, id int) (*
 	result, err := s.repo.GetCloudResource(ctx, tenantID, id)
 	if err != nil {
 		s.logger.Errorw("Failed to get cloud resource", "error", err, "id", id, "tenant_id", tenantID)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud resource")
 	}
 	s.logger.Infow("Got cloud resource successfully", "id", id, "resource_id", result.ResourceID)
 	return result, nil
@@ -409,7 +429,7 @@ func (s *Service) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*
 	result, err := s.repo.UpdateCloudResource(ctx, cr)
 	if err != nil {
 		s.logger.Errorw("Failed to update cloud resource", "error", err, "id", cr.ID, "resource_id", cr.ResourceID)
-		return nil, err
+		return nil, mapCloudNotFound(err, "cloud resource")
 	}
 	s.logger.Infow("Cloud resource updated successfully", "id", result.ID, "resource_id", result.ResourceID)
 	return result, nil
@@ -417,7 +437,8 @@ func (s *Service) UpdateCloudResource(ctx context.Context, cr *CloudResource) (*
 
 func (s *Service) prepareCloudResourceIdentity(ctx context.Context, resource *CloudResource) error {
 	if resource == nil || resource.TenantID <= 0 || resource.CloudAccountID <= 0 || resource.ServiceID <= 0 || strings.TrimSpace(resource.ResourceID) == "" {
-		return fmt.Errorf("cloud resource identity fields are required")
+		// 缺必填标识是客户端错误，不是内部错误：必须映射 400/1001 而不是 500/5001。
+		return common.NewValidationError("cloudAccountId, serviceId and resourceId are required", nil)
 	}
 	account, err := s.repo.GetCloudAccount(ctx, resource.TenantID, resource.CloudAccountID)
 	if err != nil {
@@ -438,7 +459,8 @@ func (s *Service) prepareCloudResourceIdentity(ctx context.Context, resource *Cl
 	}
 	provider := strings.ToLower(strings.TrimSpace(account.Provider))
 	if provider == "" || provider != strings.ToLower(strings.TrimSpace(service.Provider)) {
-		return fmt.Errorf("cloud account and service provider mismatch")
+		// 账号与云服务厂商不一致是请求数据本身矛盾，映射 400 而不是 500。
+		return common.NewValidationError("cloud account and cloud service belong to different providers", nil)
 	}
 	region := strings.ToLower(strings.TrimSpace(resource.Region))
 	zone := strings.ToLower(strings.TrimSpace(resource.Zone))
@@ -470,10 +492,14 @@ func (s *Service) prepareCloudResourceIdentity(ctx context.Context, resource *Cl
 
 func (s *Service) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting cloud resource", "id", id, "tenant_id", tenantID)
-	err := s.repo.DeleteCloudResource(ctx, id, tenantID)
+	affected, err := s.repo.DeleteCloudResource(ctx, id, tenantID)
 	if err != nil {
 		s.logger.Errorw("Failed to delete cloud resource", "error", err, "id", id, "tenant_id", tenantID)
 		return err
+	}
+	if affected == 0 {
+		s.logger.Warnw("Cloud resource delete matched no row", "id", id, "tenant_id", tenantID)
+		return common.NewNotFoundError("cloud resource")
 	}
 	s.logger.Infow("Cloud resource deleted successfully", "id", id, "tenant_id", tenantID)
 	return nil

@@ -897,6 +897,21 @@ definitions:
       updatedAt:
         type: string
     type: object
+  dto.CMDBCloudAccountUpdateRequest:
+    properties:
+      accountName:
+        maxLength: 200
+        type: string
+      credentialRef:
+        maxLength: 200
+        type: string
+      isActive:
+        type: boolean
+      regionWhitelist:
+        items:
+          type: string
+        type: array
+    type: object
   dto.CMDBOntologyCIType:
     properties:
       attributeDefinitions:
@@ -1317,6 +1332,273 @@ definitions:
       resolution:
         type: string
     type: object
+  dto.CloudAccountListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.CloudAccountResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.CloudAccountRequest:
+    properties:
+      accountId:
+        type: string
+      accountName:
+        type: string
+      credentialRef:
+        type: string
+      isActive:
+        type: boolean
+      provider:
+        enum:
+        - aliyun
+        - tencent
+        - huawei
+        - aws
+        - azure
+        - onprem
+        type: string
+      regionWhitelist:
+        items:
+          type: string
+        type: array
+    required:
+    - accountId
+    - accountName
+    - provider
+    type: object
+  dto.CloudAccountResponse:
+    properties:
+      accountId:
+        type: string
+      accountName:
+        type: string
+      createdAt:
+        type: string
+      effectiveAt:
+        type: string
+      expireAt:
+        type: string
+      hasCredential:
+        type: boolean
+      id:
+        type: integer
+      isActive:
+        type: boolean
+      lifecycleStatus:
+        description: 生命周期管理
+        enum:
+        - draft
+        - online
+        - maintenance
+        - offline
+        - scrapped
+        type: string
+      provider:
+        type: string
+      regionWhitelist:
+        items:
+          type: string
+        type: array
+      tenantId:
+        type: integer
+      type:
+        description: Type is optional; will be set from CIType if not provided
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.CloudResourceListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.CloudResourceResponse'
+        type: array
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+      totalPages:
+        type: integer
+    type: object
+  dto.CloudResourceResponse:
+    properties:
+      canonicalAccountId:
+        type: string
+      cloudAccountId:
+        type: integer
+      createdAt:
+        type: string
+      effectiveAt:
+        type: string
+      expireAt:
+        type: string
+      firstSeenAt:
+        type: string
+      id:
+        type: integer
+      identityHash:
+        type: string
+      identityVersion:
+        type: integer
+      lastSeenAt:
+        type: string
+      lifecycleState:
+        type: string
+      lifecycleStatus:
+        description: 生命周期管理
+        enum:
+        - draft
+        - online
+        - maintenance
+        - offline
+        - scrapped
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      missingCount:
+        type: integer
+      partition:
+        type: string
+      provider:
+        type: string
+      region:
+        type: string
+      resourceId:
+        type: string
+      resourceName:
+        type: string
+      resourceScope:
+        type: string
+      resourceType:
+        type: string
+      serviceCode:
+        type: string
+      serviceId:
+        type: integer
+      sourceFingerprint:
+        type: string
+      sourceId:
+        type: string
+      status:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      tenantId:
+        type: integer
+      type:
+        description: Type is optional; will be set from CIType if not provided
+        type: string
+      updatedAt:
+        type: string
+      zone:
+        type: string
+    type: object
+  dto.CloudServiceListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.CloudServiceResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.CloudServiceRequest:
+    properties:
+      apiVersion:
+        type: string
+      attributeSchema:
+        additionalProperties: true
+        type: object
+      category:
+        type: string
+      isActive:
+        type: boolean
+      isSystem:
+        type: boolean
+      parentId:
+        type: integer
+      provider:
+        enum:
+        - aliyun
+        - tencent
+        - huawei
+        - aws
+        - azure
+        - onprem
+        type: string
+      resourceTypeCode:
+        type: string
+      resourceTypeName:
+        type: string
+      serviceCode:
+        type: string
+      serviceName:
+        type: string
+    required:
+    - provider
+    - resourceTypeCode
+    - resourceTypeName
+    - serviceCode
+    - serviceName
+    type: object
+  dto.CloudServiceResponse:
+    properties:
+      apiVersion:
+        type: string
+      attributeSchema:
+        additionalProperties: true
+        type: object
+      category:
+        type: string
+      createdAt:
+        type: string
+      effectiveAt:
+        type: string
+      expireAt:
+        type: string
+      id:
+        type: integer
+      isActive:
+        type: boolean
+      isSystem:
+        type: boolean
+      lifecycleStatus:
+        description: 生命周期管理
+        enum:
+        - draft
+        - online
+        - maintenance
+        - offline
+        - scrapped
+        type: string
+      parentId:
+        type: integer
+      provider:
+        type: string
+      resourceTypeCode:
+        type: string
+      resourceTypeName:
+        type: string
+      serviceCode:
+        type: string
+      serviceName:
+        type: string
+      tenantId:
+        type: integer
+      type:
+        description: Type is optional; will be set from CIType if not provided
+        type: string
+      updatedAt:
+        type: string
+    type: object
   dto.ConvertIncidentToProblemRequest:
     properties:
       description:
@@ -1650,6 +1932,36 @@ definitions:
         type: string
     required:
     - title
+    type: object
+  dto.CreateCloudResourceRequest:
+    properties:
+      cloudAccountId:
+        type: integer
+      lifecycleState:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      region:
+        type: string
+      resourceId:
+        type: string
+      resourceName:
+        type: string
+      serviceId:
+        type: integer
+      status:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      zone:
+        type: string
+    required:
+    - cloudAccountId
+    - resourceId
+    - serviceId
     type: object
   dto.CreateGroupRequest:
     properties:
@@ -3351,6 +3663,32 @@ definitions:
         allOf:
         - $ref: '#/definitions/dto.ChangeType'
         description: 变更类型
+    type: object
+  dto.UpdateCloudResourceRequest:
+    properties:
+      cloudAccountId:
+        type: integer
+      lifecycleState:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      region:
+        type: string
+      resourceId:
+        type: string
+      resourceName:
+        type: string
+      serviceId:
+        type: integer
+      status:
+        type: string
+      tags:
+        additionalProperties:
+          type: string
+        type: object
+      zone:
+        type: string
     type: object
   dto.UpdateGroupRequest:
     properties:
@@ -6673,6 +7011,632 @@ paths:
       summary: 获取配置项统计
       tags:
       - CMDB
+  /api/v1/cmdb/cloud-accounts:
+    get:
+      description: 当前租户的云账号，是云资源页与 CI 表单的选择器数据源。刻意不分页，只返回诚实的 {items,total}。credentialRef
+        属于凭据引用，永不外露，只返回 hasCredential 布尔。
+      parameters:
+      - description: 云厂商过滤（省略=全部）
+        enum:
+        - aliyun
+        - tencent
+        - huawei
+        - aws
+        - azure
+        - onprem
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudAccountListResponse'
+              type: object
+        "400":
+          description: provider 不在六个规范值内
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云账号列表
+      tags:
+      - CMDB-云资源
+    post:
+      consumes:
+      - application/json
+      description: 租户级云账号。credentialRef 只是凭据的引用标识（不落明文密钥），写入后经校验保存，读取侧仅外露 hasCredential。provider
+        只接受六个规范值。
+      parameters:
+      - description: 云账号
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CloudAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudAccountResponse'
+              type: object
+        "400":
+          description: provider 枚举外 / 必填缺失 / credentialRef 跨租户引用
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: 缺少 cmdb write 权限
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增云账号
+      tags:
+      - CMDB-云资源
+  /api/v1/cmdb/cloud-accounts/{id}:
+    delete:
+      description: 删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。
+      parameters:
+      - description: 云账号ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云账号不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除云账号
+      tags:
+      - CMDB-云资源
+    get:
+      description: 按 tenant + id 读取。凭据引用（credentialRef）不外露，只返回 hasCredential。
+      parameters:
+      - description: 云账号ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudAccountResponse'
+              type: object
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云账号不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云账号详情
+      tags:
+      - CMDB-云资源
+    put:
+      consumes:
+      - application/json
+      description: PATCH 语义的可选字段（指针）：未传即保留原值。provider 与 accountId 不在请求体里，创建后不可改；改凭证前会先按当前租户读取账号，跨租户统一
+        404。
+      parameters:
+      - description: 云账号ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 可更新字段
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CMDBCloudAccountUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudAccountResponse'
+              type: object
+        "400":
+          description: 字段超长 / credentialRef 跨租户引用
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云账号不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新云账号
+      tags:
+      - CMDB-云资源
+  /api/v1/cmdb/cloud-resources:
+    get:
+      description: 三个云列表里唯一真分页的一个：total 来自仓储 Count，items 是当前页，page/pageSize/totalPages
+        回显生效值（缺省 1/20，pageSize 越界回落 20）。provider 走云账号边而不是资源自报表字段。
+      parameters:
+      - description: 云厂商过滤
+        enum:
+        - aliyun
+        - tencent
+        - huawei
+        - aws
+        - azure
+        - onprem
+        in: query
+        name: provider
+        type: string
+      - description: 云账号ID过滤
+        in: query
+        name: cloudAccountId
+        type: integer
+      - description: 云服务类型ID过滤
+        in: query
+        name: serviceId
+        type: integer
+      - description: Region 过滤
+        in: query
+        name: region
+        type: string
+      - description: 资源状态过滤
+        in: query
+        name: status
+        type: string
+      - description: 搜索关键词（云资源唯一ID前缀）
+        in: query
+        name: search
+        type: string
+      - description: 页码，缺省 1
+        in: query
+        name: page
+        type: integer
+      - description: 页长，缺省 20，最大 100；越界回落 20
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudResourceListResponse'
+              type: object
+        "400":
+          description: provider 枚举外 / 查询参数类型非法（含旧的 snake_case service_id）
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云资源分页列表
+      tags:
+      - CMDB-云资源
+    post:
+      consumes:
+      - application/json
+      description: cloudAccountId 与 serviceId 会先按当前租户重新加载：查不到即 404（跨租户与不存在同义，不回露差异）；两者厂商不一致是
+        400。identity 字段与 firstSeenAt/lastSeenAt 由 service 派生，请求体无法自报 tenantId。
+      parameters:
+      - description: 云资源
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCloudResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudResourceResponse'
+              type: object
+        "400":
+          description: 必填缺失 / 云账号与云服务厂商不一致
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: 缺少 cmdb write 权限
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 引用的云账号或云服务不存在/不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 登记云资源
+      tags:
+      - CMDB-云资源
+  /api/v1/cmdb/cloud-resources/{id}:
+    delete:
+      description: 删除按 tenant + id 条件执行；命中 0 行返回 404，不再对跨租户删除报成功。
+      parameters:
+      - description: 云资源ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云资源不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除云资源
+      tags:
+      - CMDB-云资源
+    get:
+      description: 按 tenant + id 读取；identity 字段（provider/partition/canonicalAccountId/identityHash
+        等）由 service 从云账号与云服务派生后外露。
+      parameters:
+      - description: 云资源ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudResourceResponse'
+              type: object
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云资源不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云资源详情
+      tags:
+      - CMDB-云资源
+    put:
+      consumes:
+      - application/json
+      description: 全量覆盖语义：缺席字段按零值写入（区分「未传/传零值」属于 PATCH 契约，尚未拍板）。identity 字段在写入前按当前租户重新解析，跨租户引用为
+        404/403。
+      parameters:
+      - description: 云资源ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 云资源
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateCloudResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudResourceResponse'
+              type: object
+        "400":
+          description: 字段类型非法 / 必填标识缺失 / 账号与云服务厂商不一致
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云资源不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新云资源
+      tags:
+      - CMDB-云资源
+  /api/v1/cmdb/cloud-services:
+    get:
+      description: 当前租户的云服务类型目录，是 CI 表单「厂商→服务→资源类型」级联选择的数据源。刻意不分页，因此只返回诚实的 {items,total}，没有
+        page/pageSize/totalPages。
+      parameters:
+      - description: 云厂商过滤（省略=全部）
+        enum:
+        - aliyun
+        - tencent
+        - huawei
+        - aws
+        - azure
+        - onprem
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudServiceListResponse'
+              type: object
+        "400":
+          description: provider 不在六个规范值内
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云服务类型列表
+      tags:
+      - CMDB-云资源
+    post:
+      consumes:
+      - application/json
+      description: 租户级云服务类型目录。provider 只接受六个规范值，别名（alibaba/alicloud/qcloud 等）属于适配器边界输入，不可写入。attributeSchema.fields
+        若非空，必须每项都带 type=select 和非空 options。
+      parameters:
+      - description: 云服务类型
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CloudServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudServiceResponse'
+              type: object
+        "400":
+          description: provider 枚举外 / 必填缺失 / attributeSchema 结构非法
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: 缺少 cmdb write 权限
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 新增云服务类型
+      tags:
+      - CMDB-云资源
+  /api/v1/cmdb/cloud-services/{id}:
+    delete:
+      description: 删除按 tenant + id 条件执行；命中 0 行不再报「删除成功」，而是 404，避免跨租户删除对外表现为成功。
+      parameters:
+      - description: 云服务类型ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云服务不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除云服务类型
+      tags:
+      - CMDB-云资源
+    get:
+      description: 按 tenant + id 读取；行不存在或属于其他租户统一返回 404，不回露存在性差异。
+      parameters:
+      - description: 云服务类型ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudServiceResponse'
+              type: object
+        "400":
+          description: id 非正整数
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云服务不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 云服务类型详情
+      tags:
+      - CMDB-云资源
+    put:
+      consumes:
+      - application/json
+      description: 全量覆盖语义：请求体沿用创建 DTO，缺席字段按零值写入。id 取自路径，tenant 取自认证上下文，body 无法自报归属。
+      parameters:
+      - description: 云服务类型ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 云服务类型
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CloudServiceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CloudServiceResponse'
+              type: object
+        "400":
+          description: provider 枚举外 / 必填缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: 租户上下文缺失
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: 云服务不存在或不属于当前租户
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新云服务类型
+      tags:
+      - CMDB-云资源
   /api/v1/cmdb/export:
     get:
       consumes:

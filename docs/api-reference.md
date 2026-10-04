@@ -1721,15 +1721,58 @@ Authorization: Bearer <accessToken>
 
 `GET /api/v1/cmdb/cloud-accounts` 与 `GET /api/v1/cmdb/cloud-services` 实测**不分页**：二者是 CI
 表单与云资源页的选择器数据源，整份返回，因此响应只有 `{items, total}` 两键，不补假的
-`page`/`pageSize`/`totalPages`。要按页读取请在 `cloud-resources` 上翻页。
+`page`/`pageSize`/`totalPages`。要按页读取请在 `cloud-resources` 上翻页。这两个端点当前是
+无上限整表读取，还没有「选择器端点」的资源上限约定（台账 E4-20b 待裁）。
+
+`provider` 的合法取值读写两侧是同一组六个规范值 `aliyun tencent huawei aws azure onprem`：
+查询侧 `omitempty,oneof=…`（省略=不过滤），写入侧 `required,oneof=…`。别名
+（alibaba/alicloud、qcloud/tencentcloud、huaweicloud、amazon、private）只在
+`service/cloud.NormalizeProvider` 的适配器边界归一化，**不是**可过滤或可写入的取值；
+拼错的厂商名现在是 400，不再静默落库、到发现阶段才表现为「没有适配器」。
 
 云账号响应只外露 `hasCredential` 布尔值，`credentialRef`（含 access key 等凭据引用）从不进入
-接口边界；创建/更新请求仍可写入该字段。三个列表的租户都只取认证上下文
-（`handlerctx.ResolveTenantID`）：缺租户上下文即 fail closed（401 / MSP 越权 403），不再用
-`c.GetInt("tenant_id")` 的 0 去查「租户 0」的数据。
+接口边界；创建/更新请求仍可写入该字段。云表面的租户一律只取认证上下文
+（`handlerctx.ResolveTenantID`）：缺租户上下文即 fail closed，不再用 `c.GetInt("tenant_id")` 的 0
+去查「租户 0」的数据。
 
-契约锁：`router/cmdb_cloud_list_route_test.go`（打在真实 `SetupRoutes` + `RequirePermission` 上，
-含跨租户收敛、凭据不外泄、信封键集、页长回落表，以及旧 `/api/v1/cloud/*` 三路径返回 404）。
+**单个资源的租户与存在性语义**
+
+```http
+GET|PUT|DELETE /api/v1/cmdb/cloud-services/{id}
+GET|PUT|DELETE /api/v1/cmdb/cloud-accounts/{id}
+GET|PUT|DELETE /api/v1/cmdb/cloud-resources/{id}
+Authorization: Bearer <accessToken>
+```
+
+- 「该行属于别的租户」与「该行真实不存在」返回**同一个** 404 / code `4004`，文案按资源固定为
+  `cloud service not found`、`cloud account not found`、`cloud resource not found`；响应不回露对方
+  租户的任何字段，因此不能靠状态码差异枚举对方的 ID。
+- `DELETE` 以 `(tenant_id, id)` 为条件并检查受影响行数：命中 0 行返回 404。此前跨租户删除返回
+  成功而对方的数据原封不动，属于假成功。
+- `PUT` 的更新语句同样带租户谓词，跨租户写入 404 且对方的行保持原值。
+- 云资源写入会校验 `cloudAccountId`/`serviceId` 指向的行属于本租户，引用他租户分别返回各自的
+  404 文案；账号与服务厂商不一致返回 400 / code `4000`
+  （`cloud account and cloud service belong to different providers`）。这与请求体绑定失败的
+  400 / code `1001` 分属两层：前者是领域校验，后者是参数校验。
+
+错误映射在 handler 边界只有一个所有者：云与发现的读取/写入端点统一走 `common.RespondError`，
+状态码与业务码由 `common.classifyError` 决定。CMDB 域内私有的 `failCMDBError`（用
+`switch appErr.Code` 复刻同一张映射表）已删除。
+
+`GET /api/v1/cmdb/capabilities` 缺租户上下文时此前返回该域自定义的 401 / `2002`
+「缺少租户认证上下文」，现与其他 CMDB 端点一致为 401 / `2001`「租户上下文缺失」。
+`/api/v1/cmdb/cloud-*` 的 15 条路由已写入 Swagger；此前注解只存在于被删除的 `handlers/cloud`，
+活表面在 Swagger 里零覆盖。
+
+已知未收口（本片只登记，不改）：`GET /api/v1/cmdb/discovery/sources` 与
+`GET /api/v1/cmdb/discovery/results` 返回裸数组、没有信封键，且后者的过滤参数绑定的是
+snake_case `job_id`，与平台 camelCase 规则不一致。
+
+契约锁：`router/cmdb_cloud_list_route_test.go`（信封键集、页长回落表、别名失效、跨租户收敛、
+凭据不外泄、旧 `/api/v1/cloud/*` 三路径 404）与 `router/cmdb_cloud_authz_route_test.go`（均打在
+真实 `SetupRoutes` + `RequirePermission` 上：缺租户上下文 401/`2001` 且响应不含任何列表载荷、
+跨租户 GET/PUT/DELETE 404/`4004` 逐资源文案、DELETE 命中 0 行不再报成功、provider 枚举覆盖三个
+列表与两个写入体、厂商矛盾 400/`4000`、合法写入后派生 identity 回填）。
 
 ## 通知接口
 

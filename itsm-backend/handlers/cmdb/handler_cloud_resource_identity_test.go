@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"itsm-backend/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,8 +31,10 @@ func TestCreateCloudResourceRejectsCrossTenantAccountAtHandlerBoundary(t *testin
 		},
 	}
 	router := gin.New()
+	// 与生产 TenantMiddleware 一致：tenant_context 是解析入口，扁平 tenant_id 只是兼容视图。
 	router.Use(func(c *gin.Context) {
 		c.Set("tenant_id", 1)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Next()
 	})
 	router.POST("/api/v1/cmdb/cloud-resources", NewHandler(NewService(repo, nil, zap.NewNop().Sugar())).CreateCloudResource)

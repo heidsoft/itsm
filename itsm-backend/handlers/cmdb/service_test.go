@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common"
+
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
@@ -20,14 +22,14 @@ type mockRepository struct {
 	listCloudServicesFn  func(ctx context.Context, tenantID int, provider string) ([]*CloudService, error)
 	getCloudServiceFn    func(ctx context.Context, tenantID int, id int) (*CloudService, error)
 	updateCloudServiceFn func(ctx context.Context, cs *CloudService) (*CloudService, error)
-	deleteCloudServiceFn func(ctx context.Context, id int, tenantID int) error
+	deleteCloudServiceFn func(ctx context.Context, id int, tenantID int) (int, error)
 
 	// Cloud accounts
 	createCloudAccountFn func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
 	listCloudAccountsFn  func(ctx context.Context, tenantID int, provider string) ([]*CloudAccount, error)
 	getCloudAccountFn    func(ctx context.Context, tenantID int, id int) (*CloudAccount, error)
 	updateCloudAccountFn func(ctx context.Context, ca *CloudAccount) (*CloudAccount, error)
-	deleteCloudAccountFn func(ctx context.Context, id int, tenantID int) error
+	deleteCloudAccountFn func(ctx context.Context, id int, tenantID int) (int, error)
 
 	// Cloud resources
 	listCloudResourcesFn        func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error)
@@ -35,7 +37,7 @@ type mockRepository struct {
 	getCloudResourceFn          func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
 	createCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
 	updateCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
-	deleteCloudResourceFn       func(ctx context.Context, id int, tenantID int) error
+	deleteCloudResourceFn       func(ctx context.Context, id int, tenantID int) (int, error)
 	listCIsForReconciliationFn  func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error)
 	getCIByCloudResourceRefIDFn func(ctx context.Context, tenantID int, cloudResourceRefID int) (*ConfigurationItem, error)
 
@@ -77,11 +79,12 @@ func (m *mockRepository) UpdateCloudService(ctx context.Context, cs *CloudServic
 	return cs, nil
 }
 
-func (m *mockRepository) DeleteCloudService(ctx context.Context, id int, tenantID int) error {
+func (m *mockRepository) DeleteCloudService(ctx context.Context, id int, tenantID int) (int, error) {
 	if m.deleteCloudServiceFn != nil {
 		return m.deleteCloudServiceFn(ctx, id, tenantID)
 	}
-	return nil
+	// 默认视为命中一行，否则「删除成功」路径会被 service 当成 not found。
+	return 1, nil
 }
 
 func (m *mockRepository) CreateCloudAccount(ctx context.Context, ca *CloudAccount) (*CloudAccount, error) {
@@ -112,11 +115,11 @@ func (m *mockRepository) UpdateCloudAccount(ctx context.Context, ca *CloudAccoun
 	return ca, nil
 }
 
-func (m *mockRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID int) error {
+func (m *mockRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID int) (int, error) {
 	if m.deleteCloudAccountFn != nil {
 		return m.deleteCloudAccountFn(ctx, id, tenantID)
 	}
-	return nil
+	return 1, nil
 }
 
 func (m *mockRepository) ListCloudResources(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
@@ -154,11 +157,11 @@ func (m *mockRepository) UpdateCloudResource(ctx context.Context, cr *CloudResou
 	return cr, nil
 }
 
-func (m *mockRepository) DeleteCloudResource(ctx context.Context, id int, tenantID int) error {
+func (m *mockRepository) DeleteCloudResource(ctx context.Context, id int, tenantID int) (int, error) {
 	if m.deleteCloudResourceFn != nil {
 		return m.deleteCloudResourceFn(ctx, id, tenantID)
 	}
-	return nil
+	return 1, nil
 }
 
 func (m *mockRepository) ListCIsForReconciliation(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
@@ -345,10 +348,10 @@ func TestService_DeleteCloudService(t *testing.T) {
 	t.Run("成功按 id+tenantID 删除", func(t *testing.T) {
 		var gotID, gotTenantID int
 		repo := &mockRepository{
-			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) error {
+			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) (int, error) {
 				gotID = id
 				gotTenantID = tenantID
-				return nil
+				return 1, nil
 			},
 		}
 		svc := newTestService(repo)
@@ -358,11 +361,27 @@ func TestService_DeleteCloudService(t *testing.T) {
 		require.Equal(t, 1, gotTenantID)
 	})
 
+	t.Run("0 行受影响必须是 not found 而不是删除成功", func(t *testing.T) {
+		// 修复前：DELETE 丢弃 Exec 的受影响行数，租户 B 删租户 A 的 ID 会返回 200/成功，
+		// 调用方以为对象已经消失，实际它还在租户 A 名下。
+		repo := &mockRepository{
+			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) (int, error) {
+				return 0, nil
+			},
+		}
+		svc := newTestService(repo)
+		err := svc.DeleteCloudService(context.Background(), 999, 2)
+		require.Error(t, err)
+		var appErr *common.AppError
+		require.True(t, errors.As(err, &appErr), "必须映射成业务错误而不是 500: %v", err)
+		require.Equal(t, common.ErrCodeNotFound, appErr.Code)
+	})
+
 	t.Run("repo 错误透传", func(t *testing.T) {
 		repoErr := errors.New("fk violation")
 		repo := &mockRepository{
-			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) error {
-				return repoErr
+			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) (int, error) {
+				return 0, repoErr
 			},
 		}
 		svc := newTestService(repo)
@@ -425,9 +444,9 @@ func TestService_CloudAccount_CRUD(t *testing.T) {
 	t.Run("Delete 按 tenantID 隔离", func(t *testing.T) {
 		var gotTenantID int
 		repo := &mockRepository{
-			deleteCloudAccountFn: func(ctx context.Context, id int, tenantID int) error {
+			deleteCloudAccountFn: func(ctx context.Context, id int, tenantID int) (int, error) {
 				gotTenantID = tenantID
-				return nil
+				return 1, nil
 			},
 		}
 		svc := newTestService(repo)
@@ -553,8 +572,8 @@ func TestService_CloudResource_CRUD(t *testing.T) {
 	t.Run("Delete 错误透传", func(t *testing.T) {
 		repoErr := errors.New("delete failed")
 		repo := &mockRepository{
-			deleteCloudResourceFn: func(ctx context.Context, id int, tenantID int) error {
-				return repoErr
+			deleteCloudResourceFn: func(ctx context.Context, id int, tenantID int) (int, error) {
+				return 0, repoErr
 			},
 		}
 		svc := newTestService(repo)

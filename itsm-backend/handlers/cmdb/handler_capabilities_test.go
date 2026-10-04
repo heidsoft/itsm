@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"itsm-backend/middleware"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,8 +35,11 @@ func TestGetCapabilitiesUsesAuthenticatedTenantAndReportsUnreadyRuntime(t *testi
 		WorkerReady:             false,
 	})
 	router := gin.New()
+	// 与生产 TenantMiddleware 一致：handler 通过 tenant_context 解析租户，
+	// 只设扁平 tenant_id 不算有认证上下文。
 	router.Use(func(c *gin.Context) {
 		c.Set("tenant_id", 42)
+		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 42})
 		c.Next()
 	})
 	router.GET("/api/v1/cmdb/capabilities", NewHandler(svc).GetCapabilities)
@@ -70,6 +75,9 @@ func TestGetCapabilitiesFailsClosedWithoutTenantContext(t *testing.T) {
 	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/cmdb/capabilities", nil))
 
 	require.Equal(t, http.StatusUnauthorized, recorder.Code)
+	// 2001 是 tenant_context 缺失的统一契约码（原先本端点自带 2002「缺少租户认证上下文」，
+	// 与其他 CMDB 端点的 fail-closed 语义不一致）。
+	assert.Contains(t, recorder.Body.String(), `"code":2001`)
 	assert.NotContains(t, recorder.Body.String(), `"code":0`)
 	assert.NotContains(t, recorder.Body.String(), "tenant ID is required")
 }
