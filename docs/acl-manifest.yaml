@@ -1,7 +1,7 @@
 version: "1.0"
 generated_at: "2026-09-04T15:08:47.168Z"
 router_version: "1.0"
-total_routes: 585
+total_routes: 576
 permission_coverage: "100.00%"
 routes:
   - method: GET
@@ -2890,60 +2890,6 @@ routes:
     menu: v1
     description: 创建
     source: router.go:1884
-  - method: GET
-    path: /api/v1/cloud/accounts/:id
-    permission: cloud_account.read
-    menu: v1
-    description: 列表
-    source: router.go:1897
-  - method: PUT
-    path: /api/v1/cloud/accounts/:id
-    permission: cloud_account.write
-    menu: v1
-    description: 更新
-    source: router.go:1898
-  - method: DELETE
-    path: /api/v1/cloud/accounts/:id
-    permission: cloud_account.delete
-    menu: v1
-    description: 删除
-    source: router.go:1899
-  - method: GET
-    path: /api/v1/cloud/services/:id
-    permission: cloud_service.read
-    menu: v1
-    description: 列表
-    source: router.go:1907
-  - method: PUT
-    path: /api/v1/cloud/services/:id
-    permission: cloud_service.write
-    menu: v1
-    description: 更新
-    source: router.go:1908
-  - method: DELETE
-    path: /api/v1/cloud/services/:id
-    permission: cloud_service.delete
-    menu: v1
-    description: 删除
-    source: router.go:1909
-  - method: GET
-    path: /api/v1/cloud/resources/:id
-    permission: cloud_resource.read
-    menu: v1
-    description: 列表
-    source: router.go:1917
-  - method: PUT
-    path: /api/v1/cloud/resources/:id
-    permission: cloud_resource.write
-    menu: v1
-    description: 更新
-    source: router.go:1918
-  - method: DELETE
-    path: /api/v1/cloud/resources/:id
-    permission: cloud_resource.delete
-    menu: v1
-    description: 删除
-    source: router.go:1919
   - method: GET
     path: /api/v1/workflows
     permission: workflow.read

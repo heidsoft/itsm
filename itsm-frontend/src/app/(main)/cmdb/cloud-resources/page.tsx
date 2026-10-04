@@ -76,31 +76,22 @@ export default function CloudResourcePage() {
     provider: filters.provider,
     serviceId: filters.serviceId,
     region: filters.region,
-    offset: (pagination.current - 1) * pagination.pageSize,
-    limit: pagination.pageSize,
+    page: pagination.current,
+    pageSize: pagination.pageSize,
   });
   const servicesQuery = useCloudServicesQuery();
 
   const provider = Form.useWatch('provider', form);
 
-  const services = servicesQuery.data ?? [];
+  const serviceItems = servicesQuery.data?.items;
+  const services = useMemo(() => serviceItems ?? [], [serviceItems]);
   const serviceMap = useMemo(() => {
     return new Map(services.map(service => [service.id, service]));
   }, [services]);
 
-  // API 返回兼容处理：可能是数组或 { items, total } 格式
-  type ApiListResponse =
-    | CloudResource[]
-    | { items?: CloudResource[]; data?: CloudResource[]; total?: number };
-  const response = resourcesQuery.data as ApiListResponse | undefined;
-  const resources = useMemo(
-    () =>
-      Array.isArray(response) ? response : response?.items || response?.data || [],
-    [response]
-  );
-  const total = Array.isArray(response)
-    ? response.length
-    : response?.total ?? resources.length;
+  // 后端信封只有一种形状：{items,total,page,pageSize,totalPages}
+  const resources = resourcesQuery.data?.items ?? [];
+  const total = resourcesQuery.data?.total ?? 0;
 
   const handleTableChange = (page: number, pageSize: number) => {
     setPagination({ current: page, pageSize });

@@ -42,7 +42,7 @@ export default function CloudAccountPage() {
 
   // React Query：云账号列表（替代手写 loadData + isMountedRef）
   const accountsQuery = useCloudAccountsQuery();
-  const data = accountsQuery.data ?? [];
+  const data = accountsQuery.data?.items ?? [];
   const loading = accountsQuery.isLoading;
 
   const [createOpen, setCreateOpen] = useState(false);

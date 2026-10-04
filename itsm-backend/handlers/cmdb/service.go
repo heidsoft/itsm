@@ -359,15 +359,21 @@ func (s *Service) DeleteCloudAccount(ctx context.Context, id int, tenantID int) 
 }
 
 // Cloud resources
-func (s *Service) ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
-	s.logger.Infow("Listing cloud resources", "tenant_id", tenantID, "provider", provider, "service_id", serviceID, "region", region)
-	result, err := s.repo.ListCloudResources(ctx, tenantID, provider, serviceID, region)
+
+// ListCloudResources 分页读取云资源，返回 (当前页, 总数)。
+//
+// page/pageSize 的唯一所有者是 HTTP 入口的 common.GetPaginationFromQuery（缺省 1/20，
+// 越界回落默认页长）；这里只再用 ValidatePagination 兜住非 HTTP 调用方，不新增第三套夹紧规则。
+// 因此响应里的 page/pageSize 由 handler 用同一份夹紧结果回显。
+func (s *Service) ListCloudResources(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error) {
+	page, pageSize = common.ValidatePagination(page, pageSize)
+	result, total, err := s.repo.ListCloudResourcesPage(ctx, tenantID, filter, page, pageSize)
 	if err != nil {
-		s.logger.Errorw("Failed to list cloud resources", "error", err, "tenant_id", tenantID, "provider", provider, "service_id", serviceID, "region", region)
-		return nil, err
+		s.logger.Errorw("Failed to list cloud resources", "error", err, "tenant_id", tenantID, "provider", filter.Provider, "service_id", filter.ServiceID, "region", filter.Region)
+		return nil, 0, err
 	}
-	s.logger.Infow("Listed cloud resources successfully", "count", len(result), "tenant_id", tenantID)
-	return result, nil
+	s.logger.Infow("Listed cloud resources successfully", "count", len(result), "total", total, "tenant_id", tenantID)
+	return result, total, nil
 }
 
 func (s *Service) GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error) {
@@ -474,7 +480,7 @@ func (s *Service) DeleteCloudResource(ctx context.Context, id int, tenantID int)
 }
 
 func (s *Service) GetReconciliation(ctx context.Context, tenantID int) (*ReconciliationResult, error) {
-	resources, err := s.repo.ListCloudResources(ctx, tenantID, "", 0, "")
+	resources, err := s.repo.ListCloudResources(ctx, tenantID, CloudResourceFilter{})
 	if err != nil {
 		return nil, err
 	}

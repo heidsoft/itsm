@@ -206,15 +206,3 @@ export const compactRecord = (record?: Record<string, unknown>) => {
   );
   return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 };
-
-export const extractCloudDataList = <T>(response: unknown): T[] => {
-  if (Array.isArray(response)) {
-    return response as T[];
-  }
-  if (response && typeof response === 'object') {
-    const record = response as Record<string, unknown>;
-    if (Array.isArray(record.items)) return record.items as T[];
-    if (Array.isArray(record.data)) return record.data as T[];
-  }
-  return [];
-};

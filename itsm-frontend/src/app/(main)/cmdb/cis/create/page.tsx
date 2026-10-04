@@ -9,7 +9,6 @@ import { useUnsavedChangesGuard } from '@/components/cmdb/useUnsavedChangesGuard
 import type { CIFormValues, SchemaField } from '@/components/cmdb/ci-editor-shared';
 import {
   compactRecord,
-  extractCloudDataList,
   normalizeSchemaFields,
   resolveEffectiveTypeSchemaFields,
 } from '@/components/cmdb/ci-editor-shared';
@@ -17,7 +16,7 @@ import { ManagementNotice, ManagementPageHeader } from '@/components/ui/Manageme
 import {
   useCITypesQuery,
   useCreateCIMutation,
-  useCloudResourcesQuery,
+  useAllCloudResourcesQuery,
   useCloudServicesQuery,
 } from '@/lib/hooks/useCMDB';
 import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
@@ -32,14 +31,12 @@ const CreateCIPage: React.FC = () => {
 
   // React Query：CI 类型、云资源、云服务（10 分钟缓存，自动重试/竞态）
   const typesQuery = useCITypesQuery();
-  const cloudResourcesQuery = useCloudResourcesQuery();
+  const cloudResourcesQuery = useAllCloudResourcesQuery();
   const cloudServicesQuery = useCloudServicesQuery();
 
   const types: CIType[] = (typesQuery.data as unknown as CIType[]) ?? [];
-  const cloudResources: CloudResource[] =
-    extractCloudDataList<CloudResource>(cloudResourcesQuery.data) ?? [];
-  const cloudServices: CloudService[] =
-    extractCloudDataList<CloudService>(cloudServicesQuery.data) ?? [];
+  const cloudResources: CloudResource[] = cloudResourcesQuery.data ?? [];
+  const cloudServices: CloudService[] = cloudServicesQuery.data?.items ?? [];
 
   const typesLoading = typesQuery.isLoading;
   const cloudLoading = cloudResourcesQuery.isLoading || cloudServicesQuery.isLoading;

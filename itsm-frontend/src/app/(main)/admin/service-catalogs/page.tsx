@@ -118,7 +118,7 @@ const ServiceCatalogManagement = () => {
           CMDBApi.getCloudServices(),
         ]);
         setCiTypes(types || []);
-        setCloudServices(services || []);
+        setCloudServices(services.items);
       } catch (error) {
         message.error('加载CMDB选项失败');
       } finally {

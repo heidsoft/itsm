@@ -84,6 +84,33 @@ export interface CMDBCapabilitiesResponse {
   items: CMDBRuntimeCapability[];
 }
 
+// 与后端 dto.ListCloudResourcesRequest + CloudResourceListResponse 逐字段一致。
+// 刻意没有 offset/limit/accountId/service_id：后端只认这份查询串。
+export interface GetCloudResourcesRequest {
+  provider?: string;
+  cloudAccountId?: number;
+  serviceId?: number;
+  region?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export type CloudResourceListResponse = PaginationResponse<CloudResource>;
+
+// 与后端 dto.CloudServiceListResponse / CloudAccountListResponse 一致：
+// 这两个端点不分页，所以契约里就没有 page/pageSize/totalPages，前端不得假造。
+export interface CloudServiceListResponse {
+  items: CloudService[];
+  total: number;
+}
+
+export interface CloudAccountListResponse {
+  items: CloudAccount[];
+  total: number;
+}
+
 const CMDB_BASE = '/api/v1/cmdb';
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
 const CIS_BASE = '/api/v1/cmdb/cis';
@@ -300,8 +327,15 @@ export class CMDBApi {
   }
 
   // ==================== Cloud ====================
+  //
+  // 云账号/云服务/云资源只有 /api/v1/cmdb/cloud-* 这一套表面。
+  // /api/v1/cloud/* 是同一用例的第二套实现（零前端调用方），2026-10-04 已删除。
+  // 云账号与云服务是 CI 表单/云资源页的选择器数据源，后端整份返回，契约只有 {items,total}；
+  // 云资源是真实分页列表，契约为 {items,total,page,pageSize,totalPages}。
 
-  static async getCloudServices(provider?: string): Promise<CloudService[]> {
+  static async getCloudServices(
+    provider?: string
+  ): Promise<CloudServiceListResponse> {
     return httpClient.get(`${CMDB_BASE}/cloud-services`, provider ? { provider } : undefined);
   }
 
@@ -320,7 +354,7 @@ export class CMDBApi {
     return httpClient.delete(`${CMDB_BASE}/cloud-services/${id}`);
   }
 
-  static async getCloudAccounts(): Promise<CloudAccount[]> {
+  static async getCloudAccounts(): Promise<CloudAccountListResponse> {
     return httpClient.get(`${CMDB_BASE}/cloud-accounts`);
   }
 
@@ -339,8 +373,26 @@ export class CMDBApi {
     return httpClient.put(`${CMDB_BASE}/cloud-accounts/${id}`, data);
   }
 
-  static async getCloudResources(params?: Record<string, unknown>): Promise<CloudResource[]> {
+  static async getCloudResources(
+    params?: GetCloudResourcesRequest
+  ): Promise<CloudResourceListResponse> {
     return httpClient.get(`${CMDB_BASE}/cloud-resources`, params);
+  }
+
+  /** 翻页读满 maxRecords 或读到末页；仪表盘这类聚合数据源不能靠放大页长取全。 */
+  static async getAllCloudResources(
+    params: Omit<GetCloudResourcesRequest, 'page' | 'pageSize'> = {},
+    maxRecords = 200,
+  ): Promise<CloudResource[]> {
+    return this.pageThrough(
+      (page, pageSize) =>
+        httpClient.get<CloudResourceListResponse>(`${CMDB_BASE}/cloud-resources`, {
+          ...params,
+          page,
+          pageSize,
+        }),
+      maxRecords,
+    );
   }
 
   // ==================== Discovery ====================

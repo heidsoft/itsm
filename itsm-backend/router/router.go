@@ -29,7 +29,6 @@ import (
 	"itsm-backend/handlers/capability"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/change_review"
-	"itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	connectorHandler "itsm-backend/handlers/connector"
@@ -191,7 +190,6 @@ type RouterConfig struct {
 	AssetHandler        *assetHandler.Handler
 	VendorHandler       *vendorHandler.Handler
 	SurveyHandler       *surveyHandler.Handler
-	CloudHandler        *cloud.Handler
 
 	// Domain Handlers
 	ServiceCatalogHandler *service_catalog.Handler
@@ -645,11 +643,6 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Surveys 客户满意度调查 ====================
 		if config.SurveyHandler != nil {
 			SetupSurveyRoutes(tenant.(*gin.RouterGroup), config.SurveyHandler)
-		}
-
-		// ==================== Cloud (云账号/云资源/云服务) ====================
-		if config.CloudHandler != nil {
-			SetupCloudRoutes(tenant.(*gin.RouterGroup), config.CloudHandler)
 		}
 
 		if config.TicketTypeHandler != nil {

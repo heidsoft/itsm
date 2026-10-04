@@ -53,8 +53,8 @@ export default function ServiceGraphRegistryPage() {
   };
 
   const discoverySources = normalizeList<Record<string, unknown>>(sourcesQuery.data);
-  const cloudServices = normalizeList<Record<string, unknown>>(servicesQuery.data);
-  const cloudAccounts = normalizeList<Record<string, unknown>>(accountsQuery.data);
+  const cloudServices = servicesQuery.data?.items ?? [];
+  const cloudAccounts = accountsQuery.data?.items ?? [];
   const discoveryHistory = normalizeList<Record<string, unknown>>(historyQuery.data);
 
   const discoveryCapability: CMDBRuntimeCapability | null =

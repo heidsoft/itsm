@@ -109,10 +109,10 @@ export const ResourceDistributionChart: React.FC = () => {
     const load = async () => {
       setLoading(true);
       try {
-        // 仅取少量样本即可用于分布展示
-        const list = await CMDBApi.getCloudResources({ limit: 200 });
+        // 分布要按厂商计数，样本必须是全量而不是第一页；页长上限 100，靠翻页读满 200 条。
+        const list = await CMDBApi.getAllCloudResources();
         if (!isMounted) return;
-        setData(aggregateByProvider(list || []));
+        setData(aggregateByProvider(list));
       } catch (error) {
         if (!isMounted) return;
         console.warn('加载云资源分布失败:', error);
@@ -181,9 +181,9 @@ export const ResourceHealthPieChart: React.FC = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const list = await CMDBApi.getCloudResources({ limit: 200 });
+        const list = await CMDBApi.getAllCloudResources();
         if (!isMounted) return;
-        setData(aggregateByStatus(list || []));
+        setData(aggregateByStatus(list));
       } catch (error) {
         if (!isMounted) return;
         console.warn('加载资源健康状态失败:', error);

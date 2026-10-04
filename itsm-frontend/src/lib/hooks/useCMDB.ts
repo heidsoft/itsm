@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIRelationshipAPI } from '@/lib/api/cmdb-relationship';
-import type { GetCIListRequest } from '@/lib/api/cmdb-api';
+import type { GetCIListRequest, GetCloudResourcesRequest } from '@/lib/api/cmdb-api';
 import type { GraphQuery, ImpactAnalysisRequest } from '@/types/cmdb';
 import type { ReconciliationResponse } from '@/types/biz/cmdb';
 
@@ -189,10 +189,23 @@ export function useTopologyGraphQuery(ciId: number, depth = 5, enabled = true) {
 }
 
 // P1-2: 云资源 / 云服务 / 云账号（CI 表单的级联选择数据源）
-export function useCloudResourcesQuery(params?: Record<string, unknown>) {
+// 返回值就是后端信封：云资源是分页页，云账号/云服务是整份的 {items,total}。
+export function useCloudResourcesQuery(params?: GetCloudResourcesRequest) {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'cloud-resources', params],
     queryFn: () => CMDBApi.getCloudResources(params),
+    staleTime: 300000,
+  });
+}
+
+/**
+ * CI 表单的云资源候选集：后端云资源列表是分页的（默认 20 条），
+ * 选择器不能只拿第一页冒充全部，所以这里翻页读满 200 条并返回扁平数组。
+ */
+export function useAllCloudResourcesQuery() {
+  return useQuery({
+    queryKey: [...CMDB_KEYS.all, 'cloud-resources', 'all'] as const,
+    queryFn: () => CMDBApi.getAllCloudResources(),
     staleTime: 300000,
   });
 }
@@ -379,6 +392,7 @@ const CMDBHooks = {
   useRunDiscoveryRuleMutation,
   useRelationshipTypesV2Query,
   useCloudResourcesQuery,
+  useAllCloudResourcesQuery,
   useCloudServicesQuery,
   useCloudAccountsQuery,
   useDiscoverySourcesQuery,

@@ -1697,6 +1697,40 @@ GET /cmdb/items/{id}/topology
 Authorization: Bearer <accessToken>
 ```
 
+### 云账号 / 云服务 / 云资源接口
+
+`/api/v1/cmdb/cloud-*` 是这三个对象的**唯一**HTTP 表面（读取需 `cmdb:read`，写入需 `cmdb:write`，
+删除需 `cmdb:delete`）。2026-10-04 实测发现 `/api/v1/cloud/accounts|services|resources` 是同一用例
+的第二套已注册实现（15 条路由、独立 handler/service、零前端调用方），已按裁决**整体删除**，
+详见 [UPGRADE.md](./UPGRADE.md) §1.22。
+
+```http
+GET /api/v1/cmdb/cloud-accounts
+GET /api/v1/cmdb/cloud-services?provider=aliyun
+GET /api/v1/cmdb/cloud-resources?provider=aliyun&serviceId=3&page=1&pageSize=20
+Authorization: Bearer <accessToken>
+```
+
+`GET /api/v1/cmdb/cloud-resources` 查询参数只有 `provider`、`cloudAccountId`、`serviceId`、
+`region`、`status`、`search`（按云资源唯一 ID 前缀匹配）加 `page`/`pageSize`。`provider` 走
+云账号边（`HasAccountWith`），不是资源自身的冗余列；`search=no-such` 之类的空结果序列化为 `[]`。
+页长与其他 CMDB 列表同源（`common.GetPaginationFromQuery`：缺省 1/20，越界回落 20 而不是夹到 100），
+`serviceId=abc` 现在是 400 / code 1001，不再被 `strconv.Atoi` 静默当成 0。响应是
+`{items, total, page, pageSize, totalPages}`，`total` 来自 `Count`，排序固定
+`updated_at DESC, id ASC`（同一次发现任务批量写入的资源更新时间相同，缺 `id` 并列键会翻页重复或漏行）。
+
+`GET /api/v1/cmdb/cloud-accounts` 与 `GET /api/v1/cmdb/cloud-services` 实测**不分页**：二者是 CI
+表单与云资源页的选择器数据源，整份返回，因此响应只有 `{items, total}` 两键，不补假的
+`page`/`pageSize`/`totalPages`。要按页读取请在 `cloud-resources` 上翻页。
+
+云账号响应只外露 `hasCredential` 布尔值，`credentialRef`（含 access key 等凭据引用）从不进入
+接口边界；创建/更新请求仍可写入该字段。三个列表的租户都只取认证上下文
+（`handlerctx.ResolveTenantID`）：缺租户上下文即 fail closed（401 / MSP 越权 403），不再用
+`c.GetInt("tenant_id")` 的 0 去查「租户 0」的数据。
+
+契约锁：`router/cmdb_cloud_list_route_test.go`（打在真实 `SetupRoutes` + `RequirePermission` 上，
+含跨租户收敛、凭据不外泄、信封键集、页长回落表，以及旧 `/api/v1/cloud/*` 三路径返回 404）。
+
 ## 通知接口
 
 ### 获取通知列表

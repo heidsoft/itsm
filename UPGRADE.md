@@ -747,6 +747,89 @@ cd itsm-backend && go test ./router/ -run 'TestTicketAssociationRoutes|TestTicke
 cd itsm-backend && go test ./tests/contract/ -run TestErrorLeakRatchet
 ```
 
+### 1.22 云账号/云服务/云资源只保留 `/api/v1/cmdb/cloud-*` 一套表面（2026-10-04，破坏性）
+
+**删除的端点**（15 条，`itsm-backend/router/cloud_routes.go` 整个文件、`itsm-backend/handlers/cloud/`
+包与 `itsm-backend/service/cloud_service.go` 一并删除）：
+
+- `GET|POST /api/v1/cloud/accounts`、`GET|PUT|DELETE /api/v1/cloud/accounts/:id`
+- `GET|POST /api/v1/cloud/services`、`GET|PUT|DELETE /api/v1/cloud/services/:id`
+- `GET|POST /api/v1/cloud/resources`、`GET|PUT|DELETE /api/v1/cloud/resources/:id`
+
+**为什么删。** 这 15 条与 `router/cmdb_routes.go` 里已注册的 `/api/v1/cmdb/cloud-accounts`、
+`/api/v1/cmdb/cloud-services`、`/api/v1/cmdb/cloud-resources`（同样 15 条、同一组
+`RequirePermission("cmdb", …)`）覆盖的是**同一个用例**，却各有独立的 handler、独立的 service、
+独立的仓储查询与独立的 DTO。AGENTS.md 规定「一个用例只能有一个业务规则所有者」，两套并存
+意味着同一个云资源列表在两条路径上有不同的租户口径、页长口径与错误口径，而调用方无从知道
+自己在用哪一套。实测引用计数：前端 `src/` 对 `/api/v1/cloud/*` **零调用**（`CMDBApi` 自始只用
+`/api/v1/cmdb/cloud-*`），`service.NewCloudService` 的构造点只有 `internal/bootstrap` 里那一条
+`CloudHandler` 装配；因此删除的是无人使用的第二套实现，不是能力。
+
+**迁移方式**（绝大多数调用只需换 URL 前缀）：
+
+| 旧 | 新 |
+| --- | --- |
+| `GET /api/v1/cloud/accounts` | `GET /api/v1/cmdb/cloud-accounts` |
+| `GET/PUT/DELETE /api/v1/cloud/accounts/:id` | `…/api/v1/cmdb/cloud-accounts/:id` |
+| `GET /api/v1/cloud/services` | `GET /api/v1/cmdb/cloud-services` |
+| `GET/PUT/DELETE /api/v1/cloud/services/:id` | `…/api/v1/cmdb/cloud-services/:id` |
+| `GET /api/v1/cloud/resources` | `GET /api/v1/cmdb/cloud-resources` |
+| `GET/PUT/DELETE /api/v1/cloud/resources/:id` | `…/api/v1/cmdb/cloud-resources/:id` |
+
+请求体的 camelCase 字段名在两套表面上一致（`provider`/`accountId`/`accountName`/
+`credentialRef`/`regionWhitelist`/`isActive`；云服务为 `serviceCode`/`serviceName`/
+`resourceTypeCode`/`resourceTypeName`/`attributeSchema`/`parentId` 等），因此写入侧不需要改字段。
+
+**响应侧的实际变化**（活表面自身被本片修掉的真缺陷，按端点列出）：
+
+| 场景 | 变更前 | 变更后 |
+| --- | --- | --- |
+| `GET /cmdb/cloud-resources` 信封 | `{items,total,page,size}`，`q.All(ctx)` 整表读取、无 `Count`、无排序 | `{items,total,page,pageSize,totalPages}`，`Count` + `updated_at DESC, id ASC` |
+| `GET /cmdb/cloud-resources` 页长 | `strconv.Atoi` 原值下传：`pageSize=0` → Ent 不加 LIMIT 返回整表，`page=-1` → 负 OFFSET，`abc` → 静默当 0 | `cmdbPagination` 单一所有者：缺省 1/20，越界或非数字回落 20 |
+| `GET /cmdb/cloud-resources` 过滤 | `service_id`（snake_case）与 `serviceId` 同时接受；`accountId` 是无人读取的幽灵参数 | 只认 `serviceId`/`cloudAccountId`；`serviceId=abc` 返回 400 / code 1001 |
+| `GET /cmdb/cloud-accounts`、`GET /cmdb/cloud-services` | 返回 `{items,total}`，但被前端当成可分页列表用 `Array.isArray ? … : items ?? data` 猜测形状 | 仍是 `{items,total}` 两键，并在文档里写明**不分页**（这两个端点是 CI 表单/云资源页的选择器数据源，整份返回）；前端的形状猜测已删除 |
+| 三个列表的租户 | `c.GetInt("tenant_id")`：缺上下文返回 **0**，于是去查「租户 0」的数据 | `handlerctx.ResolveTenantID`：缺上下文 401、MSP 越权 403，fail closed |
+| 三个列表的错误 | `common.InternalError(… + err.Error())` 把底层串透出 | `common.RespondError` / `common.ParamErrorWithErr`，原始串只进日志 |
+| 云账号响应凭据 | 已只外露 `hasCredential` | 不变，且守卫搬进路由级契约测试（响应体断言不含 `credentialRef` 与密钥明文） |
+
+**需要检查的集成方**：
+
+1. 外部脚本/Webhook 若曾调用 `/api/v1/cloud/*`，现在得到 **404**（该组路由不再注册），请改前缀。
+2. 若曾用 `?size=200` 或 `?limit=200` 一次性拉全云资源：`size`/`limit`/`offset` 都不参与分页，
+   越界页长回落 20。需要整份数据请按页翻到底（前端参考实现：`CMDBApi.getAllCloudResources
+   (params, maxRecords)`、`useAllCloudResourcesQuery`）。
+3. 若曾用 `?service_id=3` 过滤云资源：别名已删除，请改 `serviceId=3`；否则该条件被忽略并返回
+   该租户全部资源（而不是报错），这是移除别名后唯一的行为差异。
+4. 写入侧一处**校验强度差异**需如实说明：被删表面在 `provider` 上带
+   `oneof=aliyun tencent huawei aws azure onprem`，活表面的 `dto.CloudAccountRequest` /
+   `dto.CloudServiceRequest` 只有 `required`。迁移到活表面后枚举校验变弱了，已登记为台账
+   E4-20b 遗留项；本片不顺手收紧，以免让原本合法的写入突然变 400。
+
+**ACL/预检同步**：`middleware/rbac_precheck_gen.go`（`go run ./cmd/authz-gen` 重新生成，diff 为
+纯删除 15 条）与手工维护的 `middleware/precheck_fallback.go`（删除 7 条 `/api/v1/cloud*` 兜底项，
+`TestRoutePrecheckAlignment` 不会报告死兜底项，必须手删）一并收敛；`docs/acl-manifest.yaml` 与
+`itsm-backend/docs/swagger.{json,yaml}` 已重新生成，不再声明这 15 条。
+
+**防新增机制**：`itsm-backend/router/cmdb_cloud_list_route_test.go` 打在
+`SetupRoutes` → `SetupCMDBRoutes` → `RequirePermission("cmdb", …)` 的真实注册上，解码目标为
+测试本地 wire 结构（不引用 `dto`，因此修复前也能编译，证明的是运行时行为）。除信封/页长/别名/
+租户断言外还锁了两条容易被忽略的路径：租户 B 用 `provider=aliyun` 过滤必须得到 `[]` 而不是跨
+租户命中租户 A 的资源（`provider` 走云账号边），以及旧 `/api/v1/cloud/{accounts,services,
+resources}` 三路径必须真实 404。
+`tests/contract/error_leak_ratchet_test.go` 基线因此从 **418 处 / 36 个文件**收敛到
+**415 处 / 36 个文件**（`handlers/cmdb/handler.go` 5 → 2）。
+**负证明**：HEAD 实现 + 本片新夹具（`git worktree` 单独跑）修复前转红的正是这些断言——默认页长
+返回全部 25 条（整表读取）、`page=-1` 得到负偏移页、`service_id` 别名仍然生效、云资源响应缺
+`pageSize`/`totalPages` 键、旧路径 200 而非 404；修复后全绿。
+
+**验证**：
+```bash
+cd itsm-backend && go test ./router/ -run 'TestCMDBCloud'
+cd itsm-backend && go test ./handlers/cmdb/ ./dto/ ./middleware/ ./tests/contract/
+cd itsm-frontend && npm run type-check && npm run lint:antd
+cd itsm-frontend && npx jest src/lib/api/__tests__/cmdb-api.test.ts src/lib/__tests__/api-contract.test.ts
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

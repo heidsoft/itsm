@@ -42,12 +42,15 @@ var errorLeakScanDirs = []string{"handlers", "router"}
 // 若将来出现多行形态，应先扩展规则并保持基线可复现，而不是绕过棘轮。
 var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|ValidationErrorResponse|AuthFailed|Forbidden|NotFound|InternalError)[A-Za-z]*\(.*err\.Error\(\)`)
 
-// errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 418 处 / 36 个文件）。
+// errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 415 处 / 36 个文件）。
 // 前三名占了近半数：handlers/cmdb/production_service.go 73、handlers/bpmn/workflow.go 67、
 // handlers/notification/handler.go 29，收敛应从它们按文件整片推进。
 //
 // router/ticket_routes.go 原有 3 处已清零：工单关联的三个读取端点改走
 // common.RespondError，业务拒绝由 service 的 common.BusinessError 决定状态码。
+//
+// handlers/cmdb/handler.go 5→2：云账号/云服务/云资源三个列表端点改用 RespondError，
+// 查询参数绑定失败改用 ParamErrorWithErr（原始串只进日志）。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -62,7 +65,7 @@ var errorLeakBaseline = map[string]int{
 	"handlers/auditlog/handler.go":          2,
 	"handlers/auth/handler.go":              10,
 	"handlers/change/handler.go":            20,
-	"handlers/cmdb/handler.go":              5,
+	"handlers/cmdb/handler.go":              2,
 	"handlers/cmdb/production_service.go":   73,
 	"handlers/common/handler.go":            22,
 	"handlers/connector/handler.go":         10,

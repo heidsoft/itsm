@@ -233,18 +233,21 @@ describe('CMDBApi', () => {
   });
 
   describe('getCloudServices', () => {
-    it('should get cloud services', async () => {
-      mockGet.mockResolvedValue([{ id: 1, name: 'ECS' }]);
+    it('读取 {items,total} 选择器信封', async () => {
+      mockGet.mockResolvedValue({ items: [{ id: 1, serviceName: 'ECS' }], total: 1 });
       const result = await CMDBApi.getCloudServices('alibaba');
       expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-services', { provider: 'alibaba' });
+      expect(result.items).toHaveLength(1);
+      expect(result.total).toBe(1);
     });
   });
 
   describe('getCloudAccounts', () => {
-    it('should get cloud accounts', async () => {
-      mockGet.mockResolvedValue([{ id: '1', name: 'Prod Account' }]);
-      await CMDBApi.getCloudAccounts();
+    it('读取 {items,total} 选择器信封', async () => {
+      mockGet.mockResolvedValue({ items: [{ id: 1, accountName: 'Prod Account' }], total: 1 });
+      const result = await CMDBApi.getCloudAccounts();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-accounts');
+      expect(result.items).toHaveLength(1);
     });
   });
 
@@ -398,10 +401,70 @@ describe('CMDBApi', () => {
   });
 
   describe('getCloudResources', () => {
-    it('should get cloud resources', async () => {
-      mockGet.mockResolvedValue([]);
-      await CMDBApi.getCloudResources({ accountId: '1' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-resources', { accountId: '1' });
+    it('读取五键分页信封，查询参数只有契约内的 camelCase 字段', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 1, resourceId: 'i-01' }],
+        total: 25,
+        page: 1,
+        pageSize: 20,
+        totalPages: 2,
+      });
+      const result = await CMDBApi.getCloudResources({
+        provider: 'aliyun',
+        cloudAccountId: 7,
+        serviceId: 3,
+        region: 'cn-hangzhou',
+        status: 'running',
+        search: 'i-0',
+        page: 1,
+        pageSize: 20,
+      });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-resources', {
+        provider: 'aliyun',
+        cloudAccountId: 7,
+        serviceId: 3,
+        region: 'cn-hangzhou',
+        status: 'running',
+        search: 'i-0',
+        page: 1,
+        pageSize: 20,
+      });
+      expect(result.total).toBe(25);
+      expect(result.totalPages).toBe(2);
+    });
+  });
+
+  describe('getAllCloudResources', () => {
+    const resource = (id: number) => ({ id, resourceId: `i-${id}` });
+    const pageOf = (items: unknown[], page: number, total: number) => ({
+      items,
+      total,
+      page,
+      pageSize: 100,
+      totalPages: Math.ceil(total / 100),
+    });
+
+    it('按平台页长上限翻页取全，而不是把第一页当全量', async () => {
+      mockGet.mockResolvedValueOnce(
+        pageOf(Array.from({ length: 100 }, (_, i) => resource(i + 1)), 1, 150),
+      );
+      mockGet.mockResolvedValueOnce(
+        pageOf(Array.from({ length: 50 }, (_, i) => resource(101 + i)), 2, 150),
+      );
+
+      const result = await CMDBApi.getAllCloudResources({ provider: 'aliyun' }, 400);
+
+      expect(result).toHaveLength(150);
+      expect(mockGet).toHaveBeenNthCalledWith(1, '/api/v1/cmdb/cloud-resources', {
+        provider: 'aliyun',
+        page: 1,
+        pageSize: 100,
+      });
+      expect(mockGet).toHaveBeenNthCalledWith(2, '/api/v1/cmdb/cloud-resources', {
+        provider: 'aliyun',
+        page: 2,
+        pageSize: 100,
+      });
     });
   });
 
@@ -466,10 +529,11 @@ describe('CMDBApi', () => {
   });
 
   describe('getCloudServices without provider', () => {
-    it('should get all cloud services', async () => {
-      mockGet.mockResolvedValue([]);
-      await CMDBApi.getCloudServices();
+    it('不带 provider 时不发送查询参数', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0 });
+      const result = await CMDBApi.getCloudServices();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cloud-services', undefined);
+      expect(result.items).toEqual([]);
     });
   });
 

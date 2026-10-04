@@ -51,7 +51,6 @@ import (
 	bpmnHandler "itsm-backend/handlers/bpmn"
 	"itsm-backend/handlers/change"
 	"itsm-backend/handlers/change_review"
-	cloudHandler "itsm-backend/handlers/cloud"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
 	"itsm-backend/handlers/common/knowledgeaccess"
@@ -370,7 +369,6 @@ func NewApplication() *Application {
 	ticketTypeService := service.NewTicketTypeService(client, sugar)
 	ticketTagService := service.NewTicketTagService(client)
 	surveyService := service.NewSurveyService(client, sugar)
-	cloudService := service.NewCloudService(client, sugar)
 	slaTemplateService := service.NewSLATemplateService(client, sugar)
 	ticketDependencyService := service.NewTicketDependencyService(client, sugar)
 	ticketCommentService := service.NewTicketCommentService(client, sugar)
@@ -1199,7 +1197,6 @@ func NewApplication() *Application {
 		ReleaseHandler:    releaseHTTPHandler,
 		AssetHandler:      assetHTTPHandler,
 		SurveyHandler:     surveyHandler.NewHandler(surveyService, sugar),
-		CloudHandler:      cloudHandler.NewHandler(cloudService, sugar),
 
 		// Domain Handlers
 		DashboardHandler:            dashboardHandler,

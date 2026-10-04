@@ -335,55 +335,106 @@ func (r *EntRepository) DeleteCloudAccount(ctx context.Context, id int, tenantID
 }
 
 // Cloud resources
-func (r *EntRepository) ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
-	q := r.client.CloudResource.Query().Where(cloudresource.TenantID(tenantID))
-	if provider != "" {
-		q = q.Where(cloudresource.HasAccountWith(cloudaccount.Provider(provider)))
+
+// applyCloudResourceFilters 把云资源过滤条件翻成谓词。
+// 整表读取（对账）与分页读取（列表端点）共用这一份，避免同一个查询参数在两条路径上给出不同结果。
+func applyCloudResourceFilters(q *ent.CloudResourceQuery, tenantID int, f CloudResourceFilter) *ent.CloudResourceQuery {
+	q = q.Where(cloudresource.TenantID(tenantID))
+	if f.Provider != "" {
+		q = q.Where(cloudresource.HasAccountWith(cloudaccount.Provider(f.Provider)))
 	}
-	if serviceID > 0 {
-		q = q.Where(cloudresource.ServiceID(serviceID))
+	if f.CloudAccountID > 0 {
+		q = q.Where(cloudresource.CloudAccountID(f.CloudAccountID))
 	}
-	if region != "" {
-		q = q.Where(cloudresource.Region(region))
+	if f.ServiceID > 0 {
+		q = q.Where(cloudresource.ServiceID(f.ServiceID))
 	}
-	es, err := q.All(ctx)
+	if f.Region != "" {
+		q = q.Where(cloudresource.Region(f.Region))
+	}
+	if f.Status != "" {
+		q = q.Where(cloudresource.Status(f.Status))
+	}
+	if f.Search != "" {
+		q = q.Where(cloudresource.ResourceIDContains(f.Search))
+	}
+	return q
+}
+
+func toCloudResourceDomain(e *ent.CloudResource) *CloudResource {
+	var firstSeenAt *time.Time
+	if !e.FirstSeenAt.IsZero() {
+		firstSeenAt = &e.FirstSeenAt
+	}
+	var lastSeenAt *time.Time
+	if !e.LastSeenAt.IsZero() {
+		lastSeenAt = &e.LastSeenAt
+	}
+	return &CloudResource{
+		ID:              e.ID,
+		CloudAccountID:  e.CloudAccountID,
+		ServiceID:       e.ServiceID,
+		ResourceID:      e.ResourceID,
+		IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
+		CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
+		ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
+		SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
+		ResourceName:   e.ResourceName,
+		Region:         e.Region,
+		Zone:           e.Zone,
+		Status:         e.Status,
+		Tags:           e.Tags,
+		Metadata:       e.Metadata,
+		FirstSeenAt:    firstSeenAt,
+		LastSeenAt:     lastSeenAt,
+		LifecycleState: e.LifecycleState,
+		TenantID:       e.TenantID,
+		CreatedAt:      e.CreatedAt,
+		UpdatedAt:      e.UpdatedAt,
+	}
+}
+
+func (r *EntRepository) ListCloudResources(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
+	es, err := applyCloudResourceFilters(r.client.CloudResource.Query(), tenantID, filter).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 	results := make([]*CloudResource, 0, len(es))
 	for _, e := range es {
-		var firstSeenAt *time.Time
-		if !e.FirstSeenAt.IsZero() {
-			firstSeenAt = &e.FirstSeenAt
-		}
-		var lastSeenAt *time.Time
-		if !e.LastSeenAt.IsZero() {
-			lastSeenAt = &e.LastSeenAt
-		}
-		results = append(results, &CloudResource{
-			ID:              e.ID,
-			CloudAccountID:  e.CloudAccountID,
-			ServiceID:       e.ServiceID,
-			ResourceID:      e.ResourceID,
-			IdentityVersion: e.IdentityVersion, Provider: e.Provider, Partition: e.Partition,
-			CanonicalAccountID: e.CanonicalAccountID, ResourceScope: e.ResourceScope,
-			ServiceCode: e.ServiceCode, ResourceType: e.ResourceType, IdentityHash: e.IdentityHash,
-			SourceID: e.SourceID, SourceFingerprint: e.SourceFingerprint, MissingCount: e.MissingCount,
-			ResourceName:   e.ResourceName,
-			Region:         e.Region,
-			Zone:           e.Zone,
-			Status:         e.Status,
-			Tags:           e.Tags,
-			Metadata:       e.Metadata,
-			FirstSeenAt:    firstSeenAt,
-			LastSeenAt:     lastSeenAt,
-			LifecycleState: e.LifecycleState,
-			TenantID:       e.TenantID,
-			CreatedAt:      e.CreatedAt,
-			UpdatedAt:      e.UpdatedAt,
-		})
+		results = append(results, toCloudResourceDomain(e))
 	}
 	return results, nil
+}
+
+// ListCloudResourcesPage 分页读取云资源并返回 (当前页, 总数)。
+//
+// 排序固定 updated_at DESC + id ASC：只按 updated_at 排时，同一次发现任务批量写入的资源
+// 更新时间相同，数据库对并列行的顺序不保证，翻页会重复或漏行。
+func (r *EntRepository) ListCloudResourcesPage(
+	ctx context.Context,
+	tenantID int,
+	filter CloudResourceFilter,
+	page int,
+	pageSize int,
+) ([]*CloudResource, int, error) {
+	q := applyCloudResourceFilters(r.client.CloudResource.Query(), tenantID, filter)
+	total, err := q.Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	es, err := q.
+		Order(ent.Desc(cloudresource.FieldUpdatedAt), ent.Asc(cloudresource.FieldID)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	results := make([]*CloudResource, 0, len(es))
+	for _, e := range es {
+		results = append(results, toCloudResourceDomain(e))
+	}
+	return results, total, nil
 }
 
 func (r *EntRepository) GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error) {

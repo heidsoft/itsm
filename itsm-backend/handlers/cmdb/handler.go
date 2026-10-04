@@ -3,10 +3,10 @@ package cmdb
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
@@ -289,37 +289,48 @@ func (h *Handler) GetReconciliation(c *gin.Context) {
 
 // Cloud services
 func (h *Handler) ListCloudServices(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	provider := c.Query("provider")
 
 	list, err := h.svc.ListCloudServices(c.Request.Context(), tenantID, provider)
 	if err != nil {
-		common.InternalError(c, "查询云服务列表失败: "+err.Error())
+		common.RespondError(c, err, "查询云服务列表失败")
 		return
 	}
 
-	resp := make([]*dto.CloudServiceResponse, 0, len(list))
+	items := make([]*dto.CloudServiceResponse, 0, len(list))
 	for _, item := range list {
-		resp = append(resp, &dto.CloudServiceResponse{
-			ID:               item.ID,
-			ParentID:         item.ParentID,
-			Provider:         item.Provider,
-			Category:         item.Category,
-			ServiceCode:      item.ServiceCode,
-			ServiceName:      item.ServiceName,
-			ResourceTypeCode: item.ResourceTypeCode,
-			ResourceTypeName: item.ResourceTypeName,
-			APIVersion:       item.APIVersion,
-			AttributeSchema:  item.AttributeSchema,
-			IsSystem:         item.IsSystem,
-			IsActive:         item.IsActive,
-			TenantID:         item.TenantID,
-			CreatedAt:        item.CreatedAt,
-			UpdatedAt:        item.UpdatedAt,
-		})
+		items = append(items, toCloudServiceDTO(item))
 	}
 
-	common.Success(c, resp)
+	// 不分页：本端点是 CI 表单的级联选择数据源，整份返回只给诚实的 {items,total}。
+	common.Success(c, &dto.CloudServiceListResponse{Items: items, Total: len(items)})
+}
+
+func toCloudServiceDTO(item *CloudService) *dto.CloudServiceResponse {
+	if item == nil {
+		return nil
+	}
+	return &dto.CloudServiceResponse{
+		ID:               item.ID,
+		ParentID:         item.ParentID,
+		Provider:         item.Provider,
+		Category:         item.Category,
+		ServiceCode:      item.ServiceCode,
+		ServiceName:      item.ServiceName,
+		ResourceTypeCode: item.ResourceTypeCode,
+		ResourceTypeName: item.ResourceTypeName,
+		APIVersion:       item.APIVersion,
+		AttributeSchema:  item.AttributeSchema,
+		IsSystem:         item.IsSystem,
+		IsActive:         item.IsActive,
+		TenantID:         item.TenantID,
+		CreatedAt:        item.CreatedAt,
+		UpdatedAt:        item.UpdatedAt,
+	}
 }
 
 func (h *Handler) CreateCloudService(c *gin.Context) {
@@ -357,26 +368,10 @@ func (h *Handler) CreateCloudService(c *gin.Context) {
 	}
 	res, err := h.svc.CreateCloudService(c.Request.Context(), cs)
 	if err != nil {
-		common.InternalError(c, "创建云服务失败: "+err.Error())
+		common.RespondError(c, err, "创建云服务失败")
 		return
 	}
-	common.Success(c, &dto.CloudServiceResponse{
-		ID:               res.ID,
-		ParentID:         res.ParentID,
-		Provider:         res.Provider,
-		Category:         res.Category,
-		ServiceCode:      res.ServiceCode,
-		ServiceName:      res.ServiceName,
-		ResourceTypeCode: res.ResourceTypeCode,
-		ResourceTypeName: res.ResourceTypeName,
-		APIVersion:       res.APIVersion,
-		AttributeSchema:  res.AttributeSchema,
-		IsSystem:         res.IsSystem,
-		IsActive:         res.IsActive,
-		TenantID:         res.TenantID,
-		CreatedAt:        res.CreatedAt,
-		UpdatedAt:        res.UpdatedAt,
-	})
+	common.Success(c, toCloudServiceDTO(res))
 }
 
 func validateAttributeSchema(schema map[string]interface{}) error {
@@ -422,30 +417,42 @@ func validateAttributeSchema(schema map[string]interface{}) error {
 
 // Cloud accounts
 func (h *Handler) ListCloudAccounts(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
 	provider := c.Query("provider")
 
 	list, err := h.svc.ListCloudAccounts(c.Request.Context(), tenantID, provider)
 	if err != nil {
-		common.InternalError(c, "查询云账号列表失败: "+err.Error())
+		common.RespondError(c, err, "查询云账号列表失败")
 		return
 	}
-	resp := make([]*dto.CloudAccountResponse, 0, len(list))
+	items := make([]*dto.CloudAccountResponse, 0, len(list))
 	for _, item := range list {
-		resp = append(resp, &dto.CloudAccountResponse{
-			ID:              item.ID,
-			Provider:        item.Provider,
-			AccountID:       item.AccountID,
-			AccountName:     item.AccountName,
-			HasCredential:   item.CredentialRef != "",
-			RegionWhitelist: item.RegionWhitelist,
-			IsActive:        item.IsActive,
-			TenantID:        item.TenantID,
-			CreatedAt:       item.CreatedAt,
-			UpdatedAt:       item.UpdatedAt,
-		})
+		items = append(items, toCloudAccountDTO(item))
 	}
-	common.Success(c, resp)
+	// 不分页：本端点是 CI 表单/云资源页的云账号选择器数据源，整份返回。
+	// credentialRef 只以 hasCredential 布尔外露，凭据引用本身不出接口边界。
+	common.Success(c, &dto.CloudAccountListResponse{Items: items, Total: len(items)})
+}
+
+func toCloudAccountDTO(item *CloudAccount) *dto.CloudAccountResponse {
+	if item == nil {
+		return nil
+	}
+	return &dto.CloudAccountResponse{
+		ID:              item.ID,
+		Provider:        item.Provider,
+		AccountID:       item.AccountID,
+		AccountName:     item.AccountName,
+		HasCredential:   item.CredentialRef != "",
+		RegionWhitelist: item.RegionWhitelist,
+		IsActive:        item.IsActive,
+		TenantID:        item.TenantID,
+		CreatedAt:       item.CreatedAt,
+		UpdatedAt:       item.UpdatedAt,
+	}
 }
 
 func (h *Handler) CreateCloudAccount(c *gin.Context) {
@@ -477,42 +484,48 @@ func (h *Handler) CreateCloudAccount(c *gin.Context) {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
-	common.Success(c, &dto.CloudAccountResponse{
-		ID:              res.ID,
-		Provider:        res.Provider,
-		AccountID:       res.AccountID,
-		AccountName:     res.AccountName,
-		HasCredential:   res.CredentialRef != "",
-		RegionWhitelist: res.RegionWhitelist,
-		IsActive:        res.IsActive,
-		TenantID:        res.TenantID,
-		CreatedAt:       res.CreatedAt,
-		UpdatedAt:       res.UpdatedAt,
-	})
+	common.Success(c, toCloudAccountDTO(res))
 }
 
 // Cloud resources
 func (h *Handler) ListCloudResources(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-	provider := c.Query("provider")
-	// Bug 修复：使用 camelCase serviceId 保持与 API 字段命名约定一致（AGENTS.md）。
-	// 同时兼容旧的 snake_case service_id 查询参数，避免破坏现有调用方。
-	serviceID, _ := strconv.Atoi(c.Query("serviceId"))
-	if serviceID == 0 {
-		serviceID, _ = strconv.Atoi(c.Query("service_id"))
-	}
-	region := c.Query("region")
-
-	list, err := h.svc.ListCloudResources(c.Request.Context(), tenantID, provider, serviceID, region)
-	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
 		return
 	}
-	resp := make([]*dto.CloudResourceResponse, 0, len(list))
-	for _, item := range list {
-		resp = append(resp, toCloudResourceDTO(item))
+
+	// service_id 别名已删除：snake_case 查询参数属于旧 /api/v1/cloud/* 表面的契约，
+	// 静默接受它会让两套命名继续共存。写错 serviceId 现在是 400，不再是解析失败当 0。
+	var req dto.ListCloudResourcesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
 	}
-	common.Success(c, resp)
+
+	page, pageSize := cmdbPagination(c)
+	list, total, err := h.svc.ListCloudResources(c.Request.Context(), tenantID, CloudResourceFilter{
+		Provider:       req.Provider,
+		CloudAccountID: req.CloudAccountID,
+		ServiceID:      req.ServiceID,
+		Region:         req.Region,
+		Status:         req.Status,
+		Search:         req.Search,
+	}, page, pageSize)
+	if err != nil {
+		common.RespondError(c, err, "查询云资源列表失败")
+		return
+	}
+	items := make([]*dto.CloudResourceResponse, 0, len(list))
+	for _, item := range list {
+		items = append(items, toCloudResourceDTO(item))
+	}
+	common.Success(c, &dto.CloudResourceListResponse{
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: (total + pageSize - 1) / pageSize,
+	})
 }
 
 // GetCloudService handles GET /api/v1/cmdb/cloud-services/:id

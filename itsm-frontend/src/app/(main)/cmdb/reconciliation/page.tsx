@@ -45,7 +45,7 @@ export default function ReconciliationPage() {
   const orphanCIs = reconQuery.data?.orphanCIs ?? [];
   const unlinkedCIs = reconQuery.data?.unlinkedCIs ?? [];
 
-  const services = servicesQuery.data ?? [];
+  const services = servicesQuery.data?.items ?? [];
   const serviceMap = useMemo(() => new Map(services.map(item => [item.id, item])), [services]);
 
   const [bindOpen, setBindOpen] = useState(false);

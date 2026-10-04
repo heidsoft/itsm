@@ -117,7 +117,7 @@ export default function ServiceCatalogPage() {
           CMDBApi.getCloudServices(),
         ]);
         setCiTypes(types || []);
-        setCloudServices(services || []);
+        setCloudServices(services.items);
       } catch (error) {
         message.error(t('common.getFailed'));
       } finally {

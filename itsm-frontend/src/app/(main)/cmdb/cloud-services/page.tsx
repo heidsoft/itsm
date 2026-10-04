@@ -44,7 +44,8 @@ export default function CloudServicePage() {
   // React Query：云服务目录（provider 进 queryKey，切换自动重取）
   const [providerFilter, setProviderFilter] = useState<string | undefined>(undefined);
   const servicesQuery = useCloudServicesQuery(providerFilter);
-  const data = useMemo(() => servicesQuery.data ?? [], [servicesQuery.data]);
+  const serviceItems = servicesQuery.data?.items;
+  const data = useMemo(() => serviceItems ?? [], [serviceItems]);
   const loading = servicesQuery.isLoading;
 
   const serviceMap = useMemo(() => {

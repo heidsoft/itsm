@@ -30,7 +30,8 @@ type mockRepository struct {
 	deleteCloudAccountFn func(ctx context.Context, id int, tenantID int) error
 
 	// Cloud resources
-	listCloudResourcesFn        func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error)
+	listCloudResourcesFn        func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error)
+	listCloudResourcesPageFn    func(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error)
 	getCloudResourceFn          func(ctx context.Context, tenantID int, id int) (*CloudResource, error)
 	createCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
 	updateCloudResourceFn       func(ctx context.Context, cr *CloudResource) (*CloudResource, error)
@@ -118,11 +119,18 @@ func (m *mockRepository) DeleteCloudAccount(ctx context.Context, id int, tenantI
 	return nil
 }
 
-func (m *mockRepository) ListCloudResources(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+func (m *mockRepository) ListCloudResources(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 	if m.listCloudResourcesFn != nil {
-		return m.listCloudResourcesFn(ctx, tenantID, provider, serviceID, region)
+		return m.listCloudResourcesFn(ctx, tenantID, filter)
 	}
 	return nil, nil
+}
+
+func (m *mockRepository) ListCloudResourcesPage(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error) {
+	if m.listCloudResourcesPageFn != nil {
+		return m.listCloudResourcesPageFn(ctx, tenantID, filter, page, pageSize)
+	}
+	return nil, 0, nil
 }
 
 func (m *mockRepository) GetCloudResource(ctx context.Context, tenantID int, id int) (*CloudResource, error) {
@@ -429,27 +437,55 @@ func TestService_CloudAccount_CRUD(t *testing.T) {
 }
 
 func TestService_CloudResource_CRUD(t *testing.T) {
-	t.Run("List 透传过滤参数", func(t *testing.T) {
+	t.Run("List 透传过滤参数与页长", func(t *testing.T) {
 		vars := struct {
-			tenantID, providerLen, serviceID, regionLen int
+			tenantID, serviceID, page, pageSize int
+			provider, region, status, search    string
+			total                               int
 		}{}
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesPageFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error) {
 				vars.tenantID = tenantID
-				vars.providerLen = len(provider)
-				vars.serviceID = serviceID
-				vars.regionLen = len(region)
-				return []*CloudResource{{ID: 1}}, nil
+				vars.provider = filter.Provider
+				vars.serviceID = filter.ServiceID
+				vars.region = filter.Region
+				vars.status = filter.Status
+				vars.search = filter.Search
+				vars.page = page
+				vars.pageSize = pageSize
+				return []*CloudResource{{ID: 1}}, 7, nil
 			},
 		}
 		svc := newTestService(repo)
-		got, err := svc.ListCloudResources(context.Background(), 5, "alibaba", 11, "cn-hangzhou")
+		got, total, err := svc.ListCloudResources(context.Background(), 5, CloudResourceFilter{
+			Provider: "aliyun", ServiceID: 11, Region: "cn-hangzhou", Status: "running", Search: "i-",
+		}, 2, 20)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
+		require.Equal(t, 7, total)
 		require.Equal(t, 5, vars.tenantID)
-		require.Equal(t, len("alibaba"), vars.providerLen)
+		require.Equal(t, "aliyun", vars.provider)
 		require.Equal(t, 11, vars.serviceID)
-		require.Equal(t, len("cn-hangzhou"), vars.regionLen)
+		require.Equal(t, "cn-hangzhou", vars.region)
+		require.Equal(t, "running", vars.status)
+		require.Equal(t, "i-", vars.search)
+		require.Equal(t, 2, vars.page)
+		require.Equal(t, 20, vars.pageSize)
+	})
+
+	t.Run("非 HTTP 调用方的越界页长被兜住", func(t *testing.T) {
+		var gotPage, gotPageSize int
+		repo := &mockRepository{
+			listCloudResourcesPageFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter, page int, pageSize int) ([]*CloudResource, int, error) {
+				gotPage, gotPageSize = page, pageSize
+				return nil, 0, nil
+			},
+		}
+		svc := newTestService(repo)
+		_, _, err := svc.ListCloudResources(context.Background(), 5, CloudResourceFilter{}, 0, 5000)
+		require.NoError(t, err)
+		require.Equal(t, 1, gotPage)
+		require.Equal(t, 100, gotPageSize)
 	})
 
 	t.Run("Create 生成稳定身份", func(t *testing.T) {
@@ -530,7 +566,7 @@ func TestService_CloudResource_CRUD(t *testing.T) {
 func TestService_GetReconciliation(t *testing.T) {
 	t.Run("空数据", func(t *testing.T) {
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return nil, nil
 			},
 			listCIsForReconciliationFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
@@ -552,7 +588,7 @@ func TestService_GetReconciliation(t *testing.T) {
 
 	t.Run("全部已绑定", func(t *testing.T) {
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return []*CloudResource{
 					{ID: 100, TenantID: 1},
 					{ID: 101, TenantID: 1},
@@ -577,7 +613,7 @@ func TestService_GetReconciliation(t *testing.T) {
 
 	t.Run("unboundResources: CI 未引用的资源", func(t *testing.T) {
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return []*CloudResource{
 					{ID: 200, TenantID: 1},
 					{ID: 201, TenantID: 1},
@@ -601,7 +637,7 @@ func TestService_GetReconciliation(t *testing.T) {
 
 	t.Run("orphanCIs: CI 引用了不存在的资源", func(t *testing.T) {
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return []*CloudResource{{ID: 300, TenantID: 1}}, nil
 			},
 			listCIsForReconciliationFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
@@ -622,7 +658,7 @@ func TestService_GetReconciliation(t *testing.T) {
 
 	t.Run("unlinkedCIs: CI 有 CloudResourceID 但未关联 CloudResourceRefID", func(t *testing.T) {
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return nil, nil
 			},
 			listCIsForReconciliationFn: func(ctx context.Context, tenantID int) ([]*ConfigurationItem, error) {
@@ -642,7 +678,7 @@ func TestService_GetReconciliation(t *testing.T) {
 	t.Run("混合场景", func(t *testing.T) {
 		now := time.Now()
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return []*CloudResource{
 					{ID: 500, TenantID: 1, FirstSeenAt: &now},
 					{ID: 501, TenantID: 1, FirstSeenAt: &now},
@@ -672,7 +708,7 @@ func TestService_GetReconciliation(t *testing.T) {
 	t.Run("ListCloudResources 错误透传", func(t *testing.T) {
 		repoErr := errors.New("resources query failed")
 		repo := &mockRepository{
-			listCloudResourcesFn: func(ctx context.Context, tenantID int, provider string, serviceID int, region string) ([]*CloudResource, error) {
+			listCloudResourcesFn: func(ctx context.Context, tenantID int, filter CloudResourceFilter) ([]*CloudResource, error) {
 				return nil, repoErr
 			},
 		}
