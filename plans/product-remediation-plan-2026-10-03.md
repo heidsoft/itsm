@@ -203,6 +203,8 @@ AGENTS.md 的 Documentation Sync Discipline 是强制的，本轮欠账：
 
 ### N4　P0-2 走"扩权"还是"收权"？（阻塞 R2-c，不阻塞 R2-a/b/d）
 
+> **状态（2026-10-05）：已拍板 = 扩权（选项 A），已落地。** 按上表差集补齐 `authz.BuiltinRolePermissionCodes()`：manager +26、agent +7、end_user +16；agent 的 `alert`/`alerts` 拼写漂移按"路由预检零条 `alerts:*` 声明"收敛为仅授 `alert:read`。R2-a 守卫 `t.Skipf` 同批退役，替换为扩权回归锁 + 单一真源锁。行为契约见 UPGRADE.md §1.31。实测：`go test ./internal/authz/ ./middleware/ ./handlers/auth/ ./handlers/common/` 绿；`pkg/seeder`/`tests/parity` 在主工作区因他域在途 `seeder.go` 语法错误无法编译，已在基于 HEAD 的临时干净 worktree 中仅叠加本批文件实测绿（`go test ./pkg/seeder/ ./tests/parity/ ./internal/authz/ -count=1`）。提交：`e367ce3a`（扩权）、`9f1c3ae1`（守卫与兜底切换）。
+
 实测事实：`sysadmin` 在 DB 播种里比硬编码权威**少 28 个码**，其中 `dashboard:read` **只有 `admin` 一个角色持有**，而该码在 89 条路由的预检映射里被强制（`middleware/rbac_precheck_gen.go`，Resource/Action 分开存，所以字面 grep `"system_config:read"` 会返回假零）。
 
 | 选项 | 含义 | 代价 |
@@ -231,6 +233,8 @@ AGENTS.md 的 Documentation Sync Discipline 是强制的，本轮欠账：
 
 ### N5　`middleware.RolePermissions` 这份硬编码权威最终留不留？
 
+> **状态（2026-10-05）：已拍板 = 移除，已落地（形态为"兜底回退 authz 单一真源"，介于 B/C 之间偏 C 的派生思路）。** 表已删除；新增 `authz.RolePermissionDefaults()`：内置角色直接派生自 `BuiltinRolePermissionCodes()`（播种与兜底同源），`super_admin` 保留 `*:*` 旁路口径，`sysadmin` 收敛为枚举码集，legacy `security` 与 `msp_*` 五个运行时角色默认集显式列出。消费点全部切换：`loadPermissionsByMode` 四模式、smart_permission L4、menu_service、auth `/auth/me` permissions、handlers/common。守卫新增「兜底默认 ⊆ DB 码集」单一真源锁。提交：`9f1c3ae1`。
+
 它是双权威问题的根因。批次 1–5 已经做到"路由声明成为权限单一真源"（预检映射由 `cmd/authz-gen` 从声明 AST 生成）。顺着这条路，`RolePermissions` 的终局应当是：
 
 | 选项 | 含义 |
@@ -240,6 +244,8 @@ AGENTS.md 的 Documentation Sync Discipline 是强制的，本轮欠账：
 | **C：由 `authz.Definitions()` codegen 生成 `RolePermissions`** | 单一真源 + 保留兜底；需要处理 `*:*` 通配与 129/160 枚举的表达差异 |
 
 ### N6　`src/app/agent-ops-demo/page.tsx` 留不留？
+
+> **状态（2026-10-05）：已拍板 = 删（选项 A），已落地。** 目录 `itsm-frontend/src/app/agent-ops-demo/`（page.tsx + prototype.module.css）经 `git rm` 移除；全仓无生产代码引用（仅历史评审文档与 `.next` 生成物，后者随构建再生成）；`npm run type-check` 绿。v1.7 如需演示资产，基于真实 AI 审计/评测链路重做。提交：`a2f559c5`。
 
 216 行、102 条长中文文案、硬编码 evidence（"checkout-api P95 延迟超过 2.5s"、"匹配 INC-2025-0817，相似度 92%"）与 guardrails（"SRE Copilot · on behalf of 刘洋"、"风险等级 L3 · 必须人工批准"、"单次授权 · 10 分钟"），整个"批准 → 执行"流程是 `useState`，"执行成功 连接池已恢复"是一个 `useMemo` 字符串。**不在菜单，但是存活的生产路由。**
 

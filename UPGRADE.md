@@ -1241,6 +1241,36 @@ cd itsm-backend && go test ./handlers/sla/ ./handlers/skill/ ./handlers/workbenc
 `handlers/skill/handler_test.go` 与 `handlers/workbench/handler_test.go` 各新增页长回落例；
 `tests/contract/page_size_owner_ratchet_test.go` 基线同批 17→11 行。
 
+### 1.31 内置角色权限码集扩权 + 移除双权威硬编码兜底表（2026-10-05，N4/N5 拍板）
+
+`plans/product-remediation-plan-2026-10-03.md` §3 N4（选"扩权"）与 N5（选"移除"）落地。
+
+**变更内容**
+
+1. **N4 扩权**：`authz.BuiltinRolePermissionCodes()` 按 R2-a 实测差集补齐
+   `manager`（26 码，含 `dashboard:read`/`release:*`/`group:*`/`org:*` 等经理全域视角）、
+   `agent`（7 码：`notification:write`、`dashboard:read`、`service_catalog:read`、
+   `change:write`、`alert:read`、`group:read`、`bpmn:read`）、
+   `end_user`（16 码，ITIL 读面 + 仪表盘/通知/AI 基线）。播种契约为「只增不减」，
+   存量库下次启动自动补齐 `role_permissions` 行，无需手工 SQL。
+2. **N5 双权威移除**：`middleware.RolePermissions` 硬编码表删除。DBOnly `unconfigured`
+   兜底、`HardcodeOnly`/`Merge`/`Fallback` 模式、菜单构建与 `/auth/me` permissions 展示面
+   统一改为 `authz.RolePermissionDefaults()`——内置角色直接派生自播种码集本身，
+   兜底与播种结构性同源，不可能再漂移。
+3. **拼写收敛**：`agent` 不再授予 `alerts:read`（路由预检实测零条 `alerts:*` 声明，
+   统一为 `alert:read`）。`security`（legacy users.role 存量值）与 `msp_*` 五个运行时
+   角色的默认集在 authz 侧显式保留，行为不变。
+
+**行为变化与升级检查**
+
+- `/auth/me` 与菜单可见性中，manager/agent/end_user 的权限码数组将按扩权结果变多；
+  依赖 permissions 数组做按钮门控的前端定制逻辑需回归验证（本项目前端按后端返回渲染，预期无需改动）。
+- `sysadmin` 在 `unconfigured` 兜底态的授权从 `*:*` 通配收敛为枚举码集（与 `configured`
+  态 DB 实际授权一致）。全新安装若 RBAC 播种失败，sysadmin 不再自动获得码空间之外的能力——
+  属预期收紧；播种失败应看启动日志 `seedRolePermissions` 告警。
+- 守卫变化：`pkg/seeder/role_permission_guard_test.go` 的 R2-a `t.Skipf` 待拍板档退役，
+  替换为「N4 扩权回归锁」+「单一真源锁」（兜底默认 ⊆ DB 码集，双权威回潮即 CI 红）。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
