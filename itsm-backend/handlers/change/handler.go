@@ -93,7 +93,7 @@ func toDTO(c *Change) *dto.ChangeResponse {
 func (h *Handler) CreateChange(c *gin.Context) {
 	var req dto.CreateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 
@@ -127,7 +127,7 @@ func (h *Handler) CreateChange(c *gin.Context) {
 
 	res, err := h.svc.CreateChange(c.Request.Context(), changeEntity)
 	if err != nil {
-		common.InternalError(c, "创建变更失败: "+err.Error())
+		common.RespondError(c, err, "创建变更失败")
 		return
 	}
 
@@ -186,7 +186,7 @@ func (h *Handler) GetApprovalSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetApprovalSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, "获取审批摘要失败: "+err.Error())
+		common.RespondError(c, err, "获取审批摘要失败")
 		return
 	}
 
@@ -216,7 +216,7 @@ func (h *Handler) GetRiskAssessment(c *gin.Context) {
 
 	ra, err := h.svc.GetRisk(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, "获取风险评估失败: "+err.Error())
+		common.RespondError(c, err, "获取风险评估失败")
 		return
 	}
 
@@ -261,7 +261,7 @@ func (h *Handler) UpdateRisk(c *gin.Context) {
 	}
 	var req dto.ChangeRiskAssessment
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 	if req.RiskLevel != dto.ChangeRiskLow &&
@@ -286,7 +286,7 @@ func (h *Handler) UpdateRisk(c *gin.Context) {
 		RiskReviewDate:     req.RiskReviewDate,
 	})
 	if err != nil {
-		common.InternalError(c, "更新风险评估失败: "+err.Error())
+		common.RespondError(c, err, "更新风险评估失败")
 		return
 	}
 	common.Success(c, dto.ChangeRiskAssessment{
@@ -328,7 +328,7 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 
 	summary, err := h.svc.GetCMDBImpactSummary(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, "获取CMDB影响摘要失败: "+err.Error())
+		common.RespondError(c, err, "获取CMDB影响摘要失败")
 		return
 	}
 
@@ -370,7 +370,7 @@ func (h *Handler) ListChanges(c *gin.Context) {
 
 	list, total, err := h.svc.ListChanges(c.Request.Context(), tenantID, pg.Page, pg.PageSize, status, search, riskLevel, currentUserID, currentRole)
 	if err != nil {
-		common.InternalError(c, "查询变更列表失败: "+err.Error())
+		common.RespondError(c, err, "查询变更列表失败")
 		return
 	}
 
@@ -413,7 +413,7 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 	var req dto.UpdateChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 
@@ -501,7 +501,7 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 
 	var req dto.CreateChangeApprovalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 	req.ChangeID = changeID
@@ -514,7 +514,7 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 
 	res, err := h.svc.SubmitApproval(c.Request.Context(), record, tenantID)
 	if err != nil {
-		common.InternalError(c, "提交审批失败: "+err.Error())
+		common.RespondError(c, err, "提交审批失败")
 		return
 	}
 
@@ -552,7 +552,7 @@ func (h *Handler) SubmitChange(c *gin.Context) {
 
 	var req dto.SubmitChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil && err != io.EOF {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 
@@ -584,7 +584,7 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 	res, err := h.svc.GetStats(c.Request.Context(), tenantID)
 	if err != nil {
-		common.InternalError(c, "获取统计信息失败: "+err.Error())
+		common.RespondError(c, err, "获取统计信息失败")
 		return
 	}
 	// Map domain stats -> DTO so the response shape stays governed by dto.ChangeStatsResponse
@@ -694,15 +694,15 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification):
 			common.Conflict(c, err.Error(), nil)
 		case errors.Is(err, ErrNotApprover):
-			common.Fail(c, common.ForbiddenCode, err.Error())
+			common.Fail(c, common.ForbiddenCode, "您不是该变更的待办审批人")
 		// P1-DataScope #27：行级守卫返回 403 AppError，必须语义分流
 		//（否则掉入 default 被吞成 500——错误映射铁律）。
 		case isForbiddenAppErr(err):
-			common.Fail(c, common.ForbiddenCode, err.Error())
+			common.FailWithErr(c, err, "操作失败")
 		case errors.Is(err, ErrChangeNotFound):
 			common.Fail(c, common.NotFoundCode, "变更不存在")
 		default:
-			common.InternalError(c, "状态转换失败: "+err.Error())
+			common.RespondError(c, err, "状态转换失败")
 		}
 		return
 	}
@@ -784,7 +784,7 @@ func (h *Handler) GetApprovals(c *gin.Context) {
 	}
 	history, err := h.svc.GetApprovalHistory(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.InternalError(c, "获取审批历史失败: "+err.Error())
+		common.RespondError(c, err, "获取审批历史失败")
 		return
 	}
 	common.Success(c, history)
@@ -838,7 +838,7 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 func (h *Handler) GetCalendar(c *gin.Context) {
 	var req dto.ChangeCalendarRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		common.ParamError(c, "Invalid query parameters: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid query parameters")
 		return
 	}
 
@@ -890,7 +890,7 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 
 	var req dto.CreateChangePIRRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 	req.ChangeID = changeID
@@ -1003,7 +1003,7 @@ func (h *Handler) UpdatePIR(c *gin.Context) {
 
 	var req dto.UpdateChangePIRRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "Invalid request body: "+err.Error())
+		common.ParamErrorWithErr(c, err, "Invalid request body")
 		return
 	}
 
