@@ -126,6 +126,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"user:read", "team:read", "department:read",
 			"asset:read", "cmdb:read",
 			"notification:read", "ai:read",
+			// 2026-10-05 N4 拍板扩权：补 R2-a 实测差集中坐席工作流所需 7 码。
+			// alert 拼写收敛口径：路由声明仅使用 alert 资源（rbac_precheck_gen 实测零条
+			// alerts:* 声明），原 middleware 的 alerts:read 属兜底表内部漂移，不再授予。
+			"notification:write", "dashboard:read", "service_catalog:read",
+			"change:write", "alert:read", "group:read", "bpmn:read",
 		},
 		// 二线支持工程师
 		"l2_support": {
@@ -176,12 +181,24 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"system:read", "user:read", "role:read", "report:read",
 		},
 		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
+		// 2026-10-05 N4 拍板扩权：补齐 plans/product-remediation-plan-2026-10-03.md §3
+		// R2-a 实测差集 26 对（原 middleware.RolePermissions["manager"] 独有码）。
 		"manager": {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
 			"problem:read", "change:read", "report:read",
 			"user:read", "department:read", "team:read",
 			"knowledge:read",
 			"service_request:read", "service_request:write", "service_request:approve",
+			// N4 扩权（26）：工单操作与全域读、经理视角聚合
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"notification:read", "notification:write",
+			"incident:write", "dashboard:read", "cmdb:read",
+			"service_catalog:read", "sla:read", "bpmn:read",
+			"release:read", "release:write",
+			"asset:read", "asset:write", "license:read", "license:write",
+			"group:read", "group:write", "org:read", "org:write",
+			"project:read", "project:write",
+			"application:read", "application:write", "ai:read",
 		},
 		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）
 		"it_admin": {
@@ -205,17 +222,24 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"user:read", "knowledge:read",
 		},
 		// 普通用户：可提交和维护自己的工单/服务请求
+		// 2026-10-05 N4 拍板扩权：补 R2-a 实测差集 16 对，以只读可见性为主
+		// （ITIL 读面 + 仪表盘/通知/AI 基线能力）。
 		"end_user": {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read", "user:read",
+			"notification:write", "dashboard:read", "ai:read", "ai:write",
+			"sla:read", "system_config:read", "org:read", "department:read",
+			"cmdb:read", "incident:read", "change:read", "problem:read",
+			"bpmn:read", "release:read", "asset:read", "license:read",
 		},
 		// 访客
 		"guest": {
 			"knowledge:read",
 		},
-		// 租户管理员（users.role=admin 对齐；与 middleware.RolePermissions["admin"] 91 对全等，
+		// 租户管理员（users.role=admin 对齐；2026-09-17 P0 曾与 middleware admin 91 对全等，
+		// 2026-10-05 N5 后 middleware 表已删除，本条目即 admin 唯一权威源）
 		// 2026-09-17 P0：此前缺条目导致 roles 表 admin 行权限空集=DB 显式撤销，admin 用户全 403）
 		"admin": {
 			"ticket:read", "ticket:write", "ticket:delete", "ticket:admin",
@@ -256,7 +280,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"msp:read",
 			"marketplace:read", "marketplace:write",
 		},
-		// 二线技术员（users.role=technician 对齐；与 middleware.RolePermissions["technician"] 16 对全等，2026-09-17 P0 补齐）
+		// 二线技术员（users.role=technician 对齐；2026-10-05 N5 后本条目即 technician 唯一权威源，
+		// 2026-09-17 P0 曾按 middleware 兜底 16 对补齐）
 		"technician": {
 			"ticket:read", "ticket:write",
 			"notification:read",
