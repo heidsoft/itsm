@@ -93,7 +93,7 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 	}
 
 	// 信封统一为 items/total/page/pageSize/totalPages，不再返回 templates 键。
-	common.SuccessWithList(c, templates, total, page, pageSize)
+	common.SuccessWithList(c, templates, total, pg.Page, pg.PageSize)
 }
 
 func (h *Handler) GetStandardChange(c *gin.Context) {

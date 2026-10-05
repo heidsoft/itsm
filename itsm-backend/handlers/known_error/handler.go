@@ -69,7 +69,7 @@ func (h *Handler) ListKnownErrors(c *gin.Context) {
 		dtos = append(dtos, *h.toResponse(item))
 	}
 
-	common.SuccessWithList(c, dtos, total, page, pageSize)
+	common.SuccessWithList(c, dtos, total, pg.Page, pg.PageSize)
 }
 
 func (h *Handler) GetKnownError(c *gin.Context) {
@@ -261,7 +261,7 @@ func (h *Handler) SearchKnownErrors(c *gin.Context) {
 		dtos = append(dtos, *h.toResponse(item))
 	}
 
-	common.SuccessWithList(c, dtos, total, page, pageSize)
+	common.SuccessWithList(c, dtos, total, pg.Page, pg.PageSize)
 }
 
 func (h *Handler) GetCategories(c *gin.Context) {

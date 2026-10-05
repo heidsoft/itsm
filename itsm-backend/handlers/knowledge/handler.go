@@ -1,8 +1,6 @@
 package knowledge
 
 import (
-	"strconv"
-
 	"itsm-backend/handlers/common/knowledgeaccess"
 
 	"itsm-backend/common"
