@@ -54,4 +54,23 @@ describe('listAuditLogs', () => {
     expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('resource=user'));
     expect(res).toEqual(expected);
   });
+
+  // 回归：后端 dto.ListAuditLogsResponse 用的是 items，早期前端按 logs 读取，
+  // 导致审计日志页 total 正常、表格永远为空。
+  it('should normalize backend items[] into logs[]', async () => {
+    const item = { id: 7, path: '/api/v1/tickets/7', method: 'PUT', statusCode: 200 };
+    mockGet.mockResolvedValue({ items: [item], total: 811, page: 2, pageSize: 50 });
+    const res = await listAuditLogs({ page: 2, pageSize: 50 });
+    expect(res.logs).toEqual([item]);
+    expect(res.total).toBe(811);
+    expect(res.page).toBe(2);
+    expect(res.pageSize).toBe(50);
+  });
+
+  it('should fall back to empty list when backend returns no payload', async () => {
+    mockGet.mockResolvedValue(undefined);
+    const res = await listAuditLogs({});
+    expect(res.logs).toEqual([]);
+    expect(res.total).toBe(0);
+  });
 });
