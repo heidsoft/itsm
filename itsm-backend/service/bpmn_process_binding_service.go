@@ -6,8 +6,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processbinding"
@@ -40,7 +42,12 @@ func (s *ProcessBindingService) CreateBinding(ctx context.Context, binding *dto.
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("流程定义 %s 不存在", binding.ProcessDefinitionKey)
+			// 「引用的流程定义不存在」是调用方指错了资源，属于 404 而非服务端故障。
+			// 用 AppError 承载 404 语义，common.RespondError 才能把它分流成 4004。
+			// （此前这里返回裸 fmt.Errorf，handler 只能兜底 500。）
+			return nil, common.NewAppError(common.ErrCodeNotFound,
+				fmt.Sprintf("流程定义 %s 不存在", binding.ProcessDefinitionKey),
+				http.StatusNotFound, err)
 		}
 		return nil, errors.Wrap(err, "验证流程定义失败")
 	}
