@@ -43,7 +43,7 @@ var errorLeakScanDirs = []string{"handlers", "router"}
 var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|ValidationErrorResponse|AuthFailed|Forbidden|NotFound|InternalError)[A-Za-z]*\(.*err\.Error\(\)`)
 
 // errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 413 处 / 35 个文件）。
-// 前三名占了近半数：handlers/cmdb/production_service.go 73、handlers/bpmn/workflow.go 67、
+// 前三名占了近半数：handlers/cmdb/production_service.go 73、handlers/bpmn/workflow.go 36（2026-10-05 错误净化收敛）、
 // handlers/notification/handler.go 29，收敛应从它们按文件整片推进。
 //
 // router/ticket_routes.go 原有 3 处已清零：工单关联的三个读取端点改走
@@ -58,7 +58,7 @@ var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/lint.go":                 2,
 	"handlers/bpmn/monitoring.go":           8, // E4-48：删除 audit-logs 重复表面随减 1
 	"handlers/bpmn/process_trigger.go":      22,
-	"handlers/bpmn/workflow.go":             67,
+	"handlers/bpmn/workflow.go":             36,
 	"handlers/bpmn/workflow_template.go":    3,
 	"handlers/application/handler.go":       12,
 	"handlers/approval/routes.go":           12,
