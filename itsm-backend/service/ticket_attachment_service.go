@@ -445,30 +445,48 @@ func (s *TicketAttachmentService) authorizeTicketAttachmentAccess(ctx context.Co
 func SanitizeDownloadFilename(name string) string { return sanitizeFilename(name) }
 
 // isAllowedType 检查文件类型是否允许
+//
+// 入参必须按 RFC 2045 规范化后再比对：net/http.DetectContentType 返回的是带参数的
+// 完整媒体类型（如 `text/plain; charset=utf-8`），而白名单里存的是裸类型（如 `text/plain`）。
+// 精确匹配会漏掉所有文本类附件（txt/log/csv/md），表现为"白名单里明明有 text/plain 却上传失败"。
 func (s *TicketAttachmentService) isAllowedType(mimeType string) bool {
-	if mimeType == "" {
+	normalized := normalizeMIMEType(mimeType)
+	if normalized == "" {
 		return false
 	}
 
 	// 检查精确匹配
 	for _, allowed := range s.allowedTypes {
-		if mimeType == allowed {
+		if normalized == normalizeMIMEType(allowed) {
 			return true
 		}
 	}
 
 	// 检查类型前缀（如 image/*, application/*）
-	parts := strings.Split(mimeType, "/")
+	parts := strings.SplitN(normalized, "/", 2)
 	if len(parts) == 2 {
 		typePrefix := parts[0] + "/*"
 		for _, allowed := range s.allowedTypes {
-			if allowed == typePrefix {
+			if normalizeMIMEType(allowed) == typePrefix {
 				return true
 			}
 		}
 	}
 
 	return false
+}
+
+// normalizeMIMEType 去掉媒体类型后的参数（; charset=utf-8 等），并统一小写与空白。
+func normalizeMIMEType(mimeType string) string {
+	// mime.ParseMediaType 同时完成「分号截断 + 小写化 + 去空白」，
+	// 解析失败时（例如不含 `/` 的脏值）回退到手工截取，保证不引入新的拒绝路径。
+	if parsed, _, err := mime.ParseMediaType(mimeType); err == nil && parsed != "" {
+		return parsed
+	}
+	if idx := strings.IndexByte(mimeType, ';'); idx >= 0 {
+		mimeType = mimeType[:idx]
+	}
+	return strings.ToLower(strings.TrimSpace(mimeType))
 }
 
 // sanitizeFilename cleans an upload filename for safe on-disk + header usage.
