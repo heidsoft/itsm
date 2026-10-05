@@ -29,6 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BPMN 流程审计读取收敛为单一表面（E4-48）：删除重复的 `/bpmn/monitoring/audit-logs`，唯一入口 `/bpmn/dashboard/audit-logs` 补 `bpmn:read` 权限门（此前任何已认证用户可读全量流程审计）；响应从直接序列化数据库模型改为 camelCase DTO，不再把 `tenant_id` 发给前端。`/workflow/audit` 页面「流程实例/活动/操作人/受理人」四列此前恒空，现恢复正常，前端也不再自报 `tenantId` 猜测租户归属，见 UPGRADE.md §1.29
 - 删除死路由 `/bpmn/dashboard/audit-logs/timeline`（参数名与处理器读取的键从不匹配，任何调用恒返回参数错误且无使用方）；时间线唯一入口为 `/bpmn/monitoring/instances/:id/timeline`
 
+
+- **bpmn 错误净化闭环**（0a254a22 + 593d91be + 9ff964b1）：三层修复解决"handler InternalError + err.Error() 泄漏 + service 裸 error 让 classifyError 兜底 500"：
+  1. `common/classifyError` 新增 `*ent.NotFoundError → 404` 分支，此前所有"资源不存在"全被兜底成 InternalError + 500
+  2. `bpmn_process_definition_service` 的 BPMN XML 校验失败从裸 `error` 改成 `common.NewValidationError`（classifyError → 400）
+  3. `bpmn_process_binding_service` 的定义不存在分支改成 `NewAppError(NotFoundCode, ..., 404)`
+  4. `handlers/bpmn/workflow.go` 10 处 `InternalError(ctx, msg+err.Error())` 全部改 `common.RespondError(ctx, err, msg)`，不再把原始 provider error 吐给客户端；bpmn/monitoring.go 还有 8 处同模式待收敛（见 179 处错误泄漏台账）
+- **附件 MIME 白名单精确匹配 bug**（a66a3286）：`net/http.DetectContentType` 返回 `text/plain; charset=utf-8` 这类带参数的完整媒体类型，而白名单存 `text/plain` 裸值，精确匹配导致 txt/log/csv/md 等文本附件"白名单明明有 text/plain 却上传失败"。新增 `normalizeMIMEType` 去掉 `;` 后缀 + 小写化 + 手工 fallback，白名单精确匹配和前缀匹配（`image/*`）两侧都 normalize
+- **前端 auditlog API items[] vs logs[] 消费 bug**（25d6a898）：后端 `dto.ListAuditLogsResponse` 用 `items`，但前端 `auditlog-api.ts` 按 `logs` 读，导致审计日志页"total 正常增长、表格永远为空"。新增 `RawAuditLogListResponse` 同时接受两种键名 + 返回值做 items→logs 归一化；新增 2 条回归测试（归一化 + undefined 空集兜底）
+- **connector settings 键名风格容错**（8a7920bb）：connector settings 是管理员自由录入的键值对，各 builtin connector 硬编码一种风格（有的写 `base_url`，有的写 `callbackInstanceId`），管理员写成另一种就静默失败报"not configured"。`connector.go` 新增 `SettingString(settings, key)` / `SettingInt(settings, key)`，按「原样 → snake_case → camelCase」依次尝试；dingtalk/feishu/wecom/manager/handler 5 处消费方全改；前端 Connectors 管理页必填键提示同步更新
 ### Changed
 
 - 错误泄漏棘轮基线下调：`handlers/bpmn/monitoring.go` 9→8（随 audit-logs 重复表面删除）
