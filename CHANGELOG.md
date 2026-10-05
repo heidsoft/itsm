@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **内置系统角色删除保护（B5.11 P0）**：`DeleteRole` 此前只检查 `roles.is_system` 字段，但 seeder 创建的 9 个内置角色（super_admin/admin/manager/it_admin/security_admin/sysadmin/agent/technician/end_user）从未设置 `is_system=true`，任何有角色管理权限的用户都能删掉系统角色（此前 admin 角色已被测试成功删除）。修复分三层：
+  1. `RoleSeed` 加 `IsSystem bool` 字段，`BuiltinRoles()` 全部标记 `IsSystem: true`；
+  2. `seedRoles` 创建和更新路径都调用 `SetIsSystem`，存量库下次启动自动被纠正；
+  3. service 层新增 code-based 双重保护：即使 `is_system` 字段漏设，只要 role code 命中 `domain/role.All` 内置词表，仍视为系统角色返回 409/4090，见 UPGRADE.md §1.30
+
 ### Fixed
 
 - 修复流程实例详情 404：`/api/v1/bpmn/process-instances/:id` 家族此前只有 GET 详情按数字主键寻址，暂停/恢复/终止/变量/审批历史都按 `PI-*` 业务键寻址，调用方拿列表返回的实例键回打详情必然 404（ga-gate 全链路 E2E 因此连续红）。现全家族统一以 `PI-*` 业务键寻址，数字主键不再作为寻址入口，见 UPGRADE.md §1.28

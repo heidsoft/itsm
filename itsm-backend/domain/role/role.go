@@ -11,6 +11,8 @@
 //   - users.role 单字段与 roles.code 种子表共用本词表，两处不同步视为 Bug。
 package role
 
+import "sort"
+
 // 内置角色 code（users.role 单字段值 = roles.code 种子值，单一事实源）。
 const (
 	SuperAdmin    = "super_admin"
@@ -62,4 +64,31 @@ func IsServiceRequestApprover(r string) bool {
 	default:
 		return false
 	}
+}
+
+// builtinSet 是 All 的 O(1) 查找表，IsBuiltinCode 使用。
+var builtinSet map[string]struct{}
+
+func init() {
+	builtinSet = make(map[string]struct{}, len(All))
+	for _, c := range All {
+		builtinSet[c] = struct{}{}
+	}
+}
+
+// IsBuiltinCode 判断角色 code 是否属于平台内置系统角色。
+// 内置角色受 schema.is_system + service 层双重保护，禁止删除。
+// 这是 service 层的第二道防线——即使 seed 时 IsSystem 字段漏设，
+// 只要 code 命中内置词表，仍会被阻止删除。
+func IsBuiltinCode(code string) bool {
+	_, ok := builtinSet[code]
+	return ok
+}
+
+// SortCodes 对角色 code 列表排序（稳定顺序便于测试断言与 diff）。
+func SortCodes(codes []string) []string {
+	out := make([]string, len(codes))
+	copy(out, codes)
+	sort.Strings(out)
+	return out
 }

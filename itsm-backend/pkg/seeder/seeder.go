@@ -127,6 +127,8 @@ type RoleSeed struct {
 	Name        string `json:"name"`
 	Code        string `json:"code"`
 	Description string `json:"description"`
+	// IsSystem 标记内置角色，防止被删除。schema 默认 false。
+	IsSystem bool `json:"isSystem"`
 }
 
 // GroupSeed 审批组种子。Name 是 BPMN candidateGroups / assignee_type(group)
@@ -1262,15 +1264,15 @@ func (s *Seeder) seedGroups(ctx context.Context) {
 // config.Roles（default.json）提供岗位型角色，两者按 code 去重合并，config 优先。
 func BuiltinRoles() []RoleSeed {
 	return []RoleSeed{
-		{Code: domainrole.SuperAdmin, Name: "超级管理员", Description: "全部权限，跨租户引导"},
-		{Code: domainrole.Admin, Name: "系统管理员", Description: "租户内系统管理"},
-		{Code: domainrole.Manager, Name: "部门经理", Description: "部门审批与 L1 审批人"},
-		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "IT 服务管理，L2 审批人"},
-		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "安全管理，L3 审批人"},
-		{Code: domainrole.SysAdmin, Name: "系统运维", Description: "基础设施运维"},
-		{Code: domainrole.Agent, Name: "服务台坐席", Description: "一线支持与工单处理"},
-		{Code: domainrole.Technician, Name: "技术员", Description: "二线技术处理"},
-		{Code: domainrole.EndUser, Name: "最终用户", Description: "服务请求与查看本人工单"},
+		{Code: domainrole.SuperAdmin, Name: "超级管理员", Description: "全部权限，跨租户引导", IsSystem: true},
+		{Code: domainrole.Admin, Name: "系统管理员", Description: "租户内系统管理", IsSystem: true},
+		{Code: domainrole.Manager, Name: "部门经理", Description: "部门审批与 L1 审批人", IsSystem: true},
+		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "IT 服务管理，L2 审批人", IsSystem: true},
+		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "安全管理，L3 审批人", IsSystem: true},
+		{Code: domainrole.SysAdmin, Name: "系统运维", Description: "基础设施运维", IsSystem: true},
+		{Code: domainrole.Agent, Name: "服务台坐席", Description: "一线支持与工单处理", IsSystem: true},
+		{Code: domainrole.Technician, Name: "技术员", Description: "二线技术处理", IsSystem: true},
+		{Code: domainrole.EndUser, Name: "最终用户", Description: "服务请求与查看本人工单", IsSystem: true},
 	}
 }
 
@@ -1324,6 +1326,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 			if _, err := existing.Update().
 				SetName(r.Name).
 				SetDescription(r.Description).
+				SetIsSystem(r.IsSystem).
 				Save(ctx); err != nil {
 				s.sugar.Warnw("update role failed", "error", err, "code", r.Code)
 			}
@@ -1338,6 +1341,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 			SetCode(r.Code).
 			SetDescription(r.Description).
 			SetTenantID(t.ID).
+			SetIsSystem(r.IsSystem).
 			Save(ctx); err != nil {
 			s.sugar.Warnw("seed role failed", "error", err, "name", r.Name)
 		}

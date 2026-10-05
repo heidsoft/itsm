@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
@@ -352,7 +353,15 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 	}
 
 	if roleEntity.IsSystem {
-		return fmt.Errorf("系统角色不能删除")
+		return common.NewBusinessError(common.ConflictCode, "系统角色不能删除", roleEntity.Code)
+	}
+
+	// P0 双重保护（2026-10-05 B5.11）：即使 seed 时 IsSystem 字段漏设，
+	// 只要 code 命中 domain/role 内置词表，仍视为系统角色禁止删除。
+	if domainrole.IsBuiltinCode(roleEntity.Code) {
+		s.logger.Warnw("Blocked deletion of builtin role (is_system=false but code matches)",
+			"role_id", roleEntity.ID, "role_code", roleEntity.Code, "tenant_id", tenantID)
+		return common.NewBusinessError(common.ConflictCode, "内置系统角色不能删除（请升级或联系管理员）", roleEntity.Code)
 	}
 
 	count, err := s.client.User.Query().
