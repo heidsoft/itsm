@@ -55,7 +55,8 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // production_service.go 73 已在 2026-10-05 RespondError+ParamError sweep 中清零并从此基线删除；
 // handlers/notification/handler.go 29 已在 2026-10-05 RespondError+ParamError+AuthFailed sweep 中清零并从此基线删除；
 // handlers/email_intake/handler.go 27 已在 2026-10-05 RespondError+NotFound sweep 中清零并从此基线删除；
-// handlers/change/handler.go 20 已在 2026-10-05 ParamErrorWithErr/RespondError/FailWithErr sweep 中清零并从此基线删除。
+// handlers/change/handler.go 20 已在 2026-10-05 ParamErrorWithErr/RespondError/FailWithErr sweep 中清零并从此基线删除；
+// handlers/common/handler.go 22 已在 2026-10-06 ParamErrorWithErr/RespondError/AuthFailed+logger sweep 中清零并从此基线删除。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -68,7 +69,6 @@ var errorLeakBaseline = map[string]int{
 	"handlers/approval_chain/handler.go":    2,
 	"handlers/auditlog/handler.go":          2,
 	"handlers/auth/handler.go":              10,
-	"handlers/common/handler.go":            22,
 	"handlers/connector/handler.go":         10,
 	"handlers/escalation_matrix/handler.go": 1,
 	"handlers/feishu/handler.go":            1,
