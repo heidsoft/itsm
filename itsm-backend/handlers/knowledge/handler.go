@@ -184,8 +184,7 @@ func (h *Handler) GetArticle(c *gin.Context) {
 
 // ListArticles handles GET /api/v1/knowledge-articles
 func (h *Handler) ListArticles(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	pg := common.GetPaginationFromQuery(c)
 	category := c.Query("category")
 	search := c.Query("search")
 	status := c.Query("status")
@@ -203,7 +202,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 		return
 	}
 
-	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, page, pageSize, category, search, status)
+	list, total, err := h.svc.ListArticles(c.Request.Context(), tenantID, pg.Page, pg.PageSize, category, search, status)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -216,7 +215,7 @@ func (h *Handler) ListArticles(c *gin.Context) {
 	}
 
 	// 标准信封：data.items + total/page/pageSize/totalPages
-	common.SuccessWithPagination(c, dtos, page, pageSize, int64(total))
+	common.SuccessWithPagination(c, dtos, pg.Page, pg.PageSize, int64(total))
 }
 
 // UpdateArticle handles PUT /api/v1/knowledge-articles/:id

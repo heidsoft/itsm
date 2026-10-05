@@ -35,15 +35,14 @@ func (h *ReleaseHandler) ListReleases(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	pg := common.GetPaginationFromQuery(c)
 	status := c.Query("status")
 	releaseType := c.Query("type")
 	// 行级数据权限：从鉴权中间件注入的 user_id/role 取得，下传给 service 判定 DataScope。
 	currentUserID := c.GetInt("user_id")
 	currentRole := c.GetString("role")
 
-	releases, err := h.releaseService.ListReleases(c.Request.Context(), tenantID, page, pageSize, status, releaseType, currentUserID, currentRole)
+	releases, err := h.releaseService.ListReleases(c.Request.Context(), tenantID, pg.Page, pg.PageSize, status, releaseType, currentUserID, currentRole)
 	if err != nil {
 		h.logger.Errorw("List releases failed", "error", err, "tenant_id", tenantID)
 		common.FailWithErr(c, err, "操作失败")

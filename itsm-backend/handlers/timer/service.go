@@ -2,7 +2,6 @@ package timer
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"itsm-backend/ent"
@@ -130,12 +129,4 @@ func toDTO(t *ent.ProcessTimer) *TimerDTO {
 		dto.LastFireAttempt = t.LastFireAttempt.Format(time.RFC3339)
 	}
 	return dto
-}
-
-func parseIntParam(value string, fallback int) int {
-	parsed, err := strconv.Atoi(value)
-	if err != nil || parsed <= 0 {
-		return fallback
-	}
-	return parsed
 }

@@ -51,15 +51,14 @@ func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 }
 
 func (h *Handler) ListKnownErrors(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(c)
 
 	tenantID, ok := h.getTenantID(c)
 	if !ok {
 		return
 	}
 
-	items, total, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, page, pageSize)
+	items, total, err := h.svc.ListKnownErrors(c.Request.Context(), tenantID, pg.Page, pg.PageSize)
 	if err != nil {
 		common.InternalError(c, "获取已知错误列表失败")
 		return
@@ -244,15 +243,14 @@ func (h *Handler) GetStats(c *gin.Context) {
 
 func (h *Handler) SearchKnownErrors(c *gin.Context) {
 	keyword := c.Query("q")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(c)
 
 	tenantID, ok := h.getTenantID(c)
 	if !ok {
 		return
 	}
 
-	items, total, err := h.svc.SearchKnownErrors(c.Request.Context(), tenantID, keyword, page, pageSize)
+	items, total, err := h.svc.SearchKnownErrors(c.Request.Context(), tenantID, keyword, pg.Page, pg.PageSize)
 	if err != nil {
 		common.InternalError(c, "搜索已知错误失败")
 		return

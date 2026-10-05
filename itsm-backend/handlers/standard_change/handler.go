@@ -2,8 +2,6 @@ package standard_change
 
 import (
 	"errors"
-	"strconv"
-
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -72,8 +70,7 @@ func (h *Handler) toResponse(sc *ent.StandardChange) *dto.StandardChangeResponse
 }
 
 func (h *Handler) ListStandardChanges(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(c)
 	category := c.Query("category")
 	search := c.Query("search")
 	activeOnly := c.Query("activeOnly") == "true"
@@ -83,7 +80,7 @@ func (h *Handler) ListStandardChanges(c *gin.Context) {
 		return
 	}
 
-	results, total, err := h.svc.ListStandardChanges(c.Request.Context(), tenantID, page, pageSize, category, search, activeOnly)
+	results, total, err := h.svc.ListStandardChanges(c.Request.Context(), tenantID, pg.Page, pg.PageSize, category, search, activeOnly)
 	if err != nil {
 		h.logger.Warnw("Failed to list standard changes", "error", err)
 		common.InternalError(c, "Failed to list standard changes")

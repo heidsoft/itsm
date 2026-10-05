@@ -21,18 +21,14 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	page := positiveInt(c.DefaultQuery("page", "1"), 1)
-	pageSize := positiveInt(c.DefaultQuery("pageSize", "20"), 20)
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	pg := common.GetPaginationFromQuery(c)
 	result, err := h.service.List(c.Request.Context(), ListRequest{
 		TenantID:      tenantID,
 		Status:        c.Query("status"),
 		CommandType:   c.Query("commandType"),
 		AggregateType: c.Query("aggregateType"),
-		Page:          page,
-		PageSize:      pageSize,
+		Page:          pg.Page,
+		PageSize:      pg.PageSize,
 	})
 	if err != nil {
 		common.InternalError(c, "failed to list operational commands")
@@ -158,12 +154,4 @@ func commandID(c *gin.Context) (int, bool) {
 		return 0, false
 	}
 	return id, true
-}
-
-func positiveInt(value string, fallback int) int {
-	parsed, err := strconv.Atoi(value)
-	if err != nil || parsed <= 0 {
-		return fallback
-	}
-	return parsed
 }

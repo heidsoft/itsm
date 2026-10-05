@@ -73,9 +73,10 @@ func (r *EntRepository) ListConversations(ctx context.Context, tenantID int, use
 }
 
 func (r *EntRepository) DeleteConversation(ctx context.Context, id int, tenantID int) error {
-	return r.client.Conversation.DeleteOneID(id).
-		Where(conversation.TenantID(tenantID)).
+	_, err := r.client.Conversation.Delete().
+		Where(conversation.ID(id), conversation.TenantID(tenantID)).
 		Exec(ctx)
+	return err
 }
 
 // Messages

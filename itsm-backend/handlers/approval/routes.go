@@ -146,20 +146,9 @@ func (h *Handler) ListWorkflows(c *gin.Context) {
 		filter.IsActive = &val
 	}
 
-	page := 1
-	if pageStr := c.Query("page"); pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-	}
-	pageSize := 20
-	if pageSizeStr := c.Query("pageSize"); pageSizeStr != "" {
-		if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
-			pageSize = ps
-		}
-	}
+	pg := common.GetPaginationFromQuery(c)
 
-	workflows, total, err := h.approvalService.ListWorkflows(c.Request.Context(), filter, tid, page, pageSize)
+	workflows, total, err := h.approvalService.ListWorkflows(c.Request.Context(), filter, tid, pg.Page, pg.PageSize)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, "获取工作流列表失败: "+err.Error())
 		return
@@ -168,8 +157,8 @@ func (h *Handler) ListWorkflows(c *gin.Context) {
 	common.Success(c, map[string]interface{}{
 		"items":    workflows,
 		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
+		"page":     pg.Page,
+		"pageSize": pg.PageSize,
 	})
 }
 

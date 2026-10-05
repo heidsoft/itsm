@@ -18,19 +18,15 @@ func (h *Handler) List(c *gin.Context) {
 		return
 	}
 
-	page := parseIntParam(c.DefaultQuery("page", "1"), 1)
-	pageSize := parseIntParam(c.DefaultQuery("pageSize", "20"), 20)
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	pg := common.GetPaginationFromQuery(c)
 
 	filter := service.TimerListFilter{
 		TenantID:             tenantID,
 		Status:               c.Query("status"),
 		TimerType:            c.Query("timerType"),
 		ProcessDefinitionKey: c.Query("processDefinitionKey"),
-		Page:                 page,
-		PageSize:             pageSize,
+		Page:                 pg.Page,
+		PageSize:             pg.PageSize,
 	}
 
 	result, err := h.service.List(c.Request.Context(), filter)

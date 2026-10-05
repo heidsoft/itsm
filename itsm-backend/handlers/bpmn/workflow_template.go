@@ -37,9 +37,8 @@ func (h *WorkflowTemplateHandler) List(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-	page, _ := strconv.Atoi(ctx.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(ctx.DefaultQuery("pageSize", "20"))
-	result, err := h.catalog.List(ctx.Request.Context(), tenantID, ctx.Query("keyword"), ctx.Query("domain"), ctx.Query("status"), page, pageSize)
+	pg := common.GetPaginationFromQuery(ctx)
+	result, err := h.catalog.List(ctx.Request.Context(), tenantID, ctx.Query("keyword"), ctx.Query("domain"), ctx.Query("status"), pg.Page, pg.PageSize)
 	if err != nil {
 		common.Fail(ctx, common.ServiceUnavailableCode, "模板目录暂不可用")
 		return
