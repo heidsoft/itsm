@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
+	"itsm-backend/ent"
 )
 
 // Response 统一响应结构
@@ -378,6 +379,14 @@ func classifyError(err error) (code int, safeMsg string, ok bool) {
 	var conflictErr *VersionConflictError
 	if errors.As(err, &conflictErr) {
 		return ConflictCode, conflictErr.Error(), true
+	}
+	// 4. ent 的「找不到记录」：这是客户端指向了不存在的资源，属于 404，
+	//    绝不能兜底成 500。此前大量 handler 因为少了这一条，
+	//    导致「任务不存在 / 工单不存在」被上报成服务端故障（观测上表现为 5xx 毛刺）。
+	//    同时不回显 err.Error()：ent 的原始消息会带上实体名等内部结构信息。
+	var notFound *ent.NotFoundError
+	if errors.As(err, &notFound) {
+		return NotFoundCode, "资源不存在或已被删除", true
 	}
 	return InternalErrorCode, "", false
 }

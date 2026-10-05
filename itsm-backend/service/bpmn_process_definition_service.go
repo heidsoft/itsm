@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/schema"
-
 	"go.uber.org/zap"
 )
 
@@ -86,10 +86,12 @@ func (s *bpmnProcessDefinitionService) SetTimerStore(store TimerStore) {
 func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Context, req *CreateProcessDefinitionRequest) (*ent.ProcessDefinition, error) {
 	if req.Publish {
 		if err := validateActivatableBPMNXML(req.BPMNXML); err != nil {
-			return nil, err
+			// BPMN XML 不合法是「调用方输入问题」，不是服务端故障。
+			// 返回带 400 语义的 AppError，让 common.RespondError 分流成 4000 而不是兜底 500。
+			return nil, common.NewValidationError("BPMN XML 校验失败", err)
 		}
 	} else if _, err := NewBPMNParser().ParseXML([]byte(req.BPMNXML)); err != nil {
-		return nil, fmt.Errorf("BPMN XML 校验失败: %w", err)
+		return nil, common.NewValidationError("BPMN XML 校验失败", err)
 	}
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
