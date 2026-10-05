@@ -94,7 +94,7 @@ func (h *Handler) CreateCustomer(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateCustomer(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建客户失败")
 		return
 	}
 	common.Success(c, mapCustomer(entity))
@@ -107,7 +107,7 @@ func (h *Handler) ListCustomers(c *gin.Context) {
 	}
 	items, err := h.svc.ListCustomers(c, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询客户失败")
 		return
 	}
 	result := make([]customerResponse, 0, len(items))
@@ -133,7 +133,7 @@ func (h *Handler) UpdateCustomer(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateCustomer(c, tenantID, id, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新客户失败")
 		return
 	}
 	common.Success(c, mapCustomer(entity))
@@ -150,7 +150,7 @@ func (h *Handler) DisableCustomer(c *gin.Context) {
 	}
 	entity, err := h.svc.DisableCustomer(c, tenantID, id)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "停用客户失败")
 		return
 	}
 	common.Success(c, mapCustomer(entity))
@@ -179,7 +179,7 @@ func (h *Handler) CreateBranch(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateBranch(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建分支机构失败")
 		return
 	}
 	common.Success(c, mapBranch(entity))
@@ -193,7 +193,7 @@ func (h *Handler) ListBranches(c *gin.Context) {
 	customerID, _ := strconv.Atoi(c.Query("customerId"))
 	items, err := h.svc.ListBranches(c, tenantID, customerID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询分支机构失败")
 		return
 	}
 	result := make([]branchResponse, 0, len(items))
@@ -223,7 +223,7 @@ func (h *Handler) UpdateBranch(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateBranch(c, tenantID, id, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新分支机构失败")
 		return
 	}
 	common.Success(c, mapBranch(entity))
@@ -240,7 +240,7 @@ func (h *Handler) DisableBranch(c *gin.Context) {
 	}
 	entity, err := h.svc.DisableBranch(c, tenantID, id)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "停用分支机构失败")
 		return
 	}
 	common.Success(c, mapBranch(entity))
@@ -265,7 +265,7 @@ func (h *Handler) CreateSourceOrganization(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateSourceOrganization(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建来源组织失败")
 		return
 	}
 	common.Success(c, mapSourceOrganization(entity))
@@ -278,7 +278,7 @@ func (h *Handler) ListSourceOrganizations(c *gin.Context) {
 	}
 	items, err := h.svc.ListSourceOrganizations(c, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询来源组织失败")
 		return
 	}
 	result := make([]sourceOrganizationResponse, 0, len(items))
@@ -304,7 +304,7 @@ func (h *Handler) UpdateSourceOrganization(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateSourceOrganization(c, tenantID, id, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新来源组织失败")
 		return
 	}
 	common.Success(c, mapSourceOrganization(entity))
@@ -321,7 +321,7 @@ func (h *Handler) DisableSourceOrganization(c *gin.Context) {
 	}
 	entity, err := h.svc.DisableSourceOrganization(c, tenantID, id)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "停用来源组织失败")
 		return
 	}
 	common.Success(c, mapSourceOrganization(entity))
@@ -351,7 +351,7 @@ func (h *Handler) CreateSupportContract(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateSupportContract(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建支持合同失败")
 		return
 	}
 	common.Success(c, mapSupportContract(entity))
@@ -364,7 +364,7 @@ func (h *Handler) ListSupportContracts(c *gin.Context) {
 	}
 	items, err := h.svc.ListSupportContracts(c, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询支持合同失败")
 		return
 	}
 	result := make([]supportContractResponse, 0, len(items))
@@ -393,7 +393,7 @@ func (h *Handler) UpdateSupportContract(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateSupportContract(c, tenantID, id, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新支持合同失败")
 		return
 	}
 	common.Success(c, mapSupportContract(entity))
@@ -425,7 +425,7 @@ func (h *Handler) TerminateSupportContract(c *gin.Context) {
 	}
 	entity, err := h.svc.TerminateSupportContract(c, tenantID, id)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "终止支持合同失败")
 		return
 	}
 	common.Success(c, mapSupportContract(entity))
@@ -455,7 +455,7 @@ func (h *Handler) CreateExternalContractReference(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateExternalContractReference(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建合同外部引用失败")
 		return
 	}
 	common.Success(c, mapExternalReference(entity))
@@ -468,7 +468,7 @@ func (h *Handler) ListExternalContractReferences(c *gin.Context) {
 	}
 	items, err := h.svc.ListExternalContractReferences(c, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询合同外部引用失败")
 		return
 	}
 	result := make([]externalReferenceResponse, 0, len(items))
@@ -498,7 +498,7 @@ func (h *Handler) UpdateExternalContractReference(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateExternalContractReference(c, tenantID, id, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新合同外部引用失败")
 		return
 	}
 	common.Success(c, mapExternalReference(entity))
@@ -515,7 +515,7 @@ func (h *Handler) DeleteExternalContractReference(c *gin.Context) {
 	}
 	deleted, err := h.svc.DeleteExternalContractReference(c, tenantID, id)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "删除合同外部引用失败")
 		return
 	}
 	common.Success(c, gin.H{"deleted": deleted > 0})
@@ -545,7 +545,7 @@ func (h *Handler) CreateSchedule(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateOnCallSchedule(c, tenantID, &req)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建值班排班失败")
 		return
 	}
 	common.Success(c, mapSchedule(entity))
@@ -558,7 +558,7 @@ func (h *Handler) ListSchedules(c *gin.Context) {
 	}
 	items, err := h.svc.ListOnCallSchedules(c, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询值班排班失败")
 		return
 	}
 	result := make([]scheduleResponse, 0, len(items))
@@ -587,11 +587,12 @@ func (h *Handler) CreateShift(c *gin.Context) {
 	}
 	entity, err := h.svc.CreateShift(c, tenantID, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
 	if err != nil {
-		code := common.ParamErrorCode
+		msg := "创建值班失败"
 		if !errors.Is(err, ErrOverlappingShift) && !errors.Is(err, ErrInvalidShift) {
-			code = common.InternalErrorCode
+			common.RespondError(c, err, msg)
+			return
 		}
-		common.Fail(c, code, err.Error())
+		common.Fail(c, common.ParamErrorCode, msg)
 		return
 	}
 	common.Success(c, shiftResponse{ID: entity.ID, ScheduleID: entity.ScheduleID, UserID: entity.UserID, StartAt: entity.StartAt, EndAt: entity.EndAt})
@@ -632,13 +633,16 @@ func (h *Handler) UpdateShift(c *gin.Context) {
 	}
 	entity, err := h.svc.UpdateShift(c, tenantID, id, req.ScheduleID, req.UserID, req.StartAt, req.EndAt)
 	if err != nil {
-		code := common.ParamErrorCode
+		msg := "更新值班失败"
 		if errors.Is(err, ErrShiftNotFound) {
-			code = common.NotFoundCode
-		} else if !errors.Is(err, ErrOverlappingShift) && !errors.Is(err, ErrInvalidShift) {
-			code = common.InternalErrorCode
+			common.NotFound(c, msg)
+			return
 		}
-		common.Fail(c, code, err.Error())
+		if !errors.Is(err, ErrOverlappingShift) && !errors.Is(err, ErrInvalidShift) {
+			common.RespondError(c, err, msg)
+			return
+		}
+		common.Fail(c, common.ParamErrorCode, msg)
 		return
 	}
 	common.Success(c, shiftResponse{ID: entity.ID, ScheduleID: entity.ScheduleID, UserID: entity.UserID, StartAt: entity.StartAt, EndAt: entity.EndAt})
@@ -679,9 +683,9 @@ func (h *Handler) CurrentOnCall(c *gin.Context) {
 	current, err := h.svc.CurrentOnCall(c, tenantID, groupID, time.Now())
 	if err != nil {
 		if errors.Is(err, ErrNoOnCall) {
-			common.Fail(c, common.NotFoundCode, err.Error())
+			common.NotFound(c, "当前没有可用值班")
 		} else {
-			common.Fail(c, common.InternalErrorCode, err.Error())
+			common.RespondError(c, err, "查询当前值班失败")
 		}
 		return
 	}
@@ -726,7 +730,7 @@ func (h *Handler) GetConversation(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询邮件会话失败")
 		return
 	}
 	common.Success(c, mapConversationDetail(item))
