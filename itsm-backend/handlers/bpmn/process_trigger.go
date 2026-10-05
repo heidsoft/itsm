@@ -99,7 +99,7 @@ func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 
 	result, err := c.triggerService.TriggerProcess(ctx.Request.Context(), &req)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "触发流程失败")
 		return
 	}
 
@@ -121,7 +121,7 @@ func (c *ProcessTriggerHandler) GetProcessStatus(ctx *gin.Context) {
 
 	result, err := c.triggerService.GetProcessStatus(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询流程状态失败")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (c *ProcessTriggerHandler) CancelProcess(ctx *gin.Context) {
 
 	err = c.triggerService.CancelProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "取消流程失败")
 		return
 	}
 
@@ -175,7 +175,7 @@ func (c *ProcessTriggerHandler) SuspendProcess(ctx *gin.Context) {
 
 	err = c.triggerService.SuspendProcess(ctx.Request.Context(), instanceID, req.Reason, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "暂停流程失败")
 		return
 	}
 
@@ -197,7 +197,7 @@ func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 
 	err = c.triggerService.ResumeProcess(ctx.Request.Context(), instanceID, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "恢复流程失败")
 		return
 	}
 
@@ -220,7 +220,7 @@ func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.CreateBinding(ctx.Request.Context(), &binding)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "创建流程绑定失败")
 		return
 	}
 
@@ -242,7 +242,7 @@ func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询流程绑定失败")
 		return
 	}
 
@@ -265,7 +265,7 @@ func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 
 	result, err := c.bindingService.QueryBindings(ctx.Request.Context(), &req)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询流程绑定失败")
 		return
 	}
 
@@ -294,7 +294,7 @@ func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 
 	result, err := c.bindingService.UpdateBinding(ctx.Request.Context(), id, &binding)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "更新流程绑定失败")
 		return
 	}
 
@@ -316,7 +316,7 @@ func (c *ProcessTriggerHandler) DeleteBinding(ctx *gin.Context) {
 
 	err = c.bindingService.DeleteBinding(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "删除流程绑定失败")
 		return
 	}
 
@@ -334,7 +334,7 @@ func (c *ProcessTriggerHandler) GetBindingsByBusinessType(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetBindingsByBusinessType(ctx.Request.Context(), businessType, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询业务类型绑定失败")
 		return
 	}
 
@@ -356,7 +356,7 @@ func (c *ProcessTriggerHandler) GetDepartmentProcesses(ctx *gin.Context) {
 
 	result, err := c.bindingService.GetDepartmentBindings(ctx.Request.Context(), tenantID, departmentID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询部门流程失败")
 		return
 	}
 
@@ -385,7 +385,7 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 	}
 
 	if err := c.bindingService.InitDepartmentDefaultBindings(ctx.Request.Context(), tenantID, departmentID, req.DepartmentType); err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "初始化部门流程失败")
 		return
 	}
 
@@ -402,7 +402,7 @@ func (c *ProcessTriggerHandler) ListDomainConfigs(ctx *gin.Context) {
 
 	result, err := c.configService.ListConfigs(ctx.Request.Context(), tenantID, configType)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询域配置失败")
 		return
 	}
 
@@ -444,7 +444,7 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		req.Description,
 	)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "设置域配置失败")
 		return
 	}
 
@@ -481,7 +481,7 @@ func (c *ProcessTriggerHandler) GetEffectiveDomainConfig(ctx *gin.Context) {
 			common.Success(ctx, nil)
 			return
 		}
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "查询生效域配置失败")
 		return
 	}
 

@@ -56,8 +56,7 @@ var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
 	"handlers/bpmn/lint.go":                 2,
-	"handlers/bpmn/monitoring.go":           8, // E4-48：删除 audit-logs 重复表面随减 1
-	"handlers/bpmn/process_trigger.go":      22,
+	"handlers/bpmn/process_trigger.go":      6, // 2026-10-05 RespondError 收敛
 	"handlers/bpmn/workflow.go":             36,
 	"handlers/bpmn/workflow_template.go":    3,
 	"handlers/application/handler.go":       12,

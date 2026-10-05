@@ -118,7 +118,7 @@ func (c *MonitoringHandler) GetProcessMetrics(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取流程指标失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程指标失败")
 		return
 	}
 
@@ -162,7 +162,7 @@ func (c *MonitoringHandler) GetProcessMetricsByKey(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取流程指标失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程指标失败")
 		return
 	}
 
@@ -185,7 +185,7 @@ func (c *MonitoringHandler) GetProcessInstanceStatus(ctx *gin.Context) {
 
 	status, err := c.monitoringService.GetProcessInstanceStatus(ctx, instanceID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取流程实例状态失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程实例状态失败")
 		return
 	}
 
@@ -227,7 +227,7 @@ func (c *MonitoringHandler) ListProcessInstancesStatus(ctx *gin.Context) {
 
 	statuses, total, err := c.monitoringService.ListProcessInstancesStatus(ctx, query)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取流程实例状态失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程实例状态失败")
 		return
 	}
 
@@ -248,7 +248,7 @@ func (c *MonitoringHandler) GetProcessTimeline(ctx *gin.Context) {
 
 	entries, err := c.monitoringService.GetProcessTimeline(ctx, processInstanceKey, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取流程时间线失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程时间线失败")
 		return
 	}
 
@@ -275,7 +275,7 @@ func (c *MonitoringHandler) GetPerformanceMetrics(ctx *gin.Context) {
 
 	metrics, err := c.monitoringService.GetProcessMetrics(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取性能指标失败: "+err.Error())
+		common.RespondError(ctx, err, "获取性能指标失败")
 		return
 	}
 
@@ -291,7 +291,7 @@ func (c *MonitoringHandler) GetPerformanceAlerts(ctx *gin.Context) {
 
 	alerts, err := c.monitoringService.GetPerformanceAlerts(ctx, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取性能告警失败: "+err.Error())
+		common.RespondError(ctx, err, "获取性能告警失败")
 		return
 	}
 
@@ -307,7 +307,7 @@ func (c *MonitoringHandler) GetSystemHealth(ctx *gin.Context) {
 
 	health, err := c.monitoringService.GetSystemHealth(ctx, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取系统健康状态失败: "+err.Error())
+		common.RespondError(ctx, err, "获取系统健康状态失败")
 		return
 	}
 
