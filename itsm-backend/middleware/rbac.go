@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/rolepermission"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/authz"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -61,384 +62,26 @@ func SetPermissionCacheTTL(ttl time.Duration) {
 	permissionCacheLock.Unlock()
 }
 
-// RolePermissions 角色权限映射
-var RolePermissions = map[string][]Permission{
-	"super_admin": {
-		{Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
-	},
-	"sysadmin": {
-		{Resource: "*", Action: "*"}, // 系统管理员拥有所有权限
-	},
-	"admin": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		// 同义细分动作（批次 2/3 奇偶补齐）：路由声明 create/update/assign/escalate/export，
-		// 缺这些码时 admin 在路由级 403（实测连更新工单都不可达）
-		{Resource: "ticket", Action: "create"},
-		{Resource: "ticket", Action: "update"},
-		{Resource: "ticket", Action: "assign"},
-		{Resource: "ticket", Action: "escalate"},
-		{Resource: "ticket", Action: "export"},
-		{Resource: "ticket", Action: "delete"},
-		{Resource: "ticket", Action: "admin"},
-		{Resource: "notification", Action: "read"},
-		{Resource: "notification", Action: "write"},
-		{Resource: "notification", Action: "create"},
-		{Resource: "ticket_category", Action: "read"},
-		{Resource: "ticket_category", Action: "write"},
-		{Resource: "ticket_category", Action: "delete"},
-		{Resource: "ticket_tag", Action: "read"},
-		{Resource: "ticket_tag", Action: "write"},
-		{Resource: "ticket_tag", Action: "delete"},
-		{Resource: "ticket_template", Action: "read"},
-		{Resource: "ticket_template", Action: "write"},
-		{Resource: "ticket_template", Action: "delete"},
-		{Resource: "user", Action: "read"},
-		{Resource: "user", Action: "write"},
-		{Resource: "user", Action: "delete"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "dashboard", Action: "admin"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "knowledge", Action: "write"},
-		{Resource: "knowledge", Action: "admin"},
-		{Resource: "knowledge", Action: "delete"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "cmdb", Action: "write"},
-		{Resource: "cmdb", Action: "delete"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-		{Resource: "incident", Action: "force-update"},
-		{Resource: "incident", Action: "delete"},
-		{Resource: "incident", Action: "admin"},
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_catalog", Action: "write"},
-		{Resource: "service_catalog", Action: "delete"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		{Resource: "service_request", Action: "approve"},
-		{Resource: "change", Action: "read"},
-		{Resource: "change", Action: "write"},
-		{Resource: "change", Action: "delete"},
-		{Resource: "change", Action: "approve"},
-		{Resource: "change", Action: "rollback"},
-		{Resource: "problem", Action: "read"},
-		{Resource: "problem", Action: "write"},
-		{Resource: "problem", Action: "delete"},
-		{Resource: "sla", Action: "read"},
-		{Resource: "sla", Action: "write"},
-		{Resource: "sla", Action: "delete"},
-		{Resource: "alert", Action: "read"},
-		{Resource: "alert", Action: "write"},
-		{Resource: "alerts", Action: "read"},
-		{Resource: "alerts", Action: "write"},
-		// 审计日志权限：仅管理员及以上可读
-		{Resource: "audit", Action: "read"},
-		{Resource: "ai", Action: "read"},
-		{Resource: "ai", Action: "write"},
-		{Resource: "role", Action: "read"},
-		{Resource: "role", Action: "write"},
-		{Resource: "role", Action: "delete"},
-		{Resource: "permission", Action: "read"},
-		{Resource: "system_config", Action: "read"},
-		{Resource: "system_config", Action: "write"},
-		{Resource: "tenant", Action: "read"},
-		{Resource: "tenant", Action: "write"},
-		{Resource: "org", Action: "read"},
-		{Resource: "org", Action: "write"},
-		// 部门管理权限：路由层使用 ("department", read/create/update/delete)；
-		// 2026-09-16 之前 RolePermissions 仅有 ("org", ...)，DBOnly 下非 super_admin
-		// 调 /departments 全部 403。现补齐 department 资源到 admin/manager/end_user，
-		// 与 common_system_routes.go 路由层声明保持一致。
-		{Resource: "department", Action: "read"},
-		{Resource: "department", Action: "create"},
-		{Resource: "department", Action: "update"},
-		{Resource: "department", Action: "delete"},
-		{Resource: "project", Action: "read"},
-		{Resource: "project", Action: "write"},
-		{Resource: "project", Action: "delete"},
-		{Resource: "application", Action: "read"},
-		{Resource: "application", Action: "write"},
-		// Groups management permissions
-		{Resource: "group", Action: "read"},
-		{Resource: "group", Action: "write"},
-		// BPMN Workflow permissions
-		{Resource: "bpmn", Action: "read"},
-		{Resource: "bpmn", Action: "write"},
-		{Resource: "bpmn", Action: "delete"},
-		// 任务面独立于流程面（2026-09-17 P0）：曾有 bpmn 读写的角色同步获得
-		// 本人任务读 + 操作；跨用户全量任务视图（task:admin）只给管理/监督角色。
-		{Resource: "task", Action: "read"},
-		{Resource: "task", Action: "update"},
-		{Resource: "task", Action: "admin"},
-		// Release Management permissions
-		{Resource: "release", Action: "read"},
-		{Resource: "release", Action: "write"},
-		{Resource: "release", Action: "delete"},
-		{Resource: "release", Action: "approve"},
-		{Resource: "release", Action: "rollback"},
-		// Asset Management permissions
-		{Resource: "asset", Action: "read"},
-		{Resource: "asset", Action: "write"},
-		{Resource: "asset", Action: "delete"},
-		// License Management permissions
-		{Resource: "license", Action: "read"},
-		{Resource: "license", Action: "write"},
-		{Resource: "license", Action: "delete"},
-		// Report 权限
-		{Resource: "report", Action: "read"},
-		// MSP 权限
-		{Resource: "msp", Action: "read"},
-		// 工单类型管理权限（创建/编辑工单类型入口依赖 ticket_type:manage）
-		{Resource: "ticket_type", Action: "read"},
-		{Resource: "ticket_type", Action: "write"},
-		{Resource: "ticket_type", Action: "create"},
-		{Resource: "ticket_type", Action: "update"},
-		{Resource: "ticket_type", Action: "delete"},
-		{Resource: "ticket_type", Action: "manage"},
-		{Resource: "ticket_type", Action: "archive"},
-	},
-	"manager": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "ticket", Action: "create"},
-		{Resource: "ticket", Action: "update"},
-		{Resource: "ticket", Action: "assign"},
-		{Resource: "ticket", Action: "escalate"},
-		{Resource: "ticket", Action: "export"},
-		{Resource: "notification", Action: "read"},
-		{Resource: "notification", Action: "write"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "user", Action: "read"}, // 经理可查看用户基本信息
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		{Resource: "change", Action: "read"},
-		{Resource: "problem", Action: "read"},
-		// SLA 权限
-		{Resource: "sla", Action: "read"},
-		// Report 权限
-		{Resource: "report", Action: "read"},
-		// BPMN Workflow permissions
-		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
-		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
-		{Resource: "bpmn", Action: "read"},
-		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
-		{Resource: "task", Action: "read"},
-		{Resource: "task", Action: "update"},
-		// Release Management permissions
-		{Resource: "release", Action: "read"},
-		{Resource: "release", Action: "write"},
-		// Asset Management permissions
-		{Resource: "asset", Action: "read"},
-		{Resource: "asset", Action: "write"},
-		// License Management permissions
-		{Resource: "license", Action: "read"},
-		{Resource: "license", Action: "write"},
-		// Groups management permissions
-		{Resource: "group", Action: "read"},
-		{Resource: "group", Action: "write"},
-		// Organization permissions
-		{Resource: "org", Action: "read"},
-		{Resource: "org", Action: "write"},
-		// Department 读取（2026-09-16 修复 DBOnly 兜底后保持与 org 对齐）
-		{Resource: "department", Action: "read"},
-		// Project management permissions
-		{Resource: "project", Action: "read"},
-		{Resource: "project", Action: "write"},
-		// Application permissions
-		{Resource: "application", Action: "read"},
-		{Resource: "application", Action: "write"},
-		// AI permissions
-		{Resource: "ai", Action: "read"},
-	},
-	"agent": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "ticket", Action: "create"},
-		{Resource: "ticket", Action: "update"},
-		{Resource: "ticket", Action: "assign"},
-		{Resource: "ticket", Action: "escalate"},
-		{Resource: "ticket", Action: "export"},
-		{Resource: "notification", Action: "read"},
-		{Resource: "notification", Action: "write"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "knowledge", Action: "write"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		{Resource: "change", Action: "read"},
-		{Resource: "change", Action: "write"},
-		{Resource: "problem", Action: "read"},
-		{Resource: "problem", Action: "write"},
-		{Resource: "alert", Action: "read"},
-		{Resource: "alerts", Action: "read"},
-		{Resource: "ai", Action: "read"},
-		// Groups management permissions
-		{Resource: "group", Action: "read"},
-		// BPMN Workflow permissions
-		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
-		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
-		{Resource: "bpmn", Action: "read"},
-		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
-		{Resource: "task", Action: "read"},
-		{Resource: "task", Action: "update"},
-	},
-	"technician": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "notification", Action: "read"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "cmdb", Action: "read"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "write"},
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		{Resource: "alert", Action: "read"},
-		{Resource: "alerts", Action: "read"},
-		{Resource: "ai", Action: "read"},
-		// Groups management permissions
-		{Resource: "group", Action: "read"},
-		// BPMN Workflow permissions
-		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
-		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
-		{Resource: "bpmn", Action: "read"},
-		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
-		{Resource: "task", Action: "read"},
-		{Resource: "task", Action: "update"},
-	},
-	"security": {
-		// 安全角色需要基本的用户信息访问权限
-		{Resource: "user", Action: "read"}, // 查看自己的用户信息
-		// B12: 安全审批人需要查看知识库和通知
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "knowledge", Action: "list"},
-		{Resource: "notification", Action: "read"},
-		{Resource: "notification", Action: "list"},
-		{Resource: "notification", Action: "write"},
-		// 安全审批人需要查看分配给自己的工单
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "list"},
-		{Resource: "incident", Action: "read"},
-		{Resource: "incident", Action: "list"},
-		{Resource: "problem", Action: "read"},
-		{Resource: "problem", Action: "list"},
-		{Resource: "change", Action: "read"},
-		{Resource: "change", Action: "list"},
-		// 审批权限
-		{Resource: "approval", Action: "read"},
-		{Resource: "approval", Action: "write"},
-		// V0：安全审批只需要查看/处理服务请求（以及读取服务目录用于上下文展示）
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		// BPMN Workflow permissions
-		// 2026-09-17 P0：流程设计/发布写权限收归 admin——处理型角色只保留读。
-		// 本表为 unconfigured 态兜底（DB 无任何角色行时生效），随权限码单一真源一并退役。
-		{Resource: "bpmn", Action: "read"},
-		// 任务面独立于流程面：本人任务读 + 操作；跨用户全量视图（task:admin）只给管理/监督角色。
-		{Resource: "task", Action: "read"},
-		{Resource: "task", Action: "update"},
-		// Release Management permissions
-		{Resource: "release", Action: "read"},
-		// Asset Management permissions
-		{Resource: "asset", Action: "read"},
-		// License Management permissions
-		{Resource: "license", Action: "read"},
-		// 安全角色需要查看仪表板
-		{Resource: "dashboard", Action: "read"},
-		// CMDB 读取权限
-		{Resource: "cmdb", Action: "read"},
-		// SLA 读取权限
-		{Resource: "sla", Action: "read"},
-	},
-	"end_user": {
-		{Resource: "ticket", Action: "read"},
-		{Resource: "ticket", Action: "write"},
-		{Resource: "ticket", Action: "create"}, // 最终用户提交工单
-		{Resource: "ticket", Action: "update"}, // 最终用户更新自己的工单
-		{Resource: "notification", Action: "read"},
-		{Resource: "notification", Action: "write"},
-		{Resource: "knowledge", Action: "read"},
-		{Resource: "dashboard", Action: "read"},
-		{Resource: "ai", Action: "read"},
-		{Resource: "ai", Action: "write"},
-		{Resource: "service_catalog", Action: "read"},
-		{Resource: "service_request", Action: "read"},
-		{Resource: "service_request", Action: "write"},
-		{Resource: "user", Action: "read"}, // 查看自己的用户信息
-		{Resource: "sla", Action: "read"},
-		// SLA write removed: only admin/manager should configure SLA policies
-		// {Resource: "sla", Action: "write"},
-		{Resource: "system_config", Action: "read"},
-		{Resource: "org", Action: "read"},
-		// Department 读取（2026-09-16 修复 DBOnly 兜底后保持与 org 对齐）
-		{Resource: "department", Action: "read"},
-		{Resource: "cmdb", Action: "read"}, // 查看配置项信息
-		{Resource: "incident", Action: "read"},
-		{Resource: "change", Action: "read"},
-		{Resource: "problem", Action: "read"},
-		// BPMN Workflow permissions (read only)
-		{Resource: "bpmn", Action: "read"},
-		// 只读参与：可查看本人被指派/待确认的任务
-		{Resource: "task", Action: "read"},
-		// Release/Asset/License read permissions
-		{Resource: "release", Action: "read"},
-		{Resource: "asset", Action: "read"},
-		{Resource: "license", Action: "read"},
-	},
-	// MSP Roles - MSP服务提供商角色权限
-	"msp_viewer": {
-		{Resource: "msp", Action: "read"},
-		{Resource: "msp_customer", Action: "read"},
-		{Resource: "msp_ticket", Action: "read"},
-		{Resource: "msp_allocation", Action: "read"},
-		{Resource: "msp_report", Action: "read"},
-	},
-	"msp_tech": {
-		{Resource: "msp", Action: "read"},
-		{Resource: "msp_customer", Action: "read"},
-		{Resource: "msp_ticket", Action: "read"},
-		{Resource: "msp_ticket", Action: "write"},
-		{Resource: "msp_allocation", Action: "read"},
-		{Resource: "msp_report", Action: "read"},
-	},
-	"msp_specialist": {
-		{Resource: "msp", Action: "read"},
-		{Resource: "msp_customer", Action: "read"},
-		{Resource: "msp_customer", Action: "write"},
-		{Resource: "msp_ticket", Action: "read"},
-		{Resource: "msp_ticket", Action: "write"},
-		{Resource: "msp_allocation", Action: "read"},
-		{Resource: "msp_report", Action: "read"},
-	},
-	"msp_manager": {
-		{Resource: "msp", Action: "read"},
-		{Resource: "msp", Action: "write"},
-		{Resource: "msp_customer", Action: "read"},
-		{Resource: "msp_customer", Action: "write"},
-		{Resource: "msp_ticket", Action: "read"},
-		{Resource: "msp_ticket", Action: "write"},
-		{Resource: "msp_allocation", Action: "read"},
-		{Resource: "msp_allocation", Action: "write"},
-		{Resource: "msp_report", Action: "read"},
-		{Resource: "msp_report", Action: "write"},
-	},
-	"msp_admin": {
-		{Resource: "msp", Action: "*"},
-		{Resource: "msp_customer", Action: "*"},
-		{Resource: "msp_ticket", Action: "*"},
-		{Resource: "msp_allocation", Action: "*"},
-		{Resource: "msp_report", Action: "*"},
-	},
+// RoleDefaultPermissions 返回角色的编译期默认权限（DBOnly unconfigured 兜底、
+// HardcodeOnly/Merge/Fallback 模式及菜单/auth 展示面的唯一来源）。
+//
+// 2026-10-05 N5 拍板：此处不再独立维护硬编码表，单一真源 =
+// internal/authz.RolePermissionDefaults()（内置角色派生自播种码集本身，
+// 兜底与播种不可能漂移；security/msp_* 等非播种角色在 authz 侧显式列出）。
+func RoleDefaultPermissions(role string) []Permission {
+	codes, ok := authz.RolePermissionDefaults()[role]
+	if !ok {
+		return nil
+	}
+	perms := make([]Permission, 0, len(codes))
+	for _, code := range codes {
+		resource, action, valid := authz.SplitPermissionCode(code)
+		if !valid {
+			continue
+		}
+		perms = append(perms, Permission{Resource: resource, Action: action})
+	}
+	return perms
 }
 
 // PermissionConfigMode 权限配置模式
@@ -1051,7 +694,7 @@ func hasResourcePermission(ctx context.Context, client *ent.Client, role, resour
 //	DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
 //	  - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
 //	  - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
-//	                 走硬编码 RolePermissions 兜底，避免非 super_admin 全量 403
+//	                 走 authz 单一真源默认权限兜底，避免非 super_admin 全量 403
 //	  - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
 //	兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
 //	保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
@@ -1065,8 +708,8 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 			// DB 显式配置（含空集合=显式撤销），尊重 DB
 			return perms
 		case permissionDBOnlyUnconfigured:
-			// DB 未配置：硬编码兜底，避免新装/小租户下非 super_admin 全量 403
-			if defaults, ok := RolePermissions[role]; ok {
+			// DB 未配置：authz 单一真源默认权限兜底，避免新装/小租户下非 super_admin 全量 403
+			if defaults := RoleDefaultPermissions(role); len(defaults) > 0 {
 				return defaults
 			}
 			return nil
@@ -1075,26 +718,23 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 			return nil
 		}
 	case PermissionConfigModeHardcodeOnly:
-		if perms, ok := RolePermissions[role]; ok {
-			return perms
-		}
-		return nil
+		return RoleDefaultPermissions(role)
 	case PermissionConfigModeMerge:
-		// 合并数据库和硬编码权限（并集）
+		// 合并数据库和默认权限（并集）
 		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
-		hardcodePerms, hasHardcode := RolePermissions[role]
-		if !hasHardcode {
+		defaultPerms := RoleDefaultPermissions(role)
+		if len(defaultPerms) == 0 {
 			return dbPerms
 		}
 		if len(dbPerms) == 0 {
-			return hardcodePerms
+			return defaultPerms
 		}
 		// 合并去重
 		permMap := make(map[string]Permission)
 		for _, p := range dbPerms {
 			permMap[p.Resource+":"+p.Action] = p
 		}
-		for _, p := range hardcodePerms {
+		for _, p := range defaultPerms {
 			key := p.Resource + ":" + p.Action
 			if _, exists := permMap[key]; !exists {
 				permMap[key] = p
@@ -1108,15 +748,12 @@ func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string,
 	case PermissionConfigModeFallback:
 		fallthrough
 	default:
-		// 默认（仅 dev/test 环境）：先数据库（role_permission+permission 表），为空则使用硬编码默认
+		// 默认（仅 dev/test 环境）：先数据库（role_permission+permission 表），为空则使用默认权限
 		dbPerms := loadPermissionsFromDB(ctx, client, role, tenantID)
 		if len(dbPerms) > 0 {
 			return dbPerms
 		}
-		if defaultPerms, exists := RolePermissions[role]; exists {
-			return defaultPerms
-		}
-		return nil
+		return RoleDefaultPermissions(role)
 	}
 }
 

@@ -316,7 +316,7 @@ func (s *MenuService) getUserPermissions(ctx context.Context, userEntity *ent.Us
 
 	if middleware.PermissionConfig.Mode != middleware.PermissionConfigModeDBOnly {
 		for _, roleCode := range roleCodes {
-			rolePerms := middleware.RolePermissions[roleCode]
+			rolePerms := middleware.RoleDefaultPermissions(roleCode)
 			for _, p := range rolePerms {
 				key := p.Resource + ":" + p.Action
 				permissions[key] = true

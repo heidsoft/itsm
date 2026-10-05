@@ -50,7 +50,7 @@ func (s *Service) permissions(userEntity *ent.User) []string {
 		}
 	}
 	for _, role := range roles {
-		for _, permission := range middleware.RolePermissions[role] {
+		for _, permission := range middleware.RoleDefaultPermissions(role) {
 			key := permission.Resource + ":" + permission.Action
 			if !seen[key] {
 				seen[key] = true

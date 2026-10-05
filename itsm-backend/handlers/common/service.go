@@ -40,9 +40,9 @@ func (s *Service) getUserPermissions(role string) []string {
 		return []string{"*"}
 	}
 
-	// 从 middleware.RolePermissions 获取角色权限
-	rolePerms, ok := middleware.RolePermissions[role]
-	if !ok {
+	// 从 authz 单一真源默认权限获取角色权限
+	rolePerms := middleware.RoleDefaultPermissions(role)
+	if len(rolePerms) == 0 {
 		return permissions
 	}
 

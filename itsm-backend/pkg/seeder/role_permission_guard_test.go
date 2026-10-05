@@ -11,7 +11,6 @@ import (
 
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/internal/authz"
-	"itsm-backend/middleware"
 )
 
 // TestBuiltinRolePermissionCodes_Guard 内置词表角色 DB 权限码集守卫。
@@ -21,22 +20,68 @@ import (
 // admin/technician 条目 → roles 表权限行空集 = DB 显式撤销 →
 // admin/technician 用户除未挂权限中间件的路由外全部 403。
 //
-// 本守卫锁三条契约，缺一 CI 红：
+// 2026-10-05 N4/N5 拍板（plans/product-remediation-plan-2026-10-03.md §3）：
+// middleware.RolePermissions 独立硬编码表已删除，编译期兜底默认权限改由
+// authz.RolePermissionDefaults() 单一真源派生（内置角色直接派生自播种码集，
+// 结构性不可能漂移；R2-a 待拍板档 t.Skip 同批退役）。原契约 3 替换为：
 //  1. 词表角色（除 super_admin 走 Login ["*"] 旁路）必须有非空 DB 权限码集；
 //  2. 码集引用的每个码必须在 permissionDefinitions() 清单中（防码空间漂移）；
-//  3. 与 middleware.RolePermissions 硬编码兜底同名的词表角色，其 DB 码集必须覆盖
-//     兜底的每一个 (resource,action) 对（防双权威表漂移——本 P0 的根因类别）。
-//     覆盖范围分硬档（admin/technician，差异即红）与待拍板档（差异以子测试
-//     t.Skip 登记，见 plans/product-remediation-plan-2026-10-03.md §3 N4）。
+//  3. N4 扩权回归锁：manager/agent/end_user 必须持有拍板补齐的码（防静默回收）；
+//  4. 兜底覆盖锁：每个运行时角色码（词表 + legacy security + msp_*）都必须有
+//     非空编译期默认权限，且与 DB 码集一致（词表角色）。
 func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 	roleCodes := builtinRolePermissionCodes()
 	defs := permissionDefinitions()
 
 	defByCode := make(map[string]permissionDef, len(defs))
-	defByPair := make(map[string]bool, len(defs)) // "resource:action"
 	for _, d := range defs {
 		defByCode[d.Code] = d
-		defByPair[d.Resource+":"+d.Action] = true
+	}
+
+	// 契约 3（N4 扩权回归锁）：拍板补齐的码一旦消失即 CI 红。
+	// manager 26 / agent 7 / end_user 16；agent 的 alerts:read 按拍板收敛为 alert:read
+	// （路由预检实测零条 alerts:* 声明，见 authz/roles.go agent 条目注释）。
+	n4Granted := map[string][]string{
+		"manager": {
+			"ticket:assign", "ticket:escalate", "ticket:export",
+			"notification:read", "notification:write", "incident:write", "dashboard:read",
+			"cmdb:read", "service_catalog:read", "sla:read", "bpmn:read",
+			"release:read", "release:write", "asset:read", "asset:write",
+			"license:read", "license:write", "group:read", "group:write",
+			"org:read", "org:write", "project:read", "project:write",
+			"application:read", "application:write", "ai:read",
+		},
+		"agent": {
+			"notification:write", "dashboard:read", "service_catalog:read",
+			"change:write", "alert:read", "group:read", "bpmn:read",
+		},
+		"end_user": {
+			"notification:write", "dashboard:read", "ai:read", "ai:write",
+			"sla:read", "system_config:read", "org:read", "department:read",
+			"cmdb:read", "incident:read", "change:read", "problem:read",
+			"bpmn:read", "release:read", "asset:read", "license:read",
+		},
+	}
+	for role, codes := range n4Granted {
+		granted := make(map[string]bool, len(roleCodes[role]))
+		for _, c := range roleCodes[role] {
+			granted[c] = true
+		}
+		for _, c := range codes {
+			if !granted[c] {
+				t.Errorf("N4 扩权回归：角色 %q 缺少拍板补齐的权限码 %q", role, c)
+			}
+		}
+	}
+
+	defaults := authz.RolePermissionDefaults()
+
+	// 契约 4 前置：非播种运行时角色（legacy security + msp_*）必须有显式默认集。
+	nonSeededRoles := []string{"super_admin", "security", "msp_viewer", "msp_tech", "msp_specialist", "msp_manager", "msp_admin"}
+	for _, role := range nonSeededRoles {
+		if len(defaults[role]) == 0 {
+			t.Errorf("角色 %q 在 authz.RolePermissionDefaults() 中缺失或为空：删除 middleware.RolePermissions 后该角色 unconfigured 兜底将全 403", role)
+		}
 	}
 
 	for _, role := range domainrole.All {
@@ -61,44 +106,25 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 			grantedPairs[def.Resource+":"+def.Action] = true
 		}
 
-		// 契约 3：与硬编码兜底覆盖校验（本 P0 根因类别）。
-		// R2-a（2026-10-03）：范围从手工枚举 {admin, technician} 扩大为
-		// 「词表角色 ∩ middleware.RolePermissions 同名键」——不再手工维护角色清单，
-		// middleware 未来新增与词表同名的角色会自动纳入守卫。
-		// 分两档（plans/product-remediation-plan-2026-10-03.md §2 R2-a / §3 N4）：
-		//   硬档 admin/technician：DB 码集定义为硬编码兜底的完整镜像（本 P0 补齐对象），差异即 CI 红；
-		//   待拍板档（manager/agent/sysadmin/end_user）：DB 码集是 2026-09-07 有意裁剪的子集
-		//   （小于硬编码兜底），扩大范围后守卫实测红出差异清单见 §3 N4，是否收敛待 N4 拍板，
-		//   拍板前以子测试 t.Skip 登记真实差异，不静默留红 CI、也不静默吞掉差异。
-		// 注意：middleware 词表另有 security / msp_viewer 两个键与 domain 词表不同名，
-		// 不在本守卫覆盖内；同名缺口（it_admin、security_admin 无 middleware 条目）同样不受影响。
-		parityHardRoles := map[string]bool{
-			domainrole.Admin:      true,
-			domainrole.Technician: true,
+		// 契约 4：词表角色的编译期兜底默认必须与 DB 码集一致（单一真源锁）。
+		// 派生上 defaults[role] = BuiltinRolePermissionCodes()[role]，
+		// 一旦有人重新引入第二张表或旁路派生，本循环立即红。
+		defaultPairs := make(map[string]bool, len(defaults[role]))
+		for _, code := range defaults[role] {
+			if _, _, valid := authz.SplitPermissionCode(code); valid {
+				defaultPairs[code] = true
+			}
 		}
-		hardcoded, hasHardcoded := middleware.RolePermissions[role]
-		if !hasHardcoded || len(hardcoded) == 0 {
-			continue
+		if len(defaultPairs) == 0 {
+			t.Errorf("角色 %q 在 authz.RolePermissionDefaults() 中缺失：unconfigured 兜底为空将全 403", role)
 		}
-		missingPairs := []string{}
-		for _, p := range hardcoded {
-			pair := p.Resource + ":" + p.Action
+		for pair := range defaultPairs {
 			if !grantedPairs[pair] {
-				missingPairs = append(missingPairs, pair)
+				// 派生规则（task 基线/同义奇偶）可能让 DB 码集多于绑定原始码，反向包含才成立：
+				// DB 码集 ⊇ defaults 码集。defaults ⊄ DB 即双权威回潮。
+				t.Errorf("角色 %q 兜底默认 %s 不在 DB 码集中：单一真源被破坏（双权威回潮）", role, pair)
 			}
 		}
-		if len(missingPairs) == 0 {
-			continue
-		}
-		if parityHardRoles[role] {
-			for _, pair := range missingPairs {
-				t.Errorf("角色 %q 的 DB 码集缺少硬编码兜底中的 %s：unconfigured 兜底与 configured 实际授权不一致", role, pair)
-			}
-			continue
-		}
-		t.Run("parity/"+role, func(t *testing.T) {
-			t.Skipf("DB 码集缺少硬编码兜底 %v；属 2026-09-07 有意裁剪的子集，是否收敛待 plans/product-remediation-plan-2026-10-03.md §3 N4 拍板", missingPairs)
-		})
 	}
 }
 

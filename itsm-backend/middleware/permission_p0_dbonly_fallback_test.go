@@ -7,7 +7,7 @@ import (
 
 // 2026-09-16 P0 修复：DBOnly 模式下三态语义区分：
 //   - unavailable (client==nil)   → fail-closed（不允许任何授权），保留 baseline fail-closed 测试
-//   - unconfigured (DB 无角色行)   → 走硬编码 RolePermissions 兜底（避免新装/小租户端点全 403）
+//   - unconfigured (DB 无角色行)   → 走 authz.RolePermissionDefaults 单一真源兜底（避免新装/小租户端点全 403）
 //   - configured (DB 角色行存在)   → 以 DB 为准（含空集=显式撤销，仍 fail-closed）
 //
 // 本测试只覆盖走 unconfigured 分支的语义（需有可用 ent client 且 DB 中无角色行）；

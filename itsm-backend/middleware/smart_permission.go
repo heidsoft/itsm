@@ -141,8 +141,8 @@ func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, metho
 		}
 	}
 
-	// L4: Fallback to role-based hardcoded permissions
-	// Phase 1 修复：L4 直接读编译期 RolePermissions map，不感知 PermissionConfig.Mode，
+	// L4: Fallback to role-based default permissions
+	// Phase 1 修复：L4 直接读编译期默认权限表，不感知 PermissionConfig.Mode，
 	// 生产（DBOnly fail-closed）下无 DB 权限的角色仍可能经 L4 拿到权限，违反 fail-closed 语义。
 	// 现按模式分流：DBOnly 下硬编码完全不参与授权，未命中 L1-L3 即拒绝。
 	if PermissionConfig.Mode == PermissionConfigModeDBOnly {
@@ -391,10 +391,10 @@ func methodToAction(method string) string {
 // =============================================================================
 
 // hasResourcePermissionFromRole checks if a role has a specific resource:action permission
-// This uses the hardcoded RolePermissions map as fallback
+// This uses the authz single-source role defaults as fallback
 func hasResourcePermissionFromRole(role, resource, action string) bool {
-	permissions, exists := RolePermissions[role]
-	if !exists {
+	permissions := RoleDefaultPermissions(role)
+	if len(permissions) == 0 {
 		return false
 	}
 
@@ -410,7 +410,7 @@ func hasResourcePermissionFromRole(role, resource, action string) bool {
 	return false
 }
 
-// checkRoleBasedPermission checks permission using hardcoded RolePermissions
+// checkRoleBasedPermission checks permission using authz role defaults
 func checkRoleBasedPermission(role, method, path string) bool {
 	// Get resource and action from ResourceActionMap
 	perm := getPermissionFromPath(method, path)
