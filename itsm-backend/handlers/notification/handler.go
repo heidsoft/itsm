@@ -45,19 +45,19 @@ func NewHandler(
 func (h *Handler) GetNotifications(ctx *gin.Context) {
 	var req dto.GetNotificationsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamError(ctx, "参数错误")
 		return
 	}
 
 	userID, err := h.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
+		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
 	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		common.ParamError(ctx, "租户信息错误")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) GetNotifications(ctx *gin.Context) {
 
 	result, err := h.notificationService.GetNotifications(ctx, &req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取通知失败: "+err.Error())
+		common.RespondError(ctx, err, "获取通知失败")
 		return
 	}
 
@@ -92,19 +92,19 @@ func (h *Handler) GetNotifications(ctx *gin.Context) {
 func (h *Handler) MarkNotificationRead(ctx *gin.Context) {
 	notificationID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "通知ID格式错误: "+err.Error())
+		common.ParamError(ctx, "通知ID格式错误")
 		return
 	}
 
 	userID, err := h.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
+		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
 	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		common.ParamError(ctx, "租户信息错误")
 		return
 	}
 
@@ -116,7 +116,7 @@ func (h *Handler) MarkNotificationRead(ctx *gin.Context) {
 
 	err = h.notificationService.MarkNotificationRead(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "标记已读失败: "+err.Error())
+		common.RespondError(ctx, err, "标记已读失败")
 		return
 	}
 
@@ -134,13 +134,13 @@ func (h *Handler) MarkNotificationRead(ctx *gin.Context) {
 func (h *Handler) MarkAllNotificationsRead(ctx *gin.Context) {
 	userID, err := h.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
+		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
 	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		common.ParamError(ctx, "租户信息错误")
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *Handler) MarkAllNotificationsRead(ctx *gin.Context) {
 
 	err = h.notificationService.MarkAllNotificationsRead(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "标记全部已读失败: "+err.Error())
+		common.RespondError(ctx, err, "标记全部已读失败")
 		return
 	}
 
@@ -170,19 +170,19 @@ func (h *Handler) MarkAllNotificationsRead(ctx *gin.Context) {
 func (h *Handler) DeleteNotification(ctx *gin.Context) {
 	notificationID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "通知ID格式错误: "+err.Error())
+		common.ParamError(ctx, "通知ID格式错误")
 		return
 	}
 
 	userID, err := h.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
+		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
 	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		common.ParamError(ctx, "租户信息错误")
 		return
 	}
 
@@ -194,7 +194,7 @@ func (h *Handler) DeleteNotification(ctx *gin.Context) {
 
 	err = h.notificationService.DeleteNotification(ctx, req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "删除通知失败: "+err.Error())
+		common.RespondError(ctx, err, "删除通知失败")
 		return
 	}
 
@@ -205,19 +205,19 @@ func (h *Handler) DeleteNotification(ctx *gin.Context) {
 func (h *Handler) GetUnreadCount(ctx *gin.Context) {
 	userID, err := h.notificationService.GetCurrentUserID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, "用户未登录: "+err.Error())
+		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
 	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "租户信息错误: "+err.Error())
+		common.ParamError(ctx, "租户信息错误")
 		return
 	}
 
 	count, err := h.notificationService.GetUnreadCount(ctx, userID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取未读数量失败: "+err.Error())
+		common.RespondError(ctx, err, "获取未读数量失败")
 		return
 	}
 
@@ -228,7 +228,7 @@ func (h *Handler) GetUnreadCount(ctx *gin.Context) {
 func (h *Handler) CreateNotification(ctx *gin.Context) {
 	var req dto.CreateNotificationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamError(ctx, "参数错误")
 		return
 	}
 
@@ -240,7 +240,7 @@ func (h *Handler) CreateNotification(ctx *gin.Context) {
 	req.TenantID = tenantID
 	notification, err := h.notificationService.CreateNotification(ctx, &req)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "创建通知失败: "+err.Error())
+		common.RespondError(ctx, err, "创建通知失败")
 		return
 	}
 
@@ -309,7 +309,7 @@ func (h *Handler) ListPreferences(cxt *gin.Context) {
 
 	prefs, err := h.notificationPreferenceService.GetUserPreferences(cxt.Request.Context(), userID, tenantID)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "获取通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "获取通知偏好失败")
 		return
 	}
 
@@ -336,7 +336,7 @@ func (h *Handler) GetPreference(cxt *gin.Context) {
 
 	pref, err := h.notificationPreferenceService.GetUserPreferenceByEventType(cxt.Request.Context(), userID, tenantID, eventType)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "获取通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "获取通知偏好失败")
 		return
 	}
 
@@ -354,13 +354,13 @@ func (h *Handler) CreateOrUpdatePreference(cxt *gin.Context) {
 
 	var req dto.NotificationPreferenceRequest
 	if err := cxt.ShouldBindJSON(&req); err != nil {
-		common.ParamError(cxt, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(cxt, err, "请求参数错误")
 		return
 	}
 
 	pref, err := h.notificationPreferenceService.CreateOrUpdatePreference(cxt.Request.Context(), userID, tenantID, &req)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "保存通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "保存通知偏好失败")
 		return
 	}
 
@@ -378,13 +378,13 @@ func (h *Handler) BulkUpdatePreferences(cxt *gin.Context) {
 
 	var req dto.BulkNotificationPreferenceRequest
 	if err := cxt.ShouldBindJSON(&req); err != nil {
-		common.ParamError(cxt, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(cxt, err, "请求参数错误")
 		return
 	}
 
 	prefs, err := h.notificationPreferenceService.BulkUpdatePreferences(cxt.Request.Context(), userID, tenantID, &req)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "批量更新通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "批量更新通知偏好失败")
 		return
 	}
 
@@ -410,7 +410,7 @@ func (h *Handler) DeletePreference(cxt *gin.Context) {
 
 	err := h.notificationPreferenceService.DeletePreference(cxt.Request.Context(), userID, tenantID, eventType)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "删除通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "删除通知偏好失败")
 		return
 	}
 
@@ -428,7 +428,7 @@ func (h *Handler) ResetPreferences(cxt *gin.Context) {
 
 	err := h.notificationPreferenceService.ResetToDefaults(cxt.Request.Context(), userID, tenantID)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "重置通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "重置通知偏好失败")
 		return
 	}
 
@@ -446,7 +446,7 @@ func (h *Handler) InitializeDefaultPreferences(cxt *gin.Context) {
 
 	err := h.notificationPreferenceService.InitializeDefaultPreferences(cxt.Request.Context(), userID, tenantID)
 	if err != nil {
-		common.Fail(cxt, common.InternalErrorCode, "初始化通知偏好失败: "+err.Error())
+		common.RespondError(cxt, err, "初始化通知偏好失败")
 		return
 	}
 

@@ -51,7 +51,9 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // handlers/cmdb/handler.go 原有 2 处已清零（本文件从基线移除）：对账读取与云选择器的
 // 绑定失败不再拼 err.Error()，同时域内 15 条云/发现端点统一由 RespondError 分类，
 // 域内私有的 failCMDBError 映射随之删除。
-// 前三名占了近半数：handlers/bpmn/workflow.go 36（2026-10-05 错误净化收敛）、notification 29、email_intake 27。production_service.go 73 已在 2026-10-05 RespondError+ParamError sweep 中清零并从此基线删除
+// 前三名占了近半数：handlers/bpmn/workflow.go 36（2026-10-05 错误净化收敛）、email_intake 27。
+// production_service.go 73 已在 2026-10-05 RespondError+ParamError sweep 中清零并从此基线删除；
+// handlers/notification/handler.go 29 已在 2026-10-05 RespondError+ParamError+AuthFailed sweep 中清零并从此基线删除。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -74,7 +76,6 @@ var errorLeakBaseline = map[string]int{
 	"handlers/knowledge/handler.go":         7,
 	"handlers/known_error/handler.go":       2,
 	"handlers/marketplace/handler.go":       13,
-	"handlers/notification/handler.go":      29,
 	"handlers/prediction/handler.go":        4,
 	"handlers/project/handler.go":           7,
 	"handlers/rbac/handler.go":              14,
