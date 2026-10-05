@@ -44,29 +44,17 @@ import (
 // 条目格式 <相对 itsm-backend 的文件路径>|<被调函数名>|<该处写死的缺省页长，
 // 无法从实参看出时为 ?>；同一键有多处就重复多行，计数一并比对。
 //
-// 扩展判定形态后新增的 8 处（原先 DefaultQuery-only 扫描器看不见）：
-// handlers/sla/handler.go 的 queryIntParam 两处（还多带 size 别名）与 c.Query 一处、
-// handlers/skill/handler.go 与 handlers/workbench/handler.go 各自的 c.Query、
-// handlers/approval/routes.go 两处 c.Query、handlers/ai/skills.go 的 inputInt。
+// 扩展判定形态后新增的 8 处（原先 DefaultQuery-only 扫描器看不见）。
+// 台账 E4-47 已全量收敛：sla/skill/workbench（①-④）+ release/standard_change/
+// knowledge/known_error/operations/timer/bpmn/workflow_template/approval（第二批）
+// 共 14 处，全部改走 common.GetPaginationFromQuery(c)。
+// 回归锁：handlers/sla/pagination_contract_test.go、handlers/skill/handler_test.go、
+// handlers/workbench/handler_test.go、handlers/approval/routes.go 兜底路径。
+// sla/skill/workbench 的 6 处（E4-47①–④）+ release/standard_change/knowledge/known_error/
+// operations/timer/bpmn/workflow_template/approval 的 8 处（E4-47 第二批）已全部收敛并删除。
 var selfParsedPageSizeBaseline = []string{
 	"handlers/ai/skills.go|inputInt|20",
-	"handlers/approval/routes.go|Query|?",
-	"handlers/approval/routes.go|Query|?",
-	"handlers/bpmn/workflow_template.go|DefaultQuery|20",
-	"handlers/knowledge/handler.go|DefaultQuery|10",
-	"handlers/known_error/handler.go|DefaultQuery|20",
-	"handlers/known_error/handler.go|DefaultQuery|20",
-	"handlers/operations/handler.go|DefaultQuery|20",
-	"handlers/release/handler.go|DefaultQuery|10",
-	"handlers/skill/handler.go|Query|?",
-	"handlers/sla/handler.go|DefaultQuery|20",
-	"handlers/sla/handler.go|Query|?",
-	"handlers/sla/handler.go|queryIntParam|10",
-	"handlers/sla/handler.go|queryIntParam|20",
-	"handlers/standard_change/handler.go|DefaultQuery|20",
-	"handlers/timer/handler.go|DefaultQuery|20",
-	"handlers/workbench/handler.go|Query|?",
-}
+				}
 
 // pageSizeOwnerDirs 是被扫描的 HTTP 入口层。业务 service 层的兜底夹紧走
 // common.ValidatePagination，不在本棘轮范围内（它读的就是同一组常量）。

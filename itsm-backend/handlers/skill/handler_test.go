@@ -433,3 +433,44 @@ func TestAdminGet_NotFound(t *testing.T) {
 	w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills/does.not.exist", nil)
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
+
+// 18. 页长单一所有者（台账 E4-47③）：越界/非数字/零负页长回落平台缺省 20，
+// 不再由 handler 私有实现把 >100 截断成 100（那是 MaxPageSize 之外的第二套界）；
+// size 别名继续不被接受，避免同一接口双轨分页契约。
+func TestAdminList_PageSizeFallsBackToPlatformDefault(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	for i := 0; i < 3; i++ {
+		body := skill.SkillUpsertRequest{
+			Code:                fmt.Sprintf("user.pgfall_%d", i),
+			Version:             "v1",
+			RequiredPermissions: []string{"skill:read"},
+			Capabilities:        []string{"custom.pagination"},
+		}
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
+		require.Equal(t, http.StatusOK, w.Code)
+	}
+
+	for _, query := range []string{"pageSize=500", "pageSize=150", "pageSize=abc", "pageSize=0", "pageSize=-1", "size=2"} {
+		w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills?"+query, nil)
+		require.Equal(t, http.StatusOK, w.Code, "%s: body=%s", query, w.Body.String())
+		data := parseData(t, w)
+		assert.EqualValues(t, 1, data["page"], query)
+		assert.EqualValues(t, 20, data["pageSize"], query)
+		assert.EqualValues(t, 1, data["totalPages"], query)
+		items, ok := data["items"].([]interface{})
+		require.True(t, ok, "%s: items 必须是数组", query)
+		assert.Len(t, items, 3, query)
+	}
+
+	// 非正页码回落 1，不得算出负 offset。
+	w := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills?page=-3&pageSize=2", nil)
+	require.Equal(t, http.StatusOK, w.Code)
+	data := parseData(t, w)
+	assert.EqualValues(t, 1, data["page"])
+	assert.EqualValues(t, 2, data["pageSize"])
+	assert.EqualValues(t, 2, data["totalPages"])
+	items, _ := data["items"].([]interface{})
+	assert.Len(t, items, 2)
+}

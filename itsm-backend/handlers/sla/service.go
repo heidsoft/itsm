@@ -9,6 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 )
 
@@ -249,17 +250,10 @@ func (s *Service) ListSLAPerformance(ctx context.Context, tenantID int, q SLAPer
 		return nil, ErrInvalidWindow
 	}
 
-	page := q.Page
-	if page <= 0 {
-		page = 1
-	}
-	pageSize := q.PageSize
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	if pageSize > 200 {
-		pageSize = 200
-	}
+	// 页长的权威所有者是 HTTP 入口的 common.GetPaginationFromQuery。
+	// 这里只兜非 HTTP 调用方（台账 E4-47①：私有 >200→200 是第三套界，
+	// 与平台 MaxPageSize=100 分家）。
+	page, pageSize := common.ValidatePagination(q.Page, q.PageSize)
 
 	rows, truncated, err := s.repo.ListSLAPerformance(ctx, tenantID, q.Dimension, q.Start, q.End, q.ServiceType, q.Priority)
 	if err != nil {

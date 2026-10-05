@@ -301,3 +301,30 @@ func TestQueryAssigneeFilter(t *testing.T) {
 	require.Equal(t, 1, listB.Total)
 	assert.Equal(t, "B-工单-待处理", listB.Items[0].Title)
 }
+
+// TestQueryPageSizeFollowsPlatformOwner 台账 E4-47④：page/pageSize 解析从 handler
+// 手抄的 (0,100] 判定收敛到 common.GetPaginationFromQuery 单一所有者。行为语义
+// 保持一致（缺省 1/20、越界与非数字回落缺省），并额外锁定 size 别名不被接受。
+func TestQueryPageSizeFollowsPlatformOwner(t *testing.T) {
+	f := setupWorkbenchTest(t)
+
+	for _, query := range []string{"?pageSize=150", "?pageSize=5000", "?pageSize=abc", "?pageSize=0", "?page=-2", "?size=5"} {
+		status, env := doWorkbench(t, f.handler, f.tenantA, query)
+		require.Equal(t, http.StatusOK, status, query)
+		require.Equal(t, 0, env.Code, query)
+		list := decodeList(t, env)
+		assert.Equal(t, 1, list.Page, query)
+		assert.Equal(t, 20, list.PageSize, query)
+		assert.LessOrEqual(t, len(list.Items), list.PageSize, query)
+	}
+
+	// 界内值照旧采纳，且信封回显即实际切片用的值。
+	status, env := doWorkbench(t, f.handler, f.tenantA, "?page=1&pageSize=2")
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, 0, env.Code)
+	list := decodeList(t, env)
+	assert.Equal(t, 1, list.Page)
+	assert.Equal(t, 2, list.PageSize)
+	assert.Len(t, list.Items, 2)
+	assert.Equal(t, (list.Total+1)/2, list.TotalPages)
+}

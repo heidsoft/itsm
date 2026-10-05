@@ -334,7 +334,7 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
 
 	t.Run("违规列表分页查询成功", func(t *testing.T) {
-		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&size=10", nil, false)
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&pageSize=10", nil, false)
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 		data := resp.Data.(map[string]interface{})
 		assert.Contains(t, data, "items")
@@ -435,7 +435,7 @@ func TestSLAHandler_ViolationsTicketContextRegression(t *testing.T) {
 	r.GET("/api/v1/sla/violations", h.GetSLAViolations)
 
 	t.Run("列表返回工单标题/编号/优先级与SLA名称", func(t *testing.T) {
-		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&size=20", nil, false)
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&pageSize=20", nil, false)
 		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 		data := resp.Data.(map[string]interface{})
 		items := data["items"].([]interface{})
@@ -458,7 +458,7 @@ func TestSLAHandler_ViolationsTicketContextRegression(t *testing.T) {
 	})
 
 	t.Run("camelCase isResolved=false 只返回未解决违规", func(t *testing.T) {
-		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&size=20&isResolved=false", nil, false)
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/violations?page=1&pageSize=20&isResolved=false", nil, false)
 		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 		data := resp.Data.(map[string]interface{})
 		items := data["items"].([]interface{})

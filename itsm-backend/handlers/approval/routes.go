@@ -244,18 +244,9 @@ func (h *Handler) GetApprovalRecords(c *gin.Context) {
 		if status := c.Query("status"); status != "" {
 			req.Status = &status
 		}
-		req.Page = 1
-		if pageStr := c.Query("page"); pageStr != "" {
-			if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-				req.Page = p
-			}
-		}
-		req.PageSize = 20
-		if pageSizeStr := c.Query("pageSize"); pageSizeStr != "" {
-			if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
-				req.PageSize = ps
-			}
-		}
+		pg := common.GetPaginationFromQuery(c)
+		req.Page = pg.Page
+		req.PageSize = pg.PageSize
 	}
 
 	tid, ok := tenantID(c)

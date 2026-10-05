@@ -101,30 +101,24 @@ func (h *Handler) GetSLADefinition(c *gin.Context) {
 
 // ListSLADefinitions handles GET /api/v1/sla/definitions
 func (h *Handler) ListSLADefinitions(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size := queryIntParam(c, "pageSize", "size", 10)
+	pg := common.GetPaginationFromQuery(c)
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
 
-	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal, page, size)
+	list, total, err := h.svc.ListDefinitions(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize)
 	if err != nil {
 		common.InternalError(c, "查询SLA定义列表失败: "+err.Error())
 		return
 	}
 
-	var dtos []*dto.SLADefinitionResponse
+	dtos := make([]*dto.SLADefinitionResponse, 0, len(list))
 	for _, item := range list {
 		dtos = append(dtos, toSLADefinitionDTO(item))
 	}
 
-	common.Success(c, gin.H{
-		"items":    dtos,
-		"total":    total,
-		"page":     page,
-		"pageSize": size,
-	})
+	common.SuccessWithPagination(c, dtos, pg.Page, pg.PageSize, int64(total))
 }
 
 // UpdateSLADefinition handles PUT /api/v1/sla/definitions/:id
@@ -366,16 +360,6 @@ func queryParam(c *gin.Context, camel, snake string) string {
 	return c.Query(snake)
 }
 
-// queryIntParam 优先读 camelCase 分页字段 pageSize，兼容存量 size 调用方。
-func queryIntParam(c *gin.Context, camel, snake string, fallback int) int {
-	if v := queryParam(c, camel, snake); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			return n
-		}
-	}
-	return fallback
-}
-
 // GetSLAViolations handles GET /api/v1/sla/violations
 func (h *Handler) GetSLAViolations(c *gin.Context) {
 	tenantIDVal, ok := handlerctx.ResolveTenantID(c)
@@ -400,20 +384,17 @@ func (h *Handler) GetSLAViolations(c *gin.Context) {
 		}
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size := queryIntParam(c, "pageSize", "size", 20)
+	pg := common.GetPaginationFromQuery(c)
 
-	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal, page, size, filters)
+	res, total, err := h.svc.GetSLAViolations(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize, filters)
 	if err != nil {
 		common.InternalError(c, "查询SLA违规记录失败: "+err.Error())
 		return
 	}
-	common.Success(c, gin.H{
-		"items":    res,
-		"total":    total,
-		"page":     page,
-		"pageSize": size,
-	})
+	if res == nil {
+		res = []*SLAViolation{}
+	}
+	common.SuccessWithPagination(c, res, pg.Page, pg.PageSize, int64(total))
 }
 
 // UpdateViolationStatus handles PUT /api/v1/sla/violations/:id
@@ -504,16 +485,7 @@ func (h *Handler) GetSLAPerformance(c *gin.Context) {
 		common.ParamError(c, "endDate 格式非法，请使用 RFC3339，例如 2026-01-31T23:59:59Z")
 		return
 	}
-	page, err := strconv.Atoi(defaultString(c.Query("page"), "1"))
-	if err != nil || page < 1 {
-		common.ParamError(c, "page 必须为正整数")
-		return
-	}
-	pageSize, err := strconv.Atoi(defaultString(c.Query("pageSize"), "20"))
-	if err != nil || pageSize < 1 {
-		common.ParamError(c, "pageSize 必须为正整数")
-		return
-	}
+	pg := common.GetPaginationFromQuery(c)
 
 	res, err := h.svc.ListSLAPerformance(c.Request.Context(), tenantIDVal, SLAPerformanceQuery{
 		Dimension:   dimension,
@@ -521,8 +493,8 @@ func (h *Handler) GetSLAPerformance(c *gin.Context) {
 		End:         end,
 		ServiceType: strings.TrimSpace(c.Query("serviceType")),
 		Priority:    strings.TrimSpace(c.Query("priority")),
-		Page:        page,
-		PageSize:    pageSize,
+		Page:        pg.Page,
+		PageSize:    pg.PageSize,
 	})
 	if err != nil {
 		failSLAQuery(c, err, "获取SLA绩效数据失败")
@@ -531,13 +503,13 @@ func (h *Handler) GetSLAPerformance(c *gin.Context) {
 
 	totalPages := 0
 	if res.Total > 0 {
-		totalPages = (res.Total + res.PageSize - 1) / res.PageSize
+		totalPages = (res.Total + pg.PageSize - 1) / pg.PageSize
 	}
 	common.Success(c, gin.H{
 		"items":      res.Items,
 		"total":      res.Total,
-		"page":       res.Page,
-		"pageSize":   res.PageSize,
+		"page":       pg.Page,
+		"pageSize":   pg.PageSize,
 		"totalPages": totalPages,
 		"dimension":  dimension,
 		"truncated":  res.Truncated,
@@ -567,13 +539,6 @@ func parseSLATimeParam(value string) (time.Time, error) {
 		return time.Time{}, err
 	}
 	return parsed.UTC(), nil
-}
-
-func defaultString(value, fallback string) string {
-	if strings.TrimSpace(value) == "" {
-		return fallback
-	}
-	return value
 }
 
 // failSLAQuery 把 service 层的稳定错误映射为 HTTP status 与业务 code，
@@ -633,20 +598,17 @@ func (h *Handler) GetAlertHistory(c *gin.Context) {
 		filters["alert_level"] = alertLevel
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pg := common.GetPaginationFromQuery(c)
 
-	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal, page, size, filters)
+	res, total, err := h.svc.GetAlertHistory(c.Request.Context(), tenantIDVal, pg.Page, pg.PageSize, filters)
 	if err != nil {
 		common.InternalError(c, "查询告警历史失败: "+err.Error())
 		return
 	}
-	common.Success(c, gin.H{
-		"items":    res,
-		"total":    total,
-		"page":     page,
-		"pageSize": size,
-	})
+	if res == nil {
+		res = []*SLAAlertHistory{}
+	}
+	common.SuccessWithPagination(c, res, pg.Page, pg.PageSize, int64(total))
 }
 
 // GetSLAStats handles GET /api/v1/sla/stats

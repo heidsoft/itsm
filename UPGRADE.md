@@ -1195,6 +1195,52 @@ cd itsm-backend && go test ./handlers/bpmn/ ./service/ ./tests/contract/ ./middl
 精确键集合且无 tenantId / 权限门 200-403-401 三态）、
 `handlers/bpmn/audit_pagination_contract_test.go`（页长与租户收敛，打在真实注册路由上）。
 
+### 1.30 SLA / Skill / 工作台列表页长收敛到单一所有者（2026-10-05，破坏性）
+
+台账 E4-47①–④。`/api/v1/sla/definitions`、`/api/v1/sla/violations`、
+`/api/v1/sla/performance`、`/api/v1/sla/alert-history`、`/api/v1/skills`、
+`/api/v1/admin/skills`、`/api/v1/workbench` 的页长此前分散在 4 套私有实现里：
+sla handler 缺省 10/20 不一且接受 `size` 别名、**没有任何上界**（`pageSize=5000`
+原样进 `LIMIT`；`alert-history` 的 `pageSize=abc` 解析成 0 后 `LIMIT` 子句整体消失，
+一次写错分页参数即读穿该租户全表）；sla service 又私有夹紧 `>200 → 200`（200 不是
+平台值）；skill 私有把 `>100` 截断成 100；workbench 手抄一份 `(0,100]` 判定。
+
+**变更**：
+
+1. 七个端点的 HTTP 入口统一走 `common.GetPaginationFromQuery`：缺省 `page=1`、
+   `pageSize=20`，只采纳 `[1,100]`，越界（`150`/`5000`）、非数字（`abc`）、`0`/负数
+   一律**回落 20**（不是夹紧），页码下界 1；响应回显即真正下传给 `Offset/Limit` 的值。
+2. `GET /api/v1/sla/definitions` 缺省页长由 **10 改为 20**；`size` 查询参数在
+   definitions/violations 上**不再被接受**（此前与 `pageSize` 双轨）。
+3. `GET /api/v1/sla/performance` 的非法 `page`/`pageSize`（非数字、0、负数）此前返回
+   400/1001，现回落缺省 1/20（与平台其它列表端点一致）；`pageSize` 在 `(100,200]`
+   此前按原值执行、`>200` 执行 200，现一律回落 20。
+4. `GET /api/v1/skills` 与 `/api/v1/admin/skills` 的 `pageSize>100` 此前夹到 100，
+   现回落 20。
+5. `GET /api/v1/workbench` 行为语义不变（越界本就回落缺省），收敛的是所有权。
+6. 信封：sla 三个列表端点（definitions/violations/alert-history）从四键手拼改为
+   平台五键 `{items,total,page,pageSize,totalPages}`（新增 `totalPages`）；
+   violations/alert-history 空结果此前序列化为 `items: null`，现为 `items: []`。
+
+**集成检查**：
+
+- 仍发送 `size` 的调用方需改为 `pageSize`（仓库内前端实测无此发送点，历史调用面为
+  `handlers/sla/handler_test.go`，已同批改走 `pageSize`）。
+- 依赖「`/sla/performance` 写错页长返回 400」做输入校验的调用方需改用显式校验；
+  现在该请求会成功并返回缺省页。
+- 期望 `/sla/definitions` 每页 10 条的调用方需显式传 `pageSize=10`。
+
+**验证**：
+
+```bash
+cd itsm-backend && go test ./handlers/sla/ ./handlers/skill/ ./handlers/workbench/ ./tests/contract/ -count=1
+```
+
+回归锁：`handlers/sla/pagination_contract_test.go`（缺省 1/20、越界/非数字/零负回落且
+回显即下传值、`size` 别名失效、末页余数、performance 非法页长不再 400）、
+`handlers/skill/handler_test.go` 与 `handlers/workbench/handler_test.go` 各新增页长回落例；
+`tests/contract/page_size_owner_ratchet_test.go` 基线同批 17→11 行。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

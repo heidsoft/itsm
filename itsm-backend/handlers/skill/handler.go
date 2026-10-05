@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
@@ -154,8 +153,10 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 //   - category：按 category 过滤（ga / pilot / experimental）
 //   - status：按 status 过滤（active / disabled）
 //   - q：按 code/name/description 模糊匹配
-//   - page：1-based 页码，默认 1；非法值（≤0/非数字）回退到 1
-//   - pageSize：每页条数，默认 20，上限 100；非法值回退到 20，越界截断到 1..100
+//   - page：1-based 页码，默认 1；非法值与非正数（≤0/非数字）回退到 1
+//   - pageSize：每页条数，默认 20；页长唯一所有者是 common.GetPaginationFromQuery，
+//     只采纳 [1,100]，越界（如 150/5000）与非数字一律回退 20（台账 E4-47③：
+//     此前私有实现把 >100 截断成 100，是平台界的第二套所有者）
 //
 // 返回统一列表契约：{ items, total, page, pageSize, totalPages }，
 // 与 AGENTS.md "API 契约单一事实来源" 规范保持一致。
@@ -187,7 +188,8 @@ func (h *Handler) List(c *gin.Context) {
 		filtered = append(filtered, e)
 	}
 
-	page, pageSize := parseSkillListPagination(c)
+	pg := common.GetPaginationFromQuery(c)
+	page, pageSize := pg.Page, pg.PageSize
 	total := len(filtered)
 	totalPages := 0
 	if total > 0 {
@@ -212,28 +214,6 @@ func (h *Handler) List(c *gin.Context) {
 		"pageSize":   pageSize,
 		"totalPages": totalPages,
 	})
-}
-
-// parseSkillListPagination 解析 page / pageSize 查询参数，
-// 对非法值或越界值回退到安全默认值，保证响应契约稳定。
-func parseSkillListPagination(c *gin.Context) (page, pageSize int) {
-	page = 1
-	pageSize = 20
-
-	if raw := strings.TrimSpace(c.Query("page")); raw != "" {
-		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
-			page = v
-		}
-	}
-	if raw := strings.TrimSpace(c.Query("pageSize")); raw != "" {
-		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
-			pageSize = v
-		}
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-	return page, pageSize
 }
 
 // Get GET /api/v1/skills/:code
