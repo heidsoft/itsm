@@ -37,7 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   4. `handlers/bpmn/workflow.go` 10 处 `InternalError(ctx, msg+err.Error())` 全部改 `common.RespondError(ctx, err, msg)`，不再把原始 provider error 吐给客户端；bpmn/monitoring.go 还有 8 处同模式待收敛（见 179 处错误泄漏台账）
 - **附件 MIME 白名单精确匹配 bug**（a66a3286）：`net/http.DetectContentType` 返回 `text/plain; charset=utf-8` 这类带参数的完整媒体类型，而白名单存 `text/plain` 裸值，精确匹配导致 txt/log/csv/md 等文本附件"白名单明明有 text/plain 却上传失败"。新增 `normalizeMIMEType` 去掉 `;` 后缀 + 小写化 + 手工 fallback，白名单精确匹配和前缀匹配（`image/*`）两侧都 normalize
 - **前端 auditlog API items[] vs logs[] 消费 bug**（25d6a898）：后端 `dto.ListAuditLogsResponse` 用 `items`，但前端 `auditlog-api.ts` 按 `logs` 读，导致审计日志页"total 正常增长、表格永远为空"。新增 `RawAuditLogListResponse` 同时接受两种键名 + 返回值做 items→logs 归一化；新增 2 条回归测试（归一化 + undefined 空集兜底）
-- **connector settings 键名风格容错**（8a7920bb）：connector settings 是管理员自由录入的键值对，各 builtin connector 硬编码一种风格（有的写 `base_url`，有的写 `callbackInstanceId`），管理员写成另一种就静默失败报"not configured"。`connector.go` 新增 `SettingString(settings, key)` / `SettingInt(settings, key)`，按「原样 → snake_case → camelCase」依次尝试；dingtalk/feishu/wecom/manager/handler 5 处消费方全改；前端 Connectors 管理页必填键提示同步更新
+- **connector settings 键名风格容错**（8a7920bb）：connector settings 是管理员自由录入的键值对，各 builtin connector 硬编码一种风格（有的写 `base_url`，有的写 `callbackInstanceId`），管理员写成另一种就静默失败报"not configured"。`connector.go` 新增 `SettingString(settings, key)` / `SettingInt(settings, key)`，按「原样 → snake_case → camelCase」依次尝试；dingtalk/feishu/wecom/manager/handler 5 处消费方全改；前端 Connectors 管理页必填键提示同步更新- **ErrorLeakRatchet 基线收紧**（54039d8e）：commit 0a254a22 把 `handlers/bpmn/workflow.go` 的 10 处 `InternalError(ctx, msg+err.Error())` 改成 `RespondError(ctx, err, msg)`，泄漏面从 67 降到 36；ratchet 基线同步收紧，防止未来回退。全仓 error leak 残余 179 处（bpmn/monitoring.go 8、cmdb/production_service 73、notification 29 等），见 ratchet 测试基线文件
+
 ### Changed
 
 - 错误泄漏棘轮基线下调：`handlers/bpmn/monitoring.go` 9→8（随 audit-logs 重复表面删除）
