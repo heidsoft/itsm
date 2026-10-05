@@ -65,7 +65,7 @@
     "react-window": "^2.2.1",
     "react-window-infinite-loader": "^2.0.0",
     "reactflow": "^11.11.4",
-    "recharts": "^3.9.0",
+    "recharts": "^3.10.1",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "swr": "^2.3.6",
