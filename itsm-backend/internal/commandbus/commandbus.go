@@ -104,6 +104,43 @@ func EnqueueTx(ctx context.Context, tx *ent.Tx, req EnqueueRequest) (*ent.Operat
 	return enqueue(ctx, tx.OperationalCommand.Create(), req)
 }
 
+// EnqueueTxIdempotent 在 *ent.Tx 内入箱命令，并保证不会因幂等键冲突而弄脏事务。
+//
+// 为什么必须有这个变体：operational_commands 上有
+// (tenant_id, command_type, idempotency_key) 唯一索引。若在事务内直接 INSERT 撞上该索引，
+// PostgreSQL 会把整条事务标记为 aborted(25P02)，此后该事务内的任何语句（包括 COMMIT）
+// 都会失败——业务写入（如 SLA 违规记录、预警历史）会被连坐回滚。
+// 由于 ent 未开启 sql/upsert 特性，无法生成 ON CONFLICT DO NOTHING，
+// 因此改为「事务内先查后插」：同一事务的语句是串行执行的，先查后插在该事务内是安全的。
+//
+// 返回值：命令实体、是否已存在（true 表示命中幂等、本次未插入）、错误。
+func EnqueueTxIdempotent(ctx context.Context, tx *ent.Tx, req EnqueueRequest) (*ent.OperationalCommand, bool, error) {
+	if tx == nil {
+		return nil, false, fmt.Errorf("EnqueueTxIdempotent requires non-nil tx")
+	}
+	if req.TenantID <= 0 || req.AggregateID <= 0 || req.CommandType == "" || req.AggregateType == "" || req.IdempotencyKey == "" {
+		return nil, false, fmt.Errorf("invalid operational command")
+	}
+	exists, err := tx.OperationalCommand.Query().
+		Where(
+			operationalcommand.TenantIDEQ(req.TenantID),
+			operationalcommand.CommandTypeEQ(req.CommandType),
+			operationalcommand.IdempotencyKeyEQ(req.IdempotencyKey),
+		).
+		Exist(ctx)
+	if err != nil {
+		return nil, false, fmt.Errorf("check existing operational command: %w", err)
+	}
+	if exists {
+		return nil, true, nil
+	}
+	cmd, err := enqueue(ctx, tx.OperationalCommand.Create(), req)
+	if err != nil {
+		return nil, false, err
+	}
+	return cmd, false, nil
+}
+
 // EnqueueSQLTx lets domain repositories that already own a database/sql
 // transaction participate in the same durable outbox without opening a second
 // Ent transaction. The business write and command therefore commit or roll

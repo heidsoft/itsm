@@ -335,16 +335,20 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 			content := fmt.Sprintf("【超时提醒】工单 #%s (%s) 已超过24小时未解决，请及时处理！",
 				t.TicketNumber, t.Title)
 
-			for _, userID := range userIDs {
-				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
-					UserIDs: []int{userID},
-					Type:    "long_pending",
-					Channel: "in_app",
-					Content: content,
-				}, tenantID); err != nil {
-					e.logger.Errorw("Failed to send long pending notification", "ticket_id", t.ID, "user_id", userID, "error", err)
-				}
+		for _, userID := range userIDs {
+			if userID <= 0 {
+				continue
 			}
+			if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+				UserIDs:        []int{userID},
+				Type:           "long_pending",
+				Channel:        "in_app",
+				Content:        content,
+				IdempotencyKey: fmt.Sprintf("long_pending:%d", t.ID),
+			}, tenantID); err != nil {
+				e.logger.Errorw("Failed to send long pending notification", "ticket_id", t.ID, "user_id", userID, "error", err)
+			}
+		}
 
 			// 通知管理员（仅限当前租户）
 			admins, _ := e.client.User.Query().
@@ -356,10 +360,11 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 
 			for _, adminID := range admins {
 				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
-					UserIDs: []int{adminID},
-					Type:    "long_pending_admin",
-					Channel: "in_app",
-					Content: content,
+					UserIDs:        []int{adminID},
+					Type:           "long_pending_admin",
+					Channel:        "in_app",
+					Content:        content,
+					IdempotencyKey: fmt.Sprintf("long_pending_admin:%d", t.ID),
 				}, tenantID); err != nil {
 					e.logger.Errorw("Failed to send long pending admin notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
 				}
@@ -367,17 +372,13 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 
 			e.logger.Infow("Long pending ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 
-			// H3 修复：发送通知后创建alert history记录，避免重复发送
-			if _, err := e.client.SLAAlertHistory.Create().
-				SetTicketID(t.ID).
-				SetTicketNumber(t.TicketNumber).
-				SetTicketTitle(t.Title).
-				SetAlertLevel("long_pending").
-				SetTenantID(tenantID).
-				SetAlertRuleName(fmt.Sprintf("工单 #%s 已超过24小时未解决", t.TicketNumber)).
-				Save(ctx); err != nil {
-				e.logger.Errorw("Failed to create alert history", "ticket_id", t.ID, "error", err)
-			}
+			// 去重说明：历史上这里会在通知后写一条 SLAAlertHistory 作为"已提醒"标记，
+			// 但 SLAAlertHistory.alert_rule_id 是指向 sla_alert_rules 的必填外键，
+			// 系统自动升级（24h 未解决）并不对应任何预警规则，该 Create 永远以
+			// `ent: missing required field "SLAAlertHistory.alert_rule_id"` 失败，
+			// 导致去重失效、通知每 5 分钟重复发送一次。
+			// 现改为由 outbox 的幂等键（long_pending:<ticketID>）承担去重：
+			// 同一工单的超时提醒只会入箱一次，重复调用撞唯一索引即安全跳过。
 		}
 	}
 
@@ -444,10 +445,11 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 
 			for _, adminID := range admins {
 				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
-					UserIDs: []int{adminID},
-					Type:    "unassigned",
-					Channel: "in_app",
-					Content: content,
+					UserIDs:        []int{adminID},
+					Type:           "unassigned",
+					Channel:        "in_app",
+					Content:        content,
+					IdempotencyKey: fmt.Sprintf("unassigned:%d", t.ID),
 				}, tenantID); err != nil {
 					e.logger.Errorw("Failed to send unassigned notification", "ticket_id", t.ID, "admin_id", adminID, "error", err)
 				}
@@ -455,17 +457,8 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 
 			e.logger.Infow("Unassigned ticket notification sent", "ticket_id", t.ID, "ticket_number", t.TicketNumber)
 
-			// H3 修复：发送通知后创建alert history记录，避免重复发送
-			if _, err := e.client.SLAAlertHistory.Create().
-				SetTicketID(t.ID).
-				SetTicketNumber(t.TicketNumber).
-				SetTicketTitle(t.Title).
-				SetAlertLevel("unassigned").
-				SetTenantID(tenantID).
-				SetAlertRuleName(fmt.Sprintf("工单 #%s 已超过2小时未分配", t.TicketNumber)).
-				Save(ctx); err != nil {
-				e.logger.Errorw("Failed to create alert history for unassigned", "ticket_id", t.ID, "error", err)
-			}
+			// 去重由 outbox 幂等键（unassigned:<ticketID>）承担，原因同 processLongPendingTickets：
+			// 系统自动告警无法提供必填的 alert_rule_id，写 SLAAlertHistory 必然失败。
 		}
 	}
 
@@ -487,12 +480,14 @@ func (e *EscalationService) EscalateTicket(ctx context.Context, ticketID int, re
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	// 创建升级记录
-	_, err = e.client.SLAAlertHistory.Create().
+	// 创建升级记录（尽力而为）。
+	// alert_rule_id 是指向 sla_alert_rules 的必填外键，手动升级并不对应任何预警规则，
+	// 因此这里不再伪造一个 0 值（会被 Positive() 校验器拒绝），
+	// 改为：写入失败时留痕但不阻断通知，避免"升级已发生但无人知晓"。
+	if _, err := e.client.SLAAlertHistory.Create().
 		SetTicketID(ticketID).
 		SetTicketNumber(ticket.TicketNumber).
 		SetTicketTitle(ticket.Title).
-		SetAlertRuleID(0).
 		SetAlertRuleName("Manual Escalation").
 		SetAlertLevel("manual").
 		SetThresholdPercentage(0).
@@ -501,22 +496,26 @@ func (e *EscalationService) EscalateTicket(ctx context.Context, ticketID int, re
 		SetEscalationLevel(1).
 		SetTenantID(tenantID).
 		SetCreatedAt(time.Now()).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create escalation record: %w", err)
+		Save(ctx); err != nil {
+		e.logger.Warnw("Manual escalation alert history not persisted (no alert rule attached)",
+			"ticket_id", ticketID, "error", err)
 	}
 
-	// 发送通知
+	// 发送通知（升级动作本身已生效，通知失败不影响返回）
 	if e.notificationSvc != nil && len(notifyUsers) > 0 {
 		content := fmt.Sprintf("【工单升级】#%s (%s) 已被手动升级，原因：%s",
 			ticket.TicketNumber, ticket.Title, reason)
 
 		for _, userID := range notifyUsers {
+			if userID <= 0 {
+				continue
+			}
 			if err := e.notificationSvc.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
-				UserIDs: []int{userID},
-				Type:    "manual_escalation",
-				Channel: "in_app",
-				Content: content,
+				UserIDs:        []int{userID},
+				Type:           "manual_escalation",
+				Channel:        "in_app",
+				Content:        content,
+				IdempotencyKey: fmt.Sprintf("manual_escalation:%d", ticketID),
 			}, tenantID); err != nil {
 				e.logger.Errorw("Failed to send manual escalation notification", "ticket_id", ticketID, "user_id", userID, "error", err)
 			}

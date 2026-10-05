@@ -250,11 +250,51 @@ func enqueueTicketNotificationCommand(ctx context.Context, client *ent.Client, t
 // enqueueTicketNotificationCommandTx 与 enqueueTicketNotificationCommand 行为一致，但写入
 // 的是 *ent.Tx 持有的连接。配合 caller 的业务事务，保证「主表变更与通知入箱同生同死」。
 // 当 client 与 tx 同时为 nil 时返回错误；两者皆非 nil 时 tx 优先（client 参数可保留为 nil）。
+// uniquePositiveRecipients 去重并剔除非正 ID 的收件人列表。
+//
+// 事务内入箱（*ent.Tx）必须使用去重后的收件人：outbox 幂等键由
+// (tenant_id, ticket_id, recipient_id, type, channel, occurrence_key) 派生，
+// 重复收件人会在同一事务内产生两条完全相同的 INSERT，撞上 operational_commands 的
+// (tenant_id, command_type, idempotency_key) 唯一索引。PostgreSQL 一旦遇到约束冲突就会把
+// 整条事务标记为 aborted(25P02)，后续任何语句（含 COMMIT）全部失败，
+// 同事务内的业务写入（SLA 违规记录 / 预警历史）会被连坐回滚。
+func uniquePositiveRecipients(ids ...int) []int {
+	seen := make(map[int]struct{}, len(ids))
+	out := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
 func enqueueTicketNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
 	if tx == nil {
 		return fmt.Errorf("enqueueTicketNotificationCommandTx requires non-nil tx")
 	}
-	return enqueueTicketNotificationCommandImpl(ctx, nil, tx, tenantID, ticketID, recipientID, notificationType, channel, content, occurrenceKey)
+	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%d|%d|%s|%s|%s", tenantID, ticketID, recipientID, notificationType, channel, occurrenceKey)))
+	_, skipped, err := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
+		TenantID:       tenantID,
+		CommandType:    commandbus.CommandDeliverNotification,
+		AggregateType:  "ticket",
+		AggregateID:    ticketID,
+		IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
+		Payload: map[string]interface{}{
+			"ticketId": ticketID, "recipientId": recipientID, "type": notificationType,
+			"channel": channel, "content": content,
+		},
+	})
+	if err != nil && !ent.IsConstraintError(err) {
+		return err
+	}
+	_ = skipped
+	return nil
 }
 
 func enqueueResourceNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
@@ -641,10 +681,7 @@ func (s *TicketNotificationService) NotifySLABreachedTx(
 	}[violationType]
 	content := fmt.Sprintf("【SLA违规】工单 #%s 的%s已违反SLA，超时 %.1f 分钟",
 		ticket.TicketNumber, slaType, exceededMinutes)
-	userIDs := []int{ticket.RequesterID}
-	if ticket.AssigneeID > 0 {
-		userIDs = append(userIDs, ticket.AssigneeID)
-	}
+	userIDs := uniquePositiveRecipients(ticket.RequesterID, ticket.AssigneeID)
 	occurrenceKey := fmt.Sprintf("sla_breached:%d:%s:%d", ticket.ID, violationType, int64(exceededMinutes))
 	for _, recipientID := range userIDs {
 		if recipientID <= 0 {
@@ -681,10 +718,7 @@ func (s *TicketNotificationService) NotifySLAAlertLevelChangedTx(
 	}[alertLevel]
 	content := fmt.Sprintf("【SLA%s】工单 #%s 剩余时间不足 %.1f%%，请及时处理！",
 		levelText, ticket.TicketNumber, percentage)
-	userIDs := []int{ticket.RequesterID}
-	if ticket.AssigneeID > 0 {
-		userIDs = append(userIDs, ticket.AssigneeID)
-	}
+	userIDs := uniquePositiveRecipients(ticket.RequesterID, ticket.AssigneeID)
 	occurrenceKey := fmt.Sprintf("sla_alert:%d:%s:%d", ticket.ID, alertLevel, int64(percentage))
 	for _, recipientID := range userIDs {
 		if recipientID <= 0 {
