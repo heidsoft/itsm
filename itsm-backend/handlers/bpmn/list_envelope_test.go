@@ -20,11 +20,22 @@ import (
 )
 
 // 列表接口信封契约：/api/v1/bpmn/dashboard/audit-logs、
-// /api/v1/bpmn/monitoring/instances/status、/api/v1/bpmn/monitoring/audit-logs
-// 历史上分别用 list / instances / logs 作为数组键，前端只能各自猜一套结构。
+// /api/v1/bpmn/monitoring/instances/status 历史上分别用 list / instances / logs
+// 作为数组键，前端只能各自猜一套结构。
 // AGENTS.md 规定列表响应唯一形态是 data:{items,total,page,pageSize,totalPages}。
+// E4-48：/bpmn/monitoring/audit-logs 重复表面已删除，收敛为 dashboard 单入口。
 
 func newEnvelopeTestRouter(t *testing.T, client *ent.Client) *gin.Engine {
+	return newEnvelopeTestRouterWithRole(t, client, "admin")
+}
+
+// newEnvelopeTestRouterWithRole 允许按用例注入认证角色：审计路由挂了
+// middleware.RequirePermission("bpmn","read")（E4-48），该门要求 role+client
+// 上下文键，缺失即 fail-closed 401——测试栈必须像真实 auth 中间件一样注入。
+// 空库（无 Role 行）走 unconfigured 兜底词表：admin 持 bpmn:read、
+// msp_viewer 不持，用作 allow/deny 两侧。role 传空串模拟"未认证"：
+// 不注入任何上下文键，让 RequirePermission 走缺键 401 分支。
+func newEnvelopeTestRouterWithRole(t *testing.T, client *ent.Client, role string) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	logger := zaptest.NewLogger(t).Sugar()
@@ -43,6 +54,10 @@ func newEnvelopeTestRouter(t *testing.T, client *ent.Client) *gin.Engine {
 		tenantID := 1
 		if c.GetHeader("X-Test-Tenant") == "2" {
 			tenantID = 2
+		}
+		if role != "" {
+			c.Set("role", role)
+			c.Set("client", client)
 		}
 		c.Set("tenant_id", tenantID)
 		c.Next()
@@ -199,18 +214,7 @@ func TestMonitoringInstancesStatus_UsesListEnvelope(t *testing.T) {
 	assert.Contains(t, first, "riskLevel")
 }
 
-func TestMonitoringAuditLogs_UsesListEnvelope(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", "file:bpmn_envelope_monitoring_logs?mode=memory&cache=shared&_fk=1")
-	t.Cleanup(func() { client.Close() })
-
-	base := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
-	seedAuditLog(t, client, 1, 11, "t1-a", base)
-	seedAuditLog(t, client, 1, 12, "t1-b", base.Add(time.Minute))
-	seedAuditLog(t, client, 1, 13, "t1-c", base.Add(2*time.Minute))
-	seedAuditLog(t, client, 2, 21, "t2-a", base)
-
-	r := newEnvelopeTestRouter(t, client)
-
-	assertListEnvelope(t, decodeEnvelope(t, r, "/api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=2", "1"), 3, 1, 2, 2, 2)
-	assertListEnvelope(t, decodeEnvelope(t, r, "/api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=20", "2"), 1, 1, 20, 1, 1)
-}
+// E4-48：原 TestMonitoringAuditLogs_UsesListEnvelope 打的是重复表面
+// /bpmn/monitoring/audit-logs，该路由已删除；同用例信封契约合并进
+// TestDashboardAuditLogs_UsesListEnvelope，重复表面消失由
+// TestAuditLogs_MonitoringDuplicateSurfaceGone 锁住。

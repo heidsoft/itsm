@@ -46,11 +46,14 @@ describe('BPMNDashboardApi', () => {
   });
 
   describe('queryAuditLogs', () => {
-    it('should query audit logs with params', async () => {
-      const expected = { list: [], total: 0, page: 1 };
+    it('should query audit logs with params and standard list envelope', async () => {
+      // E4-48：契约固定为标准列表信封；tenantId 不再由前端发送，
+      // 断言查询串里不出现它，防止旧参数名回流。
+      const expected = { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
       mockGet.mockResolvedValue(expected);
-      const res = await BPMNDashboardApi.queryAuditLogs({ tenantId: 1, page: 1 });
+      const res = await BPMNDashboardApi.queryAuditLogs({ processDefinitionKey: 'flow_a', page: 1 });
       expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/bpmn/dashboard/audit-logs'));
+      expect(mockGet).toHaveBeenCalledWith(expect.not.stringContaining('tenantId='));
       expect(res).toEqual(expected);
     });
   });
@@ -73,11 +76,14 @@ describe('BPMNDashboardApi', () => {
   });
 
   describe('getUserActivity', () => {
-    it('should get user activity', async () => {
+    it('should get user activity without client-sent tenantId', async () => {
       const expected = [{ id: 1 }];
       mockGet.mockResolvedValue(expected);
-      const res = await BPMNDashboardApi.getUserActivity(5, 1);
-      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/bpmn/dashboard/audit-logs/user/5'));
+      const res = await BPMNDashboardApi.getUserActivity(5);
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/bpmn/dashboard/audit-logs/user/5')
+      );
+      expect(mockGet).toHaveBeenCalledWith(expect.not.stringContaining('tenantId='));
       expect(res).toEqual(expected);
     });
   });

@@ -126,6 +126,8 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/bpmn/ai/templates/*":                          {Resource: "workflow", Action: "read"},
 			"/api/v1/bpmn/ai/templates/*/versions":                 {Resource: "workflow", Action: "read"},
 			"/api/v1/bpmn/ai/templates/suggestions":                {Resource: "workflow", Action: "read"},
+			"/api/v1/bpmn/dashboard/audit-logs":                    {Resource: "bpmn", Action: "read"},
+			"/api/v1/bpmn/dashboard/audit-logs/user/*":             {Resource: "bpmn", Action: "read"},
 			"/api/v1/bpmn/definitions":                             {Resource: "bpmn", Action: "read"},
 			"/api/v1/bpmn/definitions/*":                           {Resource: "bpmn", Action: "read"},
 			"/api/v1/bpmn/process-definitions":                     {Resource: "bpmn", Action: "read"},

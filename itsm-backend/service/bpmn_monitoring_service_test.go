@@ -215,26 +215,6 @@ func TestListProcessInstanceStatusQueryFields(t *testing.T) {
 	}
 }
 
-// 单元测试：AuditLogRequest 字段验证（确保与 bpmn_audit_service.QueryAuditLogsRequest 兼容）
-func TestAuditLogRequestFields(t *testing.T) {
-	now := time.Now()
-	req := &AuditLogRequest{
-		UserID:    "1",
-		Action:    "started",
-		TenantID:  1,
-		Page:      1,
-		PageSize:  20,
-		StartTime: &now,
-		EndTime:   &now,
-	}
-	if req.TenantID != 1 {
-		t.Error("TenantID not set")
-	}
-	if req.UserID != "1" {
-		t.Error("UserID not set")
-	}
-}
-
 // 单元测试：generateOptimizationRecommendations 应根据瓶颈数量返回建议
 func TestGenerateOptimizationRecommendations(t *testing.T) {
 	s := &BPMNMonitoringService{}

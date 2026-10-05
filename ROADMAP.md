@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-04.
+> what is parked.** Updated as part of every release. Last synced: 2026-10-05.
 >
 > Cross-references:
 > - PRD library: [docs/prd/](./docs/prd)
@@ -113,6 +113,8 @@ Concretely that means:
 - [x] **P0-2 同源响应双写收口（E4-46）** — `handlerctx.ResolveTenantID` / `RequireTenantID` 失败时委托 `middleware.AbortIfTenantError`（`middleware/msp_tenant_resolver.go`），后者对 401/403/500 三种情形都**已写体并 abort**；但 `handlers/` 仍有 24 处「拒绝后 handler 又 `common.Fail` 再写一份」的形态，客户端按 `{code,message,data}` 严格解析时报 `invalid character '{' after top-level value`。本批一次成片收掉 **24 处 / 6 文件**：仅保留 `if !ok { return }`，删除 `common.Fail` / `common.FailWithErr` / `common.ParamError` 等任何再写响应；并在 `common/handlerctx/handlerctx.go` 的 `ResolveTenantID` / `RequireTenantID` 函数注释里写明「失败时已写响应并 abort；调用方在 `!ok` 分支禁止再写响应，只能 `return`」。新增 `tests/contract/handlerctx_no_double_write_test.go` 作为双向 AST 棘轮（扫描 `handlers/*.go` 里 `tenantID, ok := handlerctx.Resolve*` / `userID, ok := handlerctx.Resolve*` / `tenantID, ok := handlerctx.Require*` 形态的 `!ok` 分支体，并对 `handlerctx.Resolve*` / `Require*` 的契约注释做 token 校验）。`UPGRADE.md` §1.27 记变更范围表 + 集成检查 + 未触碰区域（`handlers/sla_template/handler.go:32-34` 1 处未收口，`handlers/dashboard_handler.go:528-530` 的 `!ok` 分支体不是裸 `return` 待读全函数后再裁；跨域统一文案「未授权访问 vs 租户上下文缺失」是同型问题但本批不动）。坐标：`handlers/ticket_type/handler.go` 9、`handlers/ai/handler.go` 4、`handlers/operations/handler.go` 4、`handlers/ticket_rating/handler.go` 3、`handlers/timer/handler.go` 3、`handlers/skill/handler.go` 1。
 
 - [x] **P0-2 流程实例寻址键收敛（ga-gate 全链路 E2E 404 根因）** — `/api/v1/bpmn/process-instances/:id` 家族此前双寻址键：仅 GET 详情按数字 Ent 主键寻址，suspend/resume/terminate/variables/approval-history 与 monitoring 表面全按 `PI-*` 业务键寻址，列表返回的实例键回打详情必然 404。现全家族收敛为 PI 业务键单一所有者（数字 ID 不再是任何端点寻址入口，fail-closed 404），`POST` 启动响应从裸序列化 Ent 模型改为 `BPMNProcessInstanceResponse` DTO（snake_case → camelCase 契约修正）。回归 `service/bpmn_process_instance_get_test.go`（PI 命中/跨租户拒绝/数字 ID 必须 404）+ `bpmn_process_instance_history_test.go`；前端 `WorkflowApi.getInstances/getInstance/startWorkflow` 删除多字段兜底、审批中心深链改传 `processInstanceKey`。`UPGRADE.md` §1.28、`docs/api-reference.md` 工作流章节同批。
+
+- [x] **P0-2 BPMN 流程审计单表面收敛（E4-48）** — 「流程审计日志读取」此前有两套已注册 HTTP 表面（`/bpmn/dashboard/audit-logs` 与 `/bpmn/monitoring/audit-logs` 委托同一 `BPMNAuditService.QueryAuditLogs`）、两条都无 `RequirePermission`（任何已认证用户可读全量流程审计）、dashboard 那条直接序列化 Ent 模型（snake_case 响应键且把 `tenant_id` 发给前端），唯一生产消费方 `/workflow/audit` 页面因此四列恒空、只能靠 `normalizeAuditLog` 同键自复制兜底并自报 `tenantId`。修法：保留 dashboard 为唯一表面，删除 monitoring 路由 + `MonitoringHandler.GetAuditLogs` + `BPMNMonitoringService.GetAuditLogs/AuditLogRequest`；两条 dashboard 审计路由挂 `RequirePermission("bpmn","read")` 并再生成 `rbac_precheck_gen`（+2 条声明）；新增 `dto.ProcessAuditLogResponse`（camelCase 21 键、无 tenantId）；同批删除死路由 `/audit-logs/timeline`（参数名与 handler 读取键从不匹配、恒 1001、零消费方）。回归 `handlers/bpmn/audit_single_surface_contract_test.go`（重复表面 404 / camelCase 精确键集合 / 200-403-401 权限三态，打在真实 `RegisterRoutes` 上）+ `audit_pagination_contract_test.go` 租户断言改读 camelCase；错误泄漏棘轮基线 `monitoring.go` 9→8。前端 `ProcessAuditLog`/`QueryAuditLogsRequest` 删 `tenantId`、`getUserActivity` 不再发送该参数、页面删兜底。`UPGRADE.md` §1.29、`docs/api-reference.md` BPMN 监控章节同批改写。遗留另账：timeline 端点 `ProcessTimelineEntry` 与页面时间线读取字段（`action` vs `eventType`）不同构。
 
 ### 当前收敛项
 

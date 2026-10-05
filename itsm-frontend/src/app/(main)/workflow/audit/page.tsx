@@ -32,33 +32,8 @@ import type {
 } from '@/lib/api/bpmn-dashboard-api';
 import BPMNDashboardApi from '@/lib/api/bpmn-dashboard-api';
 import { useI18n } from '@/lib/i18n';
-import { useAuthStore } from '@/lib/store/auth-store';
 
 const { RangePicker } = DatePicker;
-
-const normalizeAuditLog = (log: ProcessAuditLog): ProcessAuditLog => {
-  const raw = log as any;
-  return {
-    ...log,
-    processInstanceId: raw.processInstanceId,
-    processInstanceKey: raw.processInstanceKey ?? '',
-    processDefinitionKey: raw.processDefinitionKey ?? '',
-    processDefinitionId: raw.processDefinitionId,
-    activityId: raw.activityId ?? '',
-    activityName: raw.activityName ?? '',
-    activityType: raw.activityType ?? '',
-    userId: raw.userId,
-    userName: raw.userName ?? '',
-    assigneeId: raw.assigneeId,
-    assigneeName: raw.assigneeName ?? '',
-    variablesBefore: raw.variablesBefore ?? {},
-    variablesAfter: raw.variablesAfter ?? {},
-    ipAddress: raw.ipAddress ?? '',
-    userAgent: raw.userAgent ?? '',
-    tenantId: raw.tenantId,
-    durationMs: raw.durationMs,
-  };
-};
 
 export default function AuditLogsPage() {
   const { t } = useI18n();
@@ -78,25 +53,17 @@ export default function AuditLogsPage() {
     pageSize: 20,
   });
 
-  const { currentTenant } = useAuthStore();
-  const tenantId = currentTenant?.id;
-
   const fetchLogs = async () => {
-    if (!tenantId) {
-      message.error('无法获取租户信息，请重新登录');
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
+      // 租户由后端认证上下文收敛（E4-48）；前端不得再发送 tenantId 猜测归属。
       const request: QueryAuditLogsRequest = {
         ...filters,
-        tenantId: tenantId,
         page,
         pageSize: pageSize,
       };
       const result = await BPMNDashboardApi.queryAuditLogs(request);
-      setLogs((result.items ?? []).map(normalizeAuditLog));
+      setLogs(result.items ?? []);
       setTotal(result.total);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
@@ -115,7 +82,7 @@ export default function AuditLogsPage() {
     setTimelineLoading(true);
     try {
       const data = await BPMNDashboardApi.getProcessTimeline(processInstanceKey);
-      setTimeline(data.map(normalizeAuditLog));
+      setTimeline(data);
       setTimelineVisible(true);
     } catch (error) {
       console.error('Failed to fetch timeline:', error);

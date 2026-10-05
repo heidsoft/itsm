@@ -1022,7 +1022,7 @@ cd itsm-backend && go test ./handlers/bpmn/ -count=1
 `expected: 20 / actual: 100`（`pageSize` 回显）、`expected: 2 / actual: 1`（`totalPages`）；
 修复前后皆绿的 3 例锁的是既有默认页长、末页余数与租户收敛行为。
 
-同批实测登记而未改的三项（台账 **E4-48，待裁**）：dashboard 与 monitoring 的 `audit-logs`
+同批实测登记而未改的三项（台账 **E4-48**，已于次日收口，见 §1.29）：dashboard 与 monitoring 的 `audit-logs`
 是同一用例的两套 HTTP 表面（后者委托到同一个 `BPMNAuditService.QueryAuditLogs`）；
 两条路由注册时都没有 `RequirePermission`，只做认证与租户范围收敛；
 `dashboard.go` 直接序列化 Ent 模型，响应项的键是 `process_instance_key`、`activity_id`、
@@ -1143,6 +1143,57 @@ cd itsm-backend && go test ./service/ ./handlers/bpmn/ ./tests/contract/ -count=
 回归锁：`service/bpmn_process_instance_get_test.go`（PI 命中 / 跨租户拒绝 / **数字 ID
 必须 404**）、`service/bpmn_process_instance_history_test.go`（approval-history 同键）。
 负证明：把查询改回按 `ID` 即红。
+
+### 1.29 BPMN 流程审计收敛为单一表面 + 权限门 + camelCase DTO（2026-10-05，破坏性）
+
+台账 E4-48（§1.26 同批登记）的收口。此前「流程审计日志读取」同时存在两套已注册 HTTP
+表面、两条都没有 `RequirePermission`，dashboard 那条还把 Ent 模型直接序列化给前端：
+
+- `GET /api/v1/bpmn/dashboard/audit-logs`：响应项键为 snake_case（`process_instance_key`、
+  `activity_id`、`tenant_id`），并把租户 ID 本身发给前端；
+- `GET /api/v1/bpmn/monitoring/audit-logs`：委托到同一个 `BPMNAuditService.QueryAuditLogs`，
+  但把行降维成 `resourceType/resourceId` 弱结构；
+- 任何已认证且拿到租户上下文的用户都能读全量流程审计；
+- 唯一生产消费方 `/workflow/audit` 页面按 camelCase 类型读取，「流程实例/活动/操作人/受理人」
+  四列恒空，只能靠 `normalizeAuditLog` 兜底，并额外在查询串里自报 `tenantId`。
+
+**变更**：
+
+1. **唯一表面**是 `GET /api/v1/bpmn/dashboard/audit-logs`（及 `audit-logs/user/:userId`）。
+   `GET /api/v1/bpmn/monitoring/audit-logs` 路由、`MonitoringHandler.GetAuditLogs`、
+   `BPMNMonitoringService.GetAuditLogs` 与 `AuditLogRequest` 全部删除，调用返回 404。
+2. **权限门**：两条 dashboard 审计路由挂 `RequirePermission("bpmn","read")`，
+   `rbac_precheck_gen.go` 同批再生成。无 `bpmn:read` 的角色从「任意已认证用户可读」变为
+   403 / code 2003；缺认证上下文 fail-closed 401 / code 2001。
+3. **DTO**：响应项改为 `dto.ProcessAuditLogResponse`，键集合恰好为 camelCase
+   （`processInstanceKey`、`activityId`、`userName`、`assigneeId`、`durationMs` 等 21 键），
+   **不再包含 `tenant_id`/`tenantId`**。
+4. 死路由 `GET /api/v1/bpmn/dashboard/audit-logs/timeline` 一并删除（注册的参数名与 handler
+   读取的 `process_instance_key` 从不匹配，任何调用恒返回 1001，零生产消费方）；
+   时间线唯一表面为 `GET /api/v1/bpmn/monitoring/instances/:instanceId/timeline`。
+5. 前端 `ProcessAuditLog` 类型删去 `tenantId`，`QueryAuditLogsRequest` 删去 `tenantId?`，
+   `getUserActivity` 不再发送 `tenantId` 查询参数；`/workflow/audit` 页面删除
+   `normalizeAuditLog` 同键自我复制的兜底与「无 tenantId 就报错」的本地门禁。
+
+**集成检查**：
+
+- 解析 `dashboard/audit-logs` 响应的代码需从 snake_case 键改为 camelCase 键；
+  依赖响应中 `tenant_id` 的调用方需改为使用自身认证上下文的租户。
+- 调用 `monitoring/audit-logs` 的集成需切换到 `dashboard/audit-logs`（参数集不变：
+  `processInstanceId`/`processDefinitionKey`/`action`/`userId`/`activityType`/
+  `startTime`/`endTime`/`page`/`pageSize`，时间仍按 `2006-01-02` 日期解析、非法值静默忽略）。
+- 以 `msp_viewer` 等非 BPMN 角色轮询审计接口的自动化任务将开始收到 403，需为角色补
+  `bpmn:read` 权限或改用有权限的服务账号。
+
+**验证**：
+
+```bash
+cd itsm-backend && go test ./handlers/bpmn/ ./service/ ./tests/contract/ ./middleware/ -count=1
+```
+
+回归锁：`handlers/bpmn/audit_single_surface_contract_test.go`（重复表面 404 / camelCase
+精确键集合且无 tenantId / 权限门 200-403-401 三态）、
+`handlers/bpmn/audit_pagination_contract_test.go`（页长与租户收敛，打在真实注册路由上）。
 
 ## 2. 环境变量变更
 

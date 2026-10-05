@@ -452,55 +452,10 @@ func (s *BPMNMonitoringService) RecordAuditLog(ctx context.Context, entry *Audit
 	return s.auditService.RecordAudit(ctx, auditCtx)
 }
 
-// GetAuditLogs 获取审计日志（委托给 BPMNAuditService 真实实现）
-func (s *BPMNMonitoringService) GetAuditLogs(ctx context.Context, req *AuditLogRequest) ([]*AuditLogEntry, int, error) {
-	if s.auditService == nil {
-		return []*AuditLogEntry{}, 0, nil
-	}
-	// 转换请求格式
-	queryReq := &QueryAuditLogsRequest{
-		TenantID:  req.TenantID,
-		Page:      req.Page,
-		PageSize:  req.PageSize,
-		SortBy:    "timestamp",
-		SortOrder: "desc",
-	}
-	if req.StartTime != nil {
-		queryReq.StartTime = *req.StartTime
-	}
-	if req.EndTime != nil {
-		queryReq.EndTime = *req.EndTime
-	}
-	if req.UserID != "" {
-		if uid, err := strconv.Atoi(req.UserID); err == nil {
-			queryReq.UserID = uid
-		}
-	}
-	if req.Action != "" {
-		queryReq.Action = req.Action
-	}
-	logs, total, err := s.auditService.QueryAuditLogs(ctx, queryReq)
-	if err != nil {
-		return nil, 0, err
-	}
-	// 转换为 AuditLogEntry
-	entries := make([]*AuditLogEntry, 0, len(logs))
-	for _, log := range logs {
-		entries = append(entries, &AuditLogEntry{
-			ID:           fmt.Sprintf("%d", log.ID),
-			Timestamp:    log.Timestamp,
-			UserID:       fmt.Sprintf("%d", log.UserID),
-			Action:       log.Action,
-			ResourceType: log.ProcessDefinitionKey,
-			ResourceID:   log.ProcessInstanceKey,
-			Details:      log.Metadata,
-			IPAddress:    log.IPAddress,
-			UserAgent:    log.UserAgent,
-			TenantID:     log.TenantID,
-		})
-	}
-	return entries, total, nil
-}
+// E4-48：原 GetAuditLogs/AuditLogRequest 是 BPMNAuditService.QueryAuditLogs 的
+// 第二套只读表面（把审计行降维成 resourceType/resourceId 弱结构再经
+// /bpmn/monitoring/audit-logs 暴露），已随该路由删除。审计日志的读取唯一所有者
+// 为 service.BPMNAuditService.QueryAuditLogs → /api/v1/bpmn/dashboard/audit-logs。
 
 // GetProcessInstanceHistory 获取流程实例执行历史（来自 execution_history 表）
 func (s *BPMNMonitoringService) GetProcessInstanceHistory(ctx context.Context, processInstanceID int, tenantID int) ([]*ent.ProcessExecutionHistory, error) {
@@ -574,19 +529,6 @@ type ProcessTimelineEntry struct {
 	DurationMs      int                    `json:"durationMs"`
 	NodeDurationMs  int                    `json:"nodeDurationMs"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// AuditLogRequest 审计日志请求
-type AuditLogRequest struct {
-	UserID       string     `json:"userId,omitempty"`
-	Action       string     `json:"action,omitempty"`
-	ResourceType string     `json:"resourceType,omitempty"`
-	ResourceID   string     `json:"resourceId,omitempty"`
-	StartTime    *time.Time `json:"startTime,omitempty"`
-	EndTime      *time.Time `json:"endTime,omitempty"`
-	TenantID     int        `json:"tenantId" binding:"required"`
-	Page         int        `json:"page"`
-	PageSize     int        `json:"pageSize"`
 }
 
 // GetSystemHealth 获取系统健康状态

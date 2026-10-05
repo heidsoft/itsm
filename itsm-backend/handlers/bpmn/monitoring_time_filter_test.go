@@ -47,7 +47,6 @@ func TestMonitoringTimeFilter_RejectsDateOnly(t *testing.T) {
 		{"/api/v1/bpmn/monitoring/metrics?startTime=2026-01-01&endTime=2026-01-31", "startTime"},
 		{"/api/v1/bpmn/monitoring/metrics/some-process?startTime=2026-01-01", "startTime"},
 		{"/api/v1/bpmn/monitoring/instances/status?endTime=2026-01-31", "endTime"},
-		{"/api/v1/bpmn/monitoring/audit-logs?startTime=2026-01-01", "startTime"},
 	}
 	for _, tc := range cases {
 		status, code, msg := doBPMNGet(t, r, tc.path, "1")
@@ -58,24 +57,27 @@ func TestMonitoringTimeFilter_RejectsDateOnly(t *testing.T) {
 }
 
 // TestMonitoringTimeFilter_AppliesValidBounds 证明合法 RFC3339 边界真的进了查询：
-// 三条审计日志分布在两个时间点，只取后一半必须得到 1 条而不是 3 条。
+// 三个流程实例分布在两个时间点，只取后一半必须得到 2 条而不是 3 条。
+// （E4-48 前本例打 /monitoring/audit-logs 重复表面，该路由已删除，
+// 时间边界语义在 instances/status 上等价可证。）
 func TestMonitoringTimeFilter_AppliesValidBounds(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_time_filter_apply?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })
 
+	definition := seedProcessDefinition(t, client, 1)
 	base := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
-	seedAuditLog(t, client, 1, 11, "tf-a", base)
-	seedAuditLog(t, client, 1, 12, "tf-b", base.Add(time.Hour))
-	seedAuditLog(t, client, 1, 13, "tf-c", base.Add(2*time.Hour))
+	seedProcessInstance(t, client, definition, 1, "tf-a", base)
+	seedProcessInstance(t, client, definition, 1, "tf-b", base.Add(time.Hour))
+	seedProcessInstance(t, client, definition, 1, "tf-c", base.Add(2*time.Hour))
 
 	r := newEnvelopeTestRouter(t, client)
 
-	all := decodeEnvelope(t, r, "/api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=20", "1")
+	all := decodeEnvelope(t, r, "/api/v1/bpmn/monitoring/instances/status?page=1&pageSize=20", "1")
 	assertListEnvelope(t, all, 3, 1, 20, 1, 3)
 
 	// 边界值本身要包含在结果里，所以用 11:00 作为下界应命中后两条。
 	filtered := decodeEnvelope(t, r,
-		"/api/v1/bpmn/monitoring/audit-logs?page=1&pageSize=20&startTime=2026-01-01T11%3A00%3A00Z&endTime=2026-01-01T13%3A00%3A00Z",
+		"/api/v1/bpmn/monitoring/instances/status?page=1&pageSize=20&startTime=2026-01-01T11%3A00%3A00Z&endTime=2026-01-01T13%3A00%3A00Z",
 		"1")
 	assertListEnvelope(t, filtered, 2, 1, 20, 1, 2)
 }

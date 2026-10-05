@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -68,10 +69,13 @@ func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 		dashboard.GET("/metrics", c.GetDashboardMetrics)
 		dashboard.GET("/process/:key/metrics", c.GetProcessMetrics)
 
-		// 审计日志
-		dashboard.GET("/audit-logs", c.GetAuditLogs)
-		dashboard.GET("/audit-logs/timeline", c.GetProcessTimeline)
-		dashboard.GET("/audit-logs/user/:userId", c.GetUserActivity)
+		// 审计日志（E4-48：本家族是该用例唯一 HTTP 表面；
+		// /bpmn/monitoring/audit-logs 重复面已删除，读取统一挂 bpmn:read 权限门。
+		// 旧的 /audit-logs/timeline 路由注册的参数名与 handler 读取的
+		// process_instance_key 从不匹配，任何调用恒返回 1001，且零生产消费方，已删除；
+		// 时间线唯一表面为 /bpmn/monitoring/instances/:instanceId/timeline。）
+		dashboard.GET("/audit-logs", middleware.RequirePermission("bpmn", "read"), c.GetAuditLogs)
+		dashboard.GET("/audit-logs/user/:userId", middleware.RequirePermission("bpmn", "read"), c.GetUserActivity)
 
 		// SLA
 		dashboard.GET("/sla/violations", c.GetSLAViolations)
@@ -241,36 +245,7 @@ func (c *DashboardHandler) GetAuditLogs(ctx *gin.Context) {
 		return
 	}
 
-	common.SuccessWithList(ctx, logs, total, pg.Page, pg.PageSize)
-}
-
-// GetProcessTimeline 获取流程时间线
-// @Summary 获取流程时间线
-// @Tags BPMN仪表盘
-// @Produce json
-// @Param process_instance_key path string true "流程实例Key"
-// @Success 200 {object} common.Response
-func (c *DashboardHandler) GetProcessTimeline(ctx *gin.Context) {
-	processInstanceKey := ctx.Param("process_instance_key")
-	if processInstanceKey == "" {
-		common.Fail(ctx, 1001, "流程实例Key不能为空")
-		return
-	}
-
-	// 租户上下文缺失时 fail-closed（历史为 comma-ok 静默取 0，
-	// 存在以 tenantID=0 查询审计时间线的跨租户数据风险）
-	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
-	if !ok {
-		return
-	}
-
-	timeline, err := c.auditService.GetProcessTimeline(ctx.Request.Context(), processInstanceKey, tenantID)
-	if err != nil {
-		c.failInternal(ctx, "获取流程时间线", err)
-		return
-	}
-
-	common.Success(ctx, timeline)
+	common.SuccessWithList(ctx, dto.ToProcessAuditLogResponseList(logs), total, pg.Page, pg.PageSize)
 }
 
 // GetUserActivity 获取用户活动
@@ -315,7 +290,7 @@ func (c *DashboardHandler) GetUserActivity(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, activity)
+	common.Success(ctx, dto.ToProcessAuditLogResponseList(activity))
 }
 
 // GetSLAViolations 获取SLA违规

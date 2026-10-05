@@ -77,14 +77,12 @@ export interface ProcessAuditLog {
   comment: string;
   ipAddress: string;
   userAgent: string;
-  tenantId: number;
   timestamp: string;
   durationMs: number;
   metadata: Record<string, any>;
 }
 
 export interface QueryAuditLogsRequest {
-  tenantId?: number;
   processInstanceId?: number;
   processDefinitionKey?: string;
   action?: string;
@@ -210,11 +208,12 @@ export class BPMNDashboardApi {
 
   /**
    * 获取用户活动
+   *
+   * 租户由后端认证上下文收敛（E4-48），前端不再发送 tenantId；
+   * 路由挂 bpmn:read 权限门。
    */
-  static async getUserActivity(userId: number, tenantId: number, startTime?: string, endTime?: string): Promise<ProcessAuditLog[]> {
-    const params = new URLSearchParams({
-      tenantId: tenantId.toString()
-    });
+  static async getUserActivity(userId: number, startTime?: string, endTime?: string): Promise<ProcessAuditLog[]> {
+    const params = new URLSearchParams();
     if (startTime) params.append('startTime', startTime);
     if (endTime) params.append('endTime', endTime);
 

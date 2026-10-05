@@ -48,8 +48,9 @@ func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 		// 系统健康检查
 		monitoring.GET("/health", c.GetSystemHealth)
 
-		// 审计日志
-		monitoring.GET("/audit-logs", c.GetAuditLogs)
+		// E4-48：/monitoring/audit-logs 与 /dashboard/audit-logs 是同一用例的双表面，
+		// 且响应形态互相漂移（此处曾把审计行降维成 resourceType/resourceId 弱结构）。
+		// 唯一表面收敛到 /bpmn/dashboard/audit-logs，本条已删除。
 	}
 }
 
@@ -311,47 +312,4 @@ func (c *MonitoringHandler) GetSystemHealth(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, health)
-}
-
-// GetAuditLogs 获取审计日志
-func (c *MonitoringHandler) GetAuditLogs(ctx *gin.Context) {
-	tenantID, ok := tenantIDFromCtx(ctx)
-	if !ok {
-		return
-	}
-
-	pg := common.GetPaginationFromQuery(ctx)
-	userID := ctx.Query("userId")
-	action := ctx.Query("action")
-	resourceType := ctx.Query("resourceType")
-	resourceID := ctx.Query("resourceId")
-
-	req := &service.AuditLogRequest{
-		TenantID:     tenantID,
-		Page:         pg.Page,
-		PageSize:     pg.PageSize,
-		UserID:       userID,
-		Action:       action,
-		ResourceType: resourceType,
-		ResourceID:   resourceID,
-	}
-
-	startTime, ok := parseTimeFilter(ctx, "startTime")
-	if !ok {
-		return
-	}
-	endTime, ok := parseTimeFilter(ctx, "endTime")
-	if !ok {
-		return
-	}
-	req.StartTime = startTime
-	req.EndTime = endTime
-
-	logs, total, err := c.monitoringService.GetAuditLogs(ctx, req)
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取审计日志失败: "+err.Error())
-		return
-	}
-
-	common.SuccessWithList(ctx, logs, total, pg.Page, pg.PageSize)
 }
