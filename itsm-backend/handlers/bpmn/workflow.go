@@ -155,7 +155,7 @@ func (c *WorkflowHandler) GetApprovalHistory(ctx *gin.Context) {
 	}
 	decisions, err := c.processEngine.TaskService().ListApprovalDecisions(workflowCtx, ctx.Param("id"))
 	if err != nil {
-		common.InternalError(ctx, "查询审批历史失败: "+err.Error())
+		common.RespondError(ctx, err, "查询审批历史失败")
 		return
 	}
 	common.Success(ctx, dto.ToProcessApprovalDecisionResponseList(decisions))
@@ -296,7 +296,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	}
 	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, &finalReq)
 	if err != nil {
-		common.InternalError(ctx, "创建流程定义失败: "+err.Error())
+		common.RespondError(ctx, err, "创建流程定义失败")
 		return
 	}
 
@@ -328,7 +328,7 @@ func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 
 	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(workflowCtx, &req)
 	if err != nil {
-		common.InternalError(ctx, "获取流程定义列表失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程定义列表失败")
 		return
 	}
 
@@ -387,7 +387,7 @@ func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 
 	definition, err := c.processEngine.ProcessDefinitionService().UpdateProcessDefinition(workflowCtx, key, version, &req)
 	if err != nil {
-		common.InternalError(ctx, "更新流程定义失败: "+err.Error())
+		common.RespondError(ctx, err, "更新流程定义失败")
 		return
 	}
 
@@ -409,7 +409,7 @@ func (c *WorkflowHandler) DeleteProcessDefinition(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessDefinitionService().DeleteProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.InternalError(ctx, "删除流程定义失败: "+err.Error())
+		common.RespondError(ctx, err, "删除流程定义失败")
 		return
 	}
 
@@ -492,7 +492,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 
 	created, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(workflowCtx, newDefinition)
 	if err != nil {
-		common.InternalError(ctx, "复制流程定义失败: "+err.Error())
+		common.RespondError(ctx, err, "复制流程定义失败")
 		return
 	}
 
@@ -526,7 +526,7 @@ func (c *WorkflowHandler) SetProcessDefinitionActive(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(workflowCtx, key, version, *req.Active)
 	if err != nil {
-		common.InternalError(ctx, "设置流程定义状态失败: "+err.Error())
+		common.RespondError(ctx, err, "设置流程定义状态失败")
 		return
 	}
 
@@ -556,7 +556,7 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 
 	instance, err := c.processEngine.StartProcess(workflowCtx, req.ProcessDefinitionKey, req.BusinessKey, req.Variables)
 	if err != nil {
-		common.InternalError(ctx, "启动流程实例失败: "+err.Error())
+		common.RespondError(ctx, err, "启动流程实例失败")
 		return
 	}
 
@@ -589,7 +589,7 @@ func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 
 	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(reqCtx, &req)
 	if err != nil {
-		common.InternalError(ctx, "获取流程实例列表失败: "+err.Error())
+		common.RespondError(ctx, err, "获取流程实例列表失败")
 		return
 	}
 
@@ -636,7 +636,7 @@ func (c *WorkflowHandler) SetProcessInstanceVariables(ctx *gin.Context) {
 
 	err := c.processEngine.ProcessInstanceService().SetProcessInstanceVariables(workflowCtx, processInstanceID, req.Variables)
 	if err != nil {
-		common.InternalError(ctx, "设置流程实例变量失败: "+err.Error())
+		common.RespondError(ctx, err, "设置流程实例变量失败")
 		return
 	}
 
@@ -661,7 +661,7 @@ func (c *WorkflowHandler) SuspendProcess(ctx *gin.Context) {
 
 	err := c.processEngine.SuspendProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
-		common.InternalError(ctx, "暂停流程实例失败: "+err.Error())
+		common.RespondError(ctx, err, "暂停流程实例失败")
 		return
 	}
 
@@ -678,7 +678,7 @@ func (c *WorkflowHandler) ResumeProcess(ctx *gin.Context) {
 
 	err := c.processEngine.ResumeProcess(workflowCtx, processInstanceID)
 	if err != nil {
-		common.InternalError(ctx, "恢复流程实例失败: "+err.Error())
+		common.RespondError(ctx, err, "恢复流程实例失败")
 		return
 	}
 
@@ -703,7 +703,7 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 
 	err := c.processEngine.TerminateProcess(workflowCtx, processInstanceID, req.Reason)
 	if err != nil {
-		common.InternalError(ctx, "终止流程实例失败: "+err.Error())
+		common.RespondError(ctx, err, "终止流程实例失败")
 		return
 	}
 
@@ -747,7 +747,7 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
-		common.InternalError(ctx, "获取用户任务列表失败: "+err.Error())
+		common.RespondError(ctx, err, "获取用户任务列表失败")
 		return
 	}
 
@@ -781,7 +781,7 @@ func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTaskViews(ctx.Request.Context(), &req)
 	if err != nil {
-		common.InternalError(ctx, "获取全部任务列表失败: "+err.Error())
+		common.RespondError(ctx, err, "获取全部任务列表失败")
 		return
 	}
 	common.Success(ctx, common.NewListResponse(tasks, common.NewPaginationResponse(req.Page, req.PageSize, int64(total))))
@@ -831,7 +831,7 @@ func (c *WorkflowHandler) AssignTask(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().AssignTask(workflowCtx, taskID, req.Assignee)
 	if err != nil {
-		common.InternalError(ctx, "分配任务失败: "+err.Error())
+		common.RespondError(ctx, err, "分配任务失败")
 		return
 	}
 
@@ -905,7 +905,7 @@ func (c *WorkflowHandler) ClaimTask(ctx *gin.Context) {
 		claimErr = c.processEngine.TaskService().ClaimTask(workflowCtx, taskID, fmt.Sprintf("%d", userID))
 	}
 	if claimErr != nil {
-		common.InternalError(ctx, "认领任务失败: "+claimErr.Error())
+		common.RespondError(ctx, claimErr, "认领任务失败")
 		return
 	}
 
@@ -938,7 +938,7 @@ func (c *WorkflowHandler) CompleteTask(ctx *gin.Context) {
 		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, req.Variables)
 	}
 	if err != nil {
-		common.InternalError(ctx, "完成任务失败: "+err.Error())
+		common.RespondError(ctx, err, "完成任务失败")
 		return
 	}
 
@@ -963,7 +963,7 @@ func (c *WorkflowHandler) CancelTask(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().CancelTask(workflowCtx, taskID, req.Reason)
 	if err != nil {
-		common.InternalError(ctx, "取消任务失败: "+err.Error())
+		common.RespondError(ctx, err, "取消任务失败")
 		return
 	}
 
@@ -988,7 +988,7 @@ func (c *WorkflowHandler) SetTaskVariables(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().SetTaskVariables(workflowCtx, taskID, req.Variables)
 	if err != nil {
-		common.InternalError(ctx, "设置任务变量失败: "+err.Error())
+		common.RespondError(ctx, err, "设置任务变量失败")
 		return
 	}
 
@@ -1021,7 +1021,7 @@ func (c *WorkflowHandler) ListVersions(ctx *gin.Context) {
 
 	versions, err := c.versionService.ListVersions(ctx, processKey, tenantID)
 	if err != nil {
-		common.InternalError(ctx, "获取版本列表失败: "+err.Error())
+		common.RespondError(ctx, err, "获取版本列表失败")
 		return
 	}
 
@@ -1062,7 +1062,7 @@ func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
 
 	version, err := c.versionService.CreateVersion(ctx, &req)
 	if err != nil {
-		common.InternalError(ctx, "创建版本失败: "+err.Error())
+		common.RespondError(ctx, err, "创建版本失败")
 		return
 	}
 
@@ -1083,7 +1083,7 @@ func (c *WorkflowHandler) ActivateVersion(ctx *gin.Context) {
 
 	err = c.versionService.ActivateVersion(ctx, processKey, version, tenantID)
 	if err != nil {
-		common.InternalError(ctx, "激活版本失败: "+err.Error())
+		common.RespondError(ctx, err, "激活版本失败")
 		return
 	}
 
@@ -1109,7 +1109,7 @@ func (c *WorkflowHandler) RollbackVersion(ctx *gin.Context) {
 
 	err = c.versionService.RollbackToVersion(ctx, processKey, version, tenantID, req.Reason)
 	if err != nil {
-		common.InternalError(ctx, "回滚版本失败: "+err.Error())
+		common.RespondError(ctx, err, "回滚版本失败")
 		return
 	}
 
@@ -1149,7 +1149,7 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 
 	comparison, err := c.versionService.CompareVersions(ctx, processKey, base, target, tenantID)
 	if err != nil {
-		common.InternalError(ctx, "版本比较失败: "+err.Error())
+		common.RespondError(ctx, err, "版本比较失败")
 		return
 	}
 
@@ -1173,7 +1173,7 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 
 	stats, err := c.processEngine.ProcessInstanceService().GetInstanceStatistics(reqCtx, &req)
 	if err != nil {
-		common.InternalError(ctx, "获取实例统计失败: "+err.Error())
+		common.RespondError(ctx, err, "获取实例统计失败")
 		return
 	}
 
@@ -1198,7 +1198,7 @@ func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
 
 	stats, err := c.processEngine.TaskService().GetTaskStatistics(ctx, &req)
 	if err != nil {
-		common.InternalError(ctx, "获取任务统计失败: "+err.Error())
+		common.RespondError(ctx, err, "获取任务统计失败")
 		return
 	}
 
@@ -1221,7 +1221,7 @@ func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 
 	tasks, err := c.processEngine.TaskService().CreateCounterSignTasks(workflowCtx, taskID, &req)
 	if err != nil {
-		common.InternalError(ctx, "创建会签任务失败: "+err.Error())
+		common.RespondError(ctx, err, "创建会签任务失败")
 		return
 	}
 
@@ -1238,7 +1238,7 @@ func (c *WorkflowHandler) GetCounterSignStatus(ctx *gin.Context) {
 
 	status, err := c.processEngine.TaskService().GetCounterSignStatus(workflowCtx, taskID)
 	if err != nil {
-		common.InternalError(ctx, "获取会签状态失败: "+err.Error())
+		common.RespondError(ctx, err, "获取会签状态失败")
 		return
 	}
 
@@ -1261,7 +1261,7 @@ func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 
 	err := c.processEngine.TaskService().Vote(workflowCtx, taskID, &req)
 	if err != nil {
-		common.InternalError(ctx, "投票失败: "+err.Error())
+		common.RespondError(ctx, err, "投票失败")
 		return
 	}
 
@@ -1275,7 +1275,7 @@ func (c *WorkflowHandler) GetVersionChangeLogs(ctx *gin.Context) {
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessKey(ctx, processKey, tenantID)
 	if err != nil {
-		common.InternalError(ctx, "获取变更日志失败: "+err.Error())
+		common.RespondError(ctx, err, "获取变更日志失败")
 		return
 	}
 
@@ -1293,7 +1293,7 @@ func (c *WorkflowHandler) GetVersionChangeLogsByID(ctx *gin.Context) {
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID)
 	if err != nil {
-		common.InternalError(ctx, "获取变更日志失败: "+err.Error())
+		common.RespondError(ctx, err, "获取变更日志失败")
 		return
 	}
 
