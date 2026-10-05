@@ -50,7 +50,7 @@ func (d *DingTalk) Init(_ context.Context, cfg connector.Config) error {
 	if appKey == "" || appSecret == "" {
 		return fmt.Errorf("dingtalk: credentials.app_key and app_secret are required")
 	}
-	baseURL, _ := cfg.Settings["base_url"].(string)
+	baseURL, _ := connector.SettingString(cfg.Settings, "base_url")
 	d.client = NewClient(appKey, appSecret, cfg.Credentials["agent_id"], baseURL)
 	d.cfg = cfg
 	d.startedAt = time.Now()

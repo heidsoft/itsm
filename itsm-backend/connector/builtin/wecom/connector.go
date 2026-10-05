@@ -54,7 +54,7 @@ func (w *WeCom) Init(_ context.Context, cfg connector.Config) error {
 	if corpID == "" || corpSecret == "" {
 		return fmt.Errorf("wecom: credentials.corp_id and corp_secret are required")
 	}
-	baseURL, _ := cfg.Settings["base_url"].(string)
+	baseURL, _ := connector.SettingString(cfg.Settings, "base_url")
 	w.client = NewClient(corpID, corpSecret, cfg.Credentials["agent_id"], baseURL)
 	w.cfg = cfg
 	w.token = cfg.Credentials["callback_token"]

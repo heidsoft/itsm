@@ -142,7 +142,7 @@ func (m *Manager) GetByCallbackInstanceID(name, callbackInstanceID string) (Conn
 	defer m.mu.RUnlock()
 	var matched *instance
 	for _, inst := range m.instances {
-		id, _ := inst.cfg.Settings["callbackInstanceId"].(string)
+		id, _ := SettingString(inst.cfg.Settings, "callbackInstanceId")
 		if inst.cfg.Name == name && inst.cfg.Enabled && id == callbackInstanceID {
 			// A public callback identifier must resolve to exactly one tenant.
 			// Fail closed on legacy/corrupt duplicate configuration instead of

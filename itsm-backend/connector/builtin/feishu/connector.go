@@ -101,10 +101,10 @@ func (f *Feishu) Init(_ context.Context, cfg connector.Config) error {
 	if appID == "" || appSecret == "" {
 		return fmt.Errorf("feishu: credentials.app_id and app_secret are required")
 	}
-	baseURL, _ := cfg.Settings["base_url"].(string)
+	baseURL, _ := connector.SettingString(cfg.Settings, "base_url")
 	if baseURL == "" {
 		// 海外版判定
-		if region, _ := cfg.Settings["region"].(string); region == "intl" {
+		if region, _ := connector.SettingString(cfg.Settings, "region"); region == "intl" {
 			baseURL = BaseURLIntl
 		}
 	}
@@ -148,7 +148,7 @@ func (f *Feishu) GetOAuthAuthURL(redirectURI, state string) string {
 }
 
 func (f *Feishu) CallbackInstanceID() string {
-	id, _ := f.cfg.Settings["callbackInstanceId"].(string)
+	id, _ := connector.SettingString(f.cfg.Settings, "callbackInstanceId")
 	return id
 }
 

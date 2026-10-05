@@ -18,6 +18,17 @@ const { Text, Paragraph } = Typography;
 
 type Tab = 'market' | 'instances';
 
+// 各连接器读取 settings 时依赖的键名。此前启用表单完全自由录入且不提示必填键，
+// 管理员很容易漏填，启用后「测试」直接报 `settings.xxx not configured`。
+// 后端已对键名风格（snake_case / camelCase）做容错，这里只负责把必填键提示出来。
+const REQUIRED_SETTINGS: Record<string, string[]> = {
+  console: ['debug_channel'],
+  webhook: ['url'],
+  feishu: ['callbackInstanceId'],
+  dingtalk: ['callbackInstanceId'],
+  wecom: ['callbackInstanceId'],
+};
+
 export default function ConnectorsAdminPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
@@ -36,6 +47,8 @@ export default function ConnectorsAdminPage() {
 
   const [form] = Form.useForm();
   const [sendForm] = Form.useForm();
+
+  const requiredSettingKeys = provisionTarget ? REQUIRED_SETTINGS[provisionTarget.name] || [] : [];
 
   const load = async () => {
     setLoading(true);
@@ -388,12 +401,28 @@ export default function ConnectorsAdminPage() {
               >
                 <Input.TextArea rows={4} placeholder={t('connectors.provision.credentialsPlaceholder')} />
               </Form.Item>
+              {requiredSettingKeys.length > 0 && (
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 12 }}
+                  message={`该连接器需要以下设置项：${requiredSettingKeys.join('、')}`}
+                  description="按 key=value 每行一项填写；留空会导致启用后「测试」失败。"
+                />
+              )}
               <Form.Item
                 name="settingText"
                 label={t('connectors.provision.fieldSettings')}
                 tooltip={t('connectors.provision.settingsTooltip')}
               >
-                <Input.TextArea rows={3} placeholder={t('connectors.provision.settingsPlaceholder')} />
+                <Input.TextArea
+                  rows={3}
+                  placeholder={
+                    requiredSettingKeys.length > 0
+                      ? requiredSettingKeys.map((k) => `${k}=`).join('\n')
+                      : t('connectors.provision.settingsPlaceholder')
+                  }
+                />
               </Form.Item></>}
             </Form>
           </>

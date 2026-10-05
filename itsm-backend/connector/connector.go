@@ -258,9 +258,7 @@ type Receiver interface {
 
 // InboundHandler receives normalized messages from long-running polling connectors.
 // tenantID and instanceKey always come from trusted connector configuration.
-type PollingInboundHandler func(context.Context, int, string, *InboundMessage) error
-
-// PollingReceiver is implemented by connectors such as IMAP that own a polling loop.
+type PollingInboundHandler func(context.Context, int, string, *InboundMessage) error// PollingReceiver is implemented by connectors such as IMAP that own a polling loop.
 type PollingReceiver interface {
 	Connector
 	SetInboundHandler(PollingInboundHandler)
@@ -269,3 +267,111 @@ type PollingReceiver interface {
 
 // ErrNotSupported 连接器不支持的能力
 var ErrNotSupported = errors.New("connector: capability not supported")
+
+// SettingString 从连接器 settings 中读取字符串配置，并对键名大小写风格容错。
+//
+// 背景：settings 是**自由键值对**（管理端以 key=value 文本录入，不做键名规范化），
+// 而各连接器读取时使用的键名风格并不统一（既有 base_url 也有 callbackInstanceId）。
+// 一旦管理员录入的键名与连接器读取的键名风格不同，配置会静默失效——
+// 表现为"配置明明写了，测试却报 xxx not configured"。
+//
+// 这里按「原样 → snake_case → camelCase」依次尝试，保证两种风格都能读到。
+func SettingString(settings map[string]interface{}, key string) (string, bool) {
+	if len(settings) == 0 || key == "" {
+		return "", false
+	}
+	for _, candidate := range settingKeyCandidates(key) {
+		if v, ok := settings[candidate]; ok {
+			if s, ok := v.(string); ok && s != "" {
+				return s, true
+			}
+		}
+	}
+	return "", false
+}
+
+// SettingInt 同 SettingString，用于整型配置（端口、轮询间隔等）。
+// JSON 反序列化后数字统一为 float64，因此这里同时兼容 float64/int/json.Number。
+func SettingInt(settings map[string]interface{}, key string) (int, bool) {
+	if len(settings) == 0 || key == "" {
+		return 0, false
+	}
+	for _, candidate := range settingKeyCandidates(key) {
+		v, ok := settings[candidate]
+		if !ok {
+			continue
+		}
+		switch n := v.(type) {
+		case float64:
+			return int(n), true
+		case int:
+			return n, true
+		case json.Number:
+			i, err := n.Int64()
+			if err == nil {
+				return int(i), true
+			}
+		}
+	}
+	return 0, false
+}
+
+// settingKeyCandidates 生成一个键名的等价候选集（去重、保序）。
+func settingKeyCandidates(key string) []string {
+	candidates := []string{key}
+	for _, alt := range []string{ToSnakeCase(key), ToCamelCase(key)} {
+		if alt == "" {
+			continue
+		}
+		dup := false
+		for _, c := range candidates {
+			if c == alt {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			candidates = append(candidates, alt)
+		}
+	}
+	return candidates
+}
+
+// ToSnakeCase 把 camelCase / PascalCase 转成 snake_case。
+func ToSnakeCase(s string) string {
+	if s == "" {
+		return ""
+	}
+	var b strings.Builder
+	for i, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			if i > 0 {
+				b.WriteByte('_')
+			}
+			b.WriteRune(r - 'A' + 'a')
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+// ToCamelCase 把 snake_case 转成 camelCase（首字母小写）。
+func ToCamelCase(s string) string {
+	if s == "" {
+		return ""
+	}
+	parts := strings.Split(s, "_")
+	var b strings.Builder
+	b.WriteString(strings.ToLower(parts[0]))
+	for _, p := range parts[1:] {
+		if p == "" {
+			continue
+		}
+		b.WriteString(strings.ToUpper(p[:1]))
+		if len(p) > 1 {
+			b.WriteString(p[1:])
+		}
+	}
+	return b.String()
+}

@@ -245,9 +245,9 @@ func (h *Handler) Test(ctx *gin.Context) {
 	var channel string
 	for _, cfg := range h.manager.ListByTenant(tenantID) {
 		if cfg.Name == name {
-			if ch, ok := cfg.Settings["debug_channel"].(string); ok {
-				channel = ch
-			}
+		if ch, ok := connector.SettingString(cfg.Settings, "debug_channel"); ok {
+			channel = ch
+		}
 		}
 	}
 	if channel == "" {
