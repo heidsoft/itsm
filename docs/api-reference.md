@@ -1298,7 +1298,7 @@ PUT  /api/v1/bpmn/process-instances/{id}/terminate
 `{id}` 全家族统一使用 BPMN 业务键 `processInstanceId`（`PI-*` 字符串，schema 全局唯一），即
 响应中的 `instanceId` 字段；数字 Ent 主键只出现在响应 `id` 字段，**不再是任何端点的寻址键**，
 传数字返回 404。查询与变更均收敛在认证租户范围内（跨租户 PI 同样 404）。详见
-[UPGRADE.md](./UPGRADE.md) §1.28。
+[UPGRADE.md](../UPGRADE.md) §1.28。
 
 ### 获取工作流列表
 
@@ -1341,9 +1341,9 @@ Authorization: Bearer <accessToken>
 
 `monitoring/metrics`、`monitoring/metrics/{processKey}`、`monitoring/instances/status` 三个端点接受可选的 `startTime`/`endTime`，取值必须是 RFC3339；非法值返回 400 / code 1001（此前行为是静默忽略该过滤条件，响应看不出差异）。未传这两个参数时按 `timeRange`（默认 `24h`）。这些路由由 `handlers/bpmn/monitoring.go` 的 `RegisterRoutes` 挂在认证租户组下，实测**没有** `RequirePermission` 声明，只做认证与租户范围收敛。
 
-三个列表端点（`instances/status`、`dashboard/audit-logs` 家族）的页长只有 `common.GetPaginationFromQuery` 一个所有者：缺省 `page=1`、`pageSize=20`，只采纳落在 `(0,100]` 的查询值，越界（`150`、`5000`）、非数字（`abc`）与 `0`/负数一律回落缺省，页码下界为 1；响应回显的就是真正进入 SQL `LIMIT` 的值，`data` 为平台五键 `{items,total,page,pageSize,totalPages}`。此前 `pageSize` 写错会让服务层的条件式分页分支整体不成立、`LIMIT` 子句消失从而把该租户的审计整表读出，越界值则按原值执行而信封另报 100，见 [UPGRADE.md](./UPGRADE.md) §1.26。
+三个列表端点（`instances/status`、`dashboard/audit-logs` 家族）的页长只有 `common.GetPaginationFromQuery` 一个所有者：缺省 `page=1`、`pageSize=20`，只采纳落在 `(0,100]` 的查询值，越界（`150`、`5000`）、非数字（`abc`）与 `0`/负数一律回落缺省，页码下界为 1；响应回显的就是真正进入 SQL `LIMIT` 的值，`data` 为平台五键 `{items,total,page,pageSize,totalPages}`。此前 `pageSize` 写错会让服务层的条件式分页分支整体不成立、`LIMIT` 子句消失从而把该租户的审计整表读出，越界值则按原值执行而信封另报 100，见 [UPGRADE.md](../UPGRADE.md) §1.26。
 
-流程审计读取的唯一 HTTP 表面是 `GET /api/v1/bpmn/dashboard/audit-logs`（台账 E4-48 已收敛，见 [UPGRADE.md](./UPGRADE.md) §1.29）：
+流程审计读取的唯一 HTTP 表面是 `GET /api/v1/bpmn/dashboard/audit-logs`（台账 E4-48 已收敛，见 [UPGRADE.md](../UPGRADE.md) §1.29）：
 
 - `GET /api/v1/bpmn/monitoring/audit-logs` 已删除（重复表面），调用返回 404；
 - 该家族（`audit-logs` 与 `audit-logs/user/{userId}`）挂 `RequirePermission("bpmn","read")`，无此权限返回 403 / code 2003，缺认证上下文 fail-closed 401 / code 2001；
@@ -1802,7 +1802,7 @@ Authorization: Bearer <accessToken>
 `/api/v1/cmdb/cloud-*` 是这三个对象的**唯一**HTTP 表面（读取需 `cmdb:read`，写入需 `cmdb:write`，
 删除需 `cmdb:delete`）。2026-10-04 实测发现 `/api/v1/cloud/accounts|services|resources` 是同一用例
 的第二套已注册实现（15 条路由、独立 handler/service、零前端调用方），已按裁决**整体删除**，
-详见 [UPGRADE.md](./UPGRADE.md) §1.22。
+详见 [UPGRADE.md](../UPGRADE.md) §1.22。
 
 ```http
 GET /api/v1/cmdb/cloud-accounts
