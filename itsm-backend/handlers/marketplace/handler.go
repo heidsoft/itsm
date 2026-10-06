@@ -22,24 +22,6 @@ func NewHandler(service *marketplace.Service) *Handler {
 	return &Handler{service: service}
 }
 
-func getTenantID(ctx *gin.Context) (int, bool) {
-	tenantID, err := middleware.GetTenantID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, err.Error())
-		return 0, false
-	}
-	return tenantID, true
-}
-
-func getUserID(ctx *gin.Context) (int, bool) {
-	userID, err := middleware.GetUserID(ctx)
-	if err != nil {
-		common.Fail(ctx, common.AuthFailedCode, err.Error())
-		return 0, false
-	}
-	return userID, true
-}
-
 // RegisterRoutes 注册路由
 func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	marketplaceGroup := r.Group("/marketplace")
@@ -123,7 +105,7 @@ func (c *Handler) GetItem(ctx *gin.Context) {
 
 	item, err := c.service.GetItem(ctx, itemID)
 	if err != nil {
-		common.Fail(ctx, http.StatusNotFound, err.Error())
+		common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
 		return
 	}
 
@@ -148,11 +130,11 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := getTenantID(ctx)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
-	userID, ok := getUserID(ctx)
+	userID, ok := middleware.UserIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
@@ -161,11 +143,11 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, marketplace.ErrMarketplaceItemNotFound):
-			common.Fail(ctx, http.StatusNotFound, err.Error())
+			common.NotFoundWithErr(ctx, err, "组件不存在或已被下架")
 		case errors.Is(err, marketplace.ErrMarketplaceItemUnavailable), errors.Is(err, marketplace.ErrMarketplaceInstalledByMissing):
-			common.Fail(ctx, http.StatusBadRequest, err.Error())
+			common.BadRequestWithErr(ctx, err, "组件当前不可安装")
 		default:
-			common.Fail(ctx, http.StatusInternalServerError, err.Error())
+			common.RespondError(ctx, err, "安装组件失败")
 		}
 		return
 	}
@@ -191,7 +173,7 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := getTenantID(ctx)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
@@ -199,10 +181,10 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 	err = c.service.UninstallItem(ctx, tenantID, itemID)
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.Fail(ctx, http.StatusNotFound, err.Error())
+			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
 			return
 		}
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		common.RespondError(ctx, err, "卸载组件失败")
 		return
 	}
 
@@ -221,14 +203,14 @@ func (c *Handler) UninstallItem(ctx *gin.Context) {
 // @Router /api/v1/marketplace/installations [get]
 func (c *Handler) ListInstallations(ctx *gin.Context) {
 	status := ctx.Query("status")
-	tenantID, ok := getTenantID(ctx)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
 
 	installations, err := c.service.ListInstallations(ctx, tenantID, status)
 	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		common.RespondError(ctx, err, "查询安装列表失败")
 		return
 	}
 
@@ -253,7 +235,7 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, ok := getTenantID(ctx)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
@@ -261,10 +243,10 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 	installation, err := c.service.GetInstallation(ctx, tenantID, itemID)
 	if err != nil {
 		if errors.Is(err, marketplace.ErrMarketplaceInstallationAbsent) {
-			common.Fail(ctx, http.StatusNotFound, err.Error())
+			common.NotFoundWithErr(ctx, err, "安装记录不存在或已被卸载")
 			return
 		}
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		common.RespondError(ctx, err, "查询安装详情失败")
 		return
 	}
 
@@ -292,18 +274,18 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 
 	var config map[string]interface{}
 	if err := ctx.ShouldBindJSON(&config); err != nil {
-		common.Fail(ctx, http.StatusBadRequest, "invalid config: "+err.Error())
+		common.BadRequestWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
-	tenantID, ok := getTenantID(ctx)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(ctx)
 	if !ok {
 		return
 	}
 
 	installation, err := c.service.UpdateInstallationConfig(ctx, tenantID, itemID, config)
 	if err != nil {
-		common.Fail(ctx, http.StatusInternalServerError, err.Error())
+		common.RespondError(ctx, err, "更新安装配置失败")
 		return
 	}
 
