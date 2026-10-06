@@ -59,8 +59,13 @@ BACKUP_DIR="$PROJECT_ROOT/backups"
 LOG_DIR="$PROJECT_ROOT/logs"
 
 BACKEND_URL="http://localhost:8090"
-FRONTEND_URL="http://localhost:3000"
 HEALTH_PATH="/api/v1/health"
+# Frontend port 3000 is NOT published to the host (see docker-compose.prod.yml):
+# browser traffic must go through nginx so audit logs keep the real client IP.
+# A host-side curl can therefore never see the frontend, so health is judged
+# from the container's Docker healthcheck instead.
+FRONTEND_CONTAINER="itsm-frontend-prod"
+NGINX_URL="http://localhost"
 
 DEPLOY_STATE_DIR="$PROJECT_ROOT/.deploy"
 CURRENT_STATE="$DEPLOY_STATE_DIR/current"
@@ -460,7 +465,7 @@ deploy_services() {
 
     log_info "Waiting for frontend..."
     if ! $DRY_RUN; then
-        if wait_for_http "$FRONTEND_URL" "frontend" 60; then
+        if wait_for_container_healthy "$FRONTEND_CONTAINER" 60; then
             log_success "Frontend is healthy"
         else
             log_error "Frontend failed to start"
@@ -526,10 +531,10 @@ verify_deployment() {
     fi
 
     # Frontend
-    if wait_for_http "$FRONTEND_URL" "frontend" 5; then
+    if wait_for_container_healthy "$FRONTEND_CONTAINER" 5; then
         log_success "Frontend: healthy"
     else
-        log_error "Frontend: unreachable"; errors=$((errors + 1))
+        log_error "Frontend: unhealthy"; errors=$((errors + 1))
     fi
 
     # Containers
@@ -631,11 +636,18 @@ show_health() {
         log_error "Backend: unreachable"
     fi
 
-    local fe_code; fe_code=$(curl -sf -o /dev/null -w '%{http_code}' "$FRONTEND_URL" 2>/dev/null || echo "000")
-    if [[ "$fe_code" == 2?? || "$fe_code" == 3?? ]]; then
-        log_success "Frontend: HTTP $fe_code"
+    local fe_health; fe_health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$FRONTEND_CONTAINER" 2>/dev/null || echo "missing")
+    if [[ "$fe_health" == "healthy" ]]; then
+        log_success "Frontend: healthy ($FRONTEND_CONTAINER)"
     else
-        log_error "Frontend: HTTP $fe_code"
+        log_error "Frontend: $fe_health ($FRONTEND_CONTAINER)"
+    fi
+
+    local ng_code; ng_code=$(curl -sf -o /dev/null -w '%{http_code}' "$NGINX_URL/" 2>/dev/null || echo "000")
+    if [[ "$ng_code" == 2?? || "$ng_code" == 3?? ]]; then
+        log_success "nginx -> frontend: HTTP $ng_code"
+    else
+        log_error "nginx -> frontend: HTTP $ng_code"
     fi
 
     # Containers
@@ -727,7 +739,7 @@ full_deploy() {
     local mins=$((duration / 60)) secs=$((duration % 60))
 
     print_banner "Deployment Successful!" \
-        "$(status_row "Frontend" "running" "$FRONTEND_URL")" \
+        "$(status_row "Frontend" "running" "$NGINX_URL (via nginx)")" \
         "$(status_row "Backend" "running" "$BACKEND_URL")" \
         "$(status_row "API Docs" "running" "${BACKEND_URL}/swagger")" \
         "" \

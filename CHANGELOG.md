@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **ga-gate 全链路 E2E 仍红的真实原因**：v1.6.14 的 §1.28 修复只解开了流程实例 404，工单类型全链路用例随即推进到下一步并暴露另一处契约漂移——`ticket-type-full-chain.spec.ts` 仍按 `logs` 读 `/api/v1/audit-logs`，而该端点自始由 `handlers/auditlog` 提供、返回平台五键 `{items,total,page,pageSize,totalPages}`（`total` 断言通过、`items` 被当 `logs` 读故为 `undefined`）。用例改为按 `items` 读取，`router/audit_routes.go` 里声称 `{logs,...}` 契约的注释同步纠正。该门自 2026-09-20 起持续红，非本版本引入。
 
+**部署与运维**
+
+- `scripts/deploy-prod.sh` 误回滚正常发布：前端探测用宿主机 `curl http://localhost:3000`，而 `docker-compose.prod.yml` 有意不把 3000 发布到宿主机（浏览器必须走 nginx，否则审计日志只记录容器网关 IP）。探测必然超时，部署在镜像完全健康的情况下被判失败并触发回滚，回滚还会把 `.deploy/current` 覆盖成旧版本。改为按容器 Docker healthcheck 判定，并补一条 `nginx -> frontend` 的宿主机侧连通性检查，`show_health` 与成功横幅同步修正。
+
 ## [1.6.14] - 2026-10-06
 
 ### Security
