@@ -231,14 +231,37 @@ export const useBatchDeleteTicketsMutation = () => {
 
   return useMutation({
     mutationFn: async (ids: number[]) => {
-      await Promise.all(ids.map(id => ticketService.deleteTicket(id)));
-      return ids;
+      // Pattern D: allSettled so partial failure is recoverable (H4).
+      const results = await Promise.allSettled(
+        ids.map(id => ticketService.deleteTicket(id).then(() => id))
+      );
+      const failedIds: number[] = [];
+      const errors: { id: number; message: string }[] = [];
+      results.forEach((r, idx) => {
+        if (r.status === 'rejected') {
+          const id = ids[idx]!;
+          failedIds.push(id);
+          errors.push({
+            id,
+            message: r.reason instanceof Error ? r.reason.message : String(r.reason),
+          });
+        }
+      });
+      return { ids, failedIds, errors };
     },
-    onSuccess: ids => {
-      message.success(`${ids.length} tickets deleted successfully`);
+    onSuccess: ({ ids, failedIds }) => {
+      if (failedIds.length === 0) {
+        message.success(`${ids.length} tickets deleted successfully`);
+      } else if (failedIds.length === ids.length) {
+        message.error(`批量删除失败：${failedIds.length} 个工单均未删除`);
+      } else {
+        message.warning(`部分成功：${ids.length - failedIds.length} 个删除成功，${failedIds.length} 个失败`);
+      }
 
-      // 从缓存中移除工单详情
-      ids.forEach(id => {
+      const successIds = ids.filter(id => !failedIds.includes(id));
+
+      // 从缓存中移除成功删除的工单详情
+      successIds.forEach(id => {
         queryClient.removeQueries({ queryKey: ticketKeys.detail(id) });
       });
 
@@ -246,12 +269,12 @@ export const useBatchDeleteTicketsMutation = () => {
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
 
-      // 乐观更新统计
+      // 乐观更新统计（只减成功的）
       queryClient.setQueryData(ticketKeys.stats(), (old: TicketStats | undefined) => {
         if (!old) return old;
         return {
           ...old,
-          total: Math.max(0, old.total - ids.length),
+          total: Math.max(0, old.total - successIds.length),
         };
       });
     },

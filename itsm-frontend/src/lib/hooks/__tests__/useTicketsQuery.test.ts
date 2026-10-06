@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -19,6 +19,7 @@ jest.mock('antd', () => ({
   message: {
     success: jest.fn(),
     error: jest.fn(),
+    warning: jest.fn(),
   },
 }));
 
@@ -340,7 +341,60 @@ describe('useTicketsQuery hooks', () => {
 
       result.current.mutate([1, 2]);
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    });
+
+    // Pattern D: allSettled (H4 partial-failure recovery)
+    it('should return failedIds for partial failure', async () => {
+      mockService.deleteTicket
+        .mockImplementationOnce(() => Promise.resolve(undefined))
+        .mockImplementationOnce(() => Promise.reject(new Error('middle failed')))
+        .mockImplementationOnce(() => Promise.resolve(undefined))
+        .mockImplementation(() => Promise.resolve(undefined));
+
+      const { result } = renderHook(() => useBatchDeleteTicketsMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      const res = await act(async () => {
+        return await result.current.mutateAsync([1, 2, 3]);
+      });
+
+      expect(mockService.deleteTicket).toHaveBeenCalledTimes(3);
+      expect(res.failedIds).toEqual([2]);
+      expect(res.ids).toEqual([1, 2, 3]);
+      expect(res.errors).toHaveLength(1);
+      expect(res.errors[0].id).toBe(2);
+    });
+
+    it('should report all-failure as failedIds without throwing', async () => {
+      mockService.deleteTicket.mockReset().mockRejectedValue(new Error('Delete failed'));
+
+      const { result } = renderHook(() => useBatchDeleteTicketsMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      const res = await act(async () => {
+        return await result.current.mutateAsync([1, 2, 3]);
+      });
+
+      expect(res.failedIds).toEqual([1, 2, 3]);
+      expect(res.ids).toEqual([1, 2, 3]);
+    });
+
+    it('should report zero failedIds on full success', async () => {
+      mockService.deleteTicket.mockReset().mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useBatchDeleteTicketsMutation(), {
+        wrapper: createWrapper(),
+      });
+
+      const res = await act(async () => {
+        return await result.current.mutateAsync([1, 2, 3]);
+      });
+
+      expect(res.failedIds).toEqual([]);
+      expect(res.errors).toEqual([]);
     });
   });
 
