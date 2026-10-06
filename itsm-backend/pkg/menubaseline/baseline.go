@@ -142,6 +142,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "审批链", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/admin", PermissionCode: "approval:write", SortOrder: 275},
 		{Name: "权限管理", Path: "/admin/permissions", Icon: "Lock", ParentPath: "/admin", PermissionCode: "role:write", SortOrder: 280},
 		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/admin", PermissionCode: "connector:write", SortOrder: 285},
+		{Name: "技能注册表", Path: "/admin/skills", Icon: "Wand2", ParentPath: "/admin", PermissionCode: "marketplace:write", SortOrder: 287, Description: "AI 技能清单与 manifest 管理"},
 		{Name: "向量存储配置", Path: "/admin/vector-store", Icon: "Database", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 290},
 		{Name: "系统配置", Path: "/admin/system-config", Icon: "Settings", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 295},
 		{Name: "全局标签", Path: "/admin/tags", Icon: "Tags", ParentPath: "/admin", PermissionCode: "system:read", SortOrder: 298, Description: "全局标签管理"},
