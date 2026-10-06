@@ -1271,6 +1271,52 @@ cd itsm-backend && go test ./handlers/sla/ ./handlers/skill/ ./handlers/workbenc
 - 守卫变化：`pkg/seeder/role_permission_guard_test.go` 的 R2-a `t.Skipf` 待拍板档退役，
   替换为「N4 扩权回归锁」+「单一真源锁」（兜底默认 ⊆ DB 码集，双权威回潮即 CI 红）。
 
+### 1.32 users.username 改为按租户组合唯一（2026-10-06，含 schema 迁移）
+
+修复「第二个租户开不出管理员」。产品基线要求每个租户的管理员都叫 `admin`，而
+`users.username` 原本是字段级全局唯一键，跨租户必然冲突。
+
+**变更内容**
+
+1. `ent/schema/user.go`：`username` 去掉字段级 `.Unique()`，新增
+   `Indexes().Unique().Fields("tenant_id", "username")`；`email` 保持全局唯一。
+2. 新增迁移 `itsm-backend/migrations/20261006_tenant_scope_user_username_unique.sql`
+   （配套 `_down.sql`）：先按 `(tenant_id, username)` 检测存量重名，有重名直接
+   `RAISE EXCEPTION`（ERRCODE `unique_violation`）中止，再 drop 旧全局唯一键
+   `users_username_key` 并建 `user_tenant_id_username`。
+3. `service/user_service.go`：`CreateUser` / `UpdateUser` 的用户名查重加上
+   `tenant_id` 谓词；邮箱查重保持全局（与找回密码按 email 定位一致）。
+4. `handlers/common`：登录必须落在唯一账号上。`tenantCode` 解析失败不再降级为
+   跨租户用户名匹配，按凭证错误拒绝；用户名跨租户重名且未指定租户时返回
+   「该用户名在多个租户下存在，请选择租户后登录」（业务码 1001 参数错误），
+   不再返回「用户名或密码错误」。
+
+**升级影响**
+
+- 迁移由 bootstrap job 自动执行（`ITSM_BOOTSTRAP_ONLY=true ITSM_AUTO_MIGRATE=true`），
+  无需手工命令；执行顺序是先 ent 建组合索引、后本迁移删旧全局键，两者都幂等。
+- 存量库前提（已在演练副本实测）：`(tenant_id, username)`、全局 `username`、
+  全局 `email` 三项重复均为 0 行，因此不需要消解数据。若你的库检测出重名，
+  迁移会明确报错并指出组数，此时先改名再升级。
+- 登录接口对外契约新增一种失败消息；前端登录页目前只提交用户名/口令，
+  单租户与「用户名恰好唯一」的部署行为不变。多租户 SaaS 要在登录页补租户选择器，
+  否则重名账号（如各租户的 `admin`）会收到上面的消歧提示。
+- 回滚只在前滚不可行时使用：`_down.sql` 会先检测全局重名，跨租户同名 `admin`
+  是本次放宽后的合法状态，因此回滚几乎必然被拒绝——正确处置是前滚修复。
+
+**验证**
+
+```bash
+cd itsm-backend
+# 迁移在真实 PostgreSQL 上的三条证明（旧形状复现冲突 / 重复检测中止 / 与 ent 生成索引同名）
+docker run -d --rm --name itsm-drill-uq -e POSTGRES_USER=drill -e POSTGRES_PASSWORD=drill \
+  -e POSTGRES_DB=itsm_init_test_users --tmpfs /var/lib/postgresql/data:rw,mode=1777 \
+  -p 127.0.0.1:5499:5432 pgvector/pgvector:pg17
+ITSM_INITIALIZATION_TEST_DSN="postgres://drill:drill@127.0.0.1:5499/itsm_init_test_users?sslmode=disable" \
+  go test ./migration/ -run UserUsername -v
+go test ./handlers/common/ -run TestLogin -v
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

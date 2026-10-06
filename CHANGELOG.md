@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   1. `RoleSeed` 加 `IsSystem bool` 字段，`BuiltinRoles()` 全部标记 `IsSystem: true`；
   2. `seedRoles` 创建和更新路径都调用 `SetIsSystem`，存量库下次启动自动被纠正；
   3. service 层新增 code-based 双重保护：即使 `is_system` 字段漏设，只要 role code 命中 `domain/role.All` 内置词表，仍视为系统角色返回 409/4090，见 UPGRADE.md §1.30
+- **登录不再在租户解析失败时降级为跨租户匹配**：`Login` 遇到无法解析的 `tenantCode` 时，此前会静默沿用「未指定租户」分支，等于拿用户名去全库匹配；现在按凭证错误拒绝。用户名在多租户下重名时也不再返回误导性的「用户名或密码错误」（旧实现查不出唯一行，用户被永久锁在门外），而是明确要求补租户，见 UPGRADE.md §1.32
 
 ### Fixed
 
+- **第二个租户开不出管理员（P0）**：`users.username` 原本是字段级全局唯一，而产品基线要求每个租户的管理员都叫 `admin`，因此第二个租户创建 admin 必然撞唯一键。实测线上库印证：`beta-test` 租户 0 个管理员，唯一成员是一个停用的 `system-baseline-2`。唯一键改为 `(tenant_id, username)` 组合唯一，迁移 `20261006_tenant_scope_user_username_unique.sql` 在建索引前先检测存量重名并拒绝；`email` 按决策保持全局唯一（找回密码只按 email 定位账号）。用户创建与改名的查重同步改为按租户，见 UPGRADE.md §1.32
 - ratchet 契约测试阻塞：`handlers/ai/repository_impl.go#DeleteConversation` 直接 `return r.client.Conversation.Delete().Exec(ctx)`，Ent 1.7+ 的 `Exec` 返回 `(int, error)` 与接口声明的 `error` 不匹配，任何 `go test ./tests/contract/...` 都会在 `handlers/ai` 建包阶段失败；现显式丢弃 affected rows 再返回 error
 - **页长单一所有者 E4-47 第二批收敛**：release/standard_change/knowledge/known_error（2 处）/bpmn/workflow_template/approval（2 处）/timer/operations 共 8 个 handler 的 9 处手抄 `strconv.Atoi(c.DefaultQuery("page"|"pageSize"))`、`parseIntParam`、`positiveInt` 或手写 if/Atoi 夹紧逻辑统一收敛为 `common.GetPaginationFromQuery(c)`；timer/operations 两个仅被分页调用的私有夹紧函数随之删除。`pageSize=10`（release/knowledge）/`pageSize=20`（其余）的硬编码缺省值不再生效，全部跟随平台缺省 20 与 MaxPageSize 100。
 - **E4-47 收敛完成**（3f752399）：sla/skill/workbench 三个域的 6 处自建页长规则（queryIntParam 含 size 别名、parseSkillListPagination 夹紧、workbench 手抄判定）改走 `common.GetPaginationFromQuery(c)` 单点；approval 处理器的 deprecated records 兜底路径（此前漏改）同步收敛。ratchet 基线从 13 条收紧到 1 条（仅剩 `handlers/ai/skills.go` 私有 inputInt helper，不在 E4-47 范围）。行为变化：`/sla/performance` 非法 page/pageSize 由 400 改回落缺省；`/skills` 越界页长由夹 100 改回落 20；sla 三列表信封新增 `totalPages`、空集合 `items: []`（此前 `items: null`）。全部写入 UPGRADE.md §1.30
