@@ -150,13 +150,19 @@ func TestMigrateWorkflowToBPMN_NotFound(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
-	// Service returns "legacy approval workflow not found: ..." wrapped in fmt.Errorf,
-	// handler maps that to InternalError → HTTP 500 with code 5001（与旧 controller 契约一致）.
-	require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
+	// service 用 fmt.Errorf("...: %w", err) 包装 *ent.NotFoundError，
+	// common.RespondError 经 classifyError 把它映射到 NotFoundCode(4004) +
+	// 安全文案「资源不存在或已被删除」，HTTP 404。响应体不得泄漏
+	// 原始 ent 错误串（sweep 之前这里吞为 5001 是合同缺陷）。
+	require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-	assert.Equal(t, float64(5001), resp["code"])
-	assert.Contains(t, resp["message"], "not found")
+	assert.Equal(t, float64(4004), resp["code"])
+	assert.Equal(t, "资源不存在或已被删除", resp["message"])
+	notFoundLeak := []string{"ent:", "approval_workflow", "not found", "sql:", "driver:"}
+	for _, needle := range notFoundLeak {
+		assert.NotContains(t, resp["message"], needle, "响应消息不得泄漏原始 driver 错误串")
+	}
 }
 
 func TestMigrateWorkflowToBPMN_BadID(t *testing.T) {

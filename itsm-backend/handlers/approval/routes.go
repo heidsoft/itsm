@@ -3,7 +3,6 @@ package approval
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
@@ -32,7 +31,7 @@ func userID(c *gin.Context) (int, bool) {
 func pathID(c *gin.Context) (int, bool) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		common.Fail(c, common.ParamErrorCode, "无效的工作流ID: "+err.Error())
+		common.ParamErrorWithErr(c, err, "无效的工作流ID")
 		return 0, false
 	}
 	return id, true
@@ -51,7 +50,7 @@ func (h *Handler) MigrateWorkflowToBPMN(c *gin.Context) {
 	dryRun := c.Query("dryRun") == "true"
 	result, err := h.approvalService.MigrateWorkflowToBPMN(c.Request.Context(), id, tid, dryRun)
 	if err != nil {
-		common.InternalError(c, "迁移审批工作流失败: "+err.Error())
+		common.RespondError(c, err, "迁移审批工作流失败")
 		return
 	}
 	common.Success(c, result)
@@ -61,7 +60,7 @@ func (h *Handler) MigrateWorkflowToBPMN(c *gin.Context) {
 func (h *Handler) CreateWorkflow(c *gin.Context) {
 	var req dto.CreateApprovalWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -72,7 +71,7 @@ func (h *Handler) CreateWorkflow(c *gin.Context) {
 
 	response, err := h.approvalService.CreateWorkflow(c.Request.Context(), &req, tid)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "创建工作流失败: "+err.Error())
+		common.RespondError(c, err, "创建工作流失败")
 		return
 	}
 
@@ -88,7 +87,7 @@ func (h *Handler) UpdateWorkflow(c *gin.Context) {
 
 	var req dto.UpdateApprovalWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -99,7 +98,7 @@ func (h *Handler) UpdateWorkflow(c *gin.Context) {
 
 	response, err := h.approvalService.UpdateWorkflow(c.Request.Context(), id, &req, tid)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "更新工作流失败: "+err.Error())
+		common.RespondError(c, err, "更新工作流失败")
 		return
 	}
 
@@ -119,7 +118,7 @@ func (h *Handler) DeleteWorkflow(c *gin.Context) {
 	}
 
 	if err := h.approvalService.DeleteWorkflow(c.Request.Context(), id, tid); err != nil {
-		common.Fail(c, common.InternalErrorCode, "删除工作流失败: "+err.Error())
+		common.RespondError(c, err, "删除工作流失败")
 		return
 	}
 
@@ -150,7 +149,7 @@ func (h *Handler) ListWorkflows(c *gin.Context) {
 
 	workflows, total, err := h.approvalService.ListWorkflows(c.Request.Context(), filter, tid, pg.Page, pg.PageSize)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取工作流列表失败: "+err.Error())
+		common.RespondError(c, err, "获取工作流列表失败")
 		return
 	}
 
@@ -176,16 +175,11 @@ func (h *Handler) GetWorkflow(c *gin.Context) {
 
 	workflow, err := h.approvalService.GetWorkflow(c.Request.Context(), id, tid)
 	if err != nil {
-		// 检查是否是"未找到"错误
-		if err.Error() == "ent: not found" || strings.Contains(err.Error(), "not found") {
-			c.JSON(404, common.Response{
-				Code:    404,
-				Message: "审批工作流不存在",
-				Data:    nil,
-			})
-			return
-		}
-		common.Fail(c, common.InternalErrorCode, "获取工作流失败: "+err.Error())
+		// service 用 fmt.Errorf("...: %w", err) 包装 *ent.NotFoundError，
+		// 由 common.RespondError 经 classifyError 映射到 NotFoundCode(4004) +
+		// 「资源不存在或已被删除」safeMsg；其他驱动层错误统一 5001，
+		// 原始 err.Error() 仅入 zap。
+		common.RespondError(c, err, "获取工作流失败")
 		return
 	}
 
@@ -206,13 +200,13 @@ func (h *Handler) PatchWorkflow(c *gin.Context) {
 
 	var req dto.UpdateApprovalWorkflowRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	response, err := h.approvalService.UpdateWorkflow(c.Request.Context(), id, &req, tid)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "更新工作流失败: "+err.Error())
+		common.RespondError(c, err, "更新工作流失败")
 		return
 	}
 
@@ -256,7 +250,7 @@ func (h *Handler) GetApprovalRecords(c *gin.Context) {
 
 	records, total, err := h.approvalService.GetApprovalRecords(c.Request.Context(), &req, tid)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取审批记录失败: "+err.Error())
+		common.RespondError(c, err, "获取审批记录失败")
 		return
 	}
 
