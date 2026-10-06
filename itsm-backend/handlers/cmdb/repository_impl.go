@@ -39,6 +39,7 @@ func toCIDomain(e *ent.ConfigurationItem) *ConfigurationItem {
 		Status:             e.Status,
 		Environment:        e.Environment,
 		Criticality:        e.Criticality,
+		LifecycleStatus:    e.LifecycleStatus,
 		Location:           e.Location,
 		AssetTag:           e.AssetTag,
 		SerialNumber:       e.SerialNumber,

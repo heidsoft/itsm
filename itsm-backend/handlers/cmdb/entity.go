@@ -14,6 +14,7 @@ type ConfigurationItem struct {
 	Status             string                 `json:"status"`
 	Environment        string                 `json:"environment"`
 	Criticality        string                 `json:"criticality"`
+	LifecycleStatus    string                 `json:"lifecycleStatus"`
 	Location           string                 `json:"location"`
 	AssetTag           string                 `json:"assetTag"`
 	SerialNumber       string                 `json:"serialNumber"`
