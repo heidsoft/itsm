@@ -9,9 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CMDB 数据治理骨架（v1.6.15 P1 收口）**：补齐 ROADMAP `[CMDB 数据治理]` 收敛项的纯函数层——CI 退役状态机（`online -> retiring -> retired` 显式转移表 + 受控 reason 词表 `manual/decommissioned/replaced/discovery_missing/end_of_life`，非法转移返回 `ErrInvalidCIRetirementTransition` 由 service 层映射 409）、差异分类（`DiffReconciliation` 产出 `add/noop/retire_confirm/duplicate` 受控 action 词表 + 同一批次重复 CloudResourceID 单独告警）、治理质量指标（`ComputeQualityMetrics` 给出 `Active/Retired/Stale/Orphan/Incomplete/CompletenessPct`，空集合除零保护 + 四舍五入到 0.01）。`ConfigurationItem` 实体补 `LifecycleStatus` 字段（schema 已存在，`toCIDomain` 未透传），让数据治理原语可读。`itsm-backend/handlers/cmdb/data_governance.go` 266 行纯函数 + `data_governance_test.go` 21 用例全绿，覆盖状态机合法/非法转移、Stale/Orphan 判定、QualityMetrics 空集+混合+四舍五入、Diff 三种分类 + nil 跳过 + 未知 action 静默。本提交不扩展 Repository 接口、不动 service 调用方；service 层 GetReconciliation 接入 diff 与 metrics、handler 暴露 `/cmdb/governance/report`、CI 退役 PUT 等三件套留 v1.6.16 收口。
+
 ### Fixed
 
-- **ga-gate 全链路 E2E 仍红的真实原因**：v1.6.14 的 §1.28 修复只解开了流程实例 404，工单类型全链路用例随即推进到下一步并暴露另一处契约漂移——`ticket-type-full-chain.spec.ts` 仍按 `logs` 读 `/api/v1/audit-logs`，而该端点自始由 `handlers/auditlog` 提供、返回平台五键 `{items,total,page,pageSize,totalPages}`（`total` 断言通过、`items` 被当 `logs` 读故为 `undefined`）。用例改为按 `items` 读取，`router/audit_routes.go` 里声称 `{logs,...}` 契约的注释同步纠正。该门自 2026-09-20 起持续红，非本版本引入。
+- **docs-gate C.6.4 产品表面棘轮基线同步**：实测 handlers_dirs=65 / service_go_files=326 / bootstrap_app_lines=1812 / frontend_pages=168 四个值均低于历史基线，原因是 2026-09-26 至 2026-10-04 之间 commit `7a3d8dcc5` / `ae86f0f8a` / `2b48975ee` / `a2f559c50` 移除了 dashboard/department/project/root_cause 死 handler 与 5 个死 service、`agent-ops-demo` 静态原型页，但基线文件没同步收紧。本提交把 4 项基线数字同步到实际值并补充 2026-10-06 收口注释，下次 C.6.4 报告从「低于基线，建议同步」改为「等于基线」。
+
+- **docs-gate C.7.4 前端孤儿组件清理**：`NotificationCenter.tsx`（1059 行）+ `TicketNotificationSection.tsx`（376 行）自通知域重构到 `src/hooks/notification` BFF 与 `/inbox` 页面后已无任何 import / require / jest 引用，docs-gate C.7.4 自 advisory 模式起即上报为 WARN，本提交将其删除，共 1435 行死代码下线，C.7.4 现报告 0 个不可达文件。
+
+：v1.6.14 的 §1.28 修复只解开了流程实例 404，工单类型全链路用例随即推进到下一步并暴露另一处契约漂移——`ticket-type-full-chain.spec.ts` 仍按 `logs` 读 `/api/v1/audit-logs`，而该端点自始由 `handlers/auditlog` 提供、返回平台五键 `{items,total,page,pageSize,totalPages}`（`total` 断言通过、`items` 被当 `logs` 读故为 `undefined`）。用例改为按 `items` 读取，`router/audit_routes.go` 里声称 `{logs,...}` 契约的注释同步纠正。该门自 2026-09-20 起持续红，非本版本引入。
 
 **部署与运维**
 

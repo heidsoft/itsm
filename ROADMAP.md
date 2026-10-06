@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-06.
+> what is parked.** Updated as part of every release. Last synced: 2026-10-06 (v1.6.15 CMDB 数据治理骨架收口).
 >
 > Cross-references:
 > - PRD library: [docs/prd/](./docs/prd)
@@ -99,6 +99,7 @@ Concretely that means:
 - [x] **连接器入站能力** — 钉钉 / 企微入站回调、持久化入站去重（`connector_inbound_dedups`）、连接器健康度与凭据轮换。
 - [x] **工作流引擎加固** — 出边 fallback 声明、ServiceTask metaData 寻址、handler 双键注册、内置模板 16/16 lint 零错误、`workflowDefinitionKey` 全链路透传与 lint 门禁加固；工作流模板管理与 BPMN 前端集成。
 - [x] **CMDB AI-Native P0/P1** — 关系词表（13 种关系单一源）、本体端点、`ci_number` 全局唯一序列；List/Search 合并、AI 工具与影响解释；CMDB 前端完成 React Query 迁移。
+- [x] **CMDB 数据治理骨架（v1.6.15）** — 退役状态机（`online -> retiring -> retired` 显式转移 + 受控 reason 词表）、差异分类（`add/noop/retire_confirm/duplicate`）、治理质量指标（Active/Retired/Stale/Orphan/Incomplete/CompletenessPct）；21 用例全绿，零 Repository 接口扩张。
 - [x] **架构收敛与可维护性** — `router.go` 巨石按域拆分为独立 routes 文件；user / tenant / rbac / notification / application / cloud 六域接口化并补冒烟测试（作为 58 域迁移样板）；包名与目录名统一、分层守卫增加包名≠目录名检查；双 BPMN 引擎死代码清理。
 - [x] **授权平面收敛（批次 1–5）** — A 类越权写收口（bpmn/流程触发等 39+ 条写路由补挂权限门，任务面 `task:*` 与流程面 `bpmn:*` 分权）；B 类权限码词表统一（95 种未定义码收敛到既有码空间）；C 类预检映射全量对齐（112 处声明/预检错配清零）；批次 5 治本：**路由声明成为权限单一真源**——预检映射路由条目由 `cmd/authz-gen` 从声明 AST 生成（698 条），族级回退策略显式化（120 条），4 道守卫（写路由必挂门 / 声明码⊆码空间 / 声明-预检对齐 / 生成物新鲜度）构成防漂移闭环；admin/technician DBOnly 空集修复 + seeder 同义动作奇偶补齐。
 - [x] **性能与运维** — 变更列表与 RAG 向量检索两处热路径 N+1 修复；prod 备份自动化（`scripts/prod-backup.sh` + 恢复演练 + launchd 每日调度）、compose 项目名隔离（`itsm-prod` / `itsm`）与诊断端口参数化。
@@ -136,8 +137,8 @@ Concretely that means:
   - 已完成：AI 审计上报链路打通；评测集去占位。
   - 剩余：接受/拒绝反馈闭环与 CI 质量基线门禁。
 - [ ] **CMDB 数据治理** — 发现 Job、Diff、调和、退役、质量指标与规模测试。
-  - 已完成：AI-Native P0/P1（见上）。
-  - 剩余：数据治理本身尚未启动。
+  - 已完成：AI-Native P0/P1（见上）；v1.6.15 落地数据治理纯函数骨架（退役状态机 online -> retiring -> retired + 受控 reason 词表 + DiffReconciliation 4 类分类 + ComputeQualityMetrics），21 用例全绿，零 Repository 接口扩张。
+  - 剩余：service 层 GetReconciliation 接入 diff 与 metrics 字段；handler 暴露 `/cmdb/governance/report` + 退役 PUT；规模测试与发现 Job 闭环工作流。
 
 ### 发布门禁
 
