@@ -9,21 +9,24 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
 
 // BPMNSLAService BPMN SLA服务
 type BPMNSLAService struct {
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client   *ent.Client
+	logger   *zap.SugaredLogger
+	slaEngine *sla.Engine
 }
 
 // NewBPMNSLAService 创建BPMN SLA服务
 func NewBPMNSLAService(client *ent.Client, logger *zap.SugaredLogger) *BPMNSLAService {
 	return &BPMNSLAService{
-		client: client,
-		logger: logger,
+		client:   client,
+		logger:   logger,
+		slaEngine: sla.NewEngine(nil),
 	}
 }
 
@@ -132,16 +135,27 @@ func (s *BPMNSLAService) GetTaskSLA(ctx context.Context, task *ent.ProcessTask) 
 }
 
 // CalculateSLAStatus 计算SLA状态
-func (s *BPMNSLAService) CalculateSLAStatus(ctx context.Context, startTime time.Time, sla *ProcessSLA) (string, time.Time, time.Time, error) {
-	var deadline, warning time.Time
+func (s *BPMNSLAService) CalculateSLAStatus(ctx context.Context, startTime time.Time, slaDef *ProcessSLA) (string, time.Time, time.Time, error) {
+	input := sla.ComputeInput{
+		StartTime:      startTime,
+		ResponseTime:   slaDef.WarningMinutes,
+		ResolutionTime: slaDef.DeadlineMinutes,
+	}
 
-	if sla.BusinessHoursOnly {
-		// 仅计算工作时间
-		deadline = s.calculateBusinessHoursDeadline(startTime, sla.DeadlineMinutes)
-		warning = s.calculateBusinessHoursDeadline(startTime, sla.WarningMinutes)
-	} else {
-		deadline = startTime.Add(time.Duration(sla.DeadlineMinutes) * time.Minute)
-		warning = startTime.Add(time.Duration(sla.WarningMinutes) * time.Minute)
+	if slaDef.BusinessHoursOnly {
+		input.BusinessHours = map[string]interface{}{}
+	}
+
+	result := s.slaEngine.ComputeDeadlines(ctx, input)
+
+	deadline := startTime.Add(time.Duration(slaDef.DeadlineMinutes) * time.Minute)
+	warning := startTime.Add(time.Duration(slaDef.WarningMinutes) * time.Minute)
+
+	if result.ResolutionDeadline != nil {
+		deadline = *result.ResolutionDeadline
+	}
+	if result.ResponseDeadline != nil {
+		warning = *result.ResponseDeadline
 	}
 
 	now := time.Now()
@@ -154,59 +168,6 @@ func (s *BPMNSLAService) CalculateSLAStatus(ctx context.Context, startTime time.
 	}
 
 	return status, deadline, warning, nil
-}
-
-// calculateBusinessHoursDeadline 计算工作时间截止时间
-func (s *BPMNSLAService) calculateBusinessHoursDeadline(startTime time.Time, minutes int) time.Time {
-	// 默认工作时间为周一至周五 9:00-18:00
-	workStartHour := 9
-	workEndHour := 18
-
-	remainingMinutes := minutes
-	current := startTime
-
-	// 如果在工作时间外，调整到下一个工作日开始
-	hour := current.Hour()
-	if hour < workStartHour {
-		current = time.Date(current.Year(), current.Month(), current.Day(), workStartHour, 0, 0, 0, current.Location())
-	} else if hour >= workEndHour {
-		// 移到第二天
-		current = time.Date(current.Year(), current.Month(), current.Day()+1, workStartHour, 0, 0, 0, current.Location())
-	}
-
-	for remainingMinutes > 0 {
-		// 检查是否在工作日
-		weekday := current.Weekday()
-		if weekday == time.Saturday || weekday == time.Sunday {
-			// 移到下一个工作日
-			daysToAdd := 1
-			if weekday == time.Saturday {
-				daysToAdd = 2
-			}
-			current = current.AddDate(0, 0, daysToAdd)
-			current = time.Date(current.Year(), current.Month(), current.Day(), workStartHour, 0, 0, 0, current.Location())
-			continue
-		}
-
-		// 计算当天剩余工作时间
-		hour = current.Hour()
-		if hour < workStartHour {
-			current = time.Date(current.Year(), current.Month(), current.Day(), workStartHour, 0, 0, 0, current.Location())
-			hour = workStartHour
-		}
-
-		minutesInDay := (workEndHour - hour) * 60
-		if remainingMinutes <= minutesInDay {
-			current = current.Add(time.Duration(remainingMinutes) * time.Minute)
-			remainingMinutes = 0
-		} else {
-			remainingMinutes -= minutesInDay
-			// 移到下一天
-			current = time.Date(current.Year(), current.Month(), current.Day()+1, workStartHour, 0, 0, 0, current.Location())
-		}
-	}
-
-	return current
 }
 
 // GetProcessInstanceSLAInfo 获取流程实例SLA信息
