@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.16] - 2026-10-07
+
+### Added
+
+- **`pkg/credential` 反 v1.6.14 孤儿状态接入**（Sprint 2 Task 1）：v1.6.14 提交 `pkg/credential/policy.go`（单一来源弱密码策略 + `MinAdminPasswordLength=12`），但零 caller。`internal/bootstrap/default_credentials_guard.go:142` 的 `hasDefaultAdminPassword` 委托给 `credential.IsWeakAdminPassword`，删除 6 项 hard-coded weak-defaults 列表（policy.go doc-comment 已点名此处为漂移源头）；`pkg/seeder/seeder.go:1056` `seedAdmin` 在 bcrypt 前加 `IsWeakAdminPassword` + `IsShortAdminPassword` 双检查（warn-skip）；`scripts/init_data/main.go:47` CLI 路径同步接入（log.Fatal 拒绝弱/短密码）。6/6 internal/bootstrap 测试 PASS、pkg/seeder 23s 全包 PASS。
+
+- **Skill Registry UI（v1.7 E4 收口，Sprint 2 Task 2）**：把 `handlers/skill/handler.go` 的 `/api/v1/admin/skills` 路由暴露为 marketplace:write 角色可用的管理面板。后端 `pkg/menubaseline/baseline.go` 加 `技能注册表` 菜单条目（SortOrder 287，与 连接器/插件市场 285 相邻，PermissionCode `marketplace:write`，`seedMenus` 委托到 baseline.next 启动自动建条目）。前端新增 `src/lib/api/skill-api.ts`（6 个方法 list/get/create/update/promote/disable，类型与后端 `SkillEntry` / `SkillUpsertRequest` 对齐）+ `src/app/(main)/admin/skills/page.tsx`（列表 + code/title 搜索 + category + status 筛选 + 详情抽屉含 manifest JSON viewer + metrics + 注册/更新 modal + promote 与 disable 按钮 + `requiredPermissions` Select tags 必填校验）+ 翻译 42 条键（中英两套）。1/1 page test PASS、type-check 0 error。
+
+- **AI Evaluator CI gate（v1.7 E1 收口，Sprint 2 Task 3）**：`itsm-backend/ai/eval/eval_test.go` 中标记为「简化的 ROUGE-L: 基于 expected topics 的覆盖度（不计算 LCS 长度）等 production 接入 LLM gateway 后替换为标准 ROUGE 实现」的 stub 升级为标准 char-level LCS ROUGE-L recall（rune-level DP，正确处理「登录页」partial-match「登录页面」等场景）。doc.go 注释从 v1.5 升级为 v1.7。`.github/workflows/backend-ci.yml` test step 显式追加 `./ai/eval/... -v` 单独 step（之前隐含在 TESTABLE_PKGS）+ `ai-eval.log` artifact 上传，让 PR 评审人能直接看到 4 个 metric（triage top-1 / summarize ROUGE-L / RAG hit-rate / prediction ROC AUC）的具体数值与阈值（≥0.85 / ≥0.6 / ≥0.7 / ≥0.75）。5/5 ai/eval tests PASS。
+
+### Fixed
+
+**Connector 生产化第一笔（Sprint 2 Task 4 — 安全优先）**
+
+- **DingTalk + WeCom `audit_log` 签名 header 重写**：两个 handler 的 `recordAuditFailure` 把整个 HTTP headers map（含 `signature` / `msg_signature` / `aes_key` 等 secret material）原样 marshal 进 `audit_log.request_body`。IM 回调路径是公开入口，`verify_signature` 失败的 caller 还没通过认证；audit 行却把它们提交的 secret 全文存档 → audit_log 反而成了密钥泄露通道。新增 `itsm-backend/connector/redact_headers.go` helper（`RedactHeaders` + `isSensitiveHeader`，11 个敏感键名 substring 大小写不敏感匹配：signature / msg_signature / token / secret / access_token / aes_key / encrypt / authorization / cookie / password，命中即覆写为 `***`，返回新 map 不动入参），两个 handler 的 `recordAuditFailure` 接入，audit 行现在只保留必要的 metadata（tenant / content-type / retry count），不再泄漏密钥。5/5 redact tests PASS。
+
+### Sprint 2 验证
+
+- `go test ./... -count=1 -short` 全绿
+- `npm run type-check` 0 error
+- `go test ./connector/ -run TestRedact -v` 5/5 PASS
+- `go test ./ai/eval/...` 5/5 PASS（含 ROUGE-L ≥0.6 阈值）
+- `go build ./handlers/dingtalk/... ./handlers/wecom/...` 0 error
+
+### 暂未交付（v1.7 后续）
+
+- WeCom AesKey PKCS#7 解密：需要 corp aes_key 在配置层 + 一次性 PKCS#7 padding，handler 当前仍把 `Encrypt` 字段当 plaintext 回写。
+- Connector HealthCheck 真实校验：当前无条件返回 OK，需要调真实 token 端点。
+- Feishu 出站 send 路径：当前只有入站 + 通用 `connector.Manager.Send`，无 type-safe 飞书出站封装。
+- P1 Feishu/DingTalk/WeCom 真实渠道联调验收：仍需要真实 corp account e2e 测试。
+
 ## [1.6.15] - 2026-10-06
 
 ### Added
