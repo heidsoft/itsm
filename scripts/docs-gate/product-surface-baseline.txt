@@ -12,13 +12,23 @@
 # 格式：key=value[  # 说明]
 # 基线建立日期：2026-09-22（来源：output/product-drift-overdesign-audit-2026-09-22.md §1.2）
 
-handlers_dirs=66          # 2026-09-26 删除 handlers/project（死代码）→ 2026-09-28 +1 handlers/workbench（统一工作台，P0 根因"无跨域待办"正解，f0a87cea）→ 2026-10-04 +1 handlers/survey（满意度评价域，报表模块配套）
-service_go_files=331      # 2026-09-28 +4：lifecycle/phase.go + approval_chain 收敛三件套 → 2026-10-02 -1：删除 service/token_blacklist_service.go（四套 token 吊销机制收敛为 middleware 一套，该服务在生产从未被构造） → 2026-10-02 -2：删除 service/cloud_discovery_service.go 及其测试（零调用者的假云发现，AWS/Azure 返回空切片、国内三家 return nil；真实链路是 service/cloud.Runner + cloud.DiscoveryWorker） → 2026-10-02 +1：新增 service/msp_allocation_service_test.go（E3-1 回归锁：重新分配不得改写已归档分配的 deassigned_at，见 plans/edge-feature-stability-audit-2026-10-02.md 行 3c）。本项计数含 *_test.go，因此该增长是测试而非新增生产逻辑。
-bootstrap_app_lines=1824  # 目标 <300；2026-09-28 +12：租户开通 outbox 接线（414ba5fd）→ 2026-10-02 +4：会话真相/吊销收敛装配 → 2026-10-04 +5：survey 域路由接线 + incident 报表端点装配
+handlers_dirs=65          # 2026-09-26 删除 handlers/project（死代码）→ 2026-09-28 +1 handlers/workbench（统一工作台，P0 根因"无跨域待办"正解，f0a87cea）→ 2026-10-04 +1 handlers/survey（满意度评价域，报表模块配套）→ 2026-10-06 -1：清理死代码 handler（7a3d8dcc5，dashboard/department/project/root_cause 三处死路径移除，project 此前已为死目录仅余目录占位）
+service_go_files=326      # 2026-09-28 +4：lifecycle/phase.go + approval_chain 收敛三件套 → 2026-10-02 -1：删除 service/token_blacklist_service.go（四套 token 吊销机制收敛为 middleware 一套，该服务在生产从未被构造） → 2026-10-02 -2：删除 service/cloud_discovery_service.go 及其测试（零调用者的假云发现，AWS/Azure 返回空切片、国内三家 return nil；真实链路是 service/cloud.Runner + cloud.DiscoveryWorker） → 2026-10-02 +1：新增 service/msp_allocation_service_test.go（E3-1 回归锁：重新分配不得改写已归档分配的 deassigned_at，见 plans/edge-feature-stability-audit-2026-10-02.md 行 3c）。本项计数含 *_test.go，因此该增长是测试而非新增生产逻辑 → 2026-10-06 -5：清理死代码 service（change_service_test/cloud_service/problem_service+test/department_process_service，commit 7a3d8dcc5 + ae86f0f8a + 2b48975ee）
+bootstrap_app_lines=1812  # 目标 <300；2026-09-28 +12：租户开通 outbox 接线（414ba5fd）→ 2026-10-02 +4：会话真相/吊销收敛装配 → 2026-10-04 +5：survey 域路由接线 + incident 报表端点装配 → 2026-10-06 -12：commit 7a3d8dcc5 合并死 handler 后 dashboard/handler.go 整段装配连带移除
 ent_schema_files=133      # 2026-09-28 +1 sla_state.go（SLA 统一引擎 Phase 3 读切换，62867abb）
-frontend_pages=169        # 2026-09-28 +1 workbench 页面（3f38f93a）；空壳结论已证伪（真实空壳 0，见 plans §1.5），无页可清
+frontend_pages=168        # 2026-09-28 +1 workbench 页面（3f38f93a）；空壳结论已证伪（真实空壳 0，见 plans §1.5），无页可清 → 2026-10-06 -1：删除 src/app/agent-ops-demo（commit a2f559c50，原型静态页 N6 交付完成后下线）→ 2026-10-06 仍 168：CMDB/前端 v1.6.15 数据治理骨架未增加页面（diff/reconciliation/retirement/quality-metrics 在 handlers/cmdb 与 BFF 层暴露，不引入独立前端页）
+
 #
 # 注（2026-09-28）：上述 5 项增长经 git log --diff-filter=A --since=2026-09-21 归因，
 # 全部指向能力契约主链路，四项本身即 PM 评审要求的收敛动作（工作台/审批收口/SLA 统一）。
 # 按本文件规定的流程显式上调并逐条说明理由；不属于扩散。
 # 未来若出现下降（重复代码消除等），必须同步把本文件收紧到实际值——下降要锁死。
+#
+# 注（2026-10-06 v1.6.15 同步）：
+# 当前实测 handlers_dirs=65, service_go_files=326, bootstrap_app_lines=1812, frontend_pages=168，
+# 均等于或低于本文件基线，棘轮规则保证"现状 ≤ 基线"约束持续成立；本次同步仅是文档修复：
+#   - handlers_dirs 66→65：commit 7a3d8dcc5 移除 dashboard/department/project/root_cause 死代码 handler
+#   - service_go_files 331→326：commit 7a3d8dcc5 + ae86f0f8a + 2b48975ee 移除 5 个死 service
+#   - bootstrap_app_lines 1824→1812：commit 7a3d8dcc5 装配段连带缩短
+#   - frontend_pages 169→168：commit a2f559c50 移除 agent-ops-demo 原型静态页
+# ent_schema_files=133 不变。
