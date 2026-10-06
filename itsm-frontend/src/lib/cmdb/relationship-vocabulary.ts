@@ -36,11 +36,11 @@ export const DEFAULT_RELATIONSHIP_VOCABULARY: RelationshipTypeMeta[] = [
   { type: 'contains', name: '包含', description: '源CI包含目标CI', direction: 'uni-directional', reverse: 'part_of', icon: 'box' },
   { type: 'part_of', name: '组成部分', description: '源CI是目标CI的一部分', direction: 'uni-directional', reverse: 'contains', icon: 'component' },
   { type: 'impacts', name: '影响', description: '源CI故障会影响目标CI', direction: 'uni-directional', reverse: 'impacted_by', icon: 'activity' },
-  { type: 'impacted_by', name: '受影响于', description: '源CI受目标CI故障影响', direction: 'uni-directional', reverse: 'depends_on', icon: 'alert-triangle' },
+  { type: 'impacted_by', name: '受影响于', description: '源CI受目标CI故障影响', direction: 'uni-directional', reverse: 'depends_on', icon: 'activity' },
   { type: 'owns', name: '拥有', description: '源CI拥有目标CI', direction: 'uni-directional', reverse: 'owned_by', icon: 'key' },
-  { type: 'owned_by', name: '归属于', description: '源CI归属于目标CI', direction: 'uni-directional', reverse: 'owns', icon: 'user' },
+  { type: 'owned_by', name: '被拥有', description: '源CI被目标CI拥有', direction: 'uni-directional', reverse: 'owns', icon: 'key' },
   { type: 'uses', name: '使用', description: '源CI使用目标CI能力', direction: 'uni-directional', reverse: 'used_by', icon: 'plug' },
-  { type: 'used_by', name: '被使用', description: '源CI被目标CI使用', direction: 'uni-directional', reverse: 'uses', icon: 'share-2' },
+  { type: 'used_by', name: '被使用', description: '源CI能力被目标CI使用', direction: 'uni-directional', reverse: 'uses', icon: 'plug' },
 ];
 
 let runtimeVocabulary: RelationshipTypeMeta[] | null = null;
