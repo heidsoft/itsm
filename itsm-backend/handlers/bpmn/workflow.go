@@ -133,7 +133,7 @@ func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 	}
 	var req service.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -142,7 +142,7 @@ func (c *WorkflowHandler) PublishProcessDefinition(ctx *gin.Context) {
 	}
 	definition, err := c.processEngine.ProcessDefinitionService().PublishProcessDefinition(workflowCtx, key, version, &req)
 	if err != nil {
-		common.Fail(ctx, common.ConflictCode, "发布流程定义失败: "+err.Error())
+		common.RespondError(ctx, err, "发布流程定义失败")
 		return
 	}
 	common.SuccessWithMessage(ctx, "流程定义发布成功", dto.ToBPMNProcessDefinitionResponse(definition))
@@ -172,7 +172,7 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		AddApproverUserID *int                   `json:"addApproverUserId"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -207,7 +207,7 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 			err = c.processEngine.TaskService().DelegateTask(workflowCtx, taskID, newAssignee)
 		}
 		if err != nil {
-			common.Fail(ctx, common.ParamErrorCode, "委托失败: "+err.Error())
+			common.RespondError(ctx, err, "委托失败")
 			return
 		}
 		common.SuccessWithMessage(ctx, "任务已委托", nil)
@@ -227,7 +227,7 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 			err = c.processEngine.TaskService().AddApproverTask(workflowCtx, taskID, newApprover)
 		}
 		if err != nil {
-			common.Fail(ctx, common.ParamErrorCode, "加签失败: "+err.Error())
+			common.RespondError(ctx, err, "加签失败")
 			return
 		}
 		common.SuccessWithMessage(ctx, "加签成功", nil)
@@ -254,7 +254,7 @@ func (c *WorkflowHandler) SubmitTaskDecision(ctx *gin.Context) {
 		err = c.processEngine.TaskService().CompleteTask(workflowCtx, taskID, variables)
 	}
 	if err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "提交审批决策失败: "+err.Error())
+		common.RespondError(ctx, err, "提交审批决策失败")
 		return
 	}
 	common.SuccessWithMessage(ctx, "审批决策提交成功", nil)
@@ -274,7 +274,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	// 我们使用 PostWithContext 来手动控制 TenantID
 	var req map[string]interface{}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -285,7 +285,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 	reqBytes, _ := json.Marshal(req)
 	var finalReq service.CreateProcessDefinitionRequest
 	if err := json.Unmarshal(reqBytes, &finalReq); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数解析错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数解析错误")
 		return
 	}
 
@@ -307,7 +307,7 @@ func (c *WorkflowHandler) CreateProcessDefinition(ctx *gin.Context) {
 func (c *WorkflowHandler) ListProcessDefinitions(ctx *gin.Context) {
 	var req service.ListProcessDefinitionsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -359,7 +359,7 @@ func (c *WorkflowHandler) GetProcessDefinition(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		common.NotFound(ctx, "流程定义不存在: "+err.Error())
+		common.NotFoundWithErr(ctx, err, "流程定义不存在")
 		return
 	}
 
@@ -377,7 +377,7 @@ func (c *WorkflowHandler) UpdateProcessDefinition(ctx *gin.Context) {
 
 	var req service.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -430,7 +430,7 @@ func (c *WorkflowHandler) ExportProcessDefinition(ctx *gin.Context) {
 
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
+		common.NotFoundWithErr(ctx, err, "获取流程定义失败")
 		return
 	}
 
@@ -464,7 +464,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 		NewName string `json:"newName" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, tenantID, ok := getBPMNTenantContext(ctx)
@@ -475,7 +475,7 @@ func (c *WorkflowHandler) CloneProcessDefinition(ctx *gin.Context) {
 	// 获取原流程定义
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(workflowCtx, key, version)
 	if err != nil {
-		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
+		common.NotFoundWithErr(ctx, err, "获取流程定义失败")
 		return
 	}
 
@@ -546,7 +546,7 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 		Variables            map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -568,7 +568,7 @@ func (c *WorkflowHandler) StartProcess(ctx *gin.Context) {
 func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 	var req service.ListProcessInstancesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -611,7 +611,7 @@ func (c *WorkflowHandler) GetProcessInstance(ctx *gin.Context) {
 
 	instance, err := c.processEngine.ProcessInstanceService().GetProcessInstance(workflowCtx, processInstanceID)
 	if err != nil {
-		common.NotFound(ctx, "流程实例不存在: "+err.Error())
+		common.NotFoundWithErr(ctx, err, "流程实例不存在")
 		return
 	}
 
@@ -626,7 +626,7 @@ func (c *WorkflowHandler) SetProcessInstanceVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -651,7 +651,7 @@ func (c *WorkflowHandler) SuspendProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -693,7 +693,7 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -714,7 +714,7 @@ func (c *WorkflowHandler) TerminateProcess(ctx *gin.Context) {
 func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -760,7 +760,7 @@ func (c *WorkflowHandler) ListUserTasks(ctx *gin.Context) {
 func (c *WorkflowHandler) ListAllTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -806,7 +806,7 @@ func (c *WorkflowHandler) GetTask(ctx *gin.Context) {
 		task, err = c.processEngine.TaskService().GetTask(workflowCtx, taskID)
 	}
 	if err != nil {
-		common.NotFound(ctx, "任务不存在: "+err.Error())
+		common.NotFoundWithErr(ctx, err, "任务不存在")
 		return
 	}
 
@@ -821,7 +821,7 @@ func (c *WorkflowHandler) AssignTask(ctx *gin.Context) {
 		Assignee string `json:"assignee" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -845,7 +845,7 @@ func (c *WorkflowHandler) ReassignTask(ctx *gin.Context) {
 		Reason        string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -853,7 +853,7 @@ func (c *WorkflowHandler) ReassignTask(ctx *gin.Context) {
 		return
 	}
 	if err := c.processEngine.TaskService().ReassignTask(workflowCtx, ctx.Param("id"), req.NewAssigneeID, req.Reason); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "重新分配任务失败: "+err.Error())
+		common.RespondError(ctx, err, "重新分配任务失败")
 		return
 	}
 	common.SuccessWithMessage(ctx, "任务重新分配成功", nil)
@@ -865,7 +865,7 @@ func (c *WorkflowHandler) TerminateTask(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -873,7 +873,7 @@ func (c *WorkflowHandler) TerminateTask(ctx *gin.Context) {
 		return
 	}
 	if err := c.processEngine.TaskService().TerminateTask(workflowCtx, ctx.Param("id"), req.Reason); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "终止任务失败: "+err.Error())
+		common.RespondError(ctx, err, "终止任务失败")
 		return
 	}
 	common.SuccessWithMessage(ctx, "任务所属流程终止成功", nil)
@@ -920,7 +920,7 @@ func (c *WorkflowHandler) CompleteTask(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -953,7 +953,7 @@ func (c *WorkflowHandler) CancelTask(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -978,7 +978,7 @@ func (c *WorkflowHandler) SetTaskVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -1053,7 +1053,7 @@ func (c *WorkflowHandler) GetVersion(ctx *gin.Context) {
 func (c *WorkflowHandler) CreateVersion(ctx *gin.Context) {
 	var req service.CreateVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -1160,7 +1160,7 @@ func (c *WorkflowHandler) CompareVersions(ctx *gin.Context) {
 func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 	var req service.InstanceStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -1184,7 +1184,7 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 func (c *WorkflowHandler) GetTaskStats(ctx *gin.Context) {
 	var req service.TaskStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -1211,7 +1211,7 @@ func (c *WorkflowHandler) CreateCounterSignTasks(ctx *gin.Context) {
 
 	var req service.CounterSignRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
@@ -1251,7 +1251,7 @@ func (c *WorkflowHandler) Vote(ctx *gin.Context) {
 
 	var req service.VoteRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	workflowCtx, _, ok := getBPMNTenantContext(ctx)
