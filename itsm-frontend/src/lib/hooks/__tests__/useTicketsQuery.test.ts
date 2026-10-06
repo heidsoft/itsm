@@ -347,10 +347,10 @@ describe('useTicketsQuery hooks', () => {
     // Pattern D: allSettled (H4 partial-failure recovery)
     it('should return failedIds for partial failure', async () => {
       mockService.deleteTicket
-        .mockImplementationOnce(() => Promise.resolve(undefined))
+        .mockImplementationOnce(() => Promise.resolve({ message: 'ok', ticketId: 1 } as any))
         .mockImplementationOnce(() => Promise.reject(new Error('middle failed')))
-        .mockImplementationOnce(() => Promise.resolve(undefined))
-        .mockImplementation(() => Promise.resolve(undefined));
+        .mockImplementationOnce(() => Promise.resolve({ message: 'ok', ticketId: 3 } as any))
+        .mockImplementation(() => Promise.resolve({ message: 'ok', ticketId: 0 } as any));
 
       const { result } = renderHook(() => useBatchDeleteTicketsMutation(), {
         wrapper: createWrapper(),
@@ -383,7 +383,7 @@ describe('useTicketsQuery hooks', () => {
     });
 
     it('should report zero failedIds on full success', async () => {
-      mockService.deleteTicket.mockReset().mockResolvedValue(undefined);
+      mockService.deleteTicket.mockReset().mockResolvedValue({ message: 'ok', ticketId: 0 } as any);
 
       const { result } = renderHook(() => useBatchDeleteTicketsMutation(), {
         wrapper: createWrapper(),
