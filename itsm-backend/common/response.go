@@ -243,6 +243,41 @@ func BadRequestWithErr(c *gin.Context, rawErr error, publicMsg string) {
 	Fail(c, BadRequestCode, publicMsg)
 }
 
+// AuthFailedWithErr 是 AuthFailed 的安全包装，与 FailWithErr 同样只把原始错误记到
+// zap.S 日志，客户端只看到 publicMsg。但与 FailWithErr 不同的是它**强制**走
+// AuthFailedCode(2001)+401，而 classifyError 会把 *ent.NotFoundError 归类为
+// NotFoundCode(4004)/404，把版本冲突归类为 ConflictCode(4090)/409——这些都不
+// 是认证失败的语义。登录/注册/密码重置等需要稳定返回 401 的端点必须用此 helper
+// 而不是 FailWithErr，否则会被错误归类降级。
+func AuthFailedWithErr(c *gin.Context, rawErr error, publicMsg string) {
+	if rawErr != nil {
+		zap.S().Errorw(
+			"handler returned auth failed error",
+			"err", rawErr.Error(),
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"public_message", publicMsg,
+		)
+	}
+	Fail(c, AuthFailedCode, publicMsg)
+}
+
+// ForbiddenWithErr 与 AuthFailedWithErr 类似的语义强制 helper：把 rawErr 隔离到
+// 日志并强制返回 ForbiddenCode(2003)+403。SwitchTenant/跨租户访问/角色拒绝等
+// 场景的语义稳定由 HTTP 401/403 表达，必须用此 helper。
+func ForbiddenWithErr(c *gin.Context, rawErr error, publicMsg string) {
+	if rawErr != nil {
+		zap.S().Errorw(
+			"handler returned forbidden error",
+			"err", rawErr.Error(),
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"public_message", publicMsg,
+		)
+	}
+	Fail(c, ForbiddenCode, publicMsg)
+}
+
 // NotFoundWithErr 与 FailWithErr 类似但保持 NotFoundCode(4004) 的语义。
 // 用于「资源不存在」场景。原常见 leak 模式是 common.NotFound(c, err.Error())
 // 直接返回驱动层错误，该 helper 保留 4004 但隔离原始错误。
