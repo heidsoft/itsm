@@ -262,10 +262,23 @@ jobs:
             echo "::error::no testable packages found"
             exit 1
           fi
+          # Sprint 2 Task 3 — AI Evaluator gate. The ai/eval package contains
+          # the v1.7 E1 metric suite (triage top-1, summarize ROUGE-L,
+          # RAG hit-rate, prediction ROC AUC). require.GreaterOrEqual
+          # thresholds are the in-test CI gate; the run is scoped here so
+          # failures are easy to spot in PR logs.
+          go test ./ai/eval/... -count=1 -short -timeout 120s -v 2>&1 | tee ai-eval.log
           go test $TESTABLE_PKGS -coverprofile=coverage.out -covermode=set
           if [ -f coverage.out ]; then
             go tool cover -func=coverage.out
           fi
+
+      - name: Upload ai-eval log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-ai-eval-log
+          path: ai-eval.log
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
