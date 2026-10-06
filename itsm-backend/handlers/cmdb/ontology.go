@@ -104,9 +104,9 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 	// 3. AI 工具面（按租户动态生成 ci_type 枚举；未注入注册表时省略该节）
 	if c.toolRegistry != nil {
 		tools := c.toolRegistry.ListToolsForTenant(ctx.Request.Context(), tenantID)
-		resp.AITools = make([]dto.CMDBOntologyTool, 0, len(tools))
+		out := make([]dto.CMDBOntologyTool, 0, len(tools))
 		for _, td := range tools {
-			resp.AITools = append(resp.AITools, dto.CMDBOntologyTool{
+			out = append(out, dto.CMDBOntologyTool{
 				Name:        td.Name,
 				Description: td.Description,
 				ReadOnly:    td.ReadOnly,
@@ -115,6 +115,7 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 				ArgsSchema:  td.ArgsSchema,
 			})
 		}
+		resp.AITools = &out
 	}
 
 	common.Success(ctx, &resp)
@@ -123,6 +124,9 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 // parseAttributeSchemaOrRaw 尝试把 CIType.attributeSchema 文本解析为 JSON 对象；
 // 非法 JSON 时原样返回字符串（schema 由 CIType 管理端维护，历史上是非结构化 Text）。
 func parseAttributeSchemaOrRaw(raw string) interface{} {
+	if raw == "" {
+		return nil
+	}
 	var parsed interface{}
 	if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
 		return raw

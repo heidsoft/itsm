@@ -11,7 +11,9 @@ type CMDBOntologyResponse struct {
 	CITypes           []CMDBOntologyCIType           `json:"ciTypes"`
 	RelationshipTypes []CMDBOntologyRelationshipType `json:"relationshipTypes"`
 	Enums             CMDBOntologyEnums              `json:"enums"`
-	AITools           []CMDBOntologyTool             `json:"aiTools"`
+	// AITools 仅在 toolRegistry 已注入时存在；用指针+omitempty 让 nil 时真正从 JSON 中省略，
+	// 避免 LLM Agent 看到 "aiTools": null 误判能力已就绪。
+	AITools *[]CMDBOntologyTool `json:"aiTools,omitempty"`
 }
 
 // CMDBOntologyCIType 单个 CI 类型的本体描述
