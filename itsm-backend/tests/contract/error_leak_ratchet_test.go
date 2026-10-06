@@ -57,7 +57,8 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // handlers/change/handler.go 20 已在 2026-10-05 ParamErrorWithErr/RespondError/FailWithErr sweep 中清零并从此基线删除；
 // handlers/common/handler.go 22 已在 2026-10-06 ParamErrorWithErr/RespondError/AuthFailed+logger sweep 中清零并从此基线删除；
 // handlers/sla/handler.go 20 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除；
-// handlers/bpmn/workflow.go 36 已在 2026-10-06 ParamErrorWithErr/RespondError/NotFoundWithErr sweep 中清零并从此基线删除。
+// handlers/bpmn/workflow.go 36 已在 2026-10-06 ParamErrorWithErr/RespondError/NotFoundWithErr sweep 中清零并从此基线删除；
+// handlers/rbac/handler.go 14 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -78,7 +79,6 @@ var errorLeakBaseline = map[string]int{
 	"handlers/marketplace/handler.go":       13,
 	"handlers/prediction/handler.go":        4,
 	"handlers/project/handler.go":           7,
-	"handlers/rbac/handler.go":              14,
 	"handlers/sla_template/handler.go":      2,
 	"handlers/standard_change/handler.go":   2,
 	"handlers/survey/handler.go":            7,
