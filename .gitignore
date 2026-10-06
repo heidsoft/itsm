@@ -39,6 +39,7 @@ go.work.sum
 itsm-backend/dist/
 itsm-backend/build/
 itsm-backend/tmp/
+itsm-backend/init_data
 
 # Logs
 *.log
