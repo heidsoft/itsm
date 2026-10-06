@@ -93,7 +93,10 @@ func (h *Handler) recordAuditFailure(tenantID int, action, reason string, header
 	if h.client == nil || h.logger == nil {
 		return
 	}
-	body, _ := json.Marshal(map[string]interface{}{"reason": reason, "headers": headers})
+	// Sprint 2 Task 4 — headers 走 connector.RedactHeaders 屏蔽 signature
+	// 与 msg_signature / token / aes_key，避免 audit_log 泄露未通过认证
+	// 的 caller 提交的 secret material。
+	body, _ := json.Marshal(map[string]interface{}{"reason": reason, "headers": connector.RedactHeaders(headers)})
 	bodyStr := string(body)
 	if err := h.client.AuditLog.Create().
 		SetTenantID(tenantID).
