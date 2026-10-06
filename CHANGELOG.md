@@ -9,13 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.15] - 2026-10-06
+
 ### Added
 
 - **CMDB 数据治理骨架（v1.6.15 P1 收口）**：补齐 ROADMAP `[CMDB 数据治理]` 收敛项的纯函数层——CI 退役状态机（`online -> retiring -> retired` 显式转移表 + 受控 reason 词表 `manual/decommissioned/replaced/discovery_missing/end_of_life`，非法转移返回 `ErrInvalidCIRetirementTransition` 由 service 层映射 409）、差异分类（`DiffReconciliation` 产出 `add/noop/retire_confirm/duplicate` 受控 action 词表 + 同一批次重复 CloudResourceID 单独告警）、治理质量指标（`ComputeQualityMetrics` 给出 `Active/Retired/Stale/Orphan/Incomplete/CompletenessPct`，空集合除零保护 + 四舍五入到 0.01）。`ConfigurationItem` 实体补 `LifecycleStatus` 字段（schema 已存在，`toCIDomain` 未透传），让数据治理原语可读。`itsm-backend/handlers/cmdb/data_governance.go` 266 行纯函数 + `data_governance_test.go` 21 用例全绿，覆盖状态机合法/非法转移、Stale/Orphan 判定、QualityMetrics 空集+混合+四舍五入、Diff 三种分类 + nil 跳过 + 未知 action 静默。本提交不扩展 Repository 接口、不动 service 调用方；service 层 GetReconciliation 接入 diff 与 metrics、handler 暴露 `/cmdb/governance/report`、CI 退役 PUT 等三件套留 v1.6.16 收口。
 
 ### Fixed
 
-- **docs-gate C.6.4 产品表面棘轮基线同步**：实测 handlers_dirs=65 / service_go_files=326 / bootstrap_app_lines=1812 / frontend_pages=168 四个值均低于历史基线，原因是 2026-09-26 至 2026-10-04 之间 commit `7a3d8dcc5` / `ae86f0f8a` / `2b48975ee` / `a2f559c50` 移除了 dashboard/department/project/root_cause 死 handler 与 5 个死 service、`agent-ops-demo` 静态原型页，但基线文件没同步收紧。本提交把 4 项基线数字同步到实际值并补充 2026-10-06 收口注释，下次 C.6.4 报告从「低于基线，建议同步」改为「等于基线」。
+**前端 P0 阻塞修复（Sprint 1）**
+
+- **3 个 hook 补 `requestIdRef` 守卫（H1 stale-overwrite 风险）**：`useCache.fetchData` / `useDashboardData.loadData` / `useSLARealTime.doRefresh` / `refreshNow` 之前无 ordering guard，慢响应会覆盖快响应。Pattern 与 `useIncidentsQuery.ts:71-131` 对齐，三处守卫（post-fetch / post-catch / post-finally）。新增 9 个 race 测试覆盖 happy / partial / finally-loading-flip 路径，全部 375 个 hook 测试通过。
+- **`useTicketsQuery` 批量删除改用 `Promise.allSettled`（H4 阻断）**：原实现用 `Promise.all`，第一个失败即整批 reject 且无 per-id 错误明细，UI 留 stale state。改 `allSettled` + 返回 `{ids, failedIds, errors}`，onSuccess 根据 `failedIds.length` 分发 success / warning / error 三档消息；`removeQueries` / 乐观 stats 更新只作用于成功 id。新增 3 个 allSettled 测试覆盖 partial / all-fail / all-success。
+- **10 个关键路由 `router.push` 包 try/catch + `message.error`（NO-GO §6.1 P0）**：`login`（post-login redirect）、`auth/callback/[provider]`（SSO 跳 dashboard 与 3s 跳 login）、`tickets/create`（post-create 与取消）、`register`（post-register 与 login link）、`not-found`（404 返回仪表盘/首页）、`tickets`（analytics redirect、tab 切换、search 切换、overdue 跳转、kanban select、create button）、`tickets/templates`（2 处查看详情）、`tickets/templates/[id]`（3 处 ticket link 与返回列表）、`my-requests/[requestId]`（back-link 与 CI 跳转）、`service-catalog/request/[id]`（post-submit、back、返回服务目录、取消）。所有导航失败路径现在 surface `message.error` 而非静默抛出未捕获异常。新增静态检查 `login-nav.test.tsx` 验证 try/catch 包裹模式。
+
+### Sprint 1 验证
+
+- `go test ./... -count=1 -short` 全绿（v1.6.14 已具备，本版无新增后端逻辑变更）
+- `npm run type-check` 0 error
+- `npx jest src/lib/hooks` **24 suites / 375 tests PASS**（含 12 个 Sprint 1 新增 race/allSettled 测试）
+- 工作树 Sprint 1 范围 clean
 
 - **docs-gate C.7.4 前端孤儿组件清理**：`NotificationCenter.tsx`（1059 行）+ `TicketNotificationSection.tsx`（376 行）自通知域重构到 `src/hooks/notification` BFF 与 `/inbox` 页面后已无任何 import / require / jest 引用，docs-gate C.7.4 自 advisory 模式起即上报为 WARN，本提交将其删除，共 1435 行死代码下线，C.7.4 现报告 0 个不可达文件。
 
