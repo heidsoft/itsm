@@ -196,7 +196,7 @@ func requireUniqueViolation(t *testing.T, err error, want string) {
 	require.Error(t, err, want)
 	var pqErr *pq.Error
 	require.True(t, errors.As(err, &pqErr), "expected a PostgreSQL error, got %T: %v", err, err)
-	require.Equal(t, pq.ErrorCode(uniqueViolationSQLState), pqErr.Code,
+	require.Equal(t, uniqueViolationSQLState, string(pqErr.Code),
 		"expected a uniqueness breach, got %s: %s", pqErr.Code, pqErr.Message)
 }
 
