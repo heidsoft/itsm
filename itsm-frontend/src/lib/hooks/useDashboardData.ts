@@ -220,8 +220,14 @@ export const useDashboardData = () => {
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
 
+  // Pattern A: guards against out-of-order responses when refreshData() is
+  // called rapidly. Complements the existing AbortController — abort cancels
+  // the network request, this guard cancels stale state writes.
+  const requestIdRef = useRef(0);
+
   const loadData = useCallback(
     async (forceRefresh = false) => {
+      const requestId = ++requestIdRef.current;
       // 取消之前的请求
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -233,6 +239,7 @@ export const useDashboardData = () => {
         const cacheAge = now - cachedData.timestamp;
 
         if (cacheAge < CACHE_DURATION) {
+          if (requestIdRef.current !== requestId) return;
           setData(cachedData.data);
           setLastUpdated(new Date(cachedData.timestamp));
           setLoading(false);
@@ -253,10 +260,11 @@ export const useDashboardData = () => {
 
         const dashboardData = await fetchDashboardData();
 
-        // 检查请求是否被取消
+        // 检查请求是否被取消（abort 或被更新的 request 覆盖）
         if (abortControllerRef.current?.signal.aborted) {
           return;
         }
+        if (requestIdRef.current !== requestId) return;
 
         const now = Date.now();
         setData(dashboardData);
@@ -277,6 +285,7 @@ export const useDashboardData = () => {
         if (abortControllerRef.current?.signal.aborted) {
           return;
         }
+        if (requestIdRef.current !== requestId) return;
 
         const errorMessage = err instanceof Error ? err.message : '加载数据失败';
         setError(errorMessage);
@@ -289,8 +298,12 @@ export const useDashboardData = () => {
           setLastUpdated(new Date(cachedData.timestamp));
         }
       } finally {
-        setLoading(false);
-        abortControllerRef.current = null;
+        if (requestIdRef.current === requestId) {
+          setLoading(false);
+        }
+        if (abortControllerRef.current?.signal.aborted === false) {
+          abortControllerRef.current = null;
+        }
       }
     },
     [cachedData, setCachedData, setRefreshState]
