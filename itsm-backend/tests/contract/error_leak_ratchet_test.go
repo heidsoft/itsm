@@ -60,6 +60,7 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // handlers/bpmn/workflow.go 36 已在 2026-10-06 ParamErrorWithErr/RespondError/NotFoundWithErr sweep 中清零并从此基线删除；
 // handlers/rbac/handler.go 14 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
 // handlers/marketplace/handler.go 13 已在 2026-10-06 middleware.TenantIDOrUnauthorized/UserIDOrUnauthorized + NotFoundWithErr/BadRequestWithErr/RespondError sweep 中清零并从此基线删除。
+// handlers/approval/routes.go 12 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
 var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/ai_generator.go":         2,
 	"handlers/bpmn/dashboard.go":            1,
@@ -67,7 +68,6 @@ var errorLeakBaseline = map[string]int{
 	"handlers/bpmn/process_trigger.go":      6, // 2026-10-05 RespondError 收敛
 	"handlers/bpmn/workflow_template.go":    3,
 	"handlers/application/handler.go":       12,
-	"handlers/approval/routes.go":           12,
 	"handlers/approval_chain/handler.go":    2,
 	"handlers/auditlog/handler.go":          2,
 	"handlers/auth/handler.go":              10,
