@@ -77,7 +77,7 @@ export default function TicketTemplateDetailPage() {
       dataIndex: 'ticketNumber',
       render: (value: string, record) => (
         <Button
-          type="link"
+          type='link'
           onClick={() => {
             try {
               router.push(`/tickets/${record.id}`);
@@ -117,9 +117,9 @@ export default function TicketTemplateDetailPage() {
   if (!template) {
     return (
       <Result
-        status="404"
-        title="模板不存在"
-        subTitle="该模板可能已被删除，或您没有访问权限。"
+        status='404'
+        title='模板不存在'
+        subTitle='该模板可能已被删除，或您没有访问权限。'
         extra={
           <Button
             onClick={() => {
@@ -139,7 +139,7 @@ export default function TicketTemplateDetailPage() {
   }
 
   return (
-    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation='vertical' size='large' style={{ width: '100%' }}>
       <Card>
         <Button
           icon={<ArrowLeft size={16} />}
@@ -154,10 +154,12 @@ export default function TicketTemplateDetailPage() {
         >
           返回模板列表
         </Button>
-        <div className="mt-4 flex items-start justify-between">
+        <div className='mt-4 flex items-start justify-between'>
           <div>
-            <Title level={3} style={{ marginBottom: 4 }}>{template.name}</Title>
-            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            <Title level={3} style={{ marginBottom: 4 }}>
+              {template.name}
+            </Title>
+            <Paragraph type='secondary' style={{ marginBottom: 0 }}>
               {template.description || '暂无描述'}
             </Paragraph>
           </div>
@@ -167,25 +169,27 @@ export default function TicketTemplateDetailPage() {
         </div>
       </Card>
 
-      <Card title="基本信息">
+      <Card title='基本信息'>
         <Descriptions bordered column={{ xs: 1, sm: 2 }}>
-          <Descriptions.Item label="模板 ID">{template.id}</Descriptions.Item>
-          <Descriptions.Item label="分类">{template.category || '-'}</Descriptions.Item>
-          <Descriptions.Item label="默认优先级">{template.priority || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          <Descriptions.Item label='模板 ID'>{template.id}</Descriptions.Item>
+          <Descriptions.Item label='分类'>{template.category || '-'}</Descriptions.Item>
+          <Descriptions.Item label='默认优先级'>{template.priority || '-'}</Descriptions.Item>
+          <Descriptions.Item label='创建时间'>
             {dayjs(template.createdAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
+          <Descriptions.Item label='更新时间'>
             {dayjs(template.updatedAt).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Card title="关联表单配置" extra={<FileText size={18} />}>
+      <Card title='关联表单配置' extra={<FileText size={18} />}>
         {formEntries.length > 0 ? (
           <Descriptions bordered column={1}>
             {formEntries.map(([key, value]) => (
-              <Descriptions.Item key={key} label={key}>{renderValue(value)}</Descriptions.Item>
+              <Descriptions.Item key={key} label={key}>
+                {renderValue(value)}
+              </Descriptions.Item>
             ))}
           </Descriptions>
         ) : template.fields?.length ? (
@@ -201,12 +205,12 @@ export default function TicketTemplateDetailPage() {
             ]}
           />
         ) : (
-          <Empty description="暂无关联表单配置" />
+          <Empty description='暂无关联表单配置' />
         )}
       </Card>
 
       <Card title={`关联工单（${tickets.length}）`}>
-        <Table rowKey="id" columns={columns} dataSource={tickets} pagination={{ pageSize: 10 }} />
+        <Table rowKey='id' columns={columns} dataSource={tickets} pagination={{ pageSize: 10 }} />
       </Card>
     </Space>
   );

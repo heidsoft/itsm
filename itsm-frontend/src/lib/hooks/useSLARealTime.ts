@@ -58,10 +58,7 @@ interface SLARealTimeReturn {
 /**
  * 计算最佳刷新间隔
  */
-function calculateOptimalInterval(
-  priority?: string,
-  hasAtRisk?: boolean
-): number {
+function calculateOptimalInterval(priority?: string, hasAtRisk?: boolean): number {
   // 如果有即将超时的工单，使用更短的间隔
   if (hasAtRisk) {
     return 5000; // 5秒
@@ -117,7 +114,8 @@ export function useSLARealTime(
   const requestIdRef = useRef(0);
 
   // 计算当前刷新间隔
-  const currentInterval = customInterval ?? calculateOptimalInterval(highestPriority, hasAtRiskTickets);
+  const currentInterval =
+    customInterval ?? calculateOptimalInterval(highestPriority, hasAtRiskTickets);
 
   // 执行刷新
   const doRefresh = useCallback(async () => {

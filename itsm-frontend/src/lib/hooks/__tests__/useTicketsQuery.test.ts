@@ -70,7 +70,10 @@ describe('useTicketsQuery hooks', () => {
       const current = 1;
       const pageSize = 20;
       expect(ticketKeys.list(filters, current, pageSize)).toEqual([
-        'tickets', 'list', filters, { current, pageSize },
+        'tickets',
+        'list',
+        filters,
+        { current, pageSize },
       ]);
     });
   });

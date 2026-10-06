@@ -54,7 +54,8 @@ describe('useCache', () => {
   it('should set error state on fetch failure', async () => {
     // The useCache hook sets error state but also re-throws.
     // We verify error handling through the refetch path where we can catch it.
-    const fetcher = jest.fn()
+    const fetcher = jest
+      .fn()
       .mockResolvedValueOnce('initial')
       .mockRejectedValueOnce(new Error('Refetch failed'));
 
@@ -103,17 +104,19 @@ describe('useCache', () => {
   // Pattern A: requestIdRef guard tests (H1 stale-overwrite prevention)
   it('should NOT overwrite fresh data when stale slow response arrives later', async () => {
     let slowResolve!: (v: { value: string }) => void;
-    const slow = new Promise<{ value: string }>(r => { slowResolve = r; });
+    const slow = new Promise<{ value: string }>(r => {
+      slowResolve = r;
+    });
     const fast = Promise.resolve({ value: 'fast' });
 
-    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+    const fetcher = jest
+      .fn<Promise<{ value: string }>, []>()
       .mockImplementationOnce(() => slow)
       .mockImplementationOnce(() => fast);
 
-    const { result, rerender } = renderHook(
-      ({ k }) => useCache<{ value: string }>(k, fetcher),
-      { initialProps: { k: 'race-k1' } }
-    );
+    const { result, rerender } = renderHook(({ k }) => useCache<{ value: string }>(k, fetcher), {
+      initialProps: { k: 'race-k1' },
+    });
 
     await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
 
@@ -134,17 +137,19 @@ describe('useCache', () => {
 
   it('should NOT surface stale error after a successful fresh fetch', async () => {
     let slowReject!: (e: Error) => void;
-    const slow = new Promise<{ value: string }>((_, rj) => { slowReject = rj; });
+    const slow = new Promise<{ value: string }>((_, rj) => {
+      slowReject = rj;
+    });
     const fast = Promise.resolve({ value: 'fast' });
 
-    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+    const fetcher = jest
+      .fn<Promise<{ value: string }>, []>()
       .mockImplementationOnce(() => slow)
       .mockImplementationOnce(() => fast);
 
-    const { result, rerender } = renderHook(
-      ({ k }) => useCache<{ value: string }>(k, fetcher),
-      { initialProps: { k: 'race-err-k1' } }
-    );
+    const { result, rerender } = renderHook(({ k }) => useCache<{ value: string }>(k, fetcher), {
+      initialProps: { k: 'race-err-k1' },
+    });
 
     rerender({ k: 'race-err-k2' });
 
@@ -164,17 +169,19 @@ describe('useCache', () => {
 
   it('should NOT flip loading off for stale requests (only the latest)', async () => {
     let slowResolve!: (v: { value: string }) => void;
-    const slow = new Promise<{ value: string }>(r => { slowResolve = r; });
+    const slow = new Promise<{ value: string }>(r => {
+      slowResolve = r;
+    });
     const fast = Promise.resolve({ value: 'fast' });
 
-    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+    const fetcher = jest
+      .fn<Promise<{ value: string }>, []>()
       .mockImplementationOnce(() => slow)
       .mockImplementationOnce(() => fast);
 
-    const { result, rerender } = renderHook(
-      ({ k }) => useCache<{ value: string }>(k, fetcher),
-      { initialProps: { k: 'race-load-k1' } }
-    );
+    const { result, rerender } = renderHook(({ k }) => useCache<{ value: string }>(k, fetcher), {
+      initialProps: { k: 'race-load-k1' },
+    });
 
     rerender({ k: 'race-load-k2' });
 
@@ -208,7 +215,9 @@ describe('cacheManager', () => {
     cacheManager.set('expired', 'value', 1); // 1ms TTL
     // Wait a tick for it to expire
     const start = Date.now();
-    while (Date.now() - start < 2) { /* busy wait */ }
+    while (Date.now() - start < 2) {
+      /* busy wait */
+    }
     expect(cacheManager.get('expired')).toBeNull();
   });
 
@@ -229,7 +238,9 @@ describe('cacheManager', () => {
   it('should report stale status', () => {
     cacheManager.set('stale-key', 'value', 1);
     const start = Date.now();
-    while (Date.now() - start < 2) { /* busy wait */ }
+    while (Date.now() - start < 2) {
+      /* busy wait */
+    }
     expect(cacheManager.isStale('stale-key')).toBe(true);
     expect(cacheManager.isStale('nonexistent')).toBe(true);
   });

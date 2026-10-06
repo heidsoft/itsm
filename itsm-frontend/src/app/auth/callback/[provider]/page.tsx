@@ -55,17 +55,17 @@ export default function AuthCallbackPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-red-500 mb-4">{error}</p>
-        <p className="text-gray-500">正在跳转到登录页面...</p>
+      <div className='flex flex-col items-center justify-center min-h-screen'>
+        <p className='text-red-500 mb-4'>{error}</p>
+        <p className='text-gray-500'>正在跳转到登录页面...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <Spin size="large" className="mb-4" />
-      <p className="text-gray-600">正在完成登录，请稍候...</p>
+    <div className='flex flex-col items-center justify-center min-h-screen'>
+      <Spin size='large' className='mb-4' />
+      <p className='text-gray-600'>正在完成登录，请稍候...</p>
     </div>
   );
 }

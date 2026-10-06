@@ -20,10 +20,12 @@ jest.mock('@/lib/services/ticket-service', () => ({
 
 // Mock usePerformance hooks (useLocalStorage, useSessionStorage)
 jest.mock('../usePerformance', () => ({
-  useLocalStorage: (_key: string, initial: unknown) =>
-    [initial, mockSetLocalStorage, jest.fn()],
-  useSessionStorage: (_key: string, initial: unknown) =>
-    [initial, mockSetSessionStorage, jest.fn()],
+  useLocalStorage: (_key: string, initial: unknown) => [initial, mockSetLocalStorage, jest.fn()],
+  useSessionStorage: (_key: string, initial: unknown) => [
+    initial,
+    mockSetSessionStorage,
+    jest.fn(),
+  ],
 }));
 
 import { DashboardAPI } from '@/lib/api/dashboard-api';
@@ -37,10 +39,27 @@ describe('useDashboardData', () => {
     jest.clearAllMocks();
     mockGetOverview.mockResolvedValue({
       kpiMetrics: [
-        { id: 'total_tickets', title: 'Total', value: 100, unit: '', color: '', trend: 'up', change: 5, changeType: 'increase' },
+        {
+          id: 'total_tickets',
+          title: 'Total',
+          value: 100,
+          unit: '',
+          color: '',
+          trend: 'up',
+          change: 5,
+          changeType: 'increase',
+        },
       ],
       recentActivities: [
-        { id: '1', type: 'update', title: 'Updated ticket', description: 'Ticket #1', user: 'admin', timestamp: '2024-01-01', status: 'completed' },
+        {
+          id: '1',
+          type: 'update',
+          title: 'Updated ticket',
+          description: 'Ticket #1',
+          user: 'admin',
+          timestamp: '2024-01-01',
+          status: 'completed',
+        },
       ],
       quickActions: [],
     });
@@ -96,7 +115,9 @@ describe('useDashboardData', () => {
   // Pattern A: requestIdRef guard tests (H1 stale-overwrite prevention)
   it('should NOT overwrite fresh data when stale slow response arrives later', async () => {
     let slowResolve!: (v: unknown) => void;
-    const slowStats = new Promise(r => { slowResolve = r; });
+    const slowStats = new Promise(r => {
+      slowResolve = r;
+    });
     // Initial mount: getOverview fast + getTicketStats slow (overall slow)
     mockGetOverview.mockReset().mockResolvedValue({
       kpiMetrics: [],
@@ -134,7 +155,9 @@ describe('useDashboardData', () => {
 
   it('should NOT surface stale error after fresh success', async () => {
     let slowReject!: (e: Error) => void;
-    const slowStats = new Promise((_, rj) => { slowReject = rj; });
+    const slowStats = new Promise((_, rj) => {
+      slowReject = rj;
+    });
     mockGetOverview.mockReset().mockResolvedValue({
       kpiMetrics: [],
       recentActivities: [],
@@ -167,7 +190,9 @@ describe('useDashboardData', () => {
 
   it('should NOT flip loading off for stale requests', async () => {
     let slowResolve!: (v: unknown) => void;
-    const slowStats = new Promise(r => { slowResolve = r; });
+    const slowStats = new Promise(r => {
+      slowResolve = r;
+    });
     mockGetOverview.mockReset().mockResolvedValue({
       kpiMetrics: [],
       recentActivities: [],

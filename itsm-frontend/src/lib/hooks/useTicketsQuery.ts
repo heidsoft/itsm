@@ -255,7 +255,9 @@ export const useBatchDeleteTicketsMutation = () => {
       } else if (failedIds.length === ids.length) {
         message.error(`批量删除失败：${failedIds.length} 个工单均未删除`);
       } else {
-        message.warning(`部分成功：${ids.length - failedIds.length} 个删除成功，${failedIds.length} 个失败`);
+        message.warning(
+          `部分成功：${ids.length - failedIds.length} 个删除成功，${failedIds.length} 个失败`
+        );
       }
 
       const successIds = ids.filter(id => !failedIds.includes(id));

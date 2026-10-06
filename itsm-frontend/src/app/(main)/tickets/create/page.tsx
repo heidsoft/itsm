@@ -18,8 +18,8 @@ import {
   Alert,
   DatePicker,
   Select,
-	Checkbox,
-	InputNumber,
+  Checkbox,
+  InputNumber,
 } from 'antd';
 import AppSelect from '@/components/ui/AppSelect';
 import {
@@ -52,32 +52,48 @@ const { TextArea } = Input;
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
 type TicketCreateType = 'incident' | 'service_request' | 'change' | 'problem';
-type RuntimeTicketType = { id: number; code: string; name: string; description: string; icon: string; color: string; priority: Priority; workflowDefinitionKey?: string; fields: CustomFieldDefinition[] };
+type RuntimeTicketType = {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  priority: Priority;
+  workflowDefinitionKey?: string;
+  fields: CustomFieldDefinition[];
+};
 
 // 图标映射
 const iconMap: Record<string, React.ReactNode> = {
-  Container: <Container className="w-5 h-5" />,
-  Database: <Database className="w-5 h-5" />,
-  Download: <Download className="w-5 h-5" />,
-  Desktop: <Monitor className="w-5 h-5" />,
-  User: <User className="w-5 h-5" />,
-  Code: <Code className="w-5 h-5" />,
-  Global: <Globe className="w-5 h-5" />,
-  Safety: <Shield className="w-5 h-5" />,
-  Appstore: <Boxes className="w-5 h-5" />,
-  Project: <Folder className="w-5 h-5" />,
-  Key: <Key className="w-5 h-5" />,
-  FileText: <FileText className="w-5 h-5" />,
+  Container: <Container className='w-5 h-5' />,
+  Database: <Database className='w-5 h-5' />,
+  Download: <Download className='w-5 h-5' />,
+  Desktop: <Monitor className='w-5 h-5' />,
+  User: <User className='w-5 h-5' />,
+  Code: <Code className='w-5 h-5' />,
+  Global: <Globe className='w-5 h-5' />,
+  Safety: <Shield className='w-5 h-5' />,
+  Appstore: <Boxes className='w-5 h-5' />,
+  Project: <Folder className='w-5 h-5' />,
+  Key: <Key className='w-5 h-5' />,
+  FileText: <FileText className='w-5 h-5' />,
 };
 
 const priorityLabel = (priority: string): string => {
   switch (priority) {
-    case 'critical': return '严重';
-    case 'urgent': return '紧急';
-    case 'high': return '高';
-    case 'medium': return '中';
-    case 'low': return '低';
-    default: return priority;
+    case 'critical':
+      return '严重';
+    case 'urgent':
+      return '紧急';
+    case 'high':
+      return '高';
+    case 'medium':
+      return '中';
+    case 'low':
+      return '低';
+    default:
+      return priority;
   }
 };
 
@@ -102,13 +118,15 @@ export default function CreateTicketPage() {
   const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-	const [ticketTypes, setTicketTypes] = useState<RuntimeTicketType[]>([]);
-	const [ticketTypesLoading, setTicketTypesLoading] = useState(true);
-	const [ticketTypesError, setTicketTypesError] = useState<string | null>(null);
+  const [ticketTypes, setTicketTypes] = useState<RuntimeTicketType[]>([]);
+  const [ticketTypesLoading, setTicketTypesLoading] = useState(true);
+  const [ticketTypesError, setTicketTypesError] = useState<string | null>(null);
 
   // 选中的工单类型
   const [selectedType, setSelectedType] = useState<RuntimeTicketType | null>(null);
-	const [referenceOptions, setReferenceOptions] = useState<Record<'user' | 'department' | 'ci', { label: string; value: number }[]>>({ user: [], department: [], ci: [] });
+  const [referenceOptions, setReferenceOptions] = useState<
+    Record<'user' | 'department' | 'ci', { label: string; value: number }[]>
+  >({ user: [], department: [], ci: [] });
   // 分类筛选
   // AI 分类建议
   const [aiSuggestions, setAiSuggestions] = useState<{
@@ -124,34 +142,65 @@ export default function CreateTicketPage() {
   const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
 
-	useEffect(() => {
-		let cancelled = false;
-		TicketTypeApi.list({ status: 'active', page: 1, pageSize: 100 })
-			.then(result => {
-				if (cancelled) return;
-				setTicketTypes(result.items.map(type => ({
-					id: type.id, code: type.code, name: type.name,
-					description: type.description ?? '', icon: type.icon ?? 'FileText', color: type.color ?? '#1677ff',
-					priority: type.defaultPriority ?? 'medium', workflowDefinitionKey: type.workflowDefinitionKey,
-					fields: type.customFields.filter(field => field.visible !== false),
-				})));
-			})
-			.catch(error => { if (!cancelled) setTicketTypesError(error instanceof Error ? error.message : '工单类型加载失败'); })
-			.finally(() => { if (!cancelled) setTicketTypesLoading(false); });
-		return () => { cancelled = true; };
-	}, []);
+  useEffect(() => {
+    let cancelled = false;
+    TicketTypeApi.list({ status: 'active', page: 1, pageSize: 100 })
+      .then(result => {
+        if (cancelled) return;
+        setTicketTypes(
+          result.items.map(type => ({
+            id: type.id,
+            code: type.code,
+            name: type.name,
+            description: type.description ?? '',
+            icon: type.icon ?? 'FileText',
+            color: type.color ?? '#1677ff',
+            priority: type.defaultPriority ?? 'medium',
+            workflowDefinitionKey: type.workflowDefinitionKey,
+            fields: type.customFields.filter(field => field.visible !== false),
+          }))
+        );
+      })
+      .catch(error => {
+        if (!cancelled)
+          setTicketTypesError(error instanceof Error ? error.message : '工单类型加载失败');
+      })
+      .finally(() => {
+        if (!cancelled) setTicketTypesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-	useEffect(() => {
-		Promise.allSettled([
-			httpClient.get<any>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
-			httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
-			CMDBApi.getAllCIs({}, 200),
-		]).then(([users, departments, cis]) => setReferenceOptions({
-			user: users.status === 'fulfilled' ? (users.value.users ?? []).map((item: any) => ({ label: item.name ?? item.username, value: item.id })) : [],
-			department: departments.status === 'fulfilled' ? (Array.isArray(departments.value) ? departments.value : []).map((item: any) => ({ label: item.name, value: item.id })) : [],
-			ci: cis.status === 'fulfilled' ? cis.value.map(item => ({ label: item.name, value: item.id })) : [],
-		}));
-	}, []);
+  useEffect(() => {
+    Promise.allSettled([
+      httpClient.get<any>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
+      httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
+      CMDBApi.getAllCIs({}, 200),
+    ]).then(([users, departments, cis]) =>
+      setReferenceOptions({
+        user:
+          users.status === 'fulfilled'
+            ? (users.value.users ?? []).map((item: any) => ({
+                label: item.name ?? item.username,
+                value: item.id,
+              }))
+            : [],
+        department:
+          departments.status === 'fulfilled'
+            ? (Array.isArray(departments.value) ? departments.value : []).map((item: any) => ({
+                label: item.name,
+                value: item.id,
+              }))
+            : [],
+        ci:
+          cis.status === 'fulfilled'
+            ? cis.value.map(item => ({ label: item.name, value: item.id }))
+            : [],
+      })
+    );
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -162,9 +211,7 @@ export default function CreateTicketPage() {
         if (cancelled) return;
         const list = res.items;
         setCategoryOptions(
-          list
-            .filter(c => c.isActive !== false)
-            .map(c => ({ label: c.name, value: c.name })),
+          list.filter(c => c.isActive !== false).map(c => ({ label: c.name, value: c.name }))
         );
       } catch (e) {
         console.error('加载工单分类失败', e);
@@ -245,21 +292,33 @@ export default function CreateTicketPage() {
         type: inferTicketType(selectedType),
         ticketTypeId: selectedType?.id,
         category: values.category || undefined,
-        formFields: selectedType ? selectedType.fields?.reduce<Record<string, unknown>>((fields, field) => {
-          const value = values[field.name];
-          if (value === undefined || value === null || value === '') {
-            return fields;
-          }
-          // 日期 / 日期时间统一转为字符串，其它原始类型（number/boolean/string）直接透传
-          let normalized: unknown = value;
-          if (field.type === 'date' && typeof value === 'object' && value && typeof (value as { format?: unknown }).format === 'function') {
-            normalized = (value as { format: (fmt: string) => string }).format('YYYY-MM-DD');
-          } else if (field.type === 'datetime' && typeof value === 'object' && value && typeof (value as { toISOString?: unknown }).toISOString === 'function') {
-            normalized = (value as { toISOString: () => string }).toISOString();
-          }
-          fields[field.name] = normalized;
-          return fields;
-        }, {}) : undefined,
+        formFields: selectedType
+          ? selectedType.fields?.reduce<Record<string, unknown>>((fields, field) => {
+              const value = values[field.name];
+              if (value === undefined || value === null || value === '') {
+                return fields;
+              }
+              // 日期 / 日期时间统一转为字符串，其它原始类型（number/boolean/string）直接透传
+              let normalized: unknown = value;
+              if (
+                field.type === 'date' &&
+                typeof value === 'object' &&
+                value &&
+                typeof (value as { format?: unknown }).format === 'function'
+              ) {
+                normalized = (value as { format: (fmt: string) => string }).format('YYYY-MM-DD');
+              } else if (
+                field.type === 'datetime' &&
+                typeof value === 'object' &&
+                value &&
+                typeof (value as { toISOString?: unknown }).toISOString === 'function'
+              ) {
+                normalized = (value as { toISOString: () => string }).toISOString();
+              }
+              fields[field.name] = normalized;
+              return fields;
+            }, {})
+          : undefined,
       });
 
       message.success('工单创建成功');
@@ -306,7 +365,10 @@ export default function CreateTicketPage() {
         setAiSuggestions(response.suggestions);
         // 自动应用建议：分类仅在与后端主数据匹配时回填，
         // 否则 AI 返回的英文 slug（database/network/…）与 TicketCategory 名称不匹配会导致提交失败
-        if (response.suggestions.category && categoryOptions.some(o => o.value === response.suggestions.category)) {
+        if (
+          response.suggestions.category &&
+          categoryOptions.some(o => o.value === response.suggestions.category)
+        ) {
           form.setFieldValue('category', response.suggestions.category);
         }
         if (response.suggestions.priority) {
@@ -329,7 +391,7 @@ export default function CreateTicketPage() {
     return (
       <Card
         key={type.id}
-        size="small"
+        size='small'
         hoverable
         onClick={() => setSelectedType(type)}
         style={{
@@ -337,9 +399,9 @@ export default function CreateTicketPage() {
           backgroundColor: isSelected ? `${type.color}10` : '#fff',
           cursor: 'pointer',
         }}
-        className="transition-all"
+        className='transition-all'
       >
-        <div className="flex items-center gap-3">
+        <div className='flex items-center gap-3'>
           <div
             style={{
               color: type.color,
@@ -348,30 +410,30 @@ export default function CreateTicketPage() {
               justifyContent: 'center',
             }}
           >
-            {iconMap[type.icon] || <FileText className="w-5 h-5" />}
+            {iconMap[type.icon] || <FileText className='w-5 h-5' />}
           </div>
           <div style={{ flex: 1 }}>
-            <div className="font-medium">{type.name}</div>
-            <Text type="secondary" className="text-xs">
+            <div className='font-medium'>{type.name}</div>
+            <Text type='secondary' className='text-xs'>
               {type.description}
             </Text>
           </div>
-          {isSelected && <ChevronRight className="w-4 h-4" style={{ color: type.color }} />}
+          {isSelected && <ChevronRight className='w-4 h-4' style={{ color: type.color }} />}
         </div>
       </Card>
     );
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6" role="main" aria-label="创建工单页面">
-      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+    <div className='max-w-6xl mx-auto p-4 md:p-6' role='main' aria-label='创建工单页面'>
+      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
         {/* 页面头部 */}
         <Card>
-          <Space align="center" style={{ width: '100%' }}>
+          <Space align='center' style={{ width: '100%' }}>
             <Button
-              icon={<ArrowLeft className="w-4 h-4" />}
+              icon={<ArrowLeft className='w-4 h-4' />}
               onClick={() => router.back()}
-              aria-label="返回上一页"
+              aria-label='返回上一页'
             >
               返回
             </Button>
@@ -379,7 +441,7 @@ export default function CreateTicketPage() {
               <Title level={4} style={{ marginBottom: 4 }}>
                 新建工单
               </Title>
-              <Text type="secondary">选择工单类型，填写详细信息后提交</Text>
+              <Text type='secondary'>选择工单类型，填写详细信息后提交</Text>
             </div>
           </Space>
         </Card>
@@ -391,11 +453,11 @@ export default function CreateTicketPage() {
               title={
                 <Space>
                   <span>选择工单类型</span>
-                  <Tag color="blue">{filteredTypes.length} 种</Tag>
+                  <Tag color='blue'>{filteredTypes.length} 种</Tag>
                 </Space>
               }
               styles={{ body: { padding: '12px' } }}
-              aria-label="工单类型选择区域"
+              aria-label='工单类型选择区域'
             >
               {/* 类型列表 */}
               <div
@@ -403,16 +465,24 @@ export default function CreateTicketPage() {
                   maxHeight: 500,
                   overflowY: 'auto',
                 }}
-                role="list"
-                aria-label="可用工单类型列表"
+                role='list'
+                aria-label='可用工单类型列表'
               >
                 <Space
-                  orientation="vertical"
+                  orientation='vertical'
                   style={{ width: '100%' }}
                   size={8}
-                  role="presentation"
+                  role='presentation'
                 >
-                  {ticketTypesLoading ? <Spin /> : ticketTypesError ? <Alert type="error" showIcon title={ticketTypesError} /> : filteredTypes.length === 0 ? <Empty description="暂无已启用的工单类型" /> : filteredTypes.map(type => renderTypeCard(type))}
+                  {ticketTypesLoading ? (
+                    <Spin />
+                  ) : ticketTypesError ? (
+                    <Alert type='error' showIcon title={ticketTypesError} />
+                  ) : filteredTypes.length === 0 ? (
+                    <Empty description='暂无已启用的工单类型' />
+                  ) : (
+                    filteredTypes.map(type => renderTypeCard(type))
+                  )}
                 </Space>
               </div>
             </Card>
@@ -420,7 +490,7 @@ export default function CreateTicketPage() {
 
           {/* 右侧：表单 */}
           <Col xs={24} md={14}>
-            <Form form={form} layout="vertical" aria-label="工单表单" requiredMark="optional">
+            <Form form={form} layout='vertical' aria-label='工单表单' requiredMark='optional'>
               {/* 已选类型提示 */}
               {selectedType && (
                 <Card
@@ -429,23 +499,23 @@ export default function CreateTicketPage() {
                     borderColor: selectedType.color,
                     background: `${selectedType.color}08`,
                   }}
-                  role="region"
+                  role='region'
                   aria-label={`已选工单类型：${selectedType.name}`}
                 >
-                  <Space orientation="vertical" style={{ width: '100%' }}>
+                  <Space orientation='vertical' style={{ width: '100%' }}>
                     <Space>
-                      <div style={{ color: selectedType.color }} aria-hidden="true">
-                        {iconMap[selectedType.icon] || <FileText className="w-5 h-5" />}
+                      <div style={{ color: selectedType.color }} aria-hidden='true'>
+                        {iconMap[selectedType.icon] || <FileText className='w-5 h-5' />}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div className="font-medium">{selectedType.name}</div>
-                        <Text type="secondary">{selectedType.description}</Text>
+                        <div className='font-medium'>{selectedType.name}</div>
+                        <Text type='secondary'>{selectedType.description}</Text>
                       </div>
                       <Button
-                        type="link"
-                        size="small"
+                        type='link'
+                        size='small'
                         onClick={() => setSelectedType(null)}
-                        aria-label="更换工单类型"
+                        aria-label='更换工单类型'
                       >
                         更换
                       </Button>
@@ -475,7 +545,7 @@ export default function CreateTicketPage() {
                           >
                             {priorityLabel(selectedType.priority)}
                           </Tag>
-                          <Text type="secondary">审批流程: </Text>
+                          <Text type='secondary'>审批流程: </Text>
                           <Text strong>{selectedType.workflowDefinitionKey}</Text>
                         </Space>
                       </div>
@@ -499,8 +569,10 @@ export default function CreateTicketPage() {
                         <Form.Item
                           name={field.name}
                           label={field.label}
-						  initialValue={field.defaultValue}
-						  valuePropName={['boolean', 'checkbox'].includes(field.type) ? 'checked' : 'value'}
+                          initialValue={field.defaultValue}
+                          valuePropName={
+                            ['boolean', 'checkbox'].includes(field.type) ? 'checked' : 'value'
+                          }
                           rules={
                             field.required
                               ? [{ required: true, message: `请填写${field.label}` }]
@@ -510,38 +582,79 @@ export default function CreateTicketPage() {
                           {field.type === 'textarea' ? (
                             <TextArea
                               rows={3}
-							  disabled={field.readonly}
+                              disabled={field.readonly}
                               placeholder={field.placeholder}
                               aria-label={field.label}
                             />
                           ) : field.type === 'select' ? (
                             <AppSelect
-							  disabled={field.readonly}
+                              disabled={field.readonly}
                               placeholder={field.placeholder || `请选择${field.label}`}
                               options={field.options}
                               aria-label={field.label}
                             />
-						  ) : field.type === 'multi_select' ? (
-							<Select disabled={field.readonly} mode="multiple" options={field.options} placeholder={field.placeholder} />
-						  ) : field.type === 'radio' ? (
-							<Select disabled={field.readonly} options={field.options} placeholder={field.placeholder} />
-						  ) : field.type === 'number' ? (
-							<InputNumber disabled={field.readonly} style={{ width: '100%' }} placeholder={field.placeholder} />
-						  ) : field.type === 'date' ? (
+                          ) : field.type === 'multi_select' ? (
+                            <Select
+                              disabled={field.readonly}
+                              mode='multiple'
+                              options={field.options}
+                              placeholder={field.placeholder}
+                            />
+                          ) : field.type === 'radio' ? (
+                            <Select
+                              disabled={field.readonly}
+                              options={field.options}
+                              placeholder={field.placeholder}
+                            />
+                          ) : field.type === 'number' ? (
+                            <InputNumber
+                              disabled={field.readonly}
+                              style={{ width: '100%' }}
+                              placeholder={field.placeholder}
+                            />
+                          ) : field.type === 'date' ? (
                             <DatePicker
-							  disabled={field.readonly}
+                              disabled={field.readonly}
                               style={{ width: '100%' }}
                               aria-label={field.label}
                               placeholder={field.placeholder || `请选择${field.label}`}
                             />
-						  ) : field.type === 'datetime' ? (
-							<DatePicker disabled={field.readonly} showTime style={{ width: '100%' }} />
-						  ) : ['boolean', 'checkbox'].includes(field.type) ? (
-							<Checkbox disabled={field.readonly}>{field.placeholder}</Checkbox>
-						  ) : ['user', 'user_picker', 'department', 'department_picker', 'ci'].includes(field.type) ? (
-							<Select disabled={field.readonly} showSearch optionFilterProp="label" options={referenceOptions[field.type === 'ci' ? 'ci' : field.type.startsWith('department') ? 'department' : 'user']} placeholder={field.placeholder} />
-						  ) : (
-							<Input disabled={field.readonly} placeholder={field.placeholder} aria-label={field.label} />
+                          ) : field.type === 'datetime' ? (
+                            <DatePicker
+                              disabled={field.readonly}
+                              showTime
+                              style={{ width: '100%' }}
+                            />
+                          ) : ['boolean', 'checkbox'].includes(field.type) ? (
+                            <Checkbox disabled={field.readonly}>{field.placeholder}</Checkbox>
+                          ) : [
+                              'user',
+                              'user_picker',
+                              'department',
+                              'department_picker',
+                              'ci',
+                            ].includes(field.type) ? (
+                            <Select
+                              disabled={field.readonly}
+                              showSearch
+                              optionFilterProp='label'
+                              options={
+                                referenceOptions[
+                                  field.type === 'ci'
+                                    ? 'ci'
+                                    : field.type.startsWith('department')
+                                      ? 'department'
+                                      : 'user'
+                                ]
+                              }
+                              placeholder={field.placeholder}
+                            />
+                          ) : (
+                            <Input
+                              disabled={field.readonly}
+                              placeholder={field.placeholder}
+                              aria-label={field.label}
+                            />
                           )}
                         </Form.Item>
                       </Col>
@@ -551,56 +664,56 @@ export default function CreateTicketPage() {
               ) : (
                 /* 无自定义字段：显示基础表单 */
                 <Card
-                  title="工单信息"
+                  title='工单信息'
                   style={{ marginBottom: 16 }}
-                  aria-label="基础工单信息表单"
-                  data-testid="ticket-form"
+                  aria-label='基础工单信息表单'
+                  data-testid='ticket-form'
                 >
                   <Alert
-                    type="info"
+                    type='info'
                     showIcon
-                    className="mb-4"
-                    title="填写最少信息即可提交，补充说明建议写在详细描述中。"
+                    className='mb-4'
+                    title='填写最少信息即可提交，补充说明建议写在详细描述中。'
                   />
                   <Form.Item
-                    name="title"
-                    label="标题"
+                    name='title'
+                    label='标题'
                     rules={[
                       { required: true, message: '请输入标题' },
                       { min: 2, message: '标题至少需要2个字符' },
                     ]}
                   >
                     <Input
-                      placeholder="例如：VPN 无法连接"
-                      aria-required="true"
-                      aria-describedby="title-help"
-                      data-testid="ticket-title-input"
+                      placeholder='例如：VPN 无法连接'
+                      aria-required='true'
+                      aria-describedby='title-help'
+                      data-testid='ticket-title-input'
                     />
                   </Form.Item>
 
                   <Form.Item
-                    name="description"
-                    label="详细描述"
+                    name='description'
+                    label='详细描述'
                     rules={[
                       { required: true, message: '请输入描述（至少10个字符）' },
                       { min: 10, message: '描述至少需要10个字符' },
                     ]}
-                    extra="建议写清现象、影响范围和期望结果。"
+                    extra='建议写清现象、影响范围和期望结果。'
                   >
                     <TextArea
                       rows={6}
-                      placeholder="请详细描述问题/需求与影响范围..."
-                      aria-required="true"
-                      data-testid="ticket-description-input"
+                      placeholder='请详细描述问题/需求与影响范围...'
+                      aria-required='true'
+                      data-testid='ticket-description-input'
                     />
                   </Form.Item>
 
                   <Row gutter={[16, 16]}>
                     <Col xs={24} sm={12}>
                       <Form.Item
-                        name="priority"
-                        label="优先级"
-                        initialValue="medium"
+                        name='priority'
+                        label='优先级'
+                        initialValue='medium'
                         rules={[{ required: true }]}
                       >
                         <AppSelect
@@ -612,19 +725,19 @@ export default function CreateTicketPage() {
                             { label: '紧急', value: 'urgent' },
                             { label: '严重', value: 'critical' },
                           ]}
-                          placeholder="选择优先级"
-                          aria-label="选择工单优先级"
+                          placeholder='选择优先级'
+                          aria-label='选择工单优先级'
                         />
                       </Form.Item>
                     </Col>
                     <Col xs={24} sm={12}>
-                      <Form.Item name="category" label="分类">
+                      <Form.Item name='category' label='分类'>
                         <AppSelect
                           allowClear
                           loading={categoryLoading}
                           options={categoryOptions}
                           placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
-                          aria-label="选择工单分类"
+                          aria-label='选择工单分类'
                         />
                       </Form.Item>
                     </Col>
@@ -632,7 +745,11 @@ export default function CreateTicketPage() {
                 </Card>
               )}
 
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end" role="group" aria-label="表单操作按钮">
+              <div
+                className='flex flex-col-reverse gap-3 sm:flex-row sm:justify-end'
+                role='group'
+                aria-label='表单操作按钮'
+              >
                 <Button
                   onClick={() => {
                     try {
@@ -642,18 +759,18 @@ export default function CreateTicketPage() {
                       message.error('导航失败，请稍后重试');
                     }
                   }}
-                  size="large"
-                  aria-label="取消创建，返回工单列表"
+                  size='large'
+                  aria-label='取消创建，返回工单列表'
                 >
                   {t('common.cancel')}
                 </Button>
                 <Button
-                  type="primary"
+                  type='primary'
                   onClick={handleSubmit}
                   loading={loading}
-                  size="large"
+                  size='large'
                   aria-busy={loading}
-                  data-testid="ticket-submit-button"
+                  data-testid='ticket-submit-button'
                 >
                   创建工单
                 </Button>
@@ -661,22 +778,22 @@ export default function CreateTicketPage() {
 
               {/* AI 智能分类区域 */}
               <Card
-                size="small"
-                className="mt-4"
+                size='small'
+                className='mt-4'
                 title={
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-yellow-500" />
+                  <span className='flex items-center gap-2'>
+                    <Sparkles className='w-4 h-4 text-yellow-500' />
                     AI 辅助分类
                   </span>
                 }
               >
                 <Spin spinning={aiLoading}>
-                  {aiError && <Alert title={aiError} type="warning" showIcon className="mb-2" />}
+                  {aiError && <Alert title={aiError} type='warning' showIcon className='mb-2' />}
                   {aiSuggestions ? (
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
+                    <div className='space-y-2'>
+                      <div className='flex flex-wrap gap-2'>
                         {aiSuggestions.category && (
-                          <Tag color="blue">分类: {aiSuggestions.category}</Tag>
+                          <Tag color='blue'>分类: {aiSuggestions.category}</Tag>
                         )}
                         {aiSuggestions.priority && (
                           <Tag color={aiSuggestions.priority === 'urgent' ? 'red' : 'orange'}>
@@ -684,30 +801,30 @@ export default function CreateTicketPage() {
                           </Tag>
                         )}
                         {aiSuggestions.urgency && (
-                          <Tag color="purple">紧急度: {aiSuggestions.urgency}</Tag>
+                          <Tag color='purple'>紧急度: {aiSuggestions.urgency}</Tag>
                         )}
                       </div>
                       {aiSuggestions.reasoning && (
-                        <Text type="secondary" className="text-sm">
+                        <Text type='secondary' className='text-sm'>
                           {aiSuggestions.reasoning}
                         </Text>
                       )}
                       {aiSuggestions.confidence && (
-                        <Text type="secondary" className="text-xs">
+                        <Text type='secondary' className='text-xs'>
                           置信度: {Math.round(aiSuggestions.confidence * 100)}%
                         </Text>
                       )}
                     </div>
                   ) : (
-                    <Text type="secondary">获取AI智能分类建议</Text>
+                    <Text type='secondary'>获取AI智能分类建议</Text>
                   )}
                 </Spin>
                 <Button
-                  type="default"
-                  icon={<Sparkles className="w-4 h-4" />}
+                  type='default'
+                  icon={<Sparkles className='w-4 h-4' />}
                   onClick={handleAITriage}
                   loading={aiLoading}
-                  className="mt-2"
+                  className='mt-2'
                   block
                 >
                   获取 AI 建议

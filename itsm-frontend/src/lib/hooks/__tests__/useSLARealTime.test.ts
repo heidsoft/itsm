@@ -18,9 +18,7 @@ describe('useSLARealTime', () => {
   it('should return initial state', () => {
     const onRefresh = jest.fn().mockResolvedValue(undefined);
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     expect(result.current.isRefreshing).toBe(false);
     expect(result.current.lastRefresh).toBeNull();
@@ -61,9 +59,7 @@ describe('useSLARealTime', () => {
   it('should pause and resume', () => {
     const onRefresh = jest.fn().mockResolvedValue(undefined);
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     act(() => {
       result.current.pause();
@@ -80,9 +76,7 @@ describe('useSLARealTime', () => {
     jest.useRealTimers();
     const onRefresh = jest.fn().mockResolvedValue(undefined);
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     await act(async () => {
       await result.current.refreshNow();
@@ -107,14 +101,15 @@ describe('useSLARealTime requestId guard', () => {
 
   it('should NOT overwrite lastRefresh when stale slow response arrives later', async () => {
     let slowResolve!: () => void;
-    const slow = new Promise<void>(r => { slowResolve = r; });
-    const onRefresh = jest.fn()
+    const slow = new Promise<void>(r => {
+      slowResolve = r;
+    });
+    const onRefresh = jest
+      .fn()
       .mockImplementationOnce(() => slow)
       .mockResolvedValue(undefined);
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     // First refreshNow: triggers slow onRefresh
     const p1 = result.current.refreshNow();
@@ -140,15 +135,16 @@ describe('useSLARealTime requestId guard', () => {
 
   it('should NOT surface stale error after fresh success', async () => {
     let slowReject!: (e: Error) => void;
-    const slow = new Promise<void>((_, rj) => { slowReject = rj; });
-    const onRefresh = jest.fn()
+    const slow = new Promise<void>((_, rj) => {
+      slowReject = rj;
+    });
+    const onRefresh = jest
+      .fn()
       .mockImplementationOnce(() => slow)
       .mockResolvedValue(undefined);
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     const p1 = result.current.refreshNow();
     const p2 = result.current.refreshNow();
@@ -167,8 +163,8 @@ describe('useSLARealTime requestId guard', () => {
       await p1;
     });
 
-    const errorCalls = consoleErrorSpy.mock.calls.filter(c =>
-      typeof c[0] === 'string' && c[0].includes('stale sla error')
+    const errorCalls = consoleErrorSpy.mock.calls.filter(
+      c => typeof c[0] === 'string' && c[0].includes('stale sla error')
     );
     expect(errorCalls).toHaveLength(0);
     expect(result.current.lastRefresh).toBe(fastRefresh);
@@ -178,14 +174,15 @@ describe('useSLARealTime requestId guard', () => {
 
   it('should NOT flip isRefreshing off for stale requests', async () => {
     let slowResolve!: () => void;
-    const slow = new Promise<void>(r => { slowResolve = r; });
-    const onRefresh = jest.fn()
+    const slow = new Promise<void>(r => {
+      slowResolve = r;
+    });
+    const onRefresh = jest
+      .fn()
       .mockImplementationOnce(() => slow)
       .mockResolvedValue(undefined);
 
-    const { result } = renderHook(() =>
-      useSLARealTime({ enabled: false }, onRefresh)
-    );
+    const { result } = renderHook(() => useSLARealTime({ enabled: false }, onRefresh));
 
     const p1 = result.current.refreshNow();
     const p2 = result.current.refreshNow();

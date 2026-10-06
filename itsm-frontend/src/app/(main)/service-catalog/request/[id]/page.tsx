@@ -62,15 +62,17 @@ export default function ServiceCatalogRequestPage() {
       })
       .catch(() => {
         // 兜底：列表接口
-        return httpClient.get<any>('/api/v1/service-catalogs', { page: 1, size: 100 }).then((list: any) => {
-          const items = list?.data?.items || list?.items || [];
-          const found = items.find((it: any) => it.id === id);
-          if (found) {
-            setCatalog(found);
-          } else {
-            setFetchError('未找到所选服务，该服务可能已下架');
-          }
-        });
+        return httpClient
+          .get<any>('/api/v1/service-catalogs', { page: 1, size: 100 })
+          .then((list: any) => {
+            const items = list?.data?.items || list?.items || [];
+            const found = items.find((it: any) => it.id === id);
+            if (found) {
+              setCatalog(found);
+            } else {
+              setFetchError('未找到所选服务，该服务可能已下架');
+            }
+          });
       })
       .catch(() => setFetchError('服务信息加载失败，请稍后重试'))
       .finally(() => setFetching(false));
@@ -99,7 +101,10 @@ export default function ServiceCatalogRequestPage() {
           dataClassification: values.dataClassification || 'internal',
           needsPublicIp: values.needsPublicIp || false,
           sourceIpWhitelist: values.sourceIpWhitelist
-            ? values.sourceIpWhitelist.split(',').map((s: string) => s.trim()).filter(Boolean)
+            ? values.sourceIpWhitelist
+                .split(',')
+                .map((s: string) => s.trim())
+                .filter(Boolean)
             : undefined,
           // B10: 合规确认 + 过期时间
           complianceAck: !!values.complianceAck,
@@ -124,23 +129,20 @@ export default function ServiceCatalogRequestPage() {
 
   if (fetching) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spin size="large" />
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <Spin size='large' />
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className='max-w-3xl mx-auto p-6'>
       <Breadcrumb
-        items={[
-          { title: '服务目录', href: '/service-catalog' },
-          { title: '提交申请' },
-        ]}
-        className="mb-4"
+        items={[{ title: '服务目录', href: '/service-catalog' }, { title: '提交申请' }]}
+        className='mb-4'
       />
       <Card>
-        <Space className="mb-4">
+        <Space className='mb-4'>
           <Button
             icon={<ArrowLeft />}
             onClick={() => {
@@ -161,9 +163,9 @@ export default function ServiceCatalogRequestPage() {
 
         {fetchError && (
           <Alert
-            type="error"
+            type='error'
             showIcon
-            className="mb-4"
+            className='mb-4'
             title={fetchError}
             action={
               <Button
@@ -184,17 +186,17 @@ export default function ServiceCatalogRequestPage() {
 
         {catalog && (
           <Alert
-            type="info"
+            type='info'
             showIcon
-            className="mb-4"
+            className='mb-4'
             title={
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <Text strong className="!text-base">
+              <div className='flex items-center justify-between gap-3 flex-wrap'>
+                <Text strong className='!text-base'>
                   {catalog.name}
                 </Text>
                 <Space size={4} wrap>
                   {catalog.deliveryTime != null && catalog.deliveryTime > 0 && (
-                    <Tag icon={<Clock />} color="blue">
+                    <Tag icon={<Clock />} color='blue'>
                       交付时长 {catalog.deliveryTime} 天
                     </Tag>
                   )}
@@ -204,7 +206,7 @@ export default function ServiceCatalogRequestPage() {
             }
             description={
               catalog.description ? (
-                <div className="text-gray-600 leading-relaxed">{catalog.description}</div>
+                <div className='text-gray-600 leading-relaxed'>{catalog.description}</div>
               ) : null
             }
           />
@@ -212,49 +214,49 @@ export default function ServiceCatalogRequestPage() {
 
         <Divider />
 
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="requesterName" label="申请人">
-              <Input disabled placeholder="当前登录用户" />
+        <Form form={form} layout='vertical' onFinish={onFinish}>
+          <div className='grid grid-cols-2 gap-4'>
+            <Form.Item name='requesterName' label='申请人'>
+              <Input disabled placeholder='当前登录用户' />
             </Form.Item>
-            <Form.Item name="requesterEmail" label="联系邮箱">
-              <Input disabled placeholder="当前用户邮箱" />
+            <Form.Item name='requesterEmail' label='联系邮箱'>
+              <Input disabled placeholder='当前用户邮箱' />
             </Form.Item>
           </div>
           <Form.Item
-            name="title"
-            label="申请标题"
+            name='title'
+            label='申请标题'
             rules={[{ required: true, message: '请输入申请标题' }]}
           >
-            <Input placeholder="一句话说明申请目的" maxLength={200} />
+            <Input placeholder='一句话说明申请目的' maxLength={200} />
           </Form.Item>
 
           <Form.Item
-            name="reason"
-            label="申请理由"
+            name='reason'
+            label='申请理由'
             rules={[{ required: true, message: '请输入申请理由' }]}
           >
-            <TextArea rows={4} placeholder="请详细说明申请原因、业务场景、紧急程度" maxLength={2000} />
+            <TextArea
+              rows={4}
+              placeholder='请详细说明申请原因、业务场景、紧急程度'
+              maxLength={2000}
+            />
           </Form.Item>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="quantity" label="数量" initialValue={1}>
-              <Input type="number" min={1} max={100} />
+          <div className='grid grid-cols-2 gap-4'>
+            <Form.Item name='quantity' label='数量' initialValue={1}>
+              <Input type='number' min={1} max={100} />
             </Form.Item>
-            <Form.Item name="expectedAt" label="期望交付时间">
+            <Form.Item name='expectedAt' label='期望交付时间'>
               <DatePicker showTime style={{ width: '100%' }} />
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="costCenter" label="成本中心">
-              <Input placeholder="例如 CC-1001" />
+          <div className='grid grid-cols-2 gap-4'>
+            <Form.Item name='costCenter' label='成本中心'>
+              <Input placeholder='例如 CC-1001' />
             </Form.Item>
-            <Form.Item
-              name="dataClassification"
-              label="数据分级"
-              initialValue="internal"
-            >
+            <Form.Item name='dataClassification' label='数据分级' initialValue='internal'>
               <Select
                 options={[
                   { label: '公开 (public)', value: 'public' },
@@ -266,35 +268,35 @@ export default function ServiceCatalogRequestPage() {
             </Form.Item>
           </div>
 
-          <Form.Item name="needsPublicIp" valuePropName="checked">
+          <Form.Item name='needsPublicIp' valuePropName='checked'>
             <Checkbox>需要公网 IP</Checkbox>
           </Form.Item>
 
           <Form.Item
-            name="sourceIpWhitelist"
-            label="来源 IP 白名单（多个以英文逗号分隔）"
+            name='sourceIpWhitelist'
+            label='来源 IP 白名单（多个以英文逗号分隔）'
             dependencies={['needsPublicIp']}
           >
-            <Input placeholder="例如 1.2.3.4, 10.0.0.0/8" />
+            <Input placeholder='例如 1.2.3.4, 10.0.0.0/8' />
           </Form.Item>
 
           <Divider />
 
           <Form.Item
-            name="expireAt"
-            label="资源过期时间（到期自动回收）"
-            extra="若不填写，则按服务目录默认策略"
+            name='expireAt'
+            label='资源过期时间（到期自动回收）'
+            extra='若不填写，则按服务目录默认策略'
           >
             <DatePicker
               showTime
               style={{ width: '100%' }}
-              disabledDate={(d) => d && d.isBefore(dayjs().startOf('day'))}
+              disabledDate={d => d && d.isBefore(dayjs().startOf('day'))}
             />
           </Form.Item>
 
           <Form.Item
-            name="complianceAck"
-            valuePropName="checked"
+            name='complianceAck'
+            valuePropName='checked'
             rules={[
               {
                 validator: (_, value) =>
@@ -312,8 +314,8 @@ export default function ServiceCatalogRequestPage() {
           <Form.Item>
             <Space>
               <Button
-                type="primary"
-                htmlType="submit"
+                type='primary'
+                htmlType='submit'
                 icon={<Send />}
                 loading={loading}
                 disabled={!catalog || !!fetchError}

@@ -173,18 +173,16 @@ function TicketsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-background-primary)]">
+    <div className='min-h-screen bg-[var(--color-background-primary)]'>
       {/* 页面头部 */}
-      <div className="bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]">
-        <div className="w-full px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className='bg-[var(--color-surface-primary)] border-b border-[var(--color-border-primary)]'>
+        <div className='w-full px-6 py-4'>
+          <div className='flex items-center justify-between'>
             <div>
               <Title level={2} style={{ marginBottom: 0 }}>
                 {t('tickets.title')}
               </Title>
-              <Text type="secondary">
-                {t('tickets.description')}
-              </Text>
+              <Text type='secondary'>{t('tickets.description')}</Text>
             </div>
             <Space>
               <Button
@@ -208,7 +206,7 @@ function TicketsPageContent() {
               >
                 {t('tickets.advancedSearch')}
               </Button>
-              <Badge count={ticketStats.overdue} size="small">
+              <Badge count={ticketStats.overdue} size='small'>
                 <Button
                   icon={<Bell />}
                   onClick={() => {
@@ -224,8 +222,8 @@ function TicketsPageContent() {
                   {t('tickets.slaWarning')}
                 </Button>
               </Badge>
-              <Link href="/tickets/create">
-                <Button type="primary" icon={<Plus />}>
+              <Link href='/tickets/create'>
+                <Button type='primary' icon={<Plus />}>
                   {t('tickets.create')}
                 </Button>
               </Link>
@@ -233,41 +231,41 @@ function TicketsPageContent() {
           </div>
 
           {/* 统计数据栏 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-            <Card size="small" className="rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mt-4'>
+            <Card size='small' className='rounded-lg shadow-sm'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <Text type="secondary">{t('tickets.stats.total')}</Text>
-                  <div className="text-2xl font-bold">{ticketStats.total}</div>
+                  <Text type='secondary'>{t('tickets.stats.total')}</Text>
+                  <div className='text-2xl font-bold'>{ticketStats.total}</div>
                 </div>
-                <Table className="text-2xl text-blue-500" />
+                <Table className='text-2xl text-blue-500' />
               </div>
             </Card>
-            <Card size="small" className="rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
+            <Card size='small' className='rounded-lg shadow-sm'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <Text type="secondary">{t('tickets.stats.open')}</Text>
-                  <div className="text-2xl font-bold text-orange-500">{ticketStats.open}</div>
+                  <Text type='secondary'>{t('tickets.stats.open')}</Text>
+                  <div className='text-2xl font-bold text-orange-500'>{ticketStats.open}</div>
                 </div>
-                <Bell className="text-2xl text-orange-500" />
+                <Bell className='text-2xl text-orange-500' />
               </div>
             </Card>
-            <Card size="small" className="rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
+            <Card size='small' className='rounded-lg shadow-sm'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <Text type="secondary">{t('tickets.stats.overdue')}</Text>
-                  <div className="text-2xl font-bold text-red-500">{ticketStats.overdue}</div>
+                  <Text type='secondary'>{t('tickets.stats.overdue')}</Text>
+                  <div className='text-2xl font-bold text-red-500'>{ticketStats.overdue}</div>
                 </div>
-                <Bell className="text-2xl text-red-500" />
+                <Bell className='text-2xl text-red-500' />
               </div>
             </Card>
-            <Card size="small" className="rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
+            <Card size='small' className='rounded-lg shadow-sm'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <Text type="secondary">{t('tickets.stats.today')}</Text>
-                  <div className="text-2xl font-bold text-green-500">{ticketStats.today}</div>
+                  <Text type='secondary'>{t('tickets.stats.today')}</Text>
+                  <div className='text-2xl font-bold text-green-500'>{ticketStats.today}</div>
                 </div>
-                <Plus className="text-2xl text-green-500" />
+                <Plus className='text-2xl text-green-500' />
               </div>
             </Card>
           </div>
@@ -276,26 +274,26 @@ function TicketsPageContent() {
 
       {/* 高级搜索面板 */}
       {showAdvancedSearch && (
-        <div className="bg-gray-50 border-b border-gray-200">
-          <div className="w-full px-6 py-4 bg-[var(--color-background-tertiary)] border-b border-[var(--color-border-primary)]">
+        <div className='bg-gray-50 border-b border-gray-200'>
+          <div className='w-full px-6 py-4 bg-[var(--color-background-tertiary)] border-b border-[var(--color-border-primary)]'>
             <TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} />
           </div>
         </div>
       )}
 
       {/* 主内容区域 */}
-      <div className="w-full px-6 py-6">
+      <div className='w-full px-6 py-6'>
         {/* 标签页导航 */}
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
-          size="large"
-          className="mb-6"
+          size='large'
+          className='mb-6'
           items={[
             {
               key: 'list',
               label: (
-                <span className="flex items-center gap-2">
+                <span className='flex items-center gap-2'>
                   <Table />
                   {t('tickets.tabs.list')} ({ticketStats.total})
                 </span>
@@ -304,7 +302,7 @@ function TicketsPageContent() {
             {
               key: 'kanban',
               label: (
-                <span className="flex items-center gap-2">
+                <span className='flex items-center gap-2'>
                   <LayoutGrid />
                   {t('tickets.tabs.kanban')}
                 </span>
@@ -337,13 +335,13 @@ function TicketsPageContent() {
       </div>
 
       {/* 快捷操作浮动按钮 */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Space orientation="vertical" size="middle">
+      <div className='fixed bottom-6 right-6 z-50'>
+        <Space orientation='vertical' size='middle'>
           <Button
-            aria-label="新增"
-            type="primary"
-            shape="circle"
-            size="large"
+            aria-label='新增'
+            type='primary'
+            shape='circle'
+            size='large'
             icon={<Plus />}
             onClick={() => {
               try {
@@ -353,7 +351,7 @@ function TicketsPageContent() {
                 message.error('导航失败，请稍后重试');
               }
             }}
-            className="shadow-lg hover:scale-110 transition-transform"
+            className='shadow-lg hover:scale-110 transition-transform'
           />
         </Space>
       </div>
@@ -364,13 +362,13 @@ function TicketsPageContent() {
 // Loading fallback 组件
 function TicketsPageSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <Card className="mb-6">
+    <div className='min-h-screen bg-gray-50 p-6'>
+      <Card className='mb-6'>
         <Skeleton active paragraph={{ rows: 2 }} />
       </Card>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-6'>
         {[1, 2, 3, 4].map(i => (
-          <Card key={i} size="small">
+          <Card key={i} size='small'>
             <Skeleton active paragraph={{ rows: 1 }} />
           </Card>
         ))}
