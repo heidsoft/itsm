@@ -91,6 +91,120 @@ describe('useSLARealTime', () => {
     expect(onRefresh).toHaveBeenCalled();
     expect(result.current.lastRefresh).not.toBeNull();
   });
+
+  // Pattern A: requestIdRef guard tests (H1 stale-overwrite prevention)
+  // Isolated describe block — race tests use real timers exclusively.
+});
+
+describe('useSLARealTime requestId guard', () => {
+  beforeEach(() => {
+    jest.useRealTimers();
+    Object.defineProperty(document, 'visibilityState', {
+      writable: true,
+      value: 'visible',
+    });
+  });
+
+  it('should NOT overwrite lastRefresh when stale slow response arrives later', async () => {
+    let slowResolve!: () => void;
+    const slow = new Promise<void>(r => { slowResolve = r; });
+    const onRefresh = jest.fn()
+      .mockImplementationOnce(() => slow)
+      .mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useSLARealTime({ enabled: false }, onRefresh)
+    );
+
+    // First refreshNow: triggers slow onRefresh
+    const p1 = result.current.refreshNow();
+    // Second refreshNow: triggers fast (mockResolvedValue default)
+    const p2 = result.current.refreshNow();
+
+    await act(async () => {
+      await p2;
+    });
+
+    await waitFor(() => {
+      expect(result.current.lastRefresh).not.toBeNull();
+    });
+    const fastRefresh = result.current.lastRefresh!;
+
+    await act(async () => {
+      slowResolve();
+      await p1;
+    });
+
+    expect(result.current.lastRefresh).toBe(fastRefresh);
+  });
+
+  it('should NOT surface stale error after fresh success', async () => {
+    let slowReject!: (e: Error) => void;
+    const slow = new Promise<void>((_, rj) => { slowReject = rj; });
+    const onRefresh = jest.fn()
+      .mockImplementationOnce(() => slow)
+      .mockResolvedValue(undefined);
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() =>
+      useSLARealTime({ enabled: false }, onRefresh)
+    );
+
+    const p1 = result.current.refreshNow();
+    const p2 = result.current.refreshNow();
+
+    await act(async () => {
+      await p2;
+    });
+
+    await waitFor(() => {
+      expect(result.current.lastRefresh).not.toBeNull();
+    });
+    const fastRefresh = result.current.lastRefresh!;
+
+    await act(async () => {
+      slowReject(new Error('stale sla error'));
+      await p1;
+    });
+
+    const errorCalls = consoleErrorSpy.mock.calls.filter(c =>
+      typeof c[0] === 'string' && c[0].includes('stale sla error')
+    );
+    expect(errorCalls).toHaveLength(0);
+    expect(result.current.lastRefresh).toBe(fastRefresh);
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should NOT flip isRefreshing off for stale requests', async () => {
+    let slowResolve!: () => void;
+    const slow = new Promise<void>(r => { slowResolve = r; });
+    const onRefresh = jest.fn()
+      .mockImplementationOnce(() => slow)
+      .mockResolvedValue(undefined);
+
+    const { result } = renderHook(() =>
+      useSLARealTime({ enabled: false }, onRefresh)
+    );
+
+    const p1 = result.current.refreshNow();
+    const p2 = result.current.refreshNow();
+
+    await act(async () => {
+      await p2;
+    });
+
+    await waitFor(() => {
+      expect(result.current.isRefreshing).toBe(false);
+    });
+
+    await act(async () => {
+      slowResolve();
+      await p1;
+    });
+
+    expect(result.current.isRefreshing).toBe(false);
+  });
 });
 
 describe('formatSLARemainingTime', () => {

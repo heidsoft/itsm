@@ -111,11 +111,17 @@ export function useSLARealTime(
     onRefreshRef.current = onRefresh;
   }, [onRefresh]);
 
+  // Pattern A: guards against out-of-order responses when refreshNow() is
+  // called rapidly or interval ticks overlap. A slow earlier tick must not
+  // overwrite a faster later one.
+  const requestIdRef = useRef(0);
+
   // 计算当前刷新间隔
   const currentInterval = customInterval ?? calculateOptimalInterval(highestPriority, hasAtRiskTickets);
 
   // 执行刷新
   const doRefresh = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     if (isPaused || !enabled) return;
 
     // 如果页面不可见且不要求后台刷新，跳过
@@ -124,25 +130,34 @@ export function useSLARealTime(
     setIsRefreshing(true);
     try {
       await onRefreshRef.current();
+      if (requestIdRef.current !== requestId) return;
       setLastRefresh(new Date());
     } catch (error) {
+      if (requestIdRef.current !== requestId) return;
       console.error('SLA refresh failed:', error);
     } finally {
-      setIsRefreshing(false);
+      if (requestIdRef.current === requestId) {
+        setIsRefreshing(false);
+      }
     }
   }, [isPaused, enabled, isPageVisible, refreshOnHidden]);
 
   // 手动刷新
   const refreshNow = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setIsRefreshing(true);
     try {
       await onRefreshRef.current();
+      if (requestIdRef.current !== requestId) return;
       setLastRefresh(new Date());
     } catch (error) {
+      if (requestIdRef.current !== requestId) return;
       console.error('Manual SLA refresh failed:', error);
       throw error;
     } finally {
-      setIsRefreshing(false);
+      if (requestIdRef.current === requestId) {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 
