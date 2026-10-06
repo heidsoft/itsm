@@ -14,11 +14,11 @@ import (
 // TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether
 //
 // P0-1 修复的 happy path：
-// 1) 仓储在 *sql.Tx 中写入审批记录（RETURNING 出 ID/CreatedAt）；
-// 2) 仓储在同一 *sql.Tx 中 CAS 推进 draft→pending；
-// 3) service 不再调用非 CAS 的 repo.Update(c)；
-// 4) service 直接复用事务内返回的 rec 作为响应，**不允许**二次
-//    CreateApprovalRecord 造成重复插入。
+//  1. 仓储在 *sql.Tx 中写入审批记录（RETURNING 出 ID/CreatedAt）；
+//  2. 仓储在同一 *sql.Tx 中 CAS 推进 draft→pending；
+//  3. service 不再调用非 CAS 的 repo.Update(c)；
+//  4. service 直接复用事务内返回的 rec 作为响应，**不允许**二次
+//     CreateApprovalRecord 造成重复插入。
 func TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	repo := newMockRepository()

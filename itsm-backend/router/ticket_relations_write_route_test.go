@@ -55,7 +55,7 @@ const (
 	relationsWriteTenantSecret = "relations-write-contract-secret"
 
 	// 泄漏探针：标题与配置项名称都是唯一字符串，出现在任何响应体里即视为跨租户泄漏。
-	writeProbeAChild  = "WRITE-PROBE-A-CHILD-甲租户子工单"
+	writeProbeAChild   = "WRITE-PROBE-A-CHILD-甲租户子工单"
 	writeProbeARelated = "WRITE-PROBE-A-RELATED-甲租户关联工单"
 	writeProbeBChild   = "WRITE-PROBE-B-CHILD-乙租户越界工单"
 

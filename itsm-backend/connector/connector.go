@@ -258,7 +258,9 @@ type Receiver interface {
 
 // InboundHandler receives normalized messages from long-running polling connectors.
 // tenantID and instanceKey always come from trusted connector configuration.
-type PollingInboundHandler func(context.Context, int, string, *InboundMessage) error// PollingReceiver is implemented by connectors such as IMAP that own a polling loop.
+type PollingInboundHandler func(context.Context, int, string, *InboundMessage) error
+
+// PollingReceiver is implemented by connectors such as IMAP that own a polling loop.
 type PollingReceiver interface {
 	Connector
 	SetInboundHandler(PollingInboundHandler)

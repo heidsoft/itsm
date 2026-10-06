@@ -138,7 +138,7 @@ func TestDeleteRole_CodeBasedProtection(t *testing.T) {
 	// 用内置 code 但 is_system=false（模拟 seeder 漏设场景）
 	for _, builtinCode := range []string{"super_admin", "admin", "end_user", "agent", "it_admin"} {
 		role, _ := client.Role.Create().
-			SetName("内置角色-"+builtinCode).SetCode(builtinCode).
+			SetName("内置角色-" + builtinCode).SetCode(builtinCode).
 			SetTenantID(tenant.ID).
 			SetIsSystem(false). // 关键：is_system=false 但 code 是内置
 			Save(ctx)

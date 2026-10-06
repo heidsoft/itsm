@@ -335,20 +335,20 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 			content := fmt.Sprintf("【超时提醒】工单 #%s (%s) 已超过24小时未解决，请及时处理！",
 				t.TicketNumber, t.Title)
 
-		for _, userID := range userIDs {
-			if userID <= 0 {
-				continue
+			for _, userID := range userIDs {
+				if userID <= 0 {
+					continue
+				}
+				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
+					UserIDs:        []int{userID},
+					Type:           "long_pending",
+					Channel:        "in_app",
+					Content:        content,
+					IdempotencyKey: fmt.Sprintf("long_pending:%d", t.ID),
+				}, tenantID); err != nil {
+					e.logger.Errorw("Failed to send long pending notification", "ticket_id", t.ID, "user_id", userID, "error", err)
+				}
 			}
-			if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
-				UserIDs:        []int{userID},
-				Type:           "long_pending",
-				Channel:        "in_app",
-				Content:        content,
-				IdempotencyKey: fmt.Sprintf("long_pending:%d", t.ID),
-			}, tenantID); err != nil {
-				e.logger.Errorw("Failed to send long pending notification", "ticket_id", t.ID, "user_id", userID, "error", err)
-			}
-		}
 
 			// 通知管理员（仅限当前租户）
 			admins, _ := e.client.User.Query().

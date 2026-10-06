@@ -16,9 +16,12 @@
 //   - helpers read strictly from the request-scoped context values
 //     injected by the auth / tenant middleware (never from query string
 //     or body)
+//
 //   - helpers write the standard error response on failure and return
 //     (zero, false) so the caller can early-return
+//
 //   - helpers use structured zap logging where appropriate
+//
 //   - caller MUST NOT write a second response after the helper returns
 //     ok=false. The helper has already issued the canonical
 //     401/403/400/500 envelope and aborted the Gin chain; calling
@@ -26,10 +29,10 @@
 //     concatenated JSON documents which the client cannot decode.
 //     The only correct caller pattern is:
 //
-//         value, ok := handlerctx.ResolveXxx(c)
-//         if !ok {
-//             return
-//         }
+//     value, ok := handlerctx.ResolveXxx(c)
+//     if !ok {
+//     return
+//     }
 //
 // These helpers are intentionally thin wrappers; business logic must
 // remain in service/ or handlers/<domain>/service.go.

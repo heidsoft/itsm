@@ -148,11 +148,11 @@ type TicketStatsResponse struct {
 
 // AnalyticsTicketStatsResponse 工单分析统计响应（/api/v1/analytics/tickets）
 type AnalyticsTicketStatsResponse struct {
-	Total          int                      `json:"total"`
-	StatusGroups   []TicketStatusGroup      `json:"statusGroups"`
-	PriorityGroups []TicketPriorityGroup    `json:"priorityGroups"`
-	Trend30d       []TicketTrendPoint       `json:"trend30d"`
-	GeneratedAt    string                   `json:"generatedAt"`
+	Total          int                   `json:"total"`
+	StatusGroups   []TicketStatusGroup   `json:"statusGroups"`
+	PriorityGroups []TicketPriorityGroup `json:"priorityGroups"`
+	Trend30d       []TicketTrendPoint    `json:"trend30d"`
+	GeneratedAt    string                `json:"generatedAt"`
 }
 
 type TicketStatusGroup struct {

@@ -897,7 +897,6 @@ func (s *TicketNotificationService) ListTicketNotifications(
 	return responses, nil
 }
 
-
 // channelAllowedForEvent 按事件类型 + 渠道查询真实通知偏好（notification_preferences 表），
 // 判定该渠道对該用户是否放行。
 //

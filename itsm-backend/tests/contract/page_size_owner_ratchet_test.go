@@ -54,7 +54,7 @@ import (
 // operations/timer/bpmn/workflow_template/approval 的 8 处（E4-47 第二批）已全部收敛并删除。
 var selfParsedPageSizeBaseline = []string{
 	"handlers/ai/skills.go|inputInt|20",
-				}
+}
 
 // pageSizeOwnerDirs 是被扫描的 HTTP 入口层。业务 service 层的兜底夹紧走
 // common.ValidatePagination，不在本棘轮范围内（它读的就是同一组常量）。
