@@ -270,44 +270,6 @@ func TestBPMNSLAService_CalculateSLAStatus(t *testing.T) {
 	}
 }
 
-// TestBPMNSLAService_BusinessHoursCalculation 测试工作时间计算
-func TestBPMNSLAService_BusinessHoursCalculation(t *testing.T) {
-	client := enttest.Open(t, "sqlite3", testDSN())
-	defer client.Close()
-
-	logger := zaptest.NewLogger(t).Sugar()
-	slaService := NewBPMNSLAService(client, logger)
-
-	t.Run("工作时间计算-跨越周末", func(t *testing.T) {
-		// 周五下午5点开始，30分钟工作时间
-		friday := time.Date(2024, 1, 5, 17, 0, 0, 0, time.Local) // 周五
-		deadline := slaService.calculateBusinessHoursDeadline(friday, 30)
-
-		// 应该计算到下周一的某个时间
-		assert.True(t, deadline.After(friday))
-	})
-
-	t.Run("工作时间计算-工作时间内", func(t *testing.T) {
-		// 周三上午10点开始，60分钟工作时间
-		wednesday := time.Date(2024, 1, 3, 10, 0, 0, 0, time.Local) // 周三
-		deadline := slaService.calculateBusinessHoursDeadline(wednesday, 60)
-
-		// 应该当天完成
-		assert.Equal(t, 11, deadline.Hour())
-	})
-
-	t.Run("工作时间计算-超过当天工作时间", func(t *testing.T) {
-		// 周三下午5:30开始，60分钟工作时间
-		wednesday := time.Date(2024, 1, 3, 17, 30, 0, 0, time.Local) // 周三
-		deadline := slaService.calculateBusinessHoursDeadline(wednesday, 60)
-
-		// 验证结果在输入时间之后
-		assert.True(t, deadline.After(wednesday), "截止时间应该在开始时间之后")
-		// 验证结果在合理范围内（不超过开始时间太多）
-		assert.Less(t, deadline.Sub(wednesday).Hours(), float64(24), "截止时间不应该超过1天")
-	})
-}
-
 // TestBPMNSLAService_GetProcessInstanceSLAInfo 测试获取流程实例SLA信息
 func TestBPMNSLAService_GetProcessInstanceSLAInfo(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

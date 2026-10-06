@@ -115,6 +115,9 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	if req.Source != "" {
 		create.SetSource(req.Source)
 	}
+	if req.Description != "" {
+		create.SetDescription(req.Description)
+	}
 	// 依据 CI 类型（含继承链）属性定义归一化并校验动态属性
 	normalizedAttrs, err := s.attrValidator.NormalizeAttributes(ctx, tenantID, ciTypeID, req.Attributes, 0)
 	if err != nil {
@@ -159,6 +162,15 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 	}
 	if req.CloudResourceRefID != 0 {
 		create.SetCloudResourceRefID(req.CloudResourceRefID)
+	}
+	if req.LifecycleStatus != "" {
+		create.SetLifecycleStatus(req.LifecycleStatus)
+	}
+	if req.EffectiveAt != nil {
+		create.SetEffectiveAt(*req.EffectiveAt)
+	}
+	if req.ExpireAt != nil {
+		create.SetExpireAt(*req.ExpireAt)
 	}
 
 	// P0-3（CMDB AI-Native）：生成全局唯一业务编号 ci_number（CI-YYYYMM-NNNNNN）。
@@ -514,6 +526,9 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	if req.Source != "" {
 		update.SetSource(req.Source)
 	}
+	if req.Description != "" {
+		update.SetDescription(req.Description)
+	}
 	if req.Attributes != nil {
 		// 依据生效的 CI 类型（本次更新后的类型）归一化并校验动态属性
 		effectiveTypeID := oldCI.CiTypeID
@@ -562,6 +577,15 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	}
 	if req.CloudResourceRefID != 0 {
 		update.SetCloudResourceRefID(req.CloudResourceRefID)
+	}
+	if req.LifecycleStatus != "" {
+		update.SetLifecycleStatus(req.LifecycleStatus)
+	}
+	if req.EffectiveAt != nil {
+		update.SetEffectiveAt(*req.EffectiveAt)
+	}
+	if req.ExpireAt != nil {
+		update.SetExpireAt(*req.ExpireAt)
 	}
 	ciTypeID := req.CITypeID
 	if ciTypeID != 0 {
