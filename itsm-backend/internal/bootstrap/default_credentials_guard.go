@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+
+	"itsm-backend/pkg/credential"
 )
 
 // DefaultCredentialRisk 检测到的风险项
@@ -140,22 +142,9 @@ func isProductionEnvironment(env string) bool {
 }
 
 func hasDefaultAdminPassword(adminPass string) bool {
-	if adminPass == "" {
-		// 未设置：依赖 seeder 的默认值。在生产环境应视为默认。
-		// 这里保守判定：有 ENV=prod + 没设 ADMIN_PASSWORD = 默认值
-		return true
-	}
-	// 检查是否为已知的弱默认值
-	weakDefaults := []string{
-		"admin", "admin123", "password", "123456", "itsm123", "changeme",
-	}
-	lower := strings.ToLower(adminPass)
-	for _, w := range weakDefaults {
-		if lower == w {
-			return true
-		}
-	}
-	return false
+	// Delegate to pkg/credential (single source of weak-defaults list).
+	// Empty string short-circuits inside IsWeakAdminPassword.
+	return credential.IsWeakAdminPassword(adminPass)
 }
 
 func isDefaultJWTSecret(secret string) bool {

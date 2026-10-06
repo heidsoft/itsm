@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"itsm-backend/pkg/credential"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -47,6 +49,14 @@ func main() {
 	adminPassword := getEnv("ADMIN_PASSWORD", "")
 	if adminPassword == "" {
 		log.Fatal("ADMIN_PASSWORD 环境变量未设置，请设置管理员初始密码")
+	}
+	// Sprint 2 Task 1: gate through pkg/credential so this CLI rejects
+	// known-default and short passwords identically to in-process seeder.
+	if credential.IsWeakAdminPassword(adminPassword) {
+		log.Fatalf("ADMIN_PASSWORD matches a known weak default; refusing to seed. Pick a strong unique value.")
+	}
+	if credential.IsShortAdminPassword(adminPassword) {
+		log.Fatalf("ADMIN_PASSWORD below minimum length %d (got %d); refusing to seed.", credential.MinAdminPasswordLength, len(adminPassword))
 	}
 
 	// 创建默认管理员账号

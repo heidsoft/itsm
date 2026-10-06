@@ -14,6 +14,7 @@ import (
 
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
+	"itsm-backend/pkg/credential"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
@@ -1056,6 +1057,21 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
 		s.sugar.Warnw("ADMIN_PASSWORD env var not set; skip admin seed")
+		return
+	}
+	// Sprint 2 Task 1: gate ADMIN_PASSWORD through pkg/credential before bcrypt,
+	// matching the single-source-of-truth weak/short checks used by the bootstrap
+	// guard. Operators running this path should not be able to seed a default
+	// password into the DB even when ADMIN_PASSWORD is set.
+	if credential.IsWeakAdminPassword(adminPassword) {
+		s.sugar.Warnw("ADMIN_PASSWORD matches a known weak default; skip admin seed",
+			"hint", "set ADMIN_PASSWORD to a strong unique value before seeding")
+		return
+	}
+	if credential.IsShortAdminPassword(adminPassword) {
+		s.sugar.Warnw("ADMIN_PASSWORD below minimum length; skip admin seed",
+			"min_length", credential.MinAdminPasswordLength,
+			"actual_length", len(adminPassword))
 		return
 	}
 	passHash, bcryptErr := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
