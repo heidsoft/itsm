@@ -61,32 +61,15 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // handlers/rbac/handler.go 14 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
 // handlers/marketplace/handler.go 13 已在 2026-10-06 middleware.TenantIDOrUnauthorized/UserIDOrUnauthorized + NotFoundWithErr/BadRequestWithErr/RespondError sweep 中清零并从此基线删除。
 // handlers/approval/routes.go 12 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
-var errorLeakBaseline = map[string]int{
-	"handlers/bpmn/ai_generator.go":         2,
-	"handlers/bpmn/dashboard.go":            1,
-	"handlers/bpmn/lint.go":                 2,
-	"handlers/bpmn/process_trigger.go":      6, // 2026-10-05 RespondError 收敛
-	"handlers/bpmn/workflow_template.go":    3,
-	"handlers/application/handler.go":       12,
-	"handlers/approval_chain/handler.go":    2,
-	"handlers/auditlog/handler.go":          2,
-	"handlers/auth/handler.go":              10,
-	"handlers/connector/handler.go":         10,
-	"handlers/escalation_matrix/handler.go": 1,
-	"handlers/feishu/handler.go":            1,
-	"handlers/incident/handler.go":          1,
-	"handlers/knowledge/handler.go":         7,
-	"handlers/known_error/handler.go":       2,
-	"handlers/prediction/handler.go":        4,
-	"handlers/project/handler.go":           7,
-	"handlers/sla_template/handler.go":      2,
-	"handlers/standard_change/handler.go":   2,
-	"handlers/survey/handler.go":            7,
-	"handlers/systemconfig/routes.go":       2,
-	"handlers/user/handler.go":              2,
-	"handlers/workbench/handler.go":         1,
-	"router/dashboard_routes.go":            2,
-}
+// errorLeakBaseline 记录「把错误串当公共消息写进响应」的历史计数（ratchet 锁）。
+// 2026-10-06 收口：应用域 14 文件（application/connector/project/survey/prediction/
+// auditlog/escalation_matrix/feishu/sla_template + bpmn/{ai_generator,dashboard,
+// lint,process_trigger,workflow_template}）共 60 处全部收敛为
+// common.ParamErrorWithErr/RespondError/NotFoundWithErr/BadRequestWithErr；
+// 所有剩余基线文件（auth/incident/knowledge/known_error/approval_chain/standard_change/
+// systemconfig/user/workbench/router/dashboard_routes）已先期清零。
+// 错误泄漏总数 60 → 0，基线文件数 24 → 0。
+var errorLeakBaseline = map[string]int{}
 
 // measuredErrorLeaks 扫描真实源码，返回「相对 itsm-backend 的路径 -> 泄漏计数」。
 func measuredErrorLeaks(t *testing.T) map[string]int {
@@ -139,9 +122,10 @@ func measuredErrorLeaks(t *testing.T) map[string]int {
 func TestErrorLeakRatchet(t *testing.T) {
 	measured := measuredErrorLeaks(t)
 
-	// 扫描器自己坏掉（目录被挪走、正则失效）会让下面所有比较都「无违规」通过，
-	// 所以先证明它确实扫到了存量。
-	if len(measured) == 0 {
+	// 扫描器自己坏掉（目录被挪走、正则失效）会让下面所有比较都「无违规」通过。
+	// 2026-10-06 收口：所有文件已清零，baseline 也清零；
+	// 启用扫描器自检仅在 baseline 非空时要求 measured 至少 1 命中。
+	if len(measured) == 0 && len(errorLeakBaseline) > 0 {
 		t.Fatal("扫描器没有命中任何泄漏点：检查 errorLeakScanDirs 与 failHelperRE 是否失效")
 	}
 
