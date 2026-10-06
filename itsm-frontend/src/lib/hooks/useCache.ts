@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface CacheOptions {
   ttl?: number; // 缓存时间（毫秒）
@@ -73,8 +73,13 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, options: Cac
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Pattern A: guards against out-of-order responses when deps (key/fetcher)
+  // change rapidly. A slower earlier request must not overwrite a faster later one.
+  const requestIdRef = useRef(0);
+
   const fetchData = useCallback(
     async (forceRefresh = false) => {
+      const requestId = ++requestIdRef.current;
       try {
         setError(null);
 
@@ -82,6 +87,7 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, options: Cac
         if (!forceRefresh) {
           const cachedData = cacheManager.get<T>(key);
           if (cachedData) {
+            if (requestIdRef.current !== requestId) return cachedData;
             setData(cachedData);
             return cachedData;
           }
@@ -90,6 +96,7 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, options: Cac
           if (staleWhileRevalidate) {
             const staleData = cacheManager.getStale<T>(key);
             if (staleData) {
+              if (requestIdRef.current !== requestId) return staleData;
               setData(staleData);
             }
           }
@@ -98,16 +105,21 @@ export function useCache<T>(key: string, fetcher: () => Promise<T>, options: Cac
         setLoading(true);
         const result = await fetcher();
 
+        if (requestIdRef.current !== requestId) return result;
+
         // 缓存新数据
         cacheManager.set(key, result, ttl);
         setData(result);
 
         return result;
       } catch (err) {
+        if (requestIdRef.current !== requestId) return null;
         setError(err as Error);
         throw err;
       } finally {
-        setLoading(false);
+        if (requestIdRef.current === requestId) {
+          setLoading(false);
+        }
       }
     },
     [key, fetcher, ttl, staleWhileRevalidate]

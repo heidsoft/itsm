@@ -99,6 +99,99 @@ describe('useCache', () => {
     // Cache should be cleared
     expect(cacheManager.get('invalidate-key')).toBeNull();
   });
+
+  // Pattern A: requestIdRef guard tests (H1 stale-overwrite prevention)
+  it('should NOT overwrite fresh data when stale slow response arrives later', async () => {
+    let slowResolve!: (v: { value: string }) => void;
+    const slow = new Promise<{ value: string }>(r => { slowResolve = r; });
+    const fast = Promise.resolve({ value: 'fast' });
+
+    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+      .mockImplementationOnce(() => slow)
+      .mockImplementationOnce(() => fast);
+
+    const { result, rerender } = renderHook(
+      ({ k }) => useCache<{ value: string }>(k, fetcher),
+      { initialProps: { k: 'race-k1' } }
+    );
+
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1));
+
+    rerender({ k: 'race-k2' });
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({ value: 'fast' });
+    });
+
+    await act(async () => {
+      slowResolve({ value: 'slow' });
+    });
+
+    // Stale response must NOT overwrite fresh data
+    expect(result.current.data).toEqual({ value: 'fast' });
+  });
+
+  it('should NOT surface stale error after a successful fresh fetch', async () => {
+    let slowReject!: (e: Error) => void;
+    const slow = new Promise<{ value: string }>((_, rj) => { slowReject = rj; });
+    const fast = Promise.resolve({ value: 'fast' });
+
+    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+      .mockImplementationOnce(() => slow)
+      .mockImplementationOnce(() => fast);
+
+    const { result, rerender } = renderHook(
+      ({ k }) => useCache<{ value: string }>(k, fetcher),
+      { initialProps: { k: 'race-err-k1' } }
+    );
+
+    rerender({ k: 'race-err-k2' });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({ value: 'fast' });
+    });
+    expect(result.current.error).toBeNull();
+
+    await act(async () => {
+      slowReject(new Error('stale error'));
+    });
+
+    // Stale error must NOT surface after fresh success
+    expect(result.current.error).toBeNull();
+    expect(result.current.data).toEqual({ value: 'fast' });
+  });
+
+  it('should NOT flip loading off for stale requests (only the latest)', async () => {
+    let slowResolve!: (v: { value: string }) => void;
+    const slow = new Promise<{ value: string }>(r => { slowResolve = r; });
+    const fast = Promise.resolve({ value: 'fast' });
+
+    const fetcher = jest.fn<Promise<{ value: string }>, []>()
+      .mockImplementationOnce(() => slow)
+      .mockImplementationOnce(() => fast);
+
+    const { result, rerender } = renderHook(
+      ({ k }) => useCache<{ value: string }>(k, fetcher),
+      { initialProps: { k: 'race-load-k1' } }
+    );
+
+    rerender({ k: 'race-load-k2' });
+
+    // After fast resolves, loading must be off
+    await waitFor(() => {
+      expect(result.current.data).toEqual({ value: 'fast' });
+      expect(result.current.loading).toBe(false);
+    });
+
+    // Resolve the slow stale request
+    await act(async () => {
+      slowResolve({ value: 'slow' });
+    });
+
+    // loading must still be off (only the latest request's finally controls it)
+    expect(result.current.loading).toBe(false);
+  });
 });
 
 describe('cacheManager', () => {
