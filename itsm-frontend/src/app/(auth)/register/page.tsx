@@ -70,7 +70,12 @@ export default function RegisterPage() {
 
       if (success) {
         message.success(t('auth.register.registerSuccess'));
-        router.push('/login');
+        try {
+          router.push('/login');
+        } catch (navErr) {
+          console.error('[nav]', navErr);
+          message.error('导航失败，请稍后重试');
+        }
       } else {
         setError(t('auth.register.registerFailed'));
       }
@@ -212,7 +217,14 @@ export default function RegisterPage() {
                     <Button
                       type="link"
                       className="p-0 h-auto text-xs"
-                      onClick={() => router.push('/login')}
+                      onClick={() => {
+                        try {
+                          router.push('/login');
+                        } catch (navErr) {
+                          console.error('[nav]', navErr);
+                          message.error('导航失败，请稍后重试');
+                        }
+                      }}
                     >
                       {t('auth.register.loginNow')}
                     </Button>

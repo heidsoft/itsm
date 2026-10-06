@@ -263,7 +263,12 @@ export default function CreateTicketPage() {
       });
 
       message.success('工单创建成功');
-      router.push(`/tickets/${created.id}`);
+      try {
+        router.push(`/tickets/${created.id}`);
+      } catch (navErr) {
+        console.error('[nav]', navErr);
+        message.error('导航失败，请稍后重试');
+      }
     } catch (e: unknown) {
       console.error('Create ticket error:', e);
       const errorObj = e as { message?: string; error?: { message?: string } };
@@ -629,7 +634,14 @@ export default function CreateTicketPage() {
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end" role="group" aria-label="表单操作按钮">
                 <Button
-                  onClick={() => router.push('/tickets')}
+                  onClick={() => {
+                    try {
+                      router.push('/tickets');
+                    } catch (navErr) {
+                      console.error('[nav]', navErr);
+                      message.error('导航失败，请稍后重试');
+                    }
+                  }}
                   size="large"
                   aria-label="取消创建，返回工单列表"
                 >

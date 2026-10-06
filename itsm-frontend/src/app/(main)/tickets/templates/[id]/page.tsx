@@ -76,7 +76,17 @@ export default function TicketTemplateDetailPage() {
       title: '工单编号',
       dataIndex: 'ticketNumber',
       render: (value: string, record) => (
-        <Button type="link" onClick={() => router.push(`/tickets/${record.id}`)}>
+        <Button
+          type="link"
+          onClick={() => {
+            try {
+              router.push(`/tickets/${record.id}`);
+            } catch (navErr) {
+              console.error('[nav]', navErr);
+              message.error('导航失败，请稍后重试');
+            }
+          }}
+        >
           {value || `#${record.id}`}
         </Button>
       ),
@@ -110,7 +120,20 @@ export default function TicketTemplateDetailPage() {
         status="404"
         title="模板不存在"
         subTitle="该模板可能已被删除，或您没有访问权限。"
-        extra={<Button onClick={() => router.push('/tickets/templates')}>返回模板列表</Button>}
+        extra={
+          <Button
+            onClick={() => {
+              try {
+                router.push('/tickets/templates');
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
+          >
+            返回模板列表
+          </Button>
+        }
       />
     );
   }
@@ -118,7 +141,17 @@ export default function TicketTemplateDetailPage() {
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <Card>
-        <Button icon={<ArrowLeft size={16} />} onClick={() => router.push('/tickets/templates')}>
+        <Button
+          icon={<ArrowLeft size={16} />}
+          onClick={() => {
+            try {
+              router.push('/tickets/templates');
+            } catch (navErr) {
+              console.error('[nav]', navErr);
+              message.error('导航失败，请稍后重试');
+            }
+          }}
+        >
           返回模板列表
         </Button>
         <div className="mt-4 flex items-start justify-between">

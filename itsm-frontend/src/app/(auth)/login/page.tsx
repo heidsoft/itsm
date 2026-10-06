@@ -19,6 +19,7 @@ import {
   Flex,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
+import { message } from 'antd';
 import { AuthService } from '@/lib/services/auth-service';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -91,7 +92,12 @@ function LoginForm() {
 
       if (success) {
         logger.info('认证信息已存储，准备跳转');
-        router.push(redirectPath);
+        try {
+          router.push(redirectPath);
+        } catch (navErr) {
+          logger.error('导航失败:', navErr);
+          message.error('导航失败，请稍后重试');
+        }
         logger.info('已执行跳转命令');
       } else {
         setError(t('auth.login.loginFailed'));

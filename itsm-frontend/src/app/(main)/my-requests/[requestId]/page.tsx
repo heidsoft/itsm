@@ -200,7 +200,17 @@ export default function MyRequestDetailPage() {
       <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Card>
           <Space align="center">
-            <Button icon={<ArrowLeft />} onClick={() => router.push('/my-requests')}>
+            <Button
+              icon={<ArrowLeft />}
+              onClick={() => {
+                try {
+                  router.push('/my-requests');
+                } catch (navErr) {
+                  console.error('[nav]', navErr);
+                  message.error('导航失败，请稍后重试');
+                }
+              }}
+            >
               返回
             </Button>
             <div>
@@ -222,7 +232,17 @@ export default function MyRequestDetailPage() {
             </Descriptions.Item>
             <Descriptions.Item label="关联CI">
               {detail?.ciId ? (
-                <Button type="link" onClick={() => router.push(`/cmdb/cis/${detail.ciId}`)}>
+                <Button
+                  type="link"
+                  onClick={() => {
+                    try {
+                      router.push(`/cmdb/cis/${detail.ciId}`);
+                    } catch (navErr) {
+                      console.error('[nav]', navErr);
+                      message.error('导航失败，请稍后重试');
+                    }
+                  }}
+                >
                   CI #{detail.ciId}
                 </Button>
               ) : (

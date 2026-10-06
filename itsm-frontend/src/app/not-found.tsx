@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Result, Button } from 'antd';
+import { Result, Button, message } from 'antd';
 import { LayoutDashboard, Home } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -23,11 +23,29 @@ export default function NotFound() {
             key="dashboard"
             type="primary"
             icon={<LayoutDashboard />}
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              try {
+                router.push('/dashboard');
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
           >
             返回仪表盘
           </Button>,
-          <Button key="home" icon={<Home />} onClick={() => router.push('/')}>
+          <Button
+            key="home"
+            icon={<Home />}
+            onClick={() => {
+              try {
+                router.push('/');
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
+          >
             返回首页
           </Button>,
         ]}

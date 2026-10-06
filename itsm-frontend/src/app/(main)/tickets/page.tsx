@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
-import { Card, Typography, Space, Button, Tabs, Badge, Skeleton } from 'antd';
+import { Card, Typography, Space, Button, Tabs, Badge, Skeleton, message } from 'antd';
 import { Search, Plus, LayoutGrid, Bell, Table } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -53,7 +53,12 @@ function TicketsPageContent() {
     // 分析视图是独立页面 /tickets/analytics，本页无对应内容区，
     // 直接渲染会空白，统一重导航
     if (tab === 'analytics') {
-      router.replace('/tickets/analytics');
+      try {
+        router.replace('/tickets/analytics');
+      } catch (navErr) {
+        console.error('[nav]', navErr);
+        message.error('导航失败，请稍后重试');
+      }
       return;
     }
     if (tab && ['list', 'kanban', 'search'].includes(tab)) {
@@ -94,13 +99,23 @@ function TicketsPageContent() {
   const handleTabChange = (tab: string) => {
     // 分析页是独立路由（带完整图表/导出），本页 tab 无内容区，点 analytics 直接导航
     if (tab === 'analytics') {
-      router.push('/tickets/analytics');
+      try {
+        router.push('/tickets/analytics');
+      } catch (navErr) {
+        console.error('[nav]', navErr);
+        message.error('导航失败，请稍后重试');
+      }
       return;
     }
     setActiveTab(tab);
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set('tab', tab);
-    router.push(`/tickets?${newParams.toString()}`, { scroll: false });
+    try {
+      router.push(`/tickets?${newParams.toString()}`, { scroll: false });
+    } catch (navErr) {
+      console.error('[nav]', navErr);
+      message.error('导航失败，请稍后重试');
+    }
   };
 
   const mapAdvancedToQueryFilters = useCallback(
@@ -183,7 +198,12 @@ function TicketsPageContent() {
                   } else {
                     newParams.delete('search');
                   }
-                  router.push(`/tickets?${newParams.toString()}`, { scroll: false });
+                  try {
+                    router.push(`/tickets?${newParams.toString()}`, { scroll: false });
+                  } catch (navErr) {
+                    console.error('[nav]', navErr);
+                    message.error('导航失败，请稍后重试');
+                  }
                 }}
               >
                 {t('tickets.advancedSearch')}
@@ -193,7 +213,12 @@ function TicketsPageContent() {
                   icon={<Bell />}
                   onClick={() => {
                     setActiveTab('list');
-                    router.push('/tickets?tab=list&overdue=true', { scroll: false });
+                    try {
+                      router.push('/tickets?tab=list&overdue=true', { scroll: false });
+                    } catch (navErr) {
+                      console.error('[nav]', navErr);
+                      message.error('导航失败，请稍后重试');
+                    }
                   }}
                 >
                   {t('tickets.slaWarning')}
@@ -298,7 +323,16 @@ function TicketsPageContent() {
         )}
 
         {activeTab === 'kanban' && (
-          <TicketKanban onTicketSelect={ticket => router.push(`/tickets/${ticket.id}`)} />
+          <TicketKanban
+            onTicketSelect={ticket => {
+              try {
+                router.push(`/tickets/${ticket.id}`);
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
+          />
         )}
       </div>
 
@@ -311,7 +345,14 @@ function TicketsPageContent() {
             shape="circle"
             size="large"
             icon={<Plus />}
-            onClick={() => router.push('/tickets/create')}
+            onClick={() => {
+              try {
+                router.push('/tickets/create');
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
             className="shadow-lg hover:scale-110 transition-transform"
           />
         </Space>

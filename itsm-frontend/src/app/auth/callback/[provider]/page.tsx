@@ -28,14 +28,24 @@ export default function AuthCallbackPage() {
 
         message.success('登录成功');
         // 跳转到首页
-        router.push('/dashboard');
+        try {
+          router.push('/dashboard');
+        } catch (navErr) {
+          console.error('[nav]', navErr);
+          message.error('导航失败，请稍后重试');
+        }
       } catch (err) {
         console.error('第三方登录失败:', err);
         setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
         message.error('登录失败，请稍后重试');
         // 3秒后跳转到登录页
         setTimeout(() => {
-          router.push('/login');
+          try {
+            router.push('/login');
+          } catch (navErr) {
+            console.error('[nav]', navErr);
+            message.error('导航失败，请稍后重试');
+          }
         }, 3000);
       }
     };

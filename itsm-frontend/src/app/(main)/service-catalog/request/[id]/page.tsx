@@ -109,7 +109,12 @@ export default function ServiceCatalogRequestPage() {
 
       await ServiceCatalogApi.createServiceRequest(payload);
       message.success('申请已提交，等待审批');
-      router.push('/my-requests');
+      try {
+        router.push('/my-requests');
+      } catch (navErr) {
+        console.error('[nav]', navErr);
+        message.error('导航失败，请稍后重试');
+      }
     } catch (e: any) {
       message.error('提交失败：' + (e?.message || '未知错误'));
     } finally {
@@ -136,7 +141,17 @@ export default function ServiceCatalogRequestPage() {
       />
       <Card>
         <Space className="mb-4">
-          <Button icon={<ArrowLeft />} onClick={() => router.push('/service-catalog')}>
+          <Button
+            icon={<ArrowLeft />}
+            onClick={() => {
+              try {
+                router.push('/service-catalog');
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
+          >
             返回
           </Button>
           <Title level={3} style={{ margin: 0 }}>
@@ -150,7 +165,20 @@ export default function ServiceCatalogRequestPage() {
             showIcon
             className="mb-4"
             title={fetchError}
-            action={<Button onClick={() => router.push('/service-catalog')}>返回服务目录</Button>}
+            action={
+              <Button
+                onClick={() => {
+                  try {
+                    router.push('/service-catalog');
+                  } catch (navErr) {
+                    console.error('[nav]', navErr);
+                    message.error('导航失败，请稍后重试');
+                  }
+                }}
+              >
+                返回服务目录
+              </Button>
+            }
           />
         )}
 
@@ -292,7 +320,18 @@ export default function ServiceCatalogRequestPage() {
               >
                 提交申请
               </Button>
-              <Button onClick={() => router.push('/service-catalog')}>取消</Button>
+              <Button
+                onClick={() => {
+                  try {
+                    router.push('/service-catalog');
+                  } catch (navErr) {
+                    console.error('[nav]', navErr);
+                    message.error('导航失败，请稍后重试');
+                  }
+                }}
+              >
+                取消
+              </Button>
             </Space>
           </Form.Item>
         </Form>

@@ -268,7 +268,14 @@ const TicketTemplatesPage = () => {
           <Button
             type="text"
             icon={<Eye size={16} />}
-            onClick={() => router.push(`/tickets/templates/${template.id}`)}
+            onClick={() => {
+              try {
+                router.push(`/tickets/templates/${template.id}`);
+              } catch (navErr) {
+                console.error('[nav]', navErr);
+                message.error('导航失败，请稍后重试');
+              }
+            }}
             aria-label="查看模板详情"
           />
         </Tooltip>,
@@ -406,7 +413,14 @@ const TicketTemplatesPage = () => {
             <Button
               type="text"
               icon={<Eye size={16} />}
-              onClick={() => router.push(`/tickets/templates/${template.id}`)}
+              onClick={() => {
+                try {
+                  router.push(`/tickets/templates/${template.id}`);
+                } catch (navErr) {
+                  console.error('[nav]', navErr);
+                  message.error('导航失败，请稍后重试');
+                }
+              }}
               aria-label="查看模板详情"
             />
             <Button
