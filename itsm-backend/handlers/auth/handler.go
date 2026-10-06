@@ -22,12 +22,12 @@ func NewHandler(service *Service) *Handler { return &Handler{service: service} }
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	response, err := h.service.Register(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailed(c, err.Error())
+		common.AuthFailedWithErr(c, err, "认证失败")
 		return
 	}
 	common.Success(c, response)
@@ -36,12 +36,12 @@ func (h *Handler) Register(c *gin.Context) {
 func (h *Handler) ForgotPassword(c *gin.Context) {
 	var req dto.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	response, err := h.service.ForgotPassword(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailed(c, err.Error())
+		common.AuthFailedWithErr(c, err, "认证失败")
 		return
 	}
 	common.Success(c, response)
@@ -50,12 +50,12 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 func (h *Handler) ResetPassword(c *gin.Context) {
 	var req dto.PasswordResetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	response, err := h.service.ResetPassword(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailed(c, err.Error())
+		common.AuthFailedWithErr(c, err, "认证失败")
 		return
 	}
 	common.Success(c, response)
@@ -64,12 +64,12 @@ func (h *Handler) ResetPassword(c *gin.Context) {
 func (h *Handler) ValidateResetToken(c *gin.Context) {
 	var req dto.ValidateResetTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	response, err := h.service.ValidateResetToken(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailed(c, err.Error())
+		common.AuthFailedWithErr(c, err, "认证失败")
 		return
 	}
 	common.Success(c, response)
@@ -78,7 +78,7 @@ func (h *Handler) ValidateResetToken(c *gin.Context) {
 func (h *Handler) SwitchTenant(c *gin.Context) {
 	var req dto.SwitchTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	userID := c.GetInt("user_id")
@@ -88,7 +88,7 @@ func (h *Handler) SwitchTenant(c *gin.Context) {
 	}
 	response, err := h.service.SwitchTenant(c.Request.Context(), userID, req.TenantID)
 	if err != nil {
-		common.Forbidden(c, err.Error())
+		common.ForbiddenWithErr(c, err, "权限不足")
 		return
 	}
 	setAuthCookies(c, response.AccessToken, response.RefreshToken)
