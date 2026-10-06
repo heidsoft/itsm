@@ -1096,7 +1096,7 @@ func (h *IncidentHandler) ConvertToProblem(c *gin.Context) {
 	problem, err := h.service.rootCauseSvc.CreateProblemFromIncident(c.Request.Context(), id, c.GetInt("user_id"), tenantID, &req)
 	if err != nil {
 		h.service.logger.Errorw("Failed to convert incident to problem", "error", err, "incident_id", id)
-		common.Fail(c, common.InternalErrorCode, "转换失败: "+err.Error())
+		common.RespondError(c, err, "转换失败")
 		return
 	}
 	common.Success(c, dto.ToProblemResponse(problem))

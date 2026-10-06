@@ -38,7 +38,7 @@ func (h *Handler) CreateProject(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *Handler) CreateProject(ctx *gin.Context) {
 
 	project, err := h.service.CreateProject(ctx.Request.Context(), req.Name, req.Code, req.DepartmentID, req.ManagerID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *Handler) ListProjects(ctx *gin.Context) {
 
 	projects, err := h.service.ListProjects(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -103,7 +103,7 @@ func (h *Handler) GetProject(ctx *gin.Context) {
 
 	project, err := h.service.GetProject(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -136,7 +136,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -147,7 +147,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 
 	project, err := h.service.UpdateProject(ctx.Request.Context(), id, req.Name, req.Code, req.DepartmentID, req.ManagerID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *Handler) DeleteProject(ctx *gin.Context) {
 
 	err = h.service.DeleteProject(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 

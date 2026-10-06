@@ -32,7 +32,7 @@ func NewHandler(predictionService *service.PredictionService, logger *zap.Sugare
 func (h *Handler) GetTrendPrediction(ctx *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *Handler) GetTrendPrediction(ctx *gin.Context) {
 
 	response, err := h.predictionService.GetTrendPrediction(ctx.Request.Context(), &req, tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取趋势预测失败: "+err.Error())
+		common.RespondError(ctx, err, "获取趋势预测失败")
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *Handler) GetTrendPrediction(ctx *gin.Context) {
 func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 	var req dto.TrendPredictionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *Handler) ExportPredictionReport(ctx *gin.Context) {
 
 	data, filename, err := h.predictionService.ExportPredictionReport(ctx.Request.Context(), &req, format, tenantID.(int))
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "导出预测报告失败: "+err.Error())
+		common.RespondError(ctx, err, "导出预测报告失败")
 		return
 	}
 

@@ -37,7 +37,7 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -47,7 +47,7 @@ func (h *Handler) CreateApplication(ctx *gin.Context) {
 	}
 	app, err := h.service.CreateApplication(ctx.Request.Context(), req.Name, req.Code, req.Type, req.ProjectID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *Handler) ListApplications(ctx *gin.Context) {
 	}
 	apps, err := h.service.ListApplications(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, apps)
@@ -94,7 +94,7 @@ func (h *Handler) CreateMicroservice(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *Handler) CreateMicroservice(ctx *gin.Context) {
 	}
 	svc, err := h.service.CreateMicroservice(ctx.Request.Context(), req.Name, req.Code, req.Language, req.Framework, req.ApplicationID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (h *Handler) UpdateApplication(ctx *gin.Context) {
 
 	app, err := h.service.UpdateApplication(ctx.Request.Context(), id, req.Name, req.Code, req.Type, req.ProjectID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -179,7 +179,7 @@ func (h *Handler) DeleteApplication(ctx *gin.Context) {
 
 	err = h.service.DeleteApplication(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -201,7 +201,7 @@ func (h *Handler) ListMicroservices(ctx *gin.Context) {
 	}
 	microservices, err := h.service.ListMicroservices(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, microservices)
@@ -234,7 +234,7 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -245,7 +245,7 @@ func (h *Handler) UpdateMicroservice(ctx *gin.Context) {
 
 	svc, err := h.service.UpdateMicroservice(ctx.Request.Context(), id, req.Name, req.Code, req.Language, req.Framework, req.ApplicationID, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 
@@ -276,7 +276,7 @@ func (h *Handler) DeleteMicroservice(ctx *gin.Context) {
 
 	err = h.service.DeleteMicroservice(ctx.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 

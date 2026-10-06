@@ -2,6 +2,7 @@ package standard_change
 
 import (
 	"errors"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -119,7 +120,7 @@ func (h *Handler) GetStandardChange(c *gin.Context) {
 func (h *Handler) CreateStandardChange(c *gin.Context) {
 	var req dto.CreateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -165,7 +166,7 @@ func (h *Handler) UpdateStandardChange(c *gin.Context) {
 
 	var req dto.UpdateStandardChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 

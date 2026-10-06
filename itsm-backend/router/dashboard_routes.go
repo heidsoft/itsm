@@ -146,7 +146,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.POST("/config", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err != nil {
-				common.Fail(c, 1001, "参数错误: "+err.Error())
+				common.ParamErrorWithErr(c, err, "请求参数错误")
 				return
 			}
 			common.Success(c, payload)
@@ -157,7 +157,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 		dashboard.POST("/layout", middleware.RequirePermission("dashboard", "admin"), func(c *gin.Context) {
 			var payload map[string]interface{}
 			if err := c.ShouldBindJSON(&payload); err != nil {
-				common.Fail(c, 1001, "参数错误: "+err.Error())
+				common.ParamErrorWithErr(c, err, "请求参数错误")
 				return
 			}
 			common.Success(c, payload)

@@ -56,7 +56,7 @@ func (h *Handler) Query(c *gin.Context) {
 
 	response, err := h.service.Query(c.Request.Context(), query)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "query workbench failed: "+err.Error())
+		common.RespondError(c, err, "query workbench failed")
 		return
 	}
 

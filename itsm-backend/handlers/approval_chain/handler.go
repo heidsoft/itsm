@@ -116,7 +116,7 @@ func (h *Handler) CreateChain(c *gin.Context) {
 
 	var req dto.ApprovalChainRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	req.TenantID = tid
@@ -144,7 +144,7 @@ func (h *Handler) UpdateChain(c *gin.Context) {
 
 	var req dto.ApprovalChainRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 

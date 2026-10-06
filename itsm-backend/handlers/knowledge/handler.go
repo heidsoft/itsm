@@ -427,7 +427,7 @@ func (h *Handler) ListRestrictedCategories(c *gin.Context) {
 	restricted, err := h.svc.ListRestrictedCategories(c.Request.Context(), tenantID)
 	if err != nil {
 		h.svc.logger.Warnw("获取受限知识分类失败", "error", err, "tenant_id", tenantID)
-		common.InternalError(c, "获取受限分类失败: "+err.Error())
+		common.FailWithErr(c, err, "获取受限分类失败")
 		return
 	}
 
@@ -448,7 +448,7 @@ func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 		Restricted *bool  `json:"restricted"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 	if req.Restricted == nil {
@@ -459,7 +459,7 @@ func (h *Handler) SetCategoryRestriction(c *gin.Context) {
 	if err := h.svc.SetCategoryRestriction(c.Request.Context(), tenantID, req.Category, *req.Restricted); err != nil {
 		h.svc.logger.Warnw("设置知识分类可见性失败",
 			"error", err, "tenant_id", tenantID, "category", req.Category)
-		common.InternalError(c, "设置失败: "+err.Error())
+		common.FailWithErr(c, err, "设置失败")
 		return
 	}
 
@@ -474,7 +474,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 		PageSize int    `json:"pageSize"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -504,7 +504,7 @@ func (h *Handler) SearchArticles(c *gin.Context) {
 
 	articles, err := h.svc.SearchArticles(searchCtx, tenantIDInt, req.Query, req.Category, limit)
 	if err != nil {
-		common.InternalError(c, "搜索失败: "+err.Error())
+		common.FailWithErr(c, err, "搜索失败")
 		return
 	}
 
@@ -553,7 +553,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 	limit := 5
 	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
 	if err != nil {
-		common.InternalError(c, "获取推荐文章失败: "+err.Error())
+		common.FailWithErr(c, err, "获取推荐文章失败")
 		return
 	}
 
@@ -581,7 +581,7 @@ func (h *Handler) GetRecentArticles(c *gin.Context) {
 	limit := 10
 	articles, _, err := h.svc.ListArticles(c.Request.Context(), tenantID, 1, limit, "", "", "published")
 	if err != nil {
-		common.InternalError(c, "获取最近文章失败: "+err.Error())
+		common.FailWithErr(c, err, "获取最近文章失败")
 		return
 	}
 

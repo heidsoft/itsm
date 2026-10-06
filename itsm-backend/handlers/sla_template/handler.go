@@ -56,7 +56,7 @@ func (h *Handler) GetTemplate(ctx *gin.Context) {
 
 	tmpl, err := h.templateService.GetTemplate(key)
 	if err != nil {
-		common.Fail(ctx, common.NotFoundCode, err.Error())
+		common.NotFoundWithErr(ctx, err, "资源不存在")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) InstallTemplate(ctx *gin.Context) {
 
 	result, err := h.templateService.InstallTemplate(ctx.Request.Context(), key, tid)
 	if err != nil {
-		common.Fail(ctx, common.BadRequestCode, err.Error())
+		common.BadRequestWithErr(ctx, err, "请求参数错误")
 		return
 	}
 

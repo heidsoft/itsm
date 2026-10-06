@@ -59,7 +59,7 @@ func (h *Handler) SetMatrix(ctx *gin.Context) {
 	}
 	var matrix service.EscalationMatrix
 	if err := ctx.ShouldBindJSON(&matrix); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误："+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	h.escalationMatrixService.SetMatrix(tid, matrix)

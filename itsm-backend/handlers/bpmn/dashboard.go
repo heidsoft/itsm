@@ -375,7 +375,7 @@ func (c *DashboardHandler) GetTenantStats(ctx *gin.Context) {
 
 	stats, err := c.tenantService.GetTenantStatistics(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, "获取租户统计失败: "+err.Error())
+		common.RespondError(ctx, err, "获取租户统计失败")
 		return
 	}
 

@@ -74,7 +74,7 @@ func (h *WorkflowTemplateHandler) Create(ctx *gin.Context) {
 	}
 	var req dto.CreateWorkflowTemplateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	result, err := h.catalog.CreateDraft(ctx.Request.Context(), tenantID, userID, &req)
@@ -100,7 +100,7 @@ func (h *WorkflowTemplateHandler) Update(ctx *gin.Context) {
 	}
 	var req dto.UpdateWorkflowTemplateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	result, err := h.catalog.UpdateDraft(ctx.Request.Context(), tenantID, ctx.Param("key"), &req)
@@ -180,7 +180,7 @@ func (h *WorkflowTemplateHandler) Reload(ctx *gin.Context) {
 		return
 	}
 	if errors.Is(err, service.ErrWorkflowTemplateInvalid) {
-		common.Fail(ctx, common.ValidationError, err.Error())
+		common.BadRequestWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	if err != nil {

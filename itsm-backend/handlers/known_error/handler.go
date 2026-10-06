@@ -96,7 +96,7 @@ func (h *Handler) GetKnownError(c *gin.Context) {
 func (h *Handler) CreateKnownError(c *gin.Context) {
 	var req dto.CreateKnownErrorRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
@@ -139,7 +139,7 @@ func (h *Handler) UpdateKnownError(c *gin.Context) {
 
 	var req dto.KEDBUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 

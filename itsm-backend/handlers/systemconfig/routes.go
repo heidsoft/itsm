@@ -144,7 +144,7 @@ func (h *Handler) UpdateConfig(c *gin.Context) {
 
 	var req dto.UpdateSystemConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (h *Handler) BatchUpdateConfigs(c *gin.Context) {
 
 	var reqs []dto.UpdateSystemConfigRequest
 	if err := c.ShouldBindJSON(&reqs); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 

@@ -35,7 +35,7 @@ func NewAIGeneratorHandler(aiGeneratorService *service.BPMNAIGeneratorService) *
 func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 	var req dto.GenerateBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	tenantID, err := middleware.GetTenantID(ctx)
@@ -77,7 +77,7 @@ func (c *AIGeneratorHandler) GenerateBPMN(ctx *gin.Context) {
 func (c *AIGeneratorHandler) PreviewBPMN(ctx *gin.Context) {
 	var req dto.PreviewBPMNRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	if _, err := middleware.GetTenantID(ctx); err != nil {

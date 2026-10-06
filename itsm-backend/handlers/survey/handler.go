@@ -41,7 +41,7 @@ func (h *Handler) ListSurveys(ctx *gin.Context) {
 	}
 	surveys, err := h.svc.GetSurveys(ctx.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{
@@ -59,7 +59,7 @@ func (h *Handler) GetSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.GetSurvey(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, survey)
@@ -78,7 +78,7 @@ func (h *Handler) CreateSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.CreateSurvey(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, survey)
@@ -98,7 +98,7 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 	}
 	survey, err := h.svc.UpdateSurvey(ctx.Request.Context(), surveyID, &req, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, survey)
@@ -113,7 +113,7 @@ func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 	}
 	responses, err := h.svc.GetSurveyResponses(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{
@@ -131,7 +131,7 @@ func (h *Handler) GetAnalytics(ctx *gin.Context) {
 	}
 	analytics, err := h.svc.GetAnalytics(ctx.Request.Context(), surveyID, tenantID)
 	if err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, analytics)
@@ -149,7 +149,7 @@ func (h *Handler) SubmitResponse(ctx *gin.Context) {
 		return
 	}
 	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, tenantID); err != nil {
-		common.Fail(ctx, 5001, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{"message": "submitted"})

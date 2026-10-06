@@ -123,7 +123,7 @@ func (h *Handler) ListConfigs(ctx *gin.Context) {
 func (h *Handler) Provision(ctx *gin.Context) {
 	var req dto.ProvisionConnectorRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
@@ -175,12 +175,12 @@ func (h *Handler) Provision(ctx *gin.Context) {
 		return
 	}
 	if err := h.manager.Provision(ctx.Request.Context(), cfg); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	if err := h.store.Save(ctx.Request.Context(), cfg); err != nil {
 		h.manager.Revoke(cfg)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, maskConfig(cfg, h.manager.HealthCheckAll(ctx.Request.Context())))
@@ -204,7 +204,7 @@ func (h *Handler) Revoke(ctx *gin.Context) {
 	}
 	h.manager.Revoke(connector.Config{TenantID: tenantID, Name: name, Provider: provider})
 	if err := h.store.Delete(ctx.Request.Context(), tenantID, name, provider); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{"name": name, "revoked": true})
@@ -215,7 +215,7 @@ func (h *Handler) Send(ctx *gin.Context) {
 	name := ctx.Param("name")
 	var req dto.SendConnectorMessageRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	tenantID := ctx.GetInt("tenant_id")
@@ -232,7 +232,7 @@ func (h *Handler) Send(ctx *gin.Context) {
 		msg.Card = convertCard(req.Card)
 	}
 	if err := h.manager.Send(ctx.Request.Context(), tenantID, name, msg); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{"name": name, "channel": req.Channel, "sent": true})
@@ -245,9 +245,9 @@ func (h *Handler) Test(ctx *gin.Context) {
 	var channel string
 	for _, cfg := range h.manager.ListByTenant(tenantID) {
 		if cfg.Name == name {
-		if ch, ok := connector.SettingString(cfg.Settings, "debug_channel"); ok {
-			channel = ch
-		}
+			if ch, ok := connector.SettingString(cfg.Settings, "debug_channel"); ok {
+				channel = ch
+			}
 		}
 	}
 	if channel == "" {
@@ -260,7 +260,7 @@ func (h *Handler) Test(ctx *gin.Context) {
 		Title:   "ITSM 连接器测试",
 		Content: "这是一条来自 ITSM 的测试消息。\n时间: " + time.Now().Format(time.RFC3339),
 	}); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	common.Success(ctx, gin.H{"name": name, "channel": channel, "sent": true})
@@ -353,7 +353,7 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 		GracePeriodHours int               `json:"gracePeriodHours"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	if len(req.NewCredentials) == 0 {
@@ -389,12 +389,12 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 		return
 	}
 	if err := h.manager.Provision(ctx.Request.Context(), existing); err != nil {
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	if err := h.store.Save(ctx.Request.Context(), existing); err != nil {
 		h.manager.Revoke(existing)
-		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		common.RespondError(ctx, err, "操作失败")
 		return
 	}
 	// 写 audit_log

@@ -85,7 +85,7 @@ func (c *ProcessTriggerHandler) RegisterRoutes(r *gin.RouterGroup) {
 func (c *ProcessTriggerHandler) TriggerProcess(ctx *gin.Context) {
 	var req dto.ProcessTriggerRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -208,7 +208,7 @@ func (c *ProcessTriggerHandler) ResumeProcess(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) CreateBinding(ctx *gin.Context) {
 	var binding dto.ProcessBinding
 	if err := ctx.ShouldBindJSON(&binding); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -253,7 +253,7 @@ func (c *ProcessTriggerHandler) GetBinding(ctx *gin.Context) {
 func (c *ProcessTriggerHandler) QueryBindings(ctx *gin.Context) {
 	var req dto.ProcessBindingQueryRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -282,7 +282,7 @@ func (c *ProcessTriggerHandler) UpdateBinding(ctx *gin.Context) {
 
 	var binding dto.ProcessBinding
 	if err := ctx.ShouldBindJSON(&binding); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -375,7 +375,7 @@ func (c *ProcessTriggerHandler) InitDepartmentProcesses(ctx *gin.Context) {
 		DepartmentType string `json:"departmentType" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 
@@ -421,7 +421,7 @@ func (c *ProcessTriggerHandler) SetDomainConfig(ctx *gin.Context) {
 		Description  string                 `json:"description"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, 1001, err.Error())
+		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
 	if req.InheritMode == "" {
