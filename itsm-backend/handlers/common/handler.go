@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -90,6 +91,13 @@ func (h *Handler) Login(c *gin.Context) {
 	auditCtx := middleware.WithLoginAuditRequest(c.Request.Context(), c.ClientIP(), c.Request.UserAgent())
 	res, err := h.svc.Login(auditCtx, req.Username, req.Password, req.TenantID, req.TenantCode)
 	if err != nil {
+		// 重名账号需要租户消歧属于请求参数问题，和凭证错误分开返回；
+		// 两者不能混成一个消息，否则前端无法引导用户补租户。
+		if errors.Is(err, ErrLoginTenantRequired) {
+			h.svc.logger.Warnw("login requires tenant disambiguation")
+			common.ParamError(c, "该用户名在多个租户下存在，请选择租户后登录")
+			return
+		}
 		h.svc.logger.Errorw("login failed", "error", err)
 		common.AuthFailed(c, "用户名或密码错误")
 		return

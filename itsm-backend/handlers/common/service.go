@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/ent"
@@ -12,6 +13,11 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// ErrLoginTenantRequired 表示用户名在多个租户下各有一个账号，调用方必须指明租户。
+// username 的唯一键是 (tenant_id, username)，每个租户都有自己的 admin，
+// 未指定租户时无法确定登录对象；此时只能要求消歧，禁止任选一个租户。
+var ErrLoginTenantRequired = errors.New("login tenant is required")
 
 type Service struct {
 	repo      Repository
@@ -59,24 +65,36 @@ func (s *Service) getUserPermissions(role string) []string {
 }
 
 func (s *Service) Login(ctx context.Context, username, password string, tenantID int, tenantCode string) (*AuthResult, error) {
-	// Resolve tenant
+	// 租户定位：显式 tenantCode 必须解析成功，解析不到就当凭证错误，
+	// 禁止回退到「跨租户按用户名匹配」——那是把拼错的租户名变成越权面。
 	if tenantID == 0 && tenantCode != "" {
 		t, err := s.client.Tenant.Query().Where(enttenant.CodeEQ(tenantCode)).First(ctx)
-		if err == nil {
-			tenantID = t.ID
+		if err != nil {
+			middleware.RecordLoginAudit(ctx, s.client, 0, tenantID, username, "LOGIN_FAILED", "租户不存在")
+			return nil, fmt.Errorf("invalid credentials")
 		}
+		tenantID = t.ID
 	}
-	// When no tenant is specified, find user by username alone (matches across tenants)
+
 	var u *User
 	var entUser *ent.User
 	var err error
 	if tenantID == 0 {
-		// Look for user by username without tenant filter
-		entUser, err = s.client.User.Query().Where(entuser.UsernameEQ(username)).Only(ctx)
-		if err != nil {
+		// 调用方没给租户：只有当用户名在全库唯一命中时才继续。
+		// username 的唯一键已改为 (tenant_id, username)，同名 admin 会跨租户出现，
+		// 此时必须让调用方消歧，不能猜一个——猜错就是跨租户登录。
+		candidates, cerr := s.client.User.Query().
+			Where(entuser.UsernameEQ(username)).
+			All(ctx)
+		if cerr != nil || len(candidates) == 0 {
 			middleware.RecordLoginAudit(ctx, s.client, 0, tenantID, username, "LOGIN_FAILED", "用户不存在")
 			return nil, fmt.Errorf("invalid credentials")
 		}
+		if len(candidates) > 1 {
+			middleware.RecordLoginAudit(ctx, s.client, 0, tenantID, username, "LOGIN_FAILED", "需要指定租户")
+			return nil, ErrLoginTenantRequired
+		}
+		entUser = candidates[0]
 		u = toUserDomain(entUser)
 	} else {
 		entUser, err = s.client.User.Query().
