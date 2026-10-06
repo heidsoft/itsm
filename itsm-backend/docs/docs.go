@@ -13455,6 +13455,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "aiTools": {
+                    "description": "AITools 仅在 toolRegistry 已注入时存在；用指针+omitempty 让 nil 时真正从 JSON 中省略，\n避免 LLM Agent 看到 \"aiTools\": null 误判能力已就绪。",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.CMDBOntologyTool"
