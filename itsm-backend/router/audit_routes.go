@@ -9,7 +9,7 @@ import (
 )
 
 // SetupAuditLogRoutes 设置审计日志相关路由
-// 优先使用 AuditLogHandler（支持过滤/分页，返回 {logs,total,page,pageSize} 契约），
+// 优先使用 AuditLogHandler（支持过滤/分页，返回平台五键 {items,total,page,pageSize,totalPages} 契约），
 // 未装配时回退到 CommonHandler 的基础实现。
 func SetupAuditLogRoutes(
 	tenant *gin.RouterGroup,

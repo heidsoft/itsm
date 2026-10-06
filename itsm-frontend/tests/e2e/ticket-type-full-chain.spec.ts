@@ -463,12 +463,12 @@ test('TicketType preset → HTTP ticket → real outbox worker → task → audi
     for (const entry of timeline.entries) expect(entry.tenantId).toBe(admin.tenantId);
 
     for (const action of ['preset.install', 'binding.update']) {
-      const audits = await get<{ logs: Audit[]; total: number }>(
+      const audits = await get<{ items: Audit[]; total: number }>(
         page,
         `/api/v1/audit-logs?resource=ticket_type:${installed.id}&action=${action}&page=1&pageSize=20`
       );
       expect(audits.total).toBe(1);
-      const audit = single(audits.logs, action);
+      const audit = single(audits.items, action);
       expect(audit).toMatchObject({
         tenantId: admin.tenantId,
         userId: admin.id,
