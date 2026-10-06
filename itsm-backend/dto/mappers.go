@@ -898,6 +898,13 @@ func ToCIResponse(ci *ent.ConfigurationItem) *CIResponse {
 		Version:            ci.Version,
 		CreatedAt:          ci.CreatedAt,
 		UpdatedAt:          ci.UpdatedAt,
+		LifecycleStatus:    ci.LifecycleStatus,
+	}
+	if !ci.EffectiveAt.IsZero() {
+		res.EffectiveAt = &ci.EffectiveAt
+	}
+	if !ci.ExpireAt.IsZero() {
+		res.ExpireAt = &ci.ExpireAt
 	}
 	if ci.CiNumber != nil {
 		res.CINumber = *ci.CiNumber
