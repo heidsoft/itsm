@@ -63,7 +63,7 @@ func (h *Handler) CreateRole(c *gin.Context) {
 
 	var req dto.CreateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -185,7 +185,7 @@ func (h *Handler) UpdateRole(c *gin.Context) {
 
 	var req dto.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -251,7 +251,7 @@ func (h *Handler) AssignPermissions(c *gin.Context) {
 
 	var req dto.AssignPermissionsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -285,7 +285,7 @@ func (h *Handler) CreatePermission(c *gin.Context) {
 
 	var req dto.CreatePermissionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.ParamError(c, "参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
@@ -376,7 +376,7 @@ func (h *Handler) ListMenus(c *gin.Context) {
 
 	menus, err := h.menuService.ListMenus(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询菜单失败")
 		return
 	}
 
@@ -410,7 +410,7 @@ func (h *Handler) GetMenu(c *gin.Context) {
 
 	menu, err := h.menuService.GetMenu(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询菜单失败")
 		return
 	}
 
@@ -432,13 +432,13 @@ func (h *Handler) CreateMenu(c *gin.Context) {
 
 	var req dto.CreateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	menu, err := h.menuService.CreateMenu(c.Request.Context(), &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "创建菜单失败")
 		return
 	}
 
@@ -466,13 +466,13 @@ func (h *Handler) UpdateMenu(c *gin.Context) {
 
 	var req dto.UpdateMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		common.Fail(c, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
 
 	menu, err := h.menuService.UpdateMenu(c.Request.Context(), id, &req, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "更新菜单失败")
 		return
 	}
 
@@ -500,7 +500,7 @@ func (h *Handler) DeleteMenu(c *gin.Context) {
 
 	err = h.menuService.DeleteMenu(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "删除菜单失败")
 		return
 	}
 
@@ -525,7 +525,7 @@ func (h *Handler) GetUserMenus(c *gin.Context) {
 
 	menus, err := h.menuService.GetUserMenus(c.Request.Context(), userID, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "查询用户菜单失败")
 		return
 	}
 
@@ -547,7 +547,7 @@ func (h *Handler) ExportMenus(c *gin.Context) {
 
 	items, err := h.menuService.ExportMenus(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "导出菜单失败")
 		return
 	}
 
@@ -569,7 +569,7 @@ func (h *Handler) InitDefaultMenus(c *gin.Context) {
 
 	diff, err := h.menuService.InitMenusFromBaseline(c.Request.Context(), tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, err.Error())
+		common.RespondError(c, err, "初始化菜单失败")
 		return
 	}
 
