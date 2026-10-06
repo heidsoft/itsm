@@ -33,9 +33,10 @@ func NewUserService(client *ent.Client, logger *zap.SugaredLogger) *UserService 
 func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest, tenantID int) (*ent.User, error) {
 	s.logger.Infof("创建用户: %s", req.Username)
 
-	// 检查用户名是否已存在
+	// 用户名按租户查重：唯一键是 (tenant_id, username)，每个租户都可以有自己的 admin。
+	// 邮箱仍按全局查重，因为找回密码只按 email 定位账号（handlers/auth/service.go）。
 	exists, err := s.client.User.Query().
-		Where(user.UsernameEQ(req.Username)).
+		Where(user.UsernameEQ(req.Username), user.TenantIDEQ(tenantID)).
 		Exist(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("检查用户名失败: %w", err)
@@ -322,12 +323,13 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 
 	update := s.client.User.UpdateOneID(id).Where(user.TenantIDEQ(tenantID))
 
-	// 检查用户名是否已被其他用户使用
+	// 检查用户名是否已被本租户其他用户使用（唯一键按租户组合，跨租户同名合法）
 	if req.Username != "" && req.Username != existingUser.Username {
 		exists, err := s.client.User.Query().
 			Where(
 				user.And(
 					user.UsernameEQ(req.Username),
+					user.TenantIDEQ(tenantID),
 					user.IDNEQ(id),
 				),
 			).

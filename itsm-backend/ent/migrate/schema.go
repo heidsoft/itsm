@@ -5550,7 +5550,7 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "username", Type: field.TypeString, Unique: true},
+		{Name: "username", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "role", Type: field.TypeEnum, Enums: []string{"super_admin", "admin", "manager", "it_admin", "security_admin", "sysadmin", "agent", "technician", "security", "end_user"}, Default: "end_user"},
@@ -5605,6 +5605,13 @@ var (
 				Columns:    []*schema.Column{UsersColumns[19]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_tenant_id_username",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[19], UsersColumns[1]},
 			},
 		},
 	}

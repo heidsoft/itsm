@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 
 	"itsm-backend/migration/pii"
 )
@@ -20,7 +21,6 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").
 			Comment("用户名").
-			Unique().
 			NotEmpty(),
 		field.String("email").
 			Comment("邮箱").
@@ -121,5 +121,14 @@ func (User) Edges() []ent.Edge {
 			Comment("AI 工具调用记录"),
 		edge.To("on_call_shifts", OnCallShift.Type).
 			Comment("用户值班班次"),
+	}
+}
+
+// Indexes 把用户名唯一性从全局放宽为「按租户组合唯一」。
+// 管理员用户名在每个租户都要求叫 admin，全局唯一会让第二个租户永远开不出管理员；
+// email 仍保持全局唯一，因为找回密码按 email 单独定位账号（见 handlers/auth）。
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("tenant_id", "username").Unique(),
 	}
 }
