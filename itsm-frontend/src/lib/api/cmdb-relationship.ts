@@ -233,9 +233,9 @@ export const CIRelationshipAPI = {
       try {
         await CIRelationshipAPI.createRelationship(rel);
         created++;
-      } catch (e: any) {
+      } catch (e: unknown) {
         failed++;
-        errors.push(e?.message ?? String(e));
+        errors.push(e instanceof Error ? e.message : String(e));
       }
     }
     return { createdCount: created, failedCount: failed, errors };

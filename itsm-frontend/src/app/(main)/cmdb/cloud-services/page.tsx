@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  App,
   Breadcrumb,
   Button,
   Card,
@@ -15,7 +16,6 @@ import {
   Space,
   Table,
   Tag,
-  message,
 } from 'antd';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -38,6 +38,7 @@ export default function CloudServicePage() {
   const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
 
@@ -61,8 +62,8 @@ export default function CloudServicePage() {
   const invalidateServices = () =>
     queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'cloud-services'] });
 
-  const buildPayload = (values: Record<string, any>) => {
-    const payload: Record<string, any> = {
+  const buildPayload = (values: Record<string, unknown>) => {
+    const payload: Record<string, unknown> = {
       provider: values.provider,
       serviceCode: values.service_code,
       parentId: values.parent_id,
@@ -75,16 +76,17 @@ export default function CloudServicePage() {
     };
 
     if (values.attribute_schema) {
-      payload.attributeSchema =
+      const parsed: { fields?: unknown } =
         typeof values.attribute_schema === 'string'
           ? JSON.parse(values.attribute_schema)
-          : values.attribute_schema;
-      const fields = payload.attributeSchema?.fields;
+          : (values.attribute_schema as { fields?: unknown });
+      payload.attributeSchema = parsed;
+      const fields = parsed.fields;
       if (fields) {
         if (!Array.isArray(fields)) {
           throw new Error(t('cmdb.propertyTemplateMustBeArray'));
         }
-        for (const field of fields) {
+        for (const field of fields as Array<{ type?: string; options?: unknown }>) {
           if (field?.type !== 'select') {
             throw new Error(t('cmdb.propertyTemplateOnlySelect'));
           }
@@ -296,7 +298,7 @@ export default function CloudServicePage() {
         rowKey='id'
         loading={loading}
         dataSource={data}
-        columns={columns as any}
+        columns={columns}
         pagination={{ pageSize: 10 }}
       />
 

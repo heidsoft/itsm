@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  App,
   Breadcrumb,
   Button,
   Card,
@@ -16,7 +17,6 @@ import {
   Tag,
   Tooltip,
   Popconfirm,
-  message,
   Switch,
 } from 'antd';
 import { Search, Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
@@ -37,6 +37,7 @@ const providerOptions = [
 export default function CloudAccountPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
   const [createForm] = Form.useForm();
   const [editForm] = Form.useForm();
 
@@ -306,7 +307,7 @@ export default function CloudAccountPage() {
         rowKey='id'
         loading={loading}
         dataSource={filteredData}
-        columns={columns as any}
+        columns={columns}
         pagination={{
           pageSize: 10,
           showSizeChanger: true,

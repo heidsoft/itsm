@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  App,
   Breadcrumb,
   Button,
   Card,
@@ -12,7 +13,6 @@ import {
   Statistic,
   Table,
   Tag,
-  message,
 } from 'antd';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
@@ -33,6 +33,7 @@ const summaryLabels = [
 export default function ReconciliationPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { message } = App.useApp();
 
   // React Query：对账结果 + 云服务目录（替代手写 loadData + setState）
   const reconQuery = useReconciliationQuery();

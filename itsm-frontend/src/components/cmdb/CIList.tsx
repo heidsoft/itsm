@@ -164,7 +164,7 @@ const CIList: React.FC = () => {
         item.id,
         item.name,
         types.find(t => t.id === item.ciTypeId)?.name || item.type || '',
-        item.cloudProvider || (item as any).cloudProvider || '',
+        item.cloudProvider || '',
         item.status,
         item.model || '',
         item.vendor || '',

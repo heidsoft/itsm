@@ -383,7 +383,7 @@ export default function CloudResourcePage() {
                 {binding.resourceName || binding.resourceId}
               </div>
               <div className='text-gray-400 mt-1'>
-                {providerOptions.find(p => p.value === (binding as any).provider)?.label} /{' '}
+                {providerOptions.find(p => p.value === binding.provider)?.label} /{' '}
                 {binding.region} / {binding.zone}
               </div>
             </div>
@@ -424,8 +424,8 @@ export default function CloudResourcePage() {
               <div>
                 <div className='text-sm text-gray-500'>云厂商</div>
                 <div>
-                  {providerOptions.find(p => p.value === (selectedRow as any).provider)?.label ||
-                    (selectedRow as any).provider ||
+                  {providerOptions.find(p => p.value === selectedRow.provider)?.label ||
+                    selectedRow.provider ||
                     '-'}
                 </div>
               </div>

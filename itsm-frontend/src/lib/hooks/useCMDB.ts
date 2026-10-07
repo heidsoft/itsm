@@ -314,14 +314,10 @@ export function useCreateRelationshipMutation() {
     onSuccess: result => {
       message.success('关系已创建');
       queryClient.invalidateQueries({
-        queryKey: CMDB_KEYS.ciRelationships(
-          String((result as any).sourceCiId ?? (result as any).parentId)
-        ),
+        queryKey: CMDB_KEYS.ciRelationships(String(result.sourceCiId)),
       });
       queryClient.invalidateQueries({
-        queryKey: CMDB_KEYS.ciRelationships(
-          String((result as any).targetCiId ?? (result as any).childId)
-        ),
+        queryKey: CMDB_KEYS.ciRelationships(String(result.targetCiId)),
       });
       queryClient.invalidateQueries({ queryKey: [...CMDB_KEYS.all, 'topology'] });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });

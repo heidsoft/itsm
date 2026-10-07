@@ -32,7 +32,7 @@ import {
 import { Plus, Trash2, Link, Network } from 'lucide-react';
 import dayjs from 'dayjs';
 
-import { type CIRelationship, type TopologyEdge } from '@/lib/api/cmdb-relationship';
+import { type CIRelationship, type CIRelationshipType, type TopologyEdge } from '@/lib/api/cmdb-relationship';
 import {
   useRelationshipTypesV2Query,
   useCIRelationshipsListQuery,
@@ -164,7 +164,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       await createMutation.mutateAsync({
         sourceCiId,
         targetCiId: destCiId,
-        relationshipType: values.relationshipType as any,
+        relationshipType: values.relationshipType as CIRelationshipType,
         strength: values.strength,
         impactLevel: values.impactLevel,
         description: values.description,
@@ -172,8 +172,8 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       handleCloseCreate();
       form.resetFields();
       onRefresh?.();
-    } catch (e: any) {
-      message.error(e?.message ?? '创建关系失败');
+    } catch (e: unknown) {
+      message.error(e instanceof Error ? e.message : '创建关系失败');
     }
   };
 
