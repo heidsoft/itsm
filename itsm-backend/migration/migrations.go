@@ -114,6 +114,18 @@ var RegisteredMigrations = []Migration{
 		Description: "Add tenant-scoped, versioned AI business workflow template catalog",
 		RollbackSQL: "DROP TABLE IF EXISTS workflow_templates;",
 	},
+	{
+		// Sprint 3 Task 1 — AI Audit accept/reject feedback loop.
+		// ai_feedbacks.useful was overloaded: operator thumb on chat answers
+		// vs operator accept/reject on AI audit suggestions. The new
+		// accepted column is exclusive to item_type='ai_audit' and lets
+		// operators flip a previously rejected audit row back to accepted
+		// (PATCH /api/v1/ai/audit-logs/:id) without overwriting the
+		// original useful verdict on a chat answer.
+		Version:     "022_add_ai_feedback_accepted_column",
+		Description: "Add nullable accepted column to ai_feedbacks so AI audit accept/reject decisions are first-class (was overloaded onto useful)",
+		RollbackSQL: "ALTER TABLE ai_feedbacks DROP COLUMN IF EXISTS accepted;",
+	},
 }
 
 // PostSchemaMigrations returns a defensive copy of the canonical active stream.
@@ -859,6 +871,13 @@ SET ci_number = CASE
     END
 FROM backfill b
 WHERE ci.id = b.id;
+`
+	case "022_add_ai_feedback_accepted_column":
+		return `
+ALTER TABLE ai_feedbacks ADD COLUMN IF NOT EXISTS accepted BOOLEAN;
+CREATE INDEX IF NOT EXISTS ai_feedbacks_accepted_idx
+    ON ai_feedbacks (tenant_id, item_type, accepted)
+    WHERE accepted IS NOT NULL;
 `
 	default:
 		return ""

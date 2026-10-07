@@ -256,6 +256,16 @@ export async function aiGetAuditLogs(params: {
   return httpClient.get<AIAuditLogsResponse>(url);
 }
 
+// Sprint 3 Task 1 — AI Audit accept/reject 反馈闭环闭合。操作者在
+// Audit Console 详情 Drawer 点 Accept / Revoke 翻转单条 ai_feedbacks
+// 行 accepted 列。仅 item_type='ai_audit' 行可改。
+export async function aiUpdateAuditAccepted(id: number, accepted: boolean): Promise<{ id: number; accepted: boolean }> {
+  return httpClient.patch<{ id: number; accepted: boolean }>(
+    `/api/v1/ai/audit-logs/${id}`,
+    { accepted },
+  );
+}
+
 // ==================== AI 趋势预测（对应后端 POST /api/v1/ai/predictions） ====================
 
 /** 后端 DTO：itsm-backend/dto/ticket_prediction_dto.go */

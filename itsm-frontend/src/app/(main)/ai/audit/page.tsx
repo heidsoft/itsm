@@ -14,12 +14,14 @@ import {
   Empty,
   App,
   Tooltip,
+  Button,
 } from 'antd';
 import { BarChart3, RefreshCw, ShieldCheck, Target } from 'lucide-react';
 
 import {
   aiGetAuditLogs,
   aiGetEvaluation,
+  aiUpdateAuditAccepted,
   type AIAuditEntry,
   type AIEvaluationReport,
 } from '@/lib/api/ai-api';
@@ -57,6 +59,7 @@ const AIAuditConsole: React.FC = () => {
   const [kindFilter, setKindFilter] = useState<string>('');
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 });
   const [detail, setDetail] = useState<AIAuditEntry | null>(null);
+  const [flipPending, setFlipPending] = useState(false);
 
   const fetchEvaluation = useCallback(async () => {
     setEvalLoading(true);
@@ -361,6 +364,56 @@ const AIAuditConsole: React.FC = () => {
             <Descriptions.Item label="可信度">{pct(detail.confidence)}</Descriptions.Item>
             <Descriptions.Item label="采纳结果">
               {detail.accepted ? <Tag color="success">已采纳</Tag> : <Tag>未采纳</Tag>}
+            </Descriptions.Item>
+            <Descriptions.Item label="操作">
+              <Space>
+                <Button
+                  size="small"
+                  type={detail.accepted ? 'default' : 'primary'}
+                  disabled={detail.accepted || flipPending}
+                  onClick={async () => {
+                    if (!detail) return;
+                    setFlipPending(true);
+                    try {
+                      await aiUpdateAuditAccepted(detail.id, true);
+                      setLogs(prev => prev.map(e => (
+                        e.id === detail.id ? { ...e, accepted: true } : e
+                      )));
+                      setDetail({ ...detail, accepted: true });
+                      message.success(`AI 审计 ${detail.id} 已标记采纳`);
+                    } catch (err) {
+                      message.error((err as Error).message ?? '采纳失败');
+                    } finally {
+                      setFlipPending(false);
+                    }
+                  }}
+                >
+                  采纳
+                </Button>
+                <Button
+                  size="small"
+                  danger
+                  disabled={!detail.accepted || flipPending}
+                  onClick={async () => {
+                    if (!detail) return;
+                    setFlipPending(true);
+                    try {
+                      await aiUpdateAuditAccepted(detail.id, false);
+                      setLogs(prev => prev.map(e => (
+                        e.id === detail.id ? { ...e, accepted: false } : e
+                      )));
+                      setDetail({ ...detail, accepted: false });
+                      message.success(`AI 审计 ${detail.id} 已标记拒绝`);
+                    } catch (err) {
+                      message.error((err as Error).message ?? '拒绝失败');
+                    } finally {
+                      setFlipPending(false);
+                    }
+                  }}
+                >
+                  拒绝
+                </Button>
+              </Space>
             </Descriptions.Item>
             <Descriptions.Item label="建议内容">
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12 }}>

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"go.uber.org/zap"
@@ -39,19 +40,48 @@ func (r *aiTelemetryRepository) ObserveLLMCall(ctx context.Context, provider, mo
 }
 
 // SaveFeedback 在 ai_feedbacks 写一条用户反馈。
-func (r *aiTelemetryRepository) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string) error {
+//
+// item_type='ai_audit' 时 accepted 是操作者 accept/reject 决策（v1.7
+// Sprint 3 Task 1：解 useful overload），其他 item_type 时 useful 是
+// 操作者对答案的赞踩。accepted 与 useful 互不覆盖，运营中可以分别
+// 读两个维度。
+func (r *aiTelemetryRepository) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
 	const sqlStr = `
-		INSERT INTO ai_feedbacks (tenant_id, user_id, request_id, kind, query, item_type, item_id, useful, score, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO ai_feedbacks (tenant_id, user_id, request_id, kind, query, item_type, item_id, useful, score, notes, accepted)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 	if _, err := r.db.ExecContext(ctx, sqlStr,
 		tenantID, userID, requestID, kind, query, itemType,
 		nullableInt(itemID), useful, nullableInt(score), nullableString(notes),
+		nullableBool(accepted),
 	); err != nil {
 		return fmt.Errorf("save ai feedback: %w", err)
 	}
 	return nil
 }
+
+// UpdateFeedbackAccepted 翻转一条 ai_audit 记录的 accept/reject 决策。
+// 幂等：同值重复调用无副作用。仅对 item_type='ai_audit' 生效。
+func (r *aiTelemetryRepository) UpdateFeedbackAccepted(ctx context.Context, tenantID int64, id int64, accepted bool) error {
+	const sqlStr = `
+		UPDATE ai_feedbacks
+		SET accepted = $3
+		WHERE id = $1 AND tenant_id = $2 AND item_type = 'ai_audit'
+	`
+	res, err := r.db.ExecContext(ctx, sqlStr, id, tenantID, accepted)
+	if err != nil {
+		return fmt.Errorf("update ai feedback accepted: %w", err)
+	}
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return ErrFeedbackNotFound
+	}
+	return nil
+}
+
+// ErrFeedbackNotFound 当 UpdateFeedbackAccepted 没找到匹配行（id 错、
+// 租户错、或 item_type 不是 ai_audit）。
+var ErrFeedbackNotFound = errors.New("ai feedback row not found")
 
 // FeedbackAggregate 是按租户聚合的反馈指标。
 type FeedbackAggregate struct {
@@ -141,6 +171,13 @@ func nullableInt(p *int) interface{} {
 }
 
 func nullableString(p *string) interface{} {
+	if p == nil {
+		return nil
+	}
+	return *p
+}
+
+func nullableBool(p *bool) interface{} {
 	if p == nil {
 		return nil
 	}

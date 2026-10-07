@@ -77,9 +77,17 @@ func (o *LLMObserver) Observe(provider string, model string, tokens int, latency
 	}
 }
 
-// SaveFeedback saves user feedback on AI suggestions
-func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID int, reqID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string) error {
-	return s.repo.SaveFeedback(ctx, tenantID, userID, reqID, kind, query, itemType, itemID, useful, score, notes)
+// SaveFeedback saves user feedback on AI suggestions.
+//
+// Sprint 3 Task 1 — accepted 是 item_type='ai_audit' 专属的 accept/reject
+// 决策，与 useful（操作者对答案的赞踩）解耦。其他 item_type 传 nil。
+func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID int, reqID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
+	return s.repo.SaveFeedback(ctx, tenantID, userID, reqID, kind, query, itemType, itemID, useful, score, notes, accepted)
+}
+
+// UpdateAuditAccepted 翻转 ai_feedbacks.accepted。详见 repository。
+func (s *AITelemetryService) UpdateAuditAccepted(ctx context.Context, tenantID int, id int64, accepted bool) error {
+	return s.repo.UpdateFeedbackAccepted(ctx, int64(tenantID), id, accepted)
 }
 
 // AIMetrics 指标聚合结果（API JSON 形状）。

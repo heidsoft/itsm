@@ -723,11 +723,24 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 
 // Telemetry
 
-func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string) error {
+// SaveFeedback delegates to AITelemetryService. Sprint 3 Task 1 added
+// accepted (*bool) for ai_audit accept/reject decisions to be first-class
+// (was overloaded onto useful).
+func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
 	if s.aiTelemetryService == nil {
 		return fmt.Errorf("AI telemetry service not initialized")
 	}
-	return s.aiTelemetryService.SaveFeedback(ctx, tenantID, userID, requestID, kind, query, itemType, itemID, useful, score, notes)
+	return s.aiTelemetryService.SaveFeedback(ctx, tenantID, userID, requestID, kind, query, itemType, itemID, useful, score, notes, accepted)
+}
+
+// UpdateAuditAccepted flips accepted on an ai_feedbacks row whose item_type
+// is 'ai_audit'. Returns service.ErrFeedbackNotFound when the row is
+// missing, belongs to another tenant, or is not an audit row.
+func (s *Service) UpdateAuditAccepted(ctx context.Context, tenantID int, id int64, accepted bool) error {
+	if s.aiTelemetryService == nil {
+		return fmt.Errorf("AI telemetry service not initialized")
+	}
+	return s.aiTelemetryService.UpdateAuditAccepted(ctx, tenantID, id, accepted)
 }
 
 func (s *Service) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (interface{}, error) {

@@ -496,6 +496,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		Useful   bool    `json:"useful" binding:"required"`
 		Score    *int    `json:"score"`
 		Notes    *string `json:"notes"`
+		Accepted *bool   `json:"accepted"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
@@ -517,7 +518,7 @@ func (h *Handler) SaveFeedback(c *gin.Context) {
 		itemTypeVal = *req.ItemType
 	}
 
-	err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes)
+	err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Kind, req.Query, itemTypeVal, req.ItemID, req.Useful, req.Score, req.Notes, req.Accepted)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -572,7 +573,7 @@ func (h *Handler) RecordAudit(c *gin.Context) {
 		score = 100
 	}
 
-	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note); err != nil {
+	if err := h.svc.SaveFeedback(c.Request.Context(), tenantID, userID, requestID, req.Scenario, req.InputRef, itemType, nil, req.Accepted, &score, &note, &req.Accepted); err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -621,6 +622,44 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 		return
 	}
 	common.SuccessWithPagination(c, entries, pg.Page, pg.PageSize, int64(total))
+}
+
+// UpdateAuditAccepted handles PATCH /api/v1/ai/audit-logs/:id.
+//
+// Sprint 3 Task 1 — AI Audit accept/reject feedback loop 闭合：让
+// 操作者在 Audit Console 详情 Drawer 里点 Accept/Revoke 翻转
+// 已记录的决策。原 ai_feedbacks 表写时即终态（append-only），
+// 现在允许 PATCH 翻 accepted 列；用 usecase / version 不变量校验
+// 不在此层（粗粒度足够，本提交只解决数据通路）。
+func (h *Handler) UpdateAuditAccepted(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil || id <= 0 {
+		common.ParamErrorWithErr(c, err, "id 参数非法")
+		return
+	}
+	var req struct {
+		Accepted bool `json:"accepted" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+
+	if err := h.svc.UpdateAuditAccepted(c.Request.Context(), tenantID, id, req.Accepted); err != nil {
+		if errors.Is(err, service.ErrFeedbackNotFound) {
+			common.NotFoundWithErr(c, err, "audit-logs 行不存在或非 ai_audit")
+			return
+		}
+		common.FailWithErr(c, err, "更新 accepted 失败")
+		return
+	}
+	common.Success(c, gin.H{"id": id, "accepted": req.Accepted})
 }
 
 // queryInt 解析正整数查询参数，非法/缺失时回退到默认值。
