@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, message, Tabs, Typography, Divider, Tag, Spin } from 'antd';
+import { Button, Card, Form, Input, Select, Upload, Space, Row, Col, App, Tabs, Typography, Divider, Tag, Spin } from 'antd';
 import { ArrowLeft, Search, X, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { IncidentAPI } from '@/lib/api/incident-api';
@@ -48,6 +48,7 @@ export default function CreateIncidentPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('basic');
   const [selectedCIs, setSelectedCIs] = useState<ConfigurationItem[]>([]);
   const [ciSearchTerm, setCISearchTerm] = useState('');

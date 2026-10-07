@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo } from 'react';
-import { Button, Modal, Pagination, Form, message } from 'antd';
+import { Button, Modal, Pagination, Form, App } from 'antd';
 import AppSelect from '@/components/ui/AppSelect';
 import { Plus, RotateCcw, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,7 @@ type View = 'list' | 'kanban';
 export default function IncidentsPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const kanbanColumns = useMemo<KanbanColumnConfig<Incident>[]>(
     () => [

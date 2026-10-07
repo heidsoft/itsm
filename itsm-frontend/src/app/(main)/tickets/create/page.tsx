@@ -64,6 +64,17 @@ type RuntimeTicketType = {
   fields: CustomFieldDefinition[];
 };
 
+interface UserOption {
+  id: number;
+  name?: string;
+  username: string;
+}
+
+interface DepartmentOption {
+  id: number;
+  name: string;
+}
+
 // 图标映射
 const iconMap: Record<string, React.ReactNode> = {
   Container: <Container className='w-5 h-5' />,
@@ -175,21 +186,21 @@ export default function CreateTicketPage() {
 
   useEffect(() => {
     Promise.allSettled([
-      httpClient.get<any>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
-      httpClient.get<any>('/api/v1/departments', { page: 1, pageSize: 200 }),
+      httpClient.get<{ users?: UserOption[] }>('/api/v1/users', { page: 1, pageSize: 200, status: 'active' }),
+      httpClient.get<DepartmentOption[]>('/api/v1/departments', { page: 1, pageSize: 200 }),
       CMDBApi.getAllCIs({}, 200),
     ]).then(([users, departments, cis]) =>
       setReferenceOptions({
         user:
           users.status === 'fulfilled'
-            ? (users.value.users ?? []).map((item: any) => ({
+            ? (users.value.users ?? []).map((item) => ({
                 label: item.name ?? item.username,
                 value: item.id,
               }))
             : [],
         department:
           departments.status === 'fulfilled'
-            ? (Array.isArray(departments.value) ? departments.value : []).map((item: any) => ({
+            ? (Array.isArray(departments.value) ? departments.value : []).map((item) => ({
                 label: item.name,
                 value: item.id,
               }))
@@ -554,15 +565,97 @@ export default function CreateTicketPage() {
                 </Card>
               )}
 
-              {/* 智能显示表单：已选类型有字段→自定义表单 | 已选类型无字段或未选择→基础表单 */}
-              {selectedType?.fields && selectedType.fields.length > 0 ? (
-                /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
+              {/* 基础表单：始终显示标题、描述、优先级、分类 */}
+              <Card
+                key="basic-form"
+                title='工单信息'
+                style={{ marginBottom: 16 }}
+                aria-label='基础工单信息表单'
+                data-testid='ticket-form'
+              >
+                <Form.Item
+                  name='title'
+                  label='标题'
+                  rules={[
+                    { required: true, message: '请输入标题' },
+                    { min: 2, message: '标题至少需要2个字符' },
+                  ]}
+                >
+                  <Input
+                    placeholder={selectedType ? `${selectedType.name}相关` : '例如：VPN 无法连接'}
+                    aria-required='true'
+                    aria-describedby='title-help'
+                    data-testid='ticket-title-input'
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name='description'
+                  label='详细描述'
+                  rules={[
+                    { required: true, message: '请输入描述（至少10个字符）' },
+                    { min: 10, message: '描述至少需要10个字符' },
+                  ]}
+                  extra='建议写清现象、影响范围和期望结果。'
+                >
+                  <TextArea
+                    rows={6}
+                    placeholder='请详细描述问题/需求与影响范围...'
+                    aria-required='true'
+                    data-testid='ticket-description-input'
+                  />
+                </Form.Item>
+
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} sm={12}>
+                    <Form.Item
+                      name='priority'
+                      label='优先级'
+                      initialValue={selectedType?.priority || 'medium'}
+                      rules={[{ required: true }]}
+                    >
+                      <AppSelect
+                        allowClear
+                        options={[
+                          { label: '低', value: 'low' },
+                          { label: '中', value: 'medium' },
+                          { label: '高', value: 'high' },
+                          { label: '紧急', value: 'urgent' },
+                          { label: '严重', value: 'critical' },
+                        ]}
+                        placeholder='选择优先级'
+                        aria-label='选择工单优先级'
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <Form.Item name='category' label='分类'>
+                      <AppSelect
+                        allowClear
+                        loading={categoryLoading}
+                        options={categoryOptions}
+                        placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
+                        aria-label='选择工单分类'
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+
+              {/* 自定义字段表单：如果工单类型有自定义字段，额外显示 */}
+              {selectedType?.fields && selectedType.fields.length > 0 && (
                 <Card
                   key={selectedType.id}
-                  title={`${selectedType.name} - 详细信息`}
+                  title={`${selectedType.name} - 补充信息`}
                   style={{ marginBottom: 16 }}
                   aria-label={`${selectedType.name} 自定义表单`}
                 >
+                  <Alert
+                    type='info'
+                    showIcon
+                    className='mb-4'
+                    title='以下是该工单类型需要的额外信息'
+                  />
                   <Row gutter={[16, 0]}>
                     {selectedType.fields.map(field => (
                       <Col span={24} key={field.name}>
@@ -659,88 +752,6 @@ export default function CreateTicketPage() {
                         </Form.Item>
                       </Col>
                     ))}
-                  </Row>
-                </Card>
-              ) : (
-                /* 无自定义字段：显示基础表单 */
-                <Card
-                  title='工单信息'
-                  style={{ marginBottom: 16 }}
-                  aria-label='基础工单信息表单'
-                  data-testid='ticket-form'
-                >
-                  <Alert
-                    type='info'
-                    showIcon
-                    className='mb-4'
-                    title='填写最少信息即可提交，补充说明建议写在详细描述中。'
-                  />
-                  <Form.Item
-                    name='title'
-                    label='标题'
-                    rules={[
-                      { required: true, message: '请输入标题' },
-                      { min: 2, message: '标题至少需要2个字符' },
-                    ]}
-                  >
-                    <Input
-                      placeholder='例如：VPN 无法连接'
-                      aria-required='true'
-                      aria-describedby='title-help'
-                      data-testid='ticket-title-input'
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name='description'
-                    label='详细描述'
-                    rules={[
-                      { required: true, message: '请输入描述（至少10个字符）' },
-                      { min: 10, message: '描述至少需要10个字符' },
-                    ]}
-                    extra='建议写清现象、影响范围和期望结果。'
-                  >
-                    <TextArea
-                      rows={6}
-                      placeholder='请详细描述问题/需求与影响范围...'
-                      aria-required='true'
-                      data-testid='ticket-description-input'
-                    />
-                  </Form.Item>
-
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name='priority'
-                        label='优先级'
-                        initialValue='medium'
-                        rules={[{ required: true }]}
-                      >
-                        <AppSelect
-                          allowClear
-                          options={[
-                            { label: '低', value: 'low' },
-                            { label: '中', value: 'medium' },
-                            { label: '高', value: 'high' },
-                            { label: '紧急', value: 'urgent' },
-                            { label: '严重', value: 'critical' },
-                          ]}
-                          placeholder='选择优先级'
-                          aria-label='选择工单优先级'
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name='category' label='分类'>
-                        <AppSelect
-                          allowClear
-                          loading={categoryLoading}
-                          options={categoryOptions}
-                          placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
-                          aria-label='选择工单分类'
-                        />
-                      </Form.Item>
-                    </Col>
                   </Row>
                 </Card>
               )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
-import { Card, Typography, Space, Button, Tabs, Badge, Skeleton, message } from 'antd';
+import { Card, Typography, Space, Button, Tabs, Badge, Skeleton, App } from 'antd';
 import { Search, Plus, LayoutGrid, Bell, Table } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -28,6 +28,7 @@ function TicketsPageContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('list');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const { message } = App.useApp();
 
   // 从 localStorage 恢复筛选条件
   const [advancedFilters, setAdvancedFilters] = useState<Partial<TicketQueryFilters>>(() => {

@@ -16,10 +16,11 @@ import {
   Progress,
   Tabs,
   Tooltip,
-  message,
+  App,
   Spin,
   Empty,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   BarChart,
   Bar,
@@ -48,6 +49,7 @@ const { RangePicker } = DatePicker;
 const TicketAnalytics: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const { message } = App.useApp();
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
     dayjs().subtract(30, 'day'),
     dayjs(),
@@ -157,7 +159,7 @@ const TicketAnalytics: React.FC = () => {
   };
 
   // 团队表现表格列
-  const teamColumns = [
+  const teamColumns: ColumnsType<TicketAnalyticsResponse['teamPerformance'][number]> = [
     {
       title: '处理人',
       dataIndex:'assigneeName',
@@ -167,7 +169,7 @@ const TicketAnalytics: React.FC = () => {
       title: '处理工单数',
       dataIndex:'totalHandled',
       key:'totalHandled',
-      sorter: (a: any, b: any) => a.totalHandled - b.totalHandled,
+      sorter: (a, b) => a.totalHandled - b.totalHandled,
     },
     {
       title: '已解决',
@@ -189,7 +191,7 @@ const TicketAnalytics: React.FC = () => {
   ];
 
   // 热门类别表格列
-  const categoryColumns = [
+  const categoryColumns: ColumnsType<TicketAnalyticsResponse['hotCategories'][number]> = [
     {
       title: '类别',
       dataIndex: 'category',
@@ -199,7 +201,7 @@ const TicketAnalytics: React.FC = () => {
       title: '工单数量',
       dataIndex: 'count',
       key: 'count',
-      sorter: (a: any, b: any) => a.count - b.count,
+      sorter: (a, b) => a.count - b.count,
     },
     {
       title: '趋势',
@@ -398,8 +400,8 @@ const TicketAnalytics: React.FC = () => {
           <Space>
             <RangePicker
               value={dateRange}
-              onChange={(dates: any) => {
-                if (dates && dates.length === 2) {
+              onChange={(dates) => {
+                if (dates && dates[0] && dates[1]) {
                   setDateRange([dates[0], dates[1]]);
                 }
               }}

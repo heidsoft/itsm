@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Button, Card, Form, Input, Select, message, Row, Col, Space, Divider } from 'antd';
+import { Button, Card, Form, Input, Select, App, Row, Col, Space, Divider } from 'antd';
 import { ArrowLeft, Save } from 'lucide-react';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { Incident, UpdateIncidentRequest } from '@/lib/api/incident-api';
@@ -31,6 +31,7 @@ export default function IncidentEditPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [incidentData, setIncidentData] = useState<Incident | null>(null);
+  const { message } = App.useApp();
 
   // Fetch incident data
   useEffect(() => {
@@ -42,16 +43,15 @@ export default function IncidentEditPage() {
       try {
         const resp = await IncidentAPI.getIncident(Number(id));
         if (!isMounted) return;
-        const data = resp as any;
-        setIncidentData(data);
+        setIncidentData(resp);
         form.setFieldsValue({
-          title: data.title,
-          description: data.description,
-          priority: data.priority,
-          severity: data.severity,
-          category: data.category,
-          subcategory: data.subcategory,
-          status: data.status,
+          title: resp.title,
+          description: resp.description,
+          priority: resp.priority,
+          severity: resp.severity,
+          category: resp.category,
+          subcategory: resp.subcategory,
+          status: resp.status,
         });
       } catch (error) {
         if (isMounted) {
