@@ -76,7 +76,7 @@ const MarketplacePage = () => {
         if (cancelled) return;
         // 后端响应字段已统一为 camelCase。
         // 仅保留对前端有用的字段并对缺失字段做兜底。
-        const normalized: MarketplaceItem[] = (res?.items || []).map((it: any) => ({
+        const normalized: MarketplaceItem[] = (res?.items || []).map((it: MarketplaceItem) => ({
           id: it.id,
           name: it.name,
           title: it.title || it.name,
@@ -92,10 +92,10 @@ const MarketplacePage = () => {
           latestVersion: it.latestVersion || '1.0.0',
         }));
         setItems(normalized);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (cancelled) return;
         console.error('Failed to fetch marketplace items:', error);
-        setLoadError(error?.message || '加载应用市场失败，请稍后重试');
+        setLoadError(error instanceof Error ? error.message : '加载应用市场失败，请稍后重试');
         setItems([]);
       } finally {
         if (!cancelled) setLoading(false);

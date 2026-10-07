@@ -125,9 +125,9 @@ const InstallationsPage = () => {
       setInstallations(installationRes);
       setConnectorConfigs(configRes);
       setForms(Object.fromEntries(installationRes.map(item => [item.id, makeForm(item)])));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch installations:', error);
-      setLoadError(error?.message || '加载已安装应用失败');
+      setLoadError(error instanceof Error ? error.message : '加载已安装应用失败');
       setInstallations([]);
     } finally {
       setLoading(false);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert, message } from 'antd';
+import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert, App } from 'antd';
 import {
   FileText,
   RefreshCw,
@@ -48,6 +48,7 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import type { ServiceRequestStatus } from '@/types/service-catalog';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
@@ -132,6 +133,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
 };
 
 const MyRequestsPage = () => {
+  const { message } = App.useApp();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +152,7 @@ const MyRequestsPage = () => {
       const data = await ServiceCatalogApi.getServiceRequests({
         page,
         pageSize,
-        status: (status === 'all' ? undefined : status) as any,
+        status: status === 'all' ? undefined : (status as ServiceRequestStatus),
       });
 
       setRequests(data.items as ServiceRequest[]);

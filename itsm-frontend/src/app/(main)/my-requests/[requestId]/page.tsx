@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
+  App,
   Card,
   Typography,
   Space,
@@ -11,7 +12,6 @@ import {
   Tag,
   Divider,
   Input,
-  message,
   Table,
   Alert,
 } from 'antd';
@@ -19,6 +19,28 @@ import { ArrowLeft, RotateCcw, PlayCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import type { ProvisioningTask } from '@/lib/api/service-request-api';
 import { serviceRequestAPI } from '@/lib/api/service-request-api';
+
+interface ApprovalRecord {
+  id: number;
+  level: number;
+  step: string;
+  status: string;
+  approverName?: string;
+  comment?: string;
+}
+
+interface ServiceRequestDetail {
+  status: string;
+  currentLevel?: number;
+  totalLevels?: number;
+  ciId?: number;
+  title?: string;
+  reason?: string;
+  dataClassification?: string;
+  costCenter?: string;
+  catalog?: { name?: string };
+  approvals?: ApprovalRecord[];
+}
 
 const { Title, Text } = Typography;
 
@@ -61,17 +83,18 @@ function statusTag(status: string) {
 }
 
 export default function MyRequestDetailPage() {
+  const { message } = App.useApp();
   const params = useParams();
   const router = useRouter();
   const requestId = Number(params.requestId);
 
   const [loading, setLoading] = useState(true);
-  const [detail, setDetail] = useState<any>(null);
+  const [detail, setDetail] = useState<ServiceRequestDetail | null>(null);
   const [comment, setComment] = useState('');
   const [provisioningTasks, setProvisioningTasks] = useState<ProvisioningTask[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [executing, setExecuting] = useState(false);
-  const approvals = useMemo(() => (detail?.approvals || []) as any[], [detail]);
+  const approvals = useMemo(() => detail?.approvals ?? [], [detail]);
 
   const load = async () => {
     try {
@@ -266,7 +289,7 @@ export default function MyRequestDetailPage() {
             <Text type='secondary'>暂无审批记录</Text>
           ) : (
             <Descriptions bordered column={1} size='small'>
-              {approvals.map((a: any) => (
+              {approvals.map((a) => (
                 <Descriptions.Item
                   key={a.id}
                   label={`L${a.level} · ${APPROVAL_STEP_LABEL[a.step] || a.step}`}

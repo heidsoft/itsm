@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  App,
   Card,
   Form,
   Input,
@@ -10,7 +11,6 @@ import {
   Typography,
   Space,
   Divider,
-  message,
   Row,
   Col,
   Tabs,
@@ -120,6 +120,7 @@ export default function ProfilePage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
   useAuthStoreHydration();
+  const { message } = App.useApp();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
@@ -235,7 +236,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSaveProfile = async (values: any) => {
+  const handleSaveProfile = async (values: { name: string; email: string; phone?: string; department?: string }) => {
     if (!profile?.id) {
       message.error('用户信息不完整');
       return;
@@ -263,7 +264,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSavePreferences = async (values: any) => {
+  const handleSavePreferences = async (values: { emailNotify?: boolean; desktopNotify?: boolean; timezone?: string }) => {
     try {
       setPrefsLoading(true);
       // 获取所有事件类型定义

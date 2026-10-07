@@ -605,8 +605,8 @@ export default function NotificationsPage() {
         <RangePicker
           style={{ width: '100%' }}
           value={dateRange}
-          onChange={(dates: any) => {
-            if (dates && dates.length === 2) {
+          onChange={(dates) => {
+            if (dates && dates[0] && dates[1]) {
               setDateRange([dates[0], dates[1]]);
             } else {
               setDateRange(null);

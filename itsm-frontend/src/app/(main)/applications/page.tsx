@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Tag, Space, Modal, Form, Input, Select, Tabs, message } from 'antd';
+import { App, Table, Button, Tag, Space, Modal, Form, Input, Select, Tabs } from 'antd';
 import { Plus, Pencil, Trash2, LayoutGrid, RefreshCw, Plug } from 'lucide-react';
 import { PageContainer } from '@/app/components/PageContainer';
 import type { Application, Microservice } from '@/lib/services/application-service';
@@ -12,6 +12,7 @@ import { useI18n } from '@/lib/i18n';
 
 export default function ApplicationsPage() {
   const { t } = useI18n();
+  const { message, modal } = App.useApp();
   const [activeTab, setActiveTab] = useState('applications');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'application' | 'microservice'>('application');
@@ -186,7 +187,7 @@ const handleEdit = (record: RecordData, type: 'application' | 'microservice') =>
 };
 
 const handleDelete = (record: RecordData) => {
-  Modal.confirm({
+  modal.confirm({
     title: '确认删除',
     content: `确定要删除 "${record.name}" 吗？`,
     onOk: async () => {

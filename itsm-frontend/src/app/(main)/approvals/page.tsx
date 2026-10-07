@@ -25,6 +25,7 @@ import {
   Skeleton,
   Select,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   CheckCircle,
   Clock,
@@ -103,6 +104,16 @@ interface LegacyPendingItem {
   requester?: string;
 }
 
+interface RawListItem {
+  id?: number | string;
+  title?: string;
+  status?: string;
+  priority?: string;
+  createdAt?: string;
+  scheduledStart?: string;
+  requesterName?: string;
+}
+
 const priorityColorMap: Record<string, string> = {
   critical: 'red',
   high: 'orange',
@@ -161,38 +172,38 @@ export default function ApprovalsCenterPage() {
       // 查询参数统一 camelCase，与后端 DTO form tag 契约一致。
       // 三个列表接口都返回标准信封，集合只在 data.items 下。
       const [ticketsResp, changesResp, srResp] = await Promise.all([
-        httpClient.get<{ items?: unknown[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
-        httpClient.get<{ items?: unknown[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
-        httpClient.get<{ items?: unknown[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] })),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/tickets', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/changes', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
+        httpClient.get<{ items?: RawListItem[] }>('/api/v1/service-requests', { status: 'pending', page: 1, pageSize: 20 }).catch(() => ({ items: [] as RawListItem[] })),
       ]);
       const items: LegacyPendingItem[] = [
-        ...(ticketsResp.items ?? []).map((t: any) => ({
-          id: t.id,
+        ...(ticketsResp.items ?? []).filter((t) => t.id != null).map((t) => ({
+          id: t.id!,
           type: 'ticket' as const,
           title: t.title || `工单 #${t.id}`,
-          status: t.status,
+          status: t.status || 'unknown',
           priority: t.priority,
-          createdAt: t.createdAt,
+          createdAt: t.createdAt || '',
           url: `/tickets/${t.id}`,
           requester: t.requesterName,
         })),
-        ...(changesResp.items ?? []).map((c: any) => ({
-          id: c.id,
+        ...(changesResp.items ?? []).filter((c) => c.id != null).map((c) => ({
+          id: c.id!,
           type: 'change' as const,
           title: c.title || `变更 #${c.id}`,
-          status: c.status,
+          status: c.status || 'unknown',
           priority: c.priority,
-          createdAt: c.scheduledStart || c.createdAt,
+          createdAt: c.scheduledStart || c.createdAt || '',
           url: `/changes/${c.id}`,
           requester: c.requesterName,
         })),
-        ...(srResp.items ?? []).map((s: any) => ({
-          id: s.id,
+        ...(srResp.items ?? []).filter((s) => s.id != null).map((s) => ({
+          id: s.id!,
           type: 'service_request' as const,
           title: s.title || `服务请求 #${s.id}`,
-          status: s.status,
+          status: s.status || 'unknown',
           priority: s.priority,
-          createdAt: s.createdAt,
+          createdAt: s.createdAt || '',
           url: `/service-requests/${s.id}`,
           requester: s.requesterName,
         })),
@@ -325,7 +336,7 @@ export default function ApprovalsCenterPage() {
   };
 
   // BPMN 待办表格列
-  const taskColumns = [
+  const taskColumns: ColumnsType<BpmnMyTask> = [
     {
       title: '任务',
       dataIndex: 'taskName',
@@ -359,7 +370,7 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'processDefinitionKey',
       key: 'processDefinitionKey',
       width: 180,
-      responsive: ['lg'] as any,
+      responsive: ['lg'],
       render: (key: string) => key ? <Tag icon={<GitBranch className="w-3 h-3 inline mr-1" />}>{key}</Tag> : '-',
     },
     {
@@ -377,7 +388,7 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'assignee',
       key: 'assignee',
       width: 110,
-      responsive: ['md'] as any,
+      responsive: ['md'],
       render: (assignee: string, record: BpmnMyTask) =>
         record.assigneeName ||
         (assignee ? '未识别' : <Text type="secondary">未领取</Text>),
@@ -387,7 +398,7 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'createdTime',
       key: 'createdTime',
       width: 130,
-      responsive: ['xl'] as any,
+      responsive: ['xl'],
       render: (t: string) => t ? (
         <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
           <span className="text-gray-500">{dayjs(t).fromNow()}</span>
@@ -451,7 +462,7 @@ export default function ApprovalsCenterPage() {
   ];
 
   // 旧业务参考视图表格列（只读，仅提供跳转）
-  const legacyColumns = [
+  const legacyColumns: ColumnsType<LegacyPendingItem> = [
     {
       title: '类型',
       dataIndex: 'type',
@@ -495,7 +506,7 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'requester',
       key: 'requester',
       width: 110,
-      responsive: ['md'] as any,
+      responsive: ['md'],
       render: (name: string) => name || '-',
     },
     {
@@ -503,7 +514,7 @@ export default function ApprovalsCenterPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 130,
-      responsive: ['lg'] as any,
+      responsive: ['lg'],
       render: (t: string) => t ? (
         <Tooltip title={dayjs(t).format('YYYY-MM-DD HH:mm:ss')}>
           <span className="text-gray-500">{dayjs(t).fromNow()}</span>

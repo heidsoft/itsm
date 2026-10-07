@@ -81,10 +81,10 @@ const MarketplaceDetailPage = () => {
         if (cancelled) return;
         setItem(itemRes);
         setInstallation(installationRes);
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (cancelled) return;
         console.error('Failed to fetch marketplace item detail:', error);
-        setLoadError(error?.message || '加载应用详情失败');
+        setLoadError(error instanceof Error ? error.message : '加载应用详情失败');
       } finally {
         if (!cancelled) setLoading(false);
       }
