@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { Form, Input, Select, Button, Card, message, Alert, Spin } from 'antd';
+import { Form, Input, Select, Button, Card, App, Alert, Spin } from 'antd';
 import { ProblemApi } from '@/lib/api/problem-api';
 import { ProblemPriority, ProblemCategoryOptions } from '@/constants/problem';
 import { useI18n } from '@/lib/i18n';
@@ -16,6 +16,7 @@ const CreateProblemPageContent = () => {
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
 
   useEffect(() => {
     const incidentId = searchParams.get('fromIncidentId');
@@ -32,7 +33,14 @@ const CreateProblemPageContent = () => {
     }
   }, [searchParams, form]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: {
+    title: string;
+    description: string;
+    priority: string;
+    category: string;
+    rootCause: string;
+    impact: string;
+  }) => {
     setLoading(true);
     try {
       await ProblemApi.createProblem({
@@ -42,7 +50,6 @@ const CreateProblemPageContent = () => {
         category: values.category,
         rootCause: values.rootCause,
         impact: values.impact,
-        assigneeId: values.assigneeId,
       });
 
       message.success(t('problems.createSuccess'));

@@ -11,7 +11,7 @@ import {
   Tag,
   Modal,
   Form,
-  message,
+  App,
   Popconfirm,
   Row,
   Col,
@@ -22,7 +22,7 @@ import {
   Tooltip,
 } from 'antd';
 import { Search, Plus, Pencil, Trash2, Eye, RotateCcw, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { KEDBResponse, KEDBStatsResponse } from '@/lib/api/kedb-api';
 import { KEDBApi } from '@/lib/api/kedb-api';
 
@@ -46,6 +46,7 @@ const severityConfig: Record<string, { color: string; text: string }> = {
 };
 
 export default function KnownErrorsPage() {
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<KEDBResponse[]>([]);
   const [stats, setStats] = useState<KEDBStatsResponse | null>(null);
@@ -122,8 +123,8 @@ export default function KnownErrorsPage() {
     fetchData();
   };
 
-  const handleTableChange = (pag: any) => {
-    setPagination({ ...pagination, current: pag.current, pageSize: pag.pageSize });
+  const handleTableChange = (pag: TablePaginationConfig) => {
+    setPagination({ ...pagination, current: pag.current || 1, pageSize: pag.pageSize || 20 });
     fetchData();
   };
 

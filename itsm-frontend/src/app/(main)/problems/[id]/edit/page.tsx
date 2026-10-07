@@ -12,6 +12,18 @@ import {
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
+
+interface ProblemData {
+  id: number;
+  title: string;
+  description: string;
+  priority: string;
+  category: string;
+  status: string;
+  rootCause: string;
+  impact: string;
+}
+
 export default function ProblemEditPage() {
   const router = useRouter();
   const params = useParams();
@@ -21,7 +33,7 @@ export default function ProblemEditPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [problemData, setProblemData] = useState<any>(null);
+  const [problemData, setProblemData] = useState<ProblemData | null>(null);
 
   // Fetch problem data
   useEffect(() => {
@@ -30,8 +42,7 @@ export default function ProblemEditPage() {
     const fetchProblem = async () => {
       setFetching(true);
       try {
-        const resp = await ProblemApi.getProblem(Number(id));
-        const data = resp as any;
+        const data = await ProblemApi.getProblem(Number(id));
         setProblemData(data);
         // 后端可能带不在前枚举里的 category（旧数据 / 脏数据），
         // antd v6 Select 不识别时表现为“空白”，此处直接显示原始字符串 + 后缀提示。
@@ -60,7 +71,15 @@ export default function ProblemEditPage() {
     fetchProblem();
   }, [id, form, router]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: {
+    title: string;
+    description: string;
+    priority: string;
+    category: string;
+    status: string;
+    rootCause: string;
+    impact: string;
+  }) => {
     if (!id) return;
 
     setLoading(true);

@@ -16,7 +16,7 @@ import {
   Table,
   Tag,
   Progress,
-  message,
+  App,
 } from 'antd';
 import { useRouter } from 'next/navigation';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -40,6 +40,7 @@ const trendDirectionConfig: Record<string, { color: string; icon: React.ReactNod
 export default function ProblemTrendsPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const [loading, setLoading] = useState(false);
   const [trendData, setTrendData] = useState<ProblemTrendData | null>(null);
@@ -123,7 +124,7 @@ export default function ProblemTrendsPage() {
     {
       title: '解决率',
       key: 'rate',
-      render: (_: any, record: { count: number; resolved: number }) => {
+      render: (_value: unknown, record: { count: number; resolved: number }) => {
         const rate = record.count > 0 ? (record.resolved / record.count) * 100 : 0;
         return <Progress percent={Math.round(rate)} size="small" strokeColor="#52c41a" />;
       },

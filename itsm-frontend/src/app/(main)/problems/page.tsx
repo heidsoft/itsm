@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, message, Pagination, Select } from 'antd';
+import { Button, App, Pagination, Select } from 'antd';
 import {
   Plus,
   RotateCcw,
@@ -29,6 +29,7 @@ type View = 'list' | 'kanban';
 export default function ProblemListPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const kanbanColumns = useMemo<KanbanColumnConfig<Problem>[]>(
     () => [
