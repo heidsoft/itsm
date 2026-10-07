@@ -7,10 +7,12 @@ import { useRouter } from 'next/navigation';
 import AssetList from '@/components/asset/AssetList';
 import { AssetApi } from '@/lib/api/asset-api';
 import BusinessPageTemplate from '@/components/layout/BusinessPageTemplate';
+import { useI18n } from '@/lib/i18n/useI18n';
 
 export default function AssetsPage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
   const [stats, setStats] = useState({
@@ -32,7 +34,7 @@ export default function AssetsPage() {
       });
     } catch (error) {
       console.error('Failed to fetch asset stats:', error);
-      message.error('获取资产统计数据失败，请稍后重试');
+      message.error(t('assets.loadStatsFailed'));
     } finally {
       setLoading(false);
     }
@@ -44,25 +46,25 @@ export default function AssetsPage() {
 
   const statsData = [
     {
-      label: '资产总数',
+      label: t('assets.totalAssets'),
       value: stats.totalAssets,
       color: '#1890ff',
       icon: <Package className="h-5 w-5" />,
     },
     {
-      label: '使用中',
+      label: t('assets.inUse'),
       value: stats.inUse,
       color: '#52c41a',
       icon: <CheckCircle className="h-5 w-5" />,
     },
     {
-      label: '可用',
+      label: t('assets.available'),
       value: stats.available,
       color: '#1890ff',
       icon: <Package className="h-5 w-5" />,
     },
     {
-      label: '维护中',
+      label: t('assets.maintenance'),
       value: stats.maintenance,
       color: '#fa8c16',
       icon: <Clock className="h-5 w-5" />,
@@ -71,15 +73,15 @@ export default function AssetsPage() {
 
   return (
     <BusinessPageTemplate
-      title="资产管理"
-      description="管理企业IT资产，包括硬件、软件、云资源和许可证"
+      title={t('assets.title')}
+      description={t('assets.description')}
       stats={statsData}
       statsLoading={loading}
-      searchPlaceholder="搜索资产名称、编号、型号..."
+      searchPlaceholder={t('assets.searchPlaceholder')}
       searchValue={searchValue}
       onSearch={setSearchValue}
       primaryAction={{
-        label: '新增资产',
+        label: t('assets.addAsset'),
         icon: <Plus className="h-4 w-4" />,
         onClick: () => router.push('/assets/new'),
       }}

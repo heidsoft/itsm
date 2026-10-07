@@ -11,7 +11,7 @@ import {
   Button,
   Tag,
   Table,
-  message,
+  App,
   Spin,
   Alert,
   Input,
@@ -31,7 +31,7 @@ import {
 import { useRouter } from 'next/navigation';
 import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
-import { ArticleStatus } from '@/types/knowledge-base';
+import { ArticleStatus, type KnowledgeArticle } from '@/types/knowledge-base';
 import { httpClient } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n/useI18n';
 
@@ -62,6 +62,7 @@ const freshnessLabel = (result: {
 export default function KnowledgePage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('list');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +70,7 @@ export default function KnowledgePage() {
 
   // AI 智能搜索
   const [aiSearchQuery, setAiSearchQuery] = useState('');
-  const [aiSearchResults, setAiSearchResults] = useState<any[]>([]);
+  const [aiSearchResults, setAiSearchResults] = useState<Array<Record<string, unknown>>>([]);
   const [aiSearchLoading, setAiSearchLoading] = useState(false);
   const [aiSearchError, setAiSearchError] = useState<string | null>(null);
   const [showAiSearch, setShowAiSearch] = useState(false);
@@ -129,18 +130,18 @@ export default function KnowledgePage() {
         views: kbStats.views || 0,
         rating: typeof kbStats.rating === 'number' ? kbStats.rating : 0,
         categories: Array.isArray(kbStats.categories)
-          ? kbStats.categories.map((c: any) => ({ name: c.name, count: c.count }))
+          ? kbStats.categories.map((c: Record<string, unknown>) => ({ name: String(c.name ?? ''), count: Number(c.count ?? 0) }))
           : [],
       });
 
       const articles = articlesData.items ?? [];
-      const mappedArticles = articles.map((a: any) => ({
-        id: String(a.id),
+      const mappedArticles = articles.map((a: KnowledgeArticle) => ({
+        id: String(a.id ?? ''),
         title: a.title || '',
-        views: a.views || 0,
-        author: a.author || '-',
-        date: a.publishedAt ? new Date(a.publishedAt).toLocaleDateString() : '-',
-        category: a.category || '-',
+        views: a.viewCount ?? 0,
+        author: a.authorName || '-',
+        date: 'publishedAt' in a && a.publishedAt ? new Date(String(a.publishedAt)).toLocaleDateString() : '-',
+        category: a.categoryName || '-',
       }));
 
       setRecentArticles(mappedArticles);
@@ -166,7 +167,7 @@ export default function KnowledgePage() {
     setAiSearchError(null);
 
     try {
-      const response = await httpClient.post<{ results: any[]; degraded?: boolean }>(
+      const response = await httpClient.post<{ results: Array<Record<string, unknown>>; degraded?: boolean }>(
         '/api/v1/ai/rag/search',
         {
           query: aiSearchQuery,
@@ -175,7 +176,7 @@ export default function KnowledgePage() {
         }
       );
 
-      const answers = (response as any)?.results || [];
+      const answers = (response as { results?: Array<Record<string, unknown>> })?.results ?? [];
       setAiSearchResults(Array.isArray(answers) ? answers : []);
       setShowAiSearch(true);
       if (Array.isArray(answers) && answers.length === 0) {
@@ -200,7 +201,7 @@ export default function KnowledgePage() {
         title: t('knowledgeBase.titleCol'),
         dataIndex: 'title',
         key: 'title',
-        render: (text: string, record: any) => (
+        render: (text: string, record: Record<string, unknown>) => (
           <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
         ),
       },
@@ -240,7 +241,7 @@ export default function KnowledgePage() {
         title: t('knowledgeBase.rank'),
         key: 'rank',
         width: 60,
-        render: (_: any, __: any, index: number) => (
+        render: (_: unknown, __: unknown, index: number) => (
           <span className="font-bold text-blue-500">#{index + 1}</span>
         ),
       },
@@ -248,7 +249,7 @@ export default function KnowledgePage() {
         title: t('knowledgeBase.titleCol'),
         dataIndex: 'title',
         key: 'title',
-        render: (text: string, record: any) => (
+        render: (text: string, record: Record<string, unknown>) => (
           <a onClick={() => router.push(`/knowledge/articles/${record.id}`)}>{text}</a>
         ),
       },
@@ -394,53 +395,63 @@ export default function KnowledgePage() {
           )}
           {aiSearchResults.length > 0 ? (
             <div className="space-y-3">
-              {aiSearchResults.map((result: any, index: number) => (
+              {aiSearchResults.map((result, index) => {
+                const resultId = String(result.id ?? '');
+                const resultTitle = String(result.title ?? t('knowledgeBase.aiSearchUnnamed'));
+                const resultCategory = result.category ? String(result.category) : undefined;
+                const authorityLevel = typeof result.authorityLevel === 'number' ? result.authorityLevel : undefined;
+                const isRestricted = typeof result.isRestricted === 'boolean' ? result.isRestricted : undefined;
+                const score = typeof result.score === 'number' ? result.score : 0;
+                const snippet = result.snippet ? String(result.snippet) : undefined;
+
+                return (
                 <Card
                   key={index}
                   size="small"
                   hoverable
-                  onClick={() => router.push(`/knowledge/articles/${result.id}`)}
+                  onClick={() => router.push(`/knowledge/articles/${resultId}`)}
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <Text strong>{result.title || t('knowledgeBase.aiSearchUnnamed')}</Text>
-                      {result.category && <Tag className="ml-2">{result.category}</Tag>}
+                      <Text strong>{resultTitle}</Text>
+                      {resultCategory && <Tag className="ml-2">{resultCategory}</Tag>}
                       {/* 可信 RAG：权威等级标签 */}
-                      {typeof result.authorityLevel === 'number' && result.authorityLevel > 0 && (
+                      {authorityLevel !== undefined && authorityLevel > 0 && (
                         <Tag color="gold" className="ml-1">
-                          {authorityLabel(result.authorityLevel)}
+                          {authorityLabel(authorityLevel)}
                         </Tag>
                       )}
                     </div>
                     <div className="flex items-center gap-1 flex-wrap justify-end">
                       {/* 可信 RAG：权限标签（分类级可见性守卫 L0） */}
-                      {typeof result.isRestricted === 'boolean' && (
-                        <Tag color={result.isRestricted ? 'red' : 'green'}>
-                          {result.isRestricted ? '受限' : '公开'}
+                      {isRestricted !== undefined && (
+                        <Tag color={isRestricted ? 'red' : 'green'}>
+                          {isRestricted ? '受限' : '公开'}
                         </Tag>
                       )}
                       <Tag
-                        color={result.score > 0.8 ? 'green' : result.score > 0.5 ? 'blue' : 'default'}
+                        color={score > 0.8 ? 'green' : score > 0.5 ? 'blue' : 'default'}
                       >
                         {t('knowledgeBase.aiSearchMatchScore', {
-                          score: Math.round((result.score || 0) * 100),
+                          score: Math.round(score * 100),
                         })}
                       </Tag>
                     </div>
                   </div>
-                  {result.snippet && (
+                  {snippet && (
                     <Text type="secondary" className="block mt-2">
-                      {result.snippet}
+                      {snippet}
                     </Text>
                   )}
                   {/* 可信 RAG：时效标签（L1 已过滤失效/未生效/逾期复核，此处展示有效期窗口） */}
-                  {freshnessLabel(result) && (
+                  {freshnessLabel(result as { validFrom?: string; validUntil?: string }) && (
                     <div className="mt-2">
-                      <Tag color="cyan">{freshnessLabel(result)}</Tag>
+                      <Tag color="cyan">{freshnessLabel(result as { validFrom?: string; validUntil?: string })}</Tag>
                     </div>
                   )}
                 </Card>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <Empty description={t('knowledgeBase.aiSearchEmpty')} />

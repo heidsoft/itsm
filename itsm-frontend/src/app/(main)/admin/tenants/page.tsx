@@ -43,43 +43,47 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { TenantAPI } from '@/lib/api/tenant-api';
 import type { TenantInitializationStatus } from '@/lib/api/api-config';
+import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 
-// 租户状态配置
-const TENANT_STATUS = {
+type TranslatorFn = (key: string, params?: Record<string, string | number>) => string;
+
+const getTenantStatusConfig = (t: TranslatorFn) => ({
   active: {
-    label: '活跃',
+    label: t('tenants.statusLabels.active'),
     color: 'success',
     icon: CheckCircle,
   },
   suspended: {
-    label: '暂停',
+    label: t('tenants.statusLabels.suspended'),
     color: 'warning',
     icon: AlertCircle,
   },
-  expired: { label: '过期', color: 'error', icon: AlertCircle },
-  deleted: { label: '已删除', color: 'default', icon: AlertCircle },
-};
+  expired: { label: t('tenants.statusLabels.expired'), color: 'error', icon: AlertCircle },
+  deleted: { label: t('tenants.statusLabels.deleted'), color: 'default', icon: AlertCircle },
+});
 
-// 租户类型配置
-const TENANT_TYPES = {
-  standard: { label: '标准租户', color: 'blue' },
-  internal: { label: '内部组织', color: 'cyan' },
-  saasCustomer: { label: 'SaaS客户', color: 'green' },
-  mspProvider: { label: 'MSP服务商', color: 'gold' },
-  mspCustomer: { label: 'MSP客户', color: 'purple' },
-  msp: { label: 'MSP兼容', color: 'orange' },
-  customer: { label: '客户兼容', color: 'default' },
-};
+const getTenantTypeConfig = (t: TranslatorFn) => ({
+  standard: { label: t('tenants.typeLabels.standard'), color: 'blue' },
+  internal: { label: t('tenants.typeLabels.internal'), color: 'cyan' },
+  saasCustomer: { label: t('tenants.typeLabels.saasCustomer'), color: 'green' },
+  mspProvider: { label: t('tenants.typeLabels.mspProvider'), color: 'gold' },
+  mspCustomer: { label: t('tenants.typeLabels.mspCustomer'), color: 'purple' },
+  msp: { label: t('tenants.typeLabels.msp'), color: 'orange' },
+  customer: { label: t('tenants.typeLabels.customer'), color: 'default' },
+});
+
+type TenantStatusKey = 'active' | 'suspended' | 'expired' | 'deleted';
+type TenantTypeKey = 'standard' | 'internal' | 'saasCustomer' | 'mspProvider' | 'mspCustomer' | 'msp' | 'customer';
 
 type Tenant = {
   id: number;
   name: string;
   code: string;
   domain?: string;
-  type: keyof typeof TENANT_TYPES;
-  status: keyof typeof TENANT_STATUS;
+  type: TenantTypeKey;
+  status: TenantStatusKey;
   userCount?: number;
   ticketCount?: number;
   expiresAt?: string;
@@ -98,6 +102,9 @@ type TenantFormValues = {
 
 export default function TenantManagement() {
   const { message } = App.useApp();
+  const { t } = useI18n();
+  const TENANT_STATUS = getTenantStatusConfig(t);
+  const TENANT_TYPES = getTenantTypeConfig(t);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -136,13 +143,13 @@ export default function TenantManagement() {
       // 计算统计数据
       const total = response.items.length;
       const active = response.items.filter(
-        (t: { status: string }) => t.status === 'active'
+        (item: { status: string }) => item.status === 'active'
       ).length;
       const suspended = response.items.filter(
-        (t: { status: string }) => t.status === 'suspended'
+        (item: { status: string }) => item.status === 'suspended'
       ).length;
       const expired = response.items.filter(
-        (t: { status: string }) => t.status === 'expired'
+        (item: { status: string }) => item.status === 'expired'
       ).length;
 
       setStats({
@@ -152,7 +159,7 @@ export default function TenantManagement() {
         expired,
       });
     } catch (error) {
-      message.error('加载租户数据失败');
+      message.error(t('tenants.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -178,14 +185,14 @@ export default function TenantManagement() {
       if (selectedTenant) {
         // 更新租户
         await TenantAPI.updateTenant(selectedTenant.id, payload);
-        message.success('租户更新成功');
+        message.success(t('tenants.updateSuccess'));
       } else {
         // 创建租户
         await TenantAPI.createTenant({
           ...payload,
           code: values.code,
         });
-        message.success('租户创建成功');
+        message.success(t('tenants.createSuccess'));
       }
 
       setShowModal(false);
@@ -193,7 +200,7 @@ export default function TenantManagement() {
       setSelectedTenant(null);
       loadTenants(); // 重新加载数据
     } catch (error) {
-      message.error('保存租户失败');
+      message.error(t('tenants.saveFailed'));
     }
   };
 
@@ -215,21 +222,21 @@ export default function TenantManagement() {
   const handleDeleteTenant = async (id: number) => {
     try {
       await TenantAPI.deleteTenant(id);
-      message.success('租户删除成功');
+      message.success(t('tenants.deleteSuccess'));
       loadTenants(); // 重新加载数据
     } catch (error) {
-      message.error('删除租户失败');
+      message.error(t('tenants.deleteFailed'));
     }
   };
 
-  const handleChangeTenantStatus = async (tenant: Tenant, status: keyof typeof TENANT_STATUS) => {
+  const handleChangeTenantStatus = async (tenant: Tenant, status: TenantStatusKey) => {
     setLoading(true);
     try {
       await TenantAPI.updateTenant(tenant.id, { status });
-      message.success(`租户状态已更新为${TENANT_STATUS[status].label}`);
+      message.success(t('tenants.statusUpdateSuccess', { status: TENANT_STATUS[status].label }));
       loadTenants();
     } catch (error) {
-      message.error('更新租户状态失败');
+      message.error(t('tenants.statusUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -268,10 +275,10 @@ export default function TenantManagement() {
     setReplaying(true);
     try {
       await TenantAPI.replayInitializationCommand(entry.commandId);
-      message.success('已重放产品基线安装命令');
+      message.success(t('tenants.replaySuccess'));
       await loadInitStatus(initDrawerTenant!.id);
     } catch (error) {
-      message.error('重放失败，请查看运维命令详情');
+      message.error(t('tenants.replayFailed'));
     } finally {
       setReplaying(false);
     }
@@ -280,8 +287,9 @@ export default function TenantManagement() {
   // 表格列定义
   const columns: ColumnsType<Tenant> = [
     {
-      title: '租户信息',
+      title: t('tenants.columns.info'),
       key: 'info',
+      width: 200,
       render: (_: unknown, record: Tenant) => (
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -297,8 +305,9 @@ export default function TenantManagement() {
       ),
     },
     {
-      title: '类型/状态',
+      title: t('tenants.columns.typeStatus'),
       key: 'type-status',
+      width: 120,
       render: (_: unknown, record: Tenant) => (
         <div className="space-y-1">
           <Tag color={TENANT_TYPES[record.type]?.color || 'default'}>
@@ -313,49 +322,51 @@ export default function TenantManagement() {
       ),
     },
     {
-      title: '资源使用',
+      title: t('tenants.columns.usage'),
       key: 'usage',
+      width: 130,
       render: (_: unknown, record: Tenant) => (
         <div className="space-y-1">
           <div className="flex items-center">
             <Users className="w-4 h-4 mr-1 text-gray-400" />
-            <span>{record.userCount || 0} 用户</span>
+            <span>{record.userCount || 0} {t('tenants.usage.users')}</span>
           </div>
-          <div className="text-xs text-gray-500">{record.ticketCount || 0} 工单</div>
+          <div className="text-xs text-gray-500">{record.ticketCount || 0} {t('tenants.usage.tickets')}</div>
         </div>
       ),
     },
     {
-      title: '到期时间',
+      title: t('tenants.columns.expires'),
       key: 'expires',
       dataIndex: 'expiresAt',
+      width: 150,
       render: (expiresAt: string) => (
         <div className="flex items-center">
           <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-          {expiresAt ? new Date(expiresAt).toLocaleDateString() : '无'}
+          {expiresAt ? new Date(expiresAt).toLocaleDateString() : t('tenants.usage.none')}
         </div>
       ),
     },
     {
-      title: '初始化',
+      title: t('tenants.columns.initialization'),
       key: 'initialization',
       width: 150,
       render: (_: unknown, record: Tenant) => {
         const entry = initStatuses[record.id];
         if (entry === 'loading') {
-          return <Text type="secondary">查询中…</Text>;
+          return <Text type="secondary">{t('tenants.initialization.querying')}</Text>;
         }
         if (entry === 'error') {
           return (
             <Button type="link" size="small" onClick={() => void loadInitStatus(record.id)}>
-              重试
+              {t('tenants.initialization.retry')}
             </Button>
           );
         }
         if (!entry) {
           return (
             <Button type="link" size="small" onClick={() => void openInitDrawer(record)}>
-              查询
+              {t('tenants.initialization.query')}
             </Button>
           );
         }
@@ -363,32 +374,32 @@ export default function TenantManagement() {
         return (
           <div className="space-y-1">
             <Tag color={entry.ready ? 'success' : 'error'}>
-              {entry.ready ? '基线就绪' : `${failed.length} 项未就绪`}
+              {entry.ready ? t('tenants.initialization.baselineReady') : t('tenants.initialization.itemsNotReady', { count: failed.length })}
             </Tag>
             <Button type="link" size="small" onClick={() => void openInitDrawer(record)}>
-              详情
+              {t('tenants.initialization.details')}
             </Button>
           </div>
         );
       },
     },
     {
-      title: '操作',
+      title: t('tenants.columns.actions'),
       key: 'actions',
       width: 120,
       render: (_: unknown, record: Tenant) => (
         <Space size="small">
-          <Tooltip title="编辑">
+          <Tooltip title={t('tenants.actions.edit')}>
             <Button
-              aria-label="编辑"
+              aria-label={t('tenants.actions.edit')}
               type="text"
               icon={<Edit className="w-4 h-4" />}
               onClick={() => openTenantModal(record)}
             />
           </Tooltip>
-          <Tooltip title="查看">
+          <Tooltip title={t('tenants.actions.view')}>
             <Button
-              aria-label="查看"
+              aria-label={t('tenants.actions.view')}
               type="text"
               icon={<Eye className="w-4 h-4" />}
               onClick={() => openTenantModal(record, true)}
@@ -396,13 +407,13 @@ export default function TenantManagement() {
           </Tooltip>
           {record.status === 'active' ? (
             record.code === 'default' ? (
-              <Tooltip title="系统默认租户不可暂停（会导致整站无法访问）">
-                <Button aria-label="系统默认租户不可暂停（会导致整站无法访问）" type="text" disabled icon={<PauseCircle className="w-4 h-4" />} />
+              <Tooltip title={t('tenants.actions.cannotPauseDefault')}>
+                <Button aria-label={t('tenants.actions.cannotPauseDefault')} type="text" disabled icon={<PauseCircle className="w-4 h-4" />} />
               </Tooltip>
             ) : (
-              <Tooltip title="暂停租户">
+              <Tooltip title={t('tenants.actions.pause')}>
                 <Button
-                  aria-label="暂停租户"
+                  aria-label={t('tenants.actions.pause')}
                   type="text"
                   icon={<PauseCircle className="w-4 h-4" />}
                   onClick={() => handleChangeTenantStatus(record, 'suspended')}
@@ -410,9 +421,9 @@ export default function TenantManagement() {
               </Tooltip>
             )
           ) : (
-            <Tooltip title="恢复租户">
+            <Tooltip title={t('tenants.actions.resume')}>
               <Button
-                aria-label="恢复租户"
+                aria-label={t('tenants.actions.resume')}
                 type="text"
                 icon={<PlayCircle className="w-4 h-4" />}
                 onClick={() => handleChangeTenantStatus(record, 'active')}
@@ -420,19 +431,19 @@ export default function TenantManagement() {
             </Tooltip>
           )}
           {record.code === 'default' ? (
-            <Tooltip title="系统默认租户不可删除">
-              <Button aria-label="系统默认租户不可删除" type="text" danger disabled icon={<Trash2 className="w-4 h-4" />} />
+            <Tooltip title={t('tenants.actions.cannotDeleteDefault')}>
+              <Button aria-label={t('tenants.actions.cannotDeleteDefault')} type="text" danger disabled icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           ) : (
             <Popconfirm
-              title="确认删除"
-              description="确定要删除这个租户吗？此操作不可恢复。"
+              title={t('tenants.confirmDelete')}
+              description={t('tenants.deleteWarning')}
               onConfirm={() => handleDeleteTenant(record.id)}
-              okText="确认"
-              cancelText="取消"
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
             >
-              <Tooltip title="删除">
-                <Button aria-label="删除" type="text" danger icon={<Trash2 className="w-4 h-4" />} />
+              <Tooltip title={t('tenants.actions.delete')}>
+                <Button aria-label={t('tenants.actions.delete')} type="text" danger icon={<Trash2 className="w-4 h-4" />} />
               </Tooltip>
             </Popconfirm>
           )}
@@ -446,9 +457,9 @@ export default function TenantManagement() {
       <div>
         <Title level={2} className="!mb-2">
           <Building2 className="inline-block w-6 h-6 mr-2" />
-          租户管理
+          {t('tenants.title')}
         </Title>
-        <Text type="secondary">管理系统中的租户和组织</Text>
+        <Text type="secondary">{t('tenants.description')}</Text>
       </div>
 
       {/* 统计卡片 */}
@@ -456,7 +467,7 @@ export default function TenantManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="总租户数"
+              title={t('tenants.totalTenants')}
               value={stats.total}
               prefix={<Building2 className="w-5 h-5" />}
             />
@@ -465,7 +476,7 @@ export default function TenantManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="活跃租户"
+              title={t('tenants.activeTenants')}
               value={stats.active}
               prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
@@ -475,7 +486,7 @@ export default function TenantManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="暂停租户"
+              title={t('tenants.suspendedTenants')}
               value={stats.suspended}
               prefix={<AlertCircle className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
@@ -485,7 +496,7 @@ export default function TenantManagement() {
         <Col xs={24} sm={12} lg={6}>
           <Card className="enterprise-card">
             <Statistic
-              title="过期租户"
+              title={t('tenants.expiredTenants')}
               value={stats.expired}
               prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -499,7 +510,7 @@ export default function TenantManagement() {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={12} lg={8}>
             <Input
-              placeholder="搜索租户名称、编码或域名..."
+              placeholder={t('tenants.searchPlaceholder')}
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -508,32 +519,32 @@ export default function TenantManagement() {
           </Col>
           <Col xs={24} md={8} lg={4}>
             <Select
-              placeholder="筛选状态"
+              placeholder={t('tenants.filterStatus')}
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
               options={[
-                { value: 'all', label: '全部状态' },
-                { value: 'active', label: '活跃' },
-                { value: 'suspended', label: '暂停' },
-                { value: 'expired', label: '过期' },
-                { value: 'deleted', label: '已删除' },
+                { value: 'all', label: t('tenants.allStatus') },
+                { value: 'active', label: t('tenants.statusLabels.active') },
+                { value: 'suspended', label: t('tenants.statusLabels.suspended') },
+                { value: 'expired', label: t('tenants.statusLabels.expired') },
+                { value: 'deleted', label: t('tenants.statusLabels.deleted') },
               ]}
             />
           </Col>
           <Col xs={24} md={8} lg={4}>
             <Select
-              placeholder="筛选类型"
+              placeholder={t('tenants.filterType')}
               value={typeFilter}
               onChange={setTypeFilter}
               style={{ width: '100%' }}
               options={[
-                { value: 'all', label: '全部类型' },
-                { value: 'standard', label: '标准租户' },
-                { value: 'internal', label: '内部组织' },
-                { value: 'saas_customer', label: 'SaaS客户' },
-                { value: 'msp_provider', label: 'MSP服务商' },
-                { value: 'msp_customer', label: 'MSP客户' },
+                { value: 'all', label: t('tenants.allTypes') },
+                { value: 'standard', label: t('tenants.typeLabels.standard') },
+                { value: 'internal', label: t('tenants.typeLabels.internal') },
+                { value: 'saas_customer', label: t('tenants.typeLabels.saasCustomer') },
+                { value: 'msp_provider', label: t('tenants.typeLabels.mspProvider') },
+                { value: 'msp_customer', label: t('tenants.typeLabels.mspCustomer') },
               ]}
             />
           </Col>
@@ -545,7 +556,7 @@ export default function TenantManagement() {
                 openTenantModal(null);
               }}
             >
-              新建租户
+              {t('tenants.create')}
             </Button>
           </Col>
         </Row>
@@ -564,7 +575,7 @@ export default function TenantManagement() {
             pageSize: 10,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: total => t('tenants.pagination.total', { total }),
           }}
           className="enterprise-table"
         />
@@ -572,7 +583,7 @@ export default function TenantManagement() {
 
       {/* 产品基线安装状态抽屉 */}
       <Drawer
-        title={initDrawerTenant ? `初始化状态 · ${initDrawerTenant.name}` : '初始化状态'}
+        title={initDrawerTenant ? t('tenants.initialization.drawerTitleWithTenant', { name: initDrawerTenant.name }) : t('tenants.initialization.drawerTitle')}
         open={Boolean(initDrawerTenant)}
         onClose={() => setInitDrawerTenant(null)}
         width={560}
@@ -583,7 +594,7 @@ export default function TenantManagement() {
                 size="small"
                 onClick={() => void loadInitStatus(initDrawerTenant.id)}
               >
-                刷新
+                {t('tenants.initialization.refresh')}
               </Button>
               {(() => {
                 const entry = initStatuses[initDrawerTenant.id];
@@ -599,7 +610,7 @@ export default function TenantManagement() {
                     loading={replaying}
                     onClick={() => void handleReplayInstallation()}
                   >
-                    重放安装
+                    {t('tenants.initialization.replayInstall')}
                   </Button>
                 ) : null;
               })()}
@@ -610,30 +621,30 @@ export default function TenantManagement() {
         {(() => {
           const entry = initDrawerTenant ? initStatuses[initDrawerTenant.id] : undefined;
           if (!entry) {
-            return <Text type="secondary">尚未查询</Text>;
+            return <Text type="secondary">{t('tenants.initialization.notQueried')}</Text>;
           }
           if (entry === 'loading') {
-            return <Text type="secondary">查询中…</Text>;
+            return <Text type="secondary">{t('tenants.initialization.querying')}</Text>;
           }
           if (entry === 'error') {
-            return <Text type="danger">状态获取失败，请点击刷新重试</Text>;
+            return <Text type="danger">{t('tenants.initialization.queryFailed')}</Text>;
           }
           return (
             <div className="space-y-4">
               <Descriptions column={1} size="small" bordered>
-                <Descriptions.Item label="基线就绪">
-                  <Tag color={entry.ready ? 'success' : 'error'}>{entry.ready ? '是' : '否'}</Tag>
+                <Descriptions.Item label={t('tenants.initialization.baselineReadyLabel')}>
+                  <Tag color={entry.ready ? 'success' : 'error'}>{entry.ready ? t('tenants.initialization.yes') : t('tenants.initialization.no')}</Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="安装命令">
+                <Descriptions.Item label={t('tenants.initialization.installCommand')}>
                   {entry.commandStatus}
-                  {entry.commandAttempts > 0 ? `（第 ${entry.commandAttempts} 次尝试）` : ''}
+                  {entry.commandAttempts > 0 ? t('tenants.initialization.attemptCount', { count: entry.commandAttempts }) : ''}
                 </Descriptions.Item>
-                <Descriptions.Item label="模板版本">{entry.templateVersion}</Descriptions.Item>
+                <Descriptions.Item label={t('tenants.initialization.templateVersion')}>{entry.templateVersion}</Descriptions.Item>
                 {entry.recordedVersion ? (
-                  <Descriptions.Item label="历史版本标记">{entry.recordedVersion}</Descriptions.Item>
+                  <Descriptions.Item label={t('tenants.initialization.recordedVersion')}>{entry.recordedVersion}</Descriptions.Item>
                 ) : null}
                 {entry.commandError ? (
-                  <Descriptions.Item label="命令错误">
+                  <Descriptions.Item label={t('tenants.initialization.commandError')}>
                     <Text type="danger">{entry.commandError}</Text>
                   </Descriptions.Item>
                 ) : null}
@@ -644,17 +655,17 @@ export default function TenantManagement() {
                 pagination={false}
                 dataSource={entry.components}
                 columns={[
-                  { title: '组件', dataIndex: 'component' },
+                  { title: t('tenants.initialization.component'), dataIndex: 'component' },
                   {
-                    title: '状态',
+                    title: t('tenants.initialization.status'),
                     dataIndex: 'verified',
                     width: 90,
                     render: (verified: boolean) => (
-                      <Tag color={verified ? 'success' : 'error'}>{verified ? '就绪' : '未就绪'}</Tag>
+                      <Tag color={verified ? 'success' : 'error'}>{verified ? t('tenants.initialization.ready') : t('tenants.initialization.notReady')}</Tag>
                     ),
                   },
                   {
-                    title: '缺口',
+                    title: t('tenants.initialization.gap'),
                     dataIndex: 'error',
                     render: (error?: string) => error || '—',
                   },
@@ -672,12 +683,12 @@ export default function TenantManagement() {
             {selectedTenant ? (
               <>
                 <Edit className="w-4 h-4 mr-2" />
-                {viewOnly ? '查看租户' : '编辑租户'}
+                {viewOnly ? t('tenants.view') : t('tenants.edit')}
               </>
             ) : (
               <>
                 <Plus className="w-4 h-4 mr-2" />
-                新建租户
+                {t('tenants.create')}
               </>
             )}
           </span>
@@ -692,8 +703,8 @@ export default function TenantManagement() {
         }}
         width={600}
         confirmLoading={loading}
-        okText="保存"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
         footer={
           viewOnly
             ? [
@@ -706,7 +717,7 @@ export default function TenantManagement() {
                     form.resetFields();
                   }}
                 >
-                  关闭
+                  {t('common.close')}
                 </Button>,
               ]
             : undefined
@@ -714,69 +725,69 @@ export default function TenantManagement() {
       >
         <Form form={form} layout="vertical" className="mt-4" disabled={viewOnly} initialValues={{ type: 'standard', status: 'active' }}>
           <Form.Item
-            label="租户名称"
+            label={t('tenants.tenantName')}
             name="name"
-            rules={[{ required: true, message: '请输入租户名称' }]}
+            rules={[{ required: true, message: t('tenants.form.nameRequired') }]}
           >
-            <Input placeholder="请输入租户名称" />
+            <Input placeholder={t('tenants.form.namePlaceholder')} />
           </Form.Item>
 
           <Form.Item
-            label="租户编码"
+            label={t('tenants.tenantCode')}
             name="code"
             rules={[
-              { required: true, message: '请输入租户编码' },
+              { required: true, message: t('tenants.form.codeRequired') },
               {
                 pattern: /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/,
-                message: '只能包含字母、数字、下划线或连字符，且以字母或数字开头',
+                message: t('tenants.form.codePattern'),
               },
             ]}
           >
             <Input
               disabled={!!selectedTenant}
-              placeholder="例如 finops_001（字母、数字、下划线、连字符）"
+              placeholder={t('tenants.form.codePlaceholder')}
             />
           </Form.Item>
 
-          <Form.Item label="域名" name="domain">
-            <Input placeholder="请输入域名" />
+          <Form.Item label={t('tenants.domain')} name="domain">
+            <Input placeholder={t('tenants.form.domainPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="租户类型"
+                label={t('tenants.tenantType')}
                 name="type"
-                rules={[{ required: true, message: '请选择租户类型' }]}
+                rules={[{ required: true, message: t('tenants.form.typeRequired') }]}
               >
-                <Select placeholder="请选择租户类型" options={[
-                  { value: 'standard', label: '标准租户' },
-                  { value: 'internal', label: '内部组织' },
-                  { value: 'saas_customer', label: 'SaaS客户' },
-                  { value: 'msp_provider', label: 'MSP服务商' },
-                  { value: 'msp_customer', label: 'MSP客户' },
+                <Select placeholder={t('tenants.form.typePlaceholder')} options={[
+                  { value: 'standard', label: t('tenants.typeLabels.standard') },
+                  { value: 'internal', label: t('tenants.typeLabels.internal') },
+                  { value: 'saas_customer', label: t('tenants.typeLabels.saasCustomer') },
+                  { value: 'msp_provider', label: t('tenants.typeLabels.mspProvider') },
+                  { value: 'msp_customer', label: t('tenants.typeLabels.mspCustomer') },
                 ]} />
               </Form.Item>
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="状态"
+                label={t('tenants.status')}
                 name="status"
-                rules={[{ required: true, message: '请选择状态' }]}
+                rules={[{ required: true, message: t('tenants.form.statusRequired') }]}
               >
-                <Select placeholder="请选择状态" options={[
-                  { value: 'active', label: '活跃' },
-                  { value: 'suspended', label: '暂停' },
-                  { value: 'expired', label: '过期' },
-                  { value: 'deleted', label: '已删除' },
+                <Select placeholder={t('tenants.form.statusPlaceholder')} options={[
+                  { value: 'active', label: t('tenants.statusLabels.active') },
+                  { value: 'suspended', label: t('tenants.statusLabels.suspended') },
+                  { value: 'expired', label: t('tenants.statusLabels.expired') },
+                  { value: 'deleted', label: t('tenants.statusLabels.deleted') },
                 ]} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item label="到期时间" name="expiresAt">
-            <DatePicker style={{ width: '100%' }} placeholder="选择到期时间" />
+          <Form.Item label={t('tenants.expiresAt')} name="expiresAt">
+            <DatePicker style={{ width: '100%' }} placeholder={t('tenants.form.expiresAtPlaceholder')} />
           </Form.Item>
         </Form>
       </Modal>

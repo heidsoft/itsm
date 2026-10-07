@@ -3,11 +3,8 @@
 import {
   Pause,
   Play,
-  Copy,
   AlertCircle,
   GitBranch,
-  BarChart3,
-  Activity,
   Users,
   Settings,
   CheckCircle,
@@ -17,6 +14,8 @@ import {
   Search,
   Plus,
   FileText,
+  MoreHorizontal,
+  Copy,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -37,11 +36,10 @@ import {
   Tooltip,
   Popconfirm,
   App,
-  Badge,
-  Progress,
-  Alert,
   Empty,
+  Dropdown,
 } from 'antd';
+import type { MenuProps } from 'antd';
 import { WorkflowAPI } from '@/lib/api/workflow-api';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 import WorkflowTemplateCatalog from '@/components/workflow/WorkflowTemplateCatalog';
@@ -64,9 +62,9 @@ const WORKFLOW_TYPES = {
   APPROVAL: 'approval',
 } as const;
 
-// 工作流数据类型
+// 工作流数据类型（id 使用 process key，与后端 BPMN 路由契约一致）
 interface Workflow {
-  id: number;
+  id: string;
   name: string;
   description: string;
   type: string;
@@ -75,9 +73,6 @@ interface Workflow {
   createdBy: string;
   createdAt: string;
   lastModified: string;
-  stepsCount: number;
-  activeInstances: number;
-  completedInstances: number;
 }
 
 
@@ -154,21 +149,16 @@ const WorkflowManagement = () => {
     setLoading(true);
     try {
       const response = await WorkflowAPI.getWorkflows({});
-      // 转换API数据格式
-       
-      const workflowList = (response.workflows || []).map((w: any) => ({
-        id: w.id,
-        name: w.name || w.key || '',
+      const workflowList: Workflow[] = (response.workflows || []).map((w) => ({
+        id: w.id || w.code || '',
+        name: w.name || w.code || '',
         description: w.description || '',
-        type: w.category || 'default',
-        status: w.isDeployed ? 'active' : 'draft',
-        version: String(w.version || '1.0'),
-        createdBy: w.createdBy || '系统',
-        createdAt: typeof w.createdAt === 'string' ? w.createdAt : (w.createdAt instanceof Date ? w.createdAt.toISOString() : new Date().toISOString()),
-        lastModified: typeof (w.updatedAt || w.createdAt) === 'string' ? (w.updatedAt || w.createdAt) : (w.updatedAt || w.createdAt) instanceof Date ? (w.updatedAt || w.createdAt).toISOString() : new Date().toISOString(),
-        stepsCount: w.stepCount || 0,
-        activeInstances: w.runningInstances || 0,
-        completedInstances: w.completedInstances || 0,
+        type: w.category || 'ticket',
+        status: w.status || 'draft',
+        version: String(w.version || '1'),
+        createdBy: w.createdByName || '',
+        createdAt: w.createdAt instanceof Date ? w.createdAt.toISOString() : (w.createdAt || ''),
+        lastModified: w.updatedAt instanceof Date ? w.updatedAt.toISOString() : (w.updatedAt || w.createdAt || ''),
       }));
       setWorkflows(workflowList);
     } catch (error) {
@@ -194,11 +184,7 @@ const WorkflowManagement = () => {
     total: workflows.length,
     active: workflows.filter(w => w.status === WORKFLOW_STATUS.ACTIVE).length,
     draft: workflows.filter(w => w.status === WORKFLOW_STATUS.DRAFT).length,
-    totalInstances: workflows.reduce((sum, w) => sum + w.activeInstances, 0),
-    avgSteps:
-      workflows.length > 0
-        ? Math.round(workflows.reduce((sum, w) => sum + w.stepsCount, 0) / workflows.length)
-        : 0,
+    inactive: workflows.filter(w => w.status === WORKFLOW_STATUS.INACTIVE).length,
   };
 
   // 获取所有工作流类型
@@ -216,8 +202,8 @@ const WorkflowManagement = () => {
   });
 
   // 处理工作流状态切换
-  const handleStatusToggle = async (workflowId: number) => {
-    const workflow = workflows.find(w => w.id === workflowId);
+  const handleStatusToggle = async (workflowKey: string) => {
+    const workflow = workflows.find(w => w.id === workflowKey);
     if (!workflow) return;
 
     const newStatus = workflow.status === WORKFLOW_STATUS.ACTIVE
@@ -225,22 +211,16 @@ const WorkflowManagement = () => {
       : WORKFLOW_STATUS.ACTIVE;
 
     try {
-      // 调用 API 更新状态
       if (newStatus === WORKFLOW_STATUS.ACTIVE) {
-        await WorkflowAPI.activateWorkflow(String(workflowId));
+        await WorkflowAPI.activateWorkflow(workflowKey);
       } else {
-        await WorkflowAPI.deactivateWorkflow(String(workflowId));
+        await WorkflowAPI.deactivateWorkflow(workflowKey);
       }
 
-      // 更新本地状态
       setWorkflows(prev =>
         prev.map(w => {
-          if (w.id === workflowId) {
-            return {
-              ...w,
-              status: newStatus,
-              lastModified: new Date().toLocaleString('zh-CN'),
-            };
+          if (w.id === workflowKey) {
+            return { ...w, status: newStatus };
           }
           return w;
         })
@@ -252,17 +232,15 @@ const WorkflowManagement = () => {
     }
   };
 
-  // 处理工作流复制（调用真实 API 创建副本）
+  // 处理工作流复制（调用后端 clone 接口，保留 bpmnXml）
   const handleDuplicate = async (workflow: Workflow) => {
     try {
       setLoading(true);
-      await WorkflowAPI.createWorkflow({
-        code: `${workflow.name}-copy-${Date.now()}`,
-        name: `${workflow.name} (副本)`,
+      await WorkflowAPI.cloneProcessDefinition(workflow.id, {
+        newKey: `${workflow.id}_copy_${Date.now()}`,
+        newName: `${workflow.name} (副本)`,
         description: workflow.description,
-        type: (workflow.type as 'approval') || 'approval',
-        status: 'draft',
-      } as never);
+      });
       message.success('工作流已复制');
       loadWorkflows();
     } catch (error) {
@@ -273,11 +251,11 @@ const WorkflowManagement = () => {
     }
   };
 
-  // 处理工作流删除（调用真实 API）
-  const handleDelete = async (workflowId: number) => {
+  // 处理工作流删除（id 为 process key）
+  const handleDelete = async (workflowKey: string) => {
     try {
       setLoading(true);
-      await WorkflowAPI.deleteWorkflow(String(workflowId));
+      await WorkflowAPI.deleteWorkflow(workflowKey);
       message.success('工作流已删除');
       loadWorkflows();
     } catch (error) {
@@ -288,12 +266,12 @@ const WorkflowManagement = () => {
     }
   };
 
-  // 批量删除（循环调用真实 API）
+  // 批量删除（循环调用真实 API，id 为 process key）
   const handleBatchDelete = async () => {
     try {
       setLoading(true);
       await Promise.all(
-        selectedRowKeys.map(id => WorkflowAPI.deleteWorkflow(String(id)))
+        selectedRowKeys.map(key => WorkflowAPI.deleteWorkflow(String(key)))
       );
       message.success(`已删除 ${selectedRowKeys.length} 个工作流`);
       setSelectedRowKeys([]);
@@ -319,15 +297,13 @@ const WorkflowManagement = () => {
       setLoading(true);
 
       if (selectedWorkflow) {
-        // 编辑
-        await WorkflowAPI.updateWorkflow(String(selectedWorkflow.id), {
+        await WorkflowAPI.updateWorkflow(selectedWorkflow.id, {
           name: values.name,
           description: values.description,
           category: values.type,
         } as never);
         message.success('工作流更新成功');
       } else {
-        // 新建
         const created = await WorkflowAPI.createWorkflow({
           code: values.name,
           name: values.name,
@@ -337,7 +313,6 @@ const WorkflowManagement = () => {
         } as never);
         message.success('工作流创建成功');
 
-        // 创建成功后引导进入设计器编排流程
         const createdId = (created as { id?: number | string } | undefined)?.id;
         if (createdId) {
           Modal.confirm({
@@ -367,9 +342,9 @@ const WorkflowManagement = () => {
   // 行选择配置
   const rowSelection = {
     selectedRowKeys,
-    onChange: setSelectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
     getCheckboxProps: (record: Workflow) => ({
-      disabled: record.status === WORKFLOW_STATUS.ACTIVE, // 活跃工作流不能批量删除
+      disabled: record.status === WORKFLOW_STATUS.ACTIVE,
     }),
   };
 
@@ -379,19 +354,21 @@ const WorkflowManagement = () => {
       title: '工作流信息',
       dataIndex: 'name',
       key: 'name',
+      width: 360,
       render: (_: unknown, record: Workflow) => (
         <div>
           <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
-            <Badge count={record.version} color="blue" />
+            <Tag color="blue">v{record.version}</Tag>
           </div>
-          <Text type="secondary" className="text-sm">
-            {record.description}
-          </Text>
-          <div className="flex items-center gap-4 mt-1">
-            <span className="text-xs text-gray-500">创建者: {record.createdBy}</span>
-            <span className="text-xs text-gray-500">步骤: {record.stepsCount}</span>
-          </div>
+          {record.description && (
+            <Text type="secondary" className="text-sm block mt-1">
+              {record.description}
+            </Text>
+          )}
+          {record.createdBy && (
+            <div className="text-xs text-gray-500 mt-1">创建者: {record.createdBy}</div>
+          )}
         </div>
       ),
     },
@@ -400,63 +377,30 @@ const WorkflowManagement = () => {
       dataIndex: 'type',
       key: 'type',
       align: 'center' as const,
-      render: (type: string) => (
-        <Tag
-          color={WORKFLOW_TYPE_CONFIG[type as keyof typeof WORKFLOW_TYPE_CONFIG]?.color}
-          icon={WORKFLOW_TYPE_CONFIG[type as keyof typeof WORKFLOW_TYPE_CONFIG]?.icon}
-        >
-          {WORKFLOW_TYPE_CONFIG[type as keyof typeof WORKFLOW_TYPE_CONFIG]?.label}
-        </Tag>
-      ),
+      width: 110,
+      render: (type: string) => {
+        const config = WORKFLOW_TYPE_CONFIG[type as keyof typeof WORKFLOW_TYPE_CONFIG];
+        if (!config) return <Tag>{type}</Tag>;
+        return (
+          <Tag color={config.color} icon={config.icon}>
+            {config.label}
+          </Tag>
+        );
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       align: 'center' as const,
-      render: (status: string) => (
-        <Tag
-          color={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color}
-          icon={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon}
-        >
-          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
-        </Tag>
-      ),
-    },
-    {
-      title: '实例统计',
-      key: 'instances',
-      align: 'center' as const,
-      render: (_: unknown, record: Workflow) => (
-        <div className="text-center">
-          <div className="text-lg font-bold text-blue-600">{record.activeInstances}</div>
-          <div className="text-xs text-gray-500">活跃实例</div>
-          <div className="text-xs text-gray-500">已完成: {record.completedInstances}</div>
-        </div>
-      ),
-    },
-    {
-      title: '效率指标',
-      key: 'efficiency',
-      align: 'center' as const,
-      render: (_: unknown, record: Workflow) => {
-        const completionRate =
-          record.completedInstances > 0
-            ? Math.round(
-                (record.completedInstances / (record.completedInstances + record.activeInstances)) *
-                  100
-              )
-            : 0;
+      width: 100,
+      render: (status: string) => {
+        const config = STATUS_CONFIG[status as keyof typeof STATUS_CONFIG];
+        if (!config) return <Tag>{status}</Tag>;
         return (
-          <div className="text-center">
-            <Progress
-              type="circle"
-              size={50}
-              percent={completionRate}
-              format={percent => `${percent}%`}
-            />
-            <div className="text-xs text-gray-500 mt-1">完成率</div>
-          </div>
+          <Tag color={config.color} icon={config.icon}>
+            {config.label}
+          </Tag>
         );
       },
     },
@@ -465,6 +409,7 @@ const WorkflowManagement = () => {
       dataIndex: 'lastModified',
       key: 'lastModified',
       align: 'center' as const,
+      width: 160,
       render: (date: unknown) => {
         if (!date) return <span className="text-gray-400">-</span>;
         const dateStr = String(date);
@@ -477,7 +422,7 @@ const WorkflowManagement = () => {
         return (
           <div className="text-center">
             <div className="text-sm">{datePart}</div>
-            <div className="text-xs text-gray-500">{timePart}</div>
+            {timePart && <div className="text-xs text-gray-500">{timePart}</div>}
           </div>
         );
       },
@@ -486,70 +431,88 @@ const WorkflowManagement = () => {
       title: '操作',
       key: 'actions',
       align: 'center' as const,
-      render: (_: unknown, record: Workflow) => (
-        <Space>
-          <Tooltip title="查看详情">
-            <Button
-              type="text"
-              icon={<Eye className="w-4 h-4" />}
-              aria-label="查看详情"
-              onClick={() => handleViewDetail(record)}
-            />
-          </Tooltip>
-          <Tooltip title="设计流程">
-            <Button
-              aria-label="设计流程"
-              type="text"
-              icon={<GitBranch className="w-4 h-4" />}
-              onClick={() => router.push(`/workflow/designer?id=${record.id}`)}
-            />
-          </Tooltip>
-          <Tooltip title="编辑元数据">
-            <Button
-              type="text"
-              icon={<Edit className="w-4 h-4" />}
-              aria-label="编辑元数据"
-              onClick={() => {
-                setSelectedWorkflow(record);
-                form.setFieldsValue(record);
-                setShowCreateModal(true);
-              }}
-            />
-          </Tooltip>
-          <Tooltip title="复制">
-            <Button
-              type="text"
-              icon={<Copy className="w-4 h-4" />}
-              aria-label="复制工作流"
-              onClick={() => handleDuplicate(record)}
-            />
-          </Tooltip>
-          <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}>
-            <Button
-              aria-label={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}
-              type="text"
-              icon={
-                record.status === WORKFLOW_STATUS.ACTIVE ? (
-                  <Pause className="w-4 h-4" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )
-              }
-              onClick={() => handleStatusToggle(record.id)}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="确定要删除这个工作流吗？"
-            description="删除后无法恢复，相关的实例将被停止。"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定删除"
-            cancelText="取消"
-            okType="danger"
-          >
-            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} aria-label="删除工作流" />
-          </Popconfirm>
-        </Space>
-      ),
+      width: 180,
+      fixed: 'right' as const,
+      render: (_: unknown, record: Workflow) => {
+        const isDraft = record.status === WORKFLOW_STATUS.DRAFT;
+        const moreItems: MenuProps['items'] = [
+          {
+            key: 'view',
+            label: '查看详情',
+            icon: <Eye className="w-4 h-4" />,
+            onClick: () => handleViewDetail(record),
+          },
+          {
+            key: 'edit',
+            label: '编辑元数据',
+            icon: <Edit className="w-4 h-4" />,
+            onClick: () => {
+              setSelectedWorkflow(record);
+              form.setFieldsValue(record);
+              setShowCreateModal(true);
+            },
+          },
+          {
+            key: 'duplicate',
+            label: '复制',
+            icon: <Copy className="w-4 h-4" />,
+            onClick: () => handleDuplicate(record),
+          },
+          { type: 'divider' },
+          {
+            key: 'delete',
+            label: '删除',
+            icon: <Trash2 className="w-4 h-4" />,
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: '确定要删除这个工作流吗？',
+                content: `将删除流程定义「${record.name}」，删除后无法恢复。`,
+                okText: '确定删除',
+                cancelText: '取消',
+                okType: 'danger',
+                onOk: () => handleDelete(record.id),
+              });
+            },
+          },
+        ];
+        return (
+          <Space>
+            <Tooltip title="设计流程">
+              <Button
+                aria-label="设计流程"
+                type="text"
+                icon={<GitBranch className="w-4 h-4" />}
+                onClick={() => router.push(`/workflow/designer?id=${encodeURIComponent(record.id)}`)}
+              />
+            </Tooltip>
+            <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}>
+              <Button
+                aria-label={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}
+                type="text"
+                icon={
+                  record.status === WORKFLOW_STATUS.ACTIVE ? (
+                    <Pause className="w-4 h-4" />
+                  ) : (
+                    <Play className="w-4 h-4" />
+                  )
+                }
+                disabled={isDraft}
+                onClick={() => handleStatusToggle(record.id)}
+              />
+            </Tooltip>
+            <Dropdown menu={{ items: moreItems }} trigger={['click']}>
+              <Tooltip title="更多">
+                <Button
+                  type="text"
+                  aria-label="更多操作"
+                  icon={<MoreHorizontal className="w-4 h-4" />}
+                />
+              </Tooltip>
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -581,7 +544,7 @@ const WorkflowManagement = () => {
 
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
               title="工作流总数"
@@ -591,7 +554,7 @@ const WorkflowManagement = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
               title="已启用"
@@ -601,22 +564,12 @@ const WorkflowManagement = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={8}>
           <Card className="enterprise-card">
             <Statistic
-              title="活跃实例"
-              value={stats.totalInstances}
-              prefix={<Activity className="w-5 h-5" />}
-              styles={{ content: { color: '#fa8c16' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="enterprise-card">
-            <Statistic
-              title="平均步骤数"
-              value={stats.avgSteps}
-              prefix={<BarChart3 className="w-5 h-5" />}
+              title="草稿"
+              value={stats.draft}
+              prefix={<Edit className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
@@ -693,11 +646,7 @@ const WorkflowManagement = () => {
       {/* 工作流列表 */}
       <Card className="enterprise-card">
         {filteredWorkflows.length === 0 && !loading ? (
-          <Alert
-            title="暂无工作流，点击右上角按钮创建"
-            type="info"
-            showIcon
-          />
+          <Empty description="暂无工作流，点击右上角按钮创建" />
         ) : (
           <Table
             columns={columns}
@@ -705,6 +654,7 @@ const WorkflowManagement = () => {
             rowKey="id"
             rowSelection={rowSelection}
             loading={loading}
+            scroll={{ x: 1200 }}
             pagination={{
               total: filteredWorkflows.length,
               pageSize: 10,
@@ -765,18 +715,6 @@ const WorkflowManagement = () => {
           >
             <Input.TextArea rows={3} placeholder="请输入工作流描述" />
           </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="版本" name="version" initialValue="v1.0">
-                <Input placeholder="如: v1.0" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="状态" name="status" initialValue={WORKFLOW_STATUS.DRAFT}>
-                <Select options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
-              </Form.Item>
-            </Col>
-          </Row>
         </Form>
       </Modal>
 
@@ -803,36 +741,6 @@ const WorkflowManagement = () => {
               <Title level={4}>{selectedWorkflow.name}</Title>
               <Text type="secondary">{selectedWorkflow.description}</Text>
             </div>
-
-            <Row gutter={16}>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="活跃实例"
-                    value={selectedWorkflow.activeInstances}
-                    prefix={<Activity className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="已完成实例"
-                    value={selectedWorkflow.completedInstances}
-                    prefix={<CheckCircle className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="步骤数"
-                    value={selectedWorkflow.stepsCount}
-                    prefix={<BarChart3 className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-            </Row>
 
             <div>
               <Title level={5}>基本信息</Title>
@@ -873,19 +781,19 @@ const WorkflowManagement = () => {
                 </Col>
                 <Col span={12}>
                   <Text strong>版本：</Text>
-                  <Text>{selectedWorkflow.version}</Text>
+                  <Text>v{selectedWorkflow.version}</Text>
                 </Col>
                 <Col span={12}>
-                  <Text strong>创建者：</Text>
-                  <Text>{selectedWorkflow.createdBy}</Text>
+                  <Text strong>流程标识：</Text>
+                  <Text copyable>{selectedWorkflow.id}</Text>
                 </Col>
                 <Col span={12}>
                   <Text strong>创建时间：</Text>
-                  <Text>{selectedWorkflow.createdAt}</Text>
+                  <Text>{selectedWorkflow.createdAt || '-'}</Text>
                 </Col>
                 <Col span={12}>
                   <Text strong>最后修改：</Text>
-                  <Text>{selectedWorkflow.lastModified}</Text>
+                  <Text>{selectedWorkflow.lastModified || '-'}</Text>
                 </Col>
               </Row>
             </div>
@@ -895,7 +803,8 @@ const WorkflowManagement = () => {
                 type="primary"
                 icon={<GitBranch />}
                 onClick={() => {
-                  window.open(`/workflow/designer?id=${selectedWorkflow.id}`, '_blank');
+                  router.push(`/workflow/designer?id=${selectedWorkflow.id}`);
+                  setShowDetailModal(false);
                 }}
               >
                 打开工作流设计器

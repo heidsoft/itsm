@@ -344,13 +344,13 @@ export default function SkillsAdminPage() {
         okText={t('admin.skills.editorSubmit')}
         cancelText={t('admin.skills.editorCancel')}
         width={720}
-        destroyOnClose
+        destroyOnHidden
       >
         <Alert
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          message={t('admin.skills.editorHint')}
+          title={t('admin.skills.editorHint')}
         />
         <Form<SkillUpsertRequest> form={form} layout="vertical">
           <Form.Item name="code" label={t('admin.skills.columnCode')} rules={[{ required: true }]}>

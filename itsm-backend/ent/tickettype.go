@@ -45,7 +45,7 @@ type TicketType struct {
 	// ArchivedBy holds the value of the "archived_by" field.
 	ArchivedBy int64 `json:"archived_by,omitempty"`
 	// CustomFields holds the value of the "custom_fields" field.
-	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
+	CustomFields []interface{} `json:"custom_fields,omitempty"`
 	// ApprovalEnabled holds the value of the "approval_enabled" field.
 	ApprovalEnabled bool `json:"approval_enabled,omitempty"`
 	// ApprovalWorkflowID holds the value of the "approval_workflow_id" field.

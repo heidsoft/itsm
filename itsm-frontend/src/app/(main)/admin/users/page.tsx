@@ -124,7 +124,16 @@ const UserManagement: React.FC = () => {
   }, []);
 
   // 创建用户
-  const handleCreateUser = async (values: any) => {
+  const handleCreateUser = async (values: {
+    username: string;
+    email: string;
+    name: string;
+    department: string;
+    phone: string;
+    password: string;
+    role: string;
+    roleIds: number[];
+  }) => {
     setLoading(true);
     try {
       const tenantId = currentTenant?.id;
@@ -155,7 +164,15 @@ const UserManagement: React.FC = () => {
   };
 
   // 更新用户
-  const handleUpdateUser = async (values: any) => {
+  const handleUpdateUser = async (values: {
+    username: string;
+    email: string;
+    name: string;
+    department: string;
+    phone: string;
+    role: string;
+    roleIds: number[];
+  }) => {
     if (!selectedUser) return;
     setLoading(true);
     try {
@@ -248,6 +265,7 @@ const UserManagement: React.FC = () => {
       title: t('users.columns.username'),
       dataIndex: 'username',
       key: 'username',
+      width: 120,
       render: (text: string, record: User) => (
         <Space>
           <Text strong>{text}</Text>
@@ -259,11 +277,13 @@ const UserManagement: React.FC = () => {
       title: t('users.columns.name'),
       dataIndex: 'name',
       key: 'name',
+      width: 100,
     },
     {
       title: '角色',
       dataIndex: 'role',
       key: 'role',
+      width: 140,
       render: (_: string, record: User) => (
         <Space size={[4, 4]} wrap>
           {record.role && (
@@ -281,21 +301,25 @@ const UserManagement: React.FC = () => {
       title: t('users.columns.email'),
       dataIndex: 'email',
       key: 'email',
+      width: 160,
     },
     {
       title: t('users.columns.department'),
       dataIndex: 'department',
       key: 'department',
+      width: 110,
     },
     {
       title: t('users.columns.phone'),
       dataIndex: 'phone',
       key: 'phone',
+      width: 110,
     },
     {
       title: t('users.columns.status'),
       dataIndex: 'active',
       key: 'active',
+      width: 90,
       render: (active: boolean, record: User) => (
         <Switch
           aria-label={`切换用户 ${record.name} 的启用状态`}
@@ -311,11 +335,13 @@ const UserManagement: React.FC = () => {
       title: t('users.columns.createdAt'),
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 140,
       render: (text: string) => (text ? new Date(text).toLocaleString('zh-CN') : '-'),
     },
     {
       title: t('common.action'),
       key: 'actions',
+      width: 60,
       render: (_: unknown, record: User) => (
         <Dropdown
           menu={{
@@ -476,7 +502,7 @@ const UserManagement: React.FC = () => {
                   const url = URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
-                  link.download = `{t('users.exportFilename')}_${new Date().toISOString().split('T')[0]}.csv`;
+                  link.download = `${t('users.exportFilename')}_${new Date().toISOString().split('T')[0]}.csv`;
                   link.click();
                   URL.revokeObjectURL(url);
                   message.success(t('users.messages.exportSuccess'));
@@ -646,15 +672,15 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="username"
-                label="用户名"
-                rules={[{ min: 3, message: '用户名至少3个字符' }]}
+                label={t('users.username')}
+                rules={[{ min: 3, message: t('users.form.minUsername') }]}
               >
-                <Input placeholder="请输入用户名" />
+                <Input placeholder={t('users.form.usernamePlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="name" label="姓名">
-                <Input placeholder="请输入姓名" />
+              <Form.Item name="name" label={t('users.fullName')}>
+                <Input placeholder={t('users.form.namePlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
@@ -662,21 +688,21 @@ const UserManagement: React.FC = () => {
             <Col span={12}>
               <Form.Item
                 name="email"
-                label="邮箱"
-                rules={[{ type: 'email', message: '请输入有效的邮箱地址' }]}
+                label={t('users.email')}
+                rules={[{ type: 'email', message: t('users.form.invalidEmail') }]}
               >
-                <Input placeholder="请输入邮箱" />
+                <Input placeholder={t('users.form.emailPlaceholder')} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="phone" label="电话">
-                <Input placeholder="请输入电话号码" />
+              <Form.Item name="phone" label={t('users.phone')}>
+                <Input placeholder={t('users.form.phonePlaceholder')} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="role" label="主角色">
+              <Form.Item name="role" label={t('users.role')}>
                 <Select placeholder="不修改则留空" allowClear options={PRIMARY_ROLE_OPTIONS} />
               </Form.Item>
             </Col>
@@ -692,13 +718,12 @@ const UserManagement: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name="department" label="部门">
-            <Select placeholder="请选择部门" options={[
-              { value: 'IT部门', label: 'IT部门' },
-              { value: '财务部门', label: '财务部门' },
-              { value: '人事部门', label: '人事部门' },
-              { value: '市场部门', label: '市场部门' },
-            ]} />
+          <Form.Item name="department" label={t('users.department')}>
+            <Select
+              placeholder={t('users.form.departmentPlaceholder')}
+              allowClear
+              options={departments.map(dept => ({ value: dept, label: dept }))}
+            />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -712,7 +737,7 @@ const UserManagement: React.FC = () => {
                   setSelectedUser(null);
                 }}
               >
-                取消
+                {t('common.cancel')}
               </Button>
             </Space>
           </Form.Item>

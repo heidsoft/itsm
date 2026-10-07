@@ -406,7 +406,7 @@ export default function ConnectorsAdminPage() {
                   type="info"
                   showIcon
                   style={{ marginBottom: 12 }}
-                  message={`该连接器需要以下设置项：${requiredSettingKeys.join('、')}`}
+                  title={`该连接器需要以下设置项：${requiredSettingKeys.join('、')}`}
                   description="按 key=value 每行一项填写；留空会导致启用后「测试」失败。"
                 />
               )}

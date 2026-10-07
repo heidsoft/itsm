@@ -271,8 +271,14 @@ func (_u *TicketTypeUpdate) ClearArchivedBy() *TicketTypeUpdate {
 }
 
 // SetCustomFields sets the "custom_fields" field.
-func (_u *TicketTypeUpdate) SetCustomFields(v map[string]interface{}) *TicketTypeUpdate {
+func (_u *TicketTypeUpdate) SetCustomFields(v []interface{}) *TicketTypeUpdate {
 	_u.mutation.SetCustomFields(v)
+	return _u
+}
+
+// AppendCustomFields appends value to the "custom_fields" field.
+func (_u *TicketTypeUpdate) AppendCustomFields(v []interface{}) *TicketTypeUpdate {
+	_u.mutation.AppendCustomFields(v)
 	return _u
 }
 
@@ -710,6 +716,11 @@ func (_u *TicketTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.CustomFields(); ok {
 		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
 	}
+	if value, ok := _u.mutation.AppendedCustomFields(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, tickettype.FieldCustomFields, value)
+		})
+	}
 	if value, ok := _u.mutation.ApprovalEnabled(); ok {
 		_spec.SetField(tickettype.FieldApprovalEnabled, field.TypeBool, value)
 	}
@@ -1098,8 +1109,14 @@ func (_u *TicketTypeUpdateOne) ClearArchivedBy() *TicketTypeUpdateOne {
 }
 
 // SetCustomFields sets the "custom_fields" field.
-func (_u *TicketTypeUpdateOne) SetCustomFields(v map[string]interface{}) *TicketTypeUpdateOne {
+func (_u *TicketTypeUpdateOne) SetCustomFields(v []interface{}) *TicketTypeUpdateOne {
 	_u.mutation.SetCustomFields(v)
+	return _u
+}
+
+// AppendCustomFields appends value to the "custom_fields" field.
+func (_u *TicketTypeUpdateOne) AppendCustomFields(v []interface{}) *TicketTypeUpdateOne {
+	_u.mutation.AppendCustomFields(v)
 	return _u
 }
 
@@ -1566,6 +1583,11 @@ func (_u *TicketTypeUpdateOne) sqlSave(ctx context.Context) (_node *TicketType, 
 	}
 	if value, ok := _u.mutation.CustomFields(); ok {
 		_spec.SetField(tickettype.FieldCustomFields, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedCustomFields(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, tickettype.FieldCustomFields, value)
+		})
 	}
 	if value, ok := _u.mutation.ApprovalEnabled(); ok {
 		_spec.SetField(tickettype.FieldApprovalEnabled, field.TypeBool, value)

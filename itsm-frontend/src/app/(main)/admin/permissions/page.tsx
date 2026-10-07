@@ -730,7 +730,7 @@ const PermissionConfiguration = () => {
           <Card className="enterprise-card">
             <Statistic
               title={t('permissions.stats.enabledModules')}
-              value={((stats.enabledModules / stats.totalModules) * 100).toFixed(1)}
+              value={stats.totalModules > 0 ? ((stats.enabledModules / stats.totalModules) * 100).toFixed(1) : '0.0'}
               suffix="%"
               prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
@@ -741,7 +741,7 @@ const PermissionConfiguration = () => {
           <Card className="enterprise-card">
             <Statistic
               title={t('permissions.stats.coverage')}
-              value={((stats.enabledActions / stats.totalActions) * 100).toFixed(1)}
+              value={stats.totalActions > 0 ? ((stats.enabledActions / stats.totalActions) * 100).toFixed(1) : '0.0'}
               suffix="%"
               prefix={<Shield className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}

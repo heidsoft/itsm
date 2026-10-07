@@ -61,7 +61,7 @@ export default function MenuManagementPage() {
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled' | 'hidden'>(
+  const [statusFilter, setStatusFilter] = useState<'all' | 'visible' | 'hidden' | 'enabled' | 'disabled'>(
     'all',
   );
   const [showModal, setShowModal] = useState(false);
@@ -105,9 +105,10 @@ export default function MenuManagementPage() {
           const hay = `${m.name} ${m.path} ${m.permissionCode ?? ''} ${m.icon ?? ''}`.toLowerCase();
           if (!hay.includes(q)) return false;
         }
+        if (statusFilter === 'visible') return m.isVisible;
+        if (statusFilter === 'hidden') return !m.isVisible;
         if (statusFilter === 'enabled') return m.isEnabled;
         if (statusFilter === 'disabled') return !m.isEnabled;
-        if (statusFilter === 'hidden') return !m.isVisible;
         return true;
       })
       .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -183,13 +184,14 @@ export default function MenuManagementPage() {
       form.resetFields();
       notifyMenusUpdated();
       loadMenus();
-    } catch (err: any) {
-      if (err?.errorFields) {
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'errorFields' in err) {
         // 表单校验错误
         return;
       }
       console.error('Save menu failed', err);
-      antMessage.error(err?.message || t('common.saveFailed'));
+      const errMsg = err instanceof Error ? err.message : t('common.saveFailed');
+      antMessage.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -202,9 +204,9 @@ export default function MenuManagementPage() {
       antMessage.success(t('menus.deleteSuccess'));
       notifyMenusUpdated();
       loadMenus();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Delete menu failed', err);
-      antMessage.error(err?.message || t('common.deleteFailed'));
+      antMessage.error(err instanceof Error ? err.message : t('common.deleteFailed'));
     }
   };
 
@@ -215,8 +217,8 @@ export default function MenuManagementPage() {
       antMessage.success(record.isEnabled ? t('menus.disabled') : t('menus.enabled'));
       notifyMenusUpdated();
       loadMenus();
-    } catch (err: any) {
-      antMessage.error(err?.message || t('common.operationFailed'));
+    } catch (err: unknown) {
+      antMessage.error(err instanceof Error ? err.message : t('common.operationFailed'));
     }
   };
 
@@ -227,8 +229,8 @@ export default function MenuManagementPage() {
       antMessage.success(record.isVisible ? t('menus.hidden') : t('menus.visible'));
       notifyMenusUpdated();
       loadMenus();
-    } catch (err: any) {
-      antMessage.error(err?.message || t('common.operationFailed'));
+    } catch (err: unknown) {
+      antMessage.error(err instanceof Error ? err.message : t('common.operationFailed'));
     }
   };
 
@@ -337,7 +339,7 @@ export default function MenuManagementPage() {
           </Tooltip>
           <Popconfirm
             title={t('common.confirmDelete')}
-            description={t('menus.deleteWarning', { name: '删除后不可恢复，关联的子菜单会变成根菜单。' })}
+            description={t('menus.deleteWarning')}
             onConfirm={() => handleDelete(record.id)}
             okText={t('common.delete')}
             cancelText={t('common.cancel')}
