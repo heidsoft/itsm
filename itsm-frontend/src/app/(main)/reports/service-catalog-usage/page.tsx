@@ -16,18 +16,25 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import type { ServiceItem } from '@/types/service-catalog';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2'];
 
+interface ChartDataItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
 const ServiceCatalogUsagePage = () => {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
-  const [services, setServices] = useState<any[]>([]);
-  const [requestsByService, setRequestsByService] = useState<any[]>([]);
-  const [requestsByStatus, setRequestsByStatus] = useState<any[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [requestsByService, setRequestsByService] = useState<ChartDataItem[]>([]);
+  const [requestsByStatus, setRequestsByStatus] = useState<ChartDataItem[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -44,9 +51,9 @@ const ServiceCatalogUsagePage = () => {
       // 如果有真实服务，使用其统计；否则使用空数据
       if (servicesData && servicesData.length > 0) {
         // 生成按服务类型分布数据（基于实际服务）
-        const serviceUsage = servicesData.map((service: any, index: number) => ({
+        const serviceUsage = servicesData.map((service: ServiceItem, index: number) => ({
           name: service.name || `服务 ${service.id}`,
-          value: service.usageCount || service.requestCount || 0,
+          value: service.requestCount || 0,
           color: COLORS[index % COLORS.length],
         }));
 
@@ -56,18 +63,18 @@ const ServiceCatalogUsagePage = () => {
         const statusDistribution = [
           {
             name: '已发布',
-            value: servicesData.filter((s: any) => s.status === 'published').length,
+            value: servicesData.filter((s: ServiceItem) => s.status === 'published').length,
             color: '#52c41a',
           },
           {
             name: '草稿',
-            value: servicesData.filter((s: any) => s.status === 'draft').length,
+            value: servicesData.filter((s: ServiceItem) => s.status === 'draft').length,
             color: '#1890ff',
           },
           {
             name: '已下线',
             value: servicesData.filter(
-              (s: any) => s.status === 'archived' || s.status === 'deprecated'
+              (s: ServiceItem) => s.status === 'retired'
             ).length,
             color: '#d9d9d9',
           },
@@ -95,7 +102,7 @@ const ServiceCatalogUsagePage = () => {
     loadData();
   }, []);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">

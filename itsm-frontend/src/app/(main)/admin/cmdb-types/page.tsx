@@ -129,13 +129,13 @@ const CMDBTypesManagement = () => {
   }, []);
 
   // 处理表单提交
-  const handleSubmit = async (values: Record<string, any>) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     try {
       if (editingType && hasUnsupportedSchema) {
         message.error('该类型包含当前可视化编辑器不支持的历史属性格式，请先迁移模板后再编辑');
         return;
       }
-      const normalizedFields = normalizeAttributeTemplateFields(values.schemaFields);
+      const normalizedFields = normalizeAttributeTemplateFields(values.schemaFields as AttributeTemplateField[]);
       const duplicateKeys = normalizedFields
         .map(field => field.key)
         .filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) !== index);
@@ -144,7 +144,7 @@ const CMDBTypesManagement = () => {
         return;
       }
 
-      const schemaText = buildAttributeSchemaFromFields(values.schemaFields);
+      const schemaText = buildAttributeSchemaFromFields(values.schemaFields as AttributeTemplateField[]);
       const schemaError = validateAttributeSchema(schemaText);
       if (schemaError) {
         message.error(schemaError);
@@ -152,14 +152,14 @@ const CMDBTypesManagement = () => {
       }
 
       const payload = {
-        name: values.name,
-        description: values.description || '',
-        icon: values.icon || '',
-        color: values.color || '#1890ff',
+        name: values.name as string,
+        description: (values.description as string) || '',
+        icon: (values.icon as string) || '',
+        color: (values.color as string) || '#1890ff',
         attributeSchema: schemaText,
-        parentTypeId: values.parentTypeId,
+        parentTypeId: values.parentTypeId as number | undefined,
         ...(editingType?.parentTypeId && !values.parentTypeId ? { clearParent: true } : {}),
-        isActive: values.isActive ?? true,
+        isActive: (values.isActive as boolean) ?? true,
       };
 
       if (editingType) {
@@ -174,8 +174,8 @@ const CMDBTypesManagement = () => {
       setHasUnsupportedSchema(false);
       form.resetFields();
       fetchCITypes();
-    } catch (error: any) {
-      message.error(error?.message || (editingType ? '更新失败' : '创建失败'));
+    } catch (error: unknown) {
+      message.error((error instanceof Error ? error.message : undefined) || (editingType ? '更新失败' : '创建失败'));
     }
   };
 
@@ -201,8 +201,8 @@ const CMDBTypesManagement = () => {
       await CMDBApi.deleteCITypes(id);
       message.success('删除成功');
       fetchCITypes();
-    } catch (error: any) {
-      message.error(error?.message || '删除失败');
+    } catch (error: unknown) {
+      message.error((error instanceof Error ? error.message : undefined) || '删除失败');
     }
   };
 

@@ -15,7 +15,7 @@ import {
   Tag,
   Button,
   Space,
-  message,
+  App,
   Typography,
   Breadcrumb,
   Skeleton,
@@ -30,6 +30,7 @@ export default function EditKnowledgeArticlePage() {
   const router = useRouter();
   const { id } = useParams() as { id: string };
   const [form] = Form.useForm();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -37,9 +38,9 @@ export default function EditKnowledgeArticlePage() {
 
   useEffect(() => {
     KnowledgeBaseApi.getCategories()
-      .then((data: any) => {
-        const list = Array.isArray(data) ? data : data?.categories || [];
-        setCategories(list.map((c: any) => ({ id: c.id, name: c.name })));
+      .then((data: unknown) => {
+        const list = Array.isArray(data) ? data : (data as Record<string, unknown>)?.categories as unknown[] || [];
+        setCategories(list.map((c: Record<string, unknown>) => ({ id: c.id as number, name: c.name as string })));
       })
       .catch(() => {
         // fallback 默认分类
@@ -73,7 +74,7 @@ export default function EditKnowledgeArticlePage() {
     // categories 加载完成后重新匹配一次默认分类
   }, [id, categories, form]);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { title: string; content: string; categoryId: number; tags?: string[] }) => {
     setLoading(true);
     try {
       await KnowledgeBaseApi.updateArticle(id, {
@@ -85,8 +86,8 @@ export default function EditKnowledgeArticlePage() {
       });
       message.success('文章更新成功');
       router.push(`/knowledge/articles/${id}`);
-    } catch (e: any) {
-      message.error('更新失败：' + (e?.message || '未知错误'));
+    } catch (e: unknown) {
+      message.error('更新失败：' + (e instanceof Error ? e.message : '未知错误'));
     } finally {
       setLoading(false);
     }

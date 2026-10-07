@@ -270,7 +270,7 @@ export default function ProcessRoutingPage() {
     {
       title: '操作',
       key: 'actions',
-      render: (_: any, record: ProcessRoutingRule) => (
+      render: (_: unknown, record: ProcessRoutingRule) => (
         <Space>
           <Tooltip title="编辑">
             <Button aria-label="编辑" size="small" icon={<Edit />} onClick={() => handleEdit(record)} />

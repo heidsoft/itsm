@@ -126,20 +126,20 @@ const EscalationRuleManagement = () => {
     setLoading(true);
     try {
       const data = await SLAApi.getAlertRules();
-      const rules = (data || []).map((item: any) => ({
+      const rules = (data || []).map((item: Record<string, unknown>) => ({
         id: String(item.id),
-        name: item.name || '未命名规则',
-        description: item.description || '',
-        triggerCondition: item.condition || '',
-        priority: item.priority || 'P3',
-        serviceType: item.serviceType || '全部',
-        escalationLevels: item.escalationLevels || [],
+        name: (item.name as string) || '未命名规则',
+        description: (item.description as string) || '',
+        triggerCondition: (item.condition as string) || '',
+        priority: ((item.priority as string) || 'P3') as 'P1' | 'P2' | 'P3' | 'P4',
+        serviceType: (item.serviceType as string) || '全部',
+        escalationLevels: (item.escalationLevels as EscalationLevel[]) || [],
         status: (item.isActive ? 'active' : 'inactive') as 'active' | 'inactive' | 'draft',
-        createdAt: item.createdAt || new Date().toISOString(),
-        updatedAt: item.updatedAt || new Date().toISOString(),
+        createdAt: (item.createdAt as string) || new Date().toISOString(),
+        updatedAt: (item.updatedAt as string) || new Date().toISOString(),
         createdBy: '系统',
-        usageCount: item.usageCount || 0,
-        lastTriggered: item.lastTriggered || '',
+        usageCount: (item.usageCount as number) || 0,
+        lastTriggered: (item.lastTriggered as string) || '',
       }));
       setEscalationRules(rules);
     } catch (error) {

@@ -8,7 +8,7 @@ import {
   Input,
   Button,
   Table,
-  message,
+  App,
   Modal,
   Space,
   Tag,
@@ -20,6 +20,7 @@ import MSPService from '@/lib/services/msp-service';
 import { UserApi } from '@/lib/api/user-api';
 import type { MSPAllocation, CreateAllocationRequest } from '@/types/msp';
 export default function MSPManagementPage() {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
@@ -44,8 +45,8 @@ export default function MSPManagementPage() {
       } else {
         setAccessError('您没有权限访问此页面');
       }
-    } catch (err: any) {
-      setAccessError(err.message || '检查权限失败');
+    } catch (err: unknown) {
+      setAccessError(err instanceof Error ? err.message : '检查权限失败');
     }
   };
 
@@ -93,8 +94,8 @@ export default function MSPManagementPage() {
         );
         setMSPUsers(uniqueUsers);
       }
-    } catch (err: any) {
-      message.error(err.message || '加载数据失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -107,8 +108,8 @@ export default function MSPManagementPage() {
       setModalVisible(false);
       form.resetFields();
       loadData();
-    } catch (err: any) {
-      message.error(err.message || '创建分配失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '创建分配失败');
     }
   };
 
@@ -122,8 +123,8 @@ export default function MSPManagementPage() {
           await MSPService.deallocate(allocation.mspUserId, allocation.customerTenantId);
           message.success('分配已解除');
           loadData();
-        } catch (err: any) {
-          message.error(err.message || '解除分配失败');
+        } catch (err: unknown) {
+          message.error(err instanceof Error ? err.message : '解除分配失败');
         } finally {
           setDeallocateLoading(false);
         }
@@ -165,7 +166,7 @@ export default function MSPManagementPage() {
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: MSPAllocation) => (
+      render: (_: unknown, record: MSPAllocation) => (
         <Space size="small">
           <Button size="small" onClick={() => handleDeallocate(record)} danger>
             解除

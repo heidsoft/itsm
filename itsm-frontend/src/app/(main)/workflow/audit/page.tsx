@@ -14,7 +14,7 @@ import {
   Spin,
   Descriptions,
   Timeline,
-  message,
+  App,
 } from 'antd';
 import {
   Search,
@@ -37,6 +37,7 @@ const { RangePicker } = DatePicker;
 
 export default function AuditLogsPage() {
   const { t } = useI18n();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [logs, setLogs] = useState<ProcessAuditLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -186,7 +187,7 @@ export default function AuditLogsPage() {
       title: t('common.actions') || '操作',
       key: 'actions',
       width: 150,
-      render: (_: any, record: ProcessAuditLog) => (
+      render: (_value: unknown, record: ProcessAuditLog) => (
         <Space>
           <Button
             type="link"

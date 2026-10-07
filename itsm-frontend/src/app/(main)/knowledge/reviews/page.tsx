@@ -8,7 +8,7 @@ import {
   Button,
   Space,
   Select,
-  message,
+  App,
   Modal,
   Descriptions,
   Divider,
@@ -69,6 +69,7 @@ const isPendingReview = (status?: string): boolean =>
 export default function KnowledgeReviewListPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const [loading, setLoading] = useState(false);
   const [articles, setArticles] = useState<ArticleItem[]>([]);
@@ -128,8 +129,8 @@ export default function KnowledgeReviewListPage() {
       setSelectedArticle(null);
       setReviewComment('');
       fetchArticles();
-    } catch (error: any) {
-      message.error(error?.message || '操作失败');
+    } catch (error: unknown) {
+      message.error((error instanceof Error ? error.message : undefined) || '操作失败');
     } finally {
       setSubmitting(false);
     }

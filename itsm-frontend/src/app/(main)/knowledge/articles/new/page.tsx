@@ -15,7 +15,7 @@ import {
   Tag,
   Button,
   Space,
-  message,
+  App,
   Typography,
   Breadcrumb,
 } from 'antd';
@@ -28,14 +28,15 @@ const { TextArea } = Input;
 export default function NewKnowledgeArticlePage() {
   const router = useRouter();
   const [form] = Form.useForm();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
 
   React.useEffect(() => {
     KnowledgeBaseApi.getCategories()
-      .then((data: any) => {
-        const list = Array.isArray(data) ? data : data?.categories || [];
-        setCategories(list.map((c: any) => ({ id: c.id, name: c.name })));
+      .then((data: unknown) => {
+        const list = Array.isArray(data) ? data : (data as Record<string, unknown>)?.categories as unknown[] || [];
+        setCategories(list.map((c: Record<string, unknown>) => ({ id: c.id as number, name: c.name as string })));
       })
       .catch(() => {
         // fallback 默认分类
@@ -47,7 +48,7 @@ export default function NewKnowledgeArticlePage() {
       });
   }, []);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: { title: string; content: string; categoryId: number; tags?: string[] }) => {
     setLoading(true);
     try {
       const created = await KnowledgeBaseApi.createArticle({
@@ -59,8 +60,8 @@ export default function NewKnowledgeArticlePage() {
       });
       message.success('文章创建成功');
       router.push(`/knowledge/articles/${created.id}`);
-    } catch (e: any) {
-      message.error('创建失败：' + (e?.message || '未知错误'));
+    } catch (e: unknown) {
+      message.error('创建失败：' + (e instanceof Error ? e.message : '未知错误'));
     } finally {
       setLoading(false);
     }

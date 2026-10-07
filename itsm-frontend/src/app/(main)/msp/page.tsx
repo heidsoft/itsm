@@ -71,8 +71,8 @@ export default function MSPDashboardPage() {
       } else if (adminFlag) {
         setError(null);
       }
-    } catch (err: any) {
-      setError(err.message || '检查 MSP 状态失败');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '检查 MSP 状态失败');
     }
   };
 
@@ -96,8 +96,8 @@ export default function MSPDashboardPage() {
         endDate: endDate,
       });
       setReports(reportsData);
-    } catch (err: any) {
-      setError(err.message || '加载数据失败');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '加载数据失败');
     } finally {
       setLoading(false);
     }
@@ -110,8 +110,8 @@ export default function MSPDashboardPage() {
     try {
       const result = await MSPService.getCustomerTickets(customerId);
       setCustomerTickets(result.items);
-    } catch (err: any) {
-      message.error(err.message || '加载客户工单失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '加载客户工单失败');
       setCustomerTickets([]);
     } finally {
       setTicketsLoading(false);
@@ -125,8 +125,8 @@ export default function MSPDashboardPage() {
       await MSPService.assignTechnician(ticketId, selectedCustomerId);
       message.success('技术员分配成功');
       loadCustomerTickets(selectedCustomerId);
-    } catch (err: any) {
-      message.error(err.message || '分配技术员失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '分配技术员失败');
     }
   };
 
@@ -138,8 +138,8 @@ export default function MSPDashboardPage() {
       const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const data = await MSPService.getPerformanceReports({ startDate: start, endDate: end });
       setPerformanceReports(data);
-    } catch (err: any) {
-      message.error(err.message || '加载绩效报表失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '加载绩效报表失败');
     } finally {
       setPerfLoading(false);
     }
@@ -151,8 +151,8 @@ export default function MSPDashboardPage() {
     try {
       const res = await MSPService.getAllocationHistory({});
       setAllocationHistory(res.items);
-    } catch (err: any) {
-      message.error(err.message || '加载分配历史失败');
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : '加载分配历史失败');
     } finally {
       setHistoryLoading(false);
     }
