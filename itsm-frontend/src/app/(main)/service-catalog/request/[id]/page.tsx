@@ -14,7 +14,7 @@ import {
   Input,
   Button,
   Space,
-  message,
+  App,
   Typography,
   Breadcrumb,
   Checkbox,
@@ -31,17 +31,27 @@ import dayjs from 'dayjs';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { httpClient } from '@/lib/api/http-client';
 import { useAuthStore } from '@/lib/store/auth-store';
+import type { CreateServiceRequestRequest } from '@/types/service-catalog';
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
+interface CatalogInfo {
+  id: number;
+  name: string;
+  category?: string;
+  description?: string;
+  deliveryTime?: number;
+}
+
 export default function ServiceCatalogRequestPage() {
   const params = useParams();
   const router = useRouter();
+  const { message } = App.useApp();
   const id = Number(params?.id);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [catalog, setCatalog] = useState<any>(null);
+  const [catalog, setCatalog] = useState<CatalogInfo | null>(null);
   const [fetching, setFetching] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const user = useAuthStore(state => state.user);
@@ -56,17 +66,19 @@ export default function ServiceCatalogRequestPage() {
     setFetchError(null);
     // 拉取服务目录详情
     httpClient
-      .get<any>(`/api/v1/service-catalogs/${id}`)
-      .then((data: any) => {
-        setCatalog(data?.data || data);
+      .get<unknown>(`/api/v1/service-catalogs/${id}`)
+      .then((data: unknown) => {
+        const raw = data as Record<string, unknown>;
+        setCatalog((raw?.data ?? raw) as CatalogInfo);
       })
       .catch(() => {
         // 兜底：列表接口
         return httpClient
-          .get<any>('/api/v1/service-catalogs', { page: 1, size: 100 })
-          .then((list: any) => {
-            const items = list?.data?.items || list?.items || [];
-            const found = items.find((it: any) => it.id === id);
+          .get<unknown>('/api/v1/service-catalogs', { page: 1, size: 100 })
+          .then((list: unknown) => {
+            const raw = list as Record<string, unknown>;
+            const items = (raw?.data as Record<string, unknown>)?.items ?? raw?.items ?? [];
+            const found = (items as CatalogInfo[]).find((it) => it.id === id);
             if (found) {
               setCatalog(found);
             } else {
@@ -84,29 +96,28 @@ export default function ServiceCatalogRequestPage() {
     }
   }, [form, user]);
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: Record<string, unknown>) => {
     setLoading(true);
     try {
-      const expireAt: Dayjs | undefined = values.expireAt;
-      const payload: any = {
-        serviceId: id,
+      const expireAt: Dayjs | undefined = values.expireAt as Dayjs | undefined;
+      const payload: CreateServiceRequestRequest = {
+        serviceId: String(id),
         formData: {
-          requesterName: values.requesterName,
-          requesterEmail: values.requesterEmail,
-          title: values.title,
-          reason: values.reason,
-          quantity: values.quantity || 1,
-          expectedAt: values.expectedAt ? values.expectedAt.toISOString() : undefined,
-          costCenter: values.costCenter,
-          dataClassification: values.dataClassification || 'internal',
-          needsPublicIp: values.needsPublicIp || false,
+          requesterName: values.requesterName as string,
+          requesterEmail: values.requesterEmail as string,
+          title: values.title as string,
+          reason: values.reason as string,
+          quantity: (values.quantity as number) || 1,
+          expectedAt: values.expectedAt ? (values.expectedAt as Dayjs).toISOString() : undefined,
+          costCenter: values.costCenter as string,
+          dataClassification: (values.dataClassification as string) || 'internal',
+          needsPublicIp: (values.needsPublicIp as boolean) || false,
           sourceIpWhitelist: values.sourceIpWhitelist
-            ? values.sourceIpWhitelist
+            ? (values.sourceIpWhitelist as string)
                 .split(',')
                 .map((s: string) => s.trim())
                 .filter(Boolean)
             : undefined,
-          // B10: 合规确认 + 过期时间
           complianceAck: !!values.complianceAck,
           expireAt: expireAt ? expireAt.toISOString() : undefined,
         },
@@ -120,8 +131,8 @@ export default function ServiceCatalogRequestPage() {
         console.error('[nav]', navErr);
         message.error('导航失败，请稍后重试');
       }
-    } catch (e: any) {
-      message.error('提交失败：' + (e?.message || '未知错误'));
+    } catch (e: unknown) {
+      message.error('提交失败：' + (e instanceof Error ? e.message : '未知错误'));
     } finally {
       setLoading(false);
     }

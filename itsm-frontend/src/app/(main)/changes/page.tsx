@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Calendar as AntCalendar, message, Pagination, Select, Card, Empty, Tag, Spin } from 'antd';
+import { Button, Calendar as AntCalendar, App, Pagination, Select, Card, Empty, Tag, Spin } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import {
@@ -22,7 +22,7 @@ import {
   type PageStats,
 } from '@/components/layout/BusinessPageTemplate';
 import ChangeList from '@/components/change/ChangeList';
-import { ChangeApi, type Change, type ChangeCalendarItem } from '@/lib/api/change-api';
+import { ChangeApi, type Change, type ChangeCalendarItem, type ChangeStatus } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   UnifiedKanbanBoard,
@@ -34,6 +34,7 @@ type View = 'list' | 'kanban' | 'calendar';
 export default function ChangesPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const kanbanColumns = useMemo<KanbanColumnConfig<Change>[]>(
     () => [
@@ -127,7 +128,7 @@ export default function ChangesPage() {
   const [statsLoading, setStatsLoading] = useState(false);
 
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<ChangeStatus | undefined>(undefined);
   const [riskFilter, setRiskFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -156,7 +157,7 @@ export default function ChangesPage() {
       const response = await ChangeApi.getChanges({
         page,
         pageSize,
-        status: statusFilter as any,
+        status: statusFilter,
         riskLevel: riskFilter,
         search: searchKeyword,
       });
@@ -179,7 +180,7 @@ export default function ChangesPage() {
       const response = await ChangeApi.getChanges({
         page: 1,
         pageSize: 100,
-        status: statusFilter as any,
+        status: statusFilter,
         riskLevel: riskFilter,
         search: searchKeyword,
       });

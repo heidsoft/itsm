@@ -8,7 +8,7 @@ import {
   Button,
   Space,
   Select,
-  message,
+  App,
   Modal,
   Descriptions,
   Divider,
@@ -24,13 +24,14 @@ import type { ColumnsType } from 'antd/es/table';
 export default function PIRListPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
 
   const [loading, setLoading] = useState(false);
   const [pirs, setPirs] = useState<PIRResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [resultFilter, setResultFilter] = useState<string | undefined>(undefined);
+  const [resultFilter, setResultFilter] = useState<PIROverallResult | '全部' | undefined>(undefined);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedPIR, setSelectedPIR] = useState<PIRResponse | null>(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -46,7 +47,7 @@ export default function PIRListPage() {
       const response = await ChangeApi.getPIRs({
         page,
         pageSize: pageSize,
-        result: resultFilter as any,
+        result: resultFilter,
       });
       if (seq !== listRequest.current) return;
       setPirs(response.items);
@@ -73,8 +74,8 @@ export default function PIRListPage() {
       setDeleteModalVisible(false);
       setSelectedPIR(null);
       fetchPIRs();
-    } catch (error: any) {
-      message.error(error?.message || '删除失败');
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : '删除失败');
     } finally {
       setDeleting(false);
     }

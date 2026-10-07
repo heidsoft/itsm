@@ -9,7 +9,7 @@ import {
   DatePicker,
   Button,
   Space,
-  message,
+  App,
   Divider,
   Tag,
   Descriptions,
@@ -28,7 +28,7 @@ import {
   type PIROverallResult,
 } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n/useI18n';
-import dayjs from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -37,6 +37,7 @@ export default function PIRPage() {
   const params = useParams();
   const router = useRouter();
   const { t } = useI18n();
+  const { message } = App.useApp();
   const changeId = Number(params.id);
 
   const [loading, setLoading] = useState(false);
@@ -78,31 +79,31 @@ export default function PIRPage() {
     fetchPIR();
   }, [fetchPIR]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     setSubmitting(true);
     try {
       const request: CreatePIRRequest = {
         overallResult: values.overallResult as PIROverallResult,
-        objectivesAchieved: values.objectivesAchieved,
-        successSummary: values.successSummary,
-        issuesEncountered: values.issuesEncountered,
-        lessonsLearned: values.lessonsLearned,
-        improvementRecommendations: values.improvementRecommendations,
-        actualStartTime: values.actualStartTime?.toISOString(),
-        actualEndTime: values.actualEndTime?.toISOString(),
-        rollbackPerformed: values.rollbackPerformed,
-        rollbackReason: values.rollbackReason,
+        objectivesAchieved: values.objectivesAchieved as boolean,
+        successSummary: values.successSummary as string,
+        issuesEncountered: values.issuesEncountered as string,
+        lessonsLearned: values.lessonsLearned as string,
+        improvementRecommendations: values.improvementRecommendations as string,
+        actualStartTime: (values.actualStartTime as Dayjs)?.toISOString(),
+        actualEndTime: (values.actualEndTime as Dayjs)?.toISOString(),
+        rollbackPerformed: values.rollbackPerformed as boolean,
+        rollbackReason: values.rollbackReason as string,
       };
 
       if (existingPIR && pir) {
         // Update existing PIR
         const updateRequest: UpdatePIRRequest = {
-          overallResult: values.overallResult,
-          objectivesAchieved: values.objectivesAchieved,
-          successSummary: values.successSummary,
-          issuesEncountered: values.issuesEncountered,
-          lessonsLearned: values.lessonsLearned,
-          improvementRecommendations: values.improvementRecommendations,
+          overallResult: values.overallResult as PIROverallResult,
+          objectivesAchieved: values.objectivesAchieved as boolean,
+          successSummary: values.successSummary as string,
+          issuesEncountered: values.issuesEncountered as string,
+          lessonsLearned: values.lessonsLearned as string,
+          improvementRecommendations: values.improvementRecommendations as string,
         };
         const updated = await ChangeApi.updatePIR(pir.id, updateRequest);
         setPIR(updated);
@@ -114,8 +115,8 @@ export default function PIRPage() {
         setExistingPIR(true);
         message.success('PIR已创建');
       }
-    } catch (error: any) {
-      message.error(error?.message || '操作失败');
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : '操作失败');
     } finally {
       setSubmitting(false);
     }
@@ -131,8 +132,8 @@ export default function PIRPage() {
       setExistingPIR(false);
       form.resetFields();
       setDeleteModalVisible(false);
-    } catch (error: any) {
-      message.error(error?.message || '删除失败');
+    } catch (error: unknown) {
+      message.error(error instanceof Error ? error.message : '删除失败');
     } finally {
       setDeleting(false);
     }

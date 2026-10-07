@@ -5,7 +5,7 @@ import { Card, Form, Input, InputNumber, Switch, Button, App, Spin } from 'antd'
 import { useParams, useRouter } from 'next/navigation';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { useI18n } from '@/lib/i18n';
-import { ServiceStatus as ServiceStatusType } from '@/types/service-catalog';
+import { ServiceStatus as ServiceStatusType, ServiceCategory } from '@/types/service-catalog';
 
 const { TextArea } = Input;
 
@@ -42,14 +42,14 @@ export default function EditServicePage() {
     loadService();
   }, [serviceId, form, appMessage, router, t]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     try {
       setLoading(true);
       await ServiceCatalogApi.updateService(serviceId, {
-        name: values.name,
-        category: values.category,
-        shortDescription: values.description,
-        availability: { responseTime: values.deliveryTime },
+        name: values.name as string,
+        category: values.category as ServiceCategory,
+        shortDescription: values.description as string,
+        availability: { responseTime: values.deliveryTime as number },
         status: values.status ? ServiceStatusType.PUBLISHED : ServiceStatusType.DRAFT,
       });
       appMessage.success(t('common.saveSuccess'));

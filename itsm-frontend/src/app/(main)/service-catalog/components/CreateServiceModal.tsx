@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Modal, Form, Input, Select, DatePicker } from 'antd';
+import type { FormInstance } from 'antd';
 import { PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -10,7 +11,7 @@ interface CreateServiceModalProps {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
-  form: any;
+  form: FormInstance;
   loading?: boolean;
 }
 

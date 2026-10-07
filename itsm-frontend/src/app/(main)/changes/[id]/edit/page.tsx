@@ -18,7 +18,7 @@ import {
 import { ArrowLeft, Lock, Save } from 'lucide-react';
 import dayjs, { type Dayjs } from 'dayjs';
 import { AppDateRangePicker } from '@/components/ui/AppDatePicker';
-import { ChangeApi, type ChangeRequest } from '@/lib/api/change-api';
+import { ChangeApi, type ChangeRequest, type Change } from '@/lib/api/change-api';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
@@ -77,7 +77,7 @@ const EditChangePage: React.FC = () => {
   const [form] = Form.useForm<ChangeFormValues>();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const [changeData, setChangeData] = useState<any>(null);
+  const [changeData, setChangeData] = useState<Change | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
 
   // Fetch change data
@@ -88,7 +88,7 @@ const EditChangePage: React.FC = () => {
       setFetching(true);
       try {
         const resp = await ChangeApi.getChange(Number(id));
-        const data = resp as any;
+        const data = resp;
         setChangeData(data);
 
         // 状态守卫：已审批/实施中/已完成的变更不允许编辑
