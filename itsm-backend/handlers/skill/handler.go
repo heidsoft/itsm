@@ -487,18 +487,17 @@ func (h *Handler) Invoke(c *gin.Context) {
 		input = map[string]interface{}{}
 	}
 
-	// 注入 tenant_id/user_id（若调用方未传）。这两项是大部分 Skill 的必填字段。
+	// 身份与角色只能来自认证中间件上下文：无条件覆盖请求体同名字段。
+	// 若用 if-absent 注入，调用方可伪造 tenantId/userId/role 造成跨租户
+	// 访问或 Gate 2（工具级 RBAC）提权。
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
 	userID := c.GetInt("user_id")
-	if _, ok := input["tenantId"]; !ok {
-		input["tenantId"] = tenantID
-	}
-	if _, ok := input["userId"]; !ok && userID != 0 {
-		input["userId"] = userID
-	}
+	input["tenantId"] = tenantID
+	input["userId"] = userID
+	input["role"] = c.GetString("role")
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
 	defer cancel()

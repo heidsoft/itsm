@@ -285,6 +285,40 @@ func TestInvoke_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
+// 11.5 Invoke 身份只能来自认证上下文：请求体伪造 tenantId/userId/role 必须被覆盖
+func TestInvoke_IdentityFromContextOverridesBody(t *testing.T) {
+	reg := service.NewSkillRegistry()
+	r := setupRouter(reg)
+
+	create := skill.SkillUpsertRequest{
+		Code:                "user.echo",
+		Version:             "v1",
+		RequiredPermissions: []string{"skill:read"},
+		Executor:            map[string]interface{}{"target": "echo"},
+	}
+	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
+	require.Equal(t, http.StatusOK, w.Code)
+
+	w2 := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/user.echo/invoke",
+		skill.SkillInvokeRequest{Input: map[string]interface{}{
+			"hello":    "world",
+			"tenantId": 2,
+			"userId":   999,
+			"role":     "super_admin",
+		}})
+	require.Equal(t, http.StatusOK, w2.Code, w2.Body.String())
+
+	output, ok := parseData(t, w2)["output"].(map[string]interface{})
+	require.True(t, ok, "output should be an object")
+	echoed, ok := output["echoed"].(map[string]interface{})
+	require.True(t, ok, "echoed should be an object")
+	// setupRouter 模拟认证上下文 tenant_id=1 / user_id=42 / role=admin，
+	// 伪造值必须被无条件覆盖，防止跨租户访问与 Gate 2（工具级 RBAC）提权。
+	assert.Equal(t, float64(1), echoed["tenantId"])
+	assert.Equal(t, float64(42), echoed["userId"])
+	assert.Equal(t, "admin", echoed["role"])
+}
+
 // 12. Update 路径
 func TestUpdate_VersionBump(t *testing.T) {
 	reg := service.NewSkillRegistry()
