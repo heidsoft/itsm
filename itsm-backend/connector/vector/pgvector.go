@@ -48,15 +48,12 @@ func (s *pgVectorStore) Search(ctx context.Context, req SearchRequest) (SearchRe
 		return SearchResponse{}, fmt.Errorf("vector dimension: got %d, want %d", len(req.Vector), s.dimension)
 	}
 	op := map[string]string{"cosine": "<=>", "l2": "<->", "ip": "<#>"}[s.metric]
-	args := []interface{}{pgvector.NewVector(req.Vector)}
-	where := []string{}
-	for key, val := range req.Filter {
-		if err := validIdentifier(key); err != nil {
-			return SearchResponse{}, err
-		}
-		args = append(args, val)
-		where = append(where, fmt.Sprintf("%s = $%d", key, len(args)))
+	where, filterArgs, err := searchFilterClauses(req.Filter, 1)
+	if err != nil {
+		return SearchResponse{}, err
 	}
+	args := []interface{}{pgvector.NewVector(req.Vector)}
+	args = append(args, filterArgs...)
 	clause := ""
 	if len(where) > 0 {
 		clause = " WHERE " + strings.Join(where, " AND ")
@@ -91,6 +88,24 @@ func (s *pgVectorStore) Search(ctx context.Context, req SearchRequest) (SearchRe
 		out.Results = append(out.Results, SearchResult{ID: id, Content: content, Score: score, Metadata: meta})
 	}
 	return out, rows.Err()
+}
+
+// searchFilterClauses 把过滤器键值编译为 metadata JSONB 文本投影谓词。
+// pgvector 表仅含 id/content/embedding/metadata 四列：过滤键若按裸列名拼
+// WHERE（如 metadata 里不存在的 tenantID）会因列不存在必然报错，检索静默降级。
+// 值统一按文本比较：JSON 数字/字符串经 ->> 投影为文本后与 %v 格式化值相等即命中。
+// 键必须通过 validIdentifier（会内嵌进单引号 SQL 文本），非法键 fail closed。
+func searchFilterClauses(filter map[string]interface{}, argOffset int) ([]string, []interface{}, error) {
+	where := make([]string, 0, len(filter))
+	args := make([]interface{}, 0, len(filter))
+	for key, val := range filter {
+		if err := validIdentifier(key); err != nil {
+			return nil, nil, err
+		}
+		args = append(args, fmt.Sprintf("%v", val))
+		where = append(where, fmt.Sprintf("metadata->>'%s' = $%d", key, argOffset+len(args)))
+	}
+	return where, args, nil
 }
 
 func (s *pgVectorStore) Insert(ctx context.Context, req InsertRequest) error {

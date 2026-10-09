@@ -341,6 +341,7 @@ func (r *RAGService) rankByAuthority(ctx context.Context, tenantID int, results 
 
 // vectorSearch performs similarity search using vectors
 func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query string, limit int) ([]map[string]any, error) {
+	legacyFallback := false
 	if r.vectorStore != nil {
 		var embedding []float32
 		if r.embedder != nil {
@@ -355,6 +356,7 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 			// Fallback to legacy store if connector fails
 			if r.vectors != nil && r.embedder != nil {
 				r.logger.Warnw("RAGService: connector vector search failed, falling back to legacy store", "error", err)
+				legacyFallback = true
 			} else {
 				return nil, fmt.Errorf("vector connector search: %w", err)
 			}
@@ -428,6 +430,10 @@ func (r *RAGService) vectorSearch(ctx context.Context, tenantID int, query strin
 			"source":      vectorResult.Source,
 			"score":       similarity,
 			"search_type": "vector",
+		}
+		// 连接器后端失败回退到 legacy 时必须在结果上可观测（能力状态与失败语义规则）
+		if legacyFallback {
+			item["degraded"] = true
 		}
 
 		// Enrich with knowledge article metadata.
