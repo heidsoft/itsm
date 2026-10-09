@@ -132,26 +132,28 @@ func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 // 禁止在各层内联 map 导致状态转换判定不一致。
 //
 // 规则：
-//   - new        → open / assigned / in_progress / cancelled
-//   - assigned   → in_progress / pending / resolved / cancelled
-//   - open       → in_progress / pending / resolved / cancelled
-//   - in_progress → resolved / pending / cancelled
-//   - pending    → in_progress / resolved / open / cancelled
+//   - new        → open / assigned / in_progress / cancelled / rejected
+//   - assigned   → in_progress / pending / resolved / cancelled / rejected
+//   - open       → in_progress / pending / resolved / cancelled / rejected
+//   - in_progress → resolved / pending / cancelled / rejected
+//   - pending    → in_progress / resolved / open / cancelled / rejected
 //   - resolved   → closed / in_progress / open
 //   - closed     → 终态，禁止转换
 //   - cancelled  → 终态，禁止转换
 //   - approved   → in_progress / resolved / closed
 //   - rejected   → open / cancelled
+//   - new/assigned/open/in_progress/pending 可迁入 rejected：驳回（RejectTicket）
+//     的落地态，与 cancelled 同一可达集；rejected 由 open/cancelled 迁出。
 func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	if currentStatus == newStatus {
 		return true
 	}
 	validTransitions := map[string][]string{
-		TicketStatusNew:        {TicketStatusOpen, TicketStatusAssigned, TicketStatusInProgress, TicketStatusCancelled},
-		TicketStatusAssigned:   {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled},
-		TicketStatusOpen:       {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled},
-		TicketStatusInProgress: {TicketStatusResolved, TicketStatusPending, TicketStatusCancelled},
-		TicketStatusPending:    {TicketStatusInProgress, TicketStatusResolved, TicketStatusOpen, TicketStatusCancelled},
+		TicketStatusNew:        {TicketStatusOpen, TicketStatusAssigned, TicketStatusInProgress, TicketStatusCancelled, TicketStatusRejected},
+		TicketStatusAssigned:   {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
+		TicketStatusOpen:       {TicketStatusInProgress, TicketStatusPending, TicketStatusResolved, TicketStatusCancelled, TicketStatusRejected},
+		TicketStatusInProgress: {TicketStatusResolved, TicketStatusPending, TicketStatusCancelled, TicketStatusRejected},
+		TicketStatusPending:    {TicketStatusInProgress, TicketStatusResolved, TicketStatusOpen, TicketStatusCancelled, TicketStatusRejected},
 		TicketStatusResolved:   {TicketStatusClosed, TicketStatusInProgress, TicketStatusOpen},
 		TicketStatusClosed:     {},
 		TicketStatusCancelled:  {},

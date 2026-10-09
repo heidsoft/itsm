@@ -63,7 +63,7 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	}
 
 	if tk.Status != "new" && tk.Status != "open" {
-		return fmt.Errorf("工单当前状态不允许接单: %s", tk.Status)
+		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许接单", fmt.Sprintf("当前状态 '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
@@ -91,7 +91,7 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		txErr = fmt.Errorf("failed to accept ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
 		return txErr
 	}
 
@@ -132,6 +132,11 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		returnToStatus = *req.ReturnToStatus
 	}
 
+	// 驳回目标状态必须通过状态机白名单校验（客户端显式传入时禁止任意跳转）
+	if !common.IsValidTicketStatusTransition(tk.Status, returnToStatus) {
+		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许驳回", fmt.Sprintf("from '%s' to '%s'", tk.Status, returnToStatus))
+	}
+
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -152,7 +157,7 @@ func (s *TicketWorkflowService) RejectTicket(ctx context.Context, req *dto.Rejec
 		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		txErr = fmt.Errorf("failed to reject ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
 		return txErr
 	}
 
@@ -190,24 +195,41 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 
 	// 检查是否是工单创建者
 	if tk.RequesterID != userID {
-		return fmt.Errorf("只有工单创建者可以撤回工单")
+		return common.NewBusinessError(common.ForbiddenCode, "只有工单创建者可以撤回工单", "")
 	}
 
-	if tk.Status == "closed" || tk.Status == "cancelled" {
-		return fmt.Errorf("工单已关闭或取消，无法撤回")
+	if !common.IsValidTicketStatusTransition(tk.Status, "cancelled") {
+		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许撤回", fmt.Sprintf("from '%s' to 'cancelled'", tk.Status))
 	}
 
-	// 更新工单状态
-	_, err = s.client.Ticket.UpdateOneID(req.TicketID).
+	// 开启事务，保证原子性（与其他流转动作对齐：状态更新与流转记录同事务）
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return fmt.Errorf("开启事务失败: %w", err)
+	}
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		}
+	}()
+
+	txClient := tx.Client()
+
+	// 更新工单状态（CAS：租户 + 版本条件更新，防止并发覆盖）
+	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 		SetStatus("cancelled").
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to withdraw ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
+		return txErr
 	}
 
 	// 记录流转记录
 	newStatus := "cancelled"
-	err = s.createWorkflowRecord(ctx, &dto.TicketWorkflowRecord{
+	err = s.createWorkflowRecordWithClient(ctx, txClient, &dto.TicketWorkflowRecord{
 		TicketID:   req.TicketID,
 		Action:     dto.WorkflowActionWithdraw,
 		FromStatus: &tk.Status,
@@ -216,8 +238,16 @@ func (s *TicketWorkflowService) WithdrawTicket(ctx context.Context, req *dto.Wit
 		Reason:     req.Reason,
 		CreatedAt:  time.Now(),
 	}, tenantID)
+	if err != nil {
+		txErr = fmt.Errorf("记录流转记录失败: %w", err)
+		return txErr
+	}
 
-	return err
+	txErr = tx.Commit()
+	if txErr != nil {
+		return fmt.Errorf("提交撤回事务失败: %w", txErr)
+	}
+	return nil
 }
 
 // ForwardTicket 转发工单
@@ -816,6 +846,11 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 		return err
 	}
 
+	// 状态机校验：仅白名单允许的来源状态可迁入 resolved
+	if !common.IsValidTicketStatusTransition(tk.Status, "resolved") {
+		return common.NewBusinessError(common.ConflictCode, "工单当前状态不允许解决", fmt.Sprintf("from '%s' to 'resolved'", tk.Status))
+	}
+
 	// 开启事务，保证原子性
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -830,15 +865,17 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 
 	txClient := tx.Client()
 
-	// 更新工单状态
+	// 更新工单状态（CAS：租户 + 版本条件更新，防止并发覆盖与 TOCTOU）
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 		SetStatus("resolved").
 		SetResolution(req.Resolution).
 		SetResolutionCategory(req.ResolutionCategory).
 		SetResolvedAt(time.Now()).
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		txErr = fmt.Errorf("failed to resolve ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
 		return txErr
 	}
 
@@ -875,8 +912,8 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 		return err
 	}
 
-	if tk.Status != "resolved" {
-		return fmt.Errorf("只有已解决的工单才能关闭")
+	if !common.IsValidTicketStatusTransition(tk.Status, "closed") {
+		return common.NewBusinessError(common.ConflictCode, "只有已解决的工单才能关闭", fmt.Sprintf("当前状态 '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
@@ -893,13 +930,15 @@ func (s *TicketWorkflowService) CloseTicket(ctx context.Context, req *dto.CloseT
 
 	txClient := tx.Client()
 
-	// 更新工单状态
+	// 更新工单状态（CAS：租户 + 版本条件更新，防止并发覆盖与 TOCTOU）
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 		SetStatus("closed").
 		SetClosedAt(time.Now()).
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		txErr = fmt.Errorf("failed to close ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
 		return txErr
 	}
 
@@ -935,8 +974,9 @@ func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.Reope
 		return err
 	}
 
-	if tk.Status != "closed" && tk.Status != "resolved" {
-		return fmt.Errorf("只有已关闭或已解决的工单才能重开")
+	// closed 是状态机规定的终态（不可迁出），仅 resolved 允许重开
+	if !common.IsValidTicketStatusTransition(tk.Status, "open") {
+		return common.NewBusinessError(common.ConflictCode, "只有已解决的工单才能重开", fmt.Sprintf("当前状态 '%s'", tk.Status))
 	}
 
 	// 开启事务，保证原子性
@@ -953,12 +993,14 @@ func (s *TicketWorkflowService) ReopenTicket(ctx context.Context, req *dto.Reope
 
 	txClient := tx.Client()
 
-	// 更新工单状态
+	// 更新工单状态（CAS：租户 + 版本条件更新，防止并发覆盖与 TOCTOU）
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
+		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version)).
 		SetStatus("open").
+		SetVersion(tk.Version + 1).
 		Save(ctx)
 	if err != nil {
-		txErr = fmt.Errorf("failed to reopen ticket: %w", err)
+		txErr = mapTicketSaveErr(err, req.TicketID, tk.Version)
 		return txErr
 	}
 
@@ -1073,9 +1115,8 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		state.AvailableActions = append(state.AvailableActions,
 			dto.WorkflowActionClose,
 			dto.WorkflowActionReopen)
-	case "closed":
-		state.AvailableActions = append(state.AvailableActions, dto.WorkflowActionReopen)
 	}
+	// closed 是状态机终态，不再提供重开动作（与 IsValidTicketStatusTransition 对齐）
 
 	// 检查审批权限
 	if approvalStatus != nil && *approvalStatus == dto.ApprovalStatusPending {
@@ -1848,6 +1889,15 @@ func (s *TicketWorkflowService) buildCCListResponse(ctx context.Context, records
 	}
 
 	return response, nil
+}
+
+// mapTicketSaveErr 将 CAS（VersionEQ 条件更新）Save 返回的 NotFound 映射为
+// 版本冲突错误（classifyError 识别为 4090 并携带冲突载荷）；其余错误按内部错误包装。
+func mapTicketSaveErr(err error, ticketID, heldVersion int) error {
+	if ent.IsNotFound(err) {
+		return common.NewVersionConflictError("工单", ticketID, heldVersion, heldVersion+1)
+	}
+	return fmt.Errorf("failed to update ticket: %w", err)
 }
 
 func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantID int) (*ent.Ticket, error) {

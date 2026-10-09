@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/ticket"
@@ -427,4 +430,187 @@ func TestTicketWorkflowService_LargeVolumeTickets(t *testing.T) {
 		All(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, 50, len(tickets))
+}
+
+// ==================== 状态机与 CAS 回归测试（workflow 路径对齐） ====================
+
+// assertWorkflowConflict 断言错误为携带期望业务码的 BusinessError（非法迁移/权限拒绝）。
+func assertWorkflowConflict(t *testing.T, err error, wantCode int) {
+	t.Helper()
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "期望 BusinessError，实际 %T: %v", err, err)
+	assert.Equal(t, wantCode, bizErr.Code)
+}
+
+func TestTicketWorkflowService_ResolveTicket_RejectsIllegalTransition(t *testing.T) {
+	// 回归：修复前 ResolveTicket 无 source→target 校验，new 可直接置 resolved
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "resvbad")
+	require.NoError(t, err)
+	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "resvbad")
+	require.NoError(t, err)
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "new")
+	require.NoError(t, err)
+
+	err = service.ResolveTicket(ctx, &dto.ResolveTicketRequest{TicketID: tk.ID, Resolution: "done"}, user.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+
+	fresh, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "new", fresh.Status, "非法迁移不得改变工单状态")
+	assert.Equal(t, tk.Version, fresh.Version)
+}
+
+func TestTicketWorkflowService_ResolveTicket_HappyPathBumpsVersion(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "resvok")
+	require.NoError(t, err)
+	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "resvok")
+	require.NoError(t, err)
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "in_progress")
+	require.NoError(t, err)
+
+	require.NoError(t, service.ResolveTicket(ctx, &dto.ResolveTicketRequest{TicketID: tk.ID, Resolution: "fixed"}, user.ID, tenant.ID))
+
+	fresh, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "resolved", fresh.Status)
+	assert.Equal(t, tk.Version+1, fresh.Version, "CAS 写入成功后版本必须自增")
+	assert.NotNil(t, fresh.ResolvedAt)
+}
+
+func TestTicketWorkflowService_CloseTicket_RequiresResolved(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "closebad")
+	require.NoError(t, err)
+	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "closebad")
+	require.NoError(t, err)
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "in_progress")
+	require.NoError(t, err)
+
+	err = service.CloseTicket(ctx, &dto.CloseTicketRequest{TicketID: tk.ID}, user.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+
+	fresh, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "in_progress", fresh.Status)
+}
+
+func TestTicketWorkflowService_ReopenTicket_ClosedIsTerminal(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "reopen")
+	require.NoError(t, err)
+	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "reopen")
+	require.NoError(t, err)
+
+	// 产品决策：closed 对齐状态机为终态，closed→open 必须拒绝
+	closed, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "closed")
+	require.NoError(t, err)
+	err = service.ReopenTicket(ctx, &dto.ReopenTicketRequest{TicketID: closed.ID, Reason: "r"}, user.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+
+	// resolved→open 仍允许（CAS 成功后版本自增）
+	resolved, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "resolved")
+	require.NoError(t, err)
+	require.NoError(t, service.ReopenTicket(ctx, &dto.ReopenTicketRequest{TicketID: resolved.ID, Reason: "r"}, user.ID, tenant.ID))
+	fresh, err := client.Ticket.Get(ctx, resolved.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "open", fresh.Status)
+	assert.Equal(t, resolved.Version+1, fresh.Version)
+}
+
+func TestTicketWorkflowService_WithdrawTicket_GuardsAndCAS(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "wd")
+	require.NoError(t, err)
+	requester, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "wdreq")
+	require.NoError(t, err)
+	other, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "wdoth")
+	require.NoError(t, err)
+
+	// 非创建者 → 403 语义（修复前为裸 error，伪装成 500）
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "new")
+	require.NoError(t, err)
+	err = service.WithdrawTicket(ctx, &dto.WithdrawTicketRequest{TicketID: tk.ID, Reason: "r"}, other.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ForbiddenCode)
+
+	// resolved → cancelled 状态机不允许（修复前仅拦 closed/cancelled）
+	resolved, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "resolved")
+	require.NoError(t, err)
+	err = service.WithdrawTicket(ctx, &dto.WithdrawTicketRequest{TicketID: resolved.ID, Reason: "r"}, requester.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+
+	// 创建者 + new → cancelled（事务 + CAS，版本自增）
+	okTk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "new")
+	require.NoError(t, err)
+	require.NoError(t, service.WithdrawTicket(ctx, &dto.WithdrawTicketRequest{TicketID: okTk.ID, Reason: "r"}, requester.ID, tenant.ID))
+	fresh, err := client.Ticket.Get(ctx, okTk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "cancelled", fresh.Status)
+	assert.Equal(t, okTk.Version+1, fresh.Version)
+}
+
+func TestTicketWorkflowService_RejectTicket_GuardsAndWhitelist(t *testing.T) {
+	service, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	tenant, err := createTicketWorkflowTestTenant(ctx, client, "rj")
+	require.NoError(t, err)
+	user, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "rj")
+	require.NoError(t, err)
+
+	// 默认目标 rejected：状态机已补齐可达性（new/open/assigned/in_progress/pending → rejected）
+	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "new")
+	require.NoError(t, err)
+	require.NoError(t, service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: tk.ID, Reason: "r", Comment: "c"}, user.ID, tenant.ID))
+	fresh, err := client.Ticket.Get(ctx, tk.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "rejected", fresh.Status)
+	assert.Equal(t, tk.Version+1, fresh.Version)
+
+	// closed 是终态：不可驳回（修复前无校验，任意状态均可驳回）
+	closed, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "closed")
+	require.NoError(t, err)
+	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: closed.ID, Reason: "r", Comment: "c"}, user.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+
+	// 客户端指定白名单外目标（new → closed）必须冲突
+	tk2, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "new")
+	require.NoError(t, err)
+	badTarget := "closed"
+	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: tk2.ID, Reason: "r", Comment: "c", ReturnToStatus: &badTarget}, user.ID, tenant.ID)
+	assertWorkflowConflict(t, err, common.ConflictCode)
+}
+
+func TestMapTicketSaveErr_MapsNotFoundToVersionConflict(t *testing.T) {
+	_, client, ctx := setupTicketWorkflowTest(t)
+	defer client.Close()
+
+	// 用真实 ent NotFound 验证 CAS 失败 → 409 语义（携带冲突载荷），而非 500
+	_, err := client.Ticket.Get(ctx, 999999)
+	require.Error(t, err)
+	require.True(t, ent.IsNotFound(err))
+
+	mapped := mapTicketSaveErr(err, 999999, 7)
+	require.True(t, common.IsVersionConflictError(mapped), "期望 VersionConflictError，实际 %T: %v", mapped, mapped)
+	var vc *common.VersionConflictError
+	require.True(t, errors.As(mapped, &vc))
+	assert.Equal(t, 999999, vc.ResourceID)
+	assert.Equal(t, 7, vc.CurrentVersion)
+
+	// 非 NotFound 错误保持包装透传，不误判为冲突
+	plain := mapTicketSaveErr(context.DeadlineExceeded, 1, 1)
+	require.False(t, common.IsVersionConflictError(plain))
+	require.ErrorIs(t, plain, context.DeadlineExceeded)
 }
