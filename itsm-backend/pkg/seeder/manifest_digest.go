@@ -49,6 +49,9 @@ func manifestDigestInputs(component string) ([]string, error) {
 		for _, role := range BuiltinRoles() {
 			inputs = append(inputs, fmt.Sprintf("role=%s|%s|%s", role.Code, role.Name, role.Description))
 		}
+		for _, role := range PracticeRoles() {
+			inputs = append(inputs, fmt.Sprintf("role=%s|%s|%s", role.Code, role.Name, role.Description))
+		}
 		for _, group := range BuiltinGroups() {
 			inputs = append(inputs, "group="+group.Name)
 		}

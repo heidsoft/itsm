@@ -18,7 +18,7 @@ func TestGetApprovalHistory_DialectSafeLevels(t *testing.T) {
 	ctx := context.Background()
 
 	approver1 := mkChangeUser(t, client, tenantID, "manager")
-	approver2 := mkChangeUser(t, client, tenantID, "security")
+	approver2 := mkChangeUser(t, client, tenantID, "security_admin")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 

@@ -28,33 +28,14 @@
     {"name": "安全运营", "description": "安全事件响应、漏洞和合规运营"},
     {"name": "变更委员会", "description": "变更评审、发布窗口和风险控制"}
   ],
-  "roles": [
-    {"name": "IT总监", "code": "it_director", "description": "IT部门总监"},
-    {"name": "运维总监", "code": "ops_director", "description": "运维部门总监"},
-    {"name": "系统管理员", "code": "sysadmin", "description": "系统管理员"},
-    {"name": "安全管理员", "code": "security_admin", "description": "安全管理角色"},
-    {"name": "审计管理员", "code": "audit_admin", "description": "审计管理角色"},
-    {"name": "运维经理", "code": "ops_manager", "description": "运维团队经理"},
-    {"name": "运维工程师", "code": "ops_engineer", "description": "运维工程师"},
-    {"name": "DBA工程师", "code": "dba", "description": "数据库管理员"},
-    {"name": "网络工程师", "code": "network_eng", "description": "网络工程师"},
-    {"name": "服务台主管", "code": "sd_manager", "description": "服务台主管"},
-    {"name": "一线工程师", "code": "l1_support", "description": "一线支持工程师"},
-    {"name": "二线工程师", "code": "l2_support", "description": "二线支持工程师"},
-    {"name": "三线专家", "code": "l3_expert", "description": "三线技术专家"},
-    {"name": "变更经理", "code": "change_manager", "description": "变更流程负责人"},
-    {"name": "服务目录管理员", "code": "service_catalog_admin", "description": "服务目录与请求模板管理员"},
-    {"name": "部门经理", "code": "dept_manager", "description": "部门经理"},
-    {"name": "普通用户", "code": "end_user", "description": "普通终端用户"},
-    {"name": "访客", "code": "guest", "description": "访客用户"}
-  ],
+  "roles": [],
   "groups": [
-    {"name": "approvers-l1", "description": "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
-    {"name": "approvers-l2", "description": "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
-    {"name": "approvers-l3", "description": "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
-    {"name": "approvers-managers", "description": "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
+    {"name": "approvers-l1", "description": "一线审批组：从 agent 角色人员中拉人组成"},
+    {"name": "approvers-l2", "description": "二线审批组：从 technician / it_admin 角色人员中拉人组成"},
+    {"name": "approvers-l3", "description": "三线审批组：从 it_admin / security_admin 角色人员中拉人组成"},
+    {"name": "approvers-managers", "description": "管理审批组：从 manager 角色人员中拉人组成"},
     {"name": "approvers-security", "description": "安全审批组：从 security_admin 角色人员中拉人组成"},
-    {"name": "approvers-change", "description": "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"}
+    {"name": "approvers-change", "description": "变更审批组：从 change_manager / manager 角色人员中拉人组成（变更委员会）"}
   ],
   "sla_definitions": [
     {"name": "Incident-P0-紧急", "description": "核心业务中断或重大安全事件", "service_type": "incident", "priority": "urgent", "response_time": 15, "resolution_time": 120},
@@ -101,10 +82,10 @@
     }
   ],
   "approval_workflows": [
-    {"name": "服务请求审批", "description": "涉及资源、权限或费用的服务请求需要部门负责人审批", "ticket_type": "service_request", "priority": "", "nodes": [{"type": "approval", "name": "部门负责人审批", "approver_type": "role", "role": "dept_manager", "timeout": 480}]},
-    {"name": "普通变更审批", "description": "普通变更需要技术负责人和变更经理审批", "ticket_type": "change", "priority": "medium,high", "nodes": [{"type": "approval", "name": "技术负责人审批", "approver_type": "role", "role": "ops_manager", "timeout": 480}, {"type": "approval", "name": "变更经理审批", "approver_type": "role", "role": "change_manager", "timeout": 480}]},
-    {"name": "紧急变更审批", "description": "紧急变更采用快速审批并要求事后复盘", "ticket_type": "change", "priority": "urgent", "nodes": [{"type": "approval", "name": "值班经理审批", "approver_type": "role", "role": "ops_manager", "timeout": 60}, {"type": "approval", "name": "安全确认", "approver_type": "role", "role": "security_admin", "timeout": 120}]},
-    {"name": "权限申请审批", "description": "高权限申请需要直属负责人和安全管理员审批", "ticket_type": "service_request", "priority": "high", "nodes": [{"type": "approval", "name": "直属负责人审批", "approver_type": "role", "role": "dept_manager", "timeout": 480}, {"type": "approval", "name": "安全管理员审批", "approver_type": "role", "role": "security_admin", "timeout": 480}]}
+    {"name": "服务请求审批", "description": "涉及资源、权限或费用的服务请求需要部门负责人审批", "ticket_type": "service_request", "priority": "", "nodes": [{"type": "approval", "name": "部门负责人审批", "approver_type": "role", "role": "manager", "timeout": 480}]},
+    {"name": "普通变更审批", "description": "普通变更需要技术负责人和变更经理审批", "ticket_type": "change", "priority": "medium,high", "nodes": [{"type": "approval", "name": "技术负责人审批", "approver_type": "role", "role": "it_admin", "timeout": 480}, {"type": "approval", "name": "变更经理审批", "approver_type": "role", "role": "change_manager", "timeout": 480}]},
+    {"name": "紧急变更审批", "description": "紧急变更采用快速审批并要求事后复盘", "ticket_type": "change", "priority": "urgent", "nodes": [{"type": "approval", "name": "值班经理审批", "approver_type": "role", "role": "manager", "timeout": 60}, {"type": "approval", "name": "安全确认", "approver_type": "role", "role": "security_admin", "timeout": 120}]},
+    {"name": "权限申请审批", "description": "高权限申请需要直属负责人和安全管理员审批", "ticket_type": "service_request", "priority": "high", "nodes": [{"type": "approval", "name": "直属负责人审批", "approver_type": "role", "role": "manager", "timeout": 480}, {"type": "approval", "name": "安全管理员审批", "approver_type": "role", "role": "security_admin", "timeout": 480}]}
   ],
   "process_bindings": [
     {"business_type": "ticket", "process_definition_key": "ticket_general_flow", "is_default": true},

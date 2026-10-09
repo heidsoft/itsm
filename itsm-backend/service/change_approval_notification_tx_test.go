@@ -50,7 +50,7 @@ func changeApprovalTxFixture(t *testing.T) (*ent.Client, context.Context, *ent.T
 		SetEmail("approver-d@example.com").
 		SetName("Review Approver").
 		SetPasswordHash("hash").
-		SetRole("security").
+		SetRole("security_admin").
 		SetActive(true).
 		SetTenantID(tenant.ID).
 		Save(ctx)
@@ -193,7 +193,7 @@ func TestNotifyChangeApprovalRequiredTxRejectsCrossTenantApprover(t *testing.T) 
 		SetEmail("foreign@example.com").
 		SetName("Foreign Approver").
 		SetPasswordHash("hash").
-		SetRole("security").
+		SetRole("security_admin").
 		SetActive(true).
 		SetTenantID(otherTenant.ID).
 		Save(ctx)

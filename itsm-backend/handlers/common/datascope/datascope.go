@@ -50,7 +50,7 @@ func FromRoleEntity(r *ent.Role) DataScope {
 }
 
 // IsDataScopeAllRole 判断角色是否拥有全租户可见权限（DataScopeAll）。
-// 管理角色（super_admin/admin/manager/sysadmin）可见全租户数据，
+// 管理角色（super_admin/admin/manager/sysadmin/audit_admin）可见全租户数据，
 // 其余角色（end_user/agent 等）只能查看本人创建或分配给自己的数据。
 // 未知/空角色按非全量处理（安全默认：收窄而非放宽）。
 // 词表单一源：domain/role.IsAdminLike。
@@ -58,29 +58,8 @@ func IsDataScopeAllRole(r string) bool {
 	return role.IsAdminLike(r)
 }
 
-// IsDataScopeDepartmentRole 判断角色是否拥有本部门数据权限。
-// 某些角色（如 department_manager）可配置为 department 档。
-func IsDataScopeDepartmentRole(role string) bool {
-	switch role {
-	case "department_manager", "l1_support", "l2_support":
-		return true
-	default:
-		return false
-	}
-}
-
-// DataScopeFromRole 根据角色代码推断默认 DataScope。
-// 注意：此函数用于 Role.data_scope 字段为空时的兜底推断，
-// 正常应优先使用 Role 实体的 data_scope 字段。
-func DataScopeFromRole(roleCode string) DataScope {
-	if IsDataScopeAllRole(roleCode) {
-		return DataScopeAll
-	}
-	if IsDataScopeDepartmentRole(roleCode) {
-		return DataScopeDepartment
-	}
-	return DataScopeOwnedOrAssigned
-}
+// department 档只由 Role.data_scope 字段显式配置（见 ParseDataScope），
+// 不从角色码推断：主角色词表是封闭的，部门范围属于租户级配置。
 
 // CanWriteResource 判定 actor 是否可对单据执行写/删操作（行级写权限）。
 //

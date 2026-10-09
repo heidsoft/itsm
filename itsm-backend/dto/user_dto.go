@@ -14,8 +14,8 @@ type CreateUserRequest struct {
 	Password   string `json:"password" binding:"required,min=12,max=128"`
 	TenantID   int    `json:"tenantId"`
 	// 角色，可选；不提供时使用后端默认值（end_user）
-	// 词表单一源=domain/role（security 为存量 legacy 值，user 为前端别名归一为 end_user）
-	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager it_admin security_admin sysadmin agent technician security end_user user"`
+	// 词表单一源=domain/role（封闭词表；user 为前端别名归一为 end_user，legacy security 已退役）
+	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin sysadmin security_admin audit_admin it_admin manager agent technician end_user user"`
 	// RBAC 多角色（roles 表实体 ID，写入 user_roles M2M 边）；与 Role 主角色并存取并集
 	RoleIDs []int `json:"roleIds,omitempty"`
 	// MSP角色，仅当用户属于MSP租户时使用
@@ -30,7 +30,7 @@ type UpdateUserRequest struct {
 	Department string `json:"department,omitempty"`
 	Phone      string `json:"phone,omitempty"`
 	// 角色更新，仅管理员有权限更新
-	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin manager it_admin security_admin sysadmin agent technician security end_user user"`
+	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin sysadmin security_admin audit_admin it_admin manager agent technician end_user user"`
 	// RBAC 多角色替换集（非 nil 时整体替换 user_roles 边）；空数组表示清空
 	RoleIDs []int `json:"roleIds,omitempty"`
 }

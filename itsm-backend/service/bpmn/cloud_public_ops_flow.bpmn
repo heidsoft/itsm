@@ -15,7 +15,7 @@
     </userTask>
 
     <!-- 运维审批 -->
-    <userTask id="Task_OpsApproval" name="运维工程师审批" camunda:assignee="ops_engineer">
+    <userTask id="Task_OpsApproval" name="运维工程师审批" camunda:assignee="technician">
       <incoming>Flow_2</incoming>
       <outgoing>Flow_3</outgoing>
     </userTask>
@@ -34,7 +34,7 @@
     </userTask>
 
     <!-- 执行资源申请 -->
-    <userTask id="Task_Execute" name="执行云资源操作" camunda:assignee="ops_engineer">
+    <userTask id="Task_Execute" name="执行云资源操作" camunda:assignee="technician">
       <incoming>Flow_5</incoming>
       <outgoing>Flow_7</outgoing>
     </userTask>

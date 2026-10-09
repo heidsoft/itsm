@@ -35,7 +35,7 @@
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">instant_notify</bpmn:metaData>
         <bpmn:metaData name="notification_channel">sms,wechat,email</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">sd_manager,l1_support,ops_manager</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">manager,agent</bpmn:metaData>
         <bpmn:metaData name="timeout_seconds">30</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_S1</bpmn:incoming>
@@ -47,7 +47,7 @@
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_assign</bpmn:metaData>
         <bpmn:metaData name="assign_rule">round_robin</bpmn:metaData>
-        <bpmn:metaData name="target_role">l1_support</bpmn:metaData>
+        <bpmn:metaData name="target_role">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_seconds">30</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_S2</bpmn:incoming>
@@ -58,7 +58,7 @@
     <bpmn:userTask id="Activity_L1Response" name="一线响应">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l1_response</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">30</bpmn:metaData>
         <bpmn:metaData name="escalation_enabled">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -93,7 +93,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l2</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">l2_support,ops_manager</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">technician,manager</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_CannotFix</bpmn:incoming>
@@ -104,7 +104,7 @@
     <bpmn:userTask id="Activity_L2Diagnosis" name="L2诊断">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l2_diagnosis</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">60</bpmn:metaData>
         <bpmn:metaData name="escalation_enabled">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -134,7 +134,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">escalate_to_l3</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">l3_expert,ops_director,it_director</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">5</bpmn:metaData>
         <bpmn:metaData name="urgency">critical</bpmn:metaData>
       </bpmn:extensionElements>
@@ -146,7 +146,7 @@
     <bpmn:userTask id="Activity_L3ExpertHandle" name="L3专家处理">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l3_expert_handle</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">240</bpmn:metaData>
         <bpmn:metaData name="expert_type">dba,network_eng,security_admin</bpmn:metaData>
       </bpmn:extensionElements>
@@ -176,7 +176,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">incident_task</bpmn:metaData>
         <bpmn:metaData name="action">major_incident_escalate</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">it_director,ops_director,security_admin</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">it_admin,security_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">10</bpmn:metaData>
         <bpmn:metaData name="create_war_room">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -188,7 +188,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="action">war_room_handle</bpmn:metaData>
         <bpmn:metaData name="timeout_minutes">480</bpmn:metaData>
-        <bpmn:metaData name="participant_roles">it_director,ops_director,l3_expert</bpmn:metaData>
+        <bpmn:metaData name="participant_roles">it_admin</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToWarRoom</bpmn:incoming>
       <bpmn:outgoing>Flow_WarRoomNotify</bpmn:outgoing>

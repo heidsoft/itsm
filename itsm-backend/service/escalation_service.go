@@ -7,6 +7,7 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/slaalerthistory"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/ticket"
@@ -226,13 +227,12 @@ func (e *EscalationService) resolveNotifyUsers(ctx context.Context, level *Escal
 			seen[uid] = true
 		}
 	}
-	// 按角色名查 user（简化：以 role 字段精确匹配角色名）
+	// 按角色码查人：主角色枚举 ∪ user_roles M2M 边，与 BPMN 审批候选人解析
+	// （bpmn.GroupResolver.resolveRoleUsers）保持同一语义，否则 ITIL 实践角色
+	// （change_manager 等只落在 user_roles）永远收不到升级通知。
 	if e.client != nil {
-		for _, role := range level.NotifyRoles {
-			ids, _ := e.client.User.Query().
-				Where(user.TenantIDEQ(tenantID)).
-				Where(user.RoleEQ(user.Role(role))).
-				IDs(ctx)
+		for _, code := range level.NotifyRoles {
+			ids := e.userIDsByRoleCode(ctx, tenantID, code)
 			for _, uid := range ids {
 				if !seen[uid] {
 					out = append(out, uid)
@@ -242,6 +242,29 @@ func (e *EscalationService) resolveNotifyUsers(ctx context.Context, level *Escal
 		}
 	}
 	return out
+}
+
+// userIDsByRoleCode 返回租户内拥有指定角色码的用户 ID；角色行不存在时返回空。
+func (e *EscalationService) userIDsByRoleCode(ctx context.Context, tenantID int, code string) []int {
+	roleEntity, err := e.client.Role.Query().
+		Where(entrole.CodeEQ(code), entrole.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return nil
+	}
+	ids, err := e.client.User.Query().
+		Where(
+			user.TenantIDEQ(tenantID),
+			user.Or(
+				user.HasRolesWith(entrole.IDEQ(roleEntity.ID)),
+				user.RoleEQ(user.Role(code)),
+			),
+		).
+		IDs(ctx)
+	if err != nil {
+		return nil
+	}
+	return ids
 }
 
 // getEscalationNotifyUsers 获取指定升级级别的通知用户（admin 兜底查询必须限定租户）

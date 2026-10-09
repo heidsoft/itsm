@@ -21,7 +21,7 @@
     </userTask>
 
     <!-- 容量评估 -->
-    <userTask id="Task_CapacityCheck" name="容量评估与规划" camunda:assignee="dba">
+    <userTask id="Task_CapacityCheck" name="容量评估与规划" camunda:assignee="technician">
       <incoming>Flow_3</incoming>
       <outgoing>Flow_4</outgoing>
     </userTask>

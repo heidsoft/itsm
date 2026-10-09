@@ -55,11 +55,11 @@ func TestEscalationMatrixService_FindNextEscalationLevel_P1(t *testing.T) {
 		{"elapsed=0", 0, 0, true, 0, ""},
 		{"elapsed=10", 10, 0, true, 0, ""},
 		{"elapsed=14", 14, 0, true, 0, ""},
-		{"elapsed=15 -> L1", 15, 0, false, 1, "team_lead"},
+		{"elapsed=15 -> L1", 15, 0, false, 1, "manager"},
 		{"elapsed=29 current=L1", 29, 1, true, 0, ""},
-		{"elapsed=30 current=L1 -> L2", 30, 1, false, 2, "manager"},
+		{"elapsed=30 current=L1 -> L2", 30, 1, false, 2, "it_admin"},
 		{"elapsed=59 current=L2", 59, 2, true, 0, ""},
-		{"elapsed=60 current=L2 -> L3", 60, 2, false, 3, "director"},
+		{"elapsed=60 current=L2 -> L3", 60, 2, false, 3, "admin"},
 		{"elapsed=120 current=L3 -> nil", 120, 3, true, 0, ""},
 	}
 
@@ -125,8 +125,8 @@ func TestEscalationMatrixService_FindNextEscalationLevel_UnknownPriority(t *test
 	if lvl == nil || lvl.Level != 1 {
 		t.Errorf("expected L1 from medium fallback, got %v", lvl)
 	}
-	if len(lvl.NotifyRoles) == 0 || lvl.NotifyRoles[0] != "team_lead" {
-		t.Errorf("expected team_lead role, got %v", lvl.NotifyRoles)
+	if len(lvl.NotifyRoles) == 0 || lvl.NotifyRoles[0] != "manager" {
+		t.Errorf("expected manager role, got %v", lvl.NotifyRoles)
 	}
 }
 

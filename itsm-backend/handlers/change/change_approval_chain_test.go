@@ -104,7 +104,7 @@ func TestChange_SubmitChange_UsesResolvedChainApprovers(t *testing.T) {
 		Status:     "active",
 		Chain: []dto.ApprovalChainStepDTO{
 			{Level: 1, Role: "manager", Name: "L1", IsRequired: true, ApprovalType: "serial"},
-			{Level: 2, Role: "security", Name: "L2", IsRequired: true, ApprovalType: "serial"},
+			{Level: 2, Role: "security_admin", Name: "L2", IsRequired: true, ApprovalType: "serial"},
 		},
 	}
 	acs := service.NewApprovalChainService(client, zaptest.NewLogger(t).Sugar())
@@ -112,7 +112,7 @@ func TestChange_SubmitChange_UsesResolvedChainApprovers(t *testing.T) {
 	require.NoError(t, err)
 
 	mgr := mkChangeUser(t, client, tenantID, "manager")
-	sec := mkChangeUser(t, client, tenantID, "security")
+	sec := mkChangeUser(t, client, tenantID, "security_admin")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 
@@ -211,7 +211,7 @@ func TestChange_Advancement_ParallelAllMustApprove(t *testing.T) {
 	ctx := context.Background()
 
 	a := mkChangeUser(t, client, tenantID, "manager")
-	b := mkChangeUser(t, client, tenantID, "security")
+	b := mkChangeUser(t, client, tenantID, "security_admin")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 
@@ -237,7 +237,7 @@ func TestChange_Advancement_OrTwoChooseOne(t *testing.T) {
 	ctx := context.Background()
 
 	a := mkChangeUser(t, client, tenantID, "manager")
-	b := mkChangeUser(t, client, tenantID, "security")
+	b := mkChangeUser(t, client, tenantID, "security_admin")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
 
@@ -258,7 +258,7 @@ func TestChange_Advancement_ThresholdNofM(t *testing.T) {
 	ctx := context.Background()
 
 	a := mkChangeUser(t, client, tenantID, "manager")
-	b := mkChangeUser(t, client, tenantID, "security")
+	b := mkChangeUser(t, client, tenantID, "security_admin")
 	c := mkChangeUser(t, client, tenantID, "technician")
 	creator := mkChangeUser(t, client, tenantID, "end_user")
 	changeID := mkChangeDraft(t, client, tenantID, creator)
@@ -286,7 +286,7 @@ func TestChange_Advancement_ReviewResolver(t *testing.T) {
 	ctx := context.Background()
 
 	ca := mkChangeUser(t, client, tenantID, "manager")
-	cb := mkChangeUser(t, client, tenantID, "security")
+	cb := mkChangeUser(t, client, tenantID, "security_admin")
 	_, err := client.ChangeReviewMember.Create().SetUserID(ca).SetType("REVIEW").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)
 	require.NoError(t, err)
 	_, err = client.ChangeReviewMember.Create().SetUserID(cb).SetType("REVIEW").SetRole("member").SetTenantID(tenantID).SetIsActive(true).Save(ctx)

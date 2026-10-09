@@ -40,7 +40,7 @@ import {
 const ROLE_FIXTURES = {
   admin: { role: 'admin', usernamePrefix: 'e2e_admin' },
   user1: { role: 'end_user', usernamePrefix: 'e2e_user' },
-  security1: { role: 'security', usernamePrefix: 'e2e_sec' },
+  security1: { role: 'security_admin', usernamePrefix: 'e2e_sec' },
   engineer1: { role: 'technician', usernamePrefix: 'e2e_eng' },
   manager1: { role: 'manager', usernamePrefix: 'e2e_mgr' },
   tenant1admin: { role: 'admin', usernamePrefix: 'e2e_t1admin' },

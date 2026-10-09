@@ -20,9 +20,9 @@ func TestShouldRestrictMenuForRole(t *testing.T) {
 			want:      true,
 		},
 		{
-			name:      "security cannot see admin menu",
+			name:      "security_admin cannot see admin menu",
 			path:      "/admin/users",
-			roleCodes: map[string]bool{"security": true},
+			roleCodes: map[string]bool{"security_admin": true},
 			want:      true,
 		},
 		{

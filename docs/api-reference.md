@@ -1412,6 +1412,13 @@ DELETE /users/{id}
 Authorization: Bearer <accessToken>
 ```
 
+> `role` 取值是封闭词表，单一源在后端 `domain/role`：`super_admin` / `admin` / `sysadmin` /
+> `security_admin` / `audit_admin` / `it_admin` / `manager` / `agent` / `technician` / `end_user`
+> （`user` 是前端别名，服务端归一为 `end_user`）。传其他值返回参数错误。
+> ITIL 实践角色（`change_manager` 等）与 MSP 协作角色（`msp_*`）不属于 `role` 字段，
+> 通过 `roleIds` 对应的 `user_roles` 边叠加。2026-10-08 前的 legacy 值（`security`、
+> `l1_support`、`it_director` 等）已退役，见 [UPGRADE §1.33](../UPGRADE.md)。
+
 ## 角色接口
 
 ### 获取角色列表

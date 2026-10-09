@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// rolePermFixture 为 target 租户装好角色、权限基线，并持有 ops_engineer 角色
+// rolePermFixture 为 target 租户装好角色、权限基线，并持有 agent 角色
 // （内置码集含 sla:read 不含 sla:write）与绑定了该租户的播种视图。
 type rolePermFixture struct {
 	seeder   *Seeder
@@ -34,7 +34,7 @@ func newRolePermFixture(t *testing.T, seeder *Seeder, ctx context.Context, code 
 	view.seedRoles(ctx)
 	view.seedPermissions(ctx)
 	ops, err := seeder.client.Role.Query().
-		Where(role.CodeEQ("ops_engineer"), role.TenantIDEQ(target.ID)).
+		Where(role.CodeEQ("agent"), role.TenantIDEQ(target.ID)).
 		Only(ctx)
 	require.NoError(t, err)
 	return &rolePermFixture{seeder: seeder, ctx: ctx, tenantID: target.ID, view: view, ops: ops}
@@ -90,7 +90,7 @@ func TestSeedRolePermissionsPreservesManualGrants(t *testing.T) {
 
 // TestSeedRolePermissionsAppliesExplicitRetirement 显式退役：只增不减契约下
 // 唯一的收缩通道。退役清单内的授权被移除且重跑不得复活；清单外的授权不受影响。
-// 场景模拟旧安装遗留行：内置码集演化后 ops_engineer 不再包含 sla:write，
+// 场景模拟旧安装遗留行：内置码集演化后 agent 不再包含 sla:write，
 // 但存量库中该授权行仍在——登记退役清单后由播种器移除。
 func TestSeedRolePermissionsAppliesExplicitRetirement(t *testing.T) {
 	seeder, ctx := newTestSeeder(t, tenantmode.DeploymentModePrivate)
@@ -101,7 +101,7 @@ func TestSeedRolePermissionsAppliesExplicitRetirement(t *testing.T) {
 	f.hotFixGrant(t, "sla:write")
 	require.True(t, f.grantExists(t, "sla:write"))
 
-	f.view.retiredRolePermissions = map[string][]string{"ops_engineer": {"sla:write"}}
+	f.view.retiredRolePermissions = map[string][]string{"agent": {"sla:write"}}
 	f.view.seedRolePermissions(ctx)
 
 	assert.False(t, f.grantExists(t, "sla:write"), "退役清单内的授权必须被移除")

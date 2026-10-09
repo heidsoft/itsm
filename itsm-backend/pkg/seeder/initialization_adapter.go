@@ -447,8 +447,8 @@ func (s *Seeder) verifyIdentityRBAC(ctx context.Context) error {
 		}
 	}
 
-	// Match seedRoles' builtin + configured role scope, not arbitrary customer roles.
-	expectedRoles := append(BuiltinRoles(), s.config.Roles...)
+	// Match seedRoles' builtin + practice + configured role scope, not arbitrary customer roles.
+	expectedRoles := append(append(BuiltinRoles(), PracticeRoles()...), s.config.Roles...)
 	seenRoles := make(map[string]struct{}, len(expectedRoles))
 	for _, expected := range expectedRoles {
 		if _, seen := seenRoles[expected.Code]; seen {

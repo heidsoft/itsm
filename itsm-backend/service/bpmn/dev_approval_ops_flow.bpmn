@@ -24,7 +24,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">dev_submit</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1</bpmn:incoming>
@@ -56,7 +56,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">ops_execute</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_engineer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">16</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Approved</bpmn:incoming>
@@ -68,7 +68,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">ticket_task</bpmn:metaData>
         <bpmn:metaData name="action">dev_rework</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Rejected</bpmn:incoming>

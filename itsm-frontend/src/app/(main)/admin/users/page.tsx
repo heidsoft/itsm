@@ -33,7 +33,12 @@ import {
   Tag,
   Empty,
 } from 'antd';
-import { UserApi, type User, PRIMARY_ROLE_OPTIONS, PRIMARY_ROLE_LABEL } from '@/lib/api/user-api';
+import {
+  UserApi,
+  type User,
+  PRIMARY_ROLE_OPTIONS,
+  resolveRoleTags,
+} from '@/lib/api/user-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import type { Role } from '@/lib/api/api-config';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -284,18 +289,22 @@ const UserManagement: React.FC = () => {
       dataIndex: 'role',
       key: 'role',
       width: 140,
-      render: (_: string, record: User) => (
-        <Space size={[4, 4]} wrap>
-          {record.role && (
-            <Tag color="blue" bordered={false}>
-              {PRIMARY_ROLE_LABEL[record.role] ?? record.role}
-            </Tag>
-          )}
-          {(record.roleNames ?? []).map(n => (
-            <Tag key={n} bordered={false}>{n}</Tag>
-          ))}
-        </Space>
-      ),
+      render: (_: string, record: User) => {
+        const tags = resolveRoleTags(record);
+        return (
+          <Space size={[4, 4]} wrap>
+            {tags.map(tag => (
+              <Tag
+                key={tag.label}
+                color={tag.primary ? 'blue' : undefined}
+                bordered={false}
+              >
+                {tag.label}
+              </Tag>
+            ))}
+          </Space>
+        );
+      },
     },
     {
       title: t('users.columns.email'),

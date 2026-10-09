@@ -22,7 +22,7 @@ export const TEST_USERS = {
   security: {
     username: 'security1',
     password: 'security123',
-    role: 'security',
+    role: 'security_admin',
   },
   // Agent uses security1 user (has agent-like permissions)
   agent: {

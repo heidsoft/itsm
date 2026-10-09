@@ -698,7 +698,7 @@ func TestSeedRolePermissionsCoverTicketLifecycle(t *testing.T) {
 	require.Contains(t, endUser, "ticket:create")
 	require.Contains(t, endUser, "ticket:update")
 
-	for _, roleCode := range []string{"l1_support", "l2_support", "ops_manager"} {
+	for _, roleCode := range []string{"agent", "technician", "manager"} {
 		codes := rolePermissionCodes(t, seeder, ctx, rootTenant.ID, roleCode)
 		for _, want := range []string{"ticket:create", "ticket:update", "ticket:assign", "ticket:escalate"} {
 			assert.Contains(t, codes, want, roleCode+" missing "+want)

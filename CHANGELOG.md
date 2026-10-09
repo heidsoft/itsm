@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **角色模型重设，legacy 角色退役**：角色=权限包，岗位/团队差异交给部门、团队与租户自建角色承载，不再塞进权限词表。词表三层单一源在 `domain/role`：
+  - 主角色（`users.role`，一人一个）：`super_admin` / `admin` / `sysadmin` / `security_admin` / `audit_admin` / `it_admin` / `manager` / `agent` / `technician` / `end_user`，其中 `sysadmin`+`security_admin`+`audit_admin` 对应等保「三员分立」。
+  - ITIL 实践角色（`user_roles` 叠加）：`change_manager` / `problem_manager` / `knowledge_manager` / `cmdb_admin` / `service_catalog_admin`。
+  - MSP 协作角色（同上）：`msp_viewer` / `msp_tech` / `msp_specialist` / `msp_manager` / `msp_admin`。
+  - 退役 17 个历史值：`security`（语义并入 `security_admin`）与 `it_director` / `ops_director` / `ops_manager` / `ops_engineer` / `dba` / `network_eng` / `sd_manager` / `l1_support` / `l2_support` / `l3_expert` / `rd_manager` / `developer` / `qa_engineer` / `dept_manager` / `team_lead` / `guest`。schema 枚举、DTO、`internal/authz`、种子清单、内置 BPMN 模板与前端词表同步收敛，界面不再出现英文角色码。
+- **存量数据迁移**（`itsm-backend/migrations/20261008_retire_legacy_roles.sql`，随新版本镜像启动由 AutoMigrate 自动应用）：`users.role=security` 改值为 `security_admin`；已部署流程定义 XML 的角色指派位按映射改写（`l1_support`→`agent`、`l2_support`/`dba`→`technician`、`l3_expert`/`it_director`/`ops_director`→`it_admin`、`sd_manager`/`ops_manager`/`rd_manager`→`manager`）；退役角色在 `roles` 表无任何成员时连同其 `role_permissions` 一起删除，有成员则保留并告警，避免把人悬空。删除不可逆，执行前先备份；脚本末尾带「定义仍含已映射退役码即报错」的收尾不变量，且可重复执行。
+- **下线孤儿表 `ai_analysis_result`**（`itsm-backend/migrations/20261009_drop_orphan_ai_analysis_result.sql`）：2026-08-31 的手工建表脚本用了单数表名，而 Ent 实际写入复数表 `ai_analysis_results`，导致一张同名异数的空表长期并存、非生成代码零引用。迁移在表内含数据时直接报错中止（前提是该表从未被写入），空表才删除，可重复执行。
+
+### Fixed
+
+- **审批派单指向不存在的角色**：内置审批组描述、BPMN 模板的 `candidateGroups`/`notify_roles` 与 SLA 升级通知矩阵长期引用 `l1_support` / `l2_support` / `l3_expert` / `ops_manager` / `it_director` 等词表外角色，按角色查人恒空、任务无人可见。全部改写为新词表（`agent` / `technician` / `it_admin` / `manager` / `security_admin`），`service/escalation_matrix.go`、工单附件与评论可见性改为引用 `domain/role` 常量，不再各自硬编码词汇。
+- **用户管理列表角色列重复渲染**：主角色同时存在于 `users.role` 和 RBAC `user_roles` 名称列表，同一角色会显示两枚一模一样的标签（如两枚「超级管理员」）。角色标签改为 `resolveRoleTags()` 统一去重，主角色高亮、其余角色追加，重复项只保留一枚；新增 4 个回归用例覆盖重复、仅有 RBAC 角色、未知角色回退。
+- **后端 v1.6.17 构建阻塞**：Ent 生成代码漂移导致 `ticketTypes.customFields` 在生成模型里退化为 `[]interface{}`，`service/ticket_service.go`、`service/ticket_type_service.go` 共 4 处编译失败，按 schema 还原对应 4 个 generated 文件；AI 技能反馈接口 `SaveFeedback` 新增 `accepted` 参数后 handler 未同步，补齐可选 `accepted` 字段解析与 DTO。
+
+### 验证
+
+- `cd itsm-backend && go test ./...` 全绿；收紧后的 `domain/role/contract_test.go` 由「domain ⊆ 各层」升级为集合相等断言，并新增退役码零出现扫描（覆盖枚举、DTO、authz、种子、BPMN 角色指派位、前端词表），逐项做过「注入退役值必须失败」的反向验证。
+- `cd itsm-frontend && npm run type-check`、`npm run lint:antd`、`user-api` 与 API 契约用例全绿。
+
+
 ## [1.6.16] - 2026-10-07
 
 ### Added

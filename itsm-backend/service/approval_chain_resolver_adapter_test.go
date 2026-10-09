@@ -33,7 +33,7 @@ func TestApprovalChainResolverAdapter_ConvergenceWithDirectPath(t *testing.T) {
 
 			tenant := mkConvergenceTenant(t, ctx, client, entityType)
 			mgr := mkConvergenceUser(t, ctx, client, tenant.ID, "manager")
-			sec := mkConvergenceUser(t, ctx, client, tenant.ID, "security")
+			sec := mkConvergenceUser(t, ctx, client, tenant.ID, "security_admin")
 			requester := mkConvergenceUser(t, ctx, client, tenant.ID, "end_user")
 
 			svc := NewApprovalChainService(client, logger)
@@ -43,7 +43,7 @@ func TestApprovalChainResolverAdapter_ConvergenceWithDirectPath(t *testing.T) {
 				Status:     "active",
 				Chain: []dto.ApprovalChainStepDTO{
 					{Level: 1, Role: "manager", Name: "L1", IsRequired: true, ApprovalType: "serial"},
-					{Level: 2, Role: "security", Name: "L2", IsRequired: true, ApprovalType: "serial"},
+					{Level: 2, Role: "security_admin", Name: "L2", IsRequired: true, ApprovalType: "serial"},
 				},
 			}, tenant.ID)
 			require.NoError(t, err)

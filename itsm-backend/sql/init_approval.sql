@@ -9,7 +9,7 @@ SELECT * FROM (VALUES
      '[{"id":"node1","name":"部门经理审批","type":"approver","assignee_type":"role","assignee_value":"admin","step_order":1,"timeout_hours":24}]'::jsonb,
      true, 1, 'active', NOW(), NOW()),
     ('变更审批-紧急', '紧急变更审批流程，需要安全团队审批', 'change', 'urgent',
-     '[{"id":"node1","name":"安全团队审批","type":"approver","assignee_type":"role","assignee_value":"security","step_order":1,"timeout_hours":2},{"id":"node2","name":"IT总监审批","type":"approver","assignee_type":"role","assignee_value":"admin","step_order":2,"timeout_hours":4}]'::jsonb,
+     '[{"id":"node1","name":"安全团队审批","type":"approver","assignee_type":"role","assignee_value":"security_admin","step_order":1,"timeout_hours":2},{"id":"node2","name":"IT总监审批","type":"approver","assignee_type":"role","assignee_value":"admin","step_order":2,"timeout_hours":4}]'::jsonb,
      true, 1, 'active', NOW(), NOW()),
     ('服务请求审批-高权限', '高权限服务请求需要审批', 'service_request', 'high',
      '[{"id":"node1","name":"一线审批","type":"approver","assignee_type":"role","assignee_value":"engineer","step_order":1,"timeout_hours":8},{"id":"node2","name":"二线审批","type":"approver","assignee_type":"role","assignee_value":"admin","step_order":2,"timeout_hours":16}]'::jsonb,

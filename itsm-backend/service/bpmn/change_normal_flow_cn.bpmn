@@ -31,7 +31,7 @@
     <bpmn:userTask id="Activity_CMReview" name="变更经理初审">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">cm_initial_review</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
         <bpmn:metaData name="risk_assessment_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -51,7 +51,7 @@
     <bpmn:userTask id="Activity_LowRiskApprove" name="低风险审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">low_risk_approve</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="auto_approve_threshold">low</bpmn:metaData>
       </bpmn:extensionElements>
@@ -69,7 +69,7 @@
     <bpmn:userTask id="Activity_MediumRiskTechReview" name="技术评审">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">technical_review</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="tech_approval_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -80,7 +80,7 @@
     <bpmn:userTask id="Activity_MediumRiskManagerApprove" name="运维经理审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">ops_manager_approve</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">12</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_C3</bpmn:incoming>
@@ -97,7 +97,7 @@
     <bpmn:userTask id="Activity_HighRiskTechReview" name="专家技术评审">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">expert_technical_review</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
         <bpmn:metaData name="multiple_expert_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -119,7 +119,7 @@
     <bpmn:userTask id="Activity_HighRiskOpsDirectorApprove" name="运维总监审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">ops_director_approve</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_C6</bpmn:incoming>
@@ -129,7 +129,7 @@
     <bpmn:userTask id="Activity_HighRiskITDirectorApprove" name="IT总监审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">it_director_approve</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">it_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="budget_check_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -147,7 +147,7 @@
     <bpmn:userTask id="Activity_Implementation_Low" name="低风险变更实施">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
         <bpmn:metaData name="maintenance_window_check">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -158,7 +158,7 @@
     <bpmn:userTask id="Activity_Implementation_Medium" name="中风险变更实施">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="backup_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -169,7 +169,7 @@
     <bpmn:userTask id="Activity_Implementation_High" name="高风险变更实施">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="rollback_plan_required">true</bpmn:metaData>
         <bpmn:metaData name="monitoring_required">true</bpmn:metaData>
@@ -182,7 +182,7 @@
     <bpmn:userTask id="Activity_Verify_Low" name="低风险验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Verify_Low</bpmn:incoming>
@@ -192,7 +192,7 @@
     <bpmn:userTask id="Activity_Verify_Medium" name="中风险验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Verify_Medium</bpmn:incoming>
@@ -202,7 +202,7 @@
     <bpmn:userTask id="Activity_Verify_High" name="高风险验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_change</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="post_implementation_review">true</bpmn:metaData>
       </bpmn:extensionElements>

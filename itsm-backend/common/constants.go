@@ -11,7 +11,6 @@ const (
 	RoleManager    = "manager"
 	RoleAgent      = "agent"
 	RoleTechnician = "technician"
-	RoleSecurity   = "security"
 	RoleEndUser    = "end_user"
 )
 

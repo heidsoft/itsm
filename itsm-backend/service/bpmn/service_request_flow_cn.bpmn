@@ -52,7 +52,7 @@
     <bpmn:userTask id="Activity_ITServiceL1Handle" name="一线处理">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l1_handle_request</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
         <bpmn:metaData name="sla_category">standard</bpmn:metaData>
       </bpmn:extensionElements>
@@ -69,7 +69,7 @@
     <bpmn:userTask id="Activity_ITServiceL2Handle" name="L2处理">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">l2_handle_request</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ITNeedL2</bpmn:incoming>
@@ -110,7 +110,7 @@
     <bpmn:userTask id="Activity_SoftwareLicenseCheck" name="License检查">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">check_software_license</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
         <bpmn:metaData name="budget_check_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -139,7 +139,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">initiate_purchase_request</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">ops_manager,finance</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">manager,finance</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SoftwareNotAvailable</bpmn:incoming>
@@ -160,7 +160,7 @@
     <bpmn:userTask id="Activity_HardwareApproval" name="硬件审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hardware_request_approval</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="budget_approval_required">true</bpmn:metaData>
       </bpmn:extensionElements>

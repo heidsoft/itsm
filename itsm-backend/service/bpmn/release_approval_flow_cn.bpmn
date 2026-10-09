@@ -31,7 +31,7 @@
     <bpmn:userTask id="Activity_ReleaseManagerReview" name="发布经理初审">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">release_manager_review</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="risk_assessment_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -51,7 +51,7 @@
     <bpmn:userTask id="Activity_HotfixTest" name="快速测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_quick_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
         <bpmn:metaData name="test_type">smoke_test</bpmn:metaData>
       </bpmn:extensionElements>
@@ -62,7 +62,7 @@
     <bpmn:userTask id="Activity_HotfixApproval" name="热修复审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_approval</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">1</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R3_Hotfix</bpmn:incoming>
@@ -84,7 +84,7 @@
     <bpmn:userTask id="Activity_HotfixVerify" name="热修复验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">hotfix_verify</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">2</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R5_Hotfix</bpmn:incoming>
@@ -95,7 +95,7 @@
     <bpmn:userTask id="Activity_UnitTest" name="单元测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">unit_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
         <bpmn:metaData name="coverage_threshold">80%</bpmn:metaData>
       </bpmn:extensionElements>
@@ -106,7 +106,7 @@
     <bpmn:userTask id="Activity_IntegrationTest" name="集成测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">integration_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R3_Normal</bpmn:incoming>
@@ -116,7 +116,7 @@
     <bpmn:userTask id="Activity_UAT" name="用户验收测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">rd_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R4_Normal</bpmn:incoming>
@@ -132,7 +132,7 @@
     <bpmn:userTask id="Activity_NormalApproval" name="常规发布审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">normal_release_approval</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_TestPass</bpmn:incoming>
@@ -153,7 +153,7 @@
     <bpmn:userTask id="Activity_FixIssues" name="修复问题">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">8</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_TestFail</bpmn:incoming>
@@ -175,7 +175,7 @@
     <bpmn:userTask id="Activity_PerformanceTest" name="性能测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">performance_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_days">5</bpmn:metaData>
         <bpmn:metaData name="load_threshold">1000 concurrent</bpmn:metaData>
       </bpmn:extensionElements>
@@ -186,7 +186,7 @@
     <bpmn:userTask id="Activity_IntegrationTest_Major" name="集成测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">integration_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R4_Major</bpmn:incoming>
@@ -196,7 +196,7 @@
     <bpmn:userTask id="Activity_UAT_Major" name="用户验收测试">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">user_acceptance_test</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">rd_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_days">5</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_R5_Major</bpmn:incoming>
@@ -213,7 +213,7 @@
     <bpmn:userTask id="Activity_MajorTechApproval" name="技术评审">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">technical_review_approval</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_MajorTestPass</bpmn:incoming>
@@ -233,7 +233,7 @@
     <bpmn:userTask id="Activity_MajorITDirectorApproval" name="IT总监审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">it_director_approval</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">it_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="budget_approval_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -255,7 +255,7 @@
     <bpmn:userTask id="Activity_FixIssues_Major" name="修复问题">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">fix_test_issues</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">developer</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_MajorTestFail</bpmn:incoming>
@@ -280,7 +280,7 @@
     <bpmn:userTask id="Activity_CanaryMonitor" name="灰度监控">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">canary_monitoring</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="metrics_threshold">error_rate&lt;1%</bpmn:metaData>
       </bpmn:extensionElements>
@@ -299,7 +299,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">auto_rollback</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">ops_manager,developer</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">manager,technician</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_CanaryFail</bpmn:incoming>
       <bpmn:outgoing>Flow_End_Rollback</bpmn:outgoing>
@@ -320,7 +320,7 @@
     <bpmn:userTask id="Activity_PostReleaseVerify" name="发布后验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">post_release_verify</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l1_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">agent</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
         <bpmn:metaData name="monitoring_period">24h</bpmn:metaData>
       </bpmn:extensionElements>

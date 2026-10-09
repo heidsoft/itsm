@@ -1,12 +1,12 @@
 /**
- * US5: sd_manager 服务台主管运营视图
+ * US5: 服务台主管（manager 主角色）运营视图
  * Priority: P2
  *
  * 用户故事: 作为服务台主管，我能查看团队工作量、工单统计、服务水平、创建工单
  */
 import { test, expect } from '../fixtures/auth';
 
-test.describe('US5: sd_manager 服务台主管运营视图', () => {
+test.describe('US5: 服务台主管（manager）运营视图', () => {
   let token: string;
 
   test.beforeEach(async ({ loginAs }) => {

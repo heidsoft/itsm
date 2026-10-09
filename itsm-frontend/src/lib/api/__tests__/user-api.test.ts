@@ -1,4 +1,9 @@
-import { UserApi } from '../user-api';
+import {
+  UserApi,
+  PRIMARY_ROLE_OPTIONS,
+  PRIMARY_ROLE_LABEL,
+  resolveRoleTags,
+} from '../user-api';
 import { httpClient } from '../http-client';
 
 jest.mock('../http-client', () => ({
@@ -146,5 +151,56 @@ describe('UserApi', () => {
       mockGet.mockRejectedValue(new Error('Not found'));
       await expect(UserApi.getUserById(999)).rejects.toThrow('Not found');
     });
+  });
+});
+
+describe('role label vocabulary', () => {
+  it('主角色词表是封闭的 10 个值，与后端 domain/role 一致', () => {
+    expect(PRIMARY_ROLE_OPTIONS.map(o => o.value).sort()).toEqual(
+      [
+        'super_admin',
+        'admin',
+        'sysadmin',
+        'security_admin',
+        'audit_admin',
+        'it_admin',
+        'manager',
+        'agent',
+        'technician',
+        'end_user',
+      ].sort(),
+    );
+    expect(PRIMARY_ROLE_OPTIONS.every(o => o.label !== o.value)).toBe(true);
+  });
+
+  it('退役角色 security 不再出现在词表任何一层', () => {
+    expect(PRIMARY_ROLE_OPTIONS.map(o => o.value)).not.toContain('security');
+    expect(PRIMARY_ROLE_LABEL.security).toBeUndefined();
+  });
+
+  it('主角色与 RBAC 角色名重复时只保留一枚标签', () => {
+    const tags = resolveRoleTags({
+      role: 'super_admin',
+      roleNames: ['超级管理员', 'IT管理员'],
+    });
+    expect(tags).toEqual([
+      { label: '超级管理员', primary: true },
+      { label: 'IT管理员', primary: false },
+    ]);
+  });
+
+  it('主角色与同名 RBAC 角色也去重', () => {
+    expect(resolveRoleTags({ role: 'security_admin', roleNames: ['安全管理员'] })).toEqual([
+      { label: '安全管理员', primary: true },
+    ]);
+  });
+
+  it('无主角色时只展示 RBAC 角色，未知主角色回退原始值', () => {
+    expect(resolveRoleTags({ role: '', roleNames: ['服务台坐席'] })).toEqual([
+      { label: '服务台坐席', primary: false },
+    ]);
+    expect(resolveRoleTags({ role: 'quality_lead', roleNames: [] })).toEqual([
+      { label: 'quality_lead', primary: true },
+    ]);
   });
 });

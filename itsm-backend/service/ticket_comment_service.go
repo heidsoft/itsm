@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -262,7 +263,8 @@ func (s *TicketCommentService) canManageInternalComments(ctx context.Context, us
 		return false, fmt.Errorf("authenticated user not found")
 	}
 	switch string(u.Role) {
-	case "super_admin", "admin", "manager", "agent", "technician", "security":
+	case domainrole.SuperAdmin, domainrole.Admin, domainrole.Manager,
+		domainrole.Agent, domainrole.Technician, domainrole.SecurityAdmin:
 		return true, nil
 	}
 	return false, nil

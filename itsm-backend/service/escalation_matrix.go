@@ -16,7 +16,7 @@ import (
 type EscalationLevel struct {
 	Level         int      `json:"level"`         // 升级级别编号（1, 2, 3...）
 	AfterMinutes  int      `json:"afterMinutes"`  // 距离告警开始多少分钟后触发
-	NotifyRoles   []string `json:"notifyRoles"`   // 通知角色名（manager/team_lead/director）
+	NotifyRoles   []string `json:"notifyRoles"`   // 通知角色码，必须取自主角色词表 domain/role.All（解析按 users.role 精确匹配）
 	NotifyUserIDs []int    `json:"notifyUserIDs"` // 通知具体用户 ID
 	Description   string   `json:"description"`   // 描述（用于审计/通知内容）
 }
@@ -25,29 +25,30 @@ type EscalationLevel struct {
 //
 // 例如：
 //
-//	"critical" → [15min TeamLead, 30min Manager, 60min Director]
-//	"high"     → [60min TeamLead, 240min Manager]
-//	"medium"   → [240min TeamLead]
+//	"critical" → [15min Manager, 30min ITAdmin, 60min Admin]
+//	"high"     → [60min Manager, 240min ITAdmin]
+//	"medium"   → [240min Manager]
 type EscalationMatrix map[string][]EscalationLevel
 
 // DefaultEscalationMatrix 默认升级矩阵（与 SLA 模板保持一致）
 //
 // 优先级约定（与 Ticket.Priority 对齐）：critical / high / medium / low
+// 升级目标只使用 users.role 主角色码，因为 resolveNotifyUsers 按主角色精确查人。
 var DefaultEscalationMatrix = EscalationMatrix{
 	"critical": {
-		{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"team_lead"}, Description: "15分钟未响应升级至 Team Lead"},
-		{Level: 2, AfterMinutes: 30, NotifyRoles: []string{"manager"}, Description: "30分钟未响应升级至 Manager"},
-		{Level: 3, AfterMinutes: 60, NotifyRoles: []string{"director"}, Description: "60分钟未响应升级至 Director"},
+		{Level: 1, AfterMinutes: 15, NotifyRoles: []string{"manager"}, Description: "15分钟未响应升级至部门经理"},
+		{Level: 2, AfterMinutes: 30, NotifyRoles: []string{"it_admin"}, Description: "30分钟未响应升级至IT管理员"},
+		{Level: 3, AfterMinutes: 60, NotifyRoles: []string{"admin"}, Description: "60分钟未响应升级至租户管理员"},
 	},
 	"high": {
-		{Level: 1, AfterMinutes: 60, NotifyRoles: []string{"team_lead"}, Description: "1小时未响应升级至 Team Lead"},
-		{Level: 2, AfterMinutes: 240, NotifyRoles: []string{"manager"}, Description: "4小时未响应升级至 Manager"},
+		{Level: 1, AfterMinutes: 60, NotifyRoles: []string{"manager"}, Description: "1小时未响应升级至部门经理"},
+		{Level: 2, AfterMinutes: 240, NotifyRoles: []string{"it_admin"}, Description: "4小时未响应升级至IT管理员"},
 	},
 	"medium": {
-		{Level: 1, AfterMinutes: 240, NotifyRoles: []string{"team_lead"}, Description: "4小时未响应升级至 Team Lead"},
+		{Level: 1, AfterMinutes: 240, NotifyRoles: []string{"manager"}, Description: "4小时未响应升级至部门经理"},
 	},
 	"low": {
-		{Level: 1, AfterMinutes: 480, NotifyRoles: []string{"team_lead"}, Description: "8小时未响应升级至 Team Lead"},
+		{Level: 1, AfterMinutes: 480, NotifyRoles: []string{"manager"}, Description: "8小时未响应升级至部门经理"},
 	},
 }
 

@@ -1,50 +1,132 @@
 // Package role 提供全后端统一的用户角色词表。
 //
-// 背景（2026-09-07 服务请求深测 P1-B）：角色字符串此前散落在 7+ 处硬编码
+// 背景（2026-10-07 角色模型重设）：角色字符串此前散落在 7+ 处硬编码
 // （users.role 单字段、roles.code 种子表、各 handler 的 switch/case、
 // 审批资格 fallback 词表），三套词汇已实际漂移——service_request 审批角色
 // manager/it_admin/security_admin 在 roles 表缺失、审批 403。
 //
+// 本产品的角色分层（角色=权限包，不是岗位/组织架构；岗位差异由部门、
+// 团队与租户自建角色承载）：
+//
+//	Tier 1 内置主角色（All）：users.role 枚举值，一人一主角色，
+//	        同时是 roles 表的 is_system 种子，封闭词表。
+//	Tier 2 ITIL 实践角色（Practice）：roles 表种子，通过 user_roles 边叠加。
+//	Tier 3 MSP 协作角色（MSP）：同上，MSP/代维场景使用。
+//	Retired：历史值，禁止再出现在 schema/DTO/authz/种子/前端任何一层。
+//
 // 规则：
 //   - 判断/比较角色时一律引用本包常量，禁止裸写字符串字面量；
-//   - 新增角色必须同时更新 SeedRoles（见 internal/bootstrap 种子）；
-//   - users.role 单字段与 roles.code 种子表共用本词表，两处不同步视为 Bug。
+//   - Tier 1 变更必须同步：ent/schema/user.go 枚举、dto/user_dto.go oneof、
+//     pkg/seeder.BuiltinRoles、internal/authz 权限条目、前端 PRIMARY_ROLE_OPTIONS
+//     （由 domain/role/contract_test.go 锁死）；
+//   - Tier 2/3 变更必须同步 internal/authz 权限条目与种子清单；
+//   - 退役码只增不减：IsRetired 命中即代表该 code 不得被重新启用。
 package role
 
 import "sort"
 
-// 内置角色 code（users.role 单字段值 = roles.code 种子值，单一事实源）。
+// Tier 1 内置主角色 code（users.role 单字段值 = roles.code 种子值，单一事实源）。
 const (
 	SuperAdmin    = "super_admin"
 	Admin         = "admin"
-	Manager       = "manager"
-	ITAdmin       = "it_admin"
+	SysAdmin      = "sysadmin"
 	SecurityAdmin = "security_admin"
+	AuditAdmin    = "audit_admin"
+	ITAdmin       = "it_admin"
+	Manager       = "manager"
 	Agent         = "agent"
 	Technician    = "technician"
-	SysAdmin      = "sysadmin"
 	EndUser       = "end_user"
 )
 
-// 全量合法角色清单（播种与校验用）。顺序即层级语义参考，不作权限依据。
+// All 是封闭的主角色词表；顺序即审批/管理层级参考，不作权限依据。
 var All = []string{
 	SuperAdmin,
 	Admin,
-	Manager,
-	ITAdmin,
+	SysAdmin,
 	SecurityAdmin,
+	AuditAdmin,
+	ITAdmin,
+	Manager,
 	Agent,
 	Technician,
-	SysAdmin,
 	EndUser,
 }
 
+// Tier 2 ITIL 实践角色 code（roles 表种子，可叠加；不进入 users.role 枚举）。
+const (
+	ChangeManager       = "change_manager"
+	ProblemManager      = "problem_manager"
+	KnowledgeManager    = "knowledge_manager"
+	CmdbAdmin           = "cmdb_admin"
+	ServiceCatalogAdmin = "service_catalog_admin"
+)
+
+var Practice = []string{
+	ChangeManager,
+	ProblemManager,
+	KnowledgeManager,
+	CmdbAdmin,
+	ServiceCatalogAdmin,
+}
+
+// Tier 3 MSP 协作角色 code（middleware.GetMSPRBACRole 的映射目标，
+// 同时也是 roles 表种子，让管理员能在角色页直接分配 MSP 协作身份）。
+const (
+	MspViewer     = "msp_viewer"
+	MspTech       = "msp_tech"
+	MspSpecialist = "msp_specialist"
+	MspManager    = "msp_manager"
+	MspAdmin      = "msp_admin"
+)
+
+var MSP = []string{
+	MspViewer,
+	MspTech,
+	MspSpecialist,
+	MspManager,
+	MspAdmin,
+}
+
+// Retired 是已退役角色 code 的封闭清单（2026-10-07 角色模型重设）。
+// security 是 users.role 的 legacy 值，语义并入 security_admin；
+// 其余是岗位/团队型角色，属于组织架构而非权限包。
+var Retired = []string{
+	"security",
+	"it_director",
+	"ops_director",
+	"ops_manager",
+	"ops_engineer",
+	"dba",
+	"network_eng",
+	"sd_manager",
+	"l1_support",
+	"l2_support",
+	"l3_expert",
+	"rd_manager",
+	"developer",
+	"qa_engineer",
+	"dept_manager",
+	"team_lead",
+	"guest",
+}
+
+// IsRetired 判断角色 code 是否已退役（禁止再播种、再分配、再出现在词表里）。
+func IsRetired(code string) bool {
+	for _, r := range Retired {
+		if r == code {
+			return true
+		}
+	}
+	return false
+}
+
 // IsAdminLike 判断角色是否为管理类（可见全租户数据/绕过行级 scope）。
-// 单一源对齐 handlers/common/datascope.IsDataScopeAllRole 与各处
-// role == "admin" || role == "super_admin" 式硬编码。
+// audit_admin 在此列出只为读视野覆盖全租户：审计员没有任何写权限码，
+// 行级写仍由 RBAC 权限码（ticket:write 等）二次拦截。
 func IsAdminLike(r string) bool {
 	switch r {
-	case SuperAdmin, Admin, Manager, SysAdmin:
+	case SuperAdmin, Admin, Manager, SysAdmin, AuditAdmin:
 		return true
 	default:
 		return false

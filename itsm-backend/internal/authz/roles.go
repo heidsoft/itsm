@@ -1,13 +1,22 @@
 package authz
 
+import domainrole "itsm-backend/domain/role"
+
 // 本文件是「角色 → 权限码」绑定的权威源（2026-09-17 批次 6 第 3 步）。
+//
+// 词表边界（2026-10-07 角色模型重设）：本 map 的键必须恰好等于
+// domain/role.All ∪ domain/role.Practice ∪ domain/role.MSP（由
+// domain/role/contract_test.go 锁死）；岗位/团队型条目（旧 it_director、
+// ops_*、l1/l2/l3_*、dba、network_eng、sd_manager、rd_manager、developer、
+// qa_engineer、dept_manager、team_lead、guest）与 legacy security 已退役，
+// 组织架构差异由部门/团队/租户自建角色承载。
 //
 // 派生规则说明：
 //   - 同义奇偶补齐（write ⇒ {create, update} 等）：修 admin/technician 等持有 write 但路由声明
 //     细分动作（create/update）的角色在路由级 RequirePermission 精确匹配下 403 的问题
-//   - task:read/update 全角色基线（除 guest）：任何角色都可能被流程指派任务（变更评审、
-//     服务请求审批、工单流转），粒度控制不在角色层（ListUserTasks 只返回本人/候选任务）
-//   - task:admin 13 个管理/监督角色加权：跨用户全量任务视图
+//   - task:read/update 全角色基线（审计员只读除外）：任何角色都可能被流程指派任务
+//     （变更评审、服务请求审批、工单流转），粒度控制不在角色层（ListUserTasks 只返回本人/候选任务）
+//   - task:admin 管理/监督角色加权：跨用户全量任务视图
 //
 // 修改本文件后必须跑 go test ./tests/parity/ 与 ./internal/authz/ 验证
 // 派生输出与历史一致（seeder 仅做落库，行为零变化）。
@@ -20,53 +29,10 @@ package authz
 // 与历史一致（任何漂移 CI 红并给出修复指引）。
 func BuiltinRolePermissionCodes() map[string][]string {
 	m := map[string][]string{
-		// 系统管理员：所有权限
-		"sysadmin": allPermissionCodes(),
-		// IT总监：全局读写（不含系统管理）
-		"it_director": allExcept([]string{"system:write", "msp:write", "msp_allocation:write"}),
-		// 运维总监：运维相关读写
-		"ops_director": allExcept([]string{"system:write", "msp:write", "msp_allocation:write", "msp_report:write"}),
-		// 运维经理：运维相关读写
-		"ops_manager": {
-			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket:assign", "ticket:escalate", "ticket:export", "ticket:delete",
-			"incident:read", "incident:write",
-			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
-			"problem:read", "problem:write", "change:read", "change:write",
-			"asset:read", "asset:write", "cmdb:read", "cmdb:write",
-			"sla:read", "workflow:read", "report:read",
-			"team:read", "department:read", "user:read", "ai:read",
-		},
-		// 运维工程师：运维操作
-		"ops_engineer": {
-			"ticket:read", "ticket:write", "incident:read", "incident:write",
-			"problem:read", "change:read", "asset:read", "asset:write",
-			"cmdb:read", "cmdb:write", "sla:read", "knowledge:read", "knowledge:write", "ai:read",
-		},
-		// DBA工程师
-		"dba": {
-			"ticket:read", "incident:read", "problem:read", "problem:write",
-			"change:read", "change:write", "asset:read", "cmdb:read", "cmdb:write",
-			"knowledge:read", "knowledge:write", "ai:read",
-		},
-		// 网络安全工程师
-		"network_eng": {
-			"ticket:read", "incident:read", "incident:write", "problem:read",
-			"change:read", "asset:read", "cmdb:read", "sla:read",
-			"knowledge:read", "knowledge:write", "ai:read",
-		},
-		// 服务台主管
-		"sd_manager": {
-			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket:assign", "ticket:escalate", "ticket:export",
-			"incident:read", "incident:write",
-			"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
-			"problem:read", "change:read", "sla:read", "sla:write",
-			"knowledge:read", "knowledge:write", "report:read",
-			"user:read", "team:read", "ai:read",
-		},
+		// 系统管理员（等保三员①）：所有权限
+		domainrole.SysAdmin: allPermissionCodes(),
 		// 变更经理：负责变更生命周期、审批协同和发布联动
-		"change_manager": {
+		domainrole.ChangeManager: {
 			"ticket:read",
 			"change:read", "change:write", "change:delete", "change:approve", "change:rollback",
 			"approval:read", "approval:write",
@@ -78,7 +44,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"knowledge:read", "knowledge:write",
 		},
 		// 服务目录管理员：负责服务目录、服务请求模板和工单模板配置
-		"service_catalog_admin": {
+		domainrole.ServiceCatalogAdmin: {
 			"service:read", "service:write",
 			"service_catalog:read", "service_catalog:write", "service_catalog:delete",
 			"service_request:read", "service_request:write", "service_request:delete",
@@ -90,19 +56,34 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"sla:read",
 			"knowledge:read",
 		},
-		// 一线支持工程师：具备工单全生命周期操作权限
-		"l1_support": {
-			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket:assign", "ticket:escalate", "ticket:export",
-			"ticket_type:read",
+		// 问题经理：问题生命周期（根因、已知错误、变通方案）与关联事件分析
+		domainrole.ProblemManager: {
+			"ticket:read",
 			"incident:read", "incident:write",
-			"knowledge:read", "user:read", "sla:read", "notification:read", "ai:read",
+			"problem:read", "problem:write", "problem:delete",
+			"change:read", "change:write",
+			"knowledge:read", "knowledge:write",
+			"cmdb:read", "sla:read", "report:read", "workflow:read", "ai:read",
 		},
-		// 服务台坐席（agent，domain/role 内置）：一线接单与处理，与 l1_support 等权，
+		// 知识管理员：文章生命周期、评审与发布，含 AI 检索面治理
+		domainrole.KnowledgeManager: {
+			"knowledge:read", "knowledge:write", "knowledge:delete", "knowledge:admin",
+			"ticket:read", "incident:read", "problem:read",
+			"ai:read", "ai:write", "report:read", "ticket_category:read",
+		},
+		// 配置管理员（CMDB Steward）：CI 类型/实例/关系与对账，拓扑与影响分析
+		domainrole.CmdbAdmin: {
+			"cmdb:read", "cmdb:write", "cmdb:delete",
+			"asset:read", "asset:write", "asset:delete",
+			"license:read", "license:write", "vendor:read",
+			"change:read", "incident:read", "problem:read",
+			"report:read", "sla:read", "ai:read",
+		},
+		// 服务台坐席（agent，domain/role 内置）：一线接单与处理，
 		// 额外覆盖服务请求 L1 审批（approvers-l1 组兜底）。
 		// 此前 seedRolePermissions 漏定义该键，导致 role_permissions 表中权限为 0，
 		// 所有 agent 用户访问任意 API 均 403（2026-09-16 P0 修复）。
-		"agent": {
+		domainrole.Agent: {
 			// 工单核心（11）：坐席需要工单全生命周期
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:resolve", "ticket:close",
@@ -132,58 +113,36 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"notification:write", "dashboard:read", "service_catalog:read",
 			"change:write", "alert:read", "group:read", "bpmn:read",
 		},
-		// 二线支持工程师
-		"l2_support": {
-			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket:assign", "ticket:escalate", "ticket:export",
-			"ticket_type:read",
-			"incident:read", "incident:write",
-			"problem:read", "change:read", "asset:read",
-			"knowledge:read", "knowledge:write", "user:read", "sla:read", "notification:read", "ai:read",
-		},
-		// 三线专家
-		"l3_expert": {
-			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
-			"ticket:assign", "ticket:escalate", "ticket:export",
-			"ticket_type:read",
-			"incident:read", "incident:write",
-			"problem:read", "problem:write", "change:read", "change:write",
-			"asset:read", "cmdb:read", "knowledge:read", "knowledge:write",
-			"sla:read", "workflow:read", "notification:read", "ai:read",
-		},
-		// 研发经理
-		"rd_manager": {
-			"ticket:read", "ticket_type:read", "problem:read", "change:read", "change:write",
-			"release:read", "release:write", "workflow:read", "workflow:write",
-			"knowledge:read", "knowledge:write", "report:read",
-		},
-		// 开发工程师
-		"developer": {
-			"ticket:read", "ticket_type:read", "problem:read", "change:read",
-			"release:read", "knowledge:read", "knowledge:write",
-		},
-		// 测试工程师
-		"qa_engineer": {
-			"ticket:read", "ticket_type:read", "problem:read", "change:read",
-			"release:read", "knowledge:read", "knowledge:write", "report:read",
-		},
-		// 安全管理员
-		"security_admin": {
+		// 安全管理员（等保三员②）
+		domainrole.SecurityAdmin: {
 			"ticket:read", "ticket_type:read", "incident:read", "problem:read",
 			"system:read", "user:read", "role:read",
 			"knowledge:read", "report:read",
 			// 服务请求审批（2026-09-07 P1-B：审批角色权限补齐）
 			"service_request:read", "service_request:write", "service_request:approve",
+			// 2026-10-07 角色重设：等保三员②需要看到权限模型与安全配置本身
+			// （permission 清单、system_config、审计轨迹、流程与告警），仍无 system:write。
+			"permission:read", "audit:read", "system_config:read",
+			"bpmn:read", "workflow:read", "alert:read", "notification:read", "dashboard:read",
+			"change:read", "release:read", "approval:read",
 		},
-		// 审计管理员
-		"audit_admin": {
+		// 安全审计员（等保三员③，users.role=audit_admin 对齐）：
+		// 全租户只读视野 + audit:read，无任何写权限码；行级写仍由权限码二次拦截。
+		domainrole.AuditAdmin: {
 			"ticket:read", "ticket_type:read", "incident:read", "problem:read", "change:read",
 			"system:read", "user:read", "role:read", "report:read",
+			"audit:read", "permission:read", "system_config:read",
+			"approval:read", "service_request:read", "service_catalog:read",
+			"knowledge:read", "cmdb:read", "asset:read", "license:read", "vendor:read",
+			"sla:read", "release:read", "workflow:read", "bpmn:read", "task:read",
+			"notification:read", "dashboard:read", "alert:read", "ai:read",
+			"team:read", "department:read", "group:read", "org:read",
+			"project:read", "application:read", "on_call:read", "msp:read",
 		},
 		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
 		// 2026-10-05 N4 拍板扩权：补齐 plans/product-remediation-plan-2026-10-03.md §3
 		// R2-a 实测差集 26 对（原 middleware.RolePermissions["manager"] 独有码）。
-		"manager": {
+		domainrole.Manager: {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
 			"problem:read", "change:read", "report:read",
 			"user:read", "department:read", "team:read",
@@ -200,31 +159,24 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"project:read", "project:write",
 			"application:read", "application:write", "ai:read",
 		},
-		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）
-		"it_admin": {
+		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）：
+		// ITIL 流程运营所有者——工单类型、SLA、流程绑定与目录配置的落地者。
+		domainrole.ITAdmin: {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read", "incident:write",
 			"problem:read", "change:read", "asset:read", "cmdb:read",
 			"user:read", "team:read", "knowledge:read", "report:read",
 			"service_request:read", "service_request:write", "service_request:approve",
+			// 2026-10-07 角色重设：流程运营职责需要配置面（工单类型/分类/模板、SLA、
+			// 流程与发布读、服务目录），不含 user/role/system 写（归 admin 与三员）。
+			"ticket_type:manage", "ticket_category:read", "ticket_tag:read", "ticket_template:read",
+			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
+			"service_catalog:read", "release:read", "notification:read", "notification:write",
+			"dashboard:read", "group:read", "approval:read",
 		},
-		// 部门经理（业务条线经理，rd_manager 等场景之外的通用审批角色）
-		"dept_manager": {
-			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
-			"problem:read", "change:read", "report:read",
-			"user:read", "department:read", "team:read",
-			"knowledge:read",
-			"service_request:read", "service_request:approve",
-		},
-		// 团队主管
-		"team_lead": {
-			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
-			"problem:read", "change:read", "team:read",
-			"user:read", "knowledge:read",
-		},
-		// 普通用户：可提交和维护自己的工单/服务请求
+		// 最终用户：可提交和维护自己的工单/服务请求
 		// 2026-10-05 N4 拍板扩权：补 R2-a 实测差集 16 对，以只读可见性为主
 		// （ITIL 读面 + 仪表盘/通知/AI 基线能力）。
-		"end_user": {
+		domainrole.EndUser: {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
@@ -234,14 +186,10 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"cmdb:read", "incident:read", "change:read", "problem:read",
 			"bpmn:read", "release:read", "asset:read", "license:read",
 		},
-		// 访客
-		"guest": {
-			"knowledge:read",
-		},
 		// 租户管理员（users.role=admin 对齐；2026-09-17 P0 曾与 middleware admin 91 对全等，
 		// 2026-10-05 N5 后 middleware 表已删除，本条目即 admin 唯一权威源）
 		// 2026-09-17 P0：此前缺条目导致 roles 表 admin 行权限空集=DB 显式撤销，admin 用户全 403）
-		"admin": {
+		domainrole.Admin: {
 			"ticket:read", "ticket:write", "ticket:delete", "ticket:admin",
 			"notification:read", "notification:write",
 			"ticket_category:read", "ticket_category:write", "ticket_category:delete",
@@ -282,8 +230,11 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		},
 		// 二线技术员（users.role=technician 对齐；2026-10-05 N5 后本条目即 technician 唯一权威源，
 		// 2026-09-17 P0 曾按 middleware 兜底 16 对补齐）
-		"technician": {
+		domainrole.Technician: {
 			"ticket:read", "ticket:write",
+			// 二线处理语义：接手升级单据并在团队内转派/继续升级。
+			// 与退役的 l2_support 权限面等价（ticket:write 由同义补齐展开为 create/update）。
+			"ticket:assign", "ticket:escalate",
 			"notification:read",
 			"knowledge:read",
 			"cmdb:read",
@@ -306,18 +257,19 @@ func BuiltinRolePermissionCodes() map[string][]string {
 	// 因此 task:read / task:update 是全角色基线，而不是个别角色的特权。
 	// 粒度控制不在角色层：ListUserTasks 只返回本人/候选任务；task:update 的每一步
 	// （认领态区分、自审批防护、委托/加签目标校验）由 handler 层 authorizeTaskActor 收口。
-	// guest 除外——外部访客不参与任何内部流程。
+	// 例外：等保三员③（audit_admin）按分立原则只读，不授予 task:update。
 	for role, codes := range m {
-		if role == "guest" {
+		if role == domainrole.AuditAdmin {
+			m[role] = appendMissingCodes(codes, "task:read")
 			continue
 		}
 		m[role] = appendMissingCodes(codes, "task:read", "task:update")
 	}
 	// 跨用户全量任务视图（GET /bpmn/tasks/all、GET /workflow/tasks/all）只给管理与监督角色。
 	for _, role := range []string{
-		"sysadmin", "it_director", "ops_director", "admin",
-		"manager", "dept_manager", "team_lead", "sd_manager", "ops_manager",
-		"change_manager", "it_admin", "security_admin", "audit_admin",
+		domainrole.SysAdmin, domainrole.Admin, domainrole.Manager, domainrole.ITAdmin,
+		domainrole.SecurityAdmin, domainrole.AuditAdmin,
+		domainrole.ChangeManager, domainrole.ServiceCatalogAdmin,
 	} {
 		if codes, ok := m[role]; ok {
 			m[role] = appendMissingCodes(codes, "task:admin")
@@ -340,9 +292,6 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		"system":          {"read"},
 	}
 	for role, codes := range m {
-		if role == "guest" {
-			continue
-		}
 		has := func(code string) bool {
 			for _, c := range codes {
 				if c == code {
@@ -367,8 +316,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 
 	// admin 显式补齐（2026-09-17 批次 2/3）：租内最高管理角色，
 	// 审批/派单/删除类动作由种子明确授予而非通配。
-	if codes, ok := m["admin"]; ok {
-		m["admin"] = appendMissingCodes(codes,
+	if codes, ok := m[domainrole.Admin]; ok {
+		m[domainrole.Admin] = appendMissingCodes(codes,
 			"ticket:assign", "ticket:escalate", "ticket:export",
 			"change:approve", "change:rollback",
 			"release:approve", "release:rollback",

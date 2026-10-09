@@ -1317,6 +1317,65 @@ ITSM_INITIALIZATION_TEST_DSN="postgres://drill:drill@127.0.0.1:5499/itsm_init_te
 go test ./handlers/common/ -run TestLogin -v
 ```
 
+### 1.33 角色词表重设与 legacy 角色退役（2026-10-08，破坏性：角色取值 + 数据清理）
+
+角色=权限包，不是岗位。此前 `users.role` 枚举、`roles` 表种子、`internal/authz` 兜底表、
+内置审批组与 BPMN 模板各自持有一套词汇，交集很小：审批派单指向 `l1_support` / `it_director`
+这类库里查不到人的角色码，`security` 这类 legacy 值又一路泄漏到界面。现在词表集中在
+`itsm-backend/domain/role`，其余各层由守卫强制对齐。
+
+**新的封闭词表**
+
+| 层 | 取值 | 承载 |
+| --- | --- | --- |
+| 主角色 | `super_admin` `admin` `sysadmin` `security_admin` `audit_admin` `it_admin` `manager` `agent` `technician` `end_user` | `users.role` 单字段（一人一个），同时是 `roles` 表的 `is_system` 种子 |
+| ITIL 实践角色 | `change_manager` `problem_manager` `knowledge_manager` `cmdb_admin` `service_catalog_admin` | 仅 `roles` + `user_roles` 边，可叠加 |
+| MSP 协作角色 | `msp_viewer` `msp_tech` `msp_specialist` `msp_manager` `msp_admin` | 同上 |
+
+`sysadmin` / `security_admin` / `audit_admin` 是等保「三员分立」的三个互斥管理角色。
+
+**退役值**：`security` `it_director` `ops_director` `ops_manager` `ops_engineer` `dba`
+`network_eng` `sd_manager` `l1_support` `l2_support` `l3_expert` `rd_manager` `developer`
+`qa_engineer` `dept_manager` `team_lead` `guest`。岗位/团队差异请改用部门、团队或租户自建角色。
+
+**升级影响**
+
+- `POST/PUT /api/v1/users` 的 `role` 只接受上表主角色（外加前端别名 `user`，服务端归一为
+  `end_user`）。传入退役值现在返回参数错误，不再落库。
+- 迁移 `itsm-backend/migrations/20261008_retire_legacy_roles.sql` 由新版本镜像启动时的
+  AutoMigrate 自动应用（`migrations/` 目录即真相，且 AutoMigrate 早于 AutoSeed，
+  所以删除的退役角色不会被旧种子复活）。它做三件事：
+  1. `users.role='security'` 改为 `'security_admin'`（语义等价，权限面不缩小）；
+  2. 已部署流程定义 XML 的角色指派位按映射改写：`l1_support`→`agent`，
+     `l2_support`/`dba`→`technician`，`l3_expert`/`it_director`/`ops_director`→`it_admin`，
+     `sd_manager`/`ops_manager`/`rd_manager`→`manager`；
+  3. `roles` 表里的退役角色在**没有任何成员**时连同其 `role_permissions` 一并删除；
+     仍有成员的角色会被保留并 `RAISE WARNING` 点名，等你先迁走成员再重跑，避免把人悬空。
+- 迁移 `itsm-backend/migrations/20261009_drop_orphan_ai_analysis_result.sql` 同批自动应用，
+  下线单数孤儿表 `ai_analysis_result`（Ent 实际写复数 `ai_analysis_results`）。表内有数据即
+  `RAISE EXCEPTION` 中止，不静默删。
+- **清空演示业务数据的运维陷阱**：若你也用 `TRUNCATE ... RESTART IDENTITY` 清掉工单/事件/变更等
+  业务行，主键会从 1 重新分配，而 `operational_commands` 的幂等键形如 `ticket:1:rules:create`。
+  只要旧聚合的命令历史还留着，新建第一条工单就会撞唯一约束、返回 `code 5001 创建工单失败`。
+  清理时必须一并删除聚合已不存在的命令行（按 `aggregate_type` + `aggregate_id` 回查父表，
+  保留聚合仍存活的行），而不是关掉幂等约束。
+- **不可逆**：本迁移删除角色行与授权行，不提供 `_down.sql`。执行前必须 `pg_dump`；
+  脚本末尾带「定义仍含已映射退役码即 `RAISE EXCEPTION`」的收尾不变量，且可重复执行。
+- 若你的自建角色、外部集成或自动化脚本按退役角色码过滤用户/审批人，需在升级前改为新码。
+  连接器回调、Webhook payload 中的历史角色字符串不受影响（只是文本）。
+- 历史条目 §1.5、§1.6 里出现的 `it_director` / `ops_director` / `dept_manager` / `team_lead` /
+  `sd_manager` / `ops_manager` / `guest` 是当时的权限授予清单，仅作记录，现已不是合法角色。
+
+**验证**
+
+```bash
+cd itsm-backend
+# 词表跨层契约（集合相等 + 退役码零出现，覆盖枚举/DTO/authz/种子/BPMN/前端）
+go test ./domain/role/ -run TestContract -v
+# 迁移在隔离 PostgreSQL 上的演练：改值、映射改写、无成员才删、幂等重跑
+go test ./pkg/seeder/ ./internal/authz/ ./tests/parity/ -count=1
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

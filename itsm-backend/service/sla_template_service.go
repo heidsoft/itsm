@@ -85,9 +85,9 @@ func (s *SLATemplateService) initCatalog() {
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
-					{"level": 1, "threshold_minutes": 15, "notify_roles": []string{"team_lead"}},
-					{"level": 2, "threshold_minutes": 30, "notify_roles": []string{"manager"}},
-					{"level": 3, "threshold_minutes": 60, "notify_roles": []string{"director"}},
+					{"level": 1, "threshold_minutes": 15, "notify_roles": []string{"manager"}},
+					{"level": 2, "threshold_minutes": 30, "notify_roles": []string{"it_admin"}},
+					{"level": 3, "threshold_minutes": 60, "notify_roles": []string{"admin"}},
 				},
 			},
 			Conditions: map[string]interface{}{
@@ -115,8 +115,8 @@ func (s *SLATemplateService) initCatalog() {
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
-					{"level": 1, "threshold_minutes": 60, "notify_roles": []string{"team_lead"}},
-					{"level": 2, "threshold_minutes": 240, "notify_roles": []string{"manager"}},
+					{"level": 1, "threshold_minutes": 60, "notify_roles": []string{"manager"}},
+					{"level": 2, "threshold_minutes": 240, "notify_roles": []string{"it_admin"}},
 				},
 			},
 			Conditions: map[string]interface{}{
@@ -143,7 +143,7 @@ func (s *SLATemplateService) initCatalog() {
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
-					{"level": 1, "threshold_minutes": 240, "notify_roles": []string{"team_lead"}},
+					{"level": 1, "threshold_minutes": 240, "notify_roles": []string{"manager"}},
 				},
 			},
 			Conditions: map[string]interface{}{
@@ -194,8 +194,8 @@ func (s *SLATemplateService) initCatalog() {
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
-					{"level": 1, "threshold_minutes": 30, "notify_roles": []string{"change_manager", "team_lead"}},
-					{"level": 2, "threshold_minutes": 60, "notify_roles": []string{"director"}},
+					{"level": 1, "threshold_minutes": 30, "notify_roles": []string{"change_manager", "manager"}},
+					{"level": 2, "threshold_minutes": 60, "notify_roles": []string{"it_admin"}},
 				},
 			},
 			Conditions: map[string]interface{}{
@@ -222,8 +222,8 @@ func (s *SLATemplateService) initCatalog() {
 			},
 			EscalationRules: map[string]interface{}{
 				"levels": []map[string]interface{}{
-					{"level": 1, "threshold_minutes": 480, "notify_roles": []string{"team_lead"}},
-					{"level": 2, "threshold_minutes": 2880, "notify_roles": []string{"manager"}},
+					{"level": 1, "threshold_minutes": 480, "notify_roles": []string{"manager"}},
+					{"level": 2, "threshold_minutes": 2880, "notify_roles": []string{"it_admin"}},
 				},
 			},
 			Conditions: map[string]interface{}{

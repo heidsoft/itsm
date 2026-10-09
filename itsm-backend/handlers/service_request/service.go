@@ -45,14 +45,12 @@ const (
 	ApprovalTimeoutSecurity = 72
 
 	// Roles：单一源在 domain/role（2026-09-07 P1-B 词表漂移治理）。
-	// 保留域内别名以最小化调用点改动；RoleSecurity/RoleAgent/RoleTechnician
-	// 为遗留词表，仅作 fallback 兼容，新代码一律用 domainrole 常量。
+	// 保留域内别名以最小化调用点改动；新代码一律用 domainrole 常量。
 	RoleAdmin      = domainrole.Admin
 	RoleSuperAdmin = domainrole.SuperAdmin
 	RoleManager    = domainrole.Manager
 	RoleAgent      = domainrole.Agent
 	RoleTechnician = domainrole.Technician
-	RoleSecurity   = "security" // 遗留词表：仅旧数据兼容，DB 真实角色为 security_admin
 	RoleITAdmin    = domainrole.ITAdmin
 	RoleSecAdmin   = domainrole.SecurityAdmin
 )
@@ -520,13 +518,12 @@ func (s *Service) checkEligibility(actorID int, actorRole, actorDept, requesterD
 			return nil
 		}
 	case ApprovalStepIT:
-		// it_admin 为 DB 真实角色；agent/technician 为遗留词表兼容
+		// IT 层由 it_admin 主签，agent/technician 作为一线/二线处理人可代签
 		if actorRole == RoleITAdmin || actorRole == RoleAgent || actorRole == RoleTechnician {
 			return nil
 		}
 	case ApprovalStepSecurity:
-		// security_admin 为 DB 真实角色；security 为遗留词表兼容
-		if actorRole == RoleSecAdmin || actorRole == RoleSecurity {
+		if actorRole == RoleSecAdmin {
 			return nil
 		}
 	}

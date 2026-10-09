@@ -14,7 +14,6 @@ import (
 
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/ent"
-	"itsm-backend/pkg/credential"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/change"
@@ -46,6 +45,7 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/authz"
+	"itsm-backend/pkg/credential"
 	"itsm-backend/pkg/menubaseline"
 	"itsm-backend/service"
 
@@ -656,44 +656,15 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "客户成功", Description: "客户成功管理"},
 			{Name: "技术支持", Description: "客户服务技术支持"},
 		},
-		Roles: []RoleSeed{
-			{Name: "IT总监", Code: "it_director", Description: "IT部门总监"},
-			{Name: "运维总监", Code: "ops_director", Description: "运维部门总监"},
-			{Name: "系统管理员", Code: "sysadmin", Description: "系统管理员"},
-			{Name: "安全管理员", Code: "security_admin", Description: "安全管理角色"},
-			// 服务请求审批角色（users.role 单字段词表对齐，见 domain/role 包——2026-09-07 P1-B 修复）
-			{Name: "部门经理", Code: "manager", Description: "服务请求 L1 审批角色（与 users.role 对齐）"},
-			{Name: "IT管理员", Code: "it_admin", Description: "服务请求 L2 审批角色（与 users.role 对齐）"},
-			{Name: "审计管理员", Code: "audit_admin", Description: "审计管理角色"},
-			{Name: "运维经理", Code: "ops_manager", Description: "运维团队经理"},
-			{Name: "运维工程师", Code: "ops_engineer", Description: "运维工程师"},
-			{Name: "DBA工程师", Code: "dba", Description: "数据库管理员"},
-			{Name: "网络安全工程师", Code: "network_eng", Description: "网络工程师"},
-			{Name: "服务台主管", Code: "sd_manager", Description: "服务台主管"},
-			{Name: "一线工程师", Code: "l1_support", Description: "一线支持工程师"},
-			{Name: "二线工程师", Code: "l2_support", Description: "二线支持工程师"},
-			{Name: "三线专家", Code: "l3_expert", Description: "三线技术专家"},
-			{Name: "研发经理", Code: "rd_manager", Description: "研发团队经理"},
-			{Name: "开发工程师", Code: "developer", Description: "开发工程师"},
-			{Name: "测试工程师", Code: "qa_engineer", Description: "测试工程师"},
-			{Name: "部门经理", Code: "dept_manager", Description: "部门经理"},
-			{Name: "团队主管", Code: "team_lead", Description: "团队主管"},
-			{Name: "普通用户", Code: "end_user", Description: "普通终端用户"},
-			{Name: "访客", Code: "guest", Description: "访客用户"},
-		},
+		// 角色与审批组的词表权威在 Go 清单（BuiltinRoles/PracticeRoles/BuiltinGroups），
+		// JSON 只提供租户级覆盖，不再复制同名的内置条目。
+		Roles: PracticeRoles(),
 		// 审批组种子：从对应角色拉人组成的窄集合（审批组=窄集合，角色=粗粒度池）。
 		// 命名空间前缀 approvers- 刻意避开全部角色 code——ExpandGroupsToUsers 的
 		// 「同名组优先于角色回退」语义下，与角色码同名的空组会挡住角色回退导致
 		// 任务无人可见。新租户/新装环境组内无成员是预期状态，管理员在组管理页
 		// 从角色对应人员中拉人后即生效。
-		Groups: []GroupSeed{
-			{Name: "approvers-l1", Description: "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
-			{Name: "approvers-l2", Description: "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
-			{Name: "approvers-l3", Description: "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
-			{Name: "approvers-managers", Description: "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
-			{Name: "approvers-security", Description: "安全审批组：从 security_admin 角色人员中拉人组成"},
-			{Name: "approvers-change", Description: "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"},
-		},
+		Groups: BuiltinGroups(),
 		SLADefinitions: []SLADefinitionSeed{
 			{Name: "SLA-P0-紧急", Description: "P0紧急级别SLA", ServiceType: "incident", Priority: "urgent", ResponseTime: 15, ResolutionTime: 120},
 			{Name: "SLA-P1-高", Description: "P1高级别SLA", ServiceType: "incident", Priority: "high", ResponseTime: 30, ResolutionTime: 240},
@@ -1217,12 +1188,12 @@ func teamCode(spec TeamSeed) string {
 // 见 ExpandGroupsToUsers 与 resolveLegacyApprovalAssignee。
 func BuiltinGroups() []GroupSeed {
 	return []GroupSeed{
-		{Name: "approvers-l1", Description: "一线审批组：从 l1_support / agent 角色人员中拉人组成"},
-		{Name: "approvers-l2", Description: "二线审批组：从 l2_support / technician 角色人员中拉人组成"},
-		{Name: "approvers-l3", Description: "三线审批组：从 l3_expert / it_admin 角色人员中拉人组成"},
-		{Name: "approvers-managers", Description: "管理审批组：从 manager / ops_manager / dept_manager 角色人员中拉人组成"},
+		{Name: "approvers-l1", Description: "一线审批组：从 agent 角色人员中拉人组成"},
+		{Name: "approvers-l2", Description: "二线审批组：从 technician / it_admin 角色人员中拉人组成"},
+		{Name: "approvers-l3", Description: "三线审批组：从 it_admin / security_admin 角色人员中拉人组成"},
+		{Name: "approvers-managers", Description: "管理审批组：从 manager 角色人员中拉人组成"},
 		{Name: "approvers-security", Description: "安全审批组：从 security_admin 角色人员中拉人组成"},
-		{Name: "approvers-change", Description: "变更审批组：从 change_manager / ops_manager 角色人员中拉人组成（变更委员会）"},
+		{Name: "approvers-change", Description: "变更审批组：从 change_manager / manager 角色人员中拉人组成（变更委员会）"},
 	}
 }
 
@@ -1274,21 +1245,40 @@ func (s *Seeder) seedGroups(ctx context.Context) {
 	}
 }
 
-// BuiltinRoles 返回 domain/role 词表的内置角色种子。
+// BuiltinRoles 返回 users.role 主角色词表（domain/role.All）的内置角色种子。
 // 契约：users.role 枚举值必须都能在 roles 表找到对应实体——
 // MigrateUserRolesBackfill 与按角色解析审批人（M2M 边）都依赖这一点。
-// config.Roles（default.json）提供岗位型角色，两者按 code 去重合并，config 优先。
+// ITIL 实践角色与 MSP 协作角色由 PracticeRoles 提供，只通过 user_roles 边叠加。
 func BuiltinRoles() []RoleSeed {
 	return []RoleSeed{
 		{Code: domainrole.SuperAdmin, Name: "超级管理员", Description: "全部权限，跨租户引导", IsSystem: true},
-		{Code: domainrole.Admin, Name: "系统管理员", Description: "租户内系统管理", IsSystem: true},
+		{Code: domainrole.Admin, Name: "租户管理员", Description: "租户内业务与配置全量管理", IsSystem: true},
+		{Code: domainrole.SysAdmin, Name: "系统管理员", Description: "等保三员①：系统与集成运维", IsSystem: true},
+		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "等保三员②：安全策略与合规，L3 审批人", IsSystem: true},
+		{Code: domainrole.AuditAdmin, Name: "安全审计员", Description: "等保三员③：全域只读与审计轨迹", IsSystem: true},
+		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "ITIL 流程运营，L2 审批人", IsSystem: true},
 		{Code: domainrole.Manager, Name: "部门经理", Description: "部门审批与 L1 审批人", IsSystem: true},
-		{Code: domainrole.ITAdmin, Name: "IT管理员", Description: "IT 服务管理，L2 审批人", IsSystem: true},
-		{Code: domainrole.SecurityAdmin, Name: "安全管理员", Description: "安全管理，L3 审批人", IsSystem: true},
-		{Code: domainrole.SysAdmin, Name: "系统运维", Description: "基础设施运维", IsSystem: true},
 		{Code: domainrole.Agent, Name: "服务台坐席", Description: "一线支持与工单处理", IsSystem: true},
 		{Code: domainrole.Technician, Name: "技术员", Description: "二线技术处理", IsSystem: true},
 		{Code: domainrole.EndUser, Name: "最终用户", Description: "服务请求与查看本人工单", IsSystem: true},
+	}
+}
+
+// PracticeRoles 返回 ITIL 实践角色与 MSP 协作角色种子：通过 user_roles 边叠加，
+// 不进入 users.role 主角色枚举（词表见 domain/role.Practice 与 domain/role.MSP）。
+// is_system=false 是有意的：租户可按需增删这些协作身份，但内置主角色受保护。
+func PracticeRoles() []RoleSeed {
+	return []RoleSeed{
+		{Code: domainrole.ChangeManager, Name: "变更经理", Description: "变更生命周期、CAB 与发布联动", IsSystem: false},
+		{Code: domainrole.ProblemManager, Name: "问题经理", Description: "根因分析、已知错误与变通方案", IsSystem: false},
+		{Code: domainrole.KnowledgeManager, Name: "知识管理员", Description: "知识文章生命周期与评审发布", IsSystem: false},
+		{Code: domainrole.CmdbAdmin, Name: "配置管理员", Description: "CI 类型/实例/关系与对账", IsSystem: false},
+		{Code: domainrole.ServiceCatalogAdmin, Name: "服务目录管理员", Description: "服务目录、请求模板与工单模板配置", IsSystem: false},
+		{Code: domainrole.MspViewer, Name: "MSP查看者", Description: "MSP 客户工单只读协作", IsSystem: false},
+		{Code: domainrole.MspTech, Name: "MSP技术员", Description: "MSP 派单处理协作", IsSystem: false},
+		{Code: domainrole.MspSpecialist, Name: "MSP专家", Description: "MSP 专家级处理与客户维护", IsSystem: false},
+		{Code: domainrole.MspManager, Name: "MSP经理", Description: "MSP 交付与资源分配管理", IsSystem: false},
+		{Code: domainrole.MspAdmin, Name: "MSP管理员", Description: "MSP 全量协作管理", IsSystem: false},
 	}
 }
 
@@ -1320,8 +1310,8 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		return
 	}
 
-	// 内置词表在前，config Roles 在后；去重时内置优先（config 只追加不覆盖）。
-	merged := BuiltinRoles()
+	// 内置主角色在前，ITIL/MSP 实践角色其次，config Roles 在后；按 code 去重，前者优先。
+	merged := append(BuiltinRoles(), PracticeRoles()...)
 	seen := make(map[string]bool, len(merged))
 	for _, r := range merged {
 		seen[r.Code] = true

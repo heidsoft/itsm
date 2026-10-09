@@ -25,7 +25,7 @@ type User struct {
 	Email string `json:"email,omitempty"`
 	// 姓名
 	Name string `json:"name,omitempty"`
-	// 角色（词表单一源=domain/role；security 为存量 legacy 值，新代码禁用）
+	// 主角色（词表单一源=domain/role；封闭词表，退役值不得再出现）
 	Role user.Role `json:"role,omitempty"`
 	// 部门
 	Department string `json:"department,omitempty"`

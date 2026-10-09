@@ -141,8 +141,8 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 		if lvl1.Level != 1 {
 			t.Fatalf("期望 L1, 实际 L%d", lvl1.Level)
 		}
-		if len(lvl1.NotifyRoles) == 0 || lvl1.NotifyRoles[0] != "team_lead" {
-			t.Fatalf("L1 应通知 team_lead, 实际: %v", lvl1.NotifyRoles)
+		if len(lvl1.NotifyRoles) == 0 || lvl1.NotifyRoles[0] != "manager" {
+			t.Fatalf("L1 应通知 manager, 实际: %v", lvl1.NotifyRoles)
 		}
 
 		lvl2 := escalationSvc.FindNextEscalationLevel(tenantA.ID, "critical", 30, 1)

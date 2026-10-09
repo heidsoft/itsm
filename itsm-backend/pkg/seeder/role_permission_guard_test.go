@@ -27,8 +27,9 @@ import (
 //  1. 词表角色（除 super_admin 走 Login ["*"] 旁路）必须有非空 DB 权限码集；
 //  2. 码集引用的每个码必须在 permissionDefinitions() 清单中（防码空间漂移）；
 //  3. N4 扩权回归锁：manager/agent/end_user 必须持有拍板补齐的码（防静默回收）；
-//  4. 兜底覆盖锁：每个运行时角色码（词表 + legacy security + msp_*）都必须有
-//     非空编译期默认权限，且与 DB 码集一致（词表角色）。
+//  4. 兜底覆盖锁：词表角色与仅运行时的 msp_* 角色都必须有非空编译期默认权限，
+//     且与 DB 码集一致（词表角色）；
+//  5. 封闭词表锁：domain/role.Retired 中的退役角色码不得出现在任何权限映射中。
 func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 	roleCodes := builtinRolePermissionCodes()
 	defs := permissionDefinitions()
@@ -76,11 +77,24 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 
 	defaults := authz.RolePermissionDefaults()
 
-	// 契约 4 前置：非播种运行时角色（legacy security + msp_*）必须有显式默认集。
-	nonSeededRoles := []string{"super_admin", "security", "msp_viewer", "msp_tech", "msp_specialist", "msp_manager", "msp_admin"}
+	// 契约 4 前置：仅存在于运行时、不进 roles 表的 MSP 协作角色必须有显式默认集。
+	// super_admin 走 Login ["*"] 旁路，但兜底默认仍必须非空。
+	nonSeededRoles := []string{"super_admin", "msp_viewer", "msp_tech", "msp_specialist", "msp_manager", "msp_admin"}
 	for _, role := range nonSeededRoles {
 		if len(defaults[role]) == 0 {
 			t.Errorf("角色 %q 在 authz.RolePermissionDefaults() 中缺失或为空：删除 middleware.RolePermissions 后该角色 unconfigured 兜底将全 403", role)
+		}
+	}
+
+	// 契约 5（2026-10-07 角色词表重设）：退役角色码不得残留在任何权限映射里。
+	// 词表是封闭的，残留条目就是双权威回潮——它永远不会被 seedRolePermissions 命中，
+	// 却会让「按角色查权限」的读者以为该角色仍然有效。
+	for _, retired := range domainrole.Retired {
+		if codes, ok := defaults[retired]; ok {
+			t.Errorf("退役角色 %q 仍在 authz.RolePermissionDefaults() 中（%d 码）：请删除条目", retired, len(codes))
+		}
+		if codes, ok := roleCodes[retired]; ok {
+			t.Errorf("退役角色 %q 仍在 builtinRolePermissionCodes() 中（%d 码）：请删除条目", retired, len(codes))
 		}
 	}
 
@@ -130,9 +144,12 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 
 // TestBuiltinRolePermissionCodes_NoDeadKeys 权限码映射的键必须 ⊆ 实际播种的角色 code。
 //
-// 背景（2026-10-03 R7-6）：BuiltinRolePermissionCodes() 的键必须对应实际会被播种到
-// roles 表的角色。播种来源有二：1) BuiltinRoles() 返回的 domainrole.All 9 个核心角色；
-// 2) 默认种子配置 config/seed/default.json 中的 roles 清单（18 个扩展角色）。
+// 背景（2026-10-03 R7-6；2026-10-07 词表重设后重写）：BuiltinRolePermissionCodes()
+// 的键必须对应实际会被播种到 roles 表的角色。播种来源有三：
+//  1. BuiltinRoles()——users.role 主角色词表（domainrole.All）；
+//  2. PracticeRoles()——ITIL 实践角色与 MSP 协作角色（只经 user_roles 边叠加）；
+//  3. 种子配置 config/seed/default.json 的 roles 清单——租户级追加，内置码不再复制。
+//
 // 死键（不在任一来源中的键）永远不会被 seedRolePermissions 匹配，携带的权限码会
 // 与真实角色漂移，增加审计与维护负担。
 func TestBuiltinRolePermissionCodes_NoDeadKeys(t *testing.T) {
@@ -143,14 +160,16 @@ func TestBuiltinRolePermissionCodes_NoDeadKeys(t *testing.T) {
 	for _, r := range BuiltinRoles() {
 		seededRoles[r.Code] = true
 	}
+	for _, r := range PracticeRoles() {
+		seededRoles[r.Code] = true
+	}
 	cfg := loadSeedConfig(zap.NewNop().Sugar())
 	for _, r := range cfg.Roles {
 		seededRoles[r.Code] = true
 	}
 
 	// loadSeedConfig 在测试上下文中无法通过 resolveSeedConfigFile 找到 JSON 配置
-	// （测试二进制运行在临时目录），因此需要直接读取项目中的 JSON 配置文件，
-	// 把仅存在于 JSON 中的角色（如 change_manager、service_catalog_admin）也纳入允许集。
+	// （测试二进制运行在临时目录），因此需要直接读取项目中的 JSON 配置文件。
 	_, testFile, _, _ := runtime.Caller(0)
 	jsonPath := filepath.Join(filepath.Dir(testFile), "..", "..", "config", "seed", "default.json")
 	if data, err := os.ReadFile(jsonPath); err == nil {
@@ -167,7 +186,7 @@ func TestBuiltinRolePermissionCodes_NoDeadKeys(t *testing.T) {
 			continue // Login ["*"] 旁路，不依赖 DB 权限行
 		}
 		if !seededRoles[role] {
-			t.Errorf("BuiltinRolePermissionCodes() 包含死键 %q：该角色不在 domainrole.All 或默认种子配置中，seedRolePermissions 永远不会匹配到它", role)
+			t.Errorf("BuiltinRolePermissionCodes() 包含死键 %q：该角色不在 BuiltinRoles/PracticeRoles 或默认种子配置中，seedRolePermissions 永远不会匹配到它", role)
 		}
 	}
 }

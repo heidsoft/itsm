@@ -3,8 +3,8 @@ import { httpClient } from './http-client';
 // 用户相关的接口定义
 
 /**
- * 主角色词表。单一源 = 后端 domain/role 包（domain/role/role.go）；
- * security 为存量 legacy 值，新代码禁用。
+ * 主角色词表（封闭）。单一源 = 后端 domain/role 包（domain/role/role.go），
+ * 退役值不得再出现在此类型或任何 UI 词表中。
  */
 export type UserRole =
   | 'super_admin'
@@ -12,10 +12,10 @@ export type UserRole =
   | 'manager'
   | 'it_admin'
   | 'security_admin'
+  | 'audit_admin'
   | 'sysadmin'
   | 'agent'
   | 'technician'
-  | 'security'
   | 'end_user';
 
 /**
@@ -29,14 +29,14 @@ export const PRIMARY_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'manager', label: '部门经理' },
   { value: 'it_admin', label: 'IT管理员' },
   { value: 'security_admin', label: '安全管理员' },
+  { value: 'audit_admin', label: '审计管理员' },
   { value: 'sysadmin', label: '系统运维' },
   { value: 'admin', label: '系统管理员' },
   { value: 'super_admin', label: '超级管理员' },
 ];
 
-export const PRIMARY_ROLE_LABEL: Record<string, string> = Object.fromEntries(
-  PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label])
-);
+export const PRIMARY_ROLE_LABEL: Record<string, string> =
+  Object.fromEntries(PRIMARY_ROLE_OPTIONS.map(o => [o.value, o.label]));
 
 export interface User {
   id: number;
@@ -55,6 +55,23 @@ export interface User {
   roleNames?: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * 角色标签：主角色高亮，其余 RBAC 角色去重后追加。
+ * roleNames 来自 user_roles M2M，主角色同时存在于两边，不去重会渲染两枚相同标签。
+ */
+export function resolveRoleTags(
+  user: Pick<User, 'role' | 'roleNames'>
+): { label: string; primary: boolean }[] {
+  const primary = user.role ? (PRIMARY_ROLE_LABEL[user.role] ?? user.role) : '';
+  const tags = primary ? [{ label: primary, primary: true }] : [];
+  for (const name of user.roleNames ?? []) {
+    if (name !== primary && !tags.some(t => t.label === name)) {
+      tags.push({ label: name, primary: false });
+    }
+  }
+  return tags;
 }
 
 export interface CreateUserRequest {

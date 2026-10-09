@@ -55,12 +55,12 @@ func TestGetContextRoles(t *testing.T) {
 	}
 
 	// 主角色 + 附加角色（含重复与空串）
-	c.Set("roles", []string{"technician", "agent", "", "security"})
+	c.Set("roles", []string{"technician", "agent", "", "security_admin"})
 	roles = GetContextRoles(c)
 	if len(roles) != 3 {
 		t.Fatalf("去重后应 3 个角色, got %v", roles)
 	}
-	want := map[string]bool{"agent": true, "technician": true, "security": true}
+	want := map[string]bool{"agent": true, "technician": true, "security_admin": true}
 	for _, r := range roles {
 		if !want[r] {
 			t.Fatalf("意外角色 %v, got %v", r, roles)
@@ -97,7 +97,7 @@ func TestSmartCheckPermission_DBOnlyFailClosed(t *testing.T) {
 
 // Phase 1：广播消息解析（"role|tenant" 载荷）。
 func TestParseInvalidateMessage(t *testing.T) {
-	if role, tenant, ok := parseInvalidateMessage("ops_manager|7"); !ok || role != "ops_manager" || tenant != 7 {
+	if role, tenant, ok := parseInvalidateMessage("change_manager|7"); !ok || role != "change_manager" || tenant != 7 {
 		t.Fatalf("合法载荷解析失败: %v %v %v", role, tenant, ok)
 	}
 	if _, _, ok := parseInvalidateMessage("bad-payload"); ok {
@@ -109,7 +109,7 @@ func TestParseInvalidateMessage(t *testing.T) {
 	if _, _, ok := parseInvalidateMessage("|7"); ok {
 		t.Fatal("空角色应解析失败")
 	}
-	if _, _, ok := parseInvalidateMessage("ops_manager|"); ok {
+	if _, _, ok := parseInvalidateMessage("change_manager|"); ok {
 		t.Fatal("空租户段应解析失败")
 	}
 	// 角色名本身含分隔符时按最后一个分隔符切分，租户段仍可正确落位

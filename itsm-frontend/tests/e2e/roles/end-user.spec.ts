@@ -9,7 +9,7 @@ import { test, expect } from '../fixtures/auth';
 const TEST_ACCOUNTS = {
   admin: { username: 'admin', password: 'admin123', role: 'admin' },
   user1: { username: 'user1', password: 'user123', role: 'end_user' },
-  security1: { username: 'security1', password: 'security123', role: 'security' },
+  security1: { username: 'security1', password: 'security123', role: 'security_admin' },
   engineer1: { username: 'engineer1', password: 'eng123', role: 'technician' },
   manager1: { username: 'manager1', password: 'mgr123', role: 'manager' },
   tenant1admin: { username: 'tenant1admin', password: 'ta123', role: 'admin' },

@@ -43,7 +43,7 @@
     <bpmn:userTask id="Activity_ProblemManagerAssign" name="问题经理分配">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">pm_assign_problem</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">sd_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">4</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_P2</bpmn:incoming>
@@ -54,7 +54,7 @@
     <bpmn:userTask id="Activity_RootCauseAnalysis" name="根因分析">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">root_cause_analysis</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
         <bpmn:metaData name="analysis_method">5why,fishbone</bpmn:metaData>
       </bpmn:extensionElements>
@@ -73,7 +73,7 @@
     <bpmn:userTask id="Activity_RootCauseConfirmed" name="根因确认">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">confirm_root_cause</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">24</bpmn:metaData>
         <bpmn:metaData name="approval_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -86,7 +86,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="service_task_type">generic_task</bpmn:metaData>
         <bpmn:metaData name="action">notify_root_cause_pending</bpmn:metaData>
-        <bpmn:metaData name="notify_roles">l3_expert,ops_manager</bpmn:metaData>
+        <bpmn:metaData name="notify_roles">it_admin,manager</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_RootCausePending</bpmn:incoming>
       <bpmn:outgoing>Flow_P5_Pending</bpmn:outgoing>
@@ -106,7 +106,7 @@
     <bpmn:userTask id="Activity_SolutionDesign" name="解决方案设计">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">design_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_days">5</bpmn:metaData>
         <bpmn:metaData name="alternative_required">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -125,7 +125,7 @@
     <bpmn:userTask id="Activity_SolutionApproved" name="解决方案审批">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">approve_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_director</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SolutionApproved</bpmn:incoming>
@@ -136,7 +136,7 @@
     <bpmn:userTask id="Activity_SolutionRevise" name="解决方案修订">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">revise_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_days">2</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SolutionRejected</bpmn:incoming>
@@ -157,7 +157,7 @@
     <bpmn:userTask id="Activity_ImplementSolution" name="解决方案实施">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">implement_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l2_support</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">technician</bpmn:metaData>
         <bpmn:metaData name="timeout_days">7</bpmn:metaData>
         <bpmn:metaData name="rollback_plan">true</bpmn:metaData>
       </bpmn:extensionElements>
@@ -169,7 +169,7 @@
     <bpmn:userTask id="Activity_VerifySolution" name="解决方案验证">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">verify_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">ops_manager</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">manager</bpmn:metaData>
         <bpmn:metaData name="timeout_hours">48</bpmn:metaData>
         <bpmn:metaData name="monitoring_period">7d</bpmn:metaData>
       </bpmn:extensionElements>
@@ -188,7 +188,7 @@
     <bpmn:userTask id="Activity_ReviseSolution" name="修订解决方案">
       <bpmn:extensionElements>
         <bpmn:metaData name="action">revise_solution</bpmn:metaData>
-        <bpmn:metaData name="assignee_type">l3_expert</bpmn:metaData>
+        <bpmn:metaData name="assignee_type">it_admin</bpmn:metaData>
         <bpmn:metaData name="timeout_days">3</bpmn:metaData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Failed</bpmn:incoming>

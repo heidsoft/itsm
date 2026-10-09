@@ -222,16 +222,16 @@ func TestExecuteTool_T2_PermissionPassed(t *testing.T) {
 	assert.Equal(t, "pending", inv.ApprovalState)
 }
 
-// ===== T3: security 对 create_ticket（ticket:write）无权限 -> enforce 拒绝 =====
-// 硬编码表 security 只有 ticket:read，没有 ticket:write。
+// ===== T3: audit_admin 对 create_ticket（ticket:write）无权限 -> enforce 拒绝 =====
+// audit_admin 是只读监督角色：权限面只有 *:read，没有任何写动作。
 func TestExecuteTool_T3_PermissionDeniedEnforce(t *testing.T) {
 	env := newRBACTestEnv(t)
 	setFlag(t, true, true) // enforce：拒绝并返回错误
 
 	args := map[string]interface{}{"title": "x"}
-	_, _, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", args)
+	_, _, err := env.svc.ExecuteTool(context.Background(), 7, 10, "audit_admin", "create_ticket", args)
 
-	require.Error(t, err, "security 缺少 ticket:write，应被拒绝")
+	require.Error(t, err, "audit_admin 缺少 ticket:write，应被拒绝")
 	assert.True(t, errors.Is(err, ai.ErrToolPermissionDenied), "应返回 ErrToolPermissionDenied")
 
 	inv := env.repo.lastInvocation()
@@ -239,7 +239,7 @@ func TestExecuteTool_T3_PermissionDeniedEnforce(t *testing.T) {
 	assert.Equal(t, "denied", inv.PermissionCheck)
 	assert.Contains(t, inv.PermissionReason, "ticket")
 	assert.Contains(t, inv.PermissionReason, "write")
-	assert.Equal(t, "security", inv.RoleSnapshot)
+	assert.Equal(t, "audit_admin", inv.RoleSnapshot)
 	assert.NotEqual(t, "pending", inv.ApprovalState, "enforce 拒绝时不应创建待审批任务")
 }
 
@@ -247,7 +247,7 @@ func TestExecuteTool_T3_PermissionDeniedEnforce(t *testing.T) {
 func TestExecuteTool_ShadowModeStillDenies(t *testing.T) {
 	env := newRBACTestEnv(t)
 	setFlag(t, true, false)
-	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
+	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "audit_admin", "create_ticket", map[string]interface{}{})
 	require.ErrorIs(t, err, ai.ErrToolPermissionDenied)
 	assert.Zero(t, invID)
 	inv := env.repo.lastInvocation()
@@ -296,7 +296,7 @@ func TestExecuteTool_T6_TenantContextPropagatedToAudit(t *testing.T) {
 func TestExecuteTool_FlagDisabledStillDenies(t *testing.T) {
 	env := newRBACTestEnv(t)
 	setFlag(t, false, false)
-	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
+	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "audit_admin", "create_ticket", map[string]interface{}{})
 	require.ErrorIs(t, err, ai.ErrToolPermissionDenied)
 	assert.Zero(t, invID)
 	inv := env.repo.lastInvocation()
@@ -307,7 +307,7 @@ func TestExecuteTool_FlagDisabledStillDenies(t *testing.T) {
 func TestExecuteTool_NilEntClientFailsClosed(t *testing.T) {
 	env := newRBACTestEnv(t)
 	env.svc.SetEntClient(nil)
-	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "security", "create_ticket", map[string]interface{}{})
+	_, invID, err := env.svc.ExecuteTool(context.Background(), 7, 10, "audit_admin", "create_ticket", map[string]interface{}{})
 	require.ErrorIs(t, err, ai.ErrToolUnavailable)
 	assert.Zero(t, invID)
 	assert.Nil(t, env.repo.lastInvocation())

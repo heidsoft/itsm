@@ -40,7 +40,7 @@ const journeys: Journey[] = [
     name: 'agent',
     username: 'security1',
     password: 'security123',
-    expectedRole: 'security',
+    expectedRole: 'security_admin',
     allowedPage: '/tickets',
     forbiddenPage: '/admin/users',
     forbiddenApi: '/api/v1/users/999',

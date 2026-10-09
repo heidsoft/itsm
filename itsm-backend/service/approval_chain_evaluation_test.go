@@ -253,7 +253,7 @@ func TestResolveApprovalPlan_EndToEnd(t *testing.T) {
 	tn := mkEvalTenant(t, ctx, client, "e2e")
 	m1 := mkEvalUser(t, ctx, client, tn.ID, "manager", "m1")
 	m2 := mkEvalUser(t, ctx, client, tn.ID, "manager", "m2")
-	esc := mkEvalUser(t, ctx, client, tn.ID, "security", "esc")
+	esc := mkEvalUser(t, ctx, client, tn.ID, "security_admin", "esc")
 
 	// 经 DTO 建链（同时验证此前 DTO 丢弃新字段的缺陷已修复）
 	created, err := svc.CreateApprovalChain(ctx, &dto.ApprovalChainRequest{
