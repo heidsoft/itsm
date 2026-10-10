@@ -164,7 +164,7 @@ func (_c *TicketTypeCreate) SetNillableArchivedBy(v *int64) *TicketTypeCreate {
 }
 
 // SetCustomFields sets the "custom_fields" field.
-func (_c *TicketTypeCreate) SetCustomFields(v []interface{}) *TicketTypeCreate {
+func (_c *TicketTypeCreate) SetCustomFields(v map[string]interface{}) *TicketTypeCreate {
 	_c.mutation.SetCustomFields(v)
 	return _c
 }

@@ -846,6 +846,7 @@ type FeedbackSkillInput struct {
 	Useful    bool    `json:"useful"`
 	Score     *int    `json:"score,omitempty"`
 	Notes     *string `json:"notes,omitempty"`
+	Accepted  *bool   `json:"accepted,omitempty"`
 }
 
 type FeedbackSkill struct {
@@ -927,11 +928,17 @@ func (s *FeedbackSkill) Execute(ctx context.Context, input interface{}) (interfa
 			notes = &str
 		}
 	}
+	var accepted *bool
+	if v, ok := in["accepted"]; ok && v != nil {
+		if b, ok := v.(bool); ok {
+			accepted = &b
+		}
+	}
 	useful, _ := in["useful"].(bool)
 	if s.svc == nil {
 		return nil, errors.New("feedback skill: underlying service is nil")
 	}
-	if err := s.svc.SaveFeedback(ctx, tenantID, userID, requestID, kind, query, itemType, itemID, useful, score, notes); err != nil {
+	if err := s.svc.SaveFeedback(ctx, tenantID, userID, requestID, kind, query, itemType, itemID, useful, score, notes, accepted); err != nil {
 		return nil, err
 	}
 	return map[string]any{"recorded": true}, nil

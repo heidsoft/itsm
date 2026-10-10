@@ -171641,8 +171641,7 @@ type TicketTypeMutation struct {
 	archived_at             *time.Time
 	archived_by             *int64
 	addarchived_by          *int64
-	custom_fields           *[]interface{}
-	appendcustom_fields     []interface{}
+	custom_fields           *map[string]interface{}
 	approval_enabled        *bool
 	approval_workflow_id    *int64
 	addapproval_workflow_id *int64
@@ -172390,13 +172389,12 @@ func (m *TicketTypeMutation) ResetArchivedBy() {
 }
 
 // SetCustomFields sets the "custom_fields" field.
-func (m *TicketTypeMutation) SetCustomFields(i []interface{}) {
-	m.custom_fields = &i
-	m.appendcustom_fields = nil
+func (m *TicketTypeMutation) SetCustomFields(value map[string]interface{}) {
+	m.custom_fields = &value
 }
 
 // CustomFields returns the value of the "custom_fields" field in the mutation.
-func (m *TicketTypeMutation) CustomFields() (r []interface{}, exists bool) {
+func (m *TicketTypeMutation) CustomFields() (r map[string]interface{}, exists bool) {
 	v := m.custom_fields
 	if v == nil {
 		return
@@ -172407,7 +172405,7 @@ func (m *TicketTypeMutation) CustomFields() (r []interface{}, exists bool) {
 // OldCustomFields returns the old "custom_fields" field's value of the TicketType entity.
 // If the TicketType object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TicketTypeMutation) OldCustomFields(ctx context.Context) (v []interface{}, err error) {
+func (m *TicketTypeMutation) OldCustomFields(ctx context.Context) (v map[string]interface{}, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCustomFields is only allowed on UpdateOne operations")
 	}
@@ -172421,23 +172419,9 @@ func (m *TicketTypeMutation) OldCustomFields(ctx context.Context) (v []interface
 	return oldValue.CustomFields, nil
 }
 
-// AppendCustomFields adds i to the "custom_fields" field.
-func (m *TicketTypeMutation) AppendCustomFields(i []interface{}) {
-	m.appendcustom_fields = append(m.appendcustom_fields, i...)
-}
-
-// AppendedCustomFields returns the list of values that were appended to the "custom_fields" field in this mutation.
-func (m *TicketTypeMutation) AppendedCustomFields() ([]interface{}, bool) {
-	if len(m.appendcustom_fields) == 0 {
-		return nil, false
-	}
-	return m.appendcustom_fields, true
-}
-
 // ResetCustomFields resets all changes to the "custom_fields" field.
 func (m *TicketTypeMutation) ResetCustomFields() {
 	m.custom_fields = nil
-	m.appendcustom_fields = nil
 }
 
 // SetApprovalEnabled sets the "approval_enabled" field.
@@ -173582,7 +173566,7 @@ func (m *TicketTypeMutation) SetField(name string, value ent.Value) error {
 		m.SetArchivedBy(v)
 		return nil
 	case tickettype.FieldCustomFields:
-		v, ok := value.([]interface{})
+		v, ok := value.(map[string]interface{})
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
