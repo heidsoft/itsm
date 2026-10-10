@@ -152,7 +152,7 @@ func (c *Handler) InstallItem(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, installation)
+	common.Success(ctx, ToInstallationResponse(installation))
 }
 
 // UninstallItem 卸载组件
@@ -214,7 +214,7 @@ func (c *Handler) ListInstallations(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, installations)
+	common.Success(ctx, ToInstallationResponseList(installations))
 }
 
 // GetInstallation 获取安装详情
@@ -250,7 +250,7 @@ func (c *Handler) GetInstallation(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, installation)
+	common.Success(ctx, ToInstallationResponse(installation))
 }
 
 // UpdateInstallationConfig 更新组件配置
@@ -289,5 +289,5 @@ func (c *Handler) UpdateInstallationConfig(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, installation)
+	common.Success(ctx, ToInstallationResponse(installation))
 }

@@ -329,6 +329,9 @@ func (s *Service) UpdateInstallationConfig(ctx context.Context, tenantID, itemID
 		return nil, err
 	}
 
+	// 出站配置带掩码，前端可能原样回写；掩码叶子还原为库中现值，避免真实密钥被 "***" 覆盖。
+	config = RestoreMaskedConfig(config, installation.Config)
+
 	// 获取 item 用于 schema 验证和类型判断
 	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
 	if err != nil {

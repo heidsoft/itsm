@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **连接器明文密钥可达前端（安全）**：marketplace 四个安装接口直出 `*ent.TenantInstallation`（snake_case tag 且 Config 无脱敏），飞书 OAuth 的 access_token/refresh_token 与连接器 appSecret 等经 `config.oauth`/`config.credentials` 原样返回，安装详情页直接渲染。现改出站 DTO（camelCase + Config 递归脱敏：token/secret/password/credential/encrypt 类键值替换为 `***`，键结构保留），配置更新入口对掩码叶子还原库中现值，防止前端把脱敏配置原样回写覆盖真实密钥；新增脱敏与还原往返回归测试。
 - **连接器审计写入绕过分层且 rotate_secret 审计从未落库（安全/合规）**：connector、dingtalk、wecom 三个 handler 直接持有 `ent.Client` 写 `audit_log`，违反 handler 不直接访问 Ent 的分层规则；其中 connector 的 ent client 在装配时从未注入，`rotate_secret` 审计分支生产环境恒为空转（密钥轮换无任何审计记录）。三者统一改为注入 `handlers/connector.AuditRecorder`（实现为 `handlers/common.EntRepository.CreateAuditLog`），dingtalk/wecom 孪生的失败审计方法收敛为共享 `RecordInboundFailure`（保留 RedactHeaders 脱敏与 fail-closed 语义），新增层间守卫测试阻止 handler 再次 import ent。装配净增 1 行，`bootstrap_app_lines` 棘轮基线同步上调 1812→1813。
 - **邮件收取失败重试 command 与业务状态非原子落库（可靠性）**：邮件提取失败时 `RETRYABLE_FAILED` 状态在事务内提交，恢复 command 却在事务外投递——enqueue 失败会留下「已标记待重试但无 command」的滞留消息，只能人工介入。现恢复 command 移入同一事务，用 `commandbus.EnqueueTxIdempotent` 事务内先查后插（幂等命中不再插入，避免唯一索引冲突弄脏事务）；新增回归测试锁定原子共存与幂等重放。
 - **产品表面棘轮基线漏同步（docs-gate C.6.4 红）**：`df47ccbaa` 落地 admin/skills 技能注册表管理页（v1.7 Skill Registry 链路配套界面）时未同 commit 上调 `frontend_pages` 基线，守卫以 169>168 FAIL。按棘轮规程上调 168→169 并留归因说明。
