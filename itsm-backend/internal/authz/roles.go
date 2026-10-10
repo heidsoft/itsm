@@ -401,20 +401,6 @@ func allPermissionCodes() []string {
 	}
 }
 
-func allExcept(exclude []string) []string {
-	excludeSet := make(map[string]bool, len(exclude))
-	for _, code := range exclude {
-		excludeSet[code] = true
-	}
-	result := make([]string, 0)
-	for _, code := range allPermissionCodes() {
-		if !excludeSet[code] {
-			result = append(result, code)
-		}
-	}
-	return result
-}
-
 // RetiredRolePermissionCodes 返回「角色 → 显式退役权限码」清单（2026-10-03 R2-d）。
 //
 // 播种收敛契约自此为「只增不减」：seedRolePermissions 不再按内置码集反向删除
