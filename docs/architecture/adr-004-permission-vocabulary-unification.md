@@ -154,7 +154,7 @@ Proposed（2026-10-06）
 ## 关联
 
 - [ADR-001](./adr-001-modular-monolith.md)：模块化单体决策，权限词表统一是其 RBAC 子系统的细化。
-- [AGENTS.md](../../agents.md)「身份、租户与数据范围」和「能力状态与失败语义」章节定义了权限系统的强制约束。
+- [AGENTS.md](../../AGENTS.md)「身份、租户与数据范围」和「能力状态与失败语义」章节定义了权限系统的强制约束。
 - `middleware/precheck_freshness_test.go`：现有路由-码空间守卫，本 ADR 的 G1-G3 增强基于此文件。
 - `internal/authz/catalog.go`：权限码空间权威清单。
 - `pkg/menubaseline/baseline.go`：菜单基线权威清单。
