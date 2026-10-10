@@ -31,7 +31,7 @@ var allowedRetirementReasons = map[string]struct{}{
 	"manual":            {},
 	"decommissioned":    {},
 	"replaced":          {},
-	"discovery_missing":  {},
+	"discovery_missing": {},
 	"end_of_life":       {},
 }
 

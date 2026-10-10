@@ -9,13 +9,13 @@ import (
 
 func TestRedactHeadersMasksSensitive(t *testing.T) {
 	in := map[string]string{
-		"X-DingTalk-Signature": "real-secret-abc",
+		"X-DingTalk-Signature":     "real-secret-abc",
 		"X-Lark-Request-Timestamp": "1700000000",
-		"X-WeCom-Msg_Signature": "wechat-secret",
-		"Content-Type":          "application/json",
-		"User-Agent":            "test",
-		"Authorization":         "Bearer super-secret",
-		"X-Trace-Id":            "trace-1",
+		"X-WeCom-Msg_Signature":    "wechat-secret",
+		"Content-Type":             "application/json",
+		"User-Agent":               "test",
+		"Authorization":            "Bearer super-secret",
+		"X-Trace-Id":               "trace-1",
 	}
 	out := RedactHeaders(in)
 
