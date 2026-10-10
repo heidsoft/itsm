@@ -13,7 +13,7 @@
 | 后端开发 | [本地开发命令](./dev-commands-reference.md)、[PostgreSQL 升级运行手册](./delivery/pg-upgrade-runbook.md)、[后端 CI](../.github/workflows/backend-ci.yml) |
 | 前端开发 | [本地开发命令](./dev-commands-reference.md)、[前端 CI](../.github/workflows/frontend-ci.yml) |
 | 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、ServiceNow 对标评审（参见 [阶段改进计划](./product/phased-improvement-plan.md)） |
-| 测试/QA | [角色视角测试方案](./testing/role-based-product-test-plan.md)、历史深度业务测试报告（[2026-06-18 快照](./review/deep-business-test-report-2026-06-18.md)） |
+| 测试/QA | [角色视角测试方案](./testing/role-based-product-test-plan.md)、[测试不变量](./testing/test-invariants.md) |
 | 发布维护 | [Release workflow](../.github/workflows/release.yml)、[Production Readiness Program](./delivery/production-readiness-program.md) |
 | 文档维护 | [文档状态与事实源](./documentation-governance.md)、[文档命名与维护规范](./documentation-style-guide.md) |
 
@@ -23,8 +23,8 @@
 - [本地开发命令](./dev-commands-reference.md): 本地开发、前后端命令、调试和常见问题。
 - [PostgreSQL 升级运行手册](./delivery/pg-upgrade-runbook.md): 数据库迁移、备份和模型说明。
 - [运维运行手册](./delivery/production-initialization.md): 日志、健康检查、备份、恢复和故障排查。
-- [文档状态与事实源](./documentation-governance.md): 当前规范、计划、测试报告和归档材料的权威层级。
-- [文档命名与维护规范](./documentation-style-guide.md): 目录分层、命名规则和归档标准。
+- [文档状态与事实源](./documentation-governance.md): 当前规范、计划与测试报告的权威层级。
+- [文档命名与维护规范](./documentation-style-guide.md): 目录分层、命名规则和清理标准。
 - [开源产品能力说明](./product/open-source-release-capability.md): 当前业务闭环、成熟度、明确限制和验收路径。
 
 ## 产品与架构
@@ -32,17 +32,14 @@
 - [AI-Native ITSM 架构解析](./articles/07-ai-native-architecture-guidance-harness-skill.md)
 - [开源发布能力说明](./product/open-source-release-capability.md)
 - [商业就绪架构评审](./architecture/commercial-ready-architecture.md)
-- [企业级 v1 就绪度评估](./archive/reviews/enterprise-v1-readiness-2026-06-07.md)
 - [工作流控制台诊断与设计](./product/workflow-console-diagnosis-and-design.md)
 
 ## 测试与评审
 
-- [模块功能复盘与改善迭代计划](./review/module-function-retrospective-2026-07-10.md)
+- [当前评审与审查记录](./review/README.md)
 - [角色视角测试方案](./testing/role-based-product-test-plan.md)
-- [浏览器 E2E 测试报告](./review/browser-e2e-test-report-2026-06-18.md)
-- [深度业务测试报告](./review/deep-business-test-report-2026-06-18.md)
-- [前端 UX Review](./review/frontend-ux-review-2026-06-19.md)
-- [商用就绪验收报告](./review/commercial-readiness-acceptance-report-2026-06-18.md)
+- [E2E 约定](./testing/e2e-conventions.md)
+- [测试不变量](./testing/test-invariants.md)
 
 ## CI/CD 与发布
 
@@ -66,4 +63,4 @@ CI 按后端、前端、契约、集成、安全和发布分层。`ga-gate` 只�
 - `docs/README.md` 作为文档导航，不承载大量业务细节。
 - 阶段性评审、测试报告和历史复盘必须标记为 historical，不能作为当前实现或发布结论。
 - 新增长期有效文档时，优先补到本页索引；临时报告使用日期命名，避免和正式指南混淆。
-- 历史 bug 报告、过期计划和阶段性复盘统一放入 [archive](./archive/README.md)，避免干扰当前用户路径。
+- 历史 bug 报告、过期计划和阶段性复盘在完成结论迁移后直接删除，仓库不设归档目录，避免干扰当前用户路径。

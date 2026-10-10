@@ -33,7 +33,7 @@
 
 ### Surfaces
 
-- 产品文档：`docs/product/*`、`docs/archive/*`、`docs/review/*`
+- 产品文档：`docs/product/*`、`docs/review/*`
 - 后端：`itsm-backend/router/router.go`、`controller/`、`handlers/`、`service/`、`dto/`、`ent/schema/`
 - 前端：`itsm-frontend/src/app/`、`src/lib/api/`、`src/lib/auth/`、`src/components/`
 - 交付：`.github/workflows/*`、`docker-compose*.yml`、`scripts/smoke-test.sh`

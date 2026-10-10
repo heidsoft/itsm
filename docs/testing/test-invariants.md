@@ -3,10 +3,7 @@
 > Status: current
 
 > **Status**: current. 自 v1.5 起强制。
-> **迁移来源**：
-> - [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md) §2（控制器测试 fixture 修复）
-> - [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md) §3（Jest 退出异常）
-> - [`docs/review/architecture-review-2026-06-14.md`](../review/architecture-review-2026-06-14.md) §3（CMDB 跨租户）
+> **迁移来源**：2026-07-01 系统功能评审结果 §2（控制器测试 fixture 修复）、§3（Jest 退出异常），2026-06-14 架构评审 §3（CMDB 跨租户）。相关报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回。
 
 本文档沉淀"在多个历史评审中反复触发，并被当前架构仍然依赖"的测试不变量。
 

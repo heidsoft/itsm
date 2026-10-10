@@ -41,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `cd itsm-backend && go test ./...` 全绿；收紧后的 `domain/role/contract_test.go` 由「domain ⊆ 各层」升级为集合相等断言，并新增退役码零出现扫描（覆盖枚举、DTO、authz、种子、BPMN 角色指派位、前端词表），逐项做过「注入退役值必须失败」的反向验证。
 - `cd itsm-frontend && npm run type-check`、`npm run lint:antd`、`user-api` 与 API 契约用例全绿。
 
+### Removed
+
+- **仓库文档清理（88 份过期与重复件删除）**：产品事实以代码、迁移、运行时 API 与当前 CI 为准，文档只作辅助，归档层不再保留。删除内容包括根目录三份 8 月一次性评审（`AI_BPMN_CONNECTOR_REVIEW.md`、`FE-BE-ALIGNMENT-REVIEW.md`、`PROD_DEPLOYMENT_REVIEW.md`）、与 `architecture.md` 重名且分层描述已失真的 `docs/architecture/architecture-design.md`、`docs/review/` 中 2026-06/07 的 9 份历史评审与测试报告、`docs/archive/` 整层 13 份归档件、`specs/001`–`002` 两套已完成的 Spec Kit 工件、`plans/` 中 4 份已落地的计划与完成报告、`.trae/documents/` 23 份其他 IDE 的一次性修复计划，以及 `itsm-frontend/docs/` 的 17 份修复报告与 fix 类指南（保留 `system_design.md`、时序/类图、DESIGN_TOKEN 等仍有效的指南）。
+- **治理规则同步**：`docs/documentation-governance.md` 权威层级去掉归档层，`docs/documentation-style-guide.md` 的「归档规则」改为「清理规则」（结论先迁移到规范文档，原件直接删除），`docs/README.md`、`docs/product/README.md`、`docs/testing/README.md` 同步；指向已删报告的 10 处入链改为「迁移来源 + `git log --diff-filter=D` 取回」的表述，`docs/scripts/smoke-api.sh` 注释与 `.specify/feature.json` 活动特性指针一并复位。
+- **保留判据**：`ROADMAP.md`（路线图唯一源，`docs/roadmap.md` 仅跳转 stub）、`AGENTS.md`、`README.md`/`README.en.md`、ADR 与 `docs/architecture/` 规范、`docs/deployment-optimization.md`（部署命令唯一源）、`docs/review/` 中仍在驱动当前工作的 2026-09-30 与 2026-10-03 两份审查均未触碰。
+
 
 ## [1.6.16] - 2026-10-07
 

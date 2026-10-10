@@ -19,22 +19,15 @@
 
 - `servicenow-benchmark-2026-06-18.md` → 已删除（2026-09 归档清理）
   - 原因：报告中的 v1.1 / v1.2 / v1.4 / v2.0 / v3.0 路线已完全被 [`ROADMAP.md`](../../ROADMAP.md) 取代；ServiceNow GAP 列表已迁移到 [`docs/product/`](../product/) 阶段改进计划。
+- 2026-10-10 清理：以下 2026-06/07 历史报告已 `git rm` 删除（结论均已迁移到上节规范文档，原文可用 `git log --diff-filter=D -- docs/review` 取回）：
+  `architecture-review-2026-06-14.md`、`browser-e2e-test-report-2026-06-18.md`、`browser-functional-test-report-2026-06-20.md`、`commercial-readiness-acceptance-report-2026-06-18.md`、`deep-business-test-report-2026-06-18.md`、`frontend-ux-review-2026-06-19.md`、`module-function-retrospective-2026-07-10.md`、`system-function-review-checklist-2026-07-01.md`、`system-function-review-result-2026-07-01.md`。
+  - 同批删除 `docs/archive/` 整层（含 `reviews/product-architecture-review-2026-09-03.md` 等 13 份归档件）。
 
 ## 仍保留的报告
 
 | 报告 | 状态 | 保留理由 |
 |---|---|---|
-| `architecture-review-2026-06-14.md` | historical | BPMN / CMDB 不变量主要迁移来源；保留作历史 |
-| `frontend-ux-review-2026-06-19.md` | historical | §5.6–5.9 门禁主要迁移来源 |
-| `module-function-retrospective-2026-07-10.md` | historical | 主流程闭环 / 契约治理迁移来源 |
-| `system-function-review-result-2026-07-01.md` | historical | F-1..F-9 测试夹具修复、GA readiness 12 modules 基线 |
-| `system-function-review-checklist-2026-07-01.md` | historical | checklist 原件 |
-| `commercial-readiness-acceptance-report-2026-06-18.md` | historical | 商用验收快照 |
-| `browser-e2e-test-report-2026-06-18.md` | historical | 浏览器 E2E 烟测基线 |
-| `browser-functional-test-report-2026-06-20.md` | historical | 浏览器功能测试 |
-| `deep-business-test-report-2026-06-18.md` | historical | 深度业务流测试（默认账号过时，但仍含 API 验证记录） |
-| `product-architecture-review-2026-09-03.md` | historical | 产品架构评审快照；2026-09-12 由 `docs/reviews/`（复数目录）合并入本目录 |
-| `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用，移动时已同步更新该引用 |
+| `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用 |
 | `scope-convergence-architecture-review-2026-09-30.md` | active | 收敛计划（`plans/scope-convergence-plan-2026-09-28.md`）B0–B5 落地状态实测审查；F8 空转、判据口径歧义与执行顺序建议 |
 | `product-convergence-initialization-permission-review-2026-10-03.md` | active | 三轮只读审查合并：注册接口可无认证自选 `super_admin`（P0-1）；硬编码与 DB 播种两套权限权威对 `sysadmin` 等角色定义不一致、播种反而致 `dashboard:read` 等 89 个路由模式在 DBOnly 下 403（P0-2）；种子载体（`seed_data.sql` 死文件带毒 / `demo.json` 入生产镜像）、55 个孤儿组件中的假实现、三处门禁假绿；含审查者 7 次近似失误记录 |
 

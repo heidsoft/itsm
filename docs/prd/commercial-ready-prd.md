@@ -385,7 +385,7 @@
 
 ## 附录 B: 参考文档
 
-- 架构评审报告: `docs/review/architecture-review-2026-06-14.md`
+- 架构不变量: `docs/architecture/workflow-cmdb-invariants.md`（原 2026-06-14 架构评审报告结论已迁移至此，报告本体已删除）
 - 问题源码位置:
   - `service/cmdb_service.go` (SEC-001, SEC-004)
   - `service/bpmn_process_engine.go` (SEC-002, FUNC-001, FUNC-002, DATA-002)

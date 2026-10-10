@@ -12,8 +12,9 @@
 2. 根目录 `README.md`、`ROADMAP.md`、`CHANGELOG.md` 和 `AGENTS.md`。
 3. `docs/product/`、`docs/architecture/`、`docs/deployment-optimization.md`、`docs/testing/` 中未标记为 historical/superseded 的规范。
 4. `plans/`：计划和设计输入，不证明已经实现。
-5. `output/`、`docs/review/`、`docs/test-plan/`：带日期的历史快照和测试证据，只证明当次运行。**注意 `output/` 已加入 `.gitignore`（产物可能含真实凭据），不随仓库分发**——`docs/` 下的规范文档不要引用 `output/` 中的文件作为事实源，否则对全新 clone 而言是失效链接。
-6. `docs/archive/`：归档资料，不参与当前设计决策。
+5. `output/`、`docs/review/`：带日期的历史快照和测试证据，只证明当次运行。**注意 `output/` 已加入 `.gitignore`（产物可能含真实凭据），不随仓库分发**——`docs/` 下的规范文档不要引用 `output/` 中的文件作为事实源，否则对全新 clone 而言是失效链接。
+
+仓库不设归档层：只描述某次历史运行、结论已迁移到规范文档的一次性报告直接删除（2026-10 清理已删除 `docs/archive/`、`specs/` 两套已完成 speckit 产物与 `docs/review/` 中 2026-06/07 的历史报告）。仍有效的规则必须已经写在第 2、3 层的规范文档里，靠归档层留存结论的做法视为缺陷。
 
 GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、运行时或最新测试证据。
 

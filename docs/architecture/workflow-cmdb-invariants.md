@@ -3,7 +3,7 @@
 > Status: current
 
 > **Status**: current. 自 v1.5 起强制。
-> **迁移来源**：[`docs/review/architecture-review-2026-06-14.md`](../review/architecture-review-2026-06-14.md) 第 2、3 节（已识别但尚未迁移）。
+> **迁移来源**：2026-06-14 架构评审第 2、3 节（报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review/architecture-review-2026-06-14.md` 取回）。
 > **维护人**：Workflow 域 owner / CMDB 域 owner。
 
 本文档把所有"代码评审 / 故障复盘中反复出现、并且当前架构仍然必须满足"的不变量集中维护。新增评审报告若再次发现同类问题，应先更新本文件，再讨论 PR。

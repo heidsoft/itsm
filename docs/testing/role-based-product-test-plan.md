@@ -7,13 +7,9 @@
 > **目标**: v1.0 GA 交付前的"可上线"质量门禁
 > **方法论**: 角色驱动 + 业务流闭环 + 风险加权 + 自动化优先
 >
-> **Spec Kit 工件**：本方案的需求/验收/成功标准已抽取为 Spec Kit 规范，详见：
+> **Spec Kit 工件**：本方案的需求/验收/成功标准曾抽取为 `specs/001-role-based-testing/`（spec、GA 检查单、api-smoke 矩阵）。该特性已完成，工件目录随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- specs/001-role-based-testing` 取回。
 >
-> - 规范主体：[`specs/001-role-based-testing/spec.md`](../../specs/001-role-based-testing/spec.md)
-> - GA 检查单：[`specs/001-role-based-testing/checklists/ga-readiness.md`](../../specs/001-role-based-testing/checklists/ga-readiness.md)
-> - 后续 `/speckit-plan`、`/speckit-tasks`、`/speckit-clarify` 将基于该 spec 生成
->
-> 本文件仍为"操作手册"，覆盖角色矩阵、API 冒烟、安全/性能/排期等执行细节；spec 文件覆盖"可测试需求 + 可度量准入"。两者交叉引用、不重复维护：FR-XXX 在 spec 中，EU-/EN-/FLOW- 等场景 ID 在本文件。
+> 自本批起，本文件是该测试方案的唯一操作手册；如需重新启动 Spec Kit 流程，用 `/speckit-specify` 生成新的特性目录，不要恢复旧目录。
 
 ---
 

@@ -94,17 +94,16 @@ plugins:
 nav:
   - 首页: index.md
   - 快速开始:
-      - 安装: getting-started/install.md
+      - 安装: install.md
+      - 开发命令: dev-commands-reference.md
   - 架构:
       - 系统总览: architecture/overview.md
-      - 部署: deployment.md
-      - 数据库: database.md
-      - 配置: configuration.md
-      - 开发: development.md
-      - 运维: operations.md
+      - 架构设计: architecture/architecture.md
+      - 部署: deployment-optimization.md
+      - API 参考: api-reference.md
       - v1.0 GA 验收: v1-ga-readiness.md
   - 治理:
-      - 贡献指南: ../CONTRIBUTING.md
+      - 文档状态与事实源: documentation-governance.md
       - 标签体系: label-schema.md
       - Roadmap: roadmap.md
       - 覆盖审计: testing/coverage-audit.md

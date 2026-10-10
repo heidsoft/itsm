@@ -245,9 +245,8 @@ grep -E "llm_gateway|rag_service|itsm-rag|itsm-ai-service|itsm-agent" \
 grep -rn "itsm-ai-service\|itsm-rag\|itsm-agent" docker-compose.prod.yml
 # 应至少 2 个服务在主编排
 
-# 4. 8 月评审 R8 销账
-grep -rn "ai_asset_ownership" docs/review/architecture-review-2026-06-14.md
-# 应有对应段落
+# 4. 8 月评审 R8 销账（勘误 2026-10-10：原评审报告已随文档清理删除，`docs/architecture/adr-ai-asset-ownership.md` 从未落地，
+#    `ai_asset_ownership` 在 itsm-backend 全仓 0 命中。本项在当前仓库里没有可核对的工件，需按 AI 资产归属重新立项，不再用 grep 销账）
 ```
 
 #### 验收

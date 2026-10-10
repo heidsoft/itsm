@@ -24,9 +24,7 @@
 
 ## 跨领域不变量（v1.5 起强制）
 
-> **迁移来源**：
-> - [`docs/review/module-function-retrospective-2026-07-10.md`](../review/module-function-retrospective-2026-07-10.md) §1（主流程闭环 / 契约治理 / AI Native 可度量）
-> - [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md) §3（前端测试退出异常、Jest open handles）
+> **迁移来源**：2026-07-10 模块功能复盘 §1（主流程闭环 / 契约治理 / AI Native 可度量）、2026-07-01 系统功能评审结果 §3（前端测试退出异常、Jest open handles）。两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回。
 >
 > 与 [`workflow-cmdb-invariants.md`](./workflow-cmdb-invariants.md) 配套使用。
 

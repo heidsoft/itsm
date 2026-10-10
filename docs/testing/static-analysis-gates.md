@@ -21,7 +21,7 @@ shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-front
 | 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
 | 5.11 | Ant Design v4/v5 弃用 API 零新增（9 类，组件归属判定 + 基线棘轮） | `itsm-frontend/tools/check-antd-legacy.sh` | HARD（本地棘轮） | ❌（未接 CI） |
 
-> 5.6–5.9 迁移自 [`docs/review/frontend-ux-review-2026-06-19.md`](../review/frontend-ux-review-2026-06-19.md) 与 [`docs/review/system-function-review-result-2026-07-01.md`](../review/system-function-review-result-2026-07-01.md)；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
+> 5.6–5.9 迁移自 2026-06-19 前端 UX Review 与 2026-07-01 系统功能评审结果（两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回）；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
 
 ## 接入位置
 

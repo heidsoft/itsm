@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # ITSM API Smoke Test Script
-# 测试矩阵: specs/001-role-based-testing/contracts/api-smoke-matrix.md
+# 测试矩阵: docs/testing/role-based-product-test-plan.md（原 specs/001-role-based-testing 工件已随特性完成删除）
 #
 # Exit codes:
 #   0 - all tests passed

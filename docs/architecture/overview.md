@@ -156,4 +156,4 @@
 
 - [领域归属与租户边界](domain-ownership.md)
 - [BPMN 审批运行时契约](approval-runtime-contract.md)
-- [系统架构设计](architecture-design.md)
+- [系统架构设计](architecture.md)

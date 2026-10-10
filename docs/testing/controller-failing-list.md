@@ -6,7 +6,7 @@
 > "阶段 0 / PR-0.3" for originating rationale.
 >
 > **Source evidence**
-> - `plans/notification-tx-outbox-completion-report.md:50` — "controller/ 包 9 个既有失败已 `git stash` 对照复现，与本次改动无关"
+> - `plans/notification-tx-outbox-completion-report.md:50`（该报告已于 2026-10 文档清理删除，可用 `git log --diff-filter=D -- plans/notification-tx-outbox-completion-report.md` 取回）— "controller/ 包 9 个既有失败已 `git stash` 对照复现，与本次改动无关"
 > - `docs/生产就绪审计报告-2026-07-12.md` 第三节 — 65 个 controller 中 44 个无对应测试
 > - `go test ./controller/ -count=1` (`output/coverage/backend-coverage.log` PR-0.1, re-run 2026-06-28) — 9 个失败明细
 
