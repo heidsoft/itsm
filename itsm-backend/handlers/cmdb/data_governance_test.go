@@ -165,8 +165,8 @@ func TestIsOrphanCI_AllFieldsEmpty(t *testing.T) {
 
 func TestIsOrphanCI_AnyOwnerBreaks(t *testing.T) {
 	cases := []struct {
-		name  string
-		mut   func(*ConfigurationItem)
+		name       string
+		mut        func(*ConfigurationItem)
 		wantOrphan bool
 	}{
 		{"owner", func(c *ConfigurationItem) { c.OwnedBy = "alice" }, false},

@@ -16,16 +16,16 @@ import (
 
 // BPMNSLAService BPMN SLA服务
 type BPMNSLAService struct {
-	client   *ent.Client
-	logger   *zap.SugaredLogger
+	client    *ent.Client
+	logger    *zap.SugaredLogger
 	slaEngine *sla.Engine
 }
 
 // NewBPMNSLAService 创建BPMN SLA服务
 func NewBPMNSLAService(client *ent.Client, logger *zap.SugaredLogger) *BPMNSLAService {
 	return &BPMNSLAService{
-		client:   client,
-		logger:   logger,
+		client:    client,
+		logger:    logger,
 		slaEngine: sla.NewEngine(nil),
 	}
 }

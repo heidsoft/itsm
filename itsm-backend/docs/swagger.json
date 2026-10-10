@@ -15145,18 +15145,18 @@
                     "type": "string"
                 },
                 "role": {
-                    "description": "角色，可选；不提供时使用后端默认值（end_user）\n词表单一源=domain/role（security 为存量 legacy 值，user 为前端别名归一为 end_user）",
+                    "description": "角色，可选；不提供时使用后端默认值（end_user）\n词表单一源=domain/role（封闭词表；user 为前端别名归一为 end_user，legacy security 已退役）",
                     "type": "string",
                     "enum": [
                         "super_admin",
                         "admin",
-                        "manager",
-                        "it_admin",
-                        "security_admin",
                         "sysadmin",
+                        "security_admin",
+                        "audit_admin",
+                        "it_admin",
+                        "manager",
                         "agent",
                         "technician",
-                        "security",
                         "end_user",
                         "user"
                     ]
@@ -17481,13 +17481,13 @@
                     "enum": [
                         "super_admin",
                         "admin",
-                        "manager",
-                        "it_admin",
-                        "security_admin",
                         "sysadmin",
+                        "security_admin",
+                        "audit_admin",
+                        "it_admin",
+                        "manager",
                         "agent",
                         "technician",
-                        "security",
                         "end_user",
                         "user"
                     ]
