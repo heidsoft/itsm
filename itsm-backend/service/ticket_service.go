@@ -1148,16 +1148,8 @@ func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.Updat
 		params.FormFields = &validationRequest.FormFields
 	}
 	if req.AssigneeID != 0 {
-		if s.client != nil {
-			assigneeExists, err := s.client.User.Query().
-				Where(user.IDEQ(req.AssigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
-				Exist(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("验证处理人失败: %w", err)
-			}
-			if !assigneeExists {
-				return nil, fmt.Errorf("处理人不存在或不可用")
-			}
+		if err := s.ValidateAssignee(ctx, req.AssigneeID, tenantID); err != nil {
+			return nil, err
 		}
 		params.AssigneeID = &req.AssigneeID
 	}
@@ -1333,6 +1325,24 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	return response, nil
 }
 
+// ValidateAssignee 校验处理人属于指定租户且处于激活状态。
+// 创建路径 validateCreateTicketReferences 和批量指派 AssignTickets 仍是各自的内联副本。
+func (s *TicketService) ValidateAssignee(ctx context.Context, assigneeID, tenantID int) error {
+	if s.client == nil {
+		return nil
+	}
+	exists, err := s.client.User.Query().
+		Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证处理人失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("处理人不存在或不可用")
+	}
+	return nil
+}
+
 // AssignTicket 分配工单
 func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assigneeID int, tenantID int) (*ticket.Ticket, error) {
 	s.logger.Infow("Assigning ticket", "ticket_id", ticketID, "assignee_id", assigneeID)
@@ -1343,16 +1353,8 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 	if err := current.Assign(assigneeID); err != nil {
 		return nil, err
 	}
-	if s.client != nil {
-		exists, err := s.client.User.Query().
-			Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
-			Exist(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("验证处理人失败: %w", err)
-		}
-		if !exists {
-			return nil, fmt.Errorf("处理人不存在或不可用")
-		}
+	if err := s.ValidateAssignee(ctx, assigneeID, tenantID); err != nil {
+		return nil, err
 	}
 	status := current.Status
 	updated, err := s.updateTicketWithFeishuCommand(ctx, ticketID, &ticket.UpdateParams{

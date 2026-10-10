@@ -1290,8 +1290,9 @@ func (c *WorkflowHandler) GetVersionChangeLogsByID(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "无效的流程定义ID")
 		return
 	}
+	tenantID := ctx.GetInt("tenant_id")
 
-	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID)
+	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID, tenantID)
 	if err != nil {
 		common.RespondError(ctx, err, "获取变更日志失败")
 		return

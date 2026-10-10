@@ -164,6 +164,25 @@ func (s *IncidentService) CreateFromEmail(ctx context.Context, tenantID int, com
 	return response, createErr
 }
 
+// ValidateAssignee 校验处理人属于指定租户且处于激活状态。
+// 与同文件的 validateIncidentAssignee 谓词相同，区别是本函数允许 client 为 nil
+// 且不拒绝 assigneeID<=0；创建/更新/指派路径仍走 validateIncidentAssignee。
+func (s *IncidentService) ValidateAssignee(ctx context.Context, assigneeID, tenantID int) error {
+	if s.client == nil {
+		return nil
+	}
+	exists, err := s.client.User.Query().
+		Where(user.IDEQ(assigneeID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证处理人失败: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("处理人不存在或不可用")
+	}
+	return nil
+}
+
 func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateIncidentRequest, tenantID, userID int, options incidentCreateOptions) (*dto.IncidentResponse, error) {
 	s.logger.Infow("Creating incident", "title", req.Title, "tenant_id", tenantID, "user_id", userID)
 	if strings.TrimSpace(req.Title) == "" {

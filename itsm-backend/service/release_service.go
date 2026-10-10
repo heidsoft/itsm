@@ -10,6 +10,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/user"
 	"itsm-backend/handlers/common/datascope"
@@ -37,12 +38,43 @@ func NewReleaseService(client *ent.Client, logger *zap.SugaredLogger) *ReleaseSe
 	return svc
 }
 
+// validateReferences 校验关联变更/负责人属于同一租户。
+func (s *ReleaseService) validateReferences(ctx context.Context, tenantID int, changeID, ownerID *int) error {
+	if changeID != nil && *changeID > 0 {
+		exists, err := s.client.Change.Query().
+			Where(change.IDEQ(*changeID), change.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("校验关联变更失败: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("关联变更不存在或不属于当前租户")
+		}
+	}
+	if ownerID != nil && *ownerID > 0 {
+		exists, err := s.client.User.Query().
+			Where(user.IDEQ(*ownerID), user.TenantIDEQ(tenantID)).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("校验负责人失败: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("负责人不存在或不属于当前租户")
+		}
+	}
+	return nil
+}
+
 // CreateRelease 创建发布
 // P1 修复：
 //  1. release_number 由服务端生成，不信任客户端传入值（避免越权/冲突编号）。
 //  2. 两段写（先 Create 再对 JSON 字段二次 Save）包进单个事务，失败回滚，不留半成品。
 func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateReleaseRequest, createdBy, tenantID int) (*dto.ReleaseResponse, error) {
 	releaseNumber := s.generateReleaseNumber(tenantID)
+
+	if err := s.validateReferences(ctx, tenantID, req.ChangeID, req.OwnerID); err != nil {
+		return nil, err
+	}
 
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
@@ -252,6 +284,10 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 		s.logger.Warnw("Release update rejected by row-level guard",
 			"release_id", id, "tenant_id", tenantID, "actor_id", actorID, "actor_role", actorRole)
 		return nil, common.NewForbiddenError("无权限操作该发布单：仅创建人、负责人或管理员可操作")
+	}
+
+	if err := s.validateReferences(ctx, tenantID, req.ChangeID, req.OwnerID); err != nil {
+		return nil, err
 	}
 
 	update := releaseEntity.Update()

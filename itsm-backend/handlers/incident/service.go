@@ -386,6 +386,12 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		current.Severity = updates.Severity
 	}
 	if updates.AssigneeID != nil {
+		// updates.AssigneeID 可指向任意租户的用户，必须由 productionService 做同租户校验。
+		if s.productionService != nil {
+			if err := s.productionService.ValidateAssignee(ctx, *updates.AssigneeID, current.TenantID); err != nil {
+				return nil, err
+			}
+		}
 		current.AssigneeID = updates.AssigneeID
 	}
 	// 修复：handler 已把 Category/Subcategory/Metadata/ImpactAnalysis/RootCause/

@@ -391,7 +391,7 @@ func TestBPMNVersion_GetChangeLogsByProcessDefinitionID(t *testing.T) {
 	// 变更日志记录在新建版本的定义 ID 上，而非原版本
 	createdDefID, err := strconv.Atoi(created.ID)
 	require.NoError(t, err)
-	logs, err := f.svc.GetChangeLogsByProcessDefinitionID(ctx, createdDefID)
+	logs, err := f.svc.GetChangeLogsByProcessDefinitionID(ctx, createdDefID, f.tenantID)
 	require.NoError(t, err)
 	assert.NotEmpty(t, logs)
 }

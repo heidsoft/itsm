@@ -557,10 +557,16 @@ func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, proc
 	return changelogs, nil
 }
 
-// GetChangeLogsByProcessDefinitionID 根据流程定义ID获取版本变更日志
-func (s *BPMNVersionService) GetChangeLogsByProcessDefinitionID(ctx context.Context, processDefID int) ([]*ent.ProcessVersionChangelog, error) {
+// GetChangeLogsByProcessDefinitionID 根据流程定义ID获取版本变更日志；定义 ID 全局可枚举，查询必须带租户谓词。
+func (s *BPMNVersionService) GetChangeLogsByProcessDefinitionID(ctx context.Context, processDefID, tenantID int) ([]*ent.ProcessVersionChangelog, error) {
+	if tenantID <= 0 {
+		return nil, fmt.Errorf("缺少租户上下文")
+	}
 	changelogs, err := s.client.ProcessVersionChangelog.Query().
-		Where(processversionchangelog.ProcessDefinitionIDEQ(processDefID)).
+		Where(
+			processversionchangelog.ProcessDefinitionIDEQ(processDefID),
+			processversionchangelog.TenantIDEQ(tenantID),
+		).
 		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
 		All(ctx)
 	if err != nil {

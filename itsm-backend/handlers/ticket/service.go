@@ -170,6 +170,12 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 	if params.Status != nil && !common.IsValidTicketStatusTransition(current.Status, *params.Status) {
 		return nil, lifecycleError(fmt.Errorf("%w: from '%s' to '%s'", ErrTicketInvalidTransition, current.Status, *params.Status))
 	}
+	// params.AssigneeID 可指向任意租户的用户，必须由 productionSvc 做同租户校验。
+	if params.AssigneeID != nil && *params.AssigneeID > 0 && s.productionSvc != nil {
+		if err := s.productionSvc.ValidateAssignee(ctx, *params.AssigneeID, tenantID); err != nil {
+			return nil, err
+		}
+	}
 
 	updated, err := s.repo.Update(ctx, id, params, tenantID)
 	if err != nil {
@@ -210,8 +216,16 @@ func (s *Service) BatchDelete(ctx context.Context, ids []int, tenantID int, acto
 }
 
 // AssignTicket assigns a ticket to a user.
+// productionSvc 为 nil（仅单测 harness）时退回裸 repo，同租户/状态机/CAS/副作用校验一并跳过。
 func (s *Service) AssignTicket(ctx context.Context, ticketID int, assigneeID int, tenantID int) (*Ticket, error) {
-	return s.repo.AssignTicket(ctx, ticketID, assigneeID, tenantID)
+	if s.productionSvc == nil {
+		return s.repo.AssignTicket(ctx, ticketID, assigneeID, tenantID)
+	}
+	updated, err := s.productionSvc.AssignTicket(ctx, ticketID, assigneeID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	return productionTicketToTicket(updated), nil
 }
 
 // EscalateTicket escalates a ticket.
@@ -328,8 +342,7 @@ func (s *Service) ImportTickets(ctx context.Context, tenantID int, data []byte, 
 // AssignTickets assigns multiple tickets to a user.
 func (s *Service) AssignTickets(ctx context.Context, tenantID int, ticketIDs []int, assigneeID int) error {
 	for _, id := range ticketIDs {
-		_, err := s.repo.AssignTicket(ctx, id, assigneeID, tenantID)
-		if err != nil {
+		if _, err := s.AssignTicket(ctx, id, assigneeID, tenantID); err != nil {
 			return err
 		}
 	}
