@@ -3,29 +3,30 @@
 package wecom
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
-	"itsm-backend/ent"
+
+	connectorDomain "itsm-backend/handlers/connector"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	manager *connector.Manager
-	dedup   *connector.InboundDedup
-	logger  *zap.SugaredLogger
-	client  *ent.Client
+	manager  *connector.Manager
+	dedup    *connector.InboundDedup
+	logger   *zap.SugaredLogger
+	auditRec connectorDomain.AuditRecorder
 }
 
 func NewHandler(mgr *connector.Manager, dedup *connector.InboundDedup, logger *zap.SugaredLogger) *Handler {
 	return &Handler{manager: mgr, dedup: dedup, logger: logger}
 }
 
-func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
+// SetAuditRecorder 注入审计写入器，用于验签失败时写 audit_log。
+func (h *Handler) SetAuditRecorder(rec connectorDomain.AuditRecorder) { h.auditRec = rec }
 
 // RegisterRoutes 公开回调路由（无需 JWT）：
 //
@@ -90,23 +91,9 @@ func (h *Handler) Webhook(c *gin.Context) {
 }
 
 func (h *Handler) recordAuditFailure(tenantID int, action, reason string, headers map[string]string) {
-	if h.client == nil || h.logger == nil {
-		return
-	}
-	// Sprint 2 Task 4 — headers 走 connector.RedactHeaders 屏蔽 signature
-	// 与 msg_signature / token / aes_key，避免 audit_log 泄露未通过认证
-	// 的 caller 提交的 secret material。
-	body, _ := json.Marshal(map[string]interface{}{"reason": reason, "headers": connector.RedactHeaders(headers)})
-	bodyStr := string(body)
-	if err := h.client.AuditLog.Create().
-		SetTenantID(tenantID).
-		SetAction(action).
-		SetResource("connector_inbound").
-		SetMethod("POST").
-		SetPath(fmt.Sprintf("/wecom/webhook/%d", tenantID)).
-		SetStatusCode(401).
-		SetRequestBody(bodyStr).
-		Exec(callerContext()); err != nil {
-		h.logger.Warnw("wecom audit failure log failed", "error", err)
-	}
+	// headers 在 connector.RecordInboundFailure 内经 RedactHeaders 屏蔽
+	// signature / msg_signature / token / aes_key，避免 audit_log 泄露未
+	// 通过认证的 caller 提交的 secret material。
+	connectorDomain.RecordInboundFailure(callerContext(), h.auditRec, tenantID, action,
+		fmt.Sprintf("/wecom/webhook/%d", tenantID), reason, headers, h.logger)
 }

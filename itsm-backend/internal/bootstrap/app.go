@@ -489,6 +489,7 @@ func NewApplication() *Application {
 	}
 	connectorMarket := marketplace.New()
 	connectorHandler := connectorHandler.NewHandler(connectorManager, connector.Default(), connectorMarket, sugar)
+	connectorHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	alertHandler := connectorAlert.NewHandler(alertRegistry, connectorManager, client, alertDevelopmentMode())
 	connectorEncryptionKey := os.Getenv("CONNECTOR_CONFIG_ENCRYPTION_KEY")
 	if connectorEncryptionKey == "" {
@@ -816,9 +817,9 @@ func NewApplication() *Application {
 	feishuHTTPHandler := feishuHandler.NewHandler(connectorManager, feishuSyncService, marketplaceSvc, sugar)
 	feishuHTTPHandler.SetInboundDedup(inboundDedup)
 	dingtalkHTTPHandler := dingtalkHandler.NewHandler(connectorManager, inboundDedup, sugar)
-	dingtalkHTTPHandler.SetEntClient(client)
+	dingtalkHTTPHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 	wecomHTTPHandler := wecomHandler.NewHandler(connectorManager, inboundDedup, sugar)
-	wecomHTTPHandler.SetEntClient(client)
+	wecomHTTPHandler.SetAuditRecorder(domainCommon.NewEntRepository(client))
 
 	// Set process trigger service for workflow integration (after processTriggerService is declared)
 	ticketService.SetProcessTriggerService(processTriggerService)

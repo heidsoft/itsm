@@ -13,7 +13,8 @@ import (
 	"itsm-backend/connector"
 	"itsm-backend/connector/marketplace"
 	"itsm-backend/dto"
-	"itsm-backend/ent"
+
+	domainCommon "itsm-backend/handlers/common"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -26,7 +27,7 @@ type Handler struct {
 	registry *connector.Registry
 	logger   *zap.SugaredLogger
 	store    *connector.PersistentConfigStore
-	client   *ent.Client
+	auditRec AuditRecorder
 }
 
 // NewHandler creates a new connector handler
@@ -34,8 +35,8 @@ func NewHandler(mgr *connector.Manager, reg *connector.Registry, mkt *marketplac
 	return &Handler{manager: mgr, market: mkt, registry: reg, logger: logger}
 }
 
-// SetEntClient 注入 ent client，用于 rotate-secret 等需要写 audit_log 的端点。
-func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
+// SetAuditRecorder 注入审计写入器，用于 rotate-secret 等需要写 audit_log 的端点。
+func (h *Handler) SetAuditRecorder(rec AuditRecorder) { h.auditRec = rec }
 
 // SetPersistentStore sets the persistent config store
 func (h *Handler) SetPersistentStore(store *connector.PersistentConfigStore) {
@@ -398,7 +399,7 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 		return
 	}
 	// 写 audit_log
-	if h.client != nil {
+	if h.auditRec != nil {
 		body, _ := json.Marshal(map[string]interface{}{
 			"connector":        name,
 			"provider":         existing.Provider,
@@ -406,17 +407,18 @@ func (h *Handler) RotateSecret(ctx *gin.Context) {
 			"gracePeriodAt":    graceAt,
 			"actorUserId":      actorID,
 		})
-		bodyStr := string(body)
-		_ = h.client.AuditLog.Create().
-			SetTenantID(tenantID).
-			SetUserID(actorID).
-			SetAction("rotate_secret").
-			SetResource("connector").
-			SetMethod("POST").
-			SetPath(ctx.Request.URL.Path).
-			SetStatusCode(200).
-			SetRequestBody(bodyStr).
-			Exec(ctx.Request.Context())
+		if err := h.auditRec.CreateAuditLog(ctx.Request.Context(), &domainCommon.AuditLog{
+			TenantID:    tenantID,
+			UserID:      actorID,
+			Resource:    "connector",
+			Action:      "rotate_secret",
+			Method:      "POST",
+			Path:        ctx.Request.URL.Path,
+			StatusCode:  200,
+			RequestBody: string(body),
+		}); err != nil {
+			h.logger.Warnw("connector rotate_secret audit failed", "connector", name, "error", err)
+		}
 	}
 	common.Success(ctx, gin.H{
 		"name":             name,

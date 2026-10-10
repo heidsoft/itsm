@@ -3,12 +3,12 @@
 package dingtalk
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
-	"itsm-backend/ent"
+
+	connectorDomain "itsm-backend/handlers/connector"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -17,18 +17,18 @@ import (
 // Handler 钉钉入站回调 + 验签 handler。
 // 解析 / 验签由 connector.builtin.dingtalk.DingTalk 实现。
 type Handler struct {
-	manager *connector.Manager
-	dedup   *connector.InboundDedup
-	logger  *zap.SugaredLogger
-	client  *ent.Client
+	manager  *connector.Manager
+	dedup    *connector.InboundDedup
+	logger   *zap.SugaredLogger
+	auditRec connectorDomain.AuditRecorder
 }
 
 func NewHandler(mgr *connector.Manager, dedup *connector.InboundDedup, logger *zap.SugaredLogger) *Handler {
 	return &Handler{manager: mgr, dedup: dedup, logger: logger}
 }
 
-// SetEntClient 把 ent client 暴露给 handler，用于验签失败时写 audit_log。
-func (h *Handler) SetEntClient(c *ent.Client) { h.client = c }
+// SetAuditRecorder 注入审计写入器，用于验签失败时写 audit_log。
+func (h *Handler) SetAuditRecorder(rec connectorDomain.AuditRecorder) { h.auditRec = rec }
 
 // RegisterRoutes 把公开回调注册到 public 路由组（IM 回调无需 JWT）：
 //
@@ -95,26 +95,9 @@ func (h *Handler) Webhook(c *gin.Context) {
 
 // recordAuditFailure 把签名 / 解析失败写 audit_log，便于运维追责。
 // fail-closed：DB 出错仅写日志，绝不让审计失败阻塞响应。
-// Sprint 2 Task 4 — Sprint 2 connector productionization:
-// headers 走 connector.RedactHeaders 屏蔽 signature/token/secret 类
-// header，避免 audit_log 变成密钥泄露通道。verify_signature 失败时尤其
-// 危险：原始 caller 还没通过认证，audit 行却把它们的 secret material
-// 全文存档。
+// headers 在 connector.RecordInboundFailure 内经 RedactHeaders 屏蔽
+// signature/token/secret 类 header，避免 audit_log 变成密钥泄露通道。
 func (h *Handler) recordAuditFailure(tenantID int, action, reason string, headers map[string]string) {
-	if h.client == nil || h.logger == nil {
-		return
-	}
-	body, _ := json.Marshal(map[string]interface{}{"reason": reason, "headers": connector.RedactHeaders(headers)})
-	bodyStr := string(body)
-	if err := h.client.AuditLog.Create().
-		SetTenantID(tenantID).
-		SetAction(action).
-		SetResource("connector_inbound").
-		SetMethod("POST").
-		SetPath(fmt.Sprintf("/dingtalk/webhook/%d", tenantID)).
-		SetStatusCode(401).
-		SetRequestBody(bodyStr).
-		Exec(callerContext()); err != nil {
-		h.logger.Warnw("dingtalk audit failure log failed", "error", err)
-	}
+	connectorDomain.RecordInboundFailure(callerContext(), h.auditRec, tenantID, action,
+		fmt.Sprintf("/dingtalk/webhook/%d", tenantID), reason, headers, h.logger)
 }
