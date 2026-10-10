@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
 	"entgo.io/ent/dialect"
 
@@ -98,7 +99,9 @@ func ProductionInitializers(seeder *Seeder) ([]initialization.Initializer, error
 			transactional.seedPermissions(ctx)
 			transactional.seedMenus(ctx)
 			if transactional.installsPlatformTenant() {
-				transactional.seedAdmin(ctx)
+				if err := transactional.seedAdmin(ctx); err != nil {
+					return err
+				}
 			}
 			transactional.seedMenuAndPermissionFixes(ctx)
 			transactional.seedRolePermissions(ctx)
@@ -342,7 +345,9 @@ func (s *Seeder) verifyIdentityRBAC(ctx context.Context) error {
 	// The bootstrap administrator belongs to the platform tenant only. Tenant
 	// users arrive through the bootstrap-token or invite flow, so a provisioned
 	// tenant must not be judged by an account it is not meant to own.
-	if root.Code == platformTenantCode {
+	// When BOOTSTRAP_TOKEN_ENABLED=1, admin is created by the initialize CLI,
+	// not by seedAdmin, so verify must skip the check.
+	if root.Code == platformTenantCode && os.Getenv("BOOTSTRAP_TOKEN_ENABLED") != "1" {
 		adminExists, err := s.client.User.Query().
 			Where(user.UsernameEQ("admin"), user.TenantIDEQ(root.ID)).
 			Exist(ctx)

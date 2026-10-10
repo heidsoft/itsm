@@ -758,7 +758,9 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
 	s.seedPermissions(ctx)          // 新增：初始化权限
 	s.seedMenus(ctx)                // 新增：初始化菜单
-	s.seedAdmin(ctx)
+	if err := s.seedAdmin(ctx); err != nil {
+		s.sugar.Warnw("seed admin failed", "error", err)
+	}
 	// 使用配置的初始化数据
 	attempt("sla-definitions", s.seedSLADefinitions)
 	s.seedSLAPolicies(ctx)
@@ -998,57 +1000,39 @@ func nilIfEmpty(value string) *string {
 	return &value
 }
 
-func (s *Seeder) seedAdmin(ctx context.Context) {
+func (s *Seeder) seedAdmin(ctx context.Context) error {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ(platformTenantCode)).First(ctx)
 	if err != nil {
-		s.sugar.Warnw("default tenant not found; skip admin seed", "error", err)
-		return
+		return fmt.Errorf("seed admin: load default tenant: %w", err)
 	}
 	existing, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
 	if err != nil && !ent.IsNotFound(err) {
-		s.sugar.Warnw("query admin user failed", "error", err)
-		return
+		return fmt.Errorf("seed admin: query existing admin: %w", err)
 	}
 	if existing != nil {
 		s.sugar.Infow("seed admin already exists; credentials preserved", "username", "admin")
-		return
+		return nil
 	}
 
-	// Check if bootstrap token mode is enabled.
 	bootstrapEnabled := os.Getenv("BOOTSTRAP_TOKEN_ENABLED") == "1"
 	if bootstrapEnabled {
-		// Generate and output bootstrap token for first-time setup.
-		// The token must be consumed via API call, not自动 created here.
-		// This is handled by cmd/initialize CLI which prints the token.
 		s.sugar.Infow("bootstrap mode enabled; use initialize CLI to generate token and create admin")
-		return
+		return nil
 	}
 
-	// Fallback: ADMIN_PASSWORD (backward compatible).
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 	if adminPassword == "" {
-		s.sugar.Warnw("ADMIN_PASSWORD env var not set; skip admin seed")
-		return
+		return fmt.Errorf("seed admin: ADMIN_PASSWORD env var is required for platform bootstrap")
 	}
-	// Sprint 2 Task 1: gate ADMIN_PASSWORD through pkg/credential before bcrypt,
-	// matching the single-source-of-truth weak/short checks used by the bootstrap
-	// guard. Operators running this path should not be able to seed a default
-	// password into the DB even when ADMIN_PASSWORD is set.
 	if credential.IsWeakAdminPassword(adminPassword) {
-		s.sugar.Warnw("ADMIN_PASSWORD matches a known weak default; skip admin seed",
-			"hint", "set ADMIN_PASSWORD to a strong unique value before seeding")
-		return
+		return fmt.Errorf("seed admin: ADMIN_PASSWORD matches a known weak default; set a strong unique password")
 	}
 	if credential.IsShortAdminPassword(adminPassword) {
-		s.sugar.Warnw("ADMIN_PASSWORD below minimum length; skip admin seed",
-			"min_length", credential.MinAdminPasswordLength,
-			"actual_length", len(adminPassword))
-		return
+		return fmt.Errorf("seed admin: ADMIN_PASSWORD below minimum length %d (got %d)", credential.MinAdminPasswordLength, len(adminPassword))
 	}
 	passHash, bcryptErr := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 	if bcryptErr != nil {
-		s.sugar.Warnw("generate bcrypt for admin failed", "error", bcryptErr)
-		return
+		return fmt.Errorf("seed admin: generate bcrypt hash: %w", bcryptErr)
 	}
 
 	if _, err := s.client.User.Create().
@@ -1061,10 +1045,10 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 		SetActive(true).
 		SetTenantID(t.ID).
 		Save(ctx); err != nil {
-		s.sugar.Warnw("seed admin failed", "error", err)
-	} else {
-		s.sugar.Infow("seed admin created", "username", "admin")
+		return fmt.Errorf("seed admin: create admin user: %w", err)
 	}
+	s.sugar.Infow("seed admin created", "username", "admin")
+	return nil
 }
 
 // seedDepartments reconciles the configured organization tree per item:

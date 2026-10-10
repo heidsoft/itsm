@@ -168,7 +168,7 @@ services:
       # 显式声明开发环境：避免 DEPLOYMENT_MODE=private 被默认判定为生产环境，触发 DEFAULT_JWT_SECRET fail-closed
       - ENV=development
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
-      - ADMIN_PASSWORD=admin123
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-dev12345678!}
       - ITSM_BOOTSTRAP_ONLY=true
       - ITSM_AUTO_MIGRATE=true
       - ITSM_AUTO_SEED=true
@@ -222,7 +222,7 @@ services:
       # 显式声明开发环境（凭据守卫优先读 ENV），避免 dev JWT 触发 fail-closed
       - ENV=development
       - DEPLOYMENT_MODE=${DEPLOYMENT_MODE:-private}
-      - ADMIN_PASSWORD=admin123
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-dev12345678!}
       # schema 迁移由独立 itsm-init 容器（ITSM_BOOTSTRAP_ONLY=true）完成；
       # web 进程禁止 AUTO_MIGRATE/AUTO_SEED（ValidateWebStartupConfig fail-closed）
       - ITSM_AUTO_MIGRATE=false

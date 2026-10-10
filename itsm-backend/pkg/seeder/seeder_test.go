@@ -327,7 +327,7 @@ func TestSeedAdminPreservesExistingCredentials(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Setenv("ADMIN_PASSWORD", "different-bootstrap-password")
-	seeder.seedAdmin(ctx)
+	require.NoError(t, seeder.seedAdmin(ctx))
 
 	after, err := seeder.client.User.Get(ctx, created.ID)
 	require.NoError(t, err)
