@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **操作者身份可由请求体/LLM 自报值伪造（安全，三处同型）**：AI chat 工具路径仅在缺失时注入 `user_id`/`requester_id`，LLM 自报值优先并被 create_ticket 直接采信为工单归属；变更审批 `POST /changes/:id/approvals` 的审批人取自请求体 `approverId`，可将审批意见伪造为链上他人所提交；MSP 分配创建/解除不校验操作者与目标 MSP 租户的从属关系，MSP 租户 A 的持有者可给租户 B 代授权且全程无审计。现身份字段一律无条件以认证上下文覆盖（与 skill invoke 同规则），MSP 增加同租户从属校验（跨租户返回 403）并补创建/解除审计日志；新增伪造拒绝与审计落库回归测试。
 - **首装门禁 seedAdmin 静默跳过导致 verify 必然失败**：`ADMIN_PASSWORD=admin123` 命中弱口令列表，`seedAdmin` 只打 Warn 日志不返回 error，apply 阶段静默成功但 verify 阶段因 admin 用户不存在而报 "verify bootstrap administrator: missing"。现 `seedAdmin` 改为返回 error（弱口令/短口令/创建失败一律 fail fast），verify 在 `BOOTSTRAP_TOKEN_ENABLED=1` 时跳过 admin 检查（该模式下 admin 由 initialize CLI 创建），`docker-compose.dev.yml` 默认密码改为 `${ADMIN_PASSWORD:-dev12345678!}`（12 字符且不在弱口令列表）。
 - **ga-gate 验收登录密码与 compose 默认值失配**：`docker-compose.dev.yml` 默认密码上调为 `dev12345678!` 后，ga-gate workflow 仍以 `ITSM_ADMIN_PASS=admin123` 跑冒烟测试，登录 401 导致核心 API 验收级联失败。同步上调 ga-gate 环境夹具密码，与 compose 默认值保持一致。
 - **staticcheck U1000：`internal/authz/roles.go` 遗留未使用函数 `allExcept`**：角色退役收敛后该 helper 无调用方，CI staticcheck 报 U1000 阻断 backend-ci。删除死代码。

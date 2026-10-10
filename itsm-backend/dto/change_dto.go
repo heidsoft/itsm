@@ -246,10 +246,10 @@ type ChangeRollbackExecution struct {
 }
 
 // CreateChangeApprovalRequest 创建变更审批请求
+// 审批人身份由认证上下文注入，请求体不再携带 approverId。
 type CreateChangeApprovalRequest struct {
-	ChangeID   int     `json:"changeId" binding:"required"`   // 变更ID
-	ApproverID int     `json:"approverId" binding:"required"` // 审批人ID
-	Comment    *string `json:"comment"`                       // 审批意见
+	ChangeID int     `json:"changeId" binding:"required"` // 变更ID
+	Comment  *string `json:"comment"`                     // 审批意见
 }
 
 // UpdateChangeApprovalRequest 更新变更审批请求

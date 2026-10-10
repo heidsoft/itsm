@@ -1613,3 +1613,46 @@ func TestValidateSubmitGate_ErrorsAreAppErrors(t *testing.T) {
 		RollbackPlan:       "r",
 	}))
 }
+
+// 回归：SubmitApproval 的审批人必须取认证上下文，请求体伪造 approverId 无效。
+func TestChangeController_SubmitApproval_UsesAuthenticatedApprover(t *testing.T) {
+	r, handler, repo := setupTestHandler(t)
+	r.POST("/api/v1/changes/:id/approvals", handler.SubmitApproval)
+
+	// 先创建一条变更，使 mock 仓库中存在可审批对象
+	createBody, _ := json.Marshal(dto.CreateChangeRequest{
+		Title: "审批人身份回归", Description: "d", Justification: "j",
+		Type: "normal", Priority: "medium", ImpactScope: "low", RiskLevel: "low",
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/changes", bytes.NewBuffer(createBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+	var created common.Response
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &created))
+	changeID := int(created.Data.(map[string]interface{})["id"].(float64))
+
+	// 前置：认证用户（user_id=1）是该变更审批链上的指定审批人
+	repo.approverValid = true
+	repo.chains[changeID] = []*ApprovalChain{{ChangeID: changeID, ApproverID: 1, Level: 1}}
+
+	// 请求体伪造 approverId=999；认证上下文 user_id=1
+	forged, _ := json.Marshal(map[string]interface{}{
+		"changeId":   changeID,
+		"approverId": 999,
+		"comment":    "伪造审批人",
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", fmt.Sprintf("/api/v1/changes/%d/approvals", changeID), bytes.NewBuffer(forged))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	require.NotEmpty(t, repo.approvals)
+	for _, a := range repo.approvals {
+		assert.Equal(t, 1, a.ApproverID, "落库审批人必须是认证上下文用户，不能是请求体伪造值")
+	}
+}

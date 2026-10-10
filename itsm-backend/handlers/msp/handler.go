@@ -140,8 +140,13 @@ func (h *Handler) CreateAllocation(c *gin.Context) {
 	roleVal, _ := c.Get("role")
 	operatorRole, _ := roleVal.(string)
 
-	alloc, err := h.mspAllocationService.Create(c.Request.Context(), req.MSPUserID, req.CustomerTenantID, req.Role, operatorRole)
+	alloc, err := h.mspAllocationService.Create(c.Request.Context(), operatorID, req.MSPUserID, req.CustomerTenantID, req.Role, operatorRole)
 	if err != nil {
+		if errors.Is(err, service.ErrMSPAllocationForbidden) {
+			h.logger.Warnw("msp allocation create forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
+			common.Forbidden(c, "无权操作该 MSP 租户的分配")
+			return
+		}
 		h.logger.Errorw("Failed to create allocation", "error", err, "operator", operatorID)
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -163,9 +168,16 @@ func (h *Handler) Deallocate(c *gin.Context) {
 		common.Fail(c, common.UnauthorizedCode, "用户未认证")
 		return
 	}
+	roleVal, _ := c.Get("role")
+	operatorRole, _ := roleVal.(string)
 
-	err := h.mspAllocationService.Deactivate(c.Request.Context(), req.MSPUserID, req.CustomerTenantID)
+	err := h.mspAllocationService.Deactivate(c.Request.Context(), operatorID, req.MSPUserID, req.CustomerTenantID, operatorRole)
 	if err != nil {
+		if errors.Is(err, service.ErrMSPAllocationForbidden) {
+			h.logger.Warnw("msp allocation deactivate forbidden", "operator", operatorID, "msp_user_id", req.MSPUserID)
+			common.Forbidden(c, "无权操作该 MSP 租户的分配")
+			return
+		}
 		if errors.Is(err, service.ErrMSPAllocationNotFound) {
 			h.logger.Warnw("Deallocate matched no active allocation",
 				"msp_user_id", req.MSPUserID, "customer_tenant_id", req.CustomerTenantID, "operator", operatorID)

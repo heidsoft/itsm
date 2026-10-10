@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -23,6 +24,10 @@ import (
 // ErrMSPAllocationNotFound 表示找不到匹配的活跃分配：记录不存在、已经解除，
 // 或不属于当前 MSP 租户。handler 据此映射 404，不得降级成静默成功。
 var ErrMSPAllocationNotFound = errors.New("msp allocation not active")
+
+// ErrMSPAllocationForbidden 表示操作者与目标 MSP 租户无从属关系：
+// 只有平台管理员（super_admin/sysadmin）或目标 MSP 租户自身可创建/解除该租户的分配。
+var ErrMSPAllocationForbidden = errors.New("operator is not affiliated with the target msp tenant")
 
 // MSPAllocationHistoryFilter 分配历史查询条件。
 // 可选项使用指针，区分「未传」与「传零值」。
@@ -52,17 +57,26 @@ func NewMSPAllocationService(client *ent.Client, logger *zap.SugaredLogger) *MSP
 	}
 }
 
-// Create 创建新的 MSP 分配
-// operatorRole: 操作者角色，如果为 "super_admin" 或 "sysadmin" 则跳过租户类型验证
+// Create 创建新的 MSP 分配。
+// 授权边界：平台管理员（super_admin/sysadmin）可任意操作；其余操作者必须与目标
+// MSP 用户同属一个 MSP 租户，防止 MSP 租户 A 的持有者给租户 B 代授权。
+// 创建与解除均写审计日志（审计失败仅记日志，不阻塞业务）。
 func (s *MSPAllocationService) Create(
 	ctx context.Context,
+	operatorID int,
 	mspUserID int,
 	customerTenantID int,
 	role string,
-	operatorRole ...string,
+	operatorRole string,
 ) (*dto.MSPAllocationDTO, error) {
 	// 检查是否是管理员操作
-	isAdmin := len(operatorRole) > 0 && (operatorRole[0] == "super_admin" || operatorRole[0] == "sysadmin")
+	isAdmin := operatorRole == "super_admin" || operatorRole == "sysadmin"
+
+	if !isAdmin {
+		if err := s.requireSameMSPTenant(ctx, operatorID, mspUserID); err != nil {
+			return nil, err
+		}
+	}
 
 	// 1. 验证 MSP 用户必须是 MSP 租户（管理员除外）
 	if !isAdmin {
@@ -119,7 +133,55 @@ func (s *MSPAllocationService) Create(
 		return nil, fmt.Errorf("创建分配记录失败: %w", err)
 	}
 
+	s.writeAllocationAudit(ctx, operatorID, "msp_allocation_create", "/api/v1/msp/allocations", mspUserID, customerTenantID)
 	return s.toDTO(ctx, alloc)
+}
+
+// requireSameMSPTenant 校验操作者与目标 MSP 用户同属一个 MSP provider 租户。
+func (s *MSPAllocationService) requireSameMSPTenant(ctx context.Context, operatorID, mspUserID int) error {
+	operator, err := s.client.User.Query().Where(user.IDEQ(operatorID)).WithTenant().Only(ctx)
+	if err != nil {
+		return fmt.Errorf("操作者不存在: %w", err)
+	}
+	target, err := s.client.User.Query().Where(user.IDEQ(mspUserID)).WithTenant().Only(ctx)
+	if err != nil {
+		return fmt.Errorf("MSP用户不存在: %w", err)
+	}
+	if operator.Edges.Tenant == nil || target.Edges.Tenant == nil ||
+		operator.Edges.Tenant.ID != target.Edges.Tenant.ID ||
+		!tenantmode.IsMSPProviderTenantType(string(operator.Edges.Tenant.Type)) {
+		return ErrMSPAllocationForbidden
+	}
+	return nil
+}
+
+// writeAllocationAudit 记录分配创建/解除审计；审计失败仅记日志，不阻塞业务。
+func (s *MSPAllocationService) writeAllocationAudit(ctx context.Context, operatorID int, action, path string, mspUserID, customerTenantID int) {
+	operator, err := s.client.User.Query().Where(user.IDEQ(operatorID)).WithTenant().Only(ctx)
+	if err != nil {
+		s.logger.Warnw("msp allocation audit: operator lookup failed", "action", action, "operator", operatorID, "error", err)
+		return
+	}
+	if operator.Edges.Tenant == nil {
+		s.logger.Warnw("msp allocation audit: operator tenant missing", "action", action, "operator", operatorID)
+		return
+	}
+	body, _ := json.Marshal(map[string]interface{}{
+		"mspUserId":        mspUserID,
+		"customerTenantId": customerTenantID,
+	})
+	if err := s.client.AuditLog.Create().
+		SetTenantID(operator.Edges.Tenant.ID).
+		SetUserID(operatorID).
+		SetAction(action).
+		SetResource("msp_allocation").
+		SetMethod("POST").
+		SetPath(path).
+		SetStatusCode(200).
+		SetRequestBody(string(body)).
+		Exec(ctx); err != nil {
+		s.logger.Warnw("msp allocation audit write failed", "action", action, "operator", operatorID, "error", err)
+	}
 }
 
 // toDTO 转换为 DTO。
@@ -206,7 +268,14 @@ func (s *MSPAllocationService) ListByCustomer(ctx context.Context, customerTenan
 // Deactivate 解除分配。
 // 只有确实存在一条活跃分配时才写入结束时间；否则返回 ErrMSPAllocationNotFound，
 // handler 映射为 404，而不是把「什么都没解除」报成成功。
-func (s *MSPAllocationService) Deactivate(ctx context.Context, mspUserID int, customerTenantID int) error {
+// 授权边界与 Create 一致：平台管理员或目标 MSP 租户自身。
+func (s *MSPAllocationService) Deactivate(ctx context.Context, operatorID, mspUserID, customerTenantID int, operatorRole string) error {
+	isAdmin := operatorRole == "super_admin" || operatorRole == "sysadmin"
+	if !isAdmin {
+		if err := s.requireSameMSPTenant(ctx, operatorID, mspUserID); err != nil {
+			return err
+		}
+	}
 	affected, err := s.client.MSPAllocation.Update().
 		Where(
 			mspallocation.MspUserIDEQ(mspUserID),
@@ -221,6 +290,7 @@ func (s *MSPAllocationService) Deactivate(ctx context.Context, mspUserID int, cu
 	if affected == 0 {
 		return ErrMSPAllocationNotFound
 	}
+	s.writeAllocationAudit(ctx, operatorID, "msp_allocation_deactivate", "/api/v1/msp/allocations/deallocate", mspUserID, customerTenantID)
 	return nil
 }
 

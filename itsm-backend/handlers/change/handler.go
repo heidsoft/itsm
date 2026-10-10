@@ -506,9 +506,15 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 	}
 	req.ChangeID = changeID
 
+	// 审批人身份取认证上下文，不信任请求体（防止代他人伪造待审记录）。
+	operatorID, ok := userIDFromCtx(c)
+	if !ok {
+		return
+	}
+
 	record := &ApprovalRecord{
 		ChangeID:   req.ChangeID,
-		ApproverID: req.ApproverID,
+		ApproverID: operatorID,
 		Comment:    req.Comment,
 	}
 

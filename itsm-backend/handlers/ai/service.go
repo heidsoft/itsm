@@ -397,13 +397,10 @@ func (s *Service) ChatStream(
 	// 写工具经审批流会返回 (res=nil, invID!=0, err=nil)，这里将其转译为结构化
 	// approval_pending 提示，让 LLM 明确告知用户"操作已提交、待人工审批"。
 	execTool := func(name string, args map[string]any) (any, error) {
-		// 注入操作者身份，便于工单归属与审计（审批队列回放时据此归因）
-		if _, ok := args["user_id"]; !ok {
-			args["user_id"] = float64(userID)
-		}
-		if _, ok := args["requester_id"]; !ok {
-			args["requester_id"] = float64(userID)
-		}
+		// 身份字段无条件以认证上下文覆盖：LLM 自报的 user_id/requester_id 不可信，
+		// 与 skill invoke 入口同规则，防止伪造操作者归属与跨租户工具执行。
+		args["user_id"] = float64(userID)
+		args["requester_id"] = float64(userID)
 		res, invID, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
 		if err != nil {
 			return nil, err
