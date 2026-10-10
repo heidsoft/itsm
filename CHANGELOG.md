@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **邮件收取失败重试 command 与业务状态非原子落库（可靠性）**：邮件提取失败时 `RETRYABLE_FAILED` 状态在事务内提交，恢复 command 却在事务外投递——enqueue 失败会留下「已标记待重试但无 command」的滞留消息，只能人工介入。现恢复 command 移入同一事务，用 `commandbus.EnqueueTxIdempotent` 事务内先查后插（幂等命中不再插入，避免唯一索引冲突弄脏事务）；新增回归测试锁定原子共存与幂等重放。
 - **产品表面棘轮基线漏同步（docs-gate C.6.4 红）**：`df47ccbaa` 落地 admin/skills 技能注册表管理页（v1.7 Skill Registry 链路配套界面）时未同 commit 上调 `frontend_pages` 基线，守卫以 169>168 FAIL。按棘轮规程上调 168→169 并留归因说明。
 - **Workflow 路径工单状态机失守与并发覆盖（安全/正确性）**：`/workflow/*` 动作此前完全绕过状态机白名单——`new`/`closed` 可直接置 `resolved`，驳回目标状态由客户端任意指定，`Withdraw` 写入无租户条件且无版本检查（TOCTOU 窗口）。现 Resolve/Close/Reopen/Withdraw/Reject 全部接入 `IsValidTicketStatusTransition` 白名单校验 + 租户/版本条件更新（CAS，冲突返回 4090 与冲突载荷，不再伪装 500），`Withdraw` 补齐事务与非创建者 403 语义。行为对齐两项产品决策：**closed 为终态**（工作流状态接口不再对 closed 提供重开动作，重开仅限 resolved→open）；**补齐 rejected 可达性**（new/assigned/open/in_progress/pending 可迁入 rejected，驳回默认落地态由此合法化）。
 - **pgvector 向量检索租户过滤必然失败导致静默降级**：`connector/vector/pgvector.go` 的 Search 把过滤键按裸列名拼 WHERE，但 Insert 只写 `id/content/embedding/metadata` 四列——`WHERE tenantID = $2` 因列不存在必然报错，配置 pgvector 后端时语义检索每次都静默回退 keyword/legacy（仅 Warn 日志，运维不可见）。现过滤键统一落到 `metadata->>'key'` JSONB 文本投影（写入侧 metadata 本就携带 `tenantID`/`objectType`），非法键 fail closed；连接器后端失败回退 legacy 时结果行携带 `degraded` 标记，降级可观测。

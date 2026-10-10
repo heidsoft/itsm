@@ -2,6 +2,8 @@ package email_intake
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -152,6 +154,31 @@ func TestOrchestrator_RetryRerunsFailedExtraction(t *testing.T) {
 	message := client.InboundEmailMessage.Query().OnlyX(ctx)
 	require.Equal(t, "PARSED", message.ProcessingStatus)
 	require.Equal(t, 2, client.EmailIntakeAnalysis.Query().CountX(ctx))
+}
+
+func TestOrchestrator_ExtractionFailurePersistsRetryCommandAtomically(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:email-intake-retry-command?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+	tenant := client.Tenant.Create().SetName("tenant").SetCode("retry-command").SaveX(ctx)
+	orchestrator := NewEmailIntakeOrchestrator(client, NewEmailIntakeExtractor(fakeEmailLLM{err: errors.New("llm down")}, "test"), nil, OrchestratorConfig{Mode: ModeManualConfirm})
+
+	_, err := orchestrator.Ingest(ctx, tenant.ID, ReceivedEmail{MailboxInstanceKey: "box", UIDValidity: 1, UID: 7, ExternalMessageID: "<fail>", FromAddress: "customer@example.com", Subject: "报障", PlainText: "线路中断", RawMIME: []byte("fail")})
+	require.NoError(t, err)
+
+	message := client.InboundEmailMessage.Query().OnlyX(ctx)
+	require.Equal(t, "RETRYABLE_FAILED", message.ProcessingStatus)
+	commands := client.OperationalCommand.Query().Where(operationalcommand.CommandTypeEQ(commandbus.CommandProcessIntakeEmail)).AllX(ctx)
+	require.Len(t, commands, 1)
+	require.Equal(t, fmt.Sprintf("email-intake-process:%d:%d", tenant.ID, message.ID), commands[0].IdempotencyKey)
+	require.Equal(t, "failed", client.EmailIntakeAnalysis.Query().OnlyX(ctx).Status)
+
+	// 同一消息以 enqueueRetry 重跑（如 worker 重放）时，幂等命中不得弄脏事务或产生重复 command。
+	conversation := client.EmailConversation.Query().OnlyX(ctx)
+	_, err = orchestrator.process(ctx, tenant.ID, conversation, message, false, true)
+	require.NoError(t, err)
+	require.Equal(t, 1, client.OperationalCommand.Query().Where(operationalcommand.CommandTypeEQ(commandbus.CommandProcessIntakeEmail)).CountX(ctx))
+	require.Equal(t, "RETRYABLE_FAILED", client.InboundEmailMessage.Query().OnlyX(ctx).ProcessingStatus)
 }
 
 func TestResolver_RejectsTerminatedAndCrossTenantContracts(t *testing.T) {

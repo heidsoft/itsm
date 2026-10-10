@@ -199,15 +199,20 @@ func (o *EmailIntakeOrchestrator) process(ctx context.Context, tenantID int, con
 		if _, txErr = tx.InboundEmailMessage.UpdateOneID(message.ID).SetProcessingStatus("RETRYABLE_FAILED").SetLastError(extractionErr.Error()).Save(ctx); txErr != nil {
 			return rollback(fmt.Errorf("persist retryable email status: %w", txErr))
 		}
+		if enqueueRetry {
+			if _, _, enqueueErr := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
+				TenantID: tenantID, CommandType: commandbus.CommandProcessIntakeEmail,
+				AggregateType: "inbound_email_message", AggregateID: message.ID,
+				IdempotencyKey: messageProcessingIdempotencyKey(tenantID, message.ID),
+				Payload:        map[string]interface{}{"messageId": message.ID},
+			}); enqueueErr != nil {
+				return rollback(fmt.Errorf("enqueue email intake retry: %w", enqueueErr))
+			}
+		}
 		if txErr = tx.Commit(); txErr != nil {
 			return nil, fmt.Errorf("commit failed-analysis transaction: %w", txErr)
 		}
 		updated, updateErr := o.updateConversation(ctx, conversation, ResolutionManualReview, IntakeFields{}, Resolution{Status: ResolutionManualReview, Reasons: []string{"ai_extraction_failed"}})
-		if enqueueRetry {
-			if enqueueErr := o.enqueueMessageProcessing(ctx, tenantID, message.ID); enqueueErr != nil {
-				return nil, enqueueErr
-			}
-		}
 		if updateErr != nil {
 			return nil, updateErr
 		}
@@ -360,17 +365,23 @@ func (o *EmailIntakeOrchestrator) RetryMessage(ctx context.Context, tenantID, me
 	return err
 }
 
+// enqueueMessageProcessing 仅限事务已回滚或已提交后的补偿投递；
+// 与业务写入同事务绑定时必须改用 commandbus.EnqueueTxIdempotent。
 func (o *EmailIntakeOrchestrator) enqueueMessageProcessing(ctx context.Context, tenantID, messageID int) error {
 	_, err := commandbus.Enqueue(ctx, o.client, commandbus.EnqueueRequest{
 		TenantID: tenantID, CommandType: commandbus.CommandProcessIntakeEmail,
 		AggregateType: "inbound_email_message", AggregateID: messageID,
-		IdempotencyKey: fmt.Sprintf("email-intake-process:%d:%d", tenantID, messageID),
+		IdempotencyKey: messageProcessingIdempotencyKey(tenantID, messageID),
 		Payload:        map[string]interface{}{"messageId": messageID},
 	})
 	if err != nil && !ent.IsConstraintError(err) {
 		return fmt.Errorf("enqueue email intake processing: %w", err)
 	}
 	return nil
+}
+
+func messageProcessingIdempotencyKey(tenantID, messageID int) string {
+	return fmt.Sprintf("email-intake-process:%d:%d", tenantID, messageID)
 }
 
 func (o *EmailIntakeOrchestrator) Revalidate(ctx context.Context, tenantID, conversationID, version int) (*ent.EmailConversation, error) {
