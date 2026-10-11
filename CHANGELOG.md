@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.18] - 2026-10-12
+
 ### Changed
 
 - **产品表面棘轮上调**：`service_go_files` 基线 334→335。CMDB 生命周期 P1 修复批次新增 `service/configuration_item_lifecycle_test.go`（状态机矩阵/非法迁移 409/乐观锁冲突/退役全路径/跨租户 404 等 13 个回归），纯测试增量，同 commit 上调基线。
