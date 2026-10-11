@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
@@ -55,6 +56,29 @@ func isLockingTenantStatus(status string) bool {
 	default:
 		return false
 	}
+}
+
+// allowedTenantStatusTransitions 状态白名单：deleted 不在其中——软删除必须走
+// DELETE /tenants/:id（带「租户下还有用户拒绝删除」守卫），经 status 接口直写
+// "deleted" 会绕过该守卫。
+var allowedTenantStatusTransitions = map[string]bool{
+	"active":    true,
+	"suspended": true,
+	"expired":   true,
+}
+
+// ensureTenantScope 非平台超管只能管理自身租户：越权写其他租户（暂停/软删/改计划域名）
+// 写入 HTTP 403 并返回 true（调用方据此中止）。
+func (h *Handler) ensureTenantScope(c *gin.Context, targetTenantID int) bool {
+	callerRole := c.GetString("role")
+	if domainrole.IsSuperAdmin(callerRole) {
+		return false
+	}
+	if callerTenant := c.GetInt("tenant_id"); callerTenant != 0 && callerTenant == targetTenantID {
+		return false
+	}
+	common.Forbidden(c, "无权限操作其他租户")
+	return true
 }
 
 // blockIfLockingSystemTenant 加载目标租户，若为系统默认租户且操作会将其锁定，
@@ -153,6 +177,14 @@ func (h *Handler) UpdateTenantStatus(c *gin.Context) {
 		common.Fail(c, 1001, "缺少状态参数")
 		return
 	}
+	if !allowedTenantStatusTransitions[status] {
+		common.Fail(c, common.ParamErrorCode, "无效的租户状态，允许值: active/suspended/expired")
+		return
+	}
+
+	if h.ensureTenantScope(c, id) {
+		return
+	}
 
 	if h.blockIfLockingSystemTenant(c, id, status, "暂停或过期") {
 		return
@@ -204,6 +236,10 @@ func (h *Handler) UpdateTenant(c *gin.Context) {
 		return
 	}
 
+	if h.ensureTenantScope(c, id) {
+		return
+	}
+
 	if req.Status != nil && h.blockIfLockingSystemTenant(c, id, *req.Status, "暂停或过期") {
 		return
 	}
@@ -225,6 +261,10 @@ func (h *Handler) DeleteTenant(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		common.Fail(c, 1001, "无效的租户ID")
+		return
+	}
+
+	if h.ensureTenantScope(c, id) {
 		return
 	}
 
@@ -330,6 +370,12 @@ func (h *Handler) UpdateTenantSettings(c *gin.Context) {
 	var req dto.UpdateTenantRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	// settings 面向当前租户自助配置；Status 变更必须走受 blockIfLockingSystemTenant
+	// 守卫的专用端点（/tenants/:id/status、DELETE），这里直改会绕过系统租户锁定防护。
+	if req.Status != nil {
+		common.Fail(c, common.ParamErrorCode, "租户状态请通过状态管理接口变更")
 		return
 	}
 	updated, err := h.svc.UpdateTenant(c.Request.Context(), tenantID.(int), &req)

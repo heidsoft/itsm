@@ -132,8 +132,16 @@ func (s *TenantService) GetTenantByCode(ctx context.Context, code string) (*ent.
 	return tenantEntity, nil
 }
 
-// UpdateTenantStatus 更新租户状态
+// UpdateTenantStatus 更新租户状态。
+// service 层第二道白名单：deleted 不允许经此接口设置——软删除必须走 DeleteTenant
+// （带「租户下还有用户拒绝删除」守卫），任意字符串直写会绕过删除防护。
 func (s *TenantService) UpdateTenantStatus(ctx context.Context, tenantID int, status string) error {
+	switch status {
+	case "active", "suspended", "expired":
+	default:
+		return fmt.Errorf("无效的租户状态: %s（允许值: active/suspended/expired）", status)
+	}
+
 	err := s.client.Tenant.
 		UpdateOneID(tenantID).
 		SetStatus(status).
