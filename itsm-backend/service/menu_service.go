@@ -63,42 +63,30 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 		isEnabled = *req.IsEnabled
 	}
 
-	menuEntity, err := s.client.Menu.Create().
+	// 单次 INSERT 写入全部字段；权限码写失败必须向上抛错，否则菜单 PermissionCode 落空后
+	// filterMenusByPermission 视为「无权限要求」→ 对全员可见（菜单越权）。
+	create := s.client.Menu.Create().
 		SetName(req.Name).
 		SetPath(req.Path).
 		SetTenantID(tenantID).
 		SetSortOrder(sortOrder).
 		SetIsVisible(isVisible).
-		SetIsEnabled(isEnabled).
-		Save(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("创建菜单失败: %w", err)
-	}
-
-	// 设置可选字段
+		SetIsEnabled(isEnabled)
 	if req.Icon != "" {
-		menuEntity, err = menuEntity.Update().SetIcon(req.Icon).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set icon", "error", err)
-		}
+		create = create.SetIcon(req.Icon)
 	}
 	if req.ParentID != nil {
-		menuEntity, err = menuEntity.Update().SetParentID(*req.ParentID).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set parent_id", "error", err)
-		}
+		create = create.SetParentID(*req.ParentID)
 	}
 	if req.PermissionCode != nil && *req.PermissionCode != "" {
-		menuEntity, err = menuEntity.Update().SetPermissionCode(*req.PermissionCode).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set permission_code", "error", err)
-		}
+		create = create.SetPermissionCode(*req.PermissionCode)
 	}
 	if req.Description != "" {
-		menuEntity, err = menuEntity.Update().SetDescription(req.Description).Save(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to set description", "error", err)
-		}
+		create = create.SetDescription(req.Description)
+	}
+	menuEntity, err := create.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建菜单失败: %w", err)
 	}
 
 	return s.toMenuDTO(menuEntity), nil
@@ -189,7 +177,7 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) erro
 
 	// 检查是否有子菜单
 	children, err := s.client.Menu.Query().
-		Where(menu.ParentID(id)).
+		Where(menu.ParentID(id), menu.TenantID(tenantID)).
 		Count(ctx)
 	if err != nil {
 		return fmt.Errorf("检查子菜单失败: %w", err)
@@ -427,15 +415,11 @@ func (s *MenuService) filterMenusByPermission(menus []*ent.Menu, permissions map
 		"total_menus", len(menus),
 		"permissions_count", len(permissions),
 		"permissions_keys", keysOfMap(permissions),
-		"roleCodes", keysOfMap(roleCodes),
-		"isElevatedMenuRole", isElevatedMenuRole(roleCodes))
+		"roleCodes", keysOfMap(roleCodes))
 
 	for _, m := range menus {
-		if shouldRestrictMenuForRole(m.Path, roleCodes) {
-			debugLog("DEBUG menu excluded",
-				"id", m.ID, "name", m.Name, "path", m.Path, "perm", m.PermissionCode, "reason", "restricted-by-role")
-			continue
-		}
+		// 菜单过滤纯按权限码判定；不再按角色名/路径前缀硬编码截断
+		// （AGENTS.md 强制：隐藏菜单不是授权，前端不得根据角色名称推导超出后端返回权限的能力）。
 
 		// 如果没有权限要求，或者用户有权限，则包含
 		if m.PermissionCode == "" {
@@ -528,43 +512,6 @@ func collectUserRoleCodes(userEntity *ent.User) map[string]bool {
 	}
 
 	return roleCodes
-}
-
-func shouldRestrictMenuForRole(path string, roleCodes map[string]bool) bool {
-	if path == "" || isElevatedMenuRole(roleCodes) {
-		return false
-	}
-
-	restrictedPrefixes := []string{
-		"/admin",
-		"/enterprise",
-		"/system",
-		"/workflow",
-	}
-
-	for _, prefix := range restrictedPrefixes {
-		if strings.HasPrefix(path, prefix) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isElevatedMenuRole(roleCodes map[string]bool) bool {
-	elevatedRoles := []string{
-		"super_admin",
-		"admin",
-		"manager",
-	}
-
-	for _, roleCode := range elevatedRoles {
-		if roleCodes[roleCode] {
-			return true
-		}
-	}
-
-	return false
 }
 
 // actionAliasMap 权限 Action 别名映射：前端使用的 action → 后端定义的 action
@@ -796,7 +743,12 @@ func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (
 		s.upsertBaselineMenu(ctx, tenantID, &specs[i], pathSet)
 	}
 
-	// 构建 diff
+	// 构建 diff：必须用初始化前的快照比对 pathSet，否则初始化过程中被 upsertBaselineMenu
+	// 创建的菜单都会进 pathSet，added 恒空（diff 永远报告 0 新增）。
+	existedBefore := make(map[string]struct{}, len(existing))
+	for _, m := range existing {
+		existedBefore[m.Path] = struct{}{}
+	}
 	added := make([]dto.MenuExportItem, 0)
 	unchanged := make([]dto.MenuExportItem, 0)
 	for _, spec := range specs {
@@ -809,7 +761,7 @@ func (s *MenuService) InitMenusFromBaseline(ctx context.Context, tenantID int) (
 			SortOrder:      spec.SortOrder,
 			Description:    spec.Description,
 		}
-		if _, existed := pathSet[spec.Path]; existed {
+		if _, existed := existedBefore[spec.Path]; existed {
 			unchanged = append(unchanged, item)
 		} else {
 			added = append(added, item)
