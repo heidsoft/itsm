@@ -741,11 +741,25 @@ func (s *Service) Update(ctx context.Context, id, tenantID, actorID int, actorRo
 
 	// 3. Save
 	if err := s.repo.Update(ctx, req); err != nil {
-		s.logger.Errorw("Failed to update service request", "error", err)
-		return nil, common.NewInternalError("Failed to update service request", err)
+		return nil, s.classifyWriteFailure(ctx, req, err, "Failed to update service request")
 	}
 
 	return req, nil
+}
+
+// classifyWriteFailure 区分条件更新 0 行命中的两种成因。
+// Ent 把「版本被并发推进」和「记录已不存在」统一报 NotFoundError；
+// 按 id+tenant 复查存在性：仍在 → 版本冲突（409 带双版本号），不在 → 404。
+func (s *Service) classifyWriteFailure(ctx context.Context, req *ServiceRequest, opErr error, failMessage string) error {
+	if !ent.IsNotFound(opErr) {
+		s.logger.Errorw(failMessage, "error", opErr, "id", req.ID)
+		return common.NewInternalError(failMessage, opErr)
+	}
+	current, checkErr := s.repo.Get(ctx, req.ID, req.TenantID)
+	if checkErr != nil {
+		return common.NewNotFoundError("Service Request")
+	}
+	return common.NewVersionConflictError("服务请求", req.ID, req.Version, current.Version)
 }
 
 // UpdateStatus updates a service request status with tenant isolation.
@@ -768,8 +782,7 @@ func (s *Service) UpdateStatus(ctx context.Context, id, tenantID, actorID int, a
 		return common.NewForbiddenError("Only service operators can update fulfillment status")
 	}
 	if err := s.repo.UpdateStatus(ctx, req, status, actorID); err != nil {
-		s.logger.Errorw("Failed to update service request status", "error", err, "id", id, "status", status)
-		return common.NewInternalError("Failed to update service request status", err)
+		return s.classifyWriteFailure(ctx, req, err, "Failed to update service request status")
 	}
 	return nil
 }
@@ -790,8 +803,7 @@ func (s *Service) Delete(ctx context.Context, id, tenantID, actorID int, actorRo
 
 	// 2. Delete
 	if err := s.repo.Delete(ctx, req); err != nil {
-		s.logger.Errorw("Failed to delete service request", "error", err)
-		return common.NewInternalError("Failed to delete service request", err)
+		return s.classifyWriteFailure(ctx, req, err, "Failed to delete service request")
 	}
 
 	return nil
