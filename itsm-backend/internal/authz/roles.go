@@ -156,7 +156,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		// IT管理员（users.role=it_admin 对齐；服务请求 L2 审批角色）：
 		// ITIL 流程运营所有者——工单类型、SLA、流程绑定与目录配置的落地者。
 		domainrole.ITAdmin: {
-			"ticket:read", "ticket_type:read", "ticket:write", "incident:read", "incident:write",
+			"ticket:read", "ticket_type:read", "ticket:write", "ticket:assign", "incident:read", "incident:write",
 			"problem:read", "change:read", "asset:read", "cmdb:read",
 			"user:read", "team:read", "knowledge:read", "report:read",
 			"service_request:read", "service_request:write", "service_request:approve",

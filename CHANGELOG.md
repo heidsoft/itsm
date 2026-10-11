@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **it_admin 缺 ticket:assign，IT 管理员无法派单（权限缺口，P2）**：`internal/authz` 权威源中 it_admin 权限清单漏 `ticket:assign`，DBOnly 显式配置态下 it_admin 用户调 `POST /tickets/:id/assign` 一律 403，派单闭环断裂（agent/technician/manager 均持有该码，唯 IT 管理员缺席）。权威源补码后，既有安装由播种「只增不减」契约或运维补授 role_permissions 生效。回归：it_admin 测试账号派单 2003→200。
+
 ## [1.6.17] - 2026-10-11
 
 ### Changed
