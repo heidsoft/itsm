@@ -292,6 +292,22 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 400 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Router /api/v1/users/{id} [delete]
+// ensureTargetRankNotAboveCaller 越权防护：目标用户的角色层级不得高于调用者
+// （如 admin 不得删除/停用同租户 sysadmin/super_admin——Rank 单一源在 domain/role）。
+// 目标不存在时放行，交由后续用例统一报「用户不存在」。
+func (h *UserHandler) ensureTargetRankNotAboveCaller(c *gin.Context, targetID, tenantID int) bool {
+	target, err := h.userService.GetUserByID(c.Request.Context(), targetID, tenantID)
+	if err != nil {
+		return false
+	}
+	callerRole := c.GetString("role")
+	if domainrole.Rank(string(target.Role)) > domainrole.Rank(callerRole) {
+		common.Forbidden(c, "无权限操作高于自身角色的用户")
+		return true
+	}
+	return false
+}
+
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -303,6 +319,10 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
+
+	if h.ensureTargetRankNotAboveCaller(c, id, tenantID) {
 		return
 	}
 
@@ -352,6 +372,10 @@ func (h *UserHandler) ChangeUserStatus(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
 		common.Fail(c, common.UnauthorizedCode, "租户信息缺失")
+		return
+	}
+
+	if h.ensureTargetRankNotAboveCaller(c, id, tenantID) {
 		return
 	}
 

@@ -431,6 +431,15 @@ func (s *UserService) DeleteUser(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("删除用户失败: %w", err)
 	}
 
+	// 立即吊销全部存量 access token：软删只是 SetActive(false)，AuthMiddleware 纯 JWT
+	// 验签不查 Active，不吊销的话被删用户在 token 有效期内仍可调用仅 AuthMiddleware
+	// 保护的路由（/users/profile、/auth/tenants、WS 等）。
+	if revokeErr := middleware.InvalidateUserTokens(ctx, id, time.Now()); revokeErr != nil {
+		s.logger.Errorw("删除用户后吊销存量token失败", "user_id", id, "error", revokeErr)
+	} else {
+		s.logger.Infow("用户已删除，存量access token已吊销", "user_id", id)
+	}
+
 	s.logger.Infof("用户删除成功: ID=%d", id)
 	return nil
 }
