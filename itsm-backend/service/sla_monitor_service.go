@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -1052,14 +1053,16 @@ func (s *SLAMonitorService) CheckAllTenantsSLA(ctx context.Context) error {
 		return fmt.Errorf("failed to query tenants: %w", err)
 	}
 
+	var errs []error
 	for _, tenant := range tenants {
 		tenantCtx := tenantctx.WithTenantID(ctx, tenant.ID)
 		if _, err := s.CheckSLAViolations(tenantCtx, tenant.ID); err != nil {
 			s.logger.Errorw("Failed to check SLA violations", "tenant_id", tenant.ID, "error", err)
+			errs = append(errs, err)
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // GetDashboardMetrics 获取SLA监控仪表板完整指标

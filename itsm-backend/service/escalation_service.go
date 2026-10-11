@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -52,23 +53,27 @@ func (e *EscalationService) MatrixService() *EscalationMatrixService {
 func (e *EscalationService) ProcessEscalations(ctx context.Context, tenantID int) error {
 	e.logger.Infow("Processing escalations", "tenant_id", tenantID)
 
+	var errs []error
 	// 1. 检查SLA预警规则中的升级配置
 	if err := e.processSLAEscalations(ctx, tenantID); err != nil {
-		e.logger.Errorw("Failed to process SLA escalations", "error", err)
+		e.logger.Errorw("Failed to process SLA escalations", "tenant_id", tenantID, "error", err)
+		errs = append(errs, err)
 	}
 
 	// 2. 检查长时间未解决的工单
 	if err := e.processLongPendingTickets(ctx, tenantID); err != nil {
-		e.logger.Errorw("Failed to process long pending tickets", "error", err)
+		e.logger.Errorw("Failed to process long pending tickets", "tenant_id", tenantID, "error", err)
+		errs = append(errs, err)
 	}
 
 	// 3. 检查未分配工单
 	if err := e.processUnassignedTickets(ctx, tenantID); err != nil {
-		e.logger.Errorw("Failed to process unassigned tickets", "error", err)
+		e.logger.Errorw("Failed to process unassigned tickets", "tenant_id", tenantID, "error", err)
+		errs = append(errs, err)
 	}
 
 	e.logger.Infow("Escalation processing completed", "tenant_id", tenantID)
-	return nil
+	return errors.Join(errs...)
 }
 
 // processSLAEscalations 处理SLA预警规则中的升级
@@ -99,6 +104,7 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 			).
 			All(ctx)
 		if err != nil {
+			e.logger.Errorw("Failed to query pending alerts", "rule_id", rule.ID, "tenant_id", tenantID, "error", err)
 			continue
 		}
 
@@ -121,6 +127,13 @@ func (e *EscalationService) processSLAEscalations(ctx context.Context, tenantID 
 					break
 				}
 				if err := e.escalateToLevelByMatrix(ctx, alert, rule, nextLevel, tenantID, priority); err != nil {
+					if errors.Is(err, ErrEscalationLevelClaimed) {
+						// 级别已被并发扫描者推进，通知权归对方，跳过即可
+						e.logger.Infow("Alert escalation skipped (claimed by concurrent scan)",
+							"alert_id", alert.ID,
+							"level", nextLevel.Level)
+						break
+					}
 					e.logger.Errorw("Failed to escalate alert",
 						"alert_id", alert.ID,
 						"level", nextLevel.Level,
@@ -161,6 +174,11 @@ func (e *EscalationService) resolveTicketPriority(ctx context.Context, ticketID 
 	return string(t.Priority)
 }
 
+// ErrEscalationLevelClaimed 表示该告警的升级级别已被并发扫描者推进（claim-once 落败）。
+// 多副本部署时各副本的 ticker 都会扫描，CAS 落败方必须跳过通知，避免同一告警
+// 同一级别被升级两次、收件人收到双份升级通知。
+var ErrEscalationLevelClaimed = errors.New("escalation level already advanced by concurrent scan")
+
 // escalateToLevelByMatrix 按矩阵级别升级
 func (e *EscalationService) escalateToLevelByMatrix(
 	ctx context.Context,
@@ -170,12 +188,20 @@ func (e *EscalationService) escalateToLevelByMatrix(
 	tenantID int,
 	priority string,
 ) error {
-	// 1. 更新告警的 escalation level
-	_, err := e.client.SLAAlertHistory.UpdateOneID(alert.ID).
+	// 1. 更新告警的 escalation level。条件更新即 claim-once：仅当级别仍是快照值时
+	// 才允许推进并继续发通知，抢到唯一推进权的副本负责通知。
+	claimed, err := e.client.SLAAlertHistory.Update().
+		Where(
+			slaalerthistory.IDEQ(alert.ID),
+			slaalerthistory.EscalationLevelEQ(alert.EscalationLevel),
+		).
 		SetEscalationLevel(level.Level).
 		Save(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to update escalation level: %w", err)
+	}
+	if claimed == 0 {
+		return ErrEscalationLevelClaimed
 	}
 
 	// 2. 解析 notify_user_ids（按角色名→具体用户）
@@ -291,12 +317,16 @@ func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level 
 		if tenantID <= 0 {
 			return nil
 		}
-		admins, _ := e.client.User.Query().
+		admins, err := e.client.User.Query().
 			Where(
 				user.TenantIDEQ(tenantID),
 				user.RoleEQ("admin"),
 			).
 			IDs(ctx)
+		if err != nil {
+			e.logger.Errorw("Failed to query admins for escalation notification",
+				"tenant_id", tenantID, "error", err)
+		}
 		userIDs = append(userIDs, admins...)
 	}
 
@@ -328,13 +358,18 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 	for i, t := range tickets {
 		ticketIDs[i] = t.ID
 	}
-	existingAlerts, _ := e.client.SLAAlertHistory.Query().
+	existingAlerts, err := e.client.SLAAlertHistory.Query().
 		Where(
 			slaalerthistory.TicketIDIn(ticketIDs...),
 			slaalerthistory.AlertLevelEQ("long_pending"),
 			slaalerthistory.ResolvedAtIsNil(),
 		).
 		All(ctx)
+	if err != nil {
+		// 查询失败时按"全部未提醒"处理：outbox 幂等键仍兜底去重，不会重复投递
+		e.logger.Errorw("Failed to query existing long-pending alerts, in-memory dedup disabled",
+			"tenant_id", tenantID, "error", err)
+	}
 
 	// 构建已发送预警的工单集合
 	alertedTickets := make(map[int]bool)
@@ -374,12 +409,16 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 			}
 
 			// 通知管理员（仅限当前租户）
-			admins, _ := e.client.User.Query().
+			admins, err := e.client.User.Query().
 				Where(
 					user.TenantIDEQ(tenantID),
 					user.RoleEQ("admin"),
 				).
 				IDs(ctx)
+			if err != nil {
+				e.logger.Errorw("Failed to query admins for long-pending notification",
+					"ticket_id", t.ID, "tenant_id", tenantID, "error", err)
+			}
 
 			for _, adminID := range admins {
 				if err := e.notificationSvc.SendNotification(ctx, t.ID, &dto.SendTicketNotificationRequest{
@@ -434,13 +473,18 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 	for i, t := range tickets {
 		ticketIDs[i] = t.ID
 	}
-	existingAlerts, _ := e.client.SLAAlertHistory.Query().
+	existingAlerts, err := e.client.SLAAlertHistory.Query().
 		Where(
 			slaalerthistory.TicketIDIn(ticketIDs...),
 			slaalerthistory.AlertLevelEQ("unassigned"),
 			slaalerthistory.ResolvedAtIsNil(),
 		).
 		All(ctx)
+	if err != nil {
+		// 查询失败时按"全部未提醒"处理：outbox 幂等键仍兜底去重，不会重复投递
+		e.logger.Errorw("Failed to query existing unassigned alerts, in-memory dedup disabled",
+			"tenant_id", tenantID, "error", err)
+	}
 
 	// 构建已发送预警的工单集合
 	alertedTickets := make(map[int]bool)
@@ -449,12 +493,16 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 	}
 
 	// 通知管理员（仅限当前租户，防止跨租户信息泄漏）
-	admins, _ := e.client.User.Query().
+	admins, err := e.client.User.Query().
 		Where(
 			user.TenantIDEQ(tenantID),
 			user.RoleEQ("admin"),
 		).
 		IDs(ctx)
+	if err != nil {
+		e.logger.Errorw("Failed to query admins for unassigned notification",
+			"tenant_id", tenantID, "error", err)
+	}
 
 	for _, t := range tickets {
 		// 检查是否已发送过未分配通知
