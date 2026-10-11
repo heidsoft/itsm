@@ -53,6 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Skill 统一调用入口身份可伪造（安全）**：`POST /api/v1/admin/skills/:code/invoke` 此前仅在请求体未携带时才注入 `tenantId`/`userId`，`role` 则完全取自请求体——仅持 `ai:read` 的调用方可声明 `role=super_admin` 或他人身份，借 Gate 2（工具级 RBAC）跨租户执行工具并伪造反馈审计归属。现身份与角色一律无条件以认证中间件上下文覆盖请求体同名字段，新增回归测试断言伪造 `tenantId`/`userId`/`role` 被拒绝。
 - **审批派单指向不存在的角色**：内置审批组描述、BPMN 模板的 `candidateGroups`/`notify_roles` 与 SLA 升级通知矩阵长期引用 `l1_support` / `l2_support` / `l3_expert` / `ops_manager` / `it_director` 等词表外角色，按角色查人恒空、任务无人可见。全部改写为新词表（`agent` / `technician` / `it_admin` / `manager` / `security_admin`），`service/escalation_matrix.go`、工单附件与评论可见性改为引用 `domain/role` 常量，不再各自硬编码词汇。
 - **用户管理列表角色列重复渲染**：主角色同时存在于 `users.role` 和 RBAC `user_roles` 名称列表，同一角色会显示两枚一模一样的标签（如两枚「超级管理员」）。角色标签改为 `resolveRoleTags()` 统一去重，主角色高亮、其余角色追加，重复项只保留一枚；新增 4 个回归用例覆盖重复、仅有 RBAC 角色、未知角色回退。
+- **产品表面棘轮基线漏同步（docs-gate C.6.4 红）**：v1.6.17 批次 commit `8a271654` 落地 PATCH 指针化 + CreateTenant 事务查重，新增 `service/tenant_create_conflict_test.go` 与 `service/user_patch_pointer_test.go` 两个回归测试，落地时漏随 commit 上调 `service_go_files` 基线，守卫以 334>332 FAIL。按棘轮规程上调 332→334 并留归因说明。
+- **PATCH 可选字段未区分「未传」与「传空串清空」**：UpdateUser 的 Department/Phone 是 `string` 类型，非指针——`omitempty` 下空串被当作「未传」，前端永远清不掉这两个字段；AGENTS.md PATCH 指针规则明确禁止。改 DTO 为 `*string`（Department/Phone），service 层 `if req.Department != nil { SetDepartment(*req.Department) }`，并补 `user_patch_pointer_test.go` 锁「传 nil 不动」「传空串真清空」两个回归分支；同批 service/user_service_test.go 表驱动测试同步改为指针字面量。
+- **CreateTenant 查重在事务外，Save 时撞唯一索引被分类为 500**：原实现 `Exist` 在事务外查 code 通过，另一并发请求在 Save 之前插入同 code 行，Save 撞 `tenants_code_key` 唯一索引时 handler 分类成 5001。事务内 `tx.Tenant.Query().Exist` 复检消除常见窗口，残余并发窗口由 `Save` 的 `ent.IsConstraintError` 显式映射 409；新增 `tenant_create_conflict_test.go` 锁事务内查重 + ConstraintError 映射两条路径。
+- **CI 修整与文档清理**：本次 CI 红两处一并治理——
+  - backend-ci gofumpt：v1.6.16 漏跑的 3 个文件（`router/router.go` 注释 `//技能` → `// 技能`、`scripts/init_data/main.go` 注释对齐、`service/bpmn_parallel_service_regression_test.go` 函数签名过长换行），`gofumpt -w` 一次过；
+  - docs-gate C.3 broken links：`.qoder/plans/*.md`（4 份 AI agent 会话笔记）引用 `file:///Users/heidsoft/...` 机器本地绝对路径 + 已删除的 `itsm-backend/controller/*.go`，按 v1.6.16 清理 `itsm-backend/memory/`/`prd/`/`docs/archive/` 同型口径从跟踪删除并 `.gitignore` 整层，37 条 broken link 归零；
+  - CHANGELOG 同步：基线棘轮、PATCH 指针、CreateTenant 事务查重、CI 修整四项均补 [Unreleased] 后续条目。
 - **后端 v1.6.17 构建阻塞**：Ent 生成代码漂移导致 `ticketTypes.customFields` 在生成模型里退化为 `[]interface{}`，`service/ticket_service.go`、`service/ticket_type_service.go` 共 4 处编译失败，按 schema 还原对应 4 个 generated 文件；AI 技能反馈接口 `SaveFeedback` 新增 `accepted` 参数后 handler 未同步，补齐可选 `accepted` 字段解析与 DTO。
 
 ### 验证

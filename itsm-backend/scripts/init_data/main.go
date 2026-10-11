@@ -50,7 +50,7 @@ func main() {
 	if adminPassword == "" {
 		log.Fatal("ADMIN_PASSWORD 环境变量未设置，请设置管理员初始密码")
 	}
-	//gate through pkg/credential so this CLI rejects
+	// gate through pkg/credential so this CLI rejects
 	// known-default and short passwords identically to in-process seeder.
 	if credential.IsWeakAdminPassword(adminPassword) {
 		log.Fatalf("ADMIN_PASSWORD matches a known weak default; refusing to seed. Pick a strong unique value.")

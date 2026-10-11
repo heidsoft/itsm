@@ -270,6 +270,7 @@ ignored
 # Production verification artifacts (contain real credentials)
 .verify_run/
 .qoder/better-harness/
+.qoder/plans/
 production-mode-test-report-*.md
 output/
 # Local verification/rebuild reports at repo root (often embed real credentials) — never commit

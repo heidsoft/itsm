@@ -42,9 +42,14 @@ const parallelServiceFirstBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 
 type parallelServiceTestHandler struct{ calls int }
 
-func (h *parallelServiceTestHandler) GetTaskType() string                                { return "ServiceTask" }
-func (h *parallelServiceTestHandler) GetHandlerID() string                               { return "parallel_service_handler" }
-func (h *parallelServiceTestHandler) Validate(context.Context, map[string]interface{}) error { return nil }
+func (h *parallelServiceTestHandler) GetTaskType() string { return "ServiceTask" }
+
+func (h *parallelServiceTestHandler) GetHandlerID() string { return "parallel_service_handler" }
+
+func (h *parallelServiceTestHandler) Validate(context.Context, map[string]interface{}) error {
+	return nil
+}
+
 func (h *parallelServiceTestHandler) Execute(_ context.Context, _ *ent.ProcessTask, _ map[string]interface{}) (*dto.ServiceTaskResult, error) {
 	h.calls++
 	return &dto.ServiceTaskResult{Success: true, OutputVars: map[string]interface{}{"svcResult": "ok"}}, nil
