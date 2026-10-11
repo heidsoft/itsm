@@ -320,7 +320,7 @@ func (e *EscalationService) getEscalationNotifyUsers(ctx context.Context, level 
 		admins, err := e.client.User.Query().
 			Where(
 				user.TenantIDEQ(tenantID),
-				user.RoleEQ("admin"),
+				user.RoleEQ(user.RoleAdmin),
 			).
 			IDs(ctx)
 		if err != nil {
@@ -412,7 +412,7 @@ func (e *EscalationService) processLongPendingTickets(ctx context.Context, tenan
 			admins, err := e.client.User.Query().
 				Where(
 					user.TenantIDEQ(tenantID),
-					user.RoleEQ("admin"),
+					user.RoleEQ(user.RoleAdmin),
 				).
 				IDs(ctx)
 			if err != nil {
@@ -496,7 +496,7 @@ func (e *EscalationService) processUnassignedTickets(ctx context.Context, tenant
 	admins, err := e.client.User.Query().
 		Where(
 			user.TenantIDEQ(tenantID),
-			user.RoleEQ("admin"),
+			user.RoleEQ(user.RoleAdmin),
 		).
 		IDs(ctx)
 	if err != nil {

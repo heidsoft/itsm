@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"itsm-backend/ent"
+	entrole "itsm-backend/ent/role"
 	"itsm-backend/ent/user"
 )
 
@@ -53,10 +54,14 @@ func (r *AmountResolver) Resolve(ctx context.Context, client *ent.Client, appCtx
 		return nil, fmt.Errorf("invalid approval role %q: %w", matchedThreshold.Role, err)
 	}
 
-	// Find users with the matching role
+	// Find users with the matching role via users.role (主角色) ∪ user_roles M2M（叠加角色）。
+	// 仅查主角色会漏掉通过 user_roles 拿到 ITIL/MSP 叠加角色（如 change_manager）的审批人。
 	users, err := client.User.Query().
 		Where(
-			user.RoleEQ(matchedRole),
+			user.Or(
+				user.HasRolesWith(entrole.CodeEQ(matchedThreshold.Role)),
+				user.RoleEQ(matchedRole),
+			),
 			user.TenantIDEQ(appCtx.TenantID),
 			user.Active(true),
 		).
