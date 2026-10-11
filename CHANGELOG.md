@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **产品表面棘轮补账**：`service_go_files` 基线 328→332。P1 修复批次新增 4 个回归测试文件（df212409 +3 个 BPMN 回归、413181f4 +1 个 SLA claim-once 回归，均为纯测试增量）落地时漏随 commit 上调基线，致 `make docs-gate` C.6.4 红，本次按棘轮规程补值并说明。
 - **角色模型重设，legacy 角色退役**：角色=权限包，岗位/团队差异交给部门、团队与租户自建角色承载，不再塞进权限词表。词表三层单一源在 `domain/role`：
   - 主角色（`users.role`，一人一个）：`super_admin` / `admin` / `sysadmin` / `security_admin` / `audit_admin` / `it_admin` / `manager` / `agent` / `technician` / `end_user`，其中 `sysadmin`+`security_admin`+`audit_admin` 对应等保「三员分立」。
   - ITIL 实践角色（`user_roles` 叠加）：`change_manager` / `problem_manager` / `knowledge_manager` / `cmdb_admin` / `service_catalog_admin`。
