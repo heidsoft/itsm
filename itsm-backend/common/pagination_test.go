@@ -327,8 +327,8 @@ func TestSuccessWithPagination(t *testing.T) {
 
 // ==================== 信封键集合测试 ====================
 
-// ticketResponse 故意使用小写类型名：历史上信封会按元素类型名反射出
-// tickets/incidents 这类领域别名，与 items 同时返回，形成 AGENTS.md 禁止的双轨契约。
+// ticketResponse 故意用小写类型名：信封若按元素类型名反射出 tickets 这类领域别名，
+// 就会与 items 同时返回两个集合键。
 type ticketResponse struct {
 	ID         int    `json:"id"`
 	TicketName string `json:"ticketNumber"`
@@ -404,10 +404,10 @@ func TestPagination_LastPageOfMany(t *testing.T) {
 	assert.True(t, resp.HasPrev)
 }
 
-// TestPagination_ZeroPageSizeDoesNotOverflow 锁死 2026-10-02 实测的缺陷类：
+// TestPagination_ZeroPageSizeDoesNotOverflow:
 // 客户端省略 page/pageSize 时 DTO 是零值，float64 除零得到 +Inf，
-// int(+Inf) 在 amd64 上是 int64 最小值，于是列表信封返回
-// totalPages: -9223372036854775808、page: 0、pageSize: 0。
+// int(+Inf) 在 amd64 上是 int64 最小值，列表信封会返回
+// totalPages: -9223372036854775808、page: 0、pageSize: 0；零值必须回落默认分页。
 func TestPagination_ZeroPageSizeDoesNotOverflow(t *testing.T) {
 	resp := NewPaginationResponse(0, 0, 3)
 

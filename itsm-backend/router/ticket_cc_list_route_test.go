@@ -25,22 +25,19 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：
-//   - GET /api/v1/tickets/cc/my  返回 {records,total}
-//   - GET /api/v1/tickets/:id/cc 返回 {records,total}
+// 抄送端点响应契约：
+//   - GET /api/v1/tickets/cc/my  => {items,total}
+//   - GET /api/v1/tickets/:id/cc => {items,total}
 //
-// 两个抄送端点实测都**不分页**（service 用 Where(tenant_id)+All(ctx) 整表取回、
-// Total=len(records)，handler 直接透传），所以本批只把集合键收敛为平台规定的 items，
-// 并保留诚实的两键形状：**不补 page/pageSize/totalPages**，否则等于用响应声明伪造
-// 一个不存在的分页协议（AGENTS「能力状态与失败语义」）。
+// 两个端点都不分页：service 按租户整表取回，total 就是 len(items)。因此响应只有这两个键，
+// 补 page/pageSize/totalPages 等于对外声明一个并不存在的分页协议。
 //
-// 同批修掉一处实测漂移：前端类型和页面读 `user.name`，而后端 dto.WorkflowUserInfo
-// 从未发出该键（真实键是 fullName），抄送人/添加人两列因此一直落到 username。
-// 用例 4 用「精确键集合」锁定它，而不是靠注释声明。
+// 抄送人与添加人的姓名只由 fullName 承载，WorkflowUserInfo 并不发 name 键；
+// 前端读 user.name 会静默落到 username。用例 4 用精确键集合锁住这一点。
 //
-// 测试打在**生产注册**上（router/ticket_routes.go:35 与 :226，含
-// RequirePermission("workflow","read")）。解码目标是本地 wire 结构而不引用 dto，
-// 因此修复前也能编译，证明的是运行时行为。
+// 用例挂在真实路由注册上（router/ticket_routes.go 的 /cc/my 与 /:id/cc，
+// 带 RequirePermission("workflow","read")）；解码目标是本地 wire 结构而不是 dto，
+// 断言的是运行时响应行为。
 
 const (
 	ticketCCListSecret = "ticket-cc-list-secret"
@@ -233,12 +230,12 @@ func TestTicketCCListRoutesEnvelope(t *testing.T) {
 		}
 	})
 
-	// 6. 相同 added_at 必须按 id 升序稳定排列（本次给两条 DESC 排序补的并列键）。
+	// 6. 相同 added_at 必须按 id 升序稳定排列（两条 DESC 排序都带并列键）。
 	//
-	// 说明：修复前 `Order(ent.Desc(addedAt))` 在并列时间下由 SQLite 随意决定顺序，
-	// 实测它恰好返回插入顺序，而插入顺序与自增 id 同向，所以本用例在修复前也会通过。
-	// 它是**契约锁**（防止后续改动把顺序变成不确定），不是「修复前转红」的证据；
-	// 本片的红转绿证据是用例 1/3/8/9 的 items 集合键与租户收敛。
+	// 只写 Order(ent.Desc(addedAt)) 时，并列时间的顺序由 SQLite 决定；它恰好按插入顺序返回，
+	// 而插入顺序与自增 id 同向，所以这个用例并不能证明并列键曾经出错。
+	// 它锁的是契约：后续改动不得让并列时间的顺序变成不确定。
+	// 集合键与租户收敛的证据在用例 1/3/8/9。
 	t.Run("相同抄送时间按 id 升序稳定排列", func(t *testing.T) {
 		tieTicket, err := client.Ticket.Create().
 			SetTicketNumber("TKT-CC-TIE").
@@ -327,10 +324,10 @@ func TestTicketCCListRoutesEnvelope(t *testing.T) {
 
 	// 9. 跨租户探测必须 fail closed：与「工单不存在」同一个 404/4004，不泄漏对方抄送。
 	//
-	// E4-5 之前这里是 500/5001：service 返回 common.NewBusinessError(NotFoundCode,...)，
-	// 但 handler 用 common.FailWithErr 一律压成内部错误，把「工单不存在/跨租户」伪装成
-	// 服务故障，且与同域附件/变更的 404/4004 口径并存两套真相。分类收敛到
-	// common.classifyError 并把 handler 切到 RespondError 后，这里锁精确 status/code。
+	// handler 若用 common.FailWithErr 一律压成内部错误，service 的
+	// NewBusinessError(NotFoundCode,...) 就变成 500/5001，把「不存在/跨租户」伪装成服务
+	// 故障，还和同域附件/变更的 404/4004 并存两套真相。分类由 common.classifyError
+	// 唯一决定、handler 走 RespondError，这里才锁得住精确 status/code。
 	t.Run("跨租户工单抄送返回 404 且不泄漏", func(t *testing.T) {
 		w, body := doCCAs(t, tenantB.admin, fmt.Sprintf("/api/v1/tickets/%d/cc", tenantA.ticketID))
 		assert.Equal(t, http.StatusNotFound, w.Code, "跨租户必须与不存在同码: body=%s", body)
@@ -343,8 +340,7 @@ func TestTicketCCListRoutesEnvelope(t *testing.T) {
 	})
 
 	// 9b. 同租户但既非发起人/受理人/审批人/抄送人的普通用户：权限拒绝必须是 403/2003。
-	//     此前 service 用 fmt.Errorf("无权访问该工单抄送信息") 表达拒绝，被压成 500/5001，
-	//     「你没权限看」看起来像「服务挂了」。
+	//     用 fmt.Errorf 表达拒绝会被压成 500/5001，「你没权限看」看起来像「服务挂了」。
 	t.Run("同租户无权用户返回 403", func(t *testing.T) {
 		stranger, err := client.User.Create().
 			SetUsername("cc-a-stranger").

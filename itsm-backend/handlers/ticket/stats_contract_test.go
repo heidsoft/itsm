@@ -117,10 +117,11 @@ func sumNameCounts(in []nameCount) int {
 }
 
 // TestTicketStatsDistributionsAreAuthoritative 锁住工单报表分布的权威来源。
-// 修复前 /reports/tickets 用 listTickets({pageSize:200}) 在浏览器里自己数：总数被
-// 页长截断，超时卡片过滤 status === 'overdue'（工单状态机里没有这个取值，恒为 0），
-// 而租户全量的分组计数一直在 stats 实现里算完就被丢掉（CountByStatus/CountByPriority
-// 折叠成几个桶后原 map 不再输出）。
+//
+// 报表不能用 listTickets({pageSize:200}) 在浏览器里自己数：总数会被页长截断，
+// 而超时卡片过滤的 status === 'overdue' 在工单状态机里并不存在，读数恒为 0。
+// 租户全量的分组计数必须由 stats 输出 CountByStatus/CountByPriority 原 map，
+// 只折叠成几个桶就把明细丢掉，等于算完即丢。
 func TestTicketStatsDistributionsAreAuthoritative(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ticket_stats_distribution?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

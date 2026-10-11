@@ -6,7 +6,7 @@ package middleware
 //
 //	ResourceActionMap = 生成条目（路由声明，精确路径） + 本文件（族级通配/别名策略）
 //
-// 本文件承载的是**策略**而非路由声明的复制：
+// 本文件承载的是策略而非路由声明的复制：
 //   - 族级通配（如 POST /api/v1/changes/* = change:write）：为未声明/未来新增的
 //     子路径提供 fail-closed 缺省预检；
 //   - 历史别名与仅 AuthMiddleware 的路由（如 /api/v1/auth/*、

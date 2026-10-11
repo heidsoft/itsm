@@ -446,8 +446,8 @@ func parseIncidentTimeFilter(v string) (time.Time, error) {
 // @Router /api/v1/incidents [get]
 func (h *IncidentHandler) Lists(c *gin.Context) {
 	// 分页只有 common.GetPaginationFromQuery 一个所有者：缺省 20、只采纳 1-100、
-	// 越界与非数字回落缺省。此前这里自建 DefaultQuery("pageSize","10") 且把未校验的
-	// 解析结果直接下传给 Offset/Limit，导致 pageSize=abc/0 走成整表读取、page=0 走成负偏移。
+	// 越界与非数字回落缺省。自建 DefaultQuery("pageSize","10") 并把未校验的解析结果
+	// 直接下传给 Offset/Limit，会让 pageSize=abc/0 走成整表读取、page=0 走成负偏移。
 	pg := common.GetPaginationFromQuery(c)
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {

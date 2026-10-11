@@ -33,8 +33,8 @@ type CreateProcessDefinitionRequest struct {
 	Category         string                 `json:"category"`
 	BPMNXML          string                 `json:"bpmnXml" binding:"required"`
 	ProcessVariables map[string]interface{} `json:"processVariables"`
-	// ApprovalConfig 流程级审批配置（auto_approve_roles 等），与设计器「流程配置」页签对应。
-	// DB 列由 20260621 迁移创建，此前为孤儿列——前端写入从未持久化。
+	// ApprovalConfig 流程级审批配置（auto_approve_roles 等），与设计器「流程配置」页签对应，
+	// 必须随创建/更新写入对应的 DB 列，否则前端保存会静默丢失。
 	ApprovalConfig *schema.ApprovalConfig `json:"approvalConfig"`
 	SLAConfig      map[string]interface{} `json:"slaConfig"`
 	TenantID       int                    `json:"tenantId" binding:"required"`

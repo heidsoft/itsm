@@ -89,11 +89,11 @@ func decodeGroups(t *testing.T, env groupEnvelope) *dto.PagedGroupsResponse {
 	return &resp
 }
 
-// TestListGroups_IgnoresTenantIDQueryParam 跨租户 IDOR 回归。
+// TestListGroups_IgnoresTenantIDQueryParam 挡的是跨租户 IDOR。
 //
-// 修复前 handler「优先使用查询参数」的 tenantId，而 service 直接以
-// req.TenantID 作查询谓词，任意登录用户传 ?tenantId=2 即可读取他租户的组。
-// 修复后租户身份只能来自认证上下文，查询参数必须被完全忽略。
+// 租户身份只能来自认证上下文，查询参数必须被完全忽略：service 直接以 req.TenantID
+// 作查询谓词，handler 只要「优先使用查询参数」的 tenantId，任意登录用户传
+// ?tenantId=2 就能读取他租户的组。
 func TestListGroups_IgnoresTenantIDQueryParam(t *testing.T) {
 	h, _, tenantA, tenantB := setupGroupTest(t)
 

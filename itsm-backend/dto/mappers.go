@@ -1064,9 +1064,8 @@ func ToCIRelationshipResponse(rel *ent.CIRelationship) *CIRelationshipResponse {
 		res.TargetCIType = rel.Edges.TargetCi.CiType
 	}
 
-	// 填入关系类型中文展示名。
-	// 之前 RelationshipTypeName 永远空字符串，导致前端 CMDB 关系列表的"关系类型"
-	// 列渲染空白。从 schema.CIRelationshipTypeVocabulary（单一受控源）查 Name 字段。
+	// 关系类型中文名取自 schema.CIRelationshipTypeVocabulary（受控单一源）；
+	// 留空会让前端 CMDB 关系列表的"关系类型"列渲染空白。
 	for _, meta := range schema.CIRelationshipTypeVocabulary {
 		if string(meta.Type) == string(rel.RelationshipType) {
 			res.RelationshipTypeName = meta.Name

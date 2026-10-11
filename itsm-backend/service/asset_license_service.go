@@ -82,9 +82,9 @@ func (s *AssetLicenseService) GetLicenseByID(ctx context.Context, id, tenantID i
 
 // ListLicenses 获取许可证列表
 func (s *AssetLicenseService) ListLicenses(ctx context.Context, tenantID int, page, pageSize int, licenseType, status string) (*dto.LicenseListResponse, error) {
-	// 实测原实现是 `if page > 0 && pageSize > 0` 才加 Offset/Limit：调用方漏写或写错分页
-	// 参数时条件为假，查询不带 LIMIT，一次把该租户整表读出来。这里无条件分页，
-	// HTTP 入口用 common.GetPaginationFromQuery 归一，本道只兜非 HTTP 调用方。
+	// 无条件分页：若只在 `page > 0 && pageSize > 0` 时才加 Offset/Limit，调用方漏写分页参数
+	// 会让查询不带 LIMIT，一次把该租户整表读出来。HTTP 入口由 common.GetPaginationFromQuery
+	// 归一，这里的 ValidatePagination 兜住非 HTTP 调用方。
 	page, pageSize = common.ValidatePagination(page, pageSize)
 	query := s.client.AssetLicense.Query().Where(assetlicense.TenantIDEQ(tenantID))
 

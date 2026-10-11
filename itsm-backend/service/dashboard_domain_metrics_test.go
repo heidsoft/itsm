@@ -8,9 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 回归：事件/变更指标必须来自真实领域数据。
-// 此前 AvgResolutionTime=240 分钟、SuccessRate=95.5% 是写死的模拟值，
-// 且两个函数数的是工单而非事件/变更域。
+// 事件/变更指标必须来自各自领域的数据：AvgResolutionTime 取事件、SuccessRate 取变更，
+// 不能写死模拟值，也不能用 ticket 计数顶替。
 func TestDashboardDomainMetricsAreReal(t *testing.T) {
 	client, svc, ctx := setupDashboardTest(t)
 	defer client.Close()
@@ -53,7 +52,7 @@ func TestDashboardDomainMetricsAreReal(t *testing.T) {
 	require.InDelta(t, 66.67, changes.SuccessRate, 0.01, "成功率 = completed/(completed+failed)")
 	require.NotEqual(t, 95.5, changes.SuccessRate, "禁止模拟值")
 
-	// 空租户：如实为 0，而不是拿模拟值充数
+	// 空租户为 0，不用模拟值填充
 	emptyIncidents, err := svc.getIncidentMetrics(ctx, other.ID)
 	require.NoError(t, err)
 	require.Equal(t, 0, emptyIncidents.AvgResolutionTime)

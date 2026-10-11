@@ -21,9 +21,8 @@ import (
 	"itsm-backend/service/sla"
 )
 
-// 回归：PUT /tickets/:id/sla/pause|resume 此前直接返回
-// 成功假象、完全不落库。必须真实调用 SLA 领域服务：暂停落库并记录原因、
-// 重复暂停/未暂停恢复是 409 冲突、跨租户按 404 拒绝。
+// PUT /tickets/:id/sla/pause|resume 必须真实调用 SLA 领域服务：暂停落库并记录原因、
+// 重复暂停/未暂停恢复是 409 冲突、跨租户按 404 拒绝。返回成功但不落库等于假控件。
 func TestSLAPauseResumeWiring(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	client := enttest.Open(t, "sqlite3", "file:ticket_sla_pause?mode=memory&cache=shared&_fk=1")

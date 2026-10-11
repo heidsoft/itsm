@@ -20,7 +20,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// txNotificationFixture 阶段 B 集成测试的最小夹具：
+// txNotificationFixture 建事务入箱测试的最小夹具：
 // 一个 tenant + 一个 requester + 一个 assignee。assignee 用于让 NotifyTicketCreatedTx 实际入箱。
 func txNotificationFixture(t *testing.T) (*ent.Client, context.Context, *ent.Tenant, *ent.User, *ent.User) {
 	t.Helper()
@@ -63,7 +63,6 @@ func txNotificationFixture(t *testing.T) (*ent.Client, context.Context, *ent.Ten
 
 // TestCreateTicketSinksCreatedNotificationIntoTx 验证 CreateTicket 提交后
 // ticket 与通知入箱在同一 tx 内完成，operational_command 行立即可见。
-// 这是阶段 B 端到端契约。
 func TestCreateTicketSinksCreatedNotificationIntoTx(t *testing.T) {
 	client, ctx, tenant, requester, assignee := txNotificationFixture(t)
 

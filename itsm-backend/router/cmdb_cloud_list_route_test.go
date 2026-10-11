@@ -19,11 +19,11 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：云账号/云服务/云资源曾经有两套平行的已注册表面
+// 云账号/云服务/云资源曾经有两套平行的已注册表面
 // —— /api/v1/cloud/*（15 条路由，带真分页与 fail-closed 租户）与 /api/v1/cmdb/cloud-*
 // （UI 唯一在用的那套，裸数组、无排序无上限整表读取、service_id 别名、err.Error() 外露）。
 // 产品裁决是「留 cmdb，删 /api/v1/cloud/*」，于是被删那一侧仅有的能力必须搬进活表面，
-// 否则收敛就是能力退化。本测试把裁决后的契约钉在**生产注册的路由**上：
+// 否则收敛就是能力退化。本测试把裁决后的契约钉在生产注册的路由上：
 //
 //  1. 云资源列表 = 标准五键信封 + 真实 Count + updated_at DESC/id ASC 确定性排序；
 //  2. 云账号/云服务列表作为选择器数据源整份返回，只给诚实的 {items,total}，不得补假分页键；
@@ -291,7 +291,6 @@ func TestCMDBCloudListSurfaceRouteContract(t *testing.T) {
 	})
 
 	t.Run("service_id 别名不再被接受", func(t *testing.T) {
-		// 修复前：handler 先读 serviceId 再回退 service_id，snake_case 别名继续生效。
 		_, body, res := resources(t, a, fmt.Sprintf("service_id=%d&pageSize=100", a.serviceIDs[0]))
 		assert.Equal(t, 25, res.Total, "snake_case 别名不得参与过滤: body=%s", body)
 		assert.Len(t, res.Items, 25, body)

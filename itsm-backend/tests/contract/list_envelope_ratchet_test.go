@@ -2,7 +2,7 @@ package contract
 
 // 列表信封收敛棘轮（ratchet）。
 //
-// AGENTS.md 规定列表响应只能有一套契约：
+// 列表响应只有一套契约：
 //   - 集合只在 data.items 下承载，领域名只允许出现在 item 类型里；
 //   - 统计字段固定为 total / page / pageSize / totalPages。
 //
@@ -29,13 +29,13 @@ import (
 var canonicalListKeys = []string{"items", "page", "pageSize", "total", "totalPages"}
 
 // pagingKeys 是「这个信封声称自己分页」的键。docs/api-reference.md「不分页的列表」
-// 明确允许只返回 {items,total}，并要求**不得伪造** page/pageSize/totalPages 让调用方
-// 以为存在分页协议（历史实例：/tickets/templates 曾伪造 page=1、pageSize=len(items)）。
+// 明确允许只返回 {items,total}，并要求不得伪造 page/pageSize/totalPages 让调用方
+// 以为存在分页协议（伪造 page=1、pageSize=len(items) 正是这种情况）。
 // 因此本棘轮判定的是「声明了分页却只给出一半分页键」，而不是「所有列表都必须分页」。
 var pagingKeys = map[string]bool{"page": true, "pageSize": true, "totalPages": true}
 
-// forbiddenPagingKeys 是 AGENTS.md 明确禁止与 pageSize 并存的分页别名。
-// 它们是历史双轨的残留：同一响应把同一个事实说两遍，消费方无法判断哪个权威。
+// forbiddenPagingKeys 是不允许与 pageSize 并存的分页别名：同一响应把同一个分页事实
+// 说两遍，消费方无法判断哪个权威。
 var forbiddenPagingKeys = map[string]bool{
 	"size":        true,
 	"limit":       true,
@@ -56,72 +56,30 @@ type listEnvelope struct {
 	hasItemsKey bool
 }
 
-// envelopeBaseline 是 2026-10-02 由扫描器实测的「领域名集合键」存量清单（file|struct|jsonKey）。
-// 新条目必须经评审才能加入；每收敛一个都应删除条目并配前端契约更新。
+// envelopeBaseline 是「领域名集合键」存量清单（file|struct|jsonKey）。
+// 新条目必须经评审才能加入；每收敛一个就删除条目并同步前端契约。
 //
-// GET /api/v1/problems
-// 的集合键改为 items，同时把三处各自夹紧的分页规则收给 common.GetPaginationFromQuery 单点。
-// 实测该结构体在非测试代码里零引用
-// （活的 CI 列表信封是 dto.CIListResponse，键已是 items），属只被本基线引用的死声明，按
-// E4-3 口径直接删除而不是改名保留。
-// 四个 URL
-// （/service-catalog、/service-catalogs、/service-catalog-services、/service-catalogs/search）
-// 共用同一个 h.List/h.Search，实测都做 Count + Offset/Limit，集合键统一为 items。
-// 2026-10-04 E4-6g 移除 asset_dto.go|AssetListResponse|assets 与
-// asset_license_dto.go|LicenseListResponse|licenses：两个端点都做 Count + Offset/Limit，
-// 但许可列表连 page/pageSize/totalPages 都没有，且服务层的 `if page>0 && pageSize>0`
-// 让漏写的调用方拿到整表；同时删除零引用的 ListParticipantsResponse 与
-// MSPReportListResponse（按 E4-3 口径删除而不是改名保留）。
-// 2026-10-04 E4-6h 移除 ticket_assignment_dto.go|ListAssignmentRulesResponse|rules、
-// ticket_automation_rule_dto.go|ListAutomationRulesResponse|rules、
-// ticket_attachment_dto.go|ListTicketAttachmentsResponse|attachments：三个端点实测都**不分页**
-// （service 整表取回、handler 写 Total: len(items)），所以只把集合键收敛为 items 并保留诚实的
-// {items,total}，**不补** page/pageSize/totalPages——给不存在的分页协议补键等于伪造契约。
-// 2026-10-04 E4-6i 移除 ticket_workflow_dto.go|TicketCCListResponse|records：GET /tickets/cc/my
-// 与 GET /tickets/:id/cc 的 service 实测都是 Where(tenant_id)+All(ctx) 整表取回、
-// Total=len(records)，同为不分页形状；同批给两条 added_at DESC 排序补 id 并列键。
-// 11 个 ListResponse 的领域名集合键
-// （changes/cloudAccounts/cloudServices/cloudResources/menus/allocations/customers/
-// releases/roles/tenants/tickets/logs）统一收敛为 items 并补齐分页五元组；
-// 3 个统计 DTO（BatchImportCIsResponse/CIStatsResponse/ConfigurationItemStatsResponse）
-// 的 totalCount 统一为 total；9 处请求 DTO 的 limit 统一为 pageSize。
-// 因此本基线现在是空集——任何再引入领域名集合键或 totalCount/limit 的信封都会在这里失败。
+// 列表信封的集合键只能是 items。端点若确实不分页（service 整表取回、handler 写
+// total = len(items)），保留诚实的 {items,total} 就够了——给并不存在的分页协议补
+// page/pageSize/totalPages 等于伪造契约。只被本基线引用的零引用声明按删除处理，
+// 不靠改名留在清单里。
 var envelopeBaseline = []string{}
 
-// envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键），
-// 出现了 page/pageSize/totalPages 里
-// 的任一键，就必须凑满五元组。纯 {items,total} 不在这里，因为 docs/api-reference.md
-// 「不分页的列表」承认它是合法形状，且明确要求不得伪造分页键。
+// envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键）：
+// 出现了 page/pageSize/totalPages 里的任一键，就必须凑满五元组。纯 {items,total} 不在这里，
+// 因为 docs/api-reference.md「不分页的列表」承认它是合法形状，且明确要求不得伪造分页键。
 //
-// 因此这 5 条全是 CMDB 一侧「带 page 但用 size 顶替 pageSize、也没有 totalPages」的信封，
-// 服务层实测真的做 Offset/Limit（如 service/ci_tag_service.go:102），消费方无法核对页数。
-// 2026-10-03 从本清单移除的两条是按实测改判，不是放宽规则：
-//   - ticket_view_dto.go|ListTicketViewsResponse、ticket_comment_dto.go|ListTicketCommentsResponse
-//     —— service/ticket_view_service.go:28 与 service/ticket_comment_service.go:104 都是
-//     无 Limit 的 All(ctx)，handler 里 Total=len(items) 诚实，属合法不分页形状；
-//   - change_pir_dto.go|ChangePIRListResponse —— 它**真的分页**（handlers/change/handler.go:957
-//     读 page/pageSize，service/pir_service.go:180 做 Offset/Limit），所以按补全五元组收口，
-//     而不是降级成「不分页」。
-//
-// 2026-10-03 E4-6e 把余下 5 条 CMDB 信封（ListResponse[T] / CIListResponse / CITagListResponse /
-// CITypeListResponse / CIHistoryListResponse）补成五元组并清零本基线：这些服务实测都做
-// Count + Offset/Limit，缺 totalPages 的 page+size 形状让调用方无法核对是否还有下一页。
-// 因此本基线现在是空集——CMDB 侧再引入「带分页键但不全」的信封会直接失败。
+// 判定看服务层是否真的做 Offset/Limit。真分页却只写 page+size、没有 totalPages，
+// 调用方无法核对是否还有下一页，必须补全五元组，而不是降级成「不分页」。
+// 再引入「带分页键但不全」的信封会直接在这里失败。
 var envelopeKeyBaseline = []string{}
 
-// envelopeAliasBaseline 是 2026-10-02 由扫描器实测的「分页别名残留」存量清单
-// （file|struct|jsonKey）。这些信封用 `size` 代替 `pageSize`（部分还缺 pageSize/totalPages），
-// 属于 AGENTS.md 禁止的双轨；清理时必须同时改请求参数、前端类型与调用点。
+// envelopeAliasBaseline 是「分页别名残留」存量清单（file|struct|jsonKey）：
+// 同一份分页事实不允许再用 size 别名返回第二遍。
 //
-// 请求侧原本同时
-// 接受 `size` 与 `pageSize`，现在只认 `pageSize`（HTTP 入口走 common.GetPaginationFromQuery）。
-// 响应键改 pageSize，请求侧 dto.ListCIRequest 的
-// `form:"size"` 一并删除（不保留双接受），前端 9 个 size 发送点同批改发 pageSize。
-// 响应 catalogs→items、
-// size→pageSize+totalPages，请求侧 dto.GetServiceCatalogsRequest 的 page/size（含
-// binding:"max=1000" 这第四套页长真相）整体删除，分页只由 HTTP 入口的
-// common.GetPaginationFromQuery 决定；前端 size 发送点同批改发 pageSize。
-// 因此本基线现在是空集——任何再用 `size` 顶替 `pageSize` 的信封都会在这里失败。
+// 清理必须一次做完：请求侧只认 pageSize（HTTP 入口走 common.GetPaginationFromQuery），
+// 响应键用 pageSize，前端发送点也必须用 pageSize，不保留双接受。
+// 再引入 size 别名会在这里失败。
 var envelopeAliasBaseline = []string{}
 
 // TestListEnvelopeRatchet 禁止列表信封再引入领域名集合键（items 之外的第二个集合键）。
@@ -165,7 +123,7 @@ func TestListEnvelopePagingAliases(t *testing.T) {
 		}), envelopeAliasBaseline)
 }
 
-// diffRatchet 双向比对：新增违规失败，基线过期同样失败，避免收敛后忘记收口。
+// diffRatchet 双向比对：新增违规失败，基线过期同样失败，避免条目清掉后忘记同步基线。
 func diffRatchet(t *testing.T, addedMsg, staleMsg string, got, baseline []string) {
 	t.Helper()
 

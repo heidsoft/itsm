@@ -301,8 +301,8 @@ func TestSyncStartTimers_NoStoreIsNoop(t *testing.T) {
 	assert.Equal(t, 0, registered)
 }
 
-// TestSyncStartTimers_ProductTemplate_IsSchedulable 把随包发布的产品模板
-// 与 Phase 5 功能锁在一起：模板里的 Timer Start Event 必须能真正注册成时间表。
+// TestSyncStartTimers_ProductTemplate_IsSchedulable 校验随包发布的产品模板：
+// 模板里的 Timer Start Event 必须能真正注册成时间表。
 // 若模板被改动导致 cron 非法/被误删，本测试立即失败。
 func TestSyncStartTimers_ProductTemplate_IsSchedulable(t *testing.T) {
 	xmlBytes, err := os.ReadFile("bpmn/scheduled_inspection_flow.bpmn")

@@ -18,7 +18,7 @@ import (
 )
 
 // rbacMockRepo 记录 CreateToolInvocation 调用，其余方法返回零值。
-// P2-6 测试只关心 Gate 2 的权限校验结果与审计写入，不需要真实持久化。
+// 测试只关心 Gate 2 的权限校验结果与审计写入，不需要真实持久化。
 type rbacMockRepo struct {
 	mu              sync.Mutex
 	toolInvocations []*ai.ToolInvocation

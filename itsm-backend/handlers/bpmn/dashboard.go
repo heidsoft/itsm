@@ -68,11 +68,10 @@ func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 		dashboard.GET("/metrics", c.GetDashboardMetrics)
 		dashboard.GET("/process/:key/metrics", c.GetProcessMetrics)
 
-		// 审计日志（E4-48：本家族是该用例唯一 HTTP 表面；
-		// /bpmn/monitoring/audit-logs 重复面已删除，读取统一挂 bpmn:read 权限门。
-		// 旧的 /audit-logs/timeline 路由注册的参数名与 handler 读取的
-		// process_instance_key 从不匹配，任何调用恒返回 1001，且零生产消费方，已删除；
-		// 时间线唯一表面为 /bpmn/monitoring/instances/:instanceId/timeline。）
+		// 审计日志：本家族是该用例唯一 HTTP 表面，读取统一挂 bpmn:read 权限门。
+		// 时间线的唯一表面是 /bpmn/monitoring/instances/:instanceId/timeline；
+		// 不要再加 /audit-logs/timeline——路由参数名与 handler 读取的
+		// process_instance_key 对不上时，任何调用只会恒返回 1001。
 		dashboard.GET("/audit-logs", middleware.RequirePermission("bpmn", "read"), c.GetAuditLogs)
 		dashboard.GET("/audit-logs/user/:userId", middleware.RequirePermission("bpmn", "read"), c.GetUserActivity)
 

@@ -15,9 +15,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestListCIsMergedFields P1-1 合并验证：
-// ListCIRequest 新增 SortBy/SortOrder/TagIDs/DateFrom/DateTo/WithRelations 字段。
-// 这些字段必须被 ListCIs 正确处理（不 panic、不被静默忽略）。
+// TestListCIsMergedFields 验证 ListCIRequest 的
+// SortBy/SortOrder/TagIDs/DateFrom/DateTo/WithRelations 字段被 ListCIs 正确处理：
+// 既不 panic，也不被静默忽略。
 func TestListCIsMergedFields(t *testing.T) {
 	dsn := testDSN()
 	client := enttest.Open(t, "sqlite3", dsn)

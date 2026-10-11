@@ -181,22 +181,18 @@ func (s *TicketService) enqueueTicketFeishuSync(ctx context.Context, tkt *ticket
 	return nil
 }
 
-// syncTicketToFeishuLegacyAsync 把 5 处完全相同的"goroutine + 飞书 connector +
-// 嵌套事务"样板提取为一个 helper。原有调用点保留以下形状：
+// syncTicketToFeishuLegacyAsync 是 outbox 未开启时的兜底路径，把 5 处相同的
+// "goroutine + 飞书 connector + 嵌套事务"样板收敛到一个 helper。调用形状：
 //
 //	if s.connectorManager != nil && !s.sideEffectOutboxEnabled {
 //	    s.syncTicketToFeishuLegacyAsync(tkt, tenantID)
 //	}
 //
-// 已知技术债（不要在本提交里同时修，先把重复解决）：
-//
-//   - fire-and-forget goroutine 违反 AGENTS.md "事务、Outbox 与可靠副作用" 的
-//     强制规则
+// 这条路径的已知缺陷，排查同步丢失时先看这里：
+//   - fire-and-forget goroutine：主事务已提交才发现问题，只能记日志，没有重试和 dead-letter
 //   - 嵌套 s.client.Tx(ctx2) 会在主事务提交后打开新事务，主从之间没有一致性
-//   - 后续应该统一走 operational_commands outbox，由独立 worker 消费；
-//     EnableSideEffectOutbox() 已经为这条路径留好入口
-//
-// 本次重构只是把 5 处重复合并到 1 处，行为完全等价。
+//   - 可靠路径是 operational_commands outbox + 独立 worker（见 syncTicketToFeishu），
+//     EnableSideEffectOutbox() 打开后不再走这里
 func (s *TicketService) syncTicketToFeishuLegacyAsync(tkt *ticket.Ticket, tenantID int) {
 	go func() {
 		ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -257,10 +253,10 @@ func (s *TicketService) updateTicketWithFeishuCommand(ctx context.Context, id in
 	return updated, nil
 }
 
-// runCreateTicketTx 封装「ticket INSERT + 通知入箱」的同一事务边界。fn 必须在 tx 内完成所有
-// 写入并在发生错误时返回，调用方负责根据返回错误决定 rollback 或 commit。
-// 阶段 B（工单创建下沉）起作为 CreateTicket 内唯一的事务持有点，后续阶段可在该框架内扩展
-// SLA 期限、审批触发等其他副作用。当前实现仅覆盖 ticket INSERT 与 NotifyTicketCreatedTx。
+// runCreateTicketTx 封装「ticket INSERT + 通知入箱」的同一事务边界，是 CreateTicket 内
+// 唯一的事务持有点。fn 必须在 tx 内完成所有写入并在出错时返回，调用方根据返回错误决定
+// rollback 或 commit。当前只覆盖 ticket INSERT 与 NotifyTicketCreatedTx；SLA 期限、
+// 审批触发等其他副作用仍在事务外。
 func (s *TicketService) runCreateTicketTx(
 	ctx context.Context,
 	params *ticket.CreateParams,
@@ -365,10 +361,10 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		params.CategoryID = categoryID
 	}
 
-	// 阶段 B（工单创建下沉）起，ticket INSERT 与工单创建通知必须在同一事务内落库。
-	// 这样 ticket 创建失败时不会出现「主表不存在但已经派发通知」或反之的不一致状态。
-	// 其他后续副作用（智能分配 / SLA 期限 / 审批触发）不在本次事务范围内，按原语义保持
-	// 独立提交，其失败仅记 warnw 不阻塞工单创建。
+	// ticket INSERT 与工单创建通知在同一事务内落库：创建失败时不会出现
+	// 「主表不存在但已派发通知」或反之的不一致状态。
+	// 其他后续副作用（智能分配 / SLA 期限 / 审批触发）不在这个事务范围内，独立提交，
+	// 其失败仅记 warnw 不阻塞工单创建。
 	var tkt *ticket.Ticket
 	err = s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
 		created, err := s.repo.CreateWithTx(ctx, tx, params, tenantID)
@@ -491,7 +487,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 事务入箱已并入 runCreateTicketTx（阶段 B：工单创建下沉）。这里不再重复调用。
+	// 事务入箱在 runCreateTicketTx 内完成，这里不再重复调用。
 
 	// 异步执行自动化规则
 	// 同样使用独立 ctx，避免请求生命周期结束导致异步任务中断。
@@ -2039,7 +2035,7 @@ func (s *TicketService) ExportTickets(ctx context.Context, tenantID int, filters
 	if priority, ok := filters["priority"].(string); ok && priority != "" {
 		query = query.Where(entTicket.PriorityEQ(priority))
 	}
-	// 排序必须显式：此前按自然顺序返回，同一份数据两次导出的行序不一致。
+	// 导出必须有显式排序：按自然顺序返回时，同一份数据两次导出的行序会不一致。
 	tickets, err := query.Order(ent.Asc(entTicket.FieldID)).All(ctx)
 	if err != nil {
 		return nil, err
@@ -2449,7 +2445,7 @@ func (s *TicketService) generateCSV(data []map[string]interface{}, headers []str
 	return buf.Bytes(), nil
 }
 
-// generateExcel 生成 xlsx（此前直接返回 CSV 文本，导致下载的文件名与内容格式不一致）
+// generateExcel 生成 xlsx 字节流，与下载文件名声明的 .xlsx 格式保持一致。
 func (s *TicketService) generateExcel(data []map[string]interface{}, headers []string) ([]byte, error) {
 	const sheet = "Sheet1"
 	f := excelize.NewFile()

@@ -18,11 +18,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// GET /api/v1/incidents/alerts/active 的分页此前有两套自建规则：handler 里
-// page<1→1 / size<1→10 / size>100→100，service 里再抄一份同样的字面量，
-// 缺省页长 10 与平台契约 20 不一致。收敛后 handler 走
-// common.GetPaginationFromQuery 采纳参数，service 只再用 common.ValidatePagination
-// 兜非 HTTP 调用方，两层都读同一组 common 常量，不再有 10/100 字面量。
+// GET /api/v1/incidents/alerts/active 的分页只有一个所有者：handler 走
+// common.GetPaginationFromQuery 采纳参数，service 再用 common.ValidatePagination
+// 兜非 HTTP 调用方，两层都读同一组 common 常量。
+//
+// 自建规则会让两层各抄一份 page<1→1 / size<1→10 / size>100→100 的字面量，
+// 缺省页长 10 还与平台契约 20 不一致。
 
 func newAlertsRouter(h *IncidentHandler, tenantID, actorID int) *gin.Engine {
 	r := gin.New()

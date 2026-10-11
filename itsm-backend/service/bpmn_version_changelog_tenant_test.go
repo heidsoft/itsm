@@ -12,7 +12,7 @@ import (
 	"itsm-backend/ent/enttest"
 )
 
-// 回归：GET /bpmn/process-definitions/changelogs/:id 按全局自增 ID 查询，
+// GET /bpmn/process-definitions/changelogs/:id 按全局自增 ID 查询，
 // 缺 tenant 谓词时跨租户可枚举他租户版本变更内容。
 func TestGetChangeLogsByProcessDefinitionID_RejectsCrossTenant(t *testing.T) {
 	client := enttest.Open(t, dialect.SQLite, testDSN())

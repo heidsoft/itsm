@@ -22,10 +22,11 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/incidents/stats/report。
+// GET /api/v1/incidents/stats/report。
 //
-// /reports/incident-trends 修复前读的是工单分析接口，事件域没有任何窗口报表端点，
-// 页面只能在浏览器里对分页结果二次累加，并把后端分钟当小时渲染。本测试打在
+// /reports/incident-trends 必须有事件域自己的窗口报表端点：改读工单分析接口会让标题
+// 与数据源脱节，在浏览器里对分页结果二次累加会把超出一页的数据截断成假全量，
+// 把后端分钟当小时渲染是 60 倍误差。本测试打在
 // router/incident_routes.go 的真实注册上（含 RequirePermission("incident","read")），
 // 证明生产入口可达、租户隔离与参数错误语义在中间件链之后依然成立，
 // 并锁定 /stats/report 没有被 /incidents/:id 抢走。

@@ -16,9 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestListUserTaskViews_ResolvesAssigneeName 验证「我的待办」视图会把数字 assignee
-// 解析成负责人显示名，而不是让审批中心直接渲染裸用户 ID（此前列里全是「1」）。
-// 修复前：BPMNTaskResponse 无 AssigneeName，断言失败；修复后：填充为 User.Name。
+// TestListUserTaskViews_ResolvesAssigneeName 验证「我的待办」视图把数字 assignee
+// 解析成 BPMNTaskResponse.AssigneeName，而不是让审批中心渲染裸用户 ID。
 func TestListUserTaskViews_ResolvesAssigneeName(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()

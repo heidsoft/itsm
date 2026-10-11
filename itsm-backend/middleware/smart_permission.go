@@ -243,8 +243,7 @@ func getCachedACLs(ctx context.Context, client *ent.Client, tenantID int) []Endp
 	return acls
 }
 
-// loadACLsFromDB 通过 Ent 加载租户 ACL（P0-4：替代 raw SQL，
-// 保持 tenant_id 过滤并使用请求 ctx）。
+// loadACLsFromDB 通过 Ent 按 tenant_id 加载租户 ACL，使用请求 ctx 以便取消与超时传播。
 func loadACLsFromDB(ctx context.Context, client *ent.Client, tenantID int) []EndpointACL {
 	if client == nil || tenantID <= 0 {
 		return nil

@@ -18,9 +18,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：并行网关分叉中，服务任务分支按声明顺序先于用户任务分支派发时，
+// 并行网关分叉中，服务任务分支按声明顺序先于用户任务分支派发时，
 // CurrentActivityID 会被后派发分支覆盖。命令完成不得依赖单位置列判定陈旧，
-// 否则命令被误杀、join 永不汇聚、实例永卡 running（2026-10-11 探针实测）。
+// 否则命令被误杀、join 永不汇聚、实例永卡 running。
 
 const parallelServiceFirstBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">

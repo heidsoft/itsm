@@ -21,7 +21,7 @@ type Article struct {
 	RelevanceScore float64 `json:"relevanceScore,omitempty"`
 
 	// 知识可引用性 L1：时效性。三个时间字段为 nil 表示未设置，
-	// 语义是「长期有效 / 不设复核」，与本次改动前的行为一致。
+	// 语义是「长期有效 / 不设复核」。
 	ValidFrom          *time.Time `json:"validFrom,omitempty"`
 	ValidUntil         *time.Time `json:"validUntil,omitempty"`
 	LastReviewedAt     *time.Time `json:"lastReviewedAt,omitempty"`

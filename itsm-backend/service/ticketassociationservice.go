@@ -346,9 +346,9 @@ func (s *TicketAssociationService) getParentChain(ctx context.Context, ticketID,
 
 // getChildrenTree 收集直接子工单。
 //
-// tenantID 谓词不可省：这里按 parent_ticket_id 匹配，修复前是**全库**扫描，所以只要
-// 别的租户有一行的 parent_ticket_id 恰好等于本次的工单 ID，它就会被当作本租户的子工单
-// 返回。关联表因此成为绕过租户隔离的第二条读取通道。
+// tenantID 谓词不可省：这里按 parent_ticket_id 匹配，漏掉租户谓词等于在全库范围内匹配——
+// 只要别的租户有一行的 parent_ticket_id 恰好等于本次的工单 ID，它就会被当作本租户的子工单
+// 返回，关联表因此成为绕过租户隔离的第二条读取通道。
 func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID, tenantID int) ([]*TicketResponse, error) {
 	children, err := s.client.Ticket.Query().
 		Where(
@@ -490,7 +490,7 @@ func (s *TicketAssociationService) SetConfigurationItems(ctx context.Context, ti
 // 调用者租户，租户谓词缺失（tenantID<=0）时结果集自然为空并按「不存在」处理，
 // 因此缺少租户上下文的调用是 fail-closed，而不是退化成全库可见。
 //
-// 跨租户与真实不存在必须返回同一个 404/4004 与同一句文案；此前这里把 ent 的错误包进
+// 跨租户与真实不存在必须返回同一个 404/4004 与同一句文案；把 ent 的错误包进
 // fmt.Errorf("工单不存在") 再由 router 原样写进响应，既泄漏底层错误串，又让不存在的
 // 工单返回 500/5001、与真实存在但无权的工单可被区分。
 func (s *TicketAssociationService) getTicketForAssociation(ctx context.Context, ticketID, tenantID int) (*ent.Ticket, error) {

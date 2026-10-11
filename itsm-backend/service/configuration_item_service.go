@@ -405,7 +405,7 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 			query = query.Order(ent.Desc(sortField))
 		}
 	} else {
-		// 未指定排序时也必须给确定性顺序：原先无 Order，翻页由数据库返回顺序决定，
+		// 未指定排序时也必须给确定性顺序：没有 Order 时翻页由数据库返回顺序决定，
 		// 同一页可能重复出现或漏出条目。
 		query = query.Order(ent.Desc(configurationitem.FieldCreatedAt))
 	}
@@ -1390,7 +1390,7 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 // Deprecated: 自 v1.6.x 起，CMDB 列表与搜索统一收敛至 ListCIs。本方法保留向后兼容至 v1.7 末。
 func (s *ConfigurationItemService) SearchCI(ctx context.Context, tenantID int, req *dto.CISearchRequest) (*dto.ListResponse[dto.CIResponse], error) {
 	// CISearchFilter → ListCIRequest 字段映射。页长不在这层另设规则：ListCIs 统一归一，
-	// 原先这里的 `PageSize>1000→20` 是第三套夹紧，会把导出任务请求的 10000 静默变成 20 条。
+	// 这里再加一套 `PageSize>1000→20` 会把导出任务请求的 10000 静默变成 20 条。
 	listReq := &dto.ListCIRequest{
 		Page:          req.Page,
 		PageSize:      req.PageSize,

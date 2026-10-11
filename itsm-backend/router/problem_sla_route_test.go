@@ -22,11 +22,11 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/problems/:id/sla 此前恒返回
-// 200 + {slaStatus:"none", responseTimeUsed:0, ...}。schema 里本就没有问题 SLA 的
-// 截止时间字段，SLA 引擎也没有任何为 problem 写 sla_state 的路径，所以这个空成功
-// 让调用方把「能力没接」读成「该问题的 SLA 正常且未超时」，与「未配置」不可区分。
-// 现在与问题评论同样显式 unready（503/5003），且不存在/跨租户仍先 404。
+// GET /api/v1/problems/:id/sla 是显式 unready（503/5003），不是空成功：
+// schema 里没有问题 SLA 的截止时间字段，SLA 引擎也没有为 problem 写 sla_state 的路径，
+// 返回 200 + {slaStatus:"none", responseTimeUsed:0, ...} 会让调用方把「能力没接」
+// 读成「该问题的 SLA 正常且未超时」，与「未配置」不可区分。
+// 问题不存在或跨租户时先 404。
 
 func TestProblemSLARouteIsExplicitlyUnready(t *testing.T) {
 	dsn := fmt.Sprintf("file:router_problem_sla_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano())

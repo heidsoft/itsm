@@ -90,8 +90,8 @@ func (h *Handler) GetAssignRecommendations(c *gin.Context) {
 	recommendations, err := h.smartService.GetAssignRecommendations(c.Request.Context(), ticketID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get assignment recommendations", "error", err, "ticket_id", ticketID)
-		// E4-29/E4-5：工单不存在与跨租户都是 service 的 4004 领域错误，必须原样带着
-		// 404 出去；此前 FailWithErr 把它们压成 500/5001，与同域附件/变更的 404 口径不一致。
+		// 工单不存在与跨租户都是 service 的 4004 领域错误，必须原样带着 404 出去；
+		// FailWithErr 会把它们压成 500/5001，与同域附件/变更的 404 口径不一致。
 		common.RespondError(c, err, "获取分配推荐失败")
 		return
 	}

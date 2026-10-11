@@ -127,9 +127,9 @@ func (h *Handler) ListRelationshipTypes(c *gin.Context) { h.svc.ListRelationship
 
 func (h *Handler) GetOntology(c *gin.Context) { h.svc.GetOntology(c) }
 
-// failCMDBError 已删除：它用 switch(appErr.Code) 复刻了 common.classifyError 已有的
-// 「领域错误 → 状态码 + 公开文案」映射（E4-5 的第二个分类真相）。域内 15 条云路由与
-// 发现端点现在统一走 common.RespondError，分类只剩 common 一处所有者。
+// 不要在 handler 里用 switch(appErr.Code) 复刻 common.classifyError 已有的
+// 「领域错误 → 状态码 + 公开文案」映射，那是第二个分类真相。域内 15 条云路由与
+// 发现端点统一走 common.RespondError，分类只保留 common 一处所有者。
 
 func (h *Handler) GetCapabilities(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)

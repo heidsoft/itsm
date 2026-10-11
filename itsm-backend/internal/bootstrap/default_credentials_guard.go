@@ -1,6 +1,6 @@
 package bootstrap
 
-// 默认账号安全检测 · v1.0 GA 准入
+// 默认账号安全检测
 //
 // 在服务启动时检测：
 //  1. 生产环境（ENV=production / saas / saas_msp）+ admin/admin123 → 拒绝启动

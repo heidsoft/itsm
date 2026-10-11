@@ -1,32 +1,25 @@
 package router
 
-// 回归：工单关联的三个读取端点必须按调用者租户收敛。
+// 工单关联的读取端点必须按调用者租户收敛：只用 ticket.ID 定位工单不够，
+// 每条查询（含关联表）都要带 tenant 谓词。
 //
-// 修复前的实测事实（service/ticketassociationservice.go）：
-//   - GetTicketDependencies/GetRelatedTickets/getParentChain/getChildrenTree/
-//     GetConfigurationItems/getTicketForAssociation 全部只用 ticket.ID(ticketID)
-//     定位工单，没有任何 tenant_id 谓词，也不校验请求者租户；
-//   - 因此带 ticket:read 的乙租户用户只要拿到甲租户的工单 ID，就能读到甲租户工单的
-//     标题、描述、优先级、状态与承办人 assignedTo（buildTicketResponse 逐字段透出）；
-//   - getChildrenTree 更严重：Where(ticket.ParentTicketID(ticketID)) 是**全库**匹配，
-//     所以甲租户的父工单会把乙租户里 parent_ticket_id 恰好指向它的子工单一起返回，
-//     关联表（parent_ticket_id / related_tickets / configuration_items 边）因此
-//     成为绕过租户隔离的第二条读取通道。
+// getChildrenTree 尤其不能只用 Where(ticket.ParentTicketID(ticketID))：该谓词在全库
+// 命中，会把其他租户里 parent_ticket_id 恰好指向同一 ID 的子工单一起返回。
 //
-// 本文件锁定的不变量（AGENTS「身份、租户与数据范围」：tenant scope 必须覆盖
+// 锁定的不变量（见 AGENTS.md「身份、租户与数据范围」：tenant scope 必须覆盖
 // Get/Only/Exist/List 与关联表）：
 //   1. 同租户正例：只返回本租户的行，parentChain/childrenTree/relatedTickets 里
 //      每个 item 的 tenantId 都等于调用者租户；
 //   2. 跨租户探测：与「工单不存在」返回同一个 404/4004，不确认对方资源是否存在；
 //   3. 三种失败都零泄漏：响应体不含对方工单标题，也不含本租户以外任何行；
 //   4. 不存在的工单同样返回 404/4004（不得再回 500/5001，也不得把底层错误串透出），
-//      且与跨租户响应**逐字节相同**——否则调用者能靠状态码差异枚举对方租户的工单 ID；
+//      且与跨租户响应逐字节相同——否则调用者能靠状态码差异枚举对方租户的工单 ID；
 //   5. 空关联是 `[]` 而不是 `null`，与平台列表契约（E4 系列「空列表 `[]` 而非 `null`」）
 //      一致；否则前端要为同一集合准备两种空值形状。
 //
-// 测试打在**生产注册**上（router/ticket_routes.go:88/:104/:129，含
+// 测试打在生产注册上（router/ticket_routes.go:88/:104/:129，含
 // RequirePermission("ticket","read")），解码目标是本地 wire 结构而不引用 service
-// 类型，因此修复前也能编译。
+// 类型，因此断言的是运行时行为而不是编译期形状。
 
 import (
 	"context"
@@ -124,7 +117,7 @@ func TestTicketRelationsRoutesTenantScope(t *testing.T) {
 	}
 	ciA := createRelationsCI(ctx, t, client, tenantA.ID, probeACIName, ticketAParent)
 
-	// 租户 B：自己的工单与配置项，外加一处**跨租户关系注入**（正是缺少校验的写入路径会
+	// 租户 B：自己的工单与配置项，外加一处跨租户关系注入（正是缺少校验的写入路径会
 	// 造出来的存量形态）：B 的子工单把 parent_ticket_id 指向 A 的父工单。
 	// 配置项侧 B 挂在自家工单上（CI→tickets 是 O2M，一张工单只属于一个配置项，
 	// 所以「B 的配置项挂到 A 的工单」这条注入不成立，改用自家工单验证过滤）。

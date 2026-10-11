@@ -367,10 +367,8 @@ func TestList_FilterByQuery(t *testing.T) {
 	assert.EqualValues(t, 1, data["total"])
 }
 
-// 14. Admin 列表：覆盖 bug #1 — GET /api/v1/admin/skills 必须存在
-//
-// 修复前的预期：404（路由未注册）。
-// 修复后：返回 200 + items/total/page/pageSize/totalPages 完整列表。
+// 14. GET /api/v1/admin/skills 必须存在，返回 200 +
+// items/total/page/pageSize/totalPages 完整列表。
 func TestAdminList_ReturnsAllSkills(t *testing.T) {
 	reg := service.NewSkillRegistry()
 	r := setupRouter(reg)
@@ -392,7 +390,7 @@ func TestAdminList_ReturnsAllSkills(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w2.Code, w2.Body.String())
 
 	data := parseData(t, w2)
-	// 修复后的契约：{ items, total, page, pageSize, totalPages }
+	// 契约：{ items, total, page, pageSize, totalPages }
 	assert.Contains(t, data, "items", "admin list response must include items")
 	assert.Contains(t, data, "total")
 	assert.Contains(t, data, "page")
@@ -420,8 +418,7 @@ func TestAdminGet_ReturnsFullEntry(t *testing.T) {
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
 	require.Equal(t, http.StatusOK, w.Code)
 
-	// 修复前：404
-	// 修复后：返回完整 entry
+	// GET /api/v1/admin/skills/:code 返回完整 entry
 	w2 := doRequest(t, r, http.MethodGet, "/api/v1/admin/skills/user.admin_detail", nil)
 	assert.Equal(t, http.StatusOK, w2.Code, w2.Body.String())
 

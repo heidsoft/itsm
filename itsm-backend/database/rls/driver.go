@@ -7,7 +7,7 @@
 // Three modes, controlled by config.RLSConfig.Mode:
 //
 //	off (default):
-//	  Pass-through. No side effects. Zero risk. Used until R2B灰度期结束.
+//	  Pass-through. No side effects. Zero risk. This is the shipped default.
 //
 //	shadow:
 //	  Pass-through DB behavior, but audit every query:
@@ -29,8 +29,9 @@
 //   - shadow/enforce modes read tenant_id from context via
 //     common/tenantctx.TenantID(ctx). System bypass via IsSystemBypass(ctx).
 //
-// Status: R2A skeleton. off + shadow verified; enforce implemented but
-// disabled until R2B灰度收尾.
+// Status: off + shadow are verified; enforce is implemented but not the
+// default -- enable it only after shadow logs show no query is missing a
+// tenant_id in context.
 package rls
 
 import (

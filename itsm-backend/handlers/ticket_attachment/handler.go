@@ -57,7 +57,7 @@ func pathIDs(c *gin.Context) (ticketID, attachmentID int, ok bool) {
 }
 
 // failAttachmentAccess 把附件访问失败映射为稳定的 HTTP 语义。
-// 此前所有失败都回 5001，「附件不存在」「跨租户」「磁盘读失败」在调用方眼里长得一样。
+// 所有失败都回 5001 时，「附件不存在」「跨租户」「磁盘读失败」在调用方眼里长得一样。
 // 原始错误只进日志；不存在与无权统一按 404 对外表达，避免确认对方工单存在。
 func (h *Handler) failAttachmentAccess(c *gin.Context, rawErr error, ticketID, tenantID int) {
 	switch {

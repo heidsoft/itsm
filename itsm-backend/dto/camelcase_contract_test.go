@@ -19,8 +19,7 @@ var snakeCaseKey = regexp.MustCompile(`[a-z]+_[a-z_]+`)
 // TestAllRequestDTOsUseCamelCaseFormTags 扫描本包（dto/）下所有 DTO 文件中的
 // struct field tag（form / query），禁止出现 snake_case key。
 //
-// 契约依据：AGENTS.md "API 契约单一事实来源" 与 "Snake_case 零新增规则"：
-// 所有 HTTP/JSON 交互字段必须使用 camelCase，DTO form/query tag 不得新增下划线。
+// 契约：所有 HTTP/JSON 交互字段使用 camelCase，DTO 的 form/query tag 不得出现下划线。
 //
 // 实现说明：
 //  1. AST 解析避免在编译期破坏性变化（DTO 体量小且字段多）；

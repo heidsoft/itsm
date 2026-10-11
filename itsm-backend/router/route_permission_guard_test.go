@@ -22,8 +22,8 @@ import (
 //  3. 分组级已挂权限中间件但不在本扫描器可识别形式内的路由（目前为空）。
 //
 // 新增条目前必须写明理由；否则请直接在路由上挂 middleware.RequirePermission。
-// 背景：2026-09-17 P0「越权写收口」——technician（rank=2）曾可创建/发布 BPMN 流程定义、
-// 触发流程、改写流程绑定，因为这些写路由只靠 ResourceActionMap 的粗粒度路径预检兜底。
+// 写路由不得只靠 ResourceActionMap 的粗粒度路径预检兜底：预检只确认请求进了受保护分组，
+// 具体动作权限要由路由级中间件声明，否则同分组内的低权限角色也能触发写操作。
 var writeRouteExemptions = map[string]string{
 	// —— 1. 公开面：登录前 / 外部回调 ——
 	"router.go POST /auth/login":                                          "登录入口，登录前无角色",

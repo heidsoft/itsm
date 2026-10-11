@@ -40,13 +40,13 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
 	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), logger)）。此前这里构造
-	// service.NewProblemService，而它实测零生产构造——业务流回归测的是死第二实现。
+	// problem.NewService(problem.NewEntRepository(client), logger)）；service.NewProblemService
+	// 没有任何生产构造点，测它证明不了业务流。
 	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 
-	// tenant A 在闭环里创建的问题 ID，供后面的跨租户拒绝用例复用。
-	// 此前那个用例只传 99999，测的是「记录不存在」而不是「租户不匹配」。
+	// tenant A 在闭环里创建的问题 ID，供后面的跨租户拒绝用例复用；
+	// 传固定 99999 只能测到「记录不存在」，测不到「租户不匹配」。
 	var problemIDA int
 
 	t.Run("incident → resolve → problem → knowledge within tenant A", func(t *testing.T) {

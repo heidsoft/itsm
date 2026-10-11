@@ -19,11 +19,10 @@ import (
 //
 // 背景
 // ----------------------------
-// checkPermissionMatch（middleware/rbac.go）只做**精确匹配**或 `*` 通配：
+// checkPermissionMatch（middleware/rbac.go）只做精确匹配或 `*` 通配：
 // 角色持有 `cmdb:read` 永远匹配不上 `cmdb_ci:read`。因此一旦路由引用了
-// permissionDefinitions 中不存在的码，该路由对除 super_admin 外的所有角色
-// **永久 403**——DBOnly configured 态下任何授权都无法满足（audit 实测 95 种码 /
-// 240 处引用，CMDB 核心整域不可用，批次 2 收敛清零）。
+// permissionDefinitions 中不存在的码，该路由对除 super_admin 外的所有角色永久 403——
+// DBOnly configured 态下没有任何授权能满足它，整个资源域不可用。
 //
 // 本测试固化该不变量：新增路由引用未定义码 → CI 红，并提示两条修复路径：
 //  1. 优先收敛到既有码（零数据迁移，改路由声明）；

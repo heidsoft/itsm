@@ -19,18 +19,18 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 列表接口信封契约：/api/v1/bpmn/dashboard/audit-logs、
-// /api/v1/bpmn/monitoring/instances/status 历史上分别用 list / instances / logs
-// 作为数组键，前端只能各自猜一套结构。
-// AGENTS.md 规定列表响应唯一形态是 data:{items,total,page,pageSize,totalPages}。
-// E4-48：/bpmn/monitoring/audit-logs 重复表面已删除，收敛为 dashboard 单入口。
+// 列表接口信封契约：/api/v1/bpmn/dashboard/audit-logs 与
+// /api/v1/bpmn/monitoring/instances/status 的数组键统一为 items，两者都不得再用
+// list / instances / logs 之类的领域名，否则前端只能各自猜一套结构。
+// 列表响应唯一形态是 data:{items,total,page,pageSize,totalPages}。
+// 审计日志只有 dashboard 一个入口：/bpmn/monitoring/audit-logs 是同一用例的重复表面，不要恢复。
 
 func newEnvelopeTestRouter(t *testing.T, client *ent.Client) *gin.Engine {
 	return newEnvelopeTestRouterWithRole(t, client, "admin")
 }
 
 // newEnvelopeTestRouterWithRole 允许按用例注入认证角色：审计路由挂了
-// middleware.RequirePermission("bpmn","read")（E4-48），该门要求 role+client
+// middleware.RequirePermission("bpmn","read")，该门要求 role+client
 // 上下文键，缺失即 fail-closed 401——测试栈必须像真实 auth 中间件一样注入。
 // 空库（无 Role 行）走 unconfigured 兜底词表：admin 持 bpmn:read、
 // msp_viewer 不持，用作 allow/deny 两侧。role 传空串模拟"未认证"：
@@ -214,7 +214,5 @@ func TestMonitoringInstancesStatus_UsesListEnvelope(t *testing.T) {
 	assert.Contains(t, first, "riskLevel")
 }
 
-// E4-48：原 TestMonitoringAuditLogs_UsesListEnvelope 打的是重复表面
-// /bpmn/monitoring/audit-logs，该路由已删除；同用例信封契约合并进
-// TestDashboardAuditLogs_UsesListEnvelope，重复表面消失由
-// TestAuditLogs_MonitoringDuplicateSurfaceGone 锁住。
+// 审计日志的信封契约只在 TestDashboardAuditLogs_UsesListEnvelope 断言一次；
+// 重复表面消失由 TestAuditLogs_MonitoringDuplicateSurfaceGone 锁住。

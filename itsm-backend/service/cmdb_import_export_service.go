@@ -557,7 +557,7 @@ func (s *CMDBImportExportService) processExportTask(parent context.Context, task
 	}
 
 	// 导出上限 1 万条，但页长归平台单一所有者夹紧（MaxPageSize=100），不能一次性索要 1 万：
-	// 按页读到上限。原先这里把 PageSize: 10000 直接下传，会被服务层静默夹紧（合并前夹到 20），
+	// 按页读到上限。把 PageSize: 10000 直接下传会被服务层静默夹紧，
 	// 导出结果远少于用户勾选的范围。
 	const exportMaxRecords = 10000
 	items := make([]dto.CIResponse, 0, common.MaxPageSize)

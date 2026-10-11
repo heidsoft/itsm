@@ -25,7 +25,6 @@ import (
 // 本文件覆盖 GET /api/v1/incidents 的筛选契约，走真实 handler + production
 // service + Ent 仓储。
 //
-// 修复前 handler 只解析 status/priority/keyword，其余条件被静默丢弃，但页面
 // 已经在用（事件列表页的「来源」、NOC 大屏的 isMajorIncident），且 scope=me
 // 写入 filters["assignee_id"] 后仓储层从不读取，因此这些筛选全部返回全量：
 //   - source / type / category / assigneeId / isMajorIncident / dateFrom / dateTo
@@ -205,7 +204,6 @@ func TestList_HonorsCamelCaseSourceFilter(t *testing.T) {
 	f := newListContractFixture(t)
 	f.baseSeed(t)
 
-	// 修复前 source 被丢弃，这里会拿到全部 5 条。
 	assert.ElementsMatch(t, []string{"INC-MON-MAJOR", "INC-MON-PLAIN"}, f.listNumbersAs(t, "source=monitoring", f.agentA))
 	assert.Equal(t, 1, f.listTotal(t, "source=email"))
 	assert.Equal(t, 5, f.listTotal(t, ""), "未传筛选时必须返回全量")
@@ -215,7 +213,7 @@ func TestList_HonorsMajorIncidentFilter(t *testing.T) {
 	f := newListContractFixture(t)
 	f.baseSeed(t)
 
-	// NOC 大屏依赖该过滤：修复前所谓「重大事件」列表其实是所有事件。
+	// NOC 大屏依赖该过滤：过滤失效时「重大事件」列表其实是所有事件。
 	assert.Equal(t, 2, f.listTotal(t, "isMajorIncident=true"))
 	// false 是合法筛选值，不得被当成「未传」。
 	assert.Equal(t, 3, f.listTotal(t, "isMajorIncident=false"))
@@ -310,8 +308,8 @@ func TestList_SizeParamIsNotContract(t *testing.T) {
 	data := f.listData(t, "size=1", f.tenantA, f.agentA)
 	items, ok := data["items"].([]interface{})
 	require.True(t, ok)
-	// 2026-10-04 分页收敛到 common.GetPaginationFromQuery 单一所有者后，
-	// 缺省页长与平台契约一致为 20（此前事件列表自建 10）。
+	// 缺省页长由 common.GetPaginationFromQuery 决定，与平台契约一致为 20，
+	// 事件列表不再自建 10。
 	assert.Len(t, items, 5, "size 已不是分页参数，应回落平台缺省每页 20 条")
 	assert.Equal(t, float64(20), data["pageSize"])
 }

@@ -32,7 +32,7 @@ func TestApprovalDecisionHistoryTenantIsolationAndMultiplicity(t *testing.T) {
 	if err := create(2, 200, "PI-1", "delegate", "delegated"); err != nil {
 		t.Fatal(err)
 	}
-	// 同一任务允许多条审计事实：委托 → 受托人完成（回归 R3 唯一约束冲突）
+	// 同一任务允许多条审计事实：委托 → 受托人完成
 	if err := create(1, 100, "PI-1", "approve", "approved"); err != nil {
 		t.Fatalf("同任务多条决策（delegate+approve）必须合法: %v", err)
 	}

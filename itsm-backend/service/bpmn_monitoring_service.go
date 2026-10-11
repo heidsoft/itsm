@@ -452,10 +452,10 @@ func (s *BPMNMonitoringService) RecordAuditLog(ctx context.Context, entry *Audit
 	return s.auditService.RecordAudit(ctx, auditCtx)
 }
 
-// E4-48：原 GetAuditLogs/AuditLogRequest 是 BPMNAuditService.QueryAuditLogs 的
-// 第二套只读表面（把审计行降维成 resourceType/resourceId 弱结构再经
-// /bpmn/monitoring/audit-logs 暴露），已随该路由删除。审计日志的读取唯一所有者
-// 为 service.BPMNAuditService.QueryAuditLogs → /api/v1/bpmn/dashboard/audit-logs。
+// 审计日志的读取唯一所有者是 BPMNAuditService.QueryAuditLogs →
+// /api/v1/bpmn/dashboard/audit-logs。不要再加第二套只读表面，尤其不要把审计行降维成
+// resourceType/resourceId 弱结构从 monitoring 侧暴露：那样调用方拿不到 actor、动作和
+// 结果，筛选条件也无法与权威列表对齐。
 
 // GetProcessInstanceHistory 获取流程实例执行历史（来自 execution_history 表）
 func (s *BPMNMonitoringService) GetProcessInstanceHistory(ctx context.Context, processInstanceID int, tenantID int) ([]*ent.ProcessExecutionHistory, error) {
@@ -1164,7 +1164,7 @@ func (s *BPMNMonitoringService) ListProcessInstancesStatus(ctx context.Context, 
 	}
 
 	// 分页：页长由 HTTP 入口的 common.GetPaginationFromQuery 决定，这里只兜非 HTTP
-	// 调用方。旧写法自建缺省 1/20 且**没有上界**，pageSize=5000 会原样进 LIMIT。
+	// 调用方，这里不再自建缺省或上界，pageSize=5000 之类的越界值不会原样进 LIMIT。
 	page, pageSize := common.ValidatePagination(query.Page, query.PageSize)
 	dbQuery = dbQuery.Order(ent.Desc(processinstance.FieldStartTime)).
 		Offset((page - 1) * pageSize).Limit(pageSize)

@@ -141,7 +141,7 @@ func TestCreateTenant_AllowsUnderscoreCode(t *testing.T) {
 	h := newTenantHandler(m)
 	m.On("CreateTenant", mock.Anything, mock.Anything).Return(sampleTenant(), nil)
 
-	// 带下划线的合法编码此前被 alphanum 绑定误拒，现应放行到 service
+	// 带下划线的合法编码不能被 alphanum 绑定拒绝，必须放行到 service 校验
 	w, c := doJSON(h, http.MethodPost, "/api/v1/tenants", `{"name":"FinOps","code":"finops_001","type":"standard"}`)
 	h.CreateTenant(c)
 

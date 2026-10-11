@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// 回归用例：持久化 store 未注入时，Provision/Revoke 必须显性失败并拒绝变更内存状态。
+// 持久化 store 未注入时，Provision/Revoke 必须显性失败并拒绝变更内存状态。
 //
 // 背景：store 曾被误注入到无路由挂载的 controller.ConnectorController，实际承接路由的
 // handler 的 h.store 始终为 nil；旧实现用 `if h.store != nil` 静默跳过落库，

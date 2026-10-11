@@ -26,7 +26,7 @@ import (
 // 本文件覆盖 PUT /api/v1/incidents/:id 的 HTTP 契约，走真实 Ent 仓储 + 真实
 // production service + 真实 handler，断言 HTTP status 与业务 code 的组合。
 //
-// 锁住的四个缺陷（均为修复前失败、修复后通过）：
+// 四个契约：
 //   - 非法状态迁移必须 409/4090，不得退化成 500/5001。
 //   - 客户端携带过期 version 必须 409/4090，不得静默覆盖。
 //   - category/subcategory/metadata 必须真的落库，不得返回 code 0 却丢弃。
@@ -247,10 +247,10 @@ func TestUpdateHTTPErrorContract(t *testing.T) {
 	})
 }
 
-// TestUpdatePersistsClassificationFields 锁住「静默成功」型数据丢失：
-// 修复前 handler 把 category/subcategory/metadata 映射到 updates，service 却
-// 只留了 "// ... other fields" 占位注释，PUT 返回 code 0 而 DB 毫无变化。
-// 线上 IncidentDetail 的「保存事件分类」与事件编辑页的分类字段因此完全失效。
+// TestUpdatePersistsClassificationFields 防的是「静默成功」型数据丢失：
+// handler 已经把 category/subcategory/metadata 映射进 updates，若 service 只留
+// "// ... other fields" 占位而不落库，PUT 照样返回 code 0 而 DB 毫无变化，
+// IncidentDetail 的「保存事件分类」与事件编辑页的分类字段会整体失效。
 func TestUpdatePersistsClassificationFields(t *testing.T) {
 	f := newUpdateContractFixture(t)
 	ctx := context.Background()
@@ -279,8 +279,8 @@ func TestUpdatePersistsClassificationFields(t *testing.T) {
 }
 
 // TestUpdateResponseExposesOptimisticLockFields 锁住响应契约：
-// 修复前 toDTO 不映射 impact/urgency/version/isMajorIncident，前端拿不到
-// version 就无法回传乐观锁，影响度/紧急度列在列表页永远是空白。
+// toDTO 必须映射 impact/urgency/version/isMajorIncident——前端拿不到 version
+// 就无法回传乐观锁，影响度/紧急度列在列表页也会一直空白。
 func TestUpdateResponseExposesOptimisticLockFields(t *testing.T) {
 	f := newUpdateContractFixture(t)
 

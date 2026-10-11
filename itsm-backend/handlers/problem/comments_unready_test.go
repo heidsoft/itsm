@@ -13,7 +13,7 @@ import (
 	"itsm-backend/middleware"
 )
 
-// 回归：问题评论未落地时必须显式 unready（5003），
+// 问题评论未落地时必须显式 unready（5003），
 // 不得用空成功伪装"暂无评论"；不存在的问题仍是 404，不因 unready 而丢失。
 func TestProblemCommentsReturnExplicitUnready(t *testing.T) {
 	gin.SetMode(gin.TestMode)

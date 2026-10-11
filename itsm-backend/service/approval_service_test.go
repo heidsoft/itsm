@@ -549,7 +549,7 @@ func TestApprovalService_TriggerApproval_Phase2_NoApprovalRecordWrite(t *testing
 		TenantID:     testTenant.ID,
 	})
 	require.NoError(t, err)
-	assert.Empty(t, records, "Phase 2: TriggerApproval should return empty slice")
+	assert.Empty(t, records, "workflow 命中时 TriggerApproval 返回空切片")
 
 	// Verify no ApprovalRecord was created in the database
 	count, err := client.ApprovalRecord.Query().
@@ -559,7 +559,7 @@ func TestApprovalService_TriggerApproval_Phase2_NoApprovalRecordWrite(t *testing
 		).
 		Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, 0, count, "Phase 2: No ApprovalRecord should be created")
+	assert.Equal(t, 0, count, "不得写入 ApprovalRecord")
 }
 
 func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testing.T) {
@@ -615,11 +615,11 @@ func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testi
 	// Multiple calls all return empty slice
 	records1, err := service.TriggerApproval(ctx, req)
 	require.NoError(t, err)
-	assert.Empty(t, records1, "Phase 2: First call should return empty slice")
+	assert.Empty(t, records1, "首次调用返回空切片")
 
 	records2, err := service.TriggerApproval(ctx, req)
 	require.NoError(t, err)
-	assert.Empty(t, records2, "Phase 2: Second call should also return empty slice")
+	assert.Empty(t, records2, "重复调用同样返回空切片")
 
 	// Verify no ApprovalRecord was ever created
 	recordCount, err := client.ApprovalRecord.Query().
@@ -629,7 +629,7 @@ func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testi
 		).
 		Count(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, 0, recordCount, "Phase 2: No ApprovalRecord should be created after multiple calls")
+	assert.Equal(t, 0, recordCount, "多次调用后仍不得写入 ApprovalRecord")
 }
 
 func TestApprovalService_SubmitApproval_Approve_RetiredPreservesLastPending(t *testing.T) {

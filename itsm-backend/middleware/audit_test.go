@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// P0-5 回归测试：用户删除/变更等 CRUD 操作必须落审计记录。
+// 用户删除/变更等 CRUD 操作必须落审计记录。
 // AuditMiddleware 挂载在 tenant 组（router.go），用户路由位于该组内，
 // 本测试证明 POST/PUT/DELETE /api/v1/users* 会产生持久化审计行，
 // 且请求体中的密码字段被掩码。

@@ -24,7 +24,7 @@ type TicketAttachmentResponse struct {
 
 // ListTicketAttachmentsResponse 工单附件列表响应
 //
-// 该端点实测不分页（handler 用 Total: len(attachments)），只保留诚实的 {items,total}。
+// 该端点不分页（handler 用 Total: len(attachments)），只有 {items,total} 两键。
 type ListTicketAttachmentsResponse struct {
 	Items []*TicketAttachmentResponse `json:"items"`
 	Total int                         `json:"total"`

@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestCINumberExistsRawSeesScrappedCIs 锁定回归：ci_number 是全局唯一索引（不含 tenant_id），
+// TestCINumberExistsRawSeesScrappedCIs ci_number 是全局唯一索引（不含 tenant_id），
 // 而 Ent 拦截器会自动附加生命周期过滤（lifecycle_status != 'scrapped'）。
 // 若存在性检查走 Ent 查询，已退役 CI 占用的编号会被误判为"未占用"，
 // 进而生成重复编号并撞上全局唯一约束（23505）。

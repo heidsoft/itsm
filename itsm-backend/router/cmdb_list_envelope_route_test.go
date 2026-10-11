@@ -25,17 +25,16 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：CMDB 的 5 个列表信封原先只回
-// {items,total,page,size}——既没有 pageSize/totalPages，又把请求别名 size 当页长；
-// 页长同时有 3 个所有者：handler 用裸 strconv.Atoi(ctx.DefaultQuery("size")) 读值且
-// 不夹紧，dto.ListCIRequest 上写着 binding:"min=1,max=200"（与平台 MaxPageSize=100 冲突），
-// service 再把原值直接写进 Offset/Limit。
+// CMDB 的 5 个列表信封必须回平台五键 {items,total,page,pageSize,totalPages}：
+// 不接受请求别名 size，DTO 上也不得再写与平台 MaxPageSize=100 冲突的 binding 上限 ——
+// 页长只由 HTTP 入口的 common.GetPaginationFromQuery 夹紧一次，handler 与 service
+// 都不再有自己的缺省或上限。
 //
-// 后果是可观测的数据错误而不是样式问题：Limit(0) 在 Ent 的 sqlgraph 里等于**不加 LIMIT**
-// 直接返回整表，page<=0 算出负 OFFSET，没有排序时翻页由数据库返回顺序决定会重/漏。
+// 这是数据正确性问题而不是样式问题：未夹紧的零值会算出 Limit(0) 或负 OFFSET，
+// pageSize=0 不得整表返回；没有稳定排序时翻页由数据库返回顺序决定，会重也会漏。
 //
-// 本测试打在**生产注册**上（SetupRoutes → SetupCMDBRoutes → RequirePermission("cmdb","read")），
-// 解码目标声明为本地 wire 结构而不引用 dto，因此修复前也能编译，证明的是运行时行为。
+// 本测试打在 SetupRoutes → SetupCMDBRoutes → RequirePermission("cmdb","read") 的真实注册上，
+// 解码目标声明为本地 wire 结构而不引用 dto，因此断言的是运行时行为而不是编译期形状。
 
 const cmdbListSecret = "cmdb-list-secret"
 
@@ -215,7 +214,6 @@ func TestCMDBListRoutesEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("size 不再是 pageSize 的别名", func(t *testing.T) {
-		// 修复前：handler 读的就是 size，这个请求返回 5 条。
 		_, body, env := list(t, "size=5")
 		require.Equal(t, 0, env.Code, body)
 		res := decode(t, body, env)
@@ -232,8 +230,7 @@ func TestCMDBListRoutesEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("越界页长回落默认页长而不是整表", func(t *testing.T) {
-		// 修复前：binding:"max=200" 把 pageSize=5000 拦成业务码 1001 参数错误，
-		// 而 size=5000 会原样下传给 Ent。
+		// pageSize 越界不得原样下传给查询，也不得原样回显。
 		status, body, env := list(t, "pageSize=5000")
 		require.Equal(t, http.StatusOK, status, "越界页长应回落默认页长: body=%s", body)
 		require.Equal(t, 0, env.Code, body)

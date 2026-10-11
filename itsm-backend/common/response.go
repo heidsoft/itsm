@@ -243,7 +243,7 @@ func BadRequestWithErr(c *gin.Context, rawErr error, publicMsg string) {
 }
 
 // AuthFailedWithErr 是 AuthFailed 的安全包装，与 FailWithErr 同样只把原始错误记到
-// zap.S 日志，客户端只看到 publicMsg。但与 FailWithErr 不同的是它**强制**走
+// zap.S 日志，客户端只看到 publicMsg。但与 FailWithErr 不同的是它强制走
 // AuthFailedCode(2001)+401，而 classifyError 会把 *ent.NotFoundError 归类为
 // NotFoundCode(4004)/404，把版本冲突归类为 ConflictCode(4090)/409——这些都不
 // 是认证失败的语义。登录/注册/密码重置等需要稳定返回 401 的端点必须用此 helper
@@ -371,8 +371,8 @@ func humanizeTag(tag string) string {
 //	    return
 //	}
 //
-// 该 helper 收敛了此前各域 handler 手写 switch 的 AppError 映射，是
-// "领域哨兵错误 + handler 统一分流"范式的落点，避免业务拒绝被兜底成 500。
+// 该 helper 是 "领域哨兵错误 + handler 统一分流" 的落点：分类集中在 classifyError，
+// 各域 handler 不再各自手写 AppError switch，业务拒绝也不会被兜底成 500。
 func RespondError(c *gin.Context, err error, fallbackMsg string) {
 	if err == nil {
 		return
@@ -414,10 +414,9 @@ func classifyError(err error) (code int, safeMsg string, ok bool) {
 	if errors.As(err, &conflictErr) {
 		return ConflictCode, conflictErr.Error(), true
 	}
-	// 4. ent 的「找不到记录」：这是客户端指向了不存在的资源，属于 404，
-	//    绝不能兜底成 500。此前大量 handler 因为少了这一条，
-	//    导致「任务不存在 / 工单不存在」被上报成服务端故障（观测上表现为 5xx 毛刺）。
-	//    同时不回显 err.Error()：ent 的原始消息会带上实体名等内部结构信息。
+	// 4. ent 的「找不到记录」：客户端指向了不存在的资源，属于 404，不能兜底成 500，
+	//    否则「任务不存在 / 工单不存在」会在观测上表现为 5xx 毛刺。
+	//    不回显 err.Error()：ent 的原始消息会带上实体名等内部结构信息。
 	var notFound *ent.NotFoundError
 	if errors.As(err, &notFound) {
 		return NotFoundCode, "资源不存在或已被删除", true

@@ -108,8 +108,9 @@ func TestEscalateToLevelByMatrix_ClaimOnce(t *testing.T) {
 	require.Equal(t, 1, sent, "同一级别只允许一条升级通知，双副本不得重复投递")
 }
 
-// TestEscalationService_ProcessEscalations_AggregatesErrors 修复前三个子步骤
-// 失败只打日志、整体返回 nil，ticker 无法感知扫描失败；必须聚合为非 nil 错误。
+// TestEscalationService_ProcessEscalations_AggregatesErrors:
+// 三个子步骤的失败必须聚合为非 nil 错误返回；只打日志、整体返回 nil 时，
+// ticker 无法感知扫描失败。
 func TestEscalationService_ProcessEscalations_AggregatesErrors(t *testing.T) {
 	client, svc, ctx := setupEscalationTest(t)
 

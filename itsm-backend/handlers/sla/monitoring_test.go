@@ -20,12 +20,13 @@ import (
 	"itsm-backend/ent"
 )
 
-// 监控大屏回归（用户报告：合规率 96.5% 其实是工单解决率、活跃告警数量不对、
+// 监控大屏口径（对应线上反馈：合规率其实是工单解决率、活跃告警数量不对、
 // 响应/解决达成率是伪造值、服务类型绩效缺少过滤条件）。
 //
-// 修复前 GetSLAMonitoring 忽略传入窗口且零样本时返回 complianceRate=1.0，
-// 前端再自行乘以 100 并伪造 totalTickets/alerts。下面的数据集是确定性的，
-// 每个比率都能在断言里手工核对样本数，因此任何“再伪造一次”的改动都会失败。
+// GetSLAMonitoring 必须按传入窗口计算，零样本返回 0 而不是 complianceRate=1.0——
+// 「没有样本」不等于「全部合规」；比率也不得由前端自行乘 100 或补 totalTickets/alerts。
+// 下面的数据集是确定性的，每个比率都能在断言里手工核对样本数，
+// 因此任何重新伪造读数的改动都会失败。
 
 type slaMonitorFixture struct {
 	tenantID      int

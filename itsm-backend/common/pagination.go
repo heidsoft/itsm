@@ -27,11 +27,9 @@ type PaginationResponse struct {
 // ListResponse 列表响应结构（唯一权威信封）：
 // data = {items,total,page,pageSize,totalPages}。
 //
-// 历史上这里还会做两件事，均已删除：
-//   - 按 slice 元素类型追加领域名别名（items 与 tickets 同时返回）；
-//   - 再嵌套一个 pagination 对象，把同一组分页事实返回两遍。
-//
-// 两者都属于 AGENTS.md 禁止的双轨契约，消费方一律读平铺的 items/total/page/pageSize/totalPages。
+// 不得按 slice 元素类型追加领域名别名（items 与 tickets 同时返回），也不得再嵌套
+// pagination 对象把同一组分页事实返回两遍；消费方一律读平铺的
+// items/total/page/pageSize/totalPages。
 type ListResponse struct {
 	Items      interface{}         `json:"items"`
 	Pagination *PaginationResponse `json:"-"`

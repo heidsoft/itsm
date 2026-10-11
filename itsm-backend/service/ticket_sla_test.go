@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// TestSLACalculationWithResolvedTicket 测试已解决工单的SLA计算（修复Bug #L3）
+// TestSLACalculationWithResolvedTicket 测试已解决工单的 SLA 计算
 func TestSLACalculationWithResolvedTicket(t *testing.T) {
 	now := time.Now()
 

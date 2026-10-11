@@ -360,7 +360,7 @@ func TestSubmitTaskDecision_RejectWithoutNodeConfigIsAllowed(t *testing.T) {
 	assert.Equal(t, "rejected", fakeTask.completeByIDVars[0]["approvalResult"])
 }
 
-// 回归：任务不存在（含跨租户不可见）时必须 404，且不得调用引擎。
+// 任务不存在（含跨租户不可见）时必须 404，且不得调用引擎。
 func TestSubmitTaskDecision_UnknownTaskFailsClosed(t *testing.T) {
 	r, fakeTask := newBPMNWorkflowTestRouter(t)
 	fakeTask.getTaskErr = errors.New("ent: not found")

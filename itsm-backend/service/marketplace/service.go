@@ -47,7 +47,7 @@ func (s *Service) SetConnectorManager(mgr *connector.Manager) {
 }
 
 // ListItems 查询市场商品列表
-// 返回 camelCase DTO，禁止 ent 模型直接序列化（违反 AGENTS.md snake_case 零新增规则）。
+// 返回 camelCase DTO，不得直接序列化 ent 模型。
 func (s *Service) ListItems(ctx context.Context, itemType, category, search string, isOfficial *bool, page, pageSize int) ([]*dto.MarketplaceItemResponse, int, error) {
 	query := s.db.MarketplaceItem.Query().
 		Where(marketplaceitem.StatusEQ(marketplaceitem.StatusPublished))
@@ -96,7 +96,7 @@ func (s *Service) ListItems(ctx context.Context, itemType, category, search stri
 }
 
 // GetItem 获取商品详情
-// 返回 camelCase DTO，禁止 ent 模型直接序列化（违反 AGENTS.md snake_case 零新增规则）。
+// 返回 camelCase DTO，不得直接序列化 ent 模型。
 func (s *Service) GetItem(ctx context.Context, itemID int) (*dto.MarketplaceItemResponse, error) {
 	item, err := s.db.MarketplaceItem.Query().
 		Where(marketplaceitem.ID(itemID)).

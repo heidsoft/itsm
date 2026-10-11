@@ -75,7 +75,7 @@ type IncidentService struct {
 	sequenceService       *SequenceService
 	processTriggerService ProcessTriggerServiceInterface
 	ruleEngine            *IncidentRuleEngine
-	rawDB                 *sql.DB // for transactional SELECT FOR UPDATE (S-4 修复)
+	rawDB                 *sql.DB // 事务内 SELECT ... FOR UPDATE 分配编号用
 	systemNumbering       *database.SystemNumberingExecutor
 	workflowOutboxEnabled bool
 	rulesOutboxEnabled    bool
@@ -112,7 +112,7 @@ func (s *IncidentService) SetSequenceService(seq *SequenceService) {
 	s.sequenceService = seq
 }
 
-// SetRawDB 设置原生数据库连接（用于事务性编号生成，S-4 修复）
+// SetRawDB 设置原生数据库连接，供事务性编号分配使用
 func (s *IncidentService) SetRawDB(db *sql.DB) {
 	s.rawDB = db
 	s.systemNumbering = database.NewSystemNumberingExecutor(db, s.logger)
@@ -337,7 +337,7 @@ func (s *IncidentService) createIncident(ctx context.Context, req *dto.CreateInc
 		return rollback(fmt.Errorf("failed to create incident: %w", err))
 	}
 
-	// 绑定SLA策略（P0-1）：创建Incident时自动匹配SLA并计算截止时间
+	// 绑定SLA策略：创建 Incident 时自动匹配 SLA 并计算截止时间
 	if s.slaSvc != nil {
 		s.logger.Infow("SLA binding start", "slaSvc_nil", s.slaSvc == nil, "priority", priority)
 		slaResult, slaErr := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "incident", priority)
@@ -1277,8 +1277,8 @@ func (s *IncidentService) EscalateIncident(ctx context.Context, req *dto.Inciden
 
 // generateIncidentNumber 生成事件编号，优先使用 Redis 序列
 //
-// S-4 补充修复：incident_number 是**全局唯一**约束（不含 tenant_id），而 Redis 序列
-// key 只按年月分片、不区分租户来源，一旦某个编号已被其他写入方（含历史数据迁移、
+// incident_number 是全局唯一约束（不含 tenant_id），而 Redis 序列 key 只按年月分片、
+// 不区分租户来源，一旦某个编号已被其他写入方（含历史数据迁移、
 // 其他租户、人工补数）占用，序列返回的候选值就会与之碰撞，导致本次创建直接失败。
 // 因此这里对候选编号做全局存在性校验并向前跳号，把"必然失败"降级为"跳过占用号"。
 func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID int) (string, error) {
@@ -1325,11 +1325,11 @@ func (s *IncidentService) generateIncidentNumber(ctx context.Context, tenantID i
 	return s.generateIncidentNumberWithDB(ctx, tenantID, year, month)
 }
 
-// generateIncidentNumberWithDB 使用数据库查询生成事件编号（备用方案）
-// S-4 修复：incident_number 在库中为全局唯一约束（非按租户），原实现按租户各自求 max 后再落库，
-// 两租户极易算出同一编号，先建者占用全局唯一值、后者永久创建失败（跨租户死锁）。
-// 改为：在事务内对全表当月最大编号加锁（FOR UPDATE SKIP LOCKED）后递增，保证全局单调递增且唯一；
-// 当月无记录时用唯一后缀兜底，彻底消除跨租户碰撞。
+// generateIncidentNumberWithDB 用数据库查询分配事件编号（备用方案）。
+// incident_number 在库中是全局唯一约束而不是按租户唯一，所以号段必须跨租户协调：
+// 各租户分别求当月最大值会算出同一编号，先建者占用全局唯一值，后者永久创建失败。
+// 这里在事务内对全表当月最大编号加锁（FOR UPDATE SKIP LOCKED）后递增，保证全局单调
+// 递增且唯一；当月无记录时用唯一后缀兜底。
 func (s *IncidentService) generateIncidentNumberWithDB(ctx context.Context, tenantID int, year, month int) (string, error) {
 	prefix := fmt.Sprintf("INC-%04d%02d-", year, month)
 

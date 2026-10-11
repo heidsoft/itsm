@@ -572,7 +572,7 @@ func (c *WorkflowHandler) ListProcessInstances(ctx *gin.Context) {
 		return
 	}
 
-	// P1-4：从JWT获取租户ID，并注入 BPMN 租户上下文（fail-closed by 引擎）。
+	// 从 JWT 取租户 ID 并注入 BPMN 租户上下文（引擎侧 fail-closed）。
 	reqCtx, tenantID, ok := getBPMNTenantContext(ctx)
 	if !ok {
 		return
@@ -1164,7 +1164,7 @@ func (c *WorkflowHandler) GetInstanceStats(ctx *gin.Context) {
 		return
 	}
 
-	// P1-4：从JWT获取租户ID，并注入 BPMN 租户上下文（fail-closed by 引擎）。
+	// 从 JWT 取租户 ID 并注入 BPMN 租户上下文（引擎侧 fail-closed）。
 	reqCtx, tenantID, ok := getBPMNTenantContext(ctx)
 	if !ok {
 		return

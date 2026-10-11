@@ -47,9 +47,9 @@ func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 		// 系统健康检查
 		monitoring.GET("/health", c.GetSystemHealth)
 
-		// E4-48：/monitoring/audit-logs 与 /dashboard/audit-logs 是同一用例的双表面，
-		// 且响应形态互相漂移（此处曾把审计行降维成 resourceType/resourceId 弱结构）。
-		// 唯一表面收敛到 /bpmn/dashboard/audit-logs，本条已删除。
+		// 审计日志的唯一表面是 /bpmn/dashboard/audit-logs。不要再注册
+		// /monitoring/audit-logs：双表面的响应形态会各自漂移（那里曾把审计行降维成
+		// resourceType/resourceId 弱结构）。
 	}
 }
 

@@ -7,12 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetApprovalHistory_DialectSafeLevels 回归测试：
-// 旧实现在 SELECT 中使用 string_agg(integer, ',')，PostgreSQL 对聚合参数不做
-// 隐式 int->text 转换，直接报 `function string_agg(integer, unknown) does not exist`，
-// 导致 POST /changes/:id/approve 返回 500 "failed to get approval history"。
-// 修复后 levels 由独立查询派生并在 Go 侧拼接，PG/SQLite 双方言均可运行。
-// 本用例锁定新实现的行为契约：历史记录正确返回且 levels 按审批人正确派生。
+// TestGetApprovalHistory_DialectSafeLevels:
+// 审批历史的 levels 由独立查询派生、在 Go 侧拼接，SQL 里不聚合整数。PG 对
+// string_agg(integer, ',') 不做隐式 int->text 转换，会报
+// `function string_agg(integer, unknown) does not exist`，让
+// POST /changes/:id/approve 返回 500 "failed to get approval history"。
+// 本用例断言历史记录正确返回且 levels 按审批人派生。
 func TestGetApprovalHistory_DialectSafeLevels(t *testing.T) {
 	svc, client, _, tenantID := setupChangeChainTest(t)
 	ctx := context.Background()

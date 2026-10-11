@@ -1,9 +1,8 @@
 // Package role 提供全后端统一的用户角色词表。
 //
-// 背景：角色字符串此前散落在 7+ 处硬编码
-// （users.role 单字段、roles.code 种子表、各 handler 的 switch/case、
-// 审批资格 fallback 词表），三套词汇已实际漂移——service_request 审批角色
-// manager/it_admin/security_admin 在 roles 表缺失、审批 403。
+// 角色词表只在这里定义。散落到 users.role 单字段、roles.code 种子表、各 handler 的
+// switch/case 与审批资格 fallback 词表之后，几套词汇会各自漂移：service_request 的审批角色
+// manager/it_admin/security_admin 一旦与 roles 表不一致，审批就 403。
 //
 // 本产品的角色分层（角色=权限包，不是岗位/组织架构；岗位差异由部门、
 // 团队与租户自建角色承载）：

@@ -12,7 +12,7 @@ import (
 	"itsm-backend/ent/tickettag"
 )
 
-// 标签域的失败分类。此前重复名、在用删除都以普通 error 上抛，handler 只能一律
+// 标签域的失败分类。重复名、在用删除若以普通 error 上抛，handler 只能一律
 // 回 500/5001「操作失败」，调用方无法区分「名字重了」「标签还在用」和后端故障。
 var (
 	// ErrTicketTagNameExists 表示同租户内已有同名标签。ticket_tags 没有 (tenant_id, name)
@@ -130,7 +130,7 @@ func (s *TicketTagService) CreateTag(ctx context.Context, req *CreateTagRequest)
 	if color == "" {
 		color = defaultTicketTagColor
 	}
-	// IsActive 是指针：未传视为启用（与 schema 默认一致）。此前的非指针 bool
+	// IsActive 是指针：未传视为启用（与 schema 默认一致）。非指针 bool
 	// 让「前端没带 isActive」和「用户明确要求停用」无法区分，UI 新建的标签全被建成停用。
 	active := req.IsActive == nil || *req.IsActive
 
@@ -330,7 +330,7 @@ type CreateTagRequest struct {
 	Description string `json:"description"`
 	// 指针：未传 = 启用；显式 false = 停用。非指针会让 omit 与 false 同义。
 	IsActive *bool `json:"isActive"`
-	// 租户只能来自认证上下文，禁止客户端自报；此前 binding:"required" 让不带
+	// 租户只能来自认证上下文，禁止客户端自报；binding:"required" 会让不带
 	// tenantId 的合法请求直接 400，页面上「新建标签」点了就失败。
 	TenantID int `json:"-"`
 }

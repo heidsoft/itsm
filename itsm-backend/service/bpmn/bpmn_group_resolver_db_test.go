@@ -179,7 +179,6 @@ func TestGroupResolver_GetUserGroupNames_TenantIsolation(t *testing.T) {
 
 // TestGroupResolver_ExpandGroupsToUsers_RoleFallback 验证角色回退：组名不存在时
 // 若与 roles 表角色 code 同名，按角色解析用户（M2M ∪ 主角色枚举）。
-// 背景：groups 表无种子时设计器选角色（code 同名）此前产出空候选集。
 func TestGroupResolver_ExpandGroupsToUsers_RoleFallback(t *testing.T) {
 	client, resolver, ctx := setupGroupResolverDB(t)
 	defer client.Close()

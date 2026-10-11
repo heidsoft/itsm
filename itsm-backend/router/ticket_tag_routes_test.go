@@ -23,17 +23,14 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：全局标签页原先打的是只读别名
-// /api/v1/tags，真 CRUD 所在的 /api/v1/ticket-tags 没有任何 UI 调用，且这条写链
-// 本身是坏的：
-//   - CreateTagRequest.TenantID 带 binding:"required"，前端不来自报 tenantId，
-//     「新建标签」必 400；租户本应只来自认证上下文。
-//   - IsActive 是非指针 bool，请求体不带该字段时按 false 建，UI 建出来的标签
-//     全部是停用态。
-//   - 空颜色被写成空串（Ent 字段默认值对显式 SetColor 不生效），列表渲染成无色。
-//   - 重名、在用删除、跨租户读写全部回 500/5001「操作失败」，调用方无法区分
-//     冲突、不存在和后端故障。
-// 必须从真实 Router 入口证明修复后的契约，并覆盖跨租户拒绝。
+// 标签 CRUD 的表面是 /api/v1/ticket-tags，/api/v1/tags 只是只读别名。这条写链的契约：
+//   - service.CreateTagRequest 的 TenantID 是 json:"-"，租户只来自认证上下文；
+//     要求客户端自报归属会让合法请求直接 400。
+//   - IsActive 是指针：未传=启用，显式 false=停用；非指针 bool 会让两种语义同义。
+//   - 空颜色由服务层补默认值（Ent 显式 SetColor 时 schema 默认值不生效）。
+//   - 重名与在用删除是 409，空名是 400，跨租户读写与真实不存在同样 404，
+//     不得统一压成 500/5001「操作失败」。
+// 契约必须从真实 Router 入口证明，并覆盖跨租户拒绝。
 
 const ticketTagsPath = "/api/v1/ticket-tags"
 

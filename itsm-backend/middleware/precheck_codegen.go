@@ -28,7 +28,7 @@ import (
 // 同一 (method, pattern) 的多对声明分两种情况：
 //   - 同一声明点（同 file:line）链式挂多个 RequirePermission（AND 语义，
 //     如 POST /ai/incidents/:id/analyze 同时要求 ai:read 与 incident:read）
-//     → 预检是**必要条件闸**（先拒），取首个声明对即可，路由级中间件仍完整复查；
+//     → 预检是必要条件闸（先拒），取首个声明对即可，路由级中间件仍完整复查；
 //   - 不同声明点声明了不同权限对 → 视为口径冲突，返回错误
 //     （生成层面即暴露，而不是静默取其一掩盖问题）。
 func generatePrecheckMap() (map[string]map[string]Permission, error) {

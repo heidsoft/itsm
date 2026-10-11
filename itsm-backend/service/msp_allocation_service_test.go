@@ -17,16 +17,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：重新分配不得改写已归档行的 deassigned_at。
-//
-// 修复前 Create 的第 4 步执行了
-//
-//	Update().Where(MspUserID, CustomerTenant, DeassignedAtNotNil()).SetDeassignedAt(now)
-//
-// 它匹配的是已经解除的归档记录，于是每一次「解除后再分配」都会把这些行的历史
-// 结束时间改写为当前时间——GET /api/v1/msp/allocations/history 读到的
-// 「什么时候解除的」全是假的。活跃重复分配本来已由前面的存在性检查挡下，
-// 这一步没有任何要关闭的对象。
+// 重新分配不得改写已归档行的 deassigned_at：归档行记录的是「何时解除的」这一历史事实，
+// GET /api/v1/msp/allocations/history 直接读它。活跃重复分配已由前面的存在性检查挡下，
+// Create 没有需要关闭的对象，因此不能碰归档行。
 func TestMSPAllocationCreate_ReAllocationPreservesArchivedHistory(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:msp_alloc_realloc?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })
@@ -76,7 +69,7 @@ func TestMSPAllocationCreate_ReAllocationPreservesArchivedHistory(t *testing.T) 
 	assert.Equal(t, 1, activeCount)
 }
 
-// 回归：非平台管理员的操作者必须与目标 MSP 用户同属一个 MSP 租户，
+// 非平台管理员的操作者必须与目标 MSP 用户同属一个 MSP 租户，
 // 防止 MSP 租户 A 的持有者给租户 B 代授权（跨租户授权注入）。
 func TestMSPAllocationCreate_RejectsCrossTenantOperator(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:msp_alloc_cross?mode=memory&cache=shared&_fk=1")

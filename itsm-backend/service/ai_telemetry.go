@@ -24,7 +24,7 @@ import (
 // db / repo 双字段保留：repo 承载 5 个写/聚合方法（ObserveLLMCall/SaveFeedback/
 // AggregateFeedback/CountAIAuditLogs/AggregateLLMLatency），db 给 ai_evaluator.go
 // 的若干读路径（loadFeedbackSamples / loadPlatformStats / listFeedback / countFeedback）
-// 提供直连，避免在本次重构外引入额外 repository 拆解。
+// 提供直连，这些读路径不再额外拆一层 repository。
 type AITelemetryService struct {
 	db   *sql.DB
 	repo *aiTelemetryRepository
@@ -108,8 +108,8 @@ type AIMetrics struct {
 
 // GetMetrics retrieves AI usage metrics for a tenant.
 //
-// 用 AIMetrics 结构体 + json tag 强制 camelCase 序列化，
-// 替代之前 map[string]interface{} 拼写漂移导致前端读字段全 undefined 的问题。
+// 响应固定走 AIMetrics 的 json tag：字段名由结构体定义，不会像 map[string]interface{}
+// 那样在拼写漂移后让前端读到 undefined。
 func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (*AIMetrics, error) {
 	out := &AIMetrics{}
 

@@ -51,13 +51,13 @@ func seedScopeTicket(t *testing.T, ctx context.Context, client *ent.Client, tena
 	require.NoError(t, err)
 }
 
-// TestEntRepository_List_DataScopeMapping 复现并锁死 2026-10-02 实测的越权读取：
-// GET /api/v1/tickets 对 technician 返回租户全量 45 条（本人只应看到 23 条）。
-// 根因是 handlers/ticket/repository_impl.go 用 ticket.DataScope(dataScope) 做数值转换：
+// TestEntRepository_List_DataScopeMapping:
+// GET /api/v1/tickets 对 technician 只能返回行级范围命中的工单，不能是租户全量。
+// 坑在 handlers/ticket/repository_impl.go 的 ticket.DataScope(dataScope) 数值转换：
 // datascope 枚举含 DataScopeDepartment(1) 使 OwnedOrAssigned=2，而仓储层只有两档
 // （OwnedOrAssigned=1），转换后的 2 让仓储谓词永不命中、行级权限静默失效。
-// 同一场景在 service/ticket_service_test.go 里一直是绿的，因为它走旧 TicketService
-// 路径并直接使用仓储层枚举，没有覆盖这条真正接在路由上的适配边界。
+// service/ticket_service_test.go 走旧 TicketService 路径并直接使用仓储层枚举，覆盖不到
+// 这条真正接在路由上的适配边界。
 func TestEntRepository_List_DataScopeMapping(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ticket_datascope?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

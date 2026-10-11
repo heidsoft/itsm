@@ -34,7 +34,7 @@ type Repository interface {
 	// 返回：
 	//   - rec:     本事务写入的审批记录（已回填 ID/CreatedAt），调用方直接返回给前端；
 	//   - promoted: 本次提交是否把变更从 draft 推进到 pending。
-	// 这是 P0-1 修复（变更审批-状态原子性）的关键原语，禁止绕过。
+	// 审批记录与状态推进的原子性依赖本原语，禁止绕过。
 	SubmitApprovalRecordTx(ctx context.Context, changeID, tenantID, approverID int, comment string, now time.Time) (rec *ApprovalRecord, promoted bool, err error)
 
 	// Approval Workflow/Chain

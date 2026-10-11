@@ -352,13 +352,13 @@ func (h *Handler) GetCMDBImpactSummary(c *gin.Context) {
 //	@Router	/api/v1/changes [get]
 func (h *Handler) ListChanges(c *gin.Context) {
 	// 分页只有一套夹紧通道：page 缺省 1、pageSize 缺省 20，只有落在 (0,100] 里的查询值会被
-	// 采纳。此前这里是裸 strconv.Atoi 且忽略错误，pageSize=0 会一路传到 Ent 的 Limit(0)，
-	// 而 sqlgraph 对 Limit(0) 是「不加 LIMIT」——整表返回；page<=0 则算出负 OFFSET。
+	// 采纳。裸 strconv.Atoi 会忽略解析错误，让 pageSize=0 原样进入查询而不加 LIMIT（整表返回），
+	// page<=0 则算出负 OFFSET。
 	pg := common.GetPaginationFromQuery(c)
 	status := c.Query("status")
 	search := c.Query("search")
-	// 参数名只有 camelCase 一套。曾同时读 risk_level，属 AGENTS 禁止的多字段兼容，
-	// 且实测前端从未发送过 risk_level（change-api.ts 发 riskLevel）。
+	// 参数名只有 camelCase 一套：同时读 risk_level 属于禁止的多字段兼容，
+	// 前端 change-api.ts 发的就是 riskLevel。
 	riskLevel := c.Query("riskLevel")
 	tenantID, ok := tenantIDFromCtx(c)
 	if !ok {

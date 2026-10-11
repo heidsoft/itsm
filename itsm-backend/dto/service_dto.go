@@ -51,17 +51,12 @@ type UpdateServiceRequestRequest struct {
 	ComplianceAck      *bool      `json:"complianceAck"`
 }
 
-// GetServiceCatalogsRequest 获取服务目录请求
+// GetServiceCatalogsRequest 服务目录列表的过滤条件。
 //
-// page/pageSize 不在这里绑定：分页夹紧的唯一所有者是 HTTP 入口的
+// 这里不声明 page/pageSize：分页夹紧的唯一所有者是 HTTP 入口的
 // common.GetPaginationFromQuery（缺省 1/20，只采纳 (0,100]，越界回落默认页长）。
-// 原先 Size 上的 binding:"omitempty,min=1,max=1000" 与 handler 里的 Size>100→100
-// 是同时生效的两套上限，实测行为自相矛盾：
-//   - ?size=1000 通过 binding，被 handler 静默夹成 100 条；
-//   - ?size=1001 被 binding 拒绝，返回业务 code 1001 参数错误；
-//     相邻的两个输入一个静默改写、一个报错，调用方无法预期。
-//
-// 另外键名是 size，与平台请求契约 pageSize 不同名，前端必须知道这个别名。
+// DTO 上再加 binding 上限会形成第二套真相：越界输入先返回业务 code 1001 参数错误，
+// 而不是回落默认页长；键名 size 也和平台请求契约 pageSize 不同名。
 type GetServiceCatalogsRequest struct {
 	Category string `json:"category" form:"category"`
 	Status   string `json:"status" form:"status" binding:"omitempty,oneof=enabled disabled"`
@@ -71,9 +66,8 @@ type GetServiceCatalogsRequest struct {
 //
 // page/pageSize 不在这里绑定：分页夹紧的唯一所有者是 HTTP 入口的
 // common.GetPaginationFromQuery（缺省 1/20，只采纳 (0,100]，越界回落默认页长）。
-// 原先 DTO 上的 binding:"min=1,max=100" 会在越界时先返回 1001 参数错误，
-// 与「回落默认页长」的平台口径是两套真相；UserID 字段则从未生效
-// （操作者身份只取认证上下文），一并删除。
+// DTO 上的 binding 上限同样会造成两套真相：越界先返回 1001 参数错误而不是回落默认页长。
+// 这里没有 UserID 字段，操作者身份只取认证上下文。
 type GetServiceRequestsRequest struct {
 	Status string `json:"status" form:"status" binding:"omitempty"`
 }
@@ -182,10 +176,10 @@ type ServiceRequestApprovalActionRequest struct {
 
 // ServiceCatalogListResponse 服务目录列表响应
 //
-// 平台五键信封：集合键是 items（原为 catalogs），页长键是 pageSize（原为 size），
-// 并补上 totalPages —— GET /service-catalogs、/service-catalog、/service-catalog-services
-// 与 /service-catalogs/search 都做 Count + Offset/Limit 真分页，缺 totalPages 会让调用方
-// 把当前页当成整表。见 UPGRADE.md §1.15。
+// 平台五键信封：集合键 items、页长键 pageSize（不接受 size 别名）、带 totalPages ——
+// GET /service-catalogs、/service-catalog、/service-catalog-services 与
+// /service-catalogs/search 都做 Count + Offset/Limit 真分页，缺 totalPages 会让调用方
+// 把当前页当成整表。
 type ServiceCatalogListResponse struct {
 	Items      []ServiceCatalogResponse `json:"items"`
 	Total      int                      `json:"total"`

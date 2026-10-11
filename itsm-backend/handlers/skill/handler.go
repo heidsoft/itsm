@@ -155,11 +155,9 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 //   - q：按 code/name/description 模糊匹配
 //   - page：1-based 页码，默认 1；非法值与非正数（≤0/非数字）回退到 1
 //   - pageSize：每页条数，默认 20；页长唯一所有者是 common.GetPaginationFromQuery，
-//     只采纳 [1,100]，越界（如 150/5000）与非数字一律回退 20（
-//     此前私有实现把 >100 截断成 100，是平台界的第二套所有者）
+//     只采纳 [1,100]，越界（如 150/5000）与非数字一律回退 20，本 handler 不再另做截断
 //
-// 返回统一列表契约：{ items, total, page, pageSize, totalPages }，
-// 与 AGENTS.md "API 契约单一事实来源" 规范保持一致。
+// 返回统一列表契约：{ items, total, page, pageSize, totalPages }。
 func (h *Handler) List(c *gin.Context) {
 	tag := strings.TrimSpace(c.Query("tag"))
 	category := strings.TrimSpace(c.Query("category"))

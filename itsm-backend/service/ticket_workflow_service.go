@@ -1132,7 +1132,7 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 		}
 	}
 
-	// P0-1 / 工单详情体验：聚合 BPMN 真实节点状态，便于详情页直接展示当前/下一节点。
+	// 工单详情需要 BPMN 真实节点状态，这里聚合当前/下一节点。
 	// enrich 内部对 BPMN 查询失败 / 无实例 均有降级路径，不会影响 V1 调用方。
 	bpmnState, bpmnErr := s.enrichBpmnProcessState(ctx, tk, tenantID)
 	if bpmnErr != nil {
@@ -1759,7 +1759,7 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		Where(user.ID(userID), user.TenantID(tenantID), user.Active(true)).
 		Only(ctx)
 	if err != nil {
-		// 权限拒绝是 403，不是内部错误；此前 fmt.Errorf 会被 handler 压成 500，
+		// 权限拒绝是 403，不是内部错误；fmt.Errorf 会被 handler 压成 500，
 		// 让「你没权限看」看起来像「服务挂了」。
 		return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
 	}

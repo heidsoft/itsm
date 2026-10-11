@@ -76,8 +76,8 @@ func (c *ProductionService) operatorContext(ctx *gin.Context) context.Context {
 }
 
 // cmdbPagination 取列表分页参数。唯一所有者是 common.GetPaginationFromQuery（缺省 1/20，
-// 只采纳落在 (0,100] 的查询值，越界回落默认页长）。CMDB 的列表端点原先各自用裸
-// strconv.Atoi 读 `size`，既没有夹紧也认别名，越界值会原样下传给 Ent。
+// 只采纳落在 (0,100] 的查询值，越界回落默认页长）。CMDB 的列表端点不得再用裸
+// strconv.Atoi 读 `size`：那既没有夹紧也认别名，越界值会原样下传给 Ent。
 func cmdbPagination(ctx *gin.Context) (page, pageSize int) {
 	pagination := common.GetPaginationFromQuery(ctx)
 	return pagination.Page, pagination.PageSize
@@ -1297,8 +1297,8 @@ func (c *ProductionService) SearchCI(ctx *gin.Context) {
 		return
 	}
 
-	// 页长归一在 ListCIs 单点完成（本方法内部转 ListCIRequest）；原先这里的
-	// `>1000→20` 是第三套夹紧，会把大批量请求静默截断。
+	// 页长归一在 ListCIs 单点完成（本方法内部转 ListCIRequest）；这里再写一套
+	// `>1000→20` 就成了第二个所有者，会把大批量请求静默截断。
 
 	result, err := c.ciService.SearchCI(ctx.Request.Context(), tenantID, &req)
 	if err != nil {
@@ -1372,8 +1372,8 @@ func (c *ProductionService) ListSavedViews(ctx *gin.Context) {
 		return
 	}
 	page, pageSize := cmdbPagination(ctx)
-	// 查询参数按平台契约用 camelCase；原先的 include_public 只有 swagger 提到，
-	// 前端与测试都无调用方，属未使用的旧形态。
+	// 查询参数按平台契约用 camelCase；include_public 只有 swagger 提到过，
+	// 前端与测试都没有调用方。
 	includePublic, _ := strconv.ParseBool(ctx.DefaultQuery("includePublic", "true"))
 
 	result, err := c.savedViewService.ListSavedViews(ctx.Request.Context(), tenantID, userID, includePublic, page, pageSize)

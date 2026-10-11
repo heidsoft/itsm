@@ -43,7 +43,7 @@ type workbenchFixture struct {
 // 并显式区分 tenantA / tenantB 与两个 actor。返回的 handler 挂在真实 gin 路由上。
 //
 // 种子刻意覆盖四个领域各一条活跃记录，外加 tenantA 一条已软删工单：
-//   - changes 没有 deleted_at 列，任何给 changes 加软删谓词的回归都会在这里变红
+//   - changes 没有 deleted_at 列，任何给 changes 加软删谓词的改动都会在这里变红
 //   - 每个领域只放一条，phase/分页断言才能给出确定数值
 func setupWorkbenchTest(t *testing.T) *workbenchFixture {
 	t.Helper()
@@ -228,8 +228,8 @@ func TestQueryCoversAllFourDomains(t *testing.T) {
 }
 
 // TestQueryPhaseFilterBeforePaging 锁定 phase 过滤发生在 SQL 侧而不是取回一页之后再筛：
-// 先 LIMIT 再按 phase 过滤会让 total 与翻页都失真，
-// 且历史实现的 count SQL 外层括号不闭合，这一步在修复前必然 500。
+// 先 LIMIT 再按 phase 过滤会让 total 与翻页都失真；count SQL 的外层括号也必须闭合，
+// 否则这一步直接 500。
 func TestQueryPhaseFilterBeforePaging(t *testing.T) {
 	f := setupWorkbenchTest(t)
 

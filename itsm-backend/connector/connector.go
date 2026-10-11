@@ -272,7 +272,7 @@ var ErrNotSupported = errors.New("connector: capability not supported")
 
 // SettingString 从连接器 settings 中读取字符串配置，并对键名大小写风格容错。
 //
-// 背景：settings 是**自由键值对**（管理端以 key=value 文本录入，不做键名规范化），
+// 背景：settings 是自由键值对（管理端以 key=value 文本录入，不做键名规范化），
 // 而各连接器读取时使用的键名风格并不统一（既有 base_url 也有 callbackInstanceId）。
 // 一旦管理员录入的键名与连接器读取的键名风格不同，配置会静默失效——
 // 表现为"配置明明写了，测试却报 xxx not configured"。

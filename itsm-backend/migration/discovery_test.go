@@ -14,8 +14,8 @@ import (
 //  2. *_down.sql 自动成对
 //  3. 无 YYYYMMDD 前缀的脚本走兜底映射（add_missing_indexes）
 //
-// 这是外部审计修复的回归门禁：add_missing_indexes.sql 自 5 月写好
-// 以来从未被加载，本测试若失败说明发现器遗漏了关键脚本。
+// 兜底映射这条必须守住：add_missing_indexes.sql 只因没有 YYYYMMDD 前缀就从未被加载，
+// 发现器一旦漏掉关键脚本，这里就红。
 func TestFilesystemMigrations_DiscoveryFromRealDir(t *testing.T) {
 	// 直接使用相对路径，CI/测试 cwd 通常在 itsm-backend/
 	dir := "../migrations"

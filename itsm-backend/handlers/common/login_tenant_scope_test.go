@@ -80,10 +80,10 @@ func TestLoginWithoutTenantKeepsWorkingForUniqueUsername(t *testing.T) {
 	require.Equal(t, tenantA.ID, result.User.TenantID)
 }
 
-// TestLoginWithDuplicateUsernameRequiresTenant 是本次改动的核心安全断言：
-// username 唯一键改成 (tenant_id, username) 后，跨租户同名账号真实存在。
-// 旧实现用 Only() 查询，多命中会退化成「用户名或密码错误」——用户被永久锁在门外
-// 且得不到可执行的提示；现在必须显式要求消歧，而不是猜一个租户。
+// TestLoginWithDuplicateUsernameRequiresTenant 锁定跨租户同名账号的登录语义：
+// username 唯一键是 (tenant_id, username)，所以同名账号可以真实存在于不同租户。
+// 用 Only() 查询会在多命中时退化成「用户名或密码错误」，用户被锁在门外且得不到
+// 可执行的提示；因此这里必须显式要求消歧，而不是猜一个租户。
 func TestLoginWithDuplicateUsernameRequiresTenant(t *testing.T) {
 	client := openLoginDB(t)
 	ctx := context.Background()

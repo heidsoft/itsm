@@ -123,8 +123,8 @@ func (s *BPMNMetricsService) GetDashboardMetrics(ctx context.Context, tenantID i
 		return nil, err
 	}
 
-	// SLA合规率：按已完成实例加权聚合（compliant/total），无样本时诚实返回 0，
-	// 不得伪装成 100% 合规（能力语义：无数据 != 全合规）
+	// SLA 合规率按已完成实例加权聚合（compliant/total）；无样本时返回 0，
+	// 不能因为「没有超时」就报成 100% 合规。
 	slaRate := 0.0
 	var slaCompliantSum, slaTotalSum int
 	definitions, err := s.client.ProcessDefinition.Query().

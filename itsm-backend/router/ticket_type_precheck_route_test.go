@@ -27,10 +27,9 @@ import (
 // 声明（tenant.GET("/ticket-types", RequirePermission("ticket","read"), ...)）必须进入
 // RBACMiddleware 的路径预检映射。
 //
-// 扫描器此前无法解析函数参数分组的前缀，这类声明被 /api/v1 过滤静默
-// 丢弃，DBOnly 生产下非 super_admin 角色在预检处恒 403——工单类型、teams、tags、
-// problem-relationships、approval-records、my-approvals 等 21 个端点全部锁死，
-// 也是 ga-gate 租户隔离步骤自 2026-09-27 起持续红的根因。
+// 扫描器解析不了函数参数分组的前缀时，这类声明会在 /api/v1 过滤处被静默丢弃，
+// 预检映射里没有条目，DBOnly 生产下非 super_admin 角色恒 403——工单类型、teams、tags、
+// problem-relationships、approval-records、my-approvals 这类端点全部锁死。
 // 本用例走真实 SetupRoutes 入口，同时锁住「fail-closed 仍然生效」：缺权限的角色必须 403。
 func TestTicketTypeRoutes_DBOnlyPathPrecheckForDeclaredRole(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -105,7 +104,7 @@ func TestTicketTypeRoutes_DBOnlyPathPrecheckForDeclaredRole(t *testing.T) {
 		return w
 	}
 
-	// 1) 声明权限的真实持有者必须通过预检（修复前此处是 403 权限不足）。
+	// 1) 声明权限的真实持有者必须通过预检，不能被解析成 write 而 403。
 	listed := get(agentA, "agent", "/api/v1/ticket-types?page=1&pageSize=20")
 	require.Equal(t, http.StatusOK, listed.Code, listed.Body.String())
 	var listBody struct {

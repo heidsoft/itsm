@@ -401,9 +401,8 @@ func (r *EntRepository) SubmitForApproval(
 	return r.SubmitForApprovalWithWorkflow(ctx, changeID, tenantID, plan, comment, nil)
 }
 
-// SubmitApprovalRecordTx 是 P0-1 修复的关键原语：
-// 在同一 *sql.Tx 中"写 change_approvals + CAS 推进 draft→pending"原子化，
-// 避免出现"有审批记录但状态未推进"或"状态推进但没有审批记录"的部分失败。
+// SubmitApprovalRecordTx 把"写 change_approvals + CAS 推进 draft→pending"原子化在同一
+// *sql.Tx 中，避免出现"有审批记录但状态未推进"或"状态推进但没有审批记录"的部分失败。
 //
 // 仓储内部开闭事务（使用 EntRepository.db），无需 service 传入 *sql.DB。
 // 返回 rec 为本事务写入的审批记录（已回填 ID/CreatedAt），promoted 表示本轮

@@ -210,8 +210,8 @@ func TestGetPermissionFromPath(t *testing.T) {
 		perm := getPermissionFromPath("POST", "/api/v1/tickets")
 		assert.NotNil(t, perm)
 		assert.Equal(t, "ticket", perm.Resource)
-		// 批次 3：预检以路由声明为权威——POST /tickets 声明 ticket:create，
-		// 预检从 write 对齐为 create（write⇒create 已在种子奇偶补齐，能力不缩水）
+		// 预检以路由声明为权威：POST /tickets 声明 ticket:create，
+		// 种子集里 ticket:write 蕴含 ticket:create，能力不缩水
 		assert.Equal(t, "create", perm.Action)
 	})
 
@@ -235,7 +235,7 @@ func TestGetPermissionFromPath(t *testing.T) {
 	})
 }
 
-// TestPatchMethodUsesUpdateContract 回归：PATCH 未在 ResourceActionMap 中登记时，
+// TestPatchMethodUsesUpdateContract 要求 PATCH 在 ResourceActionMap 中登记：漏登记时
 // SmartCheckPermission L3 会把复数路径段 "tickets" 推断为资源名，导致
 // ticket:write/update 权限真实存在的非通配角色（l1/l2/manager）被 RBACMiddleware 误拒 403。
 func TestPatchMethodUsesUpdateContract(t *testing.T) {
@@ -258,8 +258,8 @@ func TestPatchMethodUsesUpdateContract(t *testing.T) {
 	}
 }
 
-// TestReleaseEndpointsHaveExplicitRBACMapping 回归：
-// ResourceActionMap 此前完全没有 releases 条目，SmartCheckPermission L3 显式映射落空后，
+// TestReleaseEndpointsHaveExplicitRBACMapping 要求 ResourceActionMap 收录 releases：
+// 显式映射落空时 SmartCheckPermission L3 会把
 // URL 推导取复数路径段 "releases" 当资源名，而词表是单数 "release"，永不匹配；
 // L4 硬编码在 prod DBOnly（fail-closed）下禁用——三者叠加导致 release 域全部端点对
 // super_admin/sysadmin（通配符）以外的一切角色不可达，即便 DB 已授予 release:write。

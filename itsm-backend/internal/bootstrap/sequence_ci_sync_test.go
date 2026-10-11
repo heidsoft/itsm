@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestMakeSequenceDBSyncFnSupportsCIKey 锁定回归：ci_number 的 Redis 序列键
+// TestMakeSequenceDBSyncFnSupportsCIKey ci_number 的 Redis 序列键
 // sequence:ci:<YYYYMM> 必须能被 DB 同步逻辑识别，否则 Redis 重置后会从 1 重新发号，
 // 撞上存量编号（全局唯一约束 23505）。
 // 同时验证同步查询因使用原生 SQL 而把已退役（scrapped）CI 的编号计入最大值。

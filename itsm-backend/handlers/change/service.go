@@ -23,9 +23,8 @@ import (
 )
 
 // 领域级哨兵错误：用于让 HTTP 层把「业务规则拒绝」与「系统内部故障」区分开。
-// 此前 TransitionStatus 的所有失败都被统一包装成 500，导致状态机冲突、
-// 非审批人越权等**预期内的业务拒绝**被误报为服务端故障，污染告警且
-// 客户端无法据此重试。调用方请用 errors.Is 判定。
+// TransitionStatus 的失败若统一包装成 500，状态机冲突、非审批人越权等预期内的业务拒绝
+// 会被误报为服务端故障，污染告警且客户端无法据此重试。调用方请用 errors.Is 判定。
 var (
 	// ErrChangeNotFound 变更不存在或不属于当前租户（→ 404）。
 	ErrChangeNotFound = errors.New("change not found")
@@ -232,9 +231,9 @@ var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis 
 
 // validateSubmitGate 提交前影响分析门禁。
 //
-// 此前 GetCMDBImpactSummary 已产出 RequiresReview / RequiresBackoutPlan 推荐，
-// 但仅用于前端展示（WorkflowHints），SubmitChange 从不消费——绑定受影响 CI
-// 的变更在实施/回滚计划为空时照样提交成功，风险分析与提交流程断链。
+// GetCMDBImpactSummary 产出的 RequiresReview / RequiresBackoutPlan 推荐若只用于前端展示
+// （WorkflowHints）而不被 SubmitChange 消费，绑定受影响 CI 的变更在实施/回滚计划为空时
+// 照样提交成功，风险分析与提交流程断链。
 //
 // 门禁规则（失败关闭，宁严勿松）：
 //   - AffectedCIs 非空 ⇒ RequiresBackoutPlan ⇒ 实施计划与回滚计划都必须非空。
@@ -266,8 +265,7 @@ func (s *Service) validateSubmitGate(c *Change) error {
 //
 // 场景：同一租户内两个变更的排期窗口（PlannedStart/PlannedEnd）重叠且
 // AffectedCIs 有交集时，存在同 CI 双变更并行实施风险（A 的实施动作可能
-// 破坏 B 的回滚前提）。此前系统仅提供日历展示（GetCalendarView），冲突
-// 全靠人工肉眼核对，无任何拦截。
+// 破坏 B 的回滚前提）。只有日历展示（GetCalendarView）时，冲突全靠人工肉眼核对，没有拦截。
 //
 // 拦截规则（失败关闭）：
 //   - 变更自身必须已排期（两个 Planned 字段齐全），否则不检查。
@@ -1079,9 +1077,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 审批决定已由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
 	// 无需再回写 legacy change_approvals 表。
 
-	// H-2 / C-2
-	// 1. 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口 pending chains
-	// 2. 非终态直接更新
+	// 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口
+	// pending chains；非终态直接更新。
 	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||
 		targetStatus == "cancelled" || targetStatus == "rolled_back" ||
 		targetStatus == "closed"
@@ -1121,11 +1118,10 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	}
 
 	// 非终态：CAS 推进状态（乐观锁）。
-	// 原先直接 repo.Update 存在 TOCTOU 竞态：并发请求同时读到同一旧状态、
-	// 各自通过状态机校验后都写入成功，导致 N 个请求全部返回 200，
-	// 客户端与审计无法区分"谁真正推进了状态"。CAS 把并发窗口收敛到一次
-	// 条件更新，抢先者成功、落后者收到 409；与桥接同事务，CAS 落败时
-	// 已完成的流程任务一并回滚。
+	// 直接 repo.Update 是 read-then-unconditional-write：并发请求读到同一旧状态、
+	// 各自通过状态机校验后都能写入成功，N 个请求全部返回 200，客户端与审计无法
+	// 区分"谁真正推进了状态"。CAS 把并发窗口收敛到一次条件更新，抢先者成功、
+	// 落后者收到 409；与桥接同事务，CAS 落败时已完成的流程任务一并回滚。
 	if tx == nil {
 		ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
 		if casErr != nil {

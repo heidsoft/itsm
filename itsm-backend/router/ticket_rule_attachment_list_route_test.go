@@ -27,18 +27,17 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：
-//   - GET /api/v1/tickets/assignment-rules 返回 {rules,total}
-//   - GET /api/v1/tickets/automation-rules  返回 {rules,total}
-//   - GET /api/v1/tickets/:id/attachments   返回 {attachments,total}
+// 三个列表端点的响应契约，集合键统一为 items：
+//   - GET /api/v1/tickets/assignment-rules => {items,total}
+//   - GET /api/v1/tickets/automation-rules  => {items,total}
+//   - GET /api/v1/tickets/:id/attachments   => {items,total}
 //
-// 三个端点实测都**不分页**（service 整表取回、handler 写 Total: len(...)），所以本批
-// 只把集合键改成平台规定的 items，并保留诚实的两键形状：**不补 page/pageSize/totalPages**，
-// 否则等于用响应声明伪造一个不存在的分页协议（AGENTS「能力状态与失败语义」）。
+// 三个端点都不分页（service 整表取回，handler 写 total = len(items)），所以响应只有这两个键；
+// 补 page/pageSize/totalPages 等于对外声明一个并不存在的分页协议。
 //
-// 测试打在**生产注册**上（SetupRoutes → router/ticket_routes.go，含
-// RequirePermission("system_config","read") 与 RequirePermission("ticket","read")）。
-// 解码目标是本地 wire 结构而不引用 dto，因此修复前也能编译，证明的是运行时行为。
+// 用例挂在真实路由注册上（SetupRoutes → router/ticket_routes.go，带
+// RequirePermission("system_config","read") 与 RequirePermission("ticket","read")）；
+// 解码目标是本地 wire 结构而不是 dto，断言的是运行时响应行为。
 
 const ticketRuleListSecret = "ticket-rule-list-secret"
 
@@ -245,14 +244,12 @@ type assignRecommendationListWire struct {
 	Total int `json:"total"`
 }
 
-// 回归：
-// GET /api/v1/tickets/assign-recommendations/:id 旧响应把集合放在 recommendations 键下，
-// 结构体名又不含 List，因此静默逃逸过 tests/contract 的信封棘轮扫描。本批把它收敛为
-// 平台唯一的 {items,total}（实测不分页，service 整表取回、handler 写 Total=len(items)），
-// 并改名 AssignRecommendationListResponse 让它落进守卫范围。
+// GET /api/v1/tickets/assign-recommendations/:id 的响应契约是 {items,total}，
+// 对应 AssignRecommendationListResponse —— 结构体名带 List 才能落进 tests/contract
+// 的信封棘轮扫描范围，否则会静默漏检。
 //
-// 测试打在**生产注册**上（SetupRoutes → router/ticket_routes.go:247，含
-// RequirePermission("system_config","read")）。
+// 端点不分页（service 整表取回，handler 写 total = len(items)）。用例挂在真实路由注册上
+// （SetupRoutes → router/ticket_routes.go，带 RequirePermission("system_config","read")）。
 func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 	ctx := context.Background()
 	dsn := fmt.Sprintf("file:router_assign_reco_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano())
@@ -375,9 +372,9 @@ func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 
 	// 5. 跨租户工单 fail closed：与「工单不存在」同一个 404/4004，不确认对方工单存在，
 	//    也不返回任何推荐载荷。
-	//    E4-5 之前这里是 500/5001：service 的 4004 领域错误被 common.FailWithErr 压成内部
-	//    错误，客户端分不清「不存在」「跨租户」「服务挂了」。现在错误分类由
-	//    common.classifyError 唯一决定，handler 走 RespondError，故可锁精确 status/code。
+	//    service 的 4004 领域错误若被 common.FailWithErr 压成内部错误，客户端就分不清
+	//    「不存在」「跨租户」「服务挂了」。错误分类由 common.classifyError 唯一决定、
+	//    handler 走 RespondError，这里才锁得住精确 status/code。
 	t.Run("跨租户工单返回 404 且不泄漏推荐载荷", func(t *testing.T) {
 		w, body := doAs(t, tenantB, path)
 		assert.Equal(t, http.StatusNotFound, w.Code, "跨租户探测必须与不存在同码", "body=%s", body)

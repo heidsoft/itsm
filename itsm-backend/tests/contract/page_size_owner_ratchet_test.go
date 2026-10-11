@@ -7,8 +7,7 @@ package contract
 // 页码下界 1）。handler 里自写 c.DefaultQuery("pageSize", "10") 会同时制造三件事：
 // 自己一份缺省值、自己一份上界（或根本没有上界）、以及「信封回显的值」与
 // 「真正下传给 Offset/Limit 的值」分家——非数字或 0 会让 Ent 的 Limit 被整个跳过，
-// 于是一次写错分页参数的请求把该租户读穿。2026-10-04 在 GET /api/v1/incidents
-// 与 GET /api/v1/incidents/alerts/active 实测命中并已收敛，见b。
+// 于是一次写错分页参数的请求把该租户读穿。
 //
 // 本棘轮不要求一次性清零，但禁止新增，也不允许基线悄悄增长。
 // 收敛一条的做法：把该 handler 改成 pg := common.GetPaginationFromQuery(c)，
@@ -21,8 +20,8 @@ package contract
 //   - 自定义 helper：queryIntParam(c, "pageSize", "size", 10）、parseSkillListPagination
 //     内部的 c.Query("pageSize")、inputInt(in, "pageSize", 20)
 //
-// 此前只匹配 DefaultQuery("pageSize", 字面量)，于是「没有上界」「camelCase 与 size 双别名」
-// 「手抄 (0,100]」这些形态既不在 9 处基线里、新增也不会转红（实测漏掉 8 处）。
+// 只匹配 DefaultQuery("pageSize", 字面量) 会漏掉「没有上界」「camelCase 与 size 双别名」
+// 「手抄 (0,100]」这些形态，新增也不转红。
 // 结构体 json tag 与 gin.H 的键不是调用的直接实参，所以 `json:"pageSize"` 和
 // gin.H{"pageSize": size} 不会被误计。
 //
@@ -40,18 +39,12 @@ import (
 	"testing"
 )
 
-// selfParsedPageSizeBaseline 是 2026-10-04 由扫描器实测的存量清单，
+// selfParsedPageSizeBaseline 是允许残留的自建页长读取点，
 // 条目格式 <相对 itsm-backend 的文件路径>|<被调函数名>|<该处写死的缺省页长，
 // 无法从实参看出时为 ?>；同一键有多处就重复多行，计数一并比对。
 //
-// 扩展判定形态后新增的 8 处（原先 DefaultQuery-only 扫描器看不见）。
-// 已全量收敛：sla/skill/workbench（①-④）+ release/standard_change/
-// knowledge/known_error/operations/timer/bpmn/workflow_template/approval（第二批）
-// 共 14 处，全部改走 common.GetPaginationFromQuery(c)。
-// 回归锁：handlers/sla/pagination_contract_test.go、handlers/skill/handler_test.go、
-// handlers/workbench/handler_test.go、handlers/approval/routes.go 兜底路径。
-// sla/skill/workbench 的 6 处（E4-47①–④）+ release/standard_change/knowledge/known_error/
-// operations/timer/bpmn/workflow_template/approval 的 8 处（E4-47 第二批）已全部收敛并删除。
+// 条目只能减不能增：收敛一条（改走 common.GetPaginationFromQuery，配套路由测试）
+// 就从这里删掉一行。
 var selfParsedPageSizeBaseline = []string{
 	"handlers/ai/skills.go|inputInt|20",
 }
@@ -134,14 +127,14 @@ func TestPageSizeSingleOwnerRatchet(t *testing.T) {
 			sites = append(sites, site.debug)
 		}
 		sort.Strings(sites)
-		b.WriteString("当前实测站点：\n  ")
+		b.WriteString("当前扫描到的站点：\n  ")
 		b.WriteString(strings.Join(sites, "\n  "))
 		t.Errorf("%s", b.String())
 	}
 }
 
 // scanSelfParsedPageSize 用 AST 找出 handler 层把 "pageSize"/"size" 当字面量实参
-// 传下去的调用点。只看真正的调用表达式及其**直接**实参，因此：
+// 传下去的调用点。只看真正的调用表达式及其直接实参，因此：
 //   - 注释掉的历史代码不会被误计；
 //   - `json:"pageSize"` 结构体标签、gin.H{"pageSize": ...} 的键都不是直接实参，不会误计；
 //   - 嵌套调用会被 ast.Inspect 单独访问，所以 strconv.Atoi(ctx.DefaultQuery("pageSize","20"))

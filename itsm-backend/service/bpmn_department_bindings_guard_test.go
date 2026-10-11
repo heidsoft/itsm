@@ -17,9 +17,9 @@ import (
 // 部门默认流程绑定的 key 只允许有一个来源（service/scenario 清单）。
 // 本文件锁两件事：清单里的 key 谁真的有 BPMN 载体，以及真实入口
 // POST /api/v1/departments/:id/init-processes -> InitDepartmentDefaultBindings
-// 在无载体/未部署时不再返回假成功。
+// 在无载体/未部署时必须失败，不能返回假成功。
 
-// readyCatalogKeysBaseline 是 2026-10-02 实测的「部门清单中有 service/bpmn 载体的 key」。
+// readyCatalogKeysBaseline 是「部门清单中有 service/bpmn 载体的 key」。
 // 双向棘轮：模板被删（ready 变少）或补了同名 .bpmn（ready 变多）都必须显式改本基线，
 // 避免清单与部署能力悄悄漂移。
 var readyCatalogKeysBaseline = []string{

@@ -21,9 +21,8 @@ type Claims struct {
 }
 
 // 会话凭证的唯一定义：cookie 名称与两类 token 的生命周期。
-// 设置 cookie、读取回退、Max-Age 和 expiresIn 都必须从这里派生；
-// 之前 handler 与 service 各自硬编码 900/604800/“access_token”，改一处就会让
-// 浏览器凭证和服务端校验窗口悄悄分叉。
+// 设置 cookie、读取回退、Max-Age 和 expiresIn 都必须从这里派生；分散的
+// 900/604800/“access_token” 字面量会让浏览器凭证和服务端校验窗口分别改动后悄悄分叉。
 const (
 	AccessTokenCookie  = "access_token"
 	RefreshTokenCookie = "refresh_token"
@@ -84,11 +83,10 @@ func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSec
 	return token.SignedString([]byte(jwtSecret))
 }
 
-// 生成Refresh Token
+// GenerateRefreshToken 生成 refresh token。
 //
-// refresh token 必须携带完整的 username/role/tenantId。
-// 之前只填 userID，导致 refresh 续签时 handler 拿到空字符串身份，降级为匿名。
-// 现在签名补齐：调用方传入 user 完整信息，refresh 续签可解析出 tenant 上下文。
+// claims 必须携带完整的 username/role/tenantId 而不只是 userID：续签 handler 依赖这些
+// 字段解析租户上下文，缺失时只能降级为匿名。调用方须传入用户完整信息。
 func GenerateRefreshToken(userID int, username, role string, tenantID int, jwtSecret string, expireTime time.Duration) (string, error) {
 	// jti 用于 refresh token 黑名单唯一标识；带随机后缀避免同一秒重复
 	jti := fmt.Sprintf("rt-%d-%d-%d", userID, time.Now().UnixNano(), randSeq6())

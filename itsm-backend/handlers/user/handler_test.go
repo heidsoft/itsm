@@ -195,7 +195,7 @@ func TestCreateUser_DuplicateBusinessError(t *testing.T) {
 }
 
 func TestCreateUser_WeakPasswordMapsToValidationError(t *testing.T) {
-	// 回归：密码策略属于输入校验，此前被 common.FailWithErr 归为 500/5001「操作失败」，
+	// 密码策略属于输入校验；若被 common.FailWithErr 归为 500/5001「操作失败」，
 	// 客户端拿不到原因，自动化夹具也无法判断是密码不合规还是服务端故障。
 	m := &mockUserService{}
 	h, _ := newTestHandler(m)
@@ -279,8 +279,8 @@ func TestResetPassword_InvalidID(t *testing.T) {
 }
 
 func TestListUsers_AcceptsPageSize1000(t *testing.T) {
-	// Fix for P1-5: groups 页面 Member Transfer 此前传 pageSize:500 被后端 max=200 拒，
-	// 错误被 .catch 吞掉，Transfer 显示 0 用户。PageSize 改 max=1000 后应能通过。
+	// groups 页面 Member Transfer 一次要拉 500 个成员；页长上限低于它时请求被拒、
+	// 错误被前端 .catch 吞掉，Transfer 会显示 0 用户。
 	m := &mockUserService{}
 	m.On("ListUsers", mock.Anything, mock.Anything, 1).Return(&dto.PagedUsersResponse{Users: []*dto.UserDetailResponse{}}, nil)
 	h, _ := newTestHandler(m)

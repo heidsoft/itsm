@@ -2,7 +2,7 @@ package contract
 
 // 错误消息泄漏棘轮（ratchet）。
 //
-// AGENTS.md「Context、日志与可观测性」要求：原始 provider/driver 错误只能进服务端日志，
+// 原始 provider/driver 错误只能进服务端日志，
 // 不得作为响应消息透出。common.FailWithErr / NotFoundWithErr / BindValidationError 这类
 // *WithErr helper 就是为此存在的安全包装；直接把 err.Error() 当公共消息传给
 // common.Fail*/NotFound*/InternalError* 属于泄漏面（SQL 片段、ent 校验串、连接器报文、
@@ -33,42 +33,19 @@ import (
 
 // errorLeakScanDirs 是扫描范围：只有进入 HTTP 边界的代码会把错误串写进响应。
 // service/ 内部把 err.Error() 拼进日志或包装错误属于诊断用途，不在本棘轮范围。
-// legacy controller/ 目录实测已不存在（HTTP facade 已清空），因此不列入；
+// legacy controller/ 目录已不存在（HTTP facade 已清空），因此不列入；
 // 缺失的目录会被跳过而不是让棘轮自己变红。
 var errorLeakScanDirs = []string{"handlers", "router"}
 
 // failHelperRE 匹配「把错误串当公共消息写进响应」的调用形态：同一行里同时出现
-// common.<fail 系 helper>( 和 err.Error()。项目里这类调用实测都是单行；
+// common.<fail 系 helper>( 和 err.Error()。项目里这类调用都是单行；
 // 若将来出现多行形态，应先扩展规则并保持基线可复现，而不是绕过棘轮。
 var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|ValidationErrorResponse|AuthFailed|Forbidden|NotFound|InternalError)[A-Za-z]*\(.*err\.Error\(\)`)
 
-// errorLeakBaseline 是 2026-10-04 由本文件扫描器实测的每文件泄漏计数（合计 413 处 / 35 个文件）。
-// handlers/notification/handler.go 29，收敛应从它们按文件整片推进。
-//
-// router/ticket_routes.go 原有 3 处已清零：工单关联的三个读取端点改走
-// common.RespondError，业务拒绝由 service 的 common.BusinessError 决定状态码。
-//
-// handlers/cmdb/handler.go 原有 2 处已清零（本文件从基线移除）：对账读取与云选择器的
-// 绑定失败不再拼 err.Error()，同时域内 15 条云/发现端点统一由 RespondError 分类，
-// 域内私有的 failCMDBError 映射随之删除。
-// production_service.go 73 已在 2026-10-05 RespondError+ParamError sweep 中清零并从此基线删除；
-// handlers/notification/handler.go 29 已在 2026-10-05 RespondError+ParamError+AuthFailed sweep 中清零并从此基线删除；
-// handlers/email_intake/handler.go 27 已在 2026-10-05 RespondError+NotFound sweep 中清零并从此基线删除；
-// handlers/change/handler.go 20 已在 2026-10-05 ParamErrorWithErr/RespondError/FailWithErr sweep 中清零并从此基线删除；
-// handlers/common/handler.go 22 已在 2026-10-06 ParamErrorWithErr/RespondError/AuthFailed+logger sweep 中清零并从此基线删除；
-// handlers/sla/handler.go 20 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除；
-// handlers/bpmn/workflow.go 36 已在 2026-10-06 ParamErrorWithErr/RespondError/NotFoundWithErr sweep 中清零并从此基线删除；
-// handlers/rbac/handler.go 14 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
-// handlers/marketplace/handler.go 13 已在 2026-10-06 middleware.TenantIDOrUnauthorized/UserIDOrUnauthorized + NotFoundWithErr/BadRequestWithErr/RespondError sweep 中清零并从此基线删除。
-// handlers/approval/routes.go 12 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
-// errorLeakBaseline 记录「把错误串当公共消息写进响应」的历史计数（ratchet 锁）。
-// 应用域 14 文件（application/connector/project/survey/prediction/
-// auditlog/escalation_matrix/feishu/sla_template + bpmn/{ai_generator,dashboard,
-// lint,process_trigger,workflow_template}）共 60 处全部收敛为
-// common.ParamErrorWithErr/RespondError/NotFoundWithErr/BadRequestWithErr；
-// 所有剩余基线文件（auth/incident/knowledge/known_error/approval_chain/standard_change/
-// systemconfig/user/workbench/router/dashboard_routes）已先期清零。
-// 错误泄漏总数 60 → 0，基线文件数 24 → 0。
+// errorLeakBaseline 是「把错误串当公共消息写进响应」的每文件历史计数（ratchet 锁）：
+// 条目只能减不能增，新增泄漏会在这里失败；清零的文件直接从基线删除，不在注释里留记录。
+// 收敛方式是把错误映射交给 common.ParamErrorWithErr / RespondError / NotFoundWithErr /
+// BadRequestWithErr，由它们净化错误后再写 envelope。
 var errorLeakBaseline = map[string]int{}
 
 // measuredErrorLeaks 扫描真实源码，返回「相对 itsm-backend 的路径 -> 泄漏计数」。

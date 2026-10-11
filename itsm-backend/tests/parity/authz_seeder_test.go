@@ -44,7 +44,7 @@ func TestAuthzSeederCodeSetParity(t *testing.T) {
 	sort.Strings(extra)
 
 	if len(missing) > 0 || len(extra) > 0 {
-		t.Errorf("权限码清单不一致（批次 6 单一源破坏，需立即对齐）：\n"+
+		t.Errorf("权限码清单不一致（单一源被破坏，需立即对齐）：\n"+
 			"  仅 authz/catalog 有 %d 条：%v\n"+
 			"  仅 seeder 有 %d 条：%v",
 			len(extra), extra, len(missing), missing)

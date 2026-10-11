@@ -31,9 +31,9 @@ func NewHandler(dependencyService *service.TicketDependencyService, logger *zap.
 
 // AnalyzeDependencyImpact GET /api/v1/tickets/:id/dependencies?action=close|delete|change_status&newStatus=...
 //
-// 这里原先用 ShouldBindJSON 绑定一个 action 必填的结构体，而路由只注册了 GET：
-// 浏览器不带请求体，任何调用都固定得到 400「请求参数错误」，这个入口从未可用过。
 // 影响分析的输入是过滤/枚举语义，按契约归属查询参数（见 dto.RelationImpactAnalysisRequest）。
+// GET 路由不绑定请求体：用 ShouldBindJSON 要求 action 必填时，不带 body 的调用会固定
+// 得到 400「请求参数错误」。
 func (h *Handler) AnalyzeDependencyImpact(ctx *gin.Context) {
 	ticketIDStr := ctx.Param("id")
 	ticketID, err := strconv.Atoi(ticketIDStr)

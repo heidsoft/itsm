@@ -17,11 +17,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 列表信封收敛回归：GET /api/v1/knowledge/articles 只返回平铺的
-// items/total/page/pageSize/totalPages。
-//
-// 修复前这里返回 {items,total,page,pageSize} 且 dto 曾同时输出 articles 别名，
-// 与工单/事件/变更三套列表各自不同的键集合并存，前端只能按多字段 fallback 读取。
+// 列表信封契约：GET /api/v1/knowledge/articles 只返回平铺的
+// items/total/page/pageSize/totalPages，不带 articles 别名。
+// 键集合必须与工单/事件/变更列表一致，否则前端只能靠多字段 fallback 读取。
 func TestListArticles_CanonicalEnvelope(t *testing.T) {
 	ctx := context.Background()
 	client := enttest.Open(t, "sqlite3", "file:knowledge_list_envelope?mode=memory&cache=shared&_fk=1")

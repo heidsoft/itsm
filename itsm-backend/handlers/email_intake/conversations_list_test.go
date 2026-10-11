@@ -54,8 +54,8 @@ func seedConversations(t *testing.T, client *ent.Client) []int {
 	return tenantOneIDs
 }
 
-// 回归：邮件处理队列页此前只发 {status}，落到后端默认
-// pageSize=20，第 21 条起永不可见且没有任何提示。契约必须能把「总量与页」如实交出去。
+// 邮件处理队列页若只发 {status}，会落到后端默认 pageSize=20，
+// 第 21 条起永不可见且没有任何提示。契约必须能把「总量与页」如实交出去。
 func TestListConversations_PaginatesAndReportsFullTotal(t *testing.T) {
 	client := newEmailIntakeClient(t)
 	svc := NewService(client)
@@ -203,7 +203,7 @@ func TestListConversationsHTTP_StandardEnvelopeAndServerSidePaging(t *testing.T)
 	}
 	sort.Strings(keys)
 	require.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, keys,
-		"列表信封只允许这 5 个键，此前缺 totalPages")
+		"列表信封只允许这 5 个键")
 	require.EqualValues(t, 2, data["page"])
 	require.EqualValues(t, 10, data["pageSize"])
 	require.EqualValues(t, 20, data["total"], "status 过滤后的全量计数")

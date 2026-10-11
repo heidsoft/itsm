@@ -27,23 +27,25 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：通知域的两个列表信封都不在标准契约上。
+// 通知域两个列表信封的标准契约：
 //
-//   - GET /api/v1/notifications 返回 {notifications,total,page,size}：集合键用了领域名
-//     （AGENTS.md 明令 items 单一契约），页长键用了被禁止的别名 size，且没有 totalPages，
-//     前端因此只能写「后端分页字段是 size（不是 pageSize）」这种注释并把字段名硬编到调用点。
-//   - GET /api/v1/tickets/:id/notifications 返回 {notifications,total}：service 侧是
-//     无 Offset/Limit 的 All(ctx)，属文档承认的「不分页的列表」合法形状，但集合键
-//     同样必须收敛为 items。
+//   - GET /api/v1/notifications => {items,total,page,pageSize,totalPages}
+//   - GET /api/v1/tickets/:id/notifications => {items,total}
 //
-// 另外实测到 page/pageSize 在 handler 与 service 各夹一次（同一规则两套真相），而 pageSize=0
-// 在 Ent 的 sqlgraph 里是 `if q.Limit != 0` —— 0 表示不加 LIMIT，整表返回。现在 HTTP 入口只
-// 走 common.GetPaginationFromQuery（缺省 1/20，越界值回落默认而不是夹到 100），service 侧保留
-// 一道 common.ValidatePagination 给非 HTTP 调用方；响应五键由 NewPaginationResponse 算出。
-// 两个 helper 的默认页长不同（10 vs 20）是已登记的存量债务，见审计计划 E4-9，因此本文件只在
-// 真实路由上锁 20 这条对外契约。
+// 集合键必须是 items 而不是领域名 notifications：一旦用了领域名，页长键容易被写成
+// 被禁止的别名 size、totalPages 也缺失，前端只能把字段名硬编到调用点并写下
+// 「后端分页字段是 size」这类注释。第二个端点确实不分页（service 是无 Offset/Limit 的
+// All(ctx)），属 docs/api-reference.md 承认的「不分页的列表」形状，只收敛集合键。
 //
-// 这些断言全部打在**生产注册**上：SetupRoutes → SetupCommonSystemRoutes /
+// page/pageSize 只在 HTTP 入口夹一次：common.GetPaginationFromQuery 缺省 1/20、
+// 越界值回落默认而不是夹到 100，service 侧再留一道 common.ValidatePagination 给非 HTTP
+// 调用方。handler 与 service 各夹一次等于同一规则两套真相，而 pageSize=0 会被当成
+// 不加 LIMIT 整表返回。响应五键由 NewPaginationResponse 算出。
+//
+// 两个 helper 的默认页长不同（10 vs 20）是存量债务，本文件只在真实路由上锁 20
+// 这条对外契约。
+//
+// 断言全部挂在真实路由注册上：SetupRoutes → SetupCommonSystemRoutes /
 // SetupTicketRoutes → middleware.RequirePermission。
 
 const notifEnvelopeSecret = "notification-envelope-secret"

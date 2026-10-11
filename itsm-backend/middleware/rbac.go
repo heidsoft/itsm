@@ -593,7 +593,7 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 		// 无 "roles" 键时退化为仅主角色（兼容未物化角色的旧链路）。
 		if !AuthorizeResource(c.Request.Context(), client, GetContextRoles(c), resource, action, tenantID) {
 			// deny 路径补 Warn 日志，便于排查权限问题
-			// （RBACMiddleware 路径预检 deny 已有，本次补齐路由级 RequirePermission）
+			// 路径预检的 deny 在 RBACMiddleware 已有日志，这里覆盖路由级 RequirePermission
 			zap.S().Warnw(
 				"RequirePermission: denied",
 				"resource", resource,
@@ -645,12 +645,10 @@ func RequireRole(allowedRoles ...string) gin.HandlerFunc {
 // Uses Smart Permission Checker (4-layer fallback architecture)
 func hasPermission(client *ent.Client, role, method, path string, userID, tenantID int, c *gin.Context) bool {
 	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
-	// sysadmin 不再短路：DBOnly 模式下判定走 AuthorizeResourceForRole →
-	// loadPermissionsByMode，configured 态尊重 role_permissions（空集=显式撤销），
-	// 收回/降级机制上可生效——但"全量授权"不成立：其播种码集来自
-	// internal/authz/roles.go 的 allPermissionCodes() 手工枚举清单（实测 129 码），
-	// 权限清单 authz.Definitions()（160 码）中有 31 码不在其内，且手工清单不随
-	// catalog 新增自动跟上。差集收敛方案尚未拍板；上述数字是实测快照，引用前重新测量。
+	// sysadmin 不短路：DBOnly 模式下判定走 AuthorizeResourceForRole → loadPermissionsByMode，
+	// configured 态尊重 role_permissions（空集=显式撤销），收回/降级在机制上可生效。
+	// 但"sysadmin 全量授权"并不成立：它的播种码集来自 internal/authz/roles.go 里手工枚举的
+	// allPermissionCodes()，该清单不随 authz.Definitions() 新增自动跟上，两者存在差集。
 	if role == "super_admin" {
 		return true
 	}
@@ -802,9 +800,9 @@ func InvalidateAllPermissionCachesEx() {
 // =============================================================================
 // 统一权限判定核心
 //
-// 所有权限判定的单一真源。此前 rbac.go hasResourcePermission 与
-// smart_permission.go checkRolePermissionFromDB 双头并存、语义分叉
-// （sysadmin 直通不一致）；现统一委托本函数，并支持多角色并集。
+// 所有权限判定的单一真源：rbac.go 的 hasResourcePermission 与 smart_permission.go 的
+// checkRolePermissionFromDB 都委托到这里，避免两处各自决定 super_admin/sysadmin 是否直通。
+// 多角色按并集判定。
 // =============================================================================
 
 // AuthorizeResource 统一判定：一组角色（并集语义）在指定租户内是否拥有 resource:action 权限。

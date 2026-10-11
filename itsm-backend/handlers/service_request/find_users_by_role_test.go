@@ -14,7 +14,7 @@ import (
 
 // TestFindActiveUsersByRole_DualSource 验证按角色查人覆盖双数据源：
 // users.role 枚举 ∪ user_roles M2M 边（roles.code），且租户/活跃/部门过滤正确。
-// 背景：此前只查枚举，it_admin 等角色在枚举里缺失时恒查空 → 审批回退 super_admin。
+// 只查枚举时，it_admin 等角色在枚举里缺失会恒查空 → 审批回退 super_admin，因此必须并上 M2M 边。
 func TestFindActiveUsersByRole_DualSource(t *testing.T) {
 	dsn := "file:" + filepath.Join(t.TempDir(), "sr_find_by_role.db") + "?_fk=1"
 	client := enttest.Open(t, "sqlite3", dsn)

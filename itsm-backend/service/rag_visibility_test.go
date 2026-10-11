@@ -16,7 +16,7 @@ import (
 )
 
 // ==================== RAG 可见性过滤端到端测试 ====================
-// 覆盖 AGENTS.md 规则：RAG 在检索前必须尊重租户隔离、发布状态（可见性）与软删除。
+// RAG 在检索前必须尊重租户隔离、发布状态（可见性）与软删除。
 // 说明：sqlite 不支持 pgvector，vector 路径在 enrichment 阶段做同样的
 // IsPublished/DeletedAt 过滤（见 rag_service.go vectorSearch）；此处用
 // keyword-only 配置走完整 Ask 链路验证过滤语义。
@@ -47,8 +47,7 @@ func newKeywordOnlyRAG(t *testing.T, client *ent.Client) *RAGService {
 	})
 }
 
-// 回归：草稿（未发布）文章不得出现在 RAG 检索结果中。
-// 修复前 keywordSearch 只过滤租户和软删除，草稿会泄漏到 /ai/rag/search。
+// keywordSearch 除租户和软删除外还必须过滤发布状态，草稿不得出现在检索结果里。
 func TestRAG_Ask_ExcludesDraftArticles(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -75,7 +74,7 @@ func TestRAG_Ask_ExcludesDraftArticles(t *testing.T) {
 	assert.Equal(t, "VPN 连接故障排查", results[0]["title"])
 }
 
-// 回归：租户隔离——租户 B 检索时不得看到租户 A 的文章（即使标题完全匹配）。
+// 租户隔离——租户 B 检索时不得看到租户 A 的文章（即使标题完全匹配）。
 func TestRAG_Ask_TenantIsolation(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -112,7 +111,7 @@ func TestRAG_Ask_TenantIsolation(t *testing.T) {
 	assert.Equal(t, tenantBArticle.ID, results[0]["id"], "只应返回本租户的文章")
 }
 
-// 回归：软删除文章不得出现在 RAG 检索结果中。
+// 软删除文章不得出现在 RAG 检索结果中。
 func TestRAG_Ask_ExcludesSoftDeleted(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -140,7 +139,7 @@ func TestRAG_Ask_ExcludesSoftDeleted(t *testing.T) {
 	assert.Equal(t, alive.ID, results[0]["id"])
 }
 
-// 回归：混合（hybrid）配置下（vector 不可用时降级 keyword），过滤语义保持一致。
+// 混合（hybrid）配置下（vector 不可用时降级 keyword），过滤语义保持一致。
 func TestRAG_Ask_Hybrid_ExcludesDraft(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()

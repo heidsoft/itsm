@@ -12,7 +12,7 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// DefaultTimerTimezone 租户未配置 timezone 时的默认时区（PRD §12 决策 Q1）。
+// DefaultTimerTimezone 租户未配置 timezone 时使用的默认时区。
 const DefaultTimerTimezone = "Asia/Shanghai"
 
 // cronParser 标准 5 字段解析器（支持 * / 范围 / 列表 / 步长，以及 @every 等描述符）。
@@ -96,7 +96,7 @@ func LoadTenantLocation(ctx context.Context, client *ent.Client, tenantID int) *
 	return ResolveLocation(tn.Timezone)
 }
 
-// NextFireAt 计算下一次触发时间（结果统一转为 UTC 存储，PRD §12 决策 Q4）。
+// NextFireAt 计算下一次触发时间，结果统一转为 UTC 存储。
 //
 //   - duration：after + duration（一次性）
 //   - date：解析后的绝对时间（一次性；若已过则原样返回，由调用方判定跳过）

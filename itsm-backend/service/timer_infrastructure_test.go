@@ -536,7 +536,7 @@ func TestDBTimerStore_CancelByProcessInstance(t *testing.T) {
 }
 
 // TestTimerScheduler_PrometheusMetrics 调度器触发路径应同步写入 Prometheus 计数器
-// （itsm_timer_fired_total / itsm_timer_retry_total，PRD §8.1）。使用独立租户 ID
+// （itsm_timer_fired_total / itsm_timer_retry_total）。使用独立租户 ID
 // 隔离全局计数器基线。
 func TestTimerScheduler_PrometheusMetrics(t *testing.T) {
 	client := newTimerTestClient(t, "sched-prom")

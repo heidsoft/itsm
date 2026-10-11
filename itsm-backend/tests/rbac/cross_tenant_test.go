@@ -1,7 +1,6 @@
 package rbac
 
-// RBAC 跨租户数据暴露回归测试
-// v1.0 GA 准入任务 P0-3
+// RBAC 跨租户数据暴露测试。
 //
 // 测试范围：
 //  1. 普通用户访问 /api/v1/admin/users → 403

@@ -472,7 +472,7 @@ func TestLLMGateway_UnicodeContent(t *testing.T) {
 	assert.Equal(t, "ok", resp)
 }
 
-// ==================== SupportsToolCalling 能力闸门（回归 bug：minimax 伪工具调用）====================
+// ==================== SupportsToolCalling 能力闸门（伪工具调用防护）====================
 
 // toolCapableProvider 同时实现 Chat 与 ChatStreamWithTools，用于验证能力探测返回 true。
 type toolCapableProvider struct {

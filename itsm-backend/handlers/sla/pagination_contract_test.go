@@ -1,15 +1,9 @@
 package sla
 
-// –② 回归锁：SLA 域四个分页端点（definitions / violations /
-// performance / alert-history）的页长唯一所有者是 common.GetPaginationFromQuery
+// SLA 域四个分页端点（definitions / violations / performance / alert-history）的
+// 页长唯一所有者是 common.GetPaginationFromQuery
 // （缺省 1/20，只采纳 [1,100]，越界/非数字/非正回落缺省，信封回显=实际下传值）。
-//
-// 修复前的四套私有 owner：
-//   - ListSLADefinitions：缺省 10、接受 size 别名、无上界（pageSize=5000 原样进 LIMIT）；
-//   - GetSLAViolations：缺省 20、同样带 size 别名、无上界；
-//   - GetAlertHistory：strconv.Atoi 失败得 0，LIMIT 子句整体消失（整表读取）；
-//   - GetSLAPerformance：入口把非法值判 400，service 又私有夹紧 >200→200
-//     （200 不是平台值，平台 MaxPageSize=100）。
+// 端点内不得再保留私有缺省、size 别名或第二套夹紧。
 //
 // 跑测命令：cd itsm-backend && go test ./handlers/sla/ -run Pagination
 
@@ -76,12 +70,11 @@ func TestListSLADefinitions_MissingPagingUsesPlatformDefault(t *testing.T) {
 	seedSLADefinitionsForPagination(t, client, tenantID, slaPageSeedCount)
 
 	data := slaListData(t, r, "/api/v1/sla/definitions")
-	assertSLAStandardEnvelope(t, data, slaPageSeedCount, 1, 20, 2, 20, "缺省 1/20（修复前是 1/10）")
+	assertSLAStandardEnvelope(t, data, slaPageSeedCount, 1, 20, 2, 20, "缺省页长 1/20")
 }
 
 // TestListSLADefinitions_PageSizeCannotEscapePlatformBound 锁住越界大值、非数字、
 // 零/负值与 size 别名：全部回落 20，且回显值就是真正下传给 Offset/Limit 的值。
-// 修复前 pageSize=5000 会原样进 LIMIT，size=10 会被私有别名接受。
 func TestListSLADefinitions_PageSizeCannotEscapePlatformBound(t *testing.T) {
 	r, client, tenantID := setupSLAHandler(t)
 	seedSLADefinitionsForPagination(t, client, tenantID, slaPageSeedCount)
@@ -112,9 +105,9 @@ func TestGetSLAViolations_StandardEnvelopeAdoptsPlatformBound(t *testing.T) {
 	assertSLAStandardEnvelope(t, data, 0, 1, 5, 0, 0, "pageSize=5 采纳")
 }
 
-// TestGetAlertHistory_BadPageSizeFallsBackInsteadOfWholeTableRead 锁修复前最危险的
-// 形态：Atoi 失败得 0，Ent 的 LIMIT 子句整体消失，一次写错分页参数读穿该租户
-// 全部告警历史。现在一律回落 20。
+// TestGetAlertHistory_BadPageSizeFallsBackInsteadOfWholeTableRead 锁最危险的形态：
+// Atoi 失败得 0 时 Ent 的 LIMIT 子句整体消失，一次写错的分页参数就读穿该租户全部告警历史，
+// 因此一律回落 20。
 func TestGetAlertHistory_BadPageSizeFallsBackInsteadOfWholeTableRead(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
 
@@ -124,9 +117,9 @@ func TestGetAlertHistory_BadPageSizeFallsBackInsteadOfWholeTableRead(t *testing.
 	}
 }
 
-// TestGetSLAPerformance_PageLengthPlatformOwner 锁 E4-47① 的另一半：入口此前把
-// 非数字/零值判 400，越界大值则原样下传、由 service 私有上限夹到 200（第三套界）。
-// 现在越界/非数字回落 20，且信封回显即采纳值。
+// TestGetSLAPerformance_PageLengthPlatformOwner:
+// 页长只有一个所有者。入口把非数字/零值判 400、或让 service 用私有上限夹到 200，
+// 都是平台界之外的第二、第三套界；越界与非数字一律回落 20，且信封回显即采纳值。
 func TestGetSLAPerformance_PageLengthPlatformOwner(t *testing.T) {
 	_, client, tenantID := setupSLAHandler(t)
 	f := seedSLAMonitoringFixture(t, client, tenantID)

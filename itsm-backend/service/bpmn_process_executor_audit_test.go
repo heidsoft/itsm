@@ -99,8 +99,8 @@ func deployAuditProcess(t *testing.T, ctx context.Context, client *ent.Client, t
 
 // TestStartProcess_AuditUserContextPropagated 验证：StartProcess 通过 typed
 // BPMNUserIDContextKey 注入的 actor，最终写进 process_audit_logs 的 user_id 与
-// user_name 字段。修复前由于 executor 走 ctx.Value("user").(*ent.User)，这两列
-// 永远是 0 与空，导致前端审计列"操作人/受理人"始终空白。
+// user_name 字段。executor 只认这个 typed key；换成 ctx.Value("user").(*ent.User)
+// 取不到 actor，这两列会恒为 0 与空，前端审计列「操作人/受理人」就是空白。
 func TestStartProcess_AuditUserContextPropagated(t *testing.T) {
 	client := newAuditTestClient(t, "audit_start_process")
 	logger := zaptest.NewLogger(t).Sugar()

@@ -60,8 +60,8 @@ func (h *Handler) List(c *gin.Context) {
 		Status:   req.Status,
 	}
 	// 分页在 HTTP 入口只夹紧一次：common.GetPaginationFromQuery（缺省 1/20，只采纳
-	// (0,100]，越界回落默认页长）。原先这里、Service.List、Service.Search 各有一套
-	// 夹紧，且 DTO 的 binding:"max=1000" 是第四套页长真相。
+	// (0,100]，越界回落默认页长）。handler、Service.List、Service.Search 和 DTO 上的
+	// binding:"max=1000" 都不再各定一套页长。
 	pagination := common.GetPaginationFromQuery(c)
 	filters.Page, filters.PageSize = pagination.Page, pagination.PageSize
 

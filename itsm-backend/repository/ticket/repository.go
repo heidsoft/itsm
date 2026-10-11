@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	// 基础 CRUD
 	Create(ctx context.Context, params *CreateParams, tenantID int) (*Ticket, error)
-	// CreateWithTx 在调用方提供的 *ent.Tx 内创建工单。阶段 B 起用于事务性通知入箱：
+	// CreateWithTx 在调用方提供的 *ent.Tx 内创建工单，用于事务性通知入箱：
 	// 调用方负责 commit/rollback，确保 ticket INSERT 与 operational_command 写入同生同死。
 	CreateWithTx(ctx context.Context, tx *ent.Tx, params *CreateParams, tenantID int) (*Ticket, error)
 	GetByID(ctx context.Context, id int, tenantID int) (*Ticket, error)

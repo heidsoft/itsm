@@ -24,8 +24,8 @@ import (
 //     Service 层应当继续使用显式 UpdateOne/Update().SetDeletedAt(now) 进行软
 //     删除，避免与现有 Delete 逻辑产生双写行为或破坏 Delete 的幂等性。
 //   - 如果某个场景需要读取软删除记录（例如回收站、管理员数据巡检），调用方
-//     应使用 ent client 的底层 API 或加 DeletedAtNotNil() 覆盖过滤——在
-//     当前 R2 阶段我们默认读路径都应该屏蔽软删除数据。
+//     应使用 ent client 的底层 API 或加 DeletedAtNotNil() 覆盖过滤——
+//     默认读路径都屏蔽软删除数据。
 func RegisterSoftDeleteInterceptors(client *ent.Client) {
 	client.Intercept(ent.InterceptFunc(func(next ent.Querier) ent.Querier {
 		return ent.QuerierFunc(func(ctx context.Context, query ent.Query) (ent.Value, error) {

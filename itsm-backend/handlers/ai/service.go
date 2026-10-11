@@ -189,9 +189,9 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	return nil, inv.ID, nil
 }
 
-// recordToolAudit 统一记录只读工具执行审计，包含 P2-6 RBAC 校验结果
+// recordToolAudit 统一记录只读工具执行审计，包含 RBAC 校验结果
 //
-// 审计写入失败不再用 _, _ = 吞掉，改用结构化错误日志 +
+// 审计写入失败不能用 _, _ = 吞掉，走结构化错误日志 +
 // itsm_ai_persist_errors_total{operation="create_tool_invocation"} 计数器埋点，
 // 保证 DB 抖动时审计丢失可观测、可告警。
 func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {

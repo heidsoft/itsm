@@ -66,7 +66,7 @@ func TestHandlerDoesNotGrantActionsWithoutTenant(t *testing.T) {
 	}
 }
 
-// 未通过实测证据的能力不得申报 GA：标签仍有双表未收敛，模板只有
+// 没有实现证据的能力不得申报 GA：标签仍有双表未收敛，模板只有
 // /api/v1/tickets/templates* 注册、通用 /api/v1/templates 市场从未注册。
 func TestUnprovenCapabilitiesAreNotDeclaredGA(t *testing.T) {
 	gin.SetMode(gin.TestMode)

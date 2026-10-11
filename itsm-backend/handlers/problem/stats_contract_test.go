@@ -68,9 +68,10 @@ func sumProblemNameCounts(in []problemNameCount) int {
 }
 
 // TestProblemStatsDistributionsAreAuthoritative 锁住问题报表分布的权威来源。
-// 修复前 /reports/problem-efficiency 用 listProblems({page:1,pageSize:100}) 在浏览器里
-// 自己数：第 100 条之后的问题被静默截断，页面却把结果当全量读数展示；identified 从来
-// 不在任何单值桶里，因此只有分布能证明「总数对得上」。
+//
+// 报表不能用 listProblems({page:1,pageSize:100}) 在浏览器里自己数：第 100 条之后被
+// 静默截断，页面却把结果当全量读数展示。identified 从来不在任何单值桶里，
+// 只有分布能证明「总数对得上」。
 func TestProblemStatsDistributionsAreAuthoritative(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:problem_stats_distribution?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -161,7 +162,7 @@ func TestProblemStatsDistributionsAreAuthoritative(t *testing.T) {
 	require.Equal(t, 2, a.InProgress)
 	require.Equal(t, 1, a.Resolved)
 	require.Equal(t, 1, a.Closed)
-	require.Equal(t, 3, a.HighPriority, "high+critical 折叠口径保持与修复前一致")
+	require.Equal(t, 3, a.HighPriority, "high+critical 并入 HighPriority")
 
 	require.Equal(t,
 		[]problemNameCount{

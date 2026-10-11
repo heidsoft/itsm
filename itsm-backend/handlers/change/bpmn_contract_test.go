@@ -1,7 +1,6 @@
 // Package change 中 BPMN 桥接的契约测试。
 //
-// 本文件 (bpmn_contract_test.go) 固化 v1.7 (PR-FIX-CMDB-BPMN)
-// 阶段 2.1 的核心契约：
+// 本文件 (bpmn_contract_test.go) 固化 BPMN 桥接的状态机契约：
 //
 //   - 审批/驳回 → ProcessTask 状态机转换
 //   - BPMN 节点超时升级路径 (due_date)
@@ -10,7 +9,7 @@
 //   - 撤回：completed_time + status
 //
 // 与 service_bpmn_bridge_test.go 不重叠：后者覆盖
-// TransitionStatus → ProcessTask 桥接；本文件覆盖 **状态机契约**。
+// TransitionStatus → ProcessTask 桥接；本文件覆盖 状态机契约。
 package change
 
 import (

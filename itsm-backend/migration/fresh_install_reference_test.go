@@ -87,7 +87,7 @@ func TestRetiredEndpointACLsMigrationStaysNoOp(t *testing.T) {
 	}
 	require.NotNil(t, retired, "退役迁移必须仍按原版本名保留在迁移流中")
 	assert.Equal(t, "SELECT 1;", strings.TrimSpace(stripSQLComments(retired.SQLContent)),
-		"退役迁移只能是 no-op；恢复动态端点 ACL 需按 endpoint_ac_ls 重写并补授权回归测试")
+		"退役迁移只能是 no-op；恢复动态端点 ACL 需要按 endpoint_acls 重写并补授权测试")
 }
 
 // 磁盘迁移不得写入 process_bindings：迁移流在 seed 之前执行，此时 departments 还没有

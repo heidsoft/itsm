@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// P1-2 修复验证：用户级 token 最低签发时间（MinIssuedAt）机制。
+// 用户级 token 最低签发时间（MinIssuedAt）机制。
 func TestMemoryStore_MinIssuedAt(t *testing.T) {
 	store := newMemoryTokenRevocationStore()
 	ctx := context.Background()
@@ -52,7 +52,7 @@ func TestMemoryStore_MinIssuedAt(t *testing.T) {
 	}
 }
 
-// P1-4 修复验证：hasResourcePermission 仅 super_admin 硬编码直通，sysadmin 必须走权限数据。
+// hasResourcePermission 只硬编码 super_admin 直通，sysadmin 必须走权限数据。
 func TestHasResourcePermission_SysadminNotHardcoded(t *testing.T) {
 	// nil client 且 DB 权限不可得时：super_admin 仍直通；sysadmin 不应直通。
 	if !hasResourcePermission(context.Background(), nil, "super_admin", "any", "any", 1) {

@@ -860,10 +860,10 @@ func TestTicketModel_StateError(t *testing.T) {
 	assert.Contains(t, err.Error(), "cannot resolve ticket")
 }
 
-// TestTicketStateMachine_SingleSourceOfTruth P1-1 不变式：
+// TestTicketStateMachine_SingleSourceOfTruth 不变式：
 // repository 层的 CanTransitionTo 必须与 common.IsValidTicketStatusTransition
-// 对所有已知状态对返回完全一致的结果。这锁定了"工单状态机为单一事实来源"这一要求，
-// 防止将来有人在 model 层或 service 层内联一份自己的 map 导致入口间判定不一致。
+// 对所有已知状态对返回完全一致的结果，避免 model 层或 service 层内联第二份迁移表
+// 导致不同入口的判定不一致。
 func TestTicketStateMachine_SingleSourceOfTruth(t *testing.T) {
 	statuses := []Status{
 		StatusNew, StatusOpen, StatusInProgress, StatusPending,

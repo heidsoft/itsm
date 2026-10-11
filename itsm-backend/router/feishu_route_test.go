@@ -73,7 +73,7 @@ func newFeishuRouteFixture(t *testing.T) (*gin.Engine, *connector.Manager) {
 	return r, manager
 }
 
-// 回归：handlers/feishu/handler.go 曾有一份从未被调用的
+// handlers/feishu/handler.go 曾有一份从未被调用的
 // RegisterRoutes 副本，与 router.SetupFeishuRoutes 逐字重复 4 条注册，两处同时生效 gin 会因
 // 重复路由直接 panic。那份副本的分组参数由调用方决定，旧测试正是以 RegisterRoutes(api, api)
 // （同一个分组既当 auth 又当 public）调它的，按该形态接线会把两条外部回调挪进鉴权组。

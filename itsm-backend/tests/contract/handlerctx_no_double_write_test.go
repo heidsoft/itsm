@@ -5,11 +5,11 @@ package contract
 // handlerctx.ResolveTenantID / ResolveActorID / ResolveResourceIDAndTenant 等 helper
 // 在缺租户上下文、缺用户上下文或资源归属校验失败时，已经通过
 // middleware.AbortIfTenantError 写入一份「单一权威」401/403/500 响应并 c.Abort()。
-// 调用方在 !ok 分支**只**应该 return，再写一份 common.Fail(...) 就是把第二个 JSON
+// 调用方在 !ok 分支只应该 return，再写一份 common.Fail(...) 就是把第二个 JSON
 // 文档塞进同一响应体：客户端解析失败、Go runtime 记 superfluous WriteHeader 警告。
 //
-// AGENTS.md「能力状态与失败语义」要求 Controller 必须稳定映射 401/403/404/409/500，
-// 不允许把同一失败写两遍，也不允许「同一请求下写多份 envelope」导致响应体拼接。
+// Controller 必须稳定映射 401/403/404/409/500，同一失败不得写两遍，
+// 也不允许「同一请求下写多份 envelope」导致响应体拼接。
 //
 // 本文件锁住这一契约：
 //   - 禁止在 handlerctx.Resolve* 调用之后的 `if !ok { ... }` 分支内再调用
@@ -33,9 +33,9 @@ import (
 	"testing"
 )
 
-// handlerCtxScanFiles 是 E4-46 收敛涉及的 6 个 handler 文件清单（路径相对 itsm-backend）。
-// 任何新增 handler 文件调用 handlerctx.Resolve* 后写出双写响应，本测试都不会覆盖；
-// 那是新增 handler 的代码评审责任，本文件不替代评审。
+// handlerCtxScanFiles 是本守卫覆盖的 6 个 handler 文件（路径相对 itsm-backend）。
+// 新增 handler 文件调用 handlerctx.Resolve* 后写出双写响应不在本测试覆盖范围内，
+// 那部分由代码评审负责，本文件不替代评审。
 var handlerCtxScanFiles = []string{
 	"handlers/ticket_type/handler.go",
 	"handlers/ai/handler.go",
@@ -45,43 +45,27 @@ var handlerCtxScanFiles = []string{
 	"handlers/skill/handler.go",
 }
 
-// handlerCtxDoubleWriteBaseline 是 2026-10-04 由本文件扫描器实测的「双写响应点位」
-// 清单（file|func|line|name）。所有 24 处都已收口：调用方只保留 `if !ok { return }`，
-// 删掉委托给 middleware 的 common.Fail / 二次 envelope。
+// handlerCtxDoubleWriteBaseline 是「双写响应点位」清单（file|func|line|name），
+// 条目只能减不能增：handlerctx.Resolve* 的调用方在失败分支里只保留 `if !ok { return }`，
+// 不再写委托给 middleware 的 common.Fail，也不写第二份 envelope。
 //
-// 2026-10-04 E4-46 收口以下文件全集：
-//   - handlers/ticket_type/handler.go 9 处：CreateTicketType/UpdateTicketType/
-//     GetTicketType/ListTicketTypes/DeleteTicketType/setStatus(EnableTicketType/
-//     DisableTicketType 共用)/CloneTicketType/RestoreTicketType/InstallPreset
-//   - handlers/ai/handler.go 4 处：GetDeepAnalytics/GetTrendPrediction/SaveFeedback/
-//     GetEvaluation
-//   - handlers/operations/handler.go 4 处：List/Get/mutate(Replay/Cancel 共用)/
-//     bulk(BulkReplay/BulkCancel 共用)
-//   - handlers/ticket_rating/handler.go 3 处：SubmitRating/GetRating/GetRatingStats
-//   - handlers/timer/handler.go 3 处：List/Get/Stats
-//   - handlers/skill/handler.go 1 处：tenantID 注入 input map 的前置解析
-//
-// 因此本基线现在是空集——任何再回到 `if !ok { common.Fail(...) }` 形态的 handler 都会
-// 在本测试里失败。
+// 本基线现在是空集——任何回到 `if !ok { common.Fail(...) }` 形态的 handler 都会在这里失败。
 var handlerCtxDoubleWriteBaseline = map[string]int{}
 
-// handlerCtxNoReturnBaseline 是 2026-10-04 由本文件扫描器实测的「handlerctx.Resolve*
-// 之后缺少 return 提前退出的早期分支」点位清单（file|func|line）。所有 24 处都已
-// 在 `if !ok` 分支里 return；这是 E4-46 与此基线同步收口的另一面。
+// handlerCtxNoReturnBaseline 是「handlerctx.Resolve* 之后 `if !ok` 分支缺少 return」的
+// 点位清单（file|func|line），条目只能减不能增：ok=false 却继续执行后续 service 调用，
+// 等于把失败当成成功路径，会写第二份响应或在 nil 上 panic。
 //
-// 因此本基线现在是空集——handlerctx.Resolve* 之后 `if !ok` 分支不 return（继续执行
-// 后续 service 调用）属于把 ok=false 当成成功路径继续走，会写第二份响应或在 nil
-// 上 panic。
+// 本基线现在是空集。
 var handlerCtxNoReturnBaseline = map[string]int{}
 
 // forbiddenResponseCallNames 是「handlerctx.Resolve* 之后的 !ok 分支内禁止调用」的
 // 写响应 helper 集合（function 名）。它们与 AST 选择器 `SelectorExpr.Sel.Name`
 // 严格匹配，避免误伤其他包同名 helper。
 //
-// 列入黑名单的依据是 AGENTS.md「能力状态与失败语义」要求的「Controller 必须稳定
-// 映射 validation / unauthorized / forbidden / not-found / conflict / unavailable
-// / internal error；禁止把所有错误返回 500 或泄漏原始 SQL/provider 错误」，以及
-// common.RespondError / common.FailWithErr 已经把 err 净化后再 envelope 的事实。
+// 黑名单覆盖 Controller 必须稳定映射的每一支失败：validation / unauthorized / forbidden /
+// not-found / conflict / unavailable / internal error。common.RespondError 与
+// common.FailWithErr 已经净化 err 再写 envelope，!ok 分支再调用一次只会拼出第二个文档。
 var forbiddenResponseCallNames = []string{
 	"Fail",
 	"FailWithErr",
@@ -332,7 +316,7 @@ func TestHandlerCtxNoDoubleWrite(t *testing.T) {
 
 	if os.Getenv("HANDLERCTX_NO_DOUBLE_WRITE_DUMP") == "1" {
 		keys := sortedKeys(measured)
-		t.Logf("扫描器实测 %d 处双写响应点位：", len(measured))
+		t.Logf("扫描到 %d 处双写响应点位：", len(measured))
 		for _, k := range keys {
 			t.Logf("  %s", k)
 		}

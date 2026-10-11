@@ -81,8 +81,8 @@ func TestShouldUseSecureCSRFCookie(t *testing.T) {
 	})
 }
 
-// TestGenerateCSRFToken_SecureFlagDynamic 验证 GenerateCSRFToken 的 Secure 标志随请求协议动态变化
-// 这是修复的核心回归测试：release 模式 + HTTP 不应强制 Secure（之前 gin.Mode()==Release 会导致强制 Secure）
+// TestGenerateCSRFToken_SecureFlagDynamic 验证 Secure 标志随请求协议动态变化：
+// release 模式下的 HTTP 请求不得强制 Secure，否则浏览器不会在 HTTP 上回传 cookie。
 func TestGenerateCSRFToken_SecureFlagDynamic(t *testing.T) {
 	// 在 release 模式下运行，确保不依赖 gin.Mode()
 	originalMode := gin.Mode()

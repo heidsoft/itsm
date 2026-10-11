@@ -67,7 +67,7 @@ func TestRound1(t *testing.T) {
 	assert.Equal(t, 100.0, round1(100))
 }
 
-// TestBPMNSLAService_ZeroSampleHonestRate 能力语义回归：无样本不得伪装 100% 合规
+// TestBPMNSLAService_ZeroSampleHonestRate 无样本时不得报成 100% 合规
 func TestBPMNSLAService_ZeroSampleHonestRate(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -98,8 +98,8 @@ func TestBPMNMetricsService_DashboardZeroSample(t *testing.T) {
 	assert.Equal(t, 0.0, metrics.SLAComplianceRate)
 }
 
-// TestBPMNMetricsService_DashboardWeightedRate 仪表盘聚合：按已完成实例加权计算合规率。
-// 一个超时完成样本 => 0%，修复前会被逐定义平均 + 零样本伪 100 抬高。
+// TestBPMNMetricsService_DashboardWeightedRate 仪表盘合规率按已完成实例加权聚合：
+// 单个超时样本 => 0%。
 func TestBPMNMetricsService_DashboardWeightedRate(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -135,7 +135,7 @@ func TestBPMNMetricsService_DashboardWeightedRate(t *testing.T) {
 	assert.Equal(t, 0.0, rate)
 }
 
-// TestBPMNMetricsService_HealthScoreRounded 健康度评分保留一位小数（修复前返回 83.333333…）。
+// TestBPMNMetricsService_HealthScoreRounded 健康度评分保留一位小数。
 // 7 健康 + 1 警告 + 1 严重 => (700+50)/9 = 83.333… => 83.3；
 // 启动时间以当天 09:00 为基准偏移，避开营业时间跨天造成的时刻依赖。
 func TestBPMNMetricsService_HealthScoreRounded(t *testing.T) {
@@ -180,12 +180,11 @@ func TestBPMNMetricsService_HealthScoreRounded(t *testing.T) {
 	health := svc.calculateProcessHealth(ctx, tenant.ID)
 	require.NotNil(t, health)
 	// 营业日历会把周末的截止时间顺延，分类数量随运行日变化；
-	// 这里锁定回归目标：评分必须等于按公式加权后的舍入值（修复前返回未舍入浮点）
+	// 评分必须等于按公式加权后的舍入值。
 	sampled := health.Healthy + health.Warning + health.Critical
 	require.Equal(t, 9, sampled, "全部实例都应被分类")
 	expected := round1(float64(health.Healthy*100+health.Warning*50) / float64(sampled))
 	assert.Equal(t, expected, health.HealthScore)
-	// 修复前返回未舍入浮点（如 83.333333），此断言会失败
 	assert.InDelta(t, math.Round(health.HealthScore*10), health.HealthScore*10, 1e-6,
 		"健康度评分最多保留一位小数")
 	if health.Warning+health.Critical > 0 {

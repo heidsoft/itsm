@@ -13,11 +13,11 @@ import (
 
 // TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether
 //
-// P0-1 修复的 happy path：
+// happy path：
 //  1. 仓储在 *sql.Tx 中写入审批记录（RETURNING 出 ID/CreatedAt）；
 //  2. 仓储在同一 *sql.Tx 中 CAS 推进 draft→pending；
 //  3. service 不再调用非 CAS 的 repo.Update(c)；
-//  4. service 直接复用事务内返回的 rec 作为响应，**不允许**二次
+//  4. service 直接复用事务内返回的 rec 作为响应，不允许二次
 //     CreateApprovalRecord 造成重复插入。
 func TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
@@ -72,7 +72,7 @@ func TestSubmitApproval_AtomicSuccess_RecordAndStateCommittedTogether(t *testing
 
 // TestSubmitApproval_TransactionFailure_LeavesNoSideEffects
 //
-// P0-1 修复的关键不变量：若仓储内 *sql.Tx 中任一写入失败，必须整体回滚——
+// 关键不变量：若仓储内 *sql.Tx 中任一写入失败，必须整体回滚——
 // 不能出现"审批记录已写入但状态未推进"或"状态推进了但没有审批记录"的
 // 部分失败窗口。该测试在仓储层模拟事务失败，断言 service 透传错误并且
 // mock 上的副作用状态保持失败前的快照。

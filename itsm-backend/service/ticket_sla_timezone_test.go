@@ -39,7 +39,6 @@ func TestParseBusinessHoursConfig_TimeZone(t *testing.T) {
 // 场景：配置 Asia/Shanghai(UTC+8)，工作时段 09:00-18:00，周一至周五。
 // 起始时刻 = 2026-08-17(周一) 01:00:00 UTC，即上海 09:00:00。
 // 480 分钟(8h) 解决时限，应在上海 17:00 截止 = UTC 09:00 同日。
-// 修复前：窗口按宿主机/UTC 计算，01:00Z 被推到 09:00Z 起算，截止 17:00Z（整体偏移 +8h）。
 func TestAddBusinessMinutes_HonorsTimeZone(t *testing.T) {
 	cfg := parseBusinessHoursConfig(map[string]interface{}{
 		"time_zone":  "Asia/Shanghai",

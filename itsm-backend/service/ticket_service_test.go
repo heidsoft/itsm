@@ -500,8 +500,8 @@ func TestTicketService_GetTickets(t *testing.T) {
 	}
 }
 
-// TestTicketService_ListTickets_DataScope 阻断8 回归测试：
-// 验证行级数据权限。end_user 只能看到自己创建或分配给自己的工单，
+// TestTicketService_ListTickets_DataScope 验证行级数据权限：
+// end_user 只能看到自己创建或分配给自己的工单，
 // admin/manager 可见全租户工单。这是安全关键路径，防止越权读取 HR/薪酬/安全工单。
 func TestTicketService_ListTickets_DataScope(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

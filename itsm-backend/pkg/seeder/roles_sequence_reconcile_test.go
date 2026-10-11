@@ -125,11 +125,11 @@ func newRolesSequencePostgresFixture(t *testing.T) (*sql.DB, *ent.Client) {
 	return db, client
 }
 
-// TestSeedRolesReconcilesRolesIDSequenceAfterExplicitIDMigration 复刻生产缺陷：
-// migrations/20260501_enable_rbac_from_db.sql 以显式 id 100-112 插入平台内置角色
-// 但不推进 roles_id_seq；租户引导的串行分配一旦追上 100 即撞 roles_pkey，且
-// PostgreSQL 序列不随事务回滚，重试永远撞在同一区间上，租户引导死信。回归证明
-// seedRoles 必须先把序列对齐到 max(roles.id) 再插入。
+// TestSeedRolesReconcilesRolesIDSequenceAfterExplicitIDMigration 覆盖
+// migrations/20260501_enable_rbac_from_db.sql 的遗留形态：它以显式 id 100-112 插入
+// 平台内置角色却不推进 roles_id_seq。租户引导的串行分配一旦追上 100 就撞 roles_pkey，
+// 而 PostgreSQL 序列不随事务回滚，重试永远撞在同一区间上，租户引导进死信。
+// 因此 seedRoles 必须先把序列对齐到 max(roles.id) 再插入。
 func TestSeedRolesReconcilesRolesIDSequenceAfterExplicitIDMigration(t *testing.T) {
 	db, client := newRolesSequencePostgresFixture(t)
 	ctx := tenantctx.SystemContext(context.Background(), "initialization:test", "roles sequence regression")

@@ -204,8 +204,7 @@ func TestFail_Conflict(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, w.Code)
 }
 
-// 对齐审计 P0 #3:2002 (未授权)必须映射到 401,不能再走 200 通道。
-// 这是 Stage 1.6 (common/response 2002/2004/2005 HTTP 状态断言) 的核心契约。
+// 业务码 2002（未授权）必须映射为 HTTP 401，不能走 200 通道。
 func TestFail_Unauthorized2002(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -220,7 +219,7 @@ func TestFail_Unauthorized2002(t *testing.T) {
 	assert.Equal(t, UnauthorizedCode, resp.Code)
 }
 
-// 对齐审计 P0 #3:2004 (工具权限不足)必须映射到 403。
+// 业务码 2004（工具权限不足）必须映射为 HTTP 403。
 func TestFail_ToolPermissionDenied2004(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -235,7 +234,7 @@ func TestFail_ToolPermissionDenied2004(t *testing.T) {
 	assert.Equal(t, ToolPermissionDeniedCode, resp.Code)
 }
 
-// 对齐审计 P0 #3:2005 (未知工具)必须映射到 404。
+// 业务码 2005（未知工具）必须映射为 HTTP 404。
 func TestFail_UnknownTool2005(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -432,7 +431,7 @@ func TestFail_ContextModified(t *testing.T) {
 	assert.Equal(t, "req-123", c.GetString("request_id"))
 }
 
-// ==================== FailWithErr / ParamErrorWithErr (Phase 4 安全错误映射) ====================
+// ==================== FailWithErr / ParamErrorWithErr ====================
 
 func TestFailWithErr_DoesNotLeakRawError(t *testing.T) {
 	w := httptest.NewRecorder()
@@ -568,10 +567,10 @@ func TestRespondError_FallbackOnInternal(t *testing.T) {
 	assert.NotContains(t, w.Body.String(), "connection refused")
 }
 
-// ==================== E4-5 错误分类单一所有者 ====================
+// ==================== 错误分类单一所有者 ====================
 
-// statusForCode 收敛后，Fail 与 FailWithData 必须对每个业务码给出同一个 HTTP 状态。
-// 这是把两份 switch 合并成唯一所有者之后才可能成立的不变量。
+// Fail 与 FailWithData 必须对每个业务码给出同一个 HTTP 状态；
+// 两份映射分别演化时，同一次失败会从两个入口返回不同状态。
 func TestStatusForCode_FailAndFailWithDataAgree(t *testing.T) {
 	codes := []struct {
 		code     int
@@ -606,10 +605,9 @@ func TestStatusForCode_FailAndFailWithDataAgree(t *testing.T) {
 	}
 }
 
-// FailWithErr 过去把所有错误一律压成 500/5001，领域错误自带的 HTTP 语义被丢掉；
-// RespondError 又单独分类，同一个 service 错误经两个 helper 得到两种状态码。
-// 收敛后 classifyError 是唯一分类者：状态码跟随领域语义，消息仍是 handler 的 publicMsg
-// （领域文案可能是英文，不能在这里替换掉中文 UX 文案）。
+// classifyError 是唯一分类者：状态码跟随领域语义，消息仍是 handler 的 publicMsg
+// （领域文案可能是英文，不能在这里替换掉中文 UX 文案）。把错误一律压成 500/5001，
+// 或让同一个 service 错误经不同 helper 得到两种状态码，都是这里要拦的。
 func TestFailWithErr_ClassifiesDomainErrors(t *testing.T) {
 	cases := []struct {
 		name     string
@@ -701,8 +699,8 @@ func TestRespondError_MatchesFailWithErrClassification(t *testing.T) {
 	}
 }
 
-// ErrorHandler 中间件此前用类型断言，只认顶层错误；被 %w 包装的业务拒绝掉进 500。
-// 分类收敛到 classifyError（errors.As）后，包装同样识别。
+// ErrorHandler 的分类必须走 classifyError（errors.As）：只认顶层错误的类型断言会把
+// 被 %w 包装的业务拒绝掉进 500。
 func TestErrorHandler_Middleware_ClassifiesWrappedErrors(t *testing.T) {
 	cases := []struct {
 		name      string

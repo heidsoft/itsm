@@ -117,7 +117,7 @@ func TestE2E_RAG_PublicKnowledgeStillSearchable(t *testing.T) {
 	client, rag, ctx, tenantID, employeeID, _ := setupKnowledgeAccessE2E(t)
 	defer client.Close()
 
-	// 关键回归：纳管一个分类后，未纳管的公开知识必须照常可检索
+	// 纳管一个分类后，未纳管的公开知识必须照常可检索
 	viewerCtx := knowledgeaccess.WithViewer(ctx, knowledgeaccess.Viewer{UserID: employeeID, Role: "end_user"})
 	results, err := rag.Ask(viewerCtx, tenantID, "VPN", 20)
 	require.NoError(t, err)

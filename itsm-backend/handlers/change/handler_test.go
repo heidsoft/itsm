@@ -76,9 +76,8 @@ type mockRepository struct {
 	approverValid bool
 	submitErr     error
 	replaceErr    error
-	// submitApprovalErr 是 P0-1 回归测试的事务失败注入点：
-	// 测试可以让 mock 的 SubmitApprovalRecordTx 直接返回错误，
-	// 断言 service 把错误透传出去且不在 mock 上留下任何部分写入。
+	// submitApprovalErr 是事务失败注入点：让 mock 的 SubmitApprovalRecordTx 直接返回错误，
+	// 用来断言 service 把错误透传出去且不在 mock 上留下任何部分写入。
 	submitApprovalErr error
 }
 
@@ -266,8 +265,8 @@ func (m *mockRepository) SubmitForApproval(ctx context.Context, changeID, tenant
 // 仍为 draft 时把它推进到 pending（原子地）。mock 这里串行执行两条写入
 // （无 sql.Tx），但语义与生产保持一致——足以支撑 service.SubmitApproval 单测。
 //
-// 支持事务失败注入（submitApprovalErr 非空时在写记录前返回错误），用于
-// P0-1 回归测试断言"事务失败不留任何副作用"。
+// 支持事务失败注入（submitApprovalErr 非空时在写记录前返回错误），
+// 用于断言事务失败不留任何副作用。
 func (m *mockRepository) SubmitApprovalRecordTx(ctx context.Context, changeID, tenantID, approverID int, comment string, now time.Time) (*ApprovalRecord, bool, error) {
 	if m.submitApprovalErr != nil {
 		return nil, false, m.submitApprovalErr
@@ -523,8 +522,8 @@ func TestChangeController_ListChanges(t *testing.T) {
 			expectedSize:   20,
 		},
 		{
-			// 修复前 handler 先读 risk_level 再兜 riskLevel，同一用例两套参数名；
-			// 实测前端只发 riskLevel，snake_case 一支属 AGENTS 禁止的多字段兼容。
+			// 过滤器只认 riskLevel。同时读 risk_level 等于两套参数名并存，
+			// snake_case 一支会静默生效，属 AGENTS 禁止的多字段兼容。
 			name:           "snake_case 参数名不再生效，不再被当成过滤器",
 			queryParams:    "?risk_level=high",
 			expectedStatus: http.StatusOK,
@@ -543,8 +542,8 @@ func TestChangeController_ListChanges(t *testing.T) {
 			expectedSize:   20,
 		},
 		{
-			// 修复前是裸 strconv.Atoi：pageSize=0 原样落库查询（Ent Limit(0) = 不加 LIMIT），
-			// page<=0 会算出负 Offset。夹紧只有一套通道。
+			// pageSize=0 必须夹紧：Ent 的 Limit(0) 等于不加 LIMIT，会把整表读出来；
+			// page<=0 同理会算出负 Offset。归一只在分页解析处发生一次。
 			name:           "pageSize=0 夹紧为默认页长",
 			queryParams:    "?page=1&pageSize=0",
 			expectedStatus: http.StatusOK,
@@ -777,7 +776,7 @@ func TestChangeController_UpdateChange(t *testing.T) {
 			expectedCode:   common.NotFoundCode,
 		},
 		{
-			name:     "P1-2 draft 允许修改治理字段（RiskLevel/Type/Justification）",
+			name:     "draft 允许修改治理字段（RiskLevel/Type/Justification）",
 			changeID: strconv.Itoa(change.ID),
 			request: dto.UpdateChangeRequest{
 				RiskLevel:     ptrChangeRisk(dto.ChangeRiskHigh),
@@ -823,7 +822,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 	pendingChange.AffectedCIs = []string{"CI-001"}
 	repo.changes[pendingChange.ID] = pendingChange
 
-	t.Run("P1-2 pending 下改 RiskLevel 被拒", func(t *testing.T) {
+	t.Run("pending 下改 RiskLevel 被拒", func(t *testing.T) {
 		body := dto.UpdateChangeRequest{RiskLevel: ptrChangeRisk(dto.ChangeRiskHigh)}
 		buf, _ := json.Marshal(body)
 		req, _ := http.NewRequest("PUT", "/api/v1/changes/"+strconv.Itoa(pendingChange.ID), bytes.NewBuffer(buf))
@@ -838,7 +837,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
-	t.Run("P1-2 pending 下改 Type+ImpactScope+Justification 组合被拒并命名字段", func(t *testing.T) {
+	t.Run("pending 下改 Type+ImpactScope+Justification 组合被拒并命名字段", func(t *testing.T) {
 		body := dto.UpdateChangeRequest{
 			Type:          ptrChangeType(dto.ChangeTypeEmergency),
 			ImpactScope:   ptrChangeImpact(dto.ChangeImpactHigh),
@@ -856,7 +855,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
-	t.Run("P1-2 pending 下改 ImplementationPlan/RollbackPlan/AffectedCIs 被拒", func(t *testing.T) {
+	t.Run("pending 下改 ImplementationPlan/RollbackPlan/AffectedCIs 被拒", func(t *testing.T) {
 		body := dto.UpdateChangeRequest{
 			ImplementationPlan: strPtr("绕过审批改实施计划"),
 			RollbackPlan:       strPtr("绕过审批改回滚计划"),
@@ -874,7 +873,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
-	t.Run("P1-2 approved 下仅改运营字段（Title/Description/Planned*/RelatedTickets）放行", func(t *testing.T) {
+	t.Run("approved 下仅改运营字段（Title/Description/Planned*/RelatedTickets）放行", func(t *testing.T) {
 		approvedChange := createTestChange(repo, 1, 1)
 		approvedChange.Status = "approved"
 		approvedChange.Title = "原始标题"
@@ -902,7 +901,7 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, common.SuccessCode, resp.Code)
 	})
 
-	t.Run("P1-2 scheduled 下改治理字段+运营字段混合 被拒（治理优先守卫）", func(t *testing.T) {
+	t.Run("scheduled 下改治理字段+运营字段混合 被拒（治理优先守卫）", func(t *testing.T) {
 		scheduledChange := createTestChange(repo, 1, 1)
 		scheduledChange.Status = "scheduled"
 		repo.changes[scheduledChange.ID] = scheduledChange
@@ -976,8 +975,8 @@ func TestChangeController_DeleteChange(t *testing.T) {
 // TestChangeController_GetStats tests GET /api/v1/changes/stats
 //
 // 断言的是响应契约本身：封闭的 camelCase 键集合 + 每个状态桶都可达 + byType 恒为数组。
-// 修复前 dto.ChangeStatsResponse 没有 draft/closed/byType，toStatsDTO 也把 Draft
-// 直接丢掉，导致报表页的「草稿」扇区恒为 0、类型分布只能用 total 伪造。
+// draft/closed 桶和 byType 必须由 toStatsDTO 真实填出——报表页的「草稿」扇区和类型分布
+// 直接读它们，丢掉 Draft 会让该扇区恒为 0、类型分布只能用 total 伪造。
 func TestChangeController_GetStats(t *testing.T) {
 	r, _, repo := setupTestHandler(t)
 
@@ -1347,9 +1346,10 @@ func TestInferITILPractices(t *testing.T) {
 	})
 }
 
-// TestChangeHandler_MissingTenantContext_401 是租户 panic 修复的回归锚点：
-// 历史实现 c.Get("tenant_id").(int) 在上下文缺失时 panic（gin recovery 兜 500），
-// 修复后应 fail-closed 返回 401 且不触达 service。
+// TestChangeHandler_MissingTenantContext_401 锁定缺租户上下文时的行为。
+//
+// c.Get("tenant_id").(int) 在上下文缺失时会 panic（gin recovery 兜成 500）；
+// 必须 fail-closed 返回 401 且不触达 service。
 func TestChangeHandler_MissingTenantContext_401(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := newMockRepository()
@@ -1371,11 +1371,11 @@ func TestChangeHandler_MissingTenantContext_401(t *testing.T) {
 	assert.Equal(t, common.AuthFailedCode, resp.Code)
 }
 
-// ==================== P1-③ 变更管理收敛：提交门禁测试 ====================
+// ==================== 变更提交门禁测试 ====================
 
 // TestChangeHandler_SubmitGate_MissingPlansRejected 影响分析门禁：
 // 绑定受影响 CI 但实施/回滚计划为空的 draft 变更，提交必须被 422 拦截，
-// 不得被 InternalError 兜底吞成 500（对齐 P1-① 错误映射铁律）。
+// 不得被 InternalError 兜底吞成 500。
 func TestChangeHandler_SubmitGate_MissingPlansRejected(t *testing.T) {
 	r, _, repo := setupTestHandler(t)
 
@@ -1610,7 +1610,7 @@ func TestValidateSubmitGate_ErrorsAreAppErrors(t *testing.T) {
 	}))
 }
 
-// 回归：SubmitApproval 的审批人必须取认证上下文，请求体伪造 approverId 无效。
+// SubmitApproval 的审批人必须取认证上下文，请求体伪造 approverId 无效。
 func TestChangeController_SubmitApproval_UsesAuthenticatedApprover(t *testing.T) {
 	r, handler, repo := setupTestHandler(t)
 	r.POST("/api/v1/changes/:id/approvals", handler.SubmitApproval)

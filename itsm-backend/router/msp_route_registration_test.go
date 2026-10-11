@@ -12,10 +12,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：前端 msp-api.ts 调用的
-// GET /api/v1/msp/allocations/history 从未在 router/msp_routes.go 注册，
-// 分配历史页签只能靠能力开关藏着。这里用真实注册函数锁定路由契约本身，
-// 方法/完整前缀/静态段都必须与前端一致，否则同类漂移会再次静默发生。
+// 用真实注册函数锁定 GET /api/v1/msp/allocations/history 的路由契约：
+// 方法、完整前缀、静态段都必须与前端 msp-api.ts 的调用一致。
+// 路径没注册时页签只能靠能力开关藏着，404 不会被任何人发现。
 func TestSetupMSPRoutes_AllocationHistoryIsRegistered(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	gin.SetMode(gin.TestMode)

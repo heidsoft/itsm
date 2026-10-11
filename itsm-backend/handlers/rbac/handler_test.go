@@ -152,7 +152,7 @@ func mkRBACPermission(t *testing.T, client *ent.Client, tenantID int, code strin
 // mkRBACRole 创建角色并可选挂载权限。
 //
 // 注意：角色↔权限关联的系统真源是 RolePermission 实体（带 tenant_id，服务层
-// AssignPermissions/getRolePermissionsByIDs 均读写它），**不是** ent 的 M2M 边
+// AssignPermissions/getRolePermissionsByIDs 均读写它），不是 ent 的 M2M 边
 // role.Permissions。用 AddPermissionIDs 写边会静默落到无人读取的联表，
 // 导致授权看起来成功但查询为空——夹具必须直接写 RolePermission。
 func mkRBACRole(t *testing.T, client *ent.Client, tenantID int, name, code string, scope entrole.DataScope, active bool, permIDs ...int) *ent.Role {
@@ -292,12 +292,11 @@ func TestListRoles_MapsStatusScopeAndPermissions(t *testing.T) {
 }
 
 // =============================================================================
-// 角色启用状态契约回归（P0：启用/禁用开关曾是假控件）
+// 角色启用状态契约
 //
-// 线上实测：PUT /api/v1/roles/19 {"status":"inactive"} 返回 HTTP 200 + code 0
-// "success"，但响应体只有 isActive:true、数据库 is_active 仍为 t。根因是 service
-// 只读 req.IsActive，而前端与 DTO 契约只发 status，字段被静默丢弃。
-// 以下用例在修复前全部失败，修复后通过。
+// PUT /api/v1/roles/:id {"status":"inactive"} 必须真的翻转 is_active 并在响应里反映为
+// isActive:false。前端与 DTO 契约发的是 status，service 若只读 req.IsActive，该字段会被
+// 静默丢弃：接口返回 HTTP 200 + code 0，数据却没变，开关成了假控件。
 // =============================================================================
 
 // TestUpdateRole_StatusTogglesIsActive 启用/禁用开关必须真实落库。

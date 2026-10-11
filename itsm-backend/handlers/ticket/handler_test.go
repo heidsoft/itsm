@@ -850,9 +850,9 @@ func seedTicketWith(t *testing.T, r http.Handler, req dto.CreateTicketRequest) {
 	require.Equal(t, 200, w.Code, w.Body.String())
 }
 
-// TestHandler_ListTickets_UnpagedRequest 锁死 2026-10-02 e2e 实测的缺陷：
-// GET /api/v1/tickets 省略 page/pageSize 时，DTO 零值被同时下传给仓储（负偏移）
-// 和信封（除零溢出），响应里出现 totalPages: -9223372036854775808。
+// TestHandler_ListTickets_UnpagedRequest:
+// GET /api/v1/tickets 省略 page/pageSize 时，DTO 零值若同时下传给仓储（负偏移）
+// 和信封（除零溢出），响应里会出现 totalPages: -9223372036854775808。
 func TestHandler_ListTickets_UnpagedRequest(t *testing.T) {
 	r, repo := newTestHarness(t)
 	seedTickets(t, r, 3)
@@ -928,10 +928,10 @@ func TestHandler_ListTickets_ExplicitPaging(t *testing.T) {
 	assert.Equal(t, 3, got.Data.TotalPages)
 }
 
-// TestHandler_ListTickets_ForwardsEveryDeclaredFilter 锁死 2026-10-02 实测的筛选静默失效：
+// TestHandler_ListTickets_ForwardsEveryDeclaredFilter:
 // ListTicketsRequest 声明了 assigneeId/requesterId/type/categoryId/parentTicketId/templateId，
-// 仓储层也按这些键位实现筛选，但 handler 只下传 status/priority/keyword/排序，
-// 于是 GET /api/v1/tickets?assigneeId=33 返回租户全量工单（实测 41 条、受理人全是别人），
+// 仓储层也按这些键位实现筛选，handler 必须把它们全部下传。只传 status/priority/keyword/排序时，
+// GET /api/v1/tickets?assigneeId=33 会返回租户全量工单，
 // 而 src/app/(main)/tickets/page.tsx 正在发送 assigneeId。
 func TestHandler_ListTickets_ForwardsEveryDeclaredFilter(t *testing.T) {
 	r, repo := newTestHarness(t)

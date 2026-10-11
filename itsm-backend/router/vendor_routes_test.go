@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：/api/v1/vendors 原本把后端故障和跨租户访问
+// /api/v1/vendors 原本把后端故障和跨租户访问
 // 都伪装成成功，且列表信封用非 items 键：
 //   - ListVendors 用 `total, _ :=` / `vendors, _ :=` 吞掉 Count/All 的错误，
 //     数据库故障时返回 200 空列表，调用方无法区分「没有供应商」和「查询挂了」。
@@ -32,7 +32,7 @@ import (
 //     实际返回 HTTP 200 + 业务码 404。
 //   - DeleteVendor 忽略条件删除的影响行数，删不存在/别人的记录也回成功。
 //   - 列表用 {list,total,page}，与全站 items/total/page/pageSize/totalPages 契约不一致。
-// 必须从真实 Router 入口证明修复后的契约，并覆盖跨租户拒绝。
+// 契约必须从真实 Router 入口证明，并覆盖跨租户拒绝。
 
 const vendorsPath = "/api/v1/vendors"
 

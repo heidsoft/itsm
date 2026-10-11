@@ -166,11 +166,11 @@ func TestFirstToken(t *testing.T) {
 	}
 }
 
-// TestDriverEnforceQueryInjectsSessionVar 回归用例：
-// enforce 模式旧实现把 Query 包进短事务，事务在调用方扫描行之前提交，
+// TestDriverEnforceQueryInjectsSessionVar：enforce 模式不能用短事务包 Query——
+// 事务在调用方扫描行之前提交，
 // 行句柄失效报 "sql: Rows are closed"，启动就绪探针因此崩溃，RLS 被迫关闭。
-// 修复后 Query/Exec 不再开事务，而是通过上下文（entsql.WithVar）把租户变量
-// 交给内层驱动，由 ent 在专用池连接上于语句前后 SET/RESET。
+// Query/Exec 通过上下文（entsql.WithVar）把租户变量交给内层驱动，
+// 由 ent 在专用池连接上于语句前后 SET/RESET。
 func TestDriverEnforceQueryInjectsSessionVar(t *testing.T) {
 	fake := &fakeDriver{}
 	d := NewDriver(fake, ModeEnforce, zap.NewNop().Sugar())

@@ -112,7 +112,6 @@ func TestGetCustomerReports_HonorsCamelCaseDateRange(t *testing.T) {
 
 	r := newMSPTestRouter(t, client, user.ID, nil)
 
-	// 修复前：handler 读 start_date/end_date，camelCase 请求恒返回 1001。
 	status, body := doMSPRequest(t, r, "/api/v1/msp/reports/customers?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusOK, status, body["message"])
 	assert.Equal(t, float64(0), body["code"])
@@ -143,14 +142,13 @@ func TestGetPerformanceReports_HonorsCamelCaseDateRange(t *testing.T) {
 	mspCtx := &middleware.MSPContext{IsMSP: true, MSPUserID: user.ID}
 	r := newMSPTestRouter(t, client, user.ID, mspCtx)
 
-	// 修复前：handler 读 start_date/end_date，camelCase 请求恒返回 1001。
 	status, body := doMSPRequest(t, r, "/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusOK, status, body["message"])
 	assert.Equal(t, float64(0), body["code"])
 	// 日期区间必须真正下推到查询：区间外的工单不得计入。
 	assert.Equal(t, 2, reportTotalTickets(t, body))
 
-	// MSP 上下文缺失仍按授权失败 fail closed（与修复前一致，不放宽鉴权面）。
+	// MSP 上下文缺失仍按授权失败 fail closed，不放宽鉴权面。
 	r = newMSPTestRouter(t, client, user.ID, nil)
 	status, body = doMSPRequest(t, r, "/api/v1/msp/reports/performance?startDate=2024-01-01&endDate=2024-12-31")
 	require.Equal(t, http.StatusForbidden, status, body["message"])
@@ -185,9 +183,9 @@ func TestGetPerformanceReports_MSPUserIDFilterIsRejected(t *testing.T) {
 	}
 }
 
-// 报表聚合维度是 tenant，租户只能来自认证上下文。修复前 handler 把认证上下文里的
-// user_id 传给了按 tenant_id 过滤的服务方法，于是调用者读到的是「ID 恰好等于自己
-// user_id 的那个租户」的工单数——这是一份跨租户读数。
+// 报表聚合维度是 tenant，租户只能来自认证上下文。把认证上下文里的 user_id 传给按
+// tenant_id 过滤的服务方法时，调用者读到的是「ID 恰好等于自己 user_id 的那个租户」
+// 的工单数——这是一份跨租户读数。
 func TestMSPReports_TenantScopeComesFromAuthContextNotUserID(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:msp_report_tenant_scope?mode=memory&cache=shared&_fk=1")
 	defer client.Close()
@@ -223,7 +221,7 @@ func TestMSPReports_TenantScopeComesFromAuthContextNotUserID(t *testing.T) {
 	} {
 		status, body := doMSPRequest(t, r, path)
 		require.Equal(t, http.StatusOK, status, "%s 返回 %v", path, body)
-		// 只统计本租户的 1 张工单；修复前这里读到的是 foreign tenant 的 2 张。
+		// 只统计本租户的 1 张工单，不是 foreign tenant 的 2 张。
 		assert.Equal(t, 1, reportTotalTickets(t, body), "%s 的聚合范围必须是认证租户", path)
 	}
 }
@@ -231,8 +229,8 @@ func TestMSPReports_TenantScopeComesFromAuthContextNotUserID(t *testing.T) {
 // ==================== MSP context 缺失不得 panic ====================
 //
 // MSPMiddleware 在 gin.Context 缺少 user_id 时直接 c.Next() 且不写入 MSPContextKey。
-// 历史实现用 `mspCtx, _ := GetMSPContext(c)` 丢弃 exists 后立即解引用，
-// 使 GetCustomerTickets / GetPerformanceReports 成为必然 500 panic 的路由。
+// 因此 handler 必须检查 exists：`mspCtx, _ := GetMSPContext(c)` 之后直接解引用，
+// 会让 GetCustomerTickets / GetPerformanceReports 成为必然 500 panic 的路由。
 
 func TestGetCustomerTickets_FailsClosedWithoutMSPContext(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:msp_cust_tickets_noctx?mode=memory&cache=shared&_fk=1")

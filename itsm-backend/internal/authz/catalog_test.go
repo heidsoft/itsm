@@ -4,11 +4,9 @@ import (
 	"testing"
 )
 
-// TestDefinitionsParityWithSeeder 迁移期一致性验证。
-//
-// 本测试保证从 pkg/seeder.seeder.go 搬到本包的 Definitions() 与原
-// permissionDefinitions() 输出完全一致——零行为变化。批次 6 后续 PR 把
-// seeder 切到本包时即可删除本测试。
+// TestDefinitionsParityWithSeeder 校验权限码目录的内部一致性：Code 必须等于
+// Resource:Action，AllCodes 与 Definitions 同序同量，且码全局唯一。
+// 目录本身已从 pkg/seeder 迁入本包，seeder 直接消费 Definitions()。
 func TestDefinitionsParityWithSeeder(t *testing.T) {
 	cat := AllCodes()
 	if len(cat) < 100 {

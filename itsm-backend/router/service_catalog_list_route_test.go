@@ -24,19 +24,19 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：服务目录列表信封原先回
-// {catalogs,total,page,size} —— 领域名集合键 + size 别名，是棘轮里最后一条 size 违规。
-// 页长同时有 4 个所有者：handler 不夹紧、Service.List 缺省 10、Service.Search 缺省 20
-// 且把 Page/Size 写死成 1/20（/search 因此永远只能拿到第一页），
-// dto.GetServiceCatalogsRequest 上的 binding:"max=1000" 是第四套真相。
+// 服务目录列表信封必须回平台五键 {items,total,page,pageSize,totalPages}：
+// 集合键不用领域名 catalogs，请求也不接受别名 size。
+// 页长只能有一个所有者 —— HTTP 入口的 common.GetPaginationFromQuery 夹紧一次；
+// handler、Service.List、Service.Search 与 dto 上的 binding 上限都不再各定一套缺省或
+// 上限，/search 必须按请求页码做 Count + Offset/Limit 真分页而不是固定第一页。
 //
-// 后果是数据错误而不是样式问题：repository 收到零值分页会算出 Limit(0)，而 Ent 的
-// Limit(0) 等于不加 LIMIT，一次调用就把该租户整表读出来；缺 ID 并列键时同秒数据的
-// 页边界归属不确定，翻页会重或漏。
+// 这是数据正确性问题而不是样式问题：未夹紧的零值会算出 Limit(0) 或负 OFFSET，
+// pageSize=0 不得整表返回该租户；缺 ID 并列键时同秒数据的页边界归属不确定，
+// 翻页会重也会漏。
 //
-// 本测试打在**生产注册**上（SetupRoutes → SetupServiceCatalogRoutes →
-// RequirePermission("service_catalog","read")），解码目标声明为本地 wire 结构而不引用
-// dto，因此修复前也能编译，证明的是运行时行为。
+// 本测试打在 SetupRoutes → SetupServiceCatalogRoutes →
+// RequirePermission("service_catalog","read") 的真实注册上，解码目标声明为本地 wire
+// 结构而不引用 dto，因此断言的是运行时行为而不是编译期形状。
 
 const serviceCatalogListSecret = "service-catalog-list-secret"
 
@@ -185,9 +185,8 @@ func TestServiceCatalogListRoutesEnvelopeAndPagination(t *testing.T) {
 
 	t.Run("页长只有一个所有者且 size 别名无效", func(t *testing.T) {
 		// size=1000/1001 与 pageSize=0/300 都必须回落到平台缺省 20。
-		// 修复前实测（120 条种子）：?size=1000 通过 binding:"max=1000" 后被 handler
-		// 静默夹成 100 条，?size=1001 却被 binding 拒绝返回业务 code 1001 ——
-		// binding 上限 1000 与 handler 上限 100 是两套真相，相邻输入行为不一致。
+		// binding 上限与 handler 上限若是两套真相，相邻输入行为就不一致：
+		// ?size=1000 通过 binding 后被静默夹成 100，?size=1001 却返回业务 code 1001。
 		for _, query := range []string{"size=1000", "size=1001", "pageSize=0", "pageSize=300", "page=-1&pageSize=abc"} {
 			t.Run(query, func(t *testing.T) {
 				status, body, env := list(t, query)

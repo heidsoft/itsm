@@ -23,12 +23,11 @@ import (
 
 // TestMultiTenantRLS_Matrix_17Tables 锁定 17 张 tenant 表的 RLS 行为。
 //
-// 注：ent sqlite 默认不做 RLS 强制，因此本测试是**契约测试**：
+// 注：ent sqlite 默认不做 RLS 强制，因此本测试是契约测试：
 //   - 验证 service 层 / handler 层在 tenant_id=0 时会拒绝
 //   - 验证跨租户 ID 查询会返回 NotFound（404 而非 200）
 //
-// 这些约定在 handlers/、service/ 的 *_test.go 中已单点覆盖，本测试汇总
-// 防止后续回归。
+// 这些约定在 handlers/、service/ 的 *_test.go 中已单点覆盖，本测试做汇总校验。
 func TestMultiTenantRLS_Matrix_17Tables(t *testing.T) {
 	cases := []struct {
 		name      string

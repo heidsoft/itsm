@@ -11,8 +11,8 @@ import (
 // 路由权限后忘记 `go run ./cmd/authz-gen` 重新生成 → 本测试红，并给出修复指引。
 //
 // 与 TestRoutePrecheckAlignment 的分工：
-//   - 本测试管**生成物新鲜度**（声明 → 生成物 是否同步）；
-//   - 对齐测试管**合并结果口径**（生成物 + precheckFallbackPolicies → 预检解析
+//   - 本测试管生成物新鲜度（声明 → 生成物 是否同步）；
+//   - 对齐测试管合并结果口径（生成物 + precheckFallbackPolicies → 预检解析
 //     是否与声明一致），兜住显式回退策略引入的漂移。
 func TestPrecheckMapIsFresh(t *testing.T) {
 	want, err := GeneratePrecheckSource()
@@ -36,11 +36,11 @@ func TestPrecheckMapIsFresh(t *testing.T) {
 // TestNoPermissionDeclarationIsDropped 守卫：任何 RequirePermission 家族声明都必须被
 // 扫描器定位成 /api/v1 完整路径，一条都不许丢。
 //
-// 扫描器此前只认函数内 `x := y.Group(...)` 派生的分组，解析不出
-// 以 `*gin.RouterGroup` 形参传入的组根（如 SetupTicketTypeRoutes(tenant *gin.RouterGroup)），
-// 于是这类声明在 `/api/v1` 前缀过滤处被静默丢弃、进不了预检映射。DBOnly 生产模式下
-// RBACMiddleware 的路径预检对未映射路径一律拒绝，工单类型 CRUD/preset 安装、teams、
-// tags、problem-relationships、approval-records、my-approvals 等 21 个端点对
+// 扫描器必须同时认两种分组写法：函数内 `x := y.Group(...)` 派生的组，以及以
+// `*gin.RouterGroup` 形参传入的组根（如 SetupTicketTypeRoutes(tenant *gin.RouterGroup)）。
+// 解析不出后者时，这类声明会在 `/api/v1` 前缀过滤处被静默丢弃、进不了预检映射；
+// DBOnly 生产模式下 RBACMiddleware 对未映射路径一律拒绝，工单类型 CRUD/preset 安装、
+// teams、tags、problem-relationships、approval-records、my-approvals 等端点会对
 // 非 super_admin 恒 403。
 //
 // 丢声明=锁死端点，所以这里必须硬失败，而不是只让生成器报错。

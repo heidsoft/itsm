@@ -275,10 +275,9 @@ func TestTransitionStatus_NoBoundInstanceFallsBack(t *testing.T) {
 	assert.Equal(t, "approved", updated.Status)
 }
 
-// TestTransitionStatus_BridgeRollbackOnCASConflict 事务化回归：
-// 业务状态 CAS 落败时，同一事务内已完成的 BPMN 任务必须一起回滚。
-// 修复前桥接独立提交，CAS 失败后留下「流程已批、业务未批」的分叉
-// （任务 completed、审批决定落库，而变更状态未推进）。
+// TestTransitionStatus_BridgeRollbackOnCASConflict 业务状态 CAS 落败时，
+// 同一事务内已完成的 BPMN 任务必须一起回滚。桥接若独立提交，CAS 失败会留下
+// 「流程已批、业务未批」的分叉：任务 completed、审批决定落库，变更状态却未推进。
 func TestTransitionStatus_BridgeRollbackOnCASConflict(t *testing.T) {
 	entClient := newChangeBridgeEntClient(t, "change_bridge_rollback")
 	tenantID, actorID := setupChangeBridgeActor(t, entClient, "rb")

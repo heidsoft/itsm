@@ -111,7 +111,7 @@ func TestStatsRepository_StatusBuckets(t *testing.T) {
 }
 
 // TestStatsRepository_ByTypeIsRealAggregation 类型分布必须来自真实 GROUP BY，
-// 顺序固定可重放；/reports/change-success 此前用 total 的 30/50/20 伪造过这张图。
+// 顺序固定可重放；用 total 按比例摊出 30/50/20 之类的假分布会让这张图与真实数据无关。
 func TestStatsRepository_ByTypeIsRealAggregation(t *testing.T) {
 	client, _ := openStatsTestDB(t)
 

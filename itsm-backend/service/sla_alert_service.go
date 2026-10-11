@@ -502,7 +502,7 @@ func (s *SLAAlertService) checkAndCreateAlert(ctx context.Context, ticketEntity 
 				}
 			}
 
-			// 创建预警历史记录（阶段 C：与通知入箱同一事务内落库）
+			// 创建预警历史记录，与通知入箱在同一事务内落库
 			tx, err := s.client.Tx(ctx)
 			if err != nil {
 				s.logger.Errorw("Failed to begin SLA alert transaction", "error", err)

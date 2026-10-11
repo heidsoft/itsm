@@ -341,9 +341,9 @@ func (s *BPMNAuditService) QueryAuditLogs(ctx context.Context, req *QueryAuditLo
 	}
 
 	// 分页：HTTP 入口由 common.GetPaginationFromQuery 单点决定页长，这里只兜非 HTTP
-	// 调用方。旧写法是 `if req.Page > 0 && req.PageSize > 0 { Offset/Limit }`，
-	// 于是页长为 0 或负值时分页分支整体不成立、LIMIT 子句被跳过——审计日志按
-	// 过滤条件整表读出。归一后任何取值都必然带 LIMIT。
+	// 调用方。`if req.Page > 0 && req.PageSize > 0 { Offset/Limit }` 这种条件式分页
+	// 在页长为 0 或负值时整个分支不成立、LIMIT 子句被跳过，审计日志会按过滤条件
+	// 整表读出；归一后任何取值都必然带 LIMIT。
 	req.Page, req.PageSize = common.ValidatePagination(req.Page, req.PageSize)
 	query = query.Offset((req.Page - 1) * req.PageSize).Limit(req.PageSize)
 

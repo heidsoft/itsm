@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// 回归：指派规则唯一所有者是 productionSvc——跨租户 assignee 必须被拒绝，
+// 指派规则唯一所有者是 productionSvc——跨租户 assignee 必须被拒绝，
 // handler 层不得再提供绕过同租户校验的直通 repo 路径。
 func TestAssignTicket_RejectsCrossTenantAssignee(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ticket-assign-tenant?mode=memory&cache=shared&_fk=1")
@@ -57,7 +57,7 @@ func TestAssignTicket_RejectsCrossTenantAssignee(t *testing.T) {
 	require.Equal(t, assigneeT1.ID, *updated.AssigneeID)
 }
 
-// 回归：Update 部分更新 params.AssigneeID 同样受同租户校验约束。
+// Update 部分更新 params.AssigneeID 同样受同租户校验约束。
 func TestUpdate_RejectsCrossTenantAssignee(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:ticket-update-tenant?mode=memory&cache=shared&_fk=1")
 	defer client.Close()

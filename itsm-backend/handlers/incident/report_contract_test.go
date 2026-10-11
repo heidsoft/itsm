@@ -21,14 +21,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// 本文件锁住 GET /api/v1/incidents/stats/report 的读数口径。
+// 本文件锁住 GET /api/v1/incidents/stats/report 的读数口径，逐字段断言窗口回显、
+// 分布之和、补零趋势、解决集合口径、软删与租户隔离，以及「出错就没有读数」。
 //
-// 修复前 /reports/incident-trends 读的是 ticket 分析接口：页面标题写着「事件趋势」，
-// 数字全部来自工单；「新增/已解决」由浏览器把返回的日趋势再累加一次，超过一页的数据
-// 被静默截断后仍当全量展示；平均解决时长把后端的分钟当小时渲染（60 倍误差）；
-// 请求失败只 console.error + message.error，卡片继续显示 0。
-// 因此这里逐字段断言：窗口回显、分布之和、补零趋势、解决集合口径、软删与租户隔离、
-// 以及「出错就没有读数」。
+// 「事件趋势」的数字必须全部来自这个事件端点：改读工单分析接口会让标题与数据源脱节，
+// 在前端把日趋势再累加一次会把超过一页的数据截断成假全量，把分钟当小时渲染是 60 倍误差，
+// 请求失败还让卡片显示 0 则会把故障读成「没有事件」。
 
 type reportContractFixture struct {
 	client   *ent.Client
@@ -302,7 +300,7 @@ func TestIncidentReportReadingsAreAuthoritative(t *testing.T) {
 }
 
 // TestIncidentReportDefaultWindow 确认不传日期时走服务端缺省窗口，
-// 而不是像修复前那样把「最近 7/30/90 天」的选择留在浏览器里不发请求。
+// 而不是把「最近 7/30/90 天」的选择留在浏览器里不发请求。
 func TestIncidentReportDefaultWindow(t *testing.T) {
 	f := newReportContractFixture(t)
 	f.seed(t, f.tenantA, reportSeed{number: "INC-D-1", status: "new", priority: "low", createdDay: -1})

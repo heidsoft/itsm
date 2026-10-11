@@ -13,7 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// 回归：Update 部分更新 AssigneeID 是跨租户指派入口，必须经
+// Update 部分更新 AssigneeID 是跨租户指派入口，必须经
 // productionService.ValidateAssignee 拒绝他租户用户。
 func TestUpdate_RejectsCrossTenantAssignee(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:incident-assign-tenant?mode=memory&cache=shared&_fk=1")

@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestService_GetStats_TableDriven 锁住 P0-2 (Bug 4) 契约：
-//   - 注入 N 条已解决事件后，avgResolutionTime 必须 > 0（之前硬编码 0）
-//   - service.GetStats → repo.GetStats 走仓储，handler 不再直接访问 ent.Client（Bug 3）
+// TestService_GetStats_TableDriven 锁住统计口径：
+//   - 注入已解决事件后 avgResolutionTime 必须 > 0，且等于 (resolved_at - created_at) 的分钟均值
+//   - service.GetStats 委托 repo.GetStats，handler 不直接访问 ent.Client
 //   - 响应字段为 camelCase，与 dto.IncidentMetrics 对齐
 func TestService_GetStats_TableDriven(t *testing.T) {
 	cases := []struct {
@@ -55,9 +55,9 @@ func TestService_GetStats_TableDriven(t *testing.T) {
 		{
 			name: "未终结 + critical + high 混合统计",
 			seed: func(repo *mockRepository) {
-				// 事件域没有 'open'：新建落库是 'new'。修复前 SQL 与测试替身都按
-				// status IN ('open','in_progress') 折叠，new/acknowledged/assigned/
-				// triaged/escalated/on_hold 全部漏计，openIncidents 长期接近 0。
+				// 事件域没有 'open' 这个状态，新建落库是 'new'。未终结桶必须覆盖
+				// new/acknowledged/assigned/triaged/escalated/on_hold，只按
+				// status IN ('open','in_progress') 折叠会让 openIncidents 长期接近 0。
 				repo.incidents[1] = &Incident{ID: 1, TenantID: 1, Status: "new", Priority: "critical"}
 				repo.incidents[2] = &Incident{ID: 2, TenantID: 1, Status: "in_progress", Priority: "high"}
 				repo.incidents[3] = &Incident{ID: 3, TenantID: 1, Status: "resolved", Priority: "medium"}
@@ -103,18 +103,18 @@ func TestService_GetStats_TableDriven(t *testing.T) {
 
 			if tc.wantAvgMinGt0 {
 				assert.Greater(t, stats.AvgResolutionTime, 0,
-					"P0-2 验收：注入 resolved 事件后 avgResolutionTime 必须 > 0")
+					"注入 resolved 事件后 avgResolutionTime 必须 > 0")
 			}
 			if tc.wantAvgEqExact > 0 {
 				assert.Equal(t, tc.wantAvgEqExact, stats.AvgResolutionTime,
-					"P0-2 验收：avgResolutionTime 应等于 (resolved_at - created_at) 的分钟均值")
+					"avgResolutionTime 应等于 (resolved_at - created_at) 的分钟均值")
 			}
 
-			// camelCase 字段必须出现在响应里（Bug 4 验收：snake_case 已切换）
+			// 统计响应只暴露 camelCase 字段，snake_case 不得残留
 			js, mErr := json.Marshal(stats)
 			assert.NoError(t, mErr)
 			body := string(js)
-			assert.Contains(t, body, `"totalIncidents"`, "P0-3 验收：snake_case → camelCase")
+			assert.Contains(t, body, `"totalIncidents"`)
 			assert.Contains(t, body, `"openIncidents"`)
 			assert.Contains(t, body, `"criticalIncidents"`)
 			assert.Contains(t, body, `"majorIncidents"`)
@@ -126,8 +126,8 @@ func TestService_GetStats_TableDriven(t *testing.T) {
 	}
 }
 
-// TestService_GetStats_NoDirectEntAccess 验证 service.GetStats 必须委托 repo.GetStats。
-// Bug 3 验收：handler/service 不再直接拿 ent.Client。
+// TestService_GetStats_NoDirectEntAccess 验证 service.GetStats 只走 repo.GetStats，
+// handler/service 不直接拿 ent.Client。
 func TestService_GetStats_NoDirectEntAccess(t *testing.T) {
 	var calls int
 	repo := newMockRepository()
@@ -139,11 +139,10 @@ func TestService_GetStats_NoDirectEntAccess(t *testing.T) {
 	assert.Equal(t, 1, calls, "service.GetStats 必须委托 repo.GetStats 一次")
 }
 
-// TestAutoPriorityByKeyword_DuplicateCritical 锁住 Bug 1 修复。
-// 修复前：critical 关键字在数组中出现两次，containsAny 仍返回 true，函数语义
-// 不变，但数组拷贝维护期容易产生误判。修复后数组中 critical 仅出现一次。
-// 通过 ensure 函数 + reflect 读取源码字符串非常脆弱，这里直接走行为验证：
-// 输入包含 "critical" 时返回 "critical"，且不被重复计数影响。
+// TestAutoPriorityByKeyword_DuplicateCritical 验证关键词优先级分流。
+//
+// 用 reflect 读源码断言关键字表内容很脆弱，这里只验证行为：输入包含 "critical" 时
+// 返回 "critical"，且结果不受关键字表增删影响。
 func TestAutoPriorityByKeyword_DuplicateCritical(t *testing.T) {
 	cases := []struct {
 		name        string
@@ -162,7 +161,7 @@ func TestAutoPriorityByKeyword_DuplicateCritical(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := autoPriorityByKeyword(tc.title, tc.description)
 			assert.Equal(t, tc.want, got,
-				"Bug 1 验收：autoPriorityByKeyword 必须正确分流，与 critical 重复出现无关")
+				"autoPriorityByKeyword 必须按关键词优先级分流")
 		})
 	}
 }

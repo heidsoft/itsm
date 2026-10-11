@@ -17,7 +17,7 @@ import (
 //
 // 授权判定是两道闸串联：RBACMiddleware 路径预检(ResourceActionMap) → 路由级 RequirePermission。
 // 预检映射若与路由声明各自手写，漂移只能靠守卫测试事后对账。这里把因果倒过来：
-// ResourceActionMap 的路由条目**从路由声明自动生成**
+// ResourceActionMap 的路由条目从路由声明自动生成
 // （cmd/authz-gen → middleware/rbac_precheck_gen.go），人只维护少量显式回退策略。
 //
 // 本扫描器供 ① codegen（cmd/authz-gen）② 守卫测试（middleware/router_test 侧）共同消费。
@@ -111,7 +111,7 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredR
 			groupDecl := map[string][][2]string{}
 			// 分组参数根：SetupXxxRoutes(tenant *gin.RouterGroup, ...) 里 tenant 是参数，
 			// 函数体内没有 `x := y.Group(...)` 赋值可追，历史实现把它当成空前缀，
-			// 于是 /ticket-types 通不过 /api/v1 过滤被**静默丢弃**。
+			// 于是 /ticket-types 通不过 /api/v1 过滤被静默丢弃。
 			paramRoot := groupParamRoots(fn)
 
 			// resolveGroupVar 返回变量前缀；known=false 表示无法定位。

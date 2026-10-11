@@ -153,7 +153,7 @@ func (s *Service) List(ctx context.Context, tenantID int, page, size int, filter
 }
 
 // Update updates a ticket.
-// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
+// 写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
 // 本人创建或受理的工单（datascope.CanWriteResource）。
 func (s *Service) Update(ctx context.Context, tenantID int, id int, params *UpdateParams, actorID int, actorRole string) (*Ticket, error) {
 	// Fetch current ticket to get version for optimistic locking
@@ -185,7 +185,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, params *Upda
 }
 
 // Delete soft-deletes a ticket.
-// P1-DataScope：删除同样受行级写权限约束（原先仅校验租户隔离）。
+// 删除同样受行级写权限约束，不能只校验租户隔离。
 func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
 	current, err := s.repo.GetByID(ctx, id, tenantID)
 	if err != nil {
@@ -198,7 +198,7 @@ func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int,
 }
 
 // BatchDelete deletes multiple tickets.
-// P1-DataScope：逐单行级校验，任一单据无权限则整体拒绝（全有或全无），
+// 逐单行级校验，任一单据无权限则整体拒绝（全有或全无），
 // 避免批量接口被用来越权删除他人工单。
 func (s *Service) BatchDelete(ctx context.Context, ids []int, tenantID int, actorID int, actorRole string) error {
 	if !datascope.IsDataScopeAllRole(actorRole) {
@@ -229,7 +229,7 @@ func (s *Service) AssignTicket(ctx context.Context, ticketID int, assigneeID int
 }
 
 // EscalateTicket escalates a ticket.
-// P1-DataScope：升级是生命周期写操作，与 Update/Delete 同风险面——行级校验
+// 升级是生命周期写操作，与 Update/Delete 同风险面——行级校验
 // 写权限 ⊆ 读权限（普通角色仅创建人/受理人/管理员）。
 func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, escalatedBy, actorRole, tenantID, "升级")
@@ -243,7 +243,7 @@ func (s *Service) EscalateTicket(ctx context.Context, ticketID int, reason strin
 }
 
 // ResolveTicket resolves a ticket with a resolution note.
-// P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
+// 生命周期写操作做行级校验，不能只校验租户隔离。
 func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, actorID int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "解决")
 	if err != nil {
@@ -256,7 +256,7 @@ func (s *Service) ResolveTicket(ctx context.Context, ticketID int, resolution st
 }
 
 // CloseTicket closes a ticket.
-// P1-DataScope：生命周期写操作行级校验（原先仅校验租户隔离）。
+// 生命周期写操作做行级校验，不能只校验租户隔离。
 func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, actorID int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, actorID, actorRole, tenantID, "关闭")
 	if err != nil {
@@ -269,7 +269,7 @@ func (s *Service) CloseTicket(ctx context.Context, ticketID int, tenantID int, a
 }
 
 // UpdateStatus updates the status of a ticket.
-// P1-DataScope：状态流转是生命周期写操作，行级校验对齐 Update/Delete
+// 状态流转是生命周期写操作，行级校验对齐 Update/Delete
 // （写权限 ⊆ 读权限，普通角色仅创建人/受理人/管理员）。
 func (s *Service) UpdateStatus(ctx context.Context, ticketID int, status string, tenantID int, userID int, actorRole string) (*Ticket, error) {
 	current, err := s.lifecycleGuard(ctx, ticketID, userID, actorRole, tenantID, "变更状态")
@@ -404,7 +404,7 @@ func (s *Service) CreateSubtask(ctx context.Context, tenantID int, parentID int,
 }
 
 // UpdateSubtask updates a child ticket.
-// P1-DataScope：子任务写路径同样受行级写权限约束。
+// 子任务写路径同样受行级写权限约束。
 func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int, params *UpdateParams, actorID int, actorRole string) (*Ticket, error) {
 	// Verify subtask belongs to parent
 	current, err := s.repo.GetByID(ctx, subtaskID, tenantID)
@@ -427,7 +427,7 @@ func (s *Service) UpdateSubtask(ctx context.Context, tenantID int, subtaskID int
 }
 
 // DeleteSubtask deletes a child ticket.
-// P1-DataScope：子任务删除同样受行级写权限约束。
+// 子任务删除同样受行级写权限约束。
 func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int, actorID int, actorRole string) error {
 	current, err := s.repo.GetByID(ctx, subtaskID, tenantID)
 	if err != nil {

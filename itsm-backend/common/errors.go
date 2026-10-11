@@ -68,7 +68,7 @@ func ErrorHandler(logger *zap.SugaredLogger) gin.HandlerFunc {
 			err := c.Errors.Last().Err
 			logger.Errorw("Request error", "error", err, "path", c.Request.URL.Path)
 
-			// 分类唯一所有者是 classifyError；此前的类型断言链只认顶层错误，
+			// 分类唯一所有者是 classifyError：裸类型断言只认顶层错误，
 			// 被 fmt.Errorf 包装过的业务拒绝会掉进 500 兜底。
 			if code, safeMsg, ok := classifyError(err); ok {
 				writeClassified(c, err, code, safeMsg)

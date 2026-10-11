@@ -59,8 +59,8 @@ func (c *ProductionService) GetOntology(ctx *gin.Context) {
 	}
 
 	// 1. CI 类型（含解析后的属性 schema + 类型级属性定义）
-	// 本体要覆盖该租户的全部 CI 类型，因此逐页取完：原先传 pageSize=500 是把「整表」意图
-	// 藏在越界页长里，而平台页长上限是 100（service 层现在会归一），继续那么传只会静默截断。
+	// 本体要覆盖该租户的全部 CI 类型，所以逐页取完而不是靠越界页长表达「整表」：
+	// 平台页长上限 100，service 层会把越界值归一回默认页长，传 500 只会静默截断。
 	ciTypes, err := c.listAllCITypes(ctx.Request.Context(), tenantID)
 	if err != nil {
 		c.logger.Errorw("ontology: list ci types failed", "error", err, "tenant_id", tenantID)

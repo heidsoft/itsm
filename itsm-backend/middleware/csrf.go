@@ -158,8 +158,8 @@ func CSRFProtectionMiddleware(config *CSRFConfig) gin.HandlerFunc {
 			return
 		}
 
-		// 注：此前的 "cookie access_token 存在即跳过 CSRF" 分支已移除。
-		// 该分支使得 cookie-based 会话完全绕过 CSRF 校验，等价于 CSRF 保护失效。
+		// cookie 会话必须照常校验 CSRF：浏览器会自动附带 cookie，
+		// 若按 "access_token cookie 存在即跳过" 放行，CSRF 保护等于失效。
 		// SPA/前端集成方式：登录后调 GET /api/v1/csrf-token 拿 token，写入 X-CSRF-Token header。
 
 		// 2. 检查请求方法是否需要 CSRF 验证

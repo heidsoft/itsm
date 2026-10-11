@@ -14,7 +14,7 @@ var txControlStmtRe = regexp.MustCompile(`^(?i:BEGIN(?:[ \t]+TRANSACTION)?|COMMI
 //
 // 背景：ApplyMigration/RollbackMigration 用 BeginTx 托管事务边界。脚本内嵌的 COMMIT;
 // 会提前提交托管事务，随后账本 INSERT 落入自动提交，最终 tx.Commit 命中空闲连接报错
-// （lib/pq "unexpected transaction status idle"），同批剩余 pending 迁移被整体中断。
+// （lib/pq "unexpected transaction status idle"），后续尚未执行的迁移会被整体中断。
 // 剥离后脚本在托管事务内原子执行，与不带事务控制的迁移行为一致。
 //
 // checksum 必须基于剥离前的原始 SQL 计算（schema_migrations 账本校验依赖原始内容），

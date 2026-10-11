@@ -44,9 +44,9 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 	SetupRoutes(router, &RouterConfig{JWTSecret: jwtSecret, Logger: logger, Client: client, AuthHandler: handler, CommonHandler: commonHandler})
 
 	t.Run("register ignores body role/tenantCode and fails closed with multiple active tenants", func(t *testing.T) {
-		// P0-1 回归：未认证注册入口曾接受 body 指定 role/tenantCode，可直接注册成
-		// 任意租户管理员。字段已从 DTO 移除（gin 静默丢弃未知字段），攻击 payload
-		// 必须被整体忽略；多活跃租户时归属无法推断，注册 fail-closed 且不产生用户。
+		// 未认证注册入口不能接受 body 指定 role/tenantCode，否则任何人都能把自己注册成
+		// 任意租户管理员。字段已从 DTO 移除（gin 静默丢弃未知字段），攻击 payload 必须被
+		// 整体忽略；多活跃租户时归属无法推断，注册 fail-closed 且不产生用户。
 		body := []byte(`{"username":"attacker","email":"attacker@example.com","password":"password123","fullName":"Attacker","role":"super_admin","tenantCode":"TENANT-A"}`)
 		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
 		request.Header.Set("Content-Type", "application/json")
@@ -90,7 +90,7 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 
 		// 真实登录拿到会话后访问管理路由：end_user 必须被 RBAC 拒绝(403)。若提权
 		// 成立（role 变成 super_admin），AuthorizeResourceForRole 的 super_admin 短路
-		// 会直接放行，此断言即失败——这正是 P0-1 的端到端证明。
+		// 会直接放行，这条断言因此是端到端证明。
 		loginRequest := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", strings.NewReader(`{"username":"selfuser","password":"password123","tenantCode":"TENANT-A"}`))
 		loginRequest.Header.Set("Content-Type", "application/json")
 		loginResponse := httptest.NewRecorder()

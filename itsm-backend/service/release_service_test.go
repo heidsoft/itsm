@@ -212,8 +212,8 @@ func TestReleaseService_UpdateReleaseStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// 测试更新状态
-	// D-5 修复后：draft→scheduled 为审批等效动作，必须经 ApplyReleaseApproval（release:approve），
-	// 不允许通过 UpdateReleaseStatus（release:write）直达，避免持 write 权限绕过审批门禁。
+	// draft→scheduled 是审批等效动作，只能经 ApplyReleaseApproval（release:approve）发生；
+	// UpdateReleaseStatus（release:write）直达会让持 write 权限的人绕过审批门禁。
 	t.Run("draft->scheduled 经 status 路由被拒绝（须走审批）", func(t *testing.T) {
 		result, err := releaseService.UpdateReleaseStatus(ctx, release.ID, testTenant.ID, "scheduled", testUser.ID, "admin")
 		assert.Error(t, err)

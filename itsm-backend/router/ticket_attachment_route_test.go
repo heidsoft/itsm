@@ -25,10 +25,9 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：工单附件的下载与预览 handler
-// （handlers/ticket_attachment/handler.go DownloadAttachment/PreviewAttachment）此前
-// 从未在 router/ticket_routes.go 注册，前端两个入口点了就 404；同时 DTO 的 fileUrl
-// 透传了库里指向从未注册路由的存量死链。必须从真实路由入口证明：
+// 工单附件的下载与预览 handler（handlers/ticket_attachment/handler.go
+// DownloadAttachment/PreviewAttachment）必须在 router/ticket_routes.go 注册，
+// DTO 的 fileUrl 必须指向这条真实路由而不是存量死链。必须从真实路由入口证明：
 //   - GET /api/v1/tickets/:id/attachments/:attachment_id 返回真实字节与 attachment 头；
 //   - GET .../preview 返回 inline 头；
 //   - 列表返回的 fileUrl 就是可点击下载的真实路由（自证一致性）；

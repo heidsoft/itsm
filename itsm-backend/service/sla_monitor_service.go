@@ -1186,7 +1186,7 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		}
 	}
 
-	// 获取即将到期的工单（未来24小时内）—— Phase 3: 从 sla_states 查询
+	// 未来 24 小时内到期的工单，截止时间以 sla_states 为权威来源
 	upcomingDeadline := now.Add(24 * time.Hour)
 	upcomingSLAStates, err := s.client.SLAState.Query().
 		Where(

@@ -155,11 +155,10 @@ func stripSQLCommentLines(sql string) string {
 	return strings.Join(out, "\n")
 }
 
-// TestApplyMigration_EmbeddedTxControl 是修复的端到端回归：
-// 修复前，含 BEGIN;/COMMIT; 的脚本会让内层 COMMIT 提前结束托管事务，
-// 账本 INSERT 落入 autocommit，随后 tx.Commit 命中 idle 连接报
-// "pq: unexpected transaction status idle"，且后续 pending 迁移被整体中止。
-// 修复后，整个脚本应在单个托管事务内原子执行并正常落账。
+// TestApplyMigration_EmbeddedTxControl 含 BEGIN;/COMMIT; 的迁移脚本必须在单个托管
+// 事务内原子执行并正常落账。内层 COMMIT 会提前结束托管事务，账本 INSERT 落进
+// autocommit，随后的 tx.Commit 在 idle 连接上报
+// "pq: unexpected transaction status idle"，并把后续 pending 迁移整体中止。
 func TestApplyMigration_EmbeddedTxControl(t *testing.T) {
 	db, err := sql.Open("postgres", "host=127.0.0.1 port=5432 user=itsm dbname=itsm sslmode=disable")
 	if err != nil {

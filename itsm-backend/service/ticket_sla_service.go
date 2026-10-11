@@ -454,7 +454,7 @@ func parseBusinessHoursConfig(raw map[string]interface{}) businessHoursConfig {
 		return cfg
 	}
 
-	// is_24_7：兼容 bool 与字符串。is_24_7=true 时**最后**短路为 00:00-23:59 全天制，
+	// is_24_7：兼容 bool 与字符串。is_24_7=true 时最后短路为 00:00-23:59 全天制，
 	// 必须放在所有 start_time/end_time 解析之后，否则会被覆盖回 9-18。
 	if v, ok := raw["is_24_7"].(bool); ok {
 		cfg.is24x7 = v

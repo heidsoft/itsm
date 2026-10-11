@@ -68,7 +68,7 @@ func createRCATicket(t *testing.T, client *ent.Client, tenantID int, priority st
 	return ticketEntity.ID
 }
 
-// 回归：LLM 网关注入后，AnalyzeTicket 必须消费 LLM 返回的 3 个根因，
+// LLM 网关注入后，AnalyzeTicket 必须消费 LLM 返回的 3 个根因，
 // 绝不回退到启发式的“系统资源不足”模板。
 func TestAnalyzeTicket_UsesLLM_ThreeRootCausesNoFallback(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
@@ -103,7 +103,7 @@ func TestAnalyzeTicket_UsesLLM_ThreeRootCausesNoFallback(t *testing.T) {
 	}
 }
 
-// 回归：无 LLM 网关时按原启发式逻辑降级（高优先级 → 系统资源不足）。
+// 无 LLM 网关时按原启发式逻辑降级（高优先级 → 系统资源不足）。
 func TestAnalyzeTicket_NoGateway_FallsBackToHeuristic(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()
@@ -119,7 +119,7 @@ func TestAnalyzeTicket_NoGateway_FallsBackToHeuristic(t *testing.T) {
 	assert.Equal(t, "系统资源不足", resp.RootCauses[0].Title)
 }
 
-// 回归：租户隔离——跨租户查询必须失败，不允许返回其他租户的工单分析。
+// 租户隔离——跨租户查询必须失败，不允许返回其他租户的工单分析。
 func TestAnalyzeTicket_TenantIsolation(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())
 	defer client.Close()

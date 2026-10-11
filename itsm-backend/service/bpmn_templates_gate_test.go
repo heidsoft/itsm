@@ -6,11 +6,10 @@ import (
 	"testing"
 )
 
-// TestBuiltinTemplates_Gate 内置 BPMN 模板常驻回归门禁。
+// TestBuiltinTemplates_Gate 校验内置 BPMN 模板的图完整性。
 //
-// 背景：16 个内置模板曾有 12 处真实图缺口、24 处 outgoing 声明悬空、2 个 XML
-// 语法损坏、2 处重复 sequenceFlow id，且引擎静默卡死导致问题长期不可见。
-// 本测试守住三层防线：
+// 引擎对图缺口、outgoing 声明悬空、XML 语法损坏和重复 sequenceFlow id 都静默卡死，
+// 运行时看不到问题，所以这三层防线放在 CI：
 //  1. lint 门禁：每个模板 0 error（悬空声明/死端/重复 id 均为 error 级）；
 //  2. parser 富化：OutgoingDecls 索引可解析（引擎 fallback 与 lint 依赖此数据）；
 //  3. 非结束事件出边完整性（lint 规则 2 的兜底断言，防 lint 被误降级）。

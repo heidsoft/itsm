@@ -707,8 +707,8 @@ func BenchmarkUserService_GetUserByID(b *testing.B) {
 	}
 }
 
-// 回归：密码策略错误必须是可分类的校验错误。
-// 此前是裸 fmt.Errorf，handler 只能统一归为 500/5001，客户端无法区分输入不合规与服务端故障。
+// 密码策略错误必须是可分类的校验错误：裸 fmt.Errorf 会被 handler 归成 500/5001，
+// 客户端分不清是输入不合规还是服务端故障。
 func TestValidatePassword_IsClassifiedValidationError(t *testing.T) {
 	var appErr *common.AppError
 

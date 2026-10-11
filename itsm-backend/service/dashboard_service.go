@@ -36,7 +36,7 @@ type DashboardService struct {
 	db       *sql.DB
 	repo     *dashboardRepository
 	logger   *zap.SugaredLogger
-	slaStore *sla.Store // Phase 3: sla_states 读取
+	slaStore *sla.Store // SLA 状态以 sla_states 为权威来源
 }
 
 // SetSLAStore 注入 SLA 持久化 store
@@ -45,8 +45,8 @@ func (s *DashboardService) SetSLAStore(store *sla.Store) {
 }
 
 // 工单状态聚合统一口径（与 common.TicketStatus* 状态机保持一致）。
-// 此前统计使用不存在的 "submitted"、完成口径只计
-// "closed"，导致仪表盘"待处理/已完成/超时"与实际数据严重背离。
+// 聚合口径一旦与状态机分叉（例如统计不存在的 "submitted"、完成只计 "closed"），
+// 仪表盘"待处理/已完成/超时"就会与实际数据背离。
 var (
 	// 待处理：新建/打开/挂起/已分配未开工
 	ticketPendingStatuses = []string{
@@ -377,7 +377,7 @@ func (s *DashboardService) getSLAMetrics(ctx context.Context, tenantID int) (*dt
 	}, nil
 }
 
-// getIncidentMetrics 获取事件指标（真实事件域数据；此前平均解决时长是 240 分钟模拟值）
+// getIncidentMetrics 获取事件指标，平均解决时长由事件表的真实时间戳算出。
 func (s *DashboardService) getIncidentMetrics(ctx context.Context, tenantID int) (*dto.IncidentMetrics, error) {
 	// 获取高优先级事件数量
 	highPriorityCount, err := s.client.Incident.Query().
@@ -427,7 +427,7 @@ func (s *DashboardService) getIncidentMetrics(ctx context.Context, tenantID int)
 	}, nil
 }
 
-// getChangeMetrics 获取变更指标（真实变更域数据；此前成功率是 95.5% 模拟值）
+// getChangeMetrics 获取变更指标，成功率由变更表的真实状态分布算出。
 func (s *DashboardService) getChangeMetrics(ctx context.Context, tenantID int) (*dto.ChangeMetrics, error) {
 	// 待审批：已提交等待审批决策的变更
 	pendingApproval, err := s.client.Change.Query().

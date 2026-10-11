@@ -76,7 +76,7 @@ func setupSLAHandler(t *testing.T) (*gin.Engine, *ent.Client, int) {
 	r.POST("/api/v1/sla/monitor", h.GetSLAMonitoring)
 	r.POST("/api/v1/sla/monitoring", h.GetSLAMonitoring)
 	r.GET("/api/v1/sla/performance", h.GetSLAPerformance)
-	// 阶段 1.7：补齐告警/违规/合规/指标相关路由
+	// 告警/违规/合规/指标相关路由
 	r.POST("/api/v1/sla/alert-rules", h.CreateAlertRule)
 	r.GET("/api/v1/sla/alert-rules", h.ListAlertRules)
 	r.GET("/api/v1/sla/alert-rules/:id", h.GetAlertRule)
@@ -172,7 +172,7 @@ func TestSLAHandler_GetStats(t *testing.T) {
 // 监控大屏契约回归（camelCase 字段、零样本诚实性、统计窗口、活跃告警、
 // 租户隔离、绩效分组与过滤）集中在 monitoring_test.go，带确定性数据集。
 
-// ---- 阶段 1.7:告警规则 CRUD 路径 ----
+// ---- 告警规则 CRUD 路径 ----
 
 func TestSLAHandler_AlertRule_CRUD(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
@@ -303,7 +303,7 @@ func TestEntRepository_UpdateAlertRuleScopesUpdateByTenant(t *testing.T) {
 	assert.Equal(t, "Original", stored.Name)
 }
 
-// ---- 阶段 1.7:合规报告 / 违规查询 路径 ----
+// ---- 合规报告 / 违规查询 路径 ----
 
 func TestSLAHandler_ComplianceReport(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
@@ -367,9 +367,9 @@ func TestSLAHandler_Violations_AndMetrics(t *testing.T) {
 	})
 }
 
-// TestSLAHandler_ViolationsTicketContextRegression 监控大屏回归：
+// TestSLAHandler_ViolationsTicketContextRegression 监控大屏：
 // /api/v1/sla/violations 必须通过 ticket edge 返回工单标题/编号/优先级，
-// 并支持 camelCase isResolved 过滤；修复前 ticketTitle 缺失导致前端全部展示 Unknown。
+// 并支持 camelCase isResolved 过滤；ticketTitle 缺失时前端全部展示 Unknown。
 func TestSLAHandler_ViolationsTicketContextRegression(t *testing.T) {
 	_, client, tenantID := setupSLAHandler(t)
 	ctx := context.Background()
@@ -468,7 +468,7 @@ func TestSLAHandler_ViolationsTicketContextRegression(t *testing.T) {
 	})
 }
 
-// ---- 阶段 1.7:定义更新 / 删除 路径 ----
+// ---- 定义更新 / 删除 路径 ----
 
 func TestSLAHandler_UpdateAndDelete(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)
@@ -507,7 +507,7 @@ func TestSLAHandler_UpdateAndDelete(t *testing.T) {
 	})
 }
 
-// ---- 阶段 1.7:未授权租户上下文 应被拒绝 ----
+// ---- 未授权租户上下文 应被拒绝 ----
 
 func TestSLAHandler_WithoutTenantContext(t *testing.T) {
 	r, _, _ := setupSLAHandler(t)

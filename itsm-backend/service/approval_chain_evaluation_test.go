@@ -255,7 +255,6 @@ func TestResolveApprovalPlan_EndToEnd(t *testing.T) {
 	m2 := mkEvalUser(t, ctx, client, tn.ID, "manager", "m2")
 	esc := mkEvalUser(t, ctx, client, tn.ID, "security_admin", "esc")
 
-	// 经 DTO 建链（同时验证此前 DTO 丢弃新字段的缺陷已修复）
 	created, err := svc.CreateApprovalChain(ctx, &dto.ApprovalChainRequest{
 		Name:       "E2E 链",
 		EntityType: "service_request",
@@ -270,7 +269,7 @@ func TestResolveApprovalPlan_EndToEnd(t *testing.T) {
 	}, tn.ID)
 	require.NoError(t, err)
 
-	// 读回校验：新字段（会签/兜底）应持久化并往返
+	// 读回校验：会签/兜底字段应持久化并往返
 	got, err := svc.GetApprovalChain(ctx, created.ID, tn.ID)
 	require.NoError(t, err)
 	require.Len(t, got.Chain, 2)

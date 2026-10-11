@@ -13,14 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// /bpmn/dashboard/audit-logs 用 c.Query("pageSize") + strconv.Atoi，
-// 只要求「能解析」就原样下传（连 >0 都不判）；/bpmn/monitoring/instances/status 用
-// DefaultQuery 且把 Atoi 的错误丢掉（monitoring/audit-logs 第二套只读表面已在
-// E4-48 收敛删除）。
-// 两者都把值交给 service 里 `if Page > 0 && PageSize > 0 { Offset/Limit }` 这一分支，
-// 于是 pageSize=abc（→0）或 pageSize=-5 会让 LIMIT/OFFSET 子句整体消失：一次写错的
-// 分页参数就把该租户的审计日志读穿，而信封回显的仍是客户端原值。
-// 现在 HTTP 入口的唯一所有者是 common.GetPaginationFromQuery（缺省 1/20，只采纳 [1,100]）。
+// /bpmn/dashboard/audit-logs 与 /bpmn/monitoring/instances/status 的分页只由
+// common.GetPaginationFromQuery 夹紧（缺省 1/20，只采纳 [1,100]）。
+// 危险在服务层的分页分支是 `if Page > 0 && PageSize > 0 { Offset/Limit }`：入口若把
+// c.Query + strconv.Atoi 的结果原样下传，pageSize=abc（解析失败得 0）或 pageSize=-5
+// 会让 LIMIT/OFFSET 子句整体消失——一次写错的分页参数就把该租户的审计日志读穿，
+// 而信封回显的仍是客户端原值。
 
 const bpmnAuditPageSize = 25
 

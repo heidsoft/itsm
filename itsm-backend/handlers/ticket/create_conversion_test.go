@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// 回归：productionSvc 创建结果转 handler 实体时曾漏拷 TicketTypeID，
+// productionSvc 创建结果转 handler 实体时曾漏拷 TicketTypeID，
 // 被 TicketResponse 的 omitempty 吞掉，导致 POST /api/v1/tickets 响应
 // 缺少 ticketTypeId（ga-gate 的 ticket-type-full-chain E2E 因此红灯）。
 func TestProductionTicketToTicketKeepsTicketTypeID(t *testing.T) {
@@ -42,7 +42,7 @@ func TestProductionTicketToTicketKeepsTicketTypeID(t *testing.T) {
 	assert.Equal(t, 1, got.TenantID)
 }
 
-// 回归：ticketToResponse 曾丢弃 SLA 截止时间，GET /api/v1/tickets/:id 响应
+// ticketToResponse 曾丢弃 SLA 截止时间，GET /api/v1/tickets/:id 响应
 // 缺少 slaResponseDeadline/slaResolutionDeadline（ga-gate 的 assertSLA 因此红灯）。
 func TestTicketToResponseKeepsSLADeadlines(t *testing.T) {
 	response := time.Date(2026, 10, 3, 10, 37, 0, 0, time.UTC)

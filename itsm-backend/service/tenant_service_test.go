@@ -28,8 +28,7 @@ import (
 // ==================== 测试设置辅助函数 ====================
 
 // setupTenantTest 返回的客户端注册了与生产完全相同的安全拦截器
-// （软删除 + 租户写护栏）。测试必须跑在真实护栏下，否则跨租户写类缺陷
-// 会被漏掉——浏览器回归曾实测到 outbox 入队被护栏拦下导致开通接口 500。
+// （软删除 + 租户写护栏）。测试必须跑在真实护栏下，否则跨租户写类缺陷会被漏掉。
 func setupTenantTest(t *testing.T) (*ent.Client, *TenantService, context.Context) {
 	t.Helper()
 	client := enttest.Open(t, "sqlite3", testDSN())
@@ -73,10 +72,9 @@ func TestTenantService_CreateTenant_EnqueuesBaselineInstall(t *testing.T) {
 	assert.Equal(t, 2, total)
 }
 
-// 浏览器回归实测暴露的缺陷：真实客户端注册了租户写护栏后，outbox 命令行归属
-// 目标租户，而创建请求运行在操作者租户上下文里，直接入队会被护栏按跨租户
-// 插入拦截，导致 POST /api/v1/tenants 整体 500。基线安装是 bootstrap/seed 类
-// 跨租户任务，必须走显式 system context（带审计）。
+// 注册租户写护栏后，outbox 命令行归属目标租户，而创建请求运行在操作者租户上下文
+// 里，直接入队会被护栏按跨租户插入拦截，导致 POST /api/v1/tenants 整体 500。
+// 基线安装是 bootstrap/seed 类跨租户任务，必须走显式 system context（带审计）。
 func TestTenantService_CreateTenant_EnqueueSurvivesTenantWriteGuard(t *testing.T) {
 	client, service, _ := setupTenantTest(t)
 	defer client.Close()

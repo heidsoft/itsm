@@ -49,8 +49,8 @@ func pathID(c *gin.Context) (int, bool) {
 	return id, true
 }
 
-// failTagError 把标签写读失败映射为稳定语义。此前重复名、在用删除、跨租户取不到
-// 全都回 500/5001「操作失败」，调用方分不清是自己给的名字重了还是后端故障。
+// failTagError 把标签写读失败映射为稳定语义。重复名、在用删除、跨租户取不到若全回
+// 500/5001「操作失败」，调用方分不清是自己给的名字重了还是后端故障。
 // 原始错误只进日志，响应体固定为安全消息。
 func (h *Handler) failTagError(c *gin.Context, rawErr error, opMsg string, tagID, tid int) {
 	switch {

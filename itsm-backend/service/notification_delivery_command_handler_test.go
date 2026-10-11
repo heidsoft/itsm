@@ -245,8 +245,8 @@ func TestNotificationDeliveryHandlerSendsConnectorAndAuditsMaskedTarget(t *testi
 	require.NotEqual(t, "ou_sensitive_target_1234", delivery.TargetMasked)
 }
 
-// TestNotifyTicketCreatedTxExcludesInactiveUsers 广播分支必须排除停用用户：
-// 停用用户入箱后投递端报「user not found」进 dead_letter（prod 实测 user5 场景）。
+// TestNotifyTicketCreatedTxExcludesInactiveUsers:
+// 广播分支必须排除停用用户，否则停用用户入箱后投递端报「user not found」，命令进 dead_letter。
 func TestNotifyTicketCreatedTxExcludesInactiveUsers(t *testing.T) {
 	client, ctx, tenantID, userID, _ := notificationDeliveryFixture(t)
 	// 工单创建后无 assignee，只挂 requester → 触发广播分支

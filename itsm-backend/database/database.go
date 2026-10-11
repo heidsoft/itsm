@@ -183,13 +183,13 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 //   - shadow   ：审计每次查询，warn 缺少 tenant 的调用点；不改变 SQL 语义
 //   - enforce  ：审计计数 + 依赖 middleware / AcquireConn 在 conn 上 SET 变量
 //
-// 说明：本函数**不**主动执行 SET LOCAL/SESSION。变量注入由 middleware 与
+// 说明：本函数不主动执行 SET LOCAL/SESSION。变量注入由 middleware 与
 // 显式 rls.AcquireConn 负责，装饰器只是插入观测点。这么设计的原因：
 //  1. 一次 request 可能触发多次 Ent 查询，共享同一 *sql.Conn。若在装饰器
 //     内每查询前后 SET+RESET，连接来回换值成本高且易出错。
 //  2. SET LOCAL 只在事务内生效；Ent 大多数查询是 autocommit，事务边界由
 //     业务逻辑控制，装饰器无法感知。
-//  3. 装饰器保持无副作用，可以在 R2A 阶段以 shadow 模式安全上线。
+//  3. 装饰器保持无副作用，因此 shadow 模式（只观测、不改数据库行为）可以安全上线。
 func InitDatabaseWithRLS(cfg *config.DatabaseConfig, rlsCfg *config.RLSConfig, logger *zap.SugaredLogger) (*ent.Client, error) {
 	// 复用 InitDatabase 完整逻辑（连接池、pgvector、schema 兼容修复等）
 	client, err := InitDatabase(cfg)

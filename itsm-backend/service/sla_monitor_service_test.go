@@ -64,7 +64,7 @@ func createSLATestDefinition(ctx context.Context, client *ent.Client, tenantID i
 
 // ==================== SLA检查测试 ====================
 
-// C4 回归：slaStore 由 bootstrap 事后 SetSLAStore 注入，漏注入必须在依赖边界 fail closed，
+// slaStore 由 bootstrap 事后 SetSLAStore 注入；漏注入必须在依赖边界 fail closed，
 // 不得在 nil *sla.Store 上解引用 client 触发 panic 并终止 SLA watcher goroutine。
 func TestSLAMonitorService_MissingSLAStoreFailsClosed(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

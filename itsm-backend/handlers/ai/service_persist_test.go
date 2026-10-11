@@ -20,9 +20,8 @@ import (
 
 // persistFailMockRepo 继承 rbacMockRepo 的字段，扩展 CreateToolInvocation 错误注入能力。
 //
-// 设计目的：L8 修复回归测试。
-// 背景：handlers/ai/service.go 中 5 处 _, _ = 吞错模式导致 DB 抖动时 AI 对话/审计静默失败。
-// 修复后：失败路径必须同时具备 (a) 不阻塞主业务、(b) 上报结构化错误日志、
+// handlers/ai/service.go 若用 _, _ = 吞掉持久化错误，DB 抖动时 AI 对话和审计会静默失败。
+// 失败路径必须同时满足：(a) 不阻塞主业务、(b) 上报结构化错误日志、
 // (c) 上报 itsm_ai_persist_errors_total 计数器。
 // 本 mock 通过让 CreateToolInvocation 返回错误，触发 recordToolAudit 的失败分支，
 // 验证 (a) 不抛错（best-effort 保留）和 (c) 指标累加。
@@ -91,8 +90,8 @@ func TestRecordToolAudit_DBFailureDoesNotPropagate(t *testing.T) {
 		"DB 错误细节不得出现在响应中（防止日志注入/敏感信息泄露）")
 }
 
-// ===== T2: DB 失败必须上报 itsm_ai_persist_errors_total 指标 =====
-// 不阻塞业务是对的，但失败本身必须可观测，否则就是 2026-06-13 审计里那个静默失败坑。
+// ===== DB 失败必须上报 itsm_ai_persist_errors_total 指标 =====
+// 不阻塞业务是对的，但失败本身必须可观测，否则审计丢失不会被发现。
 func TestRecordToolAudit_EmitsMetric(t *testing.T) {
 	svc, repo := newPersistFailEnv(t)
 	setFlag(t, true, true)

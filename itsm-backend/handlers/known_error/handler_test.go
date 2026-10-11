@@ -17,14 +17,11 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 契约：known-errors 的边缘入口必须遵守标准信封与真实统计。
-//
-// 修复前的真实形态（本文件先跑红再转绿）：
-//   - GET /stats 在 gin.H 里伪造 page=1、totalPages=1，让聚合统计看起来像分页集合；
-//   - Service.GetStats 复用同一条 Ent query，而 Ent 的 Where 会就地追加谓词，
-//     因此 status/severity 条件逐级 AND，resolved/deprecated/critical/... 恒为 0；
-//   - GET /categories 只返回 {items}，前端按 {categories} 读取并配了 || [] 兜底，
-//     分类下拉因此永远为空。
+// known-errors 边缘入口的契约：
+//   - GET /stats 返回真实聚合，不得用 page/totalPages 把统计伪装成分页集合；
+//   - 每个计数使用独立 query —— Ent 的 Where 会就地追加谓词，复用同一条 query
+//     会让 status/severity 条件逐级 AND，后面的计数恒为 0；
+//   - GET /categories 的集合放在 categories 键下，与前端读取的字段一致。
 
 func newKnownErrorTestRouter(t *testing.T, client *ent.Client) *gin.Engine {
 	t.Helper()
@@ -107,7 +104,6 @@ func TestStats_HonorsIndependentCountsAndNoFakePagination(t *testing.T) {
 
 	assert.EqualValues(t, 4, data["total"])
 	assert.EqualValues(t, 2, data["active"])
-	// 修复前：这些值因谓词逐级 AND 恒为 0
 	assert.EqualValues(t, 1, data["resolved"])
 	assert.EqualValues(t, 1, data["deprecated"])
 	assert.EqualValues(t, 1, data["critical"])

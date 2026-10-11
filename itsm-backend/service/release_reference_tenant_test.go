@@ -12,7 +12,7 @@ import (
 	"itsm-backend/ent/enttest"
 )
 
-// 回归：release 的关联变更/负责人引用必须同租户，防跨租户引用注入。
+// release 的关联变更/负责人引用必须同租户，防跨租户引用注入。
 func TestCreateRelease_RejectsCrossTenantChangeReference(t *testing.T) {
 	client := enttest.Open(t, dialect.SQLite, testDSN())
 	defer client.Close()

@@ -14,9 +14,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// 回归：生产 handler 全部经 ProcessDefinitionService()/TaskService() 访问器操作引擎，
+// 生产 handler 全部经 ProcessDefinitionService()/TaskService() 访问器操作引擎，
 // 访问器必须返回 SetTimerServices 接线过的实例。返回新建副本会让发布定义时的
-// start timer 同步、任务完成时的定时器取消全部静默失效（2026-10-11 实测）。
+// start timer 同步、任务完成时的定时器取消全部静默失效。
 
 const timerStartBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL">

@@ -35,7 +35,7 @@ func functionSource(t *testing.T, source []byte, funcName string) string {
 // TestBackgroundTasksReuseInjectedSLAServices 锁定后台定时任务的依赖来源：
 // startBackgroundTasks 只能使用 Application 上由 NewApplication 注入完成的实例。
 // 私有副本会让 CheckSLAViolations 每轮命中 requireSLAStore 的 503 fail closed
-// （见 service/sla_monitor_service_test.go 的 C4 回归），预警与升级通知则静默为 0。
+// （见 service/sla_monitor_service_test.go 的 fail-closed 用例），预警与升级通知则静默为 0。
 func TestBackgroundTasksReuseInjectedSLAServices(t *testing.T) {
 	source, err := os.ReadFile("app.go")
 	require.NoError(t, err)

@@ -29,11 +29,12 @@ type AssignmentRecommendation struct {
 
 // AssignRecommendationListResponse 分配推荐列表响应
 //
-// GET /api/v1/tickets/assign-recommendations/:id 实测不分页：service 将租户内全部可用
-// 用户排序后整表返回，handler 写 Total=len(items)，因此按 docs/api-reference.md
-// 「不分页的列表」保留诚实的两键，不补 page/pageSize/totalPages。
-// 结构体名带 List 是为了让它落进 tests/contract 的信封棘轮扫描范围（棘轮只扫名字含
-// List 且带 total 的结构体，旧名 GetAssignRecommendationsResponse 因此静默逃逸过守卫）。
+// GET /api/v1/tickets/assign-recommendations/:id 不分页：service 把租户内全部可用用户
+// 排序后整表返回，handler 写 Total=len(items)，所以响应只有 {items,total} 两键；
+// 补 page/pageSize/totalPages 等于对外声明一个并不存在的分页协议。
+//
+// 结构体名带 List 是为了落进 tests/contract 的信封棘轮扫描范围：棘轮只检查名字含 List
+// 且带 total 的结构体。
 type AssignRecommendationListResponse struct {
 	Items []*AssignmentRecommendation `json:"items"`
 	Total int                         `json:"total"`
@@ -76,8 +77,7 @@ type UpdateAssignmentRuleRequest struct {
 
 // ListAssignmentRulesResponse 分配规则列表响应
 //
-// 该端点实测不分页（handler 用 Total: len(rules) 且 service 整表取回），
-// 因此只保留诚实的 {items,total} 两键，不补假的 page/pageSize/totalPages。
+// 该端点不分页（service 整表取回、handler 用 Total: len(rules)），只有 {items,total} 两键。
 type ListAssignmentRulesResponse struct {
 	Items []*AssignmentRuleResponse `json:"items"`
 	Total int                       `json:"total"`

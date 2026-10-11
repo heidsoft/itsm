@@ -362,8 +362,8 @@ func TestService_DeleteCloudService(t *testing.T) {
 	})
 
 	t.Run("0 行受影响必须是 not found 而不是删除成功", func(t *testing.T) {
-		// 修复前：DELETE 丢弃 Exec 的受影响行数，租户 B 删租户 A 的 ID 会返回 200/成功，
-		// 调用方以为对象已经消失，实际它还在租户 A 名下。
+		// DELETE 必须看受影响行数：租户 B 删租户 A 的 ID 时匹配 0 行，
+		// 若把 0 行当成成功，调用方以为对象已消失，实际它还在租户 A 名下。
 		repo := &mockRepository{
 			deleteCloudServiceFn: func(ctx context.Context, id int, tenantID int) (int, error) {
 				return 0, nil

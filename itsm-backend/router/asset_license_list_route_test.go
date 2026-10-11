@@ -27,21 +27,20 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/assets 与 GET /api/v1/licenses
-// 的集合键原先是领域名（assets / licenses），许可列表连 page/pageSize/totalPages 都没有。
+// GET /api/v1/assets 与 GET /api/v1/licenses 的信封是平台五键：集合键 items，
+// 不用 assets/licenses 领域名键，也不省掉 page/pageSize/totalPages。
 //
-// 更严重的是页长有三套真相，其中一套会把整表读出来：
-//   - handler 用 strconv 自己校验，允许 pageSize 到 200 并对非法值返回 400；
-//   - 服务层再把 >100 的值换成 20，于是 101..200 这一段「handler 说可以、服务层不认」；
-//   - 许可侧 handler 用 page, _ := strconv.Atoi(...) 忽略解析错误，服务层再写
-//     `if page > 0 && pageSize > 0` 才加 Offset/Limit —— 漏写或写错分页参数时条件为假，
-//     查询不带 LIMIT，一次返回该租户全部许可证。
+// 页长只能有一个所有者（HTTP 入口的 common.GetPaginationFromQuery）。各处各自校验会留下
+// 互相矛盾的上限，最坏一次读整表：handler 自己 strconv 校验并允许到 200、服务层又把 >100
+// 换成 20，101..200 这段就是「handler 说可以、服务层不认」；handler 忽略解析错误、服务层
+// 再用 `if page > 0 && pageSize > 0` 才加 Offset/Limit 时，分页参数缺失或写错会让查询
+// 不带 LIMIT，一次返回该租户全部许可证。
 //
-// 两个列表都只按 created_at 排序且没有 ID 并列键，翻页归属不确定。
+// 排序必须带 ID 并列键：只按 created_at 排序时同秒数据的翻页归属不确定。
 //
-// 本测试打在**生产注册**上（SetupRoutes → assetHandler.SetupRoutes →
-// RequirePermission("asset"|"license","read")），解码目标声明为本地 wire 结构而不引用
-// dto，因此修复前也能编译，证明的是运行时行为。
+// 本测试打在 SetupRoutes → assetHandler.SetupRoutes →
+// RequirePermission("asset"|"license","read") 的真实注册上，解码目标声明为本地 wire 结构
+// 而不引用 dto，因此断言的是运行时行为而不是编译期形状。
 
 const assetListSecret = "asset-list-secret"
 
@@ -267,7 +266,7 @@ func TestAssetAndLicenseListRoutesEnvelopeAndPagination(t *testing.T) {
 	})
 }
 
-// TestAssetListDTOKeys 在 DTO 层锁死集合键：本批把 assets/licenses 改成 items，
+// TestAssetListDTOKeys 在 DTO 层锁死集合键：assets/licenses 的键就是 items，
 // 任何把 json tag 改回领域名的改动都会在这里红。
 func TestAssetListDTOKeys(t *testing.T) {
 	envelopeKeys := func(t *testing.T, payload any) []string {

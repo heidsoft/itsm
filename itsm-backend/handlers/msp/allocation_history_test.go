@@ -148,7 +148,6 @@ func TestGetAllocationHistory_IncludesClosedRowsWithinCallerTenant(t *testing.T)
 
 	// 标准列表信封：集合只放在 items 下。
 	assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, sortedDataKeys(data))
-	// 修复前这条路由根本不存在（404）；现在是本租户全量 2 条，跨租户那条被排除。
 	assert.Equal(t, float64(2), data["total"], "total 必须是本租户的全量计数（含已解除）")
 
 	items, ok := data["items"].([]interface{})

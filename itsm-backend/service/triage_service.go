@@ -267,9 +267,8 @@ IMPORTANT: Respond with ONLY valid JSON in this exact format, no other text:
 	// LLM assignee IDs are not trustworthy — always reset to category default
 	classification.AssigneeID = 0
 
-	// P1-1 fix: Go's case-insensitive JSON decoder does not ignore underscores, so an
-	// LLM that emits the snake_case key `suggested_fix` would lose the field. Backfill
-	// from the snake_case key when the camelCase field is empty.
+	// Go 的 JSON 解码忽略键的大小写但不忽略下划线，LLM 返回 snake_case 的 suggested_fix 时
+	// camelCase 字段会是空串，因此 camelCase 为空时再从 snake_case 键回填一次。
 	if classification.SuggestedFix == "" {
 		var snake struct {
 			SuggestedFix string `json:"suggested_fix"`

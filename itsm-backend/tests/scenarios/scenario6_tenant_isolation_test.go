@@ -44,9 +44,9 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 	// 否则 CreateIncident 的 fire-and-forget goroutine 会与本用例后续事务争抢共享内存表。
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
-	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), logger)）；此前的
-	// service.NewProblemService 实测零生产构造，见。
+	// 问题域必须走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
+	// problem.NewService(problem.NewEntRepository(client), logger)）：
+	// service.NewProblemService 没有任何生产构造点，用它做场景测试等于测一条不存在的链路。
 	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 	policySvc := service.NewSLAPolicyService(client)
@@ -197,9 +197,9 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 			t.Fatalf("列出 tenant B 事件失败: %v", err)
 		}
 
-		// 此前这一条只断言 err==nil，却在日志里写「不包含 tenant A 的资源」：
-		// tenant B 一条数据都没有，循环体从不执行，断言是空转的。
-		// 现在两侧都验——tenant B 自己的行必须出现（证明查询真的返回了数据），
+		// 两侧都要验：只断言 err==nil 时，tenant B 没有数据会让遍历空转，
+		// 「不包含 tenant A 的资源」就成了没有依据的结论。
+		// tenant B 自己的行必须出现（证明查询真的返回了数据），
 		// tenant A 的行必须不出现（证明租户谓词生效）。
 		probB, err := problemSvc.Create(ctx, tenantB.ID, &problemdomain.Problem{
 			Title:     "tenant B 问题",

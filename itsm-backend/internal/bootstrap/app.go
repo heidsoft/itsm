@@ -153,7 +153,7 @@ type Application struct {
 // 必须使用原生 SQL：
 //  1. Ent 全局软删拦截器 (database/softdelete.go) 会给所有 Query 附加
 //     DeletedAtIsNil()，但已软删记录的编号仍占用物理唯一约束，播种若忽略
-//     它们会撞号（实测复现）；
+//     它们会撞号；
 //  2. 原生 SQL 与唯一约束视角完全一致（含软删记录）。
 //
 // 返回 DB 当前最大尾号；SequenceService 用 SETNX 播种该值后首次 INCR 即 max+1。
@@ -525,9 +525,9 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register notification command handler", "error", err)
 	}
 	ticketNotificationService.EnableOutbox()
-	// EnableTxOutbox 启用事务入箱：阶段 B（工单创建）/ C（SLA 违规/预警）/ D（变更审批）
-	// 三个域下沉时，业务事务内调用 Notify*Tx 才能与主表「同生同死」。未启用时 Tx 方法会
-	// fail-closed，避免静默回退到 client 路径产生主表与通知行分离提交的不一致状态。
+	// EnableTxOutbox 启用事务入箱：工单创建、SLA 违规/预警、变更审批的业务事务内
+	// 调用 Notify*Tx 才能与主表「同生同死」。未启用时 Tx 方法 fail-closed，避免静默
+	// 回退到 client 路径造成主表与通知行分离提交。
 	ticketNotificationService.EnableTxOutbox()
 	ticketAutomationRuleService := service.NewTicketAutomationRuleService(client, sugar)
 	ticketAutomationCommandHandler := service.NewTicketAutomationCommandHandler(ticketAutomationRuleService)

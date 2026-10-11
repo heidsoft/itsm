@@ -78,7 +78,7 @@ func NewService(repo Repository, client *ent.Client, productionSvc *service.Inci
 }
 
 // acknowledgeGuard 是 ack/resolve/close/reopen 共用的行级守卫。
-// P1-DataScope：生命周期写操作与 Update/Delete 同属"操作他人单据"风险面，
+// 生命周期写操作与 Update/Delete 同属"操作他人单据"风险面，
 // 写权限 ⊆ 读权限——普通角色仅可操作本人报告或受理的事件单。
 func (s *Service) acknowledgeGuard(ctx context.Context, id, actorID int, actorRole string, tenantID int) error {
 	current, err := s.repo.Get(ctx, id, tenantID)
@@ -128,7 +128,7 @@ func (s *Service) Assign(ctx context.Context, id, assigneeID, tenantID int) erro
 }
 
 func (s *Service) Delete(ctx context.Context, id, tenantID int, actorID int, actorRole string) error {
-	// P1-DataScope：删除前行级校验——写权限 ⊆ 读权限，普通角色仅可删除
+	// 删除前行级校验——写权限 ⊆ 读权限，普通角色仅可删除
 	// 本人报告或受理的事件单。
 	current, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
@@ -321,7 +321,7 @@ func (s *Service) GetUserNames(ctx context.Context, tenantID int, ids []int) (ma
 	return s.repo.GetUserNamesByIDs(ctx, tenantID, ids)
 }
 
-// Update 更新事件单。P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，
+// Update 更新事件单。写路径行级校验——写权限 ⊆ 读权限，
 // 普通角色仅可修改本人报告或受理的事件单（datascope.CanWriteResource）。
 //
 // 所有错误在边界统一经 lifecycleError 归一化：handler 走 common.RespondError，
@@ -455,7 +455,7 @@ func (s *Service) Escalate(ctx context.Context, tenantID int, id int, level int,
 }
 
 func (s *Service) escalateIncident(ctx context.Context, tenantID int, id int, level int, reason string, actorID int, actorRole string) (*Incident, error) {
-	// P1-DataScope：升级是生命周期写操作，与 ack/resolve/close/reopen 同风险面，
+	// 升级是生命周期写操作，与 ack/resolve/close/reopen 同风险面，
 	// 行级校验对齐 acknowledgeGuard（写权限 ⊆ 读权限）。
 	if err := s.acknowledgeGuard(ctx, id, actorID, actorRole, tenantID); err != nil {
 		return nil, err

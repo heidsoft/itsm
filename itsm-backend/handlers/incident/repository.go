@@ -58,8 +58,8 @@ type Repository interface {
 type IncidentStats struct {
 	TotalIncidents int `json:"totalIncidents"`
 	// OpenIncidents 统计未终结事件，状态集合见 incidentOpenStatuses。
-	// 2026-10 之前这里按 status='open' 过滤，而 'open' 不是事件域合法取值，
-	// 导致新建/已确认/已分配等全部漏计，读数长期接近 0。
+	// 'open' 不是事件域的合法取值，按它过滤会漏掉新建/已确认/已分配等状态，
+	// 读数会长期接近 0。
 	OpenIncidents     int `json:"openIncidents"`
 	CriticalIncidents int `json:"criticalIncidents"`
 	MajorIncidents    int `json:"majorIncidents"`

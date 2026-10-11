@@ -1,14 +1,11 @@
 // Package cmdb 中 CMDB 拓扑 / 影响分析的契约测试。
 //
-// 本文件 (topology_invariant_test.go) 固化 v1.7 (PR-FIX-CMDB-BPMN)
-// 阶段 2.3 的核心契约：
+// 本文件 (topology_invariant_test.go) 固化拓扑与影响分析的四条契约：
 //
 //   - 自环 (a -> a) 必须判为非法
 //   - 50 层深链递归必须不爆栈
 //   - 环 (a -> b -> a) 必须早返回
 //   - 跨租户 CI 不能进入本租户的影响图
-//
-// 这些是 ROADMAP 反复点名的高风险路径（递归爆栈）。
 //
 // 注：本测试聚焦 *算法层* 契约（TopologyGuard）；DB 集成由
 // repository_impl_test.go 承担。

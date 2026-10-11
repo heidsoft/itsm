@@ -12,10 +12,8 @@ import (
 
 // 本文件锁住事件趋势报表的窗口解析与分布折叠规则。
 //
-// 修复前 /reports/incident-trends 在浏览器里用 ticket 分析接口自己数：
-// 事件没有窗口端点，页面只能拿工单趋势冒充，并把「所选周期」留在本地不发请求。
-// 窗口口径因此必须由后端唯一决定，且严格到「错就报参数错误」，
-// 否则任何静默纠正都会让页面上的读数与用户选择脱钩。
+// 窗口口径由后端唯一决定：非法窗口直接报参数错误，不做静默纠正，
+// 否则页面上的读数会与用户选择的周期脱钩。
 
 func mustResolvePeriod(t *testing.T, dateFrom, dateTo string, now time.Time) ReportPeriod {
 	t.Helper()

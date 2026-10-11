@@ -93,7 +93,7 @@ func TestApproveTicket_BridgesBPMNTask(t *testing.T) {
 	assert.Equal(t, true, record.Metadata["bpmn_handled"])
 }
 
-// TestApproveTicket_BridgeFailClosed 失败关闭回归：
+// TestApproveTicket_BridgeFailClosed 要求失败关闭：
 // 存在待办流程任务但操作人不是流程审批人时，业务审批必须整体中止，双轨状态均不变。
 func TestApproveTicket_BridgeFailClosed(t *testing.T) {
 	client := newApprovalBridgeTestClient(t, "ticket_bridge_failclosed")

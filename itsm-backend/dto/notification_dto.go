@@ -57,7 +57,7 @@ type GetNotificationsRequest struct {
 
 // NotificationListResponse 通知列表响应。
 //
-// 集合键固定为 items（`notifications` 是 AGENTS.md 禁止的领域名第二键），分页键由
+// 集合键固定为 items，不用领域名 notifications 另开一个键；分页键由
 // common.NewPaginationResponse 一次算出：本端点真的做 Count + Offset/Limit，
 // 少一个键调用方就无法核对是否还有下一页。
 type NotificationListResponse struct {

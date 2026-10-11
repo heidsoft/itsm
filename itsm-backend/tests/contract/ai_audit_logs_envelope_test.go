@@ -20,9 +20,11 @@ import (
 	"go.uber.org/zap"
 )
 
-// GET /api/v1/ai/audit-logs 的页长此前有三处真相：handler 用私有 queryInt 且不给上界、
-// service 里再写一份 auditMaxPageSize=200 与缺省 20、响应又只回四键并回显未采纳的原值。
-// 本文件把「单一所有者 + 五键信封 + 回显等于实际采纳值」锁在真实注册的那条路由上。
+// GET /api/v1/ai/audit-logs 的页长只能有一个所有者。本文件把
+// 「单一所有者 + 五键信封 + 回显等于实际采纳值」锁在真实注册的那条路由上。
+//
+// 三处真相的形态是：handler 用私有 queryInt 且不给上界、service 再写一份
+// auditMaxPageSize=200 与缺省 20、响应只回四键并回显未采纳的原值。
 
 const aiAuditCreateSQL = `
 	CREATE TABLE IF NOT EXISTS ai_feedbacks (

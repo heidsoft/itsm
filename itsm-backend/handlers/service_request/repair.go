@@ -10,10 +10,9 @@ import (
 
 // PendingApprovalRepairer 对存量 pending 服务请求做审批链自愈。
 //
-// 背景：审批人解析修复前创建的请求，其
-// service_request_approvals.node.approver_ids 可能退化为 super_admin
-// 独审（同部门审批人缺失时旧逻辑直接兜底 admin）。修复只影响新请求，
-// 存量请求需要按新解析逻辑重算。此任务在应用启动时执行一次，幂等：
+// 背景：同部门审批人缺失时，审批人解析会兜底成 super_admin 独审，并把错误的
+// approver_ids 固化进 service_request_approvals.node。解析规则变更后，存量 pending 请求
+// 需要按新规则重算（新请求不受影响）。此任务在应用启动时执行一次，幂等：
 //   - 仅处理未终态（pending 审批中）的请求；
 //   - 仅当重算结果与现有 approver_ids 不同才写回；
 //   - 已有明确人工决策（已 approved/rejected 的记录）不动。

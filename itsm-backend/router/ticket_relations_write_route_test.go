@@ -1,18 +1,10 @@
 package router
 
-// 回归：工单关联写入面契约。
+// 工单关联写入面契约：PATCH /api/v1/tickets/:id/relations，权限 ticket:update，
+// 调用 service.UpdateTicketAssociations 并透传其业务错误码。
 //
-// 修复前的实测事实（router/ticket_routes.go 抽取后）：
-//   - TicketAssociationService.UpdateTicketAssociations 已具备完整能力（事务、租户收敛、
-//     父子环检测、关联工单反向边、标签校验），但 router 仅注册三个读取端点
-//     （GET /:id/relations、GET /:id/relations/stats、GET /:id/configuration-items）；
-//   - 前端在工单详情页「修改关联 / 设置父工单 / 设置标签」点击只得到 404，根本走不到
-//     service；运营只能通过直接改库或临时工单管理脚本补数据；
-//   - 更糟的是 404 把「资源不存在」「权限不足」「路径错了」三种状态压成同一种 HTTP
-//     响应，前端无法给出可信的失败提示。
-//
-// 修复后新增 PATCH /api/v1/tickets/:id/relations，权限 ticket:update，调用
-// service.UpdateTicketAssociations 并透传业务错误码：
+// 「资源不存在」「权限不足」「请求体格式/语义错误」必须映射成不同的 HTTP status 与
+// 业务 code，不能统一压成 404，否则前端给不出可信的失败提示。
 //   - 跨租户 / 不存在工单：404/4004（与读取路径同码，不让调用者用差异枚举对方资源）；
 //   - 父子循环引用：422/4220；
 //   - 标签/关联工单不在本租户：4001/ParamErrorCode；
@@ -25,7 +17,7 @@ package router
 //   4. 不存在工单：404/4004，与跨租户同码；
 //   5. body 解析失败：400/1001，DB 无变化。
 //
-// 测试打在**生产注册**上（PATCH /api/v1/tickets/:id/relations，含
+// 测试打在生产注册上（PATCH /api/v1/tickets/:id/relations，含
 // RequirePermission("ticket","update")），依赖真实 service 与 ent sqlite。
 
 import (
@@ -74,7 +66,8 @@ type updateReqBody struct {
 	TagIDs     []int `json:"tagIds,omitempty"`
 }
 
-// TestTicketRelationsWriteRouteContract 覆盖 P0-2 写入面契约。
+// TestTicketRelationsWriteRouteContract 覆盖工单关系写入端点的契约：
+// URL、方法、权限，以及跨租户关系 ID 注入必须被拒。
 func TestTicketRelationsWriteRouteContract(t *testing.T) {
 	ctx := context.Background()
 	dsn := fmt.Sprintf("file:router_relations_write_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano())
@@ -175,7 +168,7 @@ func TestTicketRelationsWriteRouteContract(t *testing.T) {
 		assert.Equal(t, 4004, env.Code, "body=%s", respBody)
 
 		// 锚点工单（甲租户 ticketAChild）的 parent 必须是先前由同租户 PATCH 写入的
-		// ticketAParent，**不能**被跨租户请求改成 ticketBOutsider。
+		// ticketAParent，不能被跨租户请求改成 ticketBOutsider。
 		got, err := client.Ticket.Get(ctx, ticketAChild.ID)
 		require.NoError(t, err)
 		assert.Equal(t, ticketAParent.ID, got.ParentTicketID,

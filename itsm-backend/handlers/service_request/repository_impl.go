@@ -733,9 +733,8 @@ func (r *EntRepository) GetUserContext(ctx context.Context, userID, tenantID int
 // FindActiveUsersByRole 查找租户内指定角色的活跃用户；department 非空时优先返回同部门用户。
 // 用于服务请求审批人自动分配。
 // 角色匹配取双数据源并集：user_roles M2M 边（roles.code，与 cc_handler 对齐的
-// 正确数据模型）∪ users.role 单字段枚举（存量主角色）。此前只查枚举，而
-// it_admin/security_admin 等词表长期不在枚举/种子内，导致三级审批恒回退 super_admin
-// 。
+// 正确数据模型）∪ users.role 单字段枚举（存量主角色）。只查枚举时，
+// it_admin/security_admin 等词表不在枚举内的角色恒查不到人，三级审批退回 super_admin。
 func (r *EntRepository) FindActiveUsersByRole(ctx context.Context, tenantID int, role, department string) ([]int, error) {
 	query := r.client.User.Query().
 		Where(

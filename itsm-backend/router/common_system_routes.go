@@ -13,8 +13,8 @@ import (
 func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *RouterConfig) {
 	if config.CommonHandler != nil {
 		// Auth scoped
-		// 修复 P0：auth/me, auth/tenants, auth/menus 不应在 tenant 分组内
-		// 否则 tenant RBAC 中间件会拦截端用户，导致 layout 崩溃
+		// auth/me、auth/tenants、auth/menus 挂在 r 层而不是 tenant 分组：
+		// tenant 分组的 RBAC 中间件会拦端用户，layout 取不到身份就崩
 		authGrp := r.Group("/api/v1/auth")
 		{
 			authGrp.GET("/me", middleware.AuthMiddleware(config.JWTSecret), config.CommonHandler.GetMe)

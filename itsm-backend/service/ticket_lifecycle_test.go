@@ -27,7 +27,7 @@ func TestIsValidTicketStatusTransition(t *testing.T) {
 		{"closed to resolved", common.TicketStatusClosed, common.TicketStatusResolved, false},
 		{"new to closed", common.TicketStatusNew, common.TicketStatusClosed, false},
 
-		// Pending状态测试（修复Bug #L1）
+		// Pending 出发的转换
 		{"pending to in_progress", common.TicketStatusPending, common.TicketStatusInProgress, true},
 		{"pending to resolved", common.TicketStatusPending, common.TicketStatusResolved, true},
 	}
@@ -43,14 +43,14 @@ func TestIsValidTicketStatusTransition(t *testing.T) {
 	}
 }
 
-// TestTicketResolveValidation 测试工单解决验证（修复Bug #L1）
+// TestTicketResolveValidation 测试工单解决验证
 func TestTicketResolveValidation(t *testing.T) {
 	// 定义可以解决的状态
 	validStatuses := map[string]bool{
 		common.TicketStatusOpen:       true,
 		common.TicketStatusInProgress: true,
 		common.TicketStatusAssigned:   true,
-		common.TicketStatusPending:    false, // Bug #L1修复：Pending不能直接解决
+		common.TicketStatusPending:    false,
 	}
 
 	for status, expected := range validStatuses {
@@ -64,12 +64,12 @@ func TestTicketResolveValidation(t *testing.T) {
 	}
 }
 
-// TestTicketCloseValidation 测试工单关闭验证（修复Bug #L2）
+// TestTicketCloseValidation 测试工单关闭验证
 func TestTicketCloseValidation(t *testing.T) {
 	// 定义可以关闭的状态
 	validStatuses := map[string]bool{
-		common.TicketStatusResolved:   true,  // Bug #L2修复：只有Resolved可以关闭
-		common.TicketStatusClosed:     false, // Bug #L2修复：Closed不能再次关闭
+		common.TicketStatusResolved:   true,
+		common.TicketStatusClosed:     false,
 		common.TicketStatusOpen:       false,
 		common.TicketStatusInProgress: false,
 	}

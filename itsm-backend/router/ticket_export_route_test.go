@@ -22,9 +22,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：POST /api/v1/tickets/export 此前恒返回
-// HTTP 500 / code 5001，因为 handlers/ticket 只留了占位实现，而带租户谓词的
-// 可用实现一直存在于 service 层。必须从真实路由入口证明：
+// POST /api/v1/tickets/export 必须接到带租户谓词的 service 实现上；
+// handler 留占位实现会让合法请求恒返回 HTTP 500 / code 5001。必须从真实路由入口证明：
 //   - 租户内导出返回文件流，且只含本租户工单；
 //   - csv/excel 的 Content-Disposition 与 Content-Type 和真实字节格式一致；
 //   - 跨租户不得泄漏对方工单编号；

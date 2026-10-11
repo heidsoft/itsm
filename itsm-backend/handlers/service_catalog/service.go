@@ -63,7 +63,7 @@ func (s *Service) Get(ctx context.Context, tenantID int, id int) (*ServiceCatalo
 func (s *Service) List(ctx context.Context, tenantID int, filters ListFilters) ([]*ServiceCatalog, int, error) {
 	// 页长不在这里夹紧：HTTP 入口用 common.GetPaginationFromQuery 做唯一所有者，
 	// 非 HTTP 调用方（tests/scenarios 直接打 repo）由 EntRepository.List 兜底。
-	// 原先 handler / Service.List / Service.Search 三套夹紧各写一遍，是同一件事的三个所有者。
+	// handler、Service.List、Service.Search 各写一遍夹紧，就是同一件事的三个所有者。
 	return s.repo.List(ctx, tenantID, filters)
 }
 

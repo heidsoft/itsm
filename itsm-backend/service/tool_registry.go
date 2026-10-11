@@ -45,7 +45,7 @@ func (t *ToolRegistry) SetCIRelationshipService(s *CIRelationshipService) {
 	t.ciRelationship = s
 }
 
-// SetImpactExplainer P1-4：影响分析 AI 解释服务（可选注入，未注入时不报错）
+// SetImpactExplainer 注入影响分析 AI 解释服务（可选注入，未注入时不报错）
 func (t *ToolRegistry) SetImpactExplainer(s *ImpactExplanationService) { t.impactExplain = s }
 
 // GetTool 按名称查找工具定义，找不到返回 nil

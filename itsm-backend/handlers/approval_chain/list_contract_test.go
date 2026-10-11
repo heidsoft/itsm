@@ -24,9 +24,9 @@ import (
 // 本文件覆盖 GET /api/v1/approval-chains 的列表契约，走真实 handler + production
 // service + Ent 仓储，而不是孤立 helper。
 //
-// 修复前列表响应使用 `size` json tag 且不返回 totalPages，前端因此无从判断分页；
-// 同时前端发送 name/多值 status/dateRange 全部被静默丢弃（多值 status 甚至因为
-// 精确匹配而返回 0 行），name 检索是页面上的可见能力但后端完全没有实现。
+// 契约要点：标准列表信封 {items,total,page,pageSize,totalPages}，不出现 size/totalCount 别名；
+// name、entityType、status 必须真正下推到查询，条件之间是 AND；status 只接受单值精确匹配，
+// 未知值或多值返回空集而不是被当成「不过滤」；筛选和分页都在租户内生效，缺租户上下文 fail closed。
 
 type listContractFixture struct {
 	client  *ent.Client
@@ -180,7 +180,6 @@ func TestListChains_UsesStandardListEnvelope(t *testing.T) {
 
 	data := f.listData(t, q())
 
-	// 修复前响应带的是 size，且没有 totalPages；前端只能靠 items.length 猜。
 	for _, key := range []string{"items", "total", "page", "pageSize", "totalPages"} {
 		_, ok := data[key]
 		assert.True(t, ok, "data.%s 缺失，实际 keys=%v", key, data)
@@ -197,7 +196,7 @@ func TestListChains_HonorsNameFilter(t *testing.T) {
 	f := newListContractFixture(t)
 	f.baseSeed(t)
 
-	// 页面上的「搜索审批链名称」在修复前被静默丢弃，这里必须真正下推到查询。
+	// 页面上的「搜索审批链名称」必须真正下推到查询，不能静默返回全量。
 	assert.ElementsMatch(t, []string{"Network Change Approval"}, f.listNames(t, q("name", "network change")))
 	assert.ElementsMatch(t, []string{"Database Access Request"}, f.listNames(t, q("name", "Database")))
 	assert.Empty(t, f.listNames(t, q("name", "no-such-chain")))

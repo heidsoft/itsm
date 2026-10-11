@@ -427,7 +427,7 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 	// BPMN 流程实例由 ticket_service 的 CommandStartBPMN outbox 命令统一启动（businessKey=ticket:<id>），
 	// 审批中心 UI 已迁移到直接消费 GET /bpmn/tasks，ApprovalRecord 不再写入。
 	// 保留 workflow 解析作为 guard：确认工单类型有绑定的审批流程才返回成功。
-	s.logger.Infow("TriggerApproval: ApprovalRecord write disabled (Phase 2), BPMN tasks are the authoritative source",
+	s.logger.Infow("TriggerApproval: ApprovalRecord write disabled, BPMN tasks are the authoritative source",
 		"ticket_id", req.TicketID,
 		"ticket_number", req.TicketNumber,
 		"workflow_id", workflow.ID,

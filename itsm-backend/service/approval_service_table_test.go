@@ -941,9 +941,9 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 }
 
 // ============================================================
-// 表驱动测试：TriggerApproval with different approval modes
-// 契约（2026-09 收敛）：BPMN 流程任务（GET /bpmn/tasks）是审批的权威来源，
-// TriggerApproval 不再写 ApprovalRecord——保留 workflow 解析作为 guard：
+// 表驱动测试：TriggerApproval 在不同 approvalMode 下的行为。
+// BPMN 流程任务（GET /bpmn/tasks）是审批的权威来源，TriggerApproval 不写 ApprovalRecord，
+// 只保留 workflow 解析作为 guard：
 // 工单类型有绑定的审批流程 → 返回空记录（非 nil）；无绑定 → nil, nil。
 // approvalMode/approverCount 仅影响 BPMN 节点语义，不再产生 ApprovalRecord 行。
 // ============================================================
@@ -1024,7 +1024,7 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				Save(ctx)
 			require.NoError(t, err)
 
-			// 触发审批：workflow 命中 → Phase 2 返回空记录（非 nil），不写任何 ApprovalRecord
+			// 触发审批：workflow 命中时返回空切片（非 nil），不写任何 ApprovalRecord
 			records, err := service.TriggerApproval(ctx, &ApprovalTriggerRequest{
 				TicketID:     ticket.ID,
 				TicketNumber: ticket.TicketNumber,
@@ -1046,7 +1046,7 @@ func TestTriggerApproval_ApprovalMode_TableDriven(t *testing.T) {
 				).
 				Count(ctx)
 			require.NoError(t, err)
-			assert.Equal(t, 0, count, "Phase 2 禁止写 ApprovalRecord")
+			assert.Equal(t, 0, count, "不得写入 ApprovalRecord")
 		})
 	}
 }

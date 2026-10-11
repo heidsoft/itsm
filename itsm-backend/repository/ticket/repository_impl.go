@@ -136,9 +136,9 @@ func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenant
 	return nil, fmt.Errorf("create ticket: ticket number collision persisted after retries")
 }
 
-// CreateWithTx 在调用方提供的 *ent.Tx 内创建工单；与 Create 逻辑一致但不管理 tx 生命周期。
-// 阶段 B（工单创建下沉）与 CreateWithTx 配套使用，保证 ticket INSERT 与 operational_command
-// 写入同生同死。GenerateTicketNumber 走 Redis 路径，不依赖数据库 tx。
+// CreateWithTx 在调用方提供的 *ent.Tx 内创建工单；与 Create 逻辑一致但不管理 tx 生命周期，
+// 因此 ticket INSERT 与 operational_command 写入同生同死。
+// GenerateTicketNumber 走 Redis 路径，不依赖数据库 tx。
 func (r *EntRepository) CreateWithTx(ctx context.Context, tx *ent.Tx, params *CreateParams, tenantID int) (*Ticket, error) {
 	if tx == nil {
 		return nil, fmt.Errorf("CreateWithTx requires non-nil tx")

@@ -37,7 +37,7 @@ const atomicBrokenBPMN = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmn:process>
 </bpmn:definitions>`
 
-// 一条「UserTask -> 排他网关(default 流) -> End」的 BPMN，用于验证正常完成仍可用（回归）。
+// 一条「UserTask -> 排他网关(default 流) -> End」的 BPMN，用于验证正常完成路径。
 const atomicOKBPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -108,7 +108,7 @@ func TestCompleteTask_AtomicRollbackOnFailure(t *testing.T) {
 	assert.Equal(t, "running", inst.Status, "失败时流程实例不应结束")
 }
 
-// TestCompleteTask_SuccessCommits 验证正常完成路径仍按预期提交并结束流程（回归）。
+// TestCompleteTask_SuccessCommits 验证正常完成路径按预期提交并结束流程。
 func TestCompleteTask_SuccessCommits(t *testing.T) {
 	engine, client, ctx, _, instID, taskID := seedEngineFixture(t, atomicOKBPMN)
 

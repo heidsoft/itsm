@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// TestApprovalCountWithDelegatedStatus 测试包含delegated状态的审批计数（修复Bug #L4）
+// TestApprovalCountWithDelegatedStatus 测试包含 delegated 状态的审批计数
 func TestApprovalCountWithDelegatedStatus(t *testing.T) {
 	// 模拟审批记录状态
 	records := []struct {

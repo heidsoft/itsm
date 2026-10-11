@@ -446,8 +446,8 @@ func (h *Handler) GetTicketStats(c *gin.Context) {
 		return
 	}
 
-	// v1.1 回归：返回与前端约定的扁平 DTO（total/open/inProgress/resolved/pending/highPriority/overdue），
-	// 避免 stats 卡片显示 0。原先直接返回 entity，字段名（TotalTickets/OpenTickets）与前端契约不一致。
+	// 统计必须经 ticketStatsToDTO 转成 camelCase DTO 再返回；直接序列化 Ent 模型会带出
+	// TotalTickets/OpenTickets 这类字段名，前端解析不到，stats 卡片全是 0。
 	common.Success(c, ticketStatsToDTO(stats))
 }
 

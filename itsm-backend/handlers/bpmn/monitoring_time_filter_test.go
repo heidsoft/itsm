@@ -58,8 +58,6 @@ func TestMonitoringTimeFilter_RejectsDateOnly(t *testing.T) {
 
 // TestMonitoringTimeFilter_AppliesValidBounds 证明合法 RFC3339 边界真的进了查询：
 // 三个流程实例分布在两个时间点，只取后一半必须得到 2 条而不是 3 条。
-// （E4-48 前本例打 /monitoring/audit-logs 重复表面，该路由已删除，
-// 时间边界语义在 instances/status 上等价可证。）
 func TestMonitoringTimeFilter_AppliesValidBounds(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_time_filter_apply?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })

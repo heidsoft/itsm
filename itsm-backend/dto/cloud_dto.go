@@ -2,9 +2,8 @@ package dto
 
 // 本文件只声明云账号/云服务/云资源三个列表端点的响应契约与云资源列表的查询参数。
 //
-// `/api/v1/cloud/*` 那套与 `/api/v1/cmdb/cloud-*` 平行的表面（15 条已注册路由、
-// handlers/cloud、service/cloud_service.go）已删除，它是同一用例的第二套业务规则所有者，
-// 实测零前端调用方。它的请求 DTO 因此成为零生产引用的死契约，随该表面一并删除；
+// `/api/v1/cloud/*` 那套与 `/api/v1/cmdb/cloud-*` 平行的表面（handlers/cloud、
+// service/cloud_service.go）已删除：同一用例只能有一个业务规则所有者。
 // 活表面的写入请求 DTO 是 cmdb_dto.go 里的 CMDB* 系列。
 
 // ListCloudSelectorRequest 云账号/云服务两个选择器列表的查询参数
@@ -52,7 +51,7 @@ type CreateCloudResourceRequest struct {
 // UpdateCloudResourceRequest 更新云资源（PUT /api/v1/cmdb/cloud-resources/:id）。
 //
 // 与 Create 的区别只有必填约束：本端点沿用 PUT 全量覆盖语义，缺席字段按零值写入，
-// 「未传」与「传零值」的区分属于 PATCH 契约，尚未拍板（见 ledger E4-26 同族问题）。
+// 「未传」与「传零值」的区分属于 PATCH 契约，这里不适用。
 type UpdateCloudResourceRequest struct {
 	CloudAccountID int                    `json:"cloudAccountId"`
 	ServiceID      int                    `json:"serviceId"`
@@ -79,8 +78,7 @@ type CloudResourceListResponse struct {
 
 // CloudAccountListResponse 云账号列表响应。
 //
-// 实测不分页：本端点是 CI 表单与云资源页的选择器数据源，整份返回，因此只保留诚实的
-// {items,total} 两键，不得补 page/pageSize/totalPages 假键。
+// 该端点不分页：它是 CI 表单与云资源页的选择器数据源，整份返回，所以只有 {items,total} 两键。
 type CloudAccountListResponse struct {
 	Items []*CloudAccountResponse `json:"items"`
 	Total int                     `json:"total"`

@@ -133,8 +133,8 @@ func TestService_Register(t *testing.T) {
 	defer fx.client.Close()
 
 	t.Run("多活跃租户时注册被拒绝(fail-closed)", func(t *testing.T) {
-		// fixture 有两个 active 租户(tenant/tenant2)。目标租户不再接受请求体
-		// 指定(P0-1)，多活跃租户无法推断归属，注册必须失败 closed。
+		// fixture 有两个 active 租户(tenant/tenant2)。目标租户不接受请求体指定，
+		// 多活跃租户无法推断归属，注册必须失败 closed。
 		req := &dto.RegisterRequest{
 			Username:    "bob",
 			Email:       "bob@example.com",

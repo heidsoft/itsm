@@ -23,20 +23,20 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/changes 的分页参数此前是裸
-// strconv.Atoi 且忽略错误，直接交给 repository_impl.go 的 Offset/Limit，而响应的分页
-// 元数据在 SuccessWithPagination 里另夹一次——SQL 侧与声明侧对同一个非法入参给两个答案：
-//   - pageSize=0 在 Ent 的 sqlgraph 里等于**不加 LIMIT**，实测 25 条种子一次返回 25 条，
-//     同时响应写着 pageSize:10；
+// GET /api/v1/changes 的分页参数必须在进入 Offset/Limit 之前夹紧一次，SQL 侧与声明侧
+// 才可能对同一个入参给出同一个答案。若 handler 用裸 strconv.Atoi 且忽略错误，把原值交给
+// repository_impl.go，再由 SuccessWithPagination 在响应里另夹一次：
+//   - pageSize=0 会被当成不加 LIMIT，25 条种子一次返回 25 条，响应却写着 pageSize:10；
 //   - pageSize=5000 让 SQL 真去取 5000 条（只被数据量兜住），响应却声明 pageSize:100；
-//   - page<=0 会算出负 OFFSET，仍被写进 SQL（SQLite 当 0 吞掉，Postgres 拒绝负 OFFSET）。
+//   - page<=0 会算出负 OFFSET 并写进 SQL（SQLite 当 0 吞掉，Postgres 直接拒绝）。
 //
-// 同一用例还并存两套风险等级参数名（先读 risk_level、空则读 riskLevel），属 AGENTS
-// 「请求/响应多字段兼容零新增」明令禁止的写法；实测前端只发 riskLevel，snake_case 一支
-// 从未被使用，因此按「只保留 camelCase」收口，而不是反过来补一个 snake_case 契约。
+// 风险等级过滤器只认 riskLevel。同时读 risk_level 属于 AGENTS
+// 「请求/响应多字段兼容零新增」明令禁止的写法，而且 snake_case 一支前端从未发送，
+// 所以按「只保留 camelCase」收口，不是反过来补一个 snake_case 契约。
 //
-// 测试打在**生产注册**上（SetupRoutes → SetupChangeRoutes → RequirePermission("change","read")），
-// 并额外锁住三条既有正确行为：行级 DataScope（agent 只见本人创建/受理）、租户收敛、未认证 401。
+// 用例挂在真实路由注册上（SetupRoutes → SetupChangeRoutes →
+// RequirePermission("change","read")），并额外锁住三条既有正确行为：
+// 行级 DataScope（agent 只见本人创建/受理）、租户收敛、未认证 401。
 
 const changeListSecret = "change-list-secret"
 
@@ -138,7 +138,7 @@ func TestChangeListRoutePaginationAndRiskFilter(t *testing.T) {
 		var res changeListWire
 		require.NoError(t, json.Unmarshal(env.Data, &res), body)
 		assert.Equal(t, 20, res.PageSize, "pageSize=0 在 Ent 里等于不加 LIMIT，必须夹紧后再查")
-		assert.Len(t, res.Items, 20, "修复前这条返回全部 25 条")
+		assert.Len(t, res.Items, 20, "pageSize=0 不得整表返回 25 条")
 		assert.Equal(t, 2, res.TotalPages)
 	})
 
@@ -156,7 +156,7 @@ func TestChangeListRoutePaginationAndRiskFilter(t *testing.T) {
 		require.Equal(t, 0, env.Code, body)
 		var res changeListWire
 		require.NoError(t, json.Unmarshal(env.Data, &res), body)
-		assert.Equal(t, 20, res.PageSize, "修复前 5000 被原样接受，一次拉走全租户数据")
+		assert.Equal(t, 20, res.PageSize, "5000 不得原样接受，否则会一次拉走全租户数据")
 		assert.Len(t, res.Items, 20)
 	})
 
@@ -173,8 +173,8 @@ func TestChangeListRoutePaginationAndRiskFilter(t *testing.T) {
 	})
 
 	t.Run("snake_case 风险参数名不再是第二套契约", func(t *testing.T) {
-		// 修复前：risk_level=high 被当成过滤器（total 收敛到 10）。现在只认 riskLevel，
-		// 未识别的参数一律忽略，绝不再有两套名字「谁先来算谁」的行为。
+		// 过滤器只认 riskLevel，未识别的参数一律忽略；两套名字「谁先来算谁」会让
+		// snake_case 静默收窄结果集。
 		_, body, env := asAdminA(t, "risk_level=high&pageSize=100")
 		require.Equal(t, 0, env.Code, body)
 		var res changeListWire

@@ -24,18 +24,16 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/changes/pirs 是**真分页**的列表
-// （service/pir_service.go 用 Count + Offset/Limit），但修复前只返回 {items,total}：
-// 调用方拿到 20 条却无从知道「第几页、共几页」，只能把已到手的当前页当成整个结果集。
+// GET /api/v1/changes/pirs 是真分页的列表（service/pir_service.go 用 Count + Offset/Limit），
+// 所以信封必须五键齐备：调用方拿到 20 条却看不到「第几页、共几页」时，
+// 只能把已到手的当前页当成整个结果集。
 //
-// 同时实测到 page/pageSize 完全没有夹紧：handler 用裸 strconv.Atoi 把查询参数原样交给
-// service，而
-//   - pageSize=0 在 Ent 的 sqlgraph 里是 `if q.Limit != 0` —— 0 表示**不加 LIMIT**，
-//     整表返回（25 条数据实测返回 25 条，而不是任何一页）；
-//   - page=0/负数会算出负 Offset，Ent 里 `if q.Offset != 0` 仍会把负数写进 SQL。
+// page/pageSize 也必须夹紧后再下传。handler 若用裸 strconv.Atoi 把查询参数原样交给 service：
+//   - pageSize=0 会被当成不加 LIMIT，整表返回（25 条种子一次返回 25 条，而不是任何一页）；
+//   - page=0/负数会算出负 Offset，负数照样写进 SQL。
 //
-// 因此这条回归同时锁住「五键齐备」与「夹紧后的页语义」，并且打在**生产注册**
-// （SetupRoutes → SetupChangeRoutes → middleware.RequirePermission）上。
+// 因此本用例同时锁住「五键齐备」与「夹紧后的页语义」，并挂在真实路由注册上
+// （SetupRoutes → SetupChangeRoutes → middleware.RequirePermission）。
 
 const (
 	pirChangeSecret  = "change-pir-secret"
@@ -138,7 +136,7 @@ func TestChangePIRListRoutePaginationEnvelope(t *testing.T) {
 		var res pirListWire
 		require.NoError(t, json.Unmarshal(env.Data, &res), body)
 		assert.Equal(t, 20, res.PageSize, "pageSize=0 在 Ent 里等于不加 LIMIT，必须夹紧后再查")
-		assert.Len(t, res.Items, 20, "修复前这条返回全部 25 条")
+		assert.Len(t, res.Items, 20, "pageSize=0 不得整表返回 25 条")
 		assert.Equal(t, 2, res.TotalPages)
 	})
 
@@ -196,8 +194,8 @@ func TestChangePIRListRoutePaginationEnvelope(t *testing.T) {
 	})
 }
 
-// pirListWire 按**线上契约**声明解析目标，不引用 dto 结构体：回归锁的是响应形状本身，
-// 实现侧换 DTO、复用别的结构体都绕不过断言。
+// pirListWire 按对外契约声明解析目标，不引用 dto 结构体：断言锁的是响应形状本身，
+// 实现侧换 DTO 或复用别的结构体都绕不过去。
 type pirListWire struct {
 	Items      []pirItemWire `json:"items"`
 	Total      int           `json:"total"`

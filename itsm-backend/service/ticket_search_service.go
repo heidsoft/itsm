@@ -18,7 +18,7 @@ import (
 type TicketSearchService struct {
 	client   *ent.Client
 	logger   *zap.SugaredLogger
-	slaStore *sla.Store // Phase 3: sla_states 读取
+	slaStore *sla.Store // SLA 状态以 sla_states 为权威来源
 }
 
 // SetSLAStore 注入 SLA 持久化 store

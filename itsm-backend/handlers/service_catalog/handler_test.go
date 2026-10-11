@@ -156,11 +156,9 @@ func TestHandler_List(t *testing.T) {
 	assert.Equal(t, float64(20), data["pageSize"])
 }
 
-// TestHandler_List_PageSizeAliasIsInert 锁住 E4-6f 的契约变更：
-// 请求侧 size 不再是 pageSize 的别名，越界页长不再返回 1001 参数错误，
-// 而是回落平台默认页长 20（唯一所有者 common.GetPaginationFromQuery）。
-// 原 TestHandler_List_AcceptsSize1000 / _RejectsSize1001 断言的是「max=1000 放行、
-// 1001 报 1001」那套第四页长真相，已随别名一起删除。
+// TestHandler_List_PageSizeAliasIsInert:
+// 请求侧 size 不是 pageSize 的别名，越界页长也不返回 1001 参数错误，而是回落平台默认
+// 页长 20（唯一所有者 common.GetPaginationFromQuery）。
 func TestHandler_List_PageSizeAliasIsInert(t *testing.T) {
 	r, _, _ := scSetup(t)
 

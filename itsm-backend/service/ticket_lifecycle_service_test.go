@@ -303,8 +303,8 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 根据测试用例显式设置初始状态（P1-1：之前"closed→open"用例错误地仍从 open 出发，
-			// 导致它实际上测的是 open→open 的 self-loop，无法验证终态保护）。
+			// 每个用例显式设置初始状态：closed -> open 必须真的从 closed 出发，
+			// 否则变成 open -> open 的 self-loop，测不到终态保护。
 			var initialStatus string
 			switch {
 			case tt.name == "无效状态转换 closed -> open":

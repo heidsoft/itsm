@@ -229,8 +229,8 @@ type TicketCCRecordResponse struct {
 
 // TicketCCListResponse 抄送记录列表响应
 //
-// 两个抄送列表端点实测都不分页（service 用 All(ctx) 整表取回、handler 直接透传），
-// 因此只保留诚实的 {items,total} 两键，不补 page/pageSize/totalPages。
+// 两个抄送列表端点都不分页（service 用 All(ctx) 整表取回、handler 直接透传），
+// 因此响应只有 {items,total} 两键。
 // 若将来实装分页，必须由 service 做 Count + Offset/Limit 后再补五键，
 // 不得只给响应补假键伪造分页协议。
 type TicketCCListResponse struct {

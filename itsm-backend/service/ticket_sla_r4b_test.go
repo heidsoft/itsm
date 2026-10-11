@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-// TestParseBusinessHoursConfig_LegacyKeys 兼容 R4-b 修复前已存在的键名别名。
-// 历史欠账：模板写 workdays/work_hour_start/work_hour_end/is_24_7，解析器不识别导致
-// P1 模板声明 24×7 实际 fallback 到 9-18 工时——所有 SLA 错算。
-// 修复后解析器必须同时认新旧键名，且 is_24_7=true 短路为 00:00-23:59 全天制。
+// TestParseBusinessHoursConfig_LegacyKeys 解析器必须同时认新旧键名：
+// 模板侧历史上写 workdays/work_hour_start/work_hour_end/is_24_7，只认新键会让
+// 声明 24×7 的模板 fallback 到默认 9-18 工时，SLA 整体错算。
+// is_24_7=true 短路为 00:00-23:59 全天制。
 func TestParseBusinessHoursConfig_LegacyKeys(t *testing.T) {
 	// 场景 A：旧键名 workdays/work_hour_start/work_hour_end
 	cfg := parseBusinessHoursConfig(map[string]interface{}{
@@ -48,8 +48,6 @@ func TestParseBusinessHoursConfig_LegacyKeys(t *testing.T) {
 //
 // 场景：起始 2026-09-16 周三 22:00 UTC(=Asia/Shanghai 06:00 周四)，
 // is_24_7=true，1440 分钟(24h)。预期：次日 22:00 UTC 截止（连续，不剔除）。
-// 修复前：因为 work_days/work_hour_start 被忽略且 is_24_7 未消费，落到默认 9-18 工时——
-// 1 天 24h 实际跨多日才累计完成，违约判定整体偏移。
 func TestAddBusinessMinutes_24x7(t *testing.T) {
 	cfg := parseBusinessHoursConfig(map[string]interface{}{
 		"time_zone": "Asia/Shanghai",

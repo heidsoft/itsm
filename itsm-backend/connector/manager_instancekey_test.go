@@ -2,14 +2,14 @@ package connector
 
 import "testing"
 
-// TestInstanceKeyUniqueness verifies Bug #4 fix: same name with different
-// providers must produce different keys (was previously producing same key).
+// TestInstanceKeyUniqueness 验证 instanceKey 由 tenant + name + provider 共同决定：
+// 同名但 provider 不同的配置必须产生不同的 key。
 func TestInstanceKeyUniqueness(t *testing.T) {
 	k1 := instanceKey(Config{TenantID: 1, Name: "feishu", Provider: "feishu"})
 	k2 := instanceKey(Config{TenantID: 1, Name: "feishu", Provider: "dingtalk"})
 
 	if k1 == k2 {
-		t.Errorf("Bug #4 not fixed: same name with different providers collided. k1=%q k2=%q", k1, k2)
+		t.Errorf("same name with different providers must not collide. k1=%q k2=%q", k1, k2)
 	}
 
 	// Same tenant + name + provider should be the same

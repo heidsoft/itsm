@@ -432,7 +432,7 @@ func TestTicketWorkflowService_LargeVolumeTickets(t *testing.T) {
 	assert.Equal(t, 50, len(tickets))
 }
 
-// ==================== 状态机与 CAS 回归测试（workflow 路径对齐） ====================
+// ==================== 状态机与 CAS（workflow 路径对齐） ====================
 
 // assertWorkflowConflict 断言错误为携带期望业务码的 BusinessError（非法迁移/权限拒绝）。
 func assertWorkflowConflict(t *testing.T, err error, wantCode int) {
@@ -444,7 +444,7 @@ func assertWorkflowConflict(t *testing.T, err error, wantCode int) {
 }
 
 func TestTicketWorkflowService_ResolveTicket_RejectsIllegalTransition(t *testing.T) {
-	// 回归：修复前 ResolveTicket 无 source→target 校验，new 可直接置 resolved
+	// new 不允许直接置 resolved
 	service, client, ctx := setupTicketWorkflowTest(t)
 	defer client.Close()
 
@@ -539,13 +539,13 @@ func TestTicketWorkflowService_WithdrawTicket_GuardsAndCAS(t *testing.T) {
 	other, err := createTicketWorkflowTestUser(ctx, client, tenant.ID, "wdoth")
 	require.NoError(t, err)
 
-	// 非创建者 → 403 语义（修复前为裸 error，伪装成 500）
+	// 非创建者撤回 → 403
 	tk, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "new")
 	require.NoError(t, err)
 	err = service.WithdrawTicket(ctx, &dto.WithdrawTicketRequest{TicketID: tk.ID, Reason: "r"}, other.ID, tenant.ID)
 	assertWorkflowConflict(t, err, common.ForbiddenCode)
 
-	// resolved → cancelled 状态机不允许（修复前仅拦 closed/cancelled）
+	// resolved → cancelled 状态机不允许
 	resolved, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, requester.ID, "resolved")
 	require.NoError(t, err)
 	err = service.WithdrawTicket(ctx, &dto.WithdrawTicketRequest{TicketID: resolved.ID, Reason: "r"}, requester.ID, tenant.ID)
@@ -579,7 +579,7 @@ func TestTicketWorkflowService_RejectTicket_GuardsAndWhitelist(t *testing.T) {
 	assert.Equal(t, "rejected", fresh.Status)
 	assert.Equal(t, tk.Version+1, fresh.Version)
 
-	// closed 是终态：不可驳回（修复前无校验，任意状态均可驳回）
+	// closed 是终态，不可驳回
 	closed, err := createTicketWorkflowTestTicket(ctx, client, tenant.ID, user.ID, "closed")
 	require.NoError(t, err)
 	err = service.RejectTicket(ctx, &dto.RejectTicketRequest{TicketID: closed.ID, Reason: "r", Comment: "c"}, user.ID, tenant.ID)

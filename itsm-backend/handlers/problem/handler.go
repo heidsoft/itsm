@@ -400,9 +400,8 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	// 分页夹紧只有一个所有者（common.GetPaginationFromQuery），SQL 侧与声明侧读同一份值。
-	// 此前 handler 把 ShouldBindQuery 的原值交给 repository，repository 自己按 size>200→200
-	// 截断，而响应末尾又按另一套规则回显未夹紧的原值：205 条数据 + pageSize=250 时响应写着
-	// pageSize:250、totalPages:1，实际只返回 200 条，客户端按声明的契约翻完第 1 页就停，
+	// 若 repository 自己截断页长、响应再回显未夹紧的原值，205 条数据配 pageSize=250 会返回
+	// 200 条却声明 pageSize:250、totalPages:1；按声明契约翻页的客户端翻完第 1 页就停，
 	// 第 201~205 条在任何一页里都拿不到。
 	pg := common.GetPaginationFromQuery(c)
 	req.Page, req.PageSize = pg.Page, pg.PageSize
@@ -855,7 +854,7 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 
 // GetProblemSLA handles GET /api/v1/problems/:id/sla
 // @Summary 获取问题SLA
-// @Description 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回 5003 unready；此前它返回 slaStatus:"none" 的空成功，与「该问题确实没有触发 SLA」不可区分
+// @Description 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回 5003 unready。不返回 slaStatus:"none" 的空成功，那种响应与「该问题确实没有触发 SLA」不可区分
 // @Tags 问题管理
 // @Produce json
 // @Param id path int true "问题ID"

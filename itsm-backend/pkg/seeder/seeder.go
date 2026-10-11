@@ -754,8 +754,8 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	attempt("departments", s.seedDepartments)
 	attempt("teams", s.seedTeams)
 	s.seedRoles(ctx)
-	s.seedGroups(ctx)               // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
-	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
+	s.seedGroups(ctx)               // 按 config.Groups 建基线组，供审批 candidateGroups 解析
+	s.MigrateUserRolesBackfill(ctx) // 回填 user_roles 边
 	s.seedPermissions(ctx)          // 初始化权限
 	s.seedMenus(ctx)                // 初始化菜单
 	if err := s.seedAdmin(ctx); err != nil {
@@ -2008,8 +2008,8 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 		"/admin/sla-config":         "/workflow/sla",
 		"/admin/escalation-matrix":  "/admin/escalation-matrices",
 		"/sla-dashboard":            "/sla-monitor",
-		// —— 2026-08 v1.1 菜单路径与 Next.js App Router 对齐（修正 404）——
-		// 以下 16 条在旧部署中会以错误的 DB path 存在：
+		// 菜单 path 与 Next.js App Router 对齐，否则点击 404。
+		// 以下 16 条在存量数据中的 path 是错的：
 		//   a) 11 条 xxx/list 子菜单：新版 specs 已删除这些冗余条目（顶级菜单点击即进入列表首页），
 		//      因此把它们的 path UPDATE 到对应的模块根路径；若根路径已被顶级菜单占用，
 		//      迁移循环会命中 dupCount>0 分支，直接删除旧条目。

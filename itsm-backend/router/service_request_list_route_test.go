@@ -25,22 +25,23 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/service-requests 与
-// GET /api/v1/service-requests/approvals/pending 这两个列表原先各有**三个**分页所有者：
-//   - 请求 DTO 上写着 binding:"min=1,max=100"，越界值在绑定阶段就返回 1001 参数错误；
-//   - handler 再把没越界的原值下传，自己补一份 page==0→1、pageSize==0→10；
-//   - repository_impl 又按 size<1→10、size>100→100 夹一次才写 Offset/Limit。
+// GET /api/v1/service-requests 与
+// GET /api/v1/service-requests/approvals/pending 的分页所有者只有 HTTP 入口的
+// common.GetPaginationFromQuery。三处都不许再定自己的规则：
+//   - 请求 DTO 不写 page/pageSize 的 binding，越界页长回落默认值，而不是在绑定阶段
+//     变成 1001 参数错误；
+//   - handler 不再补 page==0→1、pageSize==0→10；
+//   - repository_impl 不再第二次夹紧，直接用传入值写 Offset/Limit。
 //
-// 而响应末尾用 handler 那套**未夹上限**的原值手算 totalPages 并回显 pageSize，
-// 于是「SQL 实际取了几条」和「响应声明的页长/总页数」可以不是同一份真相。
+// totalPages 与回显的 pageSize 必须由夹紧后的同一个值算出，否则「SQL 实际取了几条」
+// 和「响应声明的页长/总页数」可以不是同一份真相。
 //
-// 同一用例还有两套集合键：生产返回 items，前端 service-request-api.ts 的
-// ServiceRequestListResponse 却声明 requests+size，靠 normalizeList 的
-// `raw.requests || (raw as any).items || []`、`raw.size || (raw as any).pageSize || requests.length`
-// 兜住——正是 AGENTS「请求/响应多字段兼容零新增」禁止的写法，且 total 缺失时静默变成当前页长度。
+// 集合键只有 items：前端 service-request-api.ts 的 ServiceRequestListResponse 不得再声明
+// requests+size，也不得用 `raw.requests || raw.items || []`、`raw.size || raw.pageSize || len`
+// 这类多字段 fallback 同时兜两套响应 —— total 缺失时它会静默变成当前页长度。
 //
-// 本测试打在**生产注册**上（SetupRoutes → SetupServiceRequestRoutes → RequirePermission("service_request","read")），
-// 解码目标按线上形状声明而不引用 dto，因此修复前也能编译、证明的是运行时行为。
+// 本测试打在生产注册上（SetupRoutes → SetupServiceRequestRoutes → RequirePermission("service_request","read")），
+// 解码目标按线上形状声明而不引用 dto，因此断言的是运行时行为而不是编译期形状。
 // 同时锁住三条既有正确行为：行级 DataScope、租户收敛、未认证 401。
 
 const serviceRequestListSecret = "sr-list-secret"
@@ -189,8 +190,8 @@ func TestServiceRequestListRouteEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("越界页长回落默认页长，SQL 与声明同一个真相", func(t *testing.T) {
-		// 修复前：绑定阶段 min=1,max=100 先把这个请求打成 1001 参数错误，
-		// 与 handler 自己那套「补默认值」是两种结局；repo 还会再夹一次。
+		// 越界页长只能是「回落默认」，不能一部分由 binding 报 1001 参数错误、
+		// 一部分由 handler 补默认值、repo 再夹一次。
 		status, body, env := listA(t, "pageSize=5000")
 		require.Equal(t, http.StatusOK, status, "越界页长应回落默认页长，不是参数错误: body=%s", body)
 		require.Equal(t, 0, env.Code, body)
@@ -249,8 +250,8 @@ func TestServiceRequestListRouteEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("size/limit/userId 等别名与自报身份都不生效", func(t *testing.T) {
-		// 修复前：DTO 上有 UserID 字段（form 名 UserID），repo 认 size 别名是历史形态；
-		// 现在页长只从 pageSize 读，操作者身份只从认证上下文读。
+		// 页长只从 pageSize 读，操作者身份只从认证上下文读：size/limit 别名和
+		// userId 自报字段都不能改变结果集。
 		_, body, env := listA(t, "pageSize=100&size=5&limit=5&userId="+fmt.Sprint(agentA)+"&user_id="+fmt.Sprint(agentA)+"&sortBy=id")
 		require.Equal(t, 0, env.Code, body)
 		res := decode(t, body, env)

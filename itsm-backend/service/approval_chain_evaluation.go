@@ -296,7 +296,7 @@ func (s *ApprovalChainService) FindActiveChainByEntityType(ctx context.Context, 
 }
 
 // ResolveApprovalPlan 查找匹配链并立即求值，返回可直接用于生成审批记录的计划。
-// 这是消费审批链求值引擎的统一入口（替换原先「无审批人时自审批 / 硬编码层级」等缺陷路径）。
+// 这是消费审批链求值引擎的统一入口：无审批人时不得自审批，层级不得硬编码。
 //
 // Deprecated: 直接调用路径。新代码应通过 BPMN Service Task（approval_chain_task / resolve_plan）
 // 在流程编排中消费审批链配置。已有调用方（change/service_request）待迁移。

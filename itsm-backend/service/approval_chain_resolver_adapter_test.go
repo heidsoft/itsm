@@ -21,7 +21,6 @@ import (
 // TestApprovalChainResolverAdapter_ConvergenceWithDirectPath 验证：
 // BPMN Service Task 路径（ApprovalChainResolverAdapter → ResolveApprovalPlan）
 // 与直接调用 ResolveApprovalPlan 产生完全一致的结果。
-// 这是 Phase 1 编排统一的核心回归——三条实体类型（ticket/change/service_request）均须收敛。
 func TestApprovalChainResolverAdapter_ConvergenceWithDirectPath(t *testing.T) {
 	for _, entityType := range []string{"ticket", "change", "service_request"} {
 		t.Run(entityType, func(t *testing.T) {

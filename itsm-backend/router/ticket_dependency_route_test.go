@@ -23,15 +23,15 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/tickets/:id/dependencies 是
-// router 真实注册的只读入口（router/ticket_routes.go:286，权限 ticket:read），
-// handler 却用 ShouldBindJSON 绑一个 action 必填的结构体。GET 不带请求体，
-// 于是这个入口**每次调用都固定 400「请求参数错误」**，从未可用过；
-// 同时服务层「工单不存在/跨租户」被兜底成 500/5001，调用方分不清不存在与故障。
+// GET /api/v1/tickets/:id/dependencies 是 router 真实注册的只读入口
+// （router/ticket_routes.go，权限 ticket:read），它必须真的可用：
+// handler 若用 ShouldBindJSON 绑一个 action 必填的结构体，GET 不带请求体就每次固定
+// 400「请求参数错误」，入口等于从未可用；服务层的「工单不存在/跨租户」若被兜底成
+// 500/5001，调用方也分不清不存在与故障。
 //
-// 修复后的契约：影响分析的输入是枚举过滤语义，归属查询参数
+// 契约：影响分析的输入是枚举过滤语义，归属查询参数
 // ?action=close|delete|change_status&newStatus=...；不存在与跨租户统一 404/4004。
-// 必须从真实 Router 入口证明，并覆盖跨租户拒绝与「客户端自报 tenantId 不被信任」。
+// 断言从真实 Router 入口出发，覆盖跨租户拒绝与「客户端自报 tenantId 不被信任」。
 
 const dependencyImpactPathFmt = "/api/v1/tickets/%d/dependencies"
 

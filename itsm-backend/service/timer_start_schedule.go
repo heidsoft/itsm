@@ -19,8 +19,8 @@ import (
 //   - bpmnProcessDefinitionService.PublishProcessDefinition（设计器发布，生产主路径）
 //   - bpmnProcessDefinitionService.SetProcessDefinitionActive(false)（停用即取消）
 //
-// 语义：**整体替换**。同一 (tenant, process_key) 下先取消全部 pending start timer，
-// 再按新定义重建。cron/cycle 依租户时区解析（PRD §12 决策 Q1），fire_at 以 UTC 落库（决策 Q4）。
+// 语义：整体替换。同一 (tenant, process_key) 下先取消全部 pending start timer，
+// 再按新定义重建。cron/cycle 依租户时区解析，fire_at 以 UTC 落库。
 // ---------------------------------------------------------------------------
 
 // SyncStartTimers 用 BPMN XML 同步 start timer 时间表，返回注册的 timer 数量。

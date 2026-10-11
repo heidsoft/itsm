@@ -357,7 +357,7 @@ func (s *TicketNotificationService) NotifyTicketCreated(ctx context.Context, tic
 		}
 	}
 
-	// 3. 如果只有创建人(没有处理人),广播给同租户其他**活跃**用户
+	// 3. 如果只有创建人(没有处理人),广播给同租户其他活跃用户
 	// （ActiveEQ 过滤：停用用户不收通知，否则投递端 user not found 进 dead_letter）
 	if len(userIDs) <= 1 && ticket.RequesterID > 0 {
 		admins, err := s.client.User.Query().
@@ -816,7 +816,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 }
 
 // collectCreatedRecipients 与 NotifyTicketCreated 同步计算收件人：
-//  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他**活跃**用户。
+//  1. AssigneeID；2. RequesterID（去重）；3. 若仍只 1 人，广播同租户其他活跃用户。
 //
 // tx 入参确保租户隔离与 ticket 一致，避免跨 tenant 误发。
 // 广播分支必须过滤 ActiveEQ(true)：停用用户入箱后投递端报 user not found 进 dead_letter

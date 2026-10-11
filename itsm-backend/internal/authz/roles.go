@@ -79,8 +79,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		},
 		// 服务台坐席（agent，domain/role 内置）：一线接单与处理，
 		// 额外覆盖服务请求 L1 审批（approvers-l1 组兜底）。
-		// 此前 seedRolePermissions 漏定义该键，导致 role_permissions 表中权限为 0，
-		// 所有 agent 用户访问任意 API 均 403。
+		// 该键缺失时 role_permissions 里 agent 是空集，DBOnly 下所有 agent 用户访问任意
+		// API 都 403。
 		domainrole.Agent: {
 			// 工单核心（11）：坐席需要工单全生命周期
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",

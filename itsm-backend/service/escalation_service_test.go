@@ -268,7 +268,7 @@ func TestEscalationService_GetEscalationNotifyUsers(t *testing.T) {
 }
 
 // TestEscalationService_GetEscalationNotifyUsers_TenantIsolation
-// 跨租户回归测试：A 租户的升级通知兜底 admin 查询不得包含 B 租户 admin
+// 验证 A 租户的升级通知兜底 admin 查询不包含 B 租户 admin
 func TestEscalationService_GetEscalationNotifyUsers_TenantIsolation(t *testing.T) {
 	client, service, ctx := setupEscalationTest(t)
 	defer client.Close()

@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 本文件锁住事件写路径的四个契约，全部为「修复前失败、修复后通过」的回归测试：
+// 本文件锁住事件写路径的四个契约：
 //
 //  1. NULL 语义保留：resolved_at / closed_at / assignee_id 在 ent 中是 Optional
 //     非 Nillable，DB NULL 会读成 Go 零值。toDomain 若直接取地址，就会伪造出
@@ -51,9 +51,8 @@ func seedRawIncident(t *testing.T, client *ent.Client, number string, tenantID i
 
 // TestEntRepository_ToDomain_PreservesNullSemantics 验证 NULL 列映射为 nil 指针。
 //
-// 修复前：toDomain 用 ResolvedAt: &e.ResolvedAt / AssigneeID: &e.AssigneeID，
-// DB NULL 被读成零值后取地址，得到指向 0001-01-01 与 0 的非 nil 指针，
-// 「未解决」与「公元 1 年解决」、「未分配」与「分配给用户 0」不可区分。
+// 对字段取地址（ResolvedAt: &e.ResolvedAt）会把 DB NULL 读成零值再交给非 nil 指针，
+// 于是「未解决」与「公元 1 年解决」、「未分配」与「分配给用户 0」不可区分。
 func TestEntRepository_ToDomain_PreservesNullSemantics(t *testing.T) {
 	repo, client := newEntTestRepo(t)
 	ctx := context.Background()
@@ -77,11 +76,11 @@ func TestEntRepository_ToDomain_PreservesNullSemantics(t *testing.T) {
 	assert.Nil(t, got.SLAPausedAt, "sla_paused_at 为 NULL 时必须映射成 nil")
 }
 
-// TestEntRepository_Update_DoesNotCorruptNullTimes 是不可逆数据污染的端到端回归。
+// TestEntRepository_Update_DoesNotCorruptNullTimes 防的是不可逆的数据污染。
 //
-// 修复前：Get 把 NULL 读成零值指针 → 只改标题 → Update 的 `if i.ResolvedAt != nil`
-// 判定通过 → SetResolvedAt(0001-01-01) 落库。此后该事件在 MTTR / SLA / 报表中
-// 永远被当成「公元 1 年已解决」，且无法从数据本身区分是真实值还是污染值。
+// 只要 Get 把 NULL 读成零值指针，Update 的 `if i.ResolvedAt != nil` 就会通过并把
+// 0001-01-01 写回库：此后该事件在 MTTR / SLA / 报表中永远算作「公元 1 年已解决」，
+// 而且无法从数据本身区分真实值与污染值。
 func TestEntRepository_Update_DoesNotCorruptNullTimes(t *testing.T) {
 	repo, client := newEntTestRepo(t)
 	ctx := context.Background()
@@ -145,9 +144,8 @@ func TestEntRepository_Update_KeepsRealTimestamps(t *testing.T) {
 
 // TestEntRepository_Update_VersionCAS 验证条件更新与版本自增。
 //
-// 修复前：Update 是 read-then-unconditional-write，VersionEQ 从未参与条件，
-// version 也从不自增；陈旧客户端可以静默覆盖他人写入，且 DTO 的 version
-// 字段是死契约。
+// 更新必须带 VersionEQ 条件并自增 version。read-then-unconditional-write 下
+// 陈旧客户端可以静默覆盖他人写入，DTO 的 version 字段也随之变成死契约。
 func TestEntRepository_Update_VersionCAS(t *testing.T) {
 	repo, client := newEntTestRepo(t)
 	ctx := context.Background()
@@ -207,8 +205,8 @@ func TestEntRepository_Update_VersionCAS(t *testing.T) {
 // TestEntRepository_Create_ImpactUrgencyGuard 验证 schema 校验与默认值的边界。
 //
 // ent 对 impact / urgency 的 Validate 拒绝空串，因此留空时必须不写该列，
-// 让 Default("medium") 生效；显式给值时必须原样保留（修复前 handler 从不
-// 传 impact/urgency，用户填写的影响度/紧急度被静默丢弃）。
+// 让 Default("medium") 生效；显式给值时必须原样保留（handler 漏传 impact/urgency 时，
+// 用户填写的影响度/紧急度会被静默丢弃）。
 func TestEntRepository_Create_ImpactUrgencyGuard(t *testing.T) {
 	repo, client := newEntTestRepo(t)
 	ctx := context.Background()

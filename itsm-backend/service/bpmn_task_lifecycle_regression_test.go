@@ -10,7 +10,7 @@ import (
 	"itsm-backend/ent/processtask"
 )
 
-// 回归：审批拒绝未填意见应返回友好校验错误而非 panic（nil 断言）。
+// 审批拒绝未填意见应返回友好校验错误而非 panic（nil 断言）。
 func TestRejectWithoutComment_ReturnsFriendlyError(t *testing.T) {
 	client := bizTestClient(t, "reject_comment")
 	ctx, tenantID := bizTenantCtx(t, client, "rjcm")
@@ -35,12 +35,12 @@ func TestRejectWithoutComment_ReturnsFriendlyError(t *testing.T) {
 
 	err = engine.CompleteTask(ctx, task.TaskID, map[string]interface{}{
 		"approvalAction": "reject",
-		// 故意不传 approvalComment：修复前 nil.(string) 断言 panic。
+		// 不传 approvalComment：缺失时必须走校验错误，不能 panic。
 	})
 	require.ErrorContains(t, err, "该审批节点要求拒绝时必须填写意见")
 }
 
-// 回归：认领必须是条件更新。读到"未认领"快照后、写入前任务被他人认领时，
+// 认领必须是条件更新。读到"未认领"快照后、写入前任务被他人认领时，
 // 不得覆盖他人认领（last-writer-wins）。
 func TestClaimTask_StaleReadCannotStealClaim(t *testing.T) {
 	client := bizTestClient(t, "claim_cas")
@@ -77,7 +77,7 @@ func TestClaimTask_StaleReadCannotStealClaim(t *testing.T) {
 	require.Equal(t, second.Username, after.Assignee, "旧快照认领不得覆盖已在库的认领结果")
 }
 
-// 回归：已完成的任务不得被取消。
+// 已完成的任务不得被取消。
 func TestCancelTask_RejectsCompletedTask(t *testing.T) {
 	client := bizTestClient(t, "cancel_done")
 	ctx, tenantID := bizTenantCtx(t, client, "cnl1")

@@ -23,25 +23,25 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：GET /api/v1/problems 的分页有**三个所有者**，
-// 每个对同一个非法入参给不同答案——
+// GET /api/v1/problems 的分页只有一个所有者：handler 采纳参数后，SQL 侧与响应信封
+// 读的是同一组值。规则分散在三层时，同一个非法入参会给出三种答案——
 //   - handler 把 ShouldBindQuery 的原值直接交给 service/repo；
 //   - repository_impl.go 自己按 page<1→1、size<1→10、size>200→200 夹紧后才写 Offset/Limit；
 //   - 响应的分页元数据在 handler 末尾又按 page<1→1、pageSize<1→10 手夹一次，
 //     上限完全不管，totalPages 用未夹紧的原值手算。
 //
-// 实测后果不是「返回多了」而是**翻页丢数据**：205 条数据配 pageSize=250 时 SQL 只按 200 取，
-// 响应却用未夹紧的原值声明 pageSize:250、totalPages=1——按声明契约翻页的客户端翻完第 1 页就停，
-// 第 201~205 条在任何一页里都拿不到。因此这里锁的是「SQL 侧与声明侧同一个真相」。
+// 后果不是「返回多了」而是翻页丢数据：205 条数据配 pageSize=250 时 SQL 只按 200 取，
+// 响应却声明 pageSize:250、totalPages=1——按声明契约翻页的客户端翻完第 1 页就停，
+// 第 201~205 条在任何一页里都拿不到。所以这里锁的是「SQL 侧与声明侧同一个真相」。
 //
-// 同一用例还有两套集合键：响应写 problems，前端却有 3 份类型声明（problem-api 的
-// problems+items?、problem-service 的 problems、types/biz 的 problems?+items?）和
-// ProblemList.tsx 的 resp.problems || resp.items || [] fallback。按 docs/api-reference.md
-// 收口为 data.items 单键，并在本批删掉那四个从未被后端使用的排序/时间参数
-// （sortBy/sortOrder/dateFrom/dateTo 在 handler 与 repo 里都不参与查询，属假契约）。
+// 集合键只有 data.items（docs/api-reference.md）。响应一旦写 problems，前端就会同时长出
+// problem-api / problem-service / types/biz 三份类型声明和 ProblemList.tsx 的
+// resp.problems || resp.items fallback。sortBy/sortOrder/dateFrom/dateTo 从未参与查询
+// （handler 的 filters 里没有它们），属假契约，已从请求 DTO 删除。
 //
-// 测试打在**生产注册**上（SetupRoutes → SetupProblemRoutes → RequirePermission("problem","read")），
-// 并锁住三条既有正确行为：行级 DataScope、租户收敛、未认证 401。
+// 用例挂在真实路由注册上（SetupRoutes → SetupProblemRoutes →
+// RequirePermission("problem","read")），并锁住三条既有正确行为：
+// 行级 DataScope、租户收敛、未认证 401。
 
 const problemListSecret = "problem-list-secret"
 
@@ -73,7 +73,7 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	// ⇒ agent 应见 3 条。
 	tenantA, adminA, agentA := seedProblemListTenant(ctx, t, client, "prb-a")
 	tenantB, adminB, _ := seedProblemListTenant(ctx, t, client, "prb-b")
-	// 租户 C 只为了证明「静默截断」：205 条数据下，修复前有一批行永远翻不到。
+	// 租户 C 有 205 条：只有行数超过任何被夹紧的页长时，「静默截断」才可观察。
 	tenantC, adminC := seedProblemListOverflowTenant(ctx, t, client, "prb-c", 205)
 
 	allA := problemIDs(ctx, t, client, tenantA)
@@ -107,7 +107,7 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 		require.Equal(t, http.StatusOK, status, body)
 		require.Equal(t, 0, env.Code, body)
 		assert.Equal(t, []string{"items", "page", "pageSize", "total", "totalPages"}, envelopeKeys(t, env.Data),
-			"问题列表必须只返回标准信封五键（修复前是 problems 键）: body=%s", body)
+			"问题列表必须只返回标准信封五键: body=%s", body)
 
 		var res problemListWire
 		require.NoError(t, json.Unmarshal(env.Data, &res), body)
@@ -151,7 +151,6 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("越界页长回落默认页长，SQL 与声明同一个真相", func(t *testing.T) {
-		// 修复前：repo 按 200 截断、响应声明 300、totalPages 用 300 手算成 1。
 		_, body, env := asAdminA(t, "pageSize=300")
 		require.Equal(t, 0, env.Code, body)
 		var res problemListWire
@@ -162,7 +161,6 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("越界页长下的翻页不丢数据", func(t *testing.T) {
-		// 修复前这一页是空的：Offset 按夹紧后的 200 算，客户端以为上一页已经拿满 300 条。
 		_, body, env := asAdminA(t, "page=2&pageSize=300")
 		require.Equal(t, 0, env.Code, body)
 		var res problemListWire
@@ -216,7 +214,7 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 
 	t.Run("未识别参数不再被当成过滤器", func(t *testing.T) {
 		// sortBy/dateFrom/sortOrder 从未参与查询（handler 的 filters 里只有四个键），
-		// 本批把请求 DTO 里这四个假契约字段删掉；这里锁「传了也不改变结果」。
+		// 请求 DTO 里已删掉这四个假契约字段；这里锁「传了也不改变结果」。
 		_, body, env := asAdminA(t, "pageSize=100&sortBy=title&sortOrder=asc&dateFrom=2020-01-01T00:00:00Z")
 		require.Equal(t, 0, env.Code, body)
 		var res problemListWire
@@ -252,9 +250,9 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	})
 
 	t.Run("越界页长不再让数据翻不到", func(t *testing.T) {
-		// 205 条种子 + pageSize=250：修复前 repository 把页长夹到 200，第 1 页只给 200 条，
-		// 但响应用未夹紧的原值声明 pageSize:250、totalPages:1——客户端按声明的契约翻完第 1 页
-		// 就认为拿全了，第 201~205 条永远不会出现在任何一页里。
+		// 205 条种子 + pageSize=250：若 repository 把页长夹到 200 而响应用未夹紧的原值声明
+		// pageSize:250、totalPages:1，客户端按声明翻完第 1 页就认为拿全了，
+		// 第 201~205 条永远不会出现在任何一页里。
 		allC := problemIDs(ctx, t, client, tenantC)
 		require.Len(t, allC, 205)
 

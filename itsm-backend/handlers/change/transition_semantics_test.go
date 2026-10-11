@@ -6,9 +6,8 @@ package change
 //   2. 错误分类：业务规则拒绝（状态机非法 / 非审批人 / 记录不存在）
 //      必须可与系统内部故障区分，以便 HTTP 层映射为 409/403/404 而非 500。
 //
-// 背景：修复前 TransitionStatus 采用「读状态 → 校验 → 写状态」的非原子流程，
-// 并发请求会同时读到同一旧状态并各自写入成功（实测 10 并发出现 5 个 200）；
-// 且所有失败都被统一包装为 500，导致客户端无法区分"重试"与"故障"。
+// TransitionStatus 若走「读状态 → 校验 → 写状态」的非原子流程，并发请求会同时读到同一
+// 旧状态并各自写入成功；失败统一包装为 500 时，客户端也无法区分"重试"与"故障"。
 
 import (
 	"context"
@@ -57,8 +56,7 @@ func seedPendingChange(t *testing.T, repo *mockRepository, tenantID, approverID 
 }
 
 // TestTransitionStatus_ConcurrentApprovals_ExactlyOneWins 并发审批必须只有一个成功。
-// 这是 TOCTOU 竞态的回归防线：修复前 10 个并发请求会有 5 个返回成功，
-// 客户端与审计无法判断谁真正推进了状态。
+// TOCTOU 竞态下 10 个并发请求会有多个返回成功，客户端与审计无法判断谁真正推进了状态。
 func TestTransitionStatus_ConcurrentApprovals_ExactlyOneWins(t *testing.T) {
 	svc, repo := newTransitionTestService(t)
 	ctx := context.Background()

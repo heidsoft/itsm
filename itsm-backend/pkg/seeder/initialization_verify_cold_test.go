@@ -291,8 +291,7 @@ func TestColdVerifyScopeContract(t *testing.T) {
 func TestColdVerifyExpectationsAreDeterministicAndIndependent(t *testing.T) {
 	permissions, menus, grants := identityRBACExpectations()
 	require.Equal(t, AllDefinedPermissionCodes(), permissions)
-	// 菜单面棘轮：menubaseline 增删菜单时必须同步这里的数字（当前 97 是 2026-10 前的
-	// 快照，/admin/tickets/automation-rules 等子页入基线后实际为 98）。
+	// 菜单面基线：menubaseline 增删菜单时必须同步这里的数字。
 	require.Len(t, menuDefinitions(), 98)
 	require.Len(t, menus, 98)
 	for code, expected := range authz.BuiltinRolePermissionCodes() {

@@ -75,8 +75,8 @@ func TestGetCapabilitiesFailsClosedWithoutTenantContext(t *testing.T) {
 	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/cmdb/capabilities", nil))
 
 	require.Equal(t, http.StatusUnauthorized, recorder.Code)
-	// 2001 是 tenant_context 缺失的统一契约码（原先本端点自带 2002「缺少租户认证上下文」，
-	// 与其他 CMDB 端点的 fail-closed 语义不一致）。
+	// 2001 是 tenant_context 缺失的统一契约码；本端点不得自带私有错误码，
+	// 否则与其他 CMDB 端点的 fail-closed 语义不一致。
 	assert.Contains(t, recorder.Body.String(), `"code":2001`)
 	assert.NotContains(t, recorder.Body.String(), `"code":0`)
 	assert.NotContains(t, recorder.Body.String(), "tenant ID is required")

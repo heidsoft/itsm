@@ -20,18 +20,17 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：/api/v1/cmdb/cloud-* 这 15 条活表面路由
-// 曾经在每个维度上都比被删掉的 /api/v1/cloud/* 那一侧更弱，收敛后必须补齐：
+// /api/v1/cmdb/cloud-* 这 15 条路由在每个维度上都必须成立，不因路径归属变化而弱化：
 //
 //  1. 租户身份 fail-closed：handler 直接 c.GetInt("tenant_id")，缺上下文时以 tenant=0 进查询。
 //     真实链路上 TenantMiddleware 会先拦（401/2001），所以这里断言的是「认证但无租户」
 //     绝不能拿到任何数据；handler 自身的兜底分支由 handlers/cmdb 的单测覆盖。
 //  2. 跨租户与「不存在」同义：Get/Update 走 ent 的 tenant 谓词 → 404/4004；
-//     Delete 曾把「按 tenant+id 命中 0 行」当删除成功返回 code:0，现在必须 404，
+//     Delete 按 tenant+id 命中 0 行不得当成功返回 code:0，必须 404，
 //     并证明归属租户侧的行仍在（不是级联误删）。
 //  3. provider 枚举：写入体与三条列表查询都只认六个规范值，别名（alibaba/qcloud 等）
 //     只在适配器边界由 NormalizeProvider 归一化。
-//  4. 同租户内账号与服务厂商矛盾是 400（数据自相矛盾），不再是从 fmt.Errorf 落成的 500。
+//  4. 同租户内账号与服务厂商矛盾是 400（数据自相矛盾），不得由 fmt.Errorf 落成 500。
 //  5. 任何失败路径都不得外露 SQL/驱动/内部错误文案。
 
 // cloudSurfaceFailureMessage 断言失败响应的公开契约：业务码、稳定文案、零泄漏。
@@ -110,8 +109,7 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 	}
 
 	t.Run("认证但无租户上下文时拿不到任何云数据", func(t *testing.T) {
-		// 修复前：handler 用 c.GetInt("tenant_id")，缺上下文会以 tenant=0 进查询，
-		// 表现为「这个租户没有云资源」的空列表假成功，而不是拒绝。
+		// 缺租户上下文必须拒绝，不能返回「这个租户没有云资源」的空列表假成功。
 		zero := 0
 		for _, path := range []string{
 			"/api/v1/cmdb/cloud-services",
@@ -202,7 +200,6 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 			"/api/v1/cmdb/cloud-accounts",
 			"/api/v1/cmdb/cloud-resources",
 		} {
-			// 修复前：任意字符串直接进精确匹配，拼错的厂商名表现为空列表而不是请求错误。
 			expectFailure(t, http.MethodGet, path+"?provider=alibaba", a, nil, http.StatusBadRequest, 1001, "请求参数错误")
 
 			status, body, env := as(t, http.MethodGet, path+"?provider=aliyun", a, nil)
@@ -253,7 +250,6 @@ func TestCMDBCloudSurfaceTenantAndEnumRouteContract(t *testing.T) {
 
 	t.Run("同租户但厂商矛盾是 400 而不是 500", func(t *testing.T) {
 		// A 的账号是 aliyun，conflictingService 是 aws：请求数据自相矛盾。
-		// 修复前是裸 fmt.Errorf，被归类成 500/5001「操作失败」。
 		// 现在它是 NewValidationError，由 common.classifyError 按 HTTPStatus 反查成
 		// 4000（BadRequestCode），文案就是这条领域规则本身。
 		// 注意与 bind 阶段的 1001 分属两层：1001 是「格式不对」，4000 是「格式对但语义矛盾」。

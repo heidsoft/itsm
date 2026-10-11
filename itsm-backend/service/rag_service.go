@@ -532,11 +532,11 @@ func (r *RAGService) articleCitable(ctx context.Context, tenantID int, a *ent.Kn
 
 // deniedCategories 返回当前访问者无权读取的知识分类。
 //
-// 知识可引用性 L0：RAG 检索此前只按 tenant_id + is_published + deleted_at 过滤，
-// 同租户内任何用户都能通过 AI 助手问出受限分类（财务/HR/高管）的知识。
-// 这里按 Viewer（userID + role）逐分类判定，返回应被排除的分类名。
+// RAG 检索若只按 tenant_id + is_published + deleted_at 过滤，同租户内任何用户都能通过
+// AI 助手问出受限分类（财务/HR/高管）的知识。这里按 Viewer（userID + role）逐分类判定，
+// 返回应被排除的分类名。
 //
-// 守卫未装配时返回 nil（不做额外限制，保持旧行为）。
+// 守卫未装配时返回 nil，即不做分类过滤。
 // Viewer 缺失时按匿名处理：所有已纳管分类一律排除（fail-closed）。
 func (r *RAGService) deniedCategories(ctx context.Context, tenantID int) []string {
 	if r.knowledgeGuard == nil {

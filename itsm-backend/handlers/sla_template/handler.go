@@ -85,8 +85,8 @@ func (h *Handler) InstallTemplate(ctx *gin.Context) {
 }
 
 // RegisterRoutes 注册路由（兼容旧接口）。
-// 此前三个路由均未挂 RequirePermission（同文件 /sla/policies 全挂），
-// 任何登录用户可读模板、可安装模板（写操作）。补齐 sla 资源权限校验。
+// 三个路由都必须挂 RequirePermission（与同文件 /sla/policies 一致）：只挂列表时任何
+// 登录用户都能读模板并安装模板（写操作）。
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	templates := r.Group("/sla/templates")
 	{

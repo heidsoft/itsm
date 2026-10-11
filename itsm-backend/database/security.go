@@ -16,7 +16,7 @@ package database
 //
 //  3. RLS enforce 全路径接线见 database/rls/driver.go：Exec/Query 在 enforce
 //     模式下包裹进带 SET LOCAL app.current_tenant 的事务，使非事务（autocommit）
-//     查询也能被 RLS 策略正确隔离（此前仅事务路径生效）。
+//     查询也能被 RLS 策略正确隔离。
 //
 // 设计约束：
 //   - 守卫仅对“上下文带租户且非系统绕过”的请求生效；SystemBypass / 无租户

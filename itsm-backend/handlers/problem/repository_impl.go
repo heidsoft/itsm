@@ -365,8 +365,8 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 }
 
 // GetAllForAnalytics 拉取 [start, end) 区间内的问题单用于趋势/热点统计。
-// 此前只用 start 做下界（CreatedAtGTE），导致区间之后的全量数据被计入，
-// 月度趋势与计数失真。这里同时约束上界 CreatedAtLT(end)，区间外数据不再混入。
+// 只用 start 做下界会把区间之后的全量数据计入，月度趋势与计数失真，
+// 因此上界 CreatedAtLT(end) 必须同时约束。
 func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, start, end time.Time) ([]*Problem, error) {
 	list, err := r.client.Problem.Query().
 		Where(problem.TenantIDEQ(tenantID), problem.DeletedAtIsNil(), problem.CreatedAtGTE(start), problem.CreatedAtLT(end)).
@@ -414,7 +414,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*ProblemSta
 		ByStatus:   orderStatusCounts(statusRows),
 		ByPriority: orderPriorityCounts(priorityRows),
 	}
-	// 折叠口径保持与修复前一致，报表才不会出现读数突变：
+	// 折叠口径（改动会造成报表读数突变）：
 	// open 单独一桶，investigating 与 in_progress 并进 InProgress，
 	// identified 历史上不属于任何单值桶（因此单值之和小于 total），
 	// 但它在 ByStatus 里必须可见，否则问题被静默漏计。

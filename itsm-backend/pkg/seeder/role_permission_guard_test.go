@@ -15,21 +15,18 @@ import (
 
 // TestBuiltinRolePermissionCodes_Guard 内置词表角色 DB 权限码集守卫。
 //
-// 背景：BuiltinRoles() 把 users.role 词表角色写入 roles 表
-// （DBOnly 三态判定为 configured），但 builtinRolePermissionCodes() 此前缺
-// admin/technician 条目 → roles 表权限行空集 = DB 显式撤销 →
-// admin/technician 用户除未挂权限中间件的路由外全部 403。
+// DBOnly 下 roles 表的权限行为空集等于显式撤销：builtinRolePermissionCodes() 只要缺
+// 某个词表角色的条目，该角色用户除了未挂权限中间件的路由外全部 403。
+// 编译期兜底默认权限由 authz.RolePermissionDefaults() 单一真源派生，内置角色直接取自
+// 播种码集，因此结构上不会与 DB 码集漂移。
 //
-// 2026-10-05 N4/N5 拍板：
-// middleware.RolePermissions 独立硬编码表已删除，编译期兜底默认权限改由
-// authz.RolePermissionDefaults() 单一真源派生（内置角色直接派生自播种码集，
-// 结构性不可能漂移；R2-a 待拍板档 t.Skip 同批退役）。原契约 3 替换为：
-//  1. 词表角色（除 super_admin 走 Login ["*"] 旁路）必须有非空 DB 权限码集；
-//  2. 码集引用的每个码必须在 permissionDefinitions() 清单中（防码空间漂移）；
-//  3. N4 扩权回归锁：manager/agent/end_user 必须持有拍板补齐的码（防静默回收）；
-//  4. 兜底覆盖锁：词表角色与仅运行时的 msp_* 角色都必须有非空编译期默认权限，
-//     且与 DB 码集一致（词表角色）；
-//  5. 封闭词表锁：domain/role.Retired 中的退役角色码不得出现在任何权限映射中。
+// 锁定的契约：
+//  1. 词表角色（super_admin 除外，它走 Login ["*"] 旁路）必须有非空 DB 权限码集；
+//  2. 码集引用的每个码都要在 permissionDefinitions() 清单里，防止码空间漂移；
+//  3. manager/agent/end_user 必须持有已补齐的码，防止授权被静默回收；
+//  4. 词表角色与仅存在于运行时的 msp_* 角色都要有非空编译期默认权限，
+//     词表角色还必须与 DB 码集一致；
+//  5. domain/role.Retired 里的退役角色码不得出现在任何权限映射中。
 func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 	roleCodes := builtinRolePermissionCodes()
 	defs := permissionDefinitions()
@@ -39,9 +36,9 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		defByCode[d.Code] = d
 	}
 
-	// 契约 3（N4 扩权回归锁）：拍板补齐的码一旦消失即 CI 红。
-	// manager 26 / agent 7 / end_user 16；agent 的 alerts:read 按拍板收敛为 alert:read
-	// （路由预检实测零条 alerts:* 声明，见 authz/roles.go agent 条目注释）。
+	// 契约 3：这些码一旦从对应角色消失就 CI 红（manager 26 / agent 7 / end_user 16）。
+	// agent 用的是 alert:read 而不是 alerts:read —— 路由预检里没有任何 alerts:* 声明，
+	// alerts:read/alerts:write 只存在于权限清单，从未挂到路由。
 	n4Granted := map[string][]string{
 		"manager": {
 			"ticket:assign", "ticket:escalate", "ticket:export",
@@ -70,7 +67,7 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		}
 		for _, c := range codes {
 			if !granted[c] {
-				t.Errorf("N4 扩权回归：角色 %q 缺少拍板补齐的权限码 %q", role, c)
+				t.Errorf("角色 %q 缺少必须持有的权限码 %q", role, c)
 			}
 		}
 	}

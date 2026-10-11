@@ -7,10 +7,9 @@ import (
 	"itsm-backend/ent/schema"
 )
 
-// TestToCIRelationshipResponse_FillsTypeName P1-5：
+// TestToCIRelationshipResponse_FillsTypeName:
 // CIRelationshipResponse.RelationshipTypeName 必须从 schema.CIRelationshipTypeVocabulary
-// 填充中文展示名（"depends_on" → "依赖"）。之前永远空字符串，导致前端
-// CMDB 关系列表"关系类型"列渲染空白。
+// 填充中文展示名（"depends_on" → "依赖"），CMDB 关系列表的「关系类型」列直接读这个字段。
 func TestToCIRelationshipResponse_FillsTypeName(t *testing.T) {
 	for _, meta := range schema.CIRelationshipTypeVocabulary {
 		rel := &ent.CIRelationship{

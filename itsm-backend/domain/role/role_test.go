@@ -2,7 +2,7 @@ package role
 
 import "testing"
 
-// 角色词表单一源回归：防再次漂移。
+// 校验 users.role 枚举与 roles.code 词表没有漂移。
 func TestRoleVocabularyContract(t *testing.T) {
 	// users.role 与 roles.code 必须共用的核心审批角色
 	required := []string{Manager, ITAdmin, SecurityAdmin}

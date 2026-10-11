@@ -78,7 +78,7 @@ func TestTicketAssociationService_RejectsCrossTenantConfigurationItemAssociation
 	assert.Empty(t, items)
 }
 
-// TestTicketAssociationService_RejectsForeignTenantTicketReads 覆盖租户收敛的根因入口：
+// TestTicketAssociationService_RejectsForeignTenantTicketReads 覆盖租户收敛的基础不变量：
 // 所有关联读写都必须先按调用者租户定位工单，而不是先按 ID 取行再决定是否过滤。
 // router/ticket_relations_tenant_scope_route_test.go 在同一不变量上打真实 HTTP 端点。
 func TestTicketAssociationService_RejectsForeignTenantTicketReads(t *testing.T) {

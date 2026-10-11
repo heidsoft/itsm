@@ -88,7 +88,7 @@ type DatabaseConfig struct {
 
 	// AppRoleUser / AppRolePassword: 应用请求路径使用的低权角色
 	// （不带 BYPASSRLS，走 policy 过滤）。留空时降级为使用 User/Password。
-	// 用于 R2 灰度：切 enforce 前先切到 itsm_app。
+	// 切 RLS enforce 之前，先把连接账号换成这个低权角色并观察 policy 过滤。
 	AppRoleUser     string `mapstructure:"app_role_user"`
 	AppRolePassword string `mapstructure:"app_role_password"`
 

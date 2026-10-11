@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归：前端不带 timeRange 时 GetTrendPrediction 不得 panic（历史 bug：
-// 直接索引 req.TimeRange[0] → 500），且默认窗口语义为「过去 6 个月 → 今天」，
+// 前端不带 timeRange 时 GetTrendPrediction 不得 panic（直接索引 req.TimeRange[0] 会 500），
+// 且默认窗口语义为「过去 6 个月 → 今天」，
 // 与 handlers/ai/service.go 的 GetTrendPrediction 默认值保持一致。
 func TestPredictionService_EmptyTimeRange_DefaultWindow(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

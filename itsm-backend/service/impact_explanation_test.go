@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// fakeLLMProvider 是 P1-4 影响分析解释层的最小 mock，用于离线单测。
+// fakeLLMProvider 是影响分析解释层的最小 mock，用于离线单测。
 type fakeLLMProvider struct {
 	response string
 	err      error
@@ -32,7 +32,7 @@ type nopObserver struct{}
 
 func (nopObserver) Observe(_ string, _ string, _ int, _ time.Duration, _ error) {}
 
-// TestImpactExplanation_FailOpenNoLLM 锁定回归：无 LLM 配置时 ExplainImpact 不报错、不 panic、返回 nil
+// TestImpactExplanation_FailOpenNoLLM 无 LLM 配置时 ExplainImpact 不报错、不 panic、返回 nil
 func TestImpactExplanation_FailOpenNoLLM(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	// 不注入 LLMGateway（nil gateway 是 fail-open 路径）
@@ -48,7 +48,7 @@ func TestImpactExplanation_FailOpenNoLLM(t *testing.T) {
 	require.Nil(t, got)
 }
 
-// TestImpactExplanation_ParseMarkdownJSON 锁定回归：模型返回 ```json``` 块时正确剥离
+// TestImpactExplanation_ParseMarkdownJSON 模型返回 ```json``` 块时正确剥离
 func TestImpactExplanation_ParseMarkdownJSON(t *testing.T) {
 	got, err := parseImpactExplanationJSON("```json\n" + `{"summary":"x","rootCauses":["a"],"slaRisks":["b"],"suggestions":["c"]}` + "\n```")
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestImpactExplanation_ParseMarkdownJSON(t *testing.T) {
 	require.Equal(t, []string{"c"}, got.Suggestions)
 }
 
-// TestImpactExplanation_ParsePlainJSON 锁定回归：直接 JSON 输入也能解析
+// TestImpactExplanation_ParsePlainJSON 直接 JSON 输入也能解析
 func TestImpactExplanation_ParsePlainJSON(t *testing.T) {
 	raw := `{"summary":"hello","rootCauses":["r1"],"slaRisks":["s1"],"suggestions":["sug1"]}`
 	got, err := parseImpactExplanationJSON(raw)
@@ -67,7 +67,7 @@ func TestImpactExplanation_ParsePlainJSON(t *testing.T) {
 	require.Equal(t, "hello", got.Summary)
 }
 
-// TestImpactExplanation_ParseMissingSummary 锁定回归：summary 缺失返回错误
+// TestImpactExplanation_ParseMissingSummary summary 缺失返回错误
 func TestImpactExplanation_ParseMissingSummary(t *testing.T) {
 	raw := `{"rootCauses":["r1"]}`
 	got, err := parseImpactExplanationJSON(raw)
@@ -112,7 +112,7 @@ func TestImpactExplanation_LLMResponse(t *testing.T) {
 	require.Equal(t, got.Summary, got2.Summary)
 }
 
-// TestImpactExplanation_LLMError 锁定回归：LLM 调用失败时返回 nil 不向上抛
+// TestImpactExplanation_LLMError LLM 调用失败时返回 nil 不向上抛
 func TestImpactExplanation_LLMError(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	mockLLM := &fakeLLMProvider{err: context.DeadlineExceeded}
@@ -125,7 +125,7 @@ func TestImpactExplanation_LLMError(t *testing.T) {
 	require.Nil(t, got)
 }
 
-// TestImpactExplanation_NilImpact 锁定回归：impact 入参 nil 必须报错（防御）
+// TestImpactExplanation_NilImpact impact 入参 nil 必须报错（防御）
 func TestImpactExplanation_NilImpact(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
 	svc := NewImpactExplanationService(nil, "mock", nil, logger)

@@ -44,8 +44,8 @@ type CloseProblemRequest struct {
 // ListProblemsRequest 获取问题列表请求
 //
 // 只有这里声明的字段会参与查询；分页夹紧由 common.GetPaginationFromQuery 单点负责。
-// 此前声明的 sortBy/sortOrder/dateFrom/dateTo 在 handler 与 repository 里都不参与
-// 过滤或排序（实测：传与不传结果完全一致），属于假契约，已按「一套接口只有一套真相」删除。
+// 这里不声明 sortBy/sortOrder/dateFrom/dateTo：handler 与 repository 都不使用它们
+// （传与不传结果一致），声明出来等于假契约。
 type ListProblemsRequest struct {
 	Page     int    `json:"page" form:"page"`
 	PageSize int    `json:"pageSize" form:"pageSize"`
@@ -112,8 +112,8 @@ type ProblemAssociationResponse struct {
 
 // ListProblemsResponse 问题列表响应
 //
-// 集合键只能是 items：曾经写成 problems，于是前端同时存在 problems、items?、
-// problems?+items? 三套类型声明和 resp.problems || resp.items || [] 的 fallback。
+// 集合键只能是 items：写成 problems 会让前端同时存在 problems、items?、
+// problems?+items? 三套类型声明，以及 resp.problems || resp.items || [] 的 fallback。
 type ListProblemsResponse struct {
 	Items      []*ProblemResponse `json:"items"`
 	Total      int                `json:"total"`

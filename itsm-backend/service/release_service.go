@@ -32,7 +32,7 @@ func NewReleaseService(client *ent.Client, logger *zap.SugaredLogger) *ReleaseSe
 		logger: logger,
 	}
 	if client != nil {
-		// P0-1：发布审批桥接到 BPMN 任务，避免流程实例悬挂
+		// 发布审批桥接到 BPMN 任务，避免流程实例悬挂
 		svc.approvalBridge = NewBPMNApprovalBridge(client, logger)
 	}
 	return svc
@@ -367,17 +367,17 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
 var ErrInvalidReleaseTransition = errors.New("非法的发布状态转换")
 
-// UpdateReleaseStatus 更新发布状态
-// C-1 修复：新增 isValidReleaseStatusTransition 白名单校验，防止审批被绕过：
-//   - draft → cancelled（draft → scheduled 已移除，见 D-5：必须走 /approve 且需 release:approve）
+// UpdateReleaseStatus 更新发布状态，流转必须过 isValidReleaseStatusTransition 白名单，
+// 否则持 release:write 的人可以绕过审批门禁：
+//   - draft → cancelled（排期 draft → scheduled 不在此列，必须走 /approve 且需 release:approve）
 //   - scheduled → in-progress / cancelled
 //   - in-progress → completed / failed / rolled_back / cancelled
 //   - completed / cancelled / rolled_back / failed 为终态（不可被复活）
 //
-// DataScope 行级写守卫：与 UpdateRelease 同规则，且**不排除** rolled_back 目标——
-// release 状态机允许经 /status 路由（仅 release:write）直达 rolled_back，若排除
-// 会形成绕行门禁的洞（D-5 同款）；统一守卫后 owner/管理员回滚不受影响，非 owner
-// 操作他人发布回滚被 403（专用 /rollback 路由的 release:rollback RBAC 仍先行生效）。
+// DataScope 行级写守卫与 UpdateRelease 同规则，且不排除 rolled_back 目标：状态机允许经
+// /status 路由（仅 release:write）直达 rolled_back，把该目标排除出行级守卫等于留下绕行门禁的洞。
+// owner/管理员回滚不受影响，非 owner 操作他人发布回滚被 403
+// （专用 /rollback 路由的 release:rollback RBAC 仍先行生效）。
 func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID int, status string, actorID int, actorRole string) (*dto.ReleaseResponse, error) {
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
@@ -427,8 +427,8 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 	}
 	baseTransitions := map[string]map[string]struct{}{
 		string(dto.ReleaseStatusDraft): {
-			// D-5 修复：draft→scheduled 是审批等效动作，必须经 /approve（release:approve），
-			// 不允许持 release:write 的用户经 /status 路由直接排期，否则绕过审批门禁。
+			// draft 只能取消：排期是审批等效动作，只能经 /approve（release:approve）发生，
+			// 否则持 release:write 的用户经 /status 路由即可绕过审批门禁。
 			string(dto.ReleaseStatusCancelled): {},
 		},
 		string(dto.ReleaseStatusScheduled): {
@@ -442,7 +442,7 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 			string(dto.ReleaseStatusCancelled):  {},
 		},
 		string(dto.ReleaseStatusFailed): {
-			// D-5 修复：failed→scheduled 为重新排期（审批等效），必须经 /approve（release:approve）。
+			// failed 只能回滚或取消：重新排期同样属于审批等效动作，必须经 /approve（release:approve）。
 			string(dto.ReleaseStatusRolledBack): {},
 			string(dto.ReleaseStatusCancelled):  {},
 		},
@@ -465,7 +465,7 @@ func isValidReleaseStatusTransition(current, newStatus string) bool {
 //   - reject:  draft → cancelled
 //
 // 无关联运行中流程实例时回退纯业务审批；若存在待办流程任务但完成失败，
-// 则中止业务审批，避免发布状态与流程状态分叉（P0-1 双轨审批收敛）。
+// 则中止业务审批，避免发布状态与流程状态分叉。
 func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID, actorID int, action, comment string) (*dto.ReleaseResponse, error) {
 	if action != "approve" && action != "reject" {
 		return nil, fmt.Errorf("无效的审批操作: %s", action)
@@ -482,8 +482,8 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, fmt.Errorf("failed to get release: %w", err)
 	}
 
-	// 仅草稿态/失败态允许审批：失败态审批即「重新排期(reschedule)」，使发布历史不断裂、
-	// 关联变更不丢（P1 修复：放宽此前硬要求 draft 的死锁）。
+	// 仅草稿态/失败态允许审批：失败态审批即「重新排期(reschedule)」，
+	// 使发布历史不断裂、关联变更不丢。
 	if releaseEntity.Status != release.Status(dto.ReleaseStatusDraft) && releaseEntity.Status != release.Status(dto.ReleaseStatusFailed) {
 		return nil, fmt.Errorf("当前发布状态不允许审批: %s", releaseEntity.Status)
 	}
@@ -502,7 +502,7 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, fmt.Errorf("发布创建人不能审批自己的发布")
 	}
 
-	// P0-1：BPMN 任务完成与业务状态更新必须在同一事务内，防止"流程已批、业务未批"的不一致。
+	// BPMN 任务完成与业务状态更新必须在同一事务内，否则会出现"流程已批、业务未批"。
 	targetStatus := string(dto.ReleaseStatusScheduled)
 	if action == "reject" {
 		targetStatus = string(dto.ReleaseStatusCancelled)
