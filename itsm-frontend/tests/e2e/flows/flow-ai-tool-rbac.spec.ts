@@ -4,7 +4,7 @@
  * Production chain under test:
  * /api/v1/agent/tools/* -> AI Handler -> AI Service -> ToolInvocation repository/ToolQueue.
  *
- * Real API contract (confirmed via live recording 2026-08-31):
+ * Real API contract:
  *
  * Execute Tool:
  *   POST /api/v1/agent/tools/execute

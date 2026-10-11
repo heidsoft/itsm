@@ -338,8 +338,8 @@ describe('httpClient', () => {
     });
   });
 
-  // 回归：post(FormData) 与 request({ data: FormData }) 曾各自手写请求，绕过
-  // addCSRFHeader 与 credentials，导致全站附件上传 / 批量导入被后端以
+  // post(FormData) 与 request({ data: FormData }) 必须走同一条链路：任何一处自己
+  // 拼请求都会绕过 addCSRFHeader 与 credentials，全站附件上传 / 批量导入被后端以
   // 403 {"code":403,"message":"CSRF token missing"} 拒绝。
   describe('FormData upload (CSRF regression)', () => {
     function blobResponse(blob: Blob, status = 200): Response {

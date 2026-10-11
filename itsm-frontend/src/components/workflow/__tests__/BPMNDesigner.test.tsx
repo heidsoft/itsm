@@ -112,9 +112,9 @@ describe('BPMNDesigner', () => {
 
   describe('BPMNDI auto-completion hook', () => {
     /**
-     * 自 2026-09-06 改造后，BPMNDesigner 在 modeler 初始化时注册
-     * import.parse.complete 的 1500 优先级监听器，用于在缺 <bpmndi:BPMNDiagram>
-     * 的 Definitions 上自动注入 DI（避免 "no diagram to display"）。
+     * BPMNDesigner 在 modeler 初始化时注册 import.parse.complete 的 1500 优先级
+     * 监听器，在缺 <bpmndi:BPMNDiagram> 的 Definitions 上自动注入 DI
+     *（否则画布报 "no diagram to display"）。
      *
      * 关键契约：
      *   - 监听器的事件名必须是 'import.parse.complete'

@@ -596,9 +596,9 @@ export class ServiceCatalogApi {
    * 导出服务目录
    */
   static async exportCatalog(format: 'excel' | 'pdf'): Promise<Blob> {
-    // 原先发 size=1000：后端 binding 允许到 1000，但 handler 又静默夹成 100，
-    // 所以导出从来就没有拿到 1000 条；信封收敛后同样的请求会回落成 20 条。
-    // 两种都说明「放大页长取全」不成立 —— 取全必须翻页，且截断要显式失败。
+    // 不能靠放大页长取全量：请求 size=1000 时后端 binding 允许，handler 却静默夹成
+    // 100，回落平台默认则是 20，单请求永远拿不到 1000 条。
+    // 取全必须翻页，且截断要显式失败。
     const { services, total, complete } = await ServiceCatalogApi.getAllServices(
       undefined,
       MAX_EXPORT_RECORDS,

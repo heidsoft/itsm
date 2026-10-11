@@ -74,7 +74,7 @@ const ChangeDetail: React.FC = () => {
   const [approvalComment, setApprovalComment] = useState('');
   const [processing, setProcessing] = useState(false);
   // 写操作 in-flight 标志：按钮 loading 状态要等 render 提交后才生效，
-  // 快速连续点击存在重复提交窗口（实测批准发 3 次、提交审批发 2 次）。
+  // 快速连续点击存在重复提交窗口。
   // 用 ref 做同步重入拦截，同一时刻只允许一个写请求在飞。
   const inFlightRef = useRef(false);
 
@@ -85,7 +85,7 @@ const ChangeDetail: React.FC = () => {
      
   }, [id]);
 
-  // 生命周期 action bar 可见性(修复 P0-1: 详情页无生命周期推进按钮)
+  // 生命周期 action bar 可见性：详情页要能推进状态机，终态只剩查看
   // draft → 提交审批;pending → 批准/拒绝;approved → 开始实施;
   // in_progress → 完成实施/回滚;非终态 → 取消
   const isTerminal =

@@ -62,8 +62,8 @@ export interface UserNotification {
 
 /**
  * GET /api/v1/notifications 的响应信封。后端是真的 Count + Offset/Limit 分页，
- * 因此五键齐备；集合键只有 items（`notifications` 属于 AGENTS.md 禁止的领域名第二键，
- * `size` 属于禁止的 pageSize 别名）。
+ * 因此五键齐备；集合键只有 items，页长键只有 pageSize，
+ * 不接受领域名 `notifications` 或 `size` 别名。
  */
 export interface ListUserNotificationsResponse {
   items: UserNotification[];

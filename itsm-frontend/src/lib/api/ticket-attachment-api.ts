@@ -27,7 +27,7 @@ export interface TicketAttachment {
   createdAt: string;
 }
 
-// 该端点实测不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键，
+// 该端点不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键，
 // 不得在前端补出 page/pageSize 假装分页。
 export interface ListTicketAttachmentsResponse {
   items: TicketAttachment[];

@@ -133,8 +133,8 @@ describe('/reports/problem-efficiency', () => {
     expect(mockGetProblems).toHaveBeenCalledWith({ page: 1, pageSize: 10 });
 
     const { status, priority } = chartData();
-    // 修复前这里数的是 listProblems({pageSize:100}) 的当前页：第 100 条之后的问题被
-    // 静默截断，页长之外的问题根本不进图；现在分片必须等于 stats.byStatus 的计数。
+    // 分片必须等于 stats.byStatus 的计数：数 listProblems({pageSize:100}) 的当前页时，
+    // 第 100 条之后的问题被静默截断，根本不进图。
     expect(status).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ key: 'open', name: '待处理', value: 60 }),
@@ -200,7 +200,7 @@ describe('/reports/problem-efficiency', () => {
     render(<ProblemEfficiencyPage />);
 
     await waitFor(() => expect(screen.getByText('当前租户还没有问题记录')).toBeInTheDocument());
-    // 修复前这里是 (0/0)*100，页面上会出现 "NaN%" 这样的读数。
+    // 空租户不渲染解决率：(0/0)*100 会在页面上出现 "NaN%" 读数。
     expect(screen.queryByText('解决率')).not.toBeInTheDocument();
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
@@ -214,8 +214,8 @@ describe('/reports/problem-efficiency', () => {
 
     await waitFor(() => expect(screen.getByText('问题统计加载失败')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
-    // 修复前失败只 console.warn('获取问题数据失败，使用空数据') + toast，
-    // 然后照样渲染全 0 的「问题总数」卡片，把故障伪装成空态。
+    // 失败不得只 console.warn + toast 后继续渲染全 0 的「问题总数」卡片，
+    // 那会把故障伪装成空态。
     expect(screen.queryByText('问题总数')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });

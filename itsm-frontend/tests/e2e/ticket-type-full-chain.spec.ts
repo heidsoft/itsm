@@ -379,10 +379,8 @@ test('TicketType preset → HTTP ticket → real outbox worker → task → audi
       const otherPage = await otherContext.newPage();
       const username = `other${suffix}`;
       const otherPassword = `E2e!${randomBytes(16).toString('hex')}`;
-      // P0-1 removed the tenantCode registration contract: self-registration
-      // fail-closes with multiple active tenants. Tenant B's user is provisioned
-      // by the super_admin switching into the tenant, then creating through the
-      // standard own-tenant user API.
+      // 存在多个活跃租户时自注册会 fail closed，所以租户 B 的用户由 super_admin
+      // 先 switch-tenant 进该租户，再走本租户用户接口创建。
       await login(otherPage, 'admin', password);
       await write(otherPage, 'POST', '/api/v1/auth/switch-tenant', { tenantId: otherTenant.id });
       await write(otherPage, 'POST', '/api/v1/users', {

@@ -81,9 +81,9 @@ export function useCITypesQuery() {
   });
 }
 
-// useRelationshipTypesQuery P1-2: 关系词表（来自后端单一源 /cmdb/relationship-types）
-// 返回结构含 name/description/direction/reverse/icon，frontend/lib/cmdb/relationship-vocabulary.ts
-// 进一步加工为本地缓存（fail-soft），避免重复请求。
+// 关系词表来自后端单一源 /cmdb/relationship-types，返回结构含
+// name/description/direction/reverse/icon；lib/cmdb/relationship-vocabulary.ts
+// 会把它加工成本地缓存，后端不可达时回退静态默认值。
 export function useRelationshipTypesQuery() {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'relationship-types'] as const,
@@ -92,8 +92,7 @@ export function useRelationshipTypesQuery() {
   });
 }
 
-// useRelationshipTypesV2Query P1-2: 走 CIRelationshipAPI.getRelationshipTypes
-// （该接口对返回结构做了归一化处理：直接返回数组；用于关系管理 UI）
+// 走 CIRelationshipAPI.getRelationshipTypes：该接口把返回结构归一化成数组，供关系管理 UI 使用
 export function useRelationshipTypesV2Query() {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'relationship-types-v2'] as const,
@@ -102,8 +101,8 @@ export function useRelationshipTypesV2Query() {
   });
 }
 
-// useOntologyQuery P1-2: 本体自描述端点（version/ciTypes/relationshipTypes/enums/aiTools）
-// 后端 /api/v1/cmdb/ontology，单一接口取所有 schema 元数据，避免前端维护多份副本。
+// 本体自描述端点 /api/v1/cmdb/ontology（version/ciTypes/relationshipTypes/enums/aiTools）：
+// 一个接口取回所有 schema 元数据，避免前端维护多份副本。
 export function useOntologyQuery() {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'ontology'] as const,
@@ -154,7 +153,7 @@ export function useDiscoveryHistoryQuery(ruleId?: string) {
   });
 }
 
-// P1-2: 出/入向关系列表（CI 关系管理 UI 用）
+// 出/入向关系列表（CI 关系管理 UI 用）
 export function useCIRelationshipsListQuery(
   ciId: number,
   options?: { includeOutgoing?: boolean; includeIncoming?: boolean; activeOnly?: boolean },
@@ -168,7 +167,7 @@ export function useCIRelationshipsListQuery(
   });
 }
 
-// P1-2: 可关联的候选 CI（创建关系时搜索源/目标）
+// 可关联的候选 CI（创建关系时搜索源/目标）
 export function useAvailableCIsQuery(ciId: number, search?: string, enabled = true) {
   return useQuery({
     queryKey: [...CMDB_KEYS.cis(), 'available', String(ciId), search],
@@ -178,7 +177,7 @@ export function useAvailableCIsQuery(ciId: number, search?: string, enabled = tr
   });
 }
 
-// P1-2: 拓扑图（环检测用）
+// 拓扑图（环检测用）
 export function useTopologyGraphQuery(ciId: number, depth = 5, enabled = true) {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'topology', ciId, depth],
@@ -188,7 +187,7 @@ export function useTopologyGraphQuery(ciId: number, depth = 5, enabled = true) {
   });
 }
 
-// P1-2: 云资源 / 云服务 / 云账号（CI 表单的级联选择数据源）
+// 云资源 / 云服务 / 云账号（CI 表单的级联选择数据源）
 // 返回值就是后端信封：云资源是分页页，云账号/云服务是整份的 {items,total}。
 export function useCloudResourcesQuery(params?: GetCloudResourcesRequest) {
   return useQuery({
@@ -226,7 +225,7 @@ export function useCloudAccountsQuery() {
   });
 }
 
-// P1-2+: 发现源（注册中心页，与 discovery rules 同端点但语义独立）
+// 发现源（注册中心页，与 discovery rules 同端点但语义独立）
 export function useDiscoverySourcesQuery() {
   return useQuery({
     queryKey: [...CMDB_KEYS.discovery(), 'sources'],
@@ -235,7 +234,7 @@ export function useDiscoverySourcesQuery() {
   });
 }
 
-// P1-2+: 后端能力开关（cmdbDiscovery 就绪状态等，注册中心告警条用）
+// 后端能力开关（cmdbDiscovery 就绪状态等，注册中心告警条用）
 export function useCapabilitiesQuery() {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'capabilities'] as const,
@@ -244,7 +243,7 @@ export function useCapabilitiesQuery() {
   });
 }
 
-// P1-2+: 云资源对账结果（summary + 待绑定/孤儿/未关联列表）
+// 云资源对账结果（summary + 待绑定/孤儿/未关联列表）
 export function useReconciliationQuery() {
   return useQuery({
     queryKey: [...CMDB_KEYS.all, 'reconciliation'] as const,

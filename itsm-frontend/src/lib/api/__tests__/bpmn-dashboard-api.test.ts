@@ -47,7 +47,7 @@ describe('BPMNDashboardApi', () => {
 
   describe('queryAuditLogs', () => {
     it('should query audit logs with params and standard list envelope', async () => {
-      // E4-48：契约固定为标准列表信封；tenantId 不再由前端发送，
+      // 契约固定为标准列表信封；tenantId 只能来自认证上下文，前端不得发送，
       // 断言查询串里不出现它，防止旧参数名回流。
       const expected = { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
       mockGet.mockResolvedValue(expected);

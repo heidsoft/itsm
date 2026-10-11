@@ -147,8 +147,8 @@ describe('ChangeApi', () => {
     });
 
     it('风险等级只有一套 camelCase 参数名', async () => {
-      // 后端曾有 risk_level/riskLevel 两套名字（先读 snake 再兜 camel），属 AGENTS 禁止的
-      // 多字段兼容；实测前端也从未发送 risk_level，这里把单一名锁住防止再次分叉。
+      // 风险等级只有一个参数名 riskLevel：同时接受 risk_level 会让两套契约共存，
+      // 前端也绝不发送 snake_case。
       const mockResponse = {
         code: 0,
         message: 'success',

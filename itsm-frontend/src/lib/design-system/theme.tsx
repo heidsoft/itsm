@@ -88,9 +88,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     localStorage.setItem(storageKey, mode);
   }, [mode, storageKey]);
 
-  // 切换主题：2 态直切（与头部按钮的「切换到暗色/亮色」语义一致）。
-  // 原先的 light→dark→system 三态循环会让用户在 system 模式下点「切换到暗色」
-  // 先跳到 light（视觉无变化），造成“点了没反应”的错觉。这里直接按当前明暗取反。
+  // 切换主题只有亮/暗两态，与头部按钮「切换到暗色/亮色」的语义一致。
+  // light→dark→system 三态循环会让 system 模式下的「切换到暗色」先跳到 light
+  // （视觉无变化），看起来像点了没反应；这里直接按当前明暗取反。
   const toggleTheme = () => {
     setMode(isDark ? 'light' : 'dark');
   };

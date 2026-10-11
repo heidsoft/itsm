@@ -21,7 +21,7 @@ describe('TicketAssignmentApi', () => {
 
   describe('autoAssign', () => {
     it('should auto-assign a ticket', async () => {
-      // 契约：后端 dto.AutoAssignResponse.assignmentType 实测只发 auto/rule/ticket_type_rule/manual。
+      // 契约：后端 dto.AutoAssignResponse.assignmentType 只发 auto/rule/ticket_type_rule/manual。
       mockPost.mockResolvedValue({ ticketId: 1, assignedTo: 5, assignmentType: 'rule', reason: 'matched rule', score: 80 });
       const result = await TicketAssignmentApi.autoAssign(1);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/1/auto-assign');

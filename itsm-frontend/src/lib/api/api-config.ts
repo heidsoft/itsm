@@ -121,7 +121,7 @@ export interface GetTenantsParams {
 }
 
 // 工单契约的唯一声明处在 ./ticket-api（对齐后端 dto/ticket_dto.go）。
-// 这里只补充历史遗留的前端视图字段，不得重复定义契约字段。
+// 这里只补前端视图字段，不得重复定义契约字段。
 import type { Ticket as TicketContract } from './ticket-api';
 
 export type {

@@ -2,10 +2,9 @@
 
 /**
  * 配置项 (CI) 列表组件
- * P1-2：手写 useState + useEffect + isMountedRef + requestIdRef 替换为 React Query。
- *  - useCIsQuery 自动处理竞态/卸载/loading/error（无需 AbortController/cancelledRef）
- *  - useCITypesQuery 缓存 10 分钟（CI 类型列表稳定）
- *  - useDeleteCIMutation 成功后自动 invalidate 列表
+ * - useCIsQuery 负责竞态/卸载/loading/error，无需手写 AbortController 和 cancelledRef
+ * - useCITypesQuery 缓存 10 分钟（CI 类型列表稳定）
+ * - useDeleteCIMutation 成功后自动 invalidate 列表
  */
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';

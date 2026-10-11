@@ -47,8 +47,8 @@ export interface ServiceRequest {
 }
 
 /**
- * 审批步骤记录：与后端 dto.ServiceRequestApprovalResponse 逐字段对齐。
- * 原先只在 types/biz/service-request.ts 里另存一份，和接口实体并行维护两套真相。
+ * 审批步骤记录：与后端 dto.ServiceRequestApprovalResponse 逐字段对齐，
+ * 是本接口唯一的类型来源。
  */
 export interface ServiceRequestApproval {
   id: number;

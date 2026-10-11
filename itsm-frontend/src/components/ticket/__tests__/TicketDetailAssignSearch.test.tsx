@@ -1,10 +1,10 @@
 /**
- * 回归：分配工单弹窗的处理人搜索。
+ * 分配工单弹窗的处理人搜索。
  *
- * 修复前 filterOption 写作 (option?.label as unknown as string)?.toLowerCase()，
+ * filterOption 若写成 (option?.label as unknown as string)?.toLowerCase()，
  * 而 options 的 label 是带部门 Tag 的 React 节点，对象上没有 toLowerCase，
  * 用户在搜索框一输入就抛 TypeError 并连带卸载整个弹窗——派单是工单域的核心
- * 动作，等于该功能实际不可用。修复后 option 额外携带 searchText 字符串供匹配。
+ * 动作，等于该功能实际不可用。option 因此额外携带 searchText 字符串供匹配。
  */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -134,7 +134,7 @@ describe('TicketDetail 分配工单弹窗 — 处理人搜索回归', () => {
     const searchInput = document.querySelector('.ant-modal .ant-select input');
     expect(searchInput).not.toBeNull();
 
-    // 修复前：label 是 React 节点，.toLowerCase 为 undefined，此处抛
+    // label 是 React 节点，只有 searchText 可用于比较；输入过滤不得抛
     // TypeError: (intermediate value)?.toLowerCase is not a function
     expect(() => fireEvent.change(searchInput as Element, { target: { value: 'zhang' } })).not.toThrow();
 

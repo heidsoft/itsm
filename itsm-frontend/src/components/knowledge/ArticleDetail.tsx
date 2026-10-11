@@ -33,9 +33,8 @@ import {
 } from '@/constants/knowledge';
 import type { KnowledgeArticle } from '@/types/biz/knowledge';
 import ArticleVersionControl from './ArticleVersionControl';
-// 使用 react-markdown 渲染文章内容，并走 rehype-sanitize 防 XSS。
-// 详见 https://github.com/remarkjs/react-markdown ；与上方 split('\n') + <br/>
-// 相比可以保留 # 标题、**加粗**、`代码`、- 列表、表格等完整 Markdown 语义。
+// 文章内容用 react-markdown 渲染，rehype-sanitize 负责防 XSS。
+// 相比纯文本按行拆 + <br/>，这里能保留标题、加粗、行内代码、列表和表格。
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';

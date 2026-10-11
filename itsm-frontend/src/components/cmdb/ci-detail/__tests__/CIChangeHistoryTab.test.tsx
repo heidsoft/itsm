@@ -18,7 +18,7 @@ jest.mock('@/lib/i18n', () => ({
 }));
 
 describe('CIChangeHistoryTab', () => {
-  // operation 取后端实测写入值：create / update / delete / revert / lifecycle_update
+  // operation 取后端写入值：create / update / delete / revert / lifecycle_update
   const mockChangeHistory: ChangeHistoryData = {
     items: [
       {

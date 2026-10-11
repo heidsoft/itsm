@@ -131,8 +131,8 @@ const CMDBQualityReport = () => {
     setHasData(false);
     try {
       // 拉取 CI 列表，按 type 分组后计算真实质量指标。
-      // 平台页长上限 100，一次性索要 size:200 会被后端回落成默认 20；
-      // 这里按页读到与原先 20 页 × 200 相同的 4000 条上限。
+      // 平台页长上限 100，一次性索要 size:200 会被后端回落成默认 20，
+      // 所以 getAllCIs 按页翻读到 4000 条上限。
       const collected = await CMDBApi.getAllCIs({}, 4000);
 
       if (collected.length === 0) {

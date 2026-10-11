@@ -255,8 +255,8 @@ export interface TicketConfigurationItem {
  *
  * 字段逐一对齐后端 itsm-backend/dto/ticket_workflow_dto.go 的 TicketCCRecordResponse。
  * user/addedBy 复用 WorkflowUserInfo（后端同名结构体，由 service.workflowUserInfoFromEnt
- * 用 user.Name 回填 fullName）：后端从未发出 `name` 键，旧前端类型里的 `user.name`
- * 是实测漂移，导致「抄送人/添加人」两列一直落到 username。
+ * 用 user.Name 回填 fullName）：后端不发 `name` 键，前端类型若按 `user.name` 读取，
+ * 「抄送人/添加人」两列就会一直落到 username。
  */
 export interface TicketCCRecord {
   id: number;
@@ -274,7 +274,7 @@ export interface TicketCCRecord {
 /**
  * 抄送列表信封。
  *
- * GET /api/v1/tickets/cc/my 与 GET /api/v1/tickets/:id/cc 实测都不分页
+ * GET /api/v1/tickets/cc/my 与 GET /api/v1/tickets/:id/cc 都不分页
  * （service 用 Where(tenant_id)+All(ctx) 整表取回、Total=len(records)），
  * 所以契约只有 {items,total}，前端不得伪造 page/pageSize/totalPages。
  */

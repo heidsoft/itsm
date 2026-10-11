@@ -4,9 +4,8 @@ import {
   usePermissionGuard, PERMISSIONS, ROLES,
 } from '../use-permissions';
 
-// 契约说明（2026-09-03 适配）：
-// use-permissions 已改为「后端下发的 user.permissions 为唯一事实来源 + fail-closed」，
-// 不再在前端维护角色→权限静态表。因此：
+// 契约：后端下发的 user.permissions 是唯一事实来源，缺权限即 fail-closed，
+// 前端不维护角色到权限的静态表。因此：
 //  1. mock 用户必须携带 permissions 数组（模拟后端 login/capabilities 下发）；
 //  2. hasPermission 走 useAuthStore.getState()，mock 工厂必须提供 getState；
 //  3. 「角色 X 应有权限 Y」的旧断言不再成立——权限由后端 role_permission 配置决定，

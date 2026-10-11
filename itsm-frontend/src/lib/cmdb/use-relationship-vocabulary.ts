@@ -1,5 +1,5 @@
 /**
- * CMDB 关系词表运行时注入 hook（P1-4）
+ * CMDB 关系词表运行时注入 hook
  *
  * 单一源：后端 /api/v1/cmdb/ontology（CMDBOntologyResponse.relationshipTypes）。
  * 任何挂载了这个 hook 的页面，都会把后端权威词表写入

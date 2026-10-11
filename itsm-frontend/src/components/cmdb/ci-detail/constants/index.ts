@@ -29,7 +29,7 @@ export const RISK_LEVEL_LABELS: Record<string, string> = {
 };
 
 // CI 变更历史的 operation 展示色/标签。
-// 键取后端实测写入值（service/configuration_item_service.go、service/ci_history_service.go）：
+// 键取后端写入值（service/configuration_item_service.go、service/ci_history_service.go）：
 // create / update / delete（退役归档）/ revert / lifecycle_update。
 // 未知值原样显示、颜色回 default，不做枚举断言以免新值被吞成空白。
 export const CI_OPERATION_COLORS: Record<string, string> = {

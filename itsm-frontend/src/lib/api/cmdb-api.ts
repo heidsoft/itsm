@@ -238,7 +238,7 @@ export class CMDBApi {
   }
 
   /**
-   * P0-1：本体自描述端点（version/ciTypes/relationshipTypes/enums/aiTools）
+   * 本体自描述端点（version/ciTypes/relationshipTypes/enums/aiTools）
    * 单一接口取代散落的硬编码元数据；fail-soft 用于前端词汇表初始化。
    */
   static async getOntology(): Promise<Record<string, unknown>> {
@@ -246,7 +246,7 @@ export class CMDBApi {
   }
 
   /**
-   * P0-2：关系词表（来自 /cmdb/relationship-types，单一源 13 种 + reverse）
+   * 关系词表（来自 /cmdb/relationship-types，单一源 13 种 + reverse）
    * 配合 relationship-vocabulary.ts 的 loadRelationshipVocabulary() 做本地缓存。
    */
   static async getRelationshipTypes(): Promise<{

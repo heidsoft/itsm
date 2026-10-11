@@ -1,18 +1,18 @@
 /**
  * e2e 会话底座：cookie 认证 + 跨 worker 会话缓存 + 一次性栈守卫。
  *
- * 为什么必须存在这一层（2026-10-02 实测）：
- * 1. 凭证自 v1.6.3 起只在 HttpOnly cookie 里，登录响应不再返回 access_token
+ * 为什么必须存在这一层：
+ * 1. 凭证只在 HttpOnly cookie 里，登录响应不返回 access_token
  *    （`dto/auth_dto.go` 的 `AccessToken` 是 `json:"-"`）。任何
  *    `data.access_token` + `Authorization: Bearer …` 的写法只会发出
  *    `Bearer undefined`，断言的是「未认证」而不是权限边界。
- * 2. 夹具此前把后端地址写成 `NEXT_PUBLIC_API_URL || 'http://localhost'`，
- *    本机 nginx 监听 :80 并反代生产后端，于是 `npm run test:e2e:roles`
- *    直接在生产环境登录成功并 `POST /api/v1/auth/register` 建了用户。
+ * 2. 后端地址若写成 `NEXT_PUBLIC_API_URL || 'http://localhost'`，本机 nginx 监听 :80
+ *    并反代生产后端，`npm run test:e2e:roles` 就会在生产环境登录成功并
+ *    `POST /api/v1/auth/register` 建用户。
  *    目标地址因此不允许有默认值，必须显式声明是可丢弃环境。
  * 3. 权限边界类用例的身份不能依赖固定口令演示账号——后端基线 seed 明确禁止
  *    （`pkg/seeder/seeder_test.go`），夹具用户改为运行时创建、口令随机。
- * 4. `middleware.LoginRateLimiter` 是 10 次/分钟/IP 的**进程内**计数，而 e2e 全部
+ * 4. `middleware.LoginRateLimiter` 是 10 次/分钟/IP 的进程内计数，而 e2e 全部
  *    经同一个环回地址出去。7 个角色文件各自登录 admin + 夹具用户就要 14 次，
  *    必然把后面的用例挡在 403/2003 上——那既不是权限结论也不是产品缺陷。
  *    所以会话按角色缓存在环回临时目录，worker 之间复用同一枚 cookie 罐。
@@ -74,9 +74,9 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 
 /**
  * 读并校验 proof：目标地址必须由「经前端代理写入、再进本栈数据库数出 1 行」的
- * 实测结果背书，而不是只看 URL 白名单。
+ * 探针结果背书，而不是只看 URL 白名单。
  *
- * 为什么白名单不够（2026-10-02 实测）：`next.config.ts` 与
+ * 为什么白名单不够：`next.config.ts` 与
  * `src/app/api/[...path]/route.ts` 的代理 upstream 默认是 `http://localhost:8090`，
  * 而本机 127.0.0.1:8090 属于生产容器（`DB_NAME=itsm_prod`）。浏览器只打环回 :3000
  * 依然会把 POST /users 代理进生产后端。所以这里要求 proof 里记录的
@@ -128,7 +128,7 @@ function readStackProof(baseURL: string): StackProof {
 let proofCache: { baseURL: string; proof: StackProof } | undefined;
 
 /**
- * 一次性栈守卫：声明环境可丢弃 + 目标在环回白名单里 + 有 canary 实测 proof，
+ * 一次性栈守卫：声明环境可丢弃 + 目标在环回白名单里 + 有 canary proof，
  * 否则拒绝发请求。与 `playwright.ticket-type.config.ts` 的
  * `ITSM_E2E_ISOLATED_STACK` 同一套契约，但那一套跑在 CI 的临时 runner 上，
  * 本机必须额外持有 proof。

@@ -8,7 +8,7 @@ import { ticketService } from '../../lib/services/ticket-service';
 /**
  * 列表筛选的 UI 模型：请求字段直接取自 dto.ListTicketsRequest（GetTicketsParams），
  * 只把 dateFrom/dateTo 换成控件形态 dateRange。
- * 之前的 tags/source/impact/urgency 后端不支持筛选，发送后会被静默忽略。
+ * tags/source/impact/urgency 后端不支持筛选，发送后会被静默忽略，因此不在这里定义。
  */
 export type TicketQueryFilters = Omit<GetTicketsParams, 'dateFrom' | 'dateTo'> & {
   dateRange?: [string, string];

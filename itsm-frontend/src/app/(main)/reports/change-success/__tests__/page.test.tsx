@@ -119,14 +119,14 @@ describe('/reports/change-success', () => {
         expect.objectContaining({ name: '草稿', value: 4 }),
       ]),
     );
-    // 修复前这里读 stats.implementing（后端字段是 inProgress），
-    // 且 DTO 根本没有 draft，两个分片永远都是 0。
+    // 键必须与后端 DTO 同名（inProgress 而非 implementing）：读错的键永远是 0，
+    // DTO 里没有的字段也不该凭空出现一个分片。
     expect(status).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: '已完成', value: 3 })]),
     );
 
-    // 修复前类型分布是 Math.floor(total*0.3/0.5/0.2) 造出来的假数：
-    // total=20 时会显示 6/10/4，而不是真实的 8/9/3。
+    // 类型分布必须来自真实计数：用 Math.floor(total*0.3/0.5/0.2) 造数时，
+    // total=20 会显示 6/10/4 而不是真实的 8/9/3。
     expect(type).toEqual([
       { type: 'standard', name: '标准变更', count: 8, color: expect.any(String) },
       { type: 'normal', name: '普通变更', count: 9, color: expect.any(String) },
@@ -143,7 +143,7 @@ describe('/reports/change-success', () => {
 
     const rate = successRateText();
     // completed 3 / (completed 3 + failed 1 + rolledBack 1) = 60.0
-    // 修复前分母用的是 total=20，读数会变成 15%，把草稿和待审批都算成不成功。
+    // 分母换成 total=20 会得到 15%，把草稿和待审批都算成不成功。
     expect(rate).toContain('60.0');
     expect(screen.getByText('已实施变更')).toBeInTheDocument();
     expect(screen.getByText('/ 完成+失败+回滚')).toBeInTheDocument();

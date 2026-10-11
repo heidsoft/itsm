@@ -1,10 +1,10 @@
 /**
- * 回归测试：权限模块 i18n key 未翻译（浏览器测试 bug #28：11/23 模块显示原始 key）
+ * 权限模块的 i18n key 契约。
  *
- * 修复前页面用 `moduleKey.toUpperCase()`（权限码，如 ticket → TICKET）查翻译，
- * 而字典 key 是常量名（TICKETS/KNOWLEDGE_BASE/WORKFLOWS），导致 11 个模块
- * 渲染出原始 key。本测试直接引用页面生产代码中的映射常量，验证：
- * 1. 每个权限码都有显式 i18n key 映射（不再依赖 toUpperCase 巧合）；
+ * 页面若用 `moduleKey.toUpperCase()`（权限码，如 ticket → TICKET）查翻译，
+ * 而字典 key 是常量名（TICKETS/KNOWLEDGE_BASE/WORKFLOWS），模块就会直接
+ * 渲染出原始 key。本测试引用页面生产代码里的映射常量，验证：
+ * 1. 每个权限码都有显式 i18n key 映射（不依赖 toUpperCase 巧合）；
  * 2. zh-CN / en-US 字典中对应 label 与 description 完整存在。
  */
 import { PERMISSION_MODULES, MODULE_I18N_KEYS } from '../page';
@@ -46,7 +46,7 @@ describe('permissions 模块 i18n 契约', () => {
   });
 
   it('页面渲染路径解析出的 key 不得回退为原始权限码大写', () => {
-    // 修复前的错误形态：ticket → TICKET（字典中不存在）
+    // 错误形态：ticket → TICKET，字典里没有这个 key
     const dict = translations['zh-CN'] as unknown as Dict;
     const brokenKeys = moduleCodes
       .map((code) => code.toUpperCase())

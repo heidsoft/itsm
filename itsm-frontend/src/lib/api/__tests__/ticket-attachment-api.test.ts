@@ -35,8 +35,8 @@ describe('TicketAttachmentApi', () => {
     });
   });
 
-  // 回归：uploadAttachment 曾自建 XMLHttpRequest，绕过 httpClient，因此不发送
-  // X-CSRF-Token、credentials 和租户 header，后端一律返回
+  // uploadAttachment 必须走 httpClient：自建 XMLHttpRequest 不发送 X-CSRF-Token、
+  // credentials 和租户 header，后端一律返回
   // 403 {"code":403,"message":"CSRF token missing"}，工单附件上传全站不可用。
   describe('uploadAttachment (CSRF regression)', () => {
     it('delegates to httpClient.post so CSRF/credentials/tenant headers are applied', async () => {

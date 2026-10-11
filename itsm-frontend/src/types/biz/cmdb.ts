@@ -180,7 +180,7 @@ export interface CIHistoryItem {
   id: number;
   ciId: number;
   version: number;
-  // 实测写入值：create / update / delete / revert / lifecycle_update；未知值原样显示，不做枚举断言
+  // 后端写入值：create / update / delete / revert / lifecycle_update；未知值原样显示，不做枚举断言
   operation: string;
   before?: Record<string, unknown>;
   after?: Record<string, unknown>;

@@ -55,8 +55,8 @@ describe('listAuditLogs', () => {
     expect(res).toEqual(expected);
   });
 
-  // 回归：后端 dto.ListAuditLogsResponse 用的是 items，早期前端按 logs 读取，
-  // 导致审计日志页 total 正常、表格永远为空。
+  // 后端 dto.ListAuditLogsResponse 的集合键是 items；前端按 logs 读取会让
+  // 审计日志页 total 正常、表格永远为空。
   it('should normalize backend items[] into logs[]', async () => {
     const item = { id: 7, path: '/api/v1/tickets/7', method: 'PUT', statusCode: 200 };
     mockGet.mockResolvedValue({ items: [item], total: 811, page: 2, pageSize: 50 });

@@ -47,8 +47,8 @@ jest.mock('recharts', () => {
   };
 });
 
-// 201 份工单：刻意越过修复前 listTickets({pageSize:200}) 的页长，
-// 只要页面还在浏览器里自己数，总数就会显示成 200。
+// 201 份工单：刻意越过 listTickets 单页能装下的页长。
+// 只要页面还在浏览器里数当前页，总数就会显示成 200。
 function legacyTicketList(count: number) {
   return {
     items: Array.from({ length: count }, (_, index) => ({
@@ -128,8 +128,8 @@ describe('/reports/tickets', () => {
     await waitFor(() => expect(screen.getAllByTestId('chart-data')).toHaveLength(2));
 
     expect(mockGetTicketStats).toHaveBeenCalledTimes(1);
-    // 修复前这里调 listTickets({pageSize:200}) 再在浏览器里数：
-    // 201 条数据只会数出 200，页面却把它当全量展示。
+    // 总数必须来自 getTicketStats。用 listTickets({pageSize:200}) 在浏览器里数，
+    // 201 条只会数出 200，页面却把它当全量展示。
     expect(mockListTickets).not.toHaveBeenCalled();
     expect(statisticText('工单总数')).toContain('201');
   });
@@ -141,8 +141,8 @@ describe('/reports/tickets', () => {
 
     await waitFor(() => expect(screen.getByText('SLA 超时')).toBeInTheDocument());
 
-    // 修复前那张卡片过滤 status === 'overdue'，而 overdue 不是工单状态机的取值，
-    // 所以永远显示 0；权威口径是 sla_states 里已超时的工单数。
+    // 'overdue' 不是工单状态机的取值，按它过滤的卡片会永远显示 0；
+    // 权威口径是 sla_states 里已超时的工单数。
     expect(statisticText('SLA 超时')).toContain('7');
   });
 
@@ -162,7 +162,7 @@ describe('/reports/tickets', () => {
           value: 40,
           color: expect.any(String),
         }),
-        // 修复前「已完成」把 resolved 和 closed 并成一个数，两者再也分不开。
+        // resolved 与 closed 必须分开计数，合成「已完成」就再也看不出差别。
         expect.objectContaining({ key: 'resolved', value: 50 }),
         expect.objectContaining({ key: 'closed', value: 60 }),
         // 枚举外的历史值保留原始字符串展示，不静默丢弃。
@@ -181,8 +181,8 @@ describe('/reports/tickets', () => {
 
     await waitFor(() => expect(screen.getByText('工单统计加载失败')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
-    // 修复前异常只弹一条 toast，页面照常渲染全 0 卡片和「暂无数据」图表，
-    // 接口故障被伪装成「这个租户没有工单」。
+    // 异常不得只弹一条 toast 后继续渲染全 0 卡片和「暂无数据」图表：
+    // 那会把接口故障伪装成「这个租户没有工单」。
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
     expect(screen.queryByText('工单总数')).not.toBeInTheDocument();
   });

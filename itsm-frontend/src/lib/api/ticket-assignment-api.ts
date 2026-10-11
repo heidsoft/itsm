@@ -8,7 +8,7 @@ import { httpClient } from './http-client';
 export interface AutoAssignResponse {
   ticketId: number;
   assignedTo?: number;
-  // 后端实测 emits: auto / rule / ticket_type_rule / manual（service/ticket_assignment_*.go）
+  // 后端实际取值: auto / rule / ticket_type_rule / manual
   assignmentType: 'auto' | 'rule' | 'ticket_type_rule' | 'manual';
   reason: string;
   score?: number;
@@ -99,13 +99,13 @@ export interface AssignRecommendation {
   categories?: number[];
 }
 
-// 该端点实测不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键。
+// 该端点不分页，响应契约只有 items + total 两键。
 export interface AssignRecommendationListResponse {
   items: AssignRecommendation[];
   total: number;
 }
 
-// 该端点实测不分页（后端 handler 用 Total: len(items)），契约就是诚实的两键。
+// 该端点不分页，响应契约只有 items + total 两键。
 export interface ListAssignmentRulesResponse {
   items: AssignmentRule[];
   total: number;

@@ -32,7 +32,7 @@ describe('IncidentAPI', () => {
 
   describe('listIncidents', () => {
     it('should list incidents', async () => {
-      // 后端 GET /api/v1/incidents 只有一套信封：五键（2026-10-04 E4-9b 起缺省页长是平台值 20）。
+      // 后端 GET /api/v1/incidents 只有一套五键信封，缺省页长是平台值 20。
       // 夹具必须写全，否则前端重新引入 ?? 兜底或自己重算 totalPages 时测不出来。
       mockGet.mockResolvedValue({
         items: [{ id: 1, title: 'Server down' }],

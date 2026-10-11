@@ -7,7 +7,7 @@
  *   - fetchHistory 失败 + fetchAuditLog 也失败：渲染 Alert 错误
  *   - 加载/空状态：Spin + Empty
  *   - 重试按钮：点击后重新调用 fetchHistory
- *   - 不渲染 method/path/statusCode 块（自 2026-09-06 重构后该块已移除）
+ *   - 不渲染 method/path/statusCode 块（时间线只展示审计字段，不展示 HTTP 细节）
  */
 
 import React from 'react';

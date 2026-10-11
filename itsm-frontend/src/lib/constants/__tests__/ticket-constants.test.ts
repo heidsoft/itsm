@@ -1,9 +1,9 @@
 /**
  * Tests for ticket-constants.ts
  *
- * 关键回归点：配置表的键必须与后端工单词表逐字一致（snake_case）。
- * 旧实现用 inProgress/pendingApproval 等 camelCase 键，导致
- * getStatusConfig('in_progress') 静默落到 open 兜底，徽标长期错显示。
+ * 配置表的键必须与后端工单词表逐字一致（snake_case）。换成 inProgress/pendingApproval
+ * 等 camelCase 键时，getStatusConfig('in_progress') 会静默落到 open 兜底，
+ * 徽标长期错显示。
  */
 
 jest.mock('@/lib/api/http-client', () => ({

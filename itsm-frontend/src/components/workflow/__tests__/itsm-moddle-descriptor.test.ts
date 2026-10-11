@@ -1,11 +1,10 @@
 /**
  * itsm 流程扩展属性的真实往返测试。
  *
- * 覆盖此前的盲区：WorkflowNodeInspector 写入的属性只有静态字段名断言，
- * 从未验证「bpmn-moddle 能不能把它写进 XML、重开流程后能不能读回来」。
- * 因此 followUpDate 漏声明、cc* 系列被塞进 $attrs（面板重开即显示为空）、
- * documentation/conditionExpression 写错形状导致整篇 saveXML 抛错，
- * 全都没有被测到。
+ * 验证「WorkflowNodeInspector 写入的属性能不能被 bpmn-moddle 存进 XML、
+ * 重开流程后又能不能读回来」，而不只断言静态字段名。只有真实往返才能暴露
+ * followUpDate 漏声明、cc* 系列被塞进 $attrs（面板重开即显示为空）、
+ * documentation/conditionExpression 形状错误导致整篇 saveXML 抛错。
  *
  * 真实 moddle 只能在 Node 侧运行（bpmn-moddle 及其依赖是纯 ESM，
  * next/jest 注入的 transformIgnorePatterns 会跳过 node_modules），

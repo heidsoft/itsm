@@ -1,17 +1,17 @@
 /**
  * 角色权限 e2e 的夹具：cookie 会话 + 按需创建并复用的夹具用户。
  *
- * 用例侧契约保持不变（`loginAs(role)` 返回句柄，`apiGet/apiPost(句柄, path)` 发请求），
- * 但句柄不再是 JWT：它只是本 worker 内一个独立 cookie 罐的标识。
- * 之所以必须换掉令牌：登录响应自 v1.6.3 起不返回 access_token（只在 HttpOnly cookie 里），
- * 旧夹具读 `data.accessToken` 只会拿到 undefined，于是所有权限用例都在断言
- * `Authorization: Bearer undefined` 的 401，而不是真正的权限边界。
+ * 用例侧契约：`loginAs(role)` 返回句柄，`apiGet/apiPost(句柄, path)` 发请求。
+ * 句柄只是本 worker 内一个独立 cookie 罐的标识，不是 JWT：登录响应不返回
+ * access_token（凭证只在 HttpOnly cookie 里），用 `data.accessToken` 拼
+ * `Authorization: Bearer …` 只会发出 `Bearer undefined`，断言到的是未认证
+ * 而不是权限边界。
  *
- * 夹具用户按运行创建，原因有两条：
+ * 夹具用户按运行创建：
  * - 后端基线 seed 禁止固定口令演示账号（`pkg/seeder/seeder_test.go`）；
- * - 公共注册接口不应接受自选角色（自助声明 admin 等于提权），
- *   所以权限身份必须由已认证的管理员通过 `POST /api/v1/users` 授予，
- *   且权限走 `roleIds`（DBOnly 模式下只设主角色拿不到任何权限）。
+ * - 公共注册接口不接受自选角色（自助声明 admin 等于提权），所以权限身份必须由
+ *   已认证的管理员通过 `POST /api/v1/users` 授予，且权限走 `roleIds`
+ *   （DBOnly 模式下只设主角色拿不到任何权限）。
  *
  * 创建结果与会话 cookie 都缓存在环回临时目录：登录接口是 10 次/分钟/IP 的进程内限流，
  * 每个测试文件都重新供给一次必然把后续用例挡在 403/2003，那不是产品结论。
@@ -67,8 +67,8 @@ async function adminSession(): Promise<APIRequestContext> {
  * 非 admin 角色：会话同样走磁盘缓存，未命中才在锁内供给并落盘。
  *
  * 这里必须套 `cachedSession`：登录限流是 10 次/分钟/IP 的进程内计数，只缓存 admin
- * 的话每个角色文件仍会各自重新登录（2026-10-02 实测：会话目录里只有 admin 的
- * state 文件，5 个夹具账号都建好了却每个 worker 各登录一次，仍在 403/2003 上成片飘红）。
+ * 时每个角色文件仍会各自重新登录，多 worker 并发会成片撞上 403/2003——
+ * 那既不是权限结论也不是产品缺陷。
  *
  * 账号口令只在缓存缺失时才读盘复用；限流（RateLimitedError）不算账号失效——
  * 丢弃它只会让下一次运行再撞一次限流并把账号白白重建成第二个用户。

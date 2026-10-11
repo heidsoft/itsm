@@ -42,7 +42,7 @@ function tryStripListSuffix(pathname: string): string | null {
  * Next.js 中间件
  *
  * 只做 URL 修正，不做登录判断。边缘层无法校验会话：cookie 是 httpOnly 的，
- * 这里既拿不到凭证内容也无法确认它未被吊销，历史上靠 JWT 字符串形状判定「已登录」
+ * 这里既拿不到凭证内容也无法确认它未被吊销；用 JWT 字符串形状判定「已登录」
  * 会把过期凭证当成有效会话，也会让 /login 页在真实会话存在时被弹走。
  * 会话真相由布局层调用 GET /api/v1/auth/session 判定并负责跳转 /login。
  */

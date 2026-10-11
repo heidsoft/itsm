@@ -90,7 +90,7 @@ export default function CreateIncidentPage() {
       const fetchCIs = async () => {
         setCISearching(true);
         try {
-          // 后端 CI 列表只认 search；原先传 keyword 不参与绑定，搜索词被静默丢弃，
+          // 后端 CI 列表只绑定 search；传 keyword 不会报错，但搜索词被静默忽略，
           // 下拉里出来的是未过滤的第一页。
           const result = await CMDBApi.getCIs({ search: ciSearchTerm });
           setCISearchResults(result.items);

@@ -1,7 +1,7 @@
 /**
- * useCIDetail Hook (P1-2)
- * - 详情/类型/影响/历史均通过 React Query 驱动：自动竞态/卸载/缓存/重试
- * - loadXxx 改为 refetch 包装器，保留旧调用方契约（tab 切换时手动触发）
+ * useCIDetail Hook
+ * - 详情/类型/影响/历史都通过 React Query 驱动
+ * - loadXxx 是 refetch 包装器，供 tab 切换时手动触发
  */
 
 import { useEffect, useState } from 'react';

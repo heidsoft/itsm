@@ -35,7 +35,7 @@ jest.mock('@/lib/api/workflow-api', () => ({
 // 三个依赖接口的响应外壳以真实 handler 为准：
 // ticket-categories -> { items }（handlers/ticket_category/handler.go ListCategories）
 // bpmn/process-definitions -> { items }（common.NewListResponse）
-// tickets/assignment-rules -> { items, total }（dto.ListAssignmentRulesResponse，实测不分页）
+// tickets/assignment-rules -> { items, total }（dto.ListAssignmentRulesResponse 不分页）
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
     get: jest.fn().mockImplementation((url: string) => {
@@ -105,8 +105,8 @@ describe('TicketTypeFormModal', () => {
     expect(screen.getByRole('tab', { name: /自动分派/ })).toBeInTheDocument();
   });
 
-  // 核心回归：审批设置页签包含 Form.Item（原 bug 是 Form 只包裹了基本信息，
-  // 其余页签的 Form.Item 游离在外导致开关状态丢失）
+  // 审批设置页签的字段必须在同一个 Form 内：Form 只包裹基本信息时，其余页签的
+  // Form.Item 游离在外，开关状态会丢失
   it('renders approval configuration form items inside the approval tab', async () => {
     const user = userEvent.setup();
     renderModal(jest.fn().mockResolvedValue(undefined));
@@ -117,8 +117,8 @@ describe('TicketTypeFormModal', () => {
     expect(screen.getByText('绑定 BPMN 工作流')).toBeInTheDocument();
   });
 
-  // 回归：审批链是运行时零消费的写入型配置（resolveApprovalWorkflow 只读 ProcessBinding
-  // 与 legacy ApprovalWorkflow），强制用户填写等于"配了却不生效"。可编辑链必须彻底移除。
+  // 审批链在本域运行时零消费（resolveApprovalWorkflow 只读 ProcessBinding 与 legacy
+  // ApprovalWorkflow），强制用户填写等于"配了却不生效"，所以不提供可编辑链。
   it('no longer offers an editable approval chain', async () => {
     const user = userEvent.setup();
     renderModal(jest.fn().mockResolvedValue(undefined));

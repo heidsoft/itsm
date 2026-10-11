@@ -76,7 +76,7 @@ function reportFixture(overrides: Partial<IncidentReport> = {}): IncidentReport 
       { value: 'low', count: 1 },
       { value: 'medium', count: 2 },
       { value: 'high', count: 1 },
-      // critical 才是事件词表；修复前常量表写的是工单的 urgent，最高档一直取不到色。
+      // 事件词表的最高档是 critical；写成工单的 urgent 会让这一档一直取不到色。
       { value: 'critical', count: 2 },
     ],
     dailyTrend: [
@@ -115,14 +115,14 @@ describe('/reports/incident-trends', () => {
     render(<IncidentTrendsPage />);
 
     await waitFor(() => expect(screen.getAllByTestId('chart-data')).toHaveLength(3));
-    // 修复前这里调的是 ticketAnalyticsService.getAnalytics + ticketService.getTicketStats：
-    // 「事件趋势报表」画的是工单数据，且 selectedPeriod/日期控件从未进入请求。
+    // 事件趋势必须打事件报表接口：接 ticketAnalyticsService.getAnalytics +
+    // ticketService.getTicketStats 时，「事件趋势报表」画的是工单数据。
     expect(mockGetIncidentReport).toHaveBeenCalledWith({
       dateFrom: '2026-09-05',
       dateTo: '2026-10-04',
     });
-    // 日期控件与请求同源：修复前页面有 7/30/90 预设和 RangePicker，
-    // 但两者都只是摆设，selectedPeriod 与选中的日期从未进入任何请求。
+    // 日期控件与请求必须同源：有 7/30/90 预设和 RangePicker 却不把选中值送进请求时，
+    // 控件只是摆设。
     const rangeValues = screen
       .getAllByRole('textbox')
       .map(input => (input as HTMLInputElement).value);
@@ -152,8 +152,8 @@ describe('/reports/incident-trends', () => {
       ['critical', '紧急', 2],
     ]);
     expect(status).toHaveLength(4);
-    // 分片颜色取自词表映射：修复前 toSlices 把原始取值字符串当色值塞给 <Cell fill>，
-    // 于是已知状态也拿不到配色（'new'、'low' 不是合法 CSS 颜色）。
+    // 分片颜色取自词表映射：toSlices 把原始取值字符串当色值塞给 <Cell fill> 时，
+    // 已知状态也拿不到配色（'new'、'low' 不是合法 CSS 颜色）。
     expect(priority.map(slice => slice.color)).toEqual([
       '#52c41a',
       '#faad14',
@@ -185,7 +185,7 @@ describe('/reports/incident-trends', () => {
   });
 
   it('labels the average resolution duration with the unit the number actually means', async () => {
-    // 修复前 avgResolutionTime.toFixed(1) + suffix="小时" 直出后端的分钟值，读数差 60 倍。
+    // 后端的 avgResolutionTime 是分钟：toFixed(1) + 固定 suffix="小时" 会让读数差 60 倍。
     const cases: Array<{ minutes: number; want: string }> = [
       { minutes: 45, want: '45 分钟' },
       { minutes: 90, want: '1.5 小时' },
@@ -230,7 +230,7 @@ describe('/reports/incident-trends', () => {
     await waitFor(() => expect(screen.getByText('事件趋势数据加载失败')).toBeInTheDocument());
     expect(screen.getByText(/网络异常/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '重试' })).toBeInTheDocument();
-    // 修复前失败只 console.error + toast，四张卡片继续显示 0，把故障伪装成空态。
+    // 失败不得只 console.error + toast 后让四张卡片继续显示 0，那会把故障伪装成空态。
     expect(screen.queryByText('窗口内新建')).not.toBeInTheDocument();
     expect(screen.queryByTestId('chart-data')).not.toBeInTheDocument();
   });

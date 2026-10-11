@@ -333,7 +333,7 @@ describe('TicketApi', () => {
     });
   });
 
-  // 抄送列表：两个端点实测都不分页，契约只有 {items,total}（2026-10-04 E4-6i）。
+  // 抄送列表：两个端点都不分页，契约只有 {items,total}。
   // 断言透传的是 items 信封本身，而不是只断言 URL，这样后端把集合键改回 records 会立刻转红。
   describe('getMyCCRecords', () => {
     it('returns the {items,total} envelope and reads fullName as the actor name', async () => {

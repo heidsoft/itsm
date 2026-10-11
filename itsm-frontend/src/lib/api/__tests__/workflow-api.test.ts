@@ -725,9 +725,9 @@ describe('WorkflowApi', () => {
       expect(result.total).toBe(5);
     });
 
-    it('rejects legacy {data: [...]} shape (S-9 single-source contract)', async () => {
-      // Fix for S-9：旧实现用 response.data ?? response.items ?? response.list 多字段兜底，
-      // AGENTS.md 禁止。现在只接受规范 {items,total,...}，data 不再被当成集合来源。
+    it('rejects legacy {data: [...]} shape (single list envelope)', async () => {
+      // 只接受规范 {items,total,...}：response.data ?? response.items ?? response.list
+      // 这种多字段兜底会让两套集合同源共存，data 不是集合来源。
       (httpClient.get as jest.Mock).mockResolvedValueOnce({
         data: [{ id: 1, key: 'wf', name: 'WF', version: 1, createdAt: '2024-01-01', updatedAt: '2024-01-01' }],
       });

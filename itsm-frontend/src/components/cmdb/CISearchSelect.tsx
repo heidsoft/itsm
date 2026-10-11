@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * 服务端搜索的配置项选择器 (P1-2 React Query)
+ * 服务端搜索的配置项选择器
  * - search 防抖 300ms 后驱动 useCIsQuery，竞态/卸载/缓存由 RQ 自动处理
  * - excludeIds 在 queryFn filterOption 端过滤（保持前端单一过滤点）
  * - 受控 value 不在当前候选时，mergedOptions 保留已选项用于回显

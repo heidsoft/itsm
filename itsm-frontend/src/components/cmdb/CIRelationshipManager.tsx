@@ -1,12 +1,12 @@
 'use client';
 
 /**
- * CI关系管理组件 (P1-2)
- * - useState+useEffect+setLoading 改为 React Query：自动竞态/缓存/重试
+ * CI 关系管理组件
+ * - 关系类型、出/入向关系、候选 CI、拓扑图都由 React Query 驱动
  * - 创建/删除走 useCreateRelationshipMutation / useDeleteRelationshipMutation，
  *   onSuccess 自动 invalidate 出/入向查询
- * - 拓扑环检测改用 useTopologyGraphQuery（按需触发，不在挂载时拉）
- * - 可选 CI 候选用 useAvailableCIsQuery（搜索值变化驱动 queryKey）
+ * - 拓扑环检测用 useTopologyGraphQuery 按需触发，不在挂载时拉
+ * - 可选 CI 候选用 useAvailableCIsQuery，搜索值变化即改变 queryKey
  */
 
 import React, { useState } from 'react';
@@ -89,7 +89,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   onRefresh,
 }) => {
   const { message } = App.useApp();
-  // P1-4：把后端 ontology 关系词表写入 runtimeVocabulary（单一源闭环）。
+  // 把后端 ontology 关系词表写入 runtimeVocabulary（词表单一源）。
   // Select 渲染仍用 V2 端点（已有完整 name/description/direction），
   // 但 graph-engine 等其他模块读 relationshipLabel() 时拿到的是 ontology 权威值。
   // 返回值不直接使用——副作用即目的（注入运行时词表）。

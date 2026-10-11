@@ -100,7 +100,7 @@ const ProblemList: React.FC<ProblemListProps> = ({
         ...query,
         ...values,
       });
-      // 信封只有一个 items 键（E4-6c），实体只有一份 Problem（E4-6d），
+      // 信封只有一个 items 键，实体只有一份 Problem，
       // 因此这里既不需要多字段 fallback，也不需要 as unknown as 断言。
       setData(resp.items);
       setTotal(resp.total);

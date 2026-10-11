@@ -42,7 +42,7 @@ function LoginForm() {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [countdown, setCountdown] = useState(0); // P0-2：限流倒计时（秒）
+  const [countdown, setCountdown] = useState(0); // 限流倒计时（秒）
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 清理倒计时定时器
@@ -105,7 +105,7 @@ function LoginForm() {
     } catch (err) {
       logger.error('登录错误:', err);
       const e = err as Error & { retryAfterSeconds?: number };
-      // P0-2：限流响应携带 retryAfterSeconds，启动倒计时让按钮显示剩余秒数。
+      // 限流响应携带 retryAfterSeconds 时启动倒计时，让按钮显示剩余秒数。
       if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
         setError(`${e.message}（${e.retryAfterSeconds} 秒后自动恢复）`);
         startCountdown(e.retryAfterSeconds);

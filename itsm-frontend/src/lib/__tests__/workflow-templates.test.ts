@@ -60,7 +60,7 @@ describe('workflow-templates', () => {
   });
 
   it('getTemplateByTicketType maps known ticket types and falls back to generic_request', () => {
-    // 后端 ticket_types 实际码表（2026-09-07 核对）
+    // 后端 ticket_types 码表
     expect(getTemplateByTicketType('account_apply')?.id).toBe('generic_request');
     expect(getTemplateByTicketType('k8s_scale')?.id).toBe('change_request');
     expect(getTemplateByTicketType('ddl_execute')?.id).toBe('change_request');

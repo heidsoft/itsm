@@ -243,7 +243,7 @@ export const CIRelationshipAPI = {
 
   // 获取可用的目标CI列表（通过 CI 列表按 search 过滤）
   async getAvailableCIs(ciId: number, search?: string): Promise<TopologyNode[]> {
-    // 平台页长上限 100，原先一次性索要 size:200 已被后端回落；候选集改为翻页读取。
+    // 页长上限 100，一次性索要 size:200 会被后端回落，所以候选集按页翻读、最多 200 条。
     const items = await CMDBApi.getAllCIs({ search }, 200);
     const filtered = items.filter(ci => ci.id !== ciId);
     return filtered.map(ci => ({

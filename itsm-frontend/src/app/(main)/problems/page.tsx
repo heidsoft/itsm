@@ -155,7 +155,7 @@ export default function ProblemListPage() {
         keyword: searchKeyword,
       });
       // 看板视图同样只读 items。注意它仍是一次 pageSize=100 的截断读取，
-      // 与列表视图是两套请求，刷新时机也不同（债务见 E4-14）。
+      // 与列表视图是两套请求，刷新时机也不同。
       setProblems(response.items);
     } catch (error) {
       console.error('Failed to fetch problems for kanban:', error);
@@ -273,8 +273,8 @@ export default function ProblemListPage() {
       getItemTitle={(problem: Problem) =>
         problem.title === '' ? t('problems.itemTitleFallback', { id: problem.id }) : problem.title
       }
-      // problemNumber/assigneeName 是后端 omitempty 字段，只有 undefined 才回退；
-      // 之前这两个字段不在 Problem 类型上，只能靠 as unknown as 偷出来。
+      // problemNumber/assigneeName 是后端 omitempty 字段，只有 undefined 才回退，
+      // 空字符串是合法值。
       getItemNumber={(problem: Problem) => problem.problemNumber ?? `P-${problem.id}`}
       getItemDescription={(problem: Problem) => problem.description}
       getItemPriority={(problem: Problem) => (problem.priority === '' ? 'medium' : problem.priority)}
