@@ -4381,6 +4381,10 @@ func init() {
 	servicerequestapprovalDescCreatedAt := servicerequestapprovalFields[15].Descriptor()
 	// servicerequestapproval.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servicerequestapproval.DefaultCreatedAt = servicerequestapprovalDescCreatedAt.Default.(func() time.Time)
+	// servicerequestapprovalDescVersion is the schema descriptor for version field.
+	servicerequestapprovalDescVersion := servicerequestapprovalFields[17].Descriptor()
+	// servicerequestapproval.DefaultVersion holds the default value on creation for the version field.
+	servicerequestapproval.DefaultVersion = servicerequestapprovalDescVersion.Default.(int)
 	sourceorganizationFields := schema.SourceOrganization{}.Fields()
 	_ = sourceorganizationFields
 	// sourceorganizationDescTenantID is the schema descriptor for tenant_id field.

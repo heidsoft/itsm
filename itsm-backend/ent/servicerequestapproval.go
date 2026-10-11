@@ -51,7 +51,9 @@ type ServiceRequestApproval struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 处理时间
-	ProcessedAt  time.Time `json:"processed_at,omitempty"`
+	ProcessedAt time.Time `json:"processed_at,omitempty"`
+	// 乐观锁版本，投票合并 CAS 依据
+	Version      int `json:"version,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -64,7 +66,7 @@ func (*ServiceRequestApproval) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case servicerequestapproval.FieldIsEscalated:
 			values[i] = new(sql.NullBool)
-		case servicerequestapproval.FieldID, servicerequestapproval.FieldTenantID, servicerequestapproval.FieldServiceRequestID, servicerequestapproval.FieldLevel, servicerequestapproval.FieldApproverID, servicerequestapproval.FieldTimeoutHours, servicerequestapproval.FieldDelegatedToID:
+		case servicerequestapproval.FieldID, servicerequestapproval.FieldTenantID, servicerequestapproval.FieldServiceRequestID, servicerequestapproval.FieldLevel, servicerequestapproval.FieldApproverID, servicerequestapproval.FieldTimeoutHours, servicerequestapproval.FieldDelegatedToID, servicerequestapproval.FieldVersion:
 			values[i] = new(sql.NullInt64)
 		case servicerequestapproval.FieldStep, servicerequestapproval.FieldStatus, servicerequestapproval.FieldApproverName, servicerequestapproval.FieldAction, servicerequestapproval.FieldComment, servicerequestapproval.FieldEscalationReason:
 			values[i] = new(sql.NullString)
@@ -197,6 +199,12 @@ func (_m *ServiceRequestApproval) assignValues(columns []string, values []any) e
 			} else if value.Valid {
 				_m.ProcessedAt = value.Time
 			}
+		case servicerequestapproval.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				_m.Version = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -287,6 +295,9 @@ func (_m *ServiceRequestApproval) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("processed_at=")
 	builder.WriteString(_m.ProcessedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("version=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Version))
 	builder.WriteByte(')')
 	return builder.String()
 }

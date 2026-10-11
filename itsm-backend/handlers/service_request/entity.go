@@ -57,6 +57,7 @@ type ServiceRequestApproval struct {
 	ProcessedAt      *time.Time
 	// Node 承载审批链求值结果（审批人ID、会签阈值、已批准ID等），用于 quorum/层级求值。
 	Node      map[string]interface{}
+	Version   int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -86,6 +87,7 @@ type Repository interface {
 
 	// Approval related
 	GetApproval(ctx context.Context, requestID int, level int) (*ServiceRequestApproval, error)
+	GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int) (*ServiceRequestApproval, error)
 	UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error
 	UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error
 	UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error

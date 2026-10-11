@@ -43,6 +43,9 @@ func (ServiceRequestApproval) Fields() []ent.Field {
 
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 		field.Time("processed_at").Comment("处理时间").Optional(),
+
+		// 会签投票并发控制：Node 是整块读改写的 JSON，无版本谓词时并发投票互相覆盖丢票。
+		field.Int("version").Comment("乐观锁版本，投票合并 CAS 依据").Default(1),
 	}
 }
 

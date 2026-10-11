@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **服务请求会签并发投票互相覆盖丢票（正确性）**：会签投票是对 `node` JSON 的整块读改写且无版本谓词，重读又发生在事务外——两个并发审批都读到旧的 `approved_ids` 后先后覆盖，先提交者的票被静默丢弃，quorum 永不达标、该级审批永久卡住。现审批记录 schema 加 `version` 乐观锁列（存量行回填 1，迁移 `itsm-backend/migrations/20261011_add_servicerequestapproval_version.sql`），四个审批更新点全部改为 `version + tenant + request + pending` 条件更新（0 行命中返回写冲突哨兵），service 层会签分支改事务内重读 + 最多 3 次合并重试，最终推进路径的冲突（涉及已完成的 BPMN 桥接动作，不可自动重放）明确报 409 不静默覆盖；新增 stale 快照拒绝+重试合并、终审后迟到写拒绝、请求行冲突映射三个回归测试。
 - **BPMN 并行网关+服务任务分支互相卡死（可靠性）**：`CurrentActivityID` 是单一位置列，并行网关分叉同步推进所有分支时互相覆盖，服务任务完成回调按「位置未变」判陈旧，把合法命令误杀成 stale——重试耗尽进 dead-letter，实例在汇聚网关永久卡死，且分支声明顺序决定成败（服务分支排后必挂）。现完成回调只按 occurrence 幂等计数判陈旧，去掉位置断言；新增「服务分支先于用户分支」并行分叉回归测试（修复前该场景死锁）。
 - **BPMN 引擎服务访问器返回未接线副本，start timer 时间表静默失效**：`ProcessDefinitionService()`/`ProcessInstanceService()`/`TaskService()` 每次调用都新建服务实例，不携带 `SetTimerServices` 注入的 TimerStore——生产 handler 全部经访问器取服务，导致发布/停用流程定义时定时启动时间表同步空转、任务完成时定时器注册/取消全部空转。现访问器返回构造时接线的实例（缺省回退补齐 timerStore），新增访问器接线守卫测试与「发布后时间表落库」回归测试。
 - **BPMN 任务认领/取消并发竞态与已完成任务可取消（正确性）**：认领任务为读后无条件写，并发认领后者覆盖前者；取消任务不校验任务是否已结束，已完成任务的取消操作会覆盖审计口径；拒绝必填意见的审批节点在意见变量缺失/类型不符时直接 panic。现认领改为条件更新（assignee 谓词区分 NULL/非空，冲突明确提示重试）、取消与状态翻转加状态谓词（0 行即拒绝）、拒绝意见改安全类型断言；新增认领竞态、已完成禁取消、缺意见友好报错三个回归测试。

@@ -226,6 +226,20 @@ func (_c *ServiceRequestApprovalCreate) SetNillableProcessedAt(v *time.Time) *Se
 	return _c
 }
 
+// SetVersion sets the "version" field.
+func (_c *ServiceRequestApprovalCreate) SetVersion(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetVersion(v)
+	return _c
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_c *ServiceRequestApprovalCreate) SetNillableVersion(v *int) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetVersion(*v)
+	}
+	return _c
+}
+
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
 func (_c *ServiceRequestApprovalCreate) Mutation() *ServiceRequestApprovalMutation {
 	return _c.mutation
@@ -277,6 +291,10 @@ func (_c *ServiceRequestApprovalCreate) defaults() {
 		v := servicerequestapproval.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
 	}
+	if _, ok := _c.mutation.Version(); !ok {
+		v := servicerequestapproval.DefaultVersion
+		_c.mutation.SetVersion(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -316,6 +334,9 @@ func (_c *ServiceRequestApprovalCreate) check() error {
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceRequestApproval.created_at"`)}
+	}
+	if _, ok := _c.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ServiceRequestApproval.version"`)}
 	}
 	return nil
 }
@@ -410,6 +431,10 @@ func (_c *ServiceRequestApprovalCreate) createSpec() (*ServiceRequestApproval, *
 	if value, ok := _c.mutation.ProcessedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldProcessedAt, field.TypeTime, value)
 		_node.ProcessedAt = value
+	}
+	if value, ok := _c.mutation.Version(); ok {
+		_spec.SetField(servicerequestapproval.FieldVersion, field.TypeInt, value)
+		_node.Version = value
 	}
 	return _node, _spec
 }

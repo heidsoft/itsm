@@ -2,6 +2,7 @@ package service_request
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -92,6 +93,7 @@ func (r *EntRepository) toDomainApproval(app *ent.ServiceRequestApproval) *Servi
 		DueAt:            itemOrNil(app.DueAt),
 		ProcessedAt:      itemOrNil(app.ProcessedAt),
 		Node:             app.Node,
+		Version:          app.Version,
 		CreatedAt:        app.CreatedAt,
 		// UpdatedAt not in ent schema
 	}
@@ -423,6 +425,18 @@ func (r *EntRepository) GetApproval(ctx context.Context, requestID int, level in
 	return r.toDomainApproval(app), nil
 }
 
+func (r *EntRepository) GetApprovalWithClient(ctx context.Context, txc *ent.Client, requestID int, level int) (*ServiceRequestApproval, error) {
+	app, err := txc.ServiceRequestApproval.Query().
+		Where(servicerequestapproval.ServiceRequestIDEQ(requestID)).
+		Where(servicerequestapproval.Level(level)).
+		Where(servicerequestapproval.Status(ApprovalStatusPending)).
+		First(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.toDomainApproval(app), nil
+}
+
 // UpdateApproval 更新单条审批记录。补上租户隔离 + 所属请求 + pending 守卫，
 // 与同文件 UpdateRequestAndApproval 的三守卫保持一致，避免越权/跨请求覆盖或重复标记。
 func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error {
@@ -431,10 +445,12 @@ func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceReq
 			servicerequestapproval.TenantIDEQ(approval.TenantID),
 			servicerequestapproval.ServiceRequestIDEQ(approval.ServiceRequestID),
 			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+			servicerequestapproval.VersionEQ(approval.Version),
 		).
 		SetStatus(approval.Status).
 		SetAction(approval.Action).
-		SetComment(approval.Comment)
+		SetComment(approval.Comment).
+		AddVersion(1)
 
 	if approval.ApproverID != nil {
 		update.SetApproverID(*approval.ApproverID)
@@ -449,7 +465,10 @@ func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceReq
 		update.SetNode(approval.Node)
 	}
 
-	return update.Exec(ctx)
+	if err := update.Exec(ctx); err != nil {
+		return approvalWriteResult(err)
+	}
+	return nil
 }
 
 func (r *EntRepository) UpdateApprovalWithClient(ctx context.Context, txc *ent.Client, approval *ServiceRequestApproval) error {
@@ -458,10 +477,12 @@ func (r *EntRepository) UpdateApprovalWithClient(ctx context.Context, txc *ent.C
 			servicerequestapproval.TenantIDEQ(approval.TenantID),
 			servicerequestapproval.ServiceRequestIDEQ(approval.ServiceRequestID),
 			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+			servicerequestapproval.VersionEQ(approval.Version),
 		).
 		SetStatus(approval.Status).
 		SetAction(approval.Action).
-		SetComment(approval.Comment)
+		SetComment(approval.Comment).
+		AddVersion(1)
 
 	if approval.ApproverID != nil {
 		update.SetApproverID(*approval.ApproverID)
@@ -476,7 +497,25 @@ func (r *EntRepository) UpdateApprovalWithClient(ctx context.Context, txc *ent.C
 		update.SetNode(approval.Node)
 	}
 
-	return update.Exec(ctx)
+	if err := update.Exec(ctx); err != nil {
+		return approvalWriteResult(err)
+	}
+	return nil
+}
+
+// ErrApprovalWriteConflict / ErrRequestWriteConflict：条件更新 0 行命中。
+// 行在本事务内刚读过，命中失败几乎必然来自 version/status 谓词被并发推进，
+// 调用方应重读合并（approval）或向调用者报冲突（request，涉 BPMN 不可自动重放）。
+var (
+	ErrApprovalWriteConflict = errors.New("approval row concurrently modified")
+	ErrRequestWriteConflict  = errors.New("request row concurrently modified")
+)
+
+func approvalWriteResult(err error) error {
+	if ent.IsNotFound(err) {
+		return ErrApprovalWriteConflict
+	}
+	return err
 }
 
 func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *ServiceRequest, approval *ServiceRequestApproval) error {
@@ -500,6 +539,9 @@ func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *Servi
 		reqUpdate.SetApprovedAt(time.Now())
 	}
 	if err := reqUpdate.Exec(ctx); err != nil {
+		if ent.IsNotFound(err) {
+			return ErrRequestWriteConflict
+		}
 		return err
 	}
 
@@ -509,10 +551,12 @@ func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *Servi
 			servicerequestapproval.TenantIDEQ(req.TenantID),
 			servicerequestapproval.ServiceRequestIDEQ(req.ID),
 			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+			servicerequestapproval.VersionEQ(approval.Version),
 		).
 		SetStatus(approval.Status).
 		SetAction(approval.Action).
-		SetComment(approval.Comment)
+		SetComment(approval.Comment).
+		AddVersion(1)
 
 	if approval.ApproverID != nil {
 		appUpdate.SetApproverID(*approval.ApproverID)
@@ -527,7 +571,7 @@ func (r *EntRepository) UpdateRequestAndApproval(ctx context.Context, req *Servi
 		appUpdate.SetNode(approval.Node)
 	}
 	if err := appUpdate.Exec(ctx); err != nil {
-		return err
+		return approvalWriteResult(err)
 	}
 
 	return tx.Commit()
@@ -547,6 +591,9 @@ func (r *EntRepository) UpdateRequestAndApprovalWithClient(ctx context.Context, 
 		reqUpdate.SetApprovedAt(time.Now())
 	}
 	if err := reqUpdate.Exec(ctx); err != nil {
+		if ent.IsNotFound(err) {
+			return ErrRequestWriteConflict
+		}
 		return err
 	}
 
@@ -555,10 +602,12 @@ func (r *EntRepository) UpdateRequestAndApprovalWithClient(ctx context.Context, 
 			servicerequestapproval.TenantIDEQ(req.TenantID),
 			servicerequestapproval.ServiceRequestIDEQ(req.ID),
 			servicerequestapproval.StatusEQ(ApprovalStatusPending),
+			servicerequestapproval.VersionEQ(approval.Version),
 		).
 		SetStatus(approval.Status).
 		SetAction(approval.Action).
-		SetComment(approval.Comment)
+		SetComment(approval.Comment).
+		AddVersion(1)
 
 	if approval.ApproverID != nil {
 		appUpdate.SetApproverID(*approval.ApproverID)
@@ -572,7 +621,10 @@ func (r *EntRepository) UpdateRequestAndApprovalWithClient(ctx context.Context, 
 	if approval.Node != nil {
 		appUpdate.SetNode(approval.Node)
 	}
-	return appUpdate.Exec(ctx)
+	if err := appUpdate.Exec(ctx); err != nil {
+		return approvalWriteResult(err)
+	}
+	return nil
 }
 
 func (r *EntRepository) ListPendingApprovals(ctx context.Context, tenantID int, targetLevel int, requiredStatus, requesterDept string, page, size int) ([]*ServiceRequest, int, error) {

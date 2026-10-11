@@ -143104,6 +143104,8 @@ type ServiceRequestApprovalMutation struct {
 	escalation_reason     *string
 	created_at            *time.Time
 	processed_at          *time.Time
+	version               *int
+	addversion            *int
 	clearedFields         map[string]struct{}
 	done                  bool
 	oldValue              func(context.Context) (*ServiceRequestApproval, error)
@@ -144072,6 +144074,62 @@ func (m *ServiceRequestApprovalMutation) ResetProcessedAt() {
 	delete(m.clearedFields, servicerequestapproval.FieldProcessedAt)
 }
 
+// SetVersion sets the "version" field.
+func (m *ServiceRequestApprovalMutation) SetVersion(i int) {
+	m.version = &i
+	m.addversion = nil
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ServiceRequestApprovalMutation) Version() (r int, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ServiceRequestApproval entity.
+// If the ServiceRequestApproval object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ServiceRequestApprovalMutation) OldVersion(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// AddVersion adds i to the "version" field.
+func (m *ServiceRequestApprovalMutation) AddVersion(i int) {
+	if m.addversion != nil {
+		*m.addversion += i
+	} else {
+		m.addversion = &i
+	}
+}
+
+// AddedVersion returns the value that was added to the "version" field in this mutation.
+func (m *ServiceRequestApprovalMutation) AddedVersion() (r int, exists bool) {
+	v := m.addversion
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ServiceRequestApprovalMutation) ResetVersion() {
+	m.version = nil
+	m.addversion = nil
+}
+
 // Where appends a list predicates to the ServiceRequestApprovalMutation builder.
 func (m *ServiceRequestApprovalMutation) Where(ps ...predicate.ServiceRequestApproval) {
 	m.predicates = append(m.predicates, ps...)
@@ -144106,7 +144164,7 @@ func (m *ServiceRequestApprovalMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ServiceRequestApprovalMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 18)
 	if m.tenant_id != nil {
 		fields = append(fields, servicerequestapproval.FieldTenantID)
 	}
@@ -144158,6 +144216,9 @@ func (m *ServiceRequestApprovalMutation) Fields() []string {
 	if m.processed_at != nil {
 		fields = append(fields, servicerequestapproval.FieldProcessedAt)
 	}
+	if m.version != nil {
+		fields = append(fields, servicerequestapproval.FieldVersion)
+	}
 	return fields
 }
 
@@ -144200,6 +144261,8 @@ func (m *ServiceRequestApprovalMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case servicerequestapproval.FieldProcessedAt:
 		return m.ProcessedAt()
+	case servicerequestapproval.FieldVersion:
+		return m.Version()
 	}
 	return nil, false
 }
@@ -144243,6 +144306,8 @@ func (m *ServiceRequestApprovalMutation) OldField(ctx context.Context, name stri
 		return m.OldCreatedAt(ctx)
 	case servicerequestapproval.FieldProcessedAt:
 		return m.OldProcessedAt(ctx)
+	case servicerequestapproval.FieldVersion:
+		return m.OldVersion(ctx)
 	}
 	return nil, fmt.Errorf("unknown ServiceRequestApproval field %s", name)
 }
@@ -144371,6 +144436,13 @@ func (m *ServiceRequestApprovalMutation) SetField(name string, value ent.Value) 
 		}
 		m.SetProcessedAt(v)
 		return nil
+	case servicerequestapproval.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ServiceRequestApproval field %s", name)
 }
@@ -144397,6 +144469,9 @@ func (m *ServiceRequestApprovalMutation) AddedFields() []string {
 	if m.adddelegated_to_id != nil {
 		fields = append(fields, servicerequestapproval.FieldDelegatedToID)
 	}
+	if m.addversion != nil {
+		fields = append(fields, servicerequestapproval.FieldVersion)
+	}
 	return fields
 }
 
@@ -144417,6 +144492,8 @@ func (m *ServiceRequestApprovalMutation) AddedField(name string) (ent.Value, boo
 		return m.AddedTimeoutHours()
 	case servicerequestapproval.FieldDelegatedToID:
 		return m.AddedDelegatedToID()
+	case servicerequestapproval.FieldVersion:
+		return m.AddedVersion()
 	}
 	return nil, false
 }
@@ -144467,6 +144544,13 @@ func (m *ServiceRequestApprovalMutation) AddField(name string, value ent.Value) 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddDelegatedToID(v)
+		return nil
+	case servicerequestapproval.FieldVersion:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddVersion(v)
 		return nil
 	}
 	return fmt.Errorf("unknown ServiceRequestApproval numeric field %s", name)
@@ -144608,6 +144692,9 @@ func (m *ServiceRequestApprovalMutation) ResetField(name string) error {
 		return nil
 	case servicerequestapproval.FieldProcessedAt:
 		m.ResetProcessedAt()
+		return nil
+	case servicerequestapproval.FieldVersion:
+		m.ResetVersion()
 		return nil
 	}
 	return fmt.Errorf("unknown ServiceRequestApproval field %s", name)

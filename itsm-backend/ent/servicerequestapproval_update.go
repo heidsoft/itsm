@@ -360,6 +360,27 @@ func (_u *ServiceRequestApprovalUpdate) ClearProcessedAt() *ServiceRequestApprov
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ServiceRequestApprovalUpdate) SetVersion(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ServiceRequestApprovalUpdate) SetNillableVersion(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ServiceRequestApprovalUpdate) AddVersion(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
 func (_u *ServiceRequestApprovalUpdate) Mutation() *ServiceRequestApprovalMutation {
 	return _u.mutation
@@ -522,6 +543,12 @@ func (_u *ServiceRequestApprovalUpdate) sqlSave(ctx context.Context) (_node int,
 	}
 	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldProcessedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(servicerequestapproval.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(servicerequestapproval.FieldVersion, field.TypeInt, value)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -875,6 +902,27 @@ func (_u *ServiceRequestApprovalUpdateOne) ClearProcessedAt() *ServiceRequestApp
 	return _u
 }
 
+// SetVersion sets the "version" field.
+func (_u *ServiceRequestApprovalUpdateOne) SetVersion(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetVersion()
+	_u.mutation.SetVersion(v)
+	return _u
+}
+
+// SetNillableVersion sets the "version" field if the given value is not nil.
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableVersion(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
+	}
+	return _u
+}
+
+// AddVersion adds value to the "version" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddVersion(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddVersion(v)
+	return _u
+}
+
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
 func (_u *ServiceRequestApprovalUpdateOne) Mutation() *ServiceRequestApprovalMutation {
 	return _u.mutation
@@ -1067,6 +1115,12 @@ func (_u *ServiceRequestApprovalUpdateOne) sqlSave(ctx context.Context) (_node *
 	}
 	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldProcessedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.Version(); ok {
+		_spec.SetField(servicerequestapproval.FieldVersion, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedVersion(); ok {
+		_spec.AddField(servicerequestapproval.FieldVersion, field.TypeInt, value)
 	}
 	_node = &ServiceRequestApproval{config: _u.config}
 	_spec.Assign = _node.assignValues

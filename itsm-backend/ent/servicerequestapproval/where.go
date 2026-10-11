@@ -134,6 +134,11 @@ func ProcessedAt(v time.Time) predicate.ServiceRequestApproval {
 	return predicate.ServiceRequestApproval(sql.FieldEQ(FieldProcessedAt, v))
 }
 
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldEQ(FieldVersion, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v int) predicate.ServiceRequestApproval {
 	return predicate.ServiceRequestApproval(sql.FieldEQ(FieldTenantID, v))
@@ -992,6 +997,46 @@ func ProcessedAtIsNil() predicate.ServiceRequestApproval {
 // ProcessedAtNotNil applies the NotNil predicate on the "processed_at" field.
 func ProcessedAtNotNil() predicate.ServiceRequestApproval {
 	return predicate.ServiceRequestApproval(sql.FieldNotNull(FieldProcessedAt))
+}
+
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldEQ(FieldVersion, v))
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldNEQ(FieldVersion, v))
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldIn(FieldVersion, vs...))
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldNotIn(FieldVersion, vs...))
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldGT(FieldVersion, v))
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldGTE(FieldVersion, v))
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldLT(FieldVersion, v))
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int) predicate.ServiceRequestApproval {
+	return predicate.ServiceRequestApproval(sql.FieldLTE(FieldVersion, v))
 }
 
 // And groups predicates with the AND operator between them.

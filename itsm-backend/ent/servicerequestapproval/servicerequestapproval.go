@@ -47,6 +47,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldProcessedAt holds the string denoting the processed_at field in the database.
 	FieldProcessedAt = "processed_at"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 	// Table holds the table name of the servicerequestapproval in the database.
 	Table = "service_request_approvals"
 )
@@ -71,6 +73,7 @@ var Columns = []string{
 	FieldEscalationReason,
 	FieldCreatedAt,
 	FieldProcessedAt,
+	FieldVersion,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -98,6 +101,8 @@ var (
 	DefaultIsEscalated bool
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
+	// DefaultVersion holds the default value on creation for the "version" field.
+	DefaultVersion int
 )
 
 // OrderOption defines the ordering options for the ServiceRequestApproval queries.
@@ -186,4 +191,9 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByProcessedAt orders the results by the processed_at field.
 func ByProcessedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProcessedAt, opts...).ToFunc()
+}
+
+// ByVersion orders the results by the version field.
+func ByVersion(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVersion, opts...).ToFunc()
 }

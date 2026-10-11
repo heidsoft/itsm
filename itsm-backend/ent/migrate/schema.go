@@ -4533,6 +4533,7 @@ var (
 		{Name: "escalation_reason", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "processed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 	}
 	// ServiceRequestApprovalsTable holds the schema information for the "service_request_approvals" table.
 	ServiceRequestApprovalsTable = &schema.Table{

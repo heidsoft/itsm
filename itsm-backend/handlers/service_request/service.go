@@ -2,6 +2,7 @@ package service_request
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -403,36 +404,36 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 				threshold = int(t)
 			}
 
-			// 并发先读后写保护。标记前重新读取 DB 中最新的审批记录，
-			// 基于最新 approved_ids 做合并，避免并发互相覆盖导致会签永不达标。
-			if fresh, ferr := s.repo.GetApproval(ctx, id, currentApproval.Level); ferr == nil && fresh != nil && fresh.Node != nil {
-				currentApproval = fresh
-			}
+			// Node 是整块读改写的 JSON，并发投票靠 version CAS 串行化：
+			// 写冲突即重读最新 approved_ids 重新合并，两票不再互相覆盖导致 quorum 永不达标。
+			quorumMet := false
+			for attempt := 0; attempt < 3; attempt++ {
+				if fresh, ferr := s.repo.GetApprovalWithClient(ctx, tx.Client(), id, currentApproval.Level); ferr == nil && fresh != nil && fresh.Node != nil {
+					currentApproval = fresh
+				}
 
-			// 记录本次审批人（去重）
-			approved := []interface{}{}
-			if existing, ok3 := currentApproval.Node["approved_ids"].([]interface{}); ok3 {
-				approved = append(approved, existing...)
-			}
-			already := false
-			for _, a := range approved {
-				if aid, ok4 := a.(float64); ok4 && int(aid) == actorID {
-					already = true
+				// 记录本次审批人（去重）
+				approved := []interface{}{}
+				if existing, ok3 := currentApproval.Node["approved_ids"].([]interface{}); ok3 {
+					approved = append(approved, existing...)
+				}
+				already := false
+				for _, a := range approved {
+					if aid, ok4 := a.(float64); ok4 && int(aid) == actorID {
+						already = true
+						break
+					}
+				}
+				if !already {
+					approved = append(approved, float64(actorID))
+				}
+				currentApproval.Node["approved_ids"] = approved
+
+				if len(approved) >= threshold {
+					quorumMet = true
 					break
 				}
-			}
-			if !already {
-				approved = append(approved, float64(actorID))
-			}
-			currentApproval.Node["approved_ids"] = approved
 
-			if len(approved) >= threshold {
-				// 本级 quorum 满足
-				nextReqStatus = srLevelApprovedStatus(req.CurrentLevel, req.TotalLevels)
-				if req.CurrentLevel < req.TotalLevels {
-					nextLevel = req.CurrentLevel + 1
-				}
-			} else {
 				// quorum 未满足：本级仍 pending，仅记录审批进度，不推进请求/状态机
 				currentApproval.Action = action
 				currentApproval.Comment = comment
@@ -440,12 +441,23 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 				currentApproval.ApproverName = actorName
 				currentApproval.ProcessedAt = &now
 				if err := s.repo.UpdateApprovalWithClient(ctx, tx.Client(), currentApproval); err != nil {
+					if errors.Is(err, ErrApprovalWriteConflict) {
+						continue
+					}
 					return nil, nil, common.NewDatabaseError("Failed to update approval", err)
 				}
 				if err := tx.Commit(); err != nil {
 					return nil, nil, fmt.Errorf("提交审批事务失败: %w", err)
 				}
 				return s.Get(ctx, id, tenantID)
+			}
+			if !quorumMet {
+				return nil, nil, common.NewBusinessError(common.ConflictCode, "审批并发冲突，请刷新后重试", "")
+			}
+			// 本级 quorum 满足
+			nextReqStatus = srLevelApprovedStatus(req.CurrentLevel, req.TotalLevels)
+			if req.CurrentLevel < req.TotalLevels {
+				nextLevel = req.CurrentLevel + 1
 			}
 		} else {
 			// 遗留三级：按步骤映射状态
@@ -477,6 +489,10 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 
 	if err := s.repo.UpdateRequestAndApprovalWithClient(ctx, tx.Client(), req, currentApproval); err != nil {
+		// 审批/请求行被并发终审或推进：涉及已完成的 BPMN 桥接动作，不可自动重放，明确报冲突。
+		if errors.Is(err, ErrApprovalWriteConflict) || errors.Is(err, ErrRequestWriteConflict) {
+			return nil, nil, common.NewBusinessError(common.ConflictCode, "审批已被并发处理，请刷新后重试", "")
+		}
 		return nil, nil, common.NewDatabaseError("Failed to update request", err)
 	}
 
