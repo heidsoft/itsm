@@ -58,6 +58,9 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTaskWithClient(ctx context.
 		return false, bpmnApprovalNotActionable(businessType, businessID)
 	}
 	task := lookup.task
+	if isLifecycleTask(task) {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
 
 	approvalResult := "approved"
 	if action == "reject" {
@@ -108,6 +111,9 @@ func (b *BPMNApprovalBridge) CompleteBusinessApprovalTask(ctx context.Context, t
 		return false, bpmnApprovalNotActionable(businessType, businessID)
 	}
 	task := lookup.task
+	if isLifecycleTask(task) {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
 
 	approvalResult := "approved"
 	if action == "reject" {
@@ -152,6 +158,9 @@ func (b *BPMNApprovalBridge) DelegateBusinessApprovalTask(ctx context.Context, t
 		return false, bpmnApprovalNotActionable(businessType, businessID)
 	}
 	task := lookup.task
+	if isLifecycleTask(task) {
+		return false, bpmnApprovalNotActionable(businessType, businessID)
+	}
 
 	// 注入认证操作人与租户，委派前校验操作人必须是当前任务的审批人/候选人，防止越权改派
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
@@ -272,6 +281,26 @@ func bpmnApprovalNotActionable(businessType string, businessID int) error {
 		"流程已绑定但当前没有可处理的审批待办，请勿直接业务审批",
 		fmt.Sprintf("businessType=%s businessId=%d", strings.ToLower(businessType), businessID),
 	)
+}
+
+// lifecycleTaskMarkers 是内置模板中「确定不是审批」的生命周期节点词根（小写）。
+// 审批桥接遇到这些节点时 fail-closed：审批动作不得代替排期/实施/验证等生命周期
+// 步骤，也不得在错误节点上写入审批决定（recordApprovalDecision 只要 variables 带
+// approvalAction 就落库，误完成会污染审计）。清单刻意收窄到确定项——流程待办
+// 未命中时保持原行为，避免误伤「变更经理初审」「请求审核」这类审核类任务。
+var lifecycleTaskMarkers = []string{
+	"assessment", "schedule", "implement", "verify", "close", "fulfill", "submit",
+	"评估", "排期", "实施", "验证", "关闭", "履行", "提交",
+}
+
+func isLifecycleTask(task *ent.ProcessTask) bool {
+	haystack := strings.ToLower(task.TaskDefinitionKey + " " + task.TaskName)
+	for _, marker := range lifecycleTaskMarkers {
+		if strings.Contains(haystack, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // approvalTaskLookup 是按业务键反查流程待办的结果，必须区分「从未绑定」与「绑定过但此刻不可操作」：

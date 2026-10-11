@@ -965,6 +965,21 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
+	// 桥接与业务状态写入收敛到同一事务：流程推进不可逆，若桥接先独立提交而
+	// 后续业务 CAS 失败（并发冲突/DB 错误），会留下「流程已批、业务未批」的
+	// 永久分叉。事务内任一步失败，defer Rollback 连同桥接写入一起撤销。
+	// entClient 为 nil 属纯 legacy/单测装配（与本文件 GetBPMNApprovalDecisions
+	// 防御点一致）：无桥接也无 ent 事务，状态 CAS 退回 repo 承担。
+	var tx *ent.Tx
+	if s.entClient != nil {
+		var txErr error
+		tx, txErr = s.entClient.Tx(ctx)
+		if txErr != nil {
+			return nil, fmt.Errorf("开启事务失败: %w", txErr)
+		}
+		defer tx.Rollback()
+	}
+
 	// For approval actions, verify user is the approver
 	if targetStatus == "approved" || targetStatus == "rejected" {
 		chain, err := s.repo.GetApprovalChain(ctx, id, tenantID)
@@ -1012,8 +1027,8 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			if targetStatus == "rejected" {
 				action = "reject"
 			}
-			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTask(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
+			handled, bridgeErr := s.approvalBridge.CompleteBusinessApprovalTaskWithClient(
+				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, action, comment,
 			)
 			if bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
@@ -1034,26 +1049,26 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	if s.approvalBridge != nil {
 		switch targetStatus {
 		case "rejected":
-			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 2,
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 2,
 			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程驳回任务失败: %w", bridgeErr)
 			}
 		case "scheduled":
-			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
 			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程排期任务失败: %w", bridgeErr)
 			}
 		case "in_progress":
-			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id, nil, 1,
 			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程实施任务失败: %w", bridgeErr)
 			}
 		case "completed":
-			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflow(
-				ctx, tenantID, userID, string(dto.BusinessTypeChange), id,
+			if _, bridgeErr := s.approvalBridge.AdvanceBusinessWorkflowWithClient(
+				ctx, tx.Client(), tenantID, userID, string(dto.BusinessTypeChange), id,
 				map[string]interface{}{"verify_passed": true}, 4,
 			); bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程验证任务失败: %w", bridgeErr)
@@ -1071,12 +1086,18 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		targetStatus == "cancelled" || targetStatus == "rolled_back" ||
 		targetStatus == "closed"
 	if isTerminal {
-		tx, txErr := s.entClient.Tx(ctx)
-		if txErr != nil {
-			return nil, fmt.Errorf("开启事务失败: %w", txErr)
+		if tx == nil {
+			ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
+			if casErr != nil {
+				return nil, fmt.Errorf("failed to update change status: %w", casErr)
+			}
+			if !ok {
+				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+					ErrConcurrentModification, c.Status, targetStatus)
+			}
+			c.Status = targetStatus
+			return c, nil
 		}
-		defer tx.Rollback()
-
 		if _, updateErr := tx.Change.UpdateOneID(c.ID).
 			Where(change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
 			SetStatus(change.Status(targetStatus)).
@@ -1099,18 +1120,36 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return c, nil
 	}
 
-	// 非终态：CAS 推进状态（乐观锁），再回写其余字段。
+	// 非终态：CAS 推进状态（乐观锁）。
 	// 原先直接 repo.Update 存在 TOCTOU 竞态：并发请求同时读到同一旧状态、
 	// 各自通过状态机校验后都写入成功，导致 N 个请求全部返回 200，
 	// 客户端与审计无法区分"谁真正推进了状态"。CAS 把并发窗口收敛到一次
-	// 条件更新，抢先者成功、落后者收到 409。
-	ok, err := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update change status: %w", err)
-	}
-	if !ok {
-		return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
-			ErrConcurrentModification, c.Status, targetStatus)
+	// 条件更新，抢先者成功、落后者收到 409；与桥接同事务，CAS 落败时
+	// 已完成的流程任务一并回滚。
+	if tx == nil {
+		ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
+		if casErr != nil {
+			return nil, fmt.Errorf("failed to update change status: %w", casErr)
+		}
+		if !ok {
+			return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+				ErrConcurrentModification, c.Status, targetStatus)
+		}
+	} else {
+		affected, err := tx.Change.Update().
+			Where(change.IDEQ(c.ID), change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
+			SetStatus(change.Status(targetStatus)).
+			Save(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update change status: %w", err)
+		}
+		if affected == 0 {
+			return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
+				ErrConcurrentModification, c.Status, targetStatus)
+		}
+		if commitErr := tx.Commit(); commitErr != nil {
+			return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+		}
 	}
 
 	c.Status = targetStatus

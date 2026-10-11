@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **变更审批桥接先提交、业务 CAS 在后，落败留下「流程已批、业务未批」（正确性）**：`TransitionStatus` 的审批/生命周期桥接各自独立事务先行提交，业务状态 CAS 在后——CAS 落败（并发冲突/DB 错误）时流程任务已被不可逆完成、审批决定已落库，而变更状态未推进，双轨永久分叉。现桥接与业务状态 CAS 收敛到同一事务，任一步失败整体回滚。同时审批桥接补生命周期节点断言：`change_normal_flow` 模板全部节点均为 userTask，流程停在排期/实施/验证等节点时，审批动作会把该节点当审批误完成并写入伪造的审批决定——现按封闭生命周期词根清单 fail-closed（清单只收「确定不是审批」的节点，未命中的保持原行为，不误伤「初审/请求审核」类审核任务），审批委派入口同样拦截。新增 CAS 冲突回滚桥接、生命周期节点误完成拦截两个回归测试。
 - **服务请求会签并发投票互相覆盖丢票（正确性）**：会签投票是对 `node` JSON 的整块读改写且无版本谓词，重读又发生在事务外——两个并发审批都读到旧的 `approved_ids` 后先后覆盖，先提交者的票被静默丢弃，quorum 永不达标、该级审批永久卡住。现审批记录 schema 加 `version` 乐观锁列（存量行回填 1，迁移 `itsm-backend/migrations/20261011_add_servicerequestapproval_version.sql`），四个审批更新点全部改为 `version + tenant + request + pending` 条件更新（0 行命中返回写冲突哨兵），service 层会签分支改事务内重读 + 最多 3 次合并重试，最终推进路径的冲突（涉及已完成的 BPMN 桥接动作，不可自动重放）明确报 409 不静默覆盖；新增 stale 快照拒绝+重试合并、终审后迟到写拒绝、请求行冲突映射三个回归测试。
 - **BPMN 并行网关+服务任务分支互相卡死（可靠性）**：`CurrentActivityID` 是单一位置列，并行网关分叉同步推进所有分支时互相覆盖，服务任务完成回调按「位置未变」判陈旧，把合法命令误杀成 stale——重试耗尽进 dead-letter，实例在汇聚网关永久卡死，且分支声明顺序决定成败（服务分支排后必挂）。现完成回调只按 occurrence 幂等计数判陈旧，去掉位置断言；新增「服务分支先于用户分支」并行分叉回归测试（修复前该场景死锁）。
 - **BPMN 引擎服务访问器返回未接线副本，start timer 时间表静默失效**：`ProcessDefinitionService()`/`ProcessInstanceService()`/`TaskService()` 每次调用都新建服务实例，不携带 `SetTimerServices` 注入的 TimerStore——生产 handler 全部经访问器取服务，导致发布/停用流程定义时定时启动时间表同步空转、任务完成时定时器注册/取消全部空转。现访问器返回构造时接线的实例（缺省回退补齐 timerStore），新增访问器接线守卫测试与「发布后时间表落库」回归测试。
