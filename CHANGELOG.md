@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.17] - 2026-10-11
+
 ### Changed
 
 - **产品表面棘轮补账**：`service_go_files` 基线 328→332。P1 修复批次新增 4 个回归测试文件（df212409 +3 个 BPMN 回归、413181f4 +1 个 SLA claim-once 回归，均为纯测试增量）落地时漏随 commit 上调基线，致 `make docs-gate` C.6.4 红，本次按棘轮规程补值并说明。

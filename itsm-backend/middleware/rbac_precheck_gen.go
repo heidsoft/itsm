@@ -455,6 +455,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/users/stats":                                  {Resource: "user", Action: "read"},
 			"/api/v1/vendors":                                      {Resource: "vendor", Action: "read"},
 			"/api/v1/vendors/*":                                    {Resource: "vendor", Action: "read"},
+			"/api/v1/workbench":                                    {Resource: "dashboard", Action: "read"},
 			"/api/v1/workflow/instances":                           {Resource: "bpmn", Action: "read"},
 			"/api/v1/workflow/instances/*":                         {Resource: "bpmn", Action: "read"},
 			"/api/v1/workflow/tasks":                               {Resource: "task", Action: "read"},
