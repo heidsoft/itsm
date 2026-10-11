@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **BPMN 并行网关+服务任务分支互相卡死（可靠性）**：`CurrentActivityID` 是单一位置列，并行网关分叉同步推进所有分支时互相覆盖，服务任务完成回调按「位置未变」判陈旧，把合法命令误杀成 stale——重试耗尽进 dead-letter，实例在汇聚网关永久卡死，且分支声明顺序决定成败（服务分支排后必挂）。现完成回调只按 occurrence 幂等计数判陈旧，去掉位置断言；新增「服务分支先于用户分支」并行分叉回归测试（修复前该场景死锁）。
+- **BPMN 引擎服务访问器返回未接线副本，start timer 时间表静默失效**：`ProcessDefinitionService()`/`ProcessInstanceService()`/`TaskService()` 每次调用都新建服务实例，不携带 `SetTimerServices` 注入的 TimerStore——生产 handler 全部经访问器取服务，导致发布/停用流程定义时定时启动时间表同步空转、任务完成时定时器注册/取消全部空转。现访问器返回构造时接线的实例（缺省回退补齐 timerStore），新增访问器接线守卫测试与「发布后时间表落库」回归测试。
+- **BPMN 任务认领/取消并发竞态与已完成任务可取消（正确性）**：认领任务为读后无条件写，并发认领后者覆盖前者；取消任务不校验任务是否已结束，已完成任务的取消操作会覆盖审计口径；拒绝必填意见的审批节点在意见变量缺失/类型不符时直接 panic。现认领改为条件更新（assignee 谓词区分 NULL/非空，冲突明确提示重试）、取消与状态翻转加状态谓词（0 行即拒绝）、拒绝意见改安全类型断言；新增认领竞态、已完成禁取消、缺意见友好报错三个回归测试。
+
 - **操作者身份可由请求体/LLM 自报值伪造（安全，三处同型）**：AI chat 工具路径仅在缺失时注入 `user_id`/`requester_id`，LLM 自报值优先并被 create_ticket 直接采信为工单归属；变更审批 `POST /changes/:id/approvals` 的审批人取自请求体 `approverId`，可将审批意见伪造为链上他人所提交；MSP 分配创建/解除不校验操作者与目标 MSP 租户的从属关系，MSP 租户 A 的持有者可给租户 B 代授权且全程无审计。现身份字段一律无条件以认证上下文覆盖（与 skill invoke 同规则），MSP 增加同租户从属校验（跨租户返回 403）并补创建/解除审计日志；新增伪造拒绝与审计落库回归测试。
 - **首装门禁 seedAdmin 静默跳过导致 verify 必然失败**：`ADMIN_PASSWORD=admin123` 命中弱口令列表，`seedAdmin` 只打 Warn 日志不返回 error，apply 阶段静默成功但 verify 阶段因 admin 用户不存在而报 "verify bootstrap administrator: missing"。现 `seedAdmin` 改为返回 error（弱口令/短口令/创建失败一律 fail fast），verify 在 `BOOTSTRAP_TOKEN_ENABLED=1` 时跳过 admin 检查（该模式下 admin 由 initialize CLI 创建），`docker-compose.dev.yml` 默认密码改为 `${ADMIN_PASSWORD:-dev12345678!}`（12 字符且不在弱口令列表）。
 - **ga-gate 验收登录密码与 compose 默认值失配**：`docker-compose.dev.yml` 默认密码上调为 `dev12345678!` 后，ga-gate workflow 仍以 `ITSM_ADMIN_PASS=admin123` 跑冒烟测试，登录 401 导致核心 API 验收级联失败。同步上调 ga-gate 环境夹具密码，与 compose 默认值保持一致。

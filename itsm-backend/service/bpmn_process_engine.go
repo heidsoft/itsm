@@ -120,7 +120,7 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
-	engine.taskService = &bpmnTaskService{client: client, logger: logger, groupResolver: engine.groupResolver}
+	engine.taskService = &bpmnTaskService{client: client, logger: logger, groupResolver: engine.groupResolver, engine: engine}
 	engine.auditService = NewBPMNAuditService(client, logger)
 
 	// 注册流程相关的内置函数
@@ -194,19 +194,30 @@ func (e *CustomProcessEngine) registerProcessFunctions() {
 	})
 }
 
-// ProcessDefinitionService 返回流程定义服务
+// ProcessDefinitionService 返回流程定义服务。
+// 返回引擎内已接线的实例：SetTimerServices 注入的 timerStore 只存在于该实例上，
+// 新建副本会让发布/停用定义时的 start timer 同步静默失效。
 func (e *CustomProcessEngine) ProcessDefinitionService() ProcessDefinitionService {
-	return &bpmnProcessDefinitionService{client: e.client}
+	if e.processDefinitionService == nil {
+		return &bpmnProcessDefinitionService{client: e.client, logger: e.logger}
+	}
+	return e.processDefinitionService
 }
 
 // ProcessInstanceService 返回流程实例服务
 func (e *CustomProcessEngine) ProcessInstanceService() ProcessInstanceService {
-	return &bpmnProcessInstanceService{client: e.client}
+	if e.processInstanceService == nil {
+		return &bpmnProcessInstanceService{client: e.client, logger: e.logger}
+	}
+	return e.processInstanceService
 }
 
-// TaskService 返回任务服务
+// TaskService 返回任务服务。返回已接线实例，任务完成经由所属引擎复用定时器设施。
 func (e *CustomProcessEngine) TaskService() TaskService {
-	return &bpmnTaskService{client: e.client, logger: e.logger, groupResolver: e.groupResolver}
+	if e.taskService == nil {
+		return &bpmnTaskService{client: e.client, logger: e.logger, groupResolver: e.groupResolver}
+	}
+	return e.taskService
 }
 
 // SetApprovalService 注入 ApprovalService，解决循环依赖

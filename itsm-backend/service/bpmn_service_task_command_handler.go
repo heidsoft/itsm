@@ -41,7 +41,9 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 		return err
 	}
 	occurrences := intMapVariable(instance.Variables, "_serviceTaskOccurrences")
-	if occurrences[elementID] != occurrence || instance.CurrentActivityID != elementID {
+	// 只按 occurrence 判陈旧，不校验 CurrentActivityID：并行网关分支会互相覆盖
+	// 单位置活动列，位置校验会把合法命令误杀成 stale，实例在汇聚网关永久卡死。
+	if occurrences[elementID] != occurrence {
 		return fmt.Errorf("stale BPMN ServiceTask command for element %s occurrence %d", elementID, occurrence)
 	}
 	if actual := serviceTaskReference(task); actual != serviceRef {
@@ -91,7 +93,7 @@ func (e *CustomProcessEngine) HandleBPMNServiceTaskCommand(ctx context.Context, 
 		return tx.Commit()
 	}
 	occurrences = intMapVariable(current.Variables, "_serviceTaskOccurrences")
-	if occurrences[elementID] != occurrence || current.CurrentActivityID != elementID {
+	if occurrences[elementID] != occurrence {
 		return fmt.Errorf("ServiceTask 完成时流程状态已变化")
 	}
 	if current.Variables == nil {

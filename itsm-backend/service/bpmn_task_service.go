@@ -97,6 +97,17 @@ type bpmnTaskService struct {
 	client        *ent.Client
 	logger        *zap.SugaredLogger
 	groupResolver *bpmn.GroupResolver
+	// engine 指向所属引擎：CompleteTask 经由它复用已注入的 timerStore 等运行时设施。
+	// 直构实例（engine==nil）回退为新建裸引擎，行为同历史版本。
+	engine *CustomProcessEngine
+}
+
+// completeTaskEngine 返回执行任务完成时应使用的引擎实例。
+func (s *bpmnTaskService) completeTaskEngine() *CustomProcessEngine {
+	if s.engine != nil {
+		return s.engine
+	}
+	return NewCustomProcessEngine(s.client, s.logger).(*CustomProcessEngine)
 }
 
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
@@ -140,7 +151,7 @@ func (s *bpmnTaskService) CompleteTaskByID(ctx context.Context, id int, variable
 		return err
 	}
 
-	engine := NewCustomProcessEngine(s.client, s.logger)
+	engine := s.completeTaskEngine()
 	// 首次读取即按当前租户过滤，避免先全局读取再事后校验造成跨租户任务泄漏。
 	task, err := s.client.ProcessTask.Query().
 		Where(processtask.ID(id), processtask.TenantID(tenantID)).
@@ -563,12 +574,31 @@ func (s *bpmnTaskService) claimTask(
 		return err
 	}
 
-	if _, err = tx.ProcessTask.UpdateOne(task).
+	// 条件更新防并发认领竞态：读到的 assignee 已被并发改写时命中 0 行，
+	// 不得覆盖他人的认领结果（last-writer-wins）。
+	claimWhere := []predicate.ProcessTask{
+		processtask.ID(task.ID),
+		processtask.TenantID(tenantID),
+		processtask.StatusNotIn("completed", "cancelled"),
+	}
+	// 未分配任务的 assignee 在库中是 NULL 而非空串，空值必须用 IsNil 谓词，
+	// 否则合法首认领命中 0 行被误判成并发冲突。
+	if task.Assignee == "" {
+		claimWhere = append(claimWhere, processtask.AssigneeIsNil())
+	} else {
+		claimWhere = append(claimWhere, processtask.AssigneeEQ(task.Assignee))
+	}
+	updated, err := tx.ProcessTask.Update().
+		Where(claimWhere...).
 		SetAssignee(currentUser).
 		SetStatus(common.ProcessTaskStatusAssigned).
 		SetAssignedTime(time.Now()).
-		Save(ctx); err != nil {
+		Save(ctx)
+	if err != nil {
 		return fmt.Errorf("claim task: %w", err)
+	}
+	if updated != 1 {
+		return fmt.Errorf("任务已被他人认领，请刷新后重试")
 	}
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("commit claim task transaction: %w", err)
@@ -619,8 +649,7 @@ func validateTaskCandidate(ctx context.Context, client *ent.Client, task *ent.Pr
 }
 
 func (s *bpmnTaskService) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
-	engine := NewCustomProcessEngine(s.client, s.logger)
-	return engine.CompleteTask(ctx, taskID, variables)
+	return s.completeTaskEngine().CompleteTask(ctx, taskID, variables)
 }
 
 func (s *bpmnTaskService) CancelTask(ctx context.Context, taskID string, reason string) error {
@@ -629,11 +658,21 @@ func (s *bpmnTaskService) CancelTask(ctx context.Context, taskID string, reason 
 		return err
 	}
 
-	_, err = s.client.ProcessTask.UpdateOne(task).
+	// 已完成/已取消的任务不允许翻转成 cancelled，避免审计口径被覆盖。
+	updated, err := s.client.ProcessTask.Update().
+		Where(
+			processtask.ID(task.ID),
+			processtask.StatusNotIn("completed", "cancelled"),
+		).
 		SetStatus("cancelled").
 		Save(ctx)
-
-	return err
+	if err != nil {
+		return err
+	}
+	if updated != 1 {
+		return fmt.Errorf("任务已结束，不能取消")
+	}
+	return nil
 }
 
 func (s *bpmnTaskService) GetTaskVariables(ctx context.Context, taskID string) (map[string]interface{}, error) {

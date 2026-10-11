@@ -261,9 +261,10 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 	rejectStrategy, _ := task.TaskVariables["rejectStrategy"].(string)
 	approvalAction, _ := variables["approvalAction"].(string)
 	commentRequired, _ := task.TaskVariables["commentRequiredOnReject"].(bool)
+	approvalComment, _ := variables["approvalComment"].(string)
 
 	if approvalAction == "reject" {
-		if commentRequired && strings.TrimSpace(variables["approvalComment"].(string)) == "" {
+		if commentRequired && strings.TrimSpace(approvalComment) == "" {
 			return nil, fmt.Errorf("该审批节点要求拒绝时必须填写意见")
 		}
 		switch strings.ToLower(strings.TrimSpace(rejectStrategy)) {
