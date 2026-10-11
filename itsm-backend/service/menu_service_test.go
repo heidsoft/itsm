@@ -1,9 +1,19 @@
 package service
 
 import (
+	"context"
+	"errors"
 	"testing"
 
+	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/enttest"
+
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 )
 
 // TestFilterMenusByPermission_RespectsGrantedPermissionCode 修复回归：
@@ -46,4 +56,46 @@ func pathsOf(menus []*ent.Menu) []string {
 		out = append(out, m.Path)
 	}
 	return out
+}
+
+// TestCreateMenu_DuplicatePathReturnsConflict 修复回归：menus 按 (tenant, path) 业务唯一
+// （唯一索引由 20261011 迁移承担，测试库无索引），CreateMenu 侧 Exist 查重必须把重复
+// 创建挡成 conflict——原先不查重，重复行会让 seedMenus 的 Only 报错、reconcile 失效。
+func TestCreateMenu_DuplicatePathReturnsConflict(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	svc := NewMenuService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tenant, err := client.Tenant.Create().
+		SetName("Menu Dup Tenant").
+		SetCode("menu-dup").
+		SetDomain("menu-dup.example.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	perm := "ticket:read"
+	req := &dto.CreateMenuRequest{Name: "工单管理", Path: "/tickets", PermissionCode: &perm}
+
+	created, err := svc.CreateMenu(ctx, req, tenant.ID)
+	require.NoError(t, err)
+	require.Equal(t, perm, *created.PermissionCode, "权限码必须一次性写入成功")
+
+	_, err = svc.CreateMenu(ctx, req, tenant.ID)
+	require.Error(t, err, "重复 path 必须被拒绝")
+	var bizErr *common.BusinessError
+	require.True(t, errors.As(err, &bizErr), "应返回业务 conflict 错误，实际: %v", err)
+	require.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// 同 path 不同租户互不影响（唯一键是组合键，不是全局 path）
+	tenantB, err := client.Tenant.Create().
+		SetName("Menu Dup Tenant B").
+		SetCode("menu-dup-b").
+		SetDomain("menu-dup-b.example.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	_, err = svc.CreateMenu(ctx, req, tenantB.ID)
+	require.NoError(t, err, "另一租户同 path 应创建成功")
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/menu"
@@ -63,6 +64,17 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 		isEnabled = *req.IsEnabled
 	}
 
+	// 同租户 (tenant, path) 查重给出友好 conflict；唯一索引 menu_tenant_id_path 兜底并发窗口
+	exists, err := s.client.Menu.Query().
+		Where(menu.PathEQ(req.Path), menu.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询菜单失败: %w", err)
+	}
+	if exists {
+		return nil, common.NewBusinessError(common.ConflictCode, "同级路径菜单已存在", req.Path)
+	}
+
 	// 单次 INSERT 写入全部字段；权限码写失败必须向上抛错，否则菜单 PermissionCode 落空后
 	// filterMenusByPermission 视为「无权限要求」→ 对全员可见（菜单越权）。
 	create := s.client.Menu.Create().
@@ -86,6 +98,9 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 	}
 	menuEntity, err := create.Save(ctx)
 	if err != nil {
+		if ent.IsConstraintError(err) {
+			return nil, common.NewBusinessError(common.ConflictCode, "同级路径菜单已存在", req.Path)
+		}
 		return nil, fmt.Errorf("创建菜单失败: %w", err)
 	}
 

@@ -60,3 +60,9 @@ func (Menu) Edges() []ent.Edge {
 			Comment("子菜单"),
 	}
 }
+
+// 注意：menus 的 (tenant_id, path) 业务唯一索引不在此声明——entc v0.14.6 对 Menu
+// 自关联 edge + 组合唯一索引会组合爆炸（CPU 1200% 不终止，2026-10-11 两次复现）。
+// 唯一索引由 migrations/20261011_add_menus_tenant_path_unique.sql 承担：
+// bootstrap 顺序是 ent Schema.Create → SQL 迁移，全新安装同样会拿到索引。
+// CreateMenu 侧以 Exist 查重 + ent.IsConstraintError 兜底防重复行。
