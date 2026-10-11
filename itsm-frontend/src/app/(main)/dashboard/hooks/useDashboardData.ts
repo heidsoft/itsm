@@ -228,19 +228,14 @@ function getInitialData(): DashboardData {
     ],
     recentActivities: [],
 
-    // 新增：工单类型分布
     typeDistribution: [],
 
-    // 新增：响应时间分布
     responseTimeDistribution: [],
 
-    // 新增：团队工作负载
     teamWorkload: [],
 
-    // 新增：优先级分布
     priorityDistribution: [],
 
-    // 新增：高峰时段分析
     peakHours: [],
 
     // 元数据

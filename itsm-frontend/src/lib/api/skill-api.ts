@@ -4,8 +4,8 @@
  * 对应后端 handlers/skill/handler.go 的 /api/v1/skills 与 /api/v1/admin/skills。
  * 复用 skill_registry.go (in-process registry) 与 skill_manifest.go 的 manifest 校验。
  *
- * Sprint 2 Task 2: 把 registry 的管理面板暴露为 admin 路由，让 marketplace:write 角色
- * 能浏览、注册、更新、提升 (promote) 与禁用技能。
+ * admin 路由把 registry 的管理面板暴露给 marketplace:write 角色，
+ * 用于浏览、注册、更新、提升 (promote) 与禁用技能。
  */
 
 import { httpClient } from '@/lib/api/http-client';

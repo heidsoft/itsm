@@ -1,11 +1,9 @@
 /**
- * 工作流模板定义
- * 提供常用企业流程模板。
+ * 工作流模板定义：常用企业流程模板。
  *
- * BPMN XML 由 buildTemplateXml 统一生成，保证每个模板都携带完整的
- * BPMNDiagram DI（节点 shape + 连线 edge）。此前部分模板缺少 DI，
- * bpmn-js 导入时报 "no diagram to display"；请假模板缺少 BPMNEdge，
- * 渲染后节点之间没有连线。
+ * BPMN XML 由 buildTemplateXml 统一生成，保证每个模板都带完整的 BPMNDiagram DI
+ * （节点 shape + 连线 edge）。缺 DI 时 bpmn-js 导入报 "no diagram to display"，
+ * 缺 BPMNEdge 时渲染后节点之间没有连线。
  */
 
 export interface WorkflowTemplate {

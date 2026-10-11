@@ -106,10 +106,8 @@ const TicketsReportPage = () => {
   const loadData = useCallback(async () => {
     setState({ kind: 'loading' });
     try {
-      // 权威来源是 GET /api/v1/tickets/stats 的租户全量分组计数。
-      // 修复前这里用 listTickets({pageSize:200}) 在浏览器里自己数：200 页长之外
-      // 的工单被静默截断后仍当成全量展示，而且超时卡片过滤 status === 'overdue'
-      // ——工单状态机里没有这个取值，那张卡片永远显示 0。
+      // 权威来源是 GET /api/v1/tickets/stats 的租户全量分组计数。用列表首页在浏览器里数
+      // 会静默截断到页长之内，却仍当成全量展示。
       const stats = await TicketApi.getTicketStats();
       setState({ kind: 'ready', stats });
     } catch (err) {

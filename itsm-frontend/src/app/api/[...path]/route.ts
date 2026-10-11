@@ -105,11 +105,9 @@ async function proxyRequest(request: NextRequest, params: Promise<{ path: string
     responseHeaders.delete('content-encoding');
     responseHeaders.delete('content-length');
 
-    // 修复 Set-Cookie 头丢失问题：
-    // fetch() 返回的 Headers 对象按规范会过滤掉 Set-Cookie 头（防止 XSS 窃取），
-    // 但 NextResponse 直接构造时可以重新写入。Node.js 18+ 提供 getSetCookie() 获取原始数组。
-    // 必须转发后端 Set-Cookie（如 access_token/refresh_token httpOnly cookie），
-    // 否则登录后浏览器无法收到 cookie，导致后续请求 401。
+    // fetch() 返回的 Headers 按规范过滤掉 Set-Cookie，只能走 Node 18+ 的 getSetCookie()
+    // 拿到原始数组再写回响应；漏这一步，后端的 httpOnly cookie
+    // （access_token/refresh_token）到不了浏览器，后续请求全部 401。
     const setCookies = (response.headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? [];
     if (setCookies.length > 0) {
       // 先删除可能从 Headers 复制过来的单个 Set-Cookie（值为合并字符串，浏览器无法解析）

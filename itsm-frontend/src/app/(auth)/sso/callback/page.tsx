@@ -55,9 +55,6 @@ function SSOCallbackContent() {
 
         logger.info('处理SSO回调:', { state, provider });
 
-        // ⚠️ 安全修复：禁止在前端硬编码任何 SSO 用户、token、tenantId、permissions。
-        // 必须由后端 /api/v1/auth/sso/callback 基于 OAuth/SAML code 进行真实校验后下发会话。
-        // 在开源版本尚未对接 SSO 提供商时，此路由必须显示"SSO 暂未启用"并禁止本地登录。
         const ssoResult = await AuthAPI.ssoCallback(code, state, provider);
 
         if (!ssoResult.success || !ssoResult.data) {

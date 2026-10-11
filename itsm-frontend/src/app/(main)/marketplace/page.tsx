@@ -60,7 +60,6 @@ const MarketplacePage = () => {
   const [isOfficial, setIsOfficial] = useState<string>('all');
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // P1-04 修复：调用真实后端 /api/v1/marketplace/items，去掉硬编码 mock。
   useEffect(() => {
     let cancelled = false;
     const fetchItems = async () => {

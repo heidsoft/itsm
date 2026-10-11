@@ -47,9 +47,8 @@ const BasicInfoCard: React.FC<BasicInfoCardProps> = ({ data }) => {
     }
   };
 
-  // 取值标签由 @/constants/problem 单点负责。卡片此前查的是另一份 i18n 词典，
-  // 同一个 critical 在列表显示「极高」、在详情卡片显示「紧急」；词典里的状态键
-  // 还写着 inProgress，而后端存量值是 in_progress，于是原样漏出英文。
+  // 取值标签由 @/constants/problem 单点负责，卡片不再查另一份 i18n 词典：
+  // 两份词表不一致时，同一个 critical 会在列表显示「极高」、在详情卡片显示「紧急」。
   const statusLabel = data.status === '' ? '-' : problemStatusLabel(data.status);
   const priorityLabel = data.priority === '' ? '-' : problemPriorityLabel(data.priority);
 

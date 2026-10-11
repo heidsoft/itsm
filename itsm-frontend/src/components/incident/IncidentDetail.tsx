@@ -123,7 +123,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     communicationPlan?: string;
   }>();
 
-  // ===== 新增：根因分析、影响评估、事件分类状态 =====
+  // ===== 根因分析、影响评估、事件分类状态 =====
   const [rootCauseData, setRootCauseData] = useState<RootCauseData | null>(null);
   const [impactData, setImpactData] = useState<ImpactAssessmentData | null>(null);
   const [classificationData, setClassificationData] = useState<IncidentClassificationData | null>(null);
@@ -362,7 +362,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
     }
   };
 
-  // ===== 新增：根因分析、影响评估、事件分类处理函数 =====
+  // ===== 根因分析、影响评估、事件分类处理函数 =====
 
   // 打开根因分析编辑弹窗
   const handleEditRootCause = () => {
@@ -1021,7 +1021,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         </Form>
       </Modal>
 
-      {/* ===== 新增：根因分析编辑弹窗 ===== */}
+      {/* 根因分析编辑弹窗 */}
       <Modal
         title={
           <Space>
@@ -1073,7 +1073,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         </Form>
       </Modal>
 
-      {/* ===== 新增：影响评估编辑弹窗 ===== */}
+      {/* 影响评估编辑弹窗 */}
       <Modal
         title={
           <Space>
@@ -1133,7 +1133,7 @@ const IncidentDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
         </Form>
       </Modal>
 
-      {/* ===== 新增：事件分类编辑弹窗 ===== */}
+      {/* 事件分类编辑弹窗 */}
       <Modal
         title={
           <Space>

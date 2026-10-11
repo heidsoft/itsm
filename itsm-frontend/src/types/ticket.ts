@@ -1,11 +1,11 @@
 /**
- * 工单相关类型定义
+ * 工单相关类型定义。
  *
- * ⚠️ 契约类型（Ticket / TicketStatus / TicketPriority / TicketType / TicketSource /
+ * 契约类型（Ticket / TicketStatus / TicketPriority / TicketType / TicketSource /
  * CreateTicketRequest / UpdateTicketRequest / TicketListResponse / TicketStatsResponse）
  * 的唯一来源是 `@/lib/api/ticket-api`（与后端 dto/ticket_dto.go 逐字段对齐）。
  * 本文件只保留前端视图/交互模型（筛选器、活动流、模板、批量操作等），
- * 禁止在此另起契约定义，也不得为契约同名类型再起别名（例如 TicketStatsResponse as TicketStats）。
+ * 不要在这里另起契约定义，也不要给契约同名类型再起别名（例如 TicketStatsResponse as TicketStats）。
  */
 
 import { TicketStatus, TicketPriority } from '@/lib/api/ticket-api';

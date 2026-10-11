@@ -79,9 +79,9 @@ export const getErrorMessage = (
 export const useErrorHandler = () => {
   const { message } = App.useApp();
 
-  // Bug 修复：使用 useCallback 稳定函数引用，避免在依赖了该 hook 的
-  // useEffect 中触发 setState → re-render → setState 死循环。
-  // 同时把 App.message 抽到稳定依赖，避免因 message context 变化导致引用抖动。
+  // handleError 必须保持引用稳定：它进入依赖本 hook 的 useEffect 时，引用抖动会
+  // 造成 setState → re-render → setState 死循环。messageApi 单独抽出同理，
+  // 避免跟随 App.message context 变化。
   const messageApi = message;
 
   const handleError = useCallback(

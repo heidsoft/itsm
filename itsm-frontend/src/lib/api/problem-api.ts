@@ -49,17 +49,13 @@ export interface ProblemHotspotsData {
 }
 
 /**
- * 问题实体的唯一形状：逐字段镜像后端 `dto.ProblemResponse`
- * （itsm-backend/dto/problem_dto.go:59），GET /api/v1/problems 的 items 与
- * GET /api/v1/problems/:id 都用它。
+ * 问题实体的唯一前端声明：逐字段对齐后端 `dto.ProblemResponse`
+ * （itsm-backend/dto/problem_dto.go），GET /api/v1/problems 的 items 与
+ * GET /api/v1/problems/:id 都用它，不要在别处再声明 Problem 的形状。
  *
- * 2026-10-03（台账 E4-6d）收敛前有同一份实体的三套声明：本文件这份带后端**从不返回**
- * 的 `severity`/`reporterId`/`affectedIncidents`/`relatedChanges`，`types/biz/problem.ts`
- * 与 `lib/services/problem-service.ts` 各有一份不含这些字段、但把 `status`/`priority`
- * 定义成枚举的版本，消费点只能写 `resp.items as unknown as Problem[]`（后者已在台账
- * E4-16 收口时整文件删除，本文件因此是该实体的唯一前端声明）。
- * `status`/`priority` 在 Ent 里是无枚举约束的 string 列，因此这里按契约声明为 string，
- * 取标签请用 `@/constants/problem` 的 `problemStatusLabel` / `problemPriorityLabel`。
+ * `severity`/`reporterId`/`affectedIncidents`/`relatedChanges` 后端从不返回，所以不声明；
+ * `status`/`priority` 在 Ent 里是无枚举约束的 string 列，按契约声明为 string，
+ * 取标签用 `@/constants/problem` 的 `problemStatusLabel` / `problemPriorityLabel`。
  */
 export interface Problem {
   id: number;
@@ -88,8 +84,7 @@ export interface Problem {
 
 /**
  * GET /api/v1/problems 的列表信封：{items,total,page,pageSize,totalPages}，只有一套契约。
- * 2026-10-03 后端（E4-6c）把集合键从 problems 收敛为 items，并把三处各自夹紧的分页规则
- * 收给 common 单点。
+ * 集合键是 items 而不是 problems，页长的夹紧规则由后端 common 单点负责。
  */
 export interface ProblemListResponse {
   items: Problem[];
@@ -272,7 +267,7 @@ export class ProblemApi {
     return httpClient.get<ProblemHotspotsData>('/api/v1/problems/hotspots', params);
   }
 
-  // ==================== 关联管理（P0 修复暴露的 TS 错误） ====================
+  // ==================== 关联管理 ====================
 
   /**
    * 获取问题关联（工单/事件/变更）

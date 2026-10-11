@@ -94,8 +94,7 @@ export class AuthService {
 
     // 检查响应码
     if (responseData.code !== 0) {
-      // P0-2（2026-09-06 UAT 修复）：登录限流响应 data.retryAfterSeconds 一并带出，
-      // 调用方（LoginForm）据此展示倒计时。
+      // 登录限流响应带 data.retryAfterSeconds，LoginForm 据此展示倒计时。
       const data = (responseData.data ?? null) as { retryAfterSeconds?: number } | null;
       const err = new Error(responseData.message || '请求失败');
       if (data && typeof data.retryAfterSeconds === 'number') {
@@ -162,9 +161,8 @@ export class AuthService {
       }
       return false;
     } catch (error) {
-      // P0-2（2026-09-06 UAT 修复）：限流响应 data.retryAfterSeconds 由 makeRequest
-      // 附加到 Error 上，LoginForm 据此展示按钮倒计时。仅对限流错误 rethrow，
-      // 其他登录失败（凭证错误、网络错误）按调用方契约返回 false。
+      // retryAfterSeconds 由 makeRequest 附加到 Error 上，LoginForm 据此展示倒计时。
+      // 只对限流错误 rethrow，其他登录失败（凭证错误、网络错误）按调用方契约返回 false。
       const e = error as Error & { retryAfterSeconds?: number };
       if (typeof e.retryAfterSeconds === 'number' && e.retryAfterSeconds > 0) {
         throw e;

@@ -117,10 +117,8 @@ export interface AIAuditRequest {
 
 /**
  * 上报 AI 建议采纳/拒绝审计（GA AI trace 契约）。
- *
- * 背景（2026-09-08 断链根因）：后端 POST /api/v1/ai/audit 端点已就位，
- * /ai/audit-logs 读 ai_feedbacks 中 item_type='ai_audit' 的记录；但前端
- * 从未调用上报端点，导致审计页恒为空（0 条 vs 44 次 LLM 调用）。
+ * 落库为 ai_feedbacks 中 item_type='ai_audit' 的记录，由 /ai/audit-logs 读取；
+ * 不调用本端点，审计页就没有任何采纳/拒绝数据。
  *
  * 调用约定：fire-and-forget——审计上报失败不得阻塞主交互，
  * 由调用方 catch 后仅记 console（遥测是 best-effort 副作用）。
@@ -256,9 +254,8 @@ export async function aiGetAuditLogs(params: {
   return httpClient.get<AIAuditLogsResponse>(url);
 }
 
-// Sprint 3 Task 1 — AI Audit accept/reject 反馈闭环闭合。操作者在
-// Audit Console 详情 Drawer 点 Accept / Revoke 翻转单条 ai_feedbacks
-// 行 accepted 列。仅 item_type='ai_audit' 行可改。
+// Audit Console 的 Accept/Revoke：翻转单条 ai_feedbacks 行的 accepted 列，
+// 仅 item_type='ai_audit' 的行可改。
 export async function aiUpdateAuditAccepted(id: number, accepted: boolean): Promise<{ id: number; accepted: boolean }> {
   return httpClient.patch<{ id: number; accepted: boolean }>(
     `/api/v1/ai/audit-logs/${id}`,

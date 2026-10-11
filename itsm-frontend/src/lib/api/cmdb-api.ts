@@ -328,8 +328,8 @@ export class CMDBApi {
 
   // ==================== Cloud ====================
   //
-  // 云账号/云服务/云资源只有 /api/v1/cmdb/cloud-* 这一套表面。
-  // /api/v1/cloud/* 是同一用例的第二套实现（零前端调用方），2026-10-04 已删除。
+  // 云账号/云服务/云资源只有 /api/v1/cmdb/cloud-* 这一套表面；
+  // 曾并存的 /api/v1/cloud/* 已删除，不要再加第二套实现。
   // 云账号与云服务是 CI 表单/云资源页的选择器数据源，后端整份返回，契约只有 {items,total}；
   // 云资源是真实分页列表，契约为 {items,total,page,pageSize,totalPages}。
 

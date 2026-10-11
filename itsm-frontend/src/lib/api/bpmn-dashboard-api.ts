@@ -209,8 +209,7 @@ export class BPMNDashboardApi {
   /**
    * 获取用户活动
    *
-   * 租户由后端认证上下文收敛（E4-48），前端不再发送 tenantId；
-   * 路由挂 bpmn:read 权限门。
+   * 租户由后端认证上下文收敛，前端不发送 tenantId；路由挂 bpmn:read 权限门。
    */
   static async getUserActivity(userId: number, startTime?: string, endTime?: string): Promise<ProcessAuditLog[]> {
     const params = new URLSearchParams();

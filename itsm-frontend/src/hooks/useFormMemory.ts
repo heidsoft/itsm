@@ -77,13 +77,8 @@ function deserializeFormValues(values: Record<string, any>): Record<string, any>
 }
 
 /**
- * 表单记忆 Hook
- * 自动保存表单输入值到 localStorage，页面刷新后自动恢复
- *
- * 修复：
- * - H-3: 添加防抖，避免每次按键都同步写 localStorage
- * - H-4: 添加 enabled 参数，编辑模式下禁用草稿恢复
- * - H-5: 正确处理 dayjs 对象的序列化/反序列化
+ * 表单记忆 Hook：自动把输入值存到 localStorage，刷新后恢复。
+ * 写入防抖；编辑模式用 enabled 关闭草稿恢复；dayjs 对象需序列化。
  */
 export function useFormMemory<T = any>(
   form: FormInstance<T>,
@@ -104,7 +99,7 @@ export function useFormMemory<T = any>(
   // 将 excludeFields 转换为稳定的字符串引用
   const excludeFieldsKey = useMemo(() => JSON.stringify(excludeFields), [excludeFields]);
 
-  // 加载已保存的表单值（H-4: 仅在 enabled 为 true 时恢复）
+  // 加载已保存的表单值
   useEffect(() => {
     if (!enabled) return;
 
@@ -120,13 +115,12 @@ export function useFormMemory<T = any>(
     }
   }, [form, storageKey, enabled]);
 
-  // 自动保存表单值（H-3: 添加防抖）
+  // 自动保存表单值（防抖，避免每次按键同步写 localStorage）
   const allValues = useWatch([], form);
 
   useEffect(() => {
     if (!autoSave || !allValues || !enabled) return;
 
-    // 清除之前的防抖定时器
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -140,7 +134,6 @@ export function useFormMemory<T = any>(
           delete filteredValues[field];
         });
 
-        // H-5: 序列化时正确处理 dayjs 对象
         const serialized = serializeFormValues(filteredValues);
         localStorage.setItem(storageKey, JSON.stringify(serialized));
       } catch (e) {
@@ -148,7 +141,6 @@ export function useFormMemory<T = any>(
       }
     }, debounceMs);
 
-    // 清理定时器
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -156,7 +148,6 @@ export function useFormMemory<T = any>(
     };
   }, [allValues, autoSave, enabled, excludeFieldsKey, storageKey, debounceMs]);
 
-  // 组件卸载时清理定时器
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {

@@ -8,8 +8,8 @@ import type { TicketTag } from '@/lib/services/ticket-tag-service';
 import { ticketTagService } from '@/lib/services/ticket-tag-service';
 import { useI18n } from '@/lib/i18n';
 
-// 全局标签的真实所有者是工单标签（/api/v1/ticket-tags）。此前本页打的是只读别名
-// /api/v1/tags，列表能看、新建/编辑/删除全部 404。
+// 全局标签的真实所有者是工单标签（/api/v1/ticket-tags）；
+// /api/v1/tags 只是只读别名，写操作打到它上面会 404。
 interface TagFormValues {
   name: string;
   color?: unknown;

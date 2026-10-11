@@ -153,8 +153,8 @@ export default function TopologyPage() {
     const graph = topologyQuery.data;
     const flowEdges: Edge[] = graph.edges.map(edge => {
       // React Flow 11.11.4 的 getMarkerId() 会把 marker 对象所有字段拼成 id（含 = 和 &），
-      // 传入 id 字段仅影响 marker <defs> 定义不影响 <path marker-end> 引用，导致引用丢失。
-      // 修复：改用字符串形式 markerEnd＋独立注入全局 <defs>，避开该 API，跟浏览器拿干净引用。
+      // 传入 id 字段只影响 <defs> 里的 marker 定义、不影响 <path marker-end> 的引用，
+      // 箭头引用因此丢失。这里改用字符串形式 markerEnd + 独立注入全局 <defs>，绕开该 API。
       const color = getEdgeColor(edge.strength);
       const markerId = `cmdb-arrow-${normalizeStrength(edge.strength)}`;
       return {

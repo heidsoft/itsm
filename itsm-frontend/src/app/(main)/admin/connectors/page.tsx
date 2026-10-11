@@ -18,9 +18,9 @@ const { Text, Paragraph } = Typography;
 
 type Tab = 'market' | 'instances';
 
-// 各连接器读取 settings 时依赖的键名。此前启用表单完全自由录入且不提示必填键，
-// 管理员很容易漏填，启用后「测试」直接报 `settings.xxx not configured`。
-// 后端已对键名风格（snake_case / camelCase）做容错，这里只负责把必填键提示出来。
+// 各连接器读取 settings 时依赖的键名，用于在启用表单里提示必填项；
+// 漏填要到启用后「测试」才会暴露成 `settings.xxx not configured`。
+// 后端已对键名风格（snake_case / camelCase）做容错，这里只负责提示。
 const REQUIRED_SETTINGS: Record<string, string[]> = {
   console: ['debug_channel'],
   webhook: ['url'],

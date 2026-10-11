@@ -2,8 +2,6 @@
 
 /**
  * 服务目录申请页面
- * Bug 2 修复：原本 /service-catalog/request/[id] 路由 404
- * B10 修复：表单加上 compliance_ack / expire_at / delivery_time
  */
 
 import React, { useState, useEffect } from 'react';

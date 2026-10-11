@@ -41,8 +41,8 @@ import {
 
 const { Title, Text } = Typography;
 
-// 键用枚举计算而来，不再手抄字面量：此前这里写着 inProgress，
-// 后端存量值是 in_progress，该状态的饼图分片因此一直是默认灰。
+// 键一律由枚举计算，不手抄字面量：枚举取值与后端一致为 in_progress，
+// 抄成 inProgress 不会报错，只会让该状态的饼图分片静默落进默认灰。
 const STATUS_COLORS: Record<ProblemStatus, string> = {
   [ProblemStatus.OPEN]: '#1890ff',
   [ProblemStatus.INVESTIGATING]: '#722ed1',
@@ -133,10 +133,9 @@ const ProblemEfficiencyPage = () => {
   const loadData = useCallback(async () => {
     setState({ kind: 'loading' });
     try {
-      // 分布的权威来源是 GET /api/v1/problems/stats 的租户全量分组计数。
-      // 修复前这里拉 listProblems({page:1,pageSize:100}) 在浏览器里自己数：第 100 条
-      // 之后的问题被静默截断后仍当成全量读数，而 identified 从来不在任何单值桶里，
-      // 页面因此无法自证总数对得上。列表只用于「最新问题列表」，按后端倒序取一页即可。
+      // 分布的权威来源是 GET /api/v1/problems/stats 的租户全量分组计数；
+      // 用列表首页在浏览器里数会静默截断到 pageSize 条，却仍当成全量读数。
+      // 列表只用于「最新问题列表」，按后端倒序取一页即可。
       const [stats, recent] = await Promise.all([
         ProblemApi.getProblemStats(),
         ProblemApi.getProblems({ page: 1, pageSize: RECENT_PAGE_SIZE }),
@@ -216,8 +215,8 @@ const ProblemEfficiencyPage = () => {
     },
   ];
 
-  // 占比的分母是租户全量问题数，total 为 0 时整块效率指标已被空态替换，
-  // 因此这里只在有分母时计算，修复前的 (0/0)*100 会把 NaN 写成读数。
+  // 分母是租户全量问题数。total 为 0 时这里会得到 NaN，但下方渲染分支已用空态整块
+  // 替换效率指标，NaN 不会进入读数。
   const resolutionPercent = (stats.resolved / total) * 100;
   const metrics = [
     {
@@ -225,7 +224,7 @@ const ProblemEfficiencyPage = () => {
       label: '已解决',
       part: stats.resolved,
       percent: resolutionPercent,
-      // 解决率低于 70% 用警示色，与修复前的判定阈值保持一致。
+      // 70% 是本页约定的警示阈值，后端并不下发阈值。
       color: resolutionPercent < 70 ? '#faad14' : '#52c41a',
     },
     {

@@ -1,16 +1,7 @@
 /**
- * 统一交互提示出口（AI-Native 友好）
+ * 统一的交互提示出口。错误提示除「发生了什么」外还要给出原因与建议动作；
+ * AI 能力失败表现为「已降级」而不是「操作失败」。
  *
- * 设计目标
- * 1. 统一出口：收敛散落在 200+ 文件中的裸 `message.*` 调用，避免同一错误在不同
- *    页面提示不一致（历史问题见 output/ux-audit-2026-09-12.md）。
- * 2. 可行动文案：提示必须回答三件事——发生了什么 / 为什么 / 怎么办。
- *    现有 `getFriendlyErrorMessage` 只给一句话（如 403 → "没有权限执行此操作"），
- *    用户知道失败了但不知道下一步做什么，本模块在其之上补「建议动作」层。
- * 3. AI 降级友好：AI 是增强能力而非主链路，AI 失败不应表现为"操作失败"，
- *    而要明确告知"已降级，你的手动输入不受影响"，避免用户以为数据丢了。
- *
- * 使用方式
  *   notify.success('变更已提交')
  *   notify.error(error)                        // 自动提取可行动文案
  *   notify.error(error, { context: '提交变更' }) // 带操作上下文
@@ -19,9 +10,8 @@
  *   })
  *   notify.aiUnavailable()                     // AI 能力降级专用
  *
- * 迁移约定
- *   - 新代码一律使用本模块，不再直接 `import { message } from 'antd'`。
- *   - 存量 `message.*` 可按页面渐进替换，行为保持兼容。
+ * 新代码一律走本模块，不再直接 `import { message } from 'antd'`；
+ * 存量 `message.*` 可按页面渐进替换。
  */
 
 import { Button, message, notification } from 'antd';

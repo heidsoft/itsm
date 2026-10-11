@@ -110,8 +110,6 @@ export class ServiceCatalogApi {
 
    
   private static toServiceRequest(raw: any): any {
-    // Bug 修复：清理重复的 `raw?.field ?? raw?.field` fallback 表达式。
-    // 这是复制粘贴残留，不会引发运行时错误，但会误导阅读并掩盖潜在缺陷。
     const catalogId = raw?.catalogId ?? raw?.serviceId;
     const requesterId = raw?.requesterId ?? raw?.requestedBy;
     const createdAt = raw?.createdAt;
@@ -180,8 +178,8 @@ export class ServiceCatalogApi {
     });
 
     const services = resp.items.map(ServiceCatalogApi.toServiceItem);
-    // 后端列表端点没有关键词参数，这里只过滤「当前页」，因此 total 会大于返回条数。
-    // 补齐服务端 search 属于账本 E4-24，不得由调用方误当成全集。
+    // 后端列表端点没有关键词参数，这里只过滤「当前页」，因此 total 会大于返回条数；
+    // 调用方不得把它当成全集结果。
     if (query?.search) {
       const q = query.search.toLowerCase();
       return {

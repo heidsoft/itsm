@@ -52,7 +52,6 @@ export interface Incident {
   escalatedAt?: string;
   createdAt?: string;
   updatedAt?: string;
-  // 新增字段
   category?: string;
   subcategory?: string;
   resolution?: string;
@@ -341,7 +340,7 @@ export interface CloudProductEventRequest {
   detectedAt: string;
 }
 
-// ==================== 新增类型定义（类外部）====================
+// 评论、影响评估、事件分类
 
 // 事件评论类型
 export interface IncidentComment {
@@ -396,9 +395,9 @@ export class IncidentAPI {
         API_URLS.INCIDENTS(),
         cleanParams
       );
-      // 后端只有一套信封：{items,total,page,pageSize,totalPages}（2026-10-04 E4-9b 起
-      // 缺省页长是平台值 20）。这里不得再用 ?? 猜第二套缺省或自己重算 totalPages，
-      // 否则缺省漂移时界面不报错、只是静默少页/多页。
+      // 后端只有一套信封：{items,total,page,pageSize,totalPages}，缺省页长是平台值 20。
+      // 这里不得再用 ?? 猜第二套缺省或自己重算 totalPages，否则缺省漂移时界面不报错、
+      // 只是静默少页/多页。
       return response;
     } catch (error) {
       console.error('IncidentAPI.listIncidents error:', error);
@@ -485,7 +484,7 @@ export class IncidentAPI {
     return response;
   }
 
-  // ==================== 新增：确认/关闭/评论/告警 ====================
+  // ==================== 确认/关闭/评论/告警 ====================
 
   /**
    * 确认事件 (Acknowledge)

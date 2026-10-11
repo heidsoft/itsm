@@ -57,7 +57,7 @@ export default function AuditLogsPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      // 租户由后端认证上下文收敛（E4-48）；前端不得再发送 tenantId 猜测归属。
+      // 租户由后端认证上下文收敛；前端不发送 tenantId 去猜测归属。
       const request: QueryAuditLogsRequest = {
         ...filters,
         page,

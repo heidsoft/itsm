@@ -94,9 +94,8 @@ export function AISuggestionPanel({
     return () => clearTimeout(timer);
   }, [title, description, dismissed]);
 
-  // 上报 AI 审计（GA AI trace 契约）。fire-and-forget：失败仅记 console，不阻塞交互。
-  // 根因修复：此前 handleAccept/handleDismiss 只更新本地状态，从未上报后端，
-  // 导致 /ai/audit-logs 恒为空（0 条 ai_audit vs 44 次 LLM 调用）。
+  // 上报 AI 审计（GA AI trace 契约）：采纳/驳回只更新本地状态会让 /ai/audit-logs 永远是空的。
+  // fire-and-forget：失败仅记 console，不阻塞交互。
   const reportAudit = (accepted: boolean, s: TriageResult) => {
     recordAIAudit({
       scenario: 'triage',

@@ -2,7 +2,6 @@
 
 /**
  * 知识库新建文章页面
- * B7 修复：原本 /knowledge/articles/new 路由 404
  */
 
 import React, { useState } from 'react';

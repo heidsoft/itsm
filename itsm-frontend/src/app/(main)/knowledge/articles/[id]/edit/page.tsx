@@ -2,7 +2,6 @@
 
 /**
  * 知识库文章编辑页面
- * 修复：列表/详情页“编辑”按钮指向 /knowledge/articles/[id]/edit，但路由缺失导致 404
  */
 
 import React, { useEffect, useState } from 'react';

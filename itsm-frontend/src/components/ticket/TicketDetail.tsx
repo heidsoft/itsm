@@ -606,8 +606,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           title={ticket.title}
           description={ticket.description}
           onAccept={async suggestion => {
-            // Bug 11 修复：onAccept 之前只打开编辑弹窗没有真正落库
-            // 现在直接调 updateTicket 写入 AI 建议的 category + priority。
+            // 采纳必须真正落库（updateTicket 写入建议的 category + priority），只打开编辑弹窗不算采纳。
             // 只比对 priority：后端 TicketResponse 不回传 category（写入口有、读出口无），
             // ticket.category 恒为 undefined，比对它等于永不相等。
             if (suggestion.priority === ticket.priority) {

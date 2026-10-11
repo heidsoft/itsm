@@ -6,11 +6,9 @@ import type { ProblemPriority, ProblemStatus } from '@/constants/problem';
 import type { ProblemListParams } from '@/lib/api/problem-api';
 
 /**
- * 问题实体只有一个形状：`@/lib/api/problem-api` 的 `Problem`，它逐字段镜像后端
- * `dto.ProblemResponse`。这里只做 re-export（与 `types/user.ts` 同一口径），
- * 不再维护副本 —— 2026-10-03 之前本文件、`lib/api/problem-api.ts` 和
- * `lib/services/problem-service.ts` 各有一份互不一致的 `Problem`，
- * 组件只能靠 `as unknown as Problem` 桥接（台账 E4-6d）。
+ * 问题实体只有一个形状：`@/lib/api/problem-api` 的 `Problem`，它逐字段对齐后端
+ * `dto.ProblemResponse`。这里只 re-export（与 `types/user.ts` 同一口径），
+ * 不要再维护一份副本，否则调用方只能靠 `as unknown as Problem` 桥接。
  */
 export type { Problem } from '@/lib/api/problem-api';
 

@@ -147,10 +147,8 @@ export default function ApprovalChainsPage() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingChain, setEditingChain] = useState<ApprovalChain | null>(null);
 
-  // 加载审批链列表
-  // 后端列表接口返回标准包裹体 data: { items, total, page, size }，
-  // httpClient.get 拆封后拿到的是分页对象本身；此前误用 getPaginated 假定的
-  // response.data 字段，导致 undefined.map 崩溃（Cannot read properties of undefined）。
+  // 加载审批链列表：httpClient.get 已拆掉 { code, message, data } 外壳，
+  // 拿到的就是分页对象本身，直接读 items/total，不能再套一层 response.data。
   const loadChains = useCallback(async () => {
     try {
       setLoading(true);

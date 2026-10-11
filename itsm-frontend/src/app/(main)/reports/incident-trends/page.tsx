@@ -30,8 +30,8 @@ import {
 
 const { Title, Text } = Typography;
 
-// 键由枚举计算而来，不再手抄字面量：本文件此前写着 urgent（工单词表），
-// 而事件域合法取值是 critical，于是最高优先级分片一直落在默认灰。
+// 键一律由枚举计算，不手抄字面量：抄成别的域的词典（例如工单的 urgent）不会报错，
+// 只会让对应分片静默落进默认灰。
 const STATUS_COLORS: Record<IncidentStatus, string> = {
   [IncidentStatus.NEW]: '#1890ff',
   [IncidentStatus.ACKNOWLEDGED]: '#096dd9',
@@ -104,7 +104,7 @@ function presetWindow(days: number): WindowRequest {
   };
 }
 
-// 平均时长的单位由读数本身决定：修复前把后端的分钟当小时渲染，相差 60 倍。
+// 后端返回的是分钟，读数按分钟渲染；自行换算成小时会差 60 倍。
 function formatAvgResolution(report: IncidentReport): string {
   if (report.resolvedInWindow === 0) {
     // 后端对空集合返回 0，这里不能把它显示成「0 分钟」。

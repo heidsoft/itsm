@@ -22,7 +22,7 @@ export interface TicketTrendData {
   inProgress: number;
   resolved: number;
   closed: number;
-  // 新增：趋势分析
+  // 趋势分析
   newTickets?: number; // 新建工单数
   completedTickets?: number; // 完成工单数
   pendingTickets?: number; // 待处理工单数（累计）
@@ -67,7 +67,7 @@ export interface RecentActivity {
   status: string;
 }
 
-// 新增：工单类型分布
+// 工单类型分布
 export interface TicketTypeDistribution {
   type: string; // 类型名称（事件、请求、问题、变更）
   count: number; // 数量
@@ -75,7 +75,7 @@ export interface TicketTypeDistribution {
   color: string; // 颜色
 }
 
-// 新增：响应时间分布
+// 响应时间分布
 export interface ResponseTimeDistribution {
   timeRange: string; // 时间段（0-1h, 1-4h, 4-8h, >8h）
   count: number; // 工单数
@@ -83,7 +83,7 @@ export interface ResponseTimeDistribution {
   avgTime?: number; // 该时段平均时间（小时）
 }
 
-// 新增：团队工作负载
+// 团队工作负载
 export interface TeamWorkload {
   assignee: string; // 处理人
   ticketCount: number; // 工单数
@@ -92,7 +92,7 @@ export interface TeamWorkload {
   activeTickets?: number; // 进行中工单
 }
 
-// 新增：优先级分布
+// 优先级分布
 export interface PriorityDistribution {
   priority: string; // 优先级（紧急、高、中、低）
   count: number; // 数量
@@ -100,7 +100,7 @@ export interface PriorityDistribution {
   color: string; // 颜色
 }
 
-// 新增：高峰时段数据
+// 高峰时段数据
 export interface PeakHourData {
   hour: string; // 小时（0-23）
   count: number; // 该时段创建的工单数
@@ -118,7 +118,7 @@ export interface DashboardData {
   quickActions: QuickAction[];
   recentActivities: RecentActivity[];
 
-  // 新增：工单分析维度
+  // 工单分析维度
   typeDistribution?: TicketTypeDistribution[]; // 工单类型分布
   responseTimeDistribution?: ResponseTimeDistribution[]; // 响应时间分布
   teamWorkload?: TeamWorkload[]; // 团队工作负载

@@ -170,7 +170,7 @@ export default function MainLayout({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 移动端 → 桌面端切换时恢复侧边栏展开（此前会永久停留在收起态）
+  // 移动端 → 桌面端切换时恢复侧边栏展开：收起态是移动端窄屏下的选择，不延续到桌面。
   useEffect(() => {
     if (mounted && !isMobile) {
       setCollapsed(false);

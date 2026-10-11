@@ -91,7 +91,7 @@ export interface BottleneckTask {
   queueLength: number;
   assignee: string;
   recommendation: string;
-  // 新增的秒级指标（修复 avgWaitTime=0 bug 后）
+  // 秒级指标（上方的 waitTime/averageDuration 是展示字符串）
   waitTimeSeconds: number;
   processingTimeSeconds: number;
   totalDurationSeconds: number;

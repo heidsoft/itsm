@@ -22,8 +22,8 @@ import { ChangeStatus, ChangeStatusConfig, ChangeType, ChangeTypeConfig } from '
 
 const { Title, Text } = Typography;
 
-// 键由 ChangeStatus 枚举计算而来，不手抄字面量：此前这里写着 implementing，
-// 而后端存量值是 in_progress，「实施中」分片因此永远拿不到颜色也永远取不到计数。
+// 键一律由 ChangeStatus 枚举计算，不手抄字面量：枚举取值与后端一致为 in_progress，
+// 抄成 implementing 不会报错，只会让「实施中」分片永远拿不到颜色也取不到计数。
 const STATUS_COLORS: Record<ChangeStatus, string> = {
   [ChangeStatus.DRAFT]: '#d9d9d9',
   [ChangeStatus.PENDING]: '#faad14',
@@ -150,8 +150,7 @@ const ChangeSuccessReport = () => {
       const stats = await ChangeApi.getChangeStats();
       setData(toReportData(stats));
     } catch (err) {
-      // 失败必须如实呈现：修复前这里把异常吞成空数据并打印「使用演示数据」，
-      // 页面因此永远显示全 0 卡片，运维无法区分「没有变更」和「接口失败」。
+      // 接口失败必须和「没有变更」区分开：置 error 态而不是只写回空数据。
       setData(EMPTY_REPORT);
       const reason = err instanceof Error ? err.message : '未知错误';
       setError(reason);
@@ -192,8 +191,7 @@ const ChangeSuccessReport = () => {
           <Spin description="加载报表数据..." />
         </div>
       ) : error ? (
-        // 失败态不得再渲染 0 值卡片或「还没有变更记录」：那会把接口故障
-        // 伪装成空数据，正好是本次修复要消除的那类误导。
+        // 失败态不得渲染成 0 值卡片或「还没有变更记录」空态：那会把接口故障伪装成空数据。
         <Alert
           type="error"
           showIcon

@@ -57,8 +57,8 @@ export interface Tenant {
     | 'professional'
     | 'enterprise';
   status: 'active' | 'suspended' | 'expired' | 'deleted';
-  // 会话视图（/auth/session）只给租户摘要，不返回时间戳；此前这里必填，
-  // 前端只能伪造 new Date().toISOString() 来满足类型。
+  // 会话视图（/auth/session）只给租户摘要、不返回时间戳，所以这三个字段是可选的；
+  // 声明成必填只会逼调用方伪造时间。
   createdAt?: string;
   updatedAt?: string;
   expiresAt?: string;
