@@ -135,6 +135,34 @@ func IsAdminLike(r string) bool {
 // IsSuperAdmin 判断是否超级管理员。
 func IsSuperAdmin(r string) bool { return r == SuperAdmin }
 
+// Rank 返回角色的权限层级（数值越大权限越高），用于「不得分配/操纵高于自身角色」的
+// 越权防护单一事实源。sysadmin 持全权限码、security_admin/audit_admin 为等保三员分立，
+// 三者必须高于 admin——若排在 admin 之下，持 user:write 的租户 admin 就能铸造等价
+// 超管账号。未知/退役/空 code 返回 0：调用方必须先用 IsBuiltinCode 白名单拒绝未知值，
+// 不能依赖 rank 兜底（Tier2/3 叠加角色 Rank 为 0 是有意的——它们不是提权面）。
+func Rank(code string) int {
+	switch code {
+	case SuperAdmin:
+		return 100
+	case SysAdmin:
+		return 90
+	case SecurityAdmin, AuditAdmin:
+		return 80
+	case Admin:
+		return 70
+	case ITAdmin:
+		return 60
+	case Manager:
+		return 50
+	case Agent, Technician:
+		return 40
+	case EndUser:
+		return 10
+	default:
+		return 0
+	}
+}
+
 // IsServiceRequestApprover 判断角色是否可参与服务请求审批
 // （L1 manager / L2 it_admin / L3 security_admin 及管理类兜底）。
 // 与 handlers/service_request.checkEligibility 的 fallback 词表对齐。

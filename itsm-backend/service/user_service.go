@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	entrole "itsm-backend/ent/role"
@@ -79,13 +80,18 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		SetPasswordHash(string(hashedPassword)).
 		SetActive(true).
 		SetTenantID(tenantID)
-	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
+	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）。
+	// service 层第二道防线：IsBuiltinCode 白名单拒绝未知/退役码，防 handler 校验被绕过
+	// 后未知 code 落库（ent 枚举会拒但错误不友好，且未来枚举放宽时这里就是提权面）。
 	primaryRole := ""
 	if strings.TrimSpace(req.Role) != "" {
 		primaryRole = strings.ToLower(strings.TrimSpace(req.Role))
 		// 兼容前端传的"user"角色，自动转换为"end_user"
 		if primaryRole == "user" {
 			primaryRole = "end_user"
+		}
+		if !domainrole.IsBuiltinCode(primaryRole) {
+			return nil, fmt.Errorf("无效的用户角色: %s", primaryRole)
 		}
 		uc = uc.SetRole(user.Role(primaryRole))
 
@@ -176,22 +182,9 @@ func (s *UserService) CanGrantRoles(ctx context.Context, tenantID int, roleIDs [
 	return nil
 }
 
-// serviceRoleRank 返回角色权限层级（与 handler 层 roleRank 保持同一词表）。
+// serviceRoleRank 返回角色权限层级（与 handler 层同一词表，单一事实源在 domain/role.Rank）。
 func serviceRoleRank(role string) int {
-	switch strings.ToLower(strings.TrimSpace(role)) {
-	case "super_admin":
-		return 5
-	case "admin":
-		return 4
-	case "manager":
-		return 3
-	case "agent":
-		return 2
-	case "end_user", "user", "":
-		return 1
-	default:
-		return 0
-	}
+	return domainrole.Rank(strings.ToLower(strings.TrimSpace(role)))
 }
 
 // ListUsers 获取用户列表
@@ -372,12 +365,16 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 	if req.Phone != "" {
 		update = update.SetPhone(req.Phone)
 	}
-	// 角色更新（仅在提供时设置），管理员权限由RBAC控制
+	// 角色更新（仅在提供时设置），管理员权限由RBAC控制。
+	// service 层第二道防线：白名单拒绝未知/退役码（同 CreateUser）。
 	if strings.TrimSpace(req.Role) != "" {
 		role := strings.ToLower(strings.TrimSpace(req.Role))
 		// 兼容前端传的"user"角色，自动转换为"end_user"
 		if role == "user" {
 			role = "end_user"
+		}
+		if !domainrole.IsBuiltinCode(role) {
+			return nil, fmt.Errorf("无效的用户角色: %s", role)
 		}
 		if role != string(existingUser.Role) {
 			update = update.SetRole(user.Role(role))

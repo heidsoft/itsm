@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 
 	"github.com/gin-gonic/gin"
@@ -71,11 +72,17 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		targetTenantID = req.TenantID
 	}
 
-	// 角色越权防护（C3 修复）：调用者不能分配高于自身权限的角色
+	// 角色越权防护（C3 修复）：调用者不能分配高于自身权限的角色。
+	// Rank/IsBuiltinCode 单一事实源在 domain/role——sysadmin/security_admin/audit_admin
+	// 必须高于 admin，否则持 user:write 的 admin 可铸造等价超管账号。
 	callerRole := c.GetString("role")
 	if strings.TrimSpace(req.Role) != "" {
 		targetRole := normalizeRole(req.Role)
-		if roleRank(targetRole) > roleRank(callerRole) {
+		if !domainrole.IsBuiltinCode(targetRole) {
+			common.Forbidden(c, "无效的用户角色")
+			return
+		}
+		if domainrole.Rank(targetRole) > domainrole.Rank(callerRole) {
 			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
 			return
 		}
@@ -236,7 +243,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	// 角色越权防护（C3 修复）
 	callerRole := c.GetString("role")
 	if strings.TrimSpace(req.Role) != "" {
-		if roleRank(normalizeRole(req.Role)) > roleRank(callerRole) {
+		targetRole := normalizeRole(req.Role)
+		if !domainrole.IsBuiltinCode(targetRole) {
+			common.Forbidden(c, "无效的用户角色")
+			return
+		}
+		if domainrole.Rank(targetRole) > domainrole.Rank(callerRole) {
 			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
 			return
 		}
@@ -520,24 +532,6 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 	}
 
 	common.Success(c, users)
-}
-
-// roleRank 返回角色权限层级，数值越大权限越高
-func roleRank(role string) int {
-	switch strings.ToLower(strings.TrimSpace(role)) {
-	case "super_admin":
-		return 5
-	case "admin":
-		return 4
-	case "manager":
-		return 3
-	case "agent":
-		return 2
-	case "end_user", "user", "":
-		return 1
-	default:
-		return 0
-	}
 }
 
 // normalizeRole 将前端传入的角色归一化（user -> end_user）
