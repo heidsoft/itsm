@@ -359,11 +359,12 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 	if req.Name != "" {
 		update = update.SetName(req.Name)
 	}
-	if req.Department != "" {
-		update = update.SetDepartment(req.Department)
+	// 指针字段：非 nil 即提交，空串即清空（区别于「未传」）
+	if req.Department != nil {
+		update = update.SetDepartment(*req.Department)
 	}
-	if req.Phone != "" {
-		update = update.SetPhone(req.Phone)
+	if req.Phone != nil {
+		update = update.SetPhone(*req.Phone)
 	}
 	// 角色更新（仅在提供时设置），管理员权限由RBAC控制。
 	// service 层第二道防线：白名单拒绝未知/退役码（同 CreateUser）。

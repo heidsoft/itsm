@@ -24,11 +24,13 @@ type CreateUserRequest struct {
 
 // UpdateUserRequest 更新用户请求
 type UpdateUserRequest struct {
-	Username   string `json:"username,omitempty" binding:"omitempty,min=3,max=50"`
-	Email      string `json:"email,omitempty" binding:"omitempty,email"`
-	Name       string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
-	Department string `json:"department,omitempty"`
-	Phone      string `json:"phone,omitempty"`
+	Username string `json:"username,omitempty" binding:"omitempty,min=3,max=50"`
+	Email    string `json:"email,omitempty" binding:"omitempty,email"`
+	Name     string `json:"name,omitempty" binding:"omitempty,min=1,max=100"`
+	// Department/Phone 用指针：PATCH 需区分「未传」与「传空串清空」——非指针下
+	// 空串被 omitempty 当未传，字段永远清不掉（AGENTS.md PATCH 指针规则）。
+	Department *string `json:"department,omitempty"`
+	Phone      *string `json:"phone,omitempty"`
 	// 角色更新，仅管理员有权限更新
 	Role string `json:"role,omitempty" binding:"omitempty,oneof=super_admin admin sysadmin security_admin audit_admin it_admin manager agent technician end_user user"`
 	// RBAC 多角色替换集（非 nil 时整体替换 user_roles 边）；空数组表示清空

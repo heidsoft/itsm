@@ -1844,17 +1844,11 @@ definitions:
     type: object
   dto.CreateChangeApprovalRequest:
     properties:
-      approverId:
-        description: 审批人ID
-        type: integer
       changeId:
-        description: 变更ID
         type: integer
       comment:
-        description: 审批意见
         type: string
     required:
-    - approverId
     - changeId
     type: object
   dto.CreateChangePIRRequest:
@@ -3815,6 +3809,9 @@ definitions:
   dto.UpdateUserRequest:
     properties:
       department:
+        description: |-
+          Department/Phone 用指针：PATCH 需区分「未传」与「传空串清空」——非指针下
+          空串被 omitempty 当未传，字段永远清不掉（AGENTS.md PATCH 指针规则）。
         type: string
       email:
         type: string
@@ -6493,7 +6490,7 @@ paths:
                 data:
                   $ref: '#/definitions/dto.CIListResponse'
               type: object
-      summary: 获取配置项列表（统一 List + Search 入口，P1-1）
+      summary: 获取配置项列表
       tags:
       - CMDB
     post:
@@ -6971,7 +6968,7 @@ paths:
       deprecated: true
       description: |-
         多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
-        已废弃（P1-1）：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
+        已废弃：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
       parameters:
       - description: 搜索请求（已废弃）
         in: body
@@ -11250,7 +11247,7 @@ paths:
   /api/v1/problems/{id}/sla:
     get:
       description: 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回
-        5003 unready；此前它返回 slaStatus:"none" 的空成功，与「该问题确实没有触发 SLA」不可区分
+        5003 unready。不返回 slaStatus:"none" 的空成功，那种响应与「该问题确实没有触发 SLA」不可区分
       parameters:
       - description: 问题ID
         in: path

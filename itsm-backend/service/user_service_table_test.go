@@ -381,7 +381,7 @@ func TestUpdateUser_TableDriven(t *testing.T) {
 		{
 			name: "update department",
 			updateReq: &dto.UpdateUserRequest{
-				Department: "New Department",
+				Department: ptr("New Department"),
 			},
 			wantErr: false,
 			checkResponse: func(t *testing.T, user *ent.User) {
@@ -403,8 +403,8 @@ func TestUpdateUser_TableDriven(t *testing.T) {
 			updateReq: &dto.UpdateUserRequest{
 				Name:       "Multi Update",
 				Email:      "multi@example.com",
-				Department: "QA",
-				Phone:      "+9999999999",
+				Department: ptr("QA"),
+				Phone:      ptr("+9999999999"),
 			},
 			wantErr: false,
 			checkResponse: func(t *testing.T, user *ent.User) {
@@ -812,3 +812,6 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+// ptr 返回字符串指针，UpdateUserRequest 指针字段（Department/Phone）用例用。
+func ptr(s string) *string { return &s }

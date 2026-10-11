@@ -210,8 +210,8 @@ func TestUserService_UpdateUser(t *testing.T) {
 			request: &dto.UpdateUserRequest{
 				Email:      "updated@example.com",
 				Name:       "Updated Name",
-				Department: "HR",
-				Phone:      "0987654321",
+				Department: strPtr("HR"),
+				Phone:      strPtr("0987654321"),
 			},
 			expectedError: false,
 		},
@@ -250,11 +250,11 @@ func TestUserService_UpdateUser(t *testing.T) {
 				if tt.request.Name != "" {
 					assert.Equal(t, tt.request.Name, user.Name)
 				}
-				if tt.request.Department != "" {
-					assert.Equal(t, tt.request.Department, user.Department)
+				if tt.request.Department != nil {
+					assert.Equal(t, *tt.request.Department, user.Department)
 				}
-				if tt.request.Phone != "" {
-					assert.Equal(t, tt.request.Phone, user.Phone)
+				if tt.request.Phone != nil {
+					assert.Equal(t, *tt.request.Phone, user.Phone)
 				}
 			}
 		})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -35,18 +36,6 @@ const BaselineSystemAccountPrefix = "system-baseline-"
 // 命令入队失败必须回滚租户创建：否则会留下一个"存在但不可用"的租户
 // （无角色/权限/菜单），且没有可追踪的补装入口。
 func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantRequest) (*ent.Tenant, error) {
-	// 检查租户代码是否已存在
-	exists, err := s.client.Tenant.Query().
-		Where(tenant.CodeEQ(req.Code)).
-		Exist(ctx)
-	if err != nil {
-		s.logger.Errorf("检查租户代码失败: %v", err)
-		return nil, fmt.Errorf("检查租户代码失败: %w", err)
-	}
-	if exists {
-		return nil, fmt.Errorf("租户代码已存在: %s", req.Code)
-	}
-
 	tx, err := s.client.Tx(ctx)
 	if err != nil {
 		s.logger.Errorf("开启租户创建事务失败: %v", err)
@@ -58,6 +47,20 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 			_ = tx.Rollback()
 		}
 	}()
+
+	// 查重在事务内做：原先在事务外 Exist，查重通过后另一并发请求可插入同 code，
+	// Save 撞 tenants_code_key 唯一索引被 handler 分类成 500。事务内重查消灭常见
+	// 窗口，残余并发窗口由 Save 的 ConstraintError 显式映射为 409。
+	exists, err := tx.Tenant.Query().
+		Where(tenant.CodeEQ(req.Code)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorf("检查租户代码失败: %v", err)
+		return nil, fmt.Errorf("检查租户代码失败: %w", err)
+	}
+	if exists {
+		return nil, common.NewBusinessError(common.ConflictCode, "租户代码已存在", req.Code)
+	}
 
 	// 创建租户
 	tenantEntity, err := tx.Tenant.
@@ -80,6 +83,9 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorf("创建租户失败: %v", err)
+		if ent.IsConstraintError(err) {
+			return nil, common.NewBusinessError(common.ConflictCode, "租户代码已存在", req.Code)
+		}
 		return nil, fmt.Errorf("创建租户失败: %w", err)
 	}
 
