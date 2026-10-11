@@ -1,7 +1,6 @@
 package cmdb
 
 import (
-	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -46,89 +45,6 @@ func itoa(i int) string {
 		digits = append([]byte{'-'}, digits...)
 	}
 	return string(digits)
-}
-
-// ----- CanRetireCI 校验 -----
-
-func TestCanRetireCI_Online_Manual_OK(t *testing.T) {
-	ci := makeCI(1, "active", "online", "manual", "alice", time.Time{})
-	if err := CanRetireCI(ci, "manual"); err != nil {
-		t.Fatalf("online + manual reason should retire, got %v", err)
-	}
-}
-
-func TestCanRetireCI_Retired_Conflict(t *testing.T) {
-	ci := makeCI(2, "retired", "retired", "manual", "alice", time.Time{})
-	err := CanRetireCI(ci, "manual")
-	if !errors.Is(err, ErrInvalidCIRetirementTransition) {
-		t.Fatalf("expected ErrInvalidCIRetirementTransition, got %v", err)
-	}
-}
-
-func TestCanRetireCI_UnknownReason(t *testing.T) {
-	ci := makeCI(3, "active", "online", "manual", "alice", time.Time{})
-	err := CanRetireCI(ci, "free_text_reason")
-	if !errors.Is(err, ErrUnknownRetirementReason) {
-		t.Fatalf("expected ErrUnknownRetirementReason, got %v", err)
-	}
-}
-
-func TestCanRetireCI_Nil(t *testing.T) {
-	if err := CanRetireCI(nil, "manual"); err == nil {
-		t.Fatal("nil CI should fail")
-	}
-}
-
-// ----- ApplyCIRetirement 状态机 -----
-
-func TestApplyCIRetirement_HappyPath(t *testing.T) {
-	now := time.Now().UTC()
-	ci := makeCI(10, "active", "online", "manual", "alice", time.Time{})
-	if err := ApplyCIRetirement(ci, CILifecycleRetiring, "manual", now); err != nil {
-		t.Fatalf("online->retiring should pass, got %v", err)
-	}
-	if ci.LifecycleStatus != CILifecycleRetiring {
-		t.Fatalf("expected retiring, got %q", ci.LifecycleStatus)
-	}
-	if err := ApplyCIRetirement(ci, CILifecycleRetired, "manual", now); err != nil {
-		t.Fatalf("retiring->retired should pass, got %v", err)
-	}
-	if ci.LifecycleStatus != CILifecycleRetired {
-		t.Fatalf("expected retired, got %q", ci.LifecycleStatus)
-	}
-	if ci.Status != CILifecycleRetired {
-		t.Fatalf("expected status=retired, got %q", ci.Status)
-	}
-	if !ci.UpdatedAt.Equal(now) {
-		t.Fatalf("UpdatedAt not advanced to now")
-	}
-}
-
-func TestApplyCIRetirement_RestoreFromRetired(t *testing.T) {
-	now := time.Now().UTC()
-	ci := makeCI(11, "retired", "retired", "manual", "alice", time.Time{})
-	if err := ApplyCIRetirement(ci, CILifecycleOnline, "manual", now); err != nil {
-		t.Fatalf("retired->online restore should pass, got %v", err)
-	}
-	if ci.LifecycleStatus != CILifecycleOnline {
-		t.Fatalf("expected online, got %q", ci.LifecycleStatus)
-	}
-}
-
-func TestApplyCIRetirement_RejectsSkipOnlineToRetired(t *testing.T) {
-	ci := makeCI(12, "active", "online", "manual", "alice", time.Time{})
-	err := ApplyCIRetirement(ci, CILifecycleRetired, "manual", time.Now())
-	if !errors.Is(err, ErrInvalidCIRetirementTransition) {
-		t.Fatalf("online->retired (skip retiring) must reject, got %v", err)
-	}
-}
-
-func TestApplyCIRetirement_RejectsUnknownSourceState(t *testing.T) {
-	ci := makeCI(13, "active", "ghost", "manual", "alice", time.Time{})
-	err := ApplyCIRetirement(ci, CILifecycleRetiring, "manual", time.Now())
-	if !errors.Is(err, ErrInvalidCIRetirementTransition) {
-		t.Fatalf("unknown source state must reject, got %v", err)
-	}
 }
 
 // ----- IsStaleCI / IsOrphanCI 判定 -----
@@ -199,8 +115,8 @@ func TestComputeQualityMetrics_MixedPopulation(t *testing.T) {
 		makeCI(1, "active", "online", "aliyun", "alice", now.Add(-2*time.Hour)),
 		// 孤儿：所有元数据为空 → orphan + incomplete
 		{ID: 2, LifecycleStatus: "online"},
-		// 退役：跳过其它判定，仅计入 retired
-		makeCI(3, "retired", "retired", "manual", "bob", now.Add(-2*time.Hour)),
+		// 退役：跳过其它判定，仅计入 retired（生产词表中退役终态是 scrapped）
+		makeCI(3, "retired", "scrapped", "manual", "bob", now.Add(-2*time.Hour)),
 		// 陈旧：超阈值未同步 → stale
 		makeCI(4, "active", "online", "manual", "carol", now.Add(-200*24*time.Hour)),
 	}

@@ -1783,6 +1783,37 @@ Content-Type: application/json
 }
 ```
 
+### 更新配置项生命周期
+
+```http
+PUT /api/v1/cmdb/cis/{id}/lifecycle
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "status": "scrapped",
+  "version": 3,
+  "retirementReason": "end_of_life",
+  "remark": "2023 年采购，已过维保期"
+}
+```
+
+- `status` 取值 `draft|online|maintenance|offline|scrapped`。迁移由后端状态机校验
+  （`common/ci_lifecycle.go` 是唯一事实源）：`draft` 只能到 `online`；
+  `online/maintenance/offline` 之间可互转并可退役到 `scrapped`；`scrapped`
+  是软删除终态，不可恢复（读接口不再可见）。
+- `version` 必填，为乐观锁：与库内不一致时返回 HTTP 409 / code `4090`，
+  载荷携带 `{resourceId, currentVersion, serverVersion}`。
+- `retirementReason` 仅在 `status=scrapped` 时必填，取值限受控词表
+  `manual|decommissioned|replaced|discovery_missing|end_of_life`；缺失或词表外
+  返回 HTTP 400 / code `1001`。`PUT /cmdb/items/{id}` 不允许把生命周期直写为
+  `scrapped`，退役必须走本接口。
+- 非法迁移返回 HTTP 409 / code `4090`；目标 CI 不存在、跨租户或已退役返回
+  HTTP 404 / code `4004`。
+- 批量入口 `PUT /api/v1/cmdb/cis/batch/lifecycle` 请求体为
+  `{ids, status, remark?, retirementReason?}`，逐条执行、逐项返回
+  `{successCount, failedCount, failedIds, errors}`，批量路径不做乐观锁。
+
 ### 删除配置项
 
 ```http

@@ -173,11 +173,13 @@ type BatchOperationResponse struct {
 	Errors       []string `json:"errors,omitempty"`
 }
 
-// BatchUpdateLifecycleRequest 批量更新CI生命周期状态请求
+// BatchUpdateLifecycleRequest 批量更新CI生命周期状态请求。
+// 退役（scrapped）必须携带受控退役理由；批量路径不做乐观锁。
 type BatchUpdateLifecycleRequest struct {
-	IDs    []int  `json:"ids" binding:"required,min=1"`
-	Status string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
-	Remark string `json:"remark,omitempty" max:"500"`
+	IDs              []int  `json:"ids" binding:"required,min=1"`
+	Status           string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
+	Remark           string `json:"remark,omitempty" max:"500"`
+	RetirementReason string `json:"retirementReason,omitempty" binding:"omitempty,oneof=manual decommissioned replaced discovery_missing end_of_life"`
 }
 
 // ListResponse 通用列表响应。

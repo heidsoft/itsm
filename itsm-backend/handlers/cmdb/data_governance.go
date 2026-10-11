@@ -1,104 +1,18 @@
 package cmdb
 
 import (
-	"errors"
-	"fmt"
 	"time"
+
+	"itsm-backend/common"
 )
 
-// CMDB 数据治理原语（v1.6.15）
+// CMDB 数据治理原语。
 //
-// 目的：
-//   - 把 CI 退役（retirement）、发现差异（diff）、治理质量（quality metrics）
-//     从零散 handler 代码中抽离成可测试的纯函数；
-//   - 退役状态机使用显式 allowed transition 表，避免散落条件分支；
-//   - 差异分类返回受控 action 词表，落地时只能在该词表内选择；
-//   - 质量指标输出 `CompletenessPct` 字段供治理看板渲染，0..100 保留两位小数。
+// CI 退役状态机与理由词表统一收敛在 common/ci_lifecycle.go（生产路径由
+// service.UpdateLifecycleStatus 消费）；本文件只保留治理看板所需的纯函数：
+// 陈旧/孤儿判定、质量指标与发现差异分类。
 //
 // 本文件不依赖 ent / gin，可独立单测；落地事务与权限校验由 service 层调用方负责。
-
-// CI 生命周期状态枚举。Schema 默认 `online`，退役流程经 `retiring` 中间态
-// 收敛到 `retired`；从 `retired` 可显式恢复到 `online`，`online -> retiring`
-// 是单向的入口。
-const (
-	CILifecycleOnline   = "online"
-	CILifecycleRetiring = "retiring"
-	CILifecycleRetired  = "retired"
-)
-
-// CI 退役理由常量词表。调用方写入时只能从该词表选择，避免审计出现自由文本。
-var allowedRetirementReasons = map[string]struct{}{
-	"manual":            {},
-	"decommissioned":    {},
-	"replaced":          {},
-	"discovery_missing": {},
-	"end_of_life":       {},
-}
-
-// allowedRetirementTransitions 描述合法的 (from -> to) 退役状态机转移。
-// 非法转移必须返回 ErrInvalidCIRetirementTransition，由 service 层映射为 409。
-var allowedRetirementTransitions = map[string]map[string]struct{}{
-	CILifecycleOnline: {
-		CILifecycleRetiring: {},
-	},
-	CILifecycleRetiring: {
-		CILifecycleRetired: {},
-		CILifecycleOnline:  {},
-	},
-	CILifecycleRetired: {
-		CILifecycleOnline: {},
-	},
-}
-
-// ErrInvalidCIRetirementTransition 标识非法 CI 退役状态机转移。
-var ErrInvalidCIRetirementTransition = errors.New("invalid CI retirement lifecycle transition")
-
-// ErrUnknownRetirementReason 标识未登记的退役理由，强制走受控词表。
-var ErrUnknownRetirementReason = errors.New("unknown CI retirement reason")
-
-// CanRetireCI 校验给定 CI 是否可发起退役流程：
-//   - 必传非 nil；
-//   - 当前状态必须是 `online` 或 `retiring`；已退役 (`retired`) 不能再发起；
-//   - 退役理由必须在受控词表内。
-func CanRetireCI(ci *ConfigurationItem, reason string) error {
-	if ci == nil {
-		return errors.New("ci is nil")
-	}
-	switch ci.LifecycleStatus {
-	case CILifecycleRetired:
-		return fmt.Errorf("%w: already retired", ErrInvalidCIRetirementTransition)
-	case CILifecycleOnline, CILifecycleRetiring:
-		// 合法起始状态
-	default:
-		return fmt.Errorf("%w: unknown lifecycle %q", ErrInvalidCIRetirementTransition, ci.LifecycleStatus)
-	}
-	if _, ok := allowedRetirementReasons[reason]; !ok {
-		return fmt.Errorf("%w: %q", ErrUnknownRetirementReason, reason)
-	}
-	return nil
-}
-
-// ApplyCIRetirement 把 CI 的 LifecycleStatus 推进到 target；同步更新 UpdatedAt 与
-// Status（仅当进入终态 retired 时把 Status 同步为 "retired" 以便老 SQL/筛选器兼容）。
-// 调用方负责把 ci 落库；纯函数不产生副作用，只修改入参对象。
-func ApplyCIRetirement(ci *ConfigurationItem, target, reason string, now time.Time) error {
-	if ci == nil {
-		return errors.New("ci is nil")
-	}
-	allowed, ok := allowedRetirementTransitions[ci.LifecycleStatus]
-	if !ok {
-		return fmt.Errorf("%w: unknown lifecycle %q", ErrInvalidCIRetirementTransition, ci.LifecycleStatus)
-	}
-	if _, ok := allowed[target]; !ok {
-		return fmt.Errorf("%w: %s -> %s", ErrInvalidCIRetirementTransition, ci.LifecycleStatus, target)
-	}
-	ci.LifecycleStatus = target
-	ci.UpdatedAt = now
-	if target == CILifecycleRetired {
-		ci.Status = CILifecycleRetired
-	}
-	return nil
-}
 
 // IsStaleCI 判断 CI 是否超过 threshold 时间未被任何发现源同步。仅在 CloudSyncTime
 // 非零时判定为 true；从未发现的 CI（人工创建、零发现历史）不算陈旧。
@@ -138,7 +52,7 @@ func ComputeQualityMetrics(cis []*ConfigurationItem, threshold time.Duration, no
 		if ci == nil {
 			continue
 		}
-		if ci.LifecycleStatus == CILifecycleRetired {
+		if ci.LifecycleStatus == common.CILifecycleStatusScrapped {
 			m.Retired++
 		} else {
 			m.Active++

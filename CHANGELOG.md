@@ -9,8 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **产品表面棘轮上调**：`service_go_files` 基线 334→335。CMDB 生命周期 P1 修复批次新增 `service/configuration_item_lifecycle_test.go`（状态机矩阵/非法迁移 409/乐观锁冲突/退役全路径/跨租户 404 等 13 个回归），纯测试增量，同 commit 上调基线。
+
 ### Fixed
 
+- **CMDB CI 生命周期接口无状态机、无乐观锁且查询参数承载变更（P1）**：`PUT /cmdb/cis/:id/lifecycle` 此前从 query string 读 `status/remark`，状态只过枚举白名单、不做迁移矩阵校验——`draft→scrapped`、`scrapped→online` 都能直写；无版本号，并发变更互相静默覆盖；退役（scrapped）不写 `Status=retired`、不停用 CI 关系、不设 `ExpireAt`，与删除接口的软删除语义分叉成两套「退役」。现：迁移矩阵收敛到 `common/ci_lifecycle.go` 单一事实源（`draft` 仅可 `online`，`online/maintenance/offline` 互转并可退役，`scrapped` 终态不可逆），非法迁移返回 409/`4090`；单条变更加 `version` 乐观锁（body 必填，冲突返回 409/`4090` + `{resourceId,currentVersion,serverVersion}` 载荷）；目标 `scrapped` 复用删除接口的 `retireCIInTx` 全量软删除路径（停用关系、`Status=retired`、`ExpireAt`、审计），且必须携带受控退役理由 `manual/decommissioned/replaced/discovery_missing/end_of_life`（缺失/词表外返回 400，理由随审计 remark 落库）；`PUT /cmdb/items/:id` 的 `lifecycleStatus` 字段同样过矩阵并禁止直写 `scrapped`，其版本冲突从 500 修正为 409、不存在修正为 404。**破坏性变更**：生命周期接口从 query 参数改为 JSON body（`{status, version, remark?, retirementReason?}`），旧 query 调用方需迁移；`handlers/cmdb` 的 `retiring/retired` 异构词表退役原语（无生产调用方）删除，治理指标 `retired` 口径对齐生产词表 `scrapped`。回归：状态机矩阵、非法迁移 409、版本冲突载荷、跨租户 404、退役全路径（关系停用/审计/理由落库）、批量逐项成败、UpdateCI 绕行拦截共 13 个新测试。
 - **it_admin 缺 ticket:assign，IT 管理员无法派单（权限缺口，P2）**：`internal/authz` 权威源中 it_admin 权限清单漏 `ticket:assign`，DBOnly 显式配置态下 it_admin 用户调 `POST /tickets/:id/assign` 一律 403，派单闭环断裂（agent/technician/manager 均持有该码，唯 IT 管理员缺席）。权威源补码后，既有安装由播种「只增不减」契约或运维补授 role_permissions 生效。回归：it_admin 测试账号派单 2003→200。
 
 ## [1.6.17] - 2026-10-11

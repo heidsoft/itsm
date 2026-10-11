@@ -214,6 +214,16 @@ type UpdateCIRequest struct {
 	Version int `json:"version,omitempty"`
 }
 
+// UpdateCILifecycleRequest CI 生命周期状态变更请求（PUT /cmdb/cis/:id/lifecycle）。
+// version 为乐观锁必填；retirementReason 仅在目标为 scrapped 时必填，
+// 取值限受控退役理由词表（common/ci_lifecycle.go）。
+type UpdateCILifecycleRequest struct {
+	Status           string `json:"status" binding:"required,oneof=draft online maintenance offline scrapped"`
+	Version          int    `json:"version" binding:"required"`
+	Remark           string `json:"remark,omitempty"`
+	RetirementReason string `json:"retirementReason,omitempty" binding:"omitempty,oneof=manual decommissioned replaced discovery_missing end_of_life"`
+}
+
 // CloudService DTOs
 //
 // Provider 的取值集合在 ent/schema/cloud_service.go 的字段注释、前端云厂商选择器和

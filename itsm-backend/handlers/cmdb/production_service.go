@@ -1676,13 +1676,12 @@ func (c *ProductionService) ListExportTasks(ctx *gin.Context) {
 
 // UpdateLifecycleStatus 更新CI生命周期状态
 // @Summary 更新CI生命周期状态
-// @Description 变更CI的生命周期状态，记录变更历史
+// @Description 按状态机变更CI生命周期；目标 scrapped 为退役终态，必须携带受控退役理由，body 需携带当前 version 做乐观锁
 // @Tags CMDB
 // @Accept json
 // @Produce json
 // @Param id path int true "CI ID"
-// @Param status query string true "目标状态: draft/online/maintenance/offline/scrapped"
-// @Param remark query string false "变更备注"
+// @Param request body dto.UpdateCILifecycleRequest true "生命周期变更请求"
 // @Success 200 {object} common.Response{data=dto.CIResponse}
 // @Router /api/v1/cmdb/cis/{id}/lifecycle [put]
 func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
@@ -1698,19 +1697,24 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 		return
 	}
 
-	status := ctx.Query("status")
-	if status == "" {
-		common.Fail(ctx, common.ParamErrorCode, "状态参数不能为空")
+	var req dto.UpdateCILifecycleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		common.ParamError(ctx, "请求参数错误")
 		return
 	}
 
-	remark := ctx.Query("remark")
 	operatorID := ctx.GetInt("user_id")
 	operatorName := ctx.GetString("user_name")
 
-	result, err := c.ciService.UpdateLifecycleStatus(c.operatorContext(ctx), id, tenantID, status, remark, operatorID, operatorName)
+	params := service.LifecycleChangeParams{
+		Status:           req.Status,
+		Remark:           req.Remark,
+		RetirementReason: req.RetirementReason,
+		ExpectedVersion:  req.Version,
+	}
+	result, err := c.ciService.UpdateLifecycleStatus(c.operatorContext(ctx), id, tenantID, params, operatorID, operatorName)
 	if err != nil {
-		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", status, "tenant_id", tenantID)
+		c.logger.Errorw("Update CI lifecycle status failed", "error", err, "ci_id", id, "status", req.Status, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "更新生命周期状态失败")
 		return
 	}
@@ -1720,7 +1724,7 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 
 // BatchUpdateLifecycleStatus 批量更新CI生命周期状态
 // @Summary 批量更新CI生命周期状态
-// @Description 批量变更多个CI的生命周期状态
+// @Description 批量变更多个CI的生命周期状态（批量路径不做乐观锁，逐项返回结果）
 // @Tags CMDB
 // @Accept json
 // @Produce json
@@ -1733,11 +1737,7 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 		return
 	}
 
-	var req struct {
-		IDs    []int  `json:"ids" binding:"required,min=1"`
-		Status string `json:"status" binding:"required"`
-		Remark string `json:"remark,omitempty"`
-	}
+	var req dto.BatchUpdateLifecycleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		common.ParamError(ctx, "请求参数错误")
 		return
@@ -1746,7 +1746,12 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 	operatorID := ctx.GetInt("user_id")
 	operatorName := ctx.GetString("user_name")
 
-	result, err := c.ciService.BatchUpdateLifecycleStatus(c.operatorContext(ctx), req.IDs, tenantID, req.Status, req.Remark, operatorID, operatorName)
+	params := service.LifecycleChangeParams{
+		Status:           req.Status,
+		Remark:           req.Remark,
+		RetirementReason: req.RetirementReason,
+	}
+	result, err := c.ciService.BatchUpdateLifecycleStatus(c.operatorContext(ctx), req.IDs, tenantID, params, operatorID, operatorName)
 	if err != nil {
 		c.logger.Errorw("Batch update CI lifecycle status failed", "error", err, "count", len(req.IDs), "status", req.Status, "tenant_id", tenantID)
 		common.RespondError(ctx, err, "批量更新失败")

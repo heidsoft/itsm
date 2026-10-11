@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -468,7 +469,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI not found")
+			return nil, fmt.Errorf("CI不存在: %w", err)
 		}
 		s.logger.Errorw("Failed to get old CI for update", "error", err, "ci_id", id)
 		return nil, fmt.Errorf("failed to get CI: %w", err)
@@ -476,7 +477,7 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 
 	// 乐观锁检查
 	if req.Version > 0 && oldCI.Version != req.Version {
-		return nil, fmt.Errorf("version mismatch: expected %d, got %d", oldCI.Version, req.Version)
+		return nil, common.NewVersionConflictError("配置项", id, req.Version, oldCI.Version)
 	}
 
 	update := s.client.ConfigurationItem.UpdateOneID(id).
@@ -578,7 +579,16 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	if req.CloudResourceRefID != 0 {
 		update.SetCloudResourceRefID(req.CloudResourceRefID)
 	}
-	if req.LifecycleStatus != "" {
+	// 退役（scrapped）是软删除终态，只能走生命周期接口并携带受控理由；
+	// 其余迁移必须过 common 状态机，避免 PUT /cis/:id 绕过矩阵。
+	// 同值写入按未传处理，保证导入/发现重跑幂等。
+	if req.LifecycleStatus != "" && req.LifecycleStatus != oldCI.LifecycleStatus {
+		if req.LifecycleStatus == common.CILifecycleStatusScrapped {
+			return nil, common.NewValidationError("退役必须通过生命周期接口并携带受控退役理由", nil)
+		}
+		if !common.CanTransitionCILifecycle(oldCI.LifecycleStatus, req.LifecycleStatus) {
+			return nil, invalidTransitionError(oldCI.LifecycleStatus, req.LifecycleStatus)
+		}
 		update.SetLifecycleStatus(req.LifecycleStatus)
 	}
 	if req.EffectiveAt != nil {
@@ -605,16 +615,23 @@ func (s *ConfigurationItemService) UpdateCI(ctx context.Context, id, tenantID in
 	}
 
 	ci, err := update.Save(ctx)
-	if err == nil {
-		// 记录更新历史
-		operatorID, operatorName := OperatorFromContext(ctx)
-		if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "update", "", oldCI, ci); historyErr != nil {
-			s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "update")
-		}
-	}
 	if err != nil {
+		// 条件更新带 VersionEQ，未命中可能是并发修改，也可能是已删除/已退役。
+		if ent.IsNotFound(err) {
+			expected := req.Version
+			if expected <= 0 {
+				expected = oldCI.Version
+			}
+			return nil, s.staleCIStateError(ctx, id, tenantID, expected)
+		}
 		s.logger.Errorw("Failed to update configuration item", "error", err, "ci_id", id)
 		return nil, fmt.Errorf("failed to update configuration item: %w", err)
+	}
+
+	// 记录更新历史
+	operatorID, operatorName := OperatorFromContext(ctx)
+	if historyErr := s.historyService.RecordCIHistory(ctx, ci.ID, tenantID, operatorID, operatorName, "update", "", oldCI, ci); historyErr != nil {
+		s.logger.Warnw("Failed to record CI history", "error", historyErr, "ci_id", ci.ID, "operation", "update")
 	}
 
 	s.logger.Infow("Configuration item updated successfully", "ci_id", ci.ID, "tenant_id", tenantID)
@@ -634,13 +651,13 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 	).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("CI not found")
+			return fmt.Errorf("CI不存在: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI for delete", "error", err, "ci_id", id)
 		return fmt.Errorf("failed to get CI: %w", err)
 	}
 
-	if err := s.retireCIInTx(ctx, tx, ci, tenantID, "Deleted through CMDB API"); err != nil {
+	if err := s.retireCIInTx(ctx, tx, ci, tenantID, "delete", "Deleted through CMDB API"); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -651,7 +668,7 @@ func (s *ConfigurationItemService) DeleteCI(ctx context.Context, id, tenantID in
 	return nil
 }
 
-func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx, ci *ent.ConfigurationItem, tenantID int, remark string) error {
+func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx, ci *ent.ConfigurationItem, tenantID int, operation, remark string) error {
 	now := time.Now()
 	if _, err := tx.CIRelationship.Update().Where(
 		cirelationship.TenantIDEQ(tenantID), cirelationship.IsActiveEQ(true),
@@ -668,7 +685,7 @@ func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx,
 	after.Version = ci.Version + 1
 	operatorID, operatorName := OperatorFromContext(ctx)
 	if err := NewCIHistoryService(tx.Client(), s.logger).RecordCIHistory(
-		ctx, ci.ID, tenantID, operatorID, operatorName, "delete", remark, ci, &after,
+		ctx, ci.ID, tenantID, operatorID, operatorName, operation, remark, ci, &after,
 	); err != nil {
 		return fmt.Errorf("record CI retirement history: %w", err)
 	}
@@ -680,11 +697,44 @@ func (s *ConfigurationItemService) retireCIInTx(ctx context.Context, tx *ent.Tx,
 		SetLifecycleStatus(common.CILifecycleStatusScrapped).
 		SetExpireAt(now).SetUpdatedAt(now).AddVersion(1).Save(ctx); err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("CI retirement conflict")
+			return s.staleCIStateErrorInTx(ctx, tx, ci.ID, tenantID, ci.Version)
 		}
 		return fmt.Errorf("retire CI: %w", err)
 	}
 	return nil
+}
+
+// invalidTransitionError 把状态机外的迁移统一映射为 409 业务冲突。
+func invalidTransitionError(from, to string) error {
+	return common.NewBusinessError(common.ConflictCode,
+		fmt.Sprintf("非法的生命周期状态迁移: %s -> %s", from, to), "")
+}
+
+// staleCIStateError 在乐观锁条件更新未命中时，区分「并发修改」（409）与
+// 「已删除/已退役」（404）。sqlite 单测环境未挂读拦截器，谓词需显式携带。
+func (s *ConfigurationItemService) staleCIStateError(ctx context.Context, id, tenantID, expectedVersion int) error {
+	return s.staleCIStateErrorInTx(ctx, nil, id, tenantID, expectedVersion)
+}
+
+func (s *ConfigurationItemService) staleCIStateErrorInTx(ctx context.Context, tx *ent.Tx, id, tenantID, expectedVersion int) error {
+	query := s.client.ConfigurationItem.Query()
+	if tx != nil {
+		query = tx.ConfigurationItem.Query()
+	}
+	current, err := query.
+		Where(
+			configurationitem.ID(id),
+			configurationitem.TenantIDEQ(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+		).
+		First(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return fmt.Errorf("CI不存在或已退役: %w", err)
+		}
+		return fmt.Errorf("获取CI失败: %w", err)
+	}
+	return common.NewVersionConflictError("配置项", id, expectedVersion, current.Version)
 }
 
 // GetCIStats 获取配置项统计
@@ -1350,7 +1400,7 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 	for _, id := range req.IDs {
 		ci := ciMap[id]
 
-		if err := s.retireCIInTx(ctx, tx, ci, tenantID, "Batch deleted"); err != nil {
+		if err := s.retireCIInTx(ctx, tx, ci, tenantID, "delete", "Batch deleted"); err != nil {
 			failedIDs = append(failedIDs, id)
 			errors = append(errors, fmt.Sprintf("CI %d: failed to retire: %v", id, err))
 			continue
@@ -1478,37 +1528,62 @@ func (s *ConfigurationItemService) convertSortField(sortBy string) string {
 }
 
 // UpdateLifecycleStatus 更新CI生命周期状态
-func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id int, tenantID int, status string, remark string, operatorID int, operatorName string) (*dto.CIResponse, error) {
-	// 校验状态是否合法
-	validStatuses := map[string]bool{
-		"draft":       true,
-		"online":      true,
-		"maintenance": true,
-		"offline":     true,
-		"scrapped":    true,
-	}
-	if !validStatuses[status] {
-		return nil, fmt.Errorf("无效的生命周期状态: %s", status)
+// LifecycleChangeParams CI 生命周期单条变更参数。
+type LifecycleChangeParams struct {
+	Status           string
+	Remark           string
+	RetirementReason string
+	// ExpectedVersion > 0 时启用乐观锁，不匹配返回 VersionConflictError；
+	// 批量路径传 0，跳过版本校验。
+	ExpectedVersion int
+}
+
+// UpdateLifecycleStatus 按 common 状态机更新 CI 生命周期。
+// 目标 scrapped 走软删除终态（retireCIInTx：停用关系、Status=retired、
+// ExpireAt、审计），必须携带受控退役理由；非法迁移与版本冲突映射 409，
+// 不存在/已退役映射 404。
+func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id int, tenantID int, params LifecycleChangeParams, operatorID int, operatorName string) (*dto.CIResponse, error) {
+	if !common.IsValidCILifecycleStatus(params.Status) {
+		return nil, common.NewValidationError(fmt.Sprintf("无效的生命周期状态: %s", params.Status), nil)
 	}
 
-	// 获取当前CI
 	ci, err := s.client.ConfigurationItem.Query().
 		Where(
 			configurationitem.ID(id),
 			configurationitem.TenantID(tenantID),
+			configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
 		).
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI不存在")
+			return nil, fmt.Errorf("CI不存在: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI for lifecycle update", "error", err, "ci_id", id)
 		return nil, fmt.Errorf("获取CI失败: %w", err)
 	}
 
-	// 如果状态没有变化，直接返回
-	if ci.LifecycleStatus == status {
+	// 乐观锁前置校验：客户端基于过期版本提交时直接拒绝，不做静默覆盖。
+	if params.ExpectedVersion > 0 && ci.Version != params.ExpectedVersion {
+		return nil, common.NewVersionConflictError("配置项", id, params.ExpectedVersion, ci.Version)
+	}
+
+	// 状态没变视为幂等成功。
+	if ci.LifecycleStatus == params.Status {
 		return dto.ToCIResponse(ci), nil
+	}
+
+	remark := params.Remark
+	if params.Status == common.CILifecycleStatusScrapped {
+		if err := common.CanRetireCILifecycle(ci.LifecycleStatus, params.RetirementReason); err != nil {
+			if errors.Is(err, common.ErrUnknownCIRetirementReason) {
+				return nil, common.NewValidationError(
+					"退役必须提供受控理由: manual/decommissioned/replaced/discovery_missing/end_of_life", err)
+			}
+			return nil, invalidTransitionError(ci.LifecycleStatus, params.Status)
+		}
+		remark = fmt.Sprintf("[retire:%s] %s", params.RetirementReason, strings.TrimSpace(remark))
+	} else if !common.CanTransitionCILifecycle(ci.LifecycleStatus, params.Status) {
+		return nil, invalidTransitionError(ci.LifecycleStatus, params.Status)
 	}
 
 	tx, err := s.client.Tx(ctx)
@@ -1518,24 +1593,45 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 	defer func() { _ = tx.Rollback() }()
 
 	// 状态变更和审计记录必须原子提交。
-	updatedCI, err := tx.Client().ConfigurationItem.UpdateOneID(ci.ID).
-		Where(configurationitem.TenantIDEQ(tenantID)).
-		SetLifecycleStatus(status).
-		Save(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to update CI lifecycle status", "error", err, "ci_id", id, "status", status)
-		return nil, fmt.Errorf("更新生命周期状态失败: %w", err)
-	}
+	if params.Status == common.CILifecycleStatusScrapped {
+		if err := s.retireCIInTx(ctx, tx, ci, tenantID, "lifecycle_update", remark); err != nil {
+			return nil, err
+		}
+	} else {
+		now := time.Now().UTC()
+		n, err := tx.Client().ConfigurationItem.Update().
+			Where(
+				configurationitem.ID(id),
+				configurationitem.TenantIDEQ(tenantID),
+				configurationitem.LifecycleStatusNEQ(common.CILifecycleStatusScrapped),
+				configurationitem.VersionEQ(ci.Version),
+			).
+			SetLifecycleStatus(params.Status).
+			SetUpdatedAt(now).
+			AddVersion(1).
+			Save(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to update CI lifecycle status", "error", err, "ci_id", id, "status", params.Status)
+			return nil, fmt.Errorf("更新生命周期状态失败: %w", err)
+		}
+		if n != 1 {
+			return nil, s.staleCIStateErrorInTx(ctx, tx, id, tenantID, ci.Version)
+		}
 
-	txHistoryService := NewCIHistoryService(tx.Client(), s.logger)
-	if err := txHistoryService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "lifecycle_update", remark, ci, updatedCI); err != nil {
-		return nil, fmt.Errorf("记录生命周期审计失败: %w", err)
+		after := *ci
+		after.LifecycleStatus = params.Status
+		after.UpdatedAt = now
+		after.Version = ci.Version + 1
+		txHistoryService := NewCIHistoryService(tx.Client(), s.logger)
+		if err := txHistoryService.RecordCIHistory(ctx, id, tenantID, operatorID, operatorName, "lifecycle_update", remark, ci, &after); err != nil {
+			return nil, fmt.Errorf("记录生命周期审计失败: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("提交生命周期事务失败: %w", err)
 	}
 
-	s.logger.Infow("CI lifecycle status updated", "ci_id", id, "old_status", ci.LifecycleStatus, "new_status", status, "tenant_id", tenantID)
+	s.logger.Infow("CI lifecycle status updated", "ci_id", id, "old_status", ci.LifecycleStatus, "new_status", params.Status, "tenant_id", tenantID)
 
 	// 重新加载CI完整信息
 	fullCI, err := s.client.ConfigurationItem.Query().
@@ -1545,25 +1641,33 @@ func (s *ConfigurationItemService) UpdateLifecycleStatus(ctx context.Context, id
 		WithTags().
 		First(ctx)
 	if err != nil {
-		return dto.ToCIResponse(updatedCI), nil
+		s.logger.Warnw("Failed to reload CI after lifecycle update", "error", err, "ci_id", id)
+		after := *ci
+		after.LifecycleStatus = params.Status
+		after.Version = ci.Version + 1
+		if params.Status == common.CILifecycleStatusScrapped {
+			after.Status = common.CIStatusRetired
+		}
+		return dto.ToCIResponse(&after), nil
 	}
 
 	return dto.ToCIResponseWithRelations(fullCI), nil
 }
 
-// BatchUpdateLifecycleStatus 批量更新CI生命周期状态
-func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Context, ids []int, tenantID int, status string, remark string, operatorID int, operatorName string) (*dto.BatchOperationResponse, error) {
+// BatchUpdateLifecycleStatus 批量更新CI生命周期状态；批量不做整批乐观锁，
+// 单条结果逐项返回。
+func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Context, ids []int, tenantID int, params LifecycleChangeParams, operatorID int, operatorName string) (*dto.BatchOperationResponse, error) {
+	params.ExpectedVersion = 0
 	successCount := 0
 	failedCount := 0
 	failedIDs := make([]int, 0)
-	errors := make([]string, 0)
+	errMsgs := make([]string, 0)
 
 	for _, id := range ids {
-		_, err := s.UpdateLifecycleStatus(ctx, id, tenantID, status, remark, operatorID, operatorName)
-		if err != nil {
+		if _, err := s.UpdateLifecycleStatus(ctx, id, tenantID, params, operatorID, operatorName); err != nil {
 			failedCount++
 			failedIDs = append(failedIDs, id)
-			errors = append(errors, fmt.Sprintf("CI %d: %v", id, err))
+			errMsgs = append(errMsgs, fmt.Sprintf("CI %d: %v", id, err))
 		} else {
 			successCount++
 		}
@@ -1573,7 +1677,7 @@ func (s *ConfigurationItemService) BatchUpdateLifecycleStatus(ctx context.Contex
 		SuccessCount: successCount,
 		FailedCount:  failedCount,
 		FailedIDs:    failedIDs,
-		Errors:       errors,
+		Errors:       errMsgs,
 	}, nil
 }
 
@@ -1587,7 +1691,7 @@ func (s *ConfigurationItemService) GetLifecycleHistory(ctx context.Context, id i
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("CI不存在")
+			return nil, fmt.Errorf("CI不存在: %w", err)
 		}
 		s.logger.Errorw("Failed to get CI lifecycle history", "error", err, "ci_id", id)
 		return nil, fmt.Errorf("获取生命周期历史失败: %w", err)

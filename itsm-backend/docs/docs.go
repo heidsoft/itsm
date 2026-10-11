@@ -3455,7 +3455,7 @@ const docTemplate = `{
         },
         "/api/v1/cmdb/cis/batch/lifecycle": {
             "put": {
-                "description": "批量变更多个CI的生命周期状态",
+                "description": "批量变更多个CI的生命周期状态（批量路径不做乐观锁，逐项返回结果）",
                 "consumes": [
                     "application/json"
                 ],
@@ -3820,7 +3820,7 @@ const docTemplate = `{
         },
         "/api/v1/cmdb/cis/{id}/lifecycle": {
             "put": {
-                "description": "变更CI的生命周期状态，记录变更历史",
+                "description": "按状态机变更CI生命周期；目标 scrapped 为退役终态，必须携带受控退役理由，body 需携带当前 version 做乐观锁",
                 "consumes": [
                     "application/json"
                 ],
@@ -3840,17 +3840,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "目标状态: draft/online/maintenance/offline/scrapped",
-                        "name": "status",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "变更备注",
-                        "name": "remark",
-                        "in": "query"
+                        "description": "生命周期变更请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCILifecycleRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -12387,6 +12383,16 @@ const docTemplate = `{
                 "remark": {
                     "type": "string"
                 },
+                "retirementReason": {
+                    "type": "string",
+                    "enum": [
+                        "manual",
+                        "decommissioned",
+                        "replaced",
+                        "discovery_missing",
+                        "end_of_life"
+                    ]
+                },
                 "status": {
                     "type": "string",
                     "enum": [
@@ -16934,6 +16940,41 @@ const docTemplate = `{
                 },
                 "validationRules": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UpdateCILifecycleRequest": {
+            "type": "object",
+            "required": [
+                "status",
+                "version"
+            ],
+            "properties": {
+                "remark": {
+                    "type": "string"
+                },
+                "retirementReason": {
+                    "type": "string",
+                    "enum": [
+                        "manual",
+                        "decommissioned",
+                        "replaced",
+                        "discovery_missing",
+                        "end_of_life"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "online",
+                        "maintenance",
+                        "offline",
+                        "scrapped"
+                    ]
+                },
+                "version": {
+                    "type": "integer"
                 }
             }
         },
