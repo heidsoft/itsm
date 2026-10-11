@@ -51,12 +51,10 @@ func (h *TicketServiceTaskHandler) SetNotificationService(svc TicketNotification
 	h.notificationService = svc
 }
 
-// GetTaskType 返回任务类型
 func (h *TicketServiceTaskHandler) GetTaskType() string {
 	return "ticket_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *TicketServiceTaskHandler) GetHandlerID() string {
 	return "ticket_service_handler"
 }

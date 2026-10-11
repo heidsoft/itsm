@@ -192,7 +192,7 @@ func TestProblemInvalidTransitionReturnsBusinessError(t *testing.T) {
 	assert.Equal(t, "closed", closed.Status)
 }
 
-// TestProblemWritePathRowLevelGuard 锁定 P1-DataScope 写路径行级校验：
+// TestProblemWritePathRowLevelGuard 验证写路径行级校验：
 // 写权限 ⊆ 读权限——非 owner 且非受理人的普通角色改/删他人问题单必须 403。
 func TestProblemWritePathRowLevelGuard(t *testing.T) {
 	client, service, ctx := setupProblemHandlerTest(t)

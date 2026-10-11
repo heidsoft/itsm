@@ -108,7 +108,7 @@ func TestScenario5_SLAPolicyViolationEscalation(t *testing.T) {
 			t.Fatalf("创建超时工单失败: %v", err)
 		}
 
-		// Phase 3 读路径以 sla_states 为权威源：CheckSLAViolations 只统计
+		// 读路径以 sla_states 为权威源：CheckSLAViolations 只统计
 		// FindWithSLABound/BatchGetStates 命中的工单，仅写工单内嵌字段不会被检查到。
 		if _, err = client.SLAState.Create().
 			SetTenantID(tenantA.ID).

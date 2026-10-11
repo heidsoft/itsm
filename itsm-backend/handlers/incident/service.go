@@ -289,7 +289,7 @@ func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Incident, err
 	return s.repo.Get(ctx, id, tenantID)
 }
 
-// GetSLAState 查询事件单的 SLA 状态（Phase 3 切读）。
+// GetSLAState 从 sla_states 表查询事件单的 SLA 状态。
 func (s *Service) GetSLAState(ctx context.Context, tenantID int, incidentID int) (*ent.SLAState, error) {
 	if s.slaMonitor == nil {
 		return nil, nil
@@ -394,12 +394,7 @@ func (s *Service) updateIncident(ctx context.Context, tenantID int, id int, upda
 		}
 		current.AssigneeID = updates.AssigneeID
 	}
-	// 修复：handler 已把 Category/Subcategory/Metadata/ImpactAnalysis/RootCause/
-	// ResolutionSteps 从请求映射到 updates，此处却只留了 "// ... other fields"
-	// 占位注释，导致 PUT 返回 code 0 但这六个字段被静默丢弃（IncidentDetail 的
-	// 「保存事件分类」与事件编辑页的分类字段因此完全失效）。
-	// map/slice 用 nil 判断，使客户端显式传空值仍能清空字段；string 沿用本函数
-	// 既有的真值约定（清空文本字段的能力见 Update 的指针化改造事项）。
+	// string 用真值判断（空串不清空）；map/slice 用 nil 判断，允许显式传空值清空。
 	if updates.Category != "" {
 		current.Category = updates.Category
 	}

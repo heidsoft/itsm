@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-6b）：GET /api/v1/changes/pirs 是**真分页**的列表
+// 回归：GET /api/v1/changes/pirs 是**真分页**的列表
 // （service/pir_service.go 用 Count + Offset/Limit），但修复前只返回 {items,total}：
 // 调用方拿到 20 条却无从知道「第几页、共几页」，只能把已到手的当前页当成整个结果集。
 //

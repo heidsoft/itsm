@@ -942,7 +942,7 @@ func TestUpdateWorkflow_WithNodes_TableDriven(t *testing.T) {
 
 // ============================================================
 // 表驱动测试：TriggerApproval with different approval modes
-// Phase 2 契约（2026-09 收敛）：BPMN 流程任务（GET /bpmn/tasks）是审批的权威来源，
+// 契约（2026-09 收敛）：BPMN 流程任务（GET /bpmn/tasks）是审批的权威来源，
 // TriggerApproval 不再写 ApprovalRecord——保留 workflow 解析作为 guard：
 // 工单类型有绑定的审批流程 → 返回空记录（非 nil）；无绑定 → nil, nil。
 // approvalMode/approverCount 仅影响 BPMN 节点语义，不再产生 ApprovalRecord 行。

@@ -20,7 +20,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-04 边缘功能收口 E4-20b/20c）：/api/v1/cmdb/cloud-* 这 15 条活表面路由
+// 回归：/api/v1/cmdb/cloud-* 这 15 条活表面路由
 // 曾经在每个维度上都比被删掉的 /api/v1/cloud/* 那一侧更弱，收敛后必须补齐：
 //
 //  1. 租户身份 fail-closed：handler 直接 c.GetInt("tenant_id")，缺上下文时以 tenant=0 进查询。

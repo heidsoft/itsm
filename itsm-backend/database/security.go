@@ -12,7 +12,7 @@ package database
 //  2. 写路径租户守卫（TenantWriteGuard）：每次 Create 变更，若实体带
 //     tenant_id 字段则校验并强制与上下文租户一致——缺失时自动注入，不一致
 //     时 fail-closed 拒绝。覆盖“跨租户插入”这一最高风险写路径漏点。
-//     Update/DeleteOne 的租户校验由业务层 TenantIDEQ 兜底（见 Batch P1-infra）。
+//     Update/DeleteOne 的租户校验由业务层 TenantIDEQ 兜底。
 //
 //  3. RLS enforce 全路径接线见 database/rls/driver.go：Exec/Query 在 enforce
 //     模式下包裹进带 SET LOCAL app.current_tenant 的事务，使非事务（autocommit）

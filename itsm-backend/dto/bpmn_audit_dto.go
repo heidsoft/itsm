@@ -8,7 +8,7 @@ import (
 
 // ProcessAuditLogResponse BPMN 流程审计日志的 API DTO。
 //
-// 历史缺陷（台账 E4-48）：/bpmn/dashboard/audit-logs 与 /audit-logs/user/:userId
+// 历史缺陷：/bpmn/dashboard/audit-logs 与 /audit-logs/user/:userId
 // 直接序列化 Ent 模型，响应键为 snake_case（process_instance_key 等），且把
 // tenant_id 发给前端；唯一生产消费方 /workflow/audit 页面按 camelCase 类型读取，
 // 四列恒空。此处是该用例的唯一响应形态：camelCase、不含 TenantID

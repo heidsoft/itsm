@@ -1,5 +1,4 @@
 // Package ticket_notification 是工单通知域的 HTTP handler 层（域切片架构）。
-// 自 controller/ticket_notification_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.TicketNotificationService 承载，本包只做参数解析与响应封装。
 package ticket_notification
 

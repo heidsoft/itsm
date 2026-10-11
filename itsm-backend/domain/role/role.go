@@ -1,6 +1,6 @@
 // Package role 提供全后端统一的用户角色词表。
 //
-// 背景（2026-10-07 角色模型重设）：角色字符串此前散落在 7+ 处硬编码
+// 背景：角色字符串此前散落在 7+ 处硬编码
 // （users.role 单字段、roles.code 种子表、各 handler 的 switch/case、
 // 审批资格 fallback 词表），三套词汇已实际漂移——service_request 审批角色
 // manager/it_admin/security_admin 在 roles 表缺失、审批 403。
@@ -88,7 +88,7 @@ var MSP = []string{
 	MspAdmin,
 }
 
-// Retired 是已退役角色 code 的封闭清单（2026-10-07 角色模型重设）。
+// Retired 是已退役角色 code 的封闭清单。
 // security 是 users.role 的 legacy 值，语义并入 security_admin；
 // 其余是岗位/团队型角色，属于组织架构而非权限包。
 var Retired = []string{

@@ -283,11 +283,9 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 }
 
 func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, error) {
-	// P1-infra 修复：写路径强制租户隔离 + 软删守卫，避免越权更新与已软删记录被
-	// 覆盖（此前缺 TenantIDEQ / DeletedAtIsNil，并发陈旧快照上状态机判定失效）。
-	// P1-乐观锁修复：追加 VersionEQ 条件并 AddVersion(1)。此前是 read-then-
-	// unconditional-write，UpdateIncidentRequest.Version 从未被消费，陈旧客户端可
-	// 静默覆盖他人写入；且版本不自增，使 lifecycle 操作的 CAS 也失去意义。
+	// 写路径必须同时带租户谓词、软删守卫和版本条件：缺 TenantIDEQ / DeletedAtIsNil 时
+	// 越权更新和覆盖软删记录都可能发生；不校验 Version 则陈旧客户端能静默覆盖他人写入，
+	// lifecycle 的 CAS 也会失去意义。
 	// impact/urgency 写回安全：entity 从 DB 加载时已带默认值（"medium"），
 	// service 层仅在非空时覆盖，ent Validate 接受 low/medium/high/critical。
 	// service_type/failure_type 为 Optional，空串也合法。
@@ -342,9 +340,9 @@ func (r *EntRepository) Update(ctx context.Context, i *Incident) (*Incident, err
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {
-	// P0-2 修复：改为软删除，避免物理删除导致 CountByPeriod 计数回退、历史
-	// 编号被复用，并使 incident_events / incident_metrics / problem↔incident
-	// 关联成为孤儿。软删后读路径由全局拦截器自动过滤。
+	// 软删除：物理删除会让 CountByPeriod 计数回退、历史编号被复用，并使
+	// incident_events / incident_metrics / problem↔incident 关联成为孤儿。
+	// 读路径由全局拦截器自动过滤软删行。
 	return r.client.Incident.UpdateOneID(id).
 		Where(incident.TenantIDEQ(tenantID)).
 		SetDeletedAt(time.Now()).

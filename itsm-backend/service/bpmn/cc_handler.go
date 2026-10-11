@@ -32,12 +32,10 @@ func NewCCTaskHandler(client *ent.Client, logger *zap.SugaredLogger) *CCTaskHand
 	}
 }
 
-// GetTaskType 返回任务类型
 func (h *CCTaskHandler) GetTaskType() string {
 	return "cc_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *CCTaskHandler) GetHandlerID() string {
 	return "cc_handler"
 }

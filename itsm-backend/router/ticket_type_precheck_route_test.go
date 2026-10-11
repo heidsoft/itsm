@@ -27,7 +27,7 @@ import (
 // 声明（tenant.GET("/ticket-types", RequirePermission("ticket","read"), ...)）必须进入
 // RBACMiddleware 的路径预检映射。
 //
-// 2026-10-04 P0：扫描器此前无法解析函数参数分组的前缀，这类声明被 /api/v1 过滤静默
+// 扫描器此前无法解析函数参数分组的前缀，这类声明被 /api/v1 过滤静默
 // 丢弃，DBOnly 生产下非 super_admin 角色在预检处恒 403——工单类型、teams、tags、
 // problem-relationships、approval-records、my-approvals 等 21 个端点全部锁死，
 // 也是 ga-gate 租户隔离步骤自 2026-09-27 起持续红的根因。

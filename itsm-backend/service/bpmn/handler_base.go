@@ -34,7 +34,6 @@ type ServiceTaskHandlerInterface interface {
 	// Validate 验证参数
 	Validate(ctx context.Context, config map[string]interface{}) error
 
-	// GetHandlerID 返回处理器标识
 	GetHandlerID() string
 }
 

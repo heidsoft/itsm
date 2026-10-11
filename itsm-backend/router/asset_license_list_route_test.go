@@ -27,7 +27,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-04 边缘功能收口 E4-6g）：GET /api/v1/assets 与 GET /api/v1/licenses
+// 回归：GET /api/v1/assets 与 GET /api/v1/licenses
 // 的集合键原先是领域名（assets / licenses），许可列表连 page/pageSize/totalPages 都没有。
 //
 // 更严重的是页长有三套真相，其中一套会把整表读出来：

@@ -592,7 +592,7 @@ func TestHandler_Delete_TableDriven(t *testing.T) {
 	assert.Equal(t, 404, w.Code)
 }
 
-// TestHandler_WritePath_RowLevelForbidden 锁定 P1-DataScope 行级写权限：
+// TestHandler_WritePath_RowLevelForbidden 验证行级写权限：
 // 测试基建默认 role=agent；agent 仅能改/删自己创建的工单，
 // 换一个非 owner 的 agent 身份访问必须 403。
 func TestHandler_WritePath_RowLevelForbidden(t *testing.T) {
@@ -635,7 +635,7 @@ func TestHandler_WritePath_RowLevelForbidden(t *testing.T) {
 	assert.NotEqual(t, "hijack", repo.tickets[id].Title, "被拒绝的修改不应落库")
 }
 
-// TestHandler_LifecycleOps_RowLevelForbidden 锁定 P1-DataScope #25 批次：
+// TestHandler_LifecycleOps_RowLevelForbidden 验证生命周期写路径的行级守卫：
 // resolve/close/escalate/updateStatus 四个生命周期写操作与 Update/Delete
 // 同风险面——非 owner 普通角色（agent）操作他人工单必须 403，且行级
 // AppError 不得被兑底吞成 500；owner 操作正常。

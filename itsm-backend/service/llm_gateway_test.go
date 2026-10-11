@@ -537,7 +537,7 @@ func TestLLMGateway_SupportsToolCalling_ReflectsProviderCapability(t *testing.T)
 	})
 }
 
-// ==================== 重试语义测试（2026-09-08 UAT Q-2 根因修复） ====================
+// ==================== 重试语义测试 ====================
 
 // flakyProvider 前几次返回瞬时错误，之后成功——模拟网络抖动/上游 5xx。
 type flakyProvider struct {
@@ -594,7 +594,7 @@ func TestLLMGateway_RetryTransientErrors(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 2, p5xx.calls(), "5xx 应重试 1 次后成功")
 
-		// 401：不可重试（重试只会重复失败拖长等待）
+		// 不可重试（重试只会重复失败拖长等待）
 		p401 := &flakyProvider{
 			failures:        3,
 			errToReturn:     errors.New("OpenAI API error: error, status code: 401"),

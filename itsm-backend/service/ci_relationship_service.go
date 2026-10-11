@@ -45,7 +45,7 @@ func NewCIRelationshipService(client *ent.Client, logger *zap.SugaredLogger) *CI
 
 // CreateCIRelationship 创建CI关系
 func (s *CIRelationshipService) CreateCIRelationship(ctx context.Context, req *dto.CreateCIRelationshipRequest, tenantID int) (*dto.CIRelationshipResponse, error) {
-	// P0-2 词表收口：关系类型必须在 13 种内置受控词表内，拒绝自由字符串脏值
+	// 词表收口： 关系类型必须在 13 种内置受控词表内，拒绝自由字符串脏值
 	if err := validateRelationshipType(req.RelationshipType); err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (s *CIRelationshipService) ListAllCIRelationships(ctx context.Context, tena
 
 // UpdateCIRelationship 更新CI关系
 func (s *CIRelationshipService) UpdateCIRelationship(ctx context.Context, id, tenantID int, req *dto.UpdateCIRelationshipRequest) (*dto.CIRelationshipResponse, error) {
-	// P0-2 词表收口：更新侧同样拒绝词表外的关系类型
+	// 词表收口： 更新侧同样拒绝词表外的关系类型
 	if req.RelationshipType != nil {
 		if err := validateRelationshipType(*req.RelationshipType); err != nil {
 			return nil, err

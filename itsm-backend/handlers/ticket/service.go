@@ -439,8 +439,8 @@ func (s *Service) DeleteSubtask(ctx context.Context, subtaskID int, tenantID int
 	return s.repo.Delete(ctx, subtaskID, tenantID)
 }
 
-// GetTicketSLAInfo returns SLA info for a ticket.
-// Phase 3 切读：优先从 sla_states 表读取 SLA 字段，不存在时降级到工单内联字段。
+// GetTicketSLAInfo 返回工单的 SLA 信息：SLA 字段以 sla_states 表为准，
+// 表里没有记录时降级到工单内联字段。
 func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID int) (map[string]interface{}, error) {
 	t, err := s.repo.GetByID(ctx, ticketID, tenantID)
 	if err != nil {

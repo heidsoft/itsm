@@ -8,7 +8,6 @@ import (
 )
 
 // SetupKnowledgeRoutes 注册知识库相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupKnowledgeRoutes(tenant *gin.RouterGroup, h *knowledgeHandler.Handler) {
 	// New route structure: /api/v1/knowledge/articles
 	knowledgeGrp := tenant.Group("/knowledge")

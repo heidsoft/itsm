@@ -27,7 +27,7 @@ func NewHandler(svc *Service) *Handler {
 }
 
 // ListTools handles GET /api/v1/agent/tools
-// P2-6: 按 ToolDefinition.Resource/Action 过滤，仅返回当前角色有权限的工具
+// 按 ToolDefinition.Resource/Action 过滤，仅返回当前角色有权限的工具
 func (h *Handler) ListTools(c *gin.Context) {
 	role := c.GetString("role")
 	tenantID := c.GetInt("tenant_id")
@@ -70,7 +70,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 		return
 	}
 
-	// P2-6: 校验工具存在性；写工具（!ReadOnly）交由 ExecuteTool 统一走审批流
+	// 校验工具存在性；写工具（!ReadOnly）交由 ExecuteTool 统一走审批流
 	// （创建 pending invocation + 入队等待人工审批），与聊天路径行为一致。
 	if h.svc.tools == nil {
 		common.Fail(c, common.ServiceUnavailableCode, "AI 工具注册表未就绪")
@@ -99,7 +99,7 @@ func (h *Handler) ExecuteTool(c *gin.Context) {
 			common.Fail(c, common.ServiceUnavailableCode, "AI 工具权限服务未就绪")
 			return
 		}
-		// P2-6: 区分权限拒绝与未知工具的错误码
+		// 区分权限拒绝与未知工具的错误码
 		if errors.Is(err, ErrToolPermissionDenied) {
 			common.Fail(c, common.ToolPermissionDeniedCode, "无权执行该工具")
 			return
@@ -626,7 +626,7 @@ func (h *Handler) GetAuditLogs(c *gin.Context) {
 
 // UpdateAuditAccepted handles PATCH /api/v1/ai/audit-logs/:id.
 //
-// Sprint 3 Task 1 — AI Audit accept/reject feedback loop 闭合：让
+// AI Audit accept/reject feedback loop 闭合：让
 // 操作者在 Audit Console 详情 Drawer 里点 Accept/Revoke 翻转
 // 已记录的决策。原 ai_feedbacks 表写时即终态（append-only），
 // 现在允许 PATCH 翻 accepted 列；用 usecase / version 不变量校验

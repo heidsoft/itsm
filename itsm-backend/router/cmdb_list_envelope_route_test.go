@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-6e）：CMDB 的 5 个列表信封原先只回
+// 回归：CMDB 的 5 个列表信封原先只回
 // {items,total,page,size}——既没有 pageSize/totalPages，又把请求别名 size 当页长；
 // 页长同时有 3 个所有者：handler 用裸 strconv.Atoi(ctx.DefaultQuery("size")) 读值且
 // 不夹紧，dto.ListCIRequest 上写着 binding:"min=1,max=200"（与平台 MaxPageSize=100 冲突），

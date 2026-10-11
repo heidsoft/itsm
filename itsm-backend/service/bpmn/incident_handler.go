@@ -28,12 +28,10 @@ func NewIncidentServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger
 	}
 }
 
-// GetTaskType 返回任务类型
 func (h *IncidentServiceTaskHandler) GetTaskType() string {
 	return "incident_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *IncidentServiceTaskHandler) GetHandlerID() string {
 	return "incident_service_handler"
 }

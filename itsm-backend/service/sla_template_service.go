@@ -76,7 +76,7 @@ func (s *SLATemplateService) initCatalog() {
 			ResolutionTime: 240,
 			BusinessHours: map[string]interface{}{
 				// 键名与 parseBusinessHoursConfig 解析器对齐（ticket_sla_service.go:366+）；
-				// R4-b 2026-09-16 修复：旧键名 workdays/work_hour_start/is_24_7 被忽略导致 24×7 模板 fallback 9-18。
+				// 旧键名 workdays/work_hour_start/is_24_7 被忽略导致 24×7 模板 fallback 9-18。
 				"time_zone":  "Asia/Shanghai",
 				"work_days":  []int{1, 2, 3, 4, 5},
 				"start_time": "00:00",

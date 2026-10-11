@@ -54,7 +54,7 @@ func TestMSPAllocationCreate_ReAllocationPreservesArchivedHistory(t *testing.T) 
 	require.NoError(t, err)
 
 	svc := NewMSPAllocationService(client, logger)
-	// 管理员旁路只跳过租户类型校验，不影响下面的历史行为。
+	// super_admin 旁路会跳过租户类型与同租户归属校验，这里只验证重新分配保留归档历史。
 	created, err := svc.Create(ctx, agent.ID, agent.ID, customer.ID, "backup", "super_admin")
 	require.NoError(t, err)
 	require.NotNil(t, created)

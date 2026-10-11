@@ -9,7 +9,6 @@ import (
 )
 
 // SetupApprovalChainRoutes 注册审批链域路由。
-// 从 router.go 集中注册块抽取，行为与原内联等价（含 EscalationMatrix 自注册委托）。
 func SetupApprovalChainRoutes(tenant *gin.RouterGroup, h *approvalChainHandler.Handler, escalationMatrixHandler *escalationMatrixHandler.Handler) {
 	approvalChains := tenant.Group("/approval-chains")
 	{

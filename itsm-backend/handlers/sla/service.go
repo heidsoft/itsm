@@ -80,8 +80,8 @@ type SLAComplianceResult struct {
 	Message                 string     `json:"message"`
 }
 
-// CheckSLACompliance P1-07 修复：真正计算 actual_response_minutes。
-// 阻断3 修复：合规判定必须基于 SLA 截止时间，而非"是否已首次响应"。
+// CheckSLACompliance 真正计算 actual_response_minutes。
+// 合规判定必须基于 SLA 截止时间，而非"是否已首次响应"。
 // 旧逻辑 `res.Compliant = !firstResponseAt.IsZero()` 把"已响应"等同于"合规"，
 // 导致超时响应的工单仍被判为合规；同时未解决工单永远判为"不合规"，
 // 与 SLA 定义中"未到截止时间即合规"的语义相悖。
@@ -251,7 +251,7 @@ func (s *Service) ListSLAPerformance(ctx context.Context, tenantID int, q SLAPer
 	}
 
 	// 页长的权威所有者是 HTTP 入口的 common.GetPaginationFromQuery。
-	// 这里只兜非 HTTP 调用方（台账 E4-47①：私有 >200→200 是第三套界，
+	// 这里只兜非 HTTP 调用方（私有 >200→200 是第三套界，
 	// 与平台 MaxPageSize=100 分家）。
 	page, pageSize := common.ValidatePagination(q.Page, q.PageSize)
 

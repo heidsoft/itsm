@@ -1,5 +1,4 @@
 // Package msp 是 MSP 多租户服务域的 HTTP handler 层（域切片架构）。
-// 自 controller/msp_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.MSPAllocationService / service.TicketService 承载，
 // 本包只做参数解析与响应封装。
 package msp
@@ -486,7 +485,7 @@ func (h *Handler) GetPerformanceReports(c *gin.Context) {
 }
 
 // domainTicketToResponse 将领域模型 *ticket.Ticket 映射为 API 响应 DTO。
-// Phase 3 切读：SLA 字段优先从 sla_states 读取。
+// 切读：SLA 字段优先从 sla_states 读取。
 func (h *Handler) domainTicketToResponse(c *gin.Context, t *ticket.Ticket) *dto.TicketResponse {
 	if t == nil {
 		return nil
@@ -515,7 +514,7 @@ func (h *Handler) domainTicketToResponse(c *gin.Context, t *ticket.Ticket) *dto.
 		SLAResolutionDeadline: t.SLAResolutionDeadline,
 	}
 
-	// Phase 3 切读：从 sla_states 覆盖 SLA 字段。
+	// 切读：从 sla_states 覆盖 SLA 字段。
 	if h.ticketService != nil {
 		tenantID := t.TenantID
 		if ctxTenant := c.GetInt("tenant_id"); ctxTenant > 0 {

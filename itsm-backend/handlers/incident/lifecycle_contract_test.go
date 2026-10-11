@@ -27,7 +27,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 	tenant := client.Tenant.Create().SetName("Lifecycle").SetCode("lifecycle").SetDomain("lifecycle.test").SaveX(ctx)
 	user := client.User.Create().SetUsername("lifecycle").SetName("test").SetEmail("lifecycle@example.com").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(ctx)
 	inc := client.Incident.Create().SetTitle("closed incident").SetIncidentNumber("INC-review").SetStatus("closed").SetReporterID(user.ID).SetTenantID(tenant.ID).SaveX(ctx)
-	// Phase 3: SLA 暂停/恢复现在以 sla_states 为权威源
+	// SLA 暂停/恢复现在以 sla_states 为权威源
 	_, err := client.SLAState.Create().
 		SetTenantID(tenant.ID).
 		SetAggregateType("incident").
@@ -36,7 +36,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 	production := service.NewIncidentService(client, zap.NewNop().Sugar(), nil)
-	// P1-DataScope：生命周期方法现在先经 repo.Get 行级守卫（CanWriteResource），
+	// 生命周期方法先经 repo.Get 行级守卫（CanWriteResource），
 	// repo 不能为 nil。接真实 Ent repo：reporter 本人操作守卫放行，跨租户由
 	// repo.Get 返回 ent NotFound（404），既有契约断言不变。
 	repo := NewEntRepository(client)
@@ -75,7 +75,7 @@ func TestLifecycleHTTPErrorContract(t *testing.T) {
 	}
 	require.Equal(t, "closed", client.Incident.GetX(ctx, inc.ID).Status)
 
-	// SLA 暂停契约（2026-09-25 假成功收口）：暂停必须真实落库；重复暂停、
+	// SLA 暂停契约：暂停必须真实落库；重复暂停、
 	// 未暂停时恢复都是 409 冲突，不再是假成功或"未接入"。
 	paused := client.Incident.GetX(ctx, inc.ID)
 	require.Equal(t, "paused", paused.SLAStatus, "暂停必须落库")

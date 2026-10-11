@@ -1,5 +1,4 @@
 // Package approval_chain 是审批链域的 HTTP handler 层（域切片架构）。
-// 自 controller/approval_chain_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.ApprovalChainService 承载，本包只做参数解析与响应封装。
 package approval_chain
 

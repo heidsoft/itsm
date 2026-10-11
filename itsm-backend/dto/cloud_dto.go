@@ -2,7 +2,7 @@ package dto
 
 // 本文件只声明云账号/云服务/云资源三个列表端点的响应契约与云资源列表的查询参数。
 //
-// 2026-10-04：`/api/v1/cloud/*` 那套与 `/api/v1/cmdb/cloud-*` 平行的表面（15 条已注册路由、
+// `/api/v1/cloud/*` 那套与 `/api/v1/cmdb/cloud-*` 平行的表面（15 条已注册路由、
 // handlers/cloud、service/cloud_service.go）已删除，它是同一用例的第二套业务规则所有者，
 // 实测零前端调用方。它的请求 DTO 因此成为零生产引用的死契约，随该表面一并删除；
 // 活表面的写入请求 DTO 是 cmdb_dto.go 里的 CMDB* 系列。

@@ -1,5 +1,4 @@
 // Package automation_rule 是工单自动化规则域的 HTTP handler 层（域切片架构）。
-// 自 controller/ticket_automation_rule_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.TicketAutomationRuleService 承载，本包只做参数解析与响应封装。
 package automation_rule
 

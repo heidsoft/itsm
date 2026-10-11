@@ -70,7 +70,7 @@ func (s *SLAMonitorService) requireSLAStore() error {
 	return nil
 }
 
-// GetSLAState 查询聚合根的 SLA 状态（Phase 3 切读：handler 层统一从 sla_states 读取）。
+// GetSLAState 查询聚合根的 SLA 状态。
 func (s *SLAMonitorService) GetSLAState(ctx context.Context, tenantID int, aggregateType string, aggregateID int) (*ent.SLAState, error) {
 	return s.client.SLAState.Query().
 		Where(
@@ -158,7 +158,7 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		slaDefMap[sd.ID] = sd.Name
 	}
 
-	// Phase 3: 从 sla_states 获取绑定了 SLA 的 ticket ID
+	// 从 sla_states 获取绑定了 SLA 的 ticket ID
 	slaBoundTicketIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "ticket")
 	if err != nil {
 		s.logger.Errorw("Failed to query SLA-bound ticket IDs", "error", err)
@@ -274,7 +274,7 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		}
 	}
 
-	// === Incident SLA 违规检查（P0-1）===
+	// Incident SLA 违规检查
 	incidentStats := s.checkIncidentSLAViolations(ctx, tenantID, now, slaDefMap)
 	stats.TotalChecked += incidentStats.TotalChecked
 	stats.NewViolations += incidentStats.NewViolations
@@ -289,7 +289,7 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 	return stats, nil
 }
 
-// checkIncidentSLAViolations 检查所有活跃 Incident 的 SLA 违规情况（P0-1）
+// checkIncidentSLAViolations 检查所有活跃 Incident 的 SLA 违规情况
 func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tenantID int, now time.Time, slaDefMap map[int]string) *SLACheckStats {
 	stats := &SLACheckStats{}
 
@@ -314,7 +314,7 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 		existingViolationMap[v.TicketID][v.ViolationType] = true
 	}
 
-	// Phase 3: 从 sla_states 获取绑定了 SLA 的 incident ID
+	// 从 sla_states 获取绑定了 SLA 的 incident ID
 	slaBoundIncidentIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "incident")
 	if err != nil {
 		s.logger.Errorw("Failed to query SLA-bound incident IDs", "error", err)
@@ -389,7 +389,7 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 	return stats
 }
 
-// createIncidentViolation 为 Incident 创建 SLA 违规记录（P0-1）
+// createIncidentViolation 为 Incident 创建 SLA 违规记录
 func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *ent.Incident, violationType string, deadline time.Time, slaDefinitionID int, slaDefMap map[int]string) (bool, error) {
 	exceededMinutes := time.Since(deadline).Minutes()
 	if exceededMinutes < 0 {
@@ -744,7 +744,7 @@ func (s *SLAMonitorService) GetSLAComplianceByDefinition(ctx context.Context, te
 
 	var stats []*SLAComplianceStat
 	for _, sla := range slas {
-		// Phase 3: 从 sla_states 查询绑定该 SLA 定义的聚合根
+		// 从 sla_states 查询绑定该 SLA 定义的聚合根
 		boundStates, err := s.client.SLAState.Query().
 			Where(
 				slastate.TenantIDEQ(tenantID),
@@ -855,7 +855,7 @@ func slaLookupError(entity string, err error) error {
 	return fmt.Errorf("查询%s失败: %w", entity, err)
 }
 
-// PauseSLA 暂停工单/事件的SLA计时（P0-2）
+// PauseSLA 暂停工单/事件的SLA计时
 func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityType string, entityID int, reason string) error {
 	now := time.Now()
 
@@ -937,7 +937,7 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 	}
 }
 
-// ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline（P0-2）
+// ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline
 func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityType string, entityID int) error {
 	now := time.Now()
 
@@ -1078,7 +1078,7 @@ func (s *SLAMonitorService) GetDashboardMetrics(ctx context.Context, tenantID in
 		TrendData:         make([]dto.SLATrendPoint, 0),
 	}
 
-	// Phase 3: 从 sla_states 获取绑定了 SLA 的 ticket ID
+	// 从 sla_states 获取绑定了 SLA 的 ticket ID
 	slaBoundTicketIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "ticket")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query SLA-bound tickets: %w", err)

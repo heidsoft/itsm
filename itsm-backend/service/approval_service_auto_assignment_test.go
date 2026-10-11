@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestResolveApprover_DynamicRoleUsesRequestContext 验证 i2 P0 修复：当 assigneeType
+// TestResolveApprover_DynamicRoleUsesRequestContext 验证 i2 当 assigneeType
 // 是 dept_manager/team_leader/project_manager 时，优先使用 ApprovalTriggerRequest 中的
 // DepartmentID/TeamID/ProjectID，不再硬依赖从 assigneeValue 解析。
 //

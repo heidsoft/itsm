@@ -1,5 +1,4 @@
 // Package assignment_smart 是工单智能分配域的 HTTP handler 层（域切片架构）。
-// 自 controller/ticket_assignment_smart_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.TicketAssignmentSmartService / service.TicketAssignmentRuleService 承载，
 // 本包只做参数解析与响应封装。
 package assignment_smart

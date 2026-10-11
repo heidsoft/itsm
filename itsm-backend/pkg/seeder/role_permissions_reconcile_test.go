@@ -68,7 +68,7 @@ func (f *rolePermFixture) hotFixGrant(t *testing.T, code string) {
 }
 
 // TestSeedRolePermissionsPreservesManualGrants 只增不减：内置码集之外的既有授权
-// （运维手工热修）在下一次播种后必须仍然存活。回归场景（R2-d 修复前）：
+// （运维手工热修）在下一次播种后必须仍然存活。回归场景：
 // seedRolePermissions 每次按内置码集反向 Delete 不在清单内的授权行，
 // 手工补的授权会被静默撤销。
 func TestSeedRolePermissionsPreservesManualGrants(t *testing.T) {

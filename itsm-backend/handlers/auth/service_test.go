@@ -179,7 +179,7 @@ func TestService_Register(t *testing.T) {
 		assert.Equal(t, "Acme", saved.Department)
 		assert.True(t, saved.Active)
 		assert.Equal(t, fx.tenant.ID, saved.TenantID)
-		// P0-1：注册是未认证入口，角色必须由服务端固定指派，不能被请求体影响
+		// 注册是未认证入口，角色必须由服务端固定指派，不能被请求体影响
 		assert.Equal(t, "end_user", string(saved.Role))
 	})
 

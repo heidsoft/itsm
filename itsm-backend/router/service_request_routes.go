@@ -9,7 +9,6 @@ import (
 )
 
 // SetupServiceRequestRoutes 注册服务请求域路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 注意：provisioning 任务子路由随同搬移，保持 /service-requests 与
 // /provisioning-tasks 两条路径的注册顺序不变。
 func SetupServiceRequestRoutes(tenant *gin.RouterGroup, h *service_request.Handler, provisioningHandler *provisioning.Handler) {

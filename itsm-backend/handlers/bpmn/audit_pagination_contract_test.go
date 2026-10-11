@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 台账 E4-47⑤：/bpmn/dashboard/audit-logs 用 c.Query("pageSize") + strconv.Atoi，
+// /bpmn/dashboard/audit-logs 用 c.Query("pageSize") + strconv.Atoi，
 // 只要求「能解析」就原样下传（连 >0 都不判）；/bpmn/monitoring/instances/status 用
 // DefaultQuery 且把 Atoi 的错误丢掉（monitoring/audit-logs 第二套只读表面已在
 // E4-48 收敛删除）。
@@ -98,7 +98,7 @@ func TestMonitoringInstancesStatus_EchoMatchesAdoptedLimit(t *testing.T) {
 // 租户收敛放宽：25 条属于租户 1，租户 2 只有自己那 3 条。
 //
 // 这里按 processInstanceKey 前缀而不是 tenant_id 判断：响应已是 camelCase DTO，
-// tenantId 不再出现在契约里（台账 E4-48 已收敛）。
+// tenantId 不再出现在契约里。
 func TestDashboardAuditLogs_DefaultPageSizeStillTenantScoped(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", "file:bpmn_audit_pg_tenant?mode=memory&cache=shared&_fk=1")
 	t.Cleanup(func() { client.Close() })

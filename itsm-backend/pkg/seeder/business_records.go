@@ -9,7 +9,7 @@ package seeder
 //   - 幂等：按编号（incident_number / problem_number / change_number）或
 //     标题（知识库）+ 租户去重，重复执行不会产生重复数据。
 //   - 失败语义：与其他 seed helper 一致，记录 warn 日志并继续，不中断启动。
-//   - 演示数据使用固定编号（如 INC-DEMO-0001），避免日期化编号在次日重跑时产生重复。
+//   - 演示数据使用固定编号，避免日期化编号在次日重跑时产生重复。
 
 import (
 	"context"

@@ -8,7 +8,6 @@ import (
 )
 
 // SetupTicketTagRoutes 注册工单标签域路由。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupTicketTagRoutes(tenant *gin.RouterGroup, h *ticketTagHandler.Handler) {
 	tags := tenant.Group("/ticket-tags")
 	{

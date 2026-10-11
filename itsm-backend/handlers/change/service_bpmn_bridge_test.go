@@ -50,7 +50,7 @@ func persistChangeInEntClient(t *testing.T, client *ent.Client, c *Change) {
 	c.ID = created.ID
 }
 
-// ==================== TransitionStatus ↔ BPMN 桥接集成测试（P0-1 阶段3） ====================
+// ==================== TransitionStatus ↔ BPMN 桥接集成测试 ====================
 
 func newChangeBridgeEntClient(t *testing.T, dbName string) *ent.Client {
 	t.Helper()

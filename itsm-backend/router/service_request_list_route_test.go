@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-4）：GET /api/v1/service-requests 与
+// 回归：GET /api/v1/service-requests 与
 // GET /api/v1/service-requests/approvals/pending 这两个列表原先各有**三个**分页所有者：
 //   - 请求 DTO 上写着 binding:"min=1,max=100"，越界值在绑定阶段就返回 1001 参数错误；
 //   - handler 再把没越界的原值下传，自己补一份 page==0→1、pageSize==0→10；

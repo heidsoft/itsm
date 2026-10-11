@@ -35,12 +35,10 @@ func NewNotificationHandler(client *ent.Client, logger *zap.SugaredLogger) *Noti
 	}
 }
 
-// GetTaskType 返回任务类型
 func (h *NotificationHandler) GetTaskType() string {
 	return "notification_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *NotificationHandler) GetHandlerID() string {
 	return "notification_handler"
 }

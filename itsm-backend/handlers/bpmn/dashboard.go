@@ -61,7 +61,6 @@ func (c *DashboardHandler) failInternal(ctx *gin.Context, action string, err err
 	common.Fail(ctx, 5001, action+"失败，请稍后重试或联系管理员")
 }
 
-// RegisterRoutes 注册路由
 func (c *DashboardHandler) RegisterRoutes(r *gin.RouterGroup) {
 	dashboard := r.Group("/bpmn/dashboard")
 	{

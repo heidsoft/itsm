@@ -1,4 +1,4 @@
-// Package parity 跨包字段一致性守卫（批次 6 第 2 步）。
+// Package parity 跨包字段一致性守卫。
 //
 // 放在独立包是为了避开 import cycle：
 //   - authz → seeder 触发循环（authz 测试 import seeder）→ 反过来 seeder 依赖 authz → 死锁

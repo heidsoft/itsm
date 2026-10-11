@@ -85,7 +85,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 		})
 	}
 
-	// --- 规则组 1.1：定时事件表达式（2026-09-15 补）---
+	// --- 规则组 1.1：定时事件表达式---
 	// TimerEventDefinition 存在但三种时间表达式全空属于非法定义：
 	// extractor 无法计算 fire_at，运行时将无法注册/触发定时器。
 	checkTimerDefinition := func(kind, elementID, elementName string, def *BPMNTimerEventDefinition) {
@@ -137,7 +137,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 	// --- 规则组 3.1：审批拒绝策略可执行性 ---
 	s.lintApprovalRejectionConfiguration(process, adjacency, result)
 
-	// --- 规则组 3.0：重复序列流 ID（2026-09-07 补）---
+	// --- 规则组 3.0：重复序列流 ID---
 	// encoding/xml 解析同名 sequenceFlow 时后者静默覆盖前者，
 	// 图会缺边——problem_management_flow_cn / service_request_flow_cn 曾各有一例。
 	flowSeen := make(map[string]bool, len(process.SequenceFlows))
@@ -201,7 +201,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 		}
 	}
 
-	// --- 规则组 6：outgoing 声明 ↔ sequenceFlow 一致性（2026-09-07 新增）---
+	// --- 规则组 6：outgoing 声明 ↔ sequenceFlow 一致性---
 	// 引擎寻路只按 sequenceFlow.sourceRef。元素声明的 <outgoing> 若指向
 	// 一条 sourceRef 不是自己的 flow（悬空），该节点在运行时会 0 出边——
 	// 曾致 10/16 内置模板卡死（executeStep 静默 return nil）。
@@ -231,7 +231,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 		}
 	}
 
-	// --- 规则组 7：serviceTask 处理器可达性（2026-09-07 新增）---
+	// --- 规则组 7：serviceTask 处理器可达性---
 	// implementation="##WebService" 等 BPMN 标准标注不是本引擎的 handler ID；
 	// 缺少 metaData service_task_type 的 serviceTask 将按 name/ID 寻址，
 	// 大概率找不到 handler 而 dead_letter。
@@ -246,7 +246,7 @@ func (s *BPMNLintService) lintProcess(process *BPMNProcess, result *dto.BPMNLint
 		}
 	}
 
-	// --- 规则组 8：审批节点能力可执行性（2026-09-13 新增）---
+	// --- 规则组 8：审批节点能力可执行性---
 	s.lintApprovalNodeCapabilities(process, result)
 }
 
@@ -329,7 +329,7 @@ func (s *BPMNLintService) lintApprovalNodeCapabilities(process *BPMNProcess, res
 		isApproval := strings.EqualFold(strings.TrimSpace(task.TaskPurpose), "approval")
 		label := display(task.Name, task.ID)
 
-		// 8.3：allowDelegate 仅对审批节点有意义
+		// allowDelegate 仅对审批节点有意义
 		if task.AllowDelegate && !isApproval {
 			result.Issues = append(result.Issues, &dto.BPMNLintIssue{
 				Severity: "warning", Category: "approval",
@@ -338,7 +338,7 @@ func (s *BPMNLintService) lintApprovalNodeCapabilities(process *BPMNProcess, res
 			})
 		}
 
-		// 8.4：显式 approvalThreshold 大于候选人数
+		// 显式 approvalThreshold 大于候选人数
 		if isApproval && task.ApprovalThreshold > 0 {
 			candidateCount := countCandidates(task)
 			if candidateCount > 0 && task.ApprovalThreshold > candidateCount {

@@ -1,5 +1,4 @@
 // Package sla_template 是 SLA 模板域的 HTTP handler 层（域切片架构）。
-// 自 controller/sla_template_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.SLATemplateService 承载，本包只做参数解析与响应封装。
 package sla_template
 
@@ -86,7 +85,7 @@ func (h *Handler) InstallTemplate(ctx *gin.Context) {
 }
 
 // RegisterRoutes 注册路由（兼容旧接口）。
-// 2026-09-17 P0：此前三个路由均未挂 RequirePermission（同文件 /sla/policies 全挂），
+// 此前三个路由均未挂 RequirePermission（同文件 /sla/policies 全挂），
 // 任何登录用户可读模板、可安装模板（写操作）。补齐 sla 资源权限校验。
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	templates := r.Group("/sla/templates")

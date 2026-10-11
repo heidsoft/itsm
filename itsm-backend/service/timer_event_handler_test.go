@@ -275,7 +275,7 @@ func TestTimerEventHandler_StartTimerMissingProcessDefinition(t *testing.T) {
 		TenantID:             tenantID,
 	}
 
-	// Phase 5 起 start timer 已实现：目标是启动流程实例；
+	// 起 start timer 已实现：目标是启动流程实例；
 	// 流程定义不存在时必须报错（供调度器重试/告警），而不是静默成功。
 	err := handler.HandleTimerFire(ctx, timer)
 	require.Error(t, err)

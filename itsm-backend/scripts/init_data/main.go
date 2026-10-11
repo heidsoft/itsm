@@ -50,7 +50,7 @@ func main() {
 	if adminPassword == "" {
 		log.Fatal("ADMIN_PASSWORD 环境变量未设置，请设置管理员初始密码")
 	}
-	// Sprint 2 Task 1: gate through pkg/credential so this CLI rejects
+	//gate through pkg/credential so this CLI rejects
 	// known-default and short passwords identically to in-process seeder.
 	if credential.IsWeakAdminPassword(adminPassword) {
 		log.Fatalf("ADMIN_PASSWORD matches a known weak default; refusing to seed. Pick a strong unique value.")
@@ -84,14 +84,14 @@ func main() {
 		}
 		fmt.Println("✅ 默认管理员账号创建成功！")
 		fmt.Println("用户名：admin")
-		// P0-6 修复：禁止将明文密码写入 stdout（会进入容器/CI 日志）。
+		// 禁止将明文密码写入 stdout（会进入容器/CI 日志）。
 		fmt.Printf("密码：使用 ADMIN_PASSWORD 环境变量指定的值（长度 %d）\n", len(adminPassword))
 	} else {
 		fmt.Println("ℹ️  管理员账号已存在")
 	}
 
 	// 仅在显式要求时重置密码（RESET_ADMIN_PASSWORD=true）。
-	// P0-6 修复：原实现每次运行都会覆盖管理员密码，导致运营中修改过的密码被静默重置。
+	// 原实现每次运行都会覆盖管理员密码，导致运营中修改过的密码被静默重置。
 	if result.Error == nil && strings.EqualFold(strings.TrimSpace(os.Getenv("RESET_ADMIN_PASSWORD")), "true") {
 		newHashedPassword, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
 		if err != nil {

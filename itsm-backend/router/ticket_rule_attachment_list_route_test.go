@@ -27,7 +27,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-04 边缘功能收口 E4-6h）：
+// 回归：
 //   - GET /api/v1/tickets/assignment-rules 返回 {rules,total}
 //   - GET /api/v1/tickets/automation-rules  返回 {rules,total}
 //   - GET /api/v1/tickets/:id/attachments   返回 {attachments,total}
@@ -245,7 +245,7 @@ type assignRecommendationListWire struct {
 	Total int `json:"total"`
 }
 
-// 回归（2026-10-04 边缘功能收口 E4-27a）：
+// 回归：
 // GET /api/v1/tickets/assign-recommendations/:id 旧响应把集合放在 recommendations 键下，
 // 结构体名又不含 List，因此静默逃逸过 tests/contract 的信封棘轮扫描。本批把它收敛为
 // 平台唯一的 {items,total}（实测不分页，service 整表取回、handler 写 Total=len(items)），

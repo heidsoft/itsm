@@ -213,7 +213,7 @@ func incidentCategoryDefinitions() []TicketCategorySeed {
 	}
 }
 
-// marketplaceItemDefinitions 修复 §8 市场空页 bug 的内置商品目录。
+// marketplaceItemDefinitions 是内置商品目录；缺这一项市场页就是空的。
 //
 // 设计原则：
 //   - 全部 status=published（ListItems 唯一可见的状态）。

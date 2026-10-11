@@ -611,7 +611,7 @@ func TestHandler_CommonFailOver2002(t *testing.T) {
 }
 
 // -----------------------------------------------------------------------------
-// P1-DataScope: lifecycle row-level guard (ack/resolve/close/reopen)
+// lifecycle row-level guard (ack/resolve/close/reopen)
 // -----------------------------------------------------------------------------
 
 // seedLifecycleIncident 在 mock repo 播种一个事件单，返回其 ID。

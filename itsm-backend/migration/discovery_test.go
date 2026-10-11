@@ -14,7 +14,7 @@ import (
 //  2. *_down.sql 自动成对
 //  3. 无 YYYYMMDD 前缀的脚本走兜底映射（add_missing_indexes）
 //
-// 这是外部审计修复（2026-09-08）的回归门禁：add_missing_indexes.sql 自 5 月写好
+// 这是外部审计修复的回归门禁：add_missing_indexes.sql 自 5 月写好
 // 以来从未被加载，本测试若失败说明发现器遗漏了关键脚本。
 func TestFilesystemMigrations_DiscoveryFromRealDir(t *testing.T) {
 	// 直接使用相对路径，CI/测试 cwd 通常在 itsm-backend/
@@ -108,7 +108,7 @@ func TestMergeWithRegistered(t *testing.T) {
 	assert.NotEmpty(t, hc.Description)
 
 	// legacy 001-006 必须被排除出活动流：其内嵌 SQL 引用旧表名/旧结构，
-	// 重放必炸（2026-09-10 prod 实证 002 报 relation "tenant" does not exist）。
+	// 重放必炸。
 	// 账本登记由 RecordLegacyMigrationsApplied 幂等补记，不在合并流内。
 	for _, m := range LegacyMigrations {
 		_, in := byVersion[m.Version]
@@ -121,7 +121,7 @@ func TestMergeWithRegistered(t *testing.T) {
 	}
 }
 
-// TestIsPreDiscoveryVersion 收养判定的日期边界（2026-09-11 复盘修正）：
+// TestIsPreDiscoveryVersion 收养判定的日期边界：
 // 只看 "20" 前缀不看日期会把既有安装上的新迁移误收养（静默跳过 DDL）。
 func TestIsPreDiscoveryVersion(t *testing.T) {
 	cases := []struct {

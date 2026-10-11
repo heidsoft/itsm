@@ -1,6 +1,6 @@
 package ai
 
-// Sprint C — Skill Registry v1：builtin Skill 实现。
+// Skill Registry v1：builtin Skill 实现。
 //
 // 设计约束：
 //   - 已有 AI endpoint 行为零回归，本期不替换 handler 主体逻辑。

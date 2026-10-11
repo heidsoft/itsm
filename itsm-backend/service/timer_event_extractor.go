@@ -101,7 +101,7 @@ func extractTimerFromDefinition(timerType, processKey, activityID, eventName str
 	} else if timerDef.TimeCycle != "" {
 		expression = timerDef.TimeCycle
 		// timeCycle 既可能是 ISO 8601 循环（R5/PT10M），也可能是 cron（"0 9 * * *"），
-		// 按实际内容分类，供调度器选择正确的触发时间算法（Phase 5）。
+		// 按实际内容分类，供调度器选择正确的触发时间算法。
 		if detected, err := ParseTimerExpression(timerDef.TimeCycle); err == nil {
 			expressionType = string(detected)
 		} else {

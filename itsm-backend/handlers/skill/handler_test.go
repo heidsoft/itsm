@@ -468,7 +468,7 @@ func TestAdminGet_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-// 18. 页长单一所有者（台账 E4-47③）：越界/非数字/零负页长回落平台缺省 20，
+// 18. 页长单一所有者：越界/非数字/零负页长回落平台缺省 20，
 // 不再由 handler 私有实现把 >100 截断成 100（那是 MaxPageSize 之外的第二套界）；
 // size 别名继续不被接受，避免同一接口双轨分页契约。
 func TestAdminList_PageSizeFallsBackToPlatformDefault(t *testing.T) {

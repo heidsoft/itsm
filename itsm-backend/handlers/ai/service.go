@@ -30,9 +30,9 @@ type Service struct {
 	triageService      *service.TriageService
 	rca                *service.RootCauseService
 	aiTelemetryService *service.AITelemetryService
-	// P1-2 修复：SummarizeService 装配路径（替换之前绕行 rca.SummarizeTicket 的方式）
+	// SummarizeService 装配路径；摘要优先走它，不再绕行 rca.SummarizeTicket。
 	summarizeService *service.SummarizeService
-	// P2-6: ent client，用于复用 RBAC hasResourcePermission
+	// ent client，用于复用 RBAC hasResourcePermission
 	entClient *ent.Client
 }
 
@@ -70,14 +70,14 @@ func (s *Service) SetLLMGateway(gateway *service.LLMGateway) {
 	s.llmGateway = gateway
 }
 
-// SetSummarizeService wires SummarizeService（2026-09-06 P1-2 修复：替换之前绕行 rca 的方式）。
+// SetSummarizeService wires SummarizeService。
 // SummarizeTicket 优先走 SummarizeService.SummarizeWithMetadata，失败兜底回 rca。
 func (s *Service) SetSummarizeService(svc *service.SummarizeService) {
 	s.summarizeService = svc
 }
 
 // SetEntClient wires the ent client for RBAC permission checks.
-// P2-6: AI 工具执行前调用 hasResourcePermission 校验用户对工具 Resource/Action 的权限
+// AI 工具执行前调用 hasResourcePermission 校验用户对工具 Resource/Action 的权限
 func (s *Service) SetEntClient(client *ent.Client) {
 	s.entClient = client
 }
@@ -99,16 +99,16 @@ func (s *Service) ListToolsForTenant(ctx context.Context, tenantID int) []servic
 	return s.tools.ListToolsForTenant(ctx, tenantID)
 }
 
-// ErrToolPermissionDenied 工具权限不足（P2-6 Gate 2）
+// ErrToolPermissionDenied 工具权限不足
 var ErrToolPermissionDenied = fmt.Errorf("tool permission denied")
 
-// ErrUnknownTool 未知工具（P2-6 Gate 2）
+// ErrUnknownTool 未知工具
 var ErrUnknownTool = fmt.Errorf("unknown tool")
 
 var ErrToolUnavailable = fmt.Errorf("tool authorization dependencies unavailable")
 
 // ExecuteTool 执行 AI 工具
-// P2-6: 新增 userID 和 role 参数用于 Gate 2 RBAC 校验
+// userID 和 role 用于 Gate 2 RBAC 校验
 //
 // 校验分层：
 //
@@ -123,7 +123,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		return nil, 0, ErrToolUnavailable
 	}
 
-	// === P2-6 Gate 2: 工具级 RBAC 校验 ===
+	// Gate 2: 工具级 RBAC 校验
 	permCheck := "passed"
 	permReason := ""
 	allowed := true
@@ -161,7 +161,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 	if !needsApproval {
 		res, err := s.tools.Execute(ctx, tenantID, name, args)
 		// 只读工具执行也记录审计（AGENTS.md: AI tool invocation must produce audit logs）
-		// P2-6: 同步写入 RBAC 校验结果字段
+		// 同步写入 RBAC 校验结果字段
 		if err == nil {
 			s.recordToolAudit(ctx, tenantID, userID, role, name, args, permCheck, permReason, "executed", nil, false)
 		}
@@ -191,7 +191,7 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 
 // recordToolAudit 统一记录只读工具执行审计，包含 P2-6 RBAC 校验结果
 //
-// L8 修复（2026-09-08）：审计写入失败不再用 _, _ = 吞掉，改用结构化错误日志 +
+// 审计写入失败不再用 _, _ = 吞掉，改用结构化错误日志 +
 // itsm_ai_persist_errors_total{operation="create_tool_invocation"} 计数器埋点，
 // 保证 DB 抖动时审计丢失可观测、可告警。
 func (s *Service) recordToolAudit(ctx context.Context, tenantID, userID int, role, toolName string, args map[string]interface{}, permCheck, permReason, status string, result *string, needsApproval bool) {
@@ -279,7 +279,7 @@ func (s *Service) Chat(ctx context.Context, tenantID, userID int, query string, 
 	}
 
 	if convID != 0 {
-		// L8 修复：Chat 路径持久化失败必须可见。两类消息分别打点，避免一次失败掩盖另一类错误。
+		// Chat 路径持久化失败必须可见。两类消息分别打点，避免一次失败掩盖另一类错误。
 		if _, err := s.repo.CreateMessage(ctx, &Message{
 			ConversationID: convID,
 			Role:           "user",
@@ -343,7 +343,7 @@ var chatWritableTools = map[string]bool{
 // separately via onSources. It also persists the resulting conversation and
 // messages after the stream completes so history is preserved.
 //
-// P1-B: 注入按权限过滤后的只读工具。只有当前角色拥有 resource:action 权限的只读工具
+// 注入按权限过滤后的只读工具。只有当前角色拥有 resource:action 权限的只读工具
 // 才会进入聊天路径；写工具（!ReadOnly）绝不注入。模型发起的工具调用经由 execTool
 // 复用 ExecuteTool 的 RBAC Gate 2 校验 + 审计记录，执行结果回填后继续流式生成。
 func (s *Service) ChatStream(
@@ -368,7 +368,7 @@ func (s *Service) ChatStream(
 	// Provider 能力闸门：部分 provider（如 MiniMax Anthropic 兼容接口）仅实现了
 	// Chat，未实现 ChatStreamWithTools。此时 LLMGateway 会退化为普通 ChatStream，
 	// 但 System Prompt 依然告诉模型“必须调用工具”，导致模型在文本中假装调用
-	// (“正在调用 list_tickets 工具...”) 但永远拿不到结果。修复：检测 provider
+	// (“正在调用 list_tickets 工具...”) 但永远拿不到结果。检测 provider
 	// 能力，不支持时不注入 tools，让 RAG 层退化为纯知识库问答（合规）。
 	var tools []service.LLMTool
 	providerSupportsTools := s.llmGateway != nil && s.llmGateway.SupportsToolCalling()
@@ -397,8 +397,7 @@ func (s *Service) ChatStream(
 	// 写工具经审批流会返回 (res=nil, invID!=0, err=nil)，这里将其转译为结构化
 	// approval_pending 提示，让 LLM 明确告知用户"操作已提交、待人工审批"。
 	execTool := func(name string, args map[string]any) (any, error) {
-		// 身份字段无条件以认证上下文覆盖：LLM 自报的 user_id/requester_id 不可信，
-		// 与 skill invoke 入口同规则，防止伪造操作者归属与跨租户工具执行。
+		// LLM 自报的 user_id/requester_id 不可信，一律以认证上下文覆盖。
 		args["user_id"] = float64(userID)
 		args["requester_id"] = float64(userID)
 		res, invID, err := s.ExecuteTool(ctx, userID, tenantID, role, name, args)
@@ -451,7 +450,7 @@ func (s *Service) ChatStream(
 		}
 	}
 	if convID != 0 {
-		// L8 修复：ChatStream 路径持久化失败同样必须可见，与 Chat 路径共用同一计数器。
+		// ChatStream 路径持久化失败同样必须可见，与 Chat 路径共用同一计数器。
 		// 流式响应已经写回客户端；如果 DB 写入失败而日志被吞，
 		// 用户会看到回复但刷新后历史丢失，难以排查。
 		if _, err := s.repo.CreateMessage(ctx, &Message{
@@ -589,7 +588,7 @@ func (s *Service) CreateTicketByAI(ctx context.Context, description string, tena
 
 // SummarizeTicket B9: AI 工单总结。
 //
-// 2026-09-06 P1-2 修复：把 SummarizeService 接入装配图（之前 NewSummarizeService 在
+// 把 SummarizeService 接入装配图（之前 NewSummarizeService 在
 // 生产装配路径零调用点，是 404 行死代码）。本函数仍委托 rca 处理 ent 反查与编排，
 // SummarizeService 通过 ai.summarize skill 独立被 SkillRegistry 消费（见 skills.go），
 // 二者职责解耦：rca 负责按 ticketID 拉上下文，SummarizeService 负责"按文本 + metadata"摘要。
@@ -628,7 +627,7 @@ func (s *Service) GetTrendPrediction(ctx context.Context, req *dto.TrendPredicti
 		}
 		output, err := s.slaForecastSkill.Execute(ctx, input)
 		if err == nil {
-			// P0-1（2026-09-06 UAT 修复）：slaForecastSkill 的 PredictionPoint 用
+			// slaForecastSkill 的 PredictionPoint 用
 			// "predicted" 字段，与 dto.TrendPredictionResponse.Predictions 契约
 			// "predictedValue" 不一致。出口做一层转译，保留 SLAForecastSkill 的
 			// 全部增强字段（insights / seasonality / trend / anomalyDates），
@@ -720,7 +719,7 @@ func (s *Service) GetForecastInsights(ctx context.Context, req *dto.TrendPredict
 
 // Telemetry
 
-// SaveFeedback delegates to AITelemetryService. Sprint 3 Task 1 added
+// SaveFeedback delegates to AITelemetryService.
 // accepted (*bool) for ai_audit accept/reject decisions to be first-class
 // (was overloaded onto useful).
 func (s *Service) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
@@ -765,7 +764,7 @@ func (s *Service) SearchKnowledge(ctx context.Context, tenantID int, query strin
 
 // TriageTicket provides ticket classification and recommendations.
 //
-// Phase 3 Step 3.2（2026-09-27）：移除内联关键词 fallback，统一委托
+// 移除内联关键词 fallback，统一委托
 // service/triage_service.go（Guidance → LLM → keyword 三级链）。
 // triageService 不可用时返回 unclassified + confidence=0，不再维护第二套分类枚举。
 func (s *Service) TriageTicket(ctx context.Context, tenantID int, title, description, category, priority string) (interface{}, error) {

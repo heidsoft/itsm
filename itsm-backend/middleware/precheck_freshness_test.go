@@ -36,12 +36,12 @@ func TestPrecheckMapIsFresh(t *testing.T) {
 // TestNoPermissionDeclarationIsDropped 守卫：任何 RequirePermission 家族声明都必须被
 // 扫描器定位成 /api/v1 完整路径，一条都不许丢。
 //
-// 2026-10-04 P0 根因：扫描器此前只认函数内 `x := y.Group(...)` 派生的分组，解析不出
+// 扫描器此前只认函数内 `x := y.Group(...)` 派生的分组，解析不出
 // 以 `*gin.RouterGroup` 形参传入的组根（如 SetupTicketTypeRoutes(tenant *gin.RouterGroup)），
 // 于是这类声明在 `/api/v1` 前缀过滤处被静默丢弃、进不了预检映射。DBOnly 生产模式下
 // RBACMiddleware 的路径预检对未映射路径一律拒绝，工单类型 CRUD/preset 安装、teams、
 // tags、problem-relationships、approval-records、my-approvals 等 21 个端点对
-// 非 super_admin 恒 403（ga-gate 租户隔离步骤自 2026-09-27 起持续红的根因）。
+// 非 super_admin 恒 403。
 //
 // 丢声明=锁死端点，所以这里必须硬失败，而不是只让生成器报错。
 func TestNoPermissionDeclarationIsDropped(t *testing.T) {

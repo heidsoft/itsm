@@ -17,7 +17,7 @@ import (
 
 // TestRoutePermissionCodesAreDefined 守卫：路由声明的每个 (resource, action) 必须落在权限码权威源内。
 //
-// 背景（2026-09-17 P0-B，已清零）
+// 背景
 // ----------------------------
 // checkPermissionMatch（middleware/rbac.go）只做**精确匹配**或 `*` 通配：
 // 角色持有 `cmdb:read` 永远匹配不上 `cmdb_ci:read`。因此一旦路由引用了

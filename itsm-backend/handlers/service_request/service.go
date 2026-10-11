@@ -44,7 +44,7 @@ const (
 	ApprovalTimeoutIT       = 48
 	ApprovalTimeoutSecurity = 72
 
-	// Roles：单一源在 domain/role（2026-09-07 P1-B 词表漂移治理）。
+	// Roles：单一源在 domain/role。
 	// 保留域内别名以最小化调用点改动；新代码一律用 domainrole 常量。
 	RoleAdmin      = domainrole.Admin
 	RoleSuperAdmin = domainrole.SuperAdmin
@@ -82,7 +82,7 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 		approvalChain: approvalChain,
 	}
 	if entClient != nil {
-		// P0-1：服务请求审批桥接到 BPMN 任务，避免流程实例悬挂
+		// 服务请求审批桥接到 BPMN 任务，避免流程实例悬挂
 		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
 	}
 	return svc
@@ -362,7 +362,7 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 	}
 
 	// BPMN 待办是审批写入的前置条件，缺少 bridge/实例/待办均不得回退直批。
-	// P0-1：BPMN 任务完成与业务写入必须在同一事务内，防止"流程已批、业务未批"的不一致。
+	// BPMN 任务完成与业务写入必须在同一事务内，防止"流程已批、业务未批"的不一致。
 	if s.approvalBridge == nil || s.client == nil {
 		return nil, nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
@@ -396,14 +396,14 @@ func (s *Service) ApplyApproval(ctx context.Context, id, tenantID, actorID int, 
 		// 审批链驱动的层级：按 node 中解析出的审批人 + 会签阈值(quorum)判定本级是否通过。
 		// 串行(阈值1)行为与遗留一致；会签(阈值=审批人数)需全员批准才推进。
 		if nodeIDs, ok := currentApproval.Node["approver_ids"].([]interface{}); ok && len(nodeIDs) > 0 {
-			// P1 修复：阈值取不到时兜底取「该层级候选审批人数」而非 1，
+			// 阈值取不到时兜底取「该层级候选审批人数」而非 1，
 			// 避免会签（需全员批准）退化为任意一人即可通过导致 threshold 退化。
 			threshold := len(nodeIDs)
 			if t, ok2 := currentApproval.Node["quorum_threshold"].(float64); ok2 && int(t) > 0 {
 				threshold = int(t)
 			}
 
-			// P1 修复：并发先读后写保护。标记前重新读取 DB 中最新的审批记录，
+			// 并发先读后写保护。标记前重新读取 DB 中最新的审批记录，
 			// 基于最新 approved_ids 做合并，避免并发互相覆盖导致会签永不达标。
 			if fresh, ferr := s.repo.GetApproval(ctx, id, currentApproval.Level); ferr == nil && fresh != nil && fresh.Node != nil {
 				currentApproval = fresh

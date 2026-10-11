@@ -39,13 +39,13 @@ type DashboardService struct {
 	slaStore *sla.Store // Phase 3: sla_states 读取
 }
 
-// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+// SetSLAStore 注入 SLA 持久化 store
 func (s *DashboardService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
 }
 
 // 工单状态聚合统一口径（与 common.TicketStatus* 状态机保持一致）。
-// 2026-08-29 生产就绪评估 P0-2：此前统计使用不存在的 "submitted"、完成口径只计
+// 此前统计使用不存在的 "submitted"、完成口径只计
 // "closed"，导致仪表盘"待处理/已完成/超时"与实际数据严重背离。
 var (
 	// 待处理：新建/打开/挂起/已分配未开工

@@ -67,7 +67,7 @@ func NewService(repo Repository, entClient *ent.Client, logger *zap.SugaredLogge
 	// Initialize PIR service
 	svc.pirService = service.NewChangePIRService(entClient, logger)
 	if entClient != nil {
-		// P0-1：变更审批桥接到 BPMN 任务，避免流程实例悬挂
+		// 变更审批桥接到 BPMN 任务，避免流程实例悬挂
 		svc.approvalBridge = service.NewBPMNApprovalBridge(entClient, logger)
 	}
 	return svc
@@ -99,15 +99,14 @@ func (s *Service) ListChanges(ctx context.Context, tenantID int, page, size int,
 }
 
 func (s *Service) UpdateChange(ctx context.Context, c *Change, actorID int, actorRole string) (*Change, error) {
-	// P1-2: Guard governance fields. Changes must be in draft status to freely edit fields that
+	// Guard governance fields. Changes must be in draft status to freely edit fields that
 	// feed review approval / risk snapshot. Reject silent post-submission mutations and force the
 	// caller to return to draft for re-approval instead.
 	existing, err := s.repo.Get(ctx, c.ID, c.TenantID)
 	if err != nil || existing == nil {
 		return nil, fmt.Errorf("change not found")
 	}
-	// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
-	// 本人创建或受理的变更单（datascope.CanWriteResource）。
+	// 写权限 ⊆ 读权限：普通角色仅可修改本人创建或受理的变更单。
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
 		return nil, common.NewForbiddenError("无权限修改该变更单：仅创建人、受理人或管理员可操作")
 	}
@@ -167,7 +166,7 @@ func governanceFieldDiffs(existing, requested *Change) []string {
 	return blocked
 }
 
-// DeleteChange 删除变更单。P1-DataScope：删除受行级写权限约束（原先仅校验租户隔离）。
+// DeleteChange 删除变更单，受行级写权限约束（写权限 ⊆ 读权限）。
 func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
 	existing, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil || existing == nil {
@@ -231,7 +230,7 @@ func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, 
 // 拦截条件：变更绑定了受影响 CI（存在实施风险）但实施计划/回滚计划缺失。
 var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis gate")
 
-// validateSubmitGate 提交前影响分析门禁（P1-③ GA 收敛项）。
+// validateSubmitGate 提交前影响分析门禁。
 //
 // 此前 GetCMDBImpactSummary 已产出 RequiresReview / RequiresBackoutPlan 推荐，
 // 但仅用于前端展示（WorkflowHints），SubmitChange 从不消费——绑定受影响 CI
@@ -263,7 +262,7 @@ func (s *Service) validateSubmitGate(c *Change) error {
 	)
 }
 
-// checkWindowConflict 排期窗口冲突检查（P1-③ GA 收敛项）。
+// checkWindowConflict 排期窗口冲突检查。
 //
 // 场景：同一租户内两个变更的排期窗口（PlannedStart/PlannedEnd）重叠且
 // AffectedCIs 有交集时，存在同 CI 双变更并行实施风险（A 的实施动作可能
@@ -347,12 +346,12 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 		return nil, fmt.Errorf("change must be in draft status to submit")
 	}
 
-	// 2.5 影响分析门禁：绑定受影响 CI 的变更必须先补齐实施/回滚计划（P1-③）。
+	// 2.5 影响分析门禁：绑定受影响 CI 的变更必须先补齐实施/回滚计划。
 	if gateErr := s.validateSubmitGate(c); gateErr != nil {
 		return nil, gateErr
 	}
 
-	// 2.6 排期窗口冲突检查：同 CI 时间重叠的活跃变更拦截（P1-③）。
+	// 2.6 排期窗口冲突检查：同 CI 时间重叠的活跃变更拦截。
 	if gateErr := s.checkWindowConflict(ctx, c); gateErr != nil {
 		return nil, gateErr
 	}
@@ -473,7 +472,7 @@ func (s *Service) resolveChangeChainPlan(ctx context.Context, tenantID, changeID
 
 // Approval methods
 //
-// P0-1 修复：审批记录写入与变更状态推进（draft → pending）合并到同一 sql.Tx，
+// 审批记录写入与变更状态推进（draft → pending）合并到同一 sql.Tx，
 // 由 repository.SubmitApprovalRecordTx 通过条件 UPDATE 统一保证原子性与幂等性。
 // 旧逻辑先 CreateApprovalRecord 再用非 CAS 的 repo.Update 改 status，
 // 存在"审批记录已写入但状态推进失败"或"状态推进成功但没有审批记录"的部分失败窗口。
@@ -484,7 +483,7 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 		return nil, fmt.Errorf("change not found")
 	}
 
-	// P0-1 修复：审批人来源只能取自本变更的审批链（change_approval_chains），
+	// 审批人来源只能取自本变更的审批链（change_approval_chains），
 	// 禁止请求体任意指定。否则持 change:write 的用户可注入以自己为审批人的
 	// pending 记录再调用 /transition 直接 approved，绕过评审 / quorum / 标准
 	// 变更门禁。
@@ -560,14 +559,14 @@ func (s *Service) ProcessApproval(ctx context.Context, recordID int, status stri
 			return nil, fmt.Errorf("failed to get change: %w", err)
 		}
 		if c != nil {
-			// C-2 修复：通过状态机校验禁止非法转换（例如 cancelled → rejected 终态互跳）
+			// 通过状态机校验禁止非法转换（例如 cancelled → rejected 终态互跳）
 			target := "rejected"
 			if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
 				s.logger.Warnw("ProcessApproval: skip invalid change status transition",
 					"change_id", res.ChangeID, "from", c.Status, "to", target)
 				return res, nil
 			}
-			// H-2 修复：事务化更新 change 为终态；提交成功后单独收口 pending chains（CloseChangeApprovalChains 内部使用 rawDB，*ent.Tx 不提供 ExecContext）
+			// 事务化更新 change 为终态；提交成功后单独收口 pending chains（CloseChangeApprovalChains 内部使用 rawDB，*ent.Tx 不提供 ExecContext）
 			tx, txErr := s.entClient.Tx(ctx)
 			if txErr != nil {
 				return nil, fmt.Errorf("开启事务失败: %w", txErr)
@@ -638,7 +637,7 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 		}
 	}
 	// 标记历史决定（租户过滤由仓储保证）。
-	// P1 修复：按 (approverID, level) 双重匹配——仅当该审批人确实属于该层级时，
+	// 按 (approverID, level) 双重匹配——仅当该审批人确实属于该层级时，
 	// 其批准/驳回才计入该层 quorum，避免跨层互相串（一次性审批可满足多层，但绝不串层）。
 	for _, h := range history {
 		for _, lvl := range h.Levels {
@@ -945,12 +944,10 @@ func inferITILPractices(summary *dto.ChangeCMDBImpactSummary) []string {
 	return practices
 }
 
-// TransitionStatus transitions a change to a new status
-// For approve/reject actions, verifies user is the designated approver
-// P1-DataScope #27：非审批分支（schedule/start/complete/close/cancel）走
-// change:write RBAC，但同样能操作他入变更单——补行级 owner 校验
-// （写权限 ⊆ 读权限）。rollback 除外：回滚是授权动作（对齐 incident Assign
-// 先例，由独立 change:rollback RBAC 门禁约束）。
+// TransitionStatus 迁移变更状态；approve/reject 需要操作人是对应审批人。
+// 非审批分支（schedule/start/complete/close/cancel）只有 change:write RBAC，
+// 因此同样补行级 owner 校验（写权限 ⊆ 读权限）；rollback 除外，回滚由独立的
+// change:rollback 授权约束。
 func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int, targetStatus, comment, actorRole string) (*Change, error) {
 	c, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {
@@ -1007,7 +1004,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			return nil, fmt.Errorf("%w: user_id=%d", ErrNotApprover, userID)
 		}
 
-		// P0-1：审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
+		// 审批先桥接完成对应的 BPMN 待办任务（以流程任务为权威审批来源）。
 		// 三态语义：无关联流程实例 → 回退纯业务审批；已绑定但无可操作待办 → bridge 返回
 		// conflict 并中止，避免业务状态与流程状态分叉。
 		if s.approvalBridge != nil {
@@ -1028,7 +1025,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
-	// P0-2：业务生命周期动作同步推进 BPMN 流程，避免业务状态与流程状态分叉。
+	// 业务生命周期动作同步推进 BPMN 流程，避免业务状态与流程状态分叉。
 	// 各动作推进的步数按 change_normal_flow 模板节点编排：
 	//   rejected  → 驳回收尾（Activity_Reject → 结束）；
 	//   scheduled → 完成排期任务（Activity_Schedule → 实施）；
@@ -1067,7 +1064,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 审批决定已由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
 	// 无需再回写 legacy change_approvals 表。
 
-	// H-2 / C-2 修复：
+	// H-2 / C-2
 	// 1. 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口 pending chains
 	// 2. 非终态直接更新
 	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||

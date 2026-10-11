@@ -27,12 +27,10 @@ func NewChangeServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger) 
 	}
 }
 
-// GetTaskType 返回任务类型
 func (h *ChangeServiceTaskHandler) GetTaskType() string {
 	return "change_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *ChangeServiceTaskHandler) GetHandlerID() string {
 	return "change_service_handler"
 }

@@ -9,7 +9,6 @@ import (
 )
 
 // SetupSLARoutes 注册 SLA 相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupSLARoutes(tenant *gin.RouterGroup, h *slaHandler.Handler) {
 	slaGrp := tenant.Group("/sla")
 	{

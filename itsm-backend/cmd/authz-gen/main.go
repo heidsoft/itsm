@@ -1,4 +1,4 @@
-// authz-gen 从路由声明生成预检映射（权限单一真源体系，2026-09-17 批次 5）。
+// authz-gen 从路由声明生成预检映射。
 //
 // 用法：cd itsm-backend && go run ./cmd/authz-gen
 // 产物：middleware/rbac_precheck_gen.go（禁手改，新鲜度由 TestPrecheckMapIsFresh 守卫）

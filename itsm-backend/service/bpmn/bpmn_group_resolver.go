@@ -64,7 +64,7 @@ func joinCSV(items []string) string {
 //   - userIDs: 所有组成员用户的 ID（去重）
 //   - usernames: 所有组成员的 username/email（去重）
 //
-// 角色回退（2026-09-15 GitHub issue 修复）：组名在 groups 表不存在时，若与
+// 角色回退：组名在 groups 表不存在时，若与
 // roles 表某个角色 code 同名，则按角色解析用户（M2M 边 ∪ 主角色枚举）。
 // 设计器下拉融合了「组 + 角色」选项，审批组配置缺失（groups 无种子）时
 // 选角色也能正确分派，不再静默产出空候选集。

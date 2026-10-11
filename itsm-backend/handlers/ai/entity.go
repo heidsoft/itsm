@@ -40,7 +40,7 @@ type ToolInvocation struct {
 	ApprovedAt     *time.Time `json:"approvedAt"`
 	RequestID      string     `json:"requestId"`
 	CreatedAt      time.Time  `json:"createdAt"`
-	// P2-6 AI 工具 RBAC 校验审计字段
+	// AI 工具 RBAC 校验 审计字段
 	UserID           int    `json:"userId"`
 	PermissionCheck  string `json:"permissionCheck"`  // passed|denied|skipped
 	PermissionReason string `json:"permissionReason"` // 校验/拒绝原因

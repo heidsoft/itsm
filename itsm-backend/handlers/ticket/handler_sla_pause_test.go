@@ -21,7 +21,7 @@ import (
 	"itsm-backend/service/sla"
 )
 
-// 回归（2026-09-25 假成功收口）：PUT /tickets/:id/sla/pause|resume 此前直接返回
+// 回归：PUT /tickets/:id/sla/pause|resume 此前直接返回
 // 成功假象、完全不落库。必须真实调用 SLA 领域服务：暂停落库并记录原因、
 // 重复暂停/未暂停恢复是 409 冲突、跨租户按 404 拒绝。
 func TestSLAPauseResumeWiring(t *testing.T) {
@@ -37,7 +37,7 @@ func TestSLAPauseResumeWiring(t *testing.T) {
 		SetRequesterID(user.ID).SetTenantID(tenant.ID).
 		SetSLAResponseDeadline(deadline).SetSLAResolutionDeadline(deadline.Add(2 * time.Hour)).
 		SaveX(ctx)
-	// Phase 3: SLA 暂停/恢复现在以 sla_states 为权威源
+	// SLA 暂停/恢复现在以 sla_states 为权威源
 	_, err := client.SLAState.Create().
 		SetTenantID(tenant.ID).
 		SetAggregateType("ticket").

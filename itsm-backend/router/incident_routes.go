@@ -8,7 +8,6 @@ import (
 )
 
 // SetupIncidentRoutes 注册事件管理相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupIncidentRoutes(tenant *gin.RouterGroup, h *incidentHandler.IncidentHandler) {
 	inc := tenant.Group("/incidents")
 	{

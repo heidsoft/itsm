@@ -8,7 +8,6 @@ import (
 )
 
 // SetupTicketTypeRoutes 注册工单类型域路由（扁平注册于 tenant 根组）。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupTicketTypeRoutes(tenant *gin.RouterGroup, h *ticketTypeHandler.Handler) {
 	tenant.GET("/ticket-types", middleware.RequirePermission("ticket", "read"), h.ListTicketTypes)
 	tenant.POST("/ticket-types", middleware.RequirePermission("ticket_type", "manage"), h.CreateTicketType)

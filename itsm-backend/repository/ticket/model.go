@@ -89,7 +89,7 @@ func (t *Ticket) IsFinalState() bool {
 }
 
 // CanTransitionTo 判断是否可以转换到目标状态。
-// P1-1：统一委托 common.IsValidTicketStatusTransition，使其成为全系统唯一的工单状态机事实来源。
+// 统一委托 common.IsValidTicketStatusTransition，使其成为全系统唯一的工单状态机事实来源。
 // 禁止在此处或其他层内联状态转换表（否则会出现不同入口判定不一致的漏洞）。
 func (t *Ticket) CanTransitionTo(target Status) bool {
 	return common.IsValidTicketStatusTransition(string(t.Status), string(target))
@@ -161,7 +161,7 @@ func (e *StateError) Error() string {
 }
 
 // DataScope 行级数据权限范围。
-// 阻断8 修复：原 ListTickets 仅按 tenantID 过滤，普通员工（end_user）可读取全租户工单，
+// 原 ListTickets 仅按 tenantID 过滤，普通员工（end_user）可读取全租户工单，
 // 含 HR/薪酬/安全事件工单。引入 DataScope 由中间件解析角色后注入，service 层统一消费。
 type DataScope int
 

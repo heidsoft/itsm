@@ -127,7 +127,6 @@ func (c *AIGeneratorHandler) GetTemplateSuggestions(ctx *gin.Context) {
 	common.Success(ctx, suggestions)
 }
 
-// RegisterRoutes 注册路由
 func (c *AIGeneratorHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmnAI := r.Group("/bpmn/ai")
 	{

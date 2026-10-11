@@ -8,7 +8,6 @@ import (
 )
 
 // SetupProblemRoutes 注册问题管理相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupProblemRoutes(tenant *gin.RouterGroup, h *problemHandler.Handler) {
 	problems := tenant.Group("/problems")
 	{

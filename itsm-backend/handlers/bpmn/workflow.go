@@ -53,7 +53,7 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 
 // RegisterRoutes 注册路由
 //
-// 授权契约（2026-09-17 P0「越权写收口」）：
+// 授权契约：
 //   - 流程定义 / 实例 / 版本 的读写删 → bpmn:read / bpmn:write / bpmn:delete
 //     （与 middleware.ResourceActionMap 的 /api/v1/bpmn/* 预检条目同一资源名）
 //   - 任务（本人待办与操作）→ task:read / task:update；跨用户全量任务视图 → task:admin

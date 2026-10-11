@@ -49,7 +49,7 @@ func (t *ToolRegistry) SetCIRelationshipService(s *CIRelationshipService) {
 func (t *ToolRegistry) SetImpactExplainer(s *ImpactExplanationService) { t.impactExplain = s }
 
 // GetTool 按名称查找工具定义，找不到返回 nil
-// P2-6: AI 工具 RBAC 校验入口需要查询 ToolDefinition.Resource/Action
+// AI 工具 RBAC 校验入口需要查询 ToolDefinition.Resource/Action
 func (t *ToolRegistry) GetTool(name string) *ToolDefinition {
 	for _, td := range t.ListTools() {
 		if td.Name == name {
@@ -83,7 +83,7 @@ func (t *ToolRegistry) canExecuteWriteTool(name string) bool {
 }
 
 // ListToolsForTenant 返回按租户动态化的工具清单。
-// P0-1（CMDB AI-Native）：list_cis 的 ci_type 枚举不再硬编码 5 值，
+// list_cis 的 ci_type 枚举不再硬编码 5 值，
 // 而是从该租户的 CIType 表实时读取——租户自定义类型（如 serverless）对 Agent 可见。
 // 查询失败或无类型时静默回落到静态清单（fail-open 仅影响参数提示，不影响执行校验）。
 func (t *ToolRegistry) ListToolsForTenant(ctx context.Context, tenantID int) []ToolDefinition {
@@ -287,7 +287,7 @@ func (t *ToolRegistry) ListTools() []ToolDefinition {
 			},
 		},
 		// ============================================================
-		// P1-3 CMDB AI 工具扩展（get_ci / get_ci_relationships /
+		// CMDB AI 工具扩展 （get_ci / get_ci_relationships /
 		//   create_ci_relationship / delete_ci_relationship / get_ci_impact）
 		// 全部围绕 CI 业务编号（自然键）或多轮稳定的 ci_id 提供，让 Agent
 		// 能完整驱动 CMDB 拓扑编辑与影响面分析。
@@ -647,7 +647,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		return created, nil
 
 	// ============================================================
-	// P1-3 CMDB AI 工具实现
+	// CMDB AI 工具实现
 	// ============================================================
 	case "get_ci":
 		if t.cmdb == nil {
@@ -823,7 +823,7 @@ func (t *ToolRegistry) Execute(ctx context.Context, tenantID int, name string, a
 		if err != nil {
 			return nil, err
 		}
-		// P1-4：影响分析 AI 解释层（fail-open，未注入 / LLM 失败时返回 nil）
+		// 影响分析 AI 解释层（fail-open，未注入 / LLM 失败时返回 nil）
 		var explain map[string]interface{}
 		if t.impactExplain != nil && impact != nil {
 			if ie, _ := t.impactExplain.ExplainImpact(ctx, tenantID, ciID, hops, impact); ie != nil {

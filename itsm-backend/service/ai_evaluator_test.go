@@ -188,7 +188,7 @@ func TestEvaluate_EmptyState(t *testing.T) {
 	assert.Equal(t, 0, report.TotalFeedback)
 	assert.Equal(t, 0.0, report.HealthScore)
 	assert.Empty(t, report.ByScenario)
-	// Sprint C：bySkill 字段在空库时仍以空数组返回（与 ByScenario 对齐）。
+	// bySkill 字段在空库时仍以空数组返回（与 ByScenario 对齐）。
 	assert.NotNil(t, report.BySkill)
 	assert.Empty(t, report.BySkill)
 }

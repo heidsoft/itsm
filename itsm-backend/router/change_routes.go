@@ -8,7 +8,6 @@ import (
 )
 
 // SetupChangeRoutes 注册变更管理相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupChangeRoutes(tenant *gin.RouterGroup, h *changeHandler.Handler) {
 	changes := tenant.Group("/changes")
 	{
@@ -20,7 +19,7 @@ func SetupChangeRoutes(tenant *gin.RouterGroup, h *changeHandler.Handler) {
 		changes.DELETE("/:id", middleware.RequirePermission("change", "delete"), h.DeleteChange)
 		changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), h.SubmitChange)
 		changes.POST("/:id/assign", middleware.RequirePermission("change", "write"), h.AssignChange)
-		// 状态转换：approve/reject 需要独立审批权限，rollback 需要独立回滚权限（H-15 修复：禁止 write 权限泛化为审批/回滚）
+		// 状态转换：approve/reject 需要独立审批权限，rollback 需要独立回滚权限
 		changes.POST("/:id/approve", middleware.RequirePermission("change", "approve"), h.TransitionStatus)
 		changes.POST("/:id/reject", middleware.RequirePermission("change", "approve"), h.TransitionStatus)
 		changes.POST("/:id/schedule", middleware.RequirePermission("change", "write"), h.TransitionStatus)

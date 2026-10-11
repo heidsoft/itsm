@@ -407,7 +407,6 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -467,7 +466,6 @@ func (h *Handler) UpdateChange(c *gin.Context) {
 
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "更新变更失败")
 		return
 	}
@@ -506,7 +504,6 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 	}
 	req.ChangeID = changeID
 
-	// 审批人身份取认证上下文，不信任请求体（防止代他人伪造待审记录）。
 	operatorID, ok := userIDFromCtx(c)
 	if !ok {
 		return
@@ -694,15 +691,12 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 
 	res, err := h.svc.TransitionStatus(c.Request.Context(), id, tenantID, userID, targetStatus, comment, c.GetString("role"))
 	if err != nil {
-		// 按错误语义分流：业务规则拒绝与并发冲突不得再伪装成 500。
-		// 否则客户端无法与真实故障区分，重试逻辑无从实现，告警也会被无谓污染。
+		// 按错误语义分流：业务规则拒绝与并发冲突不得伪装成 500。
 		switch {
 		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification):
 			common.Conflict(c, err.Error(), nil)
 		case errors.Is(err, ErrNotApprover):
 			common.Fail(c, common.ForbiddenCode, "您不是该变更的待办审批人")
-		// P1-DataScope #27：行级守卫返回 403 AppError，必须语义分流
-		//（否则掉入 default 被吞成 500——错误映射铁律）。
 		case isForbiddenAppErr(err):
 			common.FailWithErr(c, err, "操作失败")
 		case errors.Is(err, ErrChangeNotFound):
@@ -752,7 +746,6 @@ func (h *Handler) AssignChange(c *gin.Context) {
 		common.NotFound(c, "Change not found")
 		return
 	}
-	// P1-DataScope：分配变更处理人属于写操作，同样受行级写权限约束
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
@@ -762,7 +755,6 @@ func (h *Handler) AssignChange(c *gin.Context) {
 	existing.AssigneeID = &req.AssigneeID
 	res, err := h.svc.UpdateChange(c.Request.Context(), existing, actorID, actorRole)
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "分配变更失败")
 		return
 	}
@@ -815,12 +807,10 @@ func (h *Handler) DeleteChange(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：删除同样受行级写权限约束
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
 	if err := h.svc.DeleteChange(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "删除变更失败")
 		return
 	}
@@ -1061,7 +1051,7 @@ func (h *Handler) DeletePIR(c *gin.Context) {
 	common.Success(c, gin.H{"message": "PIR deleted"})
 }
 
-// isForbiddenAppErr 判定是否为 403 Forbidden AppError（P1-DataScope）。
+// isForbiddenAppErr 判定是否为 403 Forbidden AppError。
 func isForbiddenAppErr(err error) bool {
 	var appErr *common.AppError
 	if errors.As(err, &appErr) {

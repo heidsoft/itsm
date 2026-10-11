@@ -10,7 +10,7 @@ import (
 
 // FilesystemMigrations 包外可用的「从目录发现的迁移」读取与排序入口。
 //
-// 2026-09-08（外部审计修复）：迁移体系原本是「Go 硬编码注册表 + 孤儿 SQL 目录」双轨制，
+// 迁移体系原本是「Go 硬编码注册表 + 孤儿 SQL 目录」双轨制，
 // 导致 migrations/*.sql 自 5 月以来从未被自动加载执行（典型案例 add_missing_indexes.sql，
 // 写好 4 个月、75 张表因此只剩 PK 索引）。本文件落地「目录即真相」单一源：
 //
@@ -132,9 +132,8 @@ func defaultMigrationsDir() string {
 //
 // LegacyMigrations（001-006）不进活动流：它们是 ent 接管前的历史版本，其中
 // 002-006 的 Go 内嵌 SQL 仍引用旧表名/旧结构（如 002 的 tenant 表——现库为
-// tenants），在真实库上重放必然报错。2026-09-10 prod init 日志实证：发现机制
-// 把未记账的 legacy 当 pending，002_add_notification_preferences 反复报
-// `relation "tenant" does not exist`。legacy 版本的账本登记由 bootstrap 的
+// tenants），在真实库上重放必然报错（002_add_notification_preferences 报
+// `relation "tenant" does not exist`）。legacy 版本的账本登记由 bootstrap 的
 // recordLegacyMigrationsApplied 幂等补记（只登记、不执行），保证账本完整可审计。
 //
 // 返回值按 Version 排序，方便重复执行幂等。

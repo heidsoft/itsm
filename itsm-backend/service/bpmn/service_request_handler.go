@@ -27,12 +27,10 @@ func NewServiceRequestServiceTaskHandler(client *ent.Client, logger *zap.Sugared
 	}
 }
 
-// GetTaskType 返回任务类型
 func (h *ServiceRequestServiceTaskHandler) GetTaskType() string {
 	return "service_request_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *ServiceRequestServiceTaskHandler) GetHandlerID() string {
 	return "service_request_handler"
 }

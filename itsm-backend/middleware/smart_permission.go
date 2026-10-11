@@ -102,12 +102,12 @@ func InvalidateTenantACLCache(tenantID int) {
 // SmartCheckPermission checks permission using 4-layer fallback
 // This is the main entry point for permission checking
 //
-// P0-4 修复：移除 raw DB 通道，ACL 与角色权限统一走 Ent（保留租户过滤与 RLS），
+// 移除 raw DB 通道，ACL 与角色权限统一走 Ent（保留租户过滤与 RLS），
 // 并使用请求 context（超时/取消随请求传播），不再使用 context.Background()。
 func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, method, path string, tenantID int) bool {
 	ctx := c.Request.Context()
 
-	// Phase 1 多角色：优先取 gin 上下文中物化的全部生效角色（主角色+m2m附加角色），
+	// 多角色：优先取 gin 上下文中物化的全部生效角色（主角色+m2m附加角色），
 	// 未注入时退化为单角色（兼容旧链路与单测）。
 	roles := GetContextRoles(c)
 	if len(roles) == 0 && role != "" {
@@ -142,7 +142,7 @@ func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, metho
 	}
 
 	// L4: Fallback to role-based default permissions
-	// Phase 1 修复：L4 直接读编译期默认权限表，不感知 PermissionConfig.Mode，
+	// L4 直接读编译期默认权限表，不感知 PermissionConfig.Mode，
 	// 生产（DBOnly fail-closed）下无 DB 权限的角色仍可能经 L4 拿到权限，违反 fail-closed 语义。
 	// 现按模式分流：DBOnly 下硬编码完全不参与授权，未命中 L1-L3 即拒绝。
 	if PermissionConfig.Mode == PermissionConfigModeDBOnly {
@@ -430,17 +430,17 @@ func checkRoleBasedPermission(role, method, path string) bool {
 
 // checkRolePermissionFromDB checks if a role has permission for a resource:action
 // using the database-driven approach
-// SEC-005 修复：真正查询数据库获取角色权限，而非仅使用硬编码权限
-// P0-4：透传请求 ctx，替代 loadACLsFromDB/loadPermissions 链路中的 context.Background()
+// 真正查询数据库获取角色权限，而非仅使用硬编码权限
+// 透传请求 ctx，替代 loadACLsFromDB/loadPermissions 链路中的 context.Background()
 func checkRolePermissionFromDB(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	// Phase 1 统一判定：委托 rbac.go 的单一真源 AuthorizeResourceForRole，
+	// 统一判定：委托 rbac.go 的单一真源 AuthorizeResourceForRole，
 	// 消除与 hasResourcePermission 的双头语义分叉（sysadmin 直通不一致等）。
 	return AuthorizeResourceForRole(ctx, client, role, resource, action, tenantID)
 }
 
 // GetResourceAndActionFromPath extracts resource and action from a URL path
 // This is useful for logging and debugging
-// P0-4 修复：移除硬编码 aclCache[1]（跨租户读取 tenant 1 缓存），
+// 移除硬编码 aclCache[1]（跨租户读取 tenant 1 缓存），
 // 仅保留静态 URL 推断，不再依赖任何租户的 ACL 缓存。
 func GetResourceAndActionFromPath(method, path string) (resource, action string) {
 	// URL auto-inference
@@ -473,7 +473,7 @@ func EvaluateACLScript(script string, ctx ACLScriptContext) bool {
 		return true
 	}
 
-	// SEC-003 修复：使用 ACL 表达式引擎替代空实现
+	// 使用 ACL 表达式引擎替代空实现
 	engine := NewACLExpressionEngine()
 	variables := map[string]interface{}{
 		"ctx.user_id":       ctx.UserID,

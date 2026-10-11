@@ -127,7 +127,7 @@ func InitDatabase(cfg *config.DatabaseConfig) (*ent.Client, error) {
 		log.Printf("create sla_violation ticket_type index failed (non-fatal): %v", err)
 	}
 
-	// 事件编号序列（P0-2 修复）：保证 INC-YYYYMM-NNNNNN 后缀全局唯一、单调递增，
+	// 事件编号序列：保证 INC-YYYYMM-NNNNNN 后缀全局唯一、单调递增，
 	// 彻底消除「COUNT+1 并发复用 / 删除回退 / UTC 窗口错乱」三类编号冲突。
 	// 播种为「已存在事件编号的最大数字后缀 + 1」，避免与历史编号碰撞；历史库
 	// 为空或 incidents 表尚未创建时从 1 开始（best-effort，失败仅告警）。

@@ -557,7 +557,7 @@ func failSLAQuery(c *gin.Context, err error, publicMsg string) {
 }
 
 // CheckSLACompliance handles POST /api/v1/sla/check-compliance/:ticketId
-// P1-07 修复：直接把 Service 返回的 *SLAComplianceResult（含 actual_response_minutes）
+// 直接把 Service 返回的 *SLAComplianceResult（含 actual_response_minutes）
 // 透传给前端，而不是仅返回占位 message。
 func (h *Handler) CheckSLACompliance(c *gin.Context) {
 	ticketIDStr := c.Param("ticketId")

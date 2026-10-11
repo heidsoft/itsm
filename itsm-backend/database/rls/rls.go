@@ -1,6 +1,6 @@
 // Package rls provides Row-Level Security context propagation for PostgreSQL.
 //
-// Design (from rls-migration-proposal-2026-07-18.md):
+// Design:
 //  1. Middleware extracts tenant_id from JWT and stores it in gin.Context.
 //  2. When a DB connection is acquired from the pool, we execute
 //     SET SESSION app.current_tenant = <tid> on that connection.

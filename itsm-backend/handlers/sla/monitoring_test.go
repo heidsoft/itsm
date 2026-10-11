@@ -162,7 +162,7 @@ func seedSLAMonitoringFixture(t *testing.T, client *ent.Client, tenantID int) sl
 		Save(ctx)
 	require.NoError(t, err)
 
-	// Phase 3: 为绑定 SLA 的工单创建 sla_states 记录（双写阶段，测试也需同步）
+	// 为绑定 SLA 的工单创建 sla_states 记录（双写阶段，测试也需同步）
 	createSLAState := func(ticketID, defID int, responseDeadline, resolutionDeadline, firstResponseAt, resolvedAt *time.Time, status string) {
 		b := client.SLAState.Create().
 			SetTenantID(tenantID).
@@ -305,7 +305,7 @@ func TestSLAHandler_MonitoringMetricsAreHonestRegression(t *testing.T) {
 		assert.Equal(t, float64(2), slaNum(t, data, "responseTimeSamples"))
 		assert.Equal(t, float64(1), slaNum(t, data, "responseTimeMet"))
 		assert.Equal(t, 50.0, slaNum(t, data, "responseTimeCompliance"))
-		// Phase 3: resolution 样本只统计 sla_states 中有 resolution_deadline + resolved_at 的工单
+		// resolution 样本只统计 sla_states 中有 resolution_deadline + resolved_at 的工单
 		// unboundTicket 无 sla_state，即使有内嵌 ResolvedAt 也不再计入
 		assert.Equal(t, float64(1), slaNum(t, data, "resolutionTimeSamples"))
 		assert.Equal(t, float64(1), slaNum(t, data, "resolutionTimeMet"))
@@ -561,7 +561,7 @@ func TestSLAHandler_PerformanceByServiceType(t *testing.T) {
 	unbound := rows[2]
 	assert.Equal(t, float64(1), slaNum(t, unbound, "totalTickets"))
 	assert.Equal(t, float64(1), slaNum(t, unbound, "resolvedTickets"))
-	// Phase 3: 未绑定 SLA 的工单无 sla_state 记录，解决样本数为 0
+	// 未绑定 SLA 的工单无 sla_state 记录，解决样本数为 0
 	assert.Equal(t, float64(0), slaNum(t, unbound, "resolutionSamples"))
 }
 

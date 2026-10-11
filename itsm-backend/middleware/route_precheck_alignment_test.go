@@ -11,18 +11,18 @@ import (
 //
 // 键格式：`<相对路径> <METHOD> <完整路径>`。每条必须写明理由与去向。
 //
-// 2026-09-17 批次 3 已清零：18 条 POST-read 错配（预检同步放宽为 read）与
+// 18 条 POST-read 错配（预检同步放宽为 read）与
 // POST /bpmn/ai/preview 一并修复，台账清空但机制保留——新错配必须先登记
 // （写明理由与去向）才能合入，修复后失效条目会被本测试强制清理。
 //
-// 2026-09-17 批次 5（P0-E）：ResourceActionMap 路由条目改为**从路由声明生成**
+// ResourceActionMap 路由条目改为**从路由声明生成**
 // （cmd/authz-gen → rbac_precheck_gen.go），生成即对齐，本测试退化为对
 // 生成物 + 显式回退策略合并结果的整体校验，并保留台账防腐化机制。
 var precheckMismatchAllowlist = map[string]string{}
 
 // TestRoutePrecheckAlignment 守卫：路由声明的 (resource, action) 必须与路径预检解析结果一致。
 //
-// 背景（2026-09-17 P0 实测教训）
+// 背景
 // ----------------------------
 // 授权判定是**两道闸串联**，且顺序固定：
 //

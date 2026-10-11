@@ -18,7 +18,7 @@ import (
 // 规则：扫描 config/seed/ 下全部文件（不限扩展名——未来任何 seed_data.sql 式
 // 再引入都会被命中），凡形如 resource:action 的 token 必须落在
 // permissionDefinitions() 清单内（按权限码或 resource:action 对匹配）。
-// 基线（2026-10-03）：default.json/demo.json 均不携带权限码，命中数 0；
+// 基线：default.json/demo.json 均不携带权限码，命中数 0；
 // 授权一律由内置 Go 清单 authz.BuiltinRolePermissionCodes() 提供。
 func TestSeedCarriers_NoOffCatalogPermissionCodes(t *testing.T) {
 	// 测试进程 cwd 不保证是仓库根（pkg/seeder 测试历史上吃过的亏）；

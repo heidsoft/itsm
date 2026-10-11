@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 台账 E4-48：BPMN 审计读取历史上同时存在
+// BPMN 审计读取历史上同时存在
 // /bpmn/dashboard/audit-logs（直接序列化 Ent 模型：snake_case 键 + 泄漏 tenant_id）
 // 与 /bpmn/monitoring/audit-logs（把行降维成弱 AuditLogEntry 形状）两套只读表面。
 // 现在唯一所有者是 BPMNAuditService.QueryAuditLogs → dashboard 单入口，

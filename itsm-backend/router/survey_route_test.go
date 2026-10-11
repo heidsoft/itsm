@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// 回归（2026-10-02 边缘功能收口 E3-3）：handlers/survey/handler.go 曾有一份从未被调用的
+// 回归：handlers/survey/handler.go 曾有一份从未被调用的
 // RegisterRoutes，与 router.SetupSurveyRoutes 逐字重复 7 条注册。本域唯一的路由所有者是
 // SetupSurveyRoutes（由 router.go 挂在 tenant 分组上），这里把它的表面契约锁住：
 // 副本一旦复活并同时接线，gin 会因重复路由直接 panic，因此路由集合必须恰好等于这一份。

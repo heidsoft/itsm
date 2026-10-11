@@ -16,7 +16,6 @@ import (
 
 // TicketLifecycleServiceInterface 工单生命周期服务接口
 type TicketLifecycleServiceInterface interface {
-	// ResolveTicket 解决工单
 	ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, resolvedBy int) (*ent.Ticket, error)
 	// CloseTicket 关闭工单
 	CloseTicket(ctx context.Context, ticketID int, feedback string, tenantID int, closedBy int) (*ent.Ticket, error)
@@ -50,7 +49,6 @@ func (s *TicketLifecycleService) SetNotificationService(notificationService *Tic
 	s.notificationService = notificationService
 }
 
-// ResolveTicket 解决工单
 func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, resolvedBy int) (*ent.Ticket, error) {
 	resolution = strings.TrimSpace(resolution)
 	if resolution == "" {
@@ -359,7 +357,7 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 }
 
 // IsValidTicketStatusTransition 检查状态转换是否合法。
-// P1-1：统一委托 common.IsValidTicketStatusTransition（工单状态机单一事实来源）。
+// 统一委托 common.IsValidTicketStatusTransition（工单状态机单一事实来源）。
 // 保留此包装仅为维持已有调用点的包级导出符号稳定，禁止再次在 service 层内联状态表。
 func IsValidTicketStatusTransition(currentStatus, newStatus string) bool {
 	return common.IsValidTicketStatusTransition(currentStatus, newStatus)

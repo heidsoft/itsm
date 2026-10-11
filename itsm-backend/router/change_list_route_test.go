@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-10）：GET /api/v1/changes 的分页参数此前是裸
+// 回归：GET /api/v1/changes 的分页参数此前是裸
 // strconv.Atoi 且忽略错误，直接交给 repository_impl.go 的 Offset/Limit，而响应的分页
 // 元数据在 SuccessWithPagination 里另夹一次——SQL 侧与声明侧对同一个非法入参给两个答案：
 //   - pageSize=0 在 Ent 的 sqlgraph 里等于**不加 LIMIT**，实测 25 条种子一次返回 25 条，

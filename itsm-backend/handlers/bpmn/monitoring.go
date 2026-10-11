@@ -27,7 +27,6 @@ func (c *MonitoringHandler) SetMonitoringService(s *service.BPMNMonitoringServic
 	c.monitoringService = s
 }
 
-// RegisterRoutes 注册路由
 func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 	monitoring := r.Group("/bpmn/monitoring")
 	{
@@ -38,7 +37,7 @@ func (c *MonitoringHandler) RegisterRoutes(r *gin.RouterGroup) {
 		// 流程实例状态监控
 		monitoring.GET("/instances/:instanceId/status", c.GetProcessInstanceStatus)
 		monitoring.GET("/instances/status", c.ListProcessInstancesStatus)
-		// 新增：完整执行轨迹时间线
+		// 完整执行轨迹时间线
 		monitoring.GET("/instances/:instanceId/timeline", c.GetProcessTimeline)
 
 		// 性能监控

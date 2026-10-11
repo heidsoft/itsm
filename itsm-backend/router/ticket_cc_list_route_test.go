@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-04 边缘功能收口 E4-6i）：
+// 回归：
 //   - GET /api/v1/tickets/cc/my  返回 {records,total}
 //   - GET /api/v1/tickets/:id/cc 返回 {records,total}
 //

@@ -10,7 +10,7 @@ import (
 
 // PendingApprovalRepairer 对存量 pending 服务请求做审批链自愈。
 //
-// 背景（2026-09-07 场景深测 P1-A）：审批人解析修复前创建的请求，其
+// 背景：审批人解析修复前创建的请求，其
 // service_request_approvals.node.approver_ids 可能退化为 super_admin
 // 独审（同部门审批人缺失时旧逻辑直接兜底 admin）。修复只影响新请求，
 // 存量请求需要按新解析逻辑重算。此任务在应用启动时执行一次，幂等：

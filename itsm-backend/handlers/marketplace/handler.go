@@ -22,7 +22,6 @@ func NewHandler(service *marketplace.Service) *Handler {
 	return &Handler{service: service}
 }
 
-// RegisterRoutes 注册路由
 func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	marketplaceGroup := r.Group("/marketplace")
 	{
@@ -30,9 +29,9 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		marketplaceGroup.GET("/items", c.ListItems)
 		marketplaceGroup.GET("/items/:id", c.GetItem)
 
-		// 扩展安装/卸载/配置 = 平台级变更（2026-09-17 P0「越权写收口」）：
+		// 扩展安装/卸载/配置 = 平台级变更：
 		// 按 marketplace:* 授权；该码已在 permissionDefinitions 登记，
-		// 但尚未授予任何角色——真正放开由批次 2（词表统一）+ 批次 3（预检映射）决定。
+		// 但尚未授予任何角色，因此默认无人可调用；放开前先对齐权限词表与预检映射。
 		{
 			marketplaceGroup.POST("/items/:id/install", middleware.RequirePermission("marketplace", "write"), c.InstallItem)
 			marketplaceGroup.POST("/items/:id/uninstall", middleware.RequirePermission("marketplace", "write"), c.UninstallItem)

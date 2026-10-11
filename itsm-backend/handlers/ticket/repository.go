@@ -68,7 +68,7 @@ type CreateParams struct {
 	FormFields     map[string]interface{}
 	TagIDs         []int
 	// WorkflowDefinitionKey 调用方显式指定的 BPMN 流程 Key（可选）。
-	// 2026-09-07 修复：此前 handler→service 链路双层丢参，导致该参数
+	// 此前 handler→service 链路双层丢参，导致该参数
 	// 永远无法到达 workflow_start 命令（payload 恒空串）。
 	WorkflowDefinitionKey string
 }

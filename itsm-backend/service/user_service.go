@@ -381,7 +381,7 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 		}
 		if role != string(existingUser.Role) {
 			update = update.SetRole(user.Role(role))
-			// P1-2 修复：角色变更后立即吊销该用户全部存量 access token，
+			// 角色变更后立即吊销该用户全部存量 access token，
 			// 防止旧角色权限在 token 有效期内（15 分钟）继续生效。
 			if err := middleware.InvalidateUserTokens(ctx, id, time.Now()); err != nil {
 				// 吊销失败不阻断角色变更本身，但必须记录：降权延迟窗口存在安全影响。
@@ -462,7 +462,7 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool,
 		return fmt.Errorf("更改用户状态失败: %w", err)
 	}
 
-	// 停用账户时立即吊销其全部存量 access token（P1-2 延伸：停用不应等 token 自然过期）。
+	// 停用账户时立即吊销其全部存量 access token。
 	if !active {
 		if revokeErr := middleware.InvalidateUserTokens(ctx, id, time.Now()); revokeErr != nil {
 			s.logger.Errorw("停用用户后吊销存量token失败", "user_id", id, "error", revokeErr)

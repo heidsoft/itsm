@@ -61,7 +61,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	if rg == nil {
 		return
 	}
-	// A2UI 属 AI 生成面：写操作按 ai:write 授权（2026-09-17 P0「越权写收口」）
+	// A2UI 属 AI 生成面：写操作按 ai:write 授权
 	a2ai := rg.Group("/a2ui")
 	{
 		a2ai.POST("/ticket/form", middleware.RequirePermission("ai", "write"), h.GenerateForm)

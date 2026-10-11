@@ -166,7 +166,7 @@ func TestFirstToken(t *testing.T) {
 	}
 }
 
-// TestDriverEnforceQueryInjectsSessionVar 回归用例（2026-08-29 生产就绪评估 P0-3）：
+// TestDriverEnforceQueryInjectsSessionVar 回归用例：
 // enforce 模式旧实现把 Query 包进短事务，事务在调用方扫描行之前提交，
 // 行句柄失效报 "sql: Rows are closed"，启动就绪探针因此崩溃，RLS 被迫关闭。
 // 修复后 Query/Exec 不再开事务，而是通过上下文（entsql.WithVar）把租户变量

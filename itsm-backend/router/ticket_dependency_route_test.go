@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E1-5）：GET /api/v1/tickets/:id/dependencies 是
+// 回归：GET /api/v1/tickets/:id/dependencies 是
 // router 真实注册的只读入口（router/ticket_routes.go:286，权限 ticket:read），
 // handler 却用 ShouldBindJSON 绑一个 action 必填的结构体。GET 不带请求体，
 // 于是这个入口**每次调用都固定 400「请求参数错误」**，从未可用过；

@@ -367,7 +367,7 @@ func NewApplication() *Application {
 
 	// 初始化业务服务层
 	ticketSLAService := service.NewTicketSLAService(client, sugar)
-	// SLA 统一引擎 + 持久化 store（Phase 3 Step 3.5 双写阶段）
+	// SLA 统一引擎 + 持久化 store（双写阶段）
 	unifiedSLAEngine := slaEngine.NewEngine(nil)
 	slaStore := slaEngine.NewStore(client, unifiedSLAEngine)
 	ticketSLAService.SetSLAStore(slaStore)
@@ -389,12 +389,11 @@ func NewApplication() *Application {
 	incidentMonitoringService := service.NewIncidentMonitoringService(client, sugar)
 	incidentAlertingService := service.NewIncidentAlertingService(client, sugar)
 	rootCauseAnalysisService := service.NewRootCauseAnalysisService(client)
-	// Application handler v1.1 回归：handlers/<domain>/ 已迁移但
-	// bootstrap 没注入，router 看到的字段为 nil，路由被 if 守卫跳过
+	// handler 未在此注入时 router 的 nil 守卫会静默跳过整组路由
 	applicationHTTPHandler := applicationHandler.NewHandler(service.NewApplicationService(client))
 	projectHTTPHandler := projectHandler.NewHandler(service.NewProjectService(client))
 	incidentRepo := incident.NewEntRepository(client)
-	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用（此前两域均为假成功或未接入）。
+	// SLA 暂停/恢复的权威实现，供工单/事件 handler 域调用。
 	slaMonitorService := service.NewSLAMonitorService(client, sugar)
 	slaMonitorService.SetNotificationService(ticketNotificationService)
 	slaMonitorService.SetSLAStore(slaStore)
@@ -414,7 +413,7 @@ func NewApplication() *Application {
 	if ss != nil {
 		sequenceService = ss
 		// 注册 DB 同步函数：Redis 序列被清空（重启/淘汰）后从 DB 最大编号播种，
-		// 避免从 1 重新计数撞上历史唯一编号（S-4 事件编号复用 P0 的装配缺口）。
+		// 避免从 1 重新计数撞上历史唯一编号。
 		// 用独立 *sql.DB + 原生 SQL：需读取含软删记录的物理最大编号，与唯一
 		// 约束视角一致，绕过 Ent 软删拦截器
 		if seqDB, derr := database.InitDB(&cfg.Database); derr == nil {
@@ -503,9 +502,8 @@ func NewApplication() *Application {
 	if connectorStoreErr != nil {
 		sugar.Fatalw("Failed to initialize connector config store", "error", connectorStoreErr)
 	}
-	// connector 配置持久化必须注入到实际承接路由的 handler。此前误注入到无路由挂载的
-	// controller.ConnectorController，导致 h.store 为 nil，Provision/Revoke 跳过落库，
-	// 配置仅存于内存、重启即丢失。
+	// 持久化 store 必须注入到实际承接路由的 handler：注错到无路由挂载的对象时 h.store 为 nil，
+	// Provision/Revoke 静默跳过落库，配置重启即丢。
 	connectorHandler.SetPersistentStore(connectorStore)
 	if persistedConfigs, loadErr := connectorStore.LoadAll(context.Background()); loadErr != nil {
 		sugar.Warnw("Failed to reload persisted connector configs", "error", loadErr)
@@ -560,7 +558,6 @@ func NewApplication() *Application {
 	ticketRepo := ticket.NewEntRepository(ticketRepoImpl)
 	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, slaMonitorService, sugar)
 	ticketHandler := ticket.NewHandler(ticketHandlerService)
-	// Dashboard handler v1.1 回归：之前未初始化导致 /api/v1/dashboard/overview 等全部 404
 	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；
 	// 不再依赖全局 rawDB 兜底，便于测试隔离与多连接池演进。
 	dashboardService := service.NewDashboardServiceWithDB(client, database.GetRawDB(), sugar)
@@ -572,7 +569,7 @@ func NewApplication() *Application {
 	// TicketAssociationService 工单关联服务
 	ticketAssociationService := service.NewTicketAssociationService(client)
 
-	// 为 IncidentService 注入序列服务与原生数据库连接（S-4 编号事务锁）
+	// 为 IncidentService 注入序列服务与原生数据库连接
 	incidentService.SetSequenceService(sequenceService)
 	incidentService.SetRawDB(database.GetRawDB())
 
@@ -607,9 +604,8 @@ func NewApplication() *Application {
 
 	// Create LLM Gateway for AI services
 	llmConfig := service.LoadLLMConfig()
-	// 阻断1 修复：启动期检测 LLM API Key 配置状态。
-	// - 占位符/空值：在开发环境 Warn，在生产环境终止启动（生产硬约束见 memory）。
-	// - 真实密钥：仅输出 MaskSecret 脱敏值，便于诊断配置是否生效，绝不输出明文。
+	// 启动期检测 LLM API Key：占位符/空值在开发环境 Warn、生产环境终止启动；
+	// 真实密钥只输出 MaskSecret 脱敏值，绝不输出明文。
 	if common.IsPlaceholderSecret(llmConfig.APIKey) {
 		if resolveEnvironment() == "production" || os.Getenv("GIN_MODE") == "release" {
 			sugar.Errorw("LLM API Key 未配置或为占位符，生产环境禁止以此状态启动",
@@ -704,13 +700,10 @@ func NewApplication() *Application {
 	}
 	guidanceClient := service.NewGuidanceClient(guidanceURL, sugar)
 
-	// P2 Handler Services
 	triageService := service.NewTriageServiceWithGuidanceAndSugaredLogger(llmGateway, guidanceClient, sugar)
 
 	rootCauseService := service.NewRootCauseService(client, sugar)
-	// Bug fix (2026-08-15): inject LLM gateway so AnalyzeTicket / SummarizeTicket
-	// actually call the LLM. Previously gateway was constructed but never wired in,
-	// so RCA endpoints always fell back to the canned "系统资源不足" template.
+	// RCA 依赖 gateway：未注入时 AnalyzeTicket / SummarizeTicket 静默走 canned 模板而不是 LLM。
 	rootCauseService.SetGateway(llmGateway)
 	// LLM/Embedding/VectorStore
 
@@ -719,9 +712,9 @@ func NewApplication() *Application {
 	toolQueue := service.NewToolQueue(client, toolRegistry, 100, sugar)
 	// 写工具（create_ticket/update_ticket/create_ticket_type）需要领域服务支撑；ticketService 已就绪，此处注入。
 	toolRegistry.SetTicketService(ticketService)
-	// P1-3：CMDB 关系类工具（get_ci/get_ci_relationships/create_ci_relationship/delete_ci_relationship/get_ci_impact）需要 CIRelationshipService
+	// CMDB 关系类工具（get_ci/get_ci_relationships/create_ci_relationship/delete_ci_relationship/get_ci_impact）需要 CIRelationshipService
 	toolRegistry.SetCIRelationshipService(ciRelationshipService)
-	// P1-4：影响分析 AI 解释服务（可选注入；LLM/Redis 任意缺失 → fail-open 不影响主流程）
+	// 影响分析 AI 解释服务（可选注入；LLM/Redis 任意缺失 → fail-open 不影响主流程）
 	impactExplainer := service.NewImpactExplanationService(llmGateway, llmConfig.Model, nil, sugar)
 	toolRegistry.SetImpactExplainer(impactExplainer)
 
@@ -731,7 +724,7 @@ func NewApplication() *Application {
 	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
 	notificationHTTPHandler := notificationHandler.NewHandler(notificationService, notificationPreferenceService, sugar)
 
-	// Ticket Workflow Service & Handler（2026-09-02 迁移至 handlers/ticket_workflow）
+	// Ticket Workflow Service & Handler
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
 	ticketWorkflowService.SetConnectorManager(connectorManager)
 	ticketWorkflowHandler := ticket_workflow.NewHandler(ticketWorkflowService, database.GetRawDB(), sugar)
@@ -778,8 +771,6 @@ func NewApplication() *Application {
 	bpmnMonitoringHandler := bpmnHandler.NewMonitoringHandler(bpmnMonitoringService)
 	// BPMN AI Generator Service & Handler (AI驱动的流程生成)
 	// Timer Store 必须在部署服务之前创建：流程部署时注册 Timer Start Event 依赖它。
-	// 此前部署服务以 NewBPMNDeploymentService 构造（timerStore=nil），registerStartTimers
-	// 直接 return nil —— Timer Start 在生产环境从未落库（功能静默失效）。
 	timerStore := service.NewDBTimerStore(client, sugar)
 	bpmnDeploymentService := service.NewBPMNDeploymentServiceWithTimerStore(client, timerStore)
 	bpmnAIGeneratorService := service.NewBPMNAIGeneratorService(llmGateway, bpmnDeploymentService, bpmnTemplateService)
@@ -902,8 +893,6 @@ func NewApplication() *Application {
 	problemHandler := problem.NewHandler(problemServiceDomain)
 
 	// Problem Investigation Service & Handler（问题调查/RCA/解决方案/知识沉淀）
-	// 修复：此前该 controller 从未在 bootstrap 装配，导致 /problem-investigation 路由组整体未注册（404）
-	// 2026-09-02 迁移至 handlers/problem_investigation（域切片架构）
 	problemInvestigationService := service.NewProblemInvestigationService(database.GetRawDB(), client, sugar)
 	problemInvestigationHandler := problem_investigation.NewHandler(sugar, problemInvestigationService)
 
@@ -944,16 +933,15 @@ func NewApplication() *Application {
 	aiRepo := ai.NewEntRepository(client)
 	aiServiceDomain := ai.NewService(aiRepo, sugar, ragService, toolRegistry, toolQueue, analyticsService, predictionService, slaForecastSkill, triageService, rootCauseService, aiTelemetryService)
 	aiServiceDomain.SetLLMGateway(llmGateway)
-	// 2026-09-06 P1-2 修复：装配 SummarizeService（之前定义了但 NewSummarizeService 在生产装配路径零调用点）。
 	// SummarizeService 通过 ai.summarize skill 被 SkillRegistry 消费（handlers/ai/skills.go），
-	// 不再作为 404 行死代码留存。
+	// 必须在这里显式装配，否则定义存在而生产路径无调用点。
 	summarizeService := service.NewSummarizeService(llmGateway, zap.NewNop())
 	aiServiceDomain.SetSummarizeService(summarizeService)
-	// P2-6: 注入 ent client 供 AI 工具 RBAC 校验复用 hasResourcePermission
+	// ent client 供 AI 工具 RBAC 校验复用 hasResourcePermission
 	aiServiceDomain.SetEntClient(client)
 	aiHandler := ai.NewHandler(aiServiceDomain)
 
-	// Sprint C — Skill Registry v1：在 ai.Service 装配完成后注入内置 Skill。
+	// Skill Registry：在 ai.Service 装配完成后注入内置 Skill。
 	// 注册失败按"启动期 fail-fast"原则处理：以 service.SkillRegistry 注入到 ai package 中，
 	// 供后续 handlers/skill 管理 API 调用。
 	skillRegistry := service.NewSkillRegistry()
@@ -963,7 +951,7 @@ func NewApplication() *Application {
 	}
 	sugar.Infow("AI SkillRegistry ready", "total_skills", skillRegistry.Count())
 
-	// Sprint C — Skills Management API：在 SkillRegistry 装配完成后创建 handler。
+	// Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
 	skillHandler := skill.NewHandler(skillRegistry, sugar)
 	emailIntakeService := email_intake.NewService(client)
@@ -985,7 +973,7 @@ func NewApplication() *Application {
 	emailIntakeHandler.SetOrchestrator(emailIntakeOrchestrator)
 	connectorManager.SetInboundHandler("email", emailIntakeOrchestrator.IngestConnectorMessage)
 
-	// Sprint C — Evaluator bySkill 维度：将 SkillRegistry 注入到 AI 评估服务。
+	// Evaluator bySkill 维度：将 SkillRegistry 注入到 AI 评估服务。
 	// 这样 /ai/evaluation 返回的 bySkill 字段会带上 Skill 的 Name/Category 元数据，
 	// 同时 byScenario 项也会带 SkillName，便于前端"技能"与"场景"两个视角对齐。
 	aiTelemetryService.SetSkillRegistry(skillRegistry)
@@ -1007,7 +995,7 @@ func NewApplication() *Application {
 				"logout/password-reset only invalidate tokens on the replica that handled the request", "error", err)
 		} else {
 			middleware.ConfigureTokenRevocationRedis(commonRedis)
-			// Phase 1 P1-4：权限缓存失效跨实例广播（多副本一致性）。
+			// 权限缓存失效跨实例广播（多副本一致性）。
 			middleware.ConfigurePermissionCacheBroadcast(commonRedis)
 			sugar.Info("token revocation shared across instances via redis")
 		}
@@ -1071,7 +1059,7 @@ func NewApplication() *Application {
 		log.Fatalf("Failed to register tenant bootstrap command handler: %v", err)
 	}
 
-	// System Config Handler（2026-09-02 迁移至 handlers/systemconfig）
+	// System Config Handler
 	systemConfigService := service.NewSystemConfigService(client, sugar)
 	systemConfigHandler := systemconfig.NewHandler(systemConfigService, sugar)
 
@@ -1225,7 +1213,6 @@ func NewApplication() *Application {
 		CommonHandler:               commonHandler,
 		AuthHandler:                 authHTTPHandler,
 
-		// Sprint C — Skill Registry v1
 		SkillHandler: skillHandler,
 
 		// Global Search
@@ -1282,7 +1269,7 @@ func NewApplication() *Application {
 		ProcessEngine:     customProcessEngine,
 		TimerScheduler:    timerScheduler,
 
-		// 存量 pending 请求审批链自愈任务的数据源（P1-A 修复配套）
+		// 存量 pending 请求审批链自愈任务的数据源
 		ServiceRequestRepo: srRepo,
 
 		// SLA 后台定时扫描复用这两个已注入实例，不再自建私有副本。
@@ -1349,7 +1336,7 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 			return fmt.Errorf("prepare ticket form fields migration: %w", err)
 		}
 		// workflow_templates.id 仍是 SERIAL 时，ent diff 会硬报
-		// "expect IDENTITY"，必须在 Schema.Create 之前对齐（见 021/实体重生成）。
+		// "expect IDENTITY"，必须在 Schema.Create 之前对齐。
 		if err := prepareWorkflowTemplatesIdentityMigration(ctx, database.GetRawDB(), sugar); err != nil {
 			return fmt.Errorf("prepare workflow_templates identity migration: %w", err)
 		}
@@ -1371,9 +1358,8 @@ func InitializeStorage(cfg *config.Config, client *ent.Client, sugar *zap.Sugare
 		sugar.Infow("database schema ensured", "deployment_mode", cfg.Deployment.Mode)
 	}
 
-	// Tenant 治理门禁（2026-09-08 外部审计修复）：
-	// 外部审计发现 31 张表缺 tenant_id，原区分"漏加"与"有意豁免"靠注释散落。
-	// 此处调用 schema.ApplyGuard 启动扫描，按策略（prod fatal / dev warn）处置。
+	// Tenant 治理门禁：启动扫描缺 tenant_id 的表，按策略（prod fatal / dev warn）处置，
+	// 避免"漏加"与"有意豁免"只靠散落的注释区分。
 	if err := runTenantGuard(ctx, database.GetRawDB(), sugar); err != nil {
 		return fmt.Errorf("tenant guard: %w", err)
 	}
@@ -1459,18 +1445,15 @@ func runPostSchemaMigrations(ctx context.Context, migrator postSchemaMigrator, l
 		return fmt.Errorf("run post-schema migrations: %w", err)
 	}
 
-	// 目录自发现迁移（2026-09-08 外部审计修复）：
-	// 历史迁移体系是「Go 硬编码注册表 + 孤儿 SQL 目录」双轨制，导致
-	// migrations/*.sql 自 5 月以来从未自动加载（add_missing_indexes.sql
-	// 4 个月没执行，75 张表只剩 PK 索引）。本步骤以磁盘为真相补全迁移
-	// 流；发现、账本调和或执行失败都必须返回，阻止后续初始化和 AutoSeed。
+	// 目录自发现迁移：以磁盘 migrations/*.sql 为真相补全迁移流。
+	// 发现、账本调和或执行失败都必须返回，阻止后续初始化和 AutoSeed。
 	fsMigs, err := migrator.FilesystemMigrations()
 	if err != nil {
 		return fmt.Errorf("discover filesystem migrations: %w", err)
 	}
 	// 账本调和（只登记不执行）：①legacy 001-006 无条件收养；②既有安装上
 	// 发现机制上线前已生效的日期化磁盘迁移收养（全新安装照常执行）。
-	// 两者都不收养会被发现机制当 pending 重放而炸（2026-09-10 实证 23502）。
+	// 未收养的迁移会被当 pending 重放并触发唯一键冲突。
 	if err := migrator.RecordLegacyMigrationsApplied(ctx, logger); err != nil {
 		return fmt.Errorf("backfill legacy migration ledger: %w", err)
 	}
@@ -1633,8 +1616,7 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		})
 	}
 
-	// 服务请求审批链自愈（2026-09-07 P1-A 配套）：对存量 pending 请求
-	// 按修复后的解析逻辑重算审批人。启动时执行一次，幂等。
+	// 服务请求审批链自愈：对存量 pending 请求按当前解析逻辑重算审批人。启动时执行一次，幂等。
 	if app.ServiceRequestRepo != nil {
 		safeGo("service-request-approval-repair", func() {
 			repairer := service_request.NewPendingApprovalRepairer(app.ServiceRequestRepo, app.Logger)
@@ -1739,7 +1721,7 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		}
 	})
 
-	// BPMN task timeout scanner (Phase 4: 恢复兜底). 主路径是 task_due 定时器
+	// BPMN task timeout scanner（恢复兜底）。主路径是 task_due 定时器
 	// （createUserTask 注册、到期由 TimerEventHandler 分发四动作）；本扫描器每 2 分钟
 	// 兜底处理无 timer 的任务（注册失败、timer 丢失、功能关闭的部署）。
 	// dispatchTimeoutAction 带 claim-once 条件更新，双路径下同一任务只生效一次。
@@ -1775,7 +1757,7 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 	})
 
 	// Timer Event scheduler: in-memory wheel with DB-backed recovery.
-	// Phase 2: TimerEventHandler bridges timer firing to BPMN process engine.
+	// TimerEventHandler bridges timer firing to BPMN process engine.
 	safeGo("timer-scheduler", func() {
 		if err := app.TimerScheduler.Start(ctx); err != nil {
 			app.Logger.Warnw("timer scheduler start failed", "error", err)

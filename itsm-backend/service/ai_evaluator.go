@@ -26,7 +26,7 @@ const (
 
 // AIEvaluationReport 是 /api/v1/ai/evaluation 的返回契约（camelCase）。
 //
-// 字段兼容性说明（Sprint C）：
+// 字段兼容性说明：
 //   - ByScenario 保留为旧契约，内部字段已扩展 SkillCode / SkillName。
 //   - BySkill 是新字段，结构与 ByScenario 一致，便于前端按"技能"维度渲染。
 //   - BySkillAlias 是 ByScenario 的反别名（统一返回两个字段，前端可任选）。
@@ -268,7 +268,7 @@ func (s *AITelemetryService) Evaluate(ctx context.Context, tenantID int, lookbac
 	}
 	sortScenariosByCount(report.ByScenario)
 
-	// 4) 按 Skill 维度分解（Sprint C 新增维度）。
+	// 4) 按 Skill 维度分解。
 	//	与 byScenario 互为同构表达，但 key 固定为 skill.code。
 	//	HealthScore 子分 = usefulRate*40 + acceptedRate*30 + (1.0 - |usefulRate-avgConfidence|)*30
 	//	  即"用户满意度" 40 + "被采纳度" 30 + "置信度校准" 30。

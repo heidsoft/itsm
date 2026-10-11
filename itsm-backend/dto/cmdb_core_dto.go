@@ -90,15 +90,15 @@ type ListCIRequest struct {
 	Search string `form:"search"`
 	// CINumber CI 唯一业务编号精确匹配（AI Agent 稳定定位实体的自然键）
 	CINumber string `form:"ciNumber"`
-	// 排序（P1-1 合并自 CISearchRequest）
+	// 排序
 	SortBy    string `form:"sortBy" binding:"omitempty,oneof=id name status environment criticality created_at updated_at"`
 	SortOrder string `form:"sortOrder" binding:"omitempty,oneof=asc desc"`
-	// 时间范围（P1-1 合并自 CISearchFilter.DateFrom/DateTo）
+	// 时间范围
 	DateFrom *time.Time `form:"dateFrom" time_format:"2006-01-02T15:04:05Z07:00"`
 	DateTo   *time.Time `form:"dateTo" time_format:"2006-01-02T15:04:05Z07:00"`
-	// 标签过滤（P1-1 合并自 CISearchFilter.TagIDs）：数组形如 ?tagIds=1&tagIds=2
+	// 标签过滤：数组形如 ?tagIds=1&tagIds=2
 	TagIDs []int `form:"tagIds"`
-	// WithRelations 是否预加载关系（P1-1 与 SearchCI 对齐：预加载出/入边+标签+CITypeRef）
+	// WithRelations 是否预加载关系
 	WithRelations bool `form:"withRelations"`
 }
 

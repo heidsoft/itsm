@@ -78,7 +78,7 @@ type SkillMetrics struct {
 
 // Skill 技能接口（运行时能力抽象）
 //
-// Sprint C — Skill Registry v1：恢复该接口定义，修复 skill_manifest.go 中
+// Skill Registry v1：恢复该接口定义，修复 skill_manifest.go 中
 // ExtendedSkill 引用未定义 Skill 的预存编译错误。
 // 所有 AI 能力（chat/triage/summarize/analyze/rag_search/agent_tool/...）
 // 的运行时抽象都应该实现该接口，由 SkillRegistry 统一管理。

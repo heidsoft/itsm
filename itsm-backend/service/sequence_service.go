@@ -62,7 +62,7 @@ func (s *SequenceService) GetNextSequence(ctx context.Context, key string) (int6
 // 方案B：Redis初始化时从DB同步起点，避免Redis重置后编号碰撞
 // expiredAt: 序列过期时间（用于按月重置等场景）
 //
-// 并发安全修复：原实现 GET->判断->SET 存在 check-then-act 竞态--并发时某协程
+// 原实现 GET->判断->SET 存在 check-then-act 竞态--并发时某协程
 // 可能在 current==0 分支用 SET 直接覆盖已被其他协程 INCR 推进的计数器（回拨），
 // 导致多个请求拿到同一序列号。现改为：① 仅当 key 不存在/为0时用 SETNX 播种
 // 起点（绝不覆盖既有值）；② 统一走 INCR 原子递增，保证单调不回拨。

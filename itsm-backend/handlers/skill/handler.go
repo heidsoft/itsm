@@ -1,4 +1,4 @@
-// Package skill — Sprint C Skill Registry v1: 技能管理与市场 API.
+// Skill Registry v1: 技能管理与市场 API.
 //
 // 本包提供 SkillRegistry 的 HTTP 入口：
 //
@@ -155,7 +155,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 //   - q：按 code/name/description 模糊匹配
 //   - page：1-based 页码，默认 1；非法值与非正数（≤0/非数字）回退到 1
 //   - pageSize：每页条数，默认 20；页长唯一所有者是 common.GetPaginationFromQuery，
-//     只采纳 [1,100]，越界（如 150/5000）与非数字一律回退 20（台账 E4-47③：
+//     只采纳 [1,100]，越界（如 150/5000）与非数字一律回退 20（
 //     此前私有实现把 >100 截断成 100，是平台界的第二套所有者）
 //
 // 返回统一列表契约：{ items, total, page, pageSize, totalPages }，

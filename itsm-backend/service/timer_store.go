@@ -28,7 +28,7 @@ const (
 	TimerTypeStart        TimerType = "start"
 	TimerTypeIntermediate TimerType = "intermediate"
 	TimerTypeBoundary     TimerType = "boundary"
-	// TimerTypeTaskDue 任务截止定时器（Phase 4）：BPMN userTask 配置 dueDate
+	// TimerTypeTaskDue 任务截止定时器：BPMN userTask 配置 dueDate
 	// 属性时注册，到期由 TimerEventHandler 分发 TimeoutScanner 四动作；
 	// TimeoutScanner 轮询降级为恢复兜底（claim-once 保护下双路径安全）。
 	TimerTypeTaskDue TimerType = "task_due"
@@ -373,7 +373,7 @@ func (s *DBTimerStore) Stats(ctx context.Context, tenantID int) (*TimerStats, er
 	return stats, nil
 }
 
-// CancelPendingStartTimers 取消指定流程定义 Key 下全部 pending 的 start timer（Phase 5）。
+// CancelPendingStartTimers 取消指定流程定义 Key 下全部 pending 的 start timer。
 //
 // 用于流程重部署：新定义的时间表整体替换旧时间表。若不取消，每次保存/发布流程都会
 // 追加一份 start timer（timer_id 为新 uuid，幂等键不生效），导致定时任务被重复触发、

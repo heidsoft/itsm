@@ -93,8 +93,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 	if err != nil {
 		return nil, err
 	}
-	// P1-DataScope：写路径行级校验——写权限 ⊆ 读权限，普通角色仅可修改
-	// 本人创建或受理的问题单（datascope.CanWriteResource）。
+	// 写权限 ⊆ 读权限：普通角色仅可修改本人创建或受理的问题单。
 	if !datascope.CanWriteResource(actorID, actorRole, existing.CreatedBy, existing.AssigneeID) {
 		return nil, common.NewForbiddenError("无权限修改该问题单：仅创建人、受理人或管理员可操作")
 	}
@@ -118,7 +117,7 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 				fmt.Sprintf("%s -> %s", existing.Status, p.Status),
 			)
 		}
-		// P1 修复：先捕获前态再修改，时间戳分支才能正确判定"是否首次进入"。
+		// 先捕获前态再修改，时间戳分支才能正确判定"是否首次进入"。
 		// 旧实现在状态写入后才比对 `existing.Status != "resolved"`，此时两侧永远相等，
 		// 导致 ResolvedAt 从未被设置、MTTR 永远为 0、closed_at 派生也走错分支。
 		prevStatus := existing.Status
@@ -249,7 +248,7 @@ func uniquePositiveIDs(ids []int) []int {
 	return result
 }
 
-// Delete 删除问题单。P1-DataScope：删除受行级写权限约束（原先仅校验租户隔离）。
+// Delete 删除问题单，受行级写权限约束（写权限 ⊆ 读权限）。
 func (s *Service) Delete(ctx context.Context, id int, tenantID int, actorID int, actorRole string) error {
 	existing, err := s.repo.Get(ctx, id, tenantID)
 	if err != nil {

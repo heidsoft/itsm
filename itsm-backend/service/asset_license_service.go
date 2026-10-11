@@ -242,7 +242,7 @@ func (s *AssetLicenseService) GetLicenseStats(ctx context.Context, tenantID int)
 }
 
 // AssignUsers 分配许可证给用户
-// C-6 修复：read-modify-write 用事务 + 原子 UPDATE 条件检查，避免并发请求下席位超发。
+// read-modify-write 用事务 + 原子 UPDATE 条件检查，避免并发请求下席位超发。
 // 同时对传入的 userIDs 去重，避免重复分配的用户计入新增席位。
 func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int, userIDs []int) (*dto.LicenseResponse, error) {
 	// 1. 传入 userIDs 先去重（本次请求中的重复用户）

@@ -618,7 +618,7 @@ func TestTicketService_ListTickets_DataScope(t *testing.T) {
 			"Alice 不应看到 Bob 的薪酬敏感工单")
 	}
 
-	// 场景2：Bob（end_user）只能看到自己创建的 2 张（DSCOPE-3 + DSCOPE-4）。
+	// 场景2：Bob（end_user）只能看到自己创建的 2 张。
 	bobResp, err := ticketService.ListTickets(ctx, req, testTenant.ID, bob.ID, "end_user")
 	require.NoError(t, err)
 	assert.Equal(t, 2, bobResp.Total, "Bob 应只看到自己创建的工单")
@@ -1511,7 +1511,7 @@ func BenchmarkTicketService_CreateTicket(b *testing.B) {
 }
 
 // Regression: ticket creation must not spawn duplicate BPMN approval instances.
-// Phase 1 fix: TriggerApproval no longer calls startApprovalProcess; only the
+// fix: TriggerApproval no longer calls startApprovalProcess; only the
 // transactional outbox path (CommandStartBPMN) creates a ProcessInstance.
 func TestTicketService_CreateTicket_SingleBPMNInstance(t *testing.T) {
 	client := enttest.Open(t, "sqlite3", testDSN())

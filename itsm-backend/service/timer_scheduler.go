@@ -30,7 +30,7 @@ type TimerRecord struct {
 	ActivityID           string
 	FireAt               time.Time
 	TenantID             int
-	// Phase 5：start timer 触发后需要按原表达式重排下一跳，故回调必须携带表达式上下文。
+	// start timer 触发后需要按原表达式重排下一跳，故回调必须携带表达式上下文。
 	TimerExpression  string
 	ExpressionType   string
 	ContextVariables map[string]interface{}

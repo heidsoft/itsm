@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 回归（2026-09-25 假成功收口）：评论未落地（无存储模型）时必须显式 unready（5003），
+// 回归：评论未落地（无存储模型）时必须显式 unready（5003），
 // 不得返回假的评论对象，也不得用空成功伪装"暂无评论"。
 func TestArticleCommentsReturnExplicitUnready(t *testing.T) {
 	gin.SetMode(gin.TestMode)

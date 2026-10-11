@@ -160,7 +160,7 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 }
 
 // GetTicket handles GET /api/v1/tickets/:id
-// :id 同时接受数字 ID(9)和业务工单号(TKT-202609-000010);
+// id 同时接受数字 ID(9)和业务工单号(TKT-202609-000010);
 // 前端 [ticketId] 动态路由会把两者都传进来,需要 fallback 到 GetByNumber。
 func (h *Handler) GetTicket(c *gin.Context) {
 	idStr := c.Param("id")
@@ -227,9 +227,8 @@ func (h *Handler) ListTickets(c *gin.Context) {
 		filters["is_overdue"] = true
 	}
 	// 指针字段必须显式判空下传：仓储层按 filters["assignee_id"] 等键位取过滤条件，
-	// 这里漏一个键不会报错，只会让筛选静默失效并返回租户全量工单
-	// （2026-10-02 实测 GET /api/v1/tickets?assigneeId=33 返回 41 条、受理人全是别人，
-	// 而 src/app/(main)/tickets/page.tsx 正在发送该参数）。
+	// 这里漏一个键不会报错，只会让筛选静默失效并返回租户全量工单：
+	// 前端工单列表页会发送 assigneeId，漏下传时结果看着正常、范围却是错的。
 	if req.AssigneeID != nil && *req.AssigneeID > 0 {
 		filters["assignee_id"] = *req.AssigneeID
 	}
@@ -278,7 +277,6 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -330,7 +328,6 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 			common.ParamErrorWithErr(c, err, "请求参数错误")
 			return
 		}
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兑底 500
 		if isForbiddenErr(err) {
 			common.RespondError(c, err, "操作失败")
 			return
@@ -359,12 +356,10 @@ func (h *Handler) DeleteTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
 	if err := h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole); err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兑底 500
 		if isForbiddenErr(err) {
 			common.RespondError(c, err, "操作失败")
 			return
@@ -396,7 +391,6 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
 	userID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -421,13 +415,11 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
 	if err := h.service.BatchDelete(c.Request.Context(), req.TicketIDs, tenantID, actorID, actorRole); err != nil {
 		if isForbiddenErr(err) {
-			// P1-DataScope：批量删除遇到越权单据，按语义响应 403
 			common.RespondError(c, err, "操作失败")
 			return
 		}
@@ -509,7 +501,6 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -545,7 +536,6 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -576,7 +566,6 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：生命周期写操作注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -1042,7 +1031,6 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -1094,7 +1082,6 @@ func (h *Handler) DeleteSubtask(c *gin.Context) {
 	if !ok {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 

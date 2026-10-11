@@ -229,7 +229,7 @@ func (d *Driver) Query(ctx context.Context, query string, args, v any) error {
 
 // enforceContext 为 enforce 模式下的单条语句准备上下文。
 //
-// 2026-08-29 回归修复（生产就绪评估 P0-3）：旧实现把每条 autocommit 语句包进
+// 旧实现把每条 autocommit 语句包进
 // 短事务（BEGIN + SET LOCAL + 语句 + COMMIT）。但 ent 的 Query 把 *sql.Rows 句柄
 // 原样交回调用方、由调用方稍后迭代；短事务在调用方扫描前就已提交，行句柄随之
 // 失效，启动就绪探针等读路径报 "sql: Rows are closed"。

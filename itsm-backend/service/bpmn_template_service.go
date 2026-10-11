@@ -191,7 +191,7 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 		return errors.Wrap(err, "读取模板文件失败")
 	}
 
-	// 部署前 lint 门禁（2026-09-07）：内置模板此前绕过发布校验，
+	// 部署前 lint 门禁：内置模板此前绕过发布校验，
 	// 2 个 XML 语法损坏 + 多个连线悬空的模板曾直接入库。
 	// 解析失败或存在 error 级 issue 时拒绝部署；由上层决定跳过或报错。
 	lintSvc := NewBPMNLintService()

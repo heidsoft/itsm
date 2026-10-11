@@ -157,7 +157,7 @@ func TestCompleteTask_AuditUserContextPropagated(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, tasks, 1, "启动后应创建一个 user task")
 
-	// 修复：让 actorID 成为 task 的 assignee，否则 authorizeTaskActor 会以
+	// 让 actorID 成为 task 的 assignee，否则 authorizeTaskActor 会以
 	// "当前用户不是该任务的审批人或候选人" 拦截，错误会盖过我们要验证的 bug。
 	_, err = client.ProcessTask.UpdateOneID(tasks[0].ID).
 		SetAssignee(strconv.Itoa(actorID)).

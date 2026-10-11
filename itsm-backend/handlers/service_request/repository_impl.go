@@ -423,7 +423,7 @@ func (r *EntRepository) GetApproval(ctx context.Context, requestID int, level in
 	return r.toDomainApproval(app), nil
 }
 
-// UpdateApproval 更新单条审批记录。P1 修复：补上租户隔离 + 所属请求 + pending 守卫，
+// UpdateApproval 更新单条审批记录。补上租户隔离 + 所属请求 + pending 守卫，
 // 与同文件 UpdateRequestAndApproval 的三守卫保持一致，避免越权/跨请求覆盖或重复标记。
 func (r *EntRepository) UpdateApproval(ctx context.Context, approval *ServiceRequestApproval) error {
 	update := r.client.ServiceRequestApproval.UpdateOneID(approval.ID).
@@ -683,7 +683,7 @@ func (r *EntRepository) GetUserContext(ctx context.Context, userID, tenantID int
 // 角色匹配取双数据源并集：user_roles M2M 边（roles.code，与 cc_handler 对齐的
 // 正确数据模型）∪ users.role 单字段枚举（存量主角色）。此前只查枚举，而
 // it_admin/security_admin 等词表长期不在枚举/种子内，导致三级审批恒回退 super_admin
-// （2026-09-15 GitHub issue 复盘）。
+// 。
 func (r *EntRepository) FindActiveUsersByRole(ctx context.Context, tenantID int, role, department string) ([]int, error) {
 	query := r.client.User.Query().
 		Where(

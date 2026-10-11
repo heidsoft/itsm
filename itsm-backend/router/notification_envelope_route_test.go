@@ -27,7 +27,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-7）：通知域的两个列表信封都不在标准契约上。
+// 回归：通知域的两个列表信封都不在标准契约上。
 //
 //   - GET /api/v1/notifications 返回 {notifications,total,page,size}：集合键用了领域名
 //     （AGENTS.md 明令 items 单一契约），页长键用了被禁止的别名 size，且没有 totalPages，

@@ -9,7 +9,6 @@ import (
 
 // SetupCommonSystemRoutes 注册 Common & System 域路由（auth/me、users、groups、org、
 // projects、applications、system、RBAC roles/permissions/menus、tenants、notifications）。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 需要 *gin.Engine 是因为 auth 子组挂在 /api/v1/auth（r 层）而非 tenant 层。
 func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *RouterConfig) {
 	if config.CommonHandler != nil {

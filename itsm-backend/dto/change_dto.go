@@ -245,11 +245,10 @@ type ChangeRollbackExecution struct {
 	UpdatedAt       time.Time  `json:"updatedAt"`       // 更新时间
 }
 
-// CreateChangeApprovalRequest 创建变更审批请求
-// 审批人身份由认证上下文注入，请求体不再携带 approverId。
+// CreateChangeApprovalRequest 创建变更审批请求；审批人取认证上下文，不由请求体指定。
 type CreateChangeApprovalRequest struct {
-	ChangeID int     `json:"changeId" binding:"required"` // 变更ID
-	Comment  *string `json:"comment"`                     // 审批意见
+	ChangeID int     `json:"changeId" binding:"required"`
+	Comment  *string `json:"comment"`
 }
 
 // UpdateChangeApprovalRequest 更新变更审批请求

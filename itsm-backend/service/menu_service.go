@@ -247,7 +247,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 	mainMenus, adminMenus := s.buildMenuTree(filteredMenus)
 
 	// 当部署模式未启用 MSP（如 DEPLOYMENT_MODE=private）时，后端 /api/v1/msp/* 路由整体关闭。
-	// 此时即便用户拥有 msp:* 权限，也应隐藏 MSP 菜单，避免暴露一个后端不可用的模块（R-001）。
+	// 此时即便用户拥有 msp:* 权限，也应隐藏 MSP 菜单，避免暴露一个后端不可用的模块。
 	if !middleware.IsMSPEnabled() {
 		mainMenus = filterMSPMenus(mainMenus)
 		adminMenus = filterMSPMenus(adminMenus)

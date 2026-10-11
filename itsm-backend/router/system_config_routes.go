@@ -13,7 +13,6 @@ import (
 )
 
 // SetupSystemConfigRoutes 注册系统配置域路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 含三条路径族：/system-configs（新）、/system 与 /configs（兼容别名）、
 // 以及向量存储（RAG）自注册委托（/system/vector-store）。
 func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Handler, tenantHandler *tenantHandler.Handler, vectorStoreHandler *vectorStoreHandler.Handler, appStartTime time.Time) {
@@ -33,7 +32,7 @@ func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Han
 		})
 	}
 
-	// P1-01 别名：/system/config → 系统状态（前端默认 fetch 路径）
+	// 别名：/system/config → 系统状态（前端默认 fetch 路径）
 	sysRoot := tenant.Group("/system")
 	{
 		// 兼容旧路径：/configs → /system-configs
@@ -70,7 +69,7 @@ func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Han
 }
 
 // systemStatusResponse 输出运行时状态（mem/goroutine/uptime），供 /system-configs/status
-// 与 /configs/status 共用。抽取自 router.go 内联闭包，响应体与原实现逐字段一致。
+// 与 /configs/status 共用。
 func systemStatusResponse(c *gin.Context, appStartTime time.Time) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

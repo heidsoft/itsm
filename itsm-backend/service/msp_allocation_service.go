@@ -25,8 +25,7 @@ import (
 // 或不属于当前 MSP 租户。handler 据此映射 404，不得降级成静默成功。
 var ErrMSPAllocationNotFound = errors.New("msp allocation not active")
 
-// ErrMSPAllocationForbidden 表示操作者与目标 MSP 租户无从属关系：
-// 只有平台管理员（super_admin/sysadmin）或目标 MSP 租户自身可创建/解除该租户的分配。
+// ErrMSPAllocationForbidden 表示操作者与目标 MSP 租户无从属关系，handler 据此映射 403。
 var ErrMSPAllocationForbidden = errors.New("operator is not affiliated with the target msp tenant")
 
 // MSPAllocationHistoryFilter 分配历史查询条件。
@@ -58,9 +57,7 @@ func NewMSPAllocationService(client *ent.Client, logger *zap.SugaredLogger) *MSP
 }
 
 // Create 创建新的 MSP 分配。
-// 授权边界：平台管理员（super_admin/sysadmin）可任意操作；其余操作者必须与目标
-// MSP 用户同属一个 MSP 租户，防止 MSP 租户 A 的持有者给租户 B 代授权。
-// 创建与解除均写审计日志（审计失败仅记日志，不阻塞业务）。
+// 非平台管理员必须与目标 MSP 用户同属一个 MSP 租户，见 requireSameMSPTenant。
 func (s *MSPAllocationService) Create(
 	ctx context.Context,
 	operatorID int,
@@ -268,7 +265,7 @@ func (s *MSPAllocationService) ListByCustomer(ctx context.Context, customerTenan
 // Deactivate 解除分配。
 // 只有确实存在一条活跃分配时才写入结束时间；否则返回 ErrMSPAllocationNotFound，
 // handler 映射为 404，而不是把「什么都没解除」报成成功。
-// 授权边界与 Create 一致：平台管理员或目标 MSP 租户自身。
+// 授权边界与 Create 一致。
 func (s *MSPAllocationService) Deactivate(ctx context.Context, operatorID, mspUserID, customerTenantID int, operatorRole string) error {
 	isAdmin := operatorRole == "super_admin" || operatorRole == "sysadmin"
 	if !isAdmin {

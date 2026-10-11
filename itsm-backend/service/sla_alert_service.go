@@ -308,7 +308,7 @@ func (s *SLAAlertService) CheckAndTriggerAlerts(ctx context.Context, ticketID in
 		return false, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	// 从 sla_states 表读取 SLA 状态（Phase 3 read migration）
+	// 从 sla_states 表读取 SLA 状态
 	slState, err := s.client.SLAState.Query().
 		Where(
 			slastate.TenantID(tenantID),
@@ -396,7 +396,7 @@ func (s *SLAAlertService) TriggerSLAWarning(ctx context.Context, ticketID int, w
 		return false, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	// 从 sla_states 表读取 SLA 状态（Phase 3 read migration）
+	// 从 sla_states 表读取 SLA 状态
 	slState, err := s.client.SLAState.Query().
 		Where(
 			slastate.TenantID(tenantID),

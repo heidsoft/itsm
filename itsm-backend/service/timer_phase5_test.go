@@ -16,7 +16,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// timer_phase5_test.go — Timer Start Event（Phase 5）验证
+// timer_phase5_test.go — Timer Start Event验证
 //
 // 覆盖三块：
 //   A. timer_cron.go 纯函数：表达式分类、按租户时区求下次触发、循环次数语义
@@ -63,7 +63,7 @@ func TestNextFireAt_CronHonoursTimezone(t *testing.T) {
 	shanghai := ResolveLocation("Asia/Shanghai")
 	newYork := ResolveLocation("America/New_York")
 
-	// 2026-09-15T00:00:00Z == 上海 08:00、纽约 20:00（前一天）
+	// 00:00Z == 上海 08:00、纽约 20:00（前一天）
 	now := time.Date(2026, 9, 15, 0, 0, 0, 0, time.UTC)
 
 	fireSH, err := NextFireAt("0 9 * * *", ExprTypeCron, shanghai, now)
@@ -220,7 +220,7 @@ const phase5PlainStartEndBPMN = `<?xml version="1.0" encoding="UTF-8"?>
   </bpmn:process>
 </bpmn:definitions>`
 
-// createTimerTenantWithTZ 建租户并显式指定时区（Phase 5 的 cron 语义依赖它）。
+// createTimerTenantWithTZ 建租户并显式指定时区。
 func createTimerTenantWithTZ(t *testing.T, client *ent.Client, suffix, tz string) int {
 	t.Helper()
 	tenant, err := client.Tenant.Create().

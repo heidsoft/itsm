@@ -41,9 +41,8 @@ func (r *aiTelemetryRepository) ObserveLLMCall(ctx context.Context, provider, mo
 
 // SaveFeedback 在 ai_feedbacks 写一条用户反馈。
 //
-// item_type='ai_audit' 时 accepted 是操作者 accept/reject 决策（v1.7
-// Sprint 3 Task 1：解 useful overload），其他 item_type 时 useful 是
-// 操作者对答案的赞踩。accepted 与 useful 互不覆盖，运营中可以分别
+// item_type='ai_audit' 时 accepted 是操作者 accept/reject 决策，不复用 useful；
+// 其他 item_type 时 useful 是操作者对答案的赞踩。两者互不覆盖，运营中可以分别
 // 读两个维度。
 func (r *aiTelemetryRepository) SaveFeedback(ctx context.Context, tenantID, userID int, requestID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
 	const sqlStr = `

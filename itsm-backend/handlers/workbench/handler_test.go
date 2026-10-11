@@ -302,7 +302,7 @@ func TestQueryAssigneeFilter(t *testing.T) {
 	assert.Equal(t, "B-工单-待处理", listB.Items[0].Title)
 }
 
-// TestQueryPageSizeFollowsPlatformOwner 台账 E4-47④：page/pageSize 解析从 handler
+// TestQueryPageSizeFollowsPlatformOwner page/pageSize 解析从 handler
 // 手抄的 (0,100] 判定收敛到 common.GetPaginationFromQuery 单一所有者。行为语义
 // 保持一致（缺省 1/20、越界与非数字回落缺省），并额外锁定 size 别名不被接受。
 func TestQueryPageSizeFollowsPlatformOwner(t *testing.T) {

@@ -50,7 +50,6 @@ func (c *LintHandler) LintBPMN(ctx *gin.Context) {
 	common.Success(ctx, result)
 }
 
-// RegisterRoutes 注册路由
 func (c *LintHandler) RegisterRoutes(r *gin.RouterGroup) {
 	bpmn := r.Group("/bpmn")
 	{

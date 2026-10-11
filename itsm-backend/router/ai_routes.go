@@ -8,7 +8,6 @@ import (
 )
 
 // SetupAIRoutes 注册 AI & Analytics 相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 	aiGrp := tenant.Group("/ai")
 	{
@@ -37,11 +36,7 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 		aiGrp.GET("/audit-logs", middleware.RequirePermission("ai", "read"), h.GetAuditLogs)
 		aiGrp.POST("/triage", middleware.RequirePermission("ai", "read"), h.Triage)
 		// RAG endpoints
-		// Bug fix (2026-08-15): handler KnowledgeSearch uses ShouldBindJSON
-		// to read {query,limit,type} from a request body, but the route was
-		// registered as GET. Gin would refuse to parse a body on GET, so the
-		// endpoint always returned ParamError. Promote to POST to match the
-		// handler's binding contract.
+		// KnowledgeSearch 用 ShouldBindJSON 从 body 读 {query,limit,type}，GET 不解析 body，因此必须注册为 POST。
 		aiGrp.POST("/rag/search", middleware.RequirePermission("ai", "read"), h.KnowledgeSearch)
 		// AI 工单智能创建
 		aiGrp.POST("/ticket/create", middleware.RequirePermission("ticket", "create"), h.CreateTicketByAI)

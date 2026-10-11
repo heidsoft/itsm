@@ -34,7 +34,7 @@ const (
 	InternalErrorCode       = 5001
 	ServerErrorCode         = InternalErrorCode
 	ServiceUnavailableCode  = 5003
-	// P2-6 AI 工具 RBAC 校验
+	// AI 工具 RBAC 校验
 	ToolPermissionDeniedCode = 2004 // 工具权限不足
 	UnknownToolCode          = 2005 // 未知工具
 
@@ -44,11 +44,10 @@ const (
 	ForbiddenErrorCode = ForbiddenCode
 )
 
-// codeStatusPairs 是「应用业务码 ⇄ HTTP 状态码」的唯一事实来源。
-// 此前 Fail 与 FailWithData 各写一份正向 switch（2026-10-04 实测两份映射内容一致，但只有
-// Fail 那份带审计 P0 #3 的理由注释），而 statusToAppCode 又独立写了第三份反向映射，
-// 反向那份缺 ServiceUnavailable(503)：AppError 明确带 503 语义时会被降级成 5001/500。
-// 两个方向都从这一张表读出，正向与反向不可能再各自漂移。
+// codeStatusPairs 是「应用业务码 ⇄ HTTP 状态码」的唯一事实来源：
+// Fail / FailWithData 的正向映射和 statusToAppCode 的反向映射都读这一张表。
+// 分开写就会漂移——反向那份一旦漏掉 ServiceUnavailable(503)，
+// 带 503 语义的 AppError 会被降级成 5001/500。
 //
 // 同组内的顺序即反向查找（statusToAppCode）的优先级：把契约测试已锁定的规范码放前面
 // （400→4000、401→2002、403→2003、404→4004）。

@@ -356,7 +356,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 		return common.NewBusinessError(common.ConflictCode, "系统角色不能删除", roleEntity.Code)
 	}
 
-	// P0 双重保护（2026-10-05 B5.11）：即使 seed 时 IsSystem 字段漏设，
+	// P0 双重保护：即使 seed 时 IsSystem 字段漏设，
 	// 只要 code 命中 domain/role 内置词表，仍视为系统角色禁止删除。
 	if domainrole.IsBuiltinCode(roleEntity.Code) {
 		s.logger.Warnw("Blocked deletion of builtin role (is_system=false but code matches)",
@@ -403,7 +403,7 @@ func (s *RoleService) DeleteRole(ctx context.Context, id int, tenantID int) erro
 }
 
 // AssignPermissions 给角色分配权限（直接操作 role_permissions 联表）
-// C-4 修复：使用事务包裹 Delete+CreateBulk，循环内 err 必须 return 触发 Rollback，
+// 使用事务包裹 Delete+CreateBulk，循环内 err 必须 return 触发 Rollback，
 // 防止"旧权限已清空、新权限只写入部分"的越权/失权静默故障。
 // ErrPermissionNotInTenant 表示请求绑定的权限中存在不属于当前租户（或不存在）的项。
 // 属于调用方输入错误（应映射为 400），而非服务端内部错误（500）。
@@ -422,7 +422,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 		return fmt.Errorf("角色不存在: %w", err)
 	}
 
-	// P1-3 权限变更审计：事务前快照旧权限（code 列表），用于 after 提交后写 diff。
+	// 权限变更审计： 事务前快照旧权限（code 列表），用于 after 提交后写 diff。
 	beforeCodes, err := s.rolePermissionCodes(ctx, roleID, tenantID)
 	if err != nil {
 		// 快照失败不阻断授权，但记录（审计降级而非业务失败）
@@ -431,7 +431,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 	}
 
 	if len(permissionIDs) > 0 {
-		// R1 修复：权限是租户级实体，绑定角色时必须按本租户过滤。
+		// 权限是租户级实体，绑定角色时必须按本租户过滤。
 		// 否则可传入他租户 permission ID 通过 len 校验，造成跨租户提权。
 		perms, err := s.client.Permission.Query().
 			Where(
@@ -487,7 +487,7 @@ func (s *RoleService) AssignPermissions(ctx context.Context, roleID int, permiss
 
 	middleware.InvalidateRolePermissionCache(roleEntity.Code, tenantID)
 
-	// P1-3 权限变更审计：提交后快照新权限并写 diff（before/after code 列表）。
+	// 权限变更审计： 提交后快照新权限并写 diff（before/after code 列表）。
 	s.writePermissionChangeAudit(ctx, roleEntity, tenantID, beforeCodes, permissionIDs)
 
 	return nil
@@ -524,7 +524,7 @@ func (s *RoleService) rolePermissionCodes(ctx context.Context, roleID, tenantID 
 	return codes, nil
 }
 
-// writePermissionChangeAudit 写权限变更 diff 审计（P1-3）。
+// writePermissionChangeAudit 写权限变更 diff 审计。
 // after 由提交后的重新快照获得（而非信任入参），确保审计与库内终态一致。
 func (s *RoleService) writePermissionChangeAudit(ctx context.Context, roleEntity *ent.Role, tenantID int, before []string, _ []int) {
 	after, err := s.rolePermissionCodes(ctx, roleEntity.ID, tenantID)

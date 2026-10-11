@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetApprovalHistory_DialectSafeLevels 回归测试（2026-08-29 生产 P0-1）：
+// TestGetApprovalHistory_DialectSafeLevels 回归测试：
 // 旧实现在 SELECT 中使用 string_agg(integer, ',')，PostgreSQL 对聚合参数不做
 // 隐式 int->text 转换，直接报 `function string_agg(integer, unknown) does not exist`，
 // 导致 POST /changes/:id/approve 返回 500 "failed to get approval history"。

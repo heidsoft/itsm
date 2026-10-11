@@ -1,6 +1,6 @@
 // Package sla provides a unified SLA computation engine.
 //
-// Phase 3 Step 3.4（2026-09-27）：收敛分散在 ticket_sla_service / sla_policy_service /
+// 收敛分散在 ticket_sla_service / sla_policy_service /
 // bpmn_sla_service 的三套截止时间计算逻辑。
 //
 // 设计原则：

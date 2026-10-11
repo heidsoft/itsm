@@ -88,7 +88,7 @@ func TestHandler_AcceptTicket_EmptyBody(t *testing.T) {
 	r.ServeHTTP(w, req)
 	// AcceptTicketRequest 无 binding required → 空对象绑定成功，TicketID=0 走 service 后
 	// 得到「工单不存在」领域错误，分类收敛后是 404/4004（此前被压成 500）。
-	// 残留：ticketId 本应是必填参数（400），缺 binding:"required"；记台账 E4-5b，不在本片顺手加校验。
+	// 残留：ticketId 本应是必填参数（400），缺 binding:"required"；记b，不在本片顺手加校验。
 	assert.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
 	assert.Equal(t, common.NotFoundCode, decodeWorkflowCode(t, w), "body=%s", w.Body.String())
 }

@@ -8,7 +8,6 @@ import (
 )
 
 // SetupConnectorRoutes 注册连接器管理域路由（连接器/插件/技能市场）。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupConnectorRoutes(tenant *gin.RouterGroup, h *connectorHandler.Handler) {
 	conns := tenant.Group("/connectors")
 	{

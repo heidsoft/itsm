@@ -1,6 +1,6 @@
 package router
 
-// 回归（2026-10-04，E5-22，P0-2）：工单关联写入面契约。
+// 回归：工单关联写入面契约。
 //
 // 修复前的实测事实（router/ticket_routes.go 抽取后）：
 //   - TicketAssociationService.UpdateTicketAssociations 已具备完整能力（事务、租户收敛、

@@ -1,5 +1,4 @@
 // Package ticket_attachment 是工单附件域的 HTTP handler 层（域切片架构）。
-// 自 controller/ticket_attachment_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.TicketAttachmentService 承载，本包只做参数解析与响应封装。
 package ticket_attachment
 

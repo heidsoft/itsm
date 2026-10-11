@@ -12,7 +12,6 @@ import (
 )
 
 // ---- Dashboard 默认布局/组件/配置辅助函数 ----
-// 从 router.go 顶部搬移而来，仅被 dashboard/reports 路由使用。
 
 func defaultDashboardLayout() gin.H {
 	return gin.H{
@@ -126,18 +125,14 @@ func dashboardWidgetByID(widgetID string) gin.H {
 }
 
 // SetupDashboardRoutes 注册仪表盘域路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // fallback ticketHandler：当 TicketHandler 未装配时 /stats/tickets 回退到 DashboardHandler.GetStats。
 //
-// 2026-09-16 P0 修复：原资源名为 ("report", "read"|"update"|"create") 与 RolePermissions 不一致，
-// 非 admin/manager 角色 DBOnly 模式下 dashboard 端点全量 403；端用户/服务台 agent 也无法访问仪表盘。
-// 路由层统一改用 ("dashboard", "read"|"update") 与 RolePermissions 中已存在的 dashboard:read 对齐，
-// create/delete 维度整合到 dashboard:write/admin；widget 资源未在 RolePermissions 中存在，
-// 一并收敛到 dashboard 资源，避免路由层与权限词表双轨。
+// 权限资源名统一用 dashboard（read|write），必须与 RolePermissions 里的 dashboard 定义对齐；
+// 用 report/widget 等资源名会让 DBOnly 模式下非 admin/manager 角色对仪表盘端点全量 403。
 func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler, ticketHandler *ticketHandler.Handler) {
 	dashboard := tenant.Group("/dashboard")
 	{
-		// B5: 别名，/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
+		// 别名：/api/v1/dashboard 直接返回 overview 数据（前端默认调用）
 		dashboard.GET("", middleware.RequirePermission("dashboard", "read"), h.GetOverview)
 		dashboard.GET("/overview", middleware.RequirePermission("dashboard", "read"), h.GetOverview)
 		dashboard.GET("/config", middleware.RequirePermission("dashboard", "read"), func(c *gin.Context) {
@@ -237,7 +232,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 				"peakUsageHours":     []int{},
 			})
 		})
-		// P1-01 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
+		// 别名：/dashboard/metrics → 通用 stats（前端默认 fetch 路径）
 		dashboard.GET("/metrics", middleware.RequirePermission("dashboard", "read"), h.GetStats)
 		dashboard.GET("/ticket-trend", middleware.RequirePermission("dashboard", "read"), h.GetTicketTrend)
 		dashboard.GET("/incident-distribution", middleware.RequirePermission("dashboard", "read"), h.GetIncidentDistribution)
@@ -281,10 +276,7 @@ func SetupDashboardRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler,
 	}
 }
 
-// SetupReportsRoutes 注册报表路由。
-// 从 router.go 的集中注册块抽取而来；报表数据聚合复用 DashboardHandler 各查询方法。
-//
-// 2026-09-16 P0 修复：与 SetupDashboardRoutes 同步，资源名收敛到 dashboard（详见其上方注释）。
+// SetupReportsRoutes 注册报表路由。权限资源名同样收敛到 dashboard。
 func SetupReportsRoutes(tenant *gin.RouterGroup, h *handlers.DashboardHandler) {
 	reports := tenant.Group("/reports")
 	{

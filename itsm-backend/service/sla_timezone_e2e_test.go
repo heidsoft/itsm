@@ -87,7 +87,7 @@ func TestSLATimezone_E2E_AsiaShanghaiDeadline(t *testing.T) {
 	require.NotNil(t, result)
 	require.NotNil(t, result.ResponseDeadline)
 
-	// 2026-08-17 01:00:00 UTC + 8小时工作时间 = 2026-08-17 09:00:00 UTC（上海 17:00）
+	// 00:00 UTC + 8小时工作时间 = 2026-08-17 09:00:00 UTC（上海 17:00）
 	want := time.Date(2026, 8, 17, 9, 0, 0, 0, time.UTC)
 	// 引擎按 SLA 时区返回（此处为 +0800 CST），需按「同一时刻」比较而非按 Location。
 	assert.True(t, result.ResponseDeadline.Equal(want),
@@ -199,7 +199,7 @@ func TestSLATimezone_E2E_WeekendSkip(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// 2026-08-14 是周五，17:00 UTC = 上海 2026-08-15 01:00
+	// 00 UTC = 上海 2026-08-15 01:00
 	// 加上 120 分钟工作时间，应该跳过周末到周一
 	result, err := service.CalculateSLADeadlineFromRequest(ctx, tenant.ID, "incident", "high")
 	require.NoError(t, err)

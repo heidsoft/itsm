@@ -8,10 +8,10 @@ import (
 )
 
 // 本文件承载「迁移账本调和」：把 unified migration 体系落地（2026-09-08 目录
-// 自发现 / 更早的 Go 注册表记账）之前就已生效、但从未记账的历史迁移幂等补记
+// 自发现上线，更早由 Go 注册表记账）之前就已生效、却从未记账的历史迁移幂等补记
 // 进 schema_migrations——只登记，不执行（adopt, don't replay）。
 //
-// 两个调和面（2026-09-10 prod init 日志实证）：
+// 两个调和面：
 //  1. LegacyMigrations 001-006：Go 注册表之前的历史版本，内嵌 SQL 引用旧表名
 //     （002 的 tenant 表——现库为 tenants），重放必炸；
 //  2. 日期化磁盘迁移（migrations/2026*.sql）：发现机制上线前效果已由 ent 基线
@@ -28,7 +28,7 @@ import (
 // 注意：收养条目有意不带 checksum（历史 SQL 不再执行，无从校验），执行查询
 // 用「存在即跳过」而非「checksum 比对」语义。
 
-// adoptionCutoffUTC 是目录自发现机制上线的时刻（2026-09-08 发布窗口）。
+// adoptionCutoffUTC 是目录自发现机制上线的时刻。
 // 最早 unified 记账早于该时刻 → 既有安装；否则 → 全新安装。
 var adoptionCutoffUTC = time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)
 
@@ -94,9 +94,9 @@ func isExistingInstallation(ctx context.Context, db *sql.DB) (bool, error) {
 }
 
 // isPreDiscoveryVersion 判定版本名是否属于发现机制上线前已存在的迁移：
-// 日期化版本（YYYYMMDD_ 前缀）的日期必须早于 cutoff（否则是既有安装上的
-// 新迁移，必须正常执行而非收养——2026-09-11 复盘修正：原实现只看前缀不看
-// 日期，会把新批次误收养成"已执行"，静默跳过 DDL）；
+// 日期化版本（YYYYMMDD_ 前缀）的日期必须早于 cutoff，否则它是既有安装上的
+// 新迁移，必须正常执行而非收养：只看前缀不看日期会把新批次误收养成"已执行"，
+// 静默跳过 DDL；
 // 另收养已知的非日期化历史别名。
 func isPreDiscoveryVersion(version string) bool {
 	if version == "add_missing_indexes" {

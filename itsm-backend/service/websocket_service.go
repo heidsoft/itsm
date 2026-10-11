@@ -140,7 +140,7 @@ func (h *WebSocketHub) Run() {
 			h.mu.Unlock()
 
 		case message := <-h.broadcast:
-			// 修复：broadcast 分支会 delete map + close channel，属于写操作，
+			// broadcast 分支会 delete map + close channel，属于写操作，
 			// 必须用 Lock 而非 RLock，否则并发写 map 导致 runtime panic。
 			h.mu.Lock()
 			for client := range h.clients {

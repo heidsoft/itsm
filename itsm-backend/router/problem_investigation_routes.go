@@ -8,7 +8,6 @@ import (
 )
 
 // SetupProblemInvestigationRoutes 注册问题调查域路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 权限说明：investigation/step/root_cause/solution 等资源未在 seeder 中定义，
 // 统一复用已 seeded 且已赋权运营角色的 problem 权限，避免注册后全员 403。
 func SetupProblemInvestigationRoutes(tenant *gin.RouterGroup, h *problem_investigation.Handler) {

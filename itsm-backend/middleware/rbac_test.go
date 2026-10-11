@@ -210,7 +210,7 @@ func TestGetPermissionFromPath(t *testing.T) {
 		perm := getPermissionFromPath("POST", "/api/v1/tickets")
 		assert.NotNil(t, perm)
 		assert.Equal(t, "ticket", perm.Resource)
-		// 批次 3（2026-09-17）：预检以路由声明为权威——POST /tickets 声明 ticket:create，
+		// 批次 3：预检以路由声明为权威——POST /tickets 声明 ticket:create，
 		// 预检从 write 对齐为 create（write⇒create 已在种子奇偶补齐，能力不缩水）
 		assert.Equal(t, "create", perm.Action)
 	})
@@ -258,7 +258,7 @@ func TestPatchMethodUsesUpdateContract(t *testing.T) {
 	}
 }
 
-// TestReleaseEndpointsHaveExplicitRBACMapping 回归（2026-09-11 E2E 实测暴露的 prod 缺陷）：
+// TestReleaseEndpointsHaveExplicitRBACMapping 回归：
 // ResourceActionMap 此前完全没有 releases 条目，SmartCheckPermission L3 显式映射落空后，
 // URL 推导取复数路径段 "releases" 当资源名，而词表是单数 "release"，永不匹配；
 // L4 硬编码在 prod DBOnly（fail-closed）下禁用——三者叠加导致 release 域全部端点对

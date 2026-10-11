@@ -8,7 +8,6 @@ import (
 )
 
 // SetupVendorRoutes 注册 Vendor（供应商）域路由。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupVendorRoutes(tenant *gin.RouterGroup, h *vendorHandler.Handler) {
 	vendors := tenant.Group("/vendors")
 	{

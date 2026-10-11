@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E2-1）：/api/v1/vendors 原本把后端故障和跨租户访问
+// 回归：/api/v1/vendors 原本把后端故障和跨租户访问
 // 都伪装成成功，且列表信封用非 items 键：
 //   - ListVendors 用 `total, _ :=` / `vendors, _ :=` 吞掉 Count/All 的错误，
 //     数据库故障时返回 200 空列表，调用方无法区分「没有供应商」和「查询挂了」。

@@ -274,7 +274,7 @@ func TestExecuteTool_T5_UnknownTool(t *testing.T) {
 	assert.Equal(t, "no_such_tool", inv.ToolName)
 }
 
-// ===== T6: 租户上下文透传到审计记录（继承 P0 fail-closed 的 tenant 隔离） =====
+// ===== T6: 租户上下文透传到审计记录 =====
 // 不同 tenantID 调用应各自记录对应租户，避免跨租户审计混淆。
 func TestExecuteTool_T6_TenantContextPropagatedToAudit(t *testing.T) {
 	env := newRBACTestEnv(t)

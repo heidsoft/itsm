@@ -488,7 +488,6 @@ func (h *Handler) Update(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	// P1-DataScope：写路径注入操作人身份做行级校验
 	actorID := c.GetInt("user_id")
 	actorRole := c.GetString("role")
 
@@ -518,7 +517,6 @@ func (h *Handler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, actorID, actorRole)
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "操作失败")
 		return
 	}
@@ -663,7 +661,6 @@ func problemRequestContext(c *gin.Context) (int, int, bool) {
 	return id, tenantID, true
 }
 
-// actorContext 提取当前操作人身份（P1-DataScope 行级写权限校验用）。
 func actorContext(c *gin.Context) (int, string) {
 	return c.GetInt("user_id"), c.GetString("role")
 }
@@ -720,7 +717,6 @@ func (h *Handler) Delete(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	// P1-DataScope：删除同样受行级写权限约束
 	actorID, actorRole := actorContext(c)
 	err = h.service.Delete(c.Request.Context(), id, tenantID, actorID, actorRole)
 	if err != nil {
@@ -893,8 +889,8 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 
 	// 显式 unready：问题从未有 sla_state 写入路径，返回 0 值 + slaStatus:"none"
 	// 会让调用方把「能力没接」读成「这个问题的 SLA 正常且未超时」。
-	// ⚠️ 响应契约：本端点当前恒为 503/5003，不再返回 200；真正接入问题 SLA
-	// （建 sla_state 写入链 + 计算倒计时）后需一并重开 200 契约与文档。
+	// 契约：本端点恒为 503/5003；接入问题 SLA（建 sla_state 写入链 + 倒计时）后
+	// 才重开 200 契约与文档。
 	common.Fail(c, common.ServiceUnavailableCode, "问题 SLA 尚未接入 SLA 引擎")
 }
 

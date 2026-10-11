@@ -210,7 +210,7 @@ type RouterConfig struct {
 	CommonHandler      *domainCommon.Handler
 	AuthHandler        *authHandler.Handler
 
-	// Sprint C — Skill Registry v1
+	// Skill Registry v1
 	SkillHandler *skill.Handler
 
 	// WebSocket Service
@@ -558,7 +558,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Skill Registry v1 ====================
-		// Sprint C：技能管理与调用入口。
+		//技能管理与调用入口。
 		// 路径：
 		//   GET    /api/v1/skills                  列表（市场发现）
 		//   GET    /api/v1/skills/:code            详情

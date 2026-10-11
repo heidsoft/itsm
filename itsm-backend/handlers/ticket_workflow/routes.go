@@ -220,7 +220,6 @@ func (h *Handler) ApproveTicket(c *gin.Context) {
 	common.Success(c, gin.H{"message": message})
 }
 
-// ResolveTicket 解决工单
 func (h *Handler) ResolveTicket(c *gin.Context) {
 	var req dto.ResolveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -337,7 +336,7 @@ func (h *Handler) GetTicketWorkflowStateV2(c *gin.Context) {
 	common.Success(c, state)
 }
 
-// GetTicketWorkflowHistory 获取工单流转历史（原样迁移的裸 SQL 实现，含 P1-08 NullString 修复）
+// GetTicketWorkflowHistory 获取工单流转历史
 func (h *Handler) GetTicketWorkflowHistory(c *gin.Context) {
 	ticketID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -383,7 +382,7 @@ func (h *Handler) GetTicketWorkflowHistory(c *gin.Context) {
 	for rows.Next() {
 		var r workflowRec
 		var metaJSON []byte
-		// P1-08 修复：comment / reason 在表中可空，使用 sql.NullString 避免 Scan NULL 报错
+		// comment / reason 在表中可空，使用 sql.NullString 避免 Scan NULL 报错
 		var commentNS, reasonNS sql.NullString
 		if err := rows.Scan(&r.ID, &r.TicketID, &r.Action, &r.FromStatus, &r.ToStatus,
 			&r.OperatorID, &r.FromUserID, &r.ToUserID, &commentNS, &reasonNS, &metaJSON, &r.CreatedAt); err != nil {

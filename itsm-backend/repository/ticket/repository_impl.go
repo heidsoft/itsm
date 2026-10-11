@@ -495,7 +495,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 		if filters.DateTo != nil {
 			query = query.Where(ticket.CreatedAtLTE(*filters.DateTo))
 		}
-		// 阻断8 修复：行级数据权限。
+		// 行级数据权限。
 		// DataScopeOwnedOrAssigned 强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid))，
 		// 使普通员工只能看到自己创建或分配给自己的工单。
 		// 这是安全关键路径：即使上层忘记传 RequesterID 过滤，这里仍会兜底收窄。
@@ -620,7 +620,7 @@ func (r *EntRepository) FindByRequester(ctx context.Context, requesterID int, te
 // FindOverdue 查询逾期工单
 func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error) {
 	now := time.Now()
-	// Phase 1: get overdue ticket IDs from sla_states
+	// get overdue ticket IDs from sla_states
 	slaStates, err := r.Client().SLAState.Query().
 		Where(
 			slastate.TenantIDEQ(tenantID),
@@ -641,7 +641,7 @@ func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticke
 		aggIDs[i] = s.AggregateID
 	}
 
-	// Phase 2: fetch tickets by those IDs
+	// fetch tickets by those IDs
 	entities, err := r.Client().Ticket.Query().
 		Where(
 			ticket.TenantID(tenantID),

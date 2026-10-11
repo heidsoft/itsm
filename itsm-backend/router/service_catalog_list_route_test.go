@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-6f）：服务目录列表信封原先回
+// 回归：服务目录列表信封原先回
 // {catalogs,total,page,size} —— 领域名集合键 + size 别名，是棘轮里最后一条 size 违规。
 // 页长同时有 4 个所有者：handler 不夹紧、Service.List 缺省 10、Service.Search 缺省 20
 // 且把 Page/Size 写死成 1/20（/search 因此永远只能拿到第一页），

@@ -59,12 +59,12 @@ type listEnvelope struct {
 // envelopeBaseline 是 2026-10-02 由扫描器实测的「领域名集合键」存量清单（file|struct|jsonKey）。
 // 新条目必须经评审才能加入；每收敛一个都应删除条目并配前端契约更新。
 //
-// 2026-10-03 E4-6c 移除 problem_dto.go|ListProblemsResponse|problems：GET /api/v1/problems
+// GET /api/v1/problems
 // 的集合键改为 items，同时把三处各自夹紧的分页规则收给 common.GetPaginationFromQuery 单点。
-// 2026-10-03 E4-6e 移除 cmdb_dto.go|ListCIsResponse|cis：实测该结构体在非测试代码里零引用
+// 实测该结构体在非测试代码里零引用
 // （活的 CI 列表信封是 dto.CIListResponse，键已是 items），属只被本基线引用的死声明，按
 // E4-3 口径直接删除而不是改名保留。
-// 2026-10-03 E4-6f 移除 service_dto.go|ServiceCatalogListResponse|catalogs：四个 URL
+// 四个 URL
 // （/service-catalog、/service-catalogs、/service-catalog-services、/service-catalogs/search）
 // 共用同一个 h.List/h.Search，实测都做 Count + Offset/Limit，集合键统一为 items。
 // 2026-10-04 E4-6g 移除 asset_dto.go|AssetListResponse|assets 与
@@ -80,7 +80,7 @@ type listEnvelope struct {
 // 2026-10-04 E4-6i 移除 ticket_workflow_dto.go|TicketCCListResponse|records：GET /tickets/cc/my
 // 与 GET /tickets/:id/cc 的 service 实测都是 Where(tenant_id)+All(ctx) 整表取回、
 // Total=len(records)，同为不分页形状；同批给两条 added_at DESC 排序补 id 并列键。
-// 2026-10-04 E4-6j 移除全部 12 条存量基线：11 个 ListResponse 的领域名集合键
+// 11 个 ListResponse 的领域名集合键
 // （changes/cloudAccounts/cloudServices/cloudResources/menus/allocations/customers/
 // releases/roles/tenants/tickets/logs）统一收敛为 items 并补齐分页五元组；
 // 3 个统计 DTO（BatchImportCIsResponse/CIStatsResponse/ConfigurationItemStatsResponse）
@@ -89,7 +89,7 @@ type listEnvelope struct {
 var envelopeBaseline = []string{}
 
 // envelopeKeyBaseline 是「声明了分页却漏掉标准分页键」的存量清单（file|struct|缺失键），
-// 2026-10-03 按新判定重新实测。判定只看**部分分页**：出现了 page/pageSize/totalPages 里
+// 出现了 page/pageSize/totalPages 里
 // 的任一键，就必须凑满五元组。纯 {items,total} 不在这里，因为 docs/api-reference.md
 // 「不分页的列表」承认它是合法形状，且明确要求不得伪造分页键。
 //
@@ -113,11 +113,11 @@ var envelopeKeyBaseline = []string{}
 // （file|struct|jsonKey）。这些信封用 `size` 代替 `pageSize`（部分还缺 pageSize/totalPages），
 // 属于 AGENTS.md 禁止的双轨；清理时必须同时改请求参数、前端类型与调用点。
 //
-// 2026-10-03 E4-7 移除 notification_dto.go|NotificationListResponse|size：请求侧原本同时
+// 请求侧原本同时
 // 接受 `size` 与 `pageSize`，现在只认 `pageSize`（HTTP 入口走 common.GetPaginationFromQuery）。
-// 2026-10-03 E4-6e 移除 5 条 CMDB 信封的 size：响应键改 pageSize，请求侧 dto.ListCIRequest 的
+// 响应键改 pageSize，请求侧 dto.ListCIRequest 的
 // `form:"size"` 一并删除（不保留双接受），前端 9 个 size 发送点同批改发 pageSize。
-// 2026-10-03 E4-6f 移除最后一条 service_dto.go|ServiceCatalogListResponse|size：响应 catalogs→items、
+// 响应 catalogs→items、
 // size→pageSize+totalPages，请求侧 dto.GetServiceCatalogsRequest 的 page/size（含
 // binding:"max=1000" 这第四套页长真相）整体删除，分页只由 HTTP 入口的
 // common.GetPaginationFromQuery 决定；前端 size 发送点同批改发 pageSize。

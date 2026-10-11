@@ -165,7 +165,7 @@ func (s *Service) reactivateUninstalledInstallation(
 
 // InstallItem 租户安装商品
 func (s *Service) InstallItem(ctx context.Context, tenantID, itemID int, installedBy string) (*ent.TenantInstallation, error) {
-	// P2-04 修复：业务保护四道闸
+	// 业务保护四道闸
 	// 1) 商品必须存在
 	item, err := s.db.MarketplaceItem.Get(ctx, itemID)
 	if err != nil {

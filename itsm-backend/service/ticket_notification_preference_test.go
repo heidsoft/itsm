@@ -58,7 +58,6 @@ func notificationPreferenceFixture(t *testing.T) (*ent.Client, context.Context, 
 
 // TestSendNotification_RespectsPerEventPreference 核心契约：用户对某事件类型
 // 显式关闭 email 渠道后，SendNotification 不应再创建该渠道的通知记录。
-// （P0-3 修复：发送链路此前消费的是硬编码假聚合偏好，per-event 设置从未生效。）
 func TestSendNotification_RespectsPerEventPreference(t *testing.T) {
 	client, ctx, tenantID, userID, ticketID := notificationPreferenceFixture(t)
 	svc := NewTicketNotificationService(client, zap.NewNop().Sugar())

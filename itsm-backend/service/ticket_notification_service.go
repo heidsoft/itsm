@@ -820,7 +820,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 //
 // tx 入参确保租户隔离与 ticket 一致，避免跨 tenant 误发。
 // 广播分支必须过滤 ActiveEQ(true)：停用用户入箱后投递端报 user not found 进 dead_letter
-// （prod 实测 2026-09-11：user5 active=false 被入箱）。
+// 。
 func collectCreatedRecipients(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) []int {
 	userIDs := []int{}
 	if ticket.AssigneeID > 0 {

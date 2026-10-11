@@ -8,7 +8,6 @@ import (
 )
 
 // SetupTicketCategoryRoutes 注册工单分类域路由。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupTicketCategoryRoutes(tenant *gin.RouterGroup, h *ticketCategoryHandler.Handler) {
 	categories := tenant.Group("/ticket-categories")
 	{

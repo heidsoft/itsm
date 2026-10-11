@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E1-3）：全局标签页原先打的是只读别名
+// 回归：全局标签页原先打的是只读别名
 // /api/v1/tags，真 CRUD 所在的 /api/v1/ticket-tags 没有任何 UI 调用，且这条写链
 // 本身是坏的：
 //   - CreateTagRequest.TenantID 带 binding:"required"，前端不来自报 tenantId，

@@ -10,7 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// 契约（2026-09-15 R3 修复）：process_approval_decisions 是只追加的审计事实表，
+// 契约：process_approval_decisions 是只追加的审计事实表，
 // 一个任务允许产生多条决策记录（delegate→受托人完成、add_approver、多次委托链）。
 // 历史 UNIQUE(tenant_id, process_task_id) 已移除——它曾使"委托后完成审批"必然
 // 撞唯一约束。防重由任务状态 CAS（completeTaskWithClient 事务内 updated!=1）保证。

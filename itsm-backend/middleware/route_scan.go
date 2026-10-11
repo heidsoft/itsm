@@ -13,15 +13,14 @@ import (
 	"strings"
 )
 
-// 本文件是「路由声明 = 权限单一真源」体系的扫描层（2026-09-17 批次 5，P0-E 治本）。
+// 本文件是「路由声明 = 权限单一真源」体系的扫描层。
 //
 // 授权判定是两道闸串联：RBACMiddleware 路径预检(ResourceActionMap) → 路由级 RequirePermission。
-// 历史上预检映射与路由声明各自手写，靠守卫测试事后对账——漂移能被发现，但每次都要人肉补表。
-// 批次 5 把因果倒过来：ResourceActionMap 的路由条目**从路由声明自动生成**
+// 预检映射若与路由声明各自手写，漂移只能靠守卫测试事后对账。这里把因果倒过来：
+// ResourceActionMap 的路由条目**从路由声明自动生成**
 // （cmd/authz-gen → middleware/rbac_precheck_gen.go），人只维护少量显式回退策略。
 //
-// 本扫描器原先内嵌在 route_precheck_alignment_test.go 中，现提升为正式代码，
-// 供 ① codegen（cmd/authz-gen）② 守卫测试（middleware/router_test 侧）共同消费。
+// 本扫描器供 ① codegen（cmd/authz-gen）② 守卫测试（middleware/router_test 侧）共同消费。
 
 // DeclaredRoute 一条「挂了权限声明」的路由。
 type DeclaredRoute struct {
@@ -49,9 +48,8 @@ func ScanDeclaredPermissionRoutes() ([]DeclaredRoute, error) {
 // ScanUnresolvedPermissionRoutes 返回「声明了权限但扫描器无法定位完整路径」的路由。
 //
 // 这类声明不会进入预检映射，非 super_admin 角色会在 RBACMiddleware 路径预检处
-// 被 DBOnly fail-closed 直接 403（2026-10-04 P0：工单类型、teams、tags、
-// problem-relationships、approval-records 等 21 个端点的真实根因）。
-// 生成层把它当作硬错误，保证这类漂移不能再静默发生。
+// 被 DBOnly fail-closed 直接 403（工单类型、teams、tags、problem-relationships、
+// approval-records 等端点即为此类）。生成层把它当作硬错误，不让这类漂移静默发生。
 func ScanUnresolvedPermissionRoutes() ([]DeclaredRoute, error) {
 	_, unresolved, err := scanPermissionRoutes()
 	return unresolved, err
@@ -271,7 +269,7 @@ func scanDeclaredPermissionRoutesFrom(base string) ([]DeclaredRoute, []DeclaredR
 
 // groupParamRoots 返回函数参数里分组变量的根前缀。
 //
-// 本仓库的注册约定（2026-10-04 实测确认，全部调用点均成立）：
+// 本仓库的注册约定：
 //   - router/ 的 SetupXxxRoutes(tenant *gin.RouterGroup, ...) 与 handlers/ 的
 //     RegisterRoutes(group *gin.RouterGroup) 收到的组都挂在 /api/v1 下
 //     （router.go 里 public := r.Group("/api/v1")、auth := r.Group("/api/v1")、

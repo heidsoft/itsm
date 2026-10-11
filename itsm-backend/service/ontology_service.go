@@ -24,7 +24,7 @@ import (
 // 它从用户 query 中识别业务实体（工单/事件/问题/变更/发布/CI），
 // 沿本体的类型化关系边做 1 跳扩展，产出供 LLM 推理的结构化上下文。
 //
-// 设计约束（见 output/ontology-design-2026-08-29.md）：
+// 设计约束：
 //   - 只读：本服务不写任何实体
 //   - 租户隔离：所有查询强制 TenantIDEQ，fail-closed
 //   - 限流：每实体邻居 ≤ maxNeighbors（默认 20）
@@ -50,7 +50,7 @@ var (
 	releaseNumberRe  = regexp.MustCompile(`REL-\d{8}-\w+`)
 	problemNumberRe  = regexp.MustCompile(`PRB-\d{8}-\d+`)
 	changeNumberRe   = regexp.MustCompile(`CHG-\d{8}-\d+`)
-	// ciNumberRe CI 唯一业务编号（P0-3：CI-YYYYMM-NNNNNN，Agent/用户可直接用编号定位 CI）
+	// ciNumberRe CI 唯一业务编号
 	ciNumberRe = regexp.MustCompile(`CI-\d{4,6}-\d+`)
 )
 
@@ -672,7 +672,7 @@ var ciStopwords = map[string]bool{
 func isStopword(w string) bool { return ciStopwords[w] }
 
 func reverseRelation(rel string) string {
-	// P0-2 词表收口：反向映射从 ent/schema 受控词表派生，本文件不再维护第二份清单
+	// 词表收口： 反向映射从 ent/schema 受控词表派生，本文件不再维护第二份清单
 	return schema.ReverseCIRelationshipType(rel)
 }
 

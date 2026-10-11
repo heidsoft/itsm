@@ -115,7 +115,7 @@ func TestSubmitApproval_TransactionFailure_LeavesNoSideEffects(t *testing.T) {
 
 // TestSubmitApproval_CASGuard_NonDraftDoesNotRegressState
 //
-// P0-1 修复：CAS 守卫保证即使变更已处于 pending/approved/in_progress
+// CAS 守卫保证即使变更已处于 pending/approved/in_progress
 // 等非 draft 状态，重复调用 SubmitApproval 也只会追加审批记录，
 // 不会把状态回退或覆盖。多个审批人分轮次提交同一变更审批时
 // 行为必须一致。
@@ -162,7 +162,7 @@ func TestSubmitApproval_CASGuard_NonDraftDoesNotRegressState(t *testing.T) {
 
 // TestSubmitApproval_RejectsApproverNotInChain
 //
-// P0-1 修复：service 必须拒绝把请求体里的 approverId 注入到审批流中，
+// service 必须拒绝把请求体里的 approverId 注入到审批流中，
 // 仅允许审批链中指定的审批人提交。
 func TestSubmitApproval_RejectsApproverNotInChain(t *testing.T) {
 	logger := zaptest.NewLogger(t).Sugar()
@@ -205,7 +205,7 @@ func TestSubmitApproval_RejectsApproverNotInChain(t *testing.T) {
 
 // TestSubmitApproval_TimestampFromCallerNotElapsedClock
 //
-// P0-1 修复：SubmitApprovalRecordTx 必须使用 service 传入的 now，
+// SubmitApprovalRecordTx 必须使用 service 传入的 now，
 // 由仓储负责事务边界。这避免了"INSERT 的 created_at 来自
 // 数据库默认时间、CAS 的 updated_at 来自 service.now"导致
 // 同一事务内两条写入时间戳不一致的审计缺陷。

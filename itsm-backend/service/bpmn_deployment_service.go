@@ -78,7 +78,7 @@ func (s *BPMNDeploymentService) DeployProcessDefinition(ctx context.Context, req
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
 
-	// 注册开始定时器事件（Phase 3）
+	// 注册开始定时器事件
 	if s.timerStore != nil {
 		if err := s.registerStartTimers(ctx, definitions, processDef.Key, req.TenantID); err != nil {
 			// 定时器注册失败不影响部署成功，只记录警告
@@ -375,8 +375,8 @@ type ListDeploymentsRequest struct {
 
 // registerStartTimers 注册开始定时器事件。
 //
-// 时间表语义与时区规则见 timer_start_schedule.go（Phase 5 抽出为共享实现，
-// 使设计器发布路径 bpmnProcessDefinitionService.PublishProcessDefinition 复用同一逻辑）。
+// 时间表语义与时区规则见 timer_start_schedule.go：设计器发布路径
+// PublishProcessDefinition 复用同一实现，两条路径的定时器注册口径一致。
 func (s *BPMNDeploymentService) registerStartTimers(ctx context.Context, definitions *BPMNDefinitions, processKey string, tenantID int) error {
 	_, err := SyncStartTimersFromDefinitions(ctx, s.client, s.timerStore, definitions, processKey, tenantID)
 	return err

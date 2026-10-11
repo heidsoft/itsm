@@ -107,7 +107,7 @@ func (o *EmailIntakeOrchestrator) Ingest(ctx context.Context, tenantID int, emai
 		email.ReceivedAt = time.Now()
 	}
 
-	// Phase 1 + 2 in a single transaction to ensure idempotent write:
+	// + 2 in a single transaction to ensure idempotent write:
 	// two concurrent poll goroutines hitting the same UID must not create duplicates.
 	var conversation *ent.EmailConversation
 	var message *ent.InboundEmailMessage

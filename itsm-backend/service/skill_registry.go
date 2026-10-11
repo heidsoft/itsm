@@ -1,4 +1,4 @@
-// Package service - Sprint C Skill Registry v1.
+// Package service -Skill Registry v1.
 //
 // SkillRegistry 是运行期 Skill 一等公民的中央索引：
 //   - 启动时由 internal/bootstrap 通过 Register 注入 built-in Skill

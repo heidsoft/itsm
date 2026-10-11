@@ -130,7 +130,7 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 	}
 	if len(tenants) != 1 {
 		// fail-closed：多活跃租户无法从请求推断归属，零活跃租户说明系统未初始化；
-		// 目标租户绝不接受请求体指定（P0-1）。
+		// 目标租户绝不接受请求体指定。
 		if len(tenants) > 1 {
 			return nil, fmt.Errorf("系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号")
 		}

@@ -8,14 +8,14 @@ package contract
 // 自己一份缺省值、自己一份上界（或根本没有上界）、以及「信封回显的值」与
 // 「真正下传给 Offset/Limit 的值」分家——非数字或 0 会让 Ent 的 Limit 被整个跳过，
 // 于是一次写错分页参数的请求把该租户读穿。2026-10-04 在 GET /api/v1/incidents
-// 与 GET /api/v1/incidents/alerts/active 实测命中并已收敛，见台账 E4-9b。
+// 与 GET /api/v1/incidents/alerts/active 实测命中并已收敛，见b。
 //
 // 本棘轮不要求一次性清零，但禁止新增，也不允许基线悄悄增长。
 // 收敛一条的做法：把该 handler 改成 pg := common.GetPaginationFromQuery(c)，
 // 查询与信封都用 pg.Page / pg.PageSize，配套路由测试锁住缺省、越界、非数字、
 // 非正页码与上界采纳，然后从基线删掉这一条。
 //
-// 判定形态（2026-10-04 扩展，台账 E4-47a）：handler 层只要把 "pageSize" 或 "size"
+// 判定形态：handler 层只要把 "pageSize" 或 "size"
 // 作为字面量实参传给任何被调函数，就算一处自建页长读取点，因此同时覆盖
 //   - ctx.Query("pageSize") 与 ctx.DefaultQuery("pageSize", "20")
 //   - 自定义 helper：queryIntParam(c, "pageSize", "size", 10）、parseSkillListPagination
@@ -45,7 +45,7 @@ import (
 // 无法从实参看出时为 ?>；同一键有多处就重复多行，计数一并比对。
 //
 // 扩展判定形态后新增的 8 处（原先 DefaultQuery-only 扫描器看不见）。
-// 台账 E4-47 已全量收敛：sla/skill/workbench（①-④）+ release/standard_change/
+// 已全量收敛：sla/skill/workbench（①-④）+ release/standard_change/
 // knowledge/known_error/operations/timer/bpmn/workflow_template/approval（第二批）
 // 共 14 处，全部改走 common.GetPaginationFromQuery(c)。
 // 回归锁：handlers/sla/pagination_contract_test.go、handlers/skill/handler_test.go、

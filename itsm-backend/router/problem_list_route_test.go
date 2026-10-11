@@ -23,7 +23,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-03 边缘功能收口 E4-6c）：GET /api/v1/problems 的分页有**三个所有者**，
+// 回归：GET /api/v1/problems 的分页有**三个所有者**，
 // 每个对同一个非法入参给不同答案——
 //   - handler 把 ShouldBindQuery 的原值直接交给 service/repo；
 //   - repository_impl.go 自己按 page<1→1、size<1→10、size>200→200 夹紧后才写 Offset/Limit；

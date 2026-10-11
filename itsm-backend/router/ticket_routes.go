@@ -10,7 +10,6 @@ import (
 )
 
 // SetupTicketRoutes 注册工单主路由（含关联子域：视图/评论/附件/审批/流转/自动化/分配/评分/依赖/通知，以及顶层分析别名与 AI 工单总结）。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 签名沿用 SetupCMDBRoutes 先例直接接收 *RouterConfig，避免十余个 handler 平铺传参。
 func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 	tickets := tenant.Group("/tickets")
@@ -140,20 +139,13 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 				common.Success(c, items)
 			})
 
-			// P0-2 修复：工单关联写入面。
-			//
-			// 此前 service.UpdateTicketAssociations 已具备完整能力（事务、租户收敛、父子
-			// 环检测、关联工单反向边、标签校验），但 router 里只有三个读取端点，前端在
-			// 工单详情页「修改关联」或「设置父工单 / 标签」只能 404 走不到 service。本
-			// 路由用 PATCH 表达部分更新：
+			// 工单关联写入面。PATCH 部分更新语义：
 			//   - body 里出现字段才更新（指针 + 切片语义与 UpdateTicketAssociations 一致）；
 			//   - parentId=0 表示「清空父工单」（service 内部已约定）；
 			//   - 关联工单/标签列表空切片表示「清空」；
 			//   - service 已用 Ticket.ParentTicketID 链上的租户谓词防止跨租户关系注入。
-			//
 			// 失败的语义由 service 透传：跨租户/不存在工单 → 404/4004，循环引用 →
-			// 422/4220，标签/关联工单不在本租户 → 4001/ParamErrorCode；路由只负责把错误
-			// 写到响应里，不在此处二次校验业务规则。
+			// 422/4220，标签/关联工单不在本租户 → 4001/ParamErrorCode；路由不在此处二次校验业务规则。
 			tickets.PATCH("/:id/relations", middleware.RequirePermission("ticket", "update"), func(c *gin.Context) {
 				ticketID, tenantID, ok := handlerctx.ResolveResourceIDAndTenant(c, "工单")
 				if !ok {
@@ -311,8 +303,6 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 
 		if config.AnalyticsHandler != nil {
 			tickets.POST("/analytics/export", middleware.RequirePermission("ticket", "export"), config.AnalyticsHandler.ExportAnalytics)
-			// B8: GET /api/v1/analytics/tickets - 工单分析概览
-			// 挂在 tenant 顶层 group，路径 = /api/v1/analytics/tickets
 		}
 
 		if config.PredictionHandler != nil {

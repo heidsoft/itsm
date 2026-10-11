@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Phase 1 统一判定：AuthorizeResource 多角色并集语义。
+// 统一判定：AuthorizeResource 多角色并集语义。
 func TestAuthorizeResource_MultiRoleUnion(t *testing.T) {
 	// nil client + DBOnly（默认模式）：无任何角色权限数据时应拒绝非超管角色。
 	// 用 Fallback 模式验证多角色并集：硬编码里 end_user 无 ticket:delete，
@@ -37,7 +37,7 @@ func TestAuthorizeResource_MultiRoleUnion(t *testing.T) {
 	}
 }
 
-// Phase 1：GetContextRoles 主角色+附加角色去重合并。
+// GetContextRoles 主角色+附加角色去重合并。
 func TestGetContextRoles(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	c := gin.CreateTestContextOnly(httptest.NewRecorder(), gin.New())
@@ -68,7 +68,7 @@ func TestGetContextRoles(t *testing.T) {
 	}
 }
 
-// Phase 1：SmartCheckPermission 的 L4 兜底在 DBOnly 下必须 fail-closed。
+// SmartCheckPermission 的 L4 兜底在 DBOnly 下必须 fail-closed。
 func TestSmartCheckPermission_DBOnlyFailClosed(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	c := gin.CreateTestContextOnly(httptest.NewRecorder(), gin.New())
@@ -95,7 +95,7 @@ func TestSmartCheckPermission_DBOnlyFailClosed(t *testing.T) {
 	}
 }
 
-// Phase 1：广播消息解析（"role|tenant" 载荷）。
+// 广播消息解析（"role|tenant" 载荷）。
 func TestParseInvalidateMessage(t *testing.T) {
 	if role, tenant, ok := parseInvalidateMessage("change_manager|7"); !ok || role != "change_manager" || tenant != 7 {
 		t.Fatalf("合法载荷解析失败: %v %v %v", role, tenant, ok)

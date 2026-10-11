@@ -16,7 +16,7 @@ import (
 const (
 	accessTokenRevocationPrefix  = "jwt:revoked:"
 	refreshTokenRevocationPrefix = "jwt:revoked:refresh:"
-	// legacyRefreshBlacklistPrefix 只读兼容：2026-10-02 之前 refresh 吊销写在
+	// legacyRefreshBlacklistPrefix 只读兼容：切换前 refresh 吊销写在
 	// handlers/common 的 Redis-only 黑名单里（键名含明文 JWT）。本版本起不再写入，
 	// 条目 TTL 不超过 refresh 生命周期（7 天），过期后该分支必然不再命中，可整段删除。
 	legacyRefreshBlacklistPrefix = "refresh:blacklist:"
@@ -88,7 +88,7 @@ func IsRefreshTokenRevoked(ctx context.Context, token string) (bool, error) {
 
 // InvalidateUserTokens 将 userID 全部存量 token 置为失效：
 // 之后任何签发时间早于 t 的 access 或 refresh token 都会被拒绝。
-// 适用于：角色变更、账户停用、密码重置等权限收窄场景（P1-2 修复）。
+// 适用于：角色变更、账户停用、密码重置等权限收窄场景。
 func InvalidateUserTokens(ctx context.Context, userID int, t time.Time) error {
 	return currentTokenRevocationStore().SetMinIssuedAt(ctx, userID, t)
 }

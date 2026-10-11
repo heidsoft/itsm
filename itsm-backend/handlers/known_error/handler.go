@@ -326,7 +326,7 @@ func (h *Handler) PromoteToKnownError(c *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	// 已知错误库属问题管理域（2026-09-17 P0「越权写收口」）：复用 problem:* 词表
+	// 已知错误库属问题管理域：复用 problem:* 词表
 	errors := r.Group("/known-errors")
 	{
 		errors.GET("", middleware.RequirePermission("problem", "read"), h.ListKnownErrors)

@@ -30,7 +30,7 @@ func NewTimerEventHandler(engine *CustomProcessEngine, logger *zap.SugaredLogger
 	}
 }
 
-// SetTimerStore 注入 TimerStore，供 start timer 触发后重排下一跳（Phase 5）。
+// SetTimerStore 注入 TimerStore，供 start timer 触发后重排下一跳。
 func (h *TimerEventHandler) SetTimerStore(store TimerStore) {
 	h.store = store
 }
@@ -143,7 +143,7 @@ func (h *TimerEventHandler) handleBoundaryTimer(ctx context.Context, timer *Time
 	return h.engine.executeStep(ctx, h.engine.client, instance, process, boundaryEvent.ID, instance.Variables)
 }
 
-// handleTaskDueTimer 处理任务截止定时器（Phase 4）：
+// handleTaskDueTimer 处理任务截止定时器：
 // 重新加载任务最新状态，仍活跃才分发超时动作（notify/escalate/auto_reject/auto_approve，
 // 由 TimeoutScanner.dispatchTimeoutAction 承载，内部有 claim-once 保护）。
 // 任务已完成/取消/已超时 → 静默确认（timer 正常结束，不重试）。
@@ -175,7 +175,7 @@ func (h *TimerEventHandler) handleTaskDueTimer(ctx context.Context, timer *Timer
 	return nil
 }
 
-// handleStartTimer 处理定时启动流程（Phase 5）：
+// handleStartTimer 处理定时启动流程：
 // Timer Start Event 到期后启动一个新的流程实例；cron / cycle 表达式在启动成功后
 // 重排下一跳，形成常驻时间表。
 //
@@ -209,7 +209,7 @@ func (h *TimerEventHandler) handleStartTimer(ctx context.Context, timer *TimerRe
 		return fmt.Errorf("start timer: query existing instance: %w", err)
 	}
 
-	// StartProcess 强制要求租户上下文（fail-closed，P1-4）
+	// StartProcess 强制要求租户上下文
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, timer.TenantID)
 
 	variables := map[string]interface{}{

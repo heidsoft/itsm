@@ -173,7 +173,7 @@ func (s *ConfigurationItemService) CreateCI(ctx context.Context, req *dto.Create
 		create.SetExpireAt(*req.ExpireAt)
 	}
 
-	// P0-3（CMDB AI-Native）：生成全局唯一业务编号 ci_number（CI-YYYYMM-NNNNNN）。
+	// 生成全局唯一业务编号 ci_number（CI-YYYYMM-NNNNNN）。
 	// 编号是 Agent 稳定定位实体的自然键；发号失败不阻断创建（降级为无编号，迁移 018 可回填）。
 	ciNumber, numErr := s.generateCINumber(ctx)
 	if numErr != nil {
@@ -314,7 +314,7 @@ func (s *ConfigurationItemService) GetCIByID(ctx context.Context, id, tenantID i
 
 // ListCIs 获取配置项列表
 //
-// P1-1 合并：覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
+// 覆盖原 ListCIs（简单过滤）+ SearchCI（关键词宽模糊/SortBy/TagIDs/DateFrom/DateTo/关系预加载）。
 // CISearchFilter / CISearchRequest 已 deprecated，handler 内部转 ListCIRequest 后统一走此处。
 func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, req *dto.ListCIRequest) (*dto.CIListResponse, error) {
 	// 页长只在这里归一一次：HTTP 入口用 common.GetPaginationFromQuery 决定生效值，非 HTTP
@@ -357,7 +357,7 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		query = query.Where(configurationitem.StatusContains(req.Status))
 	}
 
-	// 关键词宽模糊（P1-1 合并自 SearchCI.Keyword）：9 字段
+	// 关键词宽模糊：9 字段
 	if req.Search != "" {
 		search := strings.TrimSpace(req.Search)
 		query = query.Where(
@@ -383,7 +383,7 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		query = query.Where(configurationitem.OwnedByContains(req.OwnedBy))
 	}
 
-	// 时间范围过滤（P1-1 合并自 CISearchFilter.DateFrom/DateTo）
+	// 时间范围过滤
 	if req.DateFrom != nil && !req.DateFrom.IsZero() {
 		query = query.Where(configurationitem.CreatedAtGTE(*req.DateFrom))
 	}
@@ -391,12 +391,12 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		query = query.Where(configurationitem.CreatedAtLTE(*req.DateTo))
 	}
 
-	// 标签过滤（P1-1 合并自 CISearchFilter.TagIDs）
+	// 标签过滤
 	if len(req.TagIDs) > 0 {
 		query = query.Where(configurationitem.HasTagsWith(citag.IDIn(req.TagIDs...)))
 	}
 
-	// 排序（P1-1 合并自 CISearchRequest.SortBy/SortOrder）
+	// 排序
 	if req.SortBy != "" {
 		sortField := s.convertSortField(req.SortBy)
 		if req.SortOrder == "asc" {
@@ -419,7 +419,7 @@ func (s *ConfigurationItemService) ListCIs(ctx context.Context, tenantID int, re
 		return nil, fmt.Errorf("failed to count configuration items: %w", err)
 	}
 
-	// 关系预加载（P1-1 合并自 SearchCI 默认行为）
+	// 关系预加载
 	if req.WithRelations {
 		query = query.
 			WithCiTypeRef().
@@ -1029,7 +1029,7 @@ func (s *ConfigurationItemService) BatchCreateCI(ctx context.Context, req *dto.B
 			create.SetCloudResourceRefID(item.CloudResourceRefID)
 		}
 
-		// P0-3：批量创建同样补 ci_number（发号失败不阻断该项创建）
+		// 批量创建同样补 ci_number（发号失败不阻断该项创建）
 		if ciNum, numErr := s.generateCINumber(ctx); numErr == nil {
 			create.SetCiNumber(ciNum)
 		} else {
@@ -1383,7 +1383,7 @@ func (s *ConfigurationItemService) BatchDeleteCI(ctx context.Context, req *dto.B
 }
 
 // SearchCI 高级搜索CI
-// SearchCI 已废弃（P1-1 合并至 ListCIs）。
+// SearchCI 已废弃。
 // 保留方法以兼容旧调用方；内部转 ListCIRequest 后调 ListCIs。
 // 推荐前端/Agent 改用 GET /cmdb/cis + query 参数（search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations）。
 //

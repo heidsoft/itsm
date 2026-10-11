@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// ImpactExplanationService 影响分析 AI 解释服务（P1-4）
+// ImpactExplanationService 影响分析 AI 解释服务
 //
 // 职责：
 //   - 把 CIRelationshipService.GetCIImpactAnalysis 返回的影响图（节点+边+跳数+风险等级）

@@ -18,7 +18,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ==================== ApproveTicket ↔ BPMN 桥接集成测试（P0-1 阶段3） ====================
+// ==================== ApproveTicket ↔ BPMN 桥接集成测试 ====================
 
 func createBridgeTestTicketWithApproval(t *testing.T, client *ent.Client, tenantID, approverID int, suffix string) (*ent.Ticket, *ent.TicketApproval) {
 	t.Helper()

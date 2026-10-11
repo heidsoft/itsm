@@ -54,7 +54,7 @@ func seedConversations(t *testing.T, client *ent.Client) []int {
 	return tenantOneIDs
 }
 
-// 回归（2026-10-02 边缘功能收口 E3-4）：邮件处理队列页此前只发 {status}，落到后端默认
+// 回归：邮件处理队列页此前只发 {status}，落到后端默认
 // pageSize=20，第 21 条起永不可见且没有任何提示。契约必须能把「总量与页」如实交出去。
 func TestListConversations_PaginatesAndReportsFullTotal(t *testing.T) {
 	client := newEmailIntakeClient(t)

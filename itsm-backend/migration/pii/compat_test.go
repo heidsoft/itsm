@@ -27,22 +27,22 @@ func TestMigrationUpDownRoundTrip(t *testing.T) {
 	upSQL := "ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT 0;"
 	downSQL := "ALTER TABLE users DROP COLUMN email_verified;"
 
-	// Phase 1: apply up
+	// apply up
 	mustExec(t, db, upSQL)
 
-	// Phase 2: 兼容读 — 老 SELECT * 仍能跑,且新列有默认值
+	// 兼容读 — 老 SELECT * 仍能跑,且新列有默认值
 	rows := queryAll(t, db, "SELECT id, email, email_verified FROM users ORDER BY id")
 	require.Len(t, rows, 2)
 	require.Equal(t, "alice@example.com", rows[0]["email"])
 	require.Equal(t, "0", rows[0]["email_verified"])
 
-	// Phase 3: NOT NULL / DEFAULT 校核通过 — 上面 ALTER 有 DEFAULT 0
+	// NOT NULL / DEFAULT 校核通过 — 上面 ALTER 有 DEFAULT 0
 	violations, err := CheckNotNullDefaults(upSQL)
 	require.NoError(t, err)
 	require.Len(t, violations, 1)
 	require.True(t, violations[0].HasDefault)
 
-	// Phase 4: apply down, schema 回到 up 之前
+	// apply down, schema 回到 up 之前
 	mustExec(t, db, downSQL)
 	rowsAfterDown := queryAll(t, db, "SELECT id, email FROM users ORDER BY id")
 	require.Len(t, rowsAfterDown, 2, "down 后数据必须保留")

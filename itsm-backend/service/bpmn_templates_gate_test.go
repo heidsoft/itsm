@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// TestBuiltinTemplates_Gate 内置 BPMN 模板常驻回归门禁（2026-09-07 架构加固）。
+// TestBuiltinTemplates_Gate 内置 BPMN 模板常驻回归门禁。
 //
 // 背景：16 个内置模板曾有 12 处真实图缺口、24 处 outgoing 声明悬空、2 个 XML
 // 语法损坏、2 处重复 sequenceFlow id，且引擎静默卡死导致问题长期不可见。

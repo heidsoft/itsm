@@ -71,7 +71,7 @@ type ListProcessDefinitionsRequest struct {
 type bpmnProcessDefinitionService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
-	// timerStore 可选：发布/停用流程定义时同步 start timer 时间表（Phase 5）。
+	// timerStore 可选：发布/停用流程定义时同步 start timer 时间表。
 	// 为 nil 时行为与历史版本一致（不注册定时启动）。
 	timerStore TimerStore
 }
@@ -332,7 +332,7 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 		return nil, fmt.Errorf("提交发布事务失败: %w", err)
 	}
 
-	// Phase 5：发布即激活时间表——同步 Timer Start Event（cron/cycle 按租户时区）。
+	// 发布即激活时间表——同步 Timer Start Event（cron/cycle 按租户时区）。
 	// 时间表同步在事务提交后执行（定时器只需 process_key + tenant，不依赖版本行）。
 	// 失败仅告警不阻断：定义已发布，重新发布即可重建时间表；不告警则问题不可见。
 	if _, err := SyncStartTimers(ctx, s.client, s.timerStore, []byte(req.BPMNXML), key, tenantID); err != nil {
@@ -422,7 +422,7 @@ func (s *bpmnProcessDefinitionService) SetProcessDefinitionActive(ctx context.Co
 		return err
 	}
 
-	// Phase 5：停用流程必须同时下线其 start timer 时间表，否则定时器照常触发，
+	// 停用流程必须同时下线其 start timer 时间表，否则定时器照常触发，
 	// 而 StartProcess 查不到 active+latest 定义 → 报错 → 重试风暴。
 	if !active {
 		tenantID, ctxErr := requireBPMNTenantContext(ctx)

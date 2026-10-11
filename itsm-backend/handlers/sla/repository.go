@@ -50,7 +50,7 @@ type Repository interface {
 
 	// GetTicketSLA - 获取单个工单的 SLA 计时信息（创建时间 / 首次响应时间 / 解决时间 /
 	// SLA 响应截止时间 / SLA 解决截止时间）。
-	// 阻断3 修复：返回 SLA 截止时间，让 Service 层基于 deadline 判断合规，
+	// 返回 SLA 截止时间，让 Service 层基于 deadline 判断合规，
 	// 而非仅检查"是否已首次响应"。
 	GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt, slaResponseDeadline, slaResolutionDeadline time.Time, found bool, err error)
 }

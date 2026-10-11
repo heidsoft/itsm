@@ -199,7 +199,7 @@ func TestTicketSLAService_GetOverdueTicketsUsesPersistedDeadline(t *testing.T) {
 		SetSLAResolutionDeadline(time.Now().Add(time.Hour)).Save(ctx)
 	require.NoError(t, err)
 
-	// Phase 3: GetOverdueTickets 以 sla_states 为权威源，工单内嵌 deadline 只是 inline 回退。
+	// GetOverdueTickets 以 sla_states 为权威源，工单内嵌 deadline 只是 inline 回退。
 	_, err = client.SLAState.Create().
 		SetTenantID(tenant.ID).SetAggregateType("ticket").SetAggregateID(overdue.ID).
 		SetStatus("active").SetResolutionDeadline(time.Now().Add(-time.Minute)).

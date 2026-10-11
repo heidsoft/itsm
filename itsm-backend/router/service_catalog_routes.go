@@ -8,7 +8,6 @@ import (
 )
 
 // SetupServiceCatalogRoutes 注册服务目录相关路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 func SetupServiceCatalogRoutes(tenant *gin.RouterGroup, h *service_catalog.Handler) {
 	tenant.GET("/service-catalog", middleware.RequirePermission("service_catalog", "read"), h.List)
 

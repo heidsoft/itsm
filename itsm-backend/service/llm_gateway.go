@@ -77,7 +77,7 @@ func NewLLMGateway(p LLMProvider, l TokenLimiter, o Observer, providerName strin
 
 // llmRetryPolicy 控制瞬时错误的自动重试。
 //
-// 背景（2026-09-08 UAT Q-2 根因）：prod 33 次 LLM 调用 6 次失败（18%），
+// 背景：prod 33 次 LLM 调用 6 次失败（18%），
 // 其中 openai 3 次为"未配置 API Key 时Embedder/Provider 回退到 openai"的 401
 // （不可重试，已在配置层修复），minimax 3 次为网络抖动/上游 5xx（可重试）。
 // 网关层对可重试错误做有限退避重试，把演示/验收场景的失败率压到 5% 以内；
@@ -249,7 +249,7 @@ func (g *LLMGateway) ChatStream(ctx context.Context, model string, messages []LL
 // same as ChatStream.
 func (g *LLMGateway) ChatStreamWithTools(ctx context.Context, model string, messages []LLMMessage, tools []LLMTool, callback func(string), onToolCalls func([]LLMToolCall)) error {
 	if p, ok := g.provider.(ToolCallingStreamProvider); ok {
-		// 修复（2026-09-08）：原实现直接透传 provider，绕过 limiter 与 observer——
+		// 原实现直接透传 provider，绕过 limiter 与 observer——
 		// 工具调用路径的 LLM 用量既不受 token_cap 约束，也不进 ai_llm_calls，
 		// 导致 /ai/metrics 的调用数/失败率/平均延迟全部失真（UAT Q-1/Q-2 的 33 次
 		// 采样若混入工具路径则不可信）。现补齐与 ChatStream 相同的门禁与观测。

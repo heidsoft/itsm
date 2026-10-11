@@ -57,7 +57,7 @@ func MD5Hash(text string) string {
 //   - 长度 8-15：返回 "前2..**..后2"
 //   - 长度 >= 16：返回 "前4..****..后4"
 //
-// 阻断1 修复：LLM API Key 等敏感凭据在启动诊断日志中必须脱敏。
+// LLM API Key 等敏感凭据在启动诊断日志中必须脱敏。
 func MaskSecret(s string) string {
 	n := len(s)
 	switch {
@@ -74,7 +74,7 @@ func MaskSecret(s string) string {
 
 // IsPlaceholderSecret 判断 API Key 是否为占位符或明显无效值。
 // 用于启动时检测未配置的真实密钥，避免误用占位符进入生产。
-// 阻断1 修复：启动期检测占位符密钥，防止误用。
+// 启动期检测占位符密钥，防止误用。
 func IsPlaceholderSecret(s string) bool {
 	t := strings.TrimSpace(s)
 	if t == "" {

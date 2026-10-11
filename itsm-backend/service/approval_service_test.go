@@ -538,7 +538,7 @@ func TestApprovalService_TriggerApproval_Phase2_NoApprovalRecordWrite(t *testing
 		Save(ctx)
 	require.NoError(t, err)
 
-	// Phase 2: TriggerApproval returns empty slice, no ApprovalRecord created
+	// TriggerApproval returns empty slice, no ApprovalRecord created
 	records, err := service.TriggerApproval(ctx, &ApprovalTriggerRequest{
 		TicketID:     ticketEntity.ID,
 		TicketNumber: ticketEntity.TicketNumber,
@@ -612,7 +612,7 @@ func TestApprovalService_TriggerApproval_Phase2_MultipleCallsStillEmpty(t *testi
 		TenantID:     testTenant.ID,
 	}
 
-	// Phase 2: Multiple calls all return empty slice
+	// Multiple calls all return empty slice
 	records1, err := service.TriggerApproval(ctx, req)
 	require.NoError(t, err)
 	assert.Empty(t, records1, "Phase 2: First call should return empty slice")

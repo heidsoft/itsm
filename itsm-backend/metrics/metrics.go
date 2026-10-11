@@ -123,7 +123,7 @@ var (
 		[]string{"process_definition", "tenant_id"},
 	)
 
-	// Timer metrics - BPMN 定时器指标（PRD ITSM-PRD-2026-002 §8.1）
+	// Timer metrics - BPMN 定时器指标
 	// status 标签区分触发结果：success = 回调推进成功；failed = 回调报错（进入重试）。
 	TimerFiredTotal = promauto.NewCounterVec(
 		prometheus.CounterOpts{

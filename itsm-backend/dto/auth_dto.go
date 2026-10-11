@@ -81,9 +81,8 @@ type UserTenantsResponse struct {
 }
 
 // RegisterRequest 用户注册请求
-// DisplayName 兼容两个字段名：新契约 displayName；旧前端/第三方一直发送 fullName。
-// f575c3f4 将 fullName 改名为 displayName 时漏改前端（auth-service.ts 仍发 fullName），
-// 导致注册接口对前端 100% 返回 400。此处用 fullName 接旧字段，handler 层归一。
+// DisplayName 兼容两个字段名：新契约 displayName，旧前端/第三方仍发送 fullName。
+// 两者都不能漏，否则注册接口会对这些调用方返回 400；归一见 ResolvedDisplayName。
 type RegisterRequest struct {
 	Username    string `json:"username" binding:"required,min=3,max=20,alphanum"`
 	Email       string `json:"email" binding:"required,email"`
@@ -93,8 +92,8 @@ type RegisterRequest struct {
 	Phone       string `json:"phone" binding:"omitempty"`
 	Company     string `json:"company,omitempty"`
 	// 注册是唯一未认证的写入入口：角色固定为服务端指派的 end_user，目标租户
-	// 不接受请求体（曾允许 body 携带 role/tenantCode 直接注册成任意租户管理员，
-	// 见 review-2026-10-03 P0-1）。多活跃租户时 fail-closed，要求管理员介入。
+	// 不接受请求体（body 携带 role/tenantCode 就能注册成任意租户管理员）。
+	// 多活跃租户时 fail-closed，要求管理员介入。
 }
 
 // ResolvedDisplayName 返回归一后的显示名，两者皆空时回退为用户名。

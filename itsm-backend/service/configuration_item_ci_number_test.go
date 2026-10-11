@@ -53,7 +53,7 @@ func TestCINumberExistsRawSeesScrappedCIs(t *testing.T) {
 	svc := NewConfigurationItemService(client, logger, NewCIHistoryService(client, logger), NewCITagService(client, logger))
 	svc.SetRawDB(rawDB)
 
-	// 修复：原生 SQL 绕过所有拦截器，必须看到被已退役 CI 占用的编号。
+	// 原生 SQL 绕过所有拦截器，必须看到被已退役 CI 占用的编号。
 	//
 	// 注意：enttest 环境不挂载生产的软删/租户拦截器，因此这里无法直接复现线上故障
 	// （线上 Ent 查询会过滤掉 scrapped 记录导致误判为"未占用"）。本用例锁定的契约是：

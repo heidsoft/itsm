@@ -62,7 +62,7 @@ var failHelperRE = regexp.MustCompile(`common\.(Fail|FailWithData|ParamError|Val
 // handlers/marketplace/handler.go 13 已在 2026-10-06 middleware.TenantIDOrUnauthorized/UserIDOrUnauthorized + NotFoundWithErr/BadRequestWithErr/RespondError sweep 中清零并从此基线删除。
 // handlers/approval/routes.go 12 已在 2026-10-06 ParamErrorWithErr/RespondError sweep 中清零并从此基线删除。
 // errorLeakBaseline 记录「把错误串当公共消息写进响应」的历史计数（ratchet 锁）。
-// 2026-10-06 收口：应用域 14 文件（application/connector/project/survey/prediction/
+// 应用域 14 文件（application/connector/project/survey/prediction/
 // auditlog/escalation_matrix/feishu/sla_template + bpmn/{ai_generator,dashboard,
 // lint,process_trigger,workflow_template}）共 60 处全部收敛为
 // common.ParamErrorWithErr/RespondError/NotFoundWithErr/BadRequestWithErr；
@@ -123,7 +123,7 @@ func TestErrorLeakRatchet(t *testing.T) {
 	measured := measuredErrorLeaks(t)
 
 	// 扫描器自己坏掉（目录被挪走、正则失效）会让下面所有比较都「无违规」通过。
-	// 2026-10-06 收口：所有文件已清零，baseline 也清零；
+	// 所有文件已清零，baseline 也清零；
 	// 启用扫描器自检仅在 baseline 非空时要求 measured 至少 1 命中。
 	if len(measured) == 0 && len(errorLeakBaseline) > 0 {
 		t.Fatal("扫描器没有命中任何泄漏点：检查 errorLeakScanDirs 与 failHelperRE 是否失效")

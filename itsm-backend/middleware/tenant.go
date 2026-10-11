@@ -131,7 +131,7 @@ func TenantMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		if tenantEntity == nil {
-			// 语义修正（2026-09-05）：租户缺失属认证问题而非参数问题。
+			// 语义修正：租户缺失属认证问题而非参数问题。
 			// 历史此处返回 ParamErrorCode(400)，与域内 TenantIDOrUnauthorized(401)
 			// 及同文件「租户不匹配」分支(AuthFailedCode) 三处语义不一致。
 			// 由于本中间件是 tenant 路由组的第一道关卡，域内 401 分支在生产中

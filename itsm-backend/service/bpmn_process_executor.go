@@ -33,7 +33,7 @@ import (
 
 // StartProcess 启动流程实例
 func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitionKey string, businessKey string, variables map[string]interface{}) (*ent.ProcessInstance, error) {
-	// P1-4：租户上下文必须显式有效（>0），禁止缺上下文时全局查流程定义。
+	// 租户上下文必须显式有效（>0），缺上下文时不得全局查流程定义。
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 
 	// 6. 记录审计日志 - 流程启动
 	// 从 typed BPMN context 取认证操作人；userName 在事务内按 ID 反查，
-	// 与 recordApprovalDecision 同一模式，避免新增 context key 导致 33 处测试同步。
+	// 与 recordApprovalDecision 同一模式。
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	userName := ""
 	if userID > 0 {
@@ -119,9 +119,9 @@ func (e *CustomProcessEngine) StartProcess(ctx context.Context, processDefinitio
 
 // CompleteTask 完成任务。
 // 整个「置完成 → 合并变量 → 推进流程 → 记录审批决策」包进单个 ent.Tx，
-// 任一步骤失败整体回滚，彻底消除并发下的半成品状态（P2 事务原子化）。
+// 任一步骤失败整体回滚，避免并发下留下半成品状态。
 func (e *CustomProcessEngine) CompleteTask(ctx context.Context, taskID string, variables map[string]interface{}) error {
-	// P1-4：租户上下文必须显式有效（>0），禁止缺上下文时全局查任务
+	// 租户上下文必须显式有效（>0），缺上下文时不得全局查任务
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return err
@@ -322,7 +322,6 @@ func (e *CustomProcessEngine) completeTaskWithClient(ctx context.Context, txc *e
 
 func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, client *ent.Client, task *ent.ProcessTask, variables map[string]interface{}) error {
 	// 与 StartProcess 同模式：从 typed BPMN context 取认证操作人，再在事务内反查姓名。
-	// 修复前走 ctx.Value("user").(*ent.User) 永远拿不到，导致审计 user_id/user_name 均为 0/空。
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	userName := ""
 	if userID > 0 {
@@ -336,9 +335,8 @@ func (e *CustomProcessEngine) recordTaskCompletedAudit(ctx context.Context, clie
 
 // mergeVariablesInTx 在事务内合并流程实例变量并返回更新后的实例。
 // 与 mergeVariablesWithOptimisticLock 不同：调用方已持有事务，无需再开事务或重试。
-// P2-并发修复：添加乐观锁 CAS，防止并发 CompleteTask 调用导致变量丢失。
-// 读取时记录版本号，更新时通过 VersionEQ 确保版本未被其他事务推进；
-// 若 Save 返回 NotFound 说明版本冲突，返回明确错误供调用方重试或回滚。
+// 更新走 VersionEQ 乐观锁 CAS：并发 CompleteTask 会推进版本，Save 返回 NotFound 即版本冲突，
+// 必须返回明确错误供调用方重试或回滚，否则变量会静默丢失。
 func (e *CustomProcessEngine) mergeVariablesInTx(ctx context.Context, txc *ent.Client, instanceID int, newVars map[string]interface{}) (*ent.ProcessInstance, error) {
 	inst, err := txc.ProcessInstance.Get(ctx, instanceID)
 	if err != nil {
@@ -448,7 +446,7 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 		if e.isEndEvent(process, currentElementID) {
 			return e.completeProcess(ctx, txc, instance)
 		}
-		// 防静默卡死（2026-09-07 内置模板测试 P0-1）：
+		// 防静默卡死：
 		// 0 出边且非结束事件时，先尝试用元素声明的 <bpmn:outgoing> 做一次
 		// fallback 匹配（声明与 sourceRef 不一致的模板历史遗留较多）；
 		// 仍无可走则将实例显式挂起并返回错误，而不是 return nil 静默成功。
@@ -475,7 +473,7 @@ func (e *CustomProcessEngine) executeStep(ctx context.Context, txc *ent.Client, 
 		return fmt.Errorf("没有符合条件的路径")
 	}
 
-	// 记录排他网关路由决策，使「走哪条分支」可审计（F-4）
+	// 记录排他网关路由决策，使「走哪条分支」可审计
 	if e.findExclusiveGateway(process, currentElementID) != nil {
 		e.recordGatewayHistory(ctx, txc, instance, currentElementID, "exclusive", "fork", []string{targetRef}, variables)
 	}
@@ -510,10 +508,10 @@ func (e *CustomProcessEngine) handleElement(ctx context.Context, txc *ent.Client
 		e.markElementDone(ctx, txc, instance, elementID)
 		return e.completeProcess(ctx, txc, instance)
 	} else if gateway := e.findParallelGateway(process, elementID); gateway != nil {
-		// 并行网关：分叉激活所有出边；汇聚等待所有入边分支完成（F-1）
+		// 并行网关：分叉激活所有出边；汇聚等待所有入边分支完成
 		return e.handleParallelGateway(ctx, txc, instance, process, gateway, 0)
 	} else if gateway := e.findInclusiveGateway(process, elementID); gateway != nil {
-		// 包容网关：分叉激活所有命中条件的出边；汇聚等待所有入边分支完成（F-1）
+		// 包容网关：分叉激活所有命中条件的出边；汇聚等待所有入边分支完成
 		return e.handleInclusiveGateway(ctx, txc, instance, process, gateway, 0)
 	} else if gateway := e.findExclusiveGateway(process, elementID); gateway != nil {
 		e.markElementDone(ctx, txc, instance, elementID)
@@ -651,7 +649,7 @@ func mergeServiceTaskVariables(instanceVariables map[string]interface{}, task *B
 // ---------------------------------------------------------------------------
 
 func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, task *BPMNUserTask) error {
-	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务（F-2）
+	// 幂等：同实例同节点已存在未结束任务时直接复用，避免 CompleteTask 流程推进失败重试时重复创建任务
 	// 必须使用事务客户端：CompleteTask 事务内刚创建的任务对外不可见，用 e.client 会漏读导致重复创建
 	if existing, _ := txc.ProcessTask.Query().
 		Where(
@@ -811,8 +809,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 		return nil // 已自动完成并推进，无需继续注册定时器
 	}
 
-	// BPMN dueDate 属性落地（Phase 4）：此前 XML 解析器校验过 dueDate 但从不写库，
-	// 导致 TimeoutScanner 扫描的 due_date 字段永远为空（休眠循环）。
+	// BPMN dueDate 落地：XML 校验过但从不写库的话，TimeoutScanner 扫到的 due_date 永远为空。
 	// 日期语义：截止到当日 23:59:59（本地时区）。
 	if dueExpr := strings.TrimSpace(task.DueDate); dueExpr != "" {
 		if dueDay, err := time.ParseInLocation("2006-01-02", dueExpr, time.Local); err == nil {
@@ -834,7 +831,7 @@ func (e *CustomProcessEngine) createUserTask(ctx context.Context, txc *ent.Clien
 	return nil
 }
 
-// registerTaskDueTimer 为带截止时间的任务注册 task_due 定时器（Phase 4）。
+// registerTaskDueTimer 为带截止时间的任务注册 task_due 定时器。
 
 // approvalConfig 从流程定义行读取流程级审批配置；未配置返回 nil。
 func (e *CustomProcessEngine) approvalConfig(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance) *schema.ApprovalConfig {
@@ -1164,7 +1161,7 @@ func (e *CustomProcessEngine) completeProcess(ctx context.Context, txc *ent.Clie
 }
 
 // recordGatewayHistory 将网关路由决策写入流程执行历史，使并行/包容/排他网关的
-// 分叉（fork）与汇聚等待（join-wait）可审计（F-4）。
+// 分叉（fork）与汇聚等待（join-wait）可审计。
 // 写历史属于辅助审计，失败仅告警不阻断主流程。
 func (e *CustomProcessEngine) recordGatewayHistory(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, gatewayID, gatewayType, eventType string, nextActivities []string, variables map[string]interface{}) {
 	detail := map[string]interface{}{
@@ -1279,7 +1276,7 @@ func (e *CustomProcessEngine) evaluateCondition(flow *BPMNSequenceFlow, variable
 	// 使用表达式引擎评估条件
 	result, err := e.exprEngine.EvaluateCondition(expr, evalVars)
 	if err != nil {
-		// SEC-002 修复：评估失败时默认拒绝（return false），而非放行
+		// 评估失败时默认拒绝（return false），而非放行
 		e.logger.Errorw(
 			"条件评估失败，默认拒绝流转",
 			"expression", expr,
@@ -1375,7 +1372,7 @@ func (e *CustomProcessEngine) findIntermediateEvent(process *BPMNProcess, id str
 }
 
 // ---------------------------------------------------------------------------
-// 定时器事件运行时注册（Phase 4）
+// 定时器事件运行时注册
 // ---------------------------------------------------------------------------
 
 // handleIntermediateCatchEvent 处理中间捕获事件。
@@ -1477,7 +1474,7 @@ func (e *CustomProcessEngine) registerBoundaryTimers(ctx context.Context, instan
 	}
 }
 
-// cancelTaskDueTimers 在任务完成/终止时取消该任务的 task_due 定时器（Phase 4）。
+// cancelTaskDueTimers 在任务完成/终止时取消该任务的 task_due 定时器。
 // 与 cancelBoundaryTimers 同语义：不留到期后才静默跳过的死 timer。
 func (e *CustomProcessEngine) cancelTaskDueTimers(ctx context.Context, tenantID int, taskID string) {
 	if e.timerStore == nil {
@@ -1587,7 +1584,7 @@ func (e *CustomProcessEngine) extractTimerExpression(def *BPMNTimerEventDefiniti
 
 const maxGatewayForkDepth = 64
 
-// handleParallelGateway 处理并行网关：多入边时作为汇聚节点等待所有分支完成；否则作为分叉节点激活所有出边（F-1）。
+// handleParallelGateway 处理并行网关：多入边时作为汇聚节点等待所有分支完成；否则作为分叉节点激活所有出边。
 func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNParallelGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
 		return fmt.Errorf("并行网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
@@ -1610,7 +1607,7 @@ func (e *CustomProcessEngine) handleParallelGateway(ctx context.Context, txc *en
 	return nil
 }
 
-// handleInclusiveGateway 处理包容网关：汇聚等待所有入边分支完成；分叉时激活所有命中条件的出边（F-1）。
+// handleInclusiveGateway 处理包容网关：汇聚等待所有入边分支完成；分叉时激活所有命中条件的出边。
 func (e *CustomProcessEngine) handleInclusiveGateway(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, process *BPMNProcess, gateway *BPMNInclusiveGateway, depth int) error {
 	if depth > maxGatewayForkDepth {
 		return fmt.Errorf("包容网关分叉层级超过上限，可能存在环路: %s", gateway.ID)
@@ -1657,7 +1654,7 @@ func (e *CustomProcessEngine) dispatchGatewayOrElement(ctx context.Context, txc 
 
 // markElementDone 标记某流程元素已执行完成（写入实例变量 _done_ 并持久化）。
 // 用于并行/包容网关汇聚时判断「非用户任务源」分支（服务任务、子网关、排他网关、结束事件）
-// 是否已真正结束——这是修复「汇聚只认 user-task 源而漏掉其他分支导致提前汇聚/死锁」的关键。
+// 是否已真正结束——只按 user-task 源判断会提前汇聚或死锁。
 // 直接就地修改 instance.Variables（同一 map 引用会在同一次执行内对汇聚判断可见），
 // 并通过 txc 持久化，使后续 CompleteTask 的汇聚判断也能读到。
 func (e *CustomProcessEngine) markElementDone(ctx context.Context, txc *ent.Client, instance *ent.ProcessInstance, elementID string) {
@@ -1683,7 +1680,7 @@ func (e *CustomProcessEngine) markElementDoneStrict(ctx context.Context, txc *en
 // allIncomingBranchesCompleted 判断汇聚网关的所有入边分支是否均已结束。
 //   - 以用户任务为源的分支：按 DB 中该任务是否已 completed/cancelled 判断（与历史行为一致）。
 //   - 以服务任务/子网关/排他网关/结束事件为源的分支：必须已在 _done_ 中标记为完成。
-//     旧实现对这些非用户任务源直接 continue（永远视为完成），会导致提前汇聚或死锁（P1 网关完整性）。
+//     若对这些非用户任务源直接视为完成，会提前汇聚或死锁。
 //   - 查询失败时保守返回 false（视为未完成），避免提前汇聚。
 //   - 任务状态查询必须使用事务客户端：CompleteTask 事务内刚标记完成的任务对外不可见，
 //     用事务外客户端会误判分支未完成导致网关死锁。

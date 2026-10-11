@@ -9,7 +9,7 @@ import (
 //
 // 预检映射由路由声明生成，所以「扫描器认得哪些注册形态」就是授权面的真相边界：
 // 一条声明定位不出完整路径，对应端点在 DBOnly 生产下对非 super_admin 恒 403
-// （2026-10-04 P0，21 个端点被静默丢弃的根因）。夹具把四种形态钉死，
+// 。夹具把四种形态钉死，
 // 新增注册风格时必须先在 testdata 里证明扫描器认得它。
 func TestScannerResolvesEveryRegistrationShape(t *testing.T) {
 	// base 只用于拼 base/../router；anchor 目录无需存在。

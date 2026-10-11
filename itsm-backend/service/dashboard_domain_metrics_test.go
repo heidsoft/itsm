@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// 回归（2026-09-25 假成功收口）：事件/变更指标必须来自真实领域数据。
+// 回归：事件/变更指标必须来自真实领域数据。
 // 此前 AvgResolutionTime=240 分钟、SuccessRate=95.5% 是写死的模拟值，
 // 且两个函数数的是工单而非事件/变更域。
 func TestDashboardDomainMetricsAreReal(t *testing.T) {

@@ -140,7 +140,7 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 	}
 
 	// 计算截止时间。
-	// 阻断7/C-8 修复：统一读取 slaDef.BusinessHours 配置，与 CalculateSLADeadlineFromRequest
+	// 统一读取 slaDef.BusinessHours 配置，与 CalculateSLADeadlineFromRequest
 	// 使用同一口径，消除"建单落库调整 / 查询展示不调整"的两路径结论相反问题。
 	var responseDeadline, resolutionDeadline *time.Time
 	if slaDef.ResponseTime > 0 {
@@ -194,7 +194,7 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
 	now := time.Now()
 
-	// Phase 3: prefer sla_states table for overdue detection
+	// prefer sla_states table for overdue detection
 	if s.slaStore != nil {
 		overdueIDs, err := s.slaStore.FindOverdueAggregateIDs(ctx, tenantID, "ticket", now)
 		if err != nil {
@@ -226,7 +226,7 @@ func (s *TicketSLAService) GetOverdueTickets(ctx context.Context, tenantID int) 
 
 // getOverdueTicketsInline 使用 sla_states 表查询逾期工单
 func (s *TicketSLAService) getOverdueTicketsInline(ctx context.Context, tenantID int, now time.Time) ([]*ent.Ticket, error) {
-	// Phase 1: Query sla_states for overdue ticket aggregates
+	// Query sla_states for overdue ticket aggregates
 	slaStates, err := s.client.SLAState.Query().
 		Where(
 			slastate.TenantID(tenantID),
@@ -243,7 +243,7 @@ func (s *TicketSLAService) getOverdueTicketsInline(ctx context.Context, tenantID
 		return []*ent.Ticket{}, nil
 	}
 
-	// Phase 2: Extract aggregate IDs and filter tickets
+	// Extract aggregate IDs and filter tickets
 	overdueIDs := make([]int, 0, len(slaStates))
 	for _, ss := range slaStates {
 		overdueIDs = append(overdueIDs, ss.AggregateID)
@@ -384,8 +384,8 @@ func (s *TicketSLAService) getSLADefinition(ctx context.Context, tenantID int, t
 // calculateDeadlineWithBusinessHours applies an SLA definition's configured
 // business calendar. An empty calendar intentionally preserves 24x7 SLA time.
 //
-// R4-b 2026-09-16：接受 ctx + tenantID，按租户时区注入 loc（覆盖 SLA 配置里的 time_zone 缺省值），
-// 与 timer_cron 的 LoadTenantLocation 口径一致；上下文不可用时回退 ResolveLocation("")=Asia/Shanghai。
+// loc 按租户时区注入（覆盖 SLA 配置里的 time_zone 缺省值），口径与
+// timer_cron 的 LoadTenantLocation 一致；上下文不可用时回退 ResolveLocation("")=Asia/Shanghai。
 func (s *TicketSLAService) calculateDeadlineWithBusinessHours(ctx context.Context, tenantID int, startTime time.Time, durationMinutes int, businessHours map[string]interface{}) time.Time {
 	if len(businessHours) == 0 || durationMinutes <= 0 {
 		return startTime.Add(time.Duration(durationMinutes) * time.Minute)
@@ -441,7 +441,6 @@ func defaultBusinessHoursConfig() businessHoursConfig {
 //
 // 空或解析失败时返回默认配置（不阻断 SLA 计算）。
 //
-// R4-b 2026-09-16 修复：
 //  1. 兼容旧键名（workdays/work_hour_start/work_hour_end/timezone/is_24_7），
 //     不破坏历史已安装的 SLA 配置；
 //  2. is_24_7=true 时把 start/end 当作 00:00-23:59 跨天窗口，工作日集合忽略，
@@ -616,7 +615,7 @@ func adjustToBusinessHoursStart(t time.Time, cfg businessHoursConfig) time.Time 
 }
 
 // addBusinessMinutes 从 start 开始，只在工作时段内消耗 minutes 分钟，返回截止时刻。
-// 阻断7 核心修复：正确排除非工作时段，而非把截止时刻平移到最近工时起点。
+// 正确排除非工作时段，而非把截止时刻平移到最近工时起点。
 // 算法：
 //  1. 若 start 在非工作时段，先把指针移到最近的工作时段起点。
 //  2. 计算当天剩余工时；若 minutes <= 当天剩余工时，截止时刻 = 当前指针 + minutes。
@@ -637,7 +636,7 @@ func addBusinessMinutes(start time.Time, minutes int, cfg businessHoursConfig) t
 	if loc == nil {
 		loc = ResolveLocation("")
 	}
-	// 关键修复：把起始时刻换算到配置时区后再计算工作窗口，
+	// 把起始时刻换算到配置时区后再计算工作窗口，
 	// 否则 9:00-18:00 窗口会按宿主机/UTC 时区计算，跨时区租户违约整体偏移。
 	cursor := adjustToBusinessHoursStart(start.In(loc), cfg)
 
@@ -718,7 +717,7 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 	}
 
 	// 计算截止时间（单位是分钟）。
-	// 阻断7/C-8 修复：统一走 SLA 配置的工作日历。
+	// 统一走 SLA 配置的工作日历。
 	// 旧逻辑用 AdjustToBusinessHours 平移截止时刻，导致非工作时段被当作顺延而非排除，
 	// 且与 GetTicketSLAInfo 路径使用不同口径，造成同一工单"是否违规"两路径结论相反。
 	businessHoursOnly := len(sla.BusinessHours) > 0

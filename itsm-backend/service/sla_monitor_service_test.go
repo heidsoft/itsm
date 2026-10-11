@@ -205,7 +205,7 @@ func TestSLAMonitorService_GetSLAComplianceByDefinition(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	// Phase 3 读路径以 sla_states 为权威源：只写工单内嵌 sla_definition_id 不会被统计到。
+	// 读路径以 sla_states 为权威源：只写工单内嵌 sla_definition_id 不会被统计到。
 	_, err = client.SLAState.Create().
 		SetTenantID(testTenant.ID).
 		SetAggregateType("ticket").

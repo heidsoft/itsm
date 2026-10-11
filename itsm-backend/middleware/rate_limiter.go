@@ -13,7 +13,7 @@ import (
 // LoginRateLimiter middleware for login endpoint
 // 10 attempts per minute per IP address using ulule/limiter v3
 //
-// P0-2（2026-09-06 UAT 修复）：从 5/分钟提到 10/分钟（真实用户首次输错常试 2-3 次）。
+// 从 5/分钟提到 10/分钟（真实用户首次输错常试 2-3 次）。
 // 命中时返回 retry_after_seconds，前端可展示倒计时；同时设 Retry-After HTTP 头。
 func LoginRateLimiter() gin.HandlerFunc {
 	rate := limiter.Rate{

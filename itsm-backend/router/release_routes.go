@@ -8,7 +8,6 @@ import (
 )
 
 // SetupReleaseRoutes 注册 Release（发布管理）域路由。
-// 从 router.go 集中注册块抽取，行为与原内联等价。
 func SetupReleaseRoutes(tenant *gin.RouterGroup, h *releaseHandler.ReleaseHandler) {
 	releases := tenant.Group("/releases")
 	{

@@ -991,7 +991,7 @@ func (r *EntRepository) ListSLAPerformance(
 // GetComplianceReportData retrieves data for SLA compliance report
 func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID int, startDate, endDate time.Time) (totalTickets, metSLA, violatedSLA int, avgResponseTime, avgResolutionTime float64, err error) {
 	// 1. 统计「窗口内创建」的工单，作为合规率统计的统一口径种群。
-	//    总数与达标数必须基于同一批工单，否则会出现负数合规率（详见 R-003）。
+	//    总数与达标数必须基于同一批工单，否则会出现负数合规率。
 	cohort, err := r.client.Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.CreatedAtGTE(startDate), ticket.CreatedAtLTE(endDate)).
 		Select(ticket.FieldID).
@@ -1105,8 +1105,8 @@ func (r *EntRepository) GetTicketStats(ctx context.Context, tenantID int) (total
 }
 
 // GetTicketSLA retrieves per-ticket SLA timing fields used by check-compliance.
-// P1-07 修复：返回创建的首次响应 / 解决时间点，让 Service 能计算 actual_response_minutes。
-// 修复：同时返回 SLA 截止时间，让 Service 判断合规时对比 deadline 而非仅检查是否有响应。
+// 返回创建的首次响应 / 解决时间点，让 Service 能计算 actual_response_minutes。
+// 同时返回 SLA 截止时间，让 Service 判断合规时对比 deadline 而非仅检查是否有响应。
 func (r *EntRepository) GetTicketSLA(ctx context.Context, ticketID int, tenantID int) (createdAt, firstResponseAt, resolvedAt, slaResponseDeadline, slaResolutionDeadline time.Time, found bool, err error) {
 	t, err := r.client.Ticket.Query().
 		Where(ticket.IDEQ(ticketID), ticket.TenantID(tenantID)).

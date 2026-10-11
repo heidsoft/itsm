@@ -121,7 +121,7 @@ func TestSearchRouteFailsClosedWithoutTenantContext(t *testing.T) {
 	router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/global-search?q=test", nil))
 
 	// 租户上下文缺失属认证问题：统一走 middleware.TenantIDOrUnauthorized → 401
-	// （2026-09-05 语义统一，原为 400；fail-closed 行为不变）
+	//
 	require.Equal(t, http.StatusUnauthorized, recorder.Code)
 	var response common.Response
 	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &response))

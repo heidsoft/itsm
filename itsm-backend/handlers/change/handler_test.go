@@ -41,7 +41,7 @@ func setupTestHandler(t *testing.T) (*gin.Engine, *Handler, *mockRepository) {
 	// handler 经 middleware.TenantIDOrUnauthorized 读取）
 	r.Use(func(c *gin.Context) {
 		c.Set("user_id", 1)
-		c.Set("role", "super_admin") // P1-DataScope：写路径行级校验需要 role；super_admin 全租户可写
+		c.Set("role", "super_admin") // 写路径行级校验需要 role；super_admin 全租户可写
 		c.Set("tenant_id", 1)
 		c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: 1})
 		c.Next()
@@ -109,7 +109,7 @@ func (m *mockRepository) Get(ctx context.Context, id int, tenantID int) (*Change
 	if !ok || c.TenantID != tenantID {
 		return nil, http.ErrMissingFile
 	}
-	// P1-2：返回深拷贝，确保调用方对返回实体的修改不会污染仓储当前持久化状态。
+	// 返回深拷贝，确保调用方对返回实体的修改不会污染仓储当前持久化状态。
 	// 这样 Service.UpdateChange 中"读取当前状态 vs 传入请求状态"的差异对比才有意义。
 	return cloneChange(c), nil
 }
@@ -835,7 +835,6 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 		assert.Equal(t, common.InternalErrorCode, resp.Code)
-		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
@@ -854,7 +853,6 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
@@ -873,7 +871,6 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 
@@ -923,7 +920,6 @@ func TestChangeController_UpdateChange_P12_GovernanceGuard(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		var resp common.Response
 		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
-		// P1-DataScope 后错误统一走 RespondError fallback：响应不回显被拒字段名明细
 		assert.Contains(t, resp.Message, "更新变更失败")
 	})
 }

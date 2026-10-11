@@ -7,7 +7,6 @@ import (
 )
 
 // SetupMSPRoutes 注册 MSP（托管服务商）跨租户路由。
-// 从 router.go 的集中注册块抽取而来，路由路径/方法/中间件与抽取前逐行一致。
 // 注意：MSP 跨租户访问，不需要租户中间件，直接挂在 /api/v1/msp 根组。
 func SetupMSPRoutes(r *gin.Engine, config *RouterConfig) {
 	if config.MSPHandler == nil {

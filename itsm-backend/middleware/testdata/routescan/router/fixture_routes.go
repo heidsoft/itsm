@@ -18,7 +18,7 @@ func (h *FixtureHandler) Create(c *gin.Context) {}
 func (h *FixtureHandler) Delete(c *gin.Context) {}
 
 // 形态 1：以 *gin.RouterGroup 形参为组根（router/ticket_type_routes.go 的真实形态）。
-// 2026-10-04 P0 修复前，这三条声明解析不出前缀、在 /api/v1 过滤处被静默丢弃。
+// 扫描器若解析不出形参组根的前缀，这三条声明会在 /api/v1 过滤处被静默丢弃。
 func SetupFixtureParamGroupRoutes(tenant *gin.RouterGroup, h *FixtureHandler) {
 	tenant.GET("/fixture-things", middleware.RequirePermission("fixture", "read"), h.List)
 	tenant.POST("/fixture-things", middleware.RequirePermission("fixture", "write"), h.Create)

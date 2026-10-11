@@ -59,7 +59,7 @@ func TestTenantMiddleware(t *testing.T) {
 
 		TenantMiddleware(client)(c)
 
-		// 契约变更（2026-09-05）：400 → 401，与域内 TenantIDOrUnauthorized
+		// 契约变更：400 → 401，与域内 TenantIDOrUnauthorized
 		// 及「租户不匹配」分支语义对齐；租户缺失是认证问题而非参数问题。
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 		assert.Contains(t, w.Body.String(), "租户信息缺失")

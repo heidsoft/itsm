@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E1-2）：工单附件的下载与预览 handler
+// 回归：工单附件的下载与预览 handler
 // （handlers/ticket_attachment/handler.go DownloadAttachment/PreviewAttachment）此前
 // 从未在 router/ticket_routes.go 注册，前端两个入口点了就 404；同时 DTO 的 fileUrl
 // 透传了库里指向从未注册路由的存量死链。必须从真实路由入口证明：

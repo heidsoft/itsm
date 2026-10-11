@@ -138,7 +138,7 @@ func TestSeedAllSaaSModeCreatesPlatformTenantAndAdmin(t *testing.T) {
 	assert.Equal(t, "super_admin", string(adminUser.Role))
 }
 
-// TestSeedGroupsAndProvisionClones 验证审批组种子链路（2026-09-15 复盘 R2）：
+// TestSeedGroupsAndProvisionClones 验证审批组种子链路：
 //  1. SeedAll 后 default 租户装上 BuiltinGroups 全部组；
 //  2. 组名以 approvers- 为前缀，与全部角色 code 无交集（同名组优先语义下，
 //     与角色码同名的空组会挡住角色回退，导致任务候选集为空）；

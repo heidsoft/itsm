@@ -1,6 +1,6 @@
 package router
 
-// 回归（2026-10-04，E4-35）：工单关联的三个读取端点必须按调用者租户收敛。
+// 回归：工单关联的三个读取端点必须按调用者租户收敛。
 //
 // 修复前的实测事实（service/ticketassociationservice.go）：
 //   - GetTicketDependencies/GetRelatedTickets/getParentChain/getChildrenTree/

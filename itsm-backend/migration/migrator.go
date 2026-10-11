@@ -23,7 +23,7 @@ type Migration struct {
 	ExecutionMS    int64
 	ReleaseVersion string
 
-	// SQLContent 用于「目录即真相」自发现迁移（2026-09-08 落地）：
+	// SQLContent 用于「目录即真相」自发现迁移：
 	// 文件系统发现的 SQL 文件加载到此处，绕过 GetMigrationSQL 的硬编码注册表，
 	// 避免 Go 改动滞后于 SQL 文件导致孤儿脚本。空值时回退到 GetMigrationSQL。
 	// 仅作为输入与 ApplyMigration 之间传输 SQL 的载体，不参与序列化。

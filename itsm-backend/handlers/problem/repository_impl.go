@@ -365,7 +365,7 @@ func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error 
 }
 
 // GetAllForAnalytics 拉取 [start, end) 区间内的问题单用于趋势/热点统计。
-// P1 修复：此前只用 start 做下界（CreatedAtGTE），导致区间之后的全量数据被计入，
+// 此前只用 start 做下界（CreatedAtGTE），导致区间之后的全量数据被计入，
 // 月度趋势与计数失真。这里同时约束上界 CreatedAtLT(end)，区间外数据不再混入。
 func (r *EntRepository) GetAllForAnalytics(ctx context.Context, tenantID int, start, end time.Time) ([]*Problem, error) {
 	list, err := r.client.Problem.Query().

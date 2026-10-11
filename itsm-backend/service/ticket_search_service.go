@@ -21,7 +21,7 @@ type TicketSearchService struct {
 	slaStore *sla.Store // Phase 3: sla_states 读取
 }
 
-// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+// SetSLAStore 注入 SLA 持久化 store
 func (s *TicketSearchService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
 }
@@ -74,7 +74,7 @@ func (s *TicketSearchService) SearchTickets(ctx context.Context, searchTerm stri
 func (s *TicketSearchService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
 	now := time.Now()
 
-	// Phase 3: prefer sla_states table for overdue detection
+	// prefer sla_states table for overdue detection
 	if s.slaStore != nil {
 		responseBreachedIDs, err1 := s.slaStore.FindResponseBreachedAggregateIDs(ctx, tenantID, "ticket", now)
 		overdueIDs, err2 := s.slaStore.FindOverdueAggregateIDs(ctx, tenantID, "ticket", now)

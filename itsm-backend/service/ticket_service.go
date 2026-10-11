@@ -57,7 +57,7 @@ type TicketService struct {
 	workflowOutboxEnabled   bool
 	sideEffectOutboxEnabled bool
 
-	slaStore *sla.Store // Phase 3: sla_states 读取
+	slaStore *sla.Store // sla_states 表读取入口
 }
 
 // TicketServiceConfig 工单服务配置
@@ -135,7 +135,7 @@ func (s *TicketService) SetSLAService(svc *TicketSLAService) {
 	s.slaSvc = svc
 }
 
-// SetSLAStore 注入 SLA 持久化 store（Phase 3: sla_states 读取）
+// SetSLAStore 注入 sla_states 表的持久化 store
 func (s *TicketService) SetSLAStore(store *sla.Store) {
 	s.slaStore = store
 }
@@ -328,7 +328,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			return nil, fmt.Errorf("resolve ticket category: %w", err)
 		}
 	}
-	// 流程 Key 优先级（与 process_resolver.go 注释语义对齐，2026-09-07 修复）：
+	// 流程 Key 优先级（与 process_resolver.go 的语义一致）：
 	// 1. 请求显式指定（req.WorkflowDefinitionKey）——最高优先，不再被 TicketType 静默覆盖；
 	// 2. TicketType 配置的 WorkflowDefinitionKey；
 	// 3. 空 → triggerWorkflowForTicket 内走 ProcessResolver（绑定表）→ 兜底。
@@ -458,7 +458,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 				s.logger.Warnw("Failed to update SLA deadlines", "error", err)
 			}
 
-			// 双写：同步写入 sla_states（Phase 3 Step 3.5 阶段 1）
+			// 双写：内联字段之外同步写一份 sla_states，切读完成后内联字段才退役
 			if store := s.slaSvc.SLAStore(); store != nil {
 				if err := store.SaveDeadlines(ctx, tenantID, "ticket", tkt.ID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
 					s.logger.Warnw("Failed to dual-write SLA state for ticket, continuing", "error", err)
@@ -467,9 +467,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}
 	}
 
-	// 触发审批（同步，走 ApprovalService，查找匹配工作流并创建 ApprovalRecord）
-	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入审批链路
-	// 同时传入 tkt.DepartmentID（i2 P0 修复），让 dept_manager 动态审批人解析有上下文；
+	// 触发审批（同步，走 ApprovalService，查找匹配工作流并创建 ApprovalRecord）。
+	// 工单创建必须进入审批链路，否则审批记录缺失、服务请求无法闭环。
+	// 这里传入 tkt.DepartmentID，让 dept_manager 动态审批人解析有上下文；
 	// ApprovalService 仍会在 req.DepartmentID==0 时以 ticket/requester 兜底。
 	deptID := 0
 	if tkt.DepartmentID != nil {
@@ -505,8 +505,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		}()
 	}
 
-	// 异步触发 BPMN 流程（V1 兼容语义）
-	// 这是 V1 缺失的 Phase 1 #1 缺陷修复：V2 必须让工单进入 BPMN 引擎
+	// 异步触发 BPMN 流程（V1 兼容语义）：建单必须让工单进入流程引擎。
 	// 使用独立 ctx，否则控制器响应后 workflow 触发立即被取消。
 	if s.processTriggerSvc != nil && !s.workflowOutboxEnabled {
 		go func() {
@@ -815,7 +814,7 @@ func normalizeCreateTicketType(reqType string, formFields ...map[string]interfac
 	return ticket.TypeIncident
 }
 
-// normalizeTicketTypeString 大小写归一：请求值大小写不敏感匹配合法词表（2026-09-07 词表统一）
+// normalizeTicketTypeString 大小写归一：请求值大小写不敏感匹配合法词表
 func normalizeTicketTypeString(value string) string {
 	return strings.ToLower(strings.TrimSpace(value))
 }
@@ -824,8 +823,8 @@ func isSupportedTicketType(value string) bool {
 	switch ticket.Type(normalizeTicketTypeString(value)) {
 	case ticket.TypeIncident, ticket.TypeProblem, ticket.TypeChange, ticket.TypeServiceRequest,
 		"improvement", "ticket",
-		// 码表对齐（2026-09-07 三处词表统一）：ticket_types 码表与 process_bindings
-		// 均配置了 general/assignment，此前代码词表缺失导致建单 1001 被拒
+		// general/assignment 来自 ticket_types 码表和 process_bindings，
+		// 词表缺这两项会让建单直接 1001 被拒
 		"general", "assignment":
 		return true
 	default:
@@ -850,7 +849,7 @@ func isTicketDataScopeAllRole(role string) bool {
 // (assignee)的工单；全量角色放行。越权时返回 common.ForbiddenError，使上层
 // 映射为 HTTP 403 而非 500。这是安全关键路径：即使调用方忘记传归属过滤，
 // 这里仍会兜底拒绝跨 Owner 删除。
-// Phase 2.2: currentUserID <= 0 时跳过校验（系统操作/AI 工具调用）。
+// currentUserID <= 0 表示系统操作/AI 工具调用，跳过行级校验。
 func (s *TicketService) enforceTicketRowScope(ctx context.Context, id, tenantID, currentUserID int, currentRole string) error {
 	// 系统操作跳过校验
 	if currentUserID <= 0 {
@@ -1068,14 +1067,13 @@ func (s *TicketService) GetTicketByNumber(ctx context.Context, ticketNumber stri
 }
 
 // UpdateTicket 更新工单
-// Phase 2.2: 增加 currentUserID 和 currentRole 参数，用于行级权限校验
 func (s *TicketService) UpdateTicket(ctx context.Context, id int, req *dto.UpdateTicketRequest, tenantID int, currentUserID int, currentRole string) (*ticket.Ticket, error) {
 	if req == nil {
 		return nil, common.NewBusinessError(common.ParamErrorCode, "request不能为nil", "")
 	}
 	s.logger.Infow("Updating ticket", "ticket_id", id, "tenant_id", tenantID)
 
-	// Phase 2.2: 行级权限校验
+	// 行级权限校验
 	if err := s.enforceTicketRowScope(ctx, id, tenantID, currentUserID, currentRole); err != nil {
 		return nil, err
 	}
@@ -1291,7 +1289,7 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		return nil, err
 	}
 
-	// Phase 3: batch lookup SLA states from sla_states table
+	// 批量查 sla_states，避免逐行 N+1
 	var slaStates map[int]*ent.SLAState
 	if store := s.getSLAStore(); store != nil && len(result.Data) > 0 {
 		ids := make([]int, 0, len(result.Data))
@@ -1544,7 +1542,7 @@ func (s *TicketService) toTicketResponseWithSLA(t *ticket.Ticket, slaState *ent.
 			resp.SLAResolutionDeadline = &slaState.ResolutionDeadline
 		}
 	}
-	// Phase 3: No fallback to inline ticket SLA fields; leave as nil if no SLAState
+	// 没有 sla_states 记录就是没有 SLA，不回退到工单内联字段
 
 	return resp
 }
@@ -1652,7 +1650,7 @@ type TicketSLAInfo struct {
 	ResolvedAt           *time.Time `json:"resolvedAt,omitempty"`
 }
 
-// GetTicketSLAState 查询工单的 SLA 状态（Phase 3 切读：handler 层从 sla_states 读取）。
+// GetTicketSLAState 从 sla_states 表查询工单的 SLA 状态。
 func (s *TicketService) GetTicketSLAState(ctx context.Context, tenantID int, ticketID int) (*ent.SLAState, error) {
 	if s.client == nil {
 		return nil, nil
@@ -1681,7 +1679,7 @@ func (s *TicketService) GetTicketSLAInfo(ctx context.Context, ticketID int, tena
 		ResponseDeadline: time.Time{},
 	}
 
-	// Phase 3: prefer sla_states table for SLA fields
+	// SLA 字段以 sla_states 表为准
 	slaState, err := s.client.SLAState.Query().
 		Where(
 			slastate.TenantID(tenantID),
@@ -2620,9 +2618,8 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 
 // GetMSPCustomerReports 获取 MSP 客户报告。
 //
-// 已知语义缺口（另见 plans/edge-feature-stability-audit-2026-10-02.md 行 2d）：本方法按
-// mspTenantID 聚合 MSP 自己租户下的工单，并没有按被服务的客户租户分组，因此一次只产出一行
-// 汇总。这里只统一字段契约（camelCase DTO），不改变统计口径。
+// 本方法按 mspTenantID 聚合 MSP 自己租户下的工单，不按被服务的客户租户分组，
+// 因此一次只产出一行汇总。这里只统一字段契约（camelCase DTO），不改变统计口径。
 func (s *TicketService) GetMSPCustomerReports(ctx context.Context, mspTenantID int, dateFrom, dateTo time.Time) ([]*dto.MSPCustomerReportResponse, error) {
 	if s.client == nil {
 		return nil, fmt.Errorf("ent client not available for MSP reports")

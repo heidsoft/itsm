@@ -29,7 +29,7 @@ func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {
 		user := client.User.Create().SetUsername(suffix).SetEmail(suffix + "@example.com").SetName("test").SetPasswordHash("hash").SetTenantID(tenant.ID).SaveX(ctx)
 		for _, status := range []string{"open", "resolved", "closed", "cancelled"} {
 			tk := client.Ticket.Create().SetTitle(status).SetTicketNumber(suffix + status).SetStatus(status).SetRequesterID(user.ID).SetTenantID(tenant.ID).SetSLAResolutionDeadline(time.Now().Add(-time.Hour)).SaveX(ctx)
-			// Phase 3: overdue 统计现在以 sla_states 为权威源
+			// overdue 统计现在以 sla_states 为权威源
 			if status == "open" {
 				_, err := client.SLAState.Create().
 					SetTenantID(tenant.ID).

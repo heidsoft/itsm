@@ -1,5 +1,4 @@
 // Package escalation_matrix 是升级矩阵域的 HTTP handler 层（域切片架构）。
-// 自 controller/escalation_matrix_controller.go 迁移而来（2026-09-02），
 // 业务逻辑仍由 service.EscalationMatrixService 承载，本包只做参数解析与响应封装。
 package escalation_matrix
 
@@ -79,7 +78,7 @@ func (h *Handler) InvalidateCache(ctx *gin.Context) {
 
 // RegisterRoutes 注册路由（兼容旧接口）
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	// 升级矩阵属 SLA 配置面（2026-09-17 P0「越权写收口」）
+	// 升级矩阵属 SLA 配置面
 	matrixGrp := r.Group("/escalation-matrices")
 	{
 		matrixGrp.GET("", middleware.RequirePermission("sla", "read"), h.GetMatrix)

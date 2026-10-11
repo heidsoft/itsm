@@ -86,7 +86,7 @@ func GenerateAccessToken(userID int, username, role string, tenantID int, jwtSec
 
 // 生成Refresh Token
 //
-// P1-3（2026-09-06 UAT 修复）：refresh token 必须携带完整的 username/role/tenantId。
+// refresh token 必须携带完整的 username/role/tenantId。
 // 之前只填 userID，导致 refresh 续签时 handler 拿到空字符串身份，降级为匿名。
 // 现在签名补齐：调用方传入 user 完整信息，refresh 续签可解析出 tenant 上下文。
 func GenerateRefreshToken(userID int, username, role string, tenantID int, jwtSecret string, expireTime time.Duration) (string, error) {
@@ -213,7 +213,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		// 提取用户信息
 		if claims, ok := token.Claims.(*Claims); ok {
-			// H4 修复：检查TokenType，必须是access类型
+			// 检查TokenType，必须是access类型
 			if claims.TokenType != "access" {
 				zap.S().Warnw(
 					"AuthMiddleware: invalid token type",
@@ -241,7 +241,7 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 				return
 			}
 
-			// P1-2 修复：用户角色变更/停用/改密后，其存量 access token 需立即失效。
+			// 用户角色变更/停用/改密后，其存量 access token 需立即失效。
 			// 比对 token 签发时间与该用户的最低可接受签发时间（MinIssuedAt）。
 			store := currentTokenRevocationStore()
 			minIAT, minIATErr := store.MinIssuedAt(c.Request.Context(), claims.UserID)

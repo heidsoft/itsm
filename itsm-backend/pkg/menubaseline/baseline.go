@@ -40,7 +40,7 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
 		{Name: "发布管理", Path: "/releases", Icon: "Rocket", ParentPath: "", PermissionCode: "release:read", SortOrder: 130, Description: "发布管理"},
 
-		// ===== 顶级扩展业务菜单（2026-09-26 补齐） =====
+		// ===== 顶级扩展业务菜单 =====
 		{Name: "报表中心", Path: "/reports", Icon: "PieChart", ParentPath: "", PermissionCode: "report:read", SortOrder: 140, Description: "ITSM 业务报表中心"},
 		{Name: "标准变更库", Path: "/standard-changes", Icon: "BookCopy", ParentPath: "", PermissionCode: "change:read", SortOrder: 150, Description: "标准变更模板库"},
 		{Name: "持续改进", Path: "/improvements", Icon: "TrendingUp", ParentPath: "", PermissionCode: "problem:read", SortOrder: 155, Description: "持续改进跟踪"},

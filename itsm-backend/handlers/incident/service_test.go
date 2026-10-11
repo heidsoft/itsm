@@ -382,7 +382,7 @@ func TestService_Escalate_SetsLevelAndEvent(t *testing.T) {
 	}, time.Second, 10*time.Millisecond)
 }
 
-// TestService_Escalate_ForeignAgentRejected 锁定 P1-DataScope 行级守卫：
+// TestService_Escalate_ForeignAgentRejected 验证行级守卫：
 // 非 owner 普通角色升级他入事件单必须 403 Forbidden AppError。
 func TestService_Escalate_ForeignAgentRejected(t *testing.T) {
 	// 此测试需要 PostgreSQL 序列支持（incident number generation），SQLite 无法运行

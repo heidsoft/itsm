@@ -30,8 +30,7 @@ func failIncidentOperation(c *gin.Context, err error) {
 		common.Fail(c, businessErr.Code, businessErr.Message)
 		return
 	}
-	// P1-DataScope：行级守卫返回 403 AppError，必须按语义分流（对齐
-	// common.RespondError），不得掉入 InternalError 兜底成 500。
+	// 行级守卫的 403 AppError 必须分流到 ForbiddenCode，不能掉进 InternalError 兜底成 500。
 	var appErr *common.AppError
 	if errors.As(err, &appErr) {
 		common.Fail(c, common.ForbiddenCode, appErr.Message)
@@ -528,7 +527,7 @@ func (h *IncidentHandler) Lists(c *gin.Context) {
 		return
 	}
 
-	// Phase 3 切读：批量加载 SLA 状态，避免 N+1。
+	// 切读：批量加载 SLA 状态，避免 N+1。
 	incidentIDs := make([]int, 0, len(incidents))
 	for _, i := range incidents {
 		incidentIDs = append(incidentIDs, i.ID)
@@ -1178,7 +1177,6 @@ func (h *IncidentHandler) Update(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "操作失败")
 		return
 	}
@@ -1251,7 +1249,7 @@ func (h *IncidentHandler) toDTO(i *Incident, slaState *ent.SLAState) *dto.Incide
 		dto.MapSliceToStructSlice(i.ResolutionSteps, &resolutionSteps)
 	}
 
-	// Phase 3 切读：SLA 字段从 sla_states 读取，降级到内联字段。
+	// 切读：SLA 字段从 sla_states 读取，降级到内联字段。
 	var slaDefinitionID *int
 	var slaResponseDeadline *time.Time
 	var slaResolutionDeadline *time.Time
@@ -1339,9 +1337,9 @@ func (h *IncidentHandler) toDTO(i *Incident, slaState *ent.SLAState) *dto.Incide
 }
 
 // GetStats 获取事件统计数据（兼容前端）。
-// P0-2 修复：handler 不再直接访问 ent.Client，改为通过 service 层调用仓储。
-// 仓储以单次 COUNT(*) FILTER + AVG 聚合查询完成全部指标，pprof 查询次数由 7 降至 1。
-// 字段已统一为 camelCase（见 dto.IncidentStats / repository.IncidentStats）。
+// handler 不直接访问 ent.Client，仓储调用在 service 层；仓储以单次
+// COUNT(*) FILTER + AVG 聚合查询取回全部指标。字段口径见 dto.IncidentStats /
+// repository.IncidentStats。
 // GetStats 事件管理-获取事件统计
 // @Summary 获取事件统计
 // @Description 获取当前租户的事件统计数据（兼容前端）
@@ -1473,7 +1471,6 @@ func (h *IncidentHandler) UpdateRootCause(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "操作失败")
 		return
 	}
@@ -1557,7 +1554,6 @@ func (h *IncidentHandler) UpdateImpactAssessment(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "操作失败")
 		return
 	}
@@ -1655,7 +1651,6 @@ func (h *IncidentHandler) UpdateClassification(c *gin.Context) {
 
 	_, err = h.service.Update(c.Request.Context(), tenantID, id, updates, c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		// P1-DataScope：行级权限拒绝（403 AppError）必须按语义响应，不得兜底 500
 		common.RespondError(c, err, "操作失败")
 		return
 	}

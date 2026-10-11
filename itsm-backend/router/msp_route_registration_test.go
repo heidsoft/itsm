@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E3-1）：前端 msp-api.ts 调用的
+// 回归：前端 msp-api.ts 调用的
 // GET /api/v1/msp/allocations/history 从未在 router/msp_routes.go 注册，
 // 分配历史页签只能靠能力开关藏着。这里用真实注册函数锁定路由契约本身，
 // 方法/完整前缀/静态段都必须与前端一致，否则同类漂移会再次静默发生。

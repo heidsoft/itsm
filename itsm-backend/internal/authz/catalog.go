@@ -1,16 +1,15 @@
 // Package authz is the single source of truth for permission vocabulary and
-// role bindings (2026-09-17 批次 6，P0-E 治本收官)。
+// role bindings.
 //
-// 历史背景：权限码与角色绑定原本分散在四处手写——
+// 权限码与角色绑定涉及四处：
 //  1. router/ + handlers/ 中的 RequirePermission 家族声明（路径 → (resource, action)）
-//  2. middleware/rbac.go 的 ResourceActionMap 预检映射
-//  3. pkg/seeder/seeder.go 的 permissionDefinitions() + builtinRolePermissionCodes()
+//  2. middleware/rbac_precheck_gen.go 的预检映射
+//  3. 本包的权限码定义与角色绑定
 //  4. DB 表 permissions / role_permissions
 //
-// 批次 5 已把 1↔2 通过 cmd/authz-gen 单向消解（路由声明 codegen 为预检映射）。
-// 本包是消解 3↔4 的治本步骤：把 (3) 抽到本包作为唯一权威源，seeder 启动时
-// 通过 cmd/authz-codegen 生成的 YAML 落库到 (4)。后续改权限码 / 角色绑定
-// 只改本包，go generate 同步一切。
+// (1)⇒(2) 由 cmd/authz-gen 单向生成，不手写。本包承载 (3)：seeder 启动时把
+// cmd/authz-codegen 生成的 YAML 落库到 (4)。改权限码 / 角色绑定只改本包，
+// go generate 同步其余各处。
 package authz
 
 // PermissionDef 权限码定义条目（码空间唯一源）。
@@ -113,7 +112,7 @@ func Definitions() []PermissionDef {
 		{"service_request:read", "查看服务请求", "service_request", "read", "查看服务请求"},
 		{"service_request:write", "处理服务请求", "service_request", "write", "创建、处理服务请求"},
 		{"service_request:delete", "删除服务请求", "service_request", "delete", "删除服务请求"},
-		// 审批动作独立权限（路由 RequirePermission("service_request","approve") 依赖，2026-09-07 场景深测 P1-B 修复）
+		// 审批动作独立权限
 		{"service_request:approve", "审批服务请求", "service_request", "approve", "审批/驳回服务请求（L1/L2/L3 审批人）"},
 		// 通知权限（路由 RequirePermission("notification", "read"/"create") 依赖）
 		{"notification:read", "查看通知", "notification", "read", "查看通知和偏好设置"},
@@ -187,7 +186,7 @@ func Definitions() []PermissionDef {
 		{"msp_allocation:write", "管理分配", "msp_allocation", "write", "创建、编辑MSP分配"},
 		{"msp_report:read", "查看报表", "msp_report", "read", "查看MSP报表"},
 		{"msp_report:write", "管理报表", "msp_report", "write", "生成和管理MSP报表"},
-		// 2026-09-17 P0 补齐：middleware.RolePermissions 硬编码表引用但 DB 码空间缺失的 16 个码。
+		// middleware.RolePermissions 硬编码表引用但 DB 码空间缺失的 16 个码。
 		// 缺失后果：role_permissions 无法授予这些 (resource,action)，admin/technician 权限集不完整。
 		{"notification:write", "更新通知", "notification", "write", "更新/标记已读通知"},
 		{"ticket_tag:write", "管理工单标签", "ticket_tag", "write", "创建、编辑工单标签"},
@@ -205,11 +204,11 @@ func Definitions() []PermissionDef {
 		{"department:update", "更新部门", "department", "update", "更新部门信息"},
 		{"department:delete", "删除部门", "department", "delete", "删除部门"},
 		{"project:delete", "删除项目", "project", "delete", "删除项目"},
-		// BPMN 工作流（DB 已有但种子清单缺失，2026-09-17 守卫测试发现补齐）
+		// BPMN 工作流
 		{"bpmn:read", "查看BPMN流程", "bpmn", "read", "查看BPMN流程定义和实例"},
 		{"bpmn:write", "管理BPMN流程", "bpmn", "write", "设计、部署BPMN流程"},
 		{"bpmn:delete", "删除BPMN流程", "bpmn", "delete", "删除BPMN流程定义"},
-		// 以下为 DB 已有但种子清单缺失、硬编码兜底引用的码（2026-09-17 守卫测试发现补齐）
+		// 以下为 DB 已有但种子清单缺失、硬编码兜底引用的码
 		{"ticket_category:write", "管理工单分类", "ticket_category", "write", "创建、编辑工单分类"},
 		{"ticket_type:write", "管理工单类型", "ticket_type", "write", "创建、编辑工单类型"},
 		{"ticket_type:create", "创建工单类型", "ticket_type", "create", "创建工单类型"},
@@ -219,19 +218,19 @@ func Definitions() []PermissionDef {
 		{"role:delete", "删除角色", "role", "delete", "删除角色"},
 		{"system_config:read", "查看系统配置", "system_config", "read", "查看系统配置"},
 		{"system_config:write", "管理系统配置", "system_config", "write", "管理系统配置"},
-		// 任务面（2026-09-17 P0「越权写收口」）：任务与流程分权。
+		// 任务面：任务与流程分权。
 		// 路由 /bpmn/tasks*、/workflow/tasks* 早已引用这些码，但码空间从未定义
 		// → DBOnly configured 态下除 super_admin 外全部 403（审批中心不可用）；
 		// 同时 bpmn:write 连带授予了「对任意任务下决策」的越权能力。
 		{"task:read", "查看任务", "task", "read", "查看本人待办与候选任务"},
 		{"task:update", "处理任务", "task", "update", "认领、完成、加签、投票与提交决策（归属由 handler 层二次校验）"},
 		{"task:admin", "管理任务", "task", "admin", "查看租户内全量任务与流程任务统计"},
-		// 以下码为「路由已引用但码空间缺失」的补齐（2026-09-17 P0 越权收口批次）：
-		// 仅登记码定义，不授予任何角色——真正放开需随批次 2/3 的授权与预检映射一并评估。
+		// 以下码为「路由已引用但码空间缺失」的补齐：
+		// 仅登记码定义，不授予任何角色；放开需连同授权与预检映射一并评估。
 		{"survey:read", "查看满意度调查", "survey", "read", "查看问卷定义与响应"},
 		{"marketplace:read", "查看扩展市场", "marketplace", "read", "查看扩展市场条目与安装记录"},
 		{"marketplace:write", "管理扩展市场", "marketplace", "write", "安装、卸载与配置扩展"},
-		// 租户管理（MSP 多租户核心面，批次 2 补码）：码空间无语义归宿的独立管理面，
+		// 租户管理：码空间无语义归宿的独立管理面，
 		// 收敛进 system/system_config 会丢失租户边界，故新增；授予 admin/sysadmin。
 		{"tenant:read", "查看租户", "tenant", "read", "查看租户列表与详情"},
 		{"tenant:write", "管理租户", "tenant", "write", "创建、更新、停用租户"},
@@ -242,7 +241,7 @@ func Definitions() []PermissionDef {
 //
 // 供 CI 守卫校验「路由声明的 (resource, action) ⊆ 码空间」：
 // checkPermissionMatch 只做精确匹配，路由引用了码空间不存在的码时，
-// 该路由对除 super_admin 外的所有角色永久 403（B 类欠账，2026-09-17 清零）。
+// 该路由对除 super_admin 外的所有角色永久 403。
 func AllCodes() []string {
 	defs := Definitions()
 	out := make([]string, 0, len(defs))

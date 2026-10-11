@@ -217,7 +217,6 @@ func (h *Handler) TestConnection(c *gin.Context) {
 	common.Success(c, resp)
 }
 
-// RegisterRoutes 注册路由
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	root := rg.Group("/system/vector-store")
 	root.GET("", middleware.RequirePermission("system", "read"), h.GetStatus)

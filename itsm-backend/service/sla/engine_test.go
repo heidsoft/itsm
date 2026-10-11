@@ -60,7 +60,7 @@ func TestComputeDeadlines_BusinessHours_WithinDay(t *testing.T) {
 		t.Fatal("expected response deadline")
 	}
 
-	// 10:00 + 60min = 11:00 same day
+	// 00 + 60min = 11:00 same day
 	expected := time.Date(2026, 9, 23, 11, 0, 0, 0, loc)
 	if !result.ResponseDeadline.Equal(expected) {
 		t.Errorf("got %v, want %v", result.ResponseDeadline, expected)
@@ -122,7 +122,7 @@ func TestComputeDeadlines_24x7(t *testing.T) {
 		t.Fatal("expected response deadline")
 	}
 
-	// 23:00 + 120min = Sunday 01:00
+	// 00 + 120min = Sunday 01:00
 	expected := start.Add(120 * time.Minute)
 	if !result.ResponseDeadline.Equal(expected) {
 		t.Errorf("got %v, want %v", result.ResponseDeadline, expected)

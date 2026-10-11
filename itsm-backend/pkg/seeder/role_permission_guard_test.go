@@ -15,12 +15,12 @@ import (
 
 // TestBuiltinRolePermissionCodes_Guard 内置词表角色 DB 权限码集守卫。
 //
-// 背景（2026-09-17 P0）：BuiltinRoles() 把 users.role 词表角色写入 roles 表
+// 背景：BuiltinRoles() 把 users.role 词表角色写入 roles 表
 // （DBOnly 三态判定为 configured），但 builtinRolePermissionCodes() 此前缺
 // admin/technician 条目 → roles 表权限行空集 = DB 显式撤销 →
 // admin/technician 用户除未挂权限中间件的路由外全部 403。
 //
-// 2026-10-05 N4/N5 拍板（plans/product-remediation-plan-2026-10-03.md §3）：
+// 2026-10-05 N4/N5 拍板：
 // middleware.RolePermissions 独立硬编码表已删除，编译期兜底默认权限改由
 // authz.RolePermissionDefaults() 单一真源派生（内置角色直接派生自播种码集，
 // 结构性不可能漂移；R2-a 待拍板档 t.Skip 同批退役）。原契约 3 替换为：
@@ -86,7 +86,7 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		}
 	}
 
-	// 契约 5（2026-10-07 角色词表重设）：退役角色码不得残留在任何权限映射里。
+	// 契约 5：退役角色码不得残留在任何权限映射里。
 	// 词表是封闭的，残留条目就是双权威回潮——它永远不会被 seedRolePermissions 命中，
 	// 却会让「按角色查权限」的读者以为该角色仍然有效。
 	for _, retired := range domainrole.Retired {
@@ -144,7 +144,7 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 
 // TestBuiltinRolePermissionCodes_NoDeadKeys 权限码映射的键必须 ⊆ 实际播种的角色 code。
 //
-// 背景（2026-10-03 R7-6；2026-10-07 词表重设后重写）：BuiltinRolePermissionCodes()
+// 背景：BuiltinRolePermissionCodes()
 // 的键必须对应实际会被播种到 roles 表的角色。播种来源有三：
 //  1. BuiltinRoles()——users.role 主角色词表（domainrole.All）；
 //  2. PracticeRoles()——ITIL 实践角色与 MSP 协作角色（只经 user_roles 边叠加）；
@@ -203,7 +203,7 @@ func TestPermissionDefinitions_NoDuplicateCodes(t *testing.T) {
 	}
 }
 
-// TestRetiredRolePermissionCodes_Guard 显式退役清单守卫（2026-10-03 R2-d）。
+// TestRetiredRolePermissionCodes_Guard 显式退役清单守卫。
 //
 // 「只增不减」契约下 applyRetiredRolePermissions 是播种器唯一的收缩通道，
 // 清单写错就会静默删掉线上授权行，故锁三条契约：

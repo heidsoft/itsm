@@ -16,7 +16,7 @@ import (
 )
 
 // BPMNApprovalBridge 将业务域审批入口（工单/变更 approve|reject）桥接到 BPMN 任务完成，
-// 保证审批动作以 BPMN 任务为权威来源，流程实例不因业务侧直批而悬挂（P0-1 双轨审批收敛）。
+// 保证审批动作以 BPMN 任务为权威来源，流程实例不因业务侧直批而悬挂。
 //
 // 约定：ProcessTriggerService 以 businessKey = "{business_type}:{business_id}" 启动流程实例，
 // 桥接层按同一约定反查运行中的实例及其待办用户任务。

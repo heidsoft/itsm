@@ -93,19 +93,19 @@ type SeedConfig struct {
 	ProcessBindings     []ProcessBindingSeed     `json:"process_bindings"`
 	TicketViews         []TicketViewSeed         `json:"ticket_views"`
 	CITypes             []CITypeSeed             `json:"ci_types"`
-	// 新增：可配置的种子数据
+	// 可配置的种子数据
 	Incidents          []IncidentSeed         `json:"incidents"`
 	Problems           []ProblemSeed          `json:"problems"`
 	Changes            []ChangeSeed           `json:"changes"`
 	KnowledgeArticles  []KnowledgeArticleSeed `json:"knowledge_articles"`
 	IncidentCategories []TicketCategorySeed   `json:"incident_categories"`
-	// 新增：标准变更模板、已知错误、标签种子数据
+	// 标准变更模板、已知错误、标签种子数据
 	StandardChanges []StandardChangeSeed `json:"standard_changes"`
 	KnownErrors     []KnownErrorSeed     `json:"known_errors"`
 	TicketTags      []TicketTagSeed      `json:"ticket_tags"`
-	// 新增：市场商品种子。MarketplaceItem 是全局表（无 tenant_id），
-	// 用于初始化「飞书/钉钉/WeCom 等」连接器、Skill、Plugin 目录，
-	// 修复 §8 市场空页 bug。
+	// 市场商品种子。MarketplaceItem 是全局表（无 tenant_id），
+	// 用于初始化飞书/钉钉/WeCom 连接器、Skill、Plugin 目录，
+	// 缺这一项市场页会是空的。
 	MarketplaceItems []MarketplaceItemSeed `json:"marketplace_items"`
 	// 工作流种子配置
 	SeedWorkflows bool `json:"seed_workflows"`
@@ -756,8 +756,8 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedRoles(ctx)
 	s.seedGroups(ctx)               // 审批组种子：candidateGroups 空转防御（2026-09-15 复盘 R2）
 	s.MigrateUserRolesBackfill(ctx) // Phase 1 迁移：回填 user_roles 边
-	s.seedPermissions(ctx)          // 新增：初始化权限
-	s.seedMenus(ctx)                // 新增：初始化菜单
+	s.seedPermissions(ctx)          // 初始化权限
+	s.seedMenus(ctx)                // 初始化菜单
 	if err := s.seedAdmin(ctx); err != nil {
 		s.sugar.Warnw("seed admin failed", "error", err)
 	}
@@ -772,14 +772,14 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	attempt("ticket-views", s.seedTicketViews)
 	attempt("service-catalog", s.seedServiceCatalog)
 	attempt("service-catalog-items", s.seedServiceCatalogItems)
-	attempt("ticket-types", s.seedTicketTypes)               // 新增：初始化工单类型
-	attempt("ci-types", s.seedCITypes)                       // 新增：初始化CI类型
-	attempt("incident-categories", s.seedIncidentCategories) // 新增：初始化事件分类
-	attempt("standard-changes", s.seedStandardChanges)       // 新增：初始化标准变更模板
-	attempt("ticket-tags", s.seedTicketTags)                 // 新增：初始化标签
-	attempt("marketplace-items", s.seedMarketplaceItems)     // 新增：初始化市场商品（修复 §8 市场空页 bug）
+	attempt("ticket-types", s.seedTicketTypes)               // 初始化工单类型
+	attempt("ci-types", s.seedCITypes)                       // 初始化CI类型
+	attempt("incident-categories", s.seedIncidentCategories) // 初始化事件分类
+	attempt("standard-changes", s.seedStandardChanges)       // 初始化标准变更模板
+	attempt("ticket-tags", s.seedTicketTags)                 // 初始化标签
+	attempt("marketplace-items", s.seedMarketplaceItems)     // 市场页依赖这份内置商品目录
 	s.seedMenuAndPermissionFixes(ctx)                        // 修复：更新菜单路径和补充缺失权限
-	s.seedRolePermissions(ctx)                               // 新增：为角色分配权限
+	s.seedRolePermissions(ctx)                               // 为角色分配权限
 	s.seedBusinessRecords(ctx)                               // 演示业务记录：仅当种子配置包含 Incidents/Problems/Changes/KnowledgeArticles 时生效
 }
 
@@ -1182,7 +1182,7 @@ func BuiltinGroups() []GroupSeed {
 }
 
 // seedGroups 审批组种子：新装环境 groups 表为空时 candidateGroups 解析为空候选集，
-// 任务无人可见（2026-09-15 复盘 R2）。组名以 approvers- 前缀避开全部角色 code，
+// 任务无人可见。组名以 approvers- 前缀避开全部角色 code，
 // 防止「同名组优先」语义下空组挡住角色回退。幂等：组已存在则跳过，不覆盖描述。
 func (s *Seeder) seedGroups(ctx context.Context) {
 	t, err := s.baselineTenant(ctx)
@@ -1339,7 +1339,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 	s.sugar.Infow("roles seeded", "count", len(merged), "builtin", len(BuiltinRoles()), "config", len(s.config.Roles))
 }
 
-// MigrateUserRolesBackfill 回填 user_roles 边（Phase 1 迁移）。
+// MigrateUserRolesBackfill 回填 user_roles 边。
 // 问题：user.role 字段是单角色主角色，user_roles m2m 边用于多角色并集。
 // 现网存量用户仅有 user.role，无 user_roles 记录，导致 RBACMiddleware
 // 加载 WithRoles() 时 Edge.Roles 为空，多角色并集判定失效。
@@ -1392,7 +1392,7 @@ func (s *Seeder) MigrateUserRolesBackfill(ctx context.Context) {
 // 以下是使用配置文件的初始化函数
 
 // seedSLADefinitions 按条目补齐受管 SLA 定义：整批 skip 会让存量库永远补不上
-// 清单新增条目（2026-09-25 演练实证：verify 要 Incident-P0-紧急，而"已有即跳过"一直拒绝创建）。
+// 清单新增条目。
 func (s *Seeder) seedSLADefinitions(ctx context.Context) error {
 	t, err := s.baselineTenant(ctx)
 	if err != nil {
@@ -1805,13 +1805,13 @@ func (s *Seeder) seedTicketViews(ctx context.Context) error {
 
 // seedPermissions 初始化系统权限
 // permissionDefinitions 返回权限定义种子清单（Permission 权威表的码空间）。
-// 2026-09-17 批次 6：定义已抽到 internal/authz.Definitions()，本函数为 shim。
+// 定义已抽到 internal/authz.Definitions()，本函数为 shim。
 // 守卫：pkg/seeder/role_permission_guard_test.go 锁定 builtinRolePermissionCodes() 引用的码必须都在此清单中。
 // AllDefinedPermissionCodes 返回权限码权威源（authz.Definitions）的全部码。
 //
 // 供 CI 守卫测试校验「路由声明的 (resource, action) ⊆ 码空间」：
 // checkPermissionMatch 只做精确匹配，路由引用了码空间不存在的码时，
-// 该路由对除 super_admin 外的所有角色永久 403（B 类欠账，2026-09-17 清零）。
+// 该路由对除 super_admin 外的所有角色永久 403。
 func AllDefinedPermissionCodes() []string {
 	defs := permissionDefinitions()
 	out := make([]string, 0, len(defs))
@@ -2103,7 +2103,7 @@ func (s *Seeder) seedMenuAndPermissionFixes(ctx context.Context) {
 
 // seedRolePermissions 为角色分配权限关联。
 //
-// 收敛契约（2026-10-03 R2-d）：只增不减。播种只补齐内置码集缺失的授权行，
+// 收敛契约：只增不减。播种只补齐内置码集缺失的授权行，
 // 不再反向删除清单外的授权——运维手工热修在下一次播种后必须仍然存活；
 // 唯一的收缩通道是显式退役清单（applyRetiredRolePermissions）。
 // 码集权威源：internal/authz BuiltinRolePermissionCodes()；
@@ -2157,7 +2157,7 @@ func (s *Seeder) seedRolePermissions(ctx context.Context) {
 
 		// 为角色添加权限（直接写入 role_permissions 联表）——只增不减：
 		// 内置清单之外的既有授权（含运维手工热修）不得在播种时被撤销；
-		// 收缩只允许走显式退役清单（R2-d）。
+		// 收缩只允许走显式退役清单。
 		created := 0
 		for _, pid := range permIDs {
 			exists, err := s.client.RolePermission.Query().

@@ -61,7 +61,6 @@ func (s *ProcessCallbackService) ListHandlers() []ServiceTaskHandlerInterface {
 // 保留用于向后兼容，新代码应使用 bpmn.HandlerBase
 type ServiceTaskHandlerBase struct{}
 
-// GetHandlerID 返回处理器标识
 func (h *ServiceTaskHandlerBase) GetHandlerID() string {
 	return ""
 }

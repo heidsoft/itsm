@@ -297,7 +297,7 @@ func (h *Handler) InstantiateStandardChange(c *gin.Context) {
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
-	// 标准变更模板属变更管理域（2026-09-17 P0「越权写收口」）：复用 change:* 词表
+	// 标准变更模板属变更管理域：复用 change:* 词表
 	sc := r.Group("/standard-changes")
 	{
 		sc.GET("", middleware.RequirePermission("change", "read"), h.ListStandardChanges)

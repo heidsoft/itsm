@@ -53,7 +53,7 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 		expectedError bool
 	}{
 		{
-			// P1 修复：release_number 现由服务端生成（避免越权/冲突编号），不信任
+			// release_number 现由服务端生成（避免越权/冲突编号），不信任
 			// 客户端传入值。故创建成功的断言改为"服务端生成了 REL- 前缀的编号"，
 			// 客户传入的 ReleaseNumber 被安全忽略。
 			name: "成功创建发布",
@@ -70,7 +70,7 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			// P1 修复：旧实期望客户端必须提供非空 ReleaseNumber，否则报错。
+			// 旧实期望客户端必须提供非空 ReleaseNumber，否则报错。
 			// 新实服务端总是生成编号，客户端传空也是合法的（服务端会填上）。
 			name: "发布编号为空（由服务端自动生成）",
 			request: &dto.CreateReleaseRequest{
@@ -104,7 +104,7 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, release)
 				assert.Equal(t, tt.request.Title, release.Title)
-				// P1 修复：release_number 由服务端生成，不信任客户端输入。
+				// release_number 由服务端生成，不信任客户端输入。
 				// 断言仅校验"服务端生成的编号符合 REL-YYYYMMDD- 格式契约"，不再
 				// 硬编码某个具体值，也不再与请求中的 ReleaseNumber 字段强比对。
 				assert.Regexp(t, `^REL-\d{8}-[A-Za-z0-9]+$`, release.ReleaseNumber,
@@ -159,7 +159,7 @@ func TestReleaseService_GetReleaseByID(t *testing.T) {
 		result, err := releaseService.GetReleaseByID(ctx, release.ID, testTenant.ID)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
-		// P1 修复：服务端生成的 release_number 不应与客户端传入值强绑定。
+		// 服务端生成的 release_number 不应与客户端传入值强绑定。
 		// 断言该编号与创建响应一致，并符合 REL-YYYYMMDD-token 格式。
 		assert.Equal(t, originalNumber, result.ReleaseNumber,
 			"重复获取同一发布的 release_number 应稳定")

@@ -16,7 +16,7 @@ import (
 
 // TestUserService_SyncUserRoles 验证 M2M 角色边写入：整体替换语义 + 跨租户角色拒绝。
 // 背景：新建用户此前只写 users.role 枚举、从不写 user_roles 边，导致按 M2M 解析
-// 角色的链路（抄送/审批人解析）收不到人（2026-09-15 GitHub issue 复盘）。
+// 角色的链路（抄送/审批人解析）收不到人。
 func TestUserService_SyncUserRoles(t *testing.T) {
 	dsn := "file:" + filepath.Join(t.TempDir(), "user_roles_sync.db") + "?_fk=1"
 	client := enttest.Open(t, "sqlite3", dsn)

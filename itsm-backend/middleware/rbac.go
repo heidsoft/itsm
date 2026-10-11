@@ -65,7 +65,7 @@ func SetPermissionCacheTTL(ttl time.Duration) {
 // RoleDefaultPermissions 返回角色的编译期默认权限（DBOnly unconfigured 兜底、
 // HardcodeOnly/Merge/Fallback 模式及菜单/auth 展示面的唯一来源）。
 //
-// 2026-10-05 N5 拍板：此处不再独立维护硬编码表，单一真源 =
+// 这里不独立维护硬编码表，单一真源是
 // internal/authz.RolePermissionDefaults()（内置角色派生自播种码集本身，
 // 兜底与播种不可能漂移；security/msp_* 等非播种角色在 authz 侧显式列出）。
 func RoleDefaultPermissions(role string) []Permission {
@@ -111,7 +111,7 @@ var PermissionConfig = struct {
 
 // loadRolePermissionsFromDB 从数据库加载角色的权限
 // 直接从 role_permissions 联表查询，支持多租户
-// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
+// ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
 func loadRolePermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
 	// 如果 client 为 nil，直接返回空权限
 	if client == nil {
@@ -201,10 +201,10 @@ func InvalidateAllPermissionCaches() {
 // loadPermissionsFromDB 从 role_permission + permission（旧表）加载角色权限。
 // 注意：权限定义的权威表是 Permission（ent/schema/permission.go）；
 // permission_definition 表（ent/schema/permission_definition.go）目前
-// 尚无任何消费方（2026-08-30 审计确认），如需启用须同步改造本函数与
+// 尚无任何消费方，如需启用须同步改造本函数与
 // AssignPermissions 的写入侧。若 role_permission 无数据，则 fallback 到
 // loadRolePermissionsFromDB（旧 Permission 表直查）。
-// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
+// ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()
 func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName string, tenantID int) []Permission {
 	// 如果 client 为 nil，直接返回空权限（将使用默认权限）
 	if client == nil {
@@ -289,7 +289,7 @@ func loadPermissionsFromDB(ctx context.Context, client *ent.Client, roleName str
 //   - permissionDBOnlyUnconfigured  : DB 可用但角色行不存在，走硬编码兜底
 //   - permissionDBOnlyConfigured    : DB 角色行存在，perms 以 DB 为准（空集=显式撤销，fail-closed）
 //
-// P0-4：ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()。
+// ctx 由调用方传入（请求链路为请求 ctx），不再使用 context.Background()。
 func loadPermissionsFromDBDBOnlyState(ctx context.Context, client *ent.Client, roleName string, tenantID int) (permissionDBOnlyState, []Permission) {
 	if client == nil {
 		// DB 不可用，fail-closed（保留 baseline 测试
@@ -324,7 +324,7 @@ const (
 
 //go:generate go run ../cmd/authz-gen
 
-// ResourceActionMap 路径预检映射 = 路由声明生成条目 + 显式族级回退策略（2026-09-17 批次 5）。
+// ResourceActionMap 路径预检映射 = 路由声明生成条目 + 显式族级回退策略。
 //
 // 路由条目的单一真源是 router/ 与 handlers/ 中的 RequirePermission 家族声明：
 // 生成物在 rbac_precheck_gen.go（禁手改）；族级通配/别名策略在 precheck_fallback.go。
@@ -442,8 +442,8 @@ func RBACMiddleware(client *ent.Client) gin.HandlerFunc {
 		}
 
 		// 从数据库获取用户最新角色信息
-		// P0-4：使用请求 ctx，随请求超时/取消传播
-		// Phase 1 多角色：附带加载 user.roles（m2m 附加角色），权限判定取并集。
+		// 使用请求 ctx，随请求超时/取消传播
+		// 多角色：附带加载 user.roles（m2m 附加角色），权限判定取并集。
 		userEntity, err := client.User.Query().
 			Where(user.ID(userID)).
 			WithRoles().
@@ -589,10 +589,10 @@ func RequirePermission(resource, action string) gin.HandlerFunc {
 			return
 		}
 
-		// Phase 1 多角色：判定取全部生效角色（主角色 + m2m 附加角色）并集。
+		// 多角色：判定取全部生效角色（主角色 + m2m 附加角色）并集。
 		// 无 "roles" 键时退化为仅主角色（兼容未物化角色的旧链路）。
 		if !AuthorizeResource(c.Request.Context(), client, GetContextRoles(c), resource, action, tenantID) {
-			// 2026-09-17 L4：deny 路径补 Warn 日志，便于排查权限问题
+			// deny 路径补 Warn 日志，便于排查权限问题
 			// （RBACMiddleware 路径预检 deny 已有，本次补齐路由级 RequirePermission）
 			zap.S().Warnw(
 				"RequirePermission: denied",
@@ -650,8 +650,7 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	// 收回/降级机制上可生效——但"全量授权"不成立：其播种码集来自
 	// internal/authz/roles.go 的 allPermissionCodes() 手工枚举清单（实测 129 码），
 	// 权限清单 authz.Definitions()（160 码）中有 31 码不在其内，且手工清单不随
-	// catalog 新增自动跟上。差集收敛待 plans/product-remediation-plan-2026-10-03.md
-	// §3 N4/N5 拍板；此处数字为 2026-10-03 实测快照，引用前请重新测量。
+	// catalog 新增自动跟上。差集收敛方案尚未拍板；上述数字是实测快照，引用前重新测量。
 	if role == "super_admin" {
 		return true
 	}
@@ -670,35 +669,33 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	}
 
 	// 使用智能权限检查器（4层兜底架构）
-	// P0-4 修复：移除 database.GetRawDB() 直连，ACL 查询统一走 Ent 客户端
+	// 移除 database.GetRawDB() 直连，ACL 查询统一走 Ent 客户端
 	return SmartCheckPermission(c, client, role, method, path, tenantID)
 }
 
 // HasResourcePermission 检查角色是否有指定资源的操作权限（导出供 AI 工具 RBAC 校验复用）
-// P2-6: AI 工具执行前的 Gate 2 校验入口
-// P0-4：ctx 由调用方传入（请求链路为请求 ctx）
+// AI 工具执行前的 Gate 2 校验入口
+// ctx 由调用方传入（请求链路为请求 ctx）
 func HasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
 	return hasResourcePermission(ctx, client, role, resource, action, tenantID)
 }
 
 // hasResourcePermission 检查角色是否有指定资源的操作权限（支持多种配置模式）
-// Phase 1 统一判定：委托 AuthorizeResourceForRole，单一真源。
+// 统一判定：委托 AuthorizeResourceForRole，单一真源。
 func hasResourcePermission(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
 	return AuthorizeResourceForRole(ctx, client, role, resource, action, tenantID)
 }
 
 // loadPermissionsByMode 根据配置模式加载权限
 //
-// 2026-09-16 P0 修复（service-catalog/sla/dashboard/users/departments 等 API 403）：
-//
-//	DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
-//	  - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
-//	  - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
-//	                 走 authz 单一真源默认权限兜底，避免非 super_admin 全量 403
-//	  - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
-//	兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
-//	保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
-//	TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
+// DBOnly 模式下三态语义（loadPermissionsFromDBDBOnlyState 返回）：
+//   - unavailable : DB 不可用（client==nil / 查询报错），fail-closed，禁止任何授权
+//   - unconfigured: DB 可用但不存在该角色行（典型：未走 RBAC 后台初始化即上线的小租户），
+//     走 authz 单一真源默认权限兜底，避免非 super_admin 全量 403
+//   - configured  : DB 角色行存在，授权集合以 DB 为准（含空集=显式撤销，fail-closed）
+//     兜底仅在「unconfigured」分支触发，「unavailable」分支仍 fail-closed，
+//     保持既有 TestSmartCheckPermission_DBOnlyFailClosed /
+//     TestDBOnlyPermissionModeDoesNotUseHardcodedFallback 等 fail-closed 测试不破。
 func loadPermissionsByMode(ctx context.Context, client *ent.Client, role string, tenantID int) []Permission {
 	switch PermissionConfig.Mode {
 	case PermissionConfigModeDBOnly:
@@ -787,7 +784,7 @@ func checkPermissionMatch(permissions []Permission, resource, action string) boo
 }
 
 // InvalidateRolePermissionCache 使指定角色-租户的权限缓存失效（导出供外部调用）
-// Phase 1 P1-4：本地失效后向 Redis 广播，多副本部署下其它实例同步失效。
+// 本地失效后向 Redis 广播，多副本部署下其它实例同步失效。
 func InvalidateRolePermissionCache(roleName string, tenantID int) {
 	if PermissionConfig.EnableCache {
 		invalidatePermissionCache(roleName, tenantID)
@@ -803,7 +800,7 @@ func InvalidateAllPermissionCachesEx() {
 }
 
 // =============================================================================
-// 统一权限判定核心（Phase 1：UnifiedAuthorizer）
+// 统一权限判定核心
 //
 // 所有权限判定的单一真源。此前 rbac.go hasResourcePermission 与
 // smart_permission.go checkRolePermissionFromDB 双头并存、语义分叉

@@ -321,7 +321,7 @@ func (r *EntRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, e
 }
 
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {
-	// P1 修复：写路径强制租户隔离，避免越权更新跨租户变更。
+	// 写路径强制租户隔离，避免越权更新跨租户变更。
 	// 注：change schema 无 deleted_at（物理删），故不附加 DeletedAtIsNil 守卫。
 	update := r.client.Change.UpdateOneID(c.ID).
 		Where(change.TenantIDEQ(c.TenantID)).

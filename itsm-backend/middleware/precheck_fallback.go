@@ -1,6 +1,6 @@
 package middleware
 
-// precheckFallbackPolicies 显式族级回退预检策略（2026-09-17 批次 5）。
+// precheckFallbackPolicies 显式族级回退预检策略。
 //
 // 与 rbac_precheck_gen.go（从路由声明生成）合并构成 ResourceActionMap：
 //
@@ -10,7 +10,7 @@ package middleware
 //   - 族级通配（如 POST /api/v1/changes/* = change:write）：为未声明/未来新增的
 //     子路径提供 fail-closed 缺省预检；
 //   - 历史别名与仅 AuthMiddleware 的路由（如 /api/v1/auth/*、
-//     /configuration-items/* 兼容别名）：保留批次 3 之前的既定预检口径。
+//     /configuration-items/* 兼容别名）：保留既定的预检口径。
 //
 // 匹配优先级：getPermissionFromPath 先精确后通配、按 specificity 取最具体，
 // 因此生成条目（精确路径）天然优先于本文件的族级通配。

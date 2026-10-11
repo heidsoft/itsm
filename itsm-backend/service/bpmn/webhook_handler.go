@@ -113,12 +113,10 @@ func isBlockedWebhookHeader(name string) bool {
 	return blockedWebhookHeaders[strings.ToLower(strings.TrimSpace(name))]
 }
 
-// GetTaskType 返回任务类型
 func (h *WebhookHandler) GetTaskType() string {
 	return "webhook_task"
 }
 
-// GetHandlerID 返回处理器标识
 func (h *WebhookHandler) GetHandlerID() string {
 	return "webhook_handler"
 }

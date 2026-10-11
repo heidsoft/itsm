@@ -9,7 +9,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// timer_start_schedule.go — Timer Start Event 时间表同步（Phase 5）
+// timer_start_schedule.go — Timer Start Event 时间表同步
 //
 // 职责：把一份 BPMN 定义中的 Timer Start Event 翻译成 process_timer 记录，
 // 并在流程重发布/重部署时整体替换旧时间表。

@@ -41,7 +41,7 @@ func NewTicketWorkflowService(client *ent.Client, logger *zap.SugaredLogger) *Ti
 		logger: logger,
 	}
 	if client != nil {
-		// P0-1：业务审批统一桥接到 BPMN 任务，避免流程实例悬挂
+		// 业务审批统一桥接到 BPMN 任务，避免流程实例悬挂
 		svc.approvalBridge = NewBPMNApprovalBridge(client, logger)
 	}
 	return svc
@@ -81,7 +81,7 @@ func (s *TicketWorkflowService) AcceptTicket(ctx context.Context, req *dto.Accep
 	txClient := tx.Client()
 
 	// 更新工单状态和分配人
-	// P1-07 修复：接单同时设置 first_response_at，供 SLA 计时使用
+	// 接单同时设置 first_response_at，供 SLA 计时使用
 	now := time.Now()
 	_, err = txClient.Ticket.UpdateOneID(req.TicketID).
 		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(tk.Version), ticket.StatusIn("new", "open")).
@@ -399,7 +399,7 @@ func (s *TicketWorkflowService) ListTicketCCRecords(ctx context.Context, ticketI
 
 // bpmnFirstMode 返回是否启用 BPMN 优先审批模式。
 // 启用后 ApproveTicket 将 BPMN bridge 调用移入事务内，以 BPMN 流程状态驱动工单状态，
-// 而非依赖 TicketApproval 待办计数。Phase 1 Step 1.2 引入，默认关闭。
+// 而非依赖 TicketApproval 待办计数。默认关闭。
 func bpmnFirstMode() bool {
 	return strings.EqualFold(strings.TrimSpace(os.Getenv("ITSM_APPROVAL_BPMN_FIRST")), "true")
 }

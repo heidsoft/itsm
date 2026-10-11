@@ -267,7 +267,7 @@ func EvaluateApprovalChain(ctx context.Context, client *ent.Client, logger *zap.
 //
 // Deprecated: 独立调用路径。新代码应通过 BPMN Service Task（approval_chain_task / resolve_plan）
 // 在流程编排中消费审批链配置，参见 service/bpmn/approval_chain_handler.go。
-// 保留仅供已有 change / service_request 直接调用过渡使用，将在 Phase 1 收尾时移除直接调用方。
+// 保留仅供已有 change / service_request 的直接调用过渡，迁移完成后移除这些调用方。
 func (s *ApprovalChainService) Evaluate(ctx context.Context, chain *ent.ApprovalChain, evalCtx ApprovalEvalContext, approvals map[int][]int) (*ApprovalChainEvaluation, error) {
 	return EvaluateApprovalChain(ctx, s.client, s.logger, chain, evalCtx, approvals)
 }
@@ -299,7 +299,7 @@ func (s *ApprovalChainService) FindActiveChainByEntityType(ctx context.Context, 
 // 这是消费审批链求值引擎的统一入口（替换原先「无审批人时自审批 / 硬编码层级」等缺陷路径）。
 //
 // Deprecated: 直接调用路径。新代码应通过 BPMN Service Task（approval_chain_task / resolve_plan）
-// 在流程编排中消费审批链配置。已有调用方（change/service_request）将在 Phase 1.5 回归测试后迁移。
+// 在流程编排中消费审批链配置。已有调用方（change/service_request）待迁移。
 // BPMN 路径通过 ApprovalChainResolverAdapter → ResolveApprovalPlan 间接使用此方法。
 func (s *ApprovalChainService) ResolveApprovalPlan(ctx context.Context, tenantID int, entityType string, evalCtx ApprovalEvalContext, approvals map[int][]int) (*ApprovalChainEvaluation, error) {
 	evalCtx.TenantID = tenantID

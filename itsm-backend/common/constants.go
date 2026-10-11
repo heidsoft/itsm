@@ -85,9 +85,8 @@ const (
 )
 
 // IsValidIncidentStatusTransition 校验事件状态转换是否合法。
-// 阻断6 修复：事件状态机原先只在 service/incident_service.go 私有实现，
-// handlers/incident/service.go 的 Update 方法绕过校验直接 SetStatus，
-// 导致终态事件可被任意改写。此函数统一为共享白名单。
+// 状态机必须共享：只要有一处自己实现迁移（例如 handlers/incident 直接 SetStatus），
+// 终态事件就能被任意改写。
 // 规则：
 //   - new → acknowledged/assigned/in_progress/cancelled
 //   - acknowledged → in_progress/on_hold/cancelled
@@ -126,7 +125,7 @@ func IsValidIncidentStatusTransition(currentStatus, newStatus string) bool {
 }
 
 // IsValidTicketStatusTransition 校验工单状态转换是否合法。
-// P1-1：工单状态机的单一事实来源。
+// 工单状态机的单一事实来源。
 // 所有入口（ticket_service.go 的 PUT 更新、ticket_lifecycle_service 的 UpdateTicketStatus、
 // repository/ticket/model.CanTransitionTo、Workflow 状态同步）必须统一通过本函数判断，
 // 禁止在各层内联 map 导致状态转换判定不一致。

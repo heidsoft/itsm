@@ -486,9 +486,8 @@ func ToTenantResponseList(tenants []*ent.Tenant) []*TenantResponse {
 // Change Mappers
 // ===================================
 
-// 注：原 ToChangeResponse / ToChangeResponseList 于 2026-09-28 删除 —— 全仓零引用
-// （仅自引用），且直接依赖已收敛为 edge 的 Change.affected_cis 字段，属于纯负担死代码。
-// 变更域的响应装配走 handlers/change 领域层，DTO 不再反向依赖 ent 实体做映射。
+// 变更域没有 ToChangeResponse：响应装配在 handlers/change 领域层完成，
+// DTO 不反向依赖 ent 实体做映射。
 
 // ===================================
 // Problem Mappers
@@ -1021,7 +1020,7 @@ func ToCIResponseList(cis []*ent.ConfigurationItem) []*CIResponse {
 }
 
 // ToCIResponseWithRelationsList 转换配置项实体列表为带关系的响应列表
-// P1-1：ListCIs 在 WithRelations=true 时使用
+// ListCIs 在 WithRelations=true 时使用
 func ToCIResponseWithRelationsList(cis []*ent.ConfigurationItem) []*CIResponse {
 	if cis == nil {
 		return nil
@@ -1065,7 +1064,7 @@ func ToCIRelationshipResponse(rel *ent.CIRelationship) *CIRelationshipResponse {
 		res.TargetCIType = rel.Edges.TargetCi.CiType
 	}
 
-	// P1-5（2026-09-06 UAT 修复）：填入关系类型中文展示名。
+	// 填入关系类型中文展示名。
 	// 之前 RelationshipTypeName 永远空字符串，导致前端 CMDB 关系列表的"关系类型"
 	// 列渲染空白。从 schema.CIRelationshipTypeVocabulary（单一受控源）查 Name 字段。
 	for _, meta := range schema.CIRelationshipTypeVocabulary {

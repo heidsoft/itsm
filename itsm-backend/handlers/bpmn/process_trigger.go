@@ -28,12 +28,11 @@ func NewProcessTriggerHandler(triggerService *service.ProcessTriggerService, bin
 	}
 }
 
-// RegisterRoutes 注册路由
+// RegisterRoutes 注册流程触发与流程绑定路由。
 //
-// 授权契约（2026-09-17 P0「越权写收口」）：流程触发与流程绑定决定「哪类业务走哪条流程」，
-// 属流程配置面，统一收归 bpmn:write（读为 bpmn:read）。此前整组零校验，
-// 仅靠 ResourceActionMap 的粗粒度路径预检兜底，而 bpmn:write 曾同时授予 technician
-// → 二线技术员可触发任意流程、改写流程绑定（prod 实测 400 而非 403）。
+// 授权契约：流程触发与绑定决定「哪类业务走哪条流程」，属流程配置面，统一按
+// bpmn:write 授权（读为 bpmn:read）；只靠 ResourceActionMap 的粗粒度路径预检兜底时，
+// 拥有 bpmn:write 的 technician 就能触发任意流程、改写流程绑定。
 func (c *ProcessTriggerHandler) RegisterRoutes(r *gin.RouterGroup) {
 	// 流程触发
 	trigger := r.Group("/process-trigger")

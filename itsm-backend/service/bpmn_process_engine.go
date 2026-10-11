@@ -102,7 +102,7 @@ type CustomProcessEngine struct {
 	taskService              *bpmnTaskService
 	// 审计服务
 	auditService *BPMNAuditService
-	// 定时器事件支持（Phase 4: 运行时注册）
+	// 定时器事件支持
 	timerStore     TimerStore
 	timerScheduler *TimerScheduler
 }
@@ -132,7 +132,7 @@ func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) Proce
 // SetTimerServices injects timer store and scheduler for runtime timer event registration.
 // Called after engine construction in app.go wiring phase.
 // SetTimerServices 注入 TimerStore 与调度器；同时把 store 传播给流程定义服务，
-// 使发布/停用流程定义时能同步 start timer 时间表（Phase 5）。
+// 使发布/停用流程定义时能同步 start timer 时间表。
 func (e *CustomProcessEngine) SetTimerServices(store TimerStore, scheduler *TimerScheduler) {
 	e.timerStore = store
 	e.timerScheduler = scheduler
@@ -230,7 +230,7 @@ func (e *CustomProcessEngine) SetApprovalChainResolver(resolver bpmn.ApprovalCha
 	e.callbackRegistry.SetApprovalChainResolver(resolver)
 }
 
-// requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文（P1-4 fail-closed）。
+// requireBPMNTenantContext 从 ctx 强制提取并校验租户上下文。
 // 无租户上下文或 tenantID<=0 一律返回错误，禁止跨租户回退到全局无过滤查询。
 func requireBPMNTenantContext(ctx context.Context) (int, error) {
 	if ctx == nil {

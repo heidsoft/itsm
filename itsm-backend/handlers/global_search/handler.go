@@ -68,7 +68,6 @@ func (h *Handler) Search(ctx *gin.Context) {
 	common.Success(ctx, response)
 }
 
-// RegisterRoutes 注册路由
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	search := r.Group("/global-search")
 	{

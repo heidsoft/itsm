@@ -375,7 +375,7 @@ func (c *ProductionService) DeleteCIAttributeDefinition(ctx *gin.Context) {
 // ------------------------------ 配置项相关接口 ------------------------------
 
 // ListCIs 获取配置项列表
-// @Summary 获取配置项列表（统一 List + Search 入口，P1-1）
+// @Summary 获取配置项列表
 // @Description 单一入口：覆盖原 List + Search 双接口。支持分页、过滤、关键词宽模糊、排序、标签过滤、时间范围与关系预加载。
 // @Tags CMDB
 // @Accept json
@@ -700,7 +700,7 @@ func (c *ProductionService) CreateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.CreateCIRelationship(ctx.Request.Context(), &req, tenantID)
 	if err != nil {
-		// P0-2 词表收口：词表外关系类型是客户端参数错误（400），不是服务端故障
+		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
 		if errors.Is(err, service.ErrInvalidRelationshipType) {
 			common.ParamError(ctx, "请求参数错误")
 			return
@@ -737,7 +737,7 @@ func (c *ProductionService) UpdateCIRelationship(ctx *gin.Context) {
 
 	result, err := c.ciRelationshipService.UpdateCIRelationship(ctx.Request.Context(), id, tenantID, &req)
 	if err != nil {
-		// P0-2 词表收口：词表外关系类型是客户端参数错误（400），不是服务端故障
+		// 词表收口： 词表外关系类型是客户端参数错误（400），不是服务端故障
 		if errors.Is(err, service.ErrInvalidRelationshipType) {
 			common.ParamError(ctx, "请求参数错误")
 			return
@@ -784,7 +784,7 @@ func (c *ProductionService) DeleteCIRelationship(ctx *gin.Context) {
 // @Success 200 {object} common.Response{data=dto.GetRelationshipTypesResponse}
 // @Router /api/v1/cmdb/relationship-types [get]
 func (c *ProductionService) ListRelationshipTypes(ctx *gin.Context) {
-	// P0-2 词表收口：从 ent/schema 受控词表派生，禁止在本文件维护第二份清单。
+	// 词表收口： 从 ent/schema 受控词表派生，禁止在本文件维护第二份清单。
 	// schema 词表顺序即常量声明顺序，前端图标/方向语义直接消费。
 	types := make([]dto.RelationshipTypeInfo, 0, len(schema.CIRelationshipTypeVocabulary))
 	for _, m := range schema.CIRelationshipTypeVocabulary {
@@ -1277,7 +1277,7 @@ func (c *ProductionService) BatchDeleteCI(ctx *gin.Context) {
 // @Summary 高级搜索CI
 // @Description 多条件组合搜索CI，支持全文搜索、属性过滤、分页、排序
 // @Summary [已废弃] CI高级搜索
-// @Description 已废弃（P1-1）：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
+// @Description 已废弃：合并至 GET /api/v1/cmdb/cis，search/sortBy/sortOrder/tagIds/dateFrom/dateTo/withRelations 全部支持。保留向后兼容至 v1.7 末。
 // @Tags CMDB
 // @Accept json
 // @Produce json

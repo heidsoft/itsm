@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestAIMetrics_JSONShape_CamelCase P1-4（2026-09-06 UAT 修复）：
+// TestAIMetrics_JSONShape_CamelCase P1-4：
 // AIMetrics 结构体的 json tag 全部 camelCase，前端 TS 类型 AIMetrics 字段对齐。
 // 本测试无需 sqlite/PG 即可保证序列化契约——任何人误改 json tag 即失败。
 func TestAIMetrics_JSONShape_CamelCase(t *testing.T) {

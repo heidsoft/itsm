@@ -79,7 +79,7 @@ func (o *LLMObserver) Observe(provider string, model string, tokens int, latency
 
 // SaveFeedback saves user feedback on AI suggestions.
 //
-// Sprint 3 Task 1 — accepted 是 item_type='ai_audit' 专属的 accept/reject
+// accepted 是 item_type='ai_audit' 专属的 accept/reject
 // 决策，与 useful（操作者对答案的赞踩）解耦。其他 item_type 传 nil。
 func (s *AITelemetryService) SaveFeedback(ctx context.Context, tenantID, userID int, reqID, kind, query, itemType string, itemID *int, useful bool, score *int, notes *string, accepted *bool) error {
 	return s.repo.SaveFeedback(ctx, tenantID, userID, reqID, kind, query, itemType, itemID, useful, score, notes, accepted)
@@ -92,7 +92,7 @@ func (s *AITelemetryService) UpdateAuditAccepted(ctx context.Context, tenantID i
 
 // AIMetrics 指标聚合结果（API JSON 形状）。
 //
-// P1-4（2026-09-06 UAT 修复）：用结构体 + json tag 强制 camelCase，
+// 用结构体 + json tag 强制 camelCase，
 // 避免 map[string]interface{} 拼写漂移。前端 TS 类型 AIMetrics 字段对齐。
 // 单元测试只断言字段名（不需要起 sqlite 测试 DB）。
 type AIMetrics struct {
@@ -108,7 +108,7 @@ type AIMetrics struct {
 
 // GetMetrics retrieves AI usage metrics for a tenant.
 //
-// P1-4（2026-09-06 UAT 修复）：用 AIMetrics 结构体 + json tag 强制 camelCase 序列化，
+// 用 AIMetrics 结构体 + json tag 强制 camelCase 序列化，
 // 替代之前 map[string]interface{} 拼写漂移导致前端读字段全 undefined 的问题。
 func (s *AITelemetryService) GetMetrics(ctx context.Context, tenantID int, lookbackDays int) (*AIMetrics, error) {
 	out := &AIMetrics{}

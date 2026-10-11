@@ -115,7 +115,7 @@ var RegisteredMigrations = []Migration{
 		RollbackSQL: "DROP TABLE IF EXISTS workflow_templates;",
 	},
 	{
-		// Sprint 3 Task 1 — AI Audit accept/reject feedback loop.
+		// AI Audit accept/reject feedback loop.
 		// ai_feedbacks.useful was overloaded: operator thumb on chat answers
 		// vs operator accept/reject on AI audit suggestions. The new
 		// accepted column is exclusive to item_type='ai_audit' and lets

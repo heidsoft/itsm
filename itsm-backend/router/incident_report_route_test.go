@@ -22,7 +22,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-04 边缘功能收口 E4-7）：GET /api/v1/incidents/stats/report。
+// 回归：GET /api/v1/incidents/stats/report。
 //
 // /reports/incident-trends 修复前读的是工单分析接口，事件域没有任何窗口报表端点，
 // 页面只能在浏览器里对分页结果二次累加，并把后端分钟当小时渲染。本测试打在

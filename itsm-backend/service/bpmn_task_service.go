@@ -112,7 +112,7 @@ func (s *bpmnTaskService) completeTaskEngine() *CustomProcessEngine {
 
 // GetTask 根据任务ID (BPMN标准task_id字符串)获取任务
 func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.ProcessTask, error) {
-	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	// 租户上下文必须显式有效（>0），fail-closed
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 
 // GetTaskByID 根据数据库自增ID获取任务
 func (s *bpmnTaskService) GetTaskByID(ctx context.Context, id int) (*ent.ProcessTask, error) {
-	// P1-4：租户上下文必须显式有效（>0），fail-closed
+	// 租户上下文必须显式有效（>0），fail-closed
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
 		return nil, err

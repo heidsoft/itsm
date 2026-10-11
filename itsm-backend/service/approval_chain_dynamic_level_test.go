@@ -15,7 +15,7 @@ import (
 )
 
 // ============================================================
-// i3 P0 修复：审批级别动态适配（ConditionPriorities/AmountMin/AmountMax）
+// i3 审批级别动态适配（ConditionPriorities/AmountMin/AmountMax）
 //
 // 设计目标：
 //   - 一个 level 配置了条件（优先级白名单 / 金额区间），当工单上下文（Priority/Amount）

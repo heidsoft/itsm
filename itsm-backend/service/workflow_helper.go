@@ -48,7 +48,7 @@ func BuildBusinessKey(entityType string, entityID int) string {
 }
 
 // contains 检查字符串是否包含子串。
-// 自 workflow_engine.go 迁入（原文件随 WorkflowEngine 死代码删除，2026-09-08）：
+// 自 workflow_engine.go 迁入：
 // known_error_service.go 仍依赖该辅助函数。
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || (len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsSubstring(s, substr))))

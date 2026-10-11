@@ -7,7 +7,7 @@ import (
 	"itsm-backend/ent/schema"
 )
 
-// TestToCIRelationshipResponse_FillsTypeName P1-5（2026-09-06 UAT 修复）：
+// TestToCIRelationshipResponse_FillsTypeName P1-5：
 // CIRelationshipResponse.RelationshipTypeName 必须从 schema.CIRelationshipTypeVocabulary
 // 填充中文展示名（"depends_on" → "依赖"）。之前永远空字符串，导致前端
 // CMDB 关系列表"关系类型"列渲染空白。

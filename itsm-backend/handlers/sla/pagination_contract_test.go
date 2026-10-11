@@ -1,6 +1,6 @@
 package sla
 
-// 台账 E4-47①–② 回归锁：SLA 域四个分页端点（definitions / violations /
+// –② 回归锁：SLA 域四个分页端点（definitions / violations /
 // performance / alert-history）的页长唯一所有者是 common.GetPaginationFromQuery
 // （缺省 1/20，只采纳 [1,100]，越界/非数字/非正回落缺省，信封回显=实际下传值）。
 //

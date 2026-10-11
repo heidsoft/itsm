@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-// TestDefinitionsParityWithSeeder 迁移期一致性验证（批次 6 第 1 步）。
+// TestDefinitionsParityWithSeeder 迁移期一致性验证。
 //
 // 本测试保证从 pkg/seeder.seeder.go 搬到本包的 Definitions() 与原
 // permissionDefinitions() 输出完全一致——零行为变化。批次 6 后续 PR 把

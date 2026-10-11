@@ -3,7 +3,7 @@ package dto
 // CMDB 本体自描述（ontology introspection）DTO。
 // 用途：LLM Agent 通过 GET /api/v1/cmdb/ontology 一次性拿到
 // 「CI 类型 × 属性定义 × 关系词表 × 枚举值域 × 可用 AI 工具」，
-// 形成 introspect → 查询 → 操作 → 验证 的闭环（2026-09-04 CMDB AI-Native 评审 P0-1）。
+// 形成 introspect → 查询 → 操作 → 验证 的闭环。
 
 // CMDBOntologyResponse 本体自描述响应
 type CMDBOntologyResponse struct {

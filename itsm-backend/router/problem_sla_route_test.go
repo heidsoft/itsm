@@ -22,7 +22,7 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// 回归（2026-10-02 边缘功能收口 E2-2）：GET /api/v1/problems/:id/sla 此前恒返回
+// 回归：GET /api/v1/problems/:id/sla 此前恒返回
 // 200 + {slaStatus:"none", responseTimeUsed:0, ...}。schema 里本就没有问题 SLA 的
 // 截止时间字段，SLA 引擎也没有任何为 problem 写 sla_state 的路径，所以这个空成功
 // 让调用方把「能力没接」读成「该问题的 SLA 正常且未超时」，与「未配置」不可区分。
