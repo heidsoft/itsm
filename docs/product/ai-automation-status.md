@@ -3,6 +3,7 @@
 > **受众**：开发团队、产品负责人、QA、运维
 > **目的**：以单页矩阵对齐 AI 域、Skill Registry、Agent 工具、连接器市场、审批与自动化规则的现状与生产入口
 > **数据快照**：main @ 2026-09-25 路由与 handlers 实读 + `ROADMAP.md`（v1.6.x 收敛线）+ `CHANGELOG.md`（`[Unreleased]` + `[1.6.10]`）
+> **快照后差异（2026-10-11 复核，以路由注册为准）**：AI 建单是 `POST /api/v1/ai/ticket/create`（`router/ai_routes.go:42`，单数），不是文中写的 `/ai/tickets/create`；企业连接器回调是 `POST /api/v1/{dingtalk,feishu,wecom}/webhook/:instance_id`（如 `handlers/dingtalk/handler.go:37`），不是 `/dingtalk/callback`；§14.5 bug#1（`GET /admin/skills` 404）与 bug#3（marketplace 无种子）已修复（`handlers/skill/handler.go:7-10` 的 `/api/v1/admin/skills` 契约、`pkg/seeder/initialization_adapter.go:55` 的 `marketplace-items` 初始化项）。
 > **关联**：长期产品全景见 [`itsm-commercial-capability-contract.md`](./itsm-commercial-capability-contract.md)；业务快照见 [`business-snapshot-2026-09-24.md`](./business-snapshot-2026-09-24.md)；路线图见 [`../roadmap.md`](../roadmap.md)
 
 ---
@@ -28,7 +29,7 @@
 
 ## 2. AI 域矩阵（生产入口）
 
-> 主要源文件：[ai/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/ai/handler.go) + [router/ai_routes.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/ai_routes.go)
+> 主要源文件：[ai/handler.go](../../itsm-backend/handlers/ai/handler.go) + [router/ai_routes.go](../../itsm-backend/router/ai_routes.go)
 
 | 接口族 | 端点 | 能力 | 权限 | 关键语义 |
 |---|---|---|---|---|
@@ -46,7 +47,7 @@
 
 ## 3. Agent 工具（写即审批）
 
-> 主要源文件：[ai/handler.go:30-130](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/ai/handler.go#L30-L130)
+> 主要源文件：[ai/handler.go:30-130](../../itsm-backend/handlers/ai/handler.go#L30-L130)
 
 | 端点 | 行为 | 权限 |
 |---|---|---|
@@ -66,7 +67,7 @@
 
 ## 4. Skill Registry v1
 
-> 主要源文件：[skill/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/handler.go) + [skill/custom_skill.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/custom_skill.go)
+> 主要源文件：[skill/handler.go](../../itsm-backend/handlers/skill/handler.go) + [skill/custom_skill.go](../../itsm-backend/handlers/skill/custom_skill.go)
 
 | 端点 | 行为 | 权限 |
 |---|---|---|
@@ -88,7 +89,7 @@
 
 ## 5. BPMN / Workflow
 
-> 主要源文件：[bpmn/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/handler.go) + 子模块：[workflow.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/workflow.go)、[process_trigger.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/process_trigger.go)、[dashboard.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/dashboard.go)、[monitoring.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/monitoring.go)、[ai_generator.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/ai_generator.go)、[workflow_template.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/workflow_template.go)、[lint.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/bpmn/lint.go)
+> 主要源文件：[bpmn/handler.go](../../itsm-backend/handlers/bpmn/handler.go) + 子模块：[workflow.go](../../itsm-backend/handlers/bpmn/workflow.go)、[process_trigger.go](../../itsm-backend/handlers/bpmn/process_trigger.go)、[dashboard.go](../../itsm-backend/handlers/bpmn/dashboard.go)、[monitoring.go](../../itsm-backend/handlers/bpmn/monitoring.go)、[ai_generator.go](../../itsm-backend/handlers/bpmn/ai_generator.go)、[workflow_template.go](../../itsm-backend/handlers/bpmn/workflow_template.go)、[lint.go](../../itsm-backend/handlers/bpmn/lint.go)
 
 | 子模块 | 能力 | 路由前缀 | 关键权限 |
 |---|---|---|---|
@@ -106,7 +107,7 @@
 
 ## 6. 审批域（approval / approval_chain）
 
-> 主要源文件：[approval/routes.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/approval/routes.go) + [approval_chain/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/approval_chain/handler.go)
+> 主要源文件：[approval/routes.go](../../itsm-backend/handlers/approval/routes.go) + [approval_chain/handler.go](../../itsm-backend/handlers/approval_chain/handler.go)
 
 | 域 | 端点 | 能力 | 备注 |
 |---|---|---|---|
@@ -123,7 +124,7 @@
 
 ## 7. Automation Rule
 
-> 主要源文件：[automation_rule/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/automation_rule/handler.go)
+> 主要源文件：[automation_rule/handler.go](../../itsm-backend/handlers/automation_rule/handler.go)
 
 | 端点 | 行为 |
 |---|---|
@@ -136,7 +137,7 @@
 
 ## 8. Connector & Marketplace
 
-> 主要源文件：[connector/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/connector/handler.go) + [marketplace/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go) + [feishu/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/feishu/handler.go) + [dingtalk/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/dingtalk/handler.go) + [wecom/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/wecom/handler.go)
+> 主要源文件：[connector/handler.go](../../itsm-backend/handlers/connector/handler.go) + [marketplace/handler.go](../../itsm-backend/handlers/marketplace/handler.go) + [feishu/handler.go](../../itsm-backend/handlers/feishu/handler.go) + [dingtalk/handler.go](../../itsm-backend/handlers/dingtalk/handler.go) + [wecom/handler.go](../../itsm-backend/handlers/wecom/handler.go)
 
 | 端点 | 行为 | 关键约束 |
 |---|---|---|
@@ -153,7 +154,7 @@
 // 现改为 fail-loudly，避免同类接线遗漏再次静默丢数据。
 ```
 
-见 [connector/handler.go:51-60](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/connector/handler.go#L51-L60)。
+见 [connector/handler.go:51-60](../../itsm-backend/handlers/connector/handler.go#L51-L60)。
 
 ---
 
@@ -198,7 +199,7 @@
 
 | # | 差异 | 矩阵原值 | 校对后值 | 证据 |
 |---|---|---|---|---|
-| 1 | `SummarizeTicket` 端点 | `POST /api/v1/ai/tickets/:id/summarize`（写在 §2「单点分析」行） | `GET /api/v1/ai/tickets/:id/summary` | [handlers/ai/handler.go:454](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/ai/handler.go#L454) 注册 `GET`，方法/路径双错 |
+| 1 | `SummarizeTicket` 端点 | `POST /api/v1/ai/tickets/:id/summarize`（写在 §2「单点分析」行） | `GET /api/v1/ai/tickets/:id/summary` | [handlers/ai/handler.go:454](../../itsm-backend/handlers/ai/handler.go#L454) 注册 `GET`，方法/路径双错 |
 
 ### 12.2 v1.6.10 新增但矩阵未覆盖的能力（需补强）
 
@@ -295,10 +296,10 @@
 
 ### 13.4 关联证据
 
-- 路由表：[itsm-backend/router/router.go:540-660](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/router.go#L540-L660)（Skill Registry 全路由已 grep 校对）。
-- AI 域端点：[handlers/ai/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/ai/handler.go) 全文 26 个方法 + [router/ai_routes.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/ai_routes.go)。
-- v1.6.10 原文：[CHANGELOG.md#1.6.10](file:///Users/heidsoft/Downloads/research/itsm/CHANGELOG.md)（2026-09-20）。
-- v1.6.x 当前收敛项：[ROADMAP.md#当前收敛项](file:///Users/heidsoft/Downloads/research/itsm/ROADMAP.md)（2026-09-12 复核）。
+- 路由表：[itsm-backend/router/router.go:540-660](../../itsm-backend/router/router.go#L540-L660)（Skill Registry 全路由已 grep 校对）。
+- AI 域端点：[handlers/ai/handler.go](../../itsm-backend/handlers/ai/handler.go) 全文 26 个方法 + [router/ai_routes.go](../../itsm-backend/router/ai_routes.go)。
+- v1.6.10 原文：[CHANGELOG.md#1.6.10](../../CHANGELOG.md)（2026-09-20）。
+- v1.6.x 当前收敛项：[ROADMAP.md#当前收敛项](../../ROADMAP.md)（2026-09-12 复核）。
 
 ---
 
@@ -326,7 +327,7 @@
 
 **没有独立 UI 页面**——前端路由表里既无 `/admin/skills` 也无 `/admin/skill-registry`，404（`KNOWN_UNMATCHED_FRONTEND_PATHS` 中本应存在但实际未注册的项）。
 
-但后端 [handlers/skill/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/handler.go) 已经实现完整 7 个端点，`GET /api/v1/skills` 返回 11 个 skill：
+但后端 [handlers/skill/handler.go](../../itsm-backend/handlers/skill/handler.go) 已经实现完整 7 个端点，`GET /api/v1/skills` 返回 11 个 skill：
 
 | code | 分类 | maturity | 用途 |
 |---|---|---|---|
@@ -343,7 +344,7 @@
 | ai.trend_prediction | ai | pilot | 趋势预测 |
 
 **真实 bug — `GET /api/v1/admin/skills` 404**：
-- [handlers/skill/handler.go:108-138](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/handler.go#L108-L138) 只注册了 `POST /admin/skills`、`PUT /admin/skills/:code`、`POST /admin/skills/:code/promote`、`DELETE /admin/skills/:code`、`POST /admin/skills/:code/invoke`。
+- [handlers/skill/handler.go:108-138](../../itsm-backend/handlers/skill/handler.go#L108-L138) 只注册了 `POST /admin/skills`、`PUT /admin/skills/:code`、`POST /admin/skills/:code/promote`、`DELETE /admin/skills/:code`、`POST /admin/skills/:code/invoke`。
 - 缺 `GET /admin/skills`（管理端列表）和 `GET /admin/skills/:code`（管理端详情）。
 - CSRF 探测结果：写端点 403 = 路由存在；列表端点 404 = 路由未注册。
 - 修复建议：补 `admin.GET("", h.List)` 与 `admin.GET("/:code", h.Get)`（handler 已存在，0.5 行改动）。
@@ -371,7 +372,7 @@
 - `/marketplace`（发现+安装）：独立页面，三类（全部/连接器/AI技能/插件），但**没有任何 marketplace_item 种子数据**，调用 `/api/v1/marketplace/items` 返回 `{ items: [], total: 0 }`。
 
 **API 契约已就绪但缺数据**：
-- [handlers/marketplace/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go) 实现 7 个端点（`items` 列表/详情 + `installations` CRUD + install/uninstall/config）。
+- [handlers/marketplace/handler.go](../../itsm-backend/handlers/marketplace/handler.go) 实现 7 个端点（`items` 列表/详情 + `installations` CRUD + install/uninstall/config）。
 - 缺项：`pkg/seeder/` 与 `internal/bootstrap/` 均无 `MarketplaceItem` 种子的可执行初始化逻辑。
 - 前端 `marketplace/page.tsx` 第 75 行直接调 `/api/v1/marketplace/items`，契约干净，无 mock 残留。
 
@@ -379,7 +380,7 @@
 
 | # | 域 | 现象 | 根因 | 修复建议 |
 |---|---|---|---|---|
-| 1 | §3 Skill Registry | `GET /api/v1/admin/skills` 404，admin 端无列表查询 | [handlers/skill/handler.go:108-138](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/handler.go#L108-L138) 未注册 `admin.GET` 列表端点；`router/router.go:556-568` 注释里也只列了 POST/PUT/promote/DELETE/invoke | 补 2 行：`admin.GET("", h.List)` + `admin.GET("/:code", h.Get)`；同步更新 router 注释 |
+| 1 | §3 Skill Registry | `GET /api/v1/admin/skills` 404，admin 端无列表查询 | [handlers/skill/handler.go:108-138](../../itsm-backend/handlers/skill/handler.go#L108-L138) 未注册 `admin.GET` 列表端点；`router/router.go:556-568` 注释里也只列了 POST/PUT/promote/DELETE/invoke | 补 2 行：`admin.GET("", h.List)` + `admin.GET("/:code", h.Get)`；同步更新 router 注释 |
 | 2 | §5 BPMN | 审计表"操作人/受理人"列始终 `—` | `ProcessAuditLog` 的 `ActorID`/`AssigneeID` 字段后端未写入，或前端未按 ID 解析显示 | 排查 `service/bpmn_audit_service.go`（如存在）的写入路径，并确认前端 `bpmn-audit-api` 是否有 userName 字段 |
 | 3 | §8 Marketplace | `/marketplace` 全空，无可安装项 | `pkg/seeder/` 与 `internal/bootstrap/` 未注册 marketplace 种子 | 增加 `MarketplaceItemSeed`（至少内置"飞书审批增强"、"钉钉 AI 助手"等 5 条），挂在 `init` build tag 上 |
 
@@ -392,5 +393,5 @@
 ### 14.7 关联证据
 
 - 浏览器走查：自动化快照（`/admin/connectors` / `/marketplace` / `/workflow/designer` / `/workflow/instances` / `/workflow/automation` / `/workflow/audit` / `/workflow/dashboard` / `/workflow/sla` / `/workflow/versions`）。
-- 端点核对：[handlers/skill/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/skill/handler.go) + [handlers/marketplace/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go)。
+- 端点核对：[handlers/skill/handler.go](../../itsm-backend/handlers/skill/handler.go) + [handlers/marketplace/handler.go](../../itsm-backend/handlers/marketplace/handler.go)。
 - 前端页面清单：`itsm-frontend/src/app/(main)/admin/connectors/page.tsx` + `marketplace/page.tsx` + `workflow/{designer,instances,audit,sla,dashboard,automation,versions,ticket-approval}/page.tsx`。

@@ -5,13 +5,17 @@
 # Gate C.3 — 内部 markdown 链接失效检测（advisory only）。
 #
 # 策略：
-#   - 仅扫描 .md / .mdx 中的内部相对链接与路径锚点（以 ./ ../ / 开头的链接）。
-#   - 不验证外部链接（避免外部站点波动误伤）。
+#   - 扫描 .md / .mdx 里的内部相对链接与路径锚点：裸写的 `中文名.md`、`scripts/foo.sh`
+#     同样校验，不要求 `./` 前缀。
+#   - 不验证外部链接（http/https/mailto 等带 scheme 的，避免外部站点波动误伤）。
+#   - `file:///...` 指向写文档那台机器的绝对路径，别人 clone 后必然失效，单独报
+#     non-portable / broken 两类。
 #   - 使用 grep + awk 抽取 [text](path)，逐条验证 path 是否存在。
 #
 # 已知限制（advisory）：
 #   - 跨 repo 链接（GitHub issue / PR）跳过。
 #   - 文档锚点 (#section) 仅做存在性检查，不解析 heading。
+#   - `-template.md`、`-guide.md` 结尾的文档不校验（其中链接是样例，目标未必存在）。
 #
 # 当前阶段（v1.5）advisory：仅警告，不阻断。
 # v2.0 起升级为 hard。
@@ -38,19 +42,40 @@ check_links_in_file() {
   local dir
   dir="$(dirname "${file}")"
 
-  # 匹配 [text](path) 与 <path> 两种形式
-  # 仅保留相对路径或 ./ ../ 开头的（内部）；http(s):// 跳过
+  # 匹配 [text](path)。只排除带 scheme 的外部链接与纯锚点，
+  # 其余都按仓库内相对路径解析——裸写的 `中文名.md`、`foo.sh` 同样要校验。
   grep -oE '\[[^]]+\]\(([^)]+)\)' "${file}" \
     | sed -E 's/^\[[^]]+\]\(//; s/\)$//' \
-    | grep -E '^((\./|\.\./|/)[^h][^t][^t][^p]|[A-Za-z0-9._/-]+\.(md|mdx|md#|mdx#))' \
     | while IFS= read -r link; do
         # 去掉 #anchor
         path="${link%%#*}"
         if [ -z "${path}" ]; then
           continue
         fi
+        case "${path}" in
+          http://* | https://* | ftp://* | mailto:* | tel:* | data:* | "www."*) continue ;;
+        esac
+        # file:// 链接只在写它的那台机器上成立，仓库文档里必须用相对路径
+        case "${path}" in
+          file://*)
+            target="${path#file://}"
+            if [[ "${target}" == "${ROOT_DIR}"/* && -e "${target}" ]]; then
+              echo "  - ${file}: non-portable link '${link}' (指向本机绝对路径，须改为仓库相对路径)"
+            else
+              echo "  - ${file}: broken link '${link}' -> ${target} (missing)"
+            fi
+            continue ;;
+        esac
+        # 只校验看起来像文件/目录的链接，跳过说明性文字
+        if [[ "${path}" != */* && ! "${path}" =~ \.[A-Za-z0-9]{1,5}$ ]]; then
+          continue
+        fi
         # 解析相对路径
         if [[ "${path}" == /* ]]; then
+          if [[ "${path}" != "${ROOT_DIR}"/* ]]; then
+            echo "  - ${file}: broken link '${link}' -> ${path} (指向仓库外绝对路径)"
+            continue
+          fi
           full_norm="${ROOT_DIR}${path}"
         else
           parent="${ROOT_DIR}/${dir}/$(dirname "${path}")"

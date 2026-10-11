@@ -17,10 +17,10 @@ set -uo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "${ROOT_DIR}"
 
+# itsm-backend/controller 已于 48eae74a 删除，不再列为扫描目标。
 TARGETS=(
   "itsm-backend/handlers"
   "itsm-backend/service"
-  "itsm-backend/controller"
 )
 
 # 命中模式：

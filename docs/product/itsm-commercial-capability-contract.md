@@ -25,7 +25,7 @@
 | CMDB | GA 核心 + Pilot 发现 | CI、类型、关系、拓扑、历史、影响分析可用；阿里云连通已验证 | 云发现 Job/Worker/Diff/对账/审计尚未落地；数据质量、来源 ownership、退役治理待补 |
 | BPMN/审批 | Pilot | 流程定义、绑定、实例、任务、变量、历史；工单与事件已使用持久化 command/outbox；旧审批提交停写，无 BPMN 待办时拒绝业务直批 | 配置与历史查询继续保留；跨域审批决策和业务状态仍需原子收敛，存量待办迁移需单独核对；补齐可靠触发、补偿与实例级 E2E |
 | SLA | GA 候选 | 定义、截止时间、违规、预警、通知、指标、逐租户 watcher | 主要围绕 Ticket，事件/请求等对象的统一绑定需确认；日历/工作时间、暂停计时、升级动作需生产验收 |
-| 知识/RAG | Pilot | 文章、关键词检索、向量检索降级、LLM 问答、租户过滤 | 向量删除未实现；发布版本、可见性/RBAC 的端到端检索验证不足；问题解决到知识审核发布不闭环 |
+| 知识/RAG | Pilot | 文章、关键词检索、向量检索降级、LLM 问答、租户过滤；向量删除已实现并经 outbox 接线（`service/vector_store.go:88`、`handlers/knowledge/outbox.go:75 deleteWithVectorOutbox`） | 发布版本、可见性/RBAC 的端到端检索验证不足；问题解决到知识审核发布不闭环 |
 | AI | Pilot | LLM Gateway、分诊、摘要、RAG、AI 审计和工具框架 | 置信度、接受/拒绝反馈、prompt/model 版本和统一 evaluator 未在每个能力中强制；高风险动作不可自动执行 |
 | 连接器/通知 | Pilot/Disabled 混合 | 连接器注册与生命周期骨架，飞书实现基础较强，企微/钉钉/Webhook 有骨架 | 真实健康检查、租户密钥、消息幂等、重试/死信、回调验签、投递审计及市场安装闭环不完整 |
 | RBAC/多租户/审计 | GA 候选 | 角色权限、Endpoint ACL、租户过滤、AuditLog、多处跨租户测试 | 各域仍需能力级权限矩阵；后台任务/system actor、审计相关 ID、敏感字段脱敏必须统一 |
@@ -120,11 +120,11 @@
 
 ### 商业化能力状态接口
 
-建议统一提供 `/api/v1/capabilities`，每项返回：
+`GET /api/v1/capabilities` 已提供（`router/router.go:376` 注册，`handlers/capability/handler.go:27-36` 定义 DTO），每项返回：
 
 - `key`、`maturity` (`ga|pilot|disabled`)；
 - `buildAvailable`、`deploymentReady`、`tenantReady`；
-- `permissions` 与当前 actor 的 allowed actions；
+- `allowedActions`（当前 actor 可执行动作；契约里原写的 `permissions` 字段尚未返回，属待补项）；
 - `dependencies`、`degradedReason`、`lastHealthCheckAt`；
 - `acceptanceVersion` 与已通过的验收套件版本。
 

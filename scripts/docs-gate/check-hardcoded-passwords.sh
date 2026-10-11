@@ -52,12 +52,13 @@ PATTERNS=(
 )
 
 # 豁免路径
-EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/delivery/postmortem-v1\.0-ga\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/dev-environment-test-report\.md|/browser-?test|/multi-role-|/production-mode-test-report|/production-deployment-test-report|/browser-functional|/browser-e2e|/frontend-ux-review|/system-function-review|/deep-business-test|/commercial-readiness-acceptance|/module-function-retrospective|/architecture-review-2026|/system-function-review-checklist|/system-function-review-result|/servicenow-benchmark|/browser-button-functional|/browser-module|/itsm-test-report|/full-product-smoke|/system-test-report|/role-based-product-test-plan|/e2e-conventions|/coverage-audit|/controller-failing-list|/ai-eval|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|/output/|AGENTS\.md|README\.md|README\.en\.md|CLAUDE\.md|CONTRIBUTING\.md)'
+# 每一项必须至少匹配一个 tracked 文件；死条目会让豁免面看起来比实际更大。
+# 上调/下调本清单前先跑：git ls-files | rg -i '<pattern>'，确认命中数。
+EXEMPT_REGEX='(\.env\.example|\.env\.dev\.example|\.env\.prod\.example|docs/delivery/postmortem-v1\.0-ga\.md|docs/scripts/|tests/|scripts/itsm-test-utils\.sh|scripts/test-data-init\.sql|/browser-?test|/browser-e2e|/deep-business-test|/full-product-smoke|/role-based-product-test-plan|/e2e-conventions|/test-trend|/static-analysis-gates|/test-invariants|/go-toolchain|/README-check|AGENTS\.md|README\.md|README\.en\.md|CLAUDE\.md|CONTRIBUTING\.md)'
 
 # 缓存全仓候选文件清单（git ls-files 在外层调一次，7 个 pattern 复用）
 # 避免每个 pattern 都重新遍历 git 索引（实测 7 × 56s ≈ 6.5min → 一次性 30s）
 # 不用 pipefail，否则下游 head/grep 关闭时 broken pipe 会让脚本误退
-# 缓存全仓候选文件清单（git ls-files 在外层调一次，7 个 pattern 复用）
 # 用临时文件 + while-read 替代 mapfile（mapfile 是 bash 4+，macOS 默认 3.2 不支持）
 CANDIDATES_FILE="$(mktemp -t c1-candidates.XXXXXX)"
 trap 'rm -f "${CANDIDATES_FILE}"' EXIT

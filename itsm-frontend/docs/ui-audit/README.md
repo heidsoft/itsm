@@ -1,5 +1,9 @@
 # Frontend UI Audit Inventory
 
+> 本文件由 `npm run audit:ui`（`tools/generate-ui-audit-inventory.mjs`）生成，数字是生成时点的快照。
+> 2026-10-11 核对：下表统计 111 页，而 `find itsm-frontend/src/app -name page.tsx` 已有 169 项（与 docs-gate C.6.4 的 `frontend_pages` 同口径），因此页面清单与复杂度排名均已过时，只能看趋势不能当现状用；需要准确数字请重跑生成命令。
+> `inventory.json` 是同命令生成的完整机器可读清单，体积大且可再生，已不纳入版本控制。
+
 Generated at: 2026-06-07T06:37:23.371Z
 
 ## Coverage
@@ -51,5 +55,5 @@ Generated at: 2026-06-07T06:37:23.371Z
 
 ## Notes
 
-- Full machine-readable audit ledger lives in `docs/ui-audit/inventory.json`.
+- The machine-readable ledger written next to this file as `inventory.json` is a regenerable artifact and is not committed.
 - Severity and issue categories are heuristic seeds for manual review, not final product decisions.

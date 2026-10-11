@@ -113,7 +113,7 @@ L5 运营        报表
 - **代码位置**：`itsm-backend/handlers/bpmn/`（引擎）+ `router/bpmn_*.go`（路由）
 - **何时碰**：变更审批、新工作流设计、流程优化
 
-⚠️ **当前陷阱**：项目里有**三套审批运行时并存**（BPMN + ApprovalService + ApprovalChainService），违反 CONSTRAINTS#3，正在 D-1 决策收敛中（详见 [决策对话 §D-1](./decision-dialogue-2026-09-24.md#d-1--审批三运行时去留最硬骨头)）。
+⚠️ **当前陷阱**：项目里仍有**三套审批运行时并存**（`service/approval_service.go`、`service/approval_chain_service.go`、BPMN），违反 CONSTRAINTS#3。收敛进度看 [审批/自动化收敛时间线](./approval-convergence-timeline-2026-09-27.md)（2026-09-27 快照，Phase 1 已止血，Phase 2 缺口未解）。
 
 ### 5.2 CMDB（配置管理数据库）
 
@@ -221,14 +221,13 @@ itsm/
 ├── itsm-agent/          # Go agent（运行在客户内网，采集数据）
 ├── itsm-skill/          # 可声明技能
 ├── docs/                # 文档（architecture / product / articles / ...）
-├── output/              # 审计/治理报告（产物勿入 Git）
+├── plans/               # 实施计划与专项审计
 ├── scripts/docs-gate/   # 文档门禁脚本
-├── prd/                 # 产品需求文档（部分）
-├── plans/               # 实施计划（部分）
-├── specs/               # spec-kit 产物
-├── .workbuddy/memory/   # AI 工作记忆
+├── output/              # 审计/治理报告（已 gitignore，产物勿入 Git）
 └── Makefile             # dev / build / docs-gate 入口
 ```
+
+`itsm-rag/`、`itsm-skill/` 目前是本地未纳入版本控制的目录（`.gitignore` 中有同名条目），clone 后不存在；`itsm-ai-service/`、`itsm-cli/`、`itsm-agent/` 已入库。
 
 ### 7.2 后端结构
 
@@ -342,7 +341,7 @@ make docs-gate
 | 2 | [AGENTS.md](../../AGENTS.md) | 20 分钟 | 后端分层、文档同步纪律 |
 | 3 | [商业能力契约](./itsm-commercial-capability-contract.md) | 30 分钟 | 12 域详细 + CONSTRAINTS |
 | 4 | [领域所有权](../architecture/domain-ownership.md) | 10 分钟 | 各域迁移状态、不变量 |
-| 5 | [决策对话](./decision-dialogue-2026-09-24.md) | 15 分钟 | 4 项决策详细论证（改代码前必看） |
+| 5 | [审批/自动化收敛时间线](./approval-convergence-timeline-2026-09-27.md) | 15 分钟 | 最硬骨头（审批三运行时）的收敛阶段与未解缺口（改代码前必看） |
 
 **总计**：30 + 15 + 20 + 30 + 10 + 15 = **2 小时**（2 个下午读完）
 
@@ -383,13 +382,13 @@ git grep -l "TODO" src/                      # 找 TODO
 
 | 我想... | 问谁 | 渠道 |
 |---|---|---|
-| 改某个业务域代码 | 看 [owner-boards](./owner-boards-2026-09-24.md) @backend-itsm / @fe-itsm | Slack #itsm-dev |
+| 改某个业务域代码 | 看 [领域所有权](../architecture/domain-ownership.md) @backend-itsm / @fe-itsm | Slack #itsm-dev |
 | 加新权限 / 新角色 | backend-itsm | Slack #itsm-dev |
 | 加新 IM 渠道 | im-itsm | Slack #itsm-im |
 | 改业务契约 / 主链路 | product（齐活林） | 邮件 |
 | 改 CI / 文档门禁 | devops-itsm | Slack #itsm-devops |
 | 提需求 / 反馈 | product（齐活林） | 邮件 |
-| 找历史决策 | 看 [decision-dialogue](./decision-dialogue-2026-09-24.md) + [`output/`](../../output/) | 自助 |
+| 找历史决策 | 看 [架构决策记录](../architecture/) + [CHANGELOG](../../CHANGELOG.md)；已删文档用 `git log --diff-filter=D --name-only` 找回 | 自助 |
 
 ---
 

@@ -22,16 +22,23 @@ cd itsm-backend && go test ./tests/rbac/... -v
 
 ## 3. 已验证的 RBAC 端点
 
+> 2026-10-11 按 `router/common_system_routes.go` 复核：本表原先三行的 URL 与真实注册路由不一致，已更正。
+> `/api/v1/admin/users` 不是生产路由，它只在 `tests/rbac/cross_tenant_test.go:92` 由测试自己
+> `r.GET(...)` 注册成 httptest mock；生产侧的用户列表是 `/api/v1/users`
+> （`common_system_routes.go:42/57`）。菜单与角色的写入口分别是
+> `POST /api/v1/menus`（`:161` 起的 `tenant.Group("/menus")`）和
+> `PUT /api/v1/roles/:id`（`:139-144`），不存在 `/admin/menus`、`/admin/roles/:id`。
+
 | 端点 | 普通用户 | Admin | 跨租户 | 备注 |
 |------|----------|-------|--------|------|
-| `GET /api/v1/admin/users` | 403 | 200 | N/A | — |
+| `GET /api/v1/admin/users` | 403 | 200 | N/A | 测试内 mock 路由，非生产路由 |
 | `GET /api/v1/tickets` | 200（本租户） | 200 | 仅本租户 | — |
 | `GET /api/v1/tickets/:id` | 200 / 404 | 200 / 404 | 404（不暴露存在） | — |
 | `GET /api/v1/incidents` | 200（本租户） | 200 | 仅本租户 | — |
 | `GET /api/v1/changes` | 200（本租户） | 200 | 仅本租户 | — |
 | `GET /api/v1/cmdb/cis` | 200（本租户） | 200 | 仅本租户 | — |
-| `POST /api/v1/admin/menus` | 403 | 200 | 403 | — |
-| `PUT /api/v1/admin/roles/:id` | 403 | 200 | 403 | — |
+| `POST /api/v1/menus` | 403 | 200 | 403 | 原表误写 `/admin/menus` |
+| `PUT /api/v1/roles/:id` | 403 | 200 | 403 | 原表误写 `/admin/roles/:id` |
 
 ## 4. 已知遗留（v1.0 GA 前必须修复）
 

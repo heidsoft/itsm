@@ -55,9 +55,9 @@ TicketType 是运行时配置，不是前端静态枚举。创建工单时会校
 ## 实现契约
 
 - Actors: 系统管理员、服务台工程师、审批人、普通员工、开源部署者。
-- Surfaces: `README.md`、`.env.example`、`.env.prod.example`、`docker-compose.yml`、`docker-compose.prod.yml`、前端自助门户、后端 `/api/v1/*`。
+- Surfaces: `README.md`、`.env.example`、`.env.prod.example`、`docker-compose.dev.yml`、`docker-compose.prod.yml`、`docker-compose.e2e.yml`、`docker-compose.fresh-gate.yml`、前端自助门户、后端 `/api/v1/*`（仓库根没有 `docker-compose.yml`）。
 - States and transitions: TicketType 支持 draft/active/inactive 与归档恢复；禁用或跨租户类型不得用于新建工单。ITIL 状态流转由后端服务校验。
-- Interfaces: HTTP JSON 使用 camelCase，Controller 返回 DTO；工单类型以 `/api/v1/ticket-types` 和 `/api/v1/ticket-type-presets` 为真实来源，服务目录以 `/api/v1/service-catalogs` 和 `/api/v1/service-requests` 为真实来源。
+- Interfaces: HTTP JSON 使用 camelCase，Handler 返回 DTO；工单类型以 `/api/v1/ticket-types` 和 `/api/v1/ticket-type-presets` 为真实来源，服务目录以 `/api/v1/service-catalogs` 和 `/api/v1/service-requests` 为真实来源。
 - Data implications: 收藏、评分、门户配置、服务分析、目录导出在后端模型和接口补齐前，不应显示为可持久化能力。
 - Operator requirements: 发布前需要通过前端 `type-check`、前端生产构建、后端 `go test ./...`、Docker Compose 健康检查和登录烟测。
 

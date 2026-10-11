@@ -322,17 +322,21 @@ FAIL    <package>
 
 ### ent cold-cache 假阳性
 
-如果失败信息涉及 `migrations/<schema>` 等 ent 自动生成包，可能遇到 cold-cache loader 误判：
+历史症状：staticcheck 用 `go/packages.Load` 解析 import 图，冷缓存时会对 ent 生成的
+`migrations/<schema>.go` + `migrations/<schema>/` 同名布局误报：
 
 ```
 migrations/client.go:59:2: module itsm-backend@latest found, but does not contain package migrations/<schema>
 ```
 
-**处理**：
+**现状（2026-10-11 实测）**：`itsm-backend/migrations/` 只剩 39 个 `.sql`，没有任何 `.go`，
+`go list ./migrations/...` 报 "matched no packages"。这个假阳性的成因已随包一起消失；
+ent 生成代码现在在 `itsm-backend/ent/`（`client.go`、`migrate/schema.go`），由生成器维护，
+不要手改。`.github/workflows/backend-ci.yml` 里的 warm-up `go build ./migrations/...` 与
+staticcheck 的 `migrations/...` 排除项是当时留下的护栏，目前匹配不到任何包，属可清理的死配置。
 
-1. 确认 Warm up 步骤已用 `|| true` 容错（见 [.github/workflows/README.md](.github/workflows/README.md)）；
-2. 确认 `Run go test` 步骤用 `go list | grep -vE` 排除了 ent 包；
-3. **不要**修改 `migrations/client.go` 或 migrations 包本身——它们是 ent 自动生成的。
+处理同类日志时仍然按 Step 4 的判定表走：先确认报错来自哪个 step、该 step 是否 `|| true` 容错，
+再决定是不是真失败。
 
 ## 许可证
 

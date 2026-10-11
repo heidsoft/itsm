@@ -148,7 +148,7 @@ CI 必须保持下列运行时基线（评审 §4）：
 
 `/api/v1/readiness/ga` 当前要求 12 modules ready。新增模块必须：
 
-1. 在 `itsm-backend/service/readiness_service.go` 注册；
+1. 在 `itsm-backend/router/ga_readiness.go:43-55` 的 `modules` 切片注册（当前 12 项全部硬编码 `Status: "ready"`，不存在 `service/readiness_service.go`）；
 2. 提供 `/healthz` 子端点或就绪探针；
 3. 在 `docs/scripts/smoke-api.sh` 增加对应路径。
 
@@ -188,6 +188,6 @@ PR 评审阶段（不依赖运行时）必须做的契约对齐检查：
 - [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md)
 - [`docs/architecture/domain-ownership.md`](../architecture/domain-ownership.md)
 - [`docs/testing/static-analysis-gates.md`](./static-analysis-gates.md)
-- [`docs/testing/coverage-audit.md`](./coverage-audit.md)
+- [`docs/testing/coverage-report.md`](./coverage-report.md)
 - [`docs/scripts/smoke-api.sh`](../scripts/smoke-api.sh)
 - [`scripts/test-coverage-guard.js`](../../scripts/test-coverage-guard.js)

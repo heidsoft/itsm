@@ -1,6 +1,8 @@
 # Review：plan-knowledge-closed-loop-2026-09-24.md — 2026-09-25
 
-> **来源**：初始化/演练会话对 [plan-knowledge-closed-loop-2026-09-24.md](./plan-knowledge-closed-loop-2026-09-24.md) 的评审意见
+> **来源**：初始化/演练会话对 `docs/product/plan-knowledge-closed-loop-2026-09-24.md` 的评审意见
+> **该 plan 已在 2026-10-11 文档清理中删除**：其中 `/rag/search`、`/rag/feedback`、`known-errors/:id/link-ci`、`knowledge/drafts/*`、submit-review/approve 等端点在 Gin Router 中均未注册，正文按不存在的接口排期。原文可用 `git log --diff-filter=D -- docs/product/plan-knowledge-closed-loop-2026-09-24.md` 找回。
+> **本评审的两条结论已落到别处**：向量删除链路记在 [商业化能力契约](./itsm-commercial-capability-contract.md) 的知识/RAG 行（`service/vector_store.go:88`、`handlers/knowledge/outbox.go:75`）；RAG 跨租户/可见性/版本双重过滤的验收口径记在 AGENTS.md「AI-Native Engineering Rules」与「RAG visibility」约定。本文保留只为说明那两条判断的来源。
 > **范围**：仅两处「当前代码事实」与代码现状的出入，已核对源码；其余计划内容未评
 > **给**：@docs-itsm / @backend-itsm（plan 作者与执行方）
 

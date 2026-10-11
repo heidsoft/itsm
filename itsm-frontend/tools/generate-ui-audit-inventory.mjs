@@ -199,6 +199,9 @@ fs.writeFileSync(path.join(outputDir, 'inventory.json'), `${JSON.stringify(inven
 const markdown = [
   '# Frontend UI Audit Inventory',
   '',
+  '> 本文件与 `inventory.json` 均由 `npm run audit:ui` 生成。数字是生成时点的快照，过期请重跑而不是手工修。',
+  '> `inventory.json` 体积大且可再生，不纳入版本控制；本 README 作为可读快照保留。',
+  '',
   `Generated at: ${summary.generatedAt}`,
   '',
   '## Coverage',
@@ -222,7 +225,7 @@ const markdown = [
   '',
   '## Notes',
   '',
-  '- Full machine-readable audit ledger lives in `docs/ui-audit/inventory.json`.',
+  '- The machine-readable ledger written next to this file as `inventory.json` is a regenerable artifact and is not committed.',
   '- Severity and issue categories are heuristic seeds for manual review, not final product decisions.',
 ].join('\n');
 

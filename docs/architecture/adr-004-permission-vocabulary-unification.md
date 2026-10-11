@@ -14,18 +14,24 @@ Proposed（2026-10-06）
 
 | 词表 | 位置 | 用途 | 条目数 |
 |:---|:---|:---|:---|
-| 菜单基线 | `pkg/menubaseline/baseline.go` | 种子菜单的 `PermissionCode` 字段，决定菜单可见性 | 95 条 |
-| 路由声明 | `router/*.go` 中的 `RequirePermission(resource, action)` | 路由级鉴权，决定接口是否可访问 | ~120 条 |
-| 授权码空间 | `internal/authz/catalog.go` → `Definitions()` | DB 种子权限码，决定角色可授予哪些 `(resource, action)` | ~110 条 |
+| 菜单基线 | `pkg/menubaseline/baseline.go` | 种子菜单的 `PermissionCode` 字段，决定菜单可见性 | 98 条菜单，97 条带非空 `PermissionCode`，去重后 49 个码（2026-10-11 实测） |
+| 路由声明 | `router/*.go` 中的 `RequirePermission(resource, action)` | 路由级鉴权，决定接口是否可访问 | 640 处调用，去重后 102 个 `(resource, action)` 对（2026-10-11 实测） |
+| 授权码空间 | `internal/authz/catalog.go` → `Definitions()` | DB 种子权限码，决定角色可授予哪些 `(resource, action)` | 160 条（2026-10-11 实测） |
 
-三套词表之间没有自动同步机制。当路由使用 `RequirePermission("ticket_type", "manage")` 而码空间只注册了 `ticket_type:write` 时，该路由对除 `super_admin` 外的所有角色永久 403（此类问题已在 2026-09-17 P0 越权收口批次中部分修复，但根因未消除）。
+三套词表之间没有自动同步机制。**2026-10-11 实测**：上述 102 个路由 `(resource, action)` 对目前全部存在于
+`Definitions()` 的 160 个码中，差集为 0，即本 ADR 描述的"路由用了未注册码 → 除 `super_admin` 外永久 403"
+当前没有可观测实例；但这靠人工收敛维持，没有任何守卫——`scripts/verify-acl-coverage.go` 只检查"路由是否声明了
+`RequirePermission`"（覆盖度），不检查码是否属于规范词表，而且该脚本没有被任何 workflow、Makefile 或
+docs-gate 调用（`git grep -l verify-acl-coverage` 只命中它自己）。因此本 ADR 提出的 G1 子集校验仍未实现。
+角色侧的缺码问题另有记录，见 `docs/review/product-convergence-initialization-permission-review-2026-10-03.md`，
+其口径（角色↔码）与本节的路由↔码空间差集不同。
 
 ### 别名解析只在菜单层生效
 
-`service/menu_service.go:574-619` 维护了两张硬编码别名表：
+`service/menu_service.go:570-612` 维护了两张硬编码别名表（2026-10-11 复核：action 11 条、resource 9 条，解析入口在 `:604`/`:612`）：
 
 ```go
-// actionAliasMap（12 条）
+// actionAliasMap（11 条）
 "view" → "read", "use" → "read", "manage" → "admin",
 "create" → "write", "update" → "write",
 "approve" → "admin", "analyze" → "read", "audit" → "read",
@@ -58,7 +64,7 @@ Proposed（2026-10-06）
 
 ### Resource 重复注册
 
-`authz/catalog.go` 中存在 6 组重复资源对——别名资源和规范资源同时作为独立权限注册：
+`internal/authz/catalog.go` 中存在 6 组重复资源对——别名资源和规范资源同时作为独立权限注册：
 
 | 别名资源 | 规范资源 | 重复行号 |
 |:---|:---|:---|
@@ -90,7 +96,7 @@ Proposed（2026-10-06）
 
 `approve` 不作为独立 action 存在——审批是业务动作，由领域状态机校验；权限层面审批等同于对该资源的 `admin`（或单独建模为 `approve` 但需与 `admin` 互通，此选项待评估）。
 
-**规范 Resource 集**：以 `authz/catalog.go` 为基础，每个业务概念只有一个规范名称。别名资源不再独立注册，改为在迁移阶段统一替换。
+**规范 Resource 集**：以 `internal/authz/catalog.go` 为基础，每个业务概念只有一个规范名称。别名资源不再独立注册，改为在迁移阶段统一替换。
 
 ### 2. 别名解析下沉到中间件
 
@@ -101,7 +107,7 @@ Proposed（2026-10-06）
 - 历史路由声明不需要一次性全量改名
 - 新增代码鼓励使用规范名，别名只用于兼容
 
-### 3. 消除 authz/catalog.go 重复注册
+### 3. 消除 internal/authz/catalog.go 重复注册
 
 对 6 组重复资源对，保留规范资源、删除别名资源。已授予别名资源的角色数据在迁移脚本中自动转换为规范资源。
 
@@ -126,7 +132,7 @@ Proposed（2026-10-06）
 
 在 `middleware/precheck_freshness_test.go` 的现有守卫基础上增加：
 
-- **G1 子集校验**：路由声明的 `(resource, action)` 经别名解析后 ⊆ `authz/catalog.go` 规范码空间。
+- **G1 子集校验**：路由声明的 `(resource, action)` 经别名解析后 ⊆ `internal/authz/catalog.go` 规范码空间。
 - **G2 重复检测**：`catalog.go` 不允许同时注册别名资源和规范资源（如 `service:read` 和 `service_catalog:read` 不可共存）。
 - **G3 方言告警**：路由使用非规范 action（`create`/`update`/`manage`/`approve`/`archive`）时输出告警日志，不阻断 CI。
 

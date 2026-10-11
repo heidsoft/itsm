@@ -4,7 +4,7 @@
 > what is parked.** Updated as part of every release. Last synced: 2026-10-06 (v1.6.15 CMDB 数据治理骨架收口).
 >
 > Cross-references:
-> - PRD library: [docs/prd/](./docs/prd)
+> - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
 > - v1.0 GA readiness: [docs/v1-ga-readiness.md](./docs/v1-ga-readiness.md)
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)

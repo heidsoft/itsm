@@ -234,9 +234,6 @@ make fresh-install-gate     # 空卷首装门禁：postgres+redis+itsm-init 全�
 # 自定义测试参数
 # 仅用于本地开发 seed 数据；生产烟测应使用临时测试 actor/secret 注入
 ITSM_BACKEND_URL=http://localhost:8090 ITSM_ADMIN_USER=admin ITSM_ADMIN_PASS=admin123 ./scripts/smoke-test.sh
-
-# Python 版功能测试（更全面，需要后端运行中）
-python3 output/itsm_functional_test.py
 ```
 
 ---

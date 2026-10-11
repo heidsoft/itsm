@@ -66,7 +66,7 @@ CMDB 资源（CI / 关系 / 拓扑 / 云账号 / 发现作业）属于 IT 基础
 
 ### 缓解
 
-- `security_classification` 字段预留（`ent/schema/configuration_item.go`）；
+- `security_classification` 字段预留（`ent/schema/configurationitem.go`）；
 - 客户端若需要"我创建的 CI"过滤，可直接传 `created_by` filter 参数
   （CMDB handler 已支持）。
 

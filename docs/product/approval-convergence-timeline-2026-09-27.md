@@ -1,6 +1,10 @@
 # 审批/自动化收敛时间线（2026-09-27）
 
-## 当前状态
+> 本文是 2026-09-27 的一次性快照，不是当前状态看板。2026-10-11 复核纠正两处：
+> ① P1 里"`Validate()` 全是 no-op"对 `handlers/ai/skills.go:154/245/321/382` 不成立，这四个 skill 的 `Validate` 有真实校验分支；
+> ② Phase 3 的验收命令 `go test ./service/automation` 无法执行，`itsm-backend/service/automation` 目录不存在。
+
+## 快照时点状态（2026-09-27）
 
 ### ✅ 已完成（2026-09-26）
 - **审批事务原子性**（commit `ae60259a`）：Release 和 ServiceRequest 的审批使用事务感知桥接（`CompleteBusinessApprovalTaskWithClient`），业务失败时 BPMN 任务完成回滚

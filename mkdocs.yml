@@ -106,7 +106,7 @@ nav:
       - 文档状态与事实源: documentation-governance.md
       - 标签体系: label-schema.md
       - Roadmap: roadmap.md
-      - 覆盖审计: testing/coverage-audit.md
+      - 覆盖率报告: testing/coverage-report.md
       - 文档规范: documentation-style-guide.md
 
 extra_css:

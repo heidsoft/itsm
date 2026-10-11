@@ -12,7 +12,7 @@
 | 部署人员 | [部署优化报告](./deployment-optimization.md)、[运维运行手册](./delivery/production-initialization.md) |
 | 后端开发 | [本地开发命令](./dev-commands-reference.md)、[PostgreSQL 升级运行手册](./delivery/pg-upgrade-runbook.md)、[后端 CI](../.github/workflows/backend-ci.yml) |
 | 前端开发 | [本地开发命令](./dev-commands-reference.md)、[前端 CI](../.github/workflows/frontend-ci.yml) |
-| 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、ServiceNow 对标评审（参见 [阶段改进计划](./product/phased-improvement-plan.md)） |
+| 产品/方案 | [开源发布能力说明](./product/open-source-release-capability.md)、[ServiceNow 差距分析](./product/servicenow-gap-analysis.md)、[ROADMAP](../ROADMAP.md) |
 | 测试/QA | [角色视角测试方案](./testing/role-based-product-test-plan.md)、[测试不变量](./testing/test-invariants.md) |
 | 发布维护 | [Release workflow](../.github/workflows/release.yml)、[Production Readiness Program](./delivery/production-readiness-program.md) |
 | 文档维护 | [文档状态与事实源](./documentation-governance.md)、[文档命名与维护规范](./documentation-style-guide.md) |

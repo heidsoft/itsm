@@ -117,7 +117,7 @@
 
 ## 5. 决策清单（等待对齐 — 齐活林）
 
-> 完整论证见 [`docs/product/decision-dialogue-2026-09-24.md`](./decision-dialogue-2026-09-24.md)（简版备忘为本地工作稿 `output/decision-memo-2026-09-23.md`，未纳入版本控制）。本表只列快照。
+> 本表只列 2026-09-24 时点的待决项。详写论证 `docs/product/decision-dialogue-2026-09-24.md` 已在 2026-10-11 文档清理中删除（当年 4 项待决中 D-W1/D-W2 已按开头校正块销账，D-1 只完成止血、跨域原子一致性仍未做）；需要完整理由时用 `git log --diff-filter=D -- docs/product/decision-dialogue-2026-09-24.md` 找回。简版备忘 `output/decision-memo-2026-09-23.md` 是本地工作稿，从未纳入版本控制。
 
 | # | 决策项 | 选项 | 我的倾向 | 截止 | 触发条件 |
 |---|---|---|---|---|---|
@@ -218,7 +218,7 @@ grep -nE "变更" README.md docs/product/itsm-commercial-capability-contract.md
 |---|---|---|
 | 商业能力契约 | [`docs/product/itsm-commercial-capability-contract.md`](./itsm-commercial-capability-contract.md) | 12 域成熟度 + CONSTRAINTS + 主链路 + OPEN QUESTIONS |
 | 领域所有权 | [`docs/architecture/domain-ownership.md`](../architecture/domain-ownership.md) | 各域迁移状态、跨领域不变量 |
-| 决策对话（详写版） | [`docs/product/decision-dialogue-2026-09-24.md`](./decision-dialogue-2026-09-24.md) | 9 项待决的完整论证与可执行方案 |
+| 审批/自动化收敛时间线 | [`docs/product/approval-convergence-timeline-2026-09-27.md`](./approval-convergence-timeline-2026-09-27.md) | D-1 的落地阶段与未解缺口（替代已删除的决策对话详写版） |
 | 产品权威清单 | `output/product-canonical-2026-09-16.md`（本地工作稿） | 已落地功能全图 + 证据 |
 | 漂移审计 | `output/product-drift-overdesign-audit-2026-09-22.md`（本地工作稿） | 9 漂移 + 10 过度设计 + 11 项 8 月评审对照 |
 | 决策备忘（简版） | `output/decision-memo-2026-09-23.md`（本地工作稿） | "我的倾向 + 简略理由" |

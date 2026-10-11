@@ -7,10 +7,13 @@
 ## 当前入口
 
 - [开源发布能力说明](./open-source-release-capability.md)
-- [分阶段完善总控计划](./phased-improvement-plan.md)
+- [商业化能力契约](./itsm-commercial-capability-contract.md)
+- [ServiceNow 差距分析](./servicenow-gap-analysis.md)
 - [工作流控制台诊断与设计](./workflow-console-diagnosis-and-design.md)
 - [AI + 自动化产品功能矩阵（v1.6.x）](./ai-automation-status.md)
 - [业务快照（2026-09-24）](./business-snapshot-2026-09-24.md)
+
+路线与交付节奏以根目录 [ROADMAP](../../ROADMAP.md) 为准，本目录不再维护并行的总控计划文档。
 
 ## 维护规则
 

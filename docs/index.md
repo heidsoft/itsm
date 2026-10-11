@@ -112,7 +112,7 @@ make dev-start-docker
 | 文档站点 | MkDocs 构建 + GitHub Pages | 持续维护 | ✅ |
 | 依赖治理 | Dependabot 周更新，人工审核合并 | 保持 | ✅ |
 
-详见根目录 [Roadmap](../ROADMAP.md) 和 [覆盖审计](testing/coverage-audit.md)。
+详见根目录 [Roadmap](../ROADMAP.md) 和 [覆盖率报告](testing/coverage-report.md)。
 
 ---
 

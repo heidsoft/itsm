@@ -40,7 +40,9 @@ Hard rules:
    the `tags` array — `playwright.config.ts` matches by `grep`.
 2. Keep each test ≤ 60 seconds wall-clock.
 3. Tests must be **idempotent** — re-running the same spec must not leave
-   the seed in a corrupt state. Use `tests/e2e/_lib/seedReset.ts`.
+   the seed in a corrupt state. There is currently **no** `tests/e2e/_lib/seedReset.ts`
+   (the `_lib/` directory does not exist); specs create their own uniquely-keyed
+   fixtures, and `tests/e2e/fixtures/auth.ts` owns login/API helpers.
 4. Never call `page.evaluate` to mutate `localStorage` directly — use
    the documented `loginAs(page, role)` helper.
 5. Assertions must use `expect(...).toBeVisible()` over arbitrary text
@@ -85,14 +87,16 @@ because the GA gate (PR-0.5) needs them as evidence.
 
 ## 5. Filename convention
 
-`<priority>-<feature>.spec.ts` where `<priority>` ∈ `{p0, p1, p2}`,
-mirroring the backend priority scheme in `docs/testing/controller-failing-list.md`.
+The convention would be `<priority>-<feature>.spec.ts` where `<priority>` ∈ `{p0, p1, p2}`.
 
-Examples committed in PR-0.4:
-- `golden/dashboard.spec.ts` (placeholder)
-- `multi-tenant/tenant-isolation.spec.ts` (placeholder)
-
-PR-3.3 / PR-3.5 will replace the placeholders with the actual flows.
+**Measured 2026-10-11**: `itsm-frontend/tests/e2e` contains **no** `p0-` / `p1-` / `p2-` prefixed
+specs, so the convention never landed. Committed files group by directory instead: `<feature>.spec.ts`
+at the root (e.g. `changes.spec.ts`, `cmdb.spec.ts`), `flows/flow-<n>-<feature>.spec.ts`,
+`golden/dashboard.spec.ts`, `multi-tenant/`. Priority is actually expressed by the `@golden` /
+`@multi-tenant` tags plus the project `grep` in `playwright.config.ts` (see rule 1), not by filename.
+The backend p0/p1/p2 failure list `docs/testing/controller-failing-list.md` was written entirely
+against the `controller/` directory (deleted in `48eae74a`) and was removed in the 2026-10-11 docs
+cleanup; recover it with `git log --diff-filter=D -- docs/testing/controller-failing-list.md`.
 
 ## 6. CI wiring (PR-3.4 deliverable)
 

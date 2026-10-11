@@ -1,9 +1,9 @@
 # 前端菜单与功能映射梳理
 
-> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-09-26。
-> 用途：把"前端页面 ↔ 后端菜单 ↔ API 入口 ↔ 能力治理"四个视角统一到一张图，作为菜单收口与下阶段补齐的单一事实来源。
+> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-10-11（菜单条数、种子位置、§8 缺登清单按 `pkg/menubaseline/baseline.go` 与 `git ls-files` 复核）。
+> 用途：把"前端页面 ↔ 后端菜单 ↔ API 入口 ↔ 能力治理"四个视角统一到一张图，作为菜单收口与下阶段补齐的参考。
 >
-> 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。
+> 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。菜单事实以 `pkg/menubaseline/baseline.go` 为准，不以本文为准。
 
 ---
 
@@ -13,8 +13,9 @@
 
 - **前端没有静态菜单配置**。`itsm-frontend/src/components/layout/sidebar/menu-config.ts` 仅保留 `MenuItem` 类型与 `capabilityPathRules`，没有任何 `const getMenuConfig()` 静态数组。
 - **菜单唯一来源是后端**：登录用户通过 `GET /api/v1/auth/menus` 获取当前租户 + 角色 + 权限过滤后的菜单树。
-- **后端 `pkg/seeder/seeder.go::menuDefinitions()` 是种子真理**：78 条菜单（21 顶级 + 57 子级）由 `seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。
-- **运行时入口**：`MenuService.GetUserMenus`（`service/menu_service.go:211`）→ `dto.MenuTreeResponse{Main, Admin}`。
+- **后端 `pkg/menubaseline/baseline.go::MenuDefinitions()` 是种子真理**（`itsm-backend/pkg/menubaseline/baseline.go:20`）：98 条菜单（28 顶级 + 70 子级）由 `pkg/seeder/seeder.go:1891 seedMenus` 两遍写入 `menu` 表（顶级 → 子级按 `parent_path` 反查）。`pkg/seeder/seeder.go:1886 menuDefinitions()` 只是转调。
+- **条数有测试棘轮**：`pkg/seeder/initialization_verify_cold_test.go:296` 断言 `require.Len(menuDefinitions(), 98)`，增删菜单必须同步该数字。
+- **运行时入口**：`MenuService.GetUserMenus`（`service/menu_service.go:212`）→ `dto.MenuTreeResponse{Main, Admin}`。
 - **前端缓存**：`useUserMenusQuery`（`src/lib/hooks/useUserMenusQuery.ts`）走 React Query，5 分钟 staleTime；菜单管理端 CRUD 后派发 `MENUS_UPDATED_EVENT` 自动 invalidate。
 
 ### 1.2 数据流
@@ -48,17 +49,17 @@ seedMenus → menu 表（tenant_id + path 唯一）
 
 | 角色 | 路径 | 行数参考 |
 |------|------|---------|
-| 前端类型 + capability 规则 | [itsm-frontend/src/components/layout/sidebar/menu-config.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/menu-config.ts) | 49 |
-| Sidebar 渲染 | [itsm-frontend/src/components/layout/sidebar/Sidebar.tsx](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/Sidebar.tsx) | 264 |
-| 菜单项渲染 | [itsm-frontend/src/components/layout/sidebar/MenuItems.tsx](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/MenuItems.tsx) | 158 |
-| 菜单 API DTO + admin CRUD | [itsm-frontend/src/lib/api/menu-api.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/menu-api.ts) | 107 |
-| React Query 缓存 | [itsm-frontend/src/lib/hooks/useUserMenusQuery.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/hooks/useUserMenusQuery.ts) | 62 |
-| 菜单种子（真理） | [itsm-backend/pkg/seeder/seeder.go:1809-1938 menuDefinitions()](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/pkg/seeder/seeder.go#L1809-L1938) | 130 |
-| 菜单 upsert | [itsm-backend/pkg/seeder/seeder.go:1941-2028 seedMenus/upsertMenu](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/pkg/seeder/seeder.go#L1941-L2028) | 87 |
-| 运行时 GetUserMenus | [itsm-backend/service/menu_service.go:211-292 GetUserMenus+filterMSPMenus](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/service/menu_service.go#L211-L292) | 81 |
-| 路由注册 | [itsm-backend/router/common_system_routes.go:14-214](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L14-L214) | 200 |
-| HTTP Handler | [itsm-backend/handlers/rbac/handler.go:493 GetUserMenus](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/rbac/handler.go#L493-L514) | 22 |
-| Marketplace 路由 | [itsm-backend/handlers/marketplace/handler.go:44-62 RegisterRoutes](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go#L44-L62) | 19 |
+| 前端类型 + capability 规则 | [itsm-frontend/src/components/layout/sidebar/menu-config.ts](../../itsm-frontend/src/components/layout/sidebar/menu-config.ts) | 49 |
+| Sidebar 渲染 | [itsm-frontend/src/components/layout/sidebar/Sidebar.tsx](../../itsm-frontend/src/components/layout/sidebar/Sidebar.tsx) | 264 |
+| 菜单项渲染 | [itsm-frontend/src/components/layout/sidebar/MenuItems.tsx](../../itsm-frontend/src/components/layout/sidebar/MenuItems.tsx) | 158 |
+| 菜单 API DTO + admin CRUD | [itsm-frontend/src/lib/api/menu-api.ts](../../itsm-frontend/src/lib/api/menu-api.ts) | 107 |
+| React Query 缓存 | [itsm-frontend/src/lib/hooks/useUserMenusQuery.ts](../../itsm-frontend/src/lib/hooks/useUserMenusQuery.ts) | 62 |
+| 菜单种子（真理） | [itsm-backend/pkg/menubaseline/baseline.go:20-158 `MenuDefinitions()`](../../itsm-backend/pkg/menubaseline/baseline.go#L20-L158) | 139 |
+| 菜单 upsert | [itsm-backend/pkg/seeder/seeder.go:1886 转调 `menuDefinitions()` / :1891 `seedMenus`](../../itsm-backend/pkg/seeder/seeder.go#L1886-L1891) | — |
+| 运行时 GetUserMenus | [itsm-backend/service/menu_service.go:212-292 GetUserMenus+filterMSPMenus](../../itsm-backend/service/menu_service.go#L212-L292) | 81 |
+| 路由注册 | [itsm-backend/router/common_system_routes.go:14-214](../../itsm-backend/router/common_system_routes.go#L14-L214) | 200 |
+| HTTP Handler | [itsm-backend/handlers/rbac/handler.go:493 GetUserMenus](../../itsm-backend/handlers/rbac/handler.go#L493-L514) | 22 |
+| Marketplace 路由 | [itsm-backend/handlers/marketplace/handler.go:44-62 RegisterRoutes](../../itsm-backend/handlers/marketplace/handler.go#L44-L62) | 19 |
 
 ---
 
@@ -385,19 +386,19 @@ DELETE /api/v1/menus/:id    RequirePermission(system_config, write)  DeleteMenu
 POST   /api/v1/menus/init   RequirePermission(system_config, write)  InitDefaultMenus
 ```
 
-> ⚠️ 注意权限是 `system_config:read/write`，不是 `menu:*`。管理 UI `/admin/menus` 前端调用 `MenuAdminAPI`，前端代码已就位 [menu-api.ts:67-102](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/menu-api.ts#L67-L102)。
+> ⚠️ 注意权限是 `system_config:read/write`，不是 `menu:*`。管理 UI `/admin/menus` 前端调用 `MenuAdminAPI`，前端代码已就位 [menu-api.ts:67-102](../../itsm-frontend/src/lib/api/menu-api.ts#L67-L102)。
 
 ### 6.3 关键路由注册点
 
 | 路由 | 文件 | 说明 |
 |------|------|------|
-| `GET /api/v1/auth/menus` | [router/common_system_routes.go:31](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L31-L31) | 登录态菜单 |
-| `/api/v1/menus/*` | [router/common_system_routes.go:158-167](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L158-L167) | 菜单管理端 |
-| `/api/v1/marketplace/*` | [handlers/marketplace/handler.go:44-62](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go#L44-L62) | marketplace 路由在 `router.go:612-613` 注册到 tenant 分组 |
-| `/api/v1/org/{departments,teams}/*` | [router/common_system_routes.go:76-88](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L76-L88) | 组织架构（org 路径） |
-| `/api/v1/projects/*` | [router/common_system_routes.go:92-100](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L92-L100) | 项目管理 |
-| `/api/v1/applications/*` | [router/common_system_routes.go:104-111](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L104-L111) | 应用/微服务 |
-| `/api/v1/system/tags`、`/api/v1/system/audit-logs` | [router/common_system_routes.go:115-117](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go#L115-L117) | 标签 + 审计 |
+| `GET /api/v1/auth/menus` | [router/common_system_routes.go:31](../../itsm-backend/router/common_system_routes.go#L31-L31) | 登录态菜单 |
+| `/api/v1/menus/*` | [router/common_system_routes.go:158-167](../../itsm-backend/router/common_system_routes.go#L158-L167) | 菜单管理端 |
+| `/api/v1/marketplace/*` | [handlers/marketplace/handler.go:44-62](../../itsm-backend/handlers/marketplace/handler.go#L44-L62) | marketplace 路由在 `router.go:612-613` 注册到 tenant 分组 |
+| `/api/v1/org/{departments,teams}/*` | [router/common_system_routes.go:76-88](../../itsm-backend/router/common_system_routes.go#L76-L88) | 组织架构（org 路径） |
+| `/api/v1/projects/*` | [router/common_system_routes.go:92-100](../../itsm-backend/router/common_system_routes.go#L92-L100) | 项目管理 |
+| `/api/v1/applications/*` | [router/common_system_routes.go:104-111](../../itsm-backend/router/common_system_routes.go#L104-L111) | 应用/微服务 |
+| `/api/v1/system/tags`、`/api/v1/system/audit-logs` | [router/common_system_routes.go:115-117](../../itsm-backend/router/common_system_routes.go#L115-L117) | 标签 + 审计 |
 
 ### 6.4 旧路径别名（向后兼容）
 
@@ -518,6 +519,13 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 
 下表是 **页面与菜单脱钩** 的事实清单。每条都是 Bug #3 同类的"入口静默缺失"风险，必须收口。
 
+> **2026-10-11 校正**：本表按当前 `pkg/menubaseline/baseline.go` 复核，已有 6 条收口，剩余 4 条成立。
+>
+> - 已注册：`/improvements`（baseline.go:46）、`/marketplace`（:47）、`/installations`（:48）、`/projects`（:49）、`/applications`（:50）、`/admin/tags`（:148）。
+> - 仍未注册：`/teams`、`/templates`、`/workflows`、`/sla-dashboard`。
+>
+> 下表保留原始快照，"建议"列中与前 6 条相关的建议已失效。
+
 ### 8.1 一级缺登（顶级菜单缺失）
 
 | path | name | 前端 page | 后端路由 | 建议 |
@@ -563,7 +571,7 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 ### 8.4 路由别名/直连风险
 
 - `/api/v1/teams`、`/api/v1/departments`、`/api/v1/tags`、`/api/v1/admin/tenants` 顶层 alias 仅 GET；前端若误用这些路径 POST/PUT，会落到 alias 404 而不是真实 `/org/*`、`/system/*`、`/tenants/*`。
-- `/api/v1/marketplace/items` POST `/install` 与 GET `/installations` 不在 `menu` 表注册（详见 §8.1），导致 `/marketplace` 与 `/installations` 页面对普通用户不可见。
+- `/api/v1/marketplace/items` POST `/install` 与 GET `/installations`：对应菜单已于 2026-10-11 复核时确认注册在 `pkg/menubaseline/baseline.go:47/48`，权限码 `marketplace:read`；原先"不在 `menu` 表注册导致页面不可见"的结论已失效，当前可见性只取决于角色是否持有该权限码。
 
 ---
 
@@ -596,24 +604,24 @@ tenant.Group("/admin").GET("/tenants", ...)  // alias /tenants
 
 ### P4：测试
 
-14. **菜单契约测试**：新增 `menu-contract.test.ts` 校验 `/api/v1/auth/menus` 响应字段（`main/admin` 结构、camelCase、children 嵌套、permissionCode 类型）。
+14. **菜单契约测试**：`menu-contract.test.ts` 未创建。现有覆盖是 `itsm-frontend/src/lib/api/__tests__/menu-api.test.ts`、`src/app/(main)/admin/menus/__tests__/menuTreeUtils.test.ts`、`src/components/layout/sidebar/__tests__/cmdb-commercial-menu.test.ts`；`/api/v1/auth/menus` 响应字段（`main/admin` 结构、camelCase、children 嵌套、permissionCode 类型）仍未被断言。
 15. **菜单端到端测试**：登录 → 取菜单 → 点击顶级菜单 → 验证路径命中 `page.tsx`。
 
 ---
 
 ## §10 参考文件索引
 
-- 后端种子： [itsm-backend/pkg/seeder/seeder.go:1805-2028](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/pkg/seeder/seeder.go#L1805-L2028)
-- 后端运行时： [itsm-backend/service/menu_service.go:200-292](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/service/menu_service.go#L200-L292)
-- 后端路由： [itsm-backend/router/common_system_routes.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/router/common_system_routes.go)
-- 后端 Handler： [itsm-backend/handlers/rbac/handler.go:493-514](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/rbac/handler.go#L493-L514)
-- 后端 Marketplace Handler： [itsm-backend/handlers/marketplace/handler.go](file:///Users/heidsoft/Downloads/research/itsm/itsm-backend/handlers/marketplace/handler.go)
-- 前端 Sidebar： [itsm-frontend/src/components/layout/sidebar/Sidebar.tsx](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/Sidebar.tsx)
-- 前端类型/capability： [itsm-frontend/src/components/layout/sidebar/menu-config.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/menu-config.ts)
-- 前端渲染： [itsm-frontend/src/components/layout/sidebar/MenuItems.tsx](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/components/layout/sidebar/MenuItems.tsx)
-- 前端 DTO + admin API： [itsm-frontend/src/lib/api/menu-api.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/api/menu-api.ts)
-- 前端 React Query： [itsm-frontend/src/lib/hooks/useUserMenusQuery.ts](file:///Users/heidsoft/Downloads/research/itsm/itsm-frontend/src/lib/hooks/useUserMenusQuery.ts)
-- 关联文档： [docs/product/ai-automation-status.md](file:///Users/heidsoft/Downloads/research/itsm/docs/product/ai-automation-status.md)
+- 后端种子： [itsm-backend/pkg/menubaseline/baseline.go:20-158](../../itsm-backend/pkg/menubaseline/baseline.go#L20-L158)（定义）+ [itsm-backend/pkg/seeder/seeder.go:1885-1891](../../itsm-backend/pkg/seeder/seeder.go#L1885-L1891)（转调与写入）
+- 后端运行时： [itsm-backend/service/menu_service.go:200-292](../../itsm-backend/service/menu_service.go#L200-L292)
+- 后端路由： [itsm-backend/router/common_system_routes.go](../../itsm-backend/router/common_system_routes.go)
+- 后端 Handler： [itsm-backend/handlers/rbac/handler.go:493-514](../../itsm-backend/handlers/rbac/handler.go#L493-L514)
+- 后端 Marketplace Handler： [itsm-backend/handlers/marketplace/handler.go](../../itsm-backend/handlers/marketplace/handler.go)
+- 前端 Sidebar： [itsm-frontend/src/components/layout/sidebar/Sidebar.tsx](../../itsm-frontend/src/components/layout/sidebar/Sidebar.tsx)
+- 前端类型/capability： [itsm-frontend/src/components/layout/sidebar/menu-config.ts](../../itsm-frontend/src/components/layout/sidebar/menu-config.ts)
+- 前端渲染： [itsm-frontend/src/components/layout/sidebar/MenuItems.tsx](../../itsm-frontend/src/components/layout/sidebar/MenuItems.tsx)
+- 前端 DTO + admin API： [itsm-frontend/src/lib/api/menu-api.ts](../../itsm-frontend/src/lib/api/menu-api.ts)
+- 前端 React Query： [itsm-frontend/src/lib/hooks/useUserMenusQuery.ts](../../itsm-frontend/src/lib/hooks/useUserMenusQuery.ts)
+- 关联文档： [docs/product/ai-automation-status.md](../../docs/product/ai-automation-status.md)
 
 ---
 

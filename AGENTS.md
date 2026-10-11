@@ -32,7 +32,7 @@ When making architecture choices, prefer enterprise correctness, auditability, t
 The repository is past v1.0 GA and is converging on the v1.6.x hardening line:
 
 - v1.0 delivered ITIL core flows, BPMN workflow engine, CMDB v1, knowledge/RAG scaffold, SLA, RBAC, multi-tenant/MSP foundations, Docker Compose, GHCR images, and basic AI/connector scaffolding.
-- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. `handlers/<domain>/` is now the primary routing target; the legacy `controller/` directory has been emptied of HTTP facades, but `service/` continues to host shared business logic consumed by both layers and is being migrated domain-by-domain into `handlers/<domain>/` (see Backend Layering Rules below).
+- v1.6.x focus is TicketType platform, reliability (command/outbox), RBAC/tenant hardening, state-machine CAS + business-error semantics (409 vs 500), and business-flow regression suites. `handlers/<domain>/` is the only routing target: the legacy `controller/` directory was deleted in `48eae74a`, and `service/` still hosts shared business logic that is being migrated domain-by-domain into `handlers/<domain>/` (see Backend Layering Rules below).
 - v1.7 focus is measurable AI evaluator, Feishu/DingTalk/WeCom production connectors, Skill registry, performance budgets, and stronger security scans.
 
 For new work, align with the roadmap rather than creating parallel mechanisms. If a feature overlaps with workflow, connector, AI skill, or marketplace direction, extend the existing extension point.
@@ -51,7 +51,7 @@ Docs and code are one bidirectional loop, not a one-way afterthought. In every c
    | make targets / dev commands / compose usage | `README.md` (+ `README.en.md` if referenced there) |
    | roadmap status change | `ROADMAP.md` + refresh its `Last synced` date |
 
-2. **Docs → code (drive obligation).** Start iterations from `ROADMAP.md` convergence items and `docs/prd/`; after hardening/fix work, write the new capability baseline back into ROADMAP "已落地" and the README maturity table, citing the test/acceptance evidence.
+2. **Docs → code (drive obligation).** Start iterations from `ROADMAP.md` convergence items plus the design outlines in `docs/prd/` and `plans/`; after hardening/fix work, write the new capability baseline back into ROADMAP "已落地" and the README maturity table, citing the test/acceptance evidence.
 
 3. **Doc drift is a defect.** Fix docs in the same batch as the code that invalidated them; if truly impossible, log a follow-up in `CHANGELOG.md` `[Unreleased]`. Run `make docs-gate` (advisory today) when docs or Makefile targets changed — gate C.5 auto-verifies make-target existence and ROADMAP/CHANGELOG freshness. Full rules: [docs/documentation-governance.md](./docs/documentation-governance.md).
 
@@ -105,13 +105,13 @@ ADMIN_PASSWORD=admin123
 - **itsm-frontend** is the operator/admin/user experience layer. It should not duplicate business rules that belong in backend services.
 - **itsm-ai-service / guidance_sidecar / RAG services** provide AI assistance and retrieval. They must remain observable and fail safely.
 - **itsm-agent / itsm-skill / itsm-cli** are future-facing extension surfaces. Do not hard-code behavior into the core app if it clearly belongs in a connector, skill, or CLI operation.
-- **connector marketplace** integrations must go through lifecycle, health check, config, permission, and audit boundaries instead of ad hoc HTTP calls from controllers.
+- **connector marketplace** integrations must go through lifecycle, health check, config, permission, and audit boundaries instead of ad hoc HTTP calls from handlers.
 
 ### Backend Structure
 
 - **handlers/<domain>/** - **Target architecture.** Domain-sliced vertical slices. Each package owns: `handler.go` (HTTP), `service.go` (business logic), `repository.go` + `repository_impl.go` (data access), `entity.go` (domain entities/DTOs). The domain list is enumerated by the filesystem, not by this document — run `ls itsm-backend/handlers/`. Do not hard-code it here: a hand-maintained list drifts (it previously claimed a `cab` domain that never existed). Every `handlers/<domain>/` package must be wired by `router/` or explicitly waived, enforced by `scripts/docs-gate/check-product-drift.sh` (Gate C.6.2 / C.6.3). Shared helpers live in `handlers/common/` and `handlers/shared/`.
-- **service/** - Business logic used by both legacy `controller/` and `handlers/<domain>/`. Do not add new business logic here without a clear owner.
-- **controller/** - **Legacy horizontal layering.** Hosts thin HTTP facades that delegate to `service/`. This directory is frozen for new code. Existing controllers are gradually migrated to `handlers/<domain>/` as part of normal development.
+- **service/** - Shared business logic still consumed by `handlers/<domain>/`. Logic that belongs to one domain should live in that domain's `handlers/<domain>/service.go`; move it when you touch it, domain by domain. Do not add new business logic here without a clear owner.
+- **controller/** - **Removed.** The legacy horizontal layer was retired in `48eae74a` (2026-09-03). There is no HTTP facade there; do not create files under that name.
 - **ent/schema/** - Database schema definitions (Ent ORM)
 - **middleware/** - Auth, logging, CORS, tenant isolation
 - **dto/** - Request/response DTOs
@@ -120,10 +120,10 @@ ADMIN_PASSWORD=admin123
 
 ### Backend Layering Rules
 
-1. **New code goes to `handlers/<domain>/`.** If the domain does not yet have a `handlers/<domain>/` package, create one. Do not add new files to `controller/`.
-2. **Follow the existing pattern.** When extending a domain that already uses `controller/` + `service/` (e.g., analytics, department), continue that pattern only for that domain — do not introduce a new `handlers/<domain>/` package alongside it.
-3. **No dual implementation.** Do not implement the same domain endpoint in both `controller/` and `handlers/<domain>/`. Pick one and migrate if needed.
-4. **Migration is opportunistic.** When working on a domain that lives in `controller/` and the change is more than trivial, evaluate migrating it to `handlers/<domain>/` as part of the same change. Use `git mv` to preserve history.
+1. **New code goes to `handlers/<domain>/`.** If the domain does not yet have a `handlers/<domain>/` package, create one. Do not reintroduce a `controller/` layer.
+2. **Domain rules belong to the domain.** When the domain already owns a `handlers/<domain>/` package, put lifecycle rules, validation, and side effects in its `service.go`; use `service/` only for logic genuinely shared across domains, and say who owns it.
+3. **No dual implementation.** Do not keep two copies of the same use case — neither across two `handlers/<domain>/` packages nor between `service/` and a domain handler. Pick one owner and migrate the other.
+4. **Migration is opportunistic.** When you touch business logic that still lives in `service/` and the change is more than trivial, evaluate moving it into `handlers/<domain>/` in the same change. Use `git mv` to preserve history.
 5. **Rationale.** `handlers/<domain>/` is the long-term target because it aligns with product goals (MSP multi-tenant, marketplace, skill registry, team autonomy) and does not scale with horizontal layering as the domain count grows.
 
 ### Frontend Structure
@@ -165,20 +165,20 @@ All APIs return `{ code: number, message: string, data: any }`:
 
 - Use `common.Success(c, data)` / `common.Fail(c, code, msg)` for responses
 - Use `zap.S()` for logging, not `fmt.Println()`
-- Controllers call services, never access DB directly
+- Handlers call services or repositories, never access Ent or SQL directly
 - Ent schemas in `ent/schema/*.go` generate CRUD
-- Keep controller methods thin: bind/validate request, call service, map DTO, return response.
-- Put transaction boundaries in service/domain layers, not in frontend or controller glue.
+- Keep handler methods thin: bind/validate request, call service, map DTO, return response.
+- Put transaction boundaries in service/domain layers, not in frontend or handler glue.
 - New domain tables must include tenant/account ownership fields where applicable and must be protected by tenant-aware queries.
 - Prefer idempotent seed/migration/init logic. Default initialization must create product templates/configuration, not fake customer business data.
 - Any high-risk action triggered by AI, connector, workflow automation, or bulk operation must create an audit record.
 
 ### 生产入口与领域归属（强制）
 
-- 修改功能前必须从实际注册的 Router 或 Worker handler 追踪生产调用链，确认 `route -> controller/handler -> service -> repository`；仅修改未接线 helper 不算完成
-- 新增实现前必须搜索同名 Route、Handler、Service、Repository 和 CommandType；禁止在 `controller/service` 与 `handlers/<domain>` 两套架构中重复实现同一用例
+- 修改功能前必须从实际注册的 Router 或 Worker handler 追踪生产调用链，确认 `route -> handler -> service -> repository`；仅修改未接线 helper 不算完成
+- 新增实现前必须搜索同名 Route、Handler、Service、Repository 和 CommandType；禁止在 `service/` 与 `handlers/<domain>/` 两处重复实现同一用例
 - 一个用例只能有一个业务规则所有者。跨领域调用使用公开 service/command 接口，禁止访问其他领域的 `repository_impl`、Ent 查询细节或私有状态机
-- Handler/Controller 只负责鉴权上下文、绑定校验、调用一个用例、错误映射和 DTO 输出；不得直接访问 Ent、SQL、连接器、LLM 或 BPMN 引擎
+- Handler 只负责鉴权上下文、绑定校验、调用一个用例、错误映射和 DTO 输出；不得直接访问 Ent、SQL、连接器、LLM 或 BPMN 引擎
 - 完成报告必须指出真实生产入口和调用链；测试只覆盖孤立 helper、但生产路由未接线时，不得声称功能完成
 
 ### 身份、租户与数据范围（强制）
@@ -227,7 +227,7 @@ All APIs return `{ code: number, message: string, data: any }`:
 - 产品能力必须区分 disabled、unconfigured、unready/degraded、ready；禁止把未实现、未配置或依赖不可用伪装成空成功结果
 - capability flag 只控制产品呈现和显式契约禁用，不能跳过后端权限、租户或审计检查
 - 缺少 connector/LLM/BPMN 配置属于 operational unavailable，不得返回用户参数错误；非法状态迁移属于 conflict，资源不存在与无权访问按安全策略明确映射
-- Controller/Handler 必须稳定映射 validation、unauthorized、forbidden、not-found、conflict、unavailable 和 internal error；禁止把所有错误返回 500 或泄漏原始 SQL/provider 错误
+- Handler 必须稳定映射 validation、unauthorized、forbidden、not-found、conflict、unavailable 和 internal error；禁止把所有错误返回 500 或泄漏原始 SQL/provider 错误
 - 降级路径必须返回可观测状态和确定性 fallback，记录 provider/model/能力版本及安全错误分类；禁止静默吃掉失败
 
 ### Context、日志与可观测性（强制）
@@ -276,9 +276,9 @@ All APIs return `{ code: number, message: string, data: any }`:
 ## AI-Native Engineering Rules
 
 - AI suggestions are decision support by default, not silent authority. For triage, impact analysis, workflow recommendation, and automation, keep confidence, prompt/template version, model/provider, accepted/rejected status, and operator feedback.
-- LLM calls must go through the LLM gateway or existing AI service abstraction. Do not call model providers directly from random controllers or frontend components.
+- LLM calls must go through the LLM gateway or existing AI service abstraction. Do not call model providers directly from random handlers or frontend components.
 - Always provide deterministic fallback behavior for AI failure, timeout, low confidence, or disabled provider.
-- Prompts and skills should be versioned, testable, and auditable. Avoid burying large prompts in controller code.
+- Prompts and skills should be versioned, testable, and auditable. Avoid burying large prompts in handler code.
 - RAG must respect tenant, RBAC, knowledge visibility, and article version state before retrieval and before final response.
 - Tool invocation by AI must pass explicit permission checks and produce audit logs.
 
@@ -335,7 +335,7 @@ All APIs return `{ code: number, message: string, data: any }`:
 
 ### Verification Expectations
 
-- For backend service/controller changes, run the narrow package tests first, then `cd itsm-backend && go test ./...` when practical.
+- For backend service/handler changes, run the narrow package tests first, then `cd itsm-backend && go test ./...` when practical.
 - For frontend type/API/UI changes, run `cd itsm-frontend && npm run type-check` and the relevant Jest or Playwright test.
 - For contract changes, update backend DTOs/mappers, frontend API clients/types, and tests in the same change.
 - For workflow, CMDB, connector, AI, auth, tenant, or deployment changes, include at least one regression test or a documented manual verification path.
@@ -346,7 +346,7 @@ All APIs return `{ code: number, message: string, data: any }`:
 - 测试必须覆盖真实生产 Router/Handler/Worker 入口；只测试未接线 helper、mock service 或复制出的逻辑不能证明功能可用
 - 每项业务变更先定义不变量，再至少覆盖成功路径和最高风险失败路径；租户、权限、事务、并发、幂等或状态机变更不得只有 happy path
 - Bug 修复必须添加能够在修复前失败、修复后通过的回归测试；禁止只改实现或只更新 snapshot
-- Controller 契约测试必须断言 HTTP status、业务 code、camelCase DTO 和敏感字段缺失；不得只断言响应包含某段字符串
+- Handler 契约测试必须断言 HTTP status、业务 code、camelCase DTO 和敏感字段缺失；不得只断言响应包含某段字符串
 - 数据库相关测试必须验证 rollback 和 tenant scope；异步副作用必须验证 duplicate、retry、dead-letter 或 fencing 中与改动相关的行为
 - 测试数据必须显式区分 tenant A/B、actor、资源归属和权限，避免共享 fixture 无意中绕过隔离
 - 先运行最窄的相关测试和静态检查，再运行领域/全量套件；不得用全量套件噪声替代对改动范围的精确证明
@@ -355,7 +355,7 @@ All APIs return `{ code: number, message: string, data: any }`:
 
 ## API 响应规范
 
-### Controller必须返回DTO，禁止直接返回Ent模型
+### Handler 必须返回 DTO，禁止直接返回 Ent 模型
 
 - ✅ `common.Success(c, dto.ToTicketResponse(ticket))`
 - ❌ `common.Success(c, ticket)` // ticket是*ent.Ticket
@@ -370,7 +370,7 @@ All APIs return `{ code: number, message: string, data: any }`:
 ### List响应必须通过Service层转换
 
 - Service层返回 `*TicketListResponse` 而非 `[]*ent.Ticket`
-- Controller层使用Mapper包装单个对象
+- Handler 层使用 Mapper 包装单个对象
 
 ### API 契约单一事实来源（强制）
 
@@ -454,7 +454,7 @@ const { items, total, page, pageSize, totalPages } = response;
 
 ### API 契约验证（强制）
 
-涉及 Router、Controller DTO、查询参数或 `src/lib/api/` 的变更，至少执行：
+涉及 Router、Handler DTO、查询参数或 `src/lib/api/` 的变更，至少执行：
 
 ```bash
 cd itsm-frontend
@@ -702,7 +702,7 @@ cd itsm-frontend && npm run type-check
 
 - 所有 HTTP/JSON 交互字段统一使用 `camelCase`，包括请求体、响应体、JSON tag、查询参数、表单字段、排序/过滤字段、前端类型定义和运行时对象 key
 - `snake_case` 仅允许出现在数据库列名、SQL、Ent 的 storage key/field 配置、数据库迁移及与明确要求 snake_case 的外部系统适配器内部
-- Controller 不直接暴露 Ent 模型；进入接口边界前必须通过 DTO/Mapper 完成字段转换
+- Handler 不直接暴露 Ent 模型；进入接口边界前必须通过 DTO/Mapper 完成字段转换
 - 新增接口时，先定义前端期望的 `camelCase` DTO，再在后端 Mapper 中完成 `snake_case` 到 `camelCase` 的映射
 - 如历史接口仍返回 `snake_case`，应视为待修复兼容问题，不得复制到新 DTO、前端类型或新接口中；兼容逻辑必须集中在明确标注的适配层，并附迁移说明
 
@@ -822,7 +822,7 @@ func GetTicket(c echo.Context) error {
 
 | 类型 | 命名风格 | 示例 |
 |------|---------|------|
-| Controller | `*_controller.go` | `ticket_controller.go` |
+| Handler | `handler.go`（域内） | `handlers/ticket/handler.go` |
 | Service | `*_service.go` | `ticket_service.go` |
 | DTO | `*_dto.go` | `ticket_dto.go` |
 | Schema | `*.go` (ent) | `ticket.go` |
@@ -833,7 +833,7 @@ func GetTicket(c echo.Context) error {
 后端补充规则：
 
 - Go 文件统一使用 `snake_case`
-- 同一资源尽量使用统一前缀：`ticket_controller.go`、`ticket_service.go`、`ticket_dto.go`
+- 同一域的文件固定落在 `handlers/<domain>/` 内，按职责命名：`handler.go`、`service.go`、`repository.go`、`entity.go`
 - 避免无语义后缀：`ticket_handler_new.go`、`ticket_final.go`、`ticket_temp.go`
 - 若文件承载的是实现细分，可使用职责后缀：`ticket_query_service.go`、`ticket_mapper.go`
 
@@ -895,7 +895,7 @@ src/
 
 ### 必须遵守的规则
 
-1. **DTO 返回**：Controller 必须返回 DTO，禁止返回 Ent 模型
+1. **DTO 返回**：Handler 必须返回 DTO，禁止返回 Ent 模型
 2. **字段命名**：后端 DTO 使用 camelCase，前端使用 camelCase
 3. **文件命名**：遵循上述命名规范（Go 用 snake_case，TypeScript 用 PascalCase/camelCase）
 4. **Mapper 转换**：DTO 层负责 snake_case → camelCase 转换

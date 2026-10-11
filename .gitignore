@@ -82,6 +82,8 @@ itsm-frontend/.jest-cache/
 itsm-frontend/playwright-report/
 itsm-frontend/coverage/
 itsm-frontend/.swc/
+# npm run audit:ui 的可再生机器可读清单（README.md 作为快照保留）
+itsm-frontend/docs/ui-audit/inventory.json
 
 # TypeScript
 *.tsbuildinfo

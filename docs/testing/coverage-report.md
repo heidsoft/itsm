@@ -8,10 +8,13 @@
 ## Quick start
 
 ```bash
-make coverage-report             # run everything; emit coverage-summary.md
-make coverage-report SKIP_BACKEND=1  # frontend-only
-make coverage-report SKIP_FRONTEND=1 # backend-only
+bash scripts/coverage-report.sh                    # run everything; emit coverage-summary.md
+SKIP_BACKEND=1 bash scripts/coverage-report.sh     # frontend-only
+SKIP_FRONTEND=1 bash scripts/coverage-report.sh    # backend-only
+BASELINE_JSON=path/to.json bash scripts/coverage-report.sh  # override baseline (default docs/testing/coverage-baseline.json)
 ```
+
+> 没有 `make coverage-report` 目标；根 Makefile 只有 `test-backend` / `test-frontend` / `lint-backend` / `build-backend`。该脚本目前是本地入口，CI 里只调 `node scripts/test-trend.js`。
 
 Outputs:
 
@@ -32,8 +35,8 @@ so subsequent runs show deltas:
 
 ```bash
 # After a successful coverage-report run:
-make coverage-baseline  # re-snapshots from coverage-summary.md
-# Or edit docs/testing/coverage-baseline.json by hand
+# 没有 make coverage-baseline 目标；直接改 docs/testing/coverage-baseline.json
+#   或把 coverage-summary.md 的 {go, jest} 数字写回该文件
 ```
 
 `scripts/coverage-summarize.js` reads the baseline JSON via `--baseline` and

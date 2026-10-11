@@ -2,10 +2,11 @@
 
 > Status: current
 
-本文档定义了 Stage 5 的静态门禁。每条门禁对应一个
-shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-frontend/tools/`）；
-`run-all.sh` 只聚合后端契约类门禁
-（5.1–5.5 与 5.10），前端门禁 5.6–5.9 与 5.11 需单独调用对应脚本，见「接入位置」。
+本文档定义了 Stage 5 的静态门禁。已实现门禁对应 `scripts/static-gates/` 下的
+shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`）；
+`scripts/static-gates/run-all.sh` 只聚合 5.1–5.5 与 5.10 六条
+（实测见该文件 :46-51）。**5.6–5.9 目前没有脚本、没有接入点**，表中列出的脚本名是待实现占位，
+`git ls-files` 全仓匹配数为 0。
 
 | # | 规则 | 脚本 | 状态 | 阻断构建 |
 |---|------|------|------|---------|
@@ -14,14 +15,14 @@ shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-front
 | 5.3 | 前端禁用 raw `fetch` / `axios`，统一走 BaseApi | `check-raw-fetch.sh` | ADVISORY | ❌ |
 | 5.4 | `service` 层 `go func` 内不得裸用 `context.Background()` | `check-context-bg.sh` | ADVISORY | ❌ |
 | 5.5 | 列表信封只用 `items` + 标准分页键（分页列表五元组 / 不分页列表 `{items,total}`） | `check-pagination-shape.sh` → 委托 `tests/contract` 棘轮 | **HARD** | ✅（棘轮随 `go test ./...` 在 backend-ci 失败） |
-| 5.6 | `next.config.ts` 不得启用 `ignoreBuildErrors` / `ignoreDuringBuilds` | `check-next-ignore-build-errors.sh` | ADVISORY | ❌ |
-| 5.7 | 主要路由组必须具备 `loading.tsx` / `error.tsx` / `not-found.tsx` | `check-next-route-states.sh` | ADVISORY | ❌ |
-| 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh` | ADVISORY | ❌ |
-| 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh` | ADVISORY | ❌ |
+| 5.6 | `next.config.ts` 不得启用 `ignoreBuildErrors` / `ignoreDuringBuilds` | `check-next-ignore-build-errors.sh`（未创建） | 未实现 | ❌ |
+| 5.7 | 主要路由组必须具备 `loading.tsx` / `error.tsx` / `not-found.tsx` | `check-next-route-states.sh`（未创建） | 未实现 | ❌ |
+| 5.8 | `ErrorBoundary` / `AccessDenied` 不得跳转 `/` 营销路径 | `check-error-boundary-target.sh`（未创建） | 未实现 | ❌ |
+| 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh`（未创建） | 未实现 | ❌ |
 | 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
 | 5.11 | Ant Design v4/v5 弃用 API 零新增（9 类，组件归属判定 + 基线棘轮） | `itsm-frontend/tools/check-antd-legacy.sh` | HARD（本地棘轮） | ❌（未接 CI） |
 
-> 5.6–5.9 迁移自 2026-06-19 前端 UX Review 与 2026-07-01 系统功能评审结果（两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回）；脚本位于 `scripts/static-gates/`（与 5.1–5.5 并列）。
+> 5.6–5.9 迁移自 2026-06-19 前端 UX Review 与 2026-07-01 系统功能评审结果（两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回）；对应的四个脚本从未落地，规则目前只以本文描述的形式存在。
 
 ## 接入位置
 
@@ -45,9 +46,10 @@ shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-front
 `run-all.sh` 目前**没有任何 workflow 调用**，因此 5.1–5.4 只在本地执行（5.5 的判定逻辑
 本身在 `tests/contract` 里，随 backend-ci 的 `go test` 硬失败，脚本只是本地入口）。
 这直接掩盖了一条
-已存在的 HARD 门禁违规：`check-bare-json.sh`（5.1）实测有 6 处命中（`handlers/dingtalk/handler.go`
-3 处、`handlers/wecom/handler.go` 2 处、`handlers/approval/routes.go` 1 处），本地 `run-all.sh`
-以退出码 1 结束，CI 却是绿的。把 `run-all.sh` 接进 CI 之前，需要先处置这 6 处（钉钉/企业微信
+已存在的 HARD 门禁违规：`check-bare-json.sh`（5.1）实测有 5 处命中（`handlers/dingtalk/handler.go`
+:73/:86/:93 三处、`handlers/wecom/handler.go`:83/:90 两处；2026-10-11 由该脚本直接复跑确认，
+早前记为 6 处并含 `handlers/approval/routes.go` 一条，该条已不存在），本地 `run-all.sh`
+以退出码 1 结束，CI 却是绿的。把 `run-all.sh` 接进 CI 之前，需要先处置这 5 处（钉钉/企业微信
 是外部回调协议，响应形状由对方规定，属于 5.1 的合理豁免面，应显式登记而不是继续裸用）。
 
 > 5.3 / 5.4 为 advisory（exit 0），日志中可见违规命中；当历史命中全部迁移完成后会
@@ -61,11 +63,11 @@ shell 脚本，位于 `scripts/static-gates/`（5.11 例外，位于 `itsm-front
 common.SuccessWithList`，确保 `{code, message, data}` 三元组与 HTTP 状态码
 映射契约不会被绕过。
 
-**实现**：扫描 `itsm-backend/handlers`、`itsm-backend/service`、
-`itsm-backend/controller` 下的 `.go` 文件（排除 `_test.go` / `_mock.go`），
-匹配 `c.JSON(<digit>, …)`。
+**实现**：扫描 `itsm-backend/handlers`、`itsm-backend/service` 下的 `.go` 文件
+（排除 `_test.go` / `_mock.go`），匹配 `c.JSON(<digit>, …)`。原先还扫描 `itsm-backend/controller`，
+该目录已在 `48eae74a` 删除，扫描目标同步移除（2026-10-11）。
 
-**当前状态**：❌ 失败（2026-10-02 实测 6 处命中，见「接入位置 / CI」）。本门禁标记为
+**当前状态**：❌ 失败（2026-10-11 复跑 `check-bare-json.sh` = 5 处命中，见「接入位置 / CI」）。本门禁标记为
 HARD，但因 `run-all.sh` 未接入 CI，实际不阻断任何合并。
 
 **修复示例**：
@@ -279,7 +281,7 @@ type FooListResponse struct {
 - `ignoreBuildErrors\s*:\s*true`
 - `ignoreDuringBuilds\s*:\s*true`
 
-**当前状态**：⚠️ advisory。仓库现存 1 处历史命中，移除后切换硬门禁。
+**当前状态**：未实现（无脚本，任何位置都不执行）。规则层面的事实：`itsm-frontend/next.config.ts:45/48` 目前显式写 `ignoreBuildErrors: false` / `ignoreDuringBuilds: false`。
 
 **修复示例**：
 
@@ -310,7 +312,7 @@ const nextConfig = {
 
 **豁免**：动态路由目录、API 路由（`api/`）。
 
-**当前状态**：⚠️ advisory。仓库当前已补齐 `(main)` 路由的 `loading.tsx` / `error.tsx`，待补 `not-found.tsx` 与根 `global-error.tsx`。
+**当前状态**：未实现（无脚本，任何位置都不执行）。2026-10-11 实测缺口与文中结论相反：`src/app/(main)/` 只有 `loading.tsx`，缺 `error.tsx` 与 `not-found.tsx`；根 `src/app/` 已有 `error.tsx`、`not-found.tsx`、`global-error.tsx`，缺 `loading.tsx`。
 
 ---
 
@@ -323,7 +325,7 @@ const nextConfig = {
 - 不得出现 `router.push('/')` 或 `window.location.href = '/'`
 - 必须跳 `/dashboard` 或基于认证状态动态决定
 
-**当前状态**：⚠️ advisory。评审已识别 2 处需修复。
+**当前状态**：未实现（无脚本，任何位置都不执行）。2026-10-11 实测：`src/components/common/ErrorBoundary.tsx` 存在但无跳转 `/` 的写法；文中列出的 `AuthGuard.tsx` 在 `src/` 下不存在，规则需要先确认它实际对应哪个守卫组件。
 
 ---
 
@@ -331,7 +333,7 @@ const nextConfig = {
 
 **目的**：评审 F-6..F-9 指出 controller 测试硬编码 `ticket_categories.code = "incident"` 会导致唯一约束冲突，9 个 ticket 测试因此失败。
 
-**实现**：扫描 `itsm-backend/controller/*_test.go`、`service/*_test.go`，匹配：
+**实现**（规则草稿，脚本 `check-test-fixture-uniqueness.sh` 尚未创建）：扫描 `itsm-backend/handlers/<domain>/*_test.go`、`service/*_test.go`（controller 目录已在 `48eae74a` 删除），匹配：
 
 - `SetCode\(["']incident["']\)`（不带 uniqueTestID）
 - `SetName\(["']incident["']\)` 同模式

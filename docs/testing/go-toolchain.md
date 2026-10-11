@@ -31,10 +31,11 @@ CI 端通过 `actions/setup-go@v7` + `go-version-file: itsm-backend/go.mod` 直�
 | 场景 | 命令 | 备注 |
 |---|---|---|
 | **CI** | `actions/setup-go@v7` + `go-version-file: itsm-backend/go.mod` | workflow 默认；新 workflow 模板固定用这种方式 |
-| **本地 `go test` 一键** | `make backend-test`（新） | 内部走 `cd itsm-backend && GOTOOLCHAIN=auto go test ./...` |
-| **本地完整覆盖** | `make coverage-report` | 内部已设置 `GOTOOLCHAIN=${GOTOOLCHAIN:-auto}` |
-| **本地 vet/lint** | `make backend-vet`（新） | `cd itsm-backend && GOTOOLCHAIN=auto go vet ./...` |
-| **本地 build** | `make backend-build`（新） | `cd itsm-backend && GOTOOLCHAIN=auto go build -o itsm ./main.go` |
+| **本地 `go test` 一键** | `make test-backend` | `cd itsm-backend && go test ./...`（不设置 `GOTOOLCHAIN`，由 go.mod 的 `go` 指令自动解析） |
+| **本地完整覆盖** | `bash scripts/coverage-report.sh` | 脚本内部已设置 `GOTOOLCHAIN=${GOTOOLCHAIN:-auto}` |
+| **本地 vet** | `cd itsm-backend && go vet ./...` | 根 Makefile 无 vet 目标；`itsm-backend/Makefile` 有 `make vet` |
+| **本地 lint** | `make lint-backend` | `cd itsm-backend && golangci-lint run`（CI 的 staticcheck 步骤另在 `.github/workflows/backend-ci.yml`） |
+| **本地 build** | `make build-backend` | 构建后端 **Docker 镜像**；纯二进制用 `cd itsm-backend && go build -o itsm ./main.go` |
 | **Docker** | `Dockerfile.prod` / `Dockerfile` | 已固定 `golang:1.25.13-alpine`，无需 `GOTOOLCHAIN` |
 | **国内网络** | `export GOPROXY=https://goproxy.cn,direct && export GOSUMDB=sum.golang.org.cn` | 与 `Dockerfile.prod` 一致，可避免 toolchain 自动下载失败 |
 

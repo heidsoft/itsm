@@ -191,7 +191,7 @@ s.client.RolePermission.Delete().Where(
 
 | # | 问题 | 证据 |
 |:--|:--|:--|
-| 1 | **`itsm-backend/config/seed/seed_data.sql`（38,991 B）死文件但带毒**：全仓引用 **0**（`*.go`/`*.yml`/`*.yaml`/`*.sh`/`Dockerfile*`/`Makefile` 全部实测无命中，唯一提及在 `.workbuddy/memory/2026-09-22.md:136`），却被整目录打进两个镜像；内含 catalog 中**不存在**的权限码 `admin:write`（L153/L334）、`change:manage`（L188）、`tenant:manage`（L342），以及自己的 admin/role INSERT。一条 `psql -f` 就能污染 RBAC | `itsm-backend/Dockerfile:69`、`itsm-backend/Dockerfile.prod:100`（均为 `COPY config/seed ./config/seed`，整目录） |
+| 1 | **`itsm-backend/config/seed/seed_data.sql`（38,991 B）死文件但带毒**：全仓引用 **0**（`*.go`/`*.yml`/`*.yaml`/`*.sh`/`Dockerfile*`/`Makefile` 全部实测无命中，唯一提及在本地未入库的 AI 会话记忆 `.workbuddy/memory/2026-09-22.md:136`（`.workbuddy/`、`itsm-*/memory/` 已在 2026-10-11 清理中移出仓库且属 gitignore 范围）），却被整目录打进两个镜像；内含 catalog 中**不存在**的权限码 `admin:write`（L153/L334）、`change:manage`（L188）、`tenant:manage`（L342），以及自己的 admin/role INSERT。一条 `psql -f` 就能污染 RBAC | `itsm-backend/Dockerfile:69`、`itsm-backend/Dockerfile.prod:100`（均为 `COPY config/seed ./config/seed`，整目录） |
 | 2 | **`demo.json` 是虚构业务数据**（8 incidents / 2 problems / 3 changes / 5 KB 文章），AGENTS.md 明禁"写入伪造客户业务数据"。它随 `config/seed` 整目录进入**生产镜像**，需要 `ITSM_SEED_CONFIG` + build tag `seed_demo` 双门禁才会生效；仓库内**受支持的入口是 dev 专用**的 `make dev-seed-demo`，其 DB 坐标硬编码为 `localhost:55432` / `itsm_user` / `itsm`（不会指向生产库）。风险是"文件在生产镜像里、只差一个环境变量"，不是"有一条受支持的生产路径" | `pkg/seeder/seed_demo.go:1-2`（build tag）；`Makefile:240-249`；`docker-compose.standalone.yml` 与两个 Dockerfile 均未设 `ITSM_SEED_CONFIG` |
 | 3 | ~~`seed_demo.go:9` 引用的 `make dev-seed-demo` 在 Makefile 中不存在~~ —— **本条已撤销，是错的**。该 target 存在于 `Makefile:240-249`、已列入 `.PHONY`（`:2`）、并在 `ROADMAP.md:94` 与 `README.md:142` 有文档。此条原样采纳了子代理结论而未自行复核，见 §6 #9 | `Makefile:2`、`:240-249` |
 | 4 | **`mergeSeedConfig` 是整段替换**：客户 JSON 若覆写 `roles` 段，新装环境会静默丢掉其余 17 个默认角色 | `pkg/seeder/seeder.go:469-543`（历史结论复核仍成立） |
@@ -326,6 +326,11 @@ s.client.RolePermission.Delete().Where(
 **本轮落盘前的引用复核结果**：后端 16 处、前端 15 处 `file:line` 引用**逐条重跑核对**，除上表 #8 的三项外全部仍然成立（`dashboard_routes.go:147/153/188/269`、`ticket_service.go:1107`、`incident/service.go:203`、`cmd/cmdb/main.go:118/124`、`smart_permission.go:117-119`、`router.go:310`、`auth_dto.go:95`、`auth/service.go:151/179`、`seeder.go:2079`、`role_permission_guard_test.go:60`、`app.go:1286`、`seed_data.sql:153/334`、`check-antd-legacy.sh:18`、`ChangeList.tsx:81`、`TicketAdvancedSearch.tsx:131/348`、`tickets/page.tsx:10/12/256`、`agent-ops-demo/page.tsx:33/36/86`、`EnhancedSystemConfig.tsx:252`、`useSatisfactionData.ts:18`、`NotificationCenter.tsx:276`、`TicketCategoryExport.tsx:134`、`TicketTemplate.tsx:104/228`、`TicketMultiLevelApproval.tsx:302`、`KnowledgeIntegration.tsx:217`、`check-scope-creep.sh:33`）。"7/10 能力开关零消费者"亦重跑确认为 7。
 
 **对子代理结论的修正**（本轮第 5 个子代理）：方向正确、两处数字不准 —— 缺失码是 **28** 不是 31；角色键 **32** 个但播种角色 **24** 个。其风险排序第 1 条（sysadmin 缺码 → DBOnly 403）结论成立，但给出的机制（内联 `RequirePermission`）不完整，真实机制是**预检映射的 Resource/Action 组合 + 内联强制两者都有**，且影响面远超 sysadmin（`dashboard:read` 只授给 `admin`）。
+
+**2026-10-11 再复核**：上段"全部仍然成立"里有两项已被后续整改作废，不要再按原引用查找——
+`seed_data.sql:153/334`（文件已不在仓库，`git ls-files | grep -i seed_data` 与全盘 `find` 均 0 命中；`itsm-backend/config/seed/` 现在只剩 `default.json`、`demo.json`）和
+`agent-ops-demo/page.tsx:33/36/86`（`itsm-frontend/src/app/agent-ops-demo` 目录已删除）。
+种子载体与假实现两条结论的业务判断不变，只是证据落点变了。
 
 ---
 

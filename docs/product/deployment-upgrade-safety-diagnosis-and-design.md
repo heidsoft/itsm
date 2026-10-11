@@ -5,7 +5,7 @@
 **状态**: Draft（待产品评审）
 **日期**: 2026-09-10
 **输入证据**: 2026-09-10 prod 恢复与本地代码重建全过程的实测日志、外部审计核实报告（2026-09-08）、ROADMAP v1.6.x 未勾选项
-**关系文档**: [itsm-commercial-capability-contract.md](./itsm-commercial-capability-contract.md)、[open-source-release-capability.md](./open-source-release-capability.md)、[phased-improvement-plan.md](./phased-improvement-plan.md)
+**关系文档**: [itsm-commercial-capability-contract.md](./itsm-commercial-capability-contract.md)、[open-source-release-capability.md](./open-source-release-capability.md)
 
 ---
 

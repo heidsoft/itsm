@@ -1,6 +1,10 @@
 # ITSM 测试用例文档索引
 
-> Status: current
+> Status: historical（2026-05-10 计划稿，非当前执行看板）
+
+本索引只保留用例编号规范与文件清单。下表「用例数量」与「统计总览」是 2026-05-10 的计划估算，从未按实际用例数实测；各文件「生成中」是当时的编写状态，不代表现在仍在写。可执行的回归以 `itsm-backend`/`itsm-frontend` 测试套件和 Playwright spec 为准，不以本目录为准。
+
+`TC-ADMIN.md` 已在 2026-10-11 文档清理中删除：其中至少 8 个端点（`/permission-groups`、`/users/export|import|search`、`/templates/users/upload|validate|assets/download`、`/audit-logs/export`、`/departments/{id}/members`）在 Gin Router 中从未注册，按代码事实重写前不要引用。
 
 ## 文档版本
 - 版本号: 1.0
@@ -28,7 +32,6 @@
 | CMDB | TC-CMDB.md | 60+ | P1 | 生成中 |
 | SLA监控 | TC-SLA.md | 50+ | P0 | 生成中 |
 | 工作流/BPMN | TC-WORKFLOW.md | 55+ | P0 | 生成中 |
-| 系统管理 | TC-ADMIN.md | 70+ | P0 | 生成中 |
 | AI功能 | TC-AI.md | 30+ | P2 | 生成中 |
 | 报表模块 | TC-REPORTS.md | 40+ | P2 | 生成中 |
 | 资产管理 | TC-ASSET.md | 45+ | P1 | 生成中 |
@@ -54,7 +57,7 @@ TC-{模块缩写}-{序号}
 示例:
 TC-AUTH-001      -> 认证模块第1个用例
 TC-TICKET-001    -> 工单模块第1个用例
-TC-ADMIN-001     -> 系统管理模块第1个用例
+TC-SLA-001       -> SLA 模块第1个用例
 ```
 
 ### 模块缩写对照表
@@ -132,7 +135,6 @@ TC-ADMIN-001     -> 系统管理模块第1个用例
 - [CMDB](./TC-CMDB.md)
 - [SLA监控](./TC-SLA.md)
 - [工作流](./TC-WORKFLOW.md)
-- [系统管理](./TC-ADMIN.md)
 - [AI功能](./TC-AI.md)
 - [报表模块](./TC-REPORTS.md)
 - [资产管理](./TC-ASSET.md)
