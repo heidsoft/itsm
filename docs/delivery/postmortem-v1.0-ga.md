@@ -205,7 +205,7 @@ CI 脚本默认值对齐。否则 CI 会"看似通过"（容器起来了），�
 
 #### v1.1 路线图调整（2026-06-28 Sprint #1 复盘）
 
-- **审计产出**：[coverage-v1.1.md](./coverage-v1.1.md)（13.7% 整体，覆盖率差距表）
+- **审计产出**：v1.1 覆盖率审计报告已于 2026-10-12 移除（`Status: superseded`，口径为 2026-06-28 快照且 `controller/` 已清空，不可用于判断当前覆盖率）；当前覆盖率见 [coverage-report.md](../testing/coverage-report.md)，目标与现状以根目录 `ROADMAP.md`「Key Metrics」为准
 - **重大发现**：`commit 12491c74 "refactor(cmdb): 重构CMDB控制器以提升模块化和可维护性"` 引入大面积 dto/service 命名不一致，导致 `go build ./service/...` 失败。这是 v1.1 Sprint #1 的 P0 阻塞项。
 - **下一轮 Sprint #2 调整方向**：先修复上游 build 阻塞，再补 incident_service.go 中 13 个 0% 覆盖方法（`AcknowledgeIncident`、`ResolveIncident`、`CloseIncident`、`EscalateIncident` 等关键路径），而不是继续扩展 controller 测试模板。
 

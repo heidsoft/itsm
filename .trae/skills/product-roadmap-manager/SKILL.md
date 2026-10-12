@@ -7,7 +7,7 @@ description: Maintain the ITSM roadmap, release scope, priorities, milestones, d
 
 ## Source of truth
 
-Read `AGENTS.md`, `docs/roadmap.md`, relevant review reports, and current code/tests before
+Read `AGENTS.md`, `ROADMAP.md`, relevant review reports, and current code/tests before
 changing roadmap status. Use dates from the current environment. Do not preserve stale quarter
 labels, fabricated team capacity, or unsupported completion percentages.
 

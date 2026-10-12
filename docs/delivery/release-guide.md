@@ -20,18 +20,15 @@ docs/delivery/
     └── certification-<date>.md
 ```
 
-> 早期散落在仓库根目录的报告（如 `docs/initialization-release-certification.md`、`docs/release-v1.5.0-certification-evidence.md`）保留原位但已标记 `Status: historical`，下次发布按本目录规范统一新建。
+> 历史上散落在仓库根目录的认证报告（`docs/initialization-release-certification.md`、`docs/release-v1.5.0-certification-evidence.md`）已在 2026-10-12 文档清理中删除；发布报告一律按本目录规范新建，不再散放根目录。
 
 ---
 
 ## 当前报告索引
 
-| 版本 | 日期 | 类型 | 报告 | 状态 |
-|---|---|---|---|---|
-| v1.5.0 | 2026-07-30 | 初始化 + GA 候选 | [`docs/release-v1.5.0-certification-evidence.md`](../release-v1.5.0-certification-evidence.md) | historical |
-| 初始化 | 2026-07-30 | 初始化发布认证 | [`docs/initialization-release-certification.md`](../initialization-release-certification.md) | historical |
+暂无按本目录规范建立的正式报告。
 
-> 历史快照不迁移到本目录，避免误导读者认为其代表当前发布状态。
+> v1.5.0 与初始化两轮 2026-07-30 的认证快照（原 `docs/release-v1.5.0-certification-evidence.md`、`docs/initialization-release-certification.md`）已在 2026-10-12 文档清理中删除；如需回溯原文，用 `git log --diff-filter=D -- <path>` 取回。历史快照不迁入本目录，避免误导读者认为其代表当前发布状态。
 
 ---
 

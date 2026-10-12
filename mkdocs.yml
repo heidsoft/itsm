@@ -101,11 +101,9 @@ nav:
       - 架构设计: architecture/architecture.md
       - 部署: deployment-optimization.md
       - API 参考: api-reference.md
-      - v1.0 GA 验收: v1-ga-readiness.md
   - 治理:
       - 文档状态与事实源: documentation-governance.md
       - 标签体系: label-schema.md
-      - Roadmap: roadmap.md
       - 覆盖率报告: testing/coverage-report.md
       - 文档规范: documentation-style-guide.md
 

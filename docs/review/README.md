@@ -22,12 +22,12 @@
 - 2026-10-10 清理：以下 2026-06/07 历史报告已 `git rm` 删除（结论均已迁移到上节规范文档，原文可用 `git log --diff-filter=D -- docs/review` 取回）：
   `architecture-review-2026-06-14.md`、`browser-e2e-test-report-2026-06-18.md`、`browser-functional-test-report-2026-06-20.md`、`commercial-readiness-acceptance-report-2026-06-18.md`、`deep-business-test-report-2026-06-18.md`、`frontend-ux-review-2026-06-19.md`、`module-function-retrospective-2026-07-10.md`、`system-function-review-checklist-2026-07-01.md`、`system-function-review-result-2026-07-01.md`。
   - 同批删除 `docs/archive/` 整层（含 `reviews/product-architecture-review-2026-09-03.md` 等 13 份归档件）。
+- 2026-10-12 清理：`workflow-cmdb-review-2026-09-03.md` 已删除（结论已在 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) 中生效；原文用 `git log --diff-filter=D` 取回）。
 
 ## 仍保留的报告
 
 | 报告 | 状态 | 保留理由 |
 |---|---|---|
-| `workflow-cmdb-review-2026-09-03.md` | historical | 工作流/CMDB 评审；被 [`docs/architecture/workflow-cmdb-invariants.md`](../architecture/workflow-cmdb-invariants.md) §回归 引用 |
 | `scope-convergence-architecture-review-2026-09-30.md` | active | 收敛计划（`plans/scope-convergence-plan-2026-09-28.md`）B0–B5 落地状态实测审查；F8 空转、判据口径歧义与执行顺序建议 |
 | `product-convergence-initialization-permission-review-2026-10-03.md` | active | 三轮只读审查合并：注册接口可无认证自选 `super_admin`（P0-1）；硬编码与 DB 播种两套权限权威对 `sysadmin` 等角色定义不一致、播种反而致 `dashboard:read` 等 89 个路由模式在 DBOnly 下 403（P0-2）；种子载体（`seed_data.sql` 死文件带毒，该文件已在后续整改中删除；`demo.json` 入生产镜像）、55 个孤儿组件中的假实现、三处门禁假绿；含审查者 7 次近似失误记录 |
 

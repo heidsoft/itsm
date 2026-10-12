@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **历史文档清理（2026-10-12）**：移除 6 份已标注 `superseded`/`historical` 的入仓文档——`docs/roadmap.md`（7 行跳转页，自述 superseded）、`docs/delivery/coverage-v1.1.md`（2026-06-28 覆盖率快照，自述 superseded）、`docs/initialization-release-certification.md`、`docs/release-v1.5.0-certification-evidence.md`、`docs/v1-ga-readiness.md`、`docs/review/workflow-cmdb-review-2026-09-03.md`。同步删除 `mkdocs.yml` nav 中 2 条失效条目（v1.0 GA 验收 / Roadmap），并将 4 处指向已删文件的链接改指当前事实源（`docs/documentation-governance.md`、`docs/testing/coverage-report.md`、根目录 `ROADMAP.md`）。清理后 Gate C.2 重复 roadmap 检测 0 violation、Gate C.3 内部断链 0。审查清单见 `output/doc-cleanup-review-2026-10-12.md`。
+- **文档清理（第二轮）**：再删 `docs/product/plan-knowledge-closed-loop-review-2026-09-25.md`（被评 plan 已删除、结论已迁移）与 `docs/testing/full-product-smoke-2026-06-06.md`（2026-06 历史快照）；修复首轮遗留的 7 处守卫豁免区软引用（`release-guide.md`、`report-template.md`、`review/README.md`、`go-toolchain.md`、`documentation-governance.md`、`coverage-baseline.json`、`.trae` roadmap skill 指向已删文件）。
+- **前端死代码清理**：删除零生产引用的 `src/lib/pwa.ts`、`color-contrast.ts`、`services/workflow-engine-service.ts`、`validation.ts` 与 `utils/validation.ts`（含各自测试）、`tests/e2e/deep-business-test.js` 重复件及 `uploads/tickets/` 测试残留；`npm run type-check` 通过、Jest 171 套件全绿。
+
+### Changed
+
+- **`ROADMAP.md`**：v1.0 GA readiness 条目由失效的 `docs/v1-ga-readiness.md` 链接改为指向 `docs/documentation-governance.md`。
+
 ## [1.6.18] - 2026-10-12
 
 ### Changed

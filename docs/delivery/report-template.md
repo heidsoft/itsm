@@ -59,7 +59,7 @@ signoff:                    # 签字（缺一不可作为发布凭证）
 > **Status**: historical。该文件只证明 YYYY-MM-DD 当次 revision、数据库和容器运行。
 > 不证明当前工作树。最新判断参见 [文档状态与事实源](../documentation-governance.md) 与 [部署业务测试](../../output/product-deployment-business-test-YYYY-MM-DD.md)。
 
-本文档归档 vX.Y.Z 的发布证据，覆盖 [初始化发布认证](../initialization-release-certification.md) 中各 P 类阻断项的关闭结果。
+本文档归档 vX.Y.Z 的发布证据，覆盖初始化/认证过程中各 P 类阻断项的关闭结果。
 
 ## 一、自动化回归（绑定 commit / 日期）
 

@@ -14,7 +14,7 @@
 | GH Actions 公共 README badge | `Go 1.25.13` | `README.md:9` |
 | Dockerfile.prod 基础镜像 | `mirror.gcr.io/library/golang:1.25.13-alpine` | `itsm-backend/Dockerfile.prod:16` |
 | Dockerfile dev 基础镜像 | `golang:1.25.13-alpine` | `itsm-backend/Dockerfile:18` |
-| 本地开发机 | 通常 `1.25.x` 系列但与上游有偏差 | docs/delivery/coverage-v1.1.md 记录 macOS Go `1.25.6` |
+| 本地开发机 | 通常 `1.25.x` 系列但与上游有偏差 | 2026-06 审计记录 macOS Go `1.25.6`（原文已删） |
 | README 给出的提示 | `GOTOOLCHAIN=auto go test ./...` | `README.md:248` |
 
 ## 2. 为什么需要 `GOTOOLCHAIN=auto`

@@ -4,7 +4,7 @@
 > **目的**：以单页矩阵对齐 AI 域、Skill Registry、Agent 工具、连接器市场、审批与自动化规则的现状与生产入口
 > **数据快照**：main @ 2026-09-25 路由与 handlers 实读 + `ROADMAP.md`（v1.6.x 收敛线）+ `CHANGELOG.md`（`[Unreleased]` + `[1.6.10]`）
 > **快照后差异（2026-10-11 复核，以路由注册为准）**：AI 建单是 `POST /api/v1/ai/ticket/create`（`router/ai_routes.go:42`，单数），不是文中写的 `/ai/tickets/create`；企业连接器回调是 `POST /api/v1/{dingtalk,feishu,wecom}/webhook/:instance_id`（如 `handlers/dingtalk/handler.go:37`），不是 `/dingtalk/callback`；§14.5 bug#1（`GET /admin/skills` 404）与 bug#3（marketplace 无种子）已修复（`handlers/skill/handler.go:7-10` 的 `/api/v1/admin/skills` 契约、`pkg/seeder/initialization_adapter.go:55` 的 `marketplace-items` 初始化项）。
-> **关联**：长期产品全景见 [`itsm-commercial-capability-contract.md`](./itsm-commercial-capability-contract.md)；业务快照见 [`business-snapshot-2026-09-24.md`](./business-snapshot-2026-09-24.md)；路线图见 [`../roadmap.md`](../roadmap.md)
+> **关联**：长期产品全景见 [`itsm-commercial-capability-contract.md`](./itsm-commercial-capability-contract.md)；业务快照见 [`business-snapshot-2026-09-24.md`](./business-snapshot-2026-09-24.md)；路线图见 [`ROADMAP.md`](../../ROADMAP.md)（唯一事实源）
 
 ---
 

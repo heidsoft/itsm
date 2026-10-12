@@ -25,7 +25,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 | 产品版本 | 最新发布标签为 `v1.6.9`；当前工作树可能包含未发布变更，版本号不等于生产门禁已放行 |
 | 当前路线 | 以根目录 `ROADMAP.md` 和 `plans/open-source-commercialization-2026q3-blueprint.md` 为准 |
 | 最新部署事实 | 以**重新执行** `docs/delivery/production-readiness-program.md` 的验收流程后取得的证据为准；`output/` 下的历史报告是**本地产物**（该目录已按“可能含真实凭据”加入 `.gitignore`，不入库、不随 clone 分发），只证明当次运行，不可作为放行依据 |
-| 生产认证 | `docs/initialization-release-certification.md` 与 `docs/release-v1.5.0-certification-evidence.md` 是 2026-07-30 历史快照，不代表当前工作树 |
+| 生产认证 | 2026-07-30 的历史认证快照（初始化认证、v1.5.0 候选证据）已在 2026-10-12 清理中删除，不代表当前工作树 |
 | 开发登录 | 本地开发可使用 seed 账号；生产必须使用当前发布支持的 bootstrap 流程，禁止引用历史默认密码 |
 | 成熟度 | 页面、Schema 或测试文件存在不等于 GA；运行时 capability/readiness 和本次发布证据共同决定 |
 
@@ -43,7 +43,7 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 
 ## 维护规则
 
-1. 路线图只维护根目录 `ROADMAP.md`；`docs/roadmap.md` 仅保留跳转说明。
+1. 路线图只维护根目录 `ROADMAP.md`（`docs/roadmap.md` 跳转页已于 2026-10-12 删除）。
 2. 生产部署命令只维护 `docs/deployment-optimization.md`；其他文档链接到它，不复制整段命令。
 3. 开发默认账号必须明确标注“仅本地开发”；生产文档不得提供固定默认密码。
 4. `plans/` 中的 checklist 完成后不能直接写“已发布”，必须链接对应测试/部署证据。
@@ -74,8 +74,6 @@ GitHub Issue、Project 或旧认证报告中的“完成”不能覆盖源码、
 
 ## 当前高风险历史材料
 
-- `docs/initialization-release-certification.md`：已被最新部署测试和当前工作树状态取代。
-- `docs/release-v1.5.0-certification-evidence.md`：仅证明 2026-07-30 当次运行。
-- `docs/v1-ga-readiness.md`：仅用于 v1.0 历史验收，不代表 v1.6.9 或当前工作树。
+- v1.0–v1.5 的三份认证/验收快照（`initialization-release-certification`、`release-v1.5.0-certification-evidence`、`v1-ga-readiness`）：已在 2026-10-12 文档清理中删除，不代表当前工作树；如需回溯用 `git log --diff-filter=D -- <path>` 取回。
 - `docs/review/`、`output/` 中的”全部通过””立即上线”：均为历史结论。
 - `docs/delivery/postmortem-v1.0-ga.md` 中的默认 `ADMIN_PASSWORD`：仅为历史 CI 复盘，不得复制到生产配置。

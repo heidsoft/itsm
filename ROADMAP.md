@@ -5,7 +5,7 @@
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
-> - v1.0 GA readiness: [docs/v1-ga-readiness.md](./docs/v1-ga-readiness.md)
+> - v1.0 GA readiness: 历史验收文档已于 2026-10-12 移除（`Status: historical`，结论不得复用于当前版本）；当前发布判断见 [文档状态与事实源](./docs/documentation-governance.md)
 > - Architecture: [docs/architecture/](./docs/architecture)
 > - Open issues & milestones: GitHub [Issues](https://github.com/heidsoft/itsm/issues) and [Projects](https://github.com/heidsoft/itsm/projects)
 
