@@ -124,7 +124,6 @@ func TestConcurrentTicketCreation(t *testing.T) {
 // TestConcurrentTicketCreationMultiTenant 多租户隔离验证
 // 验证不同租户的工单互相隔离
 func TestConcurrentTicketCreationMultiTenant(t *testing.T) {
-	t.Skip("KNOWN BUG: ticket number collision in multi-tenant - DB fallback not tenant-scoped")
 	client, svc, ctx := setupConcurrentTest(t)
 	tenantA := createConcTenant(ctx, t, client)
 	tenantB, err := client.Tenant.Create().
@@ -138,7 +137,8 @@ func TestConcurrentTicketCreationMultiTenant(t *testing.T) {
 	userA := createConcUser(ctx, t, client, tenantA, "a")
 	userB := createConcUser(ctx, t, client, tenantB.ID, "b")
 
-	// 顺序创建（SQLite ticket number collision 避免）
+	// 两个租户各自当月首单都会算出 TKT-YYYYMM-000001：编号是租户内 max+1 的
+	// 确定性结果，不含月份以下的时间成分，所以跨租户同号是必然而非竞态。
 	tkA, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
 		Title:       "TenantA ticket",
 		Priority:    "medium",
@@ -146,9 +146,7 @@ func TestConcurrentTicketCreationMultiTenant(t *testing.T) {
 		RequesterID: userA.ID,
 	}, tenantA)
 	require.NoError(t, err)
-	time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
 	assert.NotNil(t, tkA)
-	time.Sleep(150 * time.Millisecond) // avoid ticket number collision in SQLite
 
 	tkB, err := svc.CreateTicket(ctx, &dto.CreateTicketRequest{
 		Title:       "TenantB ticket",
@@ -158,6 +156,8 @@ func TestConcurrentTicketCreationMultiTenant(t *testing.T) {
 	}, tenantB.ID)
 	require.NoError(t, err)
 	assert.NotNil(t, tkB)
+	assert.Equal(t, tkA.TicketNumber, tkB.TicketNumber,
+		"两个租户当月首单必然同号；ticket_number 唯一性必须是租户内而非全局")
 
 	// 验证租户隔离：A 的工单不能被 B 访问
 	_, err = svc.GetTicket(ctx, tkA.ID, tenantB.ID)

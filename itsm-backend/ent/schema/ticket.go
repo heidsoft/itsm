@@ -38,7 +38,6 @@ func (Ticket) Fields() []ent.Field {
 			Default("medium"),
 		field.String("ticket_number").
 			Comment("工单编号").
-			Unique().
 			NotEmpty(),
 		field.Int("requester_id").
 			Comment("申请人ID").
@@ -174,7 +173,9 @@ func (Ticket) Edges() []ent.Edge {
 // Indexes of the Ticket.
 func (Ticket) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("ticket_number").Unique(),
+		// 租户内唯一，不是全局唯一：编号由「该租户当月 max+1」生成，
+		// 全局唯一会让新开通租户在当月首单必然撞号且无法建单。
+		index.Fields("tenant_id", "ticket_number").Unique(),
 		index.Fields("status"),
 		index.Fields("priority"),
 		index.Fields("type"), // Added index for type

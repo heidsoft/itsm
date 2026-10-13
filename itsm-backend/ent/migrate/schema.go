@@ -4915,7 +4915,7 @@ var (
 		{Name: "ticket_type_name_snapshot", Type: field.TypeString, Nullable: true, Size: 128},
 		{Name: "form_fields", Type: field.TypeJSON},
 		{Name: "priority", Type: field.TypeString, Default: "medium"},
-		{Name: "ticket_number", Type: field.TypeString, Unique: true},
+		{Name: "ticket_number", Type: field.TypeString},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "template_id", Type: field.TypeInt, Nullable: true},
 		{Name: "category_id", Type: field.TypeInt, Nullable: true},
@@ -5024,9 +5024,9 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "ticket_ticket_number",
+				Name:    "ticket_tenant_id_ticket_number",
 				Unique:  true,
-				Columns: []*schema.Column{TicketsColumns[9]},
+				Columns: []*schema.Column{TicketsColumns[10], TicketsColumns[9]},
 			},
 			{
 				Name:    "ticket_status",
