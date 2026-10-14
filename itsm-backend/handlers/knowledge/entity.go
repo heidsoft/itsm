@@ -1,8 +1,13 @@
 package knowledge
 
 import (
+	"errors"
 	"time"
 )
+
+// ErrArticleNotFound 文章不存在或不属于当前租户。
+// 版本表无 tenant_id，租户隔离经文章归属校验实现，失败时返回本错误。
+var ErrArticleNotFound = errors.New("article not found")
 
 // Article representing a knowledge base article
 type Article struct {
@@ -38,4 +43,18 @@ type Article struct {
 // Category represents a knowledge category
 type Category struct {
 	Name string `json:"name"`
+}
+
+// ArticleVersion 文章版本快照。更新正文前自动创建，用于历史回溯与恢复。
+// JSON 键与前端 ArticleVersion 契约对齐：createdByName/changeLog 是展示字段，
+// 由仓储层在读取时补齐（changeLog 取自变更摘要，createdByName 查用户表）。
+type ArticleVersion struct {
+	Version       int       `json:"version"`
+	Title         string    `json:"title"`
+	Content       string    `json:"content"`
+	CreatedBy     int       `json:"createdBy"`
+	CreatedByName string    `json:"createdByName"`
+	ChangeLog     string    `json:"changeLog"`
+	Summary       string    `json:"summary"`
+	CreatedAt     time.Time `json:"createdAt"`
 }

@@ -34,6 +34,8 @@ func SetupAIRoutes(tenant *gin.RouterGroup, h *aiHandler.Handler) {
 		aiGrp.GET("/evaluation", middleware.RequirePermission("ai", "read"), h.GetEvaluation)
 		// AI 审计日志（ai_audit 记录分页查询）
 		aiGrp.GET("/audit-logs", middleware.RequirePermission("ai", "read"), h.GetAuditLogs)
+		// 审计闭环：采纳/拒绝翻转（handler 自 2026-10 存在但漏注册路由，前端 PATCH 恒 404）
+		aiGrp.PATCH("/audit-logs/:id", middleware.RequirePermission("ai", "write"), h.UpdateAuditAccepted)
 		aiGrp.POST("/triage", middleware.RequirePermission("ai", "read"), h.Triage)
 		// RAG endpoints
 		// KnowledgeSearch 用 ShouldBindJSON 从 body 读 {query,limit,type}，GET 不解析 body，因此必须注册为 POST。

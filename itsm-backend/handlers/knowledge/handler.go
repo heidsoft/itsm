@@ -1,10 +1,14 @@
 package knowledge
 
 import (
+	"errors"
+	"strings"
+
 	"itsm-backend/internal/knowledgeaccess"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 
 	"github.com/gin-gonic/gin"
 )
@@ -638,4 +642,180 @@ func (h *Handler) GetStats(c *gin.Context) {
 	}
 
 	common.Success(c, stats)
+}
+
+// ListArticleVersions handles GET /api/v1/knowledge/articles/:id/versions.
+// 版本历史列表（版本号倒序）。2026-10-14 前该端点未注册，前端版本 Tab 打开即报错。
+func (h *Handler) ListArticleVersions(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromContext(c)
+	if !ok {
+		return
+	}
+
+	pg := common.GetPaginationFromQuery(c)
+
+	versions, _, err := h.svc.ListVersions(c.Request.Context(), id, tenantID, pg.Page, pg.PageSize)
+	if err != nil {
+		knowledgeVersionError(c, err)
+		return
+	}
+	common.Success(c, versions)
+}
+
+// RestoreArticleVersion handles POST /api/v1/knowledge/articles/:id/versions/:version/restore.
+func (h *Handler) RestoreArticleVersion(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	version, ok := common.ParsePositiveID(c, "version")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromContext(c)
+	if !ok {
+		return
+	}
+	userID := c.GetInt("user_id")
+
+	article, err := h.svc.RestoreVersion(c.Request.Context(), id, version, tenantID, userID)
+	if err != nil {
+		knowledgeVersionError(c, err)
+		return
+	}
+	common.Success(c, h.toArticleDTO(article))
+}
+
+// CompareArticleVersions handles GET /api/v1/knowledge/articles/:id/versions/compare?from&to.
+func (h *Handler) CompareArticleVersions(c *gin.Context) {
+	id, ok := common.ParsePositiveID(c, "id")
+	if !ok {
+		return
+	}
+	tenantID, ok := tenantIDFromContext(c)
+	if !ok {
+		return
+	}
+	from, ok := common.ParsePositiveID(c, "from")
+	if !ok {
+		return
+	}
+	to, ok := common.ParsePositiveID(c, "to")
+	if !ok {
+		return
+	}
+
+	fromVersion, err := h.svc.GetVersion(c.Request.Context(), id, from, tenantID)
+	if err != nil {
+		knowledgeVersionError(c, err)
+		return
+	}
+	toVersion, err := h.svc.GetVersion(c.Request.Context(), id, to, tenantID)
+	if err != nil {
+		knowledgeVersionError(c, err)
+		return
+	}
+
+	changes := diffLines(fromVersion.Content, toVersion.Content)
+	common.Success(c, gin.H{
+		"diff":    renderLineDiff(changes),
+		"changes": changes,
+	})
+}
+
+// tenantIDFromContext 从 gin 上下文取租户 ID，缺失/类型错误统一 401。
+func tenantIDFromContext(c *gin.Context) (int, bool) {
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		// 租户上下文缺失属认证问题，统一为 401。
+		common.Fail(c, common.AuthFailedCode, "Tenant ID not found")
+		return 0, false
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, common.AuthFailedCode, "Invalid tenant ID")
+		return 0, false
+	}
+	return tenantID, true
+}
+
+// knowledgeVersionError 版本操作错误映射：不存在/非本租户 → 404，其余 → 500。
+func knowledgeVersionError(c *gin.Context, err error) {
+	if errors.Is(err, ErrArticleNotFound) || ent.IsNotFound(err) {
+		common.NotFound(c, "Article or version not found")
+		return
+	}
+	common.Fail(c, common.InternalErrorCode, err.Error())
+}
+
+// diffChange 单行差异：type 为 added / removed。
+type diffChange struct {
+	Type    string `json:"type"`
+	Content string `json:"content"`
+}
+
+// diffLines 以行为单位对比两段文本（LCS），返回增删序列。
+// 知识文章版本对比只需行级可读性，不引入三方 diff 依赖。
+func diffLines(from, to string) []diffChange {
+	fromLines := strings.Split(from, "\n")
+	toLines := strings.Split(to, "\n")
+
+	// LCS 长度表
+	m, n := len(fromLines), len(toLines)
+	lcs := make([][]int, m+1)
+	for i := range lcs {
+		lcs[i] = make([]int, n+1)
+	}
+	for i := m - 1; i >= 0; i-- {
+		for j := n - 1; j >= 0; j-- {
+			if fromLines[i] == toLines[j] {
+				lcs[i][j] = lcs[i+1][j+1] + 1
+			} else if lcs[i+1][j] >= lcs[i][j+1] {
+				lcs[i][j] = lcs[i+1][j]
+			} else {
+				lcs[i][j] = lcs[i][j+1]
+			}
+		}
+	}
+
+	changes := make([]diffChange, 0, m+n)
+	i, j := 0, 0
+	for i < m && j < n {
+		switch {
+		case fromLines[i] == toLines[j]:
+			i++
+			j++
+		case lcs[i+1][j] >= lcs[i][j+1]:
+			changes = append(changes, diffChange{Type: "removed", Content: fromLines[i]})
+			i++
+		default:
+			changes = append(changes, diffChange{Type: "added", Content: toLines[j]})
+			j++
+		}
+	}
+	for ; i < m; i++ {
+		changes = append(changes, diffChange{Type: "removed", Content: fromLines[i]})
+	}
+	for ; j < n; j++ {
+		changes = append(changes, diffChange{Type: "added", Content: toLines[j]})
+	}
+	return changes
+}
+
+// renderLineDiff 把增删序列渲染为 unified diff 风格文本。
+func renderLineDiff(changes []diffChange) string {
+	var sb strings.Builder
+	for _, ch := range changes {
+		switch ch.Type {
+		case "added":
+			sb.WriteString("+ " + ch.Content + "\n")
+		case "removed":
+			sb.WriteString("- " + ch.Content + "\n")
+		}
+	}
+	return sb.String()
 }

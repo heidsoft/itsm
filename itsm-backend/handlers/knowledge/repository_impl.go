@@ -8,6 +8,8 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticleversion"
+	"itsm-backend/ent/user"
 )
 
 // defaultCategories provides baseline knowledge-base categories so the category
@@ -186,6 +188,184 @@ func (r *EntRepository) MarkReviewed(ctx context.Context, id int, tenantID int) 
 		return nil, err
 	}
 	return toDomain(e), nil
+}
+
+// articleExistsForTenant 校验文章存在且属于该租户（版本表无 tenant_id，
+// 所有版本操作的租户隔离都经这道文章归属校验实现）。
+func (r *EntRepository) articleExistsForTenant(ctx context.Context, articleID, tenantID int) error {
+	exist, err := r.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.DeletedAtIsNil(),
+		).
+		Exist(ctx)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		return ErrArticleNotFound
+	}
+	return nil
+}
+
+// userDisplayNames 批量查询用户展示名，供版本列表补 createdByName。
+func (r *EntRepository) userDisplayNames(ctx context.Context, ids []int) map[int]string {
+	names := make(map[int]string, len(ids))
+	if len(ids) == 0 {
+		return names
+	}
+	users, err := r.client.User.Query().Where(user.IDIn(ids...)).All(ctx)
+	if err != nil {
+		// 展示名缺失不阻断版本历史读取，退化为空串由前端兜底
+		return names
+	}
+	for _, u := range users {
+		if u.Name != "" {
+			names[u.ID] = u.Name
+		} else {
+			names[u.ID] = u.Username
+		}
+	}
+	return names
+}
+
+func toVersionDomain(e *ent.KnowledgeArticleVersion, names map[int]string) *ArticleVersion {
+	if e == nil {
+		return nil
+	}
+	return &ArticleVersion{
+		Version:       e.Version,
+		Title:         e.Title,
+		Content:       e.Content,
+		CreatedBy:     e.AuthorID,
+		CreatedByName: names[e.AuthorID],
+		ChangeLog:     e.ChangeSummary,
+		CreatedAt:     e.CreatedAt,
+	}
+}
+
+func (r *EntRepository) ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ArticleVersion, int, error) {
+	if err := r.articleExistsForTenant(ctx, articleID, tenantID); err != nil {
+		return nil, 0, err
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+
+	total, err := r.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(articleID)).
+		Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := r.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(articleID)).
+		Order(ent.Desc(knowledgearticleversion.FieldVersion)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	authorIDs := make([]int, 0, len(rows))
+	for _, row := range rows {
+		authorIDs = append(authorIDs, row.AuthorID)
+	}
+	names := r.userDisplayNames(ctx, authorIDs)
+
+	out := make([]*ArticleVersion, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, toVersionDomain(row, names))
+	}
+	return out, total, nil
+}
+
+func (r *EntRepository) GetVersion(ctx context.Context, articleID, version, tenantID int) (*ArticleVersion, error) {
+	if err := r.articleExistsForTenant(ctx, articleID, tenantID); err != nil {
+		return nil, err
+	}
+	row, err := r.client.KnowledgeArticleVersion.Query().
+		Where(
+			knowledgearticleversion.ArticleID(articleID),
+			knowledgearticleversion.Version(version),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toVersionDomain(row, r.userDisplayNames(ctx, []int{row.AuthorID})), nil
+}
+
+func (r *EntRepository) RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error) {
+	if err := r.articleExistsForTenant(ctx, articleID, tenantID); err != nil {
+		return nil, err
+	}
+	versionEntity, err := r.client.KnowledgeArticleVersion.Query().
+		Where(
+			knowledgearticleversion.ArticleID(articleID),
+			knowledgearticleversion.Version(version),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	article, err := r.client.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(articleID),
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.DeletedAtIsNil(),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 恢复前为当前正文建快照，保证历史链不断（与共享 service 的语义一致）。
+	// 快照失败不阻断恢复：恢复是用户显式动作，正文覆写优先。
+	if snapshotErr := r.createVersionSnapshot(ctx, article, "恢复前版本"); snapshotErr != nil {
+		_ = snapshotErr
+	}
+
+	updated, err := r.client.KnowledgeArticle.UpdateOne(article).
+		SetTitle(versionEntity.Title).
+		SetContent(versionEntity.Content).
+		SetCategory(versionEntity.Category).
+		SetTags(versionEntity.Tags).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toDomain(updated), nil
+}
+
+// createVersionSnapshot 为文章当前正文创建一个新版本快照。
+func (r *EntRepository) createVersionSnapshot(ctx context.Context, article *ent.KnowledgeArticle, changeSummary string) error {
+	latest, _ := r.client.KnowledgeArticleVersion.Query().
+		Where(knowledgearticleversion.ArticleID(article.ID)).
+		Order(ent.Desc(knowledgearticleversion.FieldVersion)).
+		First(ctx)
+	nextVersion := 1
+	if latest != nil {
+		nextVersion = latest.Version + 1
+	}
+	_, err := r.client.KnowledgeArticleVersion.Create().
+		SetArticleID(article.ID).
+		SetVersion(nextVersion).
+		SetTitle(article.Title).
+		SetContent(article.Content).
+		SetCategory(article.Category).
+		SetTags(article.Tags).
+		SetAuthorID(article.AuthorID).
+		SetChangeSummary(changeSummary).
+		Save(ctx)
+	return err
 }
 
 func (r *EntRepository) Delete(ctx context.Context, id int, tenantID int) error {

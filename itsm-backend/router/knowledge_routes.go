@@ -25,6 +25,14 @@ func SetupKnowledgeRoutes(tenant *gin.RouterGroup, h *knowledgeHandler.Handler) 
 			// 内容复核（L1 时效闭环）：确认内容仍然适用，解除「逾期未复核」过滤
 			articles.POST("/:id/review", middleware.RequirePermission("knowledge", "write"), h.MarkArticleReviewed)
 
+			// 版本历史：列表 / 恢复 / 对比。
+			// 2026-10-14 前这三组端点未注册（service 层早有 RestoreVersion），
+			// 前端文章详情的「版本历史」Tab 打开即失败。静态段必须先于 :version
+			// 参数段注册，避免路由树把 compare 当成版本号匹配。
+			articles.GET("/:id/versions", middleware.RequirePermission("knowledge", "read"), h.ListArticleVersions)
+			articles.GET("/:id/versions/compare", middleware.RequirePermission("knowledge", "read"), h.CompareArticleVersions)
+			articles.POST("/:id/versions/:version/restore", middleware.RequirePermission("knowledge", "write"), h.RestoreArticleVersion)
+
 			// Comments
 			articles.GET("/:id/comments", middleware.RequirePermission("knowledge", "read"), h.GetArticleComments)
 			articles.POST("/:id/comments", middleware.RequirePermission("knowledge", "write"), h.AddArticleComment)

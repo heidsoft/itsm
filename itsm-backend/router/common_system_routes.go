@@ -98,6 +98,11 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 				applications.POST("", middleware.RequirePermission("application", "write"), config.ApplicationHandler.CreateApplication)
 				applications.GET("/microservices", middleware.RequirePermission("application", "read"), config.ApplicationHandler.ListMicroservices)
 				applications.POST("/microservices", middleware.RequirePermission("application", "write"), config.ApplicationHandler.CreateMicroservice)
+				// 写操作路由（handler 早已存在，2026-10-14 前漏注册：前端编辑/删除恒 404）
+				applications.PUT("/:id", middleware.RequirePermission("application", "write"), config.ApplicationHandler.UpdateApplication)
+				applications.DELETE("/:id", middleware.RequirePermission("application", "write"), config.ApplicationHandler.DeleteApplication)
+				applications.PUT("/microservices/:id", middleware.RequirePermission("application", "write"), config.ApplicationHandler.UpdateMicroservice)
+				applications.DELETE("/microservices/:id", middleware.RequirePermission("application", "write"), config.ApplicationHandler.DeleteMicroservice)
 			}
 		}
 

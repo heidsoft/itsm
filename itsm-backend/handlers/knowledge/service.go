@@ -65,6 +65,27 @@ func (s *Service) MarkArticleReviewed(ctx context.Context, id int, tenantID int)
 	return a, nil
 }
 
+// ListVersions 返回文章版本历史（版本号倒序）。
+func (s *Service) ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ArticleVersion, int, error) {
+	return s.repo.ListVersions(ctx, articleID, tenantID, page, pageSize)
+}
+
+// GetVersion 返回单个版本快照，供版本对比使用。
+func (s *Service) GetVersion(ctx context.Context, articleID, version, tenantID int) (*ArticleVersion, error) {
+	return s.repo.GetVersion(ctx, articleID, version, tenantID)
+}
+
+// RestoreVersion 恢复文章到指定版本。
+func (s *Service) RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error) {
+	a, err := s.repo.RestoreVersion(ctx, articleID, version, tenantID, userID)
+	if err != nil {
+		return nil, err
+	}
+	s.logger.Infow("知识版本恢复完成",
+		"article_id", articleID, "version", version, "tenant_id", tenantID, "user_id", userID)
+	return a, nil
+}
+
 // filterCitable 按时效性过滤检索结果（L1）。
 //
 // 注意这里必须与管理端列表区分开：

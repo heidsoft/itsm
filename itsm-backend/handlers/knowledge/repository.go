@@ -15,6 +15,14 @@ type Repository interface {
 	// 这是 L1 时效管控的闭环动作——声明了复核周期的知识逾期后会被 RAG 过滤，
 	// 复核是把它恢复回检索结果的唯一途径。只改复核时间，不触碰正文。
 	MarkReviewed(ctx context.Context, id int, tenantID int) (*Article, error)
+	// ListVersions 返回文章的版本快照，按版本号倒序（最新在前）。
+	// 版本表无 tenant_id，租户隔离经文章归属校验实现。
+	ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ArticleVersion, int, error)
+	// GetVersion 返回指定版本号的快照；版本不存在或文章非本租户时返回错误。
+	GetVersion(ctx context.Context, articleID, version, tenantID int) (*ArticleVersion, error)
+	// RestoreVersion 把文章正文恢复到指定版本：先为当前正文建快照，再覆写。
+	// 恢复本身也会留下一个新版本，历史链不断。
+	RestoreVersion(ctx context.Context, articleID, version, tenantID, userID int) (*Article, error)
 	GetCategories(ctx context.Context, tenantID int) ([]string, error)
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
 	// GetByIDs returns articles by a list of IDs, preserving the order of IDs.
