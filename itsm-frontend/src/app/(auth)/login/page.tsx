@@ -78,7 +78,14 @@ function LoginForm() {
 
   // 检查会话过期标记
   const isExpired = searchParams.get('expired') === 'true';
-  const redirectPath = searchParams.get('redirect') || '/dashboard';
+  // 开放重定向防护：仅允许站内相对路径。
+  // `//evil.com` 是协议相对 URL，浏览器会当作外部主机跳转；`http(s)://`、
+  // 反斜杠变体（`\evil.com` 部分浏览器归一化为 //）同样拒绝，一律回退 /dashboard。
+  const rawRedirect = searchParams.get('redirect') || '/dashboard';
+  const redirectPath =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.startsWith('/\\')
+      ? rawRedirect
+      : '/dashboard';
 
   // 处理登录提交
   const handleLogin = async (values: { username: string; password: string }) => {

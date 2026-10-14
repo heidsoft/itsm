@@ -355,7 +355,7 @@ export default function TeamManagement() {
           </Form.Item>
           <Form.Item
             label={t("teamsPage.manager")}
-            name="manager_id"
+            name="managerId"
           >
             <Select
               placeholder={t("teamsPage.form.managerPlaceholder")}

@@ -21,15 +21,20 @@ export function useDashboardData() {
         ticketService.getTicketStats(),
       ]);
 
+      // 两个接口都失败必须抛错：Promise.allSettled 本身永不 reject，
+      // 若在此吞掉，queryFn 永远"成功"返回全 0 初始数据，页面错误态不可达、
+      // isConnected 恒 true——故障被伪装成"0 数据 + 已连接"（2026-10-14 审查修复）。
+      if (overviewResult.status === 'rejected' && statsResult.status === 'rejected') {
+        throw overviewResult.reason;
+      }
+
       let dashboardData = getInitialData(); // 默认使用空数据初始化
 
-      // 处理 Dashboard Overview 数据
+      // 处理 Dashboard Overview 数据（部分失败时保留另一路真实数据）
       if (overviewResult.status === 'fulfilled') {
         dashboardData = { ...dashboardData, ...overviewResult.value };
       } else {
         console.error('Dashboard Overview API调用失败:', overviewResult.reason);
-        // 不再回退到 Mock 数据
-        // 如果 API 失败，尝试从 error 中获取 mock 数据（如果之前有的话），或者保持空数据
       }
 
       // 处理真实工单统计数据（高优先级覆盖）

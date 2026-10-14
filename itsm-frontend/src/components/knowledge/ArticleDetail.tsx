@@ -21,7 +21,7 @@ import {
   Rate,
   Input,
 } from 'antd';
-import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, Archive, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -46,7 +46,7 @@ const ArticleDetail: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
-  const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | 'archive' | null>(null);
+  const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | null>(null);
   const [helpful, setHelpful] = useState<boolean | null>(null);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [feedbackComment, setFeedbackComment] = useState('');
@@ -112,28 +112,6 @@ const ArticleDetail: React.FC = () => {
           message.success('已取消发布');
         } catch (e: any) {
           message.error('操作失败：' + (e?.message || '未知错误'));
-        } finally {
-          setActionLoading(null);
-        }
-      },
-    });
-  };
-
-  const handleArchive = () => {
-    if (!article) return;
-    Modal.confirm({
-      title: '确认归档该文章？',
-      content: '归档后将从默认列表中隐藏，可在归档管理中找回。',
-      okText: '归档',
-      cancelText: '取消',
-      onOk: async () => {
-        setActionLoading('archive');
-        try {
-          const updated = await KnowledgeBaseApi.archiveArticle(article.id.toString());
-          setArticle(updated as unknown as KnowledgeArticle);
-          message.success('文章已归档');
-        } catch (e: any) {
-          message.error('归档失败：' + (e?.message || '未知错误'));
         } finally {
           setActionLoading(null);
         }
@@ -218,13 +196,6 @@ const ArticleDetail: React.FC = () => {
                   取消发布
                 </Button>
               )}
-              <Button
-                icon={<Archive />}
-                onClick={handleArchive}
-                loading={actionLoading === 'archive'}
-              >
-                归档
-              </Button>
               <Button
                 type="primary"
                 icon={<Pencil />}

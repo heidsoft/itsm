@@ -58,9 +58,12 @@ interface ChangeListProps {
   status?: string;
   /** 外部传入的风险等级筛选 */
   risk?: string;
+  /** 受控分页：嵌入模式（showHeader=false）下由父级 Pagination 驱动 */
+  page?: number;
+  pageSize?: number;
 }
 
-const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, status, risk }) => {
+const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, status, risk, page, pageSize }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Change[]>([]);
@@ -111,9 +114,20 @@ const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true, search, stat
 
   useEffect(() => {
     loadData();
-     
+
   }, [query]);
 
+  // 受控分页同步：嵌入模式下表格自身 pagination={false}，分页控件在父级。
+  // 2026-10-14 修复：此前不接收父级页码，父级 Pagination 翻页只改父 state，
+  // 表格停在第 1 页；此处把父级 page/pageSize 同步进内部 query 触发重取。
+  useEffect(() => {
+    if (showHeader) return; // 独立模式自管分页，不受外部控制
+    setQuery(prev => ({
+      ...prev,
+      page: page ?? prev.page,
+      pageSize: pageSize ?? prev.pageSize,
+    }));
+  }, [showHeader, page, pageSize]);
   const handleSearch = () => {
     setQuery(prev => ({ ...prev, page: 1 }));
   };

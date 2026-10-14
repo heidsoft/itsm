@@ -60,6 +60,9 @@ interface ProblemListProps {
   status?: string;
   /** 外部传入的优先级筛选 */
   priority?: string;
+  /** 受控分页：嵌入模式（showHeader=false）下由父级 Pagination 驱动 */
+  page?: number;
+  pageSize?: number;
 }
 
 const ProblemList: React.FC<ProblemListProps> = ({
@@ -67,6 +70,8 @@ const ProblemList: React.FC<ProblemListProps> = ({
   keyword,
   status,
   priority,
+  page,
+  pageSize,
 }) => {
   const router = useRouter();
   const { message } = App.useApp();
@@ -121,8 +126,20 @@ const ProblemList: React.FC<ProblemListProps> = ({
 
   useEffect(() => {
     loadData();
-     
+
   }, [query]);
+
+  // 受控分页同步：嵌入模式下表格自身 pagination={false}，分页控件在父级。
+  // 2026-10-14 修复：此前不接收父级页码，父级 Pagination 翻页只改父 state，
+  // 表格停在第 1 页；此处把父级 page/pageSize 同步进内部 query 触发重取。
+  useEffect(() => {
+    if (showHeader) return; // 独立模式自管分页，不受外部控制
+    setQuery(prev => ({
+      ...prev,
+      page: page ?? prev.page,
+      pageSize: pageSize ?? prev.pageSize,
+    }));
+  }, [showHeader, page, pageSize]);
 
   const handleSearch = () => {
     setQuery(prev => ({ ...prev, page: 1 }));

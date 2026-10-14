@@ -93,9 +93,9 @@ export interface EscalationHistoryEntry {
 export class EscalationMatrixApi {
   /**
    * 获取当前生效的升级矩阵。
-   * - 优先调用 /api/v1/escalation-matrices（EscalationMatrixController）
-   * - 后端无响应/网络异常时回落到默认矩阵，避免页面空白
-   */
+    * - 优先调用 /api/v1/escalation-matrices（EscalationMatrixController）
+    * - 后端返回空 payload 时回落到默认矩阵（正常降级）；请求失败则抛出，由页面显式报错
+    */
   static async getMatrix(): Promise<EscalationMatrix> {
     try {
       const resp = await httpClient.get<{
@@ -110,9 +110,13 @@ export class EscalationMatrixApi {
         return payload as EscalationMatrix;
       }
     } catch (err) {
-      // 网络或后端 5xx 时回落到默认矩阵
-      console.warn('EscalationMatrixApi.getMatrix fallback to default:', err);
+      // 2026-10-14 修复：失败时不再静默回落到硬编码默认矩阵——
+      // 用户无法分辨看到的是真实配置还是内置占位，会把演示数据当生产配置。
+      // 后端返回空 payload 时仍用默认矩阵兜底（属正常降级），请求失败则抛出。
+      console.error('EscalationMatrixApi.getMatrix failed:', err);
+      throw new Error('升级矩阵加载失败，请检查网络或联系管理员');
     }
+    // 后端 200 但 payload 为空：属正常降级，用内置默认矩阵兜底
     return DEFAULT_ESCALATION_MATRIX;
   }
 }

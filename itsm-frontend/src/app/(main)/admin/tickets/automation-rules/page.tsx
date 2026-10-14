@@ -79,7 +79,14 @@ const AutomationRulesPage: React.FC = () => {
       priority: rule.priority,
       isActive: rule.isActive,
       conditions: rule.conditions,
-      actions: rule.actions,
+      // 后端 config 是对象，表单 TextArea 需要字符串：回填时序列化，保存时 parse（见 handleSave）
+      actions: (rule.actions || []).map(action => ({
+        ...action,
+        config:
+          action.config && typeof action.config === 'object'
+            ? JSON.stringify(action.config)
+            : ((action.config as string | undefined) ?? ''),
+      })),
     });
     setModalVisible(true);
   };
@@ -113,13 +120,31 @@ const AutomationRulesPage: React.FC = () => {
     try {
       const values = await form.validateFields();
 
+      // 动作 config 在表单里是 TextArea 字符串，后端契约是对象（[]map[string]interface{}），
+      // 此处统一 parse；空串按空对象处理，非法 JSON 给出可定位的字段错误。
+      const actions = ((values.actions || []) as Array<{ type: string; config?: string }>).map(
+        (action, index) => {
+          const raw = action.config?.trim();
+          let config: Record<string, unknown> = {};
+          if (raw) {
+            try {
+              config = JSON.parse(raw) as Record<string, unknown>;
+            } catch {
+              message.error(`第 ${index + 1} 个动作的 config 不是合法 JSON`);
+              throw new Error('invalid action config json');
+            }
+          }
+          return { ...action, config };
+        }
+      );
+
       const ruleData: CreateAutomationRuleRequest | UpdateAutomationRuleRequest = {
         name: values.name,
         description: values.description,
         priority: values.priority ?? 1,
         isActive: values.isActive,
         conditions: values.conditions || [],
-        actions: values.actions || [],
+        actions,
       };
 
       if (editingRule) {
@@ -290,7 +315,7 @@ const AutomationRulesPage: React.FC = () => {
             <InputNumber min={1} max={10} />
           </Form.Item>
 
-          <Form.Item name="is_active" label="启用状态" valuePropName="checked" initialValue={true}>
+          <Form.Item name="isActive" label="启用状态" valuePropName="checked" initialValue={true}>
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 

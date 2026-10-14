@@ -37,6 +37,8 @@ import {
   Tooltip,
   App,
   Tag,
+  Descriptions,
+  Spin,
 } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { CMDBApi } from '@/lib/api/cmdb-api';
@@ -45,8 +47,8 @@ import type {
   ServiceItem,
   CreateServiceItemRequest,
   UpdateServiceItemRequest,
-  ServiceStatus,
 } from '@/types/service-catalog';
+import { ServiceStatus } from '@/types/service-catalog';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
@@ -66,7 +68,27 @@ const ServiceCatalogManagement = () => {
   const [ciTypes, setCiTypes] = useState<CIType[]>([]);
   const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
+  // 查看详情弹窗（2026-10-14 接线：原「查看详情」按钮无 onClick）
+  const [detailVisible, setDetailVisible] = useState(false);
+  const [detailCatalog, setDetailCatalog] = useState<ServiceItem | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [form] = Form.useForm();
+
+  const handleViewDetail = async (catalog: ServiceItem) => {
+    setDetailVisible(true);
+    setDetailLoading(true);
+    try {
+      // 拉详情保证拿到最新全量字段，而非列表行的投影
+      const full = await ServiceCatalogApi.getService(catalog.id.toString());
+      setDetailCatalog(full);
+    } catch {
+      // 详情拉取失败时退化为列表行数据，至少不空白
+      setDetailCatalog(catalog);
+      message.warning('详情加载失败，展示列表缓存数据');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   // 统计数据
   const [stats, setStats] = useState({
@@ -417,7 +439,13 @@ const ServiceCatalogManagement = () => {
       render: (_: unknown, record: ServiceItem) => (
         <Space>
           <Tooltip title="查看详情">
-            <Button aria-label="查看详情" type="text" icon={<Eye className="w-4 h-4" />} size="small" />
+            <Button
+              aria-label="查看详情"
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
+              size="small"
+              onClick={() => handleViewDetail(record)}
+            />
           </Tooltip>
           <Tooltip title="编辑">
             <Button
@@ -609,7 +637,6 @@ const ServiceCatalogManagement = () => {
               >
                 新建服务目录
               </Button>
-              <Button icon={<Upload className="w-4 h-4" />}>导入</Button>
               <Button icon={<Download className="w-4 h-4" />} onClick={handleExport}>
                 导出
               </Button>
@@ -847,6 +874,50 @@ const ServiceCatalogManagement = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 服务目录详情弹窗 */}
+      <Modal
+        title="服务目录详情"
+        open={detailVisible}
+        onCancel={() => setDetailVisible(false)}
+        footer={<Button onClick={() => setDetailVisible(false)}>关闭</Button>}
+        width={640}
+      >
+        <Spin spinning={detailLoading}>
+          {detailCatalog && (
+            <Descriptions column={2} bordered size="small">
+              <Descriptions.Item label="ID">{detailCatalog.id}</Descriptions.Item>
+              <Descriptions.Item label="名称">{detailCatalog.name}</Descriptions.Item>
+              <Descriptions.Item label="分类">{detailCatalog.category}</Descriptions.Item>
+              <Descriptions.Item label="状态">
+                <Tag color={detailCatalog.status === ServiceStatus.PUBLISHED ? 'green' : detailCatalog.status === ServiceStatus.DRAFT ? 'orange' : 'red'}>
+                  {detailCatalog.status === ServiceStatus.PUBLISHED ? '已发布' : detailCatalog.status === ServiceStatus.DRAFT ? '草稿' : '已下线'}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="需要审批">
+                {detailCatalog.requiresApproval ? `是（${detailCatalog.approvalLevel ?? 1} 级）` : '否'}
+              </Descriptions.Item>
+              <Descriptions.Item label="CI 类型">
+                {ciTypes.find(t => t.id === detailCatalog.ciTypeId)?.name || '未关联'}
+              </Descriptions.Item>
+              <Descriptions.Item label="云服务">
+                {cloudServices.find(s => s.id === detailCatalog.cloudServiceId)?.serviceName || '未关联'}
+              </Descriptions.Item>
+              <Descriptions.Item label="响应时间">
+                {detailCatalog.availability?.responseTime != null
+                  ? `${detailCatalog.availability.responseTime} 小时`
+                  : '未设置'}
+              </Descriptions.Item>
+              <Descriptions.Item label="简介" span={2}>
+                {detailCatalog.shortDescription || '—'}
+              </Descriptions.Item>
+              <Descriptions.Item label="详细说明" span={2}>
+                {detailCatalog.fullDescription || '—'}
+              </Descriptions.Item>
+            </Descriptions>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

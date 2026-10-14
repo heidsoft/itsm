@@ -23,7 +23,7 @@ describe('CIRelationshipAPI', () => {
     it('should get relationship types', async () => {
       mockGet.mockResolvedValue({ types: [{ type: 'depends_on', name: 'Depends On' }] });
       const result = await CIRelationshipAPI.getRelationshipTypes();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/relationship-types');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/relationship-types');
       expect(result).toHaveLength(1);
       expect(result[0].type).toBe('depends_on');
     });
@@ -40,7 +40,7 @@ describe('CIRelationshipAPI', () => {
       const data = { sourceCiId: 1, targetCiId: 2, relationshipType: 'depends_on' as const };
       mockPost.mockResolvedValue({ id: 1, ...data });
       const result = await CIRelationshipAPI.createRelationship(data);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/configuration-items/relationships', data);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/cmdb/relationships', data);
     });
   });
 
@@ -48,7 +48,7 @@ describe('CIRelationshipAPI', () => {
     it('should update a relationship', async () => {
       mockPut.mockResolvedValue({ id: 1, relationshipType: 'hosts' });
       await CIRelationshipAPI.updateRelationship(1, { relationshipType: 'hosts' });
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/configuration-items/relationships/1', { relationshipType: 'hosts' });
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/cmdb/relationships/1', { relationshipType: 'hosts' });
     });
   });
 
@@ -56,7 +56,7 @@ describe('CIRelationshipAPI', () => {
     it('should delete a relationship', async () => {
       mockDelete.mockResolvedValue(undefined);
       await CIRelationshipAPI.deleteRelationship(1);
-      expect(mockDelete).toHaveBeenCalledWith('/api/v1/configuration-items/relationships/1');
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/cmdb/relationships/1');
     });
   });
 
@@ -67,7 +67,7 @@ describe('CIRelationshipAPI', () => {
         { id: 2, sourceCiId: 30, targetCiId: 10 },
       ]);
       const result = await CIRelationshipAPI.getCIRelationships(10);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/10/relationships', undefined);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/10/relationships', undefined);
       expect(result.outgoingRelations).toHaveLength(1);
       expect(result.incomingRelations).toHaveLength(1);
       expect(result.totalOutgoing).toBe(1);
@@ -79,13 +79,13 @@ describe('CIRelationshipAPI', () => {
     it('should get topology graph', async () => {
       mockGet.mockResolvedValue({ nodes: [], edges: [], rootCiId: 1, depth: 3, totalNodes: 0, totalEdges: 0 });
       const result = await CIRelationshipAPI.getTopologyGraph(1, 3);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/topology?depth=3');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology?depth=3');
     });
 
     it('should get topology graph without depth', async () => {
       mockGet.mockResolvedValue({ nodes: [], edges: [] });
       await CIRelationshipAPI.getTopologyGraph(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/topology');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology');
     });
   });
 
@@ -93,7 +93,7 @@ describe('CIRelationshipAPI', () => {
     it('should analyze impact', async () => {
       mockGet.mockResolvedValue({ sourceCiId: 1, totalImpacted: 5 });
       const result = await CIRelationshipAPI.analyzeImpact(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/configuration-items/1/impact-analysis');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/impact-analysis');
       expect(result.totalImpacted).toBe(5);
     });
   });

@@ -21,10 +21,10 @@ describe('ReleaseApi', () => {
 
   describe('getReleases', () => {
     it('should get release list', async () => {
-      mockGet.mockResolvedValue({ releases: [{ id: 1, title: 'v1.0' }], total: 1 });
+      mockGet.mockResolvedValue({ items: [{ id: 1, title: 'v1.0' }], total: 1 });
       const result = await ReleaseApi.getReleases({ page: 1, pageSize: 10 });
       expect(mockGet).toHaveBeenCalledWith('/api/v1/releases', { page: 1, pageSize: 10 });
-      expect(result.releases).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
     });
   });
 

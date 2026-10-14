@@ -31,6 +31,8 @@ export default function SLAMonitoringPage() {
   const currentTenant = useAuthStore(s => s.currentTenant);
   const [loading, setLoading] = useState(false);
   const [violations, setViolations] = useState<SLAViolation[]>([]);
+  // 违规列表加载失败必须与「暂无违规」区分：2026-10-14 修复前失败被渲染成成功态空列表
+  const [violationsError, setViolationsError] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState<string>('');
   const [processes, setProcesses] = useState<{ key: string; name: string }[]>([]);
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
@@ -62,8 +64,11 @@ export default function SLAMonitoringPage() {
     try {
       const data = await BPMNDashboardApi.getSLAViolations(tenantId);
       setViolations(data);
+      setViolationsError(false);
     } catch (error) {
       console.error('Failed to fetch violations:', error);
+      setViolations([]);
+      setViolationsError(true);
     } finally {
       setLoading(false);
     }
@@ -282,7 +287,14 @@ export default function SLAMonitoringPage() {
           </Tag>
         }
       >
-        {violations.length === 0 ? (
+        {violationsError ? (
+          <Alert
+            title='SLA 违规数据加载失败'
+            description='请稍后重试；失败不等于没有违规，请勿据此判断系统健康。'
+            type='error'
+            showIcon
+          />
+        ) : violations.length === 0 ? (
           <Alert title={t('workflow.sla.noViolations') || '暂无SLA违规'} type='success' showIcon />
         ) : (
           <Table

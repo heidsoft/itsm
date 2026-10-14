@@ -160,23 +160,23 @@ export const CIRelationshipAPI = {
   // 获取关系类型列表
   async getRelationshipTypes(): Promise<RelationshipTypeInfo[]> {
 	const response = await httpClient.get<{ types: RelationshipTypeInfo[] }>(
-	  '/api/v1/configuration-items/relationship-types'
+	  '/api/v1/cmdb/relationship-types'
 	);
 	return response.types ?? [];
   },
 
   // 创建关系
   async createRelationship(data: CreateRelationshipRequest): Promise<CIRelationship> {
-    return httpClient.post('/api/v1/configuration-items/relationships', data);
+    return httpClient.post('/api/v1/cmdb/relationships', data);
   },
 
   async updateRelationship(id: number, data: UpdateRelationshipRequest): Promise<CIRelationship> {
-	return httpClient.put(`/api/v1/configuration-items/relationships/${id}`, data);
+	return httpClient.put(`/api/v1/cmdb/relationships/${id}`, data);
   },
 
   // 删除关系
   async deleteRelationship(id: number): Promise<void> {
-    return httpClient.delete(`/api/v1/configuration-items/relationships/${id}`);
+    return httpClient.delete(`/api/v1/cmdb/relationships/${id}`);
   },
 
   // 获取CI的所有关系（返回平铺列表，前端自行按 source_ci_id/target_ci_id 分组）
@@ -195,7 +195,7 @@ export const CIRelationshipAPI = {
     totalIncoming: number;
   }> {
 	const list = await httpClient.get<CIRelationship[]>(
-	  `/api/v1/configuration-items/${ciId}/relationships`,
+	  `/api/v1/cmdb/cis/${ciId}/relationships`,
 	  options?.relationshipType ? { relationshipType: options.relationshipType } : undefined
 	);
 	const arr = Array.isArray(list) ? list : [];
@@ -212,12 +212,12 @@ export const CIRelationshipAPI = {
   // 获取拓扑图
   async getTopologyGraph(ciId: number, depth?: number): Promise<TopologyGraph> {
     const params = depth ? `?depth=${depth}` : '';
-    return httpClient.get(`/api/v1/configuration-items/${ciId}/topology${params}`);
+    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/topology${params}`);
   },
 
   // 影响分析
   async analyzeImpact(ciId: number): Promise<ImpactAnalysisResponse> {
-    return httpClient.get(`/api/v1/configuration-items/${ciId}/impact-analysis`);
+    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/impact-analysis`);
   },
 
   // 批量创建关系（逐个调用，后端无 batch 路由）

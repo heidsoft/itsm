@@ -80,10 +80,10 @@ export interface Release {
   updatedAt: string;
 }
 
-// 发布列表响应
+// 发布列表响应（信封键与后端 dto.ReleaseListResponse 对齐：items，勿改回 releases）
 export interface ReleaseListResponse {
   total: number;
-  releases: Release[];
+  items: Release[];
 }
 
 // 发布统计响应

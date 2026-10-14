@@ -54,16 +54,26 @@ const SLAPerformanceReport = () => {
       const endDate = dayjs().endOf('day').toISOString();
       const startDate = dayjs().subtract(DEFAULT_RANGE_DAYS, 'day').startOf('day').toISOString();
 
-      // 并行获取 SLA 总体合规率和按类型分布
-      const [complianceReport, stats, definitions] = await Promise.allSettled([
+      // 并行获取 SLA 总体合规率 + 按服务类型的真实分维表现
+      const [complianceReport, stats, performance] = await Promise.allSettled([
         SLAApi.getSLAComplianceReport({ startDate, endDate }),
         SLAApi.getSLAStats(),
-        SLAApi.getSLADefinitions({ page: 1, pageSize: 50 }),
+        SLAApi.getSLAPerformance({
+          dimension: 'serviceType',
+          startDate,
+          endDate,
+          page: 1,
+          pageSize: 20,
+        }),
       ]);
 
       const report =
         complianceReport.status === 'fulfilled' ? complianceReport.value : null;
       const statsValue = stats.status === 'fulfilled' ? stats.value : null;
+      const perfRows =
+        performance.status === 'fulfilled' && Array.isArray(performance.value?.items)
+          ? performance.value.items
+          : [];
 
       const totalMetCount = report?.metSla ?? statsValue?.totalDefinitions ?? 0;
       const totalBreachedCount = report?.violatedSla ?? statsValue?.openViolations ?? 0;
@@ -73,24 +83,17 @@ const SLAPerformanceReport = () => {
       setTotalBreached(totalBreachedCount);
       setOverallRate(compliance);
 
-      // 按 SLA 定义构建分布数据；没有定义时回退到总体数据
-      if (
-        definitions.status === 'fulfilled' &&
-        Array.isArray(definitions.value?.items) &&
-        definitions.value.items.length > 0
-      ) {
-        const items = definitions.value.items;
-        const perDefinitionRate = totalMetCount + totalBreachedCount > 0
-          ? compliance
-          : 0;
-        const list: SLAData[] = items.slice(0, 6).map(def => {
-          const rate = def.complianceRate ?? perDefinitionRate;
-          const breached = 100 - rate;
+      // 按服务类型构建分布数据：每行 complianceRate 是后端按该维度真实聚合的达成率。
+      // 历史缺陷：此处曾用总体合规率冒充每个定义的达成率（def.complianceRate 后端不返回），
+      // 导致图中每一行显示同一数字；现改走 GET /sla/performance 真实分维端点。
+      if (perfRows.length > 0) {
+        const list: SLAData[] = perfRows.slice(0, 8).map(row => {
+          const rate = Math.round(row.complianceRate);
           return {
-            name: def.name || `SLA-${def.id}`,
-            met: Math.round(rate),
-            breached: Math.round(breached),
-            compliance: Math.round(rate),
+            name: row.key === 'unassigned' ? '未绑定SLA' : row.key,
+            met: rate,
+            breached: 100 - rate,
+            compliance: rate,
           };
         });
         setSLAData(list);

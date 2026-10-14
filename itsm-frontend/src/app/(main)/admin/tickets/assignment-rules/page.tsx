@@ -191,7 +191,7 @@ export default function AssignmentRulesPage() {
   const openTestModal = (rule: AssignmentRule) => {
     setTestResult('');
     testForm.resetFields();
-    (testForm as any).setFieldValue('rule_id', rule.id);
+    (testForm as any).setFieldValue('ruleId', rule.id);
     setTestModalOpen(true);
   };
 

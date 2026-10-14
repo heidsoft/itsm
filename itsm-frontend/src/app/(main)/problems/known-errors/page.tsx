@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table,
   Card,
@@ -65,12 +65,14 @@ export default function KnownErrorsPage() {
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchData();
     fetchStats();
     fetchCategories();
   }, []);
 
-  const fetchData = async () => {
+  // 状态驱动重取：分页/筛选变化即重新拉取。
+  // 2026-10-14 修复：此前 handleSearch/handleTableChange 先 setState 后立即调 fetchData()，
+  // fetchData 闭包里读的是旧 pagination（停第 N 页搜索会拿第 N 页数据），且无 effect 补救。
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -92,7 +94,11 @@ export default function KnownErrorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.current, pagination.pageSize, searchParams]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const fetchStats = async () => {
     try {
@@ -113,19 +119,18 @@ export default function KnownErrorsPage() {
   };
 
   const handleSearch = () => {
+    // 只改状态，重取由 [fetchData] effect 驱动（带着最新 searchParams）
     setPagination((prev) => ({ ...prev, current: 1 }));
-    fetchData();
   };
 
   const handleReset = () => {
     setSearchParams({ keyword: '', status: '', category: '', severity: '' });
     setPagination((prev) => ({ ...prev, current: 1 }));
-    fetchData();
   };
 
   const handleTableChange = (pag: TablePaginationConfig) => {
+    // 只改状态，重取由 [fetchData] effect 驱动（带着最新 pagination）
     setPagination({ ...pagination, current: pag.current || 1, pageSize: pag.pageSize || 20 });
-    fetchData();
   };
 
   const handleAdd = () => {

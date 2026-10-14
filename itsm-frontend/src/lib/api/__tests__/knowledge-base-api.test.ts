@@ -143,14 +143,6 @@ describe('KnowledgeBaseApi', () => {
     });
   });
 
-  describe('archiveArticle', () => {
-    it('should archive article', async () => {
-      mockPost.mockResolvedValue({ id: '1', status: 'archived' });
-      await KnowledgeBaseApi.archiveArticle('1');
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/knowledge/articles/1/archive');
-    });
-  });
-
   describe('cloneArticle', () => {
     it('should clone article', async () => {
       mockPost.mockResolvedValue({ id: '2', title: 'Clone' });

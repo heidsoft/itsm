@@ -261,6 +261,8 @@ export default function ProblemListPage() {
       keyword={searchKeyword}
       status={statusFilter}
       priority={priorityFilter}
+      page={page}
+      pageSize={pageSize}
     />
   );
 

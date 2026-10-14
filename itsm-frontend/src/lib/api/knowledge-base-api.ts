@@ -74,10 +74,6 @@ export class KnowledgeBaseApi {
     return httpClient.post(`${ARTICLES_PREFIX}/${id}/unpublish`);
   }
 
-  static async archiveArticle(id: string): Promise<KnowledgeArticle> {
-    return httpClient.post(`${ARTICLES_PREFIX}/${id}/archive`);
-  }
-
   static async cloneArticle(id: string, title: string): Promise<KnowledgeArticle> {
     return httpClient.post(`${ARTICLES_PREFIX}/${id}/clone`, {
       title,

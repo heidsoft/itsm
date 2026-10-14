@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card,
+  Switch,
   Table,
   Button,
   Input,
@@ -12,7 +13,6 @@ import {
   Tag,
   Space,
   Tooltip,
-  Switch,
   Row,
   Col,
   Typography,
@@ -55,7 +55,67 @@ const WorkflowAutomationPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
   const [activeTab, setActiveTab] = useState('assignment');
-  const [automationEnabled, setAutomationEnabled] = useState(true);
+  // 测试规则弹窗（2026-10-14 接线：后端 POST /tickets/automation-rules/:id/test 早已存在）
+  const [testModalOpen, setTestModalOpen] = useState(false);
+  const [testRuleId, setTestRuleId] = useState<number | null>(null);
+  const [testTicketId, setTestTicketId] = useState<string>('');
+  const [testResult, setTestResult] = useState<{
+    matched: boolean;
+    actions?: string[];
+    reason?: string;
+    error?: string;
+  } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  const openTestModal = (ruleId?: number) => {
+    setTestRuleId(ruleId ?? null);
+    setTestTicketId('');
+    setTestResult(null);
+    setTestModalOpen(true);
+  };
+
+  const runRuleTest = async () => {
+    if (!testRuleId) {
+      message.warning('请选择要测试的规则');
+      return;
+    }
+    if (!testTicketId) {
+      message.warning('请输入用于测试的工单 ID（后端 ticketId 必填）');
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const result = await TicketAutomationRuleApi.testRule({
+        ruleId: testRuleId,
+        ticketId: Number(testTicketId),
+      });
+      setTestResult(result);
+    } catch (e: any) {
+      message.error('测试失败：' + (e?.message || '未知错误'));
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  // 复制规则：以「副本」名重建一条（后端无 clone 端点，创建是最小可靠语义）
+  const handleCopyRule = async (record: AutomationRule) => {
+    try {
+      await TicketAutomationRuleApi.createRule({
+        name: `${record.name} 副本`,
+        description: record.description,
+        type: record.type,
+        priority: record.priority,
+        conditions: record.conditions,
+        actions: record.actions,
+        isActive: false,
+      });
+      message.success('已复制为「' + record.name + ' 副本」（默认停用，请检查后启用）');
+      loadRules();
+    } catch (e: any) {
+      message.error('复制失败：' + (e?.message || '未知错误'));
+    }
+  };
 
   useEffect(() => {
     loadRules();
@@ -204,7 +264,12 @@ const WorkflowAutomationPage = () => {
             />
           </Tooltip>
           <Tooltip title='复制'>
-            <Button aria-label="复制" type='text' icon={<Copy className='w-4 h-4' />} />
+            <Button
+              aria-label="复制"
+              type='text'
+              icon={<Copy className='w-4 h-4' />}
+              onClick={() => handleCopyRule(record)}
+            />
           </Tooltip>
           <Popconfirm
             title='确认删除该自动化规则？'
@@ -247,14 +312,11 @@ const WorkflowAutomationPage = () => {
       <Card className='rounded-lg shadow-sm border border-gray-200 mb-6'>
         <Row gutter={[16, 16]} align='middle'>
           <Col xs={24} sm={12}>
-            <div className='flex items-center space-x-4'>
-              <Switch aria-label="启用或禁用所有工作流自动化规则" checked={automationEnabled} onChange={setAutomationEnabled} />
-              <div>
-                <Title level={5} className='!mb-1'>
-                  工作流自动化
-                </Title>
-                <Text type='secondary'>启用或禁用所有自动化规则</Text>
-              </div>
+            <div>
+              <Title level={5} className='!mb-1'>
+                工作流自动化
+              </Title>
+              <Text type='secondary'>规则的启停请在各行操作，批量启停暂未提供</Text>
             </div>
           </Col>
           <Col xs={24} sm={12}>
@@ -262,7 +324,7 @@ const WorkflowAutomationPage = () => {
               <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadRules}>
                 刷新
               </Button>
-              <Button icon={<PlayCircle className='w-4 h-4' />} type='primary'>
+              <Button icon={<PlayCircle className='w-4 h-4' />} type='primary' onClick={() => openTestModal()}>
                 测试规则
               </Button>
             </Space>
@@ -566,6 +628,57 @@ const WorkflowAutomationPage = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 测试规则弹窗：选规则 + 填工单 ID，走后端 /tickets/automation-rules/:id/test */}
+      <Modal
+        title="测试自动化规则"
+        open={testModalOpen}
+        onOk={runRuleTest}
+        onCancel={() => setTestModalOpen(false)}
+        confirmLoading={testing}
+        okText="执行测试"
+        cancelText="关闭"
+      >
+        <Form layout="vertical">
+          <Form.Item label="规则" required>
+            <Select
+              placeholder="选择要测试的规则"
+              value={testRuleId ?? undefined}
+              onChange={(v) => setTestRuleId(v)}
+              options={rules.map(r => ({ value: r.id, label: r.name }))}
+              showSearch
+              optionFilterProp="label"
+            />
+          </Form.Item>
+          <Form.Item label="测试工单 ID" required tooltip="用一条真实工单验证规则条件是否命中">
+            <Input
+              value={testTicketId}
+              onChange={(e) => setTestTicketId(e.target.value.replace(/\D/g, ''))}
+              placeholder="例如 123"
+              inputMode="numeric"
+            />
+          </Form.Item>
+        </Form>
+        {testResult && (
+          <div className="mt-2">
+            <Tag color={testResult.matched ? 'green' : 'orange'}>
+              {testResult.matched ? '条件命中' : '未命中'}
+            </Tag>
+            {testResult.reason && <Text type="secondary" className="ml-2">{testResult.reason}</Text>}
+            {testResult.error && <Text type="danger" className="ml-2">{testResult.error}</Text>}
+            {testResult.actions && testResult.actions.length > 0 && (
+              <div className="mt-2">
+                <Text strong>将执行的动作：</Text>
+                <div className="mt-1">
+                  {testResult.actions.map((a, i) => (
+                    <Tag key={i} className="mb-1">{a}</Tag>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

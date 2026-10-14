@@ -85,7 +85,7 @@ const ReleaseList: React.FC = () => {
         ...values,
       });
       if (requestId === requestIdRef.current) {
-        setData(resp.releases || []);
+        setData(resp.items || []);
         setTotal(resp.total || 0);
         hasLoadedDataRef.current = true;
       }

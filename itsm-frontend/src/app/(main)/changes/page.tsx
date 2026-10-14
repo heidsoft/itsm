@@ -310,6 +310,8 @@ export default function ChangesPage() {
       search={searchKeyword}
       status={statusFilter}
       risk={riskFilter}
+      page={page}
+      pageSize={pageSize}
     />
   );
 

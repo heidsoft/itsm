@@ -6,7 +6,7 @@
  * 按优先级展示多级升级链：阈值 / 目标类型 / 目标 ID / 通知渠道
  */
 
-import { Alert, Card, Col, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Col, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
 import { Users, Clock, Bell, AlertTriangle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -35,13 +35,19 @@ function formatMinutes(mins: number): string {
 export default function EscalationMatricesPage() {
   const [matrix, setMatrix] = useState<EscalationMatrix>(DEFAULT_ESCALATION_MATRIX);
   const [loading, setLoading] = useState(false);
+  // 2026-10-14 修复：加载失败显式报错，不再把硬编码默认矩阵当真实数据展示
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
+    setLoadError(null);
     EscalationMatrixApi.getMatrix()
       .then(m => {
         if (alive) setMatrix(m);
+      })
+      .catch((err: Error) => {
+        if (alive) setLoadError(err.message || '升级矩阵加载失败');
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -151,6 +157,21 @@ export default function EscalationMatricesPage() {
           按优先级配置的多级升级策略。当 SLA 阈值被突破时，系统会按升级链逐级通知更高级别的处理人。
         </Paragraph>
       </div>
+
+      {loadError && (
+        <Alert
+          title="升级矩阵加载失败"
+          description={loadError + '。以下展示的是系统内置默认策略，并非生产配置，请勿据此判断线上升级行为。'}
+          type="error"
+          showIcon
+          style={{ marginBottom: 16 }}
+          action={
+            <Button size="small" onClick={() => window.location.reload()}>
+              重试
+            </Button>
+          }
+        />
+      )}
 
       <Alert
         title="升级矩阵为系统内置策略，当前仅支持查看"
