@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 )
 
 // ErrStaleVersion 表示条件更新未命中任何行：读取快照后版本已被并发写入推进。

@@ -68,6 +68,15 @@ export interface GetCIListRequest {
 // 与后端 dto.CIListResponse 逐字段一致；不要再声明第二套键名。
 export type GetCIListResponse = PaginationResponse<ConfigurationItem>;
 
+// 与后端 dto.CIStatsResponse 逐字段一致。
+export interface CMDBStatsSummary {
+  total: number;
+  statusDistribution: Record<string, number>;
+  typeDistribution: Record<string, number>;
+  environmentDistribution: Record<string, number>;
+  criticalityDistribution: Record<string, number>;
+}
+
 export type CMDBCapabilityState = 'disabled' | 'unconfigured' | 'unready' | 'ready';
 
 export interface CMDBRuntimeCapability {
@@ -180,7 +189,7 @@ export class CMDBApi {
 
   // ==================== Stats & Types ====================
 
-  static async getCMDBStats(params?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  static async getCMDBStats(params?: Record<string, unknown>): Promise<CMDBStatsSummary> {
     return httpClient.get(`${CIS_BASE}/stats`, params);
   }
 

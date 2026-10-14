@@ -184,6 +184,10 @@ jobs:
         run: |
           bash scripts/static-gates/check-list-envelope.sh
 
+      - name: Transaction constraint swallow gate (PG 25P02)
+        run: |
+          bash scripts/static-gates/check-tx-constraint-swallow.sh
+
   build:
     name: Build
     runs-on: ubuntu-latest

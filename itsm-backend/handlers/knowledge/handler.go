@@ -1,7 +1,7 @@
 package knowledge
 
 import (
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"

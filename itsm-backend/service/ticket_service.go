@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -23,6 +24,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/slastate"
 	entTicket "itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/ent/ticketcategory"
 	entTicketComment "itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/tickettag"
@@ -365,56 +367,81 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 「主表不存在但已派发通知」或反之的不一致状态。
 	// 其他后续副作用（智能分配 / SLA 期限 / 审批触发）不在这个事务范围内，独立提交，
 	// 其失败仅记 warnw 不阻塞工单创建。
+	//
+	// 工单号在事务外预生成：撞唯一索引会把整条事务标记为 aborted(25P02)，事务内无法重试，
+	// 只能回滚后重开事务。重试时 GenerateTicketNumber 会取到新的序列值，因此重试是有效的。
+	// 详见 ticket.ErrTicketNumberConflict。
 	var tkt *ticket.Ticket
-	err = s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
-		created, err := s.repo.CreateWithTx(ctx, tx, params, tenantID)
-		if err != nil {
-			return err
+	const createTicketMaxAttempts = 3
+	for attempt := 0; attempt < createTicketMaxAttempts; attempt++ {
+		ticketNumber, numErr := s.repo.GenerateTicketNumber(ctx, tenantID)
+		if numErr != nil {
+			return nil, fmt.Errorf("generate ticket number: %w", numErr)
 		}
-		tkt = created
+		params.TicketNumber = ticketNumber
 
-		if s.notificationSvc != nil {
-			entTicket := s.toEntTicket(tkt)
-			if err := s.notificationSvc.NotifyTicketCreatedTx(ctx, tx, entTicket); err != nil {
-				return fmt.Errorf("enqueue ticket-created notification: %w", err)
-			}
-		}
-		if s.workflowOutboxEnabled {
-			_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
-				TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
-				AggregateType: "ticket", AggregateID: created.ID,
-				IdempotencyKey: fmt.Sprintf("ticket:%d:workflow:start", created.ID),
-				Payload: map[string]interface{}{
-					"businessType": "ticket", "businessId": created.ID,
-					"workflowDefinitionKey": workflowDefinitionKey,
-				},
-			})
+		err = s.runCreateTicketTx(ctx, params, tenantID, func(tx *ent.Tx) error {
+			created, err := s.repo.CreateWithTx(ctx, tx, params, tenantID)
 			if err != nil {
-				return fmt.Errorf("enqueue ticket workflow: %w", err)
+				return err
 			}
-		}
-		if s.sideEffectOutboxEnabled {
-			commands := []commandbus.EnqueueRequest{
-				{
-					TenantID: tenantID, CommandType: commandbus.CommandExecuteTicketRules, AggregateType: "ticket", AggregateID: created.ID,
-					IdempotencyKey: fmt.Sprintf("ticket:%d:rules:create", created.ID), Payload: map[string]interface{}{"event": "created"},
-				},
-				{
-					TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu, AggregateType: "ticket", AggregateID: created.ID,
-					IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", created.ID, created.Version), Payload: map[string]interface{}{"event": "created", "version": created.Version},
-				},
-			}
-			for _, command := range commands {
-				if _, err := commandbus.EnqueueTx(ctx, tx, command); err != nil {
-					return fmt.Errorf("enqueue ticket side effect %s: %w", command.CommandType, err)
+			tkt = created
+
+			if s.notificationSvc != nil {
+				entTicket := s.toEntTicket(tkt)
+				if err := s.notificationSvc.NotifyTicketCreatedTx(ctx, tx, entTicket); err != nil {
+					return fmt.Errorf("enqueue ticket-created notification: %w", err)
 				}
 			}
+			if s.workflowOutboxEnabled {
+				_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+					TenantID: tenantID, CommandType: commandbus.CommandStartBPMN,
+					AggregateType: "ticket", AggregateID: created.ID,
+					IdempotencyKey: fmt.Sprintf("ticket:%d:workflow:start", created.ID),
+					Payload: map[string]interface{}{
+						"businessType": "ticket", "businessId": created.ID,
+						"workflowDefinitionKey": workflowDefinitionKey,
+					},
+				})
+				if err != nil {
+					return fmt.Errorf("enqueue ticket workflow: %w", err)
+				}
+			}
+			if s.sideEffectOutboxEnabled {
+				commands := []commandbus.EnqueueRequest{
+					{
+						TenantID: tenantID, CommandType: commandbus.CommandExecuteTicketRules, AggregateType: "ticket", AggregateID: created.ID,
+						IdempotencyKey: fmt.Sprintf("ticket:%d:rules:create", created.ID), Payload: map[string]interface{}{"event": "created"},
+					},
+					{
+						TenantID: tenantID, CommandType: commandbus.CommandSyncTicketFeishu, AggregateType: "ticket", AggregateID: created.ID,
+						IdempotencyKey: fmt.Sprintf("ticket:%d:feishu:sync:v%d", created.ID, created.Version), Payload: map[string]interface{}{"event": "created", "version": created.Version},
+					},
+				}
+				for _, command := range commands {
+					if _, err := commandbus.EnqueueTx(ctx, tx, command); err != nil {
+						return fmt.Errorf("enqueue ticket side effect %s: %w", command.CommandType, err)
+					}
+				}
+			}
+			return nil
+		})
+		if err == nil {
+			break
 		}
-		return nil
-	})
-	if err != nil {
-		s.logger.Errorw("Failed to create ticket", "error", err)
-		return nil, err
+		// 工单号冲突：事务已回滚且已 aborted，重开事务用新号重试。
+		// 其他错误（业务校验、通知入箱失败等）一律不重试，直接上抛。
+		if !errors.Is(err, ticket.ErrTicketNumberConflict) {
+			s.logger.Errorw("Failed to create ticket", "error", err)
+			return nil, err
+		}
+		if attempt == createTicketMaxAttempts-1 {
+			s.logger.Errorw("Failed to create ticket: ticket number conflict persisted after retries",
+				"error", err, "attempts", createTicketMaxAttempts, "tenant_id", tenantID)
+			return nil, err
+		}
+		s.logger.Warnw("ticket number conflict, retrying in a fresh transaction",
+			"tenant_id", tenantID, "attempt", attempt+1, "error", err)
 	}
 	if configuredType != nil {
 		if err := s.client.TicketType.UpdateOneID(configuredType.ID).AddUsageCount(1).SetUpdatedAt(time.Now()).Exec(ctx); err != nil {
@@ -1266,9 +1293,9 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 	// 管理角色放行全租户；普通角色强制收窄到本人创建或分配给自己的工单。
 	filters.CurrentUserID = currentUserID
 	if isTicketDataScopeAllRole(currentRole) {
-		filters.DataScope = ticket.DataScopeAll
+		filters.DataScope = datascope.DataScopeAll
 	} else {
-		filters.DataScope = ticket.DataScopeOwnedOrAssigned
+		filters.DataScope = datascope.DataScopeOwnedOrAssigned
 	}
 
 	// 分页参数

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 )
 
 // ServiceRequest represents the domain entity for a service request

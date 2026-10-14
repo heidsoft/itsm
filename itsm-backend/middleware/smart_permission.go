@@ -161,15 +161,28 @@ func SmartCheckPermission(c *gin.Context, client *ent.Client, role string, metho
 // =============================================================================
 
 // Auth whitelist endpoints - no permission required
-var authWhitelist = map[string]bool{
-	"/api/v1/auth/login":    true,
-	"/api/v1/auth/register": true,
-	"/health":               true,
-	"/api/v1/health":        true,
+//
+// 按 (path, method) 两级声明：value 是该路径允许免权限的 HTTP 方法集合。
+// 每个条目都必须与 router 中的真实注册方法一致（router/router.go:302/309
+// 注册 POST /auth/login、/auth/register；:321/:325 注册 GET /health、/healthz）。
+//
+// 为什么不再只按 path 匹配：形参 method 此前收了但未使用，导致任意方法命中
+// 白名单路径即放行（DELETE /health、GET /api/v1/auth/login 都无需权限）。
+// 这些路径本身无敏感写操作，危害有限；但「方法不参与判定」意味着日后往白名单里
+// 添加带写语义的路径时会静默放大暴露面，因此收紧为方法级精确匹配。
+var authWhitelist = map[string]map[string]bool{
+	"/api/v1/auth/login":    {"POST": true},
+	"/api/v1/auth/register": {"POST": true},
+	"/health":               {"GET": true},
+	"/api/v1/health":        {"GET": true},
 }
 
 func isAuthWhitelist(path, method string) bool {
-	return authWhitelist[path]
+	methods, ok := authWhitelist[path]
+	if !ok {
+		return false
+	}
+	return methods[strings.ToUpper(method)]
 }
 
 // =============================================================================

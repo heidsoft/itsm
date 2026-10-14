@@ -157,19 +157,24 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		// ITIL 流程运营所有者——工单类型、SLA、流程绑定与目录配置的落地者。
 		domainrole.ITAdmin: {
 			"ticket:read", "ticket_type:read", "ticket:write", "ticket:assign", "incident:read", "incident:write",
-			"problem:read", "change:read", "asset:read", "cmdb:read",
+			"problem:read", "change:read", "asset:read", "cmdb:read", "cmdb:write",
 			"user:read", "team:read", "knowledge:read", "report:read",
 			"service_request:read", "service_request:write", "service_request:approve",
-			// 流程运营职责需要配置面（工单类型/分类/模板、SLA、
-			// 流程与发布读、服务目录），不含 user/role/system 写（归 admin 与三员）。
+			// 流程运营职责需要配置面（工单类型/分类/模板、SLA、流程与发布读、
+			// 服务目录、CI 类型建模），不含 user/role/system 写（归 admin 与三员）。
 			"ticket_type:manage", "ticket_category:read", "ticket_tag:read", "ticket_template:read",
 			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
 			"service_catalog:read", "release:read", "notification:read", "notification:write",
 			"dashboard:read", "group:read", "approval:read",
+			// AI 分派建议/摘要是 IT 运营一线工具，其余运营角色（agent/manager/end_user）均持 ai:read。
+			"ai:read",
 		},
 		// 最终用户：写面只限自己的工单/服务请求，其余资源一律只读。
 		domainrole.EndUser: {
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
+			// 建单页分类下拉（/ticket-categories）与工单详情流转进度（state-v2）
+			// 属最终用户旅程，按「其余资源一律只读」口径授予只读码。
+			"ticket_category:read", "workflow:read",
 			"knowledge:read", "service_catalog:read",
 			"service_request:read", "service_request:write",
 			"notification:read", "user:read",
@@ -336,58 +341,17 @@ func appendMissingCodes(codes []string, extra ...string) []string {
 	return out
 }
 
+// allPermissionCodes 返回 sysadmin 的全量权限码。
+//
+// 直接委托 catalog.AllCodes()（Definitions() 的权威投影），不再手写枚举。
+// 历史上这里是一份手写清单，与 catalog.go 存在差集：新增权限码时只改 catalog
+// 不改这里，sysadmin 就悄悄少了一批码——而 sysadmin 恰恰被假定为"全量"，
+// 结果是最高权限角色反而拿不到新能力，且没有任何告警。
+// 实测 2026-10-13 修复前：手写清单 129 个，catalog 160 个，缺 33 个
+// （tenant:read/write、notification:*、system_config:*、dashboard:*、alert:*、
+// permission:read、role:delete、service_request:approve、incident:admin 等）。
 func allPermissionCodes() []string {
-	return []string{
-		"ticket:read", "ticket:write", "ticket:create", "ticket:update", "ticket:assign",
-		"ticket:escalate", "ticket:resolve", "ticket:close", "ticket:export", "ticket:import",
-		"ticket:admin", "ticket:delete",
-		"ticket_type:read", "ticket_type:manage", "ticket_type:install_preset", "ticket_type:archive",
-		"ticket_category:read", "ticket_category:create", "ticket_category:update", "ticket_category:delete",
-		"ticket_tag:read", "ticket_tag:create", "ticket_tag:update", "ticket_tag:delete",
-		"ticket_template:read", "ticket_template:create", "ticket_template:update", "ticket_template:delete",
-		"incident:read", "incident:write", "incident:delete",
-		"problem:read", "problem:write", "problem:delete",
-		"change:read", "change:write", "change:delete", "change:approve", "change:rollback",
-		"release:read", "release:write", "release:delete", "release:approve", "release:rollback",
-		"asset:read", "asset:write", "asset:delete",
-		"cmdb:read", "cmdb:write", "cmdb:delete",
-		"report:read", "report:write",
-		"license:read", "license:write", "license:delete",
-		"service:read", "service:write",
-		"service_catalog:read", "service_catalog:write", "service_catalog:delete",
-		"service_request:read", "service_request:write", "service_request:delete",
-		"sla:read", "sla:write", "sla:delete",
-		"user:read", "user:write", "user:delete",
-		"group:read", "group:write",
-		"role:read", "role:write",
-		"department:read", "department:write",
-		"team:read", "team:write",
-		"approval:read", "approval:write",
-		"workflow:read", "workflow:write",
-		// BPMN 流程引擎
-		"bpmn:read", "bpmn:write", "bpmn:delete",
-		// 任务面：与 bpmn 分权，见 permissionDefinitions 注释
-		"task:read", "task:update", "task:admin",
-		"knowledge:read", "knowledge:write", "knowledge:delete",
-		"system:read", "system:write",
-		"org:read", "org:write",
-		"project:read", "project:write",
-		"application:read", "application:write",
-		"audit:read",
-		"ai:read", "ai:write",
-		"connector:read", "connector:write",
-		"email_intake:read", "email_intake:review", "email_intake:retry", "email_intake:override",
-		"customer_master:read", "customer_master:write", "support_contract:read", "support_contract:write",
-		"on_call:read", "on_call:write",
-		"vendor:read", "vendor:write", "vendor:delete",
-		"survey:write",
-		"msp:read", "msp:write",
-		"msp_customer:read", "msp_customer:write",
-		"msp_ticket:read", "msp_ticket:write",
-		"msp_allocation:read", "msp_allocation:write",
-		"msp_report:read", "msp_report:write",
-		"marketplace:read", "marketplace:write",
-	}
+	return AllCodes()
 }
 
 // RetiredRolePermissionCodes 返回「角色 → 显式退役权限码」清单。

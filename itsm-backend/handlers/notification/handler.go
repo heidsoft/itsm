@@ -1,14 +1,34 @@
 package notification
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+// currentUserID / currentTenantID 从请求上下文读取当前身份。
+//
+// 这两个 helper 取代了原先挂在 NotificationService 上的
+// GetCurrentUserID(c *gin.Context) / GetCurrentTenantID(c *gin.Context)：
+// service 层不应依赖 gin，否则无法在定时任务、消息消费者等非 HTTP 场景复用。
+// 语义与原实现完全一致（读扁平 context 键、>0 校验），错误响应由调用方决定。
+func currentUserID(ctx *gin.Context) (int, error) {
+	return middleware.GetUserID(ctx)
+}
+
+func currentTenantID(ctx *gin.Context) (int, error) {
+	tenantID := ctx.GetInt("tenant_id")
+	if tenantID <= 0 {
+		return 0, errors.New("租户ID无效")
+	}
+	return tenantID, nil
+}
 
 // Handler HTTP handlers for notification domain
 type Handler struct {
@@ -49,13 +69,13 @@ func (h *Handler) GetNotifications(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.ParamError(ctx, "租户信息错误")
 		return
@@ -96,13 +116,13 @@ func (h *Handler) MarkNotificationRead(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.ParamError(ctx, "租户信息错误")
 		return
@@ -132,13 +152,13 @@ func (h *Handler) MarkNotificationRead(ctx *gin.Context) {
 // @Success 200 {object} common.Response
 // @Router /api/v1/notifications/read-all [post]
 func (h *Handler) MarkAllNotificationsRead(ctx *gin.Context) {
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.ParamError(ctx, "租户信息错误")
 		return
@@ -174,13 +194,13 @@ func (h *Handler) DeleteNotification(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.ParamError(ctx, "租户信息错误")
 		return
@@ -203,13 +223,13 @@ func (h *Handler) DeleteNotification(ctx *gin.Context) {
 
 // GetUnreadCount 获取未读通知数量
 func (h *Handler) GetUnreadCount(ctx *gin.Context) {
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.AuthFailed(ctx, "用户未登录")
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.ParamError(ctx, "租户信息错误")
 		return
@@ -232,7 +252,7 @@ func (h *Handler) CreateNotification(ctx *gin.Context) {
 		return
 	}
 
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
 		return
@@ -254,12 +274,12 @@ func (h *Handler) MarkNotificationsRead(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请选择要标记的通知（最多100条）")
 		return
 	}
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.Fail(ctx, common.AuthFailedCode, "用户未登录")
 		return
 	}
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
 		return
@@ -279,12 +299,12 @@ func (h *Handler) DeleteNotifications(ctx *gin.Context) {
 		common.Fail(ctx, common.ParamErrorCode, "请选择要删除的通知（最多100条）")
 		return
 	}
-	userID, err := h.notificationService.GetCurrentUserID(ctx)
+	userID, err := currentUserID(ctx)
 	if err != nil {
 		common.Fail(ctx, common.AuthFailedCode, "用户未登录")
 		return
 	}
-	tenantID, err := h.notificationService.GetCurrentTenantID(ctx)
+	tenantID, err := currentTenantID(ctx)
 	if err != nil {
 		common.Fail(ctx, common.AuthFailedCode, "无法确认当前租户")
 		return

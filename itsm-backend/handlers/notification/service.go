@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"itsm-backend/dto"
-
-	"github.com/gin-gonic/gin"
 )
 
 // NotificationService 定义通知域业务接口（依赖倒置）。
 // 实现由 internal/bootstrap 装配的 service.NotificationService 提供。
+//
+// 注意：接口不含任何 *gin.Context 方法。身份读取（user_id / tenant_id）
+// 由 handler 侧的 currentUserID / currentTenantID helper 完成，
+// service 层因此可在定时任务、消息消费者等非 HTTP 场景复用。
 type NotificationService interface {
 	CreateNotification(ctx context.Context, req *dto.CreateNotificationRequest) (*dto.Notification, error)
 	GetNotifications(ctx context.Context, req *dto.GetNotificationsRequest) (*dto.NotificationListResponse, error)
@@ -19,8 +21,6 @@ type NotificationService interface {
 	MarkNotificationsRead(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error)
 	DeleteNotifications(ctx context.Context, notificationIDs []int, userID, tenantID int) (int, error)
 	GetUnreadCount(ctx context.Context, userID, tenantID int) (int, error)
-	GetCurrentUserID(c *gin.Context) (int, error)
-	GetCurrentTenantID(c *gin.Context) (int, error)
 }
 
 // NotificationPreferenceService 定义通知偏好域业务接口（依赖倒置）。

@@ -39,10 +39,11 @@ describe('token-storage', () => {
     expect(tokenStorage.getTenantCode()).toBe('TENANT_A');
   });
 
-  it('getTenantId returns stored value', async () => {
+  it('clearAuthStorage removes legacy current_tenant_id key', async () => {
     localStorage.setItem('current_tenant_id', '42');
     tokenStorage = await import('../token-storage');
-    expect(tokenStorage.getTenantId()).toBe('42');
+    tokenStorage.clearAuthStorage();
+    expect(localStorage.getItem('current_tenant_id')).toBeNull();
   });
 
   it('migrateLegacyAuthStorage migrates tenantCode', async () => {

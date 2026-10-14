@@ -58,9 +58,13 @@ func parseData(t *testing.T, w *httptest.ResponseRecorder) map[string]interface{
 // 路径中验证）。
 func setupRouter(reg *service.SkillRegistry) *gin.Engine {
 	gin.SetMode(gin.TestMode)
+	// Invoke 会校验 skill 声明的 RequiredPermissions，权限判定走 middleware 单一真源。
+	// 默认 Mode=0（DBOnly）在 client=nil 时 fail-closed，会让所有角色零权限，
+	// 因此显式切到 HardcodeOnly，按 internal/authz 的默认权限集判定。
+	middleware.PermissionConfig.Mode = middleware.PermissionConfigModeHardcodeOnly
 	r := gin.New()
 	r.Use(gin.Recovery())
-	h := skill.NewHandler(reg, zap.NewNop().Sugar())
+	h := skill.NewHandler(reg, zap.NewNop().Sugar(), nil)
 	v1 := r.Group("/api/v1")
 	// 跳过 RequirePermission 中间件，专注于 handler 行为。
 	v1.Use(func(c *gin.Context) {
@@ -113,7 +117,7 @@ func TestCreate_AndList(t *testing.T) {
 		Description:         "用于测试",
 		Category:            "pilot",
 		Tags:                []string{"custom", "demo"},
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		Capabilities:        []string{"custom.demo"},
 		Executor: map[string]interface{}{
 			"target": "echo",
@@ -141,7 +145,7 @@ func TestCreate_DuplicateReturns409(t *testing.T) {
 	body := skill.SkillUpsertRequest{
 		Code:                "user.duplicate",
 		Version:             "v1",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
@@ -158,7 +162,7 @@ func TestCreate_RequiresVersion(t *testing.T) {
 
 	body := skill.SkillUpsertRequest{
 		Code:                "user.noversion",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		// 故意把 Version 留空
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
@@ -187,7 +191,7 @@ func TestGet_AfterCreate(t *testing.T) {
 		Code:                "user.detail",
 		Version:             "v1",
 		Title:               "详情",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
 	require.Equal(t, http.StatusOK, w.Code)
@@ -216,7 +220,7 @@ func TestPromote_PilotToGa(t *testing.T) {
 		Code:                "user.promote",
 		Version:             "v1",
 		Category:            "pilot",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
 	require.Equal(t, http.StatusOK, w.Code)
@@ -238,7 +242,7 @@ func TestDelete_DisablesSkill(t *testing.T) {
 	create := skill.SkillUpsertRequest{
 		Code:                "user.todelete",
 		Version:             "v1",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
 	require.Equal(t, http.StatusOK, w.Code)
@@ -258,7 +262,7 @@ func TestInvoke_EchoSkill(t *testing.T) {
 	create := skill.SkillUpsertRequest{
 		Code:                "user.echo",
 		Version:             "v1",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		Executor: map[string]interface{}{
 			"target": "echo",
 		},
@@ -293,7 +297,7 @@ func TestInvoke_IdentityFromContextOverridesBody(t *testing.T) {
 	create := skill.SkillUpsertRequest{
 		Code:                "user.echo",
 		Version:             "v1",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		Executor:            map[string]interface{}{"target": "echo"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
@@ -327,7 +331,7 @@ func TestUpdate_VersionBump(t *testing.T) {
 	create := skill.SkillUpsertRequest{
 		Code:                "user.bump",
 		Version:             "v1",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
 	require.Equal(t, http.StatusOK, w.Code)
@@ -335,7 +339,7 @@ func TestUpdate_VersionBump(t *testing.T) {
 	update := skill.SkillUpsertRequest{
 		Code:                "user.bump",
 		Version:             "v2",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 	}
 	w2 := doRequest(t, r, http.MethodPut, "/api/v1/admin/skills/user.bump", update)
 	assert.Equal(t, http.StatusOK, w2.Code)
@@ -354,7 +358,7 @@ func TestList_FilterByQuery(t *testing.T) {
 		body := skill.SkillUpsertRequest{
 			Code:                code,
 			Version:             "v1",
-			RequiredPermissions: []string{"skill:read"},
+			RequiredPermissions: []string{"marketplace:read"},
 			Description:         code,
 		}
 		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
@@ -379,7 +383,7 @@ func TestAdminList_ReturnsAllSkills(t *testing.T) {
 		Version:             "v1",
 		Title:               "Admin List Test",
 		Category:            "pilot",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		Capabilities:        []string{"custom.admin_list"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
@@ -412,7 +416,7 @@ func TestAdminGet_ReturnsFullEntry(t *testing.T) {
 		Version:             "v1",
 		Title:               "Admin Detail",
 		Category:            "pilot",
-		RequiredPermissions: []string{"skill:read"},
+		RequiredPermissions: []string{"marketplace:read"},
 		Capabilities:        []string{"custom.admin_detail"},
 	}
 	w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", create)
@@ -437,7 +441,7 @@ func TestAdminList_Pagination(t *testing.T) {
 		body := skill.SkillUpsertRequest{
 			Code:                fmt.Sprintf("user.page_%d", i),
 			Version:             "v1",
-			RequiredPermissions: []string{"skill:read"},
+			RequiredPermissions: []string{"marketplace:read"},
 			Capabilities:        []string{"custom.pagination"},
 		}
 		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
@@ -476,7 +480,7 @@ func TestAdminList_PageSizeFallsBackToPlatformDefault(t *testing.T) {
 		body := skill.SkillUpsertRequest{
 			Code:                fmt.Sprintf("user.pgfall_%d", i),
 			Version:             "v1",
-			RequiredPermissions: []string{"skill:read"},
+			RequiredPermissions: []string{"marketplace:read"},
 			Capabilities:        []string{"custom.pagination"},
 		}
 		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", body)
@@ -504,4 +508,76 @@ func TestAdminList_PageSizeFallsBackToPlatformDefault(t *testing.T) {
 	assert.EqualValues(t, 2, data["totalPages"])
 	items, _ := data["items"].([]interface{})
 	assert.Len(t, items, 2)
+}
+
+// TestInvoke_EnforcesRequiredPermissions 锁定 skill manifest 声明的
+// RequiredPermissions 在执行前被逐条校验。
+//
+// 背景：该字段此前只存不验——manifests 里声明 ticket:write 之类的 skill，
+// 任何持 ai:read（invoke 路由级权限）的角色都能调用，声明等于装饰，
+// skill 成为绕过路由级权限的后门。现由 Invoke 在执行前校验。
+func TestInvoke_EnforcesRequiredPermissions(t *testing.T) {
+	// admin 持有 marketplace:read，不持有 msp:write（见 internal/authz/roles.go）
+	newSkill := func(code string, perms []string) skill.SkillUpsertRequest {
+		return skill.SkillUpsertRequest{
+			Code:                code,
+			Version:             "1.0.0",
+			Title:               "Perm Skill",
+			Description:         "权限校验测试",
+			Category:            "pilot",
+			Tags:                []string{"custom", "perm"},
+			RequiredPermissions: perms,
+			Capabilities:        []string{"custom.perm"},
+			Executor:            map[string]interface{}{"target": "echo"},
+		}
+	}
+
+	t.Run("held permission passes", func(t *testing.T) {
+		reg := service.NewSkillRegistry()
+		r := setupRouter(reg)
+		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.ok", []string{"marketplace:read"}))
+		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/perm.ok/invoke", nil)
+		assert.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	})
+
+	t.Run("missing permission is denied before execution", func(t *testing.T) {
+		reg := service.NewSkillRegistry()
+		r := setupRouter(reg)
+		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.denied", []string{"msp:write"}))
+		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/perm.denied/invoke", nil)
+		assert.Equal(t, http.StatusForbidden, w.Code, w.Body.String())
+		assert.Contains(t, w.Body.String(), "msp:write")
+	})
+
+	t.Run("one missing permission denies the whole call", func(t *testing.T) {
+		reg := service.NewSkillRegistry()
+		r := setupRouter(reg)
+		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.partial", []string{"marketplace:read", "msp:write"}))
+		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/perm.partial/invoke", nil)
+		assert.Equal(t, http.StatusForbidden, w.Code, w.Body.String())
+	})
+
+	// 自定义 skill 的 RequiredPermissions 由 Create 强制至少声明一项
+	// （handlers/skill/handler.go Create 分支），因此「空列表放行」分支
+	// 只可能来自不经 Create 的内置 skill——那里由 RegisterBuiltinSkills
+	// 直接注册，不声明权限即不校验，保持内置能力可用。
+	t.Run("create rejects empty requiredPermissions", func(t *testing.T) {
+		reg := service.NewSkillRegistry()
+		r := setupRouter(reg)
+		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.empty", nil))
+		assert.Equal(t, http.StatusBadRequest, create.Code, create.Body.String())
+		assert.Contains(t, create.Body.String(), "requiredPermissions")
+	})
+
+	t.Run("malformed permission code is denied fail-closed", func(t *testing.T) {
+		reg := service.NewSkillRegistry()
+		r := setupRouter(reg)
+		create := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills", newSkill("perm.malformed", []string{"no-colon-here"}))
+		require.Equal(t, http.StatusOK, create.Code, create.Body.String())
+		w := doRequest(t, r, http.MethodPost, "/api/v1/admin/skills/perm.malformed/invoke", nil)
+		assert.Equal(t, http.StatusForbidden, w.Code, w.Body.String())
+	})
 }

@@ -8,7 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	repoTicket "itsm-backend/repository/ticket"
 	"itsm-backend/service"
 

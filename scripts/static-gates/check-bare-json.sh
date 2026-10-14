@@ -31,8 +31,16 @@ TARGETS=(
 PATTERN='c\.JSON\([0-9]'
 EXCLUDE_PATTERN='_test\.go$|_mock\.go$|mocks/'
 
+# 平台协议豁免：钉钉 / 企业微信 / 飞书的回调入口必须按平台规定的**精确响应体**
+# 应答（echostr 原文回显、errcode/errmsg 信封），不能包成本项目统一的
+# {code,message,data}——包了平台就认为验签失败。这些文件的响应格式由外部平台
+# 契约决定，不属于"绕过统一响应"的坏味道。
+# 新增豁免必须满足：① 文件是平台回调入口 ② 注释说明平台契约依据。
+PLATFORM_CALLBACK_PATTERN='handlers/(dingtalk|wecom|feishu)/'
+
 VIOLATIONS=0
 REPORT_LINES=()
+WAIVED=0
 
 for target in "${TARGETS[@]}"; do
   if [[ ! -d "${target}" ]]; then
@@ -48,12 +56,20 @@ for target in "${TARGETS[@]}"; do
     if echo "${line}" | grep -qE '^\s*//'; then
       continue
     fi
+    # 平台回调协议豁免（计入 WAIVED 以便审计豁免规模）
+    if echo "${line}" | grep -qE "${PLATFORM_CALLBACK_PATTERN}"; then
+      WAIVED=$((WAIVED + 1))
+      continue
+    fi
     VIOLATIONS=$((VIOLATIONS + 1))
     REPORT_LINES+=("${line}")
   done < <(grep -rnE "${PATTERN}" "${target}" 2>/dev/null || true)
 done
 
 echo "==== Static Gate 5.1: bare c.JSON() check ===="
+if [[ "${WAIVED}" -gt 0 ]]; then
+  echo "豁免 ${WAIVED} 处平台回调协议响应（钉钉/企微/飞书规定精确响应体）。"
+fi
 if [[ "${VIOLATIONS}" -gt 0 ]]; then
   echo "FAIL: ${VIOLATIONS} bare c.JSON() call(s) found."
   echo ""

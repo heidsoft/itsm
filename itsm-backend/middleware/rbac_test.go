@@ -306,3 +306,66 @@ func TestDBOnlyPermissionModeDoesNotUseHardcodedFallback(t *testing.T) {
 	assert.Empty(t, permissions)
 	assert.False(t, checkPermissionMatch(permissions, "ticket", "read"))
 }
+
+// TestHasPermission_WSTicketIdentityOnly 锁定 WS 票据颁发的身份自省面豁免：
+// DBOnly fail-closed 下若漏掉该豁免，POST /ws/ticket 会对全部非 super_admin 角色
+// 返回 403，前端实时通知整体失效（v1.6.18 角色场景测试发现的回归面）。
+func TestHasPermission_WSTicketIdentityOnly(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	original := PermissionConfig.Mode
+	PermissionConfig.Mode = PermissionConfigModeDBOnly
+	t.Cleanup(func() { PermissionConfig.Mode = original })
+
+	t.Run("Authenticated Role Can Request WS Ticket", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request, _ = http.NewRequest("POST", "/api/v1/ws/ticket", nil)
+
+		assert.True(t, hasPermission(nil, "end_user", "POST", "/api/v1/ws/ticket", 3, 1, c))
+		assert.True(t, hasPermission(nil, "it_admin", "POST", "/api/v1/ws/ticket", 13, 1, c))
+	})
+
+	t.Run("Method And Path Variants Stay Fail-Closed", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request, _ = http.NewRequest("GET", "/api/v1/ws/ticket", nil)
+
+		assert.False(t, hasPermission(nil, "end_user", "GET", "/api/v1/ws/ticket", 3, 1, c))
+
+		c.Request, _ = http.NewRequest("POST", "/api/v1/ws/tickets", nil)
+		assert.False(t, hasPermission(nil, "end_user", "POST", "/api/v1/ws/tickets", 3, 1, c))
+	})
+}
+
+// TestAuthorizeResourceRejectsEmptyResourceAction 锁定空值拒绝语义。
+//
+// 背景：checkPermissionMatch 的通配分支在空 resource/action 下会产生意外放行
+// （漏配 ToolDefinition.Resource 的工具会让持有 "*:<action>" 码的角色通过），
+// 因此 AuthorizeResource 入口显式拒绝空值。这里用 super_admin 也一起锁定——
+// 空值一律拒绝，不因角色高低而分叉。
+func TestAuthorizeResourceRejectsEmptyResourceAction(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctx := context.Background()
+
+	t.Run("empty resource is denied even for super_admin", func(t *testing.T) {
+		assert.False(t, AuthorizeResource(ctx, nil, []string{"super_admin"}, "", "read", 1))
+		assert.False(t, AuthorizeResourceForRole(ctx, nil, "super_admin", "", "read", 1))
+	})
+
+	t.Run("empty action is denied even for super_admin", func(t *testing.T) {
+		assert.False(t, AuthorizeResource(ctx, nil, []string{"super_admin"}, "ticket", "", 1))
+		assert.False(t, AuthorizeResourceForRole(ctx, nil, "super_admin", "ticket", "", 1))
+	})
+
+	t.Run("wildcard permission cannot bypass empty value check", func(t *testing.T) {
+		// 持有 *:* 的超级角色也不能因空值放行：空值永远是调用方缺陷
+		assert.False(t, AuthorizeResource(ctx, nil, []string{"tenant_owner"}, "", "", 1))
+		assert.False(t, AuthorizeResourceForRole(ctx, nil, "tenant_owner", "", "", 1))
+	})
+
+	t.Run("non-empty values keep existing behavior", func(t *testing.T) {
+		assert.True(t, AuthorizeResource(ctx, nil, []string{"super_admin"}, "ticket", "read", 1))
+		assert.True(t, AuthorizeResourceForRole(ctx, nil, "super_admin", "ticket", "read", 1))
+		assert.False(t, AuthorizeResource(ctx, nil, []string{"end_user"}, "ticket", "delete", 1))
+	})
+}

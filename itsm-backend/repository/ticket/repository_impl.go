@@ -3,6 +3,7 @@ package ticket
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 
 	"go.uber.org/zap"
@@ -136,17 +138,38 @@ func (r *EntRepository) Create(ctx context.Context, params *CreateParams, tenant
 	return nil, fmt.Errorf("create ticket: ticket number collision persisted after retries")
 }
 
+// ErrTicketNumberConflict 工单号撞上 tickets 表唯一索引。
+//
+// 这不是「重试一次就好」的软错误。PostgreSQL 遇到唯一约束冲突会把**整条事务**标记为
+// aborted(SQLSTATE 25P02)，此后该事务内的任何语句——包括 COMMIT——都会失败。
+// 因此在本事务内捕获冲突后再 INSERT 一次必然失败，还会把同事务内的通知入箱等写入
+// 连坐回滚（历史上这正是 CreateWithTx 复制 Create 的重试循环引入的缺陷）。
+//
+// 正确处置：调用方 rollback 后**重开事务**，用新工单号重试。
+var ErrTicketNumberConflict = errors.New("ticket number conflict")
+
 // CreateWithTx 在调用方提供的 *ent.Tx 内创建工单；与 Create 逻辑一致但不管理 tx 生命周期，
 // 因此 ticket INSERT 与 operational_command 写入同生同死。
-// GenerateTicketNumber 走 Redis 路径，不依赖数据库 tx。
+//
+// 与 Create 的关键差异：**不做撞号重试**。Create 每次重试都是无事务上下文的独立语句，
+// 撞 23505 只影响那一条；而本函数在调用方事务内，撞约束即 aborted，重试毫无意义。
+// 撞号时返回 ErrTicketNumberConflict，由调用方回滚并重开事务。
+//
+// 推荐调用方通过 params.TicketNumber 在事务外预生成号码（同时避免事务内 Redis 往返）。
+// GenerateTicketNumber 走 Redis 路径，不依赖数据库 tx——但生成的号撞上 DB 唯一索引时，
+// 脏的仍然是 DB 事务。
 func (r *EntRepository) CreateWithTx(ctx context.Context, tx *ent.Tx, params *CreateParams, tenantID int) (*Ticket, error) {
 	if tx == nil {
 		return nil, fmt.Errorf("CreateWithTx requires non-nil tx")
 	}
-	for attempt := 0; attempt < 3; attempt++ {
-		ticketNumber, err := r.GenerateTicketNumber(ctx, tenantID)
-		if err != nil {
-			return nil, fmt.Errorf("generate ticket number: %w", err)
+	{
+		ticketNumber := params.TicketNumber
+		if ticketNumber == "" {
+			var err error
+			ticketNumber, err = r.GenerateTicketNumber(ctx, tenantID)
+			if err != nil {
+				return nil, fmt.Errorf("generate ticket number: %w", err)
+			}
 		}
 
 		builder := tx.Ticket.Create().
@@ -194,18 +217,16 @@ func (r *EntRepository) CreateWithTx(ctx context.Context, tx *ent.Tx, params *Cr
 		}
 
 		if ent.IsConstraintError(err) || strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "23505") {
-			r.logger.Warnw("ticket number collision detected during create (tx), retrying",
+			r.logger.Warnw("ticket number conflict inside caller transaction; caller must rollback and retry",
 				"ticket_number", ticketNumber,
 				"tenant_id", tenantID,
-				"attempt", attempt+1,
+				"pre_generated", params.TicketNumber != "",
 				"error", err)
-			continue
+			return nil, fmt.Errorf("%w: %s", ErrTicketNumberConflict, ticketNumber)
 		}
 
 		return nil, fmt.Errorf("create ticket (tx): %w", err)
 	}
-
-	return nil, fmt.Errorf("create ticket (tx): ticket number collision persisted after retries")
 }
 
 // GetByID 根据 ID 获取工单
@@ -499,7 +520,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 		// DataScopeOwnedOrAssigned 强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid))，
 		// 使普通员工只能看到自己创建或分配给自己的工单。
 		// 这是安全关键路径：即使上层忘记传 RequesterID 过滤，这里仍会兜底收窄。
-		if filters.DataScope == DataScopeOwnedOrAssigned {
+		if filters.DataScope == datascope.DataScopeOwnedOrAssigned {
 			if filters.CurrentUserID <= 0 {
 				// 防御性：未提供用户 ID 时 fail closed，返回空集而非全量。
 				query = query.Where(ticket.IDEQ(-1))

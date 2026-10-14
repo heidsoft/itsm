@@ -53,7 +53,7 @@ import (
 	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 	dingtalkHandler "itsm-backend/handlers/dingtalk"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
@@ -953,7 +953,8 @@ func NewApplication() *Application {
 
 	// Skills Management API：在 SkillRegistry 装配完成后创建 handler。
 	// handler 只是 thin wrapper，所有业务逻辑在 SkillRegistry 内。
-	skillHandler := skill.NewHandler(skillRegistry, sugar)
+	// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions。
+	skillHandler := skill.NewHandler(skillRegistry, sugar, client)
 	emailIntakeService := email_intake.NewService(client)
 	emailIntakeHandler := email_intake.NewHandler(emailIntakeService)
 	emailIntakeMode := email_intake.IntakeMode(os.Getenv("EMAIL_INTAKE_MODE"))

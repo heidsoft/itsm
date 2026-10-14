@@ -16,7 +16,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"

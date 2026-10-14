@@ -65,17 +65,27 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
+	// 跨租户创建用户仅允许 super_admin（MSP 场景）。
+	// 提前为独立前置校验，判据用请求里的 req.TenantID（调用方的真实意图），
+	// 不依赖 req.Role / req.RoleIDs 是否填写——原实现把该检查嵌在
+	// if req.Role != "" 分支内，且判据是 targetTenantID != tenantID，
+	// 而 targetTenantID 只可能在下面 super_admin 分支被改写，条件恒假，
+	// 等于没有这道检查。
+	callerRole := c.GetString("role")
+	if req.TenantID > 0 && req.TenantID != tenantID && callerRole != "super_admin" {
+		common.Forbidden(c, "无权限跨租户创建用户")
+		return
+	}
+
 	// 确定目标租户：对于super_admin且请求中指定了tenant_id，使用请求中的；否则使用上下文中的
 	targetTenantID := tenantID
-	userRole, _ := c.Get("role")
-	if userRole == "super_admin" && req.TenantID > 0 {
+	if callerRole == "super_admin" && req.TenantID > 0 {
 		targetTenantID = req.TenantID
 	}
 
 	// 角色越权防护（C3 修复）：调用者不能分配高于自身权限的角色。
 	// Rank/IsBuiltinCode 单一事实源在 domain/role——sysadmin/security_admin/audit_admin
 	// 必须高于 admin，否则持 user:write 的 admin 可铸造等价超管账号。
-	callerRole := c.GetString("role")
 	if strings.TrimSpace(req.Role) != "" {
 		targetRole := normalizeRole(req.Role)
 		if !domainrole.IsBuiltinCode(targetRole) {
@@ -84,11 +94,6 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		}
 		if domainrole.Rank(targetRole) > domainrole.Rank(callerRole) {
 			common.Forbidden(c, "无权限分配高于自身角色的用户角色")
-			return
-		}
-		// 跨租户创建用户仅允许 super_admin（MSP 场景）
-		if targetTenantID != tenantID && callerRole != "super_admin" {
-			common.Forbidden(c, "无权限跨租户创建用户")
 			return
 		}
 	}

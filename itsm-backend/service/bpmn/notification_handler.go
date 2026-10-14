@@ -285,7 +285,11 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 		idempotencyKey := fmt.Sprintf("%s:%s:%d:%s:%d:%s",
 			req.OccurrenceKey, req.ResourceType, req.ResourceID,
 			req.Channel, recipientID, req.NotificationType)
-		if _, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+		// 必须用幂等变体，不能在事务内吞掉约束错误后 continue：
+		// 撞上 operational_commands 唯一索引会把整条事务标记 aborted(25P02)，
+		// 之后剩余的收件人 INSERT 与 tx.Commit() 全部失败，本批通知整体丢失。
+		// 先查后插把「同一事件重复触发」变成 skipped=true 的正常返回，事务保持干净。
+		_, skipped, err := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
 			TenantID:       req.TenantID,
 			CommandType:    commandbus.CommandDeliverNotification,
 			AggregateType:  req.ResourceType,
@@ -300,12 +304,13 @@ func (h *NotificationHandler) enqueueDeliveries(ctx context.Context, req deliver
 				"type":         req.NotificationType,
 				"content":      req.Content,
 			},
-		}); err != nil {
-			if ent.IsConstraintError(err) {
-				// 同一业务事件重复触发，视为已投递，保持幂等
-				continue
-			}
+		})
+		if err != nil {
 			return rollback(fmt.Errorf("通知入队失败: %w", err))
+		}
+		if skipped {
+			// 同一业务事件已入箱，视为已投递，保持幂等
+			continue
 		}
 		enqueued++
 	}

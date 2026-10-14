@@ -11,6 +11,7 @@ import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CMDB_CAPABILITIES } from '@/lib/cmdb/cmdb-capabilities';
 import { useCapabilities } from '@/lib/hooks/useCapabilities';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -20,14 +21,6 @@ type CMDBOverview = {
   loading: boolean;
   error: boolean;
   refreshedAt: string | null;
-};
-
-const normalizeItems = (value: unknown): unknown[] => {
-  if (Array.isArray(value)) return value;
-  if (value && typeof value === 'object' && Array.isArray((value as { items?: unknown[] }).items)) {
-    return (value as { items: unknown[] }).items;
-  }
-  return [];
 };
 
 type CapabilityBadge = { color: string; key: string };
@@ -50,7 +43,20 @@ export function CSDMHub() {
   const { message } = App.useApp();
   const { t } = useI18n();
   const { capabilities, allows } = useCapabilities();
+  const { hasPermission } = usePermissions();
   const availableCapabilities = CMDB_CAPABILITIES.filter(item => allows(item.capabilityKey));
+  // 能力卡片按权限过滤：管理面能力（如 CI 类型建模）只对持有所需权限码的用户展示入口，
+  // 后端仍是唯一授权方；「生产可用能力」统计保持产品口径，不随个人权限变化。
+  const enterableCapabilities = availableCapabilities.filter(item => {
+    if (!('requiredPermission' in item) || !item.requiredPermission) return true;
+    const separatorIndex = item.requiredPermission.indexOf(':');
+    if (separatorIndex <= 0) return true;
+    return hasPermission(
+      item.requiredPermission.slice(0, separatorIndex),
+      item.requiredPermission.slice(separatorIndex + 1),
+    );
+  });
+  const canMaintainCITypes = hasPermission('cmdb', 'write');
   const [overview, setOverview] = React.useState<CMDBOverview>({
     totalCIs: 0,
     ciTypes: 0,
@@ -62,16 +68,11 @@ export function CSDMHub() {
   const load = React.useCallback(async () => {
     setOverview(previous => ({ ...previous, loading: true, error: false }));
     try {
-      const [statsResponse, typesResponse] = await Promise.all([
-        CMDBApi.getCMDBStats(),
-        CMDBApi.getCITypes(),
-      ]);
-      const stats = (statsResponse as { data?: Record<string, unknown> })?.data ?? statsResponse;
-      const statsRecord = (stats ?? {}) as Record<string, unknown>;
+      const [stats, types] = await Promise.all([CMDBApi.getCMDBStats(), CMDBApi.getCITypes()]);
 
       setOverview({
-        totalCIs: Number(statsRecord.totalCount ?? statsRecord.totalCIs ?? 0),
-        ciTypes: normalizeItems(typesResponse).length,
+        totalCIs: stats.total,
+        ciTypes: types.length,
         loading: false,
         error: false,
         refreshedAt: new Date().toISOString(),
@@ -140,7 +141,7 @@ export function CSDMHub() {
 
       <Card title={t('cmdb.hub.gaCapabilities')} loading={overview.loading}>
         <Row gutter={[16, 16]}>
-          {availableCapabilities.map(capability => {
+          {enterableCapabilities.map(capability => {
             const maturity = capabilities.find(item => item.key === capability.capabilityKey)?.maturity;
             const badge = maturityBadge(maturity, t);
             return (
@@ -168,9 +169,11 @@ export function CSDMHub() {
           <Button type="primary" icon={<Server className="h-4 w-4" />} onClick={() => router.push('/cmdb/cis')}>
             {t('cmdb.hub.ciWorkbench')}
           </Button>
-          <Button icon={<Database className="h-4 w-4" />} onClick={() => router.push('/admin/cmdb-types')}>
-            {t('cmdb.hub.maintainTypeTemplates')}
-          </Button>
+          {canMaintainCITypes && (
+            <Button icon={<Database className="h-4 w-4" />} onClick={() => router.push('/admin/cmdb-types')}>
+              {t('cmdb.hub.maintainTypeTemplates')}
+            </Button>
+          )}
           <Button icon={<GitBranch className="h-4 w-4" />} onClick={() => router.push('/cmdb/relationships')}>
             {t('cmdb.hub.maintainRelationships')}
           </Button>

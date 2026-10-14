@@ -8,7 +8,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/ent"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"
 )

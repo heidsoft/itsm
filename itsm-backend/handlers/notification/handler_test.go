@@ -63,16 +63,6 @@ func (m *mockNotificationService) GetUnreadCount(ctx context.Context, userID, te
 	return a.Int(0), a.Error(1)
 }
 
-func (m *mockNotificationService) GetCurrentUserID(c *gin.Context) (int, error) {
-	a := m.Called(c)
-	return a.Int(0), a.Error(1)
-}
-
-func (m *mockNotificationService) GetCurrentTenantID(c *gin.Context) (int, error) {
-	a := m.Called(c)
-	return a.Int(0), a.Error(1)
-}
-
 type mockNotificationPreferenceService struct{ mock.Mock }
 
 func (m *mockNotificationPreferenceService) GetUserPreferences(ctx context.Context, userID, tenantID int) ([]*dto.NotificationPreferenceResponse, error) {
@@ -124,7 +114,9 @@ func newNotificationHandler(n *mockNotificationService, p *mockNotificationPrefe
 	return NewHandler(n, p, zap.NewNop().Sugar())
 }
 
-func notifCtx(method, path, body string) (*httptest.ResponseRecorder, *gin.Context) {
+// notifCtx 构造测试用 gin 上下文。withIdentity=false 时不注入 user_id，
+// 用于验证「未认证」分支（handler 经 middleware.GetUserID 读扁平 context 键）。
+func notifCtx(method, path, body string, withIdentity bool) (*httptest.ResponseRecorder, *gin.Context) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	if body != "" {
@@ -134,14 +126,16 @@ func notifCtx(method, path, body string) (*httptest.ResponseRecorder, *gin.Conte
 		c.Request = httptest.NewRequest(method, path, nil)
 	}
 	c.Params = gin.Params{{Key: "id", Value: "1"}}
+	if withIdentity {
+		c.Set("user_id", 7)
+		c.Set("tenant_id", 3)
+	}
 	return w, c
 }
 
 func TestGetNotifications_Success(t *testing.T) {
 	n := &mockNotificationService{}
 	h := newNotificationHandler(n, &mockNotificationPreferenceService{})
-	n.On("GetCurrentUserID", mock.Anything).Return(7, nil)
-	n.On("GetCurrentTenantID", mock.Anything).Return(3, nil)
 
 	var forwarded *dto.GetNotificationsRequest
 	n.On("GetNotifications", mock.Anything, mock.Anything).
@@ -153,7 +147,7 @@ func TestGetNotifications_Success(t *testing.T) {
 		}, nil)
 
 	// 客户端自报的 userId/tenantId 不得参与查询，身份只能来自认证上下文。
-	w, c := notifCtx(http.MethodGet, "/api/v1/notifications?pageSize=5&userId=999&tenantId=999", "")
+	w, c := notifCtx(http.MethodGet, "/api/v1/notifications?pageSize=5&userId=999&tenantId=999", "", true)
 	h.GetNotifications(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -170,9 +164,8 @@ func TestGetNotifications_Success(t *testing.T) {
 func TestGetNotifications_Unauthenticated(t *testing.T) {
 	n := &mockNotificationService{}
 	h := newNotificationHandler(n, &mockNotificationPreferenceService{})
-	n.On("GetCurrentUserID", mock.Anything).Return(0, assert.AnError)
 
-	w, c := notifCtx(http.MethodGet, "/api/v1/notifications", "")
+	w, c := notifCtx(http.MethodGet, "/api/v1/notifications", "", false)
 	h.GetNotifications(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
@@ -182,11 +175,9 @@ func TestGetNotifications_Unauthenticated(t *testing.T) {
 func TestGetUnreadCount_Success(t *testing.T) {
 	n := &mockNotificationService{}
 	h := newNotificationHandler(n, &mockNotificationPreferenceService{})
-	n.On("GetCurrentUserID", mock.Anything).Return(7, nil)
-	n.On("GetCurrentTenantID", mock.Anything).Return(3, nil)
 	n.On("GetUnreadCount", mock.Anything, 7, 3).Return(5, nil)
 
-	w, c := notifCtx(http.MethodGet, "/api/v1/notifications/unread-count", "")
+	w, c := notifCtx(http.MethodGet, "/api/v1/notifications/unread-count", "", true)
 	h.GetUnreadCount(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -196,11 +187,9 @@ func TestGetUnreadCount_Success(t *testing.T) {
 func TestMarkNotificationRead_Success(t *testing.T) {
 	n := &mockNotificationService{}
 	h := newNotificationHandler(n, &mockNotificationPreferenceService{})
-	n.On("GetCurrentUserID", mock.Anything).Return(7, nil)
-	n.On("GetCurrentTenantID", mock.Anything).Return(3, nil)
 	n.On("MarkNotificationRead", mock.Anything, mock.Anything).Return(nil)
 
-	w, c := notifCtx(http.MethodPost, "/api/v1/notifications/1/read", "")
+	w, c := notifCtx(http.MethodPost, "/api/v1/notifications/1/read", "", true)
 	h.MarkNotificationRead(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -215,7 +204,7 @@ func TestListPreferences_Success(t *testing.T) {
 		{EventType: "ticket.assign"},
 	}, nil)
 
-	w, c := notifCtx(http.MethodGet, "/api/v1/notifications/preferences", "")
+	w, c := notifCtx(http.MethodGet, "/api/v1/notifications/preferences", "", true)
 	// ListPreferences 直接从上下文读 user_id/tenant_id（裸 key），不经 notificationService。
 	c.Set("user_id", 7)
 	c.Set("tenant_id", 3)

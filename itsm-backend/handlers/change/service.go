@@ -16,7 +16,7 @@ import (
 	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/processapprovaldecision"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"

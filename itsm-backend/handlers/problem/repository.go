@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 )
 
 // Repository interface for Problem domain

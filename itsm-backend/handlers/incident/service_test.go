@@ -11,7 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

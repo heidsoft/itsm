@@ -13,7 +13,7 @@ import (
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/user"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 
 	"go.uber.org/zap"
 )

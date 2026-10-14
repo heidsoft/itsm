@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
 )
@@ -226,9 +226,9 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	// 普通角色因此读到全租户工单。
 	// 未知档位一律按最窄档处理，保证新增枚举值时不会静默放宽权限。
 	if dataScope == datascope.DataScopeAll {
-		fp.DataScope = ticket.DataScopeAll
+		fp.DataScope = datascope.DataScopeAll
 	} else {
-		fp.DataScope = ticket.DataScopeOwnedOrAssigned
+		fp.DataScope = datascope.DataScopeOwnedOrAssigned
 	}
 	fp.CurrentUserID = currentUserID
 

@@ -12,7 +12,11 @@
 //   - DELETE /api/v1/admin/skills/:code           禁用 / 卸载 Skill
 //   - POST   /api/v1/admin/skills/:code/invoke   统一调用入口（pilot）
 //
-// 所有写操作需要 skill:write 权限，所有读操作需要 skill:read。
+// 权限口径（与 RegisterRoutes 实际声明一致，勿凭本注释外的旧文档接线）：
+// 市场/管理端读用 marketplace:read，写用 marketplace:write，
+// 调用入口 invoke 用 ai:read（Skill 调用会触发 AI 推理/RAG，与"列元数据"不同）。
+// 注意历史上没有 skill:read / skill:write 权限码，catalog.go 亦未声明——
+// manifest 的 RequiredPermissions 请填 catalog 中真实存在的码。
 package skill
 
 import (
@@ -24,6 +28,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
+	"itsm-backend/ent"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -39,13 +44,20 @@ import (
 //     读操作（GET）通过 /skills 与 /skills/:code 路径与 skill:read 权限保护。
 //   - 调用入口（POST /:code/invoke）需要单独的 ai:read 权限——因为 Skill 调用时
 //     会执行 AI 推理或 RAG，与"列出元数据"权限不同。
+//   - ai:read 只是入口权限：skill manifest 声明的 RequiredPermissions 由
+//     Invoke 在执行前逐条校验（见 enforceRequiredPermissions），
+//     否则声明形同虚设——任何持 ai:read 的角色都能调用声明了
+//     ticket:write 的 skill，等于把 skill 变成绕过路由级权限的后门。
 type Handler struct {
 	registry *service.SkillRegistry
 	logger   *zap.SugaredLogger
+	client   *ent.Client
 }
 
 // NewHandler 构造技能管理 Handler。
-func NewHandler(registry *service.SkillRegistry, logger *zap.SugaredLogger) *Handler {
+// client 用于 Invoke 时校验 skill 声明的 RequiredPermissions；可为 nil
+// （此时权限校验按 hardcode 模式的默认权限集进行）。
+func NewHandler(registry *service.SkillRegistry, logger *zap.SugaredLogger, client *ent.Client) *Handler {
 	if registry == nil {
 		registry = service.NewSkillRegistry()
 	}
@@ -497,6 +509,15 @@ func (h *Handler) Invoke(c *gin.Context) {
 	input["userId"] = userID
 	input["role"] = c.GetString("role")
 
+	// 执行前校验 skill 声明的 RequiredPermissions。
+	// 该字段此前只存不验：manifests 里声明了 ticket:write 之类的 skill，
+	// 任何持 ai:read 的角色都能调用，声明等于装饰。
+	// 空列表不校验（字段可选，保持向后兼容）。
+	entry, entryErr := h.registry.GetEntry(code)
+	if entryErr == nil && !h.enforceRequiredPermissions(c, entry) {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 60*time.Second)
 	defer cancel()
 
@@ -506,7 +527,9 @@ func (h *Handler) Invoke(c *gin.Context) {
 		return
 	}
 
-	entry, _ := h.registry.GetEntry(code)
+	if entryErr != nil {
+		entry, _ = h.registry.GetEntry(code)
+	}
 	resp := SkillInvokeResponse{
 		Code:           code,
 		Output:         result.Output,
@@ -515,6 +538,38 @@ func (h *Handler) Invoke(c *gin.Context) {
 		IsPilot:        strings.EqualFold(entry.Category, "pilot"),
 	}
 	common.Success(c, resp)
+}
+
+// enforceRequiredPermissions 校验调用方是否持有 skill manifest 声明的全部权限码。
+// 任一不满足即返回 false（响应已写入），全部满足或列表为空返回 true。
+//
+// 权限码格式为 "resource:action"（如 ticket:write），与 catalog.go 一致；
+// 拆分后走 middleware.HasResourcePermission 单一真源，避免本地再实现一套匹配。
+// 格式非法的码按不满足处理（fail-closed）：声明了无法解析的权限码，
+// 说明 manifest 本身有问题，不应放行。
+func (h *Handler) enforceRequiredPermissions(c *gin.Context, entry service.SkillEntry) bool {
+	if len(entry.RequiredPerms) == 0 {
+		return true
+	}
+	role := c.GetString("role")
+	tenantID := c.GetInt("tenant_id")
+	ctx := c.Request.Context()
+	for _, perm := range entry.RequiredPerms {
+		resource, action, ok := strings.Cut(perm, ":")
+		if !ok || resource == "" || action == "" {
+			h.logger.Warnw("skill declares malformed requiredPermission",
+				"skill", entry.Code, "permission", perm)
+			common.Forbidden(c, "skill 权限声明格式错误: "+perm)
+			return false
+		}
+		if !middleware.HasResourcePermission(ctx, h.client, role, resource, action, tenantID) {
+			h.logger.Warnw("skill invoke denied by requiredPermissions",
+				"skill", entry.Code, "permission", perm, "role", role, "tenant_id", tenantID)
+			common.Forbidden(c, "无权限调用该 skill: 缺少 "+perm)
+			return false
+		}
+	}
+	return true
 }
 
 // failInvoke 翻译 SkillRegistry 调用错误为合适的 HTTP 响应码。

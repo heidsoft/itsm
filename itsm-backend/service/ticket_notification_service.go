@@ -236,6 +236,9 @@ func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Co
 		}
 		seen[recipientID] = struct{}{}
 		err := enqueueTicketNotificationCommand(ctx, s.client, tenantID, ticketID, recipientID, req.Type, channel, req.Content, occurrenceKey)
+		// 这里的吞错是**安全**的，与事务内版本不同：本函数走 *ent.Client 而非 *ent.Tx，
+		// 每条 INSERT 是独立语句、无事务上下文，撞唯一索引不会弄脏任何后续写入。
+		// 事务内版本（enqueueTicketNotificationCommandTx）绝不能这么做——见该文件顶部说明。
 		if err != nil && !ent.IsConstraintError(err) {
 			return fmt.Errorf("enqueue ticket notification: %w", err)
 		}
@@ -290,16 +293,30 @@ func enqueueTicketNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantI
 			"channel": channel, "content": content,
 		},
 	})
-	if err != nil && !ent.IsConstraintError(err) {
+	if err != nil {
+		// 注意：此处不能再吞掉 ent.IsConstraintError。
+		// operational_commands 的唯一索引一旦撞上，PostgreSQL 就把整条事务标记 aborted(25P02)，
+		// 之后的任何语句（含 COMMIT）都会失败。若在这里「当作已投递」继续下一个收件人，
+		// 同事务内的业务写入（SLA 违规记录、预警历史）会被连坐回滚。
+		// EnqueueTxIdempotent 的事务内先查后插已覆盖正常重复场景（skipped=true），
+		// 走到这里的真实错误必须上抛，让调用方回滚。
 		return err
 	}
 	_ = skipped
 	return nil
 }
 
+// enqueueResourceNotificationCommandTx 在 *ent.Tx 内入箱资源类通知命令。
+//
+// 必须用幂等变体：调用方（变更审批等）在同一事务内还有业务写入，撞上
+// operational_commands 唯一索引会让整条事务 aborted(25P02)，业务写入连坐回滚。
+// 先查后插把「重复投递」变成 skipped=true 的正常返回，而不是一个脏事务。
 func enqueueResourceNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenantID int, aggregateType string, aggregateID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
+	if tx == nil {
+		return fmt.Errorf("enqueueResourceNotificationCommandTx requires non-nil tx")
+	}
 	digest := sha256.Sum256([]byte(fmt.Sprintf("%d|%s|%d|%d|%s|%s|%s", tenantID, aggregateType, aggregateID, recipientID, notificationType, channel, occurrenceKey)))
-	_, err := commandbus.EnqueueTx(ctx, tx, commandbus.EnqueueRequest{
+	_, skipped, err := commandbus.EnqueueTxIdempotent(ctx, tx, commandbus.EnqueueRequest{
 		TenantID: tenantID, CommandType: commandbus.CommandDeliverNotification,
 		AggregateType: aggregateType, AggregateID: aggregateID,
 		IdempotencyKey: "notification:" + hex.EncodeToString(digest[:16]),
@@ -308,7 +325,11 @@ func enqueueResourceNotificationCommandTx(ctx context.Context, tx *ent.Tx, tenan
 			"type": notificationType, "channel": channel, "content": content,
 		},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	_ = skipped
+	return nil
 }
 
 func enqueueTicketNotificationCommandImpl(ctx context.Context, client *ent.Client, tx *ent.Tx, tenantID, ticketID, recipientID int, notificationType, channel, content, occurrenceKey string) error {
@@ -649,7 +670,7 @@ func (s *TicketNotificationService) NotifyTicketCreatedTx(ctx context.Context, t
 	content := fmt.Sprintf("新工单已创建：%s (#%s)", ticket.Title, ticket.TicketNumber)
 	occurrenceKey := fmt.Sprintf("created:%d:%d", ticket.TenantID, ticket.ID)
 	for _, recipientID := range userIDs {
-		if err := enqueueTicketNotificationCommandTx(ctx, tx, ticket.TenantID, ticket.ID, recipientID, "created", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, ticket.TenantID, ticket.ID, recipientID, "created", "in_app", content, occurrenceKey); err != nil {
 			return fmt.Errorf("enqueue ticket created notification: %w", err)
 		}
 	}
@@ -687,7 +708,7 @@ func (s *TicketNotificationService) NotifySLABreachedTx(
 		if recipientID <= 0 {
 			continue
 		}
-		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_breached", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_breached", "in_app", content, occurrenceKey); err != nil {
 			return fmt.Errorf("enqueue SLA breach notification: %w", err)
 		}
 	}
@@ -724,7 +745,7 @@ func (s *TicketNotificationService) NotifySLAAlertLevelChangedTx(
 		if recipientID <= 0 {
 			continue
 		}
-		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_alert", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+		if err := enqueueTicketNotificationCommandTx(ctx, tx, tenantID, ticket.ID, recipientID, "sla_alert", "in_app", content, occurrenceKey); err != nil {
 			return fmt.Errorf("enqueue SLA alert notification: %w", err)
 		}
 	}
@@ -763,7 +784,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalRequiredTx(
 	}
 	content := fmt.Sprintf("【变更审批】变更 #%d 等待您的审批（第 %d 级，角色：%s）", changeID, approvalLevel, roleText)
 	occurrenceKey := fmt.Sprintf("change_approval_required:%d:%d:%d:%d", tenantID, changeID, approvalLevel, approverID)
-	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, approverID, "change_approval_required", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, approverID, "change_approval_required", "in_app", content, occurrenceKey); err != nil {
 		return fmt.Errorf("enqueue change approval-required notification: %w", err)
 	}
 	return nil
@@ -809,7 +830,7 @@ func (s *TicketNotificationService) NotifyChangeApprovalDecidedTx(
 		content = fmt.Sprintf("%s：%s", content, comment)
 	}
 	occurrenceKey := fmt.Sprintf("change_approval_decided:%d:%d:%d:%s", tenantID, changeID, approvalID, decision)
-	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, creatorID, "change_approval_decided", "in_app", content, occurrenceKey); err != nil && !ent.IsConstraintError(err) {
+	if err := enqueueResourceNotificationCommandTx(ctx, tx, tenantID, "change", changeID, creatorID, "change_approval_decided", "in_app", content, occurrenceKey); err != nil {
 		return fmt.Errorf("enqueue change approval-decided notification: %w", err)
 	}
 	return nil

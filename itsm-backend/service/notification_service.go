@@ -10,8 +10,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/user"
-
-	"github.com/gin-gonic/gin"
 )
 
 type NotificationService struct {
@@ -276,28 +274,3 @@ func (s *NotificationService) convertToDTO(n *ent.Notification) *dto.Notificatio
 	return notification
 }
 
-// GetCurrentUserID 从上下文获取当前用户ID
-func (s *NotificationService) GetCurrentUserID(c *gin.Context) (int, error) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return 0, fmt.Errorf("用户ID不存在")
-	}
-	id, ok := userID.(int)
-	if !ok || id <= 0 {
-		return 0, fmt.Errorf("用户ID无效")
-	}
-	return id, nil
-}
-
-// GetCurrentTenantID 从上下文获取当前租户ID
-func (s *NotificationService) GetCurrentTenantID(c *gin.Context) (int, error) {
-	tenantID, exists := c.Get("tenant_id")
-	if !exists {
-		return 0, fmt.Errorf("租户ID不存在")
-	}
-	id, ok := tenantID.(int)
-	if !ok || id <= 0 {
-		return 0, fmt.Errorf("租户ID无效")
-	}
-	return id, nil
-}

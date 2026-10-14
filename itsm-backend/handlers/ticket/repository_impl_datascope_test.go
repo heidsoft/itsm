@@ -6,7 +6,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	ticketrepo "itsm-backend/repository/ticket"
 
 	"go.uber.org/zap"

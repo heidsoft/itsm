@@ -10,7 +10,7 @@ import (
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 
 	"github.com/gin-gonic/gin"
 )

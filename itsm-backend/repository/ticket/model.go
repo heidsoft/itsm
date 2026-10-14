@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/internal/datascope"
 )
 
 // Status 工单状态类型
@@ -160,17 +161,10 @@ func (e *StateError) Error() string {
 	return e.Message
 }
 
-// DataScope 行级数据权限范围。
-// 原 ListTickets 仅按 tenantID 过滤，普通员工（end_user）可读取全租户工单，
-// 含 HR/薪酬/安全事件工单。引入 DataScope 由中间件解析角色后注入，service 层统一消费。
-type DataScope int
-
-const (
-	// DataScopeAll 全租户可见（admin/manager/super_admin 等管理角色）。
-	DataScopeAll DataScope = iota
-	// DataScopeOwnedOrAssigned 仅可见本人创建或分配给本人的工单（end_user/agent）。
-	DataScopeOwnedOrAssigned
-)
+// DataScope 行级数据权限范围的单一事实源在 internal/datascope。
+// 本包不再定义自己的副本：历史上此处有一份 2 值子集（All / OwnedOrAssigned），
+// 与 datascope 包的 3 值版（另含 Department）各自演化，
+// FilterParams.DataScope 与 repository 内的判定已统一改用 datascope.DataScope。
 
 // FilterParams 工单查询过滤参数
 type FilterParams struct {
@@ -187,10 +181,10 @@ type FilterParams struct {
 	Keyword        string
 	DateFrom       *time.Time
 	DateTo         *time.Time
-	// DataScope 行级数据权限（阻断8）。
+	// DataScope 行级数据权限（阻断8），类型取自单一事实源 internal/datascope。
 	// DataScopeOwnedOrAssigned 时，CurrentUserID 必须非零，
 	// repository 会强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid)) 谓词。
-	DataScope     DataScope
+	DataScope     datascope.DataScope
 	CurrentUserID int
 }
 
@@ -211,6 +205,14 @@ type CreateParams struct {
 	ParentTicketID *int
 	TagIDs         []int
 	Tags           []string
+	// TicketNumber 可选的预生成工单号。非空时仓储直接使用，不在事务内再生成。
+	//
+	// 为什么需要它：工单号走 Redis 序列，撞上 tickets 表唯一索引的概率不为零。
+	// 一旦在事务内撞约束，PostgreSQL 会把整条事务标记为 aborted(25P02)，
+	// 此后事务内任何语句（含 COMMIT）都会失败——「捕获冲突再 INSERT 一次」必然失败，
+	// 还会把同事务内的通知入箱连坐回滚。因此 CreateTicket 在事务外预生成号码，
+	// 撞号时回滚并**重开事务**重试，而不是在脏事务里重试。详见 ErrTicketNumberConflict。
+	TicketNumber string
 }
 
 // UpdateParams 工单更新参数

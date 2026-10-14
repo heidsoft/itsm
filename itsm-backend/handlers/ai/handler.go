@@ -11,7 +11,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
 	"itsm-backend/dto"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 

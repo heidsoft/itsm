@@ -15,7 +15,7 @@ import (
 	connectorVector "itsm-backend/connector/vector"
 	"itsm-backend/ent"
 	ka "itsm-backend/ent/knowledgearticle"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 )
 
 // RAGService provides retrieval augmented generation over Knowledge Base

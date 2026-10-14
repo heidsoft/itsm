@@ -135,6 +135,18 @@ func (s *Service) ExecuteTool(ctx context.Context, userID, tenantID int, role, n
 		return nil, 0, ErrUnknownTool
 	}
 
+	// 工具定义完整性校验：Resource/Action 必须显式声明。
+	// 漏配时 fail-closed，且审计里写明是配置缺陷而非用户越权——
+	// 否则空值会在 middleware.AuthorizeResource 的通配匹配里产生意外放行
+	// （该入口也已显式拒绝空值，这里是更早、更可诊断的一道）。
+	if toolDef.Resource == "" || toolDef.Action == "" {
+		reason := fmt.Sprintf("tool %s missing resource/action declaration", name)
+		s.logger.Errorw("AI tool definition incomplete",
+			"tool", name, "resource", toolDef.Resource, "action", toolDef.Action)
+		s.recordToolAudit(ctx, tenantID, userID, role, name, args, "denied", reason, "", nil, false)
+		return nil, 0, fmt.Errorf("%w: %s", ErrToolPermissionDenied, reason)
+	}
+
 	{
 		if role != "" && middleware.HasResourcePermission(ctx, s.entClient, role, toolDef.Resource, toolDef.Action, tenantID) {
 			permCheck = "passed"

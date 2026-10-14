@@ -11,7 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/permission"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/internal/commandbus"
 	"itsm-backend/service"
 )

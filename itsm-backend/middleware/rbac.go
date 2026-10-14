@@ -647,8 +647,7 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	// 仅 super_admin 硬编码直通（与 smart_permission.go checkRolePermissionFromDB 语义统一）。
 	// sysadmin 不短路：DBOnly 模式下判定走 AuthorizeResourceForRole → loadPermissionsByMode，
 	// configured 态尊重 role_permissions（空集=显式撤销），收回/降级在机制上可生效。
-	// 但"sysadmin 全量授权"并不成立：它的播种码集来自 internal/authz/roles.go 里手工枚举的
-	// allPermissionCodes()，该清单不随 authz.Definitions() 新增自动跟上，两者存在差集。
+	// sysadmin 的播种码集现直接取 catalog.AllCodes()（权威投影），与 Definitions() 不再有差集。
 	if role == "super_admin" {
 		return true
 	}
@@ -663,6 +662,11 @@ func hasPermission(client *ent.Client, role, method, path string, userID, tenant
 	// allowing discovery prevents a circular dependency where the UI needs a
 	// capability permission before it can learn which capabilities are usable.
 	if method == "GET" && path == "/api/v1/capabilities" {
+		return true
+	}
+	// WS 票据颁发仅凭已认证身份（票据一次性且仅限本人，与 router 守卫测试豁免理由一致）；
+	// 不豁免则 DBOnly fail-closed 拒绝全部非 super_admin 角色，实时通知整体失效。
+	if method == "POST" && path == "/api/v1/ws/ticket" {
 		return true
 	}
 
@@ -811,6 +815,15 @@ func InvalidateAllPermissionCachesEx() {
 //   - super_admin 任一角色命中即直通；
 //   - 其余角色按 PermissionConfig.Mode 加载权限（生产 DBOnly fail-closed）。
 func AuthorizeResource(ctx context.Context, client *ent.Client, roles []string, resource, action string, tenantID int) bool {
+	// 空 resource/action 一律拒绝（fail-closed）。
+	// 这不是理论防御：checkPermissionMatch 的通配分支在空值下会产生意外放行——
+	// 漏配 Resource 的工具定义（ToolDefinition.Resource == ""）会让持有
+	// "*:<action>" 码的角色通过 "*" && perm.Action == action 分支。
+	// 在入口显式拒绝，把「人为漏配」的后果固定为拒绝，而不是依赖对通配符
+	// 叠加效果的推理。已验证所有生产调用方均传非空值，此分支不改变既有行为。
+	if resource == "" || action == "" {
+		return false
+	}
 	if len(roles) == 0 {
 		return false
 	}
@@ -829,10 +842,9 @@ func AuthorizeResource(ctx context.Context, client *ent.Client, roles []string, 
 }
 
 // AuthorizeResourceForRole 单角色便捷入口（兼容旧调用方）。
+// 委托 AuthorizeResource：空值拒绝与 super_admin 判定收敛在单一入口，
+// 避免「单角色路径放行空值、多角色路径拒绝空值」的语义分叉。
 func AuthorizeResourceForRole(ctx context.Context, client *ent.Client, role, resource, action string, tenantID int) bool {
-	if role == "super_admin" {
-		return true
-	}
 	return AuthorizeResource(ctx, client, []string{role}, resource, action, tenantID)
 }
 

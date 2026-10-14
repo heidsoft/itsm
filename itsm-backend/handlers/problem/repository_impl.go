@@ -13,7 +13,7 @@ import (
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 )
 
 type EntRepository struct {

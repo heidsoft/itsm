@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	"itsm-backend/ent"
-	"itsm-backend/handlers/common/knowledgeaccess"
+	"itsm-backend/internal/knowledgeaccess"
 )
 
 // ==================== 知识可引用性 L1（时效性）+ L2（权威性）集成测试 ====================

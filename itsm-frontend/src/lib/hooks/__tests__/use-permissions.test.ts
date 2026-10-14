@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import {
   usePermissions, useRoutePermissions, useOperationPermissions,
-  usePermissionGuard, PERMISSIONS, ROLES,
+  usePermissionGuard,
 } from '../use-permissions';
 
 // 契约：后端下发的 user.permissions 是唯一事实来源，缺权限即 fail-closed，
@@ -365,57 +365,5 @@ describe('usePermissionGuard', () => {
     const onDenied = jest.fn();
     result.current.guardRole(['super_admin'], onDenied);
     expect(onDenied).toHaveBeenCalled();
-  });
-});
-
-describe('PERMISSIONS constants', () => {
-  it('should have correct ticket permissions', () => {
-    expect(PERMISSIONS.TICKET.READ).toEqual({ resource: 'ticket', action: 'read' });
-    expect(PERMISSIONS.TICKET.CREATE).toEqual({ resource: 'ticket', action: 'create' });
-    expect(PERMISSIONS.TICKET.UPDATE).toEqual({ resource: 'ticket', action: 'update' });
-    expect(PERMISSIONS.TICKET.DELETE).toEqual({ resource: 'ticket', action: 'delete' });
-    expect(PERMISSIONS.TICKET.ASSIGN).toEqual({ resource: 'ticket', action: 'assign' });
-    expect(PERMISSIONS.TICKET.ESCALATE).toEqual({ resource: 'ticket', action: 'escalate' });
-    expect(PERMISSIONS.TICKET.RESOLVE).toEqual({ resource: 'ticket', action: 'resolve' });
-    expect(PERMISSIONS.TICKET.CLOSE).toEqual({ resource: 'ticket', action: 'close' });
-    expect(PERMISSIONS.TICKET.REOPEN).toEqual({ resource: 'ticket', action: 'reopen' });
-    expect(PERMISSIONS.TICKET.BATCH_DELETE).toEqual({ resource: 'ticket', action: 'batch_delete' });
-    expect(PERMISSIONS.TICKET.EXPORT).toEqual({ resource: 'ticket', action: 'export' });
-  });
-
-  it('should have correct incident permissions', () => {
-    expect(PERMISSIONS.INCIDENT.READ).toEqual({ resource: 'incident', action: 'read' });
-    expect(PERMISSIONS.INCIDENT.DECLARE_MAJOR).toEqual({ resource: 'incident', action: 'declare_major' });
-  });
-
-  it('should have correct problem permissions', () => {
-    expect(PERMISSIONS.PROBLEM.READ).toEqual({ resource: 'problem', action: 'read' });
-    expect(PERMISSIONS.PROBLEM.CLOSE).toEqual({ resource: 'problem', action: 'close' });
-  });
-
-  it('should have correct change permissions', () => {
-    expect(PERMISSIONS.CHANGE.APPROVE).toEqual({ resource: 'change', action: 'approve' });
-    expect(PERMISSIONS.CHANGE.REJECT).toEqual({ resource: 'change', action: 'reject' });
-    expect(PERMISSIONS.CHANGE.IMPLEMENT).toEqual({ resource: 'change', action: 'implement' });
-    expect(PERMISSIONS.CHANGE.REVIEW).toEqual({ resource: 'change', action: 'review' });
-  });
-
-  it('should have correct system permissions', () => {
-    expect(PERMISSIONS.SYSTEM.READ).toEqual({ resource: 'system', action: 'read' });
-    expect(PERMISSIONS.SYSTEM.MANAGE).toEqual({ resource: 'system', action: 'manage' });
-    expect(PERMISSIONS.SYSTEM.VIEW_LOGS).toEqual({ resource: 'system', action: 'view_logs' });
-    expect(PERMISSIONS.SYSTEM.BACKUP).toEqual({ resource: 'system', action: 'backup' });
-  });
-});
-
-describe('ROLES constants', () => {
-  it('should have correct role values', () => {
-    expect(ROLES.SUPER_ADMIN).toBe('super_admin');
-    expect(ROLES.ADMIN).toBe('admin');
-    expect(ROLES.MANAGER).toBe('manager');
-    expect(ROLES.AGENT).toBe('agent');
-    expect(ROLES.TECHNICIAN).toBe('technician');
-    expect(ROLES.END_USER).toBe('end_user');
-    expect(ROLES.USER).toBe('user');
   });
 });

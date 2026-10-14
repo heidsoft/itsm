@@ -70,10 +70,10 @@ export function getTenantCode(): string | null {
   return safeGet(STORAGE_KEYS.TENANT_CODE);
 }
 
-export function getTenantId(): string | null {
-  migrateLegacyAuthStorage();
-  return safeGet(STORAGE_KEYS.TENANT_ID);
-}
+// 注意：本模块不提供 getTenantId。租户 ID 的唯一权威源是
+// @/lib/auth/tenant-context 的内存态（number | null），由 http-client.setTenantId
+// 在登录时写入。STORAGE_KEYS.TENANT_ID 是历史遗留键，当前无任何写入方，
+// 仅保留在 clearAuthStorage 中清理用户浏览器里的陈旧值。
 
 export function clearAuthStorage(): void {
   safeRemove(STORAGE_KEYS.TENANT_ID);

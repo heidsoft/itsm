@@ -4,6 +4,8 @@ export type CMDBCapability = {
   description: string;
   href: string;
   capabilityKey: string;
+  /** 进入该能力页面所需的权限码；缺省表示 hub 页权限（cmdb:read）即可进入。 */
+  requiredPermission?: string;
 };
 
 /**
@@ -23,6 +25,7 @@ export const CMDB_CAPABILITIES = [
     description: '维护类型、字段模板和数据约束。',
     href: '/admin/cmdb-types',
     capabilityKey: 'cmdb.ciTypes',
+    requiredPermission: 'cmdb:write',
   },
   {
     key: 'relationships',

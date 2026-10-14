@@ -12,7 +12,7 @@ import (
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
-	"itsm-backend/handlers/common/datascope"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/commandbus"
 )
 

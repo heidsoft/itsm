@@ -4,8 +4,8 @@
 
 本文档定义了 Stage 5 的静态门禁。已实现门禁对应 `scripts/static-gates/` 下的
 shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`）；
-`scripts/static-gates/run-all.sh` 只聚合 5.1–5.5 与 5.10 六条
-（实测见该文件 :46-51）。**5.6–5.9 目前没有脚本、没有接入点**，表中列出的脚本名是待实现占位，
+`scripts/static-gates/run-all.sh` 只聚合 5.1–5.5、5.10 与 5.13 七条
+（实测见该文件 :46-52）。**5.6–5.9 目前没有脚本、没有接入点**，表中列出的脚本名是待实现占位，
 `git ls-files` 全仓匹配数为 0。
 
 | # | 规则 | 脚本 | 状态 | 阻断构建 |
@@ -21,6 +21,7 @@ shell 脚本（5.11 例外，位于 `itsm-frontend/tools/check-antd-legacy.sh`�
 | 5.9 | 测试夹具不得硬编码共享唯一键（如 `ticket_categories.code`） | `check-test-fixture-uniqueness.sh`（未创建） | 未实现 | ❌ |
 | 5.10 | `handlers/**` 分页 `gin.H` 响应体的集合键必须是 `items` | `check-list-envelope.sh` | **HARD** | ✅（backend-ci lint job） |
 | 5.11 | Ant Design v4/v5 弃用 API 零新增（9 类，组件归属判定 + 基线棘轮） | `itsm-frontend/tools/check-antd-legacy.sh` | HARD（本地棘轮） | ❌（未接 CI） |
+| 5.13 | 事务内不得吞掉 `ent.IsConstraintError` 后继续执行 | `check-tx-constraint-swallow.sh` | **HARD** | ❌（未接 CI） |
 
 > 5.6–5.9 迁移自 2026-06-19 前端 UX Review 与 2026-07-01 系统功能评审结果（两份报告已随 2026-10 文档清理删除，原文可用 `git log --diff-filter=D -- docs/review` 取回）；对应的四个脚本从未落地，规则目前只以本文描述的形式存在。
 
@@ -473,3 +474,58 @@ python3 scripts/docs-gate/find-frontend-orphans.py itsm-frontend
 - 模块 owner 确认剩余 hit 已迁移或被豁免（豁免须写明理由并加 TODO）。
 
 升级时只需移除脚本中的 `exit 0` / 添加 `exit 1` 即可。
+---
+
+## 5.13 — 事务内不得吞掉 `ent.IsConstraintError`
+
+**目的**：堵住 PostgreSQL 事务语义误用导致的连坐回滚。
+
+PostgreSQL 遇到唯一约束冲突会把**整条事务**标记为 `aborted`（SQLSTATE `25P02`），
+此后该事务内的任何语句——包括 `COMMIT`——都会失败。因此下面两种写法都是错的：
+
+```go
+// 错：把「事务已废」当成「幂等命中」
+if ent.IsConstraintError(err) { continue }
+if err != nil && !ent.IsConstraintError(err) { return err }   // 约束错误被静默吞掉
+```
+
+后果是同一事务内的无关业务写入（SLA 违规记录、预警历史、通知入箱）被连坐回滚，
+而调用方只看到"最后一个错误"，极难定位。
+
+**正确的两种写法**：
+
+```go
+// A. 先回滚再按幂等处理（需 rollback 在前，见 service/sla_monitor_service.go:468）
+if rbErr := tx.Rollback(); rbErr != nil { s.logger.Errorw(...) }
+if ent.IsConstraintError(err) { return nil }
+
+// B. 直接上抛，让调用方回滚
+if err != nil { return err }
+```
+
+事务内入箱应优先规避冲突本身：改用 `commandbus.EnqueueTxIdempotent`
+（`internal/commandbus/commandbus.go:107`，事务内先查后插）。该函数的存在理由
+与该门禁规则同源，注释已完整记录 `25P02` 语义。
+
+**检测逻辑**：`scripts/static-gates/check-tx-constraint-swallow.sh` 扫描
+`itsm-backend/{handlers,service,repository}`，定位 `if` 条件含
+`IsConstraintError` 的语句，提取 then 块判定：
+- 块内或紧邻前 12 行出现 `Rollback(` → PASS（模式 A）
+- then 块向上传播错误（`return err` / `fmt.Errorf`）→ PASS（模式 B）
+- then 块为 `continue` 或返回全空值 → **FAIL**
+
+**为什么需要它而不是只靠注释**：`commandbus.go` 的注释从写下那天起就没变过，
+但 2026-10-13 的实测仍命中 4 处，其中 `repository/ticket/repository_impl.go`
+的 `CreateWithTx` 在工单创建主链路上。知识停在注释里必然漂移，因此固化为守卫。
+
+**当前状态**：✅ 通过（0 命中）。检出能力经注入回归验证：临时写入一个
+`if ent.IsConstraintError(err) { continue }` 样本 → 守卫 FAIL 并给出 `file:line`，
+删除样本后恢复 PASS。
+
+**已修复位置**（2026-10-13）：
+- `repository/ticket/repository_impl.go` — `CreateWithTx` 移除事务内重试，
+  新增 `ErrTicketNumberConflict`；`service/ticket_service.go` 改为事务外预生成工单号 +
+  撞号重开事务
+- `service/bpmn/notification_handler.go` — 改用 `EnqueueTxIdempotent`
+- `service/ticket_notification_service.go` — `enqueueResourceNotificationCommandTx`
+  改用幂等变体；5 处 tx 内调用点不再吞错
