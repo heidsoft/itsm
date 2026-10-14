@@ -7,7 +7,7 @@ import {
   Col,
   Statistic,
   Progress,
-  Table,
+  Empty,
   Typography,
   Space,
   Button,
@@ -37,7 +37,6 @@ const { Text, Title } = Typography;
 const TicketDashboardPage = () => {
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState('7d');
-  const [selectedTeam, setSelectedTeam] = useState('all');
   const [activeTab, setActiveTab] = useState('overview');
   const [slaThreshold, setSlaThreshold] = useState(95);
   const [dashboardData, setDashboardData] = useState<DashboardOverviewResponse | null>(null);
@@ -45,7 +44,7 @@ const TicketDashboardPage = () => {
 
   useEffect(() => {
     loadDashboardData();
-  }, [timeRange, selectedTeam]);
+  }, [timeRange]);
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -288,34 +287,11 @@ const TicketDashboardPage = () => {
 
   const renderTeamPerformance = () => (
     <Card title="团队表现" className="mb-6">
-      <div className="mb-4">
-        <Space>
-          <Text>筛选团队:</Text>
-          <Select value={selectedTeam} onChange={setSelectedTeam} style={{ width: 120 }} options={[
-            { value: 'all', label: '全部' },
-            { value: 'support', label: '技术支持' },
-            { value: 'engineering', label: '工程团队' },
-            { value: 'management', label: '管理团队' },
-          ]} />
-          <Button icon={<RefreshCw size={16} />} onClick={loadDashboardData}>
-            刷新
-          </Button>
-        </Space>
-      </div>
-
-      <Table
-        dataSource={[]}
-        columns={[
-          { title: '团队成员', key: 'member', render: () => '-' },
-          { title: '已分配工单', key: 'assigned', render: () => '-' },
-          { title: '已解决工单', key: 'resolved', render: () => '-' },
-          { title: '平均解决时间', key: 'avgTime', render: () => '-' },
-          { title: 'SLA合规率', key: 'sla', render: () => '-' },
-        ]}
-        pagination={false}
-        size="small"
-        locale={{ emptyText: '暂无团队数据' }}
-        scroll={{ x: 'max-content' }}
+      {/* 2026-10-14 审查修复：原为写死空数据源的假表格（列全渲染 '-'）。
+          后端尚无按处理人聚合的工单统计端点，改为诚实空态，不再伪装表格。 */}
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description="团队工作负载统计暂未接入：后端尚无按处理人聚合的工单数据源"
       />
     </Card>
   );

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, ArrowLeft, CheckCircle, Shield } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   Typography,
@@ -12,7 +12,6 @@ import {
   Card,
   ConfigProvider,
   message,
-  Divider,
   Alert,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
@@ -199,19 +198,6 @@ export default function ForgotPasswordPage() {
                 </a>
               </Text>
             </div>
-
-            <Divider className="my-5">
-              <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
-            </Divider>
-
-            <Button
-              size="middle"
-              className="w-full h-10 rounded-md text-sm"
-              disabled={loading}
-              icon={<Shield size={14} />}
-            >
-              SSO 企业登录
-            </Button>
           </Card>
         </div>
       </div>

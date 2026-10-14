@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  App,
   Card,
   Row,
   Col,
@@ -47,6 +48,7 @@ const { RangePicker } = DatePicker;
 
 export default function BPMNDashboardPage() {
   const { t } = useI18n();
+  const { message } = App.useApp();
   const currentTenant = useAuthStore(s => s.currentTenant);
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -70,6 +72,7 @@ export default function BPMNDashboardPage() {
       setMetrics(data);
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
+      message.error('加载工作流仪表盘指标失败');
     } finally {
       setLoading(false);
     }

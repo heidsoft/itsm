@@ -106,6 +106,7 @@ export default function KnownErrorsPage() {
       setStats(response);
     } catch (error) {
       console.error('获取统计失败', error);
+      message.error('获取已知错误统计失败');
     }
   };
 
@@ -115,6 +116,7 @@ export default function KnownErrorsPage() {
       setCategories(response.items);
     } catch (error) {
       console.error('获取分类失败', error);
+      message.error('获取分类失败');
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Button } from 'antd';
+import { App, Card, Row, Col, Statistic, Typography, Tabs, Table, Button } from 'antd';
 import ServiceRequestList from '@/components/service-request/ServiceRequestList';
 import { FileText, Clock, CheckCircle, Inbox } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ interface PendingApprovalRow {
 
 export default function ServiceRequestsPage() {
   const router = useRouter();
+  const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('requests');
   const [pendingApprovals, setPendingApprovals] = useState<PendingApprovalRow[]>([]);
   const [stats, setStats] = useState({
@@ -68,6 +69,7 @@ export default function ServiceRequestsPage() {
       });
     } catch (error) {
       console.error('Failed to fetch service request stats:', error);
+      message.error('加载服务请求统计失败');
     }
   };
 

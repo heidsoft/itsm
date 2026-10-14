@@ -18,6 +18,7 @@ import {
 } from '@/components/layout/BusinessPageTemplate';
 import ProblemList from '@/components/problem/ProblemList';
 import { ProblemApi, type Problem } from '@/lib/api/problem-api';
+import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   UnifiedKanbanBoard,
@@ -142,6 +143,42 @@ export default function ProblemListPage() {
       setLoading(false);
     }
   }, [page, pageSize, statusFilter, priorityFilter, searchKeyword, t]);
+
+  // 导出：后端无问题导出端点，按当前筛选条件全量拉取后浏览器端生成 CSV
+  // （2026-10-14 审查：原为 message.info 占位）。导出口径 = 当前筛选结果。
+  const handleExport = async () => {
+    try {
+      const rows = await fetchAllPages((p, pageSize) =>
+        ProblemApi.getProblems({
+          page: p,
+          pageSize,
+          status: statusFilter,
+          priority: priorityFilter,
+          keyword: searchKeyword,
+        }),
+      );
+      if (rows.length === 0) {
+        message.warning(t('problems.exportEmpty'));
+        return;
+      }
+      const columns: CsvColumn<Problem>[] = [
+        { title: '编号', render: (row) => row.problemNumber || `#${row.id}` },
+        { title: '标题', render: (row) => row.title },
+        { title: '状态', render: (row) => row.status },
+        { title: '优先级', render: (row) => row.priority },
+        { title: '分类', render: (row) => row.category },
+        { title: '处理人', render: (row) => row.assigneeName },
+        { title: '创建人', render: (row) => row.createdByName },
+        { title: '创建时间', render: (row) => csvDate(row.createdAt) },
+        { title: '更新时间', render: (row) => csvDate(row.updatedAt) },
+      ];
+      downloadCsv(`问题列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      message.success(t('problems.exportSuccess', { count: rows.length }));
+    } catch (error) {
+      console.error('Failed to export problems:', error);
+      message.error(t('problems.exportFailed'));
+    }
+  };
 
   const fetchProblemsForKanban = useCallback(async () => {
     setLoading(true);
@@ -334,7 +371,7 @@ export default function ProblemListPage() {
           key: 'export',
           label: t('problems.export'),
           icon: <Download className="w-4 h-4" />,
-          onClick: () => message.info(t('problems.exportPending')),
+          onClick: handleExport,
         },
       ]}
       loading={loading}

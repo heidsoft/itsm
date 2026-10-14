@@ -68,6 +68,7 @@ export default function AuditLogsPage() {
       setTotal(result.total);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
+      message.error('加载审计日志失败');
       setLogs([]);
       setTotal(0);
     } finally {

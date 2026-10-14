@@ -76,6 +76,7 @@ const LicenseDetail: React.FC = () => {
       setLicense(data);
     } catch (error) {
       console.error('Failed to load license:', error);
+      message.error('加载许可证详情失败');
     } finally {
       setLoading(false);
     }

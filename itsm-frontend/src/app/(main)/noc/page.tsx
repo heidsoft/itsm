@@ -26,6 +26,10 @@ const STATUS_META: Record<string, { color: string; label: string }> = {
 };
 
 const PAGE_SIZE = 20;
+// 计数聚合上限：20 页 × 100 条。超过即截断并在卡片上标注「+」，
+// 避免把当前页 20 条的局部计数冒充全局口径（2026-10-14 审查修复）。
+const COUNT_MAX_PAGES = 20;
+const COUNT_PAGE_SIZE = 100;
 
 export default function NOCPage() {
   const { message } = App.useApp();
@@ -34,6 +38,13 @@ export default function NOCPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  // KPI 卡片计数：全量聚合结果；failed 时渲染 '-' 而非 0（失败 ≠ 没有）
+  const [counts, setCounts] = useState<{
+    highPriority: number;
+    inProgress: number;
+    truncated: boolean;
+    failed: boolean;
+  }>({ highPriority: 0, inProgress: 0, truncated: false, failed: false });
 
   const loadData = useCallback(async (p: number, status?: string) => {
     setLoading(true);
@@ -56,6 +67,44 @@ export default function NOCPage() {
   useEffect(() => {
     void loadData(page, statusFilter);
   }, [loadData, page, statusFilter]);
+
+  // KPI 计数：与列表同一筛选条件（重大事件 + 状态），全量翻页聚合
+  const loadCounts = useCallback(async (status?: string) => {
+    const params = {
+      isMajorIncident: true,
+      pageSize: COUNT_PAGE_SIZE,
+      ...(status ? { status } : {}),
+    };
+    try {
+      const first = await IncidentAPI.getIncidents({ ...params, page: 1 });
+      const all: Incident[] = [...(first.items ?? [])];
+      const totalCount = first.total;
+      for (let p = 2; all.length < totalCount && p <= COUNT_MAX_PAGES + 1; p++) {
+        const resp = await IncidentAPI.getIncidents({ ...params, page: p });
+        const items = resp.items ?? [];
+        all.push(...items);
+        if (items.length < COUNT_PAGE_SIZE) break;
+      }
+      const truncated = all.length < totalCount;
+      setCounts({
+        highPriority: all.filter(i =>
+          ['critical', 'urgent', 'high'].includes((i.priority || '').toLowerCase())
+        ).length,
+        inProgress: all.filter(i =>
+          ['in_progress', 'open'].includes((i.status || '').toLowerCase())
+        ).length,
+        truncated,
+        failed: false,
+      });
+    } catch {
+      // 计数失败不打扰主列表：卡片显示 '-'，明确区别于 0
+      setCounts({ highPriority: 0, inProgress: 0, truncated: false, failed: true });
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCounts(statusFilter);
+  }, [loadCounts, statusFilter]);
 
   const columns: ColumnsType<Incident> = [
     {
@@ -106,13 +155,6 @@ export default function NOCPage() {
     },
   ];
 
-  // 统计按优先级分组
-  const priorityCounts = incidents.reduce<Record<string, number>>((acc, inc) => {
-    const k = (inc.priority || 'unknown').toLowerCase();
-    acc[k] = (acc[k] || 0) + 1;
-    return acc;
-  }, {});
-
   const cardStyle: React.CSSProperties = { height: '100%' };
 
   return (
@@ -138,7 +180,13 @@ export default function NOCPage() {
           <Card style={cardStyle}>
             <Statistic
               title="高优事件"
-              value={(priorityCounts['critical'] || 0) + (priorityCounts['urgent'] || 0) + (priorityCounts['high'] || 0)}
+              value={
+                counts.failed
+                  ? '-'
+                  : counts.truncated
+                    ? `${counts.highPriority}+`
+                    : counts.highPriority
+              }
               prefix={<AlertTriangle size={18} className="text-orange-500 mr-2" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
@@ -148,7 +196,13 @@ export default function NOCPage() {
           <Card style={cardStyle}>
             <Statistic
               title="正在处理"
-              value={incidents.filter(i => ['in_progress', 'open'].includes((i.status || '').toLowerCase())).length}
+              value={
+                counts.failed
+                  ? '-'
+                  : counts.truncated
+                    ? `${counts.inProgress}+`
+                    : counts.inProgress
+              }
               prefix={<Activity size={18} className="text-blue-500 mr-2" />}
               styles={{ content: { color: '#1890ff' } }}
             />

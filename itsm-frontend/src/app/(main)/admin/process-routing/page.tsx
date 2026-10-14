@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   Table,
@@ -52,7 +52,29 @@ export default function ProcessRoutingPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [processDefinitions, setProcessDefinitions] = useState<Array<{ key: string; name: string }>>([]);
+  const [searchText, setSearchText] = useState('');
   const [form] = Form.useForm();
+
+  // 搜索：规则为全量客户端加载（ProcessBindingApi.list 无分页），本地过滤口径透明
+  const filteredRules = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return rules;
+    return rules.filter(rule => {
+      const haystack = [
+        rule.businessType,
+        rule.businessSubType,
+        rule.processDefinitionKey,
+        rule.scenario,
+        rule.category,
+        rule.departmentName,
+        rule.teamName,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(keyword);
+    });
+  }, [rules, searchText]);
 
   // Load data
   useEffect(() => {
@@ -131,7 +153,13 @@ export default function ProcessRoutingPage() {
       setSelectedRule(null);
       loadRules();
     } catch (error) {
-      console.error('Validation failed:', error);
+      // validateFields 拒绝时错误已在表单项内联展示，不重复弹提示；
+      // API 失败必须让用户看到（2026-10-14 审查：原仅 console.error 静默）
+      if (error && typeof error === 'object' && 'errorFields' in error) {
+        return;
+      }
+      console.error('Failed to save routing rule:', error);
+      message.error(error instanceof Error ? error.message : '保存路由规则失败');
     }
   };
 
@@ -345,8 +373,20 @@ export default function ProcessRoutingPage() {
               placeholder="搜索规则..."
               prefix={<Search />}
               style={{ width: 200 }}
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              allowClear
             />
-            <Button type="primary" icon={<Plus />} onClick={() => setShowModal(true)}>
+            <Button
+              type="primary"
+              icon={<Plus />}
+              onClick={() => {
+                // 新增前清空表单与选中态：修复「编辑后点新增带回上一次值」
+                setSelectedRule(null);
+                form.resetFields();
+                setShowModal(true);
+              }}
+            >
               新增规则
             </Button>
           </Space>
@@ -354,7 +394,7 @@ export default function ProcessRoutingPage() {
       >
         <Table
           columns={columns}
-          dataSource={rules}
+          dataSource={filteredRules}
           loading={loading}
           rowKey="id"
           pagination={{

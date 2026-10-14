@@ -21,7 +21,7 @@ import {
   Rate,
   Input,
 } from 'antd';
-import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -47,9 +47,6 @@ const ArticleDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
   const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | null>(null);
-  const [helpful, setHelpful] = useState<boolean | null>(null);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
-  const [feedbackComment, setFeedbackComment] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -117,12 +114,6 @@ const ArticleDetail: React.FC = () => {
         }
       },
     });
-  };
-
-  const handleFeedback = (isHelpful: boolean) => {
-    setHelpful(isHelpful);
-    setFeedbackSubmitted(true);
-    message.success(isHelpful ? '感谢您的肯定！' : '感谢您的反馈，我们会改进');
   };
 
   if (loading)
@@ -258,35 +249,6 @@ const ArticleDetail: React.FC = () => {
                   ) : (
                     <Paragraph type="secondary">本文暂无内容。</Paragraph>
                   )}
-                  {/* Helpfulness Feedback */}
-                  <Divider />
-                  <div style={{ padding: '16px 0', background: '#f9f9f9', borderRadius: 8, textAlign: 'center' }}>
-                    {feedbackSubmitted ? (
-                      <div>
-                        <Text type="secondary">感谢您的反馈！</Text>
-                      </div>
-                    ) : (
-                      <Space orientation="vertical" size="small">
-                        <Text strong>这篇文章对您有帮助吗？</Text>
-                        <Space>
-                          <Button
-                            icon={<ThumbsUp size={14} />}
-                            onClick={() => handleFeedback(true)}
-                            type={helpful === true ? 'primary' : 'default'}
-                          >
-                            有帮助
-                          </Button>
-                          <Button
-                            icon={<ThumbsDown size={14} />}
-                            onClick={() => handleFeedback(false)}
-                            type={helpful === false ? 'primary' : 'default'}
-                          >
-                            需要改进
-                          </Button>
-                        </Space>
-                      </Space>
-                    )}
-                  </div>
                 </div>
               ),
             },

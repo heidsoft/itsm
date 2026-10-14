@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Typography, Spin, App, Select, DatePicker, Space } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Alert, Card, Col, Empty, Row, Select, Space, Spin, Typography } from 'antd';
 import {
   PieChart,
   Pie,
@@ -16,12 +16,28 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import type { ServiceItem } from '@/types/service-catalog';
+import {
+  ServiceCategory,
+  ServiceStatus,
+  type ServiceItem,
+} from '@/types/service-catalog';
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2'];
+
+const CATEGORY_LABELS: Record<ServiceCategory, string> = {
+  [ServiceCategory.IT_SERVICE]: 'IT服务',
+  [ServiceCategory.BUSINESS_SERVICE]: '业务服务',
+  [ServiceCategory.TECHNICAL_SERVICE]: '技术服务',
+  [ServiceCategory.SUPPORT_SERVICE]: '支持服务',
+};
+
+const STATUS_LABELS: Record<ServiceStatus, string> = {
+  [ServiceStatus.PUBLISHED]: '已发布',
+  [ServiceStatus.DRAFT]: '草稿',
+  [ServiceStatus.RETIRED]: '已下线',
+};
 
 interface ChartDataItem {
   name: string;
@@ -30,69 +46,21 @@ interface ChartDataItem {
 }
 
 const ServiceCatalogUsagePage = () => {
-  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState<ServiceItem[]>([]);
-  const [requestsByService, setRequestsByService] = useState<ChartDataItem[]>([]);
-  const [requestsByStatus, setRequestsByStatus] = useState<ChartDataItem[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | ServiceStatus>('all');
 
   const loadData = async () => {
     setLoading(true);
     try {
-      // 获取服务列表
       const { services: servicesData } = await ServiceCatalogApi.getServices({
         page: 1,
         pageSize: 100,
       });
-
-      setServices(servicesData);
-
-      // 从真实服务数据生成使用统计，而非使用模拟数据
-      // 如果有真实服务，使用其统计；否则使用空数据
-      if (servicesData && servicesData.length > 0) {
-        // 生成按服务类型分布数据（基于实际服务）
-        const serviceUsage = servicesData.map((service: ServiceItem, index: number) => ({
-          name: service.name || `服务 ${service.id}`,
-          value: service.requestCount || 0,
-          color: COLORS[index % COLORS.length],
-        }));
-
-        setRequestsByService(serviceUsage);
-
-        // 生成按状态分布数据（基于服务状态）
-        const statusDistribution = [
-          {
-            name: '已发布',
-            value: servicesData.filter((s: ServiceItem) => s.status === 'published').length,
-            color: '#52c41a',
-          },
-          {
-            name: '草稿',
-            value: servicesData.filter((s: ServiceItem) => s.status === 'draft').length,
-            color: '#1890ff',
-          },
-          {
-            name: '已下线',
-            value: servicesData.filter(
-              (s: ServiceItem) => s.status === 'retired'
-            ).length,
-            color: '#d9d9d9',
-          },
-        ].filter(item => item.value > 0);
-
-        setRequestsByStatus(statusDistribution.length > 0 ? statusDistribution : []);
-      } else {
-        // 无数据时显示空状态
-        setRequestsByService([]);
-        setRequestsByStatus([]);
-      }
+      setServices(servicesData ?? []);
     } catch (error) {
       console.error('加载服务目录数据失败:', error);
-      message.error('加载数据失败');
-
-      // 不再使用演示数据，保持空数据状态
-      setRequestsByService([]);
-      setRequestsByStatus([]);
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -102,7 +70,51 @@ const ServiceCatalogUsagePage = () => {
     loadData();
   }, []);
 
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }> }) => {
+  // 状态筛选：作用于本页全部图表与卡片（客户端过滤目录存量，口径透明）
+  const filteredServices = useMemo(
+    () =>
+      statusFilter === 'all'
+        ? services
+        : services.filter((s) => s.status === statusFilter),
+    [services, statusFilter]
+  );
+
+  const byCategory: ChartDataItem[] = useMemo(() => {
+    const counts = new Map<ServiceCategory, number>();
+    filteredServices.forEach((s) => {
+      counts.set(s.category, (counts.get(s.category) ?? 0) + 1);
+    });
+    return Array.from(counts.entries()).map(([category, value], index) => ({
+      name: CATEGORY_LABELS[category] ?? String(category),
+      value,
+      color: COLORS[index % COLORS.length],
+    }));
+  }, [filteredServices]);
+
+  const byStatus: ChartDataItem[] = useMemo(() => {
+    const counts = new Map<ServiceStatus, number>();
+    filteredServices.forEach((s) => {
+      counts.set(s.status, (counts.get(s.status) ?? 0) + 1);
+    });
+    return Array.from(counts.entries()).map(([status, value]) => ({
+      name: STATUS_LABELS[status] ?? String(status),
+      value,
+      color:
+        status === ServiceStatus.PUBLISHED
+          ? '#52c41a'
+          : status === ServiceStatus.DRAFT
+            ? '#1890ff'
+            : '#d9d9d9',
+    }));
+  }, [filteredServices]);
+
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number; color: string }>;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
@@ -117,11 +129,13 @@ const ServiceCatalogUsagePage = () => {
     return null;
   };
 
+  const hasData = filteredServices.length > 0;
+
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       <header className="mb-6">
         <Title level={2}>服务目录使用报表</Title>
-        <p className="text-gray-500 mt-1">展示服务目录的使用情况和请求分布</p>
+        <p className="text-gray-500 mt-1">服务目录存量结构与分类分布</p>
       </header>
 
       {/* 控制栏 */}
@@ -129,26 +143,38 @@ const ServiceCatalogUsagePage = () => {
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select defaultValue="all" style={{ width: 120 }} options={[
-                { value: 'all', label: '全部服务' },
-                { value: 'published', label: '已发布' },
-                { value: 'draft', label: '草稿' },
-              ]} />
-              <RangePicker />
+              <Select
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v)}
+                style={{ width: 120 }}
+                options={[
+                  { value: 'all', label: '全部服务' },
+                  { value: ServiceStatus.PUBLISHED, label: '已发布' },
+                  { value: ServiceStatus.DRAFT, label: '草稿' },
+                  { value: ServiceStatus.RETIRED, label: '已下线' },
+                ]}
+              />
+              <Text type="secondary">筛选作用于本页全部卡片与图表</Text>
             </Space>
           </Col>
           <Col>
-            <Space>
-              <button
-                onClick={loadData}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                刷新数据
-              </button>
-            </Space>
+            <button
+              onClick={loadData}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              刷新数据
+            </button>
           </Col>
         </Row>
       </Card>
+
+      <Alert
+        className="mb-6"
+        type="info"
+        showIcon
+        message="口径说明"
+        description="请求量统计（每个服务被申请的次数）依赖后端采集，当前尚未提供；本页展示服务目录的存量结构，不含请求数据。"
+      />
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
@@ -161,7 +187,9 @@ const ServiceCatalogUsagePage = () => {
             <Col xs={24} sm={8}>
               <Card>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">{services.length || 6}</div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {filteredServices.length}
+                  </div>
                   <div className="text-gray-500">服务总数</div>
                 </div>
               </Card>
@@ -170,9 +198,9 @@ const ServiceCatalogUsagePage = () => {
               <Card>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600">
-                    {requestsByService.reduce((sum, item) => sum + item.value, 0)}
+                    {filteredServices.filter((s) => s.status === ServiceStatus.PUBLISHED).length}
                   </div>
-                  <div className="text-gray-500">请求总数</div>
+                  <div className="text-gray-500">已发布服务</div>
                 </div>
               </Card>
             </Col>
@@ -180,9 +208,9 @@ const ServiceCatalogUsagePage = () => {
               <Card>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-orange-600">
-                    {requestsByStatus.find(s => s.name === '已完成')?.value || 0}
+                    {filteredServices.filter((s) => s.status === ServiceStatus.DRAFT).length}
                   </div>
-                  <div className="text-gray-500">已完成请求</div>
+                  <div className="text-gray-500">草稿服务</div>
                 </div>
               </Card>
             </Col>
@@ -191,51 +219,59 @@ const ServiceCatalogUsagePage = () => {
           {/* 图表区域 */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="按服务类型分布">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={requestsByService}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    >
-                      {requestsByService.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.color || COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              <Card title="按服务分类分布">
+                {hasData && byCategory.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={byCategory}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        nameKey="name"
+                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                      >
+                        {byCategory.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color || COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="暂无服务数据" />
+                )}
               </Card>
             </Col>
 
             <Col xs={24} lg={12}>
               <Card title="按状态分布">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={requestsByStatus}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend />
-                    <Bar dataKey="value" name="请求数量" fill="#1890ff">
-                      {requestsByStatus.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.color || COLORS[index % COLORS.length]}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                {hasData && byStatus.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={byStatus}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar dataKey="value" name="服务数量" fill="#1890ff">
+                        {byStatus.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color || COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Empty description="暂无服务数据" />
+                )}
               </Card>
             </Col>
           </Row>

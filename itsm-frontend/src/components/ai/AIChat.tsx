@@ -87,7 +87,9 @@ const AIChat: React.FC = () => {
       const list = await listConversations();
       setConversations(list);
     } catch {
-      // silent
+      // 2026-10-14 修复：原为静默，用户看不到会话列表加载失败，
+      // 会误以为「没有历史会话」。失败必须有反馈。
+      antdMessage.warning('会话列表加载失败，请稍后重试');
     } finally {
       setLoadingConvs(false);
     }

@@ -307,7 +307,7 @@ const ReleaseDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button type="primary" onClick={() => router.push(`/releases/${release.id}`)}>
+          <Button type="primary" onClick={() => router.push(`/releases/${release.id}/edit`)}>
             编辑
           </Button>
           {release.status === 'draft' && (

@@ -21,6 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **前端产品完善第二轮（P2 体验项，2026-10-14）**：承接同日审查报告遗留清单第 5 项，全部为前端修复：
+  - **工单升级入口接线**：`TicketDetail` 新增升级按钮与原因弹窗，调 `TicketApi.escalateTicket`（后端 `POST /tickets/:id/escalate` 早已注册，此前 API 零调用）；终态工单禁用并附说明；i18n 中英双语文案。
+  - **发布编辑按钮跳自身**：`ReleaseDetail.tsx` 编辑按钮跳 `/releases/:id`（当前页）而非 `/releases/:id/edit`，用户点编辑无任何反应。
+  - **导出占位转真实导出（problems/changes/incidents）**：三页「导出」原为 `message.info('开发中')`。新增 `src/lib/utils/csv-export.ts`（全量翻页拉取 + 客户端 CSV：BOM、CRLF、公式注入防护、日期格式化），按各页当前筛选条件全量聚合后下载；空结果给明确提示，不再假装有功能。
+  - **服务目录使用报表口径矫正**：`service-catalog-usage` 读后端不存在的 `requestCount` 致饼图/请求总数恒 0，「服务总数」写死 `|| 6`，「已完成请求」读不存在的状态名恒 0，筛选控件无 onChange。重写为真实存量口径：服务总数/已发布/草稿卡片 + 按分类饼图 + 按状态柱图；状态筛选改为受控并真实作用于全部图表；明确标注请求量统计后端未采集，不再伪造。
+  - **NOC 大屏计数口径**：「高优事件/正在处理」原按当前页 20 条计数冒充全局。改为与列表同筛选条件全量翻页聚合（上限 20 页×100 条），截断时标注「+」；计数失败渲染 `-` 而非 0（失败不等于没有）。
+  - **团队负载假表格摘除**：`tickets/dashboard` 团队表现表 `dataSource={[]}` 且列全渲染 `-`（后端无按处理人聚合端点），改为诚实空态；`TeamWorkloadChart` 空数据时平均完成率 `0/0=NaN` 已守卫并加空状态。
+  - **知识文章假反馈摘除**：`ArticleDetail` 「有帮助/需要改进」仅 set 本地 state 无后端端点（承诺无法兑现），整块摘除。
+  - **错误吞噬补用户提示**：`workflow/dashboard`、`workflow/audit`、`service-requests` 统计、`known-errors` 统计/分类、`LicenseDetail` 详情、`AIChat` 会话列表（原注释 `// silent`）六处 catch 只 console.error，失败用户零感知，全部补 message 提示。
+  - **process-routing 交互修复**：搜索框无 value/onChange（死控件）改受控 + 本地过滤（规则本就全量加载）；「编辑后点新增带回上一次值」改新增前 resetFields；保存失败仅 console.error，改表单项校验错误不重复弹、API 失败必须提示。
+  - **工单类型弹窗容错**：`tickets/types` 恢复/安装预设两个 async 回调无 try/catch，失败时 promise unhandled rejection 且无提示。
+  - **死代码删除**：`useKnowledgeBase`（整模块 10 个导出零消费）、`useSLARealTime`（零消费）及其测试；`forgot-password` 页无 onClick 的「SSO 企业登录」死按钮（SSO 后端未建，按钮即谎言）及随之孤立的 Divider/Shield 导入。
+
+### Fixed
+
 - **前端功能点审查批次修复（2026-10-14 审查，168 页全量）**：见 `output/frontend-feature-audit-2026-10-14.md`。本轮修复：
   - **发布列表永远空表（P0）**：`ReleaseList.tsx` 读 `resp.releases`，后端 `dto.ReleaseListResponse` 返回 `items`，`|| []` 掩盖错配致表格恒空而 total/分页数字真实。信封键统一为 `items`（api 类型、组件、测试三处同改）。
   - **8 个写/读端点 handler 存在但路由漏注册（P0）**：`PATCH /ai/audit-logs/:id`（审计采纳翻转）、`PUT/DELETE /applications/:id` 与 `/applications/microservices/:id`（应用/微服务编辑删除）均 404；补齐注册并跑 `go run ./cmd/authz-gen` 同步 `rbac_precheck_gen.go`（`TestPrecheckMapIsFresh` 守卫验证通过）。

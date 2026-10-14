@@ -23,6 +23,7 @@ import {
 } from '@/components/layout/BusinessPageTemplate';
 import ChangeList from '@/components/change/ChangeList';
 import { ChangeApi, type Change, type ChangeCalendarItem, type ChangeStatus } from '@/lib/api/change-api';
+import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   UnifiedKanbanBoard,
@@ -172,6 +173,44 @@ export default function ChangesPage() {
       setLoading(false);
     }
   }, [page, pageSize, statusFilter, riskFilter, searchKeyword, t]);
+
+  // 导出：后端无变更导出端点，按当前筛选条件全量拉取后浏览器端生成 CSV
+  // （2026-10-14 审查：原为 message.info 占位）。导出口径 = 当前筛选结果。
+  const handleExport = async () => {
+    try {
+      const rows = await fetchAllPages((p, pageSize) =>
+        ChangeApi.getChanges({
+          page: p,
+          pageSize,
+          status: statusFilter,
+          riskLevel: riskFilter,
+          search: searchKeyword,
+        }),
+      );
+      if (rows.length === 0) {
+        message.warning(t('changes.exportEmpty'));
+        return;
+      }
+      const columns: CsvColumn<Change>[] = [
+        { title: '编号', render: (row) => `#${row.id}` },
+        { title: '标题', render: (row) => row.title },
+        { title: '类型', render: (row) => row.type },
+        { title: '状态', render: (row) => row.status },
+        { title: '优先级', render: (row) => row.priority },
+        { title: '风险等级', render: (row) => row.riskLevel },
+        { title: '影响范围', render: (row) => row.impactScope },
+        { title: '处理人', render: (row) => row.assigneeName },
+        { title: '创建人', render: (row) => row.createdByName },
+        { title: '计划开始', render: (row) => csvDate(row.plannedStartDate) },
+        { title: '计划结束', render: (row) => csvDate(row.plannedEndDate) },
+      ];
+      downloadCsv(`变更列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      message.success(t('changes.exportSuccess', { count: rows.length }));
+    } catch (error) {
+      console.error('Failed to export changes:', error);
+      message.error(t('changes.exportFailed'));
+    }
+  };
 
   const fetchChangesForKanban = useCallback(async () => {
     setLoading(true);
@@ -490,7 +529,7 @@ export default function ChangesPage() {
           key: 'export',
           label: t('changes.export'),
           icon: <Download className="w-4 h-4" />,
-          onClick: () => message.info(t('changes.exportPending')),
+          onClick: handleExport,
         },
       ]}
       loading={activeView === 'calendar' ? false : loading}

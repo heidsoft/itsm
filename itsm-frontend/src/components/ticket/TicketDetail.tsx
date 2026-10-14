@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { TicketApi, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
+import { TicketApi, type EscalateTicketRequest, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
 import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
 import type { Ticket } from '@/lib/api/api-config';
@@ -38,6 +38,7 @@ import {
   Descriptions,
   Space,
   Modal,
+  Alert,
   Form,
   Select,
   Input,
@@ -74,6 +75,7 @@ import {
   GitBranch,
   Link2,
   Info,
+  ArrowUpCircle,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
 
@@ -194,6 +196,11 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // 避免旧 updateTicketStatus(ticketId,'approved') 直接改 ticket.status 造成的双轨分叉。
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
+  // 升级：后端 POST /tickets/:id/escalate 早已注册（ticket:escalate 权限），
+  // 2026-10-14 前前端无入口，escalateTicket API 零调用。
+  const [escalateModalVisible, setEscalateModalVisible] = useState(false);
+  const [escalating, setEscalating] = useState(false);
+  const [escalateForm] = Form.useForm();
 
   // AI-Native：受影响配置项（工单→CI 反向查询）
   const [cis, setCis] = useState<TicketConfigurationItem[]>([]);
@@ -397,6 +404,28 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   // Handle assignment
   const handleAssign = () => {
     setAssignModalVisible(true);
+  };
+
+  // 升级工单：reason 为后端必填字段
+  const handleEscalateSubmit = async (values: { reason: string }) => {
+    const reason = values.reason?.trim();
+    if (!reason) {
+      antMessage.warning(t('ticketDetail.escalateReasonRequired'));
+      return;
+    }
+    try {
+      setEscalating(true);
+      const payload: EscalateTicketRequest = { reason };
+      await TicketApi.escalateTicket(resolvedTicketId!, payload);
+      antMessage.success(t('ticketDetail.escalateSuccess'));
+      setEscalateModalVisible(false);
+      escalateForm.resetFields();
+      fetchTicket();
+    } catch (error) {
+      handleError(error, 'escalateTicket', t('ticketDetail.escalateFailed'));
+    } finally {
+      setEscalating(false);
+    }
   };
 
   // Handle assignment submit
@@ -780,6 +809,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
               title={isTicketFinal ? t('ticketDetail.ticketFinalNoAssign') : ''}
             >
               {t('ticketDetail.assign')}
+            </Button>
+            <Button
+              icon={<ArrowUpCircle size={16} />}
+              onClick={() => setEscalateModalVisible(true)}
+              disabled={isTicketFinal}
+              title={isTicketFinal ? t('ticketDetail.escalateFinalHint') : t('ticketDetail.escalateHint')}
+            >
+              {t('ticketDetail.escalate')}
             </Button>
             <Button
               icon={<Edit size={16} />}
@@ -1192,6 +1229,63 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
           </Space>
         </Modal>
       </Card>
+
+      {/* 升级 Modal：升级原因必填，与后端 dto.EscalateTicketRequest 对齐 */}
+      <Modal
+        title={
+          <Space>
+            <ArrowUpCircle className="w-5 h-5 text-orange-500" />
+            {t('ticketDetail.escalateTitle')}
+          </Space>
+        }
+        open={escalateModalVisible}
+        onCancel={() => {
+          setEscalateModalVisible(false);
+          escalateForm.resetFields();
+        }}
+        footer={null}
+        width={480}
+      >
+        <Form form={escalateForm} layout="vertical" onFinish={handleEscalateSubmit}>
+          <Alert
+            type="warning"
+            showIcon
+            className="mb-4"
+            message={t('ticketDetail.escalateHint')}
+          />
+          <Form.Item
+            name="reason"
+            label={t('ticketDetail.escalateReason')}
+            rules={[{ required: true, message: t('ticketDetail.escalateReasonRequired') }]}
+          >
+            <TextArea
+              rows={4}
+              maxLength={500}
+              showCount
+              placeholder={t('ticketDetail.escalateReasonPlaceholder')}
+            />
+          </Form.Item>
+          <Space className="w-full justify-end">
+            <Button
+              onClick={() => {
+                setEscalateModalVisible(false);
+                escalateForm.resetFields();
+              }}
+              disabled={escalating}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={escalating}
+              icon={<ArrowUpCircle size={14} />}
+            >
+              {t('ticketDetail.escalate')}
+            </Button>
+          </Space>
+        </Form>
+      </Modal>
 
       {/* 流转进度卡片（工单三件套改造）：详情页头部下方、详情 Tabs 上方。
           hidden 在 isTicketFinal 时折叠，避免无效请求。

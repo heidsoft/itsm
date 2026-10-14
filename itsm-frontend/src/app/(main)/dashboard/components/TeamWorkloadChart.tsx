@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Column } from '@ant-design/charts';
+import { Empty, Typography } from 'antd';
 import { Users } from 'lucide-react';
 import type { TeamWorkload } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
@@ -39,7 +40,11 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
   };
 
   const totalTickets = data.reduce((sum, item) => sum + item.ticketCount, 0);
-  const avgCompletion = data.reduce((sum, item) => sum + item.completionRate, 0) / data.length;
+  // 空数据时 avgCompletion 为 NaN（0/0），2026-10-14 修复：显式守卫
+  const avgCompletion =
+    data.length > 0
+      ? data.reduce((sum, item) => sum + item.completionRate, 0) / data.length
+      : 0;
 
   return (
     <DashboardChartCard
@@ -57,7 +62,15 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
       }
     >
       <div style={{ height: '280px' }}>
-        <Column {...config} />
+        {data.length > 0 ? (
+          <Column {...config} />
+        ) : (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="暂无团队工作负载数据"
+            style={{ paddingTop: 60 }}
+          />
+        )}
       </div>
     </DashboardChartCard>
   );

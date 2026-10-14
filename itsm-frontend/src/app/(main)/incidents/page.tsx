@@ -14,7 +14,8 @@ import {
 } from '@/components/business/UnifiedKanbanBoard';
 import type { PageStats } from '@/components/layout/BusinessPageTemplate';
 import type { Incident } from '@/lib/api/types';
-import { IncidentAPI } from '@/lib/api/incident-api';
+import { IncidentAPI, type Incident as IncidentApiItem } from '@/lib/api/incident-api';
+import { buildCsv, csvDate, downloadCsv, fetchAllPages, type CsvColumn } from '@/lib/utils/csv-export';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 import { IncidentList } from './components/IncidentList';
@@ -93,6 +94,42 @@ export default function IncidentsPage() {
     void query.refresh();
     void stats.refresh();
   }, [query, stats]);
+
+  // 导出：后端无事件导出端点，按当前筛选条件全量拉取后浏览器端生成 CSV
+  // （2026-10-14 审查：原为 message.info 占位）。导出口径 = 当前筛选结果。
+  const handleExport = useCallback(async () => {
+    try {
+      const rows = await fetchAllPages((p, pageSize) =>
+        IncidentAPI.listIncidents({
+          page: p,
+          pageSize,
+          keyword: filters.values.search || undefined,
+          status: filters.values.status,
+          priority: filters.values.priority,
+          source: filters.values.source,
+        }),
+      );
+      if (rows.length === 0) {
+        message.warning(t('incidents.exportEmpty'));
+        return;
+      }
+      const columns: CsvColumn<IncidentApiItem>[] = [
+        { title: '编号', render: (row) => row.incidentNumber || `#${row.id}` },
+        { title: '标题', render: (row) => row.title },
+        { title: '状态', render: (row) => row.status },
+        { title: '优先级', render: (row) => row.priority },
+        { title: '来源', render: (row) => row.source },
+        { title: '处理人', render: (row) => row.assignee?.name },
+        { title: '创建时间', render: (row) => csvDate(row.createdAt) },
+        { title: '解决时间', render: (row) => csvDate(row.resolvedAt) },
+      ];
+      downloadCsv(`事件列表-${new Date().toISOString().slice(0, 10)}`, buildCsv(columns, rows));
+      message.success(t('incidents.exportSuccess', { count: rows.length }));
+    } catch (error) {
+      console.error('Failed to export incidents:', error);
+      message.error(t('incidents.exportFailed'));
+    }
+  }, [filters, message, t]);
 
   const handleSearch = useCallback(
     (value: string) => {
@@ -237,7 +274,7 @@ export default function IncidentsPage() {
           key: 'export',
           label: t('incidents.export'),
           icon: <Download className='w-4 h-4' />,
-          onClick: () => message.info(t('incidents.exportPending')),
+          onClick: () => void handleExport(),
         },
       ]}
       loading={query.loading}
