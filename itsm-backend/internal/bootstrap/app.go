@@ -53,7 +53,6 @@ import (
 	"itsm-backend/handlers/change_review"
 	"itsm-backend/handlers/cmdb"
 	domainCommon "itsm-backend/handlers/common"
-	"itsm-backend/internal/knowledgeaccess"
 	dingtalkHandler "itsm-backend/handlers/dingtalk"
 	"itsm-backend/handlers/email_intake"
 	escalationMatrixHandler "itsm-backend/handlers/escalation_matrix"
@@ -98,6 +97,7 @@ import (
 	wecomHandler "itsm-backend/handlers/wecom"
 	workbenchHandler "itsm-backend/handlers/workbench"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/knowledgeaccess"
 	"itsm-backend/internal/schema"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
@@ -866,7 +866,12 @@ func NewApplication() *Application {
 	// 将审批链求值器注入 BPMN Service Task handler（配置与编排分离）
 	customProcessEngine.SetApprovalChainResolver(service.NewApprovalChainResolverAdapter(client, sugar, approvalChainService))
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)
-	escalationMatrixService := service.NewEscalationMatrixService(sugar)
+	// 升级矩阵落 system_configs（key=escalation.matrix）：纯内存态会导致
+	// PUT /escalation-matrices 返回成功后重启即丢配置，多副本之间也不共享。
+	escalationMatrixService := service.NewEscalationMatrixServiceWithStore(
+		sugar,
+		service.NewSystemConfigEscalationMatrixStore(client, sugar),
+	)
 	vendorService := service.NewVendorService(client, sugar)
 	provisioningService := service.NewProvisioningService(client, sugar)
 	provisioningTaskCommandHandler := service.NewProvisioningTaskCommandHandler(provisioningService)
@@ -1196,7 +1201,11 @@ func NewApplication() *Application {
 		SurveyHandler:     surveyHandler.NewHandler(surveyService, sugar),
 
 		// Domain Handlers
-		DashboardHandler:            dashboardHandler,
+		DashboardHandler: dashboardHandler,
+		// 仪表盘个性化配置落 system_configs（dashboard.config/layout/widgets 前缀 + user_id）。
+		// 此前 /dashboard/config|layout|widgets 写面只回显请求体、无任何持久化，
+		// 表现为"保存成功"实则重启即丢。
+		DashboardConfigStore:        service.NewDashboardConfigStore(client, sugar),
 		ServiceCatalogHandler:       scHandler,
 		ServiceRequestHandler:       srHandler,
 		ApplicationHandler:          applicationHTTPHandler,

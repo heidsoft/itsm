@@ -171,60 +171,6 @@ export class DashboardAPI {
   }
 
   /**
-   * 获取图表数据
-   * @param chartType 图表类型
-   * @param filters 过滤条件
-   * @returns 图表数据
-   */
-  static async getChartData(
-    chartType: string,
-    filters?: Record<string, string | number | boolean>
-  ): Promise<ChartData> {
-    return await httpClient.get<ChartData>(`/api/v1/dashboard/charts/${chartType}`, filters);
-  }
-
-  /**
-   * 获取实时数据
-   * @param dataType 数据类型
-   * @returns 实时数据
-   */
-  static async getRealtimeData(dataType: string): Promise<RealtimeData> {
-    return await httpClient.get<RealtimeData>(`/api/v1/dashboard/realtime/${dataType}`);
-  }
-
-  /**
-   * 获取小组件数据
-   * @param widgetId 小组件ID
-   * @param filters 过滤条件
-   * @returns 小组件数据
-   */
-  static async getWidgetData(
-    widgetId: string,
-    filters?: Record<string, string | number | boolean>
-  ): Promise<DashboardWidget> {
-    return await httpClient.get<DashboardWidget>(
-      `/api/v1/dashboard/widgets/${widgetId}/data`,
-      filters
-    );
-  }
-
-  /**
-   * 刷新小组件数据
-   * @param widgetId 小组件ID
-   * @param filters 过滤条件
-   * @returns 刷新后的小组件数据
-   */
-  static async refreshWidgetData(
-    widgetId: string,
-    filters?: Record<string, string | number | boolean>
-  ): Promise<DashboardWidget> {
-    return await httpClient.post<DashboardWidget>(
-      `/api/v1/dashboard/widgets/${widgetId}/refresh`,
-      filters
-    );
-  }
-
-  /**
    * 获取可用部件列表
    * @returns 部件列表
    */
@@ -247,82 +193,12 @@ export class DashboardAPI {
   }
 
   /**
-   * 更新部件配置
-   * @param widgetId 部件ID
-   * @param config 部件配置
-   * @returns 更新结果
-   */
-  static async updateWidget(
-    widgetId: string,
-    config: Partial<DashboardWidget>
-  ): Promise<{ widget: DashboardWidget }> {
-    return await httpClient.put<{ widget: DashboardWidget }>(
-      `/api/v1/dashboard/widgets/${widgetId}`,
-      config
-    );
-  }
-
-  /**
    * 删除部件
    * @param widgetId 部件ID
    * @returns 删除结果
    */
   static async removeWidget(widgetId: string): Promise<{ success: boolean }> {
     return await httpClient.delete<{ success: boolean }>(`/api/v1/dashboard/widgets/${widgetId}`);
-  }
-
-  /**
-   * 生成报告
-   * @param reportType 报告类型
-   * @param filters 过滤条件
-   * @returns 报告数据
-   */
-  static async generateReport(
-    reportType: string,
-    filters?: Record<string, unknown>
-  ): Promise<Report> {
-    return await httpClient.post<Report>(`/api/v1/dashboard/reports/${reportType}`, filters);
-  }
-
-  /**
-   * 获取报告列表
-   * @param page 页码
-   * @param pageSize 页面大小
-   * @returns 报告列表
-   */
-  static async getReports(
-    page: number = 1,
-    pageSize: number = 20
-  ): Promise<{
-    reports: Report[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }> {
-    return await httpClient.get('/api/v1/dashboard/reports', { page, pageSize: pageSize });
-  }
-
-  /**
-   * 下载报告
-   * @param reportId 报告ID
-   * @returns 报告文件Blob
-   */
-  static async downloadReport(reportId: string): Promise<Blob> {
-    const response = await httpClient.get<ArrayBuffer>(
-      `/api/v1/dashboard/reports/${reportId}/download`
-    );
-    return new Blob([response], { type: 'application/octet-stream' });
-  }
-
-  /**
-   * 导出仪表盘数据
-   * @param params 导出参数
-   * @returns 导出结果
-   */
-  static async exportDashboard(
-    params?: Record<string, unknown>
-  ): Promise<{ downloadUrl: string }> {
-    return await httpClient.post<{ downloadUrl: string }>('/api/v1/dashboard/export', params);
   }
 
   /**
@@ -361,34 +237,5 @@ export class DashboardAPI {
       description,
       config,
     });
-  }
-
-  /**
-   * 获取仪表盘性能指标
-   * @returns 性能指标
-   */
-  static async getPerformanceMetrics(): Promise<{
-    loadTime: number;
-    renderTime: number;
-    dataFetchTime: number;
-    widgetCount: number;
-    memoryUsage: number;
-  }> {
-    return await httpClient.get('/api/v1/dashboard/metrics/performance');
-  }
-
-  /**
-   * 获取仪表盘使用统计
-   * @param dateRange 日期范围
-   * @returns 使用统计
-   */
-  static async getUsageStats(dateRange?: { start: string; end: string }): Promise<{
-    totalViews: number;
-    uniqueUsers: number;
-    avgSessionDuration: number;
-    mostUsedWidgets: Array<{ widgetId: string; usage: number }>;
-    peakUsageHours: number[];
-  }> {
-    return await httpClient.get('/api/v1/dashboard/metrics/usage', dateRange);
   }
 }

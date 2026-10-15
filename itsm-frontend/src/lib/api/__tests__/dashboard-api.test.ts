@@ -149,46 +149,6 @@ describe('DashboardAPI', () => {
     });
   });
 
-  describe('getChartData', () => {
-    it('should get chart data', async () => {
-      const expected = { labels: [], datasets: [] };
-      mockGet.mockResolvedValue(expected);
-      const res = await DashboardAPI.getChartData('bar');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/dashboard/charts/bar', undefined);
-      expect(res).toEqual(expected);
-    });
-  });
-
-  describe('getRealtimeData', () => {
-    it('should get realtime data', async () => {
-      const expected = { value: 42 };
-      mockGet.mockResolvedValue(expected);
-      const res = await DashboardAPI.getRealtimeData('activeUsers');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/dashboard/realtime/activeUsers');
-      expect(res).toEqual(expected);
-    });
-  });
-
-  describe('getWidgetData', () => {
-    it('should get widget data', async () => {
-      const expected = { id: 'w1', type: 'chart' };
-      mockGet.mockResolvedValue(expected);
-      const res = await DashboardAPI.getWidgetData('w1');
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/dashboard/widgets/w1/data', undefined);
-      expect(res).toEqual(expected);
-    });
-  });
-
-  describe('refreshWidgetData', () => {
-    it('should refresh widget', async () => {
-      const expected = { id: 'w1', type: 'chart' };
-      mockPost.mockResolvedValue(expected);
-      const res = await DashboardAPI.refreshWidgetData('w1');
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/dashboard/widgets/w1/refresh', undefined);
-      expect(res).toEqual(expected);
-    });
-  });
-
   describe('addWidget', () => {
     it('should add widget', async () => {
       const config = { type: 'chart' };
@@ -208,16 +168,6 @@ describe('DashboardAPI', () => {
     });
   });
 
-  describe('generateReport', () => {
-    it('should generate report', async () => {
-      const expected = { id: 'r1', type: 'weekly' };
-      mockPost.mockResolvedValue(expected);
-      const res = await DashboardAPI.generateReport('weekly', { from: '2024-01-01' });
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/dashboard/reports/weekly', { from: '2024-01-01' });
-      expect(res).toEqual(expected);
-    });
-  });
-
   describe('getTemplates', () => {
     it('should get templates', async () => {
       const expected = [{ id: 't1', name: 'Default' }];
@@ -234,35 +184,6 @@ describe('DashboardAPI', () => {
       const res = await DashboardAPI.applyTemplate('t1');
       expect(mockPost).toHaveBeenCalledWith('/api/v1/dashboard/templates/t1/apply');
       expect(res.success).toBe(true);
-    });
-  });
-
-  describe('exportDashboard', () => {
-    it('should export dashboard', async () => {
-      mockPost.mockResolvedValue({ downloadUrl: 'https://example.com/file' });
-      const res = await DashboardAPI.exportDashboard();
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/dashboard/export', undefined);
-      expect(res.downloadUrl).toBeDefined();
-    });
-  });
-
-  describe('getPerformanceMetrics', () => {
-    it('should get performance metrics', async () => {
-      const expected = { loadTime: 100, renderTime: 50, dataFetchTime: 200, widgetCount: 5, memoryUsage: 1024 };
-      mockGet.mockResolvedValue(expected);
-      const res = await DashboardAPI.getPerformanceMetrics();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/dashboard/metrics/performance');
-      expect(res).toEqual(expected);
-    });
-  });
-
-  describe('getUsageStats', () => {
-    it('should get usage stats', async () => {
-      const expected = { totalViews: 1000, uniqueUsers: 50, avgSessionDuration: 300, mostUsedWidgets: [], peakUsageHours: [] };
-      mockGet.mockResolvedValue(expected);
-      const res = await DashboardAPI.getUsageStats({ start: '2024-01-01', end: '2024-01-31' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/dashboard/metrics/usage', { start: '2024-01-01', end: '2024-01-31' });
-      expect(res).toEqual(expected);
     });
   });
 });

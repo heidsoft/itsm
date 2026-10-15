@@ -1,6 +1,10 @@
 package workbench
 
-import "time"
+import (
+	"time"
+
+	"itsm-backend/internal/datascope"
+)
 
 // WorkbenchItem represents a unified work item from any ITIL domain.
 type WorkbenchItem struct {
@@ -26,6 +30,15 @@ type WorkbenchQuery struct {
 	RecordType []string `json:"recordType,omitempty"`
 	Page       int      `json:"page"`
 	PageSize   int      `json:"pageSize"`
+
+	// 行级数据权限。零值 DataScopeAll 表示不过滤；
+	// 非管理角色必须显式传入 datascope.DataScopeOwnedOrAssigned。
+	//
+	// 此前 workbench 只靠路由层 dashboard:read 兜底，导致普通角色的跨域工作台
+	// 能看到全租户的工单/事件/问题/变更。行级过滤的单一源是 internal/datascope。
+	DataScope datascope.DataScope `json:"-"`
+	// ViewerID 是当前访问者 ID，用于 owner/assignee 维度过滤。
+	ViewerID int `json:"-"`
 }
 
 // WorkbenchResponse represents the paginated workbench response.

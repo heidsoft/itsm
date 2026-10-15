@@ -29,9 +29,14 @@ func (c *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		marketplaceGroup.GET("/items", c.ListItems)
 		marketplaceGroup.GET("/items/:id", c.GetItem)
 
-		// 扩展安装/卸载/配置 = 平台级变更：
-		// 按 marketplace:* 授权；该码已在 permissionDefinitions 登记，
-		// 但尚未授予任何角色，因此默认无人可调用；放开前先对齐权限词表与预检映射。
+		// 扩展安装/卸载/配置 = 平台级变更：按 marketplace:* 授权。
+		//
+		// 口径说明（2026-10-15 复核修正）：此前的注释称"该码尚未授予任何角色，
+		// 因此默认无人可调用"，与实际词表不符——internal/authz/roles.go 已把
+		// marketplace:read/write 授予 domainrole.Admin，且预检映射
+		// （middleware/rbac_precheck_gen.go）中 install/uninstall/installations:*/config
+		// 三个写面端点齐备。因此这组端点对 admin 可正常调用，非全员不可用。
+		// 保留说明是为了让后续读者不必重新排查一遍授权链路。
 		{
 			marketplaceGroup.POST("/items/:id/install", middleware.RequirePermission("marketplace", "write"), c.InstallItem)
 			marketplaceGroup.POST("/items/:id/uninstall", middleware.RequirePermission("marketplace", "write"), c.UninstallItem)

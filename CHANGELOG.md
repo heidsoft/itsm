@@ -21,6 +21,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **功能点台账发现的假数据/假成功批次修复（2026-10-15）**：承接 `output/product-feature-inventory-2026-10-14.md`（约 145 功能点全量梳理）发现的 P0 项，全部有代码实证与回归锁：
+  - **报表语义错配**：`GET /reports/problems` 与 `/reports/changes` 此前都挂 `DashboardHandler.GetTicketTrend`（工单趋势），报表名与返回数据不是同一业务对象。改接问题域 `ProblemHandler.GetTrends` 与变更域 `ChangeHandler.GetStats`；域 handler 未装配时回退工单趋势并显式标注 `reports_fallback`，不再静默返回错数据。
+  - **仪表盘配置假成功**：`/dashboard/config|layout|widgets` 写面只回显请求体、无任何持久化（保存成功实则重启即丢）。新增 `service.DashboardConfigStore`（落 `system_configs`，键前缀 `dashboard.config|layout|widgets` + `user_id`），读面未配置时回落内置默认，写面落库失败显式报错；`POST /widgets` 改追加语义（同 id 覆盖）而非整表覆盖；`DELETE /widgets/:id` 部件不存在时返回 404 而非假成功。
+  - **升级矩阵纯内存态**：`service.EscalationMatrixService` 全文无任何 DB 依赖，`SetMatrix` 只写 `sync.RWMutex` map，重启即丢、多副本不共享。新增 `EscalationMatrixStore` 接口与基于 `system_configs` 的落库实现（键 `escalation.matrix`，先查后写，不依赖 ent upsert）；语义改为「先落库成功才更新缓存」，落库失败返回 error 且缓存保持原值；读路径为 缓存 → store → `DefaultEscalationMatrix`，DB 读失败降级默认矩阵并记 Warn（升级是 SLA 兜底路径，不因 DB 抖动停摆）。
+  - **仪表盘虚构端点摘除**：`GET /dashboard/metrics/performance|usage` 恒返回全 0（`loadTime`/`memoryUsage`/`totalViews`/`uniqueUsers`）而仓库无任何前端性能采集与埋点数据源；`/dashboard/charts/:type` 返回空数组、`/realtime/:type` 返回空对象、`/widgets/:id/data` 返回部件定义而非数据、`/reports/:id/download` 返回纯文本 `"report is not generated yet"`（HTTP 200）、`POST /export` 返回 `downloadUrl:""`。这批端点全仓零生产调用（仅自身单测引用），已摘除；报表生成类改返 501（`NotImplementedCode`）明确告知能力边界，引导至 `/api/v1/reports/*` 真实统计。
+  - **响应码语义修正**：企业微信/钉钉 webhook 命中「渠道未实现 Receiver」此前返回 500，把 capability registry 已声明 `built:false`+`MaturityDisabled` 的已知产品边界伪装成服务端故障（监控被刷屏、调用方误判自身请求）。新增 `common.NotImplementedCode`(5010) 并登记到 `codeStatusPairs`，反向映射可正确反查回 501 而非降级 500；两处改为 501。
+  - **工作台行级数据权限缺失**：`handlers/workbench/service.go:21` 自述 TODO 未实现，跨域工作台（工单/事件/问题/变更 UNION）此前仅靠路由层 `dashboard:read` 兜底，普通角色能看到全租户单据。接入 `internal/datascope` 单一源：非管理角色收窄为「本人发起或本域受理人」，各域请求人列名显式映射（`tickets.requester_id`/`incidents.reporter_id`/`changes.created_by`/`problems.created_by`）；`ViewerID<=0` 时生成恒假条件安全收窄而非不过滤；租户隔离不受影响。
+  - **重复硬编码端点摘除**：`GET /tickets/types` 内联硬编码 6 条类型数组，与真实类型体系 `/api/v1/ticket-types`（`ListTicketTypes`）并存且矛盾；前端 `TicketTypeApi` 全量走 `/api/v1/ticket-types`，该别名全仓零调用，已摘除。
+  - **版本号口径漂移**：`GET /system/config` 硬编码 `version:"1.6.8"` 而 `GET /version` 为 1.6.9。抽 `router.appVersion()` 单一事实源（`APP_VERSION` 环境变量优先，回落 `defaultAppVersion`），两个端点共用。
+  - **权限注释过时修正**：`handlers/marketplace/handler.go` 注释称 marketplace:* 「尚未授予任何角色，因此默认无人可调用」，与词表不符——`internal/authz/roles.go` 已授予 `domainrole.Admin`，预检映射中 install/uninstall/installations:*/config 三个写面端点齐备。已改为实测口径说明。
+
+### Added
+
+- **后端回归测试**：`service/escalation_matrix_persistence_test.go`（重启跨实例持久化、落库失败不污染缓存、DB 读失败降级默认、nil store 保持纯内存、`GetMatrix` 返回深拷贝防调用方篡改缓存）、`router/dashboard_config_route_test.go`（配置/布局/部件真实落库与追加语义、删除不存在部件 404、存储故障显式 500、nil store 读回落/写 503、报表端点 501、已摘除端点 404）、`handlers/workbench/datascope_test.go`（行级收窄、零 viewer 安全收窄、本人单据可见、跨租户仍隔离、四域请求人列名映射）、`common/not_implemented_semantics_test.go`（5010 双向映射）。
+
+
 - **前端产品完善第二轮（P2 体验项，2026-10-14）**：承接同日审查报告遗留清单第 5 项，全部为前端修复：
   - **工单升级入口接线**：`TicketDetail` 新增升级按钮与原因弹窗，调 `TicketApi.escalateTicket`（后端 `POST /tickets/:id/escalate` 早已注册，此前 API 零调用）；终态工单禁用并附说明；i18n 中英双语文案。
   - **发布编辑按钮跳自身**：`ReleaseDetail.tsx` 编辑按钮跳 `/releases/:id`（当前页）而非 `/releases/:id/edit`，用户点编辑无任何反应。
@@ -28,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **服务目录使用报表口径矫正**：`service-catalog-usage` 读后端不存在的 `requestCount` 致饼图/请求总数恒 0，「服务总数」写死 `|| 6`，「已完成请求」读不存在的状态名恒 0，筛选控件无 onChange。重写为真实存量口径：服务总数/已发布/草稿卡片 + 按分类饼图 + 按状态柱图；状态筛选改为受控并真实作用于全部图表；明确标注请求量统计后端未采集，不再伪造。
   - **NOC 大屏计数口径**：「高优事件/正在处理」原按当前页 20 条计数冒充全局。改为与列表同筛选条件全量翻页聚合（上限 20 页×100 条），截断时标注「+」；计数失败渲染 `-` 而非 0（失败不等于没有）。
   - **团队负载假表格摘除**：`tickets/dashboard` 团队表现表 `dataSource={[]}` 且列全渲染 `-`（后端无按处理人聚合端点），改为诚实空态；`TeamWorkloadChart` 空数据时平均完成率 `0/0=NaN` 已守卫并加空状态。
+  - **系统健康卡接入真实指标**：`GET /dashboard/stats/system` 原样返回硬编码假数据（CPU 35.5%、命中率 89.5%、库大小 500MB）。现改由新增 `itsm-backend/internal/sysstat` 采集进程 CPU 时间增量、cgroup/`/proc/meminfo` 内存分母与文件系统用量；时延/QPS/错误率取自进程内 Prometheus 注册表（`itsm_http_requests_total`、`itsm_http_request_duration_seconds`，按距上一次采样的增量计算，错误率只计 5xx）；连接数取 `sql.DB.Stats()`，库大小走 `pg_database_size`（SQLite 退回 `page_count × page_size`），缓存命中率走 Redis `INFO stats`。响应新增 `availability`（`measured`/`unavailable`/`unconfigured`）与 `metricsWindowSeconds`；前端仅对 `measured` 指标评级，未接入项显示「未接入」而非 0%，摘除恒真「实时」标签，最后更新时间改用服务端 `sampledAt`。
   - **知识文章假反馈摘除**：`ArticleDetail` 「有帮助/需要改进」仅 set 本地 state 无后端端点（承诺无法兑现），整块摘除。
   - **错误吞噬补用户提示**：`workflow/dashboard`、`workflow/audit`、`service-requests` 统计、`known-errors` 统计/分类、`LicenseDetail` 详情、`AIChat` 会话列表（原注释 `// silent`）六处 catch 只 console.error，失败用户零感知，全部补 message 提示。
   - **process-routing 交互修复**：搜索框无 value/onChange（死控件）改受控 + 本地过滤（规则本就全量加载）；「编辑后点新增带回上一次值」改新增前 resetFields；保存失败仅 console.error，改表单项校验错误不重复弹、API 失败必须提示。
@@ -64,6 +81,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AdminRouteGuard 按角色名一刀切，合法用户被拦 403（P2）**：`/admin/*` 页面守卫只认 `admin`/`super_admin` 角色名，与后端「按权限码过滤菜单」的口径脱节——持有页面所需权限码的其他角色（如 it_admin 访问 `/admin/cmdb-types`）即使有权限也进不去。现守卫默认按后端 `/auth/menus` 返回的管理菜单判定（菜单含该路径即放行，服务端过滤即授权口径），admin/super_admin 直通不变；菜单请求在途时等待，避免深链硬刷新误闪 403。`/admin/cmdb-types` 因「系统管理」分组节点要求 `system:write`、菜单树不会向 it_admin 返回该子路径，改按后端路由同款 `cmdb:write` 权限码放行。回归：admin 直通、菜单含路径放行、cmdb-types 按权限码放行/无码 403、菜单不含路径 403、在途不闪 403、非 admin 路径不受影响共 7 个组件测试。
 - **CMDB 概览「配置项总数」恒为 0（P2）**：CSDMHub 读取了契约中不存在的 `totalCount` 字段（后端 `dto.CIStatsResponse` 契约为 `total`），统计恒 0。现按后端 DTO 逐字段声明 `CMDBStatsSummary` 类型并读取 `total`，删除字段猜测兜底。回归：组件以 total=14 的 mock 统计渲染出 14（修复前显示 0）。
 - **CMDB 工作台把无权用户导航进 403 页（P2）**：CSDMHub 的「CI 类型建模」能力卡片与「维护类型模板」快捷按钮无条件跳 `/admin/cmdb-types`，而该页需要 `cmdb:write`——只读用户（end_user、agent 等）从工作台点进去就是 403 死胡同。现能力声明增加 `requiredPermission`，工作台按权限过滤入口（无权限不展示卡片/按钮，后端仍是唯一授权方）。回归：无 `cmdb:write` 不渲染入口、持有时渲染，共 3 个组件测试。
+
+#### 架构审查批次（2026-10-15，按业务模块实测定位）
+
+- **升级矩阵配置写入后对升级流程零影响（P0）**：`PUT /api/v1/escalation-matrices` 写的服务实例，与 `EscalationService` 构造时自建的私有实例不是同一个，配置改动读得到、生效不了。`internal/bootstrap/app.go` 补 `escalationService.SetMatrixService(escalationMatrixService)`，让 API 与升级判定共用同一实例。回归锁扩到装配守卫 `TestSLAServicesAreFullyInjected`（AST 断言装配语句存在）；删除该行即 FAIL、恢复即 PASS。
+- **BPMN 任务归属校验 fail-open：无执行人身份即放行（P0）**：`service/bpmn_process_executor.go` 的 `authorizeTaskActor` 在取不到 `user_id` 时直接返回放行，任何未挂身份的入口都能对任意任务下决策。现改为缺身份即拒（`2002`），后台批处理必须显式声明 `tenantctx.SystemContext` 才能免归属执行——跨租户系统任务与「谁都能点通过」由此成为两条可区分的链路。会签末票推进父任务原本用 `context.Background()`，已改为沿用请求 context 并声明系统上下文。同步把 6 个依赖旧放行行为的测试改为真实身份或显式特权上下文，并删除原先把缺陷锁死的 `TestAuthorizeTaskActor_NoActorContextIsPermissive`。
+- **工单数据范围角色词表分裂成三份，sysadmin 读不到却能删（P1）**：`internal/datascope` 已把「谁是管理角色」委托给 `domain/role.IsAdminLike`，但工单域另留了两份手写枚举——`handlers/ticket/service.go` 少 `sysadmin`/`audit_admin`，`service/ticket_service.go` 少 `audit_admin`。结果是这两个角色的工单列表被收窄到本人单据，而批量删除走完整词表，出现「列表里看不到却能删掉」，直接违反 `datascope.CanWriteResource` 自述的「写权限 ⊆ 读权限」。两处重复已删除、统一走单一事实源。回归：`handlers/ticket/datascope_roles_test.go` 逐 10 个内置角色断言真实路由 `GET /api/v1/tickets` 下传档位，并交叉断言读路径与删除路径判定一致；修复前 `sysadmin`、`audit_admin` 两个子用例 FAIL。
+- **工单抄送可见性放宽给 technician、同时漏配两个管理角色（P1，安全）**：`service/ticket_workflow_service.go` 裸写 `super_admin/admin/manager/technician`——technician 不是管理角色却拿到他人工单抄送视野，而 `sysadmin`/`audit_admin` 反而被漏。改判 `domainrole.IsAdminLike`。回归：`ticket_cc_scope_test.go` 逐 9 个角色断言放行/拒绝与业务码，并覆盖申请人/处理人/抄送人本身不受角色判定影响；修复前 technician 误放行、sysadmin 与 audit_admin 误拒。
+- **CMDB 审计的操作人姓名恒为空串（P1）**：`handlers/cmdb/production_service.go` 有 7 处读 gin 键 `user_name`，而 `middleware/auth.go` 写入的是 `username`，且没有任何中间件写过 `user_name`。CI 变更历史、导入/导出任务、版本回滚、保存视图、生命周期流转的 `operator_name` 因此全部落成空串，审计只剩数字 ID。7 处收敛为单一 `authenticatedOperatorName(ctx)` helper，`service/operator_context.go` 的兼容回退同步改键。回归：`handlers/cmdb/operator_identity_test.go` 用真实 `AuthMiddleware` 签发 token 后断言操作人身份可解析；修复前实际值为空串 FAIL。
+- **AI 审计列表的提示词版本恒为空（P1）**：`service/ai_evaluator.go` 解析 audit `notes` 时用 `prompt_version` 标签，而写入侧 `handlers/ai` 落库的是 camelCase `promptVersion`，读侧永远取到空、评测无法按版本归因。修正读取标签并补契约锁：`handlers/ai/audit_notes_contract_test.go` 走真实 handler→数据库→查询往返，断言落库键为 camelCase 且版本可读回；把标签改回 snake_case 即 FAIL。同时把原单测的 fixture 改成与写入侧一致，此前它按读取端的临时拼写构造，只验证了解析器自洽。
 
 ## [1.6.18] - 2026-10-12
 

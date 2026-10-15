@@ -52,18 +52,34 @@ var DefaultEscalationMatrix = EscalationMatrix{
 	},
 }
 
+// EscalationMatrixStore 是升级矩阵的持久化契约。
+//
+// 由调用方（生产用 SystemConfig-backed 实现，测试用内存实现）注入，
+// 使本服务不直接依赖 ent.Client，同时可测。
+type EscalationMatrixStore interface {
+	// Load 返回该租户已持久化的矩阵。未配置时返回 (nil, nil) —— 调用方据此回落默认矩阵。
+	Load(ctx context.Context, tenantID int) (EscalationMatrix, error)
+	// Save 覆盖写入该租户的矩阵。
+	Save(ctx context.Context, tenantID int, matrix EscalationMatrix) error
+	// Delete 清除该租户的自定义矩阵（回落默认）。
+	Delete(ctx context.Context, tenantID int) error
+}
+
 // EscalationMatrixService 升级矩阵服务
 //
-// 内存缓存每个租户的升级矩阵，缺省使用 DefaultEscalationMatrix。
-// 未来可扩展：每个租户自定义矩阵（通过 DB 存储）。
+// 持久化语义：自定义矩阵写入 EscalationMatrixStore（生产落 system_configs 表，
+// key=escalation.matrix，category=escalation），内存 map 仅作**读缓存**。
+// 读路径：缓存未命中 → store.Load → 仍未配置则回落 DefaultEscalationMatrix。
+// 写路径：store.Save 成功后才更新缓存；store 未注入（测试/降级）时保持纯内存行为。
 type EscalationMatrixService struct {
 	logger *zap.SugaredLogger
+	store  EscalationMatrixStore
 
 	mu    sync.RWMutex
 	cache map[int]EscalationMatrix
 }
 
-// NewEscalationMatrixService 创建升级矩阵服务
+// NewEscalationMatrixService 创建升级矩阵服务（纯内存，仅测试与降级路径使用）
 func NewEscalationMatrixService(logger *zap.SugaredLogger) *EscalationMatrixService {
 	return &EscalationMatrixService{
 		logger: logger,
@@ -71,38 +87,93 @@ func NewEscalationMatrixService(logger *zap.SugaredLogger) *EscalationMatrixServ
 	}
 }
 
-// GetMatrix 获取指定租户的升级矩阵
+// NewEscalationMatrixServiceWithStore 创建带持久化的升级矩阵服务（生产装配使用）
+func NewEscalationMatrixServiceWithStore(logger *zap.SugaredLogger, store EscalationMatrixStore) *EscalationMatrixService {
+	return &EscalationMatrixService{
+		logger: logger,
+		store:  store,
+		cache:  make(map[int]EscalationMatrix),
+	}
+}
+
+// cloneMatrix 深拷贝一份矩阵，避免调用方改动缓存内部切片。
+func cloneMatrix(src EscalationMatrix) EscalationMatrix {
+	out := make(EscalationMatrix, len(src))
+	for priority, levels := range src {
+		out[priority] = append([]EscalationLevel(nil), levels...)
+	}
+	return out
+}
+
+// defaultMatrixCopy 返回默认矩阵的拷贝。
+func defaultMatrixCopy() EscalationMatrix {
+	return cloneMatrix(DefaultEscalationMatrix)
+}
+
+// GetMatrix 获取指定租户的升级矩阵。
 //
-// 实现：
-//  1. 命中缓存 → 直接返回
-//  2. 未命中 → 返回 DefaultEscalationMatrix 的拷贝并写入缓存
+// 读路径优先级：内存缓存 → 持久化 store → DefaultEscalationMatrix。
+// 三级都拿不到时返回默认矩阵的拷贝（保证调用方永远拿到非 nil）。
+//
+// 一律返回**深拷贝**：调用方（handler 序列化、升级判定等）不应能通过改返回值
+// 污染服务内部缓存——否则一次误改会让该租户后续所有升级判定读到脏配置。
 func (s *EscalationMatrixService) GetMatrix(tenantID int) EscalationMatrix {
 	s.mu.RLock()
 	if m, ok := s.cache[tenantID]; ok {
 		s.mu.RUnlock()
-		return m
+		return cloneMatrix(m)
 	}
 	s.mu.RUnlock()
 
+	var matrix EscalationMatrix
+
+	// store 为 nil 时直接回落默认（保持旧构造函数的纯内存语义）
+	if s.store != nil {
+		loaded, err := s.store.Load(context.Background(), tenantID)
+		switch {
+		case err != nil:
+			// 持久化读取失败**不阻断**升级判定：降级到默认矩阵并记日志。
+			// 升级是 SLA 兜底路径，因 DB 抖动而停摆比用默认矩阵更糟。
+			s.logger.Warnf("读取升级矩阵失败，降级到默认矩阵: tenant=%d err=%v", tenantID, err)
+			matrix = defaultMatrixCopy()
+		case loaded != nil:
+			matrix = loaded
+		default:
+			matrix = defaultMatrixCopy()
+		}
+	} else {
+		matrix = defaultMatrixCopy()
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// 双重检查
+	// 双重检查：期间可能已被别的 goroutine 写入
 	if m, ok := s.cache[tenantID]; ok {
-		return m
-	}
-	matrix := make(EscalationMatrix, len(DefaultEscalationMatrix))
-	for priority, levels := range DefaultEscalationMatrix {
-		matrix[priority] = append([]EscalationLevel(nil), levels...)
+		return cloneMatrix(m)
 	}
 	s.cache[tenantID] = matrix
-	return matrix
+	return cloneMatrix(matrix)
 }
 
-// SetMatrix 设置租户的自定义升级矩阵
-func (s *EscalationMatrixService) SetMatrix(tenantID int, matrix EscalationMatrix) {
+// SetMatrix 设置租户的自定义升级矩阵。
+//
+// 语义：**先落库成功，再更新缓存**。落库失败时缓存保持原值并返回错误，
+// 避免出现"接口返回成功但重启后配置丢失"的假成功。
+// store 为 nil（测试/降级）时保持纯内存写入。
+func (s *EscalationMatrixService) SetMatrix(tenantID int, matrix EscalationMatrix) error {
+	if s.store != nil {
+		if err := s.store.Save(context.Background(), tenantID, matrix); err != nil {
+			s.logger.Errorf("持久化升级矩阵失败: tenant=%d err=%v", tenantID, err)
+			return err
+		}
+	}
+
+	stored := cloneMatrix(matrix)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.cache[tenantID] = matrix
+	s.cache[tenantID] = stored
+	return nil
 }
 
 // InvalidateCache 清除租户的矩阵缓存（用于配置变更时刷新）
@@ -142,12 +213,13 @@ func (s *EscalationMatrixService) FindNextEscalationLevel(tenantID int, priority
 }
 
 // CachedMatrixSnapshot 返回当前缓存中所有租户的矩阵快照（用于调试）
+// 返回深拷贝，避免调试代码误改服务内部缓存。
 func (s *EscalationMatrixService) CachedMatrixSnapshot() map[int]EscalationMatrix {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	out := make(map[int]EscalationMatrix, len(s.cache))
 	for k, v := range s.cache {
-		out[k] = v
+		out[k] = cloneMatrix(v)
 	}
 	return out
 }

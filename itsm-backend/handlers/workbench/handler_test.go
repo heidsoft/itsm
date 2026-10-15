@@ -37,7 +37,14 @@ type workbenchFixture struct {
 	actorA        int
 	actorB        int
 	missingTenant int
+
+	// db 暴露给同包其他测试（datascope_test.go）做仓储层直测：
+	// 行级过滤的 SQL 生成逻辑只在 repository 里，走 HTTP 层无法精确断言。
+	db *sql.DB
 }
+
+// dbValue 返回 fixture 使用的 *sql.DB。
+func (f *workbenchFixture) dbValue() (*sql.DB, bool) { return f.db, f.db != nil }
 
 // setupWorkbenchTest 在内存 SQLite + 全量 ent schema 上组装真实 repository/service/handler，
 // 并显式区分 tenantA / tenantB 与两个 actor。返回的 handler 挂在真实 gin 路由上。
@@ -126,15 +133,22 @@ func setupWorkbenchTest(t *testing.T) *workbenchFixture {
 		actorA:        actorA,
 		actorB:        actorB,
 		missingTenant: missingTenant,
+		db:            db,
 	}
 }
 
 // doWorkbench 走真实 GET /api/v1/workbench 入口。tenantID<=0 时不注入租户上下文，
 // 用于验证 fail-closed 分支。
+//
+// 角色固定注入 super_admin（管理视角 = DataScopeAll），这样本组用例专注验证
+// **租户隔离与分页契约**；行级数据权限由 datascope_test.go 在仓储层单独覆盖。
+// 若不注入 role，handler 会按非管理角色收窄到"本人发起或受理"，
+// 本组断言（跨域全量列表）会被行级过滤误伤而变红。
 func doWorkbench(t *testing.T, h *Handler, tenantID int, query string) (int, workbenchEnvelope) {
 	t.Helper()
 	router := gin.New()
 	router.Use(func(c *gin.Context) {
+		c.Set("role", "super_admin")
 		if tenantID > 0 {
 			c.Set("tenant_id", tenantID)
 			c.Set(middleware.TenantContextKey, &middleware.TenantContext{TenantID: tenantID})

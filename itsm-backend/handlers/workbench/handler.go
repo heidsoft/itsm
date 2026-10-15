@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/common/handlerctx"
+	"itsm-backend/internal/datascope"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,13 +28,31 @@ func (h *Handler) Query(c *gin.Context) {
 		return
 	}
 
+	// 行级数据权限：跨域工作台会同时列出工单/事件/问题/变更，
+	// 若只靠路由层 dashboard:read 兜底，普通角色能看到全租户单据。
+	// 词表单一源：internal/datascope（管理角色看全量，其余只看本人发起或受理）。
+	role := ""
+	if v, exists := c.Get("role"); exists {
+		role, _ = v.(string)
+	}
+	viewerID := 0
+	if v, exists := c.Get("user_id"); exists {
+		viewerID, _ = v.(int)
+	}
+	scope := datascope.DataScopeAll
+	if !datascope.IsDataScopeAllRole(role) {
+		scope = datascope.DataScopeOwnedOrAssigned
+	}
+
 	// 页长唯一所有者：common.GetPaginationFromQuery（缺省 1/20，只采纳 [1,100]，
 	// 越界与非数字回落缺省），handler 不再自己判 (0,100]。
 	pg := common.GetPaginationFromQuery(c)
 	query := WorkbenchQuery{
-		TenantID: tenantID,
-		Page:     pg.Page,
-		PageSize: pg.PageSize,
+		TenantID:  tenantID,
+		Page:      pg.Page,
+		PageSize:  pg.PageSize,
+		DataScope: scope,
+		ViewerID:  viewerID,
 	}
 
 	if assigneeIDStr := c.Query("assigneeId"); assigneeIDStr != "" {

@@ -46,7 +46,10 @@ func (h *Handler) Webhook(c *gin.Context) {
 	}
 	rcv, ok := conn.(connector.Receiver)
 	if !ok {
-		common.Fail(c, common.InternalErrorCode, "wecom 渠道未实现 Receiver 接口")
+		// 501 而非 500：企业微信渠道在 capability registry 中已声明 built:false
+		// （MaturityDisabled），"渠道未实现 Receiver" 是已知产品边界，不是故障。
+		// 报 500 会让监控被已知边界刷屏，调用方也会误判为自身请求有误。
+		common.Fail(c, common.NotImplementedCode, "企业微信渠道未实现 Receiver 接口：该能力在当前版本未包含")
 		return
 	}
 	rawData, _ := c.GetRawData()

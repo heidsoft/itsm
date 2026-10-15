@@ -589,6 +589,7 @@ func TestStatusForCode_FailAndFailWithDataAgree(t *testing.T) {
 		{UnprocessableEntityCode, http.StatusUnprocessableEntity},
 		{InternalErrorCode, http.StatusInternalServerError},
 		{ServiceUnavailableCode, http.StatusServiceUnavailable},
+		{NotImplementedCode, http.StatusNotImplemented},
 		{9999, http.StatusOK},
 	}
 	for _, tc := range codes {

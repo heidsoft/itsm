@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"itsm-backend/internal/datascope"
 	"itsm-backend/service/lifecycle"
 )
 
@@ -16,17 +17,23 @@ type repositoryImpl struct {
 // workbenchDomain 描述一个参与统一工作台的 ITIL 领域及其物理表。
 // softDelete 必须与 ent/schema 实际列一致：changes 没有 deleted_at，
 // 给它加 deleted_at IS NULL 会让整条 UNION 直接报错。
+//
+// requesterCol 是该域"发起人"列名。行级数据权限（owner 维度）需要按各域
+// 自己的列过滤 —— 各域命名不统一：tickets.requester_id / incidents.reporter_id
+// / changes.created_by / problems.created_by。写成常量是为了让映射关系显式可见，
+// 避免在 SQL 里散落魔法字符串。
 type workbenchDomain struct {
-	name       string
-	table      string
-	softDelete bool
+	name         string
+	table        string
+	softDelete   bool
+	requesterCol string
 }
 
 var workbenchDomains = []workbenchDomain{
-	{name: "incident", table: "incidents", softDelete: true},
-	{name: "change", table: "changes", softDelete: false},
-	{name: "problem", table: "problems", softDelete: true},
-	{name: "ticket", table: "tickets", softDelete: true},
+	{name: "incident", table: "incidents", softDelete: true, requesterCol: "reporter_id"},
+	{name: "change", table: "changes", softDelete: false, requesterCol: "created_by"},
+	{name: "problem", table: "problems", softDelete: true, requesterCol: "created_by"},
+	{name: "ticket", table: "tickets", softDelete: true, requesterCol: "requester_id"},
 }
 
 // NewRepository creates a new workbench repository.
@@ -62,6 +69,21 @@ func (r *repositoryImpl) Query(ctx context.Context, query WorkbenchQuery) (*Work
 				args = append(args, s)
 			}
 			conds = append(conds, fmt.Sprintf("status IN (%s)", strings.Join(placeholders, ",")))
+		}
+
+		// 行级数据权限（owner/assignee 维度）：非管理角色只看本人发起或受理的单据。
+		// 收窄条件放在各域子查询内，保证 UNION 的每一条分支都带上 ——
+		// 放外层会因各域列名不同而无法统一引用。
+		// viewerID <= 0 时返回恒假条件（安全收窄），不做"无过滤"处理。
+		if query.DataScope != datascope.DataScopeAll {
+			viewerArg := nextArg()
+			args = append(args, query.ViewerID)
+			if query.ViewerID <= 0 {
+				conds = append(conds, "1 = 0")
+			} else {
+				conds = append(conds, fmt.Sprintf(
+					"(%s = %s OR assignee_id = %s)", d.requesterCol, viewerArg, viewerArg))
+			}
 		}
 
 		unions = append(unions, fmt.Sprintf(

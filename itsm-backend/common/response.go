@@ -34,6 +34,11 @@ const (
 	InternalErrorCode       = 5001
 	ServerErrorCode         = InternalErrorCode
 	ServiceUnavailableCode  = 5003
+	// NotImplementedCode 能力未实现（501）。与 InternalErrorCode 的区别：
+	// 501 是**声明过的产品边界**（capability registry 里 built:false 的能力），
+	// 属于可预期的业务结果；500 是没预料到的故障。把"渠道未实现"报成 500
+	// 会让监控告警被已知边界问题刷屏，也会让调用方误以为是自己请求出错。
+	NotImplementedCode = 5010
 	// AI 工具 RBAC 校验
 	ToolPermissionDeniedCode = 2004 // 工具权限不足
 	UnknownToolCode          = 2005 // 未知工具
@@ -68,6 +73,7 @@ var codeStatusPairs = []struct {
 	{UnprocessableEntityCode, http.StatusUnprocessableEntity},
 	{InternalErrorCode, http.StatusInternalServerError},
 	{ServiceUnavailableCode, http.StatusServiceUnavailable},
+	{NotImplementedCode, http.StatusNotImplemented},
 }
 
 // statusForCode 是「应用业务码 → HTTP 状态码」方向的唯一入口。

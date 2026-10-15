@@ -48,16 +48,10 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		tickets.GET("/:id/history", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicketActivity)
 		tickets.PUT("/:id/sla/pause", middleware.RequirePermission("ticket", "update"), config.TicketHandler.PauseSLA)
 		tickets.PUT("/:id/sla/resume", middleware.RequirePermission("ticket", "update"), config.TicketHandler.ResumeSLA)
-		tickets.GET("/types", middleware.RequirePermission("ticket", "read"), func(c *gin.Context) {
-			common.Success(c, gin.H{"types": []gin.H{
-				{"id": 1, "name": "故障工单", "code": "incident"},
-				{"id": 2, "name": "服务请求", "code": "service_request"},
-				{"id": 3, "name": "变更工单", "code": "change"},
-				{"id": 4, "name": "问题工单", "code": "problem"},
-				{"id": 5, "name": "综合工单", "code": "ticket"},
-				{"id": 6, "name": "持续改进", "code": "improvement"},
-			}, "total": 6})
-		})
+		// 注：原 GET /tickets/types（内联硬编码 6 条类型数组）已摘除。
+		// 该别名与真实类型体系 /api/v1/ticket-types（SetupTicketTypeRoutes → ListTicketTypes）
+		// 并存且与之矛盾；前端 TicketTypeApi 全量走 /api/v1/ticket-types，全仓零调用本别名。
+		// 保留硬编码副本会让调用方拿到与真实配置不一致的类型清单。
 		tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), config.TicketHandler.GetTicket)
 		tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), config.TicketHandler.UpdateTicket)
 		// REST 契约：部分更新使用 PATCH（与 PUT 共用同一 handler，DTO 指针字段区分未传/传零值）

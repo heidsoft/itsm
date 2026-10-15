@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"itsm-backend/common"
@@ -120,6 +121,22 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 	}
 }
 
+// defaultAppVersion 是未注入 APP_VERSION 时的兜底版本。
+//
+// Keep in sync with itsm-frontend/package.json and the release tag.
+// 这是版本号的**唯一手写兜底**：任何对外暴露版本的端点（/version、/system/config）
+// 都必须走 appVersion()，不要各自再写一份字面量 —— 此前 /system/config 硬编码
+// "1.6.8" 而 /version 是 1.6.9，就是两份字面量漂移出来的。
+const defaultAppVersion = "1.6.9"
+
+// appVersion 返回当前应用版本：优先取注入的 APP_VERSION，回落到 defaultAppVersion。
+func appVersion() string {
+	if v := strings.TrimSpace(os.Getenv("APP_VERSION")); v != "" {
+		return v
+	}
+	return defaultAppVersion
+}
+
 // RouterConfig 路由配置
 type RouterConfig struct {
 	JWTSecret string
@@ -154,6 +171,9 @@ type RouterConfig struct {
 
 	A2UIHandler      *a2uiHandler.Handler
 	DashboardHandler *handlers.DashboardHandler
+	// DashboardConfigStore 承载仪表盘个性化配置（布局/部件/配置）的持久化。
+	// nil 表示未装配 —— 此时配置类端点回落内置默认值且写面显式 503。
+	DashboardConfigStore DashboardConfigStore
 
 	// Organization & Application
 	ApplicationHandler *applicationHandler.Handler
@@ -334,14 +354,8 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 			c.JSON(status, readiness)
 		})
 		public.GET("/version", func(c *gin.Context) {
-			// Keep APP_VERSION in sync with itsm-frontend/package.json and the
-			// release tag; the fallback is only used when it is not injected.
-			version := os.Getenv("APP_VERSION")
-			if version == "" {
-				version = "1.6.9"
-			}
 			// 统一响应信封 {code,message,data}，前端 httpClient 按 data 解包。
-			common.Success(c, gin.H{"version": version, "build": "release"})
+			common.Success(c, gin.H{"version": appVersion(), "build": "release"})
 		})
 
 		// Prometheus metrics endpoint.
@@ -632,12 +646,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		if config.DashboardHandler != nil {
-			SetupDashboardRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.TicketHandler)
+			SetupDashboardRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.TicketHandler, config.DashboardConfigStore)
 		}
 
 		// ==================== Reports 报表 ====================
 		if config.DashboardHandler != nil {
-			SetupReportsRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler)
+			SetupReportsRoutes(tenant.(*gin.RouterGroup), config.DashboardHandler, config.ProblemHandler, config.ChangeHandler)
 		}
 
 		// ==================== Surveys 客户满意度调查 ====================
@@ -648,6 +662,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		if config.TicketTypeHandler != nil {
 			SetupTicketTypeRoutes(tenant.(*gin.RouterGroup), config.TicketTypeHandler)
 		}
+
+		// SSO（OIDC）路由：公开组发起/回调 + r 层自助绑定 + 租户内提供方管理。
+		SetupSSORoutes(r, auth, public, tenant.(*gin.RouterGroup), config)
 	}
 
 	// 飞书相关路由

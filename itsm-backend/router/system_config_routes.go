@@ -50,9 +50,10 @@ func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Han
 		}
 
 		sysRoot.GET("/config", middleware.RequirePermission("system_config", "read"), func(c *gin.Context) {
+			// 版本号走 appVersion() 单一事实源，不再各写一份字面量。
 			c.JSON(200, gin.H{
 				"status":    "ok",
-				"version":   "1.6.8",
+				"version":   appVersion(),
 				"timestamp": time.Now(),
 			})
 		})

@@ -48,7 +48,9 @@ func (h *Handler) Webhook(c *gin.Context) {
 	}
 	rcv, ok := conn.(connector.Receiver)
 	if !ok {
-		common.Fail(c, common.InternalErrorCode, "dingtalk 渠道未实现 Receiver 接口")
+		// 501 而非 500：钉钉渠道在 capability registry 中已声明 built:false
+		// （MaturityDisabled），"渠道未实现 Receiver" 是已知产品边界，不是故障。
+		common.Fail(c, common.NotImplementedCode, "钉钉渠道未实现 Receiver 接口：该能力在当前版本未包含")
 		return
 	}
 	rawData, _ := c.GetRawData()

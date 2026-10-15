@@ -61,8 +61,12 @@ func (h *Handler) SetMatrix(ctx *gin.Context) {
 		common.ParamErrorWithErr(ctx, err, "请求参数错误")
 		return
 	}
-	h.escalationMatrixService.SetMatrix(tid, matrix)
-	h.escalationMatrixService.InvalidateCache(tid)
+	// 落库失败必须显式报错：SetMatrix 内部是「先落库成功才更新缓存」，
+	// 返回 nil 意味着配置已持久化。若这里吞错，接口会返回成功但重启即丢配置。
+	if err := h.escalationMatrixService.SetMatrix(tid, matrix); err != nil {
+		common.FailWithErr(ctx, err, "保存升级矩阵失败")
+		return
+	}
 	common.Success(ctx, nil)
 }
 
