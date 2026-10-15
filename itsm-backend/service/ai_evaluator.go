@@ -363,7 +363,7 @@ func (s *AITelemetryService) loadPlatformStats(ctx context.Context, lookbackDays
 // ==================== AI 审计日志查询 ====================
 
 // AIAuditEntry 是 /api/v1/ai/audit-logs 列表项（camelCase）。
-// notes 字段为 JSON（prompt_version/model/confidence/suggestion/notes），
+// notes 字段为 JSON（promptVersion/model/confidence/suggestion/notes），
 // 由 RecordAudit 写入 ai_feedbacks.notes，此处解析为结构化字段。
 type AIAuditEntry struct {
 	ID            int64                  `json:"id"`
@@ -436,9 +436,10 @@ func (s *AITelemetryService) ListAuditLogs(ctx context.Context, tenantID int, pa
 		e.Confidence = round4(float64(score) / 100.0)
 		e.Notes = notes
 		// notes 中冗余了 confidence 等字段；解析时仅提取结构化元数据，原始 notes 保留展示。
+		// 键名必须与 handlers/ai RecordAudit 写入库的 payload 一致（camelCase）。
 		if notes != "" {
 			var meta struct {
-				PromptVersion string                 `json:"prompt_version"`
+				PromptVersion string                 `json:"promptVersion"`
 				Model         string                 `json:"model"`
 				Suggestion    map[string]interface{} `json:"suggestion"`
 			}

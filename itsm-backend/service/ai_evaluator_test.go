@@ -88,7 +88,9 @@ func seedLLMCall(t *testing.T, db *sql.DB, latencyMS int, success bool) {
 //	LLM: 成功 2000ms / 成功 1000ms / 失败 3000ms / 成功 500ms
 func seedStandardEvaluationFixture(t *testing.T, db *sql.DB) {
 	t.Helper()
-	notes := `{"prompt_version":"v1","model":"doubao-pro","suggestion":{"category":"network"}}`
+	// 与 handlers/ai RecordAudit 落库的 payload 逐字段一致（camelCase）。
+	// fixture 若按读取端的临时拼写来写，只会验证解析器自洽，验证不了写读契约。
+	notes := `{"promptVersion":"v1","model":"doubao-pro","confidence":0.9,"suggestion":{"category":"network"},"notes":""}`
 	seedFeedback(t, db, feedbackSeed{tenantID: 1, userID: 1, kind: "triage", query: "网络中断", itemType: "", useful: true, score: 80})
 	seedFeedback(t, db, feedbackSeed{tenantID: 1, userID: 1, kind: "summarize", query: "总结工单", itemType: "", useful: false, score: 40})
 	seedFeedback(t, db, feedbackSeed{tenantID: 1, userID: 1, kind: "analyze", query: "ticket_1", itemType: "ai_audit", useful: true, score: 90, notes: notes})
@@ -324,7 +326,8 @@ func TestListAIAuditLogs_PaginationAndNotes(t *testing.T) {
 	assert.NotEmpty(t, entries[0].Notes)
 	var raw map[string]interface{}
 	require.NoError(t, json.Unmarshal([]byte(entries[0].Notes), &raw))
-	assert.Equal(t, "v1", raw["prompt_version"])
+	assert.Equal(t, "v1", raw["promptVersion"])
+	assert.NotContains(t, raw, "prompt_version", "notes 落库键必须是 camelCase，禁止 snake_case 双轨")
 }
 
 func TestListAIAuditLogs_KindFilterAndPaging(t *testing.T) {
