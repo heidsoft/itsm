@@ -72,7 +72,14 @@ func NewProductionService(
 
 // operatorContext 将当前登录用户信息下传到请求 context，供服务层记录变更历史
 func (c *ProductionService) operatorContext(ctx *gin.Context) context.Context {
-	return service.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), ctx.GetString("user_name"))
+	return service.WithOperator(ctx.Request.Context(), ctx.GetInt("user_id"), authenticatedOperatorName(ctx))
+}
+
+// authenticatedOperatorName 读取当前登录用户名。键名单一事实源是 middleware/auth.go 写入的
+// "username"；本文件此前误读 "user_name"（没有任何中间件写过该键），
+// 使 CI 变更历史与导入/导出任务的 operator_name 全部落成空串。
+func authenticatedOperatorName(ctx *gin.Context) string {
+	return ctx.GetString("username")
 }
 
 // cmdbPagination 取列表分页参数。唯一所有者是 common.GetPaginationFromQuery（缺省 1/20，
@@ -1164,7 +1171,7 @@ func (c *ProductionService) RevertCIVersion(ctx *gin.Context) {
 
 	// 获取操作人信息
 	operatorID := ctx.GetInt("user_id")
-	operatorName := ctx.GetString("user_name")
+	operatorName := authenticatedOperatorName(ctx)
 
 	result, err := c.ciHistoryService.RevertCIVersion(c.operatorContext(ctx), id, tenantID, operatorID, operatorName, &req)
 	if err != nil {
@@ -1331,8 +1338,7 @@ func (c *ProductionService) CreateSavedView(ctx *gin.Context) {
 	if !uidOK {
 		return
 	}
-	userNameVal, _ := ctx.Get("user_name")
-	userNameStr, _ := userNameVal.(string)
+	userNameStr := authenticatedOperatorName(ctx)
 
 	var req dto.CreateCISavedViewRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1497,8 +1503,7 @@ func (c *ProductionService) CreateImportTask(ctx *gin.Context) {
 	if !uidOK {
 		return
 	}
-	userNameVal, _ := ctx.Get("user_name")
-	userNameStr, _ := userNameVal.(string)
+	userNameStr := authenticatedOperatorName(ctx)
 
 	var req dto.ImportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1594,8 +1599,7 @@ func (c *ProductionService) CreateExportTask(ctx *gin.Context) {
 	if !uidOK {
 		return
 	}
-	userNameVal, _ := ctx.Get("user_name")
-	userNameStr, _ := userNameVal.(string)
+	userNameStr := authenticatedOperatorName(ctx)
 
 	var req dto.ExportCIRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -1704,7 +1708,7 @@ func (c *ProductionService) UpdateLifecycleStatus(ctx *gin.Context) {
 	}
 
 	operatorID := ctx.GetInt("user_id")
-	operatorName := ctx.GetString("user_name")
+	operatorName := authenticatedOperatorName(ctx)
 
 	params := service.LifecycleChangeParams{
 		Status:           req.Status,
@@ -1744,7 +1748,7 @@ func (c *ProductionService) BatchUpdateLifecycleStatus(ctx *gin.Context) {
 	}
 
 	operatorID := ctx.GetInt("user_id")
-	operatorName := ctx.GetString("user_name")
+	operatorName := authenticatedOperatorName(ctx)
 
 	params := service.LifecycleChangeParams{
 		Status:           req.Status,

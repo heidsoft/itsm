@@ -32,7 +32,9 @@ func OperatorFromContext(ctx context.Context) (int, string) {
 	}
 	operatorName, ok := ctx.Value(operatorNameContextKey).(string)
 	if !ok {
-		operatorName, _ = ctx.Value("user_name").(string) //nolint:staticcheck // 兼容旧字符串键
+		// 兼容直接传入 gin.Context 的调用方：AuthMiddleware 写入的用户名键是
+		// "username"，读成 "user_name" 会静默拿到空串。
+		operatorName, _ = ctx.Value("username").(string) //nolint:staticcheck // 兼容旧字符串键
 	}
 	if operatorID < 0 {
 		operatorID = SystemOperatorID
