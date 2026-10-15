@@ -61,12 +61,14 @@ func TestSLAServicesAreFullyInjected(t *testing.T) {
 	assembly := functionSource(t, source, "NewApplication")
 
 	// slaStore: 违规检查读写 sla_states；notificationSvc: 违规通知；
-	// alertService: 预警与告警触发计数。
+	// alertService: 预警与告警触发计数；matrixSvc: 升级矩阵 API 与升级判定共用同一实例。
 	for _, required := range []string{
 		"slaMonitorService.SetSLAStore(",
 		"slaMonitorService.SetNotificationService(",
 		"slaMonitorService.SetAlertService(",
 		"escalationService.SetNotificationService(",
+		"escalationService.SetMatrixService(escalationMatrixService)",
+		"escalationMatrixHandler.NewHandler(sugar, escalationMatrixService)",
 		"SLAMonitorService: slaMonitorService,",
 		"EscalationService: escalationService,",
 	} {
