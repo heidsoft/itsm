@@ -146,7 +146,7 @@ func (s *Service) GetByNumber(ctx context.Context, ticketNumber string, tenantID
 // List lists tickets with pagination and filtering.
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Ticket, int, error) {
 	dataScope := datascope.DataScopeAll
-	if !IsDataScopeAllRole(currentRole) {
+	if !datascope.IsDataScopeAllRole(currentRole) {
 		dataScope = datascope.DataScopeOwnedOrAssigned
 	}
 	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
@@ -487,16 +487,6 @@ func (s *Service) GetTicketSLAInfo(ctx context.Context, ticketID int, tenantID i
 		"isResponseBreached":   t.SLAResponseDeadline != nil && time.Now().After(*t.SLAResponseDeadline),
 		"isResolutionBreached": t.SLAResolutionDeadline != nil && time.Now().After(*t.SLAResolutionDeadline),
 	}, nil
-}
-
-// IsDataScopeAllRole returns true if the role has access to all tickets.
-func IsDataScopeAllRole(role string) bool {
-	switch role {
-	case "admin", "super_admin", "manager":
-		return true
-	default:
-		return false
-	}
 }
 
 // GetTicketActivity retrieves ticket activity log (merged comments, attachments, status changes)

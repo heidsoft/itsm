@@ -856,15 +856,11 @@ func isSupportedTicketType(value string) bool {
 }
 
 // isTicketDataScopeAllRole 判断角色是否拥有全租户工单可见权限（DataScopeAll）。
-// 阻断8：管理角色（super_admin/admin/manager/sysadmin）可见全租户工单，
-// 其余角色（end_user/agent 等）只能查看本人创建或分配给自己的工单。
+// 词表单一源：domain/role.IsAdminLike（经 datascope 暴露）。此前本文件另写
+// {super_admin, admin, manager, sysadmin}，比单一事实源少 audit_admin，
+// 使审计员在工单域被按普通角色收窄；各域现在共用同一份枚举。
 func isTicketDataScopeAllRole(role string) bool {
-	switch role {
-	case "super_admin", "admin", "manager", "sysadmin":
-		return true
-	default:
-		return false
-	}
+	return datascope.IsDataScopeAllRole(role)
 }
 
 // enforceTicketRowScope 行级数据权限（M-7 修复）：非全量数据角色
@@ -1245,8 +1241,8 @@ func (s *TicketService) DeleteTicket(ctx context.Context, id int, tenantID int, 
 
 // ListTickets 列表查询工单。
 // 阻断8 修复：新增 currentUserID + currentRole 参数，按角色注入行级数据权限。
-// - 管理角色（super_admin/admin/manager）：DataScopeAll，可见全租户工单。
-// - 普通角色（end_user/agent）：DataScopeOwnedOrAssigned，仅可见本人创建或分配给自己的工单。
+// - 管理角色（isTicketDataScopeAllRole → domain/role.IsAdminLike）：DataScopeAll，可见全租户工单。
+// - 普通角色（end_user/agent 等）：DataScopeOwnedOrAssigned，仅可见本人创建或分配给自己的工单。
 // 这是安全关键路径：即使前端不传 RequesterID 过滤，service 层也会强制收窄。
 func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int, currentUserID int, currentRole string) (*dto.ListTicketsResponse, error) {
 	// 构建过滤参数

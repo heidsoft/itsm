@@ -16,7 +16,7 @@ import (
 type DataScope int
 
 const (
-	// DataScopeAll 全租户可见（admin/manager/super_admin/sysadmin 等管理角色）。
+	// DataScopeAll 全租户可见（词表见 domain/role.IsAdminLike）。
 	DataScopeAll DataScope = iota
 	// DataScopeDepartment 仅可见本部门数据（需部门树查询支持）。
 	DataScopeDepartment
@@ -64,7 +64,7 @@ func IsDataScopeAllRole(r string) bool {
 // CanWriteResource 判定 actor 是否可对单据执行写/删操作（行级写权限）。
 //
 // 原则：写权限 ⊆ 读权限。DataScope 决定读不到的单据，同样不允许写/删：
-//   - 管理角色（IsDataScopeAllRole：super_admin/admin/manager/sysadmin）全租户可写；
+//   - 管理角色（IsDataScopeAllRole → domain/role.IsAdminLike）全租户可写；
 //   - 其余角色仅 owner（创建人/报告人）或当前受理人可写。
 //
 // ownerID 为单据的归属人字段（ticket.RequesterID / change.CreatedBy /

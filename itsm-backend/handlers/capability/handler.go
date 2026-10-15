@@ -82,11 +82,6 @@ var registry = []definition{
 func Handler(c *gin.Context) {
 	now := time.Now().UTC()
 	roleStr := c.GetString("role")
-	if roleStr == "" {
-		if value, ok := c.Get("user_role"); ok {
-			roleStr, _ = value.(string)
-		}
-	}
 	tenantReady := c.GetInt("tenant_id") > 0
 	admin := role.IsAdminLike(roleStr)
 

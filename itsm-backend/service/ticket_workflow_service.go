@@ -12,6 +12,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/connector"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
@@ -1763,8 +1764,10 @@ func (s *TicketWorkflowService) ensureCanViewTicketCC(ctx context.Context, tk *e
 		// 让「你没权限看」看起来像「服务挂了」。
 		return common.NewBusinessError(common.ForbiddenCode, "无权访问该工单抄送信息", "")
 	}
-	switch currentUser.Role {
-	case "super_admin", "admin", "manager", "technician":
+	// 全租户抄送可见性只给管理面角色，词表以 domain/role 为单一事实源。
+	// 此前裸写 "super_admin","admin","manager","technician"：technician 不是管理角色
+	// 却拿到他人工单抄送视野，而 sysadmin/audit_admin 反而漏配。
+	if domainrole.IsAdminLike(string(currentUser.Role)) {
 		return nil
 	}
 
