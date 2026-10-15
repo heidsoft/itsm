@@ -90,6 +90,21 @@ func IsPublished(v bool) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldIsPublished, v))
 }
 
+// ReviewerID applies equality check predicate on the "reviewer_id" field. It's identical to ReviewerIDEQ.
+func ReviewerID(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewerID, v))
+}
+
+// ReviewedAt applies equality check predicate on the "reviewed_at" field. It's identical to ReviewedAtEQ.
+func ReviewedAt(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewedAt, v))
+}
+
+// ReviewComment applies equality check predicate on the "review_comment" field. It's identical to ReviewCommentEQ.
+func ReviewComment(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewComment, v))
+}
+
 // ViewCount applies equality check predicate on the "view_count" field. It's identical to ViewCountEQ.
 func ViewCount(v int) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldEQ(FieldViewCount, v))
@@ -518,6 +533,201 @@ func IsPublishedEQ(v bool) predicate.KnowledgeArticle {
 // IsPublishedNEQ applies the NEQ predicate on the "is_published" field.
 func IsPublishedNEQ(v bool) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldIsPublished, v))
+}
+
+// ReviewStatusEQ applies the EQ predicate on the "review_status" field.
+func ReviewStatusEQ(v ReviewStatus) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewStatus, v))
+}
+
+// ReviewStatusNEQ applies the NEQ predicate on the "review_status" field.
+func ReviewStatusNEQ(v ReviewStatus) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldReviewStatus, v))
+}
+
+// ReviewStatusIn applies the In predicate on the "review_status" field.
+func ReviewStatusIn(vs ...ReviewStatus) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldReviewStatus, vs...))
+}
+
+// ReviewStatusNotIn applies the NotIn predicate on the "review_status" field.
+func ReviewStatusNotIn(vs ...ReviewStatus) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldReviewStatus, vs...))
+}
+
+// ReviewerIDEQ applies the EQ predicate on the "reviewer_id" field.
+func ReviewerIDEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewerID, v))
+}
+
+// ReviewerIDNEQ applies the NEQ predicate on the "reviewer_id" field.
+func ReviewerIDNEQ(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldReviewerID, v))
+}
+
+// ReviewerIDIn applies the In predicate on the "reviewer_id" field.
+func ReviewerIDIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldReviewerID, vs...))
+}
+
+// ReviewerIDNotIn applies the NotIn predicate on the "reviewer_id" field.
+func ReviewerIDNotIn(vs ...int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldReviewerID, vs...))
+}
+
+// ReviewerIDGT applies the GT predicate on the "reviewer_id" field.
+func ReviewerIDGT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldReviewerID, v))
+}
+
+// ReviewerIDGTE applies the GTE predicate on the "reviewer_id" field.
+func ReviewerIDGTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldReviewerID, v))
+}
+
+// ReviewerIDLT applies the LT predicate on the "reviewer_id" field.
+func ReviewerIDLT(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldReviewerID, v))
+}
+
+// ReviewerIDLTE applies the LTE predicate on the "reviewer_id" field.
+func ReviewerIDLTE(v int) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldReviewerID, v))
+}
+
+// ReviewerIDIsNil applies the IsNil predicate on the "reviewer_id" field.
+func ReviewerIDIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldReviewerID))
+}
+
+// ReviewerIDNotNil applies the NotNil predicate on the "reviewer_id" field.
+func ReviewerIDNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldReviewerID))
+}
+
+// ReviewedAtEQ applies the EQ predicate on the "reviewed_at" field.
+func ReviewedAtEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewedAt, v))
+}
+
+// ReviewedAtNEQ applies the NEQ predicate on the "reviewed_at" field.
+func ReviewedAtNEQ(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldReviewedAt, v))
+}
+
+// ReviewedAtIn applies the In predicate on the "reviewed_at" field.
+func ReviewedAtIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldReviewedAt, vs...))
+}
+
+// ReviewedAtNotIn applies the NotIn predicate on the "reviewed_at" field.
+func ReviewedAtNotIn(vs ...time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldReviewedAt, vs...))
+}
+
+// ReviewedAtGT applies the GT predicate on the "reviewed_at" field.
+func ReviewedAtGT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldReviewedAt, v))
+}
+
+// ReviewedAtGTE applies the GTE predicate on the "reviewed_at" field.
+func ReviewedAtGTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldReviewedAt, v))
+}
+
+// ReviewedAtLT applies the LT predicate on the "reviewed_at" field.
+func ReviewedAtLT(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldReviewedAt, v))
+}
+
+// ReviewedAtLTE applies the LTE predicate on the "reviewed_at" field.
+func ReviewedAtLTE(v time.Time) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldReviewedAt, v))
+}
+
+// ReviewedAtIsNil applies the IsNil predicate on the "reviewed_at" field.
+func ReviewedAtIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldReviewedAt))
+}
+
+// ReviewedAtNotNil applies the NotNil predicate on the "reviewed_at" field.
+func ReviewedAtNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldReviewedAt))
+}
+
+// ReviewCommentEQ applies the EQ predicate on the "review_comment" field.
+func ReviewCommentEQ(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEQ(FieldReviewComment, v))
+}
+
+// ReviewCommentNEQ applies the NEQ predicate on the "review_comment" field.
+func ReviewCommentNEQ(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNEQ(FieldReviewComment, v))
+}
+
+// ReviewCommentIn applies the In predicate on the "review_comment" field.
+func ReviewCommentIn(vs ...string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIn(FieldReviewComment, vs...))
+}
+
+// ReviewCommentNotIn applies the NotIn predicate on the "review_comment" field.
+func ReviewCommentNotIn(vs ...string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotIn(FieldReviewComment, vs...))
+}
+
+// ReviewCommentGT applies the GT predicate on the "review_comment" field.
+func ReviewCommentGT(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGT(FieldReviewComment, v))
+}
+
+// ReviewCommentGTE applies the GTE predicate on the "review_comment" field.
+func ReviewCommentGTE(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldGTE(FieldReviewComment, v))
+}
+
+// ReviewCommentLT applies the LT predicate on the "review_comment" field.
+func ReviewCommentLT(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLT(FieldReviewComment, v))
+}
+
+// ReviewCommentLTE applies the LTE predicate on the "review_comment" field.
+func ReviewCommentLTE(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldLTE(FieldReviewComment, v))
+}
+
+// ReviewCommentContains applies the Contains predicate on the "review_comment" field.
+func ReviewCommentContains(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldContains(FieldReviewComment, v))
+}
+
+// ReviewCommentHasPrefix applies the HasPrefix predicate on the "review_comment" field.
+func ReviewCommentHasPrefix(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldHasPrefix(FieldReviewComment, v))
+}
+
+// ReviewCommentHasSuffix applies the HasSuffix predicate on the "review_comment" field.
+func ReviewCommentHasSuffix(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldHasSuffix(FieldReviewComment, v))
+}
+
+// ReviewCommentIsNil applies the IsNil predicate on the "review_comment" field.
+func ReviewCommentIsNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldIsNull(FieldReviewComment))
+}
+
+// ReviewCommentNotNil applies the NotNil predicate on the "review_comment" field.
+func ReviewCommentNotNil() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldNotNull(FieldReviewComment))
+}
+
+// ReviewCommentEqualFold applies the EqualFold predicate on the "review_comment" field.
+func ReviewCommentEqualFold(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldEqualFold(FieldReviewComment, v))
+}
+
+// ReviewCommentContainsFold applies the ContainsFold predicate on the "review_comment" field.
+func ReviewCommentContainsFold(v string) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(sql.FieldContainsFold(FieldReviewComment, v))
 }
 
 // ViewCountEQ applies the EQ predicate on the "view_count" field.
@@ -1021,6 +1231,29 @@ func HasSessions() predicate.KnowledgeArticle {
 func HasSessionsWith(preds ...predicate.KnowledgeArticleSession) predicate.KnowledgeArticle {
 	return predicate.KnowledgeArticle(func(s *sql.Selector) {
 		step := newSessionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReviewRecords applies the HasEdge predicate on the "review_records" edge.
+func HasReviewRecords() predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReviewRecordsTable, ReviewRecordsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReviewRecordsWith applies the HasEdge predicate on the "review_records" edge with a given conditions (other predicates).
+func HasReviewRecordsWith(preds ...predicate.KnowledgeArticleReview) predicate.KnowledgeArticle {
+	return predicate.KnowledgeArticle(func(s *sql.Selector) {
+		step := newReviewRecordsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

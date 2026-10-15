@@ -37,6 +37,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
+	accountHandler "itsm-backend/handlers/account"
 	a2uiHandler "itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
@@ -1081,6 +1082,11 @@ func NewApplication() *Application {
 	// Wire up notification service
 	slaAlertService.SetNotificationService(ticketNotificationService)
 	escalationService.SetNotificationService(ticketNotificationService)
+	// 升级矩阵必须与升级流程共用**同一个实例**：EscalationService 构造时会自建一个
+	// 私有 EscalationMatrixService，不注入的话 PUT /escalation-matrices 改的是 A 实例，
+	// 而定时升级判定读的是 B 实例的默认值 —— 管理员配的升级策略永远不生效。
+	// 注入后同一实例也就意味着同一份持久化（system_configs key=escalation.matrix）。
+	escalationService.SetMatrixService(escalationMatrixService)
 	// 预警/告警触发依赖 alertService；缺失时 CheckSLAViolations 会跳过
 	// TriggerSLAWarning 与 CheckAndTriggerAlerts，统计恒为 0。
 	slaMonitorService.SetAlertService(slaAlertService)
@@ -1222,6 +1228,9 @@ func NewApplication() *Application {
 		EmailIntakeHandler:          emailIntakeHandler,
 		CommonHandler:               commonHandler,
 		AuthHandler:                 authHTTPHandler,
+		// 自助改密：复用 userService（与用户管理面同一 service 层，
+		// 但 ChangeOwnPassword 强制校验旧密码，权限面独立）。
+		AccountHandler: accountHandler.NewHandler(userService),
 
 		SkillHandler: skillHandler,
 

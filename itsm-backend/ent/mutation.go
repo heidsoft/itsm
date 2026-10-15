@@ -62,6 +62,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
@@ -114,6 +115,8 @@ import (
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
+	"itsm-backend/ent/ssoidentity"
+	"itsm-backend/ent/ssoprovider"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
@@ -213,6 +216,7 @@ const (
 	TypeKnowledgeArticle            = "KnowledgeArticle"
 	TypeKnowledgeArticleLike        = "KnowledgeArticleLike"
 	TypeKnowledgeArticleParticipant = "KnowledgeArticleParticipant"
+	TypeKnowledgeArticleReview      = "KnowledgeArticleReview"
 	TypeKnowledgeArticleSession     = "KnowledgeArticleSession"
 	TypeKnowledgeArticleVersion     = "KnowledgeArticleVersion"
 	TypeKnownError                  = "KnownError"
@@ -257,6 +261,8 @@ const (
 	TypeSLAPolicy                   = "SLAPolicy"
 	TypeSLAState                    = "SLAState"
 	TypeSLAViolation                = "SLAViolation"
+	TypeSSOIdentity                 = "SSOIdentity"
+	TypeSSOProvider                 = "SSOProvider"
 	TypeServiceCatalog              = "ServiceCatalog"
 	TypeServiceCatalogItem          = "ServiceCatalogItem"
 	TypeServiceCustomer             = "ServiceCustomer"
@@ -76564,6 +76570,11 @@ type KnowledgeArticleMutation struct {
 	tenant_id               *int
 	addtenant_id            *int
 	is_published            *bool
+	review_status           *knowledgearticle.ReviewStatus
+	reviewer_id             *int
+	addreviewer_id          *int
+	reviewed_at             *time.Time
+	review_comment          *string
 	view_count              *int
 	addview_count           *int
 	like_count              *int
@@ -76588,6 +76599,9 @@ type KnowledgeArticleMutation struct {
 	sessions                map[int]struct{}
 	removedsessions         map[int]struct{}
 	clearedsessions         bool
+	review_records          map[int]struct{}
+	removedreview_records   map[int]struct{}
+	clearedreview_records   bool
 	done                    bool
 	oldValue                func(context.Context) (*KnowledgeArticle, error)
 	predicates              []predicate.KnowledgeArticle
@@ -77020,6 +77034,210 @@ func (m *KnowledgeArticleMutation) OldIsPublished(ctx context.Context) (v bool, 
 // ResetIsPublished resets all changes to the "is_published" field.
 func (m *KnowledgeArticleMutation) ResetIsPublished() {
 	m.is_published = nil
+}
+
+// SetReviewStatus sets the "review_status" field.
+func (m *KnowledgeArticleMutation) SetReviewStatus(ks knowledgearticle.ReviewStatus) {
+	m.review_status = &ks
+}
+
+// ReviewStatus returns the value of the "review_status" field in the mutation.
+func (m *KnowledgeArticleMutation) ReviewStatus() (r knowledgearticle.ReviewStatus, exists bool) {
+	v := m.review_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewStatus returns the old "review_status" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldReviewStatus(ctx context.Context) (v knowledgearticle.ReviewStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewStatus: %w", err)
+	}
+	return oldValue.ReviewStatus, nil
+}
+
+// ResetReviewStatus resets all changes to the "review_status" field.
+func (m *KnowledgeArticleMutation) ResetReviewStatus() {
+	m.review_status = nil
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (m *KnowledgeArticleMutation) SetReviewerID(i int) {
+	m.reviewer_id = &i
+	m.addreviewer_id = nil
+}
+
+// ReviewerID returns the value of the "reviewer_id" field in the mutation.
+func (m *KnowledgeArticleMutation) ReviewerID() (r int, exists bool) {
+	v := m.reviewer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewerID returns the old "reviewer_id" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldReviewerID(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewerID: %w", err)
+	}
+	return oldValue.ReviewerID, nil
+}
+
+// AddReviewerID adds i to the "reviewer_id" field.
+func (m *KnowledgeArticleMutation) AddReviewerID(i int) {
+	if m.addreviewer_id != nil {
+		*m.addreviewer_id += i
+	} else {
+		m.addreviewer_id = &i
+	}
+}
+
+// AddedReviewerID returns the value that was added to the "reviewer_id" field in this mutation.
+func (m *KnowledgeArticleMutation) AddedReviewerID() (r int, exists bool) {
+	v := m.addreviewer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (m *KnowledgeArticleMutation) ClearReviewerID() {
+	m.reviewer_id = nil
+	m.addreviewer_id = nil
+	m.clearedFields[knowledgearticle.FieldReviewerID] = struct{}{}
+}
+
+// ReviewerIDCleared returns if the "reviewer_id" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) ReviewerIDCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldReviewerID]
+	return ok
+}
+
+// ResetReviewerID resets all changes to the "reviewer_id" field.
+func (m *KnowledgeArticleMutation) ResetReviewerID() {
+	m.reviewer_id = nil
+	m.addreviewer_id = nil
+	delete(m.clearedFields, knowledgearticle.FieldReviewerID)
+}
+
+// SetReviewedAt sets the "reviewed_at" field.
+func (m *KnowledgeArticleMutation) SetReviewedAt(t time.Time) {
+	m.reviewed_at = &t
+}
+
+// ReviewedAt returns the value of the "reviewed_at" field in the mutation.
+func (m *KnowledgeArticleMutation) ReviewedAt() (r time.Time, exists bool) {
+	v := m.reviewed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewedAt returns the old "reviewed_at" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldReviewedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewedAt: %w", err)
+	}
+	return oldValue.ReviewedAt, nil
+}
+
+// ClearReviewedAt clears the value of the "reviewed_at" field.
+func (m *KnowledgeArticleMutation) ClearReviewedAt() {
+	m.reviewed_at = nil
+	m.clearedFields[knowledgearticle.FieldReviewedAt] = struct{}{}
+}
+
+// ReviewedAtCleared returns if the "reviewed_at" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) ReviewedAtCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldReviewedAt]
+	return ok
+}
+
+// ResetReviewedAt resets all changes to the "reviewed_at" field.
+func (m *KnowledgeArticleMutation) ResetReviewedAt() {
+	m.reviewed_at = nil
+	delete(m.clearedFields, knowledgearticle.FieldReviewedAt)
+}
+
+// SetReviewComment sets the "review_comment" field.
+func (m *KnowledgeArticleMutation) SetReviewComment(s string) {
+	m.review_comment = &s
+}
+
+// ReviewComment returns the value of the "review_comment" field in the mutation.
+func (m *KnowledgeArticleMutation) ReviewComment() (r string, exists bool) {
+	v := m.review_comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReviewComment returns the old "review_comment" field's value of the KnowledgeArticle entity.
+// If the KnowledgeArticle object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleMutation) OldReviewComment(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReviewComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReviewComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReviewComment: %w", err)
+	}
+	return oldValue.ReviewComment, nil
+}
+
+// ClearReviewComment clears the value of the "review_comment" field.
+func (m *KnowledgeArticleMutation) ClearReviewComment() {
+	m.review_comment = nil
+	m.clearedFields[knowledgearticle.FieldReviewComment] = struct{}{}
+}
+
+// ReviewCommentCleared returns if the "review_comment" field was cleared in this mutation.
+func (m *KnowledgeArticleMutation) ReviewCommentCleared() bool {
+	_, ok := m.clearedFields[knowledgearticle.FieldReviewComment]
+	return ok
+}
+
+// ResetReviewComment resets all changes to the "review_comment" field.
+func (m *KnowledgeArticleMutation) ResetReviewComment() {
+	m.review_comment = nil
+	delete(m.clearedFields, knowledgearticle.FieldReviewComment)
 }
 
 // SetViewCount sets the "view_count" field.
@@ -77676,6 +77894,60 @@ func (m *KnowledgeArticleMutation) ResetSessions() {
 	m.removedsessions = nil
 }
 
+// AddReviewRecordIDs adds the "review_records" edge to the KnowledgeArticleReview entity by ids.
+func (m *KnowledgeArticleMutation) AddReviewRecordIDs(ids ...int) {
+	if m.review_records == nil {
+		m.review_records = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.review_records[ids[i]] = struct{}{}
+	}
+}
+
+// ClearReviewRecords clears the "review_records" edge to the KnowledgeArticleReview entity.
+func (m *KnowledgeArticleMutation) ClearReviewRecords() {
+	m.clearedreview_records = true
+}
+
+// ReviewRecordsCleared reports if the "review_records" edge to the KnowledgeArticleReview entity was cleared.
+func (m *KnowledgeArticleMutation) ReviewRecordsCleared() bool {
+	return m.clearedreview_records
+}
+
+// RemoveReviewRecordIDs removes the "review_records" edge to the KnowledgeArticleReview entity by IDs.
+func (m *KnowledgeArticleMutation) RemoveReviewRecordIDs(ids ...int) {
+	if m.removedreview_records == nil {
+		m.removedreview_records = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.review_records, ids[i])
+		m.removedreview_records[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedReviewRecords returns the removed IDs of the "review_records" edge to the KnowledgeArticleReview entity.
+func (m *KnowledgeArticleMutation) RemovedReviewRecordsIDs() (ids []int) {
+	for id := range m.removedreview_records {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ReviewRecordsIDs returns the "review_records" edge IDs in the mutation.
+func (m *KnowledgeArticleMutation) ReviewRecordsIDs() (ids []int) {
+	for id := range m.review_records {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetReviewRecords resets all changes to the "review_records" edge.
+func (m *KnowledgeArticleMutation) ResetReviewRecords() {
+	m.review_records = nil
+	m.clearedreview_records = false
+	m.removedreview_records = nil
+}
+
 // Where appends a list predicates to the KnowledgeArticleMutation builder.
 func (m *KnowledgeArticleMutation) Where(ps ...predicate.KnowledgeArticle) {
 	m.predicates = append(m.predicates, ps...)
@@ -77710,7 +77982,7 @@ func (m *KnowledgeArticleMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *KnowledgeArticleMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 21)
 	if m.title != nil {
 		fields = append(fields, knowledgearticle.FieldTitle)
 	}
@@ -77731,6 +78003,18 @@ func (m *KnowledgeArticleMutation) Fields() []string {
 	}
 	if m.is_published != nil {
 		fields = append(fields, knowledgearticle.FieldIsPublished)
+	}
+	if m.review_status != nil {
+		fields = append(fields, knowledgearticle.FieldReviewStatus)
+	}
+	if m.reviewer_id != nil {
+		fields = append(fields, knowledgearticle.FieldReviewerID)
+	}
+	if m.reviewed_at != nil {
+		fields = append(fields, knowledgearticle.FieldReviewedAt)
+	}
+	if m.review_comment != nil {
+		fields = append(fields, knowledgearticle.FieldReviewComment)
 	}
 	if m.view_count != nil {
 		fields = append(fields, knowledgearticle.FieldViewCount)
@@ -77784,6 +78068,14 @@ func (m *KnowledgeArticleMutation) Field(name string) (ent.Value, bool) {
 		return m.TenantID()
 	case knowledgearticle.FieldIsPublished:
 		return m.IsPublished()
+	case knowledgearticle.FieldReviewStatus:
+		return m.ReviewStatus()
+	case knowledgearticle.FieldReviewerID:
+		return m.ReviewerID()
+	case knowledgearticle.FieldReviewedAt:
+		return m.ReviewedAt()
+	case knowledgearticle.FieldReviewComment:
+		return m.ReviewComment()
 	case knowledgearticle.FieldViewCount:
 		return m.ViewCount()
 	case knowledgearticle.FieldLikeCount:
@@ -77827,6 +78119,14 @@ func (m *KnowledgeArticleMutation) OldField(ctx context.Context, name string) (e
 		return m.OldTenantID(ctx)
 	case knowledgearticle.FieldIsPublished:
 		return m.OldIsPublished(ctx)
+	case knowledgearticle.FieldReviewStatus:
+		return m.OldReviewStatus(ctx)
+	case knowledgearticle.FieldReviewerID:
+		return m.OldReviewerID(ctx)
+	case knowledgearticle.FieldReviewedAt:
+		return m.OldReviewedAt(ctx)
+	case knowledgearticle.FieldReviewComment:
+		return m.OldReviewComment(ctx)
 	case knowledgearticle.FieldViewCount:
 		return m.OldViewCount(ctx)
 	case knowledgearticle.FieldLikeCount:
@@ -77904,6 +78204,34 @@ func (m *KnowledgeArticleMutation) SetField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsPublished(v)
+		return nil
+	case knowledgearticle.FieldReviewStatus:
+		v, ok := value.(knowledgearticle.ReviewStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewStatus(v)
+		return nil
+	case knowledgearticle.FieldReviewerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewerID(v)
+		return nil
+	case knowledgearticle.FieldReviewedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewedAt(v)
+		return nil
+	case knowledgearticle.FieldReviewComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReviewComment(v)
 		return nil
 	case knowledgearticle.FieldViewCount:
 		v, ok := value.(int)
@@ -77989,6 +78317,9 @@ func (m *KnowledgeArticleMutation) AddedFields() []string {
 	if m.addtenant_id != nil {
 		fields = append(fields, knowledgearticle.FieldTenantID)
 	}
+	if m.addreviewer_id != nil {
+		fields = append(fields, knowledgearticle.FieldReviewerID)
+	}
 	if m.addview_count != nil {
 		fields = append(fields, knowledgearticle.FieldViewCount)
 	}
@@ -78013,6 +78344,8 @@ func (m *KnowledgeArticleMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedAuthorID()
 	case knowledgearticle.FieldTenantID:
 		return m.AddedTenantID()
+	case knowledgearticle.FieldReviewerID:
+		return m.AddedReviewerID()
 	case knowledgearticle.FieldViewCount:
 		return m.AddedViewCount()
 	case knowledgearticle.FieldLikeCount:
@@ -78043,6 +78376,13 @@ func (m *KnowledgeArticleMutation) AddField(name string, value ent.Value) error 
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddTenantID(v)
+		return nil
+	case knowledgearticle.FieldReviewerID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReviewerID(v)
 		return nil
 	case knowledgearticle.FieldViewCount:
 		v, ok := value.(int)
@@ -78089,6 +78429,15 @@ func (m *KnowledgeArticleMutation) ClearedFields() []string {
 	if m.FieldCleared(knowledgearticle.FieldTags) {
 		fields = append(fields, knowledgearticle.FieldTags)
 	}
+	if m.FieldCleared(knowledgearticle.FieldReviewerID) {
+		fields = append(fields, knowledgearticle.FieldReviewerID)
+	}
+	if m.FieldCleared(knowledgearticle.FieldReviewedAt) {
+		fields = append(fields, knowledgearticle.FieldReviewedAt)
+	}
+	if m.FieldCleared(knowledgearticle.FieldReviewComment) {
+		fields = append(fields, knowledgearticle.FieldReviewComment)
+	}
 	if m.FieldCleared(knowledgearticle.FieldValidFrom) {
 		fields = append(fields, knowledgearticle.FieldValidFrom)
 	}
@@ -78123,6 +78472,15 @@ func (m *KnowledgeArticleMutation) ClearField(name string) error {
 		return nil
 	case knowledgearticle.FieldTags:
 		m.ClearTags()
+		return nil
+	case knowledgearticle.FieldReviewerID:
+		m.ClearReviewerID()
+		return nil
+	case knowledgearticle.FieldReviewedAt:
+		m.ClearReviewedAt()
+		return nil
+	case knowledgearticle.FieldReviewComment:
+		m.ClearReviewComment()
 		return nil
 	case knowledgearticle.FieldValidFrom:
 		m.ClearValidFrom()
@@ -78165,6 +78523,18 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 	case knowledgearticle.FieldIsPublished:
 		m.ResetIsPublished()
 		return nil
+	case knowledgearticle.FieldReviewStatus:
+		m.ResetReviewStatus()
+		return nil
+	case knowledgearticle.FieldReviewerID:
+		m.ResetReviewerID()
+		return nil
+	case knowledgearticle.FieldReviewedAt:
+		m.ResetReviewedAt()
+		return nil
+	case knowledgearticle.FieldReviewComment:
+		m.ResetReviewComment()
+		return nil
 	case knowledgearticle.FieldViewCount:
 		m.ResetViewCount()
 		return nil
@@ -78201,7 +78571,7 @@ func (m *KnowledgeArticleMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *KnowledgeArticleMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.user_likes != nil {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
 	}
@@ -78210,6 +78580,9 @@ func (m *KnowledgeArticleMutation) AddedEdges() []string {
 	}
 	if m.sessions != nil {
 		edges = append(edges, knowledgearticle.EdgeSessions)
+	}
+	if m.review_records != nil {
+		edges = append(edges, knowledgearticle.EdgeReviewRecords)
 	}
 	return edges
 }
@@ -78236,13 +78609,19 @@ func (m *KnowledgeArticleMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case knowledgearticle.EdgeReviewRecords:
+		ids := make([]ent.Value, 0, len(m.review_records))
+		for id := range m.review_records {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *KnowledgeArticleMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removeduser_likes != nil {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
 	}
@@ -78251,6 +78630,9 @@ func (m *KnowledgeArticleMutation) RemovedEdges() []string {
 	}
 	if m.removedsessions != nil {
 		edges = append(edges, knowledgearticle.EdgeSessions)
+	}
+	if m.removedreview_records != nil {
+		edges = append(edges, knowledgearticle.EdgeReviewRecords)
 	}
 	return edges
 }
@@ -78277,13 +78659,19 @@ func (m *KnowledgeArticleMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case knowledgearticle.EdgeReviewRecords:
+		ids := make([]ent.Value, 0, len(m.removedreview_records))
+		for id := range m.removedreview_records {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *KnowledgeArticleMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.cleareduser_likes {
 		edges = append(edges, knowledgearticle.EdgeUserLikes)
 	}
@@ -78292,6 +78680,9 @@ func (m *KnowledgeArticleMutation) ClearedEdges() []string {
 	}
 	if m.clearedsessions {
 		edges = append(edges, knowledgearticle.EdgeSessions)
+	}
+	if m.clearedreview_records {
+		edges = append(edges, knowledgearticle.EdgeReviewRecords)
 	}
 	return edges
 }
@@ -78306,6 +78697,8 @@ func (m *KnowledgeArticleMutation) EdgeCleared(name string) bool {
 		return m.clearedversions
 	case knowledgearticle.EdgeSessions:
 		return m.clearedsessions
+	case knowledgearticle.EdgeReviewRecords:
+		return m.clearedreview_records
 	}
 	return false
 }
@@ -78330,6 +78723,9 @@ func (m *KnowledgeArticleMutation) ResetEdge(name string) error {
 		return nil
 	case knowledgearticle.EdgeSessions:
 		m.ResetSessions()
+		return nil
+	case knowledgearticle.EdgeReviewRecords:
+		m.ResetReviewRecords()
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticle edge %s", name)
@@ -79840,6 +80236,855 @@ func (m *KnowledgeArticleParticipantMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown KnowledgeArticleParticipant edge %s", name)
+}
+
+// KnowledgeArticleReviewMutation represents an operation that mutates the KnowledgeArticleReview nodes in the graph.
+type KnowledgeArticleReviewMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *int
+	tenant_id      *int
+	addtenant_id   *int
+	from_status    *string
+	to_status      *string
+	action         *string
+	operator_id    *int
+	addoperator_id *int
+	comment        *string
+	created_at     *time.Time
+	clearedFields  map[string]struct{}
+	article        *int
+	clearedarticle bool
+	done           bool
+	oldValue       func(context.Context) (*KnowledgeArticleReview, error)
+	predicates     []predicate.KnowledgeArticleReview
+}
+
+var _ ent.Mutation = (*KnowledgeArticleReviewMutation)(nil)
+
+// knowledgearticlereviewOption allows management of the mutation configuration using functional options.
+type knowledgearticlereviewOption func(*KnowledgeArticleReviewMutation)
+
+// newKnowledgeArticleReviewMutation creates new mutation for the KnowledgeArticleReview entity.
+func newKnowledgeArticleReviewMutation(c config, op Op, opts ...knowledgearticlereviewOption) *KnowledgeArticleReviewMutation {
+	m := &KnowledgeArticleReviewMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeKnowledgeArticleReview,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withKnowledgeArticleReviewID sets the ID field of the mutation.
+func withKnowledgeArticleReviewID(id int) knowledgearticlereviewOption {
+	return func(m *KnowledgeArticleReviewMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *KnowledgeArticleReview
+		)
+		m.oldValue = func(ctx context.Context) (*KnowledgeArticleReview, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().KnowledgeArticleReview.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withKnowledgeArticleReview sets the old KnowledgeArticleReview of the mutation.
+func withKnowledgeArticleReview(node *KnowledgeArticleReview) knowledgearticlereviewOption {
+	return func(m *KnowledgeArticleReviewMutation) {
+		m.oldValue = func(context.Context) (*KnowledgeArticleReview, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m KnowledgeArticleReviewMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m KnowledgeArticleReviewMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *KnowledgeArticleReviewMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *KnowledgeArticleReviewMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().KnowledgeArticleReview.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetArticleID sets the "article_id" field.
+func (m *KnowledgeArticleReviewMutation) SetArticleID(i int) {
+	m.article = &i
+}
+
+// ArticleID returns the value of the "article_id" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) ArticleID() (r int, exists bool) {
+	v := m.article
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldArticleID returns the old "article_id" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldArticleID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldArticleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldArticleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldArticleID: %w", err)
+	}
+	return oldValue.ArticleID, nil
+}
+
+// ResetArticleID resets all changes to the "article_id" field.
+func (m *KnowledgeArticleReviewMutation) ResetArticleID() {
+	m.article = nil
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *KnowledgeArticleReviewMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *KnowledgeArticleReviewMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *KnowledgeArticleReviewMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *KnowledgeArticleReviewMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetFromStatus sets the "from_status" field.
+func (m *KnowledgeArticleReviewMutation) SetFromStatus(s string) {
+	m.from_status = &s
+}
+
+// FromStatus returns the value of the "from_status" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) FromStatus() (r string, exists bool) {
+	v := m.from_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFromStatus returns the old "from_status" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldFromStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFromStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFromStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFromStatus: %w", err)
+	}
+	return oldValue.FromStatus, nil
+}
+
+// ResetFromStatus resets all changes to the "from_status" field.
+func (m *KnowledgeArticleReviewMutation) ResetFromStatus() {
+	m.from_status = nil
+}
+
+// SetToStatus sets the "to_status" field.
+func (m *KnowledgeArticleReviewMutation) SetToStatus(s string) {
+	m.to_status = &s
+}
+
+// ToStatus returns the value of the "to_status" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) ToStatus() (r string, exists bool) {
+	v := m.to_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldToStatus returns the old "to_status" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldToStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldToStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldToStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldToStatus: %w", err)
+	}
+	return oldValue.ToStatus, nil
+}
+
+// ResetToStatus resets all changes to the "to_status" field.
+func (m *KnowledgeArticleReviewMutation) ResetToStatus() {
+	m.to_status = nil
+}
+
+// SetAction sets the "action" field.
+func (m *KnowledgeArticleReviewMutation) SetAction(s string) {
+	m.action = &s
+}
+
+// Action returns the value of the "action" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) Action() (r string, exists bool) {
+	v := m.action
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAction returns the old "action" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldAction(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAction is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAction requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAction: %w", err)
+	}
+	return oldValue.Action, nil
+}
+
+// ResetAction resets all changes to the "action" field.
+func (m *KnowledgeArticleReviewMutation) ResetAction() {
+	m.action = nil
+}
+
+// SetOperatorID sets the "operator_id" field.
+func (m *KnowledgeArticleReviewMutation) SetOperatorID(i int) {
+	m.operator_id = &i
+	m.addoperator_id = nil
+}
+
+// OperatorID returns the value of the "operator_id" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) OperatorID() (r int, exists bool) {
+	v := m.operator_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperatorID returns the old "operator_id" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldOperatorID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperatorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperatorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperatorID: %w", err)
+	}
+	return oldValue.OperatorID, nil
+}
+
+// AddOperatorID adds i to the "operator_id" field.
+func (m *KnowledgeArticleReviewMutation) AddOperatorID(i int) {
+	if m.addoperator_id != nil {
+		*m.addoperator_id += i
+	} else {
+		m.addoperator_id = &i
+	}
+}
+
+// AddedOperatorID returns the value that was added to the "operator_id" field in this mutation.
+func (m *KnowledgeArticleReviewMutation) AddedOperatorID() (r int, exists bool) {
+	v := m.addoperator_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOperatorID resets all changes to the "operator_id" field.
+func (m *KnowledgeArticleReviewMutation) ResetOperatorID() {
+	m.operator_id = nil
+	m.addoperator_id = nil
+}
+
+// SetComment sets the "comment" field.
+func (m *KnowledgeArticleReviewMutation) SetComment(s string) {
+	m.comment = &s
+}
+
+// Comment returns the value of the "comment" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) Comment() (r string, exists bool) {
+	v := m.comment
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldComment returns the old "comment" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldComment(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldComment is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldComment requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldComment: %w", err)
+	}
+	return oldValue.Comment, nil
+}
+
+// ClearComment clears the value of the "comment" field.
+func (m *KnowledgeArticleReviewMutation) ClearComment() {
+	m.comment = nil
+	m.clearedFields[knowledgearticlereview.FieldComment] = struct{}{}
+}
+
+// CommentCleared returns if the "comment" field was cleared in this mutation.
+func (m *KnowledgeArticleReviewMutation) CommentCleared() bool {
+	_, ok := m.clearedFields[knowledgearticlereview.FieldComment]
+	return ok
+}
+
+// ResetComment resets all changes to the "comment" field.
+func (m *KnowledgeArticleReviewMutation) ResetComment() {
+	m.comment = nil
+	delete(m.clearedFields, knowledgearticlereview.FieldComment)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *KnowledgeArticleReviewMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *KnowledgeArticleReviewMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the KnowledgeArticleReview entity.
+// If the KnowledgeArticleReview object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *KnowledgeArticleReviewMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *KnowledgeArticleReviewMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// ClearArticle clears the "article" edge to the KnowledgeArticle entity.
+func (m *KnowledgeArticleReviewMutation) ClearArticle() {
+	m.clearedarticle = true
+	m.clearedFields[knowledgearticlereview.FieldArticleID] = struct{}{}
+}
+
+// ArticleCleared reports if the "article" edge to the KnowledgeArticle entity was cleared.
+func (m *KnowledgeArticleReviewMutation) ArticleCleared() bool {
+	return m.clearedarticle
+}
+
+// ArticleIDs returns the "article" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ArticleID instead. It exists only for internal usage by the builders.
+func (m *KnowledgeArticleReviewMutation) ArticleIDs() (ids []int) {
+	if id := m.article; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetArticle resets all changes to the "article" edge.
+func (m *KnowledgeArticleReviewMutation) ResetArticle() {
+	m.article = nil
+	m.clearedarticle = false
+}
+
+// Where appends a list predicates to the KnowledgeArticleReviewMutation builder.
+func (m *KnowledgeArticleReviewMutation) Where(ps ...predicate.KnowledgeArticleReview) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the KnowledgeArticleReviewMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *KnowledgeArticleReviewMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.KnowledgeArticleReview, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *KnowledgeArticleReviewMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *KnowledgeArticleReviewMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (KnowledgeArticleReview).
+func (m *KnowledgeArticleReviewMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *KnowledgeArticleReviewMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.article != nil {
+		fields = append(fields, knowledgearticlereview.FieldArticleID)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, knowledgearticlereview.FieldTenantID)
+	}
+	if m.from_status != nil {
+		fields = append(fields, knowledgearticlereview.FieldFromStatus)
+	}
+	if m.to_status != nil {
+		fields = append(fields, knowledgearticlereview.FieldToStatus)
+	}
+	if m.action != nil {
+		fields = append(fields, knowledgearticlereview.FieldAction)
+	}
+	if m.operator_id != nil {
+		fields = append(fields, knowledgearticlereview.FieldOperatorID)
+	}
+	if m.comment != nil {
+		fields = append(fields, knowledgearticlereview.FieldComment)
+	}
+	if m.created_at != nil {
+		fields = append(fields, knowledgearticlereview.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *KnowledgeArticleReviewMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticlereview.FieldArticleID:
+		return m.ArticleID()
+	case knowledgearticlereview.FieldTenantID:
+		return m.TenantID()
+	case knowledgearticlereview.FieldFromStatus:
+		return m.FromStatus()
+	case knowledgearticlereview.FieldToStatus:
+		return m.ToStatus()
+	case knowledgearticlereview.FieldAction:
+		return m.Action()
+	case knowledgearticlereview.FieldOperatorID:
+		return m.OperatorID()
+	case knowledgearticlereview.FieldComment:
+		return m.Comment()
+	case knowledgearticlereview.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *KnowledgeArticleReviewMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case knowledgearticlereview.FieldArticleID:
+		return m.OldArticleID(ctx)
+	case knowledgearticlereview.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case knowledgearticlereview.FieldFromStatus:
+		return m.OldFromStatus(ctx)
+	case knowledgearticlereview.FieldToStatus:
+		return m.OldToStatus(ctx)
+	case knowledgearticlereview.FieldAction:
+		return m.OldAction(ctx)
+	case knowledgearticlereview.FieldOperatorID:
+		return m.OldOperatorID(ctx)
+	case knowledgearticlereview.FieldComment:
+		return m.OldComment(ctx)
+	case knowledgearticlereview.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown KnowledgeArticleReview field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleReviewMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticlereview.FieldArticleID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetArticleID(v)
+		return nil
+	case knowledgearticlereview.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case knowledgearticlereview.FieldFromStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFromStatus(v)
+		return nil
+	case knowledgearticlereview.FieldToStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetToStatus(v)
+		return nil
+	case knowledgearticlereview.FieldAction:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAction(v)
+		return nil
+	case knowledgearticlereview.FieldOperatorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperatorID(v)
+		return nil
+	case knowledgearticlereview.FieldComment:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetComment(v)
+		return nil
+	case knowledgearticlereview.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *KnowledgeArticleReviewMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, knowledgearticlereview.FieldTenantID)
+	}
+	if m.addoperator_id != nil {
+		fields = append(fields, knowledgearticlereview.FieldOperatorID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *KnowledgeArticleReviewMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case knowledgearticlereview.FieldTenantID:
+		return m.AddedTenantID()
+	case knowledgearticlereview.FieldOperatorID:
+		return m.AddedOperatorID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *KnowledgeArticleReviewMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case knowledgearticlereview.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	case knowledgearticlereview.FieldOperatorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOperatorID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *KnowledgeArticleReviewMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(knowledgearticlereview.FieldComment) {
+		fields = append(fields, knowledgearticlereview.FieldComment)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *KnowledgeArticleReviewMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *KnowledgeArticleReviewMutation) ClearField(name string) error {
+	switch name {
+	case knowledgearticlereview.FieldComment:
+		m.ClearComment()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *KnowledgeArticleReviewMutation) ResetField(name string) error {
+	switch name {
+	case knowledgearticlereview.FieldArticleID:
+		m.ResetArticleID()
+		return nil
+	case knowledgearticlereview.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case knowledgearticlereview.FieldFromStatus:
+		m.ResetFromStatus()
+		return nil
+	case knowledgearticlereview.FieldToStatus:
+		m.ResetToStatus()
+		return nil
+	case knowledgearticlereview.FieldAction:
+		m.ResetAction()
+		return nil
+	case knowledgearticlereview.FieldOperatorID:
+		m.ResetOperatorID()
+		return nil
+	case knowledgearticlereview.FieldComment:
+		m.ResetComment()
+		return nil
+	case knowledgearticlereview.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *KnowledgeArticleReviewMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.article != nil {
+		edges = append(edges, knowledgearticlereview.EdgeArticle)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *KnowledgeArticleReviewMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case knowledgearticlereview.EdgeArticle:
+		if id := m.article; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *KnowledgeArticleReviewMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *KnowledgeArticleReviewMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *KnowledgeArticleReviewMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedarticle {
+		edges = append(edges, knowledgearticlereview.EdgeArticle)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *KnowledgeArticleReviewMutation) EdgeCleared(name string) bool {
+	switch name {
+	case knowledgearticlereview.EdgeArticle:
+		return m.clearedarticle
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *KnowledgeArticleReviewMutation) ClearEdge(name string) error {
+	switch name {
+	case knowledgearticlereview.EdgeArticle:
+		m.ClearArticle()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *KnowledgeArticleReviewMutation) ResetEdge(name string) error {
+	switch name {
+	case knowledgearticlereview.EdgeArticle:
+		m.ResetArticle()
+		return nil
+	}
+	return fmt.Errorf("unknown KnowledgeArticleReview edge %s", name)
 }
 
 // KnowledgeArticleSessionMutation represents an operation that mutates the KnowledgeArticleSession nodes in the graph.
@@ -135510,6 +136755,2577 @@ func (m *SLAViolationMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown SLAViolation edge %s", name)
+}
+
+// SSOIdentityMutation represents an operation that mutates the SSOIdentity nodes in the graph.
+type SSOIdentityMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	tenant_id         *int
+	addtenant_id      *int
+	provider_id       *int
+	addprovider_id    *int
+	user_id           *int
+	adduser_id        *int
+	subject           *string
+	external_username *string
+	external_email    *string
+	last_login_at     *time.Time
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*SSOIdentity, error)
+	predicates        []predicate.SSOIdentity
+}
+
+var _ ent.Mutation = (*SSOIdentityMutation)(nil)
+
+// ssoidentityOption allows management of the mutation configuration using functional options.
+type ssoidentityOption func(*SSOIdentityMutation)
+
+// newSSOIdentityMutation creates new mutation for the SSOIdentity entity.
+func newSSOIdentityMutation(c config, op Op, opts ...ssoidentityOption) *SSOIdentityMutation {
+	m := &SSOIdentityMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSSOIdentity,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSSOIdentityID sets the ID field of the mutation.
+func withSSOIdentityID(id int) ssoidentityOption {
+	return func(m *SSOIdentityMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SSOIdentity
+		)
+		m.oldValue = func(ctx context.Context) (*SSOIdentity, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SSOIdentity.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSSOIdentity sets the old SSOIdentity of the mutation.
+func withSSOIdentity(node *SSOIdentity) ssoidentityOption {
+	return func(m *SSOIdentityMutation) {
+		m.oldValue = func(context.Context) (*SSOIdentity, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SSOIdentityMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SSOIdentityMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SSOIdentityMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SSOIdentityMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SSOIdentity.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SSOIdentityMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SSOIdentityMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SSOIdentityMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SSOIdentityMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SSOIdentityMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetProviderID sets the "provider_id" field.
+func (m *SSOIdentityMutation) SetProviderID(i int) {
+	m.provider_id = &i
+	m.addprovider_id = nil
+}
+
+// ProviderID returns the value of the "provider_id" field in the mutation.
+func (m *SSOIdentityMutation) ProviderID() (r int, exists bool) {
+	v := m.provider_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProviderID returns the old "provider_id" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldProviderID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProviderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProviderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProviderID: %w", err)
+	}
+	return oldValue.ProviderID, nil
+}
+
+// AddProviderID adds i to the "provider_id" field.
+func (m *SSOIdentityMutation) AddProviderID(i int) {
+	if m.addprovider_id != nil {
+		*m.addprovider_id += i
+	} else {
+		m.addprovider_id = &i
+	}
+}
+
+// AddedProviderID returns the value that was added to the "provider_id" field in this mutation.
+func (m *SSOIdentityMutation) AddedProviderID() (r int, exists bool) {
+	v := m.addprovider_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetProviderID resets all changes to the "provider_id" field.
+func (m *SSOIdentityMutation) ResetProviderID() {
+	m.provider_id = nil
+	m.addprovider_id = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *SSOIdentityMutation) SetUserID(i int) {
+	m.user_id = &i
+	m.adduser_id = nil
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *SSOIdentityMutation) UserID() (r int, exists bool) {
+	v := m.user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// AddUserID adds i to the "user_id" field.
+func (m *SSOIdentityMutation) AddUserID(i int) {
+	if m.adduser_id != nil {
+		*m.adduser_id += i
+	} else {
+		m.adduser_id = &i
+	}
+}
+
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
+func (m *SSOIdentityMutation) AddedUserID() (r int, exists bool) {
+	v := m.adduser_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *SSOIdentityMutation) ResetUserID() {
+	m.user_id = nil
+	m.adduser_id = nil
+}
+
+// SetSubject sets the "subject" field.
+func (m *SSOIdentityMutation) SetSubject(s string) {
+	m.subject = &s
+}
+
+// Subject returns the value of the "subject" field in the mutation.
+func (m *SSOIdentityMutation) Subject() (r string, exists bool) {
+	v := m.subject
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubject returns the old "subject" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldSubject(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubject is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubject requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubject: %w", err)
+	}
+	return oldValue.Subject, nil
+}
+
+// ResetSubject resets all changes to the "subject" field.
+func (m *SSOIdentityMutation) ResetSubject() {
+	m.subject = nil
+}
+
+// SetExternalUsername sets the "external_username" field.
+func (m *SSOIdentityMutation) SetExternalUsername(s string) {
+	m.external_username = &s
+}
+
+// ExternalUsername returns the value of the "external_username" field in the mutation.
+func (m *SSOIdentityMutation) ExternalUsername() (r string, exists bool) {
+	v := m.external_username
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExternalUsername returns the old "external_username" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldExternalUsername(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExternalUsername is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExternalUsername requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExternalUsername: %w", err)
+	}
+	return oldValue.ExternalUsername, nil
+}
+
+// ClearExternalUsername clears the value of the "external_username" field.
+func (m *SSOIdentityMutation) ClearExternalUsername() {
+	m.external_username = nil
+	m.clearedFields[ssoidentity.FieldExternalUsername] = struct{}{}
+}
+
+// ExternalUsernameCleared returns if the "external_username" field was cleared in this mutation.
+func (m *SSOIdentityMutation) ExternalUsernameCleared() bool {
+	_, ok := m.clearedFields[ssoidentity.FieldExternalUsername]
+	return ok
+}
+
+// ResetExternalUsername resets all changes to the "external_username" field.
+func (m *SSOIdentityMutation) ResetExternalUsername() {
+	m.external_username = nil
+	delete(m.clearedFields, ssoidentity.FieldExternalUsername)
+}
+
+// SetExternalEmail sets the "external_email" field.
+func (m *SSOIdentityMutation) SetExternalEmail(s string) {
+	m.external_email = &s
+}
+
+// ExternalEmail returns the value of the "external_email" field in the mutation.
+func (m *SSOIdentityMutation) ExternalEmail() (r string, exists bool) {
+	v := m.external_email
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExternalEmail returns the old "external_email" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldExternalEmail(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExternalEmail is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExternalEmail requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExternalEmail: %w", err)
+	}
+	return oldValue.ExternalEmail, nil
+}
+
+// ClearExternalEmail clears the value of the "external_email" field.
+func (m *SSOIdentityMutation) ClearExternalEmail() {
+	m.external_email = nil
+	m.clearedFields[ssoidentity.FieldExternalEmail] = struct{}{}
+}
+
+// ExternalEmailCleared returns if the "external_email" field was cleared in this mutation.
+func (m *SSOIdentityMutation) ExternalEmailCleared() bool {
+	_, ok := m.clearedFields[ssoidentity.FieldExternalEmail]
+	return ok
+}
+
+// ResetExternalEmail resets all changes to the "external_email" field.
+func (m *SSOIdentityMutation) ResetExternalEmail() {
+	m.external_email = nil
+	delete(m.clearedFields, ssoidentity.FieldExternalEmail)
+}
+
+// SetLastLoginAt sets the "last_login_at" field.
+func (m *SSOIdentityMutation) SetLastLoginAt(t time.Time) {
+	m.last_login_at = &t
+}
+
+// LastLoginAt returns the value of the "last_login_at" field in the mutation.
+func (m *SSOIdentityMutation) LastLoginAt() (r time.Time, exists bool) {
+	v := m.last_login_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastLoginAt returns the old "last_login_at" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldLastLoginAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastLoginAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastLoginAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastLoginAt: %w", err)
+	}
+	return oldValue.LastLoginAt, nil
+}
+
+// ClearLastLoginAt clears the value of the "last_login_at" field.
+func (m *SSOIdentityMutation) ClearLastLoginAt() {
+	m.last_login_at = nil
+	m.clearedFields[ssoidentity.FieldLastLoginAt] = struct{}{}
+}
+
+// LastLoginAtCleared returns if the "last_login_at" field was cleared in this mutation.
+func (m *SSOIdentityMutation) LastLoginAtCleared() bool {
+	_, ok := m.clearedFields[ssoidentity.FieldLastLoginAt]
+	return ok
+}
+
+// ResetLastLoginAt resets all changes to the "last_login_at" field.
+func (m *SSOIdentityMutation) ResetLastLoginAt() {
+	m.last_login_at = nil
+	delete(m.clearedFields, ssoidentity.FieldLastLoginAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SSOIdentityMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SSOIdentityMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SSOIdentityMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SSOIdentityMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SSOIdentityMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SSOIdentity entity.
+// If the SSOIdentity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOIdentityMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SSOIdentityMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SSOIdentityMutation builder.
+func (m *SSOIdentityMutation) Where(ps ...predicate.SSOIdentity) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SSOIdentityMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SSOIdentityMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SSOIdentity, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SSOIdentityMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SSOIdentityMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SSOIdentity).
+func (m *SSOIdentityMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SSOIdentityMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.tenant_id != nil {
+		fields = append(fields, ssoidentity.FieldTenantID)
+	}
+	if m.provider_id != nil {
+		fields = append(fields, ssoidentity.FieldProviderID)
+	}
+	if m.user_id != nil {
+		fields = append(fields, ssoidentity.FieldUserID)
+	}
+	if m.subject != nil {
+		fields = append(fields, ssoidentity.FieldSubject)
+	}
+	if m.external_username != nil {
+		fields = append(fields, ssoidentity.FieldExternalUsername)
+	}
+	if m.external_email != nil {
+		fields = append(fields, ssoidentity.FieldExternalEmail)
+	}
+	if m.last_login_at != nil {
+		fields = append(fields, ssoidentity.FieldLastLoginAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, ssoidentity.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, ssoidentity.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SSOIdentityMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		return m.TenantID()
+	case ssoidentity.FieldProviderID:
+		return m.ProviderID()
+	case ssoidentity.FieldUserID:
+		return m.UserID()
+	case ssoidentity.FieldSubject:
+		return m.Subject()
+	case ssoidentity.FieldExternalUsername:
+		return m.ExternalUsername()
+	case ssoidentity.FieldExternalEmail:
+		return m.ExternalEmail()
+	case ssoidentity.FieldLastLoginAt:
+		return m.LastLoginAt()
+	case ssoidentity.FieldCreatedAt:
+		return m.CreatedAt()
+	case ssoidentity.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SSOIdentityMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case ssoidentity.FieldProviderID:
+		return m.OldProviderID(ctx)
+	case ssoidentity.FieldUserID:
+		return m.OldUserID(ctx)
+	case ssoidentity.FieldSubject:
+		return m.OldSubject(ctx)
+	case ssoidentity.FieldExternalUsername:
+		return m.OldExternalUsername(ctx)
+	case ssoidentity.FieldExternalEmail:
+		return m.OldExternalEmail(ctx)
+	case ssoidentity.FieldLastLoginAt:
+		return m.OldLastLoginAt(ctx)
+	case ssoidentity.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case ssoidentity.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SSOIdentity field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SSOIdentityMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case ssoidentity.FieldProviderID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProviderID(v)
+		return nil
+	case ssoidentity.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case ssoidentity.FieldSubject:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubject(v)
+		return nil
+	case ssoidentity.FieldExternalUsername:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExternalUsername(v)
+		return nil
+	case ssoidentity.FieldExternalEmail:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExternalEmail(v)
+		return nil
+	case ssoidentity.FieldLastLoginAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastLoginAt(v)
+		return nil
+	case ssoidentity.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case ssoidentity.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SSOIdentity field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SSOIdentityMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, ssoidentity.FieldTenantID)
+	}
+	if m.addprovider_id != nil {
+		fields = append(fields, ssoidentity.FieldProviderID)
+	}
+	if m.adduser_id != nil {
+		fields = append(fields, ssoidentity.FieldUserID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SSOIdentityMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		return m.AddedTenantID()
+	case ssoidentity.FieldProviderID:
+		return m.AddedProviderID()
+	case ssoidentity.FieldUserID:
+		return m.AddedUserID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SSOIdentityMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	case ssoidentity.FieldProviderID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddProviderID(v)
+		return nil
+	case ssoidentity.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUserID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SSOIdentity numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SSOIdentityMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(ssoidentity.FieldExternalUsername) {
+		fields = append(fields, ssoidentity.FieldExternalUsername)
+	}
+	if m.FieldCleared(ssoidentity.FieldExternalEmail) {
+		fields = append(fields, ssoidentity.FieldExternalEmail)
+	}
+	if m.FieldCleared(ssoidentity.FieldLastLoginAt) {
+		fields = append(fields, ssoidentity.FieldLastLoginAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SSOIdentityMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SSOIdentityMutation) ClearField(name string) error {
+	switch name {
+	case ssoidentity.FieldExternalUsername:
+		m.ClearExternalUsername()
+		return nil
+	case ssoidentity.FieldExternalEmail:
+		m.ClearExternalEmail()
+		return nil
+	case ssoidentity.FieldLastLoginAt:
+		m.ClearLastLoginAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SSOIdentity nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SSOIdentityMutation) ResetField(name string) error {
+	switch name {
+	case ssoidentity.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case ssoidentity.FieldProviderID:
+		m.ResetProviderID()
+		return nil
+	case ssoidentity.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case ssoidentity.FieldSubject:
+		m.ResetSubject()
+		return nil
+	case ssoidentity.FieldExternalUsername:
+		m.ResetExternalUsername()
+		return nil
+	case ssoidentity.FieldExternalEmail:
+		m.ResetExternalEmail()
+		return nil
+	case ssoidentity.FieldLastLoginAt:
+		m.ResetLastLoginAt()
+		return nil
+	case ssoidentity.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case ssoidentity.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SSOIdentity field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SSOIdentityMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SSOIdentityMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SSOIdentityMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SSOIdentityMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SSOIdentityMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SSOIdentityMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SSOIdentityMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SSOIdentity unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SSOIdentityMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SSOIdentity edge %s", name)
+}
+
+// SSOProviderMutation represents an operation that mutates the SSOProvider nodes in the graph.
+type SSOProviderMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *int
+	tenant_id               *int
+	addtenant_id            *int
+	code                    *string
+	name                    *string
+	protocol                *string
+	client_id               *string
+	client_secret_encrypted *string
+	issuer                  *string
+	authorization_endpoint  *string
+	token_endpoint          *string
+	userinfo_endpoint       *string
+	jwks_uri                *string
+	scopes                  *string
+	redirect_uri            *string
+	auto_provision          *bool
+	default_role            *string
+	allowed_email_domains   *string
+	enabled                 *bool
+	status                  *string
+	last_error              *string
+	last_health_check_at    *time.Time
+	created_at              *time.Time
+	updated_at              *time.Time
+	clearedFields           map[string]struct{}
+	done                    bool
+	oldValue                func(context.Context) (*SSOProvider, error)
+	predicates              []predicate.SSOProvider
+}
+
+var _ ent.Mutation = (*SSOProviderMutation)(nil)
+
+// ssoproviderOption allows management of the mutation configuration using functional options.
+type ssoproviderOption func(*SSOProviderMutation)
+
+// newSSOProviderMutation creates new mutation for the SSOProvider entity.
+func newSSOProviderMutation(c config, op Op, opts ...ssoproviderOption) *SSOProviderMutation {
+	m := &SSOProviderMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSSOProvider,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSSOProviderID sets the ID field of the mutation.
+func withSSOProviderID(id int) ssoproviderOption {
+	return func(m *SSOProviderMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SSOProvider
+		)
+		m.oldValue = func(ctx context.Context) (*SSOProvider, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SSOProvider.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSSOProvider sets the old SSOProvider of the mutation.
+func withSSOProvider(node *SSOProvider) ssoproviderOption {
+	return func(m *SSOProviderMutation) {
+		m.oldValue = func(context.Context) (*SSOProvider, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SSOProviderMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SSOProviderMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SSOProviderMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SSOProviderMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SSOProvider.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *SSOProviderMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *SSOProviderMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *SSOProviderMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *SSOProviderMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *SSOProviderMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCode sets the "code" field.
+func (m *SSOProviderMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *SSOProviderMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *SSOProviderMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetName sets the "name" field.
+func (m *SSOProviderMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *SSOProviderMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *SSOProviderMutation) ResetName() {
+	m.name = nil
+}
+
+// SetProtocol sets the "protocol" field.
+func (m *SSOProviderMutation) SetProtocol(s string) {
+	m.protocol = &s
+}
+
+// Protocol returns the value of the "protocol" field in the mutation.
+func (m *SSOProviderMutation) Protocol() (r string, exists bool) {
+	v := m.protocol
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProtocol returns the old "protocol" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldProtocol(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProtocol is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProtocol requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProtocol: %w", err)
+	}
+	return oldValue.Protocol, nil
+}
+
+// ResetProtocol resets all changes to the "protocol" field.
+func (m *SSOProviderMutation) ResetProtocol() {
+	m.protocol = nil
+}
+
+// SetClientID sets the "client_id" field.
+func (m *SSOProviderMutation) SetClientID(s string) {
+	m.client_id = &s
+}
+
+// ClientID returns the value of the "client_id" field in the mutation.
+func (m *SSOProviderMutation) ClientID() (r string, exists bool) {
+	v := m.client_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientID returns the old "client_id" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldClientID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientID: %w", err)
+	}
+	return oldValue.ClientID, nil
+}
+
+// ResetClientID resets all changes to the "client_id" field.
+func (m *SSOProviderMutation) ResetClientID() {
+	m.client_id = nil
+}
+
+// SetClientSecretEncrypted sets the "client_secret_encrypted" field.
+func (m *SSOProviderMutation) SetClientSecretEncrypted(s string) {
+	m.client_secret_encrypted = &s
+}
+
+// ClientSecretEncrypted returns the value of the "client_secret_encrypted" field in the mutation.
+func (m *SSOProviderMutation) ClientSecretEncrypted() (r string, exists bool) {
+	v := m.client_secret_encrypted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientSecretEncrypted returns the old "client_secret_encrypted" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldClientSecretEncrypted(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientSecretEncrypted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientSecretEncrypted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientSecretEncrypted: %w", err)
+	}
+	return oldValue.ClientSecretEncrypted, nil
+}
+
+// ClearClientSecretEncrypted clears the value of the "client_secret_encrypted" field.
+func (m *SSOProviderMutation) ClearClientSecretEncrypted() {
+	m.client_secret_encrypted = nil
+	m.clearedFields[ssoprovider.FieldClientSecretEncrypted] = struct{}{}
+}
+
+// ClientSecretEncryptedCleared returns if the "client_secret_encrypted" field was cleared in this mutation.
+func (m *SSOProviderMutation) ClientSecretEncryptedCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldClientSecretEncrypted]
+	return ok
+}
+
+// ResetClientSecretEncrypted resets all changes to the "client_secret_encrypted" field.
+func (m *SSOProviderMutation) ResetClientSecretEncrypted() {
+	m.client_secret_encrypted = nil
+	delete(m.clearedFields, ssoprovider.FieldClientSecretEncrypted)
+}
+
+// SetIssuer sets the "issuer" field.
+func (m *SSOProviderMutation) SetIssuer(s string) {
+	m.issuer = &s
+}
+
+// Issuer returns the value of the "issuer" field in the mutation.
+func (m *SSOProviderMutation) Issuer() (r string, exists bool) {
+	v := m.issuer
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIssuer returns the old "issuer" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldIssuer(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIssuer is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIssuer requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIssuer: %w", err)
+	}
+	return oldValue.Issuer, nil
+}
+
+// ResetIssuer resets all changes to the "issuer" field.
+func (m *SSOProviderMutation) ResetIssuer() {
+	m.issuer = nil
+}
+
+// SetAuthorizationEndpoint sets the "authorization_endpoint" field.
+func (m *SSOProviderMutation) SetAuthorizationEndpoint(s string) {
+	m.authorization_endpoint = &s
+}
+
+// AuthorizationEndpoint returns the value of the "authorization_endpoint" field in the mutation.
+func (m *SSOProviderMutation) AuthorizationEndpoint() (r string, exists bool) {
+	v := m.authorization_endpoint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAuthorizationEndpoint returns the old "authorization_endpoint" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldAuthorizationEndpoint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAuthorizationEndpoint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAuthorizationEndpoint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAuthorizationEndpoint: %w", err)
+	}
+	return oldValue.AuthorizationEndpoint, nil
+}
+
+// ClearAuthorizationEndpoint clears the value of the "authorization_endpoint" field.
+func (m *SSOProviderMutation) ClearAuthorizationEndpoint() {
+	m.authorization_endpoint = nil
+	m.clearedFields[ssoprovider.FieldAuthorizationEndpoint] = struct{}{}
+}
+
+// AuthorizationEndpointCleared returns if the "authorization_endpoint" field was cleared in this mutation.
+func (m *SSOProviderMutation) AuthorizationEndpointCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldAuthorizationEndpoint]
+	return ok
+}
+
+// ResetAuthorizationEndpoint resets all changes to the "authorization_endpoint" field.
+func (m *SSOProviderMutation) ResetAuthorizationEndpoint() {
+	m.authorization_endpoint = nil
+	delete(m.clearedFields, ssoprovider.FieldAuthorizationEndpoint)
+}
+
+// SetTokenEndpoint sets the "token_endpoint" field.
+func (m *SSOProviderMutation) SetTokenEndpoint(s string) {
+	m.token_endpoint = &s
+}
+
+// TokenEndpoint returns the value of the "token_endpoint" field in the mutation.
+func (m *SSOProviderMutation) TokenEndpoint() (r string, exists bool) {
+	v := m.token_endpoint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTokenEndpoint returns the old "token_endpoint" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldTokenEndpoint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTokenEndpoint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTokenEndpoint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTokenEndpoint: %w", err)
+	}
+	return oldValue.TokenEndpoint, nil
+}
+
+// ClearTokenEndpoint clears the value of the "token_endpoint" field.
+func (m *SSOProviderMutation) ClearTokenEndpoint() {
+	m.token_endpoint = nil
+	m.clearedFields[ssoprovider.FieldTokenEndpoint] = struct{}{}
+}
+
+// TokenEndpointCleared returns if the "token_endpoint" field was cleared in this mutation.
+func (m *SSOProviderMutation) TokenEndpointCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldTokenEndpoint]
+	return ok
+}
+
+// ResetTokenEndpoint resets all changes to the "token_endpoint" field.
+func (m *SSOProviderMutation) ResetTokenEndpoint() {
+	m.token_endpoint = nil
+	delete(m.clearedFields, ssoprovider.FieldTokenEndpoint)
+}
+
+// SetUserinfoEndpoint sets the "userinfo_endpoint" field.
+func (m *SSOProviderMutation) SetUserinfoEndpoint(s string) {
+	m.userinfo_endpoint = &s
+}
+
+// UserinfoEndpoint returns the value of the "userinfo_endpoint" field in the mutation.
+func (m *SSOProviderMutation) UserinfoEndpoint() (r string, exists bool) {
+	v := m.userinfo_endpoint
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserinfoEndpoint returns the old "userinfo_endpoint" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldUserinfoEndpoint(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserinfoEndpoint is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserinfoEndpoint requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserinfoEndpoint: %w", err)
+	}
+	return oldValue.UserinfoEndpoint, nil
+}
+
+// ClearUserinfoEndpoint clears the value of the "userinfo_endpoint" field.
+func (m *SSOProviderMutation) ClearUserinfoEndpoint() {
+	m.userinfo_endpoint = nil
+	m.clearedFields[ssoprovider.FieldUserinfoEndpoint] = struct{}{}
+}
+
+// UserinfoEndpointCleared returns if the "userinfo_endpoint" field was cleared in this mutation.
+func (m *SSOProviderMutation) UserinfoEndpointCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldUserinfoEndpoint]
+	return ok
+}
+
+// ResetUserinfoEndpoint resets all changes to the "userinfo_endpoint" field.
+func (m *SSOProviderMutation) ResetUserinfoEndpoint() {
+	m.userinfo_endpoint = nil
+	delete(m.clearedFields, ssoprovider.FieldUserinfoEndpoint)
+}
+
+// SetJwksURI sets the "jwks_uri" field.
+func (m *SSOProviderMutation) SetJwksURI(s string) {
+	m.jwks_uri = &s
+}
+
+// JwksURI returns the value of the "jwks_uri" field in the mutation.
+func (m *SSOProviderMutation) JwksURI() (r string, exists bool) {
+	v := m.jwks_uri
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldJwksURI returns the old "jwks_uri" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldJwksURI(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldJwksURI is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldJwksURI requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldJwksURI: %w", err)
+	}
+	return oldValue.JwksURI, nil
+}
+
+// ClearJwksURI clears the value of the "jwks_uri" field.
+func (m *SSOProviderMutation) ClearJwksURI() {
+	m.jwks_uri = nil
+	m.clearedFields[ssoprovider.FieldJwksURI] = struct{}{}
+}
+
+// JwksURICleared returns if the "jwks_uri" field was cleared in this mutation.
+func (m *SSOProviderMutation) JwksURICleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldJwksURI]
+	return ok
+}
+
+// ResetJwksURI resets all changes to the "jwks_uri" field.
+func (m *SSOProviderMutation) ResetJwksURI() {
+	m.jwks_uri = nil
+	delete(m.clearedFields, ssoprovider.FieldJwksURI)
+}
+
+// SetScopes sets the "scopes" field.
+func (m *SSOProviderMutation) SetScopes(s string) {
+	m.scopes = &s
+}
+
+// Scopes returns the value of the "scopes" field in the mutation.
+func (m *SSOProviderMutation) Scopes() (r string, exists bool) {
+	v := m.scopes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldScopes returns the old "scopes" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldScopes(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldScopes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldScopes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldScopes: %w", err)
+	}
+	return oldValue.Scopes, nil
+}
+
+// ResetScopes resets all changes to the "scopes" field.
+func (m *SSOProviderMutation) ResetScopes() {
+	m.scopes = nil
+}
+
+// SetRedirectURI sets the "redirect_uri" field.
+func (m *SSOProviderMutation) SetRedirectURI(s string) {
+	m.redirect_uri = &s
+}
+
+// RedirectURI returns the value of the "redirect_uri" field in the mutation.
+func (m *SSOProviderMutation) RedirectURI() (r string, exists bool) {
+	v := m.redirect_uri
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRedirectURI returns the old "redirect_uri" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldRedirectURI(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRedirectURI is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRedirectURI requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRedirectURI: %w", err)
+	}
+	return oldValue.RedirectURI, nil
+}
+
+// ResetRedirectURI resets all changes to the "redirect_uri" field.
+func (m *SSOProviderMutation) ResetRedirectURI() {
+	m.redirect_uri = nil
+}
+
+// SetAutoProvision sets the "auto_provision" field.
+func (m *SSOProviderMutation) SetAutoProvision(b bool) {
+	m.auto_provision = &b
+}
+
+// AutoProvision returns the value of the "auto_provision" field in the mutation.
+func (m *SSOProviderMutation) AutoProvision() (r bool, exists bool) {
+	v := m.auto_provision
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAutoProvision returns the old "auto_provision" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldAutoProvision(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAutoProvision is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAutoProvision requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAutoProvision: %w", err)
+	}
+	return oldValue.AutoProvision, nil
+}
+
+// ResetAutoProvision resets all changes to the "auto_provision" field.
+func (m *SSOProviderMutation) ResetAutoProvision() {
+	m.auto_provision = nil
+}
+
+// SetDefaultRole sets the "default_role" field.
+func (m *SSOProviderMutation) SetDefaultRole(s string) {
+	m.default_role = &s
+}
+
+// DefaultRole returns the value of the "default_role" field in the mutation.
+func (m *SSOProviderMutation) DefaultRole() (r string, exists bool) {
+	v := m.default_role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDefaultRole returns the old "default_role" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldDefaultRole(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDefaultRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDefaultRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDefaultRole: %w", err)
+	}
+	return oldValue.DefaultRole, nil
+}
+
+// ResetDefaultRole resets all changes to the "default_role" field.
+func (m *SSOProviderMutation) ResetDefaultRole() {
+	m.default_role = nil
+}
+
+// SetAllowedEmailDomains sets the "allowed_email_domains" field.
+func (m *SSOProviderMutation) SetAllowedEmailDomains(s string) {
+	m.allowed_email_domains = &s
+}
+
+// AllowedEmailDomains returns the value of the "allowed_email_domains" field in the mutation.
+func (m *SSOProviderMutation) AllowedEmailDomains() (r string, exists bool) {
+	v := m.allowed_email_domains
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowedEmailDomains returns the old "allowed_email_domains" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldAllowedEmailDomains(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowedEmailDomains is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowedEmailDomains requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowedEmailDomains: %w", err)
+	}
+	return oldValue.AllowedEmailDomains, nil
+}
+
+// ClearAllowedEmailDomains clears the value of the "allowed_email_domains" field.
+func (m *SSOProviderMutation) ClearAllowedEmailDomains() {
+	m.allowed_email_domains = nil
+	m.clearedFields[ssoprovider.FieldAllowedEmailDomains] = struct{}{}
+}
+
+// AllowedEmailDomainsCleared returns if the "allowed_email_domains" field was cleared in this mutation.
+func (m *SSOProviderMutation) AllowedEmailDomainsCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldAllowedEmailDomains]
+	return ok
+}
+
+// ResetAllowedEmailDomains resets all changes to the "allowed_email_domains" field.
+func (m *SSOProviderMutation) ResetAllowedEmailDomains() {
+	m.allowed_email_domains = nil
+	delete(m.clearedFields, ssoprovider.FieldAllowedEmailDomains)
+}
+
+// SetEnabled sets the "enabled" field.
+func (m *SSOProviderMutation) SetEnabled(b bool) {
+	m.enabled = &b
+}
+
+// Enabled returns the value of the "enabled" field in the mutation.
+func (m *SSOProviderMutation) Enabled() (r bool, exists bool) {
+	v := m.enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnabled returns the old "enabled" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnabled: %w", err)
+	}
+	return oldValue.Enabled, nil
+}
+
+// ResetEnabled resets all changes to the "enabled" field.
+func (m *SSOProviderMutation) ResetEnabled() {
+	m.enabled = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *SSOProviderMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *SSOProviderMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *SSOProviderMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetLastError sets the "last_error" field.
+func (m *SSOProviderMutation) SetLastError(s string) {
+	m.last_error = &s
+}
+
+// LastError returns the value of the "last_error" field in the mutation.
+func (m *SSOProviderMutation) LastError() (r string, exists bool) {
+	v := m.last_error
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastError returns the old "last_error" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldLastError(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastError is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastError requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastError: %w", err)
+	}
+	return oldValue.LastError, nil
+}
+
+// ClearLastError clears the value of the "last_error" field.
+func (m *SSOProviderMutation) ClearLastError() {
+	m.last_error = nil
+	m.clearedFields[ssoprovider.FieldLastError] = struct{}{}
+}
+
+// LastErrorCleared returns if the "last_error" field was cleared in this mutation.
+func (m *SSOProviderMutation) LastErrorCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldLastError]
+	return ok
+}
+
+// ResetLastError resets all changes to the "last_error" field.
+func (m *SSOProviderMutation) ResetLastError() {
+	m.last_error = nil
+	delete(m.clearedFields, ssoprovider.FieldLastError)
+}
+
+// SetLastHealthCheckAt sets the "last_health_check_at" field.
+func (m *SSOProviderMutation) SetLastHealthCheckAt(t time.Time) {
+	m.last_health_check_at = &t
+}
+
+// LastHealthCheckAt returns the value of the "last_health_check_at" field in the mutation.
+func (m *SSOProviderMutation) LastHealthCheckAt() (r time.Time, exists bool) {
+	v := m.last_health_check_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastHealthCheckAt returns the old "last_health_check_at" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldLastHealthCheckAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastHealthCheckAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastHealthCheckAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastHealthCheckAt: %w", err)
+	}
+	return oldValue.LastHealthCheckAt, nil
+}
+
+// ClearLastHealthCheckAt clears the value of the "last_health_check_at" field.
+func (m *SSOProviderMutation) ClearLastHealthCheckAt() {
+	m.last_health_check_at = nil
+	m.clearedFields[ssoprovider.FieldLastHealthCheckAt] = struct{}{}
+}
+
+// LastHealthCheckAtCleared returns if the "last_health_check_at" field was cleared in this mutation.
+func (m *SSOProviderMutation) LastHealthCheckAtCleared() bool {
+	_, ok := m.clearedFields[ssoprovider.FieldLastHealthCheckAt]
+	return ok
+}
+
+// ResetLastHealthCheckAt resets all changes to the "last_health_check_at" field.
+func (m *SSOProviderMutation) ResetLastHealthCheckAt() {
+	m.last_health_check_at = nil
+	delete(m.clearedFields, ssoprovider.FieldLastHealthCheckAt)
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SSOProviderMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SSOProviderMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SSOProviderMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SSOProviderMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SSOProviderMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SSOProvider entity.
+// If the SSOProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SSOProviderMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SSOProviderMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// Where appends a list predicates to the SSOProviderMutation builder.
+func (m *SSOProviderMutation) Where(ps ...predicate.SSOProvider) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SSOProviderMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SSOProviderMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SSOProvider, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SSOProviderMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SSOProviderMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SSOProvider).
+func (m *SSOProviderMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SSOProviderMutation) Fields() []string {
+	fields := make([]string, 0, 22)
+	if m.tenant_id != nil {
+		fields = append(fields, ssoprovider.FieldTenantID)
+	}
+	if m.code != nil {
+		fields = append(fields, ssoprovider.FieldCode)
+	}
+	if m.name != nil {
+		fields = append(fields, ssoprovider.FieldName)
+	}
+	if m.protocol != nil {
+		fields = append(fields, ssoprovider.FieldProtocol)
+	}
+	if m.client_id != nil {
+		fields = append(fields, ssoprovider.FieldClientID)
+	}
+	if m.client_secret_encrypted != nil {
+		fields = append(fields, ssoprovider.FieldClientSecretEncrypted)
+	}
+	if m.issuer != nil {
+		fields = append(fields, ssoprovider.FieldIssuer)
+	}
+	if m.authorization_endpoint != nil {
+		fields = append(fields, ssoprovider.FieldAuthorizationEndpoint)
+	}
+	if m.token_endpoint != nil {
+		fields = append(fields, ssoprovider.FieldTokenEndpoint)
+	}
+	if m.userinfo_endpoint != nil {
+		fields = append(fields, ssoprovider.FieldUserinfoEndpoint)
+	}
+	if m.jwks_uri != nil {
+		fields = append(fields, ssoprovider.FieldJwksURI)
+	}
+	if m.scopes != nil {
+		fields = append(fields, ssoprovider.FieldScopes)
+	}
+	if m.redirect_uri != nil {
+		fields = append(fields, ssoprovider.FieldRedirectURI)
+	}
+	if m.auto_provision != nil {
+		fields = append(fields, ssoprovider.FieldAutoProvision)
+	}
+	if m.default_role != nil {
+		fields = append(fields, ssoprovider.FieldDefaultRole)
+	}
+	if m.allowed_email_domains != nil {
+		fields = append(fields, ssoprovider.FieldAllowedEmailDomains)
+	}
+	if m.enabled != nil {
+		fields = append(fields, ssoprovider.FieldEnabled)
+	}
+	if m.status != nil {
+		fields = append(fields, ssoprovider.FieldStatus)
+	}
+	if m.last_error != nil {
+		fields = append(fields, ssoprovider.FieldLastError)
+	}
+	if m.last_health_check_at != nil {
+		fields = append(fields, ssoprovider.FieldLastHealthCheckAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, ssoprovider.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, ssoprovider.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SSOProviderMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		return m.TenantID()
+	case ssoprovider.FieldCode:
+		return m.Code()
+	case ssoprovider.FieldName:
+		return m.Name()
+	case ssoprovider.FieldProtocol:
+		return m.Protocol()
+	case ssoprovider.FieldClientID:
+		return m.ClientID()
+	case ssoprovider.FieldClientSecretEncrypted:
+		return m.ClientSecretEncrypted()
+	case ssoprovider.FieldIssuer:
+		return m.Issuer()
+	case ssoprovider.FieldAuthorizationEndpoint:
+		return m.AuthorizationEndpoint()
+	case ssoprovider.FieldTokenEndpoint:
+		return m.TokenEndpoint()
+	case ssoprovider.FieldUserinfoEndpoint:
+		return m.UserinfoEndpoint()
+	case ssoprovider.FieldJwksURI:
+		return m.JwksURI()
+	case ssoprovider.FieldScopes:
+		return m.Scopes()
+	case ssoprovider.FieldRedirectURI:
+		return m.RedirectURI()
+	case ssoprovider.FieldAutoProvision:
+		return m.AutoProvision()
+	case ssoprovider.FieldDefaultRole:
+		return m.DefaultRole()
+	case ssoprovider.FieldAllowedEmailDomains:
+		return m.AllowedEmailDomains()
+	case ssoprovider.FieldEnabled:
+		return m.Enabled()
+	case ssoprovider.FieldStatus:
+		return m.Status()
+	case ssoprovider.FieldLastError:
+		return m.LastError()
+	case ssoprovider.FieldLastHealthCheckAt:
+		return m.LastHealthCheckAt()
+	case ssoprovider.FieldCreatedAt:
+		return m.CreatedAt()
+	case ssoprovider.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SSOProviderMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case ssoprovider.FieldCode:
+		return m.OldCode(ctx)
+	case ssoprovider.FieldName:
+		return m.OldName(ctx)
+	case ssoprovider.FieldProtocol:
+		return m.OldProtocol(ctx)
+	case ssoprovider.FieldClientID:
+		return m.OldClientID(ctx)
+	case ssoprovider.FieldClientSecretEncrypted:
+		return m.OldClientSecretEncrypted(ctx)
+	case ssoprovider.FieldIssuer:
+		return m.OldIssuer(ctx)
+	case ssoprovider.FieldAuthorizationEndpoint:
+		return m.OldAuthorizationEndpoint(ctx)
+	case ssoprovider.FieldTokenEndpoint:
+		return m.OldTokenEndpoint(ctx)
+	case ssoprovider.FieldUserinfoEndpoint:
+		return m.OldUserinfoEndpoint(ctx)
+	case ssoprovider.FieldJwksURI:
+		return m.OldJwksURI(ctx)
+	case ssoprovider.FieldScopes:
+		return m.OldScopes(ctx)
+	case ssoprovider.FieldRedirectURI:
+		return m.OldRedirectURI(ctx)
+	case ssoprovider.FieldAutoProvision:
+		return m.OldAutoProvision(ctx)
+	case ssoprovider.FieldDefaultRole:
+		return m.OldDefaultRole(ctx)
+	case ssoprovider.FieldAllowedEmailDomains:
+		return m.OldAllowedEmailDomains(ctx)
+	case ssoprovider.FieldEnabled:
+		return m.OldEnabled(ctx)
+	case ssoprovider.FieldStatus:
+		return m.OldStatus(ctx)
+	case ssoprovider.FieldLastError:
+		return m.OldLastError(ctx)
+	case ssoprovider.FieldLastHealthCheckAt:
+		return m.OldLastHealthCheckAt(ctx)
+	case ssoprovider.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case ssoprovider.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SSOProvider field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SSOProviderMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case ssoprovider.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case ssoprovider.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case ssoprovider.FieldProtocol:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProtocol(v)
+		return nil
+	case ssoprovider.FieldClientID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientID(v)
+		return nil
+	case ssoprovider.FieldClientSecretEncrypted:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientSecretEncrypted(v)
+		return nil
+	case ssoprovider.FieldIssuer:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIssuer(v)
+		return nil
+	case ssoprovider.FieldAuthorizationEndpoint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAuthorizationEndpoint(v)
+		return nil
+	case ssoprovider.FieldTokenEndpoint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTokenEndpoint(v)
+		return nil
+	case ssoprovider.FieldUserinfoEndpoint:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserinfoEndpoint(v)
+		return nil
+	case ssoprovider.FieldJwksURI:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetJwksURI(v)
+		return nil
+	case ssoprovider.FieldScopes:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetScopes(v)
+		return nil
+	case ssoprovider.FieldRedirectURI:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRedirectURI(v)
+		return nil
+	case ssoprovider.FieldAutoProvision:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAutoProvision(v)
+		return nil
+	case ssoprovider.FieldDefaultRole:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDefaultRole(v)
+		return nil
+	case ssoprovider.FieldAllowedEmailDomains:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowedEmailDomains(v)
+		return nil
+	case ssoprovider.FieldEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnabled(v)
+		return nil
+	case ssoprovider.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case ssoprovider.FieldLastError:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastError(v)
+		return nil
+	case ssoprovider.FieldLastHealthCheckAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastHealthCheckAt(v)
+		return nil
+	case ssoprovider.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case ssoprovider.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SSOProvider field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SSOProviderMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, ssoprovider.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SSOProviderMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SSOProviderMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SSOProvider numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SSOProviderMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(ssoprovider.FieldClientSecretEncrypted) {
+		fields = append(fields, ssoprovider.FieldClientSecretEncrypted)
+	}
+	if m.FieldCleared(ssoprovider.FieldAuthorizationEndpoint) {
+		fields = append(fields, ssoprovider.FieldAuthorizationEndpoint)
+	}
+	if m.FieldCleared(ssoprovider.FieldTokenEndpoint) {
+		fields = append(fields, ssoprovider.FieldTokenEndpoint)
+	}
+	if m.FieldCleared(ssoprovider.FieldUserinfoEndpoint) {
+		fields = append(fields, ssoprovider.FieldUserinfoEndpoint)
+	}
+	if m.FieldCleared(ssoprovider.FieldJwksURI) {
+		fields = append(fields, ssoprovider.FieldJwksURI)
+	}
+	if m.FieldCleared(ssoprovider.FieldAllowedEmailDomains) {
+		fields = append(fields, ssoprovider.FieldAllowedEmailDomains)
+	}
+	if m.FieldCleared(ssoprovider.FieldLastError) {
+		fields = append(fields, ssoprovider.FieldLastError)
+	}
+	if m.FieldCleared(ssoprovider.FieldLastHealthCheckAt) {
+		fields = append(fields, ssoprovider.FieldLastHealthCheckAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SSOProviderMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SSOProviderMutation) ClearField(name string) error {
+	switch name {
+	case ssoprovider.FieldClientSecretEncrypted:
+		m.ClearClientSecretEncrypted()
+		return nil
+	case ssoprovider.FieldAuthorizationEndpoint:
+		m.ClearAuthorizationEndpoint()
+		return nil
+	case ssoprovider.FieldTokenEndpoint:
+		m.ClearTokenEndpoint()
+		return nil
+	case ssoprovider.FieldUserinfoEndpoint:
+		m.ClearUserinfoEndpoint()
+		return nil
+	case ssoprovider.FieldJwksURI:
+		m.ClearJwksURI()
+		return nil
+	case ssoprovider.FieldAllowedEmailDomains:
+		m.ClearAllowedEmailDomains()
+		return nil
+	case ssoprovider.FieldLastError:
+		m.ClearLastError()
+		return nil
+	case ssoprovider.FieldLastHealthCheckAt:
+		m.ClearLastHealthCheckAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SSOProvider nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SSOProviderMutation) ResetField(name string) error {
+	switch name {
+	case ssoprovider.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case ssoprovider.FieldCode:
+		m.ResetCode()
+		return nil
+	case ssoprovider.FieldName:
+		m.ResetName()
+		return nil
+	case ssoprovider.FieldProtocol:
+		m.ResetProtocol()
+		return nil
+	case ssoprovider.FieldClientID:
+		m.ResetClientID()
+		return nil
+	case ssoprovider.FieldClientSecretEncrypted:
+		m.ResetClientSecretEncrypted()
+		return nil
+	case ssoprovider.FieldIssuer:
+		m.ResetIssuer()
+		return nil
+	case ssoprovider.FieldAuthorizationEndpoint:
+		m.ResetAuthorizationEndpoint()
+		return nil
+	case ssoprovider.FieldTokenEndpoint:
+		m.ResetTokenEndpoint()
+		return nil
+	case ssoprovider.FieldUserinfoEndpoint:
+		m.ResetUserinfoEndpoint()
+		return nil
+	case ssoprovider.FieldJwksURI:
+		m.ResetJwksURI()
+		return nil
+	case ssoprovider.FieldScopes:
+		m.ResetScopes()
+		return nil
+	case ssoprovider.FieldRedirectURI:
+		m.ResetRedirectURI()
+		return nil
+	case ssoprovider.FieldAutoProvision:
+		m.ResetAutoProvision()
+		return nil
+	case ssoprovider.FieldDefaultRole:
+		m.ResetDefaultRole()
+		return nil
+	case ssoprovider.FieldAllowedEmailDomains:
+		m.ResetAllowedEmailDomains()
+		return nil
+	case ssoprovider.FieldEnabled:
+		m.ResetEnabled()
+		return nil
+	case ssoprovider.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case ssoprovider.FieldLastError:
+		m.ResetLastError()
+		return nil
+	case ssoprovider.FieldLastHealthCheckAt:
+		m.ResetLastHealthCheckAt()
+		return nil
+	case ssoprovider.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case ssoprovider.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SSOProvider field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SSOProviderMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SSOProviderMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SSOProviderMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SSOProviderMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SSOProviderMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SSOProviderMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SSOProviderMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown SSOProvider unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SSOProviderMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown SSOProvider edge %s", name)
 }
 
 // ServiceCatalogMutation represents an operation that mutates the ServiceCatalog nodes in the graph.

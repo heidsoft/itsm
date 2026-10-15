@@ -109,6 +109,7 @@ var TenantExemptTables = []ExemptTable{
 	// 知识库会话/版本
 	{TableName: "knowledge_article_sessions", Reason: "知识库协作会话，session_id 天然唯一", Owner: "knowledge", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "knowledge_article_versions", Reason: "知识库版本快照", Owner: "knowledge", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
+	{TableName: "knowledge_article_reviews", Reason: "知识评审记录，tenant_id 随文章派生", Owner: "knowledge", Scope: "derived", ReviewedAt: time.Date(2026, 10, 15, 0, 0, 0, 0, time.UTC)},
 	{TableName: "item_versions", Reason: "通用版本快照", Owner: "platform", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	// marketplace / messages / prompt_templates / password_reset_tokens：需评估，暂列豁免并标注 owner
 	{TableName: "marketplace_items", Reason: "市场项目模板，跨租户共享", Owner: "marketplace", Scope: "global", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},

@@ -98,7 +98,7 @@ export const QuickActions: React.FC = () => {
         { title: '工作流设计', desc: 'BPMN流程编排', href: '/admin/workflows', color: '#10b981', icon: Workflow },
         { title: '审批链', desc: '多级审批规则', href: '/admin/approval-chains', color: '#14b8a6', icon: CheckSquare },
         { title: 'SLA定义', desc: '服务级别协议', href: '/admin/sla-definitions', color: '#f59e0b', icon: Clock },
-        { title: '升级规则', desc: '自动升级策略', href: '/admin/escalation-rules', color: '#f97316', icon: AlertTriangle },
+        { title: 'SLA 告警规则', desc: '阈值告警配置', href: '/admin/escalation-rules', color: '#f97316', icon: AlertTriangle },
       ],
     },
     {

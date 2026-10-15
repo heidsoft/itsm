@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/user"
 )
@@ -55,6 +56,13 @@ func toDomain(e *ent.KnowledgeArticle) *Article {
 		IsPublished: e.IsPublished,
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
+
+		// 评审状态机字段。ReviewStatus 经 NormalizeReviewStatus 归一，
+		// 保证前端拿到的永远是四个合法值之一（存量未回填时为 draft）。
+		ReviewStatus:  NormalizeReviewStatus(string(e.ReviewStatus)),
+		ReviewerID:    e.ReviewerID,
+		ReviewedAt:    e.ReviewedAt,
+		ReviewComment: e.ReviewComment,
 
 		ValidFrom:          e.ValidFrom,
 		ValidUntil:         e.ValidUntil,
@@ -188,6 +196,157 @@ func (r *EntRepository) MarkReviewed(ctx context.Context, id int, tenantID int) 
 		return nil, err
 	}
 	return toDomain(e), nil
+}
+
+// TransitionReview 执行一次评审状态流转，并**在同一事务**内落评审流水。
+//
+// 事务必要性：状态与审计必须同生共死。分开写会出现「状态已改但审计没记」
+// （事后无法回答"谁批的"）或「审计已记但状态没改」（审计与事实矛盾），
+// 这两种不一致在合规审计里都是不可接受的。
+//
+// toStatus 传空串表示只记流水、不改状态。
+func (r *EntRepository) TransitionReview(
+	ctx context.Context, id, tenantID, operatorID int,
+	action, toStatus, comment string,
+) (*Article, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 注意：事务内一律用 tx.* 做读写，不要用 r.client —— 那样会走事务外的
+	// 连接池，既看不到本事务的中间态，还可能在提交前被别的连接读走。
+	current, err := tx.KnowledgeArticle.Query().
+		Where(
+			knowledgearticle.ID(id),
+			knowledgearticle.TenantID(tenantID),
+			knowledgearticle.DeletedAtIsNil(),
+		).
+		Only(ctx)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+
+	fromStatus := NormalizeReviewStatus(string(current.ReviewStatus))
+	actionToStatus := toStatus
+	if actionToStatus == "" {
+		actionToStatus = fromStatus
+	}
+
+	if _, err := tx.KnowledgeArticleReview.Create().
+		SetArticleID(id).
+		SetTenantID(tenantID).
+		SetFromStatus(fromStatus).
+		SetToStatus(actionToStatus).
+		SetAction(action).
+		SetOperatorID(operatorID).
+		SetComment(comment).
+		Save(ctx); err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+
+	if toStatus != "" && toStatus != fromStatus {
+		upd := tx.KnowledgeArticle.UpdateOneID(id).
+			Where(knowledgearticle.TenantID(tenantID), knowledgearticle.DeletedAtIsNil()).
+			SetReviewStatus(knowledgearticle.ReviewStatus(toStatus)).
+			SetReviewerID(operatorID).
+			SetReviewedAt(time.Now()).
+			SetReviewComment(comment)
+
+		// 通过评审 = 对外可见；驳回 = 撤回可见性。
+		// 必须同时改 is_published，否则会出现 review_status=approved
+		// 但 is_published=false 的矛盾状态——审核通过却搜不到。
+		if toStatus == ReviewStatusApproved {
+			upd = upd.SetIsPublished(true)
+		} else if toStatus == ReviewStatusRejected || toStatus == ReviewStatusDraft {
+			upd = upd.SetIsPublished(false)
+		}
+
+		if _, err := upd.Save(ctx); err != nil {
+			_ = tx.Rollback()
+			return nil, err
+		}
+
+		// 可见性变更必须与状态变更同事务进出向量索引：
+		// 评审通过后若索引不同步，RAG 检索不到这篇刚批准的知识；
+		// 驳回后若不同步，已被否定的内容仍会被 AI 引用 —— 后者比"搜不到"更糟。
+		if toStatus == ReviewStatusApproved || toStatus == ReviewStatusRejected {
+			action := vectorIndexSync
+			if toStatus == ReviewStatusRejected {
+				action = vectorIndexDelete
+			}
+			articleForIndex := &Article{ID: id, TenantID: tenantID, UpdatedAt: time.Now()}
+			if err := enqueueVectorSyncTx(ctx, tx, articleForIndex, action); err != nil {
+				_ = tx.Rollback()
+				return nil, err
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	updated, err := r.client.KnowledgeArticle.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return toDomain(updated), nil
+}
+
+// ListReviews 返回文章的评审历史，时间倒序。
+func (r *EntRepository) ListReviews(
+	ctx context.Context, articleID, tenantID, page, pageSize int,
+) ([]*ReviewRecord, int, error) {
+	// 评审流水以 tenant_id 独立承载隔离，但仍先校验文章归属，
+	// 避免拿到不存在的文章时返回一个空列表（调用方会误判为"没有评审记录"）。
+	if err := r.articleExistsForTenant(ctx, articleID, tenantID); err != nil {
+		return nil, 0, err
+	}
+
+	q := r.client.KnowledgeArticleReview.Query().
+		Where(
+			knowledgearticlereview.ArticleID(articleID),
+			knowledgearticlereview.TenantID(tenantID),
+		)
+
+	total, err := q.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	rows, err := q.Order(ent.Desc(knowledgearticlereview.FieldCreatedAt), ent.Desc(knowledgearticlereview.FieldID)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	out := make([]*ReviewRecord, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, &ReviewRecord{
+			ID:         row.ID,
+			ArticleID:  row.ArticleID,
+			TenantID:   row.TenantID,
+			FromStatus: row.FromStatus,
+			ToStatus:   row.ToStatus,
+			Action:     row.Action,
+			OperatorID: row.OperatorID,
+			Comment:    row.Comment,
+			CreatedAt:  row.CreatedAt,
+		})
+	}
+	return out, total, nil
 }
 
 // articleExistsForTenant 校验文章存在且属于该租户（版本表无 tenant_id，

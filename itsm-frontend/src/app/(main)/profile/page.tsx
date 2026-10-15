@@ -144,14 +144,14 @@ export default function ProfilePage() {
         return;
       }
 
-      if (!profile?.id) {
-        message.error('用户信息不完整');
-        return;
-      }
-
+      // 走自助改密端点（校验旧密码），而不是管理员重置接口 ——
+      // 后者不校验旧密码，且 /users/:id/reset-password 后端尚未注册。
       setPasswordLoading(true);
-      await UserApi.resetPassword(profile.id, values.newPassword);
-      message.success('密码修改成功');
+      await UserApi.changeOwnPassword(values.oldPassword, values.newPassword);
+      // 服务端已吊销该用户全部存量 access token，本地会话必须一并清掉，
+      // 否则前端还拿着失效 token 继续请求，只会得到一片 401。
+      useAuthStore.getState().logout();
+      message.success('密码修改成功，请重新登录');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
     } catch (error) {
@@ -847,12 +847,24 @@ export default function ProfilePage() {
           <Form.Item
             name="newPassword"
             label="新密码"
+            // 与后端 service.validatePassword 对齐：12-128 位，
+            // 且必须同时包含大写、小写、数字、特殊字符。前端先拦一道，
+            // 避免用户填完提交才被后端拒绝。
             rules={[
               { required: true, message: '请输入新密码' },
-              { min: 6, message: '密码长度至少6位' },
+              { min: 12, max: 128, message: '密码长度需为 12 到 128 位' },
+              {
+                validator: async (_, value: string) => {
+                  if (!value) return;
+                  const classes = [/[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
+                  if (!classes.some((re) => re.test(value))) {
+                    throw new Error('密码必须同时包含大写字母、小写字母、数字和特殊字符');
+                  }
+                },
+              },
             ]}
           >
-            <Input.Password placeholder="请输入新密码" />
+            <Input.Password placeholder="至少12位，含大小写字母、数字与特殊字符" />
           </Form.Item>
           <Form.Item
             name="confirmPassword"

@@ -49,7 +49,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   'sla-definitions': 'SLA 定义',
   'sla-templates': 'SLA 模板',
   'ticket-categories': '工单分类',
-  'escalation-rules': '升级规则',
+  'escalation-rules': 'SLA 告警规则',
   'escalation-matrices': '升级矩阵',
   workflow: '工作流',
   workflows: '工作流',

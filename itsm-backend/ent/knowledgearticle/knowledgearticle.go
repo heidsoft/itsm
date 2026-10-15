@@ -3,6 +3,7 @@
 package knowledgearticle
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -28,6 +29,14 @@ const (
 	FieldTenantID = "tenant_id"
 	// FieldIsPublished holds the string denoting the is_published field in the database.
 	FieldIsPublished = "is_published"
+	// FieldReviewStatus holds the string denoting the review_status field in the database.
+	FieldReviewStatus = "review_status"
+	// FieldReviewerID holds the string denoting the reviewer_id field in the database.
+	FieldReviewerID = "reviewer_id"
+	// FieldReviewedAt holds the string denoting the reviewed_at field in the database.
+	FieldReviewedAt = "reviewed_at"
+	// FieldReviewComment holds the string denoting the review_comment field in the database.
+	FieldReviewComment = "review_comment"
 	// FieldViewCount holds the string denoting the view_count field in the database.
 	FieldViewCount = "view_count"
 	// FieldLikeCount holds the string denoting the like_count field in the database.
@@ -54,6 +63,8 @@ const (
 	EdgeVersions = "versions"
 	// EdgeSessions holds the string denoting the sessions edge name in mutations.
 	EdgeSessions = "sessions"
+	// EdgeReviewRecords holds the string denoting the review_records edge name in mutations.
+	EdgeReviewRecords = "review_records"
 	// Table holds the table name of the knowledgearticle in the database.
 	Table = "knowledge_articles"
 	// UserLikesTable is the table that holds the user_likes relation/edge.
@@ -77,6 +88,13 @@ const (
 	SessionsInverseTable = "knowledge_article_sessions"
 	// SessionsColumn is the table column denoting the sessions relation/edge.
 	SessionsColumn = "article_id"
+	// ReviewRecordsTable is the table that holds the review_records relation/edge.
+	ReviewRecordsTable = "knowledge_article_reviews"
+	// ReviewRecordsInverseTable is the table name for the KnowledgeArticleReview entity.
+	// It exists in this package in order to avoid circular dependency with the "knowledgearticlereview" package.
+	ReviewRecordsInverseTable = "knowledge_article_reviews"
+	// ReviewRecordsColumn is the table column denoting the review_records relation/edge.
+	ReviewRecordsColumn = "article_id"
 )
 
 // Columns holds all SQL columns for knowledgearticle fields.
@@ -89,6 +107,10 @@ var Columns = []string{
 	FieldAuthorID,
 	FieldTenantID,
 	FieldIsPublished,
+	FieldReviewStatus,
+	FieldReviewerID,
+	FieldReviewedAt,
+	FieldReviewComment,
 	FieldViewCount,
 	FieldLikeCount,
 	FieldValidFrom,
@@ -147,6 +169,34 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 )
 
+// ReviewStatus defines the type for the "review_status" enum field.
+type ReviewStatus string
+
+// ReviewStatusDraft is the default value of the ReviewStatus enum.
+const DefaultReviewStatus = ReviewStatusDraft
+
+// ReviewStatus values.
+const (
+	ReviewStatusDraft       ReviewStatus = "draft"
+	ReviewStatusUnderReview ReviewStatus = "under_review"
+	ReviewStatusApproved    ReviewStatus = "approved"
+	ReviewStatusRejected    ReviewStatus = "rejected"
+)
+
+func (rs ReviewStatus) String() string {
+	return string(rs)
+}
+
+// ReviewStatusValidator is a validator for the "review_status" field enum values. It is called by the builders before save.
+func ReviewStatusValidator(rs ReviewStatus) error {
+	switch rs {
+	case ReviewStatusDraft, ReviewStatusUnderReview, ReviewStatusApproved, ReviewStatusRejected:
+		return nil
+	default:
+		return fmt.Errorf("knowledgearticle: invalid enum value for review_status field: %q", rs)
+	}
+}
+
 // OrderOption defines the ordering options for the KnowledgeArticle queries.
 type OrderOption func(*sql.Selector)
 
@@ -188,6 +238,26 @@ func ByTenantID(opts ...sql.OrderTermOption) OrderOption {
 // ByIsPublished orders the results by the is_published field.
 func ByIsPublished(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIsPublished, opts...).ToFunc()
+}
+
+// ByReviewStatus orders the results by the review_status field.
+func ByReviewStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewStatus, opts...).ToFunc()
+}
+
+// ByReviewerID orders the results by the reviewer_id field.
+func ByReviewerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewerID, opts...).ToFunc()
+}
+
+// ByReviewedAt orders the results by the reviewed_at field.
+func ByReviewedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewedAt, opts...).ToFunc()
+}
+
+// ByReviewComment orders the results by the review_comment field.
+func ByReviewComment(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReviewComment, opts...).ToFunc()
 }
 
 // ByViewCount orders the results by the view_count field.
@@ -281,6 +351,20 @@ func BySessions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newSessionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByReviewRecordsCount orders the results by review_records count.
+func ByReviewRecordsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReviewRecordsStep(), opts...)
+	}
+}
+
+// ByReviewRecords orders the results by review_records terms.
+func ByReviewRecords(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReviewRecordsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserLikesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -300,5 +384,12 @@ func newSessionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SessionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, SessionsTable, SessionsColumn),
+	)
+}
+func newReviewRecordsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReviewRecordsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReviewRecordsTable, ReviewRecordsColumn),
 	)
 }

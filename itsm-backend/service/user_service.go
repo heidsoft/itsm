@@ -619,6 +619,65 @@ func (s *UserService) BatchUpdateUsers(ctx context.Context, req *dto.BatchUpdate
 
 // validatePassword 返回 common.ErrCodeValidation 分类错误，让 handler 能映射成 400；
 // 用普通 error 会被 handler 归为内部错误（500），把输入问题伪装成服务端故障。
+// ChangeOwnPassword 用户自助修改密码。
+//
+// 与 ResetPassword 的区别（这是两个不同权限面，不能互相顶替）：
+//   - ResetPassword：管理员重置他人密码，不校验旧密码
+//   - ChangeOwnPassword：用户改自己的密码，**必须校验旧密码**，
+//     并拒绝新旧相同
+//
+// 返回的错误语义：
+//   - 旧密码错误 → ForbiddenCode（不暴露"用户存在"这一信息）
+//   - 新密码不合规 / 与旧密码相同 → ValidationError
+func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPassword, newPassword string, tenantID int) error {
+	if userID <= 0 {
+		return common.NewBusinessError(common.UnauthorizedCode, "未授权访问", "")
+	}
+
+	// 变量名避开 user —— 该包已 import ent/user，遮蔽后
+	// user.TenantIDEQ 会解析成 *ent.User 上的方法（不存在）导致编译失败。
+	target, err := s.GetUserByID(ctx, userID, tenantID)
+	if err != nil {
+		return err
+	}
+
+	// 先校验旧密码。这里刻意统一返回 Forbidden 而不是区分"用户不存在"，
+	// 避免探测接口被用来枚举账号。
+	if bcrypt.CompareHashAndPassword([]byte(target.PasswordHash), []byte(oldPassword)) != nil {
+		s.logger.Warnf("自助改密失败（旧密码错误）: user_id=%d", userID)
+		return common.NewBusinessError(common.ForbiddenCode, "当前密码不正确", "")
+	}
+
+	if err := validatePassword(newPassword); err != nil {
+		return err
+	}
+
+	if oldPassword == newPassword {
+		return common.NewValidationError("新密码不能与当前密码相同", nil)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("密码加密失败: %w", err)
+	}
+
+	if err := s.client.User.UpdateOneID(userID).
+		Where(user.TenantIDEQ(tenantID)).
+		SetPasswordHash(string(hashedPassword)).
+		Exec(ctx); err != nil {
+		return fmt.Errorf("修改密码失败: %w", err)
+	}
+
+	// 与 ResetPassword 一致：改密后吊销全部存量 access token，
+	// 否则旧会话会在改密后继续存活 —— 改密最常见的动机恰恰是"可能泄露了"。
+	if revokeErr := middleware.InvalidateUserTokens(ctx, userID, time.Now()); revokeErr != nil {
+		s.logger.Errorw("改密后吊销存量token失败", "user_id", userID, "error", revokeErr)
+	}
+
+	s.logger.Infof("用户自助改密成功: ID=%d", userID)
+	return nil
+}
+
 func validatePassword(password string) error {
 	if len(password) < 12 || len(password) > 128 {
 		return common.NewValidationError("密码长度必须为12到128位", nil)

@@ -174,6 +174,9 @@ type KnowledgeArticleLike func(*sql.Selector)
 // KnowledgeArticleParticipant is the predicate function for knowledgearticleparticipant builders.
 type KnowledgeArticleParticipant func(*sql.Selector)
 
+// KnowledgeArticleReview is the predicate function for knowledgearticlereview builders.
+type KnowledgeArticleReview func(*sql.Selector)
+
 // KnowledgeArticleSession is the predicate function for knowledgearticlesession builders.
 type KnowledgeArticleSession func(*sql.Selector)
 
@@ -305,6 +308,12 @@ type SLAState func(*sql.Selector)
 
 // SLAViolation is the predicate function for slaviolation builders.
 type SLAViolation func(*sql.Selector)
+
+// SSOIdentity is the predicate function for ssoidentity builders.
+type SSOIdentity func(*sql.Selector)
+
+// SSOProvider is the predicate function for ssoprovider builders.
+type SSOProvider func(*sql.Selector)
 
 // ServiceCatalog is the predicate function for servicecatalog builders.
 type ServiceCatalog func(*sql.Selector)

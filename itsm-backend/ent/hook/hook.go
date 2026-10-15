@@ -680,6 +680,18 @@ func (f KnowledgeArticleParticipantFunc) Mutate(ctx context.Context, m ent.Mutat
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleParticipantMutation", m)
 }
 
+// The KnowledgeArticleReviewFunc type is an adapter to allow the use of ordinary
+// function as KnowledgeArticleReview mutator.
+type KnowledgeArticleReviewFunc func(context.Context, *ent.KnowledgeArticleReviewMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnowledgeArticleReviewFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnowledgeArticleReviewMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleReviewMutation", m)
+}
+
 // The KnowledgeArticleSessionFunc type is an adapter to allow the use of ordinary
 // function as KnowledgeArticleSession mutator.
 type KnowledgeArticleSessionFunc func(context.Context, *ent.KnowledgeArticleSessionMutation) (ent.Value, error)
@@ -1206,6 +1218,30 @@ func (f SLAViolationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAViolationMutation", m)
+}
+
+// The SSOIdentityFunc type is an adapter to allow the use of ordinary
+// function as SSOIdentity mutator.
+type SSOIdentityFunc func(context.Context, *ent.SSOIdentityMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SSOIdentityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SSOIdentityMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SSOIdentityMutation", m)
+}
+
+// The SSOProviderFunc type is an adapter to allow the use of ordinary
+// function as SSOProvider mutator.
+type SSOProviderFunc func(context.Context, *ent.SSOProviderMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SSOProviderFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SSOProviderMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SSOProviderMutation", m)
 }
 
 // The ServiceCatalogFunc type is an adapter to allow the use of ordinary

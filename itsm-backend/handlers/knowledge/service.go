@@ -55,6 +55,91 @@ func (s *Service) SetFreshnessJudger(j *knowledgeaccess.FreshnessJudger) { s.fre
 // L1 时效管控的闭环动作：声明了复核周期的知识一旦逾期，会从 RAG 检索结果中消失，
 // 复核是把它恢复回来的唯一途径。只更新复核时间，不改正文，
 // 因此复核动作不可能夹带未经审校的内容改动。
+// SubmitReview 作者提交文章送审。
+func (s *Service) SubmitReview(ctx context.Context, articleID, tenantID, operatorID int, comment string) (*Article, error) {
+	return s.applyReview(ctx, articleID, tenantID, operatorID, ReviewActionSubmit, comment)
+}
+
+// ApproveReview 评审人通过。
+func (s *Service) ApproveReview(ctx context.Context, articleID, tenantID, reviewerID int, comment string) (*Article, error) {
+	return s.applyReview(ctx, articleID, tenantID, reviewerID, ReviewActionApprove, comment)
+}
+
+// RejectReview 评审人驳回。必须给理由（ReviewRequiresComment）。
+func (s *Service) RejectReview(ctx context.Context, articleID, tenantID, reviewerID int, comment string) (*Article, error) {
+	return s.applyReview(ctx, articleID, tenantID, reviewerID, ReviewActionReject, comment)
+}
+
+// WithdrawReview 作者撤回送审。
+func (s *Service) WithdrawReview(ctx context.Context, articleID, tenantID, operatorID int, comment string) (*Article, error) {
+	return s.applyReview(ctx, articleID, tenantID, operatorID, ReviewActionWithdraw, comment)
+}
+
+// RepublishReview 已通过内容被修改后重新送审。
+func (s *Service) RepublishReview(ctx context.Context, articleID, tenantID, operatorID int, comment string) (*Article, error) {
+	return s.applyReview(ctx, articleID, tenantID, operatorID, ReviewActionRepubish, comment)
+}
+
+// applyReview 执行一次评审动作的统一入口：校验动作合法性、强制意见、
+// 防自审，然后落状态与流水。
+//
+// 防自审：approve/reject 的操作人不能是文章作者。自己批自己的稿在治理上
+// 等于没有评审——这是知识库可信度最容易塌陷的方式，代码层必须挡住。
+func (s *Service) applyReview(
+	ctx context.Context, articleID, tenantID, operatorID int,
+	action, comment string,
+) (*Article, error) {
+	if !IsReviewAction(action) {
+		return nil, common.NewValidationError("未知的评审动作: "+action, nil)
+	}
+	if ReviewRequiresComment(action) && strings.TrimSpace(comment) == "" {
+		return nil, common.NewValidationError("驳回必须填写评审意见", nil)
+	}
+
+	current, err := s.repo.Get(ctx, articleID, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	if action == ReviewActionApprove || action == ReviewActionReject {
+		if current.AuthorID == operatorID {
+			s.logger.Warnw("知识评审拒绝自审",
+				"article_id", articleID, "author_id", current.AuthorID, "action", action)
+			return nil, common.NewBusinessError(
+				common.ForbiddenCode, "不能评审自己撰写的文章", "",
+			)
+		}
+	}
+
+	toStatus, err := nextReviewStatus(action, current.ReviewStatus)
+	if err != nil {
+		return nil, err
+	}
+
+	updated, err := s.repo.TransitionReview(ctx, articleID, tenantID, operatorID, action, toStatus, comment)
+	if err != nil {
+		return nil, err
+	}
+
+	s.logger.Infow("知识评审状态流转",
+		"article_id", articleID,
+		"tenant_id", tenantID,
+		"action", action,
+		"from", NormalizeReviewStatus(current.ReviewStatus),
+		"to", toStatus,
+		"operator_id", operatorID)
+
+	// 向量索引同步已在 TransitionReview 的同一事务内完成（可见性变更必须
+	// 与状态变更同生共死），此处不再重复处理。
+	return updated, nil
+}
+
+// ListReviews 返回文章的评审历史。
+func (s *Service) ListReviews(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ReviewRecord, int, error) {
+	return s.repo.ListReviews(ctx, articleID, tenantID, page, pageSize)
+}
+
+// MarkArticleReviewed 记录一次内容复核：把 last_reviewed_at 置为当前时间。
 func (s *Service) MarkArticleReviewed(ctx context.Context, id int, tenantID int) (*Article, error) {
 	a, err := s.repo.MarkReviewed(ctx, id, tenantID)
 	if err != nil {

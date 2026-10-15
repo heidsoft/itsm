@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"time"
@@ -93,6 +94,62 @@ func (_c *KnowledgeArticleCreate) SetIsPublished(v bool) *KnowledgeArticleCreate
 func (_c *KnowledgeArticleCreate) SetNillableIsPublished(v *bool) *KnowledgeArticleCreate {
 	if v != nil {
 		_c.SetIsPublished(*v)
+	}
+	return _c
+}
+
+// SetReviewStatus sets the "review_status" field.
+func (_c *KnowledgeArticleCreate) SetReviewStatus(v knowledgearticle.ReviewStatus) *KnowledgeArticleCreate {
+	_c.mutation.SetReviewStatus(v)
+	return _c
+}
+
+// SetNillableReviewStatus sets the "review_status" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableReviewStatus(v *knowledgearticle.ReviewStatus) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetReviewStatus(*v)
+	}
+	return _c
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (_c *KnowledgeArticleCreate) SetReviewerID(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetReviewerID(v)
+	return _c
+}
+
+// SetNillableReviewerID sets the "reviewer_id" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableReviewerID(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetReviewerID(*v)
+	}
+	return _c
+}
+
+// SetReviewedAt sets the "reviewed_at" field.
+func (_c *KnowledgeArticleCreate) SetReviewedAt(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetReviewedAt(v)
+	return _c
+}
+
+// SetNillableReviewedAt sets the "reviewed_at" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableReviewedAt(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetReviewedAt(*v)
+	}
+	return _c
+}
+
+// SetReviewComment sets the "review_comment" field.
+func (_c *KnowledgeArticleCreate) SetReviewComment(v string) *KnowledgeArticleCreate {
+	_c.mutation.SetReviewComment(v)
+	return _c
+}
+
+// SetNillableReviewComment sets the "review_comment" field if the given value is not nil.
+func (_c *KnowledgeArticleCreate) SetNillableReviewComment(v *string) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetReviewComment(*v)
 	}
 	return _c
 }
@@ -282,6 +339,21 @@ func (_c *KnowledgeArticleCreate) AddSessions(v ...*KnowledgeArticleSession) *Kn
 	return _c.AddSessionIDs(ids...)
 }
 
+// AddReviewRecordIDs adds the "review_records" edge to the KnowledgeArticleReview entity by IDs.
+func (_c *KnowledgeArticleCreate) AddReviewRecordIDs(ids ...int) *KnowledgeArticleCreate {
+	_c.mutation.AddReviewRecordIDs(ids...)
+	return _c
+}
+
+// AddReviewRecords adds the "review_records" edges to the KnowledgeArticleReview entity.
+func (_c *KnowledgeArticleCreate) AddReviewRecords(v ...*KnowledgeArticleReview) *KnowledgeArticleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddReviewRecordIDs(ids...)
+}
+
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (_c *KnowledgeArticleCreate) Mutation() *KnowledgeArticleMutation {
 	return _c.mutation
@@ -320,6 +392,10 @@ func (_c *KnowledgeArticleCreate) defaults() {
 	if _, ok := _c.mutation.IsPublished(); !ok {
 		v := knowledgearticle.DefaultIsPublished
 		_c.mutation.SetIsPublished(v)
+	}
+	if _, ok := _c.mutation.ReviewStatus(); !ok {
+		v := knowledgearticle.DefaultReviewStatus
+		_c.mutation.SetReviewStatus(v)
 	}
 	if _, ok := _c.mutation.ViewCount(); !ok {
 		v := knowledgearticle.DefaultViewCount
@@ -375,6 +451,14 @@ func (_c *KnowledgeArticleCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsPublished(); !ok {
 		return &ValidationError{Name: "is_published", err: errors.New(`ent: missing required field "KnowledgeArticle.is_published"`)}
+	}
+	if _, ok := _c.mutation.ReviewStatus(); !ok {
+		return &ValidationError{Name: "review_status", err: errors.New(`ent: missing required field "KnowledgeArticle.review_status"`)}
+	}
+	if v, ok := _c.mutation.ReviewStatus(); ok {
+		if err := knowledgearticle.ReviewStatusValidator(v); err != nil {
+			return &ValidationError{Name: "review_status", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.review_status": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.ViewCount(); !ok {
 		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "KnowledgeArticle.view_count"`)}
@@ -447,6 +531,22 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 	if value, ok := _c.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 		_node.IsPublished = value
+	}
+	if value, ok := _c.mutation.ReviewStatus(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)
+		_node.ReviewStatus = value
+	}
+	if value, ok := _c.mutation.ReviewerID(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewerID, field.TypeInt, value)
+		_node.ReviewerID = &value
+	}
+	if value, ok := _c.mutation.ReviewedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewedAt, field.TypeTime, value)
+		_node.ReviewedAt = &value
+	}
+	if value, ok := _c.mutation.ReviewComment(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewComment, field.TypeString, value)
+		_node.ReviewComment = value
 	}
 	if value, ok := _c.mutation.ViewCount(); ok {
 		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
@@ -529,6 +629,22 @@ func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.Cre
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ReviewRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

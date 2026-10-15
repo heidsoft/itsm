@@ -42,6 +42,24 @@ var writeRouteExemptions = map[string]string{
 	"common_system_routes.go POST /logout":        "登出，凭会话自身即可失效",
 	"common_system_routes.go POST /switch-tenant": "切换至该用户已归属的租户，授权依据是租户成员关系而非资源动作",
 	"router.go POST /ws/ticket":                   "颁发一次性 WebSocket 票据，凭已认证身份且仅限本人会话",
+
+	// —— 3. SSO 登录发起与账号自助面（与 /logout、/switch-tenant 同模式）——
+	// initiate/callback 是 OIDC 登录链路的前半段，会话尚未建立，
+	// 授权依据是 issuer + state + PKCE + nonce 而非角色；自助面只操作调用者本人绑定。
+	//
+	// ⚠️ 这四条豁免**依赖 sso_routes.go 已注册**（该文件当前未提交到本仓库，
+	// 由 SSO 后端批次一并落地）。若守卫报"白名单存在失效条目"，
+	// 说明 sso_routes.go 未在本分支注册，此时应把这四条一并移除，
+	// 而不是删掉守卫。
+	"sso_routes.go POST /auth/sso/initiate": "SSO 登录发起，会话未建立，凭 issuer + state + PKCE",
+	"sso_routes.go POST /auth/sso/callback": "SSO 回调，凭 state + nonce 校验 IdP 断言",
+	"sso_routes.go POST /sso/bind":          "绑定外部身份到本人账号，仅影响调用者自己",
+	"sso_routes.go POST /sso/unbind":        "解绑外部身份，仅影响调用者自己",
+
+	// —— 4. 自助改密：改的是调用者自己的密码，且必须校验旧密码 ——
+	// 用 user:write 会让端用户无法改自己的密码（该码是管理员语义）；
+	// handler 内部 user_id 只取鉴权上下文，不接受请求体指定目标用户。
+	"account_routes.go PUT /change-password": "自助改密，仅作用于调用者本人并校验旧密码",
 }
 
 type scannedRoute struct {

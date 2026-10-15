@@ -15,6 +15,7 @@ import (
 	connectorAlert "itsm-backend/connector/alert"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
+	accountHandler "itsm-backend/handlers/account"
 	a2uiHandler "itsm-backend/handlers/a2ui"
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
@@ -229,6 +230,9 @@ type RouterConfig struct {
 	VectorStoreHandler *vectorStoreHandler.Handler
 	CommonHandler      *domainCommon.Handler
 	AuthHandler        *authHandler.Handler
+	// AccountHandler 提供登录用户对自身账号的自助操作（当前：自助改密）。
+	// 与用户管理面分离：管理面由管理员重置他人密码，不校验旧密码。
+	AccountHandler *accountHandler.Handler
 
 	// Skill Registry v1
 	SkillHandler *skill.Handler
@@ -593,6 +597,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Common & System (DDD) ====================
 		if config.CommonHandler != nil {
 			SetupCommonSystemRoutes(r, tenant.(*gin.RouterGroup), config)
+
+			// 自助账号操作（当前：自助改密，校验旧密码）。
+			// 此前前端 profile 页调用的 PUT /users/:id/reset-password 后端从未注册，
+			// 且那是管理员重置语义（不校验旧密码），不能直接拿来用。
+			SetupAccountRoutes(r, config.JWTSecret, config.AccountHandler)
 		}
 
 		// ==================== Problem Investigation ====================

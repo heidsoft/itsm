@@ -170,9 +170,18 @@ export class UserApi {
     await httpClient.put(`${this.baseURL}/${id}/status`, { active });
   }
 
-  // 重置用户密码
+  // 重置用户密码（管理员语义：不校验旧密码）
+  // ⚠️ 后端当前**未注册** PUT /users/:id/reset-password（仅存在于预检映射与
+  // swagger 注释中），调用必然 404。自助改密请用下方 changeOwnPassword。
   static async resetPassword(id: number, newPassword: string): Promise<void> {
     await httpClient.put(`${this.baseURL}/${id}/reset-password`, { newPassword: newPassword });
+  }
+
+  // 自助修改本人密码（校验旧密码）
+  // 与上面的管理员重置是两个权限面：此处只能改自己，且必须提供当前密码。
+  // 成功后服务端会吊销该用户全部存量 access token，需重新登录。
+  static async changeOwnPassword(oldPassword: string, newPassword: string): Promise<void> {
+    await httpClient.put('/api/v1/account/change-password', { oldPassword, newPassword });
   }
 
   // 获取用户统计

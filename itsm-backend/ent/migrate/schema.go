@@ -2328,6 +2328,10 @@ var (
 		{Name: "author_id", Type: field.TypeInt},
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "is_published", Type: field.TypeBool, Default: false},
+		{Name: "review_status", Type: field.TypeEnum, Enums: []string{"draft", "under_review", "approved", "rejected"}, Default: "draft"},
+		{Name: "reviewer_id", Type: field.TypeInt, Nullable: true},
+		{Name: "reviewed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "review_comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "view_count", Type: field.TypeInt, Default: 0},
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
 		{Name: "valid_from", Type: field.TypeTime, Nullable: true},
@@ -2348,7 +2352,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
-				Columns:    []*schema.Column{KnowledgeArticlesColumns[18]},
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[22]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -2406,6 +2410,44 @@ var (
 				Name:    "knowledgearticleparticipant_session_id_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{KnowledgeArticleParticipantsColumns[1], KnowledgeArticleParticipantsColumns[2]},
+			},
+		},
+	}
+	// KnowledgeArticleReviewsColumns holds the columns for the "knowledge_article_reviews" table.
+	KnowledgeArticleReviewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "from_status", Type: field.TypeString, Default: "draft"},
+		{Name: "to_status", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "operator_id", Type: field.TypeInt},
+		{Name: "comment", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "article_id", Type: field.TypeInt},
+	}
+	// KnowledgeArticleReviewsTable holds the schema information for the "knowledge_article_reviews" table.
+	KnowledgeArticleReviewsTable = &schema.Table{
+		Name:       "knowledge_article_reviews",
+		Columns:    KnowledgeArticleReviewsColumns,
+		PrimaryKey: []*schema.Column{KnowledgeArticleReviewsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "knowledge_article_reviews_knowledge_articles_review_records",
+				Columns:    []*schema.Column{KnowledgeArticleReviewsColumns[8]},
+				RefColumns: []*schema.Column{KnowledgeArticlesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "knowledgearticlereview_article_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{KnowledgeArticleReviewsColumns[8], KnowledgeArticleReviewsColumns[7]},
+			},
+			{
+				Name:    "knowledgearticlereview_tenant_id_article_id",
+				Unique:  false,
+				Columns: []*schema.Column{KnowledgeArticleReviewsColumns[1], KnowledgeArticleReviewsColumns[8]},
 			},
 		},
 	}
@@ -4319,6 +4361,86 @@ var (
 			},
 		},
 	}
+	// SSOIdentitiesColumns holds the columns for the "sso_identities" table.
+	SSOIdentitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "provider_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "subject", Type: field.TypeString, Size: 255},
+		{Name: "external_username", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "external_email", Type: field.TypeString, Nullable: true, Size: 255},
+		{Name: "last_login_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SSOIdentitiesTable holds the schema information for the "sso_identities" table.
+	SSOIdentitiesTable = &schema.Table{
+		Name:       "sso_identities",
+		Columns:    SSOIdentitiesColumns,
+		PrimaryKey: []*schema.Column{SSOIdentitiesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ssoidentity_tenant_id_provider_id_subject",
+				Unique:  true,
+				Columns: []*schema.Column{SSOIdentitiesColumns[1], SSOIdentitiesColumns[2], SSOIdentitiesColumns[4]},
+			},
+			{
+				Name:    "ssoidentity_tenant_id_user_id_provider_id",
+				Unique:  true,
+				Columns: []*schema.Column{SSOIdentitiesColumns[1], SSOIdentitiesColumns[3], SSOIdentitiesColumns[2]},
+			},
+			{
+				Name:    "ssoidentity_provider_id",
+				Unique:  false,
+				Columns: []*schema.Column{SSOIdentitiesColumns[2]},
+			},
+		},
+	}
+	// SSOProvidersColumns holds the columns for the "sso_providers" table.
+	SSOProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "code", Type: field.TypeString, Size: 50},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "protocol", Type: field.TypeString, Size: 20, Default: "oidc"},
+		{Name: "client_id", Type: field.TypeString, Size: 200},
+		{Name: "client_secret_encrypted", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "issuer", Type: field.TypeString, Size: 500},
+		{Name: "authorization_endpoint", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "token_endpoint", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "userinfo_endpoint", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "jwks_uri", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "scopes", Type: field.TypeString, Size: 500, Default: "openid profile email"},
+		{Name: "redirect_uri", Type: field.TypeString, Size: 1000},
+		{Name: "auto_provision", Type: field.TypeBool, Default: true},
+		{Name: "default_role", Type: field.TypeString, Size: 50, Default: "end_user"},
+		{Name: "allowed_email_domains", Type: field.TypeString, Nullable: true, Size: 1000},
+		{Name: "enabled", Type: field.TypeBool, Default: false},
+		{Name: "status", Type: field.TypeString, Size: 40, Default: "configured"},
+		{Name: "last_error", Type: field.TypeString, Nullable: true, Size: 2000},
+		{Name: "last_health_check_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SSOProvidersTable holds the schema information for the "sso_providers" table.
+	SSOProvidersTable = &schema.Table{
+		Name:       "sso_providers",
+		Columns:    SSOProvidersColumns,
+		PrimaryKey: []*schema.Column{SSOProvidersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ssoprovider_tenant_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{SSOProvidersColumns[1], SSOProvidersColumns[2]},
+			},
+			{
+				Name:    "ssoprovider_code_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{SSOProvidersColumns[2], SSOProvidersColumns[17]},
+			},
+		},
+	}
 	// ServiceCatalogsColumns holds the columns for the "service_catalogs" table.
 	ServiceCatalogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -6165,6 +6287,7 @@ var (
 		KnowledgeArticlesTable,
 		KnowledgeArticleLikesTable,
 		KnowledgeArticleParticipantsTable,
+		KnowledgeArticleReviewsTable,
 		KnowledgeArticleSessionsTable,
 		KnowledgeArticleVersionsTable,
 		KnownErrorsTable,
@@ -6209,6 +6332,8 @@ var (
 		SLAPoliciesTable,
 		SLAStatesTable,
 		SLAViolationsTable,
+		SSOIdentitiesTable,
+		SSOProvidersTable,
 		ServiceCatalogsTable,
 		ServiceCatalogItemsTable,
 		ServiceCustomersTable,
@@ -6308,6 +6433,7 @@ func init() {
 	ItemVersionsTable.ForeignKeys[0].RefTable = MarketplaceItemsTable
 	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
+	KnowledgeArticleReviewsTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	KnowledgeArticleSessionsTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	KnowledgeArticleVersionsTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	MspAllocationsTable.ForeignKeys[0].RefTable = TenantsTable

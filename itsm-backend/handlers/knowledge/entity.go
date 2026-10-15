@@ -19,8 +19,16 @@ type Article struct {
 	AuthorID    int       `json:"authorId"`
 	TenantID    int       `json:"tenantId"`
 	IsPublished bool      `json:"isPublished"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+
+	// 评审状态机。ReviewStatus 为空按 "draft" 处理，
+	// 兼容未回填该字段的历史响应。
+	ReviewStatus  string     `json:"reviewStatus,omitempty"`
+	ReviewerID    *int       `json:"reviewerId,omitempty"`
+	ReviewedAt    *time.Time `json:"reviewedAt,omitempty"`
+	ReviewComment string     `json:"reviewComment,omitempty"`
+
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 	// RelevanceScore is set by SearchArticles when returning RAG results (0 if not from RAG).
 	// Values are in [0, 1]; higher means more relevant.
 	RelevanceScore float64 `json:"relevanceScore,omitempty"`

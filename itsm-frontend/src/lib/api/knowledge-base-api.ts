@@ -27,6 +27,7 @@ import type {
   ArticleQuery,
   BatchArticleOperation,
   ImageUploadResult,
+  KnowledgeReviewRecord,
 } from '@/types/knowledge-base';
 
 // 统一路径前缀：文章路径、命名空间路径分离，避免散落的字符串拼接
@@ -84,6 +85,56 @@ export class KnowledgeBaseApi {
     operation: BatchArticleOperation
   ): Promise<{ success: number; failed: number }> {
     return httpClient.post(`${ARTICLES_PREFIX}/batch`, operation);
+  }
+
+  // ==================== 评审状态机 ====================
+  //
+  // 状态取值与后端 ent schema KnowledgeArticle.review_status 枚举严格对应：
+  //   draft 草稿 / under_review 评审中 / approved 已通过 / rejected 已驳回
+  //
+  // 注意区分两个概念：
+  //   reviewStatus  是「谁批准的」过程事实（评审链）
+  //   isPublished   是「是否对外可见」的布尔投影（检索面）
+  // 后端在 approve 时同步把 isPublished 置真、reject 时置假，
+  // 但两者语义不同，前端不要拿 isPublished 反推评审状态。
+
+  /** 作者提交送审 */
+  static async submitReview(id: number | string, comment?: string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/review/submit`, { comment });
+  }
+
+  /** 评审人通过 */
+  static async approveReview(id: number | string, comment?: string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/review/approve`, { comment });
+  }
+
+  /** 评审人驳回（comment 必填，后端会拒绝空意见） */
+  static async rejectReview(id: number | string, comment: string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/review/reject`, { comment });
+  }
+
+  /** 作者撤回送审 */
+  static async withdrawReview(id: number | string, comment?: string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/review/withdraw`, { comment });
+  }
+
+  /** 已通过内容被修改后重新送审 */
+  static async republishReview(id: number | string, comment?: string): Promise<KnowledgeArticle> {
+    return httpClient.post(`${ARTICLES_PREFIX}/${id}/review/republish`, { comment });
+  }
+
+  /** 取文章的评审历史（时间倒序） */
+  static async getReviewHistory(
+    id: number | string,
+    params?: { page?: number; pageSize?: number }
+  ): Promise<{
+    items: KnowledgeReviewRecord[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
+    return httpClient.get(`${ARTICLES_PREFIX}/${id}/reviews`, params);
   }
 
   // ==================== 版本控制 ====================

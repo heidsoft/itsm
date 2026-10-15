@@ -16,6 +16,40 @@ export enum ArticleStatus {
 }
 
 /**
+ * 评审状态 —— 后端 ent schema KnowledgeArticle.review_status 的枚举。
+ *
+ * 与 ArticleStatus 的区别：后者是前端自造的展示态，后端没有对应字段；
+ * 本枚举是真实落库值，判断"这篇知识批没批过"只能用它。
+ */
+export enum KnowledgeReviewStatus {
+  DRAFT = 'draft', // 草稿：作者可编辑，未提交
+  UNDER_REVIEW = 'under_review', // 评审中：等待评审人决策
+  APPROVED = 'approved', // 已通过：评审人批准，对外可见
+  REJECTED = 'rejected', // 已驳回：作者可修改后重新提交
+}
+
+/** 评审动作 */
+export type KnowledgeReviewAction =
+  | 'submit'
+  | 'approve'
+  | 'reject'
+  | 'withdraw'
+  | 'republish';
+
+/** 一条评审审计流水 */
+export interface KnowledgeReviewRecord {
+  id: number;
+  articleId: number;
+  tenantId: number;
+  fromStatus: string;
+  toStatus: string;
+  action: KnowledgeReviewAction | string;
+  operatorId: number;
+  comment?: string;
+  createdAt: string;
+}
+
+/**
  * 文章可见性
  */
 export enum ArticleVisibility {
@@ -47,6 +81,24 @@ export interface KnowledgeArticle {
   // 状态和可见性
   status: ArticleStatus;
   visibility: ArticleVisibility;
+
+  // ---- 评审状态机（后端 ent schema KnowledgeArticle.review_status）----
+  //
+  // 权威来源是 reviewStatus，取值 draft/under_review/approved/rejected。
+  //
+  // 为什么与上面的 status 并存：status 是前端自造的枚举，后端文章实体上
+  // **并不存在** status 字段（只有 is_published 布尔）。历史代码把
+  // status 当成"待审核/已发布"用，导致 knowledge/reviews 页面永远筛不出数据。
+  // reviewStatus 是真实落库的字段，新代码请一律用它判断评审阶段；
+  // status 仅保留给仍依赖它的旧组件。
+  reviewStatus?: KnowledgeReviewStatus;
+  // reviewerId/reviewedAt/reviewComment 只在本文（KnowledgeArticle）声明一次。
+  // 相邻的 ReviewArticleRequest 面向旧的 review/decision 断链端点，
+  // 字段同名但语义不同（那边是请求入参、类型也不同），不要合并。
+
+  // isPublished 是「对外可见」的布尔投影，由 reviewStatus 派生但语义不同：
+  // 评审通过才为 true，检索面（RAG / 搜索）只看它。
+  isPublished?: boolean;
 
   // 媒体
   featuredImage?: string;

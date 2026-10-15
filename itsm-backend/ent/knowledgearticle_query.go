@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/predicate"
@@ -22,14 +23,15 @@ import (
 // KnowledgeArticleQuery is the builder for querying KnowledgeArticle entities.
 type KnowledgeArticleQuery struct {
 	config
-	ctx           *QueryContext
-	order         []knowledgearticle.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.KnowledgeArticle
-	withUserLikes *KnowledgeArticleLikeQuery
-	withVersions  *KnowledgeArticleVersionQuery
-	withSessions  *KnowledgeArticleSessionQuery
-	withFKs       bool
+	ctx               *QueryContext
+	order             []knowledgearticle.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.KnowledgeArticle
+	withUserLikes     *KnowledgeArticleLikeQuery
+	withVersions      *KnowledgeArticleVersionQuery
+	withSessions      *KnowledgeArticleSessionQuery
+	withReviewRecords *KnowledgeArticleReviewQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -125,6 +127,28 @@ func (_q *KnowledgeArticleQuery) QuerySessions() *KnowledgeArticleSessionQuery {
 			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
 			sqlgraph.To(knowledgearticlesession.Table, knowledgearticlesession.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.SessionsTable, knowledgearticle.SessionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReviewRecords chains the current query on the "review_records" edge.
+func (_q *KnowledgeArticleQuery) QueryReviewRecords() *KnowledgeArticleReviewQuery {
+	query := (&KnowledgeArticleReviewClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, selector),
+			sqlgraph.To(knowledgearticlereview.Table, knowledgearticlereview.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.ReviewRecordsTable, knowledgearticle.ReviewRecordsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -319,14 +343,15 @@ func (_q *KnowledgeArticleQuery) Clone() *KnowledgeArticleQuery {
 		return nil
 	}
 	return &KnowledgeArticleQuery{
-		config:        _q.config,
-		ctx:           _q.ctx.Clone(),
-		order:         append([]knowledgearticle.OrderOption{}, _q.order...),
-		inters:        append([]Interceptor{}, _q.inters...),
-		predicates:    append([]predicate.KnowledgeArticle{}, _q.predicates...),
-		withUserLikes: _q.withUserLikes.Clone(),
-		withVersions:  _q.withVersions.Clone(),
-		withSessions:  _q.withSessions.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]knowledgearticle.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.KnowledgeArticle{}, _q.predicates...),
+		withUserLikes:     _q.withUserLikes.Clone(),
+		withVersions:      _q.withVersions.Clone(),
+		withSessions:      _q.withSessions.Clone(),
+		withReviewRecords: _q.withReviewRecords.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -363,6 +388,17 @@ func (_q *KnowledgeArticleQuery) WithSessions(opts ...func(*KnowledgeArticleSess
 		opt(query)
 	}
 	_q.withSessions = query
+	return _q
+}
+
+// WithReviewRecords tells the query-builder to eager-load the nodes that are connected to
+// the "review_records" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *KnowledgeArticleQuery) WithReviewRecords(opts ...func(*KnowledgeArticleReviewQuery)) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleReviewClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withReviewRecords = query
 	return _q
 }
 
@@ -445,10 +481,11 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		nodes       = []*KnowledgeArticle{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withUserLikes != nil,
 			_q.withVersions != nil,
 			_q.withSessions != nil,
+			_q.withReviewRecords != nil,
 		}
 	)
 	if withFKs {
@@ -490,6 +527,15 @@ func (_q *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 		if err := _q.loadSessions(ctx, query, nodes,
 			func(n *KnowledgeArticle) { n.Edges.Sessions = []*KnowledgeArticleSession{} },
 			func(n *KnowledgeArticle, e *KnowledgeArticleSession) { n.Edges.Sessions = append(n.Edges.Sessions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withReviewRecords; query != nil {
+		if err := _q.loadReviewRecords(ctx, query, nodes,
+			func(n *KnowledgeArticle) { n.Edges.ReviewRecords = []*KnowledgeArticleReview{} },
+			func(n *KnowledgeArticle, e *KnowledgeArticleReview) {
+				n.Edges.ReviewRecords = append(n.Edges.ReviewRecords, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -571,6 +617,36 @@ func (_q *KnowledgeArticleQuery) loadSessions(ctx context.Context, query *Knowle
 	}
 	query.Where(predicate.KnowledgeArticleSession(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(knowledgearticle.SessionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ArticleID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "article_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *KnowledgeArticleQuery) loadReviewRecords(ctx context.Context, query *KnowledgeArticleReviewQuery, nodes []*KnowledgeArticle, init func(*KnowledgeArticle), assign func(*KnowledgeArticle, *KnowledgeArticleReview)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*KnowledgeArticle)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(knowledgearticlereview.FieldArticleID)
+	}
+	query.Where(predicate.KnowledgeArticleReview(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(knowledgearticle.ReviewRecordsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

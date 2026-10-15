@@ -31,6 +31,14 @@ type KnowledgeArticle struct {
 	TenantID int `json:"tenant_id,omitempty"`
 	// 是否发布
 	IsPublished bool `json:"is_published,omitempty"`
+	// 评审状态：draft 草稿 / under_review 评审中 / approved 已通过 / rejected 已驳回
+	ReviewStatus knowledgearticle.ReviewStatus `json:"review_status,omitempty"`
+	// 最近一次评审人ID；空=未评审
+	ReviewerID *int `json:"reviewer_id,omitempty"`
+	// 最近一次评审时间；空=未评审
+	ReviewedAt *time.Time `json:"reviewed_at,omitempty"`
+	// 最近一次评审意见
+	ReviewComment string `json:"review_comment,omitempty"`
 	// 浏览次数
 	ViewCount int `json:"view_count,omitempty"`
 	// 点赞次数
@@ -66,9 +74,11 @@ type KnowledgeArticleEdges struct {
 	Versions []*KnowledgeArticleVersion `json:"versions,omitempty"`
 	// Sessions holds the value of the sessions edge.
 	Sessions []*KnowledgeArticleSession `json:"sessions,omitempty"`
+	// ReviewRecords holds the value of the review_records edge.
+	ReviewRecords []*KnowledgeArticleReview `json:"review_records,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // UserLikesOrErr returns the UserLikes value or an error if the edge
@@ -98,6 +108,15 @@ func (e KnowledgeArticleEdges) SessionsOrErr() ([]*KnowledgeArticleSession, erro
 	return nil, &NotLoadedError{edge: "sessions"}
 }
 
+// ReviewRecordsOrErr returns the ReviewRecords value or an error if the edge
+// was not loaded in eager-loading.
+func (e KnowledgeArticleEdges) ReviewRecordsOrErr() ([]*KnowledgeArticleReview, error) {
+	if e.loadedTypes[3] {
+		return e.ReviewRecords, nil
+	}
+	return nil, &NotLoadedError{edge: "review_records"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -105,11 +124,11 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case knowledgearticle.FieldIsPublished:
 			values[i] = new(sql.NullBool)
-		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel:
+		case knowledgearticle.FieldID, knowledgearticle.FieldAuthorID, knowledgearticle.FieldTenantID, knowledgearticle.FieldReviewerID, knowledgearticle.FieldViewCount, knowledgearticle.FieldLikeCount, knowledgearticle.FieldReviewIntervalDays, knowledgearticle.FieldAuthorityLevel:
 			values[i] = new(sql.NullInt64)
-		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags:
+		case knowledgearticle.FieldTitle, knowledgearticle.FieldContent, knowledgearticle.FieldCategory, knowledgearticle.FieldTags, knowledgearticle.FieldReviewStatus, knowledgearticle.FieldReviewComment:
 			values[i] = new(sql.NullString)
-		case knowledgearticle.FieldValidFrom, knowledgearticle.FieldValidUntil, knowledgearticle.FieldLastReviewedAt, knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt, knowledgearticle.FieldDeletedAt:
+		case knowledgearticle.FieldReviewedAt, knowledgearticle.FieldValidFrom, knowledgearticle.FieldValidUntil, knowledgearticle.FieldLastReviewedAt, knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt, knowledgearticle.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case knowledgearticle.ForeignKeys[0]: // known_error_knowledge_articles
 			values[i] = new(sql.NullInt64)
@@ -175,6 +194,32 @@ func (_m *KnowledgeArticle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_published", values[i])
 			} else if value.Valid {
 				_m.IsPublished = value.Bool
+			}
+		case knowledgearticle.FieldReviewStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field review_status", values[i])
+			} else if value.Valid {
+				_m.ReviewStatus = knowledgearticle.ReviewStatus(value.String)
+			}
+		case knowledgearticle.FieldReviewerID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field reviewer_id", values[i])
+			} else if value.Valid {
+				_m.ReviewerID = new(int)
+				*_m.ReviewerID = int(value.Int64)
+			}
+		case knowledgearticle.FieldReviewedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field reviewed_at", values[i])
+			} else if value.Valid {
+				_m.ReviewedAt = new(time.Time)
+				*_m.ReviewedAt = value.Time
+			}
+		case knowledgearticle.FieldReviewComment:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field review_comment", values[i])
+			} else if value.Valid {
+				_m.ReviewComment = value.String
 			}
 		case knowledgearticle.FieldViewCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -275,6 +320,11 @@ func (_m *KnowledgeArticle) QuerySessions() *KnowledgeArticleSessionQuery {
 	return NewKnowledgeArticleClient(_m.config).QuerySessions(_m)
 }
 
+// QueryReviewRecords queries the "review_records" edge of the KnowledgeArticle entity.
+func (_m *KnowledgeArticle) QueryReviewRecords() *KnowledgeArticleReviewQuery {
+	return NewKnowledgeArticleClient(_m.config).QueryReviewRecords(_m)
+}
+
 // Update returns a builder for updating this KnowledgeArticle.
 // Note that you need to call KnowledgeArticle.Unwrap() before calling this method if this KnowledgeArticle
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -318,6 +368,22 @@ func (_m *KnowledgeArticle) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_published=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsPublished))
+	builder.WriteString(", ")
+	builder.WriteString("review_status=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ReviewStatus))
+	builder.WriteString(", ")
+	if v := _m.ReviewerID; v != nil {
+		builder.WriteString("reviewer_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.ReviewedAt; v != nil {
+		builder.WriteString("reviewed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("review_comment=")
+	builder.WriteString(_m.ReviewComment)
 	builder.WriteString(", ")
 	builder.WriteString("view_count=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ViewCount))

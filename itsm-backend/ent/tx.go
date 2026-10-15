@@ -124,6 +124,8 @@ type Tx struct {
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
 	// KnowledgeArticleParticipant is the client for interacting with the KnowledgeArticleParticipant builders.
 	KnowledgeArticleParticipant *KnowledgeArticleParticipantClient
+	// KnowledgeArticleReview is the client for interacting with the KnowledgeArticleReview builders.
+	KnowledgeArticleReview *KnowledgeArticleReviewClient
 	// KnowledgeArticleSession is the client for interacting with the KnowledgeArticleSession builders.
 	KnowledgeArticleSession *KnowledgeArticleSessionClient
 	// KnowledgeArticleVersion is the client for interacting with the KnowledgeArticleVersion builders.
@@ -212,6 +214,10 @@ type Tx struct {
 	SLAState *SLAStateClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
+	// SSOIdentity is the client for interacting with the SSOIdentity builders.
+	SSOIdentity *SSOIdentityClient
+	// SSOProvider is the client for interacting with the SSOProvider builders.
+	SSOProvider *SSOProviderClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
@@ -465,6 +471,7 @@ func (tx *Tx) init() {
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
 	tx.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(tx.config)
+	tx.KnowledgeArticleReview = NewKnowledgeArticleReviewClient(tx.config)
 	tx.KnowledgeArticleSession = NewKnowledgeArticleSessionClient(tx.config)
 	tx.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(tx.config)
 	tx.KnownError = NewKnownErrorClient(tx.config)
@@ -509,6 +516,8 @@ func (tx *Tx) init() {
 	tx.SLAPolicy = NewSLAPolicyClient(tx.config)
 	tx.SLAState = NewSLAStateClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
+	tx.SSOIdentity = NewSSOIdentityClient(tx.config)
+	tx.SSOProvider = NewSSOProviderClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceCatalogItem = NewServiceCatalogItemClient(tx.config)
 	tx.ServiceCustomer = NewServiceCustomerClient(tx.config)

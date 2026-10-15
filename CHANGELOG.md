@@ -21,6 +21,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **功能点台账遗留批次修复（2026-10-15）**：承接上批功能点梳理的遗留清单。
+  - **自助改密端点缺失（前端调用不存在的后端）**：profile 页「修改密码」调 `PUT /users/:id/reset-password`，后端**从未注册该路由**（仅存在于预检映射与 swagger 注释），点了必然失败；且它是管理员重置语义（不校验旧密码）。新增 `handlers/account` + `PUT /api/v1/account/change-password`：只挂 `AuthMiddleware`（不进租户级 RBAC，否则端用户无法改自己密码），user_id 只取鉴权上下文不接受请求体指定目标，必须校验旧密码（旧密码错→403，统一不区分"用户不存在"以防账号枚举），拒绝新旧相同，成功后吊销该用户全部存量 access token。`UserService.ChangeOwnPassword` 与 `ResetPassword` 分为两个权限面，后者仍留给管理员重置。前端改调新端点，密码规则与后端对齐（12–128 位 + 四类字符），改密成功后清本地会话。
+  - **escalation-rules 命名与语义错配**：页面名叫「升级规则」但打的是 `SLAApi.getAlertRules()`，实际是 **SLA 告警规则**，与升级矩阵（`/escalation-matrices`）无关；两页标题几乎一样（"SLA 升级矩阵" vs "SLA 升级规则"），用户无法区分。改为「SLA 告警规则」，页内加 Alert 明确说明与升级矩阵的区别（告警规则产出通知、升级矩阵驱动工单升级）；同步更新面包屑、admin 快捷入口、统计卡与删除确认文案。
+  - **升级矩阵未接入升级流程**：`escalationService` 构造时自建一个私有 `EscalationMatrixService`，未注入实例意味着管理员配的升级策略**只改了 API 实例、升级定时判定读的是另一个默认实例**。补 `SetMatrixService` 接线（`TestSLAServicesAreFullyInjected` 守卫此前已捕获此缺口）。
+  - **SSO 路由未挂权限中间件**：`POST /auth/sso/initiate|callback|bind|unbind` 四条写路由无 `RequirePermission`，触发 `TestWriteRoutesRequirePermission` 红。这四条确属公开面（OIDC 登录链路，凭 issuer+state+PKCE+nonce）与身份自省面（只操作调用者本人绑定），按守卫约定登记 `writeRouteExemptions` 并写明授权依据。
+  - **SSO 绑定测试自身缺陷**：`TestSetupRoutes_SSOBindAndUnbindRoundTrip` 的 unbind 请求未带 access token cookie，而该端点挂 `AuthMiddleware`，测试把正确的 401 当成实现缺陷。抽出 `postJSONWithToken`，自助面调用改为带凭据。
+  - **评审页用不存在的字段**：`knowledge/reviews` 页靠 `article.status` 过滤「待审核」，但后端文章实体**没有 status 字段**（只有 `is_published`），页面恒为空且看着正常；同时调的 `/review/decision` 后端从未注册。
+
+### Added
+
+- **知识评审状态机（最小闭环）**：`ent/schema/knowledgearticle.go` 新增 `review_status` 枚举（draft/under_review/approved/rejected）+ `reviewer_id`/`reviewed_at`/`review_comment`，新建 `knowledge_article_reviews` 审计流水表（from_status/to_status/action/operator_id/comment，`from/to` 刻意用 String 以便老记录在枚举扩展后仍可读）。流转规则显式白名单化（`reviewTransitions`），状态机拒绝映射 **409 ConflictCode**（不是 500）、未知动作映射 400。特性：
+  - **同一事务落状态与流水**（`TransitionReview`）：分开写会出现「状态已改但审计没记」或「审计已记但状态没改」，合规审计不可接受。
+  - **可见性与状态同事务进出向量索引**：approve 同步 `is_published=true` + 索引 sync，reject 置 false + 索引 delete —— 被驳回的知识仍能被 AI 引用，比"搜不到"更糟。
+  - **防自审**：approve/reject 的操作人不能是文章作者（自己批自己的稿等于没评审）。
+  - **驳回必须给理由**：只说"不通过"不说为什么，作者无法改进，评审退化为盖章。
+  - **存量数据按 `is_published` 反向初始化**：字段默认 draft，不回填会让已发布存量文章瞬间变成「未评审」，RAG 检索大面积掉量（迁移 `20261015_knowledge_review_status.sql`，幂等）。
+  - 新表已登记 RLS 派生租户策略（`internal/schema/tenant_guard.go`）。
+- **前端评审 API 与类型**：`KnowledgeBaseApi.submitReview/approveReview/rejectReview/withdrawReview/republishReview/getReviewHistory`，新增 `KnowledgeReviewStatus` 枚举与 `KnowledgeReviewRecord` 类型；`knowledge/reviews` 页改用真实 `reviewStatus` 驱动（不再读不存在的 `status`），驳回空意见前端先拦一道。
+- **后端回归测试**：`handlers/knowledge/review_state_test.go`（流转全集、死状态可达性、409/400 语义、常量与 ent 枚举一致性）、`handlers/account/handler_test.go`（未认证 401 fail-closed、缺字段 400、service 未就绪 503、不接受请求体指定目标用户）。
+
+
 - **功能点台账发现的假数据/假成功批次修复（2026-10-15）**：承接 `output/product-feature-inventory-2026-10-14.md`（约 145 功能点全量梳理）发现的 P0 项，全部有代码实证与回归锁：
   - **报表语义错配**：`GET /reports/problems` 与 `/reports/changes` 此前都挂 `DashboardHandler.GetTicketTrend`（工单趋势），报表名与返回数据不是同一业务对象。改接问题域 `ProblemHandler.GetTrends` 与变更域 `ChangeHandler.GetStats`；域 handler 未装配时回退工单趋势并显式标注 `reports_fallback`，不再静默返回错数据。
   - **仪表盘配置假成功**：`/dashboard/config|layout|widgets` 写面只回显请求体、无任何持久化（保存成功实则重启即丢）。新增 `service.DashboardConfigStore`（落 `system_configs`，键前缀 `dashboard.config|layout|widgets` + `user_id`），读面未配置时回落内置默认，写面落库失败显式报错；`POST /widgets` 改追加语义（同 id 覆盖）而非整表覆盖；`DELETE /widgets/:id` 部件不存在时返回 404 而非假成功。

@@ -59,6 +59,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
@@ -109,6 +110,8 @@ import (
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
+	"itsm-backend/ent/ssoidentity"
+	"itsm-backend/ent/ssoprovider"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
@@ -2422,27 +2425,27 @@ func init() {
 	// knowledgearticle.DefaultIsPublished holds the default value on creation for the is_published field.
 	knowledgearticle.DefaultIsPublished = knowledgearticleDescIsPublished.Default.(bool)
 	// knowledgearticleDescViewCount is the schema descriptor for view_count field.
-	knowledgearticleDescViewCount := knowledgearticleFields[7].Descriptor()
+	knowledgearticleDescViewCount := knowledgearticleFields[11].Descriptor()
 	// knowledgearticle.DefaultViewCount holds the default value on creation for the view_count field.
 	knowledgearticle.DefaultViewCount = knowledgearticleDescViewCount.Default.(int)
 	// knowledgearticleDescLikeCount is the schema descriptor for like_count field.
-	knowledgearticleDescLikeCount := knowledgearticleFields[8].Descriptor()
+	knowledgearticleDescLikeCount := knowledgearticleFields[12].Descriptor()
 	// knowledgearticle.DefaultLikeCount holds the default value on creation for the like_count field.
 	knowledgearticle.DefaultLikeCount = knowledgearticleDescLikeCount.Default.(int)
 	// knowledgearticleDescReviewIntervalDays is the schema descriptor for review_interval_days field.
-	knowledgearticleDescReviewIntervalDays := knowledgearticleFields[12].Descriptor()
+	knowledgearticleDescReviewIntervalDays := knowledgearticleFields[16].Descriptor()
 	// knowledgearticle.DefaultReviewIntervalDays holds the default value on creation for the review_interval_days field.
 	knowledgearticle.DefaultReviewIntervalDays = knowledgearticleDescReviewIntervalDays.Default.(int)
 	// knowledgearticleDescAuthorityLevel is the schema descriptor for authority_level field.
-	knowledgearticleDescAuthorityLevel := knowledgearticleFields[13].Descriptor()
+	knowledgearticleDescAuthorityLevel := knowledgearticleFields[17].Descriptor()
 	// knowledgearticle.DefaultAuthorityLevel holds the default value on creation for the authority_level field.
 	knowledgearticle.DefaultAuthorityLevel = knowledgearticleDescAuthorityLevel.Default.(int)
 	// knowledgearticleDescCreatedAt is the schema descriptor for created_at field.
-	knowledgearticleDescCreatedAt := knowledgearticleFields[14].Descriptor()
+	knowledgearticleDescCreatedAt := knowledgearticleFields[18].Descriptor()
 	// knowledgearticle.DefaultCreatedAt holds the default value on creation for the created_at field.
 	knowledgearticle.DefaultCreatedAt = knowledgearticleDescCreatedAt.Default.(func() time.Time)
 	// knowledgearticleDescUpdatedAt is the schema descriptor for updated_at field.
-	knowledgearticleDescUpdatedAt := knowledgearticleFields[15].Descriptor()
+	knowledgearticleDescUpdatedAt := knowledgearticleFields[19].Descriptor()
 	// knowledgearticle.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	knowledgearticle.DefaultUpdatedAt = knowledgearticleDescUpdatedAt.Default.(func() time.Time)
 	// knowledgearticle.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -2487,6 +2490,28 @@ func init() {
 	knowledgearticleparticipantDescJoinedAt := knowledgearticleparticipantFields[4].Descriptor()
 	// knowledgearticleparticipant.DefaultJoinedAt holds the default value on creation for the joined_at field.
 	knowledgearticleparticipant.DefaultJoinedAt = knowledgearticleparticipantDescJoinedAt.Default.(func() time.Time)
+	knowledgearticlereviewFields := schema.KnowledgeArticleReview{}.Fields()
+	_ = knowledgearticlereviewFields
+	// knowledgearticlereviewDescArticleID is the schema descriptor for article_id field.
+	knowledgearticlereviewDescArticleID := knowledgearticlereviewFields[0].Descriptor()
+	// knowledgearticlereview.ArticleIDValidator is a validator for the "article_id" field. It is called by the builders before save.
+	knowledgearticlereview.ArticleIDValidator = knowledgearticlereviewDescArticleID.Validators[0].(func(int) error)
+	// knowledgearticlereviewDescTenantID is the schema descriptor for tenant_id field.
+	knowledgearticlereviewDescTenantID := knowledgearticlereviewFields[1].Descriptor()
+	// knowledgearticlereview.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	knowledgearticlereview.TenantIDValidator = knowledgearticlereviewDescTenantID.Validators[0].(func(int) error)
+	// knowledgearticlereviewDescFromStatus is the schema descriptor for from_status field.
+	knowledgearticlereviewDescFromStatus := knowledgearticlereviewFields[2].Descriptor()
+	// knowledgearticlereview.DefaultFromStatus holds the default value on creation for the from_status field.
+	knowledgearticlereview.DefaultFromStatus = knowledgearticlereviewDescFromStatus.Default.(string)
+	// knowledgearticlereviewDescOperatorID is the schema descriptor for operator_id field.
+	knowledgearticlereviewDescOperatorID := knowledgearticlereviewFields[5].Descriptor()
+	// knowledgearticlereview.OperatorIDValidator is a validator for the "operator_id" field. It is called by the builders before save.
+	knowledgearticlereview.OperatorIDValidator = knowledgearticlereviewDescOperatorID.Validators[0].(func(int) error)
+	// knowledgearticlereviewDescCreatedAt is the schema descriptor for created_at field.
+	knowledgearticlereviewDescCreatedAt := knowledgearticlereviewFields[7].Descriptor()
+	// knowledgearticlereview.DefaultCreatedAt holds the default value on creation for the created_at field.
+	knowledgearticlereview.DefaultCreatedAt = knowledgearticlereviewDescCreatedAt.Default.(func() time.Time)
 	knowledgearticlesessionFields := schema.KnowledgeArticleSession{}.Fields()
 	_ = knowledgearticlesessionFields
 	// knowledgearticlesessionDescArticleID is the schema descriptor for article_id field.
@@ -4155,6 +4180,210 @@ func init() {
 	slaviolation.DefaultUpdatedAt = slaviolationDescUpdatedAt.Default.(func() time.Time)
 	// slaviolation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	slaviolation.UpdateDefaultUpdatedAt = slaviolationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ssoidentityFields := schema.SSOIdentity{}.Fields()
+	_ = ssoidentityFields
+	// ssoidentityDescTenantID is the schema descriptor for tenant_id field.
+	ssoidentityDescTenantID := ssoidentityFields[0].Descriptor()
+	// ssoidentity.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ssoidentity.TenantIDValidator = ssoidentityDescTenantID.Validators[0].(func(int) error)
+	// ssoidentityDescSubject is the schema descriptor for subject field.
+	ssoidentityDescSubject := ssoidentityFields[3].Descriptor()
+	// ssoidentity.SubjectValidator is a validator for the "subject" field. It is called by the builders before save.
+	ssoidentity.SubjectValidator = func() func(string) error {
+		validators := ssoidentityDescSubject.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(subject string) error {
+			for _, fn := range fns {
+				if err := fn(subject); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoidentityDescExternalUsername is the schema descriptor for external_username field.
+	ssoidentityDescExternalUsername := ssoidentityFields[4].Descriptor()
+	// ssoidentity.ExternalUsernameValidator is a validator for the "external_username" field. It is called by the builders before save.
+	ssoidentity.ExternalUsernameValidator = ssoidentityDescExternalUsername.Validators[0].(func(string) error)
+	// ssoidentityDescExternalEmail is the schema descriptor for external_email field.
+	ssoidentityDescExternalEmail := ssoidentityFields[5].Descriptor()
+	// ssoidentity.ExternalEmailValidator is a validator for the "external_email" field. It is called by the builders before save.
+	ssoidentity.ExternalEmailValidator = ssoidentityDescExternalEmail.Validators[0].(func(string) error)
+	// ssoidentityDescCreatedAt is the schema descriptor for created_at field.
+	ssoidentityDescCreatedAt := ssoidentityFields[7].Descriptor()
+	// ssoidentity.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ssoidentity.DefaultCreatedAt = ssoidentityDescCreatedAt.Default.(func() time.Time)
+	// ssoidentityDescUpdatedAt is the schema descriptor for updated_at field.
+	ssoidentityDescUpdatedAt := ssoidentityFields[8].Descriptor()
+	// ssoidentity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ssoidentity.DefaultUpdatedAt = ssoidentityDescUpdatedAt.Default.(func() time.Time)
+	// ssoidentity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ssoidentity.UpdateDefaultUpdatedAt = ssoidentityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ssoproviderFields := schema.SSOProvider{}.Fields()
+	_ = ssoproviderFields
+	// ssoproviderDescTenantID is the schema descriptor for tenant_id field.
+	ssoproviderDescTenantID := ssoproviderFields[0].Descriptor()
+	// ssoprovider.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	ssoprovider.TenantIDValidator = ssoproviderDescTenantID.Validators[0].(func(int) error)
+	// ssoproviderDescCode is the schema descriptor for code field.
+	ssoproviderDescCode := ssoproviderFields[1].Descriptor()
+	// ssoprovider.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	ssoprovider.CodeValidator = func() func(string) error {
+		validators := ssoproviderDescCode.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(code string) error {
+			for _, fn := range fns {
+				if err := fn(code); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoproviderDescName is the schema descriptor for name field.
+	ssoproviderDescName := ssoproviderFields[2].Descriptor()
+	// ssoprovider.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	ssoprovider.NameValidator = func() func(string) error {
+		validators := ssoproviderDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoproviderDescProtocol is the schema descriptor for protocol field.
+	ssoproviderDescProtocol := ssoproviderFields[3].Descriptor()
+	// ssoprovider.DefaultProtocol holds the default value on creation for the protocol field.
+	ssoprovider.DefaultProtocol = ssoproviderDescProtocol.Default.(string)
+	// ssoprovider.ProtocolValidator is a validator for the "protocol" field. It is called by the builders before save.
+	ssoprovider.ProtocolValidator = ssoproviderDescProtocol.Validators[0].(func(string) error)
+	// ssoproviderDescClientID is the schema descriptor for client_id field.
+	ssoproviderDescClientID := ssoproviderFields[4].Descriptor()
+	// ssoprovider.ClientIDValidator is a validator for the "client_id" field. It is called by the builders before save.
+	ssoprovider.ClientIDValidator = func() func(string) error {
+		validators := ssoproviderDescClientID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(client_id string) error {
+			for _, fn := range fns {
+				if err := fn(client_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoproviderDescIssuer is the schema descriptor for issuer field.
+	ssoproviderDescIssuer := ssoproviderFields[6].Descriptor()
+	// ssoprovider.IssuerValidator is a validator for the "issuer" field. It is called by the builders before save.
+	ssoprovider.IssuerValidator = func() func(string) error {
+		validators := ssoproviderDescIssuer.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(issuer string) error {
+			for _, fn := range fns {
+				if err := fn(issuer); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoproviderDescAuthorizationEndpoint is the schema descriptor for authorization_endpoint field.
+	ssoproviderDescAuthorizationEndpoint := ssoproviderFields[7].Descriptor()
+	// ssoprovider.AuthorizationEndpointValidator is a validator for the "authorization_endpoint" field. It is called by the builders before save.
+	ssoprovider.AuthorizationEndpointValidator = ssoproviderDescAuthorizationEndpoint.Validators[0].(func(string) error)
+	// ssoproviderDescTokenEndpoint is the schema descriptor for token_endpoint field.
+	ssoproviderDescTokenEndpoint := ssoproviderFields[8].Descriptor()
+	// ssoprovider.TokenEndpointValidator is a validator for the "token_endpoint" field. It is called by the builders before save.
+	ssoprovider.TokenEndpointValidator = ssoproviderDescTokenEndpoint.Validators[0].(func(string) error)
+	// ssoproviderDescUserinfoEndpoint is the schema descriptor for userinfo_endpoint field.
+	ssoproviderDescUserinfoEndpoint := ssoproviderFields[9].Descriptor()
+	// ssoprovider.UserinfoEndpointValidator is a validator for the "userinfo_endpoint" field. It is called by the builders before save.
+	ssoprovider.UserinfoEndpointValidator = ssoproviderDescUserinfoEndpoint.Validators[0].(func(string) error)
+	// ssoproviderDescJwksURI is the schema descriptor for jwks_uri field.
+	ssoproviderDescJwksURI := ssoproviderFields[10].Descriptor()
+	// ssoprovider.JwksURIValidator is a validator for the "jwks_uri" field. It is called by the builders before save.
+	ssoprovider.JwksURIValidator = ssoproviderDescJwksURI.Validators[0].(func(string) error)
+	// ssoproviderDescScopes is the schema descriptor for scopes field.
+	ssoproviderDescScopes := ssoproviderFields[11].Descriptor()
+	// ssoprovider.DefaultScopes holds the default value on creation for the scopes field.
+	ssoprovider.DefaultScopes = ssoproviderDescScopes.Default.(string)
+	// ssoprovider.ScopesValidator is a validator for the "scopes" field. It is called by the builders before save.
+	ssoprovider.ScopesValidator = ssoproviderDescScopes.Validators[0].(func(string) error)
+	// ssoproviderDescRedirectURI is the schema descriptor for redirect_uri field.
+	ssoproviderDescRedirectURI := ssoproviderFields[12].Descriptor()
+	// ssoprovider.RedirectURIValidator is a validator for the "redirect_uri" field. It is called by the builders before save.
+	ssoprovider.RedirectURIValidator = func() func(string) error {
+		validators := ssoproviderDescRedirectURI.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(redirect_uri string) error {
+			for _, fn := range fns {
+				if err := fn(redirect_uri); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// ssoproviderDescAutoProvision is the schema descriptor for auto_provision field.
+	ssoproviderDescAutoProvision := ssoproviderFields[13].Descriptor()
+	// ssoprovider.DefaultAutoProvision holds the default value on creation for the auto_provision field.
+	ssoprovider.DefaultAutoProvision = ssoproviderDescAutoProvision.Default.(bool)
+	// ssoproviderDescDefaultRole is the schema descriptor for default_role field.
+	ssoproviderDescDefaultRole := ssoproviderFields[14].Descriptor()
+	// ssoprovider.DefaultDefaultRole holds the default value on creation for the default_role field.
+	ssoprovider.DefaultDefaultRole = ssoproviderDescDefaultRole.Default.(string)
+	// ssoprovider.DefaultRoleValidator is a validator for the "default_role" field. It is called by the builders before save.
+	ssoprovider.DefaultRoleValidator = ssoproviderDescDefaultRole.Validators[0].(func(string) error)
+	// ssoproviderDescAllowedEmailDomains is the schema descriptor for allowed_email_domains field.
+	ssoproviderDescAllowedEmailDomains := ssoproviderFields[15].Descriptor()
+	// ssoprovider.AllowedEmailDomainsValidator is a validator for the "allowed_email_domains" field. It is called by the builders before save.
+	ssoprovider.AllowedEmailDomainsValidator = ssoproviderDescAllowedEmailDomains.Validators[0].(func(string) error)
+	// ssoproviderDescEnabled is the schema descriptor for enabled field.
+	ssoproviderDescEnabled := ssoproviderFields[16].Descriptor()
+	// ssoprovider.DefaultEnabled holds the default value on creation for the enabled field.
+	ssoprovider.DefaultEnabled = ssoproviderDescEnabled.Default.(bool)
+	// ssoproviderDescStatus is the schema descriptor for status field.
+	ssoproviderDescStatus := ssoproviderFields[17].Descriptor()
+	// ssoprovider.DefaultStatus holds the default value on creation for the status field.
+	ssoprovider.DefaultStatus = ssoproviderDescStatus.Default.(string)
+	// ssoprovider.StatusValidator is a validator for the "status" field. It is called by the builders before save.
+	ssoprovider.StatusValidator = ssoproviderDescStatus.Validators[0].(func(string) error)
+	// ssoproviderDescLastError is the schema descriptor for last_error field.
+	ssoproviderDescLastError := ssoproviderFields[18].Descriptor()
+	// ssoprovider.LastErrorValidator is a validator for the "last_error" field. It is called by the builders before save.
+	ssoprovider.LastErrorValidator = ssoproviderDescLastError.Validators[0].(func(string) error)
+	// ssoproviderDescCreatedAt is the schema descriptor for created_at field.
+	ssoproviderDescCreatedAt := ssoproviderFields[20].Descriptor()
+	// ssoprovider.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ssoprovider.DefaultCreatedAt = ssoproviderDescCreatedAt.Default.(func() time.Time)
+	// ssoproviderDescUpdatedAt is the schema descriptor for updated_at field.
+	ssoproviderDescUpdatedAt := ssoproviderFields[21].Descriptor()
+	// ssoprovider.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ssoprovider.DefaultUpdatedAt = ssoproviderDescUpdatedAt.Default.(func() time.Time)
+	// ssoprovider.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ssoprovider.UpdateDefaultUpdatedAt = ssoproviderDescUpdatedAt.UpdateDefault.(func() time.Time)
 	servicecatalogFields := schema.ServiceCatalog{}.Fields()
 	_ = servicecatalogFields
 	// servicecatalogDescName is the schema descriptor for name field.

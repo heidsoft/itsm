@@ -67,6 +67,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
@@ -117,6 +118,8 @@ import (
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
+	"itsm-backend/ent/ssoidentity"
+	"itsm-backend/ent/ssoprovider"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
@@ -268,6 +271,8 @@ type Client struct {
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
 	// KnowledgeArticleParticipant is the client for interacting with the KnowledgeArticleParticipant builders.
 	KnowledgeArticleParticipant *KnowledgeArticleParticipantClient
+	// KnowledgeArticleReview is the client for interacting with the KnowledgeArticleReview builders.
+	KnowledgeArticleReview *KnowledgeArticleReviewClient
 	// KnowledgeArticleSession is the client for interacting with the KnowledgeArticleSession builders.
 	KnowledgeArticleSession *KnowledgeArticleSessionClient
 	// KnowledgeArticleVersion is the client for interacting with the KnowledgeArticleVersion builders.
@@ -356,6 +361,10 @@ type Client struct {
 	SLAState *SLAStateClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
+	// SSOIdentity is the client for interacting with the SSOIdentity builders.
+	SSOIdentity *SSOIdentityClient
+	// SSOProvider is the client for interacting with the SSOProvider builders.
+	SSOProvider *SSOProviderClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
 	ServiceCatalog *ServiceCatalogClient
 	// ServiceCatalogItem is the client for interacting with the ServiceCatalogItem builders.
@@ -489,6 +498,7 @@ func (c *Client) init() {
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
 	c.KnowledgeArticleParticipant = NewKnowledgeArticleParticipantClient(c.config)
+	c.KnowledgeArticleReview = NewKnowledgeArticleReviewClient(c.config)
 	c.KnowledgeArticleSession = NewKnowledgeArticleSessionClient(c.config)
 	c.KnowledgeArticleVersion = NewKnowledgeArticleVersionClient(c.config)
 	c.KnownError = NewKnownErrorClient(c.config)
@@ -533,6 +543,8 @@ func (c *Client) init() {
 	c.SLAPolicy = NewSLAPolicyClient(c.config)
 	c.SLAState = NewSLAStateClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
+	c.SSOIdentity = NewSSOIdentityClient(c.config)
+	c.SSOProvider = NewSSOProviderClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceCatalogItem = NewServiceCatalogItemClient(c.config)
 	c.ServiceCustomer = NewServiceCustomerClient(c.config)
@@ -714,6 +726,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
 		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
+		KnowledgeArticleReview:      NewKnowledgeArticleReviewClient(cfg),
 		KnowledgeArticleSession:     NewKnowledgeArticleSessionClient(cfg),
 		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
 		KnownError:                  NewKnownErrorClient(cfg),
@@ -758,6 +771,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
 		SLAState:                    NewSLAStateClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
+		SSOIdentity:                 NewSSOIdentityClient(cfg),
+		SSOProvider:                 NewSSOProviderClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
 		ServiceCustomer:             NewServiceCustomerClient(cfg),
@@ -866,6 +881,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		KnowledgeArticle:            NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:        NewKnowledgeArticleLikeClient(cfg),
 		KnowledgeArticleParticipant: NewKnowledgeArticleParticipantClient(cfg),
+		KnowledgeArticleReview:      NewKnowledgeArticleReviewClient(cfg),
 		KnowledgeArticleSession:     NewKnowledgeArticleSessionClient(cfg),
 		KnowledgeArticleVersion:     NewKnowledgeArticleVersionClient(cfg),
 		KnownError:                  NewKnownErrorClient(cfg),
@@ -910,6 +926,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLAPolicy:                   NewSLAPolicyClient(cfg),
 		SLAState:                    NewSLAStateClient(cfg),
 		SLAViolation:                NewSLAViolationClient(cfg),
+		SSOIdentity:                 NewSSOIdentityClient(cfg),
+		SSOProvider:                 NewSSOProviderClient(cfg),
 		ServiceCatalog:              NewServiceCatalogClient(cfg),
 		ServiceCatalogItem:          NewServiceCatalogItemClient(cfg),
 		ServiceCustomer:             NewServiceCustomerClient(cfg),
@@ -986,26 +1004,27 @@ func (c *Client) Use(hooks ...Hook) {
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
 		c.ItemVersion, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
-		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.MarketplaceItem,
-		c.Menu, c.Message, c.Microservice, c.Notification, c.NotificationDelivery,
-		c.NotificationPreference, c.OnCallSchedule, c.OnCallShift,
-		c.OperationalCommand, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleReview,
+		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
+		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.OnCallSchedule, c.OnCallShift, c.OperationalCommand, c.PasswordResetToken,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
 		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
 		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
-		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
-		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
-		c.ToolInvocation, c.User, c.Vendor, c.WorkflowTemplate,
+		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.SSOIdentity,
+		c.SSOProvider, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
+		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
+		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
+		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
+		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.WorkflowTemplate,
 	} {
 		n.Use(hooks...)
 	}
@@ -1029,26 +1048,27 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.InboundEmailMessage, c.Incident, c.IncidentAlert, c.IncidentEscalationRule,
 		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
 		c.ItemVersion, c.KnowledgeArticle, c.KnowledgeArticleLike,
-		c.KnowledgeArticleParticipant, c.KnowledgeArticleSession,
-		c.KnowledgeArticleVersion, c.KnownError, c.MSPAllocation, c.MarketplaceItem,
-		c.Menu, c.Message, c.Microservice, c.Notification, c.NotificationDelivery,
-		c.NotificationPreference, c.OnCallSchedule, c.OnCallShift,
-		c.OperationalCommand, c.PasswordResetToken, c.Permission,
-		c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
+		c.KnowledgeArticleParticipant, c.KnowledgeArticleReview,
+		c.KnowledgeArticleSession, c.KnowledgeArticleVersion, c.KnownError,
+		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
+		c.Notification, c.NotificationDelivery, c.NotificationPreference,
+		c.OnCallSchedule, c.OnCallShift, c.OperationalCommand, c.PasswordResetToken,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
 		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
 		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
 		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
 		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
-		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
-		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
-		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
-		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
-		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
-		c.ToolInvocation, c.User, c.Vendor, c.WorkflowTemplate,
+		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.SSOIdentity,
+		c.SSOProvider, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
+		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
+		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
+		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
+		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
+		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
+		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
+		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
+		c.WorkflowTemplate,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -1169,6 +1189,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.KnowledgeArticleLike.mutate(ctx, m)
 	case *KnowledgeArticleParticipantMutation:
 		return c.KnowledgeArticleParticipant.mutate(ctx, m)
+	case *KnowledgeArticleReviewMutation:
+		return c.KnowledgeArticleReview.mutate(ctx, m)
 	case *KnowledgeArticleSessionMutation:
 		return c.KnowledgeArticleSession.mutate(ctx, m)
 	case *KnowledgeArticleVersionMutation:
@@ -1257,6 +1279,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SLAState.mutate(ctx, m)
 	case *SLAViolationMutation:
 		return c.SLAViolation.mutate(ctx, m)
+	case *SSOIdentityMutation:
+		return c.SSOIdentity.mutate(ctx, m)
+	case *SSOProviderMutation:
+		return c.SSOProvider.mutate(ctx, m)
 	case *ServiceCatalogMutation:
 		return c.ServiceCatalog.mutate(ctx, m)
 	case *ServiceCatalogItemMutation:
@@ -10005,6 +10031,22 @@ func (c *KnowledgeArticleClient) QuerySessions(_m *KnowledgeArticle) *KnowledgeA
 	return query
 }
 
+// QueryReviewRecords queries the review_records edge of a KnowledgeArticle.
+func (c *KnowledgeArticleClient) QueryReviewRecords(_m *KnowledgeArticle) *KnowledgeArticleReviewQuery {
+	query := (&KnowledgeArticleReviewClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticle.Table, knowledgearticle.FieldID, id),
+			sqlgraph.To(knowledgearticlereview.Table, knowledgearticlereview.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knowledgearticle.ReviewRecordsTable, knowledgearticle.ReviewRecordsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *KnowledgeArticleClient) Hooks() []Hook {
 	return c.hooks.KnowledgeArticle
@@ -10341,6 +10383,155 @@ func (c *KnowledgeArticleParticipantClient) mutate(ctx context.Context, m *Knowl
 		return (&KnowledgeArticleParticipantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown KnowledgeArticleParticipant mutation op: %q", m.Op())
+	}
+}
+
+// KnowledgeArticleReviewClient is a client for the KnowledgeArticleReview schema.
+type KnowledgeArticleReviewClient struct {
+	config
+}
+
+// NewKnowledgeArticleReviewClient returns a client for the KnowledgeArticleReview from the given config.
+func NewKnowledgeArticleReviewClient(c config) *KnowledgeArticleReviewClient {
+	return &KnowledgeArticleReviewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knowledgearticlereview.Hooks(f(g(h())))`.
+func (c *KnowledgeArticleReviewClient) Use(hooks ...Hook) {
+	c.hooks.KnowledgeArticleReview = append(c.hooks.KnowledgeArticleReview, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knowledgearticlereview.Intercept(f(g(h())))`.
+func (c *KnowledgeArticleReviewClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnowledgeArticleReview = append(c.inters.KnowledgeArticleReview, interceptors...)
+}
+
+// Create returns a builder for creating a KnowledgeArticleReview entity.
+func (c *KnowledgeArticleReviewClient) Create() *KnowledgeArticleReviewCreate {
+	mutation := newKnowledgeArticleReviewMutation(c.config, OpCreate)
+	return &KnowledgeArticleReviewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnowledgeArticleReview entities.
+func (c *KnowledgeArticleReviewClient) CreateBulk(builders ...*KnowledgeArticleReviewCreate) *KnowledgeArticleReviewCreateBulk {
+	return &KnowledgeArticleReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnowledgeArticleReviewClient) MapCreateBulk(slice any, setFunc func(*KnowledgeArticleReviewCreate, int)) *KnowledgeArticleReviewCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnowledgeArticleReviewCreateBulk{err: fmt.Errorf("calling to KnowledgeArticleReviewClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnowledgeArticleReviewCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnowledgeArticleReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnowledgeArticleReview.
+func (c *KnowledgeArticleReviewClient) Update() *KnowledgeArticleReviewUpdate {
+	mutation := newKnowledgeArticleReviewMutation(c.config, OpUpdate)
+	return &KnowledgeArticleReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnowledgeArticleReviewClient) UpdateOne(_m *KnowledgeArticleReview) *KnowledgeArticleReviewUpdateOne {
+	mutation := newKnowledgeArticleReviewMutation(c.config, OpUpdateOne, withKnowledgeArticleReview(_m))
+	return &KnowledgeArticleReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnowledgeArticleReviewClient) UpdateOneID(id int) *KnowledgeArticleReviewUpdateOne {
+	mutation := newKnowledgeArticleReviewMutation(c.config, OpUpdateOne, withKnowledgeArticleReviewID(id))
+	return &KnowledgeArticleReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnowledgeArticleReview.
+func (c *KnowledgeArticleReviewClient) Delete() *KnowledgeArticleReviewDelete {
+	mutation := newKnowledgeArticleReviewMutation(c.config, OpDelete)
+	return &KnowledgeArticleReviewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnowledgeArticleReviewClient) DeleteOne(_m *KnowledgeArticleReview) *KnowledgeArticleReviewDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnowledgeArticleReviewClient) DeleteOneID(id int) *KnowledgeArticleReviewDeleteOne {
+	builder := c.Delete().Where(knowledgearticlereview.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnowledgeArticleReviewDeleteOne{builder}
+}
+
+// Query returns a query builder for KnowledgeArticleReview.
+func (c *KnowledgeArticleReviewClient) Query() *KnowledgeArticleReviewQuery {
+	return &KnowledgeArticleReviewQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnowledgeArticleReview},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnowledgeArticleReview entity by its id.
+func (c *KnowledgeArticleReviewClient) Get(ctx context.Context, id int) (*KnowledgeArticleReview, error) {
+	return c.Query().Where(knowledgearticlereview.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnowledgeArticleReviewClient) GetX(ctx context.Context, id int) *KnowledgeArticleReview {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryArticle queries the article edge of a KnowledgeArticleReview.
+func (c *KnowledgeArticleReviewClient) QueryArticle(_m *KnowledgeArticleReview) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knowledgearticlereview.Table, knowledgearticlereview.FieldID, id),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticlereview.ArticleTable, knowledgearticlereview.ArticleColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnowledgeArticleReviewClient) Hooks() []Hook {
+	return c.hooks.KnowledgeArticleReview
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnowledgeArticleReviewClient) Interceptors() []Interceptor {
+	return c.inters.KnowledgeArticleReview
+}
+
+func (c *KnowledgeArticleReviewClient) mutate(ctx context.Context, m *KnowledgeArticleReviewMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnowledgeArticleReviewCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnowledgeArticleReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnowledgeArticleReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnowledgeArticleReviewDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnowledgeArticleReview mutation op: %q", m.Op())
 	}
 }
 
@@ -17220,6 +17411,272 @@ func (c *SLAViolationClient) mutate(ctx context.Context, m *SLAViolationMutation
 	}
 }
 
+// SSOIdentityClient is a client for the SSOIdentity schema.
+type SSOIdentityClient struct {
+	config
+}
+
+// NewSSOIdentityClient returns a client for the SSOIdentity from the given config.
+func NewSSOIdentityClient(c config) *SSOIdentityClient {
+	return &SSOIdentityClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ssoidentity.Hooks(f(g(h())))`.
+func (c *SSOIdentityClient) Use(hooks ...Hook) {
+	c.hooks.SSOIdentity = append(c.hooks.SSOIdentity, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ssoidentity.Intercept(f(g(h())))`.
+func (c *SSOIdentityClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SSOIdentity = append(c.inters.SSOIdentity, interceptors...)
+}
+
+// Create returns a builder for creating a SSOIdentity entity.
+func (c *SSOIdentityClient) Create() *SSOIdentityCreate {
+	mutation := newSSOIdentityMutation(c.config, OpCreate)
+	return &SSOIdentityCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SSOIdentity entities.
+func (c *SSOIdentityClient) CreateBulk(builders ...*SSOIdentityCreate) *SSOIdentityCreateBulk {
+	return &SSOIdentityCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SSOIdentityClient) MapCreateBulk(slice any, setFunc func(*SSOIdentityCreate, int)) *SSOIdentityCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SSOIdentityCreateBulk{err: fmt.Errorf("calling to SSOIdentityClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SSOIdentityCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SSOIdentityCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SSOIdentity.
+func (c *SSOIdentityClient) Update() *SSOIdentityUpdate {
+	mutation := newSSOIdentityMutation(c.config, OpUpdate)
+	return &SSOIdentityUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SSOIdentityClient) UpdateOne(_m *SSOIdentity) *SSOIdentityUpdateOne {
+	mutation := newSSOIdentityMutation(c.config, OpUpdateOne, withSSOIdentity(_m))
+	return &SSOIdentityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SSOIdentityClient) UpdateOneID(id int) *SSOIdentityUpdateOne {
+	mutation := newSSOIdentityMutation(c.config, OpUpdateOne, withSSOIdentityID(id))
+	return &SSOIdentityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SSOIdentity.
+func (c *SSOIdentityClient) Delete() *SSOIdentityDelete {
+	mutation := newSSOIdentityMutation(c.config, OpDelete)
+	return &SSOIdentityDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SSOIdentityClient) DeleteOne(_m *SSOIdentity) *SSOIdentityDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SSOIdentityClient) DeleteOneID(id int) *SSOIdentityDeleteOne {
+	builder := c.Delete().Where(ssoidentity.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SSOIdentityDeleteOne{builder}
+}
+
+// Query returns a query builder for SSOIdentity.
+func (c *SSOIdentityClient) Query() *SSOIdentityQuery {
+	return &SSOIdentityQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSSOIdentity},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SSOIdentity entity by its id.
+func (c *SSOIdentityClient) Get(ctx context.Context, id int) (*SSOIdentity, error) {
+	return c.Query().Where(ssoidentity.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SSOIdentityClient) GetX(ctx context.Context, id int) *SSOIdentity {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SSOIdentityClient) Hooks() []Hook {
+	return c.hooks.SSOIdentity
+}
+
+// Interceptors returns the client interceptors.
+func (c *SSOIdentityClient) Interceptors() []Interceptor {
+	return c.inters.SSOIdentity
+}
+
+func (c *SSOIdentityClient) mutate(ctx context.Context, m *SSOIdentityMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SSOIdentityCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SSOIdentityUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SSOIdentityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SSOIdentityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SSOIdentity mutation op: %q", m.Op())
+	}
+}
+
+// SSOProviderClient is a client for the SSOProvider schema.
+type SSOProviderClient struct {
+	config
+}
+
+// NewSSOProviderClient returns a client for the SSOProvider from the given config.
+func NewSSOProviderClient(c config) *SSOProviderClient {
+	return &SSOProviderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ssoprovider.Hooks(f(g(h())))`.
+func (c *SSOProviderClient) Use(hooks ...Hook) {
+	c.hooks.SSOProvider = append(c.hooks.SSOProvider, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ssoprovider.Intercept(f(g(h())))`.
+func (c *SSOProviderClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SSOProvider = append(c.inters.SSOProvider, interceptors...)
+}
+
+// Create returns a builder for creating a SSOProvider entity.
+func (c *SSOProviderClient) Create() *SSOProviderCreate {
+	mutation := newSSOProviderMutation(c.config, OpCreate)
+	return &SSOProviderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SSOProvider entities.
+func (c *SSOProviderClient) CreateBulk(builders ...*SSOProviderCreate) *SSOProviderCreateBulk {
+	return &SSOProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SSOProviderClient) MapCreateBulk(slice any, setFunc func(*SSOProviderCreate, int)) *SSOProviderCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SSOProviderCreateBulk{err: fmt.Errorf("calling to SSOProviderClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SSOProviderCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SSOProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SSOProvider.
+func (c *SSOProviderClient) Update() *SSOProviderUpdate {
+	mutation := newSSOProviderMutation(c.config, OpUpdate)
+	return &SSOProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SSOProviderClient) UpdateOne(_m *SSOProvider) *SSOProviderUpdateOne {
+	mutation := newSSOProviderMutation(c.config, OpUpdateOne, withSSOProvider(_m))
+	return &SSOProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SSOProviderClient) UpdateOneID(id int) *SSOProviderUpdateOne {
+	mutation := newSSOProviderMutation(c.config, OpUpdateOne, withSSOProviderID(id))
+	return &SSOProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SSOProvider.
+func (c *SSOProviderClient) Delete() *SSOProviderDelete {
+	mutation := newSSOProviderMutation(c.config, OpDelete)
+	return &SSOProviderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SSOProviderClient) DeleteOne(_m *SSOProvider) *SSOProviderDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SSOProviderClient) DeleteOneID(id int) *SSOProviderDeleteOne {
+	builder := c.Delete().Where(ssoprovider.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SSOProviderDeleteOne{builder}
+}
+
+// Query returns a query builder for SSOProvider.
+func (c *SSOProviderClient) Query() *SSOProviderQuery {
+	return &SSOProviderQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSSOProvider},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SSOProvider entity by its id.
+func (c *SSOProviderClient) Get(ctx context.Context, id int) (*SSOProvider, error) {
+	return c.Query().Where(ssoprovider.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SSOProviderClient) GetX(ctx context.Context, id int) *SSOProvider {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *SSOProviderClient) Hooks() []Hook {
+	return c.hooks.SSOProvider
+}
+
+// Interceptors returns the client interceptors.
+func (c *SSOProviderClient) Interceptors() []Interceptor {
+	return c.inters.SSOProvider
+}
+
+func (c *SSOProviderClient) mutate(ctx context.Context, m *SSOProviderMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SSOProviderCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SSOProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SSOProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SSOProviderDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SSOProvider mutation op: %q", m.Op())
+	}
+}
+
 // ServiceCatalogClient is a client for the ServiceCatalog schema.
 type ServiceCatalogClient struct {
 	config
@@ -22921,17 +23378,18 @@ type (
 		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
 		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
-		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
-		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy, SLAState,
-		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		KnowledgeArticleParticipant, KnowledgeArticleReview, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationDelivery,
+		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessTimer, ProcessVariable, ProcessVersionChangelog, Project,
+		PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAState, SLAViolation, SSOIdentity,
+		SSOProvider, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
 		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
 		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
 		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,
@@ -22954,17 +23412,18 @@ type (
 		InboundEmailMessage, Incident, IncidentAlert, IncidentEscalationRule,
 		IncidentEvent, IncidentMetric, IncidentRule, IncidentRuleExecution,
 		ItemVersion, KnowledgeArticle, KnowledgeArticleLike,
-		KnowledgeArticleParticipant, KnowledgeArticleSession, KnowledgeArticleVersion,
-		KnownError, MSPAllocation, MarketplaceItem, Menu, Message, Microservice,
-		Notification, NotificationDelivery, NotificationPreference, OnCallSchedule,
-		OnCallShift, OperationalCommand, PasswordResetToken, Permission,
-		PermissionDefinition, Problem, ProcessApprovalDecision, ProcessAuditLog,
-		ProcessBinding, ProcessDefinition, ProcessDeployment, ProcessExecutionHistory,
-		ProcessInstance, ProcessTask, ProcessTimer, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RolePermission, RootCauseAnalysis,
-		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy, SLAState,
-		SLAViolation, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
+		KnowledgeArticleParticipant, KnowledgeArticleReview, KnowledgeArticleSession,
+		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
+		Message, Microservice, Notification, NotificationDelivery,
+		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
+		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessTimer, ProcessVariable, ProcessVersionChangelog, Project,
+		PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
+		RolePermission, RootCauseAnalysis, SLAAlertHistory, SLAAlertRule,
+		SLADefinition, SLAMetric, SLAPolicy, SLAState, SLAViolation, SSOIdentity,
+		SSOProvider, ServiceCatalog, ServiceCatalogItem, ServiceCustomer,
 		ServiceRequest, ServiceRequestApproval, SourceOrganization, StandardChange,
 		SupportContract, Survey, SurveyResponse, SystemConfig, Tag, Team, Tenant,
 		TenantInstallation, Ticket, TicketApproval, TicketAssignmentRule,

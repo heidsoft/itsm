@@ -15,6 +15,14 @@ type Repository interface {
 	// 这是 L1 时效管控的闭环动作——声明了复核周期的知识逾期后会被 RAG 过滤，
 	// 复核是把它恢复回检索结果的唯一途径。只改复核时间，不触碰正文。
 	MarkReviewed(ctx context.Context, id int, tenantID int) (*Article, error)
+	// TransitionReview 执行一次评审状态流转，并落一条评审流水。
+	//
+	// 为什么不放 service：状态流转必须与流水写入在**同一事务**里，
+	// 否则会出现「状态已改但审计没记」或反之的可追溯性缺口。
+	// toStatus 传空串表示不动 review_status（仅记流水），用于纯审计场景。
+	TransitionReview(ctx context.Context, id, tenantID, operatorID int, action, toStatus, comment string) (*Article, error)
+	// ListReviews 返回文章的评审历史，时间倒序。
+	ListReviews(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ReviewRecord, int, error)
 	// ListVersions 返回文章的版本快照，按版本号倒序（最新在前）。
 	// 版本表无 tenant_id，租户隔离经文章归属校验实现。
 	ListVersions(ctx context.Context, articleID, tenantID, page, pageSize int) ([]*ArticleVersion, int, error)

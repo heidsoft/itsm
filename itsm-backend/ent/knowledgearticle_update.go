@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/predicate"
@@ -158,6 +159,87 @@ func (_u *KnowledgeArticleUpdate) SetNillableIsPublished(v *bool) *KnowledgeArti
 	if v != nil {
 		_u.SetIsPublished(*v)
 	}
+	return _u
+}
+
+// SetReviewStatus sets the "review_status" field.
+func (_u *KnowledgeArticleUpdate) SetReviewStatus(v knowledgearticle.ReviewStatus) *KnowledgeArticleUpdate {
+	_u.mutation.SetReviewStatus(v)
+	return _u
+}
+
+// SetNillableReviewStatus sets the "review_status" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableReviewStatus(v *knowledgearticle.ReviewStatus) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetReviewStatus(*v)
+	}
+	return _u
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdate) SetReviewerID(v int) *KnowledgeArticleUpdate {
+	_u.mutation.ResetReviewerID()
+	_u.mutation.SetReviewerID(v)
+	return _u
+}
+
+// SetNillableReviewerID sets the "reviewer_id" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableReviewerID(v *int) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetReviewerID(*v)
+	}
+	return _u
+}
+
+// AddReviewerID adds value to the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdate) AddReviewerID(v int) *KnowledgeArticleUpdate {
+	_u.mutation.AddReviewerID(v)
+	return _u
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdate) ClearReviewerID() *KnowledgeArticleUpdate {
+	_u.mutation.ClearReviewerID()
+	return _u
+}
+
+// SetReviewedAt sets the "reviewed_at" field.
+func (_u *KnowledgeArticleUpdate) SetReviewedAt(v time.Time) *KnowledgeArticleUpdate {
+	_u.mutation.SetReviewedAt(v)
+	return _u
+}
+
+// SetNillableReviewedAt sets the "reviewed_at" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableReviewedAt(v *time.Time) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetReviewedAt(*v)
+	}
+	return _u
+}
+
+// ClearReviewedAt clears the value of the "reviewed_at" field.
+func (_u *KnowledgeArticleUpdate) ClearReviewedAt() *KnowledgeArticleUpdate {
+	_u.mutation.ClearReviewedAt()
+	return _u
+}
+
+// SetReviewComment sets the "review_comment" field.
+func (_u *KnowledgeArticleUpdate) SetReviewComment(v string) *KnowledgeArticleUpdate {
+	_u.mutation.SetReviewComment(v)
+	return _u
+}
+
+// SetNillableReviewComment sets the "review_comment" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdate) SetNillableReviewComment(v *string) *KnowledgeArticleUpdate {
+	if v != nil {
+		_u.SetReviewComment(*v)
+	}
+	return _u
+}
+
+// ClearReviewComment clears the value of the "review_comment" field.
+func (_u *KnowledgeArticleUpdate) ClearReviewComment() *KnowledgeArticleUpdate {
+	_u.mutation.ClearReviewComment()
 	return _u
 }
 
@@ -390,6 +472,21 @@ func (_u *KnowledgeArticleUpdate) AddSessions(v ...*KnowledgeArticleSession) *Kn
 	return _u.AddSessionIDs(ids...)
 }
 
+// AddReviewRecordIDs adds the "review_records" edge to the KnowledgeArticleReview entity by IDs.
+func (_u *KnowledgeArticleUpdate) AddReviewRecordIDs(ids ...int) *KnowledgeArticleUpdate {
+	_u.mutation.AddReviewRecordIDs(ids...)
+	return _u
+}
+
+// AddReviewRecords adds the "review_records" edges to the KnowledgeArticleReview entity.
+func (_u *KnowledgeArticleUpdate) AddReviewRecords(v ...*KnowledgeArticleReview) *KnowledgeArticleUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReviewRecordIDs(ids...)
+}
+
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (_u *KnowledgeArticleUpdate) Mutation() *KnowledgeArticleMutation {
 	return _u.mutation
@@ -458,6 +555,27 @@ func (_u *KnowledgeArticleUpdate) RemoveSessions(v ...*KnowledgeArticleSession) 
 	return _u.RemoveSessionIDs(ids...)
 }
 
+// ClearReviewRecords clears all "review_records" edges to the KnowledgeArticleReview entity.
+func (_u *KnowledgeArticleUpdate) ClearReviewRecords() *KnowledgeArticleUpdate {
+	_u.mutation.ClearReviewRecords()
+	return _u
+}
+
+// RemoveReviewRecordIDs removes the "review_records" edge to KnowledgeArticleReview entities by IDs.
+func (_u *KnowledgeArticleUpdate) RemoveReviewRecordIDs(ids ...int) *KnowledgeArticleUpdate {
+	_u.mutation.RemoveReviewRecordIDs(ids...)
+	return _u
+}
+
+// RemoveReviewRecords removes "review_records" edges to KnowledgeArticleReview entities.
+func (_u *KnowledgeArticleUpdate) RemoveReviewRecords(v ...*KnowledgeArticleReview) *KnowledgeArticleUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReviewRecordIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *KnowledgeArticleUpdate) Save(ctx context.Context) (int, error) {
 	_u.defaults()
@@ -511,6 +629,11 @@ func (_u *KnowledgeArticleUpdate) check() error {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.ReviewStatus(); ok {
+		if err := knowledgearticle.ReviewStatusValidator(v); err != nil {
+			return &ValidationError{Name: "review_status", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.review_status": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -561,6 +684,30 @@ func (_u *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ReviewStatus(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ReviewerID(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewerID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedReviewerID(); ok {
+		_spec.AddField(knowledgearticle.FieldReviewerID, field.TypeInt, value)
+	}
+	if _u.mutation.ReviewerIDCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewerID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ReviewedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ReviewedAtCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReviewComment(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewComment, field.TypeString, value)
+	}
+	if _u.mutation.ReviewCommentCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewComment, field.TypeString)
 	}
 	if value, ok := _u.mutation.ViewCount(); ok {
 		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
@@ -751,6 +898,51 @@ func (_u *KnowledgeArticleUpdate) sqlSave(ctx context.Context) (_node int, err e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ReviewRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReviewRecordsIDs(); len(nodes) > 0 && !_u.mutation.ReviewRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{knowledgearticle.Label}
@@ -898,6 +1090,87 @@ func (_u *KnowledgeArticleUpdateOne) SetNillableIsPublished(v *bool) *KnowledgeA
 	if v != nil {
 		_u.SetIsPublished(*v)
 	}
+	return _u
+}
+
+// SetReviewStatus sets the "review_status" field.
+func (_u *KnowledgeArticleUpdateOne) SetReviewStatus(v knowledgearticle.ReviewStatus) *KnowledgeArticleUpdateOne {
+	_u.mutation.SetReviewStatus(v)
+	return _u
+}
+
+// SetNillableReviewStatus sets the "review_status" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableReviewStatus(v *knowledgearticle.ReviewStatus) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetReviewStatus(*v)
+	}
+	return _u
+}
+
+// SetReviewerID sets the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdateOne) SetReviewerID(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.ResetReviewerID()
+	_u.mutation.SetReviewerID(v)
+	return _u
+}
+
+// SetNillableReviewerID sets the "reviewer_id" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableReviewerID(v *int) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetReviewerID(*v)
+	}
+	return _u
+}
+
+// AddReviewerID adds value to the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdateOne) AddReviewerID(v int) *KnowledgeArticleUpdateOne {
+	_u.mutation.AddReviewerID(v)
+	return _u
+}
+
+// ClearReviewerID clears the value of the "reviewer_id" field.
+func (_u *KnowledgeArticleUpdateOne) ClearReviewerID() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearReviewerID()
+	return _u
+}
+
+// SetReviewedAt sets the "reviewed_at" field.
+func (_u *KnowledgeArticleUpdateOne) SetReviewedAt(v time.Time) *KnowledgeArticleUpdateOne {
+	_u.mutation.SetReviewedAt(v)
+	return _u
+}
+
+// SetNillableReviewedAt sets the "reviewed_at" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableReviewedAt(v *time.Time) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetReviewedAt(*v)
+	}
+	return _u
+}
+
+// ClearReviewedAt clears the value of the "reviewed_at" field.
+func (_u *KnowledgeArticleUpdateOne) ClearReviewedAt() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearReviewedAt()
+	return _u
+}
+
+// SetReviewComment sets the "review_comment" field.
+func (_u *KnowledgeArticleUpdateOne) SetReviewComment(v string) *KnowledgeArticleUpdateOne {
+	_u.mutation.SetReviewComment(v)
+	return _u
+}
+
+// SetNillableReviewComment sets the "review_comment" field if the given value is not nil.
+func (_u *KnowledgeArticleUpdateOne) SetNillableReviewComment(v *string) *KnowledgeArticleUpdateOne {
+	if v != nil {
+		_u.SetReviewComment(*v)
+	}
+	return _u
+}
+
+// ClearReviewComment clears the value of the "review_comment" field.
+func (_u *KnowledgeArticleUpdateOne) ClearReviewComment() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearReviewComment()
 	return _u
 }
 
@@ -1130,6 +1403,21 @@ func (_u *KnowledgeArticleUpdateOne) AddSessions(v ...*KnowledgeArticleSession) 
 	return _u.AddSessionIDs(ids...)
 }
 
+// AddReviewRecordIDs adds the "review_records" edge to the KnowledgeArticleReview entity by IDs.
+func (_u *KnowledgeArticleUpdateOne) AddReviewRecordIDs(ids ...int) *KnowledgeArticleUpdateOne {
+	_u.mutation.AddReviewRecordIDs(ids...)
+	return _u
+}
+
+// AddReviewRecords adds the "review_records" edges to the KnowledgeArticleReview entity.
+func (_u *KnowledgeArticleUpdateOne) AddReviewRecords(v ...*KnowledgeArticleReview) *KnowledgeArticleUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddReviewRecordIDs(ids...)
+}
+
 // Mutation returns the KnowledgeArticleMutation object of the builder.
 func (_u *KnowledgeArticleUpdateOne) Mutation() *KnowledgeArticleMutation {
 	return _u.mutation
@@ -1198,6 +1486,27 @@ func (_u *KnowledgeArticleUpdateOne) RemoveSessions(v ...*KnowledgeArticleSessio
 	return _u.RemoveSessionIDs(ids...)
 }
 
+// ClearReviewRecords clears all "review_records" edges to the KnowledgeArticleReview entity.
+func (_u *KnowledgeArticleUpdateOne) ClearReviewRecords() *KnowledgeArticleUpdateOne {
+	_u.mutation.ClearReviewRecords()
+	return _u
+}
+
+// RemoveReviewRecordIDs removes the "review_records" edge to KnowledgeArticleReview entities by IDs.
+func (_u *KnowledgeArticleUpdateOne) RemoveReviewRecordIDs(ids ...int) *KnowledgeArticleUpdateOne {
+	_u.mutation.RemoveReviewRecordIDs(ids...)
+	return _u
+}
+
+// RemoveReviewRecords removes "review_records" edges to KnowledgeArticleReview entities.
+func (_u *KnowledgeArticleUpdateOne) RemoveReviewRecords(v ...*KnowledgeArticleReview) *KnowledgeArticleUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveReviewRecordIDs(ids...)
+}
+
 // Where appends a list predicates to the KnowledgeArticleUpdate builder.
 func (_u *KnowledgeArticleUpdateOne) Where(ps ...predicate.KnowledgeArticle) *KnowledgeArticleUpdateOne {
 	_u.mutation.Where(ps...)
@@ -1262,6 +1571,11 @@ func (_u *KnowledgeArticleUpdateOne) check() error {
 	if v, ok := _u.mutation.TenantID(); ok {
 		if err := knowledgearticle.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReviewStatus(); ok {
+		if err := knowledgearticle.ReviewStatusValidator(v); err != nil {
+			return &ValidationError{Name: "review_status", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.review_status": %w`, err)}
 		}
 	}
 	return nil
@@ -1331,6 +1645,30 @@ func (_u *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Knowle
 	}
 	if value, ok := _u.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.ReviewStatus(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.ReviewerID(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewerID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedReviewerID(); ok {
+		_spec.AddField(knowledgearticle.FieldReviewerID, field.TypeInt, value)
+	}
+	if _u.mutation.ReviewerIDCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewerID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ReviewedAt(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ReviewedAtCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ReviewComment(); ok {
+		_spec.SetField(knowledgearticle.FieldReviewComment, field.TypeString, value)
+	}
+	if _u.mutation.ReviewCommentCleared() {
+		_spec.ClearField(knowledgearticle.FieldReviewComment, field.TypeString)
 	}
 	if value, ok := _u.mutation.ViewCount(); ok {
 		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
@@ -1514,6 +1852,51 @@ func (_u *KnowledgeArticleUpdateOne) sqlSave(ctx context.Context) (_node *Knowle
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlesession.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ReviewRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedReviewRecordsIDs(); len(nodes) > 0 && !_u.mutation.ReviewRecordsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ReviewRecordsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   knowledgearticle.ReviewRecordsTable,
+			Columns: []string{knowledgearticle.ReviewRecordsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(knowledgearticlereview.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

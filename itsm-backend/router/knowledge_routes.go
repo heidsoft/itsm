@@ -25,6 +25,16 @@ func SetupKnowledgeRoutes(tenant *gin.RouterGroup, h *knowledgeHandler.Handler) 
 			// 内容复核（L1 时效闭环）：确认内容仍然适用，解除「逾期未复核」过滤
 			articles.POST("/:id/review", middleware.RequirePermission("knowledge", "write"), h.MarkArticleReviewed)
 
+			// 评审状态机：submit/approve/reject/withdraw/republish。
+			// 读侧（reviews 列表）用 read，其余动作统一 write —— 评审人本身
+			// 需要 knowledge:write 才能改文章，用更严的码会把评审权锁死在作者手里。
+			articles.GET("/:id/reviews", middleware.RequirePermission("knowledge", "read"), h.ListArticleReviews)
+			articles.POST("/:id/review/submit", middleware.RequirePermission("knowledge", "write"), h.SubmitReview)
+			articles.POST("/:id/review/approve", middleware.RequirePermission("knowledge", "write"), h.ApproveReview)
+			articles.POST("/:id/review/reject", middleware.RequirePermission("knowledge", "write"), h.RejectReview)
+			articles.POST("/:id/review/withdraw", middleware.RequirePermission("knowledge", "write"), h.WithdrawReview)
+			articles.POST("/:id/review/republish", middleware.RequirePermission("knowledge", "write"), h.RepublishReview)
+
 			// 版本历史：列表 / 恢复 / 对比。
 			// 2026-10-14 前这三组端点未注册（service 层早有 RestoreVersion），
 			// 前端文章详情的「版本历史」Tab 打开即失败。静态段必须先于 :version

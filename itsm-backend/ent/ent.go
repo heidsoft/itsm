@@ -62,6 +62,7 @@ import (
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
 	"itsm-backend/ent/knowledgearticleparticipant"
+	"itsm-backend/ent/knowledgearticlereview"
 	"itsm-backend/ent/knowledgearticlesession"
 	"itsm-backend/ent/knowledgearticleversion"
 	"itsm-backend/ent/knownerror"
@@ -112,6 +113,8 @@ import (
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/sourceorganization"
+	"itsm-backend/ent/ssoidentity"
+	"itsm-backend/ent/ssoprovider"
 	"itsm-backend/ent/standardchange"
 	"itsm-backend/ent/supportcontract"
 	"itsm-backend/ent/survey"
@@ -261,6 +264,7 @@ func checkColumn(t, c string) error {
 			knowledgearticle.Table:            knowledgearticle.ValidColumn,
 			knowledgearticlelike.Table:        knowledgearticlelike.ValidColumn,
 			knowledgearticleparticipant.Table: knowledgearticleparticipant.ValidColumn,
+			knowledgearticlereview.Table:      knowledgearticlereview.ValidColumn,
 			knowledgearticlesession.Table:     knowledgearticlesession.ValidColumn,
 			knowledgearticleversion.Table:     knowledgearticleversion.ValidColumn,
 			knownerror.Table:                  knownerror.ValidColumn,
@@ -305,6 +309,8 @@ func checkColumn(t, c string) error {
 			slapolicy.Table:                   slapolicy.ValidColumn,
 			slastate.Table:                    slastate.ValidColumn,
 			slaviolation.Table:                slaviolation.ValidColumn,
+			ssoidentity.Table:                 ssoidentity.ValidColumn,
+			ssoprovider.Table:                 ssoprovider.ValidColumn,
 			servicecatalog.Table:              servicecatalog.ValidColumn,
 			servicecatalogitem.Table:          servicecatalogitem.ValidColumn,
 			servicecustomer.Table:             servicecustomer.ValidColumn,

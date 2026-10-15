@@ -32,7 +32,10 @@ interface ArticleItem {
   summary?: string;
   category?: string;
   tags?: string[];
-  status: string;
+  /** 后端 review_status 的真实值（draft/under_review/approved/rejected） */
+  reviewStatus?: KnowledgeReviewStatus;
+  /** 对外可见投影，由 reviewStatus 派生 */
+  isPublished?: boolean;
   author?: string;
   authorName?: string;
   authorId?: number;
@@ -43,28 +46,25 @@ interface ArticleItem {
 import { useI18n } from '@/lib/i18n/useI18n';
 import dayjs from 'dayjs';
 import type { ColumnsType } from 'antd/es/table';
+import { KnowledgeReviewStatus } from '@/types/knowledge-base';
 
 const { Text, Paragraph } = Typography;
 
-// 状态标签映射
-// 状态值统一使用 ArticleStatus 枚举，避免前端多处出现 snake_case/camelCase 不一致
+// 状态标签映射：权威来源是后端 reviewStatus（KnowledgeReviewStatus 枚举）。
+//
+// 这里原先用的是前端自造的 ArticleStatus，而**后端文章实体上不存在 status 字段**
+// （只有 is_published 布尔），导致本页过滤条件永远命中不到任何数据 ——
+// 页面看着正常，实际上恒为空。改为读真实 review_status 后才真正可用。
 const statusTagMap: Record<string, { color: string; text: string; icon?: React.ReactNode }> = {
-  [ArticleStatus.DRAFT]: { color: 'default', text: '草稿' },
-  [ArticleStatus.UNDER_REVIEW]: { color: 'orange', text: '待审核', icon: <Clock /> },
-  [ArticleStatus.PUBLISHED]: { color: 'green', text: '已发布', icon: <CheckCircle /> },
-  rejected: { color: 'red', text: '已拒绝', icon: <XCircle /> },
-  [ArticleStatus.ARCHIVED]: { color: 'default', text: '已归档' },
+  [KnowledgeReviewStatus.DRAFT]: { color: 'default', text: '草稿' },
+  [KnowledgeReviewStatus.UNDER_REVIEW]: { color: 'orange', text: '待审核', icon: <Clock /> },
+  [KnowledgeReviewStatus.APPROVED]: { color: 'green', text: '已通过', icon: <CheckCircle /> },
+  [KnowledgeReviewStatus.REJECTED]: { color: 'red', text: '已驳回', icon: <XCircle /> },
 };
 
-// 同时兼容 snake_case 历史值（部分后端/种子数据可能仍返回下划线形态）
-const PENDING_REVIEW_ALIASES = new Set<string>([
-  ArticleStatus.UNDER_REVIEW,
-  'pending_review',
-  'pendingReview',
-]);
-
-const isPendingReview = (status?: string): boolean =>
-  typeof status === 'string' && PENDING_REVIEW_ALIASES.has(status);
+/** 是否处于评审中（唯一允许 approve/reject 的状态）。 */
+const isPendingReview = (reviewStatus?: string): boolean =>
+  reviewStatus === KnowledgeReviewStatus.UNDER_REVIEW;
 
 export default function KnowledgeReviewListPage() {
   const router = useRouter();
@@ -94,7 +94,8 @@ export default function KnowledgeReviewListPage() {
       });
       // 过滤出待审核的文章（兼容下划线/驼峰两种历史取值）
       const items = (response.items ?? []) as unknown as ArticleItem[];
-      const pendingReview = items.filter(a => isPendingReview(a.status));
+      // 用真实 reviewStatus 过滤，不再读不存在的 a.status。
+      const pendingReview = items.filter(a => isPendingReview(a.reviewStatus));
 
       if (isPendingReview(statusFilter) || !statusFilter) {
         setArticles(pendingReview);
@@ -119,12 +120,21 @@ export default function KnowledgeReviewListPage() {
     if (!selectedArticle) return;
     setSubmitting(true);
     try {
-      const request: ReviewArticleRequest = {
-        action: reviewAction,
-        comment: reviewComment || undefined,
-      };
-      await KnowledgeBaseApi.reviewArticle(String(selectedArticle.id), request);
-      message.success(reviewAction === 'approve' ? '已批准发布' : '已拒绝');
+      // 驳回必须给理由：后端 ReviewRequiresComment 会拒绝空意见，
+      // 前端先拦一道给出明确提示，而不是等一次 400。
+      if (reviewAction === 'reject' && !reviewComment.trim()) {
+        message.error('驳回必须填写评审意见');
+        return;
+      }
+
+      const id = String(selectedArticle.id);
+      // 此前调用的 /review/decision 后端从未注册（断链），改为按动作打真实端点。
+      if (reviewAction === 'approve') {
+        await KnowledgeBaseApi.approveReview(id, reviewComment || undefined);
+      } else {
+        await KnowledgeBaseApi.rejectReview(id, reviewComment);
+      }
+      message.success(reviewAction === 'approve' ? '已批准并发布' : '已驳回');
       setReviewModalVisible(false);
       setSelectedArticle(null);
       setReviewComment('');
@@ -174,16 +184,16 @@ export default function KnowledgeReviewListPage() {
       width: 120,
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
+      title: '评审状态',
+      dataIndex: 'reviewStatus',
+      key: 'reviewStatus',
       width: 100,
-      render: (status: string) => getStatusTag(status),
+      render: (reviewStatus: string) => getStatusTag(reviewStatus),
     },
     {
-      title: '提交时间',
-      dataIndex: 'submittedAt',
-      key: 'submittedAt',
+      title: '最近评审时间',
+      dataIndex: 'reviewedAt',
+      key: 'reviewedAt',
       width: 180,
       render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
@@ -203,7 +213,7 @@ export default function KnowledgeReviewListPage() {
           >
             查看
           </Button>
-          {isPendingReview(record.status) && (
+          {isPendingReview(record.reviewStatus) && (
             <>
               <Button
                 type="link"
@@ -235,9 +245,11 @@ export default function KnowledgeReviewListPage() {
     },
   ];
 
-  const statusOptions: Array<{ value: ArticleStatus | string; label: string }> = [
-    { value: ArticleStatus.UNDER_REVIEW, label: '待审核' },
-    { value: ArticleStatus.PUBLISHED, label: '已发布' },
+  const statusOptions: Array<{ value: KnowledgeReviewStatus | string; label: string }> = [
+    { value: KnowledgeReviewStatus.UNDER_REVIEW, label: '待审核' },
+    { value: KnowledgeReviewStatus.APPROVED, label: '已通过' },
+    { value: KnowledgeReviewStatus.REJECTED, label: '已驳回' },
+    { value: KnowledgeReviewStatus.DRAFT, label: '草稿' },
     { value: 'rejected', label: '已拒绝' },
     { value: ArticleStatus.DRAFT, label: '草稿' },
   ];
@@ -302,7 +314,7 @@ export default function KnowledgeReviewListPage() {
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
             关闭
           </Button>,
-          selectedArticle?.status && isPendingReview(selectedArticle.status) && (
+          isPendingReview(selectedArticle?.reviewStatus) && (
             <Button
               key="reject"
               danger
@@ -316,7 +328,7 @@ export default function KnowledgeReviewListPage() {
               拒绝
             </Button>
           ),
-          selectedArticle?.status && isPendingReview(selectedArticle.status) && (
+          isPendingReview(selectedArticle?.reviewStatus) && (
             <Button
               key="approve"
               type="primary"
@@ -340,8 +352,8 @@ export default function KnowledgeReviewListPage() {
                 {selectedArticle.title}
               </Descriptions.Item>
               <Descriptions.Item label="分类">{selectedArticle.category || '-'}</Descriptions.Item>
-              <Descriptions.Item label="状态">
-                {getStatusTag(selectedArticle.status)}
+              <Descriptions.Item label="评审状态">
+                {getStatusTag(selectedArticle.reviewStatus ?? KnowledgeReviewStatus.DRAFT)}
               </Descriptions.Item>
               <Descriptions.Item label="作者">
                 {selectedArticle.authorName || selectedArticle.author || '-'}
