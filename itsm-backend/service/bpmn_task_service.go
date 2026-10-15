@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/predicate"
@@ -1381,7 +1382,16 @@ func (s *bpmnTaskService) Vote(ctx context.Context, taskID string, req *VoteRequ
 			).
 			SetStatus("cancelled").SetCompletedTime(time.Now()).Save(ctx)
 		engine := NewCustomProcessEngine(s.client, s.logger)
-		systemCtx := context.WithValue(context.Background(), bpmn.BPMNTenantIDContextKey, tenantID)
+		// 会签末票结束后推进父任务没有单一执行人身份：父任务的 assignee 是会签整体，
+		// 沿用任一投票人身份会被判为「非认领人」。这里显式清除投票人身份并声明系统上下文，
+		// 使其与超时扫描等后台任务走同一条可审计的特权路径；沿用 ctx 以保留取消与超时。
+		systemCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenantID)
+		systemCtx = context.WithValue(systemCtx, bpmn.BPMNUserIDContextKey, nil)
+		systemCtx = tenantctx.SystemContext(
+			systemCtx,
+			"bpmn:countersign-parent-advance",
+			"会签全部投票完成后由系统推进父任务，无单一执行人身份",
+		)
 		if err := engine.CompleteTask(systemCtx, parentTask.TaskID, map[string]interface{}{"approvalResult": status.Status, "approved": status.Status == "approved"}); err != nil {
 			return fmt.Errorf("推进会签父任务失败: %w", err)
 		}

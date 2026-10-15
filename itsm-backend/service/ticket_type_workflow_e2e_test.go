@@ -69,7 +69,10 @@ func TestTicketTypeWorkflowBindingCreatesAndCompletesEngineInstanceE2E(t *testin
 
 	task, err := client.ProcessTask.Query().Where(processtask.TenantIDEQ(tenant.ID), processtask.ProcessInstanceIDEQ(instanceID), processtask.TaskDefinitionKeyEQ("handle")).Only(ctx)
 	require.NoError(t, err)
+	// 生产链路里完成任务的是登录的请求人（handler 会把 user_id 注入 BPMN 上下文），
+	// 这里必须同样携带身份，否则只是依赖引擎的历史 fail-open。
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenant.ID)
+	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, requester.ID)
 	require.NoError(t, engine.CompleteTask(workflowCtx, task.TaskID, map[string]interface{}{"resolution": "done"}))
 
 	instance, err := client.ProcessInstance.Get(ctx, instanceID)
@@ -194,7 +197,10 @@ func TestTicketTypeFullChain_InstallToAuditE2E(t *testing.T) {
 	assert.Equal(t, strconv.Itoa(requester.ID), task.Assignee)
 
 	// --- 完成任务 → 实例结束断言 ---
+	// 生产链路里完成任务的是登录的请求人（handler 会把 user_id 注入 BPMN 上下文），
+	// 这里必须同样携带身份，否则只是依赖引擎的历史 fail-open。
 	workflowCtx := context.WithValue(ctx, bpmn.BPMNTenantIDContextKey, tenant.ID)
+	workflowCtx = context.WithValue(workflowCtx, bpmn.BPMNUserIDContextKey, requester.ID)
 	require.NoError(t, engine.CompleteTask(workflowCtx, task.TaskID, map[string]interface{}{"resolution": "done"}))
 	instance, err := client.ProcessInstance.Get(ctx, instanceID)
 	require.NoError(t, err)

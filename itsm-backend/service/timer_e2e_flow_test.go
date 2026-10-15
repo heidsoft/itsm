@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processinstance"
@@ -347,10 +348,6 @@ func deployE2EProcess(t *testing.T, ctx context.Context, client *ent.Client, ten
 	return def.ID
 }
 
-func withUser(ctx context.Context, userID int) context.Context {
-	return context.WithValue(ctx, bpmn.BPMNUserIDContextKey, userID)
-}
-
 // ============================================================================
 // Test 1: Full golden path — Start → IntermediateTimer → UserTask → Complete → End
 // ============================================================================
@@ -442,7 +439,10 @@ func TestE2E_FullTimerFlow(t *testing.T) {
 	assert.Equal(t, "PT1H", boundaryTimers[0].TimerExpression)
 
 	// Step 3: Complete the user task — should cancel boundary timer and advance to EndEvent
-	ctx = withUser(ctx, 0)
+	// 该任务没有指派人和候选人（assignee 为空），不存在可对号的登录用户，
+	// 属于系统驱动推进；因此显式声明 tenantctx 系统上下文而不是伪造 user_id=0
+	// —— 后者会命中引擎的「缺少执行人身份」拒绝分支。
+	ctx = tenantctx.SystemContext(ctx, "test:timer-e2e-system-completion", "完成无指派人的定时器推进任务")
 	err = engine.CompleteTask(ctx, tasks[0].TaskID, nil)
 	require.NoError(t, err)
 

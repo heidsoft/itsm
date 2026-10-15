@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
@@ -394,8 +396,12 @@ func (e *CustomProcessEngine) recordApprovalDecision(ctx context.Context, txc *e
 }
 
 // authorizeTaskActor ensures that task actions are performed by the assigned
-// user or an explicitly resolved candidate. System/internal calls without an
-// authenticated actor keep their existing behavior.
+// user or an explicitly resolved candidate.
+//
+// 无执行人身份不再视为放行：请求链路只有在认证中间件写入 user_id 后才带
+// BPMNUserIDContextKey，缺失即意味着裸奔入口。后台任务必须显式携带
+// tenantctx 系统上下文（见 common/tenantctx/system.go）才能免归属执行，
+// 这样跨租户批处理与「谁都能点通过」才是两条可区分的链路。
 func (e *CustomProcessEngine) authorizeTaskActor(ctx context.Context, task *ent.ProcessTask) error {
 	return e.authorizeTaskActorWithClient(ctx, e.client, task)
 }
@@ -403,7 +409,10 @@ func (e *CustomProcessEngine) authorizeTaskActor(ctx context.Context, task *ent.
 func (e *CustomProcessEngine) authorizeTaskActorWithClient(ctx context.Context, client *ent.Client, task *ent.ProcessTask) error {
 	userID, _ := ctx.Value(bpmn.BPMNUserIDContextKey).(int)
 	if userID <= 0 {
-		return nil
+		if tenantctx.IsSystemBypass(ctx) {
+			return nil
+		}
+		return common.NewBusinessError(common.UnauthorizedCode, "缺少执行人身份，无法校验任务归属", "")
 	}
 	actor, err := client.User.Query().Where(user.ID(userID)).Only(ctx)
 	if err != nil {

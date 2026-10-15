@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/service/bpmn"
@@ -872,7 +873,10 @@ func TestAuthorizeTaskActor_AllowsAssigneeAndCandidate(t *testing.T) {
 	assert.Error(t, engine.authorizeTaskActor(ctx, task3))
 }
 
-func TestAuthorizeTaskActor_NoActorContextIsPermissive(t *testing.T) {
+// TestAuthorizeTaskActor_NoActorRequiresSystemContext 锁定 P0 修复前的 fail-open：
+// 原实现在 ctx 无执行人身份时直接 return nil，任何未携带 user_id 的入口都能
+// 完成任意任务。修复后免归属执行只能走显式的 tenantctx 系统上下文。
+func TestAuthorizeTaskActor_NoActorRequiresSystemContext(t *testing.T) {
 	engine, baseCtx := newApprovalDecisionTestEngine(t)
 	tenantID, _ := setupApprovalDecisionFixture(t, engine)
 	ctx := context.WithValue(baseCtx, bpmn.BPMNTenantIDContextKey, tenantID)
@@ -880,8 +884,16 @@ func TestAuthorizeTaskActor_NoActorContextIsPermissive(t *testing.T) {
 	_, taskID := createProcessFixture(t, engine, tenantID, "noctx1")
 	task, err := engine.client.ProcessTask.Get(ctx, taskID)
 	require.NoError(t, err)
-	// No actor in context should not error (system/internal calls stay working)
-	assert.NoError(t, engine.authorizeTaskActor(ctx, task))
+
+	err = engine.authorizeTaskActor(ctx, task)
+	require.Error(t, err, "缺少执行人身份且未声明系统上下文时必须拒绝")
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.UnauthorizedCode, bizErr.Code)
+
+	// 后台任务显式声明系统上下文后仍可执行（超时扫描、会签父任务推进等）。
+	sysCtx := tenantctx.SystemContext(ctx, "test:bpmn-system-actor", "verify privileged path")
+	assert.NoError(t, engine.authorizeTaskActor(sysCtx, task))
 }
 
 func TestClaimTask_ValidatesCandidatesAndExistingAssignee(t *testing.T) {

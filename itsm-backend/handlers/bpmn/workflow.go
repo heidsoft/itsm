@@ -58,7 +58,8 @@ func getBPMNTenantContext(ctx *gin.Context) (context.Context, int, bool) {
 //     （与 middleware.ResourceActionMap 的 /api/v1/bpmn/* 预检条目同一资源名）
 //   - 任务（本人待办与操作）→ task:read / task:update；跨用户全量任务视图 → task:admin
 //     task 与 bpmn 必须分开：bpmn:write 意味着「能设计并发布流程」，不应连带
-//     「能对任意任务下决策」。归属/候选人校验在 handler 层 authorizeTaskActor 二次收口。
+//     「能对任意任务下决策」。归属/候选人校验在 BPMN 引擎 authorizeTaskActor 二次收口，
+//     请求链路未携带 user_id 时引擎按未授权拒绝，后台任务须显式使用 tenantctx 系统上下文。
 //   - 本文件所有写路由必须显式挂 RequirePermission；守卫测试
 //     router/route_permission_guard_test.go 会拦截新增的裸奔写路由。
 func (c *WorkflowHandler) RegisterRoutes(r *gin.RouterGroup) {

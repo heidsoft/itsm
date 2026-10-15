@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	"itsm-backend/ent/processtask"
@@ -112,7 +113,10 @@ func TestCompleteTask_AtomicRollbackOnFailure(t *testing.T) {
 func TestCompleteTask_SuccessCommits(t *testing.T) {
 	engine, client, ctx, _, instID, taskID := seedEngineFixture(t, atomicOKBPMN)
 
-	err := engine.CompleteTask(ctx, "TASK-ENGINE-1", map[string]interface{}{})
+	// 本用例验证提交语义，不建模登录用户；TASK-ENGINE-1 无指派人，
+	// 只能按系统特权路径推进（与超时扫描同一条链路）。
+	systemCtx := tenantctx.SystemContext(ctx, "test:bpmn-engine-p3-completion", "引擎提交语义用例无登录执行人")
+	err := engine.CompleteTask(systemCtx, "TASK-ENGINE-1", map[string]interface{}{})
 	require.NoError(t, err)
 
 	tk, err := client.ProcessTask.Get(ctx, taskID)

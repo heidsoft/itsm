@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
+	"itsm-backend/common/tenantctx"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processtask"
 )
@@ -138,8 +139,10 @@ func TestE2E_TaskDueTimerCancelledOnCompletion(t *testing.T) {
 	_, task, timerStore, ctx, engine := startTaskDueProcess(t, client, testBPMNTaskDue, "task_due_proc", "BK-DUE-004")
 
 	// 人工完成任务 → task_due timer 应被同步取消
-	ctxWithUser := withUser(ctx, 0)
-	require.NoError(t, engine.CompleteTask(ctxWithUser, task.TaskID, map[string]interface{}{"approvalDecision": "approve"}))
+	// deadline_task 没有指派人（assignee 为空），完成它属于系统驱动推进，
+	// 伪造 user_id=0 会被任务归属校验判为缺少执行人身份。
+	systemCtx := tenantctx.SystemContext(ctx, "test:task-due-completion", "完成无指派人的到期任务")
+	require.NoError(t, engine.CompleteTask(systemCtx, task.TaskID, map[string]interface{}{"approvalDecision": "approve"}))
 
 	_, total, err := timerStore.List(ctx, TimerListFilter{
 		TenantID:  task.TenantID,
