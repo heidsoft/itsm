@@ -15,6 +15,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// IsMSPStaff 判定「谁算 MSP 员工」：服务商租户 + 非空 users.msp_role。
+// 这是 MSP 成员身份的唯一入口，请求中间件与菜单可见性过滤共用同一判定，
+// 避免出现「菜单按权限码展示、接口按成员身份拒绝」两套口径。
+func IsMSPStaff(tenantType string, mspRole string) bool {
+	return tenantmode.IsMSPProviderTenantType(tenantType) && mspRole != ""
+}
+
 // MSPMiddleware 在请求进入 MSP 路由族时构造 MSPContext：
 //  1. 门控 mspEnabled（private 部署直接 404）
 //  2. 解析 user_id / 加载用户与租户
@@ -88,12 +95,8 @@ func MSPMiddleware(client *ent.Client) gin.HandlerFunc {
 		tenantObj := tenants
 
 		// 3. 判断是否为 MSP 员工
-		isMSP := false
-		var mspRole string
-		if tenantmode.IsMSPProviderTenantType(string(tenantObj.Type)) && u.MspRole != "" {
-			isMSP = true
-			mspRole = string(u.MspRole)
-		}
+		isMSP := IsMSPStaff(string(tenantObj.Type), string(u.MspRole))
+		mspRole := string(u.MspRole)
 
 		ctx := &MSPContext{
 			IsMSP:     isMSP,

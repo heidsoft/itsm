@@ -45,6 +45,14 @@ func RequireMSPAccess() gin.HandlerFunc {
 	}
 }
 
+// IsMSPManagerRole 判断 MSP 原生角色是否具备服务商管理员权限。
+// 这是「MSP 管理员」的唯一口径：RequireMSPManager 的放行条件与 GET /msp/status
+// 返回给前端的 isAdmin 展示位必须同源，否则 UI 会把只有读权限的 provider_agent
+// 导航进管理页，再在每个写操作上收到 403。
+func IsMSPManagerRole(mspRole string) bool {
+	return mspRole == MSPRoleManager
+}
+
 // RequireMSPManager 在 RequireMSPAccess 基础上额外要求 Role == provider_admin。
 // 用于租户开通、计费查询、跨客户批量操作等高风险面。
 func RequireMSPManager() gin.HandlerFunc {
@@ -58,7 +66,7 @@ func RequireMSPManager() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if mspCtx.Role != MSPRoleManager {
+		if !IsMSPManagerRole(mspCtx.Role) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code":    http.StatusForbidden,
 				"message": "仅MSP经理可执行此操作",

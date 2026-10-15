@@ -123,7 +123,8 @@ configurationItems.POST("/types", middleware.RequirePermission("cmdb", "write"),
 **规则**：`msp` 组下所有路由必须显式调用 `RequireMSPPermission(resource, action)`，禁止依赖组级中间件。
 
 **迁移**：
-- `/msp/status` 补齐 `RequireMSPPermission("msp", "read")` 或论证为何不需要
+- `/msp/status`：已按「论证为何不需要」分支收口（2026-10-15）。它是登录即可访问的身份自述端点（`docs/acl-manifest.yaml` 登记为 AUTH_ONLY），只返回调用者自身的 `isMsp/isAdmin/role`，不含任何客户租户数据；前端靠它决定展示 MSP 工作台还是权限拒绝态，套上 `RequireMSPPermission` 会让非 MSP 用户收到 403 而不是一个可判定的响应。授权仍由同组带权限码的端点逐请求执行，论证已写在 `router/msp_routes.go` 的路由注册处。
+- 同批收口 `isAdmin` 语义：它表示 MSP 服务商管理员（`msp_role=provider_admin`，`middleware.IsMSPManagerRole`），不是平台 `admin` 角色。平台角色名不构成 MSP 访问权（`347d44511`：MSP 访问必须有真实 `msp_role` + allocation）。
 
 ### D4. ResourceActionMap 代码生成必须与路由声明保持同步
 

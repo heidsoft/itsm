@@ -11,6 +11,7 @@ import type {
   MSPPerformanceReportListResponse,
   MSPAllocationHistoryResponse,
   MSPContext,
+  MSPStatus,
 } from '@/types/msp';
 
 export class MSPAPI {
@@ -105,14 +106,15 @@ export class MSPAPI {
   // ==================== 辅助方法 ====================
 
   /**
-   * 检查当前用户是否是 MSP 员工
+   * 检查当前用户的 MSP 身份。isAdmin 只表示 MSP 服务商管理员（provider_admin），
+   * 不是平台 admin 角色；授权仍逐请求由后端执行，这里只是展示提示。
    */
   static async isMSPUser(): Promise<{ isMSP: boolean; isAdmin: boolean }> {
     try {
-      const res = await httpClient.get<{ isMsp: boolean; isAdmin?: boolean }>('/api/v1/msp/status');
+      const res = await httpClient.get<MSPStatus>('/api/v1/msp/status');
       return {
-        isMSP: res.isMsp || false,
-        isAdmin: res.isAdmin || false,
+        isMSP: res.isMsp,
+        isAdmin: res.isAdmin,
       };
     } catch {
       return { isMSP: false, isAdmin: false };

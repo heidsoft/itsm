@@ -221,6 +221,7 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 		WithRoles(func(q *ent.RoleQuery) {
 			q.Select(role.FieldCode)
 		}).
+		WithTenant().
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("用户不存在: %w", err)
@@ -249,9 +250,14 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 	// 构建菜单树
 	mainMenus, adminMenus := s.buildMenuTree(filteredMenus)
 
-	// 当部署模式未启用 MSP（如 DEPLOYMENT_MODE=private）时，后端 /api/v1/msp/* 路由整体关闭。
-	// 此时即便用户拥有 msp:* 权限，也应隐藏 MSP 菜单，避免暴露一个后端不可用的模块。
-	if !middleware.IsMSPEnabled() {
+	// MSP 菜单要求服务商成员身份，与 MSPMiddleware 同口径：msp:read 是 12 个内置角色
+	// 共有的读码，只按权限码过滤会把非服务商成员导航进一个必然 403 的入口。
+	// 部署模式关闭 MSP 时同样隐藏。隐藏菜单不是授权，接口仍逐请求把关。
+	tenantType := ""
+	if userEntity.Edges.Tenant != nil {
+		tenantType = string(userEntity.Edges.Tenant.Type)
+	}
+	if !middleware.IsMSPEnabled() || !middleware.IsMSPStaff(tenantType, string(userEntity.MspRole)) {
 		mainMenus = filterMSPMenus(mainMenus)
 		adminMenus = filterMSPMenus(adminMenus)
 	}

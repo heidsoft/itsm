@@ -17,7 +17,10 @@ func SetupMSPRoutes(r *gin.Engine, config *RouterConfig) {
 	msp.Use(middleware.RBACMiddleware(config.Client)) // 设置 client 到 context
 	msp.Use(middleware.MSPMiddleware(config.Client))
 	{
-		// MSP 基础信息 - 允许 MSP 员工和管理员访问
+		// MSP 身份自述 - 不含客户数据，MSP 管理员语义见下
+		// 保持 AUTH_ONLY（ADR-005 D3）：前端靠它判断展示工作台还是权限拒绝态，
+		// 套 RequireMSPPermission 会让非 MSP 用户收到 403 而不是可判定的响应。
+		// 它只返回调用者自身身份，数据端点仍逐请求带权限码。
 		msp.GET("/status", config.MSPHandler.GetMSPStatus)
 		msp.GET("/context", middleware.RequireMSPPermission("msp", "read"), config.MSPHandler.GetMSPContext)
 

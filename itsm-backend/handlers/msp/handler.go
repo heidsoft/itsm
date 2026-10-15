@@ -47,36 +47,28 @@ func parseDateOrZero(s string) (time.Time, error) {
 	return time.Parse("2006-01-02", s)
 }
 
-// GetMSPStatus 获取当前用户的 MSP 状态
+// GetMSPStatus 报告当前用户的 MSP 身份，供前端决定展示工作台还是权限拒绝态。
+//
+// isAdmin 只表示「MSP 服务商管理员（msp_role=provider_admin）」，与 RequireMSPManager 同源；
+// 授权仍逐请求走 RequireMSPPermission，本字段纯展示。历史实现读 gin 键 "user_role"，
+// 而 AuthMiddleware 从不写该键，于是 isAdmin 恒 false，且「管理员模式」分支永不命中，
+// 反而诱导后来者以为改对键名就能放行（口径见 347d44511）。
 func (h *Handler) GetMSPStatus(c *gin.Context) {
 	mspCtx, exists := middleware.GetMSPContext(c)
-
-	userRole, _ := c.Get("user_role")
-	isAdmin := userRole == "super_admin" || userRole == "admin"
-
-	if exists && mspCtx.IsMSP {
-		common.Success(c, dto.MSPStatusResponse{
-			IsMSP:     true,
-			MSPUserID: mspCtx.MSPUserID,
-			Role:      mspCtx.Role,
-			IsAdmin:   isAdmin,
-		})
-		return
-	}
-
-	if isAdmin {
+	if !exists || !mspCtx.IsMSP {
 		common.Success(c, dto.MSPStatusResponse{
 			IsMSP:   false,
-			IsAdmin: true,
-			Message: "管理员模式：可配置MSP功能",
+			IsAdmin: false,
+			Message: "非MSP用户",
 		})
 		return
 	}
 
 	common.Success(c, dto.MSPStatusResponse{
-		IsMSP:   false,
-		IsAdmin: false,
-		Message: "非MSP用户",
+		IsMSP:     true,
+		MSPUserID: mspCtx.MSPUserID,
+		Role:      mspCtx.Role,
+		IsAdmin:   middleware.IsMSPManagerRole(mspCtx.Role),
 	})
 }
 

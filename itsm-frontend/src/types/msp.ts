@@ -49,6 +49,16 @@ export interface WorkflowNodeMSPConfig {
   requireMspApproval: boolean;
 }
 
+// MSP 身份自述（对应后端 dto.MSPStatusResponse，GET /api/v1/msp/status）。
+// isAdmin 表示 MSP 服务商管理员（msp_role=provider_admin），不是平台 admin 角色。
+export interface MSPStatus {
+  isMsp: boolean;
+  isAdmin: boolean;
+  mspUserId?: number;
+  role?: string;
+  message?: string;
+}
+
 // MSP 上下文（用于中间件）
 export interface MSPContext {
   isMsp: boolean;

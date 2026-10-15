@@ -160,8 +160,10 @@ type MSPStatusResponse struct {
 	IsMSP     bool   `json:"isMsp"`
 	MSPUserID int    `json:"mspUserId,omitempty"`
 	Role      string `json:"role,omitempty"`
-	IsAdmin   bool   `json:"isAdmin"`
-	Message   string `json:"message,omitempty"`
+	// IsAdmin 表示 MSP 服务商管理员（msp_role=provider_admin），不是平台 admin 角色。
+	// 非 MSP 员工恒为 false；MSP 数据端点仍逐请求由 RequireMSPPermission 授权。
+	IsAdmin bool   `json:"isAdmin"`
+	Message string `json:"message,omitempty"`
 }
 
 type MSPAllocationListResponse struct {
