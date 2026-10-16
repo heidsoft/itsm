@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **SSO（OIDC）身份接入后端整批落地（2026-10-16）**：企业身份接入的完整后端链路——提供方管理（`/api/v1/admin/sso/providers`，`sso:read`/`sso:write`，仅 Admin 及以上）、登录发起/回调（`/api/v1/auth/sso/initiate|callback|providers`，挂登录限流）、账号自助绑定（`/api/v1/auth/sso/bind|unbind|identities`，只挂 `AuthMiddleware`，user_id 只取鉴权上下文）。安全口径：
+  - **client_secret 只存 AES-GCM 密文**（`middleware.EncryptionService`，与 `connector_configs.encrypted_credentials` 同密钥来源 `CONNECTOR_CONFIG_ENCRYPTION_KEY`）；密钥缺失时拒绝保存而不是明文落库。
+  - **JIT 建号角色白名单**（`end_user`/`agent`/`technician`）：admin 及以上的等保角色绝不由 IdP 声明直接授予，提权必须走管理员显式授权——提供方配置写错不等于交出租户最高权限。
+  - **state 一次性消费**（Redis Lua 原子 GET+DEL，NX 防碰撞；Redis 不可用时进程内降级并告警——多副本下「发起在 A、回调到 B」会失败，降级必须可观察）。
+  - 新表 `sso_providers`/`sso_identities` 均含 `tenant_id` 且带 RLS 策略（迁移 `20261014_create_sso_tables.sql`，目录自动发现、幂等），无需 tenant_guard 豁免登记。
+- **SSO 装配守卫**（`internal/bootstrap/sso_assembly_test.go`）：锁定 `NewApplication` 的 `SetSSOService` 注入与密钥口径。路由级测试自己注入 SSO 服务，生产装配一旦缺失整套 SSO 静默不注册（路由 404）且无人能测出——守卫已做「注入回归→FAIL→恢复」验证。`router/route_permission_guard_test.go` 的 4 条 SSO 豁免注记同步更新（此前标注「依赖未提交批次」，现已随本批次落地）。
+
+### Fixed
+
+- **main 分支编译修复：补齐被引用的未提交 SSO 工件（2026-10-16）**：HEAD 上 `ent/client.go`（import `ent/ssoidentity`、`ent/ssoprovider`）、`ent/runtime.go`（引用 `schema.SSOIdentity`/`SSOProvider`）、`router/router.go`（调用 `SetupSSORoutes`）均已提交，而定义它们的 SSO 后端文件（handlers/dto/ent 生成物/路由/迁移）从未入库——origin/main 检出即可编译失败（`go build` 报 `does not contain package itsm-backend/ent/ssoidentity`，worktree 基线实测确认）。这是「生成物随批次扫入、被引用方未入库」的悬空引用：本批次按依赖闭包把 SSO 后端整体补齐入库，而不是把悬空引用删掉。修复后 worktree 基线全量测试（common/service/router/middleware/internal/handlers/pkg/dto/migration）零 FAIL。
+
 ### Removed
 
 - **历史文档清理（2026-10-12）**：移除 6 份已标注 `superseded`/`historical` 的入仓文档——`docs/roadmap.md`（7 行跳转页，自述 superseded）、`docs/delivery/coverage-v1.1.md`（2026-06-28 覆盖率快照，自述 superseded）、`docs/initialization-release-certification.md`、`docs/release-v1.5.0-certification-evidence.md`、`docs/v1-ga-readiness.md`、`docs/review/workflow-cmdb-review-2026-09-03.md`。同步删除 `mkdocs.yml` nav 中 2 条失效条目（v1.0 GA 验收 / Roadmap），并将 4 处指向已删文件的链接改指当前事实源（`docs/documentation-governance.md`、`docs/testing/coverage-report.md`、根目录 `ROADMAP.md`）。清理后 Gate C.2 重复 roadmap 检测 0 violation、Gate C.3 内部断链 0。审查清单见 `output/doc-cleanup-review-2026-10-12.md`。

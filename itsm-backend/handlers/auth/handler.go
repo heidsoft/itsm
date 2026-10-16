@@ -15,9 +15,18 @@ import (
 // handlers/common's session handler.
 type Handler struct {
 	service *Service
+	// sso 为 SSO（OIDC）子系统；装配层未注入时为 nil，SSO 路由不注册。
+	sso *SSOService
 }
 
 func NewHandler(service *Service) *Handler { return &Handler{service: service} }
+
+// SetSSOService 注入 SSO 子系统。单独 setter 而不是改 NewHandler 签名：
+// 既有装配与测试只构造账号自助面，不应被 SSO 的依赖（加密服务、state 存储）传染。
+func (h *Handler) SetSSOService(sso *SSOService) { h.sso = sso }
+
+// SSOEnabled 报告 SSO 路由是否可注册。
+func (h *Handler) SSOEnabled() bool { return h.sso != nil }
 
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest

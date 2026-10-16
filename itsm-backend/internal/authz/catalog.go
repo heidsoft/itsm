@@ -234,6 +234,10 @@ func Definitions() []PermissionDef {
 		// 收敛进 system/system_config 会丢失租户边界，故新增；授予 admin/sysadmin。
 		{"tenant:read", "查看租户", "tenant", "read", "查看租户列表与详情"},
 		{"tenant:write", "管理租户", "tenant", "write", "创建、更新、停用租户"},
+		// SSO（OIDC）管理面：提供方配置可改登录入口与 JIT 提权策略，
+		// 与 tenant 同级独立成面；bind/unbind 是用户自助动作，不走权限码。
+		{"sso:read", "查看SSO配置", "sso", "read", "查看 SSO 提供方配置"},
+		{"sso:write", "管理SSO配置", "sso", "write", "创建、编辑、启停 SSO 提供方"},
 	}
 }
 

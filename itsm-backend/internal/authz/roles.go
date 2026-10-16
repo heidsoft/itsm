@@ -224,6 +224,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"report:read",
 			"msp:read",
 			"marketplace:read", "marketplace:write",
+			"sso:read", "sso:write",
 		},
 		// 二线技术员（users.role=technician 对齐）；本条目即 technician 权限的唯一来源。
 		domainrole.Technician: {

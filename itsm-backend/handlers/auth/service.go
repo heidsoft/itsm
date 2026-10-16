@@ -38,6 +38,12 @@ func (s *Service) SetEmailService(emailService *service.EmailService) { s.emailS
 func (s *Service) SetBaseURL(baseURL string)                          { s.baseURL = baseURL }
 
 func (s *Service) permissions(userEntity *ent.User) []string {
+	return userPermissions(userEntity)
+}
+
+// userPermissions 按角色解析权限码列表。登录与 SSO 会话签发共用同一口径，
+// 避免两条认证链路给出不同权限集。
+func userPermissions(userEntity *ent.User) []string {
 	if userEntity.Role == user.RoleSuperAdmin {
 		return []string{"*"}
 	}

@@ -37,8 +37,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
-	accountHandler "itsm-backend/handlers/account"
 	a2uiHandler "itsm-backend/handlers/a2ui"
+	accountHandler "itsm-backend/handlers/account"
 	"itsm-backend/handlers/ai"
 	analyticsHandler "itsm-backend/handlers/analytics"
 	applicationHandler "itsm-backend/handlers/application"
@@ -1016,6 +1016,40 @@ func NewApplication() *Application {
 	// Auth handler owns account self-service and tenant session switching.
 	authService := authHandler.NewService(client, cfg.JWT.Secret, sugar)
 	authHTTPHandler := authHandler.NewHandler(authService)
+
+	// SSO（OIDC）子系统装配。
+	//
+	// 路由组由 router.SetupSSORoutes 注册，但整组以「SSO 服务是否注入」为总开关：
+	// SSOEnabled() == false 时一条都不注册。这里漏掉 SetSSOService 会让整套 SSO
+	// 静默成为死代码——路由不注册、管理接口 404，而单测测不出来（测试自己注入）。
+	//   - state 存 Redis 时跨副本共享；降级为进程内存储时单副本语义完整，多副本下
+	//     「发起在 A 副本、回调落到 B 副本」必然失败，降级必须留告警。
+	//   - client_secret 加密与 connector_configs 同口径（同一密钥来源，
+	//     见上方 connector 装配段；生产缺密钥已在那里 fatal）。
+	{
+		ssoStates := authHandler.NewSSOStateStore(nil)
+		if cfg.Redis.Host != "" {
+			ssoRedis := redis.NewClient(&redis.Options{
+				Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+				Password: cfg.Redis.Password,
+				DB:       cfg.Redis.DB,
+			})
+			pingCtx, pingCancel := context.WithTimeout(context.Background(), 2*time.Second)
+			if err := ssoRedis.Ping(pingCtx).Err(); err != nil {
+				sugar.Warnw("sso state store falls back to process-local storage because redis is unreachable; "+
+					"a login initiated on one replica may fail when its callback lands on another", "error", err)
+			} else {
+				ssoStates = authHandler.NewSSOStateStore(ssoRedis)
+			}
+			pingCancel()
+		} else {
+			sugar.Warn("REDIS_HOST is empty: sso state store is process-local; " +
+				"a login initiated on one replica may fail when its callback lands on another")
+		}
+		authHTTPHandler.SetSSOService(authHandler.NewSSOService(
+			client, cfg.JWT.Secret, sugar,
+			middleware.NewEncryptionService(connectorEncryptionKey), ssoStates))
+	}
 
 	// User Handler
 	userService := service.NewUserService(client, sugar)

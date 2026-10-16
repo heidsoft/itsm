@@ -46,11 +46,8 @@ var writeRouteExemptions = map[string]string{
 	// —— 3. SSO 登录发起与账号自助面（与 /logout、/switch-tenant 同模式）——
 	// initiate/callback 是 OIDC 登录链路的前半段，会话尚未建立，
 	// 授权依据是 issuer + state + PKCE + nonce 而非角色；自助面只操作调用者本人绑定。
-	//
-	// ⚠️ 这四条豁免**依赖 sso_routes.go 已注册**（该文件当前未提交到本仓库，
-	// 由 SSO 后端批次一并落地）。若守卫报"白名单存在失效条目"，
-	// 说明 sso_routes.go 未在本分支注册，此时应把这四条一并移除，
-	// 而不是删掉守卫。
+	// 这四条豁免与 sso_routes.go 的注册一一对应：若守卫报「白名单存在失效条目」，
+	// 说明对应路由被改名或未注册，应同步修订本清单，而不是删掉守卫。
 	"sso_routes.go POST /auth/sso/initiate": "SSO 登录发起，会话未建立，凭 issuer + state + PKCE",
 	"sso_routes.go POST /auth/sso/callback": "SSO 回调，凭 state + nonce 校验 IdP 断言",
 	"sso_routes.go POST /sso/bind":          "绑定外部身份到本人账号，仅影响调用者自己",
