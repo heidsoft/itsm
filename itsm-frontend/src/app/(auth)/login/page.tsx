@@ -14,6 +14,7 @@ import {
   Input,
   Button,
   Card,
+  Divider,
   Row,
   Col,
   Flex,
@@ -21,6 +22,7 @@ import {
 import { antdTheme } from '@/lib/antd-theme';
 import { message } from 'antd';
 import { AuthService } from '@/lib/services/auth-service';
+import { AuthAPI, type SSOProviderBrief } from '@/lib/api/auth-api';
 import { logger } from '@/lib/env';
 import { useAuthStoreHydration } from '@/lib/store/auth-store';
 
@@ -44,6 +46,10 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0); // 限流倒计时（秒）
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  // SSO 提供方（登录页数据源）。加载失败保持空数组：SSO 不可用时登录页
+  // 只隐藏入口，账号密码登录必须始终可用。
+  const [ssoProviders, setSsoProviders] = useState<SSOProviderBrief[]>([]);
+  const [ssoLoading, setSsoLoading] = useState<string | null>(null);
 
   // 清理倒计时定时器
   useEffect(() => {
@@ -53,6 +59,40 @@ function LoginForm() {
       }
     };
   }, []);
+
+  // 加载启用中的 SSO 提供方（无提供方/后端未接入时静默为空）
+  useEffect(() => {
+    let cancelled = false;
+    AuthAPI.listSSOProviders().then(providers => {
+      if (!cancelled && providers.length > 0) {
+        setSsoProviders(providers);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 发起 SSO 登录：拿授权 URL 后整页跳转到 IdP。
+  // 跳转是浏览器级导航（非同源 fetch），授权码由 IdP 回调到 /sso/callback 页处理。
+  const handleSSOLogin = async (providerCode: string) => {
+    setSsoLoading(providerCode);
+    setError('');
+    try {
+      const result = await AuthAPI.initiateSSOLogin(providerCode);
+      if (!result.success || !result.redirectUrl) {
+        setError(result.error || 'SSO 登录发起失败，请使用账号密码登录');
+        setSsoLoading(null);
+        return;
+      }
+      logger.info('跳转 SSO 提供方', { provider: providerCode });
+      window.location.href = result.redirectUrl;
+    } catch (err) {
+      logger.error('SSO 登录发起失败:', err);
+      setError(err instanceof Error ? err.message : 'SSO 登录发起失败');
+      setSsoLoading(null);
+    }
+  };
 
   // 启动倒计时
   const startCountdown = (seconds: number) => {
@@ -245,6 +285,30 @@ function LoginForm() {
           </Button>
         </Form.Item>
       </Form>
+
+      {/* SSO 登录入口：仅在租户配置了启用中的提供方时渲染 */}
+      {ssoProviders.length > 0 && (
+        <>
+          <Divider plain className='!my-5'>
+            <Text className='text-gray-400 text-xs'>或使用企业账号登录</Text>
+          </Divider>
+          <div className='flex flex-col gap-2'>
+            {ssoProviders.map(provider => (
+              <Button
+                key={provider.code}
+                size='large'
+                className='w-full h-10 rounded-md text-sm'
+                icon={<Shield size={14} />}
+                loading={ssoLoading === provider.code}
+                disabled={loading || (ssoLoading !== null && ssoLoading !== provider.code)}
+                onClick={() => handleSSOLogin(provider.code)}
+              >
+                {provider.name}
+              </Button>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className='text-center mt-5'>
         <Text className='text-gray-400 text-xs'>

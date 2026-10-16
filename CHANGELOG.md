@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **JIT 建号角色白名单**（`end_user`/`agent`/`technician`）：admin 及以上的等保角色绝不由 IdP 声明直接授予，提权必须走管理员显式授权——提供方配置写错不等于交出租户最高权限。
   - **state 一次性消费**（Redis Lua 原子 GET+DEL，NX 防碰撞；Redis 不可用时进程内降级并告警——多副本下「发起在 A、回调到 B」会失败，降级必须可观察）。
   - 新表 `sso_providers`/`sso_identities` 均含 `tenant_id` 且带 RLS 策略（迁移 `20261014_create_sso_tables.sql`，目录自动发现、幂等），无需 tenant_guard 豁免登记。
+- **登录页 SSO 入口（前端闭环，2026-10-16）**：登录页启动时发现启用中的提供方（`GET /auth/sso/providers`，失败静默为空——SSO 未配置或后端异常不得让账号密码登录变红），点击后经 `POST /auth/sso/initiate` 整页跳转 IdP，回调由既有 `/sso/callback` 页处理（会话经 `syncSession()` 统一读取，不采信回调响应字段）。同时修复 `initiateSSOLogin` 的响应信封解包 bug：旧实现读顶层 `data.redirectUrl`（实际恒 undefined），且既有单测按「无信封」的错误契约 mock，把 bug 钉成了通过——实现与测试一并修正；补 `listSSOProviders()`。
 - **SSO 装配守卫**（`internal/bootstrap/sso_assembly_test.go`）：锁定 `NewApplication` 的 `SetSSOService` 注入与密钥口径。路由级测试自己注入 SSO 服务，生产装配一旦缺失整套 SSO 静默不注册（路由 404）且无人能测出——守卫已做「注入回归→FAIL→恢复」验证。`router/route_permission_guard_test.go` 的 4 条 SSO 豁免注记同步更新（此前标注「依赖未提交批次」，现已随本批次落地）。
 
 ### Fixed

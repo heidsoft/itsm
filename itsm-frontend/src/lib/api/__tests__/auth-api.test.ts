@@ -100,11 +100,67 @@ describe('AuthApiClient', () => {
   });
 
   describe('initiateSSOLogin', () => {
-    it('should initiate SSO', async () => {
-      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ redirectUrl: 'https://sso.example.com' }) });
+    // 后端统一响应信封 {code, message, data}，redirectUrl 在 data 内层。
+    // 旧实现直接读顶层 data.redirectUrl（恒 undefined），而这里的 mock 当时
+    // 也按「无信封」的错误契约返回，把 bug 钉成了通过——两处现已同时修正。
+    it('should initiate SSO via response envelope', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          code: 0,
+          message: 'success',
+          data: { redirectUrl: 'https://sso.example.com/authorize', state: 'st', provider: 'default' },
+        }),
+      });
       const res = await authApiClient.initiateSSOLogin('default');
       expect(res.success).toBe(true);
-      expect(res.redirectUrl).toBe('https://sso.example.com');
+      expect(res.redirectUrl).toBe('https://sso.example.com/authorize');
+    });
+
+    it('should fail when business code is non-zero even on HTTP 200', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ code: 2001, message: 'SSO 登录发起失败', data: null }),
+      });
+      const res = await authApiClient.initiateSSOLogin('nope');
+      expect(res.success).toBe(false);
+      expect(res.error).toBe('SSO 登录发起失败');
+      expect(res.redirectUrl).toBeUndefined();
+    });
+
+    it('should fail when envelope data is missing', async () => {
+      mockFetch.mockResolvedValue({ ok: true, json: async () => ({ code: 0 }) });
+      const res = await authApiClient.initiateSSOLogin('default');
+      expect(res.success).toBe(false);
+    });
+  });
+
+  describe('listSSOProviders', () => {
+    it('should unwrap envelope and return providers', async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          code: 0,
+          message: 'success',
+          data: [{ code: 'okta', name: 'Okta', protocol: 'oidc' }],
+        }),
+      });
+      const providers = await authApiClient.listSSOProviders();
+      expect(providers).toEqual([{ code: 'okta', name: 'Okta', protocol: 'oidc' }]);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/auth/sso/providers'),
+        expect.any(Object)
+      );
+    });
+
+    it('should return empty array on HTTP error instead of throwing', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+      await expect(authApiClient.listSSOProviders()).resolves.toEqual([]);
+    });
+
+    it('should return empty array on network failure', async () => {
+      mockFetch.mockRejectedValue(new Error('Network down'));
+      await expect(authApiClient.listSSOProviders()).resolves.toEqual([]);
     });
   });
 

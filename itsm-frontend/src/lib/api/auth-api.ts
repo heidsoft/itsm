@@ -62,6 +62,7 @@ const API_ENDPOINTS = {
   WEBAUTHN_VERIFY: '/api/v1/auth/webauthn/verify',
   SSO_INITIATE: '/api/v1/auth/sso/initiate',
   SSO_CALLBACK: '/api/v1/auth/sso/callback',
+  SSO_PROVIDERS: '/api/v1/auth/sso/providers',
 } as const;
 
 // HTTP客户端配置
@@ -311,16 +312,19 @@ class AuthApiClient {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      // 统一响应信封 {code, message, data}：redirectUrl 在 data 内层，且业务码
+      // 非 0 时 HTTP 仍可能是 200。此前直接读顶层 `data.redirectUrl`（恒 undefined），
+      // 且既有测试按「无信封」的错误契约 mock，把 bug 钉成了"通过"——两处一并修。
+      if (!response.ok || data?.code !== 0 || !data?.data?.redirectUrl) {
         return {
           success: false,
-          error: data.message || 'SSO initiation failed',
+          error: data?.message || 'SSO initiation failed',
         };
       }
 
       return {
         success: true,
-        redirectUrl: data.redirectUrl,
+        redirectUrl: data.data.redirectUrl,
       };
     } catch (error) {
       console.error('SSO initiation error:', error);
@@ -328,6 +332,27 @@ class AuthApiClient {
         success: false,
         error: error instanceof Error ? error.message : 'Network error',
       };
+    }
+  }
+
+  /**
+   * 列出启用中的 SSO 提供方（登录页数据源，公开端点）。
+   *
+   * 任何失败（未配置、网络异常、非 0 业务码）一律返回空数组并静默：
+   * 登录页不应因 SSO 不可用而变红——账号密码登录必须始终可用。
+   */
+  async listSSOProviders(): Promise<SSOProviderBrief[]> {
+    try {
+      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.SSO_PROVIDERS}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) return [];
+      const data = await response.json();
+      if (data?.code !== 0 || !Array.isArray(data?.data)) return [];
+      return data.data as SSOProviderBrief[];
+    } catch {
+      return [];
     }
   }
 
@@ -415,6 +440,13 @@ export interface WebAuthnUser {
   permissions: string[];
 }
 
+/** 登录页展示的 SSO 提供方摘要（对应后端 dto.SSOBrief）。 */
+export interface SSOProviderBrief {
+  code: string;
+  name: string;
+  protocol?: string;
+}
+
 // 导出便捷方法
 export const AuthAPI = {
   login: (data: LoginRequest) => authApiClient.login(data),
@@ -423,6 +455,7 @@ export const AuthAPI = {
   getWebAuthnChallenge: (username: string) => authApiClient.getWebAuthnChallenge(username),
   verifyWebAuthn: (credential: WebAuthnCredential) => authApiClient.verifyWebAuthn(credential),
   initiateSSOLogin: (provider?: string) => authApiClient.initiateSSOLogin(provider),
+  listSSOProviders: () => authApiClient.listSSOProviders(),
   ssoCallback: (code: string, state: string | null, provider?: string) =>
     authApiClient.ssoCallback(code, state, provider),
 };
