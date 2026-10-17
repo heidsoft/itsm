@@ -451,32 +451,49 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	}
 
 	// 获取调查记录
-	if investigationID, ok, err := s.repo.FetchInvestigationIDByProblem(ctx, problemID, tenantID); err == nil && ok {
-		if investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID); err == nil {
-			summary.Investigation = investigation
+	//
+	// 🔴 这里必须把子查询错误向上传播（2026-10-18 缺陷 P0-4）。
+	// 原实现是 `if err == nil && ok`，把错误直接丢掉：当底层表缺失
+	// （relation does not exist）时，本接口会返回 200 + 全空数组，
+	// 让「整个调查子系统不可用」表现为「这个调查还没开始填」——
+	// 监控抓不到、用户看不出、自动化验证还会误判 PASS。
+	// 宁可 500 也不要静默空数据。
+	if investigationID, ok, err := s.repo.FetchInvestigationIDByProblem(ctx, problemID, tenantID); err != nil {
+		return nil, fmt.Errorf("查询调查记录失败: %v", err)
+	} else if ok {
+		investigation, err := s.GetProblemInvestigation(ctx, investigationID, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("查询调查详情失败: %v", err)
 		}
+		summary.Investigation = investigation
 	}
 
 	// 获取调查步骤
 	if summary.Investigation != nil {
 		steps, err := s.repo.ListInvestigationSteps(ctx, summary.Investigation.ID, tenantID)
-		if err == nil {
-			summary.Steps = steps
+		if err != nil {
+			return nil, fmt.Errorf("查询调查步骤失败: %v", err)
 		}
+		summary.Steps = steps
 	}
 
 	// 获取根本原因分析
-	if id, ok, err := s.repo.FetchRootCauseAnalysisIDByProblem(ctx, problemID, tenantID); err == nil && ok {
-		if analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID); err == nil {
-			summary.RootCauseAnalysis = analysis
+	if id, ok, err := s.repo.FetchRootCauseAnalysisIDByProblem(ctx, problemID, tenantID); err != nil {
+		return nil, fmt.Errorf("查询根因分析失败: %v", err)
+	} else if ok {
+		analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID)
+		if err != nil {
+			return nil, fmt.Errorf("查询根因分析详情失败: %v", err)
 		}
+		summary.RootCauseAnalysis = analysis
 	}
 
 	// 获取解决方案
 	solutions, err := s.repo.ListProblemSolutions(ctx, problemID, tenantID)
-	if err == nil {
-		summary.Solutions = solutions
+	if err != nil {
+		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
+	summary.Solutions = solutions
 
 	return summary, nil
 }

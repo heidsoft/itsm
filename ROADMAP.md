@@ -274,7 +274,8 @@ and the **target** for the next major release.
 | Metric | Historical v1.0 baseline | v1.7 target | v2.0 target |
 |:---|---:|---:|---:|
 | Backend coverage | ~2% | 55% | 70% |
-| Frontend coverage | ~10% (UI only) | 30% | 60% |
+| Frontend coverage（门槛口径 `src/lib/**`，阻断） | ~10% | ≥80%（现行门槛） | ≥85% |
+| Frontend coverage（产品口径 `src/**`，只报告） | 待首次产出（`npm run test:coverage:product`） | 30% | 60% |
 | E2E smoke coverage | 11 APIs | 25 APIs | 50 APIs |
 | Mean PR → first review | TBD | < 48h | < 24h |
 | Mean issue → first response | TBD | < 48h | < 24h |
@@ -289,6 +290,13 @@ and the **target** for the next major release.
 > 仅包含 `src/lib/**`，不含 `src/app/**` 与 `src/components/**`。因此上表 Frontend coverage 与
 > 80% 门槛都是 **`src/lib` 的局部口径**，不等于产品代码覆盖率；把口径扩到页面/组件，
 > 或明确按局部口径对外表述，两者必须二选一（由 Gate C.6.5 守卫）。
+>
+> **2026-10-17 决策：双口径并存，不再二选一。** `src/lib/**` 只占产品代码约 30%（45k/150k 行），
+> 把阻断门槛扩到 `src/**` 会让门槛从 80% 断崖到 30% 量级——那不是更诚实，而是失去约束力
+> （30% 几乎拦不住回归），还会诱导「渲染即通过」的凑数断言。因此：
+> **`src/lib/**` 继续作为阻断门槛（80%），另以 `npm run test:coverage:product`
+> 产出 `src/**` 产品口径数字（只报告、无 threshold）**，用于观察 UI 覆盖是否在推进。
+> 上表两行分别对应这两个口径，缺一即口径漂移（C.6.5 守卫：存在该脚本时 ROADMAP 必须同时披露 `src/**`）。
 
 ---
 

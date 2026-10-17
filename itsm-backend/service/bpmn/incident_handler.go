@@ -57,13 +57,19 @@ func (h *IncidentServiceTaskHandler) Execute(ctx context.Context, task *ent.Proc
 	case "categorize_incident":
 		return h.categorizeIncident(ctx, variables)
 	default:
-		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
+		return nil, serviceTaskActionError("incident_task", task, action, incidentServiceTaskActions)
 	}
+}
+
+// incidentServiceTaskActions 是 incident_task 支持的全部动作，供错误信息与 Validate 共用。
+var incidentServiceTaskActions = []string{
+	"create_incident", "assign_incident", "escalate_incident", "resolve_incident",
+	"close_incident", "update_incident", "acknowledge_incident", "categorize_incident",
 }
 
 // Validate 验证配置
 func (h *IncidentServiceTaskHandler) Validate(ctx context.Context, config map[string]interface{}) error {
-	return nil
+	return validateServiceTaskAction("incident_task", config, incidentServiceTaskActions)
 }
 
 // getIncidentByIDWithTenant 按 ID + TenantID 查询 Incident，找不到或不属于该租户均返回错误。

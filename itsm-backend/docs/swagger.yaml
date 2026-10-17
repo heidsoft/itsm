@@ -192,6 +192,8 @@ definitions:
       items:
         items:
           $ref: '#/definitions/dto.CreateCIRequest'
+        maxItems: 100
+        minItems: 1
         type: array
     required:
     - items
@@ -2301,12 +2303,19 @@ definitions:
         example: 20
         type: integer
       timeRange:
+        description: |-
+          timeRange 是深度分析的必填前置：服务层要求恰好 2 个日期（起、止）。
+          原先写 omitempty，缺省时能过绑定校验，一路走到 service 才报错，
+          再被 handler 兜底成 500（2026-10-18 缺陷 P1-5）。改 required 后
+          缺省在绑定阶段即返回 400，且带出缺失字段名。
         example:
         - '["2024-01-01"'
         - '"2024-01-31"]'
         items:
           type: string
         type: array
+    required:
+    - timeRange
     type: object
   dto.EscalateMajorIncidentRequest:
     properties:
@@ -4507,7 +4516,7 @@ info:
   description: AI-Native ITSM 平台 API：ITIL v4 核心流程（工单/事件/问题/变更/发布/服务请求）、CMDB、BPMN 工作流、知识库
     RAG、SLA、RBAC 与多租户隔离。
   title: ITSM API
-  version: 1.6.9
+  version: 1.6.19
 paths:
   /api/dashboard:
     get:

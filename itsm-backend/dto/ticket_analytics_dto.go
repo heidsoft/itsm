@@ -7,7 +7,11 @@ type DeepAnalyticsRequest struct {
 	Dimensions []string               `json:"dimensions" binding:"omitempty,min=1" example:"[\"status\",\"priority\"]"`
 	Metrics    []string               `json:"metrics" binding:"omitempty,min=1" example:"[\"count\",\"response_time\"]"`
 	ChartType  string                 `json:"chartType" binding:"omitempty,oneof=line bar pie area table" example:"bar"`
-	TimeRange  []string               `json:"timeRange" binding:"omitempty,len=2" example:"[\"2024-01-01\",\"2024-01-31\"]"`
+	// timeRange 是深度分析的必填前置：服务层要求恰好 2 个日期（起、止）。
+	// 原先写 omitempty，缺省时能过绑定校验，一路走到 service 才报错，
+	// 再被 handler 兜底成 500（2026-10-18 缺陷 P1-5）。改 required 后
+	// 缺省在绑定阶段即返回 400，且带出缺失字段名。
+	TimeRange  []string               `json:"timeRange" binding:"required,len=2" example:"[\"2024-01-01\",\"2024-01-31\"]"`
 	Filters    map[string]interface{} `json:"filters,omitempty"`
 	GroupBy    *string                `json:"groupBy,omitempty" example:"status"`
 	Page       int                    `json:"page" example:"1"`

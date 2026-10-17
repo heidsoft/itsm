@@ -1,6 +1,6 @@
 {
   "name": "ai-native-itsm",
-  "version": "1.6.9",
+  "version": "1.6.19",
   "private": true,
   "engines": {
     "node": ">=22.0.0",
@@ -19,6 +19,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false --passWithNoTests",
+    "test:coverage:product": "COVERAGE_SCOPE=product jest --ci --coverage --watchAll=false --passWithNoTests",
     "test:unit": "jest --coverage=false --passWithNoTests",
     "test:integration": "jest --coverage=false --passWithNoTests",
     "test:e2e": "playwright test",

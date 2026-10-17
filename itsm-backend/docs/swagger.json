@@ -4,7 +4,7 @@
         "description": "AI-Native ITSM 平台 API：ITIL v4 核心流程（工单/事件/问题/变更/发布/服务请求）、CMDB、BPMN 工作流、知识库 RAG、SLA、RBAC 与多租户隔离。",
         "title": "ITSM API",
         "contact": {},
-        "version": "1.6.9"
+        "version": "1.6.19"
     },
     "basePath": "/api/v1",
     "paths": {
@@ -12296,6 +12296,8 @@
             "properties": {
                 "items": {
                     "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/dto.CreateCIRequest"
                     }
@@ -15225,6 +15227,9 @@
         },
         "dto.DeepAnalyticsRequest": {
             "type": "object",
+            "required": [
+                "timeRange"
+            ],
             "properties": {
                 "chartType": {
                     "type": "string",
@@ -15276,6 +15281,7 @@
                     "example": 20
                 },
                 "timeRange": {
+                    "description": "timeRange 是深度分析的必填前置：服务层要求恰好 2 个日期（起、止）。\n原先写 omitempty，缺省时能过绑定校验，一路走到 service 才报错，\n再被 handler 兜底成 500（2026-10-18 缺陷 P1-5）。改 required 后\n缺省在绑定阶段即返回 400，且带出缺失字段名。",
                     "type": "array",
                     "items": {
                         "type": "string"

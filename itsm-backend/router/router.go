@@ -124,11 +124,13 @@ func withIncidentIDParam(handler gin.HandlerFunc) gin.HandlerFunc {
 
 // defaultAppVersion 是未注入 APP_VERSION 时的兜底版本。
 //
-// Keep in sync with itsm-frontend/package.json and the release tag.
-// 这是版本号的**唯一手写兜底**：任何对外暴露版本的端点（/version、/system/config）
-// 都必须走 appVersion()，不要各自再写一份字面量 —— 此前 /system/config 硬编码
-// "1.6.8" 而 /version 是 1.6.9，就是两份字面量漂移出来的。
-const defaultAppVersion = "1.6.9"
+// Keep in sync with itsm-frontend/package.json、main.go 的 swagger @version
+// 以及 release tag。这是版本号的**唯一手写兜底**：任何对外暴露版本的端点
+// （/version、/system/config）都必须走 appVersion()，不要各自再写一份字面量 ——
+// 此前 /system/config 硬编码 "1.6.8" 而 /version 是 1.6.9，就是两份字面量漂移出来的。
+// 2026-10-17：三处字面量（本常量 / package.json / swagger @version）齐刷刷停在
+// 1.6.9，而 tag 已到 v1.6.19 —— 同一类漂移，只是这次跨了 10 个版本没人发现。
+const defaultAppVersion = "1.6.19"
 
 // appVersion 返回当前应用版本：优先取注入的 APP_VERSION，回落到 defaultAppVersion。
 func appVersion() string {

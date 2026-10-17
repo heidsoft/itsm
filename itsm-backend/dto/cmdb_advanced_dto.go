@@ -150,8 +150,14 @@ type CIAttributeSearchRequest struct {
 }
 
 // BatchCreateCIRequest 批量创建CI请求
+//
+// 🔴 标签顺序不可调换：切片长度约束（min/max）必须写在 dive 之前。
+// dive 的语义是"下钻到元素继续校验"，写在前面会让 min/max 作用到每个
+// CreateCIRequest 结构体上，validator 对结构体求 min 会直接 panic
+// （Bad field type dto.CreateCIRequest），gin Recovery 兜成裸 500。
+// 2026-10-18 实测：POST /cmdb/cis/batch 传合法单条即 500。
 type BatchCreateCIRequest struct {
-	Items []CreateCIRequest `json:"items" binding:"required,dive,min=1,max=100"`
+	Items []CreateCIRequest `json:"items" binding:"required,min=1,max=100,dive"`
 }
 
 // BatchUpdateCIRequest 批量更新CI请求

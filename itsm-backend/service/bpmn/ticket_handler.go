@@ -107,13 +107,18 @@ func (h *TicketServiceTaskHandler) Execute(ctx context.Context, task *ent.Proces
 		// 分配任务
 		return h.assignTicket(ctx, businessID, variables)
 	default:
-		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
+		return nil, serviceTaskActionError("ticket_task", task, action, ticketServiceTaskActions)
 	}
+}
+
+// ticketServiceTaskActions 是 ticket_task 支持的全部动作，供错误信息与 Validate 共用。
+var ticketServiceTaskActions = []string{
+	"update_status", "notify_requester", "notify_handler", "escalate", "assign",
 }
 
 // Validate 验证配置
 func (h *TicketServiceTaskHandler) Validate(ctx context.Context, config map[string]interface{}) error {
-	return nil
+	return validateServiceTaskAction("ticket_task", config, ticketServiceTaskActions)
 }
 
 // updateTicketStatus 更新工单状态

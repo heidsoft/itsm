@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
@@ -168,7 +169,12 @@ func TestAnalyticsService_GetDeepAnalytics_InvalidTimeFormat(t *testing.T) {
 
 	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid start time format")
+	assert.Contains(t, err.Error(), "起始日期格式非法")
+	// 关键回归（2026-10-18 缺陷 P1-5）：参数错误必须归类为 400，不能兜底成 500。
+	// 断言 AppError 的 HTTPStatus，而不是只断言文案——文案会变，分类不能变。
+	var appErr *common.AppError
+	require.ErrorAs(t, err, &appErr)
+	assert.Equal(t, 400, appErr.HTTPStatus)
 }
 
 func TestAnalyticsService_GetDeepAnalytics_RejectsIncompleteTimeRange(t *testing.T) {
@@ -184,7 +190,11 @@ func TestAnalyticsService_GetDeepAnalytics_RejectsIncompleteTimeRange(t *testing
 	}
 
 	_, err = service.GetDeepAnalytics(ctx, req, testTenant.ID)
-	require.ErrorContains(t, err, "exactly two dates")
+	require.ErrorContains(t, err, "必须恰好包含起止两个日期")
+	// 同上：缺 timeRange 属调用方参数错误 → 400，不是 500。
+	var appErr *common.AppError
+	require.ErrorAs(t, err, &appErr)
+	assert.Equal(t, 400, appErr.HTTPStatus)
 }
 
 func TestAnalyticsService_GetDeepAnalytics_GroupBy(t *testing.T) {

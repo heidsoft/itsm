@@ -9,7 +9,7 @@
 // 放在其他文件会被忽略——勿移回 swagger_meta.go）：
 //
 //	@title ITSM API
-//	@version 1.6.9
+//	@version 1.6.19
 //	@description AI-Native ITSM 平台 API：ITIL v4 核心流程（工单/事件/问题/变更/发布/服务请求）、CMDB、BPMN 工作流、知识库 RAG、SLA、RBAC 与多租户隔离。
 //	@BasePath /api/v1
 //	@securityDefinitions.apikey BearerAuth

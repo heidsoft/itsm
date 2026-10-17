@@ -60,13 +60,20 @@ func (h *ChangeServiceTaskHandler) Execute(ctx context.Context, task *ent.Proces
 	case "notify_stakeholders":
 		return h.notifyStakeholders(ctx, variables)
 	default:
-		return nil, fmt.Errorf("未知的服务任务动作: %s", action)
+		return nil, serviceTaskActionError("change_task", task, action, changeServiceTaskActions)
 	}
+}
+
+// changeServiceTaskActions 是 change_task 支持的全部动作，供错误信息与 Validate 共用。
+var changeServiceTaskActions = []string{
+	"create_change", "update_change", "approve_change", "reject_change",
+	"schedule_change", "implement_change", "verify_change", "close_change",
+	"assess_risk", "notify_stakeholders",
 }
 
 // Validate 验证配置
 func (h *ChangeServiceTaskHandler) Validate(ctx context.Context, config map[string]interface{}) error {
-	return nil
+	return validateServiceTaskAction("change_task", config, changeServiceTaskActions)
 }
 
 // getChangeByIDWithTenant 按 ID + TenantID 查询 Change，找不到或不属于该租户均返回错误。

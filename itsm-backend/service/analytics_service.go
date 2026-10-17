@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -33,16 +34,21 @@ func (s *AnalyticsService) GetDeepAnalytics(ctx context.Context, req *dto.DeepAn
 	s.logger.Infow("Getting deep analytics", "tenant_id", tenantID, "dimensions", req.Dimensions)
 
 	// 解析时间范围
+	//
+	// 这三处是**调用方参数错误**，必须返回 400 而不是 500（2026-10-18 缺陷 P1-5）。
+	// 原先返回 fmt.Errorf，经 handler 的 common.FailWithErr 兜底成 500 操作失败，
+	// 把「你没传 timeRange」表现为「服务端故障」。改用 AppError 后
+	// classifyError 会按 HTTPStatus 归类为 400。
 	if len(req.TimeRange) != 2 {
-		return nil, fmt.Errorf("timeRange must contain exactly two dates")
+		return nil, common.NewBadRequestError("timeRange 必须恰好包含起止两个日期（YYYY-MM-DD）", nil)
 	}
 	startTime, err := time.Parse("2006-01-02", req.TimeRange[0])
 	if err != nil {
-		return nil, fmt.Errorf("invalid start time format: %w", err)
+		return nil, common.NewBadRequestError("timeRange 起始日期格式非法，应为 YYYY-MM-DD", err)
 	}
 	endTime, err := time.Parse("2006-01-02", req.TimeRange[1])
 	if err != nil {
-		return nil, fmt.Errorf("invalid end time format: %w", err)
+		return nil, common.NewBadRequestError("timeRange 结束日期格式非法，应为 YYYY-MM-DD", err)
 	}
 	endTime = endTime.Add(24 * time.Hour) // 包含结束日期
 

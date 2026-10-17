@@ -700,11 +700,13 @@ func (h *Handler) CompareArticleVersions(c *gin.Context) {
 	if !ok {
 		return
 	}
-	from, ok := common.ParsePositiveID(c, "from")
+	// from/to 在 query 上，不是 path 参数（路由只有 :id）。
+	// 曾误用 ParsePositiveID（读 c.Param），导致本端点永久 400 from is required。
+	from, ok := common.ParseRequiredPositiveIDFromQuery(c, "from")
 	if !ok {
 		return
 	}
-	to, ok := common.ParsePositiveID(c, "to")
+	to, ok := common.ParseRequiredPositiveIDFromQuery(c, "to")
 	if !ok {
 		return
 	}

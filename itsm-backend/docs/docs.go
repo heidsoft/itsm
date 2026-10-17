@@ -12303,6 +12303,8 @@ const docTemplate = `{
             "properties": {
                 "items": {
                     "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/dto.CreateCIRequest"
                     }
@@ -15232,6 +15234,9 @@ const docTemplate = `{
         },
         "dto.DeepAnalyticsRequest": {
             "type": "object",
+            "required": [
+                "timeRange"
+            ],
             "properties": {
                 "chartType": {
                     "type": "string",
@@ -15283,6 +15288,7 @@ const docTemplate = `{
                     "example": 20
                 },
                 "timeRange": {
+                    "description": "timeRange 是深度分析的必填前置：服务层要求恰好 2 个日期（起、止）。\n原先写 omitempty，缺省时能过绑定校验，一路走到 service 才报错，\n再被 handler 兜底成 500（2026-10-18 缺陷 P1-5）。改 required 后\n缺省在绑定阶段即返回 400，且带出缺失字段名。",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -18468,7 +18474,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.6.9",
+	Version:          "1.6.19",
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},

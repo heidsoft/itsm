@@ -317,27 +317,86 @@ check_agents_domain_list() {
 # C.6.3 handler 域包接线
 # ---------------------------------------------------------------------------
 
+# 单遍采集：一次全仓扫描，把 "itsm-backend/handlers/<pkg>" 的 import 引用
+# 按 (文件, 包) 去重后聚合成 pkg -> 外部生产文件数。
+#
+# 为什么不是逐包 grep（2026-10-17 实测）：旧实现对 66 个域包各跑一次
+# `grep -rl ... itsm-backend`，2286 个 .go / 873MB，单次 36s 墙钟（CPU 仅 0.7s，
+# 瓶颈是文件系统遍历）→ 单道 C.6.3 约 40 分钟，整道 docs-gate 因此常被判超时假死。
+# 单遍只遍历一次目录树，实测 ~37s，与包数解耦。
+#
+# 等价性约束（改这里前先看 A/B 结论，见 CHANGELOG 2026-10-17）：
+#   1. 匹配串含收尾引号 —— `"itsm-backend/handlers/ticket"` 不匹配 .../ticket/v2
+#   2. 排除 *_test.go（与旧 --exclude 一致）
+#   3. 排除同包内文件：判据是路径含 `/handlers/<pkg>/`（旧 grep -v 的同一判据，
+#      不是前缀匹配 —— 前缀匹配会漏掉 legacy/handlers/<pkg>/ 这类同名字样）
+#   4. 计数口径 = 去重后的文件数（旧 `grep -rl | wc -l`）
+collect_handler_import_refs() {
+  local out="$1"
+  grep -rHoE --include='*.go' --exclude='*_test.go' \
+    '"itsm-backend/handlers/[A-Za-z0-9_]+"' "${BE}" 2>/dev/null |
+    awk -v self="/handlers/" '
+      {
+        line = $0
+        file = line
+        sub(/:[^:]*$/, "", file)          # 去掉 `:匹配串`
+        pkg = line
+        sub(/^.*handlers\//, "", pkg)     # 取 import 路径末段
+        sub(/".*$/, "", pkg)
+        if (pkg == "") next
+        if (index(file, self pkg "/") > 0) next   # 同包自引用不计
+        key = file SUBSEP pkg
+        if (seen[key]++) next
+        cnt[pkg]++
+      }
+      END { for (p in cnt) printf "%s\t%d\n", p, cnt[p] }
+    ' >"${out}"
+}
+
+# 单遍采集生产 .go 文件数（替代 66 次 `find <dir> -maxdepth 1`）。
+# 同一文件系统上每多一次目录遍历都是纯损耗，这里与 import 采集共享"只走一遍树"的原则。
+collect_handler_prod_counts() {
+  local out="$1"
+  find "${BE}/handlers" -mindepth 2 -maxdepth 2 -name '*.go' -not -name '*_test.go' 2>/dev/null |
+    awk -F/ '{ cnt[$(NF - 1)]++ } END { for (p in cnt) printf "%s\t%d\n", p, cnt[p] }' >"${out}"
+}
+
 check_handlers_wiring() {
   echo "-- C.6.3 handler 域包接线（零路由守卫）"
   if [ ! -d "${BE}/handlers" ]; then
     skip "itsm-backend/handlers 不存在，跳过"
     return 0
   fi
+
+  local refmap prodmap
+  refmap="$(mktemp "${TMPDIR:-/tmp}/c63-refs.XXXXXX")" || {
+    fail "C.6.3 无法创建临时文件（无法做单遍引用采集）"
+    return 1
+  }
+  prodmap="$(mktemp "${TMPDIR:-/tmp}/c63-prod.XXXXXX")" || {
+    rm -f "${refmap}"
+    fail "C.6.3 无法创建临时文件（无法做单遍文件计数）"
+    return 1
+  }
+  collect_handler_import_refs "${refmap}"
+  collect_handler_prod_counts "${prodmap}"
+
   local dir n prod refs wired=0
   for dir in "${BE}/handlers"/*/; do
     [ -d "${dir}" ] || continue
     n="$(basename "${dir}")"
     case "${n}" in common | shared) continue ;; esac
 
-    prod="$(find "${dir}" -maxdepth 1 -name '*.go' -not -name '*_test.go' 2>/dev/null | wc -l | tr -d ' ')"
+    prod="$(awk -F'\t' -v n="${n}" '$1 == n { print $2 }' "${prodmap}")"
+    prod="${prod:-0}"
     if [ "${prod}" -eq 0 ]; then
       waived "C.6.3-empty" "${n}" ||
         fail "空域包 handlers/${n}/（无生产 .go 文件）—— 空目录不应入库"
       continue
     fi
 
-    refs="$(grep -rl "\"itsm-backend/handlers/${n}\"" "${BE}" --include='*.go' --exclude='*_test.go' 2>/dev/null \
-      | grep -v "/handlers/${n}/" | wc -l | tr -d ' ')"
+    refs="$(awk -F'\t' -v n="${n}" '$1 == n { print $2 }' "${refmap}")"
+    refs="${refs:-0}"
     if [ "${refs}" -eq 0 ]; then
       waived "C.6.3" "${n}" ||
         fail "零路由域包 handlers/${n}/（${prod} 个生产文件，全仓无生产代码 import）—— 要么接线，要么删除"
@@ -345,6 +404,7 @@ check_handlers_wiring() {
       wired=$((wired + 1))
     fi
   done
+  rm -f "${refmap}" "${prodmap}"
   pass "已接线域包 ${wired} 个"
 }
 
@@ -412,22 +472,6 @@ check_coverage_scope() {
     return 0
   fi
 
-  local block base covers_ui=0
-  block="$(awk '/collectCoverageFrom/,/\]/' "${j}")"
-  if printf '%s' "${block}" | grep -qE 'src/(app|components)'; then
-    covers_ui=1
-  fi
-  base="$(printf '%s\n' "${block}" | grep -oE "'[^']+'" | tr -d "'" | grep -v '^!' | head -1)"
-  base="${base%%/\*\**}"
-  if [ -z "${base}" ]; then
-    skip "无法解析 collectCoverageFrom 范围"
-    return 0
-  fi
-  if [ "${covers_ui}" -eq 1 ]; then
-    pass "jest 覆盖率范围包含 app/components，无需额外口径披露"
-    return 0
-  fi
-
   local rm="${ROOT_DIR}/ROADMAP.md"
   if [ ! -f "${rm}" ]; then
     skip "ROADMAP.md 不存在，跳过"
@@ -435,11 +479,38 @@ check_coverage_scope() {
   fi
   local sect
   sect="$(awk '/^## .*Key Metrics/ { f = 1; next } f && /^## / { exit } f' "${rm}")"
-  if printf '%s' "${sect}" | grep -qF "${base}"; then
-    pass "ROADMAP 指标章节已披露前端覆盖率口径（scope=${base}）"
-  else
-    waived "C.6.5" "frontend_coverage_scope" ||
-      fail "jest 覆盖率仅统计 ${base}/**，但 ROADMAP 指标章节未披露该口径（80% 门槛会被误读为产品覆盖率）"
+
+  # 口径识别改成「按已知口径字面量探测」，不再从 collectCoverageFrom 的第一段推断：
+  # 2026-10-17 起 jest.config.js 有 COVERAGE_SCOPE=product 分支，第一段可能是产品口径，
+  # 推断法会把产品分支误认成默认口径 —— 那恰好是本守卫要防的「只报好看口径」。
+  local checked=0
+
+  # 门槛口径：默认统计范围仍是 src/lib/**（80% 阻断）。
+  if grep -qF 'src/lib/**' "${j}"; then
+    checked=1
+    if printf '%s' "${sect}" | grep -qF 'src/lib'; then
+      pass "ROADMAP 指标章节已披露门槛口径（src/lib/**）"
+    else
+      waived "C.6.5" "frontend_coverage_scope" ||
+        fail "jest 门槛口径为 src/lib/**，但 ROADMAP 指标章节未披露该口径（80% 门槛会被误读为产品覆盖率）"
+    fi
+  fi
+
+  # 产品口径：一旦 package.json 提供 test:coverage:product，ROADMAP 必须同时披露 src/**，
+  # 否则只报 80%（lib 口径）会掩盖真实产品覆盖率（src/lib 仅占产品代码约 30%）。
+  local pkg="${FE}/package.json"
+  if [ -f "${pkg}" ] && grep -q '"test:coverage:product"' "${pkg}"; then
+    checked=1
+    if printf '%s' "${sect}" | grep -qF 'src/**'; then
+      pass "ROADMAP 同时披露产品口径（src/**）与门槛口径（src/lib/**）"
+    else
+      waived "C.6.5" "frontend_coverage_product_scope" ||
+        fail "package.json 已提供 test:coverage:product，但 ROADMAP 指标章节未披露 src/** 产品口径（只报 80% 会掩盖真实产品覆盖率）"
+    fi
+  fi
+
+  if [ "${checked}" -eq 0 ]; then
+    skip "未识别到已知覆盖率口径（src/lib/** 或 test:coverage:product），跳过"
   fi
 }
 

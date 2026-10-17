@@ -104,6 +104,19 @@ var TenantExemptTables = []ExemptTable{
 	{TableName: "incident_related_incidents", Reason: "事件↔事件纯关联表", Owner: "incident", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "problem_changes", Reason: "问题↔变更纯关联表", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "problem_incidents", Reason: "问题↔事件纯关联表", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
+	// 问题调查子系统的 4 张关联表（migrations/20261018_create_problem_investigation_tables.sql）。
+	// 均无 tenant_id：仓库层每一条 SELECT/UPDATE/DELETE 都通过
+	// JOIN problems p ON <fk> = p.id WHERE p.tenant_id = $N 完成隔离
+	// （service/problem_investigation_repository.go），隔离正确性由 problems 表承担，
+	// 与上面的 problem_changes / problem_incidents 同口径，故为 derived。
+	{TableName: "problem_investigations", Reason: "问题调查主表，租户由 problem_id→problems.tenant_id 派生", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)},
+	{TableName: "problem_investigation_steps", Reason: "调查步骤，租户经 investigation_id→problem_id→problems 派生", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)},
+	{TableName: "problem_root_cause_analyses", Reason: "问题根因分析，租户由 problem_id→problems.tenant_id 派生（注意与工单域的 root_cause_analyses 不是同一张表）", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)},
+	{TableName: "problem_solutions", Reason: "问题解决方案，租户由 problem_id→problems.tenant_id 派生", Owner: "problem", Scope: "derived", ReviewedAt: time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)},
+	// 变更 PIR 的「评审人」M2M 关联表（ent/schema/changepir.go 的 user_pir_reviews 边）。
+	// 纯关联表无 tenant_id；租户隔离由两端实体（change_pirs / users）承担。
+	// 此前一直未登记，导致 ITSM_TENANT_GUARD_POLICY=fatal 的部署会在启动自检处被拒。
+	{TableName: "user_pir_reviews", Reason: "变更PIR↔评审人纯关联表，租户由两端实体派生", Owner: "change", Scope: "derived", ReviewedAt: time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)},
 	{TableName: "ticket_category_tickets", Reason: "工单分类关联表", Owner: "ticket", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	{TableName: "ticket_related_tickets", Reason: "工单↔工单纯关联表", Owner: "ticket", Scope: "derived", ReviewedAt: time.Date(2026, 9, 8, 0, 0, 0, 0, time.UTC)},
 	// 知识库会话/版本

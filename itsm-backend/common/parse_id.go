@@ -72,6 +72,32 @@ func ParsePositiveIDFromQuery(c *gin.Context, paramName string) (int, bool) {
 	return id, true
 }
 
+// ParseRequiredPositiveIDFromQuery 从查询参数解析**必填**正整数。
+//
+// 与 ParsePositiveIDFromQuery 的区别：参数缺失时写 ParamError（code 1001 / 400），
+// 而不是静默返回 (0, false)。与 ParsePositiveID 的区别：读的是 query 而非 path。
+//
+// 存在理由（2026-10-18 缺陷 P0-1）：
+// knowledge 的版本对比曾用 ParsePositiveID 取 `from`/`to`，而该函数读 c.Param——
+// 路由 `GET /articles/:id/versions/compare` 只有 `:id`，于是 `from` 恒为空，
+// 端点永久返回 `400 from is required`。参数在 query 里就必须用本函数，
+// 用 ParsePositiveID 会在编译期与运行期都静默通过，只在真实请求时暴露。
+func ParseRequiredPositiveIDFromQuery(c *gin.Context, paramName string) (int, bool) {
+	idStr := c.Query(paramName)
+	if idStr == "" {
+		ParamError(c, paramName+" is required")
+		return 0, false
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		ParamError(c, paramName+" must be a positive integer")
+		return 0, false
+	}
+
+	return id, true
+}
+
 // MustParsePositiveID 从 URL 参数解析正整数 ID，失败时终止
 // 注意：这是便捷函数，仅适用于确定参数存在的情况
 //

@@ -83,7 +83,11 @@ func (h *Handler) getFeishuConnectorPublic(ctx *gin.Context) (*feishuConn.Feishu
 func (h *Handler) GetOAuthAuthURL(ctx *gin.Context) {
 	fc, tenantID, ok := h.getFeishuConnector(ctx)
 	if !ok {
-		common.Fail(ctx, common.InternalErrorCode, "Feishu connector not configured")
+		// 「连接器未配置」是部署/配置状态，不是服务端 bug：不能用 500。
+		// 500 会被监控当成代码故障告警，也让调用方误以为是可重试的瞬时错误。
+		// 用 503 并给出可执行的处置指引（2026-10-18 缺陷 P1-5）。
+		common.Fail(ctx, common.ServiceUnavailableCode,
+			"飞书连接器未配置：请先在「连接器」中创建飞书实例并填写 app_id / app_secret")
 		return
 	}
 	redirectURI := ctx.Query("redirectUri")
@@ -158,7 +162,11 @@ func (h *Handler) SyncTicketToFeishu(ctx *gin.Context) {
 	}
 	fc, tenantID, ok := h.getFeishuConnector(ctx)
 	if !ok {
-		common.Fail(ctx, common.InternalErrorCode, "Feishu connector not configured")
+		// 「连接器未配置」是部署/配置状态，不是服务端 bug：不能用 500。
+		// 500 会被监控当成代码故障告警，也让调用方误以为是可重试的瞬时错误。
+		// 用 503 并给出可执行的处置指引（2026-10-18 缺陷 P1-5）。
+		common.Fail(ctx, common.ServiceUnavailableCode,
+			"飞书连接器未配置：请先在「连接器」中创建飞书实例并填写 app_id / app_secret")
 		return
 	}
 	resp, err := h.syncService.SyncTicketToFeishu(ctx.Request.Context(), tenantID, ticketID, fc)
