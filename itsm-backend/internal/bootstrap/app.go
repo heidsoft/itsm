@@ -895,7 +895,7 @@ func NewApplication() *Application {
 
 	// Domain: Problem (DDD)
 	problemRepo := problem.NewEntRepository(client)
-	problemServiceDomain := problem.NewService(problemRepo, sugar)
+	problemServiceDomain := problem.NewService(problemRepo, ticketService, sugar) // 受指人校验复用 ticketService.ValidateAssignee（同租户+在职），与 datascope 写权限互补
 	problemHandler := problem.NewHandler(problemServiceDomain)
 
 	// Problem Investigation Service & Handler（问题调查/RCA/解决方案/知识沉淀）

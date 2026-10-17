@@ -433,38 +433,8 @@ func (r *EntRepository) UpdateSLADeadlines(ctx context.Context, id int, response
 	return r.repo.UpdateSLADeadlines(ctx, id, responseDeadline, resolutionDeadline, slaDefinitionID, tenantID)
 }
 
-// Template operations
-func (r *EntRepository) CreateTemplate(ctx context.Context, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error) {
-	return tmpl, nil
-}
-
-func (r *EntRepository) UpdateTemplate(ctx context.Context, id int, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error) {
-	return tmpl, nil
-}
-
-func (r *EntRepository) DeleteTemplate(ctx context.Context, id int, tenantID int) error {
-	return nil
-}
-
-func (r *EntRepository) GetTemplate(ctx context.Context, id int, tenantID int) (*TicketTemplate, error) {
-	return nil, fmt.Errorf("template not found")
-}
-
-func (r *EntRepository) ListTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error) {
-	return []*TicketTemplate{}, nil
-}
-
-func (r *EntRepository) UpdateTemplateStatus(ctx context.Context, id int, isActive bool, tenantID int) (*TicketTemplate, error) {
-	return &TicketTemplate{ID: id, IsActive: isActive}, nil
-}
-
-func (r *EntRepository) CopyTemplate(ctx context.Context, id int, newName string, tenantID int) (*TicketTemplate, error) {
-	return &TicketTemplate{ID: id, Name: newName}, nil
-}
-
-func (r *EntRepository) GetTemplateCategories(ctx context.Context, tenantID int) ([]string, error) {
-	return []string{}, nil
-}
+// 注：模板 CRUD 不在本仓储实现——它们唯一所有者是 productionSvc
+// （service.TicketService 模板 CRUD），此前这里的返回伪造数据的 stub 已移除。
 
 func ptrTicketStatus(v ticket.Status) *ticket.Status {
 	return &v

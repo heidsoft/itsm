@@ -40,15 +40,9 @@ type Repository interface {
 	// SLA
 	UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error
 
-	// Template operations
-	CreateTemplate(ctx context.Context, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error)
-	UpdateTemplate(ctx context.Context, id int, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error)
-	DeleteTemplate(ctx context.Context, id int, tenantID int) error
-	GetTemplate(ctx context.Context, id int, tenantID int) (*TicketTemplate, error)
-	ListTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error)
-	UpdateTemplateStatus(ctx context.Context, id int, isActive bool, tenantID int) (*TicketTemplate, error)
-	CopyTemplate(ctx context.Context, id int, newName string, tenantID int) (*TicketTemplate, error)
-	GetTemplateCategories(ctx context.Context, tenantID int) ([]string, error)
+	// 注：模板 CRUD（CreateTemplate 等）不在此接口——它们的规则与持久化
+	// 唯一所有者是 productionSvc（service.TicketService 模板 CRUD）；
+	// 历史上这里挂在接口上时由返回伪造数据的 stub 实现，属于"伪成功"，已移除。
 }
 
 // CreateParams holds parameters for creating a ticket

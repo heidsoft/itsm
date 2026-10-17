@@ -310,34 +310,6 @@ func (m *mockRepository) UpdateSLADeadlines(ctx context.Context, id int, respons
 	return nil
 }
 
-func (m *mockRepository) CreateTemplate(ctx context.Context, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error) {
-	return tmpl, nil
-}
-
-func (m *mockRepository) UpdateTemplate(ctx context.Context, id int, tmpl *TicketTemplate, tenantID int) (*TicketTemplate, error) {
-	return tmpl, nil
-}
-
-func (m *mockRepository) DeleteTemplate(ctx context.Context, id int, tenantID int) error {
-	return nil
-}
-
-func (m *mockRepository) GetTemplate(ctx context.Context, id int, tenantID int) (*TicketTemplate, error) {
-	return nil, errors.New("template not found")
-}
-
-func (m *mockRepository) ListTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error) {
-	return []*TicketTemplate{}, nil
-}
-
-func (m *mockRepository) UpdateTemplateStatus(ctx context.Context, id int, isActive bool, tenantID int) (*TicketTemplate, error) {
-	return &TicketTemplate{ID: id, IsActive: isActive}, nil
-}
-
-func (m *mockRepository) CopyTemplate(ctx context.Context, id int, newName string, tenantID int) (*TicketTemplate, error) {
-	return &TicketTemplate{ID: id, Name: newName}, nil
-}
-
 func (m *mockRepository) GetTemplateCategories(ctx context.Context, tenantID int) ([]string, error) {
 	return []string{}, nil
 }

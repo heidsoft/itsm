@@ -14,8 +14,17 @@ import (
 )
 
 type Service struct {
-	repo   Repository
-	logger *zap.SugaredLogger
+	repo      Repository
+	validator AssigneeValidator
+	logger    *zap.SugaredLogger
+}
+
+// AssigneeValidator 校验受指人属于同一租户且处于在职可用状态。
+// 实现由 bootstrap 注入（当前复用 service.TicketService.ValidateAssignee，
+// 与 ticket 域同一实现）——同一校验用例不复制第二份实现；
+// placeholders 为 nil 时受指人引用必须 fail-closed，禁止跨租户关系注入。
+type AssigneeValidator interface {
+	ValidateAssignee(ctx context.Context, assigneeID, tenantID int) error
 }
 
 // IsNotFound keeps persistence error classification behind the domain service.
@@ -23,11 +32,26 @@ func (s *Service) IsNotFound(err error) bool {
 	return ent.IsNotFound(err)
 }
 
-func NewService(repo Repository, logger *zap.SugaredLogger) *Service {
+func NewService(repo Repository, validator AssigneeValidator, logger *zap.SugaredLogger) *Service {
 	return &Service{
-		repo:   repo,
-		logger: logger,
+		repo:      repo,
+		validator: validator,
+		logger:    logger,
 	}
+}
+
+// validateAssignee 统一受指人同租户/在职校验入口。
+func (s *Service) validateAssignee(ctx context.Context, assigneeID, tenantID int) error {
+	if assigneeID <= 0 {
+		return fmt.Errorf("受理人 ID 无效")
+	}
+	if s.validator == nil {
+		return fmt.Errorf("受理人校验器未配置，拒绝写入受指人引用")
+	}
+	if err := s.validator.ValidateAssignee(ctx, assigneeID, tenantID); err != nil {
+		return fmt.Errorf("处理人不存在或不可用: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Problem, error) {
@@ -36,6 +60,13 @@ func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Proble
 	}
 	if !isValidProblemPriority(p.Priority) {
 		return nil, fmt.Errorf("invalid problem priority: %s", p.Priority)
+	}
+	// AssigneeID 可指向任意租户的用户：写入前必须校验同租户 +在职，
+	// 否则问题单（含根因等敏感内容）可以被静默指给别家租户员工。
+	if p.AssigneeID != nil && *p.AssigneeID > 0 {
+		if err := s.validateAssignee(ctx, *p.AssigneeID, tenantID); err != nil {
+			return nil, err
+		}
 	}
 	p.Title = strings.TrimSpace(p.Title)
 	p.Status = "open"
@@ -164,6 +195,14 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		existing.Impact = p.Impact
 	}
 	if p.AssigneeID != nil {
+		if *p.AssigneeID > 0 && existing.AssigneeID != nil && *existing.AssigneeID == *p.AssigneeID {
+			// 与当前受理人相同：跳过校验，允许仅变更其他字段。
+		} else {
+			// AssigneeID 可指向任意租户的用户，必须与 Create 同强度的同租户校验。
+			if err := s.validateAssignee(ctx, *p.AssigneeID, tenantID); err != nil {
+				return nil, err
+			}
+		}
 		existing.AssigneeID = p.AssigneeID
 	}
 

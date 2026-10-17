@@ -401,18 +401,40 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 		return nil, fmt.Errorf("%w: %s -> %s", ErrInvalidReleaseTransition, releaseEntity.Status, status)
 	}
 
-	update := releaseEntity.Update().SetStatus(release.Status(status))
+	// 2. CAS 条件更新：谓词锚定读取时看到的状态值，防止并发窗口内
+	// （scheduled→in_progress 或 failed→rolled_back 已发生）用陈旧校验结果
+	// 覆盖推进后的状态。0 行命中 = 状态已被并发修改 → 409 冲突语义。
+	builder := s.client.Release.Update().
+		Where(
+			release.IDEQ(id),
+			release.TenantIDEQ(tenantID),
+			release.StatusEQ(releaseEntity.Status),
+		).
+		SetStatus(release.Status(status))
 
 	// 如果状态是已完成，设置实际发布日期
 	if status == string(dto.ReleaseStatusCompleted) {
 		now := time.Now()
-		update.SetActualReleaseDate(now)
+		builder.SetActualReleaseDate(now)
 	}
 
-	updated, err := update.Save(ctx)
+	affected, err := builder.Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update release status", "error", err, "release_id", id, "status", status)
 		return nil, fmt.Errorf("failed to update release status: %w", err)
+	}
+	if affected == 0 {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"发布状态已被并发修改，请刷新后重试",
+			fmt.Sprintf("expected %s", releaseEntity.Status))
+	}
+
+	updated, err := s.client.Release.Query().
+		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
+		First(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to reload release after status update", "error", err, "release_id", id)
+		return nil, fmt.Errorf("failed to reload release: %w", err)
 	}
 
 	s.logger.Infow("Release status updated", "release_id", id, "status", status)
@@ -485,7 +507,10 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 	// 仅草稿态/失败态允许审批：失败态审批即「重新排期(reschedule)」，
 	// 使发布历史不断裂、关联变更不丢。
 	if releaseEntity.Status != release.Status(dto.ReleaseStatusDraft) && releaseEntity.Status != release.Status(dto.ReleaseStatusFailed) {
-		return nil, fmt.Errorf("当前发布状态不允许审批: %s", releaseEntity.Status)
+		// 非法状态属于 conflict（409），不是服务器故障——必须类型化，
+		// 否则 RespondError 分类不到会兜底 500。
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"当前发布状态不允许审批", string(releaseEntity.Status))
 	}
 
 	// 审批人校验：必须是本租户有效用户，且创建人不能审批自己的发布
@@ -499,7 +524,9 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, common.NewForbiddenError("审批人不存在或已停用")
 	}
 	if actorID == releaseEntity.CreatedBy {
-		return nil, fmt.Errorf("发布创建人不能审批自己的发布")
+		// 自审批属于业务拒绝（conflict 语义），必须类型化避免 500 兜底。
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"发布创建人不能审批自己的发布", "")
 	}
 
 	// BPMN 任务完成与业务状态更新必须在同一事务内，否则会出现"流程已批、业务未批"。
@@ -527,10 +554,28 @@ func (s *ReleaseService) ApplyReleaseApproval(ctx context.Context, id, tenantID,
 		return nil, common.NewBusinessError(common.ConflictCode, "没有可处理的 BPMN 审批任务，请先确认流程绑定与待办状态", "")
 	}
 
-	updated, err := tx.Release.UpdateOneID(id).
-		Where(release.TenantIDEQ(tenantID)).
+	// 审批状态推进同样走 CAS：防止并发窗口里已进入 in_progress 的发布
+	// 被并发提交的旧审批结果改回 rejected/cancelled（fail-closed）。
+	affected, err := tx.Release.Update().
+		Where(
+			release.IDEQ(id),
+			release.TenantIDEQ(tenantID),
+			release.StatusEQ(releaseEntity.Status),
+		).
 		SetStatus(release.Status(targetStatus)).
 		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update release approval status", "error", err, "release_id", id, "status", targetStatus)
+		return nil, fmt.Errorf("failed to update release status: %w", err)
+	}
+	if affected == 0 {
+		return nil, common.NewBusinessError(common.ConflictCode,
+			"发布状态已被并发修改，请刷新后重试",
+			fmt.Sprintf("expected %s", releaseEntity.Status))
+	}
+	updated, err := tx.Release.Query().
+		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
+		First(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to update release approval status", "error", err, "release_id", id, "status", targetStatus)
 		return nil, fmt.Errorf("failed to update release status: %w", err)

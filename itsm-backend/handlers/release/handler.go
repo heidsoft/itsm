@@ -172,11 +172,12 @@ func (h *ReleaseHandler) UpdateReleaseStatus(c *gin.Context) {
 
 	release, err := h.releaseService.UpdateReleaseStatus(c.Request.Context(), releaseID, tenantID, string(req.Status), c.GetInt("user_id"), c.GetString("role"))
 	if err != nil {
-		// 状态机白名单拒绝属于调用方输入错误，应返回 400 而非 500，
-		// 避免客户端把"被安全策略拦截"误判为服务端故障而重试。
+		// 状态机白名单拒绝属于与服务器状态相关的业务冲突：按全局错误语义规范
+		// 映射 409(4090)，不能伪装成 400 参数错误（触发客户端"修正输入"重试），
+		// 更不能掉进 500 兜底（客户端会误判为服务端故障而盲目重试）。
 		if errors.Is(err, service.ErrInvalidReleaseTransition) {
 			h.logger.Warnw("Release status transition rejected", "error", err, "release_id", releaseID)
-			common.ParamErrorWithErr(c, err, "请求参数错误")
+			common.Conflict(c, "当前发布状态不允许此操作", gin.H{"detail": err.Error()})
 			return
 		}
 		if isForbiddenAppErr(err) {

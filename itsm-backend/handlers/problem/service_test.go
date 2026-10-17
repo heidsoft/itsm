@@ -10,6 +10,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,10 @@ func setupProblemHandlerTest(t *testing.T) (*ent.Client, *Service, context.Conte
 	t.Helper()
 	client := enttest.Open(t, "sqlite3", fmt.Sprintf("file:problem-handler-%s?mode=memory&cache=shared&_fk=1", t.Name()))
 	repo := NewEntRepository(client)
-	return client, NewService(repo, zaptest.NewLogger(t).Sugar()), context.Background()
+	// 受指人校验器与生产同构：直接复用 service.TicketService 的实现（同租户+在职），
+	// 保证跨租户注入回归测试测的是真实校验逻辑。
+	validator := service.NewTicketServiceForTest(client, zaptest.NewLogger(t).Sugar())
+	return client, NewService(repo, validator, zaptest.NewLogger(t).Sugar()), context.Background()
 }
 
 func createProblemHandlerTenant(t *testing.T, ctx context.Context, client *ent.Client, suffix string) *ent.Tenant {
@@ -236,4 +240,42 @@ func TestProblemWritePathRowLevelGuard(t *testing.T) {
 	if err == nil {
 		assert.NotEqual(t, "hijack", fetched.Title, "被拒绝的修改不应落库")
 	}
+}
+
+// TestProblemAssigneeCrossTenantRejected 回归：Update/Create 的 AssigneeID 曾被
+// 直接落库，无同租户校验——问题单（含根因等敏感信息）可以被静默指给其他租户
+// 的用户。修复后：跨租户受指人必须被拒绝且不落库；同租户在职受指人正常放行。
+func TestProblemAssigneeCrossTenantRejected(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenantA := createProblemHandlerTenant(t, ctx, client, "xta")
+	tenantB := createProblemHandlerTenant(t, ctx, client, "xtb")
+	owner := createProblemHandlerUser(t, ctx, client, tenantA.ID, "xta-owner")
+	// tenantB 的在职用户——跨租户注入目标。
+	other := createProblemHandlerUser(t, ctx, client, tenantB.ID, "xtb-user")
+	// tenantA 的同租户在职受指人——正向对照。
+	sameTenantAssignee := createProblemHandlerUser(t, ctx, client, tenantA.ID, "xta-assignee")
+
+	p := createProblemHandlerProblem(t, ctx, service, tenantA.ID, owner.ID)
+
+	// ① Create 路径：新增问题单直接指给别租户用户 → 拒绝。
+	_, err := service.Create(ctx, tenantA.ID, &Problem{Title: "跨租户受指人问题单", Priority: "high", AssigneeID: &other.ID})
+	require.Error(t, err, "Create 跨租户受指人必须被拒绝")
+
+	// ② Update 路径：修改为跨租户受指人 → 拒绝且不落库。
+	_, err = service.Update(ctx, tenantA.ID, p.ID, &Problem{AssigneeID: &other.ID}, 0, "manager")
+	require.Error(t, err, "Update 跨租户受指人必须被拒绝")
+	fetched, err := service.Get(ctx, p.ID, tenantA.ID)
+	require.NoError(t, err)
+	if fetched.AssigneeID != nil {
+		assert.NotEqual(t, other.ID, *fetched.AssigneeID, "跨租户受指人不得落库")
+	}
+
+	// ③ 同租户在职受指人：正常放行。
+	_, err = service.Update(ctx, tenantA.ID, p.ID, &Problem{AssigneeID: &sameTenantAssignee.ID}, 0, "manager")
+	require.NoError(t, err)
+	fetched, err = service.Get(ctx, p.ID, tenantA.ID)
+	require.NoError(t, err)
+	require.NotNil(t, fetched.AssigneeID)
+	assert.Equal(t, sameTenantAssignee.ID, *fetched.AssigneeID)
 }

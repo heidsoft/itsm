@@ -464,3 +464,75 @@ func TestReleaseService_WritePath_RowLevelGuard(t *testing.T) {
 		assert.True(t, ent.IsNotFound(qErr), "owner 删除后单据应不存在")
 	})
 }
+
+// createReleaseTestUserNO 建立独立租户/用户测试夹具。
+func createReleaseTestUserNO(t *testing.T, ctx context.Context, client *ent.Client, tenantName, username string) (tenant *ent.Tenant, usr *ent.User) {
+	t.Helper()
+	tenant, err := client.Tenant.Create().
+		SetName(tenantName).
+		SetCode(tenantName).
+		SetDomain(tenantName + ".com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	usr, err = client.User.Create().
+		SetUsername(username).
+		SetEmail(username + "@example.com").
+		SetName(username).
+		SetPasswordHash("hash").
+		SetRole("admin").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	return tenant, usr
+}
+
+// TestReleaseService_ApprovalSemanticsTyped 回归：审批资格/状态违规曾是 plaintext
+// error，RespondError 分类不到兜底 500；状态推进曾是读后无条件写（无 StatusEQ
+// 守卫）。修复后这些语义必须类型化：
+// ① 非 draft/failed 发布走 /approve → BusinessError(4090)；
+// ② 创建人自审批 → BusinessError(4090)；
+// ③ 正常状态推进必须真实落库（读取-校验-条件写不能破坏正常链路）。
+func TestReleaseService_ApprovalSemanticsTyped(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", testDSN())
+	defer client.Close()
+	releaseService := NewReleaseService(client, zaptest.NewLogger(t).Sugar())
+	ctx := context.Background()
+
+	tenantCreator, creator := createReleaseTestUserNO(t, ctx, client, "rel-sem", "rel-creator")
+	_, approver := createReleaseTestUserNO(t, ctx, client, "rel-approver", "rel-approver")
+
+	rel, err := releaseService.CreateRelease(ctx, &dto.CreateReleaseRequest{
+		ReleaseNumber: "REL-CAS-1",
+		Title:         "语义回归发布",
+		Type:          "minor",
+	}, creator.ID, tenantCreator.ID)
+	require.NoError(t, err)
+
+	// ① scheduled 状态走 approve → 当前状态不允许审批（typed 4090）。
+	_, uErr := client.Release.UpdateOneID(rel.ID).SetStatus(entrelease.StatusInProgress).Save(ctx)
+	require.NoError(t, uErr)
+	_, err = releaseService.ApplyReleaseApproval(ctx, rel.ID, tenantCreator.ID, approver.ID, "approve", "ok")
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "审批状态违规必须类型化为 BusinessError")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// ② 创建人自审批 → typed 4090（此前是 plaintext -> 500）。
+	_, uErr = client.Release.UpdateOneID(rel.ID).SetStatus(entrelease.StatusDraft).Save(ctx)
+	require.NoError(t, uErr)
+	_, err = releaseService.ApplyReleaseApproval(ctx, rel.ID, tenantCreator.ID, creator.ID, "approve", "自己批自己")
+	require.ErrorAs(t, err, &bizErr, "自审批必须类型化为 BusinessError")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// ③ 正常推进链路不受 CAS 改造影响：scheduled -> in-progress -> completed。
+	_, uErr = client.Release.UpdateOneID(rel.ID).SetStatus(entrelease.StatusScheduled).Save(ctx)
+	require.NoError(t, uErr)
+	res, err := releaseService.UpdateReleaseStatus(ctx, rel.ID, tenantCreator.ID, "in-progress", creator.ID, "admin")
+	require.NoError(t, err)
+	assert.Equal(t, "in-progress", res.Status)
+	res, err = releaseService.UpdateReleaseStatus(ctx, rel.ID, tenantCreator.ID, "completed", creator.ID, "admin")
+	require.NoError(t, err)
+	assert.Equal(t, "completed", res.Status)
+	assert.NotNil(t, res.ActualReleaseDate)
+}

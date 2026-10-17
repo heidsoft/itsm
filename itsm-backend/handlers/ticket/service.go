@@ -349,44 +349,156 @@ func (s *Service) AssignTickets(ctx context.Context, tenantID int, ticketIDs []i
 	return nil
 }
 
+// ==================== 工单模板 ====================
+//
+// 模板的业务规则与持久化唯一所有者是 productionSvc（service.TicketService 的
+// 模板 CRUD，对照 ent TicketTemplate schema）。此前这组方法委托给 Repository
+// 层的 stub——CreateTemplate 原样返回入参、GetTemplate 恒 not found，属于
+// "伪成功"：前端显示创建/编辑成功，库里实际没有记录，违反"能力未实现必须
+// 如实暴露，禁止包装成空成功"的错误语义禁令。现在统一接通真实现；
+// productionSvc 为 nil（纯单测 harness）时 fail-closed 报错，不再伪造成功。
+
+// dtoTemplateToDomain 把 service.TicketService 返回的 dto.TicketTemplate 转回
+// handler 层模板实体，供 normalizeTemplate 统一映射响应。
+func dtoTemplateToDomain(t *dto.TicketTemplate) *TicketTemplate {
+	if t == nil {
+		return nil
+	}
+	return &TicketTemplate{
+		ID:            t.ID,
+		Name:          t.Name,
+		Description:   t.Description,
+		Category:      t.Category,
+		Priority:      t.Priority,
+		Fields:        t.Fields,
+		FormFields:    t.FormFields,
+		WorkflowSteps: t.WorkflowSteps,
+		IsActive:      t.IsActive,
+		CreatedAt:     t.CreatedAt,
+		UpdatedAt:     t.UpdatedAt,
+	}
+}
+
+// templateDomainToDTO 把 handler 层请求实体转为 dto.TicketTemplate。
+func templateDomainToDTO(t *TicketTemplate) *dto.TicketTemplate {
+	if t == nil {
+		return nil
+	}
+	return &dto.TicketTemplate{
+		ID:            t.ID,
+		Name:          t.Name,
+		Description:   t.Description,
+		Category:      t.Category,
+		Priority:      t.Priority,
+		Fields:        t.Fields,
+		FormFields:    t.FormFields,
+		WorkflowSteps: t.WorkflowSteps,
+		IsActive:      t.IsActive,
+		CreatedAt:     t.CreatedAt,
+		UpdatedAt:     t.UpdatedAt,
+	}
+}
+
 // GetTicketTemplates returns all ticket templates.
 func (s *Service) GetTicketTemplates(ctx context.Context, tenantID int) ([]*TicketTemplate, error) {
-	return s.repo.ListTemplates(ctx, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	items, err := s.productionSvc.GetTicketTemplates(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*TicketTemplate, 0, len(items))
+	for _, item := range items {
+		if t, ok := item.(*dto.TicketTemplate); ok {
+			result = append(result, dtoTemplateToDomain(t))
+		}
+	}
+	return result, nil
 }
 
 // GetTicketTemplate returns a single template.
 func (s *Service) GetTicketTemplate(ctx context.Context, tenantID int, templateID int) (*TicketTemplate, error) {
-	return s.repo.GetTemplate(ctx, templateID, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	t, err := s.productionSvc.GetTicketTemplate(ctx, tenantID, templateID)
+	if err != nil {
+		return nil, err
+	}
+	return dtoTemplateToDomain(t), nil
 }
 
 // CreateTicketTemplate creates a new template.
 func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, tmpl *TicketTemplate) (*TicketTemplate, error) {
-	return s.repo.CreateTemplate(ctx, tmpl, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	created, err := s.productionSvc.CreateTicketTemplate(ctx, tenantID, templateDomainToDTO(tmpl))
+	if err != nil {
+		return nil, err
+	}
+	t, ok := created.(*dto.TicketTemplate)
+	if !ok {
+		return nil, fmt.Errorf("工单模板创建返回类型异常")
+	}
+	return dtoTemplateToDomain(t), nil
 }
 
 // UpdateTicketTemplate updates a template.
 func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, tmpl *TicketTemplate) (*TicketTemplate, error) {
-	return s.repo.UpdateTemplate(ctx, templateID, tmpl, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	updated, err := s.productionSvc.UpdateTicketTemplate(ctx, tenantID, templateID, templateDomainToDTO(tmpl))
+	if err != nil {
+		return nil, err
+	}
+	t, ok := updated.(*dto.TicketTemplate)
+	if !ok {
+		return nil, fmt.Errorf("工单模板更新返回类型异常")
+	}
+	return dtoTemplateToDomain(t), nil
 }
 
 // DeleteTicketTemplate deletes a template.
 func (s *Service) DeleteTicketTemplate(ctx context.Context, tenantID int, templateID int) error {
-	return s.repo.DeleteTemplate(ctx, templateID, tenantID)
+	if s.productionSvc == nil {
+		return fmt.Errorf("工单模板服务不可用")
+	}
+	return s.productionSvc.DeleteTicketTemplate(ctx, tenantID, templateID)
 }
 
 // UpdateTicketTemplateStatus enables or disables a template.
 func (s *Service) UpdateTicketTemplateStatus(ctx context.Context, tenantID int, templateID int, isActive bool) (*TicketTemplate, error) {
-	return s.repo.UpdateTemplateStatus(ctx, templateID, isActive, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	t, err := s.productionSvc.UpdateTicketTemplateStatus(ctx, tenantID, templateID, isActive)
+	if err != nil {
+		return nil, err
+	}
+	return dtoTemplateToDomain(t), nil
 }
 
 // CopyTicketTemplate copies a template with a new name.
 func (s *Service) CopyTicketTemplate(ctx context.Context, tenantID int, templateID int, newName string) (*TicketTemplate, error) {
-	return s.repo.CopyTemplate(ctx, templateID, newName, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	t, err := s.productionSvc.CopyTicketTemplate(ctx, tenantID, templateID, newName)
+	if err != nil {
+		return nil, err
+	}
+	return dtoTemplateToDomain(t), nil
 }
 
 // GetTicketTemplateCategories returns template categories.
 func (s *Service) GetTicketTemplateCategories(ctx context.Context, tenantID int) ([]string, error) {
-	return s.repo.GetTemplateCategories(ctx, tenantID)
+	if s.productionSvc == nil {
+		return nil, fmt.Errorf("工单模板服务不可用")
+	}
+	return s.productionSvc.GetTicketTemplateCategories(ctx, tenantID)
 }
 
 // GetSubtasks returns child tickets of a parent ticket.
