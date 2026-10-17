@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.19] - 2026-10-17
+
 ### Added
 
 - **SSO（OIDC）身份接入后端整批落地（2026-10-16）**：企业身份接入的完整后端链路——提供方管理（`/api/v1/admin/sso/providers`，`sso:read`/`sso:write`，仅 Admin 及以上）、登录发起/回调（`/api/v1/auth/sso/initiate|callback|providers`，挂登录限流）、账号自助绑定（`/api/v1/auth/sso/bind|unbind|identities`，只挂 `AuthMiddleware`，user_id 只取鉴权上下文）。安全口径：
