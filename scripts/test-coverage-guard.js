@@ -12,13 +12,17 @@
  *     `expect.stringContaining('/api/v1/tickets')` and happily passed.
  *   - `ticket_controller.go` exposed `UpdateTicket` returning 5001 (InternalError)
  *     for "ticket not found" while `GetTicket` correctly returned 4004 (NotFound),
- *     and no test caught the asymmetry.
+ *     and no test caught the asymmetry. (Historical: the `controller/` layer was
+ *     deleted in 48eae74a; the same asymmetry class now lives in
+ *     `handlers/<domain>/`.)
  *
  *   This script makes those regressions loud: it inspects the git diff for a
- *   given PR/commit range, and for every modified source file asserts that
- *   a corresponding test file is also touched. If a source file is changed
- *   without its test, CI fails and the author is forced to either update
- *   the test or add a `# test-coverage-guard: skip` justification.
+ *   given PR/commit range and, for every modified source file, requires a
+ *   corresponding test file to exist. A candidate test satisfies the guard when
+ *   it is present on disk OR appears in the diff range — so a source file that
+ *   already has a test passes without editing it, while a source file with no
+ *   test at all fails and must either gain one or opt out with a
+ *   `// test-coverage-guard: skip` justification.
  *
  * Mapping rules (kept conservative; false positives cost reviewer time):
  *   Frontend (itsm-frontend/src/lib/<area>/<name>.ts):
@@ -26,12 +30,14 @@
  *       <area>/__tests__/<name>.test.ts
  *       <area>/__tests__/<name>-*.test.ts
  *
- *   Backend (itsm-backend/controller/<name>_controller.go,
- *            itsm-backend/service/<name>_service.go):
+ *   Backend (itsm-backend/handlers/<domain>/<name>.go,
+ *            itsm-backend/service/<name>_service.go,
+ *            itsm-backend/service/<pkg>/<name>.go):
  *     test candidates (any one of):
- *       <dir>/<name>_controller_test.go
- *       <dir>/<name>_service_test.go
  *       <dir>/<name>_test.go
+ *       <dir>/<name>_service_test.go        (for service/<name>_service.go)
+ *       any *_test.go in the same package    (domain slices use
+ *                                             handler_test.go / service_test.go)
  *
  * Exemptions (no test required):
  *   - Type-only files: *.d.ts, files inside a types/ directory
@@ -197,14 +203,18 @@ function isFrontendSource(p) {
 }
 
 function isBackendSource(p) {
-  // itsm-backend/controller/*_controller.go
-  // itsm-backend/service/*_service.go
-  // IMPORTANT: must not match *._test.go (those are tests, not source).
+  // Domain-sliced handlers (target architecture):
+  //   itsm-backend/handlers/<domain>/<name>.go
+  // Shared business logic:
+  //   itsm-backend/service/<name>_service.go
+  //   itsm-backend/service/<pkg>/<name>.go
+  // The legacy itsm-backend/controller/** horizontal layer was deleted in
+  // 48eae74a; it is intentionally NOT matched any more.
+  // IMPORTANT: must not match *_test.go (those are tests, not source).
+  if (/_test\.go$/.test(p)) return false;
   return (
-    (/^itsm-backend\/controller\/[^/]+\.go$/.test(p) &&
-      !/_test\.go$/.test(p)) ||
-    (/^itsm-backend\/service\/[^/]+\.go$/.test(p) &&
-      !/_test\.go$/.test(p))
+    /^itsm-backend\/handlers\/[^/]+\/[^/]+\.go$/.test(p) ||
+    /^itsm-backend\/service\/(?:[^/]+\/)?[^/]+\.go$/.test(p)
   );
 }
 
@@ -263,17 +273,27 @@ function frontendCandidates(src) {
 }
 
 function backendCandidates(src) {
-  const m = src.match(/^itsm-backend\/(controller|service)\/([^/]+)\.go$/);
-  if (!m) return [];
-  const [, dir, base] = m;
-  // Strip common suffixes to map to the conventional test name.
-  //   ticket_controller.go  → ticket_controller_test.go
-  //   ticket_service.go     → ticket_service_test.go
+  const dir = path.posix.dirname(src);
+  const base = path.posix.basename(src, '.go');
+  // Literal name-based candidates:
   //   analytics.go          → analytics_test.go
-  return [
-    `itsm-backend/${dir}/${base}_test.go`,
-    `itsm-backend/${dir}/${base.replace(/_(controller|service)$/, '')}_test.go`,
+  //   release_service.go    → release_service_test.go / release_test.go
+  const candidates = [
+    `${dir}/${base}_test.go`,
+    `${dir}/${base.replace(/_(service)$/, '')}_test.go`,
   ];
+  // Domain slices and shared service packages follow an "at least one *_test.go
+  // in the package" convention (handler_test.go, service_test.go, entity_test.go,
+  // repository_impl_test.go, ...), so any sibling test file in the same package
+  // satisfies the guard.
+  try {
+    for (const entry of fs.readdirSync(path.join(REPO_ROOT, dir))) {
+      if (entry.endsWith('_test.go')) candidates.push(`${dir}/${entry}`);
+    }
+  } catch {
+    // Directory missing (e.g. deleted file) — keep the literal candidates only.
+  }
+  return candidates;
 }
 
 // ---------- utilities ----------

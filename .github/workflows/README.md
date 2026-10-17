@@ -9,7 +9,7 @@
 | [`backend-ci.yml`](./backend-ci.yml) | 后端 push / PR | Go 格式、静态检查、构建、测试和依赖校验 |
 | [`frontend-ci.yml`](./frontend-ci.yml) | 前端 push / PR | 单次安装后执行 ESLint、类型检查、Jest 和生产构建 |
 | [`api-contract-check.yml`](./api-contract-check.yml) | API/路由变更 | 前后端路径与字段契约静态检查 |
-| [`test-coverage-guard.yml`](./test-coverage-guard.yml) | 源代码变更 | 强制「源码 X 改动 ⇒ 测试 X 必动」规则 |
+| [`test-coverage-guard.yml`](./test-coverage-guard.yml) | 源代码变更 | 强制「受管源码变更 ⇒ 必须有对应测试」规则（管辖 `handlers/<domain>`、`service/**`、`src/lib/**`；测试文件需在磁盘存在或随本次 diff 改动） |
 | [`ga-gate.yml`](./ga-gate.yml) | 核心应用 push / PR | 启动核心 Compose 栈并执行健康检查和 API 烟测 |
 | [`extensions-ci.yml`](./extensions-ci.yml) | Agent/CLI/Skill 变更 | 验证三个扩展模块 |
 | [`docs.yml`](./docs.yml) | 文档变更 | 构建 MkDocs；main 分支部署 GitHub Pages |

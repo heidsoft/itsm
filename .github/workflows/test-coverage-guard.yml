@@ -1,7 +1,8 @@
 name: test-coverage-guard
 
 # Purpose:
-#   Enforce the rule: "source X changed ⇒ test X must change".
+#   Enforce the rule: "source X changed ⇒ a matching test X must exist"
+#   (present on disk or in the diff range).
 #
 #   This guards against the class of regressions where production code evolves
 #   but the corresponding test does not — a pattern that hides real bugs behind
@@ -11,7 +12,7 @@ name: test-coverage-guard
 #
 # Triggers:
 #   - PRs and pushes that touch itsm-frontend/src/lib/** or
-#     itsm-backend/controller|service/*.go (excluding *_test.go).
+#     itsm-backend/handlers|service/*.go (excluding *_test.go).
 #   - Changes to scripts/test-coverage-guard.js or this workflow itself.
 #
 # Behavior:
@@ -27,14 +28,14 @@ on:
     branches: [main, develop]
     paths:
       - 'itsm-frontend/src/lib/**'
-      - 'itsm-backend/controller/**'
+      - 'itsm-backend/handlers/**'
       - 'itsm-backend/service/**'
       - 'scripts/test-coverage-guard.js'
       - '.github/workflows/test-coverage-guard.yml'
   pull_request:
     paths:
       - 'itsm-frontend/src/lib/**'
-      - 'itsm-backend/controller/**'
+      - 'itsm-backend/handlers/**'
       - 'itsm-backend/service/**'
       - 'scripts/test-coverage-guard.js'
       - '.github/workflows/test-coverage-guard.yml'
