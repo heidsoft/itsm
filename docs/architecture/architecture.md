@@ -14,7 +14,7 @@
 |------|------|
 | **ITIL 全流程** | 工单、事件、问题、变更、发布、服务请求、服务目录、知识库、SLA |
 | **AI 原生** | 智能分诊、根因分析、风险预测、RAG 知识问答、AI 评估 |
-| **BPMN 工作流** | 自研流程引擎，支持 XML 解析、网关、服务任务、版本管理 |
+| **BPMN 工作流** | 基于 `nitram509/lib-bpmn-engine` 的流程引擎，支持 XML 解析、网关、服务任务、版本管理 |
 | **多租户 + MSP** | JWT 租户隔离 + RLS 行级安全 + MSP 服务提供商模式 |
 | **可观测性** | Prometheus + Grafana + Alertmanager 完整监控栈 |
 
@@ -23,10 +23,10 @@
 | 层级 | 技术选型 |
 |------|----------|
 | 前端 | Next.js 15 + React 19 + TypeScript + Ant Design 6 + Tailwind CSS 4 |
-| 后端 | Go 1.21 + Gin + Ent ORM + Zap |
+| 后端 | Go 1.25 + Gin + Ent ORM + Zap |
 | 数据库 | PostgreSQL 17 (pgvector) + Redis 7 + MinIO |
-| AI 服务 | Python FastAPI + OpenAI/Ollama + ChromaDB + RAG |
-| 工作流 | 自研 BPMN 引擎 (nitram509/lib-bpmn-engine) |
+| AI 服务 | Python FastAPI（triage / RCA / risk）+ OpenAI / Ollama / vLLM 等 LLM |
+| 工作流 | BPMN 引擎（基于 nitram509/lib-bpmn-engine） |
 | 监控 | Prometheus + Grafana + Alertmanager |
 | 部署 | Docker Compose + Nginx |
 
@@ -48,10 +48,10 @@
 │  Handler 域 | 核心服务 | Middleware | 数据访问 | 后台任务   │
 ├─────────────────────────────────────────────────────────────┤
 │                     数据层                                    │
-│    PostgreSQL (pgvector) | Redis | MinIO | ChromaDB        │
+│    PostgreSQL (pgvector) | Redis | MinIO                   │
 ├─────────────────────────────────────────────────────────────┤
 │                     AI 服务层                                 │
-│          FastAPI + LLM + Triage/RCA/Risk + RAG             │
+│          FastAPI + LLM + Triage/RCA/Risk                   │
 ├─────────────────────────────────────────────────────────────┤
 │                   监控/可观测性层                             │
 │            Prometheus + Grafana + Alertmanager              │
@@ -70,22 +70,22 @@
 - UI 框架：Ant Design 6 + Tailwind CSS 4
 - HTTP 客户端：自封装 fetch (非 Axios)
 
-**目录结构**：
+**目录结构**（统计口径：2026-10-17 `main` 实测）：
 ```
 itsm-frontend/src/
 ├── app/                    # App Router 页面
 │   ├── (auth)/            # 认证路由 (login, register)
-│   ├── (main)/            # 主应用路由 (90+ 页面)
+│   ├── (main)/            # 主应用路由 (169 个页面)
 │   └── api/               # API 代理
-├── components/            # 36 个业务域组件
+├── components/            # 21 个领域组件目录（139 个 .tsx，含 20 个测试）
 │   ├── ticket/            # 工单
 │   ├── incident/         # 事件
 │   ├── cmdb/             # 配置管理
 │   ├── workflow/         # 工作流
 │   └── ...
 ├── lib/
-│   ├── api/              # 76 个 API 客户端文件
-│   ├── hooks/            # 32 个自定义 Hooks
+│   ├── api/              # 66 个 API 客户端文件
+│   ├── hooks/            # 24 个自定义 Hooks
 │   ├── store/            # Zustand 状态存储
 │   └── services/         # 业务服务层
 └── types/                # TypeScript 类型定义
@@ -99,9 +99,19 @@ itsm-frontend/src/
 
 ### 3.2 后端 (itsm-backend)
 
-**Handler 域** (18 个业务域)：
+**Handler 域**（66 个 `handlers/<domain>/` 包）：
 
-| 域 | 职责 | 路由前缀 |
+域的权威清单由文件系统枚举，**不在本文档硬编码**（手工维护的清单必然漂移，AGENTS.md 明确禁止）：
+
+```bash
+ls itsm-backend/handlers/
+```
+
+每个域包按职责收口 `handler.go`（HTTP）/ `service.go`（业务规则）/ `repository.go` + `repository_impl.go`（数据访问）/ `entity.go`（领域实体与 DTO）；共享助手位于 `handlers/common/` 与 `handlers/shared/`。新增域包必须被 `router/` 装配或显式豁免，由 Gate C.6.3「零路由域」强制。
+
+以下为代表性域与路由前缀（**非穷举**）：
+
+| 域（示例） | 职责 | 路由前缀 |
 |----|------|----------|
 | `ticket` | 工单 CRUD + 生命周期 | `/api/v1/tickets` |
 | `incident` | 事件管理 + 升级 + 根因 | `/api/v1/incidents` |
@@ -114,12 +124,10 @@ itsm-frontend/src/
 | `service_catalog` | 服务目录 | `/api/v1/service-catalog` |
 | `service_request` | 服务请求 | `/api/v1/service-requests` |
 | `skill` | AI 技能注册表 | `/api/v1/skills` |
-| `cab` | CAB 成员管理 | `/api/v1/cab` |
 | `standard_change` | 标准变更模板 | `/api/v1/standard-changes` |
 | `known_error` | 已知错误库 | `/api/v1/known-errors` |
 | `release` | 发布管理 | `/api/v1/releases` |
 | `asset` | 资产管理 | `/api/v1/assets` |
-| `dashboard` | 仪表盘 | `/api/v1/dashboard` |
 | `operations` | 运维命令 | `/api/v1/admin/operations` |
 
 **核心服务**：
@@ -147,7 +155,7 @@ itsm-frontend/src/
 | CSRF | `middleware/csrf.go` | 双提交 Cookie 保护 |
 | Security | `middleware/security.go` | 安全头、SQL 注入、XSS 防护 |
 
-**Ent Schema** (95 个实体)：
+**Ent Schema**（135 个 `ent/schema/*.go` 文件）：
 
 ```
 工单域: ticket, ticket_approval, ticket_comment, ticket_attachment...
@@ -184,13 +192,13 @@ BPMN域: process_definition, process_instance, process_task...
 - S3 兼容 API
 - 端口：9000 (dev) / 内部 (prod)
 
-**ChromaDB**：
-- 向量数据库，RAG 语义检索
-- 本地 PersistentClient 模式
+**向量检索**：
+- 知识库语义检索使用 PostgreSQL `pgvector`，由后端 `service/vector_store.go` 负责扩展、表层与索引
+- 不引入独立向量数据库
 
-**Watermill**：
-- 事件总线，跨服务异步通信
-- Outbox 模式保证事务一致性
+**可靠异步（Outbox）**：
+- 跨领域副作用统一走 PostgreSQL `operational_commands` 事务型 outbox + Worker（见 [operational-command-outbox.md](./operational-command-outbox.md)）
+- `pkg/eventbus`（Watermill + Redis Stream）已引入并在启动时装配，但当前**没有生产者与消费者**，不作为生产异步路径；计划在 v2.0 提升为一等 pub/sub
 
 ### 3.4 AI 服务层 (itsm-ai-service)
 
@@ -201,27 +209,23 @@ BPMN域: process_definition, process_instance, process_task...
 | `POST /api/v1/triage/` | 智能工单分类 (分类/优先级/分配建议) |
 | `POST /api/v1/triage/batch` | 批量分类 |
 | `POST /api/v1/rca/analyze` | 根因分析 (5 Whys/鱼骨图/AI) |
+| `POST /api/v1/rca/similar` | 相似历史问题检索 |
 | `POST /api/v1/risk/predict` | 变更风险预测 |
 | `POST /api/v1/risk/batch` | 批量风险预测 |
+| `POST /triage` | Guidance sidecar 兼容端点（后端 GuidanceClient 调用） |
 
-**LLM 配置** (config.yaml)：
+**LLM 配置** (`itsm-ai-service/config.yaml`)：
 - OpenAI (gpt-4o-mini, 默认)
 - Ollama (本地开发)
 - vLLM / DeepSeek / 智谱 / 百度 / 阿里
 
-### 3.5 RAG 服务 (itsm-rag)
+### 3.5 RAG（知识库检索）
 
-**运维知识问答系统**：
+RAG 由后端内置实现，不依赖独立服务或独立向量数据库：
 
-```
-Confluence API → JSON → 分块 → Embedding → ChromaDB → Rerank → LLM 生成
-```
-
-**技术栈**：
-- Embedding: `shibing624/text2vec-base-chinese` (768维)
-- Reranker: `BAAI/bge-reranker-base`
-- LLM: `qwen2.5:7b` (Ollama)
-- UI: Gradio (端口 7860)
+- `service/rag_service.go`：检索编排，支持向量 / 关键词 / 混合检索，向量存储或 Embedder 不可用时降级到关键词检索
+- `service/vector_store.go`：PostgreSQL `pgvector` 扩展、嵌入表与索引（pgvector DDL 必须 raw SQL，是允许的例外）
+- `handlers/knowledge/`：文章版本与可见性过滤在检索前后生效
 
 ### 3.6 监控栈 (monitoring/)
 
@@ -271,13 +275,13 @@ Confluence API → JSON → 分块 → Embedding → ChromaDB → Rerank → LLM
 ```
 1. 业务事务提交
       ↓
-2. Outbox 记录写入 (同一事务)
+2. Operational Command 写入 (同一事务)
       ↓
-3. EventBus (Watermill) 发布事件
+3. Worker 轮询认领 (租约 + fencing token, at-least-once)
       ↓
-4. Command Handler 消费事件
+4. Command Handler 执行业务幂等检查
       ↓
-5. 外部操作 (邮件/短信/通知/IM)
+5. 外部操作 (邮件/短信/通知/IM/连接器)
 ```
 
 ### 4.3 BPMN 流程执行
@@ -417,7 +421,6 @@ Confluence API → JSON → 分块 → Embedding → ChromaDB → Rerank → LLM
 | Redis | 6379 | 6380 |
 | MinIO | 9000/9001 | 内部 |
 | AI Service | 8000 | 8000 |
-| RAG (Gradio) | 7860 | - |
 | Prometheus | 9090 | 9090 |
 | Grafana | 3001 | 3001 |
 

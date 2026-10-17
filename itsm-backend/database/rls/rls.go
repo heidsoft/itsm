@@ -15,7 +15,8 @@
 // connect via the dedicated itsm_admin role (BYPASSRLS attribute). This
 // package is intentionally NOT used on those paths.
 //
-// Status: R0.5 skeleton — not wired into main yet. See R1 milestone.
+// Status: wired into the main DB path — see database/database.go (rls driver
+// decorator), database/tenant_sql.go and database/system_numbering.go.
 package rls
 
 import (

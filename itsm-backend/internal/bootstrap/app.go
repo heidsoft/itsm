@@ -890,8 +890,8 @@ func NewApplication() *Application {
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)
-	// Note: Incident handler has been removed from router config
-	_ = incident.NewEntRepository // Prevent unused import warning
+	// IncidentHandler 在应用装配阶段注入（见本函数早段的 incident.NewService/NewHandler），
+	// 路由由 router.SetupIncidentRoutes 注册（router/router.go）。
 
 	// Domain: Problem (DDD)
 	problemRepo := problem.NewEntRepository(client)

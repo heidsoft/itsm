@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **架构文档漂移修复（2026-10-17）**：`docs/architecture/` 的现状描述与代码实测对齐，仅文档 + 两处过时注释，不改任何行为：
+  - `architecture.md`：技术栈 Go 1.21 → 1.25；「18 个业务域」硬编码表（含从未存在的 `cab` 域、以及并非域包的 `dashboard` 行）改为「按文件系统枚举 `ls itsm-backend/handlers/`」+ 66 个域包收口约定 + 非穷举示例表（AGENTS.md 明确禁止手工维护域清单）；Ent Schema「95 个实体」→ 135 个 `ent/schema/*.go`；前端目录统计改为实测口径（169 页面 / 21 个领域组件目录 / 66 个 API client / 24 个 hooks）；删除已不存在的 `itsm-rag` 章节（含 Gradio 7860）与端口行，`ChromaDB` 更正为后端 `pgvector`（`service/vector_store.go`）；异步流程图由「EventBus(Watermill) 发布事件」更正为「Operational Command + Worker 租约认领」，并注明 `pkg/eventbus` 当前无生产者/消费者；补 `POST /api/v1/rca/similar` 与 guidance 兼容端点；BPMN 由「自研流程引擎」更正为基于 `nitram509/lib-bpmn-engine`。
+  - `domain-ownership.md`：Ticket / Incident / Change 的「当前生产入口」更正（横向 `controller/` 层已于 `48eae74a` 退役）；Incident 的「延后至 v1.7、新层零路由」结论作废——实测 `router/router.go` 已装配 `SetupIncidentRoutes`，`/incidents` 全套端点生效；契约治理表来源由 `controller` 改为 `handlers/<domain>`。
+  - `internal/bootstrap/app.go`：删除过时的 `_ = incident.NewEntRepository // Prevent unused import warning` 及「Incident handler has been removed from router config」注释——`incident` 包已由本函数早段的装配使用，该行是纯死代码且注释与事实相反。
+  - `database/rls/rls.go`：包注释 `Status: R0.5 skeleton — not wired into main yet` 更正为已接入主 DB 路径（`database/database.go` 的 rls driver 装饰器、`database/tenant_sql.go`、`database/system_numbering.go`）。
+
+- **【P0 工单】版本冲突语义修复（2026-10-17）**：工单乐观锁冲突曾以裸字符串 `version conflict` 上抛，被 `classifyError` 分类不到后兜底为 5001/500——并发编辑工单的合法冲突被客户端当成服务器故障。修复链路（`repository/ticket` 4 处冲突点全部类型化为 `*common.VersionConflictError`，条件更新未命中时重读区分「并发冲突→409」与「工件已消失→404」；`common.IsVersionConflictError` 改 `errors.As` 兼容 `fmt.Errorf` 包装；`handlers/ticket/handler.go` 改 `errors.As` 解包）。响应维持 `HTTP 409 + code 4090 + {ticketId, currentVersion, serverVersion}` 载荷，前端可据此提示刷新。新增回归：repository 层断言类型化冲突与版本字段、handler 层全链路断言 409（`TestRepository_Update_RejectsStaleVersion` 强化、`TestHandler_Update_VersionConflict` 新增）。
+- **【P0 工单】模板接口"伪成功"修复（2026-10-17）**：`/tickets/templates*` 生产路由曾挂在 handlers 层返回伪造数据的 repository stub 上（CreateTemplate 原样回显入参、GetTemplate 恒 not found、Status/Copy 返回假对象）——前端显示创建/编辑成功但库里无记录，且真实实现（`service.TicketService` 模板 CRUD，对照 ent `TicketTemplate` schema）从未被路由消费。修复：handlers/ticket 域 Service 的模板方法全部改接 productionSvc 真实现，productionSvc 为 nil 时 fail-closed 报错；Repository 接口/仓储实现/测试 mock 三处的 8 个假桩方法一并移除（消灭双实现遗迹）。新增 DB 级回归 `TestTemplateRoutes_PersistRealData`：创建落库、404、列表租户隔离、更新与删除真实生效。
+- **【P0 问题】受理人跨租户引用注入修复（2026-10-17）**：problem 域 Create/Update 的 `AssigneeID` 曾直接落库、无同租户校验（ticket/incident 均有 `ValidateAssignee` 护卫,problem 漏网）——多租户环境下问题单（含根因等敏感内容）可被静默指给其他租户员工。修复：新增 `AssigneeValidator` 接口注入 problem 域 Service（实现复用 `service.TicketService.ValidateAssignee`,同一校验用例不复制第三份实现;与 datascope 写权限互补——前者管"指向谁",后者管"谁能改"），Create/Update 均强制同租户+在职校验，validator 缺失时 fail-closed 拒绝写入。新增回归 `TestProblemAssigneeCrossTenantRejected`：Create/Update 跨租户拒绝且不落库、同租户在职受指人放行。
+- **【P0 发布】状态推进并发守卫与冲突语义修复（2026-10-17）**：发布状态机两处读后无条件写（`UpdateReleaseStatus` 实体更新、`ApplyReleaseApproval` 审批落库,均无 `StatusEQ` 条件）——并发窗口内 `scheduled→cancelled` 等陈旧校验可覆盖刚推进的状态,审批 quorum 结果存在 TOCTOU。修复：两处改为 `WHERE id+tenant_id+status=期望值` 的条件更新，0 行命中返回 typed 4090「发布状态已被并发修改」；`UpdateReleaseStatus` 的非法迁移映射由 400（ParamError,客户端会修参重试）改为 409（全局错误语义规范：非法 ITIL 状态迁移属 conflict）；`ApplyReleaseApproval` 的状态违规/自审批 plaintext 错误类型化为 `BusinessError(4090)`,消除 500 兜底。新增回归：服务层 `TestReleaseService_ApprovalSemanticsTyped`、handler 层 `TestHandler_UpdateReleaseStatus_IllegalTransition_409`。
+
 ## [1.6.19] - 2026-10-17
 
 ### Added

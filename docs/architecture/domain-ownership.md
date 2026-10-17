@@ -4,9 +4,9 @@
 
 | 领域 | 当前生产入口 | 目标所有者 | 事务所有者 | 当前策略 |
 |---|---|---|---|---|
-| Ticket | legacy controller/service | Ticket application service | Ticket service | 首版保留，不并入通用 Ticket 抽象 |
-| Incident | 全部在 legacy（`/incidents` 30+ 端点） | `handlers/incident` | Incident application service | **延后至 v1.7**（2026-08-29 决策）：新层已实现约六成但零路由，生产化前不做切换；`handlers/incident` 实现保留，待补齐 9 个生命周期端点后一次切路由 |
-| Change | legacy + `handlers/change` | `handlers/change` | Change application service | BPMN 启动只写 command |
+| Ticket | `handlers/ticket`（HTTP）+ `service/ticket_service.go`（规则主体） | `handlers/ticket` | Ticket application service | 门面已迁；业务规则下沉进行中，不并入通用 Ticket 抽象 |
+| Incident | `handlers/incident`（`router/router.go` 的 `SetupIncidentRoutes` 装配，`/incidents` 全套端点） | `handlers/incident` | Incident application service | **已切路由**（2026-10-17 实测，旧「延后至 v1.7 / 新层零路由」结论作废）：根因/监控/告警委托 `service/incident_*`，规则主体下沉进行中 |
+| Change | `handlers/change`（HTTP + 规则主体）；状态机助手仍在 `service/change_service.go` | `handlers/change` | Change application service | BPMN 启动只写 command |
 | Problem / Known Error | `handlers/problem`、`handlers/known_error` | 对应领域切片 | 对应 application service | `/problems` 已在新层；调查子域 `/problem-investigation` 为独立互补功能，暂留旧层 |
 | Service Request | legacy + `handlers/service_request` | `handlers/service_request` | Request application service | 审批、通知和 provisioning 使用 command |
 | CMDB | `handlers/cmdb`（主体 21 端点） | `handlers/cmdb` | CMDB service / Job | 已切新层；仅剩弃用别名 `/configuration-items` 与 `/incidents/configuration-items`，禁止新增端点，待移除 |
@@ -42,7 +42,7 @@
 
 | 层 | 来源 | 备注 |
 |---|---|---|
-| 后端路由 | `itsm-backend/router/` + 各 controller 的 `RegisterRoutes` | 由 `generate-acl-manifest.js` 重新生成 |
+| 后端路由 | `itsm-backend/router/` + 各域 `handlers/<domain>/` 的 `RegisterRoutes`（横向 `controller/` 层已于 `48eae74a` 退役） | 由 `generate-acl-manifest.js` 重新生成 |
 | 后端 DTO | `itsm-backend/dto/` | DTO 字段必须 camelCase |
 | 前端 API Client | `itsm-frontend/src/lib/api/*Api.ts` | 类型与 DTO 1:1 对齐 |
 | 前端类型 | `itsm-frontend/src/types/` | 不允许任何字段重命名 |
