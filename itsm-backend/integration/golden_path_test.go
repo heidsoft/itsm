@@ -7,14 +7,19 @@
 //
 // 运行：
 //
-//	ITSM_TEST_DSN='postgres://itsm_app:itsm_app_pwd@127.0.0.1:55432/itsm?sslmode=disable' \
-//	RLS_SETUP_DSN='postgres://itsm_user:itsm_user_pwd@127.0.0.1:55432/itsm?sslmode=disable' \
+//	ITSM_TEST_DSN='postgres://postgres:postgres@127.0.0.1:55432/itsm?sslmode=disable' \
+//	RLS_SETUP_DSN='postgres://postgres:postgres@127.0.0.1:55432/itsm?sslmode=disable' \
 //	  go test -tags integration_rls -v ./integration/... -run TestGoldenPath
 //
 // 必须：
 //   - 数据库表结构已迁移（ent migrate 或 atlas apply）
 //   - roles 已建立（itsm_app / itsm_admin / itsm_user）
 //   - 目标 schema 是迁移过的同一个库
+//   - ITSM_TEST_DSN 连接的角色必须能 `SET ROLE itsm_app`，并且不因 RLS 拒绝写入
+//     （owner / superuser / BYPASSRLS 角色）。理由：本文件用该连接写入夹具数据，
+//     又用它在 `SET ROLE itsm_app` 后做 RLS 可见性探测。若用受限的 itsm_app
+//     连接，`FORCE ROW LEVEL SECURITY` 会直接拒绝写入。
+//   - RLS_SETUP_DSN 用于设置/清理临时 RLS 策略的 DDL（需要 owner 权限）。
 package integration
 
 import (
@@ -29,6 +34,7 @@ import (
 	"itsm-backend/database/rls"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	entticket "itsm-backend/ent/ticket"
 
 	"github.com/stretchr/testify/require"
 )
@@ -133,26 +139,19 @@ func TestGoldenPath_Ticket(t *testing.T) {
 		require.NoError(t, err)
 		require.NotZero(t, tk.ID)
 
-		// 同租户查询应可见
-		visible, err := client.Ticket.Query().
-			Where( /* tenant_id = */ ).
+		// 应用层租户隔离：同租户查询可见，跨租户查询不可见。
+		// （数据库级 RLS 由 TestGoldenPath_RLSEnforced 在临时策略下验证。）
+		visibleA, err := client.Ticket.Query().
+			Where(entticket.TenantID(tenantA)).
 			All(ctx)
 		require.NoError(t, err)
-		_ = visible
+		require.Len(t, visibleA, 1, "tenantA 应能看到自己刚创建的工单")
 
-		// 验证跨租户查询应不可见（直连其m_app 角色 + SET app.current_tenant=tenantB 时查询应返回 0 行）
-		dsn := os.Getenv("ITSM_TEST_DSN")
-		appDB, err := sql.Open("postgres", dsn)
+		visibleB, err := client.Ticket.Query().
+			Where(entticket.TenantID(tenantB)).
+			All(ctx)
 		require.NoError(t, err)
-		defer appDB.Close()
-		conn, err := rls.AcquireConn(ctx, appDB)
-		require.NoError(t, err)
-		defer conn.Close()
-		_, err = conn.ExecContext(ctx, "SET ROLE itsm_app")
-		require.NoError(t, err)
-		var n int
-		require.NoError(t, conn.QueryRowContext(ctx, "SELECT COUNT(*) FROM tickets WHERE id = $1", tk.ID).Scan(&n))
-		require.Zero(t, n, "ticket from tenantA should NOT be visible under tenantB RLS context")
+		require.Empty(t, visibleB, "tenantB 不得看到 tenantA 的工单")
 	})
 
 	t.Run("update status", func(t *testing.T) {
@@ -172,11 +171,6 @@ func TestGoldenPath_Ticket(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "in_progress", updated.Status)
 		require.Equal(t, tenantA, updated.TenantID)
-	})
-
-	// 用 tenantB 验证反向不变量：仅在 tenantB 上下文中 tenantA 工单不可见
-	t.Run("tenantB sees zero tickets from tenantA", func(t *testing.T) {
-		_ = tenantB
 	})
 }
 
@@ -205,12 +199,12 @@ func TestGoldenPath_Incident(t *testing.T) {
 		resolved, err := client.Incident.UpdateOneID(inc.ID).
 			SetStatus("resolved").
 			SetRootCause(map[string]interface{}{"cause": "log volume full"}).
-			SetResolution(map[string]interface{}{"action": "rotate logs and grow volume"}).
+			SetResolutionSteps([]map[string]interface{}{{"action": "rotate logs and grow volume"}}).
 			Save(ctx)
 		require.NoError(t, err)
 		require.Equal(t, "resolved", resolved.Status)
 		require.NotNil(t, resolved.RootCause)
-		require.NotNil(t, resolved.Resolution)
+		require.NotEmpty(t, resolved.ResolutionSteps)
 	})
 }
 
@@ -283,35 +277,36 @@ func TestGoldenPath_Change(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 		require.NotZero(t, ch.ID)
-		require.Equal(t, "draft", ch.Status)
+		require.Equal(t, "draft", string(ch.Status))
 
-		// 2. 提交审批
+		// 2. 提交审批（change.status 枚举：draft/pending/approved/rejected/
+		//    scheduled/in_progress/completed/failed/rolled_back/cancelled/closed）
 		submitted, err := client.Change.UpdateOneID(ch.ID).
-			SetStatus("pending_approval").
+			SetStatus("pending").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "pending_approval", submitted.Status)
+		require.Equal(t, "pending", string(submitted.Status))
 
 		// 3. 审批通过
 		approved, err := client.Change.UpdateOneID(ch.ID).
 			SetStatus("approved").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "approved", approved.Status)
+		require.Equal(t, "approved", string(approved.Status))
 
 		// 4. 实施完成
 		implemented, err := client.Change.UpdateOneID(ch.ID).
-			SetStatus("implemented").
+			SetStatus("completed").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "implemented", implemented.Status)
+		require.Equal(t, "completed", string(implemented.Status))
 
 		// 5. 关闭
 		closed, err := client.Change.UpdateOneID(ch.ID).
 			SetStatus("closed").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "closed", closed.Status)
+		require.Equal(t, "closed", string(closed.Status))
 	})
 
 	t.Run("rejected change stays in rejected state", func(t *testing.T) {
@@ -331,7 +326,7 @@ func TestGoldenPath_Change(t *testing.T) {
 			SetStatus("rejected").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "rejected", rejected.Status)
+		require.Equal(t, "rejected", string(rejected.Status))
 
 		// 验证：被拒后再次尝试切到 implemented 应被业务校验拦截
 		// (此处只验持久化状态机，service 层校验留给 handler/service 集成测试)
@@ -344,34 +339,35 @@ func TestGoldenPath_Release(t *testing.T) {
 	client := enttest.Open(t, "postgres", os.Getenv("ITSM_TEST_DSN"))
 	defer client.Close()
 
-	tenantA, _, _, _ := seedTenantAndUsers(t, client)
+	tenantA, userA, _, _ := seedTenantAndUsers(t, client)
 	ctx := context.Background()
 
 	t.Run("create + complete release", func(t *testing.T) {
 		rel, err := client.Release.Create().
 			SetTitle("2026-Q3 Release 1").
 			SetDescription("Quarterly batch of changes").
-			SetStatus("planning").
+			SetStatus("scheduled").
 			SetReleaseNumber(fmt.Sprintf("REL-GP-%d", time.Now().UnixNano())).
+			SetCreatedBy(userA).
 			SetTenantID(tenantA).
 			Save(ctx)
 		require.NoError(t, err)
 		require.NotZero(t, rel.ID)
-		require.Equal(t, "planning", rel.Status)
+		require.Equal(t, "scheduled", string(rel.Status))
 
 		// 进入 deploy 阶段
 		deployed, err := client.Release.UpdateOneID(rel.ID).
-			SetStatus("deploying").
+			SetStatus("in-progress").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "deploying", deployed.Status)
+		require.Equal(t, "in-progress", string(deployed.Status))
 
 		// 发布完成
 		closed, err := client.Release.UpdateOneID(rel.ID).
 			SetStatus("completed").
 			Save(ctx)
 		require.NoError(t, err)
-		require.Equal(t, "completed", closed.Status)
+		require.Equal(t, "completed", string(closed.Status))
 	})
 }
 
@@ -385,16 +381,24 @@ func TestGoldenPath_ServiceRequest(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("create + fulfill service request", func(t *testing.T) {
+		catalog, err := client.ServiceCatalog.Create().
+			SetName("Jira 账号服务").
+			SetStatus("active").
+			SetTenantID(tenantA).
+			Save(ctx)
+		require.NoError(t, err)
+
 		sr, err := client.ServiceRequest.Create().
 			SetTitle("申请 Jira 账号").
-			SetDescription("Need Jira access for new joiner").
-			SetStatus("pending").
+			SetReason("Need Jira access for new joiner").
+			SetCatalogID(catalog.ID).
+			SetStatus("submitted").
 			SetTenantID(tenantA).
 			SetRequesterID(userA).
 			Save(ctx)
 		require.NoError(t, err)
 		require.NotZero(t, sr.ID)
-		require.Equal(t, "pending", sr.Status)
+		require.Equal(t, "submitted", sr.Status)
 
 		// 进入审批/履行
 		inProgress, err := client.ServiceRequest.UpdateOneID(sr.ID).
@@ -456,9 +460,11 @@ func TestGoldenPath_RLSEnforced(t *testing.T) {
 	})
 
 	// 用 ent 客户端在 tenantA 写入所有 6 类记录。
+	// 写入连接必须是 owner / superuser / BYPASSRLS 角色：策略已 FORCE RLS，
+	// 受限角色在缺少 app.current_tenant 时会连 INSERT 都被拒。
 	client := enttest.Open(t, "postgres", os.Getenv("ITSM_TEST_DSN"))
 	defer client.Close()
-	tenantA, userA, _, _ := seedTenantAndUsers(t, client)
+	tenantA, userA, tenantB, _ := seedTenantAndUsers(t, client)
 
 	suffix := time.Now().UnixNano()
 	ticket, err := client.Ticket.Create().
@@ -503,29 +509,26 @@ func TestGoldenPath_RLSEnforced(t *testing.T) {
 	release, err := client.Release.Create().
 		SetTitle("RLS release").
 		SetReleaseNumber(fmt.Sprintf("REL-RLS-%d", suffix)).
-		SetStatus("planning").
+		SetStatus("scheduled").
+		SetCreatedBy(userA).
+		SetTenantID(tenantA).
+		Save(ctx)
+	require.NoError(t, err)
+
+	catalog, err := client.ServiceCatalog.Create().
+		SetName("RLS catalog").
+		SetStatus("active").
 		SetTenantID(tenantA).
 		Save(ctx)
 	require.NoError(t, err)
 
 	sr, err := client.ServiceRequest.Create().
 		SetTitle("RLS service request").
-		SetStatus("pending").
+		SetCatalogID(catalog.ID).
+		SetStatus("submitted").
 		SetTenantID(tenantA).
 		SetRequesterID(userA).
 		Save(ctx)
-	require.NoError(t, err)
-
-	// 在 itsm_app + tenant=999 上下文下，逐表验证看不到。
-	dsn := os.Getenv("ITSM_TEST_DSN")
-	appDB, err := sql.Open("postgres", dsn)
-	require.NoError(t, err)
-	defer appDB.Close()
-
-	conn, err := rls.AcquireConn(ctx, appDB)
-	require.NoError(t, err)
-	defer conn.Close()
-	_, err = conn.ExecContext(ctx, "SET ROLE itsm_app")
 	require.NoError(t, err)
 
 	checks := []struct {
@@ -539,26 +542,46 @@ func TestGoldenPath_RLSEnforced(t *testing.T) {
 		{"releases", release.ID},
 		{"service_requests", sr.ID},
 	}
-	for _, c := range checks {
-		var n int
-		require.NoError(t, conn.QueryRowContext(ctx,
-			fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = $1", c.table), c.id).Scan(&n),
-			"table %s query failed", c.table)
-		require.Zero(t, n, "tenant=999 must not see %s id=%d", c.table, c.id)
+
+	// 在 itsm_app 角色 + 指定租户上下文下统计每张表的可见行数。
+	// 这是真实的生产路径：租户由 rls.WithTenant 注入 ctx，AcquireConn 负责
+	// set_config('app.current_tenant', ...)，Set ROLE 让策略真正生效。
+	// 缺少租户上下文时 AcquireConn 会 fail closed（ErrNoTenant）。
+	dsn := os.Getenv("ITSM_TEST_DSN")
+	appDB, err := sql.Open("postgres", dsn)
+	require.NoError(t, err)
+	defer appDB.Close()
+
+	countVisible := func(tenantID int) []int {
+		tenantCtx := rls.WithTenant(context.Background(), int64(tenantID))
+		conn, err := rls.AcquireConn(tenantCtx, appDB)
+		require.NoError(t, err)
+		defer func() {
+			require.NoError(t, rls.ReleaseConn(tenantCtx, conn), "释放连接必须清理会话状态")
+		}()
+
+		_, err = conn.ExecContext(tenantCtx, "SET ROLE itsm_app")
+		require.NoError(t, err)
+
+		counts := make([]int, 0, len(checks))
+		for _, c := range checks {
+			var n int
+			require.NoError(t, conn.QueryRowContext(tenantCtx,
+				fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = $1", c.table), c.id).Scan(&n),
+				"table %s query failed", c.table)
+			counts = append(counts, n)
+		}
+		return counts
 	}
 
-	// 反向验证：itsm_app + tenant=tenantA 应看到所有 6 行
-	connA, err := rls.AcquireConn(ctx, appDB)
-	require.NoError(t, err)
-	defer connA.Close()
-	_, err = connA.ExecContext(ctx, "SET ROLE itsm_app")
-	require.NoError(t, err)
+	// 跨租户：tenantB 上下文下 tenantA 的 6 行全部不可见。
+	for i, n := range countVisible(tenantB) {
+		require.Zero(t, n, "tenantB must not see %s id=%d", checks[i].table, checks[i].id)
+	}
 
-	for _, c := range checks {
-		var n int
-		require.NoError(t, connA.QueryRowContext(ctx,
-			fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE id = $1", c.table), c.id).Scan(&n),
-			"table %s query (own tenant) failed", c.table)
-		require.Equal(t, 1, n, "tenant=tenantA must see %s id=%d", c.table, c.id)
+	// 正控制：tenantA 上下文下 6 行全部可见——证明上一步的 0 是租户过滤
+	// 的结果，而不是策略把所有人都挡在外面。
+	for i, n := range countVisible(tenantA) {
+		require.Equal(t, 1, n, "tenantA must see %s id=%d", checks[i].table, checks[i].id)
 	}
 }
