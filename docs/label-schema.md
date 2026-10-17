@@ -4,9 +4,9 @@
 
 > **目的**：统一 Issue / PR 标签语义，便于维护者分类、过滤和统计。
 >
-> **生效范围**：itsm-backend、itsm-frontend、itsm-cli、itsm-skill、itsm-agent、itsm-ai-service、itsm-rag、docs。
+> **生效范围**：itsm-backend、itsm-frontend、itsm-cli、itsm-skill、itsm-agent、itsm-ai-service、docs。
 >
-> **最后更新**：2026-06-28
+> **最后更新**：2026-10-17
 
 ---
 
@@ -36,12 +36,12 @@
 
 | 标签 | 触发条件 | 责任人 |
 |:---|:---|:---|
-| `area/backend` | 修改 `itsm-backend/controller/**`、`service/**`、`middleware/**`、`dto/**`、`cache/**`、`router/**` | Backend Lead |
+| `area/backend` | 修改 `itsm-backend/handlers/**`、`service/**`、`middleware/**`、`dto/**`、`cache/**`、`router/**` | Backend Lead |
 | `area/backend-entity` | 修改 `itsm-backend/ent/schema/**`、`ent/**` | Backend Lead |
 | `area/backend-test` | 修改 `itsm-backend/**/*_test.go` | Backend Lead |
 | `area/frontend` | 修改 `itsm-frontend/src/**` | Frontend Lead |
 | `area/frontend-test` | 修改 `itsm-frontend/tests/**`、`**/*.test.{ts,tsx}` | Frontend Lead |
-| `area/ai` | 修改 `itsm-ai-service/**`、`itsm-rag/**` | AI Lead |
+| `area/ai` | 修改 `itsm-ai-service/**` | AI Lead |
 | `area/cli` | 修改 `itsm-cli/**` | Tooling Lead |
 | `area/agent` | 修改 `itsm-agent/**` | Tooling Lead |
 | `area/skill` | 修改 `itsm-skill/**` | Tooling Lead |

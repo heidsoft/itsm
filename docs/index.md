@@ -41,7 +41,7 @@
 - **RAG 知识问答**：基于向量库的语义搜索 + 来源追溯
 - **A2UI**：AI 主动生成表单（替代传统下拉菜单）
 - **Agent 工具调用**：工单 Agent 可调用 connector + 外部 API
-- **MCP 技能市场**：itsm-skill 插件 + Connector 集成（飞书、Slack、钉钉、Teams）
+- **MCP 技能市场**（规划中）：`itsm-skill` 插件（本地扩展目录，未纳入版本库）+ Connector 集成（飞书、Slack、钉钉、Teams）
 
 ### 3. 平台能力
 
@@ -64,8 +64,8 @@
 │ Backend:   Go 1.25 + Gin + Ent ORM + PostgreSQL + Redis     │
 │            + BPMN Engine + LLM Gateway + RAG (pgvector)    │
 ├────────────────────────────────────────────────────────────┤
-│ Tooling:   itsm-cli (Node) + itsm-agent (Go) + itsm-skill   │
-│            + itsm-ai-service (Python) + itsm-rag (Python)   │
+│ Tooling:   itsm-cli (Node) + itsm-agent (Go)                │
+│            + itsm-ai-service (Python)                       │
 ├────────────────────────────────────────────────────────────┤
 │ Ops:       Docker Compose + GitHub Actions + GHCR + Pages   │
 │            + Prometheus + Grafana + nginx                   │
