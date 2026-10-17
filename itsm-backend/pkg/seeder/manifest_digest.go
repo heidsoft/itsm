@@ -55,7 +55,10 @@ func manifestDigestInputs(component string) ([]string, error) {
 		for _, group := range BuiltinGroups() {
 			inputs = append(inputs, "group="+group.Name)
 		}
-		inputs = append(inputs, builtinGrantDigests(authz.BuiltinRolePermissionCodes())...)
+		inputs = append(inputs, grantDigests("grant", authz.BuiltinRolePermissionCodes())...)
+		// 退役清单独立入摘要：只登记退役而不动内置码集时，既有安装也必须重放 identity-rbac，
+		// 否则撤销永远不会落地。
+		inputs = append(inputs, grantDigests("retire", authz.RetiredRolePermissionCodes())...)
 		return inputs, nil
 
 	case "itil-core":
@@ -130,7 +133,7 @@ func manifestDigestInputs(component string) ([]string, error) {
 	}
 }
 
-func builtinGrantDigests(grants map[string][]string) []string {
+func grantDigests(label string, grants map[string][]string) []string {
 	roles := make([]string, 0, len(grants))
 	for code := range grants {
 		roles = append(roles, code)
@@ -141,7 +144,7 @@ func builtinGrantDigests(grants map[string][]string) []string {
 		codes := append([]string(nil), grants[role]...)
 		sort.Strings(codes)
 		for _, code := range codes {
-			inputs = append(inputs, "grant="+role+"|"+code)
+			inputs = append(inputs, label+"="+role+"|"+code)
 		}
 	}
 	return inputs

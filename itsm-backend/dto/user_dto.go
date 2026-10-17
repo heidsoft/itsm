@@ -105,17 +105,35 @@ type UserStatsResponse struct {
 }
 
 // SystemStatsResponse 系统统计响应
+//
+// 指标一律来自运行时采集（进程 CPU/内存、文件系统、Prometheus 注册表、数据库连接池、
+// Redis INFO）。Availability 标注每项是否真的测到，前端不得把未接入的指标渲染成 0。
 type SystemStatsResponse struct {
-	Uptime            float64 `json:"uptime"`
-	CPUUsage          float64 `json:"cpuUsage"`
-	MemoryUsage       float64 `json:"memoryUsage"`
-	DiskUsage         float64 `json:"diskUsage"`
-	AvgResponseTime   float64 `json:"avgResponseTime"`
-	RequestsPerSecond float64 `json:"requestsPerSecond"`
-	ErrorRate         float64 `json:"errorRate"`
-	DBConnections     int     `json:"dbConnections"`
-	DBSize            int64   `json:"dbSize"`
-	CacheHitRate      float64 `json:"cacheHitRate"`
+	Uptime               float64                  `json:"uptime"`
+	CPUUsage             float64                  `json:"cpuUsage"`
+	MemoryUsage          float64                  `json:"memoryUsage"`
+	DiskUsage            float64                  `json:"diskUsage"`
+	AvgResponseTime      float64                  `json:"avgResponseTime"`
+	RequestsPerSecond    float64                  `json:"requestsPerSecond"`
+	ErrorRate            float64                  `json:"errorRate"`
+	MetricsWindowSeconds float64                  `json:"metricsWindowSeconds"`
+	DBConnections        int                      `json:"dbConnections"`
+	DBSize               int64                    `json:"dbSize"`
+	CacheHitRate         float64                  `json:"cacheHitRate"`
+	Cores                int                      `json:"cores"`
+	Goroutines           int                      `json:"goroutines"`
+	SampledAt            time.Time                `json:"sampledAt"`
+	Availability         SystemMetricAvailability `json:"availability"`
+}
+
+// SystemMetricAvailability 取值：measured / unavailable / unconfigured。
+type SystemMetricAvailability struct {
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
+	Disk   string `json:"disk"`
+	HTTP   string `json:"http"`
+	DBSize string `json:"dbSize"`
+	Cache  string `json:"cache"`
 }
 
 // BatchUpdateUsersRequest 批量更新用户请求

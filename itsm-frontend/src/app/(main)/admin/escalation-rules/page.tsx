@@ -355,7 +355,7 @@ export default function EscalationRulesPage() {
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          message="本页配置的是 SLA 阈值告警，不是升级矩阵"
+          title="本页配置的是 SLA 阈值告警，不是升级矩阵"
           description={
             <span>
               升级矩阵（优先级 → 通知角色链，如 15 分钟未响应升级至部门经理）在

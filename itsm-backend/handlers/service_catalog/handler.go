@@ -2,6 +2,7 @@ package service_catalog
 
 import (
 	"strconv"
+	"strings"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -21,7 +22,7 @@ func failServiceCatalog(c *gin.Context, err error) {
 		case common.ErrCodeBadRequest, common.ErrCodeValidation:
 			common.Fail(c, common.ParamErrorCode, appErr.Message)
 		case common.ErrCodeConflict:
-			common.Fail(c, common.ConflictCode, appErr.Error())
+			common.Fail(c, common.ConflictCode, appErr.Message)
 		case common.ErrCodeNotFound:
 			common.Fail(c, common.NotFoundErrorCode, appErr.Message)
 		default:
@@ -56,8 +57,11 @@ func (h *Handler) List(c *gin.Context) {
 	}
 
 	filters := ListFilters{
-		Category: req.Category,
-		Status:   req.Status,
+		Category:       req.Category,
+		Status:         req.Status,
+		Keyword:        req.Keyword,
+		CiTypeID:       req.CiTypeID,
+		CloudServiceID: req.CloudServiceID,
 	}
 	// 分页在 HTTP 入口只夹紧一次：common.GetPaginationFromQuery（缺省 1/20，只采纳
 	// (0,100]，越界回落默认页长）。handler、Service.List、Service.Search 和 DTO 上的
@@ -111,10 +115,6 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	normalizeServiceCatalogRequest(&req)
-	if req.CloudServiceID > 0 && req.CITypeID == 0 {
-		common.Fail(c, 1001, "关联云服务时必须选择CI类型")
-		return
-	}
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -183,7 +183,6 @@ func (h *Handler) Update(c *gin.Context) {
 		common.ParamErrorWithErr(c, err, "请求参数错误")
 		return
 	}
-	normalizeUpdateServiceCatalogRequest(&req)
 
 	tenantID := c.GetInt("tenant_id")
 	if tenantID == 0 {
@@ -191,89 +190,45 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	deliveryTime := 0
-	if req.DeliveryTime != nil && *req.DeliveryTime != "" {
-		val, parseErr := strconv.Atoi(*req.DeliveryTime)
-		if parseErr != nil || val < 0 {
-			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须为非负整数天数")
-			return
-		}
-		deliveryTime = val
-	}
-
-	catalog := &ServiceCatalog{
-		ID:                id,
-		Name:              getStringValue(req.Name),
-		Category:          getStringValue(req.Category),
-		Description:       getStringValue(req.Description),
-		Icon:              getStringValue(req.Icon),
-		ServiceType:       getStringValue(req.ServiceType),
-		Price:             getFloat64Value(req.Price),
-		DeliveryTime:      deliveryTime,
-		Unit:              getStringValue(req.Unit),
-		RequiresApproval:  getBoolValue(req.RequiresApproval),
-		ApprovalLevel:     getIntValue(req.ApprovalLevel),
+	patch := &CatalogPatch{
+		Name:              req.Name,
+		Category:          req.Category,
+		Description:       req.Description,
+		Icon:              req.Icon,
+		ServiceType:       req.ServiceType,
+		Price:             req.Price,
+		Unit:              req.Unit,
+		RequiresApproval:  req.RequiresApproval,
+		ApprovalLevel:     req.ApprovalLevel,
 		Approvers:         req.Approvers,
-		SLAResponseTime:   getIntValue(req.SLAResponseTime),
-		SLAResolutionTime: getIntValue(req.SLAResolutionTime),
-		CITypeID:          getIntValue(req.CITypeID),
-		CloudServiceID:    getIntValue(req.CloudServiceID),
-		FormSchema:        getMapValue(req.FormSchema),
+		SLAResponseTime:   req.SLAResponseTime,
+		SLAResolutionTime: req.SLAResolutionTime,
+		CITypeID:          req.CITypeID,
+		CloudServiceID:    req.CloudServiceID,
+		FormSchema:        req.FormSchema,
 		AvailableRegions:  req.AvailableRegions,
 		AvailableSpecs:    req.AvailableSpecs,
-		Status:            getStringValue(req.Status),
-		SortOrder:         getIntValue(req.SortOrder),
+		Status:            req.Status,
+		SortOrder:         req.SortOrder,
+	}
+	// deliveryTime 在线上是字符串、在领域里是天数：只有真正提交过键才参与更新，
+	// 空串和非数字都是明确的输入错误，不能静默当成「不改」。
+	if req.DeliveryTime != nil {
+		days, parseErr := strconv.Atoi(strings.TrimSpace(*req.DeliveryTime))
+		if parseErr != nil {
+			common.Fail(c, common.ParamErrorCode, "deliveryTime 必须是正整数天数")
+			return
+		}
+		patch.DeliveryTime = &days
 	}
 
-	_, err = h.service.Update(c.Request.Context(), tenantID, catalog)
-	if err != nil {
-		failServiceCatalog(c, err)
-		return
-	}
-
-	// Fetch updated to return full object
-	updated, err := h.service.Get(c.Request.Context(), tenantID, id)
+	updated, err := h.service.Update(c.Request.Context(), tenantID, id, patch)
 	if err != nil {
 		failServiceCatalog(c, err)
 		return
 	}
 
 	common.Success(c, h.toDTO(updated))
-}
-
-func getStringValue(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
-func getIntValue(i *int) int {
-	if i == nil {
-		return 0
-	}
-	return *i
-}
-
-func getFloat64Value(f *float64) float64 {
-	if f == nil {
-		return 0
-	}
-	return *f
-}
-
-func getBoolValue(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
-}
-
-func getMapValue(m *map[string]interface{}) map[string]interface{} {
-	if m == nil {
-		return nil
-	}
-	return *m
 }
 
 func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
@@ -283,9 +238,6 @@ func normalizeServiceCatalogRequest(req *dto.CreateServiceCatalogRequest) {
 	if req.Status == "" {
 		req.Status = "enabled"
 	}
-}
-
-func normalizeUpdateServiceCatalogRequest(req *dto.UpdateServiceCatalogRequest) {
 }
 
 // Delete handles DeleteServiceCatalog

@@ -172,7 +172,7 @@ const ServiceCatalogUsagePage = () => {
         className="mb-6"
         type="info"
         showIcon
-        message="口径说明"
+        title="口径说明"
         description="请求量统计（每个服务被申请的次数）依赖后端采集，当前尚未提供；本页展示服务目录的存量结构，不含请求数据。"
       />
 

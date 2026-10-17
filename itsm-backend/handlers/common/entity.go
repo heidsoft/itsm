@@ -38,15 +38,26 @@ type Department struct {
 
 // Team represents a group of users
 type Team struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Code        string    `json:"code"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	ManagerID   int       `json:"managerId"`
-	TenantID    int       `json:"tenantId"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          int           `json:"id"`
+	Name        string        `json:"name"`
+	Code        string        `json:"code"`
+	Description string        `json:"description"`
+	Status      string        `json:"status"`
+	ManagerID   int           `json:"managerId"`
+	ManagerName string        `json:"managerName"`
+	TenantID    int           `json:"tenantId"`
+	Members     []*TeamMember `json:"members"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	UpdatedAt   time.Time     `json:"updatedAt"`
+}
+
+// TeamMember 是团队成员的 API 投影。团队成员关系在库中是 users.team_users 外键，
+// 一个用户同一时刻只能归属一个团队，因此这里不回带团队字段。
+type TeamMember struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
 }
 
 // Tag represents a metadata label

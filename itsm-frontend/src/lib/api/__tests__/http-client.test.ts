@@ -23,7 +23,7 @@
  *   - Missing code field is tolerated (BPMN controller quirk)
  */
 
-import { httpClient } from '../http-client';
+import { ApiRequestError, httpClient } from '../http-client';
 import { security } from '@/lib/security';
 import { setTenantId, setTenantCode, clearTenant } from '@/lib/auth/tenant-context';
 
@@ -183,6 +183,62 @@ describe('httpClient', () => {
       await expect(httpClient.get('/api/v1/tickets/1')).rejects.toThrow(/status: 500/);
     });
 
+    // 服务端 message 必须到达调用方：旧实现把 throw 写在 try 内、被自家 catch 吞掉，
+    // 页面只能把 403 当成「没有数据」。
+    it('surfaces the backend message and status on non-2xx responses', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ code: 2003, message: '权限不足' }, { status: 403, ok: false })
+      );
+
+      const error = await httpClient
+        .get('/api/v1/tickets/automation-rules')
+        .then(() => null)
+        .catch((e: unknown) => e as ApiRequestError);
+
+      expect(error).toBeInstanceOf(ApiRequestError);
+      expect(error?.message).toBe('权限不足');
+      expect(error?.status).toBe(403);
+      expect(error?.code).toBe(2003);
+    });
+
+    it('falls back to the status text when the error body is not JSON', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        headers: new Headers(),
+        json: async () => {
+          throw new SyntaxError('Unexpected token <');
+        },
+      } as unknown as Response);
+
+      await expect(httpClient.get('/api/v1/tickets/1')).rejects.toMatchObject({
+        message: 'HTTP error! status: 502',
+        status: 502,
+      });
+    });
+
+    it('keeps a backend message that happens to contain "fetch"', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ code: 5001, message: 'connector fetch failed' }, { status: 500, ok: false })
+      );
+
+      await expect(httpClient.get('/api/v1/connectors/1/test')).rejects.toMatchObject({
+        message: 'connector fetch failed',
+        status: 500,
+        code: 5001,
+      });
+    });
+
+    it('carries the business code when HTTP is 200 but code is non-zero', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 1001, message: '标题不能为空' }));
+
+      await expect(httpClient.get('/api/v1/tickets')).rejects.toMatchObject({
+        message: '标题不能为空',
+        status: 200,
+        code: 1001,
+      });
+    });
+
     it('tolerates a missing code field (BPMN controllers do not always set one)', async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse({ message: 'ok', data: { ok: true } }));
 
@@ -260,7 +316,7 @@ describe('httpClient', () => {
         jsonResponse({ code: 2003, message: 'Forbidden' }, { status: 403, ok: false })
       );
 
-      await expect(httpClient.delete('/api/v1/changes/1')).rejects.toThrow('status: 403');
+      await expect(httpClient.delete('/api/v1/changes/1')).rejects.toThrow('Forbidden');
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/slastate"
@@ -275,9 +276,10 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 		return nil, err
 	}
 
-	// 乐观锁检查
+	// 乐观锁检查：冲突必须以类型化 VersionConflictError 上抛，
+	// handler/classifyError 依赖它映射为 409(4090)，裸字符串会掉进 500 兜底。
 	if current.Version != params.Version {
-		return nil, fmt.Errorf("version conflict: expected %d, got %d", current.Version, params.Version)
+		return nil, common.NewVersionConflictError("工单", id, params.Version, current.Version)
 	}
 
 	builder := r.Client().Ticket.UpdateOneID(id).
@@ -333,7 +335,17 @@ func (r *EntRepository) Update(ctx context.Context, id int, params *UpdateParams
 	entity, err := builder.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("version conflict or ticket no longer exists")
+			// 条件更新 predicate 未命中：大概率是并发下版本已被推进（小概率是并发软删）。
+			// 重读区分两者：仍存在且满足租户过滤 → 类型化版本冲突(409)；
+			// 已消失/软删 → 归一为 "ticket not found"，让 handler 映射 404，
+			// 不允许以裸字符串落进 500 兜底。
+			latest, lerr := r.Client().Ticket.Query().
+				Where(ticket.IDEQ(id), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+				Only(ctx)
+			if lerr == nil {
+				return nil, common.NewVersionConflictError("工单", id, params.Version, latest.Version)
+			}
+			return nil, fmt.Errorf("ticket not found: %w", lerr)
 		}
 		return nil, fmt.Errorf("update ticket: %w", err)
 	}
@@ -356,7 +368,7 @@ func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *Up
 		return nil, fmt.Errorf("get ticket for update: %w", err)
 	}
 	if currentEntity.Version != params.Version {
-		return nil, fmt.Errorf("version conflict: expected %d, got %d", currentEntity.Version, params.Version)
+		return nil, common.NewVersionConflictError("工单", id, params.Version, currentEntity.Version)
 	}
 	builder := tx.Ticket.UpdateOneID(id).
 		Where(ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil(), ticket.VersionEQ(params.Version)).
@@ -409,7 +421,14 @@ func (r *EntRepository) UpdateWithTxHook(ctx context.Context, id int, params *Up
 	updatedEntity, err := builder.Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("version conflict or ticket no longer exists")
+			// 同 Update：predicate 未命中时重读区分并发冲突(409)与工件已消失(404)。
+			latest, lerr := tx.Ticket.Query().
+				Where(ticket.IDEQ(id), ticket.TenantIDEQ(tenantID), ticket.DeletedAtIsNil()).
+				Only(ctx)
+			if lerr == nil {
+				return nil, common.NewVersionConflictError("工单", id, params.Version, latest.Version)
+			}
+			return nil, fmt.Errorf("ticket not found: %w", lerr)
 		}
 		return nil, fmt.Errorf("update ticket: %w", err)
 	}

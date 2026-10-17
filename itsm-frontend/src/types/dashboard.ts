@@ -190,16 +190,29 @@ export interface UserStats {
   newThisMonth: number;
 }
 
+export type SystemMetricAvailabilityState = 'measured' | 'unavailable' | 'unconfigured';
+
+export interface SystemMetricAvailability {
+  cpu: SystemMetricAvailabilityState;
+  memory: SystemMetricAvailabilityState;
+  disk: SystemMetricAvailabilityState;
+  http: SystemMetricAvailabilityState;
+  dbSize: SystemMetricAvailabilityState;
+  cache: SystemMetricAvailabilityState;
+}
+
 export interface SystemStats {
   uptime: number;
   cpuUsage: number;
   memoryUsage: number;
   diskUsage: number;
 
-  // 性能指标
+  // 性能指标：metricsWindowSeconds 是 avgResponseTime/requestsPerSecond/errorRate
+  // 的采样区间，首次采样时为进程启动以来的累计口径。
   avgResponseTime: number;
   requestsPerSecond: number;
   errorRate: number;
+  metricsWindowSeconds: number;
 
   // 数据库统计
   dbConnections: number;
@@ -207,7 +220,11 @@ export interface SystemStats {
 
   // 缓存统计
   cacheHitRate: number;
-  cacheSize: number;
+
+  cores: number;
+  goroutines: number;
+  sampledAt: string;
+  availability: SystemMetricAvailability;
 }
 
 // 图表数据

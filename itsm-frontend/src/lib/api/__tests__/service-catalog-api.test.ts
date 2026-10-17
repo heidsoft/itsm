@@ -1,6 +1,6 @@
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { httpClient } from '@/lib/api/http-client';
-import { ServiceRequestStatus } from '@/types/service-catalog';
+import { ServiceRequestStatus, ServiceStatus } from '@/types/service-catalog';
 
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
@@ -50,7 +50,7 @@ describe('ServiceCatalogApi', () => {
       await expect(ServiceCatalogApi.getServices({})).rejects.toThrow(TypeError);
     });
 
-    it('search 只过滤当前页，total 仍取后端全集', async () => {
+    it('关键词、分类和关联筛选交给服务端，前端不再过滤当前页', async () => {
       mockGet.mockResolvedValue(
         envelope(
           [
@@ -60,9 +60,34 @@ describe('ServiceCatalogApi', () => {
           42,
         ),
       );
-      const result = await ServiceCatalogApi.getServices({ search: 'email' });
-      expect(result.services.map(s => s.id)).toEqual(['1']);
+
+      const result = await ServiceCatalogApi.getServices({
+        search: '  email  ',
+        ciTypeId: 7,
+        cloudServiceId: 3,
+      });
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/service-catalogs', {
+        page: 1,
+        pageSize: 10,
+        q: 'email',
+        ciTypeId: 7,
+        cloudServiceId: 3,
+      });
+      // 命中与否由后端判断；客户端把已加载的一页再筛一遍会伪装成全集结果。
+      expect(result.services.map(s => s.id)).toEqual(['1', '2']);
       expect(result.total).toBe(42);
+    });
+
+    it('0 与未传都不进入查询参数，避免把合法零值当成过滤条件', async () => {
+      mockGet.mockResolvedValue(envelope([], 0));
+
+      await ServiceCatalogApi.getServices({ ciTypeId: 0, cloudServiceId: 0, search: '   ' });
+
+      const sentParams = mockGet.mock.calls[0][1];
+      expect(sentParams).not.toHaveProperty('ciTypeId');
+      expect(sentParams).not.toHaveProperty('cloudServiceId');
+      expect(sentParams).not.toHaveProperty('q');
     });
   });
 
@@ -81,7 +106,7 @@ describe('ServiceCatalogApi', () => {
         .mockResolvedValueOnce(page(Array.from({ length: 100 }, (_, i) => row(i + 1)), 150, 1))
         .mockResolvedValueOnce(page(Array.from({ length: 50 }, (_, i) => row(i + 101)), 150, 2));
 
-      const result = await ServiceCatalogApi.getAllServices({ category: 'compute' as never }, 4000);
+      const result = await ServiceCatalogApi.getAllServices({ category: 'compute' }, 4000);
 
       expect(result.services).toHaveLength(150);
       expect(result.total).toBe(150);
@@ -106,6 +131,37 @@ describe('ServiceCatalogApi', () => {
       expect(result.complete).toBe(false);
       expect(mockGet).toHaveBeenCalledTimes(1);
     });
+
+    it('过滤条件随每一页一起发送，不能只在第一页生效', async () => {
+      mockGet
+        .mockResolvedValueOnce(page(Array.from({ length: 100 }, (_, i) => row(i + 1)), 150, 1))
+        .mockResolvedValueOnce(page(Array.from({ length: 50 }, (_, i) => row(i + 101)), 150, 2));
+
+      const result = await ServiceCatalogApi.getAllServices(
+        { search: 'compute', status: ServiceStatus.PUBLISHED, ciTypeId: 7 },
+        5000,
+      );
+
+      expect(result.complete).toBe(true);
+      expect(mockGet).toHaveBeenNthCalledWith(2, '/api/v1/service-catalogs', {
+        page: 2,
+        pageSize: 100,
+        q: 'compute',
+        status: 'enabled',
+        ciTypeId: 7,
+      });
+    });
+
+    it('末页判断用响应页长，后端把过大页长回落成 20 时也不会漏页', async () => {
+      // 响应 pageSize=20 表示后端实际按 20 条返回，只有 18 条即末页。
+      mockGet.mockResolvedValue({ items: Array.from({ length: 18 }, (_, i) => row(i + 1)), total: 18, page: 1, pageSize: 20, totalPages: 1 });
+
+      const result = await ServiceCatalogApi.getAllServices({}, 5000);
+
+      expect(result.services).toHaveLength(18);
+      expect(result.complete).toBe(true);
+      expect(mockGet).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('getService', () => {
@@ -115,21 +171,64 @@ describe('ServiceCatalogApi', () => {
       expect(mockGet).toHaveBeenCalledWith('/api/v1/service-catalogs/1');
       expect(result.name).toBe('Email');
     });
+
+    it('关联字段返回 0 表示未关联，布尔假值不得被兜底覆盖', async () => {
+      mockGet.mockResolvedValue({
+        id: 3,
+        name: 'Email',
+        category: 'it_service',
+        status: 'disabled',
+        description: '',
+        deliveryTime: '0',
+        requiresApproval: false,
+        isActive: false,
+        ciTypeId: 0,
+        cloudServiceId: 0,
+        price: 0,
+        approvalLevel: 0,
+      });
+      const result = await ServiceCatalogApi.getService('3');
+
+      // 后端恒定返回关联 id，0 就是「未关联」；组件的空值是 undefined。
+      expect(result.ciTypeId).toBeUndefined();
+      expect(result.cloudServiceId).toBeUndefined();
+      expect(result.requiresApproval).toBe(false);
+      expect(result.approvalLevel).toBe(0);
+      expect(result.price).toBe(0);
+      expect(result.status).toBe(ServiceStatus.RETIRED);
+    });
   });
 
   describe('createService', () => {
-    it('should create a service', async () => {
+    it('把 deliveryDays 映射成后端的天数字符串并始终携带 requiresApproval', async () => {
       mockPost.mockResolvedValue({ id: 2, name: 'VPN', status: 'enabled' });
-      const result = await ServiceCatalogApi.createService({ name: 'VPN', category: 'it_service' as any } as any);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/service-catalogs', expect.objectContaining({ name: 'VPN' }));
+      await ServiceCatalogApi.createService({
+        name: 'VPN',
+        category: 'it_service',
+        shortDescription: '远程接入',
+        deliveryDays: 3,
+        requiresApproval: false,
+      });
+
+      const payload = mockPost.mock.calls[0][1];
+      expect(payload).toEqual(
+        expect.objectContaining({
+          name: 'VPN',
+          category: 'it_service',
+          deliveryTime: '3',
+          requiresApproval: false,
+        }),
+      );
     });
   });
 
   describe('updateService', () => {
-    it('should update a service', async () => {
+    it('PATCH 只发送显式传入的键，false 与 0 必须真的写下去', async () => {
       mockPut.mockResolvedValue({ id: 1, name: 'Updated', status: 'enabled' });
-      const result = await ServiceCatalogApi.updateService('1', { name: 'Updated' } as any);
-      expect(mockPut).toHaveBeenCalledWith('/api/v1/service-catalogs/1', expect.objectContaining({ name: 'Updated' }));
+      await ServiceCatalogApi.updateService('1', { name: 'Updated', price: 0, requiresApproval: false });
+
+      const payload = mockPut.mock.calls[0][1];
+      expect(payload).toEqual({ name: 'Updated', price: 0, requiresApproval: false });
     });
   });
 
@@ -245,10 +344,16 @@ describe('ServiceCatalogApi', () => {
   });
 
   describe('createServiceRequest', () => {
-    it('should create service request', async () => {
+    it('serviceId 转成数字 catalogId，reason 从 formData 取', async () => {
       mockPost.mockResolvedValue({ id: 1 });
-      await ServiceCatalogApi.createServiceRequest({ serviceId: '5', formData: { reason: 'Need access' } } as any);
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/service-requests', expect.objectContaining({ catalogId: 5 }));
+      await ServiceCatalogApi.createServiceRequest({
+        serviceId: '5',
+        formData: { reason: 'Need access' },
+      });
+      expect(mockPost).toHaveBeenCalledWith(
+        '/api/v1/service-requests',
+        expect.objectContaining({ catalogId: 5, reason: 'Need access' }),
+      );
     });
   });
 
@@ -318,51 +423,6 @@ describe('ServiceCatalogApi', () => {
   describe('recordServiceView', () => {
     it('should fail explicitly instead of silently dropping the write', async () => {
       await expect(ServiceCatalogApi.recordServiceView('1')).rejects.toThrow(/服务浏览记录/);
-    });
-  });
-
-  describe('exportCatalog', () => {
-    const row = (id: number) => ({
-      id: String(id),
-      name: `Svc ${id}`,
-      category: 'IT',
-      status: 'enabled',
-      description: 'desc',
-      deliveryTime: 1,
-      createdAt: '2024-01-01',
-      updatedAt: '2024-01-02',
-    });
-    const page = (items: unknown[], total: number, pageNo: number) => ({
-      items,
-      total,
-      page: pageNo,
-      pageSize: 100,
-      totalPages: Math.ceil(total / 100),
-    });
-
-    it('翻页取全量而不是只导第一页', async () => {
-      mockGet
-        .mockResolvedValueOnce(page(Array.from({ length: 100 }, (_, i) => row(i + 1)), 150, 1))
-        .mockResolvedValueOnce(page(Array.from({ length: 50 }, (_, i) => row(i + 101)), 150, 2));
-
-      const result = await ServiceCatalogApi.exportCatalog('excel');
-
-      expect(result).toBeInstanceOf(Blob);
-      expect(mockGet).toHaveBeenCalledTimes(2);
-      expect(mockGet).toHaveBeenCalledWith(
-        '/api/v1/service-catalogs',
-        expect.objectContaining({ page: 2, pageSize: 100 }),
-      );
-    });
-
-    it('超过导出上限必须显式报错，不得静默导出半截 CSV', async () => {
-      mockGet.mockImplementation(async (_path: string, params: { page: number }) =>
-        page(Array.from({ length: 100 }, (_, i) => row((params.page - 1) * 100 + i + 1)), 5001, params.page),
-      );
-
-      await expect(ServiceCatalogApi.exportCatalog('excel')).rejects.toThrow(
-        '超过单次导出上限',
-      );
     });
   });
 

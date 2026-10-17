@@ -1,11 +1,11 @@
 package router
 
 import (
-	"runtime"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"itsm-backend/handlers"
 	systemConfigHandler "itsm-backend/handlers/systemconfig"
 	tenantHandler "itsm-backend/handlers/tenant"
 	vectorStoreHandler "itsm-backend/handlers/vector_store"
@@ -15,21 +15,24 @@ import (
 // SetupSystemConfigRoutes 注册系统配置域路由。
 // 含三条路径族：/system-configs（新）、/system 与 /configs（兼容别名）、
 // 以及向量存储（RAG）自注册委托（/system/vector-store）。
-func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Handler, tenantHandler *tenantHandler.Handler, vectorStoreHandler *vectorStoreHandler.Handler, appStartTime time.Time) {
+//
+// dashboard 为 nil 时不注册状态端点：运行时指标只有一个采集口径，
+// 复制一份假数据或第二套采集实现都属于回归。
+func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Handler, tenantHandler *tenantHandler.Handler, vectorStoreHandler *vectorStoreHandler.Handler, dashboard *handlers.DashboardHandler) {
 	sysConfigs := tenant.Group("/system-configs")
 	{
-		// 配置管理
+		// 配置管理。默认配置由 ListConfigs 在总数为 0 时懒初始化，
+		// 不提供 GET /init：该入口按读权限守卫却整表写入安全策略，最终用户一次 GET 即可落地。
 		sysConfigs.GET("", middleware.RequirePermission("system_config", "read"), h.ListConfigs)
-		sysConfigs.GET("/init", middleware.RequirePermission("system_config", "read"), h.InitDefaultConfigs)
 		sysConfigs.GET("/:id", middleware.RequirePermission("system_config", "read"), h.GetConfig)
 		sysConfigs.GET("/key/:key", middleware.RequirePermission("system_config", "read"), h.GetConfigByKey)
 		sysConfigs.PUT("/:id", middleware.RequirePermission("system_config", "write"), h.UpdateConfig)
 		sysConfigs.PUT("/batch", middleware.RequirePermission("system_config", "write"), h.BatchUpdateConfigs)
 
 		// 系统状态
-		sysConfigs.GET("/status", middleware.RequirePermission("system_config", "read"), func(c *gin.Context) {
-			systemStatusResponse(c, appStartTime)
-		})
+		if dashboard != nil {
+			sysConfigs.GET("/status", middleware.RequirePermission("system_config", "read"), dashboard.GetSystemStats)
+		}
 	}
 
 	// 别名：/system/config → 系统状态（前端默认 fetch 路径）
@@ -39,14 +42,13 @@ func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Han
 		configs := tenant.Group("/configs")
 		{
 			configs.GET("", middleware.RequirePermission("system_config", "read"), h.ListConfigs)
-			configs.GET("/init", middleware.RequirePermission("system_config", "read"), h.InitDefaultConfigs)
 			configs.GET("/:id", middleware.RequirePermission("system_config", "read"), h.GetConfig)
 			configs.GET("/key/:key", middleware.RequirePermission("system_config", "read"), h.GetConfigByKey)
 			configs.PUT("/:id", middleware.RequirePermission("system_config", "write"), h.UpdateConfig)
 			configs.PUT("/batch", middleware.RequirePermission("system_config", "write"), h.BatchUpdateConfigs)
-			configs.GET("/status", middleware.RequirePermission("system_config", "read"), func(c *gin.Context) {
-				systemStatusResponse(c, appStartTime)
-			})
+			if dashboard != nil {
+				configs.GET("/status", middleware.RequirePermission("system_config", "read"), dashboard.GetSystemStats)
+			}
 		}
 
 		sysRoot.GET("/config", middleware.RequirePermission("system_config", "read"), func(c *gin.Context) {
@@ -67,32 +69,4 @@ func SetupSystemConfigRoutes(tenant *gin.RouterGroup, h *systemConfigHandler.Han
 	if vectorStoreHandler != nil {
 		vectorStoreHandler.RegisterRoutes(tenant)
 	}
-}
-
-// systemStatusResponse 输出运行时状态（mem/goroutine/uptime），供 /system-configs/status
-// 与 /configs/status 共用。
-func systemStatusResponse(c *gin.Context, appStartTime time.Time) {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	var uptime string
-	if !appStartTime.IsZero() {
-		uptime = time.Since(appStartTime).Truncate(time.Second).String()
-	}
-
-	c.JSON(200, gin.H{
-		"cpu": gin.H{
-			"usage": 0,
-			"cores": runtime.NumCPU(),
-		},
-		"memory": gin.H{
-			"used":  m.Alloc / 1024 / 1024,
-			"total": m.Sys / 1024 / 1024,
-			"usage": float64(m.Alloc) / float64(m.Sys) * 100,
-		},
-		"goroutines": runtime.NumGoroutine(),
-		"startTime":  appStartTime,
-		"uptime":     uptime,
-		"timestamp":  time.Now(),
-	})
 }

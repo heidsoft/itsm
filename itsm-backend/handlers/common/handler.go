@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -438,13 +439,17 @@ func (h *Handler) DeleteDepartment(c *gin.Context) {
 // Teams
 
 func (h *Handler) ListTeams(c *gin.Context) {
-	tenantID := c.GetInt("tenant_id")
-	teams, err := h.svc.ListTeams(c.Request.Context(), tenantID)
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
+	pagination := common.GetPaginationFromQuery(c)
+	teams, total, err := h.svc.ListTeams(c.Request.Context(), tenantID, pagination.Page, pagination.PageSize, c.Query("search"))
 	if err != nil {
 		common.RespondError(c, err, "获取团队列表失败")
 		return
 	}
-	common.Success(c, teams)
+	common.SuccessWithList(c, teams, total, pagination.Page, pagination.PageSize)
 }
 
 func (h *Handler) GetTeam(c *gin.Context) {
@@ -453,7 +458,10 @@ func (h *Handler) GetTeam(c *gin.Context) {
 		common.ParamError(c, "无效的团队ID")
 		return
 	}
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
 	t, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
 	if err != nil {
 		common.RespondError(c, err, "获取团队失败")
@@ -474,7 +482,10 @@ func (h *Handler) CreateTeam(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
 	t := &Team{
 		Name:        req.Name,
 		Code:        req.Code,
@@ -498,20 +509,23 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	}
 
 	var req struct {
-		Name        string `json:"name"`
-		Code        string `json:"code"`
-		Description string `json:"description"`
-		ManagerID   int    `json:"managerId"`
+		Name        string  `json:"name"`
+		Code        string  `json:"code"`
+		Description *string `json:"description"`
+		ManagerID   *int    `json:"managerId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		common.ParamErrorWithErr(c, err, "参数错误")
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
 	existing, err := h.svc.GetTeam(c.Request.Context(), id, tenantID)
-	if err != nil || existing == nil {
-		common.NotFound(c, "团队不存在")
+	if err != nil {
+		common.RespondError(c, err, "更新团队失败")
 		return
 	}
 	if req.Name != "" {
@@ -520,11 +534,12 @@ func (h *Handler) UpdateTeam(c *gin.Context) {
 	if req.Code != "" {
 		existing.Code = req.Code
 	}
-	if req.Description != "" {
-		existing.Description = req.Description
+	if req.Description != nil {
+		existing.Description = *req.Description
 	}
-	if req.ManagerID != 0 {
-		existing.ManagerID = req.ManagerID
+	// managerId 未传保持原负责人；显式传 0 清空。归属仍由仓储按租户校验。
+	if req.ManagerID != nil {
+		existing.ManagerID = *req.ManagerID
 	}
 	existing.TenantID = tenantID
 	result, err := h.svc.UpdateTeam(c.Request.Context(), existing)
@@ -542,12 +557,91 @@ func (h *Handler) DeleteTeam(c *gin.Context) {
 		return
 	}
 
-	tenantID := c.GetInt("tenant_id")
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
 	if err := h.svc.DeleteTeam(c.Request.Context(), id, tenantID); err != nil {
 		common.RespondError(c, err, "删除团队失败")
 		return
 	}
 	common.Success(c, nil)
+}
+
+// ListTeamMembers 分页列出团队成员（team:read）。
+func (h *Handler) ListTeamMembers(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的团队ID")
+		return
+	}
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
+	pagination := common.GetPaginationFromQuery(c)
+	members, total, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, pagination.Page, pagination.PageSize)
+	if err != nil {
+		common.RespondError(c, err, "获取团队成员失败")
+		return
+	}
+	common.SuccessWithList(c, members, total, pagination.Page, pagination.PageSize)
+}
+
+// AddTeamMember 把用户加入团队（team:write）。
+func (h *Handler) AddTeamMember(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的团队ID")
+		return
+	}
+	var req dto.AddTeamMemberRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.AddTeamMember(c.Request.Context(), id, req.UserID, tenantID); err != nil {
+		common.RespondError(c, err, "添加团队成员失败")
+		return
+	}
+	members, _, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, 1, common.MaxPageSize)
+	if err != nil {
+		common.RespondError(c, err, "获取团队成员失败")
+		return
+	}
+	common.Success(c, members)
+}
+
+// RemoveTeamMember 从团队移除用户（team:write）。
+func (h *Handler) RemoveTeamMember(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.ParamError(c, "无效的团队ID")
+		return
+	}
+	var req dto.RemoveTeamMemberRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+	tenantID, ok := middleware.TenantIDOrUnauthorized(c)
+	if !ok {
+		return
+	}
+	if err := h.svc.RemoveTeamMember(c.Request.Context(), id, req.UserID, tenantID); err != nil {
+		common.RespondError(c, err, "移除团队成员失败")
+		return
+	}
+	members, _, err := h.svc.ListTeamMembers(c.Request.Context(), id, tenantID, 1, common.MaxPageSize)
+	if err != nil {
+		common.RespondError(c, err, "获取团队成员失败")
+		return
+	}
+	common.Success(c, members)
 }
 
 // Tags

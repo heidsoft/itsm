@@ -54,6 +54,20 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 			return fmt.Errorf("load ticket for workflow: %w", err)
 		}
 		processKey, _ := cmd.Payload["workflowDefinitionKey"].(string)
+		// 工单类型/分类的绑定可能在流程定义被停用或删除后仍保留，直接用它会让
+		// workflow.start 反复重试并卡住工单生命周期；视为未配置，回落到路由表与
+		// 内置兜底并告警（与变更域同一处理）。
+		if processKey != "" {
+			available, derr := h.definitionAvailable(ctx, cmd.TenantID, processKey)
+			if derr != nil {
+				return fmt.Errorf("check ticket process definition: %w", derr)
+			}
+			if !available {
+				h.logger.Warnw("ticket workflow binding points to a missing or inactive process definition, falling back to routing",
+					"command_id", cmd.ID, "ticket_id", cmd.AggregateID, "tenant_id", cmd.TenantID, "bound_key", processKey)
+				processKey = ""
+			}
+		}
 		if processKey == "" && h.resolver != nil {
 			processKey, err = h.resolver.ResolveWithPriority(ctx, tkt, "")
 			if err != nil {
@@ -179,4 +193,13 @@ func (h *WorkflowStartCommandHandler) Handle(ctx context.Context, cmd *ent.Opera
 		return fmt.Errorf("start %s workflow: %w", cmd.AggregateType, err)
 	}
 	return nil
+}
+
+// definitionAvailable 判断流程定义在本租户是否存在且处于启用状态。
+func (h *WorkflowStartCommandHandler) definitionAvailable(ctx context.Context, tenantID int, key string) (bool, error) {
+	return h.client.ProcessDefinition.Query().Where(
+		processdefinition.TenantIDEQ(tenantID),
+		processdefinition.IsActive(true),
+		processdefinition.Key(key),
+	).Exist(ctx)
 }

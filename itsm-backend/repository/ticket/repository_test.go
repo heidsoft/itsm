@@ -354,7 +354,14 @@ func TestRepository_Update_RejectsStaleVersion(t *testing.T) {
 	require.NoError(t, err)
 	title := "Must not overwrite"
 	_, err = fx.repo.Update(fx.ctx, created.ID, &UpdateParams{Title: &title, Version: created.Version + 1}, fx.tenant.ID)
-	require.ErrorContains(t, err, "version conflict")
+	// 冲突必须是类型化 VersionConflictError（可被 classifyError 映射 409），
+	// 不能退化为裸字符串——否则 handler 兜底会把并发冲突掩盖成 500。
+	var conflictErr *common.VersionConflictError
+	require.ErrorAs(t, err, &conflictErr)
+	assert.Equal(t, "工单", conflictErr.ResourceName)
+	assert.Equal(t, created.ID, conflictErr.ResourceID)
+	assert.Equal(t, created.Version+1, conflictErr.CurrentVersion)
+	assert.Equal(t, created.Version, conflictErr.ServerVersion)
 	unchanged, err := fx.repo.GetByID(fx.ctx, created.ID, fx.tenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "Original", unchanged.Title)

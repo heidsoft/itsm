@@ -21,10 +21,15 @@ export interface MenuItem {
 
 /**
  * 菜单列表响应
+ * 后端一次返回当前租户的全部菜单（服务端按 sortOrder 升序），page/pageSize/totalPages
+ * 描述的是这一整份数据，不支持分页翻页。
  */
 export interface MenuListResponse {
-  menus: MenuItem[];
+  items: MenuItem[];
   total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 /**
@@ -38,6 +43,8 @@ export interface MenuTreeResponse {
 /**
  * 创建/更新请求载荷
  * HTTP 接口统一使用 camelCase
+ * PUT 的可选字段是指针语义：未传保持原值，显式空值才覆盖。
+ * 因此「清除」必须发送空值——parentId 0 表示顶级菜单，icon/permissionCode/description 空串表示清除。
  */
 export interface MenuRequest {
   name: string;

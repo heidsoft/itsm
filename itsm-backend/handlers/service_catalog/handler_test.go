@@ -65,6 +65,23 @@ func scDoReq(t *testing.T, r *gin.Engine, method, path string, body interface{})
 	return &resp
 }
 
+// scEngine 用同一个 handler 装配给定租户的路由，跨租户用例复用同一份接线。
+func scEngine(t *testing.T, client *ent.Client, tenantID int) *gin.Engine {
+	t.Helper()
+	h := NewHandler(NewService(NewEntRepository(client), zaptest.NewLogger(t).Sugar()))
+
+	r := gin.New()
+	r.Use(withTenant(tenantID))
+	r.GET("/api/v1/service-catalogs", h.List)
+	r.POST("/api/v1/service-catalogs", h.Create)
+	r.GET("/api/v1/service-catalogs/search", h.Search)
+	r.GET("/api/v1/service-catalogs/stats", h.Stats)
+	r.GET("/api/v1/service-catalogs/:id", h.Get)
+	r.PUT("/api/v1/service-catalogs/:id", h.Update)
+	r.DELETE("/api/v1/service-catalogs/:id", h.Delete)
+	return r
+}
+
 func scSetup(t *testing.T) (*gin.Engine, *ent.Client, int) {
 	t.Helper()
 	dsn := "file:" + filepath.Join(t.TempDir(), "sc_test.db") + "?_fk=1"
@@ -79,20 +96,20 @@ func scSetup(t *testing.T) (*gin.Engine, *ent.Client, int) {
 		Save(ctx)
 	require.NoError(t, err)
 
-	repo := NewEntRepository(client)
-	svc := NewService(repo, zaptest.NewLogger(t).Sugar())
-	h := NewHandler(svc)
+	return scEngine(t, client, tenant.ID), client, tenant.ID
+}
 
-	r := gin.New()
-	r.Use(withTenant(tenant.ID))
-	r.GET("/api/v1/service-catalogs", h.List)
-	r.POST("/api/v1/service-catalogs", h.Create)
-	r.GET("/api/v1/service-catalogs/search", h.Search)
-	r.GET("/api/v1/service-catalogs/stats", h.Stats)
-	r.GET("/api/v1/service-catalogs/:id", h.Get)
-	r.PUT("/api/v1/service-catalogs/:id", h.Update)
-	r.DELETE("/api/v1/service-catalogs/:id", h.Delete)
-	return r, client, tenant.ID
+// scTenant 在既有库上再建一个租户，用于跨租户拒绝用例。
+func scTenant(t *testing.T, client *ent.Client) int {
+	t.Helper()
+	tenant, err := client.Tenant.Create().
+		SetName("SCTenantB").
+		SetCode("SCB" + scUID()).
+		SetDomain("scb.test").
+		SetStatus("active").
+		Save(context.Background())
+	require.NoError(t, err)
+	return tenant.ID
 }
 
 func TestHandler_Create_Success(t *testing.T) {

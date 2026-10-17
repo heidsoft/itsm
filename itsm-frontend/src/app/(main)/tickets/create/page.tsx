@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -42,7 +42,7 @@ import {
 import { TicketApi } from '@/lib/api/ticket-api';
 import { TicketCategoryApi } from '@/lib/api/ticket-category-api';
 import { useI18n } from '@/lib/i18n';
-import { httpClient } from '@/lib/api/http-client';
+import { httpClient, isPermissionDeniedError } from '@/lib/api/http-client';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { CustomFieldDefinition } from '@/types/ticket-type';
@@ -152,6 +152,9 @@ export default function CreateTicketPage() {
   // 分类下拉选项：从后端 TicketCategory 主数据动态拉取，避免前后端分类词表零重合
   const [categoryOptions, setCategoryOptions] = useState<{ label: string; value: string }[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
+  const [categoryError, setCategoryError] = useState<{ denied: boolean; detail: string } | null>(
+    null
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -213,28 +216,30 @@ export default function CreateTicketPage() {
     );
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCategories = async () => {
-      setCategoryLoading(true);
-      try {
-        const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: 200 });
-        if (cancelled) return;
-        const list = res.items;
-        setCategoryOptions(
-          list.filter(c => c.isActive !== false).map(c => ({ label: c.name, value: c.name }))
-        );
-      } catch (e) {
-        console.error('加载工单分类失败', e);
-      } finally {
-        if (!cancelled) setCategoryLoading(false);
-      }
-    };
-    loadCategories();
-    return () => {
-      cancelled = true;
-    };
+  // 分类是建单旅程的主数据依赖：读取失败（含 403）必须让用户看见。
+  // 只 console.error 会让下拉静默变空，用户以为系统里没有分类。
+  const loadCategories = useCallback(async () => {
+    setCategoryLoading(true);
+    setCategoryError(null);
+    try {
+      const res = await TicketCategoryApi.getCategories({ isActive: true, pageSize: 200 });
+      setCategoryOptions(
+        res.items.filter(c => c.isActive !== false).map(c => ({ label: c.name, value: c.name }))
+      );
+    } catch (e) {
+      setCategoryOptions([]);
+      setCategoryError({
+        denied: isPermissionDeniedError(e),
+        detail: e instanceof Error ? e.message : '',
+      });
+    } finally {
+      setCategoryLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
 
   // 过滤后的类型列表（后端已按 sortOrder 排序，前端不再做分类筛选）
   const filteredTypes = ticketTypes;
@@ -629,12 +634,41 @@ export default function CreateTicketPage() {
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <Form.Item name='category' label='分类'>
+                    <Form.Item
+                      name='category'
+                      label='分类'
+                      extra={
+                        categoryError ? (
+                          <Space orientation='vertical' size={2}>
+                            <Text type='warning'>
+                              {categoryError.denied
+                                ? '当前账号没有「查看工单分类」权限，分类留空仍可提交。请联系管理员为所属角色开放该权限。'
+                                : `工单分类加载失败：${categoryError.detail || '后端未返回分类数据'}`}
+                            </Text>
+                            <Button
+                              type='link'
+                              size='small'
+                              style={{ height: 'auto', padding: 0 }}
+                              onClick={loadCategories}
+                              disabled={categoryLoading}
+                            >
+                              重试加载分类
+                            </Button>
+                          </Space>
+                        ) : null
+                      }
+                    >
                       <AppSelect
                         allowClear
                         loading={categoryLoading}
                         options={categoryOptions}
-                        placeholder={categoryLoading ? '加载分类中…' : '选择分类'}
+                        placeholder={
+                          categoryLoading
+                            ? '加载分类中…'
+                            : categoryError
+                              ? '分类暂不可用'
+                              : '选择分类'
+                        }
                         aria-label='选择工单分类'
                       />
                     </Form.Item>

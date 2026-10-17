@@ -29,20 +29,20 @@ func toSLADefinitionDTO(s *SLADefinition) *dto.SLADefinitionResponse {
 		return nil
 	}
 	return &dto.SLADefinitionResponse{
-		ID:              s.ID,
-		Name:            s.Name,
-		Description:     s.Description,
-		ServiceType:     s.ServiceType,
-		Priority:        s.Priority,
-		ResponseTime:    s.ResponseTime,
-		ResolutionTime:  s.ResolutionTime,
-		BusinessHours:   s.BusinessHours,
-		EscalationRules: s.EscalationRules,
-		Conditions:      s.Conditions,
-		IsActive:        s.IsActive,
-		TenantID:        s.TenantID,
-		CreatedAt:       s.CreatedAt,
-		UpdatedAt:       s.UpdatedAt,
+		ID:               s.ID,
+		Name:             s.Name,
+		Description:      s.Description,
+		ServiceType:      s.ServiceType,
+		Priority:         s.Priority,
+		ResponseTime:     s.ResponseTime,
+		ResolutionTime:   s.ResolutionTime,
+		BusinessHours:    dto.ProjectSLABusinessHours(s.BusinessHours),
+		EscalationLevels: dto.ProjectSLAEscalationLevels(s.EscalationRules),
+		Conditions:       s.Conditions,
+		IsActive:         s.IsActive,
+		TenantID:         s.TenantID,
+		CreatedAt:        s.CreatedAt,
+		UpdatedAt:        s.UpdatedAt,
 	}
 }
 
@@ -234,7 +234,8 @@ func (h *Handler) ListAlertRules(c *gin.Context) {
 		return
 	}
 	filters := make(map[string]interface{})
-	if slaID := c.Query("sla_definition_id"); slaID != "" {
+	// 查询参数契约为 camelCase，与前端 API client 保持逐字段一致。
+	if slaID := c.Query("slaDefinitionId"); slaID != "" {
 		id, _ := strconv.Atoi(slaID)
 		filters["sla_definition_id"] = id
 	}

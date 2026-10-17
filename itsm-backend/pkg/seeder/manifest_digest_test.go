@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"itsm-backend/internal/authz"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,6 +52,13 @@ func TestManifestDigestInputsCoverTheirComponents(t *testing.T) {
 	assert.True(t, hasPrefixFrom(identity, "role="))
 	assert.True(t, hasPrefixFrom(identity, "group=approvers-"))
 	assert.True(t, hasPrefixFrom(identity, "grant=sysadmin|"))
+	// 退役清单必须进入 identity-rbac 摘要：只登记撤销、不动内置码集的改动
+	// 否则不会让校验和变化，既有安装上的旧授权永远收不回来。
+	for role, codes := range authz.RetiredRolePermissionCodes() {
+		require.NotEmpty(t, codes, "退役清单角色 %s 为空条目", role)
+		assert.True(t, hasPrefixFrom(identity, "retire="+role+"|"),
+			"退役角色 %s 未进入 identity-rbac 摘要", role)
+	}
 
 	itil, err := manifestDigestInputs("itil-core")
 	require.NoError(t, err)

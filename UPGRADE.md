@@ -1376,6 +1376,246 @@ go test ./domain/role/ -run TestContract -v
 go test ./pkg/seeder/ ./internal/authz/ ./tests/parity/ -count=1
 ```
 
+### 1.34 SLA 定义响应改为投影后的 camelCase 配置对象（2026-10-15，破坏性：字段删除 + 类型变更）
+
+`SLADefinitionResponse` 过去把数据库里的两个 JSON 列原样透出：`businessHours` 与 `escalationRules`
+都是 snake_case 键的自由 map（`time_zone`、`work_days`、`is_24_7`、`levels[].threshold_minutes`、
+`notify_roles`）。前端因此只能在页面里各自猜键名，`/admin/sla-definitions` 的服务窗口列被硬编码成
+「7×24」，升级规则列直接 `JSON.stringify` 整个 map。现在投影收敛到 DTO 层：
+
+| 旧响应 | 新响应 |
+| --- | --- |
+| `businessHours`：`{"time_zone":"Asia/Shanghai","is_24_7":true,...}` 原始 map | `businessHours`：`{timeZone,alwaysOn,workDays[],startTime,endTime}`，配置为空时该字段缺省 |
+| `escalationRules`：`{"levels":[{"level":1,"threshold_minutes":15,"notify_roles":["manager"]}]}` | `escalationLevels`：`[{level,thresholdMinutes,notifyRoles[]}]`，**`escalationRules` 字段已删除** |
+| `conditions` 原始 map | 不变（仍是原始 map，管理页不编辑） |
+
+**升级影响**
+
+- 任何按 `escalationRules.levels[].threshold_minutes` 读取的集成方需改为
+  `escalationLevels[].thresholdMinutes`；`businessHours.is_24_7` 改为 `businessHours.alwaysOn`。
+- `escalationLevels` 只收录类型正确的层级，条数可能少于原配置；`businessHours` 缺省不等于
+  `alwaysOn: false`（前者是「没配」，后者是「配了但不是 7×24」），展示层需区分。
+- 纯 API 边界变更：**无数据库迁移、无数据改写**，`sla_definitions` 的列与存量 JSON 保持原样；
+  回滚只需退回旧镜像。
+- 创建接口 `POST /api/v1/sla/definitions` 的 `isActive` 是非指针 `bool`，不传即按 `false` 落成停用
+  状态。这不是本次新增的破坏，但页面/脚本创建 SLA 时应显式提交该字段。
+- `GET /api/v1/sla/definitions` 只解析 `page`/`pageSize`（上限 100），不支持按名称或启用状态过滤；
+  需要全量请按 `total` 翻页，不要假定一次请求返回全部。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./dto/ ./handlers/sla/ -count=1
+cd itsm-frontend && npx jest --coverage=false --testPathPattern "sla-definitions|sla-api|sla-format"
+```
+
+### 1.35 SLA 模板响应改为投影配置对象，并新增安装状态字段（2026-10-16，破坏性：类型变更 + 字段新增 + 状态码变更）
+
+`/api/v1/sla/templates`（含 `/{key}` 与 `/{key}/install`）过去把目录里的 JSON 配置原样透出，安装状态则完全由前端
+本地点击维护。现在模板与已安装 SLA 定义共用 §1.34 的投影函数，并由服务端返回安装事实。
+
+| 旧响应 | 新响应 |
+| --- | --- |
+| `businessHours`：`{"time_zone":...,"is_24_7":true}` 原始 map | `businessHours`：`{timeZone,alwaysOn,workDays[],startTime,endTime}`，配置为空时字段缺省 |
+| `escalationRules`：`{"levels":[{"threshold_minutes":15,"notify_roles":[...]}]}` | `escalationLevels`：`[{level,thresholdMinutes,notifyRoles[]}]`，**`escalationRules` 字段已删除** |
+| 无安装状态 | 新增 `installed`（必填布尔）、`slaDefinitionId`、`installedAt`（已安装时才有值） |
+| 未知 `key`、缺租户上下文一律 HTTP 400 | 未知 `key` → HTTP 404 / code 4004；缺租户上下文 → HTTP 401 / code 2001（fail-closed，不再返回「谁都没装过」的列表） |
+
+**升级影响**
+
+- 前端与集成方需按新字段读取：`escalationRules.levels[].threshold_minutes` → `escalationLevels[].thresholdMinutes`，
+  `businessHours.is_24_7` → `businessHours.alwaysOn`；安装状态请读 `installed`/`slaDefinitionId`，不要再自行记忆点击结果。
+- 列表响应仍是 `{items,total}`（目录固定、无分页参数），安装响应 `{templateKey,slaDefinitionId,created,wasAlreadyExist,message}`
+  未变更；`created: false, wasAlreadyExist: true` 表示幂等命中，不是失败。
+- **无数据库迁移、无数据改写**。安装识别改用 `sla_definitions.conditions.templateKey` 标记，并兼容标记引入前
+  写入的描述约定 `[Template] <key> - …`：存量安装仍能被判为已安装，不会重复创建；改名不影响识别（此前按名称
+  前缀判断的版本，改名会让安装记录消失）。若管理员此前改过描述的 `[Template] ` 开头，该条会被视为未安装
+  （再点安装会新建一份），需人工确认后删除旧记录。
+- 已知边界：安装幂等互斥只在单副本进程内。多副本部署下并发安装同一模板理论上仍可产生两条定义，彻底去重需要
+  `sla_definitions` 上的 `(tenant_id, template_key)` 唯一约束（尚未引入）。
+- 模板的 `escalationLevels` 只是随定义写入的参考配置，当前没有运行时消费者；升级动作在「升级规则」
+  `/admin/escalation-rules` 与「升级矩阵」`/admin/escalation-matrices` 配置。
+- 纯 API 边界变更，回滚只需退回旧镜像（旧镜像会重新透出原始 map，新写入的 `templateKey` 标记对旧代码无害）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./service/ ./handlers/sla_template/ -count=1
+cd itsm-frontend && npx jest --coverage=false --testPathPattern "sla-templates|sla-template-api|sla-format"
+```
+
+### 1.36 团队列表改为标准列表信封，成员关系升为一等接口（2026-10-16，破坏性：响应结构变更 + 状态码变更）
+
+`GET /api/v1/org/teams`（以及别名 `GET /api/v1/teams`）此前直接把数组塞进 `data`，成员关系只在库里、
+接口层完全不可见，前端团队管理页的成员头像与「团队成员总数」因此恒为空。现在列表走统一信封，
+成员读写成为独立端点。
+
+| 旧 | 新 |
+| --- | --- |
+| `data: [{id,name,code,...}]` 裸数组，无分页、无总数 | `data: {items,total,page,pageSize,totalPages}` |
+| 团队对象没有成员（部分集成方自行猜 `edges.users`） | `members: [{id,username,name,email}]`，无成员时为 `[]` |
+| 无搜索参数，前端拿全量数组本地过滤 | `GET /api/v1/org/teams?search=` 在服务端匹配 `name`/`code`/`description` |
+| 成员只能通过未注册的 `POST /api/v1/org/teams/members`（恒 404） | `GET/POST/DELETE /api/v1/org/teams/{id}/members`，写操作 `data` 回带服务端成员列表 |
+| `PUT /api/v1/org/teams/{id}` 用非指针字段，传 `""` 清空描述/传 `0` 解除负责人都是空操作 | `description`/`managerId` 为可选指针：未传保持原值，显式 `""` 清空描述、`0` 解除负责人 |
+| 未知团队 DELETE 返回成功 | HTTP 404 / code 4004 |
+| 缺少租户上下文时按 0 号租户查询（空列表） | HTTP 401 / code 2001（fail-closed） |
+
+**升级影响**
+
+- 读取团队列表的集成方需解一层 `data.items`；分页由服务端负责，`total` 是过滤后的全量条数，
+  `pageSize` 超过 100 会被回落到 100（不再是「有多少返回多少」）。
+- 成员是 **1:N**（`users.team_users` 外键）：一个用户同一时刻只属于一个团队。把已在别队的用户
+  加入新团队返回 HTTP 409 / code 4090，消息里带上其归属团队名；重复添加同一成员返回 200 且不会
+  产生第二份关系；移除非成员返回 404。跨租户或已停用的用户作为成员/负责人写入返回 400 / code 4000
+  （领域层 `AppError` 路径，不是参数层的 1001）。
+- `team:write` 此前在任何角色条目里都不存在，DBOnly 权限模式（企业交付默认）下租户管理员访问
+  团队管理恒为 403。现已补进 `admin` 角色；自定义角色若也需要管理团队，需自行授予 `team:read`/`team:write`。
+- **无数据库迁移**：成员关系使用既有的 `users.team_users` 列，未新增表或约束。想要「一个用户属于多个团队」
+  需要引入 M2M 关联表与迁移，本次未做。
+- 前端 `CommonApi.getTeams()`（只返回别名列表、无成员）已删除，统一改用 `teamService`；
+  `service/team_service.go` 这条与 `handlers/common` 重复的实现一并移除，后端团队用例只有一个所有者。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./handlers/common/ ./router/ ./internal/authz/ -count=1
+cd itsm-frontend && npx jest --coverage=false --testPathPattern "team-service|admin/teams|api-contract"
+```
+
+### 1.37 菜单接口的清空语义、上级校验与删除状态码（2026-10-16，破坏性：状态码变更 + 请求语义变更）
+
+`GET /api/v1/menus` 的响应结构没有变化（一直是标准列表信封），但管理页 `/admin/menus` 读的是不存在的
+`data.menus`，整表渲染为空、四张统计卡恒为 0。修复前端的同时，把同一组端点上三个会造成数据损坏的
+写语义补齐了。
+
+| 旧 | 新 |
+| --- | --- |
+| `PUT /api/v1/menus/{id}` 只按指针判断，页面无从表达「移除上级菜单」，提交后上级不变（静默失效） | `parentId: 0` 清为**顶级菜单**（写 NULL）；未传保持原上级 |
+| `icon`/`permissionCode`/`description` 无法清除 | 显式 `""` 清除；未传保持原值 |
+| `parentId` 可指向其他租户的菜单、自身或自己的后代，落库成功后整棵子树从页面上消失 | 写入前校验同租户、非自身、非后代，违反返回 HTTP 400 / code 4000 且不留脏数据 |
+| `DELETE /api/v1/menus/{id}` 仍有子菜单时 HTTP 500 / code 5001「删除菜单失败」 | HTTP 409 / code 4090「请先删除子菜单」，父子行都不受影响 |
+| `DELETE /api/v1/menus/{id}` 对不存在或跨租户的 id 返回 HTTP 200 / code 0（什么也没删却报成功） | HTTP 404 / code 4004「资源不存在或已被删除」，与读/改同口径 |
+
+**升级影响**
+
+- 依赖「删除任意 id 都成功」的脚本需要按 404 处理已不存在的菜单；需要先清理子树的脚本现在会收到 409，
+  应改为自底向上删除或先提示用户。
+- 「清空」与「不传」从此是两件事：集成方要清空字段必须显式发送空值（`parentId: 0`、`icon: ""`），
+  省略键表示保持不变。前端管理页已按全量提交实现该约定。
+- **清除 `permissionCode` 是放权操作**：该字段为空的菜单在侧边栏过滤里视为「无权限要求」，对租户内所有
+  登录用户可见。前端保存表单会显式提交空串，因此操作者清空权限码时必须自行确认影响面。
+- `GET /api/v1/menus` 一次返回当前租户的**完整**菜单集合，`page` 恒为 1、`pageSize` 恒等于 `total`，
+  不接受分页参数；管理页的搜索与树形组装是在这份完整集合上做的本地视图，不是本地分页。
+- **无数据库迁移**：上级关系沿用 `menus.parent_id`（可空）与既有 `(tenant_id, path)` 组合唯一索引。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./service/ ./handlers/rbac/ -count=1
+cd itsm-frontend && npx jest --coverage=false --testPathPattern "admin/menus|menu-api|api-contract"
+```
+
+### 1.38 工单分类「关联工作流」开始真正参与建单选路（2026-10-16，破坏性：写入口状态码变更 + 路由行为变更）
+
+`ticket_categories.workflow_definition_key` 此前只写库、不生效：建单与流程启动代码从未读取它。
+管理员在 `/admin/ticket-categories` 选了工作流会收到「保存成功」，新工单却仍走默认流程。
+现在该绑定成为建单选路的一级，并对写入增加了可解析性校验。
+
+**建单流程 Key 解析优先级**（`POST /api/v1/tickets`，请求未显式传 `workflowDefinitionKey` 时）
+
+| 顺序 | 来源 | 说明 |
+| --- | --- | --- |
+| 1 | 请求体 `workflowDefinitionKey` | 最高优先，不再被工单类型静默覆盖 |
+| 2 | 工单类型 `ticket_types.workflow_definition_key` | 工单类型已配置时以类型为准，分类配置让位 |
+| 3 | 工单分类 `ticket_categories.workflow_definition_key` | 本次新增；分类由 `categoryId` 或分类名解析而来 |
+| 4 | 流程绑定表 `process_bindings`（按工单类型匹配） | 兜底命中 `ticket_general_flow` 且工单为 `high`/`urgent` 时改走 `ticket_urgent_flow` |
+| 5 | 命令侧最终兜底 `ticket_general_flow` | 解析器不可用或返回空时 |
+
+| 旧 | 新 |
+| --- | --- |
+| `POST`/`PUT /api/v1/ticket-categories` 接受任意 `workflowDefinitionKey`，不校验是否存在 | 必须是**本租户存在且已激活**的流程定义，否则 HTTP 400 / code 4000「工作流不存在、未激活或不属于当前租户」，行不受影响 |
+| 传其他租户的流程 Key 会落库并在启动流程时报「流程定义 X 不存在」，命令反复重试 | 写入即拒绝；已落库的历史脏绑定在消费端回退路由表与内置兜底并告警，不再卡住工单生命周期 |
+| 校验失败响应统一为「操作失败」，管理员无从判断原因 | 分类写端点改走 `common.RespondError`，返回分类后的安全文案 |
+
+**升级影响**
+
+- **存量分类绑定会立即改变新工单的流程走向**。升级后请核对：
+  `SELECT id, code, workflow_definition_key FROM ticket_categories WHERE workflow_definition_key <> '';`
+  若某条绑定本意是「占位」或指向已停用流程，请在管理页清空（提交 `workflowDefinitionKey: ""`）或改绑，
+  否则该分类下、且工单类型未配置工作流的新工单会走这条流程。
+- 写入校验只作用于新的 `POST`/`PUT`；历史数据不会自动清理，由消费端兜底保证不卡死。
+- 分类改绑**不会**重启或迁移已在运行的流程实例，只影响后续新工单。
+- **无数据库迁移**：沿用 `ticket_categories.workflow_definition_key`（可空，max 128）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./service/ ./handlers/ticket_category/ -count=1
+```
+
+### 1.39 内置角色权限码变更，需要重跑 bootstrap job（2026-10-16，破坏性：路由下线 + 角色授权增减）
+
+本批三处权限面调整都只改「内置角色 → 权限码」权威源（`internal/authz/roles.go`），
+**不会随服务重启自动落到已有安装**，必须重放初始化：
+
+```bash
+ITSM_BOOTSTRAP_ONLY=true ITSM_AUTO_SEED=true ./itsm-backend
+```
+
+| 变更 | 影响 |
+| --- | --- |
+| `manager` 新增 `ticket_category:read` | 部门经理此前持 `ticket:write`（派生 `create`/`update`）与 `ticket:assign`，能建单却读不到 `GET /api/v1/ticket-categories`，建单页分类下拉为空。重放后该角色可见并可选分类 |
+| `GET /api/v1/system-configs/init`（别名 `GET /api/v1/configs/init`）下线 | 该路由是按 `system_config:read` 守卫的**写**入口，挂在 GET 上；默认配置本就由 `ListConfigs` 懒初始化。外部脚本若曾调用它需改为直接读取配置 |
+| `end_user` 撤回 `system_config:read` | 读接口整表返回 SMTP、密码策略、2FA 等租户级配置，而最终用户无任何前端入口。撤回由 `RetiredRolePermissionCodes()` 承载并计入 `identity-rbac` 校验和，因此重放 job 才会真正回收既有授权行 |
+
+授权播种是「只增不减」语义：新增码在重放后立刻生效，撤回码只在退役清单登记后才回收。
+未重放前的表现与升级前一致，不会间歇性 403。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./internal/authz/ ./tests/parity/ ./pkg/seeder/ -count=1
+```
+
+### 1.40 审批待办菜单改挂 `task:read`（2026-10-16，破坏性：菜单可见性变更，需重放 §1.39 的 bootstrap job）
+
+「审批中心」/「待我审批」两条菜单此前挂 `approval:read`，而页面实际只消费
+`GET /api/v1/bpmn/tasks`（`task:read`）与工单/变更/服务请求的 pending 列表，
+隔离栈实测该页**没有任何 `approval:*` 调用**。`approval:read` 只授给
+change_manager / it_admin / service_catalog_admin / 三员等配置角色，
+`agent`、`manager`、`end_user`、`technician` 这些真正的待办处理人不持有它；
+叠加 `/approvals` 挂在 `/workflow` 下（`buildMenuTree` 把 `/workflow` 前缀归入 admin 桶，
+前端只对管理角色渲染该桶），结果是**处理人在整个侧边栏里没有任何审批入口**，
+只能手敲 URL，而该页面对他们返回 200 且正常渲染。
+
+| 菜单 | 旧权限码 | 新权限码 |
+| --- | --- | --- |
+| `/approvals/pending`「待我审批」（顶级，main 桶） | `approval:read` | `task:read` |
+| `/approvals`「审批中心」（`/workflow` 子项，admin 桶） | `approval:read` | `task:read` |
+
+**不会随服务重启自动生效**：`permission_code` 落在 `menus` 表，需要重放初始化
+（`pkg/seeder` `upsertMenu` 与 `service/menu_service.go` `upsertBaselineMenu` 都会 UPDATE 已有行）：
+
+```bash
+ITSM_BOOTSTRAP_ONLY=true ITSM_AUTO_SEED=true ./itsm-backend
+```
+
+**升级影响**
+
+- 重放后 `agent` / `manager` / `end_user` / `technician` 的主导航新增「待我审批」一项；
+  该菜单是纯展示层，接口仍逐请求按 `task:read`/`task:update` 与归属校验把关。
+- 管理角色无变化：`/approvals` 原码 `approval:read` 与新码 `task:read` 这批角色都持有。
+- 若某租户在菜单管理端手工改过这两条的 `permission_code`，重放会覆盖回基线值，需重新配置。
+- **未动**的部分：审批记录与流程定义配置面（`GET /api/v1/approvals` → `ApprovalHandler.ListWorkflows`）
+  仍要求 `approval:read`；本次只改菜单归属，不给任何角色补授权限。
+- **无数据库迁移**：只更新 `menus.permission_code` 两行。
+
+**验证**
+
+```bash
+cd itsm-backend && go test ./pkg/menubaseline/ ./pkg/seeder/ -count=1
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

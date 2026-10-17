@@ -1,123 +1,56 @@
 /**
  * SLA 升级矩阵 API
  *
- * 对应后端 service/escalation_matrix.go（service 层）和
- * controller/escalation_matrix_controller.go（HTTP 层）。
+ * 契约来源：`service/escalation_matrix.go` 的 `EscalationMatrix` / `EscalationLevel`，
+ * 经 `handlers/escalation_matrix` 的 `GET|PUT /api/v1/escalation-matrices` 暴露。
  *
- * - 后端已注册路由 /api/v1/escalation-matrices（EscalationMatrixController）
- * - 矩阵被 EscalationMatrixService.GetMatrix() 在以下场景隐式使用：
- *   - SLA 告警升级
- *   - 工单超时升级
- *   - BPMN 任务超时
- * - 这里提供前端 HTTP 客户端 + 默认值兜底，便于 UI 展示当前生效矩阵。
+ * - 优先级键与 `Ticket.Priority` 对齐：critical / high / medium / low
+ * - `afterMinutes` 是距告警开始的分钟数，不是距上一次升级的间隔
+ * - `notifyRoles` 取主角色词表（users.role 精确匹配），`notifyUserIDs` 是具体用户
+ * - 未配置自定义矩阵时后端直接返回内置默认矩阵，因此空响应属于异常而非「未配置」
  */
 
 import { httpClient } from '@/lib/api/http-client';
 
 // 单级升级策略
 export interface EscalationLevel {
-  level: number; // 1, 2, 3
-  thresholdMinutes: number; // 触发阈值（分钟）
-  targetType: string; // user | role | group
-  targetIds: number[];
-  notifyChannels: string[]; // email | sms | in_app | webhook
+  level: number;
+  afterMinutes: number;
+  notifyRoles: string[];
+  notifyUserIDs: number[];
+  description: string;
 }
 
 // 优先级 → 升级级别链
 export type EscalationMatrix = Record<string, EscalationLevel[]>;
 
-// 默认矩阵（与后端 service/escalation_matrix.go DefaultEscalationMatrix 一致）
+// 与后端 service.DefaultEscalationMatrix 逐字段一致，仅用于加载失败时标注「内置默认」展示。
 export const DEFAULT_ESCALATION_MATRIX: EscalationMatrix = {
-  P1: [
-    {
-      level: 1,
-      thresholdMinutes: 5,
-      targetType: 'role',
-      targetIds: [1],
-      notifyChannels: ['email', 'sms', 'in_app'],
-    },
-    {
-      level: 2,
-      thresholdMinutes: 15,
-      targetType: 'role',
-      targetIds: [2],
-      notifyChannels: ['email', 'sms', 'in_app', 'webhook'],
-    },
-    {
-      level: 3,
-      thresholdMinutes: 30,
-      targetType: 'user',
-      targetIds: [],
-      notifyChannels: ['email', 'sms', 'in_app', 'webhook'],
-    },
+  critical: [
+    { level: 1, afterMinutes: 15, notifyRoles: ['manager'], notifyUserIDs: [], description: '15分钟未响应升级至部门经理' },
+    { level: 2, afterMinutes: 30, notifyRoles: ['it_admin'], notifyUserIDs: [], description: '30分钟未响应升级至IT管理员' },
+    { level: 3, afterMinutes: 60, notifyRoles: ['admin'], notifyUserIDs: [], description: '60分钟未响应升级至租户管理员' },
   ],
-  P2: [
-    {
-      level: 1,
-      thresholdMinutes: 30,
-      targetType: 'role',
-      targetIds: [1],
-      notifyChannels: ['email', 'in_app'],
-    },
-    {
-      level: 2,
-      thresholdMinutes: 120,
-      targetType: 'role',
-      targetIds: [2],
-      notifyChannels: ['email', 'in_app', 'webhook'],
-    },
+  high: [
+    { level: 1, afterMinutes: 60, notifyRoles: ['manager'], notifyUserIDs: [], description: '1小时未响应升级至部门经理' },
+    { level: 2, afterMinutes: 240, notifyRoles: ['it_admin'], notifyUserIDs: [], description: '4小时未响应升级至IT管理员' },
   ],
-  P3: [
-    {
-      level: 1,
-      thresholdMinutes: 240,
-      targetType: 'role',
-      targetIds: [1],
-      notifyChannels: ['email', 'in_app'],
-    },
+  medium: [
+    { level: 1, afterMinutes: 240, notifyRoles: ['manager'], notifyUserIDs: [], description: '4小时未响应升级至部门经理' },
+  ],
+  low: [
+    { level: 1, afterMinutes: 480, notifyRoles: ['manager'], notifyUserIDs: [], description: '8小时未响应升级至部门经理' },
   ],
 };
 
-// 升级历史条目（前端展示用）
-export interface EscalationHistoryEntry {
-  ticketId: number;
-  ticketNumber: string;
-  priority: string;
-  level: number;
-  triggeredAt: string;
-  resolvedAt?: string;
-  targetType: string;
-  targetName: string;
-}
-
 export class EscalationMatrixApi {
-  /**
-   * 获取当前生效的升级矩阵。
-    * - 优先调用 /api/v1/escalation-matrices（EscalationMatrixController）
-    * - 后端返回空 payload 时回落到默认矩阵（正常降级）；请求失败则抛出，由页面显式报错
-    */
+  /** 获取当前租户生效的升级矩阵。后端总会返回矩阵（自定义或内置默认），空响应视为不可用并抛出。 */
   static async getMatrix(): Promise<EscalationMatrix> {
-    try {
-      const resp = await httpClient.get<{
-        matrix?: EscalationMatrix;
-        data?: EscalationMatrix;
-        priorities?: Record<string, EscalationLevel[]>;
-      }>('/api/v1/escalation-matrices');
-      const payload = (resp as { matrix?: EscalationMatrix; data?: EscalationMatrix }).matrix
-        || (resp as { data?: EscalationMatrix }).data
-        || (resp as { priorities?: Record<string, EscalationLevel[]> }).priorities;
-      if (payload && typeof payload === 'object' && Object.keys(payload).length > 0) {
-        return payload as EscalationMatrix;
-      }
-    } catch (err) {
-      // 2026-10-14 修复：失败时不再静默回落到硬编码默认矩阵——
-      // 用户无法分辨看到的是真实配置还是内置占位，会把演示数据当生产配置。
-      // 后端返回空 payload 时仍用默认矩阵兜底（属正常降级），请求失败则抛出。
-      console.error('EscalationMatrixApi.getMatrix failed:', err);
-      throw new Error('升级矩阵加载失败，请检查网络或联系管理员');
+    const matrix = await httpClient.get<EscalationMatrix | null>('/api/v1/escalation-matrices');
+    if (!matrix || typeof matrix !== 'object' || Object.keys(matrix).length === 0) {
+      throw new Error('升级矩阵返回为空，无法确认当前生效配置');
     }
-    // 后端 200 但 payload 为空：属正常降级，用内置默认矩阵兜底
-    return DEFAULT_ESCALATION_MATRIX;
+    return matrix;
   }
 }
 

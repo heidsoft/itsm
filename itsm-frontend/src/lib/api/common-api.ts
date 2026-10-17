@@ -8,7 +8,6 @@ import { httpClient } from './http-client';
 // 使用 any 类型避免导入错误
 type User = any;
 type Department = any;
-type Team = any;
 type Tag = any;
 type AuditLog = any;
 
@@ -46,13 +45,6 @@ export class CommonApi {
    */
   static async getDepartmentTree(): Promise<any[]> {
     return httpClient.get('/api/v1/departments/tree');
-  }
-
-  /**
-   * 获取团队列表
-   */
-  static async getTeams(): Promise<Team[]> {
-    return httpClient.get('/api/v1/teams');
   }
 
   /**

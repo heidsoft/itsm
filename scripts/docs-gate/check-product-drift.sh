@@ -4,6 +4,13 @@
 #
 # Gate C.6 — 产品口径漂移守卫（口径不一致 = 构建失败）
 #
+# 🔴 locale 铁律（2026-10-17 实测教训）：macOS BSD awk 在 UTF-8 locale 下对含 CJK
+# 的字符串做 collation 比较，`工单与事件 == 能力域`、`可用 == 预览` 均为真——
+# 表头识别把纯中文能力域行整行丢弃、契约状态查到错误行，C.6.1/C.7 双双假阳性。
+# 全脚本强制 LC_ALL=C：awk/grep/sed 全部退化为字节级比较，中文按字面字节匹配，
+# 行为与 Linux CI 一致。禁在此脚本内改回 UTF-8 locale。
+export LC_ALL=C
+
 # 为什么有这条门禁
 # ----------------
 # 2026-09-22 审计（output/product-drift-overdesign-audit-2026-09-22.md）的核心规律是：
@@ -128,7 +135,11 @@ readme_maturity_rows() {
       gsub(/^[ \t]+|[ \t]+$/, "", state)
       if (name == "" || state == "") next
       if (name ~ /^:?-+:?$/) next
-      if (name == "能力域") next
+      # 不用 == 比较：macOS BSD awk 在 UTF-8 locale 下对纯 CJK 字符串的 ==
+      # 走 collation，会把任意纯中文名误判为表头「能力域」（实测
+      # `工单与事件 == 能力域` 为真），导致纯中文能力域行被整行丢弃、
+      # C.6.1 反向闭合误报「对外承诺漏报」。正则字面量按字节匹配，两种 awk 行为一致。
+      if (name ~ /^能力域$/) next
       print name "\t" state
     }
   ' "${ROOT_DIR}/README.md"

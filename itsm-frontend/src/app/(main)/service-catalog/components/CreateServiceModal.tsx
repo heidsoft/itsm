@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Modal, Form, Input, Select, DatePicker } from 'antd';
+import { Modal, Form, Input, InputNumber, Select } from 'antd';
 import type { FormInstance } from 'antd';
 import { PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+
+const { TextArea } = Input;
 
 
 interface CreateServiceModalProps {
@@ -76,10 +78,14 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
 
         <Form.Item
           label={t('serviceCatalog.deliveryTime')}
-          name="deliveryTime"
-          rules={[{ required: true, message: t('serviceCatalog.serviceDeliveryTimeRequired') }]}
+          name="deliveryDays"
+          extra="交付周期按自然日保存，范围 1–3650 天"
+          rules={[
+            { required: true, message: t('serviceCatalog.serviceDeliveryTimeRequired') },
+            { type: 'integer', min: 1, max: 3650, message: '交付天数必须是 1 到 3650 之间的整数' },
+          ]}
         >
-          <DatePicker style={{ width: '100%' }} placeholder={t('serviceCatalog.deliveryTimePlaceholder')} />
+          <InputNumber min={1} max={3650} precision={0} className="w-full" suffix="天" />
         </Form.Item>
 
         <Form.Item
@@ -88,13 +94,13 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           rules={[{ required: true, message: t('serviceCatalog.serviceStatusRequired') }]}
         >
           <Select placeholder={t('serviceCatalog.status')} options={[
-            { value: "enabled", label: t('serviceCatalog.enabled') },
-            { value: "disabled", label: t('serviceCatalog.disabled') },
+            { value: "published", label: t('serviceCatalog.enabled') },
+            { value: "retired", label: t('serviceCatalog.disabled') },
           ]} />
         </Form.Item>
 
         <Form.Item label={t('serviceCatalog.serviceDescription')} name="description">
-          <Input.TextArea
+          <TextArea
             placeholder={t('serviceCatalog.serviceDescriptionPlaceholder')}
             rows={4}
           />

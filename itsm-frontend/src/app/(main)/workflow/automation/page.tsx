@@ -20,7 +20,7 @@ import {
   InputNumber,
   Statistic,
   App,
-  message,
+  Alert,
   Spin,
   Divider,
   Popconfirm,
@@ -44,6 +44,7 @@ import type {
   UpdateAutomationRuleRequest,
 } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
+import { isPermissionDeniedError } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
@@ -52,6 +53,7 @@ const WorkflowAutomationPage = () => {
   const { t } = useI18n();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
   const [activeTab, setActiveTab] = useState('assignment');
@@ -123,12 +125,17 @@ const WorkflowAutomationPage = () => {
 
   const loadRules = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const response = await TicketAutomationRuleApi.listRules();
       setRules(response.items);
     } catch (error) {
-      console.error('加载自动化规则失败:', error);
-      message.error(t('common.loadRulesFailed'));
+      // 失败不能画成「0 条规则」：统计卡加空表格会让用户以为系统里确实没有规则。
+      setRules([]);
+      setLoadError({
+        denied: isPermissionDeniedError(error),
+        detail: error instanceof Error ? error.message : '',
+      });
     } finally {
       setLoading(false);
     }
@@ -332,105 +339,131 @@ const WorkflowAutomationPage = () => {
         </Row>
       </Card>
 
-      {/* 统计信息 */}
-      <Row gutter={[16, 16]} className='mb-6'>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200'>
-            <Statistic
-              title='自动分配规则'
-              value={rules.filter(r => r.type === 'assignment').length}
-              prefix={<Users className='w-5 h-5' />}
-              styles={{ content: { color: '#1890ff' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200'>
-            <Statistic
-              title='智能路由规则'
-              value={rules.filter(r => r.type === 'routing').length}
-              prefix={<GitBranch className='w-5 h-5' />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200'>
-            <Statistic
-              title='自动升级规则'
-              value={rules.filter(r => r.type === 'escalation').length}
-              prefix={<Clock className='w-5 h-5' />}
-              styles={{ content: { color: '#faad14' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200'>
-            <Statistic
-              title='活跃规则'
-              value={rules.filter(r => r.isActive).length}
-              prefix={<CheckCircle className='w-5 h-5' />}
-              styles={{ content: { color: '#52c41a' } }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* 规则管理 */}
-      <Card className='rounded-lg shadow-sm border border-gray-200'>
-        <div className='flex items-center justify-between mb-4'>
-          <Title level={5}>自动化规则</Title>
-          <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={handleCreateRule}>
-            新建规则
-          </Button>
-        </div>
-
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'assignment',
-              label: '自动分配',
-              children: (
-                <Table
-                  columns={columns}
-                  dataSource={filteredRules}
-                  rowKey='id'
-                  loading={loading}
-                  pagination={false}
-                />
-              ),
-            },
-            {
-              key: 'routing',
-              label: '智能路由',
-              children: (
-                <Table
-                  columns={columns}
-                  dataSource={filteredRules}
-                  rowKey='id'
-                  loading={loading}
-                  pagination={false}
-                />
-              ),
-            },
-            {
-              key: 'escalation',
-              label: '自动升级',
-              children: (
-                <Table
-                  columns={columns}
-                  dataSource={filteredRules}
-                  rowKey='id'
-                  loading={loading}
-                  pagination={false}
-                />
-              ),
-            },
-          ]}
+      {/* 加载失败/无权限时不渲染统计卡与表格：0 条规则和「看不到规则」是两回事 */}
+      {loadError ? (
+        <Alert
+          type={loadError.denied ? 'warning' : 'error'}
+          showIcon
+          title={loadError.denied ? '没有权限查看自动化规则' : t('common.loadRulesFailed')}
+          description={
+            loadError.denied
+              ? '当前角色未被授予自动化规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
+              : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+          }
+          action={
+            <Button
+              size='small'
+              icon={<RefreshCw className='w-4 h-4' />}
+              onClick={loadRules}
+              loading={loading}
+            >
+              重试
+            </Button>
+          }
         />
-      </Card>
+      ) : (
+        <>
+          {/* 统计信息 */}
+          <Row gutter={[16, 16]} className='mb-6'>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className='rounded-lg shadow-sm border border-gray-200'>
+                <Statistic
+                  title='自动分配规则'
+                  value={rules.filter(r => r.type === 'assignment').length}
+                  prefix={<Users className='w-5 h-5' />}
+                  styles={{ content: { color: '#1890ff' } }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className='rounded-lg shadow-sm border border-gray-200'>
+                <Statistic
+                  title='智能路由规则'
+                  value={rules.filter(r => r.type === 'routing').length}
+                  prefix={<GitBranch className='w-5 h-5' />}
+                  styles={{ content: { color: '#52c41a' } }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className='rounded-lg shadow-sm border border-gray-200'>
+                <Statistic
+                  title='自动升级规则'
+                  value={rules.filter(r => r.type === 'escalation').length}
+                  prefix={<Clock className='w-5 h-5' />}
+                  styles={{ content: { color: '#faad14' } }}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card className='rounded-lg shadow-sm border border-gray-200'>
+                <Statistic
+                  title='活跃规则'
+                  value={rules.filter(r => r.isActive).length}
+                  prefix={<CheckCircle className='w-5 h-5' />}
+                  styles={{ content: { color: '#52c41a' } }}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* 规则管理 */}
+          <Card className='rounded-lg shadow-sm border border-gray-200'>
+            <div className='flex items-center justify-between mb-4'>
+              <Title level={5}>自动化规则</Title>
+              <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={handleCreateRule}>
+                新建规则
+              </Button>
+            </div>
+
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: 'assignment',
+                  label: '自动分配',
+                  children: (
+                    <Table
+                      columns={columns}
+                      dataSource={filteredRules}
+                      rowKey='id'
+                      loading={loading}
+                      pagination={false}
+                    />
+                  ),
+                },
+                {
+                  key: 'routing',
+                  label: '智能路由',
+                  children: (
+                    <Table
+                      columns={columns}
+                      dataSource={filteredRules}
+                      rowKey='id'
+                      loading={loading}
+                      pagination={false}
+                    />
+                  ),
+                },
+                {
+                  key: 'escalation',
+                  label: '自动升级',
+                  children: (
+                    <Table
+                      columns={columns}
+                      dataSource={filteredRules}
+                      rowKey='id'
+                      loading={loading}
+                      pagination={false}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        </>
+      )}
 
       {/* 创建/编辑规则模态框 */}
       <Modal

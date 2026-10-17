@@ -51,10 +51,13 @@ export default function ServiceCatalogPage() {
     catalogs,
     loading,
     error,
+    total,
+    truncated,
+    limit,
+    stats,
     categoryFilter,
     ciTypeFilter,
     cloudServiceFilter,
-    stats,
     setSearchText,
     setCategoryFilter,
     setCiTypeFilter,
@@ -99,11 +102,14 @@ export default function ServiceCatalogPage() {
     return result;
   }, [catalogs, activeCategory, categoryFilter, ciTypeFilter, cloudServiceFilter]);
 
+  // 后端服务目录 DTO 目前没有请求量投影，requestCount 全为空时这张卡就是不成立的：
+  // 只排真正有计数的目录，否则整屏「0 个请求」的“热门服务”比不显示更误导。
   const popularCatalogs = React.useMemo(
-    () => [...catalogs]
-      .filter(catalog => catalog.status === 'published')
-      .sort((a, b) => (b.requestCount ?? 0) - (a.requestCount ?? 0))
-      .slice(0, 3),
+    () =>
+      catalogs
+        .filter(catalog => (catalog.requestCount ?? 0) > 0)
+        .sort((a, b) => (b.requestCount ?? 0) - (a.requestCount ?? 0))
+        .slice(0, 3),
     [catalogs]
   );
 
@@ -113,12 +119,12 @@ export default function ServiceCatalogPage() {
       try {
         setOptionsLoading(true);
         const [types, services] = await Promise.all([
-		  CMDBApi.getCITypes(),
+          CMDBApi.getCITypes(),
           CMDBApi.getCloudServices(),
         ]);
         setCiTypes(types || []);
         setCloudServices(services.items);
-      } catch (error) {
+      } catch {
         message.error(t('common.getFailed'));
       } finally {
         setOptionsLoading(false);
@@ -149,9 +155,8 @@ export default function ServiceCatalogPage() {
         name: values.name,
         category: values.category,
         shortDescription: values.description,
-        availability: {
-          responseTime: values.deliveryTime ? Number(values.deliveryTime) : undefined,
-        },
+        deliveryDays: values.deliveryDays,
+        ...(values.status ? { status: values.status } : {}),
         tags: [],
       });
 
@@ -160,8 +165,7 @@ export default function ServiceCatalogPage() {
       createForm.resetFields();
       loadServiceCatalogs();
     } catch (error) {
-      console.error(t('serviceCatalog.createServiceFailed'), error);
-      message.error(t('serviceCatalog.createServiceFailed'));
+      message.error(error instanceof Error ? error.message : t('serviceCatalog.createServiceFailed'));
     } finally {
       setCreating(false);
     }
@@ -248,6 +252,15 @@ export default function ServiceCatalogPage() {
         <Alert className="mb-4" type="error" showIcon title={t('serviceCatalog.loadFailed')} description={error}
           action={<Button onClick={loadServiceCatalogs}>{t('serviceCatalog.reload')}</Button>} />
       )}
+      {truncated && (
+        <Alert
+          className="mb-4"
+          type="warning"
+          showIcon
+          title={`共有 ${total} 个已发布目录，本页最多载入 ${limit} 个`}
+          description="分类标签计数与筛选只覆盖已载入的部分，请用搜索词收窄范围。"
+        />
+      )}
       <ServiceCatalogFilters
         onSearch={setSearchText}
         onCategoryFilterChange={setCategoryFilter}
@@ -278,7 +291,7 @@ export default function ServiceCatalogPage() {
         <Row gutter={[24, 24]}>
           {filteredCatalogs.map(catalog => (
             <Col key={catalog.id} xs={24} sm={12} md={8} lg={6}>
-              <ServiceItemCard catalog={catalog} />
+              <ServiceItemCard catalog={catalog} onDeleted={() => loadServiceCatalogs()} />
             </Col>
           ))}
         </Row>

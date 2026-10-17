@@ -621,7 +621,11 @@ const TicketCategoryManagementPage = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="workflowDefinitionKey" label="关联工作流" tooltip="该分类下的工单将默认走此工作流">
+              <Form.Item
+                name="workflowDefinitionKey"
+                label="关联工作流"
+                tooltip="该分类下的工单默认走此工作流；工单类型已配置工作流时以工单类型为准"
+              >
                 <Select placeholder="请选择工作流（可选）" allowClear showSearch optionFilterProp="children" options={workflows.map(w => ({ value: w.key, label: w.name }))} />
               </Form.Item>
             </Col>

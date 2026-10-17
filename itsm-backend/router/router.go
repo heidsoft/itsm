@@ -151,9 +151,6 @@ type RouterConfig struct {
 	// Redis rate limiter (optional - uses memory fallback if nil)
 	RedisRateLimiter RateLimiterInterface
 
-	// 进程启动时间（用于系统状态接口的 uptime 计算）
-	AppStartTime time.Time
-
 	// Controllers
 	ProblemInvestigationHandler  *problem_investigation.Handler
 	TicketHandler                *ticketHandler.Handler
@@ -488,7 +485,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 		// ==================== System Configs ====================
 		if config.SystemConfigHandler != nil {
-			SetupSystemConfigRoutes(tenant.(*gin.RouterGroup), config.SystemConfigHandler, config.TenantHandler, config.VectorStoreHandler, config.AppStartTime)
+			SetupSystemConfigRoutes(tenant.(*gin.RouterGroup), config.SystemConfigHandler, config.TenantHandler, config.VectorStoreHandler, config.DashboardHandler)
 		}
 
 		// ==================== Approval Chains ====================

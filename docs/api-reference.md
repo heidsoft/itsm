@@ -271,6 +271,8 @@ Content-Type: application/json
 }
 ```
 
+创建成功后系统会自动启动一个 BPMN 流程。请求不传 `workflowDefinitionKey` 时，流程按「工单类型 → 工单分类 → 流程绑定表 → 内置兜底」逐级解析，详见「工单分类接口 · 关联工作流：建单选路优先级」。
+
 ### 获取工单详情
 
 ```http
@@ -434,6 +436,62 @@ GET /api/v1/tickets/stats
 - `open` 含 `new`；`overdue` 由 `sla_states` 判定，工单状态词表里并没有 `overdue` 这个取值。
 - `byStatus`/`byPriority` 只含真实存在的取值，顺序按后端词表基准，词表外的历史值按字母序追加；两者各自求和恒等于 `total`，且严格按租户过滤（`handlers/ticket/stats_contract_test.go` 锁死这几条）。
 - 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：页长之外的工作量会被静默截断，界面却仍然把它当成全量读数。
+
+## 工单分类接口
+
+分类是工单的主数据，也是建单选路的一个真实输入：`workflowDefinitionKey` 决定该分类下工单默认启动哪个 BPMN 流程。
+
+| 方法 | 路径 | 权限 |
+| --- | --- | --- |
+| `GET` | `/api/v1/ticket-categories` | `ticket_category:read` |
+| `POST` | `/api/v1/ticket-categories` | `ticket_category:create` |
+| `GET` | `/api/v1/ticket-categories/tree` | `ticket_category:read` |
+| `GET` | `/api/v1/ticket-categories/{id}` | `ticket_category:read` |
+| `PUT` | `/api/v1/ticket-categories/{id}` | `ticket_category:update` |
+| `PUT` | `/api/v1/ticket-categories/{id}/move` | `ticket_category:update` |
+| `DELETE` | `/api/v1/ticket-categories/{id}` | `ticket_category:delete` |
+| `POST` | `/api/v1/ticket-categories/import/preview`、`/import` | `ticket_category:create` |
+
+### 列表查询
+
+```http
+GET /api/v1/ticket-categories?page=1&pageSize=20&parentId=3&isActive=true
+```
+
+- 过滤参数只有 camelCase 的 `parentId`、`level`、`isActive`，分页只有 `page`、`pageSize`；`tenantId` 只取认证上下文，查询参数不认。
+- `parentId=0` 表示只要顶级分类。
+- 响应为标准信封 `data: {items,total,page,pageSize,totalPages}`，`total` 是过滤后的全量条数。
+- item 字段：`id`、`name`、`code`、`description`、`parentId`、`sortOrder`、`isActive`、`workflowDefinitionKey`、`departmentId`、`tenantId`、`createdAt`、`updatedAt`；`parentId`/`departmentId`/`workflowDefinitionKey` 为空时省略。
+
+### 关联工作流：写入契约
+
+`PUT` 用指针区分「未传」与「清空」：
+
+| 请求 | 结果 |
+| --- | --- |
+| 不带 `workflowDefinitionKey` | 保持原绑定 |
+| `"workflowDefinitionKey": ""` | 解除绑定（写 NULL） |
+| `"workflowDefinitionKey": "net_flow"` | 绑定本租户已激活、最新版本的 `net_flow`；解析不到时 HTTP 400 + code 4000，文案「工作流不存在、未激活或不属于当前租户」，且原值不变 |
+
+`POST` 同理：`workflowDefinitionKey` 缺省或空串都是不绑定。
+
+### 关联工作流：建单选路优先级
+
+工单创建时流程 Key 按以下顺序取值，第一个非空者生效，并被写进同事务入箱的 `workflow.start` 命令 payload：
+
+1. 请求显式 `workflowDefinitionKey`；
+2. 工单类型（`ticket_types.workflow_definition_key`）；
+3. **工单分类**（`ticket_categories.workflow_definition_key`）——按 ID 或按 `category` 名称解析出的分类都算；
+4. 流程绑定表 `process_bindings`（按工单类型 + `priority` 变量匹配）；走到内置 `ticket_general_flow` 且工单是 `high`/`urgent` 时，改判 `ticket_urgent_flow`；
+5. 命令侧最终兜底 `ticket_general_flow`（解析器不可用或返回空时）。
+
+分类绑定只影响**新建**工单：分类改绑不会重启或迁移已经在跑的流程实例。
+
+消费侧对失效绑定是 fail-safe：payload 里的 Key 在本租户解析不到激活的流程定义时（分类被改坏、流程被停用或删除），命令不会反复重试，而是记 warn 后回落到第 4/5 级。
+
+回归见 `itsm-backend/service/ticket_category_workflow_test.go`（分类绑定进入选路、三级优先级、按名解析、未绑定留空、写入校验与跨租户拒绝）、
+`itsm-backend/service/workflow_start_command_handler_ticket_test.go`（绑定失效回落、路由表接管、加急兜底、跨租户流程名不泄漏）与
+`itsm-backend/handlers/ticket_category/handler_test.go`（未知流程 Key 的 400/4000 与「未传不清空、空串才清空」）。
 
 ## 工单标签接口
 
@@ -1062,8 +1120,11 @@ Authorization: Bearer <accessToken>
 Query Parameters:
 - page: 页码（缺省或非法回落 1）
 - pageSize: 每页数量（缺省 20；只有落在 1-100 的值被采纳，越界值回落 20 而不是夹到 100）
-- category: 分类过滤（精确匹配）
+- category: 分类过滤（精确匹配原始字符串，取值来自数据本身而不是枚举）
 - status: 状态过滤，只接受 enabled | disabled
+- q: 关键词，对 name / description 做包含匹配（与 `/search` 同一套口径），最长 100
+- ciTypeId: 按关联 CI 类型过滤（正整数；0 或缺省表示不过滤）
+- cloudServiceId: 按关联云服务过滤（正整数；0 或缺省表示不过滤）
 ```
 
 响应是标准分页信封 `{items, total, page, pageSize, totalPages}`，`total` 为过滤后的全量条数；
@@ -1072,6 +1133,10 @@ Query Parameters:
 
 > 破坏性变更（2026-10-03 E4-6f）：集合键 `catalogs`→`items`、页长键 `size`→`pageSize`、
 > 新增 `totalPages`，请求侧不再接受 `size`。见 UPGRADE.md §1.15。
+
+> 服务端过滤（2026-10-16）：`q`/`ciTypeId`/`cloudServiceId` 之前只在 `/search` 或根本不存在，
+> 列表端点因此把「对已加载的一页再做关键词过滤」当成搜索。现在筛选在 SQL 层完成，
+> `total` 就是筛选后的全集条数，调用方不得再对 `items` 二次过滤后冒充全量。
 
 ### 搜索服务目录
 
@@ -1104,6 +1169,74 @@ Authorization: Bearer <accessToken>
 
 返回 `dto` 口径的服务数量与分类计数；请求量、趋势、热门服务没有服务端实现，接口不会补零
 伪装成「0 个请求」。
+
+### 创建服务目录
+
+```http
+POST /service-catalogs
+Authorization: Bearer <accessToken>
+需要权限: service_catalog:write
+
+Request Body (dto.CreateServiceCatalogRequest):
+- name: 必填，最长 255
+- category: 必填，最长 100，自由文本（后端不做枚举校验，列表按原始字符串精确过滤）
+- description: 最长 1000
+- serviceType: 可选，oneof vm | rds | oss | network | storage | security | custom
+- deliveryTime: 字符串承载的正整数「天数」，1-3650；缺省或空串按 1 天落库
+- unit: 可选，oneof 月 | 次 | 用户
+- price: 数字，缺省 0（免费/未定价）
+- requiresApproval: 布尔指针，缺省为 true；必须显式传 false 才能创建免审批目录
+- approvalLevel: 0-3，0 表示「未配置」
+- slaResponseTime / slaResolutionTime / sortOrder / ciTypeId / cloudServiceId /
+  formSchema / availableRegions / availableSpecs / status（enabled | disabled）
+```
+
+响应 `data` 是 `dto.ServiceCatalogResponse`。`requiresApproval`、`isActive`、`deliveryTime`
+恒定返回；其余零值可选字段带 `omitempty`，缺席表示未配置，调用方不得用 `||` 兜底数字与布尔。
+
+引用与取值校验（HTTP 400，业务码 1001，均为中文提示；同一规则只有一处文案，创建与更新一致）：
+
+- `关联云服务时必须选择 CI 类型`
+- `关联的 CI 类型不存在或未启用` / `关联的云服务不存在或未启用`（写入前按当前租户重新校验，
+  跨租户 ID 一律拒绝）
+- `deliveryTime 必须为正整数天数`（绑定层解析字符串）/ `交付天数必须在 1 到 3650 之间`（领域层范围校验）
+
+### 更新服务目录
+
+```http
+PUT /service-catalogs/{id}
+Authorization: Bearer <accessToken>
+需要权限: service_catalog:write
+```
+
+请求体是 **PATCH 语义**（`dto.UpdateServiceCatalogRequest`，可写字段全部为指针）：
+
+- 字段缺席 = 不修改，后端保持原值；
+- 显式传 `""` / `0` / `false` = 真的清空或关闭（清除计价单位、清零价格、关闭审批都靠这条表达）；
+- 因此前端表单必须把「用户清空输入框」提交成显式零值，省略字段会让页面显示与库里数据分叉。
+
+`serviceType`、`unit`、`status` 的枚举/范围校验放在 service 层而不是绑定层：绑定层的 `oneof`
+对非空指针仍会执行，会把「清空单位」这类合法 PATCH 拦成通用「请求参数错误」并丢失字段级提示。
+
+关联字段的清空规则（2026-10-16 隔离栈实测修正）：
+
+- `ciTypeId` / `cloudServiceId` 显式提交 `0` 表示解除关联，仓储层无条件写入实体值。
+  此前仓储用 `> 0` 守卫，清空返回 HTTP 200 却把旧关联留在库里，页面显示「未关联」而新申请仍按旧 CI 类型履约。
+- 云服务必须与 CI 类型成对存在：只把 `ciTypeId` 置 0 而保留 `cloudServiceId` 会被拒绝
+  （HTTP 400 / code 1001「关联云服务时必须选择 CI 类型」），且一行不改；两者同时置 0 才合法。
+- `approvers`、`availableRegions`、`availableSpecs` 目前是裸切片，只支持非空覆盖，
+  **清空这三项尚无契约**，前端不得提交空数组来假装清除。
+
+### 删除服务目录
+
+```http
+DELETE /service-catalogs/{id}
+Authorization: Bearer <accessToken>
+需要权限: service_catalog:delete
+```
+
+删除是软归档：目录转为 `disabled`，门户不再展示，历史申请记录保留。请求其他租户的目录返回
+HTTP 404（业务码 4004），不泄露资源存在性。
 
 ## 服务请求接口
 
@@ -1279,6 +1412,150 @@ Authorization: Bearer <accessToken>
 ```
 
 权限 `sla:read`。`startDate`/`endDate` 必填且必须是 RFC3339 完整时间戳：只传 `2026-01-31` 这类 date-only 值会被判为非法并返回 400 / code 1001，不会退化成「统计全部时间」。响应 `data` 为 `dto.SLAComplianceReport`：`totalTickets`、`metSla`、`violatedSla`、`complianceRate`、`avgResponseTime`、`avgResolutionTime`、`reportPeriod`。该端点与 `GET /api/v1/sla/stats` 口径不同（报表按窗口内的工单计率，stats 为全量口径），调用方不得在前者失败时静默改用后者数字冒充同一指标。
+
+### SLA 定义（`/api/v1/sla/definitions` 家族）
+
+```http
+GET    /api/v1/sla/definitions?page=1&pageSize=100   # 列表，权限 sla:read
+POST   /api/v1/sla/definitions                       # 创建，权限 sla:write
+GET    /api/v1/sla/definitions/{id}                  # 详情，权限 sla:read
+PUT    /api/v1/sla/definitions/{id}                  # 更新，权限 sla:write
+DELETE /api/v1/sla/definitions/{id}                  # 删除，权限 sla:delete
+```
+
+`GET /sla` 与 `GET /sla/policies`（含 `/policies/:id` 全家族）是指向本家族的旧路径别名，返回同一份 DTO。
+
+列表响应 `data` 是标准信封 `{items,total,page,pageSize,totalPages,hasNext,hasPrev}`；单对象响应 `data` 直接承载 `dto.SLADefinitionResponse`（见下）。列表只解析 `page`/`pageSize`，**不支持** `name`、`isActive` 等过滤参数，传了会被静默忽略；`pageSize` 上限 100（`common.MaxPageSize`），超限按 100 截断，调用方需用 `total` 与自己拿到的 `items.length` 比对，不能假定一次请求取回全量。
+
+`dto.SLADefinitionResponse`：
+
+```json
+{
+  "id": 1,
+  "name": "Incident-P0-紧急",
+  "description": "生产环境全面不可用",
+  "serviceType": "incident",
+  "priority": "urgent",
+  "responseTime": 30,
+  "resolutionTime": 240,
+  "businessHours": {
+    "timeZone": "Asia/Shanghai",
+    "alwaysOn": true
+  },
+  "escalationLevels": [
+    { "level": 1, "thresholdMinutes": 15, "notifyRoles": ["manager"] }
+  ],
+  "conditions": { "priority": ["urgent"] },
+  "isActive": true,
+  "tenantId": 1,
+  "createdAt": "2026-10-15T10:00:00Z",
+  "updatedAt": "2026-10-15T10:00:00Z"
+}
+```
+
+- `responseTime`/`resolutionTime` 单位是**分钟**，创建时后端要求 `>= 1`；前端不得再做小时/分钟换算。
+- `businessHours` 与 `escalationLevels` 是把存储层 JSON（`business_hours`、`escalation_rules.levels[]`，键为 `time_zone`/`work_days`/`is_24_7`/`threshold_minutes`/`notify_roles` 等 snake_case）投影后的 camelCase 视图。原始 map **不再出现在响应里**：`escalationRules` 字段已从 `SLADefinitionResponse` 移除，改用 `escalationLevels[]`。
+- `businessHours` 缺省（`omitempty`）表示存储配置为空，前端应显示「未配置」；`alwaysOn: true` 表示 7×24，两者语义不同，不得合并成一个 hardcoded 展示值。
+- `escalationLevels` 只保留 `levels[]` 中类型正确的层级，缺失或类型不符的条目被跳过，因此数组长度可能小于原始配置条数。
+- `conditions` 仍是原始 map（当前没有稳定 schema），管理页不编辑。
+- `priority` 词表：种子数据用 `urgent|high|medium|low`，模板用 `critical|high|medium|low`，后端优先级匹配前统一小写并把 `urgent` 归一到 `critical`。展示层需要同时接受两者。
+- 创建请求体的 `isActive` 是非指针 `bool`：不传即按 `false` 落成停用状态。管理页创建时必须显式提交 `isActive`。
+
+回归见 `itsm-backend/dto/sla_projection_test.go`（snake_case 键投影、空配置返回 nil）与
+`itsm-frontend/src/app/(main)/admin/sla-definitions/__tests__/page.test.tsx`（分页信封、显式 `isActive`、优先级别名）。
+
+### SLA 模板（`/api/v1/sla/templates` 家族）
+
+```http
+GET  /api/v1/sla/templates            # 目录 + 当前租户安装状态，权限 sla:read
+GET  /api/v1/sla/templates/{key}      # 单模板详情，权限 sla:read
+POST /api/v1/sla/templates/{key}/install  # 安装到当前租户，权限 sla:write
+```
+
+列表响应 `data` 是 `{items,total}`（目录在服务端固定，无分页参数）；单对象响应 `data` 直接承载
+`dto.SLATemplateResponse`。
+
+`dto.SLATemplateResponse`：
+
+```json
+{
+  "key": "incident_p1_critical",
+  "name": "事件 P1 紧急",
+  "description": "核心业务系统不可用",
+  "serviceType": "incident",
+  "priority": "critical",
+  "responseTime": 15,
+  "resolutionTime": 240,
+  "businessHours": { "timeZone": "Asia/Shanghai", "alwaysOn": true },
+  "escalationLevels": [
+    { "level": 1, "thresholdMinutes": 15, "notifyRoles": ["manager"] }
+  ],
+  "conditions": { "priority": ["critical"] },
+  "industry": "incident",
+  "recommended": true,
+  "installed": true,
+  "slaDefinitionId": 12,
+  "installedAt": "2026-10-16T02:00:00Z"
+}
+```
+
+- `businessHours` / `escalationLevels` 与 `SLADefinitionResponse` 共用 `dto.ProjectSLABusinessHours` /
+  `ProjectSLAEscalationLevels`，因此模板预览和安装后的 SLA 定义是同一个形状；目录里的 snake_case
+  存储键（`time_zone`/`is_24_7`/`threshold_minutes`/`notify_roles`）不会出现在响应里。
+- `installed`/`slaDefinitionId`/`installedAt` 是**安装事实**，由服务端查 `sla_definitions` 得出，不是前端
+  点过按钮的本地状态。识别依据是安装时写入的 `conditions.templateKey` 标记，并回落到旧约定
+  `description` 前缀 `[Template] <key> - `；**不按名称前缀过滤**，管理员改掉显示名称后依然认得出是同一份安装。
+- 安装是幂等的：已安装时返回 `wasAlreadyExist: true` 且不新建定义。幂等互斥只在单副本进程内
+  （按 tenant+key 串行），多副本并发安装仍需 `sla_definitions` 上的 `(tenant_id, template_key)` 唯一约束才能彻底去重。
+- `conditions` 是目录原始 map；安装时才追加 `templateKey`，目录响应里不含该标记。
+- 模板的 `escalationLevels` 只是随定义一起写入的参考配置，**当前没有运行时消费者**；真正的升级动作在
+  「升级规则」（`/admin/escalation-rules`）与「升级矩阵」（`/admin/escalation-matrices`）配置。
+- 安装响应 `data` 是 `{templateKey,slaDefinitionId,created,wasAlreadyExist,message}`。
+- 未知 `key` → HTTP 404 + 业务 code 4004；缺少租户上下文 → fail-closed，HTTP 401 + code 2001
+  （不会返回「谁都没装过」的空列表）。
+
+回归见 `itsm-backend/service/sla_template_install_test.go`（安装状态来自库、改名后仍幂等、并发只装一份、
+租户隔离、租户自建定义不误判）与 `itsm-backend/handlers/sla_template/handler_test.go`（标准信封、投影形态、
+HTTP 层幂等、404/401 语义），前端见 `src/app/(main)/admin/sla-templates/__tests__/page.test.tsx`。
+
+## 升级矩阵接口
+
+```http
+GET /api/v1/escalation-matrices        # 需要 sla:read，返回本租户当前生效的矩阵
+PUT /api/v1/escalation-matrices        # 需要 sla:write，整体覆盖
+POST /api/v1/escalation-matrices/invalidate-cache  # 需要 sla:write，清读缓存
+```
+
+`data` 直接是「优先级 → 升级级别链」的 map，没有再包一层 `matrix`/`items`：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "critical": [
+      {
+        "level": 1,
+        "afterMinutes": 15,
+        "notifyRoles": ["manager"],
+        "notifyUserIDs": [],
+        "description": "15分钟未响应升级至部门经理"
+      }
+    ]
+  }
+}
+```
+
+- 优先级键与 `Ticket.Priority` 对齐，为 `critical` / `high` / `medium` / `low`；键顺序不保证，消费方按 key 取值。
+- `afterMinutes` 是**距告警开始**累计的分钟数，不是距上一级升级的间隔。
+- `notifyRoles` 取主角色词表原值（`manager`/`it_admin`/`admin`…），`notifyUserIDs` 是具体用户 ID。
+  两者未配置时返回**空数组**而不是 `null`（2026-10-16 修正：原先 nil 切片直接序列化，前端每处取值都要再判空）。
+  角色与用户都为空的级别不会发出通知。
+- `notifyUserIDs` 的 JSON key 沿用 Go 缩写写法，未按接口 camelCase 规范改为 `notifyUserIds`；
+  改名属破坏性契约变更，需要连同 `system_configs` 里已持久化的矩阵一起评估。
+- 未配置自定义矩阵时返回内置默认矩阵，因此**空 map 不是「未配置」而是异常**，前端据此报错而不是当作空成功。
+- 自定义矩阵持久化在 `system_configs`（key=`escalation.matrix`，category=`escalation`）；`PUT` 落库成功才更新
+  读缓存，落库失败返回错误而不是假成功。
 
 ## 工作流接口
 
@@ -1467,6 +1744,192 @@ Query Parameters:
 `active`/`inactive` 两个取值；不存在 `roles`、`page_size`、`isActive` 这些键，前端读取时不得做多字段兼容。
 同一资源的创建/更新/删除/授权在 `/api/v1/roles`、`/api/v1/roles/{id}`、`/api/v1/roles/{id}/permissions`，
 分别需要 `role:write` 与 `role:delete`。
+
+## 团队管理接口
+
+```http
+GET    /api/v1/org/teams?page&pageSize&search   # 团队列表（含成员投影），权限 team:read
+GET    /api/v1/org/teams/{id}                   # 团队详情（含成员投影），权限 team:read
+POST   /api/v1/org/teams                        # 新建团队，权限 team:write
+PUT    /api/v1/org/teams/{id}                   # 更新团队，权限 team:write
+DELETE /api/v1/org/teams/{id}                   # 删除团队（软删除），权限 team:write
+GET    /api/v1/org/teams/{id}/members?page&pageSize  # 成员分页，权限 team:read
+POST   /api/v1/org/teams/{id}/members           # 添加成员，权限 team:write
+DELETE /api/v1/org/teams/{id}/members           # 移除成员，权限 team:write，body 带 userId
+```
+
+`GET /api/v1/teams` 是同一 handler 的旧路径别名，响应形状与 `/api/v1/org/teams` 完全一致。
+
+### 列表与投影
+
+列表响应 `data` 使用统一信封 `{items,total,page,pageSize,totalPages}`（破坏性变更见 UPGRADE.md §1.36，
+此前是裸数组）。`total` 是**过滤后**的全量条数；`search` 在服务端对 `name`/`code`/`description` 做
+不区分大小写的包含匹配，前端不得拿当前页数据二次过滤后冒充全量结果。`pageSize` 超过 100 由
+`common.GetPaginationFromQuery` 回落到上限。
+
+`Team` 投影（`handlers/common.Team`）：
+
+```json
+{
+  "id": 1,
+  "name": "运维一组",
+  "code": "OPS-A",
+  "description": "负责生产运维",
+  "status": "active",
+  "managerId": 10,
+  "managerName": "爱丽丝",
+  "tenantId": 7,
+  "members": [
+    { "id": 10, "username": "alice", "name": "爱丽丝", "email": "alice@example.com" }
+  ],
+  "createdAt": "2026-10-16T02:00:00Z",
+  "updatedAt": "2026-10-16T02:00:00Z"
+}
+```
+
+- `members` 由列表/详情查询一次性带出（Ent `WithUsers` 只取 `id/username/name/email` 四列），
+  团队没有成员时是空数组 `[]`，不会缺省。响应里不再出现 Ent 的 `edges` 形态，也不会带出
+  `password_hash` 等用户列。
+- `managerName` 由服务端按 `managerId` 在当前租户内一次查回（优先 `name`，缺失回落 `username`），
+  前端不得再拿用户目录比对 ID 推导姓名：目录被分页截断时负责人会显示成空。负责人未设置、
+  或库里残留指向其他租户用户的 `manager_id` 时该字段是空串 `""`，不回带其他租户用户的姓名。
+- 成员端点 `GET /teams/{id}/members` 的分页口径与 `Team.members` 一致：同一列清单、同一
+  `username` 升序，只是额外提供 `total` 翻页。
+
+### 更新语义（`PUT /api/v1/org/teams/{id}`）
+
+请求体 `{name?, code?, description?, managerId?}`，可选字段按「未传 / 传零值」区分：
+
+| 字段 | 未传 | 传值 |
+|:---|:---|:---|
+| `name` / `code` | 保持原值 | 非空则覆盖（空串等同于未传，两者都不允许把必填列清空） |
+| `description` | 保持原值 | 显式 `""` **清空**描述 |
+| `managerId` | 保持原负责人 | 显式 `0` **解除**负责人；正整数按当前租户校验后设置 |
+
+前端编辑表单展示全部字段，因此按全量提交：清空负责人要显式发送 `managerId: 0`，省略键不会解除。
+`managerId` 指向其他租户或停用用户返回 400 + code 4000，且原负责人不变。
+
+### 成员关系语义
+
+成员关系落在 `users.team_users` 外键上（Ent 的 O2M 边），**一个用户同一时刻只能归属一个团队**，
+因此写操作不能靠 `AddUserIDs` 静默搬人：
+
+| 场景 | 结果 |
+|:---|:---|
+| 添加已在该团队的成员 | HTTP 200，幂等，不产生第二份关系 |
+| 添加已属于**其他团队**的用户 | HTTP 409 + code 4090，消息带上归属团队名，原归属不变 |
+| 添加跨租户 / 已停用 / 不存在的用户 | HTTP 400 + code 4000 |
+| 移除不属于该团队的用户 | HTTP 404 + code 4004 |
+| 未知团队 id 的读/写/删 | HTTP 404 + code 4004（`DELETE /teams/{id}` 不再对不存在的团队返回成功） |
+
+跨资源引用校验（负责人/成员不属于当前租户、已停用、不存在）走领域层的 `AppError(HTTP 400)`，
+业务码是 **4000**；只有路径 ID 非数字、请求体绑定失败这类纯参数错误才是 **1001**。两者分属两层，
+前端不得把它们合并成同一句「参数错误」。
+
+`POST`/`DELETE /teams/{id}/members` 的 `data` 直接是操作后的**服务端成员列表**（`TeamMember[]`），
+前端用它刷新，不自行拼接本地状态。请求体只有 `{"userId": 10}`。
+
+### 归属校验与租户边界
+
+- `managerId`（负责人）与 `userId`（成员）都是跨资源引用，写入前必须校验目标用户属于**当前租户**且
+  处于启用状态；只校验团队自身的 tenant 不足以阻止跨租户关系注入。
+- 缺少租户上下文一律 fail-closed：HTTP 401 + code 2001，不会退化成空列表。
+- 跨租户访问他人团队（含成员端点）返回 404 + code 4004，不暴露资源是否存在。
+- `team:read` / `team:write` 在 DBOnly 权限模式下必须有角色条目；此前 `admin` 角色缺这两条，
+  团队管理对租户管理员恒为 403。
+
+回归见 `itsm-backend/handlers/common/team_member_test.go`（列表信封与成员投影、服务端搜索、
+分页、跨租户 404、幂等/冲突/参数拒绝、写响应回带服务端状态、fail-closed、负责人跨租户注入）与
+`itsm-frontend/src/app/(main)/admin/teams/__tests__/page.test.tsx`（成员列渲染、总数口径、
+服务端搜索与翻页、添加/移除/冲突原因透出、错误态重试）。
+
+## 菜单管理接口
+
+路由在 `itsm-backend/router/common_system_routes.go` 注册，HTTP 层在 `handlers/rbac/handler.go`，
+业务规则在 `service/menu_service.go`，数据落在 `menus` 表（租户内 `(tenant_id, path)` 组合唯一，
+见 `migrations/20261011_add_menus_tenant_path_unique.sql`）。写端点权限为
+`system_config:write`、读端点为 `system_config:read`（DBOnly 模式下必须有对应角色条目）。
+
+| Method + Path | 权限 | 说明 |
+|:---|:---|:---|
+| `GET /api/v1/menus` | `system_config:read` | 当前租户的**全部**菜单，按 `sortOrder` 升序 |
+| `GET /api/v1/menus/{id}` | `system_config:read` | 单条菜单 |
+| `POST /api/v1/menus` | `system_config:write` | 新建 |
+| `PUT /api/v1/menus/{id}` | `system_config:write` | 更新，可选字段是指针 |
+| `DELETE /api/v1/menus/{id}` | `system_config:write` | 删除叶子菜单 |
+| `GET /api/v1/menus/export` | `system_config:read` | 导出为 seeder 规格（用 `parentPath` 表达层级，不是 `parentId`） |
+| `POST /api/v1/menus/init` | `system_config:write` | 按内置基线补齐缺失菜单，返回 `{added,unchanged,totalAdded}` |
+| `GET /api/v1/auth/menus` | 仅需登录 | 侧边栏数据源：按当前用户角色与权限码过滤后的菜单树 `{main,admin}` |
+
+### 列表响应：标准信封，但一次给全量、不翻页
+
+`GET /api/v1/menus` 的 `data` 是 `{items,total,page,pageSize,totalPages}`。这里
+`page=1`、`pageSize=total`、`totalPages=1` 是**有意为之**：该端点返回的就是当前租户的完整菜单集合，
+不接受 `page`/`pageSize` 请求参数。管理页在本地做搜索过滤与按 `parentId` 组装树形，是因为它拿到的
+已经是全量数据，而不是在冒充服务端分页；调用方不得对该端点翻页。
+
+`items` 中每条是 `MenuDTO`：`id`、`name`、`path`、`sortOrder`、`tenantId`、`isVisible`、`isEnabled`
+恒在；`icon`、`description` 为空串时**整键省略**；`parentId`、`permissionCode` 为 NULL 时**整键省略**
+（指针 + `omitempty`）。因此前端必须用「键是否存在」判断上级和权限码，不得写
+`record.parentId ?? 0` 之类把「顶级」和「字段缺失」合并的 fallback。响应不含 Ent 的 `edges`，
+也不含 `permission_code`、`tenant_id` 这类 snake_case 键。
+
+### 上级菜单与顶级菜单
+
+- 请求里的 `parentId: 0` 与未传同义，都表示**顶级菜单**；创建时不会写入 0 这类悬空外键，库里是 NULL。
+- 上级必须是**同租户**的菜单，且不能是自身或自身的后代；违反时 HTTP 400 + code 4000，
+  消息分别是 `上级菜单不存在或不属于当前租户` / `上级菜单不能是当前菜单自身` / `上级菜单不能是当前菜单的子菜单`，
+  被拒绝的写入不落库。成环会让按 `parentId` 组装的整棵子树在页面上消失。
+- `GET /api/v1/auth/menus` 的 `main` / `admin` 划分只看**顶级菜单**的路径前缀：
+  `/admin`、`/system`、`/workflow` 开头进 `admin`，其余进 `main`；子树跟随其顶级菜单归属。
+
+### `PUT` 的清空语义
+
+可选字段都是指针，必须区分「未传」「传零值」「清空」：
+
+| 字段 | 未传 | 显式传值 |
+|:---|:---|:---|
+| `name` / `path` | 保持原值 | 非空则覆盖；空串等同未传（两列必填，不允许被清空） |
+| `icon` / `description` | 保持原值 | 显式 `""` **清除** |
+| `permissionCode` | 保持原值 | 显式 `""` **清除权限码**（见下方安全含义） |
+| `parentId` | 保持原上级 | 显式 `0` **升为顶级**（写 NULL），正整数按上面的规则校验 |
+| `sortOrder` | 保持原值 | 按值覆盖，`0` 是合法排序值 |
+| `isVisible` / `isEnabled` | 保持原值 | 按布尔覆盖 |
+
+管理页展示全部字段，因此按全量提交并把「清除」表达为空值：移除上级要显式发 `parentId: 0`，
+省略键不会解除上级。
+
+**权限码清除是放权操作。** `permissionCode` 为空的菜单在权限过滤里视为「无权限要求」，
+对租户内所有登录用户可见。后端在创建时就把权限码与其余字段写进同一条 `INSERT`，避免
+「菜单已建、权限码写失败」留下全员可见的行；页面上的清除动作必须让操作者看到这一点。
+
+### 状态码口径
+
+| 场景 | HTTP + 业务码 |
+|:---|:---|
+| 缺少租户上下文 | 401 + code 2002，不返回空列表 |
+| 非 `super_admin` 带 `?tenantId=` 查看他租户 | 403 + code 2003，且不查询 |
+| `?tenantId=` 非正整数 | 400 + code 1001 |
+| 同租户内 `path` 重复（含并发窗口，唯一索引兜底） | 409 + code 4090 `同级路径菜单已存在` |
+| 上级菜单非法（跨租户 / 自身 / 后代） | 400 + code 4000 |
+| 未知或跨租户的 `{id}`（读/改/删） | 404 + code 4004 `资源不存在或已被删除` |
+| 删除仍有子菜单的菜单 | 409 + code 4090 `请先删除子菜单`，父子行都不受影响 |
+
+领域校验走 `AppError(HTTP 400)`，业务码是 **4000**；只有路径 ID 非数字、`?tenantId=` 非法、
+请求体绑定失败这类纯参数错误才是 **1001**。删除不存在的菜单不再返回成功。
+
+### 创建端点的默认值
+
+`POST /api/v1/menus` 未传 `sortOrder` 或传 `0` 时按 **100** 落库（与 `PUT` 不同，创建阶段无法表达
+排序 0）；`isVisible` / `isEnabled` 未传按 `true`。`name`、`path` 为必填，缺失是 400 + code 1001。
+
+回归见 `itsm-backend/handlers/rbac/handler_test.go`（列表信封与 camelCase 投影、`?tenantId=`
+越权拒绝与 fail-closed、显式清空 payload 的指针到达 service、非法上级映射 400/4000、
+删除冲突映射 409/4090、未知删除映射 404/4004）、
+`itsm-backend/service/menu_service_test.go`（`TestCreateMenu_DuplicatePathReturnsConflict`、
+`TestUpdateMenu_ParentAssignmentSemantics`、`TestDeleteMenu_StateAndTenantSemantics`）与
+`itsm-frontend/src/app/(main)/admin/menus/__tests__/page.test.tsx`（从 `items` 渲染与统计口径、
+搜索命中子项、错误态、编辑保存的显式清空 payload）。
 
 ## 资产管理接口
 
@@ -2110,12 +2573,57 @@ Content-Type: application/json
 }
 ```
 
-### 初始化默认配置
+### 获取系统运行状态
 
 ```http
-GET /system-configs/init
+GET /system-configs/status
 Authorization: Bearer <accessToken>
 ```
+
+需要 `system_config:read` 权限。`GET /configs/status` 与 `GET /dashboard/stats/system` 返回同一个 DTO，
+只有这一套采集口径。
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "uptime": 244.7,
+    "cpuUsage": 0.011,
+    "memoryUsage": 0,
+    "diskUsage": 98.88,
+    "avgResponseTime": 38.33,
+    "requestsPerSecond": 0.158,
+    "errorRate": 0,
+    "metricsWindowSeconds": 101.14,
+    "dbConnections": 5,
+    "dbSize": 22985751,
+    "cacheHitRate": 34.72,
+    "cores": 16,
+    "goroutines": 40,
+    "sampledAt": "2026-10-15T22:57:09+08:00",
+    "availability": {
+      "cpu": "measured",
+      "memory": "unavailable",
+      "disk": "measured",
+      "http": "measured",
+      "dbSize": "measured",
+      "cache": "unconfigured"
+    }
+  }
+}
+```
+
+- `availability` 取值 `measured` / `unavailable` / `unconfigured`；非 `measured` 的字段恒为 0，调用方必须按该标记渲染「未接入」，不得当成实测值参与评级。
+- `metricsWindowSeconds` 是 `avgResponseTime`、`requestsPerSecond`、`errorRate` 覆盖的时间窗：区间足够时为「距上一次采样的增量」，区间不足 1s（多个轮询者共用同一基线）或首次采样时退回启动以来的累计口径，此时等于 `uptime`。
+- `cacheHitRate` 只有在后端注入 Redis 客户端后才为 `measured`；`errorRate` 只统计 5xx。
+
+### 默认配置的来源
+
+默认配置不再提供初始化接口。`GET /system-configs` 在租户配置表为空时懒写入 24 项默认配置，
+返回值即为写入后的列表；此前的 `GET /system-configs/init`（以及别名 `GET /configs/init`）已移除——
+它按读权限守卫却整表写入密码策略、2FA 等安全配置，任何持 `system_config:read` 的账号一次 GET 即可落地。
+写配置仍走 `PUT /system-configs/:id`（需 `system_config:write`）。
 
 ## 搜索接口
 
@@ -2219,12 +2727,12 @@ Query Parameters:
 | `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
 | `GET /api/v1/tickets/views` | `{items, total}` | 视图按租户全量返回（`service/ticket_view_service.go` 无 `Limit`），`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/{id}/comments` | `{items, total}` | 单工单评论全量返回，同上；分页若将来引入必须实装而非补键 |
-| `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实 |
-| `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `system_config:read` |
+| `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实；读写整组接口需 `assignment_rule:read`/`assignment_rule:write` |
+| `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `automation_rule:read`（规则配置面自有码，不是 `system_config:read`，也不是最终用户为看流转进度而持有的 `workflow:read`，见 UPGRADE §1.41） |
 | `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
 | `GET /api/v1/tickets/cc/my` | `{items: TicketCCRecordResponse[], total}` | 抄送给当前用户的记录，按 `tenant_id + user_id + is_active` 全量返回，排序 `added_at DESC, id ASC`（`id` 是并列键）；`user`/`addedBy` 是 `WorkflowUserInfo`，姓名键是 `fullName`，没有 `name` |
 | `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `workflow:read` 且调用者是工单相关方/审批人/管理角色。跨租户探测与工单不存在返回同一个 404/`4004`（不确认对方资源存在），同租户但非相关方的用户是 403/`2003`；三种失败都不携带 `items` 载荷（2026-10-04 由 500/`5001` 纠正，见 UPGRADE §1.20） |
-| `GET /api/v1/tickets/assign-recommendations/{id}` | `{items: AssignmentRecommendation[], total}` | 按评分降序全量返回本租户的可用候选（`service/ticket_assignment_smart_service.go:116`：`user.TenantIDEQ` + `ActiveEQ(true)` 整表取回后排序），`total=len(items)` 诚实；item 是 `{userId,username,name,email,score,reason,workload,skills?,categories?}`，**没有** `userName`/`userEmail`/`userAvatar`/`factors`。读取需 `system_config:read`；工单不存在与跨租户返回同一个 404/`4004`（同样是 E4-5 本片由 500/`5001` 纠正），不泄漏对方租户候选 |
+| `GET /api/v1/tickets/assign-recommendations/{id}` | `{items: AssignmentRecommendation[], total}` | 按评分降序全量返回本租户的可用候选（`service/ticket_assignment_smart_service.go:116`：`user.TenantIDEQ` + `ActiveEQ(true)` 整表取回后排序），`total=len(items)` 诚实；item 是 `{userId,username,name,email,score,reason,workload,skills?,categories?}`，**没有** `userName`/`userEmail`/`userAvatar`/`factors`。读取需 `ticket:assign`（单工单分配动作，与 `POST /tickets/{id}/auto-assign` 同码：候选表带 email/workload/skills，不对只读角色开放；旧口径 `system_config:read` 见 UPGRADE §1.41）；工单不存在与跨租户返回同一个 404/`4004`（同样是 E4-5 本片由 500/`5001` 纠正），不泄漏对方租户候选 |
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |
 | `GET /api/v1/msp/reports/performance` | `{items, total}` | 同上 |

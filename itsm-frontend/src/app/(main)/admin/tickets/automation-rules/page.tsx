@@ -19,8 +19,9 @@ import {
   Tooltip,
   Alert,
 } from 'antd';
-import { Plus, Edit, Delete, PlayCircle, PauseCircle, Settings } from 'lucide-react';
+import { Plus, Edit, Delete, PlayCircle, PauseCircle, Settings, RefreshCw } from 'lucide-react';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
+import { isPermissionDeniedError } from '@/lib/api/http-client';
 import type {
   AutomationRule,
   CreateAutomationRuleRequest,
@@ -36,6 +37,7 @@ const AutomationRulesPage: React.FC = () => {
   const { message } = App.useApp();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
   const [form] = Form.useForm();
@@ -43,11 +45,17 @@ const AutomationRulesPage: React.FC = () => {
   // 加载规则列表
   const loadRules = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const response = await TicketAutomationRuleApi.listRules();
       setRules(response.items);
     } catch (error) {
-      message.error('加载自动化规则失败');
+      // 失败不能画成「暂无规则」：空表格会让用户以为系统里确实没有规则。
+      setRules([]);
+      setLoadError({
+        denied: isPermissionDeniedError(error),
+        detail: error instanceof Error ? error.message : '',
+      });
     } finally {
       setLoading(false);
     }
@@ -267,7 +275,28 @@ const AutomationRulesPage: React.FC = () => {
           ]}
         />
 
-        {rules.length === 0 && !loading ? (
+        {loadError ? (
+          <Alert
+            type={loadError.denied ? 'warning' : 'error'}
+            showIcon
+            title={loadError.denied ? '没有权限查看自动化规则' : '加载自动化规则失败'}
+            description={
+              loadError.denied
+                ? '当前角色未被授予自动化规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
+                : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+            }
+            action={
+              <Button
+                size="small"
+                icon={<RefreshCw size={14} />}
+                onClick={loadRules}
+                loading={loading}
+              >
+                重试
+              </Button>
+            }
+          />
+        ) : rules.length === 0 && !loading ? (
           <Alert
             type="info"
             showIcon

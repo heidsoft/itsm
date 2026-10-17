@@ -3,8 +3,11 @@ package common
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/auditlog"
 	"itsm-backend/ent/department"
@@ -81,9 +84,23 @@ func toTeamDomain(e *ent.Team) *Team {
 		Status:      e.Status,
 		ManagerID:   e.ManagerID,
 		TenantID:    e.TenantID,
+		Members:     toTeamMembers(e.Edges.Users),
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
 	}
+}
+
+func toTeamMembers(users []*ent.User) []*TeamMember {
+	members := make([]*TeamMember, 0, len(users))
+	for _, u := range users {
+		members = append(members, &TeamMember{
+			ID:       u.ID,
+			Username: u.Username,
+			Name:     u.Name,
+			Email:    u.Email,
+		})
+	}
+	return members
 }
 
 func toTagDomain(e *ent.Tag) *Tag {
@@ -303,6 +320,107 @@ func (r *EntRepository) DeleteDepartment(ctx context.Context, id int, tenantID i
 
 // Team methods
 
+// withTeamMembers 让团队查询一次性带回成员投影。列清单必须显式：整行加载会把
+// password_hash 之类的字段带进进程，而接口只需要 id/username/name/email。
+func withTeamMembers() func(*ent.UserQuery) {
+	return func(q *ent.UserQuery) {
+		q.Select(user.FieldID, user.FieldUsername, user.FieldName, user.FieldEmail).
+			Order(ent.Asc(user.FieldUsername))
+	}
+}
+
+func (r *EntRepository) findTeam(ctx context.Context, teamID int, tenantID int) (*ent.Team, error) {
+	t, err := r.client.Team.Query().
+		Where(team.ID(teamID), team.TenantID(tenantID), team.DeletedAtIsNil()).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError("team")
+		}
+		return nil, fmt.Errorf("查询团队失败: %w", err)
+	}
+	return t, nil
+}
+
+// assertActiveTenantUser 校验关联用户属于当前租户且处于启用状态。
+// 负责人和成员都是跨资源引用，只校验主资源的租户不足以防止跨租户注入。
+func (r *EntRepository) assertActiveTenantUser(ctx context.Context, userID int, tenantID int) error {
+	exists, err := r.client.User.Query().
+		Where(user.ID(userID), user.TenantID(tenantID), user.ActiveEQ(true)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("查询用户失败: %w", err)
+	}
+	if !exists {
+		return common.NewValidationError("用户不存在、已停用或不属于当前租户", nil)
+	}
+	return nil
+}
+
+// teamOfUser 返回用户当前归属的团队（没有归属返回 nil）。
+// users.team_users 是单向 To 边的外键，Ent 不生成 user 侧的 team 谓词，
+// 因此按租户一次取回「团队 → 成员 ID」再判定；租户内团队数量是有界的。
+func (r *EntRepository) teamOfUser(ctx context.Context, userID int, tenantID int) (*ent.Team, error) {
+	teams, err := r.client.Team.Query().
+		Where(team.TenantID(tenantID), team.DeletedAtIsNil()).
+		WithUsers(func(q *ent.UserQuery) { q.Select(user.FieldID) }).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队成员关系失败: %w", err)
+	}
+	for _, t := range teams {
+		for _, u := range t.Edges.Users {
+			if u.ID == userID {
+				return t, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+// attachManagerNames 按租户一次查回负责人姓名并写入投影。
+// teams.manager_id 没有指向 users 的 Ent 边，接口只回带 ID 时页面只能拿用户目录比对，
+// 目录被分页截断后负责人就显示为空，因此姓名由服务端补齐。
+// 负责人被停用或已从其他租户残留时按姓名缺失处理，不回带其他租户的用户信息。
+func (r *EntRepository) attachManagerNames(ctx context.Context, tenantID int, teams []*Team) error {
+	ids := make([]int, 0, len(teams))
+	seen := make(map[int]struct{}, len(teams))
+	for _, t := range teams {
+		if t == nil || t.ManagerID <= 0 {
+			continue
+		}
+		if _, ok := seen[t.ManagerID]; ok {
+			continue
+		}
+		seen[t.ManagerID] = struct{}{}
+		ids = append(ids, t.ManagerID)
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	users, err := r.client.User.Query().
+		Where(user.IDIn(ids...), user.TenantID(tenantID)).
+		Select(user.FieldID, user.FieldName, user.FieldUsername).
+		All(ctx)
+	if err != nil {
+		return fmt.Errorf("查询团队负责人失败: %w", err)
+	}
+	names := make(map[int]string, len(users))
+	for _, u := range users {
+		if u.Name != "" {
+			names[u.ID] = u.Name
+			continue
+		}
+		names[u.ID] = u.Username
+	}
+	for _, t := range teams {
+		if t != nil {
+			t.ManagerName = names[t.ManagerID]
+		}
+	}
+	return nil
+}
+
 func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) {
 	exists, err := r.client.Team.Query().
 		Where(team.Code(t.Code), team.TenantID(t.TenantID), team.DeletedAtIsNil()).
@@ -311,7 +429,12 @@ func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) 
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("team code already exists: %s", t.Code)
+		return nil, common.NewConflictError("team", t.Code)
+	}
+	if t.ManagerID > 0 {
+		if err := r.assertActiveTenantUser(ctx, t.ManagerID, t.TenantID); err != nil {
+			return nil, err
+		}
 	}
 	e, err := r.client.Team.Create().
 		SetName(t.Name).
@@ -323,30 +446,69 @@ func (r *EntRepository) CreateTeam(ctx context.Context, t *Team) (*Team, error) 
 	if err != nil {
 		return nil, err
 	}
-	return toTeamDomain(e), nil
+	domain := toTeamDomain(e)
+	if err := r.attachManagerNames(ctx, t.TenantID, []*Team{domain}); err != nil {
+		return nil, err
+	}
+	return domain, nil
 }
 
 func (r *EntRepository) GetTeam(ctx context.Context, id int, tenantID int) (*Team, error) {
-	e, err := r.client.Team.Query().Where(team.ID(id), team.TenantID(tenantID), team.DeletedAtIsNil()).Only(ctx)
+	e, err := r.client.Team.Query().
+		Where(team.ID(id), team.TenantID(tenantID), team.DeletedAtIsNil()).
+		WithUsers(withTeamMembers()).
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, common.NewNotFoundError("team")
+		}
 		return nil, err
 	}
-	return toTeamDomain(e), nil
+	domain := toTeamDomain(e)
+	if err := r.attachManagerNames(ctx, tenantID, []*Team{domain}); err != nil {
+		return nil, err
+	}
+	return domain, nil
 }
 
-func (r *EntRepository) ListTeams(ctx context.Context, tenantID int) ([]*Team, error) {
-	es, err := r.client.Team.Query().Where(team.TenantID(tenantID), team.DeletedAtIsNil()).All(ctx)
-	if err != nil {
-		return nil, err
+// ListTeams 按租户分页列出团队，search 对名称/编码/描述做不区分大小写的包含匹配。
+// 搜索由服务端负责：前端只拿到当前页，不能对半截数据做二次过滤后冒充全量结果。
+func (r *EntRepository) ListTeams(ctx context.Context, tenantID int, page int, pageSize int, search string) ([]*Team, int, error) {
+	query := r.client.Team.Query().Where(team.TenantID(tenantID), team.DeletedAtIsNil())
+	if keyword := strings.TrimSpace(search); keyword != "" {
+		query = query.Where(team.Or(
+			team.NameContainsFold(keyword),
+			team.CodeContainsFold(keyword),
+			team.DescriptionContainsFold(keyword),
+		))
 	}
-	var res []*Team
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	es, err := query.
+		Order(ent.Asc(team.FieldID)).
+		WithUsers(withTeamMembers()).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	res := make([]*Team, 0, len(es))
 	for _, e := range es {
 		res = append(res, toTeamDomain(e))
 	}
-	return res, nil
+	if err := r.attachManagerNames(ctx, tenantID, res); err != nil {
+		return nil, 0, err
+	}
+	return res, total, nil
 }
 
 func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) {
+	if _, err := r.findTeam(ctx, t.ID, t.TenantID); err != nil {
+		return nil, err
+	}
 	exists, err := r.client.Team.Query().
 		Where(team.Code(t.Code), team.TenantID(t.TenantID), team.DeletedAtIsNil(), team.IDNEQ(t.ID)).
 		Exist(ctx)
@@ -354,7 +516,12 @@ func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) 
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("team code already exists: %s", t.Code)
+		return nil, common.NewConflictError("team", t.Code)
+	}
+	if t.ManagerID > 0 {
+		if err := r.assertActiveTenantUser(ctx, t.ManagerID, t.TenantID); err != nil {
+			return nil, err
+		}
 	}
 	e, err := r.client.Team.UpdateOneID(t.ID).
 		Where(team.TenantID(t.TenantID), team.DeletedAtIsNil()).
@@ -367,19 +534,93 @@ func (r *EntRepository) UpdateTeam(ctx context.Context, t *Team) (*Team, error) 
 	if err != nil {
 		return nil, err
 	}
-	return toTeamDomain(e), nil
+	updated, err := r.GetTeam(ctx, e.ID, t.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *EntRepository) DeleteTeam(ctx context.Context, id int, tenantID int) error {
-	_, err := r.client.Team.Update().
-		Where(team.ID(id), team.TenantID(tenantID), team.DeletedAtIsNil()).
+	if _, err := r.findTeam(ctx, id, tenantID); err != nil {
+		return err
+	}
+	_, err := r.client.Team.UpdateOneID(id).
+		Where(team.TenantID(tenantID), team.DeletedAtIsNil()).
 		SetDeletedAt(time.Now()).
 		Save(ctx)
 	return err
 }
 
-func (r *EntRepository) AddTeamMember(ctx context.Context, teamID int, userID int) error {
-	return r.client.Team.UpdateOneID(teamID).Where(team.DeletedAtIsNil()).AddUserIDs(userID).Exec(ctx)
+func (r *EntRepository) ListTeamMembers(ctx context.Context, teamID int, tenantID int, page int, pageSize int) ([]*TeamMember, int, error) {
+	if _, err := r.findTeam(ctx, teamID, tenantID); err != nil {
+		return nil, 0, err
+	}
+	query := r.client.Team.Query().
+		Where(team.ID(teamID), team.TenantID(tenantID), team.DeletedAtIsNil()).
+		QueryUsers()
+	total, err := query.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("统计团队成员失败: %w", err)
+	}
+	users, err := query.
+		Select(user.FieldID, user.FieldUsername, user.FieldName, user.FieldEmail).
+		Order(ent.Asc(user.FieldUsername)).
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		All(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("查询团队成员失败: %w", err)
+	}
+	return toTeamMembers(users), total, nil
+}
+
+// AddTeamMember 把用户归属到团队。库里是 users.team_users 外键，一个用户同一时刻
+// 只能属于一个团队：直接 AddUserIDs 会把人从原团队静默搬走，所以先查归属——
+// 已在目标团队按幂等成功，已在别的团队返回冲突。
+func (r *EntRepository) AddTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error {
+	if _, err := r.findTeam(ctx, teamID, tenantID); err != nil {
+		return err
+	}
+	if err := r.assertActiveTenantUser(ctx, userID, tenantID); err != nil {
+		return err
+	}
+	owner, err := r.teamOfUser(ctx, userID, tenantID)
+	if err != nil {
+		return err
+	}
+	if owner != nil {
+		if owner.ID == teamID {
+			return nil
+		}
+		return common.NewAppError(
+			common.ErrCodeConflict,
+			fmt.Sprintf("用户已属于团队「%s」，请先从该团队移出", owner.Name),
+			http.StatusConflict,
+			nil,
+		)
+	}
+	return r.client.Team.UpdateOneID(teamID).
+		Where(team.TenantID(tenantID), team.DeletedAtIsNil()).
+		AddUserIDs(userID).
+		Exec(ctx)
+}
+
+func (r *EntRepository) RemoveTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error {
+	if _, err := r.findTeam(ctx, teamID, tenantID); err != nil {
+		return err
+	}
+	owner, err := r.teamOfUser(ctx, userID, tenantID)
+	if err != nil {
+		return err
+	}
+	if owner == nil || owner.ID != teamID {
+		return common.NewNotFoundError("team member")
+	}
+	return r.client.Team.UpdateOneID(teamID).
+		Where(team.TenantID(tenantID), team.DeletedAtIsNil()).
+		RemoveUserIDs(userID).
+		Exec(ctx)
 }
 
 // Tag methods

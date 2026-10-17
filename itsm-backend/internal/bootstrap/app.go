@@ -1185,6 +1185,8 @@ func NewApplication() *Application {
 			sugar.Info("Redis connection established, using distributed rate limiter")
 			// 默认每分钟 500 次请求
 			redisRateLimiter = middleware.NewRedisRateLimiter(redisClient, 500, time.Minute)
+			// 系统健康卡的缓存命中率数据源；未注入时接口返回 unconfigured 而不是 0%。
+			dashboardService.SetRedisClient(redisClient)
 		}
 	} else {
 		sugar.Warn("Redis not configured, rate limiter will use in-memory fallback (not suitable for distributed deployment)")
@@ -1197,7 +1199,6 @@ func NewApplication() *Application {
 		RawDB:                        database.GetRawDB(),
 		CSRFEnabled:                  cfg.Security.CSRFEnabled,
 		RedisRateLimiter:             redisRateLimiter,
-		AppStartTime:                 time.Now(),
 		TicketHandler:                ticketHandler,
 		TicketDependencyHandler:      ticketDependencyHandler.NewHandler(ticketDependencyService, sugar),
 		TicketCommentHandler:         ticketCommentHandler.NewHandler(ticketCommentService, sugar),

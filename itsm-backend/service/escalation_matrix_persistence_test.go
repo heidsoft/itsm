@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 
@@ -197,4 +199,38 @@ func keysOf(m EscalationMatrix) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// TestEscalationMatrixService_NotifyTargetsSerializeAsArrays 锁定 HTTP 响应契约：
+// 未配置通知目标的级别返回空数组而不是 null。handler 直接序列化矩阵，
+// null 会让前端每一处取值都得再判一次空。
+func TestEscalationMatrixService_NotifyTargetsSerializeAsArrays(t *testing.T) {
+	store := newFakeEscalationStore()
+	store.data[4242] = EscalationMatrix{
+		"critical": {{Level: 1, AfterMinutes: 15, Description: "只配了时长"}},
+	}
+	svc := NewEscalationMatrixServiceWithStore(zap.NewNop().Sugar(), store)
+
+	raw, err := json.Marshal(svc.GetMatrix(4242))
+	if err != nil {
+		t.Fatalf("序列化失败: %v", err)
+	}
+	got := string(raw)
+	for _, want := range []string{`"notifyRoles":[]`, `"notifyUserIDs":[]`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("响应缺少 %s: %s", want, got)
+		}
+	}
+	if strings.Contains(got, "null") {
+		t.Errorf("通知目标不得序列化为 null: %s", got)
+	}
+
+	// 未配置自定义矩阵时回落默认，同样不得出现 null。
+	defaultRaw, err := json.Marshal(NewEscalationMatrixService(zap.NewNop().Sugar()).GetMatrix(7))
+	if err != nil {
+		t.Fatalf("序列化默认矩阵失败: %v", err)
+	}
+	if strings.Contains(string(defaultRaw), "null") {
+		t.Errorf("默认矩阵序列化为 null: %s", defaultRaw)
+	}
 }

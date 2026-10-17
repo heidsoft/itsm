@@ -1,9 +1,14 @@
 // Package sla_template 是 SLA 模板域的 HTTP handler 层（域切片架构）。
-// 业务逻辑仍由 service.SLATemplateService 承载，本包只做参数解析与响应封装。
+// 模板目录与安装规则由 service.SLATemplateService 承载，本包只做租户上下文、
+// DTO 投影与错误映射。
 package sla_template
 
 import (
+	"errors"
+
 	"itsm-backend/common"
+	"itsm-backend/common/handlerctx"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -20,73 +25,132 @@ func NewHandler(templateService *service.SLATemplateService) *Handler {
 	return &Handler{templateService: templateService}
 }
 
-// tenantID 提取租户上下文
-func tenantID(c *gin.Context) (int, bool) {
-	tid, exists := c.Get("tenant_id")
-	if !exists {
-		common.Fail(c, common.AuthFailedCode, "未授权访问")
-		return 0, false
+func (h *Handler) toResponse(tmpl service.SLATemplate, state service.SLATemplateInstallInfo) *dto.SLATemplateResponse {
+	resp := &dto.SLATemplateResponse{
+		Key:              tmpl.Key,
+		Name:             tmpl.Name,
+		Description:      tmpl.Description,
+		ServiceType:      tmpl.ServiceType,
+		Priority:         tmpl.Priority,
+		ResponseTime:     tmpl.ResponseTime,
+		ResolutionTime:   tmpl.ResolutionTime,
+		BusinessHours:    dto.ProjectSLABusinessHours(tmpl.BusinessHours),
+		EscalationLevels: dto.ProjectSLAEscalationLevels(tmpl.EscalationRules),
+		Conditions:       tmpl.Conditions,
+		Industry:         tmpl.Industry,
+		Recommended:      tmpl.Recommended,
+		Installed:        state.SLADefinitionID > 0,
+		SLADefinitionID:  state.SLADefinitionID,
 	}
-	id, ok := tid.(int)
-	if !ok {
-		// 租户上下文类型错误本质是认证/上下文问题，统一为 401（对齐上游中间件）。
-		common.Fail(c, common.AuthFailedCode, "租户ID类型错误")
-		return 0, false
+	if state.SLADefinitionID > 0 {
+		installedAt := state.InstalledAt
+		resp.InstalledAt = &installedAt
 	}
-	return id, true
+	if resp.Conditions == nil {
+		resp.Conditions = map[string]interface{}{}
+	}
+	return resp
 }
 
-// ListTemplates 列出所有预置 SLA 模板
-func (h *Handler) ListTemplates(ctx *gin.Context) {
+// resolveTenant 统一 fail-closed：缺租户上下文时不返回「谁都没装过」的空状态。
+// ResolveTenantID 解析失败时已经写入 401/403，这里只补它没写响应的分支。
+func resolveTenant(c *gin.Context) (int, bool) {
+	tid, ok := handlerctx.ResolveTenantID(c)
+	if ok && tid > 0 {
+		return tid, true
+	}
+	if !c.Writer.Written() {
+		common.Fail(c, common.AuthFailedCode, "未授权访问")
+	}
+	return 0, false
+}
+
+// ListTemplates 列出预置 SLA 模板及其在当前租户的安装状态
+func (h *Handler) ListTemplates(c *gin.Context) {
+	tid, ok := resolveTenant(c)
+	if !ok {
+		return
+	}
+
+	states, err := h.templateService.InstallStates(c.Request.Context(), tid)
+	if err != nil {
+		common.RespondError(c, err, "查询 SLA 模板安装状态失败")
+		return
+	}
+
 	templates := h.templateService.ListTemplates()
-	common.Success(ctx, gin.H{
-		"items": templates,
-		"total": len(templates),
+	items := make([]*dto.SLATemplateResponse, 0, len(templates))
+	for _, tmpl := range templates {
+		items = append(items, h.toResponse(tmpl, states[tmpl.Key]))
+	}
+
+	common.Success(c, gin.H{
+		"items": items,
+		"total": len(items),
 	})
 }
 
-// GetTemplate 获取单个 SLA 模板详情
-func (h *Handler) GetTemplate(ctx *gin.Context) {
-	key := ctx.Param("key")
+// GetTemplate 获取单个模板详情（含安装状态）
+func (h *Handler) GetTemplate(c *gin.Context) {
+	key := c.Param("key")
 	if key == "" {
-		common.Fail(ctx, common.ParamErrorCode, "模板 key 不能为空")
+		common.Fail(c, common.ParamErrorCode, "模板 key 不能为空")
+		return
+	}
+
+	tid, ok := resolveTenant(c)
+	if !ok {
 		return
 	}
 
 	tmpl, err := h.templateService.GetTemplate(key)
 	if err != nil {
-		common.NotFoundWithErr(ctx, err, "资源不存在")
+		if errors.Is(err, service.ErrSLATemplateNotFound) {
+			common.NotFoundWithErr(c, err, "SLA 模板不存在")
+			return
+		}
+		common.RespondError(c, err, "查询 SLA 模板失败")
 		return
 	}
 
-	common.Success(ctx, tmpl)
+	states, err := h.templateService.InstallStates(c.Request.Context(), tid)
+	if err != nil {
+		common.RespondError(c, err, "查询 SLA 模板安装状态失败")
+		return
+	}
+
+	common.Success(c, h.toResponse(*tmpl, states[key]))
 }
 
 // InstallTemplate 将模板安装到当前租户
-func (h *Handler) InstallTemplate(ctx *gin.Context) {
-	key := ctx.Param("key")
+func (h *Handler) InstallTemplate(c *gin.Context) {
+	key := c.Param("key")
 	if key == "" {
-		common.Fail(ctx, common.ParamErrorCode, "模板 key 不能为空")
+		common.Fail(c, common.ParamErrorCode, "模板 key 不能为空")
 		return
 	}
 
-	tid, ok := tenantID(ctx)
+	tid, ok := resolveTenant(c)
 	if !ok {
 		return
 	}
 
-	result, err := h.templateService.InstallTemplate(ctx.Request.Context(), key, tid)
+	result, err := h.templateService.InstallTemplate(c.Request.Context(), key, tid)
 	if err != nil {
-		common.BadRequestWithErr(ctx, err, "请求参数错误")
+		if errors.Is(err, service.ErrSLATemplateNotFound) {
+			common.NotFoundWithErr(c, err, "SLA 模板不存在")
+			return
+		}
+		common.RespondError(c, err, "安装 SLA 模板失败")
 		return
 	}
 
-	common.Success(ctx, result)
+	common.Success(c, result)
 }
 
-// RegisterRoutes 注册路由（兼容旧接口）。
-// 三个路由都必须挂 RequirePermission（与同文件 /sla/policies 一致）：只挂列表时任何
-// 登录用户都能读模板并安装模板（写操作）。
+// RegisterRoutes 注册路由（挂在 /api/v1/sla/templates 下）。
+// 三个端点都必须过 RequirePermission：安装是写操作，只给列表挂权限会让任何登录用户
+// 都能往租户里创建 SLA 定义。
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	templates := r.Group("/sla/templates")
 	{

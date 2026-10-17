@@ -8,7 +8,21 @@ function isRFC3339Timestamp(value: string): boolean {
   return RFC3339.test(value) && !Number.isNaN(Date.parse(value));
 }
 
-// SLA定义接口 (camelCase - httpClient 自动转换)
+// SLA定义接口 (camelCase，与后端 dto.SLADefinitionResponse 逐字段一致)
+export interface SLABusinessHours {
+  timeZone?: string;
+  alwaysOn?: boolean;
+  workDays?: number[];
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface SLAEscalationLevel {
+  level: number;
+  thresholdMinutes: number;
+  notifyRoles?: string[];
+}
+
 export interface SLADefinition {
   id: number;
   name: string;
@@ -17,10 +31,9 @@ export interface SLADefinition {
   priority: string;
   responseTime: number;
   resolutionTime: number;
-  escalationRules?: Record<string, unknown>[];
-  availabilityTarget?: number;
-  availability?: number;
-  complianceRate?: number;
+  businessHours?: SLABusinessHours;
+  escalationLevels?: SLAEscalationLevel[];
+  conditions?: Record<string, unknown>;
   isActive?: boolean;
   tenantId?: number;
   createdAt?: string;
@@ -81,6 +94,17 @@ export interface SLATimeRemaining {
 }
 
 /** 告警列表行，数据源是真实触发的 SLA 告警历史 */
+/** GET/POST/PUT /api/v1/sla/alert-rules 的规则对象（后端 dto.SLAAlertRuleResponse） */
+export interface SLAAlertRule {
+  id: number;
+  slaDefinitionId: number;
+  name: string;
+  thresholdPercentage: number;
+  alertLevel: 'warning' | 'critical' | 'severe';
+  notificationChannels: string[];
+  isActive: boolean;
+}
+
 export interface SLAAlertItem {
   id: number;
   ticketId: number;
@@ -183,24 +207,31 @@ export interface SLAMetricRecord {
   tenantId: number;
 }
 
-// 创建SLA定义请求 (camelCase)
-export interface CreateSLADefinitionRequest {
-  name: string;
-  description: string;
-  serviceType: string;
-  priority: string;
-  responseTimeMinutes: number;
-  resolutionTimeMinutes: number;
-  availabilityTarget: number;
+/**
+ * POST /api/v1/sla/definitions 与 PUT /api/v1/sla/definitions/:id 的请求体。
+ * 字段与后端 dto.CreateSLADefinitionRequest / UpdateSLADefinitionRequest 一致；
+ * businessHours、escalationRules、conditions 是原始配置 map，由 SLA 模板与后端服务写入，
+ * 管理页当前不编辑它们，因此不在本类型中暴露。
+ */
+export interface SLADefinitionPayload {
+  name?: string;
+  description?: string;
+  serviceType?: string;
+  priority?: string;
+  /** 响应时限，单位分钟；创建时后端要求 >= 1 */
+  responseTime?: number;
+  /** 解决时限，单位分钟；创建时后端要求 >= 1 */
+  resolutionTime?: number;
+  isActive?: boolean;
 }
 
 export class SLAApi {
   // 获取SLA定义列表
+  // 后端 ListSLADefinitions 只解析 page/pageSize，不支持按名称或启用状态过滤，
+  // 因此这里不暴露这类参数，避免调用方误以为过滤已生效。
   static async getSLADefinitions(params?: {
     page?: number;
     pageSize?: number;
-    isActive?: boolean;
-    name?: string;
   }): Promise<{
     items: SLADefinition[];
     total: number;
@@ -211,8 +242,6 @@ export class SLAApi {
     if (params) {
       if (params.page) queryParams.page = String(params.page);
       if (params.pageSize) queryParams.pageSize = String(params.pageSize);
-      if (params.isActive !== undefined) queryParams.isActive = String(params.isActive);
-      if (params.name) queryParams.name = params.name;
     }
     return httpClient.get('/api/v1/sla/definitions', queryParams);
   }
@@ -223,14 +252,14 @@ export class SLAApi {
   }
 
   // 创建SLA定义
-  static async createSLADefinition(data: Partial<SLADefinition>): Promise<SLADefinition> {
+  static async createSLADefinition(data: SLADefinitionPayload): Promise<SLADefinition> {
     return httpClient.post('/api/v1/sla/definitions', data);
   }
 
   // 更新SLA定义
   static async updateSLADefinition(
     id: number,
-    data: Partial<SLADefinition>
+    data: SLADefinitionPayload
   ): Promise<SLADefinition> {
     return httpClient.put(`/api/v1/sla/definitions/${id}`, data);
   }
@@ -440,7 +469,7 @@ export class SLAApi {
       notifyUsers: number[];
     }>;
     isActive: boolean;
-  }): Promise<unknown> {
+  }): Promise<SLAAlertRule> {
     return httpClient.post('/api/v1/sla/alert-rules', data);
   }
 
@@ -454,14 +483,12 @@ export class SLAApi {
       notificationChannels: string[];
       isActive: boolean;
     }>
-  ): Promise<any> {
-    // 修正: 确保路径与后端一致，去掉 v2
+  ): Promise<SLAAlertRule> {
     return httpClient.put(`/api/v1/sla/alert-rules/${id}`, data);
   }
 
   // 删除SLA预警规则
   static async deleteAlertRule(id: number): Promise<void> {
-    // 修正: 确保路径与后端一致，去掉 v2
     return httpClient.delete(`/api/v1/sla/alert-rules/${id}`);
   }
 
@@ -470,13 +497,12 @@ export class SLAApi {
     slaDefinitionId?: number;
     isActive?: boolean;
     alertLevel?: string;
-  }): Promise<any[]> {
+  }): Promise<SLAAlertRule[]> {
     return httpClient.get('/api/v1/sla/alert-rules', params);
   }
 
   // 获取SLA预警规则详情
-  static async getAlertRule(id: number): Promise<any> {
-    // 修正: 确保路径与后端一致，去掉 v2
+  static async getAlertRule(id: number): Promise<SLAAlertRule> {
     return httpClient.get(`/api/v1/sla/alert-rules/${id}`);
   }
 
@@ -503,23 +529,13 @@ export class SLAApi {
   // ==================== 兼容别名（旧代码使用） ====================
 
   /** @deprecated 使用 getSLADefinitions */
-  static getDefinitions(params?: { page?: number; pageSize?: number; isActive?: boolean; name?: string }) {
+  static getDefinitions(params?: { page?: number; pageSize?: number }) {
     return this.getSLADefinitions(params);
   }
 
   /** @deprecated 使用 getSLADefinition */
   static getDefinition(id: number) {
     return this.getSLADefinition(id);
-  }
-
-  /** @deprecated 使用 updateSLADefinition */
-  static updateDefinition(id: number, data: Partial<SLADefinition>) {
-    return this.updateSLADefinition(id, data);
-  }
-
-  /** @deprecated 使用 deleteSLADefinition */
-  static deleteDefinition(id: number) {
-    return this.deleteSLADefinition(id);
   }
 }
 

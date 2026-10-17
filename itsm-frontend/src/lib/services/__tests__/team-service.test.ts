@@ -16,91 +16,143 @@ const mockPost = httpClient.post as jest.Mock;
 const mockPut = httpClient.put as jest.Mock;
 const mockDelete = httpClient.delete as jest.Mock;
 
+const TEAM = {
+  id: 1,
+  name: 'Platform Team',
+  code: 'PLT',
+  description: 'Platform engineering',
+  status: 'active',
+  managerId: 5,
+  managerName: 'Boss',
+  tenantId: 7,
+  members: [{ id: 10, username: 'alice', name: 'Alice', email: 'alice@example.com' }],
+  createdAt: '2024-01-01T00:00:00Z',
+  updatedAt: '2024-01-02T00:00:00Z',
+};
+
 describe('TeamService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('listTeams', () => {
-    it('should fetch and normalize teams', async () => {
-      const rawTeams = [
-        {
-          id: 1,
-          name: 'Platform Team',
-          code: 'PLT',
-          description: 'Platform engineering',
-          managerId: 5,
-          createdAt: '2024-01-01',
-          updatedAt: '2024-01-02',
-          edges: { users: [{ id: 10, name: 'Alice' }] },
-        },
-        {
-          id: 2,
-          name: 'Mobile Team',
-          code: 'MOB',
-        },
-      ];
-      mockGet.mockResolvedValue(rawTeams);
+    it('requests page/pageSize/search as query params and unwraps the list envelope', async () => {
+      mockGet.mockResolvedValue({ items: [TEAM], total: 12, page: 2, pageSize: 10, totalPages: 2 });
 
-      const result = await teamService.listTeams();
+      const result = await teamService.listTeams({ page: 2, pageSize: 10, search: 'dev' });
 
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/org/teams');
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe(1);
-      expect(result[0].name).toBe('Platform Team');
-      expect(result[0].edges?.users).toHaveLength(1);
-      expect(result[1].id).toBe(2);
-      expect(result[1].code).toBe('MOB');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/org/teams', {
+        page: 2,
+        pageSize: 10,
+        search: 'dev',
+      });
+      expect(result.total).toBe(12);
+      expect(result.page).toBe(2);
+      expect(result.totalPages).toBe(2);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].managerName).toBe('Boss');
+      expect(result.items[0].members[0]).toEqual({
+        id: 10,
+        username: 'alice',
+        name: 'Alice',
+        email: 'alice@example.com',
+      });
     });
 
-    it('should handle empty list', async () => {
-      mockGet.mockResolvedValue([]);
+    it('keeps members as an array so the UI never has to guess its presence', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 2, name: 'Mobile Team', code: 'MOB' }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
 
       const result = await teamService.listTeams();
 
-      expect(result).toEqual([]);
+      expect(result.items[0].members).toEqual([]);
+      expect(result.items[0].description).toBe('');
+      expect(result.items[0].managerId).toBe(0);
+      expect(result.items[0].managerName).toBe('');
     });
 
-    it('should normalize missing fields with defaults', async () => {
-      mockGet.mockResolvedValue([{}]);
+    it('handles an empty page', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
 
       const result = await teamService.listTeams();
 
-      expect(result[0].id).toBe(0);
-      expect(result[0].name).toBe('');
-      expect(result[0].code).toBe('');
+      expect(result.items).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+
+  describe('getTeam', () => {
+    it('fetches a single team by id', async () => {
+      mockGet.mockResolvedValue(TEAM);
+
+      const result = await teamService.getTeam(1);
+
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/org/teams/1');
+      expect(result.name).toBe('Platform Team');
+      expect(result.members).toHaveLength(1);
     });
   });
 
   describe('createTeam', () => {
-    it('should create a team', async () => {
+    it('posts to the collection path and returns the server projection', async () => {
       const request = { name: 'QA Team', code: 'QA', description: 'Quality Assurance' };
-      const response = { id: 3, ...request };
-      mockPost.mockResolvedValue(response);
+      mockPost.mockResolvedValue({ ...TEAM, id: 3, name: 'QA Team', code: 'QA', members: [] });
 
       const result = await teamService.createTeam(request);
 
       expect(mockPost).toHaveBeenCalledWith('/api/v1/org/teams', request);
-      expect(result).toEqual(response);
+      expect(result.id).toBe(3);
+      expect(result.members).toEqual([]);
     });
   });
 
-  describe('addMember', () => {
-    it('should add a member to a team', async () => {
-      const request = { teamId: 1, userId: 10 };
-      mockPost.mockResolvedValue(undefined);
+  describe('members', () => {
+    it('lists members through the paginated member endpoint', async () => {
+      mockGet.mockResolvedValue({
+        items: TEAM.members,
+        total: 1,
+        page: 1,
+        pageSize: 20,
+        totalPages: 1,
+      });
 
-      await teamService.addMember(request);
+      const result = await teamService.listMembers(1, { page: 1, pageSize: 20 });
 
-      expect(mockPost).toHaveBeenCalledWith('/api/v1/org/teams/members', request);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/org/teams/1/members', {
+        page: 1,
+        pageSize: 20,
+      });
+      expect(result.items[0].username).toBe('alice');
+    });
+
+    it('adds a member with the camelCase userId body and returns the server member list', async () => {
+      mockPost.mockResolvedValue(TEAM.members);
+
+      const result = await teamService.addMember(1, 10);
+
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/org/teams/1/members', { userId: 10 });
+      expect(result).toHaveLength(1);
+    });
+
+    it('removes a member by userId and returns the remaining member list', async () => {
+      mockDelete.mockResolvedValue([]);
+
+      const result = await teamService.removeMember(1, 10);
+
+      expect(mockDelete).toHaveBeenCalledWith('/api/v1/org/teams/1/members', { userId: 10 });
+      expect(result).toEqual([]);
     });
   });
 
   describe('updateTeam', () => {
     it('should update a team by id', async () => {
       const updateData = { name: 'Platform Team v2' };
-      const response = { id: 1, name: 'Platform Team v2', code: 'PLT' };
-      mockPut.mockResolvedValue(response);
+      mockPut.mockResolvedValue({ ...TEAM, name: 'Platform Team v2' });
 
       const result = await teamService.updateTeam(1, updateData);
 

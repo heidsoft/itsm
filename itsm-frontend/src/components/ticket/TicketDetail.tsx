@@ -1251,7 +1251,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             type="warning"
             showIcon
             className="mb-4"
-            message={t('ticketDetail.escalateHint')}
+            title={t('ticketDetail.escalateHint')}
           />
           <Form.Item
             name="reason"

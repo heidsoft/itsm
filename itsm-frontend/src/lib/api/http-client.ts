@@ -54,6 +54,40 @@ interface ApiResponse<T> {
   data: T;
 }
 
+/**
+ * 请求失败。status 是 HTTP 状态码，code 是后端业务码，两者让调用方能区分
+ * 无权限、冲突和依赖不可用，而不是解析提示文案。
+ */
+export class ApiRequestError extends Error {
+  readonly status?: number;
+  readonly code?: number;
+
+  constructor(message: string, status?: number, code?: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+/** 无权限：后端可能返回 HTTP 403，也可能用业务码 2003 表达。 */
+export function isPermissionDeniedError(error: unknown): boolean {
+  return error instanceof ApiRequestError && (error.status === 403 || error.code === 2003);
+}
+
+/** 非 2xx 响应体不是合法 JSON 时返回 null，由调用方回落到状态码文案。 */
+async function readErrorEnvelope(
+  response?: Response
+): Promise<{ code?: number; message?: string } | null> {
+  if (!response) return null;
+  try {
+    const payload = (await response.json()) as { code?: number; message?: string } | null;
+    return payload && typeof payload === 'object' ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
 class HttpClient {
   private baseURL: string;
   private token: string | null = null;
@@ -365,7 +399,12 @@ class HttpClient {
           if (!retryResponse.ok) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
-            throw new Error(`HTTP error! status: ${retryResponse?.status}${suffix}`);
+            const failure = await readErrorEnvelope(retryResponse);
+            throw new ApiRequestError(
+              (failure?.message || `HTTP error! status: ${retryResponse?.status}`) + suffix,
+              retryResponse.status,
+              failure?.code
+            );
           }
 
           if (responseType === 'blob') {
@@ -379,7 +418,11 @@ class HttpClient {
           if (retryData.code !== undefined && retryData.code !== null && retryData.code !== 0) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
-            throw new Error((retryData.message || 'Request failed') + suffix);
+            throw new ApiRequestError(
+              (retryData.message || 'Request failed') + suffix,
+              retryResponse.status,
+              retryData.code
+            );
           }
 
           return toCamelCase(retryData.data) as T;
@@ -397,16 +440,14 @@ class HttpClient {
       if (!response?.ok) {
         const rid = response?.headers?.get('X-Request-Id') || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
-        // 尝试从响应中获取更详细的错误信息
-        try {
-          const errorData = await response.json();
-          if (errorData && errorData.message) {
-            throw new Error(errorData.message + suffix);
-          }
-        } catch {
-          // Ignore JSON parse errors, use default message
-        }
-        throw new Error(`HTTP error! status: ${response?.status}${suffix}`);
+        // 服务端 message 必须透传：旧写法在 try 内 throw，被紧跟的 catch 吞掉，
+        // 「权限不足」到不了调用方，页面只能把 403 渲染成空数据。
+        const failure = await readErrorEnvelope(response);
+        throw new ApiRequestError(
+          (failure?.message || `HTTP error! status: ${response?.status}`) + suffix,
+          response?.status,
+          failure?.code
+        );
       }
 
       // Blob 响应：直接返回二进制，跳过 JSON 解析与 code 校验
@@ -427,7 +468,11 @@ class HttpClient {
       ) {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
-        throw new Error((responseData.message || 'Request failed') + suffix);
+        throw new ApiRequestError(
+          (responseData.message || 'Request failed') + suffix,
+          response.status,
+          responseData.code
+        );
       }
 
       // 自动转换响应数据 key 为 camelCase
@@ -440,6 +485,8 @@ class HttpClient {
       }
       logger.error('Request failed:', error);
       if (error instanceof Error) {
+        // ApiRequestError 来自真实响应，服务端已可达，不能被网络文案替换掉状态码。
+        if (error instanceof ApiRequestError) throw error;
         if (error.message.includes('fetch')) {
           throw new Error('无法连接到服务器，请检查网络连接和后端服务是否运行');
         }
@@ -563,7 +610,7 @@ class HttpClient {
             }
 
             if (xhr.status < 200 || xhr.status >= 300) {
-              reject(new Error(`HTTP error! status: ${xhr.status}`));
+              reject(new ApiRequestError(`HTTP error! status: ${xhr.status}`, xhr.status));
               return;
             }
 

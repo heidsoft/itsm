@@ -7,6 +7,7 @@ import type {
   ServiceItem,
   ServiceStatus,
   ServiceCategory,
+  ServiceType,
   PortalConfig,
   ServiceFavorite,
   ServiceRating,
@@ -20,11 +21,20 @@ import type {
 
 // 必须是字符串字面量：派生模板常量无法被 api-contract 扫描器静态解析。
 const SERVICE_CATALOGS_PATH = '/api/v1/service-catalogs';
+// 后端 dto 里 0 是合法业务值（审批级别 0、排序 0、SLA 0），但可选数值字段在
+// 响应里可能整体缺席；用显式判断代替 `||`，避免 0 被当成缺失。
+function optionalNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+// 关联字段恒定返回，0 表示「未关联」（解除关联就是显式提交 0）。
+// 组件里的空值只有 undefined，所以在这层一次归一，页面不再各自判断 0。
+function associationId(value: unknown): number | undefined {
+  const id = optionalNumber(value);
+  return id === undefined || id <= 0 ? undefined : id;
+}
 // 后端 common.MaxPageSize=100。超过它的页长不报错，而是被单点回落成默认 20，
 // 所以「取全」只能翻页表达。
 const MAX_PAGE_SIZE = 100;
-// 导出的硬上限。超过它必须显式报错并让调用方收窄过滤条件，禁止静默导出半截 CSV。
-const MAX_EXPORT_RECORDS = 5000;
 
 /** GET /api/v1/service-catalogs 的信封；集合键只有 items，页长只有 pageSize。 */
 interface ServiceCatalogListEnvelope {
@@ -61,16 +71,6 @@ export class ServiceCatalogApi {
     return 'retired' as ServiceStatus;
   }
 
-  private static escapeCSV(value: unknown): string {
-    const text =
-      value instanceof Date
-        ? value.toISOString()
-        : value === undefined || value === null
-          ? ''
-          : String(value);
-    return `"${text.replace(/"/g, '""')}"`;
-  }
-
   private static toBackendRequestStatus(status?: unknown): string | undefined {
     if (!status) return undefined;
     const s = String(status);
@@ -81,30 +81,39 @@ export class ServiceCatalogApi {
     return s;
   }
 
-   
   private static toServiceItem(raw: any): ServiceItem {
-    // 后端 dto.ServiceCatalogResponse: {id,name,category,description,deliveryTime,status,ciTypeId,cloudServiceId,createdAt,updatedAt}
+    // 后端 dto.ServiceCatalogResponse 是契约唯一来源。
+    // deliveryTime 是字符串承载的整数「天数」，不是小时，也不再冒充 availability.responseTime。
+    const deliveryDays = Number(raw?.deliveryTime);
     return {
       id: String(raw?.id),
       name: String(raw?.name || ''),
       // 这里保留后端 category 的原始字符串（前端页面目前以中文分类做统计/图标）
-       
       category: (raw?.category as ServiceCategory) || ('it_service' as ServiceCategory),
       status: ServiceCatalogApi.toFrontendStatus(raw?.status),
       shortDescription: String(raw?.description || ''),
       fullDescription: String(raw?.description || ''),
-      ciTypeId: typeof raw?.ciTypeId === 'number' ? raw.ciTypeId : undefined,
-      cloudServiceId: typeof raw?.cloudServiceId === 'number' ? raw.cloudServiceId : undefined,
+      ciTypeId: associationId(raw?.ciTypeId),
+      cloudServiceId: associationId(raw?.cloudServiceId),
+      serviceType: raw?.serviceType ? (String(raw.serviceType) as ServiceType) : undefined,
       tags: [],
-      requiresApproval: true,
+      // requiresApproval 恒定由后端返回；旧实现硬编码 true，会把「不需要审批」的目录
+      // 显示成需要审批，并在编辑回填后把 false 又写回 true。
+      requiresApproval: raw?.requiresApproval === true,
+      approvalLevel: optionalNumber(raw?.approvalLevel),
+      approvers: Array.isArray(raw?.approvers)
+        ? raw.approvers.map((id: unknown) => Number(id))
+        : undefined,
+      slaResponseTime: optionalNumber(raw?.slaResponseTime),
+      slaResolutionTime: optionalNumber(raw?.slaResolutionTime),
+      sortOrder: optionalNumber(raw?.sortOrder),
+      price: optionalNumber(raw?.price),
+      unit: raw?.unit ? String(raw.unit) : undefined,
+      deliveryDays: Number.isFinite(deliveryDays) ? deliveryDays : undefined,
       createdBy: 0,
       createdByName: '',
       createdAt: raw?.createdAt ? new Date(raw.createdAt) : new Date(),
       updatedAt: raw?.updatedAt ? new Date(raw.updatedAt) : new Date(),
-      availability: {
-        // 后端 deliveryTime 为 string（天/小时口径未统一）；V0先用于展示，不做严格含义
-        responseTime: raw?.deliveryTime ? Number(raw.deliveryTime) : undefined,
-      },
     };
   }
 
@@ -161,38 +170,39 @@ export class ServiceCatalogApi {
    * 集合键固定为 items，页长固定为 pageSize；后端 common.GetPaginationFromQuery 是
    * 唯一的夹紧所有者（缺省 1/20，只采纳 (0,100]）。需要读全量的调用方走
    * ServiceCatalogApi.getAllServices，不要靠放大 pageSize 表达「全部」。
+   *
+   * search 是服务端关键词过滤（q，匹配名称或描述），与 category/status 叠加；
+   * total 就是过滤后的命中数。禁止在返回的当前页上做二次关键词过滤后当成全量。
    */
   static async getServices(query?: ServiceQuery): Promise<{
     services: ServiceItem[];
     total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
   }> {
     const page = query?.page ?? 1;
     const category = query?.category ? String(query.category) : undefined;
     const status = ServiceCatalogApi.toBackendStatus(query?.status);
+    const keyword = query?.search?.trim();
 
     const resp = await httpClient.get<ServiceCatalogListEnvelope>(SERVICE_CATALOGS_PATH, {
       page,
       pageSize: query?.pageSize ?? 10,
       ...(category ? { category } : {}),
       ...(status ? { status } : {}),
+      ...(keyword ? { q: keyword } : {}),
+      ...(query?.ciTypeId ? { ciTypeId: query.ciTypeId } : {}),
+      ...(query?.cloudServiceId ? { cloudServiceId: query.cloudServiceId } : {}),
     });
 
-    const services = resp.items.map(ServiceCatalogApi.toServiceItem);
-    // 后端列表端点没有关键词参数，这里只过滤「当前页」，因此 total 会大于返回条数；
-    // 调用方不得把它当成全集结果。
-    if (query?.search) {
-      const q = query.search.toLowerCase();
-      return {
-        services: services.filter(
-          s =>
-            (s.name || '').toLowerCase().includes(q) ||
-            (s.shortDescription || '').toLowerCase().includes(q),
-        ),
-        total: resp.total,
-      };
-    }
-
-    return { services, total: resp.total };
+    return {
+      services: resp.items.map(ServiceCatalogApi.toServiceItem),
+      total: resp.total,
+      page: resp.page,
+      pageSize: resp.pageSize,
+      totalPages: resp.totalPages,
+    };
   }
 
   /**
@@ -208,6 +218,7 @@ export class ServiceCatalogApi {
   ): Promise<{ services: ServiceItem[]; total: number; complete: boolean }> {
     const category = query?.category ? String(query.category) : undefined;
     const status = ServiceCatalogApi.toBackendStatus(query?.status);
+    const keyword = query?.search?.trim();
     const services: ServiceItem[] = [];
     let total = 0;
 
@@ -217,6 +228,9 @@ export class ServiceCatalogApi {
         pageSize: MAX_PAGE_SIZE,
         ...(category ? { category } : {}),
         ...(status ? { status } : {}),
+        ...(keyword ? { q: keyword } : {}),
+        ...(query?.ciTypeId ? { ciTypeId: query.ciTypeId } : {}),
+        ...(query?.cloudServiceId ? { cloudServiceId: query.cloudServiceId } : {}),
       });
       total = resp.total;
       services.push(...resp.items.map(ServiceCatalogApi.toServiceItem));
@@ -242,7 +256,10 @@ export class ServiceCatalogApi {
   }
 
   /**
-   * 创建服务
+   * 创建服务。
+   *
+   * 表单可见的字段必须全部落到后端；旧实现只发 6 个字段，服务类型/审批/SLA/排序
+   * 在页面上填了也不会保存。
    */
   static async createService(request: CreateServiceItemRequest): Promise<ServiceItem> {
     const payload = {
@@ -251,9 +268,17 @@ export class ServiceCatalogApi {
       description: request.shortDescription || request.fullDescription || '',
       ciTypeId: request.ciTypeId,
       cloudServiceId: request.cloudServiceId,
-      deliveryTime: String(
-        request.availability?.responseTime ?? request.availability?.resolutionTime ?? 1
-      ),
+      icon: request.icon,
+      serviceType: request.serviceType || undefined,
+      requiresApproval: request.requiresApproval ?? true,
+      approvalLevel: request.approvalLevel,
+      approvers: request.approvers,
+      slaResponseTime: request.slaResponseTime,
+      slaResolutionTime: request.slaResolutionTime,
+      sortOrder: request.sortOrder,
+      price: request.price,
+      unit: request.unit || undefined,
+      deliveryTime: String(request.deliveryDays ?? 1),
       status: ServiceCatalogApi.toBackendStatus(request.status) || 'enabled',
     };
     const resp = await httpClient.post<any>('/api/v1/service-catalogs', payload);
@@ -261,18 +286,34 @@ export class ServiceCatalogApi {
   }
 
   /**
-   * 更新服务
+   * 部分更新服务。
+   *
+   * 未出现在 request 里的键不发送，后端 CatalogPatch 会保持原值；显式传入的
+   * false/0/'' 会真的写进去（关闭审批、清零、清除单位都靠这条表达）。
    */
   static async updateService(id: string, request: UpdateServiceItemRequest): Promise<ServiceItem> {
     const payload: Record<string, unknown> = {};
     if (request.name !== undefined) payload.name = request.name;
     if (request.category !== undefined) payload.category = String(request.category);
-    if (request.shortDescription !== undefined || request.fullDescription !== undefined) {
-      payload.description = request.shortDescription || request.fullDescription || '';
+    if (request.shortDescription !== undefined) payload.description = request.shortDescription;
+    else if (request.fullDescription !== undefined) payload.description = request.fullDescription;
+    if (request.icon !== undefined) payload.icon = request.icon;
+    if (request.serviceType !== undefined) payload.serviceType = request.serviceType;
+    if (request.requiresApproval !== undefined) {
+      payload.requiresApproval = request.requiresApproval;
     }
-    if (request.availability?.responseTime !== undefined) {
-      payload.deliveryTime = String(request.availability.responseTime);
+    if (request.approvalLevel !== undefined) payload.approvalLevel = request.approvalLevel;
+    if (request.approvers !== undefined) payload.approvers = request.approvers;
+    if (request.slaResponseTime !== undefined) {
+      payload.slaResponseTime = request.slaResponseTime;
     }
+    if (request.slaResolutionTime !== undefined) {
+      payload.slaResolutionTime = request.slaResolutionTime;
+    }
+    if (request.sortOrder !== undefined) payload.sortOrder = request.sortOrder;
+    if (request.price !== undefined) payload.price = request.price;
+    if (request.unit !== undefined) payload.unit = request.unit;
+    if (request.deliveryDays !== undefined) payload.deliveryTime = String(request.deliveryDays);
     if (request.ciTypeId !== undefined) payload.ciTypeId = request.ciTypeId;
     if (request.cloudServiceId !== undefined) payload.cloudServiceId = request.cloudServiceId;
     const st = ServiceCatalogApi.toBackendStatus(request.status);
@@ -590,49 +631,6 @@ export class ServiceCatalogApi {
     const _serviceId = serviceId;
     // 写入路径必须显式失败，静默丢弃会让调用方以为浏览量已记录。
     return ServiceCatalogApi.unsupportedFeature('服务浏览记录');
-  }
-
-  /**
-   * 导出服务目录
-   */
-  static async exportCatalog(format: 'excel' | 'pdf'): Promise<Blob> {
-    // 不能靠放大页长取全量：请求 size=1000 时后端 binding 允许，handler 却静默夹成
-    // 100，回落平台默认则是 20，单请求永远拿不到 1000 条。
-    // 取全必须翻页，且截断要显式失败。
-    const { services, total, complete } = await ServiceCatalogApi.getAllServices(
-      undefined,
-      MAX_EXPORT_RECORDS,
-    );
-    if (!complete) {
-      throw new Error(
-        `服务目录共 ${total} 条，超过单次导出上限 ${MAX_EXPORT_RECORDS} 条，请按分类或状态收窄条件后重试。`,
-      );
-    }
-    const header = [
-      'ID',
-      '服务名称',
-      '分类',
-      '状态',
-      '描述',
-      '交付时间',
-      '创建时间',
-      '更新时间',
-    ];
-    const rows = services.map(service => [
-      service.id,
-      service.name,
-      service.category,
-      service.status,
-      service.shortDescription,
-      service.availability?.responseTime || '',
-      service.createdAt,
-      service.updatedAt,
-    ]);
-    const csv = [header, ...rows]
-      .map(row => row.map(ServiceCatalogApi.escapeCSV).join(','))
-      .join('\n');
-    const type = format === 'pdf' ? 'text/csv;charset=utf-8' : 'text/csv;charset=utf-8';
-    return new Blob([`\uFEFF${csv}`], { type });
   }
 }
 

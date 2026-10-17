@@ -4,6 +4,11 @@
 #
 # Gate C.7 — 产品需求收敛守卫（继续扩散 = 构建失败）
 #
+# 🔴 locale 铁律（2026-10-17 实测教训）：macOS BSD awk 在 UTF-8 locale 下对含 CJK
+# 的字符串做 collation 比较，`可用 == 预览` 为真——预览域棘轮把「可用」行也计入，
+# preview_now 被虚高误判。全脚本强制 LC_ALL=C 退化为字节级比较，行为与 Linux CI 一致。
+export LC_ALL=C
+
 # 为什么有这条门禁
 # ----------------
 # Gate C.6 治的是「口径漂移」（文档说 A、代码做 B）。但 2026-09-28 盘点暴露了
@@ -224,7 +229,10 @@ say "-- C.7.2 预览域棘轮（README 成熟度表「预览」数量只减不�
 README="${ROOT_DIR}/README.md"
 preview_now=0
 if [ -f "$README" ]; then
-  preview_now="$(awk '/^\| 能力域 \| 状态 \| 说明 \|/{flag=1;next} /^\|[: -]+\|/{next} flag&&/^\|/{n=split($0,a,"|"); st=a[3]; gsub(/^[ \t]+|[ \t]+$/,"",st); if (st=="预览") c++} flag&&!/^\|/{flag=0} END{print c+0}' "$README")"
+  # 不用 == 比较「预览」：macOS BSD awk 的 CJK == 走 collation，纯中文的「可用」
+  # 也会被判成「预览」（实测 `可用 == 预览` 为真），预览域棘轮被虚高误判。
+  # 正则锚定按字节匹配，两种 awk 行为一致。
+  preview_now="$(awk '/^\| 能力域 \| 状态 \| 说明 \|/{flag=1;next} /^\|[: -]+\|/{next} flag&&/^\|/{n=split($0,a,"|"); st=a[3]; gsub(/^[ \t]+|[ \t]+$/,"",st); if (st ~ /^预览$/) c++} flag&&!/^\|/{flag=0} END{print c+0}' "$README")"
 fi
 preview_base="$(baseline_get preview_domains 999999)"
 say "  -- README「预览」能力域 = ${preview_now}（基线 ${preview_base}）"

@@ -1,5 +1,6 @@
 import { SystemConfigAPI } from '@/lib/api/system-config-api';
 import { httpClient } from '@/lib/api/http-client';
+import type { SystemStats } from '@/types/dashboard';
 
 jest.mock('@/lib/api/http-client', () => ({
   httpClient: {
@@ -78,12 +79,36 @@ describe('SystemConfigAPI', () => {
   });
 
   describe('getSystemStatus', () => {
-    it('should get system status', async () => {
-      const expected = { version: '1.0.0', uptime: 3600 };
+    it('返回与系统健康卡同一份运行时 DTO（含 availability 与 goroutines）', async () => {
+      const expected: SystemStats = {
+        uptime: 3600,
+        cpuUsage: 12.5,
+        memoryUsage: 30,
+        diskUsage: 40,
+        avgResponseTime: 25,
+        requestsPerSecond: 4.2,
+        errorRate: 0.5,
+        metricsWindowSeconds: 30,
+        dbConnections: 8,
+        dbSize: 1024,
+        cacheHitRate: 95,
+        cores: 8,
+        goroutines: 42,
+        sampledAt: '2026-10-15T02:00:00.000Z',
+        availability: {
+          cpu: 'measured',
+          memory: 'measured',
+          disk: 'measured',
+          http: 'measured',
+          dbSize: 'measured',
+          cache: 'measured',
+        },
+      };
       mockGet.mockResolvedValue(expected);
       const res = await SystemConfigAPI.getSystemStatus();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/system-configs/status');
-      expect(res).toEqual(expected);
+      expect(res.goroutines).toBe(42);
+      expect(res.availability.memory).toBe('measured');
     });
   });
 });

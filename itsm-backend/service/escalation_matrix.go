@@ -97,10 +97,23 @@ func NewEscalationMatrixServiceWithStore(logger *zap.SugaredLogger, store Escala
 }
 
 // cloneMatrix 深拷贝一份矩阵，避免调用方改动缓存内部切片。
+//
+// 通知目标为空的级别在这里归一成空切片：handler 直接把矩阵序列化进响应，
+// nil 会变成 JSON null，而 `/api/v1/escalation-matrices` 的契约是数组，
+// 前端每处取值都得再判一次 null。
 func cloneMatrix(src EscalationMatrix) EscalationMatrix {
 	out := make(EscalationMatrix, len(src))
 	for priority, levels := range src {
-		out[priority] = append([]EscalationLevel(nil), levels...)
+		out[priority] = make([]EscalationLevel, len(levels))
+		for i, l := range levels {
+			if l.NotifyRoles == nil {
+				l.NotifyRoles = []string{}
+			}
+			if l.NotifyUserIDs == nil {
+				l.NotifyUserIDs = []int{}
+			}
+			out[priority][i] = l
+		}
 	}
 	return out
 }

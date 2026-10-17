@@ -287,6 +287,10 @@ func (s *Service) ListSLAPerformance(ctx context.Context, tenantID int, q SLAPer
 // Alert Rules
 
 func (s *Service) CreateAlertRule(ctx context.Context, rule *SLAAlertRule) (*SLAAlertRule, error) {
+	// 关联 ID 必须属于同一租户：不校验会允许通过 slaDefinitionId 注入跨租户引用。
+	if _, err := s.repo.GetDefinition(ctx, rule.SLADefinitionID, rule.TenantID); err != nil {
+		return nil, common.NewBadRequestError("SLA 定义不存在或不属于当前租户", err)
+	}
 	return s.repo.CreateAlertRule(ctx, rule)
 }
 

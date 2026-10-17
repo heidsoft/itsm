@@ -1,4 +1,8 @@
-import { EscalationMatrixApi, DEFAULT_ESCALATION_MATRIX } from '@/lib/api/escalation-matrix-api';
+import {
+  EscalationMatrixApi,
+  DEFAULT_ESCALATION_MATRIX,
+  type EscalationMatrix,
+} from '@/lib/api/escalation-matrix-api';
 import { httpClient } from '@/lib/api/http-client';
 
 jest.mock('@/lib/api/http-client', () => ({
@@ -11,41 +15,92 @@ jest.mock('@/lib/api/http-client', () => ({
   },
 }));
 
+const mockGet = jest.mocked(httpClient.get);
+
+// 后端 GET /api/v1/escalation-matrices 的 data 就是矩阵本身：
+// 键为优先级（critical/high/medium/low），级别字段为 afterMinutes/notifyRoles/notifyUserIDs/description。
+const SERVER_MATRIX: EscalationMatrix = {
+  critical: [
+    {
+      level: 1,
+      afterMinutes: 10,
+      notifyRoles: ['manager'],
+      notifyUserIDs: [7],
+      description: '自定义：10 分钟未响应升级至部门经理',
+    },
+  ],
+  low: [
+    {
+      level: 1,
+      afterMinutes: 960,
+      notifyRoles: ['it_admin'],
+      notifyUserIDs: [],
+      description: '自定义：16 小时未响应升级至 IT 管理员',
+    },
+  ],
+};
+
 describe('EscalationMatrixApi', () => {
-  beforeEach(() => { jest.clearAllMocks(); });
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('getMatrix', () => {
-    it('should return default escalation matrix', async () => {
-      const res = await EscalationMatrixApi.getMatrix();
-      expect(res).toEqual(DEFAULT_ESCALATION_MATRIX);
+    it('请求升级矩阵接口', async () => {
+      mockGet.mockResolvedValue(SERVER_MATRIX);
+      await EscalationMatrixApi.getMatrix();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/escalation-matrices');
     });
 
-    it('should have P1, P2, P3 priorities', async () => {
+    it('原样返回服务端矩阵，不得用内置默认覆盖租户自定义', async () => {
+      mockGet.mockResolvedValue(SERVER_MATRIX);
       const res = await EscalationMatrixApi.getMatrix();
-      expect(res.P1).toBeDefined();
-      expect(res.P2).toBeDefined();
-      expect(res.P3).toBeDefined();
+      expect(res).toEqual(SERVER_MATRIX);
+      expect(res.critical[0].afterMinutes).toBe(10);
+      expect(res.low[0].notifyRoles).toEqual(['it_admin']);
     });
 
-    it('should have correct P1 escalation levels', async () => {
-      const res = await EscalationMatrixApi.getMatrix();
-      expect(res.P1).toHaveLength(3);
-      expect(res.P1[0].level).toBe(1);
-      expect(res.P1[0].thresholdMinutes).toBe(5);
-      expect(res.P1[1].level).toBe(2);
-      expect(res.P1[2].level).toBe(3);
+    it('空矩阵属不可用而非「未配置」，必须抛出而不是静默回落默认', async () => {
+      mockGet.mockResolvedValue({});
+      await expect(EscalationMatrixApi.getMatrix()).rejects.toThrow(
+        '升级矩阵返回为空，无法确认当前生效配置',
+      );
     });
 
-    it('should have correct P2 escalation levels', async () => {
-      const res = await EscalationMatrixApi.getMatrix();
-      expect(res.P2).toHaveLength(2);
-      expect(res.P2[0].thresholdMinutes).toBe(30);
+    it('响应缺失同样抛出', async () => {
+      mockGet.mockResolvedValue(null);
+      await expect(EscalationMatrixApi.getMatrix()).rejects.toThrow(
+        '升级矩阵返回为空，无法确认当前生效配置',
+      );
     });
 
-    it('should have correct P3 escalation levels', async () => {
-      const res = await EscalationMatrixApi.getMatrix();
-      expect(res.P3).toHaveLength(1);
-      expect(res.P3[0].thresholdMinutes).toBe(240);
+    it('请求失败向上抛出，交页面显式报错', async () => {
+      mockGet.mockRejectedValue(new Error('HTTP error! status: 500'));
+      await expect(EscalationMatrixApi.getMatrix()).rejects.toThrow('HTTP error! status: 500');
+    });
+  });
+
+  describe('DEFAULT_ESCALATION_MATRIX', () => {
+    it('与后端 DefaultEscalationMatrix 同键同字段，避免页面自造优先级', () => {
+      expect(Object.keys(DEFAULT_ESCALATION_MATRIX)).toEqual(['critical', 'high', 'medium', 'low']);
+      expect(DEFAULT_ESCALATION_MATRIX.critical.map(l => l.afterMinutes)).toEqual([15, 30, 60]);
+      expect(DEFAULT_ESCALATION_MATRIX.critical.map(l => l.notifyRoles)).toEqual([
+        ['manager'],
+        ['it_admin'],
+        ['admin'],
+      ]);
+      expect(DEFAULT_ESCALATION_MATRIX.low[0].afterMinutes).toBe(480);
+      Object.values(DEFAULT_ESCALATION_MATRIX)
+        .flat()
+        .forEach(level => {
+          expect(level).toEqual({
+            level: expect.any(Number),
+            afterMinutes: expect.any(Number),
+            notifyRoles: expect.any(Array),
+            notifyUserIDs: expect.any(Array),
+            description: expect.any(String),
+          });
+        });
     });
   });
 });

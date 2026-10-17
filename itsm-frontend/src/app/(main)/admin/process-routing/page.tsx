@@ -108,8 +108,8 @@ export default function ProcessRoutingPage() {
 
   const loadTeams = async () => {
     try {
-      const data = await teamService.listTeams();
-      setTeams(data);
+      const data = await teamService.listTeams({ page: 1, pageSize: 100 });
+      setTeams(data.items);
     } catch (error) {
       console.error('Failed to load teams:', error);
     }

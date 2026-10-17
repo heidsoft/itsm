@@ -257,24 +257,26 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 
 		// 工单自动化规则
 		if config.TicketAutomationRuleHandler != nil {
-			tickets.GET("/automation-rules", middleware.RequirePermission("system_config", "read"), config.TicketAutomationRuleHandler.ListAutomationRules)
-			tickets.POST("/automation-rules", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.CreateAutomationRule)
-			tickets.GET("/automation-rules/:id", middleware.RequirePermission("system_config", "read"), config.TicketAutomationRuleHandler.GetAutomationRule)
-			tickets.PUT("/automation-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.UpdateAutomationRule)
-			tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.DeleteAutomationRule)
-			tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("system_config", "write"), config.TicketAutomationRuleHandler.TestAutomationRule)
+			tickets.GET("/automation-rules", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleHandler.ListAutomationRules)
+			tickets.POST("/automation-rules", middleware.RequirePermission("automation_rule", "write"), config.TicketAutomationRuleHandler.CreateAutomationRule)
+			tickets.GET("/automation-rules/:id", middleware.RequirePermission("automation_rule", "read"), config.TicketAutomationRuleHandler.GetAutomationRule)
+			tickets.PUT("/automation-rules/:id", middleware.RequirePermission("automation_rule", "write"), config.TicketAutomationRuleHandler.UpdateAutomationRule)
+			tickets.DELETE("/automation-rules/:id", middleware.RequirePermission("automation_rule", "write"), config.TicketAutomationRuleHandler.DeleteAutomationRule)
+			tickets.POST("/automation-rules/:id/test", middleware.RequirePermission("automation_rule", "write"), config.TicketAutomationRuleHandler.TestAutomationRule)
 		}
 
 		// 工单分配规则
 		if config.TicketAssignmentSmartHandler != nil {
-			tickets.POST("/:id/auto-assign", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.AutoAssign)
-			tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.GetAssignRecommendations)
-			tickets.GET("/assignment-rules", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.ListAssignmentRules)
-			tickets.POST("/assignment-rules", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.CreateAssignmentRule)
-			tickets.POST("/assignment-rules/test", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.TestAssignmentRule)
-			tickets.GET("/assignment-rules/:id", middleware.RequirePermission("system_config", "read"), config.TicketAssignmentSmartHandler.GetAssignmentRule)
-			tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.UpdateAssignmentRule)
-			tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("system_config", "write"), config.TicketAssignmentSmartHandler.DeleteAssignmentRule)
+			// 针对单个工单的自动分配与推荐是「指派这个工单」的动作，归 ticket:assign，
+			// 不属于规则配置面；挂在 system_config:* 上会让能派单的坐席与经理 403。
+			tickets.POST("/:id/auto-assign", middleware.RequirePermission("ticket", "assign"), config.TicketAssignmentSmartHandler.AutoAssign)
+			tickets.GET("/assign-recommendations/:id", middleware.RequirePermission("ticket", "assign"), config.TicketAssignmentSmartHandler.GetAssignRecommendations)
+			tickets.GET("/assignment-rules", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartHandler.ListAssignmentRules)
+			tickets.POST("/assignment-rules", middleware.RequirePermission("assignment_rule", "write"), config.TicketAssignmentSmartHandler.CreateAssignmentRule)
+			tickets.POST("/assignment-rules/test", middleware.RequirePermission("assignment_rule", "write"), config.TicketAssignmentSmartHandler.TestAssignmentRule)
+			tickets.GET("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "read"), config.TicketAssignmentSmartHandler.GetAssignmentRule)
+			tickets.PUT("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "write"), config.TicketAssignmentSmartHandler.UpdateAssignmentRule)
+			tickets.DELETE("/assignment-rules/:id", middleware.RequirePermission("assignment_rule", "write"), config.TicketAssignmentSmartHandler.DeleteAssignmentRule)
 		}
 
 		// 工单评分

@@ -211,8 +211,7 @@ export const CIRelationshipAPI = {
 
   // 获取拓扑图
   async getTopologyGraph(ciId: number, depth?: number): Promise<TopologyGraph> {
-    const params = depth ? `?depth=${depth}` : '';
-    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/topology${params}`);
+    return httpClient.get(`/api/v1/cmdb/cis/${ciId}/topology`, depth ? { depth } : undefined);
   },
 
   // 影响分析

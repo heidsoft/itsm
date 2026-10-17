@@ -3,9 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
+	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 )
@@ -58,6 +62,9 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 		create.SetParentID(req.ParentID)
 	}
 	if req.WorkflowDefinitionKey != nil && *req.WorkflowDefinitionKey != "" {
+		if err := s.validateWorkflowKey(ctx, req.TenantID, *req.WorkflowDefinitionKey); err != nil {
+			return nil, err
+		}
 		create.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
 	}
 	if req.DepartmentID != nil && *req.DepartmentID > 0 {
@@ -226,6 +233,9 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 	}
 	if req.WorkflowDefinitionKey != nil {
 		if *req.WorkflowDefinitionKey != "" {
+			if err := s.validateWorkflowKey(ctx, tenantID, *req.WorkflowDefinitionKey); err != nil {
+				return nil, err
+			}
 			update.SetWorkflowDefinitionKey(*req.WorkflowDefinitionKey)
 		} else {
 			update.ClearWorkflowDefinitionKey()
@@ -251,6 +261,29 @@ func (s *TicketCategoryService) UpdateCategory(ctx context.Context, id int, req 
 		}
 	}
 	return updated, nil
+}
+
+// validateWorkflowKey 校验分类关联的流程定义在本租户存在且已激活。
+// 分类绑定是建单选路的一个优先级来源，写入时必须可解析，否则管理员看到
+// 「保存成功」但工单仍走默认流程。
+func (s *TicketCategoryService) validateWorkflowKey(ctx context.Context, tenantID int, key string) error {
+	if strings.TrimSpace(key) == "" {
+		return nil
+	}
+	exists, err := s.client.ProcessDefinition.Query().
+		Where(
+			processdefinition.KeyEQ(key),
+			processdefinition.TenantIDEQ(tenantID),
+			processdefinition.IsActiveEQ(true),
+			processdefinition.IsLatestEQ(true),
+		).Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("验证关联工作流失败: %w", err)
+	}
+	if !exists {
+		return common.NewValidationError("工作流不存在、未激活或不属于当前租户", nil)
+	}
+	return nil
 }
 
 // DeleteCategory 删除工单分类

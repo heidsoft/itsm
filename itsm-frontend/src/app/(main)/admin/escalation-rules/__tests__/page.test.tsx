@@ -81,6 +81,7 @@ describe('EscalationRulesPage', () => {
     expect(screen.queryByText(/由 系统/)).not.toBeInTheDocument();
   });
 
+  // 整页 jsdom 渲染 + antd 弹窗，在全量并行下会超过 jest.config 的 10s 默认上限。
   it('创建时提交表单选中的 slaDefinitionId，而不是硬编码定义', async () => {
     renderPage();
     await waitFor(() => expect(mockedApi.getAlertRules).toHaveBeenCalled());
@@ -106,7 +107,7 @@ describe('EscalationRulesPage', () => {
       notificationChannels: ['email'],
       isActive: false,
     });
-  });
+  }, 30000);
 
   it('停用按钮调用更新接口并取反 isActive', async () => {
     renderPage();
@@ -133,5 +134,5 @@ describe('EscalationRulesPage', () => {
     fireEvent.click(within(popper).getByRole('button', { name: '删 除' }));
 
     await waitFor(() => expect(mockedApi.deleteAlertRule).toHaveBeenCalledWith(11));
-  });
+  }, 30000);
 });

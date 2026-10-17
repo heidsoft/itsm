@@ -275,8 +275,8 @@ func (s *Service) DeleteDepartment(ctx context.Context, id int, tenantID int) er
 	return s.repo.DeleteDepartment(ctx, id, tenantID)
 }
 
-func (s *Service) ListTeams(ctx context.Context, tenantID int) ([]*Team, error) {
-	return s.repo.ListTeams(ctx, tenantID)
+func (s *Service) ListTeams(ctx context.Context, tenantID int, page int, pageSize int, search string) ([]*Team, int, error) {
+	return s.repo.ListTeams(ctx, tenantID, page, pageSize, search)
 }
 
 func (s *Service) GetTeam(ctx context.Context, id int, tenantID int) (*Team, error) {
@@ -295,8 +295,16 @@ func (s *Service) DeleteTeam(ctx context.Context, id int, tenantID int) error {
 	return s.repo.DeleteTeam(ctx, id, tenantID)
 }
 
-func (s *Service) AddTeamMember(ctx context.Context, teamID int, userID int) error {
-	return s.repo.AddTeamMember(ctx, teamID, userID)
+func (s *Service) ListTeamMembers(ctx context.Context, teamID int, tenantID int, page int, pageSize int) ([]*TeamMember, int, error) {
+	return s.repo.ListTeamMembers(ctx, teamID, tenantID, page, pageSize)
+}
+
+func (s *Service) AddTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error {
+	return s.repo.AddTeamMember(ctx, teamID, userID, tenantID)
+}
+
+func (s *Service) RemoveTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error {
+	return s.repo.RemoveTeamMember(ctx, teamID, userID, tenantID)
 }
 
 // Tags

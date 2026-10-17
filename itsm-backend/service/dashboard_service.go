@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"itsm-backend/common"
@@ -22,8 +23,10 @@ import (
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/sysstat"
 	"itsm-backend/service/sla"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -37,6 +40,12 @@ type DashboardService struct {
 	repo     *dashboardRepository
 	logger   *zap.SugaredLogger
 	slaStore *sla.Store // SLA 状态以 sla_states 为权威来源
+
+	// 系统健康指标：采集器持有 CPU 增量基线，lastHTTP 持有请求累计量基线。
+	hostStats     *sysstat.Collector
+	metricSources hostMetricSources
+	mu            sync.Mutex
+	lastHTTP      *httpTotals
 }
 
 // SetSLAStore 注入 SLA 持久化 store
@@ -96,10 +105,14 @@ func NewDashboardService(client *ent.Client, logger *zap.SugaredLogger) *Dashboa
 // 注入的 db 会用于 dashboardRepository 内的复杂聚合 raw SQL。
 func NewDashboardServiceWithDB(client *ent.Client, db *sql.DB, logger *zap.SugaredLogger) *DashboardService {
 	return &DashboardService{
-		client: client,
-		db:     db,
-		repo:   newDashboardRepository(db),
-		logger: logger,
+		client:    client,
+		db:        db,
+		repo:      newDashboardRepository(db),
+		logger:    logger,
+		hostStats: sysstat.New(""),
+		metricSources: hostMetricSources{
+			gatherer: prometheus.DefaultGatherer,
+		},
 	}
 }
 
@@ -1710,20 +1723,23 @@ func (s *DashboardService) GetUserStats(ctx context.Context, tenantID int) (*dto
 	return stats, nil
 }
 
-// GetSystemStats 获取系统统计数据
+// GetSystemStats 获取系统统计数据。
+//
+// 数据源全部是运行时真值：进程 CPU/内存与文件系统用量来自 internal/sysstat，
+// 时延/QPS/错误率来自进程内 Prometheus 注册表（middleware.PrometheusMetricsMiddleware
+// 已在 router.go 全局挂载），连接数与库大小来自注入的 *sql.DB，缓存命中率来自 Redis INFO。
 func (s *DashboardService) GetSystemStats(ctx context.Context) (*dto.SystemStatsResponse, error) {
-	// 返回模拟的系统统计数据（实际生产环境应从系统监控获取）
-	stats := &dto.SystemStatsResponse{
-		Uptime:            time.Since(time.Now().Add(-24 * time.Hour)).Seconds(),
-		CPUUsage:          35.5,
-		MemoryUsage:       62.3,
-		DiskUsage:         45.8,
-		AvgResponseTime:   125.5,
-		RequestsPerSecond: 45.2,
-		ErrorRate:         0.15,
-		DBConnections:     25,
-		DBSize:            1024 * 1024 * 500, // 500MB
-		CacheHitRate:      89.5,
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.hostStats == nil {
+		s.hostStats = sysstat.New("")
 	}
-	return stats, nil
+
+	resp, current, err := buildSystemStats(ctx, s.hostStats, s.metricSources, s.db, s.lastHTTP)
+	if err != nil {
+		return nil, err
+	}
+	s.lastHTTP = current
+	return resp, nil
 }

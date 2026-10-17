@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -40,8 +42,10 @@ func newCategoryTestRouter(t *testing.T, client *ent.Client, tenantID int) *gin.
 	})
 	// 与 router.SetupTicketCategoryRoutes 相同的路径与方法（省略 RequirePermission，
 	// 权限链路由 router 包测试覆盖），确保测试打到真实生产 handler 入口。
-	group := r.Group("/api/v1")
-	group.Group("/ticket-categories").GET("", h.ListCategories)
+	group := r.Group("/api/v1").Group("/ticket-categories")
+	group.GET("", h.ListCategories)
+	group.POST("", h.CreateCategory)
+	group.PUT("/:id", h.UpdateCategory)
 	return r
 }
 
@@ -157,4 +161,85 @@ func TestListCategories_IgnoresInjectedTenantID(t *testing.T) {
 	assert.Equal(t, 1, env.Data.Total, "查询参数 tenantId 不得覆盖认证租户上下文")
 	require.Len(t, env.Data.Items, 1)
 	assert.Equal(t, "OWN", env.Data.Items[0]["code"])
+}
+
+// POST/PUT /api/v1/ticket-categories 契约：分类关联的工作流是建单选路的一个真实来源，
+// 写入时必须能在本租户解析到激活的流程定义。未知 Key 返回 400 + code 4000，
+// 而不是「保存成功」后工单仍走默认流程。
+func TestCategoryWrite_RejectsUnknownWorkflowKey(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cat_write_wf?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+
+	r := newCategoryTestRouter(t, client, 1)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ticket-categories", strings.NewReader(
+		`{"name":"网络故障","code":"net-fault","isActive":true,"workflowDefinitionKey":"ghost_flow"}`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code, w.Body.String())
+	var env struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &env))
+	assert.Equal(t, 4000, env.Code)
+	assert.Equal(t, "工作流不存在、未激活或不属于当前租户", env.Message)
+
+	count, err := client.TicketCategory.Query().Where(ticketcategory.CodeEQ("net-fault")).Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "被拒绝的写入不得留下分类行")
+}
+
+func TestCategoryWrite_AcceptsDeployedWorkflowKey(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:cat_write_wf_ok?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	ctx := context.Background()
+
+	dep, err := client.ProcessDeployment.Create().
+		SetDeploymentID("dep-cat-net").SetDeploymentName("deploy cat net").SetTenantID(1).Save(ctx)
+	require.NoError(t, err)
+	_, err = client.ProcessDefinition.Create().
+		SetKey("net_flow").SetName("网络故障流程").SetBpmnXML([]byte("<definitions/>")).
+		SetDeploymentID(dep.ID).SetTenantID(1).Save(ctx)
+	require.NoError(t, err)
+
+	r := newCategoryTestRouter(t, client, 1)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ticket-categories", strings.NewReader(
+		`{"name":"网络故障","code":"net-fault","isActive":true,"workflowDefinitionKey":"net_flow"}`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+
+	var created struct {
+		Code int `json:"code"`
+		Data struct {
+			ID                    int    `json:"id"`
+			WorkflowDefinitionKey string `json:"workflowDefinitionKey"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &created))
+	require.Equal(t, 0, created.Code)
+	assert.Equal(t, "net_flow", created.Data.WorkflowDefinitionKey)
+
+	// 显式传空串才是解除绑定；未传字段保持原值
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPut, "/api/v1/ticket-categories/"+strconv.Itoa(created.Data.ID), strings.NewReader(`{"name":"网络故障"}`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	row, err := client.TicketCategory.Get(ctx, created.Data.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "net_flow", row.WorkflowDefinitionKey, "未传 workflowDefinitionKey 时不得清空既有绑定")
+
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPut, "/api/v1/ticket-categories/"+strconv.Itoa(created.Data.ID), strings.NewReader(`{"workflowDefinitionKey":""}`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code, w.Body.String())
+	row, err = client.TicketCategory.Get(ctx, created.Data.ID)
+	require.NoError(t, err)
+	assert.Empty(t, row.WorkflowDefinitionKey)
 }

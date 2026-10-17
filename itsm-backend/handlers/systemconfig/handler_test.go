@@ -48,7 +48,6 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 	sc := r.Group("/api/v1/system-configs")
 	{
 		sc.GET("", h.ListConfigs)
-		sc.GET("/init", h.InitDefaultConfigs)
 		sc.GET("/:id", h.GetConfig)
 		sc.GET("/key/:key", h.GetConfigByKey)
 		sc.PUT("/:id", h.UpdateConfig)
@@ -58,28 +57,17 @@ func setupTestHandler(t *testing.T) *gin.Engine {
 	return r
 }
 
-func TestHandler_InitDefaultConfigs_ThenList(t *testing.T) {
+// 默认配置只能由 ListConfigs 懒初始化。曾经存在 GET /system-configs/init：
+// 按 system_config:read 守卫却整表写入密码策略/2FA/SMTP，而 end_user 持该读权限，
+// 一次 GET 就能把 passwordMinLength=8、enable2FA=false 落进租户配置。
+func TestHandler_ListConfigs_LazyInitializesDefaults(t *testing.T) {
 	r := setupTestHandler(t)
 
-	// 初始化默认配置
-	req, err := http.NewRequest("GET", "/api/v1/system-configs/init", nil)
+	req, err := http.NewRequest("GET", "/api/v1/system-configs", nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
-
-	var initResp struct {
-		Code int `json:"code"`
-	}
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &initResp))
-	assert.Equal(t, 0, initResp.Code)
-
-	// 列表应有配置
-	req2, err := http.NewRequest("GET", "/api/v1/system-configs", nil)
-	require.NoError(t, err)
-	w2 := httptest.NewRecorder()
-	r.ServeHTTP(w2, req2)
-	assert.Equal(t, http.StatusOK, w2.Code, "body=%s", w2.Body.String())
 
 	var listResp struct {
 		Code int `json:"code"`
@@ -90,11 +78,25 @@ func TestHandler_InitDefaultConfigs_ThenList(t *testing.T) {
 			PageSize int                      `json:"pageSize"`
 		} `json:"data"`
 	}
-	require.NoError(t, json.Unmarshal(w2.Body.Bytes(), &listResp))
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &listResp))
 	assert.Equal(t, 0, listResp.Code)
-	assert.Greater(t, listResp.Data.Total, 0, "初始化后应至少有一条默认配置")
+	assert.Greater(t, listResp.Data.Total, 0, "空表首次读取应懒初始化出默认配置")
 	assert.Equal(t, 1, listResp.Data.Page)
 	assert.Equal(t, 20, listResp.Data.PageSize)
+}
+
+// GET /system-configs/init 不再是写入口：路径只剩 /:id 兜底，不得再返回初始化成功。
+// 路由本身缺席由 router 生产路由表测试锁定（含 /configs 别名）。
+func TestHandler_InitRouteIsRemoved(t *testing.T) {
+	r := setupTestHandler(t)
+
+	req, err := http.NewRequest("GET", "/api/v1/system-configs/init", nil)
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.NotEqual(t, http.StatusOK, w.Code, "init 不得再作为可调用入口：%s", w.Body.String())
+	assert.NotContains(t, w.Body.String(), "默认配置初始化成功")
 }
 
 func TestHandler_GetConfig_InvalidID(t *testing.T) {

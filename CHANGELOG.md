@@ -31,9 +31,287 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **工单分类「关联工作流」成为建单选路的一级**：分类绑定原先只写进 `ticket_categories`，
+  建单和启动流程的代码从未读取它（隔离库实测：给分类绑 `ticket_assignment_flow`，工单的 outbox payload
+  仍是空串，实例落到内置 `ticket_general_flow`）。现在解析顺序为请求显式指定 → 工单类型 → 工单分类 →
+  流程绑定表 → 内置兜底，工单类型已配置时仍以类型为准；分类改绑只影响后续新工单，已在跑的实例不重启。
+  写入侧同时补上校验：分类关联的流程定义必须在本租户存在且激活，否则 400/code 4000
+  「工作流不存在、未激活或不属于当前租户」（见 UPGRADE §1.38）。
+- **`scripts/docs-gate/product-surface-baseline.txt`**：Gate C.6.4 表面棘轮调账（功能点台账批次 + SSO 批次合并净账，与已入库基线文件终值一致）。`handlers_dirs` 65→66（`handlers/account` 自助改密权限面）；`service_go_files` 335→343（净账：功能点台账批次落地时漏调补账 +5、`system_stats.go`+`system_stats_test.go` +2、`sla_template_install_test.go` 回归锁 +1、删除 `team_service.go`/`team_service_test.go` 双实现 -2、工单分类选路回归锁 `ticket_category_workflow_test.go`+`workflow_start_command_handler_ticket_test.go` +2）；`bootstrap_app_lines` 1813→1849（存量漏调 +1、`dashboardService.SetRedisClient` 恢复注入 +1、SSO 批次接线 +34）；`ent_schema_files` 133→135（SSO 批次 `sso_provider.go`/`sso_identity.go`，随 74f80bdf7 入库，基线文件已同步上调并逐条注记）。`frontend_pages` 169 不变。
 - **`ROADMAP.md`**：v1.0 GA readiness 条目由失效的 `docs/v1-ga-readiness.md` 链接改为指向 `docs/documentation-governance.md`。
 
 ### Fixed
+
+- **SSO 回调失败不再把原始错误串透出响应（2026-10-17）**：`handlers/auth/sso_handler.go` 的回调失败分支原先 `common.AuthFailed(c, err.Error())`，OIDC 提供方报文、内部状态校验错误会直接成为响应消息（SQL 片段/连接器报文可能出现在响应里）。该泄漏点被 `tests/contract` 的错误泄漏棘轮 `TestErrorLeakRatchet` 拦截（基线为空、禁止新增泄漏）。改用 `common.AuthFailedWithErr(c, err, "SSO 回调失败")`：原始错误进服务端日志（含 method/path），响应只回安全文案；`go test ./tests/contract/` 全绿。
+
+- **守卫脚本 CJK 假阳性修复：docs-gate 在 macOS 上不再误报（2026-10-17）**：macOS BSD awk（20200816）在 UTF-8 locale 下对含 CJK 的字符串 `==` 走 collation 比较——实测 `工单与事件 == 能力域`、`可用 == 预览`、`问题/已知错误 == 工单/事件` 均为真。后果三连：`check-product-drift.sh` 的 README 表头识别把纯中文能力域行整行丢弃（工单与事件/变更管理/服务目录与请求/通知与连接器/报表与运营 5 行），C.6.1 反向闭合误报 5 条「对外承诺漏报」；契约状态查找 `$1 == k` 命中错误行，把「问题/已知错误」的契约状态查成「工单/事件」的 GA 候选；`check-scope-creep.sh` 的预览域计数把「可用」行也计入 `preview_now`，C.7 预览棘轮被虚高。修复：两个脚本顶部 `export LC_ALL=C`（awk/grep/sed 全部退化为字节级比较，行为与 Linux CI 一致），表头判定同时改为正则锚定 `/^能力域$/`、预览计数改 `/^预览$/`。修复后实测：C.6.1 12 对能力域全 PASS、C.7 0 FAIL 0 WAIVED。README 成熟度表与能力契约本身无漂移——全部 FAIL 均为解析器假阳性。
+
+- **菜单子树不再因父节点权限码缺失被整棵丢弃（2026-10-17）**：`filterMenusByPermission` 逐条独立按权限码过滤，父菜单码不满足被剔除、子菜单码满足存活时，`buildMenuTree` 只从存活根节点出发建树——存活子菜单因父节点缺失被整棵丢弃（10-16 修复「审批待办不可见」走的是条目级改码路线——菜单码改为页面真实消费的 `task:read`，结构性缺陷未触及）。新增 `MenuService.backfillParentMenus`：子菜单存活而父节点不在结果集时，把父菜单作为纯导航容器回填（逐级向上直至根），保证子树可达；回填不代表授权，接口仍逐请求把关。本修复源自 2026-10-06 wip-pre-sprint1 stash 中的未落地实现，经代码实证 HEAD 仍有此缺陷后正式落地。回归：新增 `service/menu_service_test.go` 两个测试——孤儿子树两级祖先回填后树上可达（改前实测 FAIL：注入 no-op 后 `/approvals/pending` 整棵丢失）、子菜单全被过滤时不得回填空容器且已存活父菜单不得重复插入；注入回归验证（方法改 no-op → FAIL → 恢复 → PASS）已完成，`go test ./service/` 全包绿。
+
+- **审批待办处理人在侧边栏里找不到任何审批入口（2026-10-16）**：「审批中心」`/approvals` 与「待我审批」`/approvals/pending`
+  挂 `approval:read`，但该页只消费 `GET /api/v1/bpmn/tasks`（`task:read`）加工单/变更/服务请求的 pending 列表——
+  隔离栈用 `role-agt` 打开页面，网络日志只有这四个请求、全部 200，没有任何 `approval:*` 调用。
+  `approval:read` 只授给 change_manager / it_admin / service_catalog_admin / 三员，`agent`/`manager`/`end_user`/`technician`
+  都不持有；叠加 `/approvals` 挂在 `/workflow` 下会落进 admin 菜单桶（`Sidebar.tsx:226` 只对管理角色渲染），
+  实测这四类角色两个菜单桶里的审批条目一条都没有，只能手敲 URL 进入这个本就对他们可用的页面。
+  - `pkg/menubaseline/baseline.go`：两条菜单改用页面数据源的真实码 `task:read`
+    （`catalog.go:221` 即「查看本人待办与候选任务」，`roles.go:266-272` 是全角色基线）。
+    没有给任何角色补 `approval:read`——那是审批记录与流程定义配置面 `GET /api/v1/approvals` 的码，授给审批人会越权；
+    菜单只是展示层，接口仍逐请求把关。升级需重放种子（动作见 UPGRADE §1.40）。
+  - 重放后实测：`menus` 两行均为 `task:read`；`/auth/menus` 里「待我审批」进入 manager/agent/end_user/it_admin 的 `main` 桶，
+    admin 两个桶不受影响。浏览器实测 `role-agt` 侧边栏出现「待我审批」，点击经重定向正常渲染审批中心。
+  - 回归：新增 `pkg/menubaseline/baseline_guard_test.go`——菜单基线每个非空权限码必须能在码空间解析
+    （此前无任何守卫，这正是过期码能长期存活的原因），并钉住两条审批待办菜单用 `task:read`、
+    且 agent/manager/end_user/technician 确实持有；改前实测失败。`docs/product/frontend-menu-and-features.md` 两行随基线同步。
+- **部门经理能建单却读不到工单分类，建单页分类下拉静默变空（2026-10-16）**：隔离库实测 `role-mgr`（manager）
+  `GET /api/v1/ticket-categories` 返回 `403 / code 2003 / 权限不足`，而同页另外两个依赖 `/api/v1/cmdb/cis`、
+  `/api/v1/ticket-types` 都是 200；`agent`/`end_user`/`it_admin`/`service_catalog_admin` 都持 `ticket_category:read`，只有 manager 缺。
+  manager 持 `ticket:write`（派生 `create`/`update`）与 `ticket:assign`，即能建单、能派单，唯独选不了分类。
+  - `internal/authz/roles.go` 给 `domainrole.Manager` 增授 `ticket_category:read`；`pkg/seeder/role_permission_guard_test.go`
+    同步登记（manager 26→27），一旦该码被静默回收即 CI 红。重放 bootstrap job 后实测日志
+    `role permissions ensured {"role": "manager", "created": 1}`，`role-mgr` 列表与 `/tree` 均转为 200。
+  - `/tickets/create` 此前只用 `console.error` 吞掉分类加载失败，下拉留空。现在按失败类型给出持久提示：
+    无权限说明「当前账号没有『查看工单分类』权限，分类留空仍可提交」，服务端失败回显原因，两者都带「重试加载分类」；
+    占位文案在未加载成功时显示「分类暂不可用」，不再冒充可用空列表。
+  - 回归：新增 `tickets/create/__tests__/category-load.test.tsx` 3 例（403 / 500+重试成功 / 成功不误报），
+    改前 403 与 500 两例实测失败；`go test ./internal/authz/ ./tests/parity/ ./pkg/seeder/` 全绿。
+    浏览器实测 manager 登录后 `GET /api/v1/ticket-categories?isActive=true&pageSize=200` 返回 200，下拉渲染出真实分类选项。
+- **规则配置页把「没有权限」画成「系统里没有规则」（2026-10-16）**：三个规则页的加载失败分支只弹一个瞬时 toast，列表仍是空数组，
+  于是页面继续渲染全 0 的统计卡和「暂无数据」表格。隔离库实测 `role-ita`（it_admin）、`role-agt`、`role-mgr`、`role-end`
+  四个角色访问 `GET /api/v1/tickets/automation-rules` 与 `GET /api/v1/tickets/assignment-rules` 全部是
+  `403 / code 2003 / 权限不足`，只有 `admin` 是 `200` 且 `items` 为空——即五个被测角色里四个看到过假空态。
+  - `src/lib/api/http-client.ts`：非 2xx 分支原先在 `try` 内 `throw` 服务端 `message`，被紧随其后的空 `catch` 吞掉，
+    调用方只剩 `HTTP error! status: N` 一句、拿不到状态码。新增 `ApiRequestError`（带 HTTP `status` 与业务 `code`，
+    与 `notify.tsx` 的 `ERROR_GUIDANCE`、`error-handler.tsx` 的 `'status' in error` 判型口径一致），
+    五处抛出点统一透传服务端 `message`；响应体不是合法 JSON 时回落到状态码文案，原文案逐字不变。
+  - `/workflow/automation`、`/admin/tickets/automation-rules`、`/admin/tickets/assignment-rules`：失败时不再渲染统计卡与表格，
+    改为持久的 403/500 分类提示加「重试」按钮；无权限文案明确说明「这里不是系统里没有规则」。
+    `/workflow/automation` 顺带去掉了禁用的静态 `message` 与 `console.error`。
+  - 回归：`http-client.test.ts` 新增 4 例（透传 message/status/code、非 JSON 回落、正文含 "fetch" 不被改写、HTTP 200 但 code 非 0），
+    三个页面各新增渲染测试（无权限 / 服务端失败+重试 / 真空态），改前均实测失败、改后通过。
+    浏览器实测 `role-ita` 登录 `/workflow/automation` 渲染「没有权限查看自动化规则」且统计卡消失，`admin` 登录同页仍正常渲染 0 值统计卡。
+- **最终用户一次 GET 就能整表落地租户安全配置（2026-10-16）**：`GET /api/v1/system-configs/init`（别名 `GET /api/v1/configs/init`）
+  是按 `system_config:read` 守卫的**写**接口，还挂在安全方法 GET 上。隔离库实测：`role-end`（end_user）登录后一次 GET，
+  租户 `system_configs` 从 1 行涨到 25 行，`passwordMinLength=8`、`enable2FA=false` 直接生效，页面与审计都无从拒绝。
+  默认配置本就由 `ListConfigs` 在表为空时懒初始化，该入口没有独立价值，前端也从未调用。
+  - 删除两组路由里的 `GET /init` 与未被任何路由引用的 `Handler.InitDefaultConfigs`；`middleware/rbac_precheck_gen.go` 重新生成。
+  - 撤回 `end_user` 的 `system_config:read`：读接口整表返回 SMTP、密码策略、2FA 等租户级配置，而前端只有 `/admin/system-config`
+    会读它，最终用户根本没有入口。按播种「只增不减」契约必须同时登记 `RetiredRolePermissionCodes()`，否则既有安装的授权行收不回来；
+    bootstrap job 实测输出 `retired role permissions applied {"role":"end_user","codes":["system_config:read"]}`，库里该角色已不再持码（升级动作见 UPGRADE §1.39）。
+  - 退役清单原先不进 `identity-rbac` 校验和：只登记撤销、不动内置码集的改动不会让校验和变化，撤销永远不会重放。
+    现在校验和包含 `retire=` 条目。
+  - 回归：`router/router_test.go` 锁生产路由表不再注册 `/init`（旧实现下失败）、`handlers/systemconfig` 补 `/init` 不可调用
+    与空表懒初始化两用例、`internal/authz` 锁 `end_user` 不持管理面读码、`pkg/seeder/manifest_digest_test.go` 锁退役清单进校验和。
+  - 隔离栈复测：`end_user`/`agent`/`manager`/`it_admin` 对 `GET /system-configs`、`/system-configs/init`、`/system-configs/status`
+    一律 403（code 2003），`system_configs` 行数保持 25 不变；admin 仍 200，列表信封 `{items,total,page,pageSize,totalPages}` 不变。
+  - 文档：`docs/acl-manifest.yaml` 删除两条 `/init` 条目；`docs/api-reference.md`「初始化默认配置」章节改为说明懒初始化与移除原因。
+
+- **服务目录：解除关联不再假成功，编辑表单不再丢字段（2026-10-16）**：`/admin/service-catalogs` 与门户
+  `/service-catalog` 一起按后端真实 DTO 重写，隔离库实测见本条末尾。
+  - **显式清空关联返回 200 却保住旧值**：仓储层用 `if catalog.CITypeID > 0` 守卫 `SetCiTypeID`/`SetCloudServiceID`，
+    service 层先加载权威实体再按指针补丁赋值，所以这里的 0 就是调用方「显式解除关联」，却被守卫跳过。
+    管理员把 CI 类型清空后页面显示「未关联」，新申请仍按旧 CI 类型履约。现在关联字段无条件写入，
+    只有显式提交 0 才清除（`ciTypeId` 单独置 0 而保留云服务仍按业务规则 400 拒绝，两者同时置 0 才合法）。
+  - **`approvalLevel=0` 被拦成参数错误**：创建请求 DTO 上的 `min=1` 让「未配置审批」无法提交，页面只能谎报级别
+    或强制选 1。现在按 `omitempty,min=0,max=3` 放开，0 就是未配置。
+  - **编辑保存丢字段**：表单只回填、不提交，`serviceType`、价格、单位、交付周期、审批、排序、SLA、CI/云服务关联
+    在保存时整段丢掉，页面仍显示旧值而库里已被改回默认。现在提交与后端可写 DTO 一一对应的完整载荷，
+    清空价格/单位表达为 `0` 与空串，清空关联表达为显式 `0`（Select 清空后的 `undefined` 不能省略，省略等于保持原值）。
+  - **关联字段恒定出现在响应里**：`ciTypeId`/`cloudServiceId` 原先带 `omitempty`，未关联时整个键缺席。
+    客户端把 GET 的整份对象回贴成 PATCH 时，缺席等于「不修改」，解除关联从 API 永远做不到；
+    现在按契约返回数值 0，前端在 API 客户端层把 0 归一成组件的空值。
+  - **同一规则两份文案，其中一份是英文**：`handler` 里另写了一份「关联云服务时必须选择CI类型」（与
+    service 的「…必须选择 CI 类型」只差一个空格）并硬编码 code 1001，创建路径的交付天数超限、名称分类缺失
+    两条还把英文原文回给用户。现在删除 handler 内的重复校验，文案单一来源于 service 层。
+  - **谎报的状态与单位**：页面把「草稿」当成服务目录的一种状态提交，后端只有 `enabled/disabled`；
+    `deliveryTime` 列标题写「时」，实际承载的是「天」。现在两态口径一致，交付周期按天并写明 1–3650 范围。
+  - **业务校验提示被吞**：名称重复、状态非法、关联资源不存在都只显示「保存失败」。现在原样透出后端中文提示。
+  - **批量操作与导出**：批量启用/停用/删除由 `Promise.all` 改为并发上限 5 的分 lanes 执行，返回逐项结果并保留失败项供重试；
+    「取全量」/导出改为按页拉取（`getAllServices`，每页参数随页码一起带上），超过 5000 条显式提示而非静默截断。
+    列表加载失败渲染 Alert 而不是空表格，删除后只做局部刷新，不再整页 reload。
+  - **分类下拉**：只列内置四项会让已有其它分类的目录在编辑时被悄悄改回默认分类，现在与 `stats` 返回的真实分类合并。
+  - **填到一半点遮罩就整份清空**：编辑弹窗有十几项配置，Ant Design 默认 `maskClosable: true`，点中遮罩直接关闭并
+    丢弃已填内容、不留任何提示。现在关闭遮罩点击，只能通过「取消 / 更新」退出。
+- **服务目录门户把「翻过的一页」当全集**：门户固定 `pageSize=100` 拉一页后在客户端按分类/关键词过滤并据此计数，
+  第 101 个目录既看不见也不计入分类卡。现在关键词交给服务端 `q` 过滤（300ms 输入防抖 + 请求序号守卫防竞态），
+  目录集合按 500 上限翻页取满，取不满时页面顶部如实提示「分类计数只覆盖已载入部分」；
+  「热门服务」卡不再把 0 请求量的目录排成热门，只列真正有计数的条目。
+- **服务目录 API 客户端的死面与幻影字段**：删除后端不存在的 `searchServices`（与 `getServices` 打同一列表）和
+  `exportCatalog`（不发请求、返回假 Blob）；`ServiceQuery` 里后端从不读取的 `serviceType`/`minPrice`/`maxPrice`/
+  `sortBy`/`order`/`department`/`owner` 一并移除，`requiresApproval` 不再硬编码 `true`（会把「不需要审批」的目录显示成需要审批）。
+  契约：`GET /api/v1/service-catalogs` 新增服务端过滤参数 `q`、`ciTypeId`、`cloudServiceId`（与 `category`/`status` 叠加，
+  `total` 按过滤后计数），`docs/api-reference.md` 补齐创建/更新/删除三节的字段契约、PATCH 三态语义与状态码口径。
+  配套：`cmdb-relationship.test.ts` 的 `getTopologyGraph` 两例同步到 params 传参新契约（实现改为
+  `httpClient.get(url, { depth })`，由 `URLSearchParams` 序列化进 query string，HTTP 请求等价；旧断言钉的是
+  手工拼 URL 的实现风格而非请求契约）。
+  回归：`handlers/service_catalog/update_patch_test.go`（关联清除三态、`approvalLevel=0` 可创建、后端中文校验映射）、
+  `handlers/service_catalog/list_search_test.go`（`q`/`ciTypeId`/`cloudServiceId` 服务端过滤与过滤后 `total`）、
+  `src/lib/api/__tests__/service-catalog-api.test.ts`（35 例：过滤交给服务端、0 与未传都不进查询参数、翻页带过滤、
+  页长回落不漏页、`deliveryTime` 字符串天数）、`admin/service-catalogs/__tests__/page.test.tsx`（全量提交、显式清空、
+  错误透传）。隔离栈（一次性 `itsm_probe` 库）实测：`q` 命中名称与描述、关联筛选与过滤后 `total`、
+  `approvalLevel=0` 创建、单独置 0 被拒/同时置 0 生效、三种关联校验的 400 中文提示。
+  浏览器实测编辑链路：清空「关联CI类型」后 `PUT /api/v1/service-catalogs/{id}` 载荷显式携带 `ciTypeId: 0`
+  与全部可写字段，响应回显两个关联字段为 0，刷新页面后关联列仍为 `-`。
+
+- **升级矩阵页整表是前端自造的假配置（2026-10-14 只修了报错路径，本次补完读取路径）**：
+  `/admin/escalation-matrices` 声称展示「当前生效矩阵」，实际永远显示内置的 P1/P2/P3 占位，租户真实配置无从看见。
+  - **取值键根本不存在**：前端在响应里找 `matrix`/`data`/`priorities` 三个候选键，而后端 `common.Success(ctx, matrix)`
+    的 `data` 就是矩阵本身（键为 `critical`/`high`/`medium`/`low`）。三个键都取不到，于是每次都落到前端自带的默认矩阵，
+    接口 200、页面有内容、数据是假的。现在按唯一契约取值，删除多字段猜测。
+  - **级别字段整套自造**：前端建模为 `thresholdMinutes`/`targetType`/`targetIds`/`notifyChannels`，后端是
+    `afterMinutes`/`notifyRoles`/`notifyUserIDs`/`description`。页面列名「目标类型 / 目标 ID / 通知渠道」对应的概念
+    后端并不存在。现在类型与列一并对齐 DTO，触发时长按「距告警开始累计分钟」说明，通知对象按角色码 + 中文职责展示。
+  - **空响应不再伪装成未配置**：后端总会返回一份矩阵（自定义或内置默认），因此空 map 属异常。
+    现在抛出「升级矩阵返回为空，无法确认当前生效配置」，页面显式报错并标注下方表格是内置默认而非生产配置。
+  - **`null` 会让页面崩**：`GET` 把未配置的通知目标序列化成 `notifyRoles: null` / `notifyUserIDs: null`（nil 切片直出），
+    前端按数组取 `.length` 即报错。现在 `cloneMatrix` 在读路径统一归一为空数组，缓存命中、持久化加载、默认回落三条路径同口径。
+  - 回归：`service/escalation_matrix_persistence_test.go`（默认与自定义矩阵的 `notifyRoles`/`notifyUserIDs` 必须为数组，
+    响应不得出现 `null`——旧实现下失败）、`src/lib/api/__tests__/escalation-matrix-api.test.ts`
+    （原样返回服务端矩阵、空 map/缺失响应/请求失败三类抛出、默认矩阵与后端同键同字段；其中 4 例在旧实现下失败）。
+    页面此前没有任何测试，所以整表造假能长期存在；补 `admin/escalation-matrices/__tests__/page.test.tsx`
+    （服务端阈值/角色/用户逐项渲染、未知优先级键原样透出、统计卡与分组视图同源、失败时回落默认并标注非生产配置——
+    3 例在旧页面实现下全部失败）。
+    契约与 `afterMinutes` 计时口径写入 `docs/api-reference.md`「升级矩阵接口」，并记录 `notifyUserIDs` 的 key 写法属待评审的命名偏差。
+  - 同域 `escalation-rules` 页面测试在全量并行下会跑到 11s，撞上 `jest.config` 的 10s 默认上限而间歇性变红；
+    给两个含弹窗交互的用例显式设 30s 上限，单独跑与全量跑都稳定通过。
+    隔离栈实测：`GET /api/v1/escalation-matrices` 修复前返回 `"notifyUserIDs": null`，修复后返回 `[]`；
+    写入一份只含 `critical` 一级的自定义矩阵后，页面渲染出「critical · 致命 / 7 分钟 / it_admin · IT 管理员 / 用户 3」，
+    不再是 P1/P2/P3 占位。
+- **分类页的工作流选择器不再是假承诺（2026-10-16）**：见上方 Changed 条目，写入与消费两端同时收敛。
+  - **写入即校验**：`POST/PUT /api/v1/ticket-categories` 的 `workflowDefinitionKey` 现在必须是本租户存在且
+    激活的流程定义，否则 400/code 4000「工作流不存在、未激活或不属于当前租户」，行不受影响；跨租户的 key
+    与不存在的 key 同样拒绝。分类处理器由 `FailWithErr` 改走 `common.RespondError`，校验文案不再被统一的
+    「操作失败」吞掉。
+  - **消费端兜底**：`workflow.start` 命令遇到已停用/删除的绑定流程时，按变更域同一口径告警并回落到流程绑定表
+    与内置兜底，不再让命令反复重试卡住工单生命周期。
+  - **回归**：`service/ticket_category_workflow_test.go`（分类驱动选路、四级优先级、按名称解析的分类同样生效、
+    未绑定分类交回绑定表、写入校验与租户边界）、`service/workflow_start_command_handler_ticket_test.go`
+    （绑定流程未部署/已停用/绑定失效但路由表命中/无绑定加急走内置、租户隔离）、
+    `handlers/ticket_category/handler_test.go`（HTTP 状态 + 业务码 + DTO 回显 + 未传/空串清除语义）。
+  - 未处理项（同类问题，另批次）：`ticket_category_service.go` 里「分类代码已存在」「父分类不存在」
+    「有子分类/被工单引用不可删」仍用裸 `errors.New`，会兜底成 500/code 5001。
+
+- **菜单管理页整表空白（2026-10-16）**：`/admin/menus` 对所有租户管理员都是空表格，四张统计卡恒为 0。
+  `GET /api/v1/menus` 早已返回标准 `{items,total,page,pageSize,totalPages}` 信封，页面却读 `res.menus`，
+  拿到 `undefined` 后静默渲染空列表——前端没有按后端 DTO 取值。
+  - **前端改读 `items`**：`menu-api.ts` 的 `MenuListResponse` 按真实 DTO 定义（`parentId`/`permissionCode`
+    是指针，NULL 时整键省略），页面的统计与树形组装只在这份完整集合上派生；该端点一次返回全租户菜单、
+    不接受翻页参数，前端不再重复排序。旧测试断言 `{menus,total}`，正是它把这个契约破坏固化了下来，已替换。
+  - **「移除上级菜单」原先静默失效**：`PUT /menus/{id}` 只按指针判断，页面无从表达「清空」。改为显式约定
+    `parentId: 0` → `ClearParentID()` 写 NULL（若直接 `SetParentID(0)` 还会撞外键），图标/权限码/描述用空串
+    表达清除；前端按全量提交并显式发送空值。
+  - **上级菜单引用原先不校验**：可以指向其他租户的菜单、自身或自己的后代，成环会让整棵子树从页面上消失。
+    现在写入前校验同租户、非自身、非后代，拒绝时 400/code 4000 且不留脏数据。
+  - **删除的两个假结果**：仍有子菜单时返回 500/code 5001（业务规则被兜底成内部错误），改为 409/code 4090
+    「请先删除子菜单」，父子行都不受影响；删除不存在或跨租户的 id 原先返回 200 成功，现在与读/改同口径
+    404/code 4004「资源不存在或已被删除」。
+  - 契约与验证：`docs/api-reference.md` 新增「菜单管理接口」章节（全量信封与不翻页语义、可选键省略、
+    显式清空约定、`?tenantId=` 仅 `super_admin`、状态码口径表、创建阶段 `sortOrder` 落 100）；回归见
+    `handlers/rbac/handler_test.go`（信封与 camelCase 投影、越权拒绝与 fail-closed、清空 payload 以指针到达
+    service、非法上级/删除冲突/未知删除的 HTTP 映射）、`service/menu_service_test.go`
+    （`TestDeleteMenu_StateAndTenantSemantics`、`TestUpdateMenu_ParentAssignmentSemantics`）与前端
+    `admin/menus/__tests__/page.test.tsx`（从 `items` 渲染与统计口径、搜索命中子项、错误态、保存的显式清空 payload）。
+    隔离栈实测：删除有子菜单 409/4090、未知 id 404/4004、重复 path 409/4090、非法上级 400/4000、
+    缺参 400/1001；清空上级与权限码后库里是 NULL/空串，响应不再带这两个键。
+
+- **团队文档把跨租户拒绝写成 1001**：`docs/api-reference.md` 与 CHANGELOG 的团队成员/负责人条目写「400 + code 1001」，
+  实测是 **400 + code 4000**——`assertActiveTenantUser` 抛的是领域层 `AppError(HTTP 400)`，反向映射规范码为 4000，
+  1001 只用于路径 ID 非数字与请求体绑定失败。文档口径已更正，并在 `handlers/common/team_member_test.go`
+  把跨租户成员、停用成员、外部负责人、移除非成员四条用例补上业务码断言（4000/4000/4000/4004）。
+
+- **知识版本端点把原始错误串写进响应**：`knowledgeVersionError` 用 `common.Fail(..., err.Error())` 兜底，
+  驱动层/约束错误的原文会直接出现在 500 响应里（错误泄漏棘轮自 2026-10-14 起为红）。改走 `common.RespondError`，
+  未分类错误回固定文案「版本操作失败」、原文只进日志，已分类的冲突/校验错误按其语义映射。
+  棘轮剩余红点为未提交的 SSO 批次 `handlers/auth/sso_handler.go`，由该批次自行收敛。
+
+- **团队成员链路打通（2026-10-16）**：`/admin/teams` 的成员头像、成员列与「团队成员总数」恒为空。
+  成员关系只落在 `users.team_users` 外键上，接口层从未透出，成员写端点也没有注册（前端点「添加成员」
+  打到一条不存在的 `POST /api/v1/org/teams/members`，恒 404）。
+  - **列表回到标准信封**：`GET /api/v1/org/teams` 此前把裸数组塞进 `data`，无分页无总数。现在返回
+    `{items,total,page,pageSize,totalPages}`，每个团队直接带 `members[{id,username,name,email}]`，无成员时是
+    `[]`；投影使用显式列清单，不再透出 Ent 的 `edges` 形态，也不会带出 `password_hash` 等用户列（破坏性变更，见 UPGRADE §1.36）。
+  - **搜索改由服务端负责**：旧页面拿全量数组在浏览器里过滤，翻页时结果口径不一致。新增 `search` 参数，
+    对 `name`/`code`/`description` 做不区分大小写的包含匹配，`total` 是过滤后的全量条数；`pageSize` 由
+    `GetPaginationFromQuery` 收敛到 100 上限。
+  - **成员读写升为一等接口**：`GET/POST/DELETE /api/v1/org/teams/{id}/members`，写操作成功后 `data` 直接回带
+    服务端最新成员列表，前端用它刷新，不再自行拼接本地状态。
+  - **1:N 归属冲突不再静默搬人**：一个用户同一时刻只能归属一个团队，`AddUserIDs` 会把人从别的团队悄悄拉走。
+    写入前先扫同租户团队定位归属，已在别队返回 409/code 4090 并在消息里带上归属团队名；重复添加同一成员是幂等 200，
+    移除非成员是 404/code 4004，跨租户/停用/不存在的用户是 400/code 4000（领域层 `AppError` 路径，不是参数层的 1001）。要做真正的多团队归属需要 M2M 关联表与迁移，本次未做。
+  - **部分更新能区分「未传」与「清空」**：`PUT /teams/{id}` 的 `description`/`managerId` 原先是非指针字段，
+    页面上清空描述或移除负责人提交后后端一律保持原值，属静默失败。改为指针语义（未传保持、显式 `""`/`0` 覆盖），
+    前端编辑表单按全量提交并显式发送 `managerId: 0`。
+  - **fail-closed 与状态码**：缺少租户上下文时原先按 0 号租户查询、返回空列表却状态 200，现在统一 401/code 2001；
+    删除不存在的团队原先也返回成功，现在 404。负责人这类跨资源引用在写入前按当前租户校验，跨租户注入被拒且不留脏数据。
+  - **权限面补齐**：`team:write` 此前在任何角色条目里都不存在，DBOnly 模式（企业交付默认）下租户管理员进团队管理
+    恒为 403。现补进 `admin` 角色的 `team:read`/`team:write`。
+  - **负责人姓名改由服务端投影**：`Team` 原先只回带 `managerId`，页面靠已加载的用户目录比对姓名，负责人不在
+    那一页里就恒显示 `-`。列表、详情和写响应统一补 `managerName`（按租户一次查回，`name` 缺失回落 `username`；
+    库里残留指向其他租户的 `manager_id` 只给空串，不回带对方姓名），前端直接读该字段。
+  - **前端**：`team-service.ts` 重写为对齐后端 DTO 的类型与信封（删除 `edges` 猜测），团队页改为服务端分页 +
+    300ms 防抖搜索 + requestId 过期响应守卫 + 错误态重试，成员管理弹窗用真实列表（移出按姓名+团队二次确认，
+    冲突原因直接展示后端消息），取代之前的本地过滤与恒为 0 的成员统计卡。删除 `CommonApi.getTeams()`（无成员的旧别名
+    入口）与 `service/team_service.go` 这条与 `handlers/common` 重复的实现。
+  - 契约与验证：`docs/api-reference.md` 新增「团队管理接口」章节（列表投影、服务端搜索、更新语义、成员关系状态码
+    口径、租户边界）；回归见 `handlers/common/team_member_test.go`（列表信封与成员投影、服务端搜索与租户隔离、分页、
+    幂等/冲突/参数拒绝、跨租户 404、写响应回带服务端状态、fail-closed、负责人注入、负责人姓名投影与残留跨租户 ID 不泄漏、
+    「未传 vs 清空」与未知删除）与
+    前端 `admin/teams/__tests__/page.test.tsx`、`lib/services/__tests__/team-service.test.ts`。
+
+- **SLA 模板页：安装状态是真的、幂等不再看名字、错误不再一律 400（2026-10-16）**：`/admin/sla-templates` 的「安装状态」列此前只活在前端一次点击之后。
+  - **安装状态从不落库、也不回读**：后端没有安装事实的查询接口，页面刷新即失忆，且无法知道装出来的 SLA 定义是哪一条。现在目录列表按当前租户查 `sla_definitions`，每条模板返回 `installed`/`slaDefinitionId`/`installedAt`，安装成功后页面重新拉取列表，显示的服务端状态与点击动作无关。
+  - **幂等键是显示名称**：旧判定按名称前缀 `[Template] ` 识别安装，管理员改掉名称后同一条安装就从视图里消失，再点一次就装出第二份相同配置。识别依据改为安装时写入的 `conditions.templateKey` 标记（并兼容标记引入前的 `[Template] <key> - ` 描述约定），列表展示与安装去重共用同一套判定。同租户同模板的安装按进程内互斥串行，跨副本彻底去重还需 `(tenant_id, template_key)` 唯一约束（已在 API 文档标注为已知边界）。
+  - **租户自建定义被误判成"已安装"**：名称或描述里含 "template" 的人工 SLA 定义会被算作安装记录并阻止真正的安装。识别只认标记/旧约定，不再做模糊匹配，并补了对应回归。
+  - **缺租户上下文时假装"谁都没装过"**：租户解析失败仍返回 200 空状态列表。现在 fail-closed 返回 401/code 2001，且不写第二份响应；未知模板 key 从一律 400 改为 404/code 4004，其余错误走统一映射。
+  - **模板响应与刚修好的定义响应分叉**：模板仍透出 snake_case 原始 map。现在与 `SLADefinitionResponse` 共用 `dto.ProjectSLABusinessHours`/`ProjectSLAEscalationLevels`，模板预览和安装后的定义是同一个形状（破坏性变更，见 UPGRADE §1.35）。
+  - **批量安装吞掉失败**：前端 `installAllRecommended` 用 `Promise.all` + `console.error`，任何一个模板失败只提示一句「批量安装失败」，看不到是哪个、为什么。改为逐个安装并返回 per-template 明细，页面把失败列成 `key：原因` 展示，成功提示不再覆盖失败。
+  - **引导文案承诺不存在的自动化**：使用说明写「安装后按升级矩阵逐级升级」，但模板的 `escalationLevels` 目前没有任何运行时消费者（只有写入侧）。文案改为明确说明它只是随定义写入的参考配置，升级动作需在「升级规则」「升级矩阵」配置。
+  - **重复词表收敛**：`sla-definitions` 页内的服务类型中文映射与模板页各写一份，统一到 `src/lib/utils/sla-format.ts`（`SLA_SERVICE_TYPE_LABELS`/`getServiceTypeLabel`/`getIndustryLabel`），优先级、服务窗口、升级层级的展示同处一个事实源。
+  - 契约与验证：`docs/api-reference.md` 新增「SLA 模板（`/api/v1/sla/templates` 家族）」章节（安装事实的来源与识别规则、幂等边界、404/401 语义、`escalationLevels` 无消费者）；回归见 `service/sla_template_install_test.go`（状态来自库、改名仍幂等、5 路并发只装一份、租户隔离、人工定义不误判）、`handlers/sla_template/handler_test.go`（标准信封、投影形态、HTTP 层幂等、跨租户互不可见、404 与 fail-closed 401）与前端 `admin/sla-templates/__tests__/page.test.tsx`、`lib/api/__tests__/sla-template-api.test.ts`、`lib/utils/__tests__/sla-format.test.ts`。
+
+- **`Alert` 弃用属性清零**：`admin/escalation-rules`、`reports/service-catalog-usage`、
+  `components/ticket/TicketDetail` 三处仍在用 `message=`（antd 6.3.1 已 `@deprecated`，靠
+  `title ?? message` 回落渲染，每次挂载打弃用告警），改为 `title=`；`npm run lint:antd` 的
+  `Alert.message` 类别从红转绿（0/0）。渲染文案与结构不变。
+
+- **SLA 定义页与详情页（2026-10-15）**：`/admin/sla-definitions` 与 `/sla/definitions/:id` 此前把后端
+  原始 JSON map 直接摊到界面上，导致一列假数据和一个静默失败的创建路径。
+  - **服务窗口与升级规则是猜的**：列表列恒显示硬编码「7×24」、详情用 `JSON.stringify(escalationRules)`；
+    后端响应里也没有可读的 camelCase 结构。现由 `dto.ProjectSLABusinessHours` /
+    `ProjectSLAEscalationLevels` 在 DTO 层把 `time_zone`/`is_24_7`/`work_days`/`threshold_minutes`/`notify_roles`
+    投影成 `businessHours{timeZone,alwaysOn,workDays,startTime,endTime}` 与 `escalationLevels[]`，
+    并从响应中删除原始 `escalationRules` map（破坏性变更，见 UPGRADE §1.34）。空配置返回缺省，界面据此
+    显示「未配置」而不是冒充 7×24。
+  - **创建必落成停用**：`CreateSLADefinitionRequest.IsActive` 是非指针 `bool`，页面不传该字段时新建的
+    SLA 一律是停用状态。表单改为显式提交「创建后启用」开关，默认开启。
+  - **优先级 Tag 全空、筛选无效**：页面用 `P1..P4` 词表，后端是 `urgent/high/medium/low`（模板侧是
+    `critical`，匹配前归一）。前端词表收敛到 `critical|high|medium|low` 并保留 `urgent` 别名，
+    筛选调用归一化比较而不是逐字符串相等。
+  - **假统计与不可达状态**：「平均可用性」取的是后端从不返回的字段，恒为 `NaN%`；「草稿」状态卡片
+    没有任何数据来源。统计卡改为总数/已启用/已停用/覆盖服务类型，全部由列表数据实算。
+  - **静默截断与假行**：列表按后端默认 `pageSize=20` 取回却显示成全部，改为按 `MaxPageSize` 取满并
+    在服务端 `total` 大于已加载条数时明确告警；保存成功后以服务端数据重新加载，不再把表单值拼成本地
+    假行、也不再用浏览器时间填 `createdAt`。列表读取按标准信封解 `data.items/total`，删除
+    `data.items || data || []` 这类被禁止的多字段猜测。
+  - **伪造归属与死字段**：详情里的「创建人：系统」和 `applicableServices` 后端从不返回，已删除；
+    `SLADetail.tsx` 同时改掉静态 `message`、`Descriptions.Item`/`Breadcrumb.Item` 旧 API 与
+    `<Button size="type">` 无效属性。
+  - **事实源收敛**：删除零引用的 `src/constants/sla.ts`（矛盾的 `P1..P4` 词表）、`types/biz/sla.ts`
+    里与 API 重复的第二套 `SLADefinition`/`SLADefinitionListResponse`（`size` 分页别名）和
+    `sla-api.ts` 中从未使用的 `CreateSLADefinitionRequest`（字段名与后端不同）；展示格式化抽到
+    `src/lib/utils/sla-format.ts`，日期继续复用 `src/lib/formatters.ts` 单一实现。
+  - 契约与验证：`docs/api-reference.md` 新增「SLA 定义（`/api/v1/sla/definitions` 家族）」章节，写明
+    投影字段、`pageSize` 上限 100、列表不支持 `name`/`isActive` 过滤、创建必须显式带 `isActive`；
+    回归见 `dto/sla_projection_test.go`、`handlers/sla/sla_definition_projection_test.go`（模板目录形状的
+    snake_case 配置写入后经真实 handler 返回 camelCase 投影、列表与详情同口径、空配置缺省）、
+    `admin/sla-definitions/__tests__/page.test.tsx`、
+    `lib/utils/__tests__/sla-format.test.ts` 与更新后的 `sla-api.test.ts`。
+
+- **隔离栈实测系统运行状态批次修复（2026-10-15）**：用一次性 Postgres/Redis + 独立后端实例把健康卡与系统配置页跑起来实测，单测覆盖不到的三类问题：
+  - **`GET /system-configs/status` 返回硬编码假指标**：该端点（及别名 `/configs/status`）由路由内联实现，恒返回 `cpu.usage: 0`、把 `runtime.MemStats.Alloc/Sys` 当内存使用率、没有磁盘/缓存/数据库口径，且响应是 `{cpu:{...}, memory:{...}}` 自定义结构，与 `{code,message,data}` 信封和标准 DTO 都不一致；前端只能用 `data.cpu ?? data.cpuUsage ?? 0` 这类多字段猜测读取。现删除内联假实现，两条路由直接复用 `DashboardHandler.GetSystemStats`（与 `/dashboard/stats/system` 同一份 `dto.SystemStatsResponse`、同一套 `availability` 标记），并补 `goroutines` 字段供系统配置页展示；`router.RouterConfig.AppStartTime` 随之摘除（假 uptime 的唯一用途）。前端 `SystemConfigAPI.getSystemStatus()` 改为返回 `Promise<SystemStats>`，页面按 `availability` 渲染「未接入」并删除 `getSystemStatusValue` 兼容读取与本地 `calculateUptime`。
+  - **Redis 缓存命中率数据源接线丢失**：`bootstrap` 建立 Redis 连接后未再调用 `dashboardService.SetRedisClient`，命中率会永久停在 `unconfigured`（并发提交把它冲掉了）。补回注入，实测 `cache: measured` 与真实命中率；未注入时仍显式返回 `unconfigured` 而不是 0%。
+  - **亚秒采样区间产生假尖峰**：健康卡与系统配置页共用同一份 HTTP 增量基线，两个轮询者把区间压到几十毫秒后，单条请求就能算出「37.5 req/s」的尖峰，前端显示成「采样区间 0s」看着像没数据。后端 `applyHTTPRates` 改为区间不足 1s 时退回启动以来累计口径并**保留旧基线**让窗口继续累积（`metricsWindowSeconds` 如实反映所用口径），`buildSystemStats` 返回下一次应使用的基线；前端抽 `src/lib/utils/metric-format.ts` 统一格式化（亚秒用 ms、不足 1 分钟的运行时长用秒），避免三处各自取整。
+  - 契约与验证：`docs/api-reference.md` 补 `GET /system-configs/status` 的响应样例、`availability` 三态与 `metricsWindowSeconds` 口径说明；`system_stats_test.go` 增加短区间保留基线 / 长区间推进基线的回归，`metric-format.test.ts` 覆盖格式化边界。
 
 - **功能点台账遗留批次修复（2026-10-15）**：承接上批功能点梳理的遗留清单。
   - **自助改密端点缺失（前端调用不存在的后端）**：profile 页「修改密码」调 `PUT /users/:id/reset-password`，后端**从未注册该路由**（仅存在于预检映射与 swagger 注释），点了必然失败；且它是管理员重置语义（不校验旧密码）。新增 `handlers/account` + `PUT /api/v1/account/change-password`：只挂 `AuthMiddleware`（不进租户级 RBAC，否则端用户无法改自己密码），user_id 只取鉴权上下文不接受请求体指定目标，必须校验旧密码（旧密码错→403，统一不区分"用户不存在"以防账号枚举），拒绝新旧相同，成功后吊销该用户全部存量 access token。`UserService.ChangeOwnPassword` 与 `ResetPassword` 分为两个权限面，后者仍留给管理员重置。前端改调新端点，密码规则与后端对齐（12–128 位 + 四类字符），改密成功后清本地会话。

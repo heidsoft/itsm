@@ -104,3 +104,62 @@ func TestSysAdminGetsFullCatalog(t *testing.T) {
 		t.Errorf("sysadmin 码集(%d) 多于 catalog(%d)，出现 catalog 之外的越权码", len(got), len(cat))
 	}
 }
+
+// TestEndUserDoesNotHoldAdminScopedReads 锁定 end_user 的最小权限口径。
+//
+// 2026-10-16 隔离栈实测：end_user 持 system_config:read，可直接 GET /api/v1/system-configs
+// 整表读到 SMTP/密码策略/2FA 等租户配置，并且当时 GET /api/v1/system-configs/init
+// 按同一读权限守卫却整表写入默认策略（passwordMinLength=8、enable2FA=false），
+// 一次 GET 即完成。前端只有 /admin/system-config 会读这些接口，最终用户没有该入口。
+func TestEndUserDoesNotHoldAdminScopedReads(t *testing.T) {
+	roles := BuiltinRolePermissionCodes()
+	endUser, ok := roles[string(domainrole.EndUser)]
+	if !ok {
+		t.Fatal("BuiltinRolePermissionCodes 缺少 end_user 条目")
+	}
+
+	granted := make(map[string]bool, len(endUser))
+	for _, c := range endUser {
+		granted[c] = true
+	}
+
+	for _, c := range []string{
+		"system_config:read", "system_config:write", "user:write", "user:delete", "tenant:read", "audit:read",
+		"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write",
+	} {
+		if granted[c] {
+			t.Errorf("end_user 不应持有权限码 %q：对应接口是管理面，最终用户无入口", c)
+		}
+	}
+}
+
+// TestRuleConfigCodesAreNotWorkflowRead 锁定规则配置面为什么不复用 workflow:read 作读守卫。
+//
+// 工单规则列表（automation/assignment）返回租户全部规则的条件、动作与创建人
+// （dto.AutomationRuleResponse 内嵌 creator 的 username/email/role），属运营配置面；
+// 而 workflow:read 同时挂着最终用户自己的旅程接口
+// （/tickets/cc/my、/tickets/:id/workflow/state-v2 等流转进度读），
+// end_user 必须持有它。若规则读也挂 workflow:read，等于给报障人开了整表枚举
+// 租户自动化规则与人员目录的口子——与本文件上一条测试的口径直接冲突。
+func TestRuleConfigCodesAreNotWorkflowRead(t *testing.T) {
+	roles := BuiltinRolePermissionCodes()
+	endUser := roles[string(domainrole.EndUser)]
+
+	granted := make(map[string]bool, len(endUser))
+	for _, c := range endUser {
+		granted[c] = true
+	}
+	if !granted["workflow:read"] {
+		t.Fatal("end_user 必须持有 workflow:read，否则工单详情流转进度与抄送列表不可读")
+	}
+
+	defined := make(map[string]bool, len(Definitions()))
+	for _, d := range Definitions() {
+		defined[d.Code] = true
+	}
+	for _, c := range []string{"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"} {
+		if !defined[c] {
+			t.Errorf("权限码 %q 未登记：路由引用未定义码时，DBOnly 下除 super_admin 外永久 403", c)
+		}
+	}
+}

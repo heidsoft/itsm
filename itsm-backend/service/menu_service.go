@@ -37,16 +37,16 @@ func NewMenuService(client *ent.Client, logger *zap.SugaredLogger) *MenuService 
 func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	s.logger.Infow("Creating menu", "name", req.Name, "tenant_id", tenantID)
 
-	// 验证父菜单是否存在（如果指定了父菜单）
-	if req.ParentID != nil {
-		parent, err := s.client.Menu.Query().
+	// 验证父菜单是否存在（如果指定了父菜单）。parentId 0 与未传同义，都表示顶级菜单。
+	if req.ParentID != nil && *req.ParentID != 0 {
+		exists, err := s.client.Menu.Query().
 			Where(menu.ID(*req.ParentID), menu.TenantID(tenantID)).
-			Only(ctx)
+			Exist(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("父菜单不存在: %w", err)
+			return nil, fmt.Errorf("查询父菜单失败: %w", err)
 		}
-		if parent == nil {
-			return nil, fmt.Errorf("父菜单不存在")
+		if !exists {
+			return nil, common.NewValidationError("上级菜单不存在或不属于当前租户", nil)
 		}
 	}
 
@@ -87,7 +87,7 @@ func (s *MenuService) CreateMenu(ctx context.Context, req *dto.CreateMenuRequest
 	if req.Icon != "" {
 		create = create.SetIcon(req.Icon)
 	}
-	if req.ParentID != nil {
+	if req.ParentID != nil && *req.ParentID != 0 {
 		create = create.SetParentID(*req.ParentID)
 	}
 	if req.PermissionCode != nil && *req.PermissionCode != "" {
@@ -137,6 +137,51 @@ func (s *MenuService) ListMenus(ctx context.Context, tenantID int) ([]*dto.MenuD
 	return dtos, nil
 }
 
+// assertParentAssignable 校验上级菜单可指向：必须同租户、非自身、且不是自身的后代，
+// 否则菜单树会成环，页面按 parentId 组装时会出现整棵子树消失。
+// 菜单量级有限，一次读回全租户再做遍历，避免递归查库。
+func (s *MenuService) assertParentAssignable(ctx context.Context, menuID int, parentID int, tenantID int) error {
+	if parentID == menuID {
+		return common.NewValidationError("上级菜单不能是当前菜单自身", nil)
+	}
+
+	menus, err := s.client.Menu.Query().Where(menu.TenantID(tenantID)).All(ctx)
+	if err != nil {
+		return fmt.Errorf("查询菜单失败: %w", err)
+	}
+
+	children := make(map[int][]int, len(menus))
+	parentFound := false
+	for _, m := range menus {
+		if m.ID == parentID {
+			parentFound = true
+		}
+		if m.ParentID != nil {
+			children[*m.ParentID] = append(children[*m.ParentID], m.ID)
+		}
+	}
+	if !parentFound {
+		return common.NewValidationError("上级菜单不存在或不属于当前租户", nil)
+	}
+
+	visited := map[int]bool{menuID: true}
+	stack := []int{menuID}
+	for len(stack) > 0 {
+		current := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		for _, childID := range children[current] {
+			if childID == parentID {
+				return common.NewValidationError("上级菜单不能是当前菜单的子菜单", nil)
+			}
+			if !visited[childID] {
+				visited[childID] = true
+				stack = append(stack, childID)
+			}
+		}
+	}
+	return nil
+}
+
 // UpdateMenu 更新菜单
 func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMenuRequest, tenantID int) (*dto.MenuDTO, error) {
 	s.logger.Infow("Updating menu", "id", id, "tenant_id", tenantID)
@@ -159,8 +204,17 @@ func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMen
 	if req.Icon != nil {
 		update = update.SetIcon(*req.Icon)
 	}
+	// parentId 用 0 表示「设为顶级菜单」：JSON null 与未传都无法区分，
+	// 只按指针判断会让页面上移除上级菜单的操作静默失效。
 	if req.ParentID != nil {
-		update = update.SetParentID(*req.ParentID)
+		if *req.ParentID == 0 {
+			update = update.ClearParentID()
+		} else {
+			if err := s.assertParentAssignable(ctx, id, *req.ParentID, tenantID); err != nil {
+				return nil, err
+			}
+			update = update.SetParentID(*req.ParentID)
+		}
 	}
 	if req.PermissionCode != nil {
 		update = update.SetPermissionCode(*req.PermissionCode)
@@ -190,6 +244,15 @@ func (s *MenuService) UpdateMenu(ctx context.Context, id int, req *dto.UpdateMen
 func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) error {
 	s.logger.Infow("Deleting menu", "id", id, "tenant_id", tenantID)
 
+	// 与 GetMenu/UpdateMenu 同一口径：未命中按 ent 的 not-found 上抛，由响应层统一映射成
+	// 404/4004「资源不存在或已被删除」。删除不存在的菜单不能返回成功。
+	_, err := s.client.Menu.Query().
+		Where(menu.ID(id), menu.TenantID(tenantID)).
+		Only(ctx)
+	if err != nil {
+		return fmt.Errorf("菜单不存在: %w", err)
+	}
+
 	// 检查是否有子菜单
 	children, err := s.client.Menu.Query().
 		Where(menu.ParentID(id), menu.TenantID(tenantID)).
@@ -198,7 +261,7 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id int, tenantID int) erro
 		return fmt.Errorf("检查子菜单失败: %w", err)
 	}
 	if children > 0 {
-		return fmt.Errorf("请先删除子菜单")
+		return common.NewBusinessError(common.ConflictCode, "请先删除子菜单", fmt.Sprintf("menu_id=%d children=%d", id, children))
 	}
 
 	_, err = s.client.Menu.Delete().
@@ -246,6 +309,10 @@ func (s *MenuService) GetUserMenus(ctx context.Context, userID int, tenantID int
 
 	// 根据权限过滤菜单
 	filteredMenus := s.filterMenusByPermission(allMenus, permissions, roleCodes)
+
+	// 回填父项：子菜单通过权限过滤但父菜单未通过时，保留父菜单作为导航容器，
+	// 否则 buildMenuTree 会因为找不到父节点而丢弃整棵子树。
+	filteredMenus = s.backfillParentMenus(filteredMenus, allMenus)
 
 	// 构建菜单树
 	mainMenus, adminMenus := s.buildMenuTree(filteredMenus)
@@ -591,6 +658,44 @@ func splitPermission(permCode string) []string {
 		}
 	}
 	return []string{permCode}
+}
+
+// backfillParentMenus 确保所有子菜单的父节点存在于过滤结果中。
+// 当父菜单因权限码不满足被 filterMenusByPermission 剔除，但其至少一个子菜单满足时，
+// 将父菜单作为纯导航容器回填到结果集，以保证 buildMenuTree 能正确构建层级——
+// 否则 buildMenuTree 只从存活的根节点出发建树，存活子菜单会因父节点缺失被整棵丢弃。
+// 回填只是展示层导航容器：被回填的父菜单不代表授权，接口仍逐请求把关。
+func (s *MenuService) backfillParentMenus(filtered, all []*ent.Menu) []*ent.Menu {
+	kept := make(map[int]bool, len(filtered))
+	for _, m := range filtered {
+		kept[m.ID] = true
+	}
+
+	allByID := make(map[int]*ent.Menu, len(all))
+	for _, m := range all {
+		allByID[m.ID] = m
+	}
+
+	changed := true
+	for changed {
+		changed = false
+		for _, m := range filtered {
+			if m.ParentID == nil {
+				continue
+			}
+			pid := *m.ParentID
+			if kept[pid] {
+				continue
+			}
+			if parent, ok := allByID[pid]; ok {
+				filtered = append(filtered, parent)
+				kept[pid] = true
+				changed = true
+			}
+		}
+	}
+
+	return filtered
 }
 
 // buildMenuTree 构建菜单树

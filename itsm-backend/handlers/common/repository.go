@@ -24,10 +24,12 @@ type Repository interface {
 	// Team
 	CreateTeam(ctx context.Context, t *Team) (*Team, error)
 	GetTeam(ctx context.Context, id int, tenantID int) (*Team, error)
-	ListTeams(ctx context.Context, tenantID int) ([]*Team, error)
+	ListTeams(ctx context.Context, tenantID int, page int, pageSize int, search string) ([]*Team, int, error)
 	UpdateTeam(ctx context.Context, t *Team) (*Team, error)
 	DeleteTeam(ctx context.Context, id int, tenantID int) error
-	AddTeamMember(ctx context.Context, teamID int, userID int) error
+	ListTeamMembers(ctx context.Context, teamID int, tenantID int, page int, pageSize int) ([]*TeamMember, int, error)
+	AddTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error
+	RemoveTeamMember(ctx context.Context, teamID int, userID int, tenantID int) error
 
 	// Tag
 	CreateTag(ctx context.Context, t *Tag) (*Tag, error)

@@ -120,6 +120,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 等保三员②需要看到权限模型与安全配置本身
 			// （permission 清单、system_config、审计轨迹、流程与告警），仍无 system:write。
 			"permission:read", "audit:read", "system_config:read",
+			// 规则配置只读：治理视野需要看到自动化/分配规则本身，但不授予写码。
+			"automation_rule:read", "assignment_rule:read",
 			"bpmn:read", "workflow:read", "alert:read", "notification:read", "dashboard:read",
 			"change:read", "release:read", "approval:read",
 		},
@@ -129,6 +131,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"ticket:read", "ticket_type:read", "incident:read", "problem:read", "change:read",
 			"system:read", "user:read", "role:read", "report:read",
 			"audit:read", "permission:read", "system_config:read",
+			"automation_rule:read", "assignment_rule:read",
 			"approval:read", "service_request:read", "service_catalog:read",
 			"knowledge:read", "cmdb:read", "asset:read", "license:read", "vendor:read",
 			"sla:read", "release:read", "workflow:read", "bpmn:read", "task:read",
@@ -139,6 +142,9 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		// 部门经理（users.role=manager 对齐；服务请求 L1 审批角色）
 		domainrole.Manager: {
 			"ticket:read", "ticket_type:read", "ticket:write", "incident:read",
+			// 建单页分类下拉：manager 持 ticket:write（派生 create/update）与 ticket:assign，
+			// 能建单却读不到分类，实测 GET /api/v1/ticket-categories 返回 403。
+			"ticket_category:read",
 			"problem:read", "change:read", "report:read",
 			"user:read", "department:read", "team:read",
 			"knowledge:read",
@@ -164,6 +170,10 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 服务目录、CI 类型建模），不含 user/role/system 写（归 admin 与三员）。
 			"ticket_type:manage", "ticket_category:read", "ticket_tag:read", "ticket_template:read",
 			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
+			// 规则配置面属流程运营职责；此前接口挂在 system_config:* 上，
+			// it_admin 看得到菜单却恒 403（实测 code 2003）。
+			"automation_rule:read", "automation_rule:write",
+			"assignment_rule:read", "assignment_rule:write",
 			"service_catalog:read", "release:read", "notification:read", "notification:write",
 			"dashboard:read", "group:read", "approval:read",
 			// AI 分派建议/摘要是 IT 运营一线工具，其余运营角色（agent/manager/end_user）均持 ai:read。
@@ -179,7 +189,9 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"service_request:read", "service_request:write",
 			"notification:read", "user:read",
 			"notification:write", "dashboard:read", "ai:read", "ai:write",
-			"sla:read", "system_config:read", "org:read", "department:read",
+			// system_config:read 已撤：前端只有 /admin/system-config 会读它，最终用户没有该入口，
+			// 持码却等于能整表读取 SMTP/密码策略/2FA 等租户级配置。
+			"sla:read", "org:read", "department:read",
 			"cmdb:read", "incident:read", "change:read", "problem:read",
 			"bpmn:read", "release:read", "asset:read", "license:read",
 		},
@@ -212,8 +224,14 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"role:read", "role:write", "role:delete",
 			"permission:read",
 			"system_config:read", "system_config:write",
+			// 工单规则配置面：租管需要看到并维护自动化/分配规则。
+			"automation_rule:read", "automation_rule:write",
+			"assignment_rule:read", "assignment_rule:write",
 			"org:read", "org:write",
 			"department:read", "department:create", "department:update", "department:delete",
+			// 团队面：admin 条目此前完全没有 team:*，DBOnly 下租管打开团队页与
+			// 任何成员写操作都是 403（菜单可见但接口拒绝）。
+			"team:read", "team:write",
 			"project:read", "project:write", "project:delete",
 			"application:read", "application:write",
 			"group:read", "group:write",
@@ -253,7 +271,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 	// 任何角色都可能被流程指派任务（变更评审、服务请求审批、工单流转），
 	// 因此 task:read / task:update 是全角色基线，而不是个别角色的特权。
 	// 粒度控制不在角色层：ListUserTasks 只返回本人/候选任务；task:update 的每一步
-	// （认领态区分、自审批防护、委托/加签目标校验）由 handler 层 authorizeTaskActor 收口。
+	// （认领态区分、自审批防护、委托/加签目标校验）由 BPMN 引擎 authorizeTaskActor 收口。
 	// 例外：等保三员③（audit_admin）按分立原则只读，不授予 task:update。
 	for role, codes := range m {
 		if role == domainrole.AuditAdmin {
@@ -368,7 +386,12 @@ func allPermissionCodes() []string {
 //   - 值 ⊆ 权限清单（Definitions()）；
 //   - 值与该角色现行内置码集不得重叠（既授予又退役 = 配置矛盾）。
 //
-// 当前为空清单：尚无需要退役的授权。
+// 退役清单必须与内置码集的收缩同步：只改 BuiltinRolePermissionCodes 不会撤销
+// 既有安装的授权行，最终用户仍拿着旧权限码。
 func RetiredRolePermissionCodes() map[string][]string {
-	return map[string][]string{}
+	return map[string][]string{
+		// GET /api/v1/system-configs 整表返回 SMTP、密码策略、2FA 等租户级配置，
+		// 前端只有 /admin/system-config 读它，最终用户没有该入口。
+		domainrole.EndUser: {"system_config:read"},
+	}
 }

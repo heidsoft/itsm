@@ -238,6 +238,16 @@ func Definitions() []PermissionDef {
 		// 与 tenant 同级独立成面；bind/unbind 是用户自助动作，不走权限码。
 		{"sso:read", "查看SSO配置", "sso", "read", "查看 SSO 提供方配置"},
 		{"sso:write", "管理SSO配置", "sso", "write", "创建、编辑、启停 SSO 提供方"},
+		// 工单规则配置面（自动化规则 / 分配规则）。
+		// 不能复用 workflow:read：该码同时挂着最终用户的工单流转进度与抄送读接口
+		// （/tickets/cc/my、/tickets/:id/workflow/state*），租规则列表会连带返回
+		// 规则创建人的邮箱与角色，等于把租户运营配置和人员目录开放给报障人。
+		// 也不能留在 system_config:*：那份码集是租户级安全配置（SMTP/密码策略/2FA），
+		// 持有者只有三员与租管，实测 it_admin 看得到规则菜单却恒 403。
+		{"automation_rule:read", "查看自动化规则", "automation_rule", "read", "查看工单自动化规则清单"},
+		{"automation_rule:write", "管理自动化规则", "automation_rule", "write", "创建、编辑、启停、删除与试跑工单自动化规则"},
+		{"assignment_rule:read", "查看分配规则", "assignment_rule", "read", "查看工单智能分配规则清单"},
+		{"assignment_rule:write", "管理分配规则", "assignment_rule", "write", "创建、编辑、启停、删除与试跑工单分配规则"},
 	}
 }
 

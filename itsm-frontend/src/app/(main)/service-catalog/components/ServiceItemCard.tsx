@@ -23,8 +23,6 @@ import {
   MoreHorizontal,
   Edit,
   Eye,
-  ToggleLeft,
-  ToggleRight,
 } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import type { ServiceItem} from '@/types/service-catalog';
@@ -44,19 +42,15 @@ const categoryIcons: Record<string, typeof HardDrive> = {
 };
 
 interface ServiceItemCardProps {
-  catalog: ServiceItem & {
-    priority?: string;
-    shortDescription?: string;
-    slaTime?: string;
-    estimatedTime?: string;
-    rating?: number;
-  };
+  catalog: ServiceItem & { priority?: string };
+  /** 删除成功后的局部刷新回调；没有它整页 reload 会丢掉筛选和滚动位置。 */
+  onDeleted?: (id: string) => void;
 }
 
-export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => {
+export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog, onDeleted }) => {
   const { t } = useI18n();
   const router = useRouter();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const { hasPermission } = usePermissions();
   const canManageCatalog = hasPermission('service_catalog', 'write');
   const [deleting, setDeleting] = useState(false);
@@ -85,36 +79,42 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     router.push(`/service-catalog/detail/${catalog.id}`);
   };
 
-  const estimatedResolution = catalog.availability?.resolutionTime
-    ?? catalog.availability?.responseTime;
-
-  // 删除服务
+  // 删除是后端软归档：目录转为「已停用」，门户不再展示，历史申请记录保留。
   const handleDelete = async () => {
     setDeleting(true);
     try {
       await ServiceCatalogApi.deleteService(String(catalog.id));
-      message.success(t('common.deleteSuccess') || '服务已删除');
-      // 触发刷新
-      window.location.reload();
+      message.success(t('common.deleteSuccess'));
+      onDeleted?.(String(catalog.id));
     } catch (error) {
-      console.error('Failed to delete service:', error);
-      message.error(t('common.deleteFailed') || '删除失败');
+      message.error(error instanceof Error ? error.message : t('common.deleteFailed'));
     } finally {
       setDeleting(false);
     }
+  };
+
+  const confirmDelete = () => {
+    modal.confirm({
+      title: `删除「${catalog.name}」？`,
+      content: '删除后该目录转为「已停用」，门户不再展示，已有申请记录保留。',
+      okText: t('common.delete'),
+      okButtonProps: { danger: true, loading: deleting },
+      cancelText: t('common.cancel'),
+      onOk: handleDelete,
+    });
   };
 
   const actionItems: MenuProps['items'] = [
     {
       key: 'detail',
       icon: <Eye size={14} />,
-      label: t('common.view') || '查看',
+      label: t('common.view'),
       onClick: () => router.push(`/service-catalog/detail/${catalog.id}`),
     },
     {
       key: 'edit',
       icon: <Edit size={14} />,
-      label: t('common.edit') || '编辑',
+      label: t('common.edit'),
       onClick: () => router.push(`/service-catalog/edit/${catalog.id}`),
     },
     {
@@ -123,8 +123,9 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
     {
       key: 'delete',
       icon: <span style={{ color: '#ff4d4f' }}>×</span>,
-      label: <span style={{ color: '#ff4d4f' }}>{t('common.delete') || '删除'}</span>,
+      label: <span style={{ color: '#ff4d4f' }}>{t('common.delete')}</span>,
       danger: true,
+      onClick: confirmDelete,
     },
   ];
 
@@ -165,7 +166,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
         <div className="flex items-center">
           <Clock size={14} className="mr-1 text-gray-500" />
           <Text type="secondary" className="!text-xs">
-            预计解决：{catalog.slaTime || catalog.estimatedTime || (estimatedResolution ? `${estimatedResolution} 天` : '待确认')}
+            交付周期：{catalog.deliveryDays != null ? `${catalog.deliveryDays} 天` : '待确认'}
           </Text>
         </div>
         <div>

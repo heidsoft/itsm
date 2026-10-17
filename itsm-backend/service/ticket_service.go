@@ -24,7 +24,6 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/slastate"
 	entTicket "itsm-backend/ent/ticket"
-	"itsm-backend/internal/datascope"
 	"itsm-backend/ent/ticketcategory"
 	entTicketComment "itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/tickettag"
@@ -32,6 +31,7 @@ import (
 	"itsm-backend/ent/tickettype"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
 	"itsm-backend/service/sla"
@@ -329,10 +329,18 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	// 流程 Key 优先级（与 process_resolver.go 的语义一致）：
 	// 1. 请求显式指定（req.WorkflowDefinitionKey）——最高优先，不再被 TicketType 静默覆盖；
 	// 2. TicketType 配置的 WorkflowDefinitionKey；
-	// 3. 空 → triggerWorkflowForTicket 内走 ProcessResolver（绑定表）→ 兜底。
+	// 3. TicketCategory 配置的 WorkflowDefinitionKey（分类级默认流程，工单类型未配置时生效）；
+	// 4. 空 → triggerWorkflowForTicket 内走 ProcessResolver（绑定表）→ 兜底。
 	workflowDefinitionKey := req.WorkflowDefinitionKey
 	if workflowDefinitionKey == "" && configuredType != nil && configuredType.WorkflowDefinitionKey != "" {
 		workflowDefinitionKey = configuredType.WorkflowDefinitionKey
+	}
+	if workflowDefinitionKey == "" && categoryID != nil {
+		key, err := s.categoryWorkflowKey(ctx, *categoryID, tenantID)
+		if err != nil {
+			return nil, err
+		}
+		workflowDefinitionKey = key
 	}
 
 	// 转换 DTO 到领域参数
@@ -889,6 +897,24 @@ func (s *TicketService) enforceTicketRowScope(ctx context.Context, id, tenantID,
 		return common.NewForbiddenError(fmt.Sprintf("无权限删除工单 %d：仅工单创建人或处理人可删除", id))
 	}
 	return nil
+}
+
+// categoryWorkflowKey 返回分类配置的默认流程 Key；未配置时返回空串。
+// 分类可能来自请求 ID 或按名称解析，统一按本租户启用中的分类取值。
+func (s *TicketService) categoryWorkflowKey(ctx context.Context, categoryID, tenantID int) (string, error) {
+	if s.client == nil {
+		return "", nil
+	}
+	category, err := s.client.TicketCategory.Query().
+		Where(ticketcategory.IDEQ(categoryID), ticketcategory.TenantIDEQ(tenantID), ticketcategory.IsActiveEQ(true)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", nil
+		}
+		return "", fmt.Errorf("resolve ticket category workflow: %w", err)
+	}
+	return category.WorkflowDefinitionKey, nil
 }
 
 // triggerWorkflowForTicket 异步触发工单关联的 BPMN 流程

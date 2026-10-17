@@ -36,7 +36,11 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "SLA 管理", Path: "/sla", Icon: "Calendar", ParentPath: "", PermissionCode: "sla:read", SortOrder: 90, Description: "SLA 监控与配置"},
 		{Name: "工作流", Path: "/workflow", Icon: "GitMerge", ParentPath: "", PermissionCode: "workflow:read", SortOrder: 100, Description: "工作流自动化"},
 		{Name: "AI 助手", Path: "/ai/chat", Icon: "Bot", ParentPath: "", PermissionCode: "ai:read", SortOrder: 110, Description: "AI 助手"},
-		{Name: "待我审批", Path: "/approvals/pending", Icon: "CheckCircle", ParentPath: "", PermissionCode: "approval:read", SortOrder: 115, Description: "待我审批"},
+		// 待我审批与审批中心指向同一个页面（/approvals/pending 只做 redirect），
+		// 该页只消费 GET /bpmn/tasks，实测无任何 approval:* 调用，故按数据源取 task:read。
+		// 旧码 approval:read 只授配置角色，且 /approvals 挂在 /workflow 下会落进 admin 桶
+		// （前端只给管理角色渲染），导致 agent/manager/end_user 这些真正的待办处理人没有入口。
+		{Name: "待我审批", Path: "/approvals/pending", Icon: "CheckCircle", ParentPath: "", PermissionCode: "task:read", SortOrder: 115, Description: "待我审批"},
 		{Name: "客户管理", Path: "/msp", Icon: "Building", ParentPath: "", PermissionCode: "msp:read", SortOrder: 120, Description: "客户管理 (MSP)"},
 		{Name: "发布管理", Path: "/releases", Icon: "Rocket", ParentPath: "", PermissionCode: "release:read", SortOrder: 130, Description: "发布管理"},
 
@@ -109,8 +113,10 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "版本管理", Path: "/workflow/versions", Icon: "History", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 104},
 		{Name: "监控仪表盘", Path: "/workflow/dashboard", Icon: "Activity", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 105},
 		{Name: "节点瓶颈分析", Path: "/workflow/bottlenecks", Icon: "BarChart3", ParentPath: "/workflow", PermissionCode: "workflow:read", SortOrder: 106},
-		{Name: "自动化规则", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "workflow:write", SortOrder: 107},
-		{Name: "审批中心", Path: "/approvals", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "approval:read", SortOrder: 108},
+		// 与 /admin/tickets/automation-rules 是同一个配置面的两个入口，按管理面取
+		// automation_rule:write：只读角色拿到菜单后每个写按钮都会 403。
+		{Name: "自动化规则", Path: "/workflow/automation", Icon: "Zap", ParentPath: "/workflow", PermissionCode: "automation_rule:write", SortOrder: 107},
+		{Name: "审批中心", Path: "/approvals", Icon: "CheckSquare", ParentPath: "/workflow", PermissionCode: "task:read", SortOrder: 108},
 		{Name: "操作日志", Path: "/workflow/audit", Icon: "ClipboardList", ParentPath: "/workflow", PermissionCode: "audit:read", SortOrder: 109},
 
 		// ===== 子菜单：AI 助手 =====
@@ -137,8 +143,11 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "团队管理", Path: "/admin/teams", Icon: "Users", ParentPath: "/admin", PermissionCode: "team:read", SortOrder: 250},
 		{Name: "评审组管理", Path: "/admin/change-review", Icon: "Users", ParentPath: "/admin", PermissionCode: "change:read", SortOrder: 255},
 		{Name: "工单分类", Path: "/admin/ticket-categories", Icon: "Tag", ParentPath: "/admin", PermissionCode: "ticket_category:update", SortOrder: 260},
-		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 265},
-		{Name: "自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/admin", PermissionCode: "ticket:read", SortOrder: 270},
+		// 规则配置页原先挂在 ticket:read（人人有码）与 workflow:write（租管没有）上，
+		// 而接口要求 system_config:*：菜单可见性与接口授权三套口径，实测 it_admin
+		// 打开页面即 403。现在菜单码与接口同域，写码入口见 baseline_guard_test。
+		{Name: "工单分配规则", Path: "/admin/tickets/assignment-rules", Icon: "GitBranch", ParentPath: "/admin", PermissionCode: "assignment_rule:write", SortOrder: 265},
+		{Name: "自动化规则", Path: "/admin/tickets/automation-rules", Icon: "Zap", ParentPath: "/admin", PermissionCode: "automation_rule:write", SortOrder: 270},
 		{Name: "审批链", Path: "/admin/approval-chains", Icon: "Link", ParentPath: "/admin", PermissionCode: "approval:write", SortOrder: 275},
 		{Name: "权限管理", Path: "/admin/permissions", Icon: "Lock", ParentPath: "/admin", PermissionCode: "role:write", SortOrder: 280},
 		{Name: "连接器/插件市场", Path: "/admin/connectors", Icon: "Plug", ParentPath: "/admin", PermissionCode: "connector:write", SortOrder: 285},

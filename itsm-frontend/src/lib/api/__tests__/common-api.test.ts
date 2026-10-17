@@ -66,15 +66,6 @@ describe('CommonApi', () => {
     });
   });
 
-  describe('getTeams', () => {
-    it('should get teams', async () => {
-      mockGet.mockResolvedValue([{ id: 1, name: 'Team A' }]);
-      const result = await CommonApi.getTeams();
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/teams');
-      expect(result).toEqual([{ id: 1, name: 'Team A' }]);
-    });
-  });
-
   describe('getTags', () => {
     it('should get tags', async () => {
       mockGet.mockResolvedValue([{ id: 1, name: 'urgent' }]);

@@ -205,19 +205,3 @@ func (h *Handler) BatchUpdateConfigs(c *gin.Context) {
 
 	common.Success(c, configResponses)
 }
-
-// InitDefaultConfigs 初始化默认配置
-func (h *Handler) InitDefaultConfigs(c *gin.Context) {
-	tid, ok := tenantID(c)
-	if !ok {
-		return
-	}
-
-	err := h.configService.InitDefaultConfigs(c.Request.Context(), tid)
-	if err != nil {
-		common.FailWithErr(c, err, "操作失败")
-		return
-	}
-
-	common.Success(c, gin.H{"message": "默认配置初始化成功"})
-}

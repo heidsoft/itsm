@@ -311,8 +311,10 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID, id, params, actorID, actorRole)
 	if err != nil {
-		if common.IsVersionConflictError(err) {
-			conflictErr := err.(*common.VersionConflictError)
+		// 版本冲突必须用 errors.As 解包：service 层 `fmt.Errorf("update ticket: %w")`
+		// 包装后顶层类型断言会漏判，导致乐观锁冲突掉进 500。冲突属于 409(4090)。
+		var conflictErr *common.VersionConflictError
+		if errors.As(err, &conflictErr) {
 			common.Conflict(c, conflictErr.Error(), gin.H{
 				"ticketId":       conflictErr.ResourceID,
 				"currentVersion": conflictErr.CurrentVersion,

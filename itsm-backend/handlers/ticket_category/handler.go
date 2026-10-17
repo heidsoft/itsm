@@ -57,7 +57,7 @@ func (h *Handler) CreateCategory(c *gin.Context) {
 	category, err := h.categoryService.CreateCategory(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to create ticket category", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *Handler) UpdateCategory(c *gin.Context) {
 	category, err := h.categoryService.UpdateCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to update ticket category", "error", err, "category_id", categoryID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -111,7 +111,7 @@ func (h *Handler) DeleteCategory(c *gin.Context) {
 	err = h.categoryService.DeleteCategory(c.Request.Context(), categoryID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete ticket category", "error", err, "category_id", categoryID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h *Handler) ListCategories(c *gin.Context) {
 	categories, total, err := h.categoryService.ListCategories(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Errorw("Failed to list ticket categories", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *Handler) GetCategoryTree(c *gin.Context) {
 	tree, err := h.categoryService.GetCategoryTree(c.Request.Context(), tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to get category tree", "error", err, "tenant_id", tenantID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -210,7 +210,7 @@ func (h *Handler) MoveCategory(c *gin.Context) {
 	category, err := h.categoryService.MoveCategory(c.Request.Context(), categoryID, &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to move ticket category", "error", err, "category_id", categoryID)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 

@@ -98,6 +98,12 @@ func (m *mockRepository) Update(ctx context.Context, id int, params *UpdateParam
 	if !ok || t.TenantID != tenantID {
 		return nil, errors.New("ticket not found")
 	}
+	// 乐观锁语义与生产 repository/ticket 对齐：客户端显式传入的版本与当前不一致时，
+	// 返回类型化冲突错误。service 层会再包一层 fmt.Errorf，handler 依赖
+	// errors.As 解包映射 409(4090)——这正是该回归链路要验证的点。
+	if params.Version != 0 && params.Version != t.Version {
+		return nil, common.NewVersionConflictError("工单", id, params.Version, t.Version)
+	}
 	if params.Title != nil {
 		t.Title = *params.Title
 	}
@@ -723,6 +729,47 @@ func TestHandler_LifecycleOps_AdminLikeBypass(t *testing.T) {
 		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "9", "X-Test-Role": "manager"},
 	)
 	assert.Equal(t, 200, w.Code, w.Body.String())
+}
+
+// TestHandler_Update_VersionConflict 验证乐观锁场冲突走完整链路时映射为 409(4090)，而不是 500。
+// 回归背景：repository 曾返回裸字符串冲突错误 + handler 用顶层类型断言检测，
+// 被 service 层 fmt.Errorf 包装后的冲突会漏判并兜底成 5001/500，
+// 并发编辑工单的合法冲突被当成服务器故障。
+func TestHandler_Update_VersionConflict(t *testing.T) {
+	r, repo := newTestHarness(t)
+
+	w := doJSON(t, r, http.MethodPost, "/api/v1/tickets",
+		dto.CreateTicketRequest{Title: "Version conflict test", Priority: "low"},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	id := int(resp["data"].(map[string]interface{})["id"].(float64))
+	idStr := strconv.Itoa(id)
+
+	// 用正确版本更新一次 → 版本从 1 推进到 2
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr,
+		dto.UpdateTicketRequest{Title: "First edit ok", Version: 1},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	require.Equal(t, 200, w.Code, w.Body.String())
+
+	// 携带陈旧版本(1)再次更新 → 必须 409 + 4090 + serverVersion 载荷
+	w = doJSON(t, r, http.MethodPut, "/api/v1/tickets/"+idStr,
+		dto.UpdateTicketRequest{Title: "Stale version edit attempt", Version: 1},
+		map[string]string{"X-Test-TenantID": "1", "X-Test-UserID": "7"},
+	)
+	assert.Equal(t, http.StatusConflict, w.Code, "版本冲突应返回 409，而不是 500: %s", w.Body.String())
+	assert.Contains(t, w.Body.String(), "4090")
+	assert.Contains(t, w.Body.String(), "\"serverVersion\":2", "响应必须携带服务端当前版本供客户端恢复")
+
+	// 冲突后内容不被陈旧写覆盖
+	for _, tk := range repo.tickets {
+		assert.Equal(t, "First edit ok", tk.Title)
+		assert.Equal(t, 2, tk.Version)
+	}
 }
 
 // TestHandler_StateMachineWhitelist 验证工单状态机白名单：非法迁移返回 4090，合法迁移放行。

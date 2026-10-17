@@ -61,6 +61,14 @@ export interface ServiceItem {
   slaResponseTime?: number;
   slaResolutionTime?: number;
 
+  // 交付与展示
+  /** 后端 deliveryTime（字符串承载的整数天数）投影；1..3650 天，不是小时 */
+  deliveryDays?: number;
+  /** 计价单位，与后端 dto.unit 同枚举：月 | 次 | 用户，空串表示未配置 */
+  unit?: string;
+  price?: number;
+  sortOrder?: number;
+
   // 表单配置
   formSchema?: Record<string, unknown>;
   availableRegions?: string[];
@@ -89,7 +97,7 @@ export interface ServiceItem {
   availability?: {
     businessHours?: string;
     supportLevel?: 'basic' | 'standard' | 'premium';
-    responseTime?: number; // 响应时间（小时）
+    responseTime?: number; // 响应时间（小时）；服务目录的交付时长用 deliveryDays（天），不要复用本字段
     resolutionTime?: number; // 解决时间（小时）
   };
 
@@ -340,7 +348,8 @@ export interface ServiceCatalogStats {
  */
 export interface CreateServiceItemRequest {
   name: string;
-  category: ServiceCategory;
+  /** 后端 dto 为 `binding:"required,max=100"` 的自由文本，没有枚举校验 */
+  category: string;
   shortDescription: string;
   fullDescription?: string;
   ciTypeId?: number;
@@ -356,6 +365,17 @@ export interface CreateServiceItemRequest {
   requiresApproval?: boolean;
   approvalWorkflow?: string;
   status?: ServiceStatus;
+
+  // 与后端 dto.UpdateServiceCatalogRequest 一一对应的可写字段
+  serviceType?: ServiceType;
+  approvalLevel?: number;
+  approvers?: number[];
+  slaResponseTime?: number;
+  slaResolutionTime?: number;
+  sortOrder?: number;
+  deliveryDays?: number;
+  unit?: string;
+  price?: number;
 }
 
 /**
@@ -375,18 +395,19 @@ export interface CreateServiceRequestRequest {
 }
 
 /**
- * 服务查询参数
+ * 服务查询参数 —— 只声明后端 GET /api/v1/service-catalogs 真正过滤的字段。
+ * search 落到查询参数 q（名称或描述），关联筛选落到 ciTypeId/cloudServiceId；
+ * 0/未传表示不过滤。评级、标签、排序后端没有实现，不在这里留悬空字段。
  */
 export interface ServiceQuery {
-  category?: ServiceCategory;
+  /** 后端按原始字符串精确匹配 category，取值来自数据本身而不是枚举 */
+  category?: string;
   status?: ServiceStatus;
   search?: string;
-  tags?: string[];
-  minRating?: number;
+  ciTypeId?: number;
+  cloudServiceId?: number;
   page?: number;
   pageSize?: number;
-  sortBy?: 'name' | 'rating' | 'popularity' | 'newest';
-  sortOrder?: 'asc' | 'desc';
 }
 
 /**

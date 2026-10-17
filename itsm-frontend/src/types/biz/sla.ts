@@ -1,23 +1,9 @@
 /**
  * SLA 类型定义
+ *
+ * SLA 定义的响应结构以 dto.SLADefinitionResponse 为准，前端类型统一用
+ * `@/lib/api/sla-api` 的 SLADefinition，此处不再重复声明第二套契约。
  */
-
-export interface SLADefinition {
-  id: number;
-  name: string;
-  description: string;
-  serviceType: string;
-  priority: string;
-  responseTime: number;
-  resolutionTime: number;
-  businessHours: Record<string, any>;
-  escalationRules: Record<string, any>;
-  conditions: Record<string, any>;
-  isActive: boolean;
-  tenantId: number;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface SLAViolation {
   id: number;
@@ -48,11 +34,4 @@ export interface SLAAlertRule {
   alertLevel: string;
   notificationChannels: string[];
   isActive: boolean;
-}
-
-export interface SLADefinitionListResponse {
-  items: SLADefinition[];
-  total: number;
-  page: number;
-  size: number;
 }

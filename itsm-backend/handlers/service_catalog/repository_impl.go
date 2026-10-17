@@ -2,6 +2,7 @@ package service_catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/common"
@@ -87,6 +88,22 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters ListFilt
 			query = query.Where(servicecatalog.Status(filters.Status))
 		}
 	}
+	// 关键词与 Search 同一套匹配口径，避免「列表搜」和「门户搜」给出不同结果。
+	if filters.Keyword != "" {
+		query = query.Where(
+			servicecatalog.Or(
+				servicecatalog.NameContains(filters.Keyword),
+				servicecatalog.DescriptionContains(filters.Keyword),
+			),
+		)
+	}
+	// 0 是这些可空外键的「未关联」哨兵，所以筛选参数只在 >0 时生效。
+	if filters.CiTypeID > 0 {
+		query = query.Where(servicecatalog.CiTypeID(filters.CiTypeID))
+	}
+	if filters.CloudServiceID > 0 {
+		query = query.Where(servicecatalog.CloudServiceID(filters.CloudServiceID))
+	}
 
 	total, err := query.Count(ctx)
 	if err != nil {
@@ -137,12 +154,11 @@ func (r *EntRepository) Update(ctx context.Context, tenantID int, catalog *Servi
 		SetAvailableRegions(catalog.AvailableRegions).
 		SetAvailableSpecs(catalog.AvailableSpecs).
 		SetSortOrder(catalog.SortOrder)
-	if catalog.CITypeID > 0 {
-		update = update.SetCiTypeID(catalog.CITypeID)
-	}
-	if catalog.CloudServiceID > 0 {
-		update = update.SetCloudServiceID(catalog.CloudServiceID)
-	}
+	// 关联字段必须无条件写入：service 层先加载权威实体再按指针补丁赋值，
+	// 这里的 0 就是「调用方显式清空」。用 `> 0` 守卫会让清空关联返回 200 却保住旧值。
+	update = update.
+		SetCiTypeID(catalog.CITypeID).
+		SetCloudServiceID(catalog.CloudServiceID)
 
 	res, err := update.Save(ctx)
 	if err != nil {
@@ -168,16 +184,23 @@ func (r *EntRepository) NameExists(ctx context.Context, tenantID int, name strin
 	return query.Exist(ctx)
 }
 
+// ErrCITypeUnavailable / ErrCloudServiceUnavailable 是引用校验的稳定错误类。
+// service 层据此映射中文提示，仓储层不得把驱动/英文原文当成用户可见消息上抛。
+var (
+	ErrCITypeUnavailable       = errors.New("ci type unavailable")
+	ErrCloudServiceUnavailable = errors.New("cloud service unavailable")
+)
+
 func (r *EntRepository) ValidateReferences(ctx context.Context, tenantID, ciTypeID, cloudServiceID int) error {
 	if ciTypeID > 0 {
 		exists, err := r.client.CIType.Query().
 			Where(citype.IDEQ(ciTypeID), citype.TenantIDEQ(tenantID), citype.IsActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to validate CI type: %w", err)
+			return fmt.Errorf("%w: %v", ErrCITypeUnavailable, err)
 		}
 		if !exists {
-			return fmt.Errorf("CI type not found or inactive")
+			return ErrCITypeUnavailable
 		}
 	}
 	if cloudServiceID > 0 {
@@ -185,10 +208,10 @@ func (r *EntRepository) ValidateReferences(ctx context.Context, tenantID, ciType
 			Where(cloudservice.IDEQ(cloudServiceID), cloudservice.TenantIDEQ(tenantID), cloudservice.IsActiveEQ(true)).
 			Exist(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to validate cloud service: %w", err)
+			return fmt.Errorf("%w: %v", ErrCloudServiceUnavailable, err)
 		}
 		if !exists {
-			return fmt.Errorf("cloud service not found or inactive")
+			return ErrCloudServiceUnavailable
 		}
 	}
 	return nil

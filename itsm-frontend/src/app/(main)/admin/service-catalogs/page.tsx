@@ -4,7 +4,6 @@ import {
   RefreshCw,
   AlertCircle,
   Download,
-  Upload,
   BookOpen,
   CheckCircle,
   Filter,
@@ -17,7 +16,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   Table,
@@ -39,32 +38,100 @@ import {
   Tag,
   Descriptions,
   Spin,
+  Switch,
+  Alert,
 } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { BatchActionBar, type BatchAction } from '@/components/business/BatchActionBar';
-import type {
-  ServiceItem,
-  CreateServiceItemRequest,
-  UpdateServiceItemRequest,
-} from '@/types/service-catalog';
+import { buildCsv, csvDate, downloadCsv } from '@/lib/utils/csv-export';
+import type { ServiceItem, CreateServiceItemRequest } from '@/types/service-catalog';
 import { ServiceStatus } from '@/types/service-catalog';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
+
+/** 弹窗表单值：与后端可写字段同名，交付周期用天。 */
+interface CatalogFormValues {
+  name: string;
+  category: string;
+  description: string;
+  serviceType?: ServiceItem['serviceType'];
+  deliveryDays?: number;
+  price?: number;
+  unit?: string;
+  requiresApproval?: boolean;
+  approvalLevel?: number;
+  sortOrder?: number;
+  slaResponseTime?: number;
+  slaResolutionTime?: number;
+  ciTypeId?: number;
+  cloudServiceId?: number;
+  status: ServiceStatus;
+}
+
+/** 只影响服务端查询的过滤条件；列表的搜索/分类/状态/关联筛选都必须在后端生效。 */
+interface CatalogFilters {
+  q: string;
+  status: ServiceStatus | '';
+  category: string;
+  ciTypeId?: number;
+  cloudServiceId?: number;
+}
+
+const EMPTY_FILTERS: CatalogFilters = { q: '', status: '', category: '' };
+
+// 产品默认分类；后端 category 是自由文本，真实分类另从 stats 合并进来。
+const DEFAULT_CATEGORIES = ['云服务', '基础设施', '应用服务', '数据服务'];
+
+/** 导出的硬上限：超过它必须显式提示，禁止静默导出半截 CSV。 */
+const MAX_EXPORT_RECORDS = 5000;
+
+// 浏览器单 origin 连接池约 6，批量 fan-out 必须限流（AGENTS.md Pattern E）。
+const BATCH_CONCURRENCY = 5;
+
+async function runBatch<T, R>(
+  items: T[],
+  worker: (item: T) => Promise<R>,
+): Promise<{ succeeded: R[]; failed: { item: T; message: string }[] }> {
+  const succeeded: R[] = [];
+  const failed: { item: T; message: string }[] = [];
+  let cursor = 0;
+
+  const lanes = Array.from({ length: Math.min(BATCH_CONCURRENCY, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      const item = items[index];
+      try {
+        succeeded.push(await worker(item));
+      } catch (error) {
+        failed.push({
+          item,
+          message: error instanceof Error ? error.message : '未知错误',
+        });
+      }
+    }
+  });
+  await Promise.all(lanes);
+  return { succeeded, failed };
+}
 
 const ServiceCatalogManagement = () => {
   const { message } = App.useApp();
   const [catalogs, setCatalogs] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingCatalog, setEditingCatalog] = useState<ServiceItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [ciTypeFilter, setCiTypeFilter] = useState<number | undefined>(undefined);
-  const [cloudServiceFilter, setCloudServiceFilter] = useState<number | undefined>(undefined);
+  const [searchInput, setSearchInput] = useState('');
+  const [filters, setFilters] = useState<CatalogFilters>(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const [ciTypes, setCiTypes] = useState<CIType[]>([]);
   const [cloudServices, setCloudServices] = useState<CloudService[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(false);
@@ -73,6 +140,8 @@ const ServiceCatalogManagement = () => {
   const [detailCatalog, setDetailCatalog] = useState<ServiceItem | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [form] = Form.useForm();
+  // 过滤条件变化时，慢的那次请求不能覆盖新的结果（AGENTS.md Pattern A）。
+  const requestSeqRef = useRef(0);
 
   const handleViewDetail = async (catalog: ServiceItem) => {
     setDetailVisible(true);
@@ -90,266 +159,338 @@ const ServiceCatalogManagement = () => {
     }
   };
 
-  // 统计数据
+  // 统计数据来自 /service-catalogs/stats：整租户口径，不受列表筛选影响。
+  // categories 同时作为分类筛选的选项来源：分类是后端自由文本，选项必须来自真实数据，
+  // 不能写死四个候选值，否则筛不到已有目录。
   const [stats, setStats] = useState({
     total: 0,
     enabled: 0,
     disabled: 0,
-    categories: 0,
+    categories: [] as { name: string; count: number }[],
   });
 
-  // 获取服务目录列表
-  const fetchCatalogs = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      setLoading(true);
-      const response = await ServiceCatalogApi.getServices({
-        page: 1,
-        pageSize: 100,
-      });
-      setCatalogs(response.services);
-
-      // 计算统计数据
-      const enabledCount = response.services.filter(
-        (c: ServiceItem) => c.status === 'published'
-      ).length;
-      const categories = new Set(response.services.map(c => c.category)).size;
-
+      const data = await ServiceCatalogApi.getCatalogStats();
       setStats({
-        total: response.services.length,
-        enabled: enabledCount,
-        disabled: response.services.length - enabledCount,
-        categories: categories,
+        total: data.totalServices,
+        enabled: data.publishedServices,
+        disabled: data.totalServices - data.publishedServices,
+        categories: Object.entries(data.categories ?? {})
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN')),
       });
     } catch (error) {
-      message.error('获取服务目录失败');
-    } finally {
-      setLoading(false);
+      setLoadError(error instanceof Error ? error.message : '服务目录统计加载失败');
     }
-  };
+  }, []);
+
+  // 默认四项只是起点：库里已有别的分类时必须能选回原值，否则编辑会把分类悄悄改掉。
+  const categoryOptions = useMemo(() => {
+    const names = [...DEFAULT_CATEGORIES];
+    for (const item of stats.categories) {
+      if (!names.includes(item.name)) names.push(item.name);
+    }
+    return names.map(name => ({ value: name, label: name }));
+  }, [stats.categories]);
+
+  // 获取服务目录列表
+  const fetchCatalogs = useCallback(async () => {
+    const seq = ++requestSeqRef.current;
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const response = await ServiceCatalogApi.getServices({
+        page,
+        pageSize,
+        ...(filters.q ? { search: filters.q } : {}),
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.category ? { category: filters.category } : {}),
+        ...(filters.ciTypeId ? { ciTypeId: filters.ciTypeId } : {}),
+        ...(filters.cloudServiceId ? { cloudServiceId: filters.cloudServiceId } : {}),
+      });
+      if (seq !== requestSeqRef.current) return;
+      setCatalogs(response.services);
+      setTotal(response.total);
+    } catch (error) {
+      if (seq !== requestSeqRef.current) return;
+      setCatalogs([]);
+      setTotal(0);
+      setLoadError(error instanceof Error ? error.message : '获取服务目录失败');
+    } finally {
+      if (seq === requestSeqRef.current) setLoading(false);
+    }
+  }, [page, pageSize, filters]);
+
+  const applyFilters = useCallback((next: Partial<CatalogFilters>) => {
+    setFilters(previous => ({ ...previous, ...next }));
+    setPage(1);
+  }, []);
+
+  const hasActiveFilters =
+    filters.q !== '' ||
+    filters.status !== '' ||
+    filters.category !== '' ||
+    filters.ciTypeId !== undefined ||
+    filters.cloudServiceId !== undefined;
+
+  const refresh = useCallback(() => {
+    void Promise.all([fetchCatalogs(), fetchStats()]);
+  }, [fetchCatalogs, fetchStats]);
 
   useEffect(() => {
     fetchCatalogs();
-  }, []);
+  }, [fetchCatalogs]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   useEffect(() => {
     const loadOptions = async () => {
       try {
         setOptionsLoading(true);
         const [types, services] = await Promise.all([
-	  CMDBApi.getCITypes(),
+          CMDBApi.getCITypes(),
           CMDBApi.getCloudServices(),
         ]);
         setCiTypes(types || []);
         setCloudServices(services.items);
-      } catch (error) {
-        message.error('加载CMDB选项失败');
+      } catch {
+        message.error('加载 CMDB 选项失败，关联筛选暂不可用');
       } finally {
         setOptionsLoading(false);
       }
     };
     loadOptions();
-  }, []);
+  }, [message]);
 
-  // 处理表单提交
-  const handleSubmit = async (values: CreateServiceItemRequest & Record<string, any>) => {
+  // 表单字段与后端可写 DTO 一一对应；交付周期用天，不再伪装成 availability.responseTime。
+  const handleSubmit = async (values: CatalogFormValues) => {
+    if (submitting) return;
+    // 「关联云服务必须选 CI 类型」由后端校验并返回中文提示，前端不再重复这套规则。
+    const payload: CreateServiceItemRequest = {
+      name: values.name,
+      category: values.category,
+      shortDescription: values.description,
+      fullDescription: values.description,
+      serviceType: values.serviceType,
+      deliveryDays: values.deliveryDays,
+      // 表单是这两个字段的权威视图：清空即「未配置/免费」，必须显式提交 0 和空串，
+      // 省略会让后端 PATCH 保持原值，页面显示与库里数据就此分叉。
+      price: values.price ?? 0,
+      unit: values.unit ?? '',
+      requiresApproval: values.requiresApproval ?? false,
+      approvalLevel: values.approvalLevel ?? 0,
+      sortOrder: values.sortOrder ?? 0,
+      slaResponseTime: values.slaResponseTime,
+      slaResolutionTime: values.slaResolutionTime,
+      // Select 清空后是 undefined，而后端 PATCH 只认显式 0；省略会让关联原样留在库里，
+      // 页面显示「未关联」但新申请仍按旧 CI 类型履约。
+      ciTypeId: values.ciTypeId ?? 0,
+      cloudServiceId: values.cloudServiceId ?? 0,
+      status: values.status,
+    };
+    setSubmitting(true);
     try {
-      if (values.cloudServiceId && !values.ciTypeId) {
-        message.error('关联云服务时必须选择CI类型');
-        return;
-      }
-      const payload: CreateServiceItemRequest = {
-        name: values.name,
-        category: values.category,
-        shortDescription: values.description,
-        fullDescription: values.description,
-        availability: values.deliveryTime ? { responseTime: values.deliveryTime } : undefined,
-        ciTypeId: values.ciTypeId,
-        cloudServiceId: values.cloudServiceId,
-        ...(values.status ? { status: values.status } : {}),
-      } as CreateServiceItemRequest;
       if (editingCatalog) {
-        await ServiceCatalogApi.updateService(
-          editingCatalog.id,
-          payload as UpdateServiceItemRequest
-        );
-        message.success('服务目录更新成功');
+        await ServiceCatalogApi.updateService(editingCatalog.id, payload);
+        message.success('服务目录已更新');
       } else {
         await ServiceCatalogApi.createService(payload);
-        message.success('服务目录创建成功');
+        message.success('服务目录已创建');
       }
       setShowModal(false);
       setEditingCatalog(null);
       form.resetFields();
-      fetchCatalogs();
+      refresh();
     } catch (error) {
-      message.error(editingCatalog ? '更新失败' : '创建失败');
+      // 名称重复、状态非法、关联资源不存在都是后端业务校验，中文提示必须原样透出，
+      // 否则管理员只看到「创建失败」而无从定位。
+      message.error(error instanceof Error ? error.message : '保存服务目录失败');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // 编辑服务目录
+  // 编辑服务目录：表单可见的字段都要回填，否则保存时会被清空。
   const handleEdit = (catalog: ServiceItem) => {
     setEditingCatalog(catalog);
     form.setFieldsValue({
       name: catalog.name,
       category: catalog.category,
       description: catalog.shortDescription || catalog.fullDescription,
-      deliveryTime: catalog.availability?.responseTime,
-      status: catalog.status,
+      serviceType: catalog.serviceType,
+      deliveryDays: catalog.deliveryDays,
+      price: catalog.price,
+      unit: catalog.unit,
+      requiresApproval: catalog.requiresApproval ?? false,
+      approvalLevel: catalog.approvalLevel ?? 0,
+      sortOrder: catalog.sortOrder ?? 0,
+      slaResponseTime: catalog.slaResponseTime,
+      slaResolutionTime: catalog.slaResolutionTime,
       ciTypeId: catalog.ciTypeId,
       cloudServiceId: catalog.cloudServiceId,
+      status: catalog.status,
     });
     setShowModal(true);
   };
 
-  // 删除服务目录
   const handleDelete = async (id: string) => {
     try {
-      await ServiceCatalogApi.deleteService(id.toString());
-      message.success('删除成功');
-      fetchCatalogs();
+      await ServiceCatalogApi.deleteService(id);
+      message.success('已删除，目录会转为「已停用」');
+      setSelectedRowKeys(previous => previous.filter(key => String(key) !== id));
+      refresh();
     } catch (error) {
-      message.error('删除失败');
+      message.error(error instanceof Error ? error.message : '删除失败');
     }
   };
 
-  // 批量删除
+  // 批量删除：限流 + 保留失败选中，让失败项可以原地重试。
   const handleBatchDelete = async () => {
+    const ids = selectedRowKeys.map(String);
+    setSubmitting(true);
     try {
-      await Promise.all(selectedRowKeys.map(id => ServiceCatalogApi.deleteService(id.toString())));
-      message.success(`成功删除 ${selectedRowKeys.length} 个服务目录`);
-      setSelectedRowKeys([]);
-      fetchCatalogs();
-    } catch (error) {
-      message.error('批量删除失败');
-    }
-  };
-
-  // 批量启用/禁用
-  const handleBatchStatusChange = async (status: 'published' | 'retired') => {
-    try {
-      await Promise.all(
-        selectedRowKeys.map(id => {
-          const catalog = catalogs.find(c => c.id === id.toString());
-          if (catalog) {
-            return ServiceCatalogApi.updateService(id.toString(), {
-              status,
-            } as UpdateServiceItemRequest);
-          }
-          return Promise.resolve();
-        })
+      const { succeeded, failed } = await runBatch(ids, id =>
+        ServiceCatalogApi.deleteService(id),
       );
-      message.success(
-        `成功${status === 'published' ? '发布' : '停用'} ${selectedRowKeys.length} 个服务目录`
-      );
-      setSelectedRowKeys([]);
-      fetchCatalogs();
-    } catch (error) {
-      message.error('批量操作失败');
+      setSelectedRowKeys(failed.map(entry => entry.item));
+      if (failed.length === 0) {
+        message.success(`已删除 ${succeeded.length} 个服务目录`);
+      } else {
+        message.warning(
+          `${succeeded.length} 个成功、${failed.length} 个失败（${failed[0].message}），失败项已保留选中`,
+        );
+      }
+      refresh();
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleStatusChange = async (catalog: ServiceItem, status: 'published' | 'retired') => {
+  // 批量发布/停用：只提交 status，其余字段由后端 PATCH 语义保持原值。
+  const handleBatchStatusChange = async (status: ServiceStatus) => {
+    const ids = selectedRowKeys.map(String);
+    const action = status === ServiceStatus.PUBLISHED ? '发布' : '停用';
+    setSubmitting(true);
     try {
-      await ServiceCatalogApi.updateService(catalog.id, { status } as UpdateServiceItemRequest);
-      message.success(status === 'published' ? '服务目录已启用' : '服务目录已停用');
-      fetchCatalogs();
-    } catch (error) {
-      message.error('状态更新失败');
+      const { succeeded, failed } = await runBatch(ids, id =>
+        ServiceCatalogApi.updateService(id, { status }),
+      );
+      setSelectedRowKeys(failed.map(entry => entry.item));
+      if (failed.length === 0) {
+        message.success(`已${action} ${succeeded.length} 个服务目录`);
+      } else {
+        message.warning(
+          `${succeeded.length} 个${action}成功、${failed.length} 个失败（${failed[0].message}），失败项已保留选中`,
+        );
+      }
+      refresh();
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const handleStatusChange = async (catalog: ServiceItem, status: ServiceStatus) => {
+    try {
+      await ServiceCatalogApi.updateService(catalog.id, { status });
+      message.success(status === ServiceStatus.PUBLISHED ? '服务目录已发布' : '服务目录已停用');
+      refresh();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '状态更新失败');
+    }
+  };
+
+  // 复制走后端真实字段，副本固定为已停用，确认后再发布；重复副本名由后端返回冲突提示。
   const handleDuplicate = async (catalog: ServiceItem) => {
     try {
       await ServiceCatalogApi.createService({
         name: `${catalog.name} 副本`,
         category: catalog.category,
         shortDescription: catalog.shortDescription,
-        fullDescription: catalog.fullDescription || catalog.shortDescription,
-        availability: catalog.availability,
+        fullDescription: catalog.fullDescription,
+        serviceType: catalog.serviceType,
+        deliveryDays: catalog.deliveryDays,
+        unit: catalog.unit,
+        price: catalog.price,
+        requiresApproval: catalog.requiresApproval ?? false,
+        approvalLevel: catalog.approvalLevel ?? 0,
+        sortOrder: catalog.sortOrder ?? 0,
+        slaResponseTime: catalog.slaResponseTime,
+        slaResolutionTime: catalog.slaResolutionTime,
         ciTypeId: catalog.ciTypeId,
         cloudServiceId: catalog.cloudServiceId,
-        status: 'draft',
-      } as CreateServiceItemRequest);
-      message.success('服务目录已复制为草稿');
-      fetchCatalogs();
+        status: ServiceStatus.RETIRED,
+      });
+      message.success('已复制为「已停用」目录，确认内容后再发布');
+      refresh();
     } catch (error) {
-      message.error('复制服务目录失败');
+      message.error(error instanceof Error ? error.message : '复制服务目录失败');
     }
   };
 
-  const escapeCSV = (value: unknown) => {
-    const text =
-      value instanceof Date
-        ? value.toISOString()
-        : value === undefined || value === null
-          ? ''
-          : String(value);
-    return `"${text.replace(/"/g, '""')}"`;
+  // 导出按当前筛选条件翻页取全，并使用项目统一的 CSV 工具（含 BOM 与公式注入防护）。
+  const handleExport = async () => {
+    setSubmitting(true);
+    try {
+      const { services, total, complete } = await ServiceCatalogApi.getAllServices(
+        {
+          ...(filters.q ? { search: filters.q } : {}),
+          ...(filters.status ? { status: filters.status } : {}),
+          ...(filters.category ? { category: filters.category } : {}),
+          ...(filters.ciTypeId ? { ciTypeId: filters.ciTypeId } : {}),
+          ...(filters.cloudServiceId ? { cloudServiceId: filters.cloudServiceId } : {}),
+        },
+        MAX_EXPORT_RECORDS,
+      );
+      if (services.length === 0) {
+        message.warning('当前筛选条件下没有可导出的服务目录');
+        return;
+      }
+      const csv = buildCsv<ServiceItem>(
+        [
+          { title: 'ID', render: row => row.id },
+          { title: '服务名称', render: row => row.name },
+          { title: '分类', render: row => row.category },
+          { title: '状态', render: row => row.status },
+          { title: '描述', render: row => row.shortDescription },
+          { title: '服务类型', render: row => row.serviceType ?? '' },
+          { title: '交付天数', render: row => row.deliveryDays ?? '' },
+          { title: '计价单位', render: row => row.unit ?? '' },
+          { title: '价格', render: row => row.price ?? '' },
+          { title: '需审批', render: row => (row.requiresApproval ? '是' : '否') },
+          { title: '审批级别', render: row => row.approvalLevel ?? '' },
+          {
+            title: '关联CI类型',
+            render: row => ciTypes.find(item => item.id === row.ciTypeId)?.name ?? '',
+          },
+          {
+            title: '关联云服务',
+            render: row => {
+              const service = cloudServices.find(item => item.id === row.cloudServiceId);
+              return service ? `${service.serviceName} (${service.resourceTypeName})` : '';
+            },
+          },
+          { title: '创建时间', render: row => csvDate(String(row.createdAt)) },
+          { title: '更新时间', render: row => csvDate(String(row.updatedAt)) },
+        ],
+        services,
+      );
+      downloadCsv(`service-catalogs-${new Date().toISOString().slice(0, 10)}`, csv);
+      if (complete) {
+        message.success(`已导出 ${services.length} 条服务目录`);
+      } else {
+        message.warning(
+          `当前筛选共 ${total} 条，超过单次导出上限 ${MAX_EXPORT_RECORDS} 条，本次仅导出前 ${services.length} 条，请收窄条件后重试`,
+        );
+      }
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '导出失败');
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  const handleExport = () => {
-    const rows = filteredCatalogs.map(catalog => {
-      const ciType = ciTypes.find(item => item.id === catalog.ciTypeId);
-      const cloudService = cloudServices.find(item => item.id === catalog.cloudServiceId);
-      return [
-        catalog.id,
-        catalog.name,
-        catalog.category,
-        catalog.status,
-        catalog.shortDescription,
-        ciType?.name || '',
-        cloudService ? `${cloudService.serviceName} (${cloudService.resourceTypeName})` : '',
-        catalog.availability?.responseTime || '',
-        catalog.createdAt,
-        catalog.updatedAt,
-      ];
-    });
-    const header = [
-      'ID',
-      '服务名称',
-      '分类',
-      '状态',
-      '描述',
-      '关联CI类型',
-      '关联云服务',
-      '交付时间(小时)',
-      '创建时间',
-      '更新时间',
-    ];
-    const csv = [header, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `service-catalogs-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    message.success(`已导出 ${rows.length} 条服务目录`);
-  };
-
-  // 过滤服务目录
-  const filteredCatalogs = catalogs.filter(catalog => {
-    const matchesSearch =
-      catalog.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      catalog.shortDescription.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      !statusFilter ||
-      (statusFilter === 'enabled'
-        ? catalog.status === 'published'
-        : catalog.status !== 'published');
-    const matchesCategory = !categoryFilter || catalog.category === categoryFilter;
-    const matchesCIType = !ciTypeFilter || catalog.ciTypeId === ciTypeFilter;
-    const matchesCloudService =
-      !cloudServiceFilter || catalog.cloudServiceId === cloudServiceFilter;
-
-    return (
-      matchesSearch && matchesStatus && matchesCategory && matchesCIType && matchesCloudService
-    );
-  });
 
   // 表格列定义
   const columns = [
@@ -392,16 +533,33 @@ const ServiceCatalogManagement = () => {
       },
     },
     {
-      title: '交付时间',
-      dataIndex:'deliveryTime',
-      key:'deliveryTime',
+      title: '交付周期',
+      key: 'deliveryDays',
       width: 120,
       render: (_: unknown, record: ServiceItem) => (
         <span className="text-sm flex items-center">
           <Clock className="w-4 h-4 mr-1" />
-          {record.availability?.responseTime ? `${record.availability.responseTime}小时` : '-'}
+          {record.deliveryDays != null ? `${record.deliveryDays} 天` : '未配置'}
         </span>
       ),
+    },
+    {
+      title: '价格',
+      key: 'price',
+      width: 110,
+      render: (_: unknown, record: ServiceItem) =>
+        record.price != null ? `${record.price}${record.unit ? ` / ${record.unit}` : ''}` : '免费',
+    },
+    {
+      title: '审批',
+      key: 'approval',
+      width: 110,
+      render: (_: unknown, record: ServiceItem) =>
+        record.requiresApproval ? (
+          <Tag color="orange">{`${record.approvalLevel ?? 0} 级`}</Tag>
+        ) : (
+          <Text type="secondary">无需审批</Text>
+        ),
     },
     {
       title: '状态',
@@ -410,16 +568,16 @@ const ServiceCatalogManagement = () => {
       width: 100,
       render: (status: ServiceStatus) => (
         <Tag
-          color={status === 'published' ? 'green' : status === 'draft' ? 'orange' : 'red'}
+          color={status === ServiceStatus.PUBLISHED ? 'green' : 'red'}
           icon={
-            status === 'published' ? (
+            status === ServiceStatus.PUBLISHED ? (
               <CheckCircle className="w-3 h-3" />
             ) : (
               <AlertCircle className="w-3 h-3" />
             )
           }
         >
-          {status === 'published' ? '已发布' : status === 'draft' ? '草稿' : '已停用'}
+          {status === ServiceStatus.PUBLISHED ? '已发布' : '已停用'}
         </Tag>
       ),
     },
@@ -471,17 +629,17 @@ const ServiceCatalogManagement = () => {
               items: [
                 {
                   key: 'enable',
-                  label: '启用',
+                  label: '发布',
                   icon: <CheckCircle className="w-4 h-4" />,
-                  disabled: record.status === 'published',
-                  onClick: () => handleStatusChange(record, 'published'),
+                  disabled: record.status === ServiceStatus.PUBLISHED,
+                  onClick: () => handleStatusChange(record, ServiceStatus.PUBLISHED),
                 },
                 {
                   key: 'disable',
-                  label: '禁用',
+                  label: '停用',
                   icon: <AlertCircle className="w-4 h-4" />,
-                  disabled: record.status === 'retired',
-                  onClick: () => handleStatusChange(record, 'retired'),
+                  disabled: record.status === ServiceStatus.RETIRED,
+                  onClick: () => handleStatusChange(record, ServiceStatus.RETIRED),
                 },
                 {
                   type: 'divider' as const,
@@ -549,7 +707,7 @@ const ServiceCatalogManagement = () => {
           <Card className="enterprise-card">
             <Statistic
               title="服务分类"
-              value={stats.categories}
+              value={stats.categories.length}
               prefix={<Filter className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
@@ -557,51 +715,53 @@ const ServiceCatalogManagement = () => {
         </Col>
       </Row>
 
-      {/* 工具栏 */}
+      {/* 工具栏：所有筛选都提交给服务端，页面上不再对当前页二次过滤 */}
       <Card className="enterprise-card">
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
             <Input
-              placeholder="搜索服务目录..."
+              placeholder="搜索名称或描述..."
               prefix={<Search className="w-4 h-4" />}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={event => {
+                setSearchInput(event.target.value);
+                if (event.target.value === '') applyFilters({ q: '' });
+              }}
+              onPressEnter={() => applyFilters({ q: searchInput.trim() })}
               allowClear
             />
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="状态筛选"
-              value={statusFilter}
-              onChange={setStatusFilter}
+              value={filters.status || undefined}
+              onChange={value => applyFilters({ status: (value ?? '') as CatalogFilters['status'] })}
               allowClear
               style={{ width: '100%' }}
               options={[
-                { value: 'enabled', label: '启用' },
-                { value: 'disabled', label: '禁用' },
+                { value: ServiceStatus.PUBLISHED, label: '已发布' },
+                { value: ServiceStatus.RETIRED, label: '已停用' },
               ]}
             />
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="分类筛选"
-              value={categoryFilter}
-              onChange={setCategoryFilter}
+              value={filters.category || undefined}
+              onChange={value => applyFilters({ category: value ?? '' })}
               allowClear
               style={{ width: '100%' }}
-              options={[
-                { value: '云服务', label: '云服务' },
-                { value: '基础设施', label: '基础设施' },
-                { value: '应用服务', label: '应用服务' },
-                { value: '数据服务', label: '数据服务' },
-              ]}
+              options={stats.categories.map(item => ({
+                value: item.name,
+                label: `${item.name}（${item.count}）`,
+              }))}
             />
           </Col>
           <Col xs={24} sm={12} md={5}>
             <Select
               placeholder="CI类型筛选"
-              value={ciTypeFilter}
-              onChange={setCiTypeFilter}
+              value={filters.ciTypeId}
+              onChange={value => applyFilters({ ciTypeId: value })}
               allowClear
               loading={optionsLoading}
               style={{ width: '100%' }}
@@ -611,8 +771,8 @@ const ServiceCatalogManagement = () => {
           <Col xs={24} sm={12} md={5}>
             <Select
               placeholder="云服务筛选"
-              value={cloudServiceFilter}
-              onChange={setCloudServiceFilter}
+              value={filters.cloudServiceId}
+              onChange={value => applyFilters({ cloudServiceId: value })}
               allowClear
               loading={optionsLoading}
               showSearch
@@ -637,12 +797,28 @@ const ServiceCatalogManagement = () => {
               >
                 新建服务目录
               </Button>
-              <Button icon={<Download className="w-4 h-4" />} onClick={handleExport}>
-                导出
+              <Button
+                icon={<Download className="w-4 h-4" />}
+                loading={submitting}
+                onClick={handleExport}
+              >
+                按当前筛选导出
               </Button>
-              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={fetchCatalogs}>
+              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={refresh}>
                 刷新
               </Button>
+              {hasActiveFilters && (
+                <Button
+                  type="link"
+                  onClick={() => {
+                    setSearchInput('');
+                    setFilters(EMPTY_FILTERS);
+                    setPage(1);
+                  }}
+                >
+                  清空筛选
+                </Button>
+              )}
             </Space>
           </Col>
         </Row>
@@ -658,12 +834,12 @@ const ServiceCatalogManagement = () => {
             key: 'publish',
             label: '批量发布',
             type: 'primary',
-            onClick: () => handleBatchStatusChange('published'),
+            onClick: () => handleBatchStatusChange(ServiceStatus.PUBLISHED),
           },
           {
             key: 'retire',
             label: '批量停用',
-            onClick: () => handleBatchStatusChange('retired'),
+            onClick: () => handleBatchStatusChange(ServiceStatus.RETIRED),
           },
           {
             key: 'delete',
@@ -675,22 +851,44 @@ const ServiceCatalogManagement = () => {
         ]}
       />
 
-      {/* 服务目录表格 */}
+      {/* 加载失败必须显式可见，不能静默显示空表格假装「没有数据」 */}
+      {loadError && (
+        <Alert
+          type="error"
+          showIcon
+          title="服务目录加载失败"
+          description={loadError}
+          action={
+            <Button size="small" icon={<RefreshCw className="w-4 h-4" />} onClick={refresh}>
+              重试
+            </Button>
+          }
+        />
+      )}
+
+      {/* 服务目录表格：分页、总数和数据都由服务端返回 */}
       <Card className="enterprise-card">
         <Table
           columns={columns}
-          dataSource={filteredCatalogs}
+          dataSource={catalogs}
           rowKey="id"
           loading={loading}
           rowSelection={{
             selectedRowKeys,
-            onChange: keys => setSelectedRowKeys(keys as number[]),
+            onChange: keys => setSelectedRowKeys(keys),
             selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
           }}
           pagination={{
+            current: page,
+            pageSize,
+            total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: total => `共 ${total} 条记录`,
+            showTotal: recordCount => `共 ${recordCount} 条记录`,
+          }}
+          onChange={pagination => {
+            setPage(pagination.current ?? 1);
+            setPageSize(pagination.pageSize ?? 20);
           }}
           scroll={{ x: 1000 }}
         />
@@ -706,25 +904,28 @@ const ServiceCatalogManagement = () => {
         }
         open={showModal}
         onCancel={() => {
+          if (submitting) return;
           setShowModal(false);
           setEditingCatalog(null);
           form.resetFields();
         }}
         footer={null}
         width={600}
+        // 十几项配置填到一半，点中遮罩就整份清空重来没有任何提示。
+        maskClosable={false}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ status: 'enabled' }}
+          initialValues={{ status: ServiceStatus.PUBLISHED, requiresApproval: true, approvalLevel: 1 }}
         >
           <Form.Item
             name="name"
             label="服务名称"
             rules={[{ required: true, message: '请输入服务名称' }]}
           >
-            <Input placeholder="请输入服务名称" />
+            <Input placeholder="请输入服务名称" maxLength={100} showCount />
           </Form.Item>
 
           <Form.Item
@@ -732,12 +933,12 @@ const ServiceCatalogManagement = () => {
             label="服务分类"
             rules={[{ required: true, message: '请选择服务分类' }]}
           >
-            <Select placeholder="请选择服务分类" options={[
-              { value: '云服务', label: '云服务' },
-              { value: '基础设施', label: '基础设施' },
-              { value: '应用服务', label: '应用服务' },
-              { value: '数据服务', label: '数据服务' },
-            ]} />
+            {/* 后端 category 是自由文本，真实取值来自 stats；只给固定四项会让已有分类选不中。 */}
+            <Select
+              placeholder="请选择服务分类"
+              showSearch
+              options={categoryOptions}
+            />
           </Form.Item>
 
           <Form.Item
@@ -745,7 +946,7 @@ const ServiceCatalogManagement = () => {
             label="服务描述"
             rules={[{ required: true, message: '请输入服务描述' }]}
           >
-            <Input.TextArea rows={3} placeholder="请输入服务描述" showCount maxLength={500} />
+            <TextArea rows={3} placeholder="请输入服务描述" showCount maxLength={500} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -763,8 +964,42 @@ const ServiceCatalogManagement = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="deliveryTime" label="交付时间">
-                <Input placeholder="例如：1-3个工作日" />
+              <Form.Item
+                name="deliveryDays"
+                label="交付周期"
+                extra="按自然日保存，范围 1–3650 天"
+                rules={[
+                  {
+                    type: 'integer',
+                    min: 1,
+                    max: 3650,
+                    message: '交付天数必须是 1 到 3650 之间的整数',
+                  },
+                ]}
+              >
+                <InputNumber min={1} max={3650} precision={0} suffix="天" style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* 计价配置：留空即「未配置」，导出与门户展示都读这两个字段 */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="price" label="价格" tooltip="留空表示免费或未定价">
+                <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="unit" label="计价单位">
+                <Select
+                  placeholder="未配置"
+                  allowClear
+                  options={[
+                    { value: '月', label: '月' },
+                    { value: '次', label: '次' },
+                    { value: '用户', label: '用户' },
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -777,19 +1012,29 @@ const ServiceCatalogManagement = () => {
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item name="requiresApproval" label="需要审批" valuePropName="checked">
-                  <Select placeholder="是否需要审批" options={[
-                    { value: true, label: '是' },
-                    { value: false, label: '否' },
-                  ]} />
+                  <Switch checkedChildren="是" unCheckedChildren="否" />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item name="approvalLevel" label="审批级别">
-                  <InputNumber min={1} max={3} placeholder="1-3" style={{ width: '100%' }} />
+                <Form.Item
+                  name="approvalLevel"
+                  label="审批级别"
+                  tooltip="0 表示未配置审批级别；需要审批时建议至少 1 级"
+                  dependencies={['requiresApproval']}
+                  rules={[
+                    {
+                      validator: (_, value) =>
+                        form.getFieldValue('requiresApproval') && !value
+                          ? Promise.reject(new Error('开启审批后必须选择 1–3 级'))
+                          : Promise.resolve(),
+                    },
+                  ]}
+                >
+                  <InputNumber min={0} max={3} placeholder="0-3" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item name="sortOrder" label="排序">
+                <Form.Item name="sortOrder" label="排序" tooltip="门户列表升序，0 为默认">
                   <InputNumber min={0} placeholder="0" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
@@ -847,11 +1092,12 @@ const ServiceCatalogManagement = () => {
               <Form.Item
                 name="status"
                 label="状态"
+                extra="后端只有「已发布 / 已停用」两态，草稿不是服务目录的状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
                 <Select options={[
-                  { value: 'enabled', label: '启用' },
-                  { value: 'disabled', label: '禁用' },
+                  { value: ServiceStatus.PUBLISHED, label: '已发布' },
+                  { value: ServiceStatus.RETIRED, label: '已停用' },
                 ]} />
               </Form.Item>
             </Col>
@@ -860,6 +1106,7 @@ const ServiceCatalogManagement = () => {
           <Form.Item className="mb-0 mt-6">
             <Space className="w-full justify-end">
               <Button
+                disabled={submitting}
                 onClick={() => {
                   setShowModal(false);
                   setEditingCatalog(null);
@@ -868,7 +1115,7 @@ const ServiceCatalogManagement = () => {
               >
                 取消
               </Button>
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={submitting}>
                 {editingCatalog ? '更新' : '创建'}
               </Button>
             </Space>
@@ -891,23 +1138,32 @@ const ServiceCatalogManagement = () => {
               <Descriptions.Item label="名称">{detailCatalog.name}</Descriptions.Item>
               <Descriptions.Item label="分类">{detailCatalog.category}</Descriptions.Item>
               <Descriptions.Item label="状态">
-                <Tag color={detailCatalog.status === ServiceStatus.PUBLISHED ? 'green' : detailCatalog.status === ServiceStatus.DRAFT ? 'orange' : 'red'}>
-                  {detailCatalog.status === ServiceStatus.PUBLISHED ? '已发布' : detailCatalog.status === ServiceStatus.DRAFT ? '草稿' : '已下线'}
+                <Tag color={detailCatalog.status === ServiceStatus.PUBLISHED ? 'green' : 'red'}>
+                  {detailCatalog.status === ServiceStatus.PUBLISHED ? '已发布' : '已停用'}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="需要审批">
-                {detailCatalog.requiresApproval ? `是（${detailCatalog.approvalLevel ?? 1} 级）` : '否'}
+                {detailCatalog.requiresApproval ? `是（${detailCatalog.approvalLevel ?? 0} 级）` : '否'}
               </Descriptions.Item>
               <Descriptions.Item label="CI 类型">
-                {ciTypes.find(t => t.id === detailCatalog.ciTypeId)?.name || '未关联'}
+                {ciTypes.find(item => item.id === detailCatalog.ciTypeId)?.name || '未关联'}
               </Descriptions.Item>
               <Descriptions.Item label="云服务">
-                {cloudServices.find(s => s.id === detailCatalog.cloudServiceId)?.serviceName || '未关联'}
+                {cloudServices.find(item => item.id === detailCatalog.cloudServiceId)?.serviceName || '未关联'}
               </Descriptions.Item>
-              <Descriptions.Item label="响应时间">
-                {detailCatalog.availability?.responseTime != null
-                  ? `${detailCatalog.availability.responseTime} 小时`
-                  : '未设置'}
+              <Descriptions.Item label="交付周期">
+                {detailCatalog.deliveryDays != null ? `${detailCatalog.deliveryDays} 天` : '未配置'}
+              </Descriptions.Item>
+              <Descriptions.Item label="价格">
+                {detailCatalog.price != null && detailCatalog.price > 0
+                  ? `${detailCatalog.price}${detailCatalog.unit ? ` / ${detailCatalog.unit}` : ''}`
+                  : '免费'}
+              </Descriptions.Item>
+              <Descriptions.Item label="服务类型">
+                {detailCatalog.serviceType ?? '未配置'}
+              </Descriptions.Item>
+              <Descriptions.Item label="排序">
+                {detailCatalog.sortOrder ?? 0}
               </Descriptions.Item>
               <Descriptions.Item label="简介" span={2}>
                 {detailCatalog.shortDescription || '—'}

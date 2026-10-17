@@ -44,6 +44,8 @@ const { Password } = Input;
 
 // 引入系统配置API
 import { SystemConfigAPI } from '@/lib/api/system-config-api';
+import { formatUptime } from '@/lib/utils/metric-format';
+import type { SystemStats } from '@/types/dashboard';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 
 const BOOLEAN_CONFIG_KEYS = new Set([
@@ -95,13 +97,10 @@ export default function SystemConfiguration() {
   const [config, setConfig] = useState<Record<string, unknown>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [systemStats, setSystemStats] = useState({
-    uptime: '加载中...',
-    goroutines: 0,
-    cpuCores: 0,
-    memoryUsagePercent: 0,
-  });
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [initialConfig, setInitialConfig] = useState<Record<string, unknown>>({});
+
+  const memoryMeasured = systemStats?.availability.memory === 'measured';
 
   // 加载系统配置
   const loadConfig = async () => {
@@ -125,28 +124,19 @@ export default function SystemConfiguration() {
   useEffect(() => {
     loadConfig();
 
-    // 定期获取真实系统状态
+    // 运行指标与系统健康卡共用同一份后端 DTO；轮询不叠加在途请求，
+    // 否则慢响应会覆盖新采样值。
+    let inFlight = false;
     const fetchSystemStats = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        const status = (await SystemConfigAPI.getSystemStatus()) || {};
-        const cpu = (status.cpu as { cores?: number; usagePercent?: number; usage?: number }) || {};
-        const memory = (status.memory as { usagePercent?: number; usage?: number }) || {};
-        const startTime =
-          (status.startTime as string) ||
-          (status.startTime as string) ||
-          (status.startedAt as string) ||
-          (status.startedAt as string);
-        const uptime = (status.uptime as string) || (status.upTime as string);
-        setSystemStats({
-          uptime: typeof uptime === 'string' ? uptime : calculateUptime(startTime ? parseInt(startTime, 10) : undefined),
-          goroutines: (status.goroutines as number) || 0,
-          cpuCores: cpu.cores || (status.cpuCores as number) || 0,
-          memoryUsagePercent: Math.round(
-            memory.usagePercent || memory.usage || 0
-          ),
-        });
+        setSystemStats(await SystemConfigAPI.getSystemStatus());
       } catch (error) {
         console.error('Failed to fetch system status:', error);
+        setSystemStats(null);
+      } finally {
+        inFlight = false;
       }
     };
 
@@ -157,15 +147,6 @@ export default function SystemConfiguration() {
     const interval = setInterval(fetchSystemStats, 5000);
     return () => clearInterval(interval);
   }, []);
-
-  // 计算运行时长
-  const calculateUptime = (startTime?: number): string => {
-    if (!startTime) return '未知';
-    const diff = Date.now() - startTime;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return `${days}天 ${hours}小时`;
-  };
 
   // 表单值变化时标记为有更改
   const handleFormChange = () => {
@@ -514,7 +495,7 @@ export default function SystemConfiguration() {
           '上传限制（大小与允许类型）影响工单附件等所有文件上传，按组织规范调整。',
           '密码策略与账户安全调整会作用于后续的设置与重置；收紧策略前请确认不会阻碍存量用户正常登录。',
           '需要邮件通知时必须配好 SMTP（服务器、端口、账号、授权码）；保存后触发一条真实通知（如工单分配）验证邮件送达。',
-          '上方“系统运行时间 / Goroutine / CPU 核心 / 内存使用率”为后端实时运行指标，仅供健康观察，无需配置。',
+          '上方“系统运行时间 / Goroutine / CPU 核心 / 内存使用率”来自后端运行时采样，与首页系统健康卡同一口径，仅供健康观察、无需配置；运行环境测不到的指标显示「未接入」而不是 0%。',
         ]}
       />
 
@@ -524,7 +505,7 @@ export default function SystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="系统运行时间"
-              value={systemStats.uptime}
+              value={systemStats ? formatUptime(systemStats.uptime) : '—'}
               prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
@@ -534,7 +515,7 @@ export default function SystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="Goroutine 数"
-              value={systemStats.goroutines}
+              value={systemStats?.goroutines ?? 0}
               prefix={<Network className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
@@ -544,7 +525,7 @@ export default function SystemConfiguration() {
           <Card className="rounded-lg shadow-sm border border-gray-200">
             <Statistic
               title="CPU 核心数"
-              value={systemStats.cpuCores}
+              value={systemStats?.cores ?? 0}
               prefix={<Cpu className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
@@ -556,12 +537,24 @@ export default function SystemConfiguration() {
               <div>
                 <div className="text-sm text-gray-500">内存使用率</div>
                 <div className="text-2xl font-bold text-purple-600">
-                  {systemStats.memoryUsagePercent}%
+                  {memoryMeasured
+                    ? `${Math.round(systemStats?.memoryUsage ?? 0)}%`
+                    : '未接入'}
                 </div>
               </div>
               <MemoryStick className="w-8 h-8 text-purple-600" />
             </div>
-            <Progress percent={systemStats.memoryUsagePercent} size="small" strokeColor="#722ed1" />
+            {memoryMeasured ? (
+              <Progress
+                percent={Math.round(systemStats?.memoryUsage ?? 0)}
+                size="small"
+                strokeColor="#722ed1"
+              />
+            ) : (
+              <Text type="secondary" className="text-xs">
+                当前运行环境测不到内存上限（容器无 cgroup 限制且主机非 Linux）
+              </Text>
+            )}
           </Card>
         </Col>
       </Row>

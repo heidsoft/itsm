@@ -1,362 +1,305 @@
 'use client';
 
 import {
-  Timer,
   CheckCircle,
   Clock,
   Edit,
-  Target,
-  TrendingUp,
   Eye,
-  Trash2,
+  Layers,
   Plus,
+  RefreshCw,
   Search,
+  Target,
+  Timer,
+  Trash2,
 } from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
-import { SLAApi, SLADefinition as APISLADefinition } from '@/lib/api/sla-api';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { SLAApi } from '@/lib/api/sla-api';
+import { formatDateTime } from '@/lib/formatters';
+import type { ColumnsType } from 'antd/es/table';
 import {
-  Card,
-  Table,
+  Alert,
+  App,
   Button,
+  Card,
+  Col,
+  Descriptions,
+  Empty,
+  Form,
   Input,
   InputNumber,
+  Modal,
+  Popconfirm,
+  Row,
   Select,
   Space,
-  Typography,
-  Modal,
-  Form,
-  Row,
-  Col,
   Statistic,
-  Tooltip,
-  Popconfirm,
-  App,
-  Progress,
-  List,
-  Badge,
+  Switch,
+  Table,
   Tag,
-  Alert,
+  Tooltip,
+  Typography,
 } from 'antd';
-import type { SLADefinition } from './types';
-import { transformSLA, getPriorityColor, getStatusColor, getStatusText } from './utils';
+import type { SLADefinition, SLAFormValues } from './types';
+import { summarizeSLADefinitions, transformSLA } from './utils';
+import {
+  SLA_PRIORITY_VALUES,
+  SLA_SERVICE_TYPE_LABELS,
+  formatDuration,
+  formatEscalationLevel,
+  getServiceTypeLabel,
+  getPriorityColor,
+  getPriorityLabel,
+  matchesPriority,
+} from '@/lib/utils/sla-format';
 
 const { Title, Text } = Typography;
 
-// 优先级配置
-const PRIORITY_CONFIG = {
-  P1: { label: 'P1 - 紧急', color: 'red' },
-  P2: { label: 'P2 - 高', color: 'orange' },
-  P3: { label: 'P3 - 中', color: 'yellow' },
-  P4: { label: 'P4 - 低', color: 'green' },
-};
+// 后端 common.MaxPageSize 为 100，单次取满并在超量时显式提示，
+// 避免默认分页把列表静默截断成 20 条却仍然按当前页做筛选。
+const FETCH_PAGE_SIZE = 100;
 
-// 状态配置
-const STATUS_CONFIG = {
-  active: {
-    label: '已启用',
-    color: 'success',
-    icon: <CheckCircle className="w-3 h-3" />,
-  },
-  inactive: {
-    label: '已停用',
-    color: 'default',
-    icon: <Clock className="w-3 h-3" />,
-  },
-  draft: {
-    label: '草稿',
-    color: 'processing',
-    icon: <Edit className="w-3 h-3" />,
-  },
-};
+// formatters.formatDateTime 对缺失或非法时间返回空串，页面统一显示为 -
+const displayDateTime = (value?: string) => formatDateTime(value) || '-';
 
-// 服务类型配置
-const SERVICE_TYPE_CONFIG: Record<string, string> = {
-  incident: '事件管理',
-  service_request: '服务请求',
-  change: '变更管理',
-  problem: '问题管理',
-  ticket: '工单',
+const STATUS_CONFIG: Record<SLADefinition['status'], { label: string; color: string }> = {
+  active: { label: '已启用', color: 'success' },
+  inactive: { label: '已停用', color: 'default' },
 };
-
-const getServiceTypeLabel = (type: string) => SERVICE_TYPE_CONFIG[type] || type;
 
 const SLADefinitionManagement = () => {
   const { message } = App.useApp();
-  const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
+  const [form] = Form.useForm<SLAFormValues>();
+
+  const [definitions, setDefinitions] = useState<SLADefinition[]>([]);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [serviceTypeFilter, setServiceTypeFilter] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedSLA, setSelectedSLA] = useState<SLADefinition | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
 
-  // 加载SLA定义列表
-  const loadSLADefinitions = async () => {
+  const [editingSLA, setEditingSLA] = useState<SLADefinition | null>(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [detailSLA, setDetailSLA] = useState<SLADefinition | null>(null);
+
+  const loadDefinitions = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const data = await SLAApi.getSLADefinitions();
-      const transformed = (data.items || data || []).map(transformSLA);
-      setSlaDefinitions(transformed);
+      const { items, total } = await SLAApi.getSLADefinitions({ page: 1, pageSize: FETCH_PAGE_SIZE });
+      setDefinitions(items.map(transformSLA));
+      setServerTotal(total);
     } catch (error) {
-      message.error('加载SLA定义失败');
+      setDefinitions([]);
+      setServerTotal(0);
+      setLoadError(error instanceof Error ? error.message : '加载 SLA 定义失败');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadSLADefinitions();
   }, []);
 
-  // 统计信息
-  const stats = {
-    total: slaDefinitions.length,
-    active: slaDefinitions.filter(sla => sla.status === 'active').length,
-    draft: slaDefinitions.filter(sla => sla.status === 'draft').length,
-    avgAvailability: (
-      slaDefinitions.reduce((sum, sla) => sum + parseFloat(sla.availability), 0) /
-      slaDefinitions.length
-    ).toFixed(1),
-  };
+  useEffect(() => {
+    void loadDefinitions();
+  }, [loadDefinitions]);
 
-  // 获取所有服务类型
-  const serviceTypes = Array.from(
-    new Set(slaDefinitions.map(sla => sla.serviceType).filter(Boolean))
+  const stats = useMemo(() => summarizeSLADefinitions(definitions), [definitions]);
+
+  const serviceTypes = useMemo(
+    () => Array.from(new Set(definitions.map(sla => sla.serviceType).filter(Boolean))),
+    [definitions]
   );
 
-  // 过滤SLA定义
-  const filteredSLAs = slaDefinitions.filter(sla => {
-    const matchesSearch =
-      sla.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sla.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPriority = priorityFilter === 'all' || sla.priority === priorityFilter;
-    const matchesStatus = statusFilter === 'all' || sla.status === statusFilter;
-    const matchesServiceType = serviceTypeFilter === 'all' || sla.serviceType === serviceTypeFilter;
+  const filteredSLAs = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return definitions.filter(sla => {
+      if (term && !`${sla.name} ${sla.description}`.toLowerCase().includes(term)) return false;
+      if (!matchesPriority(sla.priority, priorityFilter)) return false;
+      if (statusFilter !== 'all' && sla.status !== statusFilter) return false;
+      if (serviceTypeFilter !== 'all' && sla.serviceType !== serviceTypeFilter) return false;
+      return true;
+    });
+  }, [definitions, searchTerm, priorityFilter, statusFilter, serviceTypeFilter]);
 
-    return matchesSearch && matchesPriority && matchesStatus && matchesServiceType;
-  });
-
-  // 处理状态切换
-  const handleStatusToggle = async (slaId: string) => {
-    try {
-      const sla = slaDefinitions.find(s => s.id === slaId);
-      if (!sla) return;
-
-      const newStatus = sla.status === 'active' ? 'inactive' : 'active';
-      await SLAApi.updateSLADefinition(Number(slaId), { isActive: newStatus === 'active' });
-      setSlaDefinitions(prev =>
-        prev.map(sla => {
-          if (sla.id === slaId) {
-            return { ...sla, status: newStatus };
-          }
-          return sla;
-        })
-      );
-      message.success('SLA状态已更新');
-    } catch (error) {
-      message.error('更新状态失败');
-    }
+  const openCreate = () => {
+    setEditingSLA(null);
+    form.resetFields();
+    setShowFormModal(true);
   };
 
-  // 处理删除
-  const handleDelete = async (slaId: string) => {
-    try {
-      await SLAApi.deleteSLADefinition(Number(slaId));
-      setSlaDefinitions(prev => prev.filter(sla => sla.id !== slaId));
-      message.success('SLA定义已删除');
-    } catch (error) {
-      message.error('删除失败');
-    }
+  const openEdit = (sla: SLADefinition) => {
+    setEditingSLA(sla);
+    form.setFieldsValue({
+      name: sla.name,
+      description: sla.description,
+      serviceType: sla.serviceType,
+      priority: sla.priority,
+      responseTimeMinutes: sla.responseTimeMinutes,
+      resolutionTimeMinutes: sla.resolutionTimeMinutes,
+      isActive: sla.status === 'active',
+    });
+    setShowFormModal(true);
   };
 
-  // 查看详情
-  const handleViewDetail = (sla: SLADefinition) => {
-    setSelectedSLA(sla);
-    setShowDetailModal(true);
+  const closeForm = () => {
+    setShowFormModal(false);
+    setEditingSLA(null);
+    form.resetFields();
   };
 
-  // 保存SLA定义
   const handleSave = async () => {
+    let values: SLAFormValues;
     try {
-      const values = await form.validateFields();
-      setLoading(true);
+      values = await form.validateFields();
+    } catch {
+      return;
+    }
 
-      // 直接使用分钟值，响应时间固定为分钟，解决时间转换为分钟
-      // 用 ?? 而非 ||，允许用户显式设置 0（即时响应/即时解决）
-      const responseTimeMinutes = values.responseTimeValue ?? 60;
-      const resolutionTimeMinutes = (values.resolutionTimeValue ?? 4) * 60; // 小时转分钟
+    // 表单字段与后端请求体同名同单位（分钟），不再做小时/分钟换算或可用性兜底。
+    const payload = {
+      name: values.name,
+      description: values.description,
+      serviceType: values.serviceType,
+      priority: values.priority,
+      responseTime: values.responseTimeMinutes,
+      resolutionTime: values.resolutionTimeMinutes,
+      isActive: values.isActive,
+    };
 
-      // 可用性：parseFloat 返回 NaN 时才回退默认值，0% 是合法值
-      const availabilityNum = parseFloat(String(values.availability).replace('%', ''));
-      const availability = Number.isNaN(availabilityNum) ? 99.9 : availabilityNum;
-
-      // 转换表单值格式 - 后端使用 camelCase 格式
-      const apiData = {
-        name: values.name,
-        description: values.description,
-        serviceType: values.serviceType,
-        priority: values.priority,
-        responseTime: responseTimeMinutes,
-        resolutionTime: resolutionTimeMinutes,
-        availability,
-      };
-
-      if (selectedSLA) {
-        // 编辑
-        await SLAApi.updateSLADefinition(Number(selectedSLA.id), apiData);
-        setSlaDefinitions(prev =>
-          prev.map(sla =>
-            sla.id === selectedSLA.id
-              ? {
-                  ...sla,
-                  ...values,
-                  responseTime: `${responseTimeMinutes}分钟`,
-                  resolutionTime: `${resolutionTimeMinutes}分钟`,
-                  responseTimeMinutes,
-                  resolutionTimeMinutes,
-                  updatedAt: new Date().toLocaleDateString(),
-                }
-              : sla
-          )
-        );
-        message.success('SLA定义更新成功');
+    setSaving(true);
+    try {
+      if (editingSLA) {
+        await SLAApi.updateSLADefinition(Number(editingSLA.id), payload);
+        message.success(`SLA 定义「${values.name}」已更新`);
       } else {
-        // 新建
-        const result = await SLAApi.createSLADefinition(apiData);
-        const newSLA: SLADefinition = {
-          id: String(result.id),
-          ...values,
-          responseTime: `${responseTimeMinutes}分钟`,
-          resolutionTime: `${resolutionTimeMinutes}分钟`,
-          responseTimeMinutes,
-          resolutionTimeMinutes,
-          status: 'draft',
-          createdBy: '当前用户',
-          createdAt: new Date().toLocaleDateString(),
-          updatedAt: new Date().toLocaleDateString(),
-          escalationRules: [],
-          applicableServices: [],
-        };
-        setSlaDefinitions(prev => [newSLA, ...prev]);
-        message.success('SLA定义创建成功');
+        await SLAApi.createSLADefinition(payload);
+        message.success(`SLA 定义「${values.name}」已创建`);
       }
-
-      setShowCreateModal(false);
-      setSelectedSLA(null);
-      form.resetFields();
+      closeForm();
+      await loadDefinitions();
     } catch (error) {
-      message.error('保存失败，请检查必填项');
+      message.error(error instanceof Error ? error.message : '保存 SLA 定义失败');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  // 表格列定义
-  const columns = [
+  const handleStatusToggle = async (sla: SLADefinition) => {
+    const nextActive = sla.status !== 'active';
+    setTogglingId(sla.id);
+    try {
+      await SLAApi.updateSLADefinition(Number(sla.id), { isActive: nextActive });
+      message.success(nextActive ? `「${sla.name}」已启用` : `「${sla.name}」已停用`);
+      await loadDefinitions();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '更新状态失败');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDelete = async (sla: SLADefinition) => {
+    try {
+      await SLAApi.deleteSLADefinition(Number(sla.id));
+      message.success(`SLA 定义「${sla.name}」已删除`);
+      if (detailSLA?.id === sla.id) setDetailSLA(null);
+      await loadDefinitions();
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : '删除失败');
+    }
+  };
+
+  const columns: ColumnsType<SLADefinition> = [
     {
-      title: 'SLA定义',
+      title: 'SLA 定义',
       dataIndex: 'name',
       key: 'name',
-      render: (_: unknown, record: SLADefinition) => (
+      render: (_, record) => (
         <div>
-          <div className="flex items-center gap-2">
+          <Space>
             <Text strong>{record.name}</Text>
-            <Tag color={PRIORITY_CONFIG[record.priority]?.color}>
-              {PRIORITY_CONFIG[record.priority]?.label}
-            </Tag>
+            <Tag color={getPriorityColor(record.priority)}>{getPriorityLabel(record.priority)}</Tag>
+          </Space>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {record.description || '无描述'}
+            </Text>
           </div>
-          <Text type="secondary" className="text-sm">
-            {record.description}
-          </Text>
-          <div className="flex items-center gap-4 mt-1">
-            <span className="text-xs text-gray-500">ID: {record.id}</span>
-            <span className="text-xs text-gray-500">类型: {getServiceTypeLabel(record.serviceType)}</span>
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              ID: {record.id} · 类型: {getServiceTypeLabel(record.serviceType)}
+            </Text>
           </div>
         </div>
       ),
     },
     {
-      title: '服务指标',
-      key: 'metrics',
-      render: (_: unknown, record: SLADefinition) => (
+      title: '服务时限',
+      key: 'targets',
+      render: (_, record) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Timer className="w-3 h-3 text-blue-500" />
-            <span className="text-xs">响应: {record.responseTime}</span>
+            <span className="text-xs">响应: {formatDuration(record.responseTimeMinutes)}</span>
           </div>
           <div className="flex items-center gap-2">
             <Target className="w-3 h-3 text-green-500" />
-            <span className="text-xs">解决: {record.resolutionTime}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-3 h-3 text-purple-500" />
-            <span className="text-xs">可用性: {record.availability}</span>
+            <span className="text-xs">解决: {formatDuration(record.resolutionTimeMinutes)}</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3 text-orange-500" />
-            <span className="text-xs">{record.businessHours}</span>
+            <span className="text-xs">服务窗口: {record.businessHours}</span>
           </div>
         </div>
       ),
     },
     {
-      title: '适用服务',
-      dataIndex: 'applicableServices',
-      key: 'applicableServices',
-      render: (services: string[]) => (
-        <div className="space-y-1">
-          {services.slice(0, 2).map(service => (
-            <Tag key={service}>{service}</Tag>
-          ))}
-          {services.length > 2 && (
-            <Text type="secondary" className="text-xs">
-              +{services.length - 2} 更多
-            </Text>
-          )}
-        </div>
-      ),
+      title: '升级规则',
+      key: 'escalation',
+      render: (_, record) =>
+        record.escalationLevels.length === 0 ? (
+          <Text type="secondary">未配置</Text>
+        ) : (
+          <Space wrap size={4}>
+            {record.escalationLevels.map(level => (
+              <Tag key={level.level}>{formatEscalationLevel(level)}</Tag>
+            ))}
+          </Space>
+        ),
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      align: 'center' as const,
-      render: (status: string) => (
-        <Tag
-          color={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color}
-          icon={STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon}
-        >
-          {STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.label}
-        </Tag>
+      align: 'center',
+      render: (status: SLADefinition['status']) => (
+        <Tag color={STATUS_CONFIG[status].color}>{STATUS_CONFIG[status].label}</Tag>
       ),
     },
     {
-      title: '更新信息',
-      key: 'updateInfo',
-      align: 'center' as const,
-      render: (_: unknown, record: SLADefinition) => (
-        <div className="text-center">
-          <div className="text-sm">{record.updatedAt}</div>
-          <div className="text-xs text-gray-500">由 {record.createdBy}</div>
-        </div>
-      ),
+      title: '更新时间',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      align: 'center',
+      render: (updatedAt: string) => <Text style={{ fontSize: 12 }}>{displayDateTime(updatedAt)}</Text>,
     },
     {
       title: '操作',
       key: 'actions',
-      align: 'center' as const,
-      render: (_: unknown, record: SLADefinition) => (
+      align: 'center',
+      render: (_, record) => (
         <Space>
           <Tooltip title="查看详情">
             <Button
               aria-label="查看详情"
               type="text"
               icon={<Eye className="w-4 h-4" />}
-              onClick={() => handleViewDetail(record)}
+              onClick={() => setDetailSLA(record)}
             />
           </Tooltip>
           <Tooltip title="编辑">
@@ -364,27 +307,14 @@ const SLADefinitionManagement = () => {
               aria-label="编辑"
               type="text"
               icon={<Edit className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedSLA(record);
-                // Map record fields to form field names: responseTime→responseTimeValue, resolutionTime(minutes)→resolutionTimeValue(hours)
-                form.setFieldsValue({
-                  ...record,
-                  // 回填真实分钟/小时数值，而非展示文本
-                  // 用 ?? 保留 0 值（即时响应/即时解决）
-                  responseTimeValue: record.responseTimeMinutes ?? 60,
-                  resolutionTimeValue:
-                    record.resolutionTimeMinutes != null
-                      ? Math.round(record.resolutionTimeMinutes / 60)
-                      : 4,
-                });
-                setShowCreateModal(true);
-              }}
+              onClick={() => openEdit(record)}
             />
           </Tooltip>
           <Tooltip title={record.status === 'active' ? '停用' : '启用'}>
             <Button
               aria-label={record.status === 'active' ? '停用' : '启用'}
               type="text"
+              loading={togglingId === record.id}
               icon={
                 record.status === 'active' ? (
                   <Clock className="w-4 h-4" />
@@ -392,13 +322,13 @@ const SLADefinitionManagement = () => {
                   <CheckCircle className="w-4 h-4" />
                 )
               }
-              onClick={() => handleStatusToggle(record.id)}
+              onClick={() => handleStatusToggle(record)}
             />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个SLA定义吗？"
-            description="删除后无法恢复，相关的服务将失去SLA保障。"
-            onConfirm={() => handleDelete(record.id)}
+            title="确定要删除这个 SLA 定义吗？"
+            description={`删除「${record.name}」后无法恢复，引用它的工单将失去 SLA 保障。`}
+            onConfirm={() => handleDelete(record)}
             okText="确定删除"
             cancelText="取消"
             okType="danger"
@@ -412,21 +342,19 @@ const SLADefinitionManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* 页面标题 */}
       <div>
         <Title level={2} className="!mb-2">
           <Target className="inline-block w-6 h-6 mr-2" />
-          SLA定义管理
+          SLA 定义管理
         </Title>
         <Text type="secondary">定义和管理服务级别协议，确保服务质量标准</Text>
       </div>
 
-      {/* 统计卡片 */}
       <Row gutter={[16, 16]} align="stretch">
         <Col xs={24} sm={12} lg={6} className="flex">
           <Card className="enterprise-card h-full w-full">
             <Statistic
-              title="SLA定义总数"
+              title="SLA 定义总数"
               value={stats.total}
               prefix={<Target className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
@@ -446,32 +374,31 @@ const SLADefinitionManagement = () => {
         <Col xs={24} sm={12} lg={6} className="flex">
           <Card className="enterprise-card h-full w-full">
             <Statistic
-              title="草稿状态"
-              value={stats.draft}
-              prefix={<Edit className="w-5 h-5" />}
-              styles={{ content: { color: '#faad14' } }}
+              title="已停用"
+              value={stats.inactive}
+              prefix={<Clock className="w-5 h-5" />}
+              styles={{ content: { color: '#8c8c8c' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6} className="flex">
           <Card className="enterprise-card h-full w-full">
             <Statistic
-              title="平均可用性"
-              value={stats.avgAvailability}
-              suffix="%"
-              prefix={<TrendingUp className="w-5 h-5" />}
+              title="覆盖服务类型"
+              value={stats.serviceTypeCount}
+              suffix="类"
+              prefix={<Layers className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* 搜索和过滤 */}
       <Card>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder="搜索SLA定义名称或描述..."
+              placeholder="搜索 SLA 名称或描述..."
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -480,31 +407,34 @@ const SLADefinitionManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="优先级"
+              aria-label="优先级筛选"
               value={priorityFilter}
               onChange={setPriorityFilter}
               style={{ width: '100%' }}
               options={[
                 { value: 'all', label: '全部优先级' },
-                ...Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+                ...SLA_PRIORITY_VALUES.map(value => ({ value, label: getPriorityLabel(value) })),
               ]}
             />
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="状态"
+              aria-label="状态筛选"
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
               options={[
                 { value: 'all', label: '全部状态' },
-                ...Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label })),
+                ...Object.entries(STATUS_CONFIG).map(([value, config]) => ({
+                  value,
+                  label: config.label,
+                })),
               ]}
             />
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder="服务类型"
+              aria-label="服务类型筛选"
               value={serviceTypeFilter}
               onChange={setServiceTypeFilter}
               style={{ width: '100%' }}
@@ -515,76 +445,82 @@ const SLADefinitionManagement = () => {
             />
           </Col>
           <Col xs={24} md={4} className="text-right">
-            <Button
-              type="primary"
-              icon={<Plus className="w-4 h-4" />}
-              onClick={() => {
-                setSelectedSLA(null);
-                form.resetFields();
-                setShowCreateModal(true);
-              }}
-            >
-              新建SLA
+            <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={openCreate}>
+              新建 SLA
             </Button>
           </Col>
         </Row>
       </Card>
 
-      {/* SLA定义列表 */}
+      {loadError && (
+        <Alert
+          type="error"
+          showIcon
+          title="SLA 定义加载失败"
+          description={loadError}
+          action={
+            <Button size="small" icon={<RefreshCw className="w-4 h-4" />} onClick={loadDefinitions}>
+              重新加载
+            </Button>
+          }
+        />
+      )}
+
+      {!loadError && serverTotal > definitions.length && (
+        <Alert
+          type="warning"
+          showIcon
+          title={`服务端共有 ${serverTotal} 条 SLA 定义，当前仅加载前 ${definitions.length} 条`}
+          description="筛选与统计只覆盖已加载的部分，请精简定义数量或对接分页查询。"
+        />
+      )}
+
       <Card className="enterprise-card">
-        {filteredSLAs.length === 0 && !loading ? (
-          <Alert
-            title="暂无SLA定义，点击右上角按钮创建"
-            type="info"
-            showIcon
-          />
+        {!loadError && !loading && definitions.length === 0 ? (
+          <Empty description="还没有 SLA 定义，点击右上角「新建 SLA」创建" />
         ) : (
-          <Table
+          <Table<SLADefinition>
             columns={columns}
             dataSource={filteredSLAs}
             rowKey="id"
             loading={loading}
             pagination={{
-              total: filteredSLAs.length,
               pageSize: 10,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: total => `共 ${total} 条记录`,
+              showTotal: total =>
+                `筛选出 ${total} 条（服务端共 ${serverTotal} 条）`,
             }}
             className="enterprise-table"
           />
         )}
       </Card>
 
-      {/* 创建/编辑模态框 */}
       <Modal
         title={
           <span>
             <Target className="w-4 h-4 mr-2" />
-            {selectedSLA ? '编辑SLA定义' : '新建SLA定义'}
+            {editingSLA ? '编辑 SLA 定义' : '新建 SLA 定义'}
           </span>
         }
-        open={showCreateModal}
+        open={showFormModal}
         onOk={handleSave}
-        onCancel={() => {
-          setShowCreateModal(false);
-          setSelectedSLA(null);
-          form.resetFields();
-        }}
-        width={800}
-        confirmLoading={loading}
+        onCancel={closeForm}
+        width={720}
+        confirmLoading={saving}
         okText="保存"
         cancelText="取消"
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" className="mt-4">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="SLA名称"
+                label="SLA 名称"
                 name="name"
-                rules={[{ required: true, message: '请输入SLA名称' }]}
+                rules={[{ required: true, message: '请输入 SLA 名称' }]}
               >
-                <Input placeholder="请输入SLA名称" />
+                <Input placeholder="例如：Incident-P1-高" />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -596,160 +532,147 @@ const SLADefinitionManagement = () => {
                 <Select
                   showSearch
                   optionFilterProp="label"
-                  placeholder="选择或输入服务类型"
-                  options={Object.entries(SERVICE_TYPE_CONFIG).map(([value, label]) => ({ value, label }))}
+                  placeholder="选择服务类型"
+                  options={Object.entries(SLA_SERVICE_TYPE_LABELS).map(([value, label]) => ({
+                    value,
+                    label,
+                  }))}
                 />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item
-            label="描述"
-            name="description"
-            rules={[{ required: true, message: '请输入SLA描述' }]}
-          >
-            <Input.TextArea rows={3} placeholder="请输入SLA描述" />
+          <Form.Item label="描述" name="description">
+            <Input.TextArea rows={3} placeholder="说明这条 SLA 适用于什么场景" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
                 label="优先级"
                 name="priority"
+                initialValue="medium"
                 rules={[{ required: true, message: '请选择优先级' }]}
-                initialValue="P3"
               >
-                <Select options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
+                <Select
+                  options={SLA_PRIORITY_VALUES.map(value => ({
+                    value,
+                    label: getPriorityLabel(value),
+                  }))}
+                />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="响应时间(分钟)"
-                name="responseTimeValue"
-                rules={[{ required: true, message: '请输入响应时间' }]}
+                label="响应时限（分钟）"
+                name="responseTimeMinutes"
                 initialValue={60}
+                rules={[{ required: true, message: '请输入响应时限' }]}
               >
-                <InputNumber min={1} placeholder="60" style={{ width: '100%' }} />
+                <InputNumber min={1} style={{ width: '100%' }} placeholder="60" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label="解决时间(小时)"
-                name="resolutionTimeValue"
-                rules={[{ required: true, message: '请输入解决时间' }]}
-                initialValue={4}
+                label="解决时限（分钟）"
+                name="resolutionTimeMinutes"
+                initialValue={240}
+                rules={[{ required: true, message: '请输入解决时限' }]}
               >
-                <InputNumber min={1} placeholder="4" style={{ width: '100%' }} />
+                <InputNumber min={1} style={{ width: '100%' }} placeholder="240" />
               </Form.Item>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Form.Item
-                label="可用性"
-                name="availability"
-                rules={[{ required: true, message: '请输入可用性' }]}
-              >
-                <Input placeholder="如: 99.9%" />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item
-                label="业务时间"
-                name="businessHours"
-                rules={[{ required: true, message: '请输入业务时间' }]}
-              >
-                <Select options={[
-                  { value: '7x24', label: '7x24小时' },
-                  { value: '工作时间', label: '工作时间' },
-                  { value: '5x8', label: '5x8小时' },
-                ]} />
-              </Form.Item>
-            </Col>
-            <Col span={8}>
-              <Form.Item label="状态" name="status" initialValue="draft">
-                <Select options={Object.entries(STATUS_CONFIG).map(([key, config]) => ({ value: key, label: config.label }))} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            label="创建后启用"
+            name="isActive"
+            valuePropName="checked"
+            initialValue={true}
+            extra="后端创建接口不传 isActive 会按默认值建成停用状态，因此这里显式提交。"
+          >
+            <Switch />
+          </Form.Item>
         </Form>
       </Modal>
 
-      {/* 详情模态框 */}
       <Modal
         title={
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            <span>SLA定义详情</span>
+            <span>SLA 定义详情</span>
           </div>
         }
-        open={showDetailModal}
-        onCancel={() => setShowDetailModal(false)}
-        width={800}
+        open={Boolean(detailSLA)}
+        onCancel={() => setDetailSLA(null)}
+        width={760}
         footer={[
-          <Button key="close" onClick={() => setShowDetailModal(false)}>
+          <Button key="close" onClick={() => setDetailSLA(null)}>
             关闭
           </Button>,
         ]}
       >
-        {selectedSLA && (
+        {detailSLA && (
           <div className="space-y-6">
             <div>
-              <Title level={4}>{selectedSLA.name}</Title>
-              <Text type="secondary">{selectedSLA.description}</Text>
+              <Title level={4}>{detailSLA.name}</Title>
+              <Text type="secondary">{detailSLA.description || '无描述'}</Text>
             </div>
 
-            <Row gutter={16}>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="响应时间"
-                    value={selectedSLA.responseTime}
-                    prefix={<Timer className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="解决时间"
-                    value={selectedSLA.resolutionTime}
-                    prefix={<Target className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card size="small">
-                  <Statistic
-                    title="可用性"
-                    value={selectedSLA.availability}
-                    prefix={<TrendingUp className="w-4 h-4" />}
-                  />
-                </Card>
-              </Col>
-            </Row>
+            <Descriptions
+              bordered
+              size="small"
+              column={2}
+              items={[
+                {
+                  key: 'priority',
+                  label: '优先级',
+                  children: (
+                    <Tag color={getPriorityColor(detailSLA.priority)}>
+                      {getPriorityLabel(detailSLA.priority)}
+                    </Tag>
+                  ),
+                },
+                {
+                  key: 'serviceType',
+                  label: '服务类型',
+                  children: getServiceTypeLabel(detailSLA.serviceType),
+                },
+                {
+                  key: 'response',
+                  label: '响应时限',
+                  children: formatDuration(detailSLA.responseTimeMinutes),
+                },
+                {
+                  key: 'resolution',
+                  label: '解决时限',
+                  children: formatDuration(detailSLA.resolutionTimeMinutes),
+                },
+                { key: 'window', label: '服务窗口', children: detailSLA.businessHours },
+                {
+                  key: 'status',
+                  label: '状态',
+                  children: (
+                    <Tag color={STATUS_CONFIG[detailSLA.status].color}>
+                      {STATUS_CONFIG[detailSLA.status].label}
+                    </Tag>
+                  ),
+                },
+                { key: 'created', label: '创建时间', children: displayDateTime(detailSLA.createdAt) },
+                { key: 'updated', label: '更新时间', children: displayDateTime(detailSLA.updatedAt) },
+              ]}
+            />
 
             <div>
               <Title level={5}>升级规则</Title>
-              <List
-                size="small"
-                dataSource={selectedSLA.escalationRules}
-                renderItem={(rule, index) => (
-                  <List.Item>
-                    <Badge count={index + 1} color="blue" />
-                    <span className="ml-2">{rule}</span>
-                  </List.Item>
-                )}
-              />
-            </div>
-
-            <div>
-              <Title level={5}>适用服务</Title>
-              <div className="flex flex-wrap gap-2">
-                {selectedSLA.applicableServices.map(service => (
-                  <Tag key={service} color="blue">
-                    {service}
-                  </Tag>
-                ))}
-              </div>
+              {detailSLA.escalationLevels.length === 0 ? (
+                <Text type="secondary">该定义未配置升级级别。</Text>
+              ) : (
+                <Space wrap size={8}>
+                  {detailSLA.escalationLevels.map(level => (
+                    <Tag key={level.level} color="blue">
+                      {formatEscalationLevel(level)}
+                    </Tag>
+                  ))}
+                </Space>
+              )}
             </div>
           </div>
         )}

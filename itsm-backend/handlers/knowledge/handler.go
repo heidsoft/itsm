@@ -743,13 +743,14 @@ func tenantIDFromContext(c *gin.Context) (int, bool) {
 	return tenantID, true
 }
 
-// knowledgeVersionError 版本操作错误映射：不存在/非本租户 → 404，其余 → 500。
+// knowledgeVersionError 版本操作错误映射：不存在/非本租户 → 404，其余按错误分类映射，
+// 未分类的落 500。原始错误串只进日志，不进响应。
 func knowledgeVersionError(c *gin.Context, err error) {
 	if errors.Is(err, ErrArticleNotFound) || ent.IsNotFound(err) {
 		common.NotFound(c, "Article or version not found")
 		return
 	}
-	common.Fail(c, common.InternalErrorCode, err.Error())
+	common.RespondError(c, err, "版本操作失败")
 }
 
 // diffChange 单行差异：type 为 added / removed。

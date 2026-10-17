@@ -58,7 +58,7 @@ func (h *Handler) SSOCallback(c *gin.Context) {
 	if err != nil {
 		h.sso.logger.Warnw("sso callback failed", "provider", providerCode, "error", err)
 		middleware.RecordLoginAudit(auditCtx, h.sso.client, 0, 0, providerCode, "LOGIN_FAILED", "SSO 回调失败")
-		common.AuthFailed(c, err.Error())
+		common.AuthFailedWithErr(c, err, "SSO 回调失败")
 		return
 	}
 

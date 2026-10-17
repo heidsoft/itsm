@@ -36,12 +36,12 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		defByCode[d.Code] = d
 	}
 
-	// 契约 3：这些码一旦从对应角色消失就 CI 红（manager 26 / agent 7 / end_user 16）。
+	// 契约 3：这些码一旦从对应角色消失就 CI 红（manager 27 / agent 7 / end_user 15）。
 	// agent 用的是 alert:read 而不是 alerts:read —— 路由预检里没有任何 alerts:* 声明，
 	// alerts:read/alerts:write 只存在于权限清单，从未挂到路由。
 	n4Granted := map[string][]string{
 		"manager": {
-			"ticket:assign", "ticket:escalate", "ticket:export",
+			"ticket:assign", "ticket:escalate", "ticket:export", "ticket_category:read",
 			"notification:read", "notification:write", "incident:write", "dashboard:read",
 			"cmdb:read", "service_catalog:read", "sla:read", "bpmn:read",
 			"release:read", "release:write", "asset:read", "asset:write",
@@ -55,10 +55,15 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		},
 		"end_user": {
 			"notification:write", "dashboard:read", "ai:read", "ai:write",
-			"sla:read", "system_config:read", "org:read", "department:read",
+			"sla:read", "org:read", "department:read",
 			"cmdb:read", "incident:read", "change:read", "problem:read",
 			"bpmn:read", "release:read", "asset:read", "license:read",
 		},
+		// 规则配置面（自动化/分配规则）从 system_config:* 迁出后，管理角色必须持有新码：
+		// 一旦回收，租管与 it_admin 的规则页会重新变成「菜单可见、接口 403」。
+		"admin":     {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
+		"it_admin":  {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
+		"security_admin": {"automation_rule:read", "assignment_rule:read"},
 	}
 	for role, codes := range n4Granted {
 		granted := make(map[string]bool, len(roleCodes[role]))

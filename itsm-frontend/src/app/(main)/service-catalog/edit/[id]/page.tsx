@@ -27,13 +27,13 @@ export default function EditServicePage() {
         form.setFieldsValue({
           name: data.name,
           category: data.category,
-          description: data.shortDescription || data.fullDescription,
-          deliveryTime: data.availability?.responseTime,
+          description: data.shortDescription,
+          deliveryTime: data.deliveryDays,
           // Switch valuePropName="checked" 需要 boolean：'published' 为启用，其他（retired）为禁用。
           status: data.status === 'published',
         });
       } catch (error) {
-        appMessage.error(t('common.getFailed'));
+        appMessage.error(error instanceof Error ? error.message : t('common.getFailed'));
         router.push('/service-catalog');
       } finally {
         setInitialLoading(false);
@@ -49,13 +49,13 @@ export default function EditServicePage() {
         name: values.name as string,
         category: values.category as ServiceCategory,
         shortDescription: values.description as string,
-        availability: { responseTime: values.deliveryTime as number },
-        status: values.status ? ServiceStatusType.PUBLISHED : ServiceStatusType.DRAFT,
+        deliveryDays: values.deliveryTime as number,
+        status: values.status ? ServiceStatusType.PUBLISHED : ServiceStatusType.RETIRED,
       });
       appMessage.success(t('common.saveSuccess'));
       router.push('/service-catalog');
     } catch (error) {
-      appMessage.error(t('common.saveFailed'));
+      appMessage.error(error instanceof Error ? error.message : t('common.saveFailed'));
     } finally {
       setLoading(false);
     }
@@ -78,8 +78,13 @@ export default function EditServicePage() {
           <Form.Item label={t('ticketDetail.labelDescription')} name="description">
             <TextArea rows={4} />
           </Form.Item>
-          <Form.Item label={t('service.deliveryTime')} name="deliveryTime">
-            <InputNumber min={1} className="w-full" />
+          <Form.Item
+            label={t('service.deliveryTime')}
+            name="deliveryTime"
+            extra="后端按自然日保存，范围 1–3650 天"
+            rules={[{ type: 'integer', min: 1, max: 3650, message: '交付天数必须是 1 到 3650 之间的整数' }]}
+          >
+            <InputNumber min={1} max={3650} precision={0} className="w-full" suffix="天" />
           </Form.Item>
           <Form.Item label={t('ticketDetail.labelStatus')} name="status" valuePropName="checked">
             <Switch checkedChildren="enabled" unCheckedChildren="disabled" />

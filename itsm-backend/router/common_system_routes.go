@@ -88,6 +88,9 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			org.POST("/teams", middleware.RequirePermission("team", "write"), config.CommonHandler.CreateTeam)
 			org.PUT("/teams/:id", middleware.RequirePermission("team", "write"), config.CommonHandler.UpdateTeam)
 			org.DELETE("/teams/:id", middleware.RequirePermission("team", "write"), config.CommonHandler.DeleteTeam)
+			org.GET("/teams/:id/members", middleware.RequirePermission("team", "read"), config.CommonHandler.ListTeamMembers)
+			org.POST("/teams/:id/members", middleware.RequirePermission("team", "write"), config.CommonHandler.AddTeamMember)
+			org.DELETE("/teams/:id/members", middleware.RequirePermission("team", "write"), config.CommonHandler.RemoveTeamMember)
 		}
 
 		// Applications

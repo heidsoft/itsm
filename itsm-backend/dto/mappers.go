@@ -306,42 +306,128 @@ func ToIncidentResponseListWithSLA(incidents []*ent.Incident, slaStates map[int]
 // SLA Mappers
 // ===================================
 
-// ToSLADefinitionResponse converts an ent.SLADefinition to SLADefinitionResponse
-func ToSLADefinitionResponse(sla *ent.SLADefinition) *SLADefinitionResponse {
-	if sla == nil {
+// ProjectSLABusinessHours 解析 business_hours JSON。空配置返回 nil，让前端区分「未配置」和「7×24」。
+func ProjectSLABusinessHours(raw map[string]interface{}) *SLABusinessHours {
+	if len(raw) == 0 {
 		return nil
 	}
 
-	return &SLADefinitionResponse{
-		ID:              sla.ID,
-		Name:            sla.Name,
-		Description:     sla.Description,
-		ServiceType:     sla.ServiceType,
-		Priority:        sla.Priority,
-		ResponseTime:    sla.ResponseTime,
-		ResolutionTime:  sla.ResolutionTime,
-		BusinessHours:   sla.BusinessHours,
-		EscalationRules: sla.EscalationRules,
-		Conditions:      sla.Conditions,
-		IsActive:        sla.IsActive,
-		TenantID:        sla.TenantID,
-		CreatedAt:       sla.CreatedAt,
-		UpdatedAt:       sla.UpdatedAt,
+	bh := &SLABusinessHours{}
+	bh.TimeZone = slaFirstString(raw, "time_zone", "timezone")
+	bh.StartTime = slaFirstString(raw, "start_time", "work_hour_start")
+	bh.EndTime = slaFirstString(raw, "end_time", "work_hour_end")
+	bh.WorkDays = slaIntSlice(raw["work_days"])
+	if len(bh.WorkDays) == 0 {
+		bh.WorkDays = slaIntSlice(raw["workdays"])
 	}
+
+	switch v := raw["is_24_7"].(type) {
+	case bool:
+		bh.AlwaysOn = v
+	case string:
+		bh.AlwaysOn = v == "true" || v == "1"
+	}
+
+	return bh
 }
 
-// ToSLADefinitionResponseList converts a slice of ent.SLADefinition to response slice
-func ToSLADefinitionResponseList(slas []*ent.SLADefinition) []*SLADefinitionResponse {
-	if slas == nil {
+// ProjectSLAEscalationLevels 解析 escalation_rules.levels[]。缺失或类型不符的层级会被跳过。
+func ProjectSLAEscalationLevels(raw map[string]interface{}) []SLAEscalationLevel {
+	levels := slaMapSlice(raw["levels"])
+	if len(levels) == 0 {
 		return nil
 	}
-	responses := make([]*SLADefinitionResponse, 0, len(slas))
-	for _, sla := range slas {
-		if sla != nil {
-			responses = append(responses, ToSLADefinitionResponse(sla))
+
+	out := make([]SLAEscalationLevel, 0, len(levels))
+	for _, entry := range levels {
+		out = append(out, SLAEscalationLevel{
+			Level:            slaToInt(entry["level"]),
+			ThresholdMinutes: slaToInt(entry["threshold_minutes"]),
+			NotifyRoles:      slaStringSlice(entry["notify_roles"]),
+		})
+	}
+	return out
+}
+
+// 配置 JSON 既可能是数据库解码出来的 []interface{}，也可能是模板装配时直接塞进实体的
+// []map[string]interface{}，两种来源都要能投影。
+func slaMapSlice(value interface{}) []map[string]interface{} {
+	switch v := value.(type) {
+	case []interface{}:
+		out := make([]map[string]interface{}, 0, len(v))
+		for _, item := range v {
+			if m, ok := item.(map[string]interface{}); ok {
+				out = append(out, m)
+			}
+		}
+		return out
+	case []map[string]interface{}:
+		return v
+	}
+	return nil
+}
+
+func slaFirstString(raw map[string]interface{}, keys ...string) string {
+	for _, key := range keys {
+		if s, ok := raw[key].(string); ok && s != "" {
+			return s
 		}
 	}
-	return responses
+	return ""
+}
+
+func slaToInt(value interface{}) int {
+	switch v := value.(type) {
+	case float64:
+		return int(v)
+	case int:
+		return v
+	}
+	return 0
+}
+
+func slaIntSlice(value interface{}) []int {
+	var items []interface{}
+	switch v := value.(type) {
+	case []interface{}:
+		items = v
+	case []int:
+		out := make([]int, 0, len(v))
+		out = append(out, v...)
+		return out
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]int, 0, len(items))
+	for _, item := range items {
+		if n := slaToInt(item); n != 0 {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+func slaStringSlice(value interface{}) []string {
+	var items []interface{}
+	switch v := value.(type) {
+	case []interface{}:
+		items = v
+	case []string:
+		out := make([]string, 0, len(v))
+		out = append(out, v...)
+		return out
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(items))
+	for _, item := range items {
+		if s, ok := item.(string); ok && s != "" {
+			out = append(out, s)
+		}
+	}
+	return out
 }
 
 // ===================================

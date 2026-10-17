@@ -20,12 +20,37 @@ describe('MenuAdminAPI', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('list', () => {
-    it('should get menu list', async () => {
-      const expected = { menus: [], total: 0 };
+    it('reads the standard items envelope returned by GET /api/v1/menus', async () => {
+      const expected = {
+        items: [
+          {
+            id: 1,
+            name: '服务台',
+            path: '/dashboard',
+            icon: 'LayoutDashboard',
+            sortOrder: 10,
+            tenantId: 1,
+            isVisible: true,
+            isEnabled: true,
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 1,
+        totalPages: 1,
+      };
       mockGet.mockResolvedValue(expected);
       const res = await MenuAdminAPI.list();
       expect(mockGet).toHaveBeenCalledWith('/api/v1/menus');
       expect(res).toEqual(expected);
+      expect(res.items[0].name).toBe('服务台');
+    });
+
+    it('passes the super-admin tenant override as a camelCase query param', async () => {
+      mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 0, totalPages: 1 });
+      const res = await MenuAdminAPI.list(7);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/menus?tenantId=7');
+      expect(res.items).toEqual([]);
     });
   });
 

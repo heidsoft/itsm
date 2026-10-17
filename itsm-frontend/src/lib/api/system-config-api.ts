@@ -1,4 +1,5 @@
 import { httpClient } from './http-client';
+import type { SystemStats } from '@/types/dashboard';
 import type {
   SystemConfig,
   SystemConfigListResponse,
@@ -35,8 +36,9 @@ export class SystemConfigAPI {
     return httpClient.put<SystemConfig[]>('/api/v1/system-configs/batch', data);
   }
 
-  // 获取系统状态信息
-  static async getSystemStatus(): Promise<Record<string, unknown>> {
-    return httpClient.get<Record<string, unknown>>('/api/v1/system-configs/status');
+  // 系统运行时状态。后端与 /api/v1/dashboard/stats/system 共用同一个 DTO 与
+  // availability 口径，未接入的指标必须由调用方按 availability 判断。
+  static async getSystemStatus(): Promise<SystemStats> {
+    return httpClient.get<SystemStats>('/api/v1/system-configs/status');
   }
 }

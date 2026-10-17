@@ -20,6 +20,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { Delete, Edit, FlaskConical, Plus, RefreshCw } from 'lucide-react';
 import { UsageGuideCard } from '@/components/common/UsageGuideCard';
+import { isPermissionDeniedError } from '@/lib/api/http-client';
 import type {
   ActionConfig,
   AssignmentRule,
@@ -79,6 +80,7 @@ export default function AssignmentRulesPage() {
   const { message } = App.useApp();
   const [rules, setRules] = useState<AssignmentRule[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [ruleModalOpen, setRuleModalOpen] = useState(false);
@@ -90,11 +92,17 @@ export default function AssignmentRulesPage() {
 
   const loadRules = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const response = await TicketAssignmentApi.listRules();
       setRules(response.items);
-    } catch {
-      message.error('加载分配规则失败');
+    } catch (error) {
+      // 失败不能画成「暂无规则」：空表格会让用户以为系统里确实没有规则。
+      setRules([]);
+      setLoadError({
+        denied: isPermissionDeniedError(error),
+        detail: error instanceof Error ? error.message : '',
+      });
     } finally {
       setLoading(false);
     }
@@ -343,7 +351,28 @@ export default function AssignmentRulesPage() {
           ]}
         />
 
-        {rules.length === 0 && !loading ? (
+        {loadError ? (
+          <Alert
+            type={loadError.denied ? 'warning' : 'error'}
+            showIcon
+            title={loadError.denied ? '没有权限查看分配规则' : '加载分配规则失败'}
+            description={
+              loadError.denied
+                ? '当前角色未被授予分配规则的读取权限。这里不是「系统里没有规则」，请联系管理员为你的角色开放规则配置权限。'
+                : loadError.detail || '后端未能返回规则列表，请稍后重试。'
+            }
+            action={
+              <Button
+                size="small"
+                icon={<RefreshCw size={14} />}
+                onClick={loadRules}
+                loading={loading}
+              >
+                重试
+              </Button>
+            }
+          />
+        ) : rules.length === 0 && !loading ? (
           <Alert
             type="info"
             showIcon

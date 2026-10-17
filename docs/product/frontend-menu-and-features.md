@@ -85,7 +85,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 14 | 90 | `/sla` | SLA 管理 | Calendar | `sla:read` | main |  |
 | 15 | 100 | `/workflow` | 工作流 | GitMerge | `workflow:read` | main |  |
 | 16 | 110 | `/ai/chat` | AI 助手 | Bot | `ai:read` | main |  |
-| 17 | 115 | `/approvals/pending` | 待我审批 | CheckCircle | `approval:read` | main |  |
+| 17 | 115 | `/approvals/pending` | 待我审批 | CheckCircle | `task:read` | main | 菜单码随页面数据源（`GET /bpmn/tasks`），由 `pkg/menubaseline/baseline_guard_test.go` 钉住 |
 | 18 | 120 | `/msp` | 客户管理 | Building | `msp:read` | main | **MSP 门控**：`IsMSPEnabled()=false` 时被 `filterMSPMenus` 剔除 |
 | 19 | 130 | `/releases` | 发布管理 | Rocket | `release:read` | main |  |
 | 20 | 200 | `/admin` | 系统管理 | Settings | `system:write` | admin | Sidebar 通过 `isAdmin`（user:write/role:write/system_config:write/ticket_type:manage 任一）切换 admin 区块 |
@@ -192,7 +192,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 105 | `/workflow/dashboard` | 监控仪表盘 | `workflow:read` | Activity |
 | 106 | `/workflow/bottlenecks` | 节点瓶颈分析 | `workflow:read` | BarChart3 |
 | 107 | `/workflow/automation` | 自动化规则 | `workflow:write` | Zap |
-| 108 | `/approvals` | 审批中心 | `approval:read` | CheckSquare |
+| 108 | `/approvals` | 审批中心 | `task:read` | CheckSquare |
 | 109 | `/workflow/audit` | 操作日志 | `audit:read` | ClipboardList |
 
 ### 3.13 AI 助手 `/ai/chat`

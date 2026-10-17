@@ -17,6 +17,7 @@ import (
 	groupHandler "itsm-backend/handlers/group"
 	notificationHandler "itsm-backend/handlers/notification"
 	releaseHandler "itsm-backend/handlers/release"
+	systemConfigHandler "itsm-backend/handlers/systemconfig"
 	userHandler "itsm-backend/handlers/user"
 	"itsm-backend/middleware"
 	"itsm-backend/migration"
@@ -352,6 +353,47 @@ func TestSetupRoutes_P1DomainHandlersRegistered(t *testing.T) {
 	}
 	for route, registered := range want {
 		assert.True(t, registered, "%s should be registered through its domain handler", route)
+	}
+}
+
+// GET /system-configs/init 与 /configs/init 曾按 system_config:read 守卫却整表写入
+// 默认安全策略；end_user 持该读权限，一次 GET 即可把 passwordMinLength=8、
+// enable2FA=false 落进租户配置。默认配置已由 ListConfigs 懒初始化，路由必须保持缺席。
+func TestSetupRoutes_SystemConfigInitWriteSurfaceIsAbsent(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:router_sc_init_removed?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+	logger := zaptest.NewLogger(t).Sugar()
+
+	cfg := &RouterConfig{
+		JWTSecret: "test-secret",
+		Logger:    logger,
+		Client:    client,
+		SystemConfigHandler: systemConfigHandler.NewHandler(
+			service.NewSystemConfigService(client, logger), logger),
+	}
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	SetupRoutes(r, cfg)
+
+	registered := make(map[string]bool)
+	for _, route := range r.Routes() {
+		registered[route.Method+" "+route.Path] = true
+	}
+
+	for _, gone := range []string{
+		"GET /api/v1/system-configs/init",
+		"GET /api/v1/configs/init",
+	} {
+		assert.False(t, registered[gone], "%s 不应注册：GET 不得写配置", gone)
+	}
+
+	// 只读与写语义各自归位，确认不是把整组路由一起删掉。
+	for _, kept := range []string{
+		"GET /api/v1/system-configs",
+		"PUT /api/v1/system-configs/:id",
+	} {
+		assert.True(t, registered[kept], "%s 应仍然注册", kept)
 	}
 }
 

@@ -57,13 +57,11 @@ export default function ServiceDetailPage() {
             <Tag color={serviceStatusMap[service.status]?.color || 'default'}>{serviceStatusMap[service.status]?.text || service.status}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label={t('ticketDetail.labelDescription')} span={2}>
-            {service.shortDescription || service.fullDescription}
+            {service.shortDescription}
           </Descriptions.Item>
-          {service.availability?.responseTime && (
-            <Descriptions.Item label={t('service.deliveryTime')}>
-              {service.availability.responseTime}
-            </Descriptions.Item>
-          )}
+          <Descriptions.Item label={t('service.deliveryTime')}>
+            {service.deliveryDays != null ? `${service.deliveryDays} 天` : '未配置'}
+          </Descriptions.Item>
         </Descriptions>
 
         <div className="mt-6 flex gap-4">

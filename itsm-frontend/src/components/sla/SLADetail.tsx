@@ -1,73 +1,91 @@
 'use client';
 
-/**
- * SLA 详情组件
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Card,
-  Tag,
-  Button,
-  Skeleton,
-  Result,
-  Descriptions,
-  Space,
+  Alert,
   Breadcrumb,
-  message,
+  Button,
+  Card,
+  Descriptions,
   Divider,
+  Skeleton,
+  Space,
+  Tag,
 } from 'antd';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
 import { SLAApi } from '@/lib/api/';
-import { SLAPriorityLabels, SLAPriorityColors } from '@/constants/sla';
-import type { SLADefinition } from '@/types/biz/sla';
+import type { SLADefinition } from '@/lib/api/sla-api';
+import { formatDateTime } from '@/lib/formatters';
+import {
+  formatBusinessHours,
+  formatDuration,
+  formatEscalationLevel,
+  getPriorityColor,
+  getPriorityLabel,
+} from '@/lib/utils/sla-format';
+
+const isEmptyRecord = (value?: Record<string, unknown>): boolean =>
+  !value || Object.keys(value).length === 0;
+
+// formatters.formatDateTime 对缺失或非法时间返回空串，详情页统一显示为 -
+const displayDateTime = (value?: string) => formatDateTime(value) || '-';
 
 const SLADetail: React.FC = () => {
-  const { id } = useParams() as { id: string };
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SLADefinition | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadDetail();
-    }
-     
-  }, [id]);
+  const id = params?.id;
 
-  const loadDetail = async () => {
+  const loadDetail = useCallback(async () => {
+    if (!id) return;
     setLoading(true);
+    setError(null);
     try {
-      const res = await SLAApi.getDefinition(Number(id!));
-      setData(res as unknown as SLADefinition);
-    } catch (error) {
-      // console.error(error);
-      message.error('加载 SLA 详情失败');
+      setData(await SLAApi.getSLADefinition(Number(id)));
+    } catch (err) {
+      setData(null);
+      setError(err instanceof Error ? err.message : '加载 SLA 详情失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  if (loading)
+  useEffect(() => {
+    void loadDetail();
+  }, [loadDetail]);
+
+  if (loading) {
     return (
       <Card className="rounded-lg shadow-sm border border-gray-200">
         <Skeleton active />
       </Card>
     );
+  }
 
-  if (!data) {
+  if (error || !data) {
     return (
       <Card className="rounded-lg shadow-sm border border-gray-200">
-        <Result
-          status="404"
-          title="404"
-          subTitle="抱歉，您访问的 SLA 定义不存在"
-          extra={
-            <Button type="primary" onClick={() => router.push('/sla')}>
-              返回列表
-            </Button>
+        <Alert
+          type={error ? 'error' : 'warning'}
+          showIcon
+          title={error ? 'SLA 详情加载失败' : '未找到该 SLA 定义'}
+          description={error ?? `SLA 定义 #${id ?? ''} 不存在或不属于当前租户。`}
+          action={
+            <Space>
+              {error && (
+                <Button size="small" icon={<RefreshCw className="w-4 h-4" />} onClick={loadDetail}>
+                  重新加载
+                </Button>
+              )}
+              <Button type="primary" onClick={() => router.push('/sla')}>
+                返回列表
+              </Button>
+            </Space>
           }
         />
       </Card>
@@ -76,14 +94,15 @@ const SLADetail: React.FC = () => {
 
   return (
     <div className="pb-6">
-      <Breadcrumb className="mb-4">
-        <Breadcrumb.Item>首页</Breadcrumb.Item>
-        <Breadcrumb.Item>服务级别管理</Breadcrumb.Item>
-        <Breadcrumb.Item onClick={() => router.push('/sla')} className="cursor-pointer">
-          SLA 定义
-        </Breadcrumb.Item>
-        <Breadcrumb.Item>详情</Breadcrumb.Item>
-      </Breadcrumb>
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { title: '首页' },
+          { title: '服务级别管理' },
+          { title: 'SLA 定义', onClick: () => router.push('/sla') },
+          { title: '详情' },
+        ]}
+      />
 
       <Card
         className="rounded-lg shadow-sm border border-gray-200"
@@ -94,39 +113,54 @@ const SLADetail: React.FC = () => {
           </Button>
         }
       >
-        <Descriptions bordered column={2} className="mb-6">
-          <Descriptions.Item label="名称">{data.name}</Descriptions.Item>
-          <Descriptions.Item label="服务类型">{data.serviceType || '-'}</Descriptions.Item>
-          <Descriptions.Item label="优先级">
-            <Tag color={SLAPriorityColors[data.priority] || 'blue'}>
-              {SLAPriorityLabels[data.priority] || data.priority}
-            </Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="状态">
-            {data.isActive ? <Tag color="green">激活</Tag> : <Tag color="red">禁用</Tag>}
-          </Descriptions.Item>
-          <Descriptions.Item label="响应时间设定">{data.responseTime} 分钟</Descriptions.Item>
-          <Descriptions.Item label="解决时间设定">{data.resolutionTime} 分钟</Descriptions.Item>
-          <Descriptions.Item label="描述" span={2}>
-            {data.description || '无'}
-          </Descriptions.Item>
-        </Descriptions>
+        <Descriptions
+          bordered
+          className="mb-6"
+          column={2}
+          items={[
+            { key: 'name', label: '名称', children: data.name },
+            { key: 'serviceType', label: '服务类型', children: data.serviceType || '-' },
+            {
+              key: 'priority',
+              label: '优先级',
+              children: (
+                <Tag color={getPriorityColor(data.priority)}>{getPriorityLabel(data.priority)}</Tag>
+              ),
+            },
+            {
+              key: 'status',
+              label: '状态',
+              children: data.isActive ? <Tag color="green">启用</Tag> : <Tag color="red">停用</Tag>,
+            },
+            { key: 'response', label: '响应时限', children: formatDuration(data.responseTime) },
+            { key: 'resolution', label: '解决时限', children: formatDuration(data.resolutionTime) },
+            { key: 'window', label: '服务窗口', children: formatBusinessHours(data.businessHours) },
+            { key: 'updated', label: '更新时间', children: displayDateTime(data.updatedAt) },
+            { key: 'description', label: '描述', span: 2, children: data.description || '无' },
+          ]}
+        />
 
         <Divider>适用条件</Divider>
-        <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto mb-6">
-          {JSON.stringify(data.conditions, null, 2)}
-        </pre>
+        {isEmptyRecord(data.conditions) ? (
+          <p className="text-gray-500 mb-6">未配置适用条件。</p>
+        ) : (
+          <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto mb-6">
+            {JSON.stringify(data.conditions, null, 2)}
+          </pre>
+        )}
 
         <Divider>升级规则</Divider>
-        <pre className="bg-gray-50 p-3 rounded text-sm overflow-auto">
-          {JSON.stringify(data.escalationRules, null, 2)}
-        </pre>
-
-        <div className="mt-6">
-          <Button icon={<ArrowLeft />} onClick={() => router.push('/sla')}>
-            返回列表
-          </Button>
-        </div>
+        {!data.escalationLevels || data.escalationLevels.length === 0 ? (
+          <p className="text-gray-500">未配置升级级别。</p>
+        ) : (
+          <Space wrap size={8}>
+            {data.escalationLevels.map(level => (
+              <Tag key={level.level} color="blue">
+                {formatEscalationLevel(level)}
+              </Tag>
+            ))}
+          </Space>
+        )}
       </Card>
     </div>
   );

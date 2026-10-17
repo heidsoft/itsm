@@ -3,7 +3,7 @@
 /**
  * SLA 升级矩阵页面
  *
- * 按优先级展示多级升级链：阈值 / 目标类型 / 目标 ID / 通知渠道
+ * 按优先级展示多级升级链：触发时长 / 通知角色 / 通知用户 / 说明
  */
 
 import { Alert, Button, Card, Col, Row, Space, Statistic, Table, Tag, Typography } from 'antd';
@@ -20,10 +20,26 @@ import { UsageGuideCard } from '@/components/common/UsageGuideCard';
 const { Title, Paragraph, Text } = Typography;
 
 const priorityColorMap: Record<string, string> = {
-  P1: 'red',
-  P2: 'orange',
-  P3: 'gold',
-  P4: 'blue',
+  critical: 'red',
+  high: 'orange',
+  medium: 'gold',
+  low: 'blue',
+};
+
+const priorityLabelMap: Record<string, string> = {
+  critical: '致命',
+  high: '高',
+  medium: '中',
+  low: '低',
+};
+
+// 后端 notifyRoles 取主角色词表原值，展示时补中文，避免运维对着 it_admin 猜职责。
+const roleLabelMap: Record<string, string> = {
+  admin: '租户管理员',
+  it_admin: 'IT 管理员',
+  manager: '部门经理',
+  agent: '服务台坐席',
+  requester: '申请人',
 };
 
 function formatMinutes(mins: number): string {
@@ -33,9 +49,9 @@ function formatMinutes(mins: number): string {
 }
 
 export default function EscalationMatricesPage() {
-  const [matrix, setMatrix] = useState<EscalationMatrix>(DEFAULT_ESCALATION_MATRIX);
-  const [loading, setLoading] = useState(false);
-  // 2026-10-14 修复：加载失败显式报错，不再把硬编码默认矩阵当真实数据展示
+  const [matrix, setMatrix] = useState<EscalationMatrix>({});
+  const [loading, setLoading] = useState(true);
+  // 加载失败时展示内置默认策略，并用错误 Alert 明确标注它不是生产配置。
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,7 +63,9 @@ export default function EscalationMatricesPage() {
         if (alive) setMatrix(m);
       })
       .catch((err: Error) => {
-        if (alive) setLoadError(err.message || '升级矩阵加载失败');
+        if (!alive) return;
+        setMatrix(DEFAULT_ESCALATION_MATRIX);
+        setLoadError(err.message || '升级矩阵加载失败');
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -63,7 +81,7 @@ export default function EscalationMatricesPage() {
     Object.values(matrix).forEach(levels => {
       totalLevels += levels.length;
       levels.forEach(l => {
-        totalTargets += l.targetIds.length;
+        totalTargets += l.notifyRoles.length + l.notifyUserIDs.length;
       });
     });
     return { priorities: Object.keys(matrix).length, totalLevels, totalTargets };
@@ -84,8 +102,12 @@ export default function EscalationMatricesPage() {
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
-      width: 100,
-      render: (v: string) => <Tag color={priorityColorMap[v] ?? 'default'}>{v}</Tag>,
+      width: 110,
+      render: (v: string) => (
+        <Tag color={priorityColorMap[v] ?? 'default'}>
+          {priorityLabelMap[v] ? `${v} · ${priorityLabelMap[v]}` : v}
+        </Tag>
+      ),
     },
     {
       title: '级别',
@@ -95,9 +117,9 @@ export default function EscalationMatricesPage() {
       render: (v: number) => <Tag color="blue">L{v}</Tag>,
     },
     {
-      title: '触发阈值',
-      dataIndex: 'thresholdMinutes',
-      key: 'thresholdMinutes',
+      title: '触发时长',
+      dataIndex: 'afterMinutes',
+      key: 'afterMinutes',
       width: 130,
       render: (v: number) => (
         <Space>
@@ -107,19 +129,29 @@ export default function EscalationMatricesPage() {
       ),
     },
     {
-      title: '目标类型',
-      dataIndex: 'targetType',
-      key: 'targetType',
-      width: 110,
-      render: (v: string) => <Tag color="geekblue">{v}</Tag>,
+      title: '通知角色',
+      dataIndex: 'notifyRoles',
+      key: 'notifyRoles',
+      render: (roles: string[]) =>
+        roles.length === 0 ? (
+          <Text type="secondary">未指定角色</Text>
+        ) : (
+          <Space size={4} wrap>
+            {roles.map(r => (
+              <Tag key={r} color="geekblue">
+                {roleLabelMap[r] ? `${r} · ${roleLabelMap[r]}` : r}
+              </Tag>
+            ))}
+          </Space>
+        ),
     },
     {
-      title: '目标 ID',
-      dataIndex: 'targetIds',
-      key: 'targetIds',
+      title: '通知用户',
+      dataIndex: 'notifyUserIDs',
+      key: 'notifyUserIDs',
       render: (ids: number[]) =>
         ids.length === 0 ? (
-          <Text type="secondary">未指定</Text>
+          <Text type="secondary">未指定用户</Text>
         ) : (
           <Space size={4} wrap>
             {ids.map(id => (
@@ -131,18 +163,10 @@ export default function EscalationMatricesPage() {
         ),
     },
     {
-      title: '通知渠道',
-      dataIndex: 'notifyChannels',
-      key: 'notifyChannels',
-      render: (channels: string[]) => (
-        <Space size={4} wrap>
-          {channels.map(c => (
-            <Tag key={c} color="cyan" icon={<Bell />}>
-              {c}
-            </Tag>
-          ))}
-        </Space>
-      ),
+      title: '升级说明',
+      dataIndex: 'description',
+      key: 'description',
+      render: (v: string) => (v ? <Text>{v}</Text> : <Text type="secondary">无说明</Text>),
     },
   ];
 
@@ -154,7 +178,7 @@ export default function EscalationMatricesPage() {
           SLA 升级矩阵
         </Title>
         <Paragraph type="secondary">
-          按优先级配置的多级升级策略。当 SLA 阈值被突破时，系统会按升级链逐级通知更高级别的处理人。
+          按优先级配置的多级升级策略。SLA 阈值被突破后，系统按升级链逐级通知更高职责的处理人。
         </Paragraph>
       </div>
 
@@ -174,7 +198,7 @@ export default function EscalationMatricesPage() {
       )}
 
       <Alert
-        title="升级矩阵为系统内置策略，当前仅支持查看"
+        title="本页展示后端当前生效的升级矩阵；租户自定义矩阵由运维按 SLA 策略维护"
         type="info"
         showIcon
       />
@@ -182,13 +206,13 @@ export default function EscalationMatricesPage() {
       <UsageGuideCard
         style={{ marginBottom: 16 }}
         title="怎么理解和使用升级矩阵"
-        intro="升级矩阵是 SLA 超时的自动升级策略：工单超过阈值仍未处理时，系统按级别逐级通知更高级别的处理人。本页为只读查看，不需要（也不支持）在线编辑。"
+        intro="升级矩阵是 SLA 超时的自动升级策略：工单超过阈值仍未处理时，系统按级别逐级通知更高职责的处理人。本页为只读查看，展示的是后端当前对本租户生效的矩阵。"
         steps={[
-          '阅读方式：每个优先级（P1 最高）配置若干升级级别；待处理时长超过某级“阈值时间”即触发该级升级，按“目标类型 + ID”（用户 / 角色 / 群组）定位升级对象，并通过“通知渠道”（邮件、站内信等）发送。',
-          '默认策略中优先级越高阈值越短、级别越多：如 P1 为 5 / 15 / 30 分钟三级，P3 仅 240 分钟一级。',
-          '生效范围：SLA 告警升级、工单超时升级、BPMN 任务超时共用这套矩阵，无需单独启用。',
-          '前置条件：SLA 时限来自“SLA 模板 / SLA 定义”，未安装 SLA 的优先级不会触发升级；邮件渠道需要在“系统配置”中配好 SMTP。',
-          '建议用法：对照本表确认阈值与组织值班响应能力是否匹配；如需调整，当前可通过修改 SLA 定义与通知渠道间接影响，矩阵本身的自定义编辑将在后续版本开放。',
+          '阅读方式：每个优先级（critical 最高）配置若干升级级别；「触发时长」是从告警开始计时累计的分钟数，达到即触发该级升级，按「通知角色 / 通知用户」定位升级对象。',
+          '通知角色取系统主角色码（如 manager、it_admin、admin），升级时按用户主角色精确查人；角色为空且用户为空的那一级不会发出通知。',
+          '生效范围：SLA 告警升级、工单超时升级与 BPMN 任务超时共用这套矩阵，无需单独启用。',
+          '前置条件：SLA 时限来自「SLA 模板 / SLA 定义」，未安装 SLA 的优先级不会触发升级；站内信之外的渠道需在「系统配置」中配好 SMTP 等通知能力。',
+          '建议用法：对照本表确认触发时长与组织值班响应能力是否匹配；如需调整矩阵本身，请通过后端升级矩阵接口（PUT /api/v1/escalation-matrices）提交，页面暂不提供在线编辑。',
         ]}
       />
 
@@ -237,7 +261,9 @@ export default function EscalationMatricesPage() {
                 size="small"
                 title={
                   <Space>
-                    <Tag color={priorityColorMap[priority] ?? 'default'}>{priority}</Tag>
+                    <Tag color={priorityColorMap[priority] ?? 'default'}>
+                      {priorityLabelMap[priority] ? `${priority} · ${priorityLabelMap[priority]}` : priority}
+                    </Tag>
                     <Text type="secondary">{levels.length} 级升级</Text>
                   </Space>
                 }
@@ -253,11 +279,15 @@ export default function EscalationMatricesPage() {
                     <Space size="small" wrap>
                       <Tag color="blue">L{level.level}</Tag>
                       <Clock />
-                      <Text>{formatMinutes(level.thresholdMinutes)}</Text>
-                      <Tag color="geekblue">{level.targetType}</Tag>
-                      {level.notifyChannels.map(c => (
-                        <Tag key={c} color="cyan">
-                          {c}
+                      <Text>{formatMinutes(level.afterMinutes)}</Text>
+                      {level.notifyRoles.map(r => (
+                        <Tag key={r} color="geekblue" icon={<Bell />}>
+                          {roleLabelMap[r] ? `${r} · ${roleLabelMap[r]}` : r}
+                        </Tag>
+                      ))}
+                      {level.notifyUserIDs.map(id => (
+                        <Tag key={id} color="purple" icon={<Users />}>
+                          {id}
                         </Tag>
                       ))}
                     </Space>

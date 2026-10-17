@@ -20,10 +20,10 @@ describe('SLAApi', () => {
   beforeEach(() => { jest.clearAllMocks(); });
 
   describe('getSLADefinitions', () => {
-    it('should get definitions with params', async () => {
+    it('只发送后端 ListSLADefinitions 实际解析的 page/pageSize', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 10 });
-      await SLAApi.getSLADefinitions({ page: 1, pageSize: 10, isActive: true, name: 'test' });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/definitions', { page: '1', pageSize: '10', isActive: 'true', name: 'test' });
+      await SLAApi.getSLADefinitions({ page: 1, pageSize: 10 });
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/sla/definitions', { page: '1', pageSize: '10' });
     });
 
     it('should get definitions without params', async () => {
@@ -49,6 +49,22 @@ describe('SLAApi', () => {
       const result = await SLAApi.createSLADefinition(data);
       expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/definitions', data);
       expect(result.name).toBe('New SLA');
+    });
+
+    it('创建时必须显式带上 isActive，否则后端按默认值建成停用状态', async () => {
+      mockPost.mockResolvedValue({ id: 2, name: 'New SLA', isActive: true });
+      await SLAApi.createSLADefinition({
+        name: 'New SLA',
+        responseTime: 60,
+        resolutionTime: 240,
+        isActive: true,
+      });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/sla/definitions', {
+        name: 'New SLA',
+        responseTime: 60,
+        resolutionTime: 240,
+        isActive: true,
+      });
     });
   });
 

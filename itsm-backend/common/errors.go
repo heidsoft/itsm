@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -52,10 +53,12 @@ func NewVersionConflictError(resourceName string, resourceID, currentVersion, se
 	}
 }
 
-// IsVersionConflictError 检查是否为版本冲突错误
+// IsVersionConflictError 检查是否为版本冲突错误。
+// 用 errors.As 而非裸类型断言：领域 service 常用 fmt.Errorf("%w") 包装，
+// 裸断言只认顶层类型，包装后的冲突会被误判为未分类错误掉进 500。
 func IsVersionConflictError(err error) bool {
-	_, ok := err.(*VersionConflictError)
-	return ok
+	var vcErr *VersionConflictError
+	return errors.As(err, &vcErr)
 }
 
 // ErrorHandler 全局错误处理中间件

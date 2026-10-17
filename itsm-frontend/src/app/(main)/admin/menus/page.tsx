@@ -40,7 +40,7 @@ import {
 } from 'antd';
 import AppSelect from '@/components/ui/AppSelect';
 import type { ColumnsType } from 'antd/es/table';
-import { MenuAdminAPI, notifyMenusUpdated, type MenuItem } from '@/lib/api/menu-api';
+import { MenuAdminAPI, notifyMenusUpdated, type MenuItem, type MenuRequest } from '@/lib/api/menu-api';
 import { RoleAPI } from '@/lib/api/role-api';
 import { iconMap, getIconByName } from '@/components/layout/sidebar/icons';
 import { useI18n } from '@/lib/i18n';
@@ -76,7 +76,7 @@ export default function MenuManagementPage() {
     setLoading(true);
     try {
       const res = await MenuAdminAPI.list();
-      setMenus(res.menus || []);
+      setMenus(res.items);
     } catch (err) {
       console.error('Failed to load menus', err);
       antMessage.error(t('menus.loadFailed'));
@@ -96,22 +96,20 @@ export default function MenuManagementPage() {
       .catch(() => setPermissionOptions([]));
   }, []);
 
-  // 过滤后的列表
+  // 过滤后的列表（后端已按 sortOrder 升序返回整份租户菜单，树形组装时再按同口径排序）
   const filteredMenus = useMemo(() => {
     const q = searchText.trim().toLowerCase();
-    return menus
-      .filter(m => {
-        if (q) {
-          const hay = `${m.name} ${m.path} ${m.permissionCode ?? ''} ${m.icon ?? ''}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        if (statusFilter === 'visible') return m.isVisible;
-        if (statusFilter === 'hidden') return !m.isVisible;
-        if (statusFilter === 'enabled') return m.isEnabled;
-        if (statusFilter === 'disabled') return !m.isEnabled;
-        return true;
-      })
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return menus.filter(m => {
+      if (q) {
+        const hay = `${m.name} ${m.path} ${m.permissionCode ?? ''} ${m.icon ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (statusFilter === 'visible') return m.isVisible;
+      if (statusFilter === 'hidden') return !m.isVisible;
+      if (statusFilter === 'enabled') return m.isEnabled;
+      if (statusFilter === 'disabled') return !m.isEnabled;
+      return true;
+    });
   }, [menus, searchText, statusFilter]);
 
   // 树形表格数据（被过滤掉父级的节点提升为根，保证搜索结果可见）
@@ -161,16 +159,18 @@ export default function MenuManagementPage() {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      const payload = {
+      // 全量提交并用空值表达「清空」：PUT 的可选字段是指针，未传保持原值，
+      // 只有显式空值才覆盖。parentId 0 = 顶级菜单，icon/permissionCode/description 空串 = 清除。
+      const payload: MenuRequest = {
         name: values.name,
         path: values.path,
-        icon: values.icon || undefined,
-        parentId: values.parentId ?? null,
-        permissionCode: values.permissionCode || null,
+        icon: values.icon ?? '',
+        parentId: values.parentId ?? 0,
+        permissionCode: values.permissionCode ?? '',
         sortOrder: values.sortOrder ?? 0,
         isVisible: values.isVisible ?? true,
         isEnabled: values.isEnabled ?? true,
-        description: values.description || undefined,
+        description: values.description ?? '',
       };
       if (editing) {
         await MenuAdminAPI.update(editing.id, payload);

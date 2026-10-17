@@ -2,45 +2,41 @@
  * SLA 定义管理页面类型定义
  */
 
+import type { SLAEscalationLevel } from '@/lib/api/sla-api';
+
 // SLA定义数据类型
 export interface SLADefinition {
   id: string;
   name: string;
   description: string;
   serviceType: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4';
-  responseTime: string;
-  resolutionTime: string;
-  /** 原始分钟数值：展示为文本后仍可回填编辑表单 */
+  /** 后端原始优先级值，展示时经 priorityLabel 归一，未识别值原样显示 */
+  priority: string;
   responseTimeMinutes: number;
   resolutionTimeMinutes: number;
-  availability: string;
+  /** 由 businessHours 配置投影出的展示文案，未配置时为「未配置」 */
   businessHours: string;
-  escalationRules: string[];
-  applicableServices: string[];
-  status: 'active' | 'inactive' | 'draft';
+  escalationLevels: SLAEscalationLevel[];
+  status: 'active' | 'inactive';
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
 }
 
-// 表单值类型
+// 表单值类型：时限字段与后端请求体同单位（分钟），页面不做换算
 export interface SLAFormValues {
   name: string;
   description: string;
   serviceType: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4';
-  responseTime: number;
-  resolutionTime: number;
-  availability: number;
-  businessHours: string;
-  status: 'active' | 'inactive' | 'draft';
+  priority: string;
+  responseTimeMinutes: number;
+  resolutionTimeMinutes: number;
+  isActive: boolean;
 }
 
-// 筛选条件类型
-export interface SLAFilters {
-  search: string;
-  priority: string;
-  status: string;
-  serviceType: string;
+// 列表统计，全部来自后端返回的真实字段
+export interface SLAStats {
+  total: number;
+  active: number;
+  inactive: number;
+  serviceTypeCount: number;
 }

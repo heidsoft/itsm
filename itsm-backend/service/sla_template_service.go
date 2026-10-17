@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,18 +48,19 @@ type SLATemplateService struct {
 	catalog map[string]SLATemplate
 	order   []string
 
-	// 安装状态缓存（key=tenantID:templateKey）
-	mu        sync.RWMutex
-	installed map[string]int // tenantID + ":" + templateKey -> SLADefinitionID
+	// installLocks 串行化同租户同模板的并发安装。进程内互斥挡不住多副本，
+	// 跨副本去重需要 sla_definitions 上的 (tenant_id, template_key) 唯一约束。
+	lockMu       sync.Mutex
+	installLocks map[string]*sync.Mutex
 }
 
 // NewSLATemplateService 创建SLA模板服务
 func NewSLATemplateService(client *ent.Client, logger *zap.SugaredLogger) *SLATemplateService {
 	s := &SLATemplateService{
-		client:    client,
-		logger:    logger,
-		catalog:   make(map[string]SLATemplate),
-		installed: make(map[string]int),
+		client:       client,
+		logger:       logger,
+		catalog:      make(map[string]SLATemplate),
+		installLocks: make(map[string]*sync.Mutex),
 	}
 	s.initCatalog()
 	return s
@@ -251,73 +254,162 @@ func (s *SLATemplateService) ListTemplates() []SLATemplate {
 	return out
 }
 
+// ErrSLATemplateNotFound 让 handler 能把「模板不存在」映射成 404，而不是把一切错误
+// 都说成请求参数错误。
+var ErrSLATemplateNotFound = errors.New("sla template not found")
+
+const (
+	// 安装生成的定义以此前缀命名，用来把模板产物与租户自建 SLA 区分开。
+	slaTemplateNamePrefix = "[Template] "
+	// templateKeyMarker 记在定义的 conditions 里：名称与描述都可能被管理员改掉，
+	// 只靠字符串前缀去重会在改名后重复安装同一模板。
+	templateKeyMarker = "templateKey"
+)
+
+// SLATemplateInstallInfo 是模板在某个租户的安装事实，来源是数据库而不是进程内存。
+type SLATemplateInstallInfo struct {
+	SLADefinitionID int
+	InstalledAt     time.Time
+}
+
+// templateKeyOf 优先读 conditions 里的标记，回落到 description 的
+// 「[Template] <key> - 」约定（标记引入之前装的历史数据）。
+func templateKeyOf(def *ent.SLADefinition) string {
+	if marker, ok := def.Conditions[templateKeyMarker].(string); ok && marker != "" {
+		return marker
+	}
+	rest := strings.TrimPrefix(def.Description, slaTemplateNamePrefix)
+	if rest == def.Description {
+		return ""
+	}
+	if idx := strings.Index(rest, " - "); idx > 0 {
+		return rest[:idx]
+	}
+	return ""
+}
+
+// withTemplateKey 复制 conditions 后写入标记。目录里的 map 是跨租户共享的只读数据，
+// 直接塞标记会让后续安装读到上一个租户的值。
+func withTemplateKey(src map[string]interface{}, key string) map[string]interface{} {
+	out := make(map[string]interface{}, len(src)+1)
+	for k, v := range src {
+		out[k] = v
+	}
+	out[templateKeyMarker] = key
+	return out
+}
+
+// lockInstall 串行化同租户同模板的并发安装。进程内互斥只挡得住单副本的重复点击，
+// 跨副本去重需要 sla_definitions 上的 (tenant_id, template_key) 唯一约束。
+func (s *SLATemplateService) lockInstall(tenantID int, key string) func() {
+	lockKey := fmt.Sprintf("%d:%s", tenantID, key)
+	s.lockMu.Lock()
+	mu, ok := s.installLocks[lockKey]
+	if !ok {
+		mu = &sync.Mutex{}
+		s.installLocks[lockKey] = mu
+	}
+	s.lockMu.Unlock()
+	mu.Lock()
+	return mu.Unlock
+}
+
 // GetTemplate 获取指定模板
 func (s *SLATemplateService) GetTemplate(key string) (*SLATemplate, error) {
 	t, ok := s.catalog[key]
 	if !ok {
-		return nil, fmt.Errorf("template not found: %s", key)
+		return nil, fmt.Errorf("%w: %s", ErrSLATemplateNotFound, key)
 	}
 	return &t, nil
 }
 
+// InstallStates 返回该租户每个在册模板的安装事实。列表展示与安装去重共用这套判定，
+// 显示的状态和实际幂等行为不会分叉。
+//
+// 不能按名称前缀过滤：管理员改掉「[Template]」开头后，记录会从已安装视图里消失，
+// 再点安装就产生第二份相同配置。
+func (s *SLATemplateService) InstallStates(ctx context.Context, tenantID int) (map[string]SLATemplateInstallInfo, error) {
+	states := make(map[string]SLATemplateInstallInfo, len(s.catalog))
+	if s.client == nil {
+		return states, nil
+	}
+
+	defs, err := s.client.SLADefinition.Query().
+		Where(sladefinition.TenantIDEQ(tenantID)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load installed sla templates: %w", err)
+	}
+
+	for _, def := range defs {
+		key := templateKeyOf(def)
+		if key == "" {
+			continue
+		}
+		if _, ok := s.catalog[key]; !ok {
+			continue
+		}
+		if existing, ok := states[key]; ok && !def.CreatedAt.After(existing.InstalledAt) {
+			continue
+		}
+		states[key] = SLATemplateInstallInfo{SLADefinitionID: def.ID, InstalledAt: def.CreatedAt}
+	}
+	return states, nil
+}
+
 // InstallTemplate 将模板安装到租户（生成 SLADefinition）
 //
-// 幂等设计：同一租户对同一模板多次 install 不会产生重复记录；
-// 已存在则返回 wasAlreadyExist=true。
+// 幂等设计：同一租户对同一模板多次 install 不会产生重复记录；已存在则返回
+// wasAlreadyExist=true。身份以写入 conditions 的 templateKey 标记为准，管理员改名
+// 之后重装仍然会被识别成同一模板。
 func (s *SLATemplateService) InstallTemplate(ctx context.Context, key string, tenantID int) (*TemplateInstallResult, error) {
 	tmpl, err := s.GetTemplate(key)
 	if err != nil {
 		return nil, err
 	}
+	if s.client == nil {
+		return nil, errors.New("sla template service is not wired to a database client")
+	}
 
-	// 检查是否已存在同 key 的 SLA Definition（按 name 精确匹配）
-	existing, err := s.client.SLADefinition.Query().
-		Where(
-			sladefinition.TenantIDEQ(tenantID),
-			sladefinition.NameEQ(fmt.Sprintf("[Template] %s", tmpl.Name)),
-		).
-		First(ctx)
-	if err == nil && existing != nil {
-		s.mu.Lock()
-		s.installed[fmt.Sprintf("%d:%s", tenantID, key)] = existing.ID
-		s.mu.Unlock()
-		s.logger.Infow("SLA template already installed", "template", key, "tenant_id", tenantID, "sla_definition_id", existing.ID)
+	release := s.lockInstall(tenantID, key)
+	defer release()
+
+	states, err := s.InstallStates(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	if state, ok := states[key]; ok {
+		s.logger.Infow("SLA template already installed",
+			"template", key, "tenant_id", tenantID, "sla_definition_id", state.SLADefinitionID)
 		return &TemplateInstallResult{
 			TemplateKey:     key,
-			SLADefinitionID: existing.ID,
+			SLADefinitionID: state.SLADefinitionID,
 			Created:         false,
 			WasAlreadyExist: true,
-			Message:         "该模板已安装过，已返回现有 SLA Definition",
+			Message:         "该模板已安装过，已返回现有 SLA 定义",
 		}, nil
 	}
-	if err != nil && !ent.IsNotFound(err) {
-		return nil, fmt.Errorf("failed to check existing template installation: %w", err)
-	}
 
-	// 创建 SLADefinition
+	now := time.Now()
 	created, err := s.client.SLADefinition.Create().
 		SetTenantID(tenantID).
-		SetName(fmt.Sprintf("[Template] %s", tmpl.Name)).
-		SetDescription(fmt.Sprintf("[Template] %s - %s", tmpl.Key, tmpl.Description)).
+		SetName(slaTemplateNamePrefix + tmpl.Name).
+		SetDescription(fmt.Sprintf("%s%s - %s", slaTemplateNamePrefix, tmpl.Key, tmpl.Description)).
 		SetServiceType(tmpl.ServiceType).
 		SetPriority(tmpl.Priority).
 		SetResponseTime(tmpl.ResponseTime).
 		SetResolutionTime(tmpl.ResolutionTime).
 		SetBusinessHours(tmpl.BusinessHours).
 		SetEscalationRules(tmpl.EscalationRules).
-		SetConditions(tmpl.Conditions).
+		SetConditions(withTemplateKey(tmpl.Conditions, tmpl.Key)).
 		SetIsActive(true).
-		SetCreatedAt(time.Now()).
-		SetUpdatedAt(time.Now()).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
 		Save(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to install SLA template", "template", key, "tenant_id", tenantID, "error", err)
-		return nil, fmt.Errorf("failed to install SLA template: %w", err)
+		return nil, fmt.Errorf("failed to install sla template: %w", err)
 	}
-
-	s.mu.Lock()
-	s.installed[fmt.Sprintf("%d:%s", tenantID, key)] = created.ID
-	s.mu.Unlock()
 
 	s.logger.Infow(
 		"SLA template installed successfully",
@@ -332,12 +424,4 @@ func (s *SLATemplateService) InstallTemplate(ctx context.Context, key string, te
 		WasAlreadyExist: false,
 		Message:         fmt.Sprintf("模板 %s 已成功安装", tmpl.Name),
 	}, nil
-}
-
-// IsInstalled 检查模板是否已安装到租户
-func (s *SLATemplateService) IsInstalled(tenantID int, key string) bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	_, ok := s.installed[fmt.Sprintf("%d:%s", tenantID, key)]
-	return ok
 }

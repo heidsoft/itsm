@@ -60,6 +60,11 @@ type UpdateServiceRequestRequest struct {
 type GetServiceCatalogsRequest struct {
 	Category string `json:"category" form:"category"`
 	Status   string `json:"status" form:"status" binding:"omitempty,oneof=enabled disabled"`
+	// Keyword 服务端过滤 name/description，与 /search 同一套匹配口径。
+	// 管理页需要「按状态 + 关键词」检索，/search 固定只看已发布目录，替代不了它。
+	Keyword        string `json:"q" form:"q" binding:"omitempty,max=100"`
+	CiTypeID       int    `json:"ciTypeId" form:"ciTypeId"`
+	CloudServiceID int    `json:"cloudServiceId" form:"cloudServiceId"`
 }
 
 // GetServiceRequestsRequest 获取服务请求列表请求。
@@ -83,20 +88,20 @@ type ServiceCatalogResponse struct {
 	Price             float64                `json:"price,omitempty"`
 	DeliveryTime      string                 `json:"deliveryTime"`
 	Unit              string                 `json:"unit,omitempty"`
-	RequiresApproval  bool                   `json:"requiresApproval,omitempty"`
+	RequiresApproval  bool                   `json:"requiresApproval"`
 	ApprovalLevel     int                    `json:"approvalLevel,omitempty"`
 	Approvers         []int                  `json:"approvers,omitempty"`
 	SLAResponseTime   int                    `json:"slaResponseTime,omitempty"`
 	SLAResolutionTime int                    `json:"slaResolutionTime,omitempty"`
 	SLAID             int                    `json:"slaId,omitempty"`
 	SLAName           string                 `json:"slaName,omitempty"`
-	CITypeID          int                    `json:"ciTypeId,omitempty"`
-	CloudServiceID    int                    `json:"cloudServiceId,omitempty"`
+	CITypeID          int                    `json:"ciTypeId"`
+	CloudServiceID    int                    `json:"cloudServiceId"`
 	FormSchema        map[string]interface{} `json:"formSchema,omitempty"`
 	AvailableRegions  []string               `json:"availableRegions,omitempty"`
 	AvailableSpecs    []string               `json:"availableSpecs,omitempty"`
 	Status            string                 `json:"status"`
-	IsActive          bool                   `json:"isActive,omitempty"`
+	IsActive          bool                   `json:"isActive"`
 	SortOrder         int                    `json:"sortOrder,omitempty"`
 	CreatedAt         time.Time              `json:"createdAt"`
 	UpdatedAt         time.Time              `json:"updatedAt"`
@@ -293,16 +298,17 @@ func ToServiceRequestApprovalResponse(a *ent.ServiceRequestApproval) ServiceRequ
 
 // CreateServiceCatalogRequest 创建服务目录请求
 type CreateServiceCatalogRequest struct {
-	Name              string                 `json:"name" binding:"required,max=255"`
-	Category          string                 `json:"category" binding:"required,max=100"`
-	Description       string                 `json:"description" binding:"omitempty,max=1000"`
-	Icon              string                 `json:"icon" binding:"omitempty,max=255"`
-	ServiceType       string                 `json:"serviceType" binding:"omitempty,oneof=vm rds oss network storage security custom"`
-	Price             float64                `json:"price" binding:"omitempty"`
-	DeliveryTime      string                 `json:"deliveryTime" binding:"omitempty,max=50"`
-	Unit              string                 `json:"unit" binding:"omitempty,oneof=月 次 用户"`
-	RequiresApproval  *bool                  `json:"requiresApproval"`
-	ApprovalLevel     int                    `json:"approvalLevel" binding:"omitempty,min=1,max=3"`
+	Name             string  `json:"name" binding:"required,max=255"`
+	Category         string  `json:"category" binding:"required,max=100"`
+	Description      string  `json:"description" binding:"omitempty,max=1000"`
+	Icon             string  `json:"icon" binding:"omitempty,max=255"`
+	ServiceType      string  `json:"serviceType" binding:"omitempty,oneof=vm rds oss network storage security custom"`
+	Price            float64 `json:"price" binding:"omitempty"`
+	DeliveryTime     string  `json:"deliveryTime" binding:"omitempty,max=50"`
+	Unit             string  `json:"unit" binding:"omitempty,oneof=月 次 用户"`
+	RequiresApproval *bool   `json:"requiresApproval"`
+	// 0 是合法值：审批级别 0 表示「未配置」。此前 min=1 让新建目录无法停留在未配置。
+	ApprovalLevel     int                    `json:"approvalLevel" binding:"omitempty,min=0,max=3"`
 	Approvers         []int                  `json:"approvers"`
 	SLAResponseTime   int                    `json:"slaResponseTime" binding:"omitempty"`
 	SLAResolutionTime int                    `json:"slaResolutionTime" binding:"omitempty"`
@@ -316,17 +322,22 @@ type CreateServiceCatalogRequest struct {
 }
 
 // UpdateServiceCatalogRequest 更新服务目录请求
+//
+// 指针 = 调用方显式提交该字段，因此枚举/范围校验放在 service（nil 表示不动，
+// ""/0/false 表示清空或关闭）。绑定层这里不能挂 oneof/min/max：gin 的校验器对
+// 非空指针仍会跑 oneof，于是「清空计价单位」这种合法 PATCH 会被拦成通用
+// 「请求参数错误」，字段级中文提示也就丢了。
 type UpdateServiceCatalogRequest struct {
 	Name              *string                 `json:"name" binding:"omitempty,max=255"`
 	Category          *string                 `json:"category" binding:"omitempty,max=100"`
 	Description       *string                 `json:"description" binding:"omitempty,max=1000"`
 	Icon              *string                 `json:"icon" binding:"omitempty,max=255"`
-	ServiceType       *string                 `json:"serviceType" binding:"omitempty,oneof=vm rds oss network storage security custom"`
+	ServiceType       *string                 `json:"serviceType" binding:"omitempty,max=50"`
 	Price             *float64                `json:"price"`
 	DeliveryTime      *string                 `json:"deliveryTime" binding:"omitempty,max=50"`
-	Unit              *string                 `json:"unit" binding:"omitempty,oneof=月 次 用户"`
+	Unit              *string                 `json:"unit" binding:"omitempty,max=20"`
 	RequiresApproval  *bool                   `json:"requiresApproval"`
-	ApprovalLevel     *int                    `json:"approvalLevel" binding:"omitempty,min=1,max=3"`
+	ApprovalLevel     *int                    `json:"approvalLevel"`
 	Approvers         []int                   `json:"approvers"`
 	SLAResponseTime   *int                    `json:"slaResponseTime"`
 	SLAResolutionTime *int                    `json:"slaResolutionTime"`
@@ -335,6 +346,6 @@ type UpdateServiceCatalogRequest struct {
 	FormSchema        *map[string]interface{} `json:"formSchema"`
 	AvailableRegions  []string                `json:"availableRegions"`
 	AvailableSpecs    []string                `json:"availableSpecs"`
-	Status            *string                 `json:"status" binding:"omitempty,oneof=enabled disabled"`
+	Status            *string                 `json:"status" binding:"omitempty,max=20"`
 	SortOrder         *int                    `json:"sortOrder"`
 }

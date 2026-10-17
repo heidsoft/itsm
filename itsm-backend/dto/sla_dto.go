@@ -31,21 +31,38 @@ type UpdateSLADefinitionRequest struct {
 	IsActive        *bool                  `json:"isActive,omitempty"`
 }
 
+// SLABusinessHours / SLAEscalationLevel 把存储层的 snake_case JSON 键投影成 API 的 camelCase，
+// 前端不再直接读 business_hours / escalation_rules 的原始键。
+type SLABusinessHours struct {
+	TimeZone  string `json:"timeZone,omitempty"`
+	AlwaysOn  bool   `json:"alwaysOn"`
+	WorkDays  []int  `json:"workDays,omitempty"`
+	StartTime string `json:"startTime,omitempty"`
+	EndTime   string `json:"endTime,omitempty"`
+}
+
+// SLAEscalationLevel 是 escalation_rules.levels[] 在 API 边界的 camelCase 视图。
+type SLAEscalationLevel struct {
+	Level            int      `json:"level"`
+	ThresholdMinutes int      `json:"thresholdMinutes"`
+	NotifyRoles      []string `json:"notifyRoles,omitempty"`
+}
+
 type SLADefinitionResponse struct {
-	ID              int                    `json:"id" example:"1"`
-	Name            string                 `json:"name" example:"标准服务SLA"`
-	Description     string                 `json:"description" example:"标准IT服务的SLA定义"`
-	ServiceType     string                 `json:"serviceType" example:"standard"`
-	Priority        string                 `json:"priority" example:"medium"`
-	ResponseTime    int                    `json:"responseTime" example:"30"`
-	ResolutionTime  int                    `json:"resolutionTime" example:"240"`
-	BusinessHours   map[string]interface{} `json:"businessHours"`
-	EscalationRules map[string]interface{} `json:"escalationRules"`
-	Conditions      map[string]interface{} `json:"conditions"`
-	IsActive        bool                   `json:"isActive" example:"true"`
-	TenantID        int                    `json:"tenantId" example:"1"`
-	CreatedAt       time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
-	UpdatedAt       time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
+	ID               int                    `json:"id" example:"1"`
+	Name             string                 `json:"name" example:"标准服务SLA"`
+	Description      string                 `json:"description" example:"标准IT服务的SLA定义"`
+	ServiceType      string                 `json:"serviceType" example:"standard"`
+	Priority         string                 `json:"priority" example:"medium"`
+	ResponseTime     int                    `json:"responseTime" example:"30"`
+	ResolutionTime   int                    `json:"resolutionTime" example:"240"`
+	BusinessHours    *SLABusinessHours      `json:"businessHours,omitempty"`
+	EscalationLevels []SLAEscalationLevel   `json:"escalationLevels,omitempty"`
+	Conditions       map[string]interface{} `json:"conditions"`
+	IsActive         bool                   `json:"isActive" example:"true"`
+	TenantID         int                    `json:"tenantId" example:"1"`
+	CreatedAt        time.Time              `json:"createdAt" example:"2024-01-01T00:00:00Z"`
+	UpdatedAt        time.Time              `json:"updatedAt" example:"2024-01-01T00:00:00Z"`
 }
 
 // SLA违规相关DTO

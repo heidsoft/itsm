@@ -782,13 +782,200 @@ func TestGetUserMenus_Unauthenticated_Mock(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
-	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/users/me/menus", nil)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/auth/menus", nil)
 	// 不设置 user_id → 401
 
 	h.GetUserMenus(c)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 	menu.AssertNotCalled(t, "GetUserMenus")
+}
+
+// menuCtx 构造带 tenant_id/role 的请求上下文。
+// mockCtx 只写 TenantContextKey，菜单 handler 读的是 c.Get("tenant_id")。
+func menuCtx(method, path, body string, tenantID int, role string) (*httptest.ResponseRecorder, *gin.Context) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	if body != "" {
+		c.Request = httptest.NewRequest(method, path, bytes.NewBufferString(body))
+		c.Request.Header.Set("Content-Type", "application/json")
+	} else {
+		c.Request = httptest.NewRequest(method, path, nil)
+	}
+	if tenantID > 0 {
+		c.Set("tenant_id", tenantID)
+	}
+	c.Set("user_id", 1)
+	c.Set("role", role)
+	c.Params = gin.Params{{Key: "id", Value: "1"}}
+	return w, c
+}
+
+// 契约锁：GET /api/v1/menus 返回标准列表信封 items/total/page/pageSize/totalPages，
+// 菜单投影全部 camelCase。前端 menu-api.ts 按 items 读取，任何 menus 别名都是漂移。
+func TestListMenus_Envelope_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	parentID := 1
+	permissionCode := "incident:read"
+	menu.On("ListMenus", mock.Anything, 7).Return([]*dto.MenuDTO{
+		{ID: 1, Name: "服务台", Path: "/dashboard", Icon: "LayoutDashboard", SortOrder: 10, TenantID: 7, IsVisible: true, IsEnabled: true},
+		{ID: 2, Name: "事件管理", Path: "/incidents", ParentID: &parentID, PermissionCode: &permissionCode, SortOrder: 30, TenantID: 7, IsVisible: true, IsEnabled: true},
+	}, nil)
+
+	w, c := menuCtx(http.MethodGet, "/api/v1/menus", "", 7, "admin")
+	h.ListMenus(c)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	require.Equal(t, common.SuccessCode, envelope.Code)
+
+	var data struct {
+		Items      []map[string]any `json:"items"`
+		Total      int              `json:"total"`
+		Page       int              `json:"page"`
+		PageSize   int              `json:"pageSize"`
+		TotalPages int              `json:"totalPages"`
+	}
+	require.NoError(t, json.Unmarshal(envelope.Data, &data))
+	assert.Len(t, data.Items, 2)
+	assert.Equal(t, 2, data.Total)
+	assert.Equal(t, 1, data.Page)
+	assert.Equal(t, 2, data.PageSize)
+	assert.Equal(t, 1, data.TotalPages)
+
+	assert.Equal(t, "事件管理", data.Items[1]["name"])
+	assert.EqualValues(t, 1, data.Items[1]["parentId"])
+	assert.Equal(t, "incident:read", data.Items[1]["permissionCode"])
+	assert.EqualValues(t, 7, data.Items[1]["tenantId"])
+	assert.Equal(t, true, data.Items[1]["isVisible"])
+	assert.Equal(t, true, data.Items[1]["isEnabled"])
+
+	assert.NotContains(t, string(envelope.Data), `"menus"`)
+	assert.NotContains(t, w.Body.String(), "permission_code")
+	assert.NotContains(t, w.Body.String(), "tenant_id")
+	menu.AssertExpectations(t)
+}
+
+// 跨租户查看配置只允许超管，且普通管理员的请求不得触达任何租户查询。
+func TestListMenus_TenantOverride_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	w, c := menuCtx(http.MethodGet, "/api/v1/menus?tenantId=9", "", 7, "agent")
+	h.ListMenus(c)
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	var denied rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &denied))
+	assert.Equal(t, common.ForbiddenCode, denied.Code)
+	menu.AssertNotCalled(t, "ListMenus")
+
+	menu.On("ListMenus", mock.Anything, 9).Return([]*dto.MenuDTO{}, nil)
+	granted, gctx := menuCtx(http.MethodGet, "/api/v1/menus?tenantId=9", "", 7, "super_admin")
+	h.ListMenus(gctx)
+	assert.Equal(t, http.StatusOK, granted.Code)
+	assert.Contains(t, granted.Body.String(), `"items":[]`)
+	menu.AssertExpectations(t)
+}
+
+// 缺少租户上下文必须 fail closed，不得回退到默认租户查全表。
+func TestListMenus_MissingTenantContext_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	w, c := menuCtx(http.MethodGet, "/api/v1/menus", "", 0, "admin")
+	h.ListMenus(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	assert.Equal(t, common.UnauthorizedCode, envelope.Code)
+	menu.AssertNotCalled(t, "ListMenus")
+}
+
+// PUT 的 parentId 0 / permissionCode 空串是「清除」，不能让指针绑定把它们吞成未传。
+func TestUpdateMenu_ExplicitClearPayload_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	menu.On("UpdateMenu", mock.Anything, 5, mock.MatchedBy(func(req *dto.UpdateMenuRequest) bool {
+		return req.ParentID != nil && *req.ParentID == 0 &&
+			req.PermissionCode != nil && *req.PermissionCode == ""
+	}), 7).Return(&dto.MenuDTO{
+		ID: 5, Name: "工单管理", Path: "/tickets", SortOrder: 20, TenantID: 7, IsVisible: true, IsEnabled: true,
+	}, nil)
+
+	w, c := menuCtx(http.MethodPut, "/api/v1/menus/5", `{"parentId":0,"permissionCode":""}`, 7, "admin")
+	c.Params = gin.Params{{Key: "id", Value: "5"}}
+	h.UpdateMenu(c)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	require.Equal(t, common.SuccessCode, envelope.Code)
+	// 清除后不再回带 parentId / permissionCode，前端据此把行还原为顶级、无权限码
+	assert.NotContains(t, string(envelope.Data), `"parentId"`)
+	assert.NotContains(t, string(envelope.Data), `"permissionCode"`)
+	menu.AssertExpectations(t)
+}
+
+// 服务层判定上级菜单不可用时必须映射成 400，不能兜底成 500。
+func TestUpdateMenu_InvalidParentMapsToBadRequest_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	menu.On("UpdateMenu", mock.Anything, 5, mock.Anything, 7).
+		Return((*dto.MenuDTO)(nil), common.NewValidationError("上级菜单不存在或不属于当前租户", nil))
+
+	w, c := menuCtx(http.MethodPut, "/api/v1/menus/5", `{"parentId":99}`, 7, "admin")
+	c.Params = gin.Params{{Key: "id", Value: "5"}}
+	h.UpdateMenu(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	assert.Equal(t, common.BadRequestCode, envelope.Code)
+	assert.Equal(t, "上级菜单不存在或不属于当前租户", envelope.Message)
+}
+
+// TestDeleteMenu_ConflictMapsTo409 证明「还有子菜单」是客户端可处理的冲突，
+// 而不是被兜底成 500/5001 的内部错误。
+func TestDeleteMenu_ConflictMapsTo409_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	menu.On("DeleteMenu", mock.Anything, 5, 7).
+		Return(common.NewBusinessError(common.ConflictCode, "请先删除子菜单", "menu_id=5 children=2"))
+
+	w, c := menuCtx(http.MethodDelete, "/api/v1/menus/5", "", 7, "admin")
+	c.Params = gin.Params{{Key: "id", Value: "5"}}
+	h.DeleteMenu(c)
+
+	assert.Equal(t, http.StatusConflict, w.Code, w.Body.String())
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	assert.Equal(t, common.ConflictCode, envelope.Code)
+	assert.Equal(t, "请先删除子菜单", envelope.Message)
+}
+
+// TestDeleteMenu_UnknownIsNotFound 关掉「删除不存在的菜单也返回成功」的静默路径。
+func TestDeleteMenu_UnknownIsNotFound_Mock(t *testing.T) {
+	menu := &mockMenuService{}
+	h := newMockRbacHandler(t, &mockRoleService{}, &mockPermissionService{}, menu)
+
+	menu.On("DeleteMenu", mock.Anything, 999999, 7).
+		Return(common.NewNotFoundError("menu"))
+
+	w, c := menuCtx(http.MethodDelete, "/api/v1/menus/999999", "", 7, "admin")
+	c.Params = gin.Params{{Key: "id", Value: "999999"}}
+	h.DeleteMenu(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code, w.Body.String())
+	var envelope rbacEnvelope
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	assert.Equal(t, common.NotFoundCode, envelope.Code)
 }
 
 // 直接引用哨兵，防止重构时误删错误语义。

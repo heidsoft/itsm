@@ -211,10 +211,68 @@ func TestSLAHandler_AlertRule_CRUD(t *testing.T) {
 		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
 	})
 
-	t.Run("按 SLA ID 过滤告警规则", func(t *testing.T) {
-		resp := doSLAReq(t, r, "GET", "/api/v1/sla/alert-rules?sla_definition_id="+itoaSLA(defID), nil, false)
-		assert.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+	t.Run("按 SLA ID 过滤告警规则（camelCase 查询参数）", func(t *testing.T) {
+		other := doSLAReq(t, r, "POST", "/api/v1/sla/definitions", dto.CreateSLADefinitionRequest{
+			Name: "另一条定义", ResponseTime: 15, ResolutionTime: 120, IsActive: true,
+		}, false)
+		require.Equal(t, common.SuccessCode, other.Code)
+		otherID := int(other.Data.(map[string]interface{})["id"].(float64))
+		otherRule := doSLAReq(t, r, "POST", "/api/v1/sla/alert-rules", dto.CreateSLAAlertRuleRequest{
+			SLADefinitionID:      otherID,
+			Name:                 "其他定义的规则",
+			ThresholdPercentage:  50,
+			AlertLevel:           "warning",
+			NotificationChannels: []string{"email"},
+			IsActive:             true,
+		}, false)
+		require.Equal(t, common.SuccessCode, otherRule.Code, "body=%s", slaStr(otherRule))
+
+		resp := doSLAReq(t, r, "GET", "/api/v1/sla/alert-rules?slaDefinitionId="+itoaSLA(defID), nil, false)
+		require.Equal(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+		items := resp.Data.([]interface{})
+		require.NotEmpty(t, items)
+		for _, raw := range items {
+			rule := raw.(map[string]interface{})
+			assert.Equal(t, float64(defID), rule["slaDefinitionId"], "过滤必须生效，不得返回其他定义的规则")
+		}
 	})
+}
+
+// TestSLAHandler_CreateAlertRuleRejectsCrossTenantDefinition 锁定：创建告警规则时
+// slaDefinitionId 必须属于当前租户，禁止跨租户引用注入。
+func TestSLAHandler_CreateAlertRuleRejectsCrossTenantDefinition(t *testing.T) {
+	r, client, _ := setupSLAHandler(t)
+	ctx := context.Background()
+
+	tenantB, err := client.Tenant.Create().
+		SetName("SLA Tenant B").
+		SetCode("SLAB" + slaUniqueID()).
+		SetDomain("sla-b2.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+	definitionB, err := client.SLADefinition.Create().
+		SetName("Tenant B SLA").
+		SetResponseTime(30).
+		SetResolutionTime(240).
+		SetIsActive(true).
+		SetTenantID(tenantB.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	resp := doSLAReq(t, r, http.MethodPost, "/api/v1/sla/alert-rules", dto.CreateSLAAlertRuleRequest{
+		SLADefinitionID:      definitionB.ID,
+		Name:                 "跨租户注入",
+		ThresholdPercentage:  80,
+		AlertLevel:           "warning",
+		NotificationChannels: []string{"email"},
+		IsActive:             true,
+	}, false)
+	assert.NotEqual(t, common.SuccessCode, resp.Code, "body=%s", slaStr(resp))
+
+	count, err := client.SLAAlertRule.Query().Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, 0, count, "跨租户引用必须被拒绝，不得落库")
 }
 
 func TestSLAHandler_UpdateAlertRuleRejectsCrossTenant(t *testing.T) {

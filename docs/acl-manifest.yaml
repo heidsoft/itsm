@@ -726,7 +726,7 @@ routes:
     source: router.go:821
   - method: POST
     path: /api/v1/tickets/automation-rules
-    permission: automation_rule.create
+    permission: automation_rule.write
     menu: v1
     description: 创建
     source: router.go:822
@@ -738,31 +738,31 @@ routes:
     source: router.go:823
   - method: PUT
     path: /api/v1/tickets/automation-rules/:id
-    permission: automation_rule.update
+    permission: automation_rule.write
     menu: v1
     description: 更新
     source: router.go:824
   - method: DELETE
     path: /api/v1/tickets/automation-rules/:id
-    permission: automation_rule.delete
+    permission: automation_rule.write
     menu: v1
     description: 删除
     source: router.go:825
   - method: POST
     path: /api/v1/tickets/automation-rules/:id/test
-    permission: automation_rule.update
+    permission: automation_rule.write
     menu: v1
     description: 创建
     source: router.go:826
   - method: POST
     path: /api/v1/tickets/:id/auto-assign
-    permission: assignment_rule.update
+    permission: ticket.assign
     menu: v1
     description: 创建
     source: router.go:831
   - method: GET
     path: /api/v1/tickets/assign-recommendations/:id
-    permission: assignment_rule.read
+    permission: ticket.assign
     menu: v1
     description: 列表
     source: router.go:832
@@ -774,13 +774,13 @@ routes:
     source: router.go:833
   - method: POST
     path: /api/v1/tickets/assignment-rules
-    permission: assignment_rule.create
+    permission: assignment_rule.write
     menu: v1
     description: 创建
     source: router.go:834
   - method: POST
     path: /api/v1/tickets/assignment-rules/test
-    permission: assignment_rule.update
+    permission: assignment_rule.write
     menu: v1
     description: 创建
     source: router.go:835
@@ -792,13 +792,13 @@ routes:
     source: router.go:836
   - method: PUT
     path: /api/v1/tickets/assignment-rules/:id
-    permission: assignment_rule.update
+    permission: assignment_rule.write
     menu: v1
     description: 更新
     source: router.go:837
   - method: DELETE
     path: /api/v1/tickets/assignment-rules/:id
-    permission: assignment_rule.delete
+    permission: assignment_rule.write
     menu: v1
     description: 删除
     source: router.go:838
@@ -863,12 +863,6 @@ routes:
     description: 列表
     source: router.go:880
   - method: GET
-    path: /api/v1/system-configs/init
-    permission: config.read
-    menu: v1
-    description: 列表
-    source: router.go:889
-  - method: GET
     path: /api/v1/system-configs/:id
     permission: config.read
     menu: v1
@@ -898,12 +892,6 @@ routes:
     menu: v1
     description: 列表
     source: router.go:896
-  - method: GET
-    path: /api/v1/configs/init
-    permission: config.read
-    menu: v1
-    description: 列表
-    source: router.go:930
   - method: GET
     path: /api/v1/configs/:id
     permission: config.read

@@ -79,13 +79,15 @@ describe('CIRelationshipAPI', () => {
     it('should get topology graph', async () => {
       mockGet.mockResolvedValue({ nodes: [], edges: [], rootCiId: 1, depth: 3, totalNodes: 0, totalEdges: 0 });
       const result = await CIRelationshipAPI.getTopologyGraph(1, 3);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology?depth=3');
+      // depth 经 httpClient.get 的 params 序列化进 query string（URLSearchParams），
+      // 调用层不再手工拼 URL——契约是「endpoint + params」，不是拼好的字符串。
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology', { depth: 3 });
     });
 
     it('should get topology graph without depth', async () => {
       mockGet.mockResolvedValue({ nodes: [], edges: [] });
       await CIRelationshipAPI.getTopologyGraph(1);
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology');
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/cmdb/cis/1/topology', undefined);
     });
   });
 
