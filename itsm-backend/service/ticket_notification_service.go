@@ -27,7 +27,6 @@ type TicketNotificationService struct {
 	client          *ent.Client
 	logger          *zap.SugaredLogger
 	emailService    *EmailService
-	smsService      *SMSService
 	outboxEnabled   bool
 	txOutboxEnabled bool
 }
@@ -51,11 +50,6 @@ func NewTicketNotificationService(client *ent.Client, logger *zap.SugaredLogger)
 // SetEmailService 设置邮件服务
 func (s *TicketNotificationService) SetEmailService(emailService *EmailService) {
 	s.emailService = emailService
-}
-
-// SetSMSService 设置短信服务
-func (s *TicketNotificationService) SetSMSService(smsService *SMSService) {
-	s.smsService = smsService
 }
 
 // SendNotification 发送工单通知
@@ -180,17 +174,12 @@ func (s *TicketNotificationService) SendNotification(
 							}
 						}
 					case "sms":
-						if s.smsService != nil && userEntity.Phone != "" {
-							sendErr = s.smsService.SendTicketNotification(
-								ctx,
-								[]string{userEntity.Phone},
-								ticketEntity.TicketNumber,
-								req.Type,
-							)
-							if sendErr != nil {
-								s.logger.Errorw("Failed to send SMS notification", "error", sendErr, "user_id", userID)
-							}
-						}
+						// 短信渠道在直发路径未接线（生产短信能力由
+						// incident_alerting_service.SMSChannel 单一所有者承载，
+						// alerting.sms 配置驱动；工单通知 outbox 路径经 connector
+						// manager 投递）。原 TicketNotification 侧的 Aliyun 第二副本
+						// 从未被 SetSMSService 装配，属永不触发的死路径，已随
+						// sms_service.go 一并移除；恢复该渠道时接能力所有者而非复制实现。
 					}
 				}
 
@@ -594,26 +583,9 @@ func (s *TicketNotificationService) NotifySLABreached(
 		}
 	}
 
-	// 3. 短信通知（严重级别时）
-	if exceededMinutes > 60 && s.smsService != nil {
-		var phones []string
-		for _, userID := range userIDs {
-			userEntity, _ := s.client.User.Get(ctx, userID)
-			if userEntity != nil && userEntity.Phone != "" {
-				phones = append(phones, userEntity.Phone)
-			}
-		}
-		if len(phones) > 0 {
-			smsContent := fmt.Sprintf("【ITSM系统】SLA告警：工单 %s 的%s已超时 %.1f 分钟，请立即处理！",
-				ticket.TicketNumber, slaType, exceededMinutes)
-			if err := s.smsService.Send(ctx, &SMSMessage{
-				PhoneNumbers: phones,
-				Content:      smsContent,
-			}); err != nil {
-				s.logger.Warnw("failed to send SLA breach SMS notification", "error", err, "ticket_id", ticketID)
-			}
-		}
-	}
+	// 3. 短信通知由 incident_alerting_service.SMSChannel 承载（alerting.sms 配置驱动）。
+	// 原 TicketNotification 侧的 Aliyun 短信第二副本从未被 SetSMSService 装配，
+	// 属永不触发的死路径，已随 sms_service.go 一并移除。
 
 	return nil
 }
