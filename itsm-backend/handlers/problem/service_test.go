@@ -279,3 +279,85 @@ func TestProblemAssigneeCrossTenantRejected(t *testing.T) {
 	require.NotNil(t, fetched.AssigneeID)
 	assert.Equal(t, sameTenantAssignee.ID, *fetched.AssigneeID)
 }
+
+// TestProblemRepositoryUpdate_CASRejectsStaleStatus 回归：Update 曾是
+// read-then-unconditional-write（仅 id+tenant 谓词）——领域 service 基于
+// 读取时的状态完成流转校验后，并发窗口内状态被推进时，陈旧校验结论会
+// 覆盖落库（绕过状态机）。修复后 CAS 预期不匹配 → ErrProblemStatusMoved。
+func TestProblemRepositoryUpdate_CASRejectsStaleStatus(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenant := createProblemHandlerTenant(t, ctx, client, "cas")
+	owner := createProblemHandlerUser(t, ctx, client, tenant.ID, "cas-owner")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, owner.ID)
+	require.Equal(t, "open", p.Status)
+
+	repo := NewEntRepository(client)
+
+	// ① 预期与真实一致 → 正常写入。
+	current, err := repo.Get(ctx, p.ID, tenant.ID)
+	require.NoError(t, err)
+	current.Title = "CAS 正常推进改名"
+	saved, err := repo.Update(ctx, current, "open")
+	require.NoError(t, err)
+	assert.Equal(t, "CAS 正常推进改名", saved.Title)
+
+	// ② 并发模拟：状态被推进到 resolved 后，携带陈旧预期 open 的写入必须拒绝。
+	_, err = client.Problem.UpdateOneID(p.ID).SetStatus("resolved").Save(ctx)
+	require.NoError(t, err)
+
+	fresh, err := repo.Get(ctx, p.ID, tenant.ID)
+	require.NoError(t, err)
+	stale := *fresh
+	stale.Title = "陈旧校验不应落库"
+	_, err = repo.Update(ctx, &stale, "open")
+	require.Error(t, err)
+	require.ErrorIs(t, err, ErrProblemStatusMoved, "陈旧预期必须返回类型化冲突哨兵")
+
+	// ③ 状态未被陈旧写覆盖。
+	reloaded, err := repo.Get(ctx, p.ID, tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "resolved", reloaded.Status, "CAS 未命中时不得覆盖落库")
+}
+
+// staleViewProblemRepo 包装仓储：Get 固定返回捕获的陈旧快照（模拟并发窗口），
+// 其余方法透传真实仓储，使 CAS 语义作用于真实存储。
+type staleViewProblemRepo struct {
+	Repository
+	view *Problem
+}
+
+func (r *staleViewProblemRepo) Get(ctx context.Context, id, tenantID int) (*Problem, error) {
+	return r.view, nil
+}
+
+// TestProblemServiceUpdate_StatusMoved_MapConflict service 汇合层映射：
+// CAS 未命中（读取到写入之间状态被并发推进）必须返回 BusinessError(409)，
+// 而不是被当成 not-found 或内部错误。
+func TestProblemServiceUpdate_StatusMoved_MapConflict(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenant := createProblemHandlerTenant(t, ctx, client, "casm")
+	owner := createProblemHandlerUser(t, ctx, client, tenant.ID, "casm-owner")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, owner.ID)
+
+	realRepo := NewEntRepository(client)
+	view, err := realRepo.Get(ctx, p.ID, tenant.ID)
+	require.NoError(t, err)
+	require.Equal(t, "open", view.Status)
+
+	// 并发推进：真实状态已被另一请求 resolved；service 持有陈旧快照。
+	_, err = client.Problem.UpdateOneID(p.ID).SetStatus("resolved").Save(ctx)
+	require.NoError(t, err)
+
+	movedSvc := NewService(&staleViewProblemRepo{Repository: realRepo, view: view}, service.validator, service.logger)
+	_, err = movedSvc.Update(ctx, tenant.ID, p.ID, &Problem{Status: "closed"}, owner.ID, "manager")
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "CAS 未命中必须映射为 BusinessError")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// 真实状态保持 resolved，未被陈旧校验结论覆盖。
+	reloaded, err := realRepo.Get(ctx, p.ID, tenant.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "resolved", reloaded.Status)
+}

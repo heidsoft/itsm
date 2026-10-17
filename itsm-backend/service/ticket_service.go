@@ -208,19 +208,10 @@ func (s *TicketService) syncTicketToFeishuLegacyAsync(tkt *ticket.Ticket, tenant
 		if !ok {
 			return
 		}
-		tx, err := s.client.Tx(ctx2)
-		if err != nil {
-			s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
-			return
-		}
-		defer tx.Rollback()
-		_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(tkt))
-		if err != nil {
+		// 命令纪律：数据库事务内禁止连接器/HTTP 外部调用——mapping 读写
+		// 由 SyncTicketToFeishu 内部短事务分相处理，不再包一层 tx。
+		if _, err := feishuConn.SyncTicketToFeishu(ctx2, s.client, s.toEntTicket(tkt)); err != nil {
 			s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", tkt.ID)
-			return
-		}
-		if err := tx.Commit(); err != nil {
-			s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", tkt.ID)
 			return
 		}
 	}()
@@ -2637,22 +2628,10 @@ func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, custo
 			if !ok {
 				return
 			}
-			// 开启事务
-			tx, err := s.client.Tx(ctx2)
-			if err != nil {
-				s.logger.Warnw("Failed to start transaction for feishu sync", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			defer tx.Rollback()
-			// 同步工单到飞书
-			_, err = feishuConn.SyncTicketToFeishu(ctx2, tx, s.toEntTicket(updated))
-			if err != nil {
+			// 命令纪律：数据库事务内禁止连接器/HTTP 外部调用——mapping 读写
+			// 由 SyncTicketToFeishu 内部短事务分相处理，不再包一层 tx。
+			if _, err := feishuConn.SyncTicketToFeishu(ctx2, s.client, s.toEntTicket(updated)); err != nil {
 				s.logger.Warnw("Failed to sync ticket to feishu", "error", err, "ticket_id", updated.ID)
-				return
-			}
-			// 提交事务
-			if err := tx.Commit(); err != nil {
-				s.logger.Warnw("Failed to commit transaction for feishu sync", "error", err, "ticket_id", updated.ID)
 				return
 			}
 		}()

@@ -61,16 +61,10 @@ func (h *TicketFeishuSyncCommandHandler) Handle(ctx context.Context, cmd *ent.Op
 	if err != nil {
 		return fmt.Errorf("load ticket for feishu sync: %w", err)
 	}
-	tx, err := h.client.Tx(syncCtx)
-	if err != nil {
-		return fmt.Errorf("begin feishu sync transaction: %w", err)
-	}
-	defer tx.Rollback()
-	if _, err := feishu.SyncTicketToFeishu(syncCtx, tx, tkt); err != nil {
+	// 命令纪律：数据库事务内禁止连接器/HTTP 外部调用。SyncTicketToFeishu
+	// 已按「短事务 claim → 外呼 → 短事务落结果」分相内部处理，直接传 client。
+	if _, err := feishu.SyncTicketToFeishu(syncCtx, h.client, tkt); err != nil {
 		return fmt.Errorf("sync ticket to feishu: %w", err)
-	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit feishu sync: %w", err)
 	}
 	return nil
 }

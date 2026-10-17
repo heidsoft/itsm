@@ -2,6 +2,7 @@ package problem
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -132,6 +133,11 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 	// Update fields if they are set (non-zero/non-empty check in Handler or here)
 	// Here assuming 'p' contains only fields to update usually, but domain entity isn't partial.
 	// We merge changes here.
+	// CAS 预期：读取时的状态。service 校验与仓储写入之间的并发窗口里若状态被
+	// 推进（如另一请求已完成 resolved→closed），条件更新未命中 → 409 冲突，
+	// 绝不允许用本次校验结论覆盖推进后的状态。
+	expectedStatus := existing.Status
+
 	if p.Title != "" {
 		existing.Title = p.Title
 	}
@@ -206,7 +212,18 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		existing.AssigneeID = p.AssigneeID
 	}
 
-	return s.repo.Update(ctx, existing)
+	result, err := s.repo.Update(ctx, existing, expectedStatus)
+	if err != nil {
+		if errors.Is(err, ErrProblemStatusMoved) {
+			return nil, common.NewBusinessError(
+				common.ConflictCode,
+				"问题单状态已被并发修改，请刷新后重试",
+				fmt.Sprintf("期望状态 '%s'", expectedStatus),
+			)
+		}
+		return nil, err
+	}
+	return result, nil
 }
 
 // InvestigateProblem starts the investigation lifecycle for a problem.

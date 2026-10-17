@@ -210,6 +210,13 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		for _, t := range tickets {
 			slState := slaStateMap[t.ID]
 
+			// paused 工单计时冻结：deadline 尚未经 ResumeSLA 延长，此时按
+			// 原 deadline 判定会误判违例/预警（暂停语义 = 不计时）。
+			// 恢复后由 ResumeSLA 按延长后的 deadline 回收违规。
+			if t.SLAStatus == "paused" {
+				continue
+			}
+
 			// 检查是否需要发送预警（在SLA截止前）
 			if s.alertService != nil {
 				if warned := s.checkAndTriggerWarning(ctx, t, slState, now); warned {
@@ -354,6 +361,11 @@ func (s *SLAMonitorService) checkIncidentSLAViolations(ctx context.Context, tena
 	for _, inc := range incidents {
 		slState := slaStateMap[inc.ID]
 
+		// paused 事件计时冻结：同工单逻辑，跳过违例判定，恢复后回收。
+		if inc.SLAStatus == "paused" {
+			continue
+		}
+
 		// 响应时间 SLA
 		if slState != nil && slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() && now.After(slState.ResponseDeadline) {
 			existingMap := existingViolationMap[inc.ID]
@@ -456,7 +468,9 @@ func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *en
 		SetSLADefinitionID(slaDefinitionID).
 		SetSLAName(slaName).
 		SetViolationType(violationType).
-		SetViolationTime(now).
+		// 同 createViolation：口径锚定 deadline（权威违约时刻）。
+		SetViolationTime(deadline).
+		SetViolationOccurredAt(deadline).
 		SetDescription(description).
 		SetSeverity(severity).
 		SetIsResolved(false).
@@ -584,7 +598,10 @@ func (s *SLAMonitorService) createViolation(ctx context.Context, t *ent.Ticket, 
 		SetSLADefinitionID(slaDefinitionID).
 		SetSLAName(slaName).
 		SetViolationType(violationType).
-		SetViolationTime(now).
+		// 违规口径锚定权威时间戳：真正违约发生在 deadline 被突破的瞬间，
+		// 而不是后台扫描把违例发现的时刻（扫描周期波动会让口径漂移）。
+		SetViolationTime(deadline).
+		SetViolationOccurredAt(deadline).
 		SetDescription(description).
 		SetSeverity(severity).
 		SetIsResolved(false).
@@ -938,6 +955,48 @@ func (s *SLAMonitorService) PauseSLA(ctx context.Context, tenantID int, entityTy
 	}
 }
 
+// recycleResolvedViolations SLA 计时恢复后，对未 resolved 的违规按延长后的
+// deadline 重新判定：deadline 不再被突破 → 标记 resolved（自动回收）。
+// 不回收会让陈旧违规永久留存，误导 MTTR/超时统计与升级决策；口径锚定
+// ResumeSLA 的 now（服务端权威时钟）与延长后的 deadline。
+func (s *SLAMonitorService) recycleResolvedViolations(ctx context.Context, tenantID int, entityType string, entityID int, respDeadline, resDeadline time.Time) error {
+	now := time.Now()
+	type recycledViolation struct {
+		violationType string
+		deadline      time.Time
+	}
+	var candidates []recycledViolation
+	if !respDeadline.IsZero() && !now.After(respDeadline) {
+		candidates = append(candidates, recycledViolation{"response_time", respDeadline})
+	}
+	if !resDeadline.IsZero() && !now.After(resDeadline) {
+		candidates = append(candidates, recycledViolation{"resolution_time", resDeadline})
+	}
+	for _, c := range candidates {
+		affected, err := s.client.SLAViolation.Update().
+			Where(
+				slaviolation.TenantIDEQ(tenantID),
+				slaviolation.TicketIDEQ(entityID),
+				slaviolation.TicketTypeEQ(entityType),
+				slaviolation.ViolationTypeEQ(c.violationType),
+				slaviolation.IsResolvedEQ(false),
+			).
+			SetIsResolved(true).
+			SetResolvedAt(now).
+			SetResolutionNotes("SLA 自动回收：计时恢复后 deadline 已延长，原违规不再成立").
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		if affected > 0 {
+			s.logger.Infow("Recycled SLA violation after resume",
+				"entity_type", entityType, "entity_id", entityID,
+				"violation_type", c.violationType, "affected", affected, "tenant_id", tenantID)
+		}
+	}
+	return nil
+}
+
 // ResumeSLA 恢复工单/事件的SLA计时，将暂停时长追加到deadline
 func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityType string, entityID int) error {
 	now := time.Now()
@@ -970,17 +1029,24 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
 
+		var extendedResp, extendedRes time.Time
 		if !slState.PausedAt.IsZero() {
 			pausedDuration := now.Sub(slState.PausedAt)
 			if !slState.ResponseDeadline.IsZero() {
-				updater.SetSLAResponseDeadline(slState.ResponseDeadline.Add(pausedDuration))
+				extendedResp = slState.ResponseDeadline.Add(pausedDuration)
+				updater.SetSLAResponseDeadline(extendedResp)
 			}
 			if !slState.ResolutionDeadline.IsZero() {
-				updater.SetSLAResolutionDeadline(slState.ResolutionDeadline.Add(pausedDuration))
+				extendedRes = slState.ResolutionDeadline.Add(pausedDuration)
+				updater.SetSLAResolutionDeadline(extendedRes)
 			}
 		}
 		if err := updater.Exec(ctx); err != nil {
 			return err
+		}
+		// 回收：resume 已把暂停时长并入 deadline，原违例可能不再成立。
+		if recycleErr := s.recycleResolvedViolations(ctx, tenantID, entityType, entityID, extendedResp, extendedRes); recycleErr != nil {
+			s.logger.Warnw("Failed to recycle SLA violations after ticket resume", "ticket_id", entityID, "error", recycleErr)
 		}
 		// 双写：同步恢复 sla_states
 		if s.slaStore != nil {
@@ -1016,17 +1082,24 @@ func (s *SLAMonitorService) ResumeSLA(ctx context.Context, tenantID int, entityT
 			ClearSLAPausedAt().
 			ClearSLAPauseReason()
 
+		var extendedResp, extendedRes time.Time
 		if !slState.PausedAt.IsZero() {
 			pausedDuration := now.Sub(slState.PausedAt)
 			if !slState.ResponseDeadline.IsZero() {
-				updater.SetSLAResponseDeadline(slState.ResponseDeadline.Add(pausedDuration))
+				extendedResp = slState.ResponseDeadline.Add(pausedDuration)
+				updater.SetSLAResponseDeadline(extendedResp)
 			}
 			if !slState.ResolutionDeadline.IsZero() {
-				updater.SetSLAResolutionDeadline(slState.ResolutionDeadline.Add(pausedDuration))
+				extendedRes = slState.ResolutionDeadline.Add(pausedDuration)
+				updater.SetSLAResolutionDeadline(extendedRes)
 			}
 		}
 		if err := updater.Exec(ctx); err != nil {
 			return err
+		}
+		// 回收：resume 已把暂停时长并入 deadline，原违例可能不再成立。
+		if recycleErr := s.recycleResolvedViolations(ctx, tenantID, entityType, entityID, extendedResp, extendedRes); recycleErr != nil {
+			s.logger.Warnw("Failed to recycle SLA violations after incident resume", "incident_id", entityID, "error", recycleErr)
 		}
 		// 双写：同步恢复 sla_states
 		if s.slaStore != nil {

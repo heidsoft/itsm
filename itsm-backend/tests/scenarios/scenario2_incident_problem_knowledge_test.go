@@ -40,9 +40,9 @@ func TestScenario2_IncidentProblemKnowledgeLoop(t *testing.T) {
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
 	// 问题域走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), logger)）；service.NewProblemService
+	// problem.NewService(problem.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)）；service.NewProblemService
 	// 没有任何生产构造点，测它证明不了业务流。
-	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), logger)
+	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 
 	// tenant A 在闭环里创建的问题 ID，供后面的跨租户拒绝用例复用；

@@ -12,6 +12,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service"
 	"itsm-backend/ent/problem"
 	problemHandler "itsm-backend/handlers/problem"
 	"itsm-backend/middleware"
@@ -56,7 +57,7 @@ func TestProblemListRouteEnvelopeAndPagination(t *testing.T) {
 	t.Cleanup(func() { client.Close() })
 
 	logger := zaptest.NewLogger(t).Sugar()
-	handler := problemHandler.NewHandler(problemHandler.NewService(problemHandler.NewEntRepository(client), logger))
+	handler := problemHandler.NewHandler(problemHandler.NewService(problemHandler.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger))
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

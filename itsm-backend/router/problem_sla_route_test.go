@@ -12,6 +12,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/service"
 	problemHandler "itsm-backend/handlers/problem"
 	"itsm-backend/middleware"
 
@@ -53,7 +54,7 @@ func TestProblemSLARouteIsExplicitlyUnready(t *testing.T) {
 		JWTSecret:      secret,
 		Logger:         logger,
 		Client:         client,
-		ProblemHandler: problemHandler.NewHandler(problemHandler.NewService(repo, logger)),
+		ProblemHandler: problemHandler.NewHandler(problemHandler.NewService(repo, service.NewTicketServiceForTest(client, logger), logger)),
 	})
 
 	do := func(t *testing.T, method, path string, user *ent.User) (int, problemEnvelope) {

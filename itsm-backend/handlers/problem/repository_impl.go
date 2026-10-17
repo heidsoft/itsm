@@ -313,9 +313,12 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, page, size int, 
 	return result, total, nil
 }
 
-func (r *EntRepository) Update(ctx context.Context, p *Problem) (*Problem, error) {
+func (r *EntRepository) Update(ctx context.Context, p *Problem, expectedStatus string) (*Problem, error) {
+	// CAS：problem 无 version 列，用读取时状态锚定校验-写入并发窗口。
+	// 注意区分两种 NotFound 成因：工件真的不存在/已软删（透传原始错误，
+	// service 映射 404）vs 工件还在但状态已被并发推进（类型化冲突，409）。
 	update := r.client.Problem.UpdateOneID(p.ID).
-		Where(problem.TenantIDEQ(p.TenantID), problem.DeletedAtIsNil()).
+		Where(problem.TenantIDEQ(p.TenantID), problem.DeletedAtIsNil(), problem.StatusEQ(expectedStatus)).
 		SetTitle(p.Title).
 		SetDescription(p.Description).
 		SetStatus(p.Status).
@@ -345,6 +348,16 @@ func (r *EntRepository) Update(ctx context.Context, p *Problem) (*Problem, error
 
 	saved, err := update.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			// 区分成因：仍能按 id+tenant 读到 → 状态被并发推进（CAS 冲突）；
+			// 读不到 → 原样透传（service 按 not-found 语义处理）。
+			if _, lerr := r.client.Problem.Query().
+				Where(problem.IDEQ(p.ID), problem.TenantIDEQ(p.TenantID)).
+				First(ctx); lerr == nil {
+				return nil, fmt.Errorf("%w: 期望状态 '%s'", ErrProblemStatusMoved, expectedStatus)
+			}
+			return nil, err
+		}
 		return nil, err
 	}
 	return r.toDomain(saved), nil

@@ -16,6 +16,9 @@ func SetupMSPRoutes(r *gin.Engine, config *RouterConfig) {
 	msp.Use(middleware.AuthMiddleware(config.JWTSecret))
 	msp.Use(middleware.RBACMiddleware(config.Client)) // 设置 client 到 context
 	msp.Use(middleware.MSPMiddleware(config.Client))
+	// MSP 是跨租户（tenant-bypass）面：每一笔分配/接管/指派都要有独立审计记录。
+	// 审计与租户路由同款，挂权限组后、端点前。
+	msp.Use(middleware.AuditMiddleware(config.Client))
 	{
 		// MSP 身份自述 - 不含客户数据，MSP 管理员语义见下
 		// 保持 AUTH_ONLY（ADR-005 D3）：前端靠它判断展示工作台还是权限拒绝态，

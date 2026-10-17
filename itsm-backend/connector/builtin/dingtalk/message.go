@@ -15,6 +15,10 @@ import (
 //   - "dept:DEPTID"               -> 部门通知
 //   - "all"                       -> 全员
 //   - 其它：当作群机器人 webhook URL
+//
+// 幂等边界：钉钉工作通知/群机器人协议均无幂等参数（外部系统适配边界），
+// msg.ID（delivery command idempotency key）无法透传；重试去重依赖
+// commandbus 层的幂等与 delivery 状态检查，不在本适配器内伪装。
 func (c *Client) Send(ctx context.Context, msg *connector.Message) error {
 	if msg == nil || msg.Channel == "" {
 		return fmt.Errorf("dingtalk: channel is required")

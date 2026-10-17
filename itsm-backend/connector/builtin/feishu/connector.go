@@ -13,6 +13,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/feishuticketsync"
 	"itsm-backend/ent/user"
+
+	"go.uber.org/zap"
 )
 
 // TicketCreator 工单创建接口，避免循环依赖
@@ -294,17 +296,25 @@ func (f *Feishu) ParseInbound(body []byte) (*connector.InboundMessage, error) {
 }
 
 // SyncTicketToFeishu syncs an ITSM ticket to Feishu as a task (creates or updates)
-func (f *Feishu) SyncTicketToFeishu(ctx context.Context, tx *ent.Tx, ticket *ent.Ticket) (*FeishuTask, error) {
+// SyncTicketToFeishu syncs an ITSM ticket to Feishu as a task (creates or updates).
+//
+// 分相执行（合规命令纪律：数据库事务内禁止连接器/HTTP 外部调用）：
+//   - phase A（短事务）：读取/抢占同步映射。mapping 唯一键 (tenant_id, ticket_id)
+//     兜住并发双发送：抢占失败即重读既有记录，按其 GUID 走 create/update。
+//   - phase B（无事务）：飞书 HTTP create/update task，失败同时把 phase C 的
+//     状态落为 failed（可观察），重试按 mapping 处于无 GUID 状态重新走 create。
+//     状态落为 failed（可观察），重试按 mapping 处于无 GUID 状态重新走 create。
+//   - phase C（短事务）：落最终 feishu_task_guid/状态（成功 synced / 失败 failed）。
+//
+// 崩溃窗口：phase B 成功后、phase C 提交前进程崩溃，重试会重新 create 一条
+// 任务（外部孤儿任务），与旧实现事务中断留下的窗口等价；飞书 create task
+// 不提供幂等 token，无法进一步收敛，由映射状态可观察性兜底。
+func (f *Feishu) SyncTicketToFeishu(ctx context.Context, client *ent.Client, ticket *ent.Ticket) (*FeishuTask, error) {
 	if f.client == nil {
 		return nil, fmt.Errorf("feishu: connector not initialized")
 	}
-
-	// Check if there's an existing sync mapping
-	syncRecord, err := tx.FeishuTicketSync.Query().
-		Where(feishuticketsync.TenantID(ticket.TenantID), feishuticketsync.TicketID(ticket.ID)).
-		Only(ctx)
-	if err != nil && !ent.IsNotFound(err) {
-		return nil, fmt.Errorf("feishu: failed to query sync record: %w", err)
+	if client == nil {
+		return nil, fmt.Errorf("feishu: ent client is required")
 	}
 
 	// Map ticket fields to Feishu task
@@ -318,48 +328,87 @@ func (f *Feishu) SyncTicketToFeishu(ctx context.Context, tx *ent.Tx, ticket *ent
 		Status: mapStatusToFeishu(ticket.Status),
 	}
 
-	var task *FeishuTask
-	if syncRecord != nil {
-		// Update existing task
-		task, err = f.client.UpdateTask(ctx, syncRecord.FeishuTaskGUID, feishuTask)
-		if err != nil {
-			// Update sync record with error
-			_, _ = syncRecord.Update().
-				SetSyncStatus("failed").
-				SetErrorMessage(err.Error()).
-				Save(ctx)
-			return nil, fmt.Errorf("feishu: failed to update task: %w", err)
-		}
-		// Update sync record
-		_, err = syncRecord.Update().
-			SetSyncStatus("synced").
-			SetLastSyncDirection("itsm_to_feishu").
-			SetLastSyncedAt(time.Now()).
-			ClearErrorMessage().
-			Save(ctx)
-	} else {
-		// Create new task
-		task, err = f.client.CreateTask(ctx, feishuTask)
-		if err != nil {
-			return nil, fmt.Errorf("feishu: failed to create task: %w", err)
-		}
-		// Create sync record
-		_, err = tx.FeishuTicketSync.Create().
-			SetTenantID(ticket.TenantID).
-			SetTicketID(ticket.ID).
-			SetFeishuTaskID(task.GUID). // Wait, is GUID the same as ID? Let's check Feishu API: yes, task GUID is the unique ID
-			SetFeishuTaskGUID(task.GUID).
-			SetSyncStatus("synced").
-			SetLastSyncDirection("itsm_to_feishu").
-			SetLastSyncedAt(time.Now()).
-			Save(ctx)
+	// ---- phase A：读取/抢占同步映射（短事务，无外部调用）----
+	syncRecord, err := claimTicketSyncRecord(ctx, client, ticket.TenantID, ticket.ID)
+	if err != nil {
+		return nil, fmt.Errorf("feishu: failed to claim sync record: %w", err)
 	}
 
+	// ---- phase B：飞书外呼（无 DB 事务）----
+	var task *FeishuTask
+	if syncRecord.FeishuTaskGUID != "" {
+		task, err = f.client.UpdateTask(ctx, syncRecord.FeishuTaskGUID, feishuTask)
+	} else {
+		task, err = f.client.CreateTask(ctx, feishuTask)
+	}
 	if err != nil {
+		// 失败落库（best-effort）：不回滚业务，状态可观察，命令重试按
+		// failed + 无 GUID 重新走 create/update。
+		if persistErr := persistTicketSyncOutcome(ctx, client, syncRecord, "failed", "", err); persistErr != nil {
+			zap.S().Warnw("feishu: failed to persist sync failure state",
+				"error", persistErr.Error(), "ticket_id", ticket.ID, "tenant_id", ticket.TenantID)
+		}
+		return nil, fmt.Errorf("feishu: failed to sync task: %w", err)
+	}
+
+	// ---- phase C：同步结果落库（短事务）----
+	if err := persistTicketSyncOutcome(ctx, client, syncRecord, "synced", task.GUID, nil); err != nil {
 		return nil, fmt.Errorf("feishu: failed to save sync record: %w", err)
 	}
 
 	return task, nil
+}
+
+// claimTicketSyncRecord 读取或抢占式创建 (tenant, ticket) 的同步映射行。
+// feishu_task_id 非空必填且参与唯一索引：创建真实任务前尚无真实 ID，用
+// 确定性占位符占用唯一键（tenant+ticket 唯一 → 占位符也唯一，真实 GUID
+// 回填时覆盖）。占位行 sync_status=pending，phase C 落最终状态。
+func claimTicketSyncRecord(ctx context.Context, client *ent.Client, tenantID, ticketID int) (*ent.FeishuTicketSync, error) {
+	rec, err := client.FeishuTicketSync.Query().
+		Where(feishuticketsync.TenantID(tenantID), feishuticketsync.TicketID(ticketID)).
+		Only(ctx)
+	if err == nil {
+		return rec, nil
+	}
+	if !ent.IsNotFound(err) {
+		return nil, err
+	}
+	created, cerr := client.FeishuTicketSync.Create().
+		SetTenantID(tenantID).
+		SetTicketID(ticketID).
+		SetFeishuTaskID(fmt.Sprintf("pending:%d:%d", tenantID, ticketID)).
+		SetSyncStatus("pending").
+		Save(ctx)
+	if cerr == nil {
+		return created, nil
+	}
+	// 并发抢占失败（唯一键冲突）→ 重读竞争对手创建的行。
+	rec, rerr := client.FeishuTicketSync.Query().
+		Where(feishuticketsync.TenantID(tenantID), feishuticketsync.TicketID(ticketID)).
+		Only(ctx)
+	if rerr != nil {
+		return nil, fmt.Errorf("create then reload failed: %v / %v", cerr, rerr)
+	}
+	return rec, nil
+}
+
+// persistTicketSyncOutcome 落 phase C 的最终映射状态（短事务语义，单条更新）。
+func persistTicketSyncOutcome(ctx context.Context, client *ent.Client, rec *ent.FeishuTicketSync, status, guid string, syncErr error) error {
+	now := time.Now()
+	upd := rec.Update().
+		SetSyncStatus(status).
+		SetLastSyncDirection("itsm_to_feishu").
+		SetLastSyncedAt(now)
+	if status == "synced" && guid != "" {
+		upd.SetFeishuTaskID(guid).SetFeishuTaskGUID(guid)
+	}
+	if syncErr != nil {
+		upd.SetErrorMessage(syncErr.Error())
+	} else {
+		upd.ClearErrorMessage()
+	}
+	_, err := upd.Save(ctx)
+	return err
 }
 
 // SyncFeishuTaskToTicket syncs a Feishu task to ITSM as a ticket (creates or updates)

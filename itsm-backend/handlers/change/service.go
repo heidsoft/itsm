@@ -686,10 +686,18 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 				"change_id", changeID, "from", c.Status, "to", target)
 			return nil
 		}
-		c.Status = target
-		if _, err := s.repo.Update(ctx, c); err != nil {
+		// 必须走 CAS：读到的 status 在校验与写入之间的并发窗口里可能已被
+		// 推进/取消，read-then-unconditional-write 会用陈旧校验结果覆盖
+		// 推进后的状态（绕过状态机）。CAS 未命中 = 状态已被并发修改，
+		// 按既有惯例记日志跳过，不落库。
+		ok, err := s.repo.UpdateStatusCAS(ctx, changeID, tenantID, c.Status, target)
+		if err != nil {
 			s.logger.Errorw("checkAndTransitionChange: failed to update change status to rejected", "error", err, "change_id", changeID)
 			return err
+		}
+		if !ok {
+			s.logger.Warnw("checkAndTransitionChange: skip status CAS miss (reject): state moved concurrently",
+				"change_id", changeID, "from", c.Status, "to", target)
 		}
 		return nil
 	}
@@ -706,10 +714,15 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 				"change_id", changeID, "from", c.Status, "to", target)
 			return nil
 		}
-		c.Status = target
-		if _, err := s.repo.Update(ctx, c); err != nil {
+		// 同 reject 分支：CAS 防并发窗口内陈旧校验覆盖推进后状态。
+		ok, err := s.repo.UpdateStatusCAS(ctx, changeID, tenantID, c.Status, target)
+		if err != nil {
 			s.logger.Errorw("checkAndTransitionChange: failed to update change status to approved", "error", err, "change_id", changeID)
 			return err
+		}
+		if !ok {
+			s.logger.Warnw("checkAndTransitionChange: skip status CAS miss (approve): state moved concurrently",
+				"change_id", changeID, "from", c.Status, "to", target)
 		}
 	}
 	return nil
@@ -1148,8 +1161,13 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
+	// 注意：此处绝不能再 `c.Status = targetStatus; return s.repo.Update(ctx, c)`——
+	// 那是用陈旧快照把 CAS 刚写好的状态又一次全列无条件覆盖（title/description/
+	// affected_cis 全量替换都按读取时旧值回写，并发提交的其他字段编辑会被静默
+	// 卡掉，CAS 等于白做）。转换只改变 status 一个字段，与上方终态分支一致：
+	// 直接返回携带新状态的内存快照，不做任何二次落库。
 	c.Status = targetStatus
-	return s.repo.Update(ctx, c)
+	return c, nil
 }
 
 // GetApprovalHistory returns approval records for a change.

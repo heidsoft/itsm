@@ -81,3 +81,28 @@ func TestBuildFeishuMessageBody(t *testing.T) {
 		t.Fatalf("unexpected body: %+v", b)
 	}
 }
+
+// TestFeishuMessageSendPath_UUIDIdempotency 回归：delivery command 的
+// idempotency key（msg.ID）必须透传为飞书 create message 的 uuid 参数，
+// 覆盖「外部发送成功但本地 audit 写入失败后重试」场景；空 ID 退回基础路径。
+func TestFeishuMessageSendPath_UUIDIdempotency(t *testing.T) {
+	if got := feishuMessageSendPath("open_id", "cmd-abc-123"); got != "/open-apis/im/v1/messages?receive_id_type=open_id&uuid=cmd-abc-123" {
+		t.Fatalf("unexpected path: %s", got)
+	}
+	if got := feishuMessageSendPath("open_id", ""); got != "/open-apis/im/v1/messages?receive_id_type=open_id" {
+		t.Fatalf("unexpected path: %s", got)
+	}
+	if got := feishuMessageSendPath("open_id", "  "); got != "/open-apis/im/v1/messages?receive_id_type=open_id" {
+		t.Fatalf("unexpected path: %s", got)
+	}
+}
+
+// TestFeishuMessageReplyPath_UUIDIdempotency reply 端点同样支持 uuid 幂等。
+func TestFeishuMessageReplyPath_UUIDIdempotency(t *testing.T) {
+	if got := feishuMessageReplyPath("om_123", "cmd-re-1"); got != "/open-apis/im/v1/messages/om_123/reply?uuid=cmd-re-1" {
+		t.Fatalf("unexpected path: %s", got)
+	}
+	if got := feishuMessageReplyPath("om_123", ""); got != "/open-apis/im/v1/messages/om_123/reply" {
+		t.Fatalf("unexpected path: %s", got)
+	}
+}

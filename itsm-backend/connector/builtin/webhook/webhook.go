@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -72,6 +73,12 @@ func (w *Webhook) Send(ctx context.Context, msg *connector.Message) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", "ITSM-Connector/1.0")
 	req.Header.Set("X-ITSM-Event", msg.Type)
+	// 幂等透传：msg.ID 是 delivery command 的 idempotency key。协议本身无幂等
+	// 语义，采用通用 X-Idempotency-Key 头约定，接收方可据此做重试去重
+	//（覆盖「外部已处理但本地 audit 写入失败后重试」场景）。
+	if key := strings.TrimSpace(msg.ID); key != "" {
+		req.Header.Set("X-Idempotency-Key", key)
+	}
 
 	// 签名：HMAC-SHA256(secret, body)
 	if secret, ok := w.cfg.Credentials["secret"]; ok && secret != "" {

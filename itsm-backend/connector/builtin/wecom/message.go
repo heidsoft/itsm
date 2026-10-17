@@ -17,6 +17,10 @@ import (
 //   - "PartyID"                         -> 指定部门
 //   - "TagID"                           -> 指定标签
 //   - URL 开头（http/https）            -> 群机器人 webhook
+//
+// 幂等边界：企微应用消息/群机器人协议均无幂等参数（外部系统适配边界），
+// msg.ID（delivery command idempotency key）无法透传；重试去重依赖
+// commandbus 层的幂等与 delivery 状态检查，不在本适配器内伪装。
 func (c *Client) Send(ctx context.Context, msg *connector.Message) error {
 	if msg == nil || msg.Channel == "" {
 		return fmt.Errorf("wecom: channel is required")

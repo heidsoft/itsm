@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"itsm-backend/connector"
 )
@@ -26,8 +28,11 @@ func (c *Client) Send(ctx context.Context, msg *connector.Message) error {
 			MessageID string `json:"message_id"`
 		} `json:"data"`
 	}
-	// 飞书接口：POST /open-apis/im/v1/messages?receive_id_type=open_id
-	if err := c.doJSON(ctx, "POST", "/open-apis/im/v1/messages?receive_id_type=open_id", body, &out); err != nil {
+	// 飞书接口：POST /open-apis/im/v1/messages?receive_id_type=open_id[&uuid=...]
+	// 幂等透传：msg.ID 是 delivery command 的 idempotency key。飞书 create message
+	// 支持 uuid 去重（同 uuid 返回同一 message_id），覆盖「外部发送成功但本地
+	// audit 写入失败后重试」场景，避免重试产生重复消息。
+	if err := c.doJSON(ctx, "POST", feishuMessageSendPath("open_id", msg.ID), body, &out); err != nil {
 		return err
 	}
 	if out.Code != 0 {
@@ -95,11 +100,38 @@ func (c *Client) Reply(ctx context.Context, messageID string, msg *connector.Mes
 		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 	}
-	if err := c.doJSON(ctx, "POST", "/open-apis/im/v1/messages/"+messageID+"/reply", body, &out); err != nil {
+	if err := c.doJSON(ctx, "POST", feishuMessageReplyPath(messageID, msg.ID), body, &out); err != nil {
 		return err
 	}
 	if out.Code != 0 {
 		return fmt.Errorf("feishu: reply failed code=%d msg=%s", out.Code, out.Msg)
 	}
 	return nil
+}
+
+// feishuUUID 把 delivery command 的 idempotency key 规范成飞书 uuid 参数：
+// 去除首尾空白并防御性截断（飞书 uuid 上限 50 字节；真实 key 由 commandbus
+// 生成，正常远短于该限制）。
+func feishuUUID(idempotencyKey string) string {
+	u := strings.TrimSpace(idempotencyKey)
+	if len(u) > 50 {
+		u = u[:50]
+	}
+	return u
+}
+
+func feishuMessageSendPath(receiveIDType, idempotencyKey string) string {
+	path := "/open-apis/im/v1/messages?receive_id_type=" + url.QueryEscape(receiveIDType)
+	if u := feishuUUID(idempotencyKey); u != "" {
+		path += "&uuid=" + url.QueryEscape(u)
+	}
+	return path
+}
+
+func feishuMessageReplyPath(messageID, idempotencyKey string) string {
+	path := "/open-apis/im/v1/messages/" + url.PathEscape(messageID) + "/reply"
+	if u := feishuUUID(idempotencyKey); u != "" {
+		path += "?uuid=" + url.QueryEscape(u)
+	}
+	return path
 }

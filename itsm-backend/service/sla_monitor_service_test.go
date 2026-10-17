@@ -11,6 +11,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/slastate"
 	"itsm-backend/service/sla"
 
 	"github.com/stretchr/testify/assert"
@@ -307,4 +309,154 @@ func TestSLAMonitorService_CreateViolation(t *testing.T) {
 	created, err = service.createViolation(ctx, ticket, "response_time", deadline, slaDef.ID, slaDefMap)
 	require.NoError(t, err)
 	assert.False(t, created, "expected duplicate SLA violation to be suppressed")
+}
+
+// P1 SLA 口径回归（对应 sla_monitor_service.go 三个口径缺陷）：
+//   1. violation_time 曾锚定扫描时刻（SetViolationTime(now)）——违约的
+//      权威时刻是 deadline 被突破的瞬间，扫描周期波动会让口径漂移。
+//   2. paused 工单违例误判：暂停语义 = 不计时，deadline 在 ResumeSLA
+//      才延长；扫描曾直接按原 deadline 判定 paused 工单违规。
+//   3. resume 不回收：resume 把暂停时长并入 deadline 后，原违规可能
+//      不再成立，必须回收（标 resolved），否则陈旧违规永久留存误导
+//      MTTR/超时统计与升级。
+
+func createSlaPauseFixture(t *testing.T, ctx context.Context, client *ent.Client, suffix string) (*ent.Tenant, *ent.Ticket, *ent.SLADefinition) {
+	t.Helper()
+	tn, err := createSLATestTenant(ctx, client, suffix)
+	require.NoError(t, err)
+	user, err := createSLATestUser(ctx, client, tn.ID, suffix)
+	require.NoError(t, err)
+	def, err := createSLATestDefinition(ctx, client, tn.ID, "P1 SLA "+suffix)
+	require.NoError(t, err)
+	tk, err := client.Ticket.Create().
+		SetTitle("P1 SLA 口径工单").
+		SetTicketNumber("TKT-SLA-P1-" + suffix).
+		SetStatus("open").
+		SetPriority("medium").
+		SetType("incident").
+		SetTenantID(tn.ID).
+		SetRequesterID(user.ID).
+		Save(ctx)
+	require.NoError(t, err)
+	return tn, tk, def
+}
+
+// TestCreateViolation_AnchorsViolationTimeToDeadline violation_time 必须
+// 锚定 deadline（权威违约时刻），不得使用扫描时刻。
+func TestCreateViolation_AnchorsViolationTimeToDeadline(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	_, tk, def := createSlaPauseFixture(t, ctx, client, "anchor")
+
+	deadline := time.Now().Add(-2 * time.Hour)
+	created, err := service.createViolation(ctx, tk, "resolution_time", deadline, def.ID, map[int]string{def.ID: "P1 SLA anchor"})
+	require.NoError(t, err)
+	require.True(t, created)
+
+	v, err := client.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tk.TenantID), slaviolation.TicketIDEQ(tk.ID)).
+		Only(ctx)
+	require.NoError(t, err)
+
+	assert.WithinDuration(t, deadline, v.ViolationTime, time.Minute,
+		"violation_time 必须锚定被突破的 deadline，而不是扫描时刻")
+	if !v.ViolationOccurredAt.IsZero() {
+		assert.WithinDuration(t, deadline, v.ViolationOccurredAt, time.Minute,
+			"violation_occurred_at 同样锚定 deadline")
+	}
+}
+
+// TestSLAViolations_SkipsPausedTickets paused 工单不得按原 deadline 误判违例。
+func TestSLAViolations_SkipsPausedTickets(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	tn, tk, def := createSlaPauseFixture(t, ctx, client, "paused")
+
+	past := time.Now().Add(-30 * time.Minute)
+	_, err := client.SLAState.Create().
+		SetTenantID(tn.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(tk.ID).
+		SetSLADefinitionID(def.ID).
+		SetStatus("active").
+		SetResponseDeadline(past).
+		SetResolutionDeadline(past).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 基线：active 工单按过期 deadline 会创建违规。
+	stats, err := service.CheckSLAViolations(ctx, tn.ID)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, stats.NewViolations, 1, "active 过期工单必须判定违规")
+
+	// 暂停：同一 deadline，暂停后不得再被误判（也不得对 paused 重复计）。
+	require.NoError(t, service.PauseSLA(ctx, tn.ID, "ticket", tk.ID, "等待客户补充信息"))
+
+	stats2, err := service.CheckSLAViolations(ctx, tn.ID)
+	require.NoError(t, err)
+	// 该唯一工单 paused：违例总数不应因本次扫描而继续增长为新建。
+	assert.LessOrEqual(t, stats2.NewViolations, 0, "paused 工单不得创建新违例")
+}
+
+// TestResumeSLA_RecyclesNoLongerBreachedViolation resume 延长 deadline 后，
+// 不再成立的违规必须自动回收（resolved），不得永久留存。
+func TestResumeSLA_RecyclesNoLongerBreachedViolation(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	tn, tk, def := createSlaPauseFixture(t, ctx, client, "recycle")
+
+	// 已过期 1 分钟的响应 deadline；解决 deadline 尚未到期。
+	responseDeadline := time.Now().Add(-time.Minute)
+	resolutionDeadline := time.Now().Add(30 * time.Minute)
+	_, err := client.SLAState.Create().
+		SetTenantID(tn.ID).
+		SetAggregateType("ticket").
+		SetAggregateID(tk.ID).
+		SetSLADefinitionID(def.ID).
+		SetStatus("active").
+		SetResponseDeadline(responseDeadline).
+		SetResolutionDeadline(resolutionDeadline).
+		Save(ctx)
+	require.NoError(t, err)
+
+	stats, err := service.CheckSLAViolations(ctx, tn.ID)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, stats.NewViolations, 1, "响应违规必须先被创建")
+
+	// 暂停（paused_at=now），然后把 paused_at 回拨 2 小时模拟长时间暂停。
+	require.NoError(t, service.PauseSLA(ctx, tn.ID, "ticket", tk.ID, "客户要求暂停"))
+	_, err = client.SLAState.Update().
+		Where(
+			slastate.TenantIDEQ(tn.ID),
+			slastate.AggregateTypeEQ("ticket"),
+			slastate.AggregateIDEQ(tk.ID),
+		).
+		SetPausedAt(time.Now().Add(-2 * time.Hour)).
+		Save(ctx)
+	require.NoError(t, err)
+	require.NoError(t, service.ResumeSLA(ctx, tn.ID, "ticket", tk.ID))
+
+	// 回收断言：响应违规 resolved，解决违规不存在且未被误建。
+	violations, err := client.SLAViolation.Query().
+		Where(slaviolation.TenantIDEQ(tn.ID), slaviolation.TicketIDEQ(tk.ID)).
+		All(ctx)
+	require.NoError(t, err)
+	require.Len(t, violations, 1)
+	assert.Equal(t, "response_time", violations[0].ViolationType)
+	assert.True(t, violations[0].IsResolved, "deadline 延长 2h 后不再被突破，违例必须回收")
+	assert.False(t, violations[0].ResolvedAt.IsZero(), "回收必须记录 resolved_at")
+}
+
+// TestResumeSLA_RejectsInvalidState 违规的 SLA 恢复调用必须返回业务冲突
+//（未暂停时不得恢复；不存在状态时不得伪造成功）。
+func TestResumeSLA_RejectsInvalidState(t *testing.T) {
+	client, service, ctx := setupSLAMonitorTest(t)
+	defer client.Close()
+	_, tk, _ := createSlaPauseFixture(t, ctx, client, "invalidresume")
+
+	err := service.ResumeSLA(ctx, tk.TenantID, "ticket", tk.ID)
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr, "未暂停工单的恢复必须是业务错误")
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
 }

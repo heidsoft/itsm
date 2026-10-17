@@ -45,9 +45,9 @@ func TestScenario6_TenantIsolationCrossDomain(t *testing.T) {
 	incidentSvc.EnableWorkflowOutbox()
 	incidentSvc.EnableRulesOutbox()
 	// 问题域必须走 router 实际装配的那个实现（router/problem_routes.go 构造同一个
-	// problem.NewService(problem.NewEntRepository(client), logger)）：
+	// problem.NewService(problem.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)）：
 	// service.NewProblemService 没有任何生产构造点，用它做场景测试等于测一条不存在的链路。
-	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), logger)
+	problemSvc := problemdomain.NewService(problemdomain.NewEntRepository(client), service.NewTicketServiceForTest(client, logger), logger)
 	knowledgeSvc := service.NewKnowledgeService(client, logger)
 	policySvc := service.NewSLAPolicyService(client)
 
