@@ -88,9 +88,9 @@ func newFixture(t *testing.T) *fixture {
 	engine := gin.New()
 	const secret = "ticket-comment-cross-tenant-secret"
 	router.SetupRoutes(engine, &router.RouterConfig{
-		JWTSecret:           secret,
-		Logger:              logger,
-		Client:              client,
+		JWTSecret:            secret,
+		Logger:               logger,
+		Client:               client,
 		TicketCommentHandler: ticketCommentHandler.NewHandler(service.NewTicketCommentService(client, logger), logger),
 	})
 

@@ -39,14 +39,14 @@ import (
 )
 
 type fixture struct {
-	engine  *gin.Engine
-	client  *ent.Client
-	secret  string
-	tenantA *ent.Tenant
-	tenantB *ent.Tenant
-	userA   *ent.User // tenant A super_admin：视图创建人
+	engine   *gin.Engine
+	client   *ent.Client
+	secret   string
+	tenantA  *ent.Tenant
+	tenantB  *ent.Tenant
+	userA    *ent.User // tenant A super_admin：视图创建人
 	stranger *ent.User // tenant B super_admin：能穿过 RBAC，但视图在租户 A
-	viewA   *ent.TicketView
+	viewA    *ent.TicketView
 }
 
 func newFixture(t *testing.T) *fixture {

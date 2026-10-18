@@ -38,13 +38,13 @@ import (
 )
 
 type attachmentMutationFixture struct {
-	engine *gin.Engine
-	client *ent.Client
-	secret string
-	userA  *ent.User
-	colleague *ent.User // tenant A 非相关人（super_admin，但非上传人/处理人/申请人）
-	stranger *ent.User
-	ticketA *ent.Ticket
+	engine      *gin.Engine
+	client      *ent.Client
+	secret      string
+	userA       *ent.User
+	colleague   *ent.User // tenant A 非相关人（super_admin，但非上传人/处理人/申请人）
+	stranger    *ent.User
+	ticketA     *ent.Ticket
 	attachmentA *ent.TicketAttachment
 }
 

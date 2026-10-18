@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	domainrole "itsm-backend/domain/role"
 	"itsm-backend/common"
+	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"

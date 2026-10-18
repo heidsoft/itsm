@@ -42,12 +42,12 @@ import (
 )
 
 type fixture struct {
-	engine  *gin.Engine
-	client  *ent.Client
-	secret  string
-	tenantA *ent.Tenant
-	tenantB *ent.Tenant
-	userA   *ent.User  // tenant A super_admin：能穿过 RBAC 正常操作本租户
+	engine   *gin.Engine
+	client   *ent.Client
+	secret   string
+	tenantA  *ent.Tenant
+	tenantB  *ent.Tenant
+	userA    *ent.User // tenant A super_admin：能穿过 RBAC 正常操作本租户
 	stranger *ent.User // tenant B super_admin：能穿过 RBAC，但资源全在租户 A
 }
 
