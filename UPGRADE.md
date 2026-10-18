@@ -1616,7 +1616,25 @@ ITSM_BOOTSTRAP_ONLY=true ITSM_AUTO_SEED=true ./itsm-backend
 cd itsm-backend && go test ./pkg/menubaseline/ ./pkg/seeder/ -count=1
 ```
 
-### 1.41 同域错误形态不一致补齐：not-found/越权/非法迁移不再伪装成 500/400（2026-10-18，破坏性：状态码变更）
+### 1.41 自动化/手工分配规则改用自有权限码，分配推荐并入 `ticket:assign`（2026-10-17，破坏性：权限码变更）
+
+授权平面第二轮收敛的修正：10-17 的功能点台账批次发现 09-17 批次（§1.7）把
+`assignment_rule` / `automation_rule` 收敛进 `system_config:*` 过度了——这两组是
+分配/自动化的规则配置面而非系统配置面，把只读规则浏览授给 `system_config:read` 会
+连带放开其它系统配置读写排查通道。改为自有码：
+
+| 接口组 | 旧权限码 | 新权限码 |
+| --- | --- | --- |
+| `/tickets/automation-rules`（6 个端点：CRUD + test） | `system_config:read` / `system_config:write` | `automation_rule:read` / `automation_rule:write` |
+| `/tickets/assignment-rules`（含 test 共 7 个端点） | `system_config:read` / `system_config:write` | `assignment_rule:read` / `assignment_rule:write` |
+| `POST /tickets/{id}/auto-assign`、`GET /tickets/assign-recommendations/{id}` | `system_config:write` / `system_config:read` | `ticket:assign`（与单工单手工分配同码） |
+
+**升级影响**：自定义角色此前按 `system_config:*` 授权的规则浏览/编辑将 403，
+需在角色管理里改为对应自有码；`super_admin` 通过快捷分支不受影响。
+无 schema/迁移变更（权限码全部命中 `seeder.AllDefinedPermissionCodes()`，由
+`permission_code_catalog_guard` 守卫）。
+
+### 1.42 同域错误形态不一致补齐：not-found/越权/非法迁移不再伪装成 500/400（2026-10-18，破坏性：状态码变更）
 
 本节只改**响应状态码与业务码**，不改任何字段、路由或分页契约。§1.20 建立了单一
 分类器，但仍有多个同域路径残留裸 `fmt.Errorf` / 统一 `Fail`，表现为同一个
