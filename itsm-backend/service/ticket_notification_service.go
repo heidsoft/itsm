@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/notificationpreference"
@@ -78,15 +79,22 @@ func (s *TicketNotificationService) SendNotification(
 		return fmt.Errorf("failed to check ticket existence: %w", err)
 	}
 	if !ticketExists {
-		return fmt.Errorf("ticket not found")
+		// BusinessError 让 FailWithErr 稳定映射 404；裸 `ticket not found` 会被
+		// classifyError 兜底成 5001，跨租户探测就表现为 5xx 毛刺（B4 钉住后修复）。
+		return common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
 	}
 
 	// 为每个用户创建通知记录
 	now := time.Now()
 	for _, userID := range req.UserIDs {
-		// 验证用户是否存在
+		// 验证用户是否存在且属于同一租户。租户谓词不可省：裸 user.ID(userID)
+		// 会让租户 A 工单为租户 B 用户创建通知行（跨租户引用注入，B4 钉住后修复）。
+		// 不满足则按「用户不存在」静默跳过，与既有缺失用户的处理语义一致。
 		userExists, err := s.client.User.Query().
-			Where(user.ID(userID)).
+			Where(
+				user.ID(userID),
+				user.TenantID(tenantID),
+			).
 			Exist(ctx)
 		if err != nil || !userExists {
 			s.logger.Warnw("User not found, skipping notification", "user_id", userID)

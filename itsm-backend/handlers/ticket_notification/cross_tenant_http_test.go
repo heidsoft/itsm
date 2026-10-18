@@ -7,13 +7,11 @@
 // 已钉住的契约：
 //   - 同租户 owner 列表/发送是正控制：正文可见、行与通用通知同步创建；
 //   - 跨租户列表 200 但 items 恒空（内容零泄漏、零副作用）——当前生产语义；
-//   - 跨租户发送 fail closed 且零副作用（当前 500/5001：service 返回裸
-//     `ticket not found`，classifyError 分类不到 404。修复映射为 404/4004 后
-//     需同步更新本文件该断言，与 comment 域 B3 同模式）；
-//   - 【已知缺陷，如实钉住】同租户工单发送引用跨租户 userID：直发路径校验
-//     用户存在时 `user.ID(userID)` 不带租户谓词，租户 A 工单可为租户 B 用户
-//     创建通知行（跨租户引用注入）。补用户租户谓词后需同步断言为「不建行、
-//     静默跳过或稳定拒绝」。
+//   - 跨租户发送 404/4004 且零副作用（B5 修复：service 改用 BusinessError
+//     呈现 not-found，与 comment 域 B3 同模式）；
+//   - 同租户工单不能为跨租户 userID 创建通知行（B5 修复：直发路径用户
+//     存在性校验带租户谓词，跨租户引用以「用户不存在」静默跳过、零行，
+//     与幽灵 userID 的可观测形态不可区分）。
 package ticket_notification_test
 
 import (
@@ -163,11 +161,10 @@ func TestTicketNotificationCrossTenant(t *testing.T) {
 		before := fx.countRows(t)
 		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.stranger,
 			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+`],"type":"ticket_commented","channel":"in_app","content":"跨租户投放探测"}`))
-		// 已知缺陷（如实钉住）：service 直发路径返回裸 `ticket not found`，
-		// classifyError 分类不到 404，跨租户探测表现为 500/5001。fail closed
-		// 成立（零副作用），修复映射为 404/4004 后需同步更新本断言。
-		require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":5001`)
+		// not-found 稳定映射 404/4004（service 用 BusinessError 呈现，B5 修复后不再是
+		// 500/5001 毛刺）；跨租户与不存在的工单同观测、零副作用。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 		assert.Equal(t, before, fx.countRows(t), "跨租户发送不得创建任何通知行")
 	})
 
@@ -190,19 +187,26 @@ func TestTicketNotificationCrossTenant(t *testing.T) {
 		require.Equal(t, fx.tenantA.ID, created.TenantID)
 	})
 
-	t.Run("同租户工单引用跨租户userID是当前可复现的注入点", func(t *testing.T) {
+	t.Run("同租户工单不能为跨租户userID创建通知行", func(t *testing.T) {
 		before := fx.countRows(t)
 		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.userA,
 			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+`],"type":"ticket_commented","channel":"in_app","content":"跨租户用户引用注入"}`))
-		// 已知缺陷（如实钉住）：service 校验用户存在用裸 user.ID(userID)，
-		// 不带租户谓词——租户 A 工单能为租户 B 用户创建通知行，形成跨租户
-		// 引用注入。补用户租户谓词后本断言应改为「不建行」并同步更新。
+		// 修复后语义（B5）：用户存在性校验带租户谓词，租户 B 用户对租户 A
+		// 请求等同「用户不存在」→ 静默跳过、200 成功但零行、不产生跨租户引用。
 		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":0`)
 		after := fx.countRows(t)
-		require.Equal(t, before.ticketNotifs+1, after.ticketNotifs, "当前实现确实为跨租户用户创建了通知行")
+		assert.Equal(t, before, after, "跨租户用户引用不得创建任何通知行")
+	})
 
-		row := fx.client.TicketNotification.Query().Order(ent.Desc("id")).FirstX(context.Background())
-		require.Equal(t, fx.stranger.ID, row.UserID, "钉住注入点：通知行 user_id 引用了租户 B 用户")
-		require.Equal(t, fx.tenantA.ID, row.TenantID)
+	t.Run("不存在的userID被静默跳过且与跨租户userID不可区分", func(t *testing.T) {
+		before := fx.countRows(t)
+		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.userA,
+			[]byte(`{"userIds":[999999],"type":"ticket_commented","channel":"in_app","content":"幽灵用户探测"}`))
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":0`)
+		assert.Equal(t, before, fx.countRows(t), "不存在用户必须静默跳过、零行")
+		// 与跨租户 userID 的错误/成功形态保持一致性：两者对外观感一致，
+		// 差异只体现在库内是否落行。
 	})
 }

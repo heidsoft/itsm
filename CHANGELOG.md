@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **【P1】工单通知直发路径的跨租户引用注入与 not-found 伪装成 500（B4 钉住的两个缺陷修复，2026-10-18）**：`service/ticket_notification_service.go` 直发路径（`outboxEnabled=false` 的同步分支）两处：
+  - 跨租户发送 `POST /tickets/:id/notifications`：service 返回裸 `ticket not found`，`classifyError` 分类不到 → 兜底 **500/5001**，跨租户探测以 5xx 毛刺泄漏存在性语义。改为 `common.NewBusinessError(common.NotFoundCode, …)` → **404/4004**（与 comment 域 B3 同模式）。
+  - **【P1 数据边界】通知行跨租户引用注入**：为收件人校验存在性用裸 `user.ID(userID)` **不带租户谓词** —— 租户 A 工单可为租户 B 真身用户创建工单通知行与通用通知行（跨租户引用注入 + 潜在外呼面读到他租户邮箱/手机号的路由）。修复：用户查询补 `user.TenantID(tenantID)`，跨租户 userID 与不存在 userID 一致按「用户不存在」静默跳过（200 + 零行，两者可观测形态不可区分）。
+  - 断言同步：`handlers/ticket_notification/cross_tenant_http_test.go` 的 500→404 断言与「注入点」探针改断「零行」，红→绿闭环。
+  - **已知残余（未在本批范围）**：outbox 路径 `enqueueNotificationDeliveries` 对 ticket/user 完全不校验归属即入 `operational_commands`（幂等键含 tenant+ticket+recipient），依赖 consumer 侧重载阶段 fail closed；建议行为批补入箱前校验。
+
 - **错误语义统一：跨租户/not-found 不再伪装成 500 或 400（B2 钉住的 4 处缺陷修复，2026-10-18）**：B1/B2 的真实入口跨租户回归测试暴露了同域错误形态不一致——相邻函数正确映射 404/403，而同 handler 的其它路径一律兜底 500/400。按「验证=400/1002、未授权=401、无权=403、不存在=404、非法状态迁移=409、内部=500」的稳定契约逐处纠正，service 侧用 `common.NewBusinessError` / `%w` 包装让 `classifyError` 可分类：
   - `service/provisioning_service.go` + `handlers/provisioning/handler.go`：`StartProvisioning` not-found 统一 **404/4004**（原 400/4000）、状态不符启动交付 **409/4090**（原裸 error→兜底 500）；`ExecuteProvisioningTask` not-found **404/4004**、provider 失败仍 500（原一律 500/5001）；列表失败改为分类映射。新增同租户状态不符 409 零副作用回归。
   - `service/ticket_comment_service.go`：`Create/List` 的 `ticket not found` 由裸 error（classifyError 兜底 5001/500）改为 **404/4004**；内容为空、提及用户无效/不存在、附件不属于该工单 → **400（1001/1002）**；编辑/删除非本人评论、内部备注越权 → **403（2003）**。`Update/Delete` 原有的 `%w` 包装保持不变。
