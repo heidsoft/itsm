@@ -9,7 +9,6 @@ export interface TicketAttachment {
   id: number;
   ticketId: number;
   fileName: string;
-  filePath: string;
   fileUrl: string;
   fileSize: number;
   fileType: string;

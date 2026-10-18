@@ -31,7 +31,6 @@ func TestTicketAttachmentResponseUsesCamelCaseJSON(t *testing.T) {
 		ID:         1,
 		TicketID:   2,
 		FileName:   "report.pdf",
-		FilePath:   "/tmp/report.pdf",
 		FileURL:    "/api/v1/tickets/2/attachments/1",
 		FileSize:   1234,
 		FileType:   "application/pdf",
@@ -46,7 +45,8 @@ func TestTicketAttachmentResponseUsesCamelCaseJSON(t *testing.T) {
 	jsonStr := string(data)
 	assert.Contains(t, jsonStr, `"ticketId":2`)
 	assert.Contains(t, jsonStr, `"fileName":"report.pdf"`)
-	assert.Contains(t, jsonStr, `"filePath":"/tmp/report.pdf"`)
+	// B7.2 收口：服务端磁盘路径不得进 API 契约（信息泄漏面）。
+	assert.NotContains(t, jsonStr, "filePath", "响应不得暴露服务端磁盘路径")
 	assert.Contains(t, jsonStr, `"fileUrl":"/api/v1/tickets/2/attachments/1"`)
 	assert.Contains(t, jsonStr, `"fileSize":1234`)
 	assert.Contains(t, jsonStr, `"fileType":"application/pdf"`)

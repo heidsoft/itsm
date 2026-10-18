@@ -564,7 +564,6 @@ export class TicketApi {
     id: number;
     ticketId: number;
     fileName: string;
-    filePath: string;
     fileUrl: string;
     fileSize: number;
     fileType: string;

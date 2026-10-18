@@ -1634,6 +1634,8 @@ cd itsm-backend && go test ./pkg/menubaseline/ ./pkg/seeder/ -count=1
 无 schema/迁移变更（权限码全部命中 `seeder.AllDefinedPermissionCodes()`，由
 `permission_code_catalog_guard` 守卫）。
 
+
+
 ### 1.42 同域错误形态不一致补齐：not-found/越权/非法迁移不再伪装成 500/400（2026-10-18，破坏性：状态码变更）
 
 本节只改**响应状态码与业务码**，不改任何字段、路由或分页契约。§1.20 建立了单一
@@ -1670,6 +1672,23 @@ cd itsm-backend && go test -count=1 \
   ./handlers/provisioning/ ./handlers/ticket_comment/ ./handlers/ticket_notification/ \
   ./handlers/ticket_view/ ./router/ ./service/
 ```
+
+### 1.43 附件响应不再暴露服务端磁盘路径 `filePath`（2026-10-18，破坏性：字段删除）
+
+B7 测试侦查发现 `TicketAttachmentResponse` 把 `attachment.file_path`（服务端
+磁盘/存储路径，如 `uploads/tickets/<id>_<ts>_<name>`）原样放进 API 响应——
+部署拓扑与存储布局属于服务端实现细节，进入客户端契约是信息泄漏面，前端
+三个类型声明也无任何组件消费该字段（死字段）。
+
+**变更**：`{items,total}` 条目与单条上传响应删除 `filePath`；下载入口唯一
+真相仍是推导的 `fileUrl = /api/v1/tickets/{id}/attachments/{attachmentId}`。
+无迁移（列保留在 ent schema，磁盘文件生命周期不受影响）。
+
+**升级影响**：下游调用方若读取 `filePath` 需改用 `fileName` + `fileUrl`。
+mapper 侧契约守卫：`dto/ticket_attachment_dto_test.go` 断言响应不含
+`filePath`；入口侧由 `handlers/ticket_attachment/cross_tenant_http_test.go`
+的列表正控制锁定。
+
 
 ## 2. 环境变量变更
 

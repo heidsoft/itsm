@@ -371,8 +371,9 @@ Authorization: Bearer <accessToken>
 
 响应是**不分页**的两键信封：`data = {items: TicketAttachmentResponse[], total}`，
 `total` 等于 `items` 长度（后端按 ticket+tenant 全量返回，`created_at DESC` 排序，
-无 `id` 次序键）。条目字段：`id`、`ticketId`、`fileName`、`filePath`、`fileUrl`、
-`fileSize`、`fileType`、`mimeType`、`uploadedBy`、`uploader?`、`createdAt`。
+无 `id` 次序键）。条目字段：`id`、`ticketId`、`fileName`、`fileUrl`、
+`fileSize`、`fileType`、`mimeType`、`uploadedBy`、`uploader?`、`createdAt`
+（服务端磁盘路径 `filePath` 已于 B7.2 从契约移除，见 UPGRADE §1.43）。
 `fileUrl` 由 `(ticketId, id)` 推导，等于下面的下载路由。集合键在 2026-10-04 之前叫
 `attachments`，见 UPGRADE §1.17。
 

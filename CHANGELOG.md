@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **附件响应不再暴露服务端磁盘路径 `filePath`（B7 侦查发现，2026-10-18，破坏性：响应字段删除）**：`TicketAttachmentResponse`（列表条目与上传单条）此前把 `attachment.file_path`（如 `uploads/tickets/…`）原样放进响应——部署拓扑/存储布局是服务端实现细节，前端三个类型声明中该字段无任何组件消费（死字段）。收口：DTO 与 mapper 删除该字段，下载/预览入口唯一真相仍是推导的 `fileUrl`；ent 列与磁盘文件不变、无迁移。守卫：`dto/ticket_attachment_dto_test.go` 断言响应不含 `filePath`，`handlers/ticket_attachment/cross_tenant_http_test.go` 列表正控制同断言；api-reference 字段清单与 UPGRADE §1.43 已同步，前端声明侧三个死类型字段一并移除。
 - **审计读面装配加固：/audit-logs 不再依赖 CommonHandler 装配（2026-10-18）**：`GET /api/v1/audit-logs` 的注册此前嵌在 `SetupCommonSystemRoutes` 的 `CommonHandler != nil` 守卫内（router.go 调用点 + 函数体两层），部署只装配 AuditLogHandler 而未装配通用 handler 时整个审计读面**静默 404**——违反「能力不得静默下线」。修复：注册单点化到 router.go 布线段（`SetupCommonSystemRoutes` 不再负责 audit），nil 守卫与回退（AuditLogHandler 优先 / CommonHandler 兜底）不变。回归：`handlers/auditlog/cross_tenant_http_test.go` fixture 改为**刻意不装配 CommonHandler** 锁定该契约；router 整包回归绿。
 
 - **【P1】工单通知直发路径的跨租户引用注入与 not-found 伪装成 500（B4 钉住的两个缺陷修复，2026-10-18）**：`service/ticket_notification_service.go` 直发路径（`outboxEnabled=false` 的同步分支）两处：

@@ -304,7 +304,6 @@ func TestListAttachmentsCrossTenant(t *testing.T) {
 				ID       int    `json:"id"`
 				TicketID int    `json:"ticketId"`
 				FileName string `json:"fileName"`
-				FilePath string `json:"filePath"`
 			} `json:"items"`
 			Total int `json:"total"`
 		}
@@ -313,6 +312,10 @@ func TestListAttachmentsCrossTenant(t *testing.T) {
 		require.Len(t, listing.Items, 1)
 		require.Equal(t, fx.attA.ID, listing.Items[0].ID)
 		require.Equal(t, fx.ticketA.ID, listing.Items[0].TicketID, "camelCase 契约：ticketId")
+		// B7.2 收口守卫：服务端磁盘路径不再出现在响应体（信息泄漏面）。
+		_, _, body := decodeEnvelope(t, w)
+		require.NotContains(t, string(body), "filePath", "附件响应不得携带服务端 filePath")
+		require.NotContains(t, string(body), "seed-a", "不得泄漏磁盘目录布局")
 	})
 
 	t.Run("跨租户列表掩码404且零泄漏", func(t *testing.T) {

@@ -9,10 +9,12 @@ import (
 
 // TicketAttachmentResponse 工单附件响应
 type TicketAttachmentResponse struct {
-	ID         int       `json:"id"`
-	TicketID   int       `json:"ticketId"`
-	FileName   string    `json:"fileName"`
-	FilePath   string    `json:"filePath"`
+	ID       int    `json:"id"`
+	TicketID int    `json:"ticketId"`
+	FileName string `json:"fileName"`
+	// FilePath 已移除（2026-10-18 B7.2）：服务端磁盘路径是部署实现细节，
+	// 曾经响应体穿透到客户端属于信息泄漏（部署拓扑/存储布局探测面）。
+	// 下载入口的唯一真相是推导出的 fileUrl（见下）。
 	FileURL    string    `json:"fileUrl"`
 	FileSize   int       `json:"fileSize"`
 	FileType   string    `json:"fileType"`
@@ -40,7 +42,6 @@ func ToTicketAttachmentResponse(attachment *ent.TicketAttachment, uploader *ent.
 		ID:         attachment.ID,
 		TicketID:   attachment.TicketID,
 		FileName:   attachment.FileName,
-		FilePath:   attachment.FilePath,
 		FileSize:   attachment.FileSize,
 		FileType:   attachment.FileType,
 		UploadedBy: attachment.UploadedBy,

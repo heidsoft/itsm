@@ -167,7 +167,6 @@ export interface Attachment {
   id: number;
   ticketId?: number;
   fileName: string;
-  filePath: string;
   fileUrl: string;
   fileSize: number;
   mimeType: string;
