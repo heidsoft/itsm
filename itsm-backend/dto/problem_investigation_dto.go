@@ -209,7 +209,7 @@ type ProblemInvestigationResponse struct {
 	InvestigatorID          int                        `json:"investigatorId"`
 	InvestigatorName        string                     `json:"investigatorName"`
 	Status                  ProblemInvestigationStatus `json:"status"`
-	StartDate               time.Time                  `json:"startDate"`
+	StartDate               *time.Time                 `json:"startDate"`
 	EstimatedCompletionDate *time.Time                 `json:"estimatedCompletionDate"`
 	ActualCompletionDate    *time.Time                 `json:"actualCompletionDate"`
 	InvestigationSummary    *string                    `json:"investigationSummary"`

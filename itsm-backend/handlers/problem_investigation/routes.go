@@ -54,7 +54,7 @@ func (h *Handler) CreateProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.CreateProblemInvestigation(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create problem investigation failed", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *Handler) GetProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.GetProblemInvestigation(c.Request.Context(), investigationID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h *Handler) UpdateProblemInvestigation(c *gin.Context) {
 	investigation, err := h.invService.UpdateProblemInvestigation(c.Request.Context(), investigationID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update problem investigation failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -134,7 +134,7 @@ func (h *Handler) CreateInvestigationStep(c *gin.Context) {
 	step, err := h.invService.CreateInvestigationStep(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create investigation step failed", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -165,7 +165,7 @@ func (h *Handler) UpdateInvestigationStep(c *gin.Context) {
 	step, err := h.invService.UpdateInvestigationStep(c.Request.Context(), stepID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update investigation step failed", "error", err, "step_id", stepID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -197,7 +197,7 @@ func (h *Handler) CreateRootCauseAnalysis(c *gin.Context) {
 	analysis, err := h.invService.CreateRootCauseAnalysis(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create root cause analysis failed", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -228,7 +228,7 @@ func (h *Handler) UpdateRootCauseAnalysis(c *gin.Context) {
 	analysis, err := h.invService.UpdateRootCauseAnalysis(c.Request.Context(), analysisID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update root cause analysis failed", "error", err, "analysis_id", analysisID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *Handler) CreateProblemSolution(c *gin.Context) {
 	solution, err := h.invService.CreateProblemSolution(c.Request.Context(), &req, tid)
 	if err != nil {
 		h.logger.Errorw("Create problem solution failed", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -291,7 +291,7 @@ func (h *Handler) UpdateProblemSolution(c *gin.Context) {
 	solution, err := h.invService.UpdateProblemSolution(c.Request.Context(), solutionID, &req, tid)
 	if err != nil {
 		h.logger.Errorw("Update problem solution failed", "error", err, "solution_id", solutionID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -316,7 +316,7 @@ func (h *Handler) GetProblemSolutions(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem solutions failed", "error", err, "problem_id", problemID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -341,7 +341,7 @@ func (h *Handler) GetProblemInvestigationSummary(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), problemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get problem investigation summary failed", "error", err, "problem_id", problemID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -364,7 +364,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 	investigation, err := h.invService.GetProblemInvestigation(c.Request.Context(), investigationID, tid)
 	if err != nil {
 		h.logger.Errorw("Get investigation steps failed - investigation not found", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.Fail(c, common.NotFoundCode, "调查记录不存在")
+		common.RespondError(c, err, "调查记录不存在")
 		return
 	}
 
@@ -372,7 +372,7 @@ func (h *Handler) GetInvestigationSteps(c *gin.Context) {
 	summary, err := h.invService.GetProblemInvestigationSummary(c.Request.Context(), investigation.ProblemID, tid)
 	if err != nil {
 		h.logger.Errorw("Get investigation steps failed", "error", err, "investigation_id", investigationID, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 
@@ -449,7 +449,7 @@ func (h *Handler) CreateKnowledgeArticle(c *gin.Context) {
 	article, err := h.invService.CreateKnowledgeArticle(c.Request.Context(), tid, uid, &req)
 	if err != nil {
 		h.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tid)
-		common.FailWithErr(c, err, "操作失败")
+		common.RespondError(c, err, "操作失败")
 		return
 	}
 

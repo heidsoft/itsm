@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
@@ -108,7 +109,7 @@ func (s *ProblemInvestigationService) GetRootCauseAnalysis(ctx context.Context, 
 	analysis, err := s.repo.GetRootCauseAnalysis(ctx, id, tenantID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("根因分析不存在")
+			return nil, notFoundError("根因分析不存在", id)
 		}
 		return nil, fmt.Errorf("查询根因分析失败: %v", err)
 	}
@@ -120,7 +121,7 @@ func (s *ProblemInvestigationService) GetProblemSolution(ctx context.Context, id
 	solution, err := s.repo.GetProblemSolution(ctx, id, tenantID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("解决方案不存在")
+			return nil, notFoundError("解决方案不存在", id)
 		}
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
@@ -133,7 +134,7 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
 	} else if !ok {
-		return nil, fmt.Errorf("问题不存在")
+		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
 
 	// 检查是否已存在调查记录
@@ -142,7 +143,7 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 		return nil, fmt.Errorf("查询调查记录失败: %v", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("该问题已存在调查记录")
+		return nil, duplicateInvestigationError(req.ProblemID)
 	}
 
 	// 创建调查记录
@@ -152,13 +153,12 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 	}
 	investigationID, err := s.repo.CreateInvestigation(ctx, req.ProblemID, req.InvestigatorID, req.EstimatedCompletionDate, summaryPtr, time.Now())
 	if err != nil {
+		// check-then-insert 之外还有 problem_investigations.problem_id UNIQUE 兜底：
+		// 并发创建时后到者撞约束，语义同样是「已存在调查记录」，不能掉进 500。
+		if isUniqueViolation(err) {
+			return nil, duplicateInvestigationError(req.ProblemID)
+		}
 		return nil, fmt.Errorf("创建问题调查失败: %v", err)
-	}
-
-	// 获取调查者姓名
-	investigatorName := "未知用户"
-	if name, ok, err := s.users.GetUserName(ctx, req.InvestigatorID, tenantID); err == nil && ok {
-		investigatorName = name
 	}
 
 	// 联动问题状态为"调查中"（经状态机校验，closed 终态拒绝联动；调查记录仍创建）
@@ -167,18 +167,8 @@ func (s *ProblemInvestigationService) CreateProblemInvestigation(ctx context.Con
 			"problem_id", req.ProblemID, "error", err)
 	}
 
-	return &dto.ProblemInvestigationResponse{
-		ID:                      investigationID,
-		ProblemID:               req.ProblemID,
-		InvestigatorID:          req.InvestigatorID,
-		InvestigatorName:        investigatorName,
-		Status:                  dto.InvestigationStatusInProgress,
-		StartDate:               time.Now(),
-		EstimatedCompletionDate: req.EstimatedCompletionDate,
-		InvestigationSummary:    summaryPtr,
-		CreatedAt:               time.Now(),
-		UpdatedAt:               time.Now(),
-	}, nil
+	// 回读库里的权威行：start_date 等可空列由数据库决定，禁止在响应里伪造。
+	return s.GetProblemInvestigation(ctx, investigationID, tenantID)
 }
 
 // GetProblemInvestigation 获取问题调查详情
@@ -186,7 +176,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigation(ctx context.Contex
 	investigation, err := s.repo.GetProblemInvestigation(ctx, investigationID, tenantID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("问题调查不存在")
+			return nil, notFoundError("问题调查不存在", investigationID)
 		}
 		return nil, fmt.Errorf("获取问题调查失败: %v", err)
 	}
@@ -232,7 +222,7 @@ func (s *ProblemInvestigationService) CreateInvestigationStep(ctx context.Contex
 		return nil, fmt.Errorf("查询调查记录失败: %v", err)
 	}
 	if problemID == 0 {
-		return nil, fmt.Errorf("调查记录不存在")
+		return nil, notFoundError("调查记录不存在", req.InvestigationID)
 	}
 
 	// 创建调查步骤
@@ -283,7 +273,7 @@ func (s *ProblemInvestigationService) UpdateInvestigationStep(ctx context.Contex
 		return nil, fmt.Errorf("查询调查步骤失败: %v", err)
 	}
 	if investigationID == 0 {
-		return nil, fmt.Errorf("调查步骤不存在")
+		return nil, notFoundError("调查步骤不存在", stepID)
 	}
 
 	upd := stepUpdate{
@@ -318,7 +308,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
 	} else if !ok {
-		return nil, fmt.Errorf("问题不存在")
+		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
 
 	// 检查是否已存在根本原因分析
@@ -327,7 +317,7 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 		return nil, fmt.Errorf("查询根因分析失败: %v", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("该问题已存在根本原因分析")
+		return nil, duplicateRootCauseError(req.ProblemID)
 	}
 
 	// 创建根本原因分析
@@ -353,6 +343,9 @@ func (s *ProblemInvestigationService) CreateRootCauseAnalysis(ctx context.Contex
 		ConfidenceLevel:      confidence,
 	}, time.Now())
 	if err != nil {
+		if isUniqueViolation(err) {
+			return nil, duplicateRootCauseError(req.ProblemID)
+		}
 		return nil, fmt.Errorf("创建根本原因分析失败: %v", err)
 	}
 
@@ -384,7 +377,7 @@ func (s *ProblemInvestigationService) CreateProblemSolution(ctx context.Context,
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, req.ProblemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
 	} else if !ok {
-		return nil, fmt.Errorf("问题不存在")
+		return nil, notFoundError("问题不存在", req.ProblemID)
 	}
 
 	var riskAssessment *string
@@ -438,7 +431,7 @@ func (s *ProblemInvestigationService) GetProblemInvestigationSummary(ctx context
 	if _, ok, err := s.repo.FetchProblemTitle(ctx, problemID, tenantID); err != nil {
 		return nil, fmt.Errorf("查询问题失败: %v", err)
 	} else if !ok {
-		return nil, fmt.Errorf("问题不存在")
+		return nil, notFoundError("问题不存在", problemID)
 	}
 
 	summary := &dto.ProblemInvestigationSummaryResponse{
@@ -508,7 +501,7 @@ func (s *ProblemInvestigationService) UpdateRootCauseAnalysis(ctx context.Contex
 		return nil, fmt.Errorf("查询根因分析失败: %v", err)
 	}
 	if count == 0 {
-		return nil, fmt.Errorf("根因分析不存在")
+		return nil, notFoundError("根因分析不存在", id)
 	}
 
 	var confidence *float64
@@ -544,7 +537,7 @@ func (s *ProblemInvestigationService) DeleteRootCauseAnalysis(ctx context.Contex
 		return fmt.Errorf("删除根因分析失败: %v", err)
 	}
 	if !deleted {
-		return fmt.Errorf("根因分析不存在")
+		return notFoundError("根因分析不存在", id)
 	}
 
 	return nil
@@ -560,7 +553,7 @@ func (s *ProblemInvestigationService) UpdateProblemSolution(ctx context.Context,
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
 	if count == 0 {
-		return nil, fmt.Errorf("解决方案不存在")
+		return nil, notFoundError("解决方案不存在", id)
 	}
 
 	upd := solutionUpdate{
@@ -589,7 +582,7 @@ func (s *ProblemInvestigationService) DeleteProblemSolution(ctx context.Context,
 		return fmt.Errorf("删除解决方案失败: %v", err)
 	}
 	if !deleted {
-		return fmt.Errorf("解决方案不存在")
+		return notFoundError("解决方案不存在", id)
 	}
 
 	return nil
@@ -605,7 +598,7 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 		return nil, fmt.Errorf("查询解决方案失败: %v", err)
 	}
 	if count == 0 {
-		return nil, fmt.Errorf("解决方案不存在")
+		return nil, notFoundError("解决方案不存在", id)
 	}
 
 	now := time.Now()
@@ -626,6 +619,39 @@ func (s *ProblemInvestigationService) ApproveSolution(ctx context.Context, id in
 	}
 
 	return s.GetProblemSolution(ctx, id, tenantID)
+}
+
+// ============================================================
+// 内部工具：错误分类
+// ============================================================
+
+// notFoundError 把「记录不存在」显式分类为 4004/404。裸 fmt.Errorf 会被
+// classifyError 兜底成 5001/500，让「客户端指向了不存在的资源」在观测上表现成服务端故障。
+func notFoundError(message string, id int) error {
+	return common.NewBusinessError(common.NotFoundCode, message, fmt.Sprintf("id=%d", id))
+}
+
+// duplicateInvestigationError 一个 problem 只允许一条调查记录：服务层前置校验之外，
+// problem_investigations.problem_id UNIQUE 也兜住并发竞态，两种路径统一返回 4090/409。
+func duplicateInvestigationError(problemID int) error {
+	return common.NewBusinessError(common.ConflictCode, "该问题已存在调查记录", fmt.Sprintf("problem_id=%d", problemID))
+}
+
+// duplicateRootCauseError 与调查记录同理：根因分析按 problem 唯一。
+func duplicateRootCauseError(problemID int) error {
+	return common.NewBusinessError(common.ConflictCode, "该问题已存在根本原因分析", fmt.Sprintf("problem_id=%d", problemID))
+}
+
+// isUniqueViolation 判断驱动层报错是否为唯一约束冲突（Postgres 23505 /
+// SQLite "UNIQUE constraint failed" / Ent 包装的 duplicate key）。
+func isUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	return strings.Contains(msg, "23505") ||
+		strings.Contains(msg, "duplicate key") ||
+		strings.Contains(msg, "UNIQUE constraint failed")
 }
 
 // ============================================================
