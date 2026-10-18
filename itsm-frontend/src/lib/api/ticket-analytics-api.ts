@@ -46,11 +46,20 @@ export class TicketAnalyticsApi {
   }
 
   // 导出分析数据
+  //
+  // 后端 `POST /api/v1/tickets/analytics/export` 用 ShouldBindJSON 读 dto.DeepAnalyticsRequest，
+  // format 走查询参数。这里必须用 request 而不是 post：httpClient.post 对 JSON 请求体
+  // 不透传 responseType，blob 会被当 JSON 解析而抛错。失败由 httpClient 按非 2xx 抛出
+  // ApiRequestError，服务端业务文案原样透出给调用方。
   static async exportAnalytics(
     config: AnalyticsConfig,
     format: 'excel' | 'pdf' | 'csv'
   ): Promise<Blob> {
-    return httpClient.post<Blob>(`/api/v1/tickets/analytics/export?format=${format}`, config, {
+    return httpClient.request<Blob>({
+      method: 'POST',
+      url: '/api/v1/tickets/analytics/export',
+      params: { format },
+      data: config,
       responseType: 'blob',
     });
   }

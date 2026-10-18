@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -58,12 +59,12 @@ type UpdateProcessDefinitionRequest struct {
 }
 
 type ListProcessDefinitionsRequest struct {
-	Key      string `json:"key"`
-	Category string `json:"category"`
-	IsActive *bool  `json:"isActive"`
-	TenantID int    `json:"tenantId"`
-	Page     int    `json:"page"`
-	PageSize int    `json:"pageSize"`
+	Key      string `form:"key" json:"key"`
+	Category string `form:"category" json:"category"`
+	IsActive *bool  `form:"isActive" json:"isActive"`
+	TenantID int    `form:"-" json:"tenantId"`
+	Page     int    `form:"page" json:"page"`
+	PageSize int    `form:"pageSize" json:"pageSize"`
 }
 
 // Service struct
@@ -343,21 +344,54 @@ func (s *bpmnProcessDefinitionService) PublishProcessDefinition(ctx context.Cont
 	return published, nil
 }
 
+// DeleteProcessDefinition 物理删除一个流程定义版本。
+//
+// process_instances.process_definition_id 是指向本行的必填外键，因此有历史实例的版本
+// 不能物理删除（删除会把实例历史变成悬空引用）。这里按活跃/历史分别返回 conflict，
+// 而不是让数据库约束错误兜底成 500/5001。
 func (s *bpmnProcessDefinitionService) DeleteProcessDefinition(ctx context.Context, key string, version string) error {
 	definition, err := s.GetProcessDefinition(ctx, key, version)
 	if err != nil {
 		return err
 	}
+	tenantID, err := requireBPMNTenantContext(ctx)
+	if err != nil {
+		return err
+	}
 
-	runningCount, err := s.client.ProcessInstance.
-		Query().
-		Where(processinstance.ProcessDefinitionID(definition.ID)).
+	liveCount, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.ProcessDefinitionID(definition.ID),
+			processinstance.TenantID(tenantID),
+			processinstance.StatusIn("running", "suspended"),
+		).
 		Count(ctx)
 	if err != nil {
 		return fmt.Errorf("检查流程实例失败: %w", err)
 	}
-	if runningCount > 0 {
-		return fmt.Errorf("该流程定义有 %d 个运行中的实例，请先关闭后再删除", runningCount)
+	if liveCount > 0 {
+		return common.NewAppError(
+			common.ErrCodeConflict,
+			fmt.Sprintf("该流程定义还有 %d 个活跃实例（running/suspended），请先终止或完成后再删除", liveCount),
+			http.StatusConflict, nil,
+		)
+	}
+
+	historicalCount, err := s.client.ProcessInstance.Query().
+		Where(
+			processinstance.ProcessDefinitionID(definition.ID),
+			processinstance.TenantID(tenantID),
+		).
+		Count(ctx)
+	if err != nil {
+		return fmt.Errorf("检查流程实例失败: %w", err)
+	}
+	if historicalCount > 0 {
+		return common.NewAppError(
+			common.ErrCodeConflict,
+			fmt.Sprintf("该流程定义有 %d 个历史实例，删除会破坏流程实例历史，请改用停用或发布新版本", historicalCount),
+			http.StatusConflict, nil,
+		)
 	}
 
 	return s.client.ProcessDefinition.DeleteOne(definition).Exec(ctx)

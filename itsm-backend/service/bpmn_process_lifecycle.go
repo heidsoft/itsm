@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processinstance"
@@ -13,17 +16,53 @@ import (
 	"itsm-backend/metrics"
 )
 
-func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
+// 实例状态词表见 ent/schema/process_instance.go：running / suspended / completed / terminated。
+type instanceTransition struct {
+	label   string
+	allowed []string
+}
+
+var instanceLifecycleTable = map[string]instanceTransition{
+	"suspend":   {label: "暂停", allowed: []string{"running"}},
+	"resume":    {label: "恢复", allowed: []string{"suspended"}},
+	"terminate": {label: "终止", allowed: []string{"running", "suspended"}},
+}
+
+// loadLifecycleInstance 是三个实例流转动作的共同入口：按 PI-* 业务键 + 租户加载实例，
+// 再校验 source 状态。非法迁移返回 conflict，避免把已完成/已终止的实例改回可执行状态
+// 并留下一条假的审计记录。
+func (e *CustomProcessEngine) loadLifecycleInstance(ctx context.Context, processInstanceID, action string) (*ent.ProcessInstance, error) {
 	tenantID, err := requireBPMNTenantContext(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	instance, err := e.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return fmt.Errorf("获取流程实例失败: %w", err)
+		return nil, fmt.Errorf("获取流程实例失败: %w", err)
+	}
+
+	transition := instanceLifecycleTable[action]
+	for _, status := range transition.allowed {
+		if instance.Status == status {
+			return instance, nil
+		}
+	}
+	return nil, common.NewAppError(
+		common.ErrCodeConflict,
+		fmt.Sprintf("流程实例当前状态为 %s，不能%s（仅支持：%s）",
+			instance.Status, transition.label, strings.Join(transition.allowed, "/")),
+		http.StatusConflict,
+		nil,
+	)
+}
+
+func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
+	instance, err := e.loadLifecycleInstance(ctx, processInstanceID, "suspend")
+	if err != nil {
+		return err
 	}
 
 	_, err = e.client.ProcessInstance.UpdateOne(instance).
@@ -66,16 +105,9 @@ func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanc
 }
 
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
-	tenantID, err := requireBPMNTenantContext(ctx)
+	instance, err := e.loadLifecycleInstance(ctx, processInstanceID, "resume")
 	if err != nil {
 		return err
-	}
-
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
-		First(ctx)
-	if err != nil {
-		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
 	_, err = e.client.ProcessInstance.UpdateOne(instance).
@@ -115,16 +147,9 @@ func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstance
 }
 
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
-	tenantID, err := requireBPMNTenantContext(ctx)
+	instance, err := e.loadLifecycleInstance(ctx, processInstanceID, "terminate")
 	if err != nil {
 		return err
-	}
-
-	instance, err := e.client.ProcessInstance.Query().
-		Where(processinstance.ProcessInstanceID(processInstanceID), processinstance.TenantID(tenantID)).
-		First(ctx)
-	if err != nil {
-		return fmt.Errorf("获取流程实例失败: %w", err)
 	}
 
 	_, err = e.client.ProcessInstance.UpdateOne(instance).

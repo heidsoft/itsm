@@ -8,10 +8,12 @@ jest.mock('@/lib/api/http-client', () => ({
     put: jest.fn(),
     delete: jest.fn(),
     patch: jest.fn(),
+    request: jest.fn(),
   },
 }));
 
 const mockPost = httpClient.post as jest.Mock;
+const mockRequest = httpClient.request as jest.Mock;
 
 describe('TicketAnalyticsApi', () => {
   beforeEach(() => { jest.clearAllMocks(); });
@@ -33,23 +35,36 @@ describe('TicketAnalyticsApi', () => {
   });
 
   describe('exportAnalytics', () => {
-    it('should export analytics as excel', async () => {
-      const config = {
-        dimensions: ['status'],
-        metrics: ['count'],
-        chartType: 'bar' as const,
-        timeRange: ['2024-01-01', '2024-12-31'] as [string, string],
-        filters: {},
-      };
-      const mockBlob = new Blob(['data']);
-      mockPost.mockResolvedValue(mockBlob);
+    const config = {
+      dimensions: ['status'],
+      metrics: ['count'],
+      chartType: 'bar' as const,
+      timeRange: ['2024-01-01', '2024-12-31'] as [string, string],
+      filters: {},
+    };
+
+    it('should post the config as body and keep format in the query', async () => {
+      const mockBlob = new Blob(['data'], { type: 'application/vnd.ms-excel' });
+      mockRequest.mockResolvedValue(mockBlob);
+
       const result = await TicketAnalyticsApi.exportAnalytics(config, 'excel');
-      expect(mockPost).toHaveBeenCalledWith(
-        '/api/v1/tickets/analytics/export?format=excel',
-        config,
-        { responseType: 'blob' }
+
+      expect(mockRequest).toHaveBeenCalledWith({
+        method: 'POST',
+        url: '/api/v1/tickets/analytics/export',
+        params: { format: 'excel' },
+        data: config,
+        responseType: 'blob',
+      });
+      expect(result).toBe(mockBlob);
+    });
+
+    it('should let the server error message propagate to the caller', async () => {
+      mockRequest.mockRejectedValue(new Error('timeRange 必须恰好包含起止两个日期（YYYY-MM-DD）'));
+
+      await expect(TicketAnalyticsApi.exportAnalytics(config, 'csv')).rejects.toThrow(
+        'timeRange 必须恰好包含起止两个日期'
       );
-      expect(result).toBeInstanceOf(Blob);
     });
   });
 });

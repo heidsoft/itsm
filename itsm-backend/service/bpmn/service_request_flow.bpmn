@@ -135,29 +135,29 @@
     </bpmn:sequenceFlow>
     <!-- 三级审批全部通过 → 执行服务 -->
     <bpmn:sequenceFlow id="Flow_L3_Pass" sourceRef="Gateway_L3_Result" targetRef="Activity_Execute">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <!-- 一级审批通过 → 二级审批 -->
     <bpmn:sequenceFlow id="Flow_L1_Result" sourceRef="Activity_Approval_L1" targetRef="Gateway_L1_Result" />
     <bpmn:sequenceFlow id="Flow_L1_Pass" sourceRef="Gateway_L1_Result" targetRef="Activity_Approval_L2">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <!-- 二级审批通过 → 三级审批 -->
     <bpmn:sequenceFlow id="Flow_L2_Result" sourceRef="Activity_Approval_L2" targetRef="Gateway_L2_Result" />
     <bpmn:sequenceFlow id="Flow_L2_Pass" sourceRef="Gateway_L2_Result" targetRef="Activity_Approval_L3">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <!-- 三级审批通过 → 执行服务 -->
     <bpmn:sequenceFlow id="Flow_L3_Result" sourceRef="Activity_Approval_L3" targetRef="Gateway_L3_Result" />
     <!-- 任意级别驳回 → 驳回通知 -->
     <bpmn:sequenceFlow id="Flow_Reject" sourceRef="Gateway_L1_Result" targetRef="Activity_RejectNotify">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'rejected'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_L2_Reject" sourceRef="Gateway_L2_Result" targetRef="Activity_RejectNotify">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'rejected'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_L3_Reject" sourceRef="Gateway_L3_Result" targetRef="Activity_RejectNotify">
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'rejected'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'rejected'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_EndReject" sourceRef="Activity_RejectNotify" targetRef="EndEvent_Reject" />
     <bpmn:sequenceFlow id="Flow_6" sourceRef="Activity_Execute" targetRef="Activity_Confirm" />

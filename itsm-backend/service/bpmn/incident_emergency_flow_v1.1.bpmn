@@ -150,7 +150,7 @@
       <bpmn:extensionElements>
         <bpmn:metaData name="flow_name">审批通过</bpmn:metaData>
       </bpmn:extensionElements>
-      <bpmn:conditionExpression><![CDATA[${variables['approval_result'] == 'approved'}]]></bpmn:conditionExpression>
+      <bpmn:conditionExpression><![CDATA[${variables['approvalResult'] == 'approved'}]]></bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
     <!-- 初步诊断 -> 问题定位网关 -->

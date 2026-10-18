@@ -147,7 +147,9 @@ const TicketAnalytics: React.FC = () => {
       message.success('导出成功');
     } catch (error) {
       console.error('Export failed:', error);
-      message.error('导出失败，请重试');
+      // 服务端给出的业务文案要透出来，否则参数错误、权限不足和后端故障都只剩
+      // 「导出失败，请重试」，运维和用户都无从判断。
+      message.error(error instanceof Error && error.message ? error.message : '导出失败，请重试');
     } finally {
       setExporting(false);
     }

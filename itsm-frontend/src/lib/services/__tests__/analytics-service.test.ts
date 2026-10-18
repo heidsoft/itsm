@@ -177,7 +177,7 @@ describe('TicketAnalyticsService', () => {
   });
 
   describe('exportAnalytics', () => {
-    it('should export analytics as blob', async () => {
+    it('should send the JSON body the backend binds, with format as query param', async () => {
       const blob = new Blob(['data'], { type: 'text/csv' });
       mockRequest.mockResolvedValue(blob);
 
@@ -190,29 +190,46 @@ describe('TicketAnalyticsService', () => {
       expect(mockRequest).toHaveBeenCalledWith({
         method: 'POST',
         url: '/api/v1/tickets/analytics/export',
-        params: { dateFrom: '2024-01-01', dateTo: '2024-01-31', format: 'csv' },
+        params: { format: 'csv' },
+        data: {
+          dimensions: ['status'],
+          metrics: ['count', 'resolution_time'],
+          chartType: 'table',
+          timeRange: ['2024-01-01', '2024-01-31'],
+          filters: {},
+        },
         responseType: 'blob',
       });
       expect(result).toBe(blob);
     });
 
-    it('should export in excel format', async () => {
-      const blob = new Blob(['excel-data']);
-      mockRequest.mockResolvedValue(blob);
+    it('should group by the requested dimension', async () => {
+      mockRequest.mockResolvedValue(new Blob(['excel-data'], { type: 'application/octet-stream' }));
 
       await ticketAnalyticsService.exportAnalytics({
         dateFrom: '2024-01-01',
         dateTo: '2024-12-31',
         format: 'excel',
-        groupBy: 'month',
+        groupBy: 'priority',
       });
 
-      expect(mockRequest).toHaveBeenCalledWith({
-        method: 'POST',
-        url: '/api/v1/tickets/analytics/export',
-        params: { dateFrom: '2024-01-01', dateTo: '2024-12-31', format: 'excel', groupBy: 'month' },
-        responseType: 'blob',
-      });
+      const call = mockRequest.mock.calls[0][0];
+      expect(call.params).toEqual({ format: 'excel' });
+      expect(call.data.groupBy).toBe('priority');
+      expect(call.data.dimensions).toEqual(['priority']);
+      expect(call.data.timeRange).toEqual(['2024-01-01', '2024-12-31']);
+    });
+
+    it('should propagate the server error message instead of swallowing it', async () => {
+      mockRequest.mockRejectedValue(new Error('未授权访问: 租户信息缺失（code 2002）'));
+
+      await expect(
+        ticketAnalyticsService.exportAnalytics({
+          dateFrom: '2024-01-01',
+          dateTo: '2024-01-31',
+          format: 'csv',
+        })
+      ).rejects.toThrow('未授权访问: 租户信息缺失');
     });
   });
 });

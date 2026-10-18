@@ -33,30 +33,33 @@ import (
 // Request/Response structs
 
 type ListUserTasksRequest struct {
-	Assignee        string `json:"assignee"`
-	CandidateUsers  string `json:"candidateUsers"`
-	CandidateGroups string `json:"candidateGroups"`
+	Assignee        string `form:"-" json:"assignee"`
+	CandidateUsers  string `form:"-" json:"candidateUsers"`
+	CandidateGroups string `form:"-" json:"candidateGroups"`
 	// UserID 为「我的待办」语义：查询"分配给我 OR 我在候选人 OR 我所在组作为候选组"的任务。
 	// 传入后：Assignee/CandidateUsers/CandidateGroups 会被忽略（可选透传）。
-	UserID int `json:"userId"`
+	// 身份三字段一律 form:"-"：只能由 handler 从认证上下文写入。
+	UserID int `form:"-" json:"userId"`
 	// AllTasks is an internal authorization decision made by the controller after
 	// the task:admin middleware succeeds. It must never be populated from HTTP input.
-	AllTasks             bool   `json:"-" form:"-"`
-	Status               string `json:"status"`
-	ProcessDefinitionKey string `json:"processDefinitionKey"`
-	ProcessInstanceID    int    `json:"processInstanceId"`
-	TenantID             int    `json:"tenantId"`
-	Page                 int    `json:"page"`
-	PageSize             int    `json:"pageSize"`
+	AllTasks bool `json:"-" form:"-"`
+	// ProcessInstanceID 是 process_tasks 的数值外键；列表按 PI-* 业务键过滤尚未收敛，
+	// 故 form:"-"，避免前端传 "PI-xxx" 时 Gin 把它变成 400。
+	ProcessInstanceID    int    `form:"-" json:"processInstanceId"`
+	Status               string `form:"status" json:"status"`
+	ProcessDefinitionKey string `form:"processDefinitionKey" json:"processDefinitionKey"`
+	TenantID             int    `form:"-" json:"tenantId"`
+	Page                 int    `form:"page" json:"page"`
+	PageSize             int    `form:"pageSize" json:"pageSize"`
 }
 
 type TaskStatisticsRequest struct {
-	ProcessDefinitionKey string     `json:"processDefinitionKey"`
-	Assignee             string     `json:"assignee"`
-	Status               string     `json:"status"`
-	TenantID             int        `json:"tenantId"`
-	StartDate            *time.Time `json:"startDate"`
-	EndDate              *time.Time `json:"endDate"`
+	ProcessDefinitionKey string     `form:"processDefinitionKey" json:"processDefinitionKey"`
+	Assignee             string     `form:"assignee" json:"assignee"`
+	Status               string     `form:"status" json:"status"`
+	TenantID             int        `form:"-" json:"tenantId"`
+	StartDate            *time.Time `form:"-" json:"startDate"`
+	EndDate              *time.Time `form:"-" json:"endDate"`
 }
 
 type TaskStatistics struct {

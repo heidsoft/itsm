@@ -1753,6 +1753,40 @@ cd itsm-backend && go test -count=1 \
 ```
 
 
+### 1.46 BPMN 列表过滤/分页首次真正生效，实例生命周期与定义删除改用冲突语义（2026-10-18，破坏性：响应结果与状态码变更）
+
+`ListProcessInstancesRequest` 等 BPMN 请求结构只有 `json` 标签，而 handler 用的是
+`ShouldBindQuery`——Gin 按 Go 字段名匹配查询参数，camelCase 参数因此静默丢空，
+service 里写好的过滤谓词和 `Offset/Limit` 是死代码。补齐 `form` 标签后，**同一批
+请求会第一次真的返回被过滤/翻页的结果**；调用方若此前依赖"过滤参数不生效"来拿全量，
+需显式不带参数请求。身份与关系键保持不绑定（`form:"-"`）：`tenantId`、`userId`、
+`assignee`、`candidateGroups` 只认认证上下文，`processInstanceId`（数值外键）与
+`startDate`/`endDate`（wire 格式未收敛）继续忽略，避免把租户变成可覆盖参数、
+或把时间过滤变成 400。
+
+| 接口 | 旧行为 | 新行为 | 不变量 |
+|:---|:---|:---|:---|
+| `GET /bpmn/process-instances`（`processDefinitionKey`/`status`/`businessKey`/`page`/`pageSize`） | 参数恒被丢弃：返回全量首页，翻页重复 | 过滤与分页真正生效 | `tenantId` 仍来自认证上下文 |
+| `GET /bpmn/process-definitions`（`key`/`category`/`isActive`） | 同上 | 同上 | 同上 |
+| `GET /bpmn/tasks`（`status`/`processDefinitionKey`/`page`/`pageSize`） | 同上 | 同上 | `assignee`/`candidateGroups` 不可由请求注入 |
+| `PUT /bpmn/process-instances/{id}/suspend\|resume\|terminate` | 不校验源状态：对 `completed`/`terminated` 实例照样写库、写审计、返回 200 | 非法迁移 **409/`4090`** 且实例状态原样留存；实例不存在/跨租户 **404/`4004`** | 合法迁移收敛为单一状态机表：`suspend←running`、`resume←suspended`、`terminate←running\|suspended` |
+| `DELETE /bpmn/process-definitions/{key}`（该版本有实例） | 裸 `fmt.Errorf` → 500/`5001`，看不出是业务拒绝 | 有活跃实例（running/suspended）**409/`4090`**；仅有历史实例 **409/`4090`** 并给出可执行指引 | 无实例版本正常删除；跨租户按 not-found。`process_instances.process_definition_id` 是必填外键，**有历史实例的版本仍删不掉**（归档/软删属 schema 与产品决策） |
+| `POST /tickets/analytics/export`（前端调用形状） | 前端把 `dateFrom/dateTo/format` 全塞 query、请求体为空；后端 `ShouldBindJSON` 读 `timeRange`（必填、恰好两个 `YYYY-MM-DD`）→ 必然 400，页面再统一压成"导出失败，请重试" | 请求体带 `timeRange/dimensions/metrics/chartType/filters`，`format` 留在查询参数；页面透出服务端真实文案 | 后端契约未变，属前端调用方修复 |
+| 内置流程定义条件表达式 | 读 `variables['approval_result']`，而引擎三条写入路径都写驼峰 → 条件恒 false，审批驳回不走驳回分支且无任何报错 | 模板文件改为 `approvalResult`；存量 `process_definitions.bpmn_xml` 由 `migrations/20261018_fix_bpmn_approval_result_variable.sql` 改写 | 该迁移属磁盘自发现流，版本日期晚于收养 cutoff（`20260908`），下次后端启动即自动执行；幂等（重复命中 0 行），残留则 `RAISE EXCEPTION` fail closed |
+
+本批无新增表结构变更。因该迁移会改写流程定义 XML 文本，升级前建议对目标库做一次备份。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 \
+  ./handlers/bpmn/ ./service/ ./migration/ ./internal/bootstrap/
+cd itsm-frontend && npx jest \
+  src/lib/services/__tests__/analytics-service.test.ts \
+  src/lib/api/__tests__/ticket-analytics-api.test.ts \
+  src/lib/__tests__/api-contract.test.ts
+```
+
 ### 1.47 基础管理域写面错误形态与幂等收敛（projects / ticket-tags / ticket-rating / surveys / timers）（2026-10-18，破坏性：状态码变更）
 
 与 §1.42/§1.44/§1.45 同型收敛：项目管理、工单标签、工单评分、满意度调查与
@@ -1789,6 +1823,7 @@ cd itsm-backend && go test -count=1 \
   ./handlers/ticket_tag/ ./handlers/timer/ ./handlers/vector_store/ \
   ./handlers/prediction/ ./service/ ./router/
 ```
+
 
 ## 2. 环境变量变更
 

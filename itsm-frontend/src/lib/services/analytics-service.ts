@@ -1,4 +1,5 @@
 import { httpClient } from '@/lib/api/http-client';
+import { TicketAnalyticsApi } from '@/lib/api/ticket-analytics-api';
 
 // 工单分析响应
 export interface TicketAnalyticsResponse {
@@ -262,20 +263,27 @@ class TicketAnalyticsService {
     };
   }
 
-  // 导出分析报表：与 router.go line 766 对齐 → POST /api/v1/tickets/analytics/export
+  // 导出分析报表：POST /api/v1/tickets/analytics/export，请求体是 dto.DeepAnalyticsRequest，
+  // format 是查询参数。之前只发查询参数、不带请求体，后端 ShouldBindJSON 必然失败。
+  // dimensions/metrics 的取值是后端 service/analytics_service.go 的枚举字面量（蛇形），
+  // 属于值域而非字段名，前端不能改成驼峰。
   async exportAnalytics(params: {
     dateFrom: string;
     dateTo: string;
     format: 'csv' | 'excel' | 'pdf';
     groupBy?: string;
   }): Promise<Blob> {
-    const response = await httpClient.request({
-      method: 'POST',
-      url: '/api/v1/tickets/analytics/export',
-      params,
-      responseType: 'blob',
-    });
-    return response as Blob;
+    return TicketAnalyticsApi.exportAnalytics(
+      {
+        dimensions: params.groupBy ? [params.groupBy] : ['status'],
+        metrics: ['count', 'resolution_time'],
+        chartType: 'table',
+        timeRange: [params.dateFrom, params.dateTo],
+        filters: {},
+        ...(params.groupBy ? { groupBy: params.groupBy } : {}),
+      },
+      params.format,
+    );
   }
 }
 

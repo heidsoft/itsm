@@ -1600,6 +1600,27 @@ PUT  /api/v1/bpmn/process-instances/{id}/terminate
 传数字返回 404。查询与变更均收敛在认证租户范围内（跨租户 PI 同样 404）。详见
 [UPGRADE.md](../UPGRADE.md) §1.28。
 
+列表查询参数（2026-10-18 起真正生效；此前请求 DTO 缺 `form` 标签，camelCase 参数被静默丢空，
+过滤与分页形同不存在）：
+
+```http
+GET /api/v1/bpmn/process-instances?processDefinitionKey=&status=&businessKey=&page=1&pageSize=20
+GET /api/v1/bpmn/process-definitions?key=&category=&isActive=&page=1&pageSize=20
+GET /api/v1/bpmn/tasks?status=&processDefinitionKey=&page=1&pageSize=20
+```
+
+- `tenantId`、`userId`、`assignee`、`candidateUsers`、`candidateGroups` 不是可查询参数，一律来自
+  认证上下文；`processDefinitionKey`/`status` 的取值见实例状态词表
+  `running | suspended | completed | terminated`。
+- 生命周期端点 `suspend`/`resume`/`terminate` 校验源状态：`suspend←running`、`resume←suspended`、
+  `terminate←running|suspended`，非法迁移返回 **409/`4090`**（实例状态与审计均不变），实例不存在
+  或跨租户返回 **404/`4004`**，不再对已完成的实例返回 200。
+- `DELETE /api/v1/bpmn/process-definitions/{key}?version=` 同理：仍有 running/suspended 活跃实例
+  → 409/`4090`；只剩历史实例 → 409/`4090`（`process_instances.process_definition_id` 是必填外键，
+  删除会破坏历史），无实例的版本才真正删除。
+
+  以上均属调用方可见的行为变更，升级注意事项见 [UPGRADE.md](../UPGRADE.md) §1.46。
+
 ### 获取工作流列表
 
 ```http
