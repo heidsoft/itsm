@@ -211,6 +211,22 @@ func (s *TicketNotificationService) SendNotification(
 }
 
 func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Context, ticketID int, req *dto.SendTicketNotificationRequest, tenantID int) error {
+	// 入箱前校验工单归属（B5.2 修复）：不校验会把跨租户 ticketId 塞进租户命令
+	// 的 payload，等价于把问题推迟到异步链路 + dead-letter 噪声。与直发路径
+	// 同一语义：工单不存在/跨租户 → 404/4004。
+	ticketExists, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantID(tenantID),
+		).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to check ticket existence: %w", err)
+	}
+	if !ticketExists {
+		return common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
+	}
+
 	channel := req.Channel
 	if channel == "" {
 		channel = "in_app"
@@ -232,7 +248,22 @@ func (s *TicketNotificationService) enqueueNotificationDeliveries(ctx context.Co
 			continue
 		}
 		seen[recipientID] = struct{}{}
-		err := enqueueTicketNotificationCommand(ctx, s.client, tenantID, ticketID, recipientID, req.Type, channel, req.Content, occurrenceKey)
+		// 收件人必须属于命令租户（跨租户 userID 注入的 outbox 变体）：
+		// 不满足则按「用户不存在」静默跳过，与直发路径一致，禁止入箱。
+		recipientExists, err := s.client.User.Query().
+			Where(
+				user.ID(recipientID),
+				user.TenantID(tenantID),
+			).
+			Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to check notification recipient existence: %w", err)
+		}
+		if !recipientExists {
+			s.logger.Warnw("Notification recipient not found in tenant, skipping enqueue", "recipient_id", recipientID, "tenant_id", tenantID)
+			continue
+		}
+		err = enqueueTicketNotificationCommand(ctx, s.client, tenantID, ticketID, recipientID, req.Type, channel, req.Content, occurrenceKey)
 		// 这里的吞错是**安全**的，与事务内版本不同：本函数走 *ent.Client 而非 *ent.Tx，
 		// 每条 INSERT 是独立语句、无事务上下文，撞唯一索引不会弄脏任何后续写入。
 		// 事务内版本（enqueueTicketNotificationCommandTx）绝不能这么做——见该文件顶部说明。

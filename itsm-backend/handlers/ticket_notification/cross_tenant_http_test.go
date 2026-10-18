@@ -12,6 +12,9 @@
 //   - 同租户工单不能为跨租户 userID 创建通知行（B5 修复：直发路径用户
 //     存在性校验带租户谓词，跨租户引用以「用户不存在」静默跳过、零行，
 //     与幽灵 userID 的可观测形态不可区分）。
+//   - outbox 入箱路径（B5.2 修复）与直发路径同语义：入箱前校验工单归属
+//     （跨租户/不存在 → 404/4004、零命令行）；收件人校验租户谓词，混合
+//     收件人列表只为本租户用户入箱，payload 收件人不得引用他租户用户。
 package ticket_notification_test
 
 import (
@@ -50,6 +53,15 @@ type fixture struct {
 }
 
 func newFixture(t *testing.T) *fixture {
+	return newFixtureMode(t, false)
+}
+
+// newOutboxFixture 构造启用 outbox 入箱路径的服务（B5.2 修复面）。
+func newOutboxFixture(t *testing.T) *fixture {
+	return newFixtureMode(t, true)
+}
+
+func newFixtureMode(t *testing.T, enableOutbox bool) *fixture {
 	t.Helper()
 	client := enttest.Open(t, "sqlite3",
 		fmt.Sprintf("file:notif_cross_tenant_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano()))
@@ -88,11 +100,15 @@ func newFixture(t *testing.T) *fixture {
 	gin.SetMode(gin.TestMode)
 	engine := gin.New()
 	const secret = "notification-cross-tenant-secret"
+	notifSvc := service.NewTicketNotificationService(client, logger)
+	if enableOutbox {
+		notifSvc.EnableOutbox()
+	}
 	router.SetupRoutes(engine, &router.RouterConfig{
 		JWTSecret:                 secret,
 		Logger:                    logger,
 		Client:                    client,
-		TicketNotificationHandler: notificationHandler.NewHandler(service.NewTicketNotificationService(client, logger), logger),
+		TicketNotificationHandler: notificationHandler.NewHandler(notifSvc, logger),
 	})
 
 	return &fixture{
@@ -208,5 +224,69 @@ func TestTicketNotificationCrossTenant(t *testing.T) {
 		assert.Equal(t, before, fx.countRows(t), "不存在用户必须静默跳过、零行")
 		// 与跨租户 userID 的错误/成功形态保持一致性：两者对外观感一致，
 		// 差异只体现在库内是否落行。
+	})
+}
+
+// nOutboxCommands 拉取 operational_commands 行（outbox 路径的副作用是命令行）。
+func (fx *fixture) nOutboxCommands(t *testing.T) []*ent.OperationalCommand {
+	t.Helper()
+	rows, err := fx.client.OperationalCommand.Query().All(context.Background())
+	require.NoError(t, err)
+	return rows
+}
+
+func TestTicketNotificationOutboxCrossTenant(t *testing.T) {
+	fx := newOutboxFixture(t)
+
+	t.Run("跨租户outbox发送404且零入箱", func(t *testing.T) {
+		before := fx.nOutboxCommands(t)
+		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.stranger,
+			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+`],"type":"ticket_commented","channel":"in_app","content":"跨租户入箱探测"}`))
+		// 与直发路径同一语义：入箱前校验工单归属（B5.2 修复），
+		// not-found/跨租户 → 404/4004，不产生任何命令行。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
+		assert.Empty(t, fx.nOutboxCommands(t), "跨租户入箱必须被拒绝，operational_commands 零新行")
+		assert.Empty(t, before)
+	})
+
+	t.Run("不存在的工单与跨租户入箱错误形态同构", func(t *testing.T) {
+		w1 := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.stranger,
+			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+`],"type":"ticket_commented","channel":"in_app","content":"x"}`))
+		w2 := fx.do(t, http.MethodPost, "/api/v1/tickets/999999/notifications", fx.stranger,
+			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+`],"type":"ticket_commented","channel":"in_app","content":"x"}`))
+		require.Equal(t, http.StatusNotFound, w1.Code)
+		require.Equal(t, http.StatusNotFound, w2.Code)
+		require.Equal(t, w1.Body.String(), w2.Body.String(), "存在性不可区分")
+	})
+
+	t.Run("同租户outbox发送是正控制：恰入一条投递命令", func(t *testing.T) {
+		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.userA,
+			[]byte(`{"userIds":[`+fmt.Sprint(fx.userA.ID)+`],"type":"ticket_commented","channel":"in_app","content":"入箱正控制","idempotencyKey":"outbox-positive-1"}`))
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":0`)
+
+		rows := fx.nOutboxCommands(t)
+		require.Len(t, rows, 1, "合法发送必须入箱恰好一条投递命令")
+		require.Equal(t, fx.tenantA.ID, rows[0].TenantID)
+		require.Equal(t, "notification.deliver", rows[0].CommandType)
+		require.Equal(t, "ticket", rows[0].AggregateType)
+		require.Equal(t, fx.ticketA.ID, rows[0].AggregateID)
+		recipientID, _ := rows[0].Payload["recipientId"].(float64)
+		require.Equal(t, float64(fx.userA.ID), recipientID, "payload 收件人必须是本租户用户")
+	})
+
+	t.Run("混合收件人只为本租户用户入箱：跨租户与幽灵userID静默跳过", func(t *testing.T) {
+		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/tickets/%d/notifications", fx.ticketA.ID), fx.userA,
+			[]byte(`{"userIds":[`+fmt.Sprint(fx.stranger.ID)+","+fmt.Sprint(fx.userA.ID)+`,999999],"type":"ticket_commented","channel":"in_app","content":"混合收件人入箱"}`))
+		require.Equal(t, http.StatusOK, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":0`)
+
+		rows := fx.nOutboxCommands(t)
+		// 上一个正控制已入 1 条；本请求混合 3 个收件人，只有本租户 userA 合法。
+		require.Len(t, rows, 2, "混合收件人必须恰好入箱一条命令（只为本租户用户）")
+		newest := rows[len(rows)-1]
+		recipientID, _ := newest.Payload["recipientId"].(float64)
+		require.Equal(t, float64(fx.userA.ID), recipientID, "payload 收件人必须是本租户用户，跨租户/幽灵收件人不得入箱")
 	})
 }
