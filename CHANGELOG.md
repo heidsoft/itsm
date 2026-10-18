@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **跨租户回归测试扩面（B4）：auditlog / analytics / ticket_notification / ticket_dependency 四域接真实入口（2026-10-18）**：延续 B2 的「真实生产入口」方法学（`router.SetupRoutes` 单域布线 + 真 JWT + `RequirePermission`），再拔掉 4 个零测试域的跨租户盲区，全部随默认 `go test ./...` 进 CI：
+  - `handlers/auditlog/cross_tenant_http_test.go`：审计日志读面（`GET /audit-logs`）五键分页契约 + 双向内容零泄漏（路径/动作/请求体程序化标记探针）+ 过滤不命中仍不泄漏对端。
+  - `handlers/analytics/cross_tenant_http_test.go`：聚合统计面用**精确计数**探隔离（泄漏不体现在单条内容而是计数混入）——`total` 与 status 分布和必须恰为本租户工单数，跨租户读取不得把对端算进来。
+  - `handlers/ticket_notification/cross_tenant_http_test.go`：列表正控制 + 跨租户列表恒空（零泄漏、零副作用）；**钉住两个真实缺陷**见 Fixed「B5」条目：跨租户发送兜底 500/5001、直发路径用户存在性校验缺租户谓词（跨租户引用注入）。
+  - `handlers/ticket_dependency/cross_tenant_http_test.go`：依赖影响分析正控制回显本租户工单号/标题；跨租户/不存在 404/4004 且错误响应逐字节同构、零内容回显。
+  - service 层四域均已带租户谓词——本批是守卫回归而非缺陷批；notification 的两个缺陷修复与其后的断言同步见 Fixed 条目。
+
 ### Fixed
 
 - **错误语义统一：跨租户/not-found 不再伪装成 500 或 400（B2 钉住的 4 处缺陷修复，2026-10-18）**：B1/B2 的真实入口跨租户回归测试暴露了同域错误形态不一致——相邻函数正确映射 404/403，而同 handler 的其它路径一律兜底 500/400。按「验证=400/1002、未授权=401、无权=403、不存在=404、非法状态迁移=409、内部=500」的稳定契约逐处纠正，service 侧用 `common.NewBusinessError` / `%w` 包装让 `classifyError` 可分类：
