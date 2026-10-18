@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **审计读面装配加固：/audit-logs 不再依赖 CommonHandler 装配（2026-10-18）**：`GET /api/v1/audit-logs` 的注册此前嵌在 `SetupCommonSystemRoutes` 的 `CommonHandler != nil` 守卫内（router.go 调用点 + 函数体两层），部署只装配 AuditLogHandler 而未装配通用 handler 时整个审计读面**静默 404**——违反「能力不得静默下线」。修复：注册单点化到 router.go 布线段（`SetupCommonSystemRoutes` 不再负责 audit），nil 守卫与回退（AuditLogHandler 优先 / CommonHandler 兜底）不变。回归：`handlers/auditlog/cross_tenant_http_test.go` fixture 改为**刻意不装配 CommonHandler** 锁定该契约；router 整包回归绿。
+
 - **【P1】工单通知直发路径的跨租户引用注入与 not-found 伪装成 500（B4 钉住的两个缺陷修复，2026-10-18）**：`service/ticket_notification_service.go` 直发路径（`outboxEnabled=false` 的同步分支）两处：
   - 跨租户发送 `POST /tickets/:id/notifications`：service 返回裸 `ticket not found`，`classifyError` 分类不到 → 兜底 **500/5001**，跨租户探测以 5xx 毛刺泄漏存在性语义。改为 `common.NewBusinessError(common.NotFoundCode, …)` → **404/4004**（与 comment 域 B3 同模式）。
   - **【P1 数据边界】通知行跨租户引用注入**：为收件人校验存在性用裸 `user.ID(userID)` **不带租户谓词** —— 租户 A 工单可为租户 B 真身用户创建工单通知行与通用通知行（跨租户引用注入 + 潜在外呼面读到他租户邮箱/手机号的路由）。修复：用户查询补 `user.TenantID(tenantID)`，跨租户 userID 与不存在 userID 一致按「用户不存在」静默跳过（200 + 零行，两者可观测形态不可区分）。

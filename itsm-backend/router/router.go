@@ -594,6 +594,12 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		}
 
 		// ==================== Common & System (DDD) ====================
+		// Audit Logs：审计读面必须始终装配（P2 装配健壮性）。此前注册嵌套在
+		// `CommonHandler != nil` 的两层级守卫内（router.go 调用点 + 函数体），
+		// 只装配 AuditLogHandler 时路由会静默 404，违反「能力不得静默下线」。
+		// SetupAuditLogRoutes 自带 nil 守卫与回退（AuditLogHandler 优先，
+		// CommonHandler 兜底），并可安全处理两者全 nil。
+		SetupAuditLogRoutes(tenant.(*gin.RouterGroup), config.AuditLogHandler, config.CommonHandler)
 		if config.CommonHandler != nil {
 			SetupCommonSystemRoutes(r, tenant.(*gin.RouterGroup), config)
 

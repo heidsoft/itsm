@@ -23,7 +23,6 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 	auditHandler "itsm-backend/handlers/auditlog"
-	commonDomain "itsm-backend/handlers/common"
 	"itsm-backend/middleware"
 	"itsm-backend/router"
 	"itsm-backend/service"
@@ -86,15 +85,14 @@ func newFixture(t *testing.T) *fixture {
 	gin.SetMode(gin.TestMode)
 	engine := gin.New()
 	const secret = "audit-cross-tenant-secret"
-	// /audit-logs 挂在 SetupCommonSystemRoutes 内，该块以 CommonHandler 非空为
-	// 前提，所以即便本次测的是 AuditLogHandler，也必须装配真实 CommonHandler。
-	commonSvc := commonDomain.NewService(commonDomain.NewEntRepository(client), secret, logger, client)
+	// 装配修复后的语义（P2）：/audit-logs 只依赖 AuditLogHandler 自身——
+	// 此前注册嵌在 `CommonHandler != nil` 块内，只装配 AuditLogHandler 时
+	// 路由会静默 404。本 fixture 刻意不装配 CommonHandler 来锁定该契约。
 	router.SetupRoutes(engine, &router.RouterConfig{
 		JWTSecret:       secret,
 		Logger:          logger,
 		Client:          client,
 		AuditLogHandler: auditHandler.NewHandler(service.NewAuditLogService(client, logger), logger),
-		CommonHandler:   commonDomain.NewHandler(commonSvc),
 	})
 
 	return &fixture{

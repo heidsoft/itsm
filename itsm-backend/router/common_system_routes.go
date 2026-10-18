@@ -34,9 +34,6 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 			authGrp.GET("/menus", middleware.AuthMiddleware(config.JWTSecret), config.RBACHandler.GetUserMenus)
 		}
 
-		// ==================== Audit Logs ====================
-		SetupAuditLogRoutes(tenant, config.AuditLogHandler, config.CommonHandler)
-
 		// Users
 		if config.UserHandler != nil {
 			users := tenant.Group("/users")
