@@ -256,6 +256,13 @@ const KNOWN_PUBLIC = new Set([
   // 飞书 OAuth/Webhook 回调带实例参数，外部系统回调仍由实例签名保护
   "/api/v1/feishu/oauth/callback/:instance_id",
   "/api/v1/feishu/webhook/:instance_id",
+  // SSO 登录链：会话建立之前就要能调用，因此不挂认证。
+  // initiate/callback 由 OIDC state/nonce 与 IdP 签名保护并挂登录限流；
+  // providers 只是「有哪些可登录的 IdP」，登录页需要。
+  // 依据：router/sso_routes.go 顶部「三组安全边界」注释（public 组）。
+  "/api/v1/auth/sso/initiate",
+  "/api/v1/auth/sso/callback",
+  "/api/v1/auth/sso/providers",
 ]);
 
 // 认证即可访问的身份/自服务类端点：登录后任意角色都需要，
@@ -275,6 +282,15 @@ const AUTH_ONLY = new Set([
   "/api/v1/users/profile",
   "/api/v1/users/me",
   "/api/v1/capabilities",  // 产品能力开关清单：登录后任意角色需要用于功能开关渲染
+  // SSO 账号自助：只挂 AuthMiddleware，user_id 一律取鉴权上下文，不信任请求体。
+  // 与 /auth/me、/auth/session 同组模式（router/sso_routes.go selfService 组）。
+  "/api/v1/auth/sso/bind",
+  "/api/v1/auth/sso/unbind",
+  "/api/v1/auth/sso/identities",
+  // 改自己的密码：只挂 AuthMiddleware。user:write 是管理面语义，挂上去会让
+  // 端用户无法自助改密；handler 内部目标用户只取鉴权上下文
+  // （router/account_routes.go 的「权限边界」注释）。
+  "/api/v1/account/change-password",
 ]);
 
 // ---------------------------------------------------------------------------
