@@ -32,6 +32,22 @@ P0 集合必须覆盖：用户认证与权限、工单/事件/变更完整生命
 
 **禁止**把生产数据脱敏导入开发环境；脱敏数据也只能用于预生产。
 
+### 1.3 租户隔离测试分层（SQLite 应用层 vs PostgreSQL RLS）
+
+租户隔离的证据链分两层，各自的覆盖范围必须如实陈述，禁止互相冒充：
+
+| 层 | 事实 | 测试 | 入口 |
+|---|---|---|---|
+| 应用层 tenant 谓词 | 全部 tenant-owned 表的日常读路径靠 repository 的 tenantID 参数、`service.TenantAwareRepository` 守卫与 `middleware.ResolveRequestTenantID` | `tests/multi_tenant/rls_matrix_test.go`（域读取矩阵 + 列表隔离 + 写守卫 + RLS 试点范围棘轮） | 默认 `go test ./...`（SQLite） |
+| 数据库级 RLS | 生产 RLS 是**试点**：仅 `changes` 与 `vectors` 有 `tenant_isolation` 策略（`itsm-backend/database/rls/migrations/002_pilot_policies.sql`，空 `app.current_tenant` fail closed） | `database/rls/rls_integration_test.go`（AcquireConn/ReleaseConn 契约）+ `integration/golden_path_test.go` 的 `TestGoldenPath_RLSEnforced`（临时策略下 A→1/B→0 双向断言） | `go test -tags integration_rls` + 真实 Postgres，由 `.github/workflows/rls-golden-path.yml` 执行 |
+
+约束：
+
+- **SQLite 测试禁止声称验证了 RLS**——SQLite 根本不支持行级安全；数据库级断言只能出现在 `integration_rls` tag 下。
+- **扩大/缩小生产 RLS 表集时**：必须同步 `002_pilot_policies.sql`、`rls_matrix_test.go` 的 `TestRowLevelSecurity_PilotScopeIsPinned` 棘轮断言与本表，不得只改文档让验收范围静默漂移。
+- `integration/golden_path_test.go` 用 `ITSM_TEST_DSN` 写夹具数据并在 `SET ROLE itsm_app` 后探测，该 DSN 必须连接 owner/superuser/BYPASSRLS 角色（受限角色在 FORCE 策略下连 INSERT 都会被拒）；`RLS_SETUP_DSN` 只用于策略 DDL。
+- MSP/CSP 租户切换决策由 `middleware/msp_tenant_resolver_test.go` 覆盖，矩阵不重复该行为。
+
 ---
 
 ## 2. 测试夹具不变量

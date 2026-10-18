@@ -1,0 +1,124 @@
+name: rls-golden-path
+
+# 真实 PostgreSQL 上的行级安全（RLS）验证。
+#
+# 这个工作流运行 build tag `integration_rls` 下的两个套件，SQLite 上无法运行：
+#   1. database/rls        —— rls.AcquireConn/ReleaseConn 的租户注入与 fail-closed 契约
+#   2. integration golden path —— 6 个核心域生命周期 + 在临时 RLS 策略下的跨租户不可见
+#
+# 应用层租户隔离（默认 `go test ./...` 可跑的部分）由
+# tests/multi_tenant/rls_matrix_test.go 覆盖，不在此重复。
+#
+# 设计说明（与数据库级 RLS 的真实覆盖范围一致）：
+#   - 生产 RLS 目前是试点，仅 changes + vectors 有 tenant_isolation 策略
+#     （itsm-backend/database/rls/migrations/002_pilot_policies.sql）。
+#   - 两个套件都用 RLS_SETUP_DSN 在测试内部的临时表上自建/清理
+#     `tenant_isolation` 策略，验证的是 RLS 机制本身；扩大生产策略覆盖面时
+#     应同步扩展这两个套件，而不是只改文档。
+
+on:
+  schedule:
+    # 每周一 01:30 UTC 兜底跑一次，防止 paths 过滤漏掉隐性依赖
+    - cron: '30 1 * * 1'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'itsm-backend/database/rls/**'
+      - 'itsm-backend/integration/golden_path_test.go'
+      - 'itsm-backend/tests/multi_tenant/**'
+      - '.github/workflows/rls-golden-path.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rls-golden-path-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rls-golden-path:
+    name: Real PostgreSQL RLS golden path
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PGPASSWORD: postgres
+      ITSM_TEST_DSN: 'postgres://postgres:postgres@127.0.0.1:5432/itsm_test?sslmode=disable'
+      RLS_TEST_DSN: 'postgres://postgres:postgres@127.0.0.1:5432/itsm_test?sslmode=disable'
+      RLS_SETUP_DSN: 'postgres://postgres:postgres@127.0.0.1:5432/itsm_test?sslmode=disable'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Start PostgreSQL 17 (pgvector)
+        run: |
+          docker run -d --name rls-golden-pg \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_DB=itsm_test \
+            -p 127.0.0.1:5432:5432 \
+            pgvector/pgvector:pg17
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec rls-golden-pg pg_isready -U postgres >/dev/null 2>&1 \
+               && docker exec rls-golden-pg psql -U postgres -d itsm_test -Atc "SELECT 1;" >/dev/null 2>&1; then
+              echo "PostgreSQL ready after ${i} attempts"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL failed to become ready"
+          exit 1
+
+      # 与本地验证一致的建表路径：ent schema create。
+      # ITSM_TEST_DSN 必须是 superuser/BYPASSRLS 角色：golden path 用它写夹具
+      # 数据（临时策略带 FORCE 时不绕过会被拒），又用同一连接 SET ROLE itsm_app
+      # 做 RLS 可见性探测。
+      - name: Migrate schema
+        working-directory: itsm-backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '5432'
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: itsm_test
+          DB_SSLMODE: disable
+          # migrate_fresh 需要 JWT 通过凭据闸门；这是仅 CI 使用的强随机串
+          JWT_SECRET: ci-rls-golden-path-only-signing-key-0123456789abcdef
+          ITSM_AUTO_SEED: 'false'
+        run: go run -tags migrate .
+
+      # SET ROLE itsm_app 需要该角色存在；001_roles.sql 使用 DO 块，幂等可重复执行
+      - name: Apply RLS roles bootstrap
+        run: |
+          docker exec -i rls-golden-pg psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test \
+            -f - < itsm-backend/database/rls/migrations/001_roles.sql
+
+      # database/rls 的租户隔离用例需要一个租户 1 的 changes 行作为探针数据
+      - name: Seed probe data
+        run: |
+          docker exec rls-golden-pg psql -v ON_ERROR_STOP=1 -U postgres -d itsm_test \
+            -c "INSERT INTO changes (title, created_by, tenant_id, created_at, updated_at)
+                VALUES ('rls seed tenant 1', 1, 1, now(), now());"
+
+      - name: Run database/rls suite
+        working-directory: itsm-backend
+        run: go test -tags integration_rls -count=1 -v ./database/rls/... -run 'TestAcquireConn|TestReleaseConn' -timeout 10m
+
+      - name: Run integration golden path suite
+        working-directory: itsm-backend
+        run: go test -tags integration_rls -count=1 -v ./integration/... -run TestGoldenPath -timeout 15m
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop rls-golden-pg 2>/dev/null || true
+          docker rm rls-golden-pg 2>/dev/null || true
