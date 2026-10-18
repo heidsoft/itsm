@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,11 +10,23 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/assetlicense"
+	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
 
 // AssetLicenseService 许可证管理服务
+
+// 许可证域稳定错误语义：
+//   - ErrLicenseNotFound：按租户谓词查不到许可证（不存在或跨租户），handler 映射 404/4004。
+//   - ErrLicenseInsufficient：席位不足，业务冲突而非后端故障，handler 映射 409/4090。
+//   - ErrLicenseSeatRace：并发扣减冲突（条件 UPDATE 未命中），可重试，handler 映射 409/4090。
+var (
+	ErrLicenseNotFound     = errors.New("license not found")
+	ErrLicenseInsufficient = errors.New("insufficient license seats")
+	ErrLicenseSeatRace     = errors.New("license seat concurrent conflict")
+)
+
 type AssetLicenseService struct {
 	client *ent.Client
 	logger *zap.SugaredLogger
@@ -199,12 +212,16 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 
 // DeleteLicense 删除许可证
 func (s *AssetLicenseService) DeleteLicense(ctx context.Context, id, tenantID int) error {
-	_, err := s.client.AssetLicense.Delete().
+	deleted, err := s.client.AssetLicense.Delete().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete license", "error", err, "license_id", id)
 		return fmt.Errorf("failed to delete license: %w", err)
+	}
+	// 条件删除影响行数为 0 视为 not-found，不得静默假装成功。
+	if deleted == 0 {
+		return ErrLicenseNotFound
 	}
 
 	s.logger.Infow("License deleted", "license_id", id)
@@ -260,6 +277,44 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 			Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 			First(ctx)
 		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, ErrLicenseNotFound
+			}
+			return nil, fmt.Errorf("failed to get license: %w", err)
+		}
+		return dto.ToLicenseResponse(licenseEntity), nil
+	}
+
+	// 1.5 校验待分配用户的租户归属：只保留本租户真实存在的用户 id。
+	// 跨租户或无效 id 静默跳过（与站内通知收件人语义一致，B5 锚点），
+	// 防止他租用户 id 被写进 license.Users（跨租户引用注入面）。
+	validIDs, err := s.client.User.Query().
+		Where(user.IDIn(deduped...), user.TenantIDEQ(tenantID)).
+		IDs(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to validate license assignees", "error", err, "license_id", id)
+		return nil, fmt.Errorf("failed to validate license assignees: %w", err)
+	}
+	validSet := make(map[int]struct{}, len(validIDs))
+	for _, uid := range validIDs {
+		validSet[uid] = struct{}{}
+	}
+	filtered := make([]int, 0, len(deduped))
+	for _, uid := range deduped {
+		if _, ok := validSet[uid]; ok {
+			filtered = append(filtered, uid)
+		}
+	}
+	deduped = filtered
+	if len(deduped) == 0 {
+		// 请求里没有本租户有效用户：视同 no-op，直接返回原记录
+		licenseEntity, err := s.client.AssetLicense.Query().
+			Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
+			First(ctx)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return nil, ErrLicenseNotFound
+			}
 			return nil, fmt.Errorf("failed to get license: %w", err)
 		}
 		return dto.ToLicenseResponse(licenseEntity), nil
@@ -277,7 +332,7 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrLicenseNotFound
 		}
 		s.logger.Errorw("Failed to get license", "error", err, "license_id", id)
 		return nil, fmt.Errorf("failed to get license: %w", err)
@@ -309,7 +364,8 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 	availableQty := licenseEntity.TotalQuantity - licenseEntity.UsedQuantity
 	if needed > availableQty {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("insufficient license quantity: available %d, requested %d", availableQty, needed)
+		// 席位不足是业务冲突：不得伪装成 500。handler 映射 409/4090。
+		return nil, fmt.Errorf("%w: available %d, requested %d", ErrLicenseInsufficient, availableQty, needed)
 	}
 
 	// 5. 原子 UPDATE：WHERE 条件包含 used_quantity + needed <= total_quantity + tenant 过滤
@@ -332,7 +388,8 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 	}
 	if result == 0 {
 		_ = tx.Rollback()
-		return nil, fmt.Errorf("席位已被其他请求占用，请重试")
+		// 并发扣减未命中：条件 UPDATE 原子保护（version 语义），映射 409 可重试。
+		return nil, ErrLicenseSeatRace
 	}
 
 	// 6. 检查是否已耗尽（在同一事务内 UPDATE，避免读已提交时的不一致）

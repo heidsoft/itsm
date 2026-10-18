@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"itsm-backend/common"
@@ -11,6 +12,10 @@ import (
 
 	"go.uber.org/zap"
 )
+
+// ErrAssetNotFound 表示按租户谓词查不到资产（不存在或跨租户）。
+// handler 层据此返回 404/4004，掩盖跨租户与真实不存在的差异。
+var ErrAssetNotFound = errors.New("asset not found")
 
 // AssetService 资产管理服务
 type AssetService struct {
@@ -250,12 +255,16 @@ func (s *AssetService) UpdateAssetStatus(ctx context.Context, id, tenantID int, 
 
 // DeleteAsset 删除资产
 func (s *AssetService) DeleteAsset(ctx context.Context, id, tenantID int) error {
-	_, err := s.client.Asset.Delete().
+	deleted, err := s.client.Asset.Delete().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		Exec(ctx)
 	if err != nil {
 		s.logger.Errorw("Failed to delete asset", "error", err, "asset_id", id)
 		return fmt.Errorf("failed to delete asset: %w", err)
+	}
+	// 条件删除影响行数为 0 视为 not-found，不得静默假装成功。
+	if deleted == 0 {
+		return ErrAssetNotFound
 	}
 
 	s.logger.Infow("Asset deleted", "asset_id", id)
@@ -318,7 +327,7 @@ func (s *AssetService) AssignAsset(ctx context.Context, id, tenantID, userID int
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrAssetNotFound
 		}
 		s.logger.Errorw("Failed to get asset", "error", err, "asset_id", id)
 		return nil, fmt.Errorf("failed to get asset: %w", err)
@@ -344,7 +353,7 @@ func (s *AssetService) RetireAsset(ctx context.Context, id, tenantID int, reason
 		First(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, nil
+			return nil, ErrAssetNotFound
 		}
 		s.logger.Errorw("Failed to get asset", "error", err, "asset_id", id)
 		return nil, fmt.Errorf("failed to get asset: %w", err)

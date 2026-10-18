@@ -1689,6 +1689,39 @@ mapper 侧契约守卫：`dto/ticket_attachment_dto_test.go` 断言响应不含
 `filePath`；入口侧由 `handlers/ticket_attachment/cross_tenant_http_test.go`
 的列表正控制锁定。
 
+### 1.44 资产/许可证写面 not-found 与席位冲突不再伪装成成功/500（2026-10-18，破坏性：状态码变更）
+
+与 §1.42 同型的残留采集：`handlers/asset` 的写面在跨租户/不存在时因忽略
+条件操作影响行数而静默假成功，席位冲突则以裸 error 落入 500 兜底。本批
+以真实入口 HTTP 回归（`handlers/asset/cross_tenant_http_test.go`，含
+license 双面）钉住后统一为 sentinel 错误语义。
+
+| 接口 | 触发条件 | 旧行为 | 新行为 |
+| --- | --- | --- | --- |
+| `DELETE /assets/{id}` | 资产不存在 / 跨租户 | 200/`0` 静默假成功（影响行数被忽略） | 404/`4004` |
+| `PUT /assets/{id}/assign` | 资产不存在 / 跨租户 | 200/`0` + `data:null` 静默假成功 | 404/`4004` |
+| `PUT /assets/{id}/retire` | 资产不存在 / 跨租户 | 200/`0` + `data:null` 静默假成功 | 404/`4004` |
+| `DELETE /licenses/{id}` | 许可证不存在 / 跨租户 | 200/`0` 静默假成功 | 404/`4004` |
+| `PUT /licenses/{id}/assign` | 许可证不存在 / 跨租户 | 200/`0` + `data:null` 静默假成功 | 404/`4004` |
+| `PUT /licenses/{id}/assign` | 席位不足 | 500/`5001`（裸 error 兜底） | 409/`4090` |
+| `PUT /licenses/{id}/assign` | 并发扣减未命中（条件 UPDATE 保护） | 500/`5001` | 409/`4090` |
+
+`PUT /licenses/{id}/assign` 同时收紧**被分配用户的租户归属**：`userIds`
+只保留本租户真实存在的用户 id，跨租户/无效 id 静默跳过（不写
+`license.Users`、不扣席位），与 §1.42 通知收件人语义一致——此前对端租户
+真身用户 id 可被写进本租许可证的用户名单（跨租户引用注入）并占用席位。
+
+存在性防泄漏不变：跨租户与「资源不存在」同为 404/`4004`。读面
+`Get/Update/UpdateStatus`（asset 与 license 两侧）此前已正确返回
+404，本批未改动。无 schema/迁移变更。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 \
+  ./handlers/asset/ ./service/ ./router/
+```
+
 
 ## 2. 环境变量变更
 

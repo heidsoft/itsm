@@ -6,6 +6,7 @@ import (
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
+	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
 
 	"github.com/stretchr/testify/assert"
@@ -309,6 +310,12 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 		Save(ctx)
 	require.NoError(t, err)
 
+	// 创建测试用户：AssignUsers 现在只保留本租户真实存在的用户 id
+	// （B8.2 修复：跨租户/无效 id 静默跳过），旧用例传入的 1..5 是幽灵 id。
+	mkUser := func(name string) *ent.User {
+		return client.User.Create().SetUsername(name).SetEmail(name + "@test.com").SetName(name).
+			SetPasswordHash("hash").SetRole("end_user").SetActive(true).SetTenantID(testTenant.ID).SaveX(ctx)
+	}
 	// 创建测试许可证 (可用数量为10)
 	license, err := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
 		Name:          "测试许可证",
@@ -319,7 +326,8 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 
 	// 测试分配用户
 	t.Run("成功分配用户", func(t *testing.T) {
-		userIDs := []int{1, 2, 3}
+		u1, u2, u3 := mkUser("assignee1"), mkUser("assignee2"), mkUser("assignee3")
+		userIDs := []int{u1.ID, u2.ID, u3.ID, u1.ID} // 重复 id 应去重
 		result, err := licenseService.AssignUsers(ctx, license.ID, testTenant.ID, userIDs)
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
@@ -335,11 +343,12 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 			TotalQuantity: 2,
 		}, testTenant.ID)
 
-		userIDs := []int{1, 2, 3, 4, 5}
+		u4, u5, u6, u7 := mkUser("assignee4"), mkUser("assignee5"), mkUser("assignee6"), mkUser("assignee7")
+		userIDs := []int{u4.ID, u5.ID, u6.ID, u7.ID}
 		result, err := licenseService.AssignUsers(ctx, license2.ID, testTenant.ID, userIDs)
-		assert.Error(t, err)
+		// B8.2：席位不足现在是业务冲突 sentinel（handler 层映射 409），不再伪装 500。
+		assert.ErrorIs(t, err, ErrLicenseInsufficient)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "insufficient license quantity")
 	})
 }
 

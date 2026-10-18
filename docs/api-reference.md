@@ -2015,6 +2015,8 @@ Content-Type: application/json
 }
 ```
 
+> 资产不存在或跨租户返回 404/`4004`（不再伪装 200 空成功，见 UPGRADE §1.44）。
+
 ### 报废资产
 
 ```http
@@ -2022,12 +2024,17 @@ PUT /assets/{id}/retire
 Authorization: Bearer <accessToken>
 ```
 
+> 资产不存在或跨租户返回 404/`4004`（见 UPGRADE §1.44）。
+
 ### 删除资产
 
 ```http
 DELETE /assets/{id}
 Authorization: Bearer <accessToken>
 ```
+
+> 删除是幂等可重放的：首次成功删除返回 200；重复删除（已删除/跨租户/不存在）
+> 一律 404/`4004`，不再静默假装成功（见 UPGRADE §1.44）。
 
 ### 获取资产统计
 
@@ -2112,12 +2119,16 @@ Content-Type: application/json
 }
 ```
 
+> `userIds` 只保留本租户真实存在的用户 id，跨租户或不存在的用户 id 静默跳过（不占席位、不报错）；席位不足与并发扣减冲突返回 409/`4090`（都是业务冲突而不是 500）；许可证不存在或跨租户返回 404/`4004`（见 UPGRADE §1.44）。
+
 ### 删除许可证
 
 ```http
 DELETE /licenses/{id}
 Authorization: Bearer <accessToken>
 ```
+
+> 已删除/不存在/跨租户的重复删除一律 404/`4004`，不再静默假装成功（见 UPGRADE §1.44）。
 
 ### 获取许可证统计
 

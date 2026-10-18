@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -200,6 +201,10 @@ func (h *Handler) DeleteAsset(c *gin.Context) {
 	err = h.svc.DeleteAsset(c.Request.Context(), assetID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Delete asset failed", "error", err, "asset_id", assetID)
+		if errors.Is(err, service.ErrAssetNotFound) {
+			common.Fail(c, common.NotFoundCode, "资产不存在")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -246,6 +251,10 @@ func (h *Handler) AssignAsset(c *gin.Context) {
 	asset, err := h.svc.AssignAsset(c.Request.Context(), assetID, tenantID, req.AssignedTo)
 	if err != nil {
 		h.logger.Errorw("Assign asset failed", "error", err, "asset_id", assetID)
+		if errors.Is(err, service.ErrAssetNotFound) {
+			common.Fail(c, common.NotFoundCode, "资产不存在")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -275,6 +284,10 @@ func (h *Handler) RetireAsset(c *gin.Context) {
 	asset, err := h.svc.RetireAsset(c.Request.Context(), assetID, tenantID, req.RetireReason)
 	if err != nil {
 		h.logger.Errorw("Retire asset failed", "error", err, "asset_id", assetID)
+		if errors.Is(err, service.ErrAssetNotFound) {
+			common.Fail(c, common.NotFoundCode, "资产不存在")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -404,6 +417,10 @@ func (h *Handler) DeleteLicense(c *gin.Context) {
 	err = h.licenseSvc.DeleteLicense(c.Request.Context(), licenseID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Delete license failed", "error", err, "license_id", licenseID)
+		if errors.Is(err, service.ErrLicenseNotFound) {
+			common.Fail(c, common.NotFoundCode, "许可证不存在")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -450,7 +467,17 @@ func (h *Handler) AssignUsers(c *gin.Context) {
 	license, err := h.licenseSvc.AssignUsers(c.Request.Context(), licenseID, tenantID, req.UserIDs)
 	if err != nil {
 		h.logger.Errorw("Assign users to license failed", "error", err, "license_id", licenseID)
-		common.FailWithErr(c, err, "操作失败")
+		switch {
+		case errors.Is(err, service.ErrLicenseNotFound):
+			common.Fail(c, common.NotFoundCode, "许可证不存在")
+		case errors.Is(err, service.ErrLicenseInsufficient):
+			// 席位不足属于业务冲突：当前可用数与请求数都写进日志后给 409。
+			common.Conflict(c, "许可证席位不足", nil)
+		case errors.Is(err, service.ErrLicenseSeatRace):
+			common.Conflict(c, "席位已被其他请求占用，请重试", nil)
+		default:
+			common.FailWithErr(c, err, "操作失败")
+		}
 		return
 	}
 	common.Success(c, license)
