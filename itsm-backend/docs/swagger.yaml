@@ -4594,28 +4594,6 @@ paths:
       summary: 获取资源健康状态
       tags:
       - dashboard
-  /api/v1/analytics/deep:
-    post:
-      consumes:
-      - application/json
-      description: 获取深度分析数据，支持多维度聚合
-      parameters:
-      - description: 分析请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DeepAnalyticsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 获取深度分析数据
-      tags:
-      - 数据分析
   /api/v1/analytics/export:
     post:
       consumes:

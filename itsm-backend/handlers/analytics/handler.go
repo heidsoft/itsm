@@ -21,36 +21,11 @@ func NewHandler(analyticsService *service.AnalyticsService) *Handler {
 	return &Handler{analyticsService: analyticsService}
 }
 
-// GetDeepAnalytics 获取深度分析数据
-// @Summary 获取深度分析数据
-// @Description 获取深度分析数据，支持多维度聚合
-// @Tags 数据分析
-// @Accept json
-// @Produce json
-// @Param request body dto.DeepAnalyticsRequest true "分析请求"
-// @Success 200 {object} common.Response
-// @Router /api/v1/analytics/deep [post]
-func (h *Handler) GetDeepAnalytics(ctx *gin.Context) {
-	var req dto.DeepAnalyticsRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.Fail(ctx, common.ParamErrorCode, "请求参数错误")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
-		return
-	}
-
-	response, err := h.analyticsService.GetDeepAnalytics(ctx.Request.Context(), &req, tenantID.(int))
-	if err != nil {
-		common.Fail(ctx, common.InternalErrorCode, "获取分析数据失败")
-		return
-	}
-
-	common.Success(ctx, response)
-}
+// GetDeepAnalytics 已删除（2026-10-18 P1 收口）：它是未接线的双实现——
+// 深度分析只有 AI 域一个 HTTP 所有者（`POST /ai/analytics` 与
+// `POST /tickets/analytics/deep` 都走 handlers/ai → service.AnalyticsService），
+// 本方法无任何路由引用，却通过 swagger 注解把幽灵路由 `/api/v1/analytics/deep`
+// 宣传进 API 文档。业务规则所有者仍是 service.AnalyticsService（单一实现未动）。
 
 // ExportAnalytics 导出分析数据
 // @Summary 导出分析数据
