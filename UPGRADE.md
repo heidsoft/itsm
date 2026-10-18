@@ -1753,6 +1753,43 @@ cd itsm-backend && go test -count=1 \
 ```
 
 
+### 1.47 基础管理域写面错误形态与幂等收敛（projects / ticket-tags / ticket-rating / surveys / timers）（2026-10-18，破坏性：状态码变更）
+
+与 §1.42/§1.44/§1.45 同型收敛：项目管理、工单标签、工单评分、满意度调查与
+BPMN 计时器各读/写面此前把「不存在/跨租户/业务违规/重复操作」伪装成 200 假
+成功或 500/`5001` 兜底。
+
+| 接口 | 旧行为 | 新行为 | 不变量 |
+|:---|:---|:---|:---|
+| `POST /projects`（managerId/departmentId 他租） | **无引用校验**：他租引用静默落库 | 400/`1001` | 引用型资源缺失与工单评论「提及用户无效」同口径 |
+| `POST /projects`（未传 managerId/departmentId） | 显式 `Set 0` → FK 严格环境 500/`5001` | 200（字段留空） | Optional 字段 0 = 未指定 |
+| `DELETE /projects/{id}`（重放/跨租户） | 200 假成功或裸「项目不存在: id=..」→ 500 | 404/`4004` | 条件删除验 affected rows；id 不再进错误文本 |
+| `GET/PUT /projects` 响应 | 直返 ent 模型（snake_case 泄漏） | DTO（camelCase） | Handler 不直返 ent 模型 |
+| `DELETE /ticket-tags/{id}`（重放/跨租户） | 0 行静默 nil → 200 假成功 | 404/`4004` | 条件删除验 affected rows（sentinel `ErrTicketTagNotFound`） |
+| `POST /tickets/{id}/tags`（重复提交同 tagIds） | M2M UNIQUE 冲突 → 500/`5001` | 200 + 幂等 | 绑定幂等：已绑定标签跳过，不重复落库 |
+| `POST /tickets/{id}/rating`（待解决工单） | 裸 error → 500/`5001` | 400/`1001` | 业务状态违规不伪装成内部故障 |
+| `POST /tickets/{id}/rating`（非申请人） | 裸 error → 500/`5001` | 403/`2003` | 域内授权违规 |
+| `POST /tickets/{id}/rating`（已评过/并发二次） | check-then-write 竞态可静默覆盖 + 裸 error → 500 | 409/`4090` | 条件更新（rating IS NULL 或 =0）+ affected rows；重放/竞态不覆盖第一次评分 |
+| `POST /surveys/responses`（surveyId/ticketId 他租） | **无引用校验**：他租 survey 引用静默落库 | 400/`1001` | 响应 survey/ticket 边必须本租；`respondentId` 写入认证用户（此前硬编码 0） |
+| `GET /surveys/{id}/analytics`、`GET /surveys/{id}/responses`（他租/不存在 survey） | 200 + 空统计/空列表（存在性探测面） | 404/`4004` | 读统计/响应前先验 survey 归属 |
+| `GET /surveys` 等响应 | 直返 ent 模型（snake_case 泄漏） | DTO（camelCase） | Handler 不直返 ent 模型 |
+| `GET /timers/{timerId}`（不存在） | ent NotFound 上抛 → 500/`5001` | 404/`4004` | 空态与跨租户同形掩码（notFoundError） |
+| `GET /system/vector-store` | 无变更 | （纯回归锁定） | 未配置=unconfigured、非法 env=error 降级、settings 脱敏 |
+
+未被本批修而明确不动的：`GET /timers/{timerId}` 对跨租户 timerID 保持读后掩码
+（timerID 为 BPMN 生成的全局唯一字符串，与不存在同形 404）；`Tag`（系统预置）
+与 `TicketTag`（工单关联）双实体并存、`project.code` 全局唯一不按租户组合——
+归属裁决记为待办。无 schema/迁移变更。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 \
+  ./handlers/project/ ./handlers/survey/ ./handlers/ticket_rating/ \
+  ./handlers/ticket_tag/ ./handlers/timer/ ./handlers/vector_store/ \
+  ./handlers/prediction/ ./service/ ./router/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

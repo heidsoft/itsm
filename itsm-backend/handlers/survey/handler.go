@@ -45,7 +45,7 @@ func (h *Handler) ListSurveys(ctx *gin.Context) {
 		return
 	}
 	common.Success(ctx, gin.H{
-		"items": surveys,
+		"items": dto.ToSurveyDTOList(surveys),
 		"total": len(surveys),
 	})
 }
@@ -62,7 +62,7 @@ func (h *Handler) GetSurvey(ctx *gin.Context) {
 		common.RespondError(ctx, err, "操作失败")
 		return
 	}
-	common.Success(ctx, survey)
+	common.Success(ctx, dto.ToSurveyDTO(survey))
 }
 
 // CreateSurvey POST /api/v1/surveys
@@ -81,7 +81,7 @@ func (h *Handler) CreateSurvey(ctx *gin.Context) {
 		common.RespondError(ctx, err, "操作失败")
 		return
 	}
-	common.Success(ctx, survey)
+	common.Success(ctx, dto.ToSurveyDTO(survey))
 }
 
 // UpdateSurvey PUT /api/v1/surveys/:id
@@ -101,7 +101,7 @@ func (h *Handler) UpdateSurvey(ctx *gin.Context) {
 		common.RespondError(ctx, err, "操作失败")
 		return
 	}
-	common.Success(ctx, survey)
+	common.Success(ctx, dto.ToSurveyDTO(survey))
 }
 
 // GetSurveyResponses GET /api/v1/surveys/:id/responses
@@ -117,7 +117,7 @@ func (h *Handler) GetSurveyResponses(ctx *gin.Context) {
 		return
 	}
 	common.Success(ctx, gin.H{
-		"items": responses,
+		"items": dto.ToSurveyResponseItemDTOList(responses),
 		"total": len(responses),
 	})
 }
@@ -148,7 +148,8 @@ func (h *Handler) SubmitResponse(ctx *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, tenantID); err != nil {
+	respondentID := ctx.GetInt("user_id")
+	if err := h.svc.SubmitResponse(ctx.Request.Context(), &req, respondentID, tenantID); err != nil {
 		common.RespondError(ctx, err, "操作失败")
 		return
 	}

@@ -248,9 +248,22 @@ func (s *TicketTagService) DeleteTag(ctx context.Context, id int, tenantID int) 
 		return fmt.Errorf("%w: tag %d referenced by %d tickets", ErrTicketTagInUse, id, ticketsCount)
 	}
 
-	return s.client.TicketTag.DeleteOneID(id).
-		Where(tickettag.TenantID(tenantID)).
+	deleted, err := s.client.TicketTag.Delete().
+		Where(
+			tickettag.ID(id),
+			tickettag.TenantID(tenantID),
+		).
 		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	// 条件删除影响行数为 0 视为 not-found：此前 0 行静默 nil，跨租户/重放
+	// 删除一律 200 假成功（B10 批 Z1 同型收敛；sentinel 已映射 404）。
+	if deleted == 0 {
+		return ErrTicketTagNotFound
+	}
+
+	return nil
 }
 
 // AssignTagsToTicket 为工单分配标签
@@ -280,9 +293,31 @@ func (s *TicketTagService) AssignTagsToTicket(ctx context.Context, ticketID int,
 		return fmt.Errorf("%w: %v", ErrTicketTagNotFound, tagIDs)
 	}
 
+	// 幂等：已绑定的标签跳过（ent M2M join 行为 UNIQUE 三元组，重复 AddTags
+	// 会撞唯一约束兜底 500；前端重复提交按钮同样的 payload 第二次必须仍是成功）。
+	bound, err := ticket.QueryTags().
+		Where(tickettag.IDIn(tagIDs...)).
+		IDs(ctx)
+	if err != nil {
+		return err
+	}
+	boundSet := make(map[int]struct{}, len(bound))
+	for _, id := range bound {
+		boundSet[id] = struct{}{}
+	}
+	pending := make([]*ent.TicketTag, 0, len(tags))
+	for _, t := range tags {
+		if _, ok := boundSet[t.ID]; !ok {
+			pending = append(pending, t)
+		}
+	}
+	if len(pending) == 0 {
+		return nil
+	}
+
 	// 更新工单标签关联
 	_, err = ticket.Update().
-		AddTags(tags...).
+		AddTags(pending...).
 		Save(ctx)
 
 	return err

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
+	entuser "itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 )
@@ -53,22 +55,33 @@ func (s *TicketRatingService) SubmitRating(
 
 	// 验证工单状态（只有已解决或已关闭的工单才能评分）
 	if ticketEntity.Status != "resolved" && ticketEntity.Status != "closed" {
-		return nil, fmt.Errorf("只能对已解决或已关闭的工单进行评分")
+		return nil, common.NewBusinessError(common.ParamErrorCode, "只能对已解决或已关闭的工单进行评分", "")
 	}
 
 	// 验证评分人是否为申请人
 	if ticketEntity.RequesterID != ratedBy {
-		return nil, fmt.Errorf("只有申请人可以评分")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "只有申请人可以评分", "")
 	}
 
 	// 检查是否已经评分过
 	if ticketEntity.Rating > 0 {
-		return nil, fmt.Errorf("该工单已经评分过了")
+		return nil, common.NewBusinessError(common.ConflictCode, "该工单已经评分过了", "")
 	}
 
-	// 更新工单评分
+	// 更新工单评分。评分字段用条件更新（未评：rating IS NULL 或 =0）完成
+	// 「读取时未评 → 写入时仍未评」的原子保证：check-then-write 的窗口内
+	// 第二个并发请求在条件更新 0 行命中时被拒绝，而不是静默覆盖第一次评分。
+	// Save 返回受影响行数（非实体），命中后按 id+tenant 重读权威状态组装响应。
 	now := time.Now()
-	updatedTicket, err := s.client.Ticket.UpdateOneID(ticketID).
+	affected, err := s.client.Ticket.Update().
+		Where(
+			ticket.ID(ticketID),
+			ticket.TenantIDEQ(tenantID),
+			ticket.Or(
+				ticket.RatingIsNil(),
+				ticket.RatingEQ(0),
+			),
+		).
 		SetRating(req.Rating).
 		SetNillableRatingComment(&req.Comment).
 		SetNillableRatedAt(&now).
@@ -78,9 +91,25 @@ func (s *TicketRatingService) SubmitRating(
 		s.logger.Errorw("Failed to submit rating", "error", err)
 		return nil, fmt.Errorf("failed to submit rating: %w", err)
 	}
+	if affected == 0 {
+		// 并发竞态：读取时未评分，写入时已被第一个请求评过（或工单在此间隙
+		// 被删）→ 不静默覆盖，统一按「已评分」业务冲突处理。
+		return nil, common.NewBusinessError(common.ConflictCode, "该工单已经评分过了", "")
+	}
+
+	// 重读评分后的权威状态（条件更新只返回受影响行数）。
+	updatedTicket, err := s.client.Ticket.Query().
+		Where(ticket.ID(ticketID), ticket.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to reload rated ticket", "error", err)
+		return nil, fmt.Errorf("reload rated ticket: %w", err)
+	}
 
 	// 获取评分人信息
-	ratedByUser, _ := s.client.User.Get(ctx, ratedBy)
+	ratedByUser, _ := s.client.User.Query().
+		Where(entuser.ID(ratedBy), entuser.TenantIDEQ(tenantID)).
+		First(ctx)
 
 	// 发送通知给处理人
 	if s.notificationService != nil && updatedTicket.AssigneeID > 0 {

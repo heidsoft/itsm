@@ -76,6 +76,12 @@ func (s *Service) List(ctx context.Context, filter service.TimerListFilter) (*Ti
 func (s *Service) Get(ctx context.Context, tenantID int, timerID string) (*TimerDTO, error) {
 	timer, err := s.store.GetByTimerID(ctx, timerID)
 	if err != nil {
+		// 不存在的 timerID 与跨租户同形掩码为 notFoundError：
+		// 此前 ent NotFound 直接上抛 → handler InternalError → 500/5001，
+		// 读面把「不存在」伪装成服务端故障（B10 批收敛）。
+		if ent.IsNotFound(err) {
+			return nil, &notFoundError{}
+		}
 		return nil, err
 	}
 	if timer.TenantID != tenantID {

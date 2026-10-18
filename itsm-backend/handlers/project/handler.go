@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -53,7 +54,7 @@ func (h *Handler) CreateProject(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, project)
+	common.Success(ctx, dto.ToProjectResponse(project))
 }
 
 // ListProjects 获取项目列表
@@ -76,7 +77,7 @@ func (h *Handler) ListProjects(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, projects)
+	common.Success(ctx, dto.ToProjectResponseList(projects))
 }
 
 // GetProject 获取单个项目
@@ -107,7 +108,7 @@ func (h *Handler) GetProject(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, project)
+	common.Success(ctx, dto.ToProjectResponse(project))
 }
 
 // UpdateProject 更新项目
@@ -151,7 +152,7 @@ func (h *Handler) UpdateProject(ctx *gin.Context) {
 		return
 	}
 
-	common.Success(ctx, project)
+	common.Success(ctx, dto.ToProjectResponse(project))
 }
 
 // DeleteProject 删除项目

@@ -1,5 +1,11 @@
-// Package prediction — 趋势预测 handler.
-// 迁移自 controller/prediction_controller.go，保持原有 API 契约不变。
+// Package prediction — 趋势预测导出 handler。
+// 迁移自 controller/prediction_controller.go。
+//
+// 注：本包曾有一份 GetTrendPrediction，与 handlers/ai 的同名方法
+// （/api/v1/ai/predictions 与 /api/v1/tickets/prediction/trend 的唯一接线者，
+// service.PredictionService.GetTrendPrediction 的生产消费者）完全重复且从未被
+// 任何路由引用（/prediction/export 是本包唯一接线的方法）——2026-10-18 清理删除，
+// 消除「双 handler 同用例」形态。
 package prediction
 
 import (
@@ -26,29 +32,6 @@ func NewHandler(predictionService *service.PredictionService, logger *zap.Sugare
 		predictionService: predictionService,
 		logger:            logger,
 	}
-}
-
-// GetTrendPrediction POST /api/v1/tickets/prediction/trend
-func (h *Handler) GetTrendPrediction(ctx *gin.Context) {
-	var req dto.TrendPredictionRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		common.ParamErrorWithErr(ctx, err, "请求参数错误")
-		return
-	}
-
-	tenantID, exists := ctx.Get("tenant_id")
-	if !exists {
-		common.Fail(ctx, common.UnauthorizedCode, "未授权访问: 租户信息缺失")
-		return
-	}
-
-	response, err := h.predictionService.GetTrendPrediction(ctx.Request.Context(), &req, tenantID.(int))
-	if err != nil {
-		common.RespondError(ctx, err, "获取趋势预测失败")
-		return
-	}
-
-	common.Success(ctx, response)
 }
 
 // ExportPredictionReport POST /api/v1/tickets/prediction/export

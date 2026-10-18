@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/schema"
 	"itsm-backend/ent/survey"
 	"itsm-backend/ent/surveyresponse"
+	"itsm-backend/ent/ticket"
 
 	"go.uber.org/zap"
 )
@@ -24,11 +27,36 @@ func NewSurveyService(client *ent.Client, logger *zap.SugaredLogger) *SurveyServ
 }
 
 // SubmitResponse submits a survey response
-func (s *SurveyService) SubmitResponse(ctx context.Context, req *dto.SubmitSurveyRequest, tenantID int) error {
-	_, err := s.client.SurveyResponse.Create().
+func (s *SurveyService) SubmitResponse(ctx context.Context, req *dto.SubmitSurveyRequest, respondentID, tenantID int) error {
+	// surveyId 必须属于当前租户：此前直接落库，他租 survey 可被引用（跨租户
+	// 引用注入），响应行虽然打着本租户 tenant_id，survey 边却指向对端。
+	surveyExists, err := s.client.Survey.Query().
+		Where(survey.ID(req.SurveyID), survey.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to check survey for submit", "error", err, "survey_id", req.SurveyID)
+		return fmt.Errorf("check survey for submit: %w", err)
+	}
+	if !surveyExists {
+		// 引用型资源缺失（不存在或跨租户）：400/1001，与工单评论提及口径一致。
+		return common.NewBusinessError(common.ParamErrorCode, "问卷不存在或不属于当前租户", "")
+	}
+	// ticketId 同为本租引用面：无效引用会让响应挂在不存在/他租工单上。
+	ticketExists, err := s.client.Ticket.Query().
+		Where(ticket.ID(req.TicketID), ticket.TenantIDEQ(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to check ticket for submit", "error", err, "ticket_id", req.TicketID)
+		return fmt.Errorf("check ticket for submit: %w", err)
+	}
+	if !ticketExists {
+		return common.NewBusinessError(common.ParamErrorCode, "评分工单不存在或不属于当前租户", "")
+	}
+
+	_, err = s.client.SurveyResponse.Create().
 		SetSurveyID(req.SurveyID).
 		SetTicketID(req.TicketID).
-		SetRespondentID(0). // Would come from auth context
+		SetRespondentID(respondentID). // 来自认证上下文的真实用户（此前硬编码 0）
 		SetAnswers(toSchemaAnswers(req.Answers)).
 		SetScore(req.Score).
 		SetComment(req.Comment).
@@ -39,6 +67,11 @@ func (s *SurveyService) SubmitResponse(ctx context.Context, req *dto.SubmitSurve
 
 // GetAnalytics retrieves analytics for a survey
 func (s *SurveyService) GetAnalytics(ctx context.Context, surveyID int, tenantID int) (*dto.SurveyAnalytics, error) {
+	// 先验 survey 归属：此前直接按响应行聚合（响应行带本租谓词），
+	// 他租 survey id 会得到 200 + 空统计而非 404——存在性探测面。
+	if _, err := s.GetSurvey(ctx, surveyID, tenantID); err != nil {
+		return nil, err
+	}
 	responses, err := s.client.SurveyResponse.Query().
 		Where(surveyresponse.HasSurveyWith(survey.ID(surveyID))).
 		Where(surveyresponse.TenantID(tenantID)).
@@ -125,6 +158,10 @@ func (s *SurveyService) UpdateSurvey(ctx context.Context, surveyID int, req *dto
 
 // GetSurveyResponses retrieves responses for a survey
 func (s *SurveyService) GetSurveyResponses(ctx context.Context, surveyID int, tenantID int) ([]*ent.SurveyResponse, error) {
+	// 先验 survey 归属：跨租户 survey id 此前得到 200 + 空列表而非 404。
+	if _, err := s.GetSurvey(ctx, surveyID, tenantID); err != nil {
+		return nil, err
+	}
 	return s.client.SurveyResponse.Query().
 		Where(surveyresponse.HasSurveyWith(survey.ID(surveyID))).
 		Where(surveyresponse.TenantID(tenantID)).
