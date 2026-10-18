@@ -21,6 +21,8 @@
  *     TenantContext is populated
  *   - `setTenantId/setTenantCode` are no-ops (deprecated)
  *   - Missing code field is tolerated (BPMN controller quirk)
+ *   - 动态 map（formFields / attributes / variables / metadata）的 key 由租户配置
+ *     决定，必须原样透传，不得参与 camelCase 归一化
  */
 
 import { ApiRequestError, httpClient } from '../http-client';
@@ -486,6 +488,89 @@ describe('httpClient', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(fetchMock.mock.calls[1][1].headers['X-CSRF-Token']).toBe('mock-csrf-token');
       expect(fetchMock.mock.calls[1][1].headers['Content-Type']).toBeUndefined();
+    });
+  });
+
+  // 动态 map 的 key 是**租户数据**而不是 API 字段名：工单类型 custom_fields 定义出的
+  // 表单键（account_type / target_system …）、CMDB CI 属性名、BPMN 流程变量名、
+  // 通知/审计 metadata 键都由租户配置决定。改写这些 key 会让后端按类型 schema 校验
+  // 时返回 400「包含未定义字段」——浏览器实测：带自定义字段的工单类型（账号申请等）
+  // 完全无法创建（2026-10-18）。此用例是修复前失败、修复后通过的回归锁。
+  describe('动态 map key 保真（formFields 等服务请求契约）', () => {
+    it('请求体保留 formFields 的 schema 键，同时仍归一化其余字段名', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: { id: 15 } }));
+
+      await httpClient.post('/api/v1/tickets', {
+        ticket_type_id: 5,
+        title: '账号申请',
+        form_fields: { account_type: 'new', target_system: 'GitLab' },
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init.body as string)).toEqual({
+        ticketTypeId: 5,
+        title: '账号申请',
+        formFields: { account_type: 'new', target_system: 'GitLab' },
+      });
+    });
+
+    it('响应保留 formFields 的 schema 键，同时归一化外层 DTO 字段', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 15,
+            ticket_number: 'TKT-202610-000015',
+            formFields: { account_type: 'new', target_system: 'GitLab' },
+          },
+        })
+      );
+
+      const result = await httpClient.get('/api/v1/tickets/15');
+
+      expect(result).toEqual({
+        id: 15,
+        ticketNumber: 'TKT-202610-000015',
+        formFields: { account_type: 'new', target_system: 'GitLab' },
+      });
+    });
+
+    it('attributes / variables / metadata 三类动态 map 同样保留键名', async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse({ code: 0, message: 'ok', data: { id: 1 } }));
+
+      await httpClient.post('/api/v1/cmdb/cis', {
+        attributes: { serial_number: 'SN-1', asset_owner: 'zhangsan' },
+        variables: { assignee_group: 'g1' },
+        metadata: { source_system: 'itsm' },
+      });
+
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse(init.body as string)).toEqual({
+        attributes: { serial_number: 'SN-1', asset_owner: 'zhangsan' },
+        variables: { assignee_group: 'g1' },
+        metadata: { source_system: 'itsm' },
+      });
+    });
+
+    it('豁免只针对 map：同名键下的 DTO 数组仍归一化', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          code: 0,
+          message: 'ok',
+          data: {
+            customFields: [{ default_value: 'x', field_type: 'text' }],
+            attributes: [{ serial_number: 'SN-1' }],
+          },
+        })
+      );
+
+      const result = await httpClient.get('/api/v1/ticket-types/5');
+
+      expect(result).toEqual({
+        customFields: [{ defaultValue: 'x', fieldType: 'text' }],
+        attributes: [{ serialNumber: 'SN-1' }],
+      });
     });
   });
 });

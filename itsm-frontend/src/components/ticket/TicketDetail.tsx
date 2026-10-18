@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 import { TicketApi, type EscalateTicketRequest, type TicketConfigurationItem, type TicketSLAInfo } from '@/lib/api/ticket-api';
 import { TicketStatus, TicketPriority } from '@/constants/taxonomy';
 import { TicketApprovalApi } from '@/lib/api/ticket-approval-api';
+import { TicketTypeApi } from '@/lib/api/ticketTypeApi';
 import type { Ticket } from '@/lib/api/api-config';
 import type { User } from '@/lib/api/user-api';
 import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
@@ -207,6 +208,9 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const [cisLoading, setCisLoading] = useState(false);
   // users / loadingUsers 由 useUserListQuery 提供（带缓存）
   const [slaInfo, setSlaInfo] = useState<TicketSLAInfo | null>(null);
+  // 动态表单字段的「字段名 → 标签」映射：formFields 的 key 是工单类型
+  // custom_fields 定义的字段名（如 account_type），标签只存在于类型 schema 中。
+  const [formFieldLabels, setFormFieldLabels] = useState<Record<string, string>>({});
   const [assignForm] = Form.useForm();
   const [editForm] = Form.useForm();
   const [ccForm] = Form.useForm();
@@ -304,6 +308,39 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
       fetchCIs();
     }
   }, [ticketKey, fetchSLAInfo, fetchCIs]);
+
+  // 动态表单字段的展示标签来自**工单类型 schema**：formFields 的 key 是类型
+  // custom_fields 的字段名（如 account_type），直接渲染只会显示原始键名。
+  // 这里按 ticketTypeId 拉取类型定义做 name → label 映射；失败或类型缺失时
+  // 静默回退原始键名（展示降级，不影响详情可用性）。
+  const ticketTypeId = ticket?.ticketTypeId;
+  const hasFormFields = !!ticket?.formFields && Object.keys(ticket.formFields).length > 0;
+  useEffect(() => {
+    if (!ticketTypeId || !hasFormFields) {
+      setFormFieldLabels({});
+      return;
+    }
+    let cancelled = false;
+    TicketTypeApi.get(ticketTypeId)
+      .then(definition => {
+        if (cancelled) return;
+        const labels: Record<string, string> = {};
+        (definition.customFields ?? []).forEach(field => {
+          if (field.name) {
+            labels[field.name] = field.label || field.name;
+          }
+        });
+        setFormFieldLabels(labels);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setFormFieldLabels({});
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ticketTypeId, hasFormFields]);
 
   // 用户列表由 useUserListQuery 内部处理挂载与缓存。
 
@@ -733,7 +770,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Card size="small" title={t('ticketDetail.formFields') || '动态表单字段'} className="mt-2">
               <Descriptions column={2} bordered size="small">
                 {Object.entries(ticket.formFields).map(([key, value]) => (
-                  <Descriptions.Item key={key} label={key}>
+                  <Descriptions.Item key={key} label={formFieldLabels[key] ?? key}>
                     {renderFormFieldValue(value)}
                   </Descriptions.Item>
                 ))}

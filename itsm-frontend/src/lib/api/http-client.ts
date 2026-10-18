@@ -7,6 +7,34 @@ import { getTenantId, getTenantCode, setTenantId as setContextTenantId, setTenan
 // 会话彻底过期后的登录页跳转只需发起一次；并行 401 不应重复导航。
 let expiredSessionRedirectInFlight = false;
 
+/**
+ * 动态 map 的 key 是**租户数据**，不是 API 字段名，必须原样透传、不得参与
+ * camelCase 归一化：
+ *   - `formFields`：工单类型 `custom_fields` 定义出的表单键（`account_type`、
+ *     `target_system` …），后端按类型 schema 的键做白名单校验；
+ *   - `attributes`：CMDB CI 属性名（CI 类型 schema 定义）；
+ *   - `variables`：BPMN 流程变量名（流程定义决定）；
+ *   - `metadata`：通知/审计等扩展键。
+ * 归一化这些 key 会让后端返回 `400 {"code":1001,"message":"包含未定义字段"}`，
+ * 表现为「带自定义字段的工单类型在浏览器上无法创建」（2026-10-18 浏览器实测）。
+ * 仅对「值为普通对象（map）」豁免递归；**数组照常归一化**，因为响应里的
+ * `customFields` 是 `CustomFieldDefinition[]`（DTO 数组），其字段仍需转 camelCase。
+ * 新增动态 map 容器时必须显式登记到这里，禁止用字段存在性做猜测。
+ */
+const DYNAMIC_MAP_KEYS: ReadonlySet<string> = new Set([
+  'formFields',
+  'attributes',
+  'variables',
+  'metadata',
+]);
+
+const isDynamicMap = (key: string, value: unknown): boolean =>
+  DYNAMIC_MAP_KEYS.has(key) &&
+  value !== null &&
+  typeof value === 'object' &&
+  !Array.isArray(value) &&
+  (value as object).constructor === Object;
+
 // 递归将对象的 key 从 snake_case 转换为 camelCase
 const toCamelCase = (obj: unknown): unknown => {
   if (obj === null || obj === undefined) {
@@ -19,7 +47,11 @@ const toCamelCase = (obj: unknown): unknown => {
     return Object.keys(typedObj).reduce(
       (result, key) => {
         const camelKey = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
-        result[camelKey] = toCamelCase(typedObj[key]);
+        // 动态 map 的 value 整体保留：其 key 由租户配置决定，改写即破坏契约。
+        // 判定用**归一化后**的键名（语义身份是 DTO 字段 formFields，而非调用方的写法）。
+        result[camelKey] = isDynamicMap(camelKey, typedObj[key])
+          ? typedObj[key]
+          : toCamelCase(typedObj[key]);
         return result;
       },
       {} as Record<string, unknown>
