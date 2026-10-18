@@ -129,7 +129,7 @@ func (s *ChangeReviewService) ListMembers(ctx context.Context, boardType string,
 		return nil, fmt.Errorf("failed to list members: %w", err)
 	}
 
-	var response = make([]*dto.ChangeReviewMemberResponse, 0, len(members))
+	response := make([]*dto.ChangeReviewMemberResponse, 0, len(members))
 	for _, member := range members {
 		// 纵深防御：成员行虽经租户谓词筛出，用户详情读取仍带租户谓词，
 		// 让历史脏数据（成员行指向他租用户）在列表里静默跳过而不是回显他租身份。
