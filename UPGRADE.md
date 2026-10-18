@@ -1616,6 +1616,43 @@ ITSM_BOOTSTRAP_ONLY=true ITSM_AUTO_SEED=true ./itsm-backend
 cd itsm-backend && go test ./pkg/menubaseline/ ./pkg/seeder/ -count=1
 ```
 
+### 1.41 同域错误形态不一致补齐：not-found/越权/非法迁移不再伪装成 500/400（2026-10-18，破坏性：状态码变更）
+
+本节只改**响应状态码与业务码**，不改任何字段、路由或分页契约。§1.20 建立了单一
+分类器，但仍有多个同域路径残留裸 `fmt.Errorf` / 统一 `Fail`，表现为同一个
+API 里「相邻函数行为不一致」。本批以真实入口 HTTP 回归钉住后逐一纠正，
+调用方若一直按 400/500 重试逻辑编码（例如把 500 当作可重试的暂时性故障），
+需按新语义识别 404/403/409。
+
+| 接口 | 触发条件 | 旧行为 | 新行为 |
+| --- | --- | --- | --- |
+| `POST /service-requests/{id}/provision` | 工单不存在 / 跨租户 | 400/`4000` | 404/`4004` |
+| `POST /service-requests/{id}/provision` | 状态非 `security_approved` | 500/`5001`（裸 error 兜底） | 409/`4090` |
+| `POST /provisioning-tasks/{id}/execute` | 任务不存在 / 跨租户 | 500/`5001` | 404/`4004` |
+| `POST /tickets/{id}/comments`、`GET /tickets/{id}/comments` | 工单不存在 / 跨租户 | 500/`5001` | 404/`4004` |
+| `POST /tickets/{id}/comments` | 内容为空 / 提及用户无效 / 附件不属于该单 | 500/`5001` | 400/`1001`–`1002` |
+| `PUT /tickets/{id}/comments/{cid}`、`DELETE …/{cid}` | 非作者/处理人 | 500/`5001` | 403/`2003` |
+| `DELETE /tickets/{id}/attachments/{aid}` | 非上传人/处理人/申请人 | 500/`5001` | 403/`2003` |
+| `DELETE /tickets/{id}/attachments/{aid}` | 附件不存在 / 跨租户 | 500/`5001` | 404/`4004` |
+| `POST /tickets/{id}/notifications` | 工单不存在 / 跨租户（直发与 outbox 双路径） | 500/`5001` | 404/`4004` |
+
+`POST /tickets/{id}/notifications` 同时收紧**收件人校验**：直发路径与 outbox
+入箱路径的收件人必须属于本租户（此前收件人存在性校验不带 `tenant_id` 谓词，
+工单租户可为其它租户的真身用户创建通知行 / 入箱投递命令——跨租户引用注入）。
+跨租户/不存在收件人按「用户不存在」静默跳过（`code:0` + 零副作用末尾），
+与幽灵 `userId` 在响应上不可区分。
+
+存在性防泄漏不变：跨租户与「资源不存在」均为同一个 404/`4004` 错误形态。
+无 schema/迁移变更，无需执行额外命令。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 \
+  ./handlers/provisioning/ ./handlers/ticket_comment/ ./handlers/ticket_notification/ \
+  ./handlers/ticket_view/ ./router/ ./service/
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。
