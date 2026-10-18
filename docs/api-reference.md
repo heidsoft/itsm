@@ -1557,6 +1557,28 @@ POST /api/v1/escalation-matrices/invalidate-cache  # 需要 sla:write，清读�
 - 未配置自定义矩阵时返回内置默认矩阵，因此**空 map 不是「未配置」而是异常**，前端据此报错而不是当作空成功。
 - 自定义矩阵持久化在 `system_configs`（key=`escalation.matrix`，category=`escalation`）；`PUT` 落库成功才更新
   读缓存，落库失败返回错误而不是假成功。
+- HTTP 契约回归：`handlers/escalation_matrix/http_contract_test.go`（默认矩阵非 null、PUT/GET 覆盖往返、
+  多租户隔离、invalidate-cache 后 store 路径不丢配置）。注意按 authz 编译期默认权限集 `end_user` 持有
+  `sla:read`（可读矩阵与 SLA 展示面），但不持有 `sla:write`（PUT 一律 403/`2003`）。
+
+## 变更评审接口
+
+评审组成员名册（REVIEW / EREVIEW 双类别），驱动审批链引擎的 `review:` 解析器：
+
+```http
+GET    /api/v1/change-review/members?type=REVIEW   # 需要 change:read，type 仅 REVIEW/EREVIEW，非法值回落 REVIEW
+POST   /api/v1/change-review/members               # 需要 change:write
+PUT    /api/v1/change-review/members/{id}          # 需要 change:write（role / isActive）
+DELETE /api/v1/change-review/members/{id}          # 需要 change:write
+```
+
+- `data` 直接是 `ChangeReviewMemberResponse` 数组（`{id,userId,userName,email,type,role,isActive,tenantId,createdAt}`），
+  **没有**分页信封；`type` 过滤是精确匹配。
+- `POST` 的 `userId` 必须是**本租户真实用户**：跨租户或不存在的用户 id → 400/`1001`（引用型资源缺失，
+  与工单评论「提及用户无效」同口径）；同 user+type 已在名册 → 409/`4090`；两者都不再伪装 500（2026-10-18
+  纠正，见 UPGRADE §1.45）。
+- `PUT`/`DELETE` 对不存在或跨租户成员一律 404/`4004`（存在性与跨租户不可区分），不再伪装 500。
+- 列表内部会按租户谓词读用户详情；历史脏数据（成员行指向他租用户）在列表中静默跳过。
 
 ## 工作流接口
 
@@ -2739,7 +2761,7 @@ Query Parameters:
 | `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
 | `GET /api/v1/tickets/views` | `{items, total}` | 视图按租户全量返回（`service/ticket_view_service.go` 无 `Limit`），`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/{id}/comments` | `{items, total}` | 单工单评论全量返回，同上；分页若将来引入必须实装而非补键 |
-| `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实；读写整组接口需 `assignment_rule:read`/`assignment_rule:write` |
+| `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实；读写整组接口需 `assignment_rule:read`/`assignment_rule:write`。`DELETE /{id}` 幂等可重放：条件删除 0 行（已删/跨租户/不存在）一律 404/`4004`，不再静默假装成功；`POST /assignment-rules/test` 的 `ruleId`/`ticketId` 均带租户谓词，跨租户引用与不存在同名 404/`4004`，他租工单不再被读取做匹配或回显动作（2026-10-18 纠正，见 UPGRADE §1.45） |
 | `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `automation_rule:read`（规则配置面自有码，不是 `system_config:read`，也不是最终用户为看流转进度而持有的 `workflow:read`，见 UPGRADE §1.41） |
 | `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
 | `GET /api/v1/tickets/cc/my` | `{items: TicketCCRecordResponse[], total}` | 抄送给当前用户的记录，按 `tenant_id + user_id + is_active` 全量返回，排序 `added_at DESC, id ASC`（`id` 是并列键）；`user`/`addedBy` 是 `WorkflowUserInfo`，姓名键是 `fullName`，没有 `name` |

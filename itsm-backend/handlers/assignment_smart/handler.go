@@ -4,6 +4,7 @@
 package assignment_smart
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -210,6 +211,10 @@ func (h *Handler) DeleteAssignmentRule(c *gin.Context) {
 	err := h.ruleService.DeleteAssignmentRule(c.Request.Context(), ruleID, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete assignment rule", "error", err, "rule_id", ruleID)
+		if errors.Is(err, service.ErrAssignmentRuleNotFound) {
+			common.Fail(c, common.NotFoundCode, "分配规则不存在")
+			return
+		}
 		common.FailWithErr(c, err, "操作失败")
 		return
 	}
@@ -233,7 +238,14 @@ func (h *Handler) TestAssignmentRule(c *gin.Context) {
 	response, err := h.ruleService.TestAssignmentRule(c.Request.Context(), &req, tenantID)
 	if err != nil {
 		h.logger.Errorw("Failed to test assignment rule", "error", err, "rule_id", req.RuleID, "ticket_id", req.TicketID)
-		common.FailWithErr(c, err, "操作失败")
+		switch {
+		case errors.Is(err, service.ErrAssignmentRuleNotFound):
+			common.Fail(c, common.NotFoundCode, "分配规则不存在")
+		case errors.Is(err, service.ErrTestTicketNotFound):
+			common.Fail(c, common.NotFoundCode, "工单不存在")
+		default:
+			common.FailWithErr(c, err, "操作失败")
+		}
 		return
 	}
 

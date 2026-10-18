@@ -2,14 +2,26 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketassignmentrule"
 
 	"go.uber.org/zap"
+)
+
+// 规则域稳定错误语义（handler 据 sentinel 映射，修复 B9 Z1/Z2/Z3 钉点）：
+//   - ErrAssignmentRuleNotFound：按租户谓词查不到规则（不存在或跨租户），
+//     handler 映射 404/4004 —— 条件删除 0 行不再假装成功。
+//   - ErrTestTicketNotFound：试运行时工单不存在或跨租户，handler 映射 404/4004
+//     —— 此前 ticket.Get 无租户谓词，他租工单可被读取做匹配并回显动作。
+var (
+	ErrAssignmentRuleNotFound = errors.New("assignment rule not found")
+	ErrTestTicketNotFound     = errors.New("assignment test ticket not found")
 )
 
 type TicketAssignmentRuleService struct {
@@ -131,7 +143,7 @@ func (s *TicketAssignmentRuleService) DeleteAssignmentRule(
 	ctx context.Context,
 	ruleID, tenantID int,
 ) error {
-	_, err := s.client.TicketAssignmentRule.Delete().
+	deleted, err := s.client.TicketAssignmentRule.Delete().
 		Where(
 			ticketassignmentrule.ID(ruleID),
 			ticketassignmentrule.TenantID(tenantID),
@@ -140,6 +152,10 @@ func (s *TicketAssignmentRuleService) DeleteAssignmentRule(
 	if err != nil {
 		s.logger.Errorw("Failed to delete assignment rule", "error", err)
 		return fmt.Errorf("failed to delete assignment rule: %w", err)
+	}
+	// 条件删除影响行数为 0 视为 not-found，不得静默假装成功。
+	if deleted == 0 {
+		return ErrAssignmentRuleNotFound
 	}
 
 	return nil
@@ -151,20 +167,32 @@ func (s *TicketAssignmentRuleService) TestAssignmentRule(
 	req *dto.TestAssignmentRuleRequest,
 	tenantID int,
 ) (*dto.TestAssignmentRuleResponse, error) {
-	// 获取规则
-	rule, err := s.client.TicketAssignmentRule.Get(ctx, req.RuleID)
+	// 获取规则（带租户谓词：跨租户与不存在同形 404，不读对端配置）
+	rule, err := s.client.TicketAssignmentRule.Query().
+		Where(
+			ticketassignmentrule.ID(req.RuleID),
+			ticketassignmentrule.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("assignment rule not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, ErrAssignmentRuleNotFound
+		}
+		return nil, fmt.Errorf("get assignment rule: %w", err)
 	}
 
-	if rule.TenantID != tenantID {
-		return nil, fmt.Errorf("assignment rule not found")
-	}
-
-	// 获取工单
-	ticketEntity, err := s.client.Ticket.Get(ctx, req.TicketID)
+	// 获取工单（带租户谓词：此前他租工单可被读取做匹配并回显动作回显面）
+	ticketEntity, err := s.client.Ticket.Query().
+		Where(
+			ticket.ID(req.TicketID),
+			ticket.TenantID(tenantID),
+		).
+		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("ticket not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, ErrTestTicketNotFound
+		}
+		return nil, fmt.Errorf("get ticket: %w", err)
 	}
 
 	// 检查规则是否匹配

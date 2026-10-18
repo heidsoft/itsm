@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/changereviewmember"
@@ -35,7 +36,9 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("user not found or does not belong to current tenant")
+			// 引用型资源缺失（不存在或跨租户）：按业务参数错误映射 400/1001，
+			// 与工单评论「提及用户无效」同口径；不再裸 error 兜底 500。
+			return nil, common.NewBusinessError(common.ParamErrorCode, "评审组成员用户不存在或不属于当前租户", "")
 		}
 		return nil, fmt.Errorf("failed to query user: %w", err)
 	}
@@ -51,7 +54,8 @@ func (s *ChangeReviewService) AddMember(ctx context.Context, req *dto.AddChangeR
 		return nil, fmt.Errorf("failed to check member existence: %w", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("user is already a member of this review group")
+		// 业务重复：映射 409/4090，不再裸 error 兜底 500。
+		return nil, common.NewBusinessError(common.ConflictCode, "该用户已加入该评审组", "")
 	}
 
 	member, err := s.client.ChangeReviewMember.Create().
@@ -95,7 +99,8 @@ func (s *ChangeReviewService) RemoveMember(ctx context.Context, memberID int, te
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("member not found")
+			// 不存在或跨租户同形 404：不再裸 error 兜底 500（存在性可探测面）。
+			return common.NewBusinessError(common.NotFoundCode, "评审组成员不存在", "")
 		}
 		return fmt.Errorf("failed to get member: %w", err)
 	}
@@ -124,9 +129,16 @@ func (s *ChangeReviewService) ListMembers(ctx context.Context, boardType string,
 		return nil, fmt.Errorf("failed to list members: %w", err)
 	}
 
-	var response []*dto.ChangeReviewMemberResponse
+	var response = make([]*dto.ChangeReviewMemberResponse, 0, len(members))
 	for _, member := range members {
-		user, err := s.client.User.Get(ctx, member.UserID)
+		// 纵深防御：成员行虽经租户谓词筛出，用户详情读取仍带租户谓词，
+		// 让历史脏数据（成员行指向他租用户）在列表里静默跳过而不是回显他租身份。
+		user, err := s.client.User.Query().
+			Where(
+				entuser.ID(member.UserID),
+				entuser.TenantID(tenantID),
+			).
+			Only(ctx)
 		if err != nil {
 			s.logger.Warnw("Failed to get user info", "error", err, "user_id", member.UserID)
 			continue
@@ -158,7 +170,8 @@ func (s *ChangeReviewService) UpdateMember(ctx context.Context, memberID, tenant
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("member not found")
+			// 不存在或跨租户同形 404：不再裸 error 兜底 500。
+			return nil, common.NewBusinessError(common.NotFoundCode, "评审组成员不存在", "")
 		}
 		return nil, fmt.Errorf("failed to get member: %w", err)
 	}

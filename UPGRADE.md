@@ -1722,6 +1722,36 @@ cd itsm-backend && go test -count=1 \
   ./handlers/asset/ ./service/ ./router/
 ```
 
+### 1.45 分配规则与变更评审写面错误形态不再伪装成成功/500（2026-10-18，破坏性：状态码变更）
+
+与 §1.42/§1.44 同型收敛：`handlers/assignment_smart`（分配规则写面）与
+`handlers/change_review`（评审组名册）在跨租户/不存在/重复时，此前把状态
+码伪装成 200 假成功或 500/`5001` 兜底。
+
+| 接口 | 旧行为 | 新行为 | 不变量 |
+|:---|:---|:---|:---|
+| `DELETE /tickets/assignment-rules/{id}` | 条件删除忽略 0 行 → 永远 200（跨租户探测面） | 404/`4004` | 不存在/跨租户/重放同掩码；对端行零副作用 |
+| `POST /tickets/assignment-rules/test`（ruleId 跨租户） | 裸 error → 500/`5001` | 404/`4004` | 与 `GET` 同域口径（`ErrAssignmentRuleNotFound`） |
+| `POST /tickets/assignment-rules/test`（ticketId 跨租户） | **无租户谓词**：他租工单被读取做匹配并回显 `assignedTo` | 404/`4004` | 他租工单零读取（`ErrTestTicketNotFound`） |
+| `POST /change-review/members`（userId 跨租户/不存在） | 裸 error → 500/`5001` | 400/`1001` | 引用型资源缺失，与工单评论「提及用户无效」同口径 |
+| `POST /change-review/members`（同 user+type 重复） | 裸 error → 500/`5001` | 409/`4090` | 业务冲突语义 |
+| `PUT/DELETE /change-review/members/{他租id}` | 裸 error → 500/`5001` | 404/`4004` | 跨租户与不存在同掩码 |
+| `GET /change-review/members`（空名册） | `data: null` | `data: []` | 列表契约恒为数组 |
+
+防御纵深：`GET /change-review/members` 读用户详情补租户谓词，历史脏数据
+（成员行指向他租用户）在列表中静默跳过。规则面权限码仍为 §1.41 的
+`assignment_rule:{read,write}`；动作面（auto-assign/assign-recommendations/
+test）归 `ticket:assign`。升级矩阵 HTTP 面（`/escalation-matrices`，sla:read/write）
+为纯回归锁定，无语义变更。无 schema/迁移变更。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 \
+  ./handlers/assignment_smart/ ./handlers/change_review/ \
+  ./handlers/escalation_matrix/ ./service/ ./router/
+```
+
 
 ## 2. 环境变量变更
 
