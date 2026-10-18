@@ -15,7 +15,6 @@ package ticket_comment_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -115,13 +114,6 @@ func (fx *fixture) do(t *testing.T, method, path string, user *ent.User, body []
 	w := httptest.NewRecorder()
 	fx.engine.ServeHTTP(w, req)
 	return w
-}
-
-func envelope(t *testing.T, w *httptest.ResponseRecorder) map[string]any {
-	t.Helper()
-	var out map[string]any
-	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &out), "body=%s", w.Body.String())
-	return out
 }
 
 func (fx *fixture) nComments(t *testing.T) int {
