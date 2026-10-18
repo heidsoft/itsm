@@ -8,6 +8,7 @@ import (
 
 	"itsm-backend/domain/provisioning"
 	domainServiceRequest "itsm-backend/domain/servicerequest"
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/provisioningtask"
 	"itsm-backend/ent/servicerequest"
@@ -49,10 +50,13 @@ func (s *ProvisioningService) CreateTaskFromServiceRequest(ctx context.Context, 
 		Where(servicerequest.ID(serviceRequestID), servicerequest.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("服务请求不存在")
+		// %w 保留 ent.NotFoundError：handler 的 classifyError 需要靠它把
+		// 跨租户/不存在统一呈现为 404，而不是兜底成 500。
+		return nil, fmt.Errorf("服务请求不存在: %w", err)
 	}
 	if string(sr.Status) != domainServiceRequest.StatusSecurityApproved {
-		return nil, fmt.Errorf("当前状态不允许启动交付（需要 security_approved）")
+		// 非法状态迁移按仓库语义映射 Conflict(4090)，不得兜底成 400/500。
+		return nil, common.NewBusinessError(common.ConflictCode, "当前状态不允许启动交付（需要 security_approved）", "")
 	}
 
 	// payload：优先使用 form_data；若为空则降级为空 map
@@ -118,7 +122,8 @@ func (s *ProvisioningService) ExecuteTask(ctx context.Context, taskID, tenantID,
 		Where(provisioningtask.ID(taskID), provisioningtask.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("交付任务不存在")
+		// 同上：保留 ent.NotFoundError 分类，让「任务不存在/跨租户」表现为 404。
+		return nil, fmt.Errorf("交付任务不存在: %w", err)
 	}
 
 	// 设置 running

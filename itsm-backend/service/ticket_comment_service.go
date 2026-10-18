@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	domainrole "itsm-backend/domain/role"
+	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
@@ -50,18 +51,20 @@ func (s *TicketCommentService) CreateTicketComment(ctx context.Context, ticketID
 		return nil, fmt.Errorf("failed to check ticket existence: %w", err)
 	}
 	if !ticketExists {
-		return nil, fmt.Errorf("ticket not found")
+		// BusinessError 让 FailWithErr 稳定映射 404；裸 `ticket not found`
+		// 会被 classifyError 兜底成 5001，跨租户探测就表现为 5xx 毛刺。
+		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
 	}
 	req.Content = strings.TrimSpace(req.Content)
 	if req.Content == "" {
-		return nil, fmt.Errorf("comment content is required")
+		return nil, common.NewBusinessError(common.ValidationError, "评论内容不能为空", "")
 	}
 	privileged, err := s.canManageInternalComments(ctx, userID, tenantID)
 	if err != nil {
 		return nil, err
 	}
 	if req.IsInternal && !privileged {
-		return nil, fmt.Errorf("permission denied: internal notes are restricted to support staff")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "内部备注仅支持角色可用", "")
 	}
 	if err := s.validateCommentReferences(ctx, ticketID, tenantID, req.Mentions, req.Attachments); err != nil {
 		return nil, err
@@ -117,7 +120,7 @@ func (s *TicketCommentService) ListTicketComments(ctx context.Context, ticketID,
 		return nil, fmt.Errorf("failed to check ticket existence: %w", err)
 	}
 	if !ticketExists {
-		return nil, fmt.Errorf("ticket not found")
+		return nil, common.NewBusinessError(common.NotFoundCode, "工单不存在或已被删除", "")
 	}
 
 	// 查询工单信息，判断当前用户是否有权限查看内部备注
@@ -209,7 +212,7 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 	canEdit := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canEdit {
-		return nil, fmt.Errorf("permission denied: only comment author or ticket assignee can edit")
+		return nil, common.NewBusinessError(common.ForbiddenCode, "只有评论作者或工单处理人可以编辑", "")
 	}
 
 	// 更新评论
@@ -228,7 +231,7 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 				return nil, privilegeErr
 			}
 			if !privileged {
-				return nil, fmt.Errorf("permission denied: internal notes are restricted to support staff")
+				return nil, common.NewBusinessError(common.ForbiddenCode, "内部备注仅支持角色可用", "")
 			}
 		}
 		update = update.SetIsInternal(*req.IsInternal)
@@ -274,7 +277,7 @@ func (s *TicketCommentService) validateCommentReferences(ctx context.Context, ti
 	seen := make(map[int]struct{}, len(mentions))
 	for _, id := range mentions {
 		if id <= 0 {
-			return fmt.Errorf("invalid mentioned user")
+			return common.NewBusinessError(common.ParamErrorCode, "无效的提及用户", "")
 		}
 		if _, duplicate := seen[id]; duplicate {
 			continue
@@ -282,13 +285,13 @@ func (s *TicketCommentService) validateCommentReferences(ctx context.Context, ti
 		seen[id] = struct{}{}
 		exists, err := s.client.User.Query().Where(user.ID(id), user.TenantID(tenantID), user.Active(true)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("mentioned user %d not found or inactive", id)
+			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("提及的用户 %d 不存在或未激活", id), "")
 		}
 	}
 	for _, id := range attachments {
 		exists, err := s.client.TicketAttachment.Query().Where(ticketattachment.ID(id), ticketattachment.TicketID(ticketID), ticketattachment.TenantID(tenantID)).Exist(ctx)
 		if err != nil || !exists {
-			return fmt.Errorf("attachment %d does not belong to this ticket", id)
+			return common.NewBusinessError(common.ParamErrorCode, fmt.Sprintf("附件 %d 不属于该工单", id), "")
 		}
 	}
 	return nil
@@ -326,7 +329,7 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 	canDelete := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canDelete {
-		return fmt.Errorf("permission denied: only comment author or ticket assignee can delete")
+		return common.NewBusinessError(common.ForbiddenCode, "只有评论作者或工单处理人可以删除", "")
 	}
 
 	// 删除评论

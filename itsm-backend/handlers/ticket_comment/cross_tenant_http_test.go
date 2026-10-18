@@ -4,14 +4,12 @@
 // 隔离保证必须从真实生产入口（router.SetupRoutes 布线 + JWT + RBAC + handler +
 // service + ent）发起验证。参照 router/ticket_attachment_route_test.go 的搭台方式。
 //
-// 已钉住的契约（按当前生产行为如实断言）：
+// 已钉住的契约：
 //   - 跨租户读/写评论 fail closed，且与「资源不存在」错误形态不可区分；
 //   - 跨租户的创建/更新/删除都零副作用（不建行、不改内容、不删行）；
-//   - 已知缺陷（如实钉住）：Create/List 的跨租户失败被 handler 的
-//     FailWithErr 分类为 5001/500（service 返回的 `ticket not found` 是裸
-//     error，没有 %w 包装 ent.NotFoundError，classifyError 分类不到 404），
-//     修复映射后需同步更新本文件的这两个断言；
-//   - Update/Delete 的跨租户失败包装了 ent.NotFoundError，正确映射 404/4004。
+//   - Create/List 的 not-found 已按业务码映射 404/4004（service 用
+//     BusinessError/对 ent.NotFoundError 包装，classifyError 可识别）；
+//   - Update/Delete 的跨租户失败同样稳定 404/4004。
 package ticket_comment_test
 
 import (
@@ -152,11 +150,8 @@ func TestTicketCommentCrossTenant_HTTP(t *testing.T) {
 
 	t.Run("跨租户列表 fail closed 且零内容泄漏", func(t *testing.T) {
 		w := fx.do(t, http.MethodGet, commentsPath, fx.stranger, nil)
-		// 已知缺陷（如实钉住）：service 返回裸 `ticket not found`，
-		// classifyError 分类不到 404，跨租户探测表现为 500/5001。fail closed
-		// 成立（租户外工单和任意异常同观测），修复映射后应改为 404/4004。
-		require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":5001`)
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 		assert.NotContains(t, w.Body.String(), "内部基线回复内容")
 		assert.NotContains(t, w.Body.String(), "owner 首条回复")
 	})
@@ -164,9 +159,9 @@ func TestTicketCommentCrossTenant_HTTP(t *testing.T) {
 	t.Run("跨租户创建 fail closed 且零副作用", func(t *testing.T) {
 		before := fx.nComments(t)
 		w := fx.do(t, http.MethodPost, commentsPath, fx.stranger, []byte(`{"content":"跨租户注入评论"}`))
-		// 已知缺陷（如实钉住）：同上，裸 error 分类为 5001/500。
-		require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":5001`)
+		// not-found 稳定映射 404/4004（不再是 5001/500）。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 
 		assert.Equal(t, before, fx.nComments(t), "跨租户创建不得产生任何评论行")
 		rows, err := fx.client.TicketComment.Query().All(ctx)

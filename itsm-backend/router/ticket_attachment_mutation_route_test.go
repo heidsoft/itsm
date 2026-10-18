@@ -42,6 +42,7 @@ type attachmentMutationFixture struct {
 	client *ent.Client
 	secret string
 	userA  *ent.User
+	colleague *ent.User // tenant A 非相关人（super_admin，但非上传人/处理人/申请人）
 	stranger *ent.User
 	ticketA *ent.Ticket
 	attachmentA *ent.TicketAttachment
@@ -64,6 +65,8 @@ func setupAttachmentMutationTest(t *testing.T) *attachmentMutationFixture {
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 	stranger := client.User.Create().SetUsername("attach-mut-b-stranger").SetEmail("attach-mut-b@example.com").SetName("B").
 		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantB.ID).SaveX(ctx)
+	colleague := client.User.Create().SetUsername("attach-mut-a-colleague").SetEmail("attach-mut-c@example.com").SetName("C").
+		SetPasswordHash("hash").SetRole("super_admin").SetActive(true).SetTenantID(tenantA.ID).SaveX(ctx)
 
 	ticketA := client.Ticket.Create().
 		SetTicketNumber("TKT-ATTACH-MUT-A-001").
@@ -105,7 +108,8 @@ func setupAttachmentMutationTest(t *testing.T) *attachmentMutationFixture {
 
 	return &attachmentMutationFixture{
 		engine: r, client: client, secret: secret,
-		userA: userA, stranger: stranger, ticketA: ticketA, attachmentA: attachmentA,
+		userA: userA, stranger: stranger, colleague: colleague,
+		ticketA: ticketA, attachmentA: attachmentA,
 	}
 }
 
@@ -191,12 +195,10 @@ func TestTicketAttachmentMutationCrossTenant_HTTP(t *testing.T) {
 		beforeFiles := fx.diskFiles(t)
 
 		w := fx.do(t, http.MethodDelete, deletePath, fx.stranger, "", nil)
-		// 已知缺陷（如实钉住）：service 把 ent.NotFoundError 以 %w 包装进
-		// `attachment not found`，但 handler 对删除失败统一 Fail(InternalErrorCode)，
-		// 完全忽略分类——跨租户探测表现为 500/5001。fail closed 成立但缺 404 语义，
-		// 修复映射后应改为 404/4004 并同步本断言。
-		require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":5001`)
+		// not-found 稳定映射 404/4004（service 保留 ent.NotFoundError 分类，
+		// handler 改用 FailWithErr，不再统一压成 500/5001）。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 
 		assert.Equal(t, beforeRows, fx.nAttachments(t), "跨租户删除不得删掉租户内附件行")
 		assert.Equal(t, beforeFiles, fx.diskFiles(t), "跨租户删除不得删掉 uploads/tickets 内文件")
@@ -204,6 +206,16 @@ func TestTicketAttachmentMutationCrossTenant_HTTP(t *testing.T) {
 		require.NoError(t, err, "被探针命中的附件必须原样留存")
 		_, statErr := os.Stat(fx.attachmentA.FilePath)
 		require.NoError(t, statErr, "seed 的磁盘文件必须原样留存")
+	})
+
+	t.Run("同租户非上传人删除是 403，不伪装成 404/500", func(t *testing.T) {
+		// colleague 与 userA 同租户、通过 RBAC（super_admin），但不是上传人/
+		// 处理人/申请人——必须走服务层的相关方检查并稳定映射 Forbidden(2003)。
+		beforeRows := fx.nAttachments(t)
+		w := fx.do(t, http.MethodDelete, deletePath, fx.colleague, "", nil)
+		require.Equal(t, http.StatusForbidden, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":2003`)
+		assert.Equal(t, beforeRows, fx.nAttachments(t), "非相关方删除不得删行")
 	})
 
 	t.Run("同租户删除是正控制：行与磁盘文件同时清理", func(t *testing.T) {

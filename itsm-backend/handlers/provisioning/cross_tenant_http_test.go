@@ -5,13 +5,12 @@
 // RequirePermission + handler + service + ent + durable command）发起验证，
 // 而不是直接打 service。参照 router/ticket_attachment_route_test.go 的搭台方式。
 //
-// 已钉住的契约（按当前生产行为如实断言）：
+// 已钉住的契约：
 //   - 同租户 owner 启动交付是正控制：任务 pending + SR 置 provisioning + 入箱一条命令；
-//   - 跨租户启动交付 400/4000（handler 把所有失败统一映射为 BadRequest），
-//     任务行、SR 状态、operational_commands 三处都必须零副作用；
-//   - 跨租户与「资源不存在」的错误形态不可区分（均 400/4000）；
-//   - 跨租户执行 500/5001（handler 把所有失败统一映射为 InternalError），
-//     任务保持 pending、SR 不被推进；与不存在的任务同形态。
+//   - 跨租户启动交付 404/4004（service 保留 ent.NotFoundError 分类），任务行、
+//     SR 状态、operational_commands 三处都必须零副作用；与「资源不存在」同形态；
+//   - 同租户状态不符启动交付 409/4090（非法状态迁移 = conflict）；
+//   - 跨租户执行 404/4004，任务保持 pending、SR 不被推进。
 package provisioning_test
 
 import (
@@ -206,10 +205,10 @@ func TestProvisioningCrossTenant_HTTP(t *testing.T) {
 		beforeCmds := nCommands(t, fx)
 
 		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/service-requests/%d/provision", srA.ID), fx.stranger, nil)
-		// 已知语义（如实钉住）：handler 把全部失败统一映射 BadRequest(4000)，
-		// 未区分 not-found；fail closed 成立但没有 404 语义。修复时应改为 404 并同步本断言。
-		require.Equal(t, http.StatusBadRequest, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":4000`)
+		// not-found 稳定映射为 404/4004（service 保留 ent.NotFoundError 分类，
+		// handler 用 FailWithErr 映射）；跨租户与任意不存在的工单同观测。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 		assert.NotContains(t, w.Body.String(), `"task"`, "失败响应不得内嵌任何任务数据")
 
 		require.Equal(t, beforeCmds, nCommands(t, fx), "跨租户启动不得入箱任何命令")
@@ -222,8 +221,8 @@ func TestProvisioningCrossTenant_HTTP(t *testing.T) {
 
 	t.Run("跨租户与不存在资源启动交付的错误形态不可区分", func(t *testing.T) {
 		w1 := fx.do(t, http.MethodPost, "/api/v1/service-requests/999999/provision", fx.stranger, nil)
-		require.Equal(t, http.StatusBadRequest, w1.Code)
-		require.Contains(t, w1.Body.String(), `"code":4000`)
+		require.Equal(t, http.StatusNotFound, w1.Code)
+		require.Contains(t, w1.Body.String(), `"code":4004`)
 		w2 := fx.do(t, http.MethodPost, "/api/v1/service-requests/999998/provision", fx.stranger, nil)
 		assert.Equal(t, w1.Code, w2.Code)
 		assert.Equal(t, w1.Body.String(), w2.Body.String(),
@@ -232,16 +231,37 @@ func TestProvisioningCrossTenant_HTTP(t *testing.T) {
 
 	// ---------- 执行任务（POST /provisioning-tasks/:id/execute） ----------
 
+	t.Run("同租户状态不符启动交付 409 且零副作用", func(t *testing.T) {
+		ctx2 := context.Background()
+		catalog := fx.client.ServiceCatalog.Create().
+			SetName("catalog draft").SetStatus("active").SetTenantID(fx.tenantA.ID).SaveX(ctx2)
+		srDraft := fx.client.ServiceRequest.Create().
+			SetTitle("SR 状态不符").
+			SetStatus("pending").
+			SetCatalogID(catalog.ID).
+			SetRequesterID(fx.userA.ID).
+			SetTenantID(fx.tenantA.ID).
+			SaveX(ctx2)
+		beforeCmds := nCommands(t, fx)
+		beforeTasks := nTasks(t, fx)
+
+		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/service-requests/%d/provision", srDraft.ID), fx.userA, nil)
+		require.Equal(t, http.StatusConflict, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4090`, "非法状态迁移必须映射 conflict，而非 500/400")
+
+		assert.Equal(t, beforeCmds, nCommands(t, fx), "状态不符不得入箱任何命令")
+		assert.Equal(t, beforeTasks, nTasks(t, fx), "状态不符不得创建任何任务行")
+	})
+
 	t.Run("跨租户执行 fail closed 且状态不被推进；同租户执行到 succeeded", func(t *testing.T) {
 		srE := fx.newApprovedSR(t, "SR 交付执行隔离")
 		taskE := fx.newPendingTask(t, srE)
 		beforeCmds := nCommands(t, fx)
 
 		w := fx.do(t, http.MethodPost, fmt.Sprintf("/api/v1/provisioning-tasks/%d/execute", taskE.ID), fx.stranger, nil)
-		// 已知缺陷（如实钉住）：handler 把全部失败统一映射 InternalErrorCode(5001)，
-		// not-found 也一样；跨租户探测表现为 500。修复时应改为 404/4004 并同步本断言。
-		require.Equal(t, http.StatusInternalServerError, w.Code, "body=%s", w.Body.String())
-		require.Contains(t, w.Body.String(), `"code":5001`)
+		// not-found 稳定映射为 404/4004（不再统一压成 500/5001）。
+		require.Equal(t, http.StatusNotFound, w.Code, "body=%s", w.Body.String())
+		require.Contains(t, w.Body.String(), `"code":4004`)
 		assert.NotContains(t, w.Body.String(), "ecs", "失败响应不得内嵌任务 payload")
 
 		task, err := fx.client.ProvisioningTask.Get(ctx, taskE.ID)

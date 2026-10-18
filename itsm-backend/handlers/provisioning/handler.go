@@ -50,7 +50,8 @@ func (h *Handler) StartProvisioning(c *gin.Context) {
 
 	task, err := h.provisioningService.CreateTaskFromServiceRequest(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.Fail(c, common.BadRequestCode, "创建交付任务失败")
+		// not-found → 404、状态不符 → 409，其余仍为 500；由 classifyError 统一稳定映射。
+		common.FailWithErr(c, err, "创建交付任务失败")
 		return
 	}
 
@@ -84,7 +85,7 @@ func (h *Handler) ListProvisioningTasks(c *gin.Context) {
 
 	tasks, err := h.provisioningService.ListTasksByServiceRequest(c.Request.Context(), id, tenantID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "获取交付任务列表失败")
+		common.FailWithErr(c, err, "获取交付任务列表失败")
 		return
 	}
 	out := make([]dto.ProvisioningTaskResponse, 0, len(tasks))
@@ -125,7 +126,9 @@ func (h *Handler) ExecuteProvisioningTask(c *gin.Context) {
 
 	task, err := h.provisioningService.ExecuteTask(c.Request.Context(), id, tenantID, userID)
 	if err != nil {
-		common.Fail(c, common.InternalErrorCode, "执行交付任务失败")
+		// not-found → 404；provider 执行失败 → 500。由 classifyError 统一稳定映射，
+		// 不再一律压成 500「执行交付任务失败」。
+		common.FailWithErr(c, err, "执行交付任务失败")
 		return
 	}
 	common.Success(c, dto.ProvisioningTaskResponse{

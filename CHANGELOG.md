@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **错误语义统一：跨租户/not-found 不再伪装成 500 或 400（B2 钉住的 4 处缺陷修复，2026-10-18）**：B1/B2 的真实入口跨租户回归测试暴露了同域错误形态不一致——相邻函数正确映射 404/403，而同 handler 的其它路径一律兜底 500/400。按「验证=400/1002、未授权=401、无权=403、不存在=404、非法状态迁移=409、内部=500」的稳定契约逐处纠正，service 侧用 `common.NewBusinessError` / `%w` 包装让 `classifyError` 可分类：
+  - `service/provisioning_service.go` + `handlers/provisioning/handler.go`：`StartProvisioning` not-found 统一 **404/4004**（原 400/4000）、状态不符启动交付 **409/4090**（原裸 error→兜底 500）；`ExecuteProvisioningTask` not-found **404/4004**、provider 失败仍 500（原一律 500/5001）；列表失败改为分类映射。新增同租户状态不符 409 零副作用回归。
+  - `service/ticket_comment_service.go`：`Create/List` 的 `ticket not found` 由裸 error（classifyError 兜底 5001/500）改为 **404/4004**；内容为空、提及用户无效/不存在、附件不属于该工单 → **400（1001/1002）**；编辑/删除非本人评论、内部备注越权 → **403（2003）**。`Update/Delete` 原有的 `%w` 包装保持不变。
+  - `service/ticket_attachment_service.go` + `handlers/ticket_attachment/handler.go`：`DeleteAttachment` 非上传人/处理人/申请人 → **403/2003**（原裸 error→500）；handler 删除失败由统一 `Fail(InternalErrorCode)` 改为 `FailWithErr`，跨租户删除 **404/4004**（原 500/5001）。同租户非相关方删除 403 已有回归断言。
+  - 所有修复均以 B2 建立的 HTTP 级断言回报绿（红→绿），跨租户/不存在资源错误形态同构、零副作用断言不变。
+
 - **问题调查子系统：可空时间列扫描 500 + 业务冲突伪装成 500（2026-10-18 生产验证）**：
   - `problem_investigations.start_date` 允许为 NULL 且创建时不写入，而 `dto.ProblemInvestigationResponse.StartDate` 用值类型 `time.Time` 接收，database/sql 直接报 `unsupported Scan, storing driver.Value type <nil> into type *time.Time` → 调查详情 `GET /problem-investigation/investigations/:id` 与摘要 `GET /problem-investigation/problems/:id/summary` 对所有已建调查恒 500。改为 `*time.Time`（前端 `ProblemInvestigation.startDate` 本就是可选字段），创建响应也改为回读库里的权威行，不再在内存伪造 `startDate`。
   - 同域错误语义纠正：重复创建调查/根因分析返回 **409 / 4090**（含并发撞 `problem_id` UNIQUE 的路径），「问题/调查/步骤/根因/方案不存在」返回 **404 / 4004**，不再一律兜底 500「操作失败」；handler 统一改用 `common.RespondError` 透出领域文案。

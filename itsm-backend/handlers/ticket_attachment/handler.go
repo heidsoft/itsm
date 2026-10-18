@@ -227,7 +227,9 @@ func (h *Handler) DeleteAttachment(c *gin.Context) {
 	err := h.attachmentService.DeleteAttachment(c.Request.Context(), ticketID, attachmentID, tenantID, userID)
 	if err != nil {
 		h.logger.Errorw("Failed to delete attachment", "error", err, "ticket_id", ticketID, "attachment_id", attachmentID, "tenant_id", tenantID)
-		common.Fail(c, common.InternalErrorCode, "删除附件失败")
+		// service 已把 ent.NotFoundError 以 %w 包装、权限拒绝为 Forbidden 业务码；
+		// 不再一律 Fail(InternalErrorCode) 吞掉分类——not-found → 404、权限不足 → 403。
+		common.FailWithErr(c, err, "删除附件失败")
 		return
 	}
 

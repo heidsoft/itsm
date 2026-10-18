@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"itsm-backend/common"
 	domainrole "itsm-backend/domain/role"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
@@ -313,7 +314,8 @@ func (s *TicketAttachmentService) DeleteAttachment(ctx context.Context, ticketID
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID) ||
 		ticketInfo.RequesterID == userID
 	if !canDelete {
-		return fmt.Errorf("permission denied: only uploader, ticket assignee or requester can delete")
+		// 同租户但非上传人/处理人/申请人 → 403；裸 error 会被 classifyError 兜底成 500。
+		return common.NewBusinessError(common.ForbiddenCode, "只有附件上传人、工单处理人或申请人可以删除附件", "")
 	}
 
 	// 删除文件
