@@ -58,7 +58,7 @@ type ExemptTable struct {
 //   - tenants：自身承载所有租户元数据，递归依赖无法含 tenant_id
 //   - schema_migrations：迁移历史表，全局唯一
 //   - user_roles / role_permissions / role_permissions_join：RBAC 关系表，
-//     平台级 RBAC 不应被租户过滤拦截（详见 docs/adr/0001）
+//     平台级 RBAC 不应被租户过滤拦截（汇总见 docs/architecture/tenant-isolation.md）
 //   - ai_llm_calls：LLM 网关级可观测性，与租户无关（service/ai_telemetry.go 注释）
 //   - knowledge_article_participants/sessions/version：协作快照，session id 是天然唯一键
 //   - msp_allocations：MSP 模式下的租户-服务分配，是租户维度之上的概念
