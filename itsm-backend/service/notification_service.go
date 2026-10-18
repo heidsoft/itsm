@@ -273,4 +273,3 @@ func (s *NotificationService) convertToDTO(n *ent.Notification) *dto.Notificatio
 
 	return notification
 }
-

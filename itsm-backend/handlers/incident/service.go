@@ -10,8 +10,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/service"
 
 	"go.uber.org/zap"

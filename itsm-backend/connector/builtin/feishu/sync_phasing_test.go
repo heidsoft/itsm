@@ -182,7 +182,7 @@ func TestSyncTicketToFeishu_NoTxHeldDuringExternalCall(t *testing.T) {
 }
 
 // TestSyncTicketToFeishu_SuccessPersistsMapping create 成功后映射必须落库
-//（synced + GUID 回填）。
+// （synced + GUID 回填）。
 func TestSyncTicketToFeishu_SuccessPersistsMapping(t *testing.T) {
 	f, entClient, _, tn, ticket1, _ := setupSyncScenery(t, "ok")
 	ctx := context.Background()

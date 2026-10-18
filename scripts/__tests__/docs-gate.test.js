@@ -325,5 +325,56 @@ test('C.6.5 passes once the scope is disclosed', (t) => {
 
   const result = runDrift(root, driftEnv(root));
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /已披露前端覆盖率口径/);
+  // 2026-10-17 双口径改造后，pass 文案区分为「门槛口径 / 产品口径」两条，
+  // 单口径场景命中前者。
+  assert.match(result.stdout, /已披露门槛口径/);
+});
+
+// 双口径：package.json 一旦提供 test:coverage:product，ROADMAP 就必须同时披露 src/**，
+// 否则只报 src/lib 的 80% 会把「产品覆盖率」误报成整体覆盖率。
+test('C.6.5 blocks a product-scope script without src/** disclosure', (t) => {
+  const root = driftFixture({
+    'itsm-frontend/jest.config.js': [
+      'module.exports = {',
+      "  collectCoverageFrom: ['src/lib/**/*.{ts,tsx}'],",
+      '};',
+      '',
+    ].join('\n'),
+    'itsm-frontend/package.json':
+      '{\n  "scripts": {\n    "test:coverage:product": "jest --coverage"\n  }\n}\n',
+    'ROADMAP.md':
+      '## 📊 Key Metrics\n\n仅统计 `src/lib/**`，不代表产品覆盖率。\n\n| Metric | v2.0 target |\n|:---|---:|\n',
+  });
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const result = runDrift(root, driftEnv(root));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /未披露 src\/\*\* 产品口径/);
+});
+
+test('C.6.5 passes when both scopes are disclosed', (t) => {
+  const root = driftFixture({
+    'itsm-frontend/jest.config.js': [
+      'module.exports = {',
+      "  collectCoverageFrom: ['src/lib/**/*.{ts,tsx}'],",
+      '};',
+      '',
+    ].join('\n'),
+    'itsm-frontend/package.json':
+      '{\n  "scripts": {\n    "test:coverage:product": "jest --coverage"\n  }\n}\n',
+    'ROADMAP.md': [
+      '## 📊 Key Metrics',
+      '',
+      '| Metric | v2.0 target |',
+      '|:---|---:|',
+      '| Frontend coverage（门槛口径 `src/lib/**`） | ≥80% |',
+      '| Frontend coverage（产品口径 `src/**`） | 30% |',
+      '',
+    ].join('\n'),
+  });
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const result = runDrift(root, driftEnv(root));
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /同时披露产品口径/);
 });

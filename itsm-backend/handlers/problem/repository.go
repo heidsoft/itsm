@@ -29,5 +29,5 @@ type Repository interface {
 }
 
 // ErrProblemStatusMoved 表示 Update 的 CAS 预期状态与真实状态不一致
-//（校验与写入的并发窗口内状态已被其他请求推进）。
+// （校验与写入的并发窗口内状态已被其他请求推进）。
 var ErrProblemStatusMoved = errors.New("problem status changed concurrently")

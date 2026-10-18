@@ -16,10 +16,10 @@ const (
 
 // 评审动作。
 const (
-	ReviewActionSubmit   = "submit"   // 作者提交评审
-	ReviewActionApprove  = "approve"  // 评审人通过
-	ReviewActionReject   = "reject"   // 评审人驳回
-	ReviewActionWithdraw = "withdraw" // 作者撤回（评审中反悔）
+	ReviewActionSubmit   = "submit"    // 作者提交评审
+	ReviewActionApprove  = "approve"   // 评审人通过
+	ReviewActionReject   = "reject"    // 评审人驳回
+	ReviewActionWithdraw = "withdraw"  // 作者撤回（评审中反悔）
 	ReviewActionRepubish = "republish" // 已通过内容被修改后重新送审
 )
 

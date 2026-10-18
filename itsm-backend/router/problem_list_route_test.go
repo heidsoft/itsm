@@ -12,10 +12,10 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/service"
 	"itsm-backend/ent/problem"
 	problemHandler "itsm-backend/handlers/problem"
 	"itsm-backend/middleware"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"

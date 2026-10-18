@@ -13,8 +13,8 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/change"
 	entuser "itsm-backend/ent/user"
-	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/datascope"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"

@@ -61,8 +61,8 @@ func TestBuiltinRolePermissionCodes_Guard(t *testing.T) {
 		},
 		// 规则配置面（自动化/分配规则）从 system_config:* 迁出后，管理角色必须持有新码：
 		// 一旦回收，租管与 it_admin 的规则页会重新变成「菜单可见、接口 403」。
-		"admin":     {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
-		"it_admin":  {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
+		"admin":          {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
+		"it_admin":       {"automation_rule:read", "automation_rule:write", "assignment_rule:read", "assignment_rule:write"},
 		"security_admin": {"automation_rule:read", "assignment_rule:read"},
 	}
 	for role, codes := range n4Granted {

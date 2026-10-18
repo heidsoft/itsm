@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"itsm-backend/connector"
-
 )
 
 func TestWebhookSend_PassesIdempotencyKeyHeader(t *testing.T) {
@@ -28,7 +27,7 @@ func TestWebhookSend_PassesIdempotencyKeyHeader(t *testing.T) {
 
 	c := New()
 	if err := c.Init(context.Background(), connector.Config{
-		Settings:   map[string]interface{}{"url": srv.URL},
+		Settings:    map[string]interface{}{"url": srv.URL},
 		Credentials: map[string]string{"secret": "s3cret"},
 	}); err != nil {
 		t.Fatalf("init: %v", err)

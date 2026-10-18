@@ -11,8 +11,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
-	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/slastate"
+	"itsm-backend/ent/slaviolation"
 	"itsm-backend/service/sla"
 
 	"github.com/stretchr/testify/assert"
@@ -448,7 +448,7 @@ func TestResumeSLA_RecyclesNoLongerBreachedViolation(t *testing.T) {
 }
 
 // TestResumeSLA_RejectsInvalidState 违规的 SLA 恢复调用必须返回业务冲突
-//（未暂停时不得恢复；不存在状态时不得伪造成功）。
+// （未暂停时不得恢复；不存在状态时不得伪造成功）。
 func TestResumeSLA_RejectsInvalidState(t *testing.T) {
 	client, service, ctx := setupSLAMonitorTest(t)
 	defer client.Close()

@@ -12,8 +12,8 @@ import (
 	"itsm-backend/ent/servicerequest"
 	"itsm-backend/ent/servicerequestapproval"
 	"itsm-backend/ent/user"
-	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/commandbus"
+	"itsm-backend/internal/datascope"
 )
 
 type EntRepository struct {
