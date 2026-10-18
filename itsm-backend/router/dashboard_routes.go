@@ -110,23 +110,6 @@ func defaultDashboardTemplate() gin.H {
 	}
 }
 
-func dashboardWidgetByID(widgetID string) gin.H {
-	for _, widget := range defaultDashboardWidgets() {
-		if widget["id"] == widgetID {
-			return widget
-		}
-	}
-	return gin.H{
-		"id":         widgetID,
-		"type":       "metric",
-		"title":      widgetID,
-		"position":   gin.H{"x": 0, "y": 0, "w": 3, "h": 2},
-		"config":     gin.H{"showTitle": true, "showBorder": true},
-		"dataSource": widgetID,
-		"isVisible":  true,
-	}
-}
-
 // DashboardConfigStore 承载仪表盘个性化配置的持久化契约。
 // 生产实现见 service.NewDashboardConfigStore（落 system_configs）。
 type DashboardConfigStore interface {

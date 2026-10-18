@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"itsm-backend/common"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,16 +37,6 @@ func doChange(r *gin.Engine, body map[string]any) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
-}
-
-// decodeEnvelope 解析统一响应信封。
-func decodeEnvelope(t *testing.T, w *httptest.ResponseRecorder) common.Response {
-	t.Helper()
-	var env common.Response
-	if err := json.Unmarshal(w.Body.Bytes(), &env); err != nil {
-		t.Fatalf("响应非 JSON: %s", w.Body.String())
-	}
-	return env
 }
 
 // TestChangePasswordFailsWithoutAuth 锁定未认证必须 401 fail-closed。

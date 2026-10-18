@@ -26,11 +26,14 @@ func diskUsage(path string) (total uint64, free uint64, ok bool) {
 		return 0, 0, false
 	}
 	total = st.Blocks * bsize
-	// 预留块（Blocks-Bfree-Bavail）普通用户不可写，df 的 Use% 也把其算作已用。
+	// 预留块（Blocks-Bfree-Bavail）普通用户不可写，df 的 Use% 也把其算作已用，
+	// 因此这里返回「含预留的剩余」（Bfree 口径）：free = total - used。
+	// 注意不能返回 st.Bavail*bsize —— 那是普通用户可用量，调用方按
+	// used = total - free 反算，会把预留块算成已用，Use% 反而高于 df。
 	used := (st.Blocks - st.Bfree) * bsize
-	free = st.Bavail * bsize
 	if used > total {
 		used = total
 	}
-	return total, total - used, true
+	free = total - used
+	return total, free, true
 }
