@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { matchesPermission } from '@/lib/permissions/utils';
 import type { RoutePermission } from '../router/route-config';
 
 /**
@@ -29,11 +30,17 @@ export const usePermissions = () => {
     return [user.role];
   }, [user?.role]);
 
+  // 判定共用 permissions/utils，与后端 checkPermissionMatch 同一套通配语义。
+  const permissionSet = useMemo(
+    () => new Set(user?.permissions ?? []),
+    [user?.permissions],
+  );
+
   /**
    * 检查是否有指定权限
    */
   const hasPermission = (resource: string, action: string): boolean => {
-    return useAuthStore.getState().hasPermission(`${resource}:${action}`);
+    return matchesPermission(permissionSet, resource, action);
   };
 
   /**

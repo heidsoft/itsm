@@ -14,6 +14,7 @@ import { useTickets } from '@/lib/hooks/useTickets';
 import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
 import { useRowSelection } from '@/lib/hooks/useRowSelection';
 import { useTableKeyboardNav } from '@/lib/hooks/useTableKeyboardNav';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 import { useDebounce } from '@/lib/component-utils';
 
 import { buildTicketListColumns } from './TicketListColumns';
@@ -57,6 +58,14 @@ const TicketList: React.FC<TicketListProps> = ({
 }) => {
   const router = useRouter();
   const { message, modal } = App.useApp();
+  const { hasPermission } = usePermissions();
+  // 按钮可见性与后端 RequirePermission 逐条对齐：只读角色（change_manager、
+  // problem_manager、knowledge_manager、security_admin、audit_admin 等只有
+  // ticket:read）点了编辑/关闭/批量删除只会拿到 403。
+  const canCreateTicket = hasPermission('ticket', 'create');
+  const canUpdateTicket = hasPermission('ticket', 'update');
+  const canDeleteTicket = hasPermission('ticket', 'delete');
+  const canExportTicket = hasPermission('ticket', 'export');
   const {
     tickets,
     loading,
@@ -238,10 +247,15 @@ const TicketList: React.FC<TicketListProps> = ({
   const columns = useMemo(
     () =>
       buildTicketListColumns(
-        { onOpen: openTicket, onEdit: editTicket, onClose: closeTicket },
+        {
+          onOpen: openTicket,
+          onEdit: editTicket,
+          onClose: closeTicket,
+          canUpdate: canUpdateTicket,
+        },
         { sortBy: filters.sortBy, sortOrder: filters.sortOrder }
       ),
-    [openTicket, editTicket, closeTicket, filters.sortBy, filters.sortOrder]
+    [openTicket, editTicket, closeTicket, canUpdateTicket, filters.sortBy, filters.sortOrder]
   );
 
   const rowSelection: TableProps<Ticket>['rowSelection'] = useMemo(
@@ -303,6 +317,9 @@ const TicketList: React.FC<TicketListProps> = ({
             showFilters={showFilters}
             selectedCount={selection.count}
             loading={loading}
+            canBatchDelete={canDeleteTicket}
+            canExport={canExportTicket}
+            canCreate={canCreateTicket}
             onSearchChange={setSearchValue}
             onSearchSubmit={setSearchValue}
             onToggleFilters={() => setShowFilters(v => !v)}

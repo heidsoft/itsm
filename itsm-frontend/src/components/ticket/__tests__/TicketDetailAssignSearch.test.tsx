@@ -56,7 +56,10 @@ jest.mock('@/lib/hooks/useUserListQuery', () => ({
 }));
 
 jest.mock('@/lib/store/auth-store', () => ({
-  useAuthStore: () => ({ user: { id: 1, username: 'admin', name: '系统管理员' } }),
+  // 操作栏按权限码渲染，测试账号需要与 admin 一致的全量权限才会出现「指派」入口。
+  useAuthStore: () => ({
+    user: { id: 1, username: 'admin', name: '系统管理员', permissions: ['*'] },
+  }),
 }));
 
 jest.mock('@/lib/hooks/useErrorHandler', () => ({

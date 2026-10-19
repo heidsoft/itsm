@@ -25,7 +25,9 @@ type Repository interface {
 	Search(ctx context.Context, keyword string, tenantID int) ([]*Ticket, error)
 
 	// Stats
-	GetStats(ctx context.Context, tenantID int) (*TicketStats, error)
+	// scope/viewerID 与 List 使用同一套行级数据范围，避免工作台卡片
+	// 报出租户全量而工单列表为空的口径分裂。
+	GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (*TicketStats, error)
 
 	// Number generation
 	GenerateTicketNumber(ctx context.Context, tenantID int) (string, error)

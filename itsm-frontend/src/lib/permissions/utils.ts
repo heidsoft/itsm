@@ -23,7 +23,13 @@ export function hasWildcardPermission(permissions: Set<string>): boolean {
  * 支持：
  * - 精确匹配: "ticket:read"
  * - 资源通配: "ticket:*" 匹配 ticket 的所有操作
+ * - 动作通配: "*:read" 匹配所有资源的 read
+ * - 资源管理员: "ticket:admin" 覆盖 ticket 下的具体业务动作
  * - 全局通配: "*" 或 "*:*" 匹配所有权限
+ *
+ * 分支顺序与后端 middleware/rbac.go 的 checkPermissionMatch 一一对应。
+ * 前端少认一条规则，就会把一个后端允许的操作显示成不可用（租管持 ticket:admin
+ * 却看不到指派按钮），所以两侧必须同集合。
  */
 export function matchesPermission(
   permissions: Set<string>,
@@ -34,6 +40,7 @@ export function matchesPermission(
   if (hasWildcardPermission(permissions)) return true;
   if (permissions.has(`${resource}:*`)) return true;
   if (permissions.has(`*:${action}`)) return true;
+  if (permissions.has(`${resource}:admin`)) return true;
 
   // 精确匹配
   return permissions.has(`${resource}:${action}`);

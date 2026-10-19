@@ -72,6 +72,46 @@ func TestMenuBaseline_ApprovalTodoMenusUseTaskRead(t *testing.T) {
 	}
 }
 
+// 工单模板页的菜单归属。
+//
+// 页面数据源是 GET /api/v1/tickets/templates，接口要求 ticket_template:read；
+// 菜单挂在 ticket:write 上时，只写自己工单的最终用户拿到入口后立刻 403
+// （2026-10-18 本地生产栈实测 code 2003），而模板配置面本就不是他们的职责。
+func TestMenuBaseline_TemplateMenuUsesTemplateRead(t *testing.T) {
+	var code string
+	for _, spec := range menubaseline.MenuDefinitions() {
+		if spec.Path == "/tickets/templates" {
+			code = spec.PermissionCode
+		}
+	}
+	if code == "" {
+		t.Fatalf("菜单基线缺少 /tickets/templates 条目")
+	}
+	if code != "ticket_template:read" {
+		t.Errorf("菜单 /tickets/templates 的权限码是 %q，应为页面数据源要求的 ticket_template:read", code)
+	}
+
+	roles := authz.BuiltinRolePermissionCodes()
+	holds := func(role, c string) bool {
+		for _, x := range roles[role] {
+			if x == c {
+				return true
+			}
+		}
+		return false
+	}
+	// 报障人不该有这个入口，也不该因为 ticket:write 的同义派生而拿到模板码。
+	if holds(domainrole.EndUser, "ticket_template:read") {
+		t.Errorf("end_user 持有 ticket_template:read，模板配置入口会回到报障人侧边栏")
+	}
+	// 真正维护模板的角色必须持字面码，否则菜单与接口同码但仍无人可见。
+	for _, role := range []string{domainrole.Admin, domainrole.ITAdmin, domainrole.ServiceCatalogAdmin} {
+		if !holds(role, "ticket_template:read") {
+			t.Errorf("角色 %q 不持有 ticket_template:read，工单模板页对完全没有入口", role)
+		}
+	}
+}
+
 // 工单规则配置页的菜单归属。
 //
 // 三处入口曾分挂 ticket:read（人人有码，接口却拒绝）与 workflow:write（租管没有该码），

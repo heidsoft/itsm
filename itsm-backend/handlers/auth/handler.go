@@ -36,7 +36,9 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	response, err := h.service.Register(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailedWithErr(c, err, "认证失败")
+		// 注册失败的原因（用户名已占用、自助注册未开放）是用户下一步动作的依据，
+		// 统一压成 2001/「认证失败」会让新用户以为是自己填错了凭据。
+		common.RespondError(c, err, "注册失败")
 		return
 	}
 	common.Success(c, response)
@@ -50,7 +52,9 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 	}
 	response, err := h.service.ForgotPassword(c.Request.Context(), &req)
 	if err != nil {
-		common.AuthFailedWithErr(c, err, "认证失败")
+		// service 明确用 5003 表达「邮件服务未配置」；压成 2001 会让用户以为是
+		// 自己的邮箱有问题并反复重试。
+		common.RespondError(c, err, "密码找回请求失败")
 		return
 	}
 	common.Success(c, response)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 )
 
@@ -32,8 +33,10 @@ type Repository interface {
 	FindByAssignee(ctx context.Context, assigneeID int, tenantID int) ([]*Ticket, error)
 	FindByRequester(ctx context.Context, requesterID int, tenantID int) ([]*Ticket, error)
 	FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error)
-	CountByStatus(ctx context.Context, tenantID int) (map[Status]int, error)
-	CountByPriority(ctx context.Context, tenantID int) (map[Priority]int, error)
+	// CountByStatus / CountByPriority 接受与 List 相同的行级数据范围，
+	// 让工作台卡片读数与列表结果共用一个口径；scope 语义见 dataScopePredicates。
+	CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Status]int, error)
+	CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Priority]int, error)
 
 	// 编号生成
 	GenerateTicketNumber(ctx context.Context, tenantID int) (string, error)

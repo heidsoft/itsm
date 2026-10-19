@@ -281,8 +281,8 @@ open http://localhost:8090/swagger/index.html
 | Create tenant | `POST /api/v1/tenants` — then create users under that tenant |
 | Configure SLA | `POST /api/v1/sla/policies` — create SLA policy, bind to ticket category |
 | Design workflow | Use the Workflow module in the frontend to design BPMN processes, bind to business objects |
-| Manage CMDB | `POST /api/v1/cmdb/ci` — create configuration items, establish CI relationships |
-| Knowledge search | `GET /api/v1/knowledge/search?q=keyword` — search knowledge articles |
+| Manage CMDB | `POST /api/v1/cmdb/cis` — create configuration items, establish CI relationships |
+| Knowledge search | `POST /api/v1/knowledge/search` — search knowledge articles |
 | Ingest external alerts | After configuring `ALERT_SOURCE_CONFIG`, `POST /api/v1/alerts/sources/:source/ingest` to receive alert webhooks |
 
 Full API documentation: [API Reference](./docs/api-reference.md).
@@ -421,7 +421,7 @@ make check-contracts
 
 # Business flow regression (requires dev environment; covers incident/problem
 # lifecycle, change rejection path, state machine negative cases, forged token
-# negative cases, and notification/dashboard integration — 27 assertions)
+# negative cases, and notification/dashboard integration — 30 assertions)
 python3 output/dev_business_flow_test.py
 ```
 

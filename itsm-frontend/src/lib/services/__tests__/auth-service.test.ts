@@ -218,6 +218,26 @@ describe('AuthService', () => {
 
         expect(result).toBe(false);
       });
+
+      it('限流 403 必须带出 retryAfterSeconds 供 LoginForm 倒计时', async () => {
+        // LoginRateLimiter 用 FailWithData 返回 403 + data.retryAfterSeconds。
+        // 只解析 2xx 响应体会把倒计时丢掉，页面只能显示一句通用失败。
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: () =>
+            Promise.resolve({
+              code: 2003,
+              message: '登录请求过于频繁，请稍后再试',
+              data: { retryAfterSeconds: 42 },
+            }),
+        });
+
+        await expect(AuthService.login('testuser', 'password')).rejects.toMatchObject({
+          message: '登录请求过于频繁，请稍后再试',
+          retryAfterSeconds: 42,
+        });
+      });
     });
   });
 
@@ -267,14 +287,85 @@ describe('AuthService', () => {
         company: 'Test Company',
       });
 
-      expect(result).toBe(true);
+      expect(result).toEqual({ ok: true });
       // 注册是未认证入口，角色与租户由服务端决定，请求体不得携带同名字段
       const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
       expect(body).not.toHaveProperty('role');
       expect(body).not.toHaveProperty('tenantCode');
     });
 
-    it('should return false on registration failure', async () => {
+    it('步骤二提交的请求体必须包含全部注册凭据', async () => {
+      // 向导把用户名/邮箱/密码放在步骤一，历史上步骤二提交时只带得到步骤二的字段，
+      // 后端因缺少必填项直接 400，新用户永远注册不成功。
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ code: 0, message: 'success', data: { id: 3 } }),
+      });
+
+      await AuthService.register({
+        username: 'newbie',
+        email: 'newbie@example.com',
+        password: 'password123',
+        fullName: '新员工',
+        phone: '13900001018',
+      });
+
+      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      expect(body).toMatchObject({
+        username: 'newbie',
+        email: 'newbie@example.com',
+        password: 'password123',
+        fullName: '新员工',
+        phone: '13900001018',
+      });
+    });
+
+    it('should surface the server reason on a non-2xx failure', async () => {
+      // 后端把失败原因放在非 2xx 的统一信封里；只看 HTTP 状态会退化成
+      // "HTTP error! status: 409"，新用户不知道是用户名冲突还是自助注册未开放。
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () => Promise.resolve({ code: 4090, message: '用户名已被注册', data: null }),
+      });
+
+      const result = await AuthService.register({
+        username: 'newuser',
+        email: 'new@example.com',
+        password: 'password123',
+        fullName: 'New User',
+      });
+
+      expect(result).toEqual({ ok: false, message: '用户名已被注册' });
+    });
+
+    it('自助注册未开放时透出 503 原因而不是认证失败', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        json: () =>
+          Promise.resolve({
+            code: 5003,
+            message: '系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号',
+            data: null,
+          }),
+      });
+
+      const result = await AuthService.register({
+        username: 'newuser',
+        email: 'new@example.com',
+        password: 'password123',
+        fullName: 'New User',
+      });
+
+      expect(result).toEqual({
+        ok: false,
+        message: '系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号',
+      });
+    });
+
+    it('should report failure when the request itself throws', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Registration failed'));
 
       const result = await AuthService.register({
@@ -284,7 +375,7 @@ describe('AuthService', () => {
         fullName: 'New User',
       });
 
-      expect(result).toBe(false);
+      expect(result).toEqual({ ok: false, message: 'Registration failed' });
     });
   });
 

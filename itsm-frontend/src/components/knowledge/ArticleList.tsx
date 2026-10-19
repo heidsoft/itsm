@@ -27,6 +27,7 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 import {
   KnowledgeStatus,
   KnowledgeStatusLabels,
@@ -40,6 +41,11 @@ interface ArticleListProps {
 const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   const router = useRouter();
   const { message } = App.useApp();
+  const { hasPermission } = usePermissions();
+  // 后端把新增/更新/发布统一挂 knowledge:write，删除挂 knowledge:delete；
+  // 只读角色（end_user 只有 knowledge:read）此前仍能看到这些按钮，点击只会 403。
+  const canWriteArticle = hasPermission('knowledge', 'write');
+  const canDeleteArticle = hasPermission('knowledge', 'delete');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<KnowledgeArticle[]>([]);
   const [total, setTotal] = useState(0);
@@ -171,24 +177,28 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
       width: 120,
       render: (_: unknown, record: KnowledgeArticle) => (
         <Space size="small">
-          <Tooltip title="编辑">
-            <Button
-              size="small"
-              aria-label={`编辑文章 ${record.title}`}
-              icon={<Pencil />}
-              onClick={() => router.push(`/knowledge/articles/${record.id}/edit`)}
-              style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none' }}
-            />
-          </Tooltip>
-          <Tooltip title="删除">
-            <Button
-              size="small"
-              aria-label={`删除文章 ${record.title}`}
-              icon={<Trash2 />}
-              onClick={() => handleDelete(record.id)}
-              style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none' }}
-            />
-          </Tooltip>
+          {canWriteArticle && (
+            <Tooltip title="编辑">
+              <Button
+                size="small"
+                aria-label={`编辑文章 ${record.title}`}
+                icon={<Pencil />}
+                onClick={() => router.push(`/knowledge/articles/${record.id}/edit`)}
+                style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none' }}
+              />
+            </Tooltip>
+          )}
+          {canDeleteArticle && (
+            <Tooltip title="删除">
+              <Button
+                size="small"
+                aria-label={`删除文章 ${record.title}`}
+                icon={<Trash2 />}
+                onClick={() => handleDelete(record.id)}
+                style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none' }}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -202,14 +212,16 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
             <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
             <p className="text-gray-500 mt-1">创建、维护和分享解决方案与最佳实践</p>
           </div>
-          <Button
-            type="primary"
-            icon={<Plus />}
-            onClick={() => router.push('/knowledge/articles/new')}
-            size="large"
-          >
-            新建文章
-          </Button>
+          {canWriteArticle && (
+            <Button
+              type="primary"
+              icon={<Plus />}
+              onClick={() => router.push('/knowledge/articles/new')}
+              size="large"
+            >
+              新建文章
+            </Button>
+          )}
         </div>
       )}
 

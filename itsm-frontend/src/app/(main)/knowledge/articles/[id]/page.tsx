@@ -12,10 +12,14 @@ import ArticleDetail from '@/components/knowledge/ArticleDetail';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
 import { useI18n } from '@/lib/i18n/useI18n';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 
 export default function KnowledgeArticleDetailPage() {
   const { t } = useI18n();
   const { message } = App.useApp();
+  const { hasPermission } = usePermissions();
+  // 发布/下架在 router 里挂 knowledge:write，只读角色不应看到可点按钮。
+  const canWriteArticle = hasPermission('knowledge', 'write');
   const { id } = useParams() as { id: string };
   const [status, setStatus] = useState<ArticleStatus>();
   const [submitting, setSubmitting] = useState(false);
@@ -56,25 +60,26 @@ export default function KnowledgeArticleDetailPage() {
   return (
     <>
       <Space style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-        {status === ArticleStatus.PUBLISHED ? (
-          <Button
-            danger
-            icon={<Archive size={16} />}
-            loading={submitting}
-            onClick={() => updatePublishStatus(false)}
-          >
-            {t('knowledgeBase.unpublish')}
-          </Button>
-        ) : (
-          <Button
-            type="primary"
-            icon={<Send size={16} />}
-            loading={submitting}
-            onClick={() => updatePublishStatus(true)}
-          >
-            {t('knowledgeBase.publish')}
-          </Button>
-        )}
+        {canWriteArticle &&
+          (status === ArticleStatus.PUBLISHED ? (
+            <Button
+              danger
+              icon={<Archive size={16} />}
+              loading={submitting}
+              onClick={() => updatePublishStatus(false)}
+            >
+              {t('knowledgeBase.unpublish')}
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              icon={<Send size={16} />}
+              loading={submitting}
+              onClick={() => updatePublishStatus(true)}
+            >
+              {t('knowledgeBase.publish')}
+            </Button>
+          ))}
       </Space>
       <ArticleDetail key={detailVersion} />
     </>

@@ -49,6 +49,7 @@ import {
   Empty,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
 import { formatDateTime } from '@/lib/formatters';
 import { SafeTextBlock } from '@/components/common/SafeContent';
@@ -171,6 +172,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   const { message: antMessage } = App.useApp();
   const { t } = useI18n();
   const { user: currentUser } = useAuthStore();
+  const { hasPermission } = usePermissions();
   const { handleError } = useErrorHandler();
 
   // 创建基于翻译的状态和优先级映射
@@ -235,6 +237,26 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // 判断工单是否处于终态（不可再操作）
   const isTicketFinal = ticket ? isFinalStatus(ticket.status as any) : false;
+
+  // 操作按钮按后端 RequirePermission 的真实权限码收口：
+  // 报障人（end_user）只持 ticket:read/write/create/update，没有 assign/escalate/
+  // delete/workflow:write，此前这些按钮照常渲染，点下去只有 403。
+  // 隐藏只负责呈现，授权仍以后端为准（AGENTS「前端不得替代后端授权」）。
+  const canUpdateTicket = hasPermission('ticket', 'update');
+  const canAssignTicket = hasPermission('ticket', 'assign');
+  const canEscalateTicket = hasPermission('ticket', 'escalate');
+  const canDeleteTicket = hasPermission('ticket', 'delete');
+  const canWriteWorkflow = hasPermission('workflow', 'write');
+  // 审批提交优先走 BPMN 桥（workflow:write），无待审记录时回退 PUT /tickets/:id/status
+  // （ticket:update），因此两个码任一命中即为可操作。
+  const canApproveTicket = canWriteWorkflow || canUpdateTicket;
+  const hasAnyTicketAction =
+    canApproveTicket ||
+    canAssignTicket ||
+    canEscalateTicket ||
+    canUpdateTicket ||
+    canWriteWorkflow ||
+    canDeleteTicket;
 
   // 所有下游操作（写操作/子组件/关联面板）统一使用数字 ID。
   // 单号路由下 ticket 加载完成后即有值；加载前子组件隐藏或禁用。
@@ -813,68 +835,84 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             </Card>
           )}
 
-          <Space>
-            <Button
-              type="primary"
-              icon={<Check size={16} />}
-              onClick={handleApprove}
-              loading={approving}
-              disabled={isRequester || isTicketFinal}
-              title={
-                isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
-              }
-            >
-              {t('ticketDetail.approve')}
-            </Button>
-            <Button
-              danger
-              icon={<XIcon size={16} />}
-              onClick={handleReject}
-              loading={rejecting}
-              disabled={isRequester || isTicketFinal}
-              title={
-                isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
-              }
-            >
-              {t('ticketDetail.reject')}
-            </Button>
-            <Button
-              icon={<UserCheck size={16} />}
-              onClick={handleAssign}
-              loading={loadingUsers}
-              disabled={isTicketFinal}
-              title={isTicketFinal ? t('ticketDetail.ticketFinalNoAssign') : ''}
-            >
-              {t('ticketDetail.assign')}
-            </Button>
-            <Button
-              icon={<ArrowUpCircle size={16} />}
-              onClick={() => setEscalateModalVisible(true)}
-              disabled={isTicketFinal}
-              title={isTicketFinal ? t('ticketDetail.escalateFinalHint') : t('ticketDetail.escalateHint')}
-            >
-              {t('ticketDetail.escalate')}
-            </Button>
-            <Button
-              icon={<Edit size={16} />}
-              onClick={handleUpdate}
-              disabled={isTicketFinal}
-              title={isTicketFinal ? t('ticketDetail.ticketFinalNoEdit') : ''}
-            >
-              {t('common.edit')}
-            </Button>
-            <Button
-              icon={<Users size={16} />}
-              onClick={() => setCCModalVisible(true)}
-              disabled={isTicketFinal}
-              title={isTicketFinal ? t('ticketDetail.ticketFinalNoCc') : ''}
-            >
-              {t('ticketDetail.cc')}
-            </Button>
-            <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
-              {t('common.delete')}
-            </Button>
-          </Space>
+          {hasAnyTicketAction && (
+            <Space>
+              {canApproveTicket && (
+                <Button
+                  type="primary"
+                  icon={<Check size={16} />}
+                  onClick={handleApprove}
+                  loading={approving}
+                  disabled={isRequester || isTicketFinal}
+                  title={
+                    isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
+                  }
+                >
+                  {t('ticketDetail.approve')}
+                </Button>
+              )}
+              {canApproveTicket && (
+                <Button
+                  danger
+                  icon={<XIcon size={16} />}
+                  onClick={handleReject}
+                  loading={rejecting}
+                  disabled={isRequester || isTicketFinal}
+                  title={
+                    isRequester ? t('ticketDetail.cannotApproveOwnTicket') : isTicketFinal ? t('ticketDetail.ticketFinalNoAction') : ''
+                  }
+                >
+                  {t('ticketDetail.reject')}
+                </Button>
+              )}
+              {canAssignTicket && (
+                <Button
+                  icon={<UserCheck size={16} />}
+                  onClick={handleAssign}
+                  loading={loadingUsers}
+                  disabled={isTicketFinal}
+                  title={isTicketFinal ? t('ticketDetail.ticketFinalNoAssign') : ''}
+                >
+                  {t('ticketDetail.assign')}
+                </Button>
+              )}
+              {canEscalateTicket && (
+                <Button
+                  icon={<ArrowUpCircle size={16} />}
+                  onClick={() => setEscalateModalVisible(true)}
+                  disabled={isTicketFinal}
+                  title={isTicketFinal ? t('ticketDetail.escalateFinalHint') : t('ticketDetail.escalateHint')}
+                >
+                  {t('ticketDetail.escalate')}
+                </Button>
+              )}
+              {canUpdateTicket && (
+                <Button
+                  icon={<Edit size={16} />}
+                  onClick={handleUpdate}
+                  disabled={isTicketFinal}
+                  title={isTicketFinal ? t('ticketDetail.ticketFinalNoEdit') : ''}
+                >
+                  {t('common.edit')}
+                </Button>
+              )}
+              {canWriteWorkflow && (
+                <Button
+                  icon={<Users size={16} />}
+                  onClick={() => setCCModalVisible(true)}
+                  disabled={isTicketFinal}
+                  title={isTicketFinal ? t('ticketDetail.ticketFinalNoCc') : ''}
+                >
+                  {t('ticketDetail.cc')}
+                </Button>
+              )}
+              {canDeleteTicket && (
+                <Button danger icon={<Trash2 size={16} />} onClick={handleDeleteClick}>
+                  {t('common.delete')}
+                </Button>
+              )}
+            </Space>
+          )}
 
           {isTicketFinal && (
             <Text type="secondary" className="block mt-2">
@@ -888,8 +926,14 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             </Text>
           )}
 
-          {!isRequester && !isTicketFinal && (
+          {!isRequester && !isTicketFinal && hasAnyTicketAction && (
             <Text type="secondary">{t('ticketDetail.fullOperationSupport')}</Text>
+          )}
+
+          {!hasAnyTicketAction && (
+            <Text type="secondary" className="block mt-2">
+              {t('ticketDetail.readonlyForViewer')}
+            </Text>
           )}
         </Space>
 

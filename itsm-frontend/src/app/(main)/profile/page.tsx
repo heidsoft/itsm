@@ -156,7 +156,13 @@ export default function ProfilePage() {
       passwordForm.resetFields();
     } catch (error) {
       console.error('Failed to change password:', error);
-      message.error('密码修改失败，请重试');
+      // 后端 reason 是唯一能区分「旧密码不正确」「密码强度不足」「会话过期」的信息，
+      // 统一成「请重试」会让用户在错误的旧密码上反复提交。
+      message.error(
+        error instanceof Error && error.message
+          ? `密码修改失败：${error.message}`
+          : '密码修改失败，请重试'
+      );
     } finally {
       setPasswordLoading(false);
     }
@@ -172,8 +178,33 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      // 服务端是唯一真相：auth store 里没有 phone，department 也可能是登录时的旧值。
+      // 用 store 值预填编辑表单会让「只改姓名」的提交把电话/部门抹成空。
+      const me = await UserApi.getOwnProfile();
+      const userData = {
+        id: me.id,
+        username: me.username || '',
+        email: me.email || '',
+        name: me.name || '',
+        department: me.department || '',
+        phone: me.phone || '',
+        role: me.role || 'user',
+        createdAt: me.createdAt || new Date().toISOString(),
+        lastLogin: undefined,
+      };
+      setProfile(userData);
+      profileForm.setFieldsValue(userData);
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      // 读不到服务端资料时退回会话里的身份字段，但必须说明原因：
+      // 静默降级会让用户以为电话/部门真的是空。
+      message.error(
+        error instanceof Error && error.message
+          ? `个人资料读取失败：${error.message}`
+          : '个人资料读取失败，显示的信息可能不完整'
+      );
       if (user) {
-        const userData = {
+        const fallback = {
           id: user.id,
           username: user.username || '',
           email: user.email || '',
@@ -184,11 +215,9 @@ export default function ProfilePage() {
           createdAt: user.createdAt || new Date().toISOString(),
           lastLogin: undefined,
         };
-        setProfile(userData);
-        profileForm.setFieldsValue(userData);
+        setProfile(fallback);
+        profileForm.setFieldsValue(fallback);
       }
-    } catch (error) {
-      console.error('Failed to load profile:', error);
     } finally {
       setLoading(false);
     }
@@ -237,28 +266,50 @@ export default function ProfilePage() {
   };
 
   const handleSaveProfile = async (values: { name: string; email: string; phone?: string; department?: string }) => {
-    if (!profile?.id) {
-      message.error('用户信息不完整');
-      return;
-    }
     setLoading(true);
     try {
-      await UserApi.updateUser(profile.id, {
+      // 自助端点：只改调用者本人，且不需要 user:write（那是管理用户目录的语义，
+      // 端用户走 PUT /users/:id 必然 403）。
+      const updated = await UserApi.updateOwnProfile({
         name: values.name,
         email: values.email,
-        phone: values.phone,
-        department: values.department,
+        phone: values.phone ?? '',
+        department: values.department ?? '',
       });
       message.success('个人信息更新成功');
       setEditing(false);
-      setProfile(prev => (prev ? { ...prev, ...values } : null));
+      // 以响应 DTO 为准回填，而不是把表单值拼进旧状态：后端会 trim 字段，
+      // 组件里保留用户输入的原值会让界面与服务端真相分叉。
+      profileForm.setFieldsValue({
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        department: updated.department,
+      });
+      setProfile(prev =>
+        prev
+          ? {
+              ...prev,
+              name: updated.name,
+              email: updated.email,
+              phone: updated.phone,
+              department: updated.department,
+            }
+          : prev
+      );
 
       // 更新 auth store 中的用户信息
       const { updateUser } = useAuthStore.getState();
-      updateUser({ ...values });
+      updateUser({ name: updated.name, email: updated.email, department: updated.department });
     } catch (error) {
       console.error('Failed to update profile:', error);
-      message.error('更新失败，请重试');
+      // 后端 reason 必须透出：邮箱冲突（409「该邮箱已被其他账号使用」）与
+      // 会话过期都发生在同一路径上，只说「更新失败，请重试」会让用户反复提交。
+      message.error(
+        error instanceof Error && error.message
+          ? `更新失败：${error.message}`
+          : '更新失败，请重试'
+      );
     } finally {
       setLoading(false);
     }
@@ -624,6 +675,7 @@ export default function ProfilePage() {
                             <Button
                               type="primary"
                               htmlType="submit"
+                              loading={loading}
                               icon={<Save size={16} />}
                               style={{
                                 background: DESIGN.colors.gradient.primary,

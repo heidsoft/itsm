@@ -123,12 +123,12 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 	if exists, err := s.client.User.Query().Where(user.UsernameEQ(req.Username)).Exist(ctx); err != nil {
 		return nil, fmt.Errorf("检查用户名失败")
 	} else if exists {
-		return nil, fmt.Errorf("用户名已被注册")
+		return nil, common.NewBusinessError(common.ConflictCode, "用户名已被注册", "")
 	}
 	if exists, err := s.client.User.Query().Where(user.EmailEQ(req.Email)).Exist(ctx); err != nil {
 		return nil, fmt.Errorf("检查邮箱失败")
 	} else if exists {
-		return nil, fmt.Errorf("邮箱已被注册")
+		return nil, common.NewBusinessError(common.ConflictCode, "邮箱已被注册", "")
 	}
 	tenants, err := s.client.Tenant.Query().Where(tenant.StatusEQ("active")).Order(ent.Asc(tenant.FieldID)).Limit(2).All(ctx)
 	if err != nil {
@@ -136,11 +136,12 @@ func (s *Service) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.
 	}
 	if len(tenants) != 1 {
 		// fail-closed：多活跃租户无法从请求推断归属，零活跃租户说明系统未初始化；
-		// 目标租户绝不接受请求体指定。
+		// 目标租户绝不接受请求体指定。两者都是部署状态而非用户输入错误，
+		// 报 401 会让新用户以为是自己的凭据有问题。
 		if len(tenants) > 1 {
-			return nil, fmt.Errorf("系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号")
+			return nil, common.NewBusinessError(common.ServiceUnavailableCode, "系统存在多个活跃租户，自助注册暂未开放，请联系管理员开通账号", "")
 		}
-		return nil, fmt.Errorf("系统尚未初始化活跃租户，暂无法注册")
+		return nil, common.NewBusinessError(common.ServiceUnavailableCode, "系统尚未初始化活跃租户，暂无法注册", "")
 	}
 	tenantID := tenants[0].ID
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)

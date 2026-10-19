@@ -10,6 +10,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/enttest"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 
 	"github.com/stretchr/testify/assert"
@@ -695,7 +696,7 @@ func TestRepository_CountByStatus(t *testing.T) {
 		RequesterID: fx.user.ID,
 	}, fx.tenant.ID)
 
-	counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID)
+	counts, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
 	require.NoError(t, err)
 	assert.Contains(t, counts, StatusNew)
 	assert.Contains(t, counts, StatusOpen)
@@ -713,9 +714,76 @@ func TestRepository_CountByPriority(t *testing.T) {
 		RequesterID: fx.user.ID,
 	}, fx.tenant.ID)
 
-	counts, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID)
+	counts, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
 	require.NoError(t, err)
 	assert.Contains(t, counts, PriorityCritical)
+}
+
+func sumStatusCounts(counts map[Status]int) int {
+	total := 0
+	for _, count := range counts {
+		total += count
+	}
+	return total
+}
+
+func sumPriorityCounts(counts map[Priority]int) int {
+	total := 0
+	for _, count := range counts {
+		total += count
+	}
+	return total
+}
+
+// TestRepository_CountsShareListDataScope 锁住统计与列表共用行级数据范围。
+// 工作台卡片此前按租户全量分组，普通员工列表为空却看到 total>0，两个读数互相打脸。
+func TestRepository_CountsShareListDataScope(t *testing.T) {
+	fx := newRepoFixture(t)
+	defer fx.client.Close()
+
+	bob, err := fx.client.User.Create().
+		SetUsername("bob").
+		SetEmail("bob@test.com").
+		SetName("Bob").
+		SetPasswordHash("hash").
+		SetRole("end_user").
+		SetActive(true).
+		SetTenantID(fx.tenant.ID).
+		Save(fx.ctx)
+	require.NoError(t, err)
+
+	for _, requesterID := range []int{fx.user.ID, bob.ID} {
+		_, err := fx.repo.Create(fx.ctx, &CreateParams{
+			Title:       "Scoped Count",
+			Description: "",
+			Priority:    PriorityMedium,
+			Type:        TypeIncident,
+			RequesterID: requesterID,
+		}, fx.tenant.ID)
+		require.NoError(t, err)
+	}
+
+	own, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, fx.user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 1, sumStatusCounts(own), "统计只能覆盖本人创建的工单")
+
+	all, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeAll, 0)
+	require.NoError(t, err)
+	assert.Equal(t, 2, sumStatusCounts(all))
+
+	// 身份缺失 fail closed，不能回落到租户全量。
+	none, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, 0)
+	require.NoError(t, err)
+	assert.Zero(t, sumStatusCounts(none))
+
+	ownPriority, err := fx.repo.CountByPriority(fx.ctx, fx.tenant.ID, datascope.DataScopeOwnedOrAssigned, bob.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 1, sumPriorityCounts(ownPriority))
+
+	// 仓储层未实现的档位按最窄档处理，而不是放宽成全量。
+	unknown, err := fx.repo.CountByStatus(fx.ctx, fx.tenant.ID, datascope.DataScope(99), fx.user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, 1, sumStatusCounts(unknown))
 }
 
 // =====================================================================

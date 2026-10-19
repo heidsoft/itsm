@@ -620,18 +620,19 @@ var actionAliasMap = map[string]string{
 }
 
 // resourceAliasMap 权限 Resource 别名映射：前端使用的 resource → 后端定义的 resource
+//
+// 只保留「同一资源的两个名字」。org、department、team、tenant 在码空间里各自有定义，
+// 而 RequirePermission 按字面码把关：把 team:read 别名到 org:read 会让只持 org:read
+// 的最终用户看到「团队管理」，点进去 GET /api/v1/org/teams 恒定 403。
 var resourceAliasMap = map[string]string{
 	// 基础别名
 	"service":  "service_catalog", // service 是 service_catalog 的别名
 	"workflow": "bpmn",            // workflow 是 bpmn 的别名
 	"report":   "report",          // report 没有对应资源，保持不变
 	// 扩展别名（数据库中使用的权限resource）
-	"helpdesk":   "ticket",        // helpdesk 等同于 ticket
-	"approval":   "permission",    // approval 等同于 permission
-	"department": "org",           // department 等同于 org
-	"team":       "org",           // team 等同于 org
-	"system":     "system_config", // system 等同于 system_config
-	"tenant":     "org",           // tenant 等同于 org
+	"helpdesk": "ticket",        // helpdesk 等同于 ticket
+	"approval": "permission",    // approval 等同于 permission
+	"system":   "system_config", // system 等同于 system_config
 }
 
 // resolveActionAliases 解析 Action 别名，返回后端定义的 Action

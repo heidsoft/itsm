@@ -678,6 +678,75 @@ func (s *UserService) ChangeOwnPassword(ctx context.Context, userID int, oldPass
 	return nil
 }
 
+// UpdateOwnProfile 更新调用者本人的资料（自助面，对应 PUT /api/v1/account/profile）。
+//
+// 与 UpdateUser（管理面 PUT /users/:id，需 user:write）分属两个权限面：自助面只挂认证，
+// 字段白名单由 DTO 结构限定，这里再显式只写 name/email/phone/department ——
+// username/role/active/tenant 永不接受，端点因此不具备提权能力。
+//
+// 邮箱唯一性沿用管理面口径（跨租户全局唯一），避免自助面绕开约束建出重复登录邮箱。
+func (s *UserService) UpdateOwnProfile(ctx context.Context, userID, tenantID int, req *dto.UpdateOwnProfileRequest) (*ent.User, error) {
+	if userID <= 0 {
+		return nil, common.NewBusinessError(common.UnauthorizedCode, "未授权访问", "")
+	}
+
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, common.NewValidationError("姓名不能为空", nil)
+	}
+	// 邮箱是登录身份，不属于自助面可清空字段：留空必须拒绝而不是静默跳过，
+	// 否则任何绕过 DTO binding 的调用方都能把账号改成无法登录。
+	if strings.TrimSpace(req.Email) == "" {
+		return nil, common.NewValidationError("邮箱不能为空", nil)
+	}
+
+	target, err := s.client.User.Query().
+		Where(user.IDEQ(userID), user.TenantIDEQ(tenantID)).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			// 自助面的 id 来自鉴权上下文，正常永远命中；走到这里说明 JWT 里的租户与库内
+			// 归属已不一致（切租户后的旧会话）。按 not-found 掩码，不回显租户细节。
+			return nil, common.NewBusinessError(common.NotFoundCode, "用户资料不存在", "")
+		}
+		return nil, fmt.Errorf("获取用户失败: %w", err)
+	}
+
+	update := s.client.User.UpdateOneID(userID).
+		Where(user.TenantIDEQ(tenantID)).
+		SetName(name)
+
+	if req.Email != target.Email {
+		exists, err := s.client.User.Query().
+			Where(user.And(user.EmailEQ(req.Email), user.IDNEQ(userID))).
+			Exist(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("检查邮箱失败: %w", err)
+		}
+		if exists {
+			// 自助表单唯一可复现的冲突，必须带可展示文案：返回未分类错误会让
+			// 前端只能显示「更新个人资料失败」，用户不知道要换一个邮箱。
+			return nil, common.NewBusinessError(common.ConflictCode, "该邮箱已被其他账号使用", "")
+		}
+		update = update.SetEmail(req.Email)
+	}
+
+	if req.Phone != nil {
+		update = update.SetPhone(strings.TrimSpace(*req.Phone))
+	}
+	if req.Department != nil {
+		update = update.SetDepartment(strings.TrimSpace(*req.Department))
+	}
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("更新个人资料失败: %w", err)
+	}
+
+	s.logger.Infof("用户自助更新资料成功: ID=%d", userID)
+	return updated, nil
+}
+
 func validatePassword(password string) error {
 	if len(password) < 12 || len(password) > 128 {
 		return common.NewValidationError("密码长度必须为12到128位", nil)

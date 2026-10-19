@@ -143,13 +143,18 @@ func (s *Service) GetByNumber(ctx context.Context, ticketNumber string, tenantID
 	return s.repo.GetByNumber(ctx, ticketNumber, tenantID)
 }
 
+// dataScopeForRole 返回某角色在工单读取上的行级数据范围。
+// 列表与统计必须走同一个判定，否则工作台卡片会显示租户全量、列表却是空的。
+func dataScopeForRole(currentRole string) datascope.DataScope {
+	if !datascope.IsDataScopeAllRole(currentRole) {
+		return datascope.DataScopeOwnedOrAssigned
+	}
+	return datascope.DataScopeAll
+}
+
 // List lists tickets with pagination and filtering.
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Ticket, int, error) {
-	dataScope := datascope.DataScopeAll
-	if !datascope.IsDataScopeAllRole(currentRole) {
-		dataScope = datascope.DataScopeOwnedOrAssigned
-	}
-	return s.repo.List(ctx, tenantID, page, size, filters, dataScope, currentUserID)
+	return s.repo.List(ctx, tenantID, page, size, filters, dataScopeForRole(currentRole), currentUserID)
 }
 
 // Update updates a ticket.
@@ -321,9 +326,9 @@ func (s *Service) GetTicketsByAssignee(ctx context.Context, assigneeID int, tena
 	return s.repo.FindByAssignee(ctx, assigneeID, tenantID)
 }
 
-// GetStats returns ticket statistics.
-func (s *Service) GetStats(ctx context.Context, tenantID int) (*TicketStats, error) {
-	return s.repo.GetStats(ctx, tenantID)
+// GetStats returns ticket statistics for the viewer's data range.
+func (s *Service) GetStats(ctx context.Context, tenantID int, actorID int, actorRole string) (*TicketStats, error) {
+	return s.repo.GetStats(ctx, tenantID, dataScopeForRole(actorRole), actorID)
 }
 
 // ExportTickets 导出工单，委派给生产服务层（其查询已带 TenantID 谓词）。

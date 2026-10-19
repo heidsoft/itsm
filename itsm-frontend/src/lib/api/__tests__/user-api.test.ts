@@ -70,6 +70,27 @@ describe('UserApi', () => {
     });
   });
 
+  describe('getOwnProfile', () => {
+    it('读取本人资料走 /auth/me（登录即可），而不是需要 user:read 的 /users/:id', async () => {
+      mockGet.mockResolvedValue({ id: 19, name: 'Walk', phone: '13800000000', department: 'IT' });
+      const result = await UserApi.getOwnProfile();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/auth/me');
+      expect(result.phone).toBe('13800000000');
+    });
+  });
+
+  describe('updateOwnProfile', () => {
+    it('走自助端点且不携带 role/username/active', async () => {
+      mockPut.mockResolvedValue({ id: 19, name: '新名字', email: 'a@b.com', phone: '', department: '' });
+      const payload = { name: '新名字', email: 'a@b.com', phone: '', department: '' };
+      const result = await UserApi.updateOwnProfile(payload);
+      expect(mockPut).toHaveBeenCalledWith('/api/v1/account/profile', payload);
+      expect(result.name).toBe('新名字');
+      // 自助面没有写权限的字段绝不出现在请求体里，否则等于把提权面暴露给端用户
+      expect(Object.keys(payload)).toEqual(['name', 'email', 'phone', 'department']);
+    });
+  });
+
   describe('deleteUser', () => {
     it('should delete user', async () => {
       mockDelete.mockResolvedValue(undefined);

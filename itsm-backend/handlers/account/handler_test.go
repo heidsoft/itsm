@@ -26,6 +26,7 @@ func newTestRouter(h *Handler, userID, tenantID int, injectUser bool) *gin.Engin
 		c.Next()
 	})
 	grp.PUT("/change-password", h.ChangePassword)
+	grp.PUT("/profile", h.UpdateProfile)
 	return r
 }
 
@@ -103,6 +104,78 @@ func TestChangePasswordIgnoresClientSuppliedUser(t *testing.T) {
 	// 若实现改成信任请求体，这里会变成对 999 的操作。
 	if w.Code != http.StatusServiceUnavailable {
 		t.Errorf("期望 503（说明未信任请求体 userId），实际 %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+// doProfile 发自助改资料请求。
+func doProfile(r *gin.Engine, body map[string]any) *httptest.ResponseRecorder {
+	raw, _ := json.Marshal(body)
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/account/profile", bytes.NewReader(raw))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+// TestUpdateProfileFailsWithoutAuth 锁定未认证不得改资料。
+func TestUpdateProfileFailsWithoutAuth(t *testing.T) {
+	r := newTestRouter(NewHandler(nil), 0, 0, false)
+
+	w := doProfile(r, map[string]any{"name": "me", "email": "me@example.com"})
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("未认证应 401，实际 %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+// TestUpdateProfileRequiresNameAndEmail 锁定 name/email 必填且邮箱合法，
+// 否则可以把账号改成无姓名或不可登录的邮箱。
+func TestUpdateProfileRequiresNameAndEmail(t *testing.T) {
+	r := newTestRouter(NewHandler(nil), 7, 1, true)
+
+	cases := []map[string]any{
+		{"email": "me@example.com"},
+		{"name": "me"},
+		{"name": "me", "email": "not-an-email"},
+		{},
+	}
+	for i, body := range cases {
+		w := doProfile(r, body)
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("用例 %d 参数非法应 400，实际 %d body=%s", i, w.Code, w.Body.String())
+		}
+	}
+}
+
+// TestUpdateProfileNilServiceFailsClosed 锁定 service 未装配时不得假成功。
+func TestUpdateProfileNilServiceFailsClosed(t *testing.T) {
+	r := newTestRouter(NewHandler(nil), 7, 1, true)
+
+	w := doProfile(r, map[string]any{"name": "me", "email": "me@example.com"})
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("期望 503，实际 %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+// TestUpdateProfileIgnoresEscalationFields 锁定请求体里的提权字段不被使用。
+//
+// 该端点刻意不挂 RequirePermission（端用户没有 user:write），因此 DTO 字段白名单
+// 是唯一的提权屏障。若有人把 userId/role 读进 handler，这条会先在这里变红。
+func TestUpdateProfileIgnoresEscalationFields(t *testing.T) {
+	r := newTestRouter(NewHandler(nil), 7, 1, true)
+
+	w := doProfile(r, map[string]any{
+		"name":     "me",
+		"email":    "me@example.com",
+		"userId":   999, // 试图改他人
+		"role":     "admin",
+		"username": "pwn",
+		"active":   false,
+		"tenantId": 99,
+	})
+	// 走到 service 前置分支（503）说明提权字段没有改变调用目标或造成 200 假成功；
+	// 实现若改成信任请求体，这里会变成对 999 的操作或直接成功。
+	if w.Code != http.StatusServiceUnavailable {
+		t.Errorf("期望 503（说明未信任请求体提权字段），实际 %d body=%s", w.Code, w.Body.String())
 	}
 }
 

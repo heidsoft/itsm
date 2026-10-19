@@ -1,26 +1,45 @@
 import { renderHook } from '@testing-library/react';
 import { useErrorHandler, handleGlobalError, handleErrorBoundary } from '../useErrorHandler';
 
-// Mock antd message
-const mockMessage = {
-  success: jest.fn(),
-  error: jest.fn(),
-  warning: jest.fn(),
-  info: jest.fn(),
+type MockApi = {
+  success: jest.Mock;
+  error: jest.Mock;
+  warning: jest.Mock;
+  info: jest.Mock;
 };
 
-jest.mock('antd', () => ({
-  message: {
+// antd message：App 上下文实例与静态实例分开，用于断言优先使用上下文实例。
+jest.mock('antd', () => {
+  const newApi = (): MockApi => ({
     success: jest.fn(),
     error: jest.fn(),
     warning: jest.fn(),
     info: jest.fn(),
-  },
-}));
+  });
+  const contextMessage = newApi();
+  const staticMessage = newApi();
+  const state = { useAppMessage: contextMessage as MockApi | undefined };
+  return {
+    App: { useApp: () => ({ message: state.useAppMessage }) },
+    message: staticMessage,
+    mockContextMessage: contextMessage,
+    mockStaticMessage: staticMessage,
+    mockState: state,
+  };
+});
+
+const antdMock = jest.requireMock('antd') as {
+  mockContextMessage: MockApi;
+  mockStaticMessage: MockApi;
+  mockState: { useAppMessage: MockApi | undefined };
+};
+const mockMessage = antdMock.mockContextMessage;
+const mockStaticMessage = antdMock.mockStaticMessage;
 
 describe('useErrorHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    antdMock.mockState.useAppMessage = mockMessage;
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -109,10 +128,56 @@ describe('useErrorHandler', () => {
 
     expect(appError.message).toBe('Custom user message');
   });
+
+  it('动作标签与失败原因一起提示用户', () => {
+    // 工单详情页分配失败历史上只弹「分配失败」，end_user 无法知道是 403 权限不足，
+    // 只会反复点同一个按钮。
+    const { result } = renderHook(() => useErrorHandler());
+
+    result.current.handleError(new Error('权限不足'), 'assignTicket', '分配失败');
+
+    expect(mockMessage.error).toHaveBeenCalledWith('分配失败：权限不足');
+  });
+
+  it('403 分类原因同样带出', () => {
+    const { result } = renderHook(() => useErrorHandler());
+
+    result.current.handleError(new Error('403 Forbidden'), 'loadRules', '加载失败');
+
+    expect(mockMessage.error).toHaveBeenCalledWith('加载失败：权限不足，无法执行此操作');
+  });
+
+  it('优先使用 App 上下文的反馈实例', () => {
+    // 主题/locale 由 App 上下文提供；静态实例无法继承，且在没有 holder 时不可见。
+    const { result } = renderHook(() => useErrorHandler());
+
+    result.current.handleError(new Error('boom'), 'ctx');
+
+    expect(mockMessage.error).toHaveBeenCalledWith('boom');
+    expect(mockStaticMessage.error).not.toHaveBeenCalled();
+  });
+
+  it('没有 App 上下文时退回静态实例而不是静默', () => {
+    antdMock.mockState.useAppMessage = undefined;
+    const { result } = renderHook(() => useErrorHandler());
+
+    result.current.handleError(new Error('boom'), 'ctx');
+
+    expect(mockStaticMessage.error).toHaveBeenCalledWith('boom');
+  });
+
+  it('showMessage=false 时不弹提示', () => {
+    const { result } = renderHook(() => useErrorHandler({ showMessage: false }));
+
+    result.current.handleError(new Error('boom'), 'ctx');
+
+    expect(mockMessage.error).not.toHaveBeenCalled();
+  });
 });
 
 describe('handleGlobalError', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 

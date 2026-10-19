@@ -146,6 +146,10 @@ func TestService_Register(t *testing.T) {
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "租户")
+		// 部署状态未就绪不是用户输入错误，也不能伪装成认证失败：必须是 5003/503。
+		var bizErr *common.BusinessError
+		require.ErrorAs(t, err, &bizErr)
+		assert.Equal(t, common.ServiceUnavailableCode, bizErr.Code)
 	})
 
 	t.Run("单一活跃租户时注册落入该租户且角色固定为end_user", func(t *testing.T) {
@@ -193,6 +197,7 @@ func TestService_Register(t *testing.T) {
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "用户名已被注册")
+		assertRegisterConflict(t, err)
 	})
 
 	t.Run("邮箱重复返回错误", func(t *testing.T) {
@@ -205,7 +210,17 @@ func TestService_Register(t *testing.T) {
 		_, err := fx.service.Register(fx.ctx, req)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "邮箱已被注册")
+		assertRegisterConflict(t, err)
 	})
+}
+
+// assertRegisterConflict 断言注册冲突是 4090/409 语义的业务错误，
+// 而不是被压成 2001/401 认证失败——新用户看到「认证失败」只会反复重填密码。
+func assertRegisterConflict(t *testing.T, err error) {
+	t.Helper()
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
 }
 
 // =====================================================================

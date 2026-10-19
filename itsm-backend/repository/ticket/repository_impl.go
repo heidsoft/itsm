@@ -12,6 +12,7 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/database"
 	"itsm-backend/ent"
+	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/internal/datascope"
@@ -536,20 +537,7 @@ func (r *EntRepository) List(ctx context.Context, tenantID int, filters *FilterP
 			query = query.Where(ticket.CreatedAtLTE(*filters.DateTo))
 		}
 		// 行级数据权限。
-		// DataScopeOwnedOrAssigned 强制追加 Or(RequesterIDEQ(uid), AssigneeIDEQ(uid))，
-		// 使普通员工只能看到自己创建或分配给自己的工单。
-		// 这是安全关键路径：即使上层忘记传 RequesterID 过滤，这里仍会兜底收窄。
-		if filters.DataScope == datascope.DataScopeOwnedOrAssigned {
-			if filters.CurrentUserID <= 0 {
-				// 防御性：未提供用户 ID 时 fail closed，返回空集而非全量。
-				query = query.Where(ticket.IDEQ(-1))
-			} else {
-				query = query.Where(ticket.Or(
-					ticket.RequesterIDEQ(filters.CurrentUserID),
-					ticket.AssigneeIDEQ(filters.CurrentUserID),
-				))
-			}
-		}
+		query = query.Where(dataScopePredicates(filters.DataScope, filters.CurrentUserID)...)
 	}
 
 	// 获取总数
@@ -698,8 +686,26 @@ func (r *EntRepository) FindOverdue(ctx context.Context, tenantID int) ([]*Ticke
 	return toDomainModels(entities), nil
 }
 
+// dataScopePredicates 返回行级数据权限谓词，供 List 与统计共用。
+// 仓储层只实现 All 与 OwnedOrAssigned 两档：除 All 外一律按最窄档收窄，
+// 新增枚举值时不会静默放宽权限；身份缺失同样返回空集而非全量。
+func dataScopePredicates(scope datascope.DataScope, viewerID int) []predicate.Ticket {
+	if scope == datascope.DataScopeAll {
+		return nil
+	}
+	if viewerID <= 0 {
+		return []predicate.Ticket{ticket.IDEQ(-1)}
+	}
+	return []predicate.Ticket{
+		ticket.Or(
+			ticket.RequesterIDEQ(viewerID),
+			ticket.AssigneeIDEQ(viewerID),
+		),
+	}
+}
+
 // CountByStatus 按状态统计工单数量
-func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int) (map[Status]int, error) {
+func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Status]int, error) {
 	// 使用 Ent 的聚合功能
 	type statusCount struct {
 		Status string `json:"status"`
@@ -709,6 +715,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int) (map[St
 	var results []statusCount
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+		Where(dataScopePredicates(scope, viewerID)...).
 		GroupBy(ticket.FieldStatus).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)
@@ -725,7 +732,7 @@ func (r *EntRepository) CountByStatus(ctx context.Context, tenantID int) (map[St
 }
 
 // CountByPriority 按优先级统计工单数量
-func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int) (map[Priority]int, error) {
+func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (map[Priority]int, error) {
 	type priorityCount struct {
 		Priority string `json:"priority"`
 		Count    int    `json:"count"`
@@ -734,6 +741,7 @@ func (r *EntRepository) CountByPriority(ctx context.Context, tenantID int) (map[
 	var results []priorityCount
 	err := r.Client().Ticket.Query().
 		Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil()).
+		Where(dataScopePredicates(scope, viewerID)...).
 		GroupBy(ticket.FieldPriority).
 		Aggregate(ent.Count()).
 		Scan(ctx, &results)

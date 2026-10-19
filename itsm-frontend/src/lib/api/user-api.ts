@@ -100,6 +100,37 @@ export interface UpdateUserRequest {
   roleIds?: number[];
 }
 
+/**
+ * 本人资料（GET /api/v1/auth/me 与 PUT /api/v1/account/profile 的响应契约）。
+ *
+ * 与管理面 User 的差别是自助面看不到也不得提交 role/roleIds/active：
+ * 后端 DTO 白名单会丢弃这些字段，因此这里同样不声明，避免 UI 误以为可改。
+ */
+export interface OwnProfile {
+  id: number;
+  username: string;
+  email: string;
+  name: string;
+  role: string;
+  mspRole?: string;
+  department: string;
+  departmentId: number;
+  phone: string;
+  active: boolean;
+  tenantId: number;
+  createdAt: string;
+  updatedAt: string;
+  permissions?: string[];
+}
+
+/** 自助更新本人资料请求（字段白名单与后端 dto.UpdateOwnProfileRequest 一致） */
+export interface UpdateOwnProfileRequest {
+  name: string;
+  email: string;
+  phone?: string;
+  department?: string;
+}
+
 export interface ListUsersParams {
   page?: number;
   pageSize?: number;
@@ -182,6 +213,20 @@ export class UserApi {
   // 成功后服务端会吊销该用户全部存量 access token，需重新登录。
   static async changeOwnPassword(oldPassword: string, newPassword: string): Promise<void> {
     await httpClient.put('/api/v1/account/change-password', { oldPassword, newPassword });
+  }
+
+  // 读取本人资料（登录即可，无需 user:read）。
+  // /auth/me 挂在 r 层而非 tenant 分组，端用户也可访问；管理面的 GET /users/:id
+  // 需要 user:read，端用户用它读自己会 403。
+  static async getOwnProfile(): Promise<OwnProfile> {
+    return httpClient.get<OwnProfile>('/api/v1/auth/me');
+  }
+
+  // 自助更新本人资料（姓名/邮箱/电话/部门）。
+  // 不能用 updateUser（PUT /users/:id）：那是 user:write 的管理面语义，
+  // 端用户保存自己的资料必然 403，而放开该码等于交出整个用户目录的写权限。
+  static async updateOwnProfile(payload: UpdateOwnProfileRequest): Promise<OwnProfile> {
+    return httpClient.put<OwnProfile>('/api/v1/account/profile', payload);
   }
 
   // 获取用户统计

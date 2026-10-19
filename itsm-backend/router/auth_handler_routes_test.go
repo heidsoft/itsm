@@ -52,10 +52,12 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 		request.Header.Set("Content-Type", "application/json")
 		response := httptest.NewRecorder()
 		router.ServeHTTP(response, request)
-		require.Equal(t, http.StatusUnauthorized, response.Code, response.Body.String())
+		// 自助注册未开放是部署状态，不是凭据错误：必须是 503/5003，并带上可行动原因。
+		require.Equal(t, http.StatusServiceUnavailable, response.Code, response.Body.String())
 		var envelope common.Response
 		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
-		require.NotEqual(t, common.SuccessCode, envelope.Code)
+		require.Equal(t, common.ServiceUnavailableCode, envelope.Code)
+		require.Contains(t, envelope.Message, "自助注册暂未开放")
 
 		created, err := client.User.Query().Where(user.UsernameEQ("attacker")).Count(context.Background())
 		require.NoError(t, err)
@@ -110,6 +112,25 @@ func TestSetupRoutes_AuthHandlerProductionRoutes(t *testing.T) {
 		adminResponse := httptest.NewRecorder()
 		router.ServeHTTP(adminResponse, adminRequest)
 		require.Equal(t, http.StatusForbidden, adminResponse.Code, adminResponse.Body.String())
+	})
+
+	t.Run("register rejects a taken username with conflict and reason", func(t *testing.T) {
+		// 上一子测试已创建 selfuser。重名必须是 409/4090 并给出原因，
+		// 压成 2001「认证失败」只会让新用户反复重填密码而不知道是用户名冲突。
+		body := []byte(`{"username":"selfuser","email":"another@example.com","password":"password123","fullName":"Duplicate"}`)
+		request := httptest.NewRequest(http.MethodPost, "/api/v1/auth/register", bytes.NewReader(body))
+		request.Header.Set("Content-Type", "application/json")
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		require.Equal(t, http.StatusConflict, response.Code, response.Body.String())
+		var envelope common.Response
+		require.NoError(t, json.Unmarshal(response.Body.Bytes(), &envelope))
+		require.Equal(t, common.ConflictCode, envelope.Code)
+		require.Equal(t, "用户名已被注册", envelope.Message)
+
+		created, err := client.User.Query().Where(user.EmailEQ("another@example.com")).Count(context.Background())
+		require.NoError(t, err)
+		require.Zero(t, created, "conflicting register must not create any user")
 	})
 
 	t.Run("switch tenant rejects cross-tenant access", func(t *testing.T) {

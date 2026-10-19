@@ -35,8 +35,9 @@ import (
 // 三个端点都不分页（service 整表取回，handler 写 total = len(items)），所以响应只有这两个键；
 // 补 page/pageSize/totalPages 等于对外声明一个并不存在的分页协议。
 //
-// 用例挂在真实路由注册上（SetupRoutes → router/ticket_routes.go，带
-// RequirePermission("system_config","read") 与 RequirePermission("ticket","read")）；
+// 用例挂在真实路由注册上（SetupRoutes → router/ticket_routes.go，规则读面分别带
+// RequirePermission("assignment_rule","read") 与 RequirePermission("automation_rule","read")，
+// 附件列表带 RequirePermission("ticket","read")）；
 // 解码目标是本地 wire 结构而不是 dto，断言的是运行时响应行为。
 
 const ticketRuleListSecret = "ticket-rule-list-secret"
@@ -249,7 +250,7 @@ type assignRecommendationListWire struct {
 // 的信封棘轮扫描范围，否则会静默漏检。
 //
 // 端点不分页（service 整表取回，handler 写 total = len(items)）。用例挂在真实路由注册上
-// （SetupRoutes → router/ticket_routes.go，带 RequirePermission("system_config","read")）。
+// （SetupRoutes → router/ticket_routes.go，带 RequirePermission("ticket","assign")）。
 func TestTicketAssignRecommendationsRouteEnvelope(t *testing.T) {
 	ctx := context.Background()
 	dsn := fmt.Sprintf("file:router_assign_reco_%d?mode=memory&cache=shared&_fk=1", time.Now().UnixNano())

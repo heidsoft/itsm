@@ -285,8 +285,8 @@ open http://localhost:8090/swagger/index.html
 | 创建租户 | `POST /api/v1/tenants` 创建租户后，可在该租户下创建用户 |
 | 配置 SLA | 通过 `POST /api/v1/sla/policies` 创建 SLA 策略，绑定到工单类别 |
 | 设计工作流 | 在前端「工作流」模块设计 BPMN 流程，绑定到业务对象 |
-| 管理 CMDB | 通过 `POST /api/v1/cmdb/ci` 创建配置项，建立 CI 关系 |
-| 知识库检索 | `GET /api/v1/knowledge/search?q=关键词` 搜索知识文章 |
+| 管理 CMDB | 通过 `POST /api/v1/cmdb/cis` 创建配置项，建立 CI 关系 |
+| 知识库检索 | `POST /api/v1/knowledge/search` 搜索知识文章 |
 | 接入外部告警 | 配置 `ALERT_SOURCE_CONFIG` 后，通过 `POST /api/v1/alerts/sources/:source/ingest` 接收告警 Webhook |
 
 完整 API 文档见 [API 参考](./docs/api-reference.md)。
@@ -426,12 +426,12 @@ make check-contracts
 # 会写业务数据的 e2e（建用户/建工单/权限夹具）一律对着一次性隔离栈跑，
 # 不对常驻栈跑：up 会用 canary 写路径证明前端代理确实落在本栈数据库上，
 # 证明不成立时 Playwright 侧守卫直接拒绝运行。
-eval "$(scripts/e2e-isolated-stack.sh up --print-env)"   # 起栈并把测试环境变量注入当前 shell
+eval "$(scripts/e2e-isolated-stack.sh up --print-env)"   # 起栈并把测试环境变量（含 E2E_RUN_ID）注入当前 shell
 cd itsm-frontend && npm run test:e2e:roles               # 用上面的环境变量跑夹具
-cd .. && scripts/e2e-isolated-stack.sh down              # 拆栈（含本栈卷）并删除证明文件
+cd .. && scripts/e2e-isolated-stack.sh down              # 拆栈（含本栈卷）并删除证明文件；换了 shell 需显式 E2E_RUN_ID=<运行号>
 
 # 业务流程回归（需先启动开发环境；覆盖事件/问题全生命周期、变更拒绝路径、
-# 状态机负例、伪造 token 负例与通知/仪表盘联动，共 27 项断言）
+# 状态机负例、伪造 token 负例与通知/仪表盘联动，共 30 项断言）
 python3 output/dev_business_flow_test.py
 ```
 

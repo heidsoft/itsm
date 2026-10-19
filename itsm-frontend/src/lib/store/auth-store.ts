@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { clearAuthStorage } from '@/lib/auth/token-storage';
 import { setTenant, clearTenant } from '@/lib/auth/tenant-context';
+import { matchesPermission } from '@/lib/permissions/utils';
 import type { User, Tenant } from '@/lib/api/api-config';
 import { httpClient } from '@/lib/api/http-client';
 
@@ -129,15 +130,22 @@ export const useAuthStore = create<AuthState>()(
 
       // 检查用户权限
       // 支持通配符：super_admin 的 permissions 为 ["*"]（后端 getUserPermissions 下发），
-      // 必须能匹配任意具体权限码；同时兼容 "resource:*" 形式的资源级通配。
-      // 与后端 filterMenusByPermission / RequirePermission 的语义保持一致。
+      // 必须能匹配任意具体权限码；同时兼容 "resource:*"、"*:action"、"resource:admin"。
+      // 判定集合与后端 RequirePermission 的 checkPermissionMatch 共用同一份实现
+      // （permissions/utils.matchesPermission），避免「前端隐藏了后端允许的操作」。
       hasPermission: (permission: string) => {
         const { user } = get();
         const permissions = user?.permissions;
         if (!permissions || permissions.length === 0) return false;
-        if (permissions.includes('*') || permissions.includes(permission)) return true;
-        const resource = permission.split(':')[0];
-        return permissions.includes(`${resource}:*`);
+        const separatorIndex = permission.indexOf(':');
+        if (separatorIndex <= 0 || separatorIndex === permission.length - 1) {
+          return permissions.includes(permission);
+        }
+        return matchesPermission(
+          new Set(permissions),
+          permission.slice(0, separatorIndex),
+          permission.slice(separatorIndex + 1),
+        );
       },
 
       // 检查用户角色

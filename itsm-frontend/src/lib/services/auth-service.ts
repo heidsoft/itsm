@@ -82,21 +82,30 @@ export class AuthService {
       ...options,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // 后端统一响应在非 2xx 上同样带 {code,message,data}（业务码与 HTTP 状态由同一张表映射）。
+    // 只在 2xx 解析会把服务端的失败原因整段丢掉，用户只能看到 "HTTP error! status: 409"，
+    // 限流的 retryAfterSeconds 也走同一个信封，非 2xx 不解析就等于倒计时永远不显示。
+    const envelope = await response.json().catch(() => null);
+
+    if (envelope === null || typeof envelope !== 'object') {
+      if (!response.ok) {
+        throw new Error(`请求失败（HTTP ${response.status}）`);
+      }
+      throw new Error('服务响应格式异常，请稍后重试');
     }
 
-    const responseData = (await response.json()) as {
+    const responseData = envelope as {
       code: number;
       message: string;
       data: T | { retryAfterSeconds?: number } | null;
     };
 
-    // 检查响应码
-    if (responseData.code !== 0) {
+    if (!response.ok || responseData.code !== 0) {
       // 登录限流响应带 data.retryAfterSeconds，LoginForm 据此展示倒计时。
       const data = (responseData.data ?? null) as { retryAfterSeconds?: number } | null;
-      const err = new Error(responseData.message || '请求失败');
+      const err = new Error(
+        responseData.message || `请求失败（HTTP ${response.status}）`
+      );
       if (data && typeof data.retryAfterSeconds === 'number') {
         (err as Error & { retryAfterSeconds?: number }).retryAfterSeconds = data.retryAfterSeconds;
       }
@@ -175,7 +184,9 @@ export class AuthService {
     }
   }
 
-  // 注册（角色由服务端固定指派 end_user，不接受前端指定）
+  // 注册（角色由服务端固定指派 end_user，不接受前端指定）。
+  // 返回失败原因而不是布尔值：注册失败的原因（用户名已占用、自助注册未开放）
+  // 决定新用户下一步做什么，只返回 false 会让页面只能说「注册失败」。
   static async register(params: {
     username: string;
     email: string;
@@ -183,7 +194,7 @@ export class AuthService {
     fullName: string;
     phone?: string;
     company?: string;
-  }): Promise<boolean> {
+  }): Promise<{ ok: true } | { ok: false; message: string }> {
     try {
       await this.makeRequest<{ id: number; username: string; email: string; message: string }>(
         '/api/v1/auth/register',
@@ -200,10 +211,10 @@ export class AuthService {
         }
       );
 
-      return true;
+      return { ok: true };
     } catch (error) {
       console.error('Registration failed:', error);
-      return false;
+      return { ok: false, message: error instanceof Error ? error.message : '注册失败' };
     }
   }
 

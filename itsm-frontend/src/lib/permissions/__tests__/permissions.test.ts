@@ -94,6 +94,15 @@ describe('matchesPermission', () => {
       expect(matchesPermission(permissions, 'incident', 'read')).toBe(true);
       expect(matchesPermission(permissions, 'ticket', 'create')).toBe(false);
     });
+
+    // resource:admin 授予该资源的全部动作。后端 middleware/rbac.go 的
+    // checkPermissionMatch 一直支持这条规则，前端缺少它会把合法操作判成无权限。
+    it('should match resource admin "resource:admin"', () => {
+      const permissions = new Set(['ticket:admin']);
+      expect(matchesPermission(permissions, 'ticket', 'assign')).toBe(true);
+      expect(matchesPermission(permissions, 'ticket', 'delete')).toBe(true);
+      expect(matchesPermission(permissions, 'incident', 'assign')).toBe(false);
+    });
   });
 });
 

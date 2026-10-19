@@ -59,6 +59,50 @@ func pathsOf(menus []*ent.Menu) []string {
 	return out
 }
 
+// TestFilterMenusByPermission_CanonicalResourceCodesAreNotAliased 修复回归：
+// 菜单过滤曾把 team/department/tenant 别名到 org，而 GET /api/v1/org/teams 用
+// middleware.RequirePermission("team", "read") 按字面码把关。只持 org:read 的最终用户
+// 因此在侧边栏看到「团队管理」，点进去恒定 403（2026-10-18 本地生产栈实测 code 2003）。
+// 同时保留 service→service_catalog 这类别名：它是租户管理员真实依赖的桥。
+func TestFilterMenusByPermission_CanonicalResourceCodesAreNotAliased(t *testing.T) {
+	svc := &MenuService{}
+	menus := []*ent.Menu{
+		{Name: "团队管理", Path: "/admin/teams", PermissionCode: "team:read"},
+		{Name: "部门管理", Path: "/admin/departments", PermissionCode: "department:read"},
+		{Name: "服务目录", Path: "/service-catalog", PermissionCode: "service:read"},
+	}
+
+	// org:read 与 team/department 是码空间里各自独立的资源，不得互相放行
+	filtered := svc.filterMenusByPermission(
+		menus,
+		map[string]bool{"org:read": true},
+		map[string]bool{"end_user": true},
+	)
+	if paths := pathsOf(filtered); len(paths) != 0 {
+		t.Fatalf("只持 org:read 不应看到任何菜单，实际: %+v", paths)
+	}
+
+	// 持字面码的角色照常可见，接口也会放行
+	filtered = svc.filterMenusByPermission(
+		menus,
+		map[string]bool{"team:read": true, "department:read": true},
+		map[string]bool{"agent": true},
+	)
+	if paths := pathsOf(filtered); len(paths) != 2 {
+		t.Fatalf("持 team:read 与 department:read 应看到两个菜单，实际: %+v", paths)
+	}
+
+	// service→service_catalog 别名仍然生效：只持 service_catalog:read 的角色看得到服务目录
+	filtered = svc.filterMenusByPermission(
+		[]*ent.Menu{{Name: "服务目录", Path: "/service-catalog", PermissionCode: "service:read"}},
+		map[string]bool{"service_catalog:read": true},
+		map[string]bool{"it_admin": true},
+	)
+	if paths := pathsOf(filtered); len(paths) != 1 || paths[0] != "/service-catalog" {
+		t.Fatalf("service:read 菜单应对只持 service_catalog:read 的角色可见，实际: %+v", paths)
+	}
+}
+
 // TestBackfillParentMenus_OrphanedSubtreePreserved 修复回归（源自 2026-10-06 未落地的
 // wip-pre-sprint1 stash，2026-10-17 正式落地）：filterMenusByPermission 逐条独立过滤，
 // 父菜单权限码不满足被剔除、子菜单权限码满足存活时，buildMenuTree 只从存活的根节点

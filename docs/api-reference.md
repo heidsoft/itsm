@@ -180,6 +180,19 @@ Content-Type: application/json
 目标租户取系统中唯一的活跃租户；存在多个活跃租户时注册被拒绝（fail-closed），
 需由管理员开通账号。
 
+字段约束与失败语义（服务端为准，前端同规则先行拦截）：
+
+| 情况 | HTTP | 业务码 | message |
+|:---|:---|:---|:---|
+| 用户名不是 3–20 位字母数字、邮箱格式非法、密码少于 8 位 | `400` | `1001` | 参数校验信息 |
+| 用户名已存在 | `409` | `4090` | `用户名已被注册` |
+| 邮箱已存在 | `409` | `4090` | `邮箱已被注册` |
+| 多个活跃租户 / 尚无活跃租户 | `503` | `5003` | `自助注册暂未开放…` / `系统尚未初始化活跃租户…` |
+| 存储层故障 | `500` | `5001` | `注册失败` |
+
+冲突与部署不可用此前统一返回 `401/2001`「认证失败」，会被前端显示成通用「注册失败」，
+新用户无法区分「用户名被占用」和「系统没开通自助注册」；现按上表如实分级。
+
 ### 忘记密码
 
 ```http
@@ -191,6 +204,10 @@ Content-Type: application/json
   "tenantCode": "default"
 }
 ```
+
+邮件服务未配置时返回 `503`（业务码 `5003`，message `密码重置功能未启用：邮件服务未配置`），
+不再返回 `401/2001`——后者会让用户以为是自己的邮箱有问题并反复重试。邮箱未注册时
+仍返回成功文案（不泄漏账号存在性）。
 
 ### 重置密码
 
@@ -1739,6 +1756,57 @@ Authorization: Bearer <accessToken>
 > ITIL 实践角色（`change_manager` 等）与 MSP 协作角色（`msp_*`）不属于 `role` 字段，
 > 通过 `roleIds` 对应的 `user_roles` 边叠加。2026-10-08 前的 legacy 值（`security`、
 > `l1_support`、`it_director` 等）已退役，见 [UPGRADE §1.33](../UPGRADE.md)。
+
+### 自助账号面（仅需登录，不需要 `user:write`）
+
+上面 `PUT /api/v1/users/{id}` 是**管理用户目录**的语义（`user:write`），最终用户改自己的
+姓名或电话走它会得到 403；把 `user:write` 放开给全员又等于交出整个用户目录的写权限。
+因此登录用户对自己账号的维护走独立权限面，路由在 `itsm-backend/router/account_routes.go`
+注册在 `r` 层 `/api/v1/account`（与 `/auth/me` 同组，不进租户级 RBAC 分组），只挂
+`AuthMiddleware`、**不挂** `RequirePermission`。
+
+| Method + Path | 权限 | 说明 |
+|:---|:---|:---|
+| `GET /api/v1/auth/me` | 仅需登录 | 本人资料读侧（`UserDetailResponse`） |
+| `PUT /api/v1/account/profile` | 仅需登录 | 更新本人 `name`/`email`/`phone`/`department` |
+| `PUT /api/v1/account/change-password` | 仅需登录 | 改本人密码，必须带旧密码，成功后吊销该用户全部存量 token |
+
+```http
+PUT /api/v1/account/profile
+Content-Type: application/json
+
+{
+  "name": "张伟",
+  "email": "zhangwei@example.com",
+  "phone": "13900000000",
+  "department": "财务部"
+}
+```
+
+- **目标用户只来自鉴权上下文**：handler 从中间件写入的 `user_id` 取，请求体和路径参数里的
+  `userId` 不参与寻址，不存在改他人资料的路径。
+- **字段白名单是唯一的提权屏障**：`dto.UpdateOwnProfileRequest` 只声明上表四个字段，
+  `role`/`username`/`active`/`tenantId`/`mspRole` 在 JSON 绑定阶段被丢弃，因此该端点不具备
+  自我提权或改变租户归属的能力。回归：`service/user_selfprofile_test.go`
+  `TestUpdateOwnProfile_DoesNotEscalateRole`、`handlers/account/handler_test.go`
+  `TestUpdateProfileIgnoresEscalationFields`。
+- **可选字段是指针**：`phone`/`department` 区分「未传」（保持原值）与「显式 `""`（清空）」；
+  只提交姓名不会抹掉电话。`name`/`email` 必填，邮箱留空一律拒绝——邮箱是登录身份，静默跳过
+  会把账号改成无法登录。
+- **邮箱唯一性按管理面口径**：跨租户全局唯一，冲突返回 409/`4090`「该邮箱已被其他账号使用」，
+  不得退化成未分类错误（否则前端只显示「更新失败」）。
+- 响应 `data` 是更新后的 `UserDetailResponse`（含只读的 `role`/`active`），前端必须以响应回填
+  表单，而不是把用户输入的原始值拼进旧状态（服务端会 trim）。
+
+| 场景 | HTTP | 业务码 |
+|:---|:---|:---|
+| `name`/`email` 缺失、邮箱格式非法 | 400 | `1001` |
+| 姓名或邮箱全为空白 | 400 | `4000` |
+| 缺少鉴权上下文（无 `user_id`） | 401 | `2002` |
+| 账号服务未装配 | 503 | `5003` |
+| 邮箱已被其他账号占用 | 409 | `4090` |
+| 目标行不属于调用者租户 | 404 | `4004` |
+
 
 ## 角色接口
 

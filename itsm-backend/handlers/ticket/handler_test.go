@@ -221,16 +221,26 @@ func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID in
 	return out, nil
 }
 
-func (m *mockRepository) GetStats(ctx context.Context, tenantID int) (*TicketStats, error) {
+func (m *mockRepository) GetStats(ctx context.Context, tenantID int, ds datascope.DataScope, currentUserID int) (*TicketStats, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.statsCalled = true
 	statusCounts := map[ticketrepo.Status]int{}
 	priorityCounts := map[ticketrepo.Priority]int{}
 	stats := &TicketStats{}
+	// 行级谓词与 List mock 保持一致：非全量角色只统计本人创建或受理的单据，身份缺失 fail closed。
+	if ds != datascope.DataScopeAll && currentUserID <= 0 {
+		return stats, nil
+	}
 	for _, t := range m.tickets {
 		if t.TenantID != tenantID {
 			continue
+		}
+		if ds != datascope.DataScopeAll {
+			assigned := t.AssigneeID != nil && *t.AssigneeID == currentUserID
+			if t.RequesterID != currentUserID && !assigned {
+				continue
+			}
 		}
 		statusCounts[ticketrepo.Status(t.Status)]++
 		priorityCounts[ticketrepo.Priority(t.Priority)]++

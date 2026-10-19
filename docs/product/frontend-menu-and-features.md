@@ -1,6 +1,6 @@
 # 前端菜单与功能映射梳理
 
-> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-10-11（菜单条数、种子位置、§8 缺登清单按 `pkg/menubaseline/baseline.go` 与 `git ls-files` 复核）。
+> 适用范围：`itsm-frontend` + `itsm-backend` v1.6.x 收尾期；最后同步时间：2026-10-18（规则配置面三条菜单码按 `pkg/menubaseline/baseline.go` 复核纠正为 `assignment_rule:write` / `automation_rule:write`；菜单条数与 §8 缺登清单沿用 2026-10-11 复核结果）。
 > 用途：把"前端页面 ↔ 后端菜单 ↔ API 入口 ↔ 能力治理"四个视角统一到一张图，作为菜单收口与下阶段补齐的参考。
 >
 > 本文是 docs/product/ 家族的新增文档，与 `ai-automation-status.md` 并列，专注"菜单/页面/功能"层。菜单事实以 `pkg/menubaseline/baseline.go` 为准，不以本文为准。
@@ -25,7 +25,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
                 ↑
         upsertMenu (两遍 upsert)
                 ↑
-   menuDefinitions() = 78 条菜单种子（唯一真理）
+   menuDefinitions() = 98 条菜单种子（唯一真理）
 
 登录后:
   GET /api/v1/auth/menus
@@ -119,6 +119,14 @@ seedMenus → menu 表（tenant_id + path 唯一）
 |-----:|------|------|------------|------|
 | 21 | `/tickets/types` | 工单类型 | `ticket_type:read` | ClipboardList |
 | 22 | `/tickets/analytics` | 工单统计 | `ticket:read` | BarChart3 |
+| 23 | `/tickets/dashboard` | 工单仪表盘 | `ticket:read` | LayoutDashboard |
+| 24 | `/tickets/cc` | 我的抄送 | `ticket:read` | Mail |
+| 25 | `/tickets/templates` | 工单模板 | `ticket_template:read` | Copy |
+
+> 2026-10-19：`/tickets/templates` 此前挂 `ticket:write`，而页面数据源
+> `GET /api/v1/tickets/templates` 要求 `ticket_template:read`；只写自己工单的最终用户
+> 拿到入口后必然 403（本地生产栈实测 `code 2003`）。守卫见
+> `itsm-backend/pkg/menubaseline/baseline_guard_test.go`。
 
 ### 3.3 事件管理 `/incidents`
 
@@ -191,7 +199,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 104 | `/workflow/versions` | 版本管理 | `workflow:write` | History |
 | 105 | `/workflow/dashboard` | 监控仪表盘 | `workflow:read` | Activity |
 | 106 | `/workflow/bottlenecks` | 节点瓶颈分析 | `workflow:read` | BarChart3 |
-| 107 | `/workflow/automation` | 自动化规则 | `workflow:write` | Zap |
+| 107 | `/workflow/automation` | 自动化规则 | `automation_rule:write` | Zap |
 | 108 | `/approvals` | 审批中心 | `task:read` | CheckSquare |
 | 109 | `/workflow/audit` | 操作日志 | `audit:read` | ClipboardList |
 
@@ -215,7 +223,7 @@ seedMenus → menu 表（tenant_id + path 唯一）
 |-----:|------|------|------------|------|
 | 132 | `/releases/new` | 新建发布 | `release:write` | Plus |
 
-### 3.16 系统管理 `/admin`（admin 域，24 子项）
+### 3.16 系统管理 `/admin`（admin 域，26 子项）
 
 | sort | path | name | permission | icon |
 |-----:|------|------|------------|------|
@@ -228,13 +236,15 @@ seedMenus → menu 表（tenant_id + path 唯一）
 | 250 | `/admin/teams` | 团队管理 | `team:read` | Users |
 | 255 | `/admin/change-review` | 评审组管理 | `change:read` | Users |
 | 260 | `/admin/ticket-categories` | 工单分类 | `ticket_category:update` | Tag |
-| 265 | `/admin/tickets/assignment-rules` | 工单分配规则 | `ticket:read` | GitBranch |
-| 270 | `/admin/tickets/automation-rules` | 自动化规则 | `ticket:read` | Zap |
+| 265 | `/admin/tickets/assignment-rules` | 工单分配规则 | `assignment_rule:write` | GitBranch |
+| 270 | `/admin/tickets/automation-rules` | 自动化规则 | `automation_rule:write` | Zap |
 | 275 | `/admin/approval-chains` | 审批链 | `approval:write` | Link |
 | 280 | `/admin/permissions` | 权限管理 | `role:write` | Lock |
 | 285 | `/admin/connectors` | 连接器/插件市场 | `connector:write` | Plug |
+| 287 | `/admin/skills` | 技能注册表 | `marketplace:write` | Wand2 |
 | 290 | `/admin/vector-store` | 向量存储配置 | `system:read` | Database |
 | 295 | `/admin/system-config` | 系统配置 | `system:read` | Settings |
+| 298 | `/admin/tags` | 全局标签 | `system:read` | Tags |
 | 315 | `/admin/cmdb-types` | CMDB 类型 | `cmdb:write` | Database |
 | 320 | `/admin/escalation-rules` | 升级规则 | `sla:write` | AlertTriangle |
 | 325 | `/admin/escalation-matrices` | 升级矩阵 | `sla:read` | TrendingUp |
@@ -313,6 +323,44 @@ filterByCapability(menus)：
 `Sidebar.tsx:15` 只 `import { capabilityForPath } from './menu-config'`，规则文件唯一
 （`menu-config.ts:31`，16 条）。`filterByCapability` 仍在 `Sidebar.tsx:163` 内联，但它消费的是
 单一来源的 key，不再是第二份路径表。
+
+### 4.4 权限码判定与别名（`filterMenusByPermission`）
+
+菜单可见性只由权限码决定，判定顺序（`itsm-backend/service/menu_service.go`）：
+空码 → 精确码 → `resource:*` / `*` 通配 → Action 别名 → Resource 别名后再走通配。
+
+Resource 别名只保留「同一资源的两个名字」：`service→service_catalog`、`workflow→bpmn`、
+`helpdesk→ticket`、`approval→permission`、`system→system_config`。2026-10-19 删除
+`team→org`、`department→org`、`tenant→org`：`org`/`department`/`team`/`tenant` 在码空间里各有定义，
+而接口按字面码把关（`GET /api/v1/org/teams` 要求 `team:read`），别名让只持 `org:read` 的最终用户
+在侧边栏拿到「团队管理」却进不去。回归：
+`itsm-backend/service/menu_service_test.go` `TestFilterMenusByPermission_CanonicalResourceCodesAreNotAliased`。
+
+### 4.5 admin 桶的前端二次门控（实测）
+
+`buildMenuTree` 把 `/admin` 前缀的菜单归入 `admin` 桶，但服务端仍会按码把低角色的 `admin` 条目
+放进 payload（例如持 `user:read` 的最终用户能看到「用户管理」这一条）。`Sidebar.tsx:181-185`
+用四个写码（`user:write`/`role:write`/`system_config:write`/`ticket_type:manage`）判定 `isAdmin`，
+非 admin 时整个管理区不渲染。这是展示层补偿控制，不是授权：接口逐请求把关。
+把它改成纯 payload 驱动（`adminMenus.length > 0`）之前，必须先解决 `/admin/users`
+菜单码 `user:read` 的 PII 口径，否则最终用户会立刻看到整表同事通讯录。
+
+### 4.6 别名删除与模板码纠正的运行时实测（2026-10-20，一次性隔离栈）
+
+栈由 `scripts/e2e-isolated-stack.sh` 从当前工作树构建镜像（空卷首装，菜单表就是本次基线的种子），
+`GET /api/v1/auth/menus` 与页面数据源接口逐一对照：
+
+| 角色 | 菜单里的团队管理 | 菜单里的工单模板 | `GET /api/v1/org/teams` | `GET /api/v1/tickets/templates` |
+|:---|:---|:---|:---|:---|
+| `end_user` | 无 | 无 | 403 / `2003` | 403 / `2003` |
+| `manager`（持 `team:read`、无 `ticket_template:read`） | 有（admin 桶） | 无 | 200 | 403 / `2003` |
+| `it_admin`（持两码） | 有 | 有（main 桶） | 200 | 200 |
+
+结论：可见性口径与接口口径在三个角色上一致，删除跨资源别名只摘掉「看得见点不进」的入口，
+`team:read` 的真实持有者入口与接口都未受影响。`manager` 侧「工单模板」是**入口减少**而非收口失败：
+该页唯一消费方是 `src/app/(main)/tickets/templates/page.tsx`（建单页不调模板接口），
+manager 原本拿到的入口点开就是 403；若产品要让 manager 用模板，应加 `ticket_template:read`
+权限码而不是把菜单码改回 `ticket:write`。
 
 ---
 

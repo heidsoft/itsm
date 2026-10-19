@@ -1824,6 +1824,36 @@ cd itsm-backend && go test -count=1 \
   ./handlers/prediction/ ./service/ ./router/
 ```
 
+### 1.48 自助注册与密码找回的失败原因不再统一压成 401（2026-10-18，破坏性：状态码与业务码变更）
+
+`POST /auth/register` 与 `POST /auth/forgot-password` 此前把所有失败交给
+`AuthFailedWithErr`，一律返回 **401/`2001`「认证失败」**：用户名被占用、邮箱被占用、
+部署只有一个活跃租户的 fail-closed 拒绝、邮件服务未配置，对端看起来完全一样，
+新用户只会反复重试同一个表单。现按错误性质分级：
+
+| 场景 | 旧响应 | 新响应 | 不变量 |
+|:---|:---|:---|:---|
+| 用户名/邮箱已被注册 | 401/`2001` | **409/`4090`** + `用户名已被注册`/`邮箱已被注册` | 冲突不创建任何用户行 |
+| 多活跃租户 / 无活跃租户 | 401/`2001` | **503/`5003`** + 自助注册未开放 / 尚未初始化 | 部署状态不得伪装成用户输入错误 |
+| 密码找回：邮件服务未配置 | 401/`2001` | **503/`5003`** + `密码重置功能未启用：邮件服务未配置` | 能力未配置属 operational unavailable |
+| 请求体校验失败 | 400/`1001` | 不变 | Gin binding 规则未动（用户名 3–20 位字母数字、密码 ≥8 位） |
+| 存储层故障 | 401/`2001` | **500/`5001`** | 未分类故障仍按内部错误处理 |
+
+`POST /auth/reset-password` 与重置 token 校验接口本批**未改**：其 service 返回的是
+非类型化 error，直接换成 `RespondError` 会把「token 无效」也映射成 500，需要先给
+这两个方法补业务错误分类（已记待办）。
+
+前端可见行为（非接口契约）：注册向导第二步提交现在携带第一步的账号与密码；用户名
+规则与后端 binding 一致，非法字符在本地即被拦住；`AuthService` 会解析非 2xx 的统一
+响应信封，把服务端 `message` 原样显示（登录限流的 `retryAfterSeconds` 也由此带出）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/auth/ ./router/ -run 'Auth|Register'
+cd itsm-frontend && npx jest wizard-submit auth-service --coverage=false
+```
+
 
 ## 2. 环境变量变更
 

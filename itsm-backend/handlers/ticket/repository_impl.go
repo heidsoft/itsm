@@ -326,18 +326,18 @@ func orderTicketPriorities(counts map[ticket.Priority]int) []PriorityCount {
 	return out
 }
 
-func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*TicketStats, error) {
-	statusCounts, err := r.repo.CountByStatus(ctx, tenantID)
+func (r *EntRepository) GetStats(ctx context.Context, tenantID int, scope datascope.DataScope, viewerID int) (*TicketStats, error) {
+	statusCounts, err := r.repo.CountByStatus(ctx, tenantID, scope, viewerID)
 	if err != nil {
 		return nil, fmt.Errorf("get status counts: %w", err)
 	}
-	priorityCounts, err := r.repo.CountByPriority(ctx, tenantID)
+	priorityCounts, err := r.repo.CountByPriority(ctx, tenantID, scope, viewerID)
 	if err != nil {
 		return nil, fmt.Errorf("get priority counts: %w", err)
 	}
 
 	// Reuse the authoritative overdue filter without loading the full backlog.
-	overdue, err := r.repo.List(ctx, tenantID, &ticket.FilterParams{IsOverdue: true}, &base.QueryParams{Page: 1, PageSize: 1})
+	overdue, err := r.repo.List(ctx, tenantID, &ticket.FilterParams{IsOverdue: true, DataScope: scope, CurrentUserID: viewerID}, &base.QueryParams{Page: 1, PageSize: 1})
 	if err != nil {
 		return nil, fmt.Errorf("get overdue count: %w", err)
 	}

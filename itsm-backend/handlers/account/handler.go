@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"itsm-backend/common"
+	"itsm-backend/dto"
 	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
@@ -68,6 +69,41 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		"reLogin":       true,
 		"tokensRevoked": true,
 	})
+}
+
+// UpdateProfile 处理 PUT /api/v1/account/profile。
+//
+// 权限边界与 ChangePassword 同构：只挂 AuthMiddleware，user_id 只取鉴权上下文。
+// 之所以不能用 PUT /users/:id（需 user:write）替代，是因为 user:write 是管理员语义，
+// 端用户持有它才改得了自己资料 —— 那等于把整个用户目录的写权限发给端用户。
+// 提权风险由 DTO 白名单挡在门外：请求体里的 role/username/active 不会被绑定。
+func (h *Handler) UpdateProfile(c *gin.Context) {
+	userID, ok := accountUserID(c)
+	if !ok {
+		return
+	}
+
+	var req dto.UpdateOwnProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误：name 与 email 均为必填且需合法")
+		return
+	}
+
+	if h.userService == nil {
+		common.Fail(c, common.ServiceUnavailableCode, "账号服务未就绪")
+		return
+	}
+
+	tenantID, _ := c.Get("tenant_id")
+	tid, _ := tenantID.(int)
+
+	updated, err := h.userService.UpdateOwnProfile(c.Request.Context(), userID, tid, &req)
+	if err != nil {
+		common.RespondError(c, err, "更新个人资料失败")
+		return
+	}
+
+	common.Success(c, dto.ToUserDetailResponse(updated))
 }
 
 // accountUserID 从鉴权上下文取当前用户 ID。

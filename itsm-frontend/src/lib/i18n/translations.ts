@@ -273,6 +273,7 @@ export const translations = {
       escalateFinalHint: '工单已结束，无法升级',
       requesterCannotApprove: '您是此工单的申请人，无法进行审批操作',
       fullOperationSupport: '支持状态变更、审批流程、分配处理人等完整工单操作',
+      readonlyForViewer: '当前账号没有该工单的处理权限，只能查看；如需处理请联系受理人或管理员',
       ticketFinalHint: '工单已结束，无法进行操作',
       // 详情页签
       tabComments: '评论',
@@ -3185,6 +3186,8 @@ export const translations = {
         usernamePlaceholder: '请输入用户名',
         usernameRequired: '请输入用户名',
         usernameMinLength: '用户名至少 3 个字符',
+        usernameMaxLength: '用户名最多 20 个字符',
+        usernamePattern: '用户名只能用字母和数字',
         emailLabel: '邮箱',
         emailPlaceholder: '请输入邮箱',
         emailRequired: '请输入邮箱',
@@ -5288,6 +5291,7 @@ export const translations = {
       escalateFinalHint: 'Ticket is closed, cannot escalate',
       requesterCannotApprove: 'You are the requester of this ticket, cannot approve',
       fullOperationSupport: 'Supports full ticket operations including status change, approval, and assignment',
+      readonlyForViewer: 'This account has no handling permission for the ticket, so it is read-only. Contact the assignee or an administrator to proceed.',
       ticketFinalHint: 'Ticket is closed, cannot operate',
       // Detail Tabs
       tabComments: 'Comments',
@@ -7996,6 +8000,8 @@ export const translations = {
         usernamePlaceholder: 'Enter username',
         usernameRequired: 'Please enter username',
         usernameMinLength: 'Username must be at least 3 characters',
+        usernameMaxLength: 'Username must be at most 20 characters',
+        usernamePattern: 'Username may only contain letters and numbers',
         emailLabel: 'Email',
         emailPlaceholder: 'Enter email',
         emailRequired: 'Please enter email',

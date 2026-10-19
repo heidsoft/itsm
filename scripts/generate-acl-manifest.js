@@ -291,6 +291,9 @@ const AUTH_ONLY = new Set([
   // 端用户无法自助改密；handler 内部目标用户只取鉴权上下文
   // （router/account_routes.go 的「权限边界」注释）。
   "/api/v1/account/change-password",
+  // 改自己的资料：同一权限面，理由同上。字段白名单（dto.UpdateOwnProfileRequest）
+  // 不含 role/username/active，因此自助面不具备提权能力。
+  "/api/v1/account/profile",
 ]);
 
 // ---------------------------------------------------------------------------

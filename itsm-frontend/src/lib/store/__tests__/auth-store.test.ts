@@ -352,6 +352,31 @@ describe('useAuthStore', () => {
       expect(useAuthStore.getState().hasPermission('ticket:write')).toBe(false);
     });
 
+    // 租户管理员持 ticket:admin（不持 ticket:assign）。后端 checkPermissionMatch
+    // 把 resource:admin 视为该资源全部动作，前端判定必须一致，否则按钮会在
+    // 合法可操作的账号上消失。
+    it('资源管理码 "ticket:admin" 应覆盖派单等具体动作', async () => {
+      const { useAuthStore } = await import('../auth-store');
+
+      const mockUser = {
+        id: 4,
+        name: 'Tenant Admin',
+        username: 'tenantadmin',
+        email: 'ta@example.com',
+        role: 'admin',
+        tenantId: 1,
+        permissions: ['ticket:read', 'ticket:write', 'ticket:admin'],
+      };
+
+      act(() => {
+        useAuthStore.getState().login(mockUser);
+      });
+
+      expect(useAuthStore.getState().hasPermission('ticket:assign')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('ticket:escalate')).toBe(true);
+      expect(useAuthStore.getState().hasPermission('incident:assign')).toBe(false);
+    });
+
     it('permissions 为空数组时应返回 false', async () => {
       const { useAuthStore } = await import('../auth-store');
       

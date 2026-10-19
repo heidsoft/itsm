@@ -53,10 +53,12 @@ var writeRouteExemptions = map[string]string{
 	"sso_routes.go POST /sso/bind":          "绑定外部身份到本人账号，仅影响调用者自己",
 	"sso_routes.go POST /sso/unbind":        "解绑外部身份，仅影响调用者自己",
 
-	// —— 4. 自助改密：改的是调用者自己的密码，且必须校验旧密码 ——
-	// 用 user:write 会让端用户无法改自己的密码（该码是管理员语义）；
-	// handler 内部 user_id 只取鉴权上下文，不接受请求体指定目标用户。
+	// —— 4. 自助面：改的是调用者自己的凭据与资料 ——
+	// 用 user:write 会让端用户无法维护自己账号（该码是管理用户目录的语义）；
+	// handler 内部 user_id 只取鉴权上下文，不接受请求体指定目标用户，
+	// 且资料 DTO 白名单排除 role/username/active，不具备提权能力。
 	"account_routes.go PUT /change-password": "自助改密，仅作用于调用者本人并校验旧密码",
+	"account_routes.go PUT /profile":         "自助改资料，仅作用于调用者本人且字段白名单不含角色/状态/用户名",
 }
 
 type scannedRoute struct {

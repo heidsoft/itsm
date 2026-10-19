@@ -37,6 +37,20 @@ type UpdateUserRequest struct {
 	RoleIDs []int `json:"roleIds,omitempty"`
 }
 
+// UpdateOwnProfileRequest 用户自助更新本人资料的请求。
+//
+// 与管理面 UpdateUserRequest 的区别不是字段子集而是权限面：自助路由只挂认证
+// （user:write 是管理员语义，用它端用户改不了自己的资料），因此这里**刻意不定义**
+// username/role/roleIds/active/mspRole/tenantId —— JSON 绑定会丢弃请求体里的同名字段，
+// 该端点不构成提权或改他人数据的路径。
+type UpdateOwnProfileRequest struct {
+	Name  string `json:"name" binding:"required,min=1,max=100"`
+	Email string `json:"email" binding:"required,email"`
+	// 指针：区分「未传」与「传空串清空」，避免只改姓名的表单抹掉电话/部门。
+	Phone      *string `json:"phone,omitempty"`
+	Department *string `json:"department,omitempty"`
+}
+
 // ListUsersRequest 获取用户列表请求
 //
 // 租户范围不在请求参数中：handler 从认证上下文取 tenantID 后单独传给 service，

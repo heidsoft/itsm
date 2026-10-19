@@ -10,6 +10,10 @@ interface TicketListToolbarProps {
   readonly showFilters: boolean;
   readonly selectedCount: number;
   readonly loading: boolean;
+  /** 与路由 RequirePermission 对齐：无 ticket:delete / ticket:export / ticket:create 时不提供入口。 */
+  readonly canBatchDelete: boolean;
+  readonly canExport: boolean;
+  readonly canCreate: boolean;
   readonly onSearchChange: (value: string) => void;
   readonly onSearchSubmit: (value: string) => void;
   readonly onToggleFilters: () => void;
@@ -28,6 +32,9 @@ export function TicketListToolbar({
   showFilters,
   selectedCount,
   loading,
+  canBatchDelete,
+  canExport,
+  canCreate,
   onSearchChange,
   onSearchSubmit,
   onToggleFilters,
@@ -63,17 +70,21 @@ export function TicketListToolbar({
         </Col>
         <Col>
           <Space>
-            {selectedCount > 0 && (
+            {canBatchDelete && selectedCount > 0 && (
               <Button danger icon={<Trash2 />} onClick={onBatchDelete}>
                 批量删除 ({selectedCount})
               </Button>
             )}
-            <Button icon={<Download />} onClick={onExport}>
-              导出
-            </Button>
-            <Button type='primary' icon={<Plus />} onClick={onCreate}>
-              创建工单
-            </Button>
+            {canExport && (
+              <Button icon={<Download />} onClick={onExport}>
+                导出
+              </Button>
+            )}
+            {canCreate && (
+              <Button type='primary' icon={<Plus />} onClick={onCreate}>
+                创建工单
+              </Button>
+            )}
           </Space>
         </Col>
       </Row>

@@ -25,7 +25,7 @@ import {
   Flex,
   Divider,
   ConfigProvider,
-  message,
+  App,
   Alert,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
@@ -41,6 +41,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const { t } = useI18n();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
@@ -59,7 +60,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const success = await AuthService.register({
+      const result = await AuthService.register({
         username: values.username,
         email: values.email,
         password: values.password,
@@ -68,7 +69,7 @@ export default function RegisterPage() {
         company: values.company,
       });
 
-      if (success) {
+      if (result.ok) {
         message.success(t('auth.register.registerSuccess'));
         try {
           router.push('/login');
@@ -77,7 +78,9 @@ export default function RegisterPage() {
           message.error('导航失败，请稍后重试');
         }
       } else {
-        setError(t('auth.register.registerFailed'));
+        // 服务端原因（用户名已占用、自助注册未开放）是用户下一步动作的依据，
+        // 不能压成通用的「注册失败」。
+        setError(result.message);
       }
     } catch (err) {
       logger.error('注册错误:', err);
@@ -124,171 +127,168 @@ export default function RegisterPage() {
               />
             )}
 
-            {step === 1 && (
-              <>
-                <Form form={form} onFinish={handleRegister} layout='vertical' size='middle'>
-                  <Form.Item
-                    name='username'
-                    label={t('auth.register.usernameLabel')}
-                    rules={[
-                      { required: true, message: t('auth.register.usernameRequired') },
-                      { min: 3, message: t('auth.register.usernameMinLength') },
-                    ]}
-                  >
-                    <Input
-                      prefix={<User size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.usernamePlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
+            <Form form={form} onFinish={handleRegister} layout='vertical' size='middle'>
+              <div hidden={step !== 1}>
+                <Form.Item
+                  name='username'
+                  label={t('auth.register.usernameLabel')}
+                  rules={[
+                    { required: true, message: t('auth.register.usernameRequired') },
+                    { min: 3, message: t('auth.register.usernameMinLength') },
+                    { max: 20, message: t('auth.register.usernameMaxLength') },
+                    { pattern: /^[A-Za-z0-9]+$/, message: t('auth.register.usernamePattern') },
+                  ]}
+                >
+                  <Input
+                    prefix={<User size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.usernamePlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
 
-                  <Form.Item
-                    name='email'
-                    label={t('auth.register.emailLabel')}
-                    rules={[
-                      { required: true, message: t('auth.register.emailRequired') },
-                      { type: 'email', message: t('auth.register.emailInvalid') },
-                    ]}
-                  >
-                    <Input
-                      prefix={<Mail size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.emailPlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
+                <Form.Item
+                  name='email'
+                  label={t('auth.register.emailLabel')}
+                  rules={[
+                    { required: true, message: t('auth.register.emailRequired') },
+                    { type: 'email', message: t('auth.register.emailInvalid') },
+                  ]}
+                >
+                  <Input
+                    prefix={<Mail size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.emailPlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
 
-                  <Form.Item
-                    name='password'
-                    label={t('auth.register.passwordLabel')}
-                    rules={[
-                      { required: true, message: t('auth.register.passwordRequired') },
-                      { min: 8, message: t('auth.register.passwordMinLength') },
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<Lock size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.passwordPlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
+                <Form.Item
+                  name='password'
+                  label={t('auth.register.passwordLabel')}
+                  rules={[
+                    { required: true, message: t('auth.register.passwordRequired') },
+                    { min: 8, message: t('auth.register.passwordMinLength') },
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<Lock size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.passwordPlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
 
-                  <Form.Item
-                    name='confirmPassword'
-                    label={t('auth.register.confirmPasswordLabel')}
-                    dependencies={['password']}
-                    rules={[
-                      { required: true, message: t('auth.register.confirmPasswordRequired') },
-                      ({ getFieldValue }) => ({
-                        validator(_, value) {
-                          if (!value || getFieldValue('password') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject(new Error(t('auth.register.passwordMismatch')));
-                        },
-                      }),
-                    ]}
-                  >
-                    <Input.Password
-                      prefix={<Lock size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.confirmPasswordPlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
+                <Form.Item
+                  name='confirmPassword'
+                  label={t('auth.register.confirmPasswordLabel')}
+                  dependencies={['password']}
+                  rules={[
+                    { required: true, message: t('auth.register.confirmPasswordRequired') },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue('password') === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(new Error(t('auth.register.passwordMismatch')));
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password
+                    prefix={<Lock size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.confirmPasswordPlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
 
-                  <Form.Item>
+                <Form.Item>
+                  <Button
+                    type='primary'
+                    htmlType='button'
+                    onClick={handleNextStep}
+                    className='w-full'
+                    icon={<ArrowRight size={14} />}
+                  >
+                    下一步
+                  </Button>
+                </Form.Item>
+              </div>
+
+              <div hidden={step !== 2}>
+                <Form.Item
+                  name='fullName'
+                  label={t('auth.register.nameLabel')}
+                  rules={[{ required: true, message: t('auth.register.nameRequired') }]}
+                >
+                  <Input
+                    prefix={<User size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.namePlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name='phone'
+                  label={t('auth.register.phoneLabel')}
+                  rules={[{ required: true, message: t('auth.register.phoneRequired') }]}
+                >
+                  <Input
+                    prefix={<Phone size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.phonePlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
+
+                <Form.Item name='company' label={t('auth.register.companyLabel')}>
+                  <Input
+                    prefix={<Building2 size={14} className='text-gray-400' />}
+                    placeholder={t('auth.register.companyPlaceholder')}
+                    disabled={loading}
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Flex gap={8}>
+                    <Button onClick={() => setStep(1)} className='flex-1' disabled={loading}>
+                      上一步
+                    </Button>
                     <Button
                       type='primary'
-                      onClick={handleNextStep}
-                      className='w-full'
-                      icon={<ArrowRight size={14} />}
+                      htmlType='submit'
+                      loading={loading}
+                      className='flex-1'
+                      icon={<CheckCircle size={14} />}
                     >
-                      下一步
+                      {loading
+                        ? t('auth.register.registering')
+                        : t('auth.register.registerButton')}
                     </Button>
-                  </Form.Item>
-                </Form>
+                  </Flex>
+                </Form.Item>
+              </div>
+            </Form>
 
-                <Divider className='my-4'>
-                  <Text className='text-gray-400 text-xs'>{t('auth.login.or')}</Text>
-                </Divider>
+            <Divider className='my-4'>
+              <Text className='text-gray-400 text-xs'>{t('auth.login.or')}</Text>
+            </Divider>
 
-                <div className='text-center'>
-                  <Text className='text-gray-400 text-xs'>
-                    {t('auth.register.hasAccount')}{' '}
-                    <Button
-                      type='link'
-                      className='p-0 h-auto text-xs'
-                      onClick={() => {
-                        try {
-                          router.push('/login');
-                        } catch (navErr) {
-                          console.error('[nav]', navErr);
-                          message.error('导航失败，请稍后重试');
-                        }
-                      }}
-                    >
-                      {t('auth.register.loginNow')}
-                    </Button>
-                  </Text>
-                </div>
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <Form form={form} onFinish={handleRegister} layout='vertical' size='middle'>
-                  <Form.Item
-                    name='fullName'
-                    label={t('auth.register.nameLabel')}
-                    rules={[{ required: true, message: t('auth.register.nameRequired') }]}
-                  >
-                    <Input
-                      prefix={<User size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.namePlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name='phone'
-                    label={t('auth.register.phoneLabel')}
-                    rules={[{ required: true, message: t('auth.register.phoneRequired') }]}
-                  >
-                    <Input
-                      prefix={<Phone size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.phonePlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item name='company' label={t('auth.register.companyLabel')}>
-                    <Input
-                      prefix={<Building2 size={14} className='text-gray-400' />}
-                      placeholder={t('auth.register.companyPlaceholder')}
-                      disabled={loading}
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <Flex gap={8}>
-                      <Button onClick={() => setStep(1)} className='flex-1' disabled={loading}>
-                        上一步
-                      </Button>
-                      <Button
-                        type='primary'
-                        htmlType='submit'
-                        loading={loading}
-                        className='flex-1'
-                        icon={<CheckCircle size={14} />}
-                      >
-                        {loading
-                          ? t('auth.register.registering')
-                          : t('auth.register.registerButton')}
-                      </Button>
-                    </Flex>
-                  </Form.Item>
-                </Form>
-              </>
-            )}
+            <div className='text-center'>
+              <Text className='text-gray-400 text-xs'>
+                {t('auth.register.hasAccount')}{' '}
+                <Button
+                  type='link'
+                  className='p-0 h-auto text-xs'
+                  onClick={() => {
+                    try {
+                      router.push('/login');
+                    } catch (navErr) {
+                      console.error('[nav]', navErr);
+                      message.error('导航失败，请稍后重试');
+                    }
+                  }}
+                >
+                  {t('auth.register.loginNow')}
+                </Button>
+              </Text>
+            </div>
           </Card>
         </div>
       </div>

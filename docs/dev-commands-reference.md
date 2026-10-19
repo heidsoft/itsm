@@ -197,10 +197,16 @@ npm run test:smoke
 # 起栈：新 compose project + 唯一容器名 + 独占端口（127.0.0.1:18090 / :3001），
 # 空卷首装（migrate+seed），随后用 canary 写路径证明代理确实落在本栈数据库上。
 scripts/e2e-isolated-stack.sh up                      # 构建 + 起栈 + canary 证明
-eval "$(scripts/e2e-isolated-stack.sh up --print-env)" # 同时把 4 个测试环境变量注入当前 shell
+eval "$(scripts/e2e-isolated-stack.sh up --print-env)" # 同时把 5 个测试环境变量注入当前 shell（含 E2E_RUN_ID）
 scripts/e2e-isolated-stack.sh status                   # 容器状态与 proof 摘要
 scripts/e2e-isolated-stack.sh down                     # 拆栈（含本栈卷）并删除 proof
 ```
+
+`status`/`down` 必须知道操作哪一次运行：只有 `up` 可以省略 `E2E_RUN_ID`（默认取当前 PID）。
+在同一条 shell 里 `eval` 过 `up --print-env` 就自带该变量；换了 shell 要显式
+`E2E_RUN_ID=<运行号> scripts/e2e-isolated-stack.sh down`，否则脚本会拒绝执行——
+按 PID 猜出来的 project 不存在，`compose down` 返回 0、按 label 复核也「无残留」，
+于是日志声称已拆栈，而真实栈和含口令的 proof 文件都还在（2026-10-20 实测）。
 
 `up` 成功后在 `$TMPDIR/itsm-e2e-proofs/`（0700）写出三个 0600 文件：`<project>.json` 是
 proof，`<project>.env` 是可直接 source 的环境变量，`<project>.password` 是本栈 admin 口令

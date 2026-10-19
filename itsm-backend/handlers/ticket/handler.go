@@ -436,13 +436,17 @@ func (h *Handler) BatchDeleteTickets(c *gin.Context) {
 }
 
 // GetStats handles GET /api/v1/tickets/stats
+// 身份只取认证上下文，统计范围与 GET /api/v1/tickets 列表一致。
 func (h *Handler) GetTicketStats(c *gin.Context) {
 	tenantID, ok := handlerctx.ResolveTenantID(c)
 	if !ok {
 		return
 	}
 
-	stats, err := h.service.GetStats(c.Request.Context(), tenantID)
+	currentUserID := c.GetInt("user_id")
+	currentRole := c.GetString("role")
+
+	stats, err := h.service.GetStats(c.Request.Context(), tenantID, currentUserID, currentRole)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return

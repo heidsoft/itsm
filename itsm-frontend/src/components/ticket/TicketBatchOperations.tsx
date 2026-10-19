@@ -1,27 +1,26 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  Button,
-  Dropdown,
-  Modal,
-  Form,
-  Select,
-  Input,
-  message,
-  Space,
-  Alert,
-  Progress,
-  Divider,
-  Typography,
-  Checkbox,
-} from 'antd';
-import { Trash2, Download, User as UserIcon, Bell, CheckCircle, Tag, Flag, MoreHorizontal } from 'lucide-react';
+import { Button, Dropdown, Modal, Form, Select, message, Alert, Progress, Typography } from 'antd';
+import { Trash2, Download, User as UserIcon, CheckCircle, Tag, Flag, MoreHorizontal } from 'lucide-react';
 import type { MenuProps } from 'antd';
 import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
-const { TextArea } = Input;
-const { Text, Title } = Typography;
+import { usePermissions } from '@/lib/hooks/use-permissions';
+import { useUserListQuery } from '@/lib/hooks/useUserListQuery';
+import { TicketStatusConfig, TicketPriorityConfig } from '@/constants/taxonomy';
+const { Text } = Typography;
+
+// 词表取自 @/constants/taxonomy（后端状态机的投影），不在组件里维护第二套清单。
+const STATUS_OPTIONS = Object.entries(TicketStatusConfig).map(([value, config]) => ({
+  value,
+  label: config.label,
+}));
+
+const PRIORITY_OPTIONS = Object.entries(TicketPriorityConfig).map(([value, config]) => ({
+  value,
+  label: config.label,
+}));
 
 interface TicketBatchOperationsProps {
   selectedTickets: Ticket[];
@@ -35,6 +34,8 @@ interface BatchOperation {
   icon: React.ReactNode;
   danger?: boolean;
   description?: string;
+  /** 与后端 RequirePermission 对齐的权限码；缺失时菜单项不出现。 */
+  permission?: [resource: string, action: string];
 }
 
 const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
@@ -42,6 +43,17 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   onOperationComplete,
   onSelectionClear,
 }) => {
+  const { hasPermission } = usePermissions();
+  // 处理人下拉复用带缓存的用户列表查询，不再使用写死的示例姓名。
+  const assignees = useUserListQuery({ pageSize: 100, enabled: hasPermission('ticket', 'assign') });
+  const assigneeOptions = useMemo(
+    () =>
+      (assignees.data?.users ?? []).map(user => ({
+        value: user.id,
+        label: `${user.name || user.username}${user.department ? ` (${user.department})` : ''}`,
+      })),
+    [assignees.data]
+  );
   const [loading, setLoading] = useState(false);
   const [operationModal, setOperationModal] = useState<{
     visible: boolean;
@@ -73,36 +85,35 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         label: '批量分配',
         icon: <UserIcon />,
         description: '将选中的工单分配给指定处理人',
+        permission: ['ticket', 'assign'],
       },
       {
-        key:'updateStatus',
+        key: 'update_status',
         label: '批量更新状态',
         icon: <Flag />,
         description: '批量更新工单状态',
+        permission: ['ticket', 'update'],
       },
       {
-        key:'addTags',
+        key: 'add_tags',
         label: '批量添加标签',
         icon: <Tag />,
         description: '为选中的工单添加标签',
+        permission: ['ticket_tag', 'create'],
       },
       {
-        key:'setPriority',
+        key: 'set_priority',
         label: '批量设置优先级',
         icon: <Flag />,
         description: '批量设置工单优先级',
-      },
-      {
-        key: 'notify',
-        label: '批量通知',
-        icon: <Bell />,
-        description: '向工单相关人员发送通知',
+        permission: ['ticket', 'update'],
       },
       {
         key: 'export',
         label: '批量导出',
         icon: <Download />,
         description: '导出选中的工单数据',
+        permission: ['ticket', 'export'],
       },
       {
         key: 'divider1',
@@ -115,6 +126,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         icon: <Trash2 />,
         danger: true,
         description: '删除选中的工单（不可恢复）',
+        permission: ['ticket', 'delete'],
       },
     ],
     []
@@ -279,7 +291,14 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               name="assigneeId"
               rules={[{ required: true, message: '请选择处理人' }]}
             >
-              <Select placeholder="选择处理人" showSearch filterOption options={[{ value: 1, label: "张三" }, { value: 2, label: "李四" }, { value: 3, label: "王五" }]} />
+              <Select
+                placeholder="选择处理人"
+                showSearch
+                optionFilterProp="label"
+                loading={assignees.isLoading}
+                notFoundContent={assignees.isError ? '处理人列表加载失败' : undefined}
+                options={assigneeOptions}
+              />
             </Form.Item>
           </>
         );
@@ -291,7 +310,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             name="status"
             rules={[{ required: true, message: '请选择状态' }]}
           >
-            <Select placeholder="选择状态" options={[{ value: "new", label: "新建" }, { value: "open", label: "待处理" }, { value: "in_progress", label: "处理中" }, { value: "pending", label: "等待中" }, { value: "resolved", label: "已解决" }, { value: "closed", label: "已关闭" }]} />
+            <Select placeholder="选择状态" options={STATUS_OPTIONS} />
           </Form.Item>
         );
 
@@ -309,23 +328,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             name="priority"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="选择优先级" options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "urgent", label: "紧急" }, { value: "critical", label: "严重" }]} />
+            <Select placeholder="选择优先级" options={PRIORITY_OPTIONS} />
           </Form.Item>
-        );
-
-      case 'notify':
-        return (
-          <>
-            <Form.Item label="通知内容" name="notification" rules={[{ required: true }]}>
-              <TextArea rows={4} placeholder="输入通知内容" />
-            </Form.Item>
-            <Form.Item name="notifyAssignee" valuePropName="checked" initialValue={true}>
-              <Checkbox>通知处理人</Checkbox>
-            </Form.Item>
-            <Form.Item name="notifyReporter" valuePropName="checked">
-              <Checkbox>通知报告人</Checkbox>
-            </Form.Item>
-          </>
         );
 
       case 'delete':
@@ -343,15 +347,22 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
     }
   };
 
-  // 批量操作菜单项
-  const menuItems: MenuProps['items'] = batchOperations
-    .filter(op => op.key !== 'divider1')
-    .map(operation => ({
-      key: operation.key,
-      icon: operation.icon,
-      label: operation.label,
-      danger: operation.danger,
-    }));
+  // 批量操作菜单项：只保留当前账号有权限码的动作。
+  // 后端逐条 RequirePermission，这里只负责不给出只会 403 的入口。
+  const permittedOperations = useMemo(
+    () =>
+      batchOperations.filter(
+        op => op.key !== 'divider1' && (!op.permission || hasPermission(op.permission[0], op.permission[1]))
+      ),
+    [batchOperations, hasPermission]
+  );
+
+  const menuItems: MenuProps['items'] = permittedOperations.map(operation => ({
+    key: operation.key,
+    icon: operation.icon,
+    label: operation.label,
+    danger: operation.danger,
+  }));
 
   if (selectedTickets.length === 0) {
     return null;
@@ -370,8 +381,17 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
             </Button>
           </div>
 
-          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} placement="bottomRight">
-            <Button type="primary" icon={<MoreHorizontal />} loading={loading}>
+          <Dropdown
+            menu={{ items: menuItems, onClick: handleMenuClick }}
+            placement="bottomRight"
+            disabled={permittedOperations.length === 0}
+          >
+            <Button
+              type="primary"
+              icon={<MoreHorizontal />}
+              loading={loading}
+              disabled={permittedOperations.length === 0}
+            >
               批量操作
             </Button>
           </Dropdown>

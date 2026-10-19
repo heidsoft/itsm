@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { message } from 'antd';
+import { App, message as staticMessage } from 'antd';
 
 // React ErrorBoundary 错误信息类型
 interface ErrorInfo {
@@ -11,6 +11,7 @@ interface ErrorInfo {
 export interface AppError {
   code?: string;
   message: string;
+  displayMessage: string;
   details?: unknown;
   context?: string;
 }
@@ -104,6 +105,16 @@ const getUserFriendlyMessage = (error: unknown): string => {
   return '未知错误';
 };
 
+// 展示文案：有动作标签时仍要带上原因。只说「分配失败」，用户无法区分
+// 权限不足、版本冲突和参数错误，只会反复点同一个按钮。
+const buildDisplayMessage = (friendlyMessage: string, customMessage?: string): string => {
+  if (!customMessage) return friendlyMessage;
+  if (!friendlyMessage || friendlyMessage === customMessage || friendlyMessage === '未知错误') {
+    return customMessage;
+  }
+  return `${customMessage}：${friendlyMessage}`;
+};
+
 // 错误上报服务
 const reportError = (error: AppError, config: ErrorHandlerConfig) => {
   if (!config.reportToService) return;
@@ -135,13 +146,21 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
     [JSON.stringify(config)]
   );
 
+  // 反馈实例来自 App 上下文（主题/locale 一致）；在没有 App 包裹的挂载点退回静态 API，
+  // 否则错误提示会静默消失。
+  const { message: contextMessage } = App.useApp();
+  const feedbackRef = useRef(contextMessage ?? staticMessage);
+  feedbackRef.current = contextMessage ?? staticMessage;
+
   // Stable handleError — identity does not change between renders.
   const handleError = useCallback(
     (error: unknown, context?: string, customMessage?: string) => {
       const mergedConfig = mergedConfigRef.current;
+      const friendlyMessage = getUserFriendlyMessage(error);
       const appError: AppError = {
         code: error instanceof Error ? (error as any).code : undefined,
-        message: customMessage || getUserFriendlyMessage(error),
+        message: customMessage || friendlyMessage,
+        displayMessage: buildDisplayMessage(friendlyMessage, customMessage),
         details: error,
         context,
       };
@@ -153,7 +172,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
 
       // 显示用户消息
       if (mergedConfig.showMessage) {
-        message.error(appError.message);
+        feedbackRef.current?.error(appError.displayMessage);
       }
 
       // 错误上报
@@ -223,15 +242,18 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
 
 // 全局错误处理函数（用于非Hook环境）
 export const handleGlobalError = (error: unknown, context?: string, customMessage?: string) => {
+  const friendlyMessage = getUserFriendlyMessage(error);
   const appError: AppError = {
     code: error instanceof Error ? (error as any).code : undefined,
-    message: customMessage || getUserFriendlyMessage(error),
+    message: customMessage || friendlyMessage,
+    displayMessage: buildDisplayMessage(friendlyMessage, customMessage),
     details: error,
     context,
   };
 
   console.error(`Global error in ${context || 'unknown context'}:`, error);
-  message.error(appError.message);
+  // 非 Hook 环境拿不到 App 上下文，只能使用静态实例；文案与 Hook 路径保持同一口径。
+  staticMessage.error(appError.displayMessage);
   reportError(appError, defaultConfig);
 
   return appError;
@@ -250,6 +272,7 @@ export const handleErrorBoundary = (error: Error, errorInfo: unknown) => {
   const appError: AppError = {
     code: 'COMPONENT_ERROR',
     message: error?.message || '组件渲染错误',
+    displayMessage: error?.message || '组件渲染错误',
     details: errorDetails,
     context: 'ErrorBoundary',
   };

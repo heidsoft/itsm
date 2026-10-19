@@ -26,6 +26,7 @@ import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 import {
   KnowledgeStatus,
   KnowledgeStatusLabels,
@@ -44,6 +45,10 @@ const { Title, Paragraph, Text } = Typography;
 const ArticleDetail: React.FC = () => {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const { hasPermission } = usePermissions();
+  // 发布/取消发布/更新在后端统一挂 knowledge:write；最终用户只有 knowledge:read，
+  // 此前按钮照常渲染，点下去只剩 403。
+  const canWriteArticle = hasPermission('knowledge', 'write');
   const [loading, setLoading] = useState(true);
   const [article, setArticle] = useState<KnowledgeArticle | null>(null);
   const [actionLoading, setActionLoading] = useState<'publish' | 'unpublish' | null>(null);
@@ -168,7 +173,7 @@ const ArticleDetail: React.FC = () => {
               返回列表
             </Button>
             <Space>
-              {status === KnowledgeStatus.DRAFT && (
+              {canWriteArticle && status === KnowledgeStatus.DRAFT && (
                 <Button
                   type="primary"
                   icon={<CheckCircle />}
@@ -178,7 +183,7 @@ const ArticleDetail: React.FC = () => {
                   发布文章
                 </Button>
               )}
-              {status === KnowledgeStatus.PUBLISHED && (
+              {canWriteArticle && status === KnowledgeStatus.PUBLISHED && (
                 <Button
                   icon={<CheckCircle />}
                   onClick={handleUnpublish}
@@ -187,13 +192,15 @@ const ArticleDetail: React.FC = () => {
                   取消发布
                 </Button>
               )}
-              <Button
-                type="primary"
-                icon={<Pencil />}
-                onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
-              >
-                编辑文章
-              </Button>
+              {canWriteArticle && (
+                <Button
+                  type="primary"
+                  icon={<Pencil />}
+                  onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
+                >
+                  编辑文章
+                </Button>
+              )}
             </Space>
           </div>
 

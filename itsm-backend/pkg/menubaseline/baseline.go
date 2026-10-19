@@ -62,7 +62,9 @@ func MenuDefinitions() []MenuSpec {
 		{Name: "工单统计", Path: "/tickets/analytics", Icon: "BarChart3", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 22, Description: "工单统计视图"},
 		{Name: "工单仪表盘", Path: "/tickets/dashboard", Icon: "LayoutDashboard", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 23, Description: "工单综合仪表盘"},
 		{Name: "我的抄送", Path: "/tickets/cc", Icon: "Mail", ParentPath: "/tickets", PermissionCode: "ticket:read", SortOrder: 24, Description: "抄送给我的工单"},
-		{Name: "工单模板", Path: "/tickets/templates", Icon: "Copy", ParentPath: "/tickets", PermissionCode: "ticket:write", SortOrder: 25, Description: "工单模板管理"},
+		// 页面数据源是 GET /api/v1/tickets/templates，接口要求 ticket_template:read。
+		// 挂在 ticket:write 上让只写自己工单的最终用户拿到入口后立刻 403（实测 code 2003）。
+		{Name: "工单模板", Path: "/tickets/templates", Icon: "Copy", ParentPath: "/tickets", PermissionCode: "ticket_template:read", SortOrder: 25, Description: "工单模板管理"},
 
 		// ===== 子菜单：事件管理 =====
 		{Name: "新建事件", Path: "/incidents/create", Icon: "Plus", ParentPath: "/incidents", PermissionCode: "incident:write", SortOrder: 32},

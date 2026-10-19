@@ -20,12 +20,15 @@
 #
 # 用法：
 #   scripts/e2e-isolated-stack.sh up                       # 构建+起栈+canary 证明
-#   eval "$(scripts/e2e-isolated-stack.sh up --print-env)" # 同时把环境变量注入当前 shell
-#   scripts/e2e-isolated-stack.sh status                   # 容器状态与 proof 摘要
-#   scripts/e2e-isolated-stack.sh down                     # 拆栈并删除 proof
+#   eval "$(scripts/e2e-isolated-stack.sh up --print-env)" # 同时把环境变量（含 E2E_RUN_ID）注入当前 shell
+#   scripts/e2e-isolated-stack.sh status                   # 容器状态与 proof 摘要（需 E2E_RUN_ID）
+#   scripts/e2e-isolated-stack.sh down                     # 拆栈并删除 proof（需 E2E_RUN_ID）
 #
 # 可调环境变量：
-#   E2E_RUN_ID            运行号（默认取 PID），决定容器名/镜像 tag/project
+#   E2E_RUN_ID            运行号（仅 up 可省略并默认取 PID），决定容器名/镜像 tag/project。
+#                         down/status 必须显式带上它（或 E2E_PROJECT）：默认值是「当前进程 PID」，
+#                         与起栈那次必然不同，猜出来的 project 会让拆栈声称成功而真实栈仍在。
+#                         同一条 shell 里 eval 过 `up --print-env` 时已自动带上。
 #   E2E_ADMIN_PASSWORD    本栈 admin 口令；不传则随机生成，只写进 proof 文件
 #   E2E_SKIP_BUILD=1      复用已构建的 itsm-e2e-backend:$E2E_RUN_ID（本地调试提速）
 #   E2E_PROOF_DIR         proof 文件目录（默认 $TMPDIR/itsm-e2e-proofs）
@@ -72,6 +75,7 @@ for arg in "$@"; do
   esac
 done
 
+E2E_RUN_ID_SUPPLIED="${E2E_RUN_ID:-}"
 E2E_RUN_ID="${E2E_RUN_ID:-$$}"
 export E2E_RUN_ID # docker-compose.e2e.yml 靠它唯一化容器名与镜像 tag
 PROJECT="${E2E_PROJECT:-itsm-e2e-${E2E_RUN_ID}}"
@@ -109,7 +113,23 @@ teardown_password_env() {
   export E2E_ADMIN_PASSWORD
 }
 
+# down/status 必须知道操作的是哪一次运行。默认 run id 取当前 PID，而 PID 与起栈那次
+# 一定不同：实测不带 E2E_RUN_ID 的 down 会对一个不存在的 project 跑 compose down，
+# 命令返回 0、按 label 复核「无残留」，于是声称已拆栈，真实栈和含口令的 proof 全留在原地。
+# 拆栈会删卷，所以宁可拒绝也不猜。
+require_explicit_target() {
+  if [ -n "$E2E_RUN_ID_SUPPLIED" ] || [ -n "${E2E_PROJECT:-}" ]; then
+    return 0
+  fi
+  say "down/status 需要指定栈：E2E_RUN_ID=<起栈时的运行号> 或 E2E_PROJECT=<project>" >&2
+  say "当前在跑的一次性栈：" >&2
+  docker ps -a --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null |
+    grep '^itsm-e2e-' | sort -u | sed 's/^/  /' >&2 || say "  （无）" >&2
+  die "未指定 E2E_RUN_ID，拒绝猜测要拆哪个栈"
+}
+
 if [ "$ACTION" = "down" ]; then
+  require_explicit_target
   command -v docker >/dev/null 2>&1 || die "docker 不可用"
   say "拆除 project=$PROJECT（含本栈卷）"
   teardown_password_env
@@ -128,6 +148,7 @@ if [ "$ACTION" = "down" ]; then
 fi
 
 if [ "$ACTION" = "status" ]; then
+  require_explicit_target
   teardown_password_env
   "${COMPOSE[@]}" ps
   if [ -f "$PROOF_FILE" ]; then
@@ -357,6 +378,7 @@ export ITSM_E2E_ISOLATED_STACK=1
 export ITSM_E2E_STACK_PROOF="$PROOF_FILE"
 export PLAYWRIGHT_BASE_URL="$FRONTEND_URL"
 export E2E_ADMIN_PASSWORD="$E2E_ADMIN_PASSWORD"
+export E2E_RUN_ID="$E2E_RUN_ID"
 EOF
 chmod 600 "$ENV_FILE"
 rm -f "$JAR" /tmp/e2e-canary-login.json /tmp/e2e-canary-user.json
@@ -366,7 +388,9 @@ say "proof: $PROOF_FILE"
 say "跑 e2e 前注入环境：set -a; . $ENV_FILE; set +a"
 
 if [ "$PRINT_ENV" = "1" ]; then
-  # 日志全走 stderr，stdout 只剩这四行，才能安全地 eval "$(… up --print-env)"。
-  printf 'export ITSM_E2E_ISOLATED_STACK=1\nexport ITSM_E2E_STACK_PROOF=%q\nexport PLAYWRIGHT_BASE_URL=%q\nexport E2E_ADMIN_PASSWORD=%q\n' \
-    "$PROOF_FILE" "$FRONTEND_URL" "$E2E_ADMIN_PASSWORD"
+  # 日志全走 stderr，stdout 只剩这五行，才能安全地 eval "$(… up --print-env)"。
+  # E2E_RUN_ID 也在其中：down/status 必须作用在同一次运行的 project 上，
+  # 否则只能靠 PID 猜（实测会对着不存在的 project 声称已拆栈）。
+  printf 'export ITSM_E2E_ISOLATED_STACK=1\nexport ITSM_E2E_STACK_PROOF=%q\nexport PLAYWRIGHT_BASE_URL=%q\nexport E2E_ADMIN_PASSWORD=%q\nexport E2E_RUN_ID=%q\n' \
+    "$PROOF_FILE" "$FRONTEND_URL" "$E2E_ADMIN_PASSWORD" "$E2E_RUN_ID"
 fi

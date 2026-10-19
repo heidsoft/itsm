@@ -1497,8 +1497,10 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, tenantID 
 }
 
 // GetTicketStats 获取工单统计
+// 遗留路径：签名中没有操作者身份，只能给出租户全量口径。
+// 路由上真正生效的是 handlers/ticket 的 GetStats（带行级数据范围），本方法仅测试可达。
 func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.TicketStatsResponse, error) {
-	statusCounts, err := s.repo.CountByStatus(ctx, tenantID)
+	statusCounts, err := s.repo.CountByStatus(ctx, tenantID, datascope.DataScopeAll, 0)
 	if err != nil {
 		return nil, err
 	}
