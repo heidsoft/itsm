@@ -291,22 +291,31 @@ func (s *Store) RecordFirstResponse(ctx context.Context, tenantID int, aggregate
 }
 
 // RecordResolution 记录解决时间。
+// 已 breached 的状态保持 breached（迟到的解决不抹除违规事实，SLA 达成率
+// 按「是否在截止前解决」计量，不是「最终是否解决」）；未违规的才转 met。
 func (s *Store) RecordResolution(ctx context.Context, tenantID int, aggregateType string, aggregateID int, at time.Time) error {
-	n, err := s.client.SLAState.Update().
+	existing, err := s.client.SLAState.Query().
 		Where(
 			slastate.TenantID(tenantID),
 			slastate.AggregateType(aggregateType),
 			slastate.AggregateID(aggregateID),
 		).
-		SetResolvedAt(at).
-		SetStatus("met").
-		Save(ctx)
+		Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			zap.S().Warnw("sla_state not found for RecordResolution",
+				"tenantID", tenantID, "aggregateType", aggregateType, "aggregateID", aggregateID)
+			return nil
+		}
 		return err
 	}
-	if n == 0 {
-		zap.S().Warnw("sla_state not found for RecordResolution",
-			"tenantID", tenantID, "aggregateType", aggregateType, "aggregateID", aggregateID)
+
+	upd := existing.Update().SetResolvedAt(at)
+	if existing.Status != "breached" {
+		upd.SetStatus("met")
+	}
+	if _, err := upd.Save(ctx); err != nil {
+		return err
 	}
 	return nil
 }

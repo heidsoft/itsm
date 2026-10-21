@@ -104,3 +104,41 @@ type ProblemHotspotData struct {
 	Hotspots          []string
 	AvgPerCategory    float64
 }
+
+// ProblemComment 问题评论/处理纪要（2026-10-21 GA 阻断项落地）。
+// 与工单评论同构但独立成表：问题评论的读者是处理团队，可见性规则与
+// 含客户沟通的工单评论不同（详见 ent/schema/problem_comment.go 头注）。
+type ProblemComment struct {
+	ID         int
+	ProblemID  int
+	UserID     int
+	Content    string
+	IsInternal bool
+	Mentions   []int
+	Attachments []int
+	TenantID   int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	// 展示字段（非持久化）：列表查询时批量投影，缺省时前端回退 `用户 #id`
+	UserName string
+}
+
+// ProblemSLAInfo 问题 SLA 状态读面（GET /api/v1/problems/:id/sla）。
+//
+// 与工单的 TicketSLAInfo 同口径：截止时间与状态以 sla_states 表为唯一真相
+// （aggregate_type="problem"）。Bound=false 表示该问题没有绑定任何 SLA 定义
+// （租户未配置 problem 类型定义或优先级无匹配）——这是「没配 SLA」的如实回答，
+// 不是「SLA 正常」；调用方不得把 Bound=false 读成未超时。
+type ProblemSLAInfo struct {
+	ProblemID         int
+	ProblemNumber     string
+	Priority          string
+	Bound             bool
+	SLADefinitionID   int
+	Status            string // pending/active/paused/breached/met
+	ResponseDeadline  *time.Time
+	ResolutionDeadline *time.Time
+	FirstResponseAt   *time.Time
+	ResolvedAt        *time.Time
+	PausedDurationSec int
+}

@@ -90,5 +90,9 @@ func (Problem) Edges() []ent.Edge {
 		// 与变更的关联
 		edge.To("changes", Change.Type).
 			Comment("关联的变更"),
+		// 处理纪要/评论（2026-10-21 GA 阻断项落地，独立表不复用工单评论：
+		// 问题评论的读者是处理团队，工单评论含客户沟通，可见性规则不同）
+		edge.To("comments", ProblemComment.Type).
+			Comment("问题的评论与处理纪要"),
 	}
 }

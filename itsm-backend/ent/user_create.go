@@ -14,6 +14,7 @@ import (
 	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/oncallshift"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/tenant"
@@ -287,6 +288,21 @@ func (_c *UserCreate) AddTicketComments(v ...*TicketComment) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddTicketCommentIDs(ids...)
+}
+
+// AddProblemCommentIDs adds the "problem_comments" edge to the ProblemComment entity by IDs.
+func (_c *UserCreate) AddProblemCommentIDs(ids ...int) *UserCreate {
+	_c.mutation.AddProblemCommentIDs(ids...)
+	return _c
+}
+
+// AddProblemComments adds the "problem_comments" edges to the ProblemComment entity.
+func (_c *UserCreate) AddProblemComments(v ...*ProblemComment) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddProblemCommentIDs(ids...)
 }
 
 // AddTicketAttachmentIDs adds the "ticket_attachments" edge to the TicketAttachment entity by IDs.
@@ -753,6 +769,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ProblemCommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ProblemCommentsTable,
+			Columns: []string{user.ProblemCommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

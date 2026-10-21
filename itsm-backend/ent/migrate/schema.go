@@ -3039,6 +3039,39 @@ var (
 			},
 		},
 	}
+	// ProblemCommentsColumns holds the columns for the "problem_comments" table.
+	ProblemCommentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "content", Type: field.TypeString, Size: 2147483647},
+		{Name: "is_internal", Type: field.TypeBool, Default: false},
+		{Name: "mentions", Type: field.TypeJSON, Nullable: true},
+		{Name: "attachments", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "problem_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// ProblemCommentsTable holds the schema information for the "problem_comments" table.
+	ProblemCommentsTable = &schema.Table{
+		Name:       "problem_comments",
+		Columns:    ProblemCommentsColumns,
+		PrimaryKey: []*schema.Column{ProblemCommentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "problem_comments_problems_comments",
+				Columns:    []*schema.Column{ProblemCommentsColumns[8]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "problem_comments_users_problem_comments",
+				Columns:    []*schema.Column{ProblemCommentsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// ProcessApprovalDecisionsColumns holds the columns for the "process_approval_decisions" table.
 	ProcessApprovalDecisionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -6306,6 +6339,7 @@ var (
 		PermissionsTable,
 		PermissionDefinitionsTable,
 		ProblemsTable,
+		ProblemCommentsTable,
 		ProcessApprovalDecisionsTable,
 		ProcessAuditLogsTable,
 		ProcessBindingsTable,
@@ -6447,6 +6481,8 @@ func init() {
 	OnCallShiftsTable.ForeignKeys[1].RefTable = UsersTable
 	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
 	ProblemsTable.ForeignKeys[0].RefTable = KnownErrorsTable
+	ProblemCommentsTable.ForeignKeys[0].RefTable = ProblemsTable
+	ProblemCommentsTable.ForeignKeys[1].RefTable = UsersTable
 	ProcessBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessDefinitionsTable.ForeignKeys[0].RefTable = ProcessDeploymentsTable
 	ProcessExecutionHistoriesTable.ForeignKeys[0].RefTable = ProcessInstancesTable

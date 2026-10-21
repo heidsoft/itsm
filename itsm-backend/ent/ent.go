@@ -81,6 +81,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -283,6 +284,7 @@ func checkColumn(t, c string) error {
 			permission.Table:                  permission.ValidColumn,
 			permissiondefinition.Table:        permissiondefinition.ValidColumn,
 			problem.Table:                     problem.ValidColumn,
+			problemcomment.Table:              problemcomment.ValidColumn,
 			processapprovaldecision.Table:     processapprovaldecision.ValidColumn,
 			processauditlog.Table:             processauditlog.ValidColumn,
 			processbinding.Table:              processbinding.ValidColumn,

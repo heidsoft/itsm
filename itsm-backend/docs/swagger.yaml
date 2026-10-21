@@ -2150,6 +2150,25 @@ definitions:
     required:
     - title
     type: object
+  dto.CreateProblemCommentRequest:
+    properties:
+      attachments:
+        items:
+          type: integer
+        type: array
+      content:
+        maxLength: 5000
+        minLength: 1
+        type: string
+      isInternal:
+        type: boolean
+      mentions:
+        items:
+          type: integer
+        type: array
+    required:
+    - content
+    type: object
   dto.CreateProblemRequest:
     properties:
       category:
@@ -2869,6 +2888,19 @@ definitions:
         example: 1
         type: integer
     type: object
+  dto.ListProblemCommentsResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.ProblemCommentResponse'
+        type: array
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
   dto.ListProblemsResponse:
     properties:
       items:
@@ -3074,6 +3106,33 @@ definitions:
         items:
           $ref: '#/definitions/dto.AssociatedItemResponse'
         type: array
+    type: object
+  dto.ProblemCommentResponse:
+    properties:
+      attachments:
+        items:
+          type: integer
+        type: array
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      isInternal:
+        type: boolean
+      mentions:
+        items:
+          type: integer
+        type: array
+      problemId:
+        type: integer
+      updatedAt:
+        type: string
+      userId:
+        type: integer
+      userName:
+        type: string
     type: object
   dto.ProblemPriorityCount:
     properties:
@@ -11307,12 +11366,23 @@ paths:
       - 问题管理
   /api/v1/problems/{id}/comments:
     get:
-      description: 获取问题评论列表（评论功能尚未实现，返回 5003 unready）
+      description: 分页获取问题评论列表（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。时间正序；跨租户/不存在的问题统一
+        404，不暴露 ID 可枚举信号
       parameters:
       - description: 问题ID
         in: path
         name: id
         required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: 每页数量
+        in: query
+        name: size
         type: integer
       produces:
       - application/json
@@ -11324,10 +11394,14 @@ paths:
             - $ref: '#/definitions/common.Response'
             - properties:
                 data:
-                  type: object
+                  $ref: '#/definitions/dto.ListProblemCommentsResponse'
               type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/common.Response'
         "404":
@@ -11346,22 +11420,38 @@ paths:
     post:
       consumes:
       - application/json
-      description: 为问题添加评论（评论功能尚未实现，返回 5003 unready）
+      description: 为问题添加评论/处理纪要（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。isInternal
+        为内部备注；跨租户/不存在的问题统一 404
       parameters:
       - description: 问题ID
         in: path
         name: id
         required: true
         type: integer
+      - description: 评论内容
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProblemCommentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/common.Response'
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProblemCommentResponse'
+              type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/common.Response'
         "404":
@@ -11471,8 +11561,8 @@ paths:
       - 问题管理
   /api/v1/problems/{id}/sla:
     get:
-      description: 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回
-        5003 unready。不返回 slaStatus:"none" 的空成功，那种响应与「该问题确实没有触发 SLA」不可区分
+      description: 读取问题的 SLA 状态（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。bound=false
+        表示该问题没有绑定任何 SLA 定义——「没配 SLA」与「SLA 正常且未超时」是两种语义，调用方不得混淆；status 取值 unbound/active/warning/breached/paused/met
       parameters:
       - description: 问题ID
         in: path
@@ -11496,10 +11586,6 @@ paths:
             $ref: '#/definitions/common.Response'
         "500":
           description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-        "503":
-          description: Service Unavailable
           schema:
             $ref: '#/definitions/common.Response'
       security:

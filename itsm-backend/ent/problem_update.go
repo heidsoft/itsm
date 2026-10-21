@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/ticket"
 	"time"
 
@@ -407,6 +408,21 @@ func (_u *ProblemUpdate) AddChanges(v ...*Change) *ProblemUpdate {
 	return _u.AddChangeIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the ProblemComment entity by IDs.
+func (_u *ProblemUpdate) AddCommentIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the ProblemComment entity.
+func (_u *ProblemUpdate) AddComments(v ...*ProblemComment) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_u *ProblemUpdate) Mutation() *ProblemMutation {
 	return _u.mutation
@@ -473,6 +489,27 @@ func (_u *ProblemUpdate) RemoveChanges(v ...*Change) *ProblemUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChangeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the ProblemComment entity.
+func (_u *ProblemUpdate) ClearComments() *ProblemUpdate {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to ProblemComment entities by IDs.
+func (_u *ProblemUpdate) RemoveCommentIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to ProblemComment entities.
+func (_u *ProblemUpdate) RemoveComments(v ...*ProblemComment) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -772,6 +809,51 @@ func (_u *ProblemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1175,6 +1257,21 @@ func (_u *ProblemUpdateOne) AddChanges(v ...*Change) *ProblemUpdateOne {
 	return _u.AddChangeIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the ProblemComment entity by IDs.
+func (_u *ProblemUpdateOne) AddCommentIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.AddCommentIDs(ids...)
+	return _u
+}
+
+// AddComments adds the "comments" edges to the ProblemComment entity.
+func (_u *ProblemUpdateOne) AddComments(v ...*ProblemComment) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCommentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_u *ProblemUpdateOne) Mutation() *ProblemMutation {
 	return _u.mutation
@@ -1241,6 +1338,27 @@ func (_u *ProblemUpdateOne) RemoveChanges(v ...*Change) *ProblemUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveChangeIDs(ids...)
+}
+
+// ClearComments clears all "comments" edges to the ProblemComment entity.
+func (_u *ProblemUpdateOne) ClearComments() *ProblemUpdateOne {
+	_u.mutation.ClearComments()
+	return _u
+}
+
+// RemoveCommentIDs removes the "comments" edge to ProblemComment entities by IDs.
+func (_u *ProblemUpdateOne) RemoveCommentIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.RemoveCommentIDs(ids...)
+	return _u
+}
+
+// RemoveComments removes "comments" edges to ProblemComment entities.
+func (_u *ProblemUpdateOne) RemoveComments(v ...*ProblemComment) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCommentIDs(ids...)
 }
 
 // Where appends a list predicates to the ProblemUpdate builder.
@@ -1570,6 +1688,51 @@ func (_u *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCommentsIDs(); len(nodes) > 0 && !_u.mutation.CommentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

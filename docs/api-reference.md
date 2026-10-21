@@ -1014,17 +1014,33 @@ GET /api/v1/problems/stats
 - 缺少租户上下文返回 HTTP 401 + 业务码 `2001`，不回落到默认租户、也不返回空成功。
 - 报表要分布就读这两个字段。禁止改成前端拉一页列表自己数：2026-10-03 之前 `/reports/problem-efficiency` 正是取 `pageSize=100` 的第一页在浏览器里计数，第 101 条之后的问题被静默截断，界面却仍把它当全量读数展示。
 
-### 问题 SLA 与评论（能力未就绪）
+### 问题 SLA
 
 ```http
 GET /problems/{id}/sla
-GET /problems/{id}/comments
 Authorization: Bearer <accessToken>
 ```
 
-两个端点恒定返回 `503` + 业务码 `5003`（unready）：问题域没有 SLA 截止时间字段，也没有任何写入 `sla_states`（`aggregate_type=problem`）的代码路径，问题评论同样没有独立存储。此前 `/sla` 返回 `200` + `{slaStatus:"none", responseTimeUsed:0, ...}` 的空成功，调用方无法区分「能力没接」和「该问题 SLA 正常且未超时」，现改为显式不可用；前端 `ProblemSLACard` 随之删除（它本就不可从任何页面到达），`Problem` 类型里后端从不返回的 `slaStatus`/`responseDeadline`/`resolutionDeadline` 字段一并移除。
+`200` 返回 `dto.ProblemSLAResponse`：`{problemId, problemNumber, priority, bound, slaDefinitionId, status, responseDeadline, resolutionDeadline, firstResponseAt, resolvedAt, pausedDurationSeconds}`。
 
-问题不存在或跨租户访问仍是 `404`/`4004`（先按租户校验资源存在，再判能力），非数字 ID 是 `400`/`1001`。回归见 `itsm-backend/router/problem_sla_route_test.go`；接入真实问题 SLA 后需重开 `200` 契约并同步本节。
+- **写入路径**（与工单/事件同一 SLA 引擎、同一 `sla_states` 多态表，`aggregate_type="problem"`）：问题创建时按 `service_type="problem"` + 优先级匹配 SLA 定义并计算响应/解决截止时间（`TicketSLAService.CalculateSLADeadlineFromRequest`）；问题进入 `resolved`/`closed` 时打解决时间戳（`Store.RecordResolution`）。SLA monitor 的周期扫描与违规创建覆盖 problem（`slaviolation.ticket_type="problem"`）。
+- **`bound=false` 是「没配 SLA」的如实回答**：租户没有 problem 类型的 SLA 定义、或该优先级无匹配定义时，问题不绑定 SLA（与工单不同——工单无匹配时回落隐藏默认 60/480 分钟，问题域有意不套用，避免存量问题瞬间全部违规）。`bound=false` 时 `status="unbound"`；调用方必须把 `bound=false` 与 `status="active"`（已绑定且未超时）区分开。其余 status 取值：`active / warning / breached / paused / met`。
+- 历史注记：本端点曾返回 `200` + `{slaStatus:"none", ...}` 空成功，后改显式 `503/5003` unready（调用方无法区分「能力没接」和「SLA 正常」），2026-10-21 随 SLA 引擎接入重开 `200` 真实契约。
+- 问题不存在或跨租户访问 `404`/`4004`，非数字 ID `400`/`1001`。回归见 `itsm-backend/router/problem_sla_route_test.go`（503 时代契约）与 `itsm-backend/handlers/problem/` 契约测试（200 契约）。
+
+### 问题评论
+
+```http
+GET /problems/{id}/comments?page=1&size=20
+POST /problems/{id}/comments
+Authorization: Bearer <accessToken>
+```
+
+- `GET` `200` 返回 `{items, total, page, size}`，`items` 为 `dto.ProblemCommentResponse`（`{id, problemId, userId, userName, content, isInternal, mentions, attachments, createdAt, updatedAt}`），时间正序；`userName` 为服务端投影的显示名（与工单姓名单一投影口径一致，缺失时前端回退 `用户 #id`）。
+- `POST` 请求体 `{content(必填,1-5000), isInternal?, mentions?, attachments?}`，`200` 返回新建评论（含投影后的 `userName`）。`isInternal` 区分「处理纪要」（团队内部）与「可对报障人可见的进展说明」，与工单评论同一语义。
+- **跨租户隔离口径**：评论表自带 `tenant_id`，但 `problem_id` 是跨租户可猜的外键——写入/读取前一律校验问题归属，别家租户的 `problem_id` 统一 `404`/`4004`，不暴露 ID 可枚举信号。
+- 评论存储为独立表 `problem_comments`（迁移 `20261021_create_problem_comments.sql`），`problem_id` 外键 + 级联删除。历史注记：本端点曾恒定返回 `503/5003` unready（评论无独立存储），2026-10-21 转为真实契约。
+- 无 update/delete 端点（与 incident 评论同一取舍：评论为过程记录，不做编辑审计面）。
 
 ## 变更管理接口
 

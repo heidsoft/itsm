@@ -5,8 +5,11 @@ import { App, Button, Card, Tabs } from 'antd';
 import { ArrowLeft, Link2, Clock as HistoryIcon } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import ProblemDetail from '@/components/problem/ProblemDetail';
+import ProblemSLACard from '@/components/problem/ProblemSLACard';
 import ProblemAssociationsTab from '@/components/problem/ProblemAssociationsTab';
-import { HistoryTimeline, fetchAuditLogHistory } from '@/components/business/detail-tabs';
+import { HistoryTimeline, fetchAuditLogHistory, CommentPanel } from '@/components/business/detail-tabs';
+import { problemCommentAdapter } from '@/components/business/detail-tabs/adapters/problem-comment-adapter';
+import { MessageSquare } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useI18n } from '@/lib/i18n/useI18n';
 
@@ -34,6 +37,9 @@ export default function ProblemDetailPage() {
         </div>
         <ProblemDetail id={id} />
 
+        {/* SLA 卡片：bound=false 如实显示「未绑定」，不伪装成正常 */}
+        {Number.isFinite(numericId) && numericId > 0 && <ProblemSLACard problemId={numericId} />}
+
         {/* 追加：关联 + 历史 Tabs */}
         {Number.isFinite(numericId) && numericId > 0 && (
           <Card className="mt-4 rounded-lg shadow-sm border border-gray-200">
@@ -49,6 +55,23 @@ export default function ProblemDetailPage() {
                     </span>
                   ),
                   children: <ProblemAssociationsTab problemId={numericId} />,
+                },
+                {
+                  key: 'comments',
+                  label: (
+                    <span>
+                      <MessageSquare size={14} className="inline mr-1" />
+                      评论
+                    </span>
+                  ),
+                  children: (
+                    <CommentPanel
+                      targetType="problem"
+                      targetId={numericId}
+                      adapter={problemCommentAdapter}
+                      formatDateTime={formatDateTime}
+                    />
+                  ),
                 },
                 {
                   key: 'history',

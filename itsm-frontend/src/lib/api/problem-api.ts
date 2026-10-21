@@ -174,6 +174,68 @@ export interface ProblemRemoveAssociationRequest {
   relatedId: number;
 }
 
+// ==================== 问题评论（2026-10-21 GA 落地） ====================
+
+/**
+ * POST /api/v1/problems/:id/comments 请求体，镜像 `dto.CreateProblemCommentRequest`。
+ * isInternal 区分「处理纪要」（团队内部）与「可对报障人可见的进展说明」。
+ */
+export interface CreateProblemCommentRequest {
+  content: string;
+  isInternal?: boolean;
+  mentions?: number[];
+  attachments?: number[];
+}
+
+/**
+ * 问题评论条目，镜像 `dto.ProblemCommentResponse`。
+ * userName 为服务端投影的显示名（可选：投影缺失时前端回退 `用户 #id`）。
+ */
+export interface ProblemComment {
+  id: number;
+  problemId: number;
+  userId: number;
+  userName?: string;
+  content: string;
+  isInternal: boolean;
+  mentions?: number[];
+  attachments?: number[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /api/v1/problems/:id/comments 信封，键名与工单评论列表一致。 */
+export interface ListProblemCommentsResponse {
+  items: ProblemComment[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+// ==================== 问题 SLA（2026-10-21 GA 落地） ====================
+
+/**
+ * GET /api/v1/problems/:id/sla 响应，镜像 `dto.ProblemSLAResponse`。
+ *
+ * bound=false 表示该问题没有绑定 SLA 定义（租户未配置 problem 类型定义或
+ * 优先级无匹配）——必须与 status='active'（已绑定且未超时）区分开，
+ * 不能把「没配 SLA」渲染成「SLA 正常」。
+ */
+export interface ProblemSLA {
+  problemId: number;
+  problemNumber?: string;
+  priority: string;
+  bound: boolean;
+  slaDefinitionId?: number;
+  /** unbound / active / warning / breached / paused / met */
+  status: string;
+  responseDeadline?: string;
+  resolutionDeadline?: string;
+  firstResponseAt?: string;
+  resolvedAt?: string;
+  pausedDurationSeconds?: number;
+}
+
 export class ProblemApi {
   /**
    * 获取问题列表
@@ -249,6 +311,43 @@ export class ProblemApi {
    */
   static async closeProblem(id: number, resolution: string): Promise<Problem> {
     return httpClient.post<Problem>(`/api/v1/problems/${id}/close`, { resolution });
+  }
+
+  // ==================== 评论（2026-10-21 GA 落地） ====================
+
+  /**
+   * 获取问题评论列表（时间正序，分页）
+   * 后端: GET /api/v1/problems/:id/comments
+   */
+  static async getProblemComments(
+    problemId: number,
+    params?: { page?: number; size?: number }
+  ): Promise<ListProblemCommentsResponse> {
+    return httpClient.get<ListProblemCommentsResponse>(
+      `/api/v1/problems/${problemId}/comments`,
+      params
+    );
+  }
+
+  /**
+   * 添加问题评论
+   * 后端: POST /api/v1/problems/:id/comments
+   */
+  static async addProblemComment(
+    problemId: number,
+    req: CreateProblemCommentRequest
+  ): Promise<ProblemComment> {
+    return httpClient.post<ProblemComment>(`/api/v1/problems/${problemId}/comments`, req);
+  }
+
+  // ==================== SLA（2026-10-21 GA 落地） ====================
+
+  /**
+   * 获取问题 SLA 状态
+   * 后端: GET /api/v1/problems/:id/sla（bound=false 表示未绑定，不是「SLA 正常」）
+   */
+  static async getProblemSLA(problemId: number): Promise<ProblemSLA> {
+    return httpClient.get<ProblemSLA>(`/api/v1/problems/${problemId}/sla`);
   }
 
   // ==================== 趋势分析 ====================

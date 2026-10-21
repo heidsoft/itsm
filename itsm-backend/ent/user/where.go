@@ -975,6 +975,29 @@ func HasTicketCommentsWith(preds ...predicate.TicketComment) predicate.User {
 	})
 }
 
+// HasProblemComments applies the HasEdge predicate on the "problem_comments" edge.
+func HasProblemComments() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ProblemCommentsTable, ProblemCommentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasProblemCommentsWith applies the HasEdge predicate on the "problem_comments" edge with a given conditions (other predicates).
+func HasProblemCommentsWith(preds ...predicate.ProblemComment) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newProblemCommentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasTicketAttachments applies the HasEdge predicate on the "ticket_attachments" edge.
 func HasTicketAttachments() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

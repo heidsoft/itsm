@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -11,6 +12,7 @@ import (
 	"itsm-backend/ent/incident"
 	entpredicate "itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
@@ -554,4 +556,137 @@ func (r *EntRepository) LoadUserNames(ctx context.Context, tenantID int, ids []i
 		}
 	}
 	return out, nil
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 评论（2026-10-21 GA 阻断项落地）
+//
+// 隔离口径：评论表自带 tenant_id，但 problem_id 是跨租户可猜的外键——
+// 写入/读取前一律用 JOIN problems 校验问题归属，防止别家租户的 problem_id
+// 被用来写评论或探测评论存在性（跨租户统一表现为 not-found，不暴露 ID 可枚举信号）。
+// ─────────────────────────────────────────────────────────────────────────────
+
+// problemVisible 校验问题存在、未删除且属于该租户。
+func (r *EntRepository) problemVisible(ctx context.Context, tenantID, problemID int) (bool, error) {
+	if problemID <= 0 {
+		return false, nil
+	}
+	return r.client.Problem.Query().
+		Where(problem.ID(problemID), problem.TenantID(tenantID), problem.DeletedAtIsNil()).
+		Exist(ctx)
+}
+
+func (r *EntRepository) commentToDomain(e *ent.ProblemComment) *ProblemComment {
+	if e == nil {
+		return nil
+	}
+	c := &ProblemComment{
+		ID:         e.ID,
+		ProblemID:  e.ProblemID,
+		UserID:     e.UserID,
+		Content:    e.Content,
+		IsInternal: e.IsInternal,
+		TenantID:   e.TenantID,
+		CreatedAt:  e.CreatedAt,
+		UpdatedAt:  e.UpdatedAt,
+	}
+	if len(e.Mentions) > 0 {
+		c.Mentions = append([]int(nil), e.Mentions...)
+	}
+	if len(e.Attachments) > 0 {
+		c.Attachments = append([]int(nil), e.Attachments...)
+	}
+	return c
+}
+
+func (r *EntRepository) CreateComment(ctx context.Context, c *ProblemComment) (*ProblemComment, error) {
+	if strings.TrimSpace(c.Content) == "" {
+		return nil, fmt.Errorf("comment content is required")
+	}
+	visible, err := r.problemVisible(ctx, c.TenantID, c.ProblemID)
+	if err != nil {
+		return nil, err
+	}
+	if !visible {
+		// 跨租户/不存在/已删除统一 not-found：不暴露问题 ID 可枚举信号。
+		return nil, ErrProblemNotVisible
+	}
+
+	create := r.client.ProblemComment.Create().
+		SetProblemID(c.ProblemID).
+		SetUserID(c.UserID).
+		SetContent(strings.TrimSpace(c.Content)).
+		SetIsInternal(c.IsInternal).
+		SetTenantID(c.TenantID)
+	if len(c.Mentions) > 0 {
+		create.SetMentions(c.Mentions)
+	}
+	if len(c.Attachments) > 0 {
+		create.SetAttachments(c.Attachments)
+	}
+	saved, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := r.commentToDomain(saved)
+	// 创建响应也投影显示名：前端拿到即可直接渲染，不必再查通讯录。
+	// 投影失败不阻断创建（响应缺 userName 时前端回退 `用户 #id`）。
+	if names, nerr := r.LoadUserNames(ctx, c.TenantID, []int{c.UserID}); nerr == nil {
+		if name, ok := names[c.UserID]; ok {
+			out.UserName = name
+		}
+	}
+	return out, nil
+}
+
+func (r *EntRepository) ListComments(ctx context.Context, tenantID, problemID int, page, size int) ([]*ProblemComment, int, error) {
+	visible, err := r.problemVisible(ctx, tenantID, problemID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if !visible {
+		return nil, 0, ErrProblemNotVisible
+	}
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 || size > 100 {
+		size = 20
+	}
+
+	q := r.client.ProblemComment.Query().
+		Where(problemcomment.TenantID(tenantID), problemcomment.ProblemID(problemID))
+
+	total, err := q.Clone().Count(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+	if total == 0 {
+		return []*ProblemComment{}, 0, nil
+	}
+
+	rows, err := q.
+		Order(ent.Asc(problemcomment.FieldCreatedAt), ent.Asc(problemcomment.FieldID)).
+		Offset((page - 1) * size).
+		Limit(size).
+		All(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	out := make([]*ProblemComment, 0, len(rows))
+	ids := make([]int, 0, len(rows))
+	for _, e := range rows {
+		out = append(out, r.commentToDomain(e))
+		ids = append(ids, e.UserID)
+	}
+	// 批量投影评论人显示名：查询失败不阻断列表（前端回退 `用户 #id`）。
+	if names, nerr := r.LoadUserNames(ctx, tenantID, ids); nerr == nil {
+		for _, c := range out {
+			if name, ok := names[c.UserID]; ok {
+				c.UserName = name
+			}
+		}
+	}
+	return out, total, nil
 }

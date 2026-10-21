@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/ticket"
 	"time"
 
@@ -296,6 +297,21 @@ func (_c *ProblemCreate) AddChanges(v ...*Change) *ProblemCreate {
 	return _c.AddChangeIDs(ids...)
 }
 
+// AddCommentIDs adds the "comments" edge to the ProblemComment entity by IDs.
+func (_c *ProblemCreate) AddCommentIDs(ids ...int) *ProblemCreate {
+	_c.mutation.AddCommentIDs(ids...)
+	return _c
+}
+
+// AddComments adds the "comments" edges to the ProblemComment entity.
+func (_c *ProblemCreate) AddComments(v ...*ProblemComment) *ProblemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCommentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_c *ProblemCreate) Mutation() *ProblemMutation {
 	return _c.mutation
@@ -531,6 +547,22 @@ func (_c *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CommentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.CommentsTable,
+			Columns: []string{problem.CommentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(problemcomment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

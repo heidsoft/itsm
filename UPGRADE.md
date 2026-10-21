@@ -1999,6 +1999,42 @@ cd itsm-frontend && npx jest --coverage=false --runInBand TicketDetailUserNames
 已知遗留：MSP 客户工单列表接口尚未接入同一投影，前端已如实显示 `用户 #id`（见 CHANGELOG「工单列表/详情
 把已派工单显示成未分配」条目的遗留说明）。
 
+### 1.54 问题 SLA 与评论从 503 unready 转真实契约（2026-10-21，行为变更：503→200 + 新表）
+
+`GET /api/v1/problems/:id/sla` 与 `GET/POST /api/v1/problems/:id/comments` 此前恒定返回 `503/5003`
+（unready），这是能力契约明写的「唯一阻断 GA 的项」。本次接入真实实现：
+
+**SLA**
+
+- 问题创建即按 `service_type="problem"` + 优先级匹配 SLA 定义，写入 `sla_states`
+  （`aggregate_type="problem"`，与工单/事件同一引擎同一多态表）；问题进入 `resolved`/`closed`
+  时打解决时间戳；SLA monitor 周期扫描与违规创建覆盖 problem。
+- **`bound=false` 契约**：租户无 problem 类型定义或优先级无匹配时问题不绑定 SLA，
+  响应 `{bound:false, status:"unbound"}`。与工单不同——工单无匹配时回落隐藏默认 60/480 分钟，
+  问题域有意不套用，避免升级后存量问题瞬间全部违规。调用方必须把 `bound=false` 与
+  `status="active"` 区分开。
+- `Store.RecordResolution` 语义修正：`resolved_at` 已存在的记录（迟到解决）不再被改写为 `met`，
+  违规事实不因迟到解决被抹除。
+
+**评论**
+
+- 新表 `problem_comments`（迁移 `20261021_create_problem_comments.sql`），`GET` 分页时间正序、
+  `POST` 建评（`isInternal`/`mentions`/`attachments`）。无 update/delete（与 incident 评论同一取舍）。
+- 跨租户 `problem_id` 统一 `404`/`4004`，不暴露 ID 可枚举信号。
+- `userName` 服务端投影（与工单同一口径）。
+
+**升级影响**
+
+- 升级前集成方若按 503 契约做了显式降级，现在会收到 `200`——请改按 `bound`/`status` 字段判断。
+- 需要数据库迁移：`20261021_create_problem_comments.sql`（Ent 自动迁移同样会建表）。
+- 想让问题绑定 SLA 的租户，需在 SLA 定义中配置 `service_type="problem"` 的定义并按优先级匹配。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/problem/ ./service/sla/
+```
+
 
 ## 2. 环境变量变更
 

@@ -672,6 +672,11 @@ func (s *TicketSLAService) CalculateSLADeadlineFromRequest(ctx context.Context, 
 		serviceType = "service_request"
 	case "change":
 		serviceType = "change"
+	case "problem":
+		// 2026-10-21：问题域接入 SLA 引擎（GA 阻断项落地）。
+		// 此前 problem 落入 default 按 incident 口径查定义，租户为问题单
+		// 单独配的响应/解决时限永远匹配不上。
+		serviceType = "problem"
 	default:
 		// 默认为incident类型
 		serviceType = "incident"

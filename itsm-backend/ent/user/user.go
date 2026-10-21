@@ -57,6 +57,8 @@ const (
 	EdgeAssignedTickets = "assigned_tickets"
 	// EdgeTicketComments holds the string denoting the ticket_comments edge name in mutations.
 	EdgeTicketComments = "ticket_comments"
+	// EdgeProblemComments holds the string denoting the problem_comments edge name in mutations.
+	EdgeProblemComments = "problem_comments"
 	// EdgeTicketAttachments holds the string denoting the ticket_attachments edge name in mutations.
 	EdgeTicketAttachments = "ticket_attachments"
 	// EdgeTicketNotifications holds the string denoting the ticket_notifications edge name in mutations.
@@ -118,6 +120,13 @@ const (
 	TicketCommentsInverseTable = "ticket_comments"
 	// TicketCommentsColumn is the table column denoting the ticket_comments relation/edge.
 	TicketCommentsColumn = "user_id"
+	// ProblemCommentsTable is the table that holds the problem_comments relation/edge.
+	ProblemCommentsTable = "problem_comments"
+	// ProblemCommentsInverseTable is the table name for the ProblemComment entity.
+	// It exists in this package in order to avoid circular dependency with the "problemcomment" package.
+	ProblemCommentsInverseTable = "problem_comments"
+	// ProblemCommentsColumn is the table column denoting the problem_comments relation/edge.
+	ProblemCommentsColumn = "user_id"
 	// TicketAttachmentsTable is the table that holds the ticket_attachments relation/edge.
 	TicketAttachmentsTable = "ticket_attachments"
 	// TicketAttachmentsInverseTable is the table name for the TicketAttachment entity.
@@ -479,6 +488,20 @@ func ByTicketComments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByProblemCommentsCount orders the results by problem_comments count.
+func ByProblemCommentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newProblemCommentsStep(), opts...)
+	}
+}
+
+// ByProblemComments orders the results by problem_comments terms.
+func ByProblemComments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newProblemCommentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByTicketAttachmentsCount orders the results by ticket_attachments count.
 func ByTicketAttachmentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -679,6 +702,13 @@ func newTicketCommentsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TicketCommentsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, TicketCommentsTable, TicketCommentsColumn),
+	)
+}
+func newProblemCommentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ProblemCommentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ProblemCommentsTable, ProblemCommentsColumn),
 	)
 }
 func newTicketAttachmentsStep() *sqlgraph.Step {

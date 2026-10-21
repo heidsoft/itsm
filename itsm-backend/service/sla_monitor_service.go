@@ -11,6 +11,7 @@ import (
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/incident"
+	"itsm-backend/ent/problem"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slastate"
 	"itsm-backend/ent/slaviolation"
@@ -171,6 +172,12 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 		stats.TotalChecked += incidentStats.TotalChecked
 		stats.NewViolations += incidentStats.NewViolations
 		stats.ExistingViolations += incidentStats.ExistingViolations
+		// 问题域同样要走一遍（2026-10-21）：没有问题绑 SLA 时提前返回，
+		// 否则「只配了 problem SLA 定义」的租户永远等不到违规扫描。
+		problemStats := s.checkProblemSLAViolations(ctx, tenantID, now, slaDefMap)
+		stats.TotalChecked += problemStats.TotalChecked
+		stats.NewViolations += problemStats.NewViolations
+		stats.ExistingViolations += problemStats.ExistingViolations
 		s.logger.Infow("SLA violation check completed (no SLA-bound tickets)", "tenant_id", tenantID)
 		return stats, nil
 	}
@@ -287,6 +294,12 @@ func (s *SLAMonitorService) CheckSLAViolations(ctx context.Context, tenantID int
 	stats.TotalChecked += incidentStats.TotalChecked
 	stats.NewViolations += incidentStats.NewViolations
 	stats.ExistingViolations += incidentStats.ExistingViolations
+
+	// Problem SLA 违规检查（2026-10-21 问题域 GA 阻断项落地）
+	problemStats := s.checkProblemSLAViolations(ctx, tenantID, now, slaDefMap)
+	stats.TotalChecked += problemStats.TotalChecked
+	stats.NewViolations += problemStats.NewViolations
+	stats.ExistingViolations += problemStats.ExistingViolations
 
 	s.logger.Infow("SLA violation check completed", "tenant_id", tenantID,
 		"total_checked", stats.TotalChecked,
@@ -493,6 +506,218 @@ func (s *SLAMonitorService) createIncidentViolation(ctx context.Context, inc *en
 	}
 
 	s.logger.Infow("Incident SLA violation created", "incident_id", inc.ID,
+		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
+	return true, nil
+}
+
+// checkProblemSLAViolations 检查所有活跃 Problem 的 SLA 违规情况
+// （2026-10-21 问题域 GA 阻断项落地：问题创建即写 sla_states，
+// aggregate_type="problem"，与 ticket/incident 同一 Store 同一多态表）。
+//
+// 结构对齐 checkIncidentSLAViolations：预加载未解决违规 → 查 SLA 绑定的问题 →
+// 批量取状态 → 逐条判定响应/解决两类违例。问题无 SLAStatus 内联字段
+// （那是工单/事件的遗留列），暂停语义暂不适用于问题域。
+func (s *SLAMonitorService) checkProblemSLAViolations(ctx context.Context, tenantID int, now time.Time, slaDefMap map[int]string) *SLACheckStats {
+	stats := &SLACheckStats{}
+
+	// 预加载该租户 Problem 未解决的 SLA 违规。
+	// sla_violations 用 ticket_id + ticket_type 多态定位聚合根，问题记
+	// ticket_type="problem"——与工单/事件同一张表，靠类型列区分。
+	existingViolations, err := s.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantIDEQ(tenantID),
+			slaviolation.IsResolvedEQ(false),
+			slaviolation.TicketTypeEQ("problem"),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to query existing problem violations", "error", err)
+		return stats
+	}
+
+	existingViolationMap := make(map[int]map[string]bool)
+	for _, v := range existingViolations {
+		if existingViolationMap[v.TicketID] == nil {
+			existingViolationMap[v.TicketID] = make(map[string]bool)
+		}
+		existingViolationMap[v.TicketID][v.ViolationType] = true
+	}
+
+	slaBoundProblemIDs, err := s.slaStore.FindWithSLABound(ctx, tenantID, "problem")
+	if err != nil {
+		s.logger.Errorw("Failed to query SLA-bound problem IDs", "error", err)
+		return stats
+	}
+	if len(slaBoundProblemIDs) == 0 {
+		return stats
+	}
+
+	// 未解决（resolved_at 为空）且未删除的问题才参与计时；
+	// closed 的问题同样排除——关闭即视为处理完毕，不再产生新违例。
+	problems, err := s.client.Problem.Query().
+		Where(
+			problem.TenantIDEQ(tenantID),
+			problem.IDIn(slaBoundProblemIDs...),
+			problem.ResolvedAtIsNil(),
+			problem.DeletedAtIsNil(),
+		).
+		All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to query problems for SLA check", "error", err)
+		return stats
+	}
+
+	stats.TotalChecked = len(problems)
+
+	problemIDs := make([]int, len(problems))
+	for i, pr := range problems {
+		problemIDs[i] = pr.ID
+	}
+	slaStateMap, err := s.slaStore.BatchGetStates(ctx, tenantID, "problem", problemIDs)
+	if err != nil {
+		s.logger.Errorw("Failed to batch load SLA states for problems", "error", err)
+		slaStateMap = map[int]*ent.SLAState{}
+	}
+
+	for _, pr := range problems {
+		slState := slaStateMap[pr.ID]
+		if slState == nil {
+			continue
+		}
+
+		// 响应时间 SLA：首次响应未发生且已过响应截止
+		if slState.FirstResponseAt.IsZero() && !slState.ResponseDeadline.IsZero() && now.After(slState.ResponseDeadline) {
+			existingMap := existingViolationMap[pr.ID]
+			if existingMap == nil || !existingMap["response_time"] {
+				if created, cErr := s.createProblemViolation(ctx, pr, "response_time", slState.ResponseDeadline, slState.SLADefinitionID, slaDefMap); cErr != nil {
+					s.logger.Errorw("Failed to create problem response violation", "problem_id", pr.ID, "error", cErr)
+				} else if created {
+					stats.NewViolations++
+				} else {
+					stats.ExistingViolations++
+				}
+			} else {
+				stats.ExistingViolations++
+			}
+		}
+
+		// 解决时间 SLA：已过解决截止（问题尚未 resolved——上面已过滤）
+		if !slState.ResolutionDeadline.IsZero() && now.After(slState.ResolutionDeadline) {
+			existingMap := existingViolationMap[pr.ID]
+			if existingMap == nil || !existingMap["resolution_time"] {
+				if created, cErr := s.createProblemViolation(ctx, pr, "resolution_time", slState.ResolutionDeadline, slState.SLADefinitionID, slaDefMap); cErr != nil {
+					s.logger.Errorw("Failed to create problem resolution violation", "problem_id", pr.ID, "error", cErr)
+				} else if created {
+					stats.NewViolations++
+				} else {
+					stats.ExistingViolations++
+				}
+			} else {
+				stats.ExistingViolations++
+			}
+		}
+	}
+
+	return stats
+}
+
+// createProblemViolation 为 Problem 创建 SLA 违规记录。
+// 幂等与竞态口径同 createIncidentViolation：事务内再查一次 +
+// 部分唯一索引 (ticket_id, violation_type) WHERE is_resolved = false。
+func (s *SLAMonitorService) createProblemViolation(ctx context.Context, pr *ent.Problem, violationType string, deadline time.Time, slaDefinitionID int, slaDefMap map[int]string) (bool, error) {
+	exceededMinutes := time.Since(deadline).Minutes()
+	if exceededMinutes < 0 {
+		exceededMinutes = 0
+	}
+
+	number := pr.ProblemNumber
+	if number == "" {
+		number = fmt.Sprintf("#%d", pr.ID)
+	}
+	description := fmt.Sprintf("问题 %s 违反SLA (%s): 超过截止时间 %.1f 分钟",
+		number, violationType, exceededMinutes)
+
+	severity := "low"
+	if exceededMinutes > 60 {
+		severity = "medium"
+	}
+	if exceededMinutes > 240 {
+		severity = "high"
+	}
+	if exceededMinutes > 480 {
+		severity = "critical"
+	}
+
+	now := time.Now()
+	if slaDefinitionID == 0 {
+		return false, nil
+	}
+
+	slaName := slaDefMap[slaDefinitionID]
+	if slaName == "" {
+		slaName = "Default SLA"
+	}
+
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return false, fmt.Errorf("begin problem SLA violation tx: %w", err)
+	}
+
+	// 幂等检查：同一问题同一类型未解决的违规只记一次
+	exists, err := tx.SLAViolation.Query().
+		Where(
+			slaviolation.TicketIDEQ(pr.ID),
+			slaviolation.TenantIDEQ(pr.TenantID),
+			slaviolation.ViolationTypeEQ(violationType),
+			slaviolation.IsResolvedEQ(false),
+			slaviolation.TicketTypeEQ("problem"),
+		).
+		Exist(ctx)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		return false, fmt.Errorf("check existing problem violation: %w", err)
+	}
+	if exists {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		return false, nil
+	}
+
+	_, err = tx.SLAViolation.Create().
+		SetCreatedBy(0).
+		SetTicketID(pr.ID).
+		SetTicketType("problem").
+		SetSLADefinitionID(slaDefinitionID).
+		SetSLAName(slaName).
+		SetViolationType(violationType).
+		// 口径锚定 deadline（权威违约时刻），与工单/事件一致。
+		SetViolationTime(deadline).
+		SetViolationOccurredAt(deadline).
+		SetDescription(description).
+		SetSeverity(severity).
+		SetIsResolved(false).
+		SetTenantID(pr.TenantID).
+		SetCreatedAt(now).
+		SetUpdatedAt(now).
+		Save(ctx)
+	if err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			s.logger.Errorw("failed to rollback tx", "error", rbErr)
+		}
+		if ent.IsConstraintError(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("create problem SLA violation: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, fmt.Errorf("commit problem SLA violation: %w", err)
+	}
+
+	s.logger.Infow("Problem SLA violation created", "problem_id", pr.ID,
 		"violation_type", violationType, "exceeded_minutes", exceededMinutes)
 	return true, nil
 }

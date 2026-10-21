@@ -82,6 +82,7 @@ import (
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -235,6 +236,7 @@ const (
 	TypePermission                  = "Permission"
 	TypePermissionDefinition        = "PermissionDefinition"
 	TypeProblem                     = "Problem"
+	TypeProblemComment              = "ProblemComment"
 	TypeProcessApprovalDecision     = "ProcessApprovalDecision"
 	TypeProcessAuditLog             = "ProcessAuditLog"
 	TypeProcessBinding              = "ProcessBinding"
@@ -99745,6 +99747,9 @@ type ProblemMutation struct {
 	changes          map[int]struct{}
 	removedchanges   map[int]struct{}
 	clearedchanges   bool
+	comments         map[int]struct{}
+	removedcomments  map[int]struct{}
+	clearedcomments  bool
 	done             bool
 	oldValue         func(context.Context) (*Problem, error)
 	predicates       []predicate.Problem
@@ -100862,6 +100867,60 @@ func (m *ProblemMutation) ResetChanges() {
 	m.removedchanges = nil
 }
 
+// AddCommentIDs adds the "comments" edge to the ProblemComment entity by ids.
+func (m *ProblemMutation) AddCommentIDs(ids ...int) {
+	if m.comments == nil {
+		m.comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.comments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearComments clears the "comments" edge to the ProblemComment entity.
+func (m *ProblemMutation) ClearComments() {
+	m.clearedcomments = true
+}
+
+// CommentsCleared reports if the "comments" edge to the ProblemComment entity was cleared.
+func (m *ProblemMutation) CommentsCleared() bool {
+	return m.clearedcomments
+}
+
+// RemoveCommentIDs removes the "comments" edge to the ProblemComment entity by IDs.
+func (m *ProblemMutation) RemoveCommentIDs(ids ...int) {
+	if m.removedcomments == nil {
+		m.removedcomments = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.comments, ids[i])
+		m.removedcomments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedComments returns the removed IDs of the "comments" edge to the ProblemComment entity.
+func (m *ProblemMutation) RemovedCommentsIDs() (ids []int) {
+	for id := range m.removedcomments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CommentsIDs returns the "comments" edge IDs in the mutation.
+func (m *ProblemMutation) CommentsIDs() (ids []int) {
+	for id := range m.comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetComments resets all changes to the "comments" edge.
+func (m *ProblemMutation) ResetComments() {
+	m.comments = nil
+	m.clearedcomments = false
+	m.removedcomments = nil
+}
+
 // Where appends a list predicates to the ProblemMutation builder.
 func (m *ProblemMutation) Where(ps ...predicate.Problem) {
 	m.predicates = append(m.predicates, ps...)
@@ -101392,7 +101451,7 @@ func (m *ProblemMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProblemMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.tickets != nil {
 		edges = append(edges, problem.EdgeTickets)
 	}
@@ -101401,6 +101460,9 @@ func (m *ProblemMutation) AddedEdges() []string {
 	}
 	if m.changes != nil {
 		edges = append(edges, problem.EdgeChanges)
+	}
+	if m.comments != nil {
+		edges = append(edges, problem.EdgeComments)
 	}
 	return edges
 }
@@ -101427,13 +101489,19 @@ func (m *ProblemMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case problem.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.comments))
+		for id := range m.comments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProblemMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedtickets != nil {
 		edges = append(edges, problem.EdgeTickets)
 	}
@@ -101442,6 +101510,9 @@ func (m *ProblemMutation) RemovedEdges() []string {
 	}
 	if m.removedchanges != nil {
 		edges = append(edges, problem.EdgeChanges)
+	}
+	if m.removedcomments != nil {
+		edges = append(edges, problem.EdgeComments)
 	}
 	return edges
 }
@@ -101468,13 +101539,19 @@ func (m *ProblemMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case problem.EdgeComments:
+		ids := make([]ent.Value, 0, len(m.removedcomments))
+		for id := range m.removedcomments {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProblemMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedtickets {
 		edges = append(edges, problem.EdgeTickets)
 	}
@@ -101483,6 +101560,9 @@ func (m *ProblemMutation) ClearedEdges() []string {
 	}
 	if m.clearedchanges {
 		edges = append(edges, problem.EdgeChanges)
+	}
+	if m.clearedcomments {
+		edges = append(edges, problem.EdgeComments)
 	}
 	return edges
 }
@@ -101497,6 +101577,8 @@ func (m *ProblemMutation) EdgeCleared(name string) bool {
 		return m.clearedincidents
 	case problem.EdgeChanges:
 		return m.clearedchanges
+	case problem.EdgeComments:
+		return m.clearedcomments
 	}
 	return false
 }
@@ -101522,8 +101604,980 @@ func (m *ProblemMutation) ResetEdge(name string) error {
 	case problem.EdgeChanges:
 		m.ResetChanges()
 		return nil
+	case problem.EdgeComments:
+		m.ResetComments()
+		return nil
 	}
 	return fmt.Errorf("unknown Problem edge %s", name)
+}
+
+// ProblemCommentMutation represents an operation that mutates the ProblemComment nodes in the graph.
+type ProblemCommentMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	content           *string
+	is_internal       *bool
+	mentions          *[]int
+	appendmentions    []int
+	attachments       *[]int
+	appendattachments []int
+	tenant_id         *int
+	addtenant_id      *int
+	created_at        *time.Time
+	updated_at        *time.Time
+	clearedFields     map[string]struct{}
+	problem           *int
+	clearedproblem    bool
+	user              *int
+	cleareduser       bool
+	done              bool
+	oldValue          func(context.Context) (*ProblemComment, error)
+	predicates        []predicate.ProblemComment
+}
+
+var _ ent.Mutation = (*ProblemCommentMutation)(nil)
+
+// problemcommentOption allows management of the mutation configuration using functional options.
+type problemcommentOption func(*ProblemCommentMutation)
+
+// newProblemCommentMutation creates new mutation for the ProblemComment entity.
+func newProblemCommentMutation(c config, op Op, opts ...problemcommentOption) *ProblemCommentMutation {
+	m := &ProblemCommentMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProblemComment,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProblemCommentID sets the ID field of the mutation.
+func withProblemCommentID(id int) problemcommentOption {
+	return func(m *ProblemCommentMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProblemComment
+		)
+		m.oldValue = func(ctx context.Context) (*ProblemComment, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProblemComment.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProblemComment sets the old ProblemComment of the mutation.
+func withProblemComment(node *ProblemComment) problemcommentOption {
+	return func(m *ProblemCommentMutation) {
+		m.oldValue = func(context.Context) (*ProblemComment, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProblemCommentMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProblemCommentMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProblemCommentMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProblemCommentMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProblemComment.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetProblemID sets the "problem_id" field.
+func (m *ProblemCommentMutation) SetProblemID(i int) {
+	m.problem = &i
+}
+
+// ProblemID returns the value of the "problem_id" field in the mutation.
+func (m *ProblemCommentMutation) ProblemID() (r int, exists bool) {
+	v := m.problem
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProblemID returns the old "problem_id" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldProblemID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProblemID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProblemID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProblemID: %w", err)
+	}
+	return oldValue.ProblemID, nil
+}
+
+// ResetProblemID resets all changes to the "problem_id" field.
+func (m *ProblemCommentMutation) ResetProblemID() {
+	m.problem = nil
+}
+
+// SetUserID sets the "user_id" field.
+func (m *ProblemCommentMutation) SetUserID(i int) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *ProblemCommentMutation) UserID() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *ProblemCommentMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetContent sets the "content" field.
+func (m *ProblemCommentMutation) SetContent(s string) {
+	m.content = &s
+}
+
+// Content returns the value of the "content" field in the mutation.
+func (m *ProblemCommentMutation) Content() (r string, exists bool) {
+	v := m.content
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContent returns the old "content" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldContent(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContent is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContent requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContent: %w", err)
+	}
+	return oldValue.Content, nil
+}
+
+// ResetContent resets all changes to the "content" field.
+func (m *ProblemCommentMutation) ResetContent() {
+	m.content = nil
+}
+
+// SetIsInternal sets the "is_internal" field.
+func (m *ProblemCommentMutation) SetIsInternal(b bool) {
+	m.is_internal = &b
+}
+
+// IsInternal returns the value of the "is_internal" field in the mutation.
+func (m *ProblemCommentMutation) IsInternal() (r bool, exists bool) {
+	v := m.is_internal
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsInternal returns the old "is_internal" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldIsInternal(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIsInternal is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIsInternal requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsInternal: %w", err)
+	}
+	return oldValue.IsInternal, nil
+}
+
+// ResetIsInternal resets all changes to the "is_internal" field.
+func (m *ProblemCommentMutation) ResetIsInternal() {
+	m.is_internal = nil
+}
+
+// SetMentions sets the "mentions" field.
+func (m *ProblemCommentMutation) SetMentions(i []int) {
+	m.mentions = &i
+	m.appendmentions = nil
+}
+
+// Mentions returns the value of the "mentions" field in the mutation.
+func (m *ProblemCommentMutation) Mentions() (r []int, exists bool) {
+	v := m.mentions
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMentions returns the old "mentions" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldMentions(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMentions is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMentions requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMentions: %w", err)
+	}
+	return oldValue.Mentions, nil
+}
+
+// AppendMentions adds i to the "mentions" field.
+func (m *ProblemCommentMutation) AppendMentions(i []int) {
+	m.appendmentions = append(m.appendmentions, i...)
+}
+
+// AppendedMentions returns the list of values that were appended to the "mentions" field in this mutation.
+func (m *ProblemCommentMutation) AppendedMentions() ([]int, bool) {
+	if len(m.appendmentions) == 0 {
+		return nil, false
+	}
+	return m.appendmentions, true
+}
+
+// ClearMentions clears the value of the "mentions" field.
+func (m *ProblemCommentMutation) ClearMentions() {
+	m.mentions = nil
+	m.appendmentions = nil
+	m.clearedFields[problemcomment.FieldMentions] = struct{}{}
+}
+
+// MentionsCleared returns if the "mentions" field was cleared in this mutation.
+func (m *ProblemCommentMutation) MentionsCleared() bool {
+	_, ok := m.clearedFields[problemcomment.FieldMentions]
+	return ok
+}
+
+// ResetMentions resets all changes to the "mentions" field.
+func (m *ProblemCommentMutation) ResetMentions() {
+	m.mentions = nil
+	m.appendmentions = nil
+	delete(m.clearedFields, problemcomment.FieldMentions)
+}
+
+// SetAttachments sets the "attachments" field.
+func (m *ProblemCommentMutation) SetAttachments(i []int) {
+	m.attachments = &i
+	m.appendattachments = nil
+}
+
+// Attachments returns the value of the "attachments" field in the mutation.
+func (m *ProblemCommentMutation) Attachments() (r []int, exists bool) {
+	v := m.attachments
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttachments returns the old "attachments" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldAttachments(ctx context.Context) (v []int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttachments is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttachments requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttachments: %w", err)
+	}
+	return oldValue.Attachments, nil
+}
+
+// AppendAttachments adds i to the "attachments" field.
+func (m *ProblemCommentMutation) AppendAttachments(i []int) {
+	m.appendattachments = append(m.appendattachments, i...)
+}
+
+// AppendedAttachments returns the list of values that were appended to the "attachments" field in this mutation.
+func (m *ProblemCommentMutation) AppendedAttachments() ([]int, bool) {
+	if len(m.appendattachments) == 0 {
+		return nil, false
+	}
+	return m.appendattachments, true
+}
+
+// ClearAttachments clears the value of the "attachments" field.
+func (m *ProblemCommentMutation) ClearAttachments() {
+	m.attachments = nil
+	m.appendattachments = nil
+	m.clearedFields[problemcomment.FieldAttachments] = struct{}{}
+}
+
+// AttachmentsCleared returns if the "attachments" field was cleared in this mutation.
+func (m *ProblemCommentMutation) AttachmentsCleared() bool {
+	_, ok := m.clearedFields[problemcomment.FieldAttachments]
+	return ok
+}
+
+// ResetAttachments resets all changes to the "attachments" field.
+func (m *ProblemCommentMutation) ResetAttachments() {
+	m.attachments = nil
+	m.appendattachments = nil
+	delete(m.clearedFields, problemcomment.FieldAttachments)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ProblemCommentMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ProblemCommentMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ProblemCommentMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ProblemCommentMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ProblemCommentMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProblemCommentMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProblemCommentMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProblemCommentMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *ProblemCommentMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *ProblemCommentMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the ProblemComment entity.
+// If the ProblemComment object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemCommentMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *ProblemCommentMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// ClearProblem clears the "problem" edge to the Problem entity.
+func (m *ProblemCommentMutation) ClearProblem() {
+	m.clearedproblem = true
+	m.clearedFields[problemcomment.FieldProblemID] = struct{}{}
+}
+
+// ProblemCleared reports if the "problem" edge to the Problem entity was cleared.
+func (m *ProblemCommentMutation) ProblemCleared() bool {
+	return m.clearedproblem
+}
+
+// ProblemIDs returns the "problem" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProblemID instead. It exists only for internal usage by the builders.
+func (m *ProblemCommentMutation) ProblemIDs() (ids []int) {
+	if id := m.problem; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProblem resets all changes to the "problem" edge.
+func (m *ProblemCommentMutation) ResetProblem() {
+	m.problem = nil
+	m.clearedproblem = false
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *ProblemCommentMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[problemcomment.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *ProblemCommentMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *ProblemCommentMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *ProblemCommentMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the ProblemCommentMutation builder.
+func (m *ProblemCommentMutation) Where(ps ...predicate.ProblemComment) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProblemCommentMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProblemCommentMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProblemComment, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProblemCommentMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProblemCommentMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProblemComment).
+func (m *ProblemCommentMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProblemCommentMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.problem != nil {
+		fields = append(fields, problemcomment.FieldProblemID)
+	}
+	if m.user != nil {
+		fields = append(fields, problemcomment.FieldUserID)
+	}
+	if m.content != nil {
+		fields = append(fields, problemcomment.FieldContent)
+	}
+	if m.is_internal != nil {
+		fields = append(fields, problemcomment.FieldIsInternal)
+	}
+	if m.mentions != nil {
+		fields = append(fields, problemcomment.FieldMentions)
+	}
+	if m.attachments != nil {
+		fields = append(fields, problemcomment.FieldAttachments)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, problemcomment.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, problemcomment.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, problemcomment.FieldUpdatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProblemCommentMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case problemcomment.FieldProblemID:
+		return m.ProblemID()
+	case problemcomment.FieldUserID:
+		return m.UserID()
+	case problemcomment.FieldContent:
+		return m.Content()
+	case problemcomment.FieldIsInternal:
+		return m.IsInternal()
+	case problemcomment.FieldMentions:
+		return m.Mentions()
+	case problemcomment.FieldAttachments:
+		return m.Attachments()
+	case problemcomment.FieldTenantID:
+		return m.TenantID()
+	case problemcomment.FieldCreatedAt:
+		return m.CreatedAt()
+	case problemcomment.FieldUpdatedAt:
+		return m.UpdatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProblemCommentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case problemcomment.FieldProblemID:
+		return m.OldProblemID(ctx)
+	case problemcomment.FieldUserID:
+		return m.OldUserID(ctx)
+	case problemcomment.FieldContent:
+		return m.OldContent(ctx)
+	case problemcomment.FieldIsInternal:
+		return m.OldIsInternal(ctx)
+	case problemcomment.FieldMentions:
+		return m.OldMentions(ctx)
+	case problemcomment.FieldAttachments:
+		return m.OldAttachments(ctx)
+	case problemcomment.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case problemcomment.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case problemcomment.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProblemComment field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProblemCommentMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case problemcomment.FieldProblemID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProblemID(v)
+		return nil
+	case problemcomment.FieldUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case problemcomment.FieldContent:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContent(v)
+		return nil
+	case problemcomment.FieldIsInternal:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsInternal(v)
+		return nil
+	case problemcomment.FieldMentions:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMentions(v)
+		return nil
+	case problemcomment.FieldAttachments:
+		v, ok := value.([]int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttachments(v)
+		return nil
+	case problemcomment.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case problemcomment.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case problemcomment.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProblemCommentMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, problemcomment.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProblemCommentMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case problemcomment.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProblemCommentMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case problemcomment.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProblemCommentMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(problemcomment.FieldMentions) {
+		fields = append(fields, problemcomment.FieldMentions)
+	}
+	if m.FieldCleared(problemcomment.FieldAttachments) {
+		fields = append(fields, problemcomment.FieldAttachments)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProblemCommentMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProblemCommentMutation) ClearField(name string) error {
+	switch name {
+	case problemcomment.FieldMentions:
+		m.ClearMentions()
+		return nil
+	case problemcomment.FieldAttachments:
+		m.ClearAttachments()
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProblemCommentMutation) ResetField(name string) error {
+	switch name {
+	case problemcomment.FieldProblemID:
+		m.ResetProblemID()
+		return nil
+	case problemcomment.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case problemcomment.FieldContent:
+		m.ResetContent()
+		return nil
+	case problemcomment.FieldIsInternal:
+		m.ResetIsInternal()
+		return nil
+	case problemcomment.FieldMentions:
+		m.ResetMentions()
+		return nil
+	case problemcomment.FieldAttachments:
+		m.ResetAttachments()
+		return nil
+	case problemcomment.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case problemcomment.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case problemcomment.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProblemCommentMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.problem != nil {
+		edges = append(edges, problemcomment.EdgeProblem)
+	}
+	if m.user != nil {
+		edges = append(edges, problemcomment.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProblemCommentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case problemcomment.EdgeProblem:
+		if id := m.problem; id != nil {
+			return []ent.Value{*id}
+		}
+	case problemcomment.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProblemCommentMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProblemCommentMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProblemCommentMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedproblem {
+		edges = append(edges, problemcomment.EdgeProblem)
+	}
+	if m.cleareduser {
+		edges = append(edges, problemcomment.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProblemCommentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case problemcomment.EdgeProblem:
+		return m.clearedproblem
+	case problemcomment.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProblemCommentMutation) ClearEdge(name string) error {
+	switch name {
+	case problemcomment.EdgeProblem:
+		m.ClearProblem()
+		return nil
+	case problemcomment.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProblemCommentMutation) ResetEdge(name string) error {
+	switch name {
+	case problemcomment.EdgeProblem:
+		m.ResetProblem()
+		return nil
+	case problemcomment.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown ProblemComment edge %s", name)
 }
 
 // ProcessApprovalDecisionMutation represents an operation that mutates the ProcessApprovalDecision nodes in the graph.
@@ -181948,6 +183002,9 @@ type UserMutation struct {
 	ticket_comments                 map[int]struct{}
 	removedticket_comments          map[int]struct{}
 	clearedticket_comments          bool
+	problem_comments                map[int]struct{}
+	removedproblem_comments         map[int]struct{}
+	clearedproblem_comments         bool
 	ticket_attachments              map[int]struct{}
 	removedticket_attachments       map[int]struct{}
 	clearedticket_attachments       bool
@@ -182989,6 +184046,60 @@ func (m *UserMutation) ResetTicketComments() {
 	m.ticket_comments = nil
 	m.clearedticket_comments = false
 	m.removedticket_comments = nil
+}
+
+// AddProblemCommentIDs adds the "problem_comments" edge to the ProblemComment entity by ids.
+func (m *UserMutation) AddProblemCommentIDs(ids ...int) {
+	if m.problem_comments == nil {
+		m.problem_comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.problem_comments[ids[i]] = struct{}{}
+	}
+}
+
+// ClearProblemComments clears the "problem_comments" edge to the ProblemComment entity.
+func (m *UserMutation) ClearProblemComments() {
+	m.clearedproblem_comments = true
+}
+
+// ProblemCommentsCleared reports if the "problem_comments" edge to the ProblemComment entity was cleared.
+func (m *UserMutation) ProblemCommentsCleared() bool {
+	return m.clearedproblem_comments
+}
+
+// RemoveProblemCommentIDs removes the "problem_comments" edge to the ProblemComment entity by IDs.
+func (m *UserMutation) RemoveProblemCommentIDs(ids ...int) {
+	if m.removedproblem_comments == nil {
+		m.removedproblem_comments = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.problem_comments, ids[i])
+		m.removedproblem_comments[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedProblemComments returns the removed IDs of the "problem_comments" edge to the ProblemComment entity.
+func (m *UserMutation) RemovedProblemCommentsIDs() (ids []int) {
+	for id := range m.removedproblem_comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ProblemCommentsIDs returns the "problem_comments" edge IDs in the mutation.
+func (m *UserMutation) ProblemCommentsIDs() (ids []int) {
+	for id := range m.problem_comments {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetProblemComments resets all changes to the "problem_comments" edge.
+func (m *UserMutation) ResetProblemComments() {
+	m.problem_comments = nil
+	m.clearedproblem_comments = false
+	m.removedproblem_comments = nil
 }
 
 // AddTicketAttachmentIDs adds the "ticket_attachments" edge to the TicketAttachment entity by ids.
@@ -184081,7 +185192,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 17)
+	edges := make([]string, 0, 18)
 	if m.department_ref != nil {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -184096,6 +185207,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.ticket_comments != nil {
 		edges = append(edges, user.EdgeTicketComments)
+	}
+	if m.problem_comments != nil {
+		edges = append(edges, user.EdgeProblemComments)
 	}
 	if m.ticket_attachments != nil {
 		edges = append(edges, user.EdgeTicketAttachments)
@@ -184163,6 +185277,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	case user.EdgeTicketComments:
 		ids := make([]ent.Value, 0, len(m.ticket_comments))
 		for id := range m.ticket_comments {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeProblemComments:
+		ids := make([]ent.Value, 0, len(m.problem_comments))
+		for id := range m.problem_comments {
 			ids = append(ids, id)
 		}
 		return ids
@@ -184244,7 +185364,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 17)
+	edges := make([]string, 0, 18)
 	if m.removedtickets != nil {
 		edges = append(edges, user.EdgeTickets)
 	}
@@ -184253,6 +185373,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedticket_comments != nil {
 		edges = append(edges, user.EdgeTicketComments)
+	}
+	if m.removedproblem_comments != nil {
+		edges = append(edges, user.EdgeProblemComments)
 	}
 	if m.removedticket_attachments != nil {
 		edges = append(edges, user.EdgeTicketAttachments)
@@ -184312,6 +185435,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	case user.EdgeTicketComments:
 		ids := make([]ent.Value, 0, len(m.removedticket_comments))
 		for id := range m.removedticket_comments {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeProblemComments:
+		ids := make([]ent.Value, 0, len(m.removedproblem_comments))
+		for id := range m.removedproblem_comments {
 			ids = append(ids, id)
 		}
 		return ids
@@ -184393,7 +185522,7 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 17)
+	edges := make([]string, 0, 18)
 	if m.cleareddepartment_ref {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -184408,6 +185537,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedticket_comments {
 		edges = append(edges, user.EdgeTicketComments)
+	}
+	if m.clearedproblem_comments {
+		edges = append(edges, user.EdgeProblemComments)
 	}
 	if m.clearedticket_attachments {
 		edges = append(edges, user.EdgeTicketAttachments)
@@ -184462,6 +185594,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedassigned_tickets
 	case user.EdgeTicketComments:
 		return m.clearedticket_comments
+	case user.EdgeProblemComments:
+		return m.clearedproblem_comments
 	case user.EdgeTicketAttachments:
 		return m.clearedticket_attachments
 	case user.EdgeTicketNotifications:
@@ -184522,6 +185656,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeTicketComments:
 		m.ResetTicketComments()
+		return nil
+	case user.EdgeProblemComments:
+		m.ResetProblemComments()
 		return nil
 	case user.EdgeTicketAttachments:
 		m.ResetTicketAttachments()

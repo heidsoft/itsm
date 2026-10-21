@@ -10,6 +10,8 @@ import (
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/internal/datascope"
+	"itsm-backend/service"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -18,6 +20,10 @@ type Service struct {
 	repo      Repository
 	validator AssigneeValidator
 	logger    *zap.SugaredLogger
+	// slaSvc 提供 SLA 截止时间计算与 sla_states 持久化（2026-10-21 GA 阻断项落地）。
+	// 与 incident 域同一装配模式：handler 域不自己算 deadline，词汇表与存储收敛在
+	// service 层单一实现；nil 时（单测/旧组装）问题照常创建，只是不带 SLA 绑定。
+	slaSvc *service.TicketSLAService
 }
 
 // AssigneeValidator 校验受指人属于同一租户且处于在职可用状态。
@@ -39,6 +45,152 @@ func NewService(repo Repository, validator AssigneeValidator, logger *zap.Sugare
 		validator: validator,
 		logger:    logger,
 	}
+}
+
+// SetSLAService 注入 SLA 服务（截止时间计算 + sla_states 持久化）。
+// 装配缺失时问题域降级为「无 SLA 绑定」而非拒绝创建——能力缺失不得阻断主流程。
+func (s *Service) SetSLAService(slaSvc *service.TicketSLAService) {
+	s.slaSvc = slaSvc
+}
+
+// bindSLAOnCreate 问题创建后绑定 SLA：按 problem 服务类型 + 优先级匹配 SLA 定义，
+// 计算响应/解决截止时间并写入 sla_states（aggregate_type="problem"）。
+// 与工单/事件同一 Store、同一多态表，不复制第二套计时实现。
+//
+// 与工单的刻意差异：工单在无匹配定义时套用默认 SLA（60/480 分钟），问题不套用。
+// 问题域投产初期若给存量问题静默绑上隐藏默认值，下一轮 watcher 会让 8 小时前的
+// 存量问题全部违规——那是配置噪音不是治理信号。无匹配定义即不绑定，
+// 由 GET /problems/:id/sla 的 bound=false 如实回答「没配 SLA」。
+func (s *Service) bindSLAOnCreate(ctx context.Context, tenantID, problemID int, priority string) {
+	if s.slaSvc == nil {
+		return
+	}
+	slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "problem", priority)
+	if err != nil {
+		// 查询失败只是「该问题没有 SLA」，不是创建失败。
+		s.logger.Warnw("Failed to calculate problem SLA deadline, continuing without SLA binding",
+			"tenant_id", tenantID, "problem_id", problemID, "error", err)
+		return
+	}
+	if slaResult == nil || slaResult.SLADefinitionID == 0 {
+		// 无匹配的 problem 类型 SLA 定义（或走了默认兜底）：不绑定。
+		return
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return
+	}
+	if err := store.SaveDeadlines(ctx, tenantID, "problem", problemID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
+		s.logger.Warnw("Failed to save problem SLA state, continuing", "problem_id", problemID, "error", err)
+	}
+}
+
+// recordResolutionOnSLA 问题进入 resolved/closed 时在 sla_states 打解决时间戳。
+// 迟到解决不抹除违规事实（已 breached 的状态保持 breached），未违才转 met。
+func (s *Service) recordResolutionOnSLA(ctx context.Context, tenantID, problemID int, at time.Time) {
+	if s.slaSvc == nil {
+		return
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return
+	}
+	if err := store.RecordResolution(ctx, tenantID, "problem", problemID, at); err != nil {
+		s.logger.Warnw("Failed to record problem SLA resolution", "problem_id", problemID, "error", err)
+	}
+}
+
+// GetProblemSLA 读取问题 SLA 状态（GET /api/v1/problems/:id/sla 的真实实现）。
+//
+// 取代此前的显式 503 桩： Bound=false 如实回答「该问题没有绑定 SLA 定义」，
+// 与「绑定了且未超时」是两种语义，调用方不得混淆（旧桩注释里的契约理由）。
+// 状态由存储态 + 纯函数推导合成：库里只有 active/met，实时 ok/warning/breached
+// 由 sla.SLAStatus 按截止时间与当前时刻推导——该词汇表单一来源在 service/sla，
+// 此处不复制第二套判定。
+func (s *Service) GetProblemSLA(ctx context.Context, id, tenantID int) (*ProblemSLAInfo, error) {
+	p, err := s.repo.Get(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	info := &ProblemSLAInfo{
+		ProblemID:     p.ID,
+		ProblemNumber: p.ProblemNumber,
+		Priority:      p.Priority,
+		Bound:         false,
+		Status:        "unbound",
+	}
+
+	if s.slaSvc == nil {
+		return info, nil
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return info, nil
+	}
+	state, err := store.GetState(ctx, tenantID, "problem", id)
+	if err != nil || state == nil {
+		// 无 sla_state 行 = 未绑定（租户没配 problem 定义或优先级无匹配）。
+		return info, nil
+	}
+
+	info.Bound = true
+	info.SLADefinitionID = state.SLADefinitionID
+	info.Status = state.Status
+	info.PausedDurationSec = state.PausedDurationSeconds
+	if !state.ResponseDeadline.IsZero() {
+		t := state.ResponseDeadline
+		info.ResponseDeadline = &t
+	}
+	if !state.ResolutionDeadline.IsZero() {
+		t := state.ResolutionDeadline
+		info.ResolutionDeadline = &t
+	}
+	if !state.FirstResponseAt.IsZero() {
+		t := state.FirstResponseAt
+		info.FirstResponseAt = &t
+	}
+	if !state.ResolvedAt.IsZero() {
+		t := state.ResolvedAt
+		info.ResolvedAt = &t
+	}
+
+	// 暂停中的计时冻结与已解决都不做实时推导，直接信任存储态。
+	if state.Status != "paused" && state.ResolvedAt.IsZero() {
+		derived := sla.SLAStatus(time.Now(),
+			info.ResponseDeadline, info.ResolutionDeadline,
+			state.FirstResponseAt, state.ResolvedAt)
+		if derived == "breached" {
+			info.Status = "breached"
+		} else if derived == "warning" && state.Status == "active" {
+			info.Status = "warning"
+		}
+	}
+	return info, nil
+}
+
+// ── 评论（2026-10-21 GA 阻断项落地）──────────────────────────────────────────
+
+// AddComment 新增问题评论。content 由 handler 侧已做 Trim；此处做领域校验
+// （非空 + 问题可见性由 repository 的 JOIN 校验保证）。
+func (s *Service) AddComment(ctx context.Context, tenantID, problemID, userID int, content string, isInternal bool, mentions, attachments []int) (*ProblemComment, error) {
+	content = strings.TrimSpace(content)
+	if content == "" {
+		return nil, common.NewBusinessError(common.ValidationError, "评论内容不能为空", "empty content")
+	}
+	return s.repo.CreateComment(ctx, &ProblemComment{
+		ProblemID:   problemID,
+		UserID:      userID,
+		Content:     content,
+		IsInternal:  isInternal,
+		Mentions:    mentions,
+		Attachments: attachments,
+		TenantID:    tenantID,
+	})
+}
+
+// ListComments 分页列出问题评论（时间正序）。
+func (s *Service) ListComments(ctx context.Context, tenantID, problemID int, page, size int) ([]*ProblemComment, int, error) {
+	return s.repo.ListComments(ctx, tenantID, problemID, page, size)
 }
 
 // validateAssignee 统一受指人同租户/在职校验入口。
@@ -72,7 +224,14 @@ func (s *Service) Create(ctx context.Context, tenantID int, p *Problem) (*Proble
 	p.Title = strings.TrimSpace(p.Title)
 	p.Status = "open"
 	p.TenantID = tenantID
-	return s.repo.Create(ctx, p)
+	created, err := s.repo.Create(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	// SLA 绑定在问题落库后进行：查不到定义只是「无 SLA」，不阻断创建
+	// （与工单/事件同一口径——能力缺失降级，主流程不失败）。
+	s.bindSLAOnCreate(ctx, tenantID, created.ID, created.Priority)
+	return created, nil
 }
 
 func (s *Service) Get(ctx context.Context, id int, tenantID int) (*Problem, error) {
@@ -137,6 +296,9 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 	// 推进（如另一请求已完成 resolved→closed），条件更新未命中 → 409 冲突，
 	// 绝不允许用本次校验结论覆盖推进后的状态。
 	expectedStatus := existing.Status
+	// enteredResolvedFreshly 捕获「本次调用首次把问题推进到 resolved/closed」，
+	// 供仓储写入成功后打 SLA 解决时间戳（重复进入同一状态不打）。
+	enteredResolvedFreshly := false
 
 	if p.Title != "" {
 		existing.Title = p.Title
@@ -164,10 +326,14 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		case "resolved":
 			if prevStatus != "resolved" {
 				existing.ResolvedAt = &now
+				enteredResolvedFreshly = true
 			}
 			existing.ClosedAt = nil
 		case "closed":
 			existing.ClosedAt = &now
+			if prevStatus != "closed" {
+				enteredResolvedFreshly = true
+			}
 		case "investigating":
 			if prevStatus == "resolved" || prevStatus == "closed" {
 				existing.ResolvedAt = nil
@@ -230,6 +396,11 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 			)
 		}
 		return nil, err
+	}
+	// 首次进入 resolved/closed 时在 sla_states 打解决时间戳（MTTR 与达成率的事实来源）。
+	// 重复进入同一状态不打（enteredResolvedFreshly 为 false）。
+	if enteredResolvedFreshly {
+		s.recordResolutionOnSLA(ctx, tenantID, id, time.Now())
 	}
 	return result, nil
 }

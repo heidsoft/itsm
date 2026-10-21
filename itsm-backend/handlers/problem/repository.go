@@ -26,8 +26,19 @@ type Repository interface {
 	// LoadUserNames 批量加载 user 显示名（id -> name），用于在 ProblemResponse 中
 	// 返回 createdBy/assignee 的中文姓名。仅查询 name/username 字段，name 为空时回退 username。
 	LoadUserNames(ctx context.Context, tenantID int, ids []int) (map[int]string, error)
+
+	// ── 评论（2026-10-21 GA 阻断项落地）──
+	// CreateComment 写入问题评论。problemID 必须属于同一 tenantID，
+	// 由实现层通过 JOIN problems 校验（跨租户 problem_id 不得写入评论）。
+	CreateComment(ctx context.Context, c *ProblemComment) (*ProblemComment, error)
+	// ListComments 按时间正序分页列出评论（含评论人显示名投影）。
+	ListComments(ctx context.Context, tenantID, problemID int, page, size int) ([]*ProblemComment, int, error)
 }
 
 // ErrProblemStatusMoved 表示 Update 的 CAS 预期状态与真实状态不一致
 // （校验与写入的并发窗口内状态已被其他请求推进）。
 var ErrProblemStatusMoved = errors.New("problem status changed concurrently")
+
+// ErrProblemNotVisible 表示问题在该租户下不存在/已删除（含跨租户探测）。
+// 评论读写前用它做归属校验：统一映射 404，不暴露 ID 可枚举信号。
+var ErrProblemNotVisible = errors.New("problem not found or not visible in this tenant")

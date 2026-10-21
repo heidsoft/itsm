@@ -166,3 +166,63 @@ type CreateKnownErrorFromProblemRequest struct {
 	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 问题评论（2026-10-21 GA 阻断项落地：GET/POST /api/v1/problems/:id/comments
+// 从显式 503 unready 转为真实契约）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// CreateProblemCommentRequest 新增问题评论请求。
+// isInternal 区分「处理纪要」（团队内部）与「可对报障人可见的进展说明」，
+// 与工单评论同一语义；mentions/attachments 为可选的 ID 引用列表。
+type CreateProblemCommentRequest struct {
+	Content     string `json:"content" binding:"required,min=1,max=5000"`
+	IsInternal  bool   `json:"isInternal"`
+	Mentions    []int  `json:"mentions"`
+	Attachments []int  `json:"attachments"`
+}
+
+// ProblemCommentResponse 问题评论响应。
+// userName 为服务端投影的显示名（缺省时前端回退 `用户 #id`），
+// 与工单姓名单一投影口径一致——不要求前端再拉一次通讯录。
+type ProblemCommentResponse struct {
+	ID         int       `json:"id"`
+	ProblemID  int       `json:"problemId"`
+	UserID     int       `json:"userId"`
+	UserName   string    `json:"userName,omitempty"`
+	Content    string    `json:"content"`
+	IsInternal bool      `json:"isInternal"`
+	Mentions   []int     `json:"mentions"`
+	Attachments []int     `json:"attachments"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
+}
+
+// ListProblemCommentsResponse 评论列表信封。
+// 键名与工单评论列表一致（items/total/page/size），前端可复用同一渲染组件。
+type ListProblemCommentsResponse struct {
+	Items []*ProblemCommentResponse `json:"items"`
+	Total int                       `json:"total"`
+	Page  int                       `json:"page"`
+	Size  int                       `json:"size"`
+}
+
+// ProblemSLAResponse 问题 SLA 读面（GET /api/v1/problems/:id/sla）。
+//
+// bound=false 表示该问题没有绑定任何 SLA 定义（租户未配置 problem 类型定义，
+// 或优先级无匹配）——这是「没配 SLA」的如实回答，不是「SLA 正常且未超时」；
+// 调用方必须把 bound=false 与 status=active 区分开（旧 503 桩的契约理由）。
+// status 取值：unbound / active / warning / breached / paused / met。
+type ProblemSLAResponse struct {
+	ProblemID         int        `json:"problemId"`
+	ProblemNumber     string     `json:"problemNumber,omitempty"`
+	Priority          string     `json:"priority"`
+	Bound             bool       `json:"bound"`
+	SLADefinitionID   int        `json:"slaDefinitionId,omitempty"`
+	Status            string     `json:"status"`
+	ResponseDeadline  *time.Time `json:"responseDeadline,omitempty"`
+	ResolutionDeadline *time.Time `json:"resolutionDeadline,omitempty"`
+	FirstResponseAt   *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt        *time.Time `json:"resolvedAt,omitempty"`
+	PausedDurationSec int        `json:"pausedDurationSeconds,omitempty"`
+}

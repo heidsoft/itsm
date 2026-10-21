@@ -86,6 +86,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -309,6 +310,8 @@ type Client struct {
 	PermissionDefinition *PermissionDefinitionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProblemComment is the client for interacting with the ProblemComment builders.
+	ProblemComment *ProblemCommentClient
 	// ProcessApprovalDecision is the client for interacting with the ProcessApprovalDecision builders.
 	ProcessApprovalDecision *ProcessApprovalDecisionClient
 	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
@@ -517,6 +520,7 @@ func (c *Client) init() {
 	c.Permission = NewPermissionClient(c.config)
 	c.PermissionDefinition = NewPermissionDefinitionClient(c.config)
 	c.Problem = NewProblemClient(c.config)
+	c.ProblemComment = NewProblemCommentClient(c.config)
 	c.ProcessApprovalDecision = NewProcessApprovalDecisionClient(c.config)
 	c.ProcessAuditLog = NewProcessAuditLogClient(c.config)
 	c.ProcessBinding = NewProcessBindingClient(c.config)
@@ -745,6 +749,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
 		Problem:                     NewProblemClient(cfg),
+		ProblemComment:              NewProblemCommentClient(cfg),
 		ProcessApprovalDecision:     NewProcessApprovalDecisionClient(cfg),
 		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
 		ProcessBinding:              NewProcessBindingClient(cfg),
@@ -900,6 +905,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Permission:                  NewPermissionClient(cfg),
 		PermissionDefinition:        NewPermissionDefinitionClient(cfg),
 		Problem:                     NewProblemClient(cfg),
+		ProblemComment:              NewProblemCommentClient(cfg),
 		ProcessApprovalDecision:     NewProcessApprovalDecisionClient(cfg),
 		ProcessAuditLog:             NewProcessAuditLogClient(cfg),
 		ProcessBinding:              NewProcessBindingClient(cfg),
@@ -1009,22 +1015,22 @@ func (c *Client) Use(hooks ...Hook) {
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationDelivery, c.NotificationPreference,
 		c.OnCallSchedule, c.OnCallShift, c.OperationalCommand, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
-		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
-		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
-		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
-		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.SSOIdentity,
-		c.SSOProvider, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
-		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
-		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.WorkflowTemplate,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProblemComment,
+		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessTimer, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAState, c.SLAViolation, c.SSOIdentity, c.SSOProvider, c.ServiceCatalog,
+		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
+		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
+		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
+		c.ToolInvocation, c.User, c.Vendor, c.WorkflowTemplate,
 	} {
 		n.Use(hooks...)
 	}
@@ -1053,22 +1059,22 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.MSPAllocation, c.MarketplaceItem, c.Menu, c.Message, c.Microservice,
 		c.Notification, c.NotificationDelivery, c.NotificationPreference,
 		c.OnCallSchedule, c.OnCallShift, c.OperationalCommand, c.PasswordResetToken,
-		c.Permission, c.PermissionDefinition, c.Problem, c.ProcessApprovalDecision,
-		c.ProcessAuditLog, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
-		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessTimer,
-		c.ProcessVariable, c.ProcessVersionChangelog, c.Project, c.PromptTemplate,
-		c.ProvisioningTask, c.RelationshipType, c.Release, c.Role, c.RolePermission,
-		c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition,
-		c.SLAMetric, c.SLAPolicy, c.SLAState, c.SLAViolation, c.SSOIdentity,
-		c.SSOProvider, c.ServiceCatalog, c.ServiceCatalogItem, c.ServiceCustomer,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SourceOrganization,
-		c.StandardChange, c.SupportContract, c.Survey, c.SurveyResponse,
-		c.SystemConfig, c.Tag, c.Team, c.Tenant, c.TenantInstallation, c.Ticket,
-		c.TicketApproval, c.TicketAssignmentRule, c.TicketAttachment,
-		c.TicketAutomationRule, c.TicketCC, c.TicketCategory, c.TicketComment,
-		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketType,
-		c.TicketView, c.TicketWorkflowRecord, c.ToolInvocation, c.User, c.Vendor,
-		c.WorkflowTemplate,
+		c.Permission, c.PermissionDefinition, c.Problem, c.ProblemComment,
+		c.ProcessApprovalDecision, c.ProcessAuditLog, c.ProcessBinding,
+		c.ProcessDefinition, c.ProcessDeployment, c.ProcessExecutionHistory,
+		c.ProcessInstance, c.ProcessTask, c.ProcessTimer, c.ProcessVariable,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RolePermission, c.RootCauseAnalysis,
+		c.SLAAlertHistory, c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy,
+		c.SLAState, c.SLAViolation, c.SSOIdentity, c.SSOProvider, c.ServiceCatalog,
+		c.ServiceCatalogItem, c.ServiceCustomer, c.ServiceRequest,
+		c.ServiceRequestApproval, c.SourceOrganization, c.StandardChange,
+		c.SupportContract, c.Survey, c.SurveyResponse, c.SystemConfig, c.Tag, c.Team,
+		c.Tenant, c.TenantInstallation, c.Ticket, c.TicketApproval,
+		c.TicketAssignmentRule, c.TicketAttachment, c.TicketAutomationRule, c.TicketCC,
+		c.TicketCategory, c.TicketComment, c.TicketNotification, c.TicketTag,
+		c.TicketTemplate, c.TicketType, c.TicketView, c.TicketWorkflowRecord,
+		c.ToolInvocation, c.User, c.Vendor, c.WorkflowTemplate,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -1227,6 +1233,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.PermissionDefinition.mutate(ctx, m)
 	case *ProblemMutation:
 		return c.Problem.mutate(ctx, m)
+	case *ProblemCommentMutation:
+		return c.ProblemComment.mutate(ctx, m)
 	case *ProcessApprovalDecisionMutation:
 		return c.ProcessApprovalDecision.mutate(ctx, m)
 	case *ProcessAuditLogMutation:
@@ -13304,6 +13312,22 @@ func (c *ProblemClient) QueryChanges(_m *Problem) *ChangeQuery {
 	return query
 }
 
+// QueryComments queries the comments edge of a Problem.
+func (c *ProblemClient) QueryComments(_m *Problem) *ProblemCommentQuery {
+	query := (&ProblemCommentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problem.Table, problem.FieldID, id),
+			sqlgraph.To(problemcomment.Table, problemcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, problem.CommentsTable, problem.CommentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ProblemClient) Hooks() []Hook {
 	return c.hooks.Problem
@@ -13326,6 +13350,171 @@ func (c *ProblemClient) mutate(ctx context.Context, m *ProblemMutation) (Value, 
 		return (&ProblemDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Problem mutation op: %q", m.Op())
+	}
+}
+
+// ProblemCommentClient is a client for the ProblemComment schema.
+type ProblemCommentClient struct {
+	config
+}
+
+// NewProblemCommentClient returns a client for the ProblemComment from the given config.
+func NewProblemCommentClient(c config) *ProblemCommentClient {
+	return &ProblemCommentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `problemcomment.Hooks(f(g(h())))`.
+func (c *ProblemCommentClient) Use(hooks ...Hook) {
+	c.hooks.ProblemComment = append(c.hooks.ProblemComment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `problemcomment.Intercept(f(g(h())))`.
+func (c *ProblemCommentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProblemComment = append(c.inters.ProblemComment, interceptors...)
+}
+
+// Create returns a builder for creating a ProblemComment entity.
+func (c *ProblemCommentClient) Create() *ProblemCommentCreate {
+	mutation := newProblemCommentMutation(c.config, OpCreate)
+	return &ProblemCommentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProblemComment entities.
+func (c *ProblemCommentClient) CreateBulk(builders ...*ProblemCommentCreate) *ProblemCommentCreateBulk {
+	return &ProblemCommentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProblemCommentClient) MapCreateBulk(slice any, setFunc func(*ProblemCommentCreate, int)) *ProblemCommentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProblemCommentCreateBulk{err: fmt.Errorf("calling to ProblemCommentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProblemCommentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProblemCommentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProblemComment.
+func (c *ProblemCommentClient) Update() *ProblemCommentUpdate {
+	mutation := newProblemCommentMutation(c.config, OpUpdate)
+	return &ProblemCommentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProblemCommentClient) UpdateOne(_m *ProblemComment) *ProblemCommentUpdateOne {
+	mutation := newProblemCommentMutation(c.config, OpUpdateOne, withProblemComment(_m))
+	return &ProblemCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProblemCommentClient) UpdateOneID(id int) *ProblemCommentUpdateOne {
+	mutation := newProblemCommentMutation(c.config, OpUpdateOne, withProblemCommentID(id))
+	return &ProblemCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProblemComment.
+func (c *ProblemCommentClient) Delete() *ProblemCommentDelete {
+	mutation := newProblemCommentMutation(c.config, OpDelete)
+	return &ProblemCommentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProblemCommentClient) DeleteOne(_m *ProblemComment) *ProblemCommentDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProblemCommentClient) DeleteOneID(id int) *ProblemCommentDeleteOne {
+	builder := c.Delete().Where(problemcomment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProblemCommentDeleteOne{builder}
+}
+
+// Query returns a query builder for ProblemComment.
+func (c *ProblemCommentClient) Query() *ProblemCommentQuery {
+	return &ProblemCommentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProblemComment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProblemComment entity by its id.
+func (c *ProblemCommentClient) Get(ctx context.Context, id int) (*ProblemComment, error) {
+	return c.Query().Where(problemcomment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProblemCommentClient) GetX(ctx context.Context, id int) *ProblemComment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProblem queries the problem edge of a ProblemComment.
+func (c *ProblemCommentClient) QueryProblem(_m *ProblemComment) *ProblemQuery {
+	query := (&ProblemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problemcomment.Table, problemcomment.FieldID, id),
+			sqlgraph.To(problem.Table, problem.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, problemcomment.ProblemTable, problemcomment.ProblemColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a ProblemComment.
+func (c *ProblemCommentClient) QueryUser(_m *ProblemComment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problemcomment.Table, problemcomment.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, problemcomment.UserTable, problemcomment.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProblemCommentClient) Hooks() []Hook {
+	return c.hooks.ProblemComment
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProblemCommentClient) Interceptors() []Interceptor {
+	return c.inters.ProblemComment
+}
+
+func (c *ProblemCommentClient) mutate(ctx context.Context, m *ProblemCommentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProblemCommentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProblemCommentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProblemCommentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProblemCommentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProblemComment mutation op: %q", m.Op())
 	}
 }
 
@@ -22847,6 +23036,22 @@ func (c *UserClient) QueryTicketComments(_m *User) *TicketCommentQuery {
 	return query
 }
 
+// QueryProblemComments queries the problem_comments edge of a User.
+func (c *UserClient) QueryProblemComments(_m *User) *ProblemCommentQuery {
+	query := (&ProblemCommentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(problemcomment.Table, problemcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ProblemCommentsTable, user.ProblemCommentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryTicketAttachments queries the ticket_attachments edge of a User.
 func (c *UserClient) QueryTicketAttachments(_m *User) *TicketAttachmentQuery {
 	query := (&TicketAttachmentClient{config: c.config}).Query()
@@ -23382,7 +23587,7 @@ type (
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationDelivery,
 		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProblemComment,
 		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
 		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
 		ProcessTimer, ProcessVariable, ProcessVersionChangelog, Project,
@@ -23416,7 +23621,7 @@ type (
 		KnowledgeArticleVersion, KnownError, MSPAllocation, MarketplaceItem, Menu,
 		Message, Microservice, Notification, NotificationDelivery,
 		NotificationPreference, OnCallSchedule, OnCallShift, OperationalCommand,
-		PasswordResetToken, Permission, PermissionDefinition, Problem,
+		PasswordResetToken, Permission, PermissionDefinition, Problem, ProblemComment,
 		ProcessApprovalDecision, ProcessAuditLog, ProcessBinding, ProcessDefinition,
 		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
 		ProcessTimer, ProcessVariable, ProcessVersionChangelog, Project,

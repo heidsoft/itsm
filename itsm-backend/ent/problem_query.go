@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/ticket"
 	"math"
 
@@ -29,6 +30,7 @@ type ProblemQuery struct {
 	withTickets   *TicketQuery
 	withIncidents *IncidentQuery
 	withChanges   *ChangeQuery
+	withComments  *ProblemCommentQuery
 	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,6 +127,28 @@ func (_q *ProblemQuery) QueryChanges() *ChangeQuery {
 			sqlgraph.From(problem.Table, problem.FieldID, selector),
 			sqlgraph.To(change.Table, change.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, problem.ChangesTable, problem.ChangesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryComments chains the current query on the "comments" edge.
+func (_q *ProblemQuery) QueryComments() *ProblemCommentQuery {
+	query := (&ProblemCommentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problem.Table, problem.FieldID, selector),
+			sqlgraph.To(problemcomment.Table, problemcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, problem.CommentsTable, problem.CommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -327,6 +351,7 @@ func (_q *ProblemQuery) Clone() *ProblemQuery {
 		withTickets:   _q.withTickets.Clone(),
 		withIncidents: _q.withIncidents.Clone(),
 		withChanges:   _q.withChanges.Clone(),
+		withComments:  _q.withComments.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -363,6 +388,17 @@ func (_q *ProblemQuery) WithChanges(opts ...func(*ChangeQuery)) *ProblemQuery {
 		opt(query)
 	}
 	_q.withChanges = query
+	return _q
+}
+
+// WithComments tells the query-builder to eager-load the nodes that are connected to
+// the "comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ProblemQuery) WithComments(opts ...func(*ProblemCommentQuery)) *ProblemQuery {
+	query := (&ProblemCommentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withComments = query
 	return _q
 }
 
@@ -445,10 +481,11 @@ func (_q *ProblemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prob
 		nodes       = []*Problem{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			_q.withTickets != nil,
 			_q.withIncidents != nil,
 			_q.withChanges != nil,
+			_q.withComments != nil,
 		}
 	)
 	if withFKs {
@@ -490,6 +527,13 @@ func (_q *ProblemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prob
 		if err := _q.loadChanges(ctx, query, nodes,
 			func(n *Problem) { n.Edges.Changes = []*Change{} },
 			func(n *Problem, e *Change) { n.Edges.Changes = append(n.Edges.Changes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withComments; query != nil {
+		if err := _q.loadComments(ctx, query, nodes,
+			func(n *Problem) { n.Edges.Comments = []*ProblemComment{} },
+			func(n *Problem, e *ProblemComment) { n.Edges.Comments = append(n.Edges.Comments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -646,6 +690,36 @@ func (_q *ProblemQuery) loadChanges(ctx context.Context, query *ChangeQuery, nod
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (_q *ProblemQuery) loadComments(ctx context.Context, query *ProblemCommentQuery, nodes []*Problem, init func(*Problem), assign func(*Problem, *ProblemComment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Problem)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(problemcomment.FieldProblemID)
+	}
+	query.Where(predicate.ProblemComment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(problem.CommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProblemID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "problem_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

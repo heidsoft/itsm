@@ -78,6 +78,7 @@ import (
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/permissiondefinition"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processapprovaldecision"
 	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
@@ -3128,6 +3129,38 @@ func init() {
 	problem.DefaultUpdatedAt = problemDescUpdatedAt.Default.(func() time.Time)
 	// problem.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	problem.UpdateDefaultUpdatedAt = problemDescUpdatedAt.UpdateDefault.(func() time.Time)
+	problemcommentFields := schema.ProblemComment{}.Fields()
+	_ = problemcommentFields
+	// problemcommentDescProblemID is the schema descriptor for problem_id field.
+	problemcommentDescProblemID := problemcommentFields[0].Descriptor()
+	// problemcomment.ProblemIDValidator is a validator for the "problem_id" field. It is called by the builders before save.
+	problemcomment.ProblemIDValidator = problemcommentDescProblemID.Validators[0].(func(int) error)
+	// problemcommentDescUserID is the schema descriptor for user_id field.
+	problemcommentDescUserID := problemcommentFields[1].Descriptor()
+	// problemcomment.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	problemcomment.UserIDValidator = problemcommentDescUserID.Validators[0].(func(int) error)
+	// problemcommentDescContent is the schema descriptor for content field.
+	problemcommentDescContent := problemcommentFields[2].Descriptor()
+	// problemcomment.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	problemcomment.ContentValidator = problemcommentDescContent.Validators[0].(func(string) error)
+	// problemcommentDescIsInternal is the schema descriptor for is_internal field.
+	problemcommentDescIsInternal := problemcommentFields[3].Descriptor()
+	// problemcomment.DefaultIsInternal holds the default value on creation for the is_internal field.
+	problemcomment.DefaultIsInternal = problemcommentDescIsInternal.Default.(bool)
+	// problemcommentDescTenantID is the schema descriptor for tenant_id field.
+	problemcommentDescTenantID := problemcommentFields[6].Descriptor()
+	// problemcomment.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	problemcomment.TenantIDValidator = problemcommentDescTenantID.Validators[0].(func(int) error)
+	// problemcommentDescCreatedAt is the schema descriptor for created_at field.
+	problemcommentDescCreatedAt := problemcommentFields[7].Descriptor()
+	// problemcomment.DefaultCreatedAt holds the default value on creation for the created_at field.
+	problemcomment.DefaultCreatedAt = problemcommentDescCreatedAt.Default.(func() time.Time)
+	// problemcommentDescUpdatedAt is the schema descriptor for updated_at field.
+	problemcommentDescUpdatedAt := problemcommentFields[8].Descriptor()
+	// problemcomment.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	problemcomment.DefaultUpdatedAt = problemcommentDescUpdatedAt.Default.(func() time.Time)
+	// problemcomment.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	problemcomment.UpdateDefaultUpdatedAt = problemcommentDescUpdatedAt.UpdateDefault.(func() time.Time)
 	processapprovaldecisionFields := schema.ProcessApprovalDecision{}.Fields()
 	_ = processapprovaldecisionFields
 	// processapprovaldecisionDescProcessInstanceID is the schema descriptor for process_instance_id field.

@@ -231,6 +231,9 @@ type PermissionDefinition func(*sql.Selector)
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
 
+// ProblemComment is the predicate function for problemcomment builders.
+type ProblemComment func(*sql.Selector)
+
 // ProcessApprovalDecision is the predicate function for processapprovaldecision builders.
 type ProcessApprovalDecision func(*sql.Selector)
 

@@ -68,9 +68,11 @@ type ProblemEdges struct {
 	Incidents []*Incident `json:"incidents,omitempty"`
 	// 关联的变更
 	Changes []*Change `json:"changes,omitempty"`
+	// 问题的评论与处理纪要
+	Comments []*ProblemComment `json:"comments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // TicketsOrErr returns the Tickets value or an error if the edge
@@ -98,6 +100,15 @@ func (e ProblemEdges) ChangesOrErr() ([]*Change, error) {
 		return e.Changes, nil
 	}
 	return nil, &NotLoadedError{edge: "changes"}
+}
+
+// CommentsOrErr returns the Comments value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) CommentsOrErr() ([]*ProblemComment, error) {
+	if e.loadedTypes[3] {
+		return e.Comments, nil
+	}
+	return nil, &NotLoadedError{edge: "comments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -278,6 +289,11 @@ func (_m *Problem) QueryIncidents() *IncidentQuery {
 // QueryChanges queries the "changes" edge of the Problem entity.
 func (_m *Problem) QueryChanges() *ChangeQuery {
 	return NewProblemClient(_m.config).QueryChanges(_m)
+}
+
+// QueryComments queries the "comments" edge of the Problem entity.
+func (_m *Problem) QueryComments() *ProblemCommentQuery {
+	return NewProblemClient(_m.config).QueryComments(_m)
 }
 
 // Update returns a builder for updating this Problem.

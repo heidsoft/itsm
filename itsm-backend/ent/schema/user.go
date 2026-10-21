@@ -97,6 +97,8 @@ func (User) Edges() []ent.Edge {
 			Comment("分配给用户的工单"),
 		edge.To("ticket_comments", TicketComment.Type).
 			Comment("工单评论"),
+		edge.To("problem_comments", ProblemComment.Type).
+			Comment("问题评论"),
 		edge.To("ticket_attachments", TicketAttachment.Type).
 			Comment("工单附件"),
 		edge.To("ticket_notifications", TicketNotification.Type).

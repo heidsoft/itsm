@@ -15,6 +15,7 @@ import (
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/oncallshift"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/problemcomment"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/tenant"
@@ -44,6 +45,7 @@ type UserQuery struct {
 	withTickets                 *TicketQuery
 	withAssignedTickets         *TicketQuery
 	withTicketComments          *TicketCommentQuery
+	withProblemComments         *ProblemCommentQuery
 	withTicketAttachments       *TicketAttachmentQuery
 	withTicketNotifications     *TicketNotificationQuery
 	withNotificationPreferences *NotificationPreferenceQuery
@@ -196,6 +198,28 @@ func (_q *UserQuery) QueryTicketComments() *TicketCommentQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(ticketcomment.Table, ticketcomment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.TicketCommentsTable, user.TicketCommentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryProblemComments chains the current query on the "problem_comments" edge.
+func (_q *UserQuery) QueryProblemComments() *ProblemCommentQuery {
+	query := (&ProblemCommentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(problemcomment.Table, problemcomment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ProblemCommentsTable, user.ProblemCommentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -664,6 +688,7 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withTickets:                 _q.withTickets.Clone(),
 		withAssignedTickets:         _q.withAssignedTickets.Clone(),
 		withTicketComments:          _q.withTicketComments.Clone(),
+		withProblemComments:         _q.withProblemComments.Clone(),
 		withTicketAttachments:       _q.withTicketAttachments.Clone(),
 		withTicketNotifications:     _q.withTicketNotifications.Clone(),
 		withNotificationPreferences: _q.withNotificationPreferences.Clone(),
@@ -734,6 +759,17 @@ func (_q *UserQuery) WithTicketComments(opts ...func(*TicketCommentQuery)) *User
 		opt(query)
 	}
 	_q.withTicketComments = query
+	return _q
+}
+
+// WithProblemComments tells the query-builder to eager-load the nodes that are connected to
+// the "problem_comments" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithProblemComments(opts ...func(*ProblemCommentQuery)) *UserQuery {
+	query := (&ProblemCommentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withProblemComments = query
 	return _q
 }
 
@@ -948,12 +984,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [17]bool{
+		loadedTypes = [18]bool{
 			_q.withDepartmentRef != nil,
 			_q.withTenant != nil,
 			_q.withTickets != nil,
 			_q.withAssignedTickets != nil,
 			_q.withTicketComments != nil,
+			_q.withProblemComments != nil,
 			_q.withTicketAttachments != nil,
 			_q.withTicketNotifications != nil,
 			_q.withNotificationPreferences != nil,
@@ -1019,6 +1056,13 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadTicketComments(ctx, query, nodes,
 			func(n *User) { n.Edges.TicketComments = []*TicketComment{} },
 			func(n *User, e *TicketComment) { n.Edges.TicketComments = append(n.Edges.TicketComments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withProblemComments; query != nil {
+		if err := _q.loadProblemComments(ctx, query, nodes,
+			func(n *User) { n.Edges.ProblemComments = []*ProblemComment{} },
+			func(n *User, e *ProblemComment) { n.Edges.ProblemComments = append(n.Edges.ProblemComments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -1254,6 +1298,36 @@ func (_q *UserQuery) loadTicketComments(ctx context.Context, query *TicketCommen
 	}
 	query.Where(predicate.TicketComment(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.TicketCommentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadProblemComments(ctx context.Context, query *ProblemCommentQuery, nodes []*User, init func(*User), assign func(*User, *ProblemComment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(problemcomment.FieldUserID)
+	}
+	query.Where(predicate.ProblemComment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ProblemCommentsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

@@ -854,7 +854,7 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 
 // GetProblemSLA handles GET /api/v1/problems/:id/sla
 // @Summary 获取问题SLA
-// @Description 问题域尚未接入 SLA 引擎（sla_policy 支持 problem 类型，但没有任何代码为 problem 建立 sla_state），因此固定返回 5003 unready。不返回 slaStatus:"none" 的空成功，那种响应与「该问题确实没有触发 SLA」不可区分
+// @Description 读取问题的 SLA 状态（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。bound=false 表示该问题没有绑定任何 SLA 定义——「没配 SLA」与「SLA 正常且未超时」是两种语义，调用方不得混淆；status 取值 unbound/active/warning/breached/paused/met
 // @Tags 问题管理
 // @Produce json
 // @Param id path int true "问题ID"
@@ -862,7 +862,6 @@ func (h *Handler) GetHotspots(c *gin.Context) {
 // @Failure 401 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
-// @Failure 503 {object} common.Response
 // @Security BearerAuth
 // @Router /api/v1/problems/{id}/sla [get]
 func (h *Handler) GetProblemSLA(c *gin.Context) {
@@ -876,7 +875,7 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	_, err = h.service.Get(c.Request.Context(), id, tenantID)
+	info, err := h.service.GetProblemSLA(c.Request.Context(), id, tenantID)
 	if err != nil {
 		if h.service.IsNotFound(err) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
@@ -886,21 +885,32 @@ func (h *Handler) GetProblemSLA(c *gin.Context) {
 		return
 	}
 
-	// 显式 unready：问题从未有 sla_state 写入路径，返回 0 值 + slaStatus:"none"
-	// 会让调用方把「能力没接」读成「这个问题的 SLA 正常且未超时」。
-	// 契约：本端点恒为 503/5003；接入问题 SLA（建 sla_state 写入链 + 倒计时）后
-	// 才重开 200 契约与文档。
-	common.Fail(c, common.ServiceUnavailableCode, "问题 SLA 尚未接入 SLA 引擎")
+	common.Success(c, &dto.ProblemSLAResponse{
+		ProblemID:          info.ProblemID,
+		ProblemNumber:      info.ProblemNumber,
+		Priority:           info.Priority,
+		Bound:              info.Bound,
+		SLADefinitionID:    info.SLADefinitionID,
+		Status:             info.Status,
+		ResponseDeadline:   info.ResponseDeadline,
+		ResolutionDeadline: info.ResolutionDeadline,
+		FirstResponseAt:    info.FirstResponseAt,
+		ResolvedAt:         info.ResolvedAt,
+		PausedDurationSec:  info.PausedDurationSec,
+	})
 }
 
 // GetProblemComments handles GET /api/v1/problems/:id/comments
 // @Summary 获取问题评论
-// @Description 获取问题评论列表（评论功能尚未实现，返回 5003 unready）
+// @Description 分页获取问题评论列表（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。时间正序；跨租户/不存在的问题统一 404，不暴露 ID 可枚举信号
 // @Tags 问题管理
 // @Produce json
 // @Param id path int true "问题ID"
-// @Success 200 {object} common.Response{data=object}
+// @Param page query int false "页码" default(1)
+// @Param size query int false "每页数量" default(20)
+// @Success 200 {object} common.Response{data=dto.ListProblemCommentsResponse}
 // @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
@@ -916,9 +926,14 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	_, err = h.service.Get(c.Request.Context(), id, tenantID)
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+
+	items, total, err := h.service.ListComments(c.Request.Context(), tenantID, id, page, size)
 	if err != nil {
-		if h.service.IsNotFound(err) {
+		// 仓储层对跨租户/不存在/已删除的问题统一返回哨兵错误 → 404。
+		if errors.Is(err, ErrProblemNotVisible) {
 			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
 		} else {
 			common.FailWithErr(c, err, "操作失败")
@@ -926,20 +941,40 @@ func (h *Handler) GetProblemComments(c *gin.Context) {
 		return
 	}
 
-	// Problem comments are not yet stored in a dedicated table: 显式 unready，
-	// 不用空成功伪装"暂无评论"。
-	common.Fail(c, common.ServiceUnavailableCode, "问题评论功能尚未实现")
+	resp := &dto.ListProblemCommentsResponse{
+		Items: make([]*dto.ProblemCommentResponse, 0, len(items)),
+		Total: total,
+		Page:  page,
+		Size:  size,
+	}
+	for _, cm := range items {
+		resp.Items = append(resp.Items, &dto.ProblemCommentResponse{
+			ID:         cm.ID,
+			ProblemID:  cm.ProblemID,
+			UserID:     cm.UserID,
+			UserName:   cm.UserName,
+			Content:    cm.Content,
+			IsInternal: cm.IsInternal,
+			Mentions:   cm.Mentions,
+			Attachments: cm.Attachments,
+			CreatedAt:  cm.CreatedAt,
+			UpdatedAt:  cm.UpdatedAt,
+		})
+	}
+	common.Success(c, resp)
 }
 
 // AddProblemComment handles POST /api/v1/problems/:id/comments
 // @Summary 添加问题评论
-// @Description 为问题添加评论（评论功能尚未实现，返回 5003 unready）
+// @Description 为问题添加评论/处理纪要（2026-10-21 起为真实契约，取代此前的 503 unready 桩）。isInternal 为内部备注；跨租户/不存在的问题统一 404
 // @Tags 问题管理
 // @Accept json
 // @Produce json
 // @Param id path int true "问题ID"
-// @Success 200 {object} common.Response
+// @Param request body dto.CreateProblemCommentRequest true "评论内容"
+// @Success 200 {object} common.Response{data=dto.ProblemCommentResponse}
 // @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
 // @Failure 404 {object} common.Response
 // @Failure 500 {object} common.Response
 // @Security BearerAuth
@@ -955,16 +990,39 @@ func (h *Handler) AddProblemComment(c *gin.Context) {
 	if !tenantOK {
 		return
 	}
-	_, err = h.service.Get(c.Request.Context(), id, tenantID)
-	if err != nil {
-		if h.service.IsNotFound(err) {
-			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
-		} else {
-			common.FailWithErr(c, err, "操作失败")
-		}
+	userID := c.GetInt("user_id")
+	if userID <= 0 {
+		common.Fail(c, common.UnauthorizedCode, "未认证的用户")
 		return
 	}
 
-	// Problem comments are not yet stored in a dedicated table.
-	common.Fail(c, common.ServiceUnavailableCode, "问题评论功能尚未实现")
+	var req dto.CreateProblemCommentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ParamErrorWithErr(c, err, "请求参数错误")
+		return
+	}
+
+	created, err := h.service.AddComment(c.Request.Context(), tenantID, id, userID, req.Content, req.IsInternal, req.Mentions, req.Attachments)
+	if err != nil {
+		if errors.Is(err, ErrProblemNotVisible) {
+			common.Fail(c, common.NotFoundErrorCode, "Problem not found")
+			return
+		}
+		// 业务校验（空内容等）已由 service 转 BusinessError；其余按内部错误。
+		common.FailWithErr(c, err, "操作失败")
+		return
+	}
+
+	common.Success(c, &dto.ProblemCommentResponse{
+		ID:         created.ID,
+		ProblemID:  created.ProblemID,
+		UserID:     created.UserID,
+		UserName:   created.UserName,
+		Content:    created.Content,
+		IsInternal: created.IsInternal,
+		Mentions:   created.Mentions,
+		Attachments: created.Attachments,
+		CreatedAt:  created.CreatedAt,
+		UpdatedAt:  created.UpdatedAt,
+	})
 }
