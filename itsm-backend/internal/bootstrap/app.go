@@ -894,6 +894,9 @@ func NewApplication() *Application {
 	srRepo := service_request.NewEntRepository(client)
 	srService := service_request.NewService(srRepo, scRepo, cmdbRepo, client, sugar, approvalChainService)
 	srService.EnableWorkflowOutbox()
+	// SLA 注入（2026-10-21 统一绑定落地）：服务请求创建即按 service_request 类型绑定
+	// sla_states；装配缺失时降级为无 SLA 绑定，不阻断创建。
+	srService.SetSLAService(ticketSLAService)
 	srHandler := service_request.NewHandler(srService)
 
 	// Domain: Incident (DDD)

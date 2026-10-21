@@ -2035,6 +2035,31 @@ cd itsm-frontend && npx jest --coverage=false --runInBand TicketDetailUserNames
 cd itsm-backend && go test -count=1 ./handlers/problem/ ./service/sla/
 ```
 
+### 1.55 预览域收口批次：服务请求 SLA、变更提交门禁、企微/钉钉连接器转正（2026-10-21，行为变更）
+
+**服务请求 SLA（新端点 + 新写入路径）**
+
+- 服务请求创建即按 `service_type="service_request"` 写入 `sla_states`（与工单/事件/问题同一引擎）。服务请求无 priority 字段，SLA 定义按 service_type 不带优先级匹配；**无匹配定义不绑定**（不套用隐藏默认值），`GET /api/v1/service-requests/:id/sla` 的 `bound=false` 如实回答。
+- not-found 契约与该域一致：HTTP 200 + 业务码 404、无 data（不暴露存在性）。
+- 想让服务请求计时：在 SLA 定义中配置 `service_type="service_request"` 的定义即可，monitor 自动纳入扫描。
+
+**变更提交门禁（行为变更：此前可提交的现在会被拦）**
+
+- 影响摘要成为提交审批的后端门禁：受影响 CI 命中关键 CI、或关联未关闭事件时，**风险等级必须显式设为 `high`** 才能提交（422）。此前影响摘要只在前端提示，low/medium 风险也能直接提交。
+- 进入 `scheduled` 状态时复查排期窗口冲突：审批后修改排期时间到与活跃变更同 CI 时间重叠的窗口会被 422 拦截。
+- 两道门禁查询失败均降级放行（best-effort）但留 Warn 日志；被拦截的提交会给出具体补齐指引。
+
+**企微/钉钉连接器转正（Disabled→Pilot）**
+
+- capability 矩阵不再把两渠道标为「未包含在商业发布」；部署就绪改由环境变量申报：`ITSM_WECOM_READY=true` / `ITSM_DINGTALK_READY=true`（与 `ITSM_FEISHU_READY` 同款门控）。未设置时矩阵显示「部署依赖未就绪」，代码能力不隐藏。
+- 企微配置：`corp_id` + `corp_secret` + `agent_id` + 回调 `callback_token`/`encoding_aes_key`；钉钉配置：`app_key` + `app_secret` + `agent_id`（加签机器人另需 secret）。渠道诊断 `GET /notifications/channels` 可直接查看两渠道装配与健康状态。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/service_request/ ./handlers/change/ ./handlers/capability/ ./router/ -run "SLA|ImpactGate|Capability|Connector"
+```
+
 
 ## 2. 环境变量变更
 

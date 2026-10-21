@@ -517,3 +517,39 @@ func normalizeServiceRequestStatus(status string) string {
 		return strings.TrimSpace(status)
 	}
 }
+
+// GetServiceRequestSLA handles GET /api/v1/service-requests/:id/sla
+// @Summary 获取服务请求SLA
+// @Description 读取服务请求的 SLA 状态（2026-10-21 统一绑定落地）。bound=false 表示该请求没有绑定任何 SLA 定义（租户未配置 service_request 类型定义）——「没配 SLA」与「SLA 正常且未超时」是两种语义，调用方不得混淆；slaStatus 取值 unbound/active/warning/breached/paused/met
+// @Tags 服务请求
+// @Produce json
+// @Param id path int true "请求ID"
+// @Success 200 {object} common.Response{data=dto.ServiceRequestSLAResponse}
+// @Failure 400 {object} common.Response
+// @Failure 401 {object} common.Response
+// @Failure 404 {object} common.Response
+// @Failure 500 {object} common.Response
+// @Security BearerAuth
+// @Router /api/v1/service-requests/{id}/sla [get]
+func (h *Handler) GetServiceRequestSLA(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		common.Fail(c, 1001, "Invalid ID")
+		return
+	}
+	tenantID, ok := handlerctx.ResolveTenantID(c)
+	if !ok {
+		return
+	}
+
+	info, err := h.service.GetServiceRequestSLA(c.Request.Context(), id, tenantID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			common.Fail(c, 404, "Not Found")
+		} else {
+			common.FailWithErr(c, err, "操作失败")
+		}
+		return
+	}
+	common.Success(c, info)
+}

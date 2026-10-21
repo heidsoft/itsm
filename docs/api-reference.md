@@ -1042,6 +1042,19 @@ Authorization: Bearer <accessToken>
 - 评论存储为独立表 `problem_comments`（迁移 `20261021_create_problem_comments.sql`），`problem_id` 外键 + 级联删除。历史注记：本端点曾恒定返回 `503/5003` unready（评论无独立存储），2026-10-21 转为真实契约。
 - 无 update/delete 端点（与 incident 评论同一取舍：评论为过程记录，不做编辑审计面）。
 
+### 服务请求 SLA
+
+```http
+GET /service-requests/{id}/sla
+Authorization: Bearer <accessToken>
+```
+
+`200` 返回 `dto.ServiceRequestSLAResponse`：`{requestId, title, status, bound, slaDefinitionId, slaStatus, responseDeadline, resolutionDeadline, firstResponseAt, resolvedAt, pausedDurationSeconds}`。
+
+- **绑定路径**（2026-10-21 起）：服务请求创建即按 `service_type="service_request"` 匹配 SLA 定义并写入 `sla_states`（与工单/事件/问题同一引擎同一多态表）。服务请求无 priority 字段，定义匹配不带优先级；无匹配定义即不绑定——`bound=false` + `slaStatus="unbound"` 是「没配 SLA」的如实回答，调用方不得与「SLA 正常」混淆。SLA monitor 周期扫描自动覆盖 service_request。
+- **not-found 契约**（与该域 Get 一致）：跨租户/不存在返回 **HTTP 200 + 业务码 `404`**、无 `data`——不暴露资源存在性；非数字 ID `HTTP 400` + 业务码 `1001`；未认证 401。
+- 事件域对照：事件 SLA 状态内联在 `GET /incidents/{id}` 详情响应（`slaState` 字段），无独立 `/sla` 端点；工单/问题有独立端点。四域统一走同一 `sla_states` 存储。
+
 ## 变更管理接口
 
 ### 获取变更列表

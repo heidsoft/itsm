@@ -3391,6 +3391,31 @@ definitions:
       status:
         type: string
     type: object
+  dto.ServiceRequestSLAResponse:
+    properties:
+      bound:
+        type: boolean
+      firstResponseAt:
+        type: string
+      pausedDurationSeconds:
+        type: integer
+      requestId:
+        type: integer
+      resolutionDeadline:
+        type: string
+      resolvedAt:
+        type: string
+      responseDeadline:
+        type: string
+      slaDefinitionId:
+        type: integer
+      slaStatus:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
   dto.SubmitChangeRequest:
     properties:
       approverIds:
@@ -11862,6 +11887,49 @@ paths:
       summary: 更新项目
       tags:
       - 项目管理
+  /api/v1/service-requests/{id}/sla:
+    get:
+      description: 读取服务请求的 SLA 状态（2026-10-21 统一绑定落地）。bound=false 表示该请求没有绑定任何 SLA 定义（租户未配置
+        service_request 类型定义）——「没配 SLA」与「SLA 正常且未超时」是两种语义，调用方不得混淆；slaStatus 取值 unbound/active/warning/breached/paused/met
+      parameters:
+      - description: 请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestSLAResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取服务请求SLA
+      tags:
+      - 服务请求
   /api/v1/system/vector-store:
     get:
       description: 获取向量存储配置视图与能力状态

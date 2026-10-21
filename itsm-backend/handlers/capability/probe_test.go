@@ -55,10 +55,16 @@ func TestHandlerDegradesCapabilityWhenProbeFails(t *testing.T) {
 	require.False(t, ticket.Health.OK)
 	require.NotContains(t, ticket.AllowedActions, "manage", "探测失败时不得下发管理动作")
 
-	// disabled 能力不参与探测，也不应带健康信号。
+	// 企微连接器 2026-10-21 Disabled→Pilot 转正：代码能力已实现（Send/验签/回调路由
+	// 全链路装配），部署就绪由 readinessEnv 申报——测试环境未设 ITSM_WECOM_READY，
+	// deploymentReady=false 且降级原因为部署依赖未就绪，而不再是「未包含在商业发布」。
 	wecom := byKey["connector.wecom"]
-	require.Equal(t, MaturityDisabled, wecom.Maturity)
-	require.Nil(t, wecom.Health)
+	require.Equal(t, MaturityPilot, wecom.Maturity)
+	require.False(t, wecom.DeploymentReady)
+	// 探测失败原因优先于 readinessEnv 降级原因（handler 的覆盖顺序）：
+	// 本测试无 DB，探测失败原因为「数据库连接未装配」。
+	require.Equal(t, "数据库连接未装配", wecom.DegradedReason)
+	require.NotNil(t, wecom.Health)
 }
 
 func TestRegistryInvariants(t *testing.T) {

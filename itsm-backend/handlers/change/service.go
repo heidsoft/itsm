@@ -229,6 +229,31 @@ func (s *Service) GetCalendarView(ctx context.Context, tenantID int, startDate, 
 // 拦截条件：变更绑定了受影响 CI（存在实施风险）但实施计划/回滚计划缺失。
 var ErrSubmitGateBlocked = errors.New("change submit blocked by impact analysis gate")
 
+// validateImpactGate 影响摘要消费门禁（2026-10-21 收口「影响摘要尚未成为提交审批的
+// 后端门禁」）：关键 CI 命中或存在关联开放事件（RequiresReview）时，必须显式声明
+// high 风险等级——影响摘要此前只进 WorkflowHints 提示文案，风险分析与提交流程断链。
+// entClient 为 nil（纯 legacy/单测装配）或查询失败时降级放行
+// （best-effort，与 checkWindowConflict 同口径）但留 Warn。
+func (s *Service) validateImpactGate(ctx context.Context, changeID, tenantID int, c *Change) error {
+	if s.entClient == nil {
+		return nil
+	}
+	summary, sumErr := s.GetCMDBImpactSummary(ctx, changeID, tenantID)
+	if sumErr != nil {
+		s.logger.Warnw("validateImpactGate: 影响摘要查询失败，降级放行",
+			"error", sumErr, "change_id", changeID, "tenant_id", tenantID)
+		return nil
+	}
+	if summary.RequiresReview && c.RiskLevel != "high" {
+		return common.NewValidationError(
+			fmt.Sprintf("该变更命中高风险特征（关键 CI %d 个、关联未关闭事件 %d 个），风险等级必须显式设为 high 才能提交审批；当前为 '%s'。请先在变更详情中完成风险评估",
+				summary.CriticalCICount, summary.OpenIncidentCount, c.RiskLevel),
+			fmt.Errorf("impact review required: %w", ErrSubmitGateBlocked),
+		)
+	}
+	return nil
+}
+
 // validateSubmitGate 提交前影响分析门禁。
 //
 // GetCMDBImpactSummary 产出的 RequiresReview / RequiresBackoutPlan 推荐若只用于前端展示
@@ -346,6 +371,11 @@ func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitte
 
 	// 2.5 影响分析门禁：绑定受影响 CI 的变更必须先补齐实施/回滚计划。
 	if gateErr := s.validateSubmitGate(c); gateErr != nil {
+		return nil, gateErr
+	}
+
+	// 2.55 影响摘要消费门禁（2026-10-21 收口「影响摘要尚未成为提交审批的后端门禁」）。
+	if gateErr := s.validateImpactGate(ctx, changeID, tenantID, c); gateErr != nil {
 		return nil, gateErr
 	}
 
@@ -974,6 +1004,15 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// Validate state transition (使用 service 包的 canonical 状态机，保证与 legacy service 一致)
 	if !service.IsValidChangeStatusTransition(c.Status, targetStatus, c.Type) {
 		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
+	}
+
+	// scheduled 转换复查排期窗口冲突（2026-10-21 收口）：排期时间可在提交审批后
+	// 通过 Update 修改，提交时（SubmitChange）的冲突检查拦不住「批后排期改动」，
+	// 所以进入 scheduled 时用实体当前窗口再查一次。查询失败降级放行（同口径）。
+	if targetStatus == "scheduled" {
+		if gateErr := s.checkWindowConflict(ctx, c); gateErr != nil {
+			return nil, gateErr
+		}
 	}
 
 	// 桥接与业务状态写入收敛到同一事务：流程推进不可逆，若桥接先独立提交而

@@ -19,6 +19,7 @@ func SetupServiceRequestRoutes(tenant *gin.RouterGroup, h *service_request.Handl
 		sr.GET("/me", middleware.RequirePermission("service_request", "read"), h.List)
 		sr.GET("/approvals/pending", middleware.RequirePermission("service_request", "read"), h.ListPending)
 		sr.GET("/:id", middleware.RequirePermission("service_request", "read"), h.Get)
+		sr.GET("/:id/sla", middleware.RequirePermission("service_request", "read"), h.GetServiceRequestSLA)
 		sr.GET("/:id/approvals", middleware.RequirePermission("service_request", "read"), h.ListApprovals)
 		sr.PUT("/:id", middleware.RequirePermission("service_request", "write"), h.Update)
 		sr.PUT("/:id/status", middleware.RequirePermission("service_request", "write"), h.UpdateStatus)

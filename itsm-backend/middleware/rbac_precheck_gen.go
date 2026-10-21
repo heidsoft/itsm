@@ -375,6 +375,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/service-requests/*":                           {Resource: "service_request", Action: "read"},
 			"/api/v1/service-requests/*/approvals":                 {Resource: "service_request", Action: "read"},
 			"/api/v1/service-requests/*/provisioning-tasks":        {Resource: "service_request", Action: "read"},
+			"/api/v1/service-requests/*/sla":                       {Resource: "service_request", Action: "read"},
 			"/api/v1/service-requests/approvals/pending":           {Resource: "service_request", Action: "read"},
 			"/api/v1/service-requests/me":                          {Resource: "service_request", Action: "read"},
 			"/api/v1/skills":                                       {Resource: "marketplace", Action: "read"},

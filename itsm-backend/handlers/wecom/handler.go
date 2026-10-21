@@ -46,10 +46,10 @@ func (h *Handler) Webhook(c *gin.Context) {
 	}
 	rcv, ok := conn.(connector.Receiver)
 	if !ok {
-		// 501 而非 500：企业微信渠道在 capability registry 中已声明 built:false
-		// （MaturityDisabled），"渠道未实现 Receiver" 是已知产品边界，不是故障。
-		// 报 500 会让监控被已知边界刷屏，调用方也会误判为自身请求有误。
-		common.Fail(c, common.NotImplementedCode, "企业微信渠道未实现 Receiver 接口：该能力在当前版本未包含")
+		// 501 而非 500：企业微信连接器 2026-10-21 起在 capability registry 为 Pilot/built:true，
+		// 且 builtin 实现有 Receiver 编译期断言，本分支按理不可达；保留作为防御——
+		// 若未来注册未实现 Receiver 的实例类型，报 501 让调用方明确是能力边界而非服务故障。
+		common.Fail(c, common.NotImplementedCode, "企业微信连接器实例未实现入站接收能力")
 		return
 	}
 	rawData, _ := c.GetRawData()

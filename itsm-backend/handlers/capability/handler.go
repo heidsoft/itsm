@@ -90,8 +90,14 @@ var registry = []definition{
 	// 此前误标为 disabled/built:false，会让按矩阵门控的界面隐藏一个可用能力。
 	// 是否真正可用取决于租户有没有启用身份提供方，由 HealthFor 如实报告。
 	{key: "identity.oidc", maturity: MaturityPilot, built: true},
-	{key: "connector.wecom", maturity: MaturityDisabled, built: false},
-	{key: "connector.dingtalk", maturity: MaturityDisabled, built: false},
+	// 企微/钉钉连接器（2026-10-21 Disabled→Pilot 转正）：Send/HealthCheck/VerifySignature/
+	// ParseInbound 四项核心与飞书同层级实现（connector/builtin/{wecom,dingtalk}，编译期
+	// 接口断言），回调路由与审计注入已在 bootstrap 装配（app.go Connector 段 → RouterConfig
+	// → RegisterRoutes）。渠道诊断（GET /notifications/channels）对两渠道返回真实健康信号。
+	// 与 feishu 同款 readinessEnv 门控：部署是否就绪由 ITSM_WECOM_READY / ITSM_DINGTALK_READY
+	// 如实申报，代码能力不再按「未包含在商业发布」隐藏。
+	{key: "connector.wecom", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_WECOM_READY"},
+	{key: "connector.dingtalk", maturity: MaturityPilot, built: true, dependencies: []string{"notification"}, readinessEnv: "ITSM_DINGTALK_READY"},
 }
 
 // NewHandler 返回能力矩阵端点。

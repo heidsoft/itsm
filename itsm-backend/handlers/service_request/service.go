@@ -16,6 +16,7 @@ import (
 	"itsm-backend/handlers/cmdb"
 	"itsm-backend/handlers/service_catalog"
 	"itsm-backend/service"
+	"itsm-backend/service/sla"
 
 	"go.uber.org/zap"
 )
@@ -67,9 +68,11 @@ type Service struct {
 	client         *ent.Client
 	logger         *zap.SugaredLogger
 	approvalBridge *service.BPMNApprovalBridge
-	// approvalChain 解析审批展示/投影层级；审批写入必须先成功完成 BPMN 待办，
+	// approvalChain 解析审批展示/投影层级；审批写入必须先成功完成 BPMN 待办,
 	// 不再允许无运行中实例或无待办时回退到业务侧裁决。
-	approvalChain         *service.ApprovalChainService
+	approvalChain *service.ApprovalChainService
+	// slaSvc 为服务请求提供 SLA 绑定与读面（2026-10-21 统一绑定落地）。
+	slaSvc                *service.TicketSLAService
 	workflowOutboxEnabled bool
 }
 
@@ -93,6 +96,36 @@ func NewService(repo Repository, scRepo service_catalog.Repository, cmdbRepo cmd
 // Create will call CreateWithWorkflowCommand so the business row and the
 // CommandStartBPMN outbox row share one transaction.
 func (s *Service) EnableWorkflowOutbox() { s.workflowOutboxEnabled = true }
+
+// SetSLAService 注入 SLA 服务（装配缺失时服务请求降级为无 SLA 绑定，不阻断创建）。
+func (s *Service) SetSLAService(slaSvc *service.TicketSLAService) { s.slaSvc = slaSvc }
+
+// bindSLAOnCreate 服务请求创建后绑定 SLA：按 service_type="service_request" 匹配
+// SLA 定义并写入 sla_states（与工单/事件/问题同一 Store、同一多态表）。
+// 服务请求无 priority 字段——匹配走「不带优先级」的定义（租户为服务请求
+// 单独配的定义即可命中）；无匹配定义即不绑定（与问题域同一决策：
+// 不套用隐藏默认值，避免存量请求被静默绑上非预期时限）。
+func (s *Service) bindSLAOnCreate(ctx context.Context, tenantID, requestID int) {
+	if s.slaSvc == nil {
+		return
+	}
+	slaResult, err := s.slaSvc.CalculateSLADeadlineFromRequest(ctx, tenantID, "service_request", "")
+	if err != nil {
+		s.logger.Warnw("Failed to calculate service request SLA deadline, continuing without SLA binding",
+			"tenant_id", tenantID, "request_id", requestID, "error", err)
+		return
+	}
+	if slaResult == nil || slaResult.SLADefinitionID == 0 {
+		return
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return
+	}
+	if err := store.SaveDeadlines(ctx, tenantID, "service_request", requestID, slaResult.SLADefinitionID, slaResult.ResponseDeadline, slaResult.ResolutionDeadline); err != nil {
+		s.logger.Warnw("Failed to save service request SLA state, continuing", "request_id", requestID, "error", err)
+	}
+}
 
 // Create submits a new service request
 func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalogID int, reqData *ServiceRequest) (*ServiceRequest, error) {
@@ -252,11 +285,14 @@ func (s *Service) Create(ctx context.Context, tenantID, requesterID int, catalog
 	if created == nil {
 		created, err = s.repo.Create(ctx, newReq, approvals)
 		if err != nil {
-			s.logger.Errorw("Failed to create service request", "error", err)
+			 s.logger.Errorw("Failed to create service request", "error", err)
 			return nil, common.NewInternalError("Failed to create service request", err)
 		}
 	}
 
+	// SLA 绑定在请求落库后进行：查不到定义只是「无 SLA」，不阻断创建
+	// （与 ticket/incident/problem 同一口径——能力缺失降级，主流程不失败）。
+	s.bindSLAOnCreate(ctx, tenantID, created.ID)
 	return created, nil
 }
 
@@ -856,4 +892,70 @@ func isValidServiceRequestOperationalTransition(current, next string) bool {
 	}
 	_, ok = allowed[next]
 	return ok
+}
+
+// GetServiceRequestSLA 读取服务请求的 SLA 状态（2026-10-21 统一绑定落地）。
+//
+// 契约红线（与 problem 域同一口径）：bound=false 是「没配 SLA」的如实回答，
+// 绝不返回伪数据让调用方把「能力没接/没配置」读成「SLA 正常且未超时」。
+// 存储态为 active 时按 SLAStatus 实时推导 warning/breached（与 problem 一致）。
+func (s *Service) GetServiceRequestSLA(ctx context.Context, id, tenantID int) (*dto.ServiceRequestSLAResponse, error) {
+	req, _, err := s.repo.GetWithApprovals(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	info := &dto.ServiceRequestSLAResponse{
+		RequestID: req.ID,
+		Title:     req.Title,
+		Status:    req.Status,
+		Bound:     false,
+		SLAStatus: "unbound",
+	}
+
+	if s.slaSvc == nil {
+		return info, nil
+	}
+	store := s.slaSvc.SLAStore()
+	if store == nil {
+		return info, nil
+	}
+	state, err := store.GetState(ctx, tenantID, "service_request", id)
+	if err != nil || state == nil {
+		// 无 sla_state 行 = 未绑定（租户没配 service_request 类型定义）。
+		return info, nil
+	}
+
+	info.Bound = true
+	info.SLADefinitionID = state.SLADefinitionID
+	info.SLAStatus = state.Status
+	info.PausedDurationSec = state.PausedDurationSeconds
+	if !state.ResponseDeadline.IsZero() {
+		t := state.ResponseDeadline
+		info.ResponseDeadline = &t
+	}
+	if !state.ResolutionDeadline.IsZero() {
+		t := state.ResolutionDeadline
+		info.ResolutionDeadline = &t
+	}
+	if !state.FirstResponseAt.IsZero() {
+		t := state.FirstResponseAt
+		info.FirstResponseAt = &t
+	}
+	if !state.ResolvedAt.IsZero() {
+		t := state.ResolvedAt
+		info.ResolvedAt = &t
+	}
+
+	// 暂停中的计时冻结与已解决都不做实时推导，直接信任存储态。
+	if state.Status != "paused" && state.ResolvedAt.IsZero() {
+		derived := sla.SLAStatus(time.Now(),
+			info.ResponseDeadline, info.ResolutionDeadline,
+			state.FirstResponseAt, state.ResolvedAt)
+		if derived == "breached" {
+			info.SLAStatus = "breached"
+		} else if derived == "warning" && state.Status == "active" {
+			info.SLAStatus = "warning"
+		}
+	}
+	return info, nil
 }

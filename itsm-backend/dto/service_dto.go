@@ -349,3 +349,27 @@ type UpdateServiceCatalogRequest struct {
 	Status            *string                 `json:"status" binding:"omitempty,max=20"`
 	SortOrder         *int                    `json:"sortOrder"`
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 服务请求 SLA（2026-10-21 统一绑定落地）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ServiceRequestSLAResponse 服务请求 SLA 读面（GET /api/v1/service-requests/:id/sla）。
+//
+// bound=false 表示该请求没有绑定任何 SLA 定义（租户未配置 service_request
+// 类型定义）——这是「没配 SLA」的如实回答，不是「SLA 正常且未超时」。
+// 服务请求无 priority 字段，定义按 service_type 匹配（不带优先级）。
+// status 取值：unbound / active / warning / breached / paused / met。
+type ServiceRequestSLAResponse struct {
+	RequestID          int        `json:"requestId"`
+	Title              string     `json:"title,omitempty"`
+	Status             string     `json:"status"`
+	Bound              bool       `json:"bound"`
+	SLADefinitionID    int        `json:"slaDefinitionId,omitempty"`
+	SLAStatus          string     `json:"slaStatus"`
+	ResponseDeadline   *time.Time `json:"responseDeadline,omitempty"`
+	ResolutionDeadline *time.Time `json:"resolutionDeadline,omitempty"`
+	FirstResponseAt    *time.Time `json:"firstResponseAt,omitempty"`
+	ResolvedAt         *time.Time `json:"resolvedAt,omitempty"`
+	PausedDurationSec  int        `json:"pausedDurationSeconds,omitempty"`
+}
