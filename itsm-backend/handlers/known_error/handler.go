@@ -1,6 +1,7 @@
 package known_error
 
 import (
+	"errors"
 	"strconv"
 
 	"itsm-backend/common"
@@ -28,7 +29,7 @@ func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 	if ke == nil {
 		return nil
 	}
-	return &dto.KEDBResponse{
+	resp := &dto.KEDBResponse{
 		ID:               ke.ID,
 		Title:            ke.Title,
 		Description:      ke.Description,
@@ -48,6 +49,13 @@ func (h *Handler) toResponse(ke *ent.KnownError) *dto.KEDBResponse {
 		CreatedAt:        ke.CreatedAt,
 		UpdatedAt:        ke.UpdatedAt,
 	}
+	// 来源问题必须回显：没有它，KEDB 列表无法跳回事故现场，
+	// 问题详情也无法判断「是否已沉淀过已知错误」。
+	if len(ke.Edges.Problem) > 0 {
+		problemID := ke.Edges.Problem[0].ID
+		resp.ProblemID = &problemID
+	}
+	return resp
 }
 
 func (h *Handler) ListKnownErrors(c *gin.Context) {
@@ -119,10 +127,15 @@ func (h *Handler) CreateKnownError(c *gin.Context) {
 		Category:    req.Category,
 		Severity:    req.Severity,
 		CreatedBy:   createdBy,
+		ProblemID:   req.ProblemID,
 	}
 
 	item, err := h.svc.CreateKnownError(c.Request.Context(), input)
 	if err != nil {
+		if errors.Is(err, ErrLinkedProblemNotFound) {
+			common.NotFoundWithErr(c, err, "关联的问题不存在")
+			return
+		}
 		common.FailWithErr(c, err, "创建已知错误失败")
 		return
 	}

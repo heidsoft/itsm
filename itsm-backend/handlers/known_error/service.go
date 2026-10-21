@@ -2,10 +2,17 @@ package known_error
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"itsm-backend/ent"
 	entknownerror "itsm-backend/ent/knownerror"
+	"itsm-backend/ent/problem"
 )
+
+// ErrLinkedProblemNotFound 表示 problemId 指向的问题不存在，或属于其他租户。
+// 两种情况对外都必须是 404：区分开会把「别家租户有没有这个 ID」变成探测面。
+var ErrLinkedProblemNotFound = errors.New("关联的问题不存在或不属于当前租户")
 
 type Service struct {
 	client *ent.Client
@@ -18,7 +25,7 @@ func NewService(client *ent.Client) *Service {
 func (s *Service) ListKnownErrors(ctx context.Context, tenantID int, page, pageSize int) ([]*ent.KnownError, int, error) {
 	query := s.client.KnownError.Query().Where(entknownerror.TenantID(tenantID))
 	offset := (page - 1) * pageSize
-	items, err := query.Offset(offset).Limit(pageSize).All(ctx)
+	items, err := query.Offset(offset).Limit(pageSize).WithProblem().All(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -32,11 +39,12 @@ func (s *Service) ListKnownErrors(ctx context.Context, tenantID int, page, pageS
 func (s *Service) GetKnownError(ctx context.Context, tenantID, id int) (*ent.KnownError, error) {
 	return s.client.KnownError.Query().
 		Where(entknownerror.ID(id), entknownerror.TenantID(tenantID)).
+		WithProblem().
 		Only(ctx)
 }
 
 func (s *Service) CreateKnownError(ctx context.Context, input *KnownErrorCreateInput) (*ent.KnownError, error) {
-	return s.client.KnownError.Create().
+	create := s.client.KnownError.Create().
 		SetTenantID(input.TenantID).
 		SetTitle(input.Title).
 		SetDescription(input.Description).
@@ -50,8 +58,36 @@ func (s *Service) CreateKnownError(ctx context.Context, input *KnownErrorCreateI
 		SetAffectedProducts(input.AffectedProducts).
 		SetAffectedCis(input.AffectedCIs).
 		SetKeywords(input.Keywords).
-		SetCreatedBy(input.CreatedBy).
-		Save(ctx)
+		SetCreatedBy(input.CreatedBy)
+
+	// 从问题沉淀已知错误时必须建立真实关联。
+	// 此前 handler 直接丢弃了前端传来的 problemId，KEDB 记录与来源问题彻底脱钩：
+	// 问题详情看不到「已沉淀」，KEDB 也追溯不回事故现场。
+	if input.ProblemID > 0 {
+		if _, err := s.client.Problem.Query().
+			Where(problem.ID(input.ProblemID), problem.TenantID(input.TenantID)).
+			Only(ctx); err != nil {
+			if ent.IsNotFound(err) {
+				return nil, ErrLinkedProblemNotFound
+			}
+			return nil, fmt.Errorf("校验关联问题失败: %w", err)
+		}
+		create = create.AddProblemIDs(input.ProblemID)
+	}
+
+	created, err := create.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if input.ProblemID > 0 {
+		// Save 返回的实体不带边；重新读取一次让调用方拿到真实的 problem 关联，
+		// 否则创建响应里的 problemId 会是 null，前端会以为关联没生效。
+		return s.client.KnownError.Query().
+			Where(entknownerror.ID(created.ID)).
+			WithProblem().
+			Only(ctx)
+	}
+	return created, nil
 }
 
 func (s *Service) UpdateKnownError(ctx context.Context, tenantID, id int, input *KnownErrorUpdateInput) (*ent.KnownError, error) {
@@ -116,7 +152,7 @@ func (s *Service) SearchKnownErrors(ctx context.Context, tenantID int, keyword s
 		return nil, 0, err
 	}
 	offset := (page - 1) * pageSize
-	items, err := baseQuery.Offset(offset).Limit(pageSize).All(ctx)
+	items, err := baseQuery.Offset(offset).Limit(pageSize).WithProblem().All(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -207,6 +243,8 @@ type KnownErrorCreateInput struct {
 	AffectedCIs      []string
 	Keywords         []string
 	CreatedBy        int
+	// ProblemID 非 0 时表示该已知错误由某个问题沉淀而来，必须建立 problem 边。
+	ProblemID int
 }
 
 // KnownErrorUpdateInput DTO for update

@@ -2937,6 +2937,47 @@ Query Parameters:
 }
 ```
 
+## 通知渠道诊断
+
+回答「为什么我没收到通知」的只读接口，权限码 `notification:read`。与投递审计互补：审计回答「发了但失败了」，渠道诊断回答「根本发不出去」。
+
+```http
+GET /api/v1/notifications/channels
+Authorization: Bearer <accessToken>
+```
+
+`data.items[]` 每项包含：
+
+| 字段 | 说明 |
+|---|---|
+| `channel` | 渠道名（连接器实例名，如 `email`/`feishu`；站内信为 `in_app`） |
+| `provider` / `type` | 连接器提供方与类型 |
+| `healthy` / `healthMessage` | 真实健康检查结果（拨号到第三方，5 秒超时） |
+| `checkedAt` | 本次检查时间 |
+| `lastSendSuccessAt` / `lastSendFailureAt` / `lastSendError` | 最近一次发送成败，来自连接器实例的运行时记录 |
+| `recipientTarget` | 当前登录用户在该渠道的收件目标，已脱敏（如 `ch****om`） |
+| `deliverable` | `healthy && recipientTarget != ""`；站内信恒为 `true` |
+| `blockedReason` | 不可投递时的可读原因（未配置目标 / 连接器不健康） |
+
+- `in_app` 恒排在首位且恒为可投递——它是账号有效即可达的兜底渠道，不依赖连接器。
+- 健康检查只探测**当前租户**已装配的连接器（`connector.Manager.HealthCheckTenant`），不会借这个接口探测其他租户的端点。
+- 接口只读，不触发真实发送；需要验证「能否送达」时先看这里，再用投递审计确认实际发送结果。
+
+## 通知投递审计
+
+`notification_deliveries` 由命令总线（`commandbus`）的投递处理器写入，记录每个「接收人 × 渠道」的投递状态、重试次数、供应商消息 ID 与失败原因。以下接口是该表的唯一读面，权限码 `notification:read`（重试需要 `notification:write`），全部按认证租户隔离。
+
+```http
+GET  /api/v1/notification-deliveries?channel=feishu&status=failed&recipientId=12&ticketId=88&from=2026-10-01&to=2026-10-20&page=1&pageSize=20
+GET  /api/v1/notification-deliveries/stats?days=7
+POST /api/v1/notification-deliveries/{id}/retry
+```
+
+- `from`/`to` 接受 `YYYY-MM-DD`（服务器本地时区，`to` 含当日）或 RFC3339；格式非法返回 **400/1001**，不返回 500。
+- 列表响应为统一分页信封 `{items,total,page,pageSize,totalPages}`；`targetMasked` 是写入时脱敏后的目标（如 `us****01`），接口不回显明文收件地址。
+- `stats` 按 `channel × status` 聚合，返回 `byStatus` 与 `byChannel[]`；`successRate` 的分母只计已定论的投递（`sent + failed`），`pending` 不计入，避免队列积压把成功率压低。
+- `retry` 只接受 `status=failed`：`sent` 返回 **409**（无需重试），`pending` 返回 **409**（仍在队列中），跨租户或记录不存在返回 **404**。重试不修改旧记录——旧记录保留为失败证据，新命令由 worker 执行后写入一条新的投递记录，因此同一通知可能有多条投递记录（审计设计，不是重复写入）。
+
 ## 值班排班
 
 排班表（schedule）属于某个支持组，班次（shift）是具体人员的时间段；同一排班表内班次不允许时间重叠。规范入口为 `/api/v1/on-call`，权限码 `on_call:read` / `on_call:write`。历史入口 `/api/v1/email-intake/on-call/*` 仍然可用并共用同一服务实例，但不再新增能力（缺少排班表改名/停用/删除）。
@@ -2960,6 +3001,10 @@ GET    /api/v1/on-call/current?groupId=5&at=2026-10-20T02:00:00Z
 - 班次要求 `endAt > startAt`（否则 **400**）、值班人是该支持组的在职成员（否则 **400**）、与同排班表已有班次不重叠（否则 **409**）。
 - 仍有班次的排班表不允许删除（**409**），避免历史派单失去可解释性；先删班次再删排班表。
 - `current` 在无匹配班次时返回 **404**「该支持组当前没有值班人」；同一时刻命中多个班次时取最早开始的一个（交接班重叠的确定性规则）。
+
+## 能力矩阵健康字段
+
+`GET /api/v1/capabilities` 的每个条目新增 `health` 对象（`{ok,reason,checkedAt}`），`lastHealthCheckAt` 改为真实探测时间而非请求时刻。探测覆盖数据库连通性（全部能力）、连接器健康（`connector.*`）、租户是否启用身份提供方（`identity.oidc`）；探测失败时 `deploymentReady` 一并置 `false` 并给出 `degradedReason`。`identity.oidc` 此前误标为 `disabled`，现为 `pilot`（SSO/OIDC 已有 11 个端点），是否可用取决于租户配置。
 
 ## 版本历史
 

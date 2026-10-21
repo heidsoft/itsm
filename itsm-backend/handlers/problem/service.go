@@ -212,6 +212,14 @@ func (s *Service) Update(ctx context.Context, tenantID int, id int, p *Problem, 
 		existing.AssigneeID = p.AssigneeID
 	}
 
+	// 关闭是唯一需要「证据」的状态跃迁：必须已有解决方案与根因结论。
+	// 放在字段合并之后校验，因为 CloseProblem 会在同一次调用里写入 resolution。
+	if existing.Status == "closed" {
+		if err := validateCloseEvidence(existing); err != nil {
+			return nil, err
+		}
+	}
+
 	result, err := s.repo.Update(ctx, existing, expectedStatus)
 	if err != nil {
 		if errors.Is(err, ErrProblemStatusMoved) {
@@ -256,6 +264,30 @@ func (s *Service) CloseProblem(ctx context.Context, tenantID, id, actorID int, a
 		Status:     "closed",
 		Resolution: strings.TrimSpace(resolution),
 	}, actorID, actorRole)
+}
+
+// validateCloseEvidence 落实「问题关闭前必须明确根因和解决方案」这一商业不变量。
+//
+// 旧实现允许 investigating -> resolved -> closed 全程不填任何分析结论，
+// 结果 KEDB 里堆满「已关闭但什么都没有」的问题单，既不能复用也不能审计。
+// 根因确实无法确定时，要求把判定依据写进根因字段（例如「无法确定：日志已轮转」），
+// 这样「无法确定」本身也是可审计的结论，而不是留空。
+func validateCloseEvidence(p *Problem) error {
+	if strings.TrimSpace(p.Resolution) == "" {
+		return common.NewBusinessError(
+			common.ConflictCode,
+			"问题关闭前必须填写解决方案",
+			"resolution is required before closing a problem",
+		)
+	}
+	if strings.TrimSpace(p.RootCause) == "" {
+		return common.NewBusinessError(
+			common.ConflictCode,
+			"问题关闭前必须明确根因；若无法确定，请在根因中写明判定依据",
+			"root_cause is required before closing a problem",
+		)
+	}
+	return nil
 }
 
 func isValidProblemPriority(priority string) bool {

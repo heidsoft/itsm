@@ -1,7 +1,7 @@
 # 🛣️ ITSM Roadmap
 
 > **Source of truth for what is shipping, what is shipping next, and
-> what is parked.** Updated as part of every release. Last synced: 2026-10-17 (v1.6.19 功能点台账修复第二轮 + 4 项存量缺陷修复)。同步缺口：v1.6.16–v1.6.18 三个版本未做条目级「已落地」回填，下文条目状态以代码与 `CHANGELOG.md` 为准。
+> what is parked.** Updated as part of every release. Last synced: 2026-10-21（Pilot 能力生产化：通知域晋升 GA、问题域关闭证据与 KEDB 关联修复）。同步缺口：v1.6.16–v1.6.18 三个版本未做条目级「已落地」回填，下文条目状态以代码与 `CHANGELOG.md` 为准。
 >
 > Cross-references:
 > - Design outlines: [docs/prd/](./docs/prd)（当前仅 1 篇）+ [plans/](./plans)（专项计划与审计）
@@ -101,6 +101,7 @@ Concretely that means:
 - [x] **CMDB AI-Native P0/P1** — 关系词表（13 种关系单一源）、本体端点、`ci_number` 全局唯一序列；List/Search 合并、AI 工具与影响解释；CMDB 前端完成 React Query 迁移。
 - [x] **CMDB 数据治理骨架（v1.6.15）** — 退役状态机（`online -> retiring -> retired` 显式转移 + 受控 reason 词表）、差异分类（`add/noop/retire_confirm/duplicate`）、治理质量指标（Active/Retired/Stale/Orphan/Incomplete/CompletenessPct）；21 用例全绿，零 Repository 接口扩张。
 - [x] **架构收敛与可维护性** — `router.go` 巨石按域拆分为独立 routes 文件；user / tenant / rbac / notification / application / cloud 六域接口化并补冒烟测试（作为 58 域迁移样板）；包名与目录名统一、分层守卫增加包名≠目录名检查；双 BPMN 引擎死代码清理。
+- [x] **Pilot 能力生产化（2026-10-21）** — 通知域晋升 GA：投递审计读面（`GET /notification-deliveries` + 失败重试）与渠道诊断（`GET /notifications/channels`：渠道装配/健康/收件目标三合一）补齐，"没收到通知"三类根因可定位；新增 `connector.Manager.HealthCheckTenant` 只探测当前租户，避免租户级只读接口成为跨租户连通性探针。问题域修两处生产阻断（关闭必须有解决方案+根因，否则 409；「转为已知错误」的 `problemId` 此前被 json 静默丢弃，现已落 `problem` 边并回显），但因 `GET /problems/:id/sla` 仍显式 503 而维持 Pilot。逐项阻断项见 `output/pilot-to-ga-2026-10-21.md`。
 - [x] **授权平面收敛（批次 1–5）** — A 类越权写收口（bpmn/流程触发等 39+ 条写路由补挂权限门，任务面 `task:*` 与流程面 `bpmn:*` 分权）；B 类权限码词表统一（95 种未定义码收敛到既有码空间）；C 类预检映射全量对齐（112 处声明/预检错配清零）；批次 5 治本：**路由声明成为权限单一真源**——预检映射路由条目由 `cmd/authz-gen` 从声明 AST 生成（698 条），族级回退策略显式化（120 条），4 道守卫（写路由必挂门 / 声明码⊆码空间 / 声明-预检对齐 / 生成物新鲜度）构成防漂移闭环；admin/technician DBOnly 空集修复 + seeder 同义动作奇偶补齐。
 - [x] **性能与运维** — 变更列表与 RAG 向量检索两处热路径 N+1 修复；prod 备份自动化（`scripts/prod-backup.sh` + 恢复演练 + launchd 每日调度）、compose 项目名隔离（`itsm-prod` / `itsm`）与诊断端口参数化。
 - [x] **变更审批-状态原子性（P0）** — `handlers/change.SubmitApproval` 把审批记录写入与目标状态 CAS 推进合并到同一 `*sql.Tx`：`SubmitApprovalRecordTx` 仓储方法以 `record.ChangeID + tenantID + status='draft' expected` 一次提交，任一子步失败整笔回滚；同时拒绝审批人不在审批链上的提交，避免越权。回归 `handlers/change/submit_approval_atomicity_test.go` 5 例：原子成功提交 / 事务失败零副作用 / CAS 守卫不会回退状态 / 拒绝非链上审批人 / 时间戳由调用方注入不被时钟漂移。

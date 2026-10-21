@@ -188,7 +188,10 @@ func TestProblemInvalidTransitionReturnsBusinessError(t *testing.T) {
 	require.ErrorAs(t, err, &bizErr, "状态机违规必须是 BusinessError")
 	assert.Equal(t, common.ConflictCode, bizErr.Code)
 
-	// 合法路径 investigating -> resolved -> closed 应成功
+	// 合法路径 investigating -> resolved -> closed 应成功。
+	// 关闭前必须已有根因结论（新增不变量），否则 409。
+	_, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, user.ID, "agent", "连接池未设上限")
+	require.NoError(t, err)
 	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"}, user.ID, "agent")
 	require.NoError(t, err)
 	closed, err := service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "resolution")
@@ -351,7 +354,9 @@ func TestProblemServiceUpdate_StatusMoved_MapConflict(t *testing.T) {
 	require.NoError(t, err)
 
 	movedSvc := NewService(&staleViewProblemRepo{Repository: realRepo, view: view}, service.validator, service.logger)
-	_, err = movedSvc.Update(ctx, tenant.ID, p.ID, &Problem{Status: "closed"}, owner.ID, "manager")
+	// 带上关闭证据，让校验通过、真正走到 CAS：本用例要验证的是并发冲突，
+	// 不是关闭证据缺失。
+	_, err = movedSvc.Update(ctx, tenant.ID, p.ID, &Problem{Status: "closed", RootCause: "根因", Resolution: "解决方案"}, owner.ID, "manager")
 	var bizErr *common.BusinessError
 	require.ErrorAs(t, err, &bizErr, "CAS 未命中必须映射为 BusinessError")
 	assert.Equal(t, common.ConflictCode, bizErr.Code)
@@ -360,4 +365,39 @@ func TestProblemServiceUpdate_StatusMoved_MapConflict(t *testing.T) {
 	reloaded, err := realRepo.Get(ctx, p.ID, tenant.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "resolved", reloaded.Status)
+}
+
+// TestProblemCloseRequiresEvidence 关闭问题必须同时具备解决方案与根因结论。
+// 「无法确定根因」也必须写进根因字段，留空一律拒绝。
+func TestProblemCloseRequiresEvidence(t *testing.T) {
+	client, service, ctx := setupProblemHandlerTest(t)
+	defer client.Close()
+	tenant := createProblemHandlerTenant(t, ctx, client, "close-evidence")
+	user := createProblemHandlerUser(t, ctx, client, tenant.ID, "close-evidence")
+	p := createProblemHandlerProblem(t, ctx, service, tenant.ID, user.ID)
+
+	_, err := service.InvestigateProblem(ctx, tenant.ID, p.ID, user.ID, "agent")
+	require.NoError(t, err)
+	_, err = service.Update(ctx, tenant.ID, p.ID, &Problem{Status: "resolved"}, user.ID, "agent")
+	require.NoError(t, err)
+
+	// 无解决方案：拒绝。
+	_, err = service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "")
+	require.Error(t, err)
+	var bizErr *common.BusinessError
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// 有解决方案、无根因：仍拒绝。
+	_, err = service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "回滚变更")
+	require.Error(t, err)
+	require.ErrorAs(t, err, &bizErr)
+	assert.Equal(t, common.ConflictCode, bizErr.Code)
+
+	// 明确记录「无法确定」也算结论：允许关闭。
+	_, err = service.UpdateRootCause(ctx, tenant.ID, p.ID, user.ID, "agent", "无法确定：相关日志已轮转，缺少现场证据")
+	require.NoError(t, err)
+	closed, err := service.CloseProblem(ctx, tenant.ID, p.ID, user.ID, "agent", "回滚变更并加日志留存")
+	require.NoError(t, err)
+	assert.Equal(t, "closed", closed.Status)
 }

@@ -19,7 +19,7 @@
 | 能力域 | 当前成熟度 | 已有业务证据 | 商业化缺口 |
 |---|---|---|---|
 | 工单/事件 | GA 候选 | 事件状态机、CI 多选关联、重大事件（`POST /api/v1/incidents/:id/major-incident`）、BPMN 触发、租户过滤；生产装配启用持久化 command/outbox | 仍需固化监控告警来源治理、积压恢复和目标容量验收；**优先级矩阵不是业务证据**（2026-10-02 实测：后端零 `/api/v1/priority*` 路由，`service/priority_matrix_service.go` 的 `SetPriorityMatrixService` 无任何调用点，因此 `incident_service.go:242,627` 的 impact×urgency 派生分支在生产里永不执行；前端 `priority-matrix-api.ts` 及其不可达组件链已在 E3-2 删除（2026-10-02），该能力现在既无 UI 也无客户端） |
-| 问题/已知错误 | Pilot | 问题状态、工作流、从问题创建已知错误、受影响 CI 字段 | CI 关联仍有字符串/弱引用路径；重复事件聚类、根因 CI、解决后知识发布未形成强制闭环 |
+| 问题/已知错误 | Pilot | 问题状态、工作流、从问题创建已知错误并建立 problem 关联、受影响 CI 字段；2026-10-21 起关闭必须有解决方案与根因结论（`4090`），「无法确定」也须写入根因字段 | **问题 SLA 与评论仍显式 503**（无截止时间字段、无 `sla_states` 写入路径），这是唯一阻断 GA 的项；重复事件聚类、根因 CI、解决后知识发布仍未形成强制闭环 |
 | 变更 | **Pilot** | 受影响 CI 校验、CMDB 影响摘要、关键 CI/高风险依赖/开放事件统计、风险与回滚建议、审批能力 | BPMN 审批与业务状态落库尚非原子；影响摘要尚未成为提交审批的后端门禁；窗口冲突和自动化回滚仍需强化；发布前需重新评估 GA 候选资格 |
 | 服务目录/服务请求 | Pilot | 目录、请求、审批、CI ID、云资源引用与 CI 创建/复用 | 目录项到 CI Type、交付模板、BPMN、SLA 的绑定不统一；Provisioning 生命周期与失败补偿不足 |
 | CMDB | GA 核心 + Pilot 发现 | CI、类型、关系、拓扑、历史、影响分析可用；阿里云连通已验证 | 云发现 Job/Worker/Diff/对账/审计尚未落地；数据质量、来源 ownership、退役治理待补 |
@@ -27,7 +27,7 @@
 | SLA | GA 候选 | 定义、截止时间、违规、预警、通知、指标、逐租户 watcher | 主要围绕 Ticket，事件/请求等对象的统一绑定需确认；日历/工作时间、暂停计时、升级动作需生产验收 |
 | 知识/RAG | Pilot | 文章、关键词检索、向量检索降级、LLM 问答、租户过滤；向量删除已实现并经 outbox 接线（`service/vector_store.go:88`、`handlers/knowledge/outbox.go:75 deleteWithVectorOutbox`） | 发布版本、可见性/RBAC 的端到端检索验证不足；问题解决到知识审核发布不闭环 |
 | AI | Pilot | LLM Gateway、分诊、摘要、RAG、AI 审计和工具框架 | 置信度、接受/拒绝反馈、prompt/model 版本和统一 evaluator 未在每个能力中强制；高风险动作不可自动执行 |
-| 连接器/通知 | Pilot/Disabled 混合 | 连接器注册与生命周期骨架，飞书实现基础较强，企微/钉钉/Webhook 有骨架 | 真实健康检查、租户密钥、消息幂等、重试/死信、回调验签、投递审计及市场安装闭环不完整 |
+| 连接器/通知 | **通知 GA** / 连接器 Pilot+Disabled | 通知：偏好过滤、幂等键、outbox 重试、投递审计读面（`GET /notification-deliveries` + 失败重试）、渠道诊断（`GET /notifications/channels`：装配/健康/收件目标三合一）；连接器：注册与生命周期骨架，飞书实现基础较强，企微/钉钉仍是 Disabled | 连接器侧：回调验签、租户密钥轮换、死信人工重放与市场安装闭环仍需逐项验收；企微/钉钉尚未实现，不构成「已交付能力」 |
 | RBAC/多租户/审计 | GA 候选 | 角色权限、Endpoint ACL、租户过滤、AuditLog、多处跨租户测试 | 各域仍需能力级权限矩阵；后台任务/system actor、审计相关 ID、敏感字段脱敏必须统一 |
 | 报表/运营 | Pilot | SLA、事件等局部指标和 Dashboard | 缺少面向管理者的统一服务质量指标、数据口径版本、导出审计和 MSP 跨租户汇总边界 |
 

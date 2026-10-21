@@ -212,7 +212,26 @@ func (m *Manager) HealthCheckAll(ctx context.Context) map[string]HealthStatus {
 		insts = append(insts, v)
 	}
 	m.mu.RUnlock()
+	return m.healthCheckInstances(ctx, insts)
+}
 
+// HealthCheckTenant 只检查指定租户的连接器。
+//
+// 与 HealthCheckAll 的区别是安全边界：健康检查会真实拨号到第三方（SMTP / 飞书 / 钉钉），
+// 租户级只读接口不能借这个调用去探测别家租户的端点，否则等于给出跨租户的连通性探针。
+func (m *Manager) HealthCheckTenant(ctx context.Context, tenantID int) map[string]HealthStatus {
+	m.mu.RLock()
+	insts := make([]*instance, 0, len(m.instances))
+	for _, v := range m.instances {
+		if v.cfg.TenantID == tenantID {
+			insts = append(insts, v)
+		}
+	}
+	m.mu.RUnlock()
+	return m.healthCheckInstances(ctx, insts)
+}
+
+func (m *Manager) healthCheckInstances(ctx context.Context, insts []*instance) map[string]HealthStatus {
 	out := make(map[string]HealthStatus, len(insts))
 	for _, ins := range insts {
 		key := fmt.Sprintf("%d/%s/%s", ins.cfg.TenantID, ins.cfg.Name, ins.cfg.Provider)

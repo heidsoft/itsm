@@ -725,6 +725,12 @@ func NewApplication() *Application {
 	// Notification and preference services share the notification domain handler.
 	notificationPreferenceService := service.NewNotificationPreferenceService(client, sugar)
 	notificationHTTPHandler := notificationHandler.NewHandler(notificationService, notificationPreferenceService, sugar)
+	// 投递审计读面：直接读 notification_deliveries（由 commandbus 投递处理器写入），
+	// 并提供失败重试入队。没有它，运维无法回答「为什么这条通知没发出去」。
+	notificationDeliveryHandler := notificationHandler.NewDeliveryHandler(client, sugar)
+	// 渠道诊断：把「渠道是否装配 / 是否健康 / 用户目标是否就绪」合成一次只读查询。
+	// 与投递审计配合，覆盖「没收到通知」的两类根因（发失败 vs 发不出去）。
+	notificationChannelHandler := notificationHandler.NewChannelHandler(client, connectorManager, sugar)
 
 	// Ticket Workflow Service & Handler
 	ticketWorkflowService := service.NewTicketWorkflowService(client, sugar)
@@ -1202,6 +1208,7 @@ func NewApplication() *Application {
 		Logger:                       sugar,
 		Client:                       client,
 		RawDB:                        database.GetRawDB(),
+		ConnectorManager:             connectorManager,
 		CSRFEnabled:                  cfg.Security.CSRFEnabled,
 		RedisRateLimiter:             redisRateLimiter,
 		TicketHandler:                ticketHandler,
@@ -1210,6 +1217,8 @@ func NewApplication() *Application {
 		TicketAttachmentHandler:      ticketAttachmentHandler.NewHandler(ticketAttachmentService, sugar),
 		TicketNotificationHandler:    ticketNotificationHandler.NewHandler(ticketNotificationService, sugar),
 		NotificationHandler:          notificationHTTPHandler,
+		NotificationDeliveryHandler:  notificationDeliveryHandler,
+		NotificationChannelHandler:   notificationChannelHandler,
 		TicketRatingHandler:          ticketRatingHandler.NewHandler(ticketRatingService, sugar),
 		TicketAssignmentSmartHandler: assignmentSmartHandler.NewHandler(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar),
 		TicketViewHandler:            ticketViewHandler.NewHandler(ticketViewService, sugar),

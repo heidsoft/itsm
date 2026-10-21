@@ -24,6 +24,9 @@ type CreateKnownErrorRequest struct {
 	AffectedProducts []string `json:"affectedProducts"`
 	AffectedCIs      []string `json:"affectedCis"`
 	Keywords         []string `json:"keywords"`
+	// ProblemID 由问题详情页的「转为已知错误」传入，服务端据此建立 problem 关联。
+	// 声明它之前，前端 payload 里的 problemId 会被 json 解码静默丢弃。
+	ProblemID int `json:"problemId"`
 	// CreatedBy/TenantID 由服务端从认证上下文推导（见 handlers/known_error），
 	// 不接受客户端自报身份，因此不得声明 binding:"required"。
 	CreatedBy int `json:"createdBy"`

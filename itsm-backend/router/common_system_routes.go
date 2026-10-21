@@ -218,6 +218,24 @@ func SetupCommonSystemRoutes(r *gin.Engine, tenant *gin.RouterGroup, config *Rou
 				notifications.DELETE("/batch", middleware.RequirePermission("notification", "write"), config.NotificationHandler.DeleteNotifications)
 				notifications.DELETE("/:id", middleware.RequirePermission("notification", "write"), config.NotificationHandler.DeleteNotification)
 				notifications.POST("", middleware.RequirePermission("notification", "create"), config.NotificationHandler.CreateNotification)
+				// 渠道诊断：回答「为什么我没收到通知」——渠道是否装配、是否健康、
+				// 当前用户是否配置了收件目标。只读，不触发真实发送。
+				if config.NotificationChannelHandler != nil {
+					notifications.GET("/channels", middleware.RequirePermission("notification", "read"), config.NotificationChannelHandler.GetChannels)
+				}
+			}
+		}
+
+		// Notification deliveries（投递审计读面）
+		//
+		// 独立一级前缀而非 /notifications/deliveries：后者会与已注册的
+		// /notifications/:id 参数路由在同一路径段上产生静态/通配冲突。
+		if config.NotificationDeliveryHandler != nil {
+			deliveries := tenant.Group("/notification-deliveries")
+			{
+				deliveries.GET("", middleware.RequirePermission("notification", "read"), config.NotificationDeliveryHandler.ListDeliveries)
+				deliveries.GET("/stats", middleware.RequirePermission("notification", "read"), config.NotificationDeliveryHandler.GetDeliveryStats)
+				deliveries.POST("/:id/retry", middleware.RequirePermission("notification", "write"), config.NotificationDeliveryHandler.RetryDelivery)
 			}
 		}
 	}

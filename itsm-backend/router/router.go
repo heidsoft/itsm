@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"itsm-backend/common"
+	"itsm-backend/connector"
 	connectorAlert "itsm-backend/connector/alert"
 	"itsm-backend/ent"
 	"itsm-backend/handlers"
@@ -147,6 +148,9 @@ type RouterConfig struct {
 	Logger    *zap.SugaredLogger
 	Client    *ent.Client
 	RawDB     *sql.DB
+	// ConnectorManager 供能力矩阵做连接器健康探测；为 nil 时跳过该维度，
+	// 不会伪造「健康」。
+	ConnectorManager *connector.Manager
 
 	// CSRF configuration
 	CSRFEnabled bool
@@ -202,6 +206,11 @@ type RouterConfig struct {
 	EscalationMatrixHandler *escalationMatrixHandler.Handler
 	AuditLogHandler         *auditlogHandler.Handler
 	NotificationHandler     *notificationHandler.Handler
+	// NotificationDeliveryHandler 暴露通知投递审计读面（失败排查 + 人工重试）。
+	// 为 nil 时对应路由不注册，兼容未装配命令总线的测试环境。
+	NotificationDeliveryHandler *notificationHandler.DeliveryHandler
+	// NotificationChannelHandler 暴露通知渠道诊断（渠道是否装配 / 健康 / 用户目标是否就绪）。
+	NotificationChannelHandler *notificationHandler.ChannelHandler
 	// OnCallHandler 暴露值班排班管理（此前只有表与权限，没有 HTTP 面）。
 	OnCallHandler *onCallHandler.Handler
 
@@ -393,7 +402,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		csrfConfig := middleware.DefaultCSRFConfig()
 		auth.Use(middleware.CSRFProtectionMiddleware(csrfConfig))
 	}
-	auth.GET("/capabilities", capability.Handler)
+	auth.GET("/capabilities", capability.NewHandler(
+		capability.NewProber(config.RawDB, config.Client, config.ConnectorManager, config.Logger),
+	))
 	// GA 就绪检查：跨租户系统级统计，需认证 + system:read 权限。
 	auth.GET("/readiness/ga", middleware.RequirePermission("system", "read"), func(c *gin.Context) {
 		common.Success(c, buildGAReadiness(c.Request.Context(), config.Client))
