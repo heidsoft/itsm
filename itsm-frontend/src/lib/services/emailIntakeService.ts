@@ -158,6 +158,9 @@ export interface ConversationListParams {
 
 class EmailIntakeService {
   private readonly baseUrl = '/api/v1/email-intake';
+  // 值班排班是独立领域，规范入口在 /api/v1/on-call；
+  // /email-intake/on-call 只是历史兼容别名，前端不再使用。
+  private readonly onCallBaseUrl = '/api/v1/on-call';
 
   async conversations(params: ConversationListParams): Promise<ConversationListResponse> {
     return httpClient.get(`${this.baseUrl}/conversations`, {
@@ -271,11 +274,11 @@ class EmailIntakeService {
   }
 
   async schedules(): Promise<ListResponse<OnCallSchedule>> {
-    return httpClient.get(`${this.baseUrl}/on-call/schedules`);
+    return httpClient.get(`${this.onCallBaseUrl}/schedules`);
   }
 
   async createSchedule(payload: Omit<OnCallSchedule, 'id'>): Promise<OnCallSchedule> {
-    return httpClient.post(`${this.baseUrl}/on-call/schedules`, payload);
+    return httpClient.post(`${this.onCallBaseUrl}/schedules`, payload);
   }
 
   async createShift(payload: {
@@ -284,12 +287,12 @@ class EmailIntakeService {
     startAt: string;
     endAt: string;
   }): Promise<void> {
-    await httpClient.post(`${this.baseUrl}/on-call/shifts`, payload);
+    await httpClient.post(`${this.onCallBaseUrl}/shifts`, payload);
   }
 
   async shifts(scheduleId?: number): Promise<ListResponse<OnCallShift>> {
     return httpClient.get(
-      `${this.baseUrl}/on-call/shifts`,
+      `${this.onCallBaseUrl}/shifts`,
       scheduleId ? { scheduleId } : undefined
     );
   }
@@ -298,11 +301,11 @@ class EmailIntakeService {
     id: number,
     payload: { scheduleId: number; userId: number; startAt: string; endAt: string }
   ): Promise<OnCallShift> {
-    return httpClient.put(`${this.baseUrl}/on-call/shifts/${id}`, payload);
+    return httpClient.put(`${this.onCallBaseUrl}/shifts/${id}`, payload);
   }
 
   async deleteShift(id: number): Promise<void> {
-    await httpClient.delete(`${this.baseUrl}/on-call/shifts/${id}`);
+    await httpClient.delete(`${this.onCallBaseUrl}/shifts/${id}`);
   }
   async updateBranch(
     id: number,
@@ -334,7 +337,7 @@ class EmailIntakeService {
     startAt: string;
     endAt: string;
   } | null> {
-    return httpClient.get(`${this.baseUrl}/on-call/current`, { groupId });
+    return httpClient.get(`${this.onCallBaseUrl}/current`, { groupId });
   }
 }
 

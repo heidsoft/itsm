@@ -25,6 +25,8 @@ const mockPut = httpClient.put as jest.Mock;
 const mockDelete = httpClient.delete as jest.Mock;
 
 const BASE = '/api/v1/email-intake';
+// 值班排班已迁到独立领域入口，与 email-intake 前缀解耦。
+const ON_CALL = '/api/v1/on-call';
 
 const conversation = {
   id: 7,
@@ -269,43 +271,43 @@ describe('EmailIntakeService', () => {
   });
 
   describe('值班排班', () => {
-    it('排班使用 /on-call/schedules 与 /on-call/shifts', async () => {
+    it('排班使用 /api/v1/on-call 的 schedules 与 shifts', async () => {
       mockGet.mockResolvedValueOnce({ items: [], total: 0 });
       await emailIntakeService.schedules();
-      expect(mockGet).toHaveBeenCalledWith(`${BASE}/on-call/schedules`);
+      expect(mockGet).toHaveBeenCalledWith(`${ON_CALL}/schedules`);
 
       const schedule = { id: 61, groupId: 5, name: '一线', timezone: 'Asia/Shanghai', status: 'active' };
       mockPost.mockResolvedValueOnce(schedule);
       await emailIntakeService.createSchedule(schedule);
-      expect(mockPost).toHaveBeenCalledWith(`${BASE}/on-call/schedules`, schedule);
+      expect(mockPost).toHaveBeenCalledWith(`${ON_CALL}/schedules`, schedule);
 
       const shiftPayload = { scheduleId: 61, userId: 9, startAt: 'a', endAt: 'b' };
       mockPost.mockResolvedValueOnce(undefined);
       await emailIntakeService.createShift(shiftPayload);
-      expect(mockPost).toHaveBeenCalledWith(`${BASE}/on-call/shifts`, shiftPayload);
+      expect(mockPost).toHaveBeenCalledWith(`${ON_CALL}/shifts`, shiftPayload);
 
       mockGet.mockResolvedValueOnce({ items: [], total: 0 });
       await emailIntakeService.shifts(61);
-      expect(mockGet).toHaveBeenLastCalledWith(`${BASE}/on-call/shifts`, { scheduleId: 61 });
+      expect(mockGet).toHaveBeenLastCalledWith(`${ON_CALL}/shifts`, { scheduleId: 61 });
 
       await emailIntakeService.shifts();
-      expect(mockGet).toHaveBeenLastCalledWith(`${BASE}/on-call/shifts`, undefined);
+      expect(mockGet).toHaveBeenLastCalledWith(`${ON_CALL}/shifts`, undefined);
 
       const shift = { id: 71, ...shiftPayload };
       mockPut.mockResolvedValueOnce(shift);
       await emailIntakeService.updateShift(71, shiftPayload);
-      expect(mockPut).toHaveBeenCalledWith(`${BASE}/on-call/shifts/71`, shiftPayload);
+      expect(mockPut).toHaveBeenCalledWith(`${ON_CALL}/shifts/71`, shiftPayload);
 
       mockDelete.mockResolvedValueOnce(undefined);
       await emailIntakeService.deleteShift(71);
-      expect(mockDelete).toHaveBeenCalledWith(`${BASE}/on-call/shifts/71`);
+      expect(mockDelete).toHaveBeenCalledWith(`${ON_CALL}/shifts/71`);
     });
 
     it('当前值班人查询按 groupId', async () => {
       mockGet.mockResolvedValueOnce(null);
 
       await expect(emailIntakeService.currentOnCall(5)).resolves.toBeNull();
-      expect(mockGet).toHaveBeenCalledWith(`${BASE}/on-call/current`, { groupId: 5 });
+      expect(mockGet).toHaveBeenCalledWith(`${ON_CALL}/current`, { groupId: 5 });
     });
   });
 

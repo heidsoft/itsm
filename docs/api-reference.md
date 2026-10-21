@@ -2937,6 +2937,30 @@ Query Parameters:
 }
 ```
 
+## 值班排班
+
+排班表（schedule）属于某个支持组，班次（shift）是具体人员的时间段；同一排班表内班次不允许时间重叠。规范入口为 `/api/v1/on-call`，权限码 `on_call:read` / `on_call:write`。历史入口 `/api/v1/email-intake/on-call/*` 仍然可用并共用同一服务实例，但不再新增能力（缺少排班表改名/停用/删除）。
+
+```http
+GET    /api/v1/on-call/schedules?groupId=5
+POST   /api/v1/on-call/schedules
+GET    /api/v1/on-call/schedules/{id}
+PUT    /api/v1/on-call/schedules/{id}
+DELETE /api/v1/on-call/schedules/{id}
+
+GET    /api/v1/on-call/shifts?scheduleId=61&from=2026-10-01T00:00:00Z&to=2026-11-01T00:00:00Z
+POST   /api/v1/on-call/shifts
+PUT    /api/v1/on-call/shifts/{id}
+DELETE /api/v1/on-call/shifts/{id}
+
+GET    /api/v1/on-call/current?groupId=5&at=2026-10-20T02:00:00Z
+```
+
+- 排班表缺省时区 `Asia/Shanghai`、缺省状态 `active`；`groupId` 必须属于当前租户。
+- 班次要求 `endAt > startAt`（否则 **400**）、值班人是该支持组的在职成员（否则 **400**）、与同排班表已有班次不重叠（否则 **409**）。
+- 仍有班次的排班表不允许删除（**409**），避免历史派单失去可解释性；先删班次再删排班表。
+- `current` 在无匹配班次时返回 **404**「该支持组当前没有值班人」；同一时刻命中多个班次时取最早开始的一个（交接班重叠的确定性规则）。
+
 ## 版本历史
 
 | 版本 | 日期 | 说明 |

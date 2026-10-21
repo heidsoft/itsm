@@ -2,10 +2,8 @@ package email_intake
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -15,12 +13,10 @@ import (
 	"itsm-backend/ent/emailconversation"
 	"itsm-backend/ent/externalcontractreference"
 	"itsm-backend/ent/group"
-	"itsm-backend/ent/oncallschedule"
-	"itsm-backend/ent/oncallshift"
+	oncall "itsm-backend/handlers/on_call"
 	"itsm-backend/ent/servicecustomer"
 	"itsm-backend/ent/sourceorganization"
 	"itsm-backend/ent/supportcontract"
-	"itsm-backend/ent/user"
 )
 
 const (
@@ -105,7 +101,7 @@ func (s *Service) CreateShift(ctx context.Context, tenantID, scheduleID, userID 
 }
 
 func (s *Service) ListShifts(ctx context.Context, tenantID, scheduleID int) ([]*ent.OnCallShift, error) {
-	return s.onCall.ListShifts(ctx, tenantID, scheduleID)
+	return s.onCall.ListShifts(ctx, tenantID, scheduleID, nil, nil)
 }
 
 func (s *Service) UpdateShift(ctx context.Context, tenantID, shiftID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
@@ -273,126 +269,34 @@ func containsNormalized(values []string, needle string) bool {
 	return false
 }
 
+// 值班排班已迁至 handlers/on_call：排班与班次是被多个域消费的一等领域，
+// 不该寄生在邮件受理里。此处保留类型/错误别名与构造函数，让 orchestrator
+// 与既有 /email-intake/on-call 路由的引用面保持不变。
+//
+// 规范入口是 /api/v1/on-call/*（handlers/on_call）；/email-intake/on-call/*
+// 作为历史路径保留，二者共用同一个 on_call.Service 实例，不存在两套语义。
+type OnCallService = oncall.Service
+type CurrentOnCall = oncall.CurrentOnCall
+
 var (
-	ErrOverlappingShift = errors.New("on-call shift overlaps an existing shift")
-	ErrInvalidShift     = errors.New("on-call shift end must be after start")
-	ErrShiftNotFound    = errors.New("on-call shift not found")
-	ErrNoOnCall         = errors.New("no on-call resolver found for group")
+	ErrOverlappingShift = oncall.ErrOverlappingShift
+	ErrInvalidShift     = oncall.ErrInvalidShift
+	ErrShiftNotFound    = oncall.ErrShiftNotFound
+	ErrNoOnCall         = oncall.ErrNoOnCall
 )
 
-type CurrentOnCall struct {
-	ScheduleID int       `json:"scheduleId"`
-	ShiftID    int       `json:"shiftId"`
-	GroupID    int       `json:"groupId"`
-	UserID     int       `json:"userId"`
-	StartAt    time.Time `json:"startAt"`
-	EndAt      time.Time `json:"endAt"`
+func NewOnCallService(client *ent.Client) *oncall.Service { return oncall.NewService(client) }
+
+// CreateOnCallSchedule / ListOnCallSchedules 是历史路径的薄委托。
+// 排班表的完整 CRUD（含改名、停用、删除）由 /on-call/schedules 提供。
+func (s *Service) CreateOnCallSchedule(ctx context.Context, tenantID int, req *scheduleRequest) (*ent.OnCallSchedule, error) {
+	return s.onCall.CreateSchedule(ctx, tenantID, oncall.ScheduleInput{
+		GroupID: req.GroupID, Name: req.Name, Timezone: req.Timezone, Status: req.Status,
+	})
 }
 
-type OnCallService struct{ client *ent.Client }
-
-func NewOnCallService(client *ent.Client) *OnCallService { return &OnCallService{client: client} }
-
-func (s *OnCallService) CreateShift(ctx context.Context, tenantID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
-	if !endAt.After(startAt) {
-		return nil, ErrInvalidShift
-	}
-	if err := s.validateShiftAssignment(ctx, tenantID, scheduleID, userID); err != nil {
-		return nil, err
-	}
-	overlap, err := s.client.OnCallShift.Query().Where(
-		oncallshift.TenantIDEQ(tenantID), oncallshift.ScheduleIDEQ(scheduleID),
-		oncallshift.StartAtLT(endAt), oncallshift.EndAtGT(startAt),
-	).Exist(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("check overlapping on-call shifts: %w", err)
-	}
-	if overlap {
-		return nil, ErrOverlappingShift
-	}
-	return s.client.OnCallShift.Create().SetTenantID(tenantID).SetScheduleID(scheduleID).SetUserID(userID).SetStartAt(startAt).SetEndAt(endAt).Save(ctx)
-}
-
-func (s *OnCallService) validateShiftAssignment(ctx context.Context, tenantID, scheduleID, userID int) error {
-	schedule, err := s.client.OnCallSchedule.Query().Where(
-		oncallschedule.IDEQ(scheduleID), oncallschedule.TenantIDEQ(tenantID), oncallschedule.StatusEQ("active"),
-	).Only(ctx)
-	if err != nil {
-		return fmt.Errorf("on-call schedule not found: %w", err)
-	}
-	member, err := s.client.Group.Query().Where(
-		group.IDEQ(schedule.GroupID), group.TenantIDEQ(tenantID), group.HasMembersWith(user.IDEQ(userID), user.TenantIDEQ(tenantID), user.ActiveEQ(true)),
-	).Exist(ctx)
-	if err != nil {
-		return fmt.Errorf("validate on-call member: %w", err)
-	}
-	if !member {
-		return errors.New("on-call user must be an active member of the support group")
-	}
-	return nil
-}
-
-func (s *OnCallService) ListShifts(ctx context.Context, tenantID, scheduleID int) ([]*ent.OnCallShift, error) {
-	query := s.client.OnCallShift.Query().Where(oncallshift.TenantIDEQ(tenantID))
-	if scheduleID > 0 {
-		query.Where(oncallshift.ScheduleIDEQ(scheduleID))
-	}
-	return query.Order(ent.Desc(oncallshift.FieldStartAt)).All(ctx)
-}
-
-func (s *OnCallService) UpdateShift(ctx context.Context, tenantID, shiftID, scheduleID, userID int, startAt, endAt time.Time) (*ent.OnCallShift, error) {
-	if !endAt.After(startAt) {
-		return nil, ErrInvalidShift
-	}
-	shift, err := s.client.OnCallShift.Query().Where(oncallshift.IDEQ(shiftID), oncallshift.TenantIDEQ(tenantID)).Only(ctx)
-	if err != nil {
-		return nil, ErrShiftNotFound
-	}
-	if err := s.validateShiftAssignment(ctx, tenantID, scheduleID, userID); err != nil {
-		return nil, err
-	}
-	if scheduleID != shift.ScheduleID || userID != shift.UserID || !startAt.Equal(shift.StartAt) || !endAt.Equal(shift.EndAt) {
-		overlap, err := s.client.OnCallShift.Query().Where(
-			oncallshift.TenantIDEQ(tenantID), oncallshift.ScheduleIDEQ(scheduleID),
-			oncallshift.StartAtLT(endAt), oncallshift.EndAtGT(startAt),
-			oncallshift.IDNEQ(shiftID),
-		).Exist(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("check overlapping on-call shifts: %w", err)
-		}
-		if overlap {
-			return nil, ErrOverlappingShift
-		}
-	}
-	return s.client.OnCallShift.UpdateOneID(shiftID).SetScheduleID(scheduleID).SetUserID(userID).SetStartAt(startAt).SetEndAt(endAt).Save(ctx)
-}
-
-func (s *OnCallService) DeleteShift(ctx context.Context, tenantID, shiftID int) error {
-	deleted, err := s.client.OnCallShift.Delete().Where(oncallshift.IDEQ(shiftID), oncallshift.TenantIDEQ(tenantID)).Exec(ctx)
-	if err != nil {
-		return err
-	}
-	if deleted == 0 {
-		return ErrShiftNotFound
-	}
-	return nil
-}
-
-func (s *OnCallService) CurrentResolver(ctx context.Context, tenantID, groupID int, at time.Time) (*CurrentOnCall, error) {
-	shifts, err := s.client.OnCallShift.Query().Where(
-		oncallshift.TenantIDEQ(tenantID), oncallshift.StartAtLTE(at), oncallshift.EndAtGT(at),
-		oncallshift.HasScheduleWith(oncallschedule.TenantIDEQ(tenantID), oncallschedule.GroupIDEQ(groupID), oncallschedule.StatusEQ("active")),
-		oncallshift.HasUserWith(user.TenantIDEQ(tenantID), user.ActiveEQ(true)),
-	).WithSchedule().All(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("query current on-call resolver: %w", err)
-	}
-	if len(shifts) == 0 {
-		return nil, ErrNoOnCall
-	}
-	sort.Slice(shifts, func(i, j int) bool { return shifts[i].StartAt.Before(shifts[j].StartAt) })
-	shift := shifts[0]
-	return &CurrentOnCall{ScheduleID: shift.ScheduleID, ShiftID: shift.ID, GroupID: groupID, UserID: shift.UserID, StartAt: shift.StartAt, EndAt: shift.EndAt}, nil
+func (s *Service) ListOnCallSchedules(ctx context.Context, tenantID int) ([]*ent.OnCallSchedule, error) {
+	return s.onCall.ListSchedules(ctx, tenantID, 0)
 }
 
 // ─── ServiceCustomer ────────────────────────────────────────────────
@@ -521,17 +425,7 @@ func (s *Service) SourceOrganizationExists(ctx context.Context, tenantID, id int
 	return s.client.SourceOrganization.Query().Where(sourceorganization.IDEQ(id), sourceorganization.TenantIDEQ(tenantID)).Exist(ctx)
 }
 
-// ─── OnCallSchedule ─────────────────────────────────────────────────
-
-func (s *Service) CreateOnCallSchedule(ctx context.Context, tenantID int, req *scheduleRequest) (*ent.OnCallSchedule, error) {
-	timezone := defaultString(req.Timezone, "Asia/Shanghai")
-	status := defaultString(req.Status, "active")
-	return s.client.OnCallSchedule.Create().SetTenantID(tenantID).SetGroupID(req.GroupID).SetName(req.Name).SetTimezone(timezone).SetStatus(status).Save(ctx)
-}
-
-func (s *Service) ListOnCallSchedules(ctx context.Context, tenantID int) ([]*ent.OnCallSchedule, error) {
-	return s.client.OnCallSchedule.Query().Where(oncallschedule.TenantIDEQ(tenantID)).All(ctx)
-}
+// 排班表的 CRUD 已归 handlers/on_call，本域不再保留第二份实现。
 
 func (s *Service) GroupExistsInTenant(ctx context.Context, tenantID, groupID int) (bool, error) {
 	return s.client.Group.Query().Where(group.IDEQ(groupID), group.TenantIDEQ(tenantID)).Exist(ctx)

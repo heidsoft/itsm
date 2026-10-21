@@ -65,6 +65,7 @@ import (
 	"itsm-backend/handlers/known_error"
 	mspHandler "itsm-backend/handlers/msp"
 	notificationHandler "itsm-backend/handlers/notification"
+	"itsm-backend/handlers/on_call"
 	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
 	"itsm-backend/handlers/problem_investigation"
@@ -978,6 +979,10 @@ func NewApplication() *Application {
 		sugar.Fatalw("Failed to register email intake process handler", "error", err)
 	}
 	emailIntakeHandler.SetOrchestrator(emailIntakeOrchestrator)
+	// 值班排班：独立领域服务，同时被 /on-call/*（规范入口）与 /email-intake/on-call/*
+	// （历史入口）消费。两处共用同一个实例，避免语义分叉。
+	onCallService := on_call.NewService(client)
+	onCallHTTPHandler := on_call.NewHandler(onCallService, sugar)
 	connectorManager.SetInboundHandler("email", emailIntakeOrchestrator.IngestConnectorMessage)
 
 	// Evaluator bySkill 维度：将 SkillRegistry 注入到 AI 评估服务。
@@ -1261,6 +1266,7 @@ func NewApplication() *Application {
 		VectorStoreHandler:          vectorStoreHandler.NewHandler(service.NewVectorStore(database.GetRawDB()), sugar),
 		AIHandler:                   aiHandler, // Added AI domain handler
 		EmailIntakeHandler:          emailIntakeHandler,
+		OnCallHandler:               onCallHTTPHandler,
 		CommonHandler:               commonHandler,
 		AuthHandler:                 authHTTPHandler,
 		// 自助改密：复用 userService（与用户管理面同一 service 层，

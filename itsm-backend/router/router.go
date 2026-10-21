@@ -46,6 +46,7 @@ import (
 	marketplaceHandler "itsm-backend/handlers/marketplace"
 	mspHandler "itsm-backend/handlers/msp"
 	notificationHandler "itsm-backend/handlers/notification"
+	onCallHandler "itsm-backend/handlers/on_call"
 	"itsm-backend/handlers/operations"
 	predictionHandler "itsm-backend/handlers/prediction"
 	"itsm-backend/handlers/problem"
@@ -201,6 +202,8 @@ type RouterConfig struct {
 	EscalationMatrixHandler *escalationMatrixHandler.Handler
 	AuditLogHandler         *auditlogHandler.Handler
 	NotificationHandler     *notificationHandler.Handler
+	// OnCallHandler 暴露值班排班管理（此前只有表与权限，没有 HTTP 面）。
+	OnCallHandler *onCallHandler.Handler
 
 	// Additional domain controllers
 	ProvisioningHandler *provisioningHandler.Handler
@@ -671,6 +674,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// ==================== Surveys 客户满意度调查 ====================
 		if config.SurveyHandler != nil {
 			SetupSurveyRoutes(tenant.(*gin.RouterGroup), config.SurveyHandler)
+		}
+
+		// ==================== On-call 值班排班 ====================
+		if config.OnCallHandler != nil {
+			SetupOnCallRoutes(tenant.(*gin.RouterGroup), config.OnCallHandler)
 		}
 
 		if config.TicketTypeHandler != nil {
