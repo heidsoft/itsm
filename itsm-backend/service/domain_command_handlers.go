@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -150,5 +151,11 @@ func (h *ProvisioningTaskCommandHandler) Handle(ctx context.Context, cmd *ent.Op
 	executionCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	_, err := h.svc.ExecuteTask(executionCtx, cmd.AggregateID, cmd.TenantID, int(actorUserID))
+	// 「已完成」与「别人正在执行」不是失败：命令的目标（任务被执行）要么已经达成，
+	// 要么正在被另一个 worker 达成。把它们当错误返回会让命令总线反复重投直到死信，
+	// 制造一批「重投 5 次仍失败」的假告警——而实际上系统状态是对的。
+	if errors.Is(err, ErrProvisioningTaskSucceeded) || errors.Is(err, ErrProvisioningTaskInProgress) {
+		return nil
+	}
 	return err
 }

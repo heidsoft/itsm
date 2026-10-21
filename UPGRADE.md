@@ -2060,6 +2060,36 @@ cd itsm-backend && go test -count=1 ./handlers/problem/ ./service/sla/
 cd itsm-backend && go test -count=1 ./handlers/service_request/ ./handlers/change/ ./handlers/capability/ ./router/ -run "SLA|ImpactGate|Capability|Connector"
 ```
 
+### 1.56 交付任务失败恢复：执行权守卫、重试与人工接管（2026-10-21，行为变更 + 新表字段）
+
+**行为变更：已完成任务不能再执行**
+
+- `POST /api/v1/provisioning-tasks/:id/execute` 对已 `succeeded` 的任务返回 **409/`4090`「该交付任务已完成，不能重复执行」**（此前会重新跑一遍 provider，等于重复创建云资源）。对 `running` 任务返回 409「正在执行中」。
+- 集成方若把「重复调用 execute」当作幂等重试手段，请改用 `retry`（见下）。两者语义不同：`execute` 是执行一次，`retry` 是重新排队。
+
+**新端点**
+
+- `POST /api/v1/provisioning-tasks/:id/retry`（`service_request:write`，请求体 `{reason?}`）：把 `failed` 任务重新排队，返回 `status=pending`；受 `maxAttempts`（5）约束；每次尝试独立幂等键。同时把服务请求从 `failed` 拉回 `provisioning`。
+- `POST /api/v1/provisioning-tasks/:id/resolve`（`service_request:write`，请求体 `{outcome, note}`）：人工接管。`outcome` 仅 `delivered|failed`，`note` **必填**（判定依据，用于审计）。仅 `failed`/`pending` 可判定。
+
+**新增字段**
+
+- `provisioning_tasks`：`attempt_count`（默认 0）、`last_attempt_at`、`resolved_by_user_id`、`resolution_note`。全部可空或带默认值，**存量行无需回填**。
+- 任务响应新增 `attemptCount`/`maxAttempts`/`lastAttemptAt`/`resolvedByUserId`/`resolutionNote`。前端据此决定是否显示「重试」按钮。
+
+**升级影响**
+
+- 需要数据库迁移：`20261021_provisioning_task_recovery.sql`（Ent 自动迁移同样会加列）。
+- 存量 `running` 任务若 `last_attempt_at` 为空，会被租约判定视为「无人持有」并允许重新领取——这是有意的：升级前崩溃留下的僵尸任务必须能自愈。升级前请确认没有正在执行的交付。
+- 存量 `failed` 任务 `attempt_count=0`，升级后仍可重试。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run "Provisioning|ExecuteTask|RetryTask|ResolveTask" && \
+  go test -count=1 ./handlers/provisioning/
+```
+
 
 ## 2. 环境变量变更
 

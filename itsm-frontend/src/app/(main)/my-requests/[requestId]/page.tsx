@@ -14,6 +14,8 @@ import {
   Input,
   Table,
   Alert,
+  Modal,
+  Radio,
 } from 'antd';
 import { ArrowLeft, RotateCcw, PlayCircle } from 'lucide-react';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
@@ -94,6 +96,12 @@ export default function MyRequestDetailPage() {
   const [provisioningTasks, setProvisioningTasks] = useState<ProvisioningTask[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [executing, setExecuting] = useState(false);
+  // 交付失败恢复：重试（重新排队）与人工判定（自动重试走不通时的出口）。
+  const [retryingTaskId, setRetryingTaskId] = useState<number | null>(null);
+  const [resolveTask, setResolveTask] = useState<ProvisioningTask | null>(null);
+  const [resolveOutcome, setResolveOutcome] = useState<'delivered' | 'failed'>('delivered');
+  const [resolveNote, setResolveNote] = useState('');
+  const [resolving, setResolving] = useState(false);
   const approvals = useMemo(() => detail?.approvals ?? [], [detail]);
 
   const load = async () => {
@@ -202,6 +210,56 @@ export default function MyRequestDetailPage() {
       message.error(e instanceof Error ? e.message : '执行交付任务失败');
     } finally {
       setExecuting(false);
+    }
+  };
+
+  // 重试 = 重新排队，不是立刻执行：返回后任务为 pending，由队列 worker 领取。
+  const handleRetryTask = async (taskId: number) => {
+    try {
+      setRetryingTaskId(taskId);
+      const task = await serviceRequestAPI.retryProvisioningTask(taskId, '运维在详情页发起重试');
+      message.success(
+        task?.status === 'pending' ? '已重新排队，等待执行' : '已提交重试'
+      );
+      await loadProvisioningTasks();
+      await load();
+    } catch (e) {
+      console.error(e);
+      message.error(e instanceof Error ? e.message : '重试交付任务失败');
+    } finally {
+      setRetryingTaskId(null);
+    }
+  };
+
+  const openResolveModal = (task: ProvisioningTask) => {
+    setResolveTask(task);
+    setResolveOutcome('delivered');
+    setResolveNote('');
+  };
+
+  const handleResolveTask = async () => {
+    if (!resolveTask) return;
+    if (!resolveNote.trim()) {
+      message.warning('请填写判定依据（工单号、资源 ID 或失败原因分析）');
+      return;
+    }
+    try {
+      setResolving(true);
+      await serviceRequestAPI.resolveProvisioningTask(
+        resolveTask.id,
+        resolveOutcome,
+        resolveNote.trim()
+      );
+      message.success('已提交人工判定');
+      setResolveTask(null);
+      setResolveNote('');
+      await loadProvisioningTasks();
+      await load();
+    } catch (e) {
+      console.error(e);
+      message.error(e instanceof Error ? e.message : '人工判定失败');
+    } finally {
+      setResolving(false);
     }
   };
 
@@ -421,10 +479,20 @@ export default function MyRequestDetailPage() {
                       width: 100,
                     },
                     {
+                      // 尝试次数直接决定「还能不能重试」：前端不猜，按服务端下发的
+                      // maxAttempts 判断，避免按钮点了才报 409。
+                      title: '尝试',
+                      key: 'attempts',
+                      width: 90,
+                      render: (_, task) =>
+                        `${task.attemptCount ?? 0}/${task.maxAttempts ?? 5}`,
+                    },
+                    {
                       title: '错误信息',
                       dataIndex: 'errorMessage',
                       ellipsis: true,
-                      render: (text: string) => text || '-',
+                      render: (text: string, task) =>
+                        text || (task.resolutionNote ? `人工判定：${task.resolutionNote}` : '-'),
                     },
                     {
                       title: '创建时间',
@@ -435,7 +503,7 @@ export default function MyRequestDetailPage() {
                     {
                       title: '操作',
                       key: 'actions',
-                      width: 120,
+                      width: 180,
                       render: (_, task) => (
                         <Space>
                           {task.status === 'pending' && (
@@ -447,6 +515,29 @@ export default function MyRequestDetailPage() {
                             >
                               执行
                             </Button>
+                          )}
+                          {task.status === 'failed' && (
+                            <>
+                              {/* 达到上限后重试按钮消失，只留人工判定——继续显示
+                                  一个注定 409 的按钮比不显示更糟。 */}
+                              {(task.attemptCount ?? 0) < (task.maxAttempts ?? 5) && (
+                                <Button
+                                  type='link'
+                                  size='small'
+                                  onClick={() => handleRetryTask(task.id)}
+                                  loading={retryingTaskId === task.id}
+                                >
+                                  重试
+                                </Button>
+                              )}
+                              <Button
+                                type='link'
+                                size='small'
+                                onClick={() => openResolveModal(task)}
+                              >
+                                人工判定
+                              </Button>
+                            </>
                           )}
                           {task.status === 'succeeded' && task.result && (
                             <Button
@@ -486,6 +577,50 @@ export default function MyRequestDetailPage() {
             </>
           )}
         </Card>
+
+        <Modal
+          open={resolveTask !== null}
+          title='人工判定交付结果'
+          onCancel={() => setResolveTask(null)}
+          onOk={handleResolveTask}
+          okText='提交判定'
+          cancelText='取消'
+          confirmLoading={resolving}
+          destroyOnHidden
+        >
+          <Space orientation='vertical' size={12} style={{ width: '100%' }}>
+            <Alert
+              type='warning'
+              showIcon
+              message='仅在自动重试无法成功时使用'
+              description='凭据吊销、配额封禁或资源已在平台外建好时，请在此给出终态判定。判定会写入服务请求状态，并记录判定人与依据。'
+            />
+            <div>
+              <Text type='secondary'>判定结果</Text>
+              <div style={{ marginTop: 8 }}>
+                <Radio.Group
+                  value={resolveOutcome}
+                  onChange={e => setResolveOutcome(e.target.value)}
+                >
+                  <Radio.Button value='delivered'>已交付</Radio.Button>
+                  <Radio.Button value='failed'>交付失败</Radio.Button>
+                </Radio.Group>
+              </div>
+            </div>
+            <div>
+              <Text type='secondary'>判定依据（必填）</Text>
+              <Input.TextArea
+                rows={3}
+                value={resolveNote}
+                onChange={e => setResolveNote(e.target.value)}
+                placeholder='例如：资源已在控制台手工创建 i-abc123，凭据吊销无法走自动交付'
+                maxLength={500}
+                showCount
+                style={{ marginTop: 8 }}
+              />
+            </div>
+          </Space>
+        </Modal>
       </Space>
     </div>
   );

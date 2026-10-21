@@ -29,6 +29,14 @@ const (
 	FieldStatus = "status"
 	// FieldErrorMessage holds the string denoting the error_message field in the database.
 	FieldErrorMessage = "error_message"
+	// FieldAttemptCount holds the string denoting the attempt_count field in the database.
+	FieldAttemptCount = "attempt_count"
+	// FieldLastAttemptAt holds the string denoting the last_attempt_at field in the database.
+	FieldLastAttemptAt = "last_attempt_at"
+	// FieldResolvedByUserID holds the string denoting the resolved_by_user_id field in the database.
+	FieldResolvedByUserID = "resolved_by_user_id"
+	// FieldResolutionNote holds the string denoting the resolution_note field in the database.
+	FieldResolutionNote = "resolution_note"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -48,6 +56,10 @@ var Columns = []string{
 	FieldResult,
 	FieldStatus,
 	FieldErrorMessage,
+	FieldAttemptCount,
+	FieldLastAttemptAt,
+	FieldResolvedByUserID,
+	FieldResolutionNote,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -73,6 +85,10 @@ var (
 	DefaultResourceType string
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
+	// DefaultAttemptCount holds the default value on creation for the "attempt_count" field.
+	DefaultAttemptCount int
+	// AttemptCountValidator is a validator for the "attempt_count" field. It is called by the builders before save.
+	AttemptCountValidator func(int) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -117,6 +133,26 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByErrorMessage orders the results by the error_message field.
 func ByErrorMessage(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldErrorMessage, opts...).ToFunc()
+}
+
+// ByAttemptCount orders the results by the attempt_count field.
+func ByAttemptCount(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAttemptCount, opts...).ToFunc()
+}
+
+// ByLastAttemptAt orders the results by the last_attempt_at field.
+func ByLastAttemptAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastAttemptAt, opts...).ToFunc()
+}
+
+// ByResolvedByUserID orders the results by the resolved_by_user_id field.
+func ByResolvedByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolvedByUserID, opts...).ToFunc()
+}
+
+// ByResolutionNote orders the results by the resolution_note field.
+func ByResolutionNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldResolutionNote, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

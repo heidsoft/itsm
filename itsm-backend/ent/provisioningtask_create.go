@@ -100,6 +100,62 @@ func (_c *ProvisioningTaskCreate) SetNillableErrorMessage(v *string) *Provisioni
 	return _c
 }
 
+// SetAttemptCount sets the "attempt_count" field.
+func (_c *ProvisioningTaskCreate) SetAttemptCount(v int) *ProvisioningTaskCreate {
+	_c.mutation.SetAttemptCount(v)
+	return _c
+}
+
+// SetNillableAttemptCount sets the "attempt_count" field if the given value is not nil.
+func (_c *ProvisioningTaskCreate) SetNillableAttemptCount(v *int) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetAttemptCount(*v)
+	}
+	return _c
+}
+
+// SetLastAttemptAt sets the "last_attempt_at" field.
+func (_c *ProvisioningTaskCreate) SetLastAttemptAt(v time.Time) *ProvisioningTaskCreate {
+	_c.mutation.SetLastAttemptAt(v)
+	return _c
+}
+
+// SetNillableLastAttemptAt sets the "last_attempt_at" field if the given value is not nil.
+func (_c *ProvisioningTaskCreate) SetNillableLastAttemptAt(v *time.Time) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetLastAttemptAt(*v)
+	}
+	return _c
+}
+
+// SetResolvedByUserID sets the "resolved_by_user_id" field.
+func (_c *ProvisioningTaskCreate) SetResolvedByUserID(v int) *ProvisioningTaskCreate {
+	_c.mutation.SetResolvedByUserID(v)
+	return _c
+}
+
+// SetNillableResolvedByUserID sets the "resolved_by_user_id" field if the given value is not nil.
+func (_c *ProvisioningTaskCreate) SetNillableResolvedByUserID(v *int) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetResolvedByUserID(*v)
+	}
+	return _c
+}
+
+// SetResolutionNote sets the "resolution_note" field.
+func (_c *ProvisioningTaskCreate) SetResolutionNote(v string) *ProvisioningTaskCreate {
+	_c.mutation.SetResolutionNote(v)
+	return _c
+}
+
+// SetNillableResolutionNote sets the "resolution_note" field if the given value is not nil.
+func (_c *ProvisioningTaskCreate) SetNillableResolutionNote(v *string) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetResolutionNote(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *ProvisioningTaskCreate) SetCreatedAt(v time.Time) *ProvisioningTaskCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -175,6 +231,10 @@ func (_c *ProvisioningTaskCreate) defaults() {
 		v := provisioningtask.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.AttemptCount(); !ok {
+		v := provisioningtask.DefaultAttemptCount
+		_c.mutation.SetAttemptCount(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := provisioningtask.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -211,6 +271,14 @@ func (_c *ProvisioningTaskCreate) check() error {
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ProvisioningTask.status"`)}
+	}
+	if _, ok := _c.mutation.AttemptCount(); !ok {
+		return &ValidationError{Name: "attempt_count", err: errors.New(`ent: missing required field "ProvisioningTask.attempt_count"`)}
+	}
+	if v, ok := _c.mutation.AttemptCount(); ok {
+		if err := provisioningtask.AttemptCountValidator(v); err != nil {
+			return &ValidationError{Name: "attempt_count", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.attempt_count": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProvisioningTask.created_at"`)}
@@ -275,6 +343,22 @@ func (_c *ProvisioningTaskCreate) createSpec() (*ProvisioningTask, *sqlgraph.Cre
 	if value, ok := _c.mutation.ErrorMessage(); ok {
 		_spec.SetField(provisioningtask.FieldErrorMessage, field.TypeString, value)
 		_node.ErrorMessage = value
+	}
+	if value, ok := _c.mutation.AttemptCount(); ok {
+		_spec.SetField(provisioningtask.FieldAttemptCount, field.TypeInt, value)
+		_node.AttemptCount = value
+	}
+	if value, ok := _c.mutation.LastAttemptAt(); ok {
+		_spec.SetField(provisioningtask.FieldLastAttemptAt, field.TypeTime, value)
+		_node.LastAttemptAt = &value
+	}
+	if value, ok := _c.mutation.ResolvedByUserID(); ok {
+		_spec.SetField(provisioningtask.FieldResolvedByUserID, field.TypeInt, value)
+		_node.ResolvedByUserID = value
+	}
+	if value, ok := _c.mutation.ResolutionNote(); ok {
+		_spec.SetField(provisioningtask.FieldResolutionNote, field.TypeString, value)
+		_node.ResolutionNote = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)

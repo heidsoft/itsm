@@ -34,6 +34,14 @@ type ProvisioningTask struct {
 	Status string `json:"status,omitempty"`
 	// 失败原因
 	ErrorMessage string `json:"error_message,omitempty"`
+	// 已执行次数（含正在运行的那次）
+	AttemptCount int `json:"attempt_count,omitempty"`
+	// 最近一次开始执行的时间
+	LastAttemptAt *time.Time `json:"last_attempt_at,omitempty"`
+	// 人工接管人ID
+	ResolvedByUserID int `json:"resolved_by_user_id,omitempty"`
+	// 人工接管说明（判定依据/工单号/资源ID）
+	ResolutionNote string `json:"resolution_note,omitempty"`
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
@@ -48,11 +56,11 @@ func (*ProvisioningTask) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case provisioningtask.FieldPayload, provisioningtask.FieldResult:
 			values[i] = new([]byte)
-		case provisioningtask.FieldID, provisioningtask.FieldTenantID, provisioningtask.FieldServiceRequestID:
+		case provisioningtask.FieldID, provisioningtask.FieldTenantID, provisioningtask.FieldServiceRequestID, provisioningtask.FieldAttemptCount, provisioningtask.FieldResolvedByUserID:
 			values[i] = new(sql.NullInt64)
-		case provisioningtask.FieldProvider, provisioningtask.FieldResourceType, provisioningtask.FieldStatus, provisioningtask.FieldErrorMessage:
+		case provisioningtask.FieldProvider, provisioningtask.FieldResourceType, provisioningtask.FieldStatus, provisioningtask.FieldErrorMessage, provisioningtask.FieldResolutionNote:
 			values[i] = new(sql.NullString)
-		case provisioningtask.FieldCreatedAt, provisioningtask.FieldUpdatedAt:
+		case provisioningtask.FieldLastAttemptAt, provisioningtask.FieldCreatedAt, provisioningtask.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -127,6 +135,31 @@ func (_m *ProvisioningTask) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.ErrorMessage = value.String
 			}
+		case provisioningtask.FieldAttemptCount:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field attempt_count", values[i])
+			} else if value.Valid {
+				_m.AttemptCount = int(value.Int64)
+			}
+		case provisioningtask.FieldLastAttemptAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_attempt_at", values[i])
+			} else if value.Valid {
+				_m.LastAttemptAt = new(time.Time)
+				*_m.LastAttemptAt = value.Time
+			}
+		case provisioningtask.FieldResolvedByUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field resolved_by_user_id", values[i])
+			} else if value.Valid {
+				_m.ResolvedByUserID = int(value.Int64)
+			}
+		case provisioningtask.FieldResolutionNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field resolution_note", values[i])
+			} else if value.Valid {
+				_m.ResolutionNote = value.String
+			}
 		case provisioningtask.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
@@ -198,6 +231,20 @@ func (_m *ProvisioningTask) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("error_message=")
 	builder.WriteString(_m.ErrorMessage)
+	builder.WriteString(", ")
+	builder.WriteString("attempt_count=")
+	builder.WriteString(fmt.Sprintf("%v", _m.AttemptCount))
+	builder.WriteString(", ")
+	if v := _m.LastAttemptAt; v != nil {
+		builder.WriteString("last_attempt_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("resolved_by_user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ResolvedByUserID))
+	builder.WriteString(", ")
+	builder.WriteString("resolution_note=")
+	builder.WriteString(_m.ResolutionNote)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

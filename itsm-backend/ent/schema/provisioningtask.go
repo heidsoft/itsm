@@ -27,6 +27,17 @@ func (ProvisioningTask) Fields() []ent.Field {
 		field.String("status").Comment("状态：pending|running|succeeded|failed").Default("pending"),
 		field.Text("error_message").Comment("失败原因").Optional(),
 
+		// 尝试计数（2026-10-21）：没有计数时「失败」是个终态——既无法判断重试了几次，
+		// 也无法阻止无限重试。ExecuteTask 每次领取任务 +1，重试上限由
+		// domain/provisioning.MaxTaskAttempts 约束。
+		field.Int("attempt_count").Comment("已执行次数（含正在运行的那次）").Default(0).Min(0),
+		field.Time("last_attempt_at").Comment("最近一次开始执行的时间").Optional().Nillable(),
+
+		// 人工接管（2026-10-21）：provider 永久性故障（凭据吊销、配额封禁）或资源已在
+		// 平台外建好时，交付不能永远卡在 failed。接管必须留痕：谁判定的、依据是什么。
+		field.Int("resolved_by_user_id").Comment("人工接管人ID").Optional(),
+		field.Text("resolution_note").Comment("人工接管说明（判定依据/工单号/资源ID）").Optional(),
+
 		field.Time("created_at").Comment("创建时间").Default(time.Now),
 		field.Time("updated_at").Comment("更新时间").Default(time.Now).UpdateDefault(time.Now),
 	}

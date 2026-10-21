@@ -135,6 +135,32 @@ describe('ServiceRequestAPI', () => {
     });
   });
 
+  describe('provisioning recovery', () => {
+    it('retry hits the retry route with the reason in the body', async () => {
+      mockSuccessResponse({ id: 7, status: 'pending', attemptCount: 1, maxAttempts: 5 });
+      await serviceRequestAPI.retryProvisioningTask(7, '凭据已更新');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/provisioning-tasks/7/retry'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ reason: '凭据已更新' }),
+        })
+      );
+    });
+
+    it('resolve sends outcome and note (note is mandatory server-side)', async () => {
+      mockSuccessResponse({ id: 7, status: 'succeeded', resolvedByUserId: 3 });
+      await serviceRequestAPI.resolveProvisioningTask(7, 'delivered', '资源已在控制台手工创建');
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/provisioning-tasks/7/resolve'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ outcome: 'delivered', note: '资源已在控制台手工创建' }),
+        })
+      );
+    });
+  });
+
   describe('healthCheck', () => {
     it('should check health', async () => {
       mockSuccessResponse({ status: 'ok' });

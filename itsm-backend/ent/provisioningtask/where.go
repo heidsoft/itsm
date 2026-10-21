@@ -84,6 +84,26 @@ func ErrorMessage(v string) predicate.ProvisioningTask {
 	return predicate.ProvisioningTask(sql.FieldEQ(FieldErrorMessage, v))
 }
 
+// AttemptCount applies equality check predicate on the "attempt_count" field. It's identical to AttemptCountEQ.
+func AttemptCount(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldAttemptCount, v))
+}
+
+// LastAttemptAt applies equality check predicate on the "last_attempt_at" field. It's identical to LastAttemptAtEQ.
+func LastAttemptAt(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldLastAttemptAt, v))
+}
+
+// ResolvedByUserID applies equality check predicate on the "resolved_by_user_id" field. It's identical to ResolvedByUserIDEQ.
+func ResolvedByUserID(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldResolvedByUserID, v))
+}
+
+// ResolutionNote applies equality check predicate on the "resolution_note" field. It's identical to ResolutionNoteEQ.
+func ResolutionNote(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldResolutionNote, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.ProvisioningTask {
 	return predicate.ProvisioningTask(sql.FieldEQ(FieldCreatedAt, v))
@@ -462,6 +482,221 @@ func ErrorMessageEqualFold(v string) predicate.ProvisioningTask {
 // ErrorMessageContainsFold applies the ContainsFold predicate on the "error_message" field.
 func ErrorMessageContainsFold(v string) predicate.ProvisioningTask {
 	return predicate.ProvisioningTask(sql.FieldContainsFold(FieldErrorMessage, v))
+}
+
+// AttemptCountEQ applies the EQ predicate on the "attempt_count" field.
+func AttemptCountEQ(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldAttemptCount, v))
+}
+
+// AttemptCountNEQ applies the NEQ predicate on the "attempt_count" field.
+func AttemptCountNEQ(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNEQ(FieldAttemptCount, v))
+}
+
+// AttemptCountIn applies the In predicate on the "attempt_count" field.
+func AttemptCountIn(vs ...int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIn(FieldAttemptCount, vs...))
+}
+
+// AttemptCountNotIn applies the NotIn predicate on the "attempt_count" field.
+func AttemptCountNotIn(vs ...int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotIn(FieldAttemptCount, vs...))
+}
+
+// AttemptCountGT applies the GT predicate on the "attempt_count" field.
+func AttemptCountGT(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGT(FieldAttemptCount, v))
+}
+
+// AttemptCountGTE applies the GTE predicate on the "attempt_count" field.
+func AttemptCountGTE(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGTE(FieldAttemptCount, v))
+}
+
+// AttemptCountLT applies the LT predicate on the "attempt_count" field.
+func AttemptCountLT(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLT(FieldAttemptCount, v))
+}
+
+// AttemptCountLTE applies the LTE predicate on the "attempt_count" field.
+func AttemptCountLTE(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLTE(FieldAttemptCount, v))
+}
+
+// LastAttemptAtEQ applies the EQ predicate on the "last_attempt_at" field.
+func LastAttemptAtEQ(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtNEQ applies the NEQ predicate on the "last_attempt_at" field.
+func LastAttemptAtNEQ(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNEQ(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtIn applies the In predicate on the "last_attempt_at" field.
+func LastAttemptAtIn(vs ...time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIn(FieldLastAttemptAt, vs...))
+}
+
+// LastAttemptAtNotIn applies the NotIn predicate on the "last_attempt_at" field.
+func LastAttemptAtNotIn(vs ...time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotIn(FieldLastAttemptAt, vs...))
+}
+
+// LastAttemptAtGT applies the GT predicate on the "last_attempt_at" field.
+func LastAttemptAtGT(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGT(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtGTE applies the GTE predicate on the "last_attempt_at" field.
+func LastAttemptAtGTE(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGTE(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtLT applies the LT predicate on the "last_attempt_at" field.
+func LastAttemptAtLT(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLT(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtLTE applies the LTE predicate on the "last_attempt_at" field.
+func LastAttemptAtLTE(v time.Time) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLTE(FieldLastAttemptAt, v))
+}
+
+// LastAttemptAtIsNil applies the IsNil predicate on the "last_attempt_at" field.
+func LastAttemptAtIsNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIsNull(FieldLastAttemptAt))
+}
+
+// LastAttemptAtNotNil applies the NotNil predicate on the "last_attempt_at" field.
+func LastAttemptAtNotNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotNull(FieldLastAttemptAt))
+}
+
+// ResolvedByUserIDEQ applies the EQ predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDEQ(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDNEQ applies the NEQ predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDNEQ(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNEQ(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDIn applies the In predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDIn(vs ...int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIn(FieldResolvedByUserID, vs...))
+}
+
+// ResolvedByUserIDNotIn applies the NotIn predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDNotIn(vs ...int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotIn(FieldResolvedByUserID, vs...))
+}
+
+// ResolvedByUserIDGT applies the GT predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDGT(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGT(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDGTE applies the GTE predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDGTE(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGTE(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDLT applies the LT predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDLT(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLT(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDLTE applies the LTE predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDLTE(v int) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLTE(FieldResolvedByUserID, v))
+}
+
+// ResolvedByUserIDIsNil applies the IsNil predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDIsNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIsNull(FieldResolvedByUserID))
+}
+
+// ResolvedByUserIDNotNil applies the NotNil predicate on the "resolved_by_user_id" field.
+func ResolvedByUserIDNotNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotNull(FieldResolvedByUserID))
+}
+
+// ResolutionNoteEQ applies the EQ predicate on the "resolution_note" field.
+func ResolutionNoteEQ(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEQ(FieldResolutionNote, v))
+}
+
+// ResolutionNoteNEQ applies the NEQ predicate on the "resolution_note" field.
+func ResolutionNoteNEQ(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNEQ(FieldResolutionNote, v))
+}
+
+// ResolutionNoteIn applies the In predicate on the "resolution_note" field.
+func ResolutionNoteIn(vs ...string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIn(FieldResolutionNote, vs...))
+}
+
+// ResolutionNoteNotIn applies the NotIn predicate on the "resolution_note" field.
+func ResolutionNoteNotIn(vs ...string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotIn(FieldResolutionNote, vs...))
+}
+
+// ResolutionNoteGT applies the GT predicate on the "resolution_note" field.
+func ResolutionNoteGT(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGT(FieldResolutionNote, v))
+}
+
+// ResolutionNoteGTE applies the GTE predicate on the "resolution_note" field.
+func ResolutionNoteGTE(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldGTE(FieldResolutionNote, v))
+}
+
+// ResolutionNoteLT applies the LT predicate on the "resolution_note" field.
+func ResolutionNoteLT(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLT(FieldResolutionNote, v))
+}
+
+// ResolutionNoteLTE applies the LTE predicate on the "resolution_note" field.
+func ResolutionNoteLTE(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldLTE(FieldResolutionNote, v))
+}
+
+// ResolutionNoteContains applies the Contains predicate on the "resolution_note" field.
+func ResolutionNoteContains(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldContains(FieldResolutionNote, v))
+}
+
+// ResolutionNoteHasPrefix applies the HasPrefix predicate on the "resolution_note" field.
+func ResolutionNoteHasPrefix(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldHasPrefix(FieldResolutionNote, v))
+}
+
+// ResolutionNoteHasSuffix applies the HasSuffix predicate on the "resolution_note" field.
+func ResolutionNoteHasSuffix(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldHasSuffix(FieldResolutionNote, v))
+}
+
+// ResolutionNoteIsNil applies the IsNil predicate on the "resolution_note" field.
+func ResolutionNoteIsNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldIsNull(FieldResolutionNote))
+}
+
+// ResolutionNoteNotNil applies the NotNil predicate on the "resolution_note" field.
+func ResolutionNoteNotNil() predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldNotNull(FieldResolutionNote))
+}
+
+// ResolutionNoteEqualFold applies the EqualFold predicate on the "resolution_note" field.
+func ResolutionNoteEqualFold(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldEqualFold(FieldResolutionNote, v))
+}
+
+// ResolutionNoteContainsFold applies the ContainsFold predicate on the "resolution_note" field.
+func ResolutionNoteContainsFold(v string) predicate.ProvisioningTask {
+	return predicate.ProvisioningTask(sql.FieldContainsFold(FieldResolutionNote, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

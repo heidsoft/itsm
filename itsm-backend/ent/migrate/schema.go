@@ -3935,6 +3935,10 @@ var (
 		{Name: "result", Type: field.TypeJSON, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "pending"},
 		{Name: "error_message", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "attempt_count", Type: field.TypeInt, Default: 0},
+		{Name: "last_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "resolved_by_user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "resolution_note", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}
@@ -3952,7 +3956,7 @@ var (
 			{
 				Name:    "provisioningtask_tenant_id_status_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{ProvisioningTasksColumns[1], ProvisioningTasksColumns[7], ProvisioningTasksColumns[9]},
+				Columns: []*schema.Column{ProvisioningTasksColumns[1], ProvisioningTasksColumns[7], ProvisioningTasksColumns[13]},
 			},
 		},
 	}

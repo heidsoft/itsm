@@ -156,6 +156,94 @@ func (_u *ProvisioningTaskUpdate) ClearErrorMessage() *ProvisioningTaskUpdate {
 	return _u
 }
 
+// SetAttemptCount sets the "attempt_count" field.
+func (_u *ProvisioningTaskUpdate) SetAttemptCount(v int) *ProvisioningTaskUpdate {
+	_u.mutation.ResetAttemptCount()
+	_u.mutation.SetAttemptCount(v)
+	return _u
+}
+
+// SetNillableAttemptCount sets the "attempt_count" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdate) SetNillableAttemptCount(v *int) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetAttemptCount(*v)
+	}
+	return _u
+}
+
+// AddAttemptCount adds value to the "attempt_count" field.
+func (_u *ProvisioningTaskUpdate) AddAttemptCount(v int) *ProvisioningTaskUpdate {
+	_u.mutation.AddAttemptCount(v)
+	return _u
+}
+
+// SetLastAttemptAt sets the "last_attempt_at" field.
+func (_u *ProvisioningTaskUpdate) SetLastAttemptAt(v time.Time) *ProvisioningTaskUpdate {
+	_u.mutation.SetLastAttemptAt(v)
+	return _u
+}
+
+// SetNillableLastAttemptAt sets the "last_attempt_at" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdate) SetNillableLastAttemptAt(v *time.Time) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetLastAttemptAt(*v)
+	}
+	return _u
+}
+
+// ClearLastAttemptAt clears the value of the "last_attempt_at" field.
+func (_u *ProvisioningTaskUpdate) ClearLastAttemptAt() *ProvisioningTaskUpdate {
+	_u.mutation.ClearLastAttemptAt()
+	return _u
+}
+
+// SetResolvedByUserID sets the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdate) SetResolvedByUserID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.ResetResolvedByUserID()
+	_u.mutation.SetResolvedByUserID(v)
+	return _u
+}
+
+// SetNillableResolvedByUserID sets the "resolved_by_user_id" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdate) SetNillableResolvedByUserID(v *int) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetResolvedByUserID(*v)
+	}
+	return _u
+}
+
+// AddResolvedByUserID adds value to the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdate) AddResolvedByUserID(v int) *ProvisioningTaskUpdate {
+	_u.mutation.AddResolvedByUserID(v)
+	return _u
+}
+
+// ClearResolvedByUserID clears the value of the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdate) ClearResolvedByUserID() *ProvisioningTaskUpdate {
+	_u.mutation.ClearResolvedByUserID()
+	return _u
+}
+
+// SetResolutionNote sets the "resolution_note" field.
+func (_u *ProvisioningTaskUpdate) SetResolutionNote(v string) *ProvisioningTaskUpdate {
+	_u.mutation.SetResolutionNote(v)
+	return _u
+}
+
+// SetNillableResolutionNote sets the "resolution_note" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdate) SetNillableResolutionNote(v *string) *ProvisioningTaskUpdate {
+	if v != nil {
+		_u.SetResolutionNote(*v)
+	}
+	return _u
+}
+
+// ClearResolutionNote clears the value of the "resolution_note" field.
+func (_u *ProvisioningTaskUpdate) ClearResolutionNote() *ProvisioningTaskUpdate {
+	_u.mutation.ClearResolutionNote()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ProvisioningTaskUpdate) SetCreatedAt(v time.Time) *ProvisioningTaskUpdate {
 	_u.mutation.SetCreatedAt(v)
@@ -229,6 +317,11 @@ func (_u *ProvisioningTaskUpdate) check() error {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.service_request_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.AttemptCount(); ok {
+		if err := provisioningtask.AttemptCountValidator(v); err != nil {
+			return &ValidationError{Name: "attempt_count", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.attempt_count": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -282,6 +375,33 @@ func (_u *ProvisioningTaskUpdate) sqlSave(ctx context.Context) (_node int, err e
 	}
 	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(provisioningtask.FieldErrorMessage, field.TypeString)
+	}
+	if value, ok := _u.mutation.AttemptCount(); ok {
+		_spec.SetField(provisioningtask.FieldAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAttemptCount(); ok {
+		_spec.AddField(provisioningtask.FieldAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.LastAttemptAt(); ok {
+		_spec.SetField(provisioningtask.FieldLastAttemptAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastAttemptAtCleared() {
+		_spec.ClearField(provisioningtask.FieldLastAttemptAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ResolvedByUserID(); ok {
+		_spec.SetField(provisioningtask.FieldResolvedByUserID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedResolvedByUserID(); ok {
+		_spec.AddField(provisioningtask.FieldResolvedByUserID, field.TypeInt, value)
+	}
+	if _u.mutation.ResolvedByUserIDCleared() {
+		_spec.ClearField(provisioningtask.FieldResolvedByUserID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ResolutionNote(); ok {
+		_spec.SetField(provisioningtask.FieldResolutionNote, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionNoteCleared() {
+		_spec.ClearField(provisioningtask.FieldResolutionNote, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)
@@ -437,6 +557,94 @@ func (_u *ProvisioningTaskUpdateOne) ClearErrorMessage() *ProvisioningTaskUpdate
 	return _u
 }
 
+// SetAttemptCount sets the "attempt_count" field.
+func (_u *ProvisioningTaskUpdateOne) SetAttemptCount(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.ResetAttemptCount()
+	_u.mutation.SetAttemptCount(v)
+	return _u
+}
+
+// SetNillableAttemptCount sets the "attempt_count" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdateOne) SetNillableAttemptCount(v *int) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetAttemptCount(*v)
+	}
+	return _u
+}
+
+// AddAttemptCount adds value to the "attempt_count" field.
+func (_u *ProvisioningTaskUpdateOne) AddAttemptCount(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.AddAttemptCount(v)
+	return _u
+}
+
+// SetLastAttemptAt sets the "last_attempt_at" field.
+func (_u *ProvisioningTaskUpdateOne) SetLastAttemptAt(v time.Time) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetLastAttemptAt(v)
+	return _u
+}
+
+// SetNillableLastAttemptAt sets the "last_attempt_at" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdateOne) SetNillableLastAttemptAt(v *time.Time) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetLastAttemptAt(*v)
+	}
+	return _u
+}
+
+// ClearLastAttemptAt clears the value of the "last_attempt_at" field.
+func (_u *ProvisioningTaskUpdateOne) ClearLastAttemptAt() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearLastAttemptAt()
+	return _u
+}
+
+// SetResolvedByUserID sets the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdateOne) SetResolvedByUserID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.ResetResolvedByUserID()
+	_u.mutation.SetResolvedByUserID(v)
+	return _u
+}
+
+// SetNillableResolvedByUserID sets the "resolved_by_user_id" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdateOne) SetNillableResolvedByUserID(v *int) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetResolvedByUserID(*v)
+	}
+	return _u
+}
+
+// AddResolvedByUserID adds value to the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdateOne) AddResolvedByUserID(v int) *ProvisioningTaskUpdateOne {
+	_u.mutation.AddResolvedByUserID(v)
+	return _u
+}
+
+// ClearResolvedByUserID clears the value of the "resolved_by_user_id" field.
+func (_u *ProvisioningTaskUpdateOne) ClearResolvedByUserID() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearResolvedByUserID()
+	return _u
+}
+
+// SetResolutionNote sets the "resolution_note" field.
+func (_u *ProvisioningTaskUpdateOne) SetResolutionNote(v string) *ProvisioningTaskUpdateOne {
+	_u.mutation.SetResolutionNote(v)
+	return _u
+}
+
+// SetNillableResolutionNote sets the "resolution_note" field if the given value is not nil.
+func (_u *ProvisioningTaskUpdateOne) SetNillableResolutionNote(v *string) *ProvisioningTaskUpdateOne {
+	if v != nil {
+		_u.SetResolutionNote(*v)
+	}
+	return _u
+}
+
+// ClearResolutionNote clears the value of the "resolution_note" field.
+func (_u *ProvisioningTaskUpdateOne) ClearResolutionNote() *ProvisioningTaskUpdateOne {
+	_u.mutation.ClearResolutionNote()
+	return _u
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_u *ProvisioningTaskUpdateOne) SetCreatedAt(v time.Time) *ProvisioningTaskUpdateOne {
 	_u.mutation.SetCreatedAt(v)
@@ -523,6 +731,11 @@ func (_u *ProvisioningTaskUpdateOne) check() error {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.service_request_id": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.AttemptCount(); ok {
+		if err := provisioningtask.AttemptCountValidator(v); err != nil {
+			return &ValidationError{Name: "attempt_count", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.attempt_count": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -593,6 +806,33 @@ func (_u *ProvisioningTaskUpdateOne) sqlSave(ctx context.Context) (_node *Provis
 	}
 	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(provisioningtask.FieldErrorMessage, field.TypeString)
+	}
+	if value, ok := _u.mutation.AttemptCount(); ok {
+		_spec.SetField(provisioningtask.FieldAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedAttemptCount(); ok {
+		_spec.AddField(provisioningtask.FieldAttemptCount, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.LastAttemptAt(); ok {
+		_spec.SetField(provisioningtask.FieldLastAttemptAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastAttemptAtCleared() {
+		_spec.ClearField(provisioningtask.FieldLastAttemptAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.ResolvedByUserID(); ok {
+		_spec.SetField(provisioningtask.FieldResolvedByUserID, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedResolvedByUserID(); ok {
+		_spec.AddField(provisioningtask.FieldResolvedByUserID, field.TypeInt, value)
+	}
+	if _u.mutation.ResolvedByUserIDCleared() {
+		_spec.ClearField(provisioningtask.FieldResolvedByUserID, field.TypeInt)
+	}
+	if value, ok := _u.mutation.ResolutionNote(); ok {
+		_spec.SetField(provisioningtask.FieldResolutionNote, field.TypeString, value)
+	}
+	if _u.mutation.ResolutionNoteCleared() {
+		_spec.ClearField(provisioningtask.FieldResolutionNote, field.TypeString)
 	}
 	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)

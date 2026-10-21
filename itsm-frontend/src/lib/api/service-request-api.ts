@@ -325,6 +325,27 @@ class ServiceRequestAPI {
     });
   }
 
+  // Retry a failed provisioning task (re-queued, not executed synchronously)
+  async retryProvisioningTask(taskId: number, reason?: string): Promise<ProvisioningTask> {
+    return this.request<ProvisioningTask>(`/api/v1/provisioning-tasks/${taskId}/retry`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason ?? '' }),
+    });
+  }
+
+  // Manually resolve a provisioning task when automatic retry cannot succeed.
+  // note is mandatory server-side: a takeover without a stated basis is unauditable.
+  async resolveProvisioningTask(
+    taskId: number,
+    outcome: 'delivered' | 'failed',
+    note: string
+  ): Promise<ProvisioningTask> {
+    return this.request<ProvisioningTask>(`/api/v1/provisioning-tasks/${taskId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ outcome, note }),
+    });
+  }
+
   // ==================== 兼容别名 ====================
 
   /** @deprecated 使用 getServiceRequestDetails */
@@ -347,6 +368,15 @@ export interface ProvisioningTask {
   payload?: Record<string, unknown>;
   result?: Record<string, unknown>;
   errorMessage?: string;
+  /** 已执行次数（含正在运行的那次）。重试本身不加，领取时才 +1。 */
+  attemptCount: number;
+  /** 服务端下发的重试上限；attemptCount >= maxAttempts 时只能人工判定。 */
+  maxAttempts: number;
+  lastAttemptAt?: string;
+  /** 人工接管留痕：谁判定的。 */
+  resolvedByUserId?: number;
+  /** 人工接管留痕：判定依据。 */
+  resolutionNote?: string;
   createdAt: string;
   updatedAt: string;
 }

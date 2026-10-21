@@ -3731,12 +3731,18 @@ func init() {
 	provisioningtaskDescStatus := provisioningtaskFields[6].Descriptor()
 	// provisioningtask.DefaultStatus holds the default value on creation for the status field.
 	provisioningtask.DefaultStatus = provisioningtaskDescStatus.Default.(string)
+	// provisioningtaskDescAttemptCount is the schema descriptor for attempt_count field.
+	provisioningtaskDescAttemptCount := provisioningtaskFields[8].Descriptor()
+	// provisioningtask.DefaultAttemptCount holds the default value on creation for the attempt_count field.
+	provisioningtask.DefaultAttemptCount = provisioningtaskDescAttemptCount.Default.(int)
+	// provisioningtask.AttemptCountValidator is a validator for the "attempt_count" field. It is called by the builders before save.
+	provisioningtask.AttemptCountValidator = provisioningtaskDescAttemptCount.Validators[0].(func(int) error)
 	// provisioningtaskDescCreatedAt is the schema descriptor for created_at field.
-	provisioningtaskDescCreatedAt := provisioningtaskFields[8].Descriptor()
+	provisioningtaskDescCreatedAt := provisioningtaskFields[12].Descriptor()
 	// provisioningtask.DefaultCreatedAt holds the default value on creation for the created_at field.
 	provisioningtask.DefaultCreatedAt = provisioningtaskDescCreatedAt.Default.(func() time.Time)
 	// provisioningtaskDescUpdatedAt is the schema descriptor for updated_at field.
-	provisioningtaskDescUpdatedAt := provisioningtaskFields[9].Descriptor()
+	provisioningtaskDescUpdatedAt := provisioningtaskFields[13].Descriptor()
 	// provisioningtask.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	provisioningtask.DefaultUpdatedAt = provisioningtaskDescUpdatedAt.Default.(func() time.Time)
 	// provisioningtask.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

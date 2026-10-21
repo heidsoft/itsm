@@ -60,6 +60,11 @@ var registry = []definition{
 	// 截止时间字段，也没有写入 sla_states 的路径）。SLA 接入后才具备晋升条件。
 	{key: "problem", maturity: MaturityPilot, built: true},
 	{key: "change", maturity: MaturityGA, built: true, dependencies: []string{"workflow"}},
+	// 服务请求 2026-10-21 收口「交付失败即终态」：执行权原子领取（重复执行 4090，
+	// 不再二次交付）、尝试次数封顶、retry 重新排队（独立幂等键）、resolve 人工接管
+	// （必填依据 + 判定人留痕）、running 租约自愈。仍不申报 GA 的原因不在交付链路：
+	// 目录项到 CI Type / 交付模板 / BPMN / SLA 的绑定口径不统一，且 Provider 仍是
+	// Stub（未接真实云 API），补偿动作（回滚已创建资源）尚未实现。
 	{key: "serviceRequest", maturity: MaturityPilot, built: true, dependencies: []string{"workflow", "notification"}},
 	{key: "cmdb", maturity: MaturityGA, built: true},
 	{key: "cmdb.configurationItems", maturity: MaturityGA, built: true, dependencies: []string{"cmdb"}},

@@ -668,6 +668,8 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/process-trigger/suspend/*":                 {Resource: "bpmn", Action: "write"},
 			"/api/v1/projects":                                  {Resource: "project", Action: "write"},
 			"/api/v1/provisioning-tasks/*/execute":              {Resource: "service_request", Action: "write"},
+			"/api/v1/provisioning-tasks/*/resolve":              {Resource: "service_request", Action: "write"},
+			"/api/v1/provisioning-tasks/*/retry":                {Resource: "service_request", Action: "write"},
 			"/api/v1/releases":                                  {Resource: "release", Action: "write"},
 			"/api/v1/releases/*/approve":                        {Resource: "release", Action: "approve"},
 			"/api/v1/releases/*/reject":                         {Resource: "release", Action: "approve"},

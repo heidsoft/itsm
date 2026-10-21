@@ -1055,6 +1055,44 @@ Authorization: Bearer <accessToken>
 - **not-found 契约**（与该域 Get 一致）：跨租户/不存在返回 **HTTP 200 + 业务码 `404`**、无 `data`——不暴露资源存在性；非数字 ID `HTTP 400` + 业务码 `1001`；未认证 401。
 - 事件域对照：事件 SLA 状态内联在 `GET /incidents/{id}` 详情响应（`slaState` 字段），无独立 `/sla` 端点；工单/问题有独立端点。四域统一走同一 `sla_states` 存储。
 
+### 交付任务失败恢复
+
+```http
+POST /provisioning-tasks/{id}/retry
+POST /provisioning-tasks/{id}/resolve
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+```
+
+权限码均为 `service_request:write`——交付会真实创建云资源，读权限不携带这种副作用。
+
+`retry` 请求体 `{reason?}`（可选，记录在命令 payload 的 `retryReason` 里，便于区分自动重试与人工重试）：
+
+- 只对 `failed` 生效。`succeeded` → `409`/`4090`「已完成，不能重复执行」；`running` → `409`「正在执行中」；`pending` → `409`「当前状态不允许重试」（它已经在队列里，重试没有语义）。
+- 尝试次数达上限（`maxAttempts`，当前 5）→ `409`「重试次数已达上限，请人工判定交付结果」，且不留下任何命令。
+- **返回时 `status=pending`**：重试是「重新排队」，执行由队列 worker 领取，不是同步执行。
+- 同一事务内把服务请求从 `failed` 拉回 `provisioning`（仅当仍是 `failed`，不覆盖人工已推进的状态）。
+- 每次尝试使用独立幂等键 `provisioning_task:{id}:execute:{attempt}`。复用首次的键会被入箱层判重直接跳过——接口 `200` 但任务永远停在 `failed`。
+
+`resolve` 请求体 `{outcome: "delivered"|"failed", note(必填)}`：
+
+- 用于自动重试不可能成功的场景：provider 凭据吊销、配额封禁、地域下线，或资源已在平台外建好。
+- `outcome=delivered` → 任务置 `succeeded`、服务请求置 `delivered`；`outcome=failed` → 任务置 `failed`、服务请求置 `failed` 且 `lastError` 记录说明。
+- **`note` 必填**：没有依据说明的人工判定无法审计。缺 `note` 返回 `400`/`1001` 且任务状态零变化。
+- 仅 `failed`/`pending` 可判定；`running` → `409`（执行中的任务即将回写自己的结果，人工判定会被覆盖），`succeeded` → `409`。
+- 留痕字段：`resolvedByUserId` + `resolutionNote`，随任务响应返回。
+
+任务响应（`GET /service-requests/{id}/provisioning-tasks`、`execute`/`retry`/`resolve`）新增：
+
+| 字段 | 含义 |
+|---|---|
+| `attemptCount` | 已执行次数（含正在运行的那次）。重试本身不加，领取时 +1 |
+| `maxAttempts` | 服务端下发的上限。`attemptCount >= maxAttempts` 时前端不应再显示「重试」 |
+| `lastAttemptAt` | 最近一次开始执行的时间；`running` 任务超过 10 分钟未更新即视为无人持有，可被重新领取 |
+| `resolvedByUserId` / `resolutionNote` | 人工接管的判定人与依据 |
+
+执行权与状态守卫（`POST /provisioning-tasks/{id}/execute`）：已完成任务返回 `409`/`4090` 而非二次交付；并发执行只有一个能领到；worker 崩溃留下的 `running` 由 10 分钟租约回收自愈。存储侧新增 `attempt_count`/`last_attempt_at`/`resolved_by_user_id`/`resolution_note`（迁移 `20261021_provisioning_task_recovery.sql`）。
+
 ## 变更管理接口
 
 ### 获取变更列表

@@ -121844,25 +121844,31 @@ func (m *PromptTemplateMutation) ResetEdge(name string) error {
 // ProvisioningTaskMutation represents an operation that mutates the ProvisioningTask nodes in the graph.
 type ProvisioningTaskMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *int
-	tenant_id             *int
-	addtenant_id          *int
-	service_request_id    *int
-	addservice_request_id *int
-	provider              *string
-	resource_type         *string
-	payload               *map[string]interface{}
-	result                *map[string]interface{}
-	status                *string
-	error_message         *string
-	created_at            *time.Time
-	updated_at            *time.Time
-	clearedFields         map[string]struct{}
-	done                  bool
-	oldValue              func(context.Context) (*ProvisioningTask, error)
-	predicates            []predicate.ProvisioningTask
+	op                     Op
+	typ                    string
+	id                     *int
+	tenant_id              *int
+	addtenant_id           *int
+	service_request_id     *int
+	addservice_request_id  *int
+	provider               *string
+	resource_type          *string
+	payload                *map[string]interface{}
+	result                 *map[string]interface{}
+	status                 *string
+	error_message          *string
+	attempt_count          *int
+	addattempt_count       *int
+	last_attempt_at        *time.Time
+	resolved_by_user_id    *int
+	addresolved_by_user_id *int
+	resolution_note        *string
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	done                   bool
+	oldValue               func(context.Context) (*ProvisioningTask, error)
+	predicates             []predicate.ProvisioningTask
 }
 
 var _ ent.Mutation = (*ProvisioningTaskMutation)(nil)
@@ -122330,6 +122336,230 @@ func (m *ProvisioningTaskMutation) ResetErrorMessage() {
 	delete(m.clearedFields, provisioningtask.FieldErrorMessage)
 }
 
+// SetAttemptCount sets the "attempt_count" field.
+func (m *ProvisioningTaskMutation) SetAttemptCount(i int) {
+	m.attempt_count = &i
+	m.addattempt_count = nil
+}
+
+// AttemptCount returns the value of the "attempt_count" field in the mutation.
+func (m *ProvisioningTaskMutation) AttemptCount() (r int, exists bool) {
+	v := m.attempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAttemptCount returns the old "attempt_count" field's value of the ProvisioningTask entity.
+// If the ProvisioningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProvisioningTaskMutation) OldAttemptCount(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAttemptCount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAttemptCount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAttemptCount: %w", err)
+	}
+	return oldValue.AttemptCount, nil
+}
+
+// AddAttemptCount adds i to the "attempt_count" field.
+func (m *ProvisioningTaskMutation) AddAttemptCount(i int) {
+	if m.addattempt_count != nil {
+		*m.addattempt_count += i
+	} else {
+		m.addattempt_count = &i
+	}
+}
+
+// AddedAttemptCount returns the value that was added to the "attempt_count" field in this mutation.
+func (m *ProvisioningTaskMutation) AddedAttemptCount() (r int, exists bool) {
+	v := m.addattempt_count
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAttemptCount resets all changes to the "attempt_count" field.
+func (m *ProvisioningTaskMutation) ResetAttemptCount() {
+	m.attempt_count = nil
+	m.addattempt_count = nil
+}
+
+// SetLastAttemptAt sets the "last_attempt_at" field.
+func (m *ProvisioningTaskMutation) SetLastAttemptAt(t time.Time) {
+	m.last_attempt_at = &t
+}
+
+// LastAttemptAt returns the value of the "last_attempt_at" field in the mutation.
+func (m *ProvisioningTaskMutation) LastAttemptAt() (r time.Time, exists bool) {
+	v := m.last_attempt_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastAttemptAt returns the old "last_attempt_at" field's value of the ProvisioningTask entity.
+// If the ProvisioningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProvisioningTaskMutation) OldLastAttemptAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastAttemptAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastAttemptAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastAttemptAt: %w", err)
+	}
+	return oldValue.LastAttemptAt, nil
+}
+
+// ClearLastAttemptAt clears the value of the "last_attempt_at" field.
+func (m *ProvisioningTaskMutation) ClearLastAttemptAt() {
+	m.last_attempt_at = nil
+	m.clearedFields[provisioningtask.FieldLastAttemptAt] = struct{}{}
+}
+
+// LastAttemptAtCleared returns if the "last_attempt_at" field was cleared in this mutation.
+func (m *ProvisioningTaskMutation) LastAttemptAtCleared() bool {
+	_, ok := m.clearedFields[provisioningtask.FieldLastAttemptAt]
+	return ok
+}
+
+// ResetLastAttemptAt resets all changes to the "last_attempt_at" field.
+func (m *ProvisioningTaskMutation) ResetLastAttemptAt() {
+	m.last_attempt_at = nil
+	delete(m.clearedFields, provisioningtask.FieldLastAttemptAt)
+}
+
+// SetResolvedByUserID sets the "resolved_by_user_id" field.
+func (m *ProvisioningTaskMutation) SetResolvedByUserID(i int) {
+	m.resolved_by_user_id = &i
+	m.addresolved_by_user_id = nil
+}
+
+// ResolvedByUserID returns the value of the "resolved_by_user_id" field in the mutation.
+func (m *ProvisioningTaskMutation) ResolvedByUserID() (r int, exists bool) {
+	v := m.resolved_by_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolvedByUserID returns the old "resolved_by_user_id" field's value of the ProvisioningTask entity.
+// If the ProvisioningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProvisioningTaskMutation) OldResolvedByUserID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolvedByUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolvedByUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolvedByUserID: %w", err)
+	}
+	return oldValue.ResolvedByUserID, nil
+}
+
+// AddResolvedByUserID adds i to the "resolved_by_user_id" field.
+func (m *ProvisioningTaskMutation) AddResolvedByUserID(i int) {
+	if m.addresolved_by_user_id != nil {
+		*m.addresolved_by_user_id += i
+	} else {
+		m.addresolved_by_user_id = &i
+	}
+}
+
+// AddedResolvedByUserID returns the value that was added to the "resolved_by_user_id" field in this mutation.
+func (m *ProvisioningTaskMutation) AddedResolvedByUserID() (r int, exists bool) {
+	v := m.addresolved_by_user_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearResolvedByUserID clears the value of the "resolved_by_user_id" field.
+func (m *ProvisioningTaskMutation) ClearResolvedByUserID() {
+	m.resolved_by_user_id = nil
+	m.addresolved_by_user_id = nil
+	m.clearedFields[provisioningtask.FieldResolvedByUserID] = struct{}{}
+}
+
+// ResolvedByUserIDCleared returns if the "resolved_by_user_id" field was cleared in this mutation.
+func (m *ProvisioningTaskMutation) ResolvedByUserIDCleared() bool {
+	_, ok := m.clearedFields[provisioningtask.FieldResolvedByUserID]
+	return ok
+}
+
+// ResetResolvedByUserID resets all changes to the "resolved_by_user_id" field.
+func (m *ProvisioningTaskMutation) ResetResolvedByUserID() {
+	m.resolved_by_user_id = nil
+	m.addresolved_by_user_id = nil
+	delete(m.clearedFields, provisioningtask.FieldResolvedByUserID)
+}
+
+// SetResolutionNote sets the "resolution_note" field.
+func (m *ProvisioningTaskMutation) SetResolutionNote(s string) {
+	m.resolution_note = &s
+}
+
+// ResolutionNote returns the value of the "resolution_note" field in the mutation.
+func (m *ProvisioningTaskMutation) ResolutionNote() (r string, exists bool) {
+	v := m.resolution_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolutionNote returns the old "resolution_note" field's value of the ProvisioningTask entity.
+// If the ProvisioningTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProvisioningTaskMutation) OldResolutionNote(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolutionNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolutionNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolutionNote: %w", err)
+	}
+	return oldValue.ResolutionNote, nil
+}
+
+// ClearResolutionNote clears the value of the "resolution_note" field.
+func (m *ProvisioningTaskMutation) ClearResolutionNote() {
+	m.resolution_note = nil
+	m.clearedFields[provisioningtask.FieldResolutionNote] = struct{}{}
+}
+
+// ResolutionNoteCleared returns if the "resolution_note" field was cleared in this mutation.
+func (m *ProvisioningTaskMutation) ResolutionNoteCleared() bool {
+	_, ok := m.clearedFields[provisioningtask.FieldResolutionNote]
+	return ok
+}
+
+// ResetResolutionNote resets all changes to the "resolution_note" field.
+func (m *ProvisioningTaskMutation) ResetResolutionNote() {
+	m.resolution_note = nil
+	delete(m.clearedFields, provisioningtask.FieldResolutionNote)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *ProvisioningTaskMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -122436,7 +122666,7 @@ func (m *ProvisioningTaskMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProvisioningTaskMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 14)
 	if m.tenant_id != nil {
 		fields = append(fields, provisioningtask.FieldTenantID)
 	}
@@ -122460,6 +122690,18 @@ func (m *ProvisioningTaskMutation) Fields() []string {
 	}
 	if m.error_message != nil {
 		fields = append(fields, provisioningtask.FieldErrorMessage)
+	}
+	if m.attempt_count != nil {
+		fields = append(fields, provisioningtask.FieldAttemptCount)
+	}
+	if m.last_attempt_at != nil {
+		fields = append(fields, provisioningtask.FieldLastAttemptAt)
+	}
+	if m.resolved_by_user_id != nil {
+		fields = append(fields, provisioningtask.FieldResolvedByUserID)
+	}
+	if m.resolution_note != nil {
+		fields = append(fields, provisioningtask.FieldResolutionNote)
 	}
 	if m.created_at != nil {
 		fields = append(fields, provisioningtask.FieldCreatedAt)
@@ -122491,6 +122733,14 @@ func (m *ProvisioningTaskMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case provisioningtask.FieldErrorMessage:
 		return m.ErrorMessage()
+	case provisioningtask.FieldAttemptCount:
+		return m.AttemptCount()
+	case provisioningtask.FieldLastAttemptAt:
+		return m.LastAttemptAt()
+	case provisioningtask.FieldResolvedByUserID:
+		return m.ResolvedByUserID()
+	case provisioningtask.FieldResolutionNote:
+		return m.ResolutionNote()
 	case provisioningtask.FieldCreatedAt:
 		return m.CreatedAt()
 	case provisioningtask.FieldUpdatedAt:
@@ -122520,6 +122770,14 @@ func (m *ProvisioningTaskMutation) OldField(ctx context.Context, name string) (e
 		return m.OldStatus(ctx)
 	case provisioningtask.FieldErrorMessage:
 		return m.OldErrorMessage(ctx)
+	case provisioningtask.FieldAttemptCount:
+		return m.OldAttemptCount(ctx)
+	case provisioningtask.FieldLastAttemptAt:
+		return m.OldLastAttemptAt(ctx)
+	case provisioningtask.FieldResolvedByUserID:
+		return m.OldResolvedByUserID(ctx)
+	case provisioningtask.FieldResolutionNote:
+		return m.OldResolutionNote(ctx)
 	case provisioningtask.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case provisioningtask.FieldUpdatedAt:
@@ -122589,6 +122847,34 @@ func (m *ProvisioningTaskMutation) SetField(name string, value ent.Value) error 
 		}
 		m.SetErrorMessage(v)
 		return nil
+	case provisioningtask.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAttemptCount(v)
+		return nil
+	case provisioningtask.FieldLastAttemptAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastAttemptAt(v)
+		return nil
+	case provisioningtask.FieldResolvedByUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolvedByUserID(v)
+		return nil
+	case provisioningtask.FieldResolutionNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolutionNote(v)
+		return nil
 	case provisioningtask.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -122617,6 +122903,12 @@ func (m *ProvisioningTaskMutation) AddedFields() []string {
 	if m.addservice_request_id != nil {
 		fields = append(fields, provisioningtask.FieldServiceRequestID)
 	}
+	if m.addattempt_count != nil {
+		fields = append(fields, provisioningtask.FieldAttemptCount)
+	}
+	if m.addresolved_by_user_id != nil {
+		fields = append(fields, provisioningtask.FieldResolvedByUserID)
+	}
 	return fields
 }
 
@@ -122629,6 +122921,10 @@ func (m *ProvisioningTaskMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedTenantID()
 	case provisioningtask.FieldServiceRequestID:
 		return m.AddedServiceRequestID()
+	case provisioningtask.FieldAttemptCount:
+		return m.AddedAttemptCount()
+	case provisioningtask.FieldResolvedByUserID:
+		return m.AddedResolvedByUserID()
 	}
 	return nil, false
 }
@@ -122652,6 +122948,20 @@ func (m *ProvisioningTaskMutation) AddField(name string, value ent.Value) error 
 		}
 		m.AddServiceRequestID(v)
 		return nil
+	case provisioningtask.FieldAttemptCount:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAttemptCount(v)
+		return nil
+	case provisioningtask.FieldResolvedByUserID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddResolvedByUserID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ProvisioningTask numeric field %s", name)
 }
@@ -122668,6 +122978,15 @@ func (m *ProvisioningTaskMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(provisioningtask.FieldErrorMessage) {
 		fields = append(fields, provisioningtask.FieldErrorMessage)
+	}
+	if m.FieldCleared(provisioningtask.FieldLastAttemptAt) {
+		fields = append(fields, provisioningtask.FieldLastAttemptAt)
+	}
+	if m.FieldCleared(provisioningtask.FieldResolvedByUserID) {
+		fields = append(fields, provisioningtask.FieldResolvedByUserID)
+	}
+	if m.FieldCleared(provisioningtask.FieldResolutionNote) {
+		fields = append(fields, provisioningtask.FieldResolutionNote)
 	}
 	return fields
 }
@@ -122691,6 +123010,15 @@ func (m *ProvisioningTaskMutation) ClearField(name string) error {
 		return nil
 	case provisioningtask.FieldErrorMessage:
 		m.ClearErrorMessage()
+		return nil
+	case provisioningtask.FieldLastAttemptAt:
+		m.ClearLastAttemptAt()
+		return nil
+	case provisioningtask.FieldResolvedByUserID:
+		m.ClearResolvedByUserID()
+		return nil
+	case provisioningtask.FieldResolutionNote:
+		m.ClearResolutionNote()
 		return nil
 	}
 	return fmt.Errorf("unknown ProvisioningTask nullable field %s", name)
@@ -122723,6 +123051,18 @@ func (m *ProvisioningTaskMutation) ResetField(name string) error {
 		return nil
 	case provisioningtask.FieldErrorMessage:
 		m.ResetErrorMessage()
+		return nil
+	case provisioningtask.FieldAttemptCount:
+		m.ResetAttemptCount()
+		return nil
+	case provisioningtask.FieldLastAttemptAt:
+		m.ResetLastAttemptAt()
+		return nil
+	case provisioningtask.FieldResolvedByUserID:
+		m.ResetResolvedByUserID()
+		return nil
+	case provisioningtask.FieldResolutionNote:
+		m.ResetResolutionNote()
 		return nil
 	case provisioningtask.FieldCreatedAt:
 		m.ResetCreatedAt()
