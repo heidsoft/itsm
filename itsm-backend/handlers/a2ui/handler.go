@@ -3,9 +3,10 @@
 package a2ui
 
 import (
+	"errors"
 	"net/http"
-	"strings"
 
+	"itsm-backend/common"
 	"itsm-backend/middleware"
 	"itsm-backend/service"
 
@@ -89,10 +90,9 @@ func (h *Handler) GenerateForm(ctx *gin.Context) {
 
 	messages, err := h.a2uiService.GenerateFormMessages(ctx.Request.Context(), req.Intent, surfaceID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "生成表单失败: " + err.Error(),
-		})
+		// B11（UPGRADE §1.48）：错误响应不透传内部 err.Error()。
+		h.logger.Errorw("a2ui generate form failed", "intent", req.Intent, "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "生成表单失败")
 		return
 	}
 
@@ -116,20 +116,25 @@ func (h *Handler) HandleAction(ctx *gin.Context) {
 
 	messages, err := h.a2uiService.HandleUserAction(ctx.Request.Context(), req.Action, req.SurfaceID, req.Context)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "处理操作失败: " + err.Error(),
-		})
+		// B11（UPGRADE §1.48）：submit 是未接线能力 → 显式 501/NotImplementedCode，
+		// 不再返回伪造的 TKT 工单号假成功（缺陷修复：443 行原实现）。
+		if errors.Is(err, service.ErrA2UISubmitNotImplemented) {
+			common.Fail(ctx, common.NotImplementedCode, "A2UI 工单提交通道尚未接入，暂不支持提交，请前往工单创建页手动提交")
+			return
+		}
+		// 其余意外错误：日志记原始错误，响应不透传 err.Error()。
+		h.logger.Errorw("a2ui handle action failed", "action", req.Action, "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "处理操作失败")
 		return
 	}
 
-	success := len(messages) == 0 || !strings.Contains(strings.Join(messages, ""), "error")
-
+	// B11：移除「响应拼串里是否含 error 子串」的嗅探启发式——success 由真实
+	// 执行结果决定（到达此处的调用均已成功执行）。
 	ctx.JSON(http.StatusOK, HandleActionResponse{
 		Code:     0,
 		Message:  "success",
 		Messages: messages,
-		Success:  success,
+		Success:  true,
 	})
 }
 
@@ -146,10 +151,9 @@ func (h *Handler) ParseTicketIntent(ctx *gin.Context) {
 
 	result, err := h.a2uiService.ParseTicketIntent(ctx.Request.Context(), req.Description)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "解析工单意图失败: " + err.Error(),
-		})
+		// B11（UPGRADE §1.48）：错误响应不透传内部 err.Error()。
+		h.logger.Errorw("a2ui parse intent failed", "error", err)
+		common.Fail(ctx, common.InternalErrorCode, "解析工单意图失败")
 		return
 	}
 
