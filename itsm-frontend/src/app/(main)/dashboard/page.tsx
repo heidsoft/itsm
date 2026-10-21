@@ -104,6 +104,15 @@ export default function DashboardPage() {
   const [prefs, setPrefs] = useState<DashboardUserPreferences | null>(null);
   const { mode: themeMode, setMode: setThemeMode } = useTheme();
 
+  // 后端在工单类 KPI 上下发行级范围；任一指标为 own 即整组为个人范围。
+  const ticketKpiScope = React.useMemo(() => {
+    const scopes = (data?.kpiMetrics || [])
+      .map(metric => metric.scope)
+      .filter((scope): scope is 'tenant' | 'own' => Boolean(scope));
+    if (scopes.length === 0) return null;
+    return scopes.some(scope => scope === 'own') ? 'own' : 'tenant';
+  }, [data?.kpiMetrics]);
+
   // 同步用户偏好
   React.useEffect(() => {
     setPrefs(userPreferences.get());
@@ -301,6 +310,21 @@ export default function DashboardPage() {
         <>
           {/* KPI指标卡片区域 */}
           <div className='mb-6'>
+            {/* 行级范围由后端按登录者角色下发；坐席与管理员数字口径不同，不说明会被当成 bug */}
+            <div className='mb-2 flex flex-wrap items-center gap-x-2 text-xs text-gray-500'>
+              {ticketKpiScope === 'own' ? (
+                <span className='px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium'>
+                  工单指标：仅本人创建或受理
+                </span>
+              ) : (
+                ticketKpiScope === 'tenant' && (
+                  <span className='px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium'>
+                    工单指标：本租户全部工单
+                  </span>
+                )
+              )}
+              <span>趋势、负载与分布图表为租户全量统计</span>
+            </div>
             <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
 

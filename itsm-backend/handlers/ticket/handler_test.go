@@ -41,10 +41,19 @@ type mockRepository struct {
 	// 非管理角色读到租户全量也不会被任何测试发现。
 	lastListDataScope datascope.DataScope
 	lastListUserID    int
+	// 姓名投影 fixture：tenantID -> userID -> 显示名。未登记的 ID 不进映射，
+	// 与 EntRepository 的租户谓词一致。
+	userNames       map[int]map[int]string
+	lastNamesTenant int
+	lastNamesIDs    []int
+	namesCalls      int
 }
 
 func newMockRepository() *mockRepository {
-	return &mockRepository{tickets: make(map[int]*Ticket)}
+	return &mockRepository{
+		tickets:   make(map[int]*Ticket),
+		userNames: make(map[int]map[int]string),
+	}
 }
 
 func (m *mockRepository) Create(ctx context.Context, params *CreateParams, tenantID int) (*Ticket, error) {
@@ -216,6 +225,21 @@ func (m *mockRepository) Search(ctx context.Context, keyword string, tenantID in
 			if contains(t.Title, keyword) || contains(t.Description, keyword) {
 				out = append(out, t)
 			}
+		}
+	}
+	return out, nil
+}
+
+func (m *mockRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.lastNamesTenant = tenantID
+	m.lastNamesIDs = append([]int(nil), ids...)
+	m.namesCalls++
+	out := map[int]string{}
+	for _, id := range ids {
+		if name, ok := m.userNames[tenantID][id]; ok {
+			out[id] = name
 		}
 	}
 	return out, nil

@@ -557,7 +557,7 @@ func NewApplication() *Application {
 		ConnectorManager:      connectorManager,
 	})
 	ticketService.EnableWorkflowOutbox()
-	ticketRepo := ticket.NewEntRepository(ticketRepoImpl)
+	ticketRepo := ticket.NewEntRepository(ticketRepoImpl, client)
 	ticketHandlerService := ticket.NewService(ticketRepo, ticketService, slaMonitorService, sugar)
 	ticketHandler := ticket.NewHandler(ticketHandlerService)
 	// 显式注入 *sql.DB，让 dashboardRepository 内 AVG/FILTER/CTE 复杂聚合走真实连接；

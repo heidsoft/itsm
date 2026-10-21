@@ -1,6 +1,7 @@
 package ticket
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -22,8 +23,8 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
-// ticketToResponse converts a Ticket domain model to a TicketResponse DTO.
-func ticketToResponse(t *Ticket) *dto.TicketResponse {
+// buildTicketResponse 只做字段映射，不查库。
+func buildTicketResponse(t *Ticket) *dto.TicketResponse {
 	if t == nil {
 		return nil
 	}
@@ -59,14 +60,63 @@ func ticketToResponse(t *Ticket) *dto.TicketResponse {
 	return resp
 }
 
-func ticketListToResponse(ts []*Ticket) []*dto.TicketResponse {
+// ticketToResponse 转 DTO 并投影报障人/处理人显示名。
+// 姓名投影必须由服务端完成：dto 里曾经声明过 requester/assignee 对象却从未赋值，
+// 前端列表因此把每个已派工单渲染成「未分配」或裸用户 ID。
+func (h *Handler) ticketToResponse(ctx context.Context, tenantID int, t *Ticket) *dto.TicketResponse {
+	resp := buildTicketResponse(t)
+	if resp == nil {
+		return nil
+	}
+	h.attachUserNames(ctx, tenantID, []*dto.TicketResponse{resp})
+	return resp
+}
+
+func (h *Handler) ticketListToResponse(ctx context.Context, tenantID int, ts []*Ticket) []*dto.TicketResponse {
 	result := make([]*dto.TicketResponse, 0, len(ts))
 	for _, t := range ts {
-		if r := ticketToResponse(t); r != nil {
+		if r := buildTicketResponse(t); r != nil {
 			result = append(result, r)
 		}
 	}
+	h.attachUserNames(ctx, tenantID, result)
 	return result
+}
+
+// attachUserNames 用一次 IN 查询回填 requesterName/assigneeName；
+// 未命中映射的工单保持空姓名，由前端回退显示用户 ID。
+func (h *Handler) attachUserNames(ctx context.Context, tenantID int, items []*dto.TicketResponse) {
+	if len(items) == 0 {
+		return
+	}
+	ids := make([]int, 0, len(items)*2)
+	seen := make(map[int]struct{}, len(items)*2)
+	add := func(id int) {
+		if id <= 0 {
+			return
+		}
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	for _, item := range items {
+		add(item.RequesterID)
+		add(item.AssigneeID)
+	}
+	if len(ids) == 0 {
+		return
+	}
+	names := h.service.LoadUserNames(ctx, tenantID, ids)
+	for _, item := range items {
+		if name, ok := names[item.RequesterID]; ok {
+			item.RequesterName = name
+		}
+		if name, ok := names[item.AssigneeID]; ok {
+			item.AssigneeName = name
+		}
+	}
 }
 
 // ticketStatsToDTO 将领域实体转为与前端契约一致的扁平 DTO。
@@ -156,7 +206,7 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // GetTicket handles GET /api/v1/tickets/:id
@@ -186,7 +236,7 @@ func (h *Handler) GetTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // ListTickets handles GET /api/v1/tickets
@@ -256,7 +306,7 @@ func (h *Handler) ListTickets(c *gin.Context) {
 	}
 
 	// 标准信封：data.items + total/page/pageSize/totalPages
-	common.SuccessWithPagination(c, ticketListToResponse(tickets), page, pageSize, int64(total))
+	common.SuccessWithPagination(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets), page, pageSize, int64(total))
 }
 
 // UpdateTicket handles PUT /api/v1/tickets/:id
@@ -343,7 +393,7 @@ func (h *Handler) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(updated))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, updated))
 }
 
 // DeleteTicket handles DELETE /api/v1/tickets/:id
@@ -402,7 +452,7 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // BatchDelete handles POST /api/v1/tickets/batch-delete
@@ -486,7 +536,7 @@ func (h *Handler) AssignTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // EscalateTicket handles POST /api/v1/tickets/:id/escalate
@@ -516,7 +566,7 @@ func (h *Handler) EscalateTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // ResolveTicket handles POST /api/v1/tickets/:id/resolve
@@ -551,7 +601,7 @@ func (h *Handler) ResolveTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // CloseTicket handles POST /api/v1/tickets/:id/close
@@ -581,7 +631,7 @@ func (h *Handler) CloseTicket(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // SearchTickets handles GET /api/v1/tickets/search
@@ -602,7 +652,7 @@ func (h *Handler) SearchTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketListToResponse(tickets))
+	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
 }
 
 // GetOverdueTickets handles GET /api/v1/tickets/overdue
@@ -617,7 +667,7 @@ func (h *Handler) GetOverdueTickets(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketListToResponse(tickets))
+	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
 }
 
 // GetTicketsByAssignee handles GET /api/v1/tickets/assignee/:assignee_id
@@ -638,7 +688,7 @@ func (h *Handler) GetTicketsByAssignee(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketListToResponse(tickets))
+	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
 }
 
 // GetTicketSLAInfo handles GET /api/v1/tickets/:id/sla
@@ -801,14 +851,7 @@ func (h *Handler) CreateTicketTemplate(c *gin.Context) {
 	if !ok {
 		return
 	}
-	created, err := h.service.CreateTicketTemplate(c.Request.Context(), tenantID, &TicketTemplate{
-		Name:        tmpl.Name,
-		Description: tmpl.Description,
-		Category:    tmpl.Category,
-		Priority:    tmpl.Priority,
-		Fields:      tmpl.Fields,
-		FormFields:  tmpl.FormFields,
-	})
+	created, err := h.service.CreateTicketTemplate(c.Request.Context(), tenantID, &tmpl)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -835,14 +878,7 @@ func (h *Handler) UpdateTicketTemplate(c *gin.Context) {
 	if !ok {
 		return
 	}
-	updated, err := h.service.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &TicketTemplate{
-		Name:        tmpl.Name,
-		Description: tmpl.Description,
-		Category:    tmpl.Category,
-		Priority:    tmpl.Priority,
-		Fields:      tmpl.Fields,
-		FormFields:  tmpl.FormFields,
-	})
+	updated, err := h.service.UpdateTicketTemplate(c.Request.Context(), tenantID, templateID, &tmpl)
 	if err != nil {
 		common.FailWithErr(c, err, "操作失败")
 		return
@@ -966,7 +1002,7 @@ func (h *Handler) GetSubtasks(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketListToResponse(tickets))
+	common.Success(c, h.ticketListToResponse(c.Request.Context(), tenantID, tickets))
 }
 
 // CreateSubtask handles POST /api/v1/tickets/:id/subtasks
@@ -1011,7 +1047,7 @@ func (h *Handler) CreateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(ticket))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, ticket))
 }
 
 // UpdateSubtask handles PUT /api/v1/tickets/:id/subtasks/:subtask_id
@@ -1068,7 +1104,7 @@ func (h *Handler) UpdateSubtask(c *gin.Context) {
 		return
 	}
 
-	common.Success(c, ticketToResponse(updated))
+	common.Success(c, h.ticketToResponse(c.Request.Context(), tenantID, updated))
 }
 
 // DeleteSubtask handles DELETE /api/v1/tickets/:id/subtasks/:subtask_id

@@ -51,7 +51,7 @@ import {
 import { useAuthStore } from '@/lib/store/auth-store';
 import { usePermissions } from '@/lib/hooks/use-permissions';
 import { useErrorHandler } from '@/lib/hooks/useErrorHandler';
-import { formatDateTime } from '@/lib/formatters';
+import { displayUserName, formatDateTime } from '@/lib/formatters';
 import { SafeTextBlock } from '@/components/common/SafeContent';
 import { AISuggestionPanel } from '@/components/business/AISuggestionPanel';
 import { WorkflowProgressCard } from '@/components/business/WorkflowProgressCard';
@@ -240,22 +240,25 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
 
   // 操作按钮按后端 RequirePermission 的真实权限码收口：
   // 报障人（end_user）只持 ticket:read/write/create/update，没有 assign/escalate/
-  // delete/workflow:write，此前这些按钮照常渲染，点下去只有 403。
+  // delete/approve，此前这些按钮照常渲染，点下去只有 403。
   // 隐藏只负责呈现，授权仍以后端为准（AGENTS「前端不得替代后端授权」）。
   const canUpdateTicket = hasPermission('ticket', 'update');
   const canAssignTicket = hasPermission('ticket', 'assign');
   const canEscalateTicket = hasPermission('ticket', 'escalate');
   const canDeleteTicket = hasPermission('ticket', 'delete');
-  const canWriteWorkflow = hasPermission('workflow', 'write');
-  // 审批提交优先走 BPMN 桥（workflow:write），无待审记录时回退 PUT /tickets/:id/status
+  // 批准/拒绝、抄送是「对这张工单的动作」，后端分别挂在 ticket:approve 与 ticket:assign；
+  // workflow:write 的目录语义是流程定义管理（含发布流程模板），一线角色不持它，
+  // 此前用它门控会让坐席看得到按钮却必然 403。
+  // 审批优先走 BPMN 桥（ticket:approve），无审批链时兜底 PUT /tickets/:id/status
   // （ticket:update），因此两个码任一命中即为可操作。
-  const canApproveTicket = canWriteWorkflow || canUpdateTicket;
+  const canApproveTicket = hasPermission('ticket', 'approve') || canUpdateTicket;
+  const canCcTicket = canAssignTicket;
   const hasAnyTicketAction =
     canApproveTicket ||
     canAssignTicket ||
     canEscalateTicket ||
     canUpdateTicket ||
-    canWriteWorkflow ||
+    canCcTicket ||
     canDeleteTicket;
 
   // 所有下游操作（写操作/子组件/关联面板）统一使用数字 ID。
@@ -285,7 +288,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
   }, [ticketKey]);
 
   // Get users for assignment（通过 React Query 缓存，避免每次详情页挂载都重新拉取）
-  const usersQuery = useUserListQuery({ pageSize: 100 });
+  // 通讯录只在真的打开选人弹窗时拉：详情接口已投影处理人/申请人姓名，
+  // 无 assign 权限的角色不再因为详情页而全量读取用户目录。
+  const usersQuery = useUserListQuery({
+    pageSize: 100,
+    enabled: canAssignTicket && (assignModalVisible || ccModalVisible),
+  });
   const users = (usersQuery.data?.users ?? []) as User[];
   const loadingUsers = usersQuery.isLoading;
 
@@ -782,6 +790,12 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
             <Descriptions.Item label={t('ticketDetail.labelPriority')}>{getPriorityText(ticket.priority)}</Descriptions.Item>
             <Descriptions.Item label={t('ticketDetail.labelCreatedAt')}>{formatDateTime(ticket.createdAt)}</Descriptions.Item>
             <Descriptions.Item label={t('ticketDetail.labelUpdatedAt')}>{formatDateTime(ticket.updatedAt)}</Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelAssignee')}>
+              {displayUserName(ticket.assigneeName, ticket.assigneeId, t('ticketDetail.unassigned'))}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('ticketDetail.labelRequester')}>
+              {displayUserName(ticket.requesterName, ticket.requesterId, '-')}
+            </Descriptions.Item>
             <Descriptions.Item label={t('ticketDetail.labelDescription')} span={2}>
               <SafeTextBlock content={ticket.description} fallback={t('ticketDetail.labelNoDescription')} />
             </Descriptions.Item>
@@ -869,7 +883,6 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                 <Button
                   icon={<UserCheck size={16} />}
                   onClick={handleAssign}
-                  loading={loadingUsers}
                   disabled={isTicketFinal}
                   title={isTicketFinal ? t('ticketDetail.ticketFinalNoAssign') : ''}
                 >
@@ -896,7 +909,7 @@ const TicketDetail: React.FC<{ id?: string }> = ({ id: propId }) => {
                   {t('common.edit')}
                 </Button>
               )}
-              {canWriteWorkflow && (
+              {canCcTicket && (
                 <Button
                   icon={<Users size={16} />}
                   onClick={() => setCCModalVisible(true)}

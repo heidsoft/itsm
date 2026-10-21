@@ -303,7 +303,7 @@ CANARY_PASSWORD="Canary#$(openssl rand -hex 8)7q"
 csrf() {
   # CSRF 每次写操作后轮换，所以每次写之前都要重新取。
   curl -sS --noproxy '*' -b "$JAR" -c "$JAR" -H 'accept: application/json' \
-    "$FRONTEND_URL/api/v1/csrf-token" | jq -r '.data.csrf_token // empty'
+    "$FRONTEND_URL/api/v1/csrf-token" | jq -r '.data.csrfToken // empty'
 }
 
 say "canary 1/3：经 $FRONTEND_URL 代理取 csrf-token"

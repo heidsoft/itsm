@@ -2239,6 +2239,9 @@ func (s *TicketService) CreateTicketTemplate(ctx context.Context, tenantID int, 
 		formFields["fields"] = createReq.Fields
 	}
 	isActive := true
+	if createReq.IsActive != nil {
+		isActive = *createReq.IsActive
+	}
 	priority := strings.TrimSpace(createReq.Priority)
 	if priority == "" {
 		priority = "medium"
@@ -2277,10 +2280,7 @@ func (s *TicketService) UpdateTicketTemplate(ctx context.Context, tenantID int, 
 	} else if len(updateReq.Fields) > 0 {
 		formFields["fields"] = updateReq.Fields
 	}
-	var isActive *bool
-	if updateReq.IsActiveAlt != nil {
-		isActive = updateReq.IsActiveAlt
-	}
+	isActive := updateReq.IsActive
 	priority := strings.TrimSpace(updateReq.Priority)
 	templateService := NewTicketTemplateService(s.client)
 	serviceReq := &UpdateTemplateRequest{
@@ -2314,9 +2314,10 @@ func (s *TicketService) GetTicketTemplates(ctx context.Context, tenantID int) ([
 		return nil, fmt.Errorf("ent client not available for template")
 	}
 	templateService := NewTicketTemplateService(s.client)
+	// 不带 Page/PageSize：ListTemplates 只在两者都为正时才加 Limit，
+	// 这里要的是契约声明的全量列表。写死 PageSize=100 会让第 101 个模板
+	// 既不出现在 items 里，也不体现在 handler 的 total=len(items) 上。
 	templates, _, err := templateService.ListTemplates(ctx, &ListTemplatesRequest{
-		Page:      1,
-		PageSize:  100,
 		TenantID:  tenantID,
 		SortBy:    "created_at",
 		SortOrder: "desc",
@@ -2351,7 +2352,7 @@ func (s *TicketService) GetTicketTemplate(ctx context.Context, tenantID int, tem
 // UpdateTicketTemplateStatus 启用或停用工单模板
 func (s *TicketService) UpdateTicketTemplateStatus(ctx context.Context, tenantID int, templateID int, isActive bool) (*dto.TicketTemplate, error) {
 	returned, err := s.UpdateTicketTemplate(ctx, tenantID, templateID, &dto.TicketTemplate{
-		IsActiveAlt: &isActive,
+		IsActive: &isActive,
 	})
 	if err != nil {
 		return nil, err
@@ -2449,7 +2450,7 @@ func (s *TicketService) toTicketTemplateDTO(template *ent.TicketTemplate) (*dto.
 		Fields:        fields,
 		FormFields:    formFields,
 		WorkflowSteps: workflowSteps,
-		IsActive:      isActive,
+		IsActive:      &isActive,
 		CreatedAt:     template.CreatedAt,
 		UpdatedAt:     template.UpdatedAt,
 	}, nil

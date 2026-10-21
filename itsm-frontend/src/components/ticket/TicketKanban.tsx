@@ -27,6 +27,7 @@ import 'dayjs/locale/zh-cn';
 
 import { useRouter } from 'next/navigation';
 import type { Ticket } from '@/lib/api/types';
+import { displayUserName } from '@/lib/formatters';
 import { useTickets } from '@/lib/hooks/useTickets';
 import { useDebounce } from '@/lib/component-utils';
 
@@ -286,12 +287,12 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           </div>
 
           {/* 分配人信息 */}
-          {ticket.assignee && (
+          {ticket.assigneeId ? (
             <div className="flex items-center mt-2">
               <Avatar size="small" icon={<User />} className="mr-2" />
-              <Text className="text-xs">{ticket.assignee.name || ticket.assignee.username}</Text>
+              <Text className="text-xs">{displayUserName(ticket.assigneeName, ticket.assigneeId, '-')}</Text>
             </div>
-          )}
+          ) : null}
 
           {/* 截止时间：契约里没有 dueTime，SLA 解决截止是唯一权威截止时间 */}
           {ticket.slaResolutionDeadline && (

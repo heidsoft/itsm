@@ -41,8 +41,8 @@ export type BpmnActivityType =
  *
  * 唯一对应后端 dto/ticket_workflow_dto.go 的 WorkflowUserInfo：FullName 由
  * service.workflowUserInfoFromEnt 用 user.Name 回填，Avatar/Department 为 omitempty。
- * 工单列表/详情的 requester、assignee 用的是另一个契约 dto.UserBasicInfo（字段名 name），
- * 两者不可混用。
+ * 工单列表/详情不返回用户对象，只有 requesterName/assigneeName 两个投影姓名，
+ * 与本契约的 fullName 不是同一来源，不可混用。
  */
 export interface WorkflowUserInfo {
   id: number;

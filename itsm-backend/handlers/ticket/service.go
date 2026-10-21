@@ -144,17 +144,28 @@ func (s *Service) GetByNumber(ctx context.Context, ticketNumber string, tenantID
 }
 
 // dataScopeForRole 返回某角色在工单读取上的行级数据范围。
-// 列表与统计必须走同一个判定，否则工作台卡片会显示租户全量、列表却是空的。
+// 判定已收敛到 datascope.ForTicketReader，工作台 KPI 与工单列表/统计共用同一规则。
 func dataScopeForRole(currentRole string) datascope.DataScope {
-	if !datascope.IsDataScopeAllRole(currentRole) {
-		return datascope.DataScopeOwnedOrAssigned
-	}
-	return datascope.DataScopeAll
+	return datascope.ForTicketReader(currentRole)
 }
 
 // List lists tickets with pagination and filtering.
 func (s *Service) List(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}, currentUserID int, currentRole string) ([]*Ticket, int, error) {
 	return s.repo.List(ctx, tenantID, page, size, filters, dataScopeForRole(currentRole), currentUserID)
+}
+
+// LoadUserNames 批量投影用户显示名，供响应里的 requesterName/assigneeName 使用。
+// 姓名只是展示增强：查询失败返回空映射，让响应退回用户 ID，而不是整页报错。
+func (s *Service) LoadUserNames(ctx context.Context, tenantID int, ids []int) map[int]string {
+	if s.repo == nil {
+		return map[int]string{}
+	}
+	names, err := s.repo.GetUserNamesByIDs(ctx, tenantID, ids)
+	if err != nil {
+		s.logger.Warnw("加载用户显示名失败", "tenant_id", tenantID, "error", err)
+		return map[int]string{}
+	}
+	return names
 }
 
 // Update updates a ticket.
@@ -378,27 +389,7 @@ func dtoTemplateToDomain(t *dto.TicketTemplate) *TicketTemplate {
 		Fields:        t.Fields,
 		FormFields:    t.FormFields,
 		WorkflowSteps: t.WorkflowSteps,
-		IsActive:      t.IsActive,
-		CreatedAt:     t.CreatedAt,
-		UpdatedAt:     t.UpdatedAt,
-	}
-}
-
-// templateDomainToDTO 把 handler 层请求实体转为 dto.TicketTemplate。
-func templateDomainToDTO(t *TicketTemplate) *dto.TicketTemplate {
-	if t == nil {
-		return nil
-	}
-	return &dto.TicketTemplate{
-		ID:            t.ID,
-		Name:          t.Name,
-		Description:   t.Description,
-		Category:      t.Category,
-		Priority:      t.Priority,
-		Fields:        t.Fields,
-		FormFields:    t.FormFields,
-		WorkflowSteps: t.WorkflowSteps,
-		IsActive:      t.IsActive,
+		IsActive:      t.IsActive != nil && *t.IsActive,
 		CreatedAt:     t.CreatedAt,
 		UpdatedAt:     t.UpdatedAt,
 	}
@@ -435,11 +426,11 @@ func (s *Service) GetTicketTemplate(ctx context.Context, tenantID int, templateI
 }
 
 // CreateTicketTemplate creates a new template.
-func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, tmpl *TicketTemplate) (*TicketTemplate, error) {
+func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, req *dto.TicketTemplate) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
 		return nil, fmt.Errorf("工单模板服务不可用")
 	}
-	created, err := s.productionSvc.CreateTicketTemplate(ctx, tenantID, templateDomainToDTO(tmpl))
+	created, err := s.productionSvc.CreateTicketTemplate(ctx, tenantID, req)
 	if err != nil {
 		return nil, err
 	}
@@ -451,11 +442,11 @@ func (s *Service) CreateTicketTemplate(ctx context.Context, tenantID int, tmpl *
 }
 
 // UpdateTicketTemplate updates a template.
-func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, tmpl *TicketTemplate) (*TicketTemplate, error) {
+func (s *Service) UpdateTicketTemplate(ctx context.Context, tenantID int, templateID int, req *dto.TicketTemplate) (*TicketTemplate, error) {
 	if s.productionSvc == nil {
 		return nil, fmt.Errorf("工单模板服务不可用")
 	}
-	updated, err := s.productionSvc.UpdateTicketTemplate(ctx, tenantID, templateID, templateDomainToDTO(tmpl))
+	updated, err := s.productionSvc.UpdateTicketTemplate(ctx, tenantID, templateID, req)
 	if err != nil {
 		return nil, err
 	}

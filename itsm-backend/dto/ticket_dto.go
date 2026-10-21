@@ -4,15 +4,6 @@ import (
 	"time"
 )
 
-// UserBasicInfo 用户基本信息
-type UserBasicInfo struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
-}
-
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
 	Title                 string                 `json:"title" binding:"required,min=2,max=200"`
@@ -76,37 +67,40 @@ type ListTicketsRequest struct {
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID                    int                    `json:"id"`
-	Title                 string                 `json:"title"`
-	Description           string                 `json:"description"`
-	Status                string                 `json:"status"`
-	Priority              string                 `json:"priority"`
-	Type                  string                 `json:"type"`
-	TicketTypeID          int                    `json:"ticketTypeId,omitempty"`
-	TicketTypeCode        string                 `json:"ticketTypeCode,omitempty"`
-	TicketTypeName        string                 `json:"ticketTypeName,omitempty"`
-	FormFields            map[string]interface{} `json:"formFields,omitempty"`
-	TicketNumber          string                 `json:"ticketNumber"`
-	RequesterID           int                    `json:"requesterId"`
-	AssigneeID            int                    `json:"assigneeId,omitempty"`
-	TenantID              int                    `json:"tenantId"`
-	CategoryID            int                    `json:"categoryId,omitempty"`
-	DepartmentID          int                    `json:"departmentId,omitempty"`
-	ParentTicketID        int                    `json:"parentTicketId,omitempty"`
-	TemplateID            *int                   `json:"templateId,omitempty"`
-	Version               int                    `json:"version"`
-	CreatedAt             time.Time              `json:"createdAt"`
-	UpdatedAt             time.Time              `json:"updatedAt"`
-	Requester             *UserBasicInfo         `json:"requester,omitempty"`
-	Assignee              *UserBasicInfo         `json:"assignee,omitempty"`
-	Resolution            string                 `json:"resolution,omitempty"`
-	ResolutionCategory    string                 `json:"resolutionCategory,omitempty"`
-	ResolvedAt            *time.Time             `json:"resolvedAt,omitempty"`
-	ClosedAt              *time.Time             `json:"closedAt,omitempty"`
-	FirstResponseAt       *time.Time             `json:"firstResponseAt,omitempty"`
-	SLAResponseDeadline   *time.Time             `json:"slaResponseDeadline,omitempty"`
-	SLAResolutionDeadline *time.Time             `json:"slaResolutionDeadline,omitempty"`
-	Rating                int                    `json:"rating,omitempty"`
+	ID             int                    `json:"id"`
+	Title          string                 `json:"title"`
+	Description    string                 `json:"description"`
+	Status         string                 `json:"status"`
+	Priority       string                 `json:"priority"`
+	Type           string                 `json:"type"`
+	TicketTypeID   int                    `json:"ticketTypeId,omitempty"`
+	TicketTypeCode string                 `json:"ticketTypeCode,omitempty"`
+	TicketTypeName string                 `json:"ticketTypeName,omitempty"`
+	FormFields     map[string]interface{} `json:"formFields,omitempty"`
+	TicketNumber   string                 `json:"ticketNumber"`
+	RequesterID    int                    `json:"requesterId"`
+	AssigneeID     int                    `json:"assigneeId,omitempty"`
+	// 显示名由服务端按当前租户投影（handlers/ticket attachUserNames）。
+	// 历史上这里挂的是 requester/assignee 对象却从未赋值，前端因此把已派工单
+	// 渲染成「未分配」；姓名以外的用户字段不在这个 DTO 里返回。
+	RequesterName         string     `json:"requesterName,omitempty"`
+	AssigneeName          string     `json:"assigneeName,omitempty"`
+	TenantID              int        `json:"tenantId"`
+	CategoryID            int        `json:"categoryId,omitempty"`
+	DepartmentID          int        `json:"departmentId,omitempty"`
+	ParentTicketID        int        `json:"parentTicketId,omitempty"`
+	TemplateID            *int       `json:"templateId,omitempty"`
+	Version               int        `json:"version"`
+	CreatedAt             time.Time  `json:"createdAt"`
+	UpdatedAt             time.Time  `json:"updatedAt"`
+	Resolution            string     `json:"resolution,omitempty"`
+	ResolutionCategory    string     `json:"resolutionCategory,omitempty"`
+	ResolvedAt            *time.Time `json:"resolvedAt,omitempty"`
+	ClosedAt              *time.Time `json:"closedAt,omitempty"`
+	FirstResponseAt       *time.Time `json:"firstResponseAt,omitempty"`
+	SLAResponseDeadline   *time.Time `json:"slaResponseDeadline,omitempty"`
+	SLAResolutionDeadline *time.Time `json:"slaResolutionDeadline,omitempty"`
+	Rating                int        `json:"rating,omitempty"`
 }
 
 // ListTicketsResponse 工单列表响应
@@ -223,10 +217,10 @@ type TicketTemplate struct {
 	Fields        []map[string]interface{} `json:"fields,omitempty"`
 	FormFields    map[string]interface{}   `json:"formFields"`
 	WorkflowSteps []map[string]interface{} `json:"workflowSteps,omitempty"`
-	IsActive      bool                     `json:"isActive"`
-	IsActiveAlt   *bool                    `json:"-"` // internal flag: force-update isActive (not JSON-bound)
-	CreatedAt     time.Time                `json:"createdAt"`
-	UpdatedAt     time.Time                `json:"updatedAt"`
+	// 指针用于区分「未传」与「显式 false」：创建时显式停用不能被默认成启用。
+	IsActive  *bool     `json:"isActive,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // TicketAssignmentRequest 工单分配请求

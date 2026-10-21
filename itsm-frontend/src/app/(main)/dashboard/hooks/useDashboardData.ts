@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardAPI } from '@/lib/api/dashboard-api';
-import { ticketService } from '@/lib/services/ticket-service';
-import type { DashboardData } from '../types/dashboard.types';
+import type { DashboardData, KPIMetric } from '../types/dashboard.types';
 
 export function useDashboardData() {
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -15,56 +14,12 @@ export function useDashboardData() {
   const { data, isLoading, error, refetch, isError } = useQuery({
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
-      // 并行请求 Dashboard 概览和真实的工单统计
-      const [overviewResult, statsResult] = await Promise.allSettled([
-        DashboardAPI.getOverview(),
-        ticketService.getTicketStats(),
-      ]);
-
-      // 两个接口都失败必须抛错：Promise.allSettled 本身永不 reject，
-      // 若在此吞掉，queryFn 永远"成功"返回全 0 初始数据，页面错误态不可达、
-      // isConnected 恒 true——故障被伪装成"0 数据 + 已连接"（2026-10-14 审查修复）。
-      if (overviewResult.status === 'rejected' && statsResult.status === 'rejected') {
-        throw overviewResult.reason;
-      }
-
-      let dashboardData = getInitialData(); // 默认使用空数据初始化
-
-      // 处理 Dashboard Overview 数据（部分失败时保留另一路真实数据）
-      if (overviewResult.status === 'fulfilled') {
-        dashboardData = { ...dashboardData, ...overviewResult.value };
-      } else {
-        console.error('Dashboard Overview API调用失败:', overviewResult.reason);
-      }
-
-      // 处理真实工单统计数据（高优先级覆盖）
-      if (statsResult.status === 'fulfilled') {
-        const stats = statsResult.value;
-        // 使用真实数据更新 KPI 指标
-        dashboardData.kpiMetrics = dashboardData.kpiMetrics.map(metric => {
-          switch (metric.id) {
-            case 'total-tickets':
-              return { ...metric, value: stats.total, description: '实时工单总数' };
-            case 'pending-tickets':
-              // 使用 open 而非 pending，保持与工单列表页一致
-              // open = new + open（新建 + 处理中）
-              return { ...metric, value: stats.open || 0, description: '实时待处理' };
-            case 'in-progress-tickets':
-              return { ...metric, value: stats.inProgress || 0, description: '实时处理中' };
-            case 'completed-tickets':
-              // resolved（后端 stats 无 closed 字段）
-              return { ...metric, value: stats.resolved || 0, description: '实时已完成' };
-            case 'overdue-tickets':
-              return { ...metric, value: stats.overdue || 0, description: '实时超时工单' };
-            default:
-              return metric;
-          }
-        });
-      } else {
-        console.warn('Ticket Stats API调用失败:', statsResult.reason);
-      }
-
-      return dashboardData;
+      // 后端 /dashboard/overview 是工作台数字的唯一来源：工单类 KPI 已按登录者的
+      // 行级数据范围统计，与 /tickets 列表、/tickets/stats 同一规则。
+      // 此前这里再用 /tickets/stats 覆盖卡片数值，而环比 chip 仍来自租户口径的 overview，
+      // 同一组卡片混着两种范围（2026-10-20 生产实测：坐席"待处理 12"下钻后找不到这 12 张单）。
+      const overview = await DashboardAPI.getOverview();
+      return { ...getInitialData(), ...overview };
     },
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 10000, // 10秒内数据被认为是新鲜的
@@ -100,101 +55,26 @@ function getInitialData(): DashboardData {
     // 扩展为8个KPI指标
     kpiMetrics: [
       // 第1行：工单数量指标
-      {
-        id: 'total-tickets',
-        title: '总工单数',
-        value: 0,
-        unit: '个',
-        color: '#3b82f6',
-        trend: 'up' as const,
-        change: 0,
-        changeType: 'increase' as const,
-        description: '加载中...',
-      },
-      {
-        id: 'pending-tickets',
-        title: '待处理工单',
-        value: 0,
-        unit: '个',
-        color: '#f59e0b',
-        trend: 'down' as const,
-        change: 0,
-        changeType: 'decrease' as const,
-        description: '加载中...',
+      placeholderMetric('total-tickets', '总工单数', '个', '#3b82f6', '加载中...'),
+      placeholderMetric('pending-tickets', '待处理工单', '个', '#f59e0b', '加载中...', {
         alert: null,
-      },
-      {
-        id: 'in-progress-tickets',
-        title: '处理中工单',
-        value: 0,
-        unit: '个',
-        color: '#06b6d4',
-        trend: 'up' as const,
-        change: 0,
-        changeType: 'increase' as const,
-        description: '加载中...',
-      },
-      {
-        id: 'completed-tickets',
-        title: '已完成工单',
-        value: 0,
-        unit: '个',
-        color: '#10b981',
-        trend: 'up' as const,
-        change: 0,
-        changeType: 'increase' as const,
-        description: '加载中...',
-      },
+      }),
+      placeholderMetric('in-progress-tickets', '处理中工单', '个', '#06b6d4', '加载中...'),
+      placeholderMetric('completed-tickets', '已完成工单', '个', '#10b981', '加载中...'),
       // 第2行：时间与质量指标
-      {
-        id: 'avg-first-response',
-        title: '平均首次响应时间',
-        value: 0,
-        unit: '小时',
-        color: '#8b5cf6',
-        trend: 'down' as const,
-        change: 0,
-        changeType: 'decrease' as const,
-        description: '暂无数据',
+      placeholderMetric('avg-first-response', '平均首次响应时间', '小时', '#8b5cf6', '暂无数据', {
         target: 4,
-      },
-      {
-        id: 'avg-resolution',
-        title: '平均解决时间',
-        value: 0,
-        unit: '小时',
-        color: '#ec4899',
-        trend: 'down' as const,
-        change: 0,
-        changeType: 'decrease' as const,
-        description: '暂无数据',
+      }),
+      placeholderMetric('avg-resolution', '平均解决时间', '小时', '#ec4899', '暂无数据', {
         target: 8,
-      },
-      {
-        id: 'sla-compliance',
-        title: 'SLA达成率',
-        value: 0,
-        unit: '%',
-        color: '#10b981',
-        trend: 'up' as const,
-        change: 0,
-        changeType: 'increase' as const,
-        description: '暂无数据',
+      }),
+      placeholderMetric('sla-compliance', 'SLA达成率', '%', '#10b981', '暂无数据', {
         target: 95,
         alert: 'warning',
-      },
-      {
-        id: 'overdue-tickets',
-        title: '超时工单',
-        value: 0,
-        unit: '个',
-        color: '#ef4444',
-        trend: 'up' as const,
-        change: 0,
-        changeType: 'increase' as const,
-        description: '实时超时工单',
+      }),
+      placeholderMetric('overdue-tickets', '超时工单', '个', '#ef4444', '暂无数据', {
         alert: 'error',
-      },
+      }),
     ],
     // 工单趋势
     ticketTrend: [],
@@ -252,5 +132,30 @@ function getInitialData(): DashboardData {
       },
       totalTickets: 0,
     },
+  };
+}
+
+// placeholderMetric 给出请求返回前的占位卡片。趋势一律 stable、环比一律不可比：
+// 数字与箭头方向只由后端 DTO 填充，占位阶段显示 ↑/↓ 等于凭空造出一个趋势。
+function placeholderMetric(
+  id: string,
+  title: string,
+  unit: string,
+  color: string,
+  description: string,
+  extra?: Partial<KPIMetric>,
+): KPIMetric {
+  return {
+    id,
+    title,
+    value: 0,
+    unit,
+    color,
+    trend: 'stable',
+    change: 0,
+    changeType: 'stable',
+    comparable: false,
+    description,
+    ...extra,
   };
 }

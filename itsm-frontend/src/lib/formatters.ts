@@ -15,3 +15,14 @@ export const mapLabel = (map: Record<string, string>, value?: string) => {
   if (!value) return '';
   return map[value] || value;
 };
+
+// 姓名由服务端投影；缺投影时如实显示用户 ID，不能渲染成「未分配」
+export const displayUserName = (
+  name: string | undefined,
+  userId: number | undefined,
+  emptyLabel: string
+): string => {
+  const trimmed = name?.trim();
+  if (trimmed) return trimmed;
+  return userId ? `用户 #${userId}` : emptyLabel;
+};

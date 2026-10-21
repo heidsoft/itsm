@@ -42,7 +42,7 @@ func TestTicketStatsCountsOverdueWithinTenant(t *testing.T) {
 			}
 		}
 	}
-	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()), client), nil, nil, zap.NewNop().Sugar()))
 	r := gin.New()
 	r.GET("/api/v1/tickets/stats", func(c *gin.Context) {
 		c.Set("tenant_id", 1)
@@ -171,7 +171,7 @@ func TestTicketStatsDistributionsAreAuthoritative(t *testing.T) {
 	createTicket(tenantB, "open", "high", "B-1")
 	createTicket(tenantB, "resolved", "high", "B-2")
 
-	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()), client), nil, nil, zap.NewNop().Sugar()))
 
 	get := func(tb *testing.T, tenantID int) statsShape {
 		tb.Helper()
@@ -280,7 +280,7 @@ func TestTicketStatsScopesToViewerDataRange(t *testing.T) {
 	mk("X-1", owner.ID, 0, other.ID)
 	mk("X-2", stranger.ID, 0, other.ID)
 
-	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar())), nil, nil, zap.NewNop().Sugar()))
+	h := NewHandler(NewService(NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()), client), nil, nil, zap.NewNop().Sugar()))
 
 	get := func(t *testing.T, userID int, role string) int {
 		t.Helper()

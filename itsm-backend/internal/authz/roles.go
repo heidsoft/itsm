@@ -85,7 +85,7 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 工单核心（11）：坐席需要工单全生命周期
 			"ticket:read", "ticket:write", "ticket:create", "ticket:update",
 			"ticket:assign", "ticket:escalate", "ticket:resolve", "ticket:close",
-			"ticket:export", "ticket:import", "ticket:delete",
+			"ticket:approve", "ticket:export", "ticket:import", "ticket:delete",
 			// 工单元数据（4）：坐席起单与维护需要
 			"ticket_type:read",
 			"ticket_category:read", "ticket_tag:read", "ticket_template:read",
@@ -150,6 +150,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			"knowledge:read",
 			"service_request:read", "service_request:write", "service_request:approve",
 			"ticket:assign", "ticket:escalate", "ticket:export",
+			// 工单流转动作（审批/解决/关闭）按 ticket 动作码授权，不借道流程定义管理码。
+			"ticket:approve", "ticket:resolve", "ticket:close",
 			"notification:read", "notification:write",
 			"incident:write", "dashboard:read", "cmdb:read",
 			"service_catalog:read", "sla:read", "bpmn:read",
@@ -163,12 +165,19 @@ func BuiltinRolePermissionCodes() map[string][]string {
 		// ITIL 流程运营所有者——工单类型、SLA、流程绑定与目录配置的落地者。
 		domainrole.ITAdmin: {
 			"ticket:read", "ticket_type:read", "ticket:write", "ticket:assign", "incident:read", "incident:write",
+			// 工单流转动作：此前 it_admin 靠 workflow:write 间接可达，
+			// 归位到 ticket 动作码后需显式授予，否则流程运营者反而不能结单。
+			"ticket:resolve", "ticket:close", "ticket:approve",
 			"problem:read", "change:read", "asset:read", "cmdb:read", "cmdb:write",
 			"user:read", "team:read", "knowledge:read", "report:read",
 			"service_request:read", "service_request:write", "service_request:approve",
 			// 流程运营职责需要配置面（工单类型/分类/模板、SLA、流程与发布读、
 			// 服务目录、CI 类型建模），不含 user/role/system 写（归 admin 与三员）。
-			"ticket_type:manage", "ticket_category:read", "ticket_tag:read", "ticket_template:read",
+			// 模板路由按 create/update 分码；admin 靠 write⇒同义补齐可达，it_admin 既无
+			// write 也无细分码，只授 read 会让「配置模板」变成只能看不能改。
+			// 删除码不在此处：抹掉存量模板留给租户管理员与目录管理员。
+			"ticket_type:manage", "ticket_category:read", "ticket_tag:read",
+			"ticket_template:read", "ticket_template:create", "ticket_template:update",
 			"sla:read", "sla:write", "workflow:read", "workflow:write", "bpmn:read",
 			// 规则配置面属流程运营职责；此前接口挂在 system_config:* 上，
 			// it_admin 看得到菜单却恒 403（实测 code 2003）。
@@ -250,6 +259,8 @@ func BuiltinRolePermissionCodes() map[string][]string {
 			// 二线处理语义：接手升级单据并在团队内转派/继续升级。
 			// 与退役的 l2_support 权限面等价（ticket:write 由同义补齐展开为 create/update）。
 			"ticket:assign", "ticket:escalate",
+			// 接手后要能结单：解决/关闭属工单动作码，不再依赖流程定义管理码。
+			"ticket:resolve", "ticket:close",
 			"notification:read",
 			"knowledge:read",
 			"cmdb:read",

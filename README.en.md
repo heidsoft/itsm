@@ -207,7 +207,7 @@ curl -X POST http://localhost:8090/api/v1/auth/login \
 # Login response does not expose access token to JavaScript.
 # Write operations also require CSRF token; examples below need jq.
 CSRF_TOKEN=$(curl -s -b /tmp/itsm-cookies.txt -c /tmp/itsm-cookies.txt \
-  http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrf_token')
+  http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrfToken')
 
 # 2. Query ticket types available for current tenant
 curl -X GET "http://localhost:8090/api/v1/ticket-types?status=active&page=1&pageSize=20" \
@@ -246,8 +246,8 @@ curl -X POST http://localhost:8090/api/v1/changes \
     "implementationPlan": "Blue-green deployment"
   }'
 
-# 6. Query SLA policies
-curl -X GET http://localhost:8090/api/v1/sla/policies \
+# 6. Query SLA policies (canonical route; /sla/policies is the legacy alias)
+curl -X GET "http://localhost:8090/api/v1/sla/definitions?page=1&pageSize=20" \
   -b /tmp/itsm-cookies.txt
 ```
 
@@ -279,7 +279,7 @@ open http://localhost:8090/swagger/index.html
 | Scenario | Operation |
 |:---|:---|
 | Create tenant | `POST /api/v1/tenants` — then create users under that tenant |
-| Configure SLA | `POST /api/v1/sla/policies` — create SLA policy, bind to ticket category |
+| Configure SLA | `POST /api/v1/sla/definitions` — create SLA policy, bind via `conditions` (priority, etc.) |
 | Design workflow | Use the Workflow module in the frontend to design BPMN processes, bind to business objects |
 | Manage CMDB | `POST /api/v1/cmdb/cis` — create configuration items, establish CI relationships |
 | Knowledge search | `POST /api/v1/knowledge/search` — search knowledge articles |

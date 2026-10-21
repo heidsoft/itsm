@@ -3,15 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  App,
+  Alert,
   Card,
   Button,
-  Table,
   Modal,
   Form,
   Input,
   Select,
   Switch,
-  message,
   Space,
   Tag,
   Typography,
@@ -40,6 +40,8 @@ import {
   Tag as TagIcon,
 } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { isPermissionDeniedError } from '@/lib/api/http-client';
+import { usePermissions } from '@/lib/hooks/use-permissions';
 // AppLayout is handled by layout.tsx
 
 const { Title, Text } = Typography;
@@ -116,11 +118,29 @@ const templateCategories = [
   },
 ];
 
+// 服务端的业务错误原因已经在 ApiRequestError.message 里（例如「没有权限执行该操作」），
+// 全部折叠成「请稍后重试」会把权限问题和网络问题说成同一件事。
+function errorReason(error: unknown): string {
+  if (error instanceof Error && error.message.trim() !== '') {
+    return error.message;
+  }
+  return '请稍后重试';
+}
+
 const TicketTemplatesPage = () => {
   const router = useRouter();
+  const { message } = App.useApp();
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission('ticket_template', 'create');
+  const canUpdate = hasPermission('ticket_template', 'update');
+  const canDelete = hasPermission('ticket_template', 'delete');
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(false);
+  // 后端 403/2003 与真正的空列表必须分开渲染：把「你没有权限」显示成「系统里没有模板」
+  // 会让使用者去改筛选条件或找管理员建数据，而不是申请权限。
+  const [loadError, setLoadError] = useState<{ denied: boolean; detail: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('incident');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -130,67 +150,55 @@ const TicketTemplatesPage = () => {
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     try {
-      // 调用实际API
-      const response = await TicketApi.getTemplates({
-        page: 1,
-        pageSize: 100,
-        category: selectedCategory !== 'all' ? selectedCategory : undefined,
-      });
+      const response = await TicketApi.getTemplates();
 
-      // 将API响应转换为组件期望的格式
-      const apiTemplates: TicketTemplate[] = (response.items || []).map(
-        (item: {
-          id: number;
-          name: string;
-          description: string;
-          category: string;
-          content?: Record<string, unknown>;
-          isActive?: boolean;
-          createdAt?: string;
-          updatedAt?: string;
-        }) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          type: (item.content?.type as string) || item.category?.toLowerCase() || 'incident',
-          category: item.category,
-          subcategory: (item.content?.subcategory as string) || undefined,
-          priority: (item.content?.priority as string) || 'medium',
-          estimatedTime: (item.content?.estimatedTime as string) || '1 hour',
-          sla: (item.content?.sla as string) || '4 hours',
-          slaType: (item.content?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',
-          impact: (item.content?.impact as string) || 'individual',
-          urgency: (item.content?.urgency as string) || 'medium',
-          businessValue: (item.content?.businessValue as string) || 'medium',
-          source: (item.content?.source as string) || 'web',
-          assigneeGroup: (item.content?.assigneeGroup as string) || undefined,
-          autoAssign: (item.content?.autoAssign as boolean) || false,
-          requiresApproval: (item.content?.requiresApproval as boolean) || false,
-          approvalLevel: (item.content?.approvalLevel as string) || 'none',
-          customFields: (item.content?.customFields as CustomField[]) || [],
-          tags: (item.content?.tags as string[]) || [],
-          isActive: item.isActive ?? true,
-          createdAt: item.createdAt || new Date().toISOString(),
-          updatedAt: item.updatedAt || new Date().toISOString(),
-          icon: <FileText size={20} />,
-          color:
-            item.category === 'System Access'
-              ? 'red'
-              : item.category === 'Hardware Equipment'
-                ? 'orange'
-                : 'blue',
-        })
-      );
+      // 后端契约是 formFields（模板表单的原生载荷），不是 content。
+      const apiTemplates: TicketTemplate[] = (response.items || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        type: (item.formFields?.type as string) || item.category?.toLowerCase() || 'incident',
+        category: item.category,
+        subcategory: (item.formFields?.subcategory as string) || undefined,
+        priority: item.priority || 'medium',
+        estimatedTime: (item.formFields?.estimatedTime as string) || '1 hour',
+        sla: (item.formFields?.sla as string) || '4 hours',
+        slaType: (item.formFields?.slaType as 'hours' | 'days' | 'business_hours') || 'hours',
+        impact: (item.formFields?.impact as string) || 'individual',
+        urgency: (item.formFields?.urgency as string) || 'medium',
+        businessValue: (item.formFields?.businessValue as string) || 'medium',
+        source: (item.formFields?.source as string) || 'web',
+        assigneeGroup: (item.formFields?.assigneeGroup as string) || undefined,
+        autoAssign: (item.formFields?.autoAssign as boolean) || false,
+        requiresApproval: (item.formFields?.requiresApproval as boolean) || false,
+        approvalLevel: (item.formFields?.approvalLevel as string) || 'none',
+        customFields: (item.formFields?.customFields as CustomField[]) || [],
+        tags: (item.formFields?.tags as string[]) || [],
+        isActive: item.isActive ?? true,
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
+        icon: <FileText size={20} />,
+        color:
+          item.category === 'System Access'
+            ? 'red'
+            : item.category === 'Hardware Equipment'
+              ? 'orange'
+              : 'blue',
+      }));
 
       setTemplates(apiTemplates);
+      setLoadError(null);
     } catch (error) {
       console.error('Failed to load templates:', error);
-      message.error('加载模板列表失败，请稍后重试');
       setTemplates([]);
+      setLoadError({
+        denied: isPermissionDeniedError(error),
+        detail: error instanceof Error ? error.message : '',
+      });
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory]);
+  }, []);
 
   useEffect(() => {
     loadTemplates();
@@ -213,35 +221,20 @@ const TicketTemplatesPage = () => {
       message.success('模板删除成功');
     } catch (error) {
       console.error('Delete template failed:', error);
-      message.error('删除失败，请稍后重试');
+      message.error(`删除失败：${errorReason(error)}`);
     }
   };
 
+  // 复制走后端 POST /tickets/templates/:id/copy：前端手抄一份表单字段会丢掉
+  // 未在当前卡片上映射的字段，复制出来的模板与原件并不等价。
   const handleCopyTemplate = async (template: TicketTemplate) => {
     try {
-      const formFields: Record<string, unknown> = {
-        type: template.type,
-        priority: template.priority,
-        source: template.source,
-        autoAssign: template.autoAssign,
-        requiresApproval: template.requiresApproval,
-        slaType: template.slaType,
-        approvalLevel: template.approvalLevel,
-        tags: template.tags,
-      };
-      await TicketApi.createTemplate({
-        name: `${template.name} - Copy`,
-        description: template.description,
-        category: template.category,
-        priority: template.priority,
-        formFields,
-        isActive: template.isActive,
-      });
+      await TicketApi.copyTemplate(template.id);
       message.success('模板复制成功');
       loadTemplates();
     } catch (error) {
       console.error('Copy template failed:', error);
-      message.error('复制失败，请稍后重试');
+      message.error(`复制失败：${errorReason(error)}`);
     }
   };
 
@@ -258,27 +251,22 @@ const TicketTemplatesPage = () => {
     return matchesKeyword && matchesCategory && matchesStatus;
   });
 
-  const renderTemplateCard = (template: TicketTemplate) => (
-    <Card
-      key={template.id}
-      hoverable
-      className='h-full'
-      actions={[
-        <Tooltip title='查看模板' key='view'>
-          <Button
-            type='text'
-            icon={<Eye size={16} />}
-            onClick={() => {
-              try {
-                router.push(`/tickets/templates/${template.id}`);
-              } catch (navErr) {
-                console.error('[nav]', navErr);
-                message.error('导航失败，请稍后重试');
-              }
-            }}
-            aria-label='查看模板详情'
-          />
-        </Tooltip>,
+  // 写操作按后端同名权限码判定：ticket_template:create/update/delete，
+  // 卡片视图与列表视图共用同一份，避免两处口径漂移。
+  const templateActions = (template: TicketTemplate): React.ReactNode[] => {
+    const actions: React.ReactNode[] = [
+      <Tooltip title='查看模板' key='view'>
+        <Button
+          type='text'
+          icon={<Eye size={16} />}
+          onClick={() => router.push(`/tickets/templates/${template.id}`)}
+          aria-label='查看模板详情'
+        />
+      </Tooltip>,
+    ];
+
+    if (canUpdate) {
+      actions.push(
         <Tooltip title='编辑模板' key='edit'>
           <Button
             type='text'
@@ -286,7 +274,12 @@ const TicketTemplatesPage = () => {
             onClick={() => handleEditTemplate(template)}
             aria-label='编辑模板'
           />
-        </Tooltip>,
+        </Tooltip>
+      );
+    }
+
+    if (canCreate) {
+      actions.push(
         <Tooltip title='复制模板' key='copy'>
           <Button
             type='text'
@@ -294,7 +287,12 @@ const TicketTemplatesPage = () => {
             onClick={() => handleCopyTemplate(template)}
             aria-label='复制模板'
           />
-        </Tooltip>,
+        </Tooltip>
+      );
+    }
+
+    if (canDelete) {
+      actions.push(
         <Tooltip title='删除模板' key='delete'>
           <Popconfirm
             title='确定删除这个模板吗？'
@@ -304,9 +302,15 @@ const TicketTemplatesPage = () => {
           >
             <Button type='text' danger icon={<Delete size={16} />} aria-label='删除模板' />
           </Popconfirm>
-        </Tooltip>,
-      ]}
-    >
+        </Tooltip>
+      );
+    }
+
+    return actions;
+  };
+
+  const renderTemplateCard = (template: TicketTemplate) => (
+    <Card key={template.id} hoverable className='h-full' actions={templateActions(template)}>
       <div className='flex items-start mb-3'>
         <div
           className={`inline-flex items-center justify-center w-12 h-12 bg-${template.color}-50 rounded-lg mr-3`}
@@ -409,41 +413,7 @@ const TicketTemplatesPage = () => {
               {template.priority}
             </Tag>
           </div>
-          <Space>
-            <Button
-              type='text'
-              icon={<Eye size={16} />}
-              onClick={() => {
-                try {
-                  router.push(`/tickets/templates/${template.id}`);
-                } catch (navErr) {
-                  console.error('[nav]', navErr);
-                  message.error('导航失败，请稍后重试');
-                }
-              }}
-              aria-label='查看模板详情'
-            />
-            <Button
-              type='text'
-              icon={<Edit size={16} />}
-              onClick={() => handleEditTemplate(template)}
-              aria-label='编辑模板'
-            />
-            <Button
-              type='text'
-              icon={<Copy size={16} />}
-              onClick={() => handleCopyTemplate(template)}
-              aria-label='复制模板'
-            />
-            <Popconfirm
-              title='确定删除这个模板吗？'
-              onConfirm={() => handleDeleteTemplate(template.id)}
-              okText='确定'
-              cancelText='取消'
-            >
-              <Button type='text' danger icon={<Delete size={16} />} aria-label='删除模板' />
-            </Popconfirm>
-          </Space>
+          <Space>{templateActions(template)}</Space>
         </div>
       </div>
     </Card>
@@ -461,151 +431,181 @@ const TicketTemplatesPage = () => {
           <Button icon={<RefreshCw size={16} />} onClick={loadTemplates} aria-label='刷新模板列表'>
             刷新
           </Button>
-          <Button
-            type='primary'
-            icon={<Plus size={16} />}
-            onClick={handleCreateTemplate}
-            aria-label='新建模板'
-          >
-            新建模板
-          </Button>
+          {canCreate && (
+            <Button
+              type='primary'
+              icon={<Plus size={16} />}
+              onClick={handleCreateTemplate}
+              aria-label='新建模板'
+            >
+              新建模板
+            </Button>
+          )}
         </Space>
       </div>
-      {/* Statistics */}
-      <Row gutter={16} className='mb-6'>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title='模板总数'
-              value={templates.length}
-              prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title='启用模板'
-              value={templates.filter(t => t.isActive).length}
-              styles={{ content: { color: '#52c41a' } }}
-              prefix={<CheckCircle size={16} />}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title='分类数'
-              value={new Set(templates.map(t => t.category).filter(Boolean)).size}
-              prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filter and search */}
-      <Card title='模板管理' className='mb-6'>
-        <div className='flex items-center justify-between mb-4'>
-          <Title level={5} className='mb-0'>
-            筛选条件
-          </Title>
-          <Space>
-            <Radio.Group
-              value={viewMode}
-              onChange={(e: RadioChangeEvent) => setViewMode(e.target.value)}
+      {/* 加载失败或无权限时，统计卡、筛选器和列表都不渲染：0 个模板和"看不到模板"是两回事 */}
+      {loadError ? (
+        <Alert
+          type={loadError.denied ? 'warning' : 'error'}
+          showIcon
+          title={loadError.denied ? '没有权限查看工单模板' : '模板列表加载失败'}
+          description={
+            loadError.denied
+              ? '当前角色未被授予工单模板的读取权限。这里不是「系统里没有模板」，请联系管理员为你的角色开放 ticket_template:read。'
+              : loadError.detail || '后端未能返回模板列表，请稍后重试。'
+          }
+          action={
+            <Button
+              size='small'
+              icon={<RefreshCw size={16} />}
+              onClick={loadTemplates}
+              loading={loading}
             >
-              <Radio.Button value='grid'>卡片视图</Radio.Button>
-              <Radio.Button value='list'>列表视图</Radio.Button>
-            </Radio.Group>
-          </Space>
-        </div>
-
-        <Row gutter={16} align='middle'>
-          <Col span={8}>
-            <Input.Search
-              placeholder='搜索模板...'
-              allowClear
-              value={searchKeyword}
-              onChange={e => setSearchKeyword(e.target.value)}
-              prefix={<Search size={16} />}
-            />
-          </Col>
-          <Col span={6}>
-            <Select
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              style={{ width: '100%' }}
-              placeholder='选择分类'
-              options={[
-                { value: 'all', label: '全部分类' },
-                ...templateCategories.map(cat => ({
-                  value: cat.key,
-                  label: (
-                    <div className='flex items-center'>
-                      <span className={`text-${cat.color}-500 mr-2`}>{cat.icon}</span>
-                      {cat.label}
-                    </div>
-                  ),
-                })),
-              ]}
-            />
-          </Col>
-          <Col span={6}>
-            <Select
-              value={filterStatus}
-              onChange={setFilterStatus}
-              style={{ width: '100%' }}
-              placeholder='状态筛选'
-              options={[
-                { value: 'all', label: '全部状态' },
-                { value: 'active', label: '启用' },
-                { value: 'inactive', label: '停用' },
-              ]}
-            />
-          </Col>
-          <Col span={4}>
-            <Button type='primary' onClick={loadTemplates} block>
-              Apply Filter
+              重试
             </Button>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Template list */}
-      {loading ? (
-        <Card>
-          <div className='text-center py-16'>
-            <div className='inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4'>
-              <RefreshCw size={32} className='text-blue-500 animate-spin' />
-            </div>
-            <Text className='text-gray-500'>加载模板中...</Text>
-          </div>
-        </Card>
-      ) : filteredTemplates.length === 0 ? (
-        <Card>
-          <div className='text-center py-16'>
-            <div className='inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-4'>
-              <FileText size={48} className='text-gray-400' />
-            </div>
-            <Title level={4} className='text-gray-600 mb-2'>
-              暂无模板
-            </Title>
-            <p className='text-gray-500 mb-4'>未找到匹配的工单模板</p>
-            <Button type='primary' onClick={() => setModalVisible(true)}>
-              创建模板
-            </Button>
-          </div>
-        </Card>
+          }
+        />
       ) : (
-        <div>
-          {viewMode === 'grid' ? (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-              {filteredTemplates.map(renderTemplateCard)}
+        <>
+          {/* Statistics */}
+          <Row gutter={16} className='mb-6'>
+            <Col span={8}>
+              <Card>
+                <Statistic
+                  title='模板总数'
+                  value={templates.length}
+                  prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card>
+                <Statistic
+                  title='启用模板'
+                  value={templates.filter(t => t.isActive).length}
+                  styles={{ content: { color: '#52c41a' } }}
+                  prefix={<CheckCircle size={16} />}
+                />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card>
+                <Statistic
+                  title='分类数'
+                  value={new Set(templates.map(t => t.category).filter(Boolean)).size}
+                  prefix={<TagIcon size={16} style={{ color: '#faad14' }} />}
+                />
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Filter and search */}
+          <Card title='模板管理' className='mb-6'>
+            <div className='flex items-center justify-between mb-4'>
+              <Title level={5} className='mb-0'>
+                筛选条件
+              </Title>
+              <Space>
+                <Radio.Group
+                  value={viewMode}
+                  onChange={(e: RadioChangeEvent) => setViewMode(e.target.value)}
+                >
+                  <Radio.Button value='grid'>卡片视图</Radio.Button>
+                  <Radio.Button value='list'>列表视图</Radio.Button>
+                </Radio.Group>
+              </Space>
             </div>
+
+            <Row gutter={16} align='middle'>
+              <Col span={8}>
+                <Input.Search
+                  placeholder='搜索模板...'
+                  allowClear
+                  value={searchKeyword}
+                  onChange={e => setSearchKeyword(e.target.value)}
+                  prefix={<Search size={16} />}
+                />
+              </Col>
+              <Col span={6}>
+                <Select
+                  value={selectedCategory}
+                  onChange={setSelectedCategory}
+                  style={{ width: '100%' }}
+                  placeholder='选择分类'
+                  options={[
+                    { value: 'all', label: '全部分类' },
+                    ...templateCategories.map(cat => ({
+                      value: cat.key,
+                      label: (
+                        <div className='flex items-center'>
+                          <span className={`text-${cat.color}-500 mr-2`}>{cat.icon}</span>
+                          {cat.label}
+                        </div>
+                      ),
+                    })),
+                  ]}
+                />
+              </Col>
+              <Col span={6}>
+                <Select
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  style={{ width: '100%' }}
+                  placeholder='状态筛选'
+                  options={[
+                    { value: 'all', label: '全部状态' },
+                    { value: 'active', label: '启用' },
+                    { value: 'inactive', label: '停用' },
+                  ]}
+                />
+              </Col>
+              <Col span={4}>
+                <Button type='primary' onClick={loadTemplates} block>
+                  Apply Filter
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Template list */}
+          {loading ? (
+            <Card>
+              <div className='text-center py-16'>
+                <div className='inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mb-4'>
+                  <RefreshCw size={32} className='text-blue-500 animate-spin' />
+                </div>
+                <Text className='text-gray-500'>加载模板中...</Text>
+              </div>
+            </Card>
+          ) : filteredTemplates.length === 0 ? (
+            <Card>
+              <div className='text-center py-16'>
+                <div className='inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-4'>
+                  <FileText size={48} className='text-gray-400' />
+                </div>
+                <Title level={4} className='text-gray-600 mb-2'>
+                  暂无模板
+                </Title>
+                <p className='text-gray-500 mb-4'>未找到匹配的工单模板</p>
+                {canCreate && (
+                  <Button type='primary' onClick={() => setModalVisible(true)}>
+                    创建模板
+                  </Button>
+                )}
+              </div>
+            </Card>
           ) : (
-            <div>{filteredTemplates.map(renderTemplateList)}</div>
+            <div>
+              {viewMode === 'grid' ? (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+                  {filteredTemplates.map(renderTemplateCard)}
+                </div>
+              ) : (
+                <div>{filteredTemplates.map(renderTemplateList)}</div>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* Create/Edit template modal */}
@@ -620,15 +620,24 @@ const TicketTemplatesPage = () => {
           layout='vertical'
           initialValues={editingTemplate || {}}
           onFinish={async values => {
+            if (saving) return;
+            setSaving(true);
             try {
-              // 把表单字段映射到后端 dto.TicketTemplate
+              // formFields 是后端原样持久化的表单载荷；表单里收集到的字段必须全部写入，
+              // 否则下次打开只会读回默认值（SLA 恒显示 4 hours 这类假象）。
               const formFields: Record<string, unknown> = {
                 type: values.type,
+                subcategory: values.subcategory,
+                estimatedTime: values.estimatedTime,
+                sla: values.sla,
+                slaType: values.slaType,
+                impact: values.impact,
+                urgency: values.urgency,
+                businessValue: values.businessValue,
                 priority: values.priority,
                 source: values.source,
                 autoAssign: values.autoAssign,
                 requiresApproval: values.requiresApproval,
-                slaType: values.slaType,
                 approvalLevel: values.approvalLevel,
                 tags: values.tags || [],
               };
@@ -652,7 +661,9 @@ const TicketTemplatesPage = () => {
               loadTemplates();
             } catch (err) {
               console.error('Save template failed:', err);
-              message.error('保存失败，请稍后重试');
+              message.error(`保存失败：${errorReason(err)}`);
+            } finally {
+              setSaving(false);
             }
           }}
         >
@@ -877,7 +888,7 @@ const TicketTemplatesPage = () => {
 
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit'>
+              <Button type='primary' htmlType='submit' loading={saving}>
                 {editingTemplate ? '更新模板' : '创建模板'}
               </Button>
               <Button onClick={() => setModalVisible(false)}>取消</Button>

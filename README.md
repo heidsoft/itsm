@@ -211,7 +211,7 @@ curl -X POST http://localhost:8090/api/v1/auth/login \
 # 登录响应不向 JavaScript 暴露 access token。
 # 写操作还需要双提交 CSRF token；以下示例需要 jq。
 CSRF_TOKEN=$(curl -s -b /tmp/itsm-cookies.txt -c /tmp/itsm-cookies.txt \
-  http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrf_token')
+  http://localhost:8090/api/v1/csrf-token | jq -r '.data.csrfToken')
 
 # 2. 查询当前租户可用的工单类型
 curl -X GET "http://localhost:8090/api/v1/ticket-types?status=active&page=1&pageSize=20" \
@@ -250,8 +250,8 @@ curl -X POST http://localhost:8090/api/v1/changes \
     "implementationPlan": "采用蓝绿部署"
   }'
 
-# 6. 查询 SLA 状态
-curl -X GET http://localhost:8090/api/v1/sla/policies \
+# 6. 查询 SLA 策略（正式路由；/sla/policies 为兼容旧路径）
+curl -X GET "http://localhost:8090/api/v1/sla/definitions?page=1&pageSize=20" \
   -b /tmp/itsm-cookies.txt
 ```
 
@@ -283,7 +283,7 @@ open http://localhost:8090/swagger/index.html
 | 场景 | 操作 |
 |:---|:---|
 | 创建租户 | `POST /api/v1/tenants` 创建租户后，可在该租户下创建用户 |
-| 配置 SLA | 通过 `POST /api/v1/sla/policies` 创建 SLA 策略，绑定到工单类别 |
+| 配置 SLA | 通过 `POST /api/v1/sla/definitions` 创建 SLA 策略，用 `conditions` 按优先级等条件绑定 |
 | 设计工作流 | 在前端「工作流」模块设计 BPMN 流程，绑定到业务对象 |
 | 管理 CMDB | 通过 `POST /api/v1/cmdb/cis` 创建配置项，建立 CI 关系 |
 | 知识库检索 | `POST /api/v1/knowledge/search` 搜索知识文章 |

@@ -6,6 +6,7 @@ import { Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
 import { useI18n } from '@/lib/i18n';
+import { displayUserName } from '@/lib/formatters';
 import type { Ticket, TicketListResponse } from '@/lib/api/api-config';
 
 type ImprovementStatus = '进行中' | '待评估' | '已完成';
@@ -50,7 +51,7 @@ const ImprovementListPage = () => {
         ticketId: ticket.id,
         title: ticket.title,
         status: mapStatus(ticket.status),
-        owner: ticket.assignee?.name || '未分配',
+        owner: displayUserName(ticket.assigneeName, ticket.assigneeId, '未分配'),
         target: ticket.description || '无目标描述',
         createdAt: ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-',
       }));

@@ -13,11 +13,13 @@ import (
 )
 
 const (
-	// CSRFTokenCookieName CSRF token cookie 名称
+	// CSRFTokenCookieName CSRF token cookie 名称。
+	// Cookie 名与 form 字段名属于 HTTP 传输协议层（非 JSON API 字段），
+	// 保留 snake_case；JSON 响应体字段一律 camelCase（见 CSRFTokenEndpoint）。
 	CSRFTokenCookieName = "csrf_token"
 	// CSRFTokenHeaderName CSRF token header 名称
 	CSRFTokenHeaderName = "X-CSRF-Token"
-	// CSRFTokenFormName CSRF token form 字段名称
+	// CSRFTokenFormName CSRF token form 字段名称（协议层，同上不打 camelCase）
 	CSRFTokenFormName = "csrf_token"
 )
 
@@ -243,7 +245,7 @@ func CSRFTokenEndpoint(config *CSRFConfig) gin.HandlerFunc {
 			"code":    0,
 			"message": "success",
 			"data": gin.H{
-				"csrf_token": token,
+				"csrfToken": token,
 			},
 		})
 	}
@@ -264,7 +266,7 @@ func CSRFMiddlewareWithTokenEndpoint(config *CSRFConfig) gin.HandlerFunc {
 				"code":    0,
 				"message": "success",
 				"data": gin.H{
-					"csrf_token": token,
+					"csrfToken": token,
 				},
 			})
 			return

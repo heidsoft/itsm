@@ -61,6 +61,17 @@ func IsDataScopeAllRole(r string) bool {
 // department 档只由 Role.data_scope 字段显式配置（见 ParseDataScope），
 // 不从角色码推断：主角色词表是封闭的，部门范围属于租户级配置。
 
+// ForTicketReader 返回某角色读取工单数据时的行级范围，是「谁能看到哪些工单」的唯一判定。
+//
+// 工单列表、工单统计卡片与工作台 KPI 必须共用它：三处口径不一致时，坐席会看到
+// 「待处理 12」却在下钻列表里找不到这 12 张单（2026-10-20 生产实测）。
+func ForTicketReader(role string) DataScope {
+	if IsDataScopeAllRole(role) {
+		return DataScopeAll
+	}
+	return DataScopeOwnedOrAssigned
+}
+
 // CanWriteResource 判定 actor 是否可对单据执行写/删操作（行级写权限）。
 //
 // 原则：写权限 ⊆ 读权限。DataScope 决定读不到的单据，同样不允许写/删：

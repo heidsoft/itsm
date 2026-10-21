@@ -22,6 +22,7 @@ import {
 import { User, FileText, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import MSPService from '@/lib/services/msp-service';
 import { hasProductCapability } from '@/config/product-capabilities';
+import { displayUserName } from '@/lib/formatters';
 import type { MSPAllocation, MSPCustomerReport, MSPPerformanceReport, MSPContext } from '@/types/msp';
 import type { Ticket as ApiTicket } from '@/lib/api/ticket-api';
 
@@ -242,7 +243,8 @@ export default function MSPDashboardPage() {
     {
       title: '负责人',
       key: 'assignee',
-      render: (_: unknown, record: ApiTicket) => record.assignee?.name || record.assignee?.username || '未分配',
+      render: (_: unknown, record: ApiTicket) =>
+        displayUserName(record.assigneeName, record.assigneeId, '未分配'),
     },
     { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', render: (v: string) => v ? new Date(v).toLocaleString('zh-CN') : '-' },
     {

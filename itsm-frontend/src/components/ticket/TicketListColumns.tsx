@@ -6,6 +6,7 @@ import { CheckCircle, Eye, Pencil } from 'lucide-react';
 import dayjs from 'dayjs';
 import type { Ticket } from '@/lib/api/types';
 import type { TicketStatus, TicketPriority, TicketType } from '@/lib/api/types';
+import { displayUserName } from '@/lib/formatters';
 import {
   ITSMMainType,
   ITSMMainTypeConfig,
@@ -150,8 +151,7 @@ export function buildTicketListColumns(
       title: '处理人',
       key: 'assignee',
       width: 120,
-      render: (_, record: Ticket) =>
-        record.assignee?.name ?? (record.assigneeId ? `用户 #${record.assigneeId}` : '未分配'),
+      render: (_, record: Ticket) => displayUserName(record.assigneeName, record.assigneeId, '未分配'),
     },
     {
       title: '创建时间',

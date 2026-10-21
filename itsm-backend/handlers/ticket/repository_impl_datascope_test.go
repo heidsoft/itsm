@@ -78,7 +78,7 @@ func TestEntRepository_List_DataScopeMapping(t *testing.T) {
 	seedScopeTicket(t, ctx, client, tenant.ID, "DS-2", bob.ID, nil)       // bob 独有（薪酬敏感）
 	seedScopeTicket(t, ctx, client, tenant.ID, "DS-3", bob.ID, &alice.ID) // bob 创建但分配给 alice
 
-	repo := NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()))
+	repo := NewEntRepository(ticketrepo.NewEntRepository(client, zap.NewNop().Sugar()), client)
 
 	listNumbers := func(ds datascope.DataScope, userID int) []string {
 		t.Helper()

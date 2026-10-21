@@ -159,6 +159,28 @@ GET /auth/session
 
 未携带有效凭证时返回 `401`（业务码 2001）。响应中不含任何令牌值。
 
+### CSRF Token
+
+```http
+GET /api/v1/csrf-token
+```
+
+写操作（POST/PUT/DELETE/PATCH）使用 HttpOnly 会话 cookie 时需要双提交 CSRF token：登录前后调用本端点，token 即以 `csrf_token` cookie（HttpOnly）下发并在响应体回显，客户端随后在每个写请求携带 `X-CSRF-Token` 头；每次成功写请求后 token 轮换，必须重新获取。Bearer token 认证（`Authorization: Bearer ...`）不受 CSRF 校验约束。
+
+**响应示例:**
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "csrfToken": "hKu4P9c_R8uF4_x1LbAaXg"
+  }
+}
+```
+
+`data.csrfToken` 为 camelCase 契约字段（v1.6 起由 `csrf_token` 改名，旧字段已移除）；`csrf_token` 这一 snake_case 名称仅保留给 cookie 名与 form 字段名，属传输层标识。
+
 ### 注册
 
 ```http
@@ -236,9 +258,15 @@ Query Parameters:
 - pageSize: 每页数量 (默认: 20)
 - status: 状态过滤
 - priority: 优先级过滤
-- categoryId: 分类过滤
-- assigneeId: 负责人过滤
-- search: 搜索关键词
+- type: 工单类型过滤
+- categoryId: 分类过滤（按 ID）
+- assigneeId: 处理人过滤
+- requesterId: 报障人过滤
+- parentTicketId: 父工单过滤
+- templateId: 模板过滤
+- keyword: 标题或描述关键词
+- isOverdue: 只看超期（`true`）
+- sortBy / sortOrder: 排序字段与方向（`asc` 需显式传，其余按倒序）
 ```
 
 **响应示例:**
@@ -250,16 +278,20 @@ Query Parameters:
   "data": {
     "items": [
       {
-        "id": "1",
+        "id": 1,
         "ticketNumber": "TK-2024-00001",
         "title": "无法登录系统",
         "description": "用户报告无法登录系统",
         "status": "open",
         "priority": "high",
+        "type": "service_request",
         "categoryId": 1,
         "assigneeId": 2,
-        "reporterId": 3,
+        "assigneeName": "张三",
+        "requesterId": 3,
+        "requesterName": "李四",
         "tenantId": 1,
+        "version": 1,
         "createdAt": "2024-01-01T00:00:00Z",
         "updatedAt": "2024-01-02T00:00:00Z"
       }
@@ -271,6 +303,20 @@ Query Parameters:
   }
 }
 ```
+
+`items` 元素是 `dto.TicketResponse`（camelCase），工单详情 `GET /tickets/{id}` 返回同一 DTO。
+
+人名口径（2026-10-21 收口）：
+
+- **姓名由服务端按当前租户投影**，字段是 `requesterName`/`assigneeName`，与事件/问题/变更同一风格。
+  单条与列表各触发一次批量查询（一页工单只查一次用户表），只取 `id` 与 `name` 两列。
+- **不再返回 `requester`/`assignee` 用户对象。** 该结构在 `dto.TicketResponse` 上声明过却从未被赋值，
+  前端因此把已派工单渲染成「未分配」；除姓名外的用户字段（邮箱、电话、角色）本接口不返回，
+  需要用户目录请走 `GET /api/v1/users`。
+- **跨租户与已删除的用户 ID 不进映射**：`assigneeId` 照常返回，`assigneeName` 缺省为空，
+  由调用方如实显示用户 ID，而不是折叠成「未分配」。
+- 前端读取点统一走 `displayUserName(name, id, emptyLabel)`（`src/lib/formatters.ts`）：
+  有姓名用姓名，只有 ID 显示 `用户 #<id>`，两者都没有才是「未分配」。
 
 ### 创建工单
 
@@ -296,6 +342,10 @@ Content-Type: application/json
 GET /tickets/{id}
 Authorization: Bearer <accessToken>
 ```
+
+返回 `data` 直接承载 `dto.TicketResponse`（与列表 item 同一结构，含 `requesterName`/`assigneeName` 投影）。
+`{id}` 同时接受数字 ID 与业务工单号（如 `TKT-202609-000010`）；跨租户与不存在都返回 HTTP 404 / `code: 4004`，
+不区分「无权限」与「不存在」。
 
 ### 更新工单
 
@@ -348,16 +398,21 @@ Content-Type: application/json
 ### 工单流转操作
 
 ```http
-POST /tickets/{id}/workflow/accept
-POST /tickets/{id}/workflow/reject
-POST /tickets/{id}/workflow/withdraw
-POST /tickets/{id}/workflow/forward
-POST /tickets/{id}/workflow/cc
-POST /tickets/{id}/workflow/approve
-POST /tickets/{id}/workflow/resolve
-POST /tickets/{id}/workflow/close
-POST /tickets/{id}/workflow/reopen
+POST /tickets/workflow/accept
+POST /tickets/workflow/reject
+POST /tickets/workflow/withdraw
+POST /tickets/workflow/forward
+POST /tickets/workflow/cc
+POST /tickets/workflow/approve
+POST /tickets/workflow/resolve
+POST /tickets/workflow/close
+POST /tickets/workflow/reopen
 ```
+
+工单 id 在请求体 `ticketId` 中，不在路径里。权限码按工单动作而非流程定义管理授予：
+accept/forward/cc 需 `ticket:assign`，approve/reject 需 `ticket:approve`，resolve 需
+`ticket:resolve`，close/reopen 需 `ticket:close`，withdraw 需 `ticket:update`。
+`workflow:read`/`workflow:write` 的目录语义是流程定义管理（含发布流程模板），不再守这组路由。
 
 ### 获取工单评论
 
@@ -564,6 +619,57 @@ Content-Type: application/json
 ```
 
 也可以用 `{"tags": ["网络"]}` 按名称绑定，缺失的标签会在当前租户内自动创建。解绑使用 `DELETE /tickets/{id}/tags`，请求体相同。绑定是幂等的：重复提交相同 `tagIds` 仍返回成功，不会产生重复关联；引用本租户不存在的标签（或他租标签/工单）返回 `404`/`code:4004`。
+
+## 工单模板接口
+
+模板是租户级配置数据，读写用独立权限码 `ticket_template:{read,create,update,delete}`，不复用 `ticket:*`：
+`agent`/`manager`/`it_admin` 持 `read`，`create`/`update` 给流程运营职责，`delete` 只给租户管理员与目录管理员。
+
+```http
+GET    /api/v1/tickets/templates                # ticket_template:read，全量列表（无分页参数）
+GET    /api/v1/tickets/templates/categories     # ticket_template:read，本租户去重分类
+GET    /api/v1/tickets/templates/{id}           # ticket_template:read
+POST   /api/v1/tickets/templates                # ticket_template:create
+PUT    /api/v1/tickets/templates/{id}           # ticket_template:update
+PATCH  /api/v1/tickets/templates/{id}/status    # ticket_template:update，仅启停
+POST   /api/v1/tickets/templates/{id}/copy      # ticket_template:create
+DELETE /api/v1/tickets/templates/{id}           # ticket_template:delete
+```
+
+列表 `data` 是 `{items, total}`，**不接受** `page`/`pageSize`/`category` 参数（服务端不分页，
+`total = len(items)`，非历史实现里被伪造的 `page:1`）。单对象响应的 `data` 直接是模板 DTO：
+
+```json
+{
+  "id": 7,
+  "name": "网络故障模板",
+  "description": "用于网络类工单",
+  "category": "IT Support",
+  "priority": "high",
+  "fields": [],
+  "formFields": { "type": "incident", "sla": "2 hours", "slaType": "hours" },
+  "workflowSteps": [{ "name": "分派", "order": 1 }],
+  "isActive": true,
+  "createdAt": "2026-10-01T00:00:00Z",
+  "updatedAt": "2026-10-01T00:00:00Z"
+}
+```
+
+- `formFields` 是模板表单的原样载荷（创建时 `fields[]` 会并入 `formFields.fields`）。消费方读这一个键，
+  不存在 `content` 之类的别名。
+- `isActive` 在请求里是**指针语义**：POST 不传按启用落库，传 `false` 就是停用；PUT 不传保持原状态，
+  传值则与 `PATCH /{id}/status` 等价。历史实现把创建的 `isActive` 写死 `true` 并丢弃该字段，
+  管理页的「模板状态」开关因此是假控件（见 UPGRADE §1.52）。
+- `workflowSteps` 会被持久化并回显；不传即不改动存量步骤。
+- `POST /{id}/copy` 由服务端整份复制源模板的 `description`/`category`/`priority`/`fields`/`formFields`/
+  `workflowSteps`/`isActive`，请求体 `{"name": "..."}` 可省略，省略时命名为「`源名称 - 副本`」。
+  复制是服务端动作，前端不应自行拼一份 formFields 再 POST 创建——卡片上没映射的字段会静默丢失。
+- 模板 ID 与租户分别只取自路径段和认证上下文；跨租户读取返回 404/`4004`，同租户无权限是 403/`2003`。
+
+回归见 `itsm-backend/middleware/rbac_ticket_template_guard_test.go`（路由权限码口径 + 各角色可达性）、
+`itsm-backend/handlers/ticket/handler_template_test.go`（真实落库、租户隔离、不存在 404、停用与 workflowSteps
+按请求提交、复制继承状态），前端 `src/lib/api/__tests__/ticket-api.test.ts` 与
+`src/app/(main)/tickets/templates/__tests__/page.test.tsx`（403 渲染权限拒绝态而非空数据、写按钮按权限码收口）。
 
 ## 工单依赖影响分析接口
 
@@ -2548,24 +2654,62 @@ Authorization: Bearer <accessToken>
 
 ## 仪表板接口
 
-### 获取仪表板数据
+工作台数字全部挂在 `/api/v1/dashboard` 下，统一要求 `dashboard:read`（写配置面要求 `dashboard:admin`）。
+完整路由以 `router/dashboard_routes.go` 为准，本节只锁定 KPI 契约。
+
+### 概览与 KPI 指标
 
 ```http
-GET /dashboard
-Authorization: Bearer <accessToken>
+GET /api/v1/dashboard/overview
+GET /api/v1/dashboard/kpi-metrics
 ```
+
+两者返回同一组 `KPIMetric`（overview 里在 `data.kpiMetrics`）：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": [
+    {
+      "id": "pending-tickets",
+      "title": "待处理工单",
+      "value": 12,
+      "unit": "个",
+      "color": "#f59e0b",
+      "trend": "stable",
+      "change": 0,
+      "changeType": "stable",
+      "comparable": false,
+      "scope": "own",
+      "description": "当前待处理存量"
+    }
+  ]
+}
+```
+
+- `scope` 是工单类计数的行级统计范围，由服务端按登录者角色推导，与 `GET /api/v1/tickets`、
+  `GET /api/v1/tickets/stats` 共用同一判定（`datascope.ForTicketReader`）：管理角色为 `tenant`
+  （本租户全部工单），一线角色为 `own`（本人创建或受理）。范围不一致时坐席会出现
+  「卡片 12、下钻列表 0 条」。请求体/查询参数里的 `tenantId`、`userId` 一律不被采纳。
+- `comparable` 表示环比是否有真实上期基线。`false` 时 `change` 恒为 `0`、`trend`/`changeType`
+  恒为 `stable`，前端不得渲染「相比上期」——上期窗口没有样本不等于 0% 或 +100%。
+- 待处理、处理中、超时是**时点存量快照**，库里没有上月末的状态快照，因此恒为 `comparable: false`；
+  总数按「上月末累计」比较，已完成按「上月新建并完成 vs 本月新建并完成」同期队列比较。
+- `target`/`alert` 为可选字段（响应里缺省即不出现），SLA 达成率目标 95、平均首次响应 4h、平均解决 8h。
+- 趋势、团队负载、事件分布、高峰时段等图表区本期仍是**租户级**口径，不随 `scope` 收窄。
 
 ### 获取工单统计
 
 ```http
-GET /dashboard/ticket-stats
+GET /api/v1/dashboard/ticket-stats
 Authorization: Bearer <accessToken>
 ```
 
 ### 获取 SLA 统计
 
 ```http
-GET /dashboard/sla-stats
+GET /api/v1/dashboard/sla-stats
 Authorization: Bearer <accessToken>
 ```
 
@@ -2847,14 +2991,14 @@ Query Parameters:
 |------|------------|------|
 | `GET /api/v1/known-errors/categories` | `{items: string[], total}` | 去重后的全量分类，无分页 |
 | `GET /api/v1/known-errors/stats` | 聚合计数对象 | 不是列表，因此不带任何分页字段 |
-| `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)` |
+| `GET /api/v1/tickets/templates` | `{items, total}` | 模板全量返回；历史实现伪造 `page=1`、`pageSize=len(items)`，并在服务端写死 `PageSize=100` 造成第 101 条静默消失（2026-10-21 去掉截断，见「工单模板接口」） |
 | `GET /api/v1/tickets/views` | `{items, total}` | 视图按租户全量返回（`service/ticket_view_service.go` 无 `Limit`），`total=len(items)` 诚实 |
 | `GET /api/v1/tickets/{id}/comments` | `{items, total}` | 单工单评论全量返回，同上；分页若将来引入必须实装而非补键 |
 | `GET /api/v1/tickets/assignment-rules` | `{items: AssignmentRuleResponse[], total}` | 按 `priority DESC, created_at DESC` 全量返回本租户规则；无任何查询参数，`total=len(items)` 诚实；读写整组接口需 `assignment_rule:read`/`assignment_rule:write`。`DELETE /{id}` 幂等可重放：条件删除 0 行（已删/跨租户/不存在）一律 404/`4004`，不再静默假装成功；`POST /assignment-rules/test` 的 `ruleId`/`ticketId` 均带租户谓词，跨租户引用与不存在同名 404/`4004`，他租工单不再被读取做匹配或回显动作（2026-10-18 纠正，见 UPGRADE §1.45） |
 | `GET /api/v1/tickets/automation-rules` | `{items: AutomationRuleResponse[], total}` | 同上排序；item 带 `createdBy`/`creator`/`tenantId`，读取需 `automation_rule:read`（规则配置面自有码，不是 `system_config:read`，也不是最终用户为看流转进度而持有的 `workflow:read`，见 UPGRADE §1.41） |
 | `GET /api/v1/tickets/{id}/attachments` | `{items: TicketAttachmentResponse[], total}` | 单工单附件按 `created_at DESC` 全量返回；读取需 `ticket:read` 且调用者是工单相关方或管理角色，跨租户工单是 404/4004 |
 | `GET /api/v1/tickets/cc/my` | `{items: TicketCCRecordResponse[], total}` | 抄送给当前用户的记录，按 `tenant_id + user_id + is_active` 全量返回，排序 `added_at DESC, id ASC`（`id` 是并列键）；`user`/`addedBy` 是 `WorkflowUserInfo`，姓名键是 `fullName`，没有 `name` |
-| `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `workflow:read` 且调用者是工单相关方/审批人/管理角色。跨租户探测与工单不存在返回同一个 404/`4004`（不确认对方资源存在），同租户但非相关方的用户是 403/`2003`；三种失败都不携带 `items` 载荷（2026-10-04 由 500/`5001` 纠正，见 UPGRADE §1.20） |
+| `GET /api/v1/tickets/{id}/cc` | `{items: TicketCCRecordResponse[], total}` | 单工单抄送列表，同上排序；读取需 `ticket:read`（2026-10-20 起，此前误挂 `workflow:read`，见 UPGRADE）且调用者是工单相关方/审批人/管理角色。跨租户探测与工单不存在返回同一个 404/`4004`（不确认对方资源存在），同租户但非相关方的用户是 403/`2003`；三种失败都不携带 `items` 载荷（2026-10-04 由 500/`5001` 纠正，见 UPGRADE §1.20） |
 | `GET /api/v1/tickets/assign-recommendations/{id}` | `{items: AssignmentRecommendation[], total}` | 按评分降序全量返回本租户的可用候选（`service/ticket_assignment_smart_service.go:116`：`user.TenantIDEQ` + `ActiveEQ(true)` 整表取回后排序），`total=len(items)` 诚实；item 是 `{userId,username,name,email,score,reason,workload,skills?,categories?}`，**没有** `userName`/`userEmail`/`userAvatar`/`factors`。读取需 `ticket:assign`（单工单分配动作，与 `POST /tickets/{id}/auto-assign` 同码：候选表带 email/workload/skills，不对只读角色开放；旧口径 `system_config:read` 见 UPGRADE §1.41）；工单不存在与跨租户返回同一个 404/`4004`（同样是 E4-5 本片由 500/`5001` 纠正），不泄漏对方租户候选 |
 | `GET /api/v1/tickets/{id}/notifications` | `{items, total}` | 单工单通知按 ticket+tenant 全量返回（`service/ticket_notification_service.go:831` 无 `Limit`），handler 里 `total=len(items)` 诚实 |
 | `GET /api/v1/msp/reports/customers` | `{items, total}` | 区间聚合，字段为 camelCase DTO |

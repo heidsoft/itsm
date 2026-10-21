@@ -81,6 +81,8 @@ func (r *dashboardRepository) AvgResponseAndResolutionHours(ctx context.Context,
 //   - tenantID：租户主键
 //   - thisMonthStart：本月窗口起点（含）
 //   - lastMonthStart：上月窗口起点（含），用于本月/上月对比及 SLA scope 起点
+//   - viewerID：读取者用户 ID；<=0 表示全租户口径（管理角色），>0 时只统计
+//     本人创建或受理的工单，与工单列表的行级范围保持一致
 //
 // 返回：
 //   - avgRespNow / avgResNow：本月平均首次响应 / 解决时长（小时）
@@ -89,11 +91,11 @@ func (r *dashboardRepository) AvgResponseAndResolutionHours(ctx context.Context,
 //
 // 时间窗口语义：current_month = [thisMonthStart, +∞)、prev_month =
 // [lastMonthStart, thisMonthStart)、sla_scope = [lastMonthStart, +∞)。
-// 与原 SQL 完全一致，迁移到本仓储后口径不变。
 func (r *dashboardRepository) KPIAvgAndSLAScope(
 	ctx context.Context,
 	tenantID int,
 	thisMonthStart, lastMonthStart time.Time,
+	viewerID int,
 ) (
 	avgRespNow, avgResNow, avgRespPrev, avgResPrev float64,
 	totalSLATickets, metSLATickets int,
@@ -111,22 +113,28 @@ func (r *dashboardRepository) KPIAvgAndSLAScope(
 	if !lastMonthStart.Before(thisMonthStart) {
 		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: lastMonthStart 必须早于 thisMonthStart")
 	}
+	if viewerID < 0 {
+		return 0, 0, 0, 0, 0, 0, errors.New("dashboard repository: viewerID 不能为负数")
+	}
 
 	const query = `
 		WITH current_month AS (
 			SELECT id, first_response_at, resolved_at, created_at
 			FROM tickets
 			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2
+			  AND ($4 = 0 OR requester_id = $4 OR assignee_id = $4)
 		),
 		prev_month AS (
 			SELECT id, first_response_at, resolved_at, created_at
 			FROM tickets
 			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3 AND created_at < $2
+			  AND ($4 = 0 OR requester_id = $4 OR assignee_id = $4)
 		),
 		sla_scope AS (
 			SELECT id, first_response_at, resolved_at, created_at, sla_response_deadline, sla_resolution_deadline
 			FROM tickets
 			WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $3
+			  AND ($4 = 0 OR requester_id = $4 OR assignee_id = $4)
 		)
 		SELECT
 			COALESCE((SELECT AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600.0)
@@ -145,7 +153,7 @@ func (r *dashboardRepository) KPIAvgAndSLAScope(
 			))
 	`
 	if _, err = database.WithTenantSQL(ctx, r.db, tenantID, func(q database.SQLExecutor) (struct{}, error) {
-		return struct{}{}, q.QueryRowContext(ctx, query, tenantID, thisMonthStart, lastMonthStart).Scan(
+		return struct{}{}, q.QueryRowContext(ctx, query, tenantID, thisMonthStart, lastMonthStart, viewerID).Scan(
 			&avgRespNow, &avgResNow, &avgRespPrev, &avgResPrev, &totalSLATickets, &metSLATickets,
 		)
 	}); err != nil {
@@ -162,12 +170,14 @@ func (r *dashboardRepository) KPIAvgAndSLAScope(
 //   - tenantID：租户主键
 //   - lastMonthStart：上月窗口起点（含）
 //   - thisMonthStart：本月窗口起点（不含），用于圈定上月窗口上界
+//   - viewerID：读取者用户 ID；<=0 表示全租户口径，>0 时只统计本人创建或受理的工单
 //
 // 返回：上月参与 SLA 考核的工单数 / 达成数。当窗口为空时返回 0,0,nil。
 func (r *dashboardRepository) PreviousSLAScopeCount(
 	ctx context.Context,
 	tenantID int,
 	lastMonthStart, thisMonthStart time.Time,
+	viewerID int,
 ) (totalSLATickets, metSLATickets int, err error) {
 	if err := r.requireDB(); err != nil {
 		return 0, 0, err
@@ -181,6 +191,9 @@ func (r *dashboardRepository) PreviousSLAScopeCount(
 	if !lastMonthStart.Before(thisMonthStart) {
 		return 0, 0, errors.New("dashboard repository: lastMonthStart 必须早于 thisMonthStart")
 	}
+	if viewerID < 0 {
+		return 0, 0, errors.New("dashboard repository: viewerID 不能为负数")
+	}
 
 	const query = `
 		SELECT COUNT(*), COUNT(*) FILTER (
@@ -189,9 +202,10 @@ func (r *dashboardRepository) PreviousSLAScopeCount(
 		)
 		FROM tickets
 		WHERE tenant_id = $1 AND deleted_at IS NULL AND created_at >= $2 AND created_at < $3
+		  AND ($4 = 0 OR requester_id = $4 OR assignee_id = $4)
 	`
 	if _, err = database.WithTenantSQL(ctx, r.db, tenantID, func(q database.SQLExecutor) (struct{}, error) {
-		return struct{}{}, q.QueryRowContext(ctx, query, tenantID, lastMonthStart, thisMonthStart).Scan(&totalSLATickets, &metSLATickets)
+		return struct{}{}, q.QueryRowContext(ctx, query, tenantID, lastMonthStart, thisMonthStart, viewerID).Scan(&totalSLATickets, &metSLATickets)
 	}); err != nil {
 		return 0, 0, err
 	}

@@ -2,7 +2,7 @@
 
 本指南面向从 **v1.6.x** 升级到最新版本（含开源就绪加固）的自部署用户，覆盖破坏性变更、环境变量变更、数据库迁移、部署与回滚。
 
-> 当前稳定版本：`1.6.9`（见 `package.json` / `CHANGELOG.md`）。
+> 当前稳定版本：`1.6.19`（见 `CHANGELOG.md`；生产部署镜像标签见 `.env.prod` 的 `VERSION`）。
 > 本文档同时适用于 Docker Compose 与私有化（k8s / 二进制）部署。
 
 ---
@@ -1853,6 +1853,151 @@ cd itsm-backend && go test -count=1 \
 cd itsm-backend && go test -count=1 ./handlers/auth/ ./router/ -run 'Auth|Register'
 cd itsm-frontend && npx jest wizard-submit auth-service --coverage=false
 ```
+
+### 1.49 CSRF token 响应字段改为 `csrfToken`（2026-10-19，破坏性：字段改名）
+
+`GET /api/v1/csrf-token` 响应体的 `data.csrf_token` 改为 **`data.csrfToken`**（camelCase，
+与 API 边界字段命名规范一致），旧字段已移除，不做双字段兼容。`csrf_token` 这一
+snake_case 名称仅保留给 HttpOnly cookie 名与 form 字段名（传输层标识，不属于 JSON 契约）。
+
+受影响场景与迁移方式：
+
+| 调用方 | 旧读取 | 新读取 |
+|:---|:---|:---|
+| curl / jq 脚本 | `.data.csrf_token` | `.data.csrfToken` |
+| 前端 `security.csrfProtection` | `data.data?.csrf_token`（已同步修改） | `data.data?.csrfToken` |
+| 自定义集成 | — | 同上改名即可 |
+
+请求侧不变：写请求仍携带 `X-CSRF-Token` 头，每次成功写请求后 token 轮换需重新获取。
+
+CHANGELOG / README / API 参考（`docs/api-reference.md` 新增「CSRF Token」小节）已同步。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./middleware/ -run 'TestCSRF'
+cd itsm-frontend && npx jest src/lib/__tests__/security.test.ts src/lib/api/__tests__/auth-api.test.ts --coverage=false
+```
+
+### 1.50 工单流转路由的权限码从 `workflow:*` 改为 `ticket:*`（2026-10-20，破坏性：授权口径变更）
+
+`/api/v1/tickets/workflow/*` 与 `/api/v1/tickets/{id}/workflow*`、`/api/v1/tickets/{id}/cc`、
+`/api/v1/tickets/cc/my` 这 16 条路由此前由 `RequirePermission("workflow", "read"|"write")` 守护。
+`workflow:read`/`workflow:write` 在权限目录里的语义是**流程定义管理**（同一码还守着
+`POST /bpmn/ai/generate` 与 `/bpmn/ai/templates/*/publish`），而这几条路由的动作对象是某一张工单。
+两套语义共用一个码，实测（v1.6.21 prod）结果是双向失效：
+
+- `agent`/`manager` 不持 `workflow:*`，工单详情流转面板与批准/接单/拒绝/解决**全部 403/`2003`**，
+  但界面照常渲染按钮；反而 `end_user` 因持有 `workflow:read` 能看到自己工单的进度。
+- 要给一线角色开结单能力，就必须连带授予流程模板发布权。
+
+现按工单动作归位：
+
+| 路由 | 旧权限码 | 新权限码 |
+|:---|:---|:---|
+| `GET /tickets/{id}/workflow/state`、`state-v2`、`workflow-history`、`workflow_records`、`{id}/cc`、`/cc/my` | `workflow:read` | `ticket:read` |
+| `POST /tickets/workflow/accept`、`forward`、`cc` | `workflow:write` | `ticket:assign` |
+| `POST /tickets/workflow/approve`、`reject` | `workflow:write` | `ticket:approve`（新增权限码） |
+| `POST /tickets/workflow/resolve` | `workflow:write` | `ticket:resolve` |
+| `POST /tickets/workflow/close`、`reopen` | `workflow:write` | `ticket:close` |
+| `POST /tickets/workflow/withdraw` | `workflow:write` | `ticket:update` |
+
+对自部署方的影响：
+
+- **内置角色无需手工干预**：`agent`/`manager`/`technician`/`it_admin` 的基线已补齐对应 `ticket:*` 码，
+  角色权限播种只增不减，升级重启后自动收敛。
+- **租户自建角色按 `workflow:*` 授权的会断**：例如某租户给自定义"服务台组"只发了 `workflow:write`，
+  升级后该组不能再操作工单流转，需改授 `ticket:assign`/`ticket:approve`/`ticket:resolve`/`ticket:close`。
+- **两处刻意的能力收回**：`change_manager` 此前借 `workflow:write` 可操作工单流转，现按角色职责不再授予；
+  `service_catalog_admin` 此前借 `workflow:read` 可读工单流转进度，现无 `ticket:read` 故不可读。
+  需要保留的租户可手工授予对应 `ticket:*` 码。
+- `workflow:read`/`workflow:write` 现在只表示流程定义管理，与工单数据面完全解耦。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./middleware/ -run 'TestTicketWorkflowRoutes|TestTicketFlowRoles'
+cd itsm-frontend && npx jest src/components/ticket/__tests__/TicketDetailActionPermissions.test.tsx --coverage=false
+```
+
+### 1.51 工作台 KPI 改为按登录者数据范围统计，并取消捏造环比（2026-10-21，行为变更）
+
+`GET /api/v1/dashboard/overview`、`/kpi-metrics` 的工单类指标此前只按租户统计，与坐席实际能看到的
+工单集合不是同一范围；同时环比字段是推导出来的假值——上期窗口没有样本时会被折算成 `+100%`，
+`overdue-tickets` 的变化值甚至写死为 `3`。接口字段是新增（向后兼容），但**显示的数字会变**：
+
+- `agent`/`manager`/`technician` 等一线角色升级后，工作台工单数会**下降**到本人创建或受理的集合，
+  与 `/tickets` 列表、`/tickets/stats` 完全一致（同一 `datascope.ForTicketReader` 判定）。
+  管理员与租户管理员仍为租户全量。需要给一线角色看全租户口径时，调整该角色的数据范围而不是改前端。
+- KPI DTO 新增 `comparable`（是否有可比上期基线）与 `scope`（`tenant` / `own`）。
+  `comparable:false` 时 `change` 恒为 `0`、`trend`/`changeType` 恒为 `stable`。
+- 待处理、处理中、超时是时点存量，库里没有上月末快照，**恒不再显示环比**；
+  自建看板如果直接消费这些字段，请按 `comparable` 分支渲染，不要继续用 `change !== undefined` 判断。
+- 图表区（趋势、团队负载、事件分布、高峰时段）本期仍为租户级口径，前端已在工作台显式标注。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./service/ -run 'TestDashboardService_KPI|TestDashboardRepository_KPI'
+cd itsm-backend && go test -count=1 ./handlers/ -run TestDashboard
+cd itsm-frontend && npx jest --coverage=false --testPathPattern "dashboard/__tests__/(KPICards|useDashboardData)"
+```
+
+### 1.52 工单模板配置面：`it_admin` 补授权，`isActive`/`workflowSteps` 真正生效（2026-10-21，行为变更）
+
+`/tickets/templates` 页此前有两类「点了没反应」：
+
+- **权限**：`it_admin` 只有 `ticket_template:read`，能看不能改——「配置模板」这项职责落在只读权限面上，
+  保存必然 403。现补 `ticket_template:create`/`ticket_template:update`（仍不含 `delete`，抹掉存量模板留给
+  租户管理员与目录管理员）。内置角色升级后由权限播种自动收敛；**租户自建角色**若也勾了模板读，需要手工补写码。
+- **模板状态开关与工作流步骤**：创建/更新请求在 handler 重组时只带 6 个字段，`isActive` 与 `workflowSteps`
+  被丢弃，服务层又把创建的 `isActive` 写死 `true`、停用只能靠一个 `json:"-"` 的内部标志。因此表单里的
+  「模板状态」提交停用仍得到启用模板，复制一个停用模板会得到启用副本，前端类型声明的 `workflowSteps`
+  永远存不进库。现在 `dto.TicketTemplate.isActive` 是指针：不传按启用创建（保持历史默认），显式 `false`
+  真实落库，PUT 与 `PATCH /templates/{id}/status` 两条停用路径结果一致；`workflowSteps` 会持久化并在响应回显。
+- **列表全量**：`GET /api/v1/tickets/templates` 的服务端实现在无分页信封的情况下写死 `PageSize=100`，
+  第 101 个模板既不出现也不体现在 `total` 上。现在按契约真实返回全量（模板是配置数据，租户级量级可控）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./middleware/ -run TestTicketTemplate
+cd itsm-backend && go test -count=1 ./handlers/ticket/ -run TestTemplateRoutes
+```
+
+### 1.53 工单响应的人名改为服务端投影，删除从未赋值的 `requester`/`assignee` 对象（2026-10-21，破坏性：字段删除 + 字段新增）
+
+`dto.TicketResponse` 声明过 `requester`/`assignee` 两个用户对象，但 15 个响应出口从未给它们赋值，
+所以这个字段在真实响应里恒为 `null`（`omitempty` 下直接消失）。前端拿不到名字，只能另开
+`GET /api/v1/users?pageSize=100` 全量通讯录去猜，或者把已派工单渲染成「未分配」。
+
+**变更**
+
+- 删除 `TicketResponse.requester` / `TicketResponse.assignee` 与 `dto.UserBasicInfo`（连带删除唯一写它们的
+  `ToTicketResponseWithUsers`）。工单接口不再返回任何用户对象，也不返回 `username`/`email`/`phone`/`role`。
+- 新增 `TicketResponse.requesterName` / `assigneeName`：由 `handlers/ticket` 的 `GetUserNamesByIDs`
+  按**当前租户**批量投影（单条一次、一页一次，ID 去重，只 `SELECT id, name`）。查询失败只降级为不显示姓名，
+  不影响工单本身可读。
+- 无数据库迁移。姓名来源仍是 `users.name`（`NotEmpty`，不存在空显示名的存量行）。
+
+**升级影响**
+
+- 外部调用方若按 `requester.name` / `assignee.username` 取值，需改读 `requesterName` / `assigneeName`。
+- **跨租户与已删除的用户 ID 不会返回姓名**：`assigneeId` 照常返回，`assigneeName` 缺省。前端统一用
+  `displayUserName(name, id, emptyLabel)`（`src/lib/formatters.ts`）：有姓名显示姓名，只有 ID 显示 `用户 #<id>`，
+  两者都没有才显示「未分配」。不要把「只有 ID」折叠成「未分配」——那是把数据缺失冒充成业务状态。
+- 需要用户目录（邮箱、部门、可选处理人列表）请显式走 `GET /api/v1/users`，工单接口不再顺带外泄。
+  工单详情页已改为只在持有 `ticket:assign` 且真的打开分配/抄送弹窗时才拉通讯录。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/ticket/ -run TestTicket
+cd itsm-frontend && npx jest --coverage=false --runInBand TicketDetailUserNames
+```
+
+已知遗留：MSP 客户工单列表接口尚未接入同一投影，前端已如实显示 `用户 #id`（见 CHANGELOG「工单列表/详情
+把已派工单显示成未分配」条目的遗留说明）。
 
 
 ## 2. 环境变量变更

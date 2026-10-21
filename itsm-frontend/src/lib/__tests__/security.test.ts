@@ -393,7 +393,7 @@ describe('csrfProtection', () => {
   it('getToken fetches from API', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ code: 0, data: { csrf_token: 'fetched-token' } }),
+      json: () => Promise.resolve({ code: 0, data: { csrfToken: 'fetched-token' } }),
     }) as jest.Mock;
     const token = await csrfProtection.getToken();
     expect(token).toBe('fetched-token');

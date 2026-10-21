@@ -9695,6 +9695,109 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/notification-deliveries": {
+            "get": {
+                "tags": [
+                    "通知管理"
+                ],
+                "summary": "查询通知投递记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "渠道（email/in_app/feishu/wecom/dingtalk/sms/webhook）",
+                        "name": "channel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态（pending/sent/failed）",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "接收人ID",
+                        "name": "recipientId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "工单ID",
+                        "name": "ticketId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "起始时间（YYYY-MM-DD 或 RFC3339）",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间（YYYY-MM-DD 或 RFC3339，含当日）",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-deliveries/stats": {
+            "get": {
+                "tags": [
+                    "通知管理"
+                ],
+                "summary": "通知投递统计",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "统计窗口天数（默认 7，上限 90）",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification-deliveries/{id}/retry": {
+            "post": {
+                "tags": [
+                    "通知管理"
+                ],
+                "summary": "重试通知投递",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "投递记录ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/notifications": {
             "get": {
                 "description": "获取当前用户的所有通知，支持分页和状态过滤",
@@ -9739,6 +9842,51 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notifications/channels": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "列出本租户已装配的通知渠道、健康状态，以及当前用户在各渠道的收件目标是否已配置",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "通知管理"
+                ],
+                "summary": "通知渠道诊断",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/definitions/notification.ChannelStatus"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -9829,6 +9977,129 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/api/v1/on-call/current": {
+            "get": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "当前值班人",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "支持组ID",
+                        "name": "groupId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "指定时刻（RFC3339，缺省为当前时间）",
+                        "name": "at",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/on-call/schedules": {
+            "get": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "值班排班列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "支持组ID",
+                        "name": "groupId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "创建值班排班",
+                "responses": {}
+            }
+        },
+        "/api/v1/on-call/schedules/{id}": {
+            "get": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "值班排班详情",
+                "responses": {}
+            },
+            "put": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "更新值班排班",
+                "responses": {}
+            },
+            "delete": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "删除值班排班",
+                "responses": {}
+            }
+        },
+        "/api/v1/on-call/shifts": {
+            "get": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "班次列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "排班表ID",
+                        "name": "scheduleId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "起始时间（RFC3339）",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "结束时间（RFC3339）",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {}
+            },
+            "post": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "新增值班班次",
+                "responses": {}
+            }
+        },
+        "/api/v1/on-call/shifts/{id}": {
+            "put": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "更新值班班次",
+                "responses": {}
+            },
+            "delete": {
+                "tags": [
+                    "值班管理"
+                ],
+                "summary": "删除值班班次",
+                "responses": {}
             }
         },
         "/api/v1/org/departments": {
@@ -18087,10 +18358,18 @@ const docTemplate = `{
                 "color": {
                     "type": "string"
                 },
+                "comparable": {
+                    "description": "Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。",
+                    "type": "boolean"
+                },
                 "description": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "scope": {
+                    "description": "Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。",
                     "type": "string"
                 },
                 "title": {
@@ -18382,6 +18661,47 @@ const docTemplate = `{
                 "TypeSkill",
                 "TypePlugin"
             ]
+        },
+        "notification.ChannelStatus": {
+            "type": "object",
+            "properties": {
+                "blockedReason": {
+                    "type": "string"
+                },
+                "channel": {
+                    "type": "string"
+                },
+                "checkedAt": {
+                    "type": "string"
+                },
+                "deliverable": {
+                    "type": "boolean"
+                },
+                "healthMessage": {
+                    "type": "string"
+                },
+                "healthy": {
+                    "type": "boolean"
+                },
+                "lastSendError": {
+                    "type": "string"
+                },
+                "lastSendFailureAt": {
+                    "type": "string"
+                },
+                "lastSendSuccessAt": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "recipientTarget": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
         },
         "service.SLAComplianceData": {
             "type": "object",

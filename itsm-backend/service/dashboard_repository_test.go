@@ -165,10 +165,10 @@ func TestDashboardRepository_KPIAvgAndSLAScope_ParamBindingAndScanOrder(t *testi
 		"total_sla_tickets", "met_sla_tickets",
 	}).AddRow(1.5, 8.0, 2.0, 10.0, 100, 95)
 	mock.ExpectQuery(`.+`).
-		WithArgs(99, thisMonth, lastMonth).
+		WithArgs(99, thisMonth, lastMonth, 0).
 		WillReturnRows(rows)
 
-	avgRespNow, avgResNow, avgRespPrev, avgResPrev, totalSLA, metSLA, err := repo.KPIAvgAndSLAScope(context.Background(), 99, thisMonth, lastMonth)
+	avgRespNow, avgResNow, avgRespPrev, avgResPrev, totalSLA, metSLA, err := repo.KPIAvgAndSLAScope(context.Background(), 99, thisMonth, lastMonth, 0)
 	require.NoError(t, err)
 	assert.Equal(t, 1.5, avgRespNow)
 	assert.Equal(t, 8.0, avgResNow)
@@ -185,12 +185,12 @@ func TestDashboardRepository_KPIAvgAndSLAScope_CTEStructure(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"a", "b", "c", "d", "e", "f"}).AddRow(0, 0, 0, 0, 0, 0)
 	mock.ExpectQuery(`.+`).
-		WithArgs(1, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WithArgs(1, sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnRows(rows)
 
 	thisMonth := time.Now()
 	lastMonth := thisMonth.AddDate(0, -1, 0)
-	avgRespNow, avgResNow, avgRespPrev, avgResPrev, totalSLA, metSLA, err := repo.KPIAvgAndSLAScope(context.Background(), 1, thisMonth, lastMonth)
+	avgRespNow, avgResNow, avgRespPrev, avgResPrev, totalSLA, metSLA, err := repo.KPIAvgAndSLAScope(context.Background(), 1, thisMonth, lastMonth, 0)
 	require.NoError(t, err)
 	_ = avgRespNow
 	_ = avgResNow
@@ -222,19 +222,19 @@ func TestDashboardRepository_KPIAvgAndSLAScope_RejectsInvalidInputs(t *testing.T
 	lastMonth := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("非法 tenantID", func(t *testing.T) {
-		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 0, thisMonth, lastMonth)
+		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 0, thisMonth, lastMonth, 0)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "tenantID")
 	})
 
 	t.Run("时间窗口为零值", func(t *testing.T) {
-		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, time.Time{}, lastMonth)
+		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, time.Time{}, lastMonth, 0)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "时间窗口")
 	})
 
 	t.Run("时间窗口顺序错误", func(t *testing.T) {
-		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, lastMonth, thisMonth)
+		_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, lastMonth, thisMonth, 0)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "必须早于")
 	})
@@ -251,10 +251,10 @@ func TestDashboardRepository_PreviousSLAScopeCount_ParamBindingAndScanOrder(t *t
 
 	rows := sqlmock.NewRows([]string{"total", "met"}).AddRow(50, 45)
 	mock.ExpectQuery(`.+`).
-		WithArgs(11, lastMonth, thisMonth).
+		WithArgs(11, lastMonth, thisMonth, 0).
 		WillReturnRows(rows)
 
-	total, met, err := repo.PreviousSLAScopeCount(context.Background(), 11, lastMonth, thisMonth)
+	total, met, err := repo.PreviousSLAScopeCount(context.Background(), 11, lastMonth, thisMonth, 0)
 	require.NoError(t, err)
 	assert.Equal(t, 50, total)
 	assert.Equal(t, 45, met)
@@ -267,12 +267,12 @@ func TestDashboardRepository_PreviousSLAScopeCount_TenantAndWindowInvariant(t *t
 
 	rows := sqlmock.NewRows([]string{"total", "met"}).AddRow(0, 0)
 	mock.ExpectQuery(`.+`).
-		WithArgs(1, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WithArgs(1, sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnRows(rows)
 
 	lastMonth := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
 	thisMonth := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
-	_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, lastMonth, thisMonth)
+	_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, lastMonth, thisMonth, 0)
 	require.NoError(t, err)
 
 	sql := rec.last()
@@ -300,16 +300,58 @@ func TestDashboardRepository_PreviousSLAScopeCount_RejectsInvalidInputs(t *testi
 	lastMonth := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
 
 	t.Run("非法 tenantID", func(t *testing.T) {
-		_, _, err := repo.PreviousSLAScopeCount(context.Background(), -5, lastMonth, thisMonth)
+		_, _, err := repo.PreviousSLAScopeCount(context.Background(), -5, lastMonth, thisMonth, 0)
 		require.Error(t, err)
 	})
 	t.Run("时间窗口顺序错误", func(t *testing.T) {
-		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, thisMonth, lastMonth)
+		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, thisMonth, lastMonth, 0)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "必须早于")
 	})
 	t.Run("零值时间", func(t *testing.T) {
-		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, time.Time{}, thisMonth)
+		_, _, err := repo.PreviousSLAScopeCount(context.Background(), 1, time.Time{}, thisMonth, 0)
 		require.Error(t, err)
 	})
+}
+
+// ==================== 读取者行级范围（viewerID） ====================
+
+// TestDashboardRepository_KPIAggregatesApplyViewerRowScope 工作台 KPI 的时长与 SLA 聚合
+// 必须按读取者范围过滤，否则坐席卡片是"我的工单"、达成率却是"全租户"。
+func TestDashboardRepository_KPIAggregatesApplyViewerRowScope(t *testing.T) {
+	db, mock, repo, rec := newRepoMockDB(t)
+	defer db.Close()
+
+	thisMonth := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+	lastMonth := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	ownerPredicate := "($4 = 0 OR requester_id = $4 OR assignee_id = $4)"
+
+	mock.ExpectQuery(`.+`).WithArgs(1, thisMonth, lastMonth, 42).
+		WillReturnRows(sqlmock.NewRows([]string{"a", "b", "c", "d", "e", "f"}).AddRow(0, 0, 0, 0, 0, 0))
+	_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, thisMonth, lastMonth, 42)
+	require.NoError(t, err)
+	assert.Equal(t, 3, strings.Count(rec.last(), ownerPredicate),
+		"current_month/prev_month/sla_scope 三个 CTE 都要带读取者范围")
+
+	mock.ExpectQuery(`.+`).WithArgs(1, lastMonth, thisMonth, 42).
+		WillReturnRows(sqlmock.NewRows([]string{"total", "met"}).AddRow(0, 0))
+	_, _, err = repo.PreviousSLAScopeCount(context.Background(), 1, lastMonth, thisMonth, 42)
+	require.NoError(t, err)
+	assert.Contains(t, rec.last(), ownerPredicate, "上月基线必须与本期同一读取者范围")
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+// TestDashboardRepository_KPIAggregatesRejectNegativeViewer viewerID 为负是身份传错，
+// 不能当成 0（全租户）放行。
+func TestDashboardRepository_KPIAggregatesRejectNegativeViewer(t *testing.T) {
+	db, _, repo, _ := newRepoMockDB(t)
+	defer db.Close()
+
+	thisMonth := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+	lastMonth := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+
+	_, _, _, _, _, _, err := repo.KPIAvgAndSLAScope(context.Background(), 1, thisMonth, lastMonth, -1)
+	require.Error(t, err)
+	_, _, err = repo.PreviousSLAScopeCount(context.Background(), 1, lastMonth, thisMonth, -1)
+	require.Error(t, err)
 }

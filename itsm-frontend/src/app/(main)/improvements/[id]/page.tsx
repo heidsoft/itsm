@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Descriptions, Tag, Button, Skeleton, Result, Space, App } from 'antd';
 import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { TicketApi } from '@/lib/api/ticket-api';
+import { TicketApi, type Ticket } from '@/lib/api/ticket-api';
+import { displayUserName } from '@/lib/formatters';
 import { useI18n } from '@/lib/i18n/useI18n';
 
 const ImprovementDetailPage = () => {
@@ -15,16 +16,7 @@ const ImprovementDetailPage = () => {
   const { message } = App.useApp();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [improvement, setImprovement] = useState<{
-    id: string | number;
-    title: string;
-    description?: string;
-    status?: string;
-    priority?: string;
-    assignee?: { name?: string };
-    createdAt?: string;
-    updatedAt?: string;
-  } | null>(null);
+  const [improvement, setImprovement] = useState<Ticket | null>(null);
 
   useEffect(() => {
     if (id) loadDetail();
@@ -39,7 +31,7 @@ const ImprovementDetailPage = () => {
       setLoading(true);
       try {
         const data = await TicketApi.getTicket(numericId);
-        setImprovement(data as unknown as typeof improvement);
+        setImprovement(data);
       } catch (err) {
         console.error('Load improvement failed:', err);
         message.error(t('improvements.loadFailed'));
@@ -116,7 +108,11 @@ const ImprovementDetailPage = () => {
               {improvement.priority || t('improvements.defaultPriority')}
             </Descriptions.Item>
             <Descriptions.Item label={t('improvements.fieldOwner')}>
-              {improvement.assignee?.name || t('improvements.unassigned')}
+              {displayUserName(
+                improvement.assigneeName,
+                improvement.assigneeId,
+                t('improvements.unassigned')
+              )}
             </Descriptions.Item>
             <Descriptions.Item label={t('improvements.fieldCreatedAt')}>
               {improvement.createdAt || '-'}

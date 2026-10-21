@@ -47,6 +47,7 @@ func Definitions() []PermissionDef {
 		{"ticket:assign", "分派工单", "ticket", "assign", "分派工单"},
 		{"ticket:escalate", "升级工单", "ticket", "escalate", "升级工单"},
 		{"ticket:resolve", "解决工单", "ticket", "resolve", "解决工单"},
+		{"ticket:approve", "审批工单", "ticket", "approve", "批准或拒绝工单审批"},
 		{"ticket:close", "关闭工单", "ticket", "close", "关闭工单"},
 		{"ticket:export", "导出工单", "ticket", "export", "导出工单"},
 		{"ticket:import", "导入工单", "ticket", "import", "导入工单"},

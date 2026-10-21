@@ -10,6 +10,11 @@ export interface KPIMetric {
   trend?: 'up' | 'down' | 'stable';
   change?: number;
   changeType?: 'increase' | 'decrease' | 'stable';
+  // comparable=false（或缺失）表示后端没有可比的上期基线，此时 change 恒为 0，
+  // 卡片不得渲染"相比上期"。缺失按不可比处理。
+  comparable?: boolean;
+  // scope 是工单类 KPI 的行级统计范围：tenant = 全租户，own = 本人创建或受理。
+  scope?: 'tenant' | 'own';
   description?: string;
   target?: number; // 目标值
   alert?: 'success' | 'warning' | 'error' | null; // 警告状态

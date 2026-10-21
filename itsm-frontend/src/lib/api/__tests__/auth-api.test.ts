@@ -29,7 +29,7 @@ describe('AuthApiClient', () => {
     it('should fetch CSRF token', async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ data: { csrf_token: 'token123' } }),
+        json: async () => ({ data: { csrfToken: 'token123' } }),
       });
       const token = await authApiClient.getCsrfToken();
       expect(token).toBe('token123');
@@ -45,7 +45,7 @@ describe('AuthApiClient', () => {
   describe('login', () => {
     it('should login successfully', async () => {
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { csrf_token: 'csrf1' } }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { csrfToken: 'csrf1' } }) })
         .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { user: { id: '1', username: 'admin' } } }) });
       const res = await authApiClient.login({ username: 'admin', password: 'pass' });
       expect(res.success).toBe(true);
@@ -53,7 +53,7 @@ describe('AuthApiClient', () => {
 
     it('should return error on failed login', async () => {
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { csrf_token: 'csrf1' } }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { csrfToken: 'csrf1' } }) })
         .mockResolvedValueOnce({ ok: false, json: async () => ({ message: 'Invalid credentials' }) });
       const res = await authApiClient.login({ username: 'admin', password: 'wrong' });
       expect(res.success).toBe(false);

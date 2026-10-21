@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Statistic, Tooltip, Spin, Progress } from 'antd';
+import { Card, Row, Col, Tooltip, Spin } from 'antd';
 import {
   ArrowUp,
   ArrowDown,
@@ -40,6 +40,9 @@ const getMetricPolarity = (id: string): MetricPolarity => {
 // 企业级KPI卡片组件
 const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric }) => {
   const polarity = getMetricPolarity(metric.id);
+
+  // 后端只在存在可比上期基线时给出 change/trend；comparable 缺失按不可比处理。
+  const comparable = metric.comparable === true;
 
   // 根据业务极性判断趋势颜色：
   // - positive 指标（总工单、已完成、SLA达成率）：上升=绿色（好），下降=红色（坏）
@@ -85,17 +88,6 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
     }
   };
 
-  // 计算进度百分比（用于装饰性进度条）
-  const getProgressPercent = () => {
-    if (metric.id === 'sla-compliance' && typeof metric.value === 'number') {
-      return metric.value;
-    }
-    if (metric.change !== undefined) {
-      return Math.min(Math.abs(metric.change) * 10, 100);
-    }
-    return 75; // 默认值
-  };
-
   return (
     <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
@@ -126,13 +118,13 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
             </div>
 
             {/* 简化趋势指示器 */}
-            {metric.change !== undefined && (
+            {comparable && (
               <div
                 className={`text-sm font-semibold flex items-center gap-1 ${trendColor}`}
               >
                 {getTrendIcon()}
-                {metric.change > 0 ? '+' : ''}
-                {metric.change.toFixed(1)}%
+                {(metric.change ?? 0) > 0 ? '+' : ''}
+                {(metric.change ?? 0).toFixed(1)}%
               </div>
             )}
           </div>
@@ -163,8 +155,8 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
             </div>
           </div>
 
-          {/* 简化底部：去除装饰性进度条 */}
-          {metric.change !== undefined && (
+          {/* 底部：仅在后端给出可比基线时显示环比 */}
+          {comparable && (
             <div className="mt-auto pt-3 border-t border-gray-100">
               <span className="text-xs text-gray-500">
                 相比上期
@@ -179,7 +171,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
                     : metric.trend === 'down'
                       ? '↓'
                       : '—'}{' '}
-                  {Math.abs(metric.change).toFixed(1)}%
+                  {Math.abs(metric.change ?? 0).toFixed(1)}%
                 </span>
               </span>
             </div>

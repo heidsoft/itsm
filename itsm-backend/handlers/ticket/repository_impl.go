@@ -6,6 +6,8 @@ import (
 	"sort"
 	"time"
 
+	"itsm-backend/ent"
+	"itsm-backend/ent/user"
 	"itsm-backend/internal/datascope"
 	"itsm-backend/repository/base"
 	"itsm-backend/repository/ticket"
@@ -16,11 +18,14 @@ import (
 // and existing business logic.
 type EntRepository struct {
 	repo ticket.Repository
+	// client 只用于 users 表的只读投影（响应里的处理人/报障人姓名）；
+	// 工单行的读写仍全部走 repo。
+	client *ent.Client
 }
 
 // NewEntRepository creates a handlers/ticket EntRepository backed by the shared repository/ticket implementation.
-func NewEntRepository(repo ticket.Repository) *EntRepository {
-	return &EntRepository{repo: repo}
+func NewEntRepository(repo ticket.Repository, client *ent.Client) *EntRepository {
+	return &EntRepository{repo: repo, client: client}
 }
 
 // toDomain converts repository/ticket.Ticket to handlers/ticket.Ticket
@@ -431,6 +436,41 @@ func (r *EntRepository) EscalateTicket(ctx context.Context, id int, reason strin
 
 func (r *EntRepository) UpdateSLADeadlines(ctx context.Context, id int, responseDeadline, resolutionDeadline *time.Time, slaDefinitionID *int, tenantID int) error {
 	return r.repo.UpdateSLADeadlines(ctx, id, responseDeadline, resolutionDeadline, slaDefinitionID, tenantID)
+}
+
+// GetUserNamesByIDs 批量读取当前租户内用户显示名（id -> name）。
+// 跨租户 ID、非正数 ID 与缺失租户一律不进映射，响应侧会退回显示用户 ID。
+func (r *EntRepository) GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error) {
+	out := make(map[int]string, len(ids))
+	if r.client == nil || tenantID <= 0 || len(ids) == 0 {
+		return out, nil
+	}
+	seen := make(map[int]struct{}, len(ids))
+	uniq := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		uniq = append(uniq, id)
+	}
+	if len(uniq) == 0 {
+		return out, nil
+	}
+	users, err := r.client.User.Query().
+		Where(user.TenantIDEQ(tenantID), user.IDIn(uniq...)).
+		Select(user.FieldID, user.FieldName).
+		All(ctx)
+	if err != nil {
+		return out, fmt.Errorf("query user display names: %w", err)
+	}
+	for _, u := range users {
+		out[u.ID] = u.Name
+	}
+	return out, nil
 }
 
 // 注：模板 CRUD 不在本仓储实现——它们唯一所有者是 productionSvc

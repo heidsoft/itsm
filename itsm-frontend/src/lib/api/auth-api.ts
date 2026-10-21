@@ -93,8 +93,9 @@ class AuthApiClient {
       }
 
       const data = await response.json();
-      // 后端返回: { code: 0, message, data: { csrf_token } }
-      const token = data?.data?.csrf_token || data?.data?.csrfToken || data?.token;
+      // 后端返回: { code: 0, message, data: { csrfToken } }（middleware.CSRFTokenEndpoint）
+      // 单一契约字段读取：不做 csrf_token/csrfToken 多字段兼容（规范零新增）
+      const token = data?.data?.csrfToken;
       if (!token) {
         throw new Error('CSRF token missing in response');
       }

@@ -54,13 +54,13 @@ func TestTicketToResponseKeepsSLADeadlines(t *testing.T) {
 		SLAResolutionDeadline: &resolution,
 	}
 
-	got := ticketToResponse(ticket)
+	got := buildTicketResponse(ticket)
 
 	assert.Same(t, &response, got.SLAResponseDeadline)
 	assert.Same(t, &resolution, got.SLAResolutionDeadline)
 
 	// 未绑定 SLA 时两个字段保持 nil，被 omitempty 吞掉是预期契约。
-	empty := ticketToResponse(&Ticket{ID: 1, TenantID: 1})
+	empty := buildTicketResponse(&Ticket{ID: 1, TenantID: 1})
 	assert.Nil(t, empty.SLAResponseDeadline)
 	assert.Nil(t, empty.SLAResolutionDeadline)
 }

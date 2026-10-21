@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -295,7 +297,18 @@ func TestCSRFTokenEndpoint(t *testing.T) {
 	CSRFTokenEndpoint(config)(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	body := w.Body.String()
-	assert.True(t, strings.Contains(body, "csrf_token"), "响应应包含 csrf_token")
-	assert.True(t, strings.Contains(body, `"code":0`), "响应 code 应为 0")
+	// 契约断言：data.csrfToken（camelCase，API 边界字段规范），且与 Set-Cookie 双提交值同构。
+	assert.True(t, strings.Contains(w.Body.String(), `"csrfToken"`), "响应 data 应包含 camelCase 字段 csrfToken")
+	assert.False(t, strings.Contains(w.Body.String(), `"csrf_token"`), "JSON 响应不得出现 snake_case 字段（cookie/form 名除外）")
+	assert.True(t, strings.Contains(w.Header().Get("Set-Cookie"), config.CookieName+"="), "应下发 csrf cookie")
+
+	var envelope struct {
+		Code int `json:"code"`
+		Data struct {
+			CSRFToken string `json:"csrfToken"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &envelope))
+	assert.Equal(t, 0, envelope.Code, "响应 code 应为 0")
+	assert.NotEmpty(t, envelope.Data.CSRFToken, "响应 data.csrfToken 非空")
 }

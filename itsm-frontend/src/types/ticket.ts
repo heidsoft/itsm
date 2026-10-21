@@ -31,7 +31,7 @@ export interface TicketCategory {
   isActive: boolean;
 }
 
-/** 工单关联人员的视图模型；接口响应用 UserBasicInfo（@/lib/api/ticket-api） */
+/** 评论/附件等子对象的用户形状；工单主体只投影 requesterName/assigneeName */
 export interface TicketUser {
   id: number;
   username: string;

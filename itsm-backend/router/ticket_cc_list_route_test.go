@@ -36,7 +36,7 @@ import (
 // 前端读 user.name 会静默落到 username。用例 4 用精确键集合锁住这一点。
 //
 // 用例挂在真实路由注册上（router/ticket_routes.go 的 /cc/my 与 /:id/cc，
-// 带 RequirePermission("workflow","read")）；解码目标是本地 wire 结构而不是 dto，
+// 带 RequirePermission("ticket","read")）；解码目标是本地 wire 结构而不是 dto，
 // 断言的是运行时响应行为。
 
 const (

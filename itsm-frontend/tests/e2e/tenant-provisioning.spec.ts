@@ -69,8 +69,8 @@ test.describe('租户开通与产品基线安装', () => {
       if (tenantId > 0) {
         const tokenResponse = await page.request.get('/api/v1/csrf-token');
         const csrf = ((await tokenResponse.json().catch(() => ({}))) as {
-          data?: { csrf_token?: string };
-        }).data?.csrf_token;
+          data?: { csrfToken?: string };
+        }).data?.csrfToken;
         await page.request.delete(`/api/v1/tenants/${tenantId}`, {
           headers: csrf ? { 'X-CSRF-Token': csrf } : undefined,
         });

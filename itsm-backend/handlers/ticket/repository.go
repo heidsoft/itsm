@@ -24,6 +24,10 @@ type Repository interface {
 	FindOverdue(ctx context.Context, tenantID int) ([]*Ticket, error)
 	Search(ctx context.Context, keyword string, tenantID int) ([]*Ticket, error)
 
+	// GetUserNamesByIDs 按当前租户批量读取用户显示名（id -> name），
+	// 供响应里的 requesterName/assigneeName 投影。查不到的 ID 不进映射。
+	GetUserNamesByIDs(ctx context.Context, tenantID int, ids []int) (map[int]string, error)
+
 	// Stats
 	// scope/viewerID 与 List 使用同一套行级数据范围，避免工作台卡片
 	// 报出租户全量而工单列表为空的口径分裂。

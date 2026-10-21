@@ -37,7 +37,7 @@ func TestAssignTicket_RejectsCrossTenantAssignee(t *testing.T) {
 		SetRequesterID(requester.ID).SetTenantID(tenant1.ID).SaveX(ctx)
 
 	svc := NewService(
-		NewEntRepository(repoTicket.NewEntRepository(client, logger)),
+		NewEntRepository(repoTicket.NewEntRepository(client, logger), client),
 		service.NewTicketServiceForTest(client, logger),
 		nil, logger,
 	)
@@ -78,7 +78,7 @@ func TestUpdate_RejectsCrossTenantAssignee(t *testing.T) {
 		SetRequesterID(requester.ID).SetTenantID(tenant1.ID).SaveX(ctx)
 
 	svc := NewService(
-		NewEntRepository(repoTicket.NewEntRepository(client, logger)),
+		NewEntRepository(repoTicket.NewEntRepository(client, logger), client),
 		service.NewTicketServiceForTest(client, logger),
 		nil, logger,
 	)

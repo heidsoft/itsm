@@ -50,7 +50,7 @@ func TestSLAPauseResumeWiring(t *testing.T) {
 	slaMonitor := service.NewSLAMonitorService(client, logger)
 	slaMonitor.SetSLAStore(sla.NewStore(client, sla.NewEngine(nil)))
 	h := NewHandler(NewService(
-		NewEntRepository(ticketrepo.NewEntRepository(client, logger)),
+		NewEntRepository(ticketrepo.NewEntRepository(client, logger), client),
 		nil,
 		slaMonitor,
 		logger,

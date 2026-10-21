@@ -470,10 +470,26 @@ describe('TicketApi', () => {
   });
 
   describe('getTemplates', () => {
-    it('should get templates', async () => {
+    it('should get templates without fake pagination params', async () => {
       mockGet.mockResolvedValue({ items: [], total: 0 });
-      await TicketApi.getTemplates({ page: 1 });
-      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/templates', { page: 1 });
+      await TicketApi.getTemplates();
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/tickets/templates');
+    });
+  });
+
+  describe('copyTemplate', () => {
+    it('should post to the copy route with an empty body by default', async () => {
+      mockPost.mockResolvedValue({ id: 2 });
+      await TicketApi.copyTemplate(1);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/templates/1/copy', {});
+    });
+
+    it('should pass a custom name when provided', async () => {
+      mockPost.mockResolvedValue({ id: 2 });
+      await TicketApi.copyTemplate(1, '克隆模板');
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/tickets/templates/1/copy', {
+        name: '克隆模板',
+      });
     });
   });
 

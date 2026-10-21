@@ -322,27 +322,8 @@ export interface SLADefinition {
 }
 
 // ==================== 仪表盘相关类型 ====================
-
-export interface DashboardOverview {
-  kpiMetrics: KPIMetric[];
-  ticketTrend: TicketTrendData[];
-  incidentDistribution: IncidentDistributionData[];
-  slaData: SLAComplianceData[];
-  satisfactionData: SatisfactionData[];
-  recentActivities: RecentActivity[];
-}
-
-export interface KPIMetric {
-  id: string;
-  title: string;
-  value: number;
-  unit: string;
-  color: string;
-  trend: 'up' | 'down' | 'stable';
-  change: number;
-  changeType: 'increase' | 'decrease' | 'stable';
-  description?: string;
-}
+// KPI 指标的正式契约在 src/app/(main)/dashboard/types/dashboard.types.ts，
+// 由 DashboardAPI 直接引用；此处不再复制一份会漂移的副本。
 
 export interface TicketTrendData {
   date: string;

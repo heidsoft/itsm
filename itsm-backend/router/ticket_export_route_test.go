@@ -59,7 +59,7 @@ func setupExportRouteTest(t *testing.T) (*gin.Engine, exportRouteFixture) {
 	newTicket(tenantB.ID, "TKT-EXPORT-B-001", "B 租户工单")
 
 	productionSvc := service.NewTicketServiceForTest(client, logger)
-	svc := ticketHandler.NewService(ticketHandler.NewEntRepository(ticketrepo.NewEntRepository(client, logger)), productionSvc, nil, logger)
+	svc := ticketHandler.NewService(ticketHandler.NewEntRepository(ticketrepo.NewEntRepository(client, logger), client), productionSvc, nil, logger)
 
 	const secret = "ticket-export-secret"
 	gin.SetMode(gin.TestMode)

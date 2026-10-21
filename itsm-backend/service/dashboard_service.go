@@ -23,6 +23,7 @@ import (
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+	"itsm-backend/internal/datascope"
 	"itsm-backend/internal/sysstat"
 	"itsm-backend/service/sla"
 
@@ -571,6 +572,38 @@ type DashboardOverviewData struct {
 	PeakHours                []PeakHourData                 `json:"peakHours,omitempty"`
 }
 
+// DashboardViewer 工作台读取者身份。KPI 里的工单类指标按读取者的行级范围统计，
+// 与 /tickets 列表同一规则（datascope.ForTicketReader）；ScopeAll 用于后台任务等
+// 没有请求者上下文的调用，显式声明全租户口径而不是靠空角色推断。
+type DashboardViewer struct {
+	UserID   int
+	Role     string
+	ScopeAll bool
+}
+
+func (v DashboardViewer) ticketScope() datascope.DataScope {
+	if v.ScopeAll {
+		return datascope.DataScopeAll
+	}
+	return datascope.ForTicketReader(v.Role)
+}
+
+// sqlViewerID 返回 raw SQL 的行级范围参数：全租户口径传 0，SQL 内 $4 = 0 即不过滤。
+func (v DashboardViewer) sqlViewerID() int {
+	if v.ticketScope() == datascope.DataScopeAll {
+		return 0
+	}
+	return v.UserID
+}
+
+// scopeKey 是给前端用于标注口径的稳定枚举，不放中文。
+func (v DashboardViewer) scopeKey() string {
+	if v.ticketScope() == datascope.DataScopeAll {
+		return "tenant"
+	}
+	return "own"
+}
+
 // KPIMetricData KPI指标数据
 type KPIMetricData struct {
 	ID          string  `json:"id"`
@@ -584,6 +617,11 @@ type KPIMetricData struct {
 	Description string  `json:"description,omitempty"`
 	Target      float64 `json:"target,omitempty"`
 	Alert       string  `json:"alert,omitempty"`
+	// Comparable 标识环比是否可信：false 表示读取者范围内没有可比的上期基线，
+	// 此时 Change 恒为 0，前端不得渲染"相比上期"。
+	Comparable bool `json:"comparable"`
+	// Scope 标识本组指标的行级范围：tenant = 全租户，own = 本人创建或受理。
+	Scope string `json:"scope"`
 }
 
 // TicketTrendData 工单趋势数据
@@ -668,11 +706,13 @@ type PeakHourData struct {
 }
 
 // GetDashboardOverview 获取Dashboard概览数据（匹配前端期望格式）
-func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID int) (*DashboardOverviewData, error) {
-	s.logger.Infow("Getting dashboard overview", "tenant_id", tenantID)
+//
+// viewer 决定工单类 KPI 的行级范围；图表区（趋势/团队负载/事件分布）本期仍是租户级口径。
+func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID int, viewer DashboardViewer) (*DashboardOverviewData, error) {
+	s.logger.Infow("Getting dashboard overview", "tenant_id", tenantID, "viewer_id", viewer.UserID, "viewer_role", viewer.Role, "scope", viewer.scopeKey())
 
 	// 获取KPI指标
-	kpiMetrics, err := s.getKPIMetrics(ctx, tenantID)
+	kpiMetrics, err := s.getKPIMetrics(ctx, tenantID, viewer)
 	if err != nil {
 		s.logger.Errorw("Failed to get KPI metrics", "error", err)
 		return nil, fmt.Errorf("获取KPI指标失败: %w", err)
@@ -755,148 +795,68 @@ func (s *DashboardService) GetDashboardOverview(ctx context.Context, tenantID in
 	}, nil
 }
 
-// getKPIMetrics 获取KPI指标
-func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]KPIMetricData, error) {
+// getKPIMetrics 获取KPI指标。
+//
+// 三条口径约束（2026-10-20 生产走查后收敛）：
+//  1. 工单类计数按读取者的行级范围统计，与 /tickets 列表、/tickets/stats 同一规则；
+//  2. 箭头方向与变化值由本期/上期真实数据推导，不再硬编码 up/down 或常量；
+//  3. 上期基线为空时没有可比性——返回 comparable=false 且 change=0，
+//     不再把"上月 0、本月有值"折算成 +100% 的捏造增长；
+//  4. 待处理/处理中/超时是时点存量快照，库里没有历史快照，一律 comparable=false。
+func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int, viewer DashboardViewer) ([]KPIMetricData, error) {
 	now := time.Now()
 	lastMonth := now.AddDate(0, -1, 0)
 	lastMonthStart := time.Date(lastMonth.Year(), lastMonth.Month(), 1, 0, 0, 0, 0, time.Local)
 	lastMonthEnd := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
-
-	// 总工单数（本月）
-	totalTickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 上月总工单数
-	lastMonthTotal, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.CreatedAtGTE(lastMonthStart),
-			ticket.CreatedAtLTE(lastMonthEnd),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		lastMonthTotal = 0
-	}
-
-	// 待处理工单（统一口径）
-	pendingTickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusIn(ticketPendingStatuses...),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 上月待处理工单
-	lastMonthPending, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusIn(ticketPendingStatuses...),
-			ticket.CreatedAtGTE(lastMonthStart),
-			ticket.CreatedAtLTE(lastMonthEnd),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		lastMonthPending = 0
-	}
-
-	// 处理中工单
-	inProgressTickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusEQ(common.TicketStatusInProgress),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 上月处理中工单
-	lastMonthInProgress, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusEQ(common.TicketStatusInProgress),
-			ticket.CreatedAtGTE(lastMonthStart),
-			ticket.CreatedAtLTE(lastMonthEnd),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
-	if err != nil {
-		lastMonthInProgress = 0
-	}
-
-	// 已完成工单（本月）
 	thisMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
-	completedTickets, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusIn(ticketCompletedStatuses...),
-			ticket.CreatedAtGTE(thisMonthStart),
-			ticket.DeletedAtIsNil(),
-		).
-		Count(ctx)
+
+	scope := viewer.ticketScope()
+
+	// scopedTickets 是本页所有工单计数的统一入口：租户 + 软删 + 读取者行级范围。
+	scopedTickets := func() *ent.TicketQuery {
+		q := s.client.Ticket.Query().Where(ticket.TenantID(tenantID), ticket.DeletedAtIsNil())
+		return datascope.ApplyTicketFilter(q, viewer.UserID, 0, scope)
+	}
+	// 上期窗口查询失败按"无基线"处理：环比只会退化为不可比，不会编造增长率。
+	countOrZero := func(q *ent.TicketQuery) int {
+		n, err := q.Count(ctx)
+		if err != nil {
+			s.logger.Warnw("failed to count previous-period tickets for KPI", "error", err)
+			return 0
+		}
+		return n
+	}
+
+	// 总数是累计存量，可比基线取上月末时点的累计值（创建时间 ≤ 上月末）。
+	totalTickets, err := scopedTickets().Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	prevCumulativeTotal := countOrZero(scopedTickets().Where(ticket.CreatedAtLTE(lastMonthEnd)))
+
+	// 待处理/处理中是当前时点的存量快照：库里没有历史状态快照，
+	// 按创建时间窗口构造的"上期值"其实是另一批工单的队列，环比无意义。
+	pendingTickets, err := scopedTickets().Where(ticket.StatusIn(ticketPendingStatuses...)).Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	inProgressTickets, err := scopedTickets().Where(ticket.StatusEQ(common.TicketStatusInProgress)).Count(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// 上月已完成工单
-	lastMonthCompleted, err := s.client.Ticket.Query().
-		Where(
-			ticket.TenantID(tenantID),
-			ticket.StatusIn(ticketCompletedStatuses...),
-			ticket.CreatedAtGTE(lastMonthStart),
-			ticket.CreatedAtLTE(lastMonthEnd),
-			ticket.DeletedAtIsNil(),
-		).
+	completedTickets, err := scopedTickets().
+		Where(ticket.StatusIn(ticketCompletedStatuses...), ticket.CreatedAtGTE(thisMonthStart)).
 		Count(ctx)
 	if err != nil {
-		lastMonthCompleted = 0
+		return nil, err
 	}
+	lastMonthCompleted := countOrZero(scopedTickets().
+		Where(ticket.StatusIn(ticketCompletedStatuses...), ticket.CreatedAtGTE(lastMonthStart), ticket.CreatedAtLTE(lastMonthEnd)))
 
-	// 计算变化百分比
-	var totalChange, pendingChange, inProgressChange, completedChange float64
-	var pendingChangeType, inProgressChangeType string = "increase", "increase"
-	if lastMonthTotal > 0 {
-		totalChange = float64(totalTickets-lastMonthTotal) / float64(lastMonthTotal) * 100
-	}
-	// 待处理工单变化：上月为0时，新增显示100%增长
-	if lastMonthPending > 0 {
-		pendingChange = float64(pendingTickets-lastMonthPending) / float64(lastMonthPending) * 100
-		if pendingChange < 0 {
-			pendingChangeType = "decrease"
-		}
-	} else if pendingTickets > 0 {
-		pendingChange = 100 // 上月为0，本月有值，视为新增100%
-		pendingChangeType = "increase"
-	}
-	// 处理中工单变化
-	if lastMonthInProgress > 0 {
-		inProgressChange = float64(inProgressTickets-lastMonthInProgress) / float64(lastMonthInProgress) * 100
-		if inProgressChange < 0 {
-			inProgressChangeType = "decrease"
-		}
-	} else if inProgressTickets > 0 {
-		inProgressChange = 100
-		inProgressChangeType = "increase"
-	}
-	if lastMonthCompleted > 0 {
-		completedChange = float64(completedTickets-lastMonthCompleted) / float64(lastMonthCompleted) * 100
-	} else if completedTickets > 0 {
-		completedChange = 100
-	}
+	totalChange, totalComparable := kpiDelta(totalTickets, prevCumulativeTotal)
+	// 已完成按同期队列比较（本月新建已完成 vs 上月新建已完成），队列形状一致。
+	completedChange, completedComparable := kpiDelta(completedTickets, lastMonthCompleted)
 
 	// 从数据库聚合真实的平均时间与 SLA 达成率（由 dashboardRepository 封装 CTE）。
 	// KPIAvgAndSLAScope 同时返回本月/上月平均时长 + 本月 SLA scope 计数，
@@ -907,6 +867,7 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		tenantID,
 		thisMonthStart,
 		lastMonthStart,
+		viewer.sqlViewerID(),
 	)
 	if err != nil {
 		return nil, err
@@ -914,14 +875,8 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 
 	avgFirstResponse := math.Round(avgRespHoursNow*100) / 100
 	avgResolution := math.Round(avgResHoursNow*100) / 100
-
-	var avgFirstResponseChange, avgResolutionChange float64
-	if avgRespHoursPrev > 0 {
-		avgFirstResponseChange = math.Round((avgFirstResponse-avgRespHoursPrev)/avgRespHoursPrev*1000) / 10
-	}
-	if avgResHoursPrev > 0 {
-		avgResolutionChange = math.Round((avgResolution-avgResHoursPrev)/avgResHoursPrev*1000) / 10
-	}
+	avgFirstResponseChange, avgFirstResponseComparable := kpiDeltaRatio(avgFirstResponse, avgRespHoursPrev)
+	avgResolutionChange, avgResolutionComparable := kpiDeltaRatio(avgResolution, avgResHoursPrev)
 
 	slaTarget := 95.0
 	var slaCompliance float64
@@ -929,18 +884,27 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		slaCompliance = math.Round(float64(metSLATickets)/float64(totalSLATickets)*1000) / 10
 	}
 
-	var slaCompliancePrev float64
-	totalSLATickets, metSLATickets, err = s.repo.PreviousSLAScopeCount(
+	prevTotalSLATickets, prevMetSLATickets, err := s.repo.PreviousSLAScopeCount(
 		ctx,
 		tenantID,
 		lastMonthStart,
 		thisMonthStart,
+		viewer.sqlViewerID(),
 	)
-	if err == nil && totalSLATickets > 0 {
-		slaCompliancePrev = math.Round(float64(metSLATickets)/float64(totalSLATickets)*1000) / 10
+	if err != nil {
+		s.logger.Warnw("failed to read previous-period SLA scope", "error", err)
+		prevTotalSLATickets, prevMetSLATickets = 0, 0
 	}
-
-	slaComplianceChange := math.Round((slaCompliance-slaCompliancePrev)*10) / 10
+	var slaCompliancePrev float64
+	if prevTotalSLATickets > 0 {
+		slaCompliancePrev = math.Round(float64(prevMetSLATickets)/float64(prevTotalSLATickets)*1000) / 10
+	}
+	// 达成率环比是百分点差，本期或上期没有考核样本时不可比。
+	slaComparable := totalSLATickets > 0 && prevTotalSLATickets > 0
+	var slaComplianceChange float64
+	if slaComparable {
+		slaComplianceChange = math.Round((slaCompliance-slaCompliancePrev)*10) / 10
+	}
 
 	// 超时工单：未完结，且（尚未首次响应且已过响应时限）或（尚未解决且已过解决时限）
 	var overdueTickets int
@@ -951,33 +915,17 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		if err1 != nil || err2 != nil {
 			s.logger.Warnw("failed to find overdue ticket IDs from sla_states", "err1", err1, "err2", err2)
 			overdueTickets = 0
-		} else {
-			// Union the two ID sets
-			idSet := make(map[int]struct{}, len(responseBreachedIDs)+len(overdueIDs))
-			for _, id := range responseBreachedIDs {
-				idSet[id] = struct{}{}
-			}
-			for _, id := range overdueIDs {
-				idSet[id] = struct{}{}
-			}
-			if len(idSet) > 0 {
-				ids := make([]int, 0, len(idSet))
-				for id := range idSet {
-					ids = append(ids, id)
-				}
-				overdueTickets, _ = s.client.Ticket.Query().
-					Where(
-						ticket.TenantID(tenantID),
-						ticket.DeletedAtIsNil(),
-						ticket.IDIn(ids...),
-						ticket.StatusNotIn(
-							common.TicketStatusResolved,
-							common.TicketStatusClosed,
-							common.TicketStatusCancelled,
-						),
-					).
-					Count(ctx)
-			}
+		} else if ids := unionTicketIDs(responseBreachedIDs, overdueIDs); len(ids) > 0 {
+			overdueTickets, _ = scopedTickets().
+				Where(
+					ticket.IDIn(ids...),
+					ticket.StatusNotIn(
+						common.TicketStatusResolved,
+						common.TicketStatusClosed,
+						common.TicketStatusCancelled,
+					),
+				).
+				Count(ctx)
 		}
 	} else {
 		// Fallback: query sla_states directly for overdue tickets
@@ -994,17 +942,14 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 			All(ctx)
 		if err != nil {
 			s.logger.Warnw("failed to query sla_states for overdue tickets", "error", err)
-			overdueTickets = 0
 		} else {
 			aggIDs := make([]int, 0, len(slaStates))
 			for _, ss := range slaStates {
 				aggIDs = append(aggIDs, ss.AggregateID)
 			}
 			if len(aggIDs) > 0 {
-				overdueTickets, _ = s.client.Ticket.Query().
+				overdueTickets, _ = scopedTickets().
 					Where(
-						ticket.TenantID(tenantID),
-						ticket.DeletedAtIsNil(),
 						ticket.IDIn(aggIDs...),
 						ticket.StatusNotIn(
 							common.TicketStatusResolved,
@@ -1017,112 +962,89 @@ func (s *DashboardService) getKPIMetrics(ctx context.Context, tenantID int) ([]K
 		}
 	}
 
-	return []KPIMetricData{
-		{
-			ID:          "total-tickets",
-			Title:       "总工单数",
-			Value:       float64(totalTickets),
-			Unit:        "个",
-			Color:       "#3b82f6",
-			Trend:       "up",
-			Change:      totalChange,
-			ChangeType:  "increase",
-			Description: "本月累计工单",
-		},
-		{
-			ID:          "pending-tickets",
-			Title:       "待处理工单",
-			Value:       float64(pendingTickets),
-			Unit:        "个",
-			Color:       "#f59e0b",
-			Trend:       "up",
-			Change:      pendingChange,
-			ChangeType:  pendingChangeType,
-			Description: "需要立即处理",
-			Alert: func() string {
-				if pendingTickets > 200 {
-					return "warning"
-				}
-				return ""
-			}(),
-		},
-		{
-			ID:          "in-progress-tickets",
-			Title:       "处理中工单",
-			Value:       float64(inProgressTickets),
-			Unit:        "个",
-			Color:       "#06b6d4",
-			Trend:       "up",
-			Change:      inProgressChange,
-			ChangeType:  inProgressChangeType,
-			Description: "正在处理中",
-		},
-		{
-			ID:          "completed-tickets",
-			Title:       "已完成工单",
-			Value:       float64(completedTickets),
-			Unit:        "个",
-			Color:       "#10b981",
-			Trend:       "up",
-			Change:      completedChange,
-			ChangeType:  "increase",
-			Description: "本月完成",
-		},
-		{
-			ID:          "avg-first-response",
-			Title:       "平均首次响应时间",
-			Value:       avgFirstResponse,
-			Unit:        "小时",
-			Color:       "#8b5cf6",
-			Trend:       "down",
-			Change:      avgFirstResponseChange,
-			ChangeType:  "decrease",
-			Description: "响应速度提升",
-			Target:      4,
-		},
-		{
-			ID:          "avg-resolution",
-			Title:       "平均解决时间",
-			Value:       avgResolution,
-			Unit:        "小时",
-			Color:       "#ec4899",
-			Trend:       "down",
-			Change:      avgResolutionChange,
-			ChangeType:  "decrease",
-			Description: "解决效率提升",
-			Target:      8,
-		},
-		{
-			ID:          "sla-compliance",
-			Title:       "SLA达成率",
-			Value:       slaCompliance,
-			Unit:        "%",
-			Color:       "#10b981",
-			Trend:       "up",
-			Change:      slaComplianceChange,
-			ChangeType:  "increase",
-			Description: "服务水平提升",
-			Target:      slaTarget,
-			Alert: func() string {
-				if slaCompliance >= slaTarget {
-					return "success"
-				}
-				return "warning"
-			}(),
-		},
-		{
-			ID:          "overdue-tickets",
-			Title:       "超时工单",
-			Value:       float64(overdueTickets),
-			Unit:        "个",
-			Color:       "#ef4444",
-			Trend:       "up",
-			Change:      3,
-			ChangeType:  "increase",
-			Description: "SLA违规工单",
-			Alert:       "error",
-		},
-	}, nil
+	newMetric := func(id, title, unit, color, description string, value, change float64, comparable bool) KPIMetricData {
+		trend, changeType := kpiTrend(change, comparable)
+		return KPIMetricData{
+			ID:          id,
+			Title:       title,
+			Value:       value,
+			Unit:        unit,
+			Color:       color,
+			Trend:       trend,
+			Change:      change,
+			ChangeType:  changeType,
+			Description: description,
+			Comparable:  comparable,
+			Scope:       viewer.scopeKey(),
+		}
+	}
+
+	mTotal := newMetric("total-tickets", "总工单数", "个", "#3b82f6", "范围内全部未删除工单", float64(totalTickets), totalChange, totalComparable)
+	mPending := newMetric("pending-tickets", "待处理工单", "个", "#f59e0b", "当前待处理存量", float64(pendingTickets), 0, false)
+	if pendingTickets > 200 {
+		mPending.Alert = "warning"
+	}
+	mInProgress := newMetric("in-progress-tickets", "处理中工单", "个", "#06b6d4", "当前处理中存量", float64(inProgressTickets), 0, false)
+	mCompleted := newMetric("completed-tickets", "已完成工单", "个", "#10b981", "本月完成", float64(completedTickets), completedChange, completedComparable)
+	mAvgResponse := newMetric("avg-first-response", "平均首次响应时间", "小时", "#8b5cf6", "首次响应平均时长", avgFirstResponse, avgFirstResponseChange, avgFirstResponseComparable)
+	mAvgResponse.Target = 4
+	mAvgResolution := newMetric("avg-resolution", "平均解决时间", "小时", "#ec4899", "端到端平均时长", avgResolution, avgResolutionChange, avgResolutionComparable)
+	mAvgResolution.Target = 8
+	mSLA := newMetric("sla-compliance", "SLA达成率", "%", "#10b981", "本月服务水平达成率", slaCompliance, slaComplianceChange, slaComparable)
+	mSLA.Target = slaTarget
+	if slaCompliance >= slaTarget {
+		mSLA.Alert = "success"
+	} else {
+		mSLA.Alert = "warning"
+	}
+	// 超时工单是当前时点的存量，没有历史快照可对比，环比一律标注不可比。
+	mOverdue := newMetric("overdue-tickets", "超时工单", "个", "#ef4444", "SLA违规工单", float64(overdueTickets), 0, false)
+	mOverdue.Alert = "error"
+
+	return []KPIMetricData{mTotal, mPending, mInProgress, mCompleted, mAvgResponse, mAvgResolution, mSLA, mOverdue}, nil
+}
+
+// kpiDelta 计算计数的环比百分比；上期基线为空时返回 comparable=false，change 恒为 0。
+func kpiDelta(current, previous int) (float64, bool) {
+	if previous <= 0 {
+		return 0, false
+	}
+	return float64(current-previous) / float64(previous) * 100, true
+}
+
+// kpiDeltaRatio 同上，用于时长均值；上期均值为 0 说明该窗口没有样本。
+func kpiDeltaRatio(current, previous float64) (float64, bool) {
+	if previous <= 0 {
+		return 0, false
+	}
+	return math.Round((current-previous)/previous*1000) / 10, true
+}
+
+// kpiTrend 由真实变化值推导箭头与变化类型，不可比时返回 stable。
+func kpiTrend(change float64, comparable bool) (trend, changeType string) {
+	if !comparable || change == 0 {
+		return "stable", "stable"
+	}
+	if change > 0 {
+		return "up", "increase"
+	}
+	return "down", "decrease"
+}
+
+// unionTicketIDs 合并两组工单 ID 并去重，用于 SLA 违规并集计数。
+func unionTicketIDs(groups ...[]int) []int {
+	seen := make(map[int]struct{})
+	out := make([]int, 0)
+	for _, group := range groups {
+		for _, id := range group {
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			out = append(out, id)
+		}
+	}
+	return out
 }
 
 // GetTicketTrend 获取工单趋势数据（公开方法，支持自定义天数）

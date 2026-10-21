@@ -31,7 +31,7 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		tickets.POST("/export", middleware.RequirePermission("ticket", "export"), config.TicketHandler.ExportTickets)
 		tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), config.TicketHandler.BatchDeleteTickets)
 		if config.TicketWorkflowHandler != nil {
-			tickets.GET("/cc/my", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.ListMyCCRecords)
+			tickets.GET("/cc/my", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.ListMyCCRecords)
 		}
 
 		// 工单模板
@@ -237,22 +237,25 @@ func SetupTicketRoutes(tenant *gin.RouterGroup, config *RouterConfig) {
 		}
 
 		// 工单流转工作流
+		// 这些路由的动作对象是某张工单，不是流程定义；workflow:read/write 在权限目录里的
+		// 语义是流程定义管理（含 /bpmn/ai/templates 发布），一线角色不持它，实测挂这里会让
+		// agent/manager 整条工单处理链路 403，故统一改用 ticket:* 动作码。
 		if config.TicketWorkflowHandler != nil {
-			tickets.POST("/workflow/accept", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.AcceptTicket)
-			tickets.POST("/workflow/reject", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.RejectTicket)
-			tickets.POST("/workflow/withdraw", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.WithdrawTicket)
-			tickets.POST("/workflow/forward", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ForwardTicket)
-			tickets.POST("/workflow/cc", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.CCTicket)
-			tickets.POST("/workflow/approve", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ApproveTicket)
-			tickets.POST("/workflow/resolve", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ResolveTicket)
-			tickets.POST("/workflow/close", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.CloseTicket)
-			tickets.POST("/workflow/reopen", middleware.RequirePermission("workflow", "write"), config.TicketWorkflowHandler.ReopenTicket)
-			tickets.GET("/:id/cc", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.ListTicketCCRecords)
-			tickets.GET("/:id/workflow/state", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowState)
+			tickets.POST("/workflow/accept", middleware.RequirePermission("ticket", "assign"), config.TicketWorkflowHandler.AcceptTicket)
+			tickets.POST("/workflow/reject", middleware.RequirePermission("ticket", "approve"), config.TicketWorkflowHandler.RejectTicket)
+			tickets.POST("/workflow/withdraw", middleware.RequirePermission("ticket", "update"), config.TicketWorkflowHandler.WithdrawTicket)
+			tickets.POST("/workflow/forward", middleware.RequirePermission("ticket", "assign"), config.TicketWorkflowHandler.ForwardTicket)
+			tickets.POST("/workflow/cc", middleware.RequirePermission("ticket", "assign"), config.TicketWorkflowHandler.CCTicket)
+			tickets.POST("/workflow/approve", middleware.RequirePermission("ticket", "approve"), config.TicketWorkflowHandler.ApproveTicket)
+			tickets.POST("/workflow/resolve", middleware.RequirePermission("ticket", "resolve"), config.TicketWorkflowHandler.ResolveTicket)
+			tickets.POST("/workflow/close", middleware.RequirePermission("ticket", "close"), config.TicketWorkflowHandler.CloseTicket)
+			tickets.POST("/workflow/reopen", middleware.RequirePermission("ticket", "close"), config.TicketWorkflowHandler.ReopenTicket)
+			tickets.GET("/:id/cc", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.ListTicketCCRecords)
+			tickets.GET("/:id/workflow/state", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.GetTicketWorkflowState)
 			// 工单详情体验增强：V2 聚合 BPMN 真实节点状态（当前/下一/历史）。
-			tickets.GET("/:id/workflow/state-v2", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowStateV2)
-			tickets.GET("/:id/workflow-history", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
-			tickets.GET("/:id/workflow_records", middleware.RequirePermission("workflow", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
+			tickets.GET("/:id/workflow/state-v2", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.GetTicketWorkflowStateV2)
+			tickets.GET("/:id/workflow-history", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
+			tickets.GET("/:id/workflow_records", middleware.RequirePermission("ticket", "read"), config.TicketWorkflowHandler.GetTicketWorkflowHistory)
 		}
 
 		// 工单自动化规则

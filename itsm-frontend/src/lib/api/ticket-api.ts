@@ -39,7 +39,10 @@ export const isTicketType = (value: string): value is TicketType =>
 /** 工单来源；后端 TicketResponse 不返回该字段，仅前端筛选/展示使用 */
 export type TicketSource = 'web' | 'email' | 'phone' | 'chat' | 'api' | 'mobile';
 
-/** 对应后端 dto.UserBasicInfo */
+/**
+ * 用户对象形状。工单接口已不再返回该结构（改用 requesterName/assigneeName 投影），
+ * 仍被 incident/change/service-request 的旧声明引用。
+ */
 export interface UserBasicInfo {
   id: number;
   username: string;
@@ -71,8 +74,9 @@ export interface Ticket {
   version: number;
   createdAt: string;
   updatedAt: string;
-  requester?: UserBasicInfo;
-  assignee?: UserBasicInfo;
+  /** 报障人/处理人显示名，由服务端按当前租户投影；未命中时前端回退显示用户 ID */
+  requesterName?: string;
+  assigneeName?: string;
   resolution?: string;
   resolutionCategory?: string;
   resolvedAt?: string;
@@ -285,9 +289,7 @@ export interface ListTicketCCRecordsResponse {
 
 export class TicketApi {
   // Get ticket list
-  static async getTickets(
-    params?: GetTicketsParams
-  ): Promise<TicketListResponse> {
+  static async getTickets(params?: GetTicketsParams): Promise<TicketListResponse> {
     return handleApiRequest(httpClient.get<TicketListResponse>('/api/v1/tickets', params), {
       errorMessage: 'Failed to fetch tickets',
       silent: true,
@@ -314,10 +316,13 @@ export class TicketApi {
   // AI-Native：工单→配置项反向查询（受影响配置项）
   // 对应后端 GET /api/v1/tickets/:id/configuration-items
   static async getTicketConfigurationItems(id: number): Promise<TicketConfigurationItem[]> {
-    return handleApiRequest(httpClient.get<TicketConfigurationItem[]>(`/api/v1/tickets/${id}/configuration-items`), {
-      errorMessage: 'Failed to fetch ticket configuration items',
-      silent: true,
-    });
+    return handleApiRequest(
+      httpClient.get<TicketConfigurationItem[]>(`/api/v1/tickets/${id}/configuration-items`),
+      {
+        errorMessage: 'Failed to fetch ticket configuration items',
+        silent: true,
+      }
+    );
   }
 
   // Update ticket status
@@ -411,9 +416,7 @@ export class TicketApi {
 
   // Get subtasks (child tickets)
   static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
-    const response = await httpClient.get<Ticket[]>(
-      `/api/v1/tickets/${parentTicketId}/subtasks`
-    );
+    const response = await httpClient.get<Ticket[]>(`/api/v1/tickets/${parentTicketId}/subtasks`);
     return response ?? [];
   }
 
@@ -785,23 +788,25 @@ export class TicketApi {
   }
 
   // Get ticket templates
-  static async getTemplates(params?: {
-    page?: number;
-    pageSize?: number;
-    category?: string;
-  }): Promise<{
+  // 后端列表不分页也不支持 category 过滤（信封只有 items + total），
+  // 因此这里不声明任何分页/过滤参数——发送过去只会被忽略。
+  static async getTemplates(): Promise<{
     items: Array<{
       id: number;
       name: string;
       description: string;
       category: string;
-      content: Record<string, unknown>;
+      priority: string;
+      fields?: Array<Record<string, unknown>>;
+      formFields: Record<string, unknown>;
+      workflowSteps?: Array<Record<string, unknown>>;
+      isActive: boolean;
       createdAt: string;
       updatedAt: string;
     }>;
     total: number;
   }> {
-    return httpClient.get('/api/v1/tickets/templates', params);
+    return httpClient.get('/api/v1/tickets/templates');
   }
 
   static async getTemplate(id: number | string): Promise<{
@@ -856,11 +861,13 @@ export class TicketApi {
     return httpClient.delete(`/api/v1/tickets/templates/${id}`);
   }
 
+  // Copy ticket template（后端按源模板整份复制，name 省略时使用「原名 - 副本」）
+  static async copyTemplate(id: number | string, name?: string): Promise<unknown> {
+    return httpClient.post(`/api/v1/tickets/templates/${id}/copy`, name ? { name } : {});
+  }
+
   // Update template status
-  static async updateTemplateStatus(
-    id: number | string,
-    isActive: boolean
-  ): Promise<unknown> {
+  static async updateTemplateStatus(id: number | string, isActive: boolean): Promise<unknown> {
     return httpClient.patch(`/api/v1/tickets/templates/${id}/status`, { isActive });
   }
 

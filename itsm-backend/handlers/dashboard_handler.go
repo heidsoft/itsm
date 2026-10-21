@@ -52,6 +52,23 @@ type KPIMetric struct {
 	Change      float64 `json:"change"`     // 变化百分比
 	ChangeType  string  `json:"changeType"` // increase, decrease, stable
 	Description string  `json:"description"`
+	// Comparable=false 表示没有可比的上期基线，Change 恒为 0，前端不渲染环比。
+	Comparable bool `json:"comparable"`
+	// Scope 是这组指标的统计范围：tenant = 全租户，own = 本人创建或受理。
+	Scope string `json:"scope"`
+}
+
+// dashboardViewer 从认证上下文取工作台读取者身份。
+//
+// KPI 里的工单类指标按读取者的行级范围统计，与 /tickets 列表、/tickets/stats 用同一规则
+// （datascope.ForTicketReader）；此前这些端点只取租户，坐席的工作台数字是租户全量。
+// user_id 缺失时 UserID 为 0，非管理角色会被收窄为空集，不做租户全量兜底。
+func dashboardViewer(c *gin.Context) service.DashboardViewer {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		userID = 0
+	}
+	return service.DashboardViewer{UserID: userID, Role: c.GetString("role")}
 }
 
 // TicketTrendData 工单趋势数据
@@ -174,7 +191,7 @@ func (h *DashboardHandler) GetOverview(c *gin.Context) {
 	}
 
 	// 从数据库查询真实数据
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取Dashboard数据失败")
@@ -229,6 +246,8 @@ func convertKPIMetrics(metrics []service.KPIMetricData) []KPIMetric {
 			Change:      m.Change,
 			ChangeType:  m.ChangeType,
 			Description: m.Description,
+			Comparable:  m.Comparable,
+			Scope:       m.Scope,
 		}
 	}
 	return result
@@ -373,7 +392,7 @@ func (h *DashboardHandler) GetKPIMetrics(c *gin.Context) {
 		return
 	}
 
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get dashboard overview", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取KPI指标失败")
@@ -434,7 +453,7 @@ func (h *DashboardHandler) GetIncidentDistribution(c *gin.Context) {
 		return
 	}
 
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get incident distribution", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取事件分布失败")
@@ -461,7 +480,7 @@ func (h *DashboardHandler) GetSLAData(c *gin.Context) {
 		return
 	}
 
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get SLA data", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取SLA数据失败")
@@ -495,7 +514,7 @@ func (h *DashboardHandler) GetSatisfactionData(c *gin.Context) {
 		months = 4
 	}
 
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get satisfaction data", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取满意度数据失败")
@@ -604,7 +623,7 @@ func (h *DashboardHandler) GetRecentActivities(c *gin.Context) {
 		limit = 10
 	}
 
-	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID)
+	overviewData, err := h.dashboardService.GetDashboardOverview(c.Request.Context(), tenantID, dashboardViewer(c))
 	if err != nil {
 		h.logger.Errorw("Failed to get recent activities", "error", err)
 		common.Fail(c, common.InternalErrorCode, "获取最近活动失败")
