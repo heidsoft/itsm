@@ -2443,6 +2443,45 @@ cd itsm-backend && go test -count=1 ./service/marketplace/ ./handlers/marketplac
 去掉卸载后的运行态复查 → 残留用例转红；删掉 handler 的「未就绪」分支 → 用例转红并暴露
 旧行为正是 `500 {"code":5001,"message":"安装组件失败"}`。
 
+### 1.65 入站回调去重收口：飞书的重放防护其实没接线（2026-10-22，行为变更：回调去重 + 失败可重投）
+
+飞书 webhook 的去重一直用 Handler 私有的 `map[string]time.Time`，而 `connector.InboundDedup`
+（持久化到 `connector_inbound_dedup` 表）虽然被 `SetInboundDedup` 注入，**从未被读取过**——
+与健康面、密钥轮换同一个病：能力写了、没接线。企微/钉钉早已用持久化版本，飞书是唯一例外。
+
+后果：进程重启后 nonce 表清零，多副本部署时各存一份，同一事件会被重复处理；而飞书的
+`task_event` 是全仓唯一会真正改写业务数据的入站路径（同步任务），重复执行就是重复建/改任务。
+
+顺带发现两处配套缺陷：
+
+| 缺陷 | 变更前 | 变更后 |
+|---|---|---|
+| 过期行覆盖 | schema 注释承诺「`expires_at` 后允许覆盖」，但唯一约束不会随时间消失，只能靠 `CleanupExpired` —— 而它**零生产调用点**（只有单测调）。清理一旦停摆，同一 `event_id` 永久判重复 | 命中唯一约束时先删掉已过期的同一行再重试一次；不依赖后台任务健康度 |
+| 表只增不减 | `CleanupExpired` 无调用方 | 后台任务每 10 分钟清理（`connector-inbound-dedup-cleanup`） |
+| 失败重投丢失 | 登记行后若业务处理失败，行仍在 → 平台重投被判「重复」直接 200，事件永久丢失（平台看到的是重复，不会再来第三次） | 新增 `InboundDedup.Forget`：处理失败释放该行再返回 `5xx`，平台重投能重新接管 |
+
+**现在飞书回调的语义**：验签 → ±5 分钟时间窗 → `(tenant_id, "feishu", timestamp:nonce)`
+登记去重（持久化）→ 处理 → 成功写 `ok`/`ignored`，失败释放。去重存储不可用时 `500`
+fail-closed（放过去重等于允许同一事件被二次执行）。
+
+**集成方影响**：飞书 webhook 在去重存储不可用时从「静默放行」变为 `500`——这是刻意的，
+飞书会重试。去重行为对外不可见（重复请求仍然返回成功响应，只是不重复执行业务）。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./connector/ ./handlers/feishu/ ./router/
+```
+
+覆盖：跨进程重启仍判重复（新 Handler + 新去重器、共享同一 DB——内存 map 做不到这一点）、
+租户隔离、失败释放后重投可重新接管、`response_status` 从 `processing` 变为 `ok`、
+过期行在清理任务没跑过时也能被覆盖（旧实现必然判重复）。
+
+负证明：删掉 `inboundDedup` 分支退回内存 map → 三个持久化用例全部转红
+（"persistent dedup must survive a process restart; the in-memory map cannot"）；
+去掉过期覆盖分支 → 过期用例转红。既有 `router` 安全契约（同一 nonce 第二次必须 403）
+保持通过——去重仍在 URL Verification 之前，所有回调（含探活）都纳入一次性 nonce。
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -16,11 +16,18 @@ import (
 func TestConsumeWebhookNonceScopesReplayByTenant(t *testing.T) {
 	handler := NewHandler(nil, nil, nil, zap.NewNop().Sugar())
 	timestamp := fmt.Sprintf("%d", time.Now().Unix())
-	require.True(t, handler.consumeWebhookNonce(1, timestamp, "same-nonce"))
-	require.False(t, handler.consumeWebhookNonce(1, timestamp, "same-nonce"))
-	require.True(t, handler.consumeWebhookNonce(2, timestamp, "same-nonce"))
-	require.False(t, handler.consumeWebhookNonce(0, timestamp, "nonce"))
-	require.False(t, handler.consumeWebhookNonce(1, "invalid", "nonce"))
+	payload := []byte(`{"type":"event_callback"}`)
+	ctx := context.Background()
+
+	require.NoError(t, handler.consumeWebhookNonce(ctx, 1, timestamp, "same-nonce", payload))
+	require.ErrorIs(t, handler.consumeWebhookNonce(ctx, 1, timestamp, "same-nonce", payload), errWebhookReplay)
+	// 租户隔离：同 nonce 在另一租户是首次出现
+	require.NoError(t, handler.consumeWebhookNonce(ctx, 2, timestamp, "same-nonce", payload))
+	require.ErrorIs(t, handler.consumeWebhookNonce(ctx, 0, timestamp, "nonce", payload), errWebhookReplay)
+	require.ErrorIs(t, handler.consumeWebhookNonce(ctx, 1, "invalid", "nonce", payload), errWebhookReplay)
+	// 超出 ±5 分钟窗口按重放处理（不是服务故障）
+	stale := fmt.Sprintf("%d", time.Now().Add(-10*time.Minute).Unix())
+	require.ErrorIs(t, handler.consumeWebhookNonce(ctx, 1, stale, "fresh-nonce", payload), errWebhookReplay)
 }
 
 func TestCallbackInstanceIDMustResolveExactlyOneTenant(t *testing.T) {

@@ -1,7 +1,9 @@
 package feishu
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -202,8 +204,20 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		common.Fail(ctx, common.ForbiddenCode, "Invalid signature")
 		return
 	}
-	if !h.consumeWebhookNonce(tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"]) {
-		common.Fail(ctx, common.ForbiddenCode, "Replay detected")
+	// 先去重再处理 URL Verification：飞书每次请求都会生成新的 timestamp+nonce，
+	// 重复保存配置不会撞 nonce；而把所有回调（含探活）都纳入一次性 nonce，
+	// 才能保证「同一请求重放一律拒绝」这条安全契约没有例外口子。
+	if err := h.consumeWebhookNonce(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], rawData); err != nil {
+		if errors.Is(err, errWebhookReplay) {
+			h.logger.Warnw("Rejected replayed Feishu webhook",
+				"tenant_id", tenantID, "timestamp", headers["X-Lark-Request-Timestamp"])
+			common.Fail(ctx, common.ForbiddenCode, "Replay detected")
+			return
+		}
+		// 去重存储不可用时 fail-closed：放过去重等于允许平台重投的同一事件
+		// 被二次执行（task_event 会重复建/改飞书任务）。
+		h.logger.Errorw("Feishu webhook dedup unavailable", "tenant_id", tenantID, "err", err)
+		common.Fail(ctx, common.InternalErrorCode, "去重校验失败，请稍后重试")
 		return
 	}
 	if handled := h.handleURLVerification(ctx, fc, rawData); handled {
@@ -221,6 +235,7 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		eventType := msg.Content
 		taskData, ok := msg.Extras["task_data"].(map[string]interface{})
 		if !ok {
+			h.forgetWebhookEvent(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"])
 			common.Fail(ctx, common.ParamErrorCode, "Invalid task event data")
 			return
 		}
@@ -228,34 +243,64 @@ func (h *Handler) Webhook(ctx *gin.Context) {
 		resp, err := h.syncService.HandleTaskEvent(ctx.Request.Context(), tenantID, fc, eventType, taskData)
 		if err != nil {
 			h.logger.Errorw("Failed to handle Feishu task event", "event_type", eventType, "err", err)
+			// 处理失败必须释放去重行：飞书会重投同一事件，若行还在，
+			// 重投会被判「重复」直接 200 掉，事件就此丢失。
+			h.forgetWebhookEvent(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"])
 			common.Fail(ctx, common.InternalErrorCode, "Failed to handle event")
 			return
 		}
+		h.markWebhookProcessed(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], "ok")
 		common.Success(ctx, resp)
 		return
 	}
 
+	h.markWebhookProcessed(ctx.Request.Context(), tenantID, headers["X-Lark-Request-Timestamp"], headers["X-Lark-Request-Nonce"], "ignored")
 	common.Success(ctx, &dto.FeishuWebhookResponse{EventType: msg.Type, Action: "ignored"})
 }
 
-func (h *Handler) consumeWebhookNonce(tenantID int, timestamp, nonce string) bool {
+// errWebhookReplay 表示时间戳越界或 nonce 已消费：这是攻击/重投信号，不是服务故障。
+var errWebhookReplay = errors.New("feishu webhook replay")
+
+// consumeWebhookNonce 做两件事：校验时间戳窗口，并消费 nonce（一次性）。
+//
+// 去重优先走持久化表（connector.InboundDedup）：内存 map 在重启后清空、多副本
+// 各存一份，而飞书回调是全仓唯一会真正改写业务数据（task_event → 同步任务）的
+// 入站路径，重复执行的代价是重复建/改任务。注入缺失时才回退内存 map。
+//
+// 返回 errWebhookReplay 表示拒绝；其他 error 表示去重存储不可用（调用方 fail-closed）。
+func (h *Handler) consumeWebhookNonce(ctx context.Context, tenantID int, timestamp, nonce string, payload []byte) error {
 	if tenantID <= 0 || timestamp == "" || nonce == "" {
-		return false
+		return errWebhookReplay
 	}
 	unixTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
 	if err != nil {
-		return false
+		return errWebhookReplay
 	}
 	now := time.Now()
 	requestTime := time.Unix(unixTimestamp, 0)
 	if requestTime.Before(now.Add(-5*time.Minute)) || requestTime.After(now.Add(5*time.Minute)) {
-		return false
+		return errWebhookReplay
 	}
 
 	// A nonce is single-use within a tenant and timestamp. The signature is
 	// deliberately excluded: including it would allow the same nonce to be
 	// consumed repeatedly by changing the body and recomputing the signature.
-	key := fmt.Sprintf("%d:%s:%s", tenantID, timestamp, nonce)
+	eventID := fmt.Sprintf("%s:%s", timestamp, nonce)
+	if h.inboundDedup != nil {
+		// 持久化表按 (tenant_id, connector_name, event_id) 唯一，租户隔离在列里，
+		// event_id 不需要再嵌租户号。
+		seen, err := h.inboundDedup.HandleBeforeProcess(ctx, tenantID, "feishu", eventID, payload)
+		if err != nil {
+			return fmt.Errorf("feishu inbound dedup: %w", err)
+		}
+		if seen {
+			return errWebhookReplay
+		}
+		return nil
+	}
+
+	// 内存回退：退化成单进程语义，键必须自带租户号（没有表来隔离）。
+	memKey := fmt.Sprintf("%d:%s", tenantID, eventID)
 	h.replayMu.Lock()
 	defer h.replayMu.Unlock()
 	for k, expires := range h.replayed {
@@ -263,11 +308,36 @@ func (h *Handler) consumeWebhookNonce(tenantID int, timestamp, nonce string) boo
 			delete(h.replayed, k)
 		}
 	}
-	if _, exists := h.replayed[key]; exists {
-		return false
+	if _, exists := h.replayed[memKey]; exists {
+		return errWebhookReplay
 	}
-	h.replayed[key] = now.Add(5 * time.Minute)
-	return true
+	h.replayed[memKey] = now.Add(5 * time.Minute)
+	return nil
+}
+
+// markWebhookProcessed 把本次事件的处置结果写回去重行，供运维判断
+// 「飞书重投了但我这边到底处理成功了没有」。
+func (h *Handler) markWebhookProcessed(ctx context.Context, tenantID int, timestamp, nonce, status string) {
+	if h.inboundDedup == nil {
+		return
+	}
+	key := fmt.Sprintf("%s:%s", timestamp, nonce)
+	if err := h.inboundDedup.MarkProcessed(ctx, tenantID, "feishu", key, status); err != nil {
+		h.logger.Warnw("Failed to mark Feishu webhook processing status",
+			"tenant_id", tenantID, "status", status, "err", err)
+	}
+}
+
+// forgetWebhookEvent 释放去重行，让平台重投能重新处理（见 InboundDedup.Forget）。
+func (h *Handler) forgetWebhookEvent(ctx context.Context, tenantID int, timestamp, nonce string) {
+	if h.inboundDedup == nil {
+		return
+	}
+	key := fmt.Sprintf("%s:%s", timestamp, nonce)
+	if err := h.inboundDedup.Forget(ctx, tenantID, "feishu", key); err != nil {
+		h.logger.Warnw("Failed to release Feishu webhook dedup row",
+			"tenant_id", tenantID, "err", err)
+	}
 }
 
 func (h *Handler) handleURLVerification(ctx *gin.Context, fc *feishuConn.Feishu, rawData []byte) bool {

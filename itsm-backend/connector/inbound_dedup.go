@@ -41,7 +41,18 @@ func NewInboundDeduper(client *ent.Client, ttl time.Duration) *InboundDedup {
 //   - 返回 (_, err)     → DB 错误，handler 应 fail-closed
 //
 // 为避免并发场景下"同时进入都看到不存在"，插入失败 UNIQUE 约束时返回 ErrDuplicateInbound。
+//
+// 过期行可被覆盖：schema 注释承诺「expires_at 后允许覆盖」，但唯一约束不会因为时间流逝
+// 自己消失——只有清理任务真的跑过才腾出位置。若清理任务停摆（它曾经根本没有生产调用点），
+// 同一个 event_id 会被永久判为重复。这里在命中约束时顺手删掉已过期的同一行再重试一次，
+// 让承诺不依赖后台任务的健康度。
 func (d *InboundDedup) HandleBeforeProcess(ctx context.Context, tenantID int, connectorName, eventID string, payload []byte) (bool, error) {
+	return d.register(ctx, tenantID, connectorName, eventID, payload, true)
+}
+
+// register 是 HandleBeforeProcess 的实现。allowExpiredOverride 只允许为 true 一次，
+// 重试路径传 false，避免「删除-插入」在并发下反复循环。
+func (d *InboundDedup) register(ctx context.Context, tenantID int, connectorName, eventID string, payload []byte, allowExpiredOverride bool) (bool, error) {
 	if tenantID <= 0 || connectorName == "" || eventID == "" {
 		return false, fmt.Errorf("inbound dedup: missing required fields")
 	}
@@ -62,10 +73,29 @@ func (d *InboundDedup) HandleBeforeProcess(ctx context.Context, tenantID int, co
 	if err == nil {
 		return false, nil
 	}
-	if ent.IsConstraintError(err) {
+	if !ent.IsConstraintError(err) {
+		return false, fmt.Errorf("inbound dedup: insert: %w", err)
+	}
+	if !allowExpiredOverride {
 		return true, nil
 	}
-	return false, fmt.Errorf("inbound dedup: insert: %w", err)
+	// 命中 (tenant, connector, event_id) 唯一约束：先判断是不是「过期但没被清理」。
+	deleted, delErr := d.client.ConnectorInboundDedup.Delete().
+		Where(
+			connectorinbounddedup.TenantIDEQ(tenantID),
+			connectorinbounddedup.ConnectorNameEQ(connectorName),
+			connectorinbounddedup.EventIDEQ(eventID),
+			connectorinbounddedup.ExpiresAtLT(d.now()),
+		).
+		Exec(ctx)
+	if delErr != nil {
+		return false, fmt.Errorf("inbound dedup: purge expired: %w", delErr)
+	}
+	if deleted == 0 {
+		// 未过期 → 真重复。
+		return true, nil
+	}
+	return d.register(ctx, tenantID, connectorName, eventID, payload, false)
 }
 
 // MarkProcessed 把事件结果状态写回（"ok" / "ignored" / "rejected"），用于运维排障。
@@ -84,6 +114,28 @@ func (d *InboundDedup) MarkProcessed(ctx context.Context, tenantID int, connecto
 		Save(ctx)
 	if err != nil && !ent.IsNotFound(err) {
 		return fmt.Errorf("inbound dedup: mark processed: %w", err)
+	}
+	return nil
+}
+
+// Forget 删除一条去重行，用于「本次处理失败、允许平台重投重新接管」的场景。
+//
+// HandleBeforeProcess 先登记后处理，若不回滚，平台在 TTL 内的重投会被判重复——
+// 一次瞬时失败（DB 抖动、下游超时）就让这条事件永久丢失，而平台那边看到的是
+// 200/重复，不会再有下一次重试。
+func (d *InboundDedup) Forget(ctx context.Context, tenantID int, connectorName, eventID string) error {
+	if d.client == nil {
+		return nil
+	}
+	_, err := d.client.ConnectorInboundDedup.Delete().
+		Where(
+			connectorinbounddedup.TenantIDEQ(tenantID),
+			connectorinbounddedup.ConnectorNameEQ(connectorName),
+			connectorinbounddedup.EventIDEQ(eventID),
+		).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("inbound dedup: forget: %w", err)
 	}
 	return nil
 }

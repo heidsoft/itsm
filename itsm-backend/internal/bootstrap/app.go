@@ -1835,6 +1835,34 @@ func (app *Application) startBackgroundTasks(ctx context.Context) {
 		}
 	})
 
+	// 连接器入站去重表的过期清理。
+	//
+	// InboundDedup.CleanupExpired 此前**没有任何生产调用点**（只有单测调），
+	// 表只增不减：每条 IM 回调一行、永不过期删除，长期运行会持续膨胀。
+	// HandleBeforeProcess 已能覆盖过期行，这里补周期清理，把行数压在窗口量级。
+	safeGo("connector-inbound-dedup-cleanup", func() {
+		dedup := connector.NewInboundDeduper(app.DBClient, 5*time.Minute)
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				sysCtx := tenantctx.SystemContext(ctx, "bootstrap:connector-inbound-dedup-cleanup",
+					"purge expired connector inbound dedup rows across all tenants")
+				removed, err := dedup.CleanupExpired(sysCtx)
+				if err != nil {
+					app.Logger.Warnw("connector inbound dedup cleanup failed", "error", err)
+					continue
+				}
+				if removed > 0 {
+					app.Logger.Infow("connector inbound dedup rows purged", "removed", removed)
+				}
+			}
+		}
+	})
+
 	// Timer Event scheduler: in-memory wheel with DB-backed recovery.
 	// TimerEventHandler bridges timer firing to BPMN process engine.
 	safeGo("timer-scheduler", func() {

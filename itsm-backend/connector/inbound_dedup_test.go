@@ -105,3 +105,41 @@ func TestInboundDedupMarkProcessedAndLookup(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, ok)
 }
+
+// TestInboundDedupOverridesExpiredRowWithoutCleanup 锁住 schema 注释承诺的语义：
+// 「expires_at 后允许覆盖」。唯一约束不会随时间自己消失，旧实现完全依赖
+// CleanupExpired —— 而它在生产里零调用点（只有测试调），于是同一个 event_id
+// 会被永久判重复。现在命中约束时会顺手删掉已过期的同一行再重试。
+func TestInboundDedupOverridesExpiredRowWithoutCleanup(t *testing.T) {
+	c := newDedupClient(t)
+	defer c.Close()
+	dedup := NewInboundDeduper(c, 5*time.Minute)
+	ctx := context.Background()
+
+	t0 := time.Now()
+	dedup.now = func() time.Time { return t0 }
+
+	seen, err := dedup.HandleBeforeProcess(ctx, 1, "feishu", "evt-exp", []byte("body"))
+	require.NoError(t, err)
+	require.False(t, seen)
+
+	// TTL 内重复 → 真重复
+	seen, err = dedup.HandleBeforeProcess(ctx, 1, "feishu", "evt-exp", []byte("body"))
+	require.NoError(t, err)
+	require.True(t, seen)
+
+	// 时间推进到 TTL 之后，且**没有**任何清理任务跑过
+	dedup.now = func() time.Time { return t0.Add(10 * time.Minute) }
+	seen, err = dedup.HandleBeforeProcess(ctx, 1, "feishu", "evt-exp", []byte("body"))
+	require.NoError(t, err)
+	require.False(t, seen, "expired row must be overridable even when cleanup never ran")
+
+	// 覆盖后仍是普通的一行，且未过期时再次重复
+	rows, err := c.ConnectorInboundDedup.Query().All(ctx)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+
+	seen, err = dedup.HandleBeforeProcess(ctx, 1, "feishu", "evt-exp", []byte("body"))
+	require.NoError(t, err)
+	require.True(t, seen)
+}
