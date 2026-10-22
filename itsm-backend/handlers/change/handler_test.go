@@ -306,44 +306,14 @@ func (m *mockRepository) CreateApprovalRecord(ctx context.Context, r *ApprovalRe
 	return r, nil
 }
 
-func (m *mockRepository) UpdateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	// 与生产实现保持一致：只更新调用方传入的字段，其它列（如 ApproverID）
-	// 必须保留。直接覆盖 m.approvals[r.ID] = r 会丢失 ApproverID，导致
-	// 并发审批场景下后续请求读取记录时退化为 "user is not an approver"。
-	existing, ok := m.approvals[r.ID]
-	if !ok {
-		m.approvals[r.ID] = r
-		return r, nil
-	}
-	if r.Status != "" {
-		existing.Status = r.Status
-	}
-	if r.Comment != nil {
-		existing.Comment = r.Comment
-	}
-	if r.ApprovedAt != nil {
-		existing.ApprovedAt = r.ApprovedAt
-	}
-	if r.Levels != nil {
-		existing.Levels = r.Levels
-	}
-	if r.ApproverName != "" {
-		existing.ApproverName = r.ApproverName
-	}
-	return existing, nil
-}
-
 func (m *mockRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	// 阻断-1：必须返回深拷贝，否则调用方在 service.go:824 读取
-	// h.Status / h.ApproverID 时与 UpdateApprovalRecord 中的
-	// existing.Status = r.Status 写入存在数据竞争。生产实现的
+	// 阻断-1：必须返回深拷贝，否则调用方读取 h.Status / h.ApproverID 时
+	// 会与写路径修改同一行产生数据竞争。生产实现的
 	// EntRepository.GetApprovalHistory 走的是 Ent 的 SELECT 路径，
 	// 读到的也是 *ent.ApprovalRecord，但 Ent 自身的查询结果有独立副本，
-	// 不会与正在被 Update 修改的同一行共享可变状态。
+	// 不会与正在被修改的同一行共享可变状态。
 	var result []*ApprovalRecord
 	for _, a := range m.approvals {
 		if a.ChangeID == changeID {

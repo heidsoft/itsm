@@ -577,13 +577,6 @@ func (d *nopTxDriver) Close() error { return nil }
 
 func (d *nopTxDriver) Dialect() string { return d.drv.Dialect() }
 
-func (r *EntRepository) UpdateApprovalRecord(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
-	if r.approvalRecords == nil {
-		return nil, fmt.Errorf("change approval record repository not initialised")
-	}
-	return r.approvalRecords.Update(ctx, rec)
-}
-
 func (r *EntRepository) GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	if r.approvalRecords == nil {
 		return nil, fmt.Errorf("change approval record repository not initialised")

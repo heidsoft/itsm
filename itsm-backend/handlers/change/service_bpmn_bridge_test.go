@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -121,6 +122,13 @@ func createChangeBridgeProcessFixture(t *testing.T, client *ent.Client, tenantID
 		Save(ctx)
 	require.NoError(t, err)
 
+	// business_id 必须与 ProcessTriggerService 的装配一致：审批决定的审计行从
+	// 实例变量取 business_id 落库，缺了它 GetBPMNApprovalDecisions 的
+	// business_id 过滤就查不到任何决策（审批历史与会签求值双双落空）。
+	businessID := ""
+	if idx := strings.LastIndex(businessKey, ":"); idx >= 0 {
+		businessID = businessKey[idx+1:]
+	}
 	instance, err := client.ProcessInstance.Create().
 		SetProcessInstanceID("CHG-PI-" + keySuffix).
 		SetProcessDefinitionKey(def.Key).
@@ -129,6 +137,7 @@ func createChangeBridgeProcessFixture(t *testing.T, client *ent.Client, tenantID
 		SetStatus("running").
 		SetVariables(map[string]interface{}{
 			"business_type": "change",
+			"business_id":   businessID,
 			"business_key":  businessKey,
 		}).
 		SetTenantID(tenantID).

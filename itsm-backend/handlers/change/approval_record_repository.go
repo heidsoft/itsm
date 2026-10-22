@@ -3,7 +3,6 @@ package change
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"itsm-backend/database"
@@ -83,43 +82,6 @@ func (r *changeApprovalRecordRepository) CreateReturningTx(ctx context.Context, 
 		return nil, err
 	}
 	return rec, nil
-}
-
-// Update 条件更新审批记录。
-// 校验 RowsAffected == 1，否则返回冲突错误，避免幂等问题。
-func (r *changeApprovalRecordRepository) Update(ctx context.Context, rec *ApprovalRecord) (*ApprovalRecord, error) {
-	const query = `
-		UPDATE change_approvals
-		SET status = $1, comment = $2, approved_at = $3, updated_at = $4
-		WHERE id = $5 AND tenant_id = $6 AND status = 'pending'
-		RETURNING id, change_id, tenant_id, approver_id, status, comment, approved_at, created_at
-	`
-	return database.WithTenantTx(ctx, r.db, rec.TenantID, func(tx *sql.Tx) (*ApprovalRecord, error) {
-		var approvedAt sql.NullTime
-		now := time.Now()
-		err := tx.QueryRowContext(ctx, query,
-			rec.Status, rec.Comment, now, now, rec.ID, rec.TenantID,
-		).Scan(&rec.ID, &rec.ChangeID, &rec.TenantID, &rec.ApproverID, &rec.Status, &rec.Comment, &approvedAt, &rec.CreatedAt)
-		if err == nil {
-			if approvedAt.Valid {
-				rec.ApprovedAt = &approvedAt.Time
-			}
-			return rec, nil
-		}
-		if err != sql.ErrNoRows {
-			return nil, err
-		}
-		// 区分"不存在/跨租户"与"已处理"：读取必须使用同一 tenant-scoped Tx。
-		var curStatus string
-		_ = tx.QueryRowContext(ctx,
-			`SELECT status FROM change_approvals WHERE id = $1 AND tenant_id = $2`,
-			rec.ID, rec.TenantID,
-		).Scan(&curStatus)
-		if curStatus != "" {
-			return nil, fmt.Errorf("审批记录已处理（当前状态=%s），不可重复审批", curStatus)
-		}
-		return nil, fmt.Errorf("审批记录不存在或跨租户")
-	})
 }
 
 // ListByChange 返回某变更的全部审批记录（按 created_at 升序），

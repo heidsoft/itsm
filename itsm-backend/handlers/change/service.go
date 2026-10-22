@@ -557,69 +557,11 @@ func (s *Service) SubmitApproval(ctx context.Context, record *ApprovalRecord, te
 	return rec, nil
 }
 
-func (s *Service) ProcessApproval(ctx context.Context, recordID int, status string, comment *string, tenantID int) (*ApprovalRecord, error) {
-	// 1. Get existing record (we need to know what change it refers to)
-	// We might need a repo.GetApprovalRecord method, let's add it or use a workaround if it's missing in repo interface
-	// For now, I'll assume I can update by ID directly if the repository implementation allows it
-
-	rec := &ApprovalRecord{
-		ID:       recordID,
-		TenantID: tenantID,
-		Status:   status,
-		Comment:  comment,
-	}
-
-	res, err := s.repo.UpdateApprovalRecord(ctx, rec)
-	if err != nil {
-		return nil, err
-	}
-
-	// 2. Logic to check if all approvals are done
-	if status == "approved" {
-		if err := s.checkAndTransitionChange(ctx, res.ChangeID, tenantID); err != nil {
-			s.logger.Errorw("ProcessApproval: checkAndTransitionChange failed", "error", err, "change_id", res.ChangeID)
-		}
-	} else if status == "rejected" {
-		// If one rejects, the whole change is rejected?
-		c, err := s.repo.Get(ctx, res.ChangeID, tenantID)
-		if err != nil {
-			s.logger.Errorw("ProcessApproval: failed to get change on rejection", "error", err, "change_id", res.ChangeID)
-			return nil, fmt.Errorf("failed to get change: %w", err)
-		}
-		if c != nil {
-			// 通过状态机校验禁止非法转换（例如 cancelled → rejected 终态互跳）
-			target := "rejected"
-			if !service.IsValidChangeStatusTransition(c.Status, target, c.Type) {
-				s.logger.Warnw("ProcessApproval: skip invalid change status transition",
-					"change_id", res.ChangeID, "from", c.Status, "to", target)
-				return res, nil
-			}
-			// 事务化更新 change 为终态；提交成功后单独收口 pending chains（CloseChangeApprovalChains 内部使用 rawDB，*ent.Tx 不提供 ExecContext）
-			tx, txErr := s.entClient.Tx(ctx)
-			if txErr != nil {
-				return nil, fmt.Errorf("开启事务失败: %w", txErr)
-			}
-			defer tx.Rollback()
-
-			if _, updateErr := tx.Change.UpdateOneID(c.ID).
-				Where(change.TenantID(tenantID)).
-				SetStatus(change.Status(target)).
-				Save(ctx); updateErr != nil {
-				s.logger.Errorw("ProcessApproval: failed to update change status to rejected", "error", updateErr, "change_id", res.ChangeID)
-				return nil, fmt.Errorf("failed to update change status: %w", updateErr)
-			}
-			if commitErr := tx.Commit(); commitErr != nil {
-				return nil, fmt.Errorf("提交事务失败: %w", commitErr)
-			}
-			if closeErr := service.CloseChangeApprovalChains(ctx, res.ChangeID, tenantID); closeErr != nil {
-				s.logger.Errorw("ProcessApproval: 收口审批链失败（非致命，后续状态机兜底）",
-					"error", closeErr, "change_id", res.ChangeID, "tenant_id", tenantID)
-			}
-		}
-	}
-
-	return res, nil
-}
+// 审批决定的写路径唯一化为 TransitionStatus + BPMN 桥接。
+// 此前还有一个无路由的 ProcessApproval（legacy）：它先改 change_approvals、
+// 再单独改 changes.status、提交后再收口审批链，三段各自成事务且失败只记日志，
+// 会留下"审批记录已落定、变更状态未推进"的半写状态；同时绕过桥接，与流程
+// 权威状态分叉。2026-10-22 收敛删除，quorum 求值统一走 evaluateApprovalQuorum。
 
 func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenantID int) error {
 	chain, err := s.repo.GetApprovalChain(ctx, changeID, tenantID)
@@ -633,76 +575,11 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 		return err
 	}
 
-	// 按 level 聚合每层：审批人集合、已批准/已驳回、该层阈值（quorum）。
-	type levelAgg struct {
-		required    bool
-		threshold   int
-		approverIDs map[int]struct{}
-		approved    map[int]struct{}
-		rejected    bool
-	}
-	levels := map[int]*levelAgg{}
-	var order []int
-	for _, item := range chain {
-		agg, ok := levels[item.Level]
-		if !ok {
-			agg = &levelAgg{approverIDs: map[int]struct{}{}, approved: map[int]struct{}{}}
-			levels[item.Level] = agg
-			order = append(order, item.Level)
-		}
-		agg.approverIDs[item.ApproverID] = struct{}{}
-		if item.IsRequired {
-			agg.required = true
-		}
-		// 该层阈值：引擎写入的 threshold 优先；缺省按类型推导
-		// （parallel/all = 候选人数，serial/or = 1）。
-		if item.Threshold > 0 {
-			agg.threshold = item.Threshold
-		} else if item.ApprovalType == "parallel" || item.ApprovalType == "all" {
-			agg.threshold = len(agg.approverIDs)
-		} else {
-			agg.threshold = 1
-		}
-	}
-	// 标记历史决定（租户过滤由仓储保证）。
-	// 按 (approverID, level) 双重匹配——仅当该审批人确实属于该层级时，
-	// 其批准/驳回才计入该层 quorum，避免跨层互相串（一次性审批可满足多层，但绝不串层）。
-	for _, h := range history {
-		for _, lvl := range h.Levels {
-			agg, ok := levels[lvl]
-			if !ok {
-				continue
-			}
-			if _, ok := agg.approverIDs[h.ApproverID]; !ok {
-				continue
-			}
-			if h.Status == "approved" {
-				agg.approved[h.ApproverID] = struct{}{}
-			}
-			if h.Status == "rejected" {
-				agg.rejected = true
-			}
-		}
-	}
-
-	// 计算每层满意度
-	allRequiredSatisfied := true
-	anyRequiredRejected := false
-	hasRequired := false
-	for _, lvl := range order {
-		agg := levels[lvl]
-		if !agg.required {
-			continue
-		}
-		hasRequired = true
-		if agg.rejected {
-			anyRequiredRejected = true
-			break
-		}
-		if len(agg.approved) < agg.threshold {
-			allRequiredSatisfied = false
-		}
-	}
+	// 求值统一走 evaluateApprovalQuorum：与生产路径（TransitionStatus）共用
+	// 同一份会签/阈值语义，避免"测试里算 quorum、线上不算"的双实现漂移。
+	outcome := evaluateApprovalQuorum(chain, history)
+	allRequiredSatisfied := outcome.AllRequiredMet
+	anyRequiredRejected := outcome.Rejected
 
 	// 任一必需层被驳回 → 整体驳回
 	if anyRequiredRejected {
@@ -732,8 +609,9 @@ func (s *Service) checkAndTransitionChange(ctx context.Context, changeID, tenant
 		return nil
 	}
 
-	// 所有必需层均满足 → 整体批准（至少存在一个必需层）
-	if allRequiredSatisfied && hasRequired {
+	// 所有必需层均满足 → 整体批准。空链（未配置审批链）不在此处自动放行：
+	// 该 helper 只做"已有链"的复核，免审路径由状态机与业务门禁决定。
+	if allRequiredSatisfied && !outcome.ChainEmpty {
 		c, err := s.repo.Get(ctx, changeID, tenantID)
 		if err != nil {
 			return err
@@ -1020,15 +898,34 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 永久分叉。事务内任一步失败，defer Rollback 连同桥接写入一起撤销。
 	// entClient 为 nil 属纯 legacy/单测装配（与本文件 GetBPMNApprovalDecisions
 	// 防御点一致）：无桥接也无 ent 事务，状态 CAS 退回 repo 承担。
-	var tx *ent.Tx
+	//
+	// 事务句柄优先取仓储的 WorkflowTx（原生 *sql.Tx + 绑定 ent client）：
+	// 只有它能在同一事务里同时做 ent 写（桥接/状态）与原生 SQL 写
+	// （change_approval_chains 无 ent schema），终态收口才具备原子性。
+	// 仓储没有原生句柄时（mock/legacy 装配）退化为纯 ent 事务。
+	var tx *WorkflowTx
 	if s.entClient != nil {
-		var txErr error
-		tx, txErr = s.entClient.Tx(ctx)
-		if txErr != nil {
-			return nil, fmt.Errorf("开启事务失败: %w", txErr)
+		if starter, ok := s.repo.(workflowTxStarter); ok {
+			var txErr error
+			tx, txErr = starter.BeginWorkflowTx(ctx)
+			if txErr != nil {
+				return nil, fmt.Errorf("开启事务失败: %w", txErr)
+			}
+		} else {
+			entTx, txErr := s.entClient.Tx(ctx)
+			if txErr != nil {
+				return nil, fmt.Errorf("开启事务失败: %w", txErr)
+			}
+			tx = wrapEntTx(entTx)
 		}
 		defer tx.Rollback()
 	}
+
+	// approvalDecidedByBridge 标记本次审批是否被 BPMN 桥接真正消费（写成
+	// ProcessApprovalDecision 审计事实）。会签门禁只在这个前提下求值：
+	// 未绑定流程时审批决定不落库，任何"求值"都看不到这一票，强行按链判定
+	// 会把单级审批永久卡在 pending（见 api-reference「审批与状态流转」）。
+	approvalDecidedByBridge := false
 
 	// For approval actions, verify user is the approver
 	if targetStatus == "approved" || targetStatus == "rejected" {
@@ -1083,6 +980,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			if bridgeErr != nil {
 				return nil, fmt.Errorf("同步流程审批任务失败: %w", bridgeErr)
 			}
+			approvalDecidedByBridge = handled
 			if !handled {
 				s.logger.Infow("变更未绑定运行中流程，按审批链直接业务审批",
 					"change_id", id, "tenant_id", tenantID, "actor_user_id", userID)
@@ -1129,6 +1027,46 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 	// 审批决定已由 BPMN bridge 写入 ProcessApprovalDecision（不可变审计表），
 	// 无需再回写 legacy change_approvals 表。
 
+	// 会签/阈值门禁：批准必须由审批链求值决定，而不是"当前这一票"。
+	//
+	// 此前 /transition approved 在桥接完成后直接把状态 CAS 成 approved，会签
+	// （parallel/all）、N of M 阈值和多级链的语义只写在无路由的 legacy 入口里，
+	// 生产上等于"一个人批掉整单"（两人会签的变更，第一票即 approved）。
+	// 现在按链求值：
+	//   · 出现必需层驳回票 → 409（已被否决，不能再通过）
+	//   · 未达阈值 → 提交事务保留本次决策与流程推进，变更状态保持不变，
+	//     返回当前快照（调用方按"已记录、等待其他审批人"处理）
+	//   · 达阈值 → 继续走 approved 状态推进
+	// 求值读的是 tx.Client() 的决策表：本次审批刚由桥接写入同一事务，若读出
+	// 事务外连接会看不到这一票，导致最后一票永远无法达标。
+	if targetStatus == "approved" && tx != nil && approvalDecidedByBridge {
+		chain, chainErr := s.repo.GetApprovalChain(ctx, id, tenantID)
+		if chainErr != nil {
+			return nil, fmt.Errorf("failed to get approval chain: %w", chainErr)
+		}
+		decisions, decErr := s.bpmnApprovalDecisionsWithClient(ctx, tx.Client(), id, tenantID)
+		if decErr != nil {
+			return nil, fmt.Errorf("failed to get approval decisions: %w", decErr)
+		}
+		// 决策表不带层级，必须由审批链派生，否则 (approver, level) 计票落空。
+		applyChainLevels(chain, decisions)
+		outcome := evaluateApprovalQuorum(chain, decisions)
+		if outcome.Rejected {
+			return nil, fmt.Errorf("%w: 审批链已出现驳回票，不能再通过", ErrInvalidTransition)
+		}
+		if !outcome.ChainEmpty && !outcome.AllRequiredMet {
+			if commitErr := tx.Commit(); commitErr != nil {
+				return nil, fmt.Errorf("提交事务失败: %w", commitErr)
+			}
+			s.logger.Infow("TransitionStatus: 审批决策已记录，会签未集齐，状态保持不变",
+				"change_id", id, "tenant_id", tenantID, "actor_user_id", userID,
+				"approved_votes", outcome.ApprovedVotes, "required_votes", outcome.RequiredVotes,
+				"missing_levels", outcome.MissingLevels)
+			// 状态未变：单票不足以放行，调用方按"已记录、等待其他审批人"处理。
+			return c, nil
+		}
+	}
+
 	// 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口
 	// pending chains；非终态直接更新。
 	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||
@@ -1144,10 +1082,17 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
 					ErrConcurrentModification, c.Status, targetStatus)
 			}
+			// 无事务句柄的装配（mock/legacy）没有原子性可依托，仍需收口，
+			// 否则终态变更的审批链会永远停在 pending。失败记日志，不阻断返回：
+			// 状态已经写入终态，此时报错会让调用方误以为可以重试。
+			if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
+				s.logger.Errorw("TransitionStatus: 收口审批链失败（无事务句柄，退化路径）",
+					"error", closeErr, "change_id", id, "tenant_id", tenantID)
+			}
 			c.Status = targetStatus
 			return c, nil
 		}
-		if _, updateErr := tx.Change.UpdateOneID(c.ID).
+		if _, updateErr := tx.Client().Change.UpdateOneID(c.ID).
 			Where(change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
 			SetStatus(change.Status(targetStatus)).
 			Save(ctx); updateErr != nil {
@@ -1158,12 +1103,25 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			}
 			return nil, fmt.Errorf("failed to update change status: %w", updateErr)
 		}
+		// 审批链收口必须在提交**之前**、且与状态写入同一事务：先提交再收口
+		// （旧实现用全局 rawDB，失败只记日志）会留下「变更已终态、审批链仍
+		// pending」的半写状态，审批人继续在待办里看到该单。
+		rawTxAvailable := true
+		if closeErr := tx.ClosePendingApprovalChains(ctx, id, tenantID); closeErr != nil {
+			if !errors.Is(closeErr, errRawTxUnavailable) {
+				return nil, fmt.Errorf("收口审批链失败: %w", closeErr)
+			}
+			rawTxAvailable = false
+		}
 		if commitErr := tx.Commit(); commitErr != nil {
 			return nil, fmt.Errorf("提交事务失败: %w", commitErr)
 		}
-		if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
-			s.logger.Errorw("TransitionStatus: 收口审批链失败（非致命，后续状态机兜底）",
-				"error", closeErr, "change_id", id, "tenant_id", tenantID)
+		if !rawTxAvailable {
+			// 纯 ent 事务（无 *sql.DB 句柄）：退化为提交后收口并记日志。
+			if closeErr := service.CloseChangeApprovalChains(ctx, id, tenantID); closeErr != nil {
+				s.logger.Errorw("TransitionStatus: 收口审批链失败（纯 ent 事务退化路径）",
+					"error", closeErr, "change_id", id, "tenant_id", tenantID)
+			}
 		}
 		c.Status = targetStatus
 		return c, nil
@@ -1184,7 +1142,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				ErrConcurrentModification, c.Status, targetStatus)
 		}
 	} else {
-		affected, err := tx.Change.Update().
+		affected, err := tx.Client().Change.Update().
 			Where(change.IDEQ(c.ID), change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
 			SetStatus(change.Status(targetStatus)).
 			Save(ctx)
@@ -1222,13 +1180,7 @@ func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID
 	if err != nil {
 		return nil, fmt.Errorf("get approval chain for levels: %w", err)
 	}
-	levelsByApprover := map[int][]int{}
-	for _, c := range chain {
-		levelsByApprover[c.ApproverID] = append(levelsByApprover[c.ApproverID], c.Level)
-	}
-	for _, rec := range decisions {
-		rec.Levels = levelsByApprover[rec.ApproverID]
-	}
+	applyChainLevels(chain, decisions)
 	return decisions, nil
 }
 
@@ -1238,13 +1190,20 @@ func (s *Service) GetApprovalHistory(ctx context.Context, changeID int, tenantID
 // timeline. ProcessApprovalDecision is the single source of truth for approval
 // decisions once the BPMN bridge writes them; change_approvals is legacy.
 func (s *Service) GetBPMNApprovalDecisions(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error) {
+	return s.bpmnApprovalDecisionsWithClient(ctx, s.entClient, changeID, tenantID)
+}
+
+// bpmnApprovalDecisionsWithClient 用指定 ent 客户端读取审批决定。
+// 传入事务内 client 时能读到本事务刚由 BPMN 桥接写入的决策——会签求值必须
+// 读得到"当前这一票"，否则最后一票永远无法把整单推过阈值。
+func (s *Service) bpmnApprovalDecisionsWithClient(ctx context.Context, client *ent.Client, changeID int, tenantID int) ([]*ApprovalRecord, error) {
 	// 未装配 BPMN 桥接（entClient 为 nil，如纯 legacy 部署/单测构造）时视为无决策，
 	// 与本文件其他 entClient 防御点一致；调用方按空审批历史处理，走 legacy 审批链语义。
-	if s.entClient == nil {
+	if client == nil {
 		return []*ApprovalRecord{}, nil
 	}
 	businessID := strconv.Itoa(changeID)
-	decisions, err := s.entClient.ProcessApprovalDecision.Query().
+	decisions, err := client.ProcessApprovalDecision.Query().
 		Where(
 			processapprovaldecision.BusinessType("change"),
 			processapprovaldecision.BusinessID(businessID),

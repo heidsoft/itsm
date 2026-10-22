@@ -302,9 +302,11 @@ export class ChangeApi {
     return httpClient.post(`/api/v1/changes/${id}/submit`, {});
   }
 
-  // 审批变更
-  static async approveChange(id: number, data: ChangeApprovalRequest): Promise<void> {
-    return httpClient.post(`/api/v1/changes/${id}/approve`, data);
+  // 审批变更。
+  // 返回变更的当前快照：会签/阈值/多级链未集齐时后端返回 200 但状态仍是 pending
+  // （本次票已记录）。调用方必须看 status，不能把"调用成功"当成"已批准"。
+  static async approveChange(id: number, data: ChangeApprovalRequest): Promise<Change> {
+    return httpClient.post<Change>(`/api/v1/changes/${id}/approve`, data);
   }
 
   // 拒绝变更

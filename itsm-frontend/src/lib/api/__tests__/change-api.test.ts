@@ -438,6 +438,27 @@ describe('ChangeApi', () => {
         })
       );
     });
+
+    // 会签门禁契约：未达阈值时后端返回 200 但 status 仍是 pending，
+    // 前端必须拿到该快照才能区分"已批准"与"已记录、等待其他人"。
+    it('returns the change snapshot so callers can detect pending quorum', async () => {
+      const mockResponse = {
+        code: 0,
+        message: 'success',
+        data: { id: 1, status: 'pending' },
+      };
+
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers(),
+        status: 200,
+        json: async () => mockResponse,
+      });
+
+      const result = await ChangeApi.approveChange(1, { status: 'approved' });
+
+      expect(result.status).toBe('pending');
+    });
   });
 
   describe('rejectChange', () => {

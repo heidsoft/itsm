@@ -237,8 +237,14 @@ const ChangeDetail: React.FC = () => {
     inFlightRef.current = true;
     setProcessing(true);
     try {
-      await ChangeApi.approveChange(change.id, { comment: approvalComment });
-      message.success(t('changeDetail.approveSuccess'));
+      const updated = await ChangeApi.approveChange(change.id, { comment: approvalComment });
+      // 会签/阈值/多级链未集齐时后端返回 200 但状态仍是 pending：这一票已记录，
+      // 不能说"变更已批准"，否则审批人会以为整单已经放行。
+      if (updated && updated.status && updated.status !== 'approved') {
+        message.info(t('changeDetail.approveRecorded'));
+      } else {
+        message.success(t('changeDetail.approveSuccess'));
+      }
       setApprovalModalVisible(false);
       setApprovalComment('');
       loadDetail();

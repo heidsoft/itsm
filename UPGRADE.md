@@ -2132,6 +2132,51 @@ cd itsm-backend && go test -count=1 ./handlers/knowledge/ -run "PublishRequiresA
 cd itsm-frontend && npx jest --coverage=false --runInBand ArticleDetail
 ```
 
+### 1.58 变更审批会签门禁 + 终态收口原子化（2026-10-22，行为变更 + 事务语义修正）
+
+**行为变更一：`POST /changes/{id}/approve` 不再"一票即批准"**
+
+会签（`parallel`/`all`）、N of M 阈值与多级审批链的条件此前只写在**无路由**的 legacy 入口里，
+生产路径（`TransitionStatus`）在完成 BPMN 待办后直接把状态 CAS 成 `approved`。结果是：
+两人会签的变更，第一位审批人批准后整单即进入 `approved`，第二位审批人的待办形同虚设。
+
+现在按审批链求值：
+
+| 场景 | 变更前 | 变更后 |
+|---|---|---|
+| 会签 2 人，只批 1 票 | `200` + `approved`（缺陷） | `200` + 仍为 `pending`，该票已写入审计表 |
+| 会签 2 人，2 票齐 | `200` + `approved` | `200` + `approved` |
+| 3 人链阈值 2，只批 1 票 | `200` + `approved`（缺陷） | `200` + 仍为 `pending` |
+| 多级链只批第 1 级 | `200` + `approved`（缺陷） | `200` + 仍为 `pending` |
+| 链上已有驳回票，再调 approve | `200` + `approved` | `409`（`ErrInvalidTransition`） |
+
+**集成方影响**：若自动化脚本以"调一次 approve 就拿到 `approved`"为前提，会签/多级链下会
+拿到 `200` + `pending`。请读取响应体 `data.status` 判定，不要只看 HTTP 码；未达阈值时不要重试
+（重复审批会因"不是待办审批人"返回 403）。
+
+**行为变更二：终态流转的审批链收口进同一事务**
+
+`reject` / `complete` / `cancel` / `rollback` / `close` 在**同一事务**内把残留 `pending`
+审批链节点置为 `obsolete`。此前收口在 `commit` 之后用全局 rawDB 执行、失败只记日志，会留下
+"变更已终态、审批链仍 pending"的半写状态（审批人待办里永远挂着已终结的单）。现在收口失败
+整体回滚并返回错误——不会再出现状态成功、链未收口的部分成功。
+
+**行为变更三：删除无路由的 legacy 审批写入口**
+
+`Service.ProcessApproval` 与 `Repository.UpdateApprovalRecord` 已删除（零调用点、无路由）。
+它绕过 BPMN 桥接、把"改审批记录 / 改变更状态 / 收口审批链"分成三段各自成事务。
+若你方的二次开发代码调用了这两个 Go 方法，需改为调用 `Service.TransitionStatus`。
+
+**已知边界**：变更未绑定运行中流程实例时（纯业务回退），审批决定不落
+`ProcessApprovalDecision`，会签无法求值，该路径按单票批准。需要会签/阈值的租户必须配置变更
+审批流程模板。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/ -run "TransitionStatus_ParallelQuorum|TransitionStatus_ThresholdNotMet|TransitionStatus_RejectedDecisionBlocksApprove|TransitionStatus_Reject_ClosesChainsSameTx|TransitionStatus_ChainCloseFailure|EvaluateApprovalQuorum"
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

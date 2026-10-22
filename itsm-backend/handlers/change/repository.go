@@ -24,8 +24,11 @@ type Repository interface {
 	SubmitForApproval(ctx context.Context, changeID, tenantID int, plan []ApprovalLevelPlan, comment string) error
 
 	// Approvals
+	// 审批决定的写入只有两条路径：SubmitApprovalRecordTx（提交审批记录）与
+	// BPMN 桥接写 ProcessApprovalDecision（审批决定）。原先的
+	// UpdateApprovalRecord（按 ID 盲改 change_approvals.status）已随无路由的
+	// ProcessApproval 一并删除——它绕过"待办归属"校验，且与状态推进不同事务。
 	CreateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)
-	UpdateApprovalRecord(ctx context.Context, r *ApprovalRecord) (*ApprovalRecord, error)
 	GetApprovalHistory(ctx context.Context, changeID int, tenantID int) ([]*ApprovalRecord, error)
 
 	// SubmitApprovalRecordTx 在同一 *sql.Tx 中原子写入审批记录并按需
