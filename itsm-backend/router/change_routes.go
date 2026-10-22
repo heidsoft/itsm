@@ -25,6 +25,9 @@ func SetupChangeRoutes(tenant *gin.RouterGroup, h *changeHandler.Handler) {
 		changes.POST("/:id/schedule", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/start", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/complete", middleware.RequirePermission("change", "write"), h.TransitionStatus)
+		// 实施失败：状态机一直允许 in_progress|failed → failed，但此前无入口，
+		// 实施失败的变更只能被报成 completed 或直接 rolled_back（统计与 PIR 失真）。
+		changes.POST("/:id/fail", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/close", middleware.RequirePermission("change", "write"), h.TransitionStatus)
 		changes.POST("/:id/rollback", middleware.RequirePermission("change", "rollback"), h.TransitionStatus)
 		changes.POST("/:id/cancel", middleware.RequirePermission("change", "write"), h.TransitionStatus)

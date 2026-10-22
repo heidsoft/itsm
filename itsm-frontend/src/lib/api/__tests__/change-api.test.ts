@@ -598,6 +598,29 @@ describe('ChangeApi', () => {
         expect.stringContaining('/api/v1/changes/1/rollback'),
         expect.objectContaining({
           method: 'POST',
+          body: JSON.stringify({ reason: 'Unexpected issues occurred' }),
+        })
+      );
+    });
+  });
+
+  describe('failChange', () => {
+    it('should mark change as failed and send the reason in the body', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers(),
+        status: 200,
+        json: async () => ({ code: 0, message: 'success', data: null }),
+      });
+
+      await ChangeApi.failChange(7, '第二步脚本报错导致连接池耗尽');
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/changes/7/fail'),
+        expect.objectContaining({
+          method: 'POST',
+          // 后端拒收无原因的 failed（400/1002），原因必须真的发出去
+          body: JSON.stringify({ reason: '第二步脚本报错导致连接池耗尽' }),
         })
       );
     });

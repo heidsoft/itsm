@@ -140,6 +140,11 @@ func RollbackPlan(v string) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldRollbackPlan, v))
 }
 
+// OutcomeNote applies equality check predicate on the "outcome_note" field. It's identical to OutcomeNoteEQ.
+func OutcomeNote(v string) predicate.Change {
+	return predicate.Change(sql.FieldEQ(FieldOutcomeNote, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Change {
 	return predicate.Change(sql.FieldEQ(FieldCreatedAt, v))
@@ -1198,6 +1203,81 @@ func RollbackPlanEqualFold(v string) predicate.Change {
 // RollbackPlanContainsFold applies the ContainsFold predicate on the "rollback_plan" field.
 func RollbackPlanContainsFold(v string) predicate.Change {
 	return predicate.Change(sql.FieldContainsFold(FieldRollbackPlan, v))
+}
+
+// OutcomeNoteEQ applies the EQ predicate on the "outcome_note" field.
+func OutcomeNoteEQ(v string) predicate.Change {
+	return predicate.Change(sql.FieldEQ(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteNEQ applies the NEQ predicate on the "outcome_note" field.
+func OutcomeNoteNEQ(v string) predicate.Change {
+	return predicate.Change(sql.FieldNEQ(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteIn applies the In predicate on the "outcome_note" field.
+func OutcomeNoteIn(vs ...string) predicate.Change {
+	return predicate.Change(sql.FieldIn(FieldOutcomeNote, vs...))
+}
+
+// OutcomeNoteNotIn applies the NotIn predicate on the "outcome_note" field.
+func OutcomeNoteNotIn(vs ...string) predicate.Change {
+	return predicate.Change(sql.FieldNotIn(FieldOutcomeNote, vs...))
+}
+
+// OutcomeNoteGT applies the GT predicate on the "outcome_note" field.
+func OutcomeNoteGT(v string) predicate.Change {
+	return predicate.Change(sql.FieldGT(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteGTE applies the GTE predicate on the "outcome_note" field.
+func OutcomeNoteGTE(v string) predicate.Change {
+	return predicate.Change(sql.FieldGTE(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteLT applies the LT predicate on the "outcome_note" field.
+func OutcomeNoteLT(v string) predicate.Change {
+	return predicate.Change(sql.FieldLT(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteLTE applies the LTE predicate on the "outcome_note" field.
+func OutcomeNoteLTE(v string) predicate.Change {
+	return predicate.Change(sql.FieldLTE(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteContains applies the Contains predicate on the "outcome_note" field.
+func OutcomeNoteContains(v string) predicate.Change {
+	return predicate.Change(sql.FieldContains(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteHasPrefix applies the HasPrefix predicate on the "outcome_note" field.
+func OutcomeNoteHasPrefix(v string) predicate.Change {
+	return predicate.Change(sql.FieldHasPrefix(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteHasSuffix applies the HasSuffix predicate on the "outcome_note" field.
+func OutcomeNoteHasSuffix(v string) predicate.Change {
+	return predicate.Change(sql.FieldHasSuffix(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteIsNil applies the IsNil predicate on the "outcome_note" field.
+func OutcomeNoteIsNil() predicate.Change {
+	return predicate.Change(sql.FieldIsNull(FieldOutcomeNote))
+}
+
+// OutcomeNoteNotNil applies the NotNil predicate on the "outcome_note" field.
+func OutcomeNoteNotNil() predicate.Change {
+	return predicate.Change(sql.FieldNotNull(FieldOutcomeNote))
+}
+
+// OutcomeNoteEqualFold applies the EqualFold predicate on the "outcome_note" field.
+func OutcomeNoteEqualFold(v string) predicate.Change {
+	return predicate.Change(sql.FieldEqualFold(FieldOutcomeNote, v))
+}
+
+// OutcomeNoteContainsFold applies the ContainsFold predicate on the "outcome_note" field.
+func OutcomeNoteContainsFold(v string) predicate.Change {
+	return predicate.Change(sql.FieldContainsFold(FieldOutcomeNote, v))
 }
 
 // RelatedTicketsIsNil applies the IsNil predicate on the "related_tickets" field.

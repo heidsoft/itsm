@@ -73,6 +73,10 @@ const ChangeDetail: React.FC = () => {
   const [approvalModalVisible, setApprovalModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [approvalComment, setApprovalComment] = useState('');
+  // 实施结果弹窗：回滚与「标记失败」都要求必填原因（后端拒收无原因的 rolled_back/failed），
+  // 因此不再让按钮直接发请求，统一走一个带必填校验的弹窗。
+  const [outcomeModal, setOutcomeModal] = useState<'rollback' | 'fail' | null>(null);
+  const [outcomeReason, setOutcomeReason] = useState('');
   const [processing, setProcessing] = useState(false);
   // 写操作 in-flight 标志：按钮 loading 状态要等 render 提交后才生效，
   // 快速连续点击存在重复提交窗口。
@@ -89,13 +93,16 @@ const ChangeDetail: React.FC = () => {
   // 生命周期 action bar 可见性：详情页要能推进状态机，终态只剩查看
   // draft → 提交审批;pending → 批准/拒绝;approved → 开始实施;
   // in_progress → 完成实施/回滚;非终态 → 取消
+  // failed 是"实施没成功"，不是终态：状态机允许 failed → scheduled（重新排期）、
+  // failed → rolled_back（回滚）、failed → cancelled。把它当终态会让记录完失败原因后
+  // 页面无路可走，只能去库里改状态。
   const isTerminal =
     change?.status === ChangeStatus.COMPLETED ||
     change?.status === ChangeStatus.CANCELLED ||
     change?.status === ChangeStatus.ROLLED_BACK ||
     change?.status === ChangeStatus.REJECTED ||
-    change?.status === ChangeStatus.FAILED ||
     change?.status === ChangeStatus.CLOSED;
+  const canRecoverFromFailure = change?.status === ChangeStatus.FAILED;
   const canSubmit = change?.status === ChangeStatus.DRAFT;
   const canApprove = change?.status === ChangeStatus.PENDING;
   const canSchedule = change?.status === ChangeStatus.APPROVED;
@@ -109,7 +116,8 @@ const ChangeDetail: React.FC = () => {
     change?.status === ChangeStatus.DRAFT ||
     change?.status === ChangeStatus.APPROVED ||
     change?.status === ChangeStatus.SCHEDULED ||
-    change?.status === ChangeStatus.IN_PROGRESS;
+    change?.status === ChangeStatus.IN_PROGRESS ||
+    change?.status === ChangeStatus.FAILED;
 
   // 提交审批
   const handleSubmit = async () => {
@@ -196,18 +204,48 @@ const ChangeDetail: React.FC = () => {
     }
   };
 
-  // 回滚
-  const handleRollback = async () => {
+  // 回滚（原因由弹窗收集，必填）
+  const handleRollback = async (reason: string) => {
     if (!change || inFlightRef.current) return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      message.warning(t('changeDetail.outcomeReasonRequired'));
+      return;
+    }
     inFlightRef.current = true;
     setProcessing(true);
     try {
-      await ChangeApi.rollbackChange(change.id, approvalComment);
+      await ChangeApi.rollbackChange(change.id, trimmed);
       message.success(t('changeDetail.rollbackSuccess'));
-      setApprovalComment('');
+      setOutcomeModal(null);
+      setOutcomeReason('');
       loadDetail();
     } catch (error) {
       message.error(serverErrorMessage(error, t('changeDetail.rollbackFailed')));
+    } finally {
+      inFlightRef.current = false;
+      setProcessing(false);
+    }
+  };
+
+  // 标记实施失败（原因写入 outcome_note，进 PIR 与审计）
+  const handleFail = async (reason: string) => {
+    if (!change || inFlightRef.current) return;
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      message.warning(t('changeDetail.outcomeReasonRequired'));
+      return;
+    }
+    inFlightRef.current = true;
+    setProcessing(true);
+    try {
+      await ChangeApi.failChange(change.id, trimmed);
+      message.success(t('changeDetail.failSuccess'));
+      setOutcomeModal(null);
+      setOutcomeReason('');
+      loadDetail();
+    } catch (error) {
+      message.error(serverErrorMessage(error, t('changeDetail.failFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -452,7 +490,43 @@ const ChangeDetail: React.FC = () => {
                     <Button type="primary" loading={processing} onClick={handleComplete}>
                       {t('changeDetail.complete')}
                     </Button>
-                    <Button danger loading={processing} onClick={handleRollback}>
+                    <Button
+                      danger
+                      loading={processing}
+                      onClick={() => {
+                        setOutcomeReason('');
+                        setOutcomeModal('rollback');
+                      }}
+                    >
+                      {t('changeDetail.rollback')}
+                    </Button>
+                    {/* 实施失败必须能如实记录：此前没有入口，失败的单只能报成"完成"
+                        或直接回滚，统计与 PIR 结论都随之失真。 */}
+                    <Button
+                      danger
+                      loading={processing}
+                      onClick={() => {
+                        setOutcomeReason('');
+                        setOutcomeModal('fail');
+                      }}
+                    >
+                      {t('changeDetail.markFailed')}
+                    </Button>
+                  </>
+                )}
+                {canRecoverFromFailure && (
+                  <>
+                    <Button type="primary" loading={processing} onClick={handleSchedule}>
+                      {t('changeDetail.reschedule')}
+                    </Button>
+                    <Button
+                      danger
+                      loading={processing}
+                      onClick={() => {
+                        setOutcomeReason('');
+                        setOutcomeModal('rollback');
+                      }}
+                    >
                       {t('changeDetail.rollback')}
                     </Button>
                   </>
@@ -529,6 +603,15 @@ const ChangeDetail: React.FC = () => {
                     fallback={t('changeDetail.noRollbackPlan')}
                     preserveNewlines
                   />
+
+                  {/* 实施结果说明只在存在时展示：没有结果就说明还没实施完，
+                      给一个"暂无"反而让人以为漏填了。 */}
+                  {change.outcomeNote && (
+                    <>
+                      <Title level={5}>{t('changeDetail.outcomeNote')}</Title>
+                      <SafeTextBlock content={change.outcomeNote} preserveNewlines />
+                    </>
+                  )}
                 </>
               ),
             },
@@ -634,6 +717,61 @@ const ChangeDetail: React.FC = () => {
           ]}
         />
       </Card>
+
+      {/* 实施结果弹窗（回滚 / 标记失败，原因必填） */}
+      <Modal
+        title={
+          outcomeModal === 'fail' ? t('changeDetail.failTitle') : t('changeDetail.rollbackTitle')
+        }
+        open={outcomeModal !== null}
+        onCancel={() => {
+          setOutcomeModal(null);
+          setOutcomeReason('');
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setOutcomeModal(null);
+              setOutcomeReason('');
+            }}
+          >
+            {t('changeDetail.cancel')}
+          </Button>,
+          <Button
+            key="confirm"
+            danger
+            loading={processing}
+            disabled={!outcomeReason.trim()}
+            onClick={() => {
+              if (outcomeModal === 'fail') {
+                handleFail(outcomeReason);
+              } else {
+                handleRollback(outcomeReason);
+              }
+            }}
+          >
+            {outcomeModal === 'fail' ? t('changeDetail.markFailed') : t('changeDetail.rollback')}
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-2">
+            {outcomeModal === 'fail'
+              ? t('changeDetail.failReasonHint')
+              : t('changeDetail.rollbackReasonHint')}
+          </p>
+          <Input.TextArea
+            value={outcomeReason}
+            onChange={e => setOutcomeReason(e.target.value)}
+            placeholder={t('changeDetail.outcomeReasonPlaceholder')}
+            rows={4}
+            aria-label={
+              outcomeModal === 'fail' ? t('changeDetail.failReason') : t('changeDetail.rollbackReason')
+            }
+          />
+        </div>
+      </Modal>
 
       {/* 批准弹窗 */}
       <Modal

@@ -113,6 +113,7 @@ type ChangeResponse struct {
 	ActualEndDate      *time.Time     `json:"actualEndDate"`          // 实际结束时间
 	ImplementationPlan string         `json:"implementationPlan"`     // 实施计划
 	RollbackPlan       string         `json:"rollbackPlan"`           // 回滚计划
+	OutcomeNote        string         `json:"outcomeNote"`            // 实施结果说明（失败原因/回滚原因/完成说明）
 	AffectedCIs        []string       `json:"affectedCis"`            // 受影响的配置项
 	RelatedTickets     []string       `json:"relatedTickets"`         // 相关工单
 	CreatedAt          time.Time      `json:"createdAt"`              // 创建时间

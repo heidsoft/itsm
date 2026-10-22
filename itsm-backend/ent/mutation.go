@@ -24395,6 +24395,7 @@ type ChangeMutation struct {
 	actual_end_date       *time.Time
 	implementation_plan   *string
 	rollback_plan         *string
+	outcome_note          *string
 	related_tickets       *[]string
 	appendrelated_tickets []string
 	created_at            *time.Time
@@ -25354,6 +25355,55 @@ func (m *ChangeMutation) ResetRollbackPlan() {
 	delete(m.clearedFields, change.FieldRollbackPlan)
 }
 
+// SetOutcomeNote sets the "outcome_note" field.
+func (m *ChangeMutation) SetOutcomeNote(s string) {
+	m.outcome_note = &s
+}
+
+// OutcomeNote returns the value of the "outcome_note" field in the mutation.
+func (m *ChangeMutation) OutcomeNote() (r string, exists bool) {
+	v := m.outcome_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutcomeNote returns the old "outcome_note" field's value of the Change entity.
+// If the Change object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChangeMutation) OldOutcomeNote(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutcomeNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutcomeNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutcomeNote: %w", err)
+	}
+	return oldValue.OutcomeNote, nil
+}
+
+// ClearOutcomeNote clears the value of the "outcome_note" field.
+func (m *ChangeMutation) ClearOutcomeNote() {
+	m.outcome_note = nil
+	m.clearedFields[change.FieldOutcomeNote] = struct{}{}
+}
+
+// OutcomeNoteCleared returns if the "outcome_note" field was cleared in this mutation.
+func (m *ChangeMutation) OutcomeNoteCleared() bool {
+	_, ok := m.clearedFields[change.FieldOutcomeNote]
+	return ok
+}
+
+// ResetOutcomeNote resets all changes to the "outcome_note" field.
+func (m *ChangeMutation) ResetOutcomeNote() {
+	m.outcome_note = nil
+	delete(m.clearedFields, change.FieldOutcomeNote)
+}
+
 // SetRelatedTickets sets the "related_tickets" field.
 func (m *ChangeMutation) SetRelatedTickets(s []string) {
 	m.related_tickets = &s
@@ -25741,7 +25791,7 @@ func (m *ChangeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChangeMutation) Fields() []string {
-	fields := make([]string, 0, 21)
+	fields := make([]string, 0, 22)
 	if m.change_number != nil {
 		fields = append(fields, change.FieldChangeNumber)
 	}
@@ -25796,6 +25846,9 @@ func (m *ChangeMutation) Fields() []string {
 	if m.rollback_plan != nil {
 		fields = append(fields, change.FieldRollbackPlan)
 	}
+	if m.outcome_note != nil {
+		fields = append(fields, change.FieldOutcomeNote)
+	}
 	if m.related_tickets != nil {
 		fields = append(fields, change.FieldRelatedTickets)
 	}
@@ -25849,6 +25902,8 @@ func (m *ChangeMutation) Field(name string) (ent.Value, bool) {
 		return m.ImplementationPlan()
 	case change.FieldRollbackPlan:
 		return m.RollbackPlan()
+	case change.FieldOutcomeNote:
+		return m.OutcomeNote()
 	case change.FieldRelatedTickets:
 		return m.RelatedTickets()
 	case change.FieldCreatedAt:
@@ -25900,6 +25955,8 @@ func (m *ChangeMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldImplementationPlan(ctx)
 	case change.FieldRollbackPlan:
 		return m.OldRollbackPlan(ctx)
+	case change.FieldOutcomeNote:
+		return m.OldOutcomeNote(ctx)
 	case change.FieldRelatedTickets:
 		return m.OldRelatedTickets(ctx)
 	case change.FieldCreatedAt:
@@ -26041,6 +26098,13 @@ func (m *ChangeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRollbackPlan(v)
 		return nil
+	case change.FieldOutcomeNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutcomeNote(v)
+		return nil
 	case change.FieldRelatedTickets:
 		v, ok := value.([]string)
 		if !ok {
@@ -26161,6 +26225,9 @@ func (m *ChangeMutation) ClearedFields() []string {
 	if m.FieldCleared(change.FieldRollbackPlan) {
 		fields = append(fields, change.FieldRollbackPlan)
 	}
+	if m.FieldCleared(change.FieldOutcomeNote) {
+		fields = append(fields, change.FieldOutcomeNote)
+	}
 	if m.FieldCleared(change.FieldRelatedTickets) {
 		fields = append(fields, change.FieldRelatedTickets)
 	}
@@ -26207,6 +26274,9 @@ func (m *ChangeMutation) ClearField(name string) error {
 		return nil
 	case change.FieldRollbackPlan:
 		m.ClearRollbackPlan()
+		return nil
+	case change.FieldOutcomeNote:
+		m.ClearOutcomeNote()
 		return nil
 	case change.FieldRelatedTickets:
 		m.ClearRelatedTickets()
@@ -26272,6 +26342,9 @@ func (m *ChangeMutation) ResetField(name string) error {
 		return nil
 	case change.FieldRollbackPlan:
 		m.ResetRollbackPlan()
+		return nil
+	case change.FieldOutcomeNote:
+		m.ResetOutcomeNote()
 		return nil
 	case change.FieldRelatedTickets:
 		m.ResetRelatedTickets()

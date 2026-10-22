@@ -1984,6 +1984,93 @@
                 }
             }
         },
+        "/api/v1/changes/{id}/fail": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按路径尾段执行状态流转：approve→approved、reject→rejected、schedule→scheduled、start→in_progress、complete→completed、close→closed、rollback→rolled_back、cancel→cancelled。审批类操作需要 change:approve 权限。状态机违规或 CAS 并发冲突返回 409。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更管理"
+                ],
+                "summary": "变更状态流转",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "变更ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "备注（{comment 或 reason}）",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/common.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ChangeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/changes/{id}/pir": {
             "get": {
                 "security": [
@@ -14123,6 +14210,10 @@
                 },
                 "justification": {
                     "description": "变更理由",
+                    "type": "string"
+                },
+                "outcomeNote": {
+                    "description": "实施结果说明（失败原因/回滚原因/完成说明）",
                     "type": "string"
                 },
                 "plannedEndDate": {

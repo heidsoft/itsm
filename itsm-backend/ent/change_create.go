@@ -252,6 +252,20 @@ func (_c *ChangeCreate) SetNillableRollbackPlan(v *string) *ChangeCreate {
 	return _c
 }
 
+// SetOutcomeNote sets the "outcome_note" field.
+func (_c *ChangeCreate) SetOutcomeNote(v string) *ChangeCreate {
+	_c.mutation.SetOutcomeNote(v)
+	return _c
+}
+
+// SetNillableOutcomeNote sets the "outcome_note" field if the given value is not nil.
+func (_c *ChangeCreate) SetNillableOutcomeNote(v *string) *ChangeCreate {
+	if v != nil {
+		_c.SetOutcomeNote(*v)
+	}
+	return _c
+}
+
 // SetRelatedTickets sets the "related_tickets" field.
 func (_c *ChangeCreate) SetRelatedTickets(v []string) *ChangeCreate {
 	_c.mutation.SetRelatedTickets(v)
@@ -565,6 +579,10 @@ func (_c *ChangeCreate) createSpec() (*Change, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.RollbackPlan(); ok {
 		_spec.SetField(change.FieldRollbackPlan, field.TypeString, value)
 		_node.RollbackPlan = value
+	}
+	if value, ok := _c.mutation.OutcomeNote(); ok {
+		_spec.SetField(change.FieldOutcomeNote, field.TypeString, value)
+		_node.OutcomeNote = value
 	}
 	if value, ok := _c.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)

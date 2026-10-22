@@ -1118,6 +1118,9 @@ definitions:
       justification:
         description: 变更理由
         type: string
+      outcomeNote:
+        description: 实施结果说明（失败原因/回滚原因/完成说明）
+        type: string
       plannedEndDate:
         description: 计划结束时间
         type: string
@@ -5724,6 +5727,60 @@ paths:
       tags:
       - 变更管理
   /api/v1/changes/{id}/complete:
+    post:
+      consumes:
+      - application/json
+      description: 按路径尾段执行状态流转：approve→approved、reject→rejected、schedule→scheduled、start→in_progress、complete→completed、close→closed、rollback→rolled_back、cancel→cancelled。审批类操作需要
+        change:approve 权限。状态机违规或 CAS 并发冲突返回 409。
+      parameters:
+      - description: 变更ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 备注（{comment 或 reason}）
+        in: body
+        name: request
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ChangeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 变更状态流转
+      tags:
+      - 变更管理
+  /api/v1/changes/{id}/fail:
     post:
       consumes:
       - application/json

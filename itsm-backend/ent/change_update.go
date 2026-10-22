@@ -366,6 +366,26 @@ func (_u *ChangeUpdate) ClearRollbackPlan() *ChangeUpdate {
 	return _u
 }
 
+// SetOutcomeNote sets the "outcome_note" field.
+func (_u *ChangeUpdate) SetOutcomeNote(v string) *ChangeUpdate {
+	_u.mutation.SetOutcomeNote(v)
+	return _u
+}
+
+// SetNillableOutcomeNote sets the "outcome_note" field if the given value is not nil.
+func (_u *ChangeUpdate) SetNillableOutcomeNote(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetOutcomeNote(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeNote clears the value of the "outcome_note" field.
+func (_u *ChangeUpdate) ClearOutcomeNote() *ChangeUpdate {
+	_u.mutation.ClearOutcomeNote()
+	return _u
+}
+
 // SetRelatedTickets sets the "related_tickets" field.
 func (_u *ChangeUpdate) SetRelatedTickets(v []string) *ChangeUpdate {
 	_u.mutation.SetRelatedTickets(v)
@@ -723,6 +743,12 @@ func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
+	}
+	if value, ok := _u.mutation.OutcomeNote(); ok {
+		_spec.SetField(change.FieldOutcomeNote, field.TypeString, value)
+	}
+	if _u.mutation.OutcomeNoteCleared() {
+		_spec.ClearField(change.FieldOutcomeNote, field.TypeString)
 	}
 	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
@@ -1274,6 +1300,26 @@ func (_u *ChangeUpdateOne) ClearRollbackPlan() *ChangeUpdateOne {
 	return _u
 }
 
+// SetOutcomeNote sets the "outcome_note" field.
+func (_u *ChangeUpdateOne) SetOutcomeNote(v string) *ChangeUpdateOne {
+	_u.mutation.SetOutcomeNote(v)
+	return _u
+}
+
+// SetNillableOutcomeNote sets the "outcome_note" field if the given value is not nil.
+func (_u *ChangeUpdateOne) SetNillableOutcomeNote(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetOutcomeNote(*v)
+	}
+	return _u
+}
+
+// ClearOutcomeNote clears the value of the "outcome_note" field.
+func (_u *ChangeUpdateOne) ClearOutcomeNote() *ChangeUpdateOne {
+	_u.mutation.ClearOutcomeNote()
+	return _u
+}
+
 // SetRelatedTickets sets the "related_tickets" field.
 func (_u *ChangeUpdateOne) SetRelatedTickets(v []string) *ChangeUpdateOne {
 	_u.mutation.SetRelatedTickets(v)
@@ -1661,6 +1707,12 @@ func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err erro
 	}
 	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
+	}
+	if value, ok := _u.mutation.OutcomeNote(); ok {
+		_spec.SetField(change.FieldOutcomeNote, field.TypeString, value)
+	}
+	if _u.mutation.OutcomeNoteCleared() {
+		_spec.ClearField(change.FieldOutcomeNote, field.TypeString)
 	}
 	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)

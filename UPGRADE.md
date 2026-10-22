@@ -2208,6 +2208,49 @@ cd itsm-backend && go test -count=1 ./handlers/change/ -run "TransitionStatus_Pa
 cd itsm-backend && go test -count=1 ./handlers/change/ -run "QuorumWithoutWorkflowInstance|SingleVoteSufficientWithoutInstance|QuorumWithoutEntClient|NoBoundInstanceFallsBack"
 ```
 
+### 1.60 变更实施结果留痕：新增 `/fail`，失败与回滚必须写原因（2026-10-22，新端点 + 行为变更 + 新列）
+
+**背景**：状态机一直允许 `in_progress|failed → failed`，`GET /changes/stats` 也有 `failed`
+计数，但**没有任何 API 入口**能把变更推进到 `failed`。于是实施失败的变更只能被报成
+`completed`（"成功率"虚高）或直接 `rolled_back`（失败原因与回滚原因混为一谈）。
+同时 `TransitionStatus` 的 `reason` 只被审批桥接消费，非审批流转的理由**完全不落库**——
+审计只能看到"状态从 in_progress 变成 rolled_back"，看不到为什么。
+
+**变更一：新增 `POST /api/v1/changes/{id}/fail`**（权限码 `change:write`）
+
+`failed` 不是死胡同：`failed → scheduled`（重新排期）、`failed → rolled_back`、`failed → cancelled`
+都是合法迁移。`GET /changes/stats` 的 `failed` 计数从"永远为 0"变成真实来源。
+
+**变更二：`fail` / `rollback` 必须填写原因**
+
+| 场景 | 变更前 | 变更后 |
+|---|---|---|
+| `POST /changes/{id}/fail` | 端点不存在 | `200`，状态 `failed` + `outcomeNote` |
+| `POST /changes/{id}/fail` 不带原因 | — | `400`（`1002`）+ 指出缺原因及其用途 |
+| `POST /changes/{id}/rollback` 不带原因 | `200`，原因丢弃 | `400`（`1002`） |
+| `POST /changes/{id}/complete` 带原因 | 原因丢弃 | 写入 `outcomeNote`（可选） |
+
+请求体字段 `reason` 与 `comment` 等价（`comment` 优先，空则取 `reason`）。
+
+**变更三：`changes` 新增列 `outcome_note`，创建 PIR 收紧状态门禁**
+
+- 迁移 `itsm-backend/migrations/20261022_change_outcome_note.sql`（`ADD COLUMN IF NOT EXISTS`，幂等）。
+  auto-migrate 会自动加列；只跑版本化迁移的库请执行该文件。
+- `GET /changes/{id}` 响应新增 `outcomeNote`；`outcome_note` 与状态在**同一条 UPDATE** 落库。
+- `POST /changes/{id}/pir` 此前对任何状态开放（草稿也能建 PIR，把"实施成功率"指标搞乱），
+  现在只接受 `completed` / `rolled_back` / `failed`，其余返回 `409` +「尚未实施完成」。
+
+**集成方影响**：脚本若调用 `/rollback` 不带原因会开始收到 `400`；把回滚原因放进
+`{"comment": "..."}` 同样生效。以 `completed` 记录实施失败的脚本应改调 `/fail`——
+否则失败率指标与 PIR 结论仍然是错的。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/ -run "FailRequiresReason|RollbackRequiresReason|FailRecordsOutcomeNote|RollbackRecordsOutcomeNote|FailedCanRescheduleOrRollback"
+cd itsm-backend && go test -count=1 ./service/ -run "CreatePIR_"
+```
+
 ## 2. 环境变量变更
 
 本次升级**移除了多个"幽灵配置项"**（在示例文件中声明但代码/Compose 从不读取，用户配置了也不生效），并修正了一个 Grafana 密码安全缺陷。

@@ -1215,11 +1215,34 @@ POST /changes/{id}/submit
 POST /changes/{id}/assign
 POST /changes/{id}/approve
 POST /changes/{id}/reject
+POST /changes/{id}/schedule
 POST /changes/{id}/start
 POST /changes/{id}/complete
+POST /changes/{id}/fail
 POST /changes/{id}/rollback
+POST /changes/{id}/close
 POST /changes/{id}/cancel
 ```
+
+请求体（所有流转共用）：`{"comment": "...", "reason": "..."}`——两个字段等价，`comment`
+为空时取 `reason`。审批流转的理由写进审批决定；`fail` / `rollback` / `complete` 的理由写进
+**实施结果说明**（`outcomeNote`）。
+
+#### 实施结果留痕（`/fail`、`/rollback`、`/complete`）
+
+| 流转 | 权限码 | 原因 | 落点 |
+|---|---|---|---|
+| `POST /changes/{id}/fail` | `change:write` | **必填** | `outcomeNote` + 状态 `failed` |
+| `POST /changes/{id}/rollback` | `change:rollback` | **必填** | `outcomeNote` + 状态 `rolled_back` |
+| `POST /changes/{id}/complete` | `change:write` | 可选（完成说明） | `outcomeNote` + 状态 `completed` |
+
+- 原因缺失 → `400`（业务码 `1002`），文案指出缺的是原因以及它会用在哪里。
+- `outcome_note` 与状态在**同一条 UPDATE** 落库：不存在"状态已是 failed、原因是空"的窗口。
+- `failed` 不是死胡同：`failed → scheduled`（重新排期）、`failed → rolled_back`（回滚）、
+  `failed → cancelled` 都是合法迁移（`GET /changes/stats` 的 `failed` 计数由此才有真实来源；
+  此前状态机允许 `failed` 但**没有任何 API 入口**写它，失败只能被报成 `completed` 或直接回滚）。
+
+`GET /changes/{id}` 的响应新增 `outcomeNote` 字段（此前不存在，事后结论无处存放）。
 
 #### 审批与会签门禁（`POST /changes/{id}/approve`）
 
@@ -1277,6 +1300,21 @@ Query Parameters:
 排序为 `review_date` 降序 + `ID` 升序：`review_date` 非唯一列，同一天录入的 PIR 需要 ID
 兜底才有确定的页边界归属。列表按认证上下文租户收敛，元素为 `ChangePIRResponse`。
 契约回归见 `itsm-backend/router/change_pir_route_test.go`。
+
+#### 创建 PIR 的状态门禁（`POST /changes/{id}/pir`）
+
+PIR 是**实施后回顾**：只有真正实施过的变更才有可回顾的事实。允许创建的状态：
+
+| 变更状态 | 是否可创建 PIR | 说明 |
+|---|---|---|
+| `completed` | ✅ | 正常路径 |
+| `rolled_back` | ✅ | 回滚本身就是最需要复盘的结果 |
+| `failed` | ✅ | 实施失败同理 |
+| `draft` / `pending` / `approved` / `scheduled` / `in_progress` | ❌ | `409` +「尚未实施完成，不能做实施后回顾」 |
+
+此前不校验状态，草稿和待审批的变更也能建 PIR，PIR 列表里混着还没开始的单，
+「实施成功率 / 目标是否达成」这类指标直接失去意义。
+同一变更只允许一条 PIR（重复创建 `409`，改用 `PUT /changes/pir/{id}`）。
 
 ## 发布管理接口
 

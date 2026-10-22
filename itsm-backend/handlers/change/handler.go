@@ -63,6 +63,7 @@ func toDTO(c *Change) *dto.ChangeResponse {
 		ActualEndDate:      c.ActualEndDate,
 		ImplementationPlan: c.ImplementationPlan,
 		RollbackPlan:       c.RollbackPlan,
+		OutcomeNote:        c.OutcomeNote,
 		AffectedCIs:        c.AffectedCIs,
 		RelatedTickets:     c.RelatedTickets,
 		CreatedAt:          c.CreatedAt,
@@ -643,6 +644,7 @@ func toStatsDTO(s *Stats) *dto.ChangeStatsResponse {
 //	@Router	/api/v1/changes/{id}/complete [post]
 //	@Router	/api/v1/changes/{id}/close [post]
 //	@Router	/api/v1/changes/{id}/rollback [post]
+//	@Router	/api/v1/changes/{id}/fail [post]
 //	@Router	/api/v1/changes/{id}/cancel [post]
 func (h *Handler) TransitionStatus(c *gin.Context) {
 	id, ok := common.ParsePositiveID(c, "id")
@@ -670,6 +672,7 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 		"complete": "completed",
 		"close":    "closed",
 		"rollback": "rolled_back",
+		"fail":     "failed",
 		"cancel":   "cancelled",
 	}
 	targetStatus, ok := statusMap[action]
@@ -898,7 +901,10 @@ func (h *Handler) CreatePIR(c *gin.Context) {
 			common.Conflict(c, err.Error(), nil)
 			return
 		}
-		common.FailWithErr(c, err, "操作失败")
+		// 用 RespondError 而不是 FailWithErr：后者会把 AppError 的领域文案替换成
+		// 兜底串，而 PIR 的状态门禁提示（"尚未实施完成，不能做实施后回顾"）正是
+		// 使用者需要看到的那句话。
+		common.RespondError(c, err, "创建实施后回顾失败")
 		return
 	}
 

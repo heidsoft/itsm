@@ -54,6 +54,8 @@ type Change struct {
 	ImplementationPlan string `json:"implementation_plan,omitempty"`
 	// 回滚计划
 	RollbackPlan string `json:"rollback_plan,omitempty"`
+	// 实施结果说明（失败原因/回滚原因/完成说明）
+	OutcomeNote string `json:"outcome_note,omitempty"`
 	// 相关工单
 	RelatedTickets []string `json:"related_tickets,omitempty"`
 	// 创建时间
@@ -127,7 +129,7 @@ func (*Change) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case change.FieldID, change.FieldAssigneeID, change.FieldCreatedBy, change.FieldTenantID:
 			values[i] = new(sql.NullInt64)
-		case change.FieldChangeNumber, change.FieldTitle, change.FieldDescription, change.FieldJustification, change.FieldType, change.FieldStatus, change.FieldPriority, change.FieldImpactScope, change.FieldRiskLevel, change.FieldImplementationPlan, change.FieldRollbackPlan:
+		case change.FieldChangeNumber, change.FieldTitle, change.FieldDescription, change.FieldJustification, change.FieldType, change.FieldStatus, change.FieldPriority, change.FieldImpactScope, change.FieldRiskLevel, change.FieldImplementationPlan, change.FieldRollbackPlan, change.FieldOutcomeNote:
 			values[i] = new(sql.NullString)
 		case change.FieldPlannedStartDate, change.FieldPlannedEndDate, change.FieldActualStartDate, change.FieldActualEndDate, change.FieldCreatedAt, change.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -261,6 +263,12 @@ func (_m *Change) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field rollback_plan", values[i])
 			} else if value.Valid {
 				_m.RollbackPlan = value.String
+			}
+		case change.FieldOutcomeNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field outcome_note", values[i])
+			} else if value.Valid {
+				_m.OutcomeNote = value.String
 			}
 		case change.FieldRelatedTickets:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -398,6 +406,9 @@ func (_m *Change) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("rollback_plan=")
 	builder.WriteString(_m.RollbackPlan)
+	builder.WriteString(", ")
+	builder.WriteString("outcome_note=")
+	builder.WriteString(_m.OutcomeNote)
 	builder.WriteString(", ")
 	builder.WriteString("related_tickets=")
 	builder.WriteString(fmt.Sprintf("%v", _m.RelatedTickets))

@@ -27,10 +27,14 @@ type Change struct {
 	ActualEndDate      *time.Time
 	ImplementationPlan string
 	RollbackPlan       string
-	AffectedCIs        []string
-	RelatedTickets     []string
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	// OutcomeNote 实施结果说明：failed 记失败原因、rolled_back 记回滚原因、
+	// completed 记完成说明。与 Justification（事前变更理由）分开存放，
+	// 避免事后结论覆盖事前理由。
+	OutcomeNote    string
+	AffectedCIs    []string
+	RelatedTickets []string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 // User is the minimal user projection needed by the Change domain response.

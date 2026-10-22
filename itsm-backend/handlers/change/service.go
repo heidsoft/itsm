@@ -37,6 +37,8 @@ var (
 	// ErrQuorumRequiresWorkflow 审批链要求会签/阈值，但该变更没有绑定运行中的
 	// 流程实例，审批决定无处落库、票数无法累积（→ 409 Conflict，需运维配置）。
 	ErrQuorumRequiresWorkflow = errors.New("approval quorum requires a running workflow instance")
+	// ErrOutcomeNoteRequired 实施失败/回滚未填写原因（Validation 语义，前端按可行动校验呈现）。
+	ErrOutcomeNoteRequired = errors.New("change outcome note is required")
 )
 
 type Service struct {
@@ -887,6 +889,22 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		return nil, fmt.Errorf("%w: 从 '%s' 到 '%s'", ErrInvalidTransition, c.Status, targetStatus)
 	}
 
+	// 实施结果说明（outcome_note）。
+	//
+	// failed / rolled_back 必须写原因：这两个状态都表示"没按计划做成"，没有原因的
+	// 记录在事后审计里无法区分"技术方案不成立"、"实施步骤走错"还是"窗口不够"，
+	// 也就无法反哺风险评估；回滚还要据此判断影响范围是否已复原。
+	// completed 的原因是可选的完成说明（有就存，便于复盘）。
+	// approve/reject 不走这里：它们的理由由审批桥接写进 ProcessApprovalDecision。
+	outcomeNote := strings.TrimSpace(comment)
+	if outcomeNote == "" && (targetStatus == "failed" || targetStatus == "rolled_back") {
+		return nil, common.NewValidationError(
+			fmt.Sprintf("把变更标记为 '%s' 必须填写原因（请求体 reason 或 comment）："+
+				"该原因会写入实施结果说明并进入 PIR 与审计，用于判断影响是否已复原、是否需要重新排期", targetStatus),
+			ErrOutcomeNoteRequired,
+		)
+	}
+
 	// scheduled 转换复查排期窗口冲突（2026-10-21 收口）：排期时间可在提交审批后
 	// 通过 Update 修改，提交时（SubmitChange）的冲突检查拦不住「批后排期改动」，
 	// 所以进入 scheduled 时用实体当前窗口再查一次。查询失败降级放行（同口径）。
@@ -1101,11 +1119,14 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 		}
 	}
 
-	// 终态（rejected/completed/cancelled/rolled_back）需要事务化：写 change + 收口
-	// pending chains；非终态直接更新。
+	// 终态（rejected/completed/cancelled/rolled_back/failed）需要事务化：写 change +
+	// 收口 pending chains；非终态直接更新。
+	// failed 是「实施失败」的如实落点：状态机一直允许 in_progress/failed → failed，
+	// 但此前没有任何 API 入口能写它，实施失败的变更只能被报成 completed 或直接
+	// rolled_back——统计口径与 PIR 结论都随之失真。
 	isTerminal := targetStatus == "rejected" || targetStatus == "completed" ||
 		targetStatus == "cancelled" || targetStatus == "rolled_back" ||
-		targetStatus == "closed"
+		targetStatus == "failed" || targetStatus == "closed"
 	if isTerminal {
 		if tx == nil {
 			ok, casErr := s.repo.UpdateStatusCAS(ctx, c.ID, tenantID, c.Status, targetStatus)
@@ -1116,6 +1137,14 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
 					ErrConcurrentModification, c.Status, targetStatus)
 			}
+			if outcomeNote != "" {
+				// 退化路径无事务可用：状态已推进，结果说明单独落库。失败仅记日志，
+				// 不把已成功的状态推进报成失败（重试会撞 409 而非补写原因）。
+				if noteErr := s.repo.SetOutcomeNote(ctx, c.ID, tenantID, outcomeNote); noteErr != nil {
+					s.logger.Errorw("TransitionStatus: 记录实施结果说明失败（退化路径）",
+						"error", noteErr, "change_id", id, "tenant_id", tenantID)
+				}
+			}
 			// 无事务句柄的装配（mock/legacy）没有原子性可依托，仍需收口，
 			// 否则终态变更的审批链会永远停在 pending。失败记日志，不阻断返回：
 			// 状态已经写入终态，此时报错会让调用方误以为可以重试。
@@ -1124,12 +1153,18 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 					"error", closeErr, "change_id", id, "tenant_id", tenantID)
 			}
 			c.Status = targetStatus
+			c.OutcomeNote = outcomeNote
 			return c, nil
 		}
-		if _, updateErr := tx.Client().Change.UpdateOneID(c.ID).
+		terminalUpdate := tx.Client().Change.UpdateOneID(c.ID).
 			Where(change.TenantIDEQ(tenantID), change.StatusEQ(change.Status(c.Status))).
-			SetStatus(change.Status(targetStatus)).
-			Save(ctx); updateErr != nil {
+			SetStatus(change.Status(targetStatus))
+		// 结果说明与状态推进同一条 UPDATE：分开写会留下"状态已是 failed、原因是空"的
+		// 窗口（进程崩溃或后续语句失败），而解释失败原因正是本次改动的目的。
+		if outcomeNote != "" {
+			terminalUpdate = terminalUpdate.SetOutcomeNote(outcomeNote)
+		}
+		if _, updateErr := terminalUpdate.Save(ctx); updateErr != nil {
 			// StatusEQ 未命中 → 状态已被并发请求抢先推进，属预期内的业务冲突。
 			if ent.IsNotFound(updateErr) {
 				return nil, fmt.Errorf("%w: 期望 '%s' → '%s'，但状态已被其他请求修改",
@@ -1158,6 +1193,7 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 			}
 		}
 		c.Status = targetStatus
+		c.OutcomeNote = outcomeNote
 		return c, nil
 	}
 

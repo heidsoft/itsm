@@ -540,6 +540,7 @@ func precheckRoutePermissions() map[string]map[string]Permission {
 			"/api/v1/changes/*/cancel":                          {Resource: "change", Action: "write"},
 			"/api/v1/changes/*/close":                           {Resource: "change", Action: "write"},
 			"/api/v1/changes/*/complete":                        {Resource: "change", Action: "write"},
+			"/api/v1/changes/*/fail":                            {Resource: "change", Action: "write"},
 			"/api/v1/changes/*/pir":                             {Resource: "change", Action: "write"},
 			"/api/v1/changes/*/reject":                          {Resource: "change", Action: "approve"},
 			"/api/v1/changes/*/rollback":                        {Resource: "change", Action: "rollback"},

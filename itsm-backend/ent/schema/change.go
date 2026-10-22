@@ -84,6 +84,13 @@ func (Change) Fields() []ent.Field {
 		field.Text("rollback_plan").
 			Comment("回滚计划").
 			Optional(),
+		// 实施结果说明：failed 记失败原因、rolled_back 记回滚原因与范围、
+		// completed 记完成说明。此前 TransitionStatus 的 reason 参数只被审批桥接
+		// 消费，非审批流转（失败/回滚/完成）的原因完全不落库——审计只能看到
+		// "状态从 in_progress 变成 rolled_back"，看不到为什么。
+		field.Text("outcome_note").
+			Comment("实施结果说明（失败原因/回滚原因/完成说明）").
+			Optional(),
 		field.JSON("related_tickets", []string{}).
 			Comment("相关工单").
 			Optional(),

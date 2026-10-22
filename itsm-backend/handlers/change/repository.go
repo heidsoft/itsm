@@ -19,6 +19,10 @@ type Repository interface {
 	// 修改（或记录不存在/不属于该租户），调用方据此返回 409 冲突。
 	// 这是状态转换消除 TOCTOU 竞态的关键原语，禁止绕过。
 	UpdateStatusCAS(ctx context.Context, id, tenantID int, expectedStatus, targetStatus string) (bool, error)
+	// SetOutcomeNote 记录实施结果说明（失败原因 / 回滚原因 / 完成说明）。
+	// 有事务句柄时 service 直接在同一条状态 UPDATE 里写该列；只有无事务句柄的
+	// 退化装配（mock/legacy）才走本方法，避免"状态变了、原因没留"。
+	SetOutcomeNote(ctx context.Context, id, tenantID int, note string) error
 	Delete(ctx context.Context, id int, tenantID int) error
 	GetStats(ctx context.Context, tenantID int) (*Stats, error)
 	SubmitForApproval(ctx context.Context, changeID, tenantID int, plan []ApprovalLevelPlan, comment string) error

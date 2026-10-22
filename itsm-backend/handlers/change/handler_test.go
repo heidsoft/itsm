@@ -185,6 +185,18 @@ func (m *mockRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, 
 	return true, nil
 }
 
+func (m *mockRepository) SetOutcomeNote(ctx context.Context, id, tenantID int, note string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.changes[id]
+	if !ok || c.TenantID != tenantID {
+		return http.ErrMissingFile
+	}
+	c.OutcomeNote = note
+	c.UpdatedAt = time.Now()
+	return nil
+}
+
 func (m *mockRepository) Delete(ctx context.Context, id int, tenantID int) error {
 	c, ok := m.changes[id]
 	if !ok || c.TenantID != tenantID {

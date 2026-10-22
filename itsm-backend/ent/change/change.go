@@ -51,6 +51,8 @@ const (
 	FieldImplementationPlan = "implementation_plan"
 	// FieldRollbackPlan holds the string denoting the rollback_plan field in the database.
 	FieldRollbackPlan = "rollback_plan"
+	// FieldOutcomeNote holds the string denoting the outcome_note field in the database.
+	FieldOutcomeNote = "outcome_note"
 	// FieldRelatedTickets holds the string denoting the related_tickets field in the database.
 	FieldRelatedTickets = "related_tickets"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -114,6 +116,7 @@ var Columns = []string{
 	FieldActualEndDate,
 	FieldImplementationPlan,
 	FieldRollbackPlan,
+	FieldOutcomeNote,
 	FieldRelatedTickets,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -305,6 +308,11 @@ func ByImplementationPlan(opts ...sql.OrderTermOption) OrderOption {
 // ByRollbackPlan orders the results by the rollback_plan field.
 func ByRollbackPlan(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRollbackPlan, opts...).ToFunc()
+}
+
+// ByOutcomeNote orders the results by the outcome_note field.
+func ByOutcomeNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOutcomeNote, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

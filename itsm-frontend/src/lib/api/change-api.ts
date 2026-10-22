@@ -334,9 +334,14 @@ export class ChangeApi {
     return httpClient.post(`/api/v1/changes/${id}/close`, {});
   }
 
-  // 回滚变更
-  static async rollbackChange(id: number, reason?: string): Promise<void> {
+  // 回滚变更（reason 必填：后端会拒收没有原因的 rolled_back）
+  static async rollbackChange(id: number, reason: string): Promise<void> {
     return httpClient.post(`/api/v1/changes/${id}/rollback`, { reason });
+  }
+
+  // 标记实施失败（reason 必填：失败原因写入 outcome_note，进 PIR 与审计）
+  static async failChange(id: number, reason: string): Promise<void> {
+    return httpClient.post(`/api/v1/changes/${id}/fail`, { reason });
   }
 
   // 取消变更

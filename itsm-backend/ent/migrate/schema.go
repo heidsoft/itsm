@@ -818,6 +818,7 @@ var (
 		{Name: "actual_end_date", Type: field.TypeTime, Nullable: true},
 		{Name: "implementation_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "rollback_plan", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "outcome_note", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "related_tickets", Type: field.TypeJSON, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -831,7 +832,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "changes_standard_changes_changes",
-				Columns:    []*schema.Column{ChangesColumns[22]},
+				Columns:    []*schema.Column{ChangesColumns[23]},
 				RefColumns: []*schema.Column{StandardChangesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

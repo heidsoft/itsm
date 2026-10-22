@@ -95,6 +95,7 @@ func toDomain(ec *ent.Change) *Change {
 		ActualEndDate:      &ec.ActualEndDate,
 		ImplementationPlan: ec.ImplementationPlan,
 		RollbackPlan:       ec.RollbackPlan,
+		OutcomeNote:        ec.OutcomeNote,
 		AffectedCIs:        affectedCIsToStrings(ec.Edges.AffectedCis),
 		RelatedTickets:     ec.RelatedTickets,
 		CreatedAt:          ec.CreatedAt,
@@ -318,6 +319,16 @@ func (r *EntRepository) UpdateStatusCAS(ctx context.Context, id, tenantID int, e
 		return false, err
 	}
 	return affected > 0, nil
+}
+
+// SetOutcomeNote 记录实施结果说明（失败原因 / 回滚原因 / 完成说明）。
+// 仅在无事务句柄的退化装配（mock/legacy）里由 service 调用；有事务句柄时
+// 结果说明与状态推进在同一条 UPDATE 里写入，避免"状态变了但原因丢了"。
+func (r *EntRepository) SetOutcomeNote(ctx context.Context, id, tenantID int, note string) error {
+	return r.client.Change.Update().
+		Where(change.IDEQ(id), change.TenantIDEQ(tenantID)).
+		SetOutcomeNote(note).
+		Exec(ctx)
 }
 
 func (r *EntRepository) Update(ctx context.Context, c *Change) (*Change, error) {

@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"itsm-backend/common"
@@ -13,6 +15,9 @@ import (
 
 	"go.uber.org/zap"
 )
+
+// ErrPIRRequiresImplementedChange 变更尚未实施完成就创建 PIR（→ 422）。
+var ErrPIRRequiresImplementedChange = errors.New("PIR requires an implemented change")
 
 // ChangePIRService 变更实施后审查服务
 type ChangePIRService struct {
@@ -41,6 +46,22 @@ func (s *ChangePIRService) CreatePIR(ctx context.Context, req *dto.CreateChangeP
 			return nil, fmt.Errorf("变更不存在")
 		}
 		return nil, fmt.Errorf("获取变更失败: %w", err)
+	}
+
+	// PIR 是「实施后回顾」：只有真正实施过的变更才有可回顾的事实。
+	// 此前不校验状态，草稿/待审批的变更也能建 PIR，于是 PIR 列表里混着
+	// 还没开始的单，"实施成功率/是否达成目标"这类指标直接失去意义。
+	// 允许的入口状态：completed（实施完成）、rolled_back（已回滚）、failed（实施失败）。
+	switch string(changeEntity.Status) {
+	case common.ChangeStatusCompleted, string(dto.ChangeStatusRolledBack), common.ChangeStatusFailed:
+	default:
+		return nil, common.NewAppError(
+			common.ErrCodeConflict,
+			fmt.Sprintf("变更当前状态为 '%s'，尚未实施完成，不能做实施后回顾（PIR）。"+
+				"请等变更进入 completed / rolled_back / failed 之后再创建", changeEntity.Status),
+			http.StatusConflict,
+			ErrPIRRequiresImplementedChange,
+		)
 	}
 
 	// 检查该变更是否已有PIR (使用HasChangeWith查询)

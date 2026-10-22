@@ -32,6 +32,8 @@ export interface Change {
   actualEndDate?: string;
   implementationPlan: string;
   rollbackPlan: string;
+  /** 实施结果说明：失败原因 / 回滚原因 / 完成说明（后端 outcome_note）。 */
+  outcomeNote?: string;
   affectedCis?: string[];
   relatedTickets?: string[];
   createdAt: string;
