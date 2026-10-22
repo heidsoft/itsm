@@ -14,5 +14,8 @@
 # 格式：key=value[  # 说明]
 # 基线建立日期：2026-09-28（来源：output/product-scope-convergence-2026-09-28.md §2）
 
-preview_domains=9          # README 成熟度表中状态为「预览」的能力域数（共 14 域：5 可用 + 9 预览）
+preview_domains=8          # README 成熟度表中状态为「预览」的能力域数（共 14 域：6 可用 + 8 预览）
+                           # 2026-10-22 收紧 9→8：af526bcc（10-21）已把「问题与 Known Error」
+                           # 晋升为可用，当时未同步下调基线，留了一个免费名额；本次补降。
+                           # 下降事实：问题域 SLA/评论 GA 阻断项落地后晋升可用（6c6c2687 之前）。
 roadmap_future_items=14    # ROADMAP v2.0 + v3.0 章节中未完成（- [ ]）条目总数

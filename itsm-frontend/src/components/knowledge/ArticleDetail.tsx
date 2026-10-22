@@ -21,7 +21,7 @@ import {
   Rate,
   Input,
 } from 'antd';
-import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Pencil, User, Folder, Calendar, CheckCircle, Link2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -219,6 +219,21 @@ const ArticleDetail: React.FC = () => {
               <Folder />
               <Text type="secondary">{article.category || '未分类'}</Text>
             </Space>
+            {/* 来源追溯（2026-10-22 沉淀闭环）：由问题沉淀而来的文章回链问题详情，
+                与问题详情页「知识沉淀」Tab 构成双向闭环；手工创建的文章不显示此行。 */}
+            {article.sourceProblemId != null && (
+              <Space>
+                <Link2 />
+                <Button
+                  type="link"
+                  size="small"
+                  style={{ padding: 0 }}
+                  onClick={() => router.push(`/problems/${article.sourceProblemId}`)}
+                >
+                  来源问题 #{article.sourceProblemId}
+                </Button>
+              </Space>
+            )}
             <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>
           </Space>
         </div>

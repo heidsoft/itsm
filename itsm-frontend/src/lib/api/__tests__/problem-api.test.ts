@@ -177,4 +177,36 @@ describe('ProblemApi', () => {
       expect(result.status).toBe('closed');
     });
   });
+
+  // 知识沉淀闭环（2026-10-22）：入口挂在问题域，动作语义是「创建知识」，
+  // 权限走 knowledge:write/read——契约测试锁路径与载荷形态，错误分支由组件测试覆盖。
+  describe('knowledge promotion closure', () => {
+    it('promoteProblemKnowledge should POST to the problem knowledge endpoint', async () => {
+      const created = { id: 7, title: '连接池耗尽复盘', status: 'draft', sourceProblemId: 1 };
+      mockPost.mockResolvedValue(created);
+      const result = await ProblemApi.promoteProblemKnowledge(1, { title: '连接池耗尽复盘' });
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/1/knowledge', {
+        title: '连接池耗尽复盘',
+      });
+      expect(result.sourceProblemId).toBe(1);
+      expect(result.status).toBe('draft');
+    });
+
+    it('promoteProblemKnowledge should send an empty object when no overrides are given', async () => {
+      mockPost.mockResolvedValue({ id: 8, title: '兜底标题', status: 'draft' });
+      await ProblemApi.promoteProblemKnowledge(2);
+      expect(mockPost).toHaveBeenCalledWith('/api/v1/problems/2/knowledge', {});
+    });
+
+    it('listProblemKnowledge should GET the reverse-lookup endpoint', async () => {
+      mockGet.mockResolvedValue({
+        items: [{ id: 7, title: '连接池耗尽复盘', status: 'draft', sourceProblemId: 1 }],
+        total: 1,
+      });
+      const result = await ProblemApi.listProblemKnowledge(1);
+      expect(mockGet).toHaveBeenCalledWith('/api/v1/problems/1/knowledge');
+      expect(result.total).toBe(1);
+      expect(result.items[0].sourceProblemId).toBe(1);
+    });
+  });
 });

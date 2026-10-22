@@ -21,6 +21,10 @@ export interface KnowledgeArticle {
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
+  // 来源追溯（2026-10-22 沉淀闭环）：文章由哪个问题沉淀而来；undefined=手工创建。
+  // 后端 knowledge_articles.source_problem_id（裸 ID 引用，知识是独立资产）。
+  // 详情页据此展示「来源问题」并回链问题详情——与问题详情页「知识沉淀」Tab 构成双向闭环。
+  sourceProblemId?: number;
 }
 
 export interface ArticleQuery {

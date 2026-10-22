@@ -7,9 +7,10 @@ import { useRouter, useParams } from 'next/navigation';
 import ProblemDetail from '@/components/problem/ProblemDetail';
 import ProblemSLACard from '@/components/problem/ProblemSLACard';
 import ProblemAssociationsTab from '@/components/problem/ProblemAssociationsTab';
+import ProblemKnowledgeTab from '@/components/problem/ProblemKnowledgeTab';
 import { HistoryTimeline, fetchAuditLogHistory, CommentPanel } from '@/components/business/detail-tabs';
 import { problemCommentAdapter } from '@/components/business/detail-tabs/adapters/problem-comment-adapter';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, BookOpen } from 'lucide-react';
 import dayjs from 'dayjs';
 import { useI18n } from '@/lib/i18n/useI18n';
 
@@ -55,6 +56,16 @@ export default function ProblemDetailPage() {
                     </span>
                   ),
                   children: <ProblemAssociationsTab problemId={numericId} />,
+                },
+                {
+                  key: 'knowledge',
+                  label: (
+                    <span>
+                      <BookOpen size={14} className="inline mr-1" />
+                      知识沉淀
+                    </span>
+                  ),
+                  children: <ProblemKnowledgeTab problemId={numericId} />,
                 },
                 {
                   key: 'comments',

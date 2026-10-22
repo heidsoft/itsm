@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **问题→知识沉淀闭环前端落地（2026-10-22，与 6c6c2687 后端闭环同属一个特性）**：后端端点已在 6c6c2687 交付，本批次补齐用户面——问题详情页新增「知识沉淀」Tab（`components/problem/ProblemKnowledgeTab.tsx`）：反查列表如实标注「草稿/已发布」（沉淀产物恒为 draft，发布须过知识评审流，不把 draft 渲染成已发布）、按创建时间倒序、标签与跳转知识详情；「沉淀为知识」弹窗全字段可选（标题/分类/标签，留空用问题单内容兜底），422 质量门理由（无根因且无解决方案）与 403（无 `knowledge:write`）/503（知识仓储未装配）/404（跨租户）按后端契约原样呈现，不静默假成功；反查失败时只呈现错误 Alert、不渲染空列表——「读不到」与「没有沉淀」同屏会把故障误导成空态。反向同步：知识文章详情页依据 `sourceProblemId` 展示「来源问题」并回链问题详情，与问题页 Tab 构成双向闭环。回归锁：`problem-api.test.ts` 3 项端点契约（路径/方法/空覆盖语义）+ `ProblemKnowledgeTab.test.tsx` 5 项组件用例（草稿标注/空态/沉淀后刷新/422 理由/反查失败），23 项全过，type-check 与 eslint 零告警。产品表面棘轮：C.7.2 预览域基线随 af526bcc 的晋升补降 9→8（此前下调漏同步，留了一个免费名额）。
+
+### Added
+
 - **问题→知识沉淀闭环落地（2026-10-22，知识域预览收口）**：问题域与知识域的双向断链补齐——正向新增 `POST /api/v1/problems/:id/knowledge`，把问题的现象/根因/临时措施/解决方案模板化组装为知识草稿（全字段可选，空值用问题单内容兜底；沉淀产物为 draft，发布须过知识评审流——沉淀降低的是记录成本，不是审核成本）；反向新增 `GET /api/v1/problems/:id/knowledge` 反查沉淀文章（含草稿，创建时间倒序），并把问题调查摘要 `GET /problems/:id/investigation/summary` 里恒为空数组的 `KnowledgeArticles` 字段接上真实数据。`knowledge_articles` 新增 `source_problem_id`（迁移 `20261022_knowledge_source_problem.sql`，裸 ID 引用而非外键：沉淀后的知识是独立资产，问题删除不级联删知识；索引 `(tenant_id, source_problem_id)` 支撑反查）。质量门：无根因且无解决方案的问题沉淀 422 拒绝——没有可复用结论的空壳文章只会污染 RAG 语料；允许同一问题沉淀多篇（不同侧面）。权限语义：入口挂在问题域，但动作是「创建知识」，写走 `knowledge:write`、反查走 `knowledge:read`，不因入口放宽。跨租户问题在沉淀与反查两个方向统一 404，不暴露 ID 可枚举信号；知识仓储未装配时沉淀端点显式 503/5003，不静默假成功。契约见 [docs/api-reference.md](./docs/api-reference.md)「问题知识沉淀」。
 
 ### Changed
