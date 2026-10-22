@@ -693,7 +693,8 @@ func (h *Handler) TransitionStatus(c *gin.Context) {
 	if err != nil {
 		// 按错误语义分流：业务规则拒绝与并发冲突不得伪装成 500。
 		switch {
-		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification):
+		case errors.Is(err, ErrInvalidTransition), errors.Is(err, ErrConcurrentModification),
+			errors.Is(err, ErrQuorumRequiresWorkflow):
 			common.Conflict(c, err.Error(), nil)
 		case errors.Is(err, ErrNotApprover):
 			common.Fail(c, common.ForbiddenCode, "您不是该变更的待办审批人")

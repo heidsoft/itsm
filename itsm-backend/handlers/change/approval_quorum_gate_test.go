@@ -221,3 +221,88 @@ func TestTransitionStatus_ChainCloseFailure_RollsBackStatus(t *testing.T) {
 	// 关键断言：状态仍是 pending —— 状态更新与收口在同一事务，收口失败即回滚。
 	assert.Equal(t, "pending", queryChangeStatus(t, client, changeID), "收口失败时状态推进必须一并回滚")
 }
+
+// ==================== 纯业务回退路径（未绑定流程实例）的会签门禁 ====================
+//
+// 主路径修复（2026-10-22）后仍留了一个同源缺口：变更没有绑定运行中的流程实例时
+// （approvalBridge 为 nil，或桥接返回 handled=false），审批决定没有落库位置，
+// 会签票无法累积，代码就退回"桥接后无条件 CAS approved"。效果与修复前一样——
+// 会签链在缺少流程模板时被一个人批掉，只是原因换成了"配置缺失"。
+// 决策表的 process_instance_id / process_task_id / node_key 都是流程事实，
+// 伪造决策行等于往不可变审计表写假账，所以这里唯一诚实的做法是失败关闭。
+
+// TestTransitionStatus_QuorumWithoutWorkflowInstance_FailsClosed 两人会签但无流程实例：
+// 单票必须被拒绝（409），且不得伪造审批决定。
+func TestTransitionStatus_QuorumWithoutWorkflowInstance_FailsClosed(t *testing.T) {
+	entClient := newChangeBridgeEntClient(t, "change_quorum_no_instance")
+	tenantID, actorA := setupChangeBridgeActor(t, entClient, "ni1")
+	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
+	repo := newMockRepository()
+	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	ctx := context.Background()
+
+	c := createTestChange(repo, tenantID, actorA)
+	c.Status = "pending"
+	persistChangeInEntClient(t, entClient, c)
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
+		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+	}))
+	// 故意不建流程实例：桥接必然返回 handled=false，走纯业务回退。
+
+	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorA, "approved", "同意", "agent")
+	require.Error(t, err, "会签链缺流程实例时必须拒绝，不得退化为单票批准")
+	assert.ErrorIs(t, err, ErrQuorumRequiresWorkflow)
+	assert.Contains(t, err.Error(), "配置审批流程模板", "错误必须给出可行动指引")
+
+	assert.Equal(t, "pending", queryChangeStatus(t, entClient, c.ID), "状态不得被推进")
+	assert.Zero(t, countDecisions(t, entClient), "不得伪造审批决定（审计表只能是流程事实）")
+}
+
+// TestTransitionStatus_SingleVoteSufficientWithoutInstance_Approves 或签（2 候选取 1）
+// 在无流程实例时仍然放行：门禁只拦"这一票不够"的链，不是一律拒绝。
+func TestTransitionStatus_SingleVoteSufficientWithoutInstance_Approves(t *testing.T) {
+	entClient := newChangeBridgeEntClient(t, "change_quorum_or_no_instance")
+	tenantID, actorA := setupChangeBridgeActor(t, entClient, "ni2")
+	actorB := mkChangeUser(t, entClient, tenantID, "security_admin")
+	repo := newMockRepository()
+	svc := NewService(repo, entClient, zaptest.NewLogger(t).Sugar(), nil)
+	ctx := context.Background()
+
+	c := createTestChange(repo, tenantID, actorA)
+	c.Status = "pending"
+	persistChangeInEntClient(t, entClient, c)
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
+		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
+		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "any", Threshold: 1, CreatedAt: time.Now()},
+	}))
+
+	updated, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorA, "approved", "同意", "agent")
+	require.NoError(t, err, "或签一票即达阈值，不应被门禁拦下")
+	assert.Equal(t, "approved", updated.Status)
+}
+
+// TestTransitionStatus_QuorumWithoutEntClient_FailsClosed 未装配 BPMN（entClient 为 nil，
+// 纯 legacy/单测装配）同样走回退门禁：多审批人链不得被单票放行。
+func TestTransitionStatus_QuorumWithoutEntClient_FailsClosed(t *testing.T) {
+	svc, repo := newTransitionTestService(t)
+	ctx := context.Background()
+	const tenantID, actorA, actorB = 1, 201, 202
+
+	c := createTestChange(repo, tenantID, actorA)
+	c.Status = "pending"
+	require.NoError(t, repo.ReplaceApprovalChain(ctx, c.ID, tenantID, []*ApprovalChain{
+		{ID: 1, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorA, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+		{ID: 2, ChangeID: c.ID, TenantID: tenantID, Level: 1, ApproverID: actorB, Role: "approver",
+			Status: "pending", IsRequired: true, ApprovalType: "parallel", Threshold: 2, CreatedAt: time.Now()},
+	}))
+
+	_, err := svc.TransitionStatus(ctx, c.ID, tenantID, actorA, "approved", "同意", "agent")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrQuorumRequiresWorkflow)
+}

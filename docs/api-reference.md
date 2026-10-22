@@ -1248,9 +1248,17 @@ POST /changes/{id}/cancel
 残留的 `pending` 审批链节点置为 `obsolete`：收口失败则整体回滚，不会出现"变更已终态、
 审批链仍挂着待办"的半写状态。
 
-> 已知边界：变更未绑定运行中的 BPMN 流程实例时（`handled=false` 的纯业务回退路径），
-> 审批决定不会写入 `ProcessApprovalDecision`，因此**无法求值会签**，该路径按单票批准处理。
-> 需要会签/阈值的租户必须为变更配置审批流程模板。
+> **未绑定流程实例时的会签（`handled=false` 纯业务回退路径）**：
+> 该路径的审批决定**没有落库位置**（`ProcessApprovalDecision` 的
+> `process_instance_id` / `process_task_id` / `node_key` 都是流程事实，不能凭空造），
+> 因此会签票无法累积。此时门禁只认"当前这一票"：
+>
+> - 单审批人链、或签、或这一票本身已达阈值 → 正常批准；
+> - 会签 / N of M / 多级链未集齐 → **`409`（`ErrQuorumRequiresWorkflow`）**，
+>   提示配置审批流程模板或改为单审批人链。
+>
+> 这是**失败关闭**（fail-closed）：不会静默退化成"一个人批掉整单"。需要会签/阈值的
+> 租户必须为变更类型配置审批流程模板。
 
 ### 获取变更 PIR 列表
 

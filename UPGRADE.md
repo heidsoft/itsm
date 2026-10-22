@@ -2168,13 +2168,44 @@ cd itsm-frontend && npx jest --coverage=false --runInBand ArticleDetail
 若你方的二次开发代码调用了这两个 Go 方法，需改为调用 `Service.TransitionStatus`。
 
 **已知边界**：变更未绑定运行中流程实例时（纯业务回退），审批决定不落
-`ProcessApprovalDecision`，会签无法求值，该路径按单票批准。需要会签/阈值的租户必须配置变更
-审批流程模板。
+`ProcessApprovalDecision`，会签无法求值。该边界在 **1.59** 收紧为失败关闭——
+不再"按单票批准"，本批只保证主路径正确，回退路径的缺口见下一节。
 
 **验证**
 
 ```bash
 cd itsm-backend && go test -count=1 ./handlers/change/ -run "TransitionStatus_ParallelQuorum|TransitionStatus_ThresholdNotMet|TransitionStatus_RejectedDecisionBlocksApprove|TransitionStatus_Reject_ClosesChainsSameTx|TransitionStatus_ChainCloseFailure|EvaluateApprovalQuorum"
+```
+
+### 1.59 会签门禁补齐回退路径：缺流程模板时改为失败关闭（2026-10-22，行为变更：未集齐由 200+approved 变 409）
+
+1.58 修好了"有流程实例"的主路径，但留了一个同源缺口：变更**没有绑定运行中的流程实例**
+时（`approvalBridge` 为 nil，或桥接返回 `handled=false`），审批决定无处落库，
+会签票无法累积，代码退回"桥接后无条件 CAS `approved`"。效果与 1.58 修复前一样——
+会签链在缺少流程模板的租户上仍被一个人批掉，只是原因从"逻辑缺失"换成了"配置缺失"。
+
+现在该路径按「当前这一票」求值，不够就失败关闭：
+
+| 场景（均无运行中流程实例） | 变更前 | 变更后 |
+|---|---|---|
+| 会签 2 人，批 1 票 | `200` + `approved`（缺陷） | `409`（`ErrQuorumRequiresWorkflow`） |
+| 多级链只批第 1 级 | `200` + `approved`（缺陷） | `409` |
+| 单审批人链 | `200` + `approved` | `200` + `approved`（不变） |
+| 或签 2 候选取 1 票 | `200` + `approved` | `200` + `approved`（不变） |
+| 未配置审批链（预授权/紧急） | `200` + `approved` | `200` + `approved`（不变） |
+
+**为什么不补写决策行**：`ProcessApprovalDecision` 的 `process_instance_id` /
+`process_task_id` / `process_node_key` / `task_id` 都是流程事实，回退路径里没有这些东西，
+凭空造一个等于往不可变审计表写假账，事后无法与真实流程对账。
+
+**升级动作**：需要会签 / N of M / 多级审批的租户，必须为对应变更类型配置审批流程模板；
+否则审批人调用 `POST /changes/{id}/approve` 会拿到 `409` 与可行动提示（提示文案包含
+"配置审批流程模板"）。只做单级单审批的租户无需任何动作。
+
+**验证**
+
+```bash
+cd itsm-backend && go test -count=1 ./handlers/change/ -run "QuorumWithoutWorkflowInstance|SingleVoteSufficientWithoutInstance|QuorumWithoutEntClient|NoBoundInstanceFallsBack"
 ```
 
 ## 2. 环境变量变更

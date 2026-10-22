@@ -34,6 +34,9 @@ var (
 	ErrNotApprover = errors.New("user is not an approver of this change")
 	// ErrConcurrentModification 状态已被并发请求抢先修改（→ 409 Conflict）。
 	ErrConcurrentModification = errors.New("change was modified concurrently")
+	// ErrQuorumRequiresWorkflow 审批链要求会签/阈值，但该变更没有绑定运行中的
+	// 流程实例，审批决定无处落库、票数无法累积（→ 409 Conflict，需运维配置）。
+	ErrQuorumRequiresWorkflow = errors.New("approval quorum requires a running workflow instance")
 )
 
 type Service struct {
@@ -1064,6 +1067,37 @@ func (s *Service) TransitionStatus(ctx context.Context, id, tenantID, userID int
 				"missing_levels", outcome.MissingLevels)
 			// 状态未变：单票不足以放行，调用方按"已记录、等待其他审批人"处理。
 			return c, nil
+		}
+	}
+
+	// 纯业务回退路径的会签门禁：未绑定运行中流程实例（approvalBridge 为 nil 或
+	// 桥接返回 handled=false）时，审批决定没有落库位置——ProcessApprovalDecision
+	// 的 process_instance_id / process_task_id / process_node_key 都是流程事实，
+	// 凭空造一个等于往「不可变审计表」里写假账，所以不能补写决策行。
+	// 后果是这一路径的会签票永远无法累积，此时只能认「当前这一票」：
+	//   · 单审批人链 / 或签 / 当前票已够阈值 → 继续放行（见下方状态推进）；
+	//   · 会签、N of M、多级链未集齐 → 失败关闭（409 + 可行动指引）。
+	// 此前该路径在桥接后无条件 CAS approved，等于让会签/阈值链在缺少流程模板时
+	// 静默退化成「一个人批掉整单」——与其在文档里写一句"请配置模板"，不如让
+	// 缺失配置当场报错（与主路径 2026-10-22 修复的缺陷同源）。
+	if targetStatus == "approved" && !approvalDecidedByBridge {
+		chain, chainErr := s.repo.GetApprovalChain(ctx, id, tenantID)
+		if chainErr != nil {
+			return nil, fmt.Errorf("failed to get approval chain: %w", chainErr)
+		}
+		// 用本票合成一次审批历史：够阈值就放行，不够就拒绝，不依赖任何持久化。
+		thisVote := []*ApprovalRecord{{ApproverID: userID, Status: "approved"}}
+		applyChainLevels(chain, thisVote)
+		fallback := evaluateApprovalQuorum(chain, thisVote)
+		if !fallback.ChainEmpty && !fallback.AllRequiredMet {
+			s.logger.Warnw("TransitionStatus: 会签链未绑定流程实例，审批无法累积，拒绝放行",
+				"change_id", id, "tenant_id", tenantID, "actor_user_id", userID,
+				"required_votes", fallback.RequiredVotes, "missing_levels", fallback.MissingLevels)
+			return nil, fmt.Errorf(
+				"%w: 该变更未绑定运行中的审批流程实例，审批决定无法持久化，会签票无法累积"+
+					"（该链需要 %d 票，本次仅 1 票，未达标层级 %v）；"+
+					"请为该变更类型配置审批流程模板后重新提交，或将审批链改为单审批人",
+				ErrQuorumRequiresWorkflow, fallback.RequiredVotes, fallback.MissingLevels)
 		}
 	}
 
