@@ -107,6 +107,22 @@ export function isPermissionDeniedError(error: unknown): boolean {
   return error instanceof ApiRequestError && (error.status === 403 || error.code === 2003);
 }
 
+/**
+ * 服务端已给出可行动原因时优先透传，未知错误才回退到本地化文案。
+ *
+ * 业务拒绝（409/403/422/404）的 message 是后端写的可行动提示，例如
+ * 「该变更未绑定运行中的审批流程实例…请配置审批流程模板」、「您不是该变更的待办
+ * 审批人」。页面统一折叠成「操作失败」会让使用者无法判断该去改配置、换人还是重试，
+ * 等于把后端已经做好的错误分级丢掉。网络错误没有 message（或只有技术文案），
+ * 这时才用本地化兜底文案。
+ */
+export function serverErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiRequestError && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 /** 非 2xx 响应体不是合法 JSON 时返回 null，由调用方回落到状态码文案。 */
 async function readErrorEnvelope(
   response?: Response

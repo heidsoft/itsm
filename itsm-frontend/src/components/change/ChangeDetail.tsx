@@ -28,6 +28,7 @@ import dayjs from 'dayjs';
 import { Modal, Input } from 'antd';
 
 import { ChangeApi } from '@/lib/api/';
+import { serverErrorMessage } from '@/lib/api/http-client';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
   ChangeStatus,
@@ -120,7 +121,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.submitSuccess'));
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.submitFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.submitFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -137,7 +138,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.scheduleSuccess'));
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.scheduleFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.scheduleFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -154,7 +155,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.startSuccess'));
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.startFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.startFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -171,7 +172,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.completeSuccess'));
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.completeFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.completeFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -188,7 +189,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.closeSuccess'));
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.closeFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.closeFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -206,7 +207,7 @@ const ChangeDetail: React.FC = () => {
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.rollbackFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.rollbackFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -224,7 +225,7 @@ const ChangeDetail: React.FC = () => {
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.cancelFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.cancelFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -249,7 +250,7 @@ const ChangeDetail: React.FC = () => {
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.approveFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.approveFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -268,7 +269,7 @@ const ChangeDetail: React.FC = () => {
       setApprovalComment('');
       loadDetail();
     } catch (error) {
-      message.error(t('changeDetail.rejectFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.rejectFailed')));
     } finally {
       inFlightRef.current = false;
       setProcessing(false);
@@ -291,7 +292,7 @@ const ChangeDetail: React.FC = () => {
       }
     } catch (error) {
       // console.error(error);
-      message.error(t('changeDetail.loadDetailFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.loadDetailFailed')));
     } finally {
       setLoading(false);
     }
@@ -333,7 +334,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.riskSaveSuccess'));
       loadRiskAssessment();
     } catch (error) {
-      message.error(t('changeDetail.saveFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.saveFailed')));
     }
   };
 
@@ -345,7 +346,7 @@ const ChangeDetail: React.FC = () => {
       message.success(t('changeDetail.impactSaveSuccess'));
       loadImpactAnalysis();
     } catch (error) {
-      message.error(t('changeDetail.saveFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.saveFailed')));
     }
   };
 
@@ -357,7 +358,7 @@ const ChangeDetail: React.FC = () => {
       await ChangeApi.updateChange(Number(id), { rollbackPlan: JSON.stringify(data) });
       message.success(t('changeDetail.rollbackPlanSaveSuccess'));
     } catch (error) {
-      message.error(t('changeDetail.saveFailed'));
+      message.error(serverErrorMessage(error, t('changeDetail.saveFailed')));
     }
   };
 
